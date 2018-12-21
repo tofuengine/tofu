@@ -4,9 +4,11 @@ namespace raylib {
     #include <raylib/raylib.h>
 }
 
+#include "Engine.hpp"
+
 #define SCREEN_WIDTH    320
 #define SCREEN_HEIGHT   240
-#define WINDOW_TITLE    ".: MODE 13h - 2D ENGINE :."
+#define WINDOW_TITLE    ".: RAWR :."
 
 typedef struct _Screen_t {
     int width;
@@ -45,8 +47,18 @@ static Screen_t FitToDisplay(const int width, const int height)
     return screen;
 }
 
+void chai_log(const std::string &message)
+{
+    raylib::TraceLog(raylib::LOG_DEBUG, message.c_str());
+}
+
 int main(int argc, char **argv)
 {
+    std::string script = "boot.chai";
+    if (argc > 1) {
+        script = argv[1];
+    }
+
     // TODO: query main script for configuration (width, height, fps, title, etc...).
     raylib::SetTraceLog(raylib::LOG_DEBUG | raylib::LOG_INFO | raylib::LOG_WARNING);
 //    raylib::ShowLogo();
@@ -56,6 +68,10 @@ int main(int argc, char **argv)
     Screen_t screen = FitToDisplay(SCREEN_WIDTH, SCREEN_HEIGHT);
 
     raylib::SetTargetFPS(60);
+
+    chaiscript::ChaiScript chai;
+    chai.add(chaiscript::fun(&chai_log), "log");
+    chai.eval_file(script);
 
     while (!raylib::WindowShouldClose()) {
         // TODO: Update your variables here

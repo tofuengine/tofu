@@ -1,26 +1,39 @@
-TARGET=m13h
-LIBS=-lm -Llib -Wl,-Rlib -lraylib
-CC=g++
-CFLAGS=-g -Wall -Iinclude
+# project name (generate executable with this name)
+TARGET=rawr
 
-.PHONY: default all clean
+COMPILER=g++
+CFLAGS=-g -Wall -Wextra -Iexternal/include -DCHAISCRIPT_NO_THREADS
 
-default: $(TARGET)
+LINKER=g++
+LFLAGS=-Wall -Wextra -lm -ldl -Lexternal/lib -Wl,-Rexternal/lib -lraylib
+
+# change these to proper directories where each file should be
+SRCDIR=src
+OBJDIR=obj
+BINDIR=bin
+
+SOURCES:= $(wildcard $(SRCDIR)/*.cpp)
+INCLUDES:= $(wildcard $(SRCDIR)/*.hpp)
+OBJECTS:= $(SOURCES:$(SRCDIR)/%.cpp=$(OBJDIR)/%.o)
+rm=rm -f
+
+default: $(BINDIR)/$(TARGET)
 all: default
 
-OBJECTS = $(patsubst %.cpp, %.o, $(wildcard *.cpp))
-HEADERS = $(wildcard *.h)
+$(BINDIR)/$(TARGET): $(OBJECTS)
+	@$(LINKER) $(OBJECTS) $(LFLAGS) -o $@
+	@echo "Linking complete!"
 
-%.o: %.cpp $(HEADERS)
-	$(CC) $(CFLAGS) -c $< -o $@
+$(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.cpp
+	@$(COMPILER) $(CFLAGS) -c $< -o $@
+	@echo "Compiled "$<" successfully!"
 
-.PRECIOUS: $(TARGET) $(OBJECTS)
-
-$(TARGET): $(OBJECTS)
-	$(CC) $(OBJECTS) -Wall $(LIBS) -o $@
-
+.PHONY: clean
 clean:
-	-rm -f *.o
-	-rm -f $(TARGET)
+	@$(rm) $(OBJECTS)
+	@echo "Cleanup complete!"
 
-	
+.PHONY: remove
+remove: clean
+	@$(rm) $(BINDIR)/$(TARGET)
+	@echo "Executable removed!"

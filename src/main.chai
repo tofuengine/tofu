@@ -1,0 +1,46 @@
+// Proposed engine functions.
+
+def peek(x, y) {
+
+}
+
+def poke(x, y, color) {
+
+}
+
+def line(x0, y0, x1, y1) {
+
+}
+
+def palette(colors) {
+
+}
+
+def sprite(id, x, y) {
+
+}
+
+def bank(id, image) {
+    
+}
+
+// Proposed engine callbacks.
+
+def configure() {
+
+}
+
+def initialize() {
+
+}
+
+def update(dt) {
+}
+
+def draw() {
+
+}
+
+
+
+log("Hello, World!");
