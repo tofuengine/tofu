@@ -1,4 +1,4 @@
-# Amaranth
+# RAWR
 
 ## Uses
 
