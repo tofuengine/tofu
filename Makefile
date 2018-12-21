@@ -1,5 +1,5 @@
 # project name (generate executable with this name)
-TARGET=rawr
+TARGET=zest
 
 COMPILER=g++
 CFLAGS=-g -Wall -Wextra -Iexternal/include -DCHAISCRIPT_NO_THREADS

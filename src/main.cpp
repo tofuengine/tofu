@@ -8,7 +8,7 @@ namespace raylib {
 
 #define SCREEN_WIDTH    320
 #define SCREEN_HEIGHT   240
-#define WINDOW_TITLE    ".: RAWR :."
+#define WINDOW_TITLE    ".: ZEST :."
 
 typedef struct _Screen_t {
     int width;
