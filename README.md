@@ -15,5 +15,6 @@ Guess what? Yup, that's another game engine/framework.
 
 ## Uses
 
-* [ChaiScript](https://github.com/ChaiScript/ChaiScript) v6.1.0
-* [raylib](https://www.raylib.com/) v2.0.0
+* [ChaiScript](https://http://chaiscript.com/) v6.1.0
+* [raylib](https://www.raylib.com/) v2.3-dev
+* [jsmn](https://zserge.com/jsmn.html/) v1.0.0
