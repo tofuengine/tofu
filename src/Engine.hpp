@@ -1,17 +1,15 @@
 #ifndef __ENGINE_H__
 #define __ENGINE_H__
 
-#include <chaiscript/chaiscript.hpp>
-
 #include "Display.hpp"
+#include "Interpreter.hpp"
 
 class Engine {
 
 private:
 
-    chaiscript::ChaiScript _interpreter;
-
     Display _display;
+    Interpreter _interpreter;
 
 public:
 

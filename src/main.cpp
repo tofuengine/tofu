@@ -1,12 +1,3 @@
-#include <limits.h>
-#include <stdlib.h>
-
-#include <chaiscript/chaiscript.hpp>
-
-namespace raylib {
-    #include <raylib/raylib.h>
-}
-
 #include "Engine.hpp"
 
 #define SCREEN_WIDTH    320
