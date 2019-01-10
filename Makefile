@@ -5,7 +5,7 @@ COMPILER=g++
 CFLAGS=-g -Wall -Wextra -Iexternal/include -DCHAISCRIPT_NO_THREADS
 
 LINKER=g++
-LFLAGS=-Wall -Wextra -lm -ldl -Lexternal/lib -Wl,-Rexternal/lib -lraylib
+LFLAGS=-Wall -Wextra -Lexternal/lib -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
 
 # change these to proper directories where each file should be
 SRCDIR=src
