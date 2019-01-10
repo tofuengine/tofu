@@ -19,11 +19,14 @@ typedef struct _Screen_t {
     int scale;
 } Screen_t;
 
-static Screen_t FitToDisplay(const int width, const int height)
+static Screen_t InitializeWindow(const int width, const int height)
 {
-    int screenWidth = raylib::GetScreenWidth();
-    int screenHeight = raylib::GetScreenHeight();
-    raylib::TraceLog(raylib::LOG_DEBUG, "Screen size is %dx%d", screenWidth, screenHeight);
+    raylib::SetConfigFlags(raylib::FLAG_WINDOW_HIDDEN);
+    raylib::InitWindow(0, 0, WINDOW_TITLE);
+
+    int displayWidth = raylib::GetScreenWidth();
+    int displayHeight = raylib::GetScreenHeight();
+    raylib::TraceLog(raylib::LOG_DEBUG, "Display size is %d x %d", displayWidth, displayHeight);
 
     Screen_t screen = {};
     screen.width = width;
@@ -33,7 +36,7 @@ static Screen_t FitToDisplay(const int width, const int height)
     for (int s = 1; ; ++s) {
         int w = width * s;
         int h = height * s;
-        if ((w > screenWidth) || (h > screenHeight)) {
+        if ((w > displayWidth) || (h > displayHeight)) {
             break;
         }
         screen.scale = s;
@@ -41,12 +44,17 @@ static Screen_t FitToDisplay(const int width, const int height)
         screen.height = h;
     }
 
-    int x = (screenWidth - screen.width) / 2;
-    int y = (screenHeight - screen.height) / 2;
+    raylib::TraceLog(raylib::LOG_DEBUG, "Window size is %d x %d (%dx)", screen.width, screen.height, screen.scale);
+
+    int x = (displayWidth - screen.width) / 2;
+    int y = (displayHeight - screen.height) / 2;
+
     raylib::SetWindowPosition(x, y);
     raylib::SetWindowSize(screen.width, screen.height);
+    raylib::ShowWindow();
 
-    raylib::TraceLog(raylib::LOG_DEBUG, "Window size is %dx%d (%dx)", screen.width, screen.height, screen.scale);
+//    raylib::SetTargetFPS(60);
+
     return screen;
 }
 
@@ -83,20 +91,15 @@ static void split_path(const std::string &path, std::string &parent, std::string
 
 int main(int argc, char **argv)
 {
+    // TODO: query main script for configuration (width, height, fps, title, etc...).
+    raylib::SetTraceLog(raylib::LOG_DEBUG | raylib::LOG_INFO | raylib::LOG_WARNING);
+
+    Screen_t screen = InitializeWindow(SCREEN_WIDTH, SCREEN_HEIGHT);
+
     std::string script = "./boot.chai";
     if (argc > 1) {
         script = argv[1];
     }
-
-    // TODO: query main script for configuration (width, height, fps, title, etc...).
-    raylib::SetTraceLog(raylib::LOG_DEBUG | raylib::LOG_INFO | raylib::LOG_WARNING);
-//    raylib::ShowLogo();
-    raylib::InitWindow(0, 0, WINDOW_TITLE); // Mostly a hack. Initialize to screen size, move offscreen.
-    raylib::SetWindowPosition(9999, 9999);
-
-    Screen_t screen = FitToDisplay(SCREEN_WIDTH, SCREEN_HEIGHT);
-
-    raylib::SetTargetFPS(60);
 
     std::vector<std::string> modulepaths;
     std::vector<std::string> usepaths;
@@ -109,16 +112,28 @@ int main(int argc, char **argv)
     chai.add(chaiscript::fun(&chai_log), "log");
     chai.eval_file(script);
 
+    raylib::RenderTexture2D offscreen = raylib::LoadRenderTexture(SCREEN_WIDTH, SCREEN_HEIGHT);
+    raylib::SetTextureFilter(offscreen.texture, raylib::FILTER_POINT); // Nearest-neighbour scaling.
+
     while (!raylib::WindowShouldClose()) {
         // TODO: Update your variables here
         float dt = raylib::GetFrameTime();
 
+        raylib::BeginTextureMode(offscreen);
+            raylib::ClearBackground(BLACK);
+            raylib::DrawFPS(0, 0);
+            raylib::DrawText(raylib::FormatText("FRAME-TIME: %.3f", dt), 16, 16, 8, LIGHTGRAY);
+        raylib::EndTextureMode();
+
         raylib::BeginDrawing();
-        raylib::ClearBackground(RAYWHITE);
-        raylib::DrawFPS(0, 0);
-        raylib::DrawText(raylib::FormatText("%.3f", dt), 0, 32, 20, LIGHTGRAY);
+            raylib::DrawTexturePro(offscreen.texture,
+            (raylib::Rectangle){ 0.0f, 0.0f, (float)offscreen.texture.width, (float)-offscreen.texture.height }, // Y-flip the texture.
+            (raylib::Rectangle){ 0.0f, 0.0f, (float)screen.width, (float)screen.height },
+            (raylib::Vector2){ 0.0f, 0.0f }, 0.0f, WHITE);
         raylib::EndDrawing();
     }
+
+    raylib::UnloadRenderTexture(offscreen);
 
     raylib::CloseWindow();
 
