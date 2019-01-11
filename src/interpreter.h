@@ -3,6 +3,8 @@
 
 #include <stdbool.h>
 
+#include <wren/wren.h>
+
 typedef struct _Interpreter_t {
 
 } Interpreter_t;
