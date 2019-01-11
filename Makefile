@@ -1,30 +1,24 @@
-# project name (generate executable with this name)
-TARGET=zest
+TARGET=tofu
 
-COMPILER=g++
-CFLAGS=-g -Wall -Wextra -Iexternal/include -DCHAISCRIPT_NO_THREADS
+COMPILER=gcc
+CFLAGS=-g -Wall -Wextra -Iexternal/include
 
-LINKER=g++
+LINKER=gcc
 LFLAGS=-Wall -Wextra -Lexternal/lib -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
 
-# change these to proper directories where each file should be
-SRCDIR=src
-OBJDIR=obj
-BINDIR=bin
-
-SOURCES:= $(wildcard $(SRCDIR)/*.cpp)
-INCLUDES:= $(wildcard $(SRCDIR)/*.hpp)
-OBJECTS:= $(SOURCES:$(SRCDIR)/%.cpp=$(OBJDIR)/%.o)
+SOURCES:= $(wildcard src/*.c external/include/jsmn/*.c)
+INCLUDES:= $(wildcard src/*.h external/include/raylib/*.h external/include/jsmn/*.h)
+OBJECTS:= $(SOURCES:%.c=%.o)
 rm=rm -f
 
-default: $(BINDIR)/$(TARGET)
+default: $(TARGET)
 all: default
 
-$(BINDIR)/$(TARGET): $(OBJECTS)
+$(TARGET): $(OBJECTS)
 	@$(LINKER) $(OBJECTS) $(LFLAGS) -o $@
 	@echo "Linking complete!"
 
-$(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.cpp
+$(OBJECTS): %.o : %.c
 	@$(COMPILER) $(CFLAGS) -c $< -o $@
 	@echo "Compiled "$<" successfully!"
 
@@ -35,5 +29,5 @@ clean:
 
 .PHONY: remove
 remove: clean
-	@$(rm) $(BINDIR)/$(TARGET)
+	@$(rm) $(TARGET)
 	@echo "Executable removed!"

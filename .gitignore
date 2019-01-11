@@ -1,2 +1,2 @@
-bin/
-obj/
+src/*.o
+external/include/jsmn/*.o
