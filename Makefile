@@ -1,13 +1,15 @@
 TARGET=tofu
 
-COMPILER=gcc
-CFLAGS=-g -Wall -Wextra -Iexternal/include
+COMPILER=cc
+CWARNINGS=-Wall -Wextra -Werror -Wno-unused-parameter
+CFLAGS=-O0 -DDEBUG -g -D_DEFAULT_SOURCE -std=c99 -Iexternal
+# -O3
 
-LINKER=gcc
-LFLAGS=-Wall -Wextra -Lexternal/lib -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
+LINKER=cc
+LFLAGS=-Wall -Wextra -Werror -Lexternal/raylib -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
 
-SOURCES:= $(wildcard src/*.c external/include/jsmn/*.c)
-INCLUDES:= $(wildcard src/*.h external/include/raylib/*.h external/include/jsmn/*.h)
+SOURCES:= $(wildcard src/*.c external/jsmn/*.c external/wren/*.c)
+INCLUDES:= $(wildcard src/*.h external/raylib/*.h external/jsmn/*.h external/wren/*.h)
 OBJECTS:= $(SOURCES:%.c=%.o)
 rm=rm -f
 
@@ -19,7 +21,7 @@ $(TARGET): $(OBJECTS)
 	@echo "Linking complete!"
 
 $(OBJECTS): %.o : %.c
-	@$(COMPILER) $(CFLAGS) -c $< -o $@
+	@$(COMPILER) $(CFLAGS) $(CWARNINGS) -c $< -o $@
 	@echo "Compiled "$<" successfully!"
 
 .PHONY: clean

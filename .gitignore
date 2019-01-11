@@ -1,2 +1,4 @@
 src/*.o
-external/include/jsmn/*.o
+external/jsmn/*.o
+external/wren/*.o
+tofu
