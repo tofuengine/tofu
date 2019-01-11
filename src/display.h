@@ -6,6 +6,8 @@
 #include <raylib/raylib.h>
 
 typedef struct _Display_t {
+    bool display_fps;
+
     int window_width, window_height, window_scale;
 
     int width, height;

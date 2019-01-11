@@ -5,6 +5,7 @@ void Display_initialize(Display_t *display, const int width, const int height, c
     SetConfigFlags(FLAG_WINDOW_HIDDEN);
     InitWindow(0, 0, title);
 
+    display->display_fps = true;
     display->width = width;
     display->height = height;
     display->window_width = width;
@@ -53,8 +54,6 @@ void Display_render(Display_t *display, void callback(void))
     BeginTextureMode(display->offscreen);
         ClearBackground(BLACK);
 //        callback();
-        DrawFPS(0, 0);
-        DrawText(FormatText("FRAME-TIME: %.3f", dt), 16, 16, 8, LIGHTGRAY);
     EndTextureMode();
 
     BeginDrawing();
@@ -62,6 +61,10 @@ void Display_render(Display_t *display, void callback(void))
         (Rectangle){ 0.0f, 0.0f, (float)display->offscreen.texture.width, (float)-display->offscreen.texture.height }, // Y-flip the texture.
         (Rectangle){ 0.0f, 0.0f, (float)display->window_width, (float)display->window_height },
         (Vector2){ 0.0f, 0.0f }, 0.0f, WHITE);
+
+        if (display->display_fps) {
+            DrawText(FormatText("FPS: %d | DELTA: %.3f", GetFPS(), dt), 0, 0, 10, (Color){ 255, 255, 255, 128 });
+        }
     EndDrawing();
 }
 
