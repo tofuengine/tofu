@@ -10,7 +10,7 @@
 
 typedef struct _Engine_t {
 
-    char basepath[PATH_MAX];
+    char base_path[PATH_MAX];
 
     Configuration_t configuration;
     Display_t display;
@@ -18,7 +18,7 @@ typedef struct _Engine_t {
 
 } Engine_t;
 
-extern bool Engine_initialize(Engine_t *engine, const char *basepath);
+extern bool Engine_initialize(Engine_t *engine, const char *base_path);
 extern void Engine_terminate(Engine_t *engine);
 extern void Engine_run(Engine_t *engine);
 

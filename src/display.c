@@ -1,5 +1,7 @@
 #include "display.h"
 
+#include "log.h"
+
 void Display_initialize(Display_t *display, const int width, const int height, const char *title)
 {
     SetConfigFlags(FLAG_WINDOW_HIDDEN);
@@ -14,7 +16,7 @@ void Display_initialize(Display_t *display, const int width, const int height, c
 
     int displayWidth = GetScreenWidth();
     int displayHeight = GetScreenHeight();
-    TraceLog(LOG_DEBUG, "Display size is %d x %d", displayWidth, displayHeight);
+    Log_write(LOG_LEVELS_DEBUG, "Display size is %d x %d", displayWidth, displayHeight);
 
     for (int s = 1; ; ++s) {
         int w = width * s;
@@ -27,7 +29,7 @@ void Display_initialize(Display_t *display, const int width, const int height, c
         display->window_scale = s;
     }
 
-    TraceLog(LOG_DEBUG, "Window size is %d x %d (%dx)", display->window_width, display->window_height, display->window_scale);
+    Log_write(LOG_LEVELS_DEBUG, "Window size is %d x %d (%dx)", display->window_width, display->window_height, display->window_scale);
 
     int x = (displayWidth - display->window_width) / 2;
     int y = (displayHeight - display->window_height) / 2;

@@ -1,7 +1,9 @@
 #include "configuration.h"
 
+#include "log.h"
+#include "utils.h"
+
 #include <jsmn/jsmn.h>
-#include <raylib/raylib.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,7 +15,7 @@
 #define SCREEN_HEIGHT   240
 #define WINDOW_TITLE    ".: tOFu :."
 
-bool Configuration_load(Configuration_t *configuration, const char *filename)
+void Configuration_load(Configuration_t *configuration, const char *filename)
 {
     strncpy(configuration->title, WINDOW_TITLE, MAX_CONFIGURATION_TITLE_LENGTH);
     configuration->width = SCREEN_WIDTH;
@@ -24,26 +26,19 @@ bool Configuration_load(Configuration_t *configuration, const char *filename)
     configuration->fps = 60;
     configuration->debug = true;
 
-    FILE *file = fopen(filename, "rt");
-    if (!file) {
-        TraceLog(LOG_WARNING, "Configuration file '%s' not found", filename);
-        return false;
+    char *json = load_file_as_string(filename, "rt");
+    if (!json) {
+        Log_write(LOG_LEVELS_WARNING, "Configuration file '%s' not found", filename);
+        return;
     }
-    fseek(file, 0L, SEEK_END);
-    long size = ftell(file);
-    char json[size];
-    fseek(file, 0L, SEEK_SET);
-    fread(json, sizeof(char), size, file);
-    fclose(file);
 
     jsmn_parser parser;
     jsmn_init(&parser);
     jsmntok_t tokens[32];
-    int token_count = jsmn_parse(&parser, json, size, tokens, countof(tokens));
+    int token_count = jsmn_parse(&parser, json, strlen(json), tokens, countof(tokens));
     if ((token_count < 0) || (tokens[0].type != JSMN_OBJECT)) {
-        TraceLog(LOG_WARNING, "Configuration file '%s' is malformed", filename);
-        return false;
+        Log_write(LOG_LEVELS_WARNING, "Configuration file '%s' is malformed", filename);
     }
 
-    return true;
+    free(json);
 }

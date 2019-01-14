@@ -1,5 +1,6 @@
 #include "engine.h"
 #include "configuration.h"
+#include "log.h"
 
 #include <raylib/raylib.h>
 
@@ -7,18 +8,19 @@
 #include <stdio.h>
 #include <string.h>
 
-bool Engine_initialize(Engine_t *engine, const char *basepath)
+bool Engine_initialize(Engine_t *engine, const char *base_path)
 {
-    strcpy(engine->basepath, basepath);
+    strcpy(engine->base_path, base_path);
 
-    char cfgfile[PATH_MAX];
-    strcpy(cfgfile, basepath);
-    strcat(cfgfile, "/configuration.json");
+    char filename[PATH_MAX];
+    strcpy(filename, base_path);
+    strcat(filename, "configuration.json");
 
-    Configuration_load(&engine->configuration, cfgfile);
+    Configuration_load(&engine->configuration, filename);
 
-    SetTraceLog(engine->configuration.debug ? LOG_DEBUG | LOG_INFO | LOG_WARNING : 0);
+    Log_configure(engine->configuration.debug);
 
+    Interpreter_initialize(&engine->interpreter, base_path);
     Display_initialize(&engine->display, engine->configuration.width, engine->configuration.height, engine->configuration.title);
 
     return true;
@@ -27,13 +29,15 @@ bool Engine_initialize(Engine_t *engine, const char *basepath)
 void Engine_terminate(Engine_t *engine)
 {
     Display_terminate(&engine->display);
+    Interpreter_terminate(&engine->interpreter);
 }
 
 void Engine_run(Engine_t *engine)
 {
-    TraceLog(LOG_DEBUG, "Engine is now running");
+    Log_write(LOG_LEVELS_DEBUG, "Engine is now running");
 
     while (!Display_shouldClose(&engine->display)) {
+        Interpreter_step(&engine->interpreter);
         Display_render(&engine->display, NULL);
     }
 }
