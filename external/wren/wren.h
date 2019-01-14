@@ -163,7 +163,7 @@ typedef struct
   // Since Wren does not talk directly to the file system, it relies on the
   // embedder to physically locate and read the source code for a module. The
   // first time an import appears, Wren will call this and pass in the name of
-  // the module being imported. The VM should return the soure code for that
+  // the module being imported. The VM should return the source code for that
   // module. Memory for the source should be allocated using [reallocateFn] and
   // Wren will take ownership over it.
   //
