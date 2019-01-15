@@ -415,9 +415,9 @@ typedef enum {
     FLAG_WINDOW_RESIZABLE   = 4,    // Set to allow resizable window
     FLAG_WINDOW_UNDECORATED = 8,    // Set to disable window decoration (frame and buttons)
     FLAG_WINDOW_TRANSPARENT = 16,   // Set to allow transparent window
-    FLAG_WINDOW_HIDDEN      = 32,   // Set to create the window initially hidden
-    FLAG_MSAA_4X_HINT       = 64,   // Set to try enabling MSAA 4X
-    FLAG_VSYNC_HINT         = 128   // Set to try enabling V-Sync on GPU
+    FLAG_WINDOW_HIDDEN      = 128,  // Set to create the window initially hidden
+    FLAG_MSAA_4X_HINT       = 32,   // Set to try enabling MSAA 4X
+    FLAG_VSYNC_HINT         = 64    // Set to try enabling V-Sync on GPU
 } ConfigFlag;
 
 // Trace log type
@@ -834,23 +834,23 @@ extern "C" {            // Prevents name mangling of functions
 
 // Window-related functions
 RLAPI void InitWindow(int width, int height, const char *title);  // Initialize window and OpenGL context
+RLAPI bool WindowShouldClose(void);                               // Check if KEY_ESCAPE pressed or Close icon pressed
 RLAPI void CloseWindow(void);                                     // Close window and unload OpenGL context
 RLAPI bool IsWindowReady(void);                                   // Check if window has been initialized successfully
-RLAPI bool WindowShouldClose(void);                               // Check if KEY_ESCAPE pressed or Close icon pressed
 RLAPI bool IsWindowMinimized(void);                               // Check if window has been minimized (or lost focus)
+RLAPI bool IsWindowHidden(void);                                  // Check if window is currently hidden
 RLAPI void ToggleFullscreen(void);                                // Toggle fullscreen mode (only PLATFORM_DESKTOP)
+RLAPI void ShowWindow(void);                                      // Show the window
+RLAPI void HideWindow(void);                                      // Hide the window
 RLAPI void SetWindowIcon(Image image);                            // Set icon for window (only PLATFORM_DESKTOP)
 RLAPI void SetWindowTitle(const char *title);                     // Set title for window (only PLATFORM_DESKTOP)
 RLAPI void SetWindowPosition(int x, int y);                       // Set window position on screen (only PLATFORM_DESKTOP)
 RLAPI void SetWindowMonitor(int monitor);                         // Set monitor for the current window (fullscreen mode)
 RLAPI void SetWindowMinSize(int width, int height);               // Set window minimum dimensions (for FLAG_WINDOW_RESIZABLE)
 RLAPI void SetWindowSize(int width, int height);                  // Set window dimensions
-RLAPI void ShowWindow();                                          // Show the window
-RLAPI void HideWindow();                                          // Hide the window
-RLAPI bool IsWindowHidden();                                      // Check if window is currently hidden
+RLAPI void *GetWindowHandle(void);                                // Get native window handle
 RLAPI int GetScreenWidth(void);                                   // Get current screen width
 RLAPI int GetScreenHeight(void);                                  // Get current screen height
-RLAPI void *GetWindowHandle(void);                                // Get native window handle
 RLAPI int GetMonitorCount(void);                                  // Get number of connected monitors
 RLAPI int GetMonitorWidth(int monitor);                           // Get primary monitor width
 RLAPI int GetMonitorHeight(int monitor);                          // Get primary monitor height
@@ -891,6 +891,7 @@ RLAPI double GetTime(void);                                       // Returns ela
 RLAPI int ColorToInt(Color color);                                // Returns hexadecimal value for a Color
 RLAPI Vector4 ColorNormalize(Color color);                        // Returns color normalized as float [0..1]
 RLAPI Vector3 ColorToHSV(Color color);                            // Returns HSV values for a Color
+RLAPI Color ColorFromHSV(Vector3 hsv);                            // Returns a Color from HSV values
 RLAPI Color GetColor(int hexValue);                               // Returns a Color struct from hexadecimal value
 RLAPI Color Fade(Color color, float alpha);                       // Color fade-in or fade-out, alpha goes from 0.0f to 1.0f
 
