@@ -24,6 +24,10 @@ $(OBJECTS): %.o : %.c
 	@$(COMPILER) $(CFLAGS) $(CWARNINGS) -c $< -o $@
 	@echo "Compiled "$<" successfully!"
 
+test: $(TARGET)
+	@echo "Launching testing application!"
+	./$(TARGET) ./script
+
 .PHONY: clean
 clean:
 	@$(rm) $(OBJECTS)
