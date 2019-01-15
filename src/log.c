@@ -7,6 +7,11 @@
 
 #define MAX_LOG_MESSAGE_LENGTH      256
 
+void Log_initialize()
+{
+    SetTraceLog(LOG_DEBUG | LOG_INFO | LOG_WARNING | LOG_ERROR | LOG_OTHER);
+}
+
 void Log_configure(bool enabled)
 {
     SetTraceLog(enabled

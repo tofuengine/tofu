@@ -14,6 +14,7 @@ typedef struct _Configuration {
     bool debug;
 } Configuration_t;
 
+extern void Configuration_initialize(Configuration_t *configuration);
 extern void Configuration_load(Configuration_t *configuration, const char *filename);
 
 #endif  /* __CONFIGURATION_H__ */

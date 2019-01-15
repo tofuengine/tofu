@@ -16,6 +16,9 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
     strcpy(filename, base_path);
     strcat(filename, "configuration.json");
 
+    Log_initialize();
+
+    Configuration_initialize(&engine->configuration);
     Configuration_load(&engine->configuration, filename);
 
     Log_configure(engine->configuration.debug);
