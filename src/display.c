@@ -49,6 +49,10 @@ void Display_initialize(Display_t *display, const Display_Configuration_t *confi
 
     display->offscreen = LoadRenderTexture(configuration->width, configuration->height);
     SetTextureFilter(display->offscreen.texture, FILTER_POINT); // Nearest-neighbour scaling.
+
+    display->a = (Rectangle){ 0.0f, 0.0f, (float)display->offscreen.texture.width, (float)-display->offscreen.texture.height };
+    display->b = (Rectangle){ 0.0f, 0.0f, (float)display->window_width, (float)display->window_height };
+    display->c = (Vector2){ 0.0f, 0.0f };
 }
 
 bool Display_shouldClose(Display_t *display)
@@ -68,12 +72,15 @@ void Display_renderEnd(Display_t *display, void callback(void), const double fps
 {
     BeginDrawing();
         // callback();
+#if 0
         DrawTexturePro(display->offscreen.texture,
             (Rectangle){ 0.0f, 0.0f, (float)display->offscreen.texture.width, (float)-display->offscreen.texture.height }, // Y-flip the texture.
             (Rectangle){ 0.0f, 0.0f, (float)display->window_width, (float)display->window_height },
             (Vector2){ 0.0f, 0.0f }, 0.0f, WHITE);
-
-        if (display->display_fps) {
+#else
+        DrawTexturePro(display->offscreen.texture, display->a, display->b, display->c, 0.0f, WHITE);
+#endif
+        if (display->configuration.display_fps) {
             DrawText(FormatText("[ %.0f fps | %.3fs ]", fps, delta_time), 0, 0, 10, (Color){ 255, 255, 255, 128 });
         }
     EndDrawing();
