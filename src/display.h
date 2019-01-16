@@ -5,16 +5,24 @@
 
 #include <raylib/raylib.h>
 
-typedef struct _Display_t {
+typedef struct _Display_Configuration_t {
+    int width, height;
+    int colors;
+    bool hide_cursor;
     bool display_fps;
+} Display_Configuration_t;
+
+typedef struct _Display_t {
+    Display_Configuration_t configuration;
 
     int window_width, window_height, window_scale;
 
-    int width, height;
     RenderTexture2D offscreen;
+    Rectangle a, b;
+    Vector2 c;
 } Display_t;
 
-extern void Display_initialize(Display_t *display, const int width, const int height, const char *title, bool hide_cursor);
+extern void Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title);
 extern bool Display_shouldClose(Display_t *display);
 extern void Display_renderBegin(Display_t *display, void callback(void));
 extern void Display_renderEnd(Display_t *display, void callback(void), const double fps, const double delta_time);

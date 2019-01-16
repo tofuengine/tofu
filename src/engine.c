@@ -38,11 +38,17 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 
     Log_configure(engine->configuration.debug);
 
-    Interpreter_Config_t configuration;
-    configuration.base_path = engine->base_path;
-    Interpreter_initialize(&engine->interpreter, &configuration);
+    Interpreter_Config_t interpreter_configuration;
+    interpreter_configuration.base_path = engine->base_path;
+    Interpreter_initialize(&engine->interpreter, &interpreter_configuration);
 
-    Display_initialize(&engine->display, engine->configuration.width, engine->configuration.height, engine->configuration.title, engine->configuration.hide_cursor);
+    Display_Configuration_t display_configuration;
+    display_configuration.width = engine->configuration.width;
+    display_configuration.height = engine->configuration.height;
+    display_configuration.colors = engine->configuration.debug;
+    display_configuration.hide_cursor = engine->configuration.hide_cursor;
+    display_configuration.display_fps = engine->configuration.debug;
+    Display_initialize(&engine->display, &display_configuration, engine->configuration.title);
 
     return true;
 }
