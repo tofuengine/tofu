@@ -8,6 +8,8 @@
 #include <limits.h>
 #include <string.h>
 
+#define MAIN_MODULE_NAME        "main"
+
 static void* reallocate_function(void *ptr, size_t size)
 {
     if (size == 0) {
@@ -20,7 +22,7 @@ static void* reallocate_function(void *ptr, size_t size)
 static const char *resolve_module_function(WrenVM *vm, const char *importer, const char *name)
 {
     char *resolved = reallocate_function(NULL, PATH_MAX);
-    if (strcmp(importer, "main") == 0) { // For the main module, use the base-path.
+    if (strcmp(importer, MAIN_MODULE_NAME) == 0) { // For the main module, use the base-path.
         Interpreter_Config_t *configuration = (Interpreter_Config_t *)wrenGetUserData(vm);
         strcpy(resolved, configuration->base_path);
     } else { // Otherwise, desume the path as relative to the importer.
@@ -76,15 +78,17 @@ bool Interpreter_initialize(Interpreter_t *interpreter, Interpreter_Config_t *co
         return false;
     }
 
-    WrenInterpretResult result = wrenInterpret(interpreter->vm, "main", source);
+    WrenInterpretResult result = wrenInterpret(interpreter->vm, MAIN_MODULE_NAME, source);
     if (result != WREN_RESULT_SUCCESS) {
         Log_write(LOG_LEVELS_ERROR, "Can't interpret main module!");
         wrenFreeVM(interpreter->vm);
         return false;
     }
 
+    free(source);
+
     wrenEnsureSlots(interpreter->vm, 1); 
-    wrenGetVariable(interpreter->vm, "main", "Tofu", 0); 
+    wrenGetVariable(interpreter->vm, MAIN_MODULE_NAME, "Tofu", 0); 
     interpreter->handles[RECEIVER] = wrenGetSlotHandle(interpreter->vm, 0);
 
     interpreter->handles[INITIALIZE] = wrenMakeCallHandle(interpreter->vm, "initialize()");
