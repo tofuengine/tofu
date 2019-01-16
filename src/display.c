@@ -44,7 +44,7 @@ void Display_initialize(Display_t *display, const int width, const int height, c
     SetTextureFilter(display->offscreen.texture, FILTER_POINT); // Nearest-neighbour scaling.
 }
 
-bool Display_shouldClose()
+bool Display_shouldClose(Display_t *display)
 {
     return WindowShouldClose();
 }

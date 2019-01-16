@@ -21,8 +21,8 @@ static const char *resolve_module_function(WrenVM *vm, const char *importer, con
 {
     char *resolved = reallocate_function(NULL, PATH_MAX);
     if (strcmp(importer, "main") == 0) { // For the main module, use the base-path.
-        UserData_t *user_data = (UserData_t *)wrenGetUserData(vm);
-        strcpy(resolved, user_data->base_path);
+        Interpreter_Config_t *configuration = (Interpreter_Config_t *)wrenGetUserData(vm);
+        strcpy(resolved, configuration->base_path);
     } else { // Otherwise, desume the path as relative to the importer.
         char *separator = strrchr(importer, '/');
         size_t length = separator - importer + 1; // Include the path-separator itself!
@@ -46,12 +46,12 @@ static char *load_module_function(WrenVM *vm, const char *name)
     return load_file_as_string(name, "rt");
 }
 
-bool Interpreter_initialize(Interpreter_t *interpreter, const char *base_path)
+bool Interpreter_initialize(Interpreter_t *interpreter, Interpreter_Config_t *configuration)
 {
-    strncpy(interpreter->user_data.base_path, base_path, PATH_MAX);
+    memcpy(&interpreter->configuration, configuration, sizeof(Interpreter_Config_t));
 
     char module_filename[PATH_MAX];
-    strcpy(module_filename, base_path);
+    strcpy(module_filename, configuration->base_path);
     strcat(module_filename, "boot.wren");
 
     WrenConfiguration config; 
@@ -67,7 +67,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const char *base_path)
         return false;
     }
 
-    wrenSetUserData(interpreter->vm, &interpreter->user_data);
+    wrenSetUserData(interpreter->vm, &interpreter->configuration);
 
     char *source = load_file_as_string(module_filename, "rt");
     if (!source) {

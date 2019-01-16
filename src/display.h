@@ -15,7 +15,7 @@ typedef struct _Display_t {
 } Display_t;
 
 extern void Display_initialize(Display_t *display, const int width, const int height, const char *title);
-extern bool Display_shouldClose();
+extern bool Display_shouldClose(Display_t *display);
 extern void Display_render(Display_t *display, void callback(void));
 extern void Display_terminate(Display_t *display);
 
