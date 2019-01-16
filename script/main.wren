@@ -6,12 +6,6 @@ class Main {
         System.write("Main.initialize()")
     }
 
-    static update(dt) {
-    }
-
-    static render() {
-    }
-
     static terminate() {
         System.write("Main.terminate()")
     }

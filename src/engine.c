@@ -7,24 +7,32 @@
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
-static const char *engineModuleSource =
-    "class Engine {\n"
-    "\n"
-    "    foreign static running\n"
-    "\n"
-    "    foreign static inputs\n"
-    "\n"
-    "}\n";
+#define MAX_FPS_SAMPLES     128
 
-void is_running_callback(WrenVM* vm) 
-{ 
-    bool shouldClose = Display_shouldClose(NULL); // FIXME: pass the real display context.
-    wrenSetSlotBool(vm, 0, shouldClose);
+static double get_time()
+{
+//    return (double)clock() / (double)CLOCKS_PER_SEC;
+    return GetTime(); // Uses RayLib.
 }
-void inputs_callback(WrenVM* vm) 
-{ 
-    wrenSetSlotNewList(vm, 0); // TODO: fill with the actual list of inputs.
+
+static double update_fps(const double elapsed) {
+    static double ticks[MAX_FPS_SAMPLES] = {};
+    static int tick_count = 0;
+    static int tick_index = 0;
+    static double tick_sum = 0.0;
+
+    tick_sum -= ticks[tick_index];
+    tick_sum += elapsed;
+    ticks[tick_index] = elapsed;
+    if (++tick_index == MAX_FPS_SAMPLES) {
+        tick_index = 0;
+    }
+    if (tick_count < MAX_FPS_SAMPLES) {
+        tick_count++;
+    }
+    return (double)tick_count / tick_sum;
 }
 
 bool Engine_initialize(Engine_t *engine, const char *base_path)
@@ -44,11 +52,9 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 
     Interpreter_Config_t configuration;
     configuration.base_path = engine->base_path;
-    configuration.is_running_callback = is_running_callback;
-    configuration.inputs_callback = inputs_callback;
-    Interpreter_initialize(&engine->interpreter, base_path);
+    Interpreter_initialize(&engine->interpreter, &configuration);
 
-    Display_initialize(&engine->display, engine->configuration.width, engine->configuration.height, engine->configuration.title);
+    Display_initialize(&engine->display, engine->configuration.width, engine->configuration.height, engine->configuration.title, engine->configuration.hide_cursor);
 
     return true;
 }
@@ -61,11 +67,31 @@ void Engine_terminate(Engine_t *engine)
 
 void Engine_run(Engine_t *engine)
 {
-    Log_write(LOG_LEVELS_DEBUG, "Engine is now running");
+    Log_write(LOG_LEVELS_INFO, "Engine is now running");
 
-    Interpreter_run(&engine->interpreter);
+    const double seconds_per_update = 1.0 / (double)engine->configuration.fps;
+    Log_write(LOG_LEVELS_DEBUG, "Engine update timeslice is %.3fs", seconds_per_update);
+
+    double previous = get_time();
+    double lag = 0.0;
 
     while (!Display_shouldClose(&engine->display)) {
-        Display_render(&engine->display, NULL);
+        double current = get_time();
+        double elapsed = current - previous;
+        previous = current;
+        lag += elapsed;
+
+        double fps = update_fps(elapsed);
+
+        Interpreter_handle(&engine->interpreter);
+
+        while (lag >= seconds_per_update) {
+            Interpreter_update(&engine->interpreter, seconds_per_update);
+            lag -= seconds_per_update;
+        }
+
+        Display_renderBegin(&engine->display, NULL);
+            Interpreter_render(&engine->interpreter, lag / seconds_per_update);
+        Display_renderEnd(&engine->display, NULL, fps, seconds_per_update);
     }
 }

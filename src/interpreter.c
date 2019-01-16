@@ -37,7 +37,7 @@ static const char *resolve_module_function(WrenVM *vm, const char *importer, con
 
 static void write_function(WrenVM *vm, const char *text)
 {
-    Log_write(LOG_LEVELS_INFO, text);
+    Log_write(LOG_LEVELS_OTHER, text);
 }
 
 static char *load_module_function(WrenVM *vm, const char *name)
@@ -52,7 +52,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, Interpreter_Config_t *co
 
     char module_filename[PATH_MAX];
     strcpy(module_filename, configuration->base_path);
-    strcat(module_filename, "boot.wren");
+    strcat(module_filename, "tofu.wren");
 
     WrenConfiguration config; 
     wrenInitConfiguration(&config);
@@ -88,7 +88,9 @@ bool Interpreter_initialize(Interpreter_t *interpreter, Interpreter_Config_t *co
     interpreter->handles[RECEIVER] = wrenGetSlotHandle(interpreter->vm, 0);
 
     interpreter->handles[INITIALIZE] = wrenMakeCallHandle(interpreter->vm, "initialize()");
-    interpreter->handles[STEP] = wrenMakeCallHandle(interpreter->vm, "step()");
+    interpreter->handles[HANDLE] = wrenMakeCallHandle(interpreter->vm, "handle(_)");
+    interpreter->handles[UPDATE] = wrenMakeCallHandle(interpreter->vm, "update(_)");
+    interpreter->handles[RENDER] = wrenMakeCallHandle(interpreter->vm, "render(_)");
     interpreter->handles[TERMINATE] = wrenMakeCallHandle(interpreter->vm, "terminate()");
 
     wrenEnsureSlots(interpreter->vm, 1); 
@@ -98,11 +100,26 @@ bool Interpreter_initialize(Interpreter_t *interpreter, Interpreter_Config_t *co
     return true;
 }
 
-void Interpreter_step(Interpreter_t *interpreter) {
+void Interpreter_handle(Interpreter_t *interpreter)
+{
     wrenEnsureSlots(interpreter->vm, 1); 
     wrenSetSlotHandle(interpreter->vm, 0, interpreter->handles[RECEIVER]);
-//    wrenSetSlotDouble(vm, 1, M_PI / 2.0);
-    wrenCall(interpreter->vm, interpreter->handles[STEP]);
+    wrenCall(interpreter->vm, interpreter->handles[HANDLE]);
+}
+
+void Interpreter_update(Interpreter_t *interpreter, const double delta_time)
+{
+    wrenEnsureSlots(interpreter->vm, 2); 
+    wrenSetSlotHandle(interpreter->vm, 0, interpreter->handles[RECEIVER]);
+    wrenSetSlotDouble(interpreter->vm, 1, delta_time);
+    wrenCall(interpreter->vm, interpreter->handles[UPDATE]);
+}
+
+void Interpreter_render(Interpreter_t *interpreter, const double ratio)
+{
+    wrenEnsureSlots(interpreter->vm, 1); 
+    wrenSetSlotHandle(interpreter->vm, 0, interpreter->handles[RECEIVER]);
+    wrenCall(interpreter->vm, interpreter->handles[RENDER]);
 }
 
 void Interpreter_terminate(Interpreter_t *interpreter)

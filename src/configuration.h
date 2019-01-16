@@ -11,6 +11,7 @@ typedef struct _Configuration {
     bool fullscreen;
     bool autofit;
     int fps;
+    bool hide_cursor;
     bool debug;
 } Configuration_t;
 
