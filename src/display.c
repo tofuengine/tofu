@@ -68,9 +68,9 @@ void Display_renderEnd(Display_t *display, void callback(void), const double fps
     BeginDrawing();
         // callback();
         DrawTexturePro(display->offscreen.texture,
-        (Rectangle){ 0.0f, 0.0f, (float)display->offscreen.texture.width, (float)-display->offscreen.texture.height }, // Y-flip the texture.
-        (Rectangle){ 0.0f, 0.0f, (float)display->window_width, (float)display->window_height },
-        (Vector2){ 0.0f, 0.0f }, 0.0f, WHITE);
+            (Rectangle){ 0.0f, 0.0f, (float)display->offscreen.texture.width, (float)-display->offscreen.texture.height }, // Y-flip the texture.
+            (Rectangle){ 0.0f, 0.0f, (float)display->window_width, (float)display->window_height },
+            (Vector2){ 0.0f, 0.0f }, 0.0f, WHITE);
 
         if (display->display_fps) {
             DrawText(FormatText("[ %.0f fps | %.3fs ]", fps, delta_time), 0, 0, 10, (Color){ 255, 255, 255, 128 });
