@@ -9,30 +9,18 @@
 #include <string.h>
 #include <time.h>
 
-#define MAX_FPS_SAMPLES     128
-
-static double get_time()
-{
-//    return (double)clock() / (double)CLOCKS_PER_SEC;
-    return GetTime(); // Uses RayLib.
-}
+#define MAX_FPS_SAMPLES     256
 
 static double update_fps(const double elapsed) {
-    static double ticks[MAX_FPS_SAMPLES] = {};
-    static int tick_count = 0;
-    static int tick_index = 0;
-    static double tick_sum = 0.0;
+    static double history[MAX_FPS_SAMPLES] = {};
+    static int index = 0;
+    static double sum = 0.0;
 
-    tick_sum -= ticks[tick_index];
-    tick_sum += elapsed;
-    ticks[tick_index] = elapsed;
-    if (++tick_index == MAX_FPS_SAMPLES) {
-        tick_index = 0;
-    }
-    if (tick_count < MAX_FPS_SAMPLES) {
-        tick_count++;
-    }
-    return (double)tick_count / tick_sum;
+    sum -= history[index];
+    sum += elapsed;
+    history[index] = elapsed;
+    index = (index + 1) % MAX_FPS_SAMPLES;
+    return (double)MAX_FPS_SAMPLES / sum;
 }
 
 bool Engine_initialize(Engine_t *engine, const char *base_path)
@@ -66,17 +54,17 @@ void Engine_terminate(Engine_t *engine)
 }
 
 void Engine_run(Engine_t *engine)
-{
+{   
     Log_write(LOG_LEVELS_INFO, "Engine is now running");
 
     const double seconds_per_update = 1.0 / (double)engine->configuration.fps;
     Log_write(LOG_LEVELS_DEBUG, "Engine update timeslice is %.3fs", seconds_per_update);
 
-    double previous = get_time();
+    double previous = GetTime();
     double lag = 0.0;
 
     while (!Display_shouldClose(&engine->display)) {
-        double current = get_time();
+        double current = GetTime();
         double elapsed = current - previous;
         previous = current;
         lag += elapsed;
