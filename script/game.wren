@@ -9,13 +9,25 @@ class Game {
         _random = Random.new()
         _time = 0
         _x = 0
-        _speedX = 32.0
+        _speedX = 16.0
+        _color = 0
+        _colorSpeed = 64.0
     }
 
     handle(inputs) {
     }
 
     update(deltaTime) {
+        _color = _color + _colorSpeed * deltaTime
+        if (_color > 255) {
+            _color = 255
+            _colorSpeed = _colorSpeed * -1
+        }
+        if (_color < 0) {
+            _color = 0
+            _colorSpeed = _colorSpeed * -1
+        }
+
         _time = _time + deltaTime
         _x = _x + _speedX * deltaTime
         if (_x > 320) {
@@ -28,10 +40,10 @@ class Game {
         }
     }
 
-    render() {
+    render(ratio) {
         var x = _x //__random.int() % 320
         var y = _time.sin * 64 + 120 //__random.int() % 240
-        Draw.point(x, y, 255)
+        Draw.point(x, y, _color.floor)
     }
 
 }
