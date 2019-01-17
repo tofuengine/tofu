@@ -76,13 +76,13 @@ static void write_function(WrenVM *vm, const char *text)
 
 static void error_function(WrenVM* vm, WrenErrorType type, const char *module, int line, const char *message)
 {
-    const char *prefix = "";
-    switch (type) {
-        case WREN_ERROR_COMPILE: prefix = "COMPILE"; break;
-        case WREN_ERROR_RUNTIME: prefix = "RUNTIME"; break;
-        case WREN_ERROR_STACK_TRACE: prefix = "STACK_TRACE"; break;
+    if (type == WREN_ERROR_COMPILE) {
+        Log_write(LOG_LEVELS_ERROR, "Compile error: [%s@%d] %s", module, line, message);
+    } else if (type == WREN_ERROR_RUNTIME) {
+        Log_write(LOG_LEVELS_ERROR, "Runtime error: %s", message);
+    } else if (type == WREN_ERROR_STACK_TRACE) {
+        Log_write(LOG_LEVELS_ERROR, "  [%s@%d] %s", module, line, message);
     }
-    Log_write(LOG_LEVELS_ERROR, "%s [%s@%d] %s", prefix, module, line, message);
 }
 
 static WrenForeignMethodFn bind_foreign_method_function(WrenVM* vm, const char *module, const char *className,
