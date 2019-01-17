@@ -1,7 +1,7 @@
 #include "configuration.h"
 
+#include "file.h"
 #include "log.h"
-#include "utils.h"
 
 #include <jsmn/jsmn.h>
 
@@ -15,7 +15,7 @@
 
 #define SCREEN_WIDTH    320
 #define SCREEN_HEIGHT   240
-#define WINDOW_TITLE    ".: tOFu :."
+#define WINDOW_TITLE    ".: TOFU :."
 
 static void parse_pair(Configuration_t *configuration, const char *key, const char *value, int type)
 {
@@ -67,7 +67,7 @@ void Configuration_initialize(Configuration_t *configuration)
 
 void Configuration_load(Configuration_t *configuration, const char *filename)
 {
-    char *json = load_file_as_string(filename, "rt");
+    char *json = file_load_as_string(filename, "rt");
     if (!json) {
         Log_write(LOG_LEVELS_WARNING, "Configuration file '%s' not found", filename);
         return;

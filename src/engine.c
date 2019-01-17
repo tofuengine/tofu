@@ -1,5 +1,6 @@
 #include "engine.h"
 #include "configuration.h"
+#include "file.h"
 #include "log.h"
 
 #include <raylib/raylib.h>
@@ -8,6 +9,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+
+#define CONFIGURATION_FILE_NAME    "configuration.json"
 
 #define MAX_FPS_SAMPLES     256
 
@@ -27,9 +30,9 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 {
     strcpy(engine->base_path, base_path);
 
-    char filename[PATH_MAX];
+    char filename[PATH_FILE_MAX];
     strcpy(filename, base_path);
-    strcat(filename, "configuration.json");
+    strcat(filename, CONFIGURATION_FILE_NAME);
 
     Log_initialize();
 
@@ -38,17 +41,30 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 
     Log_configure(engine->configuration.debug);
 
-    Interpreter_Config_t interpreter_configuration;
-    interpreter_configuration.base_path = engine->base_path;
-    Interpreter_initialize(&engine->interpreter, &interpreter_configuration);
+    Interpreter_Config_t interpreter_configuration = {
+        .base_path = engine->base_path
+    };
+    bool result = Interpreter_initialize(&engine->interpreter, &interpreter_configuration);
+    if (!result) {
+        Log_write(LOG_LEVELS_ERROR, "Can't initialize interpreter!");
+        return false;
+    }
 
-    Display_Configuration_t display_configuration;
-    display_configuration.width = engine->configuration.width;
-    display_configuration.height = engine->configuration.height;
-    display_configuration.colors = engine->configuration.debug;
-    display_configuration.hide_cursor = engine->configuration.hide_cursor;
-    display_configuration.display_fps = engine->configuration.debug;
-    Display_initialize(&engine->display, &display_configuration, engine->configuration.title);
+    Display_Configuration_t display_configuration = {
+        .width = engine->configuration.width,
+        .height = engine->configuration.height,
+        .colors = engine->configuration.debug,
+        .fullscreen = engine->configuration.fullscreen,
+        .autofit = engine->configuration.autofit,
+        .hide_cursor = engine->configuration.hide_cursor,
+        .display_fps = engine->configuration.debug
+    };
+    result = Display_initialize(&engine->display, &display_configuration, engine->configuration.title);
+    if (!result) {
+        Log_write(LOG_LEVELS_ERROR, "Can't initialize display!");
+        Interpreter_terminate(&engine->interpreter);
+        return false;
+    }
 
     return true;
 }
@@ -60,11 +76,9 @@ void Engine_terminate(Engine_t *engine)
 }
 
 void Engine_run(Engine_t *engine)
-{   
-    Log_write(LOG_LEVELS_INFO, "Engine is now running");
-
+{
     const double seconds_per_update = 1.0 / (double)engine->configuration.fps;
-    Log_write(LOG_LEVELS_DEBUG, "Engine update timeslice is %.3fs", seconds_per_update);
+    Log_write(LOG_LEVELS_INFO, "Engine is nor running, timeslice is %.3fs", seconds_per_update);
 
     double previous = GetTime();
     double lag = 0.0;

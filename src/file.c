@@ -1,10 +1,10 @@
-#include "utils.h"
+#include "file.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-void resolve_path(const char *path, char *resolved)
+void file_resolve_path(char *resolved, const char *path)
 {
     realpath(path, resolved);
     size_t length = strlen(resolved);
@@ -13,7 +13,7 @@ void resolve_path(const char *path, char *resolved)
     }
 }
 
-char *load_file_as_string(const char *filename, const char *mode)
+char *file_load_as_string(const char *filename, const char *mode)
 {
     FILE *file = fopen(filename, mode);
     if (!file) {

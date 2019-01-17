@@ -8,7 +8,7 @@
 typedef struct _Configuration {
     char title[MAX_CONFIGURATION_TITLE_LENGTH];
     int width, height, depth;
-    bool fullscreen;
+    bool fullscreen;  // TODO: rename to "windowed"?
     bool autofit;
     int fps;
     bool hide_cursor;

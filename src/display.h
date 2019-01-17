@@ -8,6 +8,8 @@
 typedef struct _Display_Configuration_t {
     int width, height;
     int colors;
+    bool fullscreen;
+    bool autofit;
     bool hide_cursor;
     bool display_fps;
 } Display_Configuration_t;
@@ -18,11 +20,11 @@ typedef struct _Display_t {
     int window_width, window_height, window_scale;
 
     RenderTexture2D offscreen;
-    Rectangle a, b;
-    Vector2 c;
+    Rectangle offscreen_source, offscreen_destination;
+    Vector2 offscreen_origin;
 } Display_t;
 
-extern void Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title);
+extern bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title);
 extern bool Display_shouldClose(Display_t *display);
 extern void Display_renderBegin(Display_t *display, void callback(void));
 extern void Display_renderEnd(Display_t *display, void callback(void), const double fps, const double delta_time);

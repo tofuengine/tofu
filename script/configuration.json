@@ -1,5 +1,7 @@
 {
     "width": 320,
     "height": 240,
+    "fullscreen": false,
+    "autofit": false,
     "debug": true
 }
