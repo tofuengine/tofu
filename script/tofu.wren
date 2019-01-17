@@ -1,27 +1,59 @@
-import "main" for Main
+import "game" for Game
 
 class Tofu {
 
     static initialize() {
-        System.write("Tofu.initialize")
-        Main.initialize()
+        System.write(">>> Tofu.initialize")
+        __game = Game.new()
     }
 
     static handle(inputs) {
-        //System.write("B")
+        __game.handle(inputs)
     }
 
     static update(deltaTime) {
-        //System.write("C " + deltaTime.toString)
+        __game.update(deltaTime)
     }
 
     static render(ratio) {
-        //System.write("D  " + ratio.toString)
+        __game.render()
     }
 
     static terminate() {
-        Main.terminate()
-        System.write("Tofu.terminate")
+        System.write("<<< Tofu.terminate")
     }
 
 }
+/*
+import "game" for Game
+
+class XTofu {
+
+    construct new() {
+        _game = Game.new()
+    }
+
+    initialize() {
+        System.write(">>> Tofu.initialize")
+    }
+
+    handle(inputs) {
+        _game.handle(inputs)
+    }
+
+    update(deltaTime) {
+        _game.update(deltaTime)
+    }
+
+    render(ratio) {
+        _game.render()
+    }
+
+    terminate() {
+        System.write("<<< Tofu.terminate")
+    }
+
+}
+
+var Tofu = XTofu.new()
+*/

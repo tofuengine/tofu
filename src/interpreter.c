@@ -1,14 +1,30 @@
 #include "interpreter.h"
 
+#include "file.h"
 #include "log.h"
-#include "utils.h"
 
 #include <raylib/raylib.h>
 
 #include <limits.h>
 #include <string.h>
 
-#define MAIN_MODULE_NAME        "main"
+#define SCRIPT_EXTENSION        ".wren"
+
+#define MAIN_MODULE_NAME        "@root@"
+#define MAIN_MODULE_FILE        "tofu" SCRIPT_EXTENSION
+
+/***/
+
+static void draw_point(WrenVM* vm)
+{
+    int x = (int)wrenGetSlotDouble(vm, 1); 
+    int y = (int)wrenGetSlotDouble(vm, 2); 
+    int color = (int)wrenGetSlotDouble(vm, 3); 
+
+    DrawPixel(x, y, (Color){ color, color, color, 255 });
+}
+
+/***/
 
 static void* reallocate_function(void *ptr, size_t size)
 {
@@ -21,7 +37,13 @@ static void* reallocate_function(void *ptr, size_t size)
 
 static const char *resolve_module_function(WrenVM *vm, const char *importer, const char *name)
 {
-    char *resolved = reallocate_function(NULL, PATH_MAX);
+    Log_write(LOG_LEVELS_DEBUG, "resolving module '%s' for importer '%s'", name, importer);
+
+    if (strcmp(name, "meta") == 0 || strcmp(name, "random") == 0) { // Don't handle internal modules.
+        return name;
+    }
+
+    char *resolved = reallocate_function(NULL, PATH_FILE_MAX);
     if (strcmp(importer, MAIN_MODULE_NAME) == 0) { // For the main module, use the base-path.
         Interpreter_Config_t *configuration = (Interpreter_Config_t *)wrenGetUserData(vm);
         strcpy(resolved, configuration->base_path);
@@ -31,10 +53,20 @@ static const char *resolve_module_function(WrenVM *vm, const char *importer, con
         strncpy(resolved, importer, length);
     }
     strcat(resolved, name);
-    strcat(resolved, ".wren");
+    strcat(resolved, SCRIPT_EXTENSION);
 
-    Log_write(LOG_LEVELS_DEBUG, "loading module '%s' for importer '%s'", name, importer);
     return resolved;
+}
+
+static char *load_module_function(WrenVM *vm, const char *name)
+{
+    if (name[0] != '/') { // Not a path, return NULL to access default modules.
+        Log_write(LOG_LEVELS_DEBUG, "don't load module '%s', might be built-in", name);
+        return NULL;
+    }
+
+    Log_write(LOG_LEVELS_DEBUG, "loading module '%s'", name);
+    return file_load_as_string(name, "rt");
 }
 
 static void write_function(WrenVM *vm, const char *text)
@@ -42,28 +74,47 @@ static void write_function(WrenVM *vm, const char *text)
     Log_write(LOG_LEVELS_OTHER, text);
 }
 
-static char *load_module_function(WrenVM *vm, const char *name)
+static void error_function(WrenVM* vm, WrenErrorType type, const char *module, int line, const char *message)
 {
-    Log_write(LOG_LEVELS_DEBUG, "loading module '%s'", name);
-    return load_file_as_string(name, "rt");
+    const char *prefix = "";
+    switch (type) {
+        case WREN_ERROR_COMPILE: prefix = "COMPILE"; break;
+        case WREN_ERROR_RUNTIME: prefix = "RUNTIME"; break;
+        case WREN_ERROR_STACK_TRACE: prefix = "STACK_TRACE"; break;
+    }
+    Log_write(LOG_LEVELS_ERROR, "%s [%s@%d] %s", prefix, module, line, message);
 }
 
-bool Interpreter_initialize(Interpreter_t *interpreter, Interpreter_Config_t *configuration)
+static WrenForeignMethodFn bind_foreign_method_function(WrenVM* vm, const char *module, const char *className,
+    bool isStatic, const char *signature)
 {
-    memcpy(&interpreter->configuration, configuration, sizeof(Interpreter_Config_t));
+//    Log_write(LOG_LEVELS_OTHER, "%s %s %d %s", module, className, isStatic, signature);
+    if (strcmp(className, "Draw") == 0) {
+        if (isStatic && strcmp(signature, "point(_,_,_)") == 0) {
+            return draw_point;
+        }
+    }
+    return NULL;
+}
 
-    char module_filename[PATH_MAX];
+bool Interpreter_initialize(Interpreter_t *interpreter, const Interpreter_Config_t *configuration)
+{
+    interpreter->configuration = *configuration;
+
+    char module_filename[PATH_FILE_MAX];
     strcpy(module_filename, configuration->base_path);
-    strcat(module_filename, "tofu.wren");
+    strcat(module_filename, MAIN_MODULE_FILE);
 
-    WrenConfiguration config; 
-    wrenInitConfiguration(&config);
-    config.reallocateFn = reallocate_function;
-    config.writeFn = write_function;
-    config.resolveModuleFn = resolve_module_function;
-    config.loadModuleFn = load_module_function;
+    WrenConfiguration vm_configuration; 
+    wrenInitConfiguration(&vm_configuration);
+    vm_configuration.reallocateFn = reallocate_function;
+    vm_configuration.resolveModuleFn = resolve_module_function;
+    vm_configuration.loadModuleFn = load_module_function;
+    vm_configuration.bindForeignMethodFn = bind_foreign_method_function;
+    vm_configuration.writeFn = write_function;
+    vm_configuration.errorFn = error_function;
 
-    interpreter->vm = wrenNewVM(&config);
+    interpreter->vm = wrenNewVM(&vm_configuration);
     if (!interpreter->vm) {
         Log_write(LOG_LEVELS_ERROR, "Can't initialize Wren's VM!");
         return false;
@@ -71,7 +122,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, Interpreter_Config_t *co
 
     wrenSetUserData(interpreter->vm, &interpreter->configuration);
 
-    char *source = load_file_as_string(module_filename, "rt");
+    char *source = file_load_as_string(module_filename, "rt");
     if (!source) {
         Log_write(LOG_LEVELS_ERROR, "Can't read main module '%s'!", module_filename);
         wrenFreeVM(interpreter->vm);
@@ -85,7 +136,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, Interpreter_Config_t *co
         return false;
     }
 
-    free(source);
+    free(source); // Dispose the script data.
 
     wrenEnsureSlots(interpreter->vm, 1); 
     wrenGetVariable(interpreter->vm, MAIN_MODULE_NAME, "Tofu", 0); 

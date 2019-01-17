@@ -29,7 +29,7 @@ typedef struct _Interpreter_t {
     WrenHandle *handles[Handles_t_CountOf];
 } Interpreter_t;
 
-extern bool Interpreter_initialize(Interpreter_t *interpreter, Interpreter_Config_t *configuration);
+extern bool Interpreter_initialize(Interpreter_t *interpreter, const Interpreter_Config_t *configuration);
 extern void Interpreter_handle(Interpreter_t *interpreter);
 extern void Interpreter_update(Interpreter_t *interpreter, const double delta_time);
 extern void Interpreter_render(Interpreter_t *interpreter, const double ratio);
