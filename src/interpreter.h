@@ -8,11 +8,9 @@
 
 typedef enum _Handles_t {
     RECEIVER,
-    INITIALIZE,
     HANDLE,
     UPDATE,
     RENDER,
-    TERMINATE,
     Handles_t_CountOf
 } Handles_t;
 

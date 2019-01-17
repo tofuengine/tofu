@@ -138,19 +138,20 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const Interpreter_Config
 
     free(source); // Dispose the script data.
 
+    result = wrenInterpret(interpreter->vm, MAIN_MODULE_NAME, "var tofu = Tofu.new()");
+    if (result != WREN_RESULT_SUCCESS) {
+        Log_write(LOG_LEVELS_ERROR, "Can't create main class!");
+        wrenFreeVM(interpreter->vm);
+        return false;
+    }
+
     wrenEnsureSlots(interpreter->vm, 1); 
-    wrenGetVariable(interpreter->vm, MAIN_MODULE_NAME, "Tofu", 0); 
+    wrenGetVariable(interpreter->vm, MAIN_MODULE_NAME, "tofu", 0); 
     interpreter->handles[RECEIVER] = wrenGetSlotHandle(interpreter->vm, 0);
 
-    interpreter->handles[INITIALIZE] = wrenMakeCallHandle(interpreter->vm, "initialize()");
     interpreter->handles[HANDLE] = wrenMakeCallHandle(interpreter->vm, "handle(_)");
     interpreter->handles[UPDATE] = wrenMakeCallHandle(interpreter->vm, "update(_)");
     interpreter->handles[RENDER] = wrenMakeCallHandle(interpreter->vm, "render(_)");
-    interpreter->handles[TERMINATE] = wrenMakeCallHandle(interpreter->vm, "terminate()");
-
-    wrenEnsureSlots(interpreter->vm, 1); 
-    wrenSetSlotHandle(interpreter->vm, 0, interpreter->handles[RECEIVER]);
-    wrenCall(interpreter->vm, interpreter->handles[INITIALIZE]);
 
     return true;
 }
@@ -179,10 +180,6 @@ void Interpreter_render(Interpreter_t *interpreter, const double ratio)
 
 void Interpreter_terminate(Interpreter_t *interpreter)
 {
-    wrenEnsureSlots(interpreter->vm, 1); 
-    wrenSetSlotHandle(interpreter->vm, 0, interpreter->handles[RECEIVER]);
-    wrenCall(interpreter->vm, interpreter->handles[TERMINATE]);
-
     for (int i = 0; i < Handles_t_CountOf; ++i) {
         WrenHandle *handle = interpreter->handles[i];
         wrenReleaseHandle(interpreter->vm, handle);
