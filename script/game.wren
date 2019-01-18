@@ -1,7 +1,7 @@
 import "random" for Random
 
-import "lib/draw" for Draw
-import "lib/other" for Other
+import "./lib/draw" for Draw
+import "./lib/other" for Other
 
 class Game {
 

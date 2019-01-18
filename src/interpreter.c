@@ -35,38 +35,23 @@ static void* reallocate_function(void *ptr, size_t size)
     return realloc(ptr, size);
 }
 
-static const char *resolve_module_function(WrenVM *vm, const char *importer, const char *name)
-{
-    Log_write(LOG_LEVELS_DEBUG, "resolving module '%s' for importer '%s'", name, importer);
-
-    if (strcmp(name, "meta") == 0 || strcmp(name, "random") == 0) { // Don't handle internal modules.
-        return name;
-    }
-
-    char *resolved = reallocate_function(NULL, PATH_FILE_MAX);
-    if (strcmp(importer, MAIN_MODULE_NAME) == 0) { // For the main module, use the base-path.
-        Interpreter_Config_t *configuration = (Interpreter_Config_t *)wrenGetUserData(vm);
-        strcpy(resolved, configuration->base_path);
-    } else { // Otherwise, desume the path as relative to the importer.
-        char *separator = strrchr(importer, '/');
-        size_t length = separator - importer + 1; // Include the path-separator itself!
-        strncpy(resolved, importer, length);
-    }
-    strcat(resolved, name);
-    strcat(resolved, SCRIPT_EXTENSION);
-
-    return resolved;
-}
-
 static char *load_module_function(WrenVM *vm, const char *name)
 {
-    if (name[0] != '/') { // Not a path, return NULL to access default modules.
-        Log_write(LOG_LEVELS_DEBUG, "don't load module '%s', might be built-in", name);
+    // User-defined modules are specified as "relative" paths (where "./" indicates the current directory)
+    if (strncmp(name, "./", 2) != 0) {
+        Log_write(LOG_LEVELS_DEBUG, "loading built-in module '%s'", name);
         return NULL;
     }
 
-    Log_write(LOG_LEVELS_DEBUG, "loading module '%s'", name);
-    return file_load_as_string(name, "rt");
+    const Environment_t *environment = (const Environment_t *)wrenGetUserData(vm);
+
+    char pathfile[PATH_FILE_MAX]; // Build the absolute path.
+    strcpy(pathfile, environment->base_path);
+    strcat(pathfile, name + 2);
+    strcat(pathfile, SCRIPT_EXTENSION);
+
+    Log_write(LOG_LEVELS_DEBUG, "loading module '%s'", pathfile);
+    return file_load_as_string(pathfile, "rt");
 }
 
 static void write_function(WrenVM *vm, const char *text)
@@ -108,7 +93,6 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const Interpreter_Config
     WrenConfiguration vm_configuration; 
     wrenInitConfiguration(&vm_configuration);
     vm_configuration.reallocateFn = reallocate_function;
-    vm_configuration.resolveModuleFn = resolve_module_function;
     vm_configuration.loadModuleFn = load_module_function;
     vm_configuration.bindForeignMethodFn = bind_foreign_method_function;
     vm_configuration.writeFn = write_function;

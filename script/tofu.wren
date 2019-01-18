@@ -1,4 +1,4 @@
-import "game" for Game
+import "./game" for Game
 
 class Tofu {
 
