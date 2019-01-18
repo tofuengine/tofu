@@ -56,7 +56,7 @@ static char *load_module_function(WrenVM *vm, const char *name)
 
 static void write_function(WrenVM *vm, const char *text)
 {
-    Log_write(LOG_LEVELS_OTHER, text);
+    Log_write(LOG_LEVELS_TRACE, text);
 }
 
 static void error_function(WrenVM* vm, WrenErrorType type, const char *module, int line, const char *message)
@@ -73,7 +73,7 @@ static void error_function(WrenVM* vm, WrenErrorType type, const char *module, i
 static WrenForeignMethodFn bind_foreign_method_function(WrenVM* vm, const char *module, const char *className,
     bool isStatic, const char *signature)
 {
-//    Log_write(LOG_LEVELS_OTHER, "%s %s %d %s", module, className, isStatic, signature);
+//    Log_write(LOG_LEVELS_TRACE, "%s %s %d %s", module, className, isStatic, signature);
     if (strcmp(className, "Draw") == 0) {
         if (isStatic && strcmp(signature, "point(_,_,_)") == 0) {
             return draw_point;
@@ -82,12 +82,12 @@ static WrenForeignMethodFn bind_foreign_method_function(WrenVM* vm, const char *
     return NULL;
 }
 
-bool Interpreter_initialize(Interpreter_t *interpreter, const Interpreter_Config_t *configuration)
+bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *environment)
 {
-    interpreter->configuration = *configuration;
+    interpreter->environment = environment;
 
     char module_filename[PATH_FILE_MAX];
-    strcpy(module_filename, configuration->base_path);
+    strcpy(module_filename, environment->base_path);
     strcat(module_filename, MAIN_MODULE_FILE);
 
     WrenConfiguration vm_configuration; 
@@ -104,7 +104,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const Interpreter_Config
         return false;
     }
 
-    wrenSetUserData(interpreter->vm, &interpreter->configuration);
+    wrenSetUserData(interpreter->vm, (void *)environment); // HACK: we discard the const qualifier :(
 
     char *source = file_load_as_string(module_filename, "rt");
     if (!source) {

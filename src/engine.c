@@ -28,7 +28,8 @@ static double update_fps(const double elapsed) {
 
 bool Engine_initialize(Engine_t *engine, const char *base_path)
 {
-    strcpy(engine->base_path, base_path);
+    strcpy(engine->environment.base_path, base_path);
+    engine->environment.should_close = false;
 
     char filename[PATH_FILE_MAX];
     strcpy(filename, base_path);
@@ -41,10 +42,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 
     Log_configure(engine->configuration.debug);
 
-    Interpreter_Config_t interpreter_configuration = {
-        .base_path = engine->base_path
-    };
-    bool result = Interpreter_initialize(&engine->interpreter, &interpreter_configuration);
+    bool result = Interpreter_initialize(&engine->interpreter, &engine->environment);
     if (!result) {
         Log_write(LOG_LEVELS_ERROR, "Can't initialize interpreter!");
         return false;
