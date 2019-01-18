@@ -6,13 +6,15 @@
 
 #include "configuration.h"
 #include "display.h"
+#include "environment.h"
 #include "interpreter.h"
 
 typedef struct _Engine_t {
 
-    char base_path[PATH_MAX];
+    Environment_t environment;
 
     Configuration_t configuration;
+
     Display_t display;
     Interpreter_t interpreter;
 
