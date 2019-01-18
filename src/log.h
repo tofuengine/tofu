@@ -4,11 +4,12 @@
 #include <stdbool.h>
 
 typedef enum _Log_Levels_t {
-    LOG_LEVELS_INFO = 1,
-    LOG_LEVELS_WARNING = 2,
-    LOG_LEVELS_ERROR = 4,
-    LOG_LEVELS_DEBUG = 8,
-    LOG_LEVELS_OTHER = 16
+    LOG_LEVELS_TRACE,
+    LOG_LEVELS_DEBUG,
+    LOG_LEVELS_INFO,
+    LOG_LEVELS_WARNING,
+    LOG_LEVELS_ERROR,
+    LOG_LEVELS_FATAL
 } Log_Levels_t;
 
 extern void Log_initialize();

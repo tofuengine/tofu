@@ -45,5 +45,15 @@ void Log_write(Log_Levels_t level, const char *text, ...)
     vsnprintf(message, MAX_LOG_MESSAGE_LENGTH, text, args);
     va_end(args);
 
-    TraceLog((int)level, message);
+    int log_type;
+    switch (level) {
+        case LOG_LEVELS_TRACE: log_type = LOG_DEBUG; break;
+        case LOG_LEVELS_DEBUG: log_type = LOG_DEBUG; break;
+        case LOG_LEVELS_INFO: log_type = LOG_INFO; break;
+        case LOG_LEVELS_WARNING: log_type = LOG_WARNING; break;
+        case LOG_LEVELS_ERROR: log_type = LOG_ERROR; break;
+        case LOG_LEVELS_FATAL: log_type = LOG_ERROR; break;
+    }
+
+    TraceLog(log_type, message);
 }
