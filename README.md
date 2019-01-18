@@ -23,3 +23,8 @@ Guess what? Yup, that's another game engine/framework.
 ## TODOs
 
 * Implement a "smart" string library (not too distant from C strings).
+
+## Inspirations
+
+* [DOME Engine](https://github.com/avivbeeri/dome/blob/master/src/vm.c)
+* [LOVE2D](https://love2d.org/)
