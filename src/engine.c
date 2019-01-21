@@ -28,7 +28,8 @@ static double update_fps(const double elapsed) {
 
 bool Engine_initialize(Engine_t *engine, const char *base_path)
 {
-    strcpy(engine->base_path, base_path);
+    strcpy(engine->environment.base_path, base_path);
+    engine->environment.should_close = false;
 
     char filename[PATH_FILE_MAX];
     strcpy(filename, base_path);
@@ -41,10 +42,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 
     Log_configure(engine->configuration.debug);
 
-    Interpreter_Config_t interpreter_configuration = {
-        .base_path = engine->base_path
-    };
-    bool result = Interpreter_initialize(&engine->interpreter, &interpreter_configuration);
+    bool result = Interpreter_initialize(&engine->interpreter, &engine->environment);
     if (!result) {
         Log_write(LOG_LEVELS_ERROR, "Can't initialize interpreter!");
         return false;
@@ -75,15 +73,20 @@ void Engine_terminate(Engine_t *engine)
     Interpreter_terminate(&engine->interpreter);
 }
 
+bool Engine_isRunning(Engine_t *engine)
+{
+    return !engine->environment.should_close && !Display_shouldClose(&engine->display);
+}
+
 void Engine_run(Engine_t *engine)
 {
-    const double seconds_per_update = 1.0 / (double)engine->configuration.fps;
-    Log_write(LOG_LEVELS_INFO, "Engine is nor running, timeslice is %.3fs", seconds_per_update);
+    const double delta_time = 1.0 / (double)engine->configuration.fps;
+    Log_write(LOG_LEVELS_INFO, "Engine is nor running, delta timeslice is %.3fs", delta_time);
 
     double previous = GetTime();
     double lag = 0.0;
 
-    while (!Display_shouldClose(&engine->display)) {
+    while (Engine_isRunning(engine)) {
         double current = GetTime();
         double elapsed = current - previous;
         previous = current;
@@ -93,13 +96,13 @@ void Engine_run(Engine_t *engine)
 
         Interpreter_handle(&engine->interpreter);
 
-        while (lag >= seconds_per_update) {
-            Interpreter_update(&engine->interpreter, seconds_per_update);
-            lag -= seconds_per_update;
+        while (lag >= delta_time) {
+            Interpreter_update(&engine->interpreter, delta_time);
+            lag -= delta_time;
         }
 
         Display_renderBegin(&engine->display, NULL);
-            Interpreter_render(&engine->interpreter, lag / seconds_per_update);
-        Display_renderEnd(&engine->display, NULL, fps, seconds_per_update);
+            Interpreter_render(&engine->interpreter, lag / delta_time);
+        Display_renderEnd(&engine->display, NULL, fps, delta_time);
     }
 }

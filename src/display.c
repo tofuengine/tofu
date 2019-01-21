@@ -47,7 +47,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
 
     SetWindowPosition(x, y);
     SetWindowSize(display->window_width, display->window_height);
-    ShowWindow();
+    UnhideWindow();
     if (configuration->fullscreen) {
         ToggleFullscreen();
     }
@@ -76,6 +76,7 @@ void Display_renderBegin(Display_t *display, void callback(void))
         if (callback) {
             callback();
         }
+        // BeginShaderMode()
 }
 
 void Display_renderEnd(Display_t *display, void callback(void), const double fps, const double delta_time)

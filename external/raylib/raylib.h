@@ -139,6 +139,7 @@
 // deprecated raylib implementation of these functions
 #define FormatText  TextFormat
 #define SubText     TextSubtext
+#define ShowWindow  UnhideWindow
 
 //----------------------------------------------------------------------------------
 // Structures Definition
@@ -421,13 +422,15 @@ typedef enum {
 } ConfigFlag;
 
 // Trace log type
-// NOTE: Used for bit masks
 typedef enum {
-    LOG_INFO            = 1,
-    LOG_WARNING         = 2,
-    LOG_ERROR           = 4,
-    LOG_DEBUG           = 8,
-    LOG_OTHER           = 16
+    LOG_ALL, // Display all logs
+    LOG_TRACE,
+    LOG_DEBUG,
+    LOG_INFO,
+    LOG_WARNING,
+    LOG_ERROR,
+    LOG_FATAL,
+    LOG_NONE // Disable logging
 } TraceLogType;
 
 // Keyboard keys
@@ -817,7 +820,7 @@ typedef enum {
 } NPatchType;
 
 // Callbacks to be implemented by users
-typedef void (*TraceLogCallback)(int msgType, const char *text, va_list args);
+typedef void (*TraceLogCallback)(int logType, const char *text, va_list args);
 
 #if defined(__cplusplus)
 extern "C" {            // Prevents name mangling of functions
@@ -840,7 +843,7 @@ RLAPI bool IsWindowReady(void);                                   // Check if wi
 RLAPI bool IsWindowMinimized(void);                               // Check if window has been minimized (or lost focus)
 RLAPI bool IsWindowHidden(void);                                  // Check if window is currently hidden
 RLAPI void ToggleFullscreen(void);                                // Toggle fullscreen mode (only PLATFORM_DESKTOP)
-RLAPI void ShowWindow(void);                                      // Show the window
+RLAPI void UnhideWindow(void);                                    // Show the window
 RLAPI void HideWindow(void);                                      // Hide the window
 RLAPI void SetWindowIcon(Image image);                            // Set icon for window (only PLATFORM_DESKTOP)
 RLAPI void SetWindowTitle(const char *title);                     // Set title for window (only PLATFORM_DESKTOP)
@@ -897,9 +900,10 @@ RLAPI Color Fade(Color color, float alpha);                       // Color fade-
 
 // Misc. functions
 RLAPI void SetConfigFlags(unsigned char flags);                   // Setup window configuration flags (view FLAGS)
-RLAPI void SetTraceLog(unsigned char types);                      // Enable trace log message types (bit flags based)
+RLAPI void SetTraceLogLevel(int logType);                // Set the current threshold (minimum) log level.
+RLAPI void SetTraceLogExit(int logType);                 // Set the exit threshold (minimum) log level.
 RLAPI void SetTraceLogCallback(TraceLogCallback callback);        // Set a trace log callback to enable custom logging bypassing raylib's one
-RLAPI void TraceLog(int logType, const char *text, ...);          // Show trace log messages (LOG_INFO, LOG_WARNING, LOG_ERROR, LOG_DEBUG)
+RLAPI void TraceLog(int logType, const char *text, ...); // Show trace log messages (LOG_INFO, LOG_WARNING, LOG_ERROR, LOG_DEBUG)
 RLAPI void TakeScreenshot(const char *fileName);                  // Takes a screenshot of current screen (saved a .png)
 RLAPI int GetRandomValue(int min, int max);                       // Returns a random value between min and max (both included)
 
