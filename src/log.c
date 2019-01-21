@@ -9,18 +9,8 @@
 
 static void custom_log_callback(int msg_type, const char *text, va_list args)
 {
-    const char *prefix = "";
-    switch (msg_type) {
-        case LOG_TRACE: prefix = "[TRACE] "; break;
-        case LOG_DEBUG: prefix = "[DEBUG] "; break;
-        case LOG_INFO: prefix = "[INFO ] "; break;
-        case LOG_WARNING: prefix = "[WARN ] "; break;
-        case LOG_ERROR: prefix = "[ERROR] "; break;
-        case LOG_FATAL: prefix = "[FATAL] "; break;
-        default: break;
-    }
-
-    printf("%s", prefix);
+    static const char prefix[] = { 'T', 'D', 'I', 'W', 'E', 'F' };
+    printf("[%c] ", prefix[msg_type]);
     vprintf(text, args);
     printf("\n");
 }
