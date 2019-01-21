@@ -2,8 +2,8 @@
 
 #include "file.h"
 #include "log.h"
-
-#include <raylib/raylib.h>
+#include "memory.h"
+#include "modules.h"
 
 #include <limits.h>
 #include <string.h>
@@ -13,33 +13,23 @@
 #define MAIN_MODULE_NAME        "@root@"
 #define MAIN_MODULE_FILE        "tofu" SCRIPT_EXTENSION
 
-/***/
-
-static void draw_point(WrenVM* vm)
-{
-    int x = (int)wrenGetSlotDouble(vm, 1); 
-    int y = (int)wrenGetSlotDouble(vm, 2); 
-    int color = (int)wrenGetSlotDouble(vm, 3); 
-
-    DrawPixel(x, y, (Color){ color, color, color, 255 });
-}
-
-/***/
-
 static void* reallocate_function(void *ptr, size_t size)
 {
-    if (size == 0) {
-        free(ptr);
-        return NULL;
-    }
-    return realloc(ptr, size);
+    return Memory_realloc(ptr, size);
 }
 
 static char *load_module_function(WrenVM *vm, const char *name)
 {
     // User-defined modules are specified as "relative" paths (where "./" indicates the current directory)
     if (strncmp(name, "./", 2) != 0) {
-        Log_write(LOG_LEVELS_DEBUG, "loading built-in module '%s'", name);
+        Log_write(LOG_LEVELS_INFO, "loading built-in module '%s'", name);
+
+        for (int i = 0; _modules[i].module != NULL; ++i) {
+            const Module_Entry_t *entry = &_modules[i];
+            if (strcmp(name, entry->module) == 0) {
+                return Memory_clone(entry->script, strlen(entry->script) + 1);
+            }
+        }
         return NULL;
     }
 
@@ -50,7 +40,7 @@ static char *load_module_function(WrenVM *vm, const char *name)
     strcat(pathfile, name + 2);
     strcat(pathfile, SCRIPT_EXTENSION);
 
-    Log_write(LOG_LEVELS_DEBUG, "loading module '%s'", pathfile);
+    Log_write(LOG_LEVELS_INFO, "loading module '%s'", pathfile);
     return file_load_as_string(pathfile, "rt");
 }
 
@@ -66,18 +56,37 @@ static void error_function(WrenVM* vm, WrenErrorType type, const char *module, i
     } else if (type == WREN_ERROR_RUNTIME) {
         Log_write(LOG_LEVELS_ERROR, "Runtime error: %s", message);
     } else if (type == WREN_ERROR_STACK_TRACE) {
-        Log_write(LOG_LEVELS_ERROR, "  [%s@%d] %s", module, line, message);
+        Log_write(LOG_LEVELS_ERROR, "  [%s@%d] in %s", module, line, message);
     }
 }
 
-static WrenForeignMethodFn bind_foreign_method_function(WrenVM* vm, const char *module, const char *className,
-    bool isStatic, const char *signature)
+WrenForeignClassMethods bind_foreign_class_function(WrenVM* vm, const char *module, const char *className)
+{
+//    Log_write(LOG_LEVELS_TRACE, "%s %s %d %s", module, className);
+    for (int i = 0; _classes[i].module != NULL; ++i) {
+        const Class_Entry_t *entry = &_classes[i];
+        if ((strcmp(module, entry->module) == 0) &&
+            (strcmp(className, entry->className) == 0)) {
+                return (WrenForeignClassMethods){
+                        .allocate = entry->allocate,
+                        .finalize = entry->finalize
+                    };
+            }
+    }
+    return (WrenForeignClassMethods){};
+}
+
+WrenForeignMethodFn bind_foreign_method_function(WrenVM *vm, const char *module, const char* className, bool isStatic, const char *signature)
 {
 //    Log_write(LOG_LEVELS_TRACE, "%s %s %d %s", module, className, isStatic, signature);
-    if (strcmp(className, "Draw") == 0) {
-        if (isStatic && strcmp(signature, "point(_,_,_)") == 0) {
-            return draw_point;
-        }
+    for (int i = 0; _methods[i].module != NULL; ++i) {
+        const Method_Entry_t *entry = &_methods[i];
+        if ((strcmp(module, entry->module) == 0) &&
+            (strcmp(className, entry->className) == 0) &&
+            (isStatic == entry->isStatic) &&
+            (strcmp(signature, entry->signature) == 0)) {
+                return entry->method;
+            }
     }
     return NULL;
 }
@@ -94,13 +103,14 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *env
     wrenInitConfiguration(&vm_configuration);
     vm_configuration.reallocateFn = reallocate_function;
     vm_configuration.loadModuleFn = load_module_function;
+    vm_configuration.bindForeignClassFn = bind_foreign_class_function;
     vm_configuration.bindForeignMethodFn = bind_foreign_method_function;
     vm_configuration.writeFn = write_function;
     vm_configuration.errorFn = error_function;
 
     interpreter->vm = wrenNewVM(&vm_configuration);
     if (!interpreter->vm) {
-        Log_write(LOG_LEVELS_ERROR, "Can't initialize Wren's VM!");
+        Log_write(LOG_LEVELS_FATAL, "Can't initialize Wren's VM!");
         return false;
     }
 
@@ -108,14 +118,14 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *env
 
     char *source = file_load_as_string(module_filename, "rt");
     if (!source) {
-        Log_write(LOG_LEVELS_ERROR, "Can't read main module '%s'!", module_filename);
+        Log_write(LOG_LEVELS_FATAL, "Can't read main module '%s'!", module_filename);
         wrenFreeVM(interpreter->vm);
         return false;
     }
 
     WrenInterpretResult result = wrenInterpret(interpreter->vm, MAIN_MODULE_NAME, source);
     if (result != WREN_RESULT_SUCCESS) {
-        Log_write(LOG_LEVELS_ERROR, "Can't interpret main module!");
+        Log_write(LOG_LEVELS_FATAL, "Can't interpret main module!");
         wrenFreeVM(interpreter->vm);
         return false;
     }
@@ -124,7 +134,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *env
 
     result = wrenInterpret(interpreter->vm, MAIN_MODULE_NAME, "var tofu = Tofu.new()");
     if (result != WREN_RESULT_SUCCESS) {
-        Log_write(LOG_LEVELS_ERROR, "Can't create main class!");
+        Log_write(LOG_LEVELS_FATAL, "Can't create main class!");
         wrenFreeVM(interpreter->vm);
         return false;
     }

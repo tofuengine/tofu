@@ -1,6 +1,6 @@
 import "random" for Random
 
-import "./lib/draw" for Draw
+import "graphics" for Canvas
 import "./lib/other" for Other
 
 class Game {
@@ -43,7 +43,7 @@ class Game {
     render(ratio) {
         var x = _x //__random.int() % 320
         var y = _time.sin * 64 + 120 //__random.int() % 240
-        Draw.point(x, y, _color.floor)
+        Canvas.point(x, y, _color.floor)
     }
 
 }
