@@ -2,12 +2,7 @@
 
 #include <raylib/raylib.h>
 
-#define GRAPHICS_MODULE \
-    "foreign class Canvas {\n" \
-    "\n" \
-    "    foreign static point(x, y, color)\n" \
-    "\n" \
-    "}\n"
+#include "modules/graphics_wren.inc"
 
 static void graphics_canvas_point(WrenVM* vm)
 {
@@ -18,9 +13,19 @@ static void graphics_canvas_point(WrenVM* vm)
     DrawPixel(x, y, (Color){ color, color, color, 255 });
 }
 
+static void graphics_canvas_palette(WrenVM* vm)
+{
+    int count = wrenGetListCount(vm, 0);
+    for (int i = 0; i < count; ++i) {
+        wrenGetListElement(vm, 0, i, 1);
+        const char *hex = wrenGetSlotString(vm, 1);
+        // TODO: pack the colors and send to the shader.
+    }
+}
+
 const Module_Entry_t _modules[] = {
 //  { "module", NULL }
-    { "graphics", GRAPHICS_MODULE },
+    { "graphics", graphics_wren },
     { NULL, NULL }
 };
 const Class_Entry_t _classes[] = {
@@ -30,5 +35,6 @@ const Class_Entry_t _classes[] = {
 const Method_Entry_t _methods[] = {
 //  { "module", "className", true, "update()", NULL }
     { "graphics", "Canvas", true, "point(_,_,_)", graphics_canvas_point },
+    { "graphics", "Canvas", true, "palette(_)", graphics_canvas_palette },
     { NULL, NULL, false, NULL, NULL }
 };

@@ -76,6 +76,7 @@ void Display_renderBegin(Display_t *display, void callback(void))
         if (callback) {
             callback();
         }
+        // BeginShaderMode()
 }
 
 void Display_renderEnd(Display_t *display, void callback(void), const double fps, const double delta_time)
