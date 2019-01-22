@@ -74,9 +74,9 @@ static void graphics_canvas_sprite(WrenVM *vm)
         return;
     }
 
-    Rectangle sourceRec = { sprite_id * bank->cell_width, 0.0f, (float)bank->atlas.width, (float)bank->atlas.height };
+    Rectangle sourceRec = { sprite_id * bank->cell_width, 0.0f, (float)bank->cell_width, (float)bank->cell_height };
     Rectangle destRec = { x, y, (float)bank->cell_width * scale_x, (float)bank->cell_height * scale_y };
-    Vector2 origin = { 0.0f, 0.0f };
+    Vector2 origin = { bank->cell_width / 2.0f, bank->cell_height / 2.0f };
 
     DrawTexturePro(bank->atlas, sourceRec, destRec, origin, (float)rotation, (Color){ 255, 255, 255, 255 });
 }
