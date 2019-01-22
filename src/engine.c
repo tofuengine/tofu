@@ -42,12 +42,6 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 
     Log_configure(engine->configuration.debug);
 
-    bool result = Interpreter_initialize(&engine->interpreter, &engine->environment);
-    if (!result) {
-        Log_write(LOG_LEVELS_ERROR, "Can't initialize interpreter!");
-        return false;
-    }
-
     Display_Configuration_t display_configuration = {
         .width = engine->configuration.width,
         .height = engine->configuration.height,
@@ -57,10 +51,16 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
         .hide_cursor = engine->configuration.hide_cursor,
         .display_fps = engine->configuration.debug
     };
-    result = Display_initialize(&engine->display, &display_configuration, engine->configuration.title);
+    bool result = Display_initialize(&engine->display, &display_configuration, engine->configuration.title);
     if (!result) {
         Log_write(LOG_LEVELS_ERROR, "Can't initialize display!");
-        Interpreter_terminate(&engine->interpreter);
+        return false;
+    }
+
+    result = Interpreter_initialize(&engine->interpreter, &engine->environment);
+    if (!result) {
+        Log_write(LOG_LEVELS_ERROR, "Can't initialize interpreter!");
+        Display_terminate(&engine->display);
         return false;
     }
 
