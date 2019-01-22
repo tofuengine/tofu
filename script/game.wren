@@ -12,6 +12,9 @@ class Game {
         _speedX = 16.0
         _color = 0
         _colorSpeed = 64.0
+
+        Canvas.palette([ 0, 1, 2, 3, 4, 5, 6, 7 ])
+        Canvas.bank(0, "./assets/sheet.png", 16, 16)
     }
 
     handle(inputs) {
@@ -44,6 +47,8 @@ class Game {
         var x = _x //__random.int() % 320
         var y = _time.sin * 64 + 120 //__random.int() % 240
         Canvas.point(x, y, _color.floor)
+
+        Canvas.sprite(0, 0, x, y, 0.0, 1.0, 1.0)
     }
 
 }
