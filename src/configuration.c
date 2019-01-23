@@ -15,7 +15,7 @@
 
 #define SCREEN_WIDTH    320
 #define SCREEN_HEIGHT   240
-#define WINDOW_TITLE    ".: TOFU :."
+#define WINDOW_TITLE    ".: Tofu Engine :."
 
 static void parse_pair(Configuration_t *configuration, const char *key, const char *value, int type)
 {

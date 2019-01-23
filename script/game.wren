@@ -5,6 +5,8 @@ import "events" for Input
 
 import "./lib/bunny" for Bunny
 
+var KEY_SPACE = 32
+var KEY_Q = 81
 var LITTER_SIZE = 500
 
 class Game {
@@ -18,11 +20,11 @@ class Game {
     }
 
     input() {
-        if (Input.isKeyPressed(32)) {
+        if (Input.isKeyPressed(KEY_SPACE)) {
             for (i in 1 .. LITTER_SIZE) {
                 _bunnies.insert(-1, Bunny.new())
             }
-        } else if (Input.isKeyPressed(81)) {
+        } else if (Input.isKeyPressed(KEY_Q)) {
             _bunnies.clear()
         }
     }
