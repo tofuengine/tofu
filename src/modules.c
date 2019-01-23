@@ -7,8 +7,23 @@
 #include "log.h"
 
 #include "modules/graphics_wren.inc"
+#include "modules/events_wren.inc"
+
+#define UNUSED(x)       (void)(x)
 
 #define SLOT_AUX        0
+
+static void graphics_canvas_width(WrenVM *vm)
+{
+    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+    wrenSetSlotDouble(vm, 0, environment->graphics.width);
+}
+
+static void graphics_canvas_height(WrenVM *vm)
+{
+    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+    wrenSetSlotDouble(vm, 0, environment->graphics.height);
+}
 
 static void graphics_canvas_point(WrenVM *vm)
 {
@@ -81,9 +96,40 @@ static void graphics_canvas_sprite(WrenVM *vm)
     DrawTexturePro(bank->atlas, sourceRec, destRec, origin, (float)rotation, (Color){ 255, 255, 255, 255 });
 }
 
+static void graphics_canvas_text(WrenVM *vm) // foreign static text(font_id, text, color, x, y, r, sx, sy)
+{
+    int font_id = (int)wrenGetSlotDouble(vm, 1);
+    const char *text = wrenGetSlotString(vm, 2);
+    int x = (int)wrenGetSlotDouble(vm, 3);
+    int y = (int)wrenGetSlotDouble(vm, 4);
+    int color = (int)wrenGetSlotDouble(vm, 5);
+    int size = (int)wrenGetSlotDouble(vm, 6);
+    // const char *align = wrenGetSlotString(vm, 7);
+
+    UNUSED(font_id);
+    // UNUSED(align);
+
+    DrawText(text, x, y, size, (Color){ color, color, color, 255 });
+}
+
+static void events_input_iskeydown(WrenVM *vm)
+{
+    int key = (int)wrenGetSlotDouble(vm, 1);
+    bool is_down = IsKeyDown(key);
+    wrenSetSlotBool(vm, 0, is_down == true);
+}
+
+static void events_input_iskeypressed(WrenVM *vm)
+{
+    int key = (int)wrenGetSlotDouble(vm, 1);
+    bool is_down = IsKeyPressed(key);
+    wrenSetSlotBool(vm, 0, is_down == true);
+}
+
 const Module_Entry_t _modules[] = {
 //  { "module", NULL }
     { "graphics", graphics_wren },
+    { "events", events_wren },
     { NULL, NULL }
 };
 const Class_Entry_t _classes[] = {
@@ -92,9 +138,14 @@ const Class_Entry_t _classes[] = {
 };
 const Method_Entry_t _methods[] = {
 //  { "module", "className", true, "update()", NULL }
+    { "graphics", "Canvas", true, "width", graphics_canvas_width },
+    { "graphics", "Canvas", true, "height", graphics_canvas_height },
     { "graphics", "Canvas", true, "point(_,_,_)", graphics_canvas_point },
     { "graphics", "Canvas", true, "palette(_)", graphics_canvas_palette },
     { "graphics", "Canvas", true, "bank(_,_,_,_)", graphics_canvas_bank },
     { "graphics", "Canvas", true, "sprite(_,_,_,_,_,_,_)", graphics_canvas_sprite },
+    { "graphics", "Canvas", true, "text(_,_,_,_,_,_)", graphics_canvas_text },
+    { "events", "Input", true, "isKeyPressed(_)", events_input_iskeypressed },
+    { "events", "Input", true, "isKeyDown(_)", events_input_iskeydown },
     { NULL, NULL, false, NULL, NULL }
 };

@@ -19,6 +19,9 @@
 
 static void parse_pair(Configuration_t *configuration, const char *key, const char *value, int type)
 {
+    if (strcmp(key, "title") == 0) {
+        strncpy(configuration->title, value, MAX_CONFIGURATION_TITLE_LENGTH);
+    } else
     if (strcmp(key, "width") == 0) {
         configuration->width = (int)strtod(value, NULL);
     } else

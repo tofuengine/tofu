@@ -42,6 +42,11 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 
     Log_configure(engine->configuration.debug);
 
+    engine->environment.graphics = (Graphics_t){
+        .width = engine->configuration.width,
+        .height = engine->configuration.height
+    };
+
     Display_Configuration_t display_configuration = {
         .width = engine->configuration.width,
         .height = engine->configuration.height,
@@ -94,7 +99,7 @@ void Engine_run(Engine_t *engine)
 
         double fps = update_fps(elapsed);
 
-        Interpreter_handle(&engine->interpreter);
+        Interpreter_input(&engine->interpreter);
 
         while (lag >= delta_time) {
             Interpreter_update(&engine->interpreter, delta_time);

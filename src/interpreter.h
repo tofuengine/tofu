@@ -10,7 +10,7 @@
 
 typedef enum _Handles_t {
     RECEIVER,
-    HANDLE,
+    INPUT,
     UPDATE,
     RENDER,
     Handles_t_CountOf
@@ -24,7 +24,7 @@ typedef struct _Interpreter_t {
 } Interpreter_t;
 
 extern bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *environment);
-extern void Interpreter_handle(Interpreter_t *interpreter);
+extern void Interpreter_input(Interpreter_t *interpreter);
 extern void Interpreter_update(Interpreter_t *interpreter, const double delta_time);
 extern void Interpreter_render(Interpreter_t *interpreter, const double ratio);
 extern void Interpreter_terminate(Interpreter_t *interpreter);

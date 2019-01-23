@@ -2,7 +2,8 @@ TARGET=tofu
 
 COMPILER=cc
 CWARNINGS=-Wall -Wextra -Werror -Wno-unused-parameter
-CFLAGS=-O0 -DDEBUG -g -D_DEFAULT_SOURCE -std=c99 -Iexternal
+#CFLAGS=-O0 -DDEBUG -g -D_DEFAULT_SOURCE -std=c99 -Iexternal
+CFLAGS=-O3 -g -D_DEFAULT_SOURCE -std=c99 -Iexternal
 # -O3
 
 LINKER=cc

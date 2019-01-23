@@ -143,18 +143,18 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *env
     wrenGetVariable(interpreter->vm, MAIN_MODULE_NAME, "tofu", 0); 
     interpreter->handles[RECEIVER] = wrenGetSlotHandle(interpreter->vm, 0);
 
-    interpreter->handles[HANDLE] = wrenMakeCallHandle(interpreter->vm, "handle(_)");
+    interpreter->handles[INPUT] = wrenMakeCallHandle(interpreter->vm, "input()");
     interpreter->handles[UPDATE] = wrenMakeCallHandle(interpreter->vm, "update(_)");
     interpreter->handles[RENDER] = wrenMakeCallHandle(interpreter->vm, "render(_)");
 
     return true;
 }
 
-void Interpreter_handle(Interpreter_t *interpreter)
+void Interpreter_input(Interpreter_t *interpreter)
 {
     wrenEnsureSlots(interpreter->vm, 1); 
     wrenSetSlotHandle(interpreter->vm, 0, interpreter->handles[RECEIVER]);
-    wrenCall(interpreter->vm, interpreter->handles[HANDLE]);
+    wrenCall(interpreter->vm, interpreter->handles[INPUT]);
 }
 
 void Interpreter_update(Interpreter_t *interpreter, const double delta_time)
