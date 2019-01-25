@@ -1,13 +1,14 @@
 import "random" for Random
 
 import "graphics" for Canvas
-import "events" for Input
+import "events" for Environment, Input
 
 import "./lib/bunny" for Bunny
 
 var KEY_SPACE = 32
 var KEY_Q = 81
 var LITTER_SIZE = 500
+var MAX_BUNNIES = 32768
 
 class Game {
 
@@ -23,6 +24,9 @@ class Game {
         if (Input.isKeyPressed(KEY_SPACE)) {
             for (i in 1 .. LITTER_SIZE) {
                 _bunnies.insert(-1, Bunny.new())
+            }
+            if (_bunnies.count >= MAX_BUNNIES) {
+                Environment.quit()
             }
         } else if (Input.isKeyPressed(KEY_Q)) {
             _bunnies.clear()
