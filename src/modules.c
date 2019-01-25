@@ -126,6 +126,12 @@ static void events_input_iskeypressed(WrenVM *vm)
     wrenSetSlotBool(vm, 0, is_down == true);
 }
 
+static void events_environment_quit(WrenVM *vm)
+{
+    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+    environment->should_close = true;
+}
+
 const Module_Entry_t _modules[] = {
 //  { "module", NULL }
     { "graphics", graphics_wren },
@@ -147,5 +153,6 @@ const Method_Entry_t _methods[] = {
     { "graphics", "Canvas", true, "text(_,_,_,_,_,_)", graphics_canvas_text },
     { "events", "Input", true, "isKeyPressed(_)", events_input_iskeypressed },
     { "events", "Input", true, "isKeyDown(_)", events_input_iskeydown },
+    { "events", "Environment", true, "quit()", events_environment_quit },
     { NULL, NULL, false, NULL, NULL }
 };
