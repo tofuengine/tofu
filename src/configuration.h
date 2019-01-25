@@ -12,6 +12,7 @@ typedef struct _Configuration {
     bool autofit;
     int fps;
     bool hide_cursor;
+    bool exit_key_enabled;
     bool debug;
 } Configuration_t;
 

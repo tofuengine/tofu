@@ -40,6 +40,8 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
     Configuration_initialize(&engine->configuration);
     Configuration_load(&engine->configuration, filename);
 
+    SetExitKey(engine->configuration.exit_key_enabled ? KEY_ESCAPE : -1);
+
     Log_configure(engine->configuration.debug);
 
     engine->environment.graphics = (Graphics_t){

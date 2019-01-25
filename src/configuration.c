@@ -43,6 +43,9 @@ static void parse_pair(Configuration_t *configuration, const char *key, const ch
     if (strcmp(key, "hide_cursor") == 0) {
         configuration->hide_cursor = strcmp(value, "true") == 0;
     } else
+    if (strcmp(key, "exit-key-enabled") == 0) {
+        configuration->exit_key_enabled = strcmp(value, "true") == 0;
+    } else
     if (strcmp(key, "debug") == 0) {
         configuration->debug = strcmp(value, "true") == 0;
     }
@@ -65,6 +68,7 @@ void Configuration_initialize(Configuration_t *configuration)
     configuration->autofit = true;
     configuration->fps = 60;
     configuration->hide_cursor = true;
+    configuration->exit_key_enabled = true;
     configuration->debug = true;
 }
 
