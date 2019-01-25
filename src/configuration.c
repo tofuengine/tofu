@@ -40,6 +40,9 @@ static void parse_pair(Configuration_t *configuration, const char *key, const ch
     if (strcmp(key, "fps") == 0) {
         configuration->fps = (int)strtod(value, NULL);
     } else
+    if (strcmp(key, "skippable_frames") == 0) {
+        configuration->skippable_frames = (int)strtod(value, NULL);
+    } else
     if (strcmp(key, "hide_cursor") == 0) {
         configuration->hide_cursor = strcmp(value, "true") == 0;
     } else
@@ -67,6 +70,7 @@ void Configuration_initialize(Configuration_t *configuration)
     configuration->fullscreen = false;
     configuration->autofit = true;
     configuration->fps = 60;
+    configuration->skippable_frames = 12; // About 20% of the FTP amount.
     configuration->hide_cursor = true;
     configuration->exit_key_enabled = true;
     configuration->debug = true;
