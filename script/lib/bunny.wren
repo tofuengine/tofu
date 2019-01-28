@@ -12,11 +12,13 @@ var MAX_Y = Canvas.height
 
 class Bunny {
 
-    construct new() {
+    construct new(random) {
         _x = (MAX_X - MIN_X) / 2 // Spawn in the top-center part of the screen.
         _y = (MAX_Y - MIN_Y) / 8
         _vx = (RANDOM.float() * MAX_SPEED) - (MAX_SPEED / 2.0)
         _vy = (RANDOM.float() * MAX_SPEED) - (MAX_SPEED / 2.0)
+
+        _random = random
     }
 
     update(deltaTime) {
@@ -36,6 +38,10 @@ class Bunny {
         if (_y > MAX_Y) {
             _vy = _vy * DAMPENING * -1.0
             _y = MAX_Y
+
+            if (_vy.abs <= 500.0 && _random.float() <= 0.10) { // Higher bounce occasionally.
+                _vy = _vy - ((_random.float() * 250.0) + 250.0)
+            }
         } else if (_y < MIN_Y) {
             _vy = _vy * DAMPENING * -1.0
             _y = MIN_Y

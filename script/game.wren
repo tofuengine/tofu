@@ -7,7 +7,7 @@ import "./lib/bunny" for Bunny
 
 var KEY_SPACE = 32
 var KEY_Q = 81
-var LITTER_SIZE = 500
+var LITTER_SIZE = 250
 var MAX_BUNNIES = 32768
 
 class Game {
@@ -23,7 +23,7 @@ class Game {
     input() {
         if (Input.isKeyPressed(KEY_SPACE)) {
             for (i in 1 .. LITTER_SIZE) {
-                _bunnies.insert(-1, Bunny.new())
+                _bunnies.insert(-1, Bunny.new(_random))
             }
             if (_bunnies.count >= MAX_BUNNIES) {
                 Environment.quit()
