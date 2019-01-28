@@ -64,7 +64,9 @@ static void graphics_canvas_bank(WrenVM *vm)
     const char *file = wrenGetSlotString(vm, 2);
     int cell_width = (int)wrenGetSlotDouble(vm, 3);
     int cell_height = (int)wrenGetSlotDouble(vm, 4);
+#ifdef DEBUG
     Log_write(LOG_LEVELS_DEBUG, "Canvas.bank() -> %d, %s, %d, %d", bank_id, file, cell_width, cell_height);
+#endif
 
     Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
@@ -91,7 +93,9 @@ static void graphics_canvas_sprite(WrenVM *vm)
     double rotation = wrenGetSlotDouble(vm, 5);
     double scale_x = wrenGetSlotDouble(vm, 6);
     double scale_y = wrenGetSlotDouble(vm, 7);
-//    Log_write(LOG_LEVELS_DEBUG, "Canvas.sprite() -> %d, %d, %d, %d, %.3f, %.3f, %.3f", bank_id, sprite_id, x, y, rotation, scale_x, scale_y);
+#ifdef DEBUG
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.sprite() -> %d, %d, %d, %d, %.3f, %.3f, %.3f", bank_id, sprite_id, x, y, rotation, scale_x, scale_y);
+#endif
 
     Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
     const Bank_t *bank = &environment->graphics.banks[bank_id];
@@ -107,7 +111,7 @@ static void graphics_canvas_sprite(WrenVM *vm)
     DrawTexturePro(bank->atlas, sourceRec, destRec, origin, (float)rotation, (Color){ 255, 255, 255, 255 });
 }
 
-static void graphics_canvas_text(WrenVM *vm) // foreign static text(font_id, text, color, x, y, r, sx, sy)
+static void graphics_canvas_text(WrenVM *vm) // foreign static text(font_id, text, color, size, align)
 {
     int font_id = (int)wrenGetSlotDouble(vm, 1);
     const char *text = wrenGetSlotString(vm, 2);
@@ -115,7 +119,10 @@ static void graphics_canvas_text(WrenVM *vm) // foreign static text(font_id, tex
     int y = (int)wrenGetSlotDouble(vm, 4);
     int color = (int)wrenGetSlotDouble(vm, 5);
     int size = (int)wrenGetSlotDouble(vm, 6);
-    // const char *align = wrenGetSlotString(vm, 7);
+    const char *align = wrenGetSlotString(vm, 7);
+#ifdef DEBUG
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.text() -> %d, %s, %d, %d, %d, %d, %s", font_id, text, x, y, color, size, align);
+#endif
 
     UNUSED(font_id);
 
@@ -148,11 +155,25 @@ static void events_input_iskeydown(WrenVM *vm)
     wrenSetSlotBool(vm, 0, is_down == true);
 }
 
+static void events_input_iskeyup(WrenVM *vm)
+{
+    int key = (int)wrenGetSlotDouble(vm, 1);
+    bool is_up = IsKeyUp(key);
+    wrenSetSlotBool(vm, 0, is_up == true);
+}
+
 static void events_input_iskeypressed(WrenVM *vm)
 {
     int key = (int)wrenGetSlotDouble(vm, 1);
-    bool is_down = IsKeyPressed(key);
-    wrenSetSlotBool(vm, 0, is_down == true);
+    bool is_pressed = IsKeyPressed(key);
+    wrenSetSlotBool(vm, 0, is_pressed == true);
+}
+
+static void events_input_iskeyreleased(WrenVM *vm)
+{
+    int key = (int)wrenGetSlotDouble(vm, 1);
+    bool is_released = IsKeyReleased(key);
+    wrenSetSlotBool(vm, 0, is_released == true);
 }
 
 static void events_environment_quit(WrenVM *vm)
@@ -179,9 +200,11 @@ const Method_Entry_t _methods[] = {
     { "graphics", "Canvas", true, "palette(_)", graphics_canvas_palette },
     { "graphics", "Canvas", true, "bank(_,_,_,_)", graphics_canvas_bank },
     { "graphics", "Canvas", true, "sprite(_,_,_,_,_,_,_)", graphics_canvas_sprite },
-    { "graphics", "Canvas", true, "text(_,_,_,_,_,_)", graphics_canvas_text },
-    { "events", "Input", true, "isKeyPressed(_)", events_input_iskeypressed },
+    { "graphics", "Canvas", true, "text(_,_,_,_,_,_,_)", graphics_canvas_text },
     { "events", "Input", true, "isKeyDown(_)", events_input_iskeydown },
+    { "events", "Input", true, "isKeyUp(_)", events_input_iskeyup },
+    { "events", "Input", true, "isKeyPressed(_)", events_input_iskeypressed },
+    { "events", "Input", true, "isKeyReleased(_)", events_input_iskeyreleased },
     { "events", "Environment", true, "quit()", events_environment_quit },
     { NULL, NULL, false, NULL, NULL }
 };

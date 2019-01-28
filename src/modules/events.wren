@@ -7,6 +7,8 @@ foreign class Environment {
 foreign class Input {
 
     foreign static isKeyDown(key)
+    foreign static isKeyUp(key)
     foreign static isKeyPressed(key)
+    foreign static isKeyReleased(key)
 
 }

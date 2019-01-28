@@ -15,7 +15,7 @@ typedef struct _Bank_t {
 
 typedef struct _Graphics_t {
     int width, height;
-    Bank_t banks[4];
+    Bank_t banks[4]; // TODO: release bank data on exit.
 } Graphics_t;
 
 typedef struct _Environment_t {
