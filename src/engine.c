@@ -40,7 +40,14 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
     Configuration_initialize(&engine->configuration);
     Configuration_load(&engine->configuration, filename);
 
+    SetExitKey(engine->configuration.exit_key_enabled ? KEY_ESCAPE : -1);
+
     Log_configure(engine->configuration.debug);
+
+    engine->environment.graphics = (Graphics_t){
+        .width = engine->configuration.width,
+        .height = engine->configuration.height
+    };
 
     Display_Configuration_t display_configuration = {
         .width = engine->configuration.width,
@@ -81,7 +88,8 @@ bool Engine_isRunning(Engine_t *engine)
 void Engine_run(Engine_t *engine)
 {
     const double delta_time = 1.0 / (double)engine->configuration.fps;
-    Log_write(LOG_LEVELS_INFO, "Engine is nor running, delta timeslice is %.3fs", delta_time);
+    const int skippable_frames = engine->configuration.skippable_frames;
+    Log_write(LOG_LEVELS_INFO, "Engine is nor running, delta-time is %.3fs w/ %d skippable frames", delta_time, skippable_frames);
 
     double previous = GetTime();
     double lag = 0.0;
@@ -90,13 +98,13 @@ void Engine_run(Engine_t *engine)
         double current = GetTime();
         double elapsed = current - previous;
         previous = current;
-        lag += elapsed;
 
-        double fps = update_fps(elapsed);
+        double fps = update_fps(elapsed); // Calculate frame statistics.
 
-        Interpreter_handle(&engine->interpreter);
+        Interpreter_input(&engine->interpreter);
 
-        while (lag >= delta_time) {
+        lag += elapsed; // Count a maximum amount of skippable frames in order no to stall on slower machines.
+        for (int frames = 0; (frames < skippable_frames) && (lag >= delta_time); ++frames) {
             Interpreter_update(&engine->interpreter, delta_time);
             lag -= delta_time;
         }

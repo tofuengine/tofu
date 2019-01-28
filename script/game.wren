@@ -1,57 +1,50 @@
 import "random" for Random
 
 import "graphics" for Canvas
-import "./lib/other" for Other
+import "events" for Environment, Input
+
+import "./lib/bunny" for Bunny
+
+var KEY_SPACE = 32
+var KEY_Q = 81
+var LITTER_SIZE = 250
+var MAX_BUNNIES = 32768
 
 class Game {
 
     construct new() {
         _random = Random.new()
-        _time = 0
-        _x = 0
-        _speedX = 16.0
-        _color = 0
-        _colorSpeed = 64.0
-        _angle = 0.0
 
-        Canvas.palette([ 0, 1, 2, 3, 4, 5, 6, 7 ])
-        Canvas.bank(0, "./assets/sheet.png", 16, 16)
+        _bunnies = []
+
+        Canvas.bank(0, "./assets/sheet.png", 26, 37)
     }
 
-    handle(inputs) {
+    input() {
+        if (Input.isKeyPressed(KEY_SPACE)) {
+            for (i in 1 .. LITTER_SIZE) {
+                _bunnies.insert(-1, Bunny.new(_random))
+            }
+            if (_bunnies.count >= MAX_BUNNIES) {
+                Environment.quit()
+            }
+        } else if (Input.isKeyPressed(KEY_Q)) {
+            _bunnies.clear()
+        }
     }
 
     update(deltaTime) {
-        _color = _color + _colorSpeed * deltaTime
-        if (_color > 255) {
-            _color = 255
-            _colorSpeed = _colorSpeed * -1
+        for (bunny in _bunnies) {
+            bunny.update(deltaTime)
         }
-        if (_color < 0) {
-            _color = 0
-            _colorSpeed = _colorSpeed * -1
-        }
-
-        _time = _time + deltaTime
-        _x = _x + _speedX * deltaTime
-        if (_x > 320) {
-            _x = 320
-            _speedX = _speedX * -1
-        }
-        if (_x < 0) {
-            _x = 0
-            _speedX = _speedX * -1
-        }
-
-        _angle = _angle + 180.0 * deltaTime
     }
 
     render(ratio) {
-        var x = _x //__random.int() % 320
-        var y = _time.sin * 64 + 120 //__random.int() % 240
-        Canvas.point(x, y, _color.floor)
+        for (bunny in _bunnies) {
+            bunny.render()
+        }
 
-        Canvas.sprite(0, 0, x, y, _angle, 1.0, 1.0)
+        Canvas.text(0, "#%(_bunnies.count) bunnies", 0, 10, 255, 10)
     }
 
 }

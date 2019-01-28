@@ -4,9 +4,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define UNUSED(x)   (void)(x)
+
 void file_resolve_path(char *resolved, const char *path)
 {
-    realpath(path, resolved);
+    char *ptr = realpath(path, resolved);
+    UNUSED(ptr);
     size_t length = strlen(resolved);
     if (resolved[length - 1] != '/') {
         strcat(resolved, "/");

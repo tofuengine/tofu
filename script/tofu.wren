@@ -6,8 +6,8 @@ class Tofu {
         _game = Game.new()
     }
 
-    handle(inputs) {
-        _game.handle(inputs)
+    input() {
+        _game.input()
     }
 
     update(deltaTime) {

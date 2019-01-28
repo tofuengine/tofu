@@ -14,6 +14,7 @@ typedef struct _Bank_t {
 } Bank_t;
 
 typedef struct _Graphics_t {
+    int width, height;
     Bank_t banks[4];
 } Graphics_t;
 

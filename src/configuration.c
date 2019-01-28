@@ -15,10 +15,13 @@
 
 #define SCREEN_WIDTH    320
 #define SCREEN_HEIGHT   240
-#define WINDOW_TITLE    ".: TOFU :."
+#define WINDOW_TITLE    ".: Tofu Engine :."
 
 static void parse_pair(Configuration_t *configuration, const char *key, const char *value, int type)
 {
+    if (strcmp(key, "title") == 0) {
+        strncpy(configuration->title, value, MAX_CONFIGURATION_TITLE_LENGTH);
+    } else
     if (strcmp(key, "width") == 0) {
         configuration->width = (int)strtod(value, NULL);
     } else
@@ -37,8 +40,14 @@ static void parse_pair(Configuration_t *configuration, const char *key, const ch
     if (strcmp(key, "fps") == 0) {
         configuration->fps = (int)strtod(value, NULL);
     } else
+    if (strcmp(key, "skippable_frames") == 0) {
+        configuration->skippable_frames = (int)strtod(value, NULL);
+    } else
     if (strcmp(key, "hide_cursor") == 0) {
         configuration->hide_cursor = strcmp(value, "true") == 0;
+    } else
+    if (strcmp(key, "exit-key-enabled") == 0) {
+        configuration->exit_key_enabled = strcmp(value, "true") == 0;
     } else
     if (strcmp(key, "debug") == 0) {
         configuration->debug = strcmp(value, "true") == 0;
@@ -61,7 +70,9 @@ void Configuration_initialize(Configuration_t *configuration)
     configuration->fullscreen = false;
     configuration->autofit = true;
     configuration->fps = 60;
+    configuration->skippable_frames = 12; // About 20% of the FTP amount.
     configuration->hide_cursor = true;
+    configuration->exit_key_enabled = true;
     configuration->debug = true;
 }
 

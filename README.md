@@ -1,4 +1,4 @@
-# TOFU
+# Tofu Engine
 
 Welcome!
 
@@ -12,12 +12,12 @@ Guess what? Yup, that's another game engine/framework.
 
 ## Cons
 
-* **Wren** is not as popular as others (e.g. **Lua** or **JavaScript**), which translates into less ready-to-use code. However, embedding is much more seamless than with **Lua**.
+* **Wren** is not as popular as others (e.g. **Lua** or **JavaScript**), which translates into less *ready-to-use* code. However, embedding is much more seamless than with **Lua**.
 
 ## Uses
 
 * [raylib](https://www.raylib.com/) v2.3-dev
-* [Wren](https://wren.io/)
+* [Wren](https://wren.io/) v0.1.0
 * [jsmn](https://zserge.com/jsmn.html/) v1.0.0
 
 ## TODOs
@@ -29,8 +29,8 @@ Guess what? Yup, that's another game engine/framework.
 
 ## Inspirations
 
-* [DOME Engine](https://github.com/avivbeeri/dome/blob/master/src/vm.c)
 * [LOVE2D](https://love2d.org/)
+* [DOME Engine](https://github.com/avivbeeri/dome/blob/master/src/vm.c)
 
 ## License
 

@@ -1,6 +1,0 @@
-class Other {
-
-    static dummy() {
-    }
-
-}
