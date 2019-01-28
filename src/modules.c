@@ -11,8 +11,6 @@
 
 #define UNUSED(x)       (void)(x)
 
-#define SLOT_AUX        0
-
 static void graphics_canvas_width(WrenVM *vm)
 {
     Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
@@ -37,12 +35,25 @@ static void graphics_canvas_point(WrenVM *vm)
 static void graphics_canvas_palette(WrenVM *vm)
 {
     int count = wrenGetListCount(vm, 1);
+
+    int slots = wrenGetSlotCount(vm);
+    const int aux_slot_id = slots;
+#ifdef DEBUG
+    Log_write(LOG_LEVELS_DEBUG, "Currently #%d slot(s) available, asking for additional slot", slots);
+#endif
+    wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
+
+#ifdef DEBUG
     Log_write(LOG_LEVELS_DEBUG, "Canvas.palette() -> %d", count);
+#endif
     for (int i = 0; i < count; ++i) {
-        wrenGetListElement(vm, 1, i, SLOT_AUX); // Use slot #0 as a temporary slot.
-        int color = (int)wrenGetSlotDouble(vm, SLOT_AUX);
-        // const char *hex = wrenGetSlotString(vm, SLOT_AUX);
+        wrenGetListElement(vm, 1, i, aux_slot_id);
+        int color = (int)wrenGetSlotDouble(vm, aux_slot_id);
+        UNUSED(color);
+        // const char *hex = wrenGetSlotString(vm, aux_slot_id);
+#ifdef DEBUG
         Log_write(LOG_LEVELS_DEBUG, " %d", color);
+#endif
         // TODO: pack the colors and send to the shader.
     }
 }
