@@ -90,7 +90,10 @@ void Display_renderEnd(Display_t *display, void callback(void), const double fps
             display->offscreen_origin, 0.0f, WHITE);
 
         if (display->configuration.display_fps) {
-            DrawText(FormatText("%.0f FPS (%.3fs)", fps, delta_time), 0, 0, 10, (Color){ 255, 255, 255, 128 });
+            const char *text = FormatText("%.0f FPS (%.3fs)", fps, delta_time);
+            int width = MeasureText(text, 10);
+            DrawRectangle(0, 0, width, 10, (Color){ 0, 0, 0, 128 });
+            DrawText(text, 0, 0, 10, (Color){ 255, 255, 255, 128 });
         }
     EndDrawing();
 }
