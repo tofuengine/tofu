@@ -6,7 +6,7 @@ foreign class Canvas {
     foreign static palette(colors)
     foreign static bank(bank_id, file, width, height)
     foreign static sprite(bank_id, sprite_id, x, y, r, sx, sy)
-    foreign static text(font_id, text, x, y, color, size)
+    foreign static text(font_id, text, x, y, color, size, align)
 
     static sprite(bank_id, sprite_id, x, y) {
         sprite(bank_id, sprite_id, x, y, 0.0, 1.0, 1.0)

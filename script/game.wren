@@ -44,7 +44,7 @@ class Game {
             bunny.render()
         }
 
-        Canvas.text(0, "#%(_bunnies.count) bunnies", 0, 10, 255, 10)
+        Canvas.text(0, "#%(_bunnies.count) bunnies", Canvas.width, 0, 255, 10, "right")
     }
 
 }

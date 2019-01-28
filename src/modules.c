@@ -107,9 +107,27 @@ static void graphics_canvas_text(WrenVM *vm) // foreign static text(font_id, tex
     // const char *align = wrenGetSlotString(vm, 7);
 
     UNUSED(font_id);
-    // UNUSED(align);
 
-    DrawText(text, x, y, size, (Color){ color, color, color, 255 });
+    int width = MeasureText(text, size);
+
+    int dx = x, dy = y;
+    if (strcmp(align, "left") == 0) {
+        dx = x;
+        dy = y;
+    } else
+    if (strcmp(align, "center") == 0) {
+        dx = x - (width / 2);
+        dy = y;
+    } else
+    if (strcmp(align, "right") == 0) {
+        dx = x - width;
+        dy = y;
+    }
+#ifdef DEBUG
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.text() -> %d, %d, %d", width, dx, dy);
+#endif
+
+    DrawText(text, dx, dy, size, (Color){ color, color, color, 255 });
 }
 
 static void events_input_iskeydown(WrenVM *vm)

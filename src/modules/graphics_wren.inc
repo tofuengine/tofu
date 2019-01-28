@@ -7,7 +7,7 @@ static const char graphics_wren[] =
     "    foreign static palette(colors)\n"
     "    foreign static bank(bank_id, file, width, height)\n"
     "    foreign static sprite(bank_id, sprite_id, x, y, r, sx, sy)\n"
-    "    foreign static text(font_id, text, x, y, color, size)\n"
+    "    foreign static text(font_id, text, x, y, color, size, align)\n"
     "\n"
     "    static sprite(bank_id, sprite_id, x, y) {\n"
     "        sprite(bank_id, sprite_id, x, y, 0.0, 1.0, 1.0)\n"
