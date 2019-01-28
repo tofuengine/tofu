@@ -3,7 +3,11 @@
 
 #include <limits.h>
 
-#define PATH_FILE_MAX       PATH_MAX
+#ifdef PATH_MAX
+  #define PATH_FILE_MAX       PATH_MAX
+#else
+  #define PATH_FILE_MAX       1024
+#endif
 
 extern void file_resolve_path(char *resolved, const char *path);
 
