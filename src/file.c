@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "memory.h"
+
 #define UNUSED(x)   (void)(x)
 
 void file_resolve_path(char *resolved, const char *path)
@@ -24,7 +26,7 @@ char *file_load_as_string(const char *filename, const char *mode)
     }
     fseek(file, 0L, SEEK_END);
     size_t length = ftell(file);
-    char *data = calloc(length + 1, sizeof(char)); // Add null terminator for the string.
+    char *data = Memory_calloc(length + 1, sizeof(char)); // Add null terminator for the string.
     rewind(file);
     size_t read_bytes = fread(data, sizeof(char), length, file);
     fclose(file);

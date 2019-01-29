@@ -7,6 +7,15 @@ void *Memory_alloc(size_t size)
     return Memory_realloc(NULL, size);
 }
 
+void *Memory_calloc(size_t num, size_t size)
+{
+    void *ptr = Memory_realloc(NULL, num * size);
+    if (ptr) {
+        memset(ptr, 0x00, num * size);
+    }
+    return ptr;
+}
+
 void Memory_free(void *ptr)
 {
     Memory_realloc(ptr, 0);

@@ -4,6 +4,7 @@
 #include <stdlib.h>
 
 extern void *Memory_alloc(size_t size);
+extern void *Memory_calloc(size_t num, size_t size);
 extern void Memory_free(void *ptr);
 extern void *Memory_realloc(void *ptr, size_t size);
 
