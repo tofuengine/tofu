@@ -45,14 +45,16 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         HideCursor();
     }
 
+    SetTargetFPS(UNCAPPED_FPS);
+
+    SetExitKey(configuration->exit_key_enabled ? KEY_ESCAPE : -1);
+
     SetWindowPosition(x, y);
     SetWindowSize(display->window_width, display->window_height);
     UnhideWindow();
     if (configuration->fullscreen) {
         ToggleFullscreen();
     }
-
-    SetTargetFPS(UNCAPPED_FPS);
 
     display->offscreen = LoadRenderTexture(configuration->width, configuration->height);
     SetTextureFilter(display->offscreen.texture, FILTER_POINT); // Nearest-neighbour scaling.

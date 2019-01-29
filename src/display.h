@@ -12,6 +12,7 @@ typedef struct _Display_Configuration_t {
     bool autofit;
     bool hide_cursor;
     bool display_fps;
+    bool exit_key_enabled;
 } Display_Configuration_t;
 
 typedef struct _Display_t {

@@ -46,7 +46,8 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             .fullscreen = engine->configuration.fullscreen,
             .autofit = engine->configuration.autofit,
             .hide_cursor = engine->configuration.hide_cursor,
-            .display_fps = engine->configuration.debug
+            .display_fps = engine->configuration.debug,
+            .exit_key_enabled = engine->configuration.exit_key_enabled
         };
     bool result = Display_initialize(&engine->display, &display_configuration, engine->configuration.title);
     if (!result) {
@@ -62,8 +63,6 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
         Display_terminate(&engine->display);
         return false;
     }
-
-    SetExitKey(engine->configuration.exit_key_enabled ? KEY_ESCAPE : -1); // TODO: move to display.
 
     return true;
 }
