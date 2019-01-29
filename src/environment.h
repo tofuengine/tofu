@@ -7,6 +7,8 @@
 
 #include <raylib/raylib.h>
 
+#define MAX_GRAPHIC_BANKS       4
+
 typedef struct _Bank_t {
     // char file[PATH_FILE_MAX];
     Texture2D atlas;
@@ -15,7 +17,7 @@ typedef struct _Bank_t {
 
 typedef struct _Graphics_t {
     int width, height;
-    Bank_t banks[4]; // TODO: release bank data on exit.
+    Bank_t banks[MAX_GRAPHIC_BANKS];
 } Graphics_t;
 
 typedef struct _Environment_t {
