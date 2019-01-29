@@ -27,4 +27,7 @@ typedef struct _Environment_t {
     Graphics_t graphics;
 } Environment_t;
 
+extern void Environment_initialize(Environment_t *environment, const char *base_path, int width, int height);
+extern void Environment_terminate(Environment_t *environment);
+
 #endif  /* __ENVIRONMENT_H__ */

@@ -28,9 +28,6 @@ static double update_fps(const double elapsed) {
 
 bool Engine_initialize(Engine_t *engine, const char *base_path)
 {
-    strcpy(engine->environment.base_path, base_path);
-    engine->environment.should_close = false;
-
     char filename[PATH_FILE_MAX];
     strcpy(filename, base_path);
     strcat(filename, CONFIGURATION_FILE_NAME);
@@ -40,29 +37,24 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
     Configuration_initialize(&engine->configuration);
     Configuration_load(&engine->configuration, filename);
 
-    SetExitKey(engine->configuration.exit_key_enabled ? KEY_ESCAPE : -1);
-
     Log_configure(engine->configuration.debug);
 
-    engine->environment.graphics = (Graphics_t){
-        .width = engine->configuration.width,
-        .height = engine->configuration.height
-    };
-
     Display_Configuration_t display_configuration = {
-        .width = engine->configuration.width,
-        .height = engine->configuration.height,
-        .colors = engine->configuration.debug,
-        .fullscreen = engine->configuration.fullscreen,
-        .autofit = engine->configuration.autofit,
-        .hide_cursor = engine->configuration.hide_cursor,
-        .display_fps = engine->configuration.debug
-    };
+            .width = engine->configuration.width,
+            .height = engine->configuration.height,
+            .colors = engine->configuration.debug,
+            .fullscreen = engine->configuration.fullscreen,
+            .autofit = engine->configuration.autofit,
+            .hide_cursor = engine->configuration.hide_cursor,
+            .display_fps = engine->configuration.debug
+        };
     bool result = Display_initialize(&engine->display, &display_configuration, engine->configuration.title);
     if (!result) {
         Log_write(LOG_LEVELS_ERROR, "Can't initialize display!");
         return false;
     }
+
+    Environment_initialize(&engine->environment, base_path, engine->configuration.width, engine->configuration.height); // TODO> add environment configuration.
 
     result = Interpreter_initialize(&engine->interpreter, &engine->environment);
     if (!result) {
@@ -71,13 +63,16 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
         return false;
     }
 
+    SetExitKey(engine->configuration.exit_key_enabled ? KEY_ESCAPE : -1); // TODO: move to display.
+
     return true;
 }
 
 void Engine_terminate(Engine_t *engine)
 {
-    Display_terminate(&engine->display);
     Interpreter_terminate(&engine->interpreter);
+    Environment_terminate(&engine->environment);
+    Display_terminate(&engine->display);
 }
 
 bool Engine_isRunning(Engine_t *engine)
