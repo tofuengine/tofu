@@ -39,8 +39,8 @@ class Bunny {
             _vy = _vy * DAMPENING * -1.0
             _y = MAX_Y
 
-            if (_vy.abs <= 500.0 && _random.float() <= 0.10) { // Higher bounce occasionally.
-                _vy = _vy - ((_random.float() * 250.0) + 250.0)
+            if (_vy.abs <= 400.0 && _random.float() <= 0.10) { // Higher bounce occasionally.
+                _vy = _vy - ((_random.float() * 150.0) + 100.0)
             }
         } else if (_y < MIN_Y) {
             _vy = _vy * DAMPENING * -1.0

@@ -1,7 +1,7 @@
 {
     "title": "BunnyMark v1",
-    "width": 512,
-    "height": 512,
+    "width": 480,
+    "height": 320,
     "fullscreen": false,
     "autofit": false,
     "exit-key-enabled": true,
