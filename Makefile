@@ -24,9 +24,9 @@ $(OBJECTS): %.o : %.c $(INCLUDES)
 	@$(COMPILER) $(CFLAGS) $(CWARNINGS) -c $< -o $@
 	@echo "Compiled "$<" successfully!"
 
-test: $(TARGET)
-	@echo "Launching testing application!"
-	./$(TARGET) ./script
+bunnymark: $(TARGET)
+	@echo "Launching Bunnymark application!"
+	./$(TARGET) ./demos/bunnymark
 
 .PHONY: clean
 clean:

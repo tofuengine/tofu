@@ -1,9 +1,9 @@
 {
-    "title": "BunnyMark v1",
+    "title": "BunnyMark",
     "width": 480,
     "height": 320,
-    "fullscreen": false,
-    "autofit": false,
+    "fullscreen": true,
+    "autofit": true,
     "exit-key-enabled": true,
     "debug": true
 }
