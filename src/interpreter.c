@@ -13,7 +13,7 @@
 #define MAIN_MODULE_NAME        "@root@"
 #define MAIN_MODULE_FILE        "tofu" SCRIPT_EXTENSION
 
-static void* reallocate_function(void *ptr, size_t size)
+static void *reallocate_function(void *ptr, size_t size)
 {
     return Memory_realloc(ptr, size);
 }
