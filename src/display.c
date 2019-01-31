@@ -5,6 +5,7 @@
 #include <memory.h>
 
 #define UNCAPPED_FPS        0
+#define FAST_FULLSCREEN     1
 
 bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title)
 {
@@ -49,19 +50,18 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
 
     SetExitKey(configuration->exit_key_enabled ? KEY_ESCAPE : -1);
 
-    // NOTE: this should be done as follows:
-    //
-    // if (configuration->fullscreen) {
-    //     SetWindowPosition(0, 0);
-    //     SetWindowSize(display_width, display_height);
-    // } else {
-    //     SetWindowPosition(x, y);
-    //     SetWindowSize(display->window_width, display->window_height);
-    // }
-    //
-    // However it would render the outer (unused) frame white. So, we limit the virtual window even when fullscreen.
-    SetWindowPosition(x, y);
+#ifdef FAST_FULLSCREEN
+    SetWindowPosition(x, y); // Enforce a "clipping region" if fullscreen.
     SetWindowSize(display->window_width, display->window_height);
+#else
+    if (configuration->fullscreen) {
+        SetWindowPosition(0, 0);
+        SetWindowSize(display_width, display_height);
+    } else {
+        SetWindowPosition(x, y);
+        SetWindowSize(display->window_width, display->window_height);
+    }
+#endif
     UnhideWindow();
     if (configuration->fullscreen) {
         ToggleFullscreen();
@@ -107,7 +107,9 @@ void Display_renderEnd(Display_t *display, void callback(void), const double fps
     EndTextureMode();
 
     BeginDrawing();
-        // ClearBackground(BLACK);
+#ifndef FAST_FULLSCREEN
+        ClearBackground(BLACK);
+#endif
         if (callback) {
             callback();
         }
