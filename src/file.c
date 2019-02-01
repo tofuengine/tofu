@@ -36,7 +36,7 @@ void file_resolve_path(char *resolved, const char *path)
     UNUSED(ptr);
     size_t length = strlen(resolved);
     if (resolved[length - 1] != '/') {
-        strcat(resolved, "/");
+        strcat(resolved, FILE_PATH_SEPARATOR_SZ);
     }
 }
 

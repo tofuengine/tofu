@@ -25,6 +25,25 @@
 
 #include <limits.h>
 
+#include "platform.h"
+
+#if PLATFORM_ID == PLATFORM_LINUX
+  #define FILE_PATH_SEPARATOR     '/'
+  #define FILE_PATH_SEPARATOR_SZ  "/"
+  #define FILE_PATH_CURRENT_SZ    "./"
+  #define FILE_PATH_PARENT_SZ     "../"
+#elif PLATFORM_ID == PLATFORM_WINDOWS
+  #define FILE_PATH_SEPARATOR     '\\'
+  #define FILE_PATH_SEPARATOR_SZ  "\\"
+  #define FILE_PATH_CURRENT_SZ    ".\\"
+  #define FILE_PATH_PARENT_SZ     "..\\"
+#elif PLATFORM_ID == PLATFORM_OSX
+  #define FILE_PATH_SEPARATOR     '/'
+  #define FILE_PATH_SEPARATOR_SZ  "/"
+  #define FILE_PATH_CURRENT_SZ    "./"
+  #define FILE_PATH_PARENT_SZ     "../"
+#endif
+
 #ifdef PATH_MAX
   #define PATH_FILE_MAX       PATH_MAX
 #else

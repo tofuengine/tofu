@@ -20,15 +20,16 @@
  * SOFTWARE.
  **/
 
-#include "engine.h"
+#include "main.h"
 
-#include "log.h"
+#include "engine.h"
 #include "file.h"
+#include "log.h"
 
 int main(int argc, char **argv)
 {
     char resolved_path[PATH_FILE_MAX];
-    file_resolve_path(resolved_path, (argc > 1) ? argv[1] : "./");
+    file_resolve_path(resolved_path, (argc > 1) ? argv[1] : FILE_PATH_CURRENT);
 
     Engine_t engine;
     bool result = Engine_initialize(&engine, resolved_path);
