@@ -36,6 +36,12 @@ void Environment_initialize(Environment_t *environment, const char *base_path, i
             .height = height
         };
 
+    for (size_t i = 0; i < MAX_PALETTE_COLORS; ++i) {
+        unsigned char v = ((float)i / (float)(MAX_PALETTE_COLORS - 1)) * 255;
+        Color *color = &graphics->palette[i];
+        *color = (Color){ v, v, v, 255 };
+    }
+
     for (size_t i = 0; i < MAX_GRAPHIC_BANKS; ++i) {
         Bank_t *bank = &graphics->banks[i];
         *bank = (Bank_t){};

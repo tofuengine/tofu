@@ -30,6 +30,7 @@
 #include <raylib/raylib.h>
 
 #define MAX_GRAPHIC_BANKS       4
+#define MAX_PALETTE_COLORS      16
 
 typedef struct _Bank_t {
     // char file[PATH_FILE_MAX];
@@ -39,6 +40,7 @@ typedef struct _Bank_t {
 
 typedef struct _Graphics_t {
     int width, height;
+    Color palette[MAX_PALETTE_COLORS];
     Bank_t banks[MAX_GRAPHIC_BANKS];
 } Graphics_t;
 
