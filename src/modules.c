@@ -37,14 +37,14 @@ static void graphics_canvas_width(WrenVM *vm)
 {
     Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
-    wrenSetSlotDouble(vm, 0, environment->graphics.width);
+    wrenSetSlotDouble(vm, 0, environment->display->configuration.width);
 }
 
 static void graphics_canvas_height(WrenVM *vm)
 {
     Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
-    wrenSetSlotDouble(vm, 0, environment->graphics.height);
+    wrenSetSlotDouble(vm, 0, environment->display->configuration.height);
 }
 
 static void graphics_canvas_palette(WrenVM *vm)
@@ -67,19 +67,20 @@ static void graphics_canvas_palette(WrenVM *vm)
 #ifdef DEBUG
     Log_write(LOG_LEVELS_DEBUG, "Canvas.palette() -> %d", count);
 #endif
+    Color palette[MAX_PALETTE_COLORS];
     for (int i = 0; i < count; ++i) {
         wrenGetListElement(vm, 1, i, aux_slot_id);
 
-        Color color;
+        Color *color = &palette[i];
         const char *argb = wrenGetSlotString(vm, aux_slot_id);
         char hex[3] = {};
-        strncpy(hex, argb    , 2); color.a = strtol(hex, NULL, 16);
-        strncpy(hex, argb + 2, 2); color.r = strtol(hex, NULL, 16);
-        strncpy(hex, argb + 4, 2); color.g = strtol(hex, NULL, 16);
-        strncpy(hex, argb + 6, 2); color.b = strtol(hex, NULL, 16);
-
-        environment->graphics.palette[i] = color;
+        strncpy(hex, argb    , 2); color->a = strtol(hex, NULL, 16);
+        strncpy(hex, argb + 2, 2); color->r = strtol(hex, NULL, 16);
+        strncpy(hex, argb + 4, 2); color->g = strtol(hex, NULL, 16);
+        strncpy(hex, argb + 6, 2); color->b = strtol(hex, NULL, 16);
     }
+
+    Display_palette(environment->display, palette, count);
 }
 
 static void graphics_canvas_bank(WrenVM *vm)
@@ -94,16 +95,18 @@ static void graphics_canvas_bank(WrenVM *vm)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.bank() -> %d, %s, %d, %d", bank_id, file, cell_width, cell_height);
 #endif
 
-    // Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
-
     char pathfile[PATH_FILE_MAX] = {};
     strcpy(pathfile, environment->base_path);
     strcat(pathfile, file + 2);
 
-    Texture2D texture = LoadTexture(pathfile);
-    Log_write(LOG_LEVELS_DEBUG, "[TOFU] Texture '%s' loaded w/ id #%d", pathfile, texture.id);
+    Image image = LoadImage(pathfile); // Load and remap image colors to the current palette.
+    for (int i = 0; i < MAX_PALETTE_COLORS; ++i) {
+        ImageColorReplace(&image, environment->display->palette[i], (Color){ i, i, i, i });
+    }
+    Texture2D texture = LoadTextureFromImage(image);
+    Log_write(LOG_LEVELS_DEBUG, "[TOFU] Bank '%s' loaded as texture w/ id #%d", pathfile, texture.id);
 
-    environment->graphics.banks[bank_id] = (Bank_t){
+    environment->banks[bank_id] = (Bank_t){
             .atlas = texture,
             .cell_width = cell_width,
             .cell_height = cell_height
@@ -112,8 +115,6 @@ static void graphics_canvas_bank(WrenVM *vm)
 
 static void graphics_canvas_text(WrenVM *vm) // foreign static text(font_id, text, color, size, align)
 {
-    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
-
     int font_id = (int)wrenGetSlotDouble(vm, 1);
     const char *text = wrenGetSlotString(vm, 2);
     int x = (int)wrenGetSlotDouble(vm, 3);
@@ -146,24 +147,20 @@ static void graphics_canvas_text(WrenVM *vm) // foreign static text(font_id, tex
     Log_write(LOG_LEVELS_DEBUG, "Canvas.text() -> %d, %d, %d", width, dx, dy);
 #endif
 
-    DrawText(text, dx, dy, size, environment->graphics.palette[color]);
+    DrawText(text, dx, dy, size, (Color){ color, color, color, 255 });
 }
 
 static void graphics_canvas_point(WrenVM *vm)
 {
-    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
-
     int x = (int)wrenGetSlotDouble(vm, 1); 
     int y = (int)wrenGetSlotDouble(vm, 2); 
     int color = (int)wrenGetSlotDouble(vm, 3); 
 
-    DrawPixel(x, y, environment->graphics.palette[color]);
+    DrawPixel(x, y, (Color){ color, color, color, 255 });
 }
 
 static void graphics_canvas_polygon(WrenVM *vm)
 {
-    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
-
     const char *mode = wrenGetSlotString(vm, 1);
     int vertices = wrenGetListCount(vm, 2);
     int color = (int)wrenGetSlotDouble(vm, 3);
@@ -198,10 +195,10 @@ static void graphics_canvas_polygon(WrenVM *vm)
     }
 
     if (strcmp(mode, "fill") == 0) {
-        DrawPolyEx(points, count, environment->graphics.palette[color]);
+        DrawPolyEx(points, count, (Color){ color, color, color, 255 });
     } else
     if (strcmp(mode, "line") == 0) {
-        DrawPolyExLines(points, count, environment->graphics.palette[color]);
+        DrawPolyExLines(points, count, (Color){ color, color, color, 255 });
     } else {
         Log_write(LOG_LEVELS_WARNING, "[TOFU] Undefined drawing mode for polygon: '%s'", mode);
     }
@@ -222,7 +219,7 @@ static void graphics_canvas_sprite(WrenVM *vm)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.sprite() -> %d, %d, %d, %d, %.3f, %.3f, %.3f", bank_id, sprite_id, x, y, rotation, scale_x, scale_y);
 #endif
 
-    const Bank_t *bank = &environment->graphics.banks[bank_id];
+    const Bank_t *bank = &environment->banks[bank_id];
 
     if (bank->atlas.id == 0) {
         return;

@@ -78,7 +78,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
         return false;
     }
 
-    Environment_initialize(&engine->environment, base_path, engine->configuration.width, engine->configuration.height); // TODO> add environment configuration.
+    Environment_initialize(&engine->environment, base_path, &engine->display); // TODO> add environment configuration.
 
     result = Interpreter_initialize(&engine->interpreter, &engine->environment);
     if (!result) {
@@ -106,7 +106,7 @@ void Engine_run(Engine_t *engine)
 {
     const double delta_time = 1.0 / (double)engine->configuration.fps;
     const int skippable_frames = engine->configuration.skippable_frames;
-    Log_write(LOG_LEVELS_INFO, "Engine is nor running, delta-time is %.3fs w/ %d skippable frames", delta_time, skippable_frames);
+    Log_write(LOG_LEVELS_INFO, "Engine is now running, delta-time is %.3fs w/ %d skippable frames", delta_time, skippable_frames);
 
     double previous = GetTime();
     double lag = 0.0;

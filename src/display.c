@@ -29,6 +29,39 @@
 #define UNCAPPED_FPS        0
 #define FAST_FULLSCREEN     1
 
+static const char *palette_shader_code = 
+    "#version 330\n"
+    "\n"
+    "const int colors = 16;\n"
+    "\n"
+    "// Input fragment attributes (from fragment shader)\n"
+    "in vec2 fragTexCoord;\n"
+    "in vec4 fragColor;\n"
+    "\n"
+    "// Input uniform values\n"
+    "uniform sampler2D texture0;\n"
+    "uniform ivec4 palette[colors];\n"
+    "\n"
+    "// Output fragment color\n"
+    "out vec4 finalColor;\n"
+    "\n"
+    "void main()\n"
+    "{\n"
+    "    // Texel color fetching from texture sampler\n"
+    "    vec4 texelColor = texture(texture0, fragTexCoord)*fragColor;\n"
+    "\n"
+    "    // Convert the (normalized) texel color RED component (GB would work, too)\n"
+    "    // to the palette index by scaling up from [0, 1] to [0, 255].\n"
+    "    int index = int(texelColor.r * 255.0);\n"
+    "    ivec4 color = palette[index];\n"
+    "\n"
+    "    // Calculate final fragment color. Note that the palette color components\n"
+    "    // are defined in the range [0, 255] and need to be normalized to [0, 1]\n"
+    "    // for OpenGL to work.\n"
+    "    finalColor = vec4(color / 255.0);\n"
+    "}\n"
+;
+
 bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title)
 {
     display->configuration = *configuration;
@@ -100,6 +133,16 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     }
     display->offscreen_origin = (Vector2){ 0.0f, 0.0f };
 
+    display->palette_shader = LoadShaderCode(NULL, (char *)palette_shader_code);
+    display->palette_shader_palette_location = GetShaderLocation(display->palette_shader, "palette");
+
+    Color palette[MAX_PALETTE_COLORS];
+    for (size_t i = 0; i < MAX_PALETTE_COLORS; ++i) {
+        unsigned char v = ((float)i / (float)(MAX_PALETTE_COLORS - 1)) * 255;
+        palette[i] = (Color){ v, v, v, 255 };
+    }
+    Display_palette(display, palette, MAX_PALETTE_COLORS);
+
     return true;
 }
 
@@ -115,11 +158,12 @@ void Display_renderBegin(Display_t *display, void callback(void))
         if (callback) {
             callback();
         }
-        // BeginShaderMode()
+        BeginShaderMode(display->palette_shader);
 }
 
 void Display_renderEnd(Display_t *display, void callback(void), const double fps, const double delta_time)
 {
+        EndShaderMode();
         if (display->configuration.display_fps) {
             const char *text = FormatText("%.0f FPS (%.3fs)", fps, delta_time);
             int width = MeasureText(text, 10);
@@ -140,8 +184,25 @@ void Display_renderEnd(Display_t *display, void callback(void), const double fps
     EndDrawing();
 }
 
+void Display_palette(Display_t *display, const Color *palette, size_t count)
+{
+    int colors[MAX_PALETTE_COLORS * VALUES_PER_COLOR] = {};
+    for (size_t i = 0; i < count; ++i) {
+        display->palette[i] = palette[i];
+
+        int j = i * VALUES_PER_COLOR;
+        colors[j    ] = palette[i].r;
+        colors[j + 1] = palette[i].g;
+        colors[j + 2] = palette[i].b;
+        colors[j + 3] = palette[i].a;
+    }
+    SetShaderValueV(display->palette_shader, display->palette_shader_palette_location,
+        colors, UNIFORM_IVEC4, MAX_PALETTE_COLORS);
+}
+
 void Display_terminate(Display_t *display)
 {
+    UnloadShader(display->palette_shader);
     UnloadRenderTexture(display->offscreen);
     CloseWindow();
 }
