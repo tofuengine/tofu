@@ -17,6 +17,18 @@ class Game {
 
         _bunnies = []
 
+        // Canvas.palette([ // Load the PICO-8 palette.
+        //         "FF000000", "FF5F574F", "FFC2C3C7", "FFFFF1E8",
+        //         "FFFFEC27", "FFFFA300", "FFFFCCAA", "FFAB5236",
+        //         "FFFF77A8", "FFFF004D", "FF83769C", "FF7E2553",
+        //         "FF29ADFF", "FF1D2B53", "FF008751", "FF00E436"
+        //     ])
+        Canvas.palette([ // Load the ARNE-16 palette.
+                "FF000000", "FF493C2B", "FFBE2633", "FFE06F8B",
+                "FF9D9D9D", "FFA46422", "FFEB8931", "FFF7E26B",
+                "FFFFFFFF", "FF1B2632", "FF2F484E", "FF44891A",
+                "FFA3CE27", "FF005784", "FF31A2F2", "FFB2DCEF"
+            ])
         Canvas.bank(0, "./assets/sheet.png", 26, 37)
     }
 
@@ -44,7 +56,12 @@ class Game {
             bunny.render()
         }
 
-        Canvas.text(0, "#%(_bunnies.count) bunnies", Canvas.width, 0, 255, 10, "right")
+        // Canvas.polygon("fill", [ 100, 100, 100, 200, 200, 200, 200, 100, 100, 100 ], 1)
+        // Canvas.rectangle("fill", 50, 50, 100, 50, 2)
+        // Canvas.square("fill", 150, 150, 25, 3)
+        // Canvas.triangle("fill", 100, 100, 150, 150, 200, 100, 4)
+
+        Canvas.text(0, "#%(_bunnies.count) bunnies", Canvas.width, 0, 8, 10, "right")
     }
 
 }
