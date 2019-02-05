@@ -106,7 +106,7 @@ static void graphics_canvas_bank(WrenVM *vm)
     Texture2D texture = LoadTextureFromImage(image);
     Log_write(LOG_LEVELS_DEBUG, "[TOFU] Bank '%s' loaded as texture w/ id #%d", pathfile, texture.id);
 
-    environment->banks[bank_id] = (Bank_t){
+    environment->display->banks[bank_id] = (Bank_t){
             .atlas = texture,
             .cell_width = cell_width,
             .cell_height = cell_height
@@ -219,7 +219,7 @@ static void graphics_canvas_sprite(WrenVM *vm)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.sprite() -> %d, %d, %d, %d, %.3f, %.3f, %.3f", bank_id, sprite_id, x, y, rotation, scale_x, scale_y);
 #endif
 
-    const Bank_t *bank = &environment->banks[bank_id];
+    const Bank_t *bank = &environment->display->banks[bank_id];
 
     if (bank->atlas.id == 0) {
         return;

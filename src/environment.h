@@ -28,21 +28,9 @@
 
 #include <stdbool.h>
 
-#include <raylib/raylib.h>
-
-#define MAX_GRAPHIC_BANKS       4
-
-typedef struct _Bank_t {
-    // char file[PATH_FILE_MAX];
-    Texture2D atlas;
-    int cell_width, cell_height;
-} Bank_t;
-
 typedef struct _Environment_t {
     char base_path[PATH_FILE_MAX];
     bool should_close;
-
-    Bank_t banks[MAX_GRAPHIC_BANKS]; // TODO: move to "Display_t"
 
     Display_t *display;
 } Environment_t;

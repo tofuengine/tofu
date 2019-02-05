@@ -31,20 +31,8 @@ void Environment_initialize(Environment_t *environment, const char *base_path, D
     environment->should_close = false;
 
     environment->display = display;
-
-    for (size_t i = 0; i < MAX_GRAPHIC_BANKS; ++i) {
-        Bank_t *bank = &environment->banks[i];
-        *bank = (Bank_t){};
-    }
 }
 
 void Environment_terminate(Environment_t *environment)
 {
-    for (size_t i = 0; i < MAX_GRAPHIC_BANKS; ++i) {
-        Bank_t *bank = &environment->banks[i];
-        if (bank->atlas.id > 0) {
-            UnloadTexture(bank->atlas);
-            bank->atlas.id = 0;
-        }
-    }
 }

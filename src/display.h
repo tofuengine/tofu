@@ -29,6 +29,8 @@
 
 #include <stdlib.h>
 
+#define MAX_GRAPHIC_BANKS       4
+
 #define MAX_PALETTE_COLORS      16
 #define VALUES_PER_COLOR        4
 
@@ -42,6 +44,12 @@ typedef struct _Display_Configuration_t {
     bool exit_key_enabled;
 } Display_Configuration_t;
 
+typedef struct _Bank_t {
+    // char file[PATH_FILE_MAX];
+    Texture2D atlas;
+    int cell_width, cell_height;
+} Bank_t;
+
 typedef struct _Display_t {
     Display_Configuration_t configuration;
 
@@ -54,6 +62,8 @@ typedef struct _Display_t {
     Color palette[MAX_PALETTE_COLORS];
     Shader palette_shader;
     int palette_shader_palette_location;
+
+    Bank_t banks[MAX_GRAPHIC_BANKS];
 } Display_t;
 
 extern bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title);
