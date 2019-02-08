@@ -32,8 +32,13 @@
 
 #define SCRIPT_EXTENSION        ".wren"
 
-#define MAIN_MODULE_NAME        "@root@"
-#define MAIN_MODULE_FILE        "tofu" SCRIPT_EXTENSION
+#define ROOT_MODULE             "@root@"
+
+#define ROOT_INSTANCE           "tofu"
+
+#define ROOT_SCRIPT \
+    "import \"./tofu\" for Tofu\n" \
+    "var tofu = Tofu.new()\n"
 
 static void *reallocate_function(void *ptr, size_t size)
 {
@@ -117,10 +122,6 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *env
 {
     interpreter->environment = environment;
 
-    char module_filename[PATH_FILE_MAX];
-    strcpy(module_filename, environment->base_path);
-    strcat(module_filename, MAIN_MODULE_FILE);
-
     WrenConfiguration vm_configuration; 
     wrenInitConfiguration(&vm_configuration);
     vm_configuration.reallocateFn = reallocate_function;
@@ -132,37 +133,21 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *env
 
     interpreter->vm = wrenNewVM(&vm_configuration);
     if (!interpreter->vm) {
-        Log_write(LOG_LEVELS_FATAL, "Can't initialize Wren's VM!");
+        Log_write(LOG_LEVELS_FATAL, "Can't initialize interpreter VM!");
         return false;
     }
 
     wrenSetUserData(interpreter->vm, (void *)environment); // HACK: we discard the const qualifier :(
 
-    char *source = file_load_as_string(module_filename, "rt");
-    if (!source) {
-        Log_write(LOG_LEVELS_FATAL, "Can't read main module '%s'!", module_filename);
-        wrenFreeVM(interpreter->vm);
-        return false;
-    }
-
-    WrenInterpretResult result = wrenInterpret(interpreter->vm, MAIN_MODULE_NAME, source);
+    WrenInterpretResult result = wrenInterpret(interpreter->vm, ROOT_MODULE, ROOT_SCRIPT);
     if (result != WREN_RESULT_SUCCESS) {
-        Log_write(LOG_LEVELS_FATAL, "Can't interpret main module!");
-        wrenFreeVM(interpreter->vm);
-        return false;
-    }
-
-    free(source); // Dispose the script data.
-
-    result = wrenInterpret(interpreter->vm, MAIN_MODULE_NAME, "var tofu = Tofu.new()");
-    if (result != WREN_RESULT_SUCCESS) {
-        Log_write(LOG_LEVELS_FATAL, "Can't create main class!");
+        Log_write(LOG_LEVELS_FATAL, "Can't interpret boot script!");
         wrenFreeVM(interpreter->vm);
         return false;
     }
 
     wrenEnsureSlots(interpreter->vm, 1); 
-    wrenGetVariable(interpreter->vm, MAIN_MODULE_NAME, "tofu", 0); 
+    wrenGetVariable(interpreter->vm, ROOT_MODULE, ROOT_INSTANCE, 0); 
     interpreter->handles[RECEIVER] = wrenGetSlotHandle(interpreter->vm, 0);
 
     interpreter->handles[INPUT] = wrenMakeCallHandle(interpreter->vm, "input()");
