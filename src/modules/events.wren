@@ -6,6 +6,9 @@ foreign class Environment {
 
 foreign class Input {
 
+    static space { 32 }
+    static q { 81 }
+
     foreign static isKeyDown(key)
     foreign static isKeyUp(key)
     foreign static isKeyPressed(key)
