@@ -31,7 +31,7 @@
 
 static void custom_log_callback(int msg_type, const char *text, va_list args)
 {
-    static const char prefix[] = { 'T', 'D', 'I', 'W', 'E', 'F' };
+    static const char prefix[] = { '<', 'T', 'D', 'I', 'W', 'E', 'F', '>' };
     printf("[%c] ", prefix[msg_type]);
     vprintf(text, args);
     printf("\n");
