@@ -106,7 +106,7 @@ void Engine_run(Engine_t *engine)
 {
     const double delta_time = 1.0 / (double)engine->configuration.fps;
     const int skippable_frames = engine->configuration.skippable_frames;
-    Log_write(LOG_LEVELS_WARNING, "Engine is now running, delta-time is %.3fs w/ %d skippable frames", delta_time, skippable_frames);
+    Log_write(LOG_LEVELS_INFO, "Engine is now running, delta-time is %.3fs w/ %d skippable frames", delta_time, skippable_frames);
 
     double previous = GetTime();
     double lag = 0.0;
