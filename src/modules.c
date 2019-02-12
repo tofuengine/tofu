@@ -101,7 +101,7 @@ static void graphics_canvas_bank(WrenVM *vm)
 
     Image image = LoadImage(pathfile); // Load and remap image colors to the current palette.
     for (int i = 0; i < MAX_PALETTE_COLORS; ++i) {
-        ImageColorReplace(&image, environment->display->palette[i], (Color){ i, i, i, i });
+        ImageColorReplace(&image, environment->display->palette[i], (Color){ i, i, i, 255 });
     }
     Texture2D texture = LoadTextureFromImage(image);
     Log_write(LOG_LEVELS_DEBUG, "[TOFU] Bank '%s' loaded as texture w/ id #%d", pathfile, texture.id);
