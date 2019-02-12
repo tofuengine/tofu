@@ -156,17 +156,14 @@ bool Display_shouldClose(Display_t *display)
     return WindowShouldClose();
 }
 
-void Display_renderBegin(Display_t *display, void callback(void))
+void Display_renderBegin(Display_t *display)
 {
     BeginTextureMode(display->offscreen);
         ClearBackground(BLACK);
-        if (callback) {
-            callback();
-        }
         BeginShaderMode(display->palette_shader);
 }
 
-void Display_renderEnd(Display_t *display, void callback(void), const double fps, const double delta_time)
+void Display_renderEnd(Display_t *display, const double fps, const double delta_time)
 {
         EndShaderMode();
         if (display->configuration.display_fps) {
@@ -181,9 +178,6 @@ void Display_renderEnd(Display_t *display, void callback(void), const double fps
 #ifndef FAST_FULLSCREEN
         ClearBackground(BLACK);
 #endif
-        if (callback) {
-            callback();
-        }
         DrawTexturePro(display->offscreen.texture, display->offscreen_source, display->offscreen_destination,
             display->offscreen_origin, 0.0f, WHITE);
     EndDrawing();

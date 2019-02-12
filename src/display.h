@@ -68,8 +68,8 @@ typedef struct _Display_t {
 
 extern bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title);
 extern bool Display_shouldClose(Display_t *display);
-extern void Display_renderBegin(Display_t *display, void callback(void));
-extern void Display_renderEnd(Display_t *display, void callback(void), const double fps, const double delta_time);
+extern void Display_renderBegin(Display_t *display);
+extern void Display_renderEnd(Display_t *display, const double fps, const double delta_time);
 extern void Display_palette(Display_t *display, const Color *palette, size_t count);
 extern void Display_terminate(Display_t *display);
 

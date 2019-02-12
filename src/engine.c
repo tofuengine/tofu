@@ -126,8 +126,8 @@ void Engine_run(Engine_t *engine)
             lag -= delta_time;
         }
 
-        Display_renderBegin(&engine->display, NULL);
+        Display_renderBegin(&engine->display);
             Interpreter_render(&engine->interpreter, lag / delta_time);
-        Display_renderEnd(&engine->display, NULL, fps, delta_time);
+        Display_renderEnd(&engine->display, fps, delta_time);
     }
 }
