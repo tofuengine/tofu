@@ -34,6 +34,9 @@
 #define MAX_PALETTE_COLORS      16
 #define VALUES_PER_COLOR        4
 
+#define ALPHA_COLOR_TRANSPARENT 0
+#define ALPHA_COLOR_OPAQUE      255
+
 typedef struct _Display_Configuration_t {
     int width, height;
     int colors;

@@ -48,7 +48,7 @@ static const char *palette_shader_code =
     "void main()\n"
     "{\n"
     "    // Texel color fetching from texture sampler\n"
-    "    vec4 texelColor = texture(texture0, fragTexCoord)*fragColor;\n"
+    "    vec4 texelColor = texture(texture0, fragTexCoord) * fragColor;\n"
     "\n"
     "    // Convert the (normalized) texel color RED component (GB would work, too)\n"
     "    // to the palette index by scaling up from [0, 1] to [0, 255].\n"
@@ -160,17 +160,13 @@ void Display_renderBegin(Display_t *display)
 {
     BeginTextureMode(display->offscreen);
         ClearBackground(BLACK);
-        BeginShaderMode(display->palette_shader);
 }
 
 void Display_renderEnd(Display_t *display, const double fps, const double delta_time)
 {
-        EndShaderMode();
         if (display->configuration.display_fps) {
             const char *text = FormatText("%.0f FPS (%.3fs)", fps, delta_time);
-            int width = MeasureText(text, 10);
-            DrawRectangle(0, 0, width, 10, (Color){ 0, 0, 0, 128 });
-            DrawText(text, 0, 0, 10, (Color){ 255, 255, 255, 128 });
+            DrawText(text, 0, 0, 10, (Color){ 15, 15, 15, 127 });
         }
     EndTextureMode();
 
@@ -178,8 +174,10 @@ void Display_renderEnd(Display_t *display, const double fps, const double delta_
 #ifndef FAST_FULLSCREEN
         ClearBackground(BLACK);
 #endif
-        DrawTexturePro(display->offscreen.texture, display->offscreen_source, display->offscreen_destination,
-            display->offscreen_origin, 0.0f, WHITE);
+        BeginShaderMode(display->palette_shader);
+            DrawTexturePro(display->offscreen.texture, display->offscreen_source, display->offscreen_destination,
+                display->offscreen_origin, 0.0f, WHITE);
+        EndShaderMode();
     EndDrawing();
 }
 
