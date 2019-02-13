@@ -193,10 +193,10 @@ void Display_renderEnd(Display_t *display, const Display_Statistics_t *statistic
                     color = (Color){   0, 255,   0, 191 };
                 } else
                 if (fps >= 45.0) {
-                    color = (Color){ 255, 127,   0, 191 };
+                    color = (Color){ 255, 255,   0, 191 };
                 } else
                 if (fps >= 30.0) {
-                    color = (Color){ 255, 255,   0, 191 };
+                    color = (Color){ 255, 127,   0, 191 };
                 } else {
                     color = (Color){ 255,   0,   0, 191 };
                 }
