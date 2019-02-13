@@ -35,7 +35,9 @@
 
 #define CONFIGURATION_FILE_NAME    "configuration.json"
 
-#define MAX_FPS_SAMPLES     256
+#define FPS_STATISTICS_RESOLUTION   10
+
+#define MAX_FPS_SAMPLES             256
 
 static double update_fps(const double elapsed) {
     static double history[MAX_FPS_SAMPLES] = {};
@@ -108,6 +110,11 @@ void Engine_run(Engine_t *engine)
     const int skippable_frames = engine->configuration.skippable_frames;
     Log_write(LOG_LEVELS_INFO, "Engine is now running, delta-time is %.3fs w/ %d skippable frames", delta_time, skippable_frames);
 
+    Display_Statistics_t statistics = (Display_Statistics_t){
+            .delta_time = delta_time
+        };
+    int count = 0;
+
     double previous = GetTime();
     double lag = 0.0;
 
@@ -117,6 +124,13 @@ void Engine_run(Engine_t *engine)
         previous = current;
 
         double fps = update_fps(elapsed); // Calculate frame statistics.
+
+        statistics.fps = fps;
+        if (count == 0) {
+            statistics.history[statistics.index] = fps;
+            statistics.index = (statistics.index + 1) % 100;
+        }
+        count = (count + 1) % FPS_STATISTICS_RESOLUTION;
 
         Interpreter_input(&engine->interpreter);
 
@@ -128,6 +142,6 @@ void Engine_run(Engine_t *engine)
 
         Display_renderBegin(&engine->display);
             Interpreter_render(&engine->interpreter, lag / delta_time);
-        Display_renderEnd(&engine->display, fps, delta_time);
+        Display_renderEnd(&engine->display, &statistics);
     }
 }
