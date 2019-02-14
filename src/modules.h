@@ -25,6 +25,8 @@
 
 #include "wren/wren.h"
 
+// TODO: split modules in separate files with the same "stem" of the related Wren file.
+
 typedef struct _Module_Entry_t {
     const char *module;
     const char *script;
