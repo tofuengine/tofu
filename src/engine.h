@@ -31,16 +31,24 @@
 #include "environment.h"
 #include "interpreter.h"
 
-typedef struct _Engine_t {
+#define STATISTICS_LENGTH       120
 
+typedef struct _Engine_t {
     Environment_t environment;
 
     Configuration_t configuration;
 
     Display_t display;
     Interpreter_t interpreter;
-
 } Engine_t;
+
+typedef struct _Engine_Statistics_t {
+    double delta_time;
+    double min_fps, max_fps;
+    double current_fps;
+    double history[STATISTICS_LENGTH];
+    int index;
+} Engine_Statistics_t;
 
 extern bool Engine_initialize(Engine_t *engine, const char *base_path);
 extern void Engine_terminate(Engine_t *engine);

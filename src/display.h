@@ -27,15 +27,33 @@
 
 #include <raylib/raylib.h>
 
+#include <stdlib.h>
+
+// Forward declaration.
+typedef struct _Engine_Statistics_t Engine_Statistics_t;
+
+#define MAX_GRAPHIC_BANKS       4
+
+#define MAX_PALETTE_COLORS      16
+#define VALUES_PER_COLOR        4
+
+#define ALPHA_COLOR_TRANSPARENT 0
+#define ALPHA_COLOR_OPAQUE      255
+
 typedef struct _Display_Configuration_t {
     int width, height;
     int colors;
     bool fullscreen;
     bool autofit;
     bool hide_cursor;
-    bool display_fps;
     bool exit_key_enabled;
 } Display_Configuration_t;
+
+typedef struct _Bank_t {
+    // char file[PATH_FILE_MAX];
+    Texture2D atlas;
+    int cell_width, cell_height;
+} Bank_t;
 
 typedef struct _Display_t {
     Display_Configuration_t configuration;
@@ -45,12 +63,19 @@ typedef struct _Display_t {
     RenderTexture2D offscreen;
     Rectangle offscreen_source, offscreen_destination;
     Vector2 offscreen_origin;
+
+    Color palette[MAX_PALETTE_COLORS];
+    Shader palette_shader;
+    int palette_shader_palette_location;
+
+    Bank_t banks[MAX_GRAPHIC_BANKS];
 } Display_t;
 
 extern bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title);
 extern bool Display_shouldClose(Display_t *display);
-extern void Display_renderBegin(Display_t *display, void callback(void));
-extern void Display_renderEnd(Display_t *display, void callback(void), const double fps, const double delta_time);
+extern void Display_renderBegin(Display_t *display);
+extern void Display_renderEnd(Display_t *display, const Engine_Statistics_t *statistics);
+extern void Display_palette(Display_t *display, const Color *palette, size_t count);
 extern void Display_terminate(Display_t *display);
 
 #endif  /* __DISPLAY_H__ */
