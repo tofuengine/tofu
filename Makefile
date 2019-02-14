@@ -8,8 +8,8 @@ CFLAGS=-O2 -g -D_DEFAULT_SOURCE -std=c99 -Iexternal
 LINKER=cc
 LFLAGS=-Wall -Wextra -Werror -Lexternal/raylib -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
 
-SOURCES:= $(wildcard src/*.c external/jsmn/*.c external/wren/*.c)
-INCLUDES:= $(wildcard src/*.h wildcard src/modules/*.inc external/raylib/*.h external/jsmn/*.h external/wren/*.h)
+SOURCES:= $(wildcard src/*.c  src/modules/*.c external/jsmn/*.c external/wren/*.c)
+INCLUDES:= $(wildcard src/*.h src/modules/*.h external/jsmn/*.h external/wren/*.h external/raylib/*.h)
 OBJECTS:= $(SOURCES:%.c=%.o)
 rm=rm -f
 
