@@ -172,7 +172,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     display->palette_shader = LoadShaderCode(NULL, (char *)palette_shader_code);
     display->palette_shader_palette_location = GetShaderLocation(display->palette_shader, "palette");
 
-    Color palette[MAX_PALETTE_COLORS];
+    Color palette[MAX_PALETTE_COLORS]; // Initial gray-scale palette.
     for (size_t i = 0; i < MAX_PALETTE_COLORS; ++i) {
         unsigned char v = ((float)i / (float)(MAX_PALETTE_COLORS - 1)) * 255;
         palette[i] = (Color){ v, v, v, 255 };
