@@ -22,6 +22,7 @@
 
 #include "display.h"
 
+#include "engine.h"
 #include "log.h"
 
 #include <memory.h>
@@ -30,8 +31,9 @@
 
 #define FAST_FULLSCREEN             1
 
-#define FPS_HISTOGRAM_HEIGHT        25
-#define FPS_MAX_VALUE               80
+#define FPS_HISTOGRAM_HEIGHT        30
+#define FPS_TEXT_HEIGHT             10
+#define FPS_MAX_VALUE               90
 
 static const char *palette_shader_code = 
     "#version 330\n"
@@ -65,6 +67,36 @@ static const char *palette_shader_code =
     "    finalColor = vec4(color / 255.0);\n"
     "}\n"
 ;
+
+static void draw_statistics(const Engine_Statistics_t *statistics)
+{
+    DrawRectangle(0, 0, STATISTICS_LENGTH, FPS_HISTOGRAM_HEIGHT + FPS_TEXT_HEIGHT, (Color){ 63, 63, 63, 191 });
+    for (int i = 0; i < STATISTICS_LENGTH; ++i) {
+        int index = (statistics->index + i) % STATISTICS_LENGTH;
+        double fps = statistics->history[index];
+        int height = (int)((fps / (double)FPS_MAX_VALUE) * (double)FPS_HISTOGRAM_HEIGHT);
+        if (height > FPS_HISTOGRAM_HEIGHT) {
+            height = FPS_HISTOGRAM_HEIGHT;
+        }
+        Color color;
+        if (fps >= 60.0) {  // We are safe to do pretty much anything.
+            color = (Color){   0, 255,   0, 191 };
+        } else
+        if (fps >= 45.0) {  // Fluid enough for some complicate 2D game.
+            color = (Color){ 255, 255,   0, 191 };
+        } else
+        if (fps >= 30.0) {  // Enough for a simple 2D game.
+            color = (Color){ 255, 127,   0, 191 };
+        } else {            // Bad, very bad...
+            color = (Color){ 255,   0,   0, 191 };
+        }
+        DrawLine(i, FPS_HISTOGRAM_HEIGHT - height, i, FPS_HISTOGRAM_HEIGHT, color);
+    }
+
+    const char *text = FormatText("%.0f FPS (%.0f - %.0f)", statistics->current_fps, statistics->min_fps, statistics->max_fps);
+    int width = MeasureText(text, FPS_TEXT_HEIGHT);
+    DrawText(text, (STATISTICS_LENGTH - width) / 2, FPS_HISTOGRAM_HEIGHT, FPS_TEXT_HEIGHT, (Color){ 0, 255, 0, 191 });
+}
 
 bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title)
 {
@@ -166,7 +198,7 @@ void Display_renderBegin(Display_t *display)
         ClearBackground(BLACK);
 }
 
-void Display_renderEnd(Display_t *display, const Display_Statistics_t *statistics)
+void Display_renderEnd(Display_t *display, const Engine_Statistics_t *statistics)
 {
     EndTextureMode();
 
@@ -179,32 +211,8 @@ void Display_renderEnd(Display_t *display, const Display_Statistics_t *statistic
                 display->offscreen_origin, 0.0f, WHITE);
         EndShaderMode();
 
-        if (display->configuration.display_fps) {
-            DrawRectangle(0, 0, STATISTICS_LENGTH, FPS_HISTOGRAM_HEIGHT, (Color){ 63, 63, 63, 191 });
-            for (int i = 0; i < STATISTICS_LENGTH; ++i) {
-                int index = (statistics->index + i) % STATISTICS_LENGTH;
-                double fps = statistics->history[index];
-                int height = (int)((fps / (double)FPS_MAX_VALUE) * (double)FPS_HISTOGRAM_HEIGHT);
-                if (height > FPS_HISTOGRAM_HEIGHT) {
-                    height = FPS_HISTOGRAM_HEIGHT;
-                }
-                Color color;
-                if (fps >= 60.0) {
-                    color = (Color){   0, 255,   0, 191 };
-                } else
-                if (fps >= 45.0) {
-                    color = (Color){ 255, 255,   0, 191 };
-                } else
-                if (fps >= 30.0) {
-                    color = (Color){ 255, 127,   0, 191 };
-                } else {
-                    color = (Color){ 255,   0,   0, 191 };
-                }
-                DrawLine(i, FPS_HISTOGRAM_HEIGHT - height, i, FPS_HISTOGRAM_HEIGHT, color);
-            }
-
-            const char *text = FormatText("%.0f FPS (%.3fs)", statistics->fps, statistics->delta_time);
-            DrawText(text, 0, FPS_HISTOGRAM_HEIGHT, 10, (Color){ 127, 127, 127, 191 });
+        if (statistics) {
+            draw_statistics(statistics);
         }
     EndDrawing();
 }

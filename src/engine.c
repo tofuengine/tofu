@@ -35,20 +35,38 @@
 
 #define CONFIGURATION_FILE_NAME    "configuration.json"
 
+#define FPS_AVERAGE_SAMPLES         256
 #define FPS_STATISTICS_RESOLUTION   10
 
-#define MAX_FPS_SAMPLES             256
-
-static double update_fps(const double elapsed) {
-    static double history[MAX_FPS_SAMPLES] = {};
+static bool update_statistics(Engine_Statistics_t *statistics, double elapsed) {
+    static double history[FPS_AVERAGE_SAMPLES] = {};
     static int index = 0;
+    static int samples = 0;
     static double sum = 0.0;
+    static int count = 0;
 
     sum -= history[index];
     sum += elapsed;
     history[index] = elapsed;
-    index = (index + 1) % MAX_FPS_SAMPLES;
-    return (double)MAX_FPS_SAMPLES / sum;
+    index = (index + 1) % FPS_AVERAGE_SAMPLES;
+    if (samples < FPS_AVERAGE_SAMPLES) {
+        samples += 1;
+        return false;
+    }
+    double fps = (double)FPS_AVERAGE_SAMPLES / sum;
+    if (statistics->min_fps > fps) {
+        statistics->min_fps = fps;
+    }
+    if (statistics->max_fps < fps) {
+        statistics->max_fps = fps;
+    }
+    statistics->current_fps = fps;
+    if (count == 0) {
+        statistics->history[statistics->index] = fps;
+        statistics->index = (statistics->index + 1) % STATISTICS_LENGTH;
+    }
+    count = (count + 1) % FPS_STATISTICS_RESOLUTION;
+    return true;
 }
 
 bool Engine_initialize(Engine_t *engine, const char *base_path)
@@ -71,8 +89,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             .fullscreen = engine->configuration.fullscreen,
             .autofit = engine->configuration.autofit,
             .hide_cursor = engine->configuration.hide_cursor,
-            .display_fps = engine->configuration.debug,
-            .exit_key_enabled = engine->configuration.exit_key_enabled
+            .exit_key_enabled = engine->configuration.exit_key_enabled,
         };
     bool result = Display_initialize(&engine->display, &display_configuration, engine->configuration.title);
     if (!result) {
@@ -110,10 +127,11 @@ void Engine_run(Engine_t *engine)
     const int skippable_frames = engine->configuration.skippable_frames;
     Log_write(LOG_LEVELS_INFO, "Engine is now running, delta-time is %.3fs w/ %d skippable frames", delta_time, skippable_frames);
 
-    Display_Statistics_t statistics = (Display_Statistics_t){
-            .delta_time = delta_time
+    Engine_Statistics_t statistics = (Engine_Statistics_t){
+            .delta_time = delta_time,
+            .min_fps = __DBL_MAX__,
+            .max_fps = 0.0
         };
-    int count = 0;
 
     double previous = GetTime();
     double lag = 0.0;
@@ -123,14 +141,11 @@ void Engine_run(Engine_t *engine)
         double elapsed = current - previous;
         previous = current;
 
-        double fps = update_fps(elapsed); // Calculate frame statistics.
-
-        statistics.fps = fps;
-        if (count == 0) {
-            statistics.history[statistics.index] = fps;
-            statistics.index = (statistics.index + 1) % 100;
+        const Engine_Statistics_t *current_statistics = NULL;
+        if (engine->configuration.debug) {
+            bool ready = update_statistics(&statistics, elapsed);
+            current_statistics = ready ? &statistics : NULL;
         }
-        count = (count + 1) % FPS_STATISTICS_RESOLUTION;
 
         Interpreter_input(&engine->interpreter);
 
@@ -142,6 +157,6 @@ void Engine_run(Engine_t *engine)
 
         Display_renderBegin(&engine->display);
             Interpreter_render(&engine->interpreter, lag / delta_time);
-        Display_renderEnd(&engine->display, &statistics);
+        Display_renderEnd(&engine->display, current_statistics);
     }
 }

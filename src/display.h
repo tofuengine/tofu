@@ -29,7 +29,8 @@
 
 #include <stdlib.h>
 
-#define STATISTICS_LENGTH       100
+// Forward declaration.
+typedef struct _Engine_Statistics_t Engine_Statistics_t;
 
 #define MAX_GRAPHIC_BANKS       4
 
@@ -45,16 +46,8 @@ typedef struct _Display_Configuration_t {
     bool fullscreen;
     bool autofit;
     bool hide_cursor;
-    bool display_fps;
     bool exit_key_enabled;
 } Display_Configuration_t;
-
-typedef struct _Display_Statistics_t {
-    double delta_time;
-    double fps;
-    double history[STATISTICS_LENGTH];
-    int index;
-} Display_Statistics_t;
 
 typedef struct _Bank_t {
     // char file[PATH_FILE_MAX];
@@ -81,7 +74,7 @@ typedef struct _Display_t {
 extern bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title);
 extern bool Display_shouldClose(Display_t *display);
 extern void Display_renderBegin(Display_t *display);
-extern void Display_renderEnd(Display_t *display, const Display_Statistics_t *statistics);
+extern void Display_renderEnd(Display_t *display, const Engine_Statistics_t *statistics);
 extern void Display_palette(Display_t *display, const Color *palette, size_t count);
 extern void Display_terminate(Display_t *display);
 
