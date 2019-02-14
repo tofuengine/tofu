@@ -20,7 +20,15 @@
  * SOFTWARE.
  **/
 
-static const char events_wren[] = 
+#include "events.h"
+
+#include "../environment.h"
+#include "../log.h"
+
+#include <raylib/raylib.h>
+#include <string.h>
+
+const char events_wren[] = 
     "foreign class Environment {\n"
     "\n"
     "    foreign static quit()\n"
@@ -37,4 +45,49 @@ static const char events_wren[] =
     "    foreign static isKeyPressed(key)\n"
     "    foreign static isKeyReleased(key)\n"
     "\n"
-    "}\n";
+    "}\n"
+;
+
+void events_input_iskeydown(WrenVM *vm)
+{
+    // Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+
+    int key = (int)wrenGetSlotDouble(vm, 1);
+    bool is_down = IsKeyDown(key);
+    wrenSetSlotBool(vm, 0, is_down == true);
+}
+
+void events_input_iskeyup(WrenVM *vm)
+{
+    // Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+
+    int key = (int)wrenGetSlotDouble(vm, 1);
+    bool is_up = IsKeyUp(key);
+    wrenSetSlotBool(vm, 0, is_up == true);
+}
+
+void events_input_iskeypressed(WrenVM *vm)
+{
+    // Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+
+    int key = (int)wrenGetSlotDouble(vm, 1);
+    bool is_pressed = IsKeyPressed(key);
+    wrenSetSlotBool(vm, 0, is_pressed == true);
+}
+
+void events_input_iskeyreleased(WrenVM *vm)
+{
+    // Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+
+    int key = (int)wrenGetSlotDouble(vm, 1);
+    bool is_released = IsKeyReleased(key);
+    wrenSetSlotBool(vm, 0, is_released == true);
+}
+
+void events_environment_quit(WrenVM *vm)
+{
+    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+
+    environment->should_close = true;
+}
+

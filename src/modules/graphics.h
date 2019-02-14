@@ -20,33 +20,20 @@
  * SOFTWARE.
  **/
 
-#ifndef __TOFU_MODULES_H__
-#define __TOFU_MODULES_H__
+#ifndef __MODULES_GRAPHICS_H__
+#define __MODULES_GRAPHICS_H__
 
 #include <wren/wren.h>
 
-typedef struct _Module_Entry_t {
-    const char *module;
-    const char *script;
-} Module_Entry_t;
+extern const char graphics_wren[];
 
-typedef struct _Class_Entry_t {
-    const char *module;
-    const char *className;
-    WrenForeignMethodFn allocate;
-    WrenFinalizerFn finalize;
-} Class_Entry_t;
+extern void graphics_canvas_width(WrenVM *vm);
+extern void graphics_canvas_height(WrenVM *vm);
+extern void graphics_canvas_palette(WrenVM *vm);
+extern void graphics_canvas_bank(WrenVM *vm);
+extern void graphics_canvas_text(WrenVM *vm);
+extern void graphics_canvas_point(WrenVM *vm);
+extern void graphics_canvas_polygon(WrenVM *vm);
+extern void graphics_canvas_sprite(WrenVM *vm);
 
-typedef struct _Method_Entry_t {
-    const char *module;
-    const char *className;
-    bool isStatic;
-    const char *signature;
-    WrenForeignMethodFn method;
-} Method_Entry_t;
-
-extern const Module_Entry_t _modules[];
-extern const Class_Entry_t _classes[];
-extern const Method_Entry_t _methods[];
-
-#endif  /* __TOFU_MODULES_H__ */
+#endif  /* __MODULES_GRAPHICS_H__ */
