@@ -270,9 +270,13 @@ void graphics_canvas_sprite(WrenVM *vm)
         return;
     }
 
-    Rectangle sourceRec = { sprite_id * bank->cell_width, 0.0f, (float)bank->cell_width, (float)bank->cell_height };
+    int bank_position = sprite_id * bank->cell_width;
+    int bank_x = bank_position % bank->atlas.width;
+    int bank_y = (bank_position / bank->atlas.width) * bank->cell_height;
+
+    Rectangle sourceRec = { (float)bank_x, (float)bank_y, (float)bank->cell_width, (float)bank->cell_height };
     Rectangle destRec = { x, y, (float)bank->cell_width * scale_x, (float)bank->cell_height * scale_y };
-    Vector2 origin = { bank->cell_width / 2.0f, bank->cell_height / 2.0f };
+    Vector2 origin = { bank->cell_width / 2.0f, bank->cell_height / 2.0f }; // TODO: make origin configurable.
 
     DrawTexturePro(bank->atlas, sourceRec, destRec, origin, (float)rotation, (Color){ 255, 255, 255, 255 });
 }
