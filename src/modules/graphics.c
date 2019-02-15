@@ -30,7 +30,7 @@
 
 #define UNUSED(x)       (void)(x)
 
-const char graphics_wren[] = 
+const char graphics_wren[] =
     "foreign class Canvas {\n"
     "\n"
     "    foreign static width\n"
@@ -197,9 +197,9 @@ void graphics_canvas_text(WrenVM *vm) // foreign static text(font_id, text, colo
 
 void graphics_canvas_point(WrenVM *vm)
 {
-    int x = (int)wrenGetSlotDouble(vm, 1); 
-    int y = (int)wrenGetSlotDouble(vm, 2); 
-    int color = (int)wrenGetSlotDouble(vm, 3); 
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+    int color = (int)wrenGetSlotDouble(vm, 3);
 
     DrawPixel(x, y, (Color){ color, color, color, 255 });
 }

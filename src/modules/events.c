@@ -28,7 +28,7 @@
 #include <raylib/raylib.h>
 #include <string.h>
 
-const char events_wren[] = 
+const char events_wren[] =
     "foreign class Environment {\n"
     "\n"
     "    foreign static quit()\n"
