@@ -180,7 +180,10 @@ void graphics_canvas_bank(WrenVM *vm)
     Texture2D texture = LoadTextureFromImage(image);
     Log_write(LOG_LEVELS_DEBUG, "[TOFU] Bank '%s' loaded as texture w/ id #%d", pathfile, texture.id);
 
+    // TODO: unload bank if already in use!
+
     environment->display->banks[bank_id] = (Bank_t){
+            .loaded = true,
             .atlas = texture,
             .cell_width = cell_width,
             .cell_height = cell_height

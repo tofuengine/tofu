@@ -181,7 +181,9 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
 
     for (size_t i = 0; i < MAX_GRAPHIC_BANKS; ++i) {
         Bank_t *bank = &display->banks[i];
-        *bank = (Bank_t){};
+        *bank = (Bank_t){
+                .loaded = false
+            };
     }
 
     for (size_t i = 0; i < MAX_GRAPHIC_FONTS; ++i) {
@@ -252,9 +254,9 @@ void Display_terminate(Display_t *display)
 
     for (size_t i = 0; i < MAX_GRAPHIC_BANKS; ++i) {
         Bank_t *bank = &display->banks[i];
-        if (bank->atlas.id > 0) {
+        if (bank->loaded) {
             UnloadTexture(bank->atlas);
-            bank->atlas.id = 0;
+            bank->loaded = false;
         }
     }
 
