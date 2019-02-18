@@ -61,6 +61,7 @@ typedef struct _Font_t {
     bool loaded;
     Font font;
 } Font_t;
+
 typedef struct _Display_t {
     Display_Configuration_t configuration;
 

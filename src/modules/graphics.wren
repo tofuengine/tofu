@@ -6,6 +6,7 @@ foreign class Canvas {
     foreign static font(font_id, file)
     foreign static bank(bank_id, file, width, height)
 
+    foreign static defaultFont
     foreign static text(font_id, text, x, y, color, size, align)
 
     foreign static point(x, y, color)

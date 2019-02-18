@@ -28,6 +28,8 @@
 #include <raylib/raylib.h>
 #include <string.h>
 
+#define DEFAULT_FONT_ID -1
+
 #define UNUSED(x)       (void)(x)
 
 const char graphics_wren[] =
@@ -39,6 +41,7 @@ const char graphics_wren[] =
     "    foreign static font(font_id, file)\n"
     "    foreign static bank(bank_id, file, width, height)\n"
     "\n"
+    "    foreign static defaultFont\n"
     "    foreign static text(font_id, text, x, y, color, size, align)\n"
     "\n"
     "    foreign static point(x, y, color)\n"
@@ -184,6 +187,11 @@ void graphics_canvas_bank(WrenVM *vm)
         };
 }
 
+void graphics_canvas_defaultFont(WrenVM *vm)
+{
+    wrenSetSlotDouble(vm, 0, DEFAULT_FONT_ID);
+}
+
 void graphics_canvas_text(WrenVM *vm) // foreign static text(font_id, text, color, size, align)
 {
     Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
@@ -218,8 +226,9 @@ void graphics_canvas_text(WrenVM *vm) // foreign static text(font_id, text, colo
     Log_write(LOG_LEVELS_DEBUG, "Canvas.text() -> %d, %d, %d", width, dx, dy);
 #endif
 
-    DrawText(text, dx, dy, size, (Color){ color, color, color, 255 });
-}
+    if (font_id == DEFAULT_FONT_ID) {
+        DrawText(text, dx, dy, size, (Color){ color, color, color, 255 });
+    }
 
     const Font_t *font = &environment->display->fonts[font_id];
 
