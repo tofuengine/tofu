@@ -40,6 +40,7 @@ const Method_Entry_t _methods[] = {
     { "graphics", "Canvas", true, "width", graphics_canvas_width },
     { "graphics", "Canvas", true, "height", graphics_canvas_height },
     { "graphics", "Canvas", true, "palette(_)", graphics_canvas_palette },
+    { "graphics", "Canvas", true, "font(_,_)", graphics_canvas_font },
     { "graphics", "Canvas", true, "bank(_,_,_,_)", graphics_canvas_bank },
     { "graphics", "Canvas", true, "text(_,_,_,_,_,_,_)", graphics_canvas_text },
     { "graphics", "Canvas", true, "point(_,_,_)", graphics_canvas_point },

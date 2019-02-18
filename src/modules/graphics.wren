@@ -3,7 +3,7 @@ foreign class Canvas {
     foreign static width
     foreign static height
     foreign static palette(colors)
-//    foreign static font(font_id, family, size)
+    foreign static font(font_id, file)
     foreign static bank(bank_id, file, width, height)
 
     foreign static text(font_id, text, x, y, color, size, align)

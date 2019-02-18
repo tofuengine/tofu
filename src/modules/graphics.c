@@ -36,7 +36,7 @@ const char graphics_wren[] =
     "    foreign static width\n"
     "    foreign static height\n"
     "    foreign static palette(colors)\n"
-    "//    foreign static font(font_id, family, size)\n"
+    "    foreign static font(font_id, file)\n"
     "    foreign static bank(bank_id, file, width, height)\n"
     "\n"
     "    foreign static text(font_id, text, x, y, color, size, align)\n"
@@ -128,6 +128,32 @@ void graphics_canvas_palette(WrenVM *vm)
     Display_palette(environment->display, palette, count);
 }
 
+void graphics_canvas_font(WrenVM *vm)
+{
+    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+
+    int font_id = (int)wrenGetSlotDouble(vm, 1);
+    const char *file = wrenGetSlotString(vm, 2);
+#ifdef DEBUG
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.font() -> %d, %s", font_id, file);
+#endif
+
+    char pathfile[PATH_FILE_MAX] = {};
+    strcpy(pathfile, environment->base_path);
+    strcat(pathfile, file + 2);
+
+    Font font = LoadFont(pathfile);
+    Log_write(LOG_LEVELS_DEBUG, "[TOFU] Font '%s' loaded as texture w/ id #%d", pathfile, font.texture.id);
+
+    // TODO: unload font if already in use!
+
+    environment->display->fonts[font_id] = (Font_t){
+//            .pathfile = pathfile,
+            .loaded = true,
+            .font = font
+        };
+}
+
 void graphics_canvas_bank(WrenVM *vm)
 {
     Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
@@ -160,6 +186,8 @@ void graphics_canvas_bank(WrenVM *vm)
 
 void graphics_canvas_text(WrenVM *vm) // foreign static text(font_id, text, color, size, align)
 {
+    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+
     int font_id = (int)wrenGetSlotDouble(vm, 1);
     const char *text = wrenGetSlotString(vm, 2);
     int x = (int)wrenGetSlotDouble(vm, 3);
@@ -170,8 +198,6 @@ void graphics_canvas_text(WrenVM *vm) // foreign static text(font_id, text, colo
 #ifdef DEBUG
     Log_write(LOG_LEVELS_DEBUG, "Canvas.text() -> %d, %s, %d, %d, %d, %d, %s", font_id, text, x, y, color, size, align);
 #endif
-
-    UNUSED(font_id);
 
     int width = MeasureText(text, size);
 
@@ -193,6 +219,22 @@ void graphics_canvas_text(WrenVM *vm) // foreign static text(font_id, text, colo
 #endif
 
     DrawText(text, dx, dy, size, (Color){ color, color, color, 255 });
+}
+
+    const Font_t *font = &environment->display->fonts[font_id];
+
+    if (font->font.texture.id == 0) {
+        return;
+    }
+
+    // Spacing is proportional to default font size.
+    const int defaultFontSize = 10;   // Default Font chars height in pixel
+    if (size < defaultFontSize) {
+        size = defaultFontSize;
+    }
+    int spacing = size / defaultFontSize;
+
+    DrawTextEx(font->font, text, (Vector2){ dx, dy }, size, (float)spacing, (Color){ color, color, color, 255 });
 }
 
 void graphics_canvas_point(WrenVM *vm)

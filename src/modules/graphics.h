@@ -30,6 +30,7 @@ extern const char graphics_wren[];
 extern void graphics_canvas_width(WrenVM *vm);
 extern void graphics_canvas_height(WrenVM *vm);
 extern void graphics_canvas_palette(WrenVM *vm);
+extern void graphics_canvas_font(WrenVM *vm);
 extern void graphics_canvas_bank(WrenVM *vm);
 extern void graphics_canvas_text(WrenVM *vm);
 extern void graphics_canvas_point(WrenVM *vm);
