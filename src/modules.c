@@ -44,6 +44,7 @@ const Method_Entry_t _methods[] = {
     { "graphics", "Canvas", true, "text(_,_,_,_,_,_,_)", graphics_canvas_text },
     { "graphics", "Canvas", true, "point(_,_,_)", graphics_canvas_point },
     { "graphics", "Canvas", true, "polygon(_,_,_)", graphics_canvas_polygon },
+    { "graphics", "Canvas", true, "circle(_,_,_,_,_)", graphics_canvas_circle },
     { "graphics", "Canvas", true, "sprite(_,_,_,_,_,_,_)", graphics_canvas_sprite },
     { "events", "Input", true, "isKeyDown(_)", events_input_iskeydown },
     { "events", "Input", true, "isKeyUp(_)", events_input_iskeyup },

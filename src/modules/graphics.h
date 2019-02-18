@@ -34,6 +34,7 @@ extern void graphics_canvas_bank(WrenVM *vm);
 extern void graphics_canvas_text(WrenVM *vm);
 extern void graphics_canvas_point(WrenVM *vm);
 extern void graphics_canvas_polygon(WrenVM *vm);
+extern void graphics_canvas_circle(WrenVM *vm);
 extern void graphics_canvas_sprite(WrenVM *vm);
 
 #endif  /* __MODULES_GRAPHICS_H__ */

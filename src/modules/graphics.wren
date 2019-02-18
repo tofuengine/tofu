@@ -10,7 +10,7 @@ foreign class Canvas {
 
     foreign static point(x, y, color)
     foreign static polygon(mode, vertices, color)
-//    foreign static circle(mode, x, y, radius, color)
+    foreign static circle(mode, x, y, radius, color)
 
     foreign static sprite(bank_id, sprite_id, x, y, r, sx, sy)
 

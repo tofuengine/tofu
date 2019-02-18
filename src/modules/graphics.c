@@ -43,7 +43,7 @@ const char graphics_wren[] =
     "\n"
     "    foreign static point(x, y, color)\n"
     "    foreign static polygon(mode, vertices, color)\n"
-    "//    foreign static circle(mode, x, y, radius, color)\n"
+    "    foreign static circle(mode, x, y, radius, color)\n"
     "\n"
     "    foreign static sprite(bank_id, sprite_id, x, y, r, sx, sy)\n"
     "\n"
@@ -244,6 +244,31 @@ void graphics_canvas_polygon(WrenVM *vm)
     } else
     if (strcmp(mode, "line") == 0) {
         DrawPolyExLines(points, count, (Color){ color, color, color, 255 });
+    } else {
+        Log_write(LOG_LEVELS_WARNING, "[TOFU] Undefined drawing mode for polygon: '%s'", mode);
+    }
+}
+
+void graphics_canvas_circle(WrenVM *vm)
+{
+    const char *mode = wrenGetSlotString(vm, 1);
+    int x = (int)wrenGetSlotDouble(vm, 2);
+    int y = (int)wrenGetSlotDouble(vm, 3);
+    float radius = (float)wrenGetSlotDouble(vm, 4);
+    int color = (int)wrenGetSlotDouble(vm, 5);
+
+#ifdef DEBUG
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.circle(%s, %d, %d, %d, %d)", mode, x, y, radius, color);
+#endif
+
+    if (strcmp(mode, "fill") == 0) {
+        DrawCircle(x, y, radius, (Color){ color, color, color, 255 });
+    } else
+    if (strcmp(mode, "line") == 0) {
+        DrawCircleLines(x, y, radius, (Color){ color, color, color, 255 });
+//     } else
+//     if (strcmp(mode, "sector") == 0) {
+//         DrawCircleSector(x, y, radius, (Color){ color, color, color, 255 });
     } else {
         Log_write(LOG_LEVELS_WARNING, "[TOFU] Undefined drawing mode for polygon: '%s'", mode);
     }
