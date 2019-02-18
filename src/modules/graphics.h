@@ -20,21 +20,21 @@
  * SOFTWARE.
  **/
 
-static const char events_wren[] = 
-    "foreign class Environment {\n"
-    "\n"
-    "    foreign static quit()\n"
-    "\n"
-    "}\n"
-    "\n"
-    "foreign class Input {\n"
-    "\n"
-    "    static space { 32 }\n"
-    "    static q { 81 }\n"
-    "\n"
-    "    foreign static isKeyDown(key)\n"
-    "    foreign static isKeyUp(key)\n"
-    "    foreign static isKeyPressed(key)\n"
-    "    foreign static isKeyReleased(key)\n"
-    "\n"
-    "}\n";
+#ifndef __MODULES_GRAPHICS_H__
+#define __MODULES_GRAPHICS_H__
+
+#include <wren/wren.h>
+
+extern const char graphics_wren[];
+
+extern void graphics_canvas_width(WrenVM *vm);
+extern void graphics_canvas_height(WrenVM *vm);
+extern void graphics_canvas_palette(WrenVM *vm);
+extern void graphics_canvas_bank(WrenVM *vm);
+extern void graphics_canvas_text(WrenVM *vm);
+extern void graphics_canvas_point(WrenVM *vm);
+extern void graphics_canvas_polygon(WrenVM *vm);
+extern void graphics_canvas_circle(WrenVM *vm);
+extern void graphics_canvas_sprite(WrenVM *vm);
+
+#endif  /* __MODULES_GRAPHICS_H__ */
