@@ -22,10 +22,12 @@ Guess what? Yup, that's another game engine/framework.
 
 ## TODOs
 
+- [ ] Add tiled-map support.
+- [ ] Add game controller support.
+- [ ] Support for TARed/ZIPed games ([rxi/microtar](https://github.com/rxi/microtar), [kuba--/zip](https://github.com/kuba--/zip)).
 - [ ] Implement a *smarter* string library (not too distant from C strings).
 - [ ] Use a custom memory-management allocator.
-- [ ] Support for TARed/ZIPed games ([rxi/microtar](https://github.com/rxi/microtar), [kuba--/zip](https://github.com/kuba--/zip)).
-- [ ] Switch to Vulkan API.
+- [ ] Switch to Vulkan API (through GLFW).
 
 ## Inspirations
 
