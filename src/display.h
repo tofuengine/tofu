@@ -53,7 +53,7 @@ typedef struct _Display_Configuration_t {
 typedef struct _Bank_t {
     // char pathfile[PATH_FILE_MAX];
     bool loaded;
-    Texture2D atlas;
+    Texture2D texture;
     int cell_width, cell_height;
 } Bank_t;
 

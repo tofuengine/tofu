@@ -28,9 +28,14 @@
 #include <raylib/raylib.h>
 #include <string.h>
 
-#define DEFAULT_FONT_ID -1
+#define DEFAULT_FONT_ID     -1
+#define DEFAULT_FONT_SIZE   10
 
-#define UNUSED(x)       (void)(x)
+// TODO: move those functions to a graphics HAL.
+static Bank_t load_bank(const char *pathfile, int cell_width, int cell_height, const Color *palette, int colors);
+static void unload_bank(Bank_t *bank);
+static Font_t load_font(const char *pathfile);
+static void unload_font(Font_t *font);
 
 const char graphics_wren[] =
     "foreign class Canvas {\n"
@@ -145,16 +150,11 @@ void graphics_canvas_font(WrenVM *vm)
     strcpy(pathfile, environment->base_path);
     strcat(pathfile, file + 2);
 
-    Font font = LoadFont(pathfile);
-    Log_write(LOG_LEVELS_DEBUG, "[TOFU] Font '%s' loaded as texture w/ id #%d", pathfile, font.texture.id);
-
-    // TODO: unload font if already in use!
-
-    environment->display->fonts[font_id] = (Font_t){
-//            .pathfile = pathfile,
-            .loaded = true,
-            .font = font
-        };
+    Font_t *font = &environment->display->fonts[font_id];
+    if (font->loaded) { // Unload font if previously loaded.
+        unload_font(font);
+    }
+    *font = load_font(pathfile);
 }
 
 void graphics_canvas_bank(WrenVM *vm)
@@ -173,21 +173,11 @@ void graphics_canvas_bank(WrenVM *vm)
     strcpy(pathfile, environment->base_path);
     strcat(pathfile, file + 2);
 
-    Image image = LoadImage(pathfile); // Load and remap image colors to the current palette.
-    for (int i = 0; i < MAX_PALETTE_COLORS; ++i) {
-        ImageColorReplace(&image, environment->display->palette[i], (Color){ i, i, i, 255 });
+    Bank_t *bank = &environment->display->banks[bank_id];
+    if (bank->loaded) { // Unload current texture if previously loaded.
+        unload_bank(bank);
     }
-    Texture2D texture = LoadTextureFromImage(image);
-    Log_write(LOG_LEVELS_DEBUG, "[TOFU] Bank '%s' loaded as texture w/ id #%d", pathfile, texture.id);
-
-    // TODO: unload bank if already in use!
-
-    environment->display->banks[bank_id] = (Bank_t){
-            .loaded = true,
-            .atlas = texture,
-            .cell_width = cell_width,
-            .cell_height = cell_height
-        };
+    *bank = load_bank(pathfile, cell_width, cell_height, environment->display->palette, MAX_PALETTE_COLORS);
 }
 
 void graphics_canvas_defaultFont(WrenVM *vm)
@@ -231,20 +221,20 @@ void graphics_canvas_text(WrenVM *vm) // foreign static text(font_id, text, colo
 
     if (font_id == DEFAULT_FONT_ID) {
         DrawText(text, dx, dy, size, (Color){ color, color, color, 255 });
+        return;
     }
 
     const Font_t *font = &environment->display->fonts[font_id];
 
-    if (font->font.texture.id == 0) {
+    if (!font->loaded) {
         return;
     }
 
     // Spacing is proportional to default font size.
-    const int defaultFontSize = 10;   // Default Font chars height in pixel
-    if (size < defaultFontSize) {
-        size = defaultFontSize;
+    if (size < DEFAULT_FONT_SIZE) {
+        size = DEFAULT_FONT_SIZE;
     }
-    int spacing = size / defaultFontSize;
+    int spacing = size / DEFAULT_FONT_SIZE;
 
     DrawTextEx(font->font, text, (Vector2){ dx, dy }, size, (float)spacing, (Color){ color, color, color, 255 });
 }
@@ -345,18 +335,66 @@ void graphics_canvas_sprite(WrenVM *vm)
 
     const Bank_t *bank = &environment->display->banks[bank_id];
 
-    if (bank->atlas.id == 0) {
+    if (!bank->loaded) {
         return;
     }
 
     int bank_position = sprite_id * bank->cell_width;
-    int bank_x = bank_position % bank->atlas.width;
-    int bank_y = (bank_position / bank->atlas.width) * bank->cell_height;
+    int bank_x = bank_position % bank->texture.width;
+    int bank_y = (bank_position / bank->texture.width) * bank->cell_height;
 
     Rectangle sourceRec = { (float)bank_x, (float)bank_y, (float)bank->cell_width, (float)bank->cell_height };
     Rectangle destRec = { x, y, (float)bank->cell_width * scale_x, (float)bank->cell_height * scale_y };
     Vector2 origin = { bank->cell_width / 2.0f, bank->cell_height / 2.0f }; // TODO: make origin configurable.
 
-    DrawTexturePro(bank->atlas, sourceRec, destRec, origin, (float)rotation, (Color){ 255, 255, 255, 255 });
+    DrawTexturePro(bank->texture, sourceRec, destRec, origin, (float)rotation, (Color){ 255, 255, 255, 255 });
 }
 
+/*--- Local Functions ---*/
+
+static Bank_t load_bank(const char *pathfile, int cell_width, int cell_height, const Color *palette, int colors)
+{
+    Image image = LoadImage(pathfile);
+    if (!image.data) {
+        return (Bank_t){};
+    }
+    for (int i = 0; i < colors; ++i) {
+        ImageColorReplace(&image, palette[i], (Color){ i, i, i, 255 });
+    }
+    Texture2D texture = LoadTextureFromImage(image);
+    UnloadImage(image);
+    Log_write(LOG_LEVELS_DEBUG, "[TOFU] Bank '%s' loaded as texture w/ id #%d", pathfile, texture.id);
+    return (Bank_t){
+            .loaded = texture.id != 0,
+            .texture = texture,
+            .cell_width = cell_width,
+            .cell_height = cell_height
+        };
+}
+
+static void unload_bank(Bank_t *bank)
+{
+    Log_write(LOG_LEVELS_DEBUG, "[TOFU] Bank texture w/ id #%d unloaded", bank->texture.id);
+    UnloadTexture(bank->texture);
+    *bank = (Bank_t){};
+}
+
+static Font_t load_font(const char *pathfile)
+{
+    Font font = LoadFont(pathfile);
+    if (font.texture.id == 0) {
+        return (Font_t){};
+    }
+    Log_write(LOG_LEVELS_DEBUG, "[TOFU] Font '%s' loaded as texture w/ id #%d", pathfile, font.texture.id);
+    return (Font_t){
+            .loaded = true,
+            .font = font
+        };
+}
+
+static void unload_font(Font_t *font)
+{
+    Log_write(LOG_LEVELS_DEBUG, "[TOFU] Font texture w/ id #%d unloaded", font->font.texture.id);
+    UnloadFont(font->font);
+    *font = (Font_t){};
+}
