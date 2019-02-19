@@ -33,6 +33,7 @@
 typedef struct _Engine_Statistics_t Engine_Statistics_t;
 
 #define MAX_GRAPHIC_BANKS       4
+#define MAX_GRAPHIC_FONTS       4
 
 #define MAX_PALETTE_COLORS      16
 #define VALUES_PER_COLOR        4
@@ -50,10 +51,17 @@ typedef struct _Display_Configuration_t {
 } Display_Configuration_t;
 
 typedef struct _Bank_t {
-    // char file[PATH_FILE_MAX];
-    Texture2D atlas;
+    // char pathfile[PATH_FILE_MAX];
+    bool loaded;
+    Texture2D texture;
     int cell_width, cell_height;
 } Bank_t;
+
+typedef struct _Font_t {
+    // char pathfile[PATH_FILE_MAX];
+    bool loaded;
+    Font font;
+} Font_t;
 
 typedef struct _Display_t {
     Display_Configuration_t configuration;
@@ -69,6 +77,7 @@ typedef struct _Display_t {
     int palette_shader_palette_location;
 
     Bank_t banks[MAX_GRAPHIC_BANKS];
+    Font_t fonts[MAX_GRAPHIC_FONTS];
 } Display_t;
 
 extern bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title);

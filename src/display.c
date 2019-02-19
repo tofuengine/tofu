@@ -181,7 +181,16 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
 
     for (size_t i = 0; i < MAX_GRAPHIC_BANKS; ++i) {
         Bank_t *bank = &display->banks[i];
-        *bank = (Bank_t){};
+        *bank = (Bank_t){
+                .loaded = false
+            };
+    }
+
+    for (size_t i = 0; i < MAX_GRAPHIC_FONTS; ++i) {
+        Font_t *font = &display->fonts[i];
+        *font = (Font_t){
+                .loaded = false
+            };
     }
 
     return true;
@@ -235,11 +244,19 @@ void Display_palette(Display_t *display, const Color *palette, size_t count)
 
 void Display_terminate(Display_t *display)
 {
+    for (size_t i = 0; i < MAX_GRAPHIC_FONTS; ++i) {
+        Font_t *font = &display->fonts[i];
+        if (font->loaded) {
+            UnloadFont(font->font);
+            font->loaded = false;
+        }
+    }
+
     for (size_t i = 0; i < MAX_GRAPHIC_BANKS; ++i) {
         Bank_t *bank = &display->banks[i];
-        if (bank->atlas.id > 0) {
-            UnloadTexture(bank->atlas);
-            bank->atlas.id = 0;
+        if (bank->loaded) {
+            UnloadTexture(bank->texture);
+            bank->loaded = false;
         }
     }
 
