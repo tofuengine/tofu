@@ -26,7 +26,20 @@
 #include "../log.h"
 
 #include <raylib/raylib.h>
+#include <math.h>
 #include <string.h>
+
+#ifdef __EXPLICIT_SIGNUM__
+static inline float fsgnf(float value)
+{
+    return (value < 0.0f) ? -1.0f : ((value > 0.0f) ? 1.0f : value); // On -0.0, +NaN, -NaN, it returns -0.0, +NaN, -NaN
+}
+#else
+static inline float fsgnf(float value)
+{
+    return (float)((0.0f < value) - (value < 0.0f)); // No cache miss due to branches.
+}
+#endif
 
 #define DEFAULT_FONT_ID     -1
 #define DEFAULT_FONT_SIZE   10
@@ -343,8 +356,8 @@ void graphics_canvas_sprite(WrenVM *vm)
     int bank_x = bank_position % bank->texture.width;
     int bank_y = (bank_position / bank->texture.width) * bank->cell_height;
 
-    Rectangle sourceRec = { (float)bank_x, (float)bank_y, (float)bank->cell_width, (float)bank->cell_height };
-    Rectangle destRec = { x, y, (float)bank->cell_width * scale_x, (float)bank->cell_height * scale_y };
+    Rectangle sourceRec = { (float)bank_x, (float)bank_y, (float)bank->cell_width * fsgnf(scale_x), (float)bank->cell_height * fsgnf(scale_y) };
+    Rectangle destRec = { x, y, (float)bank->cell_width * fabsf(scale_x), (float)bank->cell_height * fabsf(scale_y) };
     Vector2 origin = { bank->cell_width / 2.0f, bank->cell_height / 2.0f }; // TODO: make origin configurable.
 
     DrawTexturePro(bank->texture, sourceRec, destRec, origin, (float)rotation, (Color){ 255, 255, 255, 255 });
