@@ -358,7 +358,7 @@ void graphics_canvas_sprite(WrenVM *vm)
 
     Rectangle sourceRec = { (float)bank_x, (float)bank_y, (float)bank->cell_width * fsgnf(scale_x), (float)bank->cell_height * fsgnf(scale_y) };
     Rectangle destRec = { x, y, (float)bank->cell_width * fabsf(scale_x), (float)bank->cell_height * fabsf(scale_y) };
-    Vector2 origin = { bank->cell_width / 2.0f, bank->cell_height / 2.0f }; // TODO: make origin configurable.
+    Vector2 origin = { bank->cell_width * 0.5f, bank->cell_height * 0.5f}; // Rotate along center.
 
     DrawTexturePro(bank->texture, sourceRec, destRec, origin, (float)rotation, (Color){ 255, 255, 255, 255 });
 }
