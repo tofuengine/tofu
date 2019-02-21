@@ -19,6 +19,8 @@ class Game {
         _xSize = Canvas.width / STEPS
         _ySize = Canvas.height / STEPS
 
+        _windy = false
+
         _grid = []
         for (i in 0 ... STEPS) {
             var row = []
@@ -27,20 +29,25 @@ class Game {
             }
             _grid.insert(-1, row)
         }
+        reset()
 
         Canvas.palette(PALETTE)
     }
 
+    reset() {
+        for (i in 0 ... STEPS) {
+            for (j in 0 ... STEPS) {
+                _grid[i][j] = 0
+            }
+        }
+        for (j in 0 ... STEPS) {
+            _grid[STEPS - 1][j] = PALETTE.count - 1
+        }
+    }
+
     input() {
         if (Input.isKeyPressed(Input.q)) {
-            for (i in 0 ... STEPS) {
-                for (j in 0 ... STEPS) {
-                    _grid[i][j] = 0
-                }
-            }
-            for (j in 0 ... STEPS) {
-                _grid[STEPS - 1][j] = PALETTE.count - 1
-            }
+            _windy = !_windy
         }
     }
 
@@ -50,8 +57,23 @@ class Game {
                 var value = _grid[i + 1][j]
                 if (value > 0) {
                     var delta = _random.int(0, 2)
-                    _grid[i][j] = value - delta
+                    value = value - delta
+                    if (value < 0) {
+                        value = 0
+                    }
                 }
+
+                var x = j
+                if (_windy) {
+                    x = x + _random.int(0, 3) - 1
+                    if (x < 0) {
+                        x = 0
+                    }
+                    if (x >= STEPS) {
+                        x = STEPS - 1
+                    }
+                }
+                _grid[i][x] = value
             }
         }
     }
