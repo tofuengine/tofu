@@ -44,7 +44,7 @@ static inline float fsgnf(float value)
 #define DEFAULT_FONT_ID     -1
 #define DEFAULT_FONT_SIZE   10
 
-// TODO: move those functions to a graphics HAL.
+// TODO: move those functions to a graphics HAL. Also, call them in the "display termination" part.
 static Bank_t load_bank(const char *pathfile, int cell_width, int cell_height, const Color *palette, int colors);
 static void unload_bank(Bank_t *bank);
 static Font_t load_font(const char *pathfile);
@@ -74,20 +74,17 @@ const char graphics_wren[] =
     "    static triangle(mode, x0, y0, x1, y1, x2, y2, color) {\n"
     "        polygon(mode, [ x0, y0, x1, y1, x2, y2, x0, y0 ], color)\n"
     "    }\n"
-    "    static rectangle(mode, x, y, width, height, color) {\n"
-    "        var left = x\n"
-    "        var top = y\n"
-    "        var right = left + width - 1\n"
-    "        var bottom = top + height - 1\n"
-    "        polygon(mode, [ left, top, left, bottom, right, bottom, right, top, left, top ], color)\n"
-    "    }\n"
-    "    static square(mode, x, y, size, color) {\n"
-    "        var left = x\n"
-    "        var top = y\n"
-    "        var right = left + size - 1\n"
-    "        var bottom = top + size - 1\n"
-    "        polygon(mode, [ left, top, left, bottom, right, bottom, right, top, left, top ], color)\n"
-    "    }\n"
+    "        static rectangle(mode, x, y, width, height, color) {\n"
+    "            var offset = mode == \"line\" ? 1 : 0\n"
+    "            var left = x\n"
+    "            var top = y\n"
+    "            var right = left + width - offset\n"
+    "            var bottom = top + height - offset\n"
+    "            polygon(mode, [ left, top, left, bottom, right, bottom, right, top, left, top ], color)\n"
+    "        }\n"
+    "        static square(mode, x, y, size, color) {\n"
+    "            rectangle(mode, x, y, size, size, color)\n"
+    "        }\n"
     "\n"
     "    static sprite(bank_id, sprite_id, x, y) {\n"
     "        sprite(bank_id, sprite_id, x, y, 0.0, 1.0, 1.0)\n"
@@ -284,6 +281,13 @@ void graphics_canvas_polygon(WrenVM *vm)
         return;
     }
 
+    // When drawing lines we need to ensure to be in mid-pixel coordinates. Also the length of lines are inclusive
+    // (and this need to be taken into account for rectangles/squares). This is due to the "diamond exit rule" in
+    // OpenGL rasterization.
+    //
+    // http://glprogramming.com/red/appendixg.html#name1
+    float offset = (strcmp(mode, "line") == 0) ? 0.5f : 0.0f;
+
     Vector2 points[count];
     for (int i = 0; i < count; ++i) {
         wrenGetListElement(vm, 2, (i * 2), aux_slot_id);
@@ -292,7 +296,7 @@ void graphics_canvas_polygon(WrenVM *vm)
         int y = (int)wrenGetSlotDouble(vm, aux_slot_id);
 
         points[i] = (Vector2){
-                .x = x, .y = y
+                .x = (float)x + offset, .y = (float)y + offset
             };
     }
 
