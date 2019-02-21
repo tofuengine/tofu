@@ -21,27 +21,16 @@ class Game {
 
         _windy = false
 
-        _grid = []
-        for (i in 0 ... STEPS) {
-            var row = []
-            for (j in 0 ... STEPS) {
-                row.insert(-1, 0)
-            }
-            _grid.insert(-1, row)
-        }
         reset()
 
         Canvas.palette(PALETTE)
     }
 
     reset() {
-        for (i in 0 ... STEPS) {
-            for (j in 0 ... STEPS) {
-                _grid[i][j] = 0
-            }
-        }
+        _grid = List.filled(STEPS * STEPS, 0)
+        var offset = (STEPS - 1) * STEPS
         for (j in 0 ... STEPS) {
-            _grid[STEPS - 1][j] = PALETTE.count - 1
+            _grid[offset + j] = PALETTE.count - 1
         }
     }
 
@@ -53,8 +42,9 @@ class Game {
 
     update(deltaTime) {
         for (i in 0 ... (STEPS - 1)) {
+            var offset = i * STEPS
             for (j in 0 ... STEPS) {
-                var value = _grid[i + 1][j]
+                var value = _grid[offset + STEPS + j]
                 if (value > 0) {
                     var delta = _random.int(0, 2)
                     value = value - delta
@@ -73,17 +63,18 @@ class Game {
                         x = STEPS - 1
                     }
                 }
-                _grid[i][x] = value
+                _grid[offset + x] = value
             }
         }
     }
 
     render(ratio) {
         for (i in 0 ... STEPS) {
+            var offset = i * STEPS
             var y = i * _ySize
             for (j in 0 ... STEPS) {
                 var x = j * _xSize
-                var value = _grid[i][j]
+                var value = _grid[offset + j]
                 if (value > 0) {
                     Canvas.rectangle("fill", x, y, _xSize, _ySize, value)
                 }
