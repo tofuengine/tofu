@@ -28,6 +28,10 @@ bunnymark: $(TARGET)
 	@echo "Launching Bunnymark application!"
 	./$(TARGET) ./demos/bunnymark
 
+fire: $(TARGET)
+	@echo "Launching Fire application!"
+	./$(TARGET) ./demos/fire
+
 .PHONY: clean
 clean:
 	@$(rm) $(OBJECTS)
