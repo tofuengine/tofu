@@ -8,7 +8,7 @@ Guess what? Yup, that's another game engine/framework.
 
 * C99 code only.
 * Self-contained, no external modules/libraries required.
-* Multi-platform.
+* Multi-platform (TBD).
 
 ## Cons
 
@@ -22,12 +22,13 @@ Guess what? Yup, that's another game engine/framework.
 
 ## TODOs
 
-- [ ] Add tiled-map support.
-- [ ] Add game controller support.
-- [ ] Support for TARed/ZIPed games ([rxi/microtar](https://github.com/rxi/microtar), [kuba--/zip](https://github.com/kuba--/zip)).
-- [ ] Implement a *smarter* string library (not too distant from C strings).
-- [ ] Use a custom memory-management allocator.
-- [ ] Switch to Vulkan API (through GLFW).
+* [ ] Add tiled-map support.
+* [ ] Add game controller support.
+* [ ] Support for TARed/ZIPed games ([rxi/microtar](https://github.com/rxi/microtar), [kuba--/zip](https://github.com/kuba--/zip)).
+* [ ] Implement a *smarter* string library (not too distant from C strings).
+* [ ] Use a custom memory-management allocator.
+* [ ] Switch to [Vulkan API](https://www.khronos.org/vulkan/) (through [GLFW](https://www.glfw.org/)).
+* [ ] Change the API to be event-based (with explicit registration).
 
 ## Inspirations
 
