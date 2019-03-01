@@ -23,6 +23,8 @@ Guess what? Yup, that's another game engine/framework.
 ## TODOs
 
 * [ ] Add tiled-map support.
+* [ ] Game state e display transitions, at which level? Engine or script?
+* [ ] Add engine splash screen (during which resources are loaded).
 * [ ] Add game controller support.
 * [ ] Support for TARed/ZIPed games ([rxi/microtar](https://github.com/rxi/microtar), [kuba--/zip](https://github.com/kuba--/zip)).
 * [ ] Implement a *smarter* string library (not too distant from C strings).
