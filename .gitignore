@@ -1,5 +1,6 @@
 src/*.o
 src/modules/*.o
+src/modules/graphics/*.o
 external/jsmn/*.o
 external/wren/*.o
 tofu
