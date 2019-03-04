@@ -45,6 +45,8 @@ static inline float fsgnf(float value)
 #define DEFAULT_FONT_ID     -1
 #define DEFAULT_FONT_SIZE   10
 
+#define MAX_DISTINCT_COLORS 256
+
 // TODO: move those functions to a graphics HAL. Also, call them in the "display termination" part.
 static Bank_t load_bank(const char *pathfile, int cell_width, int cell_height, const Color *palette, int colors);
 static void unload_bank(Bank_t *bank);
@@ -394,15 +396,53 @@ void graphics_canvas_sprite(WrenVM *vm)
 
 /*--- Local Functions ---*/
 
+static int find_nearest_color(const Color *palette, int count, Color color)
+{
+    int index = -1;
+    float minimum = __FLT_MAX__;
+    for (int i = 0; i < count; ++i) {
+        const Color *current = &palette[i];
+#ifdef __FIND_NEAREST_COLOR_EUCLIDIAN__
+        float distance = sqrtf(powf(color.r - current->r, 2.0f)
+            + powf(color.g - current->g, 2.0f)
+            + powf(color.b - current->b, 2.0f)
+            + powf(color.a - current->a, 2.0f));
+#else
+        float distance = powf(color.r - current->r, 2.0f)
+            + powf(color.g - current->g, 2.0f)
+            + powf(color.b - current->b, 2.0f)
+            + powf(color.a - current->a, 2.0f);
+#endif
+        if (minimum > distance) {
+            minimum = distance;
+            index = i;
+        }
+    }
+    return index;
+}
+
+static void palettize_image(Image *image, const Color *palette, int colors)
+{
+    int extractCount = 0;
+    Color *extractPalette = ImageExtractPalette(*image, MAX_DISTINCT_COLORS, &extractCount);
+    Log_write(LOG_LEVELS_DEBUG, "[TOFU] Image '%p' has %d distinct color(s)", image, extractCount);
+
+    for (int i = 0; i < extractCount; ++i) {
+        int index = find_nearest_color(palette, colors, extractPalette[i]);
+        ImageColorReplace(image, extractPalette[i], (Color){ index, index, index, 255 });
+    }
+    free(extractPalette);
+}
+
 static Bank_t load_bank(const char *pathfile, int cell_width, int cell_height, const Color *palette, int colors)
 {
     Image image = LoadImage(pathfile);
     if (!image.data) {
         return (Bank_t){};
     }
-    for (int i = 0; i < colors; ++i) {
-        ImageColorReplace(&image, palette[i], (Color){ i, i, i, 255 });
-    }
+
+    palettize_image(&image, palette, colors);
+
     Texture2D texture = LoadTextureFromImage(image);
     UnloadImage(image);
     Log_write(LOG_LEVELS_DEBUG, "[TOFU] Bank '%s' loaded as texture w/ id #%d", pathfile, texture.id);
