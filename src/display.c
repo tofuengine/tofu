@@ -38,7 +38,7 @@
 static const char *palette_shader_code = 
     "#version 330\n"
     "\n"
-    "const int colors = 16;\n"
+    "const int colors = 64;\n"
     "\n"
     "// Input fragment attributes (from fragment shader)\n"
     "in vec2 fragTexCoord;\n"

@@ -35,7 +35,7 @@ typedef struct _Engine_Statistics_t Engine_Statistics_t;
 #define MAX_GRAPHIC_BANKS       4
 #define MAX_GRAPHIC_FONTS       4
 
-#define MAX_PALETTE_COLORS      16
+#define MAX_PALETTE_COLORS      64
 #define VALUES_PER_COLOR        4
 
 #define ALPHA_COLOR_TRANSPARENT 0
