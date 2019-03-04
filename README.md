@@ -8,7 +8,7 @@ Guess what? Yup, that's another game engine/framework.
 
 * C99 code only.
 * Self-contained, no external modules/libraries required.
-* Multi-platform (TBD).
+* Multi-platform (hopefully).
 
 ## Cons
 
@@ -22,9 +22,13 @@ Guess what? Yup, that's another game engine/framework.
 
 ## TODOs
 
+* [*] Library of 8/16/32 color palettes.
 * [ ] Add tiled-map support.
+* [ ] Out-of-the-box timer and easing support.
 * [ ] Game state e display transitions, at which level? Engine or script?
+* [ ] Library of "retro-feel" shaders.
 * [ ] Add engine splash screen (during which resources are loaded).
+* [ ] Hot-reload of selected resources (fonts, banks, maps, shaders, sounds).
 * [ ] Add game controller support.
 * [ ] Support for TARed/ZIPed games ([rxi/microtar](https://github.com/rxi/microtar), [kuba--/zip](https://github.com/kuba--/zip)).
 * [ ] Implement a *smarter* string library (not too distant from C strings).
