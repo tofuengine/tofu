@@ -24,6 +24,7 @@
 
 #include "../environment.h"
 #include "../log.h"
+#include "graphics/palettes.h"
 
 #include <raylib/raylib.h>
 #include <math.h>
@@ -114,36 +115,60 @@ void graphics_canvas_palette(WrenVM *vm)
 {
     Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
-    int count = wrenGetListCount(vm, 1);
-    if (count > MAX_PALETTE_COLORS) {
-        Log_write(LOG_LEVELS_WARNING, "[TOFU] Palette has too many colors (%d) - clamping!", count);
-        count = MAX_PALETTE_COLORS;
+    WrenType type = wrenGetSlotType(vm, 1);
+
+    Color colors[MAX_PALETTE_COLORS];
+    int count = 0;
+
+    if (type == WREN_TYPE_STRING) { // Predefined palette!
+        const char *id = wrenGetSlotString(vm, 1);
+        const Palette_t *palette = graphics_palettes_find(id);
+        if (palette != NULL) {
+            count = palette->count;
+            memcpy(colors, palette->colors, sizeof(Color) * count);
+
+            Log_write(LOG_LEVELS_DEBUG, "[TOFU] Setting predefined palette '%s' w/ %d color(s)", id, count);
+        } else {
+            Log_write(LOG_LEVELS_WARNING, "[TOFU] Unknown predefined palette w/ id '%s'", id);
+        }
+    } else
+    if (type == WREN_TYPE_LIST) { // User supplied palette.
+        count = wrenGetListCount(vm, 1);
+        Log_write(LOG_LEVELS_DEBUG, "Setting custom palette of #%d color(s)", count);
+
+        if (count > MAX_PALETTE_COLORS) {
+            Log_write(LOG_LEVELS_WARNING, "[TOFU] Palette has too many colors (%d) - clamping!", count);
+            count = MAX_PALETTE_COLORS;
+        }
+
+        int slots = wrenGetSlotCount(vm);
+        const int aux_slot_id = slots;
+#ifdef DEBUG
+        Log_write(LOG_LEVELS_DEBUG, "Currently #%d slot(s) available, asking for additional slot", slots);
+#endif
+        wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
+
+#ifdef DEBUG
+        Log_write(LOG_LEVELS_DEBUG, "Canvas.palette() -> %d", count);
+#endif
+        for (int i = 0; i < count; ++i) {
+            wrenGetListElement(vm, 1, i, aux_slot_id);
+
+            Color *color = &colors[i];
+            const char *argb = wrenGetSlotString(vm, aux_slot_id);
+            char hex[3] = {};
+            strncpy(hex, argb    , 2); color->a = strtol(hex, NULL, 16);
+            strncpy(hex, argb + 2, 2); color->r = strtol(hex, NULL, 16);
+            strncpy(hex, argb + 4, 2); color->g = strtol(hex, NULL, 16);
+            strncpy(hex, argb + 6, 2); color->b = strtol(hex, NULL, 16);
+        }
+    } else { 
+        Log_write(LOG_ERROR, "[TOFU] Wrong palette type, need to be string or list");
     }
 
-    int slots = wrenGetSlotCount(vm);
-    const int aux_slot_id = slots;
-#ifdef DEBUG
-    Log_write(LOG_LEVELS_DEBUG, "Currently #%d slot(s) available, asking for additional slot", slots);
-#endif
-    wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
-
-#ifdef DEBUG
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.palette() -> %d", count);
-#endif
-    Color palette[MAX_PALETTE_COLORS];
-    for (int i = 0; i < count; ++i) {
-        wrenGetListElement(vm, 1, i, aux_slot_id);
-
-        Color *color = &palette[i];
-        const char *argb = wrenGetSlotString(vm, aux_slot_id);
-        char hex[3] = {};
-        strncpy(hex, argb    , 2); color->a = strtol(hex, NULL, 16);
-        strncpy(hex, argb + 2, 2); color->r = strtol(hex, NULL, 16);
-        strncpy(hex, argb + 4, 2); color->g = strtol(hex, NULL, 16);
-        strncpy(hex, argb + 6, 2); color->b = strtol(hex, NULL, 16);
+    if (count > 0) {
+        Display_palette(environment->display, colors, count);
     }
-
-    Display_palette(environment->display, palette, count);
 }
 
 void graphics_canvas_font(WrenVM *vm)
