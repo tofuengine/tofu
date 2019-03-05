@@ -421,7 +421,7 @@ static int find_nearest_color(const Color *palette, int count, Color color)
     return index;
 }
 
-static void palettize_image(Image *image, const Color *palette, int colors)
+static void convert_image_to_palette(Image *image, const Color *palette, int colors)
 {
     int extractCount = 0;
     Color *extractPalette = ImageExtractPalette(*image, MAX_DISTINCT_COLORS, &extractCount);
@@ -441,7 +441,7 @@ static Bank_t load_bank(const char *pathfile, int cell_width, int cell_height, c
         return (Bank_t){};
     }
 
-    palettize_image(&image, palette, colors);
+    convert_image_to_palette(&image, palette, colors);
 
     Texture2D texture = LoadTextureFromImage(image);
     UnloadImage(image);
