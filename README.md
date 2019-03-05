@@ -23,7 +23,7 @@ Guess what? Yup, that's another game engine/framework.
 ## TODOs
 
 * [*] Library of 8/16/32 color palettes.
-* [ ] Add tiled-map support.
+* [ ] Add tiled-map support (w/ shader-level scrolling?).
 * [ ] Out-of-the-box timer and easing support.
 * [ ] Game state e display transitions, at which level? Engine or script?
 * [ ] Library of "retro-feel" shaders.
@@ -31,7 +31,7 @@ Guess what? Yup, that's another game engine/framework.
 * [ ] Hot-reload of selected resources (fonts, banks, maps, shaders, sounds).
 * [ ] Add game controller support.
 * [ ] Support for TARed/ZIPed games ([rxi/microtar](https://github.com/rxi/microtar), [kuba--/zip](https://github.com/kuba--/zip)).
-* [ ] Implement a *smarter* string library (not too distant from C strings).
+* [ ] Use a *smarter* string library (implement or use [utstring](http://troydhanson.github.io/uthash/utstring.html)).
 * [ ] Use a custom memory-management allocator.
 * [ ] Switch to [Vulkan API](https://www.khronos.org/vulkan/) (through [GLFW](https://www.glfw.org/)).
 * [ ] Change the API to be event-based (with explicit registration).
