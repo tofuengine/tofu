@@ -22,10 +22,10 @@ Guess what? Yup, that's another game engine/framework.
 
 ## Features
 
-- [*] Palette based graphics (through shader) with up to 16/32/64 colors.
-- [*] Automatic nearest-color palette indexing of images.
-- [*] Predefined library of 8/16/32 colors palettes.
-- [ ] Out-of-the-box palette switching features.
+- [x] Palette based graphics (through shader) with up to 16/32/64 colors.
+- - [x] Automatic nearest-color palette indexing of images.
+- - [x] Predefined library of 8/16/32 colors palettes.
+- - [ ] Out-of-the-box palette switching features.
 - [ ] Tiled-map support w/ camera support (shader-level zoom and scrolling?).
 - [ ] Out-of-the-box timer and easing functions.
 - [ ] Game state and display transitions (at which level? Engine or script?).
