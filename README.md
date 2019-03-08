@@ -22,25 +22,25 @@ Guess what? Yup, that's another game engine/framework.
 
 ## Features
 
-* [*] Palette based graphics (through shader) with up to 16/32/64 colors.
-* [*] Automatic nearest-color palette indexing of images.
-* [*] Predefined library of 8/16/32 colors palettes.
-* [ ] Out-of-the-box palette switching features.
-* [ ] Tiled-map support w/ camera support (shader-level zoom and scrolling?).
-* [ ] Out-of-the-box timer and easing functions.
-* [ ] Game state and display transitions (at which level? Engine or script?).
-* [ ] Library of "retro-feel" shaders.
-* [ ] Engine splash screen (during which resources are loaded).
-* [ ] Hot-reload of selected resources (fonts, banks, maps, shaders, sounds).
-* [ ] Digital/analogue game-controller support.
-* [ ] Support for TARed/ZIPed games ([rxi/microtar](https://github.com/rxi/microtar), [kuba--/zip](https://github.com/kuba--/zip)).
+- [*] Palette based graphics (through shader) with up to 16/32/64 colors.
+- - [*] Automatic nearest-color palette indexing of images.
+- - [*] Predefined library of 8/16/32 colors palettes.
+- - [ ] Out-of-the-box palette switching features.
+- [ ] Tiled-map support w/ camera support (shader-level zoom and scrolling?).
+- [ ] Out-of-the-box timer and easing functions.
+- [ ] Game state and display transitions (at which level? Engine or script?).
+- [ ] Library of "retro-feel" shaders.
+- [ ] Engine splash screen (during which resources are loaded).
+- [ ] Hot-reload of selected resources (fonts, banks, maps, shaders, sounds).
+- [ ] Digital/analogue game-controller support.
+- [ ] Support for TARed/ZIPed games ([rxi/microtar](https://github.com/rxi/microtar), [kuba--/zip](https://github.com/kuba--/zip)).
 
 ## TODO
 
-* [ ] Use a *smarter* string library (implement or use [utstring](http://troydhanson.github.io/uthash/utstring.html)).
-* [ ] Use a custom memory-management allocator.
-* [ ] Switch to [Vulkan API](https://www.khronos.org/vulkan/) (through [GLFW](https://www.glfw.org/)).
-* [ ] Change the API to be event-based (with explicit registration).
+- [ ] Use a *smarter* string library (implement or use [utstring](http://troydhanson.github.io/uthash/utstring.html)).
+- [ ] Use a custom memory-management allocator.
+- [ ] Switch to [Vulkan API](https://www.khronos.org/vulkan/) (through [GLFW](https://www.glfw.org/)).
+- [ ] Change the API to be event-based (with explicit registration).
 
 ## Inspirations
 
