@@ -20,17 +20,23 @@ Guess what? Yup, that's another game engine/framework.
 * [Wren](https://wren.io/) v0.1.0
 * [jsmn](https://zserge.com/jsmn.html/) v1.0.0
 
-## TODOs
+## Features
 
-* [*] Library of 8/16/32 color palettes.
-* [ ] Add tiled-map support (w/ shader-level scrolling?).
-* [ ] Out-of-the-box timer and easing support.
-* [ ] Game state e display transitions, at which level? Engine or script?
+* [*] Palette based graphics (through shader) with up to 16/32/64 colors.
+* * [*] Automatic nearest-color palette indexing of images.
+* * [*] Predefined library of 8/16/32 colors palettes.
+* * [*] Out-of-the-box palette switching features.
+* [ ] Tiled-map support w/ camera support (shader-level zoom and scrolling?).
+* [ ] Out-of-the-box timer and easing functions.
+* [ ] Game state and display transitions (at which level? Engine or script?).
 * [ ] Library of "retro-feel" shaders.
-* [ ] Add engine splash screen (during which resources are loaded).
+* [ ] Engine splash screen (during which resources are loaded).
 * [ ] Hot-reload of selected resources (fonts, banks, maps, shaders, sounds).
-* [ ] Add game controller support.
+* [ ] Digital/analogue game-controller support.
 * [ ] Support for TARed/ZIPed games ([rxi/microtar](https://github.com/rxi/microtar), [kuba--/zip](https://github.com/kuba--/zip)).
+
+## TODO
+
 * [ ] Use a *smarter* string library (implement or use [utstring](http://troydhanson.github.io/uthash/utstring.html)).
 * [ ] Use a custom memory-management allocator.
 * [ ] Switch to [Vulkan API](https://www.khronos.org/vulkan/) (through [GLFW](https://www.glfw.org/)).
