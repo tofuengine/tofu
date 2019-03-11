@@ -22,9 +22,9 @@ Guess what? Yup, that's another game engine/framework.
 
 ## Features
 
-* [x] Palette based graphics (through shader) with up to 16/32/64 colors.
+* [x] Palette based graphics (through shader) with up to 64 colors.
 * [x] Automatic nearest-color palette indexing of images.
-* [x] Predefined library of 8/16/32 colors palettes.
+* [x] Predefined library of 8/16/32/64 colors palettes.
 * [ ] Out-of-the-box palette switching features.
 * [ ] Tiled-map support w/ camera support (shader-level zoom and scrolling?).
 * [ ] Out-of-the-box timer and easing functions.
@@ -37,6 +37,7 @@ Guess what? Yup, that's another game engine/framework.
 
 ## TODO
 
+* [ ] Define some fixed resolutions (see [this](https://pacoup.com/2011/06/12/list-of-true-169-resolutions/))?
 * [ ] Use a *smarter* string library (implement or use [utstring](http://troydhanson.github.io/uthash/utstring.html)).
 * [ ] Use a custom memory-management allocator.
 * [ ] Switch to [Vulkan API](https://www.khronos.org/vulkan/) (through [GLFW](https://www.glfw.org/)).
