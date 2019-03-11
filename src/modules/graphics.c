@@ -45,14 +45,6 @@ static inline float fsgnf(float value)
 #define DEFAULT_FONT_ID     -1
 #define DEFAULT_FONT_SIZE   10
 
-#define MAX_DISTINCT_COLORS 256
-
-// TODO: move those functions to a graphics HAL. Also, call them in the "display termination" part.
-static Bank_t load_bank(const char *pathfile, int cell_width, int cell_height, const Color *palette, int colors);
-static void unload_bank(Bank_t *bank);
-static Font_t load_font(const char *pathfile);
-static void unload_font(Font_t *font);
-
 const char graphics_wren[] =
     "foreign class Canvas {\n"
     "\n"
@@ -392,91 +384,4 @@ void graphics_canvas_sprite(WrenVM *vm)
     Vector2 origin = { bank->cell_width * 0.5f, bank->cell_height * 0.5f}; // Rotate along center.
 
     DrawTexturePro(bank->atlas, sourceRec, destRec, origin, (float)rotation, (Color){ 255, 255, 255, 255 });
-}
-
-/*--- Local Functions ---*/
-
-static int find_nearest_color(const Color *palette, int count, Color color)
-{
-    int index = -1;
-    float minimum = __FLT_MAX__;
-    for (int i = 0; i < count; ++i) {
-        const Color *current = &palette[i];
-#ifdef __FIND_NEAREST_COLOR_EUCLIDIAN__
-        float distance = sqrtf(powf(color.r - current->r, 2.0f)
-            + powf(color.g - current->g, 2.0f)
-            + powf(color.b - current->b, 2.0f)
-            + powf(color.a - current->a, 2.0f));
-#else
-        float distance = powf(color.r - current->r, 2.0f)
-            + powf(color.g - current->g, 2.0f)
-            + powf(color.b - current->b, 2.0f)
-            + powf(color.a - current->a, 2.0f);
-#endif
-        if (minimum > distance) {
-            minimum = distance;
-            index = i;
-        }
-    }
-    return index;
-}
-
-static void convert_image_to_palette(Image *image, const Color *palette, int colors)
-{
-    int extractCount = 0;
-    Color *extractPalette = ImageExtractPalette(*image, MAX_DISTINCT_COLORS, &extractCount);
-    Log_write(LOG_LEVELS_DEBUG, "[TOFU] Image '%p' has %d distinct color(s)", image, extractCount);
-
-    for (int i = 0; i < extractCount; ++i) {
-        int index = find_nearest_color(palette, colors, extractPalette[i]);
-        ImageColorReplace(image, extractPalette[i], (Color){ index, index, index, 255 });
-    }
-    free(extractPalette);
-}
-
-static Bank_t load_bank(const char *pathfile, int cell_width, int cell_height, const Color *palette, int colors)
-{
-    Image image = LoadImage(pathfile);
-    if (!image.data) {
-        return (Bank_t){};
-    }
-
-    convert_image_to_palette(&image, palette, colors);
-
-    Texture2D texture = LoadTextureFromImage(image);
-    UnloadImage(image);
-    Log_write(LOG_LEVELS_DEBUG, "[TOFU] Bank '%s' loaded as texture w/ id #%d", pathfile, texture.id);
-    return (Bank_t){
-            .loaded = texture.id != 0,
-            .atlas = texture,
-            .cell_width = cell_width,
-            .cell_height = cell_height
-        };
-}
-
-static void unload_bank(Bank_t *bank)
-{
-    Log_write(LOG_LEVELS_DEBUG, "[TOFU] Bank texture w/ id #%d unloaded", bank->atlas.id);
-    UnloadTexture(bank->atlas);
-    *bank = (Bank_t){};
-}
-
-static Font_t load_font(const char *pathfile)
-{
-    Font font = LoadFont(pathfile);
-    if (font.texture.id == 0) {
-        return (Font_t){};
-    }
-    Log_write(LOG_LEVELS_DEBUG, "[TOFU] Font '%s' loaded as texture w/ id #%d", pathfile, font.texture.id);
-    return (Font_t){
-            .loaded = true,
-            .font = font
-        };
-}
-
-static void unload_font(Font_t *font)
-{
-    Log_write(LOG_LEVELS_DEBUG, "[TOFU] Font texture w/ id #%d unloaded", font->font.texture.id);
-    UnloadFont(font->font);
-    *font = (Font_t){};
 }

@@ -24,22 +24,25 @@
 #define __DISPLAY_H__
 
 #include <stdbool.h>
+#include <stddef.h>
+//#include <stdint.h>
 
 #include <raylib/raylib.h>
 
-#include <stdlib.h>
-
-// Forward declaration.
-typedef struct _Engine_Statistics_t Engine_Statistics_t;
+#include "hal.h"
 
 #define MAX_GRAPHIC_BANKS       4
 #define MAX_GRAPHIC_FONTS       4
+#define MAX_GRAPHIC_MAPS        4
 
 #define MAX_PALETTE_COLORS      64
 #define VALUES_PER_COLOR        4
 
 #define ALPHA_COLOR_TRANSPARENT 0
 #define ALPHA_COLOR_OPAQUE      255
+
+// Forward declaration.
+typedef struct _Engine_Statistics_t Engine_Statistics_t;
 
 typedef struct _Display_Configuration_t {
     int width, height;
@@ -49,19 +52,6 @@ typedef struct _Display_Configuration_t {
     bool hide_cursor;
     bool exit_key_enabled;
 } Display_Configuration_t;
-
-typedef struct _Bank_t {
-    // char pathfile[PATH_FILE_MAX];
-    bool loaded;
-    int cell_width, cell_height;
-    Texture2D atlas;
-} Bank_t;
-
-typedef struct _Font_t {
-    // char pathfile[PATH_FILE_MAX];
-    bool loaded;
-    Font font;
-} Font_t;
 
 typedef struct _Display_t {
     Display_Configuration_t configuration;
@@ -76,8 +66,9 @@ typedef struct _Display_t {
     Shader palette_shader;
     int palette_shader_palette_location;
 
-    Bank_t banks[MAX_GRAPHIC_BANKS];
     Font_t fonts[MAX_GRAPHIC_FONTS];
+    Bank_t banks[MAX_GRAPHIC_BANKS];
+    Map_t maps[MAX_GRAPHIC_MAPS];
 } Display_t;
 
 extern bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title);

@@ -23,6 +23,7 @@
 #include "display.h"
 
 #include "engine.h"
+#include "hal.h"
 #include "log.h"
 
 #include <memory.h>
@@ -247,16 +248,21 @@ void Display_terminate(Display_t *display)
     for (size_t i = 0; i < MAX_GRAPHIC_FONTS; ++i) {
         Font_t *font = &display->fonts[i];
         if (font->loaded) {
-            UnloadFont(font->font);
-            font->loaded = false;
+            unload_font(font);
         }
     }
 
     for (size_t i = 0; i < MAX_GRAPHIC_BANKS; ++i) {
         Bank_t *bank = &display->banks[i];
         if (bank->loaded) {
-            UnloadTexture(bank->atlas);
-            bank->loaded = false;
+            unload_bank(bank);
+        }
+    }
+
+    for (size_t i = 0; i < MAX_GRAPHIC_MAPS; ++i) {
+        Map_t *map = &display->maps[i];
+        if (map->loaded) {
+            unload_map(map);
         }
     }
 
