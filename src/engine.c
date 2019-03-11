@@ -22,6 +22,7 @@
 
 #include "engine.h"
 
+#include "config.h"
 #include "configuration.h"
 #include "file.h"
 #include "log.h"
@@ -34,9 +35,6 @@
 #include <time.h>
 
 #define CONFIGURATION_FILE_NAME    "configuration.json"
-
-#define FPS_AVERAGE_SAMPLES         256
-#define FPS_STATISTICS_RESOLUTION   10
 
 static bool update_statistics(Engine_Statistics_t *statistics, double elapsed) {
     static double history[FPS_AVERAGE_SAMPLES] = {};

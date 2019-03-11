@@ -29,13 +29,9 @@
 
 #include <raylib/raylib.h>
 
+#include "config.h"
 #include "hal.h"
 
-#define MAX_GRAPHIC_BANKS       4
-#define MAX_GRAPHIC_FONTS       4
-#define MAX_GRAPHIC_MAPS        4
-
-#define MAX_PALETTE_COLORS      64
 #define VALUES_PER_COLOR        4
 
 #define ALPHA_COLOR_TRANSPARENT 0

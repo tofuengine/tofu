@@ -20,37 +20,28 @@
  * SOFTWARE.
  **/
 
-#ifndef __ENGINE_H__
-#define __ENGINE_H__
+#ifndef __TOFU_CONFIG_H__
+#define __TOFU_CONFIG_H__
 
-#include <stdbool.h>
-#include <limits.h>
 
-#include "config.h"
-#include "configuration.h"
-#include "display.h"
-#include "environment.h"
-#include "interpreter.h"
+// Constant MACROs have no prefix.
 
-typedef struct _Engine_t {
-    Environment_t environment;
+#define STATISTICS_LENGTH           120
+#define FPS_AVERAGE_SAMPLES         256
+#define FPS_STATISTICS_RESOLUTION   10
 
-    Configuration_t configuration;
+#define MAX_PALETTE_COLORS          64
+#define MAX_DISTINCT_COLORS         256
 
-    Display_t display;
-    Interpreter_t interpreter;
-} Engine_t;
+#define MAX_GRAPHIC_BANKS           4
+#define MAX_GRAPHIC_FONTS           4
+#define MAX_GRAPHIC_MAPS            4
 
-typedef struct _Engine_Statistics_t {
-    double delta_time;
-    double min_fps, max_fps;
-    double current_fps;
-    double history[STATISTICS_LENGTH];
-    int index;
-} Engine_Statistics_t;
+// Behavioural MACROs are uses the "__" prefix/suffix.
 
-extern bool Engine_initialize(Engine_t *engine, const char *base_path);
-extern void Engine_terminate(Engine_t *engine);
-extern void Engine_run(Engine_t *engine);
+#define __FAST_FULLSCREEN__ 
+#undef  __EXPLICIT_SIGNUM__
+#undef   __FIND_NEAREST_COLOR_EUCLIDIAN__
 
-#endif  /* __ENGINE_H__ */
+
+#endif  /* __TOFU_CONFIG_H__ */

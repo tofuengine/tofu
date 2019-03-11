@@ -22,6 +22,7 @@
 
 #include "display.h"
 
+#include "config.h"
 #include "engine.h"
 #include "hal.h"
 #include "log.h"
@@ -29,8 +30,6 @@
 #include <memory.h>
 
 #define UNCAPPED_FPS                0
-
-#define FAST_FULLSCREEN             1
 
 #define FPS_HISTOGRAM_HEIGHT        30
 #define FPS_TEXT_HEIGHT             10
@@ -142,7 +141,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
 
     SetExitKey(configuration->exit_key_enabled ? KEY_ESCAPE : -1);
 
-#ifdef FAST_FULLSCREEN
+#ifdef __FAST_FULLSCREEN__
     SetWindowPosition(x, y); // This will enforce a "clipping region" for the fullscreen, clear won't be needed.
     SetWindowSize(display->window_width, display->window_height);
 #else
@@ -213,7 +212,7 @@ void Display_renderEnd(Display_t *display, const Engine_Statistics_t *statistics
     EndTextureMode();
 
     BeginDrawing();
-#ifndef FAST_FULLSCREEN
+#ifndef __FAST_FULLSCREEN__
         ClearBackground(BLACK);
 #endif
         BeginShaderMode(display->palette_shader);

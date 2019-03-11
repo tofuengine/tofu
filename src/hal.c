@@ -25,9 +25,8 @@
 #include <math.h>
 #include <stdlib.h>
 
+#include "../../config.h"
 #include "log.h"
-
-#define MAX_DISTINCT_COLORS     256
 
 static int find_nearest_color(const Color *palette, int count, Color color)
 {
@@ -41,7 +40,7 @@ static int find_nearest_color(const Color *palette, int count, Color color)
             + powf(color.b - current->b, 2.0f)
             + powf(color.a - current->a, 2.0f));
 #else
-        float distance = powf(color.r - current->r, 2.0f)
+        float distance = powf(color.r - current->r, 2.0f) // Faster, no need to get the Euclidean distance.
             + powf(color.g - current->g, 2.0f)
             + powf(color.b - current->b, 2.0f)
             + powf(color.a - current->a, 2.0f);
