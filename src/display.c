@@ -255,7 +255,7 @@ void Display_terminate(Display_t *display)
     for (size_t i = 0; i < MAX_GRAPHIC_BANKS; ++i) {
         Bank_t *bank = &display->banks[i];
         if (bank->loaded) {
-            UnloadTexture(bank->texture);
+            UnloadTexture(bank->atlas);
             bank->loaded = false;
         }
     }

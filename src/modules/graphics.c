@@ -384,14 +384,14 @@ void graphics_canvas_sprite(WrenVM *vm)
     }
 
     int bank_position = sprite_id * bank->cell_width;
-    int bank_x = bank_position % bank->texture.width;
-    int bank_y = (bank_position / bank->texture.width) * bank->cell_height;
+    int bank_x = bank_position % bank->atlas.width;
+    int bank_y = (bank_position / bank->atlas.width) * bank->cell_height;
 
     Rectangle sourceRec = { (float)bank_x, (float)bank_y, (float)bank->cell_width * fsgnf(scale_x), (float)bank->cell_height * fsgnf(scale_y) };
     Rectangle destRec = { x, y, (float)bank->cell_width * fabsf(scale_x), (float)bank->cell_height * fabsf(scale_y) };
     Vector2 origin = { bank->cell_width * 0.5f, bank->cell_height * 0.5f}; // Rotate along center.
 
-    DrawTexturePro(bank->texture, sourceRec, destRec, origin, (float)rotation, (Color){ 255, 255, 255, 255 });
+    DrawTexturePro(bank->atlas, sourceRec, destRec, origin, (float)rotation, (Color){ 255, 255, 255, 255 });
 }
 
 /*--- Local Functions ---*/
@@ -448,7 +448,7 @@ static Bank_t load_bank(const char *pathfile, int cell_width, int cell_height, c
     Log_write(LOG_LEVELS_DEBUG, "[TOFU] Bank '%s' loaded as texture w/ id #%d", pathfile, texture.id);
     return (Bank_t){
             .loaded = texture.id != 0,
-            .texture = texture,
+            .atlas = texture,
             .cell_width = cell_width,
             .cell_height = cell_height
         };
@@ -456,8 +456,8 @@ static Bank_t load_bank(const char *pathfile, int cell_width, int cell_height, c
 
 static void unload_bank(Bank_t *bank)
 {
-    Log_write(LOG_LEVELS_DEBUG, "[TOFU] Bank texture w/ id #%d unloaded", bank->texture.id);
-    UnloadTexture(bank->texture);
+    Log_write(LOG_LEVELS_DEBUG, "[TOFU] Bank texture w/ id #%d unloaded", bank->atlas.id);
+    UnloadTexture(bank->atlas);
     *bank = (Bank_t){};
 }
 
