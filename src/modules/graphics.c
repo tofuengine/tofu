@@ -22,7 +22,7 @@
 
 #include "graphics.h"
 
-#include "../../config.h"
+#include "../config.h"
 #include "../environment.h"
 #include "../log.h"
 #include "graphics/palettes.h"

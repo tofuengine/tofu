@@ -25,7 +25,7 @@
 #include <math.h>
 #include <stdlib.h>
 
-#include "../../config.h"
+#include "config.h"
 #include "log.h"
 
 static int find_nearest_color(const Color *palette, int count, Color color)
