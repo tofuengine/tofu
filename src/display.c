@@ -46,7 +46,7 @@ static const char *palette_shader_code =
     "\n"
     "// Input uniform values\n"
     "uniform sampler2D texture0;\n"
-    "uniform ivec4 palette[colors];\n"
+    "uniform vec4 palette[colors];\n"
     "\n"
     "// Output fragment color\n"
     "out vec4 finalColor;\n"
@@ -59,12 +59,10 @@ static const char *palette_shader_code =
     "    // Convert the (normalized) texel color RED component (GB would work, too)\n"
     "    // to the palette index by scaling up from [0, 1] to [0, 255].\n"
     "    int index = int(texelColor.r * 255.0);\n"
-    "    ivec4 color = palette[index];\n"
     "\n"
-    "    // Calculate final fragment color. Note that the palette color components\n"
-    "    // are defined in the range [0, 255] and need to be normalized to [0, 1]\n"
-    "    // for OpenGL to work.\n"
-    "    finalColor = vec4(color / 255.0);\n"
+    "    // Pick the palette color as final fragment color. Note that the palette components\n"
+    "    // are already normalized in the range [0, 1], ready for OpenGL to work.\n"
+    "    finalColor = palette[index];\n"
     "}\n"
 ;
 
@@ -228,18 +226,18 @@ void Display_renderEnd(Display_t *display, const Engine_Statistics_t *statistics
 
 void Display_palette(Display_t *display, const Color *palette, size_t count)
 {
-    int colors[MAX_PALETTE_COLORS * VALUES_PER_COLOR] = {};
+    float colors[MAX_PALETTE_COLORS * VALUES_PER_COLOR] = {};
     for (size_t i = 0; i < count; ++i) {
         display->palette[i] = palette[i];
 
         int j = i * VALUES_PER_COLOR;
-        colors[j    ] = palette[i].r;
-        colors[j + 1] = palette[i].g;
-        colors[j + 2] = palette[i].b;
-        colors[j + 3] = palette[i].a;
+        colors[j    ] = (float)palette[i].r / 255.0f;
+        colors[j + 1] = (float)palette[i].g / 255.0f;
+        colors[j + 2] = (float)palette[i].b / 255.0f;
+        colors[j + 3] = (float)palette[i].a / 255.0f;
     }
     SetShaderValueV(display->palette_shader, display->palette_shader_palette_location,
-        colors, UNIFORM_IVEC4, MAX_PALETTE_COLORS);
+        colors, UNIFORM_VEC4, MAX_PALETTE_COLORS);
 }
 
 void Display_terminate(Display_t *display)
