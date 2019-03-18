@@ -55,15 +55,29 @@ static int find_nearest_color(const Color *palette, int count, Color color)
 
 static void convert_image_to_palette(Image *image, const Color *palette, int colors)
 {
-    int extractCount = 0;
-    Color *extractPalette = ImageExtractPalette(*image, MAX_DISTINCT_COLORS, &extractCount);
-    Log_write(LOG_LEVELS_DEBUG, "[TOFU] Image '%p' has %d distinct color(s)", image, extractCount);
+    Color *pixels = GetImageData(*image);
 
-    for (int i = 0; i < extractCount; ++i) {
-        int index = find_nearest_color(palette, colors, extractPalette[i]);
-        ImageColorReplace(image, extractPalette[i], (Color){ index, index, index, 255 });
+    for (int y = 0; y < image->height; ++y) {
+        int row_offset = image->width * y;
+        for (int x = 0; x < image->width; ++x) {
+            int offset = row_offset + x;
+
+            Color color = pixels[offset];
+            if (color.a == 0) { // Skip transparent colors.
+                continue;
+            }
+
+            int index = find_nearest_color(palette, colors, color);
+            pixels[offset] = (Color){ index, index, index, 255 };
+        }
     }
-    free(extractPalette);
+
+    Image processed = LoadImageEx(pixels, image->width, image->height);
+    ImageFormat(&processed, image->format);
+    UnloadImage(*image);
+    free(pixels);
+
+    image->data = processed.data;
 }
 
 Bank_t load_bank(const char *pathfile, int cell_width, int cell_height, const Color *palette, int colors)
