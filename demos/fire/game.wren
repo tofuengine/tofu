@@ -46,16 +46,23 @@ class Game {
 
         _windy = false
 
+        _grid = Grid.new(STEPS, STEPS)
         reset()
 
         Canvas.palette(PALETTE)
     }
 
     reset() {
-        _grid = Grid.new(STEPS, STEPS)
+var s = System.clock
+for (x in 0 ... 100000) {
+        _grid.fill(0)
         for (j in 0 ... STEPS) {
             _grid.poke(j, STEPS - 1, PALETTE.count - 1)
         }
+}
+var e = System.clock
+var delta = (e - s) * 1000
+System.print("Took %(delta)ms")
     }
 
     input() {
