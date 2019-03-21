@@ -1,5 +1,6 @@
 import "random" for Random
 
+import "collections" for Grid
 import "graphics" for Canvas
 import "events" for Input
 
@@ -10,6 +11,30 @@ var PALETTE = [
         "FFFF3F00", "FFFF7F00", "FFFFBF00", "FFFFFF00",
         "FFFFFF3F", "FFFFFF7F", "FFFFFFBF", "FFFFFFFF"
     ]
+
+class Grid2 {
+
+    construct new(width, height) {
+        _width = width
+        _height = height
+        _data = List.filled(width * height, 0)
+    }
+
+    fill(value) {
+        for (i in 0 ... _width * _height) {
+            _data[i] = value
+        }
+    }
+
+    peek(x, y) {
+        return _data[(y * _width) + x]
+    }
+
+    poke(x, y, value) {
+        _data[(y * _width) + x] = value
+    }
+
+}
 
 class Game {
 
@@ -27,10 +52,9 @@ class Game {
     }
 
     reset() {
-        _grid = List.filled(STEPS * STEPS, 0)
-        var offset = (STEPS - 1) * STEPS
+        _grid = Grid.new(STEPS, STEPS)
         for (j in 0 ... STEPS) {
-            _grid[offset + j] = PALETTE.count - 1
+            _grid.poke(j, STEPS - 1, PALETTE.count - 1)
         }
     }
 
@@ -42,9 +66,8 @@ class Game {
 
     update(deltaTime) {
         for (i in 0 ... (STEPS - 1)) {
-            var offset = i * STEPS
             for (j in 0 ... STEPS) {
-                var value = _grid[offset + STEPS + j]
+                var value = _grid.peek(j, i + 1)
                 if (value > 0) {
                     var delta = _random.int(0, 2)
                     value = value - delta
@@ -63,18 +86,17 @@ class Game {
                         x = STEPS - 1
                     }
                 }
-                _grid[offset + x] = value
+                _grid.poke(x, i, value)
             }
         }
     }
 
     render(ratio) {
         for (i in 0 ... STEPS) {
-            var offset = i * STEPS
             var y = i * _ySize
             for (j in 0 ... STEPS) {
                 var x = j * _xSize
-                var value = _grid[offset + j]
+                var value = _grid.peek(j, i)
                 if (value > 0) {
                     Canvas.rectangle("fill", x, y, _xSize, _ySize, value)
                 }

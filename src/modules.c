@@ -22,21 +22,27 @@
 
 #include "modules.h"
 
+#include "modules/collections.h"
 #include "modules/graphics.h"
 #include "modules/events.h"
 
 const Module_Entry_t _modules[] = {
 //  { "module", NULL }
+    { "collections", collections_wren },
     { "graphics", graphics_wren },
     { "events", events_wren },
     { NULL, NULL }
 };
 const Class_Entry_t _classes[] = {
 //  { "module", "className", NULL, NULL }
+    { "collections", "Grid", grid_allocate, grid_finalize },
     { NULL, NULL, NULL, NULL }
 };
 const Method_Entry_t _methods[] = {
 //  { "module", "className", true, "update()", NULL }
+    { "collections", "Grid", false, "fill(_)", grid_fill },
+    { "collections", "Grid", false, "peek(_,_)", grid_peek },
+    { "collections", "Grid", false, "poke(_,_,_)", grid_poke },
     { "graphics", "Canvas", true, "width", graphics_canvas_width },
     { "graphics", "Canvas", true, "height", graphics_canvas_height },
     { "graphics", "Canvas", true, "palette(_)", graphics_canvas_palette },
