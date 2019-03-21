@@ -30,6 +30,8 @@ extern const char collections_wren[];
 extern void grid_allocate(WrenVM* vm);
 extern void grid_finalize(void* data);
 
+extern void grid_width(WrenVM *vm);
+extern void grid_height(WrenVM *vm);
 extern void grid_fill(WrenVM *vm);
 extern void grid_peek(WrenVM *vm);
 extern void grid_poke(WrenVM *vm);
