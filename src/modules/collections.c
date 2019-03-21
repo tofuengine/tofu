@@ -40,19 +40,21 @@ const char collections_wren[] =
     "}\n"
 ;
 
+typedef int Cell_t; // TODO: Could double?
+
 typedef struct _Grid_t {
     int width;
     int height;
-    int *data;
-    int **offsets; // Precomputed pointers to the line of data.
+    Cell_t *data;
+    Cell_t **offsets; // Precomputed pointers to the line of data.
 } Grid_t;
 
 void grid_allocate(WrenVM* vm)
 {
     int width = (int)wrenGetSlotDouble(vm, 1);
     int height = (int)wrenGetSlotDouble(vm, 2);
-    int *data = Memory_alloc(sizeof(int) * width * height);
-    int **offsets = Memory_alloc(sizeof(int *) * height);
+    Cell_t *data = Memory_alloc(sizeof(Cell_t) * width * height);
+    Cell_t **offsets = Memory_alloc(sizeof(Cell_t *) * height);
 
     for (int i = 0; i < height; ++i) { // Precompute the pointers to the data rows for faster access (old-school! :D).
         offsets[i] = data + (i * width);
@@ -87,11 +89,11 @@ void grid_fill(WrenVM *vm)
 {
     Grid_t* grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
 
-    int value = (int)wrenGetSlotDouble(vm, 1);
+    Cell_t value = (Cell_t)wrenGetSlotDouble(vm, 1);
 
     int width = grid->width;
     int height = grid->height;
-    int *data = grid->data;
+    Cell_t *data = grid->data;
 
     int size = width * height;
     for (int i = 0; i < size; ++i) {
@@ -106,9 +108,9 @@ void grid_peek(WrenVM *vm)
     int x = (int)wrenGetSlotDouble(vm, 1);
     int y = (int)wrenGetSlotDouble(vm, 2);
 
-    int *ptr = grid->offsets[y];
+    Cell_t *ptr = grid->offsets[y];
 
-    int value = ptr[x];
+    Cell_t value = ptr[x];
 
     wrenSetSlotDouble(vm, 0, value);
 }
@@ -119,9 +121,9 @@ void grid_poke(WrenVM *vm)
 
     int x = (int)wrenGetSlotDouble(vm, 1);
     int y = (int)wrenGetSlotDouble(vm, 2);
-    int value = (int)wrenGetSlotDouble(vm, 3);
+    Cell_t value = (Cell_t)wrenGetSlotDouble(vm, 3);
 
-    int *ptr = grid->offsets[y];
+    Cell_t *ptr = grid->offsets[y];
 
     ptr[x] = value;
 }
