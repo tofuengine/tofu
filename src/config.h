@@ -31,7 +31,6 @@
 #define FPS_STATISTICS_RESOLUTION   10
 
 #define MAX_PALETTE_COLORS          64
-#define MAX_DISTINCT_COLORS         256
 
 #define MAX_GRAPHIC_BANKS           4
 #define MAX_GRAPHIC_FONTS           4
