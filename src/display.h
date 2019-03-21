@@ -60,7 +60,6 @@ typedef struct _Display_t {
 
     Color palette[MAX_PALETTE_COLORS];
     Shader palette_shader;
-    int palette_shader_palette_location;
 
     Font_t fonts[MAX_GRAPHIC_FONTS];
     Bank_t banks[MAX_GRAPHIC_BANKS];
