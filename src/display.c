@@ -168,7 +168,6 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     display->offscreen_origin = (Vector2){ 0.0f, 0.0f };
 
     display->palette_shader = LoadShaderCode(NULL, (char *)palette_shader_code);
-    display->palette_shader_palette_location = GetShaderLocation(display->palette_shader, "palette");
 
     Color palette[MAX_PALETTE_COLORS]; // Initial gray-scale palette.
     for (size_t i = 0; i < MAX_PALETTE_COLORS; ++i) {
@@ -236,7 +235,11 @@ void Display_palette(Display_t *display, const Color *palette, size_t count)
         colors[j + 2] = (float)palette[i].b / 255.0f;
         colors[j + 3] = (float)palette[i].a / 255.0f;
     }
-    SetShaderValueV(display->palette_shader, display->palette_shader_palette_location,
+    int uniform_location = GetShaderLocation(display->palette_shader, "palette");
+    if (uniform_location == -1) {
+        return;
+    }
+    SetShaderValueV(display->palette_shader, uniform_location,
         colors, UNIFORM_VEC4, MAX_PALETTE_COLORS);
 }
 

@@ -1,3 +1,4 @@
+.vscode/
 src/*.o
 src/modules/*.o
 src/modules/graphics/*.o
