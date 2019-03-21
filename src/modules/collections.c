@@ -38,6 +38,7 @@ typedef struct _Grid_t {
     int width;
     int height;
     int *data;
+    int **offsets; // Precomputed pointers to the line of data.
 } Grid_t;
 
 void grid_allocate(WrenVM* vm)
@@ -45,9 +46,14 @@ void grid_allocate(WrenVM* vm)
     int width = (int)wrenGetSlotDouble(vm, 1);
     int height = (int)wrenGetSlotDouble(vm, 2);
     int *data = calloc(sizeof(int), width * height);
+    int **offsets = calloc(sizeof(int *), height);
+
+    for (int i = 0; i < height; ++i) { // Precompute the pointers to the data rows for faster access (old-school! :D).
+        offsets[i] = data + (i * width);
+    }
 
     Grid_t* grid = (Grid_t *)wrenSetSlotNewForeign(vm, 0, 0, sizeof(Grid_t)); // `0, 0` since we are in the allocate callback.
-    *grid = (Grid_t){ width, height, data };
+    *grid = (Grid_t){ width, height, data, offsets };
 }
 
 void grid_finalize(void* data)
@@ -79,11 +85,9 @@ void grid_peek(WrenVM *vm)
     int x = (int)wrenGetSlotDouble(vm, 1);
     int y = (int)wrenGetSlotDouble(vm, 2);
 
-    int width = grid->width;
-//    int height = grid->height;
-    int *data = grid->data;
+    int *ptr = grid->offsets[y];
 
-    int value = data[(y * width) + x];
+    int value = ptr[x];
 
     wrenSetSlotDouble(vm, 0, value);
 }
@@ -96,9 +100,7 @@ void grid_poke(WrenVM *vm)
     int y = (int)wrenGetSlotDouble(vm, 2);
     int value = (int)wrenGetSlotDouble(vm, 3);
 
-    int width = grid->width;
-//    int height = grid->height;
-    int *data = grid->data;
+    int *ptr = grid->offsets[y];
 
-    data[(y * width) + x] = value;
+    ptr[x] = value;
 }
