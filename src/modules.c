@@ -40,6 +40,8 @@ const Class_Entry_t _classes[] = {
 };
 const Method_Entry_t _methods[] = {
 //  { "module", "className", true, "update()", NULL }
+    { "collections", "Grid", false, "width", grid_width },
+    { "collections", "Grid", false, "height", grid_height },
     { "collections", "Grid", false, "fill(_)", grid_fill },
     { "collections", "Grid", false, "peek(_,_)", grid_peek },
     { "collections", "Grid", false, "poke(_,_,_)", grid_poke },

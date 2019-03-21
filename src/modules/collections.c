@@ -27,6 +27,8 @@ const char collections_wren[] =
     "\n"
     "    construct new(width, height) {}\n"
     "\n"
+    "    foreign width\n"
+    "    foreign height\n"
     "    foreign fill(value)\n"
     "    foreign peek(x, y)\n"
     "    foreign poke(x, y, value)\n"
@@ -60,6 +62,21 @@ void grid_finalize(void* data)
 {
     Grid_t* grid = (Grid_t *)data;
     free(grid->data);
+    free(grid->offsets);
+}
+
+void grid_width(WrenVM *vm)
+{
+    Grid_t* grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
+
+    wrenSetSlotDouble(vm, 0, grid->width);
+}
+
+void grid_height(WrenVM *vm)
+{
+    Grid_t* grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
+
+    wrenSetSlotDouble(vm, 0, grid->height);
 }
 
 void grid_fill(WrenVM *vm)
