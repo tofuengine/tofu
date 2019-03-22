@@ -43,6 +43,7 @@ const Method_Entry_t _methods[] = {
     { "collections", "Grid", false, "width", grid_width },
     { "collections", "Grid", false, "height", grid_height },
     { "collections", "Grid", false, "fill(_)", grid_fill },
+    { "collections", "Grid", false, "row(_,_,_,_)", grid_row },
     { "collections", "Grid", false, "peek(_,_)", grid_peek },
     { "collections", "Grid", false, "poke(_,_,_)", grid_poke },
     { "events", "Input", true, "isKeyDown(_)", events_input_iskeydown },

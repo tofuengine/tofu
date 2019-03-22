@@ -34,6 +34,7 @@ const char collections_wren[] =
     "    foreign width\n"
     "    foreign height\n"
     "    foreign fill(value)\n"
+    "    foreign row(x0, x1, y, value)\n"
     "    foreign peek(x, y)\n"
     "    foreign poke(x, y, value)\n"
     "\n"
@@ -95,9 +96,25 @@ void grid_fill(WrenVM *vm)
     int height = grid->height;
     Cell_t *data = grid->data;
 
-    int size = width * height;
+    int size = width * height; // TODO: optimize, use direct pointer and not indexing!
     for (int i = 0; i < size; ++i) {
         data[i] = value;
+    }
+}
+
+void grid_row(WrenVM *vm)
+{
+    Grid_t* grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
+
+    int x0 = (int)wrenGetSlotDouble(vm, 1);
+    int x1 = (int)wrenGetSlotDouble(vm, 2);
+    int y = (int)wrenGetSlotDouble(vm, 3);
+    int value = (Cell_t)wrenGetSlotDouble(vm, 4);
+
+    Cell_t *ptr = grid->offsets[y];
+
+    for (int i = x0; i <= x1; ++i) { // Ditto!
+        ptr[i] = value;
     }
 }
 
