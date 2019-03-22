@@ -34,7 +34,7 @@ const char collections_wren[] =
     "    foreign width\n"
     "    foreign height\n"
     "    foreign fill(value)\n"
-    "    foreign row(x0, x1, y, value)\n"
+    "    foreign row(x, y, count, value)\n"
     "    foreign peek(x, y)\n"
     "    foreign poke(x, y, value)\n"
     "\n"
@@ -96,9 +96,10 @@ void grid_fill(WrenVM *vm)
     int height = grid->height;
     Cell_t *data = grid->data;
 
-    int size = width * height; // TODO: optimize, use direct pointer and not indexing!
-    for (int i = 0; i < size; ++i) {
-        data[i] = value;
+    Cell_t *ptr = data;
+    Cell_t *eod = ptr + (width * height);
+    while (ptr < eod) {
+        *(ptr++) = value;
     }
 }
 
@@ -106,15 +107,17 @@ void grid_row(WrenVM *vm)
 {
     Grid_t* grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
 
-    int x0 = (int)wrenGetSlotDouble(vm, 1);
-    int x1 = (int)wrenGetSlotDouble(vm, 2);
-    int y = (int)wrenGetSlotDouble(vm, 3);
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+    int count = (int)wrenGetSlotDouble(vm, 3);
     int value = (Cell_t)wrenGetSlotDouble(vm, 4);
 
-    Cell_t *ptr = grid->offsets[y];
+    Cell_t *data = grid->offsets[y];
 
-    for (int i = x0; i <= x1; ++i) { // Ditto!
-        ptr[i] = value;
+    Cell_t *ptr = data + x;
+    Cell_t *eod = ptr + count;
+    while (ptr < eod) {
+        *(ptr++) = value;
     }
 }
 
@@ -125,9 +128,9 @@ void grid_peek(WrenVM *vm)
     int x = (int)wrenGetSlotDouble(vm, 1);
     int y = (int)wrenGetSlotDouble(vm, 2);
 
-    Cell_t *ptr = grid->offsets[y];
+    Cell_t *data = grid->offsets[y];
 
-    Cell_t value = ptr[x];
+    Cell_t value = data[x];
 
     wrenSetSlotDouble(vm, 0, value);
 }
@@ -140,7 +143,7 @@ void grid_poke(WrenVM *vm)
     int y = (int)wrenGetSlotDouble(vm, 2);
     Cell_t value = (Cell_t)wrenGetSlotDouble(vm, 3);
 
-    Cell_t *ptr = grid->offsets[y];
+    Cell_t *data = grid->offsets[y];
 
-    ptr[x] = value;
+    data[x] = value;
 }

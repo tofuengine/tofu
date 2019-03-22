@@ -27,9 +27,9 @@ class Grid2 {
         }
     }
 
-    row(x0, x1, y, value) {
-        var offset = y * _width
-        for (j in x0 .. x1) {
+    row(x, y, count, value) {
+        var offset = (y * _width) + x
+        for (j in 0 ... count) {
             _data[offset + j] = value
         }
     }
@@ -63,9 +63,9 @@ class Grid3 {
         }
     }
 
-    row(x0, x1, y, value) {
-        var offset = _offsets[y]
-        for (j in x0 .. x1) {
+    row(x, y, count, value) {
+        var offset = _offsets[y] + x
+        for (j in 0 ... count) {
             _data[offset + j] = value
         }
     }
@@ -101,9 +101,9 @@ class Grid4 {
         }
     }
 
-    row(x0, x1, y, value) {
-        var offset = _offsets[y]
-        for (j in x0 .. x1) {
+    row(x, y, count, value) {
+        var offset = _offsets[y] + x
+        for (j in 0 ... count) {
             _data[offset + j] = value
         }
     }
@@ -143,11 +143,11 @@ class Game {
         var s = System.clock
         _grid = Grid.new(STEPS, STEPS)
         for (x in 0 ... 10000) {
-            grid.fill(0)
+//            grid.fill(0)
 //            for (j in 0 ... STEPS) {
 //                grid.poke(j, STEPS - 1, PALETTE.count - 1)
 //            }
-//            grid.row(0, STEPS - 1, STEPS - 1, PALETTE.count - 1)
+            grid.row(0, STEPS - 1, STEPS - 1, PALETTE.count - 1)
         }
         var e = System.clock
         var delta = (e - s) * 1000
