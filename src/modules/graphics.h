@@ -31,12 +31,15 @@ extern void graphics_bank_allocate(WrenVM* vm);
 extern void graphics_bank_finalize(void* data);
 extern void graphics_bank_sprite(WrenVM *vm);
 
+extern void graphics_font_allocate(WrenVM* vm);
+extern void graphics_font_finalize(void* data);
+extern void graphics_font_text(WrenVM *vm);
+
 extern void graphics_canvas_width(WrenVM *vm);
 extern void graphics_canvas_height(WrenVM *vm);
 extern void graphics_canvas_palette(WrenVM *vm);
 extern void graphics_canvas_font(WrenVM *vm);
 extern void graphics_canvas_defaultFont(WrenVM *vm);
-extern void graphics_canvas_text(WrenVM *vm);
 extern void graphics_canvas_point(WrenVM *vm);
 extern void graphics_canvas_polygon(WrenVM *vm);
 extern void graphics_canvas_circle(WrenVM *vm);

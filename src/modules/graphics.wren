@@ -12,15 +12,21 @@ foreign class Bank {
 
 }
 
+foreign class Font {
+
+    construct new(file) {}
+
+    static default = Font.new("default")
+
+    foreign text(text, x, y, color, size, align)
+
+}
+
 foreign class Canvas {
 
     foreign static width
     foreign static height
     foreign static palette(colors)
-    foreign static font(font_id, file)
-
-    foreign static defaultFont
-    foreign static text(font_id, text, x, y, color, size, align)
 
     foreign static point(x, y, color)
     foreign static polygon(mode, vertices, color)

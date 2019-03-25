@@ -43,7 +43,6 @@ static inline float fsgnf(float value)
 }
 #endif
 
-#define DEFAULT_FONT_ID     -1
 #define DEFAULT_FONT_SIZE   10
 
 const char graphics_wren[] =
@@ -52,12 +51,22 @@ const char graphics_wren[] =
     "    construct new(file, cell_width, cell_height) {}\n"
     "\n"
     "    sprite(id, x, y) {\n"
-    "        sprite(id, x, y, 0.0)\n"
+    "        draw(id, x, y, 0.0)\n"
     "    }\n"
     "    sprite(id, x, y, r) {\n"
-    "        sprite(id, x, y, r, 1.0, 1.0)\n"
+    "        draw(id, x, y, r, 1.0, 1.0)\n"
     "    }\n"
     "    foreign sprite(id, x, y, r, sx, sy)\n"
+    "\n"
+    "}\n"
+    "\n"
+    "foreign class Font {\n"
+    "\n"
+    "    construct new(file) {}\n"
+    "\n"
+    "    static default = Font.new(\"default\")\n"
+    "\n"
+    "    foreign text(text, x, y, color, size, align)\n"
     "\n"
     "}\n"
     "\n"
@@ -66,10 +75,6 @@ const char graphics_wren[] =
     "    foreign static width\n"
     "    foreign static height\n"
     "    foreign static palette(colors)\n"
-    "    foreign static font(font_id, file)\n"
-    "\n"
-    "    foreign static defaultFont\n"
-    "    foreign static text(font_id, text, x, y, color, size, align)\n"
     "\n"
     "    foreign static point(x, y, color)\n"
     "    foreign static polygon(mode, vertices, color)\n"
@@ -93,10 +98,9 @@ const char graphics_wren[] =
     "        rectangle(mode, x, y, size, size, color)\n"
     "    }\n"
     "\n"
-    "}\n"
 ;
 
-void graphics_bank_allocate(WrenVM* vm)
+void graphics_bank_allocate(WrenVM *vm)
 {
     Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
@@ -107,17 +111,18 @@ void graphics_bank_allocate(WrenVM* vm)
     Log_write(LOG_LEVELS_DEBUG, "Bank.new() -> %s, %d, %d", file, cell_width, cell_height);
 #endif
 
+    Bank_t *bank = (Bank_t *)wrenSetSlotNewForeign(vm, 0, 0, sizeof(Bank_t)); // `0, 0` since we are in the allocate callback.
+
     char pathfile[PATH_FILE_MAX] = {};
     strcpy(pathfile, environment->base_path);
     strcat(pathfile, file + 2);
 
-    Bank_t* bank = (Bank_t *)wrenSetSlotNewForeign(vm, 0, 0, sizeof(Bank_t)); // `0, 0` since we are in the allocate callback.
     *bank = load_bank(pathfile, cell_width, cell_height, environment->display->palette, MAX_PALETTE_COLORS);
 }
 
-void graphics_bank_finalize(void* data)
+void graphics_bank_finalize(void *data)
 {
-    Bank_t* bank = (Bank_t *)data;
+    Bank_t *bank = (Bank_t *)data;
     unload_bank(bank);
 }
 
@@ -149,6 +154,88 @@ void graphics_bank_sprite(WrenVM *vm)
     Vector2 origin = { bank->cell_width * 0.5f, bank->cell_height * 0.5f}; // Rotate along center.
 
     DrawTexturePro(bank->atlas, sourceRec, destRec, origin, (float)rotation, (Color){ 255, 255, 255, 255 });
+}
+
+void graphics_font_allocate(WrenVM *vm)
+{
+    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+
+    const char *file = wrenGetSlotString(vm, 1);
+#ifdef DEBUG
+    Log_write(LOG_LEVELS_DEBUG, "Font.new() -> %s", file);
+#endif
+
+    Font_t *font = (Font_t *)wrenSetSlotNewForeign(vm, 0, 0, sizeof(Font_t)); // `0, 0` since we are in the allocate callback.
+
+    if (strcmp(file, "default") == 0) {
+        *font = (Font_t){ NULL, true };
+        return;
+    }
+
+    char pathfile[PATH_FILE_MAX] = {};
+    strcpy(pathfile, environment->base_path);
+    strcat(pathfile, file + 2);
+
+    *font = load_font(pathfile);
+}
+
+void graphics_font_finalize(void *data)
+{
+    Font_t *font = (Font_t *)data;
+    if (font->font != NULL) {
+        unload_font(font);
+    }
+}
+
+void graphics_font_text(WrenVM *vm) // foreign text(text, color, size, align)
+{
+    const char *text = wrenGetSlotString(vm, 1);
+    int x = (int)wrenGetSlotDouble(vm, 2);
+    int y = (int)wrenGetSlotDouble(vm, 3);
+    int color = (int)wrenGetSlotDouble(vm, 4);
+    int size = (int)wrenGetSlotDouble(vm, 5);
+    const char *align = wrenGetSlotString(vm, 6);
+#ifdef DEBUG
+    Log_write(LOG_LEVELS_DEBUG, "Font.text() -> %s, %d, %d, %d, %d, %s", text, x, y, color, size, align);
+#endif
+
+    const Font_t *font = (const Font_t *)wrenGetSlotForeign(vm, 0);
+
+    int width = MeasureText(text, size);
+
+    int dx = x, dy = y;
+    if (strcmp(align, "left") == 0) {
+        dx = x;
+        dy = y;
+    } else
+    if (strcmp(align, "center") == 0) {
+        dx = x - (width / 2);
+        dy = y;
+    } else
+    if (strcmp(align, "right") == 0) {
+        dx = x - width;
+        dy = y;
+    }
+#ifdef DEBUG
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.text() -> %d, %d, %d", width, dx, dy);
+#endif
+
+    if (font->font == NULL) {
+        DrawText(text, dx, dy, size, (Color){ color, color, color, 255 });
+        return;
+    }
+
+    if (!font->loaded) {
+        return;
+    }
+
+    // Spacing is proportional to default font size.
+    if (size < DEFAULT_FONT_SIZE) {
+        size = DEFAULT_FONT_SIZE;
+    }
+    int spacing = size / DEFAULT_FONT_SIZE;
+
+    DrawTextEx(font->font, text, (Vector2){ dx, dy }, size, (float)spacing, (Color){ color, color, color, 255 });
 }
 
 void graphics_canvas_width(WrenVM *vm)
@@ -223,86 +310,6 @@ void graphics_canvas_palette(WrenVM *vm)
     if (count > 0) {
         Display_palette(environment->display, colors, count);
     }
-}
-
-void graphics_canvas_font(WrenVM *vm)
-{
-    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
-
-    int font_id = (int)wrenGetSlotDouble(vm, 1);
-    const char *file = wrenGetSlotString(vm, 2);
-#ifdef DEBUG
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.font() -> %d, %s", font_id, file);
-#endif
-
-    char pathfile[PATH_FILE_MAX] = {};
-    strcpy(pathfile, environment->base_path);
-    strcat(pathfile, file + 2);
-
-    Font_t *font = &environment->display->fonts[font_id];
-    if (font->loaded) { // Unload font if previously loaded.
-        unload_font(font);
-    }
-    *font = load_font(pathfile);
-}
-
-void graphics_canvas_defaultFont(WrenVM *vm)
-{
-    wrenSetSlotDouble(vm, 0, DEFAULT_FONT_ID);
-}
-
-void graphics_canvas_text(WrenVM *vm) // foreign static text(font_id, text, color, size, align)
-{
-    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
-
-    int font_id = (int)wrenGetSlotDouble(vm, 1);
-    const char *text = wrenGetSlotString(vm, 2);
-    int x = (int)wrenGetSlotDouble(vm, 3);
-    int y = (int)wrenGetSlotDouble(vm, 4);
-    int color = (int)wrenGetSlotDouble(vm, 5);
-    int size = (int)wrenGetSlotDouble(vm, 6);
-    const char *align = wrenGetSlotString(vm, 7);
-#ifdef DEBUG
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.text() -> %d, %s, %d, %d, %d, %d, %s", font_id, text, x, y, color, size, align);
-#endif
-
-    int width = MeasureText(text, size);
-
-    int dx = x, dy = y;
-    if (strcmp(align, "left") == 0) {
-        dx = x;
-        dy = y;
-    } else
-    if (strcmp(align, "center") == 0) {
-        dx = x - (width / 2);
-        dy = y;
-    } else
-    if (strcmp(align, "right") == 0) {
-        dx = x - width;
-        dy = y;
-    }
-#ifdef DEBUG
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.text() -> %d, %d, %d", width, dx, dy);
-#endif
-
-    if (font_id == DEFAULT_FONT_ID) {
-        DrawText(text, dx, dy, size, (Color){ color, color, color, 255 });
-        return;
-    }
-
-    const Font_t *font = &environment->display->fonts[font_id];
-
-    if (!font->loaded) {
-        return;
-    }
-
-    // Spacing is proportional to default font size.
-    if (size < DEFAULT_FONT_SIZE) {
-        size = DEFAULT_FONT_SIZE;
-    }
-    int spacing = size / DEFAULT_FONT_SIZE;
-
-    DrawTextEx(font->font, text, (Vector2){ dx, dy }, size, (float)spacing, (Color){ color, color, color, 255 });
 }
 
 void graphics_canvas_point(WrenVM *vm)
