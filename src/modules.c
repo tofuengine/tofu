@@ -22,21 +22,35 @@
 
 #include "modules.h"
 
-#include "modules/graphics.h"
+#include "modules/collections.h"
 #include "modules/events.h"
+#include "modules/graphics.h"
 
 const Module_Entry_t _modules[] = {
-//  { "module", NULL }
-    { "graphics", graphics_wren },
+//  { "<module-name>", "<module-source>" }
+    { "collections", collections_wren },
     { "events", events_wren },
+    { "graphics", graphics_wren },
     { NULL, NULL }
 };
 const Class_Entry_t _classes[] = {
-//  { "module", "className", NULL, NULL }
+//  { "<module-name>", "<class-name>", <allocator>, <deallocator> }
+    { "collections", "Grid", grid_allocate, grid_finalize },
     { NULL, NULL, NULL, NULL }
 };
 const Method_Entry_t _methods[] = {
-//  { "module", "className", true, "update()", NULL }
+//  { "<module-name>", "<class-name>", <is-static>, "<signature>", <function> }
+    { "collections", "Grid", false, "width", grid_width },
+    { "collections", "Grid", false, "height", grid_height },
+    { "collections", "Grid", false, "fill(_)", grid_fill },
+    { "collections", "Grid", false, "row(_,_,_,_)", grid_row },
+    { "collections", "Grid", false, "peek(_,_)", grid_peek },
+    { "collections", "Grid", false, "poke(_,_,_)", grid_poke },
+    { "events", "Input", true, "isKeyDown(_)", events_input_iskeydown },
+    { "events", "Input", true, "isKeyUp(_)", events_input_iskeyup },
+    { "events", "Input", true, "isKeyPressed(_)", events_input_iskeypressed },
+    { "events", "Input", true, "isKeyReleased(_)", events_input_iskeyreleased },
+    { "events", "Environment", true, "quit()", events_environment_quit },
     { "graphics", "Canvas", true, "width", graphics_canvas_width },
     { "graphics", "Canvas", true, "height", graphics_canvas_height },
     { "graphics", "Canvas", true, "palette(_)", graphics_canvas_palette },
@@ -48,10 +62,5 @@ const Method_Entry_t _methods[] = {
     { "graphics", "Canvas", true, "polygon(_,_,_)", graphics_canvas_polygon },
     { "graphics", "Canvas", true, "circle(_,_,_,_,_)", graphics_canvas_circle },
     { "graphics", "Canvas", true, "sprite(_,_,_,_,_,_,_)", graphics_canvas_sprite },
-    { "events", "Input", true, "isKeyDown(_)", events_input_iskeydown },
-    { "events", "Input", true, "isKeyUp(_)", events_input_iskeyup },
-    { "events", "Input", true, "isKeyPressed(_)", events_input_iskeypressed },
-    { "events", "Input", true, "isKeyReleased(_)", events_input_iskeyreleased },
-    { "events", "Environment", true, "quit()", events_environment_quit },
     { NULL, NULL, false, NULL, NULL }
 };
