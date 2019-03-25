@@ -31,6 +31,7 @@
 typedef struct _Font_t {
     // char pathfile[PATH_FILE_MAX];
     bool loaded;
+    bool is_default;
     Font font;
 } Font_t;
 

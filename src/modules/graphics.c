@@ -64,7 +64,7 @@ const char graphics_wren[] =
     "\n"
     "    construct new(file) {}\n"
     "\n"
-    "    static default = Font.new(\"default\")\n"
+    "    static default { Font.new(\"default\") }\n"
     "\n"
     "    foreign text(text, x, y, color, size, align)\n"
     "\n"
@@ -97,6 +97,7 @@ const char graphics_wren[] =
     "    static square(mode, x, y, size, color) {\n"
     "        rectangle(mode, x, y, size, size, color)\n"
     "    }\n"
+    "}\n"
     "\n"
 ;
 
@@ -168,7 +169,11 @@ void graphics_font_allocate(WrenVM *vm)
     Font_t *font = (Font_t *)wrenSetSlotNewForeign(vm, 0, 0, sizeof(Font_t)); // `0, 0` since we are in the allocate callback.
 
     if (strcmp(file, "default") == 0) {
-        *font = (Font_t){ NULL, true };
+        *font = (Font_t){
+                .loaded = true,
+                .is_default = true,
+                .font = GetFontDefault()
+            };
         return;
     }
 
@@ -182,7 +187,7 @@ void graphics_font_allocate(WrenVM *vm)
 void graphics_font_finalize(void *data)
 {
     Font_t *font = (Font_t *)data;
-    if (font->font != NULL) {
+    if (!font->is_default) {
         unload_font(font);
     }
 }
@@ -220,7 +225,7 @@ void graphics_font_text(WrenVM *vm) // foreign text(text, color, size, align)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.text() -> %d, %d, %d", width, dx, dy);
 #endif
 
-    if (font->font == NULL) {
+    if (font->is_default) {
         DrawText(text, dx, dy, size, (Color){ color, color, color, 255 });
         return;
     }

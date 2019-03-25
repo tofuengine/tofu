@@ -16,7 +16,7 @@ foreign class Font {
 
     construct new(file) {}
 
-    static default = Font.new("default")
+    static default { Font.new("default") }
 
     foreign text(text, x, y, color, size, align)
 

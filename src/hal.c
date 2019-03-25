@@ -114,6 +114,7 @@ Font_t load_font(const char *pathfile)
     Log_write(LOG_LEVELS_DEBUG, "[TOFU] Font '%s' loaded as texture w/ id #%d", pathfile, font.texture.id);
     return (Font_t){
             .loaded = true,
+            .is_default = false,
             .font = font
         };
 }
