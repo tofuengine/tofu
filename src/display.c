@@ -176,13 +176,6 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     }
     Display_palette(display, palette, MAX_PALETTE_COLORS);
 
-    for (size_t i = 0; i < MAX_GRAPHIC_BANKS; ++i) {
-        Bank_t *bank = &display->banks[i];
-        *bank = (Bank_t){
-                .loaded = false
-            };
-    }
-
     for (size_t i = 0; i < MAX_GRAPHIC_FONTS; ++i) {
         Font_t *font = &display->fonts[i];
         *font = (Font_t){
@@ -249,13 +242,6 @@ void Display_terminate(Display_t *display)
         Font_t *font = &display->fonts[i];
         if (font->loaded) {
             unload_font(font);
-        }
-    }
-
-    for (size_t i = 0; i < MAX_GRAPHIC_BANKS; ++i) {
-        Bank_t *bank = &display->banks[i];
-        if (bank->loaded) {
-            unload_bank(bank);
         }
     }
 

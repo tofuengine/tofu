@@ -1,10 +1,23 @@
+foreign class Bank {
+
+    construct new(file, cell_width, cell_height) {}
+
+    sprite(id, x, y) {
+        draw(id, x, y, 0.0)
+    }
+    sprite(id, x, y, r) {
+        draw(id, x, y, r, 1.0, 1.0)
+    }
+    foreign sprite(id, x, y, r, sx, sy)
+
+}
+
 foreign class Canvas {
 
     foreign static width
     foreign static height
     foreign static palette(colors)
     foreign static font(font_id, file)
-    foreign static bank(bank_id, file, width, height)
 
     foreign static defaultFont
     foreign static text(font_id, text, x, y, color, size, align)
@@ -12,8 +25,6 @@ foreign class Canvas {
     foreign static point(x, y, color)
     foreign static polygon(mode, vertices, color)
     foreign static circle(mode, x, y, radius, color)
-
-    foreign static sprite(bank_id, sprite_id, x, y, r, sx, sy)
 
     static line(x0, y0, x1, y1, color) {
         polygon("line", [ x0, y0, x1, y1 ], color)
@@ -31,13 +42,6 @@ foreign class Canvas {
     }
     static square(mode, x, y, size, color) {
         rectangle(mode, x, y, size, size, color)
-    }
-
-    static sprite(bank_id, sprite_id, x, y) {
-        sprite(bank_id, sprite_id, x, y, 0.0, 1.0, 1.0)
-    }
-    static sprite(bank_id, sprite_id, x, y, r) {
-        sprite(bank_id, sprite_id, x, y, r, 1.0, 1.0)
     }
 
 }

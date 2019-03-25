@@ -12,13 +12,14 @@ var MAX_Y = Canvas.height
 
 class Bunny {
 
-    construct new(random) {
+    construct new(random, bank) {
         _x = (MAX_X - MIN_X) / 2 // Spawn in the top-center part of the screen.
         _y = (MAX_Y - MIN_Y) / 8
         _vx = (RANDOM.float() * MAX_SPEED) - (MAX_SPEED / 2.0)
         _vy = (RANDOM.float() * MAX_SPEED) - (MAX_SPEED / 2.0)
 
         _random = random
+        _bank = bank
     }
 
     update(deltaTime) {
@@ -51,8 +52,8 @@ class Bunny {
     render() {
         var angle = (((_vx.abs > MAX_SPEED) ? MAX_SPEED : _vx.abs) / MAX_SPEED) * 45.0
         var rotation = _vx.sign * angle
-        Canvas.sprite(0, 0, _x, _y, rotation)
-        // Canvas.sprite(0, 0, _x, _y)
+        _bank.sprite(0, _x, _y, rotation)
+        // _bank.sprite(0, _x, _y)
     }
 
 }

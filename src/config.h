@@ -32,7 +32,6 @@
 
 #define MAX_PALETTE_COLORS          64
 
-#define MAX_GRAPHIC_BANKS           4
 #define MAX_GRAPHIC_FONTS           4
 #define MAX_GRAPHIC_MAPS            4
 

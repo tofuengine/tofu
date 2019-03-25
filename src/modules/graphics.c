@@ -47,13 +47,26 @@ static inline float fsgnf(float value)
 #define DEFAULT_FONT_SIZE   10
 
 const char graphics_wren[] =
+    "foreign class Bank {\n"
+    "\n"
+    "    construct new(file, cell_width, cell_height) {}\n"
+    "\n"
+    "    sprite(id, x, y) {\n"
+    "        sprite(id, x, y, 0.0)\n"
+    "    }\n"
+    "    sprite(id, x, y, r) {\n"
+    "        sprite(id, x, y, r, 1.0, 1.0)\n"
+    "    }\n"
+    "    foreign sprite(id, x, y, r, sx, sy)\n"
+    "\n"
+    "}\n"
+    "\n"
     "foreign class Canvas {\n"
     "\n"
     "    foreign static width\n"
     "    foreign static height\n"
     "    foreign static palette(colors)\n"
     "    foreign static font(font_id, file)\n"
-    "    foreign static bank(bank_id, file, width, height)\n"
     "\n"
     "    foreign static defaultFont\n"
     "    foreign static text(font_id, text, x, y, color, size, align)\n"
@@ -62,35 +75,81 @@ const char graphics_wren[] =
     "    foreign static polygon(mode, vertices, color)\n"
     "    foreign static circle(mode, x, y, radius, color)\n"
     "\n"
-    "    foreign static sprite(bank_id, sprite_id, x, y, r, sx, sy)\n"
-    "\n"
     "    static line(x0, y0, x1, y1, color) {\n"
     "        polygon(\"line\", [ x0, y0, x1, y1 ], color)\n"
     "    }\n"
     "    static triangle(mode, x0, y0, x1, y1, x2, y2, color) {\n"
     "        polygon(mode, [ x0, y0, x1, y1, x2, y2, x0, y0 ], color)\n"
     "    }\n"
-    "        static rectangle(mode, x, y, width, height, color) {\n"
-    "            var offset = mode == \"line\" ? 1 : 0\n"
-    "            var left = x\n"
-    "            var top = y\n"
-    "            var right = left + width - offset\n"
-    "            var bottom = top + height - offset\n"
-    "            polygon(mode, [ left, top, left, bottom, right, bottom, right, top, left, top ], color)\n"
-    "        }\n"
-    "        static square(mode, x, y, size, color) {\n"
-    "            rectangle(mode, x, y, size, size, color)\n"
-    "        }\n"
-    "\n"
-    "    static sprite(bank_id, sprite_id, x, y) {\n"
-    "        sprite(bank_id, sprite_id, x, y, 0.0, 1.0, 1.0)\n"
+    "    static rectangle(mode, x, y, width, height, color) {\n"
+    "        var offset = mode == \"line\" ? 1 : 0\n"
+    "        var left = x\n"
+    "        var top = y\n"
+    "        var right = left + width - offset\n"
+    "        var bottom = top + height - offset\n"
+    "        polygon(mode, [ left, top, left, bottom, right, bottom, right, top, left, top ], color)\n"
     "    }\n"
-    "    static sprite(bank_id, sprite_id, x, y, r) {\n"
-    "        sprite(bank_id, sprite_id, x, y, r, 1.0, 1.0)\n"
+    "    static square(mode, x, y, size, color) {\n"
+    "        rectangle(mode, x, y, size, size, color)\n"
     "    }\n"
     "\n"
     "}\n"
 ;
+
+void graphics_bank_allocate(WrenVM* vm)
+{
+    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+
+    const char *file = wrenGetSlotString(vm, 1);
+    int cell_width = (int)wrenGetSlotDouble(vm, 2);
+    int cell_height = (int)wrenGetSlotDouble(vm, 3);
+#ifdef DEBUG
+    Log_write(LOG_LEVELS_DEBUG, "Bank.new() -> %s, %d, %d", file, cell_width, cell_height);
+#endif
+
+    char pathfile[PATH_FILE_MAX] = {};
+    strcpy(pathfile, environment->base_path);
+    strcat(pathfile, file + 2);
+
+    Bank_t* bank = (Bank_t *)wrenSetSlotNewForeign(vm, 0, 0, sizeof(Bank_t)); // `0, 0` since we are in the allocate callback.
+    *bank = load_bank(pathfile, cell_width, cell_height, environment->display->palette, MAX_PALETTE_COLORS);
+}
+
+void graphics_bank_finalize(void* data)
+{
+    Bank_t* bank = (Bank_t *)data;
+    unload_bank(bank);
+}
+
+void graphics_bank_sprite(WrenVM *vm)
+{
+    int sprite_id = (int)wrenGetSlotDouble(vm, 1);
+    int x = (int)wrenGetSlotDouble(vm, 2);
+    int y = (int)wrenGetSlotDouble(vm, 3);
+    double rotation = wrenGetSlotDouble(vm, 4);
+    double scale_x = wrenGetSlotDouble(vm, 5);
+    double scale_y = wrenGetSlotDouble(vm, 6);
+#ifdef DEBUG
+    Log_write(LOG_LEVELS_DEBUG, "Bank.sprite() -> %d, %d, %d, %.3f, %.3f, %.3f", sprite_id, x, y, rotation, scale_x, scale_y);
+#endif
+
+    const Bank_t *bank = (const Bank_t *)wrenGetSlotForeign(vm, 0);
+
+    if (!bank->loaded) {
+        Log_write(LOG_ERROR, "[TOFU] Bank now loaded, can't draw sprite");
+        return;
+    }
+
+    int bank_position = sprite_id * bank->cell_width;
+    int bank_x = bank_position % bank->atlas.width;
+    int bank_y = (bank_position / bank->atlas.width) * bank->cell_height;
+
+    Rectangle sourceRec = { (float)bank_x, (float)bank_y, (float)bank->cell_width * fsgnf(scale_x), (float)bank->cell_height * fsgnf(scale_y) };
+    Rectangle destRec = { x, y, (float)bank->cell_width * fabsf(scale_x), (float)bank->cell_height * fabsf(scale_y) };
+    Vector2 origin = { bank->cell_width * 0.5f, bank->cell_height * 0.5f}; // Rotate along center.
+
+    DrawTexturePro(bank->atlas, sourceRec, destRec, origin, (float)rotation, (Color){ 255, 255, 255, 255 });
+}
 
 void graphics_canvas_width(WrenVM *vm)
 {
@@ -185,29 +244,6 @@ void graphics_canvas_font(WrenVM *vm)
         unload_font(font);
     }
     *font = load_font(pathfile);
-}
-
-void graphics_canvas_bank(WrenVM *vm)
-{
-    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
-
-    int bank_id = (int)wrenGetSlotDouble(vm, 1);
-    const char *file = wrenGetSlotString(vm, 2);
-    int cell_width = (int)wrenGetSlotDouble(vm, 3);
-    int cell_height = (int)wrenGetSlotDouble(vm, 4);
-#ifdef DEBUG
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.bank() -> %d, %s, %d, %d", bank_id, file, cell_width, cell_height);
-#endif
-
-    char pathfile[PATH_FILE_MAX] = {};
-    strcpy(pathfile, environment->base_path);
-    strcat(pathfile, file + 2);
-
-    Bank_t *bank = &environment->display->banks[bank_id];
-    if (bank->loaded) { // Unload current texture if previously loaded.
-        unload_bank(bank);
-    }
-    *bank = load_bank(pathfile, cell_width, cell_height, environment->display->palette, MAX_PALETTE_COLORS);
 }
 
 void graphics_canvas_defaultFont(WrenVM *vm)
@@ -353,36 +389,4 @@ void graphics_canvas_circle(WrenVM *vm)
     } else {
         Log_write(LOG_LEVELS_WARNING, "[TOFU] Undefined drawing mode for polygon: '%s'", mode);
     }
-}
-
-void graphics_canvas_sprite(WrenVM *vm)
-{
-    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
-
-    int bank_id = (int)wrenGetSlotDouble(vm, 1);
-    int sprite_id = (int)wrenGetSlotDouble(vm, 2);
-    int x = (int)wrenGetSlotDouble(vm, 3);
-    int y = (int)wrenGetSlotDouble(vm, 4);
-    double rotation = wrenGetSlotDouble(vm, 5);
-    double scale_x = wrenGetSlotDouble(vm, 6);
-    double scale_y = wrenGetSlotDouble(vm, 7);
-#ifdef DEBUG
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.sprite() -> %d, %d, %d, %d, %.3f, %.3f, %.3f", bank_id, sprite_id, x, y, rotation, scale_x, scale_y);
-#endif
-
-    const Bank_t *bank = &environment->display->banks[bank_id];
-
-    if (!bank->loaded) {
-        return;
-    }
-
-    int bank_position = sprite_id * bank->cell_width;
-    int bank_x = bank_position % bank->atlas.width;
-    int bank_y = (bank_position / bank->atlas.width) * bank->cell_height;
-
-    Rectangle sourceRec = { (float)bank_x, (float)bank_y, (float)bank->cell_width * fsgnf(scale_x), (float)bank->cell_height * fsgnf(scale_y) };
-    Rectangle destRec = { x, y, (float)bank->cell_width * fabsf(scale_x), (float)bank->cell_height * fabsf(scale_y) };
-    Vector2 origin = { bank->cell_width * 0.5f, bank->cell_height * 0.5f}; // Rotate along center.
-
-    DrawTexturePro(bank->atlas, sourceRec, destRec, origin, (float)rotation, (Color){ 255, 255, 255, 255 });
 }
