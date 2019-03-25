@@ -50,7 +50,7 @@ typedef struct _Grid_t {
     Cell_t **offsets; // Precomputed pointers to the line of data.
 } Grid_t;
 
-void grid_allocate(WrenVM* vm)
+void grid_allocate(WrenVM *vm)
 {
     int width = (int)wrenGetSlotDouble(vm, 1);
     int height = (int)wrenGetSlotDouble(vm, 2);
@@ -61,34 +61,39 @@ void grid_allocate(WrenVM* vm)
         offsets[i] = data + (i * width);
     }
 
-    Grid_t* grid = (Grid_t *)wrenSetSlotNewForeign(vm, 0, 0, sizeof(Grid_t)); // `0, 0` since we are in the allocate callback.
-    *grid = (Grid_t){ width, height, data, offsets };
+    Grid_t *grid = (Grid_t *)wrenSetSlotNewForeign(vm, 0, 0, sizeof(Grid_t)); // `0, 0` since we are in the allocate callback.
+    *grid = (Grid_t){
+            .width = width,
+            .height = height,
+            .data = data,
+            .offsets = offsets
+        };
 }
 
-void grid_finalize(void* data)
+void grid_finalize(void *data)
 {
-    Grid_t* grid = (Grid_t *)data;
+    Grid_t *grid = (Grid_t *)data;
     Memory_free(grid->data);
     Memory_free(grid->offsets);
 }
 
 void grid_width(WrenVM *vm)
 {
-    Grid_t* grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
+    Grid_t *grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
 
     wrenSetSlotDouble(vm, 0, grid->width);
 }
 
 void grid_height(WrenVM *vm)
 {
-    Grid_t* grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
+    Grid_t *grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
 
     wrenSetSlotDouble(vm, 0, grid->height);
 }
 
 void grid_fill(WrenVM *vm)
 {
-    Grid_t* grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
+    Grid_t *grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
 
     Cell_t value = (Cell_t)wrenGetSlotDouble(vm, 1);
 
@@ -105,7 +110,7 @@ void grid_fill(WrenVM *vm)
 
 void grid_row(WrenVM *vm)
 {
-    Grid_t* grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
+    Grid_t *grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
 
     int x = (int)wrenGetSlotDouble(vm, 1);
     int y = (int)wrenGetSlotDouble(vm, 2);
@@ -123,7 +128,7 @@ void grid_row(WrenVM *vm)
 
 void grid_peek(WrenVM *vm)
 {
-    Grid_t* grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
+    Grid_t *grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
 
     int x = (int)wrenGetSlotDouble(vm, 1);
     int y = (int)wrenGetSlotDouble(vm, 2);
@@ -137,7 +142,7 @@ void grid_peek(WrenVM *vm)
 
 void grid_poke(WrenVM *vm)
 {
-    Grid_t* grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
+    Grid_t *grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
 
     int x = (int)wrenGetSlotDouble(vm, 1);
     int y = (int)wrenGetSlotDouble(vm, 2);
