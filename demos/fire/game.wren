@@ -12,112 +12,6 @@ var PALETTE = [
         "FFFFFF3F", "FFFFFF7F", "FFFFFFBF", "FFFFFFFF"
     ]
 
-class Grid2 {
-
-    construct new(width, height) {
-        _width = width
-        _height = height
-        _data = List.filled(width * height, 0)
-    }
-
-    fill(value) {
-        var count = _width * _height
-        for (i in 0 ... count) {
-            _data[i] = value
-        }
-    }
-
-    row(x, y, count, value) {
-        var offset = (y * _width) + x
-        for (j in 0 ... count) {
-            _data[offset + j] = value
-        }
-    }
-
-    peek(x, y) {
-        return _data[(y * _width) + x]
-    }
-
-    poke(x, y, value) {
-        _data[(y * _width) + x] = value
-    }
-
-}
-
-class Grid3 {
-
-    construct new(width, height) {
-        _width = width
-        _height = height
-        _data = List.filled(width * height, 0)
-        _offsets = List.filled(height, 0)
-        for (i in 0 ... _height) {
-            _offsets[i] = i * _width
-        }
-    }
-
-    fill(value) {
-        var count = _width * _height
-        for (i in 0 ... count) {
-            _data[i] = value
-        }
-    }
-
-    row(x, y, count, value) {
-        var offset = _offsets[y] + x
-        for (j in 0 ... count) {
-            _data[offset + j] = value
-        }
-    }
-
-    peek(x, y) {
-        return _data[_offsets[y] + x]
-    }
-
-    poke(x, y, value) {
-        _data[_offsets[y] + x] = value
-    }
-
-}
-
-class Grid4 {
-
-    construct new(width, height) {
-        _width = width
-        _height = height
-        _data = List.filled(width * height, 0)
-        _offsets = List.filled(height, 0)
-        for (i in 0 ... _height) {
-            _offsets[i] = i * _width
-        }
-    }
-
-    fill(value) {
-        var count = _width * _height
-        var i = 0
-        while (i < count) {
-            _data[i] = value
-            i = i + 1
-        }
-    }
-
-    row(x, y, count, value) {
-        var offset = _offsets[y] + x
-        for (j in 0 ... count) {
-            _data[offset + j] = value
-        }
-    }
-
-    peek(x, y) {
-        return _data[_offsets[y] + x]
-    }
-
-    poke(x, y, value) {
-        _data[_offsets[y] + x] = value
-    }
-
-}
-
 class Game {
 
     construct new() {
@@ -128,37 +22,15 @@ class Game {
 
         _windy = false
 
-        test(Grid.new(STEPS, STEPS))
-        test(Grid2.new(STEPS, STEPS))
-        test(Grid3.new(STEPS, STEPS))
-        test(Grid4.new(STEPS, STEPS))
-
         _grid = Grid.new(STEPS, STEPS)
         reset()
 
         Canvas.palette(PALETTE)
     }
 
-    test(grid) {
-        var s = System.clock
-        _grid = Grid.new(STEPS, STEPS)
-        for (x in 0 ... 10000) {
-//            grid.fill(0)
-//            for (j in 0 ... STEPS) {
-//                grid.poke(j, STEPS - 1, PALETTE.count - 1)
-//            }
-            grid.row(0, STEPS - 1, STEPS - 1, PALETTE.count - 1)
-        }
-        var e = System.clock
-        var delta = (e - s) * 1000
-        System.print("Grid took %(delta)ms")
-    }
-
     reset() {
         _grid.fill(0)
-        for (j in 0 ... STEPS) {
-            _grid.poke(j, STEPS - 1, PALETTE.count - 1)
-        }
+        _grid.row(0, STEPS - 1, STEPS, PALETTE.count - 1)
     }
 
     input() {
