@@ -31,10 +31,11 @@
 typedef struct _Font_t {
     // char pathfile[PATH_FILE_MAX];
     bool loaded;
+    bool is_default;
     Font font;
 } Font_t;
 
-typedef struct _Bank_t {
+typedef struct _Bank_t { // TODO: rename to `Sheet`?
     // char pathfile[PATH_FILE_MAX];
     bool loaded;
     int cell_width, cell_height;

@@ -43,26 +43,42 @@ static inline float fsgnf(float value)
 }
 #endif
 
-#define DEFAULT_FONT_ID     -1
 #define DEFAULT_FONT_SIZE   10
 
 const char graphics_wren[] =
+    "foreign class Bank {\n"
+    "\n"
+    "    construct new(file, cell_width, cell_height) {}\n"
+    "\n"
+    "    sprite(id, x, y) {\n"
+    "        sprite(id, x, y, 0.0)\n"
+    "    }\n"
+    "    sprite(id, x, y, r) {\n"
+    "        sprite(id, x, y, r, 1.0, 1.0)\n"
+    "    }\n"
+    "    foreign sprite(id, x, y, r, sx, sy)\n"
+    "\n"
+    "}\n"
+    "\n"
+    "foreign class Font {\n"
+    "\n"
+    "    construct new(file) {}\n"
+    "\n"
+    "    static default { Font.new(\"default\") }\n"
+    "\n"
+    "    foreign text(text, x, y, color, size, align)\n"
+    "\n"
+    "}\n"
+    "\n"
     "foreign class Canvas {\n"
     "\n"
     "    foreign static width\n"
     "    foreign static height\n"
     "    foreign static palette(colors)\n"
-    "    foreign static font(font_id, file)\n"
-    "    foreign static bank(bank_id, file, width, height)\n"
-    "\n"
-    "    foreign static defaultFont\n"
-    "    foreign static text(font_id, text, x, y, color, size, align)\n"
     "\n"
     "    foreign static point(x, y, color)\n"
     "    foreign static polygon(mode, vertices, color)\n"
     "    foreign static circle(mode, x, y, radius, color)\n"
-    "\n"
-    "    foreign static sprite(bank_id, sprite_id, x, y, r, sx, sy)\n"
     "\n"
     "    static line(x0, y0, x1, y1, color) {\n"
     "        polygon(\"line\", [ x0, y0, x1, y1 ], color)\n"
@@ -70,27 +86,157 @@ const char graphics_wren[] =
     "    static triangle(mode, x0, y0, x1, y1, x2, y2, color) {\n"
     "        polygon(mode, [ x0, y0, x1, y1, x2, y2, x0, y0 ], color)\n"
     "    }\n"
-    "        static rectangle(mode, x, y, width, height, color) {\n"
-    "            var offset = mode == \"line\" ? 1 : 0\n"
-    "            var left = x\n"
-    "            var top = y\n"
-    "            var right = left + width - offset\n"
-    "            var bottom = top + height - offset\n"
-    "            polygon(mode, [ left, top, left, bottom, right, bottom, right, top, left, top ], color)\n"
-    "        }\n"
-    "        static square(mode, x, y, size, color) {\n"
-    "            rectangle(mode, x, y, size, size, color)\n"
-    "        }\n"
-    "\n"
-    "    static sprite(bank_id, sprite_id, x, y) {\n"
-    "        sprite(bank_id, sprite_id, x, y, 0.0, 1.0, 1.0)\n"
+    "    static rectangle(mode, x, y, width, height, color) {\n"
+    "        var offset = mode == \"line\" ? 1 : 0\n"
+    "        var left = x\n"
+    "        var top = y\n"
+    "        var right = left + width - offset\n"
+    "        var bottom = top + height - offset\n"
+    "        polygon(mode, [ left, top, left, bottom, right, bottom, right, top, left, top ], color)\n"
     "    }\n"
-    "    static sprite(bank_id, sprite_id, x, y, r) {\n"
-    "        sprite(bank_id, sprite_id, x, y, r, 1.0, 1.0)\n"
+    "    static square(mode, x, y, size, color) {\n"
+    "        rectangle(mode, x, y, size, size, color)\n"
     "    }\n"
-    "\n"
     "}\n"
+    "\n"
 ;
+
+void graphics_bank_allocate(WrenVM *vm)
+{
+    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+
+    const char *file = wrenGetSlotString(vm, 1);
+    int cell_width = (int)wrenGetSlotDouble(vm, 2);
+    int cell_height = (int)wrenGetSlotDouble(vm, 3);
+#ifdef DEBUG
+    Log_write(LOG_LEVELS_DEBUG, "Bank.new() -> %s, %d, %d", file, cell_width, cell_height);
+#endif
+
+    Bank_t *bank = (Bank_t *)wrenSetSlotNewForeign(vm, 0, 0, sizeof(Bank_t)); // `0, 0` since we are in the allocate callback.
+
+    char pathfile[PATH_FILE_MAX] = {};
+    strcpy(pathfile, environment->base_path);
+    strcat(pathfile, file + 2);
+
+    *bank = load_bank(pathfile, cell_width, cell_height, environment->display->palette, MAX_PALETTE_COLORS);
+}
+
+void graphics_bank_finalize(void *data)
+{
+    Bank_t *bank = (Bank_t *)data;
+    unload_bank(bank);
+}
+
+void graphics_bank_sprite(WrenVM *vm)
+{
+    int sprite_id = (int)wrenGetSlotDouble(vm, 1);
+    int x = (int)wrenGetSlotDouble(vm, 2);
+    int y = (int)wrenGetSlotDouble(vm, 3);
+    double rotation = wrenGetSlotDouble(vm, 4);
+    double scale_x = wrenGetSlotDouble(vm, 5);
+    double scale_y = wrenGetSlotDouble(vm, 6);
+#ifdef DEBUG
+    Log_write(LOG_LEVELS_DEBUG, "Bank.sprite() -> %d, %d, %d, %.3f, %.3f, %.3f", sprite_id, x, y, rotation, scale_x, scale_y);
+#endif
+
+    const Bank_t *bank = (const Bank_t *)wrenGetSlotForeign(vm, 0);
+
+    if (!bank->loaded) {
+        Log_write(LOG_ERROR, "[TOFU] Bank now loaded, can't draw sprite");
+        return;
+    }
+
+    int bank_position = sprite_id * bank->cell_width;
+    int bank_x = bank_position % bank->atlas.width;
+    int bank_y = (bank_position / bank->atlas.width) * bank->cell_height;
+
+    Rectangle sourceRec = { (float)bank_x, (float)bank_y, (float)bank->cell_width * fsgnf(scale_x), (float)bank->cell_height * fsgnf(scale_y) };
+    Rectangle destRec = { x, y, (float)bank->cell_width * fabsf(scale_x), (float)bank->cell_height * fabsf(scale_y) };
+    Vector2 origin = { bank->cell_width * 0.5f, bank->cell_height * 0.5f}; // Rotate along center.
+
+    DrawTexturePro(bank->atlas, sourceRec, destRec, origin, (float)rotation, (Color){ 255, 255, 255, 255 });
+}
+
+void graphics_font_allocate(WrenVM *vm)
+{
+    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+
+    const char *file = wrenGetSlotString(vm, 1);
+#ifdef DEBUG
+    Log_write(LOG_LEVELS_DEBUG, "Font.new() -> %s", file);
+#endif
+
+    Font_t *font = (Font_t *)wrenSetSlotNewForeign(vm, 0, 0, sizeof(Font_t)); // `0, 0` since we are in the allocate callback.
+
+    if (strcmp(file, "default") == 0) {
+        *font = (Font_t){
+                .loaded = true,
+                .is_default = true,
+                .font = GetFontDefault()
+            };
+        return;
+    }
+
+    char pathfile[PATH_FILE_MAX] = {};
+    strcpy(pathfile, environment->base_path);
+    strcat(pathfile, file + 2);
+
+    *font = load_font(pathfile);
+}
+
+void graphics_font_finalize(void *data)
+{
+    Font_t *font = (Font_t *)data;
+    if (!font->is_default) {
+        unload_font(font);
+    }
+}
+
+void graphics_font_text(WrenVM *vm) // foreign text(text, color, size, align)
+{
+    const char *text = wrenGetSlotString(vm, 1);
+    int x = (int)wrenGetSlotDouble(vm, 2);
+    int y = (int)wrenGetSlotDouble(vm, 3);
+    int color = (int)wrenGetSlotDouble(vm, 4);
+    int size = (int)wrenGetSlotDouble(vm, 5);
+    const char *align = wrenGetSlotString(vm, 6);
+#ifdef DEBUG
+    Log_write(LOG_LEVELS_DEBUG, "Font.text() -> %s, %d, %d, %d, %d, %s", text, x, y, color, size, align);
+#endif
+
+    const Font_t *font = (const Font_t *)wrenGetSlotForeign(vm, 0);
+
+    int width = MeasureText(text, size);
+
+    int dx = x, dy = y;
+    if (strcmp(align, "left") == 0) {
+        dx = x;
+        dy = y;
+    } else
+    if (strcmp(align, "center") == 0) {
+        dx = x - (width / 2);
+        dy = y;
+    } else
+    if (strcmp(align, "right") == 0) {
+        dx = x - width;
+        dy = y;
+    }
+#ifdef DEBUG
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.text() -> %d, %d, %d", width, dx, dy);
+#endif
+
+    if (!font->loaded) {
+        return;
+    }
+
+    // Spacing is proportional to default font size.
+    if (size < DEFAULT_FONT_SIZE) {
+        size = DEFAULT_FONT_SIZE;
+    }
+    int spacing = size / DEFAULT_FONT_SIZE;
+
+    DrawTextEx(font->font, text, (Vector2){ dx, dy }, size, (float)spacing, (Color){ color, color, color, 255 });
+}
 
 void graphics_canvas_width(WrenVM *vm)
 {
@@ -164,109 +310,6 @@ void graphics_canvas_palette(WrenVM *vm)
     if (count > 0) {
         Display_palette(environment->display, colors, count);
     }
-}
-
-void graphics_canvas_font(WrenVM *vm)
-{
-    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
-
-    int font_id = (int)wrenGetSlotDouble(vm, 1);
-    const char *file = wrenGetSlotString(vm, 2);
-#ifdef DEBUG
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.font() -> %d, %s", font_id, file);
-#endif
-
-    char pathfile[PATH_FILE_MAX] = {};
-    strcpy(pathfile, environment->base_path);
-    strcat(pathfile, file + 2);
-
-    Font_t *font = &environment->display->fonts[font_id];
-    if (font->loaded) { // Unload font if previously loaded.
-        unload_font(font);
-    }
-    *font = load_font(pathfile);
-}
-
-void graphics_canvas_bank(WrenVM *vm)
-{
-    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
-
-    int bank_id = (int)wrenGetSlotDouble(vm, 1);
-    const char *file = wrenGetSlotString(vm, 2);
-    int cell_width = (int)wrenGetSlotDouble(vm, 3);
-    int cell_height = (int)wrenGetSlotDouble(vm, 4);
-#ifdef DEBUG
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.bank() -> %d, %s, %d, %d", bank_id, file, cell_width, cell_height);
-#endif
-
-    char pathfile[PATH_FILE_MAX] = {};
-    strcpy(pathfile, environment->base_path);
-    strcat(pathfile, file + 2);
-
-    Bank_t *bank = &environment->display->banks[bank_id];
-    if (bank->loaded) { // Unload current texture if previously loaded.
-        unload_bank(bank);
-    }
-    *bank = load_bank(pathfile, cell_width, cell_height, environment->display->palette, MAX_PALETTE_COLORS);
-}
-
-void graphics_canvas_defaultFont(WrenVM *vm)
-{
-    wrenSetSlotDouble(vm, 0, DEFAULT_FONT_ID);
-}
-
-void graphics_canvas_text(WrenVM *vm) // foreign static text(font_id, text, color, size, align)
-{
-    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
-
-    int font_id = (int)wrenGetSlotDouble(vm, 1);
-    const char *text = wrenGetSlotString(vm, 2);
-    int x = (int)wrenGetSlotDouble(vm, 3);
-    int y = (int)wrenGetSlotDouble(vm, 4);
-    int color = (int)wrenGetSlotDouble(vm, 5);
-    int size = (int)wrenGetSlotDouble(vm, 6);
-    const char *align = wrenGetSlotString(vm, 7);
-#ifdef DEBUG
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.text() -> %d, %s, %d, %d, %d, %d, %s", font_id, text, x, y, color, size, align);
-#endif
-
-    int width = MeasureText(text, size);
-
-    int dx = x, dy = y;
-    if (strcmp(align, "left") == 0) {
-        dx = x;
-        dy = y;
-    } else
-    if (strcmp(align, "center") == 0) {
-        dx = x - (width / 2);
-        dy = y;
-    } else
-    if (strcmp(align, "right") == 0) {
-        dx = x - width;
-        dy = y;
-    }
-#ifdef DEBUG
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.text() -> %d, %d, %d", width, dx, dy);
-#endif
-
-    if (font_id == DEFAULT_FONT_ID) {
-        DrawText(text, dx, dy, size, (Color){ color, color, color, 255 });
-        return;
-    }
-
-    const Font_t *font = &environment->display->fonts[font_id];
-
-    if (!font->loaded) {
-        return;
-    }
-
-    // Spacing is proportional to default font size.
-    if (size < DEFAULT_FONT_SIZE) {
-        size = DEFAULT_FONT_SIZE;
-    }
-    int spacing = size / DEFAULT_FONT_SIZE;
-
-    DrawTextEx(font->font, text, (Vector2){ dx, dy }, size, (float)spacing, (Color){ color, color, color, 255 });
 }
 
 void graphics_canvas_point(WrenVM *vm)
@@ -353,36 +396,4 @@ void graphics_canvas_circle(WrenVM *vm)
     } else {
         Log_write(LOG_LEVELS_WARNING, "[TOFU] Undefined drawing mode for polygon: '%s'", mode);
     }
-}
-
-void graphics_canvas_sprite(WrenVM *vm)
-{
-    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
-
-    int bank_id = (int)wrenGetSlotDouble(vm, 1);
-    int sprite_id = (int)wrenGetSlotDouble(vm, 2);
-    int x = (int)wrenGetSlotDouble(vm, 3);
-    int y = (int)wrenGetSlotDouble(vm, 4);
-    double rotation = wrenGetSlotDouble(vm, 5);
-    double scale_x = wrenGetSlotDouble(vm, 6);
-    double scale_y = wrenGetSlotDouble(vm, 7);
-#ifdef DEBUG
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.sprite() -> %d, %d, %d, %d, %.3f, %.3f, %.3f", bank_id, sprite_id, x, y, rotation, scale_x, scale_y);
-#endif
-
-    const Bank_t *bank = &environment->display->banks[bank_id];
-
-    if (!bank->loaded) {
-        return;
-    }
-
-    int bank_position = sprite_id * bank->cell_width;
-    int bank_x = bank_position % bank->atlas.width;
-    int bank_y = (bank_position / bank->atlas.width) * bank->cell_height;
-
-    Rectangle sourceRec = { (float)bank_x, (float)bank_y, (float)bank->cell_width * fsgnf(scale_x), (float)bank->cell_height * fsgnf(scale_y) };
-    Rectangle destRec = { x, y, (float)bank->cell_width * fabsf(scale_x), (float)bank->cell_height * fabsf(scale_y) };
-    Vector2 origin = { bank->cell_width * 0.5f, bank->cell_height * 0.5f}; // Rotate along center.
-
-    DrawTexturePro(bank->atlas, sourceRec, destRec, origin, (float)rotation, (Color){ 255, 255, 255, 255 });
 }

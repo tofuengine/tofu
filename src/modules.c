@@ -36,6 +36,8 @@ const Module_Entry_t _modules[] = {
 const Class_Entry_t _classes[] = {
 //  { "<module-name>", "<class-name>", <allocator>, <deallocator> }
     { "collections", "Grid", grid_allocate, grid_finalize },
+    { "graphics", "Bank", graphics_bank_allocate, graphics_bank_finalize },
+    { "graphics", "Font", graphics_font_allocate, graphics_font_finalize },
     { NULL, NULL, NULL, NULL }
 };
 const Method_Entry_t _methods[] = {
@@ -51,16 +53,13 @@ const Method_Entry_t _methods[] = {
     { "events", "Input", true, "isKeyPressed(_)", events_input_iskeypressed },
     { "events", "Input", true, "isKeyReleased(_)", events_input_iskeyreleased },
     { "events", "Environment", true, "quit()", events_environment_quit },
+    { "graphics", "Bank", false, "sprite(_,_,_,_,_,_)", graphics_bank_sprite },
+    { "graphics", "Font", false, "text(_,_,_,_,_,_)", graphics_font_text },
     { "graphics", "Canvas", true, "width", graphics_canvas_width },
     { "graphics", "Canvas", true, "height", graphics_canvas_height },
     { "graphics", "Canvas", true, "palette(_)", graphics_canvas_palette },
-    { "graphics", "Canvas", true, "font(_,_)", graphics_canvas_font },
-    { "graphics", "Canvas", true, "bank(_,_,_,_)", graphics_canvas_bank },
-    { "graphics", "Canvas", true, "defaultFont", graphics_canvas_defaultFont },
-    { "graphics", "Canvas", true, "text(_,_,_,_,_,_,_)", graphics_canvas_text },
     { "graphics", "Canvas", true, "point(_,_,_)", graphics_canvas_point },
     { "graphics", "Canvas", true, "polygon(_,_,_)", graphics_canvas_polygon },
     { "graphics", "Canvas", true, "circle(_,_,_,_,_)", graphics_canvas_circle },
-    { "graphics", "Canvas", true, "sprite(_,_,_,_,_,_,_)", graphics_canvas_sprite },
     { NULL, NULL, false, NULL, NULL }
 };

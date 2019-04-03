@@ -1,6 +1,6 @@
 import "random" for Random
 
-import "graphics" for Canvas
+import "graphics" for Bank, Canvas, Font
 import "events" for Environment, Input
 
 import "./lib/bunny" for Bunny
@@ -16,13 +16,15 @@ class Game {
         _bunnies = []
 
         Canvas.palette("arne-16")
-        Canvas.bank(0, "./assets/sheet.png", 26, 37)
+
+        _bank = Bank.new("./assets/sheet.png", 26, 37)
+        _font = Font.default
     }
 
     input() {
         if (Input.isKeyPressed(Input.space)) {
             for (i in 1 .. LITTER_SIZE) {
-                _bunnies.insert(-1, Bunny.new(_random))
+                _bunnies.insert(-1, Bunny.new(_random, _bank))
             }
             if (_bunnies.count >= MAX_BUNNIES) {
                 Environment.quit()
@@ -43,7 +45,7 @@ class Game {
             bunny.render()
         }
 
-        Canvas.text(Canvas.defaultFont, "#%(_bunnies.count) bunnies", Canvas.width, 0, 15, 10, "right")
+        _font.text("#%(_bunnies.count) bunnies", Canvas.width, 0, 15, 10, "right")
     }
 
 }

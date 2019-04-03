@@ -176,20 +176,6 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     }
     Display_palette(display, palette, MAX_PALETTE_COLORS);
 
-    for (size_t i = 0; i < MAX_GRAPHIC_BANKS; ++i) {
-        Bank_t *bank = &display->banks[i];
-        *bank = (Bank_t){
-                .loaded = false
-            };
-    }
-
-    for (size_t i = 0; i < MAX_GRAPHIC_FONTS; ++i) {
-        Font_t *font = &display->fonts[i];
-        *font = (Font_t){
-                .loaded = false
-            };
-    }
-
     return true;
 }
 
@@ -239,33 +225,11 @@ void Display_palette(Display_t *display, const Color *palette, size_t count)
     if (uniform_location == -1) {
         return;
     }
-    SetShaderValueV(display->palette_shader, uniform_location,
-        colors, UNIFORM_VEC4, MAX_PALETTE_COLORS);
+    SetShaderValueV(display->palette_shader, uniform_location, colors, UNIFORM_VEC4, MAX_PALETTE_COLORS);
 }
 
 void Display_terminate(Display_t *display)
 {
-    for (size_t i = 0; i < MAX_GRAPHIC_FONTS; ++i) {
-        Font_t *font = &display->fonts[i];
-        if (font->loaded) {
-            unload_font(font);
-        }
-    }
-
-    for (size_t i = 0; i < MAX_GRAPHIC_BANKS; ++i) {
-        Bank_t *bank = &display->banks[i];
-        if (bank->loaded) {
-            unload_bank(bank);
-        }
-    }
-
-    for (size_t i = 0; i < MAX_GRAPHIC_MAPS; ++i) {
-        Map_t *map = &display->maps[i];
-        if (map->loaded) {
-            unload_map(map);
-        }
-    }
-
     UnloadShader(display->palette_shader);
     UnloadRenderTexture(display->offscreen);
     CloseWindow();
