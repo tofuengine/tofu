@@ -176,13 +176,6 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     }
     Display_palette(display, palette, MAX_PALETTE_COLORS);
 
-    for (size_t i = 0; i < MAX_GRAPHIC_FONTS; ++i) {
-        Font_t *font = &display->fonts[i];
-        *font = (Font_t){
-                .loaded = false
-            };
-    }
-
     return true;
 }
 
@@ -237,13 +230,6 @@ void Display_palette(Display_t *display, const Color *palette, size_t count)
 
 void Display_terminate(Display_t *display)
 {
-    for (size_t i = 0; i < MAX_GRAPHIC_FONTS; ++i) {
-        Font_t *font = &display->fonts[i];
-        if (font->loaded) {
-            unload_font(font);
-        }
-    }
-
     for (size_t i = 0; i < MAX_GRAPHIC_MAPS; ++i) {
         Map_t *map = &display->maps[i];
         if (map->loaded) {
