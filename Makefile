@@ -32,6 +32,10 @@ fire: $(TARGET)
 	@echo "Launching Fire application!"
 	./$(TARGET) ./demos/fire
 
+tiled-map: $(TARGET)
+	@echo "Launching Tiled-Map application!"
+	./$(TARGET) ./demos/tiled-map
+
 .PHONY: clean
 clean:
 	@$(rm) $(OBJECTS)
