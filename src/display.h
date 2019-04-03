@@ -60,8 +60,6 @@ typedef struct _Display_t {
 
     Color palette[MAX_PALETTE_COLORS];
     Shader palette_shader;
-
-    Map_t maps[MAX_GRAPHIC_MAPS];
 } Display_t;
 
 extern bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title);

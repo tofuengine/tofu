@@ -32,8 +32,6 @@
 
 #define MAX_PALETTE_COLORS          64
 
-#define MAX_GRAPHIC_MAPS            4
-
 // Behavioural MACROs are uses the "__" prefix/suffix.
 
 #define __FAST_FULLSCREEN__ 

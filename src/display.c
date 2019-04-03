@@ -230,13 +230,6 @@ void Display_palette(Display_t *display, const Color *palette, size_t count)
 
 void Display_terminate(Display_t *display)
 {
-    for (size_t i = 0; i < MAX_GRAPHIC_MAPS; ++i) {
-        Map_t *map = &display->maps[i];
-        if (map->loaded) {
-            unload_map(map);
-        }
-    }
-
     UnloadShader(display->palette_shader);
     UnloadRenderTexture(display->offscreen);
     CloseWindow();
