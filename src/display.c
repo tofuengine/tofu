@@ -232,8 +232,7 @@ void Display_palette(Display_t *display, const Color *palette, size_t count)
     if (uniform_location == -1) {
         return;
     }
-    SetShaderValueV(display->palette_shader, uniform_location,
-        colors, UNIFORM_VEC4, MAX_PALETTE_COLORS);
+    SetShaderValueV(display->palette_shader, uniform_location, colors, UNIFORM_VEC4, MAX_PALETTE_COLORS);
 }
 
 void Display_terminate(Display_t *display)

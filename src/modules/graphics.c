@@ -225,11 +225,6 @@ void graphics_font_text(WrenVM *vm) // foreign text(text, color, size, align)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.text() -> %d, %d, %d", width, dx, dy);
 #endif
 
-    if (font->is_default) {
-        DrawText(text, dx, dy, size, (Color){ color, color, color, 255 });
-        return;
-    }
-
     if (!font->loaded) {
         return;
     }
