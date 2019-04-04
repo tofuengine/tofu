@@ -37,19 +37,19 @@ const Module_Entry_t _modules[] = {
 };
 const Class_Entry_t _classes[] = {
 //  { "<module-name>", "<class-name>", <allocator>, <deallocator> }
-    { "collections", "Grid", grid_allocate, grid_finalize },
+    { "collections", "Grid", collections_grid_allocate, collections_grid_finalize },
     { "graphics", "Bank", graphics_bank_allocate, graphics_bank_finalize },
     { "graphics", "Font", graphics_font_allocate, graphics_font_finalize },
     { NULL, NULL, NULL, NULL }
 };
 const Method_Entry_t _methods[] = {
 //  { "<module-name>", "<class-name>", <is-static>, "<signature>", <function> }
-    { "collections", "Grid", false, "width", grid_width },
-    { "collections", "Grid", false, "height", grid_height },
-    { "collections", "Grid", false, "fill(_)", grid_fill },
-    { "collections", "Grid", false, "row(_,_,_,_)", grid_row },
-    { "collections", "Grid", false, "peek(_,_)", grid_peek },
-    { "collections", "Grid", false, "poke(_,_,_)", grid_poke },
+    { "collections", "Grid", false, "width", collections_grid_width },
+    { "collections", "Grid", false, "height", collections_grid_height },
+    { "collections", "Grid", false, "fill(_,_,_)", collections_grid_fill },
+    { "collections", "Grid", false, "row(_,_,_,_)", collections_grid_row },
+    { "collections", "Grid", false, "peek(_,_)", collections_grid_peek },
+    { "collections", "Grid", false, "poke(_,_,_)", collections_grid_poke },
     { "events", "Input", true, "isKeyDown(_)", events_input_iskeydown },
     { "events", "Input", true, "isKeyUp(_)", events_input_iskeyup },
     { "events", "Input", true, "isKeyPressed(_)", events_input_iskeypressed },
