@@ -25,12 +25,14 @@
 #include "modules/collections.h"
 #include "modules/events.h"
 #include "modules/graphics.h"
+#include "modules/io.h"
 
 const Module_Entry_t _modules[] = {
 //  { "<module-name>", "<module-source>" }
     { "collections", collections_wren },
     { "events", events_wren },
     { "graphics", graphics_wren },
+    { "io", io_wren },
     { NULL, NULL }
 };
 const Class_Entry_t _classes[] = {
@@ -61,5 +63,6 @@ const Method_Entry_t _methods[] = {
     { "graphics", "Canvas", true, "point(_,_,_)", graphics_canvas_point },
     { "graphics", "Canvas", true, "polygon(_,_,_)", graphics_canvas_polygon },
     { "graphics", "Canvas", true, "circle(_,_,_,_,_)", graphics_canvas_circle },
+    { "io", "File", true, "read(_)", io_file_read },
     { NULL, NULL, false, NULL, NULL }
 };
