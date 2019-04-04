@@ -22,8 +22,6 @@
 
 #include "collections.h"
 
-#include "collections.h"
-
 #include "../memory.h"
 
 const char collections_wren[] =
@@ -95,7 +93,7 @@ void grid_fill(WrenVM *vm)
 {
     Grid_t *grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
 
-    Cell_t value = (Cell_t)wrenGetSlotDouble(vm, 1);
+    WrenType type = wrenGetSlotType(vm, 1);
 
     int width = grid->width;
     int height = grid->height;
@@ -103,8 +101,30 @@ void grid_fill(WrenVM *vm)
 
     Cell_t *ptr = data;
     Cell_t *eod = ptr + (width * height);
-    while (ptr < eod) {
-        *(ptr++) = value;
+
+    if (type == WREN_TYPE_LIST) {
+        int count = wrenGetListCount(vm, 1);
+
+        int slots = wrenGetSlotCount(vm);
+        const int aux_slot_id = slots;
+#ifdef DEBUG
+        Log_write(LOG_LEVELS_DEBUG, "Currently #%d slot(s) available, asking for additional slot", slots);
+#endif
+        wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
+
+        for (int i = 0; ptr < eod; i = (i + 1) % count) { // Copy the list, repeating if necessary.
+            wrenGetListElement(vm, 1, i, aux_slot_id);
+
+            Cell_t value = (Cell_t)wrenGetSlotDouble(vm, aux_slot_id);
+
+            *(ptr++) = value;
+        }
+    } else {
+        Cell_t value = (Cell_t)wrenGetSlotDouble(vm, 1);
+
+        while (ptr < eod) {
+            *(ptr++) = value;
+        }
     }
 }
 
