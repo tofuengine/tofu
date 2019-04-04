@@ -67,14 +67,26 @@ void collections_grid_allocate(WrenVM *vm)
 
     if (type == WREN_TYPE_LIST) {
         int count = wrenGetListCount(vm, 3);
+#ifdef DEBUG
+        Log_write(LOG_LEVELS_DEBUG, "List has #%d elements(s)", count);
+#endif
 
         int slots = wrenGetSlotCount(vm);
-        const int aux_slot_id = slots;
 #ifdef DEBUG
         Log_write(LOG_LEVELS_DEBUG, "Currently #%d slot(s) available, asking for additional slot", slots);
 #endif
+        const int aux_slot_id = slots;
         wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
+#if 0
+        for (int i = 0; i < count; ++i) { // Copy the list, repeating if necessary.
+            wrenGetListElement(vm, 3, i, aux_slot_id);
 
+            Cell_t value = (Cell_t)wrenGetSlotDouble(vm, aux_slot_id);
+
+            *(ptr++) = value;
+        }
+#endif        
+#if 0
         for (int i = 0; (ptr < eod) && (count > 0); ++i) { // Copy the list, repeating if necessary.
             wrenGetListElement(vm, 3, i % count, aux_slot_id);
 
@@ -82,6 +94,7 @@ void collections_grid_allocate(WrenVM *vm)
 
             *(ptr++) = value;
         }
+#endif
     } else
     if (type == WREN_TYPE_NUM) {
         Cell_t value = (Cell_t)wrenGetSlotDouble(vm, 3);

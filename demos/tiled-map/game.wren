@@ -6,24 +6,42 @@ import "io" for File
 
 class Tilemap {
 
-    construct new(file) {
-var marker = System.clock
+    load_(file) {
         var content = File.read(file)
         var tokens = content.split("\n")
 
-        _bank = Bank.new(tokens[0], Num.fromString(tokens[1]), Num.fromString(tokens[2]))
-
-        _grid = Grid.new(Num.fromString(tokens[3]), Num.fromString(tokens[4]))
-
-        var i = 0
-        for (chunk in tokens[5 ... -1]) {
+        var cells = []
+        for (chunk in tokens[5 .. -1]) { // This is the slowest part while loading, but not dramatical.
             for (cell in chunk.split(" ")) {
-                var value = Num.fromString(cell)
-                _grid.poke(i % _grid.width, i / _grid.width, value) // TODO: _grid.fill(data)
-                i = i + 1
+                cells.add(Num.fromString(cell))
             }
         }
-System.write("Timemap loading took %(System.clock - marker) second(s)")
+
+        var result = {
+            "bank": {
+                "atlas": tokens[0],
+                "width": Num.fromString(tokens[1]),
+                "height": Num.fromString(tokens[2])
+            },
+            "grid": {
+                "width": Num.fromString(tokens[3]),
+                "height": Num.fromString(tokens[4]),
+                "cells": cells
+            }
+        }
+        return result
+    }
+
+    construct new(file) {
+        var map = load_(file)
+
+        var bank = map["bank"]
+        _bank = Bank.new(bank["atlas"], bank["width"], bank["height"])  // Bank loading *the* slowest part.
+
+        var grid = map["grid"]
+        _grid = Grid.new(grid["width"], grid["height"], grid["cells"])
+//        _grid = Grid.new(grid["width"], grid["height"], null)
+//        _grid.fill(grid["cells"])
     }
 
     update(deltaTime) {
