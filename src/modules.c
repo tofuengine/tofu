@@ -46,8 +46,8 @@ const Method_Entry_t _methods[] = {
 //  { "<module-name>", "<class-name>", <is-static>, "<signature>", <function> }
     { "collections", "Grid", false, "width", collections_grid_width },
     { "collections", "Grid", false, "height", collections_grid_height },
-    { "collections", "Grid", false, "fill(_,_,_)", collections_grid_fill },
-    { "collections", "Grid", false, "row(_,_,_,_)", collections_grid_row },
+    { "collections", "Grid", false, "fill(_)", collections_grid_fill },
+    { "collections", "Grid", false, "row(_,_,_,_)", collections_grid_row }, // TODO: rename to `stride`
     { "collections", "Grid", false, "peek(_,_)", collections_grid_peek },
     { "collections", "Grid", false, "poke(_,_,_)", collections_grid_poke },
     { "events", "Input", true, "isKeyDown(_)", events_input_iskeydown },

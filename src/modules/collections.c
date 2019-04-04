@@ -28,23 +28,19 @@
 const char collections_wren[] =
     "foreign class Grid {\n"
     "\n"
-    "    construct new(width, height) {}\n"
+    "    construct new(width, height, content) {}\n"
     "\n"
     "    foreign width\n"
     "    foreign height\n"
-    "    foreign fill(valueOrList, offset, length)\n"
+    "    foreign fill(content)\n"
     "    foreign row(x, y, count, value)\n"
     "    foreign peek(x, y)\n"
     "    foreign poke(x, y, value)\n"
     "\n"
-    "    fill(valueOrList) {\n"
-    "        fill(valueOrList, 0, -1)\n"
-    "    }\n"
-    "\n"
     "}\n"
 ;
 
-typedef int Cell_t; // TODO: Could double?
+typedef int Cell_t; // TODO: Is `double` be better?
 
 typedef struct _Grid_t {
     int width;
@@ -57,12 +53,42 @@ void collections_grid_allocate(WrenVM *vm)
 {
     int width = (int)wrenGetSlotDouble(vm, 1);
     int height = (int)wrenGetSlotDouble(vm, 2);
-    // TODO: pass the (optional) grid content as a list.
+    WrenType type = wrenGetSlotType(vm, 3);
+
     Cell_t *data = Memory_alloc(sizeof(Cell_t) * width * height);
     Cell_t **offsets = Memory_alloc(sizeof(Cell_t *) * height);
 
     for (int i = 0; i < height; ++i) { // Precompute the pointers to the data rows for faster access (old-school! :D).
         offsets[i] = data + (i * width);
+    }
+
+    Cell_t *ptr = data;
+    Cell_t *eod = ptr + (width * height);
+
+    if (type == WREN_TYPE_LIST) {
+        int count = wrenGetListCount(vm, 3);
+
+        int slots = wrenGetSlotCount(vm);
+        const int aux_slot_id = slots;
+#ifdef DEBUG
+        Log_write(LOG_LEVELS_DEBUG, "Currently #%d slot(s) available, asking for additional slot", slots);
+#endif
+        wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
+
+        for (int i = 0; (ptr < eod) && (count > 0); ++i) { // Copy the list, repeating if necessary.
+            wrenGetListElement(vm, 3, i % count, aux_slot_id);
+
+            Cell_t value = (Cell_t)wrenGetSlotDouble(vm, aux_slot_id);
+
+            *(ptr++) = value;
+        }
+    } else
+    if (type == WREN_TYPE_NUM) {
+        Cell_t value = (Cell_t)wrenGetSlotDouble(vm, 3);
+
+        while (ptr < eod) {
+            *(ptr++) = value;
+        }
     }
 
     Grid_t *grid = (Grid_t *)wrenSetSlotNewForeign(vm, 0, 0, sizeof(Grid_t)); // `0, 0` since we are in the allocate callback.
@@ -100,14 +126,12 @@ void collections_grid_fill(WrenVM *vm)
     Grid_t *grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
 
     WrenType type = wrenGetSlotType(vm, 1);
-    int offset = (int)wrenGetSlotDouble(vm, 2);
-    int length = (int)wrenGetSlotDouble(vm, 3);
 
     int width = grid->width;
     int height = grid->height;
     Cell_t *data = grid->data;
 
-    Cell_t *ptr = data + offset;
+    Cell_t *ptr = data;
     Cell_t *eod = ptr + (width * height);
 
     if (type == WREN_TYPE_LIST) {
@@ -120,17 +144,18 @@ void collections_grid_fill(WrenVM *vm)
 #endif
         wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
 
-        for (int i = 0; (ptr < eod) && ((length < 0) || (i < length)); ++i) { // Copy the list, repeating if necessary.
+        for (int i = 0; ptr < eod; ++i) { // Copy the list, repeating if necessary.
             wrenGetListElement(vm, 1, i % count, aux_slot_id);
 
             Cell_t value = (Cell_t)wrenGetSlotDouble(vm, aux_slot_id);
 
             *(ptr++) = value;
         }
-    } else {
+    } else
+    if (type == WREN_TYPE_NUM) {
         Cell_t value = (Cell_t)wrenGetSlotDouble(vm, 1);
 
-        for (int i = 0; (ptr < eod) && ((length < 0) || (i < length)); ++i) {
+        while (ptr < eod) {
             *(ptr++) = value;
         }
     }
