@@ -42,10 +42,12 @@ class Tilemap {
 //        _grid = Grid.new(grid["width"], grid["height"], grid["cells"]) // Bugged!!!
         _grid = Grid.new(grid["width"], grid["height"], null)
         _grid.fill(grid["cells"])
+
+        _angle = 0
     }
 
     update(deltaTime) {
-
+        _angle = _angle + (45.0 * deltaTime)
     }
 
     render() {
@@ -54,8 +56,8 @@ class Tilemap {
             for (j in 0 ... 16) {
                 var x = j * 32 // TODO: ditto
                 var cell = _grid.peek(i, j)
-                _bank.sprite(cell, x, y) // TODO: rename `sprite()` to `draw()` or `blit()`
-            } // TODO: fix bank sprite "hot-spot", not in the center for tiling!
+                _bank.sprite(cell, x, y, _angle) // TODO: rename `sprite()` to `draw()` or `blit()`
+            }
         }
     }
 

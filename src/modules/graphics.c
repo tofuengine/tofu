@@ -149,12 +149,18 @@ void graphics_bank_sprite(WrenVM *vm)
     int bank_position = sprite_id * bank->cell_width;
     int bank_x = bank_position % bank->atlas.width;
     int bank_y = (bank_position / bank->atlas.width) * bank->cell_height;
+    float bank_width = (float)bank->cell_width * fsgnf(scale_x); // The sign controls the mirroring.
+    float bank_height = (float)bank->cell_height * fsgnf(scale_y);
 
-    Rectangle sourceRec = { (float)bank_x, (float)bank_y, (float)bank->cell_width * fsgnf(scale_x), (float)bank->cell_height * fsgnf(scale_y) };
-    Rectangle destRec = { x, y, (float)bank->cell_width * fabsf(scale_x), (float)bank->cell_height * fabsf(scale_y) };
-    Vector2 origin = { bank->cell_width * 0.5f, bank->cell_height * 0.5f}; // Rotate along center.
+    float width = (float)bank->cell_width * fabsf(scale_x);
+    float height = (float)bank->cell_height * fabsf(scale_y);
+    float half_width = width * 0.5; // Offset to compensate for origin (rotation)
+    float half_height = height * 0.5;
 
-    DrawTexturePro(bank->atlas, sourceRec, destRec, origin, (float)rotation, (Color){ 255, 255, 255, 255 });
+    Rectangle sourceRec = (Rectangle){ (float)bank_x, (float)bank_y, bank_width, bank_height };
+    Rectangle destRec = (Rectangle){ x + half_width, y + half_height, width, height };
+
+    DrawTexturePro(bank->atlas, sourceRec, destRec, bank->origin, (float)rotation, (Color){ 255, 255, 255, 255 });
 }
 
 void graphics_font_allocate(WrenVM *vm)

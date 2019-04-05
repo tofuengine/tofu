@@ -94,7 +94,8 @@ Bank_t load_bank(const char *pathfile, int cell_width, int cell_height, const Co
             .loaded = texture.id != 0,
             .atlas = texture,
             .cell_width = cell_width,
-            .cell_height = cell_height
+            .cell_height = cell_height,
+            .origin = (Vector2){ cell_width * 0.5f, cell_height * 0.5f} // Rotate along center
         };
 }
 
