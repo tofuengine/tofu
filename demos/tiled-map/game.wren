@@ -39,9 +39,9 @@ class Tilemap {
         _bank = Bank.new(bank["atlas"], bank["width"], bank["height"])  // Bank loading *the* slowest part.
 
         var grid = map["grid"]
-        _grid = Grid.new(grid["width"], grid["height"], grid["cells"])
-//        _grid = Grid.new(grid["width"], grid["height"], null)
-//        _grid.fill(grid["cells"])
+//        _grid = Grid.new(grid["width"], grid["height"], grid["cells"]) // Bugged!!!
+        _grid = Grid.new(grid["width"], grid["height"], null)
+        _grid.fill(grid["cells"])
     }
 
     update(deltaTime) {
