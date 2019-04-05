@@ -122,7 +122,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *env
 {
     interpreter->environment = environment;
 
-    WrenConfiguration vm_configuration; 
+    WrenConfiguration vm_configuration;
     wrenInitConfiguration(&vm_configuration);
     vm_configuration.reallocateFn = reallocate_function;
     vm_configuration.loadModuleFn = load_module_function;
@@ -146,8 +146,8 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *env
         return false;
     }
 
-    wrenEnsureSlots(interpreter->vm, 1); 
-    wrenGetVariable(interpreter->vm, ROOT_MODULE, ROOT_INSTANCE, 0); 
+    wrenEnsureSlots(interpreter->vm, 1);
+    wrenGetVariable(interpreter->vm, ROOT_MODULE, ROOT_INSTANCE, 0);
     interpreter->handles[RECEIVER] = wrenGetSlotHandle(interpreter->vm, 0);
 
     interpreter->handles[INPUT] = wrenMakeCallHandle(interpreter->vm, "input()");
@@ -159,14 +159,14 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *env
 
 void Interpreter_input(Interpreter_t *interpreter)
 {
-    wrenEnsureSlots(interpreter->vm, 1); 
+    wrenEnsureSlots(interpreter->vm, 1);
     wrenSetSlotHandle(interpreter->vm, 0, interpreter->handles[RECEIVER]);
     wrenCall(interpreter->vm, interpreter->handles[INPUT]);
 }
 
 void Interpreter_update(Interpreter_t *interpreter, const double delta_time)
 {
-    wrenEnsureSlots(interpreter->vm, 2); 
+    wrenEnsureSlots(interpreter->vm, 2);
     wrenSetSlotHandle(interpreter->vm, 0, interpreter->handles[RECEIVER]);
     wrenSetSlotDouble(interpreter->vm, 1, delta_time);
     wrenCall(interpreter->vm, interpreter->handles[UPDATE]);
@@ -174,7 +174,7 @@ void Interpreter_update(Interpreter_t *interpreter, const double delta_time)
 
 void Interpreter_render(Interpreter_t *interpreter, const double ratio)
 {
-    wrenEnsureSlots(interpreter->vm, 1); 
+    wrenEnsureSlots(interpreter->vm, 1);
     wrenSetSlotHandle(interpreter->vm, 0, interpreter->handles[RECEIVER]);
     wrenCall(interpreter->vm, interpreter->handles[RENDER]);
 }

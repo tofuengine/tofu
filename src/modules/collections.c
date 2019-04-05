@@ -55,6 +55,8 @@ void collections_grid_allocate(WrenVM *vm)
     int height = (int)wrenGetSlotDouble(vm, 2);
     WrenType type = wrenGetSlotType(vm, 3);
 
+    Grid_t *grid = (Grid_t *)wrenSetSlotNewForeign(vm, 0, 0, sizeof(Grid_t)); // `0, 0` since we are in the allocate callback.
+
     Cell_t *data = Memory_alloc(sizeof(Cell_t) * width * height);
     Cell_t **offsets = Memory_alloc(sizeof(Cell_t *) * height);
 
@@ -139,9 +141,9 @@ void collections_grid_height(WrenVM *vm)
 
 void collections_grid_fill(WrenVM *vm)
 {
-    Grid_t *grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
-
     WrenType type = wrenGetSlotType(vm, 1);
+
+    Grid_t *grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
 
     int width = grid->width;
     int height = grid->height;
@@ -189,12 +191,12 @@ void collections_grid_fill(WrenVM *vm)
 
 void collections_grid_row(WrenVM *vm)
 {
-    Grid_t *grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
-
     int x = (int)wrenGetSlotDouble(vm, 1);
     int y = (int)wrenGetSlotDouble(vm, 2);
     int count = (int)wrenGetSlotDouble(vm, 3);
     int value = (Cell_t)wrenGetSlotDouble(vm, 4);
+
+    Grid_t *grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
 
     Cell_t *data = grid->offsets[y];
 
@@ -207,10 +209,10 @@ void collections_grid_row(WrenVM *vm)
 
 void collections_grid_peek(WrenVM *vm)
 {
-    Grid_t *grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
-
     int x = (int)wrenGetSlotDouble(vm, 1);
     int y = (int)wrenGetSlotDouble(vm, 2);
+
+    Grid_t *grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
 
     Cell_t *data = grid->offsets[y];
 
@@ -221,11 +223,11 @@ void collections_grid_peek(WrenVM *vm)
 
 void collections_grid_poke(WrenVM *vm)
 {
-    Grid_t *grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
-
     int x = (int)wrenGetSlotDouble(vm, 1);
     int y = (int)wrenGetSlotDouble(vm, 2);
     Cell_t value = (Cell_t)wrenGetSlotDouble(vm, 3);
+
+    Grid_t *grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
 
     Cell_t *data = grid->offsets[y];
 

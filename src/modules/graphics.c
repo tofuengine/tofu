@@ -103,8 +103,6 @@ const char graphics_wren[] =
 
 void graphics_bank_allocate(WrenVM *vm)
 {
-    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
-
     const char *file = wrenGetSlotString(vm, 1);
     int cell_width = (int)wrenGetSlotDouble(vm, 2);
     int cell_height = (int)wrenGetSlotDouble(vm, 3);
@@ -113,6 +111,8 @@ void graphics_bank_allocate(WrenVM *vm)
 #endif
 
     Bank_t *bank = (Bank_t *)wrenSetSlotNewForeign(vm, 0, 0, sizeof(Bank_t)); // `0, 0` since we are in the allocate callback.
+
+    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
     char pathfile[PATH_FILE_MAX] = {};
     strcpy(pathfile, environment->base_path);
@@ -159,8 +159,6 @@ void graphics_bank_sprite(WrenVM *vm)
 
 void graphics_font_allocate(WrenVM *vm)
 {
-    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
-
     const char *file = wrenGetSlotString(vm, 1);
 #ifdef DEBUG
     Log_write(LOG_LEVELS_DEBUG, "Font.new() -> %s", file);
@@ -176,6 +174,8 @@ void graphics_font_allocate(WrenVM *vm)
             };
         return;
     }
+
+    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
     char pathfile[PATH_FILE_MAX] = {};
     strcpy(pathfile, environment->base_path);
@@ -254,8 +254,6 @@ void graphics_canvas_height(WrenVM *vm)
 
 void graphics_canvas_palette(WrenVM *vm)
 {
-    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
-
     WrenType type = wrenGetSlotType(vm, 1);
 
     Color colors[MAX_PALETTE_COLORS];
@@ -284,7 +282,7 @@ void graphics_canvas_palette(WrenVM *vm)
 
         int slots = wrenGetSlotCount(vm);
 #ifdef DEBUG
-        Log_write(LOG_LEVELS_DEBUG, "Currently #%d slot(s) available, asking for additional slot", slots);
+        Log_write(LOG_LEVELS_DEBUG, "Currently #%d slot(s) available, asking for an additional slot", slots);
 #endif
         const int aux_slot_id = slots;
         wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
@@ -307,9 +305,13 @@ void graphics_canvas_palette(WrenVM *vm)
         Log_write(LOG_ERROR, "[TOFU] Wrong palette type, need to be string or list");
     }
 
-    if (count > 0) {
-        Display_palette(environment->display, colors, count);
+    if (count <= 0) {
+        return;
     }
+
+    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+    
+    Display_palette(environment->display, colors, count);
 }
 
 void graphics_canvas_point(WrenVM *vm)
@@ -329,7 +331,7 @@ void graphics_canvas_polygon(WrenVM *vm)
 
     int slots = wrenGetSlotCount(vm);
 #ifdef DEBUG
-    Log_write(LOG_LEVELS_DEBUG, "Currently #%d slot(s) available, asking for additional slot", slots);
+    Log_write(LOG_LEVELS_DEBUG, "Currently #%d slot(s) available, asking for an additional slot", slots);
 #endif
     const int aux_slot_id = slots;
     wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
