@@ -42,6 +42,7 @@ class Tilemap {
 //        _grid = Grid.new(grid["width"], grid["height"], grid["cells"]) // Bugged!!!
         _grid = Grid.new(grid["width"], grid["height"], null)
         _grid.fill(grid["cells"])
+//        _grid.stride(0, 0, grid["cells"])
 
         _angle = 0
     }

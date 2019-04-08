@@ -5,8 +5,8 @@ foreign class Grid {
     foreign width
     foreign height
     foreign fill(content)
-    foreign row(x, y, count, value)
-    foreign peek(x, y)
-    foreign poke(x, y, value)
+    foreign stride(column, row, count, value)
+    foreign peek(column, row)
+    foreign poke(column, row, value)
 
 }

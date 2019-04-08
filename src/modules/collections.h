@@ -33,7 +33,7 @@ extern void collections_grid_finalize(void* data);
 extern void collections_grid_width(WrenVM *vm);
 extern void collections_grid_height(WrenVM *vm);
 extern void collections_grid_fill(WrenVM *vm);
-extern void collections_grid_row(WrenVM *vm);
+extern void collections_grid_stride(WrenVM *vm); // TODO: rename to "fill()" and override?
 extern void collections_grid_peek(WrenVM *vm);
 extern void collections_grid_poke(WrenVM *vm);
 
