@@ -48,7 +48,7 @@ class Tilemap {
     }
 
     update(deltaTime) {
-        _angle = _angle + (45.0 * deltaTime)
+        _angle = _angle + (90.0 * deltaTime)
     }
 
     render() {
