@@ -2,6 +2,9 @@ foreign class Bank {
 
     construct new(file, cell_width, cell_height) {}
 
+    foreign cellWidth
+    foreign cellHeight
+
     sprite(id, x, y) {
         sprite(id, x, y, 0.0)
     }

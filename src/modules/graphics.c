@@ -50,6 +50,9 @@ const char graphics_wren[] =
     "\n"
     "    construct new(file, cell_width, cell_height) {}\n"
     "\n"
+    "    foreign cellWidth\n"
+    "    foreign cellHeight\n"
+    "\n"
     "    sprite(id, x, y) {\n"
     "        sprite(id, x, y, 0.0)\n"
     "    }\n"
@@ -125,6 +128,20 @@ void graphics_bank_finalize(void *data)
 {
     Bank_t *bank = (Bank_t *)data;
     unload_bank(bank);
+}
+
+void graphics_bank_cell_width(WrenVM *vm)
+{
+    const Bank_t *bank = (const Bank_t *)wrenGetSlotForeign(vm, 0);
+
+    wrenSetSlotDouble(vm, 0, bank->cell_width);
+}
+
+void graphics_bank_cell_height(WrenVM *vm)
+{
+    const Bank_t *bank = (const Bank_t *)wrenGetSlotForeign(vm, 0);
+
+    wrenSetSlotDouble(vm, 0, bank->cell_height);
 }
 
 void graphics_bank_sprite(WrenVM *vm)

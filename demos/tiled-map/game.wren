@@ -53,9 +53,9 @@ class Tilemap {
 
     render() {
         for (i in 0 ... 16) {
-            var y = i * 32 // TODO: Access bank cell size.
+            var y = i * _bank.cellHeight
             for (j in 0 ... 16) {
-                var x = j * 32 // TODO: ditto
+                var x = j * _bank.cellWidth
                 var cell = _grid.peek(i, j)
                 _bank.sprite(cell, x, y, _angle) // TODO: rename `sprite()` to `draw()` or `blit()`
             }

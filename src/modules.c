@@ -55,6 +55,8 @@ const Method_Entry_t _methods[] = {
     { "events", "Input", true, "isKeyPressed(_)", events_input_iskeypressed },
     { "events", "Input", true, "isKeyReleased(_)", events_input_iskeyreleased },
     { "events", "Environment", true, "quit()", events_environment_quit },
+    { "graphics", "Bank", false, "cellWidth", graphics_bank_cell_width },
+    { "graphics", "Bank", false, "cellHeight", graphics_bank_cell_height },
     { "graphics", "Bank", false, "sprite(_,_,_,_,_,_)", graphics_bank_sprite },
     { "graphics", "Font", false, "text(_,_,_,_,_,_)", graphics_font_text },
     { "graphics", "Canvas", true, "width", graphics_canvas_width },
