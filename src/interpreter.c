@@ -40,6 +40,14 @@
     "import \"./tofu\" for Tofu\n" \
     "var tofu = Tofu.new()\n"
 
+static const char *get_filename_extension(const char *name) {
+    const char *dot = strrchr(name, '.');
+    if (!dot || dot == name) {
+        return "";
+    }
+    return dot + 1;
+}
+
 static void *reallocate_function(void *ptr, size_t size)
 {
     return Memory_realloc(ptr, size);
@@ -64,8 +72,12 @@ static char *load_module_function(WrenVM *vm, const char *name)
 
     char pathfile[PATH_FILE_MAX]; // Build the absolute path.
     strcpy(pathfile, environment->base_path);
-    strcat(pathfile, name + 2);
-    strcat(pathfile, SCRIPT_EXTENSION);
+    if (strlen(get_filename_extension(name)) > 0) { // Has a valid extension, use it.
+        strcat(pathfile, name);
+    } else {
+        strcat(pathfile, name + 2);
+        strcat(pathfile, SCRIPT_EXTENSION);
+    }
 
     Log_write(LOG_LEVELS_INFO, "loading module '%s'", pathfile);
     return file_load_as_string(pathfile, "rt");
