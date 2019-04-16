@@ -5,13 +5,13 @@ foreign class Bank {
     foreign cellWidth
     foreign cellHeight
 
-    sprite(id, x, y) {
-        sprite(id, x, y, 0.0)
+    draw(cell_id, x, y) {
+        draw(id, x, y, 0.0)
     }
-    sprite(id, x, y, r) {
-        sprite(id, x, y, r, 1.0, 1.0)
+    draw(cell_id, x, y, r) {
+        draw(id, x, y, r, 1.0, 1.0)
     }
-    foreign sprite(id, x, y, r, sx, sy)
+    foreign draw(cell_id, x, y, r, sx, sy)
 
 }
 

@@ -29,7 +29,7 @@ extern const char graphics_wren[];
 
 extern void graphics_bank_allocate(WrenVM* vm);
 extern void graphics_bank_finalize(void* data);
-extern void graphics_bank_sprite(WrenVM *vm);
+extern void graphics_bank_draw(WrenVM *vm);
 extern void graphics_bank_cell_width(WrenVM *vm);
 extern void graphics_bank_cell_height(WrenVM *vm);
 

@@ -57,7 +57,7 @@ const Method_Entry_t _methods[] = {
     { "events", "Environment", true, "quit()", events_environment_quit },
     { "graphics", "Bank", false, "cellWidth", graphics_bank_cell_width },
     { "graphics", "Bank", false, "cellHeight", graphics_bank_cell_height },
-    { "graphics", "Bank", false, "sprite(_,_,_,_,_,_)", graphics_bank_sprite },
+    { "graphics", "Bank", false, "draw(_,_,_,_,_,_)", graphics_bank_draw },
     { "graphics", "Font", false, "text(_,_,_,_,_,_)", graphics_font_text },
     { "graphics", "Canvas", true, "width", graphics_canvas_width },
     { "graphics", "Canvas", true, "height", graphics_canvas_height },

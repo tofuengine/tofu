@@ -53,13 +53,13 @@ const char graphics_wren[] =
     "    foreign cellWidth\n"
     "    foreign cellHeight\n"
     "\n"
-    "    sprite(id, x, y) {\n"
-    "        sprite(id, x, y, 0.0)\n"
+    "    draw(cell_id, x, y) {\n"
+    "        draw(cell_id, x, y, 0.0)\n"
     "    }\n"
-    "    sprite(id, x, y, r) {\n"
-    "        sprite(id, x, y, r, 1.0, 1.0)\n"
+    "    draw(cell_id, x, y, r) {\n"
+    "        draw(cell_id, x, y, r, 1.0, 1.0)\n"
     "    }\n"
-    "    foreign sprite(id, x, y, r, sx, sy)\n"
+    "    foreign draw(cell_id, x, y, r, sx, sy)\n"
     "\n"
     "}\n"
     "\n"
@@ -144,26 +144,26 @@ void graphics_bank_cell_height(WrenVM *vm)
     wrenSetSlotDouble(vm, 0, bank->cell_height);
 }
 
-void graphics_bank_sprite(WrenVM *vm)
+void graphics_bank_draw(WrenVM *vm)
 {
-    int sprite_id = (int)wrenGetSlotDouble(vm, 1);
+    int cell_id = (int)wrenGetSlotDouble(vm, 1);
     int x = (int)wrenGetSlotDouble(vm, 2);
     int y = (int)wrenGetSlotDouble(vm, 3);
     double rotation = wrenGetSlotDouble(vm, 4);
     double scale_x = wrenGetSlotDouble(vm, 5);
     double scale_y = wrenGetSlotDouble(vm, 6);
 #ifdef DEBUG
-    Log_write(LOG_LEVELS_DEBUG, "Bank.sprite() -> %d, %d, %d, %.3f, %.3f, %.3f", sprite_id, x, y, rotation, scale_x, scale_y);
+    Log_write(LOG_LEVELS_DEBUG, "Bank.draw() -> %d, %d, %d, %.3f, %.3f, %.3f", cell_id, x, y, rotation, scale_x, scale_y);
 #endif
 
     const Bank_t *bank = (const Bank_t *)wrenGetSlotForeign(vm, 0);
 
     if (!bank->loaded) {
-        Log_write(LOG_ERROR, "[TOFU] Bank now loaded, can't draw sprite");
+        Log_write(LOG_ERROR, "[TOFU] Bank now loaded, can't draw cell");
         return;
     }
 
-    int bank_position = sprite_id * bank->cell_width;
+    int bank_position = cell_id * bank->cell_width;
     int bank_x = bank_position % bank->atlas.width;
     int bank_y = (bank_position / bank->atlas.width) * bank->cell_height;
     float bank_width = (float)bank->cell_width * fsgnf(scale_x); // The sign controls the mirroring.

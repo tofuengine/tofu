@@ -57,7 +57,7 @@ class Tilemap {
             for (j in 0 ... 16) {
                 var x = j * _bank.cellWidth
                 var cell = _grid.peek(i, j)
-                _bank.sprite(cell, x, y, _angle) // TODO: rename `sprite()` to `draw()` or `blit()`
+                _bank.draw(cell, x, y, _angle)
             }
         }
     }
