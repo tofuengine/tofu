@@ -29,13 +29,13 @@ extern const char graphics_wren[];
 
 extern void graphics_bank_allocate(WrenVM* vm);
 extern void graphics_bank_finalize(void* data);
-extern void graphics_bank_draw(WrenVM *vm);
+extern void graphics_bank_draw(WrenVM *vm); // TODO: is `Bank.blit()` any better?
 extern void graphics_bank_cell_width(WrenVM *vm);
 extern void graphics_bank_cell_height(WrenVM *vm);
 
 extern void graphics_font_allocate(WrenVM* vm);
 extern void graphics_font_finalize(void* data);
-extern void graphics_font_text(WrenVM *vm);
+extern void graphics_font_text(WrenVM *vm); // TODO: rename to `Font.write()`?
 
 extern void graphics_canvas_width(WrenVM *vm);
 extern void graphics_canvas_height(WrenVM *vm);
