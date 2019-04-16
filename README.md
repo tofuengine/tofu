@@ -47,7 +47,7 @@ Guess what? Yup, that's another game engine/framework.
 ## Inspirations
 
 * [LOVE2D](https://love2d.org/)
-* [DOME Engine](https://github.com/avivbeeri/dome/blob/master/src/vm.c)
+* [DOME Engine](https://github.com/avivbeeri/dome/)
 
 ## License
 

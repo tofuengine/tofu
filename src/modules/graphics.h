@@ -40,7 +40,7 @@ extern void graphics_font_text(WrenVM *vm); // TODO: rename to `Font.write()`?
 extern void graphics_canvas_width(WrenVM *vm);
 extern void graphics_canvas_height(WrenVM *vm);
 extern void graphics_canvas_palette(WrenVM *vm);
-extern void graphics_canvas_point(WrenVM *vm);
+extern void graphics_canvas_point(WrenVM *vm); // TODO: should points, poligons and circles be objects?
 extern void graphics_canvas_polygon(WrenVM *vm);
 extern void graphics_canvas_circle(WrenVM *vm);
 
