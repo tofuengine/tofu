@@ -29,6 +29,7 @@ Guess what? Yup, that's another game engine/framework.
 * [ ] Tiled-map support w/ camera support (shader-level zoom and scrolling?).
 * [ ] Out-of-the-box timer and easing functions.
 * [ ] Game state and display transitions (at which level? Engine or script?).
+* [ ] **Bit** **Bl**ock **T**ransfer operations when drawing.
 * [ ] Library of "retro-feel" shaders.
 * [ ] Engine splash screen (during which resources are loaded).
 * [ ] Hot-reload of selected resources (fonts, banks, maps, shaders, sounds).
