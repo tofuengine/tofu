@@ -48,18 +48,18 @@ static inline float fsgnf(float value)
 const char graphics_wren[] =
     "foreign class Bank {\n"
     "\n"
-    "    construct new(file, cell_width, cell_height) {}\n"
+    "    construct new(file, cellWidth, cellHeight) {}\n"
     "\n"
     "    foreign cellWidth\n"
     "    foreign cellHeight\n"
     "\n"
-    "    draw(cell_id, x, y) {\n"
-    "        draw(cell_id, x, y, 0.0)\n"
+    "    blit(cellId, x, y) {\n"
+    "        blit(cellId, x, y, 0.0, 1.0, 1.0)\n"
     "    }\n"
-    "    draw(cell_id, x, y, r) {\n"
-    "        draw(cell_id, x, y, r, 1.0, 1.0)\n"
+    "    blit(cellId, x, y, r) {\n"
+    "        blit(cellId, x, y, r, 1.0, 1.0)\n"
     "    }\n"
-    "    foreign draw(cell_id, x, y, r, sx, sy)\n"
+    "    foreign blit(cellId, x, y, r, sx, sy)\n"
     "\n"
     "}\n"
     "\n"
@@ -69,7 +69,7 @@ const char graphics_wren[] =
     "\n"
     "    static default { Font.new(\"default\") }\n"
     "\n"
-    "    foreign text(text, x, y, color, size, align)\n"
+    "    foreign write(text, x, y, color, size, align)\n"
     "\n"
     "}\n"
     "\n"
@@ -144,7 +144,7 @@ void graphics_bank_cell_height(WrenVM *vm)
     wrenSetSlotDouble(vm, 0, bank->cell_height);
 }
 
-void graphics_bank_draw(WrenVM *vm)
+void graphics_bank_blit(WrenVM *vm)
 {
     int cell_id = (int)wrenGetSlotDouble(vm, 1);
     int x = (int)wrenGetSlotDouble(vm, 2);
@@ -153,7 +153,7 @@ void graphics_bank_draw(WrenVM *vm)
     double scale_x = wrenGetSlotDouble(vm, 5);
     double scale_y = wrenGetSlotDouble(vm, 6);
 #ifdef DEBUG
-    Log_write(LOG_LEVELS_DEBUG, "Bank.draw() -> %d, %d, %d, %.3f, %.3f, %.3f", cell_id, x, y, rotation, scale_x, scale_y);
+    Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %d, %d, %.3f, %.3f, %.3f", cell_id, x, y, rotation, scale_x, scale_y);
 #endif
 
     const Bank_t *bank = (const Bank_t *)wrenGetSlotForeign(vm, 0);
@@ -215,7 +215,7 @@ void graphics_font_finalize(void *data)
     }
 }
 
-void graphics_font_text(WrenVM *vm) // foreign text(text, color, size, align)
+void graphics_font_write(WrenVM *vm) // foreign text(text, color, size, align)
 {
     const char *text = wrenGetSlotString(vm, 1);
     int x = (int)wrenGetSlotDouble(vm, 2);
@@ -224,7 +224,7 @@ void graphics_font_text(WrenVM *vm) // foreign text(text, color, size, align)
     int size = (int)wrenGetSlotDouble(vm, 5);
     const char *align = wrenGetSlotString(vm, 6);
 #ifdef DEBUG
-    Log_write(LOG_LEVELS_DEBUG, "Font.text() -> %s, %d, %d, %d, %d, %s", text, x, y, color, size, align);
+    Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %s, %d, %d, %d, %d, %s", text, x, y, color, size, align);
 #endif
 
     const Font_t *font = (const Font_t *)wrenGetSlotForeign(vm, 0);
