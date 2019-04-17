@@ -22,7 +22,7 @@ class Game {
 
         _windy = false
 
-        _grid = Grid.new(STEPS, STEPS)
+        _grid = Grid.new(STEPS, STEPS, null)
         reset()
 
         Canvas.palette(PALETTE)
@@ -30,7 +30,7 @@ class Game {
 
     reset() {
         _grid.fill(0)
-        _grid.row(0, STEPS - 1, STEPS, PALETTE.count - 1)
+        _grid.stride(0, STEPS - 1, PALETTE.count - 1, STEPS)
     }
 
     input() {

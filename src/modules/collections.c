@@ -33,7 +33,7 @@ const char collections_wren[] =
     "    foreign width\n"
     "    foreign height\n"
     "    foreign fill(content)\n"
-    "    foreign stride(column, row, content)\n"
+    "    foreign stride(column, row, content, amount)\n"
     "    foreign peek(column, row)\n"
     "    foreign poke(column, row, value)\n"
     "\n"
@@ -194,6 +194,7 @@ void collections_grid_stride(WrenVM *vm)
     int column = (int)wrenGetSlotDouble(vm, 1);
     int row = (int)wrenGetSlotDouble(vm, 2);
     WrenType type = wrenGetSlotType(vm, 3);
+    int amount = (int)wrenGetSlotDouble(vm, 4);
 
     Grid_t *grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
 
@@ -215,7 +216,7 @@ void collections_grid_stride(WrenVM *vm)
         wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
 
 #ifdef __GRID_REPEAT_CONTENT__
-        for (int i = 0; (ptr < eod) && (count > 0); ++i) {
+        for (int i = 0; (ptr < eod) && (i < amount) && (count > 0); ++i) {
             wrenGetListElement(vm, 1, i % count, aux_slot_id);
 
             Cell_t value = (Cell_t)wrenGetSlotDouble(vm, aux_slot_id);
@@ -223,7 +224,7 @@ void collections_grid_stride(WrenVM *vm)
             *(ptr++) = value;
         }
 #else
-        for (int i = 0; (ptr < eod) && (i < count); ++i) { // Don't exceed buffer if list is too long to fit!
+        for (int i = 0; (ptr < eod) && (i < amount) && (i < count); ++i) { // Don't exceed buffer if list is too long to fit!
             wrenGetListElement(vm, 3, i, aux_slot_id);
 
             Cell_t value = (Cell_t)wrenGetSlotDouble(vm, aux_slot_id);
@@ -235,7 +236,7 @@ void collections_grid_stride(WrenVM *vm)
     if (type == WREN_TYPE_NUM) {
         Cell_t value = (Cell_t)wrenGetSlotDouble(vm, 3);
 
-        while (ptr < eod) {
+        for (int i = 0; (ptr < eod) && (i < amount); ++i) {
             *(ptr++) = value;
         }
     }
