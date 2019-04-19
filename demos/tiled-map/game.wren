@@ -46,10 +46,11 @@ class BankBatch {
 
 class TilemapCamera {
 
-    construct new(grid, tileWidth, tileHeight, columns, rows) {
-        _grid = grid
+    construct new(mapWidth, mapHeight, tileWidth, tileHeight, columns, rows) {
         _tileWidth = tileWidth
         _tileHeight = tileHeight
+        _mapWidth = mapWidth * tileWidth
+        _mapHeight = mapHeight * tileHeight
         _width = tileWidth * columns
         _height = tileHeight * rows
         _columns = columns
@@ -65,22 +66,22 @@ class TilemapCamera {
         if (y < 0) {
             y = 0
         }
-        if (x > (_grid.width - _width)) {
-            x = _grid.width - _width
+        if (x > (_mapWidth - _width)) {
+            x = _mapWidth - _width
         }
-        if (y > (_grid.height - _height)) {
-            y = _grid.height - _height
+        if (y > (_mapHeight - _height)) {
+            y = _mapHeight - _height
         }
         _x = x
         _y = y
 
-        _startCol = (_x / _tileWidth).floor;
-        _endCol = _startCol + (_width / _tileWidth);
-        _startRow = (_y / _tileHeight).floor;
-        _endRow = _startRow + (_height / _tileHeight);
+        _startCol = (_x / _tileWidth).floor
+        _endCol = _startCol + (_width / _tileWidth)
+        _startRow = (_y / _tileHeight).floor
+        _endRow = _startRow + (_height / _tileHeight)
 
-        _offsetX = -_x + _startCol * _tileWidth;
-        _offsetY = -_y + _startRow * _tileHeight;
+        _offsetX = -(_x % _tileWidth)
+        _offsetY = -(_y % _tileHeight)
     }
 
     scrollBy(dx, dy) {
@@ -88,14 +89,11 @@ class TilemapCamera {
     }
 
     draw(callback) {
-        for (var c = startCol; c <= endCol; c++) {
-            for (var r = startRow; r <= endRow; r++) {
-                var tile = map.getTile(c, r);
-                var x = (c - startCol) * map.tsize + offsetX;
-                var y = (r - startRow) * map.tsize + offsetY;
-                if (tile !== 0) { // 0 => empty tile
-                    _bank.blit(tile, x.round, y.round)
-                }
+        for (i in _startRow .. _endRow) {
+            var y = (i - _startRow) * _tileHeight + _offsetY
+            for (j in _startCol .. _endCol) {
+                var x = (j - _startCol) * _tileWidth + _offsetX
+                callback.call(x, y, j, i)
             }
         }
     }
@@ -143,7 +141,8 @@ class Tilemap {
         _grid.fill(grid["cells"])
 //        _grid.stride(0, 0, grid["cells"], grid["cells"].length())
 
-        _camera = TilemapCamera.new(_grid, _bank.cellWidth, _bank.cellHeight, 15, 10)
+        _camera = TilemapCamera.new(_grid.width, _grid.height, _bank.cellWidth, _bank.cellHeight, 15, 10)
+        _camera.moveTo(16, 0)
 
         _angle = 0
     }
@@ -161,14 +160,10 @@ class Tilemap {
     }
 
     render() {
-        for (i in _camera["y"] ... _camera["y"] + _camera["height"]) {
-            var y = i * _bank.cellHeight
-            for (j in _camera["x"] ... _camera["x"] + _camera["width"]) {
-                var x = j * _bank.cellWidth
-                var cell = _grid.peek(i, j)
-                _bank.blit(cell, x, y, _angle)
-            }
-        }
+        _camera.draw(Fn.new{|x, y, c, r|
+                var cellId = _grid.peek(c, r)
+                _bank.blit(cellId, x, y, _angle)
+            })
     }
 
 }
