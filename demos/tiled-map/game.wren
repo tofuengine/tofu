@@ -59,27 +59,26 @@ class TilemapCamera {
         moveTo(0, 0)
     }
 
+    max(a, b) {
+        if (a > b) {
+            return a
+        }
+        return b
+    }
+
+    min(a, b) {
+        if (a < b) {
+            return a
+        }
+        return b
+    }
+
     moveTo(x, y) {
-        if (x < 0) {
-            x = 0
-        }
-        if (y < 0) {
-            y = 0
-        }
-        if (x > (_mapWidth - _width)) {
-            x = _mapWidth - _width
-        }
-        if (y > (_mapHeight - _height)) {
-            y = _mapHeight - _height
-        }
-        _x = x
-        _y = y
+        _x = min(max(x, 0), _mapWidth - _width) // TODO: precompute "maxX" e "maxY"
+        _y = min(max(y, 0), _mapHeight - _height)
 
         _startCol = (_x / _tileWidth).floor
-        _endCol = _startCol + (_width / _tileWidth)
         _startRow = (_y / _tileHeight).floor
-        _endRow = _startRow + (_height / _tileHeight)
-
         _offsetX = -(_x % _tileWidth)
         _offsetY = -(_y % _tileHeight)
     }
@@ -89,11 +88,13 @@ class TilemapCamera {
     }
 
     draw(callback) {
-        for (i in _startRow .. _endRow) {
-            var y = (i - _startRow) * _tileHeight + _offsetY
-            for (j in _startCol .. _endCol) {
-                var x = (j - _startCol) * _tileWidth + _offsetX
-                callback.call(x, y, j, i)
+        for (i in 0 .. _rows) { // Inclusive, we handle an additional row to enable scrolling offset.
+            var y = i * _tileHeight + _offsetY
+            var r = _startRow + i
+            for (j in 0 .. _columns) {
+                var x = j * _tileWidth + _offsetX
+                var c = _startCol + j
+                callback.call(x, y, c, r)
             }
         }
     }
