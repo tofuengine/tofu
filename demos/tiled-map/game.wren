@@ -44,38 +44,41 @@ class BankBatch {
 
 }
 
-class TilemapCamera {
+class Math {
 
-    construct new(mapWidth, mapHeight, tileWidth, tileHeight, columns, rows) {
-        _tileWidth = tileWidth
-        _tileHeight = tileHeight
-        _mapWidth = mapWidth * tileWidth
-        _mapHeight = mapHeight * tileHeight
-        _width = tileWidth * columns
-        _height = tileHeight * rows
-        _columns = columns
-        _rows = rows
-
-        moveTo(0, 0)
-    }
-
-    max(a, b) {
+    static max(a, b) {
         if (a > b) {
             return a
         }
         return b
     }
 
-    min(a, b) {
+    static min(a, b) {
         if (a < b) {
             return a
         }
         return b
     }
 
+}
+
+// TODO: move this class into the  Tilemap` class itself.
+class TilemapCamera {
+
+    construct new(tileWidth, tileHeight, mapWidth, mapHeight, columns, rows) {
+        _tileWidth = tileWidth
+        _tileHeight = tileHeight
+        _columns = columns
+        _rows = rows
+        _maxX = (mapWidth - columns) * tileWidth
+        _maxY = (mapHeight - rows) * tileHeight
+
+        moveTo(0, 0)
+    }
+
     moveTo(x, y) {
-        _x = min(max(x, 0), _mapWidth - _width) // TODO: precompute "maxX" e "maxY"
-        _y = min(max(y, 0), _mapHeight - _height)
+        _x = Math.min(Math.max(x, 0), _maxX)
+        _y = Math.min(Math.max(y, 0), _maxY)
 
         _startCol = (_x / _tileWidth).floor
         _startRow = (_y / _tileHeight).floor
@@ -85,6 +88,11 @@ class TilemapCamera {
 
     scrollBy(dx, dy) {
         moveTo(_x + dx, _y + dy)
+    }
+
+    update(deltaTime) {
+        // TODO: update the camera position in the case we are performing easings and/or following the user
+        // (or some more advanced techniques).
     }
 
     draw(callback) {
@@ -142,7 +150,7 @@ class Tilemap {
         _grid.fill(grid["cells"])
 //        _grid.stride(0, 0, grid["cells"], grid["cells"].length())
 
-        _camera = TilemapCamera.new(_grid.width, _grid.height, _bank.cellWidth, _bank.cellHeight, 15, 10)
+        _camera = TilemapCamera.new(_bank.cellWidth, _bank.cellHeight, _grid.width, _grid.height, 15, 10)
         _camera.moveTo(16, 0)
 
         _angle = 0
@@ -157,6 +165,7 @@ class Tilemap {
     }
 
     update(deltaTime) {
+        _camera.update(deltaTime)
         _angle = _angle + (90.0 * deltaTime)
     }
 
