@@ -16,7 +16,7 @@ Guess what? Yup, that's another game engine/framework.
 
 ## Uses
 
-* [raylib](https://www.raylib.com/) v2.3-dev
+* [raylib](https://www.raylib.com/) v2.5
 * [Wren](https://wren.io/) v0.1.0
 * [jsmn](https://zserge.com/jsmn.html/) v1.0.0
 
@@ -25,12 +25,13 @@ Guess what? Yup, that's another game engine/framework.
 * [x] Palette based graphics (through shader) with up to 64 colors.
 * [x] Automatic nearest-color palette indexing of images.
 * [x] Predefined library of 8/16/32/64 colors palettes.
-* [ ] Out-of-the-box palette switching features.
 * [ ] Tiled-map support w/ camera support (shader-level zoom and scrolling?).
 * [ ] Out-of-the-box timer and easing functions.
+* [ ] Out-of-the-box palette switching features.
 * [ ] Game state and display transitions (at which level? Engine or script?).
 * [ ] **Bit** **Bl**ock **T**ransfer operations when drawing.
 * [ ] Library of "retro-feel" shaders.
+* [ ] Camera/screen shaking by using a post-processing shader.
 * [ ] Engine splash screen (during which resources are loaded).
 * [ ] Hot-reload of selected resources (fonts, banks, maps, shaders, sounds).
 * [ ] Digital/analogue game-controller support.
