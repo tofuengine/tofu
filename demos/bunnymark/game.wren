@@ -45,7 +45,7 @@ class Game {
             bunny.render()
         }
 
-        _font.text("#%(_bunnies.count) bunnies", Canvas.width, 0, 15, 10, "right")
+        _font.write("#%(_bunnies.count) bunnies", Canvas.width, 0, 15, 10, "right")
     }
 
 }

@@ -1,14 +1,17 @@
 foreign class Bank {
 
-    construct new(file, cell_width, cell_height) {}
+    construct new(file, cellWidth, cellWeight) {}
 
-    sprite(id, x, y) {
-        sprite(id, x, y, 0.0)
+    foreign cellWidth
+    foreign cellHeight
+
+    blit(cellId, x, y) {
+        draw(cellId, x, y, 0.0, 1.0, 1.0)
     }
-    sprite(id, x, y, r) {
-        sprite(id, x, y, r, 1.0, 1.0)
+    blit(cellId, x, y, r) {
+        draw(cellId, x, y, r, 1.0, 1.0)
     }
-    foreign sprite(id, x, y, r, sx, sy)
+    foreign blit(cellId, x, y, r, sx, sy)
 
 }
 
@@ -18,7 +21,7 @@ foreign class Font {
 
     static default { Font.new("default") }
 
-    foreign text(text, x, y, color, size, align)
+    foreign write(text, x, y, color, size, align)
 
 }
 

@@ -1,12 +1,12 @@
 foreign class Grid {
 
-    construct new(width, height) {}
+    construct new(width, height, content) {}
 
     foreign width
     foreign height
-    foreign fill(value)
-    foreign row(x, y, count, value)
-    foreign peek(x, y)
-    foreign poke(x, y, value)
+    foreign fill(content)
+    foreign stride(column, row, content, amount)
+    foreign peek(column, row)
+    foreign poke(column, row, value)
 
 }

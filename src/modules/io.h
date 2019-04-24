@@ -20,28 +20,13 @@
  * SOFTWARE.
  **/
 
-#ifndef __MODULES_GRAPHICS_H__
-#define __MODULES_GRAPHICS_H__
+#ifndef __MODULES_IO_H__
+#define __MODULES_IO_H__
 
 #include <wren/wren.h>
 
-extern const char graphics_wren[];
+extern const char io_wren[];
 
-extern void graphics_bank_allocate(WrenVM* vm);
-extern void graphics_bank_finalize(void* data);
-extern void graphics_bank_blit(WrenVM *vm);
-extern void graphics_bank_cell_width(WrenVM *vm);
-extern void graphics_bank_cell_height(WrenVM *vm);
+extern void io_file_read(WrenVM *vm);
 
-extern void graphics_font_allocate(WrenVM* vm);
-extern void graphics_font_finalize(void* data);
-extern void graphics_font_write(WrenVM *vm);
-
-extern void graphics_canvas_width(WrenVM *vm);
-extern void graphics_canvas_height(WrenVM *vm);
-extern void graphics_canvas_palette(WrenVM *vm);
-extern void graphics_canvas_point(WrenVM *vm); // TODO: should points, poligons and circles be objects?
-extern void graphics_canvas_polygon(WrenVM *vm);
-extern void graphics_canvas_circle(WrenVM *vm);
-
-#endif  /* __MODULES_GRAPHICS_H__ */
+#endif  /* __MODULES_IO_H__ */

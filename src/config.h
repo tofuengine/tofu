@@ -34,9 +34,10 @@
 
 // Behavioural MACROs are uses the "__" prefix/suffix.
 
-#define __FAST_FULLSCREEN__ 
+#define __FAST_FULLSCREEN__
 #undef  __EXPLICIT_SIGNUM__
-#undef   __FIND_NEAREST_COLOR_EUCLIDIAN__
+#undef  __FIND_NEAREST_COLOR_EUCLIDIAN__
+#define __GRID_REPEAT_CONTENT__
 
 
 #endif  /* __TOFU_CONFIG_H__ */

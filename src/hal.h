@@ -39,6 +39,7 @@ typedef struct _Bank_t { // TODO: rename to `Sheet`?
     // char pathfile[PATH_FILE_MAX];
     bool loaded;
     int cell_width, cell_height;
+    Vector2 origin;
     Texture2D atlas;
 } Bank_t;
 

@@ -22,26 +22,25 @@
 
 #include "collections.h"
 
-#include "collections.h"
-
+#include "../log.h"
 #include "../memory.h"
 
 const char collections_wren[] =
     "foreign class Grid {\n"
     "\n"
-    "    construct new(width, height) {}\n"
+    "    construct new(width, height, content) {}\n"
     "\n"
     "    foreign width\n"
     "    foreign height\n"
-    "    foreign fill(value)\n"
-    "    foreign row(x, y, count, value)\n"
-    "    foreign peek(x, y)\n"
-    "    foreign poke(x, y, value)\n"
+    "    foreign fill(content)\n"
+    "    foreign stride(column, row, content, amount)\n"
+    "    foreign peek(column, row)\n"
+    "    foreign poke(column, row, value)\n"
     "\n"
     "}\n"
 ;
 
-typedef int Cell_t; // TODO: Could double?
+typedef int Cell_t; // TODO: Is `double` be better?
 
 typedef struct _Grid_t {
     int width;
@@ -50,10 +49,14 @@ typedef struct _Grid_t {
     Cell_t **offsets; // Precomputed pointers to the line of data.
 } Grid_t;
 
-void grid_allocate(WrenVM *vm)
+void collections_grid_allocate(WrenVM *vm)
 {
     int width = (int)wrenGetSlotDouble(vm, 1);
     int height = (int)wrenGetSlotDouble(vm, 2);
+    WrenType type = wrenGetSlotType(vm, 3);
+
+    Grid_t *grid = (Grid_t *)wrenSetSlotNewForeign(vm, 0, 0, sizeof(Grid_t)); // `0, 0` since we are in the allocate callback.
+
     Cell_t *data = Memory_alloc(sizeof(Cell_t) * width * height);
     Cell_t **offsets = Memory_alloc(sizeof(Cell_t *) * height);
 
@@ -61,7 +64,52 @@ void grid_allocate(WrenVM *vm)
         offsets[i] = data + (i * width);
     }
 
-    Grid_t *grid = (Grid_t *)wrenSetSlotNewForeign(vm, 0, 0, sizeof(Grid_t)); // `0, 0` since we are in the allocate callback.
+    Cell_t *ptr = data;
+    Cell_t *eod = ptr + (width * height);
+
+    if (type == WREN_TYPE_LIST) {
+        int count = wrenGetListCount(vm, 3);
+#ifdef DEBUG
+        Log_write(LOG_LEVELS_DEBUG, "List has #%d elements(s)", count);
+#endif
+
+        int slots = wrenGetSlotCount(vm);
+#ifdef DEBUG
+        Log_write(LOG_LEVELS_DEBUG, "Currently #%d slot(s) available, asking for an additional slot", slots);
+#endif
+        const int aux_slot_id = slots;
+        wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
+
+        // FIXME: At the moment Wren has a bug that prevents the foreign constructor to "modify" the VM (for
+        //        example to request an additional slot). This code doesn't work, but we leave it here in the
+        //        case the interpreter will be fixed.
+
+#ifdef __GRID_REPEAT_CONTENT__
+        for (int i = 0; (ptr < eod) && (count > 0); ++i) {
+            wrenGetListElement(vm, 3, i % count, aux_slot_id);
+
+            Cell_t value = (Cell_t)wrenGetSlotDouble(vm, aux_slot_id);
+
+            *(ptr++) = value;
+        }
+#else
+        for (int i = 0; (ptr < eod) && (i < count); ++i) { // Don't exceed buffer if list is too long to fit!
+            wrenGetListElement(vm, 3, i, aux_slot_id);
+
+            Cell_t value = (Cell_t)wrenGetSlotDouble(vm, aux_slot_id);
+
+            *(ptr++) = value;
+        }
+#endif
+    } else
+    if (type == WREN_TYPE_NUM) {
+        Cell_t value = (Cell_t)wrenGetSlotDouble(vm, 3);
+
+        while (ptr < eod) {
+            *(ptr++) = value;
+        }
+    }
+
     *grid = (Grid_t){
             .width = width,
             .height = height,
@@ -70,32 +118,32 @@ void grid_allocate(WrenVM *vm)
         };
 }
 
-void grid_finalize(void *data)
+void collections_grid_finalize(void *data)
 {
     Grid_t *grid = (Grid_t *)data;
     Memory_free(grid->data);
     Memory_free(grid->offsets);
 }
 
-void grid_width(WrenVM *vm)
+void collections_grid_width(WrenVM *vm)
 {
     Grid_t *grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
 
     wrenSetSlotDouble(vm, 0, grid->width);
 }
 
-void grid_height(WrenVM *vm)
+void collections_grid_height(WrenVM *vm)
 {
     Grid_t *grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
 
     wrenSetSlotDouble(vm, 0, grid->height);
 }
 
-void grid_fill(WrenVM *vm)
+void collections_grid_fill(WrenVM *vm)
 {
-    Grid_t *grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
+    WrenType type = wrenGetSlotType(vm, 1);
 
-    Cell_t value = (Cell_t)wrenGetSlotDouble(vm, 1);
+    Grid_t *grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
 
     int width = grid->width;
     int height = grid->height;
@@ -103,52 +151,120 @@ void grid_fill(WrenVM *vm)
 
     Cell_t *ptr = data;
     Cell_t *eod = ptr + (width * height);
-    while (ptr < eod) {
-        *(ptr++) = value;
+
+    if (type == WREN_TYPE_LIST) {
+        int count = wrenGetListCount(vm, 1);
+
+        int slots = wrenGetSlotCount(vm);
+        const int aux_slot_id = slots;
+#ifdef DEBUG
+        Log_write(LOG_LEVELS_DEBUG, "Currently #%d slot(s) available, asking for additional slot", slots);
+#endif
+        wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
+
+#ifdef __GRID_REPEAT_CONTENT__
+        for (int i = 0; (ptr < eod) && (count > 0); ++i) {
+            wrenGetListElement(vm, 1, i % count, aux_slot_id);
+
+            Cell_t value = (Cell_t)wrenGetSlotDouble(vm, aux_slot_id);
+
+            *(ptr++) = value;
+        }
+#else
+        for (int i = 0; (ptr < eod) && (i < count); ++i) { // Don't exceed buffer if list is too long to fit!
+            wrenGetListElement(vm, 1, i, aux_slot_id);
+
+            Cell_t value = (Cell_t)wrenGetSlotDouble(vm, aux_slot_id);
+
+            *(ptr++) = value;
+        }
+#endif
+    } else
+    if (type == WREN_TYPE_NUM) {
+        Cell_t value = (Cell_t)wrenGetSlotDouble(vm, 1);
+
+        while (ptr < eod) {
+            *(ptr++) = value;
+        }
     }
 }
 
-void grid_row(WrenVM *vm)
+void collections_grid_stride(WrenVM *vm)
 {
+    int column = (int)wrenGetSlotDouble(vm, 1);
+    int row = (int)wrenGetSlotDouble(vm, 2);
+    WrenType type = wrenGetSlotType(vm, 3);
+    int amount = (int)wrenGetSlotDouble(vm, 4);
+
     Grid_t *grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
 
-    int x = (int)wrenGetSlotDouble(vm, 1);
-    int y = (int)wrenGetSlotDouble(vm, 2);
-    int count = (int)wrenGetSlotDouble(vm, 3);
-    int value = (Cell_t)wrenGetSlotDouble(vm, 4);
+    int width = grid->width;
+    int height = grid->height;
+    Cell_t *data = grid->offsets[row];
 
-    Cell_t *data = grid->offsets[y];
+    Cell_t *ptr = data + column;
+    Cell_t *eod = ptr + (width * height);
 
-    Cell_t *ptr = data + x;
-    Cell_t *eod = ptr + count;
-    while (ptr < eod) {
-        *(ptr++) = value;
+    if (type == WREN_TYPE_LIST) {
+        int count = wrenGetListCount(vm, 3);
+
+        int slots = wrenGetSlotCount(vm);
+        const int aux_slot_id = slots;
+#ifdef DEBUG
+        Log_write(LOG_LEVELS_DEBUG, "Currently #%d slot(s) available, asking for additional slot", slots);
+#endif
+        wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
+
+#ifdef __GRID_REPEAT_CONTENT__
+        for (int i = 0; (ptr < eod) && (i < amount) && (count > 0); ++i) {
+            wrenGetListElement(vm, 1, i % count, aux_slot_id);
+
+            Cell_t value = (Cell_t)wrenGetSlotDouble(vm, aux_slot_id);
+
+            *(ptr++) = value;
+        }
+#else
+        for (int i = 0; (ptr < eod) && (i < amount) && (i < count); ++i) { // Don't exceed buffer if list is too long to fit!
+            wrenGetListElement(vm, 3, i, aux_slot_id);
+
+            Cell_t value = (Cell_t)wrenGetSlotDouble(vm, aux_slot_id);
+
+            *(ptr++) = value;
+        }
+#endif
+    } else
+    if (type == WREN_TYPE_NUM) {
+        Cell_t value = (Cell_t)wrenGetSlotDouble(vm, 3);
+
+        for (int i = 0; (ptr < eod) && (i < amount); ++i) {
+            *(ptr++) = value;
+        }
     }
 }
 
-void grid_peek(WrenVM *vm)
+void collections_grid_peek(WrenVM *vm)
 {
+    int column = (int)wrenGetSlotDouble(vm, 1);
+    int row = (int)wrenGetSlotDouble(vm, 2);
+
     Grid_t *grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
 
-    int x = (int)wrenGetSlotDouble(vm, 1);
-    int y = (int)wrenGetSlotDouble(vm, 2);
+    Cell_t *data = grid->offsets[row];
 
-    Cell_t *data = grid->offsets[y];
-
-    Cell_t value = data[x];
+    Cell_t value = data[column];
 
     wrenSetSlotDouble(vm, 0, value);
 }
 
-void grid_poke(WrenVM *vm)
+void collections_grid_poke(WrenVM *vm)
 {
-    Grid_t *grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
-
-    int x = (int)wrenGetSlotDouble(vm, 1);
-    int y = (int)wrenGetSlotDouble(vm, 2);
+    int column = (int)wrenGetSlotDouble(vm, 1);
+    int row = (int)wrenGetSlotDouble(vm, 2);
     Cell_t value = (Cell_t)wrenGetSlotDouble(vm, 3);
 
-    Cell_t *data = grid->offsets[y];
+    Grid_t *grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
 
-    data[x] = value;
+    Cell_t *data = grid->offsets[row];
+
+    data[column] = value;
 }

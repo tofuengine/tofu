@@ -40,6 +40,14 @@
     "import \"./tofu\" for Tofu\n" \
     "var tofu = Tofu.new()\n"
 
+static const char *get_filename_extension(const char *name) {
+    const char *dot = strrchr(name, '.');
+    if (!dot || dot == name) {
+        return "";
+    }
+    return dot + 1;
+}
+
 static void *reallocate_function(void *ptr, size_t size)
 {
     return Memory_realloc(ptr, size);
@@ -64,8 +72,12 @@ static char *load_module_function(WrenVM *vm, const char *name)
 
     char pathfile[PATH_FILE_MAX]; // Build the absolute path.
     strcpy(pathfile, environment->base_path);
-    strcat(pathfile, name + 2);
-    strcat(pathfile, SCRIPT_EXTENSION);
+    if (strlen(get_filename_extension(name)) > 0) { // Has a valid extension, use it.
+        strcat(pathfile, name);
+    } else {
+        strcat(pathfile, name + 2);
+        strcat(pathfile, SCRIPT_EXTENSION);
+    }
 
     Log_write(LOG_LEVELS_INFO, "loading module '%s'", pathfile);
     return file_load_as_string(pathfile, "rt");
@@ -122,7 +134,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *env
 {
     interpreter->environment = environment;
 
-    WrenConfiguration vm_configuration; 
+    WrenConfiguration vm_configuration;
     wrenInitConfiguration(&vm_configuration);
     vm_configuration.reallocateFn = reallocate_function;
     vm_configuration.loadModuleFn = load_module_function;
@@ -146,8 +158,8 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *env
         return false;
     }
 
-    wrenEnsureSlots(interpreter->vm, 1); 
-    wrenGetVariable(interpreter->vm, ROOT_MODULE, ROOT_INSTANCE, 0); 
+    wrenEnsureSlots(interpreter->vm, 1);
+    wrenGetVariable(interpreter->vm, ROOT_MODULE, ROOT_INSTANCE, 0);
     interpreter->handles[RECEIVER] = wrenGetSlotHandle(interpreter->vm, 0);
 
     interpreter->handles[INPUT] = wrenMakeCallHandle(interpreter->vm, "input()");
@@ -159,14 +171,14 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *env
 
 void Interpreter_input(Interpreter_t *interpreter)
 {
-    wrenEnsureSlots(interpreter->vm, 1); 
+    wrenEnsureSlots(interpreter->vm, 1);
     wrenSetSlotHandle(interpreter->vm, 0, interpreter->handles[RECEIVER]);
     wrenCall(interpreter->vm, interpreter->handles[INPUT]);
 }
 
 void Interpreter_update(Interpreter_t *interpreter, const double delta_time)
 {
-    wrenEnsureSlots(interpreter->vm, 2); 
+    wrenEnsureSlots(interpreter->vm, 2);
     wrenSetSlotHandle(interpreter->vm, 0, interpreter->handles[RECEIVER]);
     wrenSetSlotDouble(interpreter->vm, 1, delta_time);
     wrenCall(interpreter->vm, interpreter->handles[UPDATE]);
@@ -174,7 +186,7 @@ void Interpreter_update(Interpreter_t *interpreter, const double delta_time)
 
 void Interpreter_render(Interpreter_t *interpreter, const double ratio)
 {
-    wrenEnsureSlots(interpreter->vm, 1); 
+    wrenEnsureSlots(interpreter->vm, 1);
     wrenSetSlotHandle(interpreter->vm, 0, interpreter->handles[RECEIVER]);
     wrenCall(interpreter->vm, interpreter->handles[RENDER]);
 }

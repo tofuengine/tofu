@@ -20,28 +20,39 @@
  * SOFTWARE.
  **/
 
-#ifndef __MODULES_GRAPHICS_H__
-#define __MODULES_GRAPHICS_H__
+#include "io.h"
 
-#include <wren/wren.h>
+#include "../environment.h"
+#include "../file.h"
+#include "../log.h"
 
-extern const char graphics_wren[];
+#include <string.h>
 
-extern void graphics_bank_allocate(WrenVM* vm);
-extern void graphics_bank_finalize(void* data);
-extern void graphics_bank_blit(WrenVM *vm);
-extern void graphics_bank_cell_width(WrenVM *vm);
-extern void graphics_bank_cell_height(WrenVM *vm);
+// TODO: annotate "native" methods with a "_" suffix?
 
-extern void graphics_font_allocate(WrenVM* vm);
-extern void graphics_font_finalize(void* data);
-extern void graphics_font_write(WrenVM *vm);
+const char io_wren[] =
+    "foreign class File {\n"
+    "\n"
+    "    foreign static read(file)\n"
+    "\n"
+    "}\n"
+;
 
-extern void graphics_canvas_width(WrenVM *vm);
-extern void graphics_canvas_height(WrenVM *vm);
-extern void graphics_canvas_palette(WrenVM *vm);
-extern void graphics_canvas_point(WrenVM *vm); // TODO: should points, poligons and circles be objects?
-extern void graphics_canvas_polygon(WrenVM *vm);
-extern void graphics_canvas_circle(WrenVM *vm);
+void io_file_read(WrenVM *vm)
+{
+    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
-#endif  /* __MODULES_GRAPHICS_H__ */
+    const char *file = wrenGetSlotString(vm, 1);
+#ifdef DEBUG
+    Log_write(LOG_LEVELS_DEBUG, "File.read() -> %s", file);
+#endif
+
+    char pathfile[PATH_FILE_MAX] = {};
+    strcpy(pathfile, environment->base_path);
+    strcat(pathfile, file + 2);
+
+    const char *result = file_load_as_string(pathfile, "rt");
+    Log_write(LOG_LEVELS_DEBUG, "[TOFU] File '%s' loaded at %p", pathfile, result);
+
+    wrenSetSlotString(vm, 0, result);
+}

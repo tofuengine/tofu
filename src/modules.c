@@ -25,41 +25,46 @@
 #include "modules/collections.h"
 #include "modules/events.h"
 #include "modules/graphics.h"
+#include "modules/io.h"
 
 const Module_Entry_t _modules[] = {
 //  { "<module-name>", "<module-source>" }
     { "collections", collections_wren },
     { "events", events_wren },
     { "graphics", graphics_wren },
+    { "io", io_wren },
     { NULL, NULL }
 };
 const Class_Entry_t _classes[] = {
 //  { "<module-name>", "<class-name>", <allocator>, <deallocator> }
-    { "collections", "Grid", grid_allocate, grid_finalize },
+    { "collections", "Grid", collections_grid_allocate, collections_grid_finalize },
     { "graphics", "Bank", graphics_bank_allocate, graphics_bank_finalize },
     { "graphics", "Font", graphics_font_allocate, graphics_font_finalize },
     { NULL, NULL, NULL, NULL }
 };
 const Method_Entry_t _methods[] = {
 //  { "<module-name>", "<class-name>", <is-static>, "<signature>", <function> }
-    { "collections", "Grid", false, "width", grid_width },
-    { "collections", "Grid", false, "height", grid_height },
-    { "collections", "Grid", false, "fill(_)", grid_fill },
-    { "collections", "Grid", false, "row(_,_,_,_)", grid_row },
-    { "collections", "Grid", false, "peek(_,_)", grid_peek },
-    { "collections", "Grid", false, "poke(_,_,_)", grid_poke },
+    { "collections", "Grid", false, "width", collections_grid_width },
+    { "collections", "Grid", false, "height", collections_grid_height },
+    { "collections", "Grid", false, "fill(_)", collections_grid_fill },
+    { "collections", "Grid", false, "stride(_,_,_,_)", collections_grid_stride },
+    { "collections", "Grid", false, "peek(_,_)", collections_grid_peek },
+    { "collections", "Grid", false, "poke(_,_,_)", collections_grid_poke },
     { "events", "Input", true, "isKeyDown(_)", events_input_iskeydown },
     { "events", "Input", true, "isKeyUp(_)", events_input_iskeyup },
     { "events", "Input", true, "isKeyPressed(_)", events_input_iskeypressed },
     { "events", "Input", true, "isKeyReleased(_)", events_input_iskeyreleased },
     { "events", "Environment", true, "quit()", events_environment_quit },
-    { "graphics", "Bank", false, "sprite(_,_,_,_,_,_)", graphics_bank_sprite },
-    { "graphics", "Font", false, "text(_,_,_,_,_,_)", graphics_font_text },
+    { "graphics", "Bank", false, "cellWidth", graphics_bank_cell_width },
+    { "graphics", "Bank", false, "cellHeight", graphics_bank_cell_height },
+    { "graphics", "Bank", false, "blit(_,_,_,_,_,_)", graphics_bank_blit },
+    { "graphics", "Font", false, "write(_,_,_,_,_,_)", graphics_font_write },
     { "graphics", "Canvas", true, "width", graphics_canvas_width },
     { "graphics", "Canvas", true, "height", graphics_canvas_height },
     { "graphics", "Canvas", true, "palette(_)", graphics_canvas_palette },
     { "graphics", "Canvas", true, "point(_,_,_)", graphics_canvas_point },
     { "graphics", "Canvas", true, "polygon(_,_,_)", graphics_canvas_polygon },
     { "graphics", "Canvas", true, "circle(_,_,_,_,_)", graphics_canvas_circle },
+    { "io", "File", true, "read(_)", io_file_read },
     { NULL, NULL, false, NULL, NULL }
 };
