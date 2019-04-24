@@ -2,7 +2,14 @@ import "random" for Random
 
 import "collections" for Grid
 import "graphics" for Bank, Canvas
+import "events" for Input
 import "io" for File
+
+class Constants {
+
+    static cameraSpeed { 64.0 }
+
+}
 
 class BankBatch {
 
@@ -184,12 +191,34 @@ class Game {
         Canvas.palette("arne-32")
 
         _map = Tilemap.new("./assets/world.map")
+
+        _x = 0
+        _y = 0
     }
 
     input() {
+        _dx = 0
+        _dy = 0
+        if (Input.isKeyDown(Input.left)) {
+            _dx = _dx - 1
+        }
+        if (Input.isKeyDown(Input.right)) {
+            _dx = _dx + 1
+        }
+        if (Input.isKeyDown(Input.up)) {
+            _dy = _dy - 1
+        }
+        if (Input.isKeyDown(Input.down)) {
+            _dy = _dy + 1
+        }
     }
 
     update(deltaTime) {
+        var dx = _dx * Constants.cameraSpeed * deltaTime
+        var dy = _dy * Constants.cameraSpeed * deltaTime
+        if (dx != 0.0 || dy != 0.0) {
+            _map.scrollBy(dx, dy)
+        }
         _map.update(deltaTime)
     }
 
