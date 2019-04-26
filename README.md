@@ -27,6 +27,7 @@ Guess what? Yup, that's another game engine/framework.
 * [x] Predefined library of 8/16/32/64 colors palettes.
 * [ ] Tiled-map support w/ camera support (shader-level zoom and scrolling?).
 * [ ] Out-of-the-box timer and easing functions.
+* [ ] Animation support w/ frameset DSL (array of strings, where each string can be a single frame, a range or a "keep-current-frame for some time" command). Each frameset can have its one update period.
 * [ ] Out-of-the-box palette switching features.
 * [ ] Game state and display transitions (at which level? Engine or script?).
 * [ ] **Bit** **Bl**ock **T**ransfer operations when drawing.
