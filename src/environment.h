@@ -25,6 +25,7 @@
 
 #include "display.h"
 #include "file.h"
+#include "hal.h"
 
 #include <stdbool.h>
 
@@ -33,6 +34,9 @@ typedef struct _Environment_t {
     bool should_close;
 
     Display_t *display;
+
+    Timer_t **timers;
+    size_t timers_capacity;
 } Environment_t;
 
 extern void Environment_initialize(Environment_t *environment, const char *base_path, Display_t *display);

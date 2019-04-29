@@ -20,23 +20,15 @@
  * SOFTWARE.
  **/
 
-#include "environment.h"
+#ifndef __MODULES_UTIL_H__
+#define __MODULES_UTIL_H__
 
-#include <stdlib.h>
-#include <string.h>
+#include <wren/wren.h>
 
-void Environment_initialize(Environment_t *environment, const char *base_path, Display_t *display)
-{
-    strcpy(environment->base_path, base_path);
-    environment->should_close = false;
+extern const char util_wren[];
 
-    environment->display = display;
+extern void util_timer_allocate(WrenVM* vm);
+extern void util_timer_finalize(void *userData, void* data);
+extern void util_timer_cancel(WrenVM *vm);
 
-    environment->timers = calloc(256, sizeof(Timer_t *));
-    environment->timers_capacity = 256;
-}
-
-void Environment_terminate(Environment_t *environment)
-{
-    free(environment->timers);
-}
+#endif  /* __MODULES_UTIL_H__ */

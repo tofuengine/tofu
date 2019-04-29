@@ -178,6 +178,41 @@ void Interpreter_input(Interpreter_t *interpreter)
 
 void Interpreter_update(Interpreter_t *interpreter, const double delta_time)
 {
+    for (size_t i = 0; i < interpreter->environment->timers_capacity; ++i) {
+        Timer_t *timer = interpreter->environment->timers[i];
+        if (timer == NULL) {
+            continue;
+        }
+
+        if (timer->state == TIMER_STATE_ZOMBIE) {
+            wrenReleaseHandle(interpreter->vm, timer->callback);
+            timer->state = TIMER_STATE_DEAD;
+        }
+
+        if (timer->state != TIMER_STATE_ALIVE) {
+            continue;
+        }
+
+        timer->age += (float)delta_time; // TODO: use doubles?
+        while (timer->age >= timer->period) {
+            timer->age -= timer->period;
+
+            WrenHandle *callHandle = wrenMakeCallHandle(interpreter->vm, "call()"); // TODO: optimize
+            wrenEnsureSlots(interpreter->vm, 1);
+            wrenSetSlotHandle(interpreter->vm, 0, timer->callback);
+            wrenCall(interpreter->vm, callHandle);
+            wrenReleaseHandle(interpreter->vm, callHandle);
+
+            if (timer->repeats > 0) {
+                timer->repeats -= 1;
+                if (timer->repeats == 0) {
+                    timer->state = TIMER_STATE_ZOMBIE;
+                    break;
+                }
+            }
+        }
+    }
+
     wrenEnsureSlots(interpreter->vm, 2);
     wrenSetSlotHandle(interpreter->vm, 0, interpreter->handles[RECEIVER]);
     wrenSetSlotDouble(interpreter->vm, 1, delta_time);
@@ -193,6 +228,15 @@ void Interpreter_render(Interpreter_t *interpreter, const double ratio)
 
 void Interpreter_terminate(Interpreter_t *interpreter)
 {
+    for (size_t i = 0; i < interpreter->environment->timers_capacity; ++i) {
+        Timer_t *timer = interpreter->environment->timers[i];
+        if (timer == NULL) {
+            continue;
+        }
+        wrenReleaseHandle(interpreter->vm, timer->callback);
+    }
+
+
     for (int i = 0; i < Handles_t_CountOf; ++i) {
         WrenHandle *handle = interpreter->handles[i];
         wrenReleaseHandle(interpreter->vm, handle);
