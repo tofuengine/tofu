@@ -651,7 +651,7 @@ void wrenFinalizeForeign(WrenVM* vm, ObjForeign* foreign)
   ASSERT(method->type == METHOD_FOREIGN, "Finalizer should be foreign.");
 
   WrenFinalizerFn finalizer = (WrenFinalizerFn)method->as.foreign;
-  finalizer(foreign->data);
+  finalizer(vm->config.userData, foreign->data);
 }
 
 // Let the host resolve an imported module name if it wants to.

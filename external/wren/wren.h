@@ -56,7 +56,7 @@ typedef void (*WrenForeignMethodFn)(WrenVM* vm);
 // class. Unlike most foreign methods, finalizers do not have access to the VM
 // and should not interact with it since it's in the middle of a garbage
 // collection.
-typedef void (*WrenFinalizerFn)(void* data);
+typedef void (*WrenFinalizerFn)(void* userData, void* data);
 
 // Gives the host a chance to canonicalize the imported module name,
 // potentially taking into account the (previously resolved) name of the module
