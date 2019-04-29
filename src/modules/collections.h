@@ -28,7 +28,7 @@
 extern const char collections_wren[];
 
 extern void collections_grid_allocate(WrenVM* vm);
-extern void collections_grid_finalize(void* data);
+extern void collections_grid_finalize(void *userData, void* data);
 
 extern void collections_grid_width(WrenVM *vm);
 extern void collections_grid_height(WrenVM *vm);

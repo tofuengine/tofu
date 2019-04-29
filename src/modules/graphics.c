@@ -124,7 +124,7 @@ void graphics_bank_allocate(WrenVM *vm)
     *bank = load_bank(pathfile, cell_width, cell_height, environment->display->palette, MAX_PALETTE_COLORS);
 }
 
-void graphics_bank_finalize(void *data)
+void graphics_bank_finalize(void *userData, void *data)
 {
     Bank_t *bank = (Bank_t *)data;
     unload_bank(bank);
@@ -207,7 +207,7 @@ void graphics_font_allocate(WrenVM *vm)
     *font = load_font(pathfile);
 }
 
-void graphics_font_finalize(void *data)
+void graphics_font_finalize(void *userData, void *data)
 {
     Font_t *font = (Font_t *)data;
     if (!font->is_default) {

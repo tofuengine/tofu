@@ -118,7 +118,7 @@ void collections_grid_allocate(WrenVM *vm)
         };
 }
 
-void collections_grid_finalize(void *data)
+void collections_grid_finalize(void *userData, void *data)
 {
     Grid_t *grid = (Grid_t *)data;
     Memory_free(grid->data);
