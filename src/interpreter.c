@@ -165,6 +165,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *env
     interpreter->handles[INPUT] = wrenMakeCallHandle(interpreter->vm, "input()");
     interpreter->handles[UPDATE] = wrenMakeCallHandle(interpreter->vm, "update(_)");
     interpreter->handles[RENDER] = wrenMakeCallHandle(interpreter->vm, "render(_)");
+    interpreter->handles[CALL] = wrenMakeCallHandle(interpreter->vm, "call()"); // Generic, for timers.
 
     return true;
 }
@@ -196,11 +197,9 @@ void Interpreter_update(Interpreter_t *interpreter, const double delta_time)
         while (timer->age >= timer->period) {
             timer->age -= timer->period;
 
-            WrenHandle *callHandle = wrenMakeCallHandle(interpreter->vm, "call()"); // TODO: optimize
             wrenEnsureSlots(interpreter->vm, 1);
             wrenSetSlotHandle(interpreter->vm, 0, timer->callback);
-            wrenCall(interpreter->vm, callHandle);
-            wrenReleaseHandle(interpreter->vm, callHandle);
+            wrenCall(interpreter->vm, interpreter->handles[CALL]);
 
             if (timer->repeats > 0) {
                 timer->repeats -= 1;

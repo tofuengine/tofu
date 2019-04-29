@@ -35,6 +35,7 @@ typedef enum _Handles_t {
     INPUT,
     UPDATE,
     RENDER,
+    CALL,
     Handles_t_CountOf
 } Handles_t;
 
