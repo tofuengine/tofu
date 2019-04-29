@@ -36,6 +36,10 @@ tiled-map: $(TARGET)
 	@echo "Launching Tiled-Map application!"
 	./$(TARGET) ./demos/tiled-map
 
+timers: $(TARGET)
+	@echo "Launching Timers application!"
+	./$(TARGET) ./demos/timers
+
 .PHONY: clean
 clean:
 	@$(rm) $(OBJECTS)
