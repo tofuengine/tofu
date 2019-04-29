@@ -57,5 +57,6 @@ typedef struct _Environment_t {
 
 extern void Environment_initialize(Environment_t *environment, const char *base_path, Display_t *display);
 extern void Environment_terminate(Environment_t *environment);
+//extern void Environment_store_timer(Environment_t *environment, const Timer_t *timer);
 
 #endif  /* __ENVIRONMENT_H__ */

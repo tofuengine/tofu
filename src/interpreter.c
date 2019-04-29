@@ -181,9 +181,11 @@ void Interpreter_update(Interpreter_t *interpreter, const double delta_time)
     for (size_t i = 0; i < interpreter->environment->timers_capacity; ++i) {
         Timer_t *timer = &interpreter->environment->timers[i];
 
-        if (timer->state == TIMER_STATE_ZOMBIE) {
+        if (timer->state == TIMER_STATE_ZOMBIE) { // Periodically release garbage-collected timers.
             wrenReleaseHandle(interpreter->vm, timer->callback);
             timer->state = TIMER_STATE_DEAD;
+
+            Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer #%d is now dead", i);
         }
 
         if (timer->state != TIMER_STATE_ALIVE) {
@@ -229,6 +231,9 @@ void Interpreter_terminate(Interpreter_t *interpreter)
         Timer_t *timer = &interpreter->environment->timers[i];
         if (timer->state != TIMER_STATE_DEAD) {
             wrenReleaseHandle(interpreter->vm, timer->callback);
+            timer->state = TIMER_STATE_DEAD; // Mark as dead, to avoid "zombification" in the timer finalizer.
+
+            Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer #%d released", i);
         }
     }
 

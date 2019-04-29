@@ -50,20 +50,32 @@ void util_timer_allocate(WrenVM *vm)
     Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
     // Scan the environment timers-pool and find an empty slot.
-    for (size_t i = 0; i < environment->timers_capacity; ++i) {
-        if (environment->timers[i].state == TIMER_STATE_DEAD) {
-            environment->timers[i] = (Timer_t){
-                    .period = period,
-                    .repeats = repeats,
-                    .callback = callback,
-                    .age = 0.0f,
-                    .state = TIMER_STATE_ALIVE
-                };
-            *slot = i;
-            break;
+    bool done = false;
+    while (!done) {
+        for (size_t i = 0; i < environment->timers_capacity; ++i) {
+            if (environment->timers[i].state == TIMER_STATE_DEAD) {
+                environment->timers[i] = (Timer_t){
+                        .period = period,
+                        .repeats = repeats,
+                        .callback = callback,
+                        .age = 0.0f,
+                        .state = TIMER_STATE_ALIVE
+                    };
+                *slot = i;
+                done = true;
+                break;
+            }
+        }
+        if (!done) {
+            size_t was_capacity = environment->timers_capacity;
+            size_t capacity = environment->timers_capacity * 2;
+            environment->timers = realloc(environment->timers, capacity);
+            for (size_t i = was_capacity; i < capacity; ++i) {
+                environment->timers[i].state = TIMER_STATE_DEAD;
+            }
+            environment->timers_capacity = capacity;
         }
     }
-    // TODO: if `slot` is minus while, resize and retry.
 }
 
 void util_timer_finalize(void *userData, void *data)
@@ -71,8 +83,12 @@ void util_timer_finalize(void *userData, void *data)
     Environment_t *environment = (Environment_t *)userData;
     size_t *slot = (size_t *)data;
 
-    if (environment->timers[*slot].state == TIMER_STATE_ALIVE) {
+    Log_write(LOG_LEVELS_DEBUG, "[TOFU] Finalizing timer #%d", *slot);
+
+    if (environment->timers[*slot].state == TIMER_STATE_ALIVE) { // TODO: check if the timer-id hasn't changed? Use a disposable linked-list?
         environment->timers[*slot].state = TIMER_STATE_ZOMBIE; // Mark as to-be-released, it not already done (e.g. on closing)
+
+        Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer #%d is now zombie", *slot);
     }
 }
 
