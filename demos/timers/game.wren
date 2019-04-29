@@ -9,8 +9,10 @@ class Game {
         Canvas.palette("pico-8")
 
         _random = Random.new()
-        _timer = Timer.new(0.5, -1, Fn.new {
+        _timerA = Timer.new(0.5, 25, Fn.new {
                 _x = _random.int(0, Canvas.width)
+            })
+        _timerB = Timer.new(0.25, -1, Fn.new {
                 _y = _random.int(0, Canvas.height)
             })
 
