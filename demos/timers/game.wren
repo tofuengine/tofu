@@ -10,7 +10,6 @@ class Game {
 
         _random = Random.new()
         _timer = Timer.new(0.5, -1, Fn.new {
-                System.write("Tick")
                 _x = _random.int(0, Canvas.width)
                 _y = _random.int(0, Canvas.height)
             })

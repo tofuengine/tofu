@@ -179,10 +179,7 @@ void Interpreter_input(Interpreter_t *interpreter)
 void Interpreter_update(Interpreter_t *interpreter, const double delta_time)
 {
     for (size_t i = 0; i < interpreter->environment->timers_capacity; ++i) {
-        Timer_t *timer = interpreter->environment->timers[i];
-        if (timer == NULL) {
-            continue;
-        }
+        Timer_t *timer = &interpreter->environment->timers[i];
 
         if (timer->state == TIMER_STATE_ZOMBIE) {
             wrenReleaseHandle(interpreter->vm, timer->callback);
@@ -229,13 +226,11 @@ void Interpreter_render(Interpreter_t *interpreter, const double ratio)
 void Interpreter_terminate(Interpreter_t *interpreter)
 {
     for (size_t i = 0; i < interpreter->environment->timers_capacity; ++i) {
-        Timer_t *timer = interpreter->environment->timers[i];
-        if (timer == NULL) {
-            continue;
+        Timer_t *timer = &interpreter->environment->timers[i];
+        if (timer->state != TIMER_STATE_DEAD) {
+            wrenReleaseHandle(interpreter->vm, timer->callback);
         }
-        wrenReleaseHandle(interpreter->vm, timer->callback);
     }
-
 
     for (int i = 0; i < Handles_t_CountOf; ++i) {
         WrenHandle *handle = interpreter->handles[i];

@@ -45,37 +45,35 @@ void util_timer_allocate(WrenVM *vm)
     Log_write(LOG_LEVELS_DEBUG, "Timer.new() -> %f, %d, %p", period, repeats, callback);
 #endif
 
-    Timer_t *timer = (Timer_t *)wrenSetSlotNewForeign(vm, 0, 0, sizeof(Timer_t)); // `0, 0` since we are in the allocate callback.
+    size_t *slot = (size_t *)wrenSetSlotNewForeign(vm, 0, 0, sizeof(size_t)); // `0, 0` since we are in the allocate callback.
 
     Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
     // Scan the environment timers-pool and find an empty slot.
-    int slot = -1;
     for (size_t i = 0; i < environment->timers_capacity; ++i) {
-        if (environment->timers[i] == NULL) {
-            environment->timers[i] = timer;
-            slot = i;
+        if (environment->timers[i].state == TIMER_STATE_DEAD) {
+            environment->timers[i] = (Timer_t){
+                    .period = period,
+                    .repeats = repeats,
+                    .callback = callback,
+                    .age = 0.0f,
+                    .state = TIMER_STATE_ALIVE
+                };
+            *slot = i;
             break;
         }
     }
     // TODO: if `slot` is minus while, resize and retry.
-
-    *timer = (Timer_t){
-            .period = period,
-            .repeats = repeats,
-            .callback = callback,
-            .slot = slot,
-            .age = 0.0f,
-            .state = TIMER_STATE_ALIVE
-        };
 }
 
 void util_timer_finalize(void *userData, void *data)
 {
     Environment_t *environment = (Environment_t *)userData;
-    Timer_t *timer = (Timer_t *)data;
+    size_t *slot = (size_t *)data;
 
-    environment->timers[timer->slot]->state = TIMER_STATE_DEAD;
+    if (environment->timers[*slot].state == TIMER_STATE_ALIVE) {
+        environment->timers[*slot].state = TIMER_STATE_ZOMBIE; // Mark as to-be-released, it not already done (e.g. on closing)
+    }
 }
 
 void util_timer_cancel(WrenVM *vm)

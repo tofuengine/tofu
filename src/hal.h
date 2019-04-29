@@ -27,23 +27,6 @@
 #include <stdint.h>
 
 #include <raylib/raylib.h>
-#include <wren/wren.h>
-
-typedef enum _Timer_State_t {
-    TIMER_STATE_EMPTY,
-    TIMER_STATE_ALIVE,
-    TIMER_STATE_ZOMBIE,
-    TIMER_STATE_DEAD
-} Timer_State_t;
-
-typedef struct _Timer_t {
-    float period;
-    int repeats;
-    WrenHandle *callback;
-    int slot; // Index of the slot in the timers-pool.
-    float age;
-    Timer_State_t state;
-} Timer_t;
 
 typedef struct _Font_t {
     // char pathfile[PATH_FILE_MAX];

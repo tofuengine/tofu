@@ -29,13 +29,29 @@
 
 #include <stdbool.h>
 
+#include <wren/wren.h>
+
+typedef enum _Timer_State_t {
+    TIMER_STATE_DEAD,
+    TIMER_STATE_ALIVE,
+    TIMER_STATE_ZOMBIE
+} Timer_State_t;
+
+typedef struct _Timer_t {
+    float period;
+    int repeats;
+    WrenHandle *callback; // Need to be released explicitly.
+    float age;
+    Timer_State_t state;
+} Timer_t;
+
 typedef struct _Environment_t {
     char base_path[PATH_FILE_MAX];
     bool should_close;
 
     Display_t *display;
 
-    Timer_t **timers;
+    Timer_t *timers;
     size_t timers_capacity;
 } Environment_t;
 
