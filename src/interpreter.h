@@ -28,6 +28,8 @@
 
 #include <wren/wren.h>
 
+#include "core/timerpool.h"
+
 #include "environment.h"
 
 typedef enum _Handles_t {
@@ -44,6 +46,8 @@ typedef struct _Interpreter_t {
 
     WrenVM *vm;
     WrenHandle *handles[Handles_t_CountOf];
+
+    Timer_Pool_t timer_pool;
 } Interpreter_t;
 
 extern bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *environment);

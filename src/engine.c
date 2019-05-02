@@ -97,6 +97,8 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 
     Environment_initialize(&engine->environment, base_path, &engine->display); // TODO> add environment configuration.
 
+    engine->environment.timer_pool = &engine->interpreter.timer_pool; // HACK: inject the timer-pool pointer.
+
     result = Interpreter_initialize(&engine->interpreter, &engine->environment);
     if (!result) {
         Log_write(LOG_LEVELS_ERROR, "Can't initialize interpreter!");
@@ -149,7 +151,7 @@ void Engine_run(Engine_t *engine)
 
         lag += elapsed; // Count a maximum amount of skippable frames in order no to stall on slower machines.
         for (int frames = 0; (frames < skippable_frames) && (lag >= delta_time); ++frames) {
-            // TODO: in the `Interpreter_update()` function we should also handle timers?
+            // TODO: move `TimerPool_update()` here?
             // TODO: Should the `Tofu` class be hardcoded?
             Interpreter_update(&engine->interpreter, delta_time);
             lag -= delta_time;

@@ -27,23 +27,9 @@
 #include "file.h"
 #include "hal.h"
 
+#include "core/timerpool.h"
+
 #include <stdbool.h>
-
-#include <wren/wren.h>
-
-typedef enum _Timer_State_t {
-    TIMER_STATE_DEAD,
-    TIMER_STATE_ALIVE,
-    TIMER_STATE_ZOMBIE
-} Timer_State_t;
-
-typedef struct _Timer_t {
-    float period;
-    int repeats;
-    WrenHandle *callback; // Need to be released explicitly.
-    float age;
-    Timer_State_t state;
-} Timer_t;
 
 typedef struct _Environment_t {
     char base_path[PATH_FILE_MAX];
@@ -51,12 +37,10 @@ typedef struct _Environment_t {
 
     Display_t *display;
 
-    Timer_t *timers;
-    size_t timers_capacity;
+    Timer_Pool_t *timer_pool;
 } Environment_t;
 
 extern void Environment_initialize(Environment_t *environment, const char *base_path, Display_t *display);
 extern void Environment_terminate(Environment_t *environment);
-//extern void Environment_store_timer(Environment_t *environment, const Timer_t *timer);
 
 #endif  /* __ENVIRONMENT_H__ */

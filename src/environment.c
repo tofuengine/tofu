@@ -31,12 +31,8 @@ void Environment_initialize(Environment_t *environment, const char *base_path, D
     environment->should_close = false;
 
     environment->display = display;
-
-    environment->timers_capacity = 32;
-    environment->timers = calloc(environment->timers_capacity, sizeof(Timer_t));
 }
 
 void Environment_terminate(Environment_t *environment)
 {
-    free(environment->timers);
 }

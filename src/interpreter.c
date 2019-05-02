@@ -134,6 +134,8 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *env
 {
     interpreter->environment = environment;
 
+    TimerPool_initialize(&interpreter->timer_pool, 32); // Need to initialized it at start.
+
     WrenConfiguration vm_configuration;
     wrenInitConfiguration(&vm_configuration);
     vm_configuration.reallocateFn = reallocate_function;
@@ -177,39 +179,26 @@ void Interpreter_input(Interpreter_t *interpreter)
     wrenCall(interpreter->vm, interpreter->handles[INPUT]);
 }
 
+void timerpool_call_callback(Timer_t *timer, void *parameters)
+{
+    Interpreter_t *interpreter = (Interpreter_t *)parameters;
+
+    wrenEnsureSlots(interpreter->vm, 1);
+    wrenSetSlotHandle(interpreter->vm, 0, timer->callback);
+    wrenCall(interpreter->vm, interpreter->handles[CALL]);
+}
+
+void timerpool_release_callback(Timer_t *timer, void *parameters)
+{
+    Interpreter_t *interpreter = (Interpreter_t *)parameters;
+
+    wrenReleaseHandle(interpreter->vm, timer->callback);
+}
+
 void Interpreter_update(Interpreter_t *interpreter, const double delta_time)
 {
-    for (size_t i = 0; i < interpreter->environment->timers_capacity; ++i) {
-        Timer_t *timer = &interpreter->environment->timers[i];
-
-        if (timer->state == TIMER_STATE_ZOMBIE) { // Periodically release garbage-collected timers.
-            wrenReleaseHandle(interpreter->vm, timer->callback);
-            timer->state = TIMER_STATE_DEAD;
-
-            Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer #%d is now dead", i);
-        }
-
-        if (timer->state != TIMER_STATE_ALIVE) {
-            continue;
-        }
-
-        timer->age += (float)delta_time; // TODO: use doubles?
-        while (timer->age >= timer->period) {
-            timer->age -= timer->period;
-
-            wrenEnsureSlots(interpreter->vm, 1);
-            wrenSetSlotHandle(interpreter->vm, 0, timer->callback);
-            wrenCall(interpreter->vm, interpreter->handles[CALL]);
-
-            if (timer->repeats > 0) {
-                timer->repeats -= 1;
-                if (timer->repeats == 0) {
-                    timer->state = TIMER_STATE_ZOMBIE;
-                    break;
-                }
-            }
-        }
-    }
+    TimerPool_gc(&interpreter->timer_pool, timerpool_release_callback, interpreter);
+    TimerPool_update(&interpreter->timer_pool, delta_time, timerpool_call_callback, interpreter);
 
     wrenEnsureSlots(interpreter->vm, 2);
     wrenSetSlotHandle(interpreter->vm, 0, interpreter->handles[RECEIVER]);
@@ -226,15 +215,7 @@ void Interpreter_render(Interpreter_t *interpreter, const double ratio)
 
 void Interpreter_terminate(Interpreter_t *interpreter)
 {
-    for (size_t i = 0; i < interpreter->environment->timers_capacity; ++i) {
-        Timer_t *timer = &interpreter->environment->timers[i];
-        if (timer->state != TIMER_STATE_DEAD) {
-            wrenReleaseHandle(interpreter->vm, timer->callback);
-            timer->state = TIMER_STATE_DEAD; // Mark as dead, to avoid "zombification" in the timer finalizer.
-
-            Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer #%d released", i);
-        }
-    }
+    TimerPool_free(&interpreter->timer_pool, timerpool_release_callback, interpreter);
 
     for (int i = 0; i < Handles_t_CountOf; ++i) {
         WrenHandle *handle = interpreter->handles[i];
