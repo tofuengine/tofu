@@ -1,5 +1,6 @@
 .vscode/
 src/*.o
+src/core/*.o
 src/modules/*.o
 src/modules/graphics/*.o
 external/jsmn/*.o
