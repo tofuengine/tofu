@@ -76,7 +76,7 @@ void util_timer_cancel(WrenVM *vm)
     Log_write(LOG_LEVELS_DEBUG, "Timer.cancel()");
 #endif
 
-    Timer_t *timer = (Timer_t *)wrenGetSlotForeign(vm, 0);
+    Timer_Class_t *instance = (Timer_Class_t *)wrenGetSlotForeign(vm, 0);
 
-    timer->state = TIMER_STATE_ZOMBIE;
+    TimerPool_release(instance->timer_pool, instance->slot);
 }
