@@ -55,6 +55,5 @@ extern size_t TimerPool_allocate(Timer_Pool_t *pool, float period, int repeats, 
 extern void TimerPool_update(Timer_Pool_t *pool, double delta_time, TimerPool_Callback_t callback, void *parameters);
 extern void TimerPool_gc(Timer_Pool_t *pool, TimerPool_Callback_t callback, void *parameters);
 extern void TimerPool_release(Timer_Pool_t *pool, int slot);
-extern void TimerPool_free(Timer_Pool_t *pool, TimerPool_Callback_t callback, void *parameters);
 
 #endif  /* __CORE_TIMERPOOL_H__ */

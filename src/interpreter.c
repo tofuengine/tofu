@@ -215,7 +215,7 @@ void Interpreter_render(Interpreter_t *interpreter, const double ratio)
 
 void Interpreter_terminate(Interpreter_t *interpreter)
 {
-    TimerPool_free(&interpreter->timer_pool, timerpool_release_callback, interpreter);
+    TimerPool_terminate(&interpreter->timer_pool, timerpool_release_callback, interpreter);
 
     for (int i = 0; i < Handles_t_CountOf; ++i) {
         WrenHandle *handle = interpreter->handles[i];

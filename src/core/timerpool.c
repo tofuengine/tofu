@@ -33,10 +33,16 @@ void TimerPool_initialize(Timer_Pool_t *pool, size_t initial_capacity)
 void TimerPool_terminate(Timer_Pool_t *pool, TimerPool_Callback_t callback, void *parameters)
 {
     for (size_t i = 0; i < pool->capacity; ++i) {
-        TimerPool_release(pool, i);
-    }
+        Timer_t *timer = &pool->timers[i];
 
-    TimerPool_free(pool, callback, parameters);
+        if (timer->state != TIMER_STATE_DEAD) { // Dispose noth ALIVE and ZOMBIE timers.
+            callback(timer, parameters);
+
+            timer->state = TIMER_STATE_DEAD; // Mark as dead, to avoid "zombification" in the timer finalizer.
+
+            Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer #%d released", i);
+        }
+    }
 
     free(pool->timers);
 }
@@ -117,20 +123,5 @@ void TimerPool_release(Timer_Pool_t *pool, int slot)
 {
     if (pool->timers[slot].state == TIMER_STATE_ALIVE) { // TODO: check if the timer-id hasn't changed? Use a disposable linked-list?
         pool->timers[slot].state = TIMER_STATE_ZOMBIE; // Mark as to-be-released, it not already done (e.g. on closing)
-    }
-}
-
-void TimerPool_free(Timer_Pool_t *pool, TimerPool_Callback_t callback, void *parameters)
-{
-    for (size_t i = 0; i < pool->capacity; ++i) {
-        Timer_t *timer = &pool->timers[i];
-
-        if (timer->state != TIMER_STATE_DEAD) { // Dispose noth ALIVE and ZOMBIE timers.
-            callback(timer, parameters);
-
-            timer->state = TIMER_STATE_DEAD; // Mark as dead, to avoid "zombification" in the timer finalizer.
-
-            Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer #%d released", i);
-        }
     }
 }
