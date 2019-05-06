@@ -48,7 +48,7 @@ void util_timer_allocate(WrenVM *vm)
     float period = (float)wrenGetSlotDouble(vm, 1);
     int repeats = (int)wrenGetSlotDouble(vm, 2);
     WrenHandle *callback = wrenGetSlotHandle(vm, 3); // NOTE! This need to be released when the timer is detached!
-#ifdef DEBUG
+#ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Timer.new() -> %f, %d, %p", period, repeats, callback);
 #endif
 
@@ -58,7 +58,7 @@ void util_timer_allocate(WrenVM *vm)
     Timer_Pool_t *timer_pool = environment->timer_pool;
 
     instance->timer_pool = timer_pool;
-    instance->slot = TimerPool_allocate(timer_pool, period, repeats, callback);
+    instance->slot = TimerPool_allocate(timer_pool, period, repeats, callback); // TODO: Pass variable pointer to track reallocations.
 }
 
 void util_timer_finalize(void *userData, void *data)
