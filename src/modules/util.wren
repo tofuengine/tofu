@@ -6,3 +6,21 @@ foreign class Timer {
     foreign cancel()
 
 }
+
+foreign class Math {
+
+    static max(a, b) {
+        if (a > b) {
+            return a
+        }
+        return b
+    }
+
+    static min(a, b) {
+        if (a < b) {
+            return a
+        }
+        return b
+    }
+
+}
