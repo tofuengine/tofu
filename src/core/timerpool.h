@@ -37,7 +37,7 @@ typedef enum _Timer_State_t {
 typedef struct _Timer_t {
     float period;
     int repeats;
-    WrenHandle *callback; // Need to be released explicitly.
+    WrenHandle *callback; // Need to be released explicitly. Should be opaque?
 
     float age;
     int loops;
@@ -46,7 +46,7 @@ typedef struct _Timer_t {
 
 typedef struct _Timer_Pool_t {
     Timer_t *timers;
-    size_t initial_capacity;
+    size_t initial_capacity; // Can't be zero.
     size_t capacity;
 } Timer_Pool_t;
 
