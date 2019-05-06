@@ -78,5 +78,5 @@ void util_timer_cancel(WrenVM *vm)
 
     Timer_Class_t *instance = (Timer_Class_t *)wrenGetSlotForeign(vm, 0);
 
-    TimerPool_release(instance->timer_pool, instance->slot);
+    TimerPool_cancel(instance->timer_pool, instance->slot);
 }

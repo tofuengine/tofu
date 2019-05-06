@@ -109,7 +109,7 @@ void graphics_bank_allocate(WrenVM *vm)
     const char *file = wrenGetSlotString(vm, 1);
     int cell_width = (int)wrenGetSlotDouble(vm, 2);
     int cell_height = (int)wrenGetSlotDouble(vm, 3);
-#ifdef DEBUG
+#ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Bank.new() -> %s, %d, %d", file, cell_width, cell_height);
 #endif
 
@@ -152,7 +152,7 @@ void graphics_bank_blit(WrenVM *vm)
     double rotation = wrenGetSlotDouble(vm, 4);
     double scale_x = wrenGetSlotDouble(vm, 5);
     double scale_y = wrenGetSlotDouble(vm, 6);
-#ifdef DEBUG
+#ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %d, %d, %.3f, %.3f, %.3f", cell_id, x, y, rotation, scale_x, scale_y);
 #endif
 
@@ -183,7 +183,7 @@ void graphics_bank_blit(WrenVM *vm)
 void graphics_font_allocate(WrenVM *vm)
 {
     const char *file = wrenGetSlotString(vm, 1);
-#ifdef DEBUG
+#ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Font.new() -> %s", file);
 #endif
 
@@ -223,7 +223,7 @@ void graphics_font_write(WrenVM *vm) // foreign text(text, color, size, align)
     int color = (int)wrenGetSlotDouble(vm, 4);
     int size = (int)wrenGetSlotDouble(vm, 5);
     const char *align = wrenGetSlotString(vm, 6);
-#ifdef DEBUG
+#ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %s, %d, %d, %d, %d, %s", text, x, y, color, size, align);
 #endif
 
@@ -244,8 +244,8 @@ void graphics_font_write(WrenVM *vm) // foreign text(text, color, size, align)
         dx = x - width;
         dy = y;
     }
-#ifdef DEBUG
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.text() -> %d, %d, %d", width, dx, dy);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %d, %d, %d", width, dx, dy);
 #endif
 
     if (!font->loaded) {
@@ -310,7 +310,7 @@ void graphics_canvas_palette(WrenVM *vm)
         const int aux_slot_id = slots;
         wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
 
-#ifdef DEBUG
+#ifdef __DEBUG_API_CALLS__
         Log_write(LOG_LEVELS_DEBUG, "Canvas.palette() -> %d", count);
 #endif
         for (int i = 0; i < count; ++i) {
@@ -359,7 +359,7 @@ void graphics_canvas_polygon(WrenVM *vm)
     const int aux_slot_id = slots;
     wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
 
-#ifdef DEBUG
+#ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Canvas.polygon(%d, %d, %d)", mode, color, vertices);
 #endif
 
@@ -406,7 +406,7 @@ void graphics_canvas_circle(WrenVM *vm)
     float radius = (float)wrenGetSlotDouble(vm, 4);
     int color = (int)wrenGetSlotDouble(vm, 5);
 
-#ifdef DEBUG
+#ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Canvas.circle(%s, %d, %d, %d, %d)", mode, x, y, radius, color);
 #endif
 

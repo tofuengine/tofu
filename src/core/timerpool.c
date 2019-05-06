@@ -27,7 +27,10 @@
 void TimerPool_initialize(Timer_Pool_t *pool, size_t initial_capacity)
 {
     pool->capacity = initial_capacity;
-    pool->timers = calloc(pool->capacity, sizeof(Timer_t));
+    pool->timers = malloc(pool->capacity * sizeof(Timer_t));
+    for (size_t i = 0; i < pool->capacity; ++i) {
+        pool->timers[i].state = TIMER_STATE_FREE;
+    }
 }
 
 void TimerPool_terminate(Timer_Pool_t *pool, TimerPool_Callback_t callback, void *parameters)
@@ -35,10 +38,10 @@ void TimerPool_terminate(Timer_Pool_t *pool, TimerPool_Callback_t callback, void
     for (size_t i = 0; i < pool->capacity; ++i) {
         Timer_t *timer = &pool->timers[i];
 
-        if (timer->state != TIMER_STATE_DEAD) { // Dispose noth ALIVE and ZOMBIE timers.
+        if (timer->state != TIMER_STATE_FREE) { // Dispose only non-freed timers.
             callback(timer, parameters);
 
-            timer->state = TIMER_STATE_DEAD; // Mark as dead, to avoid "zombification" in the timer finalizer.
+            timer->state = TIMER_STATE_FREE; // Mark as dead, to avoid "zombification" in the timer finalizer.
 
             Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer #%d released", i);
         }
@@ -52,13 +55,13 @@ size_t TimerPool_allocate(Timer_Pool_t *pool, float period, int repeats, WrenHan
     bool done = false;
     while (!done) {
         for (size_t i = 0; i < pool->capacity; ++i) {
-            if (pool->timers[i].state == TIMER_STATE_DEAD) {
+            if (pool->timers[i].state == TIMER_STATE_FREE) {
                 pool->timers[i] = (Timer_t){
                         .period = period,
                         .repeats = repeats,
                         .callback = callback,
                         .age = 0.0f,
-                        .state = TIMER_STATE_ALIVE
+                        .state = TIMER_STATE_RUNNING
                     };
                 return i;
             }
@@ -66,9 +69,9 @@ size_t TimerPool_allocate(Timer_Pool_t *pool, float period, int repeats, WrenHan
         if (!done) {
             size_t was_capacity = pool->capacity;
             size_t capacity = pool->capacity * 2;
-            pool->timers = realloc(pool->timers, capacity);
+            pool->timers = realloc(pool->timers, capacity * sizeof(Timer_t));
             for (size_t i = was_capacity; i < capacity; ++i) {
-                pool->timers[i].state = TIMER_STATE_DEAD;
+                pool->timers[i].state = TIMER_STATE_FREE;
             }
             pool->capacity = capacity;
         }
@@ -81,12 +84,12 @@ void TimerPool_update(Timer_Pool_t *pool, double delta_time, TimerPool_Callback_
     for (size_t i = 0; i < pool->capacity; ++i) {
         Timer_t *timer = &pool->timers[i];
 
-        if (timer->state != TIMER_STATE_ALIVE) {
+        if (timer->state != TIMER_STATE_RUNNING) {
             continue;
         }
 
         timer->age += delta_time;
-        while (timer->age >= timer->period) {
+        while (timer->age >= timer->period) { // TODO: should check if still alive when looping.
             timer->age -= timer->period;
 
             callback(timer, parameters);
@@ -94,7 +97,7 @@ void TimerPool_update(Timer_Pool_t *pool, double delta_time, TimerPool_Callback_
             if (timer->repeats > 0) {
                 timer->repeats -= 1;
                 if (timer->repeats == 0) {
-                    timer->state = TIMER_STATE_ZOMBIE;
+                    timer->state = TIMER_STATE_FROZEN;
                     break;
                 }
             }
@@ -107,12 +110,12 @@ void TimerPool_gc(Timer_Pool_t *pool, TimerPool_Callback_t callback, void *param
     for (size_t i = 0; i < pool->capacity; ++i) {
         Timer_t *timer = &pool->timers[i];
 
-        if (timer->state == TIMER_STATE_ZOMBIE) { // Periodically release garbage-collected timers.
+        if (timer->state == TIMER_STATE_FINALIZED) { // Periodically release garbage-collected timers.
             callback(timer, parameters);
 
-            timer->state = TIMER_STATE_DEAD;
+            timer->state = TIMER_STATE_FREE;
 
-            Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer #%d is now dead", i);
+            Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer #%d garbage-collected, slot freed", i);
         }
     }
 
@@ -121,7 +124,18 @@ void TimerPool_gc(Timer_Pool_t *pool, TimerPool_Callback_t callback, void *param
 
 void TimerPool_release(Timer_Pool_t *pool, int slot)
 {
-    if (pool->timers[slot].state == TIMER_STATE_ALIVE) { // TODO: check if the timer-id hasn't changed? Use a disposable linked-list?
-        pool->timers[slot].state = TIMER_STATE_ZOMBIE; // Mark as to-be-released, it not already done (e.g. on closing)
+    if (pool->timers[slot].state != TIMER_STATE_FREE) {
+        pool->timers[slot].state = TIMER_STATE_FINALIZED; // Mark as to-be-released, it not already done (e.g. on closing)
+
+        Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer #%d finalized, ready for GC", slot);
+    }
+}
+
+void TimerPool_cancel(Timer_Pool_t *pool, int slot)
+{
+    if (pool->timers[slot].state == TIMER_STATE_RUNNING) {
+        pool->timers[slot].state = TIMER_STATE_FROZEN;
+
+        Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer #%d frozen", slot);
     }
 }

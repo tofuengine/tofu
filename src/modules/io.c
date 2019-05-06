@@ -43,7 +43,7 @@ void io_file_read(WrenVM *vm)
     Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
     const char *file = wrenGetSlotString(vm, 1);
-#ifdef DEBUG
+#ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "File.read() -> %s", file);
 #endif
 
