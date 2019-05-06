@@ -42,12 +42,12 @@ const char collections_wren[] =
 
 typedef int Cell_t; // TODO: Is `double` be better?
 
-typedef struct _Grid_t {
+typedef struct _Grid_Class_t {
     int width;
     int height;
     Cell_t *data;
     Cell_t **offsets; // Precomputed pointers to the line of data.
-} Grid_t;
+} Grid_Class_t;
 
 void collections_grid_allocate(WrenVM *vm)
 {
@@ -55,7 +55,7 @@ void collections_grid_allocate(WrenVM *vm)
     int height = (int)wrenGetSlotDouble(vm, 2);
     WrenType type = wrenGetSlotType(vm, 3);
 
-    Grid_t *grid = (Grid_t *)wrenSetSlotNewForeign(vm, 0, 0, sizeof(Grid_t)); // `0, 0` since we are in the allocate callback.
+    Grid_Class_t *instance = (Grid_Class_t *)wrenSetSlotNewForeign(vm, 0, 0, sizeof(Grid_Class_t)); // `0, 0` since we are in the allocate callback.
 
     Cell_t *data = Memory_alloc(sizeof(Cell_t) * width * height);
     Cell_t **offsets = Memory_alloc(sizeof(Cell_t *) * height);
@@ -110,7 +110,7 @@ void collections_grid_allocate(WrenVM *vm)
         }
     }
 
-    *grid = (Grid_t){
+    *instance = (Grid_Class_t){
             .width = width,
             .height = height,
             .data = data,
@@ -118,36 +118,36 @@ void collections_grid_allocate(WrenVM *vm)
         };
 }
 
-void collections_grid_finalize(void *data)
+void collections_grid_finalize(void *userData, void *data)
 {
-    Grid_t *grid = (Grid_t *)data;
-    Memory_free(grid->data);
-    Memory_free(grid->offsets);
+    Grid_Class_t *instance = (Grid_Class_t *)data;
+    Memory_free(instance->data);
+    Memory_free(instance->offsets);
 }
 
 void collections_grid_width(WrenVM *vm)
 {
-    Grid_t *grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
+    Grid_Class_t *instance = (Grid_Class_t *)wrenGetSlotForeign(vm, 0);
 
-    wrenSetSlotDouble(vm, 0, grid->width);
+    wrenSetSlotDouble(vm, 0, instance->width);
 }
 
 void collections_grid_height(WrenVM *vm)
 {
-    Grid_t *grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
+    Grid_Class_t *instance = (Grid_Class_t *)wrenGetSlotForeign(vm, 0);
 
-    wrenSetSlotDouble(vm, 0, grid->height);
+    wrenSetSlotDouble(vm, 0, instance->height);
 }
 
 void collections_grid_fill(WrenVM *vm)
 {
     WrenType type = wrenGetSlotType(vm, 1);
 
-    Grid_t *grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
+    Grid_Class_t *instance = (Grid_Class_t *)wrenGetSlotForeign(vm, 0);
 
-    int width = grid->width;
-    int height = grid->height;
-    Cell_t *data = grid->data;
+    int width = instance->width;
+    int height = instance->height;
+    Cell_t *data = instance->data;
 
     Cell_t *ptr = data;
     Cell_t *eod = ptr + (width * height);
@@ -196,11 +196,11 @@ void collections_grid_stride(WrenVM *vm)
     WrenType type = wrenGetSlotType(vm, 3);
     int amount = (int)wrenGetSlotDouble(vm, 4);
 
-    Grid_t *grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
+    Grid_Class_t *instance = (Grid_Class_t *)wrenGetSlotForeign(vm, 0);
 
-    int width = grid->width;
-    int height = grid->height;
-    Cell_t *data = grid->offsets[row];
+    int width = instance->width;
+    int height = instance->height;
+    Cell_t *data = instance->offsets[row];
 
     Cell_t *ptr = data + column;
     Cell_t *eod = ptr + (width * height);
@@ -247,9 +247,9 @@ void collections_grid_peek(WrenVM *vm)
     int column = (int)wrenGetSlotDouble(vm, 1);
     int row = (int)wrenGetSlotDouble(vm, 2);
 
-    Grid_t *grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
+    Grid_Class_t *instance = (Grid_Class_t *)wrenGetSlotForeign(vm, 0);
 
-    Cell_t *data = grid->offsets[row];
+    Cell_t *data = instance->offsets[row];
 
     Cell_t value = data[column];
 
@@ -262,9 +262,9 @@ void collections_grid_poke(WrenVM *vm)
     int row = (int)wrenGetSlotDouble(vm, 2);
     Cell_t value = (Cell_t)wrenGetSlotDouble(vm, 3);
 
-    Grid_t *grid = (Grid_t *)wrenGetSlotForeign(vm, 0);
+    Grid_Class_t *instance = (Grid_Class_t *)wrenGetSlotForeign(vm, 0);
 
-    Cell_t *data = grid->offsets[row];
+    Cell_t *data = instance->offsets[row];
 
     data[column] = value;
 }

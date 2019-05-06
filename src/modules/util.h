@@ -20,39 +20,15 @@
  * SOFTWARE.
  **/
 
-#include "io.h"
+#ifndef __MODULES_UTIL_H__
+#define __MODULES_UTIL_H__
 
-#include "../environment.h"
-#include "../file.h"
-#include "../log.h"
+#include <wren/wren.h>
 
-#include <string.h>
+extern const char util_wren[];
 
-// TODO: annotate "native" methods with a "_" suffix?
+extern void util_timer_allocate(WrenVM* vm);
+extern void util_timer_finalize(void *userData, void* data);
+extern void util_timer_cancel(WrenVM *vm);
 
-const char io_wren[] =
-    "foreign class File {\n"
-    "\n"
-    "    foreign static read(file)\n"
-    "\n"
-    "}\n"
-;
-
-void io_file_read(WrenVM *vm)
-{
-    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
-
-    const char *file = wrenGetSlotString(vm, 1);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "File.read() -> %s", file);
-#endif
-
-    char pathfile[PATH_FILE_MAX] = {};
-    strcpy(pathfile, environment->base_path);
-    strcat(pathfile, file + 2);
-
-    const char *result = file_load_as_string(pathfile, "rt");
-    Log_write(LOG_LEVELS_DEBUG, "[TOFU] File '%s' loaded at %p", pathfile, result);
-
-    wrenSetSlotString(vm, 0, result);
-}
+#endif  /* __MODULES_UTIL_H__ */

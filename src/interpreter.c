@@ -134,6 +134,8 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *env
 {
     interpreter->environment = environment;
 
+    TimerPool_initialize(&interpreter->timer_pool, 32); // Need to initialized it at start.
+
     WrenConfiguration vm_configuration;
     wrenInitConfiguration(&vm_configuration);
     vm_configuration.reallocateFn = reallocate_function;
@@ -165,6 +167,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *env
     interpreter->handles[INPUT] = wrenMakeCallHandle(interpreter->vm, "input()");
     interpreter->handles[UPDATE] = wrenMakeCallHandle(interpreter->vm, "update(_)");
     interpreter->handles[RENDER] = wrenMakeCallHandle(interpreter->vm, "render(_)");
+    interpreter->handles[CALL] = wrenMakeCallHandle(interpreter->vm, "call()"); // Generic, for timers.
 
     return true;
 }
@@ -176,8 +179,27 @@ void Interpreter_input(Interpreter_t *interpreter)
     wrenCall(interpreter->vm, interpreter->handles[INPUT]);
 }
 
+void timerpool_call_callback(Timer_t *timer, void *parameters)
+{
+    Interpreter_t *interpreter = (Interpreter_t *)parameters;
+
+    wrenEnsureSlots(interpreter->vm, 1);
+    wrenSetSlotHandle(interpreter->vm, 0, timer->callback);
+    wrenCall(interpreter->vm, interpreter->handles[CALL]);
+}
+
+void timerpool_release_callback(Timer_t *timer, void *parameters)
+{
+    Interpreter_t *interpreter = (Interpreter_t *)parameters;
+
+    wrenReleaseHandle(interpreter->vm, timer->callback);
+}
+
 void Interpreter_update(Interpreter_t *interpreter, const double delta_time)
 {
+    TimerPool_gc(&interpreter->timer_pool, timerpool_release_callback, interpreter);
+    TimerPool_update(&interpreter->timer_pool, delta_time, timerpool_call_callback, interpreter);
+
     wrenEnsureSlots(interpreter->vm, 2);
     wrenSetSlotHandle(interpreter->vm, 0, interpreter->handles[RECEIVER]);
     wrenSetSlotDouble(interpreter->vm, 1, delta_time);
@@ -193,6 +215,8 @@ void Interpreter_render(Interpreter_t *interpreter, const double ratio)
 
 void Interpreter_terminate(Interpreter_t *interpreter)
 {
+    TimerPool_terminate(&interpreter->timer_pool, timerpool_release_callback, interpreter);
+
     for (int i = 0; i < Handles_t_CountOf; ++i) {
         WrenHandle *handle = interpreter->handles[i];
         wrenReleaseHandle(interpreter->vm, handle);

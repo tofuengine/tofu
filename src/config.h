@@ -38,6 +38,7 @@
 #undef  __EXPLICIT_SIGNUM__
 #undef  __FIND_NEAREST_COLOR_EUCLIDIAN__
 #define __GRID_REPEAT_CONTENT__
+#undef  __DEBUG_API_CALLS__
 
 
 #endif  /* __TOFU_CONFIG_H__ */

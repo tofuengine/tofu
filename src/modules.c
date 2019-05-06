@@ -26,6 +26,7 @@
 #include "modules/events.h"
 #include "modules/graphics.h"
 #include "modules/io.h"
+#include "modules/util.h"
 
 const Module_Entry_t _modules[] = {
 //  { "<module-name>", "<module-source>" }
@@ -33,6 +34,7 @@ const Module_Entry_t _modules[] = {
     { "events", events_wren },
     { "graphics", graphics_wren },
     { "io", io_wren },
+    { "util", util_wren },
     { NULL, NULL }
 };
 const Class_Entry_t _classes[] = {
@@ -40,6 +42,7 @@ const Class_Entry_t _classes[] = {
     { "collections", "Grid", collections_grid_allocate, collections_grid_finalize },
     { "graphics", "Bank", graphics_bank_allocate, graphics_bank_finalize },
     { "graphics", "Font", graphics_font_allocate, graphics_font_finalize },
+    { "util", "Timer", util_timer_allocate, util_timer_finalize },
     { NULL, NULL, NULL, NULL }
 };
 const Method_Entry_t _methods[] = {
@@ -66,5 +69,6 @@ const Method_Entry_t _methods[] = {
     { "graphics", "Canvas", true, "polygon(_,_,_)", graphics_canvas_polygon },
     { "graphics", "Canvas", true, "circle(_,_,_,_,_)", graphics_canvas_circle },
     { "io", "File", true, "read(_)", io_file_read },
+    { "util", "Timer", false, "cancel()", util_timer_cancel },
     { NULL, NULL, false, NULL, NULL }
 };

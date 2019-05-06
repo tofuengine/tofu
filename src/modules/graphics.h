@@ -28,13 +28,13 @@
 extern const char graphics_wren[];
 
 extern void graphics_bank_allocate(WrenVM* vm);
-extern void graphics_bank_finalize(void* data);
+extern void graphics_bank_finalize(void *userData, void* data);
 extern void graphics_bank_blit(WrenVM *vm);
 extern void graphics_bank_cell_width(WrenVM *vm);
 extern void graphics_bank_cell_height(WrenVM *vm);
 
 extern void graphics_font_allocate(WrenVM* vm);
-extern void graphics_font_finalize(void* data);
+extern void graphics_font_finalize(void *userData, void* data);
 extern void graphics_font_write(WrenVM *vm);
 
 extern void graphics_canvas_width(WrenVM *vm);
