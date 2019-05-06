@@ -29,6 +29,7 @@ extern const char util_wren[];
 
 extern void util_timer_allocate(WrenVM* vm);
 extern void util_timer_finalize(void *userData, void* data);
+extern void util_timer_reset(WrenVM *vm);
 extern void util_timer_cancel(WrenVM *vm);
 
 #endif  /* __MODULES_UTIL_H__ */

@@ -26,6 +26,7 @@
 
 void TimerPool_initialize(Timer_Pool_t *pool, size_t initial_capacity)
 {
+    pool->initial_capacity = initial_capacity;
     pool->capacity = initial_capacity;
     pool->timers = malloc(pool->capacity * sizeof(Timer_t));
     for (size_t i = 0; i < pool->capacity; ++i) {
@@ -61,6 +62,7 @@ size_t TimerPool_allocate(Timer_Pool_t *pool, float period, int repeats, WrenHan
                         .repeats = repeats,
                         .callback = callback,
                         .age = 0.0f,
+                        .loops = repeats,
                         .state = TIMER_STATE_RUNNING
                     };
                 return i;
@@ -89,16 +91,19 @@ void TimerPool_update(Timer_Pool_t *pool, double delta_time, TimerPool_Callback_
         }
 
         timer->age += delta_time;
-        while (timer->age >= timer->period) { // TODO: should check if still alive when looping.
+        while (timer->age >= timer->period) {
+            if (timer->state != TIMER_STATE_RUNNING) { // The timer could have been terminated
+                break;
+            }
+
             timer->age -= timer->period;
 
             callback(timer, parameters);
 
-            if (timer->repeats > 0) {
-                timer->repeats -= 1;
-                if (timer->repeats == 0) {
+            if (timer->loops > 0) {
+                timer->loops -= 1;
+                if (timer->loops == 0) {
                     timer->state = TIMER_STATE_FROZEN;
-                    break;
                 }
             }
         }
@@ -117,6 +122,10 @@ void TimerPool_gc(Timer_Pool_t *pool, TimerPool_Callback_t callback, void *param
 
             Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer #%d garbage-collected, slot freed", i);
         }
+
+        if (timer->state == TIMER_STATE_FREE) {
+            last_free = i;
+        }
     }
 
     // TODO: Repack the array, no dead holes.
@@ -124,17 +133,34 @@ void TimerPool_gc(Timer_Pool_t *pool, TimerPool_Callback_t callback, void *param
 
 void TimerPool_release(Timer_Pool_t *pool, int slot)
 {
-    if (pool->timers[slot].state != TIMER_STATE_FREE) {
-        pool->timers[slot].state = TIMER_STATE_FINALIZED; // Mark as to-be-released, it not already done (e.g. on closing)
+    Timer_t *timer = &pool->timers[slot];
+
+    if (timer->state != TIMER_STATE_FREE) {
+        timer->state = TIMER_STATE_FINALIZED; // Mark as to-be-released, it not already done (e.g. on closing)
 
         Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer #%d finalized, ready for GC", slot);
     }
 }
 
+void TimerPool_reset(Timer_Pool_t *pool, int slot)
+{
+    Timer_t *timer = &pool->timers[slot];
+
+    if (timer->state != TIMER_STATE_FINALIZED) {
+        timer->age = 0.0;
+        timer->loops = timer->repeats;
+        timer->state = TIMER_STATE_RUNNING;
+
+        Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer #%d reset", slot);
+    }
+}
+
 void TimerPool_cancel(Timer_Pool_t *pool, int slot)
 {
-    if (pool->timers[slot].state == TIMER_STATE_RUNNING) {
-        pool->timers[slot].state = TIMER_STATE_FROZEN;
+    Timer_t *timer = &pool->timers[slot];
+
+    if (timer->state == TIMER_STATE_RUNNING) {
+        timer->state = TIMER_STATE_FROZEN;
 
         Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer #%d frozen", slot);
     }

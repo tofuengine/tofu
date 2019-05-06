@@ -38,13 +38,15 @@ typedef struct _Timer_t {
     float period;
     int repeats;
     WrenHandle *callback; // Need to be released explicitly.
+
     float age;
+    int loops;
     Timer_State_t state;
 } Timer_t;
 
 typedef struct _Timer_Pool_t {
     Timer_t *timers;
-    size_t count;
+    size_t initial_capacity;
     size_t capacity;
 } Timer_Pool_t;
 
@@ -56,6 +58,7 @@ extern size_t TimerPool_allocate(Timer_Pool_t *pool, float period, int repeats, 
 extern void TimerPool_update(Timer_Pool_t *pool, double delta_time, TimerPool_Callback_t callback, void *parameters);
 extern void TimerPool_gc(Timer_Pool_t *pool, TimerPool_Callback_t callback, void *parameters);
 extern void TimerPool_release(Timer_Pool_t *pool, int slot);
+extern void TimerPool_reset(Timer_Pool_t *pool, int slot);
 extern void TimerPool_cancel(Timer_Pool_t *pool, int slot);
 
 #endif  /* __CORE_TIMERPOOL_H__ */

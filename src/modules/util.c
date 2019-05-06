@@ -38,6 +38,7 @@ const char util_wren[] =
     "\n"
     "    construct new(period, repeats, callback) {}\n"
     "\n"
+    "    foreign reset()\n"
     "    foreign cancel()\n"
     "\n"
     "}\n"
@@ -70,9 +71,20 @@ void util_timer_finalize(void *userData, void *data)
     TimerPool_release(instance->timer_pool, instance->slot);
 }
 
+void util_timer_reset(WrenVM *vm)
+{
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Timer.cancel()");
+#endif
+
+    Timer_Class_t *instance = (Timer_Class_t *)wrenGetSlotForeign(vm, 0);
+
+    TimerPool_reset(instance->timer_pool, instance->slot);
+}
+
 void util_timer_cancel(WrenVM *vm)
 {
-#ifdef DEBUG
+#ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Timer.cancel()");
 #endif
 
