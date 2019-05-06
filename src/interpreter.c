@@ -36,9 +36,12 @@
 
 #define ROOT_INSTANCE           "tofu"
 
-#define ROOT_SCRIPT \
+#define BOOT_SCRIPT \
     "import \"./tofu\" for Tofu\n" \
     "var tofu = Tofu.new()\n"
+
+#define SHUTDOWN_SCRIPT \
+    "tofu = null\n"
 
 static const char *get_filename_extension(const char *name) {
     const char *dot = strrchr(name, '.');
@@ -134,8 +137,6 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *env
 {
     interpreter->environment = environment;
 
-    TimerPool_initialize(&interpreter->timer_pool, 32); // Need to initialized it at start.
-
     WrenConfiguration vm_configuration;
     wrenInitConfiguration(&vm_configuration);
     vm_configuration.reallocateFn = reallocate_function;
@@ -153,7 +154,11 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *env
 
     wrenSetUserData(interpreter->vm, (void *)environment); // HACK: we discard the const qualifier :(
 
-    WrenInterpretResult result = wrenInterpret(interpreter->vm, ROOT_MODULE, ROOT_SCRIPT);
+    interpreter->gc_age = 0.0;
+
+    TimerPool_initialize(&interpreter->timer_pool, 32); // Need to initialized before boot-script interpretation.
+
+    WrenInterpretResult result = wrenInterpret(interpreter->vm, ROOT_MODULE, BOOT_SCRIPT);
     if (result != WREN_RESULT_SUCCESS) {
         Log_write(LOG_LEVELS_FATAL, "Can't interpret boot script!");
         wrenFreeVM(interpreter->vm);
@@ -200,6 +205,14 @@ void Interpreter_update(Interpreter_t *interpreter, const double delta_time)
     TimerPool_gc(&interpreter->timer_pool, timerpool_release_callback, interpreter);
     TimerPool_update(&interpreter->timer_pool, delta_time, timerpool_call_callback, interpreter);
 
+    interpreter->gc_age += delta_time;
+    while (interpreter->gc_age >= GARBAGE_COLLECTION_PERIOD) { // Periodically collect GC.
+        interpreter->gc_age -= GARBAGE_COLLECTION_PERIOD;
+
+        Log_write(LOG_LEVELS_DEBUG, "Performing periodical garbage collection");
+        wrenCollectGarbage(interpreter->vm);
+    }
+
     wrenEnsureSlots(interpreter->vm, 2);
     wrenSetSlotHandle(interpreter->vm, 0, interpreter->handles[RECEIVER]);
     wrenSetSlotDouble(interpreter->vm, 1, delta_time);
@@ -215,6 +228,13 @@ void Interpreter_render(Interpreter_t *interpreter, const double ratio)
 
 void Interpreter_terminate(Interpreter_t *interpreter)
 {
+    WrenInterpretResult result = wrenInterpret(interpreter->vm, ROOT_MODULE, SHUTDOWN_SCRIPT);
+    if (result != WREN_RESULT_SUCCESS) {
+        Log_write(LOG_LEVELS_FATAL, "Can't interpret shutdown script!");
+    }
+
+    wrenCollectGarbage(interpreter->vm);
+
     TimerPool_terminate(&interpreter->timer_pool, timerpool_release_callback, interpreter);
 
     for (int i = 0; i < Handles_t_CountOf; ++i) {

@@ -47,6 +47,8 @@ typedef struct _Interpreter_t {
     WrenVM *vm;
     WrenHandle *handles[Handles_t_CountOf];
 
+    double gc_age;
+
     Timer_Pool_t timer_pool;
 } Interpreter_t;
 

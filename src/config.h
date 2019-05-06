@@ -32,6 +32,8 @@
 
 #define MAX_PALETTE_COLORS          64
 
+#define GARBAGE_COLLECTION_PERIOD   60.0
+
 // Behavioural MACROs are uses the "__" prefix/suffix.
 
 #define __FAST_FULLSCREEN__
