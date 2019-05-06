@@ -4,6 +4,7 @@ import "collections" for Grid
 import "graphics" for Bank, Canvas
 import "events" for Input
 import "io" for File
+import "util" for Math // TODO: rename to `core` or `lang`?
 
 class Constants {
 
@@ -47,24 +48,6 @@ class BankBatch {
             _bank.blit(item["cellId"], item["x"], item["y"], item["r"], item["sx"], item["sy"])
         }
         _batch.clear()
-    }
-
-}
-
-class Math {
-
-    static max(a, b) {
-        if (a > b) {
-            return a
-        }
-        return b
-    }
-
-    static min(a, b) {
-        if (a < b) {
-            return a
-        }
-        return b
     }
 
 }
