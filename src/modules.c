@@ -69,6 +69,7 @@ const Method_Entry_t _methods[] = {
     { "graphics", "Canvas", true, "polygon(_,_,_)", graphics_canvas_polygon },
     { "graphics", "Canvas", true, "circle(_,_,_,_,_)", graphics_canvas_circle },
     { "io", "File", true, "read(_)", io_file_read },
+    { "util", "Timer", false, "reset()", util_timer_reset },
     { "util", "Timer", false, "cancel()", util_timer_cancel },
     { NULL, NULL, false, NULL, NULL }
 };
