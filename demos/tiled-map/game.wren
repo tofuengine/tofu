@@ -38,15 +38,15 @@ class Tilemap {
     }
 
     camera(cameraColumns, cameraRows, cameraAlignment) {
-        var multipliers = { "left": 0, "top": 0, "center": 1, "middle": 1, "right": 2, "bottom": 2 }
+        var multipliers = { "left": 0.0, "top": 0.0, "center": 0.5, "middle": 0.5, "right": 1.0, "bottom": 1.0 }
         var alignments = cameraAlignment.split("-")
 
         _cameraColumns = cameraColumns
         _cameraRows = cameraRows
         _cameraWidth = cameraRows * _bank.cellWidth
         _cameraHeight = cameraColumns * _bank.cellHeight
-        _cameraAlignmentX = multipliers[alignments[0]] * -(_cameraWidth / 2)
-        _cameraAlignmentY = multipliers[alignments[1]] * -(_cameraHeight / 2)
+        _cameraAlignmentX = multipliers[alignments[0]] * -_cameraWidth
+        _cameraAlignmentY = multipliers[alignments[1]] * -_cameraHeight
         _cameraMinX = -_cameraAlignmentX
         _cameraMaxX = (_grid.width - cameraColumns) * _bank.cellWidth + _cameraAlignmentX
         _cameraMinY = -_cameraAlignmentY
