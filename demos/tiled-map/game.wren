@@ -1,7 +1,7 @@
 import "random" for Random
 
 import "collections" for Grid
-import "graphics" for Bank, Canvas, Font
+import "graphics" for Bank, Canvas, Font, BankBatch
 import "events" for Input
 import "io" for File
 import "util" for Math // TODO: rename to `core` or `lang`?
@@ -46,6 +46,8 @@ class Tilemap {
         _cameraRows = cameraRows
         _cameraMaxX = (_grid.width - cameraColumns) * _bank.cellWidth
         _cameraMaxY = (_grid.height - _cameraRows) * _bank.cellHeight
+
+        _modified = true
     }
 
     scrollBy(dx, dy) {
@@ -63,26 +65,36 @@ class Tilemap {
         _cameraStartRow = (cameraY / _bank.cellHeight)
         _cameraOffsetX = -(cameraX % _bank.cellWidth)
         _cameraOffsetY = -(cameraY % _bank.cellHeight)
+
+        _modified = true
     }
 
     update(deltaTime) {
         // TODO: update the camera position in the case we are performing easings and/or following the user
         // (or some more advanced techniques).
+
+        if (_modified) { // Check if we need to rebuild the bank batch.
+            _modified = false
+
+            _batch.clear()
+
+            for (i in 0 .. _cameraRows) { // Inclusive, we handle an additional row to enable scrolling offset.
+                var y = i * _bank.cellHeight + _cameraOffsetY
+                var r = _cameraStartRow + i
+                for (j in 0 .. _cameraColumns) {
+                    var x = j * _bank.cellWidth + _cameraOffsetX
+                    var c = _cameraStartColumn + j
+
+                    var cellId = _grid.peek(c, r)
+
+                    _batch.push(cellId, x, y)
+                }
+            }
+        }
     }
 
     render() {
-        for (i in 0 .. _cameraRows) { // Inclusive, we handle an additional row to enable scrolling offset.
-            var y = i * _bank.cellHeight + _cameraOffsetY
-            var r = _cameraStartRow + i
-            for (j in 0 .. _cameraColumns) {
-                var x = j * _bank.cellWidth + _cameraOffsetX
-                var c = _cameraStartColumn + j
-
-                var cellId = _grid.peek(c, r)
-
-                _bank.blit(cellId, x, y)
-            }
-        }
+        _batch.blit()
 
         Font.default.write("%(_cameraX.floor) %(_cameraY.floor)", Canvas.width, 0, 15, 10, "right")
     }
