@@ -67,6 +67,13 @@ static void pop(Timer_Pool_t *pool, Timer_t *timer)
     free(timer);
 }
 
+static Timer_t *pop_next(Timer_Pool_t *pool, Timer_t *timer)
+{
+    Timer_t *next = timer->next;
+    pop(pool, timer);
+    return next;
+}
+
 static bool contains(Timer_Pool_t *pool, Timer_t *timer)
 {
     for (Timer_t *current = pool->timers; current != NULL; current = current->next) {
@@ -85,13 +92,9 @@ void TimerPool_initialize(Timer_Pool_t *pool, size_t initial_capacity)
 void TimerPool_terminate(Timer_Pool_t *pool, TimerPool_Callback_t callback, void *parameters)
 {
     for (Timer_t *timer = pool->timers; timer != NULL; ) {
-        Timer_t *next = timer->next;
-
         callback(timer, parameters);
-        pop(pool, timer);
         Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer #%p released", timer);
-
-        timer = next;
+        timer = pop_next(pool, timer);
     }
 }
 
@@ -103,16 +106,13 @@ Timer_t *TimerPool_allocate(Timer_Pool_t *pool, const Timer_Value_t value)
 void TimerPool_gc(Timer_Pool_t *pool, TimerPool_Callback_t callback, void *parameters)
 {
     for (Timer_t *timer = pool->timers; timer != NULL; ) {
-        Timer_t *next = timer->next;
-
         if (timer->state == TIMER_STATE_FINALIZED) { // Periodically release garbage-collected timers.
             callback(timer, parameters);
-            pop(pool, timer);
-
             Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer #%p garbage-collected", timer);
+            timer = pop_next(pool, timer);
+        } else {
+            timer = timer->next;
         }
-
-        timer = next;
     }
 }
 
