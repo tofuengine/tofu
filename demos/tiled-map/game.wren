@@ -34,7 +34,7 @@ class Tilemap {
     }
 
     construct new(file, cameraColumns, cameraRows) {
-        var map = load_(file)
+        load_(file)
 
         camera(cameraColumns, cameraRows)
 
