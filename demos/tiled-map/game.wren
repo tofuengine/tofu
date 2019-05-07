@@ -15,7 +15,7 @@ class Constants {
 // https://developer.mozilla.org/en-US/docs/Games/Techniques/Tilemaps/Square_tilemaps_implementation:_Scrolling_maps
 class Tilemap {
 
-    construct new(file, cameraColumns, cameraRows, cameraAlignment) {
+    construct new(file, cameraColumns, cameraRows, cameraAlignment) { // TODO: pass a camera easing function.
         var content = File.read(file)
         var tokens = content.split("\n")
         var cells = []
@@ -38,23 +38,19 @@ class Tilemap {
     }
 
     camera(cameraColumns, cameraRows, cameraAlignment) {
+        var multipliers = { "left": 0, "top": 0, "center": 1, "middle": 1, "right": 2, "bottom": 2 }
+        var alignments = cameraAlignment.split("-")
+
         _cameraColumns = cameraColumns
         _cameraRows = cameraRows
         _cameraWidth = cameraRows * _bank.cellWidth
         _cameraHeight = cameraColumns * _bank.cellHeight
-        if (cameraAlignment == "left") {
-            _cameraAlignmentX = 0
-            _cameraAlignmentY = 0
-            // Do nothing. This is the default, too.
-        } else if (cameraAlignment == "right") {
-            _cameraAlignmentX = -_cameraWidth
-            _cameraAlignmentY = -_cameraHeight
-        } else if (cameraAlignment == "center") {
-            _cameraAlignmentX = -(_cameraWidth / 2)
-            _cameraAlignmentY = -(_cameraHeight / 2)
-        }
-        _cameraMaxX = (_grid.width - cameraColumns) * _bank.cellWidth
-        _cameraMaxY = (_grid.height - _cameraRows) * _bank.cellHeight
+        _cameraAlignmentX = multipliers[alignments[0]] * -(_cameraWidth / 2)
+        _cameraAlignmentY = multipliers[alignments[1]] * -(_cameraHeight / 2)
+        _cameraMinX = -_cameraAlignmentX
+        _cameraMaxX = (_grid.width - cameraColumns) * _bank.cellWidth + _cameraAlignmentX
+        _cameraMinY = -_cameraAlignmentY
+        _cameraMaxY = (_grid.height - _cameraRows) * _bank.cellHeight + _cameraAlignmentY
 
         _modified = true
     }
@@ -64,16 +60,11 @@ class Tilemap {
     }
 
     moveTo(x, y) {
-System.write("%(x) %(y) %(_cameraWidth) %(_cameraHeight) %(_cameraAlignmentX) %(_cameraAlignmentY)")
-        x = x + _cameraAlignmentX
-        y = y + _cameraAlignmentY
-System.write("%(x) %(y)")
+        _cameraX = Math.min(Math.max(x, _cameraMinX), _cameraMaxX)
+        _cameraY = Math.min(Math.max(y, _cameraMinY), _cameraMaxY)
 
-        _cameraX = Math.min(Math.max(x + _cameraAlignmentX, 0), _cameraMaxX)
-        _cameraY = Math.min(Math.max(y + _cameraAlignmentY, 0), _cameraMaxY)
-
-        var cameraX = _cameraX.floor // Discard non-integer part! Internally we track sub-pixel movements.
-        var cameraY = _cameraY.floor
+        var cameraX = (_cameraX - _cameraAlignmentX).floor // Discard non-integer part! Internally we track sub-pixel movements.
+        var cameraY = (_cameraY - _cameraAlignmentY).floor
 
         _cameraStartColumn = (cameraX / _bank.cellWidth)
         _cameraStartRow = (cameraY / _bank.cellHeight)
@@ -120,7 +111,7 @@ class Game {
     construct new() {
         Canvas.palette("arne-32")
 
-        _map = Tilemap.new("./assets/world.map", 15, 10, "center")
+        _map = Tilemap.new("./assets/world.map", 15, 10, "center-top")
         _map.moveTo(512, 512)
     }
 
