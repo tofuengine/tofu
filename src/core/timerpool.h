@@ -28,37 +28,41 @@
 #include <wren/wren.h>
 
 typedef enum _Timer_State_t {
-    TIMER_STATE_FREE,
     TIMER_STATE_FINALIZED,
     TIMER_STATE_RUNNING,
     TIMER_STATE_FROZEN
 } Timer_State_t;
 
-typedef struct _Timer_t {
+typedef struct _Timer_Value_t {
     float period;
     int repeats;
     WrenHandle *callback; // Need to be released explicitly. Should be opaque?
+} Timer_Value_t;
+
+typedef struct _Timer_t {
+    Timer_Value_t value;
 
     float age;
     int loops;
     Timer_State_t state;
+
+    struct _Timer_t *prev; // The pool is handler as a double-linked-list.
+    struct _Timer_t *next;
 } Timer_t;
 
 typedef struct _Timer_Pool_t {
     Timer_t *timers;
-    size_t initial_capacity; // Can't be zero.
-    size_t capacity;
 } Timer_Pool_t;
 
 typedef void (*TimerPool_Callback_t)(Timer_t *timer, void *parameters);
 
 extern void TimerPool_initialize(Timer_Pool_t *pool, size_t initial_capacity);
 extern void TimerPool_terminate(Timer_Pool_t *pool, TimerPool_Callback_t callback, void *parameters);
-extern size_t TimerPool_allocate(Timer_Pool_t *pool, float period, int repeats, WrenHandle *callback);
+extern Timer_t *TimerPool_allocate(Timer_Pool_t *pool, const Timer_Value_t value);
 extern void TimerPool_update(Timer_Pool_t *pool, double delta_time, TimerPool_Callback_t callback, void *parameters);
 extern void TimerPool_gc(Timer_Pool_t *pool, TimerPool_Callback_t callback, void *parameters);
-extern void TimerPool_release(Timer_Pool_t *pool, int slot);
-extern void TimerPool_reset(Timer_Pool_t *pool, int slot);
-extern void TimerPool_cancel(Timer_Pool_t *pool, int slot);
+extern void TimerPool_release(Timer_Pool_t *pool, Timer_t *timer);
+extern void TimerPool_reset(Timer_Pool_t *pool, Timer_t *timer);
+extern void TimerPool_cancel(Timer_Pool_t *pool, Timer_t *timer);
 
 #endif  /* __CORE_TIMERPOOL_H__ */

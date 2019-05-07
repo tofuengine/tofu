@@ -105,7 +105,7 @@ static void error_function(WrenVM* vm, WrenErrorType type, const char *module, i
     }
 }
 
-WrenForeignClassMethods bind_foreign_class_function(WrenVM* vm, const char *module, const char *className)
+static WrenForeignClassMethods bind_foreign_class_function(WrenVM* vm, const char *module, const char *className)
 {
 //    Log_write(LOG_LEVELS_TRACE, "%s %s %d %s", module, className);
     for (int i = 0; _classes[i].module != NULL; ++i) {
@@ -121,7 +121,7 @@ WrenForeignClassMethods bind_foreign_class_function(WrenVM* vm, const char *modu
     return (WrenForeignClassMethods){};
 }
 
-WrenForeignMethodFn bind_foreign_method_function(WrenVM *vm, const char *module, const char* className, bool isStatic, const char *signature)
+static WrenForeignMethodFn bind_foreign_method_function(WrenVM *vm, const char *module, const char* className, bool isStatic, const char *signature)
 {
 //    Log_write(LOG_LEVELS_TRACE, "%s %s %d %s", module, className, isStatic, signature);
     for (int i = 0; _methods[i].module != NULL; ++i) {
@@ -134,6 +134,22 @@ WrenForeignMethodFn bind_foreign_method_function(WrenVM *vm, const char *module,
             }
     }
     return NULL;
+}
+
+static void timerpool_call_callback(Timer_t *timer, void *parameters)
+{
+    Interpreter_t *interpreter = (Interpreter_t *)parameters;
+
+    wrenEnsureSlots(interpreter->vm, 1);
+    wrenSetSlotHandle(interpreter->vm, 0, timer->value.callback);
+    wrenCall(interpreter->vm, interpreter->handles[CALL]);
+}
+
+static void timerpool_release_callback(Timer_t *timer, void *parameters)
+{
+    Interpreter_t *interpreter = (Interpreter_t *)parameters;
+
+    wrenReleaseHandle(interpreter->vm, timer->value.callback);
 }
 
 bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *environment)
@@ -185,22 +201,6 @@ void Interpreter_input(Interpreter_t *interpreter)
     wrenEnsureSlots(interpreter->vm, 1);
     wrenSetSlotHandle(interpreter->vm, 0, interpreter->handles[RECEIVER]);
     wrenCall(interpreter->vm, interpreter->handles[INPUT]);
-}
-
-void timerpool_call_callback(Timer_t *timer, void *parameters)
-{
-    Interpreter_t *interpreter = (Interpreter_t *)parameters;
-
-    wrenEnsureSlots(interpreter->vm, 1);
-    wrenSetSlotHandle(interpreter->vm, 0, timer->callback);
-    wrenCall(interpreter->vm, interpreter->handles[CALL]);
-}
-
-void timerpool_release_callback(Timer_t *timer, void *parameters)
-{
-    Interpreter_t *interpreter = (Interpreter_t *)parameters;
-
-    wrenReleaseHandle(interpreter->vm, timer->callback);
 }
 
 void Interpreter_update(Interpreter_t *interpreter, const double delta_time)

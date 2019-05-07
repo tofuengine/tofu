@@ -22,119 +22,114 @@
 
 #include "timerpool.h"
 
+#include <memory.h>
+
 #include "../config.h"
 
 #include "../log.h"
 
+static Timer_t *push(Timer_Pool_t *pool, const Timer_Value_t value)
+{
+    Timer_t *timer = malloc(sizeof(Timer_t));
+    *timer = (Timer_t){
+            .value = value,
+            .age = 0.0f,
+            .loops = value.repeats,
+            .state = TIMER_STATE_RUNNING,
+            .prev = NULL,
+            .next = pool->timers
+        };
+
+    if (pool->timers != NULL) { // Update head not, if present, prior adding to the front of the list.
+        pool->timers->prev = timer;
+    }
+    pool->timers = timer;
+
+    return timer;
+}
+
+static void pop(Timer_Pool_t *pool, Timer_t *timer)
+{
+    if (pool->timers == timer) { // Update head pointer if we are releasing it.
+        pool->timers = timer->next;
+    }
+
+    if (timer->prev != NULL) { // Unlink node from the list.
+        timer->prev->next = timer->next;
+    }
+    if (timer->next != NULL) {
+        timer->next->prev = timer->prev;
+    }
+
+#if DEBUG
+    memset(timer, 0x00, sizeof(Timer_t)); // Clear in DEBUG mode for easier, umm, debugging.
+#endif
+    free(timer);
+}
+
+static bool contains(Timer_Pool_t *pool, Timer_t *timer)
+{
+    for (Timer_t *current = pool->timers; current != NULL; current = current->next) {
+        if (current == timer) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void TimerPool_initialize(Timer_Pool_t *pool, size_t initial_capacity)
 {
-    pool->initial_capacity = initial_capacity;
-    pool->capacity = initial_capacity;
-    pool->timers = malloc(pool->capacity * sizeof(Timer_t));
-    for (size_t i = 0; i < pool->capacity; ++i) {
-        pool->timers[i].state = TIMER_STATE_FREE;
-    }
+    pool->timers = NULL;
 }
 
 void TimerPool_terminate(Timer_Pool_t *pool, TimerPool_Callback_t callback, void *parameters)
 {
-    for (size_t i = 0; i < pool->capacity; ++i) {
-        Timer_t *timer = &pool->timers[i];
+    for (Timer_t *timer = pool->timers; timer != NULL; ) {
+        Timer_t *next = timer->next;
 
-        if (timer->state != TIMER_STATE_FREE) { // Dispose only non-freed timers.
-            callback(timer, parameters);
+        callback(timer, parameters);
+        pop(pool, timer);
+        Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer #%p released", timer);
 
-            timer->state = TIMER_STATE_FREE; // Mark as dead, to avoid "zombification" in the timer finalizer.
-
-            Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer #%d released", i);
-        }
+        timer = next;
     }
-
-    free(pool->timers);
 }
 
-size_t TimerPool_allocate(Timer_Pool_t *pool, float period, int repeats, WrenHandle *callback)
+Timer_t *TimerPool_allocate(Timer_Pool_t *pool, const Timer_Value_t value)
 {
-    bool done = false;
-    while (!done) {
-        for (size_t i = 0; i < pool->capacity; ++i) {
-            if (pool->timers[i].state == TIMER_STATE_FREE) {
-                pool->timers[i] = (Timer_t){
-                        .period = period,
-                        .repeats = repeats,
-                        .callback = callback,
-                        .age = 0.0f,
-                        .loops = repeats,
-                        .state = TIMER_STATE_RUNNING
-                    };
-                return i;
-            }
-        }
-        if (!done) {
-            size_t capacity = pool->capacity;
-            pool->capacity *= 2;
-            pool->timers = realloc(pool->timers, pool->capacity * sizeof(Timer_t));
-            for (size_t i = capacity; i < pool->capacity; ++i) {
-                pool->timers[i].state = TIMER_STATE_FREE;
-            }
-            Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer pool extended to #%d slots", pool->capacity);
-        }
-    }
-    return __SIZE_MAX__;
+    return push(pool, value);
 }
 
 void TimerPool_gc(Timer_Pool_t *pool, TimerPool_Callback_t callback, void *parameters)
 {
-    for (size_t i = 0; i < pool->capacity; ++i) {
-        Timer_t *timer = &pool->timers[i];
+    for (Timer_t *timer = pool->timers; timer != NULL; ) {
+        Timer_t *next = timer->next;
 
         if (timer->state == TIMER_STATE_FINALIZED) { // Periodically release garbage-collected timers.
             callback(timer, parameters);
+            pop(pool, timer);
 
-            timer->state = TIMER_STATE_FREE;
-
-            Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer #%d garbage-collected, slot freed", i);
+            Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer #%p garbage-collected", timer);
         }
 
+        timer = next;
     }
-
-#ifdef __REPACK_TIMER_POOL_DURING_GC___
-    size_t last_not_free = 0; // Tracks the last used slot for pool shrinking.
-    for (size_t i = pool->capacity - 1; i >= 0; --i) {
-        Timer_t *timer = &pool->timers[i];
-
-        if (timer->state != TIMER_STATE_FREE) {
-            last_not_free = i;
-            break;
-        }
-    }
-
-    if ((last_not_free >= pool->initial_capacity) && (last_not_free < (pool->capacity / 2))) { // Can't go below initial size.
-        pool->capacity /= 2;
-        pool->timers = realloc(pool->timers, pool->capacity);
-#ifdef __DEBUG_GARBAGE_COLLECTOR__
-        Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer pool shrunk to #%d slots", pool->capacity);
-#endif
-    }
-#endif
 }
 
 void TimerPool_update(Timer_Pool_t *pool, double delta_time, TimerPool_Callback_t callback, void *parameters)
 {
-    for (size_t i = 0; i < pool->capacity; ++i) {
-        Timer_t *timer = &pool->timers[i];
-
+    for (Timer_t *timer = pool->timers; timer != NULL; timer = timer->next) {
         if (timer->state != TIMER_STATE_RUNNING) {
             continue;
         }
 
         timer->age += delta_time;
-        while (timer->age >= timer->period) {
+        while (timer->age >= timer->value.period) {
             if (timer->state != TIMER_STATE_RUNNING) { // The timer could have been terminated
                 break;
             }
 
-            timer->age -= timer->period;
+            timer->age -= timer->value.period;
 
             callback(timer, parameters);
 
@@ -148,37 +143,41 @@ void TimerPool_update(Timer_Pool_t *pool, double delta_time, TimerPool_Callback_
     }
 }
 
-void TimerPool_release(Timer_Pool_t *pool, int slot)
+void TimerPool_release(Timer_Pool_t *pool, Timer_t *timer)
 {
-    Timer_t *timer = &pool->timers[slot];
-
-    if (timer->state != TIMER_STATE_FREE) {
-        timer->state = TIMER_STATE_FINALIZED; // Mark as to-be-released, it not already done (e.g. on closing)
-
-        Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer #%d finalized, ready for GC", slot);
+    if (!contains(pool, timer)) { // Check if the timer is still present in the pool (could have been freed by `TimerPool_terminate()`).
+        return;
     }
+
+    timer->state = TIMER_STATE_FINALIZED; // Mark as to-be-released, it not already done (e.g. on closing)
+
+    Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer #%p finalized, ready for GC", timer);
 }
 
-void TimerPool_reset(Timer_Pool_t *pool, int slot)
+void TimerPool_reset(Timer_Pool_t *pool, Timer_t *timer)
 {
-    Timer_t *timer = &pool->timers[slot];
+    if (!contains(pool, timer)) {
+        return;
+    }
 
     if (timer->state != TIMER_STATE_FINALIZED) {
         timer->age = 0.0;
-        timer->loops = timer->repeats;
+        timer->loops = timer->value.repeats;
         timer->state = TIMER_STATE_RUNNING;
 
-        Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer #%d reset", slot);
+        Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer #%p reset", timer);
     }
 }
 
-void TimerPool_cancel(Timer_Pool_t *pool, int slot)
+void TimerPool_cancel(Timer_Pool_t *pool, Timer_t *timer)
 {
-    Timer_t *timer = &pool->timers[slot];
+    if (!contains(pool, timer)) {
+        return;
+    }
 
     if (timer->state == TIMER_STATE_RUNNING) {
         timer->state = TIMER_STATE_FROZEN;
 
-        Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer #%d frozen", slot);
+        Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer #%p frozen", timer);
     }
 }

@@ -30,7 +30,7 @@
 
 typedef struct _Timer_Class_t {
     Timer_Pool_t *timer_pool;
-    int slot;
+    Timer_t *timer;
 } Timer_Class_t;
 
 const char util_wren[] =
@@ -77,16 +77,20 @@ void util_timer_allocate(WrenVM *vm)
     Timer_Pool_t *timer_pool = environment->timer_pool;
 
     instance->timer_pool = timer_pool;
-    instance->slot = TimerPool_allocate(timer_pool, period, repeats, callback); // TODO: Pass variable pointer to track reallocations.
+    instance->timer = TimerPool_allocate(timer_pool, (Timer_Value_t){
+            .period = period,
+            .repeats = repeats,
+            .callback = callback
+        });
 }
 
 void util_timer_finalize(void *userData, void *data)
 {
     Timer_Class_t *instance = (Timer_Class_t *)data;
 
-    Log_write(LOG_LEVELS_DEBUG, "[TOFU] Finalizing timer #%d", instance->slot);
+    Log_write(LOG_LEVELS_DEBUG, "[TOFU] Finalizing timer #%p", instance->timer);
 
-    TimerPool_release(instance->timer_pool, instance->slot);
+    TimerPool_release(instance->timer_pool, instance->timer);
 }
 
 void util_timer_reset(WrenVM *vm)
@@ -97,7 +101,7 @@ void util_timer_reset(WrenVM *vm)
 
     Timer_Class_t *instance = (Timer_Class_t *)wrenGetSlotForeign(vm, 0);
 
-    TimerPool_reset(instance->timer_pool, instance->slot);
+    TimerPool_reset(instance->timer_pool, instance->timer);
 }
 
 void util_timer_cancel(WrenVM *vm)
@@ -108,5 +112,5 @@ void util_timer_cancel(WrenVM *vm)
 
     Timer_Class_t *instance = (Timer_Class_t *)wrenGetSlotForeign(vm, 0);
 
-    TimerPool_cancel(instance->timer_pool, instance->slot);
+    TimerPool_cancel(instance->timer_pool, instance->timer);
 }
