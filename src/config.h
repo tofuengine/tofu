@@ -41,6 +41,7 @@
 #undef  __FIND_NEAREST_COLOR_EUCLIDIAN__
 #define __GRID_REPEAT_CONTENT__
 #undef  __DEBUG_API_CALLS__
-
+#define __DEBUG_GARBAGE_COLLECTOR__
+#define __REPACK_TIMER_POOL_DURING_GC___
 
 #endif  /* __TOFU_CONFIG_H__ */

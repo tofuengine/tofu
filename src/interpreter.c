@@ -29,6 +29,9 @@
 
 #include <limits.h>
 #include <string.h>
+#ifdef __DEBUG_GARBAGE_COLLECTOR__
+#include <time.h>
+#endif
 
 #define SCRIPT_EXTENSION        ".wren"
 
@@ -202,15 +205,22 @@ void timerpool_release_callback(Timer_t *timer, void *parameters)
 
 void Interpreter_update(Interpreter_t *interpreter, const double delta_time)
 {
-    TimerPool_gc(&interpreter->timer_pool, timerpool_release_callback, interpreter);
     TimerPool_update(&interpreter->timer_pool, delta_time, timerpool_call_callback, interpreter);
 
     interpreter->gc_age += delta_time;
     while (interpreter->gc_age >= GARBAGE_COLLECTION_PERIOD) { // Periodically collect GC.
         interpreter->gc_age -= GARBAGE_COLLECTION_PERIOD;
 
+#ifdef __DEBUG_GARBAGE_COLLECTOR__
         Log_write(LOG_LEVELS_DEBUG, "Performing periodical garbage collection");
+        double start_time = (double)clock() / CLOCKS_PER_SEC;
+#endif
         wrenCollectGarbage(interpreter->vm);
+        TimerPool_gc(&interpreter->timer_pool, timerpool_release_callback, interpreter);
+#ifdef __DEBUG_GARBAGE_COLLECTOR__
+        double elapsed = ((double)clock() / CLOCKS_PER_SEC) - start_time;
+        Log_write(LOG_LEVELS_DEBUG, "Garbage collection took %.3fs", elapsed);
+#endif
     }
 
     wrenEnsureSlots(interpreter->vm, 2);

@@ -22,6 +22,8 @@
 
 #include "timerpool.h"
 
+#include "../config.h"
+
 #include "../log.h"
 
 void TimerPool_initialize(Timer_Pool_t *pool, size_t initial_capacity)
@@ -83,8 +85,6 @@ size_t TimerPool_allocate(Timer_Pool_t *pool, float period, int repeats, WrenHan
 
 void TimerPool_gc(Timer_Pool_t *pool, TimerPool_Callback_t callback, void *parameters)
 {
-    size_t last_not_free = 0; // Tracks the last used slot for pool shrinking.
-
     for (size_t i = 0; i < pool->capacity; ++i) {
         Timer_t *timer = &pool->timers[i];
 
@@ -96,16 +96,27 @@ void TimerPool_gc(Timer_Pool_t *pool, TimerPool_Callback_t callback, void *param
             Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer #%d garbage-collected, slot freed", i);
         }
 
+    }
+
+#ifdef __REPACK_TIMER_POOL_DURING_GC___
+    size_t last_not_free = 0; // Tracks the last used slot for pool shrinking.
+    for (size_t i = pool->capacity - 1; i >= 0; --i) {
+        Timer_t *timer = &pool->timers[i];
+
         if (timer->state != TIMER_STATE_FREE) {
             last_not_free = i;
+            break;
         }
     }
 
     if ((last_not_free >= pool->initial_capacity) && (last_not_free < (pool->capacity / 2))) { // Can't go below initial size.
         pool->capacity /= 2;
         pool->timers = realloc(pool->timers, pool->capacity);
+#ifdef __DEBUG_GARBAGE_COLLECTOR__
         Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer pool shrunk to #%d slots", pool->capacity);
+#endif
     }
+#endif
 }
 
 void TimerPool_update(Timer_Pool_t *pool, double delta_time, TimerPool_Callback_t callback, void *parameters)
