@@ -109,10 +109,10 @@ class Tilemap {
 class Game {
 
     construct new() {
-        Canvas.palette("arne-32")
+        Canvas.palette("nes")
 
-        _map = Tilemap.new("./assets/world.map", 15, 10, "center-top")
-        _map.moveTo(512, 512)
+        _map = Tilemap.new("./assets/world.map", 15, 10, "left-top")
+        _map.moveTo(0, 0)
     }
 
     input() {
