@@ -109,7 +109,7 @@ class Tilemap {
 class Game {
 
     construct new() {
-        Canvas.palette("nes")
+        Canvas.palette("gameboy")
 
         _map = Tilemap.new("./assets/world.map", 15, 10, "left-top")
         _map.moveTo(0, 0)
