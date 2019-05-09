@@ -69,12 +69,12 @@ void collections_grid_allocate(WrenVM *vm)
 
     if (type == WREN_TYPE_LIST) {
         int count = wrenGetListCount(vm, 3);
-#ifdef DEBUG
+#ifdef __DEBUG_VM_CALLS__
         Log_write(LOG_LEVELS_DEBUG, "List has #%d elements(s)", count);
 #endif
 
         int slots = wrenGetSlotCount(vm);
-#ifdef DEBUG
+#ifdef __DEBUG_VM_CALLS__
         Log_write(LOG_LEVELS_DEBUG, "Currently #%d slot(s) available, asking for an additional slot", slots);
 #endif
         const int aux_slot_id = slots;
@@ -157,7 +157,7 @@ void collections_grid_fill(WrenVM *vm)
 
         int slots = wrenGetSlotCount(vm);
         const int aux_slot_id = slots;
-#ifdef DEBUG
+#ifdef __DEBUG_VM_CALLS__
         Log_write(LOG_LEVELS_DEBUG, "Currently #%d slot(s) available, asking for additional slot", slots);
 #endif
         wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
@@ -210,7 +210,7 @@ void collections_grid_stride(WrenVM *vm)
 
         int slots = wrenGetSlotCount(vm);
         const int aux_slot_id = slots;
-#ifdef DEBUG
+#ifdef __DEBUG_VM_CALLS__
         Log_write(LOG_LEVELS_DEBUG, "Currently #%d slot(s) available, asking for additional slot", slots);
 #endif
         wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.

@@ -370,7 +370,7 @@ void graphics_canvas_palette(WrenVM *vm)
         }
 
         int slots = wrenGetSlotCount(vm);
-#ifdef DEBUG
+#ifdef __DEBUG_VM_CALLS__
         Log_write(LOG_LEVELS_DEBUG, "Currently #%d slot(s) available, asking for an additional slot", slots);
 #endif
         const int aux_slot_id = slots;
@@ -419,7 +419,7 @@ void graphics_canvas_polygon(WrenVM *vm)
     int color = (int)wrenGetSlotDouble(vm, 3);
 
     int slots = wrenGetSlotCount(vm);
-#ifdef DEBUG
+#ifdef __DEBUG_VM_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Currently #%d slot(s) available, asking for an additional slot", slots);
 #endif
     const int aux_slot_id = slots;
