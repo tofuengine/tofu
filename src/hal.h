@@ -24,9 +24,17 @@
 #define __HAL_H__
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #include <raylib/raylib.h>
+
+#include "config.h"
+
+typedef struct _Palette_t {
+    Color colors[MAX_PALETTE_COLORS];
+    size_t count;
+} Palette_t;
 
 typedef struct _Font_t {
     // char pathfile[PATH_FILE_MAX];
@@ -51,7 +59,7 @@ typedef struct _Map_t {
     uint16_t *cells; // Only the lowest 8 bits are used to access the bank?
 } Map_t;
 
-extern Bank_t load_bank(const char *pathfile, int cell_width, int cell_height, const Color *palette, int colors);
+extern Bank_t load_bank(const char *pathfile, int cell_width, int cell_height, const Palette_t *palette);
 extern void unload_bank(Bank_t *bank);
 extern Font_t load_font(const char *pathfile);
 extern void unload_font(Font_t *font);

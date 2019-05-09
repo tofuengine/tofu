@@ -29,7 +29,6 @@
 
 #include <raylib/raylib.h>
 
-#include "config.h"
 #include "hal.h"
 
 #define VALUES_PER_COLOR        4
@@ -58,7 +57,7 @@ typedef struct _Display_t {
     Rectangle offscreen_source, offscreen_destination;
     Vector2 offscreen_origin;
 
-    Color palette[MAX_PALETTE_COLORS];
+    Palette_t palette;
     Shader palette_shader;
 } Display_t;
 
@@ -66,7 +65,7 @@ extern bool Display_initialize(Display_t *display, const Display_Configuration_t
 extern bool Display_shouldClose(Display_t *display);
 extern void Display_renderBegin(Display_t *display);
 extern void Display_renderEnd(Display_t *display, const Engine_Statistics_t *statistics);
-extern void Display_palette(Display_t *display, const Color *palette, size_t count);
+extern void Display_palette(Display_t *display, const Palette_t *palette);
 extern void Display_terminate(Display_t *display);
 
 #endif  /* __DISPLAY_H__ */

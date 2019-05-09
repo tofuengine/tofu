@@ -28,12 +28,12 @@
 #include "config.h"
 #include "log.h"
 
-static int find_nearest_color(const Color *palette, int count, Color color)
+static size_t find_nearest_color(const Palette_t *palette, Color color)
 {
-    int index = -1;
+    size_t index = 0;
     float minimum = __FLT_MAX__;
-    for (int i = 0; i < count; ++i) {
-        const Color *current = &palette[i];
+    for (size_t i = 0; i < palette->count; ++i) {
+        const Color *current = &palette->colors[i];
 #ifdef __FIND_NEAREST_COLOR_EUCLIDIAN__
         float distance = sqrtf(powf(color.r - current->r, 2.0f)
             + powf(color.g - current->g, 2.0f)
@@ -53,7 +53,7 @@ static int find_nearest_color(const Color *palette, int count, Color color)
     return index;
 }
 
-static void convert_image_to_palette(Image *image, const Color *palette, int colors)
+static void convert_image_to_palette(Image *image, const Palette_t *palette)
 {
     Color *pixels = GetImageData(*image);
 
@@ -67,7 +67,7 @@ static void convert_image_to_palette(Image *image, const Color *palette, int col
                 continue;
             }
 
-            int index = find_nearest_color(palette, colors, color);
+            size_t index = find_nearest_color(palette, color);
             pixels[offset] = (Color){ index, index, index, 255 };
         }
     }
@@ -80,13 +80,13 @@ static void convert_image_to_palette(Image *image, const Color *palette, int col
     image->data = processed.data;
 }
 
-Bank_t load_bank(const char *pathfile, int cell_width, int cell_height, const Color *palette, int colors)
+Bank_t load_bank(const char *pathfile, int cell_width, int cell_height, const Palette_t *palette)
 {
     Image image = LoadImage(pathfile);
     if (!image.data) {
         return (Bank_t){};
     }
-    convert_image_to_palette(&image, palette, colors);
+    convert_image_to_palette(&image, palette);
     Texture2D texture = LoadTextureFromImage(image);
     UnloadImage(image);
     Log_write(LOG_LEVELS_DEBUG, "[TOFU] Bank '%s' loaded as texture w/ id #%d", pathfile, texture.id);

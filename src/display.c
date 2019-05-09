@@ -169,12 +169,13 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
 
     display->palette_shader = LoadShaderCode(NULL, (char *)palette_shader_code);
 
-    Color palette[MAX_PALETTE_COLORS]; // Initial gray-scale palette.
+    Palette_t palette; // Initial gray-scale palette.
     for (size_t i = 0; i < MAX_PALETTE_COLORS; ++i) {
         unsigned char v = ((float)i / (float)(MAX_PALETTE_COLORS - 1)) * 255;
-        palette[i] = (Color){ v, v, v, 255 };
+        palette.colors[i] = (Color){ v, v, v, 255 };
     }
-    Display_palette(display, palette, MAX_PALETTE_COLORS);
+    palette.count = MAX_PALETTE_COLORS;
+    Display_palette(display, &palette);
 
     return true;
 }
@@ -209,18 +210,17 @@ void Display_renderEnd(Display_t *display, const Engine_Statistics_t *statistics
     EndDrawing();
 }
 
-void Display_palette(Display_t *display, const Color *palette, size_t count)
+void Display_palette(Display_t *display, const Palette_t *palette)
 {
     float colors[MAX_PALETTE_COLORS * VALUES_PER_COLOR] = {};
-    for (size_t i = 0; i < count; ++i) {
-        display->palette[i] = palette[i];
-
+    for (size_t i = 0; i < palette->count; ++i) {
         int j = i * VALUES_PER_COLOR;
-        colors[j    ] = (float)palette[i].r / 255.0f;
-        colors[j + 1] = (float)palette[i].g / 255.0f;
-        colors[j + 2] = (float)palette[i].b / 255.0f;
-        colors[j + 3] = (float)palette[i].a / 255.0f;
+        colors[j    ] = (float)palette->colors[i].r / 255.0f;
+        colors[j + 1] = (float)palette->colors[i].g / 255.0f;
+        colors[j + 2] = (float)palette->colors[i].b / 255.0f;
+        colors[j + 3] = (float)palette->colors[i].a / 255.0f;
     }
+    display->palette = *palette;
     int uniform_location = GetShaderLocation(display->palette_shader, "palette");
     if (uniform_location == -1) {
         return;

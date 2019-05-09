@@ -188,7 +188,7 @@ void graphics_bank_allocate(WrenVM *vm)
     strcpy(pathfile, environment->base_path);
     strcat(pathfile, file + 2);
 
-    *bank = load_bank(pathfile, cell_width, cell_height, environment->display->palette, MAX_PALETTE_COLORS);
+    *bank = load_bank(pathfile, cell_width, cell_height, &environment->display->palette);
 }
 
 void graphics_bank_finalize(void *userData, void *data)
@@ -346,28 +346,27 @@ void graphics_canvas_palette(WrenVM *vm)
 {
     WrenType type = wrenGetSlotType(vm, 1);
 
-    Color colors[MAX_PALETTE_COLORS];
-    int count = 0;
+    Palette_t palette = {};
 
     if (type == WREN_TYPE_STRING) { // Predefined palette!
         const char *id = wrenGetSlotString(vm, 1);
-        const Palette_t *palette = graphics_palettes_find(id);
-        if (palette != NULL) {
-            count = palette->count;
-            memcpy(colors, palette->colors, sizeof(Color) * count);
+        const Predefined_Palette_t *predefined_palette = graphics_palettes_find(id);
+        if (predefined_palette != NULL) {
+            palette.count = predefined_palette->count;
+            memcpy(palette.colors, predefined_palette->colors, sizeof(Color) * predefined_palette->count);
 
-            Log_write(LOG_LEVELS_DEBUG, "[TOFU] Setting predefined palette '%s' w/ %d color(s)", id, count);
+            Log_write(LOG_LEVELS_DEBUG, "[TOFU] Setting predefined palette '%s' w/ %d color(s)", id, predefined_palette->count);
         } else {
             Log_write(LOG_LEVELS_WARNING, "[TOFU] Unknown predefined palette w/ id '%s'", id);
         }
     } else
     if (type == WREN_TYPE_LIST) { // User supplied palette.
-        count = wrenGetListCount(vm, 1);
-        Log_write(LOG_LEVELS_DEBUG, "Setting custom palette of #%d color(s)", count);
+        palette.count = wrenGetListCount(vm, 1);
+        Log_write(LOG_LEVELS_DEBUG, "Setting custom palette of #%d color(s)", palette.count);
 
-        if (count > MAX_PALETTE_COLORS) {
-            Log_write(LOG_LEVELS_WARNING, "[TOFU] Palette has too many colors (%d) - clamping!", count);
-            count = MAX_PALETTE_COLORS;
+        if (palette.count > MAX_PALETTE_COLORS) {
+            Log_write(LOG_LEVELS_WARNING, "[TOFU] Palette has too many colors (%d) - clamping!", palette.count);
+            palette.count = MAX_PALETTE_COLORS;
         }
 
         int slots = wrenGetSlotCount(vm);
@@ -380,10 +379,10 @@ void graphics_canvas_palette(WrenVM *vm)
 #ifdef __DEBUG_API_CALLS__
         Log_write(LOG_LEVELS_DEBUG, "Canvas.palette() -> %d", count);
 #endif
-        for (int i = 0; i < count; ++i) {
+        for (size_t i = 0; i < palette.count; ++i) {
             wrenGetListElement(vm, 1, i, aux_slot_id);
 
-            Color *color = &colors[i];
+            Color *color = &palette.colors[i];
             const char *argb = wrenGetSlotString(vm, aux_slot_id);
             char hex[3] = {};
             strncpy(hex, argb    , 2); color->a = strtol(hex, NULL, 16);
@@ -395,13 +394,13 @@ void graphics_canvas_palette(WrenVM *vm)
         Log_write(LOG_ERROR, "[TOFU] Wrong palette type, need to be string or list");
     }
 
-    if (count <= 0) {
+    if (palette.count == 0) {
         return;
     }
 
     Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
     
-    Display_palette(environment->display, colors, count);
+    Display_palette(environment->display, &palette);
 }
 
 void graphics_canvas_point(WrenVM *vm)

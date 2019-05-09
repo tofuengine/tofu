@@ -2,7 +2,7 @@
 
 #include <strings.h>
 
-static const Palette_t _palettes[] = {
+static const Predefined_Palette_t _palettes[] = {
     { "gameboy", 4, {
             { 8, 24, 32, 255 },
             { 52, 104, 86, 255 },
@@ -352,7 +352,7 @@ static const Palette_t _palettes[] = {
     { NULL, 0, {} }
 };
 
-const Palette_t *graphics_palettes_find(const char *id)
+const Predefined_Palette_t *graphics_palettes_find(const char *id)
 {
     for (size_t i = 0; _palettes[i].id != NULL; ++i) {
         if (strcasecmp(_palettes[i].id, id) == 0) {
