@@ -455,10 +455,10 @@ void graphics_canvas_polygon(WrenVM *vm)
     }
 
     if (strcmp(mode, "fill") == 0) {
-        DrawPolyEx(points, count, (Color){ color, color, color, 255 });
+        DrawTriangleFan(points, count, (Color){ color, color, color, 255 });
     } else
     if (strcmp(mode, "line") == 0) {
-        DrawPolyExLines(points, count, (Color){ color, color, color, 255 });
+        DrawLineStrip(points, count, (Color){ color, color, color, 255 });
     } else {
         Log_write(LOG_LEVELS_WARNING, "[TOFU] Undefined drawing mode for polygon: '%s'", mode);
     }
