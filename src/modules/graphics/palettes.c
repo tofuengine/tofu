@@ -2,22 +2,30 @@
 
 #include <strings.h>
 
+typedef struct _Predefined_Palette_t {
+    const char *id;
+    Palette_t palette;
+} Predefined_Palette_t;
+
 static const Predefined_Palette_t _palettes[] = {
-    { "gameboy", 4, {
+    { "gameboy", {
+        {
             { 8, 24, 32, 255 },
             { 52, 104, 86, 255 },
             { 136, 192, 112, 255 },
             { 224, 248, 208, 255 }
-        }
+        }, 4 }
     },
-    { "gameboy-bw", 4, {
+    { "gameboy-bw", {
+        {
             { 0, 0, 0, 255 },
             { 103, 103, 103, 255 },
             { 182, 182, 182, 255 },
             { 255, 255, 255, 255 }
-        }
+        }, 4 }
     },
-    { "3-bit-rgb", 8, {
+    { "3-bit-rgb", {
+        {
             { 0, 0, 0, 255 },
             { 255, 0, 0, 255 },
             { 0, 255, 0, 255 },
@@ -26,9 +34,10 @@ static const Predefined_Palette_t _palettes[] = {
             { 255, 0, 255, 255 },
             { 255, 255, 0, 255 },
             { 255, 255, 255, 255 }
-        }
+        }, 8 }
     },
-    { "arne-8", 8, {
+    { "arne-8", {
+        {
             { 0, 0, 0, 255 },
             { 204, 53, 0, 255 },
             { 94, 200, 9, 255 },
@@ -37,9 +46,10 @@ static const Predefined_Palette_t _palettes[] = {
             { 142, 142, 142, 255 },
             { 255, 224, 82, 255 },
             { 255, 255, 255, 255 }
-        }
+        }, 8 }
     },
-    { "dawnbringer-8", 8, {
+    { "dawnbringer-8", {
+        {
             { 0, 0, 0, 255 },
             { 85, 65, 95, 255 },
             { 100, 105, 100, 255 },
@@ -48,9 +58,10 @@ static const Predefined_Palette_t _palettes[] = {
             { 100, 185, 100, 255 },
             { 230, 200, 110, 255 },
             { 220, 245, 255, 255 }
-        }
+        }, 8 }
     },
-    { "pico-8", 16, {
+    { "pico-8", {
+        {
             { 0, 0, 0, 255 },
             { 95, 87, 79, 255 },
             { 194, 195, 199, 255 },
@@ -67,9 +78,10 @@ static const Predefined_Palette_t _palettes[] = {
             { 29, 43, 83, 255 },
             { 0, 135, 81, 255 },
             { 0, 228, 54, 255 }
-        }
+        }, 16 }
     },
-    { "arne-16", 16, {
+    { "arne-16", {
+        {
             { 0, 0, 0, 255 },
             { 73, 60, 43, 255 },
             { 190, 38, 51, 255 },
@@ -86,9 +98,10 @@ static const Predefined_Palette_t _palettes[] = {
             { 0, 87, 132, 255 },
             { 49, 162, 242, 255 },
             { 178, 220, 239, 255 }
-        }
+        }, 16 }
     },
-    { "dawnbringer-16", 16, {
+    { "dawnbringer-16", {
+        {
             { 20, 12, 28, 255 },
             { 68, 36, 52, 255 },
             { 48, 52, 109, 255 },
@@ -105,9 +118,10 @@ static const Predefined_Palette_t _palettes[] = {
             { 109, 194, 202, 255 },
             { 218, 212, 94, 255 },
             { 222, 238, 214, 255 }
-        }
+        }, 16 }
     },
-    { "cga", 16, {
+    { "cga", {
+        {
             { 0, 0, 0, 255 },
             { 85, 85, 85, 255 },
             { 170, 170, 170, 255 },
@@ -124,9 +138,10 @@ static const Predefined_Palette_t _palettes[] = {
             { 255, 85, 255, 255 },
             { 170, 85, 0, 255 },
             { 255, 255, 85, 255 }
-        }
+        }, 16 }
     },
-    { "c64", 16, {
+    { "c64", {
+        {
             { 0, 0, 0, 255 },
             { 98, 98, 98, 255 },
             { 137, 137, 137, 255 },
@@ -143,9 +158,10 @@ static const Predefined_Palette_t _palettes[] = {
             { 136, 126, 203, 255 },
             { 80, 69, 155, 255 },
             { 160, 87, 163, 255 }
-        }
+        }, 16 }
     },
-    { "arne-32", 32, {
+    { "arne-32", {
+        {
             { 0, 0, 0, 255 },
             { 73, 60, 43, 255 },
             { 190, 38, 51, 255 },
@@ -178,9 +194,10 @@ static const Predefined_Palette_t _palettes[] = {
             { 153, 100, 249, 255 },
             { 247, 142, 214, 255 },
             { 244, 185, 144, 255 }
-        }
+        }, 32 }
     },
-    { "dawnbringer-32", 32, {
+    { "dawnbringer-32", {
+        {
             { 0, 0, 0, 255 },
             { 34, 32, 52, 255 },
             { 69, 40, 60, 255 },
@@ -213,9 +230,10 @@ static const Predefined_Palette_t _palettes[] = {
             { 215, 123, 186, 255 },
             { 143, 151, 74, 255 },
             { 138, 111, 48, 255 }
-        }
+        }, 32 }
     },
-    { "6-bit-rgb", 64, {
+    { "6-bit-rgb", {
+        {
             { 0, 0, 0, 255 },
             { 0, 0, 85, 255 },
             { 0, 0, 170, 255 },
@@ -280,9 +298,10 @@ static const Predefined_Palette_t _palettes[] = {
             { 255, 255, 85, 255 },
             { 255, 255, 170, 255 },
             { 255, 255, 255, 255 },
-        }
+        }, 64 }
     },
-    { "nes", 64, {
+    { "nes", {
+        {
             { 124,124,124, 255 },
             { 0,0,252, 255 },
             { 0,0,188, 255 },
@@ -347,16 +366,16 @@ static const Predefined_Palette_t _palettes[] = {
             { 248,216,248, 255 },
             { 0,0,0, 255 },
             { 0,0,0, 255 }
-        }
+        }, 64 }
     },
-    { NULL, 0, {} }
+    { NULL, { {}, 0 } }
 };
 
-const Predefined_Palette_t *graphics_palettes_find(const char *id)
+const Palette_t *graphics_palettes_find(const char *id)
 {
     for (size_t i = 0; _palettes[i].id != NULL; ++i) {
         if (strcasecmp(_palettes[i].id, id) == 0) {
-            return &_palettes[i];
+            return &_palettes[i].palette;
         }
     }
     return NULL;

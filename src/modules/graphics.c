@@ -350,7 +350,7 @@ void graphics_canvas_palette(WrenVM *vm)
 
     if (type == WREN_TYPE_STRING) { // Predefined palette!
         const char *id = wrenGetSlotString(vm, 1);
-        const Predefined_Palette_t *predefined_palette = graphics_palettes_find(id);
+        const Palette_t *predefined_palette = graphics_palettes_find(id);
         if (predefined_palette != NULL) {
             palette.count = predefined_palette->count;
             memcpy(palette.colors, predefined_palette->colors, sizeof(Color) * predefined_palette->count);
