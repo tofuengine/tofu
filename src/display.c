@@ -60,9 +60,9 @@ static const char *palette_shader_code =
     "    // to the palette index by scaling up from [0, 1] to [0, 255].\n"
     "    int index = int(texelColor.r * 255.0);\n"
     "\n"
-    "    // Pick the palette color as final fragment color. Note that the palette components\n"
-    "    // are already normalized in the range [0, 1], ready for OpenGL to work.\n"
-    "    finalColor = palette[index];\n"
+    "    // Pick the palette color as final fragment color (retain the texel alpha value).\n"
+    "    // Note: palette components are pre-normalized in the OpenGL range [0, 1].\n"
+    "    finalColor = vec4(palette[index].rgb, texelColor.a);\n"
     "}\n"
 ;
 

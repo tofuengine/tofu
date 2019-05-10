@@ -37,13 +37,11 @@ static size_t find_nearest_color(const Palette_t *palette, Color color)
 #ifdef __FIND_NEAREST_COLOR_EUCLIDIAN__
         float distance = sqrtf(powf(color.r - current->r, 2.0f)
             + powf(color.g - current->g, 2.0f)
-            + powf(color.b - current->b, 2.0f)
-            + powf(color.a - current->a, 2.0f));
+            + powf(color.b - current->b, 2.0f));
 #else
         float distance = powf(color.r - current->r, 2.0f) // Faster, no need to get the Euclidean distance.
             + powf(color.g - current->g, 2.0f)
-            + powf(color.b - current->b, 2.0f)
-            + powf(color.a - current->a, 2.0f);
+            + powf(color.b - current->b, 2.0f);
 #endif
         if (minimum > distance) {
             minimum = distance;
@@ -68,7 +66,7 @@ static void convert_image_to_palette(Image *image, const Palette_t *palette)
             }
 
             size_t index = find_nearest_color(palette, color);
-            pixels[offset] = (Color){ index, index, index, 255 };
+            pixels[offset] = (Color){ index, index, index, color.a };
         }
     }
 
