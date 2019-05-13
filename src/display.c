@@ -54,7 +54,7 @@ static const char *palette_shader_code =
     "void main()\n"
     "{\n"
     "    // Texel color fetching from texture sampler\n"
-    "    vec4 texelColor = texture(texture0, fragTexCoord) * fragColor;\n"
+    "    vec4 texelColor = texture(texture0, fragTexCoord);\n"
     "\n"
     "    // Convert the (normalized) texel color RED component (GB would work, too)\n"
     "    // to the palette index by scaling up from [0, 1] to [0, 255].\n"
@@ -62,7 +62,7 @@ static const char *palette_shader_code =
     "\n"
     "    // Pick the palette color as final fragment color (retain the texel alpha value).\n"
     "    // Note: palette components are pre-normalized in the OpenGL range [0, 1].\n"
-    "    finalColor = vec4(palette[index].rgb, texelColor.a);\n"
+    "    finalColor = vec4(palette[index].rgb, fragColor.a);\n"
     "}\n"
 ;
 
@@ -199,7 +199,7 @@ void Display_renderEnd(Display_t *display, const Engine_Statistics_t *statistics
 #ifndef __FAST_FULLSCREEN__
         ClearBackground(BLACK);
 #endif
-        BeginShaderMode(display->palette_shader);
+        BeginShaderMode(display->palette_shader); // TODO: for real alpha, the shader should be applied to each draw-call!
             DrawTexturePro(display->offscreen.texture, display->offscreen_source, display->offscreen_destination,
                 display->offscreen_origin, 0.0f, WHITE);
         EndShaderMode();
