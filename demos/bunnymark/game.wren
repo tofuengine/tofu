@@ -19,6 +19,8 @@ class Game {
 
         _bank = Bank.new("./assets/sheet.png", 26, 37)
         _font = Font.default
+
+        _running = true
     }
 
     input() {
@@ -31,10 +33,15 @@ class Game {
             }
         } else if (Input.isKeyPressed(Input.q)) {
             _bunnies.clear()
+        } else if (Input.isKeyPressed(Input.enter)) {
+            _running = !_running
         }
     }
 
     update(deltaTime) {
+        if (!_running) {
+            return
+        }
         for (bunny in _bunnies) {
             bunny.update(deltaTime)
         }

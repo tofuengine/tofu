@@ -54,12 +54,15 @@ const char graphics_wren[] =
     "    foreign cellHeight\n"
     "\n"
     "    blit(cellId, x, y) {\n"
-    "        blit(cellId, x, y, 0.0, 1.0, 1.0)\n"
+    "        blit(cellId, x, y, 0.0, 1.0, 1.0, 1.0)\n"
     "    }\n"
-    "    blit(cellId, x, y, r) {\n"
-    "        blit(cellId, x, y, r, 1.0, 1.0)\n"
+    "    blit(cellId, x, y, a) {\n"
+    "        blit(cellId, x, y, a, 0.0, 1.0, 1.0)\n"
     "    }\n"
-    "    foreign blit(cellId, x, y, r, sx, sy)\n"
+    "    blit(cellId, x, y, a, r) {\n"
+    "        blit(cellId, x, y, a, r, 1.0, 1.0)\n"
+    "    }\n"
+    "    foreign blit(cellId, x, y, a, r, sx, sy)\n"
     "\n"
     "}\n"
     "\n"
@@ -216,11 +219,12 @@ void graphics_bank_blit(WrenVM *vm)
     int cell_id = (int)wrenGetSlotDouble(vm, 1);
     int x = (int)wrenGetSlotDouble(vm, 2);
     int y = (int)wrenGetSlotDouble(vm, 3);
-    double rotation = wrenGetSlotDouble(vm, 4);
-    double scale_x = wrenGetSlotDouble(vm, 5);
-    double scale_y = wrenGetSlotDouble(vm, 6);
+    double alpha = wrenGetSlotDouble(vm, 4);
+    double rotation = wrenGetSlotDouble(vm, 5);
+    double scale_x = wrenGetSlotDouble(vm, 6);
+    double scale_y = wrenGetSlotDouble(vm, 7);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %d, %d, %.3f, %.3f, %.3f", cell_id, x, y, rotation, scale_x, scale_y);
+    Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %d, %d, %.3f, %.3f, %.3f, %.3f", cell_id, x, y, alpha, rotation, scale_x, scale_y);
 #endif
 
     const Bank_t *bank = (const Bank_t *)wrenGetSlotForeign(vm, 0);
@@ -244,7 +248,7 @@ void graphics_bank_blit(WrenVM *vm)
     Rectangle sourceRec = (Rectangle){ (float)bank_x, (float)bank_y, bank_width, bank_height };
     Rectangle destRec = (Rectangle){ x + half_width, y + half_height, width, height };
 
-    DrawTexturePro(bank->atlas, sourceRec, destRec, bank->origin, (float)rotation, (Color){ 255, 255, 255, 255 });
+    DrawTexturePro(bank->atlas, sourceRec, destRec, bank->origin, (float)rotation, (Color){ 255, 255, 255, (int)(alpha * 255.0) });
 }
 
 void graphics_font_allocate(WrenVM *vm)
