@@ -46,7 +46,7 @@ static const char *palette_shader_code =
     "\n"
     "// Input uniform values\n"
     "uniform sampler2D texture0;\n"
-    "uniform vec4 palette[colors];\n"
+    "uniform vec3 palette[colors];\n"
     "\n"
     "// Output fragment color\n"
     "out vec4 finalColor;\n"
@@ -220,14 +220,13 @@ void Display_palette(Display_t *display, const Palette_t *palette)
         colors[j    ] = (float)palette->colors[i].r / 255.0f;
         colors[j + 1] = (float)palette->colors[i].g / 255.0f;
         colors[j + 2] = (float)palette->colors[i].b / 255.0f;
-        colors[j + 3] = (float)palette->colors[i].a / 255.0f;
     }
     display->palette = *palette;
     int uniform_location = GetShaderLocation(display->palette_shader, "palette");
     if (uniform_location == -1) {
         return;
     }
-    SetShaderValueV(display->palette_shader, uniform_location, colors, UNIFORM_VEC4, MAX_PALETTE_COLORS);
+    SetShaderValueV(display->palette_shader, uniform_location, colors, UNIFORM_VEC3, MAX_PALETTE_COLORS);
 }
 
 void Display_terminate(Display_t *display)

@@ -31,7 +31,7 @@
 
 #include "hal.h"
 
-#define VALUES_PER_COLOR        4
+#define VALUES_PER_COLOR        3
 
 #define ALPHA_COLOR_TRANSPARENT 0
 #define ALPHA_COLOR_OPAQUE      255
