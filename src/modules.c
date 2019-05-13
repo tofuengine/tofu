@@ -61,7 +61,7 @@ const Method_Entry_t _methods[] = {
     { "graphics", "Bank", false, "cellWidth", graphics_bank_cell_width },
     { "graphics", "Bank", false, "cellHeight", graphics_bank_cell_height },
     { "graphics", "Bank", false, "blit(_,_,_,_,_,_,_)", graphics_bank_blit },
-    { "graphics", "Font", false, "write(_,_,_,_,_,_)", graphics_font_write },
+    { "graphics", "Font", false, "write(_,_,_,_,_,_,_)", graphics_font_write },
     { "graphics", "Canvas", true, "width", graphics_canvas_width },
     { "graphics", "Canvas", true, "height", graphics_canvas_height },
     { "graphics", "Canvas", true, "palette(_)", graphics_canvas_palette },

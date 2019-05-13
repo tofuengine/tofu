@@ -24,7 +24,10 @@ foreign class Font {
 
     static default { Font.new("default") }
 
-    foreign write(text, x, y, color, size, align)
+    write(text, x, y, color, size, align) {
+        write(text, x, y, color, size, align, 1.0)
+    }
+    foreign write(text, x, y, color, size, align, alpha)
 
 }
 

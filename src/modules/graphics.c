@@ -72,7 +72,10 @@ const char graphics_wren[] =
     "\n"
     "    static default { Font.new(\"default\") }\n"
     "\n"
-    "    foreign write(text, x, y, color, size, align)\n"
+    "    write(text, x, y, color, size, align) {\n"
+    "        write(text, x, y, color, size, align, 1.0)\n"
+    "    }\n"
+    "    foreign write(text, x, y, color, size, align, alpha)\n"
     "\n"
     "}\n"
     "\n"
@@ -294,8 +297,9 @@ void graphics_font_write(WrenVM *vm) // foreign text(text, color, size, align)
     int color = (int)wrenGetSlotDouble(vm, 4);
     int size = (int)wrenGetSlotDouble(vm, 5);
     const char *align = wrenGetSlotString(vm, 6);
+    double alpha = wrenGetSlotDouble(vm, 7);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %s, %d, %d, %d, %d, %s", text, x, y, color, size, align);
+    Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %s, %d, %d, %d, %d, %s, %.3f", text, x, y, color, size, align, alpha);
 #endif
 
     const Font_t *font = (const Font_t *)wrenGetSlotForeign(vm, 0);
@@ -329,7 +333,7 @@ void graphics_font_write(WrenVM *vm) // foreign text(text, color, size, align)
     }
     int spacing = size / DEFAULT_FONT_SIZE;
 
-    DrawTextEx(font->font, text, (Vector2){ dx, dy }, size, (float)spacing, (Color){ color, color, color, 255 });
+    DrawTextEx(font->font, text, (Vector2){ dx, dy }, size, (float)spacing, (Color){ color, color, color, (int)(alpha * 255.0) });
 }
 
 void graphics_canvas_width(WrenVM *vm)
