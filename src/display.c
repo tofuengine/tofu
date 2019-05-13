@@ -197,14 +197,14 @@ void Display_renderEnd(Display_t *display, const Engine_Statistics_t *statistics
         EndShaderMode();
     EndTextureMode();
 
+    // TODO: implemented filters loop here on a pair of textures.
+
     BeginDrawing();
 #ifndef __FAST_FULLSCREEN__
         ClearBackground((Color){ 0, 0, 0, 255 }); // TODO: configurable background color?
 #endif
-//        BeginShaderMode(display->palette_shader); // TODO: for real alpha, the shader should be applied to each draw-call!
-            DrawTexturePro(display->offscreen.texture, display->offscreen_source, display->offscreen_destination,
-                display->offscreen_origin, 0.0f, (Color){ 255, 255, 255, 255 });
-//        EndShaderMode();
+        DrawTexturePro(display->offscreen.texture, display->offscreen_source, display->offscreen_destination,
+            display->offscreen_origin, 0.0f, (Color){ 255, 255, 255, 255 });
 
         if (statistics) {
             draw_statistics(statistics);
