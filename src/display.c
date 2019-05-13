@@ -188,8 +188,8 @@ bool Display_shouldClose(Display_t *display)
 void Display_renderBegin(Display_t *display)
 {
     BeginTextureMode(display->offscreen);
+        ClearBackground((Color){ 0, 0, 0, 255 }); // TODO: configurable background color.
         BeginShaderMode(display->palette_shader);
-            ClearBackground((Color){ 0, 0, 0, 255 }); // TODO: configurable background color?
 }
 
 void Display_renderEnd(Display_t *display, const Engine_Statistics_t *statistics)
@@ -201,7 +201,7 @@ void Display_renderEnd(Display_t *display, const Engine_Statistics_t *statistics
 
     BeginDrawing();
 #ifndef __FAST_FULLSCREEN__
-        ClearBackground((Color){ 0, 0, 0, 255 }); // TODO: configurable background color?
+        ClearBackground((Color){ 0, 0, 0, 255 });
 #endif
         DrawTexturePro(display->offscreen.texture, display->offscreen_source, display->offscreen_destination,
             display->offscreen_origin, 0.0f, (Color){ 255, 255, 255, 255 });
