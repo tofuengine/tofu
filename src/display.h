@@ -31,6 +31,8 @@
 
 #include "hal.h"
 
+#define FRAMEBUFFERS_COUNT      2
+
 #define VALUES_PER_COLOR        3
 
 #define ALPHA_COLOR_TRANSPARENT 0
@@ -53,7 +55,7 @@ typedef struct _Display_t {
 
     int window_width, window_height, window_scale;
 
-    RenderTexture2D offscreen;
+    RenderTexture2D framebuffers[2];
     Rectangle offscreen_source, offscreen_destination;
     Vector2 offscreen_origin;
 

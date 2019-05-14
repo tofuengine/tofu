@@ -160,10 +160,12 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         ToggleFullscreen();
     }
 
-    display->offscreen = LoadRenderTexture(configuration->width, configuration->height);
-    SetTextureFilter(display->offscreen.texture, FILTER_POINT); // Nearest-neighbour scaling.
+    for (size_t i = 0; i < FRAMEBUFFERS_COUNT; ++i) {
+        display->framebuffers[i] = LoadRenderTexture(configuration->width, configuration->height);
+        SetTextureFilter(display->framebuffers[i].texture, FILTER_POINT); // Nearest-neighbour scaling.
+    }
 
-    display->offscreen_source = (Rectangle){ 0.0f, 0.0f, (float)display->offscreen.texture.width, (float)-display->offscreen.texture.height };
+    display->offscreen_source = (Rectangle){ 0.0f, 0.0f, (float)configuration->width, (float)configuration->height };
     if (configuration->fullscreen) {
         display->offscreen_destination = (Rectangle){ (float)x, (float)y, (float)display->window_width, (float)display->window_height };
     } else {
@@ -193,23 +195,26 @@ bool Display_shouldClose(Display_t *display)
 
 void Display_renderBegin(Display_t *display)
 {
-    BeginTextureMode(display->offscreen);
-        ClearBackground((Color){ 0, 0, 0, 255 }); // TODO: configurable background color.
-        BeginShaderMode(display->palette_shader);
+    BeginTextureMode(display->framebuffers[0]);
+        ClearBackground((Color){ 0, 0, 0, 255 }); // Required, to clear previous content. (TODO: configurable color?)
 }
 
 void Display_renderEnd(Display_t *display, const Engine_Statistics_t *statistics)
 {
-        EndShaderMode();
     EndTextureMode();
 
     // TODO: implemented filters loop here on a pair of textures.
+    BeginTextureMode(display->framebuffers[1]); // Recolor the framebuffer using the palette.
+        BeginShaderMode(display->palette_shader);
+            DrawTexture(display->framebuffers[0].texture, 0, 0, (Color){ 255, 255, 255, 255 });
+        EndShaderMode();
+    EndTextureMode();
 
     BeginDrawing();
 #ifndef __FAST_FULLSCREEN__
         ClearBackground((Color){ 0, 0, 0, 255 });
 #endif
-        DrawTexturePro(display->offscreen.texture, display->offscreen_source, display->offscreen_destination,
+        DrawTexturePro(display->framebuffers[1].texture, display->offscreen_source, display->offscreen_destination,
             display->offscreen_origin, 0.0f, (Color){ 255, 255, 255, 255 });
 
         if (statistics) {
@@ -238,6 +243,8 @@ void Display_palette(Display_t *display, const Palette_t *palette)
 void Display_terminate(Display_t *display)
 {
     UnloadShader(display->palette_shader);
-    UnloadRenderTexture(display->offscreen);
+    for (size_t i = 0; i < FRAMEBUFFERS_COUNT; ++i) {
+        UnloadRenderTexture(display->framebuffers[i]);
+    }
     CloseWindow();
 }
