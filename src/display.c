@@ -62,7 +62,7 @@ static const char *palette_shader_code =
     "\n"
     "    // Convert the (normalized) texel color RED component (GB would work, too)\n"
     "    // to the palette index by scaling up from [0, 1] to [0, 255].\n"
-    "    int index = int(texelColor.r * 255.0);\n"
+    "    int index = int(floor((texelColor.r * 255.0) + 0.5));\n"
     "\n"
     "    // Pick the palette color as final fragment color (retain the texel alpha value).\n"
     "    // Note: palette components are pre-normalized in the OpenGL range [0, 1].\n"
