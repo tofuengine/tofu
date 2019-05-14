@@ -171,7 +171,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
 
     Palette_t palette; // Initial gray-scale palette.
     for (size_t i = 0; i < MAX_PALETTE_COLORS; ++i) {
-        unsigned char v = ((float)i / (float)(MAX_PALETTE_COLORS - 1)) * 255;
+        unsigned char v = (unsigned char)(((double)i / (double)(MAX_PALETTE_COLORS - 1)) * 255.0);
         palette.colors[i] = (Color){ v, v, v, 255 };
     }
     palette.count = MAX_PALETTE_COLORS;

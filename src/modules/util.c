@@ -64,7 +64,7 @@ const char util_wren[] =
 
 void util_timer_allocate(WrenVM *vm)
 {
-    float period = (float)wrenGetSlotDouble(vm, 1);
+    double period = wrenGetSlotDouble(vm, 1);
     int repeats = (int)wrenGetSlotDouble(vm, 2);
     WrenHandle *callback = wrenGetSlotHandle(vm, 3); // NOTE! This need to be released when the timer is detached!
 #ifdef __DEBUG_API_CALLS__

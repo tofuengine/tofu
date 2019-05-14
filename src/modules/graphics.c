@@ -32,14 +32,14 @@
 #include <string.h>
 
 #ifdef __EXPLICIT_SIGNUM__
-static inline float fsgnf(float value)
+static inline double fsgn(double value)
 {
-    return (value < 0.0f) ? -1.0f : ((value > 0.0f) ? 1.0f : value); // On -0.0, +NaN, -NaN, it returns -0.0, +NaN, -NaN
+    return (value < 0.0) ? -1.0 : ((value > 0.0) ? 1.0 : value); // On -0.0, +NaN, -NaN, it returns -0.0, +NaN, -NaN
 }
 #else
-static inline float fsgnf(float value)
+static inline double fsgn(double value)
 {
-    return (float)((0.0f < value) - (value < 0.0f)); // No cache miss due to branches.
+    return (0.0 < value) - (value < 0.0); // No cache miss due to branches.
 }
 #endif
 
@@ -237,16 +237,16 @@ void graphics_bank_blit_call6(WrenVM *vm)
     int bank_position = cell_id * bank->cell_width;
     int bank_x = bank_position % bank->atlas.width;
     int bank_y = (bank_position / bank->atlas.width) * bank->cell_height;
-    float bank_width = (float)bank->cell_width * fsgnf(scale_x); // The sign controls the mirroring.
-    float bank_height = (float)bank->cell_height * fsgnf(scale_y);
+    double bank_width = (double)bank->cell_width * fsgn(scale_x); // The sign controls the mirroring.
+    double bank_height = (double)bank->cell_height * fsgn(scale_y);
 
-    float width = (float)bank->cell_width * fabsf(scale_x);
-    float height = (float)bank->cell_height * fabsf(scale_y);
-    float half_width = width * 0.5; // Offset to compensate for origin (rotation)
-    float half_height = height * 0.5;
+    double width = (double)bank->cell_width * fabs(scale_x);
+    double height = (double)bank->cell_height * fabs(scale_y);
+    double half_width = width * 0.5; // Offset to compensate for origin (rotation)
+    double half_height = height * 0.5;
 
-    Rectangle sourceRec = (Rectangle){ (float)bank_x, (float)bank_y, bank_width, bank_height };
-    Rectangle destRec = (Rectangle){ x + half_width, y + half_height, width, height };
+    Rectangle sourceRec = (Rectangle){ (float)bank_x, (float)bank_y, (float)bank_width, (float)bank_height };
+    Rectangle destRec = (Rectangle){ (float)x + (float)half_width, (float)y + (float)half_height, (float)width, (float)height };
 
     DrawTexturePro(bank->atlas, sourceRec, destRec, bank->origin, (float)rotation, (Color){ 255, 255, 255, (int)(environment->display->alpha * 255.0) });
 }
@@ -451,7 +451,7 @@ void graphics_canvas_polygon_call3(WrenVM *vm)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.polygon(%d, %d, %d)", mode, color, vertices);
 #endif
 
-    const int count = vertices / 2;
+    const size_t count = vertices / 2;
     if (count == 0) {
         Log_write(LOG_LEVELS_INFO, "[TOFU] Polygon as no vertices");
         return;
@@ -462,24 +462,24 @@ void graphics_canvas_polygon_call3(WrenVM *vm)
     // OpenGL rasterization.
     //
     // http://glprogramming.com/red/appendixg.html#name1
-    float offset = (strcmp(mode, "line") == 0) ? 0.5f : 0.0f;
+    double offset = (strcasecmp(mode, "line") == 0) ? 0.5 : 0.0;
 
     Vector2 points[count];
-    for (int i = 0; i < count; ++i) {
+    for (size_t i = 0; i < count; ++i) {
         wrenGetListElement(vm, 2, (i * 2), aux_slot_id);
-        int x = (int)wrenGetSlotDouble(vm, aux_slot_id);
+        double x = wrenGetSlotDouble(vm, aux_slot_id);
         wrenGetListElement(vm, 2, (i * 2) + 1, aux_slot_id);
-        int y = (int)wrenGetSlotDouble(vm, aux_slot_id);
+        double y = wrenGetSlotDouble(vm, aux_slot_id);
 
         points[i] = (Vector2){
-                .x = (float)x + offset, .y = (float)y + offset
+                .x = (float)(x + offset), .y = (float)(y + offset) // HAZARD: should cast separately?
             };
     }
 
-    if (strcmp(mode, "fill") == 0) {
+    if (strcasecmp(mode, "fill") == 0) {
         DrawTriangleFan(points, count, (Color){ color, color, color, 255 });
     } else
-    if (strcmp(mode, "line") == 0) {
+    if (strcasecmp(mode, "line") == 0) {
         DrawLineStrip(points, count, (Color){ color, color, color, 255 });
     } else {
         Log_write(LOG_LEVELS_WARNING, "[TOFU] Undefined drawing mode for polygon: '%s'", mode);
@@ -489,20 +489,20 @@ void graphics_canvas_polygon_call3(WrenVM *vm)
 void graphics_canvas_circle_call5(WrenVM *vm)
 {
     const char *mode = wrenGetSlotString(vm, 1);
-    int x = (int)wrenGetSlotDouble(vm, 2);
-    int y = (int)wrenGetSlotDouble(vm, 3);
-    float radius = (float)wrenGetSlotDouble(vm, 4);
+    double x = wrenGetSlotDouble(vm, 2);
+    double y = wrenGetSlotDouble(vm, 3);
+    double radius =wrenGetSlotDouble(vm, 4);
     int color = (int)wrenGetSlotDouble(vm, 5);
 
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Canvas.circle(%s, %d, %d, %d, %d)", mode, x, y, radius, color);
 #endif
 
-    if (strcmp(mode, "fill") == 0) {
-        DrawCircle(x, y, radius, (Color){ color, color, color, 255 });
+    if (strcasecmp(mode, "fill") == 0) {
+        DrawCircle((int)x, (int)y, (float)radius, (Color){ color, color, color, 255 });
     } else
-    if (strcmp(mode, "line") == 0) {
-        DrawCircleLines(x, y, radius, (Color){ color, color, color, 255 });
+    if (strcasecmp(mode, "line") == 0) {
+        DrawCircleLines((int)x, (int)y, (float)radius, (Color){ color, color, color, 255 });
 //     } else
 //     if (strcmp(mode, "sector") == 0) {
 //         DrawCircleSector(x, y, radius, (Color){ color, color, color, 255 });
