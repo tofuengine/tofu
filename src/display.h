@@ -59,6 +59,8 @@ typedef struct _Display_t {
 
     Palette_t palette;
     Shader palette_shader;
+
+    double alpha;
 } Display_t;
 
 extern bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title);

@@ -177,6 +177,8 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     palette.count = MAX_PALETTE_COLORS;
     Display_palette(display, &palette);
 
+    display->alpha = 1.0;
+
     return true;
 }
 

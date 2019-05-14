@@ -6,15 +6,12 @@ foreign class Bank {
     foreign cellHeight
 
     blit(cellId, x, y) {
-        blit(cellId, x, y, 0.0, 1.0, 1.0, 1.0)
+        blit(cellId, x, y, 1.0, 1.0, 1.0)
     }
-    blit(cellId, x, y, a) {
-        blit(cellId, x, y, a, 0.0, 1.0, 1.0)
+    blit(cellId, x, y, r) {
+        blit(cellId, x, y, r, 1.0, 1.0)
     }
-    blit(cellId, x, y, a, r) {
-        blit(cellId, x, y, a, r, 1.0, 1.0)
-    }
-    foreign blit(cellId, x, y, a, r, sx, sy)
+    foreign blit(cellId, x, y, r, sx, sy)
 
 }
 
@@ -24,10 +21,7 @@ foreign class Font {
 
     static default { Font.new("default") }
 
-    write(text, x, y, color, size, align) {
-        write(text, x, y, color, size, align, 1.0)
-    }
-    foreign write(text, x, y, color, size, align, alpha)
+    foreign write(text, x, y, color, size, align)
 
 }
 
