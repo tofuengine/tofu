@@ -65,6 +65,8 @@ const Method_Entry_t _methods[] = {
     { "graphics", "Canvas", true, "width", graphics_canvas_width },
     { "graphics", "Canvas", true, "height", graphics_canvas_height },
     { "graphics", "Canvas", true, "palette(_)", graphics_canvas_palette },
+    { "graphics", "Canvas", true, "alpha", graphics_canvas_alpha_get },
+    { "graphics", "Canvas", true, "alpha=(_)", graphics_canvas_alpha },
     { "graphics", "Canvas", true, "point(_,_,_)", graphics_canvas_point },
     { "graphics", "Canvas", true, "polygon(_,_,_)", graphics_canvas_polygon },
     { "graphics", "Canvas", true, "circle(_,_,_,_,_)", graphics_canvas_circle },

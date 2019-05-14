@@ -6,10 +6,10 @@ foreign class Bank {
     foreign cellHeight
 
     blit(cellId, x, y) {
-        draw(cellId, x, y, 0.0, 1.0, 1.0)
+        blit(cellId, x, y, 1.0, 1.0, 1.0)
     }
     blit(cellId, x, y, r) {
-        draw(cellId, x, y, r, 1.0, 1.0)
+        blit(cellId, x, y, r, 1.0, 1.0)
     }
     foreign blit(cellId, x, y, r, sx, sy)
 
@@ -30,6 +30,8 @@ foreign class Canvas {
     foreign static width
     foreign static height
     foreign static palette(colors)
+    foreign static alpha
+    foreign static alpha=(level)
 
     foreign static point(x, y, color)
     foreign static polygon(mode, vertices, color)

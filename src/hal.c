@@ -28,20 +28,29 @@
 #include "config.h"
 #include "log.h"
 
+#define RED_WEIGHT      2.0f
+#define GREEN_WEIGHT    4.0f
+#define BLUE_WEIGHT     3.0f
+
+// https://en.wikipedia.org/wiki/Color_difference
 static size_t find_nearest_color(const Palette_t *palette, Color color)
 {
     size_t index = 0;
     float minimum = __FLT_MAX__;
     for (size_t i = 0; i < palette->count; ++i) {
         const Color *current = &palette->colors[i];
+
+        float delta_r = (float)(color.r - current->r);
+        float delta_g = (float)(color.g - current->g);
+        float delta_b = (float)(color.b - current->b);
 #ifdef __FIND_NEAREST_COLOR_EUCLIDIAN__
-        float distance = sqrtf(powf(color.r - current->r, 2.0f)
-            + powf(color.g - current->g, 2.0f)
-            + powf(color.b - current->b, 2.0f));
+        float distance = sqrtf((delta_r * delta_r) * RED_WEIGHT
+            + (delta_g * delta_g) * GREEN_WEIGHT
+            + (delta_b * delta_b)) * BLUE_WEIGHT;
 #else
-        float distance = powf(color.r - current->r, 2.0f) // Faster, no need to get the Euclidean distance.
-            + powf(color.g - current->g, 2.0f)
-            + powf(color.b - current->b, 2.0f);
+        float distance = (delta_r * delta_r) * RED_WEIGHT
+            + (delta_g * delta_g) * GREEN_WEIGHT
+            + (delta_b * delta_b) * BLUE_WEIGHT; // Faster, no need to get the Euclidean distance.
 #endif
         if (minimum > distance) {
             minimum = distance;

@@ -31,7 +31,7 @@
 
 #include "hal.h"
 
-#define VALUES_PER_COLOR        4
+#define VALUES_PER_COLOR        3
 
 #define ALPHA_COLOR_TRANSPARENT 0
 #define ALPHA_COLOR_OPAQUE      255
@@ -59,6 +59,8 @@ typedef struct _Display_t {
 
     Palette_t palette;
     Shader palette_shader;
+
+    double alpha;
 } Display_t;
 
 extern bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title);

@@ -40,6 +40,8 @@ extern void graphics_font_write(WrenVM *vm);
 extern void graphics_canvas_width(WrenVM *vm);
 extern void graphics_canvas_height(WrenVM *vm);
 extern void graphics_canvas_palette(WrenVM *vm);
+extern void graphics_canvas_alpha(WrenVM *vm);
+extern void graphics_canvas_alpha_get(WrenVM *vm);
 extern void graphics_canvas_point(WrenVM *vm); // TODO: should points, poligons and circles be objects?
 extern void graphics_canvas_polygon(WrenVM *vm);
 extern void graphics_canvas_circle(WrenVM *vm);

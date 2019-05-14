@@ -46,7 +46,7 @@ static const char *palette_shader_code =
     "\n"
     "// Input uniform values\n"
     "uniform sampler2D texture0;\n"
-    "uniform vec4 palette[colors];\n"
+    "uniform vec3 palette[colors];\n"
     "\n"
     "// Output fragment color\n"
     "out vec4 finalColor;\n"
@@ -177,6 +177,8 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     palette.count = MAX_PALETTE_COLORS;
     Display_palette(display, &palette);
 
+    display->alpha = 1.0;
+
     return true;
 }
 
@@ -188,21 +190,23 @@ bool Display_shouldClose(Display_t *display)
 void Display_renderBegin(Display_t *display)
 {
     BeginTextureMode(display->offscreen);
-        ClearBackground(BLACK);
+        ClearBackground((Color){ 0, 0, 0, 255 }); // TODO: configurable background color.
+        BeginShaderMode(display->palette_shader);
 }
 
 void Display_renderEnd(Display_t *display, const Engine_Statistics_t *statistics)
 {
+        EndShaderMode();
     EndTextureMode();
+
+    // TODO: implemented filters loop here on a pair of textures.
 
     BeginDrawing();
 #ifndef __FAST_FULLSCREEN__
-        ClearBackground(BLACK);
+        ClearBackground((Color){ 0, 0, 0, 255 });
 #endif
-        BeginShaderMode(display->palette_shader);
-            DrawTexturePro(display->offscreen.texture, display->offscreen_source, display->offscreen_destination,
-                display->offscreen_origin, 0.0f, WHITE);
-        EndShaderMode();
+        DrawTexturePro(display->offscreen.texture, display->offscreen_source, display->offscreen_destination,
+            display->offscreen_origin, 0.0f, (Color){ 255, 255, 255, 255 });
 
         if (statistics) {
             draw_statistics(statistics);
@@ -218,14 +222,13 @@ void Display_palette(Display_t *display, const Palette_t *palette)
         colors[j    ] = (float)palette->colors[i].r / 255.0f;
         colors[j + 1] = (float)palette->colors[i].g / 255.0f;
         colors[j + 2] = (float)palette->colors[i].b / 255.0f;
-        colors[j + 3] = (float)palette->colors[i].a / 255.0f;
     }
     display->palette = *palette;
     int uniform_location = GetShaderLocation(display->palette_shader, "palette");
     if (uniform_location == -1) {
         return;
     }
-    SetShaderValueV(display->palette_shader, uniform_location, colors, UNIFORM_VEC4, MAX_PALETTE_COLORS);
+    SetShaderValueV(display->palette_shader, uniform_location, colors, UNIFORM_VEC3, MAX_PALETTE_COLORS);
 }
 
 void Display_terminate(Display_t *display)
