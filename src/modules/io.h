@@ -27,6 +27,6 @@
 
 extern const char io_wren[];
 
-extern void io_file_read(WrenVM *vm);
+extern void io_file_read_call1(WrenVM *vm);
 
 #endif  /* __MODULES_IO_H__ */

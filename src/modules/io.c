@@ -28,7 +28,7 @@
 
 #include <string.h>
 
-// TODO: annotate "native" methods with a "_" suffix?
+// TODO: annotate "native" methods with a "_" suffix? Or only private ones?
 
 const char io_wren[] =
     "foreign class File {\n"
@@ -38,7 +38,7 @@ const char io_wren[] =
     "}\n"
 ;
 
-void io_file_read(WrenVM *vm)
+void io_file_read_call1(WrenVM *vm)
 {
     Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 

@@ -93,7 +93,7 @@ void util_timer_finalize(void *userData, void *data)
     TimerPool_release(instance->timer_pool, instance->timer);
 }
 
-void util_timer_reset(WrenVM *vm)
+void util_timer_reset_call0(WrenVM *vm)
 {
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Timer.cancel()");
@@ -104,7 +104,7 @@ void util_timer_reset(WrenVM *vm)
     TimerPool_reset(instance->timer_pool, instance->timer);
 }
 
-void util_timer_cancel(WrenVM *vm)
+void util_timer_cancel_call0(WrenVM *vm)
 {
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Timer.cancel()");

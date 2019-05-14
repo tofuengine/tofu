@@ -30,11 +30,11 @@ extern const char collections_wren[];
 extern void collections_grid_allocate(WrenVM* vm);
 extern void collections_grid_finalize(void *userData, void* data);
 
-extern void collections_grid_width(WrenVM *vm);
-extern void collections_grid_height(WrenVM *vm);
-extern void collections_grid_fill(WrenVM *vm);
-extern void collections_grid_stride(WrenVM *vm); // TODO: rename to "fill()" and override?
-extern void collections_grid_peek(WrenVM *vm);
-extern void collections_grid_poke(WrenVM *vm);
+extern void collections_grid_width_get(WrenVM *vm);
+extern void collections_grid_height_get(WrenVM *vm);
+extern void collections_grid_fill_call1(WrenVM *vm);
+extern void collections_grid_stride_call4(WrenVM *vm); // TODO: rename to "fill()" and override?
+extern void collections_grid_peek_call2(WrenVM *vm);
+extern void collections_grid_poke_call3(WrenVM *vm);
 
 #endif  /* __MODULES_COLLECTIONS_H__ */
