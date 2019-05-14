@@ -40,7 +40,11 @@ const char collections_wren[] =
     "}\n"
 ;
 
-typedef int Cell_t; // TODO: Is `double` be better?
+#ifdef __GRID_INTEGER_CELL__
+typedef long Cell_t;
+#else
+typedef double Cell_t;
+#endif
 
 typedef struct _Grid_Class_t {
     int width;
