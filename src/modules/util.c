@@ -64,7 +64,7 @@ const char util_wren[] =
 
 void util_timer_allocate(WrenVM *vm)
 {
-    float period = (float)wrenGetSlotDouble(vm, 1);
+    double period = wrenGetSlotDouble(vm, 1);
     int repeats = (int)wrenGetSlotDouble(vm, 2);
     WrenHandle *callback = wrenGetSlotHandle(vm, 3); // NOTE! This need to be released when the timer is detached!
 #ifdef __DEBUG_API_CALLS__
@@ -93,7 +93,7 @@ void util_timer_finalize(void *userData, void *data)
     TimerPool_release(instance->timer_pool, instance->timer);
 }
 
-void util_timer_reset(WrenVM *vm)
+void util_timer_reset_call0(WrenVM *vm)
 {
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Timer.cancel()");
@@ -104,7 +104,7 @@ void util_timer_reset(WrenVM *vm)
     TimerPool_reset(instance->timer_pool, instance->timer);
 }
 
-void util_timer_cancel(WrenVM *vm)
+void util_timer_cancel_call0(WrenVM *vm)
 {
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Timer.cancel()");

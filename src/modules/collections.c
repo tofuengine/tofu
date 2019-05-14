@@ -40,7 +40,11 @@ const char collections_wren[] =
     "}\n"
 ;
 
-typedef int Cell_t; // TODO: Is `double` be better?
+#ifdef __GRID_INTEGER_CELL__
+typedef long Cell_t;
+#else
+typedef double Cell_t;
+#endif
 
 typedef struct _Grid_Class_t {
     int width;
@@ -125,21 +129,21 @@ void collections_grid_finalize(void *userData, void *data)
     Memory_free(instance->offsets);
 }
 
-void collections_grid_width(WrenVM *vm)
+void collections_grid_width_get(WrenVM *vm)
 {
     Grid_Class_t *instance = (Grid_Class_t *)wrenGetSlotForeign(vm, 0);
 
     wrenSetSlotDouble(vm, 0, instance->width);
 }
 
-void collections_grid_height(WrenVM *vm)
+void collections_grid_height_get(WrenVM *vm)
 {
     Grid_Class_t *instance = (Grid_Class_t *)wrenGetSlotForeign(vm, 0);
 
     wrenSetSlotDouble(vm, 0, instance->height);
 }
 
-void collections_grid_fill(WrenVM *vm)
+void collections_grid_fill_call1(WrenVM *vm)
 {
     WrenType type = wrenGetSlotType(vm, 1);
 
@@ -189,7 +193,7 @@ void collections_grid_fill(WrenVM *vm)
     }
 }
 
-void collections_grid_stride(WrenVM *vm)
+void collections_grid_stride_call4(WrenVM *vm)
 {
     int column = (int)wrenGetSlotDouble(vm, 1);
     int row = (int)wrenGetSlotDouble(vm, 2);
@@ -242,7 +246,7 @@ void collections_grid_stride(WrenVM *vm)
     }
 }
 
-void collections_grid_peek(WrenVM *vm)
+void collections_grid_peek_call2(WrenVM *vm)
 {
     int column = (int)wrenGetSlotDouble(vm, 1);
     int row = (int)wrenGetSlotDouble(vm, 2);
@@ -256,7 +260,7 @@ void collections_grid_peek(WrenVM *vm)
     wrenSetSlotDouble(vm, 0, value);
 }
 
-void collections_grid_poke(WrenVM *vm)
+void collections_grid_poke_call3(WrenVM *vm)
 {
     int column = (int)wrenGetSlotDouble(vm, 1);
     int row = (int)wrenGetSlotDouble(vm, 2);

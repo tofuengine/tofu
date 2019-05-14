@@ -26,16 +26,17 @@
 
 void *Memory_alloc(size_t size)
 {
-    return Memory_realloc(NULL, size);
+    return malloc(size);
 }
 
 void *Memory_calloc(size_t num, size_t size)
 {
-    void *ptr = Memory_realloc(NULL, num * size);
-    if (ptr) {
-        memset(ptr, 0x00, num * size);
-    }
-    return ptr;
+    return calloc(num, size);
+}
+
+void Memory_clear(void *ptr, size_t size)
+{
+    memset(ptr, 0x00, size);
 }
 
 void Memory_free(void *ptr)

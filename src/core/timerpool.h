@@ -34,16 +34,16 @@ typedef enum _Timer_State_t {
 } Timer_State_t;
 
 typedef struct _Timer_Value_t {
-    float period;
-    int repeats;
+    double period;
+    size_t repeats;
     WrenHandle *callback; // Need to be released explicitly. Should be opaque?
 } Timer_Value_t;
 
 typedef struct _Timer_t {
     Timer_Value_t value;
 
-    float age;
-    int loops;
+    double age;
+    size_t loops;
     Timer_State_t state;
 
     struct _Timer_t *prev; // The pool is handler as a double-linked-list.

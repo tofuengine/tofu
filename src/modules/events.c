@@ -56,7 +56,7 @@ const char events_wren[] =
     "}\n"
 ;
 
-void events_input_iskeydown(WrenVM *vm)
+void events_input_iskeydown_call1(WrenVM *vm)
 {
     // Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
@@ -65,7 +65,7 @@ void events_input_iskeydown(WrenVM *vm)
     wrenSetSlotBool(vm, 0, is_down == true);
 }
 
-void events_input_iskeyup(WrenVM *vm)
+void events_input_iskeyup_call1(WrenVM *vm)
 {
     // Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
@@ -74,7 +74,7 @@ void events_input_iskeyup(WrenVM *vm)
     wrenSetSlotBool(vm, 0, is_up == true);
 }
 
-void events_input_iskeypressed(WrenVM *vm)
+void events_input_iskeypressed_call1(WrenVM *vm)
 {
     // Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
@@ -83,7 +83,7 @@ void events_input_iskeypressed(WrenVM *vm)
     wrenSetSlotBool(vm, 0, is_pressed == true);
 }
 
-void events_input_iskeyreleased(WrenVM *vm)
+void events_input_iskeyreleased_call1(WrenVM *vm)
 {
     // Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
@@ -92,7 +92,7 @@ void events_input_iskeyreleased(WrenVM *vm)
     wrenSetSlotBool(vm, 0, is_released == true);
 }
 
-void events_environment_quit(WrenVM *vm)
+void events_environment_quit_call0(WrenVM *vm)
 {
     Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 

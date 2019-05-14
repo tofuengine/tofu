@@ -27,10 +27,10 @@
 
 extern const char events_wren[];
 
-extern void events_input_iskeydown(WrenVM *vm);
-extern void events_input_iskeyup(WrenVM *vm);
-extern void events_input_iskeypressed(WrenVM *vm);
-extern void events_input_iskeyreleased(WrenVM *vm);
-extern void events_environment_quit(WrenVM *vm);
+extern void events_input_iskeydown_call1(WrenVM *vm);
+extern void events_input_iskeyup_call1(WrenVM *vm);
+extern void events_input_iskeypressed_call1(WrenVM *vm);
+extern void events_input_iskeyreleased_call1(WrenVM *vm);
+extern void events_environment_quit_call0(WrenVM *vm);
 
 #endif  /* __MODULES_EVENTS_H__ */
