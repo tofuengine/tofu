@@ -78,6 +78,8 @@ const char graphics_wren[] =
     "    foreign static width\n"
     "    foreign static height\n"
     "    foreign static palette(colors)\n"
+    "    foreign static alpha\n"
+    "    foreign static alpha=(level)\n"
     "\n"
     "    foreign static point(x, y, color)\n"
     "    foreign static polygon(mode, vertices, color)\n"
@@ -405,6 +407,22 @@ void graphics_canvas_palette(WrenVM *vm)
     Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
     
     Display_palette(environment->display, &palette);
+}
+
+void graphics_canvas_alpha(WrenVM *vm)
+{
+    double alpha = wrenGetSlotDouble(vm, 1);
+
+    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+
+    environment->display->alpha = alpha;
+}
+
+void graphics_canvas_alpha_get(WrenVM *vm)
+{
+    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+
+    wrenSetSlotDouble(vm, 0, environment->display->alpha);
 }
 
 void graphics_canvas_point(WrenVM *vm)

@@ -16,6 +16,7 @@ class Game {
         _bunnies = []
 
         Canvas.palette("arne-16")
+        //Canvas.alpha = 0.5
 
         _bank = Bank.new("./assets/sheet.png", 26, 37)
         _font = Font.default
