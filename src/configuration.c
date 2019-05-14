@@ -24,6 +24,7 @@
 
 #include "file.h"
 #include "log.h"
+#include "memory.h"
 
 #include <jsmn/jsmn.h>
 
@@ -136,5 +137,5 @@ void Configuration_load(Configuration_t *configuration, const char *filename)
         parse_pair(configuration, key, value, json_value.type);
     }
 
-    free(json);
+    Memory_free(json);
 }

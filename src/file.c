@@ -53,7 +53,7 @@ char *file_load_as_string(const char *filename, const char *mode)
     size_t read_bytes = fread(data, sizeof(char), length, file);
     fclose(file);
     if (read_bytes < length) {
-        free(data);
+        Memory_free(data);
         return NULL;
     }
     data[length] = '\0';
