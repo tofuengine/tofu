@@ -29,6 +29,10 @@
 
 #include <memory.h>
 
+#ifndef GLfloat
+typedef float GLfloat;
+#endif
+
 #define UNCAPPED_FPS                0
 
 #define FPS_HISTOGRAM_HEIGHT        30
@@ -216,12 +220,12 @@ void Display_renderEnd(Display_t *display, const Engine_Statistics_t *statistics
 
 void Display_palette(Display_t *display, const Palette_t *palette)
 {
-    float colors[MAX_PALETTE_COLORS * VALUES_PER_COLOR] = {};
+    GLfloat colors[MAX_PALETTE_COLORS * VALUES_PER_COLOR] = {};
     for (size_t i = 0; i < palette->count; ++i) {
         int j = i * VALUES_PER_COLOR;
-        colors[j    ] = (float)palette->colors[i].r / 255.0f;
-        colors[j + 1] = (float)palette->colors[i].g / 255.0f;
-        colors[j + 2] = (float)palette->colors[i].b / 255.0f;
+        colors[j    ] = (GLfloat)palette->colors[i].r / (GLfloat)255.0;
+        colors[j + 1] = (GLfloat)palette->colors[i].g / (GLfloat)255.0;
+        colors[j + 2] = (GLfloat)palette->colors[i].b / (GLfloat)255.0;
     }
     display->palette = *palette;
     int uniform_location = GetShaderLocation(display->palette_shader, "palette");
