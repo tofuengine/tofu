@@ -217,7 +217,8 @@ void Display_renderEnd(Display_t *display, double now, const Engine_Statistics_t
 
         int uniform_location = GetShaderLocation(display->shaders[i], "time"); // Send current time to shader.
         if (uniform_location != -1) {
-            SetShaderValue(display->shaders[i], uniform_location, &now, UNIFORM_FLOAT);
+            GLfloat time = (float)now;
+            SetShaderValue(display->shaders[i], uniform_location, &time, UNIFORM_FLOAT);
         }
 
         BeginTextureMode(display->framebuffers[target]);
