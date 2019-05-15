@@ -20,31 +20,9 @@
  * SOFTWARE.
  **/
 
-#ifndef __MODULES_GRAPHICS_H__
-#define __MODULES_GRAPHICS_H__
+#ifndef __GRAPHICS_SHADERS_H__
+#define __GRAPHICS_SHADERS_H__
 
-#include <wren/wren.h>
+extern const char *graphics_shaders_find(const char *id);
 
-extern const char graphics_wren[];
-
-extern void graphics_bank_allocate(WrenVM* vm);
-extern void graphics_bank_finalize(void *userData, void* data);
-extern void graphics_bank_cell_width_get(WrenVM *vm);
-extern void graphics_bank_cell_height_get(WrenVM *vm);
-extern void graphics_bank_blit_call6(WrenVM *vm);
-
-extern void graphics_font_allocate(WrenVM* vm);
-extern void graphics_font_finalize(void *userData, void* data);
-extern void graphics_font_write_call6(WrenVM *vm);
-
-extern void graphics_canvas_width_get(WrenVM *vm);
-extern void graphics_canvas_height_get(WrenVM *vm);
-extern void graphics_canvas_palette_call1(WrenVM *vm);
-extern void graphics_canvas_shader_call2(WrenVM *vm);
-extern void graphics_canvas_alpha_get(WrenVM *vm);
-extern void graphics_canvas_alpha_set(WrenVM *vm);
-extern void graphics_canvas_point_call3(WrenVM *vm); // TODO: should points, poligons and circles be objects?
-extern void graphics_canvas_polygon_call3(WrenVM *vm);
-extern void graphics_canvas_circle_call5(WrenVM *vm);
-
-#endif  /* __MODULES_GRAPHICS_H__ */
+#endif  /* __GRAPHICS_SHADERS_H__ */

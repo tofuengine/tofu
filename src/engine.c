@@ -159,6 +159,6 @@ void Engine_run(Engine_t *engine)
 
         Display_renderBegin(&engine->display);
             Interpreter_render(&engine->interpreter, lag / delta_time);
-        Display_renderEnd(&engine->display, current_statistics);
+        Display_renderEnd(&engine->display, current, current_statistics);
     }
 }

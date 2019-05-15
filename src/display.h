@@ -32,8 +32,9 @@
 #include "hal.h"
 
 #define FRAMEBUFFERS_COUNT      2
+#define SHADERS_COUNT           5
 
-#define VALUES_PER_COLOR        3
+#define SHADER_INDEX_PALETTE    0
 
 #define ALPHA_COLOR_TRANSPARENT 0
 #define ALPHA_COLOR_OPAQUE      255
@@ -55,12 +56,13 @@ typedef struct _Display_t {
 
     int window_width, window_height, window_scale;
 
-    RenderTexture2D framebuffers[2];
+    RenderTexture2D framebuffers[FRAMEBUFFERS_COUNT];
     Rectangle offscreen_source, offscreen_destination;
     Vector2 offscreen_origin;
 
     Palette_t palette;
-    Shader palette_shader;
+
+    Shader shaders[SHADERS_COUNT];
 
     double alpha;
 } Display_t;
@@ -68,8 +70,9 @@ typedef struct _Display_t {
 extern bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title);
 extern bool Display_shouldClose(Display_t *display);
 extern void Display_renderBegin(Display_t *display);
-extern void Display_renderEnd(Display_t *display, const Engine_Statistics_t *statistics);
+extern void Display_renderEnd(Display_t *display, double now, const Engine_Statistics_t *statistics);
 extern void Display_palette(Display_t *display, const Palette_t *palette);
+extern void Display_shader(Display_t *display, size_t index, const char *code);
 extern void Display_terminate(Display_t *display);
 
 #endif  /* __DISPLAY_H__ */

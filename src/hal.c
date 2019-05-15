@@ -60,6 +60,7 @@ static size_t find_nearest_color(const Palette_t *palette, Color color)
     return index;
 }
 
+// TODO: convert image with a shader.
 static void convert_image_to_palette(Image *image, const Palette_t *palette)
 {
     Color *pixels = GetImageData(*image);
