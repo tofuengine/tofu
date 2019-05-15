@@ -30,7 +30,7 @@
 #define FPS_AVERAGE_SAMPLES         256
 #define FPS_STATISTICS_RESOLUTION   10
 
-#define MAX_PALETTE_COLORS          64
+#define MAX_PALETTE_COLORS          256
 
 #define GARBAGE_COLLECTION_PERIOD   60.0
 

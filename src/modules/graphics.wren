@@ -30,6 +30,7 @@ foreign class Canvas {
     foreign static width
     foreign static height
     foreign static palette(colors)
+    foreign static shader(index, code)
     foreign static alpha
     foreign static alpha=(level)
 

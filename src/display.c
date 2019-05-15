@@ -33,6 +33,8 @@
 typedef float GLfloat;
 #endif
 
+#define VALUES_PER_COLOR            3
+
 #define UNCAPPED_FPS                0
 
 #define FPS_HISTOGRAM_HEIGHT        30
@@ -42,7 +44,7 @@ typedef float GLfloat;
 static const char *palette_shader_code = 
     "#version 330\n"
     "\n"
-    "const int colors = 64;\n"
+    "const int colors = 256;\n"
     "\n"
     "// Input fragment attributes (from fragment shader)\n"
     "in vec2 fragTexCoord;\n"
@@ -62,7 +64,7 @@ static const char *palette_shader_code =
     "\n"
     "    // Convert the (normalized) texel color RED component (GB would work, too)\n"
     "    // to the palette index by scaling up from [0, 1] to [0, 255].\n"
-    "    int index = int(texelColor.r * 255.0);\n"
+    "    int index = int(floor((texelColor.r * 255.0) + 0.5));\n"
     "\n"
     "    // Pick the palette color as final fragment color (retain the texel alpha value).\n"
     "    // Note: palette components are pre-normalized in the OpenGL range [0, 1].\n"
@@ -160,10 +162,12 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         ToggleFullscreen();
     }
 
-    display->offscreen = LoadRenderTexture(configuration->width, configuration->height);
-    SetTextureFilter(display->offscreen.texture, FILTER_POINT); // Nearest-neighbour scaling.
+    for (size_t i = 0; i < FRAMEBUFFERS_COUNT; ++i) {
+        display->framebuffers[i] = LoadRenderTexture(configuration->width, configuration->height);
+        SetTextureFilter(display->framebuffers[i].texture, FILTER_POINT); // Nearest-neighbour scaling.
+    }
 
-    display->offscreen_source = (Rectangle){ 0.0f, 0.0f, (float)display->offscreen.texture.width, (float)-display->offscreen.texture.height };
+    display->offscreen_source = (Rectangle){ 0.0f, 0.0f, (float)configuration->width, (float)-configuration->height };
     if (configuration->fullscreen) {
         display->offscreen_destination = (Rectangle){ (float)x, (float)y, (float)display->window_width, (float)display->window_height };
     } else {
@@ -171,7 +175,10 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     }
     display->offscreen_origin = (Vector2){ 0.0f, 0.0f };
 
-    display->palette_shader = LoadShaderCode(NULL, (char *)palette_shader_code);
+    for (size_t i = 0; i < SHADERS_COUNT; ++i) { // Initialize shader-chain.
+        display->shaders[i] = (Shader){};
+    }
+    Display_shader(display, SHADER_INDEX_PALETTE, palette_shader_code);
 
     Palette_t palette; // Initial gray-scale palette.
     for (size_t i = 0; i < MAX_PALETTE_COLORS; ++i) {
@@ -193,23 +200,45 @@ bool Display_shouldClose(Display_t *display)
 
 void Display_renderBegin(Display_t *display)
 {
-    BeginTextureMode(display->offscreen);
-        ClearBackground((Color){ 0, 0, 0, 255 }); // TODO: configurable background color.
-        BeginShaderMode(display->palette_shader);
+    BeginTextureMode(display->framebuffers[0]);
+        ClearBackground((Color){ 0, 0, 0, 255 }); // Required, to clear previous content. (TODO: configurable color?)
 }
 
-void Display_renderEnd(Display_t *display, const Engine_Statistics_t *statistics)
+void Display_renderEnd(Display_t *display, double now, const Engine_Statistics_t *statistics)
 {
-        EndShaderMode();
     EndTextureMode();
 
-    // TODO: implemented filters loop here on a pair of textures.
+    Rectangle os = display->offscreen_source;
+    size_t source = 0, target = 1;
+    for (size_t i = 0; i < SHADERS_COUNT; ++i) { // Post-processing filters chain. Shader #0 is the palette shader.
+        if (display->shaders[i].id == 0) {
+            break;
+        }
+
+        int uniform_location = GetShaderLocation(display->shaders[i], "time"); // Send current time to shader.
+        if (uniform_location != -1) {
+            GLfloat time = (float)now;
+            SetShaderValue(display->shaders[i], uniform_location, &time, UNIFORM_FLOAT);
+        }
+
+        BeginTextureMode(display->framebuffers[target]);
+            BeginShaderMode(display->shaders[i]);
+                DrawTexture(display->framebuffers[source].texture, 0, 0, (Color){ 255, 255, 255, 255 });
+            EndShaderMode();
+        EndTextureMode();
+
+        size_t aux = target;
+        target = source;
+        source = aux;
+
+        os.height *= -1.0; // Y-flip on even number of shaders.
+    }
 
     BeginDrawing();
 #ifndef __FAST_FULLSCREEN__
         ClearBackground((Color){ 0, 0, 0, 255 });
 #endif
-        DrawTexturePro(display->offscreen.texture, display->offscreen_source, display->offscreen_destination,
+        DrawTexturePro(display->framebuffers[source].texture, os, display->offscreen_destination,
             display->offscreen_origin, 0.0f, (Color){ 255, 255, 255, 255 });
 
         if (statistics) {
@@ -228,16 +257,41 @@ void Display_palette(Display_t *display, const Palette_t *palette)
         colors[j + 2] = (GLfloat)palette->colors[i].b / (GLfloat)255.0;
     }
     display->palette = *palette;
-    int uniform_location = GetShaderLocation(display->palette_shader, "palette");
+    int uniform_location = GetShaderLocation(display->shaders[SHADER_INDEX_PALETTE], "palette");
     if (uniform_location == -1) {
         return;
     }
-    SetShaderValueV(display->palette_shader, uniform_location, colors, UNIFORM_VEC3, MAX_PALETTE_COLORS);
+    SetShaderValueV(display->shaders[SHADER_INDEX_PALETTE], uniform_location, colors, UNIFORM_VEC3, MAX_PALETTE_COLORS);
+}
+
+void Display_shader(Display_t *display, size_t index, const char *code)
+{
+    if (display->shaders[index].id != 0) {
+        UnloadShader(display->shaders[index]);
+        display->shaders[index].id = 0;
+
+        Log_write(LOG_LEVELS_DEBUG, "Shader %d unloaded", index);
+    }
+
+    if (!code || !code[0]) {
+        return;
+    }
+
+    display->shaders[index] = LoadShaderCode(NULL, (char *)code);
+
+    Log_write(LOG_LEVELS_DEBUG, "Shader %d loaded", index);
 }
 
 void Display_terminate(Display_t *display)
 {
-    UnloadShader(display->palette_shader);
-    UnloadRenderTexture(display->offscreen);
+    for (size_t i = 0; i < SHADERS_COUNT; ++i) {
+        if (display->shaders[i].id == 0) {
+            continue;
+        }
+        UnloadShader(display->shaders[i]);
+    }
+    for (size_t i = 0; i < FRAMEBUFFERS_COUNT; ++i) {
+        UnloadRenderTexture(display->framebuffers[i]);
+    }
     CloseWindow();
 }
