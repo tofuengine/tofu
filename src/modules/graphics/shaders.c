@@ -44,10 +44,36 @@ static const char *greyscale =
     "}\n"
 "";
 
+static const char *wave = 
+    "#version 330\n"
+    "\n"
+    "in vec2 fragTexCoord;\n"
+    "in vec4 fragColor;\n"
+    "\n"
+    "uniform sampler2D texture0;\n"
+    "uniform float time;\n"
+    "\n"
+    "out vec4 finalColor;\n"
+    "\n"
+    "void main()\n"
+    "{\n"
+    "    vec2 uv = fragTexCoord.xy;\n"
+    "    uv *= 2.0;\n"
+    "    uv -= 1.0;\n"
+    "    vec3 waveColor = vec3(1.0, 1.0, 1.0);\n"
+    "    waveColor *= abs(0.2 / (sin(uv.x + sin(uv.y + time) * 0.1) * 20.0));\n"
+    "    vec4 texel = texture(texture0, fragTexCoord) * fragColor;\n"
+    "    finalColor = vec4(mix(waveColor.rgb, texel.rgb, 0.5), texel.a);\n"
+    "}\n"
+"";
+
 const char *graphics_shaders_find(const char *id)
 {
     if (strcasecmp(id, "greyscale") == 0) {
         return greyscale;
+    }
+    if (strcasecmp(id, "wave") == 0) {
+        return wave;
     }
     return NULL;
 }
