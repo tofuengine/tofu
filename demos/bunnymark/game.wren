@@ -36,6 +36,10 @@ class Game {
             _bunnies.clear()
         } else if (Input.isKeyPressed(Input.enter)) {
             _running = !_running
+        } else if (Input.isKeyPressed(Input.up)) {
+            Canvas.shader(0, "wave")
+        } else if (Input.isKeyPressed(Input.down)) {
+            Canvas.shader(0, "")
         }
     }
 
