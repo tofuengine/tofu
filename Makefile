@@ -2,8 +2,8 @@ TARGET=tofu
 
 COMPILER=cc
 CWARNINGS=-Wall -Wextra -Werror -Wno-unused-parameter
-#CFLAGS=-O0 -DDEBUG -g -D_DEFAULT_SOURCE -std=c99 -Iexternal
-CFLAGS=-O2 -g -D_DEFAULT_SOURCE -std=c99 -Iexternal
+CFLAGS=-O0 -DDEBUG -g -D_DEFAULT_SOURCE -std=c99 -Iexternal
+#CFLAGS=-O2 -g -D_DEFAULT_SOURCE -std=c99 -Iexternal
 
 LINKER=cc
 LFLAGS=-Wall -Wextra -Werror -Lexternal/raylib -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
@@ -20,7 +20,7 @@ $(TARGET): $(OBJECTS)
 	@$(LINKER) $(OBJECTS) $(LFLAGS) -o $@
 	@echo "Linking complete!"
 
-$(OBJECTS): %.o : %.c $(INCLUDES)
+$(OBJECTS): %.o : %.c $(INCLUDES) Makefile
 	@$(COMPILER) $(CFLAGS) $(CWARNINGS) -c $< -o $@
 	@echo "Compiled "$<" successfully!"
 
