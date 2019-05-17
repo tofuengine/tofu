@@ -6,10 +6,10 @@ CFLAGS=-O0 -DDEBUG -g -D_DEFAULT_SOURCE -std=c99 -Iexternal
 #CFLAGS=-O2 -g -D_DEFAULT_SOURCE -std=c99 -Iexternal
 
 LINKER=cc
-LFLAGS=-Wall -Wextra -Werror -Lexternal/raylib -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
+LFLAGS=-Wall -Wextra -Werror -Lexternal/GLFW -lglfw3 -lm  -ldl -lpthread -lrt -lX11
 
-SOURCES:= $(wildcard src/*.c  src/core/*.c src/modules/*.c src/modules/graphics/*.c external/jsmn/*.c external/wren/*.c)
-INCLUDES:= $(wildcard src/*.h src/core/*.h src/modules/*.h src/modules/graphics/*.h external/jsmn/*.h external/wren/*.h external/raylib/*.h)
+SOURCES:= $(wildcard src/*.c  src/core/*.c src/modules/*.c src/modules/graphics/*.c external/jsmn/*.c external/glad/*.c external/wren/*.c)
+INCLUDES:= $(wildcard src/*.h src/core/*.h src/modules/*.h src/modules/graphics/*.h external/jsmn/*.h external/wren/*.h external/GLFW/*.h external/glad/*.h)
 OBJECTS:= $(SOURCES:%.c=%.o)
 rm=rm -f
 
