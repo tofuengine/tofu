@@ -8,10 +8,12 @@ CFLAGS=-O0 -DDEBUG -g -D_DEFAULT_SOURCE -std=c99 -Iexternal
 LINKER=cc
 LFLAGS=-Wall -Wextra -Werror -Lexternal/GLFW -lglfw3 -lm  -ldl -lpthread -lrt -lX11
 
-SOURCES:= $(wildcard src/*.c  src/core/*.c src/modules/*.c src/modules/graphics/*.c external/jsmn/*.c external/glad/*.c external/wren/*.c)
-INCLUDES:= $(wildcard src/*.h src/core/*.h src/modules/*.h src/modules/graphics/*.h external/jsmn/*.h external/wren/*.h external/GLFW/*.h external/glad/*.h)
+SOURCES:= $(wildcard src/*.c  src/core/*.c src/modules/*.c src/modules/graphics/*.c external/glad/*.c external/jsmn/*.c external/stb/*.c external/wren/*.c)
+INCLUDES:= $(wildcard src/*.h src/core/*.h src/modules/*.h src/modules/graphics/*.h external/glad/*.h external/GLFW/*.h external/jsmn/*.h external/stb/*.h external/wren/*.h)
 OBJECTS:= $(SOURCES:%.c=%.o)
-rm=rm -f
+RM=rm -f
+
+#https://glad.dav1d.de/
 
 default: $(TARGET)
 all: default
@@ -42,10 +44,10 @@ timers: $(TARGET)
 
 .PHONY: clean
 clean:
-	@$(rm) $(OBJECTS)
+	@$(RM) $(OBJECTS)
 	@echo "Cleanup complete!"
 
 .PHONY: remove
 remove: clean
-	@$(rm) $(TARGET)
+	@$(RM) $(TARGET)
 	@echo "Executable removed!"
