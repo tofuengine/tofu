@@ -22,40 +22,50 @@
 
 #include "log.h"
 
-#include <raylib/raylib.h>
-
 #include <stdio.h>
 #include <stdarg.h>
 
-#define MAX_LOG_MESSAGE_LENGTH      256
+#define COLOR_NONE      ""
+#define COLOR_RED       "\033[0;31m"
+#define COLOR_GREEN     "\033[0;32m"
+#define COLOR_YELLOW    "\033[0;33m"
+#define COLOR_BLUE      "\033[0;34m"
+#define COLOR_MAGENTA   "\033[0;35m"
+#define COLOR_CYAN      "\033[0;36m"
+#define COLOR_OFF       "\033[0m"
 
-static void custom_log_callback(int msg_type, const char *text, va_list args)
+static Log_Levels_t _level = LOG_LEVELS_ALL;
+
+static void log_output(int msg_type, const char *text, va_list args)
 {
+    static const char *color[] = { COLOR_NONE, COLOR_BLUE, COLOR_BLUE, COLOR_GREEN, COLOR_YELLOW, COLOR_RED, COLOR_RED, COLOR_NONE };
     static const char prefix[] = { '<', 'T', 'D', 'I', 'W', 'E', 'F', '>' };
-    printf("[%c] ", prefix[msg_type]);
+    printf("%s[%c] ", color[msg_type], prefix[msg_type]);
     vprintf(text, args);
+    if (color[msg_type][0] != '\0') {
+        printf(COLOR_OFF);
+    }
     printf("\n");
 }
 
 void Log_initialize()
 {
-    SetTraceLogCallback(custom_log_callback);
-    SetTraceLogLevel(LOG_ALL);
+    _level = LOG_LEVELS_ALL;
 }
 
 void Log_configure(bool enabled)
 {
-    SetTraceLogExit(LOG_NONE);
-    SetTraceLogLevel(enabled ? LOG_ALL : LOG_NONE);
+    _level = enabled ? LOG_LEVELS_ALL : LOG_LEVELS_NONE;
 }
 
 void Log_write(Log_Levels_t level, const char *text, ...)
 {
-    char message[MAX_LOG_MESSAGE_LENGTH];
+    if (level < _level) {
+        return;
+    }
+
     va_list args;
     va_start(args, text);
-    vsnprintf(message, MAX_LOG_MESSAGE_LENGTH, text, args);
+    log_output((int)level, text, args);
     va_end(args);
-
-    TraceLog((int)level, message);
 }
