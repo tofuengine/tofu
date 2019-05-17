@@ -27,7 +27,8 @@
 #include <stddef.h>
 //#include <stdint.h>
 
-#include <raylib/raylib.h>
+#include <glad/gl.h>
+#include <GLFW/glfw3.h>
 
 #include "hal.h"
 
@@ -54,17 +55,14 @@ typedef struct _Display_Configuration_t {
 typedef struct _Display_t {
     Display_Configuration_t configuration;
 
+    GLFWwindow *window;
     int window_width, window_height, window_scale;
 
-    RenderTexture2D framebuffers[FRAMEBUFFERS_COUNT];
-    Rectangle offscreen_source, offscreen_destination;
-    Vector2 offscreen_origin;
+    GLuint offscreen;
+    Rectangle_t offscreen_source, offscreen_destination;
+    Point_t offscreen_origin;
 
     Palette_t palette;
-
-    Shader shaders[SHADERS_COUNT];
-
-    double alpha;
 } Display_t;
 
 extern bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title);

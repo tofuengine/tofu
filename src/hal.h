@@ -27,43 +27,55 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <raylib/raylib.h>
+#include <glad/gl.h>
+#include <GLFW/glfw3.h>
 
 #include "config.h"
 
+typedef struct _Point_t {
+    double x, y;
+} Point_t;
+
+typedef struct _Rectangle_t {
+    double x, y;
+    double width, height;
+} Rectangle_t;
+
+typedef struct _Texture_t {
+    GLuint id;
+    size_t width, height;
+} Texture_t;
+
+typedef struct _Color_t {
+    GLbyte r, g, b, a;
+} Color_t;
+
 typedef struct _Palette_t {
-    Color colors[MAX_PALETTE_COLORS];
+    Color_t colors[MAX_PALETTE_COLORS];
     size_t count;
 } Palette_t;
 
 typedef struct _Font_t {
     // char pathfile[PATH_FILE_MAX];
     bool loaded;
-    bool is_default;
-    Font font;
+    Texture_t atlas;
 } Font_t;
 
 typedef struct _Bank_t { // TODO: rename to `Sheet`?
     // char pathfile[PATH_FILE_MAX];
     bool loaded;
     int cell_width, cell_height;
-    Vector2 origin;
-    Texture2D atlas;
+    Point_t origin;
+    Texture_t atlas;
 } Bank_t;
 
-typedef struct _Map_t {
-    // char pathfile[PATH_FILE_MAX];
-    bool loaded;
-    int width, height;
-    Bank_t bank;
-    uint16_t *cells; // Only the lowest 8 bits are used to access the bank?
-} Map_t;
+typedef void (*Texture_Callback_t)(void *parameters, void *data, int width, int height);
 
+extern Texture_t load_texture(const char *pathfile, Texture_Callback_t callback, void *parameters);
+extern void unload_texture(Texture_t *texture);
 extern Bank_t load_bank(const char *pathfile, int cell_width, int cell_height, const Palette_t *palette);
 extern void unload_bank(Bank_t *bank);
 extern Font_t load_font(const char *pathfile);
 extern void unload_font(Font_t *font);
-extern Map_t load_map(const char *pathfile);
-extern void unload_map(Map_t *map);
 
 #endif  /* __HAL_H__*/

@@ -106,18 +106,22 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
 {
     display->configuration = *configuration;
 
-    SetConfigFlags(FLAG_WINDOW_HIDDEN);
-    InitWindow(0, 0, title); // Initially fit the screen-size automatically.
+    glfwSetErrorCallback(error_callback);
 
-    int display_width = GetScreenWidth();
-    int display_height = GetScreenHeight();
+    if (!glfwInit()) {
+        Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't initialize GLFW");
+        return false;
+    }
+
+    int display_width, display_height;
+    glfwGetMonitorWorkarea(glfwGetPrimaryMonitor(), NULL, NULL, &display_width, &display_height);
 
     display->window_width = configuration->width;
     display->window_height = configuration->height;
     display->window_scale = 1;
 
     if (configuration->autofit) {
-        Log_write(LOG_LEVELS_DEBUG, "Display size is %d x %d", display_width, display_height);
+        Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> display size is %d x %d", display_width, display_height);
 
         for (int s = 1; ; ++s) {
             int w = configuration->width * s;
@@ -131,19 +135,27 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         }
     }
 
-    Log_write(LOG_LEVELS_DEBUG, "Window size is %d x %d (%dx)", display->window_width, display->window_height,
+    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> window size is %d x %d (%dx)", display->window_width, display->window_height,
         display->window_scale);
 
     int x = (display_width - display->window_width) / 2;
     int y = (display_height - display->window_height) / 2;
 
     if (configuration->hide_cursor) {
-        HideCursor();
+        // HideCursor();
     }
 
-    SetTargetFPS(UNCAPPED_FPS);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
-    SetExitKey(configuration->exit_key_enabled ? KEY_ESCAPE : -1);
+    display->window = glfwCreateWindow(display->window_width, display->window_height, title, glfwGetPrimaryMonitor(), NULL);
+    if (display->window == NULL) {
+        Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't create window");
+        glfwTerminate();
+        return false;
+    }
+
+    glfwSetKeyCallback(display->window, configuration->exit_key_enabled ? key_callback : NULL);
 
 #ifdef __FAST_FULLSCREEN__
     SetWindowPosition(x, y); // This will enforce a "clipping region" for the fullscreen, clear won't be needed.
@@ -187,8 +199,6 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     }
     palette.count = MAX_PALETTE_COLORS;
     Display_palette(display, &palette);
-
-    display->alpha = 1.0;
 
     return true;
 }
