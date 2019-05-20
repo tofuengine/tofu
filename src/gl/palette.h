@@ -34,6 +34,8 @@ typedef struct _GL_Palette_t {
     size_t count;
 } GL_Palette_t;
 
+extern void GL_greyscale_palette(GL_Palette_t *palette, size_t count);
+extern void GL_normalize_palette(GL_Palette_t *palette, GLfloat *colors);
 extern GL_Color_t GL_parse_color(const char *argb);
 
 #endif  /* __GL_PALETTE_H__ */

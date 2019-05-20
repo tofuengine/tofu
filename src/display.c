@@ -29,8 +29,6 @@
 
 #include <memory.h>
 
-#define VALUES_PER_COLOR            3
-
 #define FPS_HISTOGRAM_HEIGHT        30
 #define FPS_TEXT_HEIGHT             10
 #define FPS_MAX_VALUE               90
@@ -270,11 +268,7 @@ float vertices[] = {
     Display_shader(display, SHADER_INDEX_PALETTE, palette_shader_code);
 #endif
     GL_Palette_t palette; // Initial gray-scale palette.
-    for (size_t i = 0; i < MAX_PALETTE_COLORS; ++i) {
-        unsigned char v = (unsigned char)(((double)i / (double)(MAX_PALETTE_COLORS - 1)) * 255.0);
-        palette.colors[i] = (GL_Color_t){ v, v, v, 255 };
-    }
-    palette.count = MAX_PALETTE_COLORS;
+    GL_greyscale_palette(&palette, GL_MAX_PALETTE_COLORS);
     Display_palette(display, &palette);
 
     return true;
