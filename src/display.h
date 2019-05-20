@@ -28,6 +28,7 @@
 //#include <stdint.h>
 
 #include "hal.h"
+#include "core/program.h"
 
 #define FRAMEBUFFERS_COUNT      2
 #define SHADERS_COUNT           5
@@ -52,9 +53,7 @@ typedef struct _Display_t {
     GLFWwindow *window;
     int window_width, window_height, window_scale;
 
-    GLuint vertex_shader;
-    GLuint fragment_shader;
-    GLuint shader_program;
+    Program_t program;
 
     GLuint offscreen;
     Rectangle_t offscreen_source, offscreen_destination;

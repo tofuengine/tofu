@@ -27,6 +27,8 @@
 #include "hal.h"
 #include "log.h"
 
+#include "core/program.h"
+
 #include <memory.h>
 
 #define VALUES_PER_COLOR            3
@@ -221,30 +223,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         glfwSetWindowMonitor(display->window, glfwGetPrimaryMonitor(), 0, 0, display->window_width, display->window_height, GLFW_DONT_CARE);
     }
 
-    int  success;
-    char infoLog[512];
-    display->vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(display->vertex_shader, 1, &vertex_shader, NULL);
-    glCompileShader(display->vertex_shader);
-    glGetShaderiv(display->vertex_shader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        glGetShaderInfoLog(display->vertex_shader, 512, NULL, infoLog);
-        Log_write(LOG_LEVELS_ERROR, "<DISPLAY> vertex shader error: %s");
-    }
-
-    display->fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(display->fragment_shader, 1, &fragment_shader, NULL);
-    glCompileShader(display->fragment_shader);
-    glGetShaderiv(display->fragment_shader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        glGetShaderInfoLog(display->fragment_shader, 512, NULL, infoLog);
-        Log_write(LOG_LEVELS_ERROR, "<DISPLAY> vertex shader error: %s");
-    }
-
-    display->shader_program = glCreateProgram();
-    glAttachShader(display->shader_program, display->vertex_shader);
-    glAttachShader(display->shader_program, display->fragment_shader);
-    glLinkProgram(display->shader_program);
+    display->program = Program_create(vertex_shader, fragment_shader);
 
 float vertices[] = {
         160.0f, 150.0f, 0.0f, // left  
@@ -321,7 +300,7 @@ void Display_renderBegin(Display_t *display)
 {
     glClearColor(0.f, 0.5f, 0.5f, 1.0f); // Required, to clear previous content. (TODO: configurable color?)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glUseProgram(display->shader_program);
+    Program_use(&display->program);
 }
 
 void Display_renderEnd(Display_t *display, double now, const Engine_Statistics_t *statistics)
@@ -426,9 +405,7 @@ void Display_terminate(Display_t *display)
         UnloadRenderTexture(display->framebuffers[i]);
     }
 #endif
-    glDeleteProgram(display->shader_program);
-    glDeleteShader(display->vertex_shader);
-    glDeleteShader(display->fragment_shader);
+    Program_destroy(&display->program);
 
     glfwDestroyWindow(display->window);
     glfwTerminate();
