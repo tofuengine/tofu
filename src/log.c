@@ -38,7 +38,7 @@ static Log_Levels_t _level = LOG_LEVELS_ALL;
 
 static void log_output(int msg_type, const char *text, va_list args)
 {
-    static const char *color[] = { COLOR_NONE, COLOR_BLUE, COLOR_BLUE, COLOR_GREEN, COLOR_YELLOW, COLOR_RED, COLOR_RED, COLOR_NONE };
+    static const char *color[] = { COLOR_NONE, COLOR_BLUE, COLOR_CYAN, COLOR_GREEN, COLOR_YELLOW, COLOR_MAGENTA, COLOR_RED, COLOR_NONE };
     static const char prefix[] = { '<', 'T', 'D', 'I', 'W', 'E', 'F', '>' };
     printf("%s[%c] ", color[msg_type], prefix[msg_type]);
     vprintf(text, args);

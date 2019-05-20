@@ -34,9 +34,6 @@
 
 #define SHADER_INDEX_PALETTE    0
 
-#define ALPHA_COLOR_TRANSPARENT 0
-#define ALPHA_COLOR_OPAQUE      255
-
 // Forward declaration.
 typedef struct _Engine_Statistics_t Engine_Statistics_t;
 
@@ -54,6 +51,10 @@ typedef struct _Display_t {
 
     GLFWwindow *window;
     int window_width, window_height, window_scale;
+
+    GLuint vertex_shader;
+    GLuint fragment_shader;
+    GLuint shader_program;
 
     GLuint offscreen;
     Rectangle_t offscreen_source, offscreen_destination;

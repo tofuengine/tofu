@@ -388,10 +388,10 @@ void graphics_canvas_palette_call1(WrenVM *vm)
     } else
     if (type == WREN_TYPE_LIST) { // User supplied palette.
         palette.count = wrenGetListCount(vm, 1);
-        Log_write(LOG_LEVELS_DEBUG, "Setting custom palette of #%d color(s)", palette.count);
+        Log_write(LOG_LEVELS_DEBUG, "[TOFU] Setting custom palette of #%d color(s)", palette.count);
 
         if (palette.count > MAX_PALETTE_COLORS) {
-            Log_write(LOG_LEVELS_WARNING, "[TOFU] Palette has too many colors (%d) - clamping!", palette.count);
+            Log_write(LOG_LEVELS_WARNING, "[TOFU] Palette has too many colors (%d) - clamping", palette.count);
             palette.count = MAX_PALETTE_COLORS;
         }
 

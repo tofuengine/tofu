@@ -89,7 +89,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
         };
     bool result = Display_initialize(&engine->display, &display_configuration, engine->configuration.title);
     if (!result) {
-        Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't initialize display!");
+        Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't initialize display");
         return false;
     }
 
@@ -99,7 +99,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 
     result = Interpreter_initialize(&engine->interpreter, &engine->environment);
     if (!result) {
-        Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't initialize interpreter!");
+        Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't initialize interpreter");
         Display_terminate(&engine->display);
         return false;
     }

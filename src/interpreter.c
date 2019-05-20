@@ -63,7 +63,7 @@ static char *load_module_function(WrenVM *vm, const char *name)
 {
     // User-defined modules are specified as "relative" paths (where "./" indicates the current directory)
     if (strncmp(name, "./", 2) != 0) {
-        Log_write(LOG_LEVELS_INFO, "loading built-in module '%s'", name);
+        Log_write(LOG_LEVELS_INFO, "<VM> loading built-in module '%s'", name);
 
         for (int i = 0; _modules[i].module != NULL; ++i) {
             const Module_Entry_t *entry = &_modules[i];
@@ -85,7 +85,7 @@ static char *load_module_function(WrenVM *vm, const char *name)
         strcat(pathfile, SCRIPT_EXTENSION);
     }
 
-    Log_write(LOG_LEVELS_INFO, "loading module '%s'", pathfile);
+    Log_write(LOG_LEVELS_INFO, "<VM> loading module '%s'", pathfile);
     return file_load_as_string(pathfile, "rt");
 }
 
@@ -97,9 +97,9 @@ static void write_function(WrenVM *vm, const char *text)
 static void error_function(WrenVM* vm, WrenErrorType type, const char *module, int line, const char *message)
 {
     if (type == WREN_ERROR_COMPILE) {
-        Log_write(LOG_LEVELS_ERROR, "Compile error: [%s@%d] %s", module, line, message);
+        Log_write(LOG_LEVELS_ERROR, "<VM> compile error: [%s@%d] %s", module, line, message);
     } else if (type == WREN_ERROR_RUNTIME) {
-        Log_write(LOG_LEVELS_ERROR, "Runtime error: %s", message);
+        Log_write(LOG_LEVELS_ERROR, "<VM> runtime error: %s", message);
     } else if (type == WREN_ERROR_STACK_TRACE) {
         Log_write(LOG_LEVELS_ERROR, "  [%s@%d] in %s", module, line, message);
     }
@@ -167,7 +167,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *env
 
     interpreter->vm = wrenNewVM(&vm_configuration);
     if (!interpreter->vm) {
-        Log_write(LOG_LEVELS_FATAL, "Can't initialize interpreter VM!");
+        Log_write(LOG_LEVELS_FATAL, "<VM> can't initialize interpreter");
         return false;
     }
 
@@ -179,7 +179,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *env
 
     WrenInterpretResult result = wrenInterpret(interpreter->vm, ROOT_MODULE, BOOT_SCRIPT);
     if (result != WREN_RESULT_SUCCESS) {
-        Log_write(LOG_LEVELS_FATAL, "Can't interpret boot script!");
+        Log_write(LOG_LEVELS_FATAL, "<VM> can't interpret boot script");
         wrenFreeVM(interpreter->vm);
         return false;
     }
@@ -212,14 +212,14 @@ void Interpreter_update(Interpreter_t *interpreter, const double delta_time)
         interpreter->gc_age -= GARBAGE_COLLECTION_PERIOD;
 
 #ifdef __DEBUG_GARBAGE_COLLECTOR__
-        Log_write(LOG_LEVELS_DEBUG, "Performing periodical garbage collection");
+        Log_write(LOG_LEVELS_DEBUG, "<VM> performing periodical garbage collection");
         double start_time = (double)clock() / CLOCKS_PER_SEC;
 #endif
         wrenCollectGarbage(interpreter->vm);
         TimerPool_gc(&interpreter->timer_pool, timerpool_release_callback, interpreter);
 #ifdef __DEBUG_GARBAGE_COLLECTOR__
         double elapsed = ((double)clock() / CLOCKS_PER_SEC) - start_time;
-        Log_write(LOG_LEVELS_DEBUG, "Garbage collection took %.3fs", elapsed);
+        Log_write(LOG_LEVELS_DEBUG, "<VM> garbage collection took %.3fs", elapsed);
 #endif
     }
 
@@ -240,7 +240,7 @@ void Interpreter_terminate(Interpreter_t *interpreter)
 {
     WrenInterpretResult result = wrenInterpret(interpreter->vm, ROOT_MODULE, SHUTDOWN_SCRIPT);
     if (result != WREN_RESULT_SUCCESS) {
-        Log_write(LOG_LEVELS_FATAL, "Can't interpret shutdown script!");
+        Log_write(LOG_LEVELS_FATAL, "<VM> can't interpret shutdown script");
     }
 
     wrenCollectGarbage(interpreter->vm);

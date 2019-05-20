@@ -34,9 +34,32 @@
 #define FPS_HISTOGRAM_HEIGHT        30
 #define FPS_TEXT_HEIGHT             10
 #define FPS_MAX_VALUE               90
+
+    unsigned int VBO, VAO;
+
+static const char *vertex_shader =
+"#version 330 core\n"
+"layout (location = 0) in vec3 aPos;\n"
+"\n"
+"void main()\n"
+"{\n"
+"    gl_Position = vec4((aPos.x - 160.0) / 160.0, (- aPos.y + 240.0) / 240.0, aPos.z, 1.0);\n"
+"}\n"
+"";
+
+static const char *fragment_shader =
+"#version 330 core\n"
+"out vec4 FragColor;\n"
+"\n"
+"void main()\n"
+"{\n"
+"    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+"}\n"
+"";
+
 #if 0
 
-static const char *palette_shader_code = 
+static const char *palette_shader_code =
     "#version 330\n"
     "\n"
     "const int colors = 256;\n"
@@ -105,7 +128,15 @@ static void error_callback(int error, const char *description)
 
 static void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
-    Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't initialize GLAD");
+    Log_write(LOG_LEVELS_TRACE, "<GLFW> key #%d is %d", scancode, action);
+}
+
+static void size_callback(GLFWwindow* window, int width, int height)
+{
+    // make sure the viewport matches the new window dimensions; note that width and 
+    // height will be significantly larger than specified on retina displays.
+    glViewport(0, 0, width, height);
+    Log_write(LOG_LEVELS_DEBUG, "<GLFW> viewport size set to %dx%d", width, height);
 }
 
 bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title)
@@ -119,26 +150,51 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         return false;
     }
 
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); 
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-#ifdef __MACOSX__
+#ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-    glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+    glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
     glfwWindowHint(GLFW_FOCUSED, GLFW_TRUE);
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
+    display->window = glfwCreateWindow(1, 1, title, NULL, NULL); // 1x1 window, in order to have a context early.
+    if (display->window == NULL) {
+        Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't create window");
+        glfwTerminate();
+        return false;
+    }
+    glfwMakeContextCurrent(display->window);
+
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+        Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't initialize GLAD");
+        glfwDestroyWindow(display->window);
+        glfwTerminate();
+        return false;
+    }
+
+    Log_write(LOG_LEVELS_INFO, "<DISPLAY> Vendor: %s", glGetString(GL_VENDOR));
+    Log_write(LOG_LEVELS_INFO, "<DISPLAY> Renderer: %s", glGetString(GL_RENDERER));
+    Log_write(LOG_LEVELS_INFO, "<DISPLAY> Version: %s", glGetString(GL_VERSION));
+    Log_write(LOG_LEVELS_INFO, "<DISPLAY> GLSL: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
+
+    glfwSetFramebufferSizeCallback(display->window, size_callback);
+    glfwSetKeyCallback(display->window, key_callback);
+    glfwSetInputMode(display->window, GLFW_CURSOR, configuration->hide_cursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
+
     int display_width, display_height;
     glfwGetMonitorWorkarea(glfwGetPrimaryMonitor(), NULL, NULL, &display_width, &display_height);
+    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> display size is %dx%d", display_width, display_height);
 
     display->window_width = configuration->width;
     display->window_height = configuration->height;
     display->window_scale = 1;
 
     if (configuration->autofit) {
-        Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> display size is %d x %d", display_width, display_height);
+        Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> auto-fitting...");
 
         for (int s = 1; ; ++s) {
             int w = configuration->width * s;
@@ -152,37 +208,71 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         }
     }
 
-    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> window size is %d x %d (%dx)", display->window_width, display->window_height,
+    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> window size is %dx%d (%dx)", display->window_width, display->window_height,
         display->window_scale);
-
-    GLFWmonitor *monitor = configuration->fullscreen ? glfwGetPrimaryMonitor() : NULL;
-    display->window = glfwCreateWindow(display->window_width, display->window_height, title, monitor, NULL);
-    if (display->window == NULL) {
-        Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't create window");
-        glfwTerminate();
-        return false;
-    }
 
     if (!configuration->fullscreen) {
         int x = (display_width - display->window_width) / 2;
         int y = (display_height - display->window_height) / 2;
 
-        glfwSetWindowPos(display->window, x, y);
+        glfwSetWindowMonitor(display->window, NULL, x, y, display->window_width, display->window_height, GLFW_DONT_CARE);
         glfwShowWindow(display->window);
+    } else { // Toggle fullscreen by passing primary monitor!
+        glfwSetWindowMonitor(display->window, glfwGetPrimaryMonitor(), 0, 0, display->window_width, display->window_height, GLFW_DONT_CARE);
     }
 
-    glfwSetInputMode(display->window, GLFW_CURSOR, configuration->hide_cursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
-
-    glfwMakeContextCurrent(display->window);
-
-    glfwSetKeyCallback(display->window, configuration->exit_key_enabled ? key_callback : NULL);
-
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't initialize GLAD");
-        return false;
+    int  success;
+    char infoLog[512];
+    display->vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(display->vertex_shader, 1, &vertex_shader, NULL);
+    glCompileShader(display->vertex_shader);
+    glGetShaderiv(display->vertex_shader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        glGetShaderInfoLog(display->vertex_shader, 512, NULL, infoLog);
+        Log_write(LOG_LEVELS_ERROR, "<DISPLAY> vertex shader error: %s");
     }
 
-    glViewport(0, 0, display->window_width, display->window_height);
+    display->fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(display->fragment_shader, 1, &fragment_shader, NULL);
+    glCompileShader(display->fragment_shader);
+    glGetShaderiv(display->fragment_shader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        glGetShaderInfoLog(display->fragment_shader, 512, NULL, infoLog);
+        Log_write(LOG_LEVELS_ERROR, "<DISPLAY> vertex shader error: %s");
+    }
+
+    display->shader_program = glCreateProgram();
+    glAttachShader(display->shader_program, display->vertex_shader);
+    glAttachShader(display->shader_program, display->fragment_shader);
+    glLinkProgram(display->shader_program);
+
+float vertices[] = {
+        160.0f, 150.0f, 0.0f, // left  
+        240.0f, 250.0f, 0.0f, // right 
+         80.0f, 250.0f, 0.0f  // top   
+//        -0.5f, -0.5f, 0.0f, // left  
+//         0.5f, -0.5f, 0.0f, // right 
+//         0.0f,  0.5f, 0.0f  // top   
+    }; 
+
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
+    glBindBuffer(GL_ARRAY_BUFFER, 0); 
+
+    // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
+    // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
+    glBindVertexArray(0); 
+
 #if 0
     for (size_t i = 0; i < FRAMEBUFFERS_COUNT; ++i) {
         display->framebuffers[i] = LoadRenderTexture(configuration->width, configuration->height);
@@ -229,8 +319,9 @@ void Display_processInput(Display_t *display)
 
 void Display_renderBegin(Display_t *display)
 {
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Required, to clear previous content. (TODO: configurable color?)
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClearColor(0.f, 0.5f, 0.5f, 1.0f); // Required, to clear previous content. (TODO: configurable color?)
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glUseProgram(display->shader_program);
 }
 
 void Display_renderEnd(Display_t *display, double now, const Engine_Statistics_t *statistics)
@@ -276,6 +367,11 @@ void Display_renderEnd(Display_t *display, double now, const Engine_Statistics_t
         }
     EndDrawing();
 #endif
+    glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    glfwSwapBuffers(display->window);
+    glfwPollEvents();
 }
 
 void Display_palette(Display_t *display, const Palette_t *palette)
@@ -330,6 +426,10 @@ void Display_terminate(Display_t *display)
         UnloadRenderTexture(display->framebuffers[i]);
     }
 #endif
+    glDeleteProgram(display->shader_program);
+    glDeleteShader(display->vertex_shader);
+    glDeleteShader(display->fragment_shader);
+
     glfwDestroyWindow(display->window);
     glfwTerminate();
 }

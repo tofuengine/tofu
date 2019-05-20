@@ -48,11 +48,7 @@ typedef struct _Texture_t {
 
 #pragma pack(push, 1)
 typedef struct _Color_t {
-#ifndef __BIG_ENDIAN__
     GLubyte r, g, b, a;
-#else
-    GLubyte a, b, g, r;
-#endif
 } Color_t;
 #pragma pack(pop)
 

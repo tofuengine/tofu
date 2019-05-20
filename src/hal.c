@@ -91,7 +91,7 @@ Texture_t load_texture(const char *pathfile, Texture_Callback_t callback, void *
     int width, height, components;
     unsigned char* data = stbi_load(pathfile, &width, &height, &components, STBI_rgb_alpha); //STBI_default);
     if (!data) {
-        Log_write(LOG_LEVELS_ERROR, "Can't load '%s': %s", pathfile, stbi_failure_reason());
+        Log_write(LOG_LEVELS_ERROR, "<HAL> can't load texture '%s': %s", pathfile, stbi_failure_reason());
         return (Texture_t){ 0, 0, 0 };
     }
 
@@ -107,18 +107,21 @@ Texture_t load_texture(const char *pathfile, Texture_Callback_t callback, void *
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
     stbi_image_free(data);
 
+    Log_write(LOG_LEVELS_DEBUG, "<HAL> texture '%s' loaded w/ size %dx%d as #%d", pathfile, width, height, id);
+
     return (Texture_t){ id, width, height };
 }
 
 void unload_texture(Texture_t *texture)
 {
     glDeleteBuffers(1, &texture->id);
+    Log_write(LOG_LEVELS_DEBUG, "<HAL> texture #%d unloaded", texture->id);
 }
 
 Bank_t load_bank(const char *pathfile, int cell_width, int cell_height, const Palette_t *palette)
 {
     Texture_t texture = load_texture(pathfile, palettize_callback, (void *)palette);
-    Log_write(LOG_LEVELS_DEBUG, "<HAL> Bank '%s' loaded as texture w/ id #%d", pathfile, texture.id);
+    Log_write(LOG_LEVELS_DEBUG, "<HAL> bank '%s' loaded as texture w/ id #%d", pathfile, texture.id);
     return (Bank_t){
             .loaded = texture.id != 0,
             .atlas = texture,
@@ -130,15 +133,15 @@ Bank_t load_bank(const char *pathfile, int cell_width, int cell_height, const Pa
 
 void unload_bank(Bank_t *bank)
 {
-    Log_write(LOG_LEVELS_DEBUG, "<HAL> Bank texture w/ id #%d unloaded", bank->atlas.id);
     unload_texture(&bank->atlas);
+    Log_write(LOG_LEVELS_DEBUG, "<HAL> bank texture w/ id #%d unloaded", bank->atlas.id);
     *bank = (Bank_t){};
 }
 
 Font_t load_font(const char *pathfile)
 {
     Texture_t texture = load_texture(pathfile, NULL, NULL);
-    Log_write(LOG_LEVELS_DEBUG, "<HAL> Font '%s' loaded as texture w/ id #%d", pathfile, texture.id);
+    Log_write(LOG_LEVELS_DEBUG, "<HAL> font '%s' loaded as texture w/ id #%d", pathfile, texture.id);
     return (Font_t){
             .loaded = true,
             .atlas = texture
@@ -147,7 +150,7 @@ Font_t load_font(const char *pathfile)
 
 void unload_font(Font_t *font)
 {
-    Log_write(LOG_LEVELS_DEBUG, "<HAL> Font texture w/ id #%d unloaded", font->atlas.id);
     unload_texture(&font->atlas);
+    Log_write(LOG_LEVELS_DEBUG, "<HAL> font texture w/ id #%d unloaded", font->atlas.id);
     *font = (Font_t){};
 }
