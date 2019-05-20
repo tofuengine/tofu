@@ -131,7 +131,7 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
 
 static void size_callback(GLFWwindow* window, int width, int height)
 {
-    // make sure the viewport matches the new window dimensions; note that width and 
+    // make sure the viewport matches the new window dimensions; note that width and
     // height will be significantly larger than specified on retina displays.
     glViewport(0, 0, width, height);
     Log_write(LOG_LEVELS_DEBUG, "<GLFW> viewport size set to %dx%d", width, height);
@@ -150,7 +150,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
@@ -222,13 +222,13 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     GL_create_program(&display->program, vertex_shader, fragment_shader);
 
 float vertices[] = {
-        160.0f, 150.0f, 0.0f, // left  
-        240.0f, 250.0f, 0.0f, // right 
-         80.0f, 250.0f, 0.0f  // top   
-//        -0.5f, -0.5f, 0.0f, // left  
-//         0.5f, -0.5f, 0.0f, // right 
-//         0.0f,  0.5f, 0.0f  // top   
-    }; 
+        160.0f, 150.0f, 0.0f, // left
+        240.0f, 250.0f, 0.0f, // right
+         80.0f, 250.0f, 0.0f  // top
+//        -0.5f, -0.5f, 0.0f, // left
+//         0.5f, -0.5f, 0.0f, // right
+//         0.0f,  0.5f, 0.0f  // top
+    };
 
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -242,11 +242,11 @@ float vertices[] = {
     glEnableVertexAttribArray(0);
 
     // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
-    glBindBuffer(GL_ARRAY_BUFFER, 0); 
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
     // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
-    glBindVertexArray(0); 
+    glBindVertexArray(0);
 
 #if 0
     for (size_t i = 0; i < FRAMEBUFFERS_COUNT; ++i) {
@@ -292,7 +292,20 @@ void Display_renderBegin(Display_t *display)
 {
     glClearColor(0.f, 0.5f, 0.5f, 1.0f); // Required, to clear previous content. (TODO: configurable color?)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    GL_use_program(&display->program);
+//    GL_use_program(&display->program);
+glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+glOrtho(0, 480, 320, 0, 0, 1);
+glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+
+        glBegin(GL_LINES);
+    //horizontal
+    for (int i = 0; i < 100; i+=10){
+        glVertex2f(0, i);
+        glVertex2f(100,i);
+    }
+    glEnd();
 }
 
 void Display_renderEnd(Display_t *display, double now, const Engine_Statistics_t *statistics)
