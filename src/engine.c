@@ -27,8 +27,6 @@
 #include "file.h"
 #include "log.h"
 
-#include <raylib/raylib.h>
-
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
@@ -91,7 +89,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
         };
     bool result = Display_initialize(&engine->display, &display_configuration, engine->configuration.title);
     if (!result) {
-        Log_write(LOG_LEVELS_ERROR, "Can't initialize display!");
+        Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't initialize display!");
         return false;
     }
 
@@ -101,7 +99,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 
     result = Interpreter_initialize(&engine->interpreter, &engine->environment);
     if (!result) {
-        Log_write(LOG_LEVELS_ERROR, "Can't initialize interpreter!");
+        Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't initialize interpreter!");
         Display_terminate(&engine->display);
         return false;
     }
@@ -125,7 +123,7 @@ void Engine_run(Engine_t *engine)
 {
     const double delta_time = 1.0 / (double)engine->configuration.fps;
     const int skippable_frames = engine->configuration.skippable_frames;
-    Log_write(LOG_LEVELS_INFO, "Engine is now running, delta-time is %.3fs w/ %d skippable frames", delta_time, skippable_frames);
+    Log_write(LOG_LEVELS_INFO, "<ENGINE> now running, delta-time is %.3fs w/ %d skippable frames", delta_time, skippable_frames);
 
     Engine_Statistics_t statistics = (Engine_Statistics_t){
             .delta_time = delta_time,
@@ -133,11 +131,11 @@ void Engine_run(Engine_t *engine)
             .max_fps = 0.0
         };
 
-    double previous = GetTime();
+    double previous = glfwGetTime();
     double lag = 0.0;
 
     while (Engine_isRunning(engine)) {
-        double current = GetTime();
+        double current = glfwGetTime();
         double elapsed = current - previous;
         previous = current;
 
@@ -147,6 +145,7 @@ void Engine_run(Engine_t *engine)
             current_statistics = ready ? &statistics : NULL;
         }
 
+        Display_processInput(&engine->display);
         Interpreter_input(&engine->interpreter);
 
         lag += elapsed; // Count a maximum amount of skippable frames in order no to stall on slower machines.

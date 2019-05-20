@@ -25,7 +25,6 @@
 #include "../environment.h"
 #include "../log.h"
 
-#include <raylib/raylib.h>
 #include <string.h>
 
 const char events_wren[] =
@@ -60,8 +59,8 @@ void events_input_iskeydown_call1(WrenVM *vm)
 {
     // Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
-    int key = (int)wrenGetSlotDouble(vm, 1);
-    bool is_down = IsKeyDown(key);
+//    int key = (int)wrenGetSlotDouble(vm, 1);
+    bool is_down = false; //IsKeyDown(key);
     wrenSetSlotBool(vm, 0, is_down == true);
 }
 
@@ -69,8 +68,8 @@ void events_input_iskeyup_call1(WrenVM *vm)
 {
     // Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
-    int key = (int)wrenGetSlotDouble(vm, 1);
-    bool is_up = IsKeyUp(key);
+//    int key = (int)wrenGetSlotDouble(vm, 1);
+    bool is_up = false; //IsKeyUp(key);
     wrenSetSlotBool(vm, 0, is_up == true);
 }
 
@@ -78,8 +77,8 @@ void events_input_iskeypressed_call1(WrenVM *vm)
 {
     // Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
-    int key = (int)wrenGetSlotDouble(vm, 1);
-    bool is_pressed = IsKeyPressed(key);
+//    int key = (int)wrenGetSlotDouble(vm, 1);
+    bool is_pressed = false; //IsKeyPressed(key);
     wrenSetSlotBool(vm, 0, is_pressed == true);
 }
 
@@ -87,8 +86,8 @@ void events_input_iskeyreleased_call1(WrenVM *vm)
 {
     // Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
-    int key = (int)wrenGetSlotDouble(vm, 1);
-    bool is_released = IsKeyReleased(key);
+//    int key = (int)wrenGetSlotDouble(vm, 1);
+    bool is_released = false; //IsKeyReleased(key);
     wrenSetSlotBool(vm, 0, is_released == true);
 }
 

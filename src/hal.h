@@ -27,28 +27,34 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <glad/gl.h>
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 #include "config.h"
 
 typedef struct _Point_t {
-    double x, y;
+    GLfloat x, y;
 } Point_t;
 
 typedef struct _Rectangle_t {
-    double x, y;
-    double width, height;
+    GLfloat x, y;
+    GLfloat width, height;
 } Rectangle_t;
 
 typedef struct _Texture_t {
     GLuint id;
-    size_t width, height;
+    GLuint width, height;
 } Texture_t;
 
+#pragma pack(push, 1)
 typedef struct _Color_t {
-    GLbyte r, g, b, a;
+#ifndef __BIG_ENDIAN__
+    GLubyte r, g, b, a;
+#else
+    GLubyte a, b, g, r;
+#endif
 } Color_t;
+#pragma pack(pop)
 
 typedef struct _Palette_t {
     Color_t colors[MAX_PALETTE_COLORS];
@@ -59,6 +65,7 @@ typedef struct _Font_t {
     // char pathfile[PATH_FILE_MAX];
     bool loaded;
     Texture_t atlas;
+    int glyph_width, glyph_height;
 } Font_t;
 
 typedef struct _Bank_t { // TODO: rename to `Sheet`?

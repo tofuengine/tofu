@@ -41,8 +41,6 @@ extern void graphics_canvas_width_get(WrenVM *vm);
 extern void graphics_canvas_height_get(WrenVM *vm);
 extern void graphics_canvas_palette_call1(WrenVM *vm);
 extern void graphics_canvas_shader_call2(WrenVM *vm);
-extern void graphics_canvas_alpha_get(WrenVM *vm);
-extern void graphics_canvas_alpha_set(WrenVM *vm);
 extern void graphics_canvas_point_call3(WrenVM *vm); // TODO: should points, poligons and circles be objects?
 extern void graphics_canvas_polygon_call3(WrenVM *vm);
 extern void graphics_canvas_circle_call5(WrenVM *vm);

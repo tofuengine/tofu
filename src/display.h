@@ -27,9 +27,6 @@
 #include <stddef.h>
 //#include <stdint.h>
 
-#include <glad/gl.h>
-#include <GLFW/glfw3.h>
-
 #include "hal.h"
 
 #define FRAMEBUFFERS_COUNT      2
@@ -67,6 +64,7 @@ typedef struct _Display_t {
 
 extern bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title);
 extern bool Display_shouldClose(Display_t *display);
+extern void Display_processInput(Display_t *display);
 extern void Display_renderBegin(Display_t *display);
 extern void Display_renderEnd(Display_t *display, double now, const Engine_Statistics_t *statistics);
 extern void Display_palette(Display_t *display, const Palette_t *palette);

@@ -34,7 +34,7 @@ int main(int argc, char **argv)
     Engine_t engine;
     bool result = Engine_initialize(&engine, resolved_path);
     if (!result) {
-        Log_write(LOG_LEVELS_ERROR, "Can't initialize engine!");
+        Log_write(LOG_LEVELS_FATAL, "<MAIN> can't initialize engine!");
         return EXIT_FAILURE;
     }
     Engine_run(&engine);

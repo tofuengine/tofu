@@ -117,7 +117,7 @@ void unload_texture(Texture_t *texture)
 
 Bank_t load_bank(const char *pathfile, int cell_width, int cell_height, const Palette_t *palette)
 {
-    Texture_t texture = load_texture(pathfile, palettize_callback, palette);
+    Texture_t texture = load_texture(pathfile, palettize_callback, (void *)palette);
     Log_write(LOG_LEVELS_DEBUG, "<HAL> Bank '%s' loaded as texture w/ id #%d", pathfile, texture.id);
     return (Bank_t){
             .loaded = texture.id != 0,
@@ -147,7 +147,7 @@ Font_t load_font(const char *pathfile)
 
 void unload_font(Font_t *font)
 {
-    Log_write(LOG_LEVELS_DEBUG, "<HAL> Font texture w/ id #%d unloaded", font->font.texture.id);
+    Log_write(LOG_LEVELS_DEBUG, "<HAL> Font texture w/ id #%d unloaded", font->atlas.id);
     unload_texture(&font->atlas);
     *font = (Font_t){};
 }

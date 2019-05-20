@@ -29,17 +29,12 @@
 
 #include <memory.h>
 
-#ifndef GLfloat
-typedef float GLfloat;
-#endif
-
 #define VALUES_PER_COLOR            3
-
-#define UNCAPPED_FPS                0
 
 #define FPS_HISTOGRAM_HEIGHT        30
 #define FPS_TEXT_HEIGHT             10
 #define FPS_MAX_VALUE               90
+#if 0
 
 static const char *palette_shader_code = 
     "#version 330\n"
@@ -101,6 +96,17 @@ static void draw_statistics(const Engine_Statistics_t *statistics)
     int width = MeasureText(text, FPS_TEXT_HEIGHT);
     DrawText(text, (STATISTICS_LENGTH - width) / 2, FPS_HISTOGRAM_HEIGHT, FPS_TEXT_HEIGHT, (Color){ 0, 255, 0, 191 });
 }
+#endif
+
+static void error_callback(int error, const char *description)
+{
+    Log_write(LOG_LEVELS_ERROR, "<GLFW> %s", description);
+}
+
+static void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
+{
+    Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't initialize GLAD");
+}
 
 bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title)
 {
@@ -112,6 +118,17 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't initialize GLFW");
         return false;
     }
+
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); 
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+#ifdef __MACOSX__
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#endif
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+    glfwWindowHint(GLFW_FOCUSED, GLFW_TRUE);
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
     int display_width, display_height;
     glfwGetMonitorWorkarea(glfwGetPrimaryMonitor(), NULL, NULL, &display_width, &display_height);
@@ -138,42 +155,35 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> window size is %d x %d (%dx)", display->window_width, display->window_height,
         display->window_scale);
 
-    int x = (display_width - display->window_width) / 2;
-    int y = (display_height - display->window_height) / 2;
-
-    if (configuration->hide_cursor) {
-        // HideCursor();
-    }
-
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-
-    display->window = glfwCreateWindow(display->window_width, display->window_height, title, glfwGetPrimaryMonitor(), NULL);
+    GLFWmonitor *monitor = configuration->fullscreen ? glfwGetPrimaryMonitor() : NULL;
+    display->window = glfwCreateWindow(display->window_width, display->window_height, title, monitor, NULL);
     if (display->window == NULL) {
         Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't create window");
         glfwTerminate();
         return false;
     }
 
+    if (!configuration->fullscreen) {
+        int x = (display_width - display->window_width) / 2;
+        int y = (display_height - display->window_height) / 2;
+
+        glfwSetWindowPos(display->window, x, y);
+        glfwShowWindow(display->window);
+    }
+
+    glfwSetInputMode(display->window, GLFW_CURSOR, configuration->hide_cursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
+
+    glfwMakeContextCurrent(display->window);
+
     glfwSetKeyCallback(display->window, configuration->exit_key_enabled ? key_callback : NULL);
 
-#ifdef __FAST_FULLSCREEN__
-    SetWindowPosition(x, y); // This will enforce a "clipping region" for the fullscreen, clear won't be needed.
-    SetWindowSize(display->window_width, display->window_height);
-#else
-    if (configuration->fullscreen) {
-        SetWindowPosition(0, 0);
-        SetWindowSize(display_width, display_height);
-    } else {
-        SetWindowPosition(x, y);
-        SetWindowSize(display->window_width, display->window_height);
-    }
-#endif
-    UnhideWindow();
-    if (configuration->fullscreen) {
-        ToggleFullscreen();
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+        Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't initialize GLAD");
+        return false;
     }
 
+    glViewport(0, 0, display->window_width, display->window_height);
+#if 0
     for (size_t i = 0; i < FRAMEBUFFERS_COUNT; ++i) {
         display->framebuffers[i] = LoadRenderTexture(configuration->width, configuration->height);
         SetTextureFilter(display->framebuffers[i].texture, FILTER_POINT); // Nearest-neighbour scaling.
@@ -191,11 +201,11 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         display->shaders[i] = (Shader){};
     }
     Display_shader(display, SHADER_INDEX_PALETTE, palette_shader_code);
-
+#endif
     Palette_t palette; // Initial gray-scale palette.
     for (size_t i = 0; i < MAX_PALETTE_COLORS; ++i) {
         unsigned char v = (unsigned char)(((double)i / (double)(MAX_PALETTE_COLORS - 1)) * 255.0);
-        palette.colors[i] = (Color){ v, v, v, 255 };
+        palette.colors[i] = (Color_t){ v, v, v, 255 };
     }
     palette.count = MAX_PALETTE_COLORS;
     Display_palette(display, &palette);
@@ -205,17 +215,27 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
 
 bool Display_shouldClose(Display_t *display)
 {
-    return WindowShouldClose();
+    return glfwWindowShouldClose(display->window) == GLFW_TRUE;
+}
+
+void Display_processInput(Display_t *display)
+{
+    if (glfwGetKey(display->window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+        if (display->configuration.exit_key_enabled) {
+            glfwSetWindowShouldClose(display->window, true);
+        }
+    }
 }
 
 void Display_renderBegin(Display_t *display)
 {
-    BeginTextureMode(display->framebuffers[0]);
-        ClearBackground((Color){ 0, 0, 0, 255 }); // Required, to clear previous content. (TODO: configurable color?)
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Required, to clear previous content. (TODO: configurable color?)
+    glClear(GL_COLOR_BUFFER_BIT);
 }
 
 void Display_renderEnd(Display_t *display, double now, const Engine_Statistics_t *statistics)
 {
+#if 0
     EndTextureMode();
 
     Rectangle os = display->offscreen_source;
@@ -255,10 +275,12 @@ void Display_renderEnd(Display_t *display, double now, const Engine_Statistics_t
             draw_statistics(statistics);
         }
     EndDrawing();
+#endif
 }
 
 void Display_palette(Display_t *display, const Palette_t *palette)
 {
+#if 0
     GLfloat colors[MAX_PALETTE_COLORS * VALUES_PER_COLOR] = {};
     for (size_t i = 0; i < palette->count; ++i) {
         int j = i * VALUES_PER_COLOR;
@@ -272,10 +294,12 @@ void Display_palette(Display_t *display, const Palette_t *palette)
         return;
     }
     SetShaderValueV(display->shaders[SHADER_INDEX_PALETTE], uniform_location, colors, UNIFORM_VEC3, MAX_PALETTE_COLORS);
+#endif
 }
 
 void Display_shader(Display_t *display, size_t index, const char *code)
 {
+#if 0
     if (display->shaders[index].id != 0) {
         UnloadShader(display->shaders[index]);
         display->shaders[index].id = 0;
@@ -290,10 +314,12 @@ void Display_shader(Display_t *display, size_t index, const char *code)
     display->shaders[index] = LoadShaderCode(NULL, (char *)code);
 
     Log_write(LOG_LEVELS_DEBUG, "Shader %d loaded", index);
+#endif
 }
 
 void Display_terminate(Display_t *display)
 {
+#if 0
     for (size_t i = 0; i < SHADERS_COUNT; ++i) {
         if (display->shaders[i].id == 0) {
             continue;
@@ -303,5 +329,7 @@ void Display_terminate(Display_t *display)
     for (size_t i = 0; i < FRAMEBUFFERS_COUNT; ++i) {
         UnloadRenderTexture(display->framebuffers[i]);
     }
-    CloseWindow();
+#endif
+    glfwDestroyWindow(display->window);
+    glfwTerminate();
 }
