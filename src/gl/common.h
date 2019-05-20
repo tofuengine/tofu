@@ -20,35 +20,27 @@
  * SOFTWARE.
  **/
 
-#ifndef __HAL_H__
-#define __HAL_H__
+#ifndef __GL_COMMON_H__
+#define __GL_COMMON_H__
 
-#include <stdbool.h>
 #include <stddef.h>
-#include <stdint.h>
 
-#include "gl/gl.h"
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 
-#include "config.h"
+typedef struct _GL_Point_t {
+    GLfloat x, y;
+} GL_Point_t;
 
-typedef struct _Font_t {
-    // char pathfile[PATH_FILE_MAX];
-    bool loaded;
-    GL_Texture_t atlas;
-    int glyph_width, glyph_height;
-} Font_t;
+typedef struct _GL_Rectangle_t {
+    GLfloat x, y;
+    GLfloat width, height;
+} GL_Rectangle_t;
 
-typedef struct _Bank_t { // TODO: rename to `Sheet`?
-    // char pathfile[PATH_FILE_MAX];
-    bool loaded;
-    int cell_width, cell_height;
-    GL_Point_t origin;
-    GL_Texture_t atlas;
-} Bank_t;
+#pragma pack(push, 1)
+typedef struct _GL_Color_t {
+    GLubyte r, g, b, a;
+} GL_Color_t;
+#pragma pack(pop)
 
-extern Bank_t load_bank(const char *pathfile, int cell_width, int cell_height, const GL_Palette_t *palette);
-extern void unload_bank(Bank_t *bank);
-extern Font_t load_font(const char *pathfile);
-extern void unload_font(Font_t *font);
-
-#endif  /* __HAL_H__*/
+#endif  /* __GL_COMMON_H__ */

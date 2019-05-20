@@ -20,35 +20,21 @@
  * SOFTWARE.
  **/
 
-#ifndef __HAL_H__
-#define __HAL_H__
+#ifndef __GL_TEXTURE_H__
+#define __GL_TEXTURE_H__
 
 #include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
 
-#include "gl/gl.h"
+#include "common.h"
 
-#include "config.h"
+typedef struct _GL_Texture_t {
+    GLuint id;
+    GLuint width, height;
+} GL_Texture_t;
 
-typedef struct _Font_t {
-    // char pathfile[PATH_FILE_MAX];
-    bool loaded;
-    GL_Texture_t atlas;
-    int glyph_width, glyph_height;
-} Font_t;
+typedef void (*GL_Texture_Callback_t)(void *parameters, void *data, int width, int height);
 
-typedef struct _Bank_t { // TODO: rename to `Sheet`?
-    // char pathfile[PATH_FILE_MAX];
-    bool loaded;
-    int cell_width, cell_height;
-    GL_Point_t origin;
-    GL_Texture_t atlas;
-} Bank_t;
+extern bool GL_create_texture(GL_Texture_t *texture, const char *pathfile, GL_Texture_Callback_t callback, void *parameters);
+extern void GL_delete_texture(GL_Texture_t *texture);
 
-extern Bank_t load_bank(const char *pathfile, int cell_width, int cell_height, const GL_Palette_t *palette);
-extern void unload_bank(Bank_t *bank);
-extern Font_t load_font(const char *pathfile);
-extern void unload_font(Font_t *font);
-
-#endif  /* __HAL_H__*/
+#endif  /* __GL_TEXTURE_H__ */

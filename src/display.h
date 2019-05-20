@@ -28,7 +28,7 @@
 //#include <stdint.h>
 
 #include "hal.h"
-#include "core/program.h"
+#include "gl/gl.h"
 
 #define FRAMEBUFFERS_COUNT      2
 #define SHADERS_COUNT           5
@@ -53,13 +53,13 @@ typedef struct _Display_t {
     GLFWwindow *window;
     int window_width, window_height, window_scale;
 
-    Program_t program;
+    GL_Program_t program;
 
     GLuint offscreen;
-    Rectangle_t offscreen_source, offscreen_destination;
-    Point_t offscreen_origin;
+    GL_Rectangle_t offscreen_source, offscreen_destination;
+    GL_Point_t offscreen_origin;
 
-    Palette_t palette;
+    GL_Palette_t palette;
 } Display_t;
 
 extern bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title);
@@ -67,7 +67,7 @@ extern bool Display_shouldClose(Display_t *display);
 extern void Display_processInput(Display_t *display);
 extern void Display_renderBegin(Display_t *display);
 extern void Display_renderEnd(Display_t *display, double now, const Engine_Statistics_t *statistics);
-extern void Display_palette(Display_t *display, const Palette_t *palette);
+extern void Display_palette(Display_t *display, const GL_Palette_t *palette);
 extern void Display_shader(Display_t *display, size_t index, const char *code);
 extern void Display_terminate(Display_t *display);
 

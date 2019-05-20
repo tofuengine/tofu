@@ -45,19 +45,19 @@ static inline double fsgn(double value)
 
 #define DEFAULT_FONT_SIZE   10.0
 
-static void pixel(const Point_t position, const Color_t color)
+static void pixel(const GL_Point_t position, const GL_Color_t color)
 {
 
 }
-static void polygon(const Point_t *point, const size_t count, const Color_t color, bool filled)
+static void polygon(const GL_Point_t *point, const size_t count, const GL_Color_t color, bool filled)
 {
     
 }
-static void circle(const Point_t center, const GLfloat radius, const Color_t color, bool filled)
+static void circle(const GL_Point_t center, const GLfloat radius, const GL_Color_t color, bool filled)
 {
     
 }
-static void blit(const Texture_t *texture, const Rectangle_t source_rectangle, const Rectangle_t destination_rectangle, const Point_t origin, const GLfloat rotation, const Color_t color)
+static void blit(const GL_Texture_t *texture, const GL_Rectangle_t source_rectangle, const GL_Rectangle_t destination_rectangle, const GL_Point_t origin, const GLfloat rotation, const GL_Color_t color)
 {
     
 }
@@ -65,7 +65,7 @@ static GLfloat measure(const Font_t *font, const char *text, const GLfloat size)
 {
     return 1.0f;
 }
-static void write(const Font_t *font, const char *text, const Point_t position, const GLfloat size, const Color_t color)
+static void write(const Font_t *font, const char *text, const GL_Point_t position, const GLfloat size, const GL_Color_t color)
 {
     
 }
@@ -269,10 +269,10 @@ void graphics_bank_blit_call6(WrenVM *vm)
     double half_width = width * 0.5f; // Offset to compensate for origin (rotation)
     double half_height = height * 0.5f;
 
-    Rectangle_t source = (Rectangle_t){ (GLfloat)bank_x, (GLfloat)bank_y, (GLfloat)bank_width, (GLfloat)bank_height };
-    Rectangle_t destination = (Rectangle_t){ (GLfloat)x + (GLfloat)half_width, (GLfloat)y + (GLfloat)half_height, (GLfloat)width, (GLfloat)height };
+    GL_Rectangle_t source = (GL_Rectangle_t){ (GLfloat)bank_x, (GLfloat)bank_y, (GLfloat)bank_width, (GLfloat)bank_height };
+    GL_Rectangle_t destination = (GL_Rectangle_t){ (GLfloat)x + (GLfloat)half_width, (GLfloat)y + (GLfloat)half_height, (GLfloat)width, (GLfloat)height };
 
-    blit(&bank->atlas, source, destination, bank->origin, rotation, (Color_t){ 255, 255, 255, 255 });
+    blit(&bank->atlas, source, destination, bank->origin, rotation, (GL_Color_t){ 255, 255, 255, 255 });
 }
 
 void graphics_font_allocate(WrenVM *vm)
@@ -351,7 +351,7 @@ void graphics_font_write_call6(WrenVM *vm) // foreign text(text, color, size, al
         size = DEFAULT_FONT_SIZE;
     }
 
-    write(font, text, (Point_t){ dx, dy }, size, (Color_t){ color, color, color, 255 });
+    write(font, text, (GL_Point_t){ dx, dy }, size, (GL_Color_t){ color, color, color, 255 });
 }
 
 void graphics_canvas_width_get(WrenVM *vm)
@@ -372,14 +372,14 @@ void graphics_canvas_palette_call1(WrenVM *vm)
 {
     WrenType type = wrenGetSlotType(vm, 1);
 
-    Palette_t palette = {};
+    GL_Palette_t palette = {};
 
     if (type == WREN_TYPE_STRING) { // Predefined palette!
         const char *id = wrenGetSlotString(vm, 1);
-        const Palette_t *predefined_palette = graphics_palettes_find(id);
+        const GL_Palette_t *predefined_palette = graphics_palettes_find(id);
         if (predefined_palette != NULL) {
             palette.count = predefined_palette->count;
-            memcpy(palette.colors, predefined_palette->colors, sizeof(Color_t) * predefined_palette->count);
+            memcpy(palette.colors, predefined_palette->colors, sizeof(GL_Color_t) * predefined_palette->count);
 
             Log_write(LOG_LEVELS_DEBUG, "[TOFU] Setting predefined palette '%s' w/ %d color(s)", id, predefined_palette->count);
         } else {
@@ -390,7 +390,7 @@ void graphics_canvas_palette_call1(WrenVM *vm)
         palette.count = wrenGetListCount(vm, 1);
         Log_write(LOG_LEVELS_DEBUG, "[TOFU] Setting custom palette of #%d color(s)", palette.count);
 
-        if (palette.count > MAX_PALETTE_COLORS) {
+        if (palette.count > GL_MAX_PALETTE_COLORS) {
             Log_write(LOG_LEVELS_WARNING, "[TOFU] Palette has too many colors (%d) - clamping", palette.count);
             palette.count = MAX_PALETTE_COLORS;
         }
@@ -408,13 +408,8 @@ void graphics_canvas_palette_call1(WrenVM *vm)
         for (size_t i = 0; i < palette.count; ++i) {
             wrenGetListElement(vm, 1, i, aux_slot_id);
 
-            Color_t *color = &palette.colors[i];
             const char *argb = wrenGetSlotString(vm, aux_slot_id);
-            char hex[3] = {};
-            strncpy(hex, argb    , 2); color->a = strtol(hex, NULL, 16);
-            strncpy(hex, argb + 2, 2); color->r = strtol(hex, NULL, 16);
-            strncpy(hex, argb + 4, 2); color->g = strtol(hex, NULL, 16);
-            strncpy(hex, argb + 6, 2); color->b = strtol(hex, NULL, 16);
+            palette.colors[i] = GL_parse_color(argb);
         }
     } else { 
         Log_write(LOG_LEVELS_ERROR, "[TOFU] Wrong palette type, need to be string or list");
@@ -456,7 +451,7 @@ void graphics_canvas_point_call3(WrenVM *vm)
     double y = wrenGetSlotDouble(vm, 2);
     int color = (int)wrenGetSlotDouble(vm, 3);
 
-    pixel((Point_t){ x, y}, (Color_t){ color, color, color, 255 });
+    pixel((GL_Point_t){ x, y}, (GL_Color_t){ color, color, color, 255 });
 }
 
 void graphics_canvas_polygon_call3(WrenVM *vm)
@@ -489,23 +484,23 @@ void graphics_canvas_polygon_call3(WrenVM *vm)
     // http://glprogramming.com/red/appendixg.html#name1
     double offset = (strcasecmp(mode, "line") == 0) ? 0.5 : 0.0;
 
-    Point_t points[count];
+    GL_Point_t points[count];
     for (size_t i = 0; i < count; ++i) {
         wrenGetListElement(vm, 2, (i * 2), aux_slot_id);
         double x = wrenGetSlotDouble(vm, aux_slot_id);
         wrenGetListElement(vm, 2, (i * 2) + 1, aux_slot_id);
         double y = wrenGetSlotDouble(vm, aux_slot_id);
 
-        points[i] = (Point_t){
+        points[i] = (GL_Point_t){
                 .x = (GLfloat)(x + offset), .y = (GLfloat)(y + offset) // HAZARD: should cast separately?
             };
     }
 
     if (strcasecmp(mode, "fill") == 0) {
-        polygon(points, count, (Color_t){ color, color, color, 255 }, true);
+        polygon(points, count, (GL_Color_t){ color, color, color, 255 }, true);
     } else
     if (strcasecmp(mode, "line") == 0) {
-        polygon(points, count, (Color_t){ color, color, color, 255 }, false);
+        polygon(points, count, (GL_Color_t){ color, color, color, 255 }, false);
     } else {
         Log_write(LOG_LEVELS_WARNING, "[TOFU] Undefined drawing mode for polygon: '%s'", mode);
     }
@@ -524,10 +519,10 @@ void graphics_canvas_circle_call5(WrenVM *vm)
 #endif
 
     if (strcasecmp(mode, "fill") == 0) {
-        circle((Point_t){ x, y }, (GLfloat)radius, (Color_t){ color, color, color, 255 }, true);
+        circle((GL_Point_t){ x, y }, (GLfloat)radius, (GL_Color_t){ color, color, color, 255 }, true);
     } else
     if (strcasecmp(mode, "line") == 0) {
-        circle((Point_t){ x, y }, (GLfloat)radius, (Color_t){ color, color, color, 255 }, false);
+        circle((GL_Point_t){ x, y }, (GLfloat)radius, (GL_Color_t){ color, color, color, 255 }, false);
 //     } else
 //     if (strcmp(mode, "sector") == 0) {
 //         DrawCircleSector(x, y, radius, (Color){ color, color, color, 255 });

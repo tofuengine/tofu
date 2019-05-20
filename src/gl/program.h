@@ -20,18 +20,19 @@
  * SOFTWARE.
  **/
 
-#ifndef __CORE_PROGRAM_H__
-#define __CORE_PROGRAM_H__
+#ifndef __GL_PROGRAM_H__
+#define __GL_PROGRAM_H__
 
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
+#include <stdbool.h>
 
-typedef struct _Program_t {
+#include "common.h"
+
+typedef struct _GL_Program_t {
     GLuint id;
-} Program_t;
+} GL_Program_t;
 
-extern Program_t Program_create(const char *vertex_shader, const char *fragment_shader);
-extern void Program_destroy(Program_t *program);
-extern void Program_use(const Program_t *program);
+extern bool GL_create_program(GL_Program_t *program, const char *vertex_shader, const char *fragment_shader);
+extern void GL_delete_program(GL_Program_t *program);
+extern void GL_use_program(const GL_Program_t *program);
 
-#endif  /* __CORE_PROGRAM_H__ */
+#endif  /* __GL_PROGRAM_H__ */

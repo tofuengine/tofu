@@ -20,35 +20,18 @@
  * SOFTWARE.
  **/
 
-#ifndef __HAL_H__
-#define __HAL_H__
+#include "palette.h"
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 
-#include "gl/gl.h"
-
-#include "config.h"
-
-typedef struct _Font_t {
-    // char pathfile[PATH_FILE_MAX];
-    bool loaded;
-    GL_Texture_t atlas;
-    int glyph_width, glyph_height;
-} Font_t;
-
-typedef struct _Bank_t { // TODO: rename to `Sheet`?
-    // char pathfile[PATH_FILE_MAX];
-    bool loaded;
-    int cell_width, cell_height;
-    GL_Point_t origin;
-    GL_Texture_t atlas;
-} Bank_t;
-
-extern Bank_t load_bank(const char *pathfile, int cell_width, int cell_height, const GL_Palette_t *palette);
-extern void unload_bank(Bank_t *bank);
-extern Font_t load_font(const char *pathfile);
-extern void unload_font(Font_t *font);
-
-#endif  /* __HAL_H__*/
+GL_Color_t GL_parse_color(const char *argb)
+{
+    GL_Color_t color;
+    char hex[3] = {};
+    strncpy(hex, argb    , 2); color.a = strtol(hex, NULL, 16);
+    strncpy(hex, argb + 2, 2); color.r = strtol(hex, NULL, 16);
+    strncpy(hex, argb + 4, 2); color.g = strtol(hex, NULL, 16);
+    strncpy(hex, argb + 6, 2); color.b = strtol(hex, NULL, 16);
+    return color;
+}

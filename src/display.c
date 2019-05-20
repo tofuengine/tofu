@@ -27,8 +27,6 @@
 #include "hal.h"
 #include "log.h"
 
-#include "core/program.h"
-
 #include <memory.h>
 
 #define VALUES_PER_COLOR            3
@@ -223,7 +221,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         glfwSetWindowMonitor(display->window, glfwGetPrimaryMonitor(), 0, 0, display->window_width, display->window_height, GLFW_DONT_CARE);
     }
 
-    display->program = Program_create(vertex_shader, fragment_shader);
+    GL_create_program(&display->program, vertex_shader, fragment_shader);
 
 float vertices[] = {
         160.0f, 150.0f, 0.0f, // left  
@@ -271,10 +269,10 @@ float vertices[] = {
     }
     Display_shader(display, SHADER_INDEX_PALETTE, palette_shader_code);
 #endif
-    Palette_t palette; // Initial gray-scale palette.
+    GL_Palette_t palette; // Initial gray-scale palette.
     for (size_t i = 0; i < MAX_PALETTE_COLORS; ++i) {
         unsigned char v = (unsigned char)(((double)i / (double)(MAX_PALETTE_COLORS - 1)) * 255.0);
-        palette.colors[i] = (Color_t){ v, v, v, 255 };
+        palette.colors[i] = (GL_Color_t){ v, v, v, 255 };
     }
     palette.count = MAX_PALETTE_COLORS;
     Display_palette(display, &palette);
@@ -300,7 +298,7 @@ void Display_renderBegin(Display_t *display)
 {
     glClearColor(0.f, 0.5f, 0.5f, 1.0f); // Required, to clear previous content. (TODO: configurable color?)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    Program_use(&display->program);
+    GL_use_program(&display->program);
 }
 
 void Display_renderEnd(Display_t *display, double now, const Engine_Statistics_t *statistics)
@@ -353,7 +351,7 @@ void Display_renderEnd(Display_t *display, double now, const Engine_Statistics_t
     glfwPollEvents();
 }
 
-void Display_palette(Display_t *display, const Palette_t *palette)
+void Display_palette(Display_t *display, const GL_Palette_t *palette)
 {
 #if 0
     GLfloat colors[MAX_PALETTE_COLORS * VALUES_PER_COLOR] = {};
@@ -405,7 +403,7 @@ void Display_terminate(Display_t *display)
         UnloadRenderTexture(display->framebuffers[i]);
     }
 #endif
-    Program_destroy(&display->program);
+    GL_delete_program(&display->program);
 
     glfwDestroyWindow(display->window);
     glfwTerminate();

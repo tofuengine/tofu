@@ -20,35 +20,20 @@
  * SOFTWARE.
  **/
 
-#ifndef __HAL_H__
-#define __HAL_H__
+#ifndef __GL_PALETTE_H__
+#define __GL_PALETTE_H__
 
-#include <stdbool.h>
 #include <stddef.h>
-#include <stdint.h>
 
-#include "gl/gl.h"
+#include "common.h"
 
-#include "config.h"
+#define GL_MAX_PALETTE_COLORS       256
 
-typedef struct _Font_t {
-    // char pathfile[PATH_FILE_MAX];
-    bool loaded;
-    GL_Texture_t atlas;
-    int glyph_width, glyph_height;
-} Font_t;
+typedef struct _GL_Palette_t {
+    GL_Color_t colors[GL_MAX_PALETTE_COLORS];
+    size_t count;
+} GL_Palette_t;
 
-typedef struct _Bank_t { // TODO: rename to `Sheet`?
-    // char pathfile[PATH_FILE_MAX];
-    bool loaded;
-    int cell_width, cell_height;
-    GL_Point_t origin;
-    GL_Texture_t atlas;
-} Bank_t;
+extern GL_Color_t GL_parse_color(const char *argb);
 
-extern Bank_t load_bank(const char *pathfile, int cell_width, int cell_height, const GL_Palette_t *palette);
-extern void unload_bank(Bank_t *bank);
-extern Font_t load_font(const char *pathfile);
-extern void unload_font(Font_t *font);
-
-#endif  /* __HAL_H__*/
+#endif  /* __GL_PALETTE_H__ */
