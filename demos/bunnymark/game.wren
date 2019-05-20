@@ -20,6 +20,8 @@ class Game {
         _bank = Bank.new("./assets/sheet.png", 26, 37)
         _font = Font.default
 
+        _bunnies.insert(-1, Bunny.new(_random, _bank))
+
         _running = true
     }
 

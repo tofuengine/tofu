@@ -57,10 +57,6 @@ static void circle(const GL_Point_t center, const GLfloat radius, const GL_Color
 {
     
 }
-static void blit(const GL_Texture_t *texture, const GL_Rectangle_t source_rectangle, const GL_Rectangle_t destination_rectangle, const GL_Point_t origin, const GLfloat rotation, const GL_Color_t color)
-{
-    
-}
 static GLfloat measure(const Font_t *font, const char *text, const GLfloat size)
 {
     return 1.0f;
@@ -272,7 +268,7 @@ void graphics_bank_blit_call6(WrenVM *vm)
     GL_Rectangle_t source = (GL_Rectangle_t){ (GLfloat)bank_x, (GLfloat)bank_y, (GLfloat)bank_width, (GLfloat)bank_height };
     GL_Rectangle_t destination = (GL_Rectangle_t){ (GLfloat)x + (GLfloat)half_width, (GLfloat)y + (GLfloat)half_height, (GLfloat)width, (GLfloat)height };
 
-    blit(&bank->atlas, source, destination, bank->origin, rotation, (GL_Color_t){ 255, 255, 255, 255 });
+    GL_draw_texture(&bank->atlas, source, destination, bank->origin, rotation, (GL_Color_t){ 255, 255, 255, 255 });
 }
 
 void graphics_font_allocate(WrenVM *vm)

@@ -36,5 +36,6 @@ typedef void (*GL_Texture_Callback_t)(void *parameters, void *data, int width, i
 
 extern bool GL_create_texture(GL_Texture_t *texture, const char *pathfile, GL_Texture_Callback_t callback, void *parameters);
 extern void GL_delete_texture(GL_Texture_t *texture);
+extern void GL_draw_texture(const GL_Texture_t *texture, const GL_Rectangle_t source, const GL_Rectangle_t target, const GL_Point_t origin, GLfloat rotation, const GL_Color_t color);
 
 #endif  /* __GL_TEXTURE_H__ */

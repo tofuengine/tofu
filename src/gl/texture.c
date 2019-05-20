@@ -67,3 +67,50 @@ void GL_delete_texture(GL_Texture_t *texture)
     Log_write(LOG_LEVELS_DEBUG, "<GL> texture #%d unloaded", texture->id);
     *texture = (GL_Texture_t){};
 }
+
+void GL_draw_texture(const GL_Texture_t *texture,
+                     const GL_Rectangle_t source, const GL_Rectangle_t target,
+                     const GL_Point_t origin, GLfloat rotation,
+                     const GL_Color_t color)
+{
+    if (texture->id == 0) {
+        // TODO: output log here?
+        return;
+    }
+
+    GLfloat width = texture->width;
+    GLfloat height = texture->height;
+
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texture->id);
+
+    glPushMatrix();
+    glTranslatef(target.x, target.y, 0.0f);
+    glRotatef(rotation, 0.0f, 0.0f, 1.0f);
+    glTranslatef(-origin.x, -origin.y, 0.0f);
+
+    glBegin(GL_QUADS);
+        glColor4ub(color.r, color.g, color.b, color.a);
+        glNormal3f(0.0f, 0.0f, 1.0f); // Normal vector pointing towards viewer
+
+        // Bottom-left corner for texture and quad
+        glTexCoord2f(source.x / width, source.y / height);
+        glVertex2f(0.0f, 0.0f);
+
+        // Bottom-right corner for texture and quad
+        glTexCoord2f(source.x / width, (source.y + source.height) / height);
+        glVertex2f(0.0f, target.height);
+
+        // Top-right corner for texture and quad
+        glTexCoord2f((source.x + source.width) / width, (source.y + source.height) / height);
+        glVertex2f(target.width, target.height);
+
+        // Top-left corner for texture and quad
+        glTexCoord2f((source.x + source.width) / width, source.y / height);
+        glVertex2f(target.width, 0.0f);
+    glEnd();
+    glPopMatrix();
+
+    glDisable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
