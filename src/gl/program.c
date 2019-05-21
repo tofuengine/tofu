@@ -43,7 +43,7 @@ bool GL_create_program(GL_Program_t *program, const char *vertex_shader, const c
         glGetShaderiv(shader_ids[i], GL_COMPILE_STATUS, &success);
         if (!success) {
             GLint length = 0;
-            glGetProgramiv(shader_ids[i], GL_INFO_LOG_LENGTH, &length);
+            glGetShaderiv(shader_ids[i], GL_INFO_LOG_LENGTH, &length);
 
             GLchar description[length];
             glGetShaderInfoLog(shader_ids[i], length, NULL, description);
@@ -57,7 +57,7 @@ bool GL_create_program(GL_Program_t *program, const char *vertex_shader, const c
     if (result) { // Link shaders into the program.
         glLinkProgram(program_id);
         GLint success;
-        glGetShaderiv(program_id, GL_LINK_STATUS, &success);
+        glGetProgramiv(program_id, GL_LINK_STATUS, &success);
         if (!success) {
             GLint length = 0;
             glGetProgramiv(program_id, GL_INFO_LOG_LENGTH, &length);
