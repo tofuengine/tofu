@@ -23,9 +23,7 @@
 #ifndef __TOFU_CONFIG_H__
 #define __TOFU_CONFIG_H__
 
-
 // Constant MACROs have no prefix.
-
 #define STATISTICS_LENGTH           120
 #define FPS_AVERAGE_SAMPLES         256
 #define FPS_STATISTICS_RESOLUTION   10
@@ -35,6 +33,8 @@
 #define GARBAGE_COLLECTION_PERIOD   60.0
 
 // Behavioural MACROs are uses the "__" prefix/suffix.
+#define __GL_VERSION__                      0x0201
+#define __GSLS_VERSION__                    0x0120
 
 #define __FAST_FULLSCREEN__
 #undef  __EXPLICIT_SIGNUM__
