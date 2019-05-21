@@ -64,7 +64,7 @@ void GL_primitive_polygon(const GL_Point_t *points, const size_t count, const GL
         return;
     }
 
-    glEnable(GL_TEXTURE_2D);
+//    glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, _default_texture_id);
     glBegin(GL_QUADS);
         glColor4ub(color.r, color.g, color.b, color.a);

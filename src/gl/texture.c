@@ -85,7 +85,7 @@ void GL_draw_texture(const GL_Texture_t *texture,
     GLfloat width = texture->width;
     GLfloat height = texture->height;
 
-    glEnable(GL_TEXTURE_2D); // Redundant
+//    glEnable(GL_TEXTURE_2D); // Redundant
 //    glActiveTexture(GL_TEXTURE0); // Redundant
     glBindTexture(GL_TEXTURE_2D, texture->id);
 
