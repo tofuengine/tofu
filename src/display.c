@@ -128,7 +128,7 @@ static void size_callback(GLFWwindow* window, int width, int height)
 #ifdef __FAST_TRANSPARENCY__
     glDisable(GL_BLEND); // Trade in proper alpha-blending for faster single color transparency.
     glEnable(GL_ALPHA_TEST);
-    glAlphaFunc(GL_GREATER, 0.1f);
+    glAlphaFunc(GL_NOTEQUAL, 0.0f);
 #else
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
