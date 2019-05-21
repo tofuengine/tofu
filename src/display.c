@@ -98,8 +98,9 @@ static void draw_statistics(const Engine_Statistics_t *statistics)
     const char *text = FormatText("%.0f FPS (%.0f - %.0f)", statistics->current_fps, statistics->min_fps, statistics->max_fps);
     int width = MeasureText(text, FPS_TEXT_HEIGHT);
     DrawText(text, (STATISTICS_LENGTH - width) / 2, FPS_HISTOGRAM_HEIGHT, FPS_TEXT_HEIGHT, (Color){ 0, 255, 0, 191 });
-}
 #endif
+    Log_write(LOG_LEVELS_DEBUG, "%.0f FPS (%.0f - %.0f)", statistics->current_fps, statistics->min_fps, statistics->max_fps);
+}
 
 static void error_callback(int error, const char *description)
 {
@@ -313,11 +314,12 @@ void Display_renderEnd(Display_t *display, double now, const Engine_Statistics_t
         DrawTexturePro(display->framebuffers[source].texture, os, display->offscreen_destination,
             display->offscreen_origin, 0.0f, (Color){ 255, 255, 255, 255 });
 
-        if (statistics) {
-            draw_statistics(statistics);
-        }
     EndDrawing();
 #endif
+    if (statistics) {
+        draw_statistics(statistics);
+    }
+
     glfwSwapBuffers(display->window);
     glfwPollEvents();
 }
