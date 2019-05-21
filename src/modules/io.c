@@ -52,7 +52,7 @@ void io_file_read_call1(WrenVM *vm)
     strcat(pathfile, file + 2);
 
     const char *result = file_load_as_string(pathfile, "rt");
-    Log_write(LOG_LEVELS_DEBUG, "[TOFU] File '%s' loaded at %p", pathfile, result);
+    Log_write(LOG_LEVELS_DEBUG, "<IO> file '%s' loaded at %p", pathfile, result);
 
     wrenSetSlotString(vm, 0, result);
 }

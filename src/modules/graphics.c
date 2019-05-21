@@ -248,7 +248,7 @@ void graphics_bank_blit_call6(WrenVM *vm)
     const Bank_t *bank = (const Bank_t *)wrenGetSlotForeign(vm, 0);
 
     if (!bank->loaded) {
-        Log_write(LOG_LEVELS_ERROR, "[TOFU] Bank now loaded, can't draw cell");
+        Log_write(LOG_LEVELS_ERROR, "<GRAPHICS> bank now loaded, can't draw cell");
         return;
     }
 
@@ -377,17 +377,17 @@ void graphics_canvas_palette_call1(WrenVM *vm)
             palette.count = predefined_palette->count;
             memcpy(palette.colors, predefined_palette->colors, sizeof(GL_Color_t) * predefined_palette->count);
 
-            Log_write(LOG_LEVELS_DEBUG, "[TOFU] Setting predefined palette '%s' w/ %d color(s)", id, predefined_palette->count);
+            Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> setting predefined palette '%s' w/ %d color(s)", id, predefined_palette->count);
         } else {
-            Log_write(LOG_LEVELS_WARNING, "[TOFU] Unknown predefined palette w/ id '%s'", id);
+            Log_write(LOG_LEVELS_WARNING, "<GRAPHICS> unknown predefined palette w/ id '%s'", id);
         }
     } else
     if (type == WREN_TYPE_LIST) { // User supplied palette.
         palette.count = wrenGetListCount(vm, 1);
-        Log_write(LOG_LEVELS_DEBUG, "[TOFU] Setting custom palette of #%d color(s)", palette.count);
+        Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> setting custom palette of #%d color(s)", palette.count);
 
         if (palette.count > GL_MAX_PALETTE_COLORS) {
-            Log_write(LOG_LEVELS_WARNING, "[TOFU] Palette has too many colors (%d) - clamping", palette.count);
+            Log_write(LOG_LEVELS_WARNING, "<GRAPHICS> palette has too many colors (%d) - clamping", palette.count);
             palette.count = MAX_PALETTE_COLORS;
         }
 
@@ -408,7 +408,7 @@ void graphics_canvas_palette_call1(WrenVM *vm)
             palette.colors[i] = GL_parse_color(argb);
         }
     } else { 
-        Log_write(LOG_LEVELS_ERROR, "[TOFU] Wrong palette type, need to be string or list");
+        Log_write(LOG_LEVELS_ERROR, "<GRAPHICS> wrong palette type, need to be string or list");
     }
 
     if (palette.count == 0) {
@@ -429,11 +429,11 @@ void graphics_canvas_shader_call2(WrenVM *vm)
     const char *shader_code = graphics_shaders_find(code);
 
     if (shader_code != NULL) { // Predefined shader.
-        Log_write(LOG_LEVELS_DEBUG, "[TOFU] Setting predefined shader '%s' for index #%d", code, shader_index);
+        Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> setting predefined shader '%s' for index #%d", code, shader_index);
     } else {
         shader_code = code;
 
-        Log_write(LOG_LEVELS_DEBUG, "[TOFU] Setting user-defined shader '%s' for index #%d", code, shader_index);
+        Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> setting user-defined shader '%s' for index #%d", code, shader_index);
     }
 
     Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
@@ -469,7 +469,7 @@ void graphics_canvas_polygon_call3(WrenVM *vm)
 
     const size_t count = vertices / 2;
     if (count == 0) {
-        Log_write(LOG_LEVELS_INFO, "[TOFU] Polygon as no vertices");
+        Log_write(LOG_LEVELS_INFO, "<GRAPHICS> polygon as no vertices");
         return;
     }
 
@@ -498,7 +498,7 @@ void graphics_canvas_polygon_call3(WrenVM *vm)
     if (strcasecmp(mode, "line") == 0) {
         polygon(points, count, (GL_Color_t){ color, color, color, 255 }, false);
     } else {
-        Log_write(LOG_LEVELS_WARNING, "[TOFU] Undefined drawing mode for polygon: '%s'", mode);
+        Log_write(LOG_LEVELS_WARNING, "<GRAPHICS> undefined drawing mode for polygon: '%s'", mode);
     }
 }
 
@@ -523,6 +523,6 @@ void graphics_canvas_circle_call5(WrenVM *vm)
 //     if (strcmp(mode, "sector") == 0) {
 //         DrawCircleSector(x, y, radius, (Color){ color, color, color, 255 });
     } else {
-        Log_write(LOG_LEVELS_WARNING, "[TOFU] Undefined drawing mode for polygon: '%s'", mode);
+        Log_write(LOG_LEVELS_WARNING, "<GRAPHICS> undefined drawing mode for polygon: '%s'", mode);
     }
 }

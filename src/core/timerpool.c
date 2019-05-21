@@ -92,7 +92,7 @@ void TimerPool_terminate(Timer_Pool_t *pool, TimerPool_Callback_t callback, void
 {
     for (Timer_t *timer = pool->timers; timer != NULL; ) {
         callback(timer, parameters);
-        Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer #%p released", timer);
+        Log_write(LOG_LEVELS_DEBUG, "<TIMERPOOL> timer #%p released", timer);
         timer = pop_next(pool, timer);
     }
 }
@@ -107,7 +107,7 @@ void TimerPool_gc(Timer_Pool_t *pool, TimerPool_Callback_t callback, void *param
     for (Timer_t *timer = pool->timers; timer != NULL; ) {
         if (timer->state == TIMER_STATE_FINALIZED) { // Periodically release garbage-collected timers.
             callback(timer, parameters);
-            Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer #%p garbage-collected", timer);
+            Log_write(LOG_LEVELS_DEBUG, "<TIMERPOOL> timer #%p garbage-collected", timer);
             timer = pop_next(pool, timer);
         } else {
             timer = timer->next;
@@ -150,7 +150,7 @@ void TimerPool_release(Timer_Pool_t *pool, Timer_t *timer)
 
     timer->state = TIMER_STATE_FINALIZED; // Mark as to-be-released, it not already done (e.g. on closing)
 
-    Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer #%p finalized, ready for GC", timer);
+    Log_write(LOG_LEVELS_DEBUG, "<TIMERPOOL> timer #%p finalized, ready for GC", timer);
 }
 
 void TimerPool_reset(Timer_Pool_t *pool, Timer_t *timer)
@@ -164,7 +164,7 @@ void TimerPool_reset(Timer_Pool_t *pool, Timer_t *timer)
         timer->loops = timer->value.repeats;
         timer->state = TIMER_STATE_RUNNING;
 
-        Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer #%p reset", timer);
+        Log_write(LOG_LEVELS_DEBUG, "<TIMERPOOL> timer #%p reset", timer);
     }
 }
 
@@ -177,6 +177,6 @@ void TimerPool_cancel(Timer_Pool_t *pool, Timer_t *timer)
     if (timer->state == TIMER_STATE_RUNNING) {
         timer->state = TIMER_STATE_FROZEN;
 
-        Log_write(LOG_LEVELS_DEBUG, "[TOFU] Timer #%p frozen", timer);
+        Log_write(LOG_LEVELS_DEBUG, "<TIMERPOOL> timer #%p frozen", timer);
     }
 }
