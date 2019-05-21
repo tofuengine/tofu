@@ -8,7 +8,7 @@ Guess what? Yup, that's another game engine/framework.
 
 * C99 code only.
 * Self-contained, no external modules/libraries required.
-* Multi-platform (hopefully).
+* Cross-compiling multi-platform (hopefully).
 
 ## Cons
 
@@ -16,7 +16,9 @@ Guess what? Yup, that's another game engine/framework.
 
 ## Uses
 
-* [raylib](https://www.raylib.com/) v2.5
+* [GLFW](https://www.glfw.org/) v3.3
+* [Glad](https://glad.dav1d.de/)
+* Sean Barret's [stb](https://github.com/nothings/stb) libraries
 * [Wren](https://wren.io/) v0.1.0
 * [jsmn](https://zserge.com/jsmn.html/) v1.0.0
 
@@ -50,6 +52,7 @@ Guess what? Yup, that's another game engine/framework.
 ## Inspirations
 
 * [LOVE2D](https://love2d.org/)
+* [raylib](https://www.raylib.com/)
 * [DOME Engine](https://github.com/avivbeeri/dome/)
 
 ## License
