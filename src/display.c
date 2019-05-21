@@ -36,11 +36,11 @@
 static const char *vertex_shader = 
     "#version 120\n"
     "\n"
-    "varying vec2 texCoord;"
+    "varying vec2 coordinates;"
     "\n"
     "void main()\n"
     "{\n"
-    "   texCoord = gl_MultiTexCoord0.st;\n"
+    "   coordinates = gl_MultiTexCoord0.st;\n"
     "   gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\n"
     "   gl_FrontColor = gl_Color;\n"
     "}\n";
@@ -49,7 +49,7 @@ static const char *vertex_shader =
 static const char *fragment_shader =
     "#version 120\n"
     "\n"
-    "varying vec2 texCoord;"
+    "varying vec2 coordinates;"
     "\n"
     "uniform sampler2D texture0;\n"
     "uniform vec3 palette[256];\n"
@@ -57,53 +57,21 @@ static const char *fragment_shader =
     "void main()\n"
     "{\n"
     "    // Texel color fetching from texture sampler\n"
-    "    vec4 texelColor = texture2D(texture0, texCoord) * gl_Color;\n"
+    "    vec4 texel = texture2D(texture0, coordinates) * gl_Color;\n"
     "\n"
     "    // Convert the (normalized) texel color RED component (GB would work, too)\n"
     "    // to the palette index by scaling up from [0, 1] to [0, 255].\n"
-    "    int index = int(floor((texelColor.r * 255.0) + 0.5));\n"
+    "    int index = int(floor((texel.r * 255.0) + 0.5));\n"
     "\n"
     "    // Pick the palette color as final fragment color (retain the texel alpha value).\n"
     "    // Note: palette components are pre-normalized in the OpenGL range [0, 1].\n"
-    "    gl_FragColor = vec4(palette[index].rgb, texelColor.a);\n"
-    "}\n"
-;
-
-#if 0
-
-static const char *palette_shader_code =
-    "#version 330\n"
-    "\n"
-    "const int colors = 256;\n"
-    "\n"
-    "// Input fragment attributes (from fragment shader)\n"
-    "in vec2 fragTexCoord;\n"
-    "in vec4 fragColor;\n"
-    "\n"
-    "// Input uniform values\n"
-    "uniform sampler2D texture0;\n"
-    "uniform vec3 palette[colors];\n"
-    "\n"
-    "// Output fragment color\n"
-    "out vec4 finalColor;\n"
-    "\n"
-    "void main()\n"
-    "{\n"
-    "    // Texel color fetching from texture sampler\n"
-    "    vec4 texelColor = texture(texture0, fragTexCoord) * fragColor;\n"
-    "\n"
-    "    // Convert the (normalized) texel color RED component (GB would work, too)\n"
-    "    // to the palette index by scaling up from [0, 1] to [0, 255].\n"
-    "    int index = int(floor((texelColor.r * 255.0) + 0.5));\n"
-    "\n"
-    "    // Pick the palette color as final fragment color (retain the texel alpha value).\n"
-    "    // Note: palette components are pre-normalized in the OpenGL range [0, 1].\n"
-    "    finalColor = vec4(palette[index].rgb, texelColor.a);\n"
+    "    gl_FragColor = vec4(palette[index].rgb, texel.a);\n"
     "}\n"
 ;
 
 static void draw_statistics(const Engine_Statistics_t *statistics)
 {
+#if 0
     DrawRectangle(0, 0, STATISTICS_LENGTH, FPS_HISTOGRAM_HEIGHT + FPS_TEXT_HEIGHT, (Color){ 63, 63, 63, 191 });
     for (int i = 0; i < STATISTICS_LENGTH; ++i) {
         int index = (statistics->index + i) % STATISTICS_LENGTH;
@@ -246,8 +214,8 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     }
 
     GL_create_program(&display->program, vertex_shader, fragment_shader);
-    glUseProgram(display->program.id);
-    glUniform1i(glGetUniformLocation(display->program.id, "texture0"), 0);
+    glUseProgram(display->program.id);  // Redundant
+    glUniform1i(glGetUniformLocation(display->program.id, "texture0"), 0); // Redundant
 
 #if 0
     for (size_t i = 0; i < FRAMEBUFFERS_COUNT; ++i) {
@@ -294,7 +262,7 @@ void Display_processInput(Display_t *display)
 
 void Display_renderBegin(Display_t *display)
 {
-    glClearColor(0.f, 0.5f, 0.5f, 1.0f); // Required, to clear previous content. (TODO: configurable color?)
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Required, to clear previous content. (TODO: configurable color?)
     glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(display->program.id);

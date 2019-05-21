@@ -13,8 +13,6 @@ INCLUDES:= $(wildcard src/*.h src/core/*.h src/gl/*.h src/modules/*.h src/module
 OBJECTS:= $(SOURCES:%.c=%.o)
 RM=rm -f
 
-#https://glad.dav1d.de/
-
 default: $(TARGET)
 all: default
 
