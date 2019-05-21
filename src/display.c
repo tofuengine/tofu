@@ -134,6 +134,12 @@ static void size_callback(GLFWwindow* window, int width, int height)
     // make sure the viewport matches the new window dimensions; note that width and
     // height will be significantly larger than specified on retina displays.
     glViewport(0, 0, width, height);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0.0, (GLdouble)width, (GLdouble)height, 0.0, 0.0, 1.0);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
     Log_write(LOG_LEVELS_DEBUG, "<GLFW> viewport size set to %dx%d", width, height);
 }
 
@@ -299,19 +305,6 @@ void Display_renderBegin(Display_t *display)
     glClearColor(0.f, 0.5f, 0.5f, 1.0f); // Required, to clear previous content. (TODO: configurable color?)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 //    GL_use_program(&display->program);
-glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-glOrtho(0, 480, 320, 0, 0, 1);
-glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-
-        glBegin(GL_LINES);
-    //horizontal
-    for (int i = 0; i < 100; i+=10){
-        glVertex2f(0, i);
-        glVertex2f(100,i);
-    }
-    glEnd();
 }
 
 void Display_renderEnd(Display_t *display, double now, const Engine_Statistics_t *statistics)
