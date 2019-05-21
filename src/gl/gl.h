@@ -24,7 +24,9 @@
 #define __GL_H__
 
 #include "common.h"
+#include "font.h"
 #include "palette.h"
+#include "primitive.h"
 #include "program.h"
 #include "texture.h"
 

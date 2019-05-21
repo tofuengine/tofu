@@ -20,5 +20,16 @@
  * SOFTWARE.
  **/
 
-#include "hal.h"
+#include "primitive.h"
 
+void GL_primitive_point(const GL_Point_t position, const GL_Color_t color)
+{
+}
+
+void GL_primitive_polygon(const GL_Point_t *point, const size_t count, const GL_Color_t color, bool filled)
+{
+}
+
+void GL_primitive_circle(const GL_Point_t center, const GLfloat radius, const GL_Color_t color, bool filled)
+{
+}

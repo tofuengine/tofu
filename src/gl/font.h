@@ -20,5 +20,25 @@
  * SOFTWARE.
  **/
 
-#include "hal.h"
+#ifndef __GL_FONT_H__
+#define __GL_FONT_H__
 
+#include <stdbool.h>
+
+#include "common.h"
+#include "texture.h"
+
+#define GL_MAX_FONT_ALPHABET    256
+
+typedef struct _GL_Font_t {
+    GL_Texture_t atlas;
+    GLuint glyph_width, glyph_height;
+    GLchar alphabet[GL_MAX_FONT_ALPHABET];
+} GL_Font_t;
+
+extern bool GL_font_create(GL_Font_t *font, const char *pathfile, const char *alphabet);
+extern void GL_font_delete(GL_Font_t *font);
+extern GL_Rectangle_t GL_font_measure(const GL_Font_t *font, const char *text, const GLfloat size);
+extern void GL_font_write(const GL_Font_t *font, const char *text, const GL_Point_t position, const GLfloat size, const GL_Color_t color);
+
+#endif  /* __GL_FONT_H__ */

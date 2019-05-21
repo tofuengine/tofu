@@ -20,5 +20,22 @@
  * SOFTWARE.
  **/
 
-#include "hal.h"
+#include "font.h"
 
+bool GL_font_create(GL_Font_t *font, const char *pathfile, const char *alphabet)
+{
+    return false;
+}
+
+void GL_font_delete(GL_Font_t *font)
+{
+}
+
+GL_Rectangle_t GL_font_measure(const GL_Font_t *font, const char *text, const GLfloat size)
+{
+    return (GL_Rectangle_t){};
+}
+
+void GL_font_write(const GL_Font_t *font, const char *text, const GL_Point_t position, const GLfloat size, const GL_Color_t color)
+{
+}

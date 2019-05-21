@@ -20,5 +20,15 @@
  * SOFTWARE.
  **/
 
-#include "hal.h"
+#ifndef __GL_PRIMITIVE_H__
+#define __GL_PRIMITIVE_H__
 
+#include <stdbool.h>
+
+#include "common.h"
+
+extern void GL_primitive_point(const GL_Point_t position, const GL_Color_t color);
+extern void GL_primitive_polygon(const GL_Point_t *point, const size_t count, const GL_Color_t color, bool filled);
+extern void GL_primitive_circle(const GL_Point_t center, const GLfloat radius, const GL_Color_t color, bool filled);
+
+#endif  /* __GL_PRIMITIVE_H__ */

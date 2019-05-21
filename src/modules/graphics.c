@@ -25,11 +25,67 @@
 #include "../config.h"
 #include "../environment.h"
 #include "../log.h"
+#include "../gl/gl.h"
 #include "graphics/palettes.h"
 #include "graphics/shaders.h"
 
 #include <math.h>
 #include <string.h>
+
+#define RED_WEIGHT      2.0f
+#define GREEN_WEIGHT    4.0f
+#define BLUE_WEIGHT     3.0f
+
+// https://en.wikipedia.org/wiki/Color_difference
+static size_t find_nearest_color(const GL_Palette_t *palette, GL_Color_t color)
+{
+    size_t index = 0;
+    double minimum = __DBL_MAX__;
+    for (size_t i = 0; i < palette->count; ++i) {
+        const GL_Color_t *current = &palette->colors[i];
+
+        double delta_r = (double)(color.r - current->r);
+        double delta_g = (double)(color.g - current->g);
+        double delta_b = (double)(color.b - current->b);
+#ifdef __FIND_NEAREST_COLOR_EUCLIDIAN__
+        double distance = sqrt((delta_r * delta_r) * RED_WEIGHT
+            + (delta_g * delta_g) * GREEN_WEIGHT
+            + (delta_b * delta_b)) * BLUE_WEIGHT;
+#else
+        double distance = (delta_r * delta_r) * RED_WEIGHT
+            + (delta_g * delta_g) * GREEN_WEIGHT
+            + (delta_b * delta_b) * BLUE_WEIGHT; // Faster, no need to get the Euclidean distance.
+#endif
+        if (minimum > distance) {
+            minimum = distance;
+            index = i;
+        }
+    }
+    return index;
+}
+
+// TODO: convert image with a shader.
+static void palettize_callback(void *parameters, void *data, int width, int height)
+{
+    const GL_Palette_t *palette = (const GL_Palette_t *)parameters;
+
+    GL_Color_t *pixels = (GL_Color_t *)data;
+
+    for (int y = 0; y < height; ++y) {
+        int row_offset = width * y;
+        for (int x = 0; x < width; ++x) {
+            int offset = row_offset + x;
+
+            GL_Color_t color = pixels[offset];
+            if (color.a == 0) { // Skip transparent colors.
+                continue;
+            }
+
+            size_t index = find_nearest_color(palette, color);
+            pixels[offset] = (GL_Color_t){ index, index, index, color.a };
+        }
+    }
+}
 
 #ifdef __EXPLICIT_SIGNUM__
 static inline double fsgn(double value)
@@ -42,29 +98,6 @@ static inline double fsgn(double value)
     return (0.0 < value) - (value < 0.0); // No cache miss due to branches.
 }
 #endif
-
-#define DEFAULT_FONT_SIZE   10.0
-
-static void pixel(const GL_Point_t position, const GL_Color_t color)
-{
-
-}
-static void polygon(const GL_Point_t *point, const size_t count, const GL_Color_t color, bool filled)
-{
-    
-}
-static void circle(const GL_Point_t center, const GLfloat radius, const GL_Color_t color, bool filled)
-{
-    
-}
-static GLfloat measure(const Font_t *font, const char *text, const GLfloat size)
-{
-    return 1.0f;
-}
-static void write(const Font_t *font, const char *text, const GL_Point_t position, const GLfloat size, const GL_Color_t color)
-{
-    
-}
 
 const char graphics_wren[] =
     "foreign class Bank {\n"
@@ -193,6 +226,20 @@ const char graphics_wren[] =
     "}\n"
 ;
 
+typedef struct _Font_Class_t {
+    // char pathfile[PATH_FILE_MAX];
+    // bool loaded;
+    GL_Font_t font;
+} Font_Class_t;
+
+typedef struct _Bank_Class_t { // TODO: rename to `Sheet`?
+    // char pathfile[PATH_FILE_MAX];
+    // bool loaded;
+    int cell_width, cell_height;
+    GL_Point_t origin;
+    GL_Texture_t atlas;
+} Bank_Class_t;
+
 void graphics_bank_allocate(WrenVM *vm)
 {
     const char *file = wrenGetSlotString(vm, 1);
@@ -202,7 +249,7 @@ void graphics_bank_allocate(WrenVM *vm)
     Log_write(LOG_LEVELS_DEBUG, "Bank.new() -> %s, %d, %d", file, cell_width, cell_height);
 #endif
 
-    Bank_t *bank = (Bank_t *)wrenSetSlotNewForeign(vm, 0, 0, sizeof(Bank_t)); // `0, 0` since we are in the allocate callback.
+    Bank_Class_t *instance = (Bank_Class_t *)wrenSetSlotNewForeign(vm, 0, 0, sizeof(Bank_Class_t)); // `0, 0` since we are in the allocate callback.
 
     Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
@@ -210,27 +257,40 @@ void graphics_bank_allocate(WrenVM *vm)
     strcpy(pathfile, environment->base_path);
     strcat(pathfile, file + 2);
 
-    *bank = load_bank(pathfile, cell_width, cell_height, &environment->display->palette);
+    GL_Texture_t texture;
+    GL_create_texture(&texture, pathfile, palettize_callback, (void *)&environment->display->palette);
+    Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> bank '%s' loaded as texture w/ id #%d", pathfile, texture.id);
+
+    *instance = (Bank_Class_t){
+            .atlas = texture,
+            .cell_width = cell_width,
+            .cell_height = cell_height,
+            .origin = (GL_Point_t){ cell_width * 0.5, cell_height * 0.5} // Rotate along center
+        };
 }
 
 void graphics_bank_finalize(void *userData, void *data)
 {
-    Bank_t *bank = (Bank_t *)data;
-    unload_bank(bank);
+    Bank_Class_t *instance = (Bank_Class_t *)data;
+
+    GL_delete_texture(&instance->atlas);
+    Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> bank texture w/ id #%d unloaded", instance->atlas.id);
+
+    *instance = (Bank_Class_t){};
 }
 
 void graphics_bank_cell_width_get(WrenVM *vm)
 {
-    const Bank_t *bank = (const Bank_t *)wrenGetSlotForeign(vm, 0);
+    const Bank_Class_t *instance = (const Bank_Class_t *)wrenGetSlotForeign(vm, 0);
 
-    wrenSetSlotDouble(vm, 0, bank->cell_width);
+    wrenSetSlotDouble(vm, 0, instance->cell_width);
 }
 
 void graphics_bank_cell_height_get(WrenVM *vm)
 {
-    const Bank_t *bank = (const Bank_t *)wrenGetSlotForeign(vm, 0);
+    const Bank_Class_t *instance = (const Bank_Class_t *)wrenGetSlotForeign(vm, 0);
 
-    wrenSetSlotDouble(vm, 0, bank->cell_height);
+    wrenSetSlotDouble(vm, 0, instance->cell_height);
 }
 
 void graphics_bank_blit_call6(WrenVM *vm)
@@ -245,30 +305,25 @@ void graphics_bank_blit_call6(WrenVM *vm)
     Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %d, %d, %.3f, %.3f, %.3f", cell_id, x, y, rotation, scale_x, scale_y);
 #endif
 
-    const Bank_t *bank = (const Bank_t *)wrenGetSlotForeign(vm, 0);
-
-    if (!bank->loaded) {
-        Log_write(LOG_LEVELS_ERROR, "<GRAPHICS> bank now loaded, can't draw cell");
-        return;
-    }
+    const Bank_Class_t *instance = (const Bank_Class_t *)wrenGetSlotForeign(vm, 0);
 
 //    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
-    int bank_position = cell_id * bank->cell_width;
-    int bank_x = bank_position % bank->atlas.width;
-    int bank_y = (bank_position / bank->atlas.width) * bank->cell_height;
-    double bank_width = (double)bank->cell_width * fsgn(scale_x); // The sign controls the mirroring.
-    double bank_height = (double)bank->cell_height * fsgn(scale_y);
+    int bank_position = cell_id * instance->cell_width;
+    int bank_x = bank_position % instance->atlas.width;
+    int bank_y = (bank_position / instance->atlas.width) * instance->cell_height;
+    double bank_width = (double)instance->cell_width * fsgn(scale_x); // The sign controls the mirroring.
+    double bank_height = (double)instance->cell_height * fsgn(scale_y);
 
-    double width = (double)bank->cell_width * fabs(scale_x);
-    double height = (double)bank->cell_height * fabs(scale_y);
+    double width = (double)instance->cell_width * fabs(scale_x);
+    double height = (double)instance->cell_height * fabs(scale_y);
     double half_width = width * 0.5f; // Offset to compensate for origin (rotation)
     double half_height = height * 0.5f;
 
     GL_Rectangle_t source = (GL_Rectangle_t){ (GLfloat)bank_x, (GLfloat)bank_y, (GLfloat)bank_width, (GLfloat)bank_height };
     GL_Rectangle_t destination = (GL_Rectangle_t){ (GLfloat)x + (GLfloat)half_width, (GLfloat)y + (GLfloat)half_height, (GLfloat)width, (GLfloat)height };
 
-    GL_draw_texture(&bank->atlas, source, destination, bank->origin, rotation, (GL_Color_t){ 255, 255, 255, 255 });
+    GL_draw_texture(&instance->atlas, source, destination, instance->origin, rotation, (GL_Color_t){ 255, 255, 255, 255 });
 }
 
 void graphics_font_allocate(WrenVM *vm)
@@ -278,15 +333,7 @@ void graphics_font_allocate(WrenVM *vm)
     Log_write(LOG_LEVELS_DEBUG, "Font.new() -> %s", file);
 #endif
 
-    Font_t *font = (Font_t *)wrenSetSlotNewForeign(vm, 0, 0, sizeof(Font_t)); // `0, 0` since we are in the allocate callback.
-
-    if (strcmp(file, "default") == 0) {
-        *font = (Font_t){
-                .loaded = true,
-//                .font = GetFontDefault()
-            };
-        return;
-    }
+    Font_Class_t *instance = (Font_Class_t *)wrenSetSlotNewForeign(vm, 0, 0, sizeof(Font_Class_t)); // `0, 0` since we are in the allocate callback.
 
     Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
@@ -294,13 +341,23 @@ void graphics_font_allocate(WrenVM *vm)
     strcpy(pathfile, environment->base_path);
     strcat(pathfile, file + 2);
 
-    *font = load_font(pathfile);
+    GL_Font_t font;
+    GL_font_create(&font, pathfile, "ABCDEFG");
+    Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> font '%s' loaded as #%p", pathfile, instance);
+
+    *instance = (Font_Class_t){
+            .font = font
+        };
 }
 
 void graphics_font_finalize(void *userData, void *data)
 {
-    Font_t *font = (Font_t *)data;
-    unload_font(font);
+    Font_Class_t *instance = (Font_Class_t *)data;
+
+    GL_font_delete(&instance->font);
+    Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> font #%p finalized", instance);
+
+    *instance = (Font_Class_t){};
 }
 
 void graphics_font_write_call6(WrenVM *vm) // foreign text(text, color, size, align)
@@ -315,39 +372,30 @@ void graphics_font_write_call6(WrenVM *vm) // foreign text(text, color, size, al
     Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %s, %d, %d, %d, %d, %s", text, x, y, color, size, align);
 #endif
 
-    const Font_t *font = (const Font_t *)wrenGetSlotForeign(vm, 0);
+    const Font_Class_t *instance = (const Font_Class_t *)wrenGetSlotForeign(vm, 0);
 
 //    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
-    int width = measure(font, text, size);
+    GL_Rectangle_t rectangle = GL_font_measure(&instance->font, text, size);
 
-    int dx = x, dy = y;
+    GLfloat dx = x, dy = y;
     if (strcmp(align, "left") == 0) {
         dx = x;
         dy = y;
     } else
     if (strcmp(align, "center") == 0) {
-        dx = x - (width / 2);
+        dx = x - (rectangle.width / 2);
         dy = y;
     } else
     if (strcmp(align, "right") == 0) {
-        dx = x - width;
+        dx = x - rectangle.width;
         dy = y;
     }
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %d, %d, %d", width, dx, dy);
 #endif
 
-    if (!font->loaded) {
-        return;
-    }
-
-    // Spacing is proportional to default font size.
-    if (size < DEFAULT_FONT_SIZE) {
-        size = DEFAULT_FONT_SIZE;
-    }
-
-    write(font, text, (GL_Point_t){ dx, dy }, size, (GL_Color_t){ color, color, color, 255 });
+    GL_font_write(&instance->font, text, (GL_Point_t){ (GLfloat)dx, (GLfloat)dy }, (GLfloat)size, (GL_Color_t){ color, color, color, 255 });
 }
 
 void graphics_canvas_width_get(WrenVM *vm)
@@ -374,8 +422,7 @@ void graphics_canvas_palette_call1(WrenVM *vm)
         const char *id = wrenGetSlotString(vm, 1);
         const GL_Palette_t *predefined_palette = graphics_palettes_find(id);
         if (predefined_palette != NULL) {
-            palette.count = predefined_palette->count;
-            memcpy(palette.colors, predefined_palette->colors, sizeof(GL_Color_t) * predefined_palette->count);
+            palette = *predefined_palette;
 
             Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> setting predefined palette '%s' w/ %d color(s)", id, predefined_palette->count);
         } else {
@@ -393,7 +440,7 @@ void graphics_canvas_palette_call1(WrenVM *vm)
 
         int slots = wrenGetSlotCount(vm);
 #ifdef __DEBUG_VM_CALLS__
-        Log_write(LOG_LEVELS_DEBUG, "Currently #%d slot(s) available, asking for an additional slot", slots);
+        Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> currently #%d slot(s) available, asking for an additional slot", slots);
 #endif
         const int aux_slot_id = slots;
         wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
@@ -447,7 +494,7 @@ void graphics_canvas_point_call3(WrenVM *vm)
     double y = wrenGetSlotDouble(vm, 2);
     int color = (int)wrenGetSlotDouble(vm, 3);
 
-    pixel((GL_Point_t){ x, y}, (GL_Color_t){ color, color, color, 255 });
+    GL_primitive_point((GL_Point_t){ x, y}, (GL_Color_t){ color, color, color, 255 });
 }
 
 void graphics_canvas_polygon_call3(WrenVM *vm)
@@ -458,7 +505,7 @@ void graphics_canvas_polygon_call3(WrenVM *vm)
 
     int slots = wrenGetSlotCount(vm);
 #ifdef __DEBUG_VM_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Currently #%d slot(s) available, asking for an additional slot", slots);
+    Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> currently #%d slot(s) available, asking for an additional slot", slots);
 #endif
     const int aux_slot_id = slots;
     wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
@@ -493,10 +540,10 @@ void graphics_canvas_polygon_call3(WrenVM *vm)
     }
 
     if (strcasecmp(mode, "fill") == 0) {
-        polygon(points, count, (GL_Color_t){ color, color, color, 255 }, true);
+        GL_primitive_polygon(points, count, (GL_Color_t){ color, color, color, 255 }, true);
     } else
     if (strcasecmp(mode, "line") == 0) {
-        polygon(points, count, (GL_Color_t){ color, color, color, 255 }, false);
+        GL_primitive_polygon(points, count, (GL_Color_t){ color, color, color, 255 }, false);
     } else {
         Log_write(LOG_LEVELS_WARNING, "<GRAPHICS> undefined drawing mode for polygon: '%s'", mode);
     }
@@ -515,10 +562,10 @@ void graphics_canvas_circle_call5(WrenVM *vm)
 #endif
 
     if (strcasecmp(mode, "fill") == 0) {
-        circle((GL_Point_t){ x, y }, (GLfloat)radius, (GL_Color_t){ color, color, color, 255 }, true);
+        GL_primitive_circle((GL_Point_t){ x, y }, (GLfloat)radius, (GL_Color_t){ color, color, color, 255 }, true);
     } else
     if (strcasecmp(mode, "line") == 0) {
-        circle((GL_Point_t){ x, y }, (GLfloat)radius, (GL_Color_t){ color, color, color, 255 }, false);
+        GL_primitive_circle((GL_Point_t){ x, y }, (GLfloat)radius, (GL_Color_t){ color, color, color, 255 }, false);
 //     } else
 //     if (strcmp(mode, "sector") == 0) {
 //         DrawCircleSector(x, y, radius, (Color){ color, color, color, 255 });
