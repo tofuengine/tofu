@@ -35,18 +35,8 @@
 
 static const char *vertex_shader = NULL;
 
-static const char *vertex_shader =
-"#version 330 core\n"
-"layout (location = 0) in vec3 aPos;\n"
-"\n"
-"void main()\n"
-"{\n"
-"    gl_Position = vec4((aPos.x - 160.0) / 160.0, (- aPos.y + 240.0) / 240.0, aPos.z, 1.0);\n"
-"}\n"
-"";
-
 static const char *fragment_shader =
-"#version 330 core\n"
+"#version 120\n"
 "out vec4 FragColor;\n"
 "\n"
 "void main()\n"
@@ -256,12 +246,15 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     GL_greyscale_palette(&palette, GL_MAX_PALETTE_COLORS);
     Display_palette(display, &palette);
 
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     return true;
 }
 
 bool Display_shouldClose(Display_t *display)
 {
-    return glfwWindowShouldClose(display->window) == GLFW_TRUE;
+    return glfwWindowShouldClose(display->window);
 }
 
 void Display_processInput(Display_t *display)
@@ -276,7 +269,8 @@ void Display_processInput(Display_t *display)
 void Display_renderBegin(Display_t *display)
 {
     glClearColor(0.f, 0.5f, 0.5f, 1.0f); // Required, to clear previous content. (TODO: configurable color?)
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT);
+
 //    GL_use_program(&display->program);
 }
 

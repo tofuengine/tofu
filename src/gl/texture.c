@@ -39,7 +39,7 @@ bool GL_create_texture(GL_Texture_t *texture, const char *pathfile, GL_Texture_C
     }
 
     if (callback != NULL) {
-        callback(parameters, data, width, height);
+//        callback(parameters, data, width, height);
     }
 
     GLuint id;
