@@ -73,10 +73,12 @@ void GL_draw_texture(const GL_Texture_t *texture,
                      const GL_Point_t origin, GLfloat rotation,
                      const GL_Color_t color)
 {
+#ifdef __DEFENSIVE_CHECKS__
     if (texture->id == 0) {
         // TODO: output log here?
         return;
     }
+#endif
 
     GLfloat width = texture->width;
     GLfloat height = texture->height;

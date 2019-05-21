@@ -36,6 +36,7 @@
 #define __GL_VERSION__                      0x0201
 #define __GSLS_VERSION__                    0x0120
 
+#undef  __DEFENSIVE_CHECKS__
 #define __FAST_FULLSCREEN__
 #undef  __EXPLICIT_SIGNUM__
 #undef  __FIND_NEAREST_COLOR_EUCLIDIAN__
