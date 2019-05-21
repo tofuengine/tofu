@@ -2,6 +2,7 @@ import "random" for Random
 
 import "graphics" for Bank, Canvas, Font
 import "events" for Environment, Input
+import "util" for Timer
 
 import "./lib/bunny" for Bunny
 
@@ -15,12 +16,18 @@ class Game {
 
         _bunnies = []
 
-        Canvas.palette("arne-16")
+        Canvas.palette("gameboy")
 
         _bank = Bank.new("./assets/sheet.png", 26, 37)
         _font = Font.default
 
-        _bunnies.insert(-1, Bunny.new(_random, _bank))
+        for (i in 1 .. 5000) {
+            _bunnies.insert(-1, Bunny.new(_random, _bank))
+        }
+
+        _timer = Timer.new(5.0, 1, Fn.new {
+                Canvas.palette("gameboy-bw")
+            })
 
         _running = true
     }
@@ -58,7 +65,9 @@ class Game {
             bunny.render()
         }
 
-        _font.write("#%(_bunnies.count) bunnies", Canvas.width, 0, 15, 10, "right")
+        Canvas.rectangle("fill", 10, 10, 100, 100, 2)
+
+        _font.write("#%(_bunnies.count) bunnies", Canvas.width, 0, 3, 10, "right")
     }
 
 }
