@@ -24,34 +24,34 @@
 
 #include "../log.h"
 
-static GLuint default_texture_id;
+static const GLubyte _white_pixel[4] = { 255, 255, 255, 255 };
+static GLuint _default_texture_id;
 
 bool GL_primitive_initialize()
 {
-    glGenTextures(1, &default_texture_id); //allocate the memory for texture
-    if (default_texture_id == 0) {
+    glGenTextures(1, &_default_texture_id); // We need a 1x1 white texture to properly color/texture the primitives!
+    if (_default_texture_id == 0) {
         Log_write(LOG_LEVELS_DEBUG, "<GL> can't create default texture");
         return false;
     }
 
-    glBindTexture(GL_TEXTURE_2D, default_texture_id); //Binding the texture
+    glBindTexture(GL_TEXTURE_2D, _default_texture_id); //Binding the texture
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    GLubyte data[4] = { 255, 255, 255, 255 };
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, _white_pixel);
 
-    Log_write(LOG_LEVELS_DEBUG, "<GL> default (white) 1x1 texture created w/ id #%d", default_texture_id);
+    Log_write(LOG_LEVELS_DEBUG, "<GL> default (white) 1x1 texture created w/ id #%d", _default_texture_id);
 
     return true;
 }
 
 void GL_primitive_terminate()
 {
-    glDeleteTextures(1, &default_texture_id);
-    Log_write(LOG_LEVELS_DEBUG, "<GL> default texture w/ id #%d deleted", default_texture_id);
-    default_texture_id = 0U;
+    glDeleteTextures(1, &_default_texture_id);
+    Log_write(LOG_LEVELS_DEBUG, "<GL> default texture w/ id #%d deleted", _default_texture_id);
+    _default_texture_id = 0U;
 }
 
 void GL_primitive_point(const GL_Point_t position, const GL_Color_t color)
@@ -65,7 +65,7 @@ void GL_primitive_polygon(const GL_Point_t *points, const size_t count, const GL
     }
 
     glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, default_texture_id);
+    glBindTexture(GL_TEXTURE_2D, _default_texture_id);
     glBegin(GL_QUADS);
         glColor4ub(color.r, color.g, color.b, color.a);
 

@@ -169,13 +169,6 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         return false;
     }
 
-    if (!GL_initialize()) {
-        Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't initialize GL");
-        glfwDestroyWindow(display->window);
-        glfwTerminate();
-        return false;
-    }
-
     Log_write(LOG_LEVELS_INFO, "<DISPLAY> Vendor: %s", glGetString(GL_VENDOR));
     Log_write(LOG_LEVELS_INFO, "<DISPLAY> Renderer: %s", glGetString(GL_RENDERER));
     Log_write(LOG_LEVELS_INFO, "<DISPLAY> Version: %s", glGetString(GL_VERSION));
@@ -184,6 +177,23 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     glfwSetFramebufferSizeCallback(display->window, size_callback);
     glfwSetKeyCallback(display->window, key_callback);
     glfwSetInputMode(display->window, GLFW_CURSOR, configuration->hide_cursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
+
+    if (!GL_initialize()) {
+        Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't initialize GL");
+        glfwDestroyWindow(display->window);
+        glfwTerminate();
+        return false;
+    }
+
+    if (!GL_create_program(&display->program, vertex_shader, fragment_shader)) {
+        Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't create default shader");
+        GL_terminate();
+        glfwDestroyWindow(display->window);
+        glfwTerminate();
+        return false;
+    }
+    glUseProgram(display->program.id);  // Redundant
+    glUniform1i(glGetUniformLocation(display->program.id, "texture0"), 0); // Redundant
 
     int display_width, display_height;
     glfwGetMonitorWorkarea(glfwGetPrimaryMonitor(), NULL, NULL, &display_width, &display_height);
@@ -220,10 +230,6 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     } else { // Toggle fullscreen by passing primary monitor!
         glfwSetWindowMonitor(display->window, glfwGetPrimaryMonitor(), 0, 0, display->window_width, display->window_height, GLFW_DONT_CARE);
     }
-
-    GL_create_program(&display->program, vertex_shader, fragment_shader);
-    glUseProgram(display->program.id);  // Redundant
-    glUniform1i(glGetUniformLocation(display->program.id, "texture0"), 0); // Redundant
 
 #if 0
     for (size_t i = 0; i < FRAMEBUFFERS_COUNT; ++i) {
