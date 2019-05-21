@@ -36,6 +36,7 @@
 #define __GL_VERSION__                      0x0201
 #define __GSLS_VERSION__                    0x0120
 
+#define __FAST_TRANSPARENCY__
 #undef  __DEFENSIVE_CHECKS__
 #define __FAST_FULLSCREEN__
 #undef  __EXPLICIT_SIGNUM__

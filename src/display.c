@@ -124,7 +124,15 @@ static void size_callback(GLFWwindow* window, int width, int height)
     glLoadIdentity();
 
     glEnable(GL_TEXTURE_2D); // Default, always enabled.
-    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_DEPTH_TEST); // We just don't need it!
+#ifdef __FAST_TRANSPARENCY__
+    glDisable(GL_BLEND); // Trade in proper alpha-blending for faster single color transparency.
+    glEnable(GL_ALPHA_TEST);
+    glAlphaFunc(GL_GREATER, 0.1f);
+#else
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+#endif
 
     Log_write(LOG_LEVELS_DEBUG, "<GLFW> viewport size set to %dx%d", width, height);
 }
@@ -256,9 +264,6 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     GL_Palette_t palette; // Initial gray-scale palette.
     GL_greyscale_palette(&palette, GL_MAX_PALETTE_COLORS);
     Display_palette(display, &palette);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     return true;
 }
