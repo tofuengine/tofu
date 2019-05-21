@@ -20,18 +20,14 @@
  * SOFTWARE.
  **/
 
-#ifndef __GL_PRIMITIVE_H__
-#define __GL_PRIMITIVE_H__
+#include "gl.h"
 
-#include <stdbool.h>
+bool GL_initialize()
+{
+    return GL_primitive_initialize();
+}
 
-#include "common.h"
-
-extern bool GL_primitive_initialize();
-extern void GL_primitive_terminate();
-
-extern void GL_primitive_point(const GL_Point_t position, const GL_Color_t color);
-extern void GL_primitive_polygon(const GL_Point_t *points, const size_t count, const GL_Color_t color, bool filled);
-extern void GL_primitive_circle(const GL_Point_t center, const GLfloat radius, const GL_Color_t color, bool filled);
-
-#endif  /* __GL_PRIMITIVE_H__ */
+void GL_terminate()
+{
+    GL_primitive_terminate();
+}

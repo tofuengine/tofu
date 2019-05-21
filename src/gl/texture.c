@@ -45,12 +45,14 @@ bool GL_create_texture(GL_Texture_t *texture, const char *pathfile, GL_Texture_C
     GLuint id;
     glGenTextures(1, &id); //allocate the memory for texture
     glBindTexture(GL_TEXTURE_2D, id); //Binding the texture
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
     stbi_image_free(data);
 
-    Log_write(LOG_LEVELS_DEBUG, "<GL> texture '%s' loaded as #%d (%dx%d)", pathfile, id, width, height);
+    Log_write(LOG_LEVELS_DEBUG, "<GL> texture '%s' created w/ id #%d (%dx%d)", pathfile, id, width, height);
 
     *texture = (GL_Texture_t){
             .id = id,
@@ -64,7 +66,7 @@ bool GL_create_texture(GL_Texture_t *texture, const char *pathfile, GL_Texture_C
 void GL_delete_texture(GL_Texture_t *texture)
 {
     glDeleteBuffers(1, &texture->id);
-    Log_write(LOG_LEVELS_DEBUG, "<GL> texture #%d unloaded", texture->id);
+    Log_write(LOG_LEVELS_DEBUG, "<GL> texture w/ id #%d deleted", texture->id);
     *texture = (GL_Texture_t){};
 }
 
@@ -83,18 +85,17 @@ void GL_draw_texture(const GL_Texture_t *texture,
     GLfloat width = texture->width;
     GLfloat height = texture->height;
 
-    glEnable(GL_TEXTURE_2D);
-    glActiveTexture(GL_TEXTURE0);
+    glEnable(GL_TEXTURE_2D); // Redundant
+//    glActiveTexture(GL_TEXTURE0); // Redundant
     glBindTexture(GL_TEXTURE_2D, texture->id);
 
     glPushMatrix();
     glTranslatef(target.x, target.y, 0.0f);
     glRotatef(rotation, 0.0f, 0.0f, 1.0f);
     glTranslatef(-origin.x, -origin.y, 0.0f);
-
     glBegin(GL_QUADS);
         glColor4ub(color.r, color.g, color.b, color.a);
-        glNormal3f(0.0f, 0.0f, 1.0f); // Normal vector pointing towards viewer
+//        glNormal3f(0.0f, 0.0f, 1.0f); // Normal vector pointing towards viewer (Redundant)
 
         // Bottom-left corner for texture and quad
         glTexCoord2f(source.x / width, source.y / height);
@@ -114,6 +115,6 @@ void GL_draw_texture(const GL_Texture_t *texture,
     glEnd();
     glPopMatrix();
 
-    glDisable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, 0);
+//    glDisable(GL_TEXTURE_2D); // Redundant
+//    glBindTexture(GL_TEXTURE_2D, 0); // Redundant
 }

@@ -22,7 +22,7 @@
 
 #include "font.h"
 
-bool GL_font_create(GL_Font_t *font, const char *pathfile, const char *alphabet)
+bool GL_font_create(GL_Font_t *font, const char *pathfile, GLuint glyph_width, GLuint glyph_height, const char *alphabet)
 {
     return false;
 }

@@ -168,6 +168,13 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         return false;
     }
 
+    if (!GL_initialize()) {
+        Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't initialize GL");
+        glfwDestroyWindow(display->window);
+        glfwTerminate();
+        return false;
+    }
+
     Log_write(LOG_LEVELS_INFO, "<DISPLAY> Vendor: %s", glGetString(GL_VENDOR));
     Log_write(LOG_LEVELS_INFO, "<DISPLAY> Renderer: %s", glGetString(GL_RENDERER));
     Log_write(LOG_LEVELS_INFO, "<DISPLAY> Version: %s", glGetString(GL_VERSION));
@@ -366,6 +373,8 @@ void Display_terminate(Display_t *display)
     }
 #endif
     GL_delete_program(&display->program);
+
+    GL_terminate();
 
     glfwDestroyWindow(display->window);
     glfwTerminate();

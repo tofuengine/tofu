@@ -23,11 +23,16 @@
 #ifndef __GL_H__
 #define __GL_H__
 
+#include <stdbool.h>
+
 #include "common.h"
 #include "font.h"
 #include "palette.h"
 #include "primitive.h"
 #include "program.h"
 #include "texture.h"
+
+extern bool GL_initialize(); // TODO: rename `GL_*` to `HAL_*`.
+extern void GL_terminate();
 
 #endif  /* __GL_H__ */

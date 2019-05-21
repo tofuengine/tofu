@@ -259,7 +259,7 @@ void graphics_bank_allocate(WrenVM *vm)
 
     GL_Texture_t texture;
     GL_create_texture(&texture, pathfile, palettize_callback, (void *)&environment->display->palette);
-    Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> bank '%s' loaded as texture w/ id #%d", pathfile, texture.id);
+    Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> bank '%s' allocated as #%p", pathfile, instance);
 
     *instance = (Bank_Class_t){
             .atlas = texture,
@@ -274,7 +274,7 @@ void graphics_bank_finalize(void *userData, void *data)
     Bank_Class_t *instance = (Bank_Class_t *)data;
 
     GL_delete_texture(&instance->atlas);
-    Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> bank texture w/ id #%d unloaded", instance->atlas.id);
+    Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> bank #%p finalized", instance);
 
     *instance = (Bank_Class_t){};
 }
@@ -342,8 +342,8 @@ void graphics_font_allocate(WrenVM *vm)
     strcat(pathfile, file + 2);
 
     GL_Font_t font;
-    GL_font_create(&font, pathfile, "ABCDEFG");
-    Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> font '%s' loaded as #%p", pathfile, instance);
+    GL_font_create(&font, pathfile, 16, 16, "ABCDEFG");
+    Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> font '%s' allocated as #%p", pathfile, instance);
 
     *instance = (Font_Class_t){
             .font = font
