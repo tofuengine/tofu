@@ -33,17 +33,41 @@
 #define FPS_TEXT_HEIGHT             10
 #define FPS_MAX_VALUE               90
 
-static const char *vertex_shader = NULL;
+static const char *vertex_shader = 
+    "#version 120\n"
+    "\n"
+    "varying vec2 texCoord;"
+    "\n"
+    "void main()\n"
+    "{\n"
+    "   texCoord = gl_MultiTexCoord0.st;\n"
+    "   gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\n"
+    "   gl_FrontColor = gl_Color;\n"
+    "}\n";
+;
 
 static const char *fragment_shader =
-"#version 120\n"
-"out vec4 FragColor;\n"
-"\n"
-"void main()\n"
-"{\n"
-"    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-"}\n"
-"";
+    "#version 120\n"
+    "\n"
+    "varying vec2 texCoord;"
+    "\n"
+    "uniform sampler2D texture0;\n"
+    "uniform vec3 palette[256];\n"
+    "\n"
+    "void main()\n"
+    "{\n"
+    "    // Texel color fetching from texture sampler\n"
+    "    vec4 texelColor = texture2D(texture0, texCoord) * gl_Color;\n"
+    "\n"
+    "    // Convert the (normalized) texel color RED component (GB would work, too)\n"
+    "    // to the palette index by scaling up from [0, 1] to [0, 255].\n"
+    "    int index = int(floor((texelColor.r * 255.0) + 0.5));\n"
+    "\n"
+    "    // Pick the palette color as final fragment color (retain the texel alpha value).\n"
+    "    // Note: palette components are pre-normalized in the OpenGL range [0, 1].\n"
+    "    gl_FragColor = vec4(palette[index].rgb, texelColor.a);\n"
+    "}\n"
+;
 
 #if 0
 
@@ -222,6 +246,8 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     }
 
     GL_create_program(&display->program, vertex_shader, fragment_shader);
+    glUseProgram(display->program.id);
+    glUniform1i(glGetUniformLocation(display->program.id, "texture0"), 0);
 
 #if 0
     for (size_t i = 0; i < FRAMEBUFFERS_COUNT; ++i) {
@@ -271,7 +297,7 @@ void Display_renderBegin(Display_t *display)
     glClearColor(0.f, 0.5f, 0.5f, 1.0f); // Required, to clear previous content. (TODO: configurable color?)
     glClear(GL_COLOR_BUFFER_BIT);
 
-//    GL_use_program(&display->program);
+    glUseProgram(display->program.id);
 }
 
 void Display_renderEnd(Display_t *display, double now, const Engine_Statistics_t *statistics)
@@ -323,21 +349,19 @@ void Display_renderEnd(Display_t *display, double now, const Engine_Statistics_t
 
 void Display_palette(Display_t *display, const GL_Palette_t *palette)
 {
-#if 0
-    GLfloat colors[MAX_PALETTE_COLORS * VALUES_PER_COLOR] = {};
-    for (size_t i = 0; i < palette->count; ++i) {
-        int j = i * VALUES_PER_COLOR;
-        colors[j    ] = (GLfloat)palette->colors[i].r / (GLfloat)255.0;
-        colors[j + 1] = (GLfloat)palette->colors[i].g / (GLfloat)255.0;
-        colors[j + 2] = (GLfloat)palette->colors[i].b / (GLfloat)255.0;
-    }
-    display->palette = *palette;
-    int uniform_location = GetShaderLocation(display->shaders[SHADER_INDEX_PALETTE], "palette");
+    GLfloat colors[MAX_PALETTE_COLORS * 3] = {};
+    GL_normalize_palette(palette, colors);
+
+    GLint uniform_location = glGetUniformLocation(display->program.id, "palette");
     if (uniform_location == -1) {
+        Log_write(LOG_LEVELS_WARNING, "<DISPLAY> can't find `palette` uniform for shader #%d", display->program.id);
         return;
     }
-    SetShaderValueV(display->shaders[SHADER_INDEX_PALETTE], uniform_location, colors, UNIFORM_VEC3, MAX_PALETTE_COLORS);
-#endif
+    glUseProgram(display->program.id);
+    glUniform3fv(uniform_location, MAX_PALETTE_COLORS, colors);
+    glUseProgram(0);
+
+    display->palette = *palette;
 }
 
 void Display_shader(Display_t *display, size_t index, const char *code)

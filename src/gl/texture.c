@@ -39,7 +39,7 @@ bool GL_create_texture(GL_Texture_t *texture, const char *pathfile, GL_Texture_C
     }
 
     if (callback != NULL) {
-//        callback(parameters, data, width, height);
+        callback(parameters, data, width, height);
     }
 
     GLuint id;
@@ -82,6 +82,7 @@ void GL_draw_texture(const GL_Texture_t *texture,
     GLfloat height = texture->height;
 
     glEnable(GL_TEXTURE_2D);
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture->id);
 
     glPushMatrix();
