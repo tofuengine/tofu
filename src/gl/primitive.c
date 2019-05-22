@@ -83,15 +83,12 @@ void GL_primitive_polygon(const GL_Point_t *points, const size_t count, const GL
     }
 #endif
 
-//    glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, _default_texture_id);
-    glBegin(GL_TRIANGLE_FAN);
+    glBegin(GL_TRIANGLE_STRIP);
         glColor4ub(color.r, color.g, color.b, color.a);
 
-        glVertex2f(points[0].x, points[0].y);
-        for (size_t i = 1; i < count - 1; ++i) {
+        for (size_t i = 0; i < count; ++i) {
             glVertex2f(points[i].x, points[i].y);
-            glVertex2f(points[i + 1].x, points[i + 1].y);
         }
     glEnd();
 }

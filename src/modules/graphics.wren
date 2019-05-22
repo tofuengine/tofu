@@ -45,7 +45,7 @@ foreign class Canvas {
         var top = y
         var right = left + width - offset
         var bottom = top + height - offset
-        polygon(mode, [ left, top, left, bottom, right, bottom, right, top, left, top ], color)
+        polygon(mode, [ left, top, left, bottom, right, top, right, bottom ], color) // CCW strip
     }
     static square(mode, x, y, size, color) {
         rectangle(mode, x, y, size, size, color)

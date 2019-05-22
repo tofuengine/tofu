@@ -147,7 +147,7 @@ const char graphics_wren[] =
     "        var top = y\n"
     "        var right = left + width - offset\n"
     "        var bottom = top + height - offset\n"
-    "        polygon(mode, [ left, top, right, top, right, bottom, left, bottom ], color)\n"
+    "        polygon(mode, [ left, top, left, bottom, right, top, right, bottom ], color) // CCW strip\n"
     "    }\n"
     "    static square(mode, x, y, size, color) {\n"
     "        rectangle(mode, x, y, size, size, color)\n"

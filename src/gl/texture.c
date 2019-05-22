@@ -104,6 +104,7 @@ void GL_texture_delete(GL_Texture_t *texture)
     *texture = (GL_Texture_t){};
 }
 
+// https://www.puredevsoftware.com/blog/2018/03/17/texture-coordinates-d3d-vs-opengl/
 void GL_texture_blit(const GL_Texture_t *texture,
                      const GL_Rectangle_t source, const GL_Rectangle_t target,
                      const GL_Point_t origin, GLfloat rotation,
@@ -119,6 +120,11 @@ void GL_texture_blit(const GL_Texture_t *texture,
     GLfloat width = texture->width;
     GLfloat height = texture->height;
 
+    GLfloat left = source.x / width;
+    GLfloat top = source.y / height;
+    GLfloat bottom = (source.y + source.height) / height;
+    GLfloat right = (source.x + source.width) / width;
+
 //    glEnable(GL_TEXTURE_2D); // Redundant
 //    glActiveTexture(GL_TEXTURE0); // Redundant
     glBindTexture(GL_TEXTURE_2D, texture->id);
@@ -127,25 +133,18 @@ void GL_texture_blit(const GL_Texture_t *texture,
     glTranslatef(target.x, target.y, 0.0f);
     glRotatef(rotation, 0.0f, 0.0f, 1.0f);
     glTranslatef(-origin.x, -origin.y, 0.0f);
-    glBegin(GL_QUADS);
+    glBegin(GL_TRIANGLE_STRIP);
         glColor4ub(color.r, color.g, color.b, color.a);
 //        glNormal3f(0.0f, 0.0f, 1.0f); // Normal vector pointing towards viewer (Redundant)
 
-        // Bottom-left corner for texture and quad
-        glTexCoord2f(source.x / width, source.y / height);
+        glTexCoord2f(left, top); // CCW strip (the face direction of the strip is determined by the winding of the first triangle)
         glVertex2f(0.0f, 0.0f);
-
-        // Bottom-right corner for texture and quad
-        glTexCoord2f(source.x / width, (source.y + source.height) / height);
+        glTexCoord2f(left, bottom);
         glVertex2f(0.0f, target.height);
-
-        // Top-right corner for texture and quad
-        glTexCoord2f((source.x + source.width) / width, (source.y + source.height) / height);
-        glVertex2f(target.width, target.height);
-
-        // Top-left corner for texture and quad
-        glTexCoord2f((source.x + source.width) / width, source.y / height);
+        glTexCoord2f(right, top);
         glVertex2f(target.width, 0.0f);
+        glTexCoord2f(right, bottom);
+        glVertex2f(target.width, target.height);
     glEnd();
     glPopMatrix();
 
