@@ -17,11 +17,11 @@ foreign class Bank {
 
 foreign class Font {
 
-    construct new(file) {}
+    construct new(file, glyphWidth, glyphHeight) {}
 
     static default { Font.new("default") }
 
-    foreign write(text, x, y, color, size, align)
+    foreign write(text, x, y, color, scale, align)
 
 }
 

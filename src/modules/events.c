@@ -30,6 +30,7 @@
 const char events_wren[] =
     "foreign class Environment {\n"
     "\n"
+    "    foreign static fps\n"
     "    foreign static quit()\n"
     "\n"
     "}\n"
@@ -91,10 +92,16 @@ void events_input_iskeyreleased_call1(WrenVM *vm)
     wrenSetSlotBool(vm, 0, is_released == true);
 }
 
+void events_environment_fps_get(WrenVM *vm)
+{
+    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+
+    wrenSetSlotDouble(vm, 0, environment->fps);
+}
+
 void events_environment_quit_call0(WrenVM *vm)
 {
     Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
     environment->should_close = true;
 }
-

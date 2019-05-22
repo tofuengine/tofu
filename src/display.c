@@ -76,39 +76,6 @@ static const char *fragment_shader =
     "}\n"
 ;
 
-static void draw_statistics(const Engine_Statistics_t *statistics)
-{
-#if 0
-    DrawRectangle(0, 0, STATISTICS_LENGTH, FPS_HISTOGRAM_HEIGHT + FPS_TEXT_HEIGHT, (Color){ 63, 63, 63, 191 });
-    for (int i = 0; i < STATISTICS_LENGTH; ++i) {
-        int index = (statistics->index + i) % STATISTICS_LENGTH;
-        double fps = statistics->history[index];
-        int height = (int)((fps / (double)FPS_MAX_VALUE) * (double)FPS_HISTOGRAM_HEIGHT);
-        if (height > FPS_HISTOGRAM_HEIGHT) {
-            height = FPS_HISTOGRAM_HEIGHT;
-        }
-        Color color;
-        if (fps >= 60.0) {  // We are safe to do pretty much anything.
-            color = (Color){   0, 255,   0, 191 };
-        } else
-        if (fps >= 45.0) {  // Fluid enough for some complicate 2D game.
-            color = (Color){ 255, 255,   0, 191 };
-        } else
-        if (fps >= 30.0) {  // Enough for a simple 2D game.
-            color = (Color){ 255, 127,   0, 191 };
-        } else {            // Bad, very bad...
-            color = (Color){ 255,   0,   0, 191 };
-        }
-        DrawLine(i, FPS_HISTOGRAM_HEIGHT - height, i, FPS_HISTOGRAM_HEIGHT, color);
-    }
-
-    const char *text = FormatText("%.0f FPS (%.0f - %.0f)", statistics->current_fps, statistics->min_fps, statistics->max_fps);
-    int width = MeasureText(text, FPS_TEXT_HEIGHT);
-    DrawText(text, (STATISTICS_LENGTH - width) / 2, FPS_HISTOGRAM_HEIGHT, FPS_TEXT_HEIGHT, (Color){ 0, 255, 0, 191 });
-#endif
-    Log_write(LOG_LEVELS_TRACE, "%.0f FPS (%.0f - %.0f)", statistics->current_fps, statistics->min_fps, statistics->max_fps);
-}
-
 static void error_callback(int error, const char *description)
 {
     Log_write(LOG_LEVELS_ERROR, "<GLFW> %s", description);
@@ -296,7 +263,7 @@ void Display_renderBegin(Display_t *display)
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
-void Display_renderEnd(Display_t *display, double now, const Engine_Statistics_t *statistics)
+void Display_renderEnd(Display_t *display, double now)
 {
 #if 0
     EndTextureMode();
@@ -336,10 +303,6 @@ void Display_renderEnd(Display_t *display, double now, const Engine_Statistics_t
 
     EndDrawing();
 #endif
-    if (statistics) {
-        draw_statistics(statistics);
-    }
-
     glfwSwapBuffers(display->window);
     glfwPollEvents();
 }

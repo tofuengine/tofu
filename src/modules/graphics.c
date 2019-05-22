@@ -65,7 +65,7 @@ static size_t find_nearest_color(const GL_Palette_t *palette, GL_Color_t color)
 }
 
 // TODO: convert image with a shader.
-static void palettize_callback(void *parameters, void *data, int width, int height)
+static void to_indexed_atlas_callback(void *parameters, void *data, int width, int height)
 {
     const GL_Palette_t *palette = (const GL_Palette_t *)parameters;
 
@@ -119,11 +119,11 @@ const char graphics_wren[] =
     "\n"
     "foreign class Font {\n"
     "\n"
-    "    construct new(file) {}\n"
+    "    construct new(file, glyphWidth, glyphHeight) {}\n"
     "\n"
-    "    static default { Font.new(\"default\") }\n"
+    "    static default { Font.new(\"default\", 0, 0) }\n"
     "\n"
-    "    foreign write(text, x, y, color, size, align)\n"
+    "    foreign write(text, x, y, color, scale, align)\n"
     "\n"
     "}\n"
     "\n"
@@ -230,6 +230,7 @@ typedef struct _Font_Class_t {
     // char pathfile[PATH_FILE_MAX];
     // bool loaded;
     GL_Font_t font;
+    bool is_default;
 } Font_Class_t;
 
 typedef struct _Bank_Class_t { // TODO: rename to `Sheet`?
@@ -258,7 +259,7 @@ void graphics_bank_allocate(WrenVM *vm)
     strcat(pathfile, file + 2);
 
     GL_Texture_t texture;
-    GL_texture_create(&texture, pathfile, palettize_callback, (void *)&environment->display->palette);
+    GL_texture_load(&texture, pathfile, to_indexed_atlas_callback, (void *)&environment->display->palette);
     Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> bank '%s' allocated as #%p", pathfile, instance);
 
     *instance = (Bank_Class_t){
@@ -329,24 +330,37 @@ void graphics_bank_blit_call6(WrenVM *vm)
 void graphics_font_allocate(WrenVM *vm)
 {
     const char *file = wrenGetSlotString(vm, 1);
+    int glyph_width = (int)wrenGetSlotDouble(vm, 2);
+    int glyph_height = (int)wrenGetSlotDouble(vm, 3);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Font.new() -> %s", file);
+    Log_write(LOG_LEVELS_DEBUG, "Font.new() -> %s, %d, %d", file, glyph_width, glyph_height);
 #endif
 
     Font_Class_t *instance = (Font_Class_t *)wrenSetSlotNewForeign(vm, 0, 0, sizeof(Font_Class_t)); // `0, 0` since we are in the allocate callback.
 
     Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
+    if (strcasecmp(file, "default") == 0) {
+        Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> default font allocated");
+
+        *instance = (Font_Class_t){
+                .font = *GL_font_default(),
+                .is_default = true
+            };
+        return;
+    }
+
     char pathfile[PATH_FILE_MAX] = {};
     strcpy(pathfile, environment->base_path);
     strcat(pathfile, file + 2);
 
     GL_Font_t font;
-    GL_font_create(&font, pathfile, 16, 16, "ABCDEFG");
+    GL_font_load(&font, pathfile, glyph_width, glyph_height);
     Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> font '%s' allocated as #%p", pathfile, instance);
 
     *instance = (Font_Class_t){
-            .font = font
+            .font = font,
+            .is_default = false
         };
 }
 
@@ -354,8 +368,10 @@ void graphics_font_finalize(void *userData, void *data)
 {
     Font_Class_t *instance = (Font_Class_t *)data;
 
-    GL_font_delete(&instance->font);
-    Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> font #%p finalized", instance);
+    if (!instance->is_default) {
+        GL_font_delete(&instance->font);
+        Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> font #%p finalized", instance);
+    }
 
     *instance = (Font_Class_t){};
 }
@@ -366,17 +382,17 @@ void graphics_font_write_call6(WrenVM *vm) // foreign text(text, color, size, al
     double x = wrenGetSlotDouble(vm, 2);
     double y = wrenGetSlotDouble(vm, 3);
     int color = (int)wrenGetSlotDouble(vm, 4);
-    double size = wrenGetSlotDouble(vm, 5);
+    double scale = wrenGetSlotDouble(vm, 5);
     const char *align = wrenGetSlotString(vm, 6);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %s, %d, %d, %d, %d, %s", text, x, y, color, size, align);
+    Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %s, %d, %d, %d, %d, %s", text, x, y, color, scale, align);
 #endif
 
     const Font_Class_t *instance = (const Font_Class_t *)wrenGetSlotForeign(vm, 0);
 
 //    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
-    GL_Rectangle_t rectangle = GL_font_measure(&instance->font, text, size);
+    GL_Rectangle_t rectangle = GL_font_measure(&instance->font, text, scale);
 
     GLfloat dx = x, dy = y;
     if (strcmp(align, "left") == 0) {
@@ -395,7 +411,7 @@ void graphics_font_write_call6(WrenVM *vm) // foreign text(text, color, size, al
     Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %d, %d, %d", width, dx, dy);
 #endif
 
-    GL_font_write(&instance->font, text, (GL_Point_t){ (GLfloat)dx, (GLfloat)dy }, (GLfloat)size, (GL_Color_t){ color, color, color, 255 });
+    GL_font_write(&instance->font, text, (GL_Point_t){ (GLfloat)dx, (GLfloat)dy }, (GLfloat)scale, (GL_Color_t){ color, color, color, 255 });
 }
 
 void graphics_canvas_width_get(WrenVM *vm)

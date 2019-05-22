@@ -34,6 +34,7 @@
 typedef struct _Environment_t {
     char base_path[PATH_FILE_MAX];
     bool should_close;
+    double fps;
 
     Display_t *display;
 

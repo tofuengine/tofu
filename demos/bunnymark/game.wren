@@ -67,7 +67,8 @@ class Game {
 
         Canvas.rectangle("fill", 10, 10, 100, 100, 2)
 
-        _font.write("#%(_bunnies.count) bunnies", Canvas.width, 0, 3, 10, "right")
+        _font.write("FPS: %(Environment.fps.round)", 0, 0, 1, 1.0, "left")
+        _font.write("#%(_bunnies.count) bunnies", Canvas.width, 0, 3, 1.0, "right")
     }
 
 }

@@ -57,6 +57,7 @@ const Method_Entry_t _methods[] = {
     { "events", "Input", true, "isKeyUp(_)", events_input_iskeyup_call1 },
     { "events", "Input", true, "isKeyPressed(_)", events_input_iskeypressed_call1 },
     { "events", "Input", true, "isKeyReleased(_)", events_input_iskeyreleased_call1 },
+    { "events", "Environment", true, "fps", events_environment_fps_get },
     { "events", "Environment", true, "quit()", events_environment_quit_call0 },
     { "graphics", "Bank", false, "cellWidth", graphics_bank_cell_width_get },
     { "graphics", "Bank", false, "cellHeight", graphics_bank_cell_height_get },

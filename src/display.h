@@ -35,9 +35,6 @@
 
 #define SHADER_INDEX_PALETTE    0
 
-// Forward declaration.
-typedef struct _Engine_Statistics_t Engine_Statistics_t;
-
 typedef struct _Display_Configuration_t {
     int width, height;
     int colors;
@@ -54,11 +51,11 @@ typedef struct _Display_t {
     int window_width, window_height, window_scale;
 
     GL_Program_t program;
-
+/*
     GLuint offscreen;
     GL_Rectangle_t offscreen_source, offscreen_destination;
     GL_Point_t offscreen_origin;
-
+*/
     GL_Palette_t palette;
 } Display_t;
 
@@ -66,7 +63,7 @@ extern bool Display_initialize(Display_t *display, const Display_Configuration_t
 extern bool Display_shouldClose(Display_t *display);
 extern void Display_processInput(Display_t *display);
 extern void Display_renderBegin(Display_t *display);
-extern void Display_renderEnd(Display_t *display, double now, const Engine_Statistics_t *statistics);
+extern void Display_renderEnd(Display_t *display, double now);
 extern void Display_palette(Display_t *display, const GL_Palette_t *palette);
 extern void Display_shader(Display_t *display, size_t index, const char *code);
 extern void Display_terminate(Display_t *display);

@@ -29,6 +29,7 @@ void Environment_initialize(Environment_t *environment, const char *base_path, D
 {
     strcpy(environment->base_path, base_path);
     environment->should_close = false;
+    environment->fps = 0.0;
 
     environment->display = display;
 }

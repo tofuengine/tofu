@@ -1,5 +1,6 @@
 foreign class Environment {
 
+    foreign static fps
     foreign static quit()
 
 }

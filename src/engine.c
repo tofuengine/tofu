@@ -139,10 +139,9 @@ void Engine_run(Engine_t *engine)
         double elapsed = current - previous;
         previous = current;
 
-        const Engine_Statistics_t *current_statistics = NULL;
         if (engine->configuration.debug) {
             bool ready = update_statistics(&statistics, elapsed);
-            current_statistics = ready ? &statistics : NULL;
+            engine->environment.fps = ready ? statistics.current_fps : 0.0;
         }
 
         Display_processInput(&engine->display);
@@ -158,6 +157,6 @@ void Engine_run(Engine_t *engine)
 
         Display_renderBegin(&engine->display);
             Interpreter_render(&engine->interpreter, lag / delta_time);
-        Display_renderEnd(&engine->display, current, current_statistics);
+        Display_renderEnd(&engine->display, current);
     }
 }
