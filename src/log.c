@@ -26,21 +26,32 @@
 #include <stdio.h>
 #include <string.h>
 
-#define COLOR_BLACK     "\033[0;31m"
-#define COLOR_RED       "\033[0;31m"
-#define COLOR_GREEN     "\033[0;32m"
-#define COLOR_YELLOW    "\033[0;33m"
-#define COLOR_BLUE      "\033[0;34m"
-#define COLOR_MAGENTA   "\033[0;35m"
-#define COLOR_CYAN      "\033[0;36m"
-#define COLOR_WHITE     "\033[0;36m"
-#define COLOR_OFF       "\033[0m"
+// http://jafrog.com/2013/11/23/colors-in-terminal.html
+#define COLOR_BLACK         "\x1b[30m"
+#define COLOR_RED           "\x1b[31m"
+#define COLOR_GREEN         "\x1b[32m"
+#define COLOR_YELLOW        "\x1b[33m"
+#define COLOR_BLUE          "\x1b[34m"
+#define COLOR_MAGENTA       "\x1b[35m"
+#define COLOR_CYAN          "\x1b[36m"
+#define COLOR_WHITE         "\x1b[37m"
+
+#define COLOR_BLACK_HC      "\x1b[90m"
+#define COLOR_RED_HC        "\x1b[91m"
+#define COLOR_GREEN_HC      "\x1b[92m"
+#define COLOR_YELLOW_HC     "\x1b[93m"
+#define COLOR_BLUE_HC       "\x1b[94m"
+#define COLOR_MAGENTA_HC    "\x1b[95m"
+#define COLOR_CYAN_HC       "\x1b[96m"
+#define COLOR_WHITE_HC      "\x1b[97m"
+
+#define COLOR_OFF           "\x1b[0m"
 
 static Log_Levels_t _level = LOG_LEVELS_ALL;
 
 static void log_output(int msg_type, const char *text, va_list args)
 {
-    static const char *color[] = { COLOR_WHITE, COLOR_BLUE, COLOR_CYAN, COLOR_GREEN, COLOR_YELLOW, COLOR_MAGENTA, COLOR_RED, COLOR_WHITE };
+    static const char *color[] = { COLOR_WHITE, COLOR_BLUE_HC, COLOR_CYAN, COLOR_GREEN, COLOR_YELLOW, COLOR_RED, COLOR_MAGENTA, COLOR_WHITE };
     printf("%s", color[msg_type]);
     vprintf(text, args);
     printf(COLOR_OFF);
