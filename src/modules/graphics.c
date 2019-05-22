@@ -132,7 +132,6 @@ const char graphics_wren[] =
     "    foreign static width\n"
     "    foreign static height\n"
     "    foreign static palette(colors)\n"
-    "    foreign static shader(index, code)\n"
     "\n"
     "    foreign static point(x, y, color)\n"
     "    foreign static polygon(mode, vertices, color)\n"
@@ -481,27 +480,6 @@ void graphics_canvas_palette_call1(WrenVM *vm)
     Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
     
     Display_palette(environment->display, &palette);
-}
-
-void graphics_canvas_shader_call2(WrenVM *vm)
-{
-    int index = (int)wrenGetSlotDouble(vm, 1);
-    const char *code = wrenGetSlotString(vm, 2);
-
-    int shader_index = ((index > SHADERS_COUNT - 1) ? SHADERS_COUNT - 2 : index) + 1; // Skip palette shader.
-    const char *shader_code = graphics_shaders_find(code);
-
-    if (shader_code != NULL) { // Predefined shader.
-        Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> setting predefined shader '%s' for index #%d", code, shader_index);
-    } else {
-        shader_code = code;
-
-        Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> setting user-defined shader '%s' for index #%d", code, shader_index);
-    }
-
-    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
-    
-    Display_shader(environment->display, shader_index, shader_code);
 }
 
 void graphics_canvas_point_call3(WrenVM *vm)

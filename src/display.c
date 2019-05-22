@@ -29,10 +29,6 @@
 
 #include <memory.h>
 
-#define FPS_HISTOGRAM_HEIGHT        30
-#define FPS_TEXT_HEIGHT             10
-#define FPS_MAX_VALUE               90
-
 static const char *vertex_shader = 
     "#version 120\n"
     "\n"
@@ -271,8 +267,8 @@ void Display_processInput(Display_t *display)
         display->keys_released[i] = was_down && !is_down;
     }
 
-    if (glfwGetKey(display->window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-        if (display->configuration.exit_key_enabled) {
+    if (display->configuration.exit_key_enabled) {
+        if (glfwGetKey(display->window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
             glfwSetWindowShouldClose(display->window, true);
         }
     }
@@ -287,34 +283,6 @@ void Display_renderBegin(Display_t *display)
 void Display_renderEnd(Display_t *display, double now)
 {
 #if 0
-    EndTextureMode();
-
-    Rectangle os = display->offscreen_source;
-    size_t source = 0, target = 1;
-    for (size_t i = 0; i < SHADERS_COUNT; ++i) { // Post-processing filters chain. Shader #0 is the palette shader.
-        if (display->shaders[i].id == 0) {
-            break;
-        }
-
-        int uniform_location = GetShaderLocation(display->shaders[i], "time"); // Send current time to shader.
-        if (uniform_location != -1) {
-            GLfloat time = (float)now;
-            SetShaderValue(display->shaders[i], uniform_location, &time, UNIFORM_FLOAT);
-        }
-
-        BeginTextureMode(display->framebuffers[target]);
-            BeginShaderMode(display->shaders[i]);
-                DrawTexture(display->framebuffers[source].texture, 0, 0, (Color){ 255, 255, 255, 255 });
-            EndShaderMode();
-        EndTextureMode();
-
-        size_t aux = target;
-        target = source;
-        source = aux;
-
-        os.height *= -1.0; // Y-flip on even number of shaders.
-    }
-
     BeginDrawing();
 #ifndef __FAST_FULLSCREEN__
         ClearBackground((Color){ 0, 0, 0, 255 });

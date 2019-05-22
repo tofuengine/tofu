@@ -25,13 +25,9 @@
 
 #include <stdbool.h>
 #include <stddef.h>
-//#include <stdint.h>
 
 #include "hal.h"
 #include "gl/gl.h"
-
-#define FRAMEBUFFERS_COUNT      2
-#define SHADERS_COUNT           5
 
 typedef enum _Display_Keys_t {
     Display_Keys_t_First = 0,
