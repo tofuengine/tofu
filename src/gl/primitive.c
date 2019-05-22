@@ -64,18 +64,25 @@ void GL_primitive_point(const GL_Point_t position, const GL_Color_t color)
     glEnd();
 }
 
-void GL_primitive_line(const GL_Point_t from, const GL_Point_t to, const GL_Color_t color)
+void GL_primitive_lines(const GL_Point_t *points, const size_t count, const GL_Color_t color)
 {
+#ifdef __DEFENSIVE_CHECKS__
+    if (count < 2) {
+        return;
+    }
+#endif
+
     glBindTexture(GL_TEXTURE_2D, _default_texture_id);
-    glBegin(GL_LINES);
+    glBegin(GL_LINE_STRIP);
         glColor4ub(color.r, color.g, color.b, color.a);
 
-        glVertex2f(from.x, from.y);
-        glVertex2f(to.x, to.y);
+        for (size_t i = 0; i < count; ++i) {
+            glVertex2f(points[i].x, points[i].y);
+        }
     glEnd();
 }
 
-void GL_primitive_polygon(const GL_Point_t *points, const size_t count, const GL_Color_t color, bool filled)
+void GL_primitive_strip(const GL_Point_t *points, const size_t count, const GL_Color_t color)
 {
 #ifdef __DEFENSIVE_CHECKS__
     if (count < 3) {

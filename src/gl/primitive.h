@@ -31,8 +31,8 @@ extern bool GL_primitive_initialize();
 extern void GL_primitive_terminate();
 
 extern void GL_primitive_point(const GL_Point_t position, const GL_Color_t color);
-extern void GL_primitive_line(const GL_Point_t from, const GL_Point_t to, const GL_Color_t color);
-extern void GL_primitive_polygon(const GL_Point_t *points, const size_t count, const GL_Color_t color, bool filled);
+extern void GL_primitive_lines(const GL_Point_t *points, const size_t count, const GL_Color_t color);
+extern void GL_primitive_strip(const GL_Point_t *points, const size_t count, const GL_Color_t color);
 extern void GL_primitive_circle(const GL_Point_t center, const GLfloat radius, const GL_Color_t color, bool filled);
 
 #endif  /* __GL_PRIMITIVE_H__ */

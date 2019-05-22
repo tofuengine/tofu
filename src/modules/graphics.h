@@ -41,8 +41,8 @@ extern void graphics_canvas_width_get(WrenVM *vm);
 extern void graphics_canvas_height_get(WrenVM *vm);
 extern void graphics_canvas_palette_call1(WrenVM *vm);
 extern void graphics_canvas_point_call3(WrenVM *vm); // TODO: should points, polygons and circles be objects?
-extern void graphics_canvas_line_call5(WrenVM *vm);
-extern void graphics_canvas_polygon_call3(WrenVM *vm);
-extern void graphics_canvas_circle_call5(WrenVM *vm);
+extern void graphics_canvas_lines_call2(WrenVM *vm);
+extern void graphics_canvas_strip_call2(WrenVM *vm);
+extern void graphics_canvas_circle_call5(WrenVM *vm); // TODO: remove and implement in Wren.
 
 #endif  /* __MODULES_GRAPHICS_H__ */

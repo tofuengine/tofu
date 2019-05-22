@@ -134,12 +134,16 @@ const char graphics_wren[] =
     "    foreign static palette(colors)\n"
     "\n"
     "    foreign static point(x, y, color)\n"
-    "    foreign static line(x0, y0, x1, y1, color)\n"
-    "    foreign static polygon(mode, vertices, color)\n"
+    "    foreign static lines(vertices, color)\n"
+    "    foreign static strip(vertices, color)\n"
     "    foreign static circle(mode, x, y, radius, color)\n"
     "\n"
     "    static triangle(mode, x0, y0, x1, y1, x2, y2, color) {\n"
-    "        polygon(mode, [ x0, y0, x1, y1, x2, y2 ], color)\n"
+    "        if (mode == \"line\") {\n"
+    "            lines([ x0, y0, x1, y1, x2, y2, x0, y0 ], color)\n"
+    "        } else {\n"
+    "            strip([ x0, y0, x1, y1, x2, y2 ], color)\n"
+    "        }\n"
     "    }\n"
     "    static rectangle(mode, x, y, width, height, color) {\n"
     "        var offset = mode == \"line\" ? 1 : 0\n"
@@ -147,7 +151,11 @@ const char graphics_wren[] =
     "        var top = y\n"
     "        var right = left + width - offset\n"
     "        var bottom = top + height - offset\n"
-    "        polygon(mode, [ left, top, left, bottom, right, top, right, bottom ], color) // CCW strip\n"
+    "        if (mode == \"line\") {\n"
+    "            lines([ left, top, left, bottom, right, bottom, right, top, left, top ], color)\n"
+    "        } else {\n"
+    "            strip([ left, top, left, bottom, right, top, right, bottom ], color)\n"
+    "        }\n"
     "    }\n"
     "    static square(mode, x, y, size, color) {\n"
     "        rectangle(mode, x, y, size, size, color)\n"
@@ -489,22 +497,10 @@ void graphics_canvas_point_call3(WrenVM *vm)
     GL_primitive_point((GL_Point_t){ x, y }, (GL_Color_t){ color, color, color, 255 });
 }
 
-void graphics_canvas_line_call5(WrenVM *vm)
+void graphics_canvas_lines_call2(WrenVM *vm)
 {
-    double x0 = wrenGetSlotDouble(vm, 1);
-    double y0 = wrenGetSlotDouble(vm, 2);
-    double x1 = wrenGetSlotDouble(vm, 3);
-    double y1 = wrenGetSlotDouble(vm, 4);
-    int color = (int)wrenGetSlotDouble(vm, 5);
-
-    GL_primitive_line((GL_Point_t){ x0, y0 }, (GL_Point_t){ x1, y1 }, (GL_Color_t){ color, color, color, 255 });
-}
-
-void graphics_canvas_polygon_call3(WrenVM *vm)
-{
-    const char *mode = wrenGetSlotString(vm, 1);
-    int vertices = wrenGetListCount(vm, 2);
-    int color = (int)wrenGetSlotDouble(vm, 3);
+    int vertices = wrenGetListCount(vm, 1);
+    int color = (int)wrenGetSlotDouble(vm, 2);
 
     int slots = wrenGetSlotCount(vm);
 #ifdef __DEBUG_VM_CALLS__
@@ -519,7 +515,7 @@ void graphics_canvas_polygon_call3(WrenVM *vm)
 
     const size_t count = vertices / 2;
     if (count == 0) {
-        Log_write(LOG_LEVELS_INFO, "<GRAPHICS> polygon as no vertices");
+        Log_write(LOG_LEVELS_INFO, "<GRAPHICS> lines as no vertices");
         return;
     }
 
@@ -528,28 +524,56 @@ void graphics_canvas_polygon_call3(WrenVM *vm)
     // OpenGL rasterization.
     //
     // http://glprogramming.com/red/appendixg.html#name1
-    double offset = (strcasecmp(mode, "line") == 0) ? 0.5 : 0.0;
-
     GL_Point_t points[count];
     for (size_t i = 0; i < count; ++i) {
-        wrenGetListElement(vm, 2, (i * 2), aux_slot_id);
+        wrenGetListElement(vm, 1, (i * 2), aux_slot_id);
         double x = wrenGetSlotDouble(vm, aux_slot_id);
-        wrenGetListElement(vm, 2, (i * 2) + 1, aux_slot_id);
+        wrenGetListElement(vm, 1, (i * 2) + 1, aux_slot_id);
         double y = wrenGetSlotDouble(vm, aux_slot_id);
 
         points[i] = (GL_Point_t){
-                .x = (GLfloat)(x + offset), .y = (GLfloat)(y + offset) // HAZARD: should cast separately?
+                .x = (GLfloat)(x + 0.5f), .y = (GLfloat)(y + 0.5f) // HAZARD: should cast separately?
             };
     }
 
-    if (strcasecmp(mode, "fill") == 0) {
-        GL_primitive_polygon(points, count, (GL_Color_t){ color, color, color, 255 }, true);
-    } else
-    if (strcasecmp(mode, "line") == 0) {
-        GL_primitive_polygon(points, count, (GL_Color_t){ color, color, color, 255 }, false);
-    } else {
-        Log_write(LOG_LEVELS_WARNING, "<GRAPHICS> undefined drawing mode for polygon: '%s'", mode);
+    GL_primitive_lines(points, count, (GL_Color_t){ color, color, color, 255 });
+}
+
+void graphics_canvas_strip_call2(WrenVM *vm)
+{
+    int vertices = wrenGetListCount(vm, 1);
+    int color = (int)wrenGetSlotDouble(vm, 2);
+
+    int slots = wrenGetSlotCount(vm);
+#ifdef __DEBUG_VM_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> currently #%d slot(s) available, asking for an additional slot", slots);
+#endif
+    const int aux_slot_id = slots;
+    wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
+
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.polygon(%d, %d, %d)", mode, color, vertices);
+#endif
+
+    const size_t count = vertices / 2;
+    if (count == 0) {
+        Log_write(LOG_LEVELS_INFO, "<GRAPHICS> strip as no vertices");
+        return;
     }
+
+    GL_Point_t points[count];
+    for (size_t i = 0; i < count; ++i) {
+        wrenGetListElement(vm, 1, (i * 2), aux_slot_id);
+        double x = wrenGetSlotDouble(vm, aux_slot_id);
+        wrenGetListElement(vm, 1, (i * 2) + 1, aux_slot_id);
+        double y = wrenGetSlotDouble(vm, aux_slot_id);
+
+        points[i] = (GL_Point_t){
+                .x = (GLfloat)x, .y = (GLfloat)y
+            };
+    }
+
+    GL_primitive_strip(points, count, (GL_Color_t){ color, color, color, 255 });
 }
 
 void graphics_canvas_circle_call5(WrenVM *vm)

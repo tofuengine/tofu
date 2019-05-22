@@ -32,12 +32,16 @@ foreign class Canvas {
     foreign static palette(colors)
 
     foreign static point(x, y, color)
-    foreign static line(x0, y0, x1, y1, color)
-    foreign static polygon(mode, vertices, color)
+    foreign static lines(vertices, color)
+    foreign static strip(vertices, color)
     foreign static circle(mode, x, y, radius, color)
 
     static triangle(mode, x0, y0, x1, y1, x2, y2, color) {
-        polygon(mode, [ x0, y0, x1, y1, x2, y2, x0, y0 ], color)
+        if (mode == "line") {
+            lines([ x0, y0, x1, y1, x2, y2, x0, y0 ], color)
+        } else {
+            strip([ x0, y0, x1, y1, x2, y2 ], color)
+        }
     }
     static rectangle(mode, x, y, width, height, color) {
         var offset = mode == "line" ? 1 : 0
@@ -45,7 +49,11 @@ foreign class Canvas {
         var top = y
         var right = left + width - offset
         var bottom = top + height - offset
-        polygon(mode, [ left, top, left, bottom, right, top, right, bottom ], color) // CCW strip
+        if (mode == "line") {
+            lines([ left, top, left, bottom, right, bottom, right, top, left, top ], color)
+        } else {
+            strip([ left, top, left, bottom, right, top, right, bottom ], color)
+        }
     }
     static square(mode, x, y, size, color) {
         rectangle(mode, x, y, size, size, color)
