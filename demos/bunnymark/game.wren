@@ -59,7 +59,7 @@ class Game {
             bunny.render()
         }
 
-        Canvas.point(150, 150, 3)
+        Canvas.point(50, 50, 3)
         Canvas.line(150, 150, 250, 250, 3)
 //        Canvas.triangle("fill", 150, 150, 50, 200, 200, 200, 3)
 //        Canvas.rectangle("fill", 10, 10, 100, 100, 2)

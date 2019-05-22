@@ -57,7 +57,7 @@ void GL_primitive_terminate()
 void GL_primitive_point(const GL_Point_t position, const GL_Color_t color)
 {
     glBindTexture(GL_TEXTURE_2D, _default_texture_id);
-    glBegin(GL_POINT);
+    glBegin(GL_POINTS);
         glColor4ub(color.r, color.g, color.b, color.a);
 
         glVertex2f(position.x, position.y);
@@ -67,7 +67,7 @@ void GL_primitive_point(const GL_Point_t position, const GL_Color_t color)
 void GL_primitive_line(const GL_Point_t from, const GL_Point_t to, const GL_Color_t color)
 {
     glBindTexture(GL_TEXTURE_2D, _default_texture_id);
-    glBegin(GL_LINE);
+    glBegin(GL_LINES);
         glColor4ub(color.r, color.g, color.b, color.a);
 
         glVertex2f(from.x, from.y);
