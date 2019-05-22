@@ -25,7 +25,7 @@
 
 // Constant MACROs have no prefix.
 #define STATISTICS_LENGTH           120
-#define FPS_AVERAGE_SAMPLES         256
+#define FPS_AVERAGE_SAMPLES         128
 #define FPS_STATISTICS_RESOLUTION   10
 
 #define MAX_PALETTE_COLORS          256
@@ -37,6 +37,7 @@
 #define __GSLS_VERSION__                    0x0120
 
 #define __FAST_TRANSPARENCY__
+#undef  __DEBUG_TRIANGLES_WINDING__
 #undef  __DEFENSIVE_CHECKS__
 #define __FAST_FULLSCREEN__
 #undef  __EXPLICIT_SIGNUM__

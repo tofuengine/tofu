@@ -101,7 +101,15 @@ static void size_callback(GLFWwindow* window, int width, int height)
     glAlphaFunc(GL_NOTEQUAL, 0.0f);
 #else
     glEnable(GL_BLEND);
+    glDisable(GL_ALPHA_TEST);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+#endif
+
+#ifdef __DEBUG_TRIANGLES_WINDING__
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 #endif
 
     Log_write(LOG_LEVELS_DEBUG, "<GLFW> viewport size set to %dx%d", width, height);
