@@ -25,7 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-void GL_greyscale_palette(GL_Palette_t *palette, size_t count)
+void GL_palette_greyscale(GL_Palette_t *palette, size_t count)
 {
     for (size_t i = 0; i < count; ++i) {
         unsigned char v = (unsigned char)(((double)i / (double)(count - 1)) * 255.0);
@@ -34,7 +34,7 @@ void GL_greyscale_palette(GL_Palette_t *palette, size_t count)
     palette->count = count;
 }
 
-GL_Color_t GL_parse_color(const char *argb)
+GL_Color_t GL_palette_parse_color(const char *argb)
 {
     GL_Color_t color;
     char hex[3] = {};
@@ -45,7 +45,7 @@ GL_Color_t GL_parse_color(const char *argb)
     return color;
 }
 
-void GL_normalize_palette(const GL_Palette_t *palette, GLfloat *colors) // palette->count * 3
+void GL_palette_normalize(const GL_Palette_t *palette, GLfloat *colors) // palette->count * 3
 {
     for (size_t i = 0; i < palette->count; ++i) {
         int j = i * 3;

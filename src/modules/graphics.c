@@ -258,7 +258,7 @@ void graphics_bank_allocate(WrenVM *vm)
     strcat(pathfile, file + 2);
 
     GL_Texture_t texture;
-    GL_create_texture(&texture, pathfile, palettize_callback, (void *)&environment->display->palette);
+    GL_texture_create(&texture, pathfile, palettize_callback, (void *)&environment->display->palette);
     Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> bank '%s' allocated as #%p", pathfile, instance);
 
     *instance = (Bank_Class_t){
@@ -273,7 +273,7 @@ void graphics_bank_finalize(void *userData, void *data)
 {
     Bank_Class_t *instance = (Bank_Class_t *)data;
 
-    GL_delete_texture(&instance->atlas);
+    GL_texture_delete(&instance->atlas);
     Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> bank #%p finalized", instance);
 
     *instance = (Bank_Class_t){};
@@ -323,7 +323,7 @@ void graphics_bank_blit_call6(WrenVM *vm)
     GL_Rectangle_t source = (GL_Rectangle_t){ (GLfloat)bank_x, (GLfloat)bank_y, (GLfloat)bank_width, (GLfloat)bank_height };
     GL_Rectangle_t destination = (GL_Rectangle_t){ (GLfloat)x + (GLfloat)half_width, (GLfloat)y + (GLfloat)half_height, (GLfloat)width, (GLfloat)height };
 
-    GL_draw_texture(&instance->atlas, source, destination, instance->origin, rotation, (GL_Color_t){ 255, 255, 255, 255 });
+    GL_texture_blit(&instance->atlas, source, destination, instance->origin, rotation, (GL_Color_t){ 255, 255, 255, 255 });
 }
 
 void graphics_font_allocate(WrenVM *vm)
@@ -452,7 +452,7 @@ void graphics_canvas_palette_call1(WrenVM *vm)
             wrenGetListElement(vm, 1, i, aux_slot_id);
 
             const char *argb = wrenGetSlotString(vm, aux_slot_id);
-            palette.colors[i] = GL_parse_color(argb);
+            palette.colors[i] = GL_palette_parse_color(argb);
         }
     } else { 
         Log_write(LOG_LEVELS_ERROR, "<GRAPHICS> wrong palette type, need to be string or list");

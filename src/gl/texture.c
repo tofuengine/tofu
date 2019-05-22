@@ -29,7 +29,7 @@
 
 #include "../log.h"
 
-bool GL_create_texture(GL_Texture_t *texture, const char *pathfile, GL_Texture_Callback_t callback, void *parameters)
+bool GL_texture_create(GL_Texture_t *texture, const char *pathfile, GL_Texture_Callback_t callback, void *parameters)
 {
     int width, height, components;
     unsigned char* data = stbi_load(pathfile, &width, &height, &components, STBI_rgb_alpha); //STBI_default);
@@ -63,14 +63,14 @@ bool GL_create_texture(GL_Texture_t *texture, const char *pathfile, GL_Texture_C
     return true;
 }
 
-void GL_delete_texture(GL_Texture_t *texture)
+void GL_texture_delete(GL_Texture_t *texture)
 {
     glDeleteBuffers(1, &texture->id);
     Log_write(LOG_LEVELS_DEBUG, "<GL> texture w/ id #%d deleted", texture->id);
     *texture = (GL_Texture_t){};
 }
 
-void GL_draw_texture(const GL_Texture_t *texture,
+void GL_texture_blit(const GL_Texture_t *texture,
                      const GL_Rectangle_t source, const GL_Rectangle_t target,
                      const GL_Point_t origin, GLfloat rotation,
                      const GL_Color_t color)

@@ -24,7 +24,7 @@
 
 #include "../log.h"
 
-bool GL_create_program(GL_Program_t *program, const char *vertex_shader, const char *fragment_shader)
+bool GL_program_create(GL_Program_t *program, const char *vertex_shader, const char *fragment_shader)
 {
     const char *shaders[2] = { vertex_shader, fragment_shader };
     GLuint shader_ids[2] = {};
@@ -86,14 +86,35 @@ bool GL_create_program(GL_Program_t *program, const char *vertex_shader, const c
     return result;
 }
 
-void GL_delete_program(GL_Program_t *program)
+void GL_program_delete(GL_Program_t *program)
 {
     glDeleteProgram(program->id);
     Log_write(LOG_LEVELS_DEBUG, "<GL> shader program #%d deleted", program->id);
     *program = (GL_Program_t){};
 }
 
-void GL_use_program(const GL_Program_t *program)
+void GL_program_send(const GL_Program_t *program, const char *id, GL_Program_Uniforms_t type, size_t count, const void *value)
+{
+    GLint location = glGetUniformLocation(program->id, id);
+    if (location == -1) {
+        Log_write(LOG_LEVELS_WARNING, "<GL> can't find uniform '%s' uniform for shader #%d", id, program->id);
+        return;
+    }
+    glUseProgram(program->id);
+    switch (type) {
+        case GL_PROGRAM_UNIFORM_INT: { glUniform1iv(location, count, value); } break;
+        case GL_PROGRAM_UNIFORM_FLOAT: { glUniform1fv(location, count, value); } break;
+        case GL_PROGRAM_UNIFORM_VEC2: { glUniform2fv(location, count, value); } break;
+        case GL_PROGRAM_UNIFORM_VEC3: { glUniform3fv(location, count, value); } break;
+        case GL_PROGRAM_UNIFORM_VEC4: { glUniform4fv(location, count, value); } break;
+        case GL_PROGRAM_UNIFORM_VEC2I: { glUniform2iv(location, count, value); } break;
+        case GL_PROGRAM_UNIFORM_VEC3I: { glUniform3iv(location, count, value); } break;
+        case GL_PROGRAM_UNIFORM_VEC4I: { glUniform4iv(location, count, value); } break;
+        case GL_PROGRAM_UNIFORM_TEXTURE: { glUniform1iv(location, count, value); } break;
+    }
+}
+
+void GL_program_use(const GL_Program_t *program)
 {
     glUseProgram(program->id);
 //    Log_write(LOG_LEVELS_TRACE, "<GL> using shader program", program->id);

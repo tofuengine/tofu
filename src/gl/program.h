@@ -31,8 +31,21 @@ typedef struct _GL_Program_t {
     GLuint id;
 } GL_Program_t;
 
-extern bool GL_create_program(GL_Program_t *program, const char *vertex_shader, const char *fragment_shader);
-extern void GL_delete_program(GL_Program_t *program);
-extern void GL_use_program(const GL_Program_t *program);
+typedef enum _GL_Program_Uniforms_t {
+    GL_PROGRAM_UNIFORM_INT,
+    GL_PROGRAM_UNIFORM_FLOAT,
+    GL_PROGRAM_UNIFORM_VEC2,
+    GL_PROGRAM_UNIFORM_VEC3,
+    GL_PROGRAM_UNIFORM_VEC4,
+    GL_PROGRAM_UNIFORM_VEC2I,
+    GL_PROGRAM_UNIFORM_VEC3I,
+    GL_PROGRAM_UNIFORM_VEC4I,
+    GL_PROGRAM_UNIFORM_TEXTURE
+} GL_Program_Uniforms_t;
+
+extern bool GL_program_create(GL_Program_t *program, const char *vertex_shader, const char *fragment_shader);
+extern void GL_program_delete(GL_Program_t *program);
+extern void GL_program_send(const GL_Program_t *program, const char *id, GL_Program_Uniforms_t type, size_t count, const void *value);
+extern void GL_program_use(const GL_Program_t *program);
 
 #endif  /* __GL_PROGRAM_H__ */

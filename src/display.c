@@ -203,15 +203,16 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         return false;
     }
 
-    if (!GL_create_program(&display->program, vertex_shader, fragment_shader)) {
+    if (!GL_program_create(&display->program, vertex_shader, fragment_shader)) {
         Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't create default shader");
         GL_terminate();
         glfwDestroyWindow(display->window);
         glfwTerminate();
         return false;
     }
-    glUseProgram(display->program.id);  // Redundant
-    glUniform1i(glGetUniformLocation(display->program.id, "texture0"), 0); // Redundant
+    GLint id = 0;
+    GL_program_send(&display->program, "texture0", GL_PROGRAM_UNIFORM_TEXTURE, 1, &id); // Redundant
+    GL_program_use(&display->program);
 
     int display_width, display_height;
     glfwGetMonitorWorkarea(glfwGetPrimaryMonitor(), NULL, NULL, &display_width, &display_height);
@@ -269,7 +270,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     Display_shader(display, SHADER_INDEX_PALETTE, palette_shader_code);
 #endif
     GL_Palette_t palette; // Initial gray-scale palette.
-    GL_greyscale_palette(&palette, GL_MAX_PALETTE_COLORS);
+    GL_palette_greyscale(&palette, GL_MAX_PALETTE_COLORS);
     Display_palette(display, &palette);
 
     return true;
@@ -293,8 +294,6 @@ void Display_renderBegin(Display_t *display)
 {
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Required, to clear previous content. (TODO: configurable color?)
     glClear(GL_COLOR_BUFFER_BIT);
-
-    glUseProgram(display->program.id);
 }
 
 void Display_renderEnd(Display_t *display, double now, const Engine_Statistics_t *statistics)
@@ -348,17 +347,8 @@ void Display_renderEnd(Display_t *display, double now, const Engine_Statistics_t
 void Display_palette(Display_t *display, const GL_Palette_t *palette)
 {
     GLfloat colors[MAX_PALETTE_COLORS * 3] = {};
-    GL_normalize_palette(palette, colors);
-
-    GLint uniform_location = glGetUniformLocation(display->program.id, "palette");
-    if (uniform_location == -1) {
-        Log_write(LOG_LEVELS_WARNING, "<DISPLAY> can't find `palette` uniform for shader #%d", display->program.id);
-        return;
-    }
-    glUseProgram(display->program.id);
-    glUniform3fv(uniform_location, MAX_PALETTE_COLORS, colors);
-    glUseProgram(0);
-
+    GL_palette_normalize(palette, colors);
+    GL_program_send(&display->program, "palette", GL_PROGRAM_UNIFORM_VEC3, MAX_PALETTE_COLORS, colors);
     display->palette = *palette;
 }
 
@@ -395,7 +385,7 @@ void Display_terminate(Display_t *display)
         UnloadRenderTexture(display->framebuffers[i]);
     }
 #endif
-    GL_delete_program(&display->program);
+    GL_program_delete(&display->program);
 
     GL_terminate();
 
