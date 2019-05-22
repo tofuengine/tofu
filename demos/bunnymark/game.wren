@@ -21,33 +21,27 @@ class Game {
         _bank = Bank.new("./assets/sheet.png", 26, 37)
         _font = Font.default
 
-        for (i in 1 .. 5000) {
-            _bunnies.insert(-1, Bunny.new(_random, _bank))
-        }
-
-        _timer = Timer.new(5.0, 1, Fn.new {
-                Canvas.palette("gameboy-bw")
-            })
-
         _running = true
+
+        _tooggle = true
+        _timer = Timer.new(5.0, 0, Fn.new {
+                _tooggle = !_tooggle
+                Canvas.palette(_tooggle ? "gameboy" : "gameboy-bw")
+            })
     }
 
     input() {
-        if (Input.isKeyPressed(Input.space)) {
+        if (Input.isKeyPressed(Input.start)) {
             for (i in 1 .. LITTER_SIZE) {
                 _bunnies.insert(-1, Bunny.new(_random, _bank))
             }
             if (_bunnies.count >= MAX_BUNNIES) {
                 Environment.quit()
             }
-        } else if (Input.isKeyPressed(Input.q)) {
+        } else if (Input.isKeyPressed(Input.select)) {
             _bunnies.clear()
-        } else if (Input.isKeyPressed(Input.enter)) {
+        } else if (Input.isKeyPressed(Input.y)) {
             _running = !_running
-        } else if (Input.isKeyPressed(Input.up)) {
-            Canvas.shader(0, "wave")
-        } else if (Input.isKeyPressed(Input.down)) {
-            Canvas.shader(0, "")
         }
     }
 

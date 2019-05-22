@@ -250,6 +250,27 @@ bool Display_shouldClose(Display_t *display)
 
 void Display_processInput(Display_t *display)
 {
+    static const int keys[Display_Keys_t_CountOf] = {
+        GLFW_KEY_UP,
+        GLFW_KEY_DOWN,
+        GLFW_KEY_LEFT,
+        GLFW_KEY_RIGHT,
+        GLFW_KEY_Z,
+        GLFW_KEY_S,
+        GLFW_KEY_X,
+        GLFW_KEY_D,
+        GLFW_KEY_ENTER,
+        GLFW_KEY_SPACE
+    };
+
+    for (int i = 0; i < Display_Keys_t_CountOf; ++i) {
+        bool was_down = display->keys_down[i];
+        bool is_down = glfwGetKey(display->window, keys[i]) == GLFW_PRESS;
+        display->keys_down[i] = is_down;
+        display->keys_pressed[i] = !was_down && is_down;
+        display->keys_released[i] = was_down && !is_down;
+    }
+
     if (glfwGetKey(display->window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         if (display->configuration.exit_key_enabled) {
             glfwSetWindowShouldClose(display->window, true);

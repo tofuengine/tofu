@@ -33,7 +33,21 @@
 #define FRAMEBUFFERS_COUNT      2
 #define SHADERS_COUNT           5
 
-#define SHADER_INDEX_PALETTE    0
+typedef enum _Display_Keys_t {
+    Display_Keys_t_First = 0,
+    DISPLAY_KEY_UP = Display_Keys_t_First,
+    DISPLAY_KEY_DOWN,
+    DISPLAY_KEY_LEFT,
+    DISPLAY_KEY_RIGHT,
+    DISPLAY_KEY_Y,
+    DISPLAY_KEY_X,
+    DISPLAY_KEY_B,
+    DISPLAY_KEY_A,
+    DISPLAY_KEY_SELECT,
+    DISPLAY_KEY_START,
+    Display_Keys_t_Last = DISPLAY_KEY_START,
+    Display_Keys_t_CountOf
+} Display_Keys_t;
 
 typedef struct _Display_Configuration_t {
     int width, height;
@@ -46,6 +60,10 @@ typedef struct _Display_Configuration_t {
 
 typedef struct _Display_t {
     Display_Configuration_t configuration;
+
+    bool keys_down[Display_Keys_t_CountOf];
+    bool keys_pressed[Display_Keys_t_CountOf];
+    bool keys_released[Display_Keys_t_CountOf];
 
     GLFWwindow *window;
     int window_width, window_height, window_scale;
