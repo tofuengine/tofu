@@ -50,13 +50,7 @@ static bool update_statistics(Engine_Statistics_t *statistics, double elapsed) {
         return false;
     }
     double fps = (double)FPS_AVERAGE_SAMPLES / sum;
-    if (statistics->min_fps > fps) {
-        statistics->min_fps = fps;
-    }
-    if (statistics->max_fps < fps) {
-        statistics->max_fps = fps;
-    }
-    statistics->current_fps = fps;
+    statistics->fps = fps;
     if (count == 0) {
         statistics->history[statistics->index] = fps;
         statistics->index = (statistics->index + 1) % STATISTICS_LENGTH;
@@ -127,8 +121,6 @@ void Engine_run(Engine_t *engine)
 
     Engine_Statistics_t statistics = (Engine_Statistics_t){
             .delta_time = delta_time,
-            .min_fps = __DBL_MAX__,
-            .max_fps = 0.0
         };
 
     double previous = glfwGetTime();
@@ -141,7 +133,7 @@ void Engine_run(Engine_t *engine)
 
         if (engine->configuration.debug) {
             bool ready = update_statistics(&statistics, elapsed);
-            engine->environment.fps = ready ? statistics.current_fps : 0.0;
+            engine->environment.fps = ready ? statistics.fps : 0.0;
         }
 
         Display_processInput(&engine->display);
