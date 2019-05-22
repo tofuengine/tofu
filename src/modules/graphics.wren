@@ -32,12 +32,10 @@ foreign class Canvas {
     foreign static palette(colors)
 
     foreign static point(x, y, color)
+    foreign static line(x0, y0, x1, y1, color)
     foreign static polygon(mode, vertices, color)
     foreign static circle(mode, x, y, radius, color)
 
-    static line(x0, y0, x1, y1, color) {
-        polygon("line", [ x0, y0, x1, y1 ], color)
-    }
     static triangle(mode, x0, y0, x1, y1, x2, y2, color) {
         polygon(mode, [ x0, y0, x1, y1, x2, y2, x0, y0 ], color)
     }

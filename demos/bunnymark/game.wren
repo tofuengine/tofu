@@ -59,7 +59,11 @@ class Game {
             bunny.render()
         }
 
-        Canvas.rectangle("fill", 10, 10, 100, 100, 2)
+        Canvas.point(150, 150, 3)
+        Canvas.line(150, 150, 250, 250, 3)
+//        Canvas.triangle("fill", 150, 150, 50, 200, 200, 200, 3)
+//        Canvas.rectangle("fill", 10, 10, 100, 100, 2)
+//        Canvas.square("fill", 10, 10, 100, 2)
 
         _font.write("FPS: %(Environment.fps.round)", 0, 0, 1, 1.0, "left")
         _font.write("#%(_bunnies.count) bunnies", Canvas.width, 0, 3, 1.0, "right")

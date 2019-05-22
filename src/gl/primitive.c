@@ -56,25 +56,41 @@ void GL_primitive_terminate()
 
 void GL_primitive_point(const GL_Point_t position, const GL_Color_t color)
 {
+    glBindTexture(GL_TEXTURE_2D, _default_texture_id);
+    glBegin(GL_POINT);
+        glColor4ub(color.r, color.g, color.b, color.a);
+
+        glVertex2f(position.x, position.y);
+    glEnd();
+}
+
+void GL_primitive_line(const GL_Point_t from, const GL_Point_t to, const GL_Color_t color)
+{
+    glBindTexture(GL_TEXTURE_2D, _default_texture_id);
+    glBegin(GL_LINE);
+        glColor4ub(color.r, color.g, color.b, color.a);
+
+        glVertex2f(from.x, from.y);
+        glVertex2f(to.x, to.y);
+    glEnd();
 }
 
 void GL_primitive_polygon(const GL_Point_t *points, const size_t count, const GL_Color_t color, bool filled)
 {
+#ifdef __DEFENSIVE_CHECKS__
     if (count < 3) {
         return;
     }
+#endif
 
 //    glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, _default_texture_id);
-    glBegin(GL_QUADS);
+    glBegin(GL_TRIANGLE_FAN);
         glColor4ub(color.r, color.g, color.b, color.a);
 
+        glVertex2f(points[0].x, points[0].y);
         for (size_t i = 1; i < count - 1; ++i) {
-            glColor4ub(color.r, color.g, color.b, color.a);
-
-            glVertex2f(points[0].x, points[0].y);
             glVertex2f(points[i].x, points[i].y);
-            glVertex2f(points[i + 1].x, points[i + 1].y);
             glVertex2f(points[i + 1].x, points[i + 1].y);
         }
     glEnd();

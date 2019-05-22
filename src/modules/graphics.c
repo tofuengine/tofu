@@ -134,14 +134,12 @@ const char graphics_wren[] =
     "    foreign static palette(colors)\n"
     "\n"
     "    foreign static point(x, y, color)\n"
+    "    foreign static line(x0, y0, x1, y1, color)\n"
     "    foreign static polygon(mode, vertices, color)\n"
     "    foreign static circle(mode, x, y, radius, color)\n"
     "\n"
-    "    static line(x0, y0, x1, y1, color) {\n"
-    "        polygon(\"line\", [ x0, y0, x1, y1 ], color)\n"
-    "    }\n"
     "    static triangle(mode, x0, y0, x1, y1, x2, y2, color) {\n"
-    "        polygon(mode, [ x0, y0, x1, y1, x2, y2, x0, y0 ], color)\n"
+    "        polygon(mode, [ x0, y0, x1, y1, x2, y2 ], color)\n"
     "    }\n"
     "    static rectangle(mode, x, y, width, height, color) {\n"
     "        var offset = mode == \"line\" ? 1 : 0\n"
@@ -149,7 +147,7 @@ const char graphics_wren[] =
     "        var top = y\n"
     "        var right = left + width - offset\n"
     "        var bottom = top + height - offset\n"
-    "        polygon(mode, [ left, top, left, bottom, right, bottom, right, top, left, top ], color)\n"
+    "        polygon(mode, [ left, top, right, top, right, bottom, left, bottom ], color)\n"
     "    }\n"
     "    static square(mode, x, y, size, color) {\n"
     "        rectangle(mode, x, y, size, size, color)\n"
@@ -488,7 +486,18 @@ void graphics_canvas_point_call3(WrenVM *vm)
     double y = wrenGetSlotDouble(vm, 2);
     int color = (int)wrenGetSlotDouble(vm, 3);
 
-    GL_primitive_point((GL_Point_t){ x, y}, (GL_Color_t){ color, color, color, 255 });
+    GL_primitive_point((GL_Point_t){ x, y }, (GL_Color_t){ color, color, color, 255 });
+}
+
+void graphics_canvas_line_call5(WrenVM *vm)
+{
+    double x0 = wrenGetSlotDouble(vm, 1);
+    double y0 = wrenGetSlotDouble(vm, 2);
+    double x1 = wrenGetSlotDouble(vm, 3);
+    double y1 = wrenGetSlotDouble(vm, 4);
+    int color = (int)wrenGetSlotDouble(vm, 5);
+
+    GL_primitive_line((GL_Point_t){ x0, y0 }, (GL_Point_t){ x1, y1 }, (GL_Color_t){ color, color, color, 255 });
 }
 
 void graphics_canvas_polygon_call3(WrenVM *vm)
