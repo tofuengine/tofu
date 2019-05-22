@@ -6,6 +6,7 @@ src/modules/*.o
 src/modules/graphics/*.o
 external/glad/*.o
 external/jsmn/*.o
+external/spleen/*.o
 external/stb/*.o
 external/wren/*.o
 tofu
