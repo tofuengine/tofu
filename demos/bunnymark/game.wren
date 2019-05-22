@@ -54,6 +54,27 @@ class Game {
         }
     }
 
+    circle(mode, x, y, radius, color) {
+        var points = []
+        if (mode == "lines") {
+            for (i in 0 .. 30) {
+                var angle = ((Num.pi * 2) / 30) * i
+                points.insert(-1, x + angle.sin * radius)
+                points.insert(-1, y + angle.cos * radius)
+            }
+            Canvas.lines(points, color)
+        } else {
+            points.insert(-1, x)
+            points.insert(-1, y)
+            for (i in 0 .. 30) {
+                var angle = ((Num.pi * 2) / 30) * i
+                points.insert(-1, x + angle.sin * radius)
+                points.insert(-1, y + angle.cos * radius)
+            }
+            Canvas.fan(points, color)
+        }
+    }
+
     render(ratio) {
         for (bunny in _bunnies) {
             bunny.render()
@@ -64,6 +85,7 @@ class Game {
 //        Canvas.triangle("fill", 150, 150, 50, 250, 250, 250, 3)
 //        Canvas.rectangle("fill", 10, 10, 100, 100, 2)
 //        Canvas.square("fill", 200, 10, 75, 2)
+        circle("lines", 100, 100, 50, 2)
 
         _font.write("FPS: %(Environment.fps.round)", 0, 0, 1, 1.0, "left")
         _font.write("#%(_bunnies.count) bunnies", Canvas.width, 0, 3, 1.0, "right")
