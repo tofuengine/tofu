@@ -22,7 +22,7 @@
 
 #include "font.h"
 
-#include <spleen/spleen-5x8.h>
+#include <spleen/spleen.h>
 
 #include <string.h>
 
@@ -49,7 +49,7 @@ static void to_font_atlas_callback(void *parameters, void *data, int width, int 
 
 bool GL_font_initialize()
 {
-    return GL_font_create(&_default_font, spleen_5x8, spleen_5x8_size, 5, 8);
+    return GL_font_create(&_default_font, spleen_5x8_png, spleen_5x8_png_len, 5, 8);
 }
 
 void GL_font_terminate()
