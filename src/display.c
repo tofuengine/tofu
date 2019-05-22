@@ -36,20 +36,27 @@
 static const char *vertex_shader = 
     "#version 120\n"
     "\n"
-    "varying vec2 coordinates;"
+    "varying vec4 color;\n"
+    "varying vec2 texture_coords;\n"
+    "varying vec2 screen_coords;\n"
     "\n"
     "void main()\n"
     "{\n"
-    "   coordinates = gl_MultiTexCoord0.st;\n"
     "   gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\n"
-    "   gl_FrontColor = gl_Color;\n"
+    "   //gl_FrontColor = gl_Color;\n"
+    "\n"
+    "   color = gl_Color; // Pass the vertex drawing color.\n"
+    "   texture_coords = gl_MultiTexCoord0.st; // Retain texture 2D position.\n"
+    "   screen_coords = (gl_Position.xy + vec2(1.0, -1.0)) * vec2(0.5, -0.5); // Mirror and normalize to [0, 1].\n"
     "}\n";
 ;
 
 static const char *fragment_shader =
     "#version 120\n"
     "\n"
-    "varying vec2 coordinates;"
+    "varying vec4 color;\n"
+    "varying vec2 texture_coords;\n"
+    "varying vec2 screen_coords;\n"
     "\n"
     "uniform sampler2D texture0;\n"
     "uniform vec3 palette[256];\n"
@@ -57,7 +64,7 @@ static const char *fragment_shader =
     "void main()\n"
     "{\n"
     "    // Texel color fetching from texture sampler\n"
-    "    vec4 texel = texture2D(texture0, coordinates) * gl_Color;\n"
+    "    vec4 texel = texture2D(texture0, texture_coords) * color; // Use `GL_color`?\n"
     "\n"
     "    // Convert the (normalized) texel color RED component (GB would work, too)\n"
     "    // to the palette index by scaling up from [0, 1] to [0, 255].\n"
@@ -99,7 +106,7 @@ static void draw_statistics(const Engine_Statistics_t *statistics)
     int width = MeasureText(text, FPS_TEXT_HEIGHT);
     DrawText(text, (STATISTICS_LENGTH - width) / 2, FPS_HISTOGRAM_HEIGHT, FPS_TEXT_HEIGHT, (Color){ 0, 255, 0, 191 });
 #endif
-    Log_write(LOG_LEVELS_DEBUG, "%.0f FPS (%.0f - %.0f)", statistics->current_fps, statistics->min_fps, statistics->max_fps);
+    Log_write(LOG_LEVELS_TRACE, "%.0f FPS (%.0f - %.0f)", statistics->current_fps, statistics->min_fps, statistics->max_fps);
 }
 
 static void error_callback(int error, const char *description)
