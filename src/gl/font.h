@@ -28,17 +28,19 @@
 #include "common.h"
 #include "texture.h"
 
-#define GL_MAX_FONT_ALPHABET    256
-
 typedef struct _GL_Font_t {
     GL_Texture_t atlas;
     GLuint glyph_width, glyph_height;
-    GLchar alphabet[GL_MAX_FONT_ALPHABET];
 } GL_Font_t;
 
-// TODO: rename to `GL_font_load()` and add proper `GL_font_create()` from memory (also for textures)
-extern bool GL_font_create(GL_Font_t *font, const char *pathfile, GLuint glyph_width, GLuint glyph_height, const char *alphabet);
+extern bool GL_font_initialize();
+extern void GL_font_terminate();
+extern const GL_Font_t *GL_font_default();
+
+extern bool GL_font_load(GL_Font_t *font, const char *pathfile, GLuint glyph_width, GLuint glyph_height);
+extern bool GL_font_create(GL_Font_t *font, const void *buffer, size_t size, GLuint glyph_width, GLuint glyph_height);
 extern void GL_font_delete(GL_Font_t *font);
+
 extern GL_Rectangle_t GL_font_measure(const GL_Font_t *font, const char *text, const GLfloat size);
 extern void GL_font_write(const GL_Font_t *font, const char *text, const GL_Point_t position, const GLfloat size, const GL_Color_t color);
 

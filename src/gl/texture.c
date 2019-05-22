@@ -29,7 +29,7 @@
 
 #include "../log.h"
 
-bool GL_texture_create(GL_Texture_t *texture, const char *pathfile, GL_Texture_Callback_t callback, void *parameters)
+bool GL_texture_load(GL_Texture_t *texture, const char *pathfile, GL_Texture_Callback_t callback, void *parameters)
 {
     int width, height, components;
     unsigned char* data = stbi_load(pathfile, &width, &height, &components, STBI_rgb_alpha); //STBI_default);
@@ -53,6 +53,40 @@ bool GL_texture_create(GL_Texture_t *texture, const char *pathfile, GL_Texture_C
     stbi_image_free(data);
 
     Log_write(LOG_LEVELS_DEBUG, "<GL> texture '%s' created w/ id #%d (%dx%d)", pathfile, id, width, height);
+
+    *texture = (GL_Texture_t){
+            .id = id,
+            .width = width,
+            .height = height
+        };
+
+    return true;
+}
+
+bool GL_texture_create(GL_Texture_t *texture, const void *buffer, size_t size, GL_Texture_Callback_t callback, void *parameters)
+{
+    int width, height, components;
+    unsigned char* data = stbi_load_from_memory(buffer, size, &width, &height, &components, STBI_rgb_alpha); //STBI_default);
+    if (!data) {
+        Log_write(LOG_LEVELS_ERROR, "<GL> can't load texture #%p: %s", data, stbi_failure_reason());
+        return false;
+    }
+
+    if (callback != NULL) {
+        callback(parameters, data, width, height);
+    }
+
+    GLuint id;
+    glGenTextures(1, &id); //allocate the memory for texture
+    glBindTexture(GL_TEXTURE_2D, id); //Binding the texture
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    stbi_image_free(data);
+
+    Log_write(LOG_LEVELS_DEBUG, "<GL> texture created w/ id #%d (%dx%d)", id, width, height);
 
     *texture = (GL_Texture_t){
             .id = id,
