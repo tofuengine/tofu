@@ -87,18 +87,6 @@ static void to_indexed_atlas_callback(void *parameters, void *data, int width, i
     }
 }
 
-#ifdef __EXPLICIT_SIGNUM__
-static inline double fsgn(double value)
-{
-    return (value < 0.0) ? -1.0 : ((value > 0.0) ? 1.0 : value); // On -0.0, +NaN, -NaN, it returns -0.0, +NaN, -NaN
-}
-#else
-static inline double fsgn(double value)
-{
-    return (0.0 < value) - (value < 0.0); // No cache miss due to branches.
-}
-#endif
-
 const char graphics_wren[] =
     "foreign class Bank {\n"
     "\n"
@@ -372,11 +360,11 @@ void graphics_bank_blit_call5(WrenVM *vm)
     int bank_position = cell_id * instance->cell_width;
     int bank_x = bank_position % instance->atlas.width;
     int bank_y = (bank_position / instance->atlas.width) * instance->cell_height;
-    double bank_width = (double)instance->cell_width * fsgn(scale_x); // The sign controls the mirroring.
-    double bank_height = (double)instance->cell_height * fsgn(scale_y);
+    double bank_width = (double)instance->cell_width;
+    double bank_height = (double)instance->cell_height;
 
-    double width = (double)instance->cell_width * fabs(scale_x);
-    double height = (double)instance->cell_height * fabs(scale_y);
+    double width = (double)instance->cell_width * scale_x; // The sign controls the mirroring.
+    double height = (double)instance->cell_height * scale_y;
 
     GL_Rectangle_t source = (GL_Rectangle_t){ (GLfloat)bank_x, (GLfloat)bank_y, (GLfloat)bank_width, (GLfloat)bank_height };
     GL_Rectangle_t destination = (GL_Rectangle_t){ (GLfloat)floor(x), (GLfloat)floor(y), (GLfloat)width, (GLfloat)height };
@@ -403,11 +391,11 @@ void graphics_bank_blit_call6(WrenVM *vm)
     int bank_position = cell_id * instance->cell_width;
     int bank_x = bank_position % instance->atlas.width;
     int bank_y = (bank_position / instance->atlas.width) * instance->cell_height;
-    double bank_width = (double)instance->cell_width * fsgn(scale_x); // The sign controls the mirroring.
-    double bank_height = (double)instance->cell_height * fsgn(scale_y);
+    double bank_width = (double)instance->cell_width;
+    double bank_height = (double)instance->cell_height;
 
-    double width = (double)instance->cell_width * fabs(scale_x);
-    double height = (double)instance->cell_height * fabs(scale_y);
+    double width = (double)instance->cell_width * scale_x; // The sign controls the mirroring.
+    double height = (double)instance->cell_height * scale_y;
 
     GL_Rectangle_t source = (GL_Rectangle_t){ (GLfloat)bank_x, (GLfloat)bank_y, (GLfloat)bank_width, (GLfloat)bank_height };
     GL_Rectangle_t destination = (GL_Rectangle_t){ (GLfloat)floor(x + instance->origin.x), (GLfloat)floor(y + instance->origin.y), (GLfloat)width, (GLfloat)height };
