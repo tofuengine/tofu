@@ -120,32 +120,32 @@ void GL_texture_blit(const GL_Texture_t *texture,
     GLfloat width = texture->width;
     GLfloat height = texture->height;
 
-    GLfloat left = source.x / width;
-    GLfloat top = source.y / height;
-    GLfloat bottom = (source.y + source.height) / height;
-    GLfloat right = (source.x + source.width) / width;
+    GLfloat x0 = source.x / width;
+    GLfloat y0 = source.y / height;
+    GLfloat x1 = (source.x + source.width) / width;
+    GLfloat y1 = (source.y + source.height) / height;
 
 //    glEnable(GL_TEXTURE_2D); // Redundant
 //    glActiveTexture(GL_TEXTURE0); // Redundant
     glBindTexture(GL_TEXTURE_2D, texture->id);
 
     glPushMatrix();
-    glTranslatef(target.x, target.y, 0.0f);
-    glRotatef(rotation, 0.0f, 0.0f, 1.0f);
-    glTranslatef(-origin.x, -origin.y, 0.0f);
-    glBegin(GL_TRIANGLE_STRIP);
-        glColor4ub(color.r, color.g, color.b, color.a);
-//        glNormal3f(0.0f, 0.0f, 1.0f); // Normal vector pointing towards viewer (Redundant)
+        glTranslatef(target.x, target.y, 0.0f);
+        glRotatef(rotation, 0.0f, 0.0f, 1.0f);
+        glTranslatef(-origin.x, -origin.y, 0.0f);
+        glBegin(GL_TRIANGLE_STRIP);
+            glColor4ub(color.r, color.g, color.b, color.a);
+//            glNormal3f(0.0f, 0.0f, 1.0f); // Normal vector pointing towards viewer (Redundant)
 
-        glTexCoord2f(left, top); // CCW strip (the face direction of the strip is determined by the winding of the first triangle)
-        glVertex2f(0.0f, 0.0f);
-        glTexCoord2f(left, bottom);
-        glVertex2f(0.0f, target.height);
-        glTexCoord2f(right, top);
-        glVertex2f(target.width, 0.0f);
-        glTexCoord2f(right, bottom);
-        glVertex2f(target.width, target.height);
-    glEnd();
+            glTexCoord2f(x0, y0); // CCW strip, top-left is <0,0> (the face direction of the strip is determined by the winding of the first triangle)
+            glVertex2f(0.0f, 0.0f);
+            glTexCoord2f(x0, y1);
+            glVertex2f(0.0f, target.height);
+            glTexCoord2f(x1, y0);
+            glVertex2f(target.width, 0.0f);
+            glTexCoord2f(x1, y1);
+            glVertex2f(target.width, target.height);
+        glEnd();
     glPopMatrix();
 
 //    glDisable(GL_TEXTURE_2D); // Redundant

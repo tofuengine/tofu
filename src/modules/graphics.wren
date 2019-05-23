@@ -32,31 +32,56 @@ foreign class Canvas {
     foreign static palette(colors)
 
     foreign static point(x, y, color)
-    foreign static lines(vertices, color)
+    foreign static chain(vertices, color)
     foreign static strip(vertices, color)
-    foreign static circle(mode, x, y, radius, color)
+    foreign static fan(vertices, color)
 
     static triangle(mode, x0, y0, x1, y1, x2, y2, color) {
         if (mode == "line") {
-            lines([ x0, y0, x1, y1, x2, y2, x0, y0 ], color)
+            chain([ x0, y0, x1, y1, x2, y2, x0, y0 ], color)
         } else {
             strip([ x0, y0, x1, y1, x2, y2 ], color)
         }
     }
     static rectangle(mode, x, y, width, height, color) {
         var offset = mode == "line" ? 1 : 0
-        var left = x
-        var top = y
-        var right = left + width - offset
-        var bottom = top + height - offset
+        var x0 = x
+        var y0 = y
+        var x1 = x0 + width - offset
+        var y1= y0 + height - offset
         if (mode == "line") {
-            lines([ left, top, left, bottom, right, bottom, right, top, left, top ], color)
+            chain([ x0, y0, x0, y1, x1, y1, x1, y0, x0, y0 ], color)
         } else {
-            strip([ left, top, left, bottom, right, top, right, bottom ], color)
+            strip([ x0, y0, x0, y1, x1, y0, x1, y1 ], color)
         }
     }
     static square(mode, x, y, size, color) {
         rectangle(mode, x, y, size, size, color)
+    }
+    static circle(mode, x, y, radius, color) {
+        circle(mode, x, y, radius, color, 30)
+    }
+    static circle(mode, x, y, radius, color, segments) {
+        var step = (2 * Num.pi) / segments
+        if (mode == "lines") {
+            var points = []
+            for (i in 0 .. segments) {
+                var angle = step * i
+                points.insert(-1, x + angle.sin * radius)
+                points.insert(-1, y + angle.cos * radius)
+            }
+            Canvas.chain(points, color)
+        } else {
+            var points = []
+            points.insert(-1, x)
+            points.insert(-1, y)
+            for (i in 0 .. segments) {
+                var angle = step * i
+                points.insert(-1, x + angle.sin * radius)
+                points.insert(-1, y + angle.cos * radius)
+            }
+            Canvas.fan(points, color)
+        }
     }
 
 }

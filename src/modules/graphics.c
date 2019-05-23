@@ -134,31 +134,56 @@ const char graphics_wren[] =
     "    foreign static palette(colors)\n"
     "\n"
     "    foreign static point(x, y, color)\n"
-    "    foreign static lines(vertices, color)\n"
+    "    foreign static chain(vertices, color)\n"
     "    foreign static strip(vertices, color)\n"
-    "    foreign static circle(mode, x, y, radius, color)\n"
+    "    foreign static fan(vertices, color)\n"
     "\n"
     "    static triangle(mode, x0, y0, x1, y1, x2, y2, color) {\n"
     "        if (mode == \"line\") {\n"
-    "            lines([ x0, y0, x1, y1, x2, y2, x0, y0 ], color)\n"
+    "            chain([ x0, y0, x1, y1, x2, y2, x0, y0 ], color)\n"
     "        } else {\n"
     "            strip([ x0, y0, x1, y1, x2, y2 ], color)\n"
     "        }\n"
     "    }\n"
     "    static rectangle(mode, x, y, width, height, color) {\n"
     "        var offset = mode == \"line\" ? 1 : 0\n"
-    "        var left = x\n"
-    "        var top = y\n"
-    "        var right = left + width - offset\n"
-    "        var bottom = top + height - offset\n"
+    "        var x0 = x\n"
+    "        var y0 = y\n"
+    "        var x1 = x0 + width - offset\n"
+    "        var y1= y0 + height - offset\n"
     "        if (mode == \"line\") {\n"
-    "            lines([ left, top, left, bottom, right, bottom, right, top, left, top ], color)\n"
+    "            chain([ x0, y0, x0, y1, x1, y1, x1, y0, x0, y0 ], color)\n"
     "        } else {\n"
-    "            strip([ left, top, left, bottom, right, top, right, bottom ], color)\n"
+    "            strip([ x0, y0, x0, y1, x1, y0, x1, y1 ], color)\n"
     "        }\n"
     "    }\n"
     "    static square(mode, x, y, size, color) {\n"
     "        rectangle(mode, x, y, size, size, color)\n"
+    "    }\n"
+    "    static circle(mode, x, y, radius, color) {\n"
+    "        circle(mode, x, y, radius, color, 30)\n"
+    "    }\n"
+    "    static circle(mode, x, y, radius, color, segments) {\n"
+    "        var step = (2 * Num.pi) / segments\n"
+    "        if (mode == \"lines\") {\n"
+    "            var points = []\n"
+    "            for (i in 0 .. segments) {\n"
+    "                var angle = step * i\n"
+    "                points.insert(-1, x + angle.sin * radius)\n"
+    "                points.insert(-1, y + angle.cos * radius)\n"
+    "            }\n"
+    "            Canvas.chain(points, color)\n"
+    "        } else {\n"
+    "            var points = []\n"
+    "            points.insert(-1, x)\n"
+    "            points.insert(-1, y)\n"
+    "            for (i in 0 .. segments) {\n"
+    "                var angle = step * i\n"
+    "                points.insert(-1, x + angle.sin * radius)\n"
+    "                points.insert(-1, y + angle.cos * radius)\n"
+    "            }\n"
+    "            Canvas.fan(points, color)\n"
+    "        }\n"
     "    }\n"
     "\n"
     "}\n"
@@ -494,10 +519,14 @@ void graphics_canvas_point_call3(WrenVM *vm)
     double y = wrenGetSlotDouble(vm, 2);
     int color = (int)wrenGetSlotDouble(vm, 3);
 
-    GL_primitive_point((GL_Point_t){ x, y }, (GL_Color_t){ color, color, color, 255 });
+    GL_Point_t points[1] = {
+            (GL_Point_t){ (GLfloat)x, (GLfloat)y }
+        };
+
+    GL_primitive_points(points, 1, (GL_Color_t){ color, color, color, 255 });
 }
 
-void graphics_canvas_lines_call2(WrenVM *vm)
+void graphics_canvas_chain_call2(WrenVM *vm)
 {
     int vertices = wrenGetListCount(vm, 1);
     int color = (int)wrenGetSlotDouble(vm, 2);
@@ -536,7 +565,7 @@ void graphics_canvas_lines_call2(WrenVM *vm)
             };
     }
 
-    GL_primitive_lines(points, count, (GL_Color_t){ color, color, color, 255 });
+    GL_primitive_chain(points, count, (GL_Color_t){ color, color, color, 255 });
 }
 
 void graphics_canvas_strip_call2(WrenVM *vm)
@@ -576,27 +605,39 @@ void graphics_canvas_strip_call2(WrenVM *vm)
     GL_primitive_strip(points, count, (GL_Color_t){ color, color, color, 255 });
 }
 
-void graphics_canvas_circle_call5(WrenVM *vm)
+void graphics_canvas_fan_call2(WrenVM *vm)
 {
-    const char *mode = wrenGetSlotString(vm, 1);
-    double x = wrenGetSlotDouble(vm, 2);
-    double y = wrenGetSlotDouble(vm, 3);
-    double radius =wrenGetSlotDouble(vm, 4);
-    int color = (int)wrenGetSlotDouble(vm, 5);
+    int vertices = wrenGetListCount(vm, 1);
+    int color = (int)wrenGetSlotDouble(vm, 2);
+
+    int slots = wrenGetSlotCount(vm);
+#ifdef __DEBUG_VM_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> currently #%d slot(s) available, asking for an additional slot", slots);
+#endif
+    const int aux_slot_id = slots;
+    wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
 
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.circle(%s, %d, %d, %d, %d)", mode, x, y, radius, color);
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.polygon(%d, %d, %d)", mode, color, vertices);
 #endif
 
-    if (strcasecmp(mode, "fill") == 0) {
-        GL_primitive_circle((GL_Point_t){ x, y }, (GLfloat)radius, (GL_Color_t){ color, color, color, 255 }, true);
-    } else
-    if (strcasecmp(mode, "line") == 0) {
-        GL_primitive_circle((GL_Point_t){ x, y }, (GLfloat)radius, (GL_Color_t){ color, color, color, 255 }, false);
-//     } else
-//     if (strcmp(mode, "sector") == 0) {
-//         DrawCircleSector(x, y, radius, (Color){ color, color, color, 255 });
-    } else {
-        Log_write(LOG_LEVELS_WARNING, "<GRAPHICS> undefined drawing mode for polygon: '%s'", mode);
+    const size_t count = vertices / 2;
+    if (count == 0) {
+        Log_write(LOG_LEVELS_INFO, "<GRAPHICS> fan as no vertices");
+        return;
     }
+
+    GL_Point_t points[count];
+    for (size_t i = 0; i < count; ++i) {
+        wrenGetListElement(vm, 1, (i * 2), aux_slot_id);
+        double x = wrenGetSlotDouble(vm, aux_slot_id);
+        wrenGetListElement(vm, 1, (i * 2) + 1, aux_slot_id);
+        double y = wrenGetSlotDouble(vm, aux_slot_id);
+
+        points[i] = (GL_Point_t){
+                .x = (GLfloat)x, .y = (GLfloat)y
+            };
+    }
+
+    GL_primitive_fan(points, count, (GL_Color_t){ color, color, color, 255 });
 }
