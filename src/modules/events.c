@@ -62,7 +62,7 @@ void events_input_iskeydown_call1(WrenVM *vm)
 
     int key = (int)wrenGetSlotDouble(vm, 1);
 
-    bool is_down = (key >= Display_Keys_t_First && key <= Display_Keys_t_Last) ? environment->display->keys_down[key] : false;
+    bool is_down = (key >= Display_Keys_t_First && key <= Display_Keys_t_Last) ? environment->display->keys_state[key].down : false;
     wrenSetSlotBool(vm, 0, is_down);
 }
 
@@ -72,7 +72,7 @@ void events_input_iskeyup_call1(WrenVM *vm)
 
     int key = (int)wrenGetSlotDouble(vm, 1);
 
-    bool is_down = (key >= Display_Keys_t_First && key <= Display_Keys_t_Last) ? environment->display->keys_down[key] : false;
+    bool is_down = (key >= Display_Keys_t_First && key <= Display_Keys_t_Last) ? environment->display->keys_state[key].down : false;
     wrenSetSlotBool(vm, 0, !is_down);
 }
 
@@ -82,7 +82,7 @@ void events_input_iskeypressed_call1(WrenVM *vm)
 
     int key = (int)wrenGetSlotDouble(vm, 1);
 
-    bool is_pressed = (key >= Display_Keys_t_First && key <= Display_Keys_t_Last) ? environment->display->keys_pressed[key] : false;
+    bool is_pressed = (key >= Display_Keys_t_First && key <= Display_Keys_t_Last) ? environment->display->keys_state[key].pressed : false;
     wrenSetSlotBool(vm, 0, is_pressed);
 }
 
@@ -92,8 +92,8 @@ void events_input_iskeyreleased_call1(WrenVM *vm)
 
     int key = (int)wrenGetSlotDouble(vm, 1);
 
-    bool is_pressed = (key >= Display_Keys_t_First && key <= Display_Keys_t_Last) ? environment->display->keys_pressed[key] : false;
-    wrenSetSlotBool(vm, 0, !is_pressed);
+    bool is_released = (key >= Display_Keys_t_First && key <= Display_Keys_t_Last) ? environment->display->keys_state[key].released : false;
+    wrenSetSlotBool(vm, 0, is_released);
 }
 
 void events_environment_fps_get(WrenVM *vm)

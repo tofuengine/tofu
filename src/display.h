@@ -54,12 +54,17 @@ typedef struct _Display_Configuration_t {
     bool exit_key_enabled;
 } Display_Configuration_t;
 
+typedef struct _Display_Key_State_t { // TODO: use explicit masks?
+    uint8_t down : 1;
+    uint8_t pressed : 1;
+    uint8_t released : 1;
+    uint8_t : 5;
+} Display_Key_State_t;
+
 typedef struct _Display_t {
     Display_Configuration_t configuration;
 
-    bool keys_down[Display_Keys_t_CountOf];
-    bool keys_pressed[Display_Keys_t_CountOf];
-    bool keys_released[Display_Keys_t_CountOf];
+    Display_Key_State_t keys_state[Display_Keys_t_CountOf];
 
     GLFWwindow *window;
     int window_width, window_height, window_scale;

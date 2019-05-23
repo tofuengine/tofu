@@ -268,11 +268,12 @@ void Display_processInput(Display_t *display)
     };
 
     for (int i = 0; i < Display_Keys_t_CountOf; ++i) {
-        bool was_down = display->keys_down[i];
+        Display_Key_State_t *key_state = &display->keys_state[i];
+        bool was_down = key_state->down;
         bool is_down = glfwGetKey(display->window, keys[i]) == GLFW_PRESS;
-        display->keys_down[i] = is_down;
-        display->keys_pressed[i] = !was_down && is_down;
-        display->keys_released[i] = was_down && !is_down;
+        key_state->down = is_down;
+        key_state->pressed = !was_down && is_down;
+        key_state->released = was_down && !is_down;
     }
 
     if (display->configuration.exit_key_enabled) {
