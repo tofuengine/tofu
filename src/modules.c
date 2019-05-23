@@ -61,6 +61,7 @@ const Method_Entry_t _methods[] = {
     { "events", "Environment", true, "quit()", events_environment_quit_call0 },
     { "graphics", "Bank", false, "cellWidth", graphics_bank_cell_width_get },
     { "graphics", "Bank", false, "cellHeight", graphics_bank_cell_height_get },
+    { "graphics", "Bank", false, "blit(_,_,_)", graphics_bank_blit_call3 },
     { "graphics", "Bank", false, "blit(_,_,_,_,_)", graphics_bank_blit_call5 },
     { "graphics", "Bank", false, "blit(_,_,_,_,_,_)", graphics_bank_blit_call6 },
     { "graphics", "Font", false, "write(_,_,_,_,_,_)", graphics_font_write_call6 },

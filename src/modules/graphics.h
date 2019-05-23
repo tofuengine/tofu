@@ -31,6 +31,7 @@ extern void graphics_bank_allocate(WrenVM* vm);
 extern void graphics_bank_finalize(void *userData, void* data);
 extern void graphics_bank_cell_width_get(WrenVM *vm);
 extern void graphics_bank_cell_height_get(WrenVM *vm);
+extern void graphics_bank_blit_call3(WrenVM *vm);
 extern void graphics_bank_blit_call5(WrenVM *vm);
 extern void graphics_bank_blit_call6(WrenVM *vm);
 
