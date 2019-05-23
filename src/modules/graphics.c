@@ -142,7 +142,7 @@ const char graphics_wren[] =
     "        points([ x0, y0 ], color)\n"
     "    }\n"
     "    static line(x0, y0, x1, y1, color) {\n"
-    "        polyline([ x0, y0, x1, y1 ], color)\n"
+    "        polyline([ x0, y0, x1, y1, x0, y0 ], color)\n"
     "    }\n"
     "    static triangle(mode, x0, y0, x1, y1, x2, y2, color) {\n"
     "        if (mode == \"line\") {\n"
@@ -333,8 +333,8 @@ void graphics_bank_cell_height_get(WrenVM *vm)
 void graphics_bank_blit_call6(WrenVM *vm)
 {
     int cell_id = (int)wrenGetSlotDouble(vm, 1);
-    int x = (int)wrenGetSlotDouble(vm, 2);
-    int y = (int)wrenGetSlotDouble(vm, 3);
+    double x = wrenGetSlotDouble(vm, 2);
+    double y = wrenGetSlotDouble(vm, 3);
     double rotation = wrenGetSlotDouble(vm, 4);
     double scale_x = wrenGetSlotDouble(vm, 5);
     double scale_y = wrenGetSlotDouble(vm, 6);
@@ -354,11 +354,10 @@ void graphics_bank_blit_call6(WrenVM *vm)
 
     double width = (double)instance->cell_width * fabs(scale_x);
     double height = (double)instance->cell_height * fabs(scale_y);
-    double half_width = width * 0.5f; // Offset to compensate for origin (rotation)
-    double half_height = height * 0.5f;
 
     GL_Rectangle_t source = (GL_Rectangle_t){ (GLfloat)bank_x, (GLfloat)bank_y, (GLfloat)bank_width, (GLfloat)bank_height };
-    GL_Rectangle_t destination = (GL_Rectangle_t){ (GLfloat)x + (GLfloat)half_width, (GLfloat)y + (GLfloat)half_height, (GLfloat)width, (GLfloat)height };
+    GL_Rectangle_t destination = (GL_Rectangle_t){ (GLfloat)floor(x + instance->origin.x), (GLfloat)floor(y + instance->origin.y), (GLfloat)width, (GLfloat)height };
+//    GL_Rectangle_t destination = (GL_Rectangle_t){ (GLfloat)x + (GLfloat)instance->origin.x, (GLfloat)y + (GLfloat)instance->origin.y, (GLfloat)width, (GLfloat)height };
 
     GL_texture_blit(&instance->atlas, source, destination, instance->origin, rotation, (GL_Color_t){ 255, 255, 255, 255 });
 }
@@ -549,7 +548,7 @@ void graphics_canvas_points_call2(WrenVM *vm)
         double y = wrenGetSlotDouble(vm, aux_slot_id);
 
         points[i] = (GL_Point_t){
-                .x = (GLfloat)x, .y = (GLfloat)y
+                .x = (GLfloat)x + 0.375f, .y = (GLfloat)y + 0.375f
             };
     }
 
@@ -578,11 +577,6 @@ void graphics_canvas_polyline_call2(WrenVM *vm)
         return;
     }
 
-    // When drawing lines we need to ensure to be in mid-pixel coordinates. Also the length of lines are inclusive
-    // (and this need to be taken into account for rectangles/squares). This is due to the "diamond exit rule" in
-    // OpenGL rasterization.
-    //
-    // http://glprogramming.com/red/appendixg.html#name1
     GL_Point_t points[count];
     for (size_t i = 0; i < count; ++i) {
         wrenGetListElement(vm, 1, (i * 2), aux_slot_id);
@@ -591,7 +585,7 @@ void graphics_canvas_polyline_call2(WrenVM *vm)
         double y = wrenGetSlotDouble(vm, aux_slot_id);
 
         points[i] = (GL_Point_t){
-                .x = (GLfloat)(x + 0.5f), .y = (GLfloat)(y + 0.5f) // HAZARD: should cast separately?
+                .x = (GLfloat)x + 0.375f, .y = (GLfloat)y + 0.375f
             };
     }
 

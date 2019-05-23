@@ -37,14 +37,15 @@ class Game {
     }
 
     render(ratio) {
-//        Canvas.point(50, 50, 3)
-        Canvas.line(1, 1, 7, 1, 3)
+        Canvas.point(4, 4, 1)
+        Canvas.line(4, 8, 7, 8, 2)
 //        Canvas.triangle("fill", 150, 150, 50, 250, 250, 250, 3)
-        Canvas.rectangle("fill", 4, 4, 8, 8, 2)
+        Canvas.rectangle("fill", 4, 12, 8, 8, 3)
+        Canvas.rectangle("line", 4, 23, 8, 8, 3)
 //        Canvas.square("fill", 200, 10, 75, 2)
-        Canvas.circle("lines", 100, 100, 50, 2)
-        Canvas.circle("fill", 200, 100, 50, 1)
-        Canvas.circle("fill", 300, 100, 50, 1, _segments)
+//        Canvas.circle("line", 100, 100, 50, 2)
+//        Canvas.circle("fill", 200, 100, 50, 1)
+//        Canvas.circle("fill", 300, 100, 50, 1, _segments)
 
         _font.write("FPS: %(Environment.fps.round)", Canvas.width, 0, 1, 1.0, "right")
     }

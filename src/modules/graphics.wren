@@ -40,7 +40,7 @@ foreign class Canvas {
         points([ x0, y0 ], color)
     }
     static line(x0, y0, x1, y1, color) {
-        polyline([ x0, y0, x1, y1 ], color)
+        polyline([ x0, y0, x1, y1, x0, y0 ], color)
     }
     static triangle(mode, x0, y0, x1, y1, x2, y2, color) {
         if (mode == "line") {
@@ -69,7 +69,7 @@ foreign class Canvas {
     }
     static circle(mode, x, y, radius, color, segments) {
         var step = (2 * Num.pi) / segments
-        if (mode == "lines") {
+        if (mode == "line") {
             var points = []
             for (i in 0 .. segments) {
                 var angle = step * i
