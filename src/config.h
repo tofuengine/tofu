@@ -36,6 +36,7 @@
 #define __GL_VERSION__                      0x0201
 #define __GSLS_VERSION__                    0x0120
 
+#undef  __NO_MIRRORING__
 #define __FAST_TRANSPARENCY__
 #undef  __DEBUG_TRIANGLES_WINDING__
 #undef  __DEFENSIVE_CHECKS__

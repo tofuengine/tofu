@@ -120,10 +120,34 @@ void GL_texture_blit(const GL_Texture_t *texture,
     GLfloat width = texture->width;
     GLfloat height = texture->height;
 
-    GLfloat x0 = source.x / width;
-    GLfloat y0 = source.y / height;
-    GLfloat x1 = (source.x + source.width) / width;
-    GLfloat y1 = (source.y + source.height) / height;
+    GLfloat sx0 = source.x / width;
+    GLfloat sy0 = source.y / height;
+    GLfloat sx1 = (source.x + source.width) / width;
+    GLfloat sy1 = (source.y + source.height) / height;
+
+#if __NO_MIRRORING__
+    GLfloat tx0 = 0.0f;
+    GLfloat ty0 = 0.0f;
+    GLfloat tx1 = target.width;
+    GLfloat ty1 = target.height;
+#else
+    // If width/height are negative swap the coordinates to flip the image accordingly.
+    GLfloat tx0, ty0, tx1, ty1;
+    if (target.width < 0.0f) {
+        tx0 = fabsf(target.width);
+        tx1 = 0.0f;
+    } else {
+        tx0 = 0.0;
+        tx1 = target.width;
+    }
+    if (target.height < 0.0f) {
+        ty0 = fabsf(target.height);
+        ty1 = 0.0;
+    } else {
+        ty0 = 0.0;
+        ty1 = target.height;
+    }
+#endif
 
     glBindTexture(GL_TEXTURE_2D, texture->id);
 
@@ -134,14 +158,14 @@ void GL_texture_blit(const GL_Texture_t *texture,
         glBegin(GL_TRIANGLE_STRIP);
             glColor4ub(color.r, color.g, color.b, color.a);
 
-            glTexCoord2f(x0, y0); // CCW strip, top-left is <0,0> (the face direction of the strip is determined by the winding of the first triangle)
-            glVertex2f(0.0f, 0.0f);
-            glTexCoord2f(x0, y1);
-            glVertex2f(0.0f, target.height);
-            glTexCoord2f(x1, y0);
-            glVertex2f(target.width, 0.0f);
-            glTexCoord2f(x1, y1);
-            glVertex2f(target.width, target.height);
+            glTexCoord2f(sx0, sy0); // CCW strip, top-left is <0,0> (the face direction of the strip is determined by the winding of the first triangle)
+            glVertex2f(tx0, ty0);
+            glTexCoord2f(sx0, sy1);
+            glVertex2f(tx0, ty1);
+            glTexCoord2f(sx1, sy0);
+            glVertex2f(tx1, ty0);
+            glTexCoord2f(sx1, sy1);
+            glVertex2f(tx1, ty1);
         glEnd();
     glPopMatrix();
 }
@@ -165,10 +189,29 @@ void GL_texture_blit_fast(const GL_Texture_t *texture,
     GLfloat sx1 = (source.x + source.width) / width;
     GLfloat sy1 = (source.y + source.height) / height;
 
+#if __NO_MIRRORING__
     GLfloat tx0 = target.x;
     GLfloat ty0 = target.y;
     GLfloat tx1 = target.x + target.width;
     GLfloat ty1 = target.y + target.height;
+#else
+    // If width/height are negative swap the coordinates to flip the image accordingly.
+    GLfloat tx0, ty0, tx1, ty1;
+    if (target.width < 0.0f) {
+        tx0 = target.x + fabsf(target.width);
+        tx1 = target.x;
+    } else {
+        tx0 = target.x;
+        tx1 = target.x + target.width;
+    }
+    if (target.height < 0.0f) {
+        ty0 = target.y + fabsf(target.height);
+        ty1 = target.y;
+    } else {
+        ty0 = target.y;
+        ty1 = target.y + target.height;
+    }
+#endif
 
     glBindTexture(GL_TEXTURE_2D, texture->id);
 
