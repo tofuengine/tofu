@@ -31,14 +31,20 @@ foreign class Canvas {
     foreign static height
     foreign static palette(colors)
 
-    foreign static point(x, y, color)
-    foreign static chain(vertices, color)
+    foreign static points(vertices, color)
+    foreign static polyline(vertices, color)
     foreign static strip(vertices, color)
     foreign static fan(vertices, color)
 
+    static point(x0, y0, color) {
+        points([ x0, y0 ], color)
+    }
+    static line(x0, y0, x1, y1, color) {
+        polyline([ x0, y0, x1, y1 ], color)
+    }
     static triangle(mode, x0, y0, x1, y1, x2, y2, color) {
         if (mode == "line") {
-            chain([ x0, y0, x1, y1, x2, y2, x0, y0 ], color)
+            polyline([ x0, y0, x1, y1, x2, y2, x0, y0 ], color)
         } else {
             strip([ x0, y0, x1, y1, x2, y2 ], color)
         }
@@ -50,7 +56,7 @@ foreign class Canvas {
         var x1 = x0 + width - offset
         var y1= y0 + height - offset
         if (mode == "line") {
-            chain([ x0, y0, x0, y1, x1, y1, x1, y0, x0, y0 ], color)
+            polyline([ x0, y0, x0, y1, x1, y1, x1, y0, x0, y0 ], color)
         } else {
             strip([ x0, y0, x0, y1, x1, y0, x1, y1 ], color)
         }
@@ -70,7 +76,7 @@ foreign class Canvas {
                 points.insert(-1, x + angle.sin * radius)
                 points.insert(-1, y + angle.cos * radius)
             }
-            Canvas.chain(points, color)
+            Canvas.polyline(points, color)
         } else {
             var points = []
             points.insert(-1, x)

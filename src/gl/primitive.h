@@ -31,7 +31,7 @@ extern bool GL_primitive_initialize();
 extern void GL_primitive_terminate();
 
 extern void GL_primitive_points(const GL_Point_t *points, const size_t count, const GL_Color_t color);
-extern void GL_primitive_chain(const GL_Point_t *points, const size_t count, const GL_Color_t color);
+extern void GL_primitive_polyline(const GL_Point_t *points, const size_t count, const GL_Color_t color);
 extern void GL_primitive_strip(const GL_Point_t *points, const size_t count, const GL_Color_t color);
 extern void GL_primitive_fan(const GL_Point_t *points, const size_t count, const GL_Color_t color);
 

@@ -133,14 +133,20 @@ const char graphics_wren[] =
     "    foreign static height\n"
     "    foreign static palette(colors)\n"
     "\n"
-    "    foreign static point(x, y, color)\n"
-    "    foreign static chain(vertices, color)\n"
+    "    foreign static points(vertices, color)\n"
+    "    foreign static polyline(vertices, color)\n"
     "    foreign static strip(vertices, color)\n"
     "    foreign static fan(vertices, color)\n"
     "\n"
+    "    static point(x0, y0, color) {\n"
+    "        points([ x0, y0 ], color)\n"
+    "    }\n"
+    "    static line(x0, y0, x1, y1, color) {\n"
+    "        polyline([ x0, y0, x1, y1 ], color)\n"
+    "    }\n"
     "    static triangle(mode, x0, y0, x1, y1, x2, y2, color) {\n"
     "        if (mode == \"line\") {\n"
-    "            chain([ x0, y0, x1, y1, x2, y2, x0, y0 ], color)\n"
+    "            polyline([ x0, y0, x1, y1, x2, y2, x0, y0 ], color)\n"
     "        } else {\n"
     "            strip([ x0, y0, x1, y1, x2, y2 ], color)\n"
     "        }\n"
@@ -152,7 +158,7 @@ const char graphics_wren[] =
     "        var x1 = x0 + width - offset\n"
     "        var y1= y0 + height - offset\n"
     "        if (mode == \"line\") {\n"
-    "            chain([ x0, y0, x0, y1, x1, y1, x1, y0, x0, y0 ], color)\n"
+    "            polyline([ x0, y0, x0, y1, x1, y1, x1, y0, x0, y0 ], color)\n"
     "        } else {\n"
     "            strip([ x0, y0, x0, y1, x1, y0, x1, y1 ], color)\n"
     "        }\n"
@@ -172,7 +178,7 @@ const char graphics_wren[] =
     "                points.insert(-1, x + angle.sin * radius)\n"
     "                points.insert(-1, y + angle.cos * radius)\n"
     "            }\n"
-    "            Canvas.chain(points, color)\n"
+    "            Canvas.polyline(points, color)\n"
     "        } else {\n"
     "            var points = []\n"
     "            points.insert(-1, x)\n"
@@ -513,20 +519,44 @@ void graphics_canvas_palette_call1(WrenVM *vm)
     Display_palette(environment->display, &palette);
 }
 
-void graphics_canvas_point_call3(WrenVM *vm)
+void graphics_canvas_points_call2(WrenVM *vm)
 {
-    double x = wrenGetSlotDouble(vm, 1);
-    double y = wrenGetSlotDouble(vm, 2);
-    int color = (int)wrenGetSlotDouble(vm, 3);
+    int vertices = wrenGetListCount(vm, 1);
+    int color = (int)wrenGetSlotDouble(vm, 2);
 
-    GL_Point_t points[1] = {
-            (GL_Point_t){ (GLfloat)x, (GLfloat)y }
-        };
+    int slots = wrenGetSlotCount(vm);
+#ifdef __DEBUG_VM_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> currently #%d slot(s) available, asking for an additional slot", slots);
+#endif
+    const int aux_slot_id = slots;
+    wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
 
-    GL_primitive_points(points, 1, (GL_Color_t){ color, color, color, 255 });
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.polygon(%d, %d, %d)", mode, color, vertices);
+#endif
+
+    const size_t count = vertices / 2;
+    if (count == 0) {
+        Log_write(LOG_LEVELS_INFO, "<GRAPHICS> points as no vertices");
+        return;
+    }
+
+    GL_Point_t points[count];
+    for (size_t i = 0; i < count; ++i) {
+        wrenGetListElement(vm, 1, (i * 2), aux_slot_id);
+        double x = wrenGetSlotDouble(vm, aux_slot_id);
+        wrenGetListElement(vm, 1, (i * 2) + 1, aux_slot_id);
+        double y = wrenGetSlotDouble(vm, aux_slot_id);
+
+        points[i] = (GL_Point_t){
+                .x = (GLfloat)x, .y = (GLfloat)y
+            };
+    }
+
+    GL_primitive_points(points, count, (GL_Color_t){ color, color, color, 255 });
 }
 
-void graphics_canvas_chain_call2(WrenVM *vm)
+void graphics_canvas_polyline_call2(WrenVM *vm)
 {
     int vertices = wrenGetListCount(vm, 1);
     int color = (int)wrenGetSlotDouble(vm, 2);
@@ -565,7 +595,7 @@ void graphics_canvas_chain_call2(WrenVM *vm)
             };
     }
 
-    GL_primitive_chain(points, count, (GL_Color_t){ color, color, color, 255 });
+    GL_primitive_polyline(points, count, (GL_Color_t){ color, color, color, 255 });
 }
 
 void graphics_canvas_strip_call2(WrenVM *vm)

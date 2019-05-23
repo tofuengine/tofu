@@ -67,7 +67,7 @@ void GL_primitive_points(const GL_Point_t *points, const size_t count, const GL_
     glEnd();
 }
 
-void GL_primitive_chain(const GL_Point_t *points, const size_t count, const GL_Color_t color)
+void GL_primitive_polyline(const GL_Point_t *points, const size_t count, const GL_Color_t color)
 {
 #ifdef __DEFENSIVE_CHECKS__
     if (count < 2) {
