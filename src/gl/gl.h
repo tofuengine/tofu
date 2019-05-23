@@ -32,6 +32,10 @@
 #include "program.h"
 #include "texture.h"
 
+typedef struct _GL_Context_t {
+    // TODO: use it to hold everything!
+} GL_Context_t;
+
 extern bool GL_initialize(); // TODO: rename `GL_*` to `HAL_*`.
 extern void GL_terminate();
 

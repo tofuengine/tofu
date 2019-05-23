@@ -28,6 +28,8 @@ class Game {
                 _tooggle = !_tooggle
                 Canvas.palette(_tooggle ? "gameboy" : "gameboy-bw")
             })
+
+        _segments = 30
     }
 
     input() {
@@ -38,6 +40,10 @@ class Game {
             if (_bunnies.count >= MAX_BUNNIES) {
                 Environment.quit()
             }
+        } else if (Input.isKeyPressed(Input.left)) {
+            _segments = _segments - 1
+        } else if (Input.isKeyPressed(Input.right)) {
+            _segments = _segments + 1
         } else if (Input.isKeyPressed(Input.select)) {
             _bunnies.clear()
         } else if (Input.isKeyPressed(Input.y)) {
@@ -54,27 +60,6 @@ class Game {
         }
     }
 
-    circle(mode, x, y, radius, color) {
-        var points = []
-        if (mode == "lines") {
-            for (i in 0 .. 30) {
-                var angle = ((Num.pi * 2) / 30) * i
-                points.insert(-1, x + angle.sin * radius)
-                points.insert(-1, y + angle.cos * radius)
-            }
-            Canvas.lines(points, color)
-        } else {
-            points.insert(-1, x)
-            points.insert(-1, y)
-            for (i in 0 .. 30) {
-                var angle = ((Num.pi * 2) / 30) * i
-                points.insert(-1, x + angle.sin * radius)
-                points.insert(-1, y + angle.cos * radius)
-            }
-            Canvas.fan(points, color)
-        }
-    }
-
     render(ratio) {
         for (bunny in _bunnies) {
             bunny.render()
@@ -85,7 +70,9 @@ class Game {
 //        Canvas.triangle("fill", 150, 150, 50, 250, 250, 250, 3)
 //        Canvas.rectangle("fill", 10, 10, 100, 100, 2)
 //        Canvas.square("fill", 200, 10, 75, 2)
-        circle("lines", 100, 100, 50, 2)
+        Canvas.circle("lines", 100, 100, 50, 2)
+        Canvas.circle("fill", 200, 100, 50, 1)
+        Canvas.circle("fill", 300, 100, 50, 1, _segments)
 
         _font.write("FPS: %(Environment.fps.round)", 0, 0, 1, 1.0, "left")
         _font.write("#%(_bunnies.count) bunnies", Canvas.width, 0, 3, 1.0, "right")
