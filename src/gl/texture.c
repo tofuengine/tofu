@@ -29,7 +29,7 @@
 
 #include "../log.h"
 
-bool GL_texture_load(GL_Texture_t *texture, const char *pathfile, GL_Texture_Callback_t callback, void *parameters)
+bool GL_texture_load(GL_Texture_t *texture, const char *pathfile, const GL_Texture_Callback_t callback, void *parameters)
 {
     int width, height, components;
     unsigned char* data = stbi_load(pathfile, &width, &height, &components, STBI_rgb_alpha); //STBI_default);
@@ -63,7 +63,7 @@ bool GL_texture_load(GL_Texture_t *texture, const char *pathfile, GL_Texture_Cal
     return true;
 }
 
-bool GL_texture_create(GL_Texture_t *texture, const void *buffer, size_t size, GL_Texture_Callback_t callback, void *parameters)
+bool GL_texture_create(GL_Texture_t *texture, const void *buffer, const size_t size, const GL_Texture_Callback_t callback, void *parameters)
 {
     int width, height, components;
     unsigned char* data = stbi_load_from_memory(buffer, size, &width, &height, &components, STBI_rgb_alpha); //STBI_default);
