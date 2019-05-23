@@ -54,7 +54,6 @@ class Bunny {
         var rotation = _vx.sign * angle
         _bank.blit(0, _x, _y, rotation)
         //_bank.blit(0, _x, _y)
-        //Canvas.point(_x, _y, 3)
     }
 
 }

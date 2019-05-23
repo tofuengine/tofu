@@ -2,7 +2,7 @@ import "random" for Random
 
 import "collections" for Grid
 import "graphics" for Bank, Canvas, Font, BankBatch
-import "events" for Input
+import "events" for Environment, Input
 import "io" for File
 import "util" for Math // TODO: rename to `core` or `lang`?
 
@@ -35,6 +35,8 @@ class Tilemap {
         _batch = BankBatch.new(_bank)
 
         camera(cameraColumns, cameraRows, cameraAlignment)
+
+        _font = Font.default
     }
 
     camera(cameraColumns, cameraRows, cameraAlignment) {
@@ -101,7 +103,8 @@ class Tilemap {
     render() {
         _batch.blit()
 
-        Font.default.write("%(_cameraX.floor) %(_cameraY.floor)", Canvas.width, 0, 15, 10, "right")
+        _font.write("%(_cameraX.floor) %(_cameraY.floor)", Canvas.width, 0, 0, 1.0, "right")
+        _font.write("FPS: %(Environment.fps.round)", 0, 0, 0, 1.0, "left")
     }
 
 }

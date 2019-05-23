@@ -21,6 +21,7 @@ class Game {
         _bank = Bank.new("./assets/sheet.png", 26, 37)
         _font = Font.default
 
+        _speed = 1.0
         _running = true
 
         _tooggle = true
@@ -28,8 +29,6 @@ class Game {
                 _tooggle = !_tooggle
                 Canvas.palette(_tooggle ? "gameboy" : "gameboy-bw")
             })
-
-        _segments = 30
     }
 
     input() {
@@ -41,9 +40,11 @@ class Game {
                 Environment.quit()
             }
         } else if (Input.isKeyPressed(Input.left)) {
-            _segments = _segments - 1
+            _speed = _speed * 0.5
         } else if (Input.isKeyPressed(Input.right)) {
-            _segments = _segments + 1
+            _speed = _speed * 2.0
+        } else if (Input.isKeyPressed(Input.down)) {
+            _speed = 1.0
         } else if (Input.isKeyPressed(Input.select)) {
             _bunnies.clear()
         } else if (Input.isKeyPressed(Input.y)) {
@@ -56,7 +57,7 @@ class Game {
             return
         }
         for (bunny in _bunnies) {
-            bunny.update(deltaTime)
+            bunny.update(deltaTime * _speed)
         }
     }
 
@@ -64,16 +65,6 @@ class Game {
         for (bunny in _bunnies) {
             bunny.render()
         }
-
-//        Canvas.point(50, 50, 3)
-//        Canvas.line(150, 150, 250, 250, 3)
-//        Canvas.triangle("fill", 150, 150, 50, 250, 250, 250, 3)
-//        Canvas.rectangle("fill", 10, 10, 100, 100, 2)
-//        Canvas.square("fill", 200, 10, 75, 2)
-        Canvas.circle("lines", 100, 100, 50, 2)
-        Canvas.circle("fill", 200, 100, 50, 1)
-        Canvas.circle("fill", 300, 100, 50, 1, _segments)
-
         _font.write("FPS: %(Environment.fps.round)", 0, 0, 1, 1.0, "left")
         _font.write("#%(_bunnies.count) bunnies", Canvas.width, 0, 3, 1.0, "right")
     }

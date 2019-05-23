@@ -24,6 +24,10 @@ $(OBJECTS): %.o : %.c $(INCLUDES) Makefile
 	@$(COMPILER) $(CFLAGS) $(CWARNINGS) -c $< -o $@
 	@echo "Compiled "$<" successfully!"
 
+primitives: $(TARGET)
+	@echo "Launching Primitives application!"
+	./$(TARGET) ./demos/primitives
+
 bunnymark: $(TARGET)
 	@echo "Launching Bunnymark application!"
 	./$(TARGET) ./demos/bunnymark
