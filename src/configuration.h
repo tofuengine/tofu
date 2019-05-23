@@ -37,9 +37,10 @@ typedef struct _Configuration {
     bool hide_cursor;
     bool exit_key_enabled;
     bool debug;
+    // TODO: key-remapping?
 } Configuration_t;
 
 extern void Configuration_initialize(Configuration_t *configuration);
-extern void Configuration_load(Configuration_t *configuration, const char *filename);
+extern void Configuration_load(Configuration_t *configuration, const char *pathfile);
 
 #endif  /* __CONFIGURATION_H__ */

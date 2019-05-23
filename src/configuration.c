@@ -99,11 +99,11 @@ void Configuration_initialize(Configuration_t *configuration)
     configuration->debug = true;
 }
 
-void Configuration_load(Configuration_t *configuration, const char *filename)
+void Configuration_load(Configuration_t *configuration, const char *pathfile)
 {
-    char *json = file_load_as_string(filename, "rt");
+    char *json = file_load_as_string(pathfile, "rt");
     if (!json) {
-        Log_write(LOG_LEVELS_WARNING, "Configuration file '%s' not found", filename);
+        Log_write(LOG_LEVELS_WARNING, "Configuration file '%s' not found", pathfile);
         return;
     }
 
@@ -112,7 +112,7 @@ void Configuration_load(Configuration_t *configuration, const char *filename)
     jsmntok_t tokens[MAX_JSON_TOKENS];
     size_t token_count = jsmn_parse(&parser, json, strlen(json), tokens, MAX_JSON_TOKENS);
     if ((token_count < 1) || (tokens[0].type != JSMN_OBJECT)) {
-        Log_write(LOG_LEVELS_WARNING, "Configuration file '%s' is malformed", filename);
+        Log_write(LOG_LEVELS_WARNING, "Configuration file '%s' is malformed", pathfile);
     }
 
     for (size_t i = 1; i < token_count; i += 2) {

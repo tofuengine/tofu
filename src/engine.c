@@ -61,14 +61,14 @@ static bool update_statistics(Engine_Statistics_t *statistics, double elapsed) {
 
 bool Engine_initialize(Engine_t *engine, const char *base_path)
 {
-    char filename[PATH_FILE_MAX];
-    strcpy(filename, base_path);
-    strcat(filename, CONFIGURATION_FILE_NAME);
+    char pathfile[PATH_FILE_MAX];
+    strcpy(pathfile, base_path);
+    strcat(pathfile, CONFIGURATION_FILE_NAME);
 
     Log_initialize();
 
     Configuration_initialize(&engine->configuration);
-    Configuration_load(&engine->configuration, filename);
+    Configuration_load(&engine->configuration, pathfile);
 
     Log_configure(engine->configuration.debug);
 

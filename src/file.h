@@ -52,6 +52,6 @@
 
 extern void file_resolve_path(char *resolved, const char *path);
 
-extern char *file_load_as_string(const char *filename, const char *mode);
+extern char *file_load_as_string(const char *pathfile, const char *mode);
 
 #endif/* __FILE_H__ */
