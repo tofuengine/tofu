@@ -302,7 +302,7 @@ void graphics_bank_allocate(WrenVM *vm)
             .atlas = texture,
             .cell_width = cell_width,
             .cell_height = cell_height,
-            .origin = (GL_Point_t){ cell_width * 0.5, cell_height * 0.5} // Rotate along center
+            .origin = (GL_Point_t){ (GLfloat)cell_width * 0.5f, (GLfloat)cell_height * 0.5f } // Rotate along center
         };
 }
 
@@ -357,7 +357,6 @@ void graphics_bank_blit_call6(WrenVM *vm)
 
     GL_Rectangle_t source = (GL_Rectangle_t){ (GLfloat)bank_x, (GLfloat)bank_y, (GLfloat)bank_width, (GLfloat)bank_height };
     GL_Rectangle_t destination = (GL_Rectangle_t){ (GLfloat)floor(x + instance->origin.x), (GLfloat)floor(y + instance->origin.y), (GLfloat)width, (GLfloat)height };
-//    GL_Rectangle_t destination = (GL_Rectangle_t){ (GLfloat)x + (GLfloat)instance->origin.x, (GLfloat)y + (GLfloat)instance->origin.y, (GLfloat)width, (GLfloat)height };
 
     GL_texture_blit(&instance->atlas, source, destination, instance->origin, rotation, (GL_Color_t){ 255, 255, 255, 255 });
 }
@@ -435,7 +434,7 @@ void graphics_font_write_call6(WrenVM *vm) // foreign text(text, color, size, al
         dy = y;
     } else
     if (strcmp(align, "center") == 0) {
-        dx = x - (rectangle.width / 2);
+        dx = x - (rectangle.width * 0.5f);
         dy = y;
     } else
     if (strcmp(align, "right") == 0) {
@@ -446,7 +445,7 @@ void graphics_font_write_call6(WrenVM *vm) // foreign text(text, color, size, al
     Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %d, %d, %d", width, dx, dy);
 #endif
 
-    GL_font_write(&instance->font, text, (GL_Point_t){ (GLfloat)dx, (GLfloat)dy }, (GLfloat)scale, (GL_Color_t){ color, color, color, 255 });
+    GL_font_write(&instance->font, text, (GL_Point_t){ dx, dy }, (GLfloat)scale, (GL_Color_t){ color, color, color, 255 });
 }
 
 void graphics_canvas_width_get(WrenVM *vm)
@@ -518,6 +517,11 @@ void graphics_canvas_palette_call1(WrenVM *vm)
     Display_palette(environment->display, &palette);
 }
 
+// When drawing points and lines we need to ensure to be in mid-pixel coordinates, according to
+// the "diamond exit rule" in OpenGL's rasterization. Also, the ending pixel of a line segment
+// is not drawn to avoid lighting a pixel twice in a loop.
+//
+// http://glprogramming.com/red/appendixg.html#name1
 void graphics_canvas_points_call2(WrenVM *vm)
 {
     int vertices = wrenGetListCount(vm, 1);

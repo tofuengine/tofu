@@ -84,19 +84,12 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
 
 static void size_callback(GLFWwindow* window, int width, int height)
 {
-    // When drawing lines we need to ensure to be in mid-pixel coordinates. Also the length of lines are inclusive
-    // (and this need to be taken into account for rectangles/squares). This is due to the "diamond exit rule" in
-    // OpenGL rasterization.
-    //
-    // http://glprogramming.com/red/appendixg.html#name1
     glViewport(0, 0, width, height); // Viewport matches window
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(0.0, (GLdouble)width, (GLdouble)height, 0.0, 0.0, 1.0); // Configure top-left corner at <0, 0>
     glMatrixMode(GL_MODELVIEW); // Reset the model-view matrix.
     glLoadIdentity();
-//    glTranslatef(0.375, 0.375, 0.0); // Works both on ATI and NVIDIA cards (0.5 doesn't work).
-    /* renders all primitives at integer position */
 
     glEnable(GL_TEXTURE_2D); // Default, always enabled.
     glDisable(GL_DEPTH_TEST); // We just don't need it!
