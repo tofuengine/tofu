@@ -337,7 +337,7 @@ void graphics_bank_blit_call3(WrenVM *vm)
     double bank_height = (double)instance->cell_height;
 
     GL_Rectangle_t source = (GL_Rectangle_t){ (GLfloat)bank_x, (GLfloat)bank_y, (GLfloat)bank_width, (GLfloat)bank_height };
-    GL_Rectangle_t destination = (GL_Rectangle_t){ (GLfloat)floor(x), (GLfloat)floor(y), (GLfloat)bank_width, (GLfloat)bank_height };
+    GL_Rectangle_t destination = (GL_Rectangle_t){ (GLfloat)floor(x - (GLfloat)instance->origin.x), (GLfloat)floor(y - (GLfloat)instance->origin.y), (GLfloat)bank_width, (GLfloat)bank_height };
 
     GL_texture_blit_fast(&instance->atlas, source, destination, (GL_Color_t){ 255, 255, 255, 255 });
 }
@@ -367,7 +367,7 @@ void graphics_bank_blit_call5(WrenVM *vm)
     double height = (double)instance->cell_height * scale_y;
 
     GL_Rectangle_t source = (GL_Rectangle_t){ (GLfloat)bank_x, (GLfloat)bank_y, (GLfloat)bank_width, (GLfloat)bank_height };
-    GL_Rectangle_t destination = (GL_Rectangle_t){ (GLfloat)floor(x), (GLfloat)floor(y), (GLfloat)width, (GLfloat)height };
+    GL_Rectangle_t destination = (GL_Rectangle_t){ (GLfloat)floor(x - (GLfloat)instance->origin.x), (GLfloat)floor(y - (GLfloat)instance->origin.y), (GLfloat)width, (GLfloat)height };
 
     GL_texture_blit_fast(&instance->atlas, source, destination, (GL_Color_t){ 255, 255, 255, 255 });
 }
