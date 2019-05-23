@@ -125,8 +125,6 @@ void GL_texture_blit(const GL_Texture_t *texture,
     GLfloat x1 = (source.x + source.width) / width;
     GLfloat y1 = (source.y + source.height) / height;
 
-//    glEnable(GL_TEXTURE_2D); // Redundant
-//    glActiveTexture(GL_TEXTURE0); // Redundant
     glBindTexture(GL_TEXTURE_2D, texture->id);
 
     glPushMatrix();
@@ -135,7 +133,6 @@ void GL_texture_blit(const GL_Texture_t *texture,
         glTranslatef(-origin.x, -origin.y, 0.0f);
         glBegin(GL_TRIANGLE_STRIP);
             glColor4ub(color.r, color.g, color.b, color.a);
-//            glNormal3f(0.0f, 0.0f, 1.0f); // Normal vector pointing towards viewer (Redundant)
 
             glTexCoord2f(x0, y0); // CCW strip, top-left is <0,0> (the face direction of the strip is determined by the winding of the first triangle)
             glVertex2f(0.0f, 0.0f);
@@ -147,7 +144,44 @@ void GL_texture_blit(const GL_Texture_t *texture,
             glVertex2f(target.width, target.height);
         glEnd();
     glPopMatrix();
+}
 
-//    glDisable(GL_TEXTURE_2D); // Redundant
-//    glBindTexture(GL_TEXTURE_2D, 0); // Redundant
+void GL_texture_blit_fast(const GL_Texture_t *texture,
+                          const GL_Rectangle_t source, const GL_Rectangle_t target,
+                          const GL_Color_t color)
+{
+#ifdef __DEFENSIVE_CHECKS__
+    if (texture->id == 0) {
+        // TODO: output log here?
+        return;
+    }
+#endif
+
+    GLfloat width = texture->width;
+    GLfloat height = texture->height;
+
+    GLfloat sx0 = source.x / width;
+    GLfloat sy0 = source.y / height;
+    GLfloat sx1 = (source.x + source.width) / width;
+    GLfloat sy1 = (source.y + source.height) / height;
+
+    GLfloat tx0 = target.x;
+    GLfloat ty0 = target.y;
+    GLfloat tx1 = target.x + target.width;
+    GLfloat ty1 = target.y + target.height;
+
+    glBindTexture(GL_TEXTURE_2D, texture->id);
+
+    glBegin(GL_TRIANGLE_STRIP);
+        glColor4ub(color.r, color.g, color.b, color.a);
+
+        glTexCoord2f(sx0, sy0); // CCW strip, top-left is <0,0> (the face direction of the strip is determined by the winding of the first triangle)
+        glVertex2f(tx0, ty0);
+        glTexCoord2f(sx0, sy1);
+        glVertex2f(tx0, ty1);
+        glTexCoord2f(sx1, sy0);
+        glVertex2f(tx1, ty0);
+        glTexCoord2f(sx1, sy1);
+        glVertex2f(tx1, ty1);
+    glEnd();
 }

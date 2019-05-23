@@ -6,11 +6,12 @@ foreign class Bank {
     foreign cellHeight
 
     blit(cellId, x, y) {
-        blit(cellId, x, y, 1.0, 1.0, 1.0)
+        blit(cellId, x, y, 1.0, 1.0)
     }
     blit(cellId, x, y, r) {
         blit(cellId, x, y, r, 1.0, 1.0)
     }
+    foreign blit(cellId, x, y, sx, sy)
     foreign blit(cellId, x, y, r, sx, sy)
 
 }

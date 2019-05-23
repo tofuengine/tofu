@@ -122,7 +122,7 @@ void GL_font_write(const GL_Font_t *font, const char *text, const GL_Point_t pos
         if (source.x >= font->atlas.width) {
             continue;
         }
-        GL_texture_blit(&font->atlas, source, target, (GL_Point_t){ 0.0f, 0.0f }, 0.0f, color);
+        GL_texture_blit_fast(&font->atlas, source, target, color);
         target.x += font->glyph_width * scale;
     }
 }

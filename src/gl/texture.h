@@ -38,5 +38,6 @@ extern bool GL_texture_create(GL_Texture_t *texture, const void *buffer, size_t 
 extern bool GL_texture_load(GL_Texture_t *texture, const char *pathfile, GL_Texture_Callback_t callback, void *parameters);
 extern void GL_texture_delete(GL_Texture_t *texture);
 extern void GL_texture_blit(const GL_Texture_t *texture, const GL_Rectangle_t source, const GL_Rectangle_t target, const GL_Point_t origin, GLfloat rotation, const GL_Color_t color);
+extern void GL_texture_blit_fast(const GL_Texture_t *texture, const GL_Rectangle_t source, const GL_Rectangle_t target, const GL_Color_t color);
 
 #endif  /* __GL_TEXTURE_H__ */

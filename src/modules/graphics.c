@@ -108,11 +108,12 @@ const char graphics_wren[] =
     "    foreign cellHeight\n"
     "\n"
     "    blit(cellId, x, y) {\n"
-    "        blit(cellId, x, y, 0.0, 1.0, 1.0)\n"
+    "        blit(cellId, x, y, 1.0, 1.0)\n"
     "    }\n"
     "    blit(cellId, x, y, r) {\n"
     "        blit(cellId, x, y, r, 1.0, 1.0)\n"
     "    }\n"
+    "    foreign blit(cellId, x, y, sx, sy)\n"
     "    foreign blit(cellId, x, y, r, sx, sy)\n"
     "\n"
     "}\n"
@@ -328,6 +329,36 @@ void graphics_bank_cell_height_get(WrenVM *vm)
     const Bank_Class_t *instance = (const Bank_Class_t *)wrenGetSlotForeign(vm, 0);
 
     wrenSetSlotDouble(vm, 0, instance->cell_height);
+}
+
+void graphics_bank_blit_call5(WrenVM *vm)
+{
+    int cell_id = (int)wrenGetSlotDouble(vm, 1);
+    double x = wrenGetSlotDouble(vm, 2);
+    double y = wrenGetSlotDouble(vm, 3);
+    double scale_x = wrenGetSlotDouble(vm, 4);
+    double scale_y = wrenGetSlotDouble(vm, 5);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %d, %d, %.3f, %.3f", cell_id, x, y, scale_x, scale_y);
+#endif
+
+    const Bank_Class_t *instance = (const Bank_Class_t *)wrenGetSlotForeign(vm, 0);
+
+//    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+
+    int bank_position = cell_id * instance->cell_width;
+    int bank_x = bank_position % instance->atlas.width;
+    int bank_y = (bank_position / instance->atlas.width) * instance->cell_height;
+    double bank_width = (double)instance->cell_width * fsgn(scale_x); // The sign controls the mirroring.
+    double bank_height = (double)instance->cell_height * fsgn(scale_y);
+
+    double width = (double)instance->cell_width * fabs(scale_x);
+    double height = (double)instance->cell_height * fabs(scale_y);
+
+    GL_Rectangle_t source = (GL_Rectangle_t){ (GLfloat)bank_x, (GLfloat)bank_y, (GLfloat)bank_width, (GLfloat)bank_height };
+    GL_Rectangle_t destination = (GL_Rectangle_t){ (GLfloat)floor(x), (GLfloat)floor(y), (GLfloat)width, (GLfloat)height };
+
+    GL_texture_blit_fast(&instance->atlas, source, destination, (GL_Color_t){ 255, 255, 255, 255 });
 }
 
 void graphics_bank_blit_call6(WrenVM *vm)
