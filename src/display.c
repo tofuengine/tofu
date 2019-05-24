@@ -81,8 +81,10 @@ static const char *fragment_shader =
     "}\n"
 ;
 
+#ifndef __NO_AUTOFIT__
 static const int _mode_palette[] = { 0 };
 static const int _mode_passthru[] = { 1 };
+#endif
 
 static void error_callback(int error, const char *description)
 {
@@ -129,6 +131,7 @@ static void size_callback(GLFWwindow* window, int width, int height)
 #endif
 }
 
+#ifndef __NO_AUTOFIT__
 static bool initialize_framebuffer(Display_t *display)
 {
     glGenTextures(1, &display->offscreen_texture);
@@ -158,6 +161,7 @@ void deinitialize_framebuffer(Display_t *display)
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0); //Bind 0, which means render to back buffer, as a result, fb is unbound
     glDeleteFramebuffersEXT(1, &display->offscreen_framebuffer);
 }
+#endif
 
 bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title)
 {
@@ -218,17 +222,6 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         return false;
     }
 
-    if (!GL_program_create(&display->program, vertex_shader, fragment_shader)) {
-        Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't create default shader");
-        GL_terminate();
-        glfwDestroyWindow(display->window);
-        glfwTerminate();
-        return false;
-    }
-    GLint id = 0;
-    GL_program_send(&display->program, "u_texture0", GL_PROGRAM_UNIFORM_TEXTURE, 1, &id); // Redundant
-    GL_program_use(&display->program);
-
     int display_width, display_height;
     glfwGetMonitorWorkarea(glfwGetPrimaryMonitor(), NULL, NULL, &display_width, &display_height);
     Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> display size is %dx%d", display_width, display_height);
@@ -237,6 +230,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     display->window_height = configuration->height;
     display->window_scale = 1;
 
+#ifndef __NO_AUTOFIT__
     if (configuration->autofit) {
         Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> auto-fitting...");
 
@@ -251,6 +245,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
             display->window_scale = s;
         }
     }
+#endif
 
     Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> window size is %dx%d (%dx)", display->window_width, display->window_height,
         display->window_scale);
@@ -265,7 +260,28 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         glfwSetWindowMonitor(display->window, glfwGetPrimaryMonitor(), 0, 0, display->window_width, display->window_height, GLFW_DONT_CARE);
     }
 
-    initialize_framebuffer(display);
+#ifndef __NO_AUTOFIT__
+    if (!initialize_framebuffer(display)) {
+        Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't create framebuffer");
+        GL_terminate();
+        glfwDestroyWindow(display->window);
+        glfwTerminate();
+    }
+#endif
+
+    if (!GL_program_create(&display->program, vertex_shader, fragment_shader)) {
+        Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't create default shader");
+#ifndef __NO_AUTOFIT__
+        deinitialize_framebuffer(display);
+#endif
+        GL_terminate();
+        glfwDestroyWindow(display->window);
+        glfwTerminate();
+        return false;
+    }
+    GLint id = 0;
+    GL_program_send(&display->program, "u_texture0", GL_PROGRAM_UNIFORM_TEXTURE, 1, &id); // Redundant
+    GL_program_use(&display->program);
 
     GL_Palette_t palette; // Initial gray-scale palette.
     GL_palette_greyscale(&palette, GL_MAX_PALETTE_COLORS);
@@ -310,19 +326,16 @@ void Display_processInput(Display_t *display)
     }
 }
 
-void Display_renderBegin(Display_t *display)
+void Display_render(Display_t *display, const Display_Render_Callback_t callback, void *parameters)
 {
-    GL_program_send(&display->program, "u_mode", GL_PROGRAM_UNIFORM_INT, 1, _mode_palette);
-
+#ifndef __NO_AUTOFIT__
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, display->offscreen_framebuffer);
-    
-    //--
-    int w = display->configuration.width;
-    int h = display->configuration.height;
-    glViewport(0, 0, w, h);
+    const int ow = display->configuration.width;
+    const int oh = display->configuration.height;
+    glViewport(0, 0, ow, oh);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0.0, (GLdouble)w, (GLdouble)h, 0.0, 0.0, 1.0); // Configure top-left corner at <0, 0>
+    glOrtho(0.0, (GLdouble)ow, (GLdouble)oh, 0.0, 0.0, 1.0); // Configure top-left corner at <0, 0>
     glMatrixMode(GL_MODELVIEW); // Reset the model-view matrix.
     glLoadIdentity();
 
@@ -334,21 +347,18 @@ void Display_renderBegin(Display_t *display)
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Required, to clear previous content. (TODO: configurable color?)
     glClear(GL_COLOR_BUFFER_BIT);
-}
 
-void Display_renderEnd(Display_t *display, double now)
-{
+    GL_program_send(&display->program, "u_mode", GL_PROGRAM_UNIFORM_INT, 1, _mode_palette);
+    callback(parameters);
     GL_program_send(&display->program, "u_mode", GL_PROGRAM_UNIFORM_INT, 1, _mode_passthru);
 
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-#if 1
-    //--
-    int w = display->window_width;
-    int h = display->window_height;
-    glViewport(0, 0, w, h);
+    const int ww = display->window_width;
+    const int wh = display->window_height;
+    glViewport(0, 0, ww, wh);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0.0, (GLdouble)w, (GLdouble)h, 0.0, 0.0, 1.0); // Configure top-left corner at <0, 0>
+    glOrtho(0.0, (GLdouble)ww, (GLdouble)wh, 0.0, 0.0, 1.0); // Configure top-left corner at <0, 0>
     glMatrixMode(GL_MODELVIEW); // Reset the model-view matrix.
     glLoadIdentity();
 
@@ -359,19 +369,22 @@ void Display_renderEnd(Display_t *display, double now)
 #endif
 
     glBindTexture(GL_TEXTURE_2D, display->offscreen_texture);
-
     glBegin(GL_TRIANGLE_STRIP);
         glColor4ub(255, 255, 255, 255);
-
         glTexCoord2f(0.0f, 1.0f); // Vertical flip the texture (swap y coordinates)!
         glVertex2f(0.0f, 0.0f);
         glTexCoord2f(0.0f, 0.0f);
-        glVertex2f(0.0f, h);
+        glVertex2f(0.0f, wh);
         glTexCoord2f(1.0f, 1.0f);
-        glVertex2f(w, 0.0f);
+        glVertex2f(ww, 0.0f);
         glTexCoord2f(1.0f, 0.0f);
-        glVertex2f(w, h);
+        glVertex2f(ww, wh);
     glEnd();
+#else
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Required, to clear previous content. (TODO: configurable color?)
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    callback(parameters);
 #endif
 
     glfwSwapBuffers(display->window);
@@ -388,10 +401,11 @@ void Display_palette(Display_t *display, const GL_Palette_t *palette)
 
 void Display_terminate(Display_t *display)
 {
-    deinitialize_framebuffer(display);
-
     GL_program_delete(&display->program);
 
+#ifndef __NO_AUTOFIT__
+    deinitialize_framebuffer(display);
+#endif
     GL_terminate();
 
     glfwDestroyWindow(display->window);

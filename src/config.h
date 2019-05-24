@@ -37,6 +37,7 @@
 #define __GSLS_VERSION__                    0x0120
 
 #undef  __NO_MIRRORING__
+#undef  __NO_AUTOFIT__
 #define __FAST_TRANSPARENCY__
 #undef  __DEBUG_TRIANGLES_WINDING__
 #undef  __DEFENSIVE_CHECKS__

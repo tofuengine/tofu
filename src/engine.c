@@ -113,6 +113,13 @@ bool Engine_isRunning(Engine_t *engine)
     return !engine->environment.should_close && !Display_shouldClose(&engine->display);
 }
 
+static void render_callback(void *parameters)
+{
+    Engine_t *engine = (Engine_t *)parameters;
+
+    Interpreter_render(&engine->interpreter, 0.0); //lag / delta_time);
+}
+
 void Engine_run(Engine_t *engine)
 {
     const double delta_time = 1.0 / (double)engine->configuration.fps;
@@ -147,8 +154,6 @@ void Engine_run(Engine_t *engine)
             lag -= delta_time;
         }
 
-        Display_renderBegin(&engine->display);
-            Interpreter_render(&engine->interpreter, lag / delta_time);
-        Display_renderEnd(&engine->display, current);
+        Display_render(&engine->display, render_callback, engine);
     }
 }
