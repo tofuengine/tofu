@@ -70,11 +70,10 @@ typedef struct _Display_t {
     int window_width, window_height, window_scale;
 
     GL_Program_t program;
-/*
-    GLuint offscreen;
-    GL_Rectangle_t offscreen_source, offscreen_destination;
-    GL_Point_t offscreen_origin;
-*/
+
+    GLuint offscreen_texture;
+    GLuint offscreen_framebuffer;
+
     GL_Palette_t palette;
 } Display_t;
 

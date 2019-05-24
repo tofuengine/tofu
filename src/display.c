@@ -25,6 +25,7 @@
 #include "config.h"
 #include "engine.h"
 #include "hal.h"
+#include "gl/gl.h"
 #include "log.h"
 
 #include <memory.h>
@@ -125,6 +126,36 @@ static void size_callback(GLFWwindow* window, int width, int height)
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     Log_write(LOG_LEVELS_DEBUG, "<GLFW> enabling OpenGL debug");
 #endif
+}
+
+static bool initialize_framebuffer(Display_t *display)
+{
+    glGenTextures(1, &display->offscreen_texture);
+    glBindTexture(GL_TEXTURE_2D, display->offscreen_texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, display->configuration.width, display->configuration.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glGenFramebuffersEXT(1, &display->offscreen_framebuffer);
+    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, display->offscreen_framebuffer);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, display->offscreen_texture, 0);
+    GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
+    if (status != GL_FRAMEBUFFER_COMPLETE_EXT) {
+        return false;
+    }
+    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+
+    return true;
+}
+
+void deinitialize_framebuffer(Display_t *display)
+{
+    glDeleteTextures(1, &display->offscreen_texture);
+    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0); //Bind 0, which means render to back buffer, as a result, fb is unbound
+    glDeleteFramebuffersEXT(1, &display->offscreen_framebuffer);
 }
 
 bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title)
@@ -233,20 +264,8 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         glfwSetWindowMonitor(display->window, glfwGetPrimaryMonitor(), 0, 0, display->window_width, display->window_height, GLFW_DONT_CARE);
     }
 
-#if 0
-    for (size_t i = 0; i < FRAMEBUFFERS_COUNT; ++i) {
-        display->framebuffers[i] = LoadRenderTexture(configuration->width, configuration->height);
-        SetTextureFilter(display->framebuffers[i].texture, FILTER_POINT); // Nearest-neighbour scaling.
-    }
+    initialize_framebuffer(display);
 
-    display->offscreen_source = (Rectangle){ 0.0f, 0.0f, (float)configuration->width, (float)-configuration->height };
-    if (configuration->fullscreen) {
-        display->offscreen_destination = (Rectangle){ (float)x, (float)y, (float)display->window_width, (float)display->window_height };
-    } else {
-        display->offscreen_destination = (Rectangle){ (float)0, (float)0, (float)display->window_width, (float)display->window_height };
-    }
-    display->offscreen_origin = (Vector2){ 0.0f, 0.0f };
-#endif
     GL_Palette_t palette; // Initial gray-scale palette.
     GL_palette_greyscale(&palette, GL_MAX_PALETTE_COLORS);
     Display_palette(display, &palette);
@@ -292,20 +311,68 @@ void Display_processInput(Display_t *display)
 
 void Display_renderBegin(Display_t *display)
 {
-    GL_program_send(&display->program, "u_mode", GL_PROGRAM_UNIFORM_INT, 1, _mode_palette);
+    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, display->offscreen_framebuffer);
+    //--
+    int w = display->configuration.width;
+    int h = display->configuration.height;
+    glViewport(0, 0, w, h);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0.0, (GLdouble)w, (GLdouble)h, 0.0, 0.0, 1.0); // Configure top-left corner at <0, 0>
+    glMatrixMode(GL_MODELVIEW); // Reset the model-view matrix.
+    glLoadIdentity();
+    glEnable(GL_TEXTURE_2D); // Default, always enabled.
+    glDisable(GL_DEPTH_TEST); // We just don't need it!
+#ifdef __FAST_TRANSPARENCY__
+    glDisable(GL_BLEND); // Trade in proper alpha-blending for faster single color transparency.
+    glEnable(GL_ALPHA_TEST);
+    glAlphaFunc(GL_NOTEQUAL, 0.0f);
+#else
+    glEnable(GL_BLEND);
+    glDisable(GL_ALPHA_TEST);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+#endif
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Required, to clear previous content. (TODO: configurable color?)
     glClear(GL_COLOR_BUFFER_BIT);
+    GL_program_send(&display->program, "u_mode", GL_PROGRAM_UNIFORM_INT, 1, _mode_palette);
 }
 
 void Display_renderEnd(Display_t *display, double now)
 {
+    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+#if 1
+    //--
+    int w = display->window_width;
+    int h = display->window_height;
+    glViewport(0, 0, w, h);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0.0, (GLdouble)w, (GLdouble)h, 0.0, 0.0, 1.0); // Configure top-left corner at <0, 0>
+    glMatrixMode(GL_MODELVIEW); // Reset the model-view matrix.
+    glLoadIdentity();
+    glEnable(GL_TEXTURE_2D); // Default, always enabled.
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_BLEND);
+    glDisable(GL_ALPHA_TEST);
+
     GL_program_send(&display->program, "u_mode", GL_PROGRAM_UNIFORM_INT, 1, _mode_passthru);
-#if 0
-    BeginDrawing();
-        DrawTexturePro(display->framebuffers[source].texture, os, display->offscreen_destination,
-            display->offscreen_origin, 0.0f, (Color){ 255, 255, 255, 255 });
-    EndDrawing();
+
+    glBindTexture(GL_TEXTURE_2D, display->offscreen_texture);
+
+    glBegin(GL_TRIANGLE_STRIP);
+        glColor4ub(255, 255, 255, 255);
+
+        glTexCoord2f(0.0f, 1.0f); // Vertical flip the texture!
+        glVertex2f(0.0f, 0.0f);
+        glTexCoord2f(0.0f, 0.0f);
+        glVertex2f(0.0f, h);
+        glTexCoord2f(1.0f, 1.0f);
+        glVertex2f(w, 0.0f);
+        glTexCoord2f(1.0f, 0.0f);
+        glVertex2f(w, h);
+    glEnd();
 #endif
+
     glfwSwapBuffers(display->window);
     glfwPollEvents();
 }
