@@ -32,35 +32,31 @@
 static const char *vertex_shader = 
     "#version 120\n"
     "\n"
-    "varying vec4 color;\n"
-    "varying vec2 texture_coords;\n"
-    "varying vec2 screen_coords;\n"
+    "varying vec2 v_texture_coords;\n"
     "\n"
     "void main()\n"
     "{\n"
     "   gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\n"
-    "   //gl_FrontColor = gl_Color;\n"
+    "   gl_FrontColor = gl_Color; // Pass the vertex drawing color.\n"
     "\n"
-    "   color = gl_Color; // Pass the vertex drawing color.\n"
-    "   texture_coords = gl_MultiTexCoord0.st; // Retain texture 2D position.\n"
-    "   screen_coords = (gl_Position.xy + vec2(1.0, -1.0)) * vec2(0.5, -0.5); // Mirror and normalize to [0, 1].\n"
+    "   v_texture_coords = gl_MultiTexCoord0.st; // Retain texture 2D position.\n"
     "}\n";
 ;
 
 static const char *fragment_shader =
     "#version 120\n"
     "\n"
-    "varying vec4 color;\n"
-    "varying vec2 texture_coords;\n"
-    "varying vec2 screen_coords;\n"
+    "varying vec2 v_texture_coords;\n"
     "\n"
-    "uniform sampler2D texture0;\n"
-    "uniform vec3 palette[256];\n"
+    "uniform sampler2D u_texture0;\n"
+    "//uniform vec2 u_resolution;\n"
+    "//uniform float u_time;\n"
     "\n"
-    "void main()\n"
-    "{\n"
+    "uniform vec3 u_palette[256];\n"
+    "\n"
+    "vec4 effect(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {\n"
     "    // Texel color fetching from texture sampler\n"
-    "    vec4 texel = texture2D(texture0, texture_coords) * color; // Use `GL_color`?\n"
+    "    vec4 texel = texture2D(texture, texture_coords) * color;\n"
     "\n"
     "    // Convert the (normalized) texel color RED component (GB would work, too)\n"
     "    // to the palette index by scaling up from [0, 1] to [0, 255].\n"
@@ -68,7 +64,12 @@ static const char *fragment_shader =
     "\n"
     "    // Pick the palette color as final fragment color (retain the texel alpha value).\n"
     "    // Note: palette components are pre-normalized in the OpenGL range [0, 1].\n"
-    "    gl_FragColor = vec4(palette[index].rgb, texel.a);\n"
+    "    return vec4(u_palette[index].rgb, texel.a);\n"
+    "}\n"
+    "\n"
+    "void main()\n"
+    "{\n"
+    "    gl_FragColor = effect(gl_Color, u_texture0, v_texture_coords, gl_FragCoord.xy);\n"
     "}\n"
 ;
 
@@ -79,17 +80,20 @@ static void error_callback(int error, const char *description)
 
 static void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
-    Log_write(LOG_LEVELS_TRACE, "<GLFW> key #%d is %d", scancode, action);
+//    Log_write(LOG_LEVELS_TRACE, "<GLFW> key #%d is %d", scancode, action);
 }
 
 static void size_callback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height); // Viewport matches window
+    Log_write(LOG_LEVELS_DEBUG, "<GLFW> viewport size set to %dx%d", width, height);
+
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(0.0, (GLdouble)width, (GLdouble)height, 0.0, 0.0, 1.0); // Configure top-left corner at <0, 0>
     glMatrixMode(GL_MODELVIEW); // Reset the model-view matrix.
     glLoadIdentity();
+    Log_write(LOG_LEVELS_DEBUG, "<GLFW> projection/model matrix reset, going otho-2D");
 
     glEnable(GL_TEXTURE_2D); // Default, always enabled.
     glDisable(GL_DEPTH_TEST); // We just don't need it!
@@ -102,15 +106,15 @@ static void size_callback(GLFWwindow* window, int width, int height)
     glDisable(GL_ALPHA_TEST);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 #endif
+    Log_write(LOG_LEVELS_DEBUG, "<GLFW> optimizing OpenGL features");
 
 #ifdef __DEBUG_TRIANGLES_WINDING__
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    Log_write(LOG_LEVELS_DEBUG, "<GLFW> enabling OpenGL debug");
 #endif
-
-    Log_write(LOG_LEVELS_DEBUG, "<GLFW> viewport size set to %dx%d", width, height);
 }
 
 bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title)
@@ -139,7 +143,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
     glfwWindowHint(GLFW_FOCUSED, GLFW_TRUE);
-    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // We'll show it after the real-size has been calculated.
 
     display->window = glfwCreateWindow(1, 1, title, NULL, NULL); // 1x1 window, in order to have a context early.
     if (display->window == NULL) {
@@ -180,7 +184,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         return false;
     }
     GLint id = 0;
-    GL_program_send(&display->program, "texture0", GL_PROGRAM_UNIFORM_TEXTURE, 1, &id); // Redundant
+    GL_program_send(&display->program, "u_texture0", GL_PROGRAM_UNIFORM_TEXTURE, 1, &id); // Redundant
     GL_program_use(&display->program);
 
     int display_width, display_height;
@@ -291,12 +295,8 @@ void Display_renderEnd(Display_t *display, double now)
 {
 #if 0
     BeginDrawing();
-#ifndef __FAST_FULLSCREEN__
-        ClearBackground((Color){ 0, 0, 0, 255 });
-#endif
         DrawTexturePro(display->framebuffers[source].texture, os, display->offscreen_destination,
             display->offscreen_origin, 0.0f, (Color){ 255, 255, 255, 255 });
-
     EndDrawing();
 #endif
     glfwSwapBuffers(display->window);
@@ -307,7 +307,7 @@ void Display_palette(Display_t *display, const GL_Palette_t *palette)
 {
     GLfloat colors[MAX_PALETTE_COLORS * 3] = {};
     GL_palette_normalize(palette, colors);
-    GL_program_send(&display->program, "palette", GL_PROGRAM_UNIFORM_VEC3, MAX_PALETTE_COLORS, colors);
+    GL_program_send(&display->program, "u_palette", GL_PROGRAM_UNIFORM_VEC3, MAX_PALETTE_COLORS, colors);
     display->palette = *palette;
 }
 
