@@ -23,6 +23,8 @@
 #ifndef __DISPLAY_H__
 #define __DISPLAY_H__
 
+#include "config.h"
+
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -49,7 +51,9 @@ typedef struct _Display_Configuration_t {
     int width, height;
     int colors;
     bool fullscreen;
+#ifndef __NO_AUTOFIT__
     bool autofit;
+#endif
     bool hide_cursor;
     bool exit_key_enabled;
 } Display_Configuration_t;
@@ -68,11 +72,12 @@ typedef struct _Display_t {
 
     GLFWwindow *window;
     int window_width, window_height, window_scale;
-
-    GL_Program_t program;
-
+#ifndef __NO_AUTOFIT__
     GLuint offscreen_texture;
     GLuint offscreen_framebuffer;
+#endif
+
+    GL_Program_t program;
 
     GL_Palette_t palette;
 } Display_t;

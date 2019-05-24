@@ -52,7 +52,9 @@ static const char *fragment_shader =
     "uniform sampler2D u_texture0;\n"
     "//uniform vec2 u_resolution;\n"
     "//uniform float u_time;\n"
+#ifndef __NO_AUTOFIT__
     "uniform int u_mode;\n"
+#endif
     "\n"
     "uniform vec3 u_palette[256];\n"
     "\n"
@@ -75,9 +77,13 @@ static const char *fragment_shader =
     "\n"
     "void main()\n"
     "{\n"
+#ifndef __NO_AUTOFIT__
     "    gl_FragColor = (u_mode == 0)\n"
     "        ? palette(gl_Color, u_texture0, v_texture_coords, gl_FragCoord.xy)\n"
     "        : passthru(gl_Color, u_texture0, v_texture_coords, gl_FragCoord.xy);\n"
+#else
+    "    gl_FragColor = palette(gl_Color, u_texture0, v_texture_coords, gl_FragCoord.xy);\n"
+#endif
     "}\n"
 ;
 
