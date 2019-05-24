@@ -295,7 +295,7 @@ bool Display_shouldClose(Display_t *display)
     return glfwWindowShouldClose(display->window);
 }
 
-void Display_processInput(Display_t *display)
+void Display_processInput(Display_t *display, const Display_Callback_t callback, void *parameters)
 {
     static const int keys[Display_Keys_t_CountOf] = {
         GLFW_KEY_UP,
@@ -324,10 +324,13 @@ void Display_processInput(Display_t *display)
             glfwSetWindowShouldClose(display->window, true);
         }
     }
+
+    callback(parameters);
 }
 
-void Display_render(Display_t *display, const Display_Render_Callback_t callback, void *parameters)
+void Display_render(Display_t *display, const Display_Callback_t callback, void *parameters)
 {
+    // TODO: we could direct the rendering routines differently in the case `autofit` is disabled.
 #ifndef __NO_AUTOFIT__
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, display->offscreen_framebuffer);
     const int ow = display->configuration.width;
