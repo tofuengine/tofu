@@ -51,10 +51,11 @@ static const char *fragment_shader =
     "uniform sampler2D u_texture0;\n"
     "//uniform vec2 u_resolution;\n"
     "//uniform float u_time;\n"
+    "uniform int u_mode;\n"
     "\n"
     "uniform vec3 u_palette[256];\n"
     "\n"
-    "vec4 effect(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {\n"
+    "vec4 palette(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {\n"
     "    // Texel color fetching from texture sampler\n"
     "    vec4 texel = texture2D(texture, texture_coords) * color;\n"
     "\n"
@@ -67,11 +68,20 @@ static const char *fragment_shader =
     "    return vec4(u_palette[index].rgb, texel.a);\n"
     "}\n"
     "\n"
+    "vec4 passthru(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {\n"
+    "    return texture2D(texture, texture_coords) * color;\n"
+    "}\n"
+    "\n"
     "void main()\n"
     "{\n"
-    "    gl_FragColor = effect(gl_Color, u_texture0, v_texture_coords, gl_FragCoord.xy);\n"
+    "    gl_FragColor = (u_mode == 0)\n"
+    "        ? palette(gl_Color, u_texture0, v_texture_coords, gl_FragCoord.xy)\n"
+    "        : passthru(gl_Color, u_texture0, v_texture_coords, gl_FragCoord.xy);\n"
     "}\n"
 ;
+
+static const int _mode_palette[] = { 0 };
+static const int _mode_passthru[] = { 1 };
 
 static void error_callback(int error, const char *description)
 {
@@ -236,11 +246,6 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         display->offscreen_destination = (Rectangle){ (float)0, (float)0, (float)display->window_width, (float)display->window_height };
     }
     display->offscreen_origin = (Vector2){ 0.0f, 0.0f };
-
-    for (size_t i = 0; i < SHADERS_COUNT; ++i) { // Initialize shader-chain.
-        display->shaders[i] = (Shader){};
-    }
-    Display_shader(display, SHADER_INDEX_PALETTE, palette_shader_code);
 #endif
     GL_Palette_t palette; // Initial gray-scale palette.
     GL_palette_greyscale(&palette, GL_MAX_PALETTE_COLORS);
@@ -287,12 +292,14 @@ void Display_processInput(Display_t *display)
 
 void Display_renderBegin(Display_t *display)
 {
+    GL_program_send(&display->program, "u_mode", GL_PROGRAM_UNIFORM_INT, 1, _mode_palette);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Required, to clear previous content. (TODO: configurable color?)
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
 void Display_renderEnd(Display_t *display, double now)
 {
+    GL_program_send(&display->program, "u_mode", GL_PROGRAM_UNIFORM_INT, 1, _mode_passthru);
 #if 0
     BeginDrawing();
         DrawTexturePro(display->framebuffers[source].texture, os, display->offscreen_destination,
