@@ -108,6 +108,7 @@ static void size_callback(GLFWwindow* window, int width, int height)
 
     glEnable(GL_TEXTURE_2D); // Default, always enabled.
     glDisable(GL_DEPTH_TEST); // We just don't need it!
+    glDisable(GL_STENCIL_TEST); // Ditto.
 #ifdef __FAST_TRANSPARENCY__
     glDisable(GL_BLEND); // Trade in proper alpha-blending for faster single color transparency.
     glEnable(GL_ALPHA_TEST);
@@ -311,7 +312,10 @@ void Display_processInput(Display_t *display)
 
 void Display_renderBegin(Display_t *display)
 {
+    GL_program_send(&display->program, "u_mode", GL_PROGRAM_UNIFORM_INT, 1, _mode_palette);
+
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, display->offscreen_framebuffer);
+    
     //--
     int w = display->configuration.width;
     int h = display->configuration.height;
@@ -321,24 +325,21 @@ void Display_renderBegin(Display_t *display)
     glOrtho(0.0, (GLdouble)w, (GLdouble)h, 0.0, 0.0, 1.0); // Configure top-left corner at <0, 0>
     glMatrixMode(GL_MODELVIEW); // Reset the model-view matrix.
     glLoadIdentity();
-    glEnable(GL_TEXTURE_2D); // Default, always enabled.
-    glDisable(GL_DEPTH_TEST); // We just don't need it!
+
 #ifdef __FAST_TRANSPARENCY__
-    glDisable(GL_BLEND); // Trade in proper alpha-blending for faster single color transparency.
     glEnable(GL_ALPHA_TEST);
-    glAlphaFunc(GL_NOTEQUAL, 0.0f);
 #else
     glEnable(GL_BLEND);
-    glDisable(GL_ALPHA_TEST);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 #endif
+
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Required, to clear previous content. (TODO: configurable color?)
     glClear(GL_COLOR_BUFFER_BIT);
-    GL_program_send(&display->program, "u_mode", GL_PROGRAM_UNIFORM_INT, 1, _mode_palette);
 }
 
 void Display_renderEnd(Display_t *display, double now)
 {
+    GL_program_send(&display->program, "u_mode", GL_PROGRAM_UNIFORM_INT, 1, _mode_passthru);
+
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 #if 1
     //--
@@ -350,19 +351,19 @@ void Display_renderEnd(Display_t *display, double now)
     glOrtho(0.0, (GLdouble)w, (GLdouble)h, 0.0, 0.0, 1.0); // Configure top-left corner at <0, 0>
     glMatrixMode(GL_MODELVIEW); // Reset the model-view matrix.
     glLoadIdentity();
-    glEnable(GL_TEXTURE_2D); // Default, always enabled.
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_BLEND);
-    glDisable(GL_ALPHA_TEST);
 
-    GL_program_send(&display->program, "u_mode", GL_PROGRAM_UNIFORM_INT, 1, _mode_passthru);
+#ifdef __FAST_TRANSPARENCY__
+    glDisable(GL_ALPHA_TEST);
+#else
+    glDisable(GL_BLEND);
+#endif
 
     glBindTexture(GL_TEXTURE_2D, display->offscreen_texture);
 
     glBegin(GL_TRIANGLE_STRIP);
         glColor4ub(255, 255, 255, 255);
 
-        glTexCoord2f(0.0f, 1.0f); // Vertical flip the texture!
+        glTexCoord2f(0.0f, 1.0f); // Vertical flip the texture (swap y coordinates)!
         glVertex2f(0.0f, 0.0f);
         glTexCoord2f(0.0f, 0.0f);
         glVertex2f(0.0f, h);
@@ -387,17 +388,8 @@ void Display_palette(Display_t *display, const GL_Palette_t *palette)
 
 void Display_terminate(Display_t *display)
 {
-#if 0
-    for (size_t i = 0; i < SHADERS_COUNT; ++i) {
-        if (display->shaders[i].id == 0) {
-            continue;
-        }
-        UnloadShader(display->shaders[i]);
-    }
-    for (size_t i = 0; i < FRAMEBUFFERS_COUNT; ++i) {
-        UnloadRenderTexture(display->framebuffers[i]);
-    }
-#endif
+    deinitialize_framebuffer(display);
+
     GL_program_delete(&display->program);
 
     GL_terminate();
