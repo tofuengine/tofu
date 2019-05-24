@@ -57,9 +57,11 @@ static void parse_pair(Configuration_t *configuration, const char *key, const ch
     if (strcmp(key, "fullscreen") == 0) {
         configuration->fullscreen = strcmp(value, "true") == 0;
     } else
+#ifndef __NO_AUTOFIT__
     if (strcmp(key, "autofit") == 0) {
         configuration->autofit = strcmp(value, "true") == 0;
     } else
+#endif
     if (strcmp(key, "fps") == 0) {
         configuration->fps = (int)strtod(value, NULL);
     } else

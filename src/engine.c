@@ -77,7 +77,9 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             .height = engine->configuration.height,
             .colors = engine->configuration.debug,
             .fullscreen = engine->configuration.fullscreen,
+#ifndef __NO_AUTOFIT__
             .autofit = engine->configuration.autofit,
+#endif
             .hide_cursor = engine->configuration.hide_cursor,
             .exit_key_enabled = engine->configuration.exit_key_enabled,
         };
@@ -113,6 +115,20 @@ bool Engine_isRunning(Engine_t *engine)
     return !engine->environment.should_close && !Display_shouldClose(&engine->display);
 }
 
+static void input_callback(void *parameters)
+{
+    Engine_t *engine = (Engine_t *)parameters;
+
+    Interpreter_input(&engine->interpreter);
+}
+
+static void render_callback(void *parameters)
+{
+    Engine_t *engine = (Engine_t *)parameters;
+
+    Interpreter_render(&engine->interpreter, 0.0); //lag / delta_time);
+}
+
 void Engine_run(Engine_t *engine)
 {
     const double delta_time = 1.0 / (double)engine->configuration.fps;
@@ -136,8 +152,7 @@ void Engine_run(Engine_t *engine)
             engine->environment.fps = ready ? statistics.fps : 0.0;
         }
 
-        Display_processInput(&engine->display);
-        Interpreter_input(&engine->interpreter);
+        Display_processInput(&engine->display, input_callback, engine);
 
         lag += elapsed; // Count a maximum amount of skippable frames in order no to stall on slower machines.
         for (int frames = 0; (frames < skippable_frames) && (lag >= delta_time); ++frames) {
@@ -147,8 +162,6 @@ void Engine_run(Engine_t *engine)
             lag -= delta_time;
         }
 
-        Display_renderBegin(&engine->display);
-            Interpreter_render(&engine->interpreter, lag / delta_time);
-        Display_renderEnd(&engine->display, current);
+        Display_render(&engine->display, render_callback, engine);
     }
 }

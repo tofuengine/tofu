@@ -23,6 +23,8 @@
 #ifndef __DISPLAY_H__
 #define __DISPLAY_H__
 
+#include "config.h"
+
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -49,7 +51,9 @@ typedef struct _Display_Configuration_t {
     int width, height;
     int colors;
     bool fullscreen;
+#ifndef __NO_AUTOFIT__
     bool autofit;
+#endif
     bool hide_cursor;
     bool exit_key_enabled;
 } Display_Configuration_t;
@@ -68,21 +72,22 @@ typedef struct _Display_t {
 
     GLFWwindow *window;
     int window_width, window_height, window_scale;
+#ifndef __NO_AUTOFIT__
+    GLuint offscreen_texture;
+    GLuint offscreen_framebuffer;
+#endif
 
     GL_Program_t program;
-/*
-    GLuint offscreen;
-    GL_Rectangle_t offscreen_source, offscreen_destination;
-    GL_Point_t offscreen_origin;
-*/
+
     GL_Palette_t palette;
 } Display_t;
 
+typedef void (*Display_Callback_t)(void *parameters);
+
 extern bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title);
 extern bool Display_shouldClose(Display_t *display);
-extern void Display_processInput(Display_t *display);
-extern void Display_renderBegin(Display_t *display);
-extern void Display_renderEnd(Display_t *display, double now);
+extern void Display_processInput(Display_t *display, const Display_Callback_t callback, void *parameters);
+extern void Display_render(Display_t *display, const Display_Callback_t callback, void *parameters);
 extern void Display_palette(Display_t *display, const GL_Palette_t *palette);
 extern void Display_terminate(Display_t *display);
 
