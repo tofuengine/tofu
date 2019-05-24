@@ -117,6 +117,8 @@ void GL_texture_blit(const GL_Texture_t *texture,
     }
 #endif
 
+    // TODO: specifies `const` always? Is pedantic or useful?
+    // https://dev.to/fenbf/please-declare-your-variables-as-const
     GLfloat width = texture->width;
     GLfloat height = texture->height;
 
@@ -125,6 +127,7 @@ void GL_texture_blit(const GL_Texture_t *texture,
     GLfloat sx1 = (source.x + source.width) / width;
     GLfloat sy1 = (source.y + source.height) / height;
 
+    // TODO: move mirroring handling in the called? This would require a different `GL_Rectangle_t` type that carries both top-left and bottom-right vertices.
 #if __NO_MIRRORING__
     GLfloat tx0 = 0.0f;
     GLfloat ty0 = 0.0f;

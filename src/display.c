@@ -25,7 +25,6 @@
 #include "config.h"
 #include "engine.h"
 #include "hal.h"
-#include "gl/gl.h"
 #include "log.h"
 
 #include <memory.h>
