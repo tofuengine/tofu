@@ -84,7 +84,6 @@ extern void Display_processInput(Display_t *display);
 extern void Display_renderBegin(Display_t *display);
 extern void Display_renderEnd(Display_t *display, double now);
 extern void Display_palette(Display_t *display, const GL_Palette_t *palette);
-extern void Display_shader(Display_t *display, size_t index, const char *code);
 extern void Display_terminate(Display_t *display);
 
 #endif  /* __DISPLAY_H__ */

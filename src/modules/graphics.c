@@ -27,7 +27,6 @@
 #include "../log.h"
 #include "../gl/gl.h"
 #include "graphics/palettes.h"
-#include "graphics/shaders.h"
 
 #include <math.h>
 #include <string.h>

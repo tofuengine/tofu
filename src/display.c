@@ -311,26 +311,6 @@ void Display_palette(Display_t *display, const GL_Palette_t *palette)
     display->palette = *palette;
 }
 
-void Display_shader(Display_t *display, size_t index, const char *code)
-{
-#if 0
-    if (display->shaders[index].id != 0) {
-        UnloadShader(display->shaders[index]);
-        display->shaders[index].id = 0;
-
-        Log_write(LOG_LEVELS_DEBUG, "Shader %d unloaded", index);
-    }
-
-    if (!code || !code[0]) {
-        return;
-    }
-
-    display->shaders[index] = LoadShaderCode(NULL, (char *)code);
-
-    Log_write(LOG_LEVELS_DEBUG, "Shader %d loaded", index);
-#endif
-}
-
 void Display_terminate(Display_t *display)
 {
 #if 0
