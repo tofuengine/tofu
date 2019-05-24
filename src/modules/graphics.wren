@@ -69,23 +69,23 @@ foreign class Canvas {
     static circle(mode, x, y, radius, color, segments) {
         var step = (2 * Num.pi) / segments
         if (mode == "line") {
-            var points = []
+            var vertices = []
             for (i in 0 .. segments) {
                 var angle = step * i
-                points.insert(-1, x + angle.sin * radius)
-                points.insert(-1, y + angle.cos * radius)
+                vertices.insert(-1, x + angle.sin * radius)
+                vertices.insert(-1, y + angle.cos * radius)
             }
-            Canvas.polyline(points, color)
+            Canvas.polyline(vertices, color)
         } else {
-            var points = []
-            points.insert(-1, x)
-            points.insert(-1, y)
+            var vertices = []
+            vertices.insert(-1, x)
+            vertices.insert(-1, y)
             for (i in 0 .. segments) {
                 var angle = step * i
-                points.insert(-1, x + angle.sin * radius)
-                points.insert(-1, y + angle.cos * radius)
+                vertices.insert(-1, x + angle.sin * radius)
+                vertices.insert(-1, y + angle.cos * radius)
             }
-            Canvas.fan(points, color)
+            Canvas.fan(vertices, color)
         }
     }
 

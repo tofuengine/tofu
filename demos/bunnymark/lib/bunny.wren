@@ -50,10 +50,12 @@ class Bunny {
     }
 
     render() {
-        var angle = (((_vx.abs > MAX_SPEED) ? MAX_SPEED : _vx.abs) / MAX_SPEED) * 60.0
-        var rotation = _vx.sign * angle
-        _bank.blit(0, _x, _y, rotation)
-        //_bank.blit(0, _x, _y)
+        //var angle = (((_vx.abs > MAX_SPEED) ? MAX_SPEED : _vx.abs) / MAX_SPEED) * 60.0
+        //var rotation = _vx.sign * angle
+        //_bank.blit(0, _x, _y, rotation)
+        //_bank.blit(0, _x, _y, -1.0, -1.0)
+        //_bank.blit(0, _x, _y, _vx.sign, _vy.sign)
+        _bank.blit(0, _x, _y)
     }
 
 }
