@@ -34,7 +34,7 @@
 
 // Behavioural MACROs are uses the "__" prefix/suffix.
 #define __GL_VERSION__                      0x0201
-#define __GSLS_VERSION__                    0x0120
+#define __GSLS_VERSION__                    0x0114
 
 // Fully disable `autofit` behaviour. The configuration setting is not parsed
 // and the offscreen framebuffer is not created. This will ensure the fastest
