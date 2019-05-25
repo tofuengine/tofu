@@ -41,6 +41,11 @@ typedef struct _GL_Rectangle_t {
     GLfloat width, height;
 } GL_Rectangle_t;
 
+typedef struct _GL_Quad_t {
+    GLfloat x0, y0;
+    GLfloat x1, y1;
+} GL_Quad_t;
+
 #pragma pack(push, 1)
 typedef struct _GL_Color_t {
     GLubyte r, g, b, a;

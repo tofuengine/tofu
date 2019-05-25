@@ -106,7 +106,7 @@ void GL_texture_delete(GL_Texture_t *texture)
 
 // https://www.puredevsoftware.com/blog/2018/03/17/texture-coordinates-d3d-vs-opengl/
 void GL_texture_blit(const GL_Texture_t *texture,
-                     const GL_Rectangle_t source, const GL_Rectangle_t target,
+                     const GL_Quad_t source, const GL_Quad_t destination,
                      const GL_Point_t origin, GLfloat rotation,
                      const GL_Color_t color)
 {
@@ -122,59 +122,39 @@ void GL_texture_blit(const GL_Texture_t *texture,
     GLfloat width = texture->width;
     GLfloat height = texture->height;
 
-    GLfloat sx0 = source.x / width;
-    GLfloat sy0 = source.y / height;
-    GLfloat sx1 = (source.x + source.width) / width;
-    GLfloat sy1 = (source.y + source.height) / height;
+    GLfloat sx0 = source.x0 / width;
+    GLfloat sy0 = source.y0 / height;
+    GLfloat sx1 = source.x1 / width;
+    GLfloat sy1 = source.y1 / height;
 
-    // TODO: move mirroring handling in the called? This would require a different `GL_Rectangle_t` type that carries both top-left and bottom-right vertices.
-#if __NO_MIRRORING__
-    GLfloat tx0 = 0.0f;
-    GLfloat ty0 = 0.0f;
-    GLfloat tx1 = target.width;
-    GLfloat ty1 = target.height;
-#else
-    // If width/height are negative swap the coordinates to flip the image accordingly.
-    GLfloat tx0, ty0, tx1, ty1;
-    if (target.width < 0.0f) {
-        tx0 = fabsf(target.width);
-        tx1 = 0.0f;
-    } else {
-        tx0 = 0.0;
-        tx1 = target.width;
-    }
-    if (target.height < 0.0f) {
-        ty0 = fabsf(target.height);
-        ty1 = 0.0;
-    } else {
-        ty0 = 0.0;
-        ty1 = target.height;
-    }
-#endif
+    GLfloat dx0 = 0.0f;
+    GLfloat dy0 = 0.0f;
+    GLfloat dx1 = destination.x1 - destination.x0;
+    GLfloat dy1 = destination.y1 - destination.y0;
 
     glBindTexture(GL_TEXTURE_2D, texture->id);
 
     glPushMatrix();
-        glTranslatef(target.x, target.y, 0.0f);
+        glTranslatef(destination.x0, destination.y0, 0.0f);
         glRotatef(rotation, 0.0f, 0.0f, 1.0f);
         glTranslatef(-origin.x, -origin.y, 0.0f);
         glBegin(GL_TRIANGLE_STRIP);
             glColor4ub(color.r, color.g, color.b, color.a);
 
             glTexCoord2f(sx0, sy0); // CCW strip, top-left is <0,0> (the face direction of the strip is determined by the winding of the first triangle)
-            glVertex2f(tx0, ty0);
+            glVertex2f(dx0, dy0);
             glTexCoord2f(sx0, sy1);
-            glVertex2f(tx0, ty1);
+            glVertex2f(dx0, dy1);
             glTexCoord2f(sx1, sy0);
-            glVertex2f(tx1, ty0);
+            glVertex2f(dx1, dy0);
             glTexCoord2f(sx1, sy1);
-            glVertex2f(tx1, ty1);
+            glVertex2f(dx1, dy1);
         glEnd();
     glPopMatrix();
 }
 
 void GL_texture_blit_fast(const GL_Texture_t *texture,
-                          const GL_Rectangle_t source, const GL_Rectangle_t target,
+                          const GL_Quad_t source, const GL_Quad_t destination,
                           const GL_Color_t color)
 {
 #ifdef __DEFENSIVE_CHECKS__
@@ -187,34 +167,15 @@ void GL_texture_blit_fast(const GL_Texture_t *texture,
     GLfloat width = texture->width;
     GLfloat height = texture->height;
 
-    GLfloat sx0 = source.x / width;
-    GLfloat sy0 = source.y / height;
-    GLfloat sx1 = (source.x + source.width) / width;
-    GLfloat sy1 = (source.y + source.height) / height;
+    GLfloat sx0 = source.x0 / width;
+    GLfloat sy0 = source.y0 / height;
+    GLfloat sx1 = source.x1 / width;
+    GLfloat sy1 = source.y1 / height;
 
-#if __NO_MIRRORING__
-    GLfloat tx0 = target.x;
-    GLfloat ty0 = target.y;
-    GLfloat tx1 = target.x + target.width;
-    GLfloat ty1 = target.y + target.height;
-#else
-    // If width/height are negative swap the coordinates to flip the image accordingly.
-    GLfloat tx0, ty0, tx1, ty1;
-    if (target.width < 0.0f) {
-        tx0 = target.x + fabsf(target.width);
-        tx1 = target.x;
-    } else {
-        tx0 = target.x;
-        tx1 = target.x + target.width;
-    }
-    if (target.height < 0.0f) {
-        ty0 = target.y + fabsf(target.height);
-        ty1 = target.y;
-    } else {
-        ty0 = target.y;
-        ty1 = target.y + target.height;
-    }
-#endif
+    GLfloat dx0 = destination.x0;
+    GLfloat dy0 = destination.y0;
+    GLfloat dx1 = destination.x1;
+    GLfloat dy1 = destination.y1;
 
     glBindTexture(GL_TEXTURE_2D, texture->id);
 
@@ -222,12 +183,12 @@ void GL_texture_blit_fast(const GL_Texture_t *texture,
         glColor4ub(color.r, color.g, color.b, color.a);
 
         glTexCoord2f(sx0, sy0); // CCW strip, top-left is <0,0> (the face direction of the strip is determined by the winding of the first triangle)
-        glVertex2f(tx0, ty0);
+        glVertex2f(dx0, dy0);
         glTexCoord2f(sx0, sy1);
-        glVertex2f(tx0, ty1);
+        glVertex2f(dx0, dy1);
         glTexCoord2f(sx1, sy0);
-        glVertex2f(tx1, ty0);
+        glVertex2f(dx1, dy0);
         glTexCoord2f(sx1, sy1);
-        glVertex2f(tx1, ty1);
+        glVertex2f(dx1, dy1);
     glEnd();
 }

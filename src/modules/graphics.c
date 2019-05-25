@@ -335,8 +335,11 @@ void graphics_bank_blit_call3(WrenVM *vm)
     double bank_width = (double)instance->cell_width;
     double bank_height = (double)instance->cell_height;
 
-    GL_Rectangle_t source = (GL_Rectangle_t){ (GLfloat)bank_x, (GLfloat)bank_y, (GLfloat)bank_width, (GLfloat)bank_height };
-    GL_Rectangle_t destination = (GL_Rectangle_t){ (GLfloat)floor(x - (GLfloat)instance->origin.x), (GLfloat)floor(y - (GLfloat)instance->origin.y), (GLfloat)bank_width, (GLfloat)bank_height };
+    int dx = (int)((GLfloat)x - instance->origin.x);
+    int dy = (int)((GLfloat)y - instance->origin.y);
+
+    GL_Quad_t source = (GL_Quad_t){ (GLfloat)bank_x, (GLfloat)bank_y, (GLfloat)bank_x + (GLfloat)bank_width, (GLfloat)bank_y + (GLfloat)bank_height };
+    GL_Quad_t destination = (GL_Quad_t){ (GLfloat)dx, (GLfloat)dy, (GLfloat)dx + (GLfloat)bank_width, (GLfloat)dy + (GLfloat)bank_height };
 
     GL_texture_blit_fast(&instance->atlas, source, destination, (GL_Color_t){ 255, 255, 255, 255 });
 }
@@ -362,11 +365,30 @@ void graphics_bank_blit_call5(WrenVM *vm)
     double bank_width = (double)instance->cell_width;
     double bank_height = (double)instance->cell_height;
 
+#ifdef __NO_MIRRORING__
+    double width = (double)instance->cell_width * fabs(scale_x);
+    double height = (double)instance->cell_height * fabs(scale_y);
+#else
     double width = (double)instance->cell_width * scale_x; // The sign controls the mirroring.
     double height = (double)instance->cell_height * scale_y;
+#endif
 
-    GL_Rectangle_t source = (GL_Rectangle_t){ (GLfloat)bank_x, (GLfloat)bank_y, (GLfloat)bank_width, (GLfloat)bank_height };
-    GL_Rectangle_t destination = (GL_Rectangle_t){ (GLfloat)floor(x - (GLfloat)instance->origin.x), (GLfloat)floor(y - (GLfloat)instance->origin.y), (GLfloat)width, (GLfloat)height };
+    int dx = (int)((GLfloat)x - instance->origin.x);
+    int dy = (int)((GLfloat)y - instance->origin.y);
+
+    GL_Quad_t source = (GL_Quad_t){ (GLfloat)bank_x, (GLfloat)bank_y, (GLfloat)bank_x + (GLfloat)bank_width, (GLfloat)bank_y + (GLfloat)bank_height };
+    GL_Quad_t destination = (GL_Quad_t){ (GLfloat)dx, (GLfloat)dy, (GLfloat)dx + (GLfloat)width, (GLfloat)dy + (GLfloat)height };
+
+#ifndef __NO_MIRRORING__
+    if (width < 0.0) { // Compensate for mirroring!
+        destination.x0 -= width;
+        destination.x1 -= width;
+    }
+    if (height < 0.0) {
+        destination.y0 -= height;
+        destination.y1 -= height;
+    }
+#endif
 
     GL_texture_blit_fast(&instance->atlas, source, destination, (GL_Color_t){ 255, 255, 255, 255 });
 }
@@ -393,11 +415,30 @@ void graphics_bank_blit_call6(WrenVM *vm)
     double bank_width = (double)instance->cell_width;
     double bank_height = (double)instance->cell_height;
 
+#ifdef __NO_MIRRORING__
+    double width = (double)instance->cell_width * fabs(scale_x);
+    double height = (double)instance->cell_height * fabs(scale_y);
+#else
     double width = (double)instance->cell_width * scale_x; // The sign controls the mirroring.
     double height = (double)instance->cell_height * scale_y;
+#endif
 
-    GL_Rectangle_t source = (GL_Rectangle_t){ (GLfloat)bank_x, (GLfloat)bank_y, (GLfloat)bank_width, (GLfloat)bank_height };
-    GL_Rectangle_t destination = (GL_Rectangle_t){ (GLfloat)floor(x + instance->origin.x), (GLfloat)floor(y + instance->origin.y), (GLfloat)width, (GLfloat)height };
+    int tx = (int)((GLfloat)x - instance->origin.x);
+    int ty = (int)((GLfloat)y - instance->origin.y);
+
+    GL_Quad_t source = (GL_Quad_t){ (GLfloat)bank_x, (GLfloat)bank_y, (GLfloat)bank_x + (GLfloat)bank_width, (GLfloat)bank_y + (GLfloat)bank_height };
+    GL_Quad_t destination = (GL_Quad_t){ (GLfloat)tx, (GLfloat)ty, (GLfloat)tx + (GLfloat)width, (GLfloat)ty + (GLfloat)height };
+
+#ifndef __NO_MIRRORING__
+    if (width < 0.0) { // Compensate for mirroring!
+        destination.x0 -= width;
+        destination.x1 -= width;
+    }
+    if (height < 0.0) {
+        destination.y0 -= height;
+        destination.y1 -= height;
+    }
+#endif
 
     GL_texture_blit(&instance->atlas, source, destination, instance->origin, rotation, (GL_Color_t){ 255, 255, 255, 255 });
 }
@@ -469,24 +510,24 @@ void graphics_font_write_call6(WrenVM *vm) // foreign text(text, color, scale, a
 
     GL_Size_t size = GL_font_measure(&instance->font, text, scale);
 
-    GLfloat dx = x, dy = y;
+    int dx, dy; // Always pixel-aligned positions.
     if (strcmp(align, "left") == 0) {
-        dx = x;
-        dy = y;
+        dx = (int)x;
+        dy = (int)y;
     } else
     if (strcmp(align, "center") == 0) {
-        dx = x - (size.width * 0.5f);
-        dy = y;
+        dx = (int)(x - (size.width * 0.5f));
+        dy = (int)y;
     } else
     if (strcmp(align, "right") == 0) {
-        dx = x - size.width;
-        dy = y;
+        dx = (int)(x - size.width);
+        dy = (int)y;
     }
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %d, %d, %d", width, dx, dy);
 #endif
 
-    GL_font_write(&instance->font, text, (GL_Point_t){ dx, dy }, (GLfloat)scale, (GL_Color_t){ color, color, color, 255 });
+    GL_font_write(&instance->font, text, (GL_Point_t){ (GLfloat)dx, (GLfloat)dy }, (GLfloat)scale, (GL_Color_t){ color, color, color, 255 });
 }
 
 void graphics_canvas_width_get(WrenVM *vm)

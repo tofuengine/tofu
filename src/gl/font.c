@@ -113,14 +113,22 @@ GL_Size_t GL_font_measure(const GL_Font_t *font, const char *text, const GLfloat
 
 void GL_font_write(const GL_Font_t *font, const char *text, const GL_Point_t position, const GLfloat scale, const GL_Color_t color)
 {
-    GL_Rectangle_t source = { .x = 0.0f, .y = 0.0f, .width = font->glyph_width, .height = font->glyph_height };
-    GL_Rectangle_t target = { .x = position.x, .y = position.y, .width = font->glyph_width * scale, .height = font->glyph_height * scale };
+    const GLfloat width = font->glyph_width * scale, height = font->glyph_height * scale;
+
+    GL_Quad_t source = { .x0 = 0.0f, .y0 = 0.0f, .x1 = font->glyph_width, .y1 = font->glyph_height };
+    GL_Quad_t destination = { .x0 = position.x, .y0 = position.y, .x1 = position.x + width, .y1 = position.y + height };
+
     for (const char *ptr = text; *ptr != '\0'; ++ptr) {
-        source.x = (GLfloat)(*ptr - ' ') * font->glyph_width;
-        if (source.x >= font->atlas.width) {
+        source.x0 = (GLfloat)(*ptr - ' ') * font->glyph_width;
+        source.x1 = source.x0 + font->glyph_width;
+
+        if (source.x0 >= font->atlas.width) {
             continue;
         }
-        GL_texture_blit_fast(&font->atlas, source, target, color);
-        target.x += font->glyph_width * scale;
+
+        GL_texture_blit_fast(&font->atlas, source, destination, color);
+
+        destination.x0 += width;
+        destination.x1 = destination.x0 + width;
     }
 }
