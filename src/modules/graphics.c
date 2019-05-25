@@ -451,7 +451,7 @@ void graphics_font_finalize(void *userData, void *data)
     *instance = (Font_Class_t){};
 }
 
-void graphics_font_write_call6(WrenVM *vm) // foreign text(text, color, size, align)
+void graphics_font_write_call6(WrenVM *vm) // foreign text(text, color, scale, align)
 {
     const char *text = wrenGetSlotString(vm, 1);
     double x = wrenGetSlotDouble(vm, 2);
@@ -467,7 +467,7 @@ void graphics_font_write_call6(WrenVM *vm) // foreign text(text, color, size, al
 
 //    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
-    GL_Rectangle_t rectangle = GL_font_measure(&instance->font, text, scale);
+    GL_Size_t size = GL_font_measure(&instance->font, text, scale);
 
     GLfloat dx = x, dy = y;
     if (strcmp(align, "left") == 0) {
@@ -475,11 +475,11 @@ void graphics_font_write_call6(WrenVM *vm) // foreign text(text, color, size, al
         dy = y;
     } else
     if (strcmp(align, "center") == 0) {
-        dx = x - (rectangle.width * 0.5f);
+        dx = x - (size.width * 0.5f);
         dy = y;
     } else
     if (strcmp(align, "right") == 0) {
-        dx = x - rectangle.width;
+        dx = x - size.width;
         dy = y;
     }
 #ifdef __DEBUG_API_CALLS__

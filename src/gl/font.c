@@ -103,11 +103,9 @@ void GL_font_delete(GL_Font_t *font)
     *font = (GL_Font_t){};
 }
 
-GL_Rectangle_t GL_font_measure(const GL_Font_t *font, const char *text, const GLfloat scale)
+GL_Size_t GL_font_measure(const GL_Font_t *font, const char *text, const GLfloat scale)
 {
-    return (GL_Rectangle_t){
-            .x = 0.0f,
-            .y = 0.0f,
+    return (GL_Size_t){
             .width = (GLfloat)font->glyph_width * strlen(text) * scale,
             .height = (GLfloat)font->glyph_height * scale
         };

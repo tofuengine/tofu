@@ -41,7 +41,7 @@ extern bool GL_font_load(GL_Font_t *font, const char *pathfile, GLuint glyph_wid
 extern bool GL_font_create(GL_Font_t *font, const void *buffer, size_t size, GLuint glyph_width, GLuint glyph_height);
 extern void GL_font_delete(GL_Font_t *font);
 
-extern GL_Rectangle_t GL_font_measure(const GL_Font_t *font, const char *text, const GLfloat size);
+extern GL_Size_t GL_font_measure(const GL_Font_t *font, const char *text, const GLfloat size);
 extern void GL_font_write(const GL_Font_t *font, const char *text, const GL_Point_t position, const GLfloat size, const GL_Color_t color);
 
 #endif  /* __GL_FONT_H__ */

@@ -32,6 +32,10 @@ typedef struct _GL_Point_t {
     GLfloat x, y;
 } GL_Point_t;
 
+typedef struct _GL_Size_t {
+    GLfloat width, height;
+} GL_Size_t;
+
 typedef struct _GL_Rectangle_t {
     GLfloat x, y;
     GLfloat width, height;
