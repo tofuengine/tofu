@@ -522,6 +522,9 @@ void graphics_font_write_call6(WrenVM *vm) // foreign text(text, color, scale, a
     if (strcmp(align, "right") == 0) {
         dx = (int)(x - size.width);
         dy = (int)y;
+    } else {
+        dx = (int)x;
+        dy = (int)y;
     }
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %d, %d, %d", width, dx, dy);
