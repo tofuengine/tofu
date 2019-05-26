@@ -162,6 +162,10 @@ void Engine_run(Engine_t *engine)
             lag -= delta_time;
         }
 
+//        if (used < delta_time) {
+//            glfwWait
+//        }
+
         Display_render(&engine->display, render_callback, engine);
     }
 }
