@@ -255,14 +255,16 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> window size is %dx%d (%dx)", display->window_width, display->window_height,
         display->window_scale);
 
+    int x = (display_width - display->window_width) / 2;
+    int y = (display_height - display->window_height) / 2;
     if (!configuration->fullscreen) {
-        int x = (display_width - display->window_width) / 2;
-        int y = (display_height - display->window_height) / 2;
-
+        display->window_x = display->window_y = 0;
         glfwSetWindowMonitor(display->window, NULL, x, y, display->window_width, display->window_height, GLFW_DONT_CARE);
         glfwShowWindow(display->window);
     } else { // Toggle fullscreen by passing primary monitor!
-        glfwSetWindowMonitor(display->window, glfwGetPrimaryMonitor(), 0, 0, display->window_width, display->window_height, GLFW_DONT_CARE);
+        glfwSetWindowMonitor(display->window, glfwGetPrimaryMonitor(), x, y, display_width, display_height, GLFW_DONT_CARE);
+        display->window_x = x;
+        display->window_y = y;
     }
 
 #ifndef __NO_AUTOFIT__
@@ -376,17 +378,19 @@ void Display_render(Display_t *display, const Display_Callback_t callback, void 
     glDisable(GL_BLEND);
 #endif
 
+    GLfloat x = 0; //display->window_x;
+    GLfloat y = 0; //display->window_y;
     glBindTexture(GL_TEXTURE_2D, display->offscreen_texture);
     glBegin(GL_TRIANGLE_STRIP);
         glColor4ub(255, 255, 255, 255);
         glTexCoord2f(0.0f, 1.0f); // Vertical flip the texture (swap y coordinates)!
-        glVertex2f(0.0f, 0.0f);
+        glVertex2f(x, y);
         glTexCoord2f(0.0f, 0.0f);
-        glVertex2f(0.0f, wh);
+        glVertex2f(x, y + wh);
         glTexCoord2f(1.0f, 1.0f);
-        glVertex2f(ww, 0.0f);
+        glVertex2f(x + ww, y);
         glTexCoord2f(1.0f, 0.0f);
-        glVertex2f(ww, wh);
+        glVertex2f(x + ww, y + wh);
     glEnd();
 #else
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Required, to clear previous content. (TODO: configurable color?)
