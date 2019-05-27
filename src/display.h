@@ -72,8 +72,9 @@ typedef struct _Display_t {
 
     GLFWwindow *window;
     int window_width, window_height, window_scale;
-    int window_x, window_y;
 #ifndef __NO_AUTOFIT__
+    int physical_width, physical_height;
+    GL_Quad_t offscreen_quad;
     GLuint offscreen_texture;
     GLuint offscreen_framebuffer;
 #endif
