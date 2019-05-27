@@ -258,19 +258,17 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     int x = (display_width - display->window_width) / 2;
     int y = (display_height - display->window_height) / 2;
     if (!configuration->fullscreen) {
-        display->window_x = 0;
-        display->window_y = 0;
-        display->physical_x = x;
-        display->physical_y = y;
+        display->offscreen_quad = (GL_Quad_t){
+                0.0, 0.0, display->window_width, display->window_height
+            };
         display->physical_width = display->window_width;
         display->physical_height = display->window_height;
         glfwSetWindowMonitor(display->window, NULL, x, y, display->window_width, display->window_height, GLFW_DONT_CARE);
         glfwShowWindow(display->window);
     } else { // Toggle fullscreen by passing primary monitor!
-        display->window_x = x;
-        display->window_y = y;
-        display->physical_x = 0;
-        display->physical_y = 0;
+        display->offscreen_quad = (GL_Quad_t){
+                x, y, x + display->window_width, y + display->window_height
+            };
         display->physical_width = display_width;
         display->physical_height = display_height;
         glfwSetWindowMonitor(display->window, glfwGetPrimaryMonitor(), 0, 0, display_width, display_height, GLFW_DONT_CARE);
@@ -348,13 +346,13 @@ void Display_render(Display_t *display, const Display_Callback_t callback, void 
 {
     // TODO: we could direct the rendering routines differently in the case `autofit` is disabled.
 #ifndef __NO_AUTOFIT__
+    const int w = display->configuration.width;
+    const int h = display->configuration.height;
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, display->offscreen_framebuffer);
-    const int ow = display->configuration.width;
-    const int oh = display->configuration.height;
-    glViewport(0, 0, ow, oh);
+    glViewport(0, 0, w, h);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0.0, (GLdouble)ow, (GLdouble)oh, 0.0, 0.0, 1.0); // Configure top-left corner at <0, 0>
+    glOrtho(0.0, (GLdouble)w, (GLdouble)h, 0.0, 0.0, 1.0); // Configure top-left corner at <0, 0>
     glMatrixMode(GL_MODELVIEW); // Reset the model-view matrix.
     glLoadIdentity();
 
@@ -371,9 +369,9 @@ void Display_render(Display_t *display, const Display_Callback_t callback, void 
     callback(parameters);
     GL_program_send(&display->program, "u_mode", GL_PROGRAM_UNIFORM_INT, 1, _mode_passthru);
 
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
     const int pw = display->physical_width;
     const int ph = display->physical_height;
+    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
     glViewport(0, 0, pw, ph);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -386,25 +384,19 @@ void Display_render(Display_t *display, const Display_Callback_t callback, void 
 #else
     glDisable(GL_BLEND);
 #endif
-    glClearColor(0.0f, 0.0f, 0.25f, 1.0f); // Required, to clear previous content. (TODO: configurable color?)
-    glClear(GL_COLOR_BUFFER_BIT);
 
-    const int wx = display->window_x;
-    const int wy = display->window_y;
-    const int ww = display->window_width;
-    const int wh = display->window_height;
-
+    const GL_Quad_t *oq = &display->offscreen_quad;
     glBindTexture(GL_TEXTURE_2D, display->offscreen_texture);
     glBegin(GL_TRIANGLE_STRIP);
         glColor4ub(255, 255, 255, 255);
         glTexCoord2f(0.0f, 1.0f); // Vertical flip the texture (swap y coordinates)!
-        glVertex2f(wx, wy);
+        glVertex2f(oq->x0, oq->y0);
         glTexCoord2f(0.0f, 0.0f);
-        glVertex2f(wx, wy + wh);
+        glVertex2f(oq->x0, oq->y1);
         glTexCoord2f(1.0f, 1.0f);
-        glVertex2f(wx + ww, wy);
+        glVertex2f(oq->x1, oq->y0);
         glTexCoord2f(1.0f, 0.0f);
-        glVertex2f(wx + ww, wy + wh);
+        glVertex2f(oq->x1, oq->y1);
     glEnd();
 #else
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Required, to clear previous content. (TODO: configurable color?)

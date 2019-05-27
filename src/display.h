@@ -71,9 +71,10 @@ typedef struct _Display_t {
     Display_Key_State_t keys_state[Display_Keys_t_CountOf];
 
     GLFWwindow *window;
-    int window_x, window_y, window_width, window_height, window_scale;
-    int physical_x, physical_y, physical_width, physical_height;
+    int window_width, window_height, window_scale;
 #ifndef __NO_AUTOFIT__
+    int physical_width, physical_height;
+    GL_Quad_t offscreen_quad;
     GLuint offscreen_texture;
     GLuint offscreen_framebuffer;
 #endif
