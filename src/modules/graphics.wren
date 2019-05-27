@@ -28,7 +28,8 @@ foreign class Canvas {
 
     foreign static width
     foreign static height
-    foreign static palette(colors)
+    foreign static palette
+    foreign static palette=(colors)
 
     foreign static points(vertices, color)
     foreign static polyline(vertices, color)

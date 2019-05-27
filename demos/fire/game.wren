@@ -27,7 +27,7 @@ class Game {
         _grid = Grid.new(STEPS, STEPS, null)
         reset()
 
-        Canvas.palette(PALETTE)
+        Canvas.palette = PALETTE
     }
 
     reset() {

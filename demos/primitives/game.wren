@@ -11,7 +11,7 @@ class Game {
 
         _bunnies = []
 
-        Canvas.palette("arne-16")
+        Canvas.palette = "arne-16"
 
         _font = Font.default
 

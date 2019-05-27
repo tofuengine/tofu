@@ -6,7 +6,7 @@ import "graphics" for Canvas
 class Game {
 
     construct new() {
-        Canvas.palette("pico-8")
+        Canvas.palette = "pico-8"
 
         _random = Random.new()
         _timerA = Timer.new(0.5, 50, Fn.new {

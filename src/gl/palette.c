@@ -22,10 +22,11 @@
 
 #include "palette.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-void GL_palette_greyscale(GL_Palette_t *palette, size_t count)
+void GL_palette_greyscale(GL_Palette_t *palette, const size_t count)
 {
     for (size_t i = 0; i < count; ++i) {
         unsigned char v = (unsigned char)(((double)i / (double)(count - 1)) * 255.0);
@@ -43,6 +44,15 @@ GL_Color_t GL_palette_parse_color(const char *argb)
     strncpy(hex, argb + 4, 2); color.g = strtol(hex, NULL, 16);
     strncpy(hex, argb + 6, 2); color.b = strtol(hex, NULL, 16);
     return color;
+}
+
+void GL_palette_format_color(char *argb, const GL_Color_t color)
+{
+#ifdef __LOWERCASE_ARGB__
+    sprintf(argb, "%02x%02x%02x%02x", color.a, color.r, color.g, color.b);
+#else
+    sprintf(argb, "%02X%02X%02X%02X", color.a, color.r, color.g, color.b);
+#endif
 }
 
 void GL_palette_normalize(const GL_Palette_t *palette, GLfloat *colors) // palette->count * 3

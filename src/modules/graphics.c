@@ -117,7 +117,8 @@ const char graphics_wren[] =
     "\n"
     "    foreign static width\n"
     "    foreign static height\n"
-    "    foreign static palette(colors)\n"
+    "    foreign static palette\n"
+    "    foreign static palette=(colors)\n"
     "\n"
     "    foreign static points(vertices, color)\n"
     "    foreign static polyline(vertices, color)\n"
@@ -547,7 +548,34 @@ void graphics_canvas_height_get(WrenVM *vm)
     wrenSetSlotDouble(vm, 0, environment->display->configuration.height);
 }
 
-void graphics_canvas_palette_call1(WrenVM *vm)
+void graphics_canvas_palette_get(WrenVM *vm)
+{
+    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+    
+    GL_Palette_t *palette = &environment->display->palette;
+
+    int slots = wrenGetSlotCount(vm);
+#ifdef __DEBUG_VM_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> currently #%d slot(s) available, asking for an additional slot", slots);
+#endif
+    const int aux_slot_id = slots;
+    wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
+
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.palette() -> %d", count);
+#endif
+    wrenSetSlotNewList(vm, 0); // Create a new list in the return value.
+
+    for (size_t i = 0; i < palette->count; ++i) {
+        char argb[12] = {};
+        GL_palette_format_color(argb, palette->colors[i]);
+        wrenSetSlotString(vm, aux_slot_id, argb);
+
+        wrenInsertInList(vm, 0, i, aux_slot_id);
+    }
+}
+
+void graphics_canvas_palette_set(WrenVM *vm)
 {
     WrenType type = wrenGetSlotType(vm, 1);
 

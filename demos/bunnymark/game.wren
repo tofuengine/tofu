@@ -16,7 +16,9 @@ class Game {
 
         _bunnies = []
 
-        Canvas.palette("gameboy")
+        Canvas.palette = "gameboy"
+        var palette = Canvas.palette
+        System.write(palette)
 
         _bank = Bank.new("./assets/sheet.png", 26, 37)
         _font = Font.default
@@ -27,7 +29,7 @@ class Game {
         _tooggle = true
         _timer = Timer.new(5.0, 0, Fn.new {
                 _tooggle = !_tooggle
-                Canvas.palette(_tooggle ? "gameboy" : "gameboy-bw")
+                Canvas.palette = _tooggle ? "gameboy" : "gameboy-bw"
             })
     }
 
