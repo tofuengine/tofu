@@ -258,13 +258,22 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     int x = (display_width - display->window_width) / 2;
     int y = (display_height - display->window_height) / 2;
     if (!configuration->fullscreen) {
-        display->window_x = display->window_y = 0;
+        display->window_x = 0;
+        display->window_y = 0;
+        display->physical_x = x;
+        display->physical_y = y;
+        display->physical_width = display->window_width;
+        display->physical_height = display->window_height;
         glfwSetWindowMonitor(display->window, NULL, x, y, display->window_width, display->window_height, GLFW_DONT_CARE);
         glfwShowWindow(display->window);
     } else { // Toggle fullscreen by passing primary monitor!
-        glfwSetWindowMonitor(display->window, glfwGetPrimaryMonitor(), x, y, display_width, display_height, GLFW_DONT_CARE);
         display->window_x = x;
         display->window_y = y;
+        display->physical_x = 0;
+        display->physical_y = 0;
+        display->physical_width = display_width;
+        display->physical_height = display_height;
+        glfwSetWindowMonitor(display->window, glfwGetPrimaryMonitor(), 0, 0, display_width, display_height, GLFW_DONT_CARE);
     }
 
 #ifndef __NO_AUTOFIT__
@@ -363,12 +372,12 @@ void Display_render(Display_t *display, const Display_Callback_t callback, void 
     GL_program_send(&display->program, "u_mode", GL_PROGRAM_UNIFORM_INT, 1, _mode_passthru);
 
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-    const int ww = display->window_width;
-    const int wh = display->window_height;
-    glViewport(0, 0, ww, wh);
+    const int pw = display->physical_width;
+    const int ph = display->physical_height;
+    glViewport(0, 0, pw, ph);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0.0, (GLdouble)ww, (GLdouble)wh, 0.0, 0.0, 1.0); // Configure top-left corner at <0, 0>
+    glOrtho(0.0, (GLdouble)pw, (GLdouble)ph, 0.0, 0.0, 1.0); // Configure top-left corner at <0, 0>
     glMatrixMode(GL_MODELVIEW); // Reset the model-view matrix.
     glLoadIdentity();
 
@@ -377,20 +386,25 @@ void Display_render(Display_t *display, const Display_Callback_t callback, void 
 #else
     glDisable(GL_BLEND);
 #endif
+    glClearColor(0.0f, 0.0f, 0.25f, 1.0f); // Required, to clear previous content. (TODO: configurable color?)
+    glClear(GL_COLOR_BUFFER_BIT);
 
-    GLfloat x = 0; //display->window_x;
-    GLfloat y = 0; //display->window_y;
+    const int wx = display->window_x;
+    const int wy = display->window_y;
+    const int ww = display->window_width;
+    const int wh = display->window_height;
+
     glBindTexture(GL_TEXTURE_2D, display->offscreen_texture);
     glBegin(GL_TRIANGLE_STRIP);
         glColor4ub(255, 255, 255, 255);
         glTexCoord2f(0.0f, 1.0f); // Vertical flip the texture (swap y coordinates)!
-        glVertex2f(x, y);
+        glVertex2f(wx, wy);
         glTexCoord2f(0.0f, 0.0f);
-        glVertex2f(x, y + wh);
+        glVertex2f(wx, wy + wh);
         glTexCoord2f(1.0f, 1.0f);
-        glVertex2f(x + ww, y);
+        glVertex2f(wx + ww, wy);
         glTexCoord2f(1.0f, 0.0f);
-        glVertex2f(x + ww, y + wh);
+        glVertex2f(wx + ww, wy + wh);
     glEnd();
 #else
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Required, to clear previous content. (TODO: configurable color?)
