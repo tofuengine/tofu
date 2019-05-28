@@ -251,7 +251,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     int y = (display_height - display->window_height) / 2;
     if (!configuration->fullscreen) {
         display->offscreen_source = (GL_Quad_t){
-                0, configuration->height, configuration->width, 0 // Vertically flip!
+                0, 0, configuration->width, configuration->height
             };
         display->offscreen_destination = (GL_Quad_t){
                 0.0, 0.0, display->window_width, display->window_height
@@ -262,7 +262,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         glfwShowWindow(display->window);
     } else { // Toggle fullscreen by passing primary monitor!
         display->offscreen_source = (GL_Quad_t){
-                0, configuration->height, configuration->width, 0 // Vertically flip!
+                0, 0, configuration->width, configuration->height
             };
         display->offscreen_destination = (GL_Quad_t){
                 x, y, x + display->window_width, y + display->window_height
@@ -373,7 +373,7 @@ void Display_render(Display_t *display, const Display_Callback_t callback, void 
     glViewport(0, 0, pw, ph);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0.0, (GLdouble)pw, (GLdouble)ph, 0.0, 0.0, 1.0); // Configure top-left corner at <0, 0>
+    glOrtho(0.0, (GLdouble)pw, 0.0, (GLdouble)ph, 0.0, 1.0); // Configure bottom-left corner at <0, 0> (FOB is inverted)
     glMatrixMode(GL_MODELVIEW); // Reset the model-view matrix.
     glLoadIdentity();
 
