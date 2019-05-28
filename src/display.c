@@ -139,31 +139,23 @@ static void size_callback(GLFWwindow* window, int width, int height)
 #ifndef __NO_AUTOFIT__
 static bool initialize_framebuffer(Display_t *display)
 {
-    glGenTextures(1, &display->offscreen_texture);
-    glBindTexture(GL_TEXTURE_2D, display->offscreen_texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, display->configuration.width, display->configuration.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    GL_texture_create(&display->offscreen_texture, display->configuration.width, display->configuration.height, NULL);
 
     glGenFramebuffersEXT(1, &display->offscreen_framebuffer);
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, display->offscreen_framebuffer);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, display->offscreen_texture, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, display->offscreen_texture.id, 0);
     GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
     if (status != GL_FRAMEBUFFER_COMPLETE_EXT) {
         return false;
     }
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 
     return true;
 }
 
 void deinitialize_framebuffer(Display_t *display)
 {
-    glDeleteTextures(1, &display->offscreen_texture);
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0); //Bind 0, which means render to back buffer, as a result, fb is unbound
+    GL_texture_delete(&display->offscreen_texture);
+
     glDeleteFramebuffersEXT(1, &display->offscreen_framebuffer);
 }
 #endif
@@ -258,7 +250,10 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     int x = (display_width - display->window_width) / 2;
     int y = (display_height - display->window_height) / 2;
     if (!configuration->fullscreen) {
-        display->offscreen_quad = (GL_Quad_t){
+        display->offscreen_source = (GL_Quad_t){
+                0, configuration->height, configuration->width, 0 // Vertically flip!
+            };
+        display->offscreen_destination = (GL_Quad_t){
                 0.0, 0.0, display->window_width, display->window_height
             };
         display->physical_width = display->window_width;
@@ -266,7 +261,10 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         glfwSetWindowMonitor(display->window, NULL, x, y, display->window_width, display->window_height, GLFW_DONT_CARE);
         glfwShowWindow(display->window);
     } else { // Toggle fullscreen by passing primary monitor!
-        display->offscreen_quad = (GL_Quad_t){
+        display->offscreen_source = (GL_Quad_t){
+                0, configuration->height, configuration->width, 0 // Vertically flip!
+            };
+        display->offscreen_destination = (GL_Quad_t){
                 x, y, x + display->window_width, y + display->window_height
             };
         display->physical_width = display_width;
@@ -385,19 +383,8 @@ void Display_render(Display_t *display, const Display_Callback_t callback, void 
     glDisable(GL_BLEND);
 #endif
 
-    const GL_Quad_t *oq = &display->offscreen_quad;
-    glBindTexture(GL_TEXTURE_2D, display->offscreen_texture);
-    glBegin(GL_TRIANGLE_STRIP);
-        glColor4ub(255, 255, 255, 255);
-        glTexCoord2f(0.0f, 1.0f); // Vertical flip the texture (swap y coordinates)!
-        glVertex2f(oq->x0, oq->y0);
-        glTexCoord2f(0.0f, 0.0f);
-        glVertex2f(oq->x0, oq->y1);
-        glTexCoord2f(1.0f, 1.0f);
-        glVertex2f(oq->x1, oq->y0);
-        glTexCoord2f(1.0f, 0.0f);
-        glVertex2f(oq->x1, oq->y1);
-    glEnd();
+    GL_texture_blit_fast(&display->offscreen_texture, display->offscreen_source, display->offscreen_destination, (GL_Color_t){ 255, 255, 255, 255 });
+
 #else
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Required, to clear previous content. (TODO: configurable color?)
     glClear(GL_COLOR_BUFFER_BIT);

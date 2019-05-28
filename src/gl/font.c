@@ -82,7 +82,7 @@ bool GL_font_load(GL_Font_t *font, const char *pathfile, GLuint glyph_width, GLu
 bool GL_font_create(GL_Font_t *font, const void *buffer, size_t size, GLuint glyph_width, GLuint glyph_height)
 {
     GL_Texture_t atlas;
-    if (!GL_texture_create(&atlas, buffer, size, to_font_atlas_callback, NULL)) {
+    if (!GL_texture_decode(&atlas, buffer, size, to_font_atlas_callback, NULL)) {
         return false;
     }
 

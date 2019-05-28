@@ -74,8 +74,9 @@ typedef struct _Display_t {
     int window_width, window_height, window_scale;
 #ifndef __NO_AUTOFIT__
     int physical_width, physical_height;
-    GL_Quad_t offscreen_quad;
-    GLuint offscreen_texture;
+    GL_Quad_t offscreen_source;
+    GL_Quad_t offscreen_destination;
+    GL_Texture_t offscreen_texture;
     GLuint offscreen_framebuffer;
 #endif
 
