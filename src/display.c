@@ -71,6 +71,7 @@ static const char *fragment_shader =
     "}\n"
     "\n"
     "vec4 passthru(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {\n"
+    "//    return texture2D(texture, vec2(texture_coords.x, 1.0 - texture_coords.y)) * color;\n"
     "    return texture2D(texture, texture_coords) * color;\n"
     "}\n"
     "\n"
@@ -264,10 +265,12 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     int y = (display_height - display->window_height) / 2;
     if (!configuration->fullscreen) {
         display->offscreen_source = (GL_Quad_t){
+//                0, configuration->height, configuration->width, 0
                 0, 0, configuration->width, configuration->height
             };
         display->offscreen_destination = (GL_Quad_t){
-                0.0, 0.0, display->window_width, display->window_height
+//                0, configuration->height, configuration->width, 0
+                0, 0, display->window_width, display->window_height
             };
         display->physical_width = display->window_width;
         display->physical_height = display->window_height;
@@ -380,12 +383,13 @@ void Display_render(Display_t *display, const Display_Callback_t callback, void 
     callback(parameters);
     GL_program_send(&display->program, "u_mode", GL_PROGRAM_UNIFORM_INT, 1, _mode_passthru);
 
-    const int pw = display->physical_width;
-    const int ph = display->physical_height;
+    const int pw = display->physical_width; // We need to y-flip the texture, either by inverting the quad or
+    const int ph = display->physical_height; // the ortho matrix or the with a shader.
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
     glViewport(0, 0, pw, ph);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
+//    glOrtho(0.0, (GLdouble)pw, (GLdouble)ph, 0.0, 0.0, 1.0);
     glOrtho(0.0, (GLdouble)pw, 0.0, (GLdouble)ph, 0.0, 1.0); // Configure bottom-left corner at <0, 0> (FOB is inverted)
     glMatrixMode(GL_MODELVIEW); // Reset the model-view matrix.
     glLoadIdentity();
