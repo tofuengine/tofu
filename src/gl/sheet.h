@@ -20,29 +20,23 @@
  * SOFTWARE.
  **/
 
-#ifndef __GL_FONT_H__
-#define __GL_FONT_H__
+#ifndef __GL_SHEET_H__
+#define __GL_SHEET_H__
 
 #include <stdbool.h>
 
 #include "common.h"
 #include "texture.h"
 
-typedef struct _GL_Font_t {
+typedef struct _GL_Sheet_t {
     GL_Texture_t atlas;
-    GLuint glyph_width, glyph_height;
     GL_Quad_t *quads;
-} GL_Font_t;
+    // GL_Size_t quad_size;
+    GLuint quad_width, quad_height;
+} GL_Sheet_t;
 
-extern bool GL_font_initialize();
-extern void GL_font_terminate();
-extern const GL_Font_t *GL_font_default();
+extern bool GL_sheet_load(GL_Sheet_t *sheet, const char *pathfile, GLuint quad_width, GLuint quad_height, const GL_Texture_Callback_t callback, void *parameters);
+extern bool GL_sheet_decode(GL_Sheet_t *sheet, const void *buffer, size_t size, GLuint quad_width, GLuint quad_height, const GL_Texture_Callback_t callback, void *parameters);
+extern void GL_sheet_delete(GL_Sheet_t *sheet);
 
-extern bool GL_font_load(GL_Font_t *font, const char *pathfile, GLuint glyph_width, GLuint glyph_height);
-extern bool GL_font_create(GL_Font_t *font, const void *buffer, size_t size, GLuint glyph_width, GLuint glyph_height);
-extern void GL_font_delete(GL_Font_t *font);
-
-extern GL_Size_t GL_font_measure(const GL_Font_t *font, const char *text, const GLfloat size);
-extern void GL_font_write(const GL_Font_t *font, const char *text, const GL_Point_t position, const GLfloat size, const GL_Color_t color);
-
-#endif  /* __GL_FONT_H__ */
+#endif  /* __GL_SHEET_H__ */

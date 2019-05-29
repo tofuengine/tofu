@@ -95,23 +95,6 @@ void GL_texture_delete(GL_Texture_t *texture)
     *texture = (GL_Texture_t){};
 }
 
-GL_Quad_t *GL_texture_quads(const GL_Texture_t *atlas, GLuint width, GLuint height)
-{
-    GLuint columns = atlas->width / width;
-    GLuint rows = atlas->height / height;
-    GLuint amount = columns * rows;
-    GL_Quad_t *quads = Memory_calloc(amount, sizeof(GL_Quad_t));
-    GLuint k = 0;
-    for (GLuint i = 0; i < rows; ++i) {
-        GLuint y = i * height;
-        for (GLuint j = 0; j < columns; ++j) {
-            GLuint x = j * width;
-            quads[k++] = (GL_Quad_t){ .x0 = x, .y0 = y, .x1 = x + width, .y1 = y + height };
-        }
-    }
-    return quads;
-}
-
 // https://www.puredevsoftware.com/blog/2018/03/17/texture-coordinates-d3d-vs-opengl/
 void GL_texture_blit(const GL_Texture_t *texture,
         const GL_Quad_t source, const GL_Quad_t destination,

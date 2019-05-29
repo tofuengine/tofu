@@ -29,6 +29,8 @@
 #include "../gl/gl.h"
 #include "graphics/palettes.h"
 
+#include <spleen/spleen.h>
+
 #include <math.h>
 #include <string.h>
 
@@ -64,8 +66,7 @@ static size_t find_nearest_color(const GL_Palette_t *palette, GL_Color_t color)
     return index;
 }
 
-// TODO: convert image with a shader.
-static void to_indexed_atlas_callback(void *parameters, void *data, int width, int height)
+static void to_indexed_atlas_callback(void *parameters, void *data, int width, int height) // TODO: convert image with a shader.
 {
     const GL_Palette_t *palette = (const GL_Palette_t *)parameters;
 
@@ -82,6 +83,22 @@ static void to_indexed_atlas_callback(void *parameters, void *data, int width, i
             }
 
             size_t index = find_nearest_color(palette, color);
+            pixels[offset] = (GL_Color_t){ index, index, index, color.a };
+        }
+    }
+}
+
+static void to_font_atlas_callback(void *parameters, void *data, int width, int height)
+{
+    GL_Color_t *pixels = (GL_Color_t *)data;
+
+    for (int y = 0; y < height; ++y) {
+        int row_offset = width * y;
+        for (int x = 0; x < width; ++x) {
+            int offset = row_offset + x;
+
+            GL_Color_t color = pixels[offset];
+            GLubyte index = color.a == 0 ? 0 : 255;
             pixels[offset] = (GL_Color_t){ index, index, index, color.a };
         }
     }
@@ -252,18 +269,13 @@ const char graphics_wren[] =
 
 typedef struct _Font_Class_t {
     // char pathfile[PATH_FILE_MAX];
-    // bool loaded;
-    GL_Font_t font;
-    bool is_default;
+    GL_Sheet_t sheet;
 } Font_Class_t;
 
-typedef struct _Bank_Class_t { // TODO: rename to `Sheet`?
+typedef struct _Bank_Class_t {
     // char pathfile[PATH_FILE_MAX];
-    // bool loaded;
-    int cell_width, cell_height;
+    GL_Sheet_t sheet;
     GL_Point_t origin;
-    GL_Texture_t atlas;
-    GL_Quad_t *quads;
 } Bank_Class_t;
 
 void graphics_bank_allocate(WrenVM *vm)
@@ -283,15 +295,12 @@ void graphics_bank_allocate(WrenVM *vm)
     strcpy(pathfile, environment->base_path);
     strcat(pathfile, file + 2);
 
-    GL_Texture_t atlas;
-    GL_texture_load(&atlas, pathfile, to_indexed_atlas_callback, (void *)&environment->display->palette);
+    GL_Sheet_t sheet;
+    GL_sheet_load(&sheet, pathfile, cell_width, cell_height, to_indexed_atlas_callback, (void *)&environment->display->palette);
     Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> bank '%s' allocated as #%p", pathfile, instance);
 
     *instance = (Bank_Class_t){
-            .atlas = atlas,
-            .quads = GL_texture_quads(&atlas, cell_width, cell_height),
-            .cell_width = cell_width,
-            .cell_height = cell_height,
+            .sheet = sheet,
             .origin = (GL_Point_t){ (GLfloat)cell_width * 0.5f, (GLfloat)cell_height * 0.5f } // Rotate along center
         };
 }
@@ -300,8 +309,7 @@ void graphics_bank_finalize(void *userData, void *data)
 {
     Bank_Class_t *instance = (Bank_Class_t *)data;
 
-    GL_texture_delete(&instance->atlas);
-    Memory_free(instance->quads);
+    GL_sheet_delete(&instance->sheet);
     Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> bank #%p finalized", instance);
 
     *instance = (Bank_Class_t){};
@@ -311,14 +319,14 @@ void graphics_bank_cell_width_get(WrenVM *vm)
 {
     const Bank_Class_t *instance = (const Bank_Class_t *)wrenGetSlotForeign(vm, 0);
 
-    wrenSetSlotDouble(vm, 0, instance->cell_width);
+    wrenSetSlotDouble(vm, 0, instance->sheet.quad_width);
 }
 
 void graphics_bank_cell_height_get(WrenVM *vm)
 {
     const Bank_Class_t *instance = (const Bank_Class_t *)wrenGetSlotForeign(vm, 0);
 
-    wrenSetSlotDouble(vm, 0, instance->cell_height);
+    wrenSetSlotDouble(vm, 0, instance->sheet.quad_height);
 }
 
 void graphics_bank_blit_call3(WrenVM *vm)
@@ -334,15 +342,16 @@ void graphics_bank_blit_call3(WrenVM *vm)
 
 //    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
-    double bank_width = (double)instance->cell_width;
-    double bank_height = (double)instance->cell_height;
+    double bank_width = (double)instance->sheet.quad_width;
+    double bank_height = (double)instance->sheet.quad_height;
 
     int dx = (int)((GLfloat)x - instance->origin.x);
     int dy = (int)((GLfloat)y - instance->origin.y);
 
     GL_Quad_t destination = (GL_Quad_t){ (GLfloat)dx, (GLfloat)dy, (GLfloat)dx + (GLfloat)bank_width, (GLfloat)dy + (GLfloat)bank_height };
 
-    GL_texture_blit_fast(&instance->atlas, instance->quads[cell_id], destination, (GL_Color_t){ 255, 255, 255, 255 });
+    const GL_Sheet_t *sheet = &instance->sheet;
+    GL_texture_blit_fast(&sheet->atlas, sheet->quads[cell_id], destination, (GL_Color_t){ 255, 255, 255, 255 });
 }
 
 void graphics_bank_blit_call5(WrenVM *vm)
@@ -361,11 +370,11 @@ void graphics_bank_blit_call5(WrenVM *vm)
 //    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
 #ifdef __NO_MIRRORING__
-    double width = (double)instance->cell_width * fabs(scale_x);
-    double height = (double)instance->cell_height * fabs(scale_y);
+    double width = (double)instance->sheet.quad_width * fabs(scale_x);
+    double height = (double)instance->sheet.quad_height * fabs(scale_y);
 #else
-    double width = (double)instance->cell_width * scale_x; // The sign controls the mirroring.
-    double height = (double)instance->cell_height * scale_y;
+    double width = (double)instance->sheet.quad_width * scale_x; // The sign controls the mirroring.
+    double height = (double)instance->sheet.quad_height * scale_y;
 #endif
 
     int dx = (int)((GLfloat)x - instance->origin.x);
@@ -384,7 +393,8 @@ void graphics_bank_blit_call5(WrenVM *vm)
     }
 #endif
 
-    GL_texture_blit_fast(&instance->atlas, instance->quads[cell_id], destination, (GL_Color_t){ 255, 255, 255, 255 });
+    const GL_Sheet_t *sheet = &instance->sheet;
+    GL_texture_blit_fast(&sheet->atlas, sheet->quads[cell_id], destination, (GL_Color_t){ 255, 255, 255, 255 });
 }
 
 void graphics_bank_blit_call6(WrenVM *vm)
@@ -404,11 +414,11 @@ void graphics_bank_blit_call6(WrenVM *vm)
 //    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
 #ifdef __NO_MIRRORING__
-    double width = (double)instance->cell_width * fabs(scale_x);
-    double height = (double)instance->cell_height * fabs(scale_y);
+    double width = (double)instance->sheet.quad_width * fabs(scale_x);
+    double height = (double)instance->sheet.quad_height * fabs(scale_y);
 #else
-    double width = (double)instance->cell_width * scale_x; // The sign controls the mirroring.
-    double height = (double)instance->cell_height * scale_y;
+    double width = (double)instance->sheet.quad_width * scale_x; // The sign controls the mirroring.
+    double height = (double)instance->sheet.quad_height * scale_y;
 #endif
 
     int dx = (int)((GLfloat)x - instance->origin.x);
@@ -427,7 +437,8 @@ void graphics_bank_blit_call6(WrenVM *vm)
     }
 #endif
 
-    GL_texture_blit(&instance->atlas, instance->quads[cell_id], destination, instance->origin, rotation, (GL_Color_t){ 255, 255, 255, 255 });
+    const GL_Sheet_t *sheet = &instance->sheet;
+    GL_texture_blit(&sheet->atlas, sheet->quads[cell_id], destination, instance->origin, rotation, (GL_Color_t){ 255, 255, 255, 255 });
 }
 
 void graphics_font_allocate(WrenVM *vm)
@@ -443,27 +454,21 @@ void graphics_font_allocate(WrenVM *vm)
 
     Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
+    GL_Sheet_t sheet;
     if (strcasecmp(file, "default") == 0) {
+        GL_sheet_decode(&sheet, spleen_5x8_png, spleen_5x8_png_len, 5, 8, to_font_atlas_callback, NULL);
         Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> default font allocated");
+    } else {
+        char pathfile[PATH_FILE_MAX] = {};
+        strcpy(pathfile, environment->base_path);
+        strcat(pathfile, file + 2);
 
-        *instance = (Font_Class_t){
-                .font = *GL_font_default(),
-                .is_default = true
-            };
-        return;
+        GL_sheet_load(&sheet, pathfile, glyph_width, glyph_height, to_font_atlas_callback, NULL);
+        Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> font '%s' allocated as #%p", pathfile, instance);
     }
 
-    char pathfile[PATH_FILE_MAX] = {};
-    strcpy(pathfile, environment->base_path);
-    strcat(pathfile, file + 2);
-
-    GL_Font_t font;
-    GL_font_load(&font, pathfile, glyph_width, glyph_height);
-    Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> font '%s' allocated as #%p", pathfile, instance);
-
     *instance = (Font_Class_t){
-            .font = font,
-            .is_default = false
+            .sheet = sheet
         };
 }
 
@@ -471,15 +476,13 @@ void graphics_font_finalize(void *userData, void *data)
 {
     Font_Class_t *instance = (Font_Class_t *)data;
 
-    if (!instance->is_default) {
-        GL_font_delete(&instance->font);
-        Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> font #%p finalized", instance);
-    }
+    GL_sheet_delete(&instance->sheet);
+    Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> font #%p finalized", instance);
 
     *instance = (Font_Class_t){};
 }
 
-void graphics_font_write_call6(WrenVM *vm) // foreign text(text, color, scale, align)
+void graphics_font_write_call6(WrenVM *vm) // foreign write(text, x, y, color, scale, align)
 {
     const char *text = wrenGetSlotString(vm, 1);
     double x = wrenGetSlotDouble(vm, 2);
@@ -495,7 +498,11 @@ void graphics_font_write_call6(WrenVM *vm) // foreign text(text, color, scale, a
 
 //    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
-    GL_Size_t size = GL_font_measure(&instance->font, text, scale);
+    const GL_Sheet_t *sheet = &instance->sheet;
+
+    const GLfloat dw = sheet->quad_width * scale, dh = sheet->quad_height * scale;
+
+    size_t width = strlen(text) * dw;
 
     int dx, dy; // Always pixel-aligned positions.
     if (strcmp(align, "left") == 0) {
@@ -503,11 +510,11 @@ void graphics_font_write_call6(WrenVM *vm) // foreign text(text, color, scale, a
         dy = (int)y;
     } else
     if (strcmp(align, "center") == 0) {
-        dx = (int)(x - (size.width * 0.5f));
+        dx = (int)(x - (width * 0.5f));
         dy = (int)y;
     } else
     if (strcmp(align, "right") == 0) {
-        dx = (int)(x - size.width);
+        dx = (int)(x - width);
         dy = (int)y;
     } else {
         dx = (int)x;
@@ -517,7 +524,13 @@ void graphics_font_write_call6(WrenVM *vm) // foreign text(text, color, scale, a
     Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %d, %d, %d", width, dx, dy);
 #endif
 
-    GL_font_write(&instance->font, text, (GL_Point_t){ (GLfloat)dx, (GLfloat)dy }, (GLfloat)scale, (GL_Color_t){ color, color, color, 255 });
+    GL_Quad_t destination = { .x0 = dx, .y0 = dy, .x1 = dx + dw, .y1 = dy + dh };
+    for (const char *ptr = text; *ptr != '\0'; ++ptr) {
+        int index = *ptr - ' ';
+        GL_texture_blit_fast(&sheet->atlas, sheet->quads[index], destination, (GL_Color_t){ color, color, color, 255 });
+        destination.x0 += dw;
+        destination.x1 = destination.x0 + dw;
+    }
 }
 
 void graphics_canvas_width_get(WrenVM *vm)

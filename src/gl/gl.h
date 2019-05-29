@@ -26,10 +26,10 @@
 #include <stdbool.h>
 
 #include "common.h"
-#include "font.h"
 #include "palette.h"
 #include "primitive.h"
 #include "program.h"
+#include "sheet.h"
 #include "texture.h"
 
 typedef struct _GL_Context_t {

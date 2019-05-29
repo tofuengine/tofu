@@ -24,11 +24,10 @@
 
 bool GL_initialize()
 {
-    return GL_font_initialize() && GL_primitive_initialize();
+    return GL_primitive_initialize();
 }
 
 void GL_terminate()
 {
     GL_primitive_terminate();
-    GL_font_terminate();
 }
