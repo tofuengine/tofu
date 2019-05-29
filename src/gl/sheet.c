@@ -53,8 +53,7 @@ bool GL_sheet_load(GL_Sheet_t *sheet, const char *pathfile, GLuint quad_width, G
     *sheet = (GL_Sheet_t){
             .atlas = atlas,
             .quads = precompute_quads(atlas.width, atlas.height, quad_width, quad_height),
-            .quad_width = quad_width,
-            .quad_height = quad_height
+            .quad = (GL_Size_t){ quad_width, quad_height }
         };
     Log_write(LOG_LEVELS_DEBUG, "<GL> sheet #%p created", sheet);
 
@@ -71,8 +70,7 @@ bool GL_sheet_decode(GL_Sheet_t *sheet, const void *buffer, size_t size, GLuint 
     *sheet = (GL_Sheet_t){
             .atlas = atlas,
             .quads = precompute_quads(atlas.width, atlas.height, quad_width, quad_height),
-            .quad_width = quad_width,
-            .quad_height = quad_height
+            .quad = (GL_Size_t){ quad_width, quad_height }
         };
     Log_write(LOG_LEVELS_DEBUG, "<GL> sheet #%p created", sheet);
 

@@ -31,8 +31,7 @@
 typedef struct _GL_Sheet_t {
     GL_Texture_t atlas;
     GL_Quad_t *quads;
-    // GL_Size_t quad_size;
-    GLuint quad_width, quad_height;
+    GL_Size_t quad;
 } GL_Sheet_t;
 
 extern bool GL_sheet_load(GL_Sheet_t *sheet, const char *pathfile, GLuint quad_width, GLuint quad_height, const GL_Texture_Callback_t callback, void *parameters);

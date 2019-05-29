@@ -319,14 +319,14 @@ void graphics_bank_cell_width_get(WrenVM *vm)
 {
     const Bank_Class_t *instance = (const Bank_Class_t *)wrenGetSlotForeign(vm, 0);
 
-    wrenSetSlotDouble(vm, 0, instance->sheet.quad_width);
+    wrenSetSlotDouble(vm, 0, instance->sheet.quad.width);
 }
 
 void graphics_bank_cell_height_get(WrenVM *vm)
 {
     const Bank_Class_t *instance = (const Bank_Class_t *)wrenGetSlotForeign(vm, 0);
 
-    wrenSetSlotDouble(vm, 0, instance->sheet.quad_height);
+    wrenSetSlotDouble(vm, 0, instance->sheet.quad.height);
 }
 
 void graphics_bank_blit_call3(WrenVM *vm)
@@ -342,13 +342,13 @@ void graphics_bank_blit_call3(WrenVM *vm)
 
 //    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
-    double bank_width = (double)instance->sheet.quad_width;
-    double bank_height = (double)instance->sheet.quad_height;
+    double dw = (double)instance->sheet.quad.width;
+    double dh = (double)instance->sheet.quad.height;
 
     int dx = (int)((GLfloat)x - instance->origin.x);
     int dy = (int)((GLfloat)y - instance->origin.y);
 
-    GL_Quad_t destination = (GL_Quad_t){ (GLfloat)dx, (GLfloat)dy, (GLfloat)dx + (GLfloat)bank_width, (GLfloat)dy + (GLfloat)bank_height };
+    GL_Quad_t destination = (GL_Quad_t){ (GLfloat)dx, (GLfloat)dy, (GLfloat)dx + (GLfloat)dw, (GLfloat)dy + (GLfloat)dh };
 
     const GL_Sheet_t *sheet = &instance->sheet;
     GL_texture_blit_fast(&sheet->atlas, sheet->quads[cell_id], destination, (GL_Color_t){ 255, 255, 255, 255 });
@@ -370,26 +370,26 @@ void graphics_bank_blit_call5(WrenVM *vm)
 //    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
 #ifdef __NO_MIRRORING__
-    double width = (double)instance->sheet.quad_width * fabs(scale_x);
-    double height = (double)instance->sheet.quad_height * fabs(scale_y);
+    double dw = (double)instance->sheet.quad.width * fabs(scale_x);
+    double dh = (double)instance->sheet.quad.height * fabs(scale_y);
 #else
-    double width = (double)instance->sheet.quad_width * scale_x; // The sign controls the mirroring.
-    double height = (double)instance->sheet.quad_height * scale_y;
+    double dw = (double)instance->sheet.quad.width * scale_x; // The sign controls the mirroring.
+    double dh = (double)instance->sheet.quad.height * scale_y;
 #endif
 
     int dx = (int)((GLfloat)x - instance->origin.x);
     int dy = (int)((GLfloat)y - instance->origin.y);
 
-    GL_Quad_t destination = (GL_Quad_t){ (GLfloat)dx, (GLfloat)dy, (GLfloat)dx + (GLfloat)width, (GLfloat)dy + (GLfloat)height };
+    GL_Quad_t destination = (GL_Quad_t){ (GLfloat)dx, (GLfloat)dy, (GLfloat)dx + (GLfloat)dw, (GLfloat)dy + (GLfloat)dh };
 
 #ifndef __NO_MIRRORING__
-    if (width < 0.0) { // Compensate for mirroring!
-        destination.x0 -= width;
-        destination.x1 -= width;
+    if (dw < 0.0) { // Compensate for mirroring!
+        destination.x0 -= dw;
+        destination.x1 -= dw;
     }
-    if (height < 0.0) {
-        destination.y0 -= height;
-        destination.y1 -= height;
+    if (dh < 0.0) {
+        destination.y0 -= dh;
+        destination.y1 -= dh;
     }
 #endif
 
@@ -414,26 +414,26 @@ void graphics_bank_blit_call6(WrenVM *vm)
 //    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
 #ifdef __NO_MIRRORING__
-    double width = (double)instance->sheet.quad_width * fabs(scale_x);
-    double height = (double)instance->sheet.quad_height * fabs(scale_y);
+    double dw = (double)instance->sheet.quad.width * fabs(scale_x);
+    double dw = (double)instance->sheet.quad.height * fabs(scale_y);
 #else
-    double width = (double)instance->sheet.quad_width * scale_x; // The sign controls the mirroring.
-    double height = (double)instance->sheet.quad_height * scale_y;
+    double dw = (double)instance->sheet.quad.width * scale_x; // The sign controls the mirroring.
+    double dh = (double)instance->sheet.quad.height * scale_y;
 #endif
 
     int dx = (int)((GLfloat)x - instance->origin.x);
     int dy = (int)((GLfloat)y - instance->origin.y);
 
-    GL_Quad_t destination = (GL_Quad_t){ (GLfloat)dx, (GLfloat)dy, (GLfloat)dx + (GLfloat)width, (GLfloat)dy + (GLfloat)height };
+    GL_Quad_t destination = (GL_Quad_t){ (GLfloat)dx, (GLfloat)dy, (GLfloat)dx + (GLfloat)dw, (GLfloat)dy + (GLfloat)dh };
 
 #ifndef __NO_MIRRORING__
-    if (width < 0.0) { // Compensate for mirroring!
-        destination.x0 -= width;
-        destination.x1 -= width;
+    if (dw < 0.0) { // Compensate for mirroring!
+        destination.x0 -= dw;
+        destination.x1 -= dw;
     }
-    if (height < 0.0) {
-        destination.y0 -= height;
-        destination.y1 -= height;
+    if (dh < 0.0) {
+        destination.y0 -= dh;
+        destination.y1 -= dh;
     }
 #endif
 
@@ -500,20 +500,21 @@ void graphics_font_write_call6(WrenVM *vm) // foreign write(text, x, y, color, s
 
     const GL_Sheet_t *sheet = &instance->sheet;
 
-    const GLfloat dw = sheet->quad_width * scale, dh = sheet->quad_height * scale;
+    double dw = sheet->quad.width * fabs(scale);
+    double dh = sheet->quad.height * fabs(scale);
 
     size_t width = strlen(text) * dw;
 
     int dx, dy; // Always pixel-aligned positions.
-    if (strcmp(align, "left") == 0) {
+    if (strcasecmp(align, "left") == 0) {
         dx = (int)x;
         dy = (int)y;
     } else
-    if (strcmp(align, "center") == 0) {
+    if (strcasecmp(align, "center") == 0) {
         dx = (int)(x - (width * 0.5f));
         dy = (int)y;
     } else
-    if (strcmp(align, "right") == 0) {
+    if (strcasecmp(align, "right") == 0) {
         dx = (int)(x - width);
         dy = (int)y;
     } else {
@@ -526,6 +527,7 @@ void graphics_font_write_call6(WrenVM *vm) // foreign write(text, x, y, color, s
 
     GL_Quad_t destination = { .x0 = dx, .y0 = dy, .x1 = dx + dw, .y1 = dy + dh };
     for (const char *ptr = text; *ptr != '\0'; ++ptr) {
+        // TODO: handle carriage-returns and similar.
         int index = *ptr - ' ';
         GL_texture_blit_fast(&sheet->atlas, sheet->quads[index], destination, (GL_Color_t){ color, color, color, 255 });
         destination.x0 += dw;
