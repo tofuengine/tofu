@@ -264,6 +264,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     int x = (display_width - display->window_width) / 2;
     int y = (display_height - display->window_height) / 2;
     if (!configuration->fullscreen) {
+#ifndef __NO_AUTOFIT__
         display->offscreen_source = (GL_Quad_t){
 //                0, configuration->height, configuration->width, 0
                 0, 0, configuration->width, configuration->height
@@ -274,9 +275,11 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
             };
         display->physical_width = display->window_width;
         display->physical_height = display->window_height;
+#endif
         glfwSetWindowMonitor(display->window, NULL, x, y, display->window_width, display->window_height, GLFW_DONT_CARE);
         glfwShowWindow(display->window);
     } else { // Toggle fullscreen by passing primary monitor!
+#ifndef __NO_AUTOFIT__
         display->offscreen_source = (GL_Quad_t){
                 0, 0, configuration->width, configuration->height
             };
@@ -285,6 +288,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
             };
         display->physical_width = display_width;
         display->physical_height = display_height;
+#endif
         glfwSetWindowMonitor(display->window, glfwGetPrimaryMonitor(), 0, 0, display_width, display_height, GLFW_DONT_CARE);
     }
 
