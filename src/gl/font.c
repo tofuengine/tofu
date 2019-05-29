@@ -28,6 +28,7 @@
 
 #include "../GL/gl.h"
 #include "../log.h"
+#include "../memory.h"
 
 static GL_Font_t _default_font;
 
@@ -71,6 +72,7 @@ bool GL_font_load(GL_Font_t *font, const char *pathfile, GLuint glyph_width, GLu
 
     *font = (GL_Font_t){
             .atlas = atlas,
+            .quads = GL_texture_quads(&atlas, glyph_width, glyph_height),
             .glyph_width = glyph_width,
             .glyph_height = glyph_height
         };
@@ -88,6 +90,7 @@ bool GL_font_create(GL_Font_t *font, const void *buffer, size_t size, GLuint gly
 
     *font = (GL_Font_t){
             .atlas = atlas,
+            .quads = GL_texture_quads(&atlas, glyph_width, glyph_height),
             .glyph_width = glyph_width,
             .glyph_height = glyph_height
         };
@@ -98,6 +101,7 @@ bool GL_font_create(GL_Font_t *font, const void *buffer, size_t size, GLuint gly
 
 void GL_font_delete(GL_Font_t *font)
 {
+    Memory_free(font->quads);
     GL_texture_delete(&font->atlas);
     Log_write(LOG_LEVELS_DEBUG, "<GL> font #%p deleted", font);
     *font = (GL_Font_t){};
@@ -115,18 +119,12 @@ void GL_font_write(const GL_Font_t *font, const char *text, const GL_Point_t pos
 {
     const GLfloat width = font->glyph_width * scale, height = font->glyph_height * scale;
 
-    GL_Quad_t source = { .x0 = 0.0f, .y0 = 0.0f, .x1 = font->glyph_width, .y1 = font->glyph_height };
     GL_Quad_t destination = { .x0 = position.x, .y0 = position.y, .x1 = position.x + width, .y1 = position.y + height };
 
     for (const char *ptr = text; *ptr != '\0'; ++ptr) {
-        source.x0 = (GLfloat)(*ptr - ' ') * font->glyph_width;
-        source.x1 = source.x0 + font->glyph_width;
+        int index = *ptr - ' ';
 
-        if (source.x0 >= font->atlas.width) {
-            continue;
-        }
-
-        GL_texture_blit_fast(&font->atlas, source, destination, color);
+        GL_texture_blit_fast(&font->atlas, font->quads[index], destination, color);
 
         destination.x0 += width;
         destination.x1 = destination.x0 + width;

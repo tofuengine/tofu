@@ -25,6 +25,7 @@
 #include "../config.h"
 #include "../environment.h"
 #include "../log.h"
+#include "../memory.h"
 #include "../gl/gl.h"
 #include "graphics/palettes.h"
 
@@ -262,6 +263,7 @@ typedef struct _Bank_Class_t { // TODO: rename to `Sheet`?
     int cell_width, cell_height;
     GL_Point_t origin;
     GL_Texture_t atlas;
+    GL_Quad_t *quads;
 } Bank_Class_t;
 
 void graphics_bank_allocate(WrenVM *vm)
@@ -281,12 +283,13 @@ void graphics_bank_allocate(WrenVM *vm)
     strcpy(pathfile, environment->base_path);
     strcat(pathfile, file + 2);
 
-    GL_Texture_t texture;
-    GL_texture_load(&texture, pathfile, to_indexed_atlas_callback, (void *)&environment->display->palette);
+    GL_Texture_t atlas;
+    GL_texture_load(&atlas, pathfile, to_indexed_atlas_callback, (void *)&environment->display->palette);
     Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> bank '%s' allocated as #%p", pathfile, instance);
 
     *instance = (Bank_Class_t){
-            .atlas = texture,
+            .atlas = atlas,
+            .quads = GL_texture_quads(&atlas, cell_width, cell_height),
             .cell_width = cell_width,
             .cell_height = cell_height,
             .origin = (GL_Point_t){ (GLfloat)cell_width * 0.5f, (GLfloat)cell_height * 0.5f } // Rotate along center
@@ -298,6 +301,7 @@ void graphics_bank_finalize(void *userData, void *data)
     Bank_Class_t *instance = (Bank_Class_t *)data;
 
     GL_texture_delete(&instance->atlas);
+    Memory_free(instance->quads);
     Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> bank #%p finalized", instance);
 
     *instance = (Bank_Class_t){};
@@ -330,19 +334,15 @@ void graphics_bank_blit_call3(WrenVM *vm)
 
 //    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
-    int bank_position = cell_id * instance->cell_width;
-    int bank_x = bank_position % instance->atlas.width;
-    int bank_y = (bank_position / instance->atlas.width) * instance->cell_height;
     double bank_width = (double)instance->cell_width;
     double bank_height = (double)instance->cell_height;
 
     int dx = (int)((GLfloat)x - instance->origin.x);
     int dy = (int)((GLfloat)y - instance->origin.y);
 
-    GL_Quad_t source = (GL_Quad_t){ (GLfloat)bank_x, (GLfloat)bank_y, (GLfloat)bank_x + (GLfloat)bank_width, (GLfloat)bank_y + (GLfloat)bank_height };
     GL_Quad_t destination = (GL_Quad_t){ (GLfloat)dx, (GLfloat)dy, (GLfloat)dx + (GLfloat)bank_width, (GLfloat)dy + (GLfloat)bank_height };
 
-    GL_texture_blit_fast(&instance->atlas, source, destination, (GL_Color_t){ 255, 255, 255, 255 });
+    GL_texture_blit_fast(&instance->atlas, instance->quads[cell_id], destination, (GL_Color_t){ 255, 255, 255, 255 });
 }
 
 void graphics_bank_blit_call5(WrenVM *vm)
@@ -360,12 +360,6 @@ void graphics_bank_blit_call5(WrenVM *vm)
 
 //    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
-    int bank_position = cell_id * instance->cell_width;
-    int bank_x = bank_position % instance->atlas.width;
-    int bank_y = (bank_position / instance->atlas.width) * instance->cell_height;
-    double bank_width = (double)instance->cell_width;
-    double bank_height = (double)instance->cell_height;
-
 #ifdef __NO_MIRRORING__
     double width = (double)instance->cell_width * fabs(scale_x);
     double height = (double)instance->cell_height * fabs(scale_y);
@@ -377,7 +371,6 @@ void graphics_bank_blit_call5(WrenVM *vm)
     int dx = (int)((GLfloat)x - instance->origin.x);
     int dy = (int)((GLfloat)y - instance->origin.y);
 
-    GL_Quad_t source = (GL_Quad_t){ (GLfloat)bank_x, (GLfloat)bank_y, (GLfloat)bank_x + (GLfloat)bank_width, (GLfloat)bank_y + (GLfloat)bank_height };
     GL_Quad_t destination = (GL_Quad_t){ (GLfloat)dx, (GLfloat)dy, (GLfloat)dx + (GLfloat)width, (GLfloat)dy + (GLfloat)height };
 
 #ifndef __NO_MIRRORING__
@@ -391,7 +384,7 @@ void graphics_bank_blit_call5(WrenVM *vm)
     }
 #endif
 
-    GL_texture_blit_fast(&instance->atlas, source, destination, (GL_Color_t){ 255, 255, 255, 255 });
+    GL_texture_blit_fast(&instance->atlas, instance->quads[cell_id], destination, (GL_Color_t){ 255, 255, 255, 255 });
 }
 
 void graphics_bank_blit_call6(WrenVM *vm)
@@ -410,12 +403,6 @@ void graphics_bank_blit_call6(WrenVM *vm)
 
 //    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
-    int bank_position = cell_id * instance->cell_width;
-    int bank_x = bank_position % instance->atlas.width;
-    int bank_y = (bank_position / instance->atlas.width) * instance->cell_height;
-    double bank_width = (double)instance->cell_width;
-    double bank_height = (double)instance->cell_height;
-
 #ifdef __NO_MIRRORING__
     double width = (double)instance->cell_width * fabs(scale_x);
     double height = (double)instance->cell_height * fabs(scale_y);
@@ -424,11 +411,10 @@ void graphics_bank_blit_call6(WrenVM *vm)
     double height = (double)instance->cell_height * scale_y;
 #endif
 
-    int tx = (int)((GLfloat)x - instance->origin.x);
-    int ty = (int)((GLfloat)y - instance->origin.y);
+    int dx = (int)((GLfloat)x - instance->origin.x);
+    int dy = (int)((GLfloat)y - instance->origin.y);
 
-    GL_Quad_t source = (GL_Quad_t){ (GLfloat)bank_x, (GLfloat)bank_y, (GLfloat)bank_x + (GLfloat)bank_width, (GLfloat)bank_y + (GLfloat)bank_height };
-    GL_Quad_t destination = (GL_Quad_t){ (GLfloat)tx, (GLfloat)ty, (GLfloat)tx + (GLfloat)width, (GLfloat)ty + (GLfloat)height };
+    GL_Quad_t destination = (GL_Quad_t){ (GLfloat)dx, (GLfloat)dy, (GLfloat)dx + (GLfloat)width, (GLfloat)dy + (GLfloat)height };
 
 #ifndef __NO_MIRRORING__
     if (width < 0.0) { // Compensate for mirroring!
@@ -441,7 +427,7 @@ void graphics_bank_blit_call6(WrenVM *vm)
     }
 #endif
 
-    GL_texture_blit(&instance->atlas, source, destination, instance->origin, rotation, (GL_Color_t){ 255, 255, 255, 255 });
+    GL_texture_blit(&instance->atlas, instance->quads[cell_id], destination, instance->origin, rotation, (GL_Color_t){ 255, 255, 255, 255 });
 }
 
 void graphics_font_allocate(WrenVM *vm)

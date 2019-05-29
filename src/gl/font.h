@@ -31,6 +31,7 @@
 typedef struct _GL_Font_t {
     GL_Texture_t atlas;
     GLuint glyph_width, glyph_height;
+    GL_Quad_t *quads;
 } GL_Font_t;
 
 extern bool GL_font_initialize();
