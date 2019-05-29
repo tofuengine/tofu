@@ -503,7 +503,25 @@ void graphics_font_write_call6(WrenVM *vm) // foreign write(text, x, y, color, s
     double dw = sheet->quad.width * fabs(scale);
     double dh = sheet->quad.height * fabs(scale);
 
+#ifndef __NO_LINEFEEDS__
+    size_t width = 0;
+    size_t slen = strlen(text);
+    size_t offset = 0;
+    while (offset < slen) {
+        const char *start = text + offset;
+        const char *end = strchr(start, '\n');
+        if (!end) {
+            end = text + slen;
+        }
+        size_t length = end - start;
+        if (width < length * dw) {
+            width = length * dw;
+        }
+        offset += length + 1;
+    }
+#else
     size_t width = strlen(text) * dw;
+#endif
 
     int dx, dy; // Always pixel-aligned positions.
     if (strcasecmp(align, "left") == 0) {
@@ -527,7 +545,18 @@ void graphics_font_write_call6(WrenVM *vm) // foreign write(text, x, y, color, s
 
     GL_Quad_t destination = { .x0 = dx, .y0 = dy, .x1 = dx + dw, .y1 = dy + dh };
     for (const char *ptr = text; *ptr != '\0'; ++ptr) {
-        // TODO: handle carriage-returns and similar.
+#ifndef __NO_LINEFEEDS__
+        if (*ptr == '\n') { // Handle carriage-return
+            destination.x0 = dx;
+            destination.x1 = destination.x0 + dw;
+            destination.y0 += dh;
+            destination.y1 = destination.y0 + dh;
+            continue;
+        } else
+#endif
+        if (*ptr < ' ') {
+            continue;
+        }
         int index = *ptr - ' ';
         GL_texture_blit_fast(&sheet->atlas, sheet->quads[index], destination, (GL_Color_t){ color, color, color, 255 });
         destination.x0 += dw;

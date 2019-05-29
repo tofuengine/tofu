@@ -48,6 +48,8 @@
 #undef  __DEFENSIVE_CHECKS__
 #endif
 
+#define __NO_LINEFEEDS__
+
 #undef  __NO_MIRRORING__
 #define __FAST_TRANSPARENCY__
 #undef  __LOWERCASE_ARGB__
