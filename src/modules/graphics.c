@@ -457,7 +457,23 @@ void graphics_font_allocate(WrenVM *vm)
     GL_Sheet_t sheet;
     if (strcasecmp(file, "default") == 0) {
         GL_sheet_decode(&sheet, spleen_5x8_png, spleen_5x8_png_len, 5, 8, to_font_atlas_callback, NULL);
-        Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> default font allocated");
+        Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> default 5x8 font allocated");
+    } else
+    if (strcasecmp(file, "default+") == 0) {
+        GL_sheet_decode(&sheet, spleen_8x16_png, spleen_8x16_png_len, 8, 16, to_font_atlas_callback, NULL);
+        Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> default 8x16 font allocated");
+    } else
+    if (strcasecmp(file, "default++") == 0) {
+        GL_sheet_decode(&sheet, spleen_12x24_png, spleen_12x24_png_len, 12, 24, to_font_atlas_callback, NULL);
+        Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> default 12x24 font allocated");
+    } else
+    if (strcasecmp(file, "default+++") == 0) {
+        GL_sheet_decode(&sheet, spleen_16x32_png, spleen_16x32_png_len, 16, 32, to_font_atlas_callback, NULL);
+        Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> default 16x32 font allocated");
+    } else
+    if (strcasecmp(file, "default++++") == 0) {
+        GL_sheet_decode(&sheet, spleen_32x64_png, spleen_32x64_png_len, 32, 64, to_font_atlas_callback, NULL);
+        Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> default 32x64 font allocated");
     } else {
         char pathfile[PATH_FILE_MAX] = {};
         strcpy(pathfile, environment->base_path);
