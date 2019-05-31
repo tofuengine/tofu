@@ -29,8 +29,8 @@
 #include "texture.h"
 
 typedef struct _GL_Sheet_t {
-    GL_Texture_t atlas;
-    GL_Quad_t *quads;
+    GL_Texture_t atlas; // TODO: is texture useless, i.e. a special case of a 1x1 sheet?
+    GL_Quad_t *quads; // TODO: pre-normalized quads. Also, add specific "sheet" rendering to save texture switches.
     GL_Size_t quad;
 } GL_Sheet_t;
 
