@@ -1,8 +1,8 @@
 import "random" for Random
 
 import "collections" for Grid
-import "graphics" for Canvas
-import "events" for Input
+import "graphics" for Canvas, Font
+import "events" for Environment, Input
 
 var STEPS = 64
 var PALETTE = [
@@ -17,6 +17,8 @@ class Game {
     construct new() {
         _random = Random.new()
 
+        _font = Font.default
+
         _xSize = Canvas.width / STEPS
         _ySize = Canvas.height / STEPS
 
@@ -25,7 +27,7 @@ class Game {
         _grid = Grid.new(STEPS, STEPS, null)
         reset()
 
-        Canvas.palette(PALETTE)
+        Canvas.palette = PALETTE
     }
 
     reset() {
@@ -34,7 +36,7 @@ class Game {
     }
 
     input() {
-        if (Input.isKeyPressed(Input.q)) {
+        if (Input.isKeyPressed(Input.select)) {
             _windy = !_windy
         }
     }
@@ -77,6 +79,8 @@ class Game {
                 }
             }
         }
+
+        _font.write("FPS: %(Environment.fps.round)", 0, 0, 15, 1.0, "left")
     }
 
 }

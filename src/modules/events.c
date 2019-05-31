@@ -25,28 +25,28 @@
 #include "../environment.h"
 #include "../log.h"
 
-#include <raylib/raylib.h>
 #include <string.h>
 
 const char events_wren[] =
     "foreign class Environment {\n"
     "\n"
+    "    foreign static fps\n"
     "    foreign static quit()\n"
     "\n"
     "}\n"
     "\n"
     "foreign class Input {\n"
     "\n"
-    "    static up { 265 }\n"
-    "    static down { 264 }\n"
-    "    static left { 263 }\n"
-    "    static right { 262 }\n"
-    "    static space { 32 }\n"
-    "    static enter { 257 }\n"
-    "    static escape { 256 }\n"
-    "    static z { 90 }\n"
-    "    static x { 88 }\n"
-    "    static q { 81 }\n"
+    "    static up { 0 }\n"
+    "    static down { 1 }\n"
+    "    static left { 2 }\n"
+    "    static right { 3 }\n"
+    "    static y { 4 }\n"
+    "    static x { 5 }\n"
+    "    static b { 6 }\n"
+    "    static a { 7 }\n"
+    "    static select { 8 }\n"
+    "    static start { 9 }\n"
     "\n"
     "    foreign static isKeyDown(key)\n"
     "    foreign static isKeyUp(key)\n"
@@ -58,38 +58,49 @@ const char events_wren[] =
 
 void events_input_iskeydown_call1(WrenVM *vm)
 {
-    // Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
     int key = (int)wrenGetSlotDouble(vm, 1);
-    bool is_down = IsKeyDown(key);
-    wrenSetSlotBool(vm, 0, is_down == true);
+
+    bool is_down = (key >= Display_Keys_t_First && key <= Display_Keys_t_Last) ? environment->display->keys_state[key].down : false;
+    wrenSetSlotBool(vm, 0, is_down);
 }
 
 void events_input_iskeyup_call1(WrenVM *vm)
 {
-    // Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
     int key = (int)wrenGetSlotDouble(vm, 1);
-    bool is_up = IsKeyUp(key);
-    wrenSetSlotBool(vm, 0, is_up == true);
+
+    bool is_down = (key >= Display_Keys_t_First && key <= Display_Keys_t_Last) ? environment->display->keys_state[key].down : false;
+    wrenSetSlotBool(vm, 0, !is_down);
 }
 
 void events_input_iskeypressed_call1(WrenVM *vm)
 {
-    // Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
     int key = (int)wrenGetSlotDouble(vm, 1);
-    bool is_pressed = IsKeyPressed(key);
-    wrenSetSlotBool(vm, 0, is_pressed == true);
+
+    bool is_pressed = (key >= Display_Keys_t_First && key <= Display_Keys_t_Last) ? environment->display->keys_state[key].pressed : false;
+    wrenSetSlotBool(vm, 0, is_pressed);
 }
 
 void events_input_iskeyreleased_call1(WrenVM *vm)
 {
-    // Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
     int key = (int)wrenGetSlotDouble(vm, 1);
-    bool is_released = IsKeyReleased(key);
-    wrenSetSlotBool(vm, 0, is_released == true);
+
+    bool is_released = (key >= Display_Keys_t_First && key <= Display_Keys_t_Last) ? environment->display->keys_state[key].released : false;
+    wrenSetSlotBool(vm, 0, is_released);
+}
+
+void events_environment_fps_get(WrenVM *vm)
+{
+    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+
+    wrenSetSlotDouble(vm, 0, environment->fps);
 }
 
 void events_environment_quit_call0(WrenVM *vm)
@@ -98,4 +109,3 @@ void events_environment_quit_call0(WrenVM *vm)
 
     environment->should_close = true;
 }
-

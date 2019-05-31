@@ -5,23 +5,22 @@ foreign class Bank {
     foreign cellWidth
     foreign cellHeight
 
-    blit(cellId, x, y) {
-        blit(cellId, x, y, 1.0, 1.0, 1.0)
-    }
     blit(cellId, x, y, r) {
         blit(cellId, x, y, r, 1.0, 1.0)
     }
+    foreign blit(cellId, x, y)
+    foreign blit(cellId, x, y, sx, sy)
     foreign blit(cellId, x, y, r, sx, sy)
 
 }
 
 foreign class Font {
 
-    construct new(file) {}
+    construct new(file, glyphWidth, glyphHeight) {}
 
-    static default { Font.new("default") }
+    static default { Font.new("5x8", 0, 0) }
 
-    foreign write(text, x, y, color, size, align)
+    foreign write(text, x, y, color, scale, align)
 
 }
 
@@ -29,31 +28,66 @@ foreign class Canvas {
 
     foreign static width
     foreign static height
-    foreign static palette(colors)
-    foreign static shader(index, code)
-    foreign static alpha
-    foreign static alpha=(level)
+    foreign static palette
+    foreign static palette=(colors)
 
-    foreign static point(x, y, color)
-    foreign static polygon(mode, vertices, color)
-    foreign static circle(mode, x, y, radius, color)
+    foreign static points(vertices, color)
+    foreign static polyline(vertices, color)
+    foreign static strip(vertices, color)
+    foreign static fan(vertices, color)
 
+    static point(x0, y0, color) {
+        points([ x0, y0 ], color)
+    }
     static line(x0, y0, x1, y1, color) {
-        polygon("line", [ x0, y0, x1, y1 ], color)
+        polyline([ x0, y0, x1, y1, x0, y0 ], color)
     }
     static triangle(mode, x0, y0, x1, y1, x2, y2, color) {
-        polygon(mode, [ x0, y0, x1, y1, x2, y2, x0, y0 ], color)
+        if (mode == "line") {
+            polyline([ x0, y0, x1, y1, x2, y2, x0, y0 ], color)
+        } else {
+            strip([ x0, y0, x1, y1, x2, y2 ], color)
+        }
     }
     static rectangle(mode, x, y, width, height, color) {
         var offset = mode == "line" ? 1 : 0
-        var left = x
-        var top = y
-        var right = left + width - offset
-        var bottom = top + height - offset
-        polygon(mode, [ left, top, left, bottom, right, bottom, right, top, left, top ], color)
+        var x0 = x
+        var y0 = y
+        var x1 = x0 + width - offset
+        var y1= y0 + height - offset
+        if (mode == "line") {
+            polyline([ x0, y0, x0, y1, x1, y1, x1, y0, x0, y0 ], color)
+        } else {
+            strip([ x0, y0, x0, y1, x1, y0, x1, y1 ], color)
+        }
     }
     static square(mode, x, y, size, color) {
         rectangle(mode, x, y, size, size, color)
+    }
+    static circle(mode, x, y, radius, color) {
+        circle(mode, x, y, radius, color, 30)
+    }
+    static circle(mode, x, y, radius, color, segments) {
+        var step = (2 * Num.pi) / segments
+        if (mode == "line") {
+            var vertices = []
+            for (i in 0 .. segments) {
+                var angle = step * i
+                vertices.insert(-1, x + angle.sin * radius)
+                vertices.insert(-1, y + angle.cos * radius)
+            }
+            Canvas.polyline(vertices, color)
+        } else {
+            var vertices = []
+            vertices.insert(-1, x)
+            vertices.insert(-1, y)
+            for (i in 0 .. segments) {
+                var angle = step * i
+                vertices.insert(-1, x + angle.sin * radius)
+                vertices.insert(-1, y + angle.cos * radius)
+            }
+            Canvas.fan(vertices, color)
+        }
     }
 
 }

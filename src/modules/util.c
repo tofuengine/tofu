@@ -88,7 +88,7 @@ void util_timer_finalize(void *userData, void *data)
 {
     Timer_Class_t *instance = (Timer_Class_t *)data;
 
-    Log_write(LOG_LEVELS_DEBUG, "[TOFU] Finalizing timer #%p", instance->timer);
+    Log_write(LOG_LEVELS_DEBUG, "<UTIL> finalizing timer #%p", instance->timer);
 
     TimerPool_release(instance->timer_pool, instance->timer);
 }

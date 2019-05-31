@@ -22,40 +22,62 @@
 
 #include "log.h"
 
-#include <raylib/raylib.h>
-
-#include <stdio.h>
 #include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
 
-#define MAX_LOG_MESSAGE_LENGTH      256
+// http://jafrog.com/2013/11/23/colors-in-terminal.html
+#define COLOR_BLACK         "\x1b[30m"
+#define COLOR_RED           "\x1b[31m"
+#define COLOR_GREEN         "\x1b[32m"
+#define COLOR_YELLOW        "\x1b[33m"
+#define COLOR_BLUE          "\x1b[34m"
+#define COLOR_MAGENTA       "\x1b[35m"
+#define COLOR_CYAN          "\x1b[36m"
+#define COLOR_WHITE         "\x1b[37m"
 
-static void custom_log_callback(int msg_type, const char *text, va_list args)
+#define COLOR_BLACK_HC      "\x1b[90m"
+#define COLOR_RED_HC        "\x1b[91m"
+#define COLOR_GREEN_HC      "\x1b[92m"
+#define COLOR_YELLOW_HC     "\x1b[93m"
+#define COLOR_BLUE_HC       "\x1b[94m"
+#define COLOR_MAGENTA_HC    "\x1b[95m"
+#define COLOR_CYAN_HC       "\x1b[96m"
+#define COLOR_WHITE_HC      "\x1b[97m"
+
+#define COLOR_OFF           "\x1b[0m"
+
+static Log_Levels_t _level = LOG_LEVELS_ALL;
+
+static void log_output(int msg_type, const char *text, va_list args)
 {
-    static const char prefix[] = { '<', 'T', 'D', 'I', 'W', 'E', 'F', '>' };
-    printf("[%c] ", prefix[msg_type]);
+    static const char *color[] = { COLOR_WHITE, COLOR_BLUE_HC, COLOR_CYAN, COLOR_GREEN, COLOR_YELLOW, COLOR_RED, COLOR_MAGENTA, COLOR_WHITE };
+    printf("%s", color[msg_type]);
     vprintf(text, args);
-    printf("\n");
+    printf(COLOR_OFF);
+    if (text[strlen(text) - 1] != '\n') {
+        printf("\n");
+    }
 }
 
 void Log_initialize()
 {
-    SetTraceLogCallback(custom_log_callback);
-    SetTraceLogLevel(LOG_ALL);
+    _level = LOG_LEVELS_ALL;
 }
 
 void Log_configure(bool enabled)
 {
-    SetTraceLogExit(LOG_NONE);
-    SetTraceLogLevel(enabled ? LOG_ALL : LOG_NONE);
+    _level = enabled ? LOG_LEVELS_ALL : LOG_LEVELS_NONE;
 }
 
 void Log_write(Log_Levels_t level, const char *text, ...)
 {
-    char message[MAX_LOG_MESSAGE_LENGTH];
+    if (level < _level) {
+        return;
+    }
+
     va_list args;
     va_start(args, text);
-    vsnprintf(message, MAX_LOG_MESSAGE_LENGTH, text, args);
+    log_output((int)level, text, args);
     va_end(args);
-
-    TraceLog((int)level, message);
 }

@@ -23,56 +23,75 @@
 #ifndef __DISPLAY_H__
 #define __DISPLAY_H__
 
+#include "config.h"
+
 #include <stdbool.h>
 #include <stddef.h>
-//#include <stdint.h>
-
-#include <raylib/raylib.h>
 
 #include "hal.h"
+#include "gl/gl.h"
 
-#define FRAMEBUFFERS_COUNT      2
-#define SHADERS_COUNT           5
-
-#define SHADER_INDEX_PALETTE    0
-
-#define ALPHA_COLOR_TRANSPARENT 0
-#define ALPHA_COLOR_OPAQUE      255
-
-// Forward declaration.
-typedef struct _Engine_Statistics_t Engine_Statistics_t;
+typedef enum _Display_Keys_t {
+    Display_Keys_t_First = 0,
+    DISPLAY_KEY_UP = Display_Keys_t_First,
+    DISPLAY_KEY_DOWN,
+    DISPLAY_KEY_LEFT,
+    DISPLAY_KEY_RIGHT,
+    DISPLAY_KEY_Y,
+    DISPLAY_KEY_X,
+    DISPLAY_KEY_B,
+    DISPLAY_KEY_A,
+    DISPLAY_KEY_SELECT,
+    DISPLAY_KEY_START,
+    Display_Keys_t_Last = DISPLAY_KEY_START,
+    Display_Keys_t_CountOf
+} Display_Keys_t;
 
 typedef struct _Display_Configuration_t {
     int width, height;
     int colors;
     bool fullscreen;
+#ifndef __NO_AUTOFIT__
     bool autofit;
+#endif
     bool hide_cursor;
     bool exit_key_enabled;
 } Display_Configuration_t;
 
+typedef struct _Display_Key_State_t { // TODO: use explicit masks?
+    uint8_t down : 1;
+    uint8_t pressed : 1;
+    uint8_t released : 1;
+    uint8_t : 5;
+} Display_Key_State_t;
+
 typedef struct _Display_t {
     Display_Configuration_t configuration;
 
+    Display_Key_State_t keys_state[Display_Keys_t_CountOf];
+
+    GLFWwindow *window;
     int window_width, window_height, window_scale;
+#ifndef __NO_AUTOFIT__
+    int physical_width, physical_height;
+    GL_Quad_t offscreen_source;
+    GL_Quad_t offscreen_destination;
+    GL_Texture_t offscreen_texture;
+    GLuint offscreen_framebuffer;
+#endif
 
-    RenderTexture2D framebuffers[FRAMEBUFFERS_COUNT];
-    Rectangle offscreen_source, offscreen_destination;
-    Vector2 offscreen_origin;
+    GL_Program_t program;
 
-    Palette_t palette;
-
-    Shader shaders[SHADERS_COUNT];
-
-    double alpha;
+    GL_Palette_t palette;
 } Display_t;
+
+typedef void (*Display_Callback_t)(void *parameters);
 
 extern bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title);
 extern bool Display_shouldClose(Display_t *display);
-extern void Display_renderBegin(Display_t *display);
-extern void Display_renderEnd(Display_t *display, double now, const Engine_Statistics_t *statistics);
-extern void Display_palette(Display_t *display, const Palette_t *palette);
-extern void Display_shader(Display_t *display, size_t index, const char *code);
+extern void Display_processInput(Display_t *display, const Display_Callback_t callback, void *parameters);
+extern void Display_render(Display_t *display, const Display_Callback_t callback, void *parameters);
+extern void Display_palette(Display_t *display, const GL_Palette_t *palette);
 extern void Display_terminate(Display_t *display);
 
 #endif  /* __DISPLAY_H__ */

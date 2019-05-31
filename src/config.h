@@ -23,11 +23,9 @@
 #ifndef __TOFU_CONFIG_H__
 #define __TOFU_CONFIG_H__
 
-
 // Constant MACROs have no prefix.
-
 #define STATISTICS_LENGTH           120
-#define FPS_AVERAGE_SAMPLES         256
+#define FPS_AVERAGE_SAMPLES         128
 #define FPS_STATISTICS_RESOLUTION   10
 
 #define MAX_PALETTE_COLORS          256
@@ -35,9 +33,27 @@
 #define GARBAGE_COLLECTION_PERIOD   60.0
 
 // Behavioural MACROs are uses the "__" prefix/suffix.
+#define __GL_VERSION__                      0x0201
+#define __GSLS_VERSION__                    0x0114
 
-#define __FAST_FULLSCREEN__
-#undef  __EXPLICIT_SIGNUM__
+// Fully disable `autofit` behaviour. The configuration setting is not parsed
+// and the offscreen framebuffer is not created. This will ensure the fastest
+// possibile FPS throughput.
+#undef  __NO_AUTOFIT__
+
+// Includes checks inside some crucial functions. Could be useful in DEBUG mode.
+#ifdef DEBUG
+#define __DEFENSIVE_CHECKS__
+#else
+#undef  __DEFENSIVE_CHECKS__
+#endif
+
+#define __NO_LINEFEEDS__
+
+#undef  __NO_MIRRORING__
+#define __FAST_TRANSPARENCY__
+#undef  __LOWERCASE_ARGB__
+#undef  __DEBUG_TRIANGLES_WINDING__
 #undef  __FIND_NEAREST_COLOR_EUCLIDIAN__
 #define __GRID_REPEAT_CONTENT__
 #undef  __GRID_INTEGER_CELL__

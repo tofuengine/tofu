@@ -31,6 +31,8 @@ extern void events_input_iskeydown_call1(WrenVM *vm);
 extern void events_input_iskeyup_call1(WrenVM *vm);
 extern void events_input_iskeypressed_call1(WrenVM *vm);
 extern void events_input_iskeyreleased_call1(WrenVM *vm);
+
+extern void events_environment_fps_get(WrenVM *vm);
 extern void events_environment_quit_call0(WrenVM *vm);
 
 #endif  /* __MODULES_EVENTS_H__ */

@@ -20,9 +20,25 @@
  * SOFTWARE.
  **/
 
-#ifndef __GRAPHICS_SHADERS_H__
-#define __GRAPHICS_SHADERS_H__
+#ifndef __GL_TEXTURE_H__
+#define __GL_TEXTURE_H__
 
-extern const char *graphics_shaders_find(const char *id);
+#include <stdbool.h>
 
-#endif  /* __GRAPHICS_SHADERS_H__ */
+#include "common.h"
+
+typedef struct _GL_Texture_t {
+    GLuint id;
+    GLuint width, height;
+} GL_Texture_t;
+
+typedef void (*GL_Texture_Callback_t)(void *parameters, void *data, int width, int height);
+
+extern bool GL_texture_load(GL_Texture_t *texture, const char *pathfile, const GL_Texture_Callback_t callback, void *parameters);
+extern bool GL_texture_decode(GL_Texture_t *texture, const void *buffer, const size_t size, const GL_Texture_Callback_t callback, void *parameters);
+extern void GL_texture_create(GL_Texture_t *texture, const size_t width, const size_t height, const void *data);
+extern void GL_texture_delete(GL_Texture_t *texture);
+extern void GL_texture_blit(const GL_Texture_t *texture, const GL_Quad_t source, const GL_Quad_t destination, const GL_Point_t origin, GLfloat rotation, const GL_Color_t color);
+extern void GL_texture_blit_fast(const GL_Texture_t *texture, const GL_Quad_t source, const GL_Quad_t destination, const GL_Color_t color);
+
+#endif  /* __GL_TEXTURE_H__ */

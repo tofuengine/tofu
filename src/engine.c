@@ -27,8 +27,6 @@
 #include "file.h"
 #include "log.h"
 
-#include <raylib/raylib.h>
-
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
@@ -52,13 +50,7 @@ static bool update_statistics(Engine_Statistics_t *statistics, double elapsed) {
         return false;
     }
     double fps = (double)FPS_AVERAGE_SAMPLES / sum;
-    if (statistics->min_fps > fps) {
-        statistics->min_fps = fps;
-    }
-    if (statistics->max_fps < fps) {
-        statistics->max_fps = fps;
-    }
-    statistics->current_fps = fps;
+    statistics->fps = fps;
     if (count == 0) {
         statistics->history[statistics->index] = fps;
         statistics->index = (statistics->index + 1) % STATISTICS_LENGTH;
@@ -69,14 +61,14 @@ static bool update_statistics(Engine_Statistics_t *statistics, double elapsed) {
 
 bool Engine_initialize(Engine_t *engine, const char *base_path)
 {
-    char filename[PATH_FILE_MAX];
-    strcpy(filename, base_path);
-    strcat(filename, CONFIGURATION_FILE_NAME);
+    char pathfile[PATH_FILE_MAX];
+    strcpy(pathfile, base_path);
+    strcat(pathfile, CONFIGURATION_FILE_NAME);
 
     Log_initialize();
 
     Configuration_initialize(&engine->configuration);
-    Configuration_load(&engine->configuration, filename);
+    Configuration_load(&engine->configuration, pathfile);
 
     Log_configure(engine->configuration.debug);
 
@@ -85,13 +77,15 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             .height = engine->configuration.height,
             .colors = engine->configuration.debug,
             .fullscreen = engine->configuration.fullscreen,
+#ifndef __NO_AUTOFIT__
             .autofit = engine->configuration.autofit,
+#endif
             .hide_cursor = engine->configuration.hide_cursor,
             .exit_key_enabled = engine->configuration.exit_key_enabled,
         };
     bool result = Display_initialize(&engine->display, &display_configuration, engine->configuration.title);
     if (!result) {
-        Log_write(LOG_LEVELS_ERROR, "Can't initialize display!");
+        Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't initialize display");
         return false;
     }
 
@@ -101,7 +95,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 
     result = Interpreter_initialize(&engine->interpreter, &engine->environment);
     if (!result) {
-        Log_write(LOG_LEVELS_ERROR, "Can't initialize interpreter!");
+        Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't initialize interpreter");
         Display_terminate(&engine->display);
         return false;
     }
@@ -121,33 +115,44 @@ bool Engine_isRunning(Engine_t *engine)
     return !engine->environment.should_close && !Display_shouldClose(&engine->display);
 }
 
+static void input_callback(void *parameters)
+{
+    Engine_t *engine = (Engine_t *)parameters;
+
+    Interpreter_input(&engine->interpreter);
+}
+
+static void render_callback(void *parameters)
+{
+    Engine_t *engine = (Engine_t *)parameters;
+
+    Interpreter_render(&engine->interpreter, 0.0); //lag / delta_time);
+}
+
 void Engine_run(Engine_t *engine)
 {
     const double delta_time = 1.0 / (double)engine->configuration.fps;
     const int skippable_frames = engine->configuration.skippable_frames;
-    Log_write(LOG_LEVELS_INFO, "Engine is now running, delta-time is %.3fs w/ %d skippable frames", delta_time, skippable_frames);
+    Log_write(LOG_LEVELS_INFO, "<ENGINE> now running, delta-time is %.3fs w/ %d skippable frames", delta_time, skippable_frames);
 
     Engine_Statistics_t statistics = (Engine_Statistics_t){
             .delta_time = delta_time,
-            .min_fps = __DBL_MAX__,
-            .max_fps = 0.0
         };
 
-    double previous = GetTime();
+    double previous = glfwGetTime();
     double lag = 0.0;
 
     while (Engine_isRunning(engine)) {
-        double current = GetTime();
+        double current = glfwGetTime();
         double elapsed = current - previous;
         previous = current;
 
-        const Engine_Statistics_t *current_statistics = NULL;
         if (engine->configuration.debug) {
             bool ready = update_statistics(&statistics, elapsed);
-            current_statistics = ready ? &statistics : NULL;
+            engine->environment.fps = ready ? statistics.fps : 0.0;
         }
 
-        Interpreter_input(&engine->interpreter);
+        Display_processInput(&engine->display, input_callback, engine);
 
         lag += elapsed; // Count a maximum amount of skippable frames in order no to stall on slower machines.
         for (int frames = 0; (frames < skippable_frames) && (lag >= delta_time); ++frames) {
@@ -157,8 +162,10 @@ void Engine_run(Engine_t *engine)
             lag -= delta_time;
         }
 
-        Display_renderBegin(&engine->display);
-            Interpreter_render(&engine->interpreter, lag / delta_time);
-        Display_renderEnd(&engine->display, current, current_statistics);
+//        if (used < delta_time) {
+//            glfwWait
+//        }
+
+        Display_render(&engine->display, render_callback, engine);
     }
 }

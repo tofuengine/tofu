@@ -8,7 +8,7 @@ Guess what? Yup, that's another game engine/framework.
 
 * C99 code only.
 * Self-contained, no external modules/libraries required.
-* Multi-platform (hopefully).
+* Cross-compiling multi-platform (hopefully).
 
 ## Cons
 
@@ -16,13 +16,17 @@ Guess what? Yup, that's another game engine/framework.
 
 ## Uses
 
-* [raylib](https://www.raylib.com/) v2.5
-* [Wren](https://wren.io/) v0.1.0
+* [Glad](https://glad.dav1d.de/)
+* [GLFW](https://www.glfw.org/) v3.3
 * [jsmn](https://zserge.com/jsmn.html/) v1.0.0
+* [Wren](https://wren.io/) v0.1.0
+* [spleen](https://github.com/fcambus/spleen) fonts
+* [stb](https://github.com/nothings/stb) libraries
 
 ## Features
 
-* [x] Palette based graphics (through shader) with up to 64 colors.
+* [x] Straight multimedia support, no intermediate third-party libraries.
+* [x] Palette based graphics (through shader) with up to 256 colors.
 * [x] Automatic nearest-color palette indexing of images.
 * [x] Predefined library of 8/16/32/64 colors palettes.
 * [ ] Tiled-map support w/ camera support (shader-level zoom and scrolling?).
@@ -49,7 +53,8 @@ Guess what? Yup, that's another game engine/framework.
 
 ## Inspirations
 
-* [LOVE2D](https://love2d.org/)
+* [Love2D](https://love2d.org/)
+* [raylib](https://www.raylib.com/)
 * [DOME Engine](https://github.com/avivbeeri/dome/)
 
 ## License

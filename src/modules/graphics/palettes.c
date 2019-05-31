@@ -26,7 +26,7 @@
 
 typedef struct _Predefined_Palette_t {
     const char *id;
-    Palette_t palette;
+    GL_Palette_t palette;
 } Predefined_Palette_t;
 
 static const Predefined_Palette_t _palettes[] = {
@@ -393,7 +393,7 @@ static const Predefined_Palette_t _palettes[] = {
     { NULL, { {}, 0 } }
 };
 
-const Palette_t *graphics_palettes_find(const char *id)
+const GL_Palette_t *graphics_palettes_find(const char *id)
 {
     for (size_t i = 0; _palettes[i].id != NULL; ++i) {
         if (strcasecmp(_palettes[i].id, id) == 0) {
