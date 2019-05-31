@@ -18,7 +18,7 @@ foreign class Font {
 
     construct new(file, glyphWidth, glyphHeight) {}
 
-    static default { Font.new("default") }
+    static default { Font.new("5x8", 0, 0) }
 
     foreign write(text, x, y, color, scale, align)
 
