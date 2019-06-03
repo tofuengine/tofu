@@ -350,7 +350,7 @@ void graphics_bank_blit_call3(WrenVM *vm)
     GL_Quad_t destination = (GL_Quad_t){ (GLfloat)dx, (GLfloat)dy, (GLfloat)dx + (GLfloat)dw, (GLfloat)dy + (GLfloat)dh };
 
     const GL_Sheet_t *sheet = &instance->sheet;
-    GL_texture_blit_fast(&sheet->atlas, sheet->quads[cell_id], destination, (GL_Color_t){ 255, 255, 255, 255 });
+    GL_sheet_blit_fast(sheet, cell_id, destination, (GL_Color_t){ 255, 255, 255, 255 });
 }
 
 void graphics_bank_blit_call5(WrenVM *vm)
@@ -393,7 +393,7 @@ void graphics_bank_blit_call5(WrenVM *vm)
 #endif
 
     const GL_Sheet_t *sheet = &instance->sheet;
-    GL_texture_blit_fast(&sheet->atlas, sheet->quads[cell_id], destination, (GL_Color_t){ 255, 255, 255, 255 });
+    GL_sheet_blit_fast(sheet, cell_id, destination, (GL_Color_t){ 255, 255, 255, 255 });
 }
 
 void graphics_bank_blit_call6(WrenVM *vm)
@@ -437,7 +437,7 @@ void graphics_bank_blit_call6(WrenVM *vm)
 #endif
 
     const GL_Sheet_t *sheet = &instance->sheet;
-    GL_texture_blit(&sheet->atlas, sheet->quads[cell_id], destination, instance->origin, rotation, (GL_Color_t){ 255, 255, 255, 255 });
+    GL_sheet_blit(sheet, cell_id, destination, instance->origin, rotation, (GL_Color_t){ 255, 255, 255, 255 });
 }
 
 void graphics_font_allocate(WrenVM *vm)
@@ -558,8 +558,7 @@ void graphics_font_write_call6(WrenVM *vm) // foreign write(text, x, y, color, s
         if (*ptr < ' ') {
             continue;
         }
-        int index = *ptr - ' ';
-        GL_texture_blit_fast(&sheet->atlas, sheet->quads[index], destination, (GL_Color_t){ color, color, color, 255 });
+        GL_sheet_blit_fast(sheet, *ptr - ' ', destination, (GL_Color_t){ color, color, color, 255 });
         destination.x0 += dw;
         destination.x1 = destination.x0 + dw;
     }
