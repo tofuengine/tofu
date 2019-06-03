@@ -34,10 +34,15 @@ GL_Quad_t *precompute_quads(GLuint width, GLuint height, GLuint quad_width, GLui
     GL_Quad_t *quads = Memory_calloc(amount, sizeof(GL_Quad_t));
     GLuint k = 0;
     for (GLuint i = 0; i < rows; ++i) {
-        GLuint y = i * quad_height;
+        GLfloat y = i * quad_height;
         for (GLuint j = 0; j < columns; ++j) {
-            GLuint x = j * quad_width;
-            quads[k++] = (GL_Quad_t){ .x0 = x, .y0 = y, .x1 = x + quad_width, .y1 = y + quad_height };
+            GLfloat x = j * quad_width;
+            quads[k++] = (GL_Quad_t){ // Pre-normalized.
+                    .x0 = x / width,
+                    .y0 = y / height,
+                    .x1 = (x + quad_width) / width,
+                    .y1 = (y + quad_height) / height
+                };
         }
     }
     return quads;
@@ -83,4 +88,83 @@ void GL_sheet_delete(GL_Sheet_t *sheet)
     GL_texture_delete(&sheet->atlas);
     Log_write(LOG_LEVELS_DEBUG, "<GL> sheet #%p deleted", sheet);
     *sheet = (GL_Sheet_t){};
+}
+
+void GL_sheet_blit(const GL_Sheet_t *sheet, size_t quad, const GL_Quad_t destination, const GL_Point_t origin, GLfloat rotation, const GL_Color_t color)
+{
+#ifdef __DEFENSIVE_CHECKS__
+    if (texture->id == 0) {
+        // TODO: output log here?
+        return;
+    }
+#endif
+
+    const GL_Quad_t *source = sheet->quads + quad;
+
+    GLfloat sx0 = source->x0;
+    GLfloat sy0 = source->y0;
+    GLfloat sx1 = source->x1;
+    GLfloat sy1 = source->y1;
+
+    GLfloat dx0 = 0.0f;
+    GLfloat dy0 = 0.0f;
+    GLfloat dx1 = destination.x1 - destination.x0;
+    GLfloat dy1 = destination.y1 - destination.y0;
+
+    glBindTexture(GL_TEXTURE_2D, sheet->atlas.id);
+
+    glPushMatrix();
+        glTranslatef(destination.x0, destination.y0, 0.0f);
+        glRotatef(rotation, 0.0f, 0.0f, 1.0f);
+        glTranslatef(-origin.x, -origin.y, 0.0f);
+        glBegin(GL_TRIANGLE_STRIP);
+            glColor4ub(color.r, color.g, color.b, color.a);
+
+            glTexCoord2f(sx0, sy0); // CCW strip, top-left is <0,0> (the face direction of the strip is determined by the winding of the first triangle)
+            glVertex2f(dx0, dy0);
+            glTexCoord2f(sx0, sy1);
+            glVertex2f(dx0, dy1);
+            glTexCoord2f(sx1, sy0);
+            glVertex2f(dx1, dy0);
+            glTexCoord2f(sx1, sy1);
+            glVertex2f(dx1, dy1);
+        glEnd();
+    glPopMatrix();
+}
+
+void GL_sheet_blit_fast(const GL_Sheet_t *sheet, size_t quad, const GL_Quad_t destination, const GL_Color_t color)
+{
+#ifdef __DEFENSIVE_CHECKS__
+    if (texture->id == 0) {
+        // TODO: output log here?
+        return;
+    }
+#endif
+
+    const GL_Quad_t *source = sheet->quads + quad;
+
+    GLfloat sx0 = source->x0;
+    GLfloat sy0 = source->y0;
+    GLfloat sx1 = source->x1;
+    GLfloat sy1 = source->y1;
+
+    GLfloat dx0 = destination.x0;
+    GLfloat dy0 = destination.y0;
+    GLfloat dx1 = destination.x1;
+    GLfloat dy1 = destination.y1;
+
+    glBindTexture(GL_TEXTURE_2D, sheet->atlas.id);
+
+    glBegin(GL_TRIANGLE_STRIP);
+        glColor4ub(color.r, color.g, color.b, color.a);
+
+        glTexCoord2f(sx0, sy0); // CCW strip, top-left is <0,0> (the face direction of the strip is determined by the winding of the first triangle)
+        glVertex2f(dx0, dy0);
+        glTexCoord2f(sx0, sy1);
+        glVertex2f(dx0, dy1);
+        glTexCoord2f(sx1, sy0);
+        glVertex2f(dx1, dy0);
+        glTexCoord2f(sx1, sy1);
+        glVertex2f(dx1, dy1);
+    glEnd();
 }
