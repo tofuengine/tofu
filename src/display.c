@@ -104,6 +104,7 @@ static const char *fragment_shader =
 static const int _mode_palette[] = { 0 };
 static const int _mode_passthru[] = { 1 };
 #endif
+static const int _texture_id_0[] = { 0 };
 
 static void error_callback(int error, const char *description)
 {
@@ -311,8 +312,10 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         glfwTerminate();
         return false;
     }
-    GLint id = 0;
-    GL_program_send(&display->program, "u_texture0", GL_PROGRAM_UNIFORM_TEXTURE, 1, &id); // Redundant
+    GL_program_send(&display->program, "u_texture0", GL_PROGRAM_UNIFORM_TEXTURE, 1, _texture_id_0); // Redundant
+#ifdef __NO_AUTOFIT__
+    GL_program_send(&display->program, "u_mode", GL_PROGRAM_UNIFORM_INT, 1, _mode_palette);
+#endif
     GL_program_use(&display->program);
 
     GL_Palette_t palette; // Initial gray-scale palette.
@@ -383,9 +386,9 @@ void Display_render(Display_t *display, const Display_Callback_t callback, void 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Required, to clear previous content. (TODO: configurable color?)
     glClear(GL_COLOR_BUFFER_BIT);
 
-    GL_program_send(&display->program, "u_mode", GL_PROGRAM_UNIFORM_INT, 1, _mode_palette);
-    callback(parameters);
     GL_program_send(&display->program, "u_mode", GL_PROGRAM_UNIFORM_INT, 1, _mode_passthru);
+    callback(parameters);
+    GL_program_send(&display->program, "u_mode", GL_PROGRAM_UNIFORM_INT, 1, _mode_palette);
 
     const int pw = display->physical_width; // We need to y-flip the texture, either by inverting the quad or
     const int ph = display->physical_height; // the ortho matrix or the with a shader.
