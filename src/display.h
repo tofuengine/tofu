@@ -79,6 +79,7 @@ typedef struct _Display_t {
     GL_Texture_t offscreen_texture;
     GLuint offscreen_framebuffer;
 #endif
+    GLfloat background[4]; // RGBA
 
     GL_Program_t program;
 

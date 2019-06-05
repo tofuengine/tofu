@@ -64,3 +64,11 @@ void GL_palette_normalize(const GL_Palette_t *palette, GLfloat *colors) // palet
         colors[j + 2] = (GLfloat)palette->colors[i].b / (GLfloat)255.0;
     }
 }
+
+void GL_palette_normalize_color(const GL_Color_t color, GLfloat rgba[4])
+{
+    rgba[0] = (GLfloat)color.r / (GLfloat)255.0;
+    rgba[1] = (GLfloat)color.g / (GLfloat)255.0;
+    rgba[2] = (GLfloat)color.b / (GLfloat)255.0;
+    rgba[3] = (GLfloat)color.b / (GLfloat)255.0;
+}
