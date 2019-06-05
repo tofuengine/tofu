@@ -386,9 +386,9 @@ void Display_render(Display_t *display, const Display_Callback_t callback, void 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Required, to clear previous content. (TODO: configurable color?)
     glClear(GL_COLOR_BUFFER_BIT);
 
-    GL_program_send(&display->program, "u_mode", GL_PROGRAM_UNIFORM_INT, 1, _mode_passthru);
-    callback(parameters);
     GL_program_send(&display->program, "u_mode", GL_PROGRAM_UNIFORM_INT, 1, _mode_palette);
+    callback(parameters);
+    GL_program_send(&display->program, "u_mode", GL_PROGRAM_UNIFORM_INT, 1, _mode_passthru);
 
     const int pw = display->physical_width; // We need to y-flip the texture, either by inverting the quad or
     const int ph = display->physical_height; // the ortho matrix or the with a shader.
