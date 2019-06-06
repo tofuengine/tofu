@@ -17,6 +17,8 @@ class Game {
         _bunnies = []
 
         Canvas.palette = "gameboy"
+        Canvas.background = 1
+
         var palette = Canvas.palette
         System.write(palette)
 
