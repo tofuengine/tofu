@@ -79,11 +79,12 @@ typedef struct _Display_t {
     GL_Texture_t offscreen_texture;
     GLuint offscreen_framebuffer;
 #endif
-    GLfloat background[4]; // RGBA
 
     GL_Program_t program;
 
     GL_Palette_t palette;
+    int background_index;
+    GLfloat background_rgba[4];
 } Display_t;
 
 typedef void (*Display_Callback_t)(void *parameters);
@@ -93,6 +94,7 @@ extern bool Display_shouldClose(Display_t *display);
 extern void Display_processInput(Display_t *display, const Display_Callback_t callback, void *parameters);
 extern void Display_render(Display_t *display, const Display_Callback_t callback, void *parameters);
 extern void Display_palette(Display_t *display, const GL_Palette_t *palette);
+extern void Display_background(Display_t *display, const size_t color);
 extern void Display_terminate(Display_t *display);
 
 #endif  /* __DISPLAY_H__ */

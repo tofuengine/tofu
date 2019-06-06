@@ -136,6 +136,8 @@ const char graphics_wren[] =
     "    foreign static height\n"
     "    foreign static palette\n"
     "    foreign static palette=(colors)\n"
+    "    foreign static background\n"
+    "    foreign static background=(color)\n"
     "\n"
     "    foreign static points(vertices, color)\n"
     "    foreign static polyline(vertices, color)\n"
@@ -581,7 +583,7 @@ void graphics_canvas_height_get(WrenVM *vm)
 void graphics_canvas_palette_get(WrenVM *vm)
 {
     Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
-    
+
     GL_Palette_t *palette = &environment->display->palette;
 
     int slots = wrenGetSlotCount(vm);
@@ -647,7 +649,7 @@ void graphics_canvas_palette_set(WrenVM *vm)
             const char *argb = wrenGetSlotString(vm, aux_slot_id);
             palette.colors[i] = GL_palette_parse_color(argb);
         }
-    } else { 
+    } else {
         Log_write(LOG_LEVELS_ERROR, "<GRAPHICS> wrong palette type, need to be string or list");
     }
 
@@ -656,8 +658,24 @@ void graphics_canvas_palette_set(WrenVM *vm)
     }
 
     Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
-    
+
     Display_palette(environment->display, &palette);
+}
+
+void graphics_canvas_background_get(WrenVM *vm)
+{
+    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+
+    wrenSetSlotDouble(vm, 0, environment->display->background_index);
+}
+
+void graphics_canvas_background_set(WrenVM *vm)
+{
+    int color = (int)wrenGetSlotDouble(vm, 1);
+
+    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+
+    Display_background(environment->display, color);
 }
 
 // When drawing points and lines we need to ensure to be in mid-pixel coordinates, according to

@@ -383,8 +383,8 @@ void Display_render(Display_t *display, const Display_Callback_t callback, void 
     glEnable(GL_BLEND);
 #endif
 
-    GLfloat *background = display->background;
-    glClearColor(background[0], background[1], background[2], background[3]); // Required, to clear previous content. (TODO: configurable color?)
+    GLfloat *rgba = display->background_rgba;
+    glClearColor(rgba[0], rgba[1], rgba[2], rgba[3]); // Required, to clear previous content.
     glClear(GL_COLOR_BUFFER_BIT);
 
     GL_program_send(&display->program, "u_mode", GL_PROGRAM_UNIFORM_INT, 1, _mode_palette);
@@ -411,8 +411,8 @@ void Display_render(Display_t *display, const Display_Callback_t callback, void 
     GL_texture_blit_fast(&display->offscreen_texture, display->offscreen_source, display->offscreen_destination, (GL_Color_t){ 255, 255, 255, 255 });
 
 #else
-    GLfloat *background = display->background;
-    glClearColor(background[0], background[1], background[2], background[3]); // Required, to clear previous content. (TODO: configurable color?)
+    GLfloat *rgba = display->background_rgba;
+    glClearColor(rgba[0], rgba[1], rgba[2], rgba[3]); // Required, to clear previous content.
     glClear(GL_COLOR_BUFFER_BIT);
 
     callback(parameters);
@@ -428,8 +428,20 @@ void Display_palette(Display_t *display, const GL_Palette_t *palette)
     GL_palette_normalize(palette, colors);
     GL_program_send(&display->program, "u_palette", GL_PROGRAM_UNIFORM_VEC3, MAX_PALETTE_COLORS, colors);
     display->palette = *palette;
-    GL_palette_normalize_color(palette->colors[0], display->background); // TODO: make configurable?
 
+    GL_palette_normalize_color(palette->colors[display->background_index], display->background_rgba); // Update current bg-color.
+
+}
+
+void Display_background(Display_t *display, const size_t color)
+{
+    if (color >= display->palette.count) {
+        Log_write(LOG_LEVELS_WARNING, "<DISPLAY> color index #%d not available in current palette", color);
+        return;
+    }
+    display->background_index = color;
+
+    GL_palette_normalize_color(display->palette.colors[color], display->background_rgba);
 }
 
 void Display_terminate(Display_t *display)
