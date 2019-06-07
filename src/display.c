@@ -430,7 +430,6 @@ void Display_palette(Display_t *display, const GL_Palette_t *palette)
     display->palette = *palette;
 
     GL_palette_normalize_color(palette->colors[display->background_index], display->background_rgba); // Update current bg-color.
-
 }
 
 void Display_background(Display_t *display, const size_t color)
