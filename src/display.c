@@ -54,8 +54,8 @@ typedef struct _Program_Data_t {
     "varying vec2 v_texture_coords;\n" \
     "\n" \
     "uniform sampler2D u_texture0;\n" \
-    "//uniform vec2 u_resolution;\n" \
-    "//uniform float u_time;\n" \
+    "uniform vec2 u_resolution;\n" \
+    "uniform float u_time;\n" \
     "\n" \
     "uniform vec3 u_palette[256];\n" \
     "\n" \
@@ -83,8 +83,8 @@ typedef struct _Program_Data_t {
     "varying vec2 v_texture_coords;\n" \
     "\n" \
     "uniform sampler2D u_texture0;\n" \
-    "//uniform vec2 u_resolution;\n" \
-    "//uniform float u_time;\n" \
+    "uniform vec2 u_resolution;\n" \
+    "uniform float u_time;\n" \
     "\n" \
     "vec4 passthru(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {\n" \
     "//    return texture2D(texture, vec2(texture_coords.x, 1.0 - texture_coords.y)) * color;\n" \
@@ -102,8 +102,8 @@ typedef struct _Program_Data_t {
     "varying vec2 v_texture_coords;\n" \
     "\n" \
     "uniform sampler2D u_texture0;\n" \
-    "//uniform vec2 u_resolution;\n" \
-    "//uniform float u_time;\n" \
+    "uniform vec2 u_resolution;\n" \
+    "uniform float u_time;\n" \
     "\n" \
     "vec4 effect(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords);\n" \
     "\n" \
@@ -114,7 +114,8 @@ typedef struct _Program_Data_t {
 
 static const Program_Data_t _programs_data[Display_Programs_t_CountOf] = {
     { VERTEX_SHADER, FRAGMENT_SHADER_PALETTE },
-    { VERTEX_SHADER, FRAGMENT_SHADER_PASSTHRU }
+    { VERTEX_SHADER, FRAGMENT_SHADER_PASSTHRU },
+    { VERTEX_SHADER, NULL }
 };
 
 static const int _texture_id_0[] = { 0 };
@@ -317,7 +318,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
 
     for (size_t i = 0; i < Display_Programs_t_CountOf; ++i) {
         const Program_Data_t *data = &_programs_data[i];
-        if (!data->vertex_shader && !data->fragment_shader) {
+        if (!data->vertex_shader || !data->fragment_shader) {
             continue;
         }
         if (!GL_program_create(&display->programs[i]) ||
@@ -334,7 +335,10 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         }
 
         GL_program_send(&display->programs[i], "u_texture0", GL_PROGRAM_UNIFORM_TEXTURE, 1, _texture_id_0); // Redundant
+        GLfloat resolution[] = { (GLfloat)display->window_width, (GLfloat)display->window_height };
+        GL_program_send(&display->programs[i], "u_resolution", GL_PROGRAM_UNIFORM_VEC2, 1, resolution);
     }
+    display->program_index = DISPLAY_PROGRAM_PASSTHRU; // Use pass-thru at the beginning.
 
     GL_Palette_t palette; // Initial gray-scale palette.
     GL_palette_greyscale(&palette, GL_MAX_PALETTE_COLORS);
@@ -407,11 +411,9 @@ void Display_render(Display_t *display, const Display_Callback_t callback, void 
 
     GL_program_use(&display->programs[DISPLAY_PROGRAM_PALETTE]);
     callback(parameters);
-    if (display->programs[DISPLAY_PROGRAM_CUSTOM].id != 0) {
-        GL_program_use(&display->programs[DISPLAY_PROGRAM_CUSTOM]);
-    } else {
-        GL_program_use(&display->programs[DISPLAY_PROGRAM_PASSTHRU]);
-    }
+    GLfloat time[] = { (GLfloat)glfwGetTime() };
+    GL_program_send(&display->programs[display->program_index], "u_time", GL_PROGRAM_UNIFORM_FLOAT, 1, time);
+    GL_program_use(&display->programs[display->program_index]);
 
     const int pw = display->physical_width; // We need to y-flip the texture, either by inverting the quad or
     const int ph = display->physical_height; // the ortho matrix or the with a shader.
@@ -470,6 +472,7 @@ void Display_shader(Display_t *display, const char *effect)
 {
     if (!effect) {
         GL_program_delete(&display->programs[DISPLAY_PROGRAM_CUSTOM]);
+        display->program_index = DISPLAY_PROGRAM_PASSTHRU;
         return;
     }
 
@@ -479,9 +482,18 @@ void Display_shader(Display_t *display, const char *effect)
     memcpy(code + strlen(FRAGMENT_SHADER_CUSTOM), effect, strlen(effect));
 
     // TODO: check for errors.
-    GL_program_create(&display->programs[DISPLAY_PROGRAM_CUSTOM]);
-    GL_program_attach(&display->programs[DISPLAY_PROGRAM_CUSTOM], VERTEX_SHADER, GL_PROGRAM_SHADER_VERTEX);
-    GL_program_attach(&display->programs[DISPLAY_PROGRAM_CUSTOM], code, GL_PROGRAM_SHADER_FRAGMENT);
+    const Program_Data_t *data = &_programs_data[DISPLAY_PROGRAM_CUSTOM];
+    GL_Program_t *program = &display->programs[DISPLAY_PROGRAM_CUSTOM];
+
+    GL_program_create(program);
+    GL_program_attach(program, data->vertex_shader, GL_PROGRAM_SHADER_VERTEX);
+    GL_program_attach(program, code, GL_PROGRAM_SHADER_FRAGMENT);
+
+    GL_program_send(program, "u_texture0", GL_PROGRAM_UNIFORM_TEXTURE, 1, _texture_id_0); // Redundant
+    GLfloat resolution[] = { (GLfloat)display->window_width, (GLfloat)display->window_height };
+    GL_program_send(program, "u_resolution", GL_PROGRAM_UNIFORM_VEC2, 1, resolution);
+
+    display->program_index = DISPLAY_PROGRAM_CUSTOM;
 
     Memory_free(code);
 }

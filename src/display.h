@@ -90,6 +90,7 @@ typedef struct _Display_t {
 #endif
 
     GL_Program_t programs[Display_Programs_t_CountOf];
+    size_t program_index;
 
     GL_Palette_t palette;
     int background_index;
