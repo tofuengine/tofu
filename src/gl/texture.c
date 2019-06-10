@@ -63,7 +63,7 @@ bool GL_texture_decode(GL_Texture_t *texture, const void *buffer, const size_t s
     GL_texture_create(texture, width, height, data);
     stbi_image_free(data);
 
-    Log_write(LOG_LEVELS_DEBUG, "<GL> texture created w/ id #%d (%dx%d)", texture->id, width, height);
+    Log_write(LOG_LEVELS_DEBUG, "<GL> texture decoded w/ id #%d (%dx%d)", texture->id, width, height);
 
     return true;
 }
