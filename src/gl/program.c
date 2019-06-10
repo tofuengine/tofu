@@ -120,7 +120,7 @@ void GL_program_send(const GL_Program_t *program, const char *id, GL_Program_Uni
 {
     GLint location = glGetUniformLocation(program->id, id);
     if (location == -1) {
-        Log_write(LOG_LEVELS_WARNING, "<GL> can't find uniform '%s' uniform for shader #%d", id, program->id);
+        Log_write(LOG_LEVELS_WARNING, "<GL> can't find uniform '%s' for program #%d", id, program->id);
         return;
     }
     glUseProgram(program->id);
