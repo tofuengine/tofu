@@ -9,6 +9,19 @@ import "./lib/bunny" for Bunny
 var LITTER_SIZE = 250
 var MAX_BUNNIES = 32768
 
+var EFFECT = "\n" +
+    "const float amount = 0.5;\n" +
+    "const float thickness = 1.0;\n" +
+    "const float spacing = 1.0;\n" +
+    "\n" +
+    "vec4 effect(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {\n" +
+    "    vec4 texel = texture2D(texture, texture_coords) * color;\n" +
+    "    if (mod(screen_coords.y, round(thickness + spacing)) < round(spacing)) {\n" +
+	"        return vec4(texel.rgb * (1.0 - amount), texel.a);\n" +
+    "    }\n" +
+    "    return texel;\n" +
+    "}\n"
+
 class Game {
 
     construct new() {
@@ -18,6 +31,7 @@ class Game {
 
         Canvas.palette = "gameboy"
         Canvas.background = 1
+        Canvas.shader = EFFECT
 
         var palette = Canvas.palette
         System.write(palette)
@@ -69,7 +83,7 @@ class Game {
         for (bunny in _bunnies) {
             bunny.render()
         }
-        _font.write("FPS: %(Environment.fps.round)", 0, 0, 1, 1.0, "left")
+        _font.write("FPS: %(Environment.fps.round)", 0, 0, 0, 1.0, "left")
         _font.write("#%(_bunnies.count) bunnies", Canvas.width, 0, 3, 1.0, "right")
     }
 

@@ -136,8 +136,8 @@ const char graphics_wren[] =
     "    foreign static height\n"
     "    foreign static palette\n"
     "    foreign static palette=(colors)\n"
-    "    foreign static background\n"
     "    foreign static background=(color)\n"
+    "    foreign static shader=(code)\n"
     "\n"
     "    foreign static points(vertices, color)\n"
     "    foreign static polyline(vertices, color)\n"
@@ -662,13 +662,6 @@ void graphics_canvas_palette_set(WrenVM *vm)
     Display_palette(environment->display, &palette);
 }
 
-void graphics_canvas_background_get(WrenVM *vm)
-{
-    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
-
-    wrenSetSlotDouble(vm, 0, environment->display->background_index);
-}
-
 void graphics_canvas_background_set(WrenVM *vm)
 {
     int color = (int)wrenGetSlotDouble(vm, 1);
@@ -676,6 +669,15 @@ void graphics_canvas_background_set(WrenVM *vm)
     Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
     Display_background(environment->display, color);
+}
+
+void graphics_canvas_shader_set(WrenVM *vm)
+{
+    const char *code= wrenGetSlotString(vm, 1);
+
+    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+
+    Display_shader(environment->display, code);
 }
 
 // When drawing points and lines we need to ensure to be in mid-pixel coordinates, according to

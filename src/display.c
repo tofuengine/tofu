@@ -26,84 +26,97 @@
 #include "engine.h"
 #include "hal.h"
 #include "log.h"
+#include "memory.h"
 
 #include <memory.h>
 
-static const char *vertex_shader = 
-    "#version 120\n"
-    "\n"
-    "varying vec2 v_texture_coords;\n"
-    "\n"
-    "void main()\n"
-    "{\n"
-    "   gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\n"
-    "   gl_FrontColor = gl_Color; // Pass the vertex drawing color.\n"
-    "\n"
-    "   v_texture_coords = gl_MultiTexCoord0.st; // Retain texture 2D position.\n"
-    "}\n";
-;
+typedef struct _Program_Data_t {
+    const char *vertex_shader;
+    const char *fragment_shader;
+} Program_Data_t;
 
-static const char *fragment_shader =
-    "#version 120\n"
-    "\n"
-    "varying vec2 v_texture_coords;\n"
-    "\n"
-    "uniform sampler2D u_texture0;\n"
-    "//uniform vec2 u_resolution;\n"
-    "//uniform float u_time;\n"
-#ifndef __NO_AUTOFIT__
-    "uniform int u_mode;\n"
-#endif
-    "\n"
-    "uniform vec3 u_palette[256];\n"
-    "\n"
-    "vec4 palette(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {\n"
-    "    // Texel color fetching from texture sampler\n"
-    "    vec4 texel = texture2D(texture, texture_coords) * color;\n"
-    "\n"
-    "    // Convert the (normalized) texel color RED component (GB would work, too)\n"
-    "    // to the palette index by scaling up from [0, 1] to [0, 255].\n"
-    "    int index = int(floor((texel.r * 255.0) + 0.5));\n"
-    "\n"
-    "    // Pick the palette color as final fragment color (retain the texel alpha value).\n"
-    "    // Note: palette components are pre-normalized in the OpenGL range [0, 1].\n"
-    "    return vec4(u_palette[index].rgb, texel.a);\n"
-    "}\n"
-    "\n"
-    "vec4 passthru(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {\n"
-    "//    return texture2D(texture, vec2(texture_coords.x, 1.0 - texture_coords.y)) * color;\n"
-    "    return texture2D(texture, texture_coords) * color;\n"
-    "}\n"
-    "\n"
-    "const float amount = 0.5;\n"
-    "const float thickness = 1.0;\n"
-    "const float spacing = 1.0;\n"
-    "\n"
-    "vec4 scanlines(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {\n"
-    "    vec4 texel = texture2D(texture, texture_coords) * color;\n"
-    "    if (mod(screen_coords.y, round(thickness + spacing)) < round(spacing)) {\n"
-	"        return vec4(texel.rgb * (1.0 - amount), texel.a);\n"
-    "    }\n"
-    "    return texel;\n"
-    "}\n"
-    "\n"
-    "void main()\n"
-    "{\n"
-#ifndef __NO_AUTOFIT__
-    "    gl_FragColor = (u_mode == 0)\n"
-    "        ? palette(gl_Color, u_texture0, v_texture_coords, gl_FragCoord.xy)\n"
-    "        : passthru(gl_Color, u_texture0, v_texture_coords, gl_FragCoord.xy);\n"
-    "//        : scanlines(gl_Color, u_texture0, v_texture_coords, gl_FragCoord.xy);\n"
-#else
-    "    gl_FragColor = palette(gl_Color, u_texture0, v_texture_coords, gl_FragCoord.xy);\n"
-#endif
-    "}\n"
-;
+#define VERTEX_SHADER \
+    "#version 120\n" \
+    "\n" \
+    "varying vec2 v_texture_coords;\n" \
+    "\n" \
+    "void main()\n" \
+    "{\n" \
+    "   gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\n" \
+    "   gl_FrontColor = gl_Color; // Pass the vertex drawing color.\n" \
+    "\n" \
+    "   v_texture_coords = gl_MultiTexCoord0.st; // Retain texture 2D position.\n" \
+    "}\n" \
 
-#ifndef __NO_AUTOFIT__
-static const int _mode_palette[] = { 0 };
-static const int _mode_passthru[] = { 1 };
-#endif
+#define FRAGMENT_SHADER_PALETTE \
+    "#version 120\n" \
+    "\n" \
+    "varying vec2 v_texture_coords;\n" \
+    "\n" \
+    "uniform sampler2D u_texture0;\n" \
+    "//uniform vec2 u_resolution;\n" \
+    "//uniform float u_time;\n" \
+    "\n" \
+    "uniform vec3 u_palette[256];\n" \
+    "\n" \
+    "vec4 palette(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {\n" \
+    "    // Texel color fetching from texture sampler\n" \
+    "    vec4 texel = texture2D(texture, texture_coords) * color;\n" \
+    "\n" \
+    "    // Convert the (normalized) texel color RED component (GB would work, too)\n" \
+    "    // to the palette index by scaling up from [0, 1] to [0, 255].\n" \
+    "    int index = int(floor((texel.r * 255.0) + 0.5));\n" \
+    "\n" \
+    "    // Pick the palette color as final fragment color (retain the texel alpha value).\n" \
+    "    // Note: palette components are pre-normalized in the OpenGL range [0, 1].\n" \
+    "    return vec4(u_palette[index].rgb, texel.a);\n" \
+    "}\n" \
+    "\n" \
+    "void main()\n" \
+    "{\n" \
+    "    gl_FragColor = palette(gl_Color, u_texture0, v_texture_coords, gl_FragCoord.xy);\n" \
+    "}\n"
+
+#define FRAGMENT_SHADER_PASSTHRU \
+    "#version 120\n" \
+    "\n" \
+    "varying vec2 v_texture_coords;\n" \
+    "\n" \
+    "uniform sampler2D u_texture0;\n" \
+    "//uniform vec2 u_resolution;\n" \
+    "//uniform float u_time;\n" \
+    "\n" \
+    "vec4 passthru(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {\n" \
+    "//    return texture2D(texture, vec2(texture_coords.x, 1.0 - texture_coords.y)) * color;\n" \
+    "    return texture2D(texture, texture_coords) * color;\n" \
+    "}\n" \
+    "\n" \
+    "void main()\n" \
+    "{\n" \
+    "    gl_FragColor = passthru(gl_Color, u_texture0, v_texture_coords, gl_FragCoord.xy);\n" \
+    "}\n"
+
+#define FRAGMENT_SHADER_CUSTOM \
+    "#version 120\n" \
+    "\n" \
+    "varying vec2 v_texture_coords;\n" \
+    "\n" \
+    "uniform sampler2D u_texture0;\n" \
+    "//uniform vec2 u_resolution;\n" \
+    "//uniform float u_time;\n" \
+    "\n" \
+    "vec4 effect(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords);\n" \
+    "\n" \
+    "void main()\n" \
+    "{\n" \
+    "    gl_FragColor = effect(gl_Color, u_texture0, v_texture_coords, gl_FragCoord.xy);\n" \
+    "}\n"
+
+static const Program_Data_t _programs_data[Display_Programs_t_CountOf] = {
+    { VERTEX_SHADER, FRAGMENT_SHADER_PALETTE },
+    { VERTEX_SHADER, FRAGMENT_SHADER_PASSTHRU }
+};
+
 static const int _texture_id_0[] = { 0 };
 
 static void error_callback(int error, const char *description)
@@ -302,23 +315,26 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     }
 #endif
 
-    if (!GL_program_create(&display->program) ||
-        !GL_program_attach(&display->program, vertex_shader, GL_PROGRAM_SHADER_VERTEX) ||
-        !GL_program_attach(&display->program, fragment_shader, GL_PROGRAM_SHADER_FRAGMENT)) {
-        Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't initialize shaders");
+    for (size_t i = 0; i < Display_Programs_t_CountOf; ++i) {
+        const Program_Data_t *data = &_programs_data[i];
+        if (!data->vertex_shader && !data->fragment_shader) {
+            continue;
+        }
+        if (!GL_program_create(&display->programs[i]) ||
+            !GL_program_attach(&display->programs[i], data->vertex_shader, GL_PROGRAM_SHADER_VERTEX) ||
+            !GL_program_attach(&display->programs[i], data->fragment_shader, GL_PROGRAM_SHADER_FRAGMENT)) {
+            Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't initialize shaders");
 #ifndef __NO_AUTOFIT__
-        deinitialize_framebuffer(display);
+            deinitialize_framebuffer(display);
 #endif
-        GL_terminate();
-        glfwDestroyWindow(display->window);
-        glfwTerminate();
-        return false;
+            GL_terminate();
+            glfwDestroyWindow(display->window);
+            glfwTerminate();
+            return false;
+        }
+
+        GL_program_send(&display->programs[i], "u_texture0", GL_PROGRAM_UNIFORM_TEXTURE, 1, _texture_id_0); // Redundant
     }
-    GL_program_send(&display->program, "u_texture0", GL_PROGRAM_UNIFORM_TEXTURE, 1, _texture_id_0); // Redundant
-#ifdef __NO_AUTOFIT__
-    GL_program_send(&display->program, "u_mode", GL_PROGRAM_UNIFORM_INT, 1, _mode_palette);
-#endif
-    GL_program_use(&display->program);
 
     GL_Palette_t palette; // Initial gray-scale palette.
     GL_palette_greyscale(&palette, GL_MAX_PALETTE_COLORS);
@@ -389,9 +405,13 @@ void Display_render(Display_t *display, const Display_Callback_t callback, void 
     glClearColor(rgba[0], rgba[1], rgba[2], rgba[3]); // Required, to clear previous content.
     glClear(GL_COLOR_BUFFER_BIT);
 
-    GL_program_send(&display->program, "u_mode", GL_PROGRAM_UNIFORM_INT, 1, _mode_palette);
+    GL_program_use(&display->programs[DISPLAY_PROGRAM_PALETTE]);
     callback(parameters);
-    GL_program_send(&display->program, "u_mode", GL_PROGRAM_UNIFORM_INT, 1, _mode_passthru);
+    if (display->programs[DISPLAY_PROGRAM_CUSTOM].id != 0) {
+        GL_program_use(&display->programs[DISPLAY_PROGRAM_CUSTOM]);
+    } else {
+        GL_program_use(&display->programs[DISPLAY_PROGRAM_PASSTHRU]);
+    }
 
     const int pw = display->physical_width; // We need to y-flip the texture, either by inverting the quad or
     const int ph = display->physical_height; // the ortho matrix or the with a shader.
@@ -417,6 +437,7 @@ void Display_render(Display_t *display, const Display_Callback_t callback, void 
     glClearColor(rgba[0], rgba[1], rgba[2], rgba[3]); // Required, to clear previous content.
     glClear(GL_COLOR_BUFFER_BIT);
 
+    GL_program_use(&display->programs[DISPLAY_PROGRAM_PALETTE]);
     callback(parameters);
 #endif
 
@@ -428,7 +449,7 @@ void Display_palette(Display_t *display, const GL_Palette_t *palette)
 {
     GLfloat colors[MAX_PALETTE_COLORS * 3] = {};
     GL_palette_normalize(palette, colors);
-    GL_program_send(&display->program, "u_palette", GL_PROGRAM_UNIFORM_VEC3, MAX_PALETTE_COLORS, colors);
+    GL_program_send(&display->programs[DISPLAY_PROGRAM_PALETTE], "u_palette", GL_PROGRAM_UNIFORM_VEC3, MAX_PALETTE_COLORS, colors);
     display->palette = *palette;
 
     GL_palette_normalize_color(palette->colors[display->background_index], display->background_rgba); // Update current bg-color.
@@ -445,9 +466,34 @@ void Display_background(Display_t *display, const size_t color)
     GL_palette_normalize_color(display->palette.colors[color], display->background_rgba);
 }
 
+void Display_shader(Display_t *display, const char *effect)
+{
+    if (!effect) {
+        GL_program_delete(&display->programs[DISPLAY_PROGRAM_CUSTOM]);
+        return;
+    }
+
+    const size_t length = strlen(FRAGMENT_SHADER_CUSTOM) + strlen(effect) + 1;
+    char *code = Memory_calloc(sizeof(char), length);
+    memcpy(code, FRAGMENT_SHADER_CUSTOM, strlen(FRAGMENT_SHADER_CUSTOM));
+    memcpy(code + strlen(FRAGMENT_SHADER_CUSTOM), effect, strlen(effect));
+
+    // TODO: check for errors.
+    GL_program_create(&display->programs[DISPLAY_PROGRAM_CUSTOM]);
+    GL_program_attach(&display->programs[DISPLAY_PROGRAM_CUSTOM], VERTEX_SHADER, GL_PROGRAM_SHADER_VERTEX);
+    GL_program_attach(&display->programs[DISPLAY_PROGRAM_CUSTOM], code, GL_PROGRAM_SHADER_FRAGMENT);
+
+    Memory_free(code);
+}
+
 void Display_terminate(Display_t *display)
 {
-    GL_program_delete(&display->program);
+    for (size_t i = 0; i < Display_Programs_t_CountOf; ++i) {
+        if (display->programs[i].id == 0) {
+            continue;
+        }
+        GL_program_delete(&display->programs[i]);
+    }
 
 #ifndef __NO_AUTOFIT__
     deinitialize_framebuffer(display);

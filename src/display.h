@@ -47,6 +47,15 @@ typedef enum _Display_Keys_t {
     Display_Keys_t_CountOf
 } Display_Keys_t;
 
+typedef enum _Display_Programs_t {
+    Display_Programs_t_First = 0,
+    DISPLAY_PROGRAM_PALETTE = Display_Programs_t_First,
+    DISPLAY_PROGRAM_PASSTHRU,
+    DISPLAY_PROGRAM_CUSTOM,
+    Display_Programs_t_Last = DISPLAY_PROGRAM_CUSTOM,
+    Display_Programs_t_CountOf
+} Display_Programs_t;
+
 typedef struct _Display_Configuration_t {
     int width, height;
     int colors;
@@ -80,7 +89,7 @@ typedef struct _Display_t {
     GLuint offscreen_framebuffer;
 #endif
 
-    GL_Program_t program;
+    GL_Program_t programs[Display_Programs_t_CountOf];
 
     GL_Palette_t palette;
     int background_index;
@@ -95,6 +104,7 @@ extern void Display_processInput(Display_t *display, const Display_Callback_t ca
 extern void Display_render(Display_t *display, const Display_Callback_t callback, void *parameters);
 extern void Display_palette(Display_t *display, const GL_Palette_t *palette);
 extern void Display_background(Display_t *display, const size_t color);
+extern void Display_shader(Display_t *display, const char *code);
 extern void Display_terminate(Display_t *display);
 
 #endif  /* __DISPLAY_H__ */
