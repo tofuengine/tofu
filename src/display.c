@@ -115,7 +115,7 @@ typedef struct _Program_Data_t {
 static const Program_Data_t _programs_data[Display_Programs_t_CountOf] = {
     { VERTEX_SHADER, FRAGMENT_SHADER_PALETTE },
     { VERTEX_SHADER, FRAGMENT_SHADER_PASSTHRU },
-    { VERTEX_SHADER, NULL }
+    { NULL, NULL }
 };
 
 static const int _texture_id_0[] = { 0 };
@@ -455,6 +455,8 @@ void Display_palette(Display_t *display, const GL_Palette_t *palette)
     display->palette = *palette;
 
     GL_palette_normalize_color(palette->colors[display->background_index], display->background_rgba); // Update current bg-color.
+
+    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> palette updated");
 }
 
 void Display_background(Display_t *display, const size_t color)
@@ -473,6 +475,7 @@ void Display_shader(Display_t *display, const char *effect)
     if (!effect) {
         GL_program_delete(&display->programs[DISPLAY_PROGRAM_CUSTOM]);
         display->program_index = DISPLAY_PROGRAM_PASSTHRU;
+        Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> switched to default shader");
         return;
     }
 
@@ -481,19 +484,21 @@ void Display_shader(Display_t *display, const char *effect)
     memcpy(code, FRAGMENT_SHADER_CUSTOM, strlen(FRAGMENT_SHADER_CUSTOM));
     memcpy(code + strlen(FRAGMENT_SHADER_CUSTOM), effect, strlen(effect));
 
-    // TODO: check for errors.
-    const Program_Data_t *data = &_programs_data[DISPLAY_PROGRAM_CUSTOM];
     GL_Program_t *program = &display->programs[DISPLAY_PROGRAM_CUSTOM];
 
-    GL_program_create(program);
-    GL_program_attach(program, data->vertex_shader, GL_PROGRAM_SHADER_VERTEX);
-    GL_program_attach(program, code, GL_PROGRAM_SHADER_FRAGMENT);
+    if (GL_program_create(program) &&
+        GL_program_attach(program, VERTEX_SHADER, GL_PROGRAM_SHADER_VERTEX) &&
+        GL_program_attach(program, code, GL_PROGRAM_SHADER_FRAGMENT)) {
+        GL_program_send(program, "u_texture0", GL_PROGRAM_UNIFORM_TEXTURE, 1, _texture_id_0); // Redundant
+        GLfloat resolution[] = { (GLfloat)display->window_width, (GLfloat)display->window_height };
+        GL_program_send(program, "u_resolution", GL_PROGRAM_UNIFORM_VEC2, 1, resolution);
 
-    GL_program_send(program, "u_texture0", GL_PROGRAM_UNIFORM_TEXTURE, 1, _texture_id_0); // Redundant
-    GLfloat resolution[] = { (GLfloat)display->window_width, (GLfloat)display->window_height };
-    GL_program_send(program, "u_resolution", GL_PROGRAM_UNIFORM_VEC2, 1, resolution);
-
-    display->program_index = DISPLAY_PROGRAM_CUSTOM;
+        display->program_index = DISPLAY_PROGRAM_CUSTOM;
+        Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> switched to custom shader");
+    } else {
+        GL_program_delete(program);
+        Log_write(LOG_LEVELS_WARNING, "<DISPLAY> can't load custom shader");
+    }
 
     Memory_free(code);
 }

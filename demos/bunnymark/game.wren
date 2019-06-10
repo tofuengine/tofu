@@ -9,7 +9,7 @@ import "./lib/bunny" for Bunny
 var LITTER_SIZE = 250
 var MAX_BUNNIES = 32768
 
-var EFFECT = "\n" +
+var SCALINES = "\n" +
     "const float amount = 0.5;\n" +
     "const float thickness = 1.0;\n" +
     "const float spacing = 1.0;\n" +
@@ -22,6 +22,27 @@ var EFFECT = "\n" +
     "    return texel;\n" +
     "}\n"
 
+var BARREL = "\n" +
+    "const float thickness = 3.0;\n" +
+    "\n" +
+    "vec4 effect(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {\n" +
+    "    vec2 delta = texture_coords - vec2(0.5, 0.5);\n" +
+    "    vec2 uv_r = delta * 0.0250 + texture_coords;\n" +
+    "    vec2 uv_g = delta * 0.0075 + texture_coords;\n" +
+    "    vec2 uv_b = delta * 0.0150 + texture_coords;\n" +
+    "    vec4 r = texture2D(texture, uv_r);\n" +
+    "    vec4 g = texture2D(texture, uv_g);\n" +
+    "    vec4 b = texture2D(texture, uv_b);\n" +
+    "    vec4 texel = vec4(r.r, g.g, b.b, 1.0)\n;" +
+    "    float y = (cos(u_time * 1.0) + 1) * 0.5 * u_resolution.y;\n" +
+    "    float d = abs(y - screen_coords.y);\n" +
+    "    if (d > thickness) {\n" +
+    "        return texel;\n" +
+    "    } else {\n" +
+    "        return mix(texel, vec4(1.0, 1.0, 1.0, 1.0), 1.0 - d / thickness);\n" +
+    "    }\n" +
+    "}\n"
+
 class Game {
 
     construct new() {
@@ -31,7 +52,9 @@ class Game {
 
         Canvas.palette = "gameboy"
         Canvas.background = 1
-        Canvas.shader = EFFECT
+        Canvas.shader = BARREL
+        //Canvas.shader = SCALINES
+        //Canvas.send("u_strength", 100)
 
         var palette = Canvas.palette
         System.write(palette)
