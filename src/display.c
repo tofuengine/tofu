@@ -302,8 +302,10 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     }
 #endif
 
-    if (!GL_program_create(&display->program, vertex_shader, fragment_shader)) {
-        Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't create default shader");
+    if (!GL_program_create(&display->program) ||
+        !GL_program_attach(&display->program, vertex_shader, GL_PROGRAM_SHADER_VERTEX) ||
+        !GL_program_attach(&display->program, fragment_shader, GL_PROGRAM_SHADER_FRAGMENT)) {
+        Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't initialize shaders");
 #ifndef __NO_AUTOFIT__
         deinitialize_framebuffer(display);
 #endif

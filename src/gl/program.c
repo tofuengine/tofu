@@ -24,73 +24,96 @@
 
 #include "../log.h"
 
-bool GL_program_create(GL_Program_t *program, const char *vertex_shader, const char *fragment_shader)
+bool GL_program_create(GL_Program_t *program)
 {
-    const char *shaders[2] = { vertex_shader, fragment_shader };
-    GLuint shader_ids[2] = {};
-    bool result = true;
-
-    GLuint program_id = glCreateProgram(); // Compile shaders.
-    for (int i = 0; i < 2; ++i) {
-        if (!shaders[i]) {
-            continue;
-        }
-        shader_ids[i] = glCreateShader(i == 0 ? GL_VERTEX_SHADER : GL_FRAGMENT_SHADER);
-        glShaderSource(shader_ids[i], 1, &shaders[i], NULL);
-        glCompileShader(shader_ids[i]);
-
-        GLint success;
-        glGetShaderiv(shader_ids[i], GL_COMPILE_STATUS, &success);
-        if (!success) {
-            GLint length = 0;
-            glGetShaderiv(shader_ids[i], GL_INFO_LOG_LENGTH, &length);
-
-            GLchar description[length];
-            glGetShaderInfoLog(shader_ids[i], length, NULL, description);
-            Log_write(LOG_LEVELS_ERROR, "<GL> shader compile error: %s", description);
-            result = false;
-            break;
-        }
-        glAttachShader(program_id, shader_ids[i]);
+    GLuint program_id = glCreateProgram();
+    if (program_id == 0) {
+        Log_write(LOG_LEVELS_ERROR, "<GL> can't create shader program");
+        return false;
     }
 
-    if (result) { // Link shaders into the program.
-        glLinkProgram(program_id);
-        GLint success;
-        glGetProgramiv(program_id, GL_LINK_STATUS, &success);
-        if (!success) {
-            GLint length = 0;
-            glGetProgramiv(program_id, GL_INFO_LOG_LENGTH, &length);
+    Log_write(LOG_LEVELS_DEBUG, "<GL> shader program #%d created", program_id);
+    *program = (GL_Program_t){
+            .id = program_id
+        };
 
-            GLchar description[length];
-            glGetProgramInfoLog(program_id, length, NULL, description);
-            Log_write(LOG_LEVELS_ERROR, "<GL> program link error: %s", description);
-            result = false;
-        }
-    }
-
-    if (result) {
-        Log_write(LOG_LEVELS_DEBUG, "<GL> shaders compiled into program #%d", program_id);
-        program->id = program_id;
-    } else {
-        glDeleteProgram(program_id);
-    }
-
-    for (int i = 0; i < 2; ++i) {
-        if (shader_ids[i] == 0) {
-            continue;
-        }
-        glDeleteShader(shader_ids[i]);
-    }
-
-    return result;
+    return true;
 }
 
 void GL_program_delete(GL_Program_t *program)
 {
+    GLint count = 0;
+    glGetProgramiv(program->id, GL_ATTACHED_SHADERS, &count);
+    if (count > 0) {
+        GLuint shaders[count];
+        glGetAttachedShaders(program->id, count, NULL, shaders);
+        for (GLint i = 0; i < count; ++i) {
+            glDetachShader(program->id, shaders[i]);
+            Log_write(LOG_LEVELS_DEBUG, "<GL> shader #%d detached from program #%d", shaders[i], program->id);
+        }
+    }
+
     glDeleteProgram(program->id);
     Log_write(LOG_LEVELS_DEBUG, "<GL> shader program #%d deleted", program->id);
+
     *program = (GL_Program_t){};
+}
+
+bool GL_program_attach(GL_Program_t *program, const char *shader_code, GL_Program_Shaders_t shader_type)
+{
+#ifdef __DEFENSIVE_CHECKS__
+    if (program->id == 0) {
+        Log_write(LOG_LEVELS_WARNING, "<GL> shader program can't be zero");
+        return false;
+    }
+    if (!shader_code) {
+        Log_write(LOG_LEVELS_WARNING, "<GL> shader code can't be null");
+        return false;
+    }
+#endif
+
+    GLuint shader_id = glCreateShader(shader_type == GL_PROGRAM_SHADER_VERTEX ? GL_VERTEX_SHADER : GL_FRAGMENT_SHADER);
+    if (shader_id == 0) {
+        Log_write(LOG_LEVELS_ERROR, "<GL> can't create shader");
+        return false;
+    }
+
+    Log_write(LOG_LEVELS_TRACE, "<GL> compiling shader\n<SHADER type=\"%d\">\n%s\n</SHADER>", shader_type, shader_code);
+    glShaderSource(shader_id, 1, &shader_code, NULL);
+    glCompileShader(shader_id);
+
+    GLint success;
+    glGetShaderiv(shader_id, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        GLint length = 0;
+        glGetShaderiv(shader_id, GL_INFO_LOG_LENGTH, &length);
+
+        GLchar description[length];
+        glGetShaderInfoLog(shader_id, length, NULL, description);
+        Log_write(LOG_LEVELS_ERROR, "<GL> shader compile error: %s", description);
+    } else {
+        glAttachShader(program->id, shader_id);
+
+        glLinkProgram(program->id);
+
+        glGetProgramiv(program->id, GL_LINK_STATUS, &success);
+        if (!success) {
+            GLint length = 0;
+            glGetProgramiv(program->id, GL_INFO_LOG_LENGTH, &length);
+
+            GLchar description[length];
+            glGetProgramInfoLog(program->id, length, NULL, description);
+            Log_write(LOG_LEVELS_ERROR, "<GL> program link error: %s", description);
+
+            glDetachShader(program->id, shader_id);
+        } else {
+            Log_write(LOG_LEVELS_DEBUG, "<GL> shader #%d compiled into program #%d", shader_id, program->id);
+        }
+    }
+
+    glDeleteShader(shader_id);
+
+    return success;
 }
 
 void GL_program_send(const GL_Program_t *program, const char *id, GL_Program_Uniforms_t type, size_t count, const void *value)

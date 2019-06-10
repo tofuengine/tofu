@@ -43,8 +43,14 @@ typedef enum _GL_Program_Uniforms_t {
     GL_PROGRAM_UNIFORM_TEXTURE
 } GL_Program_Uniforms_t;
 
-extern bool GL_program_create(GL_Program_t *program, const char *vertex_shader, const char *fragment_shader);
+typedef enum _GL_Program_Shaders_t {
+    GL_PROGRAM_SHADER_VERTEX,
+    GL_PROGRAM_SHADER_FRAGMENT,
+} GL_Program_Shaders_t;
+
+extern bool GL_program_create(GL_Program_t *program);
 extern void GL_program_delete(GL_Program_t *program);
+extern bool GL_program_attach(GL_Program_t *program, const char *shader_code, GL_Program_Shaders_t shader_type);
 extern void GL_program_send(const GL_Program_t *program, const char *id, GL_Program_Uniforms_t type, size_t count, const void *value);
 extern void GL_program_use(const GL_Program_t *program);
 
