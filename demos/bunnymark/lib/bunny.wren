@@ -1,7 +1,5 @@
-import "random" for Random
 import "graphics" for Canvas
 
-var RANDOM = Random.new()
 var MAX_SPEED = 500
 var GRAVITY = 981
 var DAMPENING = 0.9
@@ -15,8 +13,8 @@ class Bunny {
     construct new(random, bank) {
         _x = (MAX_X - MIN_X) / 2 // Spawn in the top-center part of the screen.
         _y = (MAX_Y - MIN_Y) / 8
-        _vx = (RANDOM.float() * MAX_SPEED) - (MAX_SPEED / 2.0)
-        _vy = (RANDOM.float() * MAX_SPEED) - (MAX_SPEED / 2.0)
+        _vx = (random.float() * MAX_SPEED) - (MAX_SPEED / 2.0)
+        _vy = (random.float() * MAX_SPEED) - (MAX_SPEED / 2.0)
 
         _random = random
         _bank = bank
