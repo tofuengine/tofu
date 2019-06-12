@@ -44,6 +44,10 @@ timers: $(TARGET)
 	@echo "Launching Timers application!"
 	./$(TARGET) ./demos/timers
 
+postfx: $(TARGET)
+	@echo "Launching PostFX application!"
+	./$(TARGET) ./demos/postfx
+
 .PHONY: clean
 clean:
 	@$(RM) $(OBJECTS)
