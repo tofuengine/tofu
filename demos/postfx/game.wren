@@ -39,7 +39,7 @@ class Game {
         } else if (Input.isKeyPressed(Input.down)) {
             _speed = 1.0
         } else if (Input.isKeyPressed(Input.select)) {
-            _bunnies.clear()
+            _sprites.clear()
         } else if (Input.isKeyPressed(Input.y)) {
             _running = !_running
         }
