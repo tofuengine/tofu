@@ -6,7 +6,7 @@ import "io" for File
 
 import "./lib/sprite" for Sprite
 
-var LITTER_SIZE = 250
+var LITTER_SIZE = 64
 
 class Game {
 
@@ -15,12 +15,12 @@ class Game {
 
         _sprites = []
 
-        Canvas.palette = "6-bit-rgb" // "pico-8"
-        Canvas.background = 0
+        Canvas.palette = "nes" // "pico-8"
+        Canvas.background = 63
         Canvas.shader = File.read("./assets/shaders/water.glsl")
         //Canvas.send("u_strength", 100)
 
-        _bank = Bank.new("./assets/images/sheet.png", 16, 16)
+        _bank = Bank.new("./assets/images/diamonds.png", 16, 16)
         _font = Font.default
 
         _speed = 1.0
@@ -30,7 +30,7 @@ class Game {
     input() {
         if (Input.isKeyPressed(Input.start)) {
             for (i in 1 .. LITTER_SIZE) {
-                _sprites.insert(-1, Sprite.new(_random, _bank))
+                _sprites.insert(-1, Sprite.new(_random, _bank, _sprites.count))
             }
         } else if (Input.isKeyPressed(Input.left)) {
             _speed = _speed * 0.5
@@ -58,8 +58,8 @@ class Game {
         for (sprite in _sprites) {
             sprite.render()
         }
-        _font.write("FPS: %(Environment.fps.round)", 0, 0, 63, 1.0, "left")
-        _font.write("#%(_sprites.count) sprites", Canvas.width, 0, 63, 1.0, "right")
+        _font.write("FPS: %(Environment.fps.round)", 0, 0, 0, 1.0, "left")
+        _font.write("#%(_sprites.count) sprites", Canvas.width, 0, 0, 1.0, "right")
     }
 
 }
