@@ -98,7 +98,7 @@ void GL_texture_delete(GL_Texture_t *texture)
 // https://www.puredevsoftware.com/blog/2018/03/17/texture-coordinates-d3d-vs-opengl/
 void GL_texture_blit(const GL_Texture_t *texture,
         const GL_Quad_t source, const GL_Quad_t destination,
-        const GL_Point_t origin, GLfloat rotation,
+        const GL_Point_t pivot, GLfloat rotation,
         const GL_Color_t color)
 {
 #ifdef __DEFENSIVE_CHECKS__
@@ -128,7 +128,7 @@ void GL_texture_blit(const GL_Texture_t *texture,
     glPushMatrix();
         glTranslatef(destination.x0, destination.y0, 0.0f);
         glRotatef(rotation, 0.0f, 0.0f, 1.0f);
-        glTranslatef(-origin.x, -origin.y, 0.0f);
+        glTranslatef(-pivot.x, -pivot.y, 0.0f);
         glBegin(GL_TRIANGLE_STRIP);
             glColor4ub(color.r, color.g, color.b, color.a);
 

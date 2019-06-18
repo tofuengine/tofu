@@ -110,6 +110,8 @@ const char graphics_wren[] =
     "\n"
     "    foreign cellWidth\n"
     "    foreign cellHeight\n"
+    "    foreign hotSpot\n"
+    "    foreign hotSpot=(position)\n"
     "\n"
     "    blit(cellId, x, y, r) {\n"
     "        blit(cellId, x, y, r, 1.0, 1.0)\n"
@@ -276,7 +278,8 @@ typedef struct _Font_Class_t {
 typedef struct _Bank_Class_t {
     // char pathfile[PATH_FILE_MAX];
     GL_Sheet_t sheet;
-    GL_Point_t origin;
+    GL_Point_t hotspot;
+    GL_Point_t pivot;
 } Bank_Class_t;
 
 void graphics_bank_allocate(WrenVM *vm)
@@ -302,7 +305,8 @@ void graphics_bank_allocate(WrenVM *vm)
 
     *instance = (Bank_Class_t){
             .sheet = sheet,
-            .origin = (GL_Point_t){ (GLfloat)cell_width * 0.5f, (GLfloat)cell_height * 0.5f } // Rotate along center
+            .hotspot = (GL_Point_t){ (GLfloat)0.0f, (GLfloat)0.0f }, // Position refers to top-left corner.
+            .pivot = (GL_Point_t){ (GLfloat)cell_width * 0.5f, (GLfloat)cell_height * 0.5f } // Rotate along center
         };
 }
 
@@ -330,6 +334,55 @@ void graphics_bank_cell_height_get(WrenVM *vm)
     wrenSetSlotDouble(vm, 0, instance->sheet.quad.height);
 }
 
+void graphics_bank_hot_spot_get(WrenVM *vm)
+{
+    const Bank_Class_t *instance = (const Bank_Class_t *)wrenGetSlotForeign(vm, 0);
+
+    wrenSetSlotDouble(vm, 0, instance->sheet.quad.height);
+
+    int slots = wrenGetSlotCount(vm);
+#ifdef __DEBUG_VM_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> currently #%d slot(s) available, asking for an additional slot", slots);
+#endif
+    const int aux_slot_id = slots;
+    wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
+
+    wrenSetSlotNewList(vm, 0); // Create a new list in the return value.
+
+    GLfloat position[2] = { instance->hotspot.x, instance->hotspot.y };
+    for (size_t i = 0; i < 2; ++i) {
+        wrenSetSlotDouble(vm, aux_slot_id, position[i]);
+        wrenInsertInList(vm, 0, i, aux_slot_id);
+    }
+}
+
+void graphics_bank_hot_spot_set(WrenVM *vm)
+{
+    Bank_Class_t *instance = (Bank_Class_t *)wrenGetSlotForeign(vm, 0);
+
+    size_t count = wrenGetListCount(vm, 1);
+    if (count != 2) {
+        Log_write(LOG_LEVELS_WARNING, "<GRAPHICS> hot-spot coordinates must be two");
+        return;
+    }
+
+    int slots = wrenGetSlotCount(vm);
+#ifdef __DEBUG_VM_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> currently #%d slot(s) available, asking for an additional slot", slots);
+#endif
+    const int aux_slot_id = slots;
+    wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
+
+    GLfloat position[2] = {};
+    for (size_t i = 0; i < count; ++i) {
+        wrenGetListElement(vm, 1, i, aux_slot_id);
+        position[i] = wrenGetSlotDouble(vm, aux_slot_id);
+    }
+
+    instance->hotspot = (GL_Point_t){ position[0], position[1] };
+    Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> new hot-spot coordinates are now <%.0f, %.0f>", position[0], position[1]);
+}
+
 void graphics_bank_blit_call3(WrenVM *vm)
 {
     int cell_id = (int)wrenGetSlotDouble(vm, 1);
@@ -346,8 +399,8 @@ void graphics_bank_blit_call3(WrenVM *vm)
     double dw = (double)instance->sheet.quad.width;
     double dh = (double)instance->sheet.quad.height;
 
-    int dx = (int)((GLfloat)x - instance->origin.x);
-    int dy = (int)((GLfloat)y - instance->origin.y);
+    int dx = (int)((GLfloat)x - instance->hotspot.x);
+    int dy = (int)((GLfloat)y - instance->hotspot.y);
 
     GL_Quad_t destination = (GL_Quad_t){ (GLfloat)dx, (GLfloat)dy, (GLfloat)dx + (GLfloat)dw, (GLfloat)dy + (GLfloat)dh };
 
@@ -378,8 +431,8 @@ void graphics_bank_blit_call5(WrenVM *vm)
     double dh = (double)instance->sheet.quad.height * scale_y;
 #endif
 
-    int dx = (int)((GLfloat)x - instance->origin.x);
-    int dy = (int)((GLfloat)y - instance->origin.y);
+    int dx = (int)((GLfloat)x - instance->hotspot.x);
+    int dy = (int)((GLfloat)y - instance->hotspot.y);
 
     GL_Quad_t destination = (GL_Quad_t){ (GLfloat)dx, (GLfloat)dy, (GLfloat)dx + (GLfloat)dw, (GLfloat)dy + (GLfloat)dh };
 
@@ -422,8 +475,8 @@ void graphics_bank_blit_call6(WrenVM *vm)
     double dh = (double)instance->sheet.quad.height * scale_y;
 #endif
 
-    int dx = (int)((GLfloat)x - instance->origin.x);
-    int dy = (int)((GLfloat)y - instance->origin.y);
+    int dx = (int)((GLfloat)x - instance->hotspot.x);
+    int dy = (int)((GLfloat)y - instance->hotspot.y);
 
     GL_Quad_t destination = (GL_Quad_t){ (GLfloat)dx, (GLfloat)dy, (GLfloat)dx + (GLfloat)dw, (GLfloat)dy + (GLfloat)dh };
 
@@ -439,7 +492,7 @@ void graphics_bank_blit_call6(WrenVM *vm)
 #endif
 
     const GL_Sheet_t *sheet = &instance->sheet;
-    GL_sheet_blit(sheet, cell_id, destination, instance->origin, rotation, (GL_Color_t){ 255, 255, 255, 255 });
+    GL_sheet_blit(sheet, cell_id, destination, instance->pivot, rotation, (GL_Color_t){ 255, 255, 255, 255 });
 }
 
 void graphics_font_allocate(WrenVM *vm)
