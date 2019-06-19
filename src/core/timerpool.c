@@ -25,11 +25,12 @@
 #include "../config.h"
 
 #include "../log.h"
-#include "../memory.h"
+
+#include <memory.h>
 
 static Timer_t *push(Timer_Pool_t *pool, const Timer_Value_t value)
 {
-    Timer_t *timer = Memory_alloc(sizeof(Timer_t));
+    Timer_t *timer = malloc(sizeof(Timer_t));
     *timer = (Timer_t){
             .value = value,
             .age = 0.0f,
@@ -61,9 +62,9 @@ static void pop(Timer_Pool_t *pool, Timer_t *timer)
     }
 
 #if DEBUG
-    Memory_clear(timer, sizeof(Timer_t)); // Clear in DEBUG mode for easier, umm, debugging.
+    memset(timer, 0, sizeof(Timer_t)); // Clear in DEBUG mode for easier, umm, debugging.
 #endif
-    Memory_free(timer);
+    free(timer);
 }
 
 static Timer_t *pop_next(Timer_Pool_t *pool, Timer_t *timer)

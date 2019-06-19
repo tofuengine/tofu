@@ -24,10 +24,10 @@
 
 #include "file.h"
 #include "log.h"
-#include "memory.h"
 
 #include <jsmn/jsmn.h>
 
+//#include <memory.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -139,5 +139,5 @@ void Configuration_load(Configuration_t *configuration, const char *pathfile)
         parse_pair(configuration, key, value, json_value.type);
     }
 
-    Memory_free(json);
+    free(json);
 }

@@ -28,7 +28,6 @@
 #include <stb/stb_image.h>
 
 #include "../log.h"
-#include "../memory.h"
 
 bool GL_texture_load(GL_Texture_t *texture, const char *pathfile, const GL_Texture_Callback_t callback, void *parameters)
 {

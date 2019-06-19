@@ -24,14 +24,15 @@
 
 #include "../GL/gl.h"
 #include "../log.h"
-#include "../memory.h"
+
+#include <stdlib.h>
 
 GL_Quad_t *precompute_quads(GLuint width, GLuint height, GLuint quad_width, GLuint quad_height)
 {
     GLuint columns = width / quad_width;
     GLuint rows = height / quad_height;
     GLuint amount = columns * rows;
-    GL_Quad_t *quads = Memory_calloc(amount, sizeof(GL_Quad_t));
+    GL_Quad_t *quads = malloc(amount * sizeof(GL_Quad_t));
     GLuint k = 0;
     for (GLuint i = 0; i < rows; ++i) {
         GLfloat y = i * quad_height;
@@ -84,7 +85,7 @@ bool GL_sheet_decode(GL_Sheet_t *sheet, const void *buffer, size_t size, GLuint 
 
 void GL_sheet_delete(GL_Sheet_t *sheet)
 {
-    Memory_free(sheet->quads);
+    free(sheet->quads);
     GL_texture_delete(&sheet->atlas);
     Log_write(LOG_LEVELS_DEBUG, "<GL> sheet #%p deleted", sheet);
     *sheet = (GL_Sheet_t){};

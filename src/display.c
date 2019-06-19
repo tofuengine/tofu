@@ -26,7 +26,6 @@
 #include "engine.h"
 #include "hal.h"
 #include "log.h"
-#include "memory.h"
 
 #include <memory.h>
 
@@ -480,7 +479,7 @@ void Display_shader(Display_t *display, const char *effect)
     }
 
     const size_t length = strlen(FRAGMENT_SHADER_CUSTOM) + strlen(effect) + 1;
-    char *code = Memory_calloc(sizeof(char), length);
+    char *code = malloc(length * sizeof(char));
     memcpy(code, FRAGMENT_SHADER_CUSTOM, strlen(FRAGMENT_SHADER_CUSTOM));
     memcpy(code + strlen(FRAGMENT_SHADER_CUSTOM), effect, strlen(effect));
 
@@ -500,7 +499,7 @@ void Display_shader(Display_t *display, const char *effect)
         Log_write(LOG_LEVELS_WARNING, "<DISPLAY> can't load custom shader");
     }
 
-    Memory_free(code);
+    free(code);
 }
 
 void Display_terminate(Display_t *display)

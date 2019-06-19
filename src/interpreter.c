@@ -25,7 +25,6 @@
 #include "config.h"
 #include "file.h"
 #include "log.h"
-#include "memory.h"
 #include "modules.h"
 
 #include <limits.h>
@@ -55,11 +54,6 @@ static const char *get_filename_extension(const char *name) {
     return dot + 1;
 }
 
-static void *reallocate_function(void *ptr, size_t size)
-{
-    return Memory_realloc(ptr, size);
-}
-
 static char *load_module_function(WrenVM *vm, const char *name)
 {
     // User-defined modules are specified as "relative" paths (where "./" indicates the current directory)
@@ -69,7 +63,12 @@ static char *load_module_function(WrenVM *vm, const char *name)
         for (int i = 0; _modules[i].module != NULL; ++i) {
             const Module_Entry_t *entry = &_modules[i];
             if (strcmp(name, entry->module) == 0) {
-                return Memory_clone(entry->script, strlen(entry->script) + 1);
+                size_t size = (strlen(entry->script) + 1) * sizeof(char);
+                void *ptr = malloc(size);
+                if (ptr) {
+                    memcpy(ptr, entry->script, size);
+                }
+                return ptr;
             }
         }
         return NULL;
@@ -159,7 +158,6 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *env
 
     WrenConfiguration vm_configuration;
     wrenInitConfiguration(&vm_configuration);
-    vm_configuration.reallocateFn = reallocate_function;
     vm_configuration.loadModuleFn = load_module_function;
     vm_configuration.bindForeignClassFn = bind_foreign_class_function;
     vm_configuration.bindForeignMethodFn = bind_foreign_method_function;

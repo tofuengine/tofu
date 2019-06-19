@@ -25,7 +25,6 @@
 #include "../config.h"
 #include "../environment.h"
 #include "../log.h"
-#include "../memory.h"
 #include "../gl/gl.h"
 #include "graphics/palettes.h"
 #include "graphics/sheets.h"

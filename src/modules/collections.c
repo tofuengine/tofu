@@ -23,7 +23,6 @@
 #include "collections.h"
 
 #include "../log.h"
-#include "../memory.h"
 
 const char collections_wren[] =
     "foreign class Grid {\n"
@@ -61,8 +60,8 @@ void collections_grid_allocate(WrenVM *vm)
 
     Grid_Class_t *instance = (Grid_Class_t *)wrenSetSlotNewForeign(vm, 0, 0, sizeof(Grid_Class_t)); // `0, 0` since we are in the allocate callback.
 
-    Cell_t *data = Memory_alloc(sizeof(Cell_t) * width * height);
-    Cell_t **offsets = Memory_alloc(sizeof(Cell_t *) * height);
+    Cell_t *data = malloc((width * height) * sizeof(Cell_t));
+    Cell_t **offsets = malloc(height * sizeof(Cell_t *));
 
     for (int i = 0; i < height; ++i) { // Precompute the pointers to the data rows for faster access (old-school! :D).
         offsets[i] = data + (i * width);
@@ -125,8 +124,8 @@ void collections_grid_allocate(WrenVM *vm)
 void collections_grid_finalize(void *userData, void *data)
 {
     Grid_Class_t *instance = (Grid_Class_t *)data;
-    Memory_free(instance->data);
-    Memory_free(instance->offsets);
+    free(instance->data);
+    free(instance->offsets);
 }
 
 void collections_grid_width_get(WrenVM *vm)
