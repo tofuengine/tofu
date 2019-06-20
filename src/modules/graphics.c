@@ -438,7 +438,8 @@ void graphics_bank_blit_call6(WrenVM *vm)
 #endif
 
     const GL_Sheet_t *sheet = &instance->sheet;
-    GL_sheet_blit(sheet, cell_id, destination, instance->pivot, rotation, (GL_Color_t){ 255, 255, 255, 255 });
+    const GL_Point_t pivot = (GL_Point_t){ instance->pivot.x * (GLfloat)fabs(scale_x), (GLfloat)instance->pivot.y * fabs(scale_y) };
+    GL_sheet_blit(sheet, cell_id, destination, pivot, rotation, (GL_Color_t){ 255, 255, 255, 255 });
 }
 
 void graphics_font_allocate(WrenVM *vm)
