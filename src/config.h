@@ -59,6 +59,7 @@
 #undef  __GRID_INTEGER_CELL__
 #undef  __DEBUG_API_CALLS__
 #undef  __DEBUG_VM_CALLS__
+#undef  __DEBUG_SHADER_CALLS__
 #define __DEBUG_GARBAGE_COLLECTOR__
 #define __REPACK_TIMER_POOL_DURING_GC___
 
