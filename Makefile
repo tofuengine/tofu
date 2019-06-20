@@ -48,6 +48,10 @@ postfx: $(TARGET)
 	@echo "Launching PostFX application!"
 	./$(TARGET) ./demos/postfx
 
+spritestack: $(TARGET)
+	@echo "Launching Sprite-Stack application!"
+	./$(TARGET) ./demos/spritestack
+
 .PHONY: clean
 clean:
 	@$(RM) $(OBJECTS)
