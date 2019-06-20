@@ -91,7 +91,7 @@ void GL_sheet_delete(GL_Sheet_t *sheet)
     *sheet = (GL_Sheet_t){};
 }
 
-void GL_sheet_blit(const GL_Sheet_t *sheet, size_t quad, const GL_Quad_t destination, const GL_Point_t pivot, GLfloat rotation, const GL_Color_t color)
+void GL_sheet_blit(const GL_Sheet_t *sheet, size_t quad, const GL_Quad_t destination, GLfloat rotation, const GL_Color_t color)
 {
 #ifdef __DEFENSIVE_CHECKS__
     if (texture->id == 0) {
@@ -112,12 +112,15 @@ void GL_sheet_blit(const GL_Sheet_t *sheet, size_t quad, const GL_Quad_t destina
     GLfloat dx1 = destination.x1 - destination.x0;
     GLfloat dy1 = destination.y1 - destination.y0;
 
+    GLfloat px = dx1 * 0.5f; // Always rotate along center.
+    GLfloat py = dy1 * 0.5f;
+
     glBindTexture(GL_TEXTURE_2D, sheet->atlas.id);
 
     glPushMatrix();
         glTranslatef(destination.x0, destination.y0, 0.0f);
         glRotatef(rotation, 0.0f, 0.0f, 1.0f);
-        glTranslatef(-pivot.x, -pivot.y, 0.0f);
+        glTranslatef(-px, -py, 0.0f);
         glBegin(GL_TRIANGLE_STRIP);
             glColor4ub(color.r, color.g, color.b, color.a);
 

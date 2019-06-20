@@ -275,7 +275,6 @@ typedef struct _Font_Class_t {
 typedef struct _Bank_Class_t {
     // char pathfile[PATH_FILE_MAX];
     GL_Sheet_t sheet;
-    GL_Point_t pivot;
 } Bank_Class_t;
 
 void graphics_bank_allocate(WrenVM *vm)
@@ -300,8 +299,7 @@ void graphics_bank_allocate(WrenVM *vm)
     Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> bank '%s' allocated as #%p", pathfile, instance);
 
     *instance = (Bank_Class_t){
-            .sheet = sheet,
-            .pivot = (GL_Point_t){ (GLfloat)cell_width * 0.5f, (GLfloat)cell_height * 0.5f } // Rotate along center
+            .sheet = sheet
         };
 }
 
@@ -438,8 +436,7 @@ void graphics_bank_blit_call6(WrenVM *vm)
 #endif
 
     const GL_Sheet_t *sheet = &instance->sheet;
-    const GL_Point_t pivot = (GL_Point_t){ instance->pivot.x * (GLfloat)fabs(scale_x), (GLfloat)instance->pivot.y * fabs(scale_y) };
-    GL_sheet_blit(sheet, cell_id, destination, pivot, rotation, (GL_Color_t){ 255, 255, 255, 255 });
+    GL_sheet_blit(sheet, cell_id, destination, rotation, (GL_Color_t){ 255, 255, 255, 255 });
 }
 
 void graphics_font_allocate(WrenVM *vm)

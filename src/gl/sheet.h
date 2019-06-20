@@ -37,7 +37,7 @@ typedef struct _GL_Sheet_t {
 extern bool GL_sheet_load(GL_Sheet_t *sheet, const char *pathfile, GLuint quad_width, GLuint quad_height, const GL_Texture_Callback_t callback, void *parameters);
 extern bool GL_sheet_decode(GL_Sheet_t *sheet, const void *buffer, size_t size, GLuint quad_width, GLuint quad_height, const GL_Texture_Callback_t callback, void *parameters);
 extern void GL_sheet_delete(GL_Sheet_t *sheet);
-extern void GL_sheet_blit(const GL_Sheet_t *sheet, size_t quad, const GL_Quad_t destination, const GL_Point_t pivot, GLfloat rotation, const GL_Color_t color);
+extern void GL_sheet_blit(const GL_Sheet_t *sheet, size_t quad, const GL_Quad_t destination, GLfloat rotation, const GL_Color_t color);
 extern void GL_sheet_blit_fast(const GL_Sheet_t *sheet, size_t quad, const GL_Quad_t destination, const GL_Color_t color);
 
 #endif  /* __GL_SHEET_H__ */

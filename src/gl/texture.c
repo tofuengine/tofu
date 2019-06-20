@@ -95,10 +95,7 @@ void GL_texture_delete(GL_Texture_t *texture)
 }
 
 // https://www.puredevsoftware.com/blog/2018/03/17/texture-coordinates-d3d-vs-opengl/
-void GL_texture_blit(const GL_Texture_t *texture,
-        const GL_Quad_t source, const GL_Quad_t destination,
-        const GL_Point_t pivot, GLfloat rotation,
-        const GL_Color_t color)
+void GL_texture_blit(const GL_Texture_t *texture, const GL_Quad_t source, const GL_Quad_t destination, GLfloat rotation, const GL_Color_t color)
 {
 #ifdef __DEFENSIVE_CHECKS__
     if (texture->id == 0) {
@@ -122,12 +119,15 @@ void GL_texture_blit(const GL_Texture_t *texture,
     GLfloat dx1 = destination.x1 - destination.x0;
     GLfloat dy1 = destination.y1 - destination.y0;
 
+    GLfloat px = dx1 * 0.5f; // Always rotate along center.
+    GLfloat py = dy1 * 0.5f;
+
     glBindTexture(GL_TEXTURE_2D, texture->id);
 
     glPushMatrix();
         glTranslatef(destination.x0, destination.y0, 0.0f);
         glRotatef(rotation, 0.0f, 0.0f, 1.0f);
-        glTranslatef(-pivot.x, -pivot.y, 0.0f);
+        glTranslatef(-px, -py, 0.0f);
         glBegin(GL_TRIANGLE_STRIP);
             glColor4ub(color.r, color.g, color.b, color.a);
 
@@ -143,9 +143,7 @@ void GL_texture_blit(const GL_Texture_t *texture,
     glPopMatrix();
 }
 
-void GL_texture_blit_fast(const GL_Texture_t *texture,
-        const GL_Quad_t source, const GL_Quad_t destination,
-        const GL_Color_t color)
+void GL_texture_blit_fast(const GL_Texture_t *texture, const GL_Quad_t source, const GL_Quad_t destination, const GL_Color_t color)
 {
 #ifdef __DEFENSIVE_CHECKS__
     if (texture->id == 0) {
