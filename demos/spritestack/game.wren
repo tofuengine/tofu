@@ -5,7 +5,9 @@ import "events" for Environment, Input
 
 import "./lib/sprite" for Sprite
 
-var CHUNK_SIZE = 4
+var CHUNK_SIZE = 1
+
+var ANGLE_STEP = 0.0025
 
 class Game {
 
