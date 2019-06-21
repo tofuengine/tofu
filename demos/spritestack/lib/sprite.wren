@@ -22,8 +22,10 @@ class Sprite {
 
     render() {
         for (id in _from .. _to) {
-            var i = id - _from
-            _bank.blit(id, _x, _y - i * _scale, _angle, _scale, _scale)
+            var i = (id - _from) * _scale
+            for (j in i ... i + _scale) {
+                _bank.blit(id, _x, _y - j, _angle, _scale, _scale)
+            }
         }
     }
 
