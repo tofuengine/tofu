@@ -4,6 +4,7 @@ import "graphics" for Bank, Canvas, Font
 import "events" for Environment, Input
 
 import "./lib/sprite" for Sprite
+import "./lib/algorithms" for Algorithms
 
 var CHUNK_SIZE = 1
 
@@ -11,8 +12,29 @@ var ANGLE_STEP = 0.0025
 
 class Game {
 
+    test() {
+        var L = []
+        var f = Fn.new {|a, b|
+                if(a == b) return 0
+                if(a < b) return -1
+                return 1
+            }
+        for (i in 0 ... 64) {
+            L.insert(-1, _random.int(0, 16))
+        }
+        System.write(L)
+        System.write(Algorithms.sorted(L, f))
+//        Algorithms.sort(L, f)
+//        Algorithms.msort(L, 0, L.count - 1)
+        Algorithms.qsort(L, 0, L.count - 1)
+        System.write(L)
+        System.write(Algorithms.sorted(L, f))
+    }
+
     construct new() {
         _random = Random.new()
+
+        test()
 
         _sprites = []
 
