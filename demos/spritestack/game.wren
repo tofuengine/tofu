@@ -26,13 +26,28 @@ class Game {
     input() {
         if (Input.isKeyPressed(Input.start)) {
             for (i in 1 .. CHUNK_SIZE) {
-                var sprite = Sprite.new(_bank, 0, 13, _random.int(1, 4))
-                sprite.move(_random.int(0, Canvas.width), _random.int(0, Canvas.height))
+//                var sprite = Sprite.new(_bank, 0, 13, _random.int(1, 4))
+//                sprite.move(_random.int(0, Canvas.width), _random.int(0, Canvas.height))
+                var sprite = Sprite.new(_bank, 0, 13, 3)
+                sprite.move(Canvas.width / 2, Canvas.height / 2)
                 _sprites.insert(-1, sprite)
             }
-        } else if (Input.isKeyPressed(Input.left)) {
-        } else if (Input.isKeyPressed(Input.right)) {
-        } else if (Input.isKeyPressed(Input.down)) {
+        } else if (Input.isKeyDown(Input.left)) {
+            for (sprite in _sprites) {
+                sprite.rotate(-ANGLE_STEP)
+            }
+        } else if (Input.isKeyDown(Input.right)) {
+            for (sprite in _sprites) {
+                sprite.rotate(ANGLE_STEP)
+            }
+        } else if (Input.isKeyDown(Input.up)) {
+            for (sprite in _sprites) {
+                sprite.accelerate(1.0)
+            }
+        } else if (Input.isKeyDown(Input.down)) {
+            for (sprite in _sprites) {
+                sprite.accelerate(-1.0)
+            }
         } else if (Input.isKeyPressed(Input.select)) {
         } else if (Input.isKeyPressed(Input.y)) {
             _running = !_running
@@ -40,9 +55,8 @@ class Game {
     }
 
     update(deltaTime) {
-        _angle = _angle + 50 * deltaTime
         for (sprite in _sprites) {
-            sprite.rotate(_angle)
+            sprite.update(deltaTime)
         }
     }
 
