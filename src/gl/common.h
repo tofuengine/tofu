@@ -52,4 +52,6 @@ typedef struct _GL_Color_t {
 } GL_Color_t;
 #pragma pack(pop)
 
+#define GL_DEGREES_OVER_RADIANS 57.295779513082320876798154814105
+
 #endif  /* __GL_COMMON_H__ */

@@ -126,7 +126,7 @@ void GL_texture_blit(const GL_Texture_t *texture, const GL_Quad_t source, const 
 
     glPushMatrix();
         glTranslatef(destination.x0, destination.y0, 0.0f);
-        glRotatef(rotation, 0.0f, 0.0f, 1.0f);
+        glRotatef((GLfloat)GL_DEGREES_OVER_RADIANS * rotation, 0.0f, 0.0f, 1.0f); // OpenGL works with degrees!
         glTranslatef(-px, -py, 0.0f);
         glBegin(GL_TRIANGLE_STRIP);
             glColor4ub(color.r, color.g, color.b, color.a);
