@@ -12,6 +12,7 @@ class Sprite {
 
         _speed = 0
         _angle = 0
+        _steering = 0
         _x = 0
         _y = 0
     }
@@ -22,7 +23,7 @@ class Sprite {
     }
 
     rotate(angle) {
-        _angle = _angle + angle
+        _steering = _steering + angle
     }
 
     accelerate(speed) {
@@ -30,6 +31,10 @@ class Sprite {
     }
 
     update(deltaTime) {
+        _angle = _angle + _steering * 0.125
+        _steering = _steering * 0.9
+        _speed = _speed * 0.99
+
         _x = _x + _angle.cos * _speed * deltaTime
         _y = _y + _angle.sin * _speed * deltaTime
     }
