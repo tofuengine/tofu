@@ -8,7 +8,8 @@ import "./lib/algorithms" for Algorithms
 
 var CHUNK_SIZE = 1
 
-var ANGLE_STEP = 0.0025
+var TORQUE = 0.025
+var FORCE = 12.5
 
 class Game {
 
@@ -56,24 +57,30 @@ class Game {
                 sprite.move(Canvas.width / 2, Canvas.height / 2)
                 _sprites.insert(-1, sprite)
             }
-        } else if (Input.isKeyDown(Input.left)) {
+        }
+        if (Input.isKeyDown(Input.left)) {
             for (sprite in _sprites) {
-                sprite.rotate(-ANGLE_STEP)
+                sprite.rotate(-TORQUE)
             }
-        } else if (Input.isKeyDown(Input.right)) {
+        }
+        if (Input.isKeyDown(Input.right)) {
             for (sprite in _sprites) {
-                sprite.rotate(ANGLE_STEP)
+                sprite.rotate(TORQUE)
             }
-        } else if (Input.isKeyDown(Input.up)) {
+        }
+        if (Input.isKeyDown(Input.up)) {
             for (sprite in _sprites) {
-                sprite.accelerate(1.0)
+                sprite.accelerate(FORCE)
             }
-        } else if (Input.isKeyDown(Input.down)) {
+        }
+        if (Input.isKeyDown(Input.down)) {
             for (sprite in _sprites) {
-                sprite.accelerate(-1.0)
+                sprite.accelerate(-FORCE)
             }
-        } else if (Input.isKeyPressed(Input.select)) {
-        } else if (Input.isKeyPressed(Input.y)) {
+        }
+        if (Input.isKeyPressed(Input.select)) {
+        }
+        if (Input.isKeyPressed(Input.y)) {
             _running = !_running
         }
     }
