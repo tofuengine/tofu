@@ -8,8 +8,8 @@ import "./lib/algorithms" for Algorithms
 
 var CHUNK_SIZE = 1
 
-var TORQUE = 0.025
-var FORCE = 12.5
+var TORQUE = 0.0125
+var FORCE = 5.0
 
 class Game {
 
@@ -53,7 +53,7 @@ class Game {
             for (i in 1 .. CHUNK_SIZE) {
 //                var sprite = Sprite.new(_bank, 0, 13, _random.int(1, 4))
 //                sprite.move(_random.int(0, Canvas.width), _random.int(0, Canvas.height))
-                var sprite = Sprite.new(_bank, 0, 13, 3)
+                var sprite = Sprite.new(_bank, 0, 13, 1)
                 sprite.move(Canvas.width / 2, Canvas.height / 2)
                 _sprites.insert(-1, sprite)
             }
