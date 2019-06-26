@@ -8,8 +8,53 @@ import "./lib/algorithms" for Algorithms
 
 var CHUNK_SIZE = 1
 
-var TORQUE = 0.0125
-var FORCE = 5.0
+var TORQUE = 0.02
+var THROTTLE = 4.0
+var BRAKE = -2.0
+
+class Tween {
+
+    static lerp(a, b, r) { // https://en.wikipedia.org/wiki/Linear_interpolation
+        return (1 - r) * a + r * b // Precise method, which guarantees v = v1 when t = 1.
+    }
+    quad(a, b, r) {
+        var t = r * r
+        return lerp(a, b, t)
+    }
+    cubic(a, b, r) {
+        var t = r * r * r
+        return lerp(a, b, t)
+    }
+    quart(a, b, r) {
+        var t = r * r * r * r
+        return lerp(a, b, t)
+    }
+    quint(a, b, r) {
+        var t = r * r * r * r * r
+        return lerp(a, b, t)
+    }
+    expo(a, b, r) {
+        var t = 2.pow(10 * (r - 1))
+        return lerp(a, b, t)
+    }
+    sine(a, b, r) {
+        var t = -(r * (Num.pi * 0.5)).cos + 1
+        return lerp(a, b, t)
+    }
+    circ(a, b, r) {
+        var t = -((1 - (r * r)).sqrt - 1)
+        return lerp(a, b, t)
+    }
+    back(a, b, r) {
+        var t = r * r * (2.7 * r - 1.7)
+        return lerp(a, b, t)
+    }
+    elastic(a, b, r) {
+        var t = -(2.pow(10 * (r - 1)) * ((r - 1.075) * (Num.pi * 2) / .3).sin)
+        return lerp(a, b, t)
+    }
+
+}
 
 class Game {
 
@@ -46,8 +91,15 @@ class Game {
         _font = Font.default
 
         _angle = 0
+
+        _force = 0
+        _torque = 0
+        _pedalLife = 0
+        _steerLife = 0
     }
 
+    // http://www.iforce2d.net/b2dtut/top-down-car
+    // file:///C:/Users/mlizza/Downloads/[Andrew_Kirmse]_Game_Programming_Gems_4(z-lib.org).pdf
     input() {
         if (Input.isKeyPressed(Input.start)) {
             for (i in 1 .. CHUNK_SIZE) {
@@ -60,22 +112,22 @@ class Game {
         }
         if (Input.isKeyDown(Input.left)) {
             for (sprite in _sprites) {
-                sprite.rotate(-TORQUE)
+                _torque = _torque - TORQUE
             }
         }
         if (Input.isKeyDown(Input.right)) {
             for (sprite in _sprites) {
-                sprite.rotate(TORQUE)
+                _torque = _torque + TORQUE
             }
         }
         if (Input.isKeyDown(Input.up)) {
             for (sprite in _sprites) {
-                sprite.accelerate(FORCE)
+                _force = _force + THROTTLE
             }
         }
         if (Input.isKeyDown(Input.down)) {
             for (sprite in _sprites) {
-                sprite.accelerate(-FORCE)
+                _force = _force + BRAKE
             }
         }
         if (Input.isKeyPressed(Input.select)) {
@@ -86,9 +138,19 @@ class Game {
     }
 
     update(deltaTime) {
+        if (_force > 0) {
+            _forceLife = _forceLife + deltaTime
+        }
+        if (_torque > 0) {
+            _forceLife = _forceLife + deltaTime
+        }
         for (sprite in _sprites) {
+            sprite.accelerate(_force)
+            sprite.rotate(_torque)
             sprite.update(deltaTime)
         }
+        _force = 0
+        _torque = 0
     }
 
     render(ratio) {
