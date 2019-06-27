@@ -32,6 +32,7 @@ foreign class Canvas {
     foreign static palette=(colors)
     foreign static background=(color)
     foreign static shader=(codes)
+    foreign static colorFromArgb(rgb)
 
     foreign static points(vertices, color)
     foreign static polyline(vertices, color)
