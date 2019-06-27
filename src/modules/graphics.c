@@ -591,9 +591,6 @@ void graphics_canvas_palette_get(WrenVM *vm)
     const int aux_slot_id = slots;
     wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
 
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.palette() -> %d", count);
-#endif
     wrenSetSlotNewList(vm, 0); // Create a new list in the return value.
 
     for (size_t i = 0; i < palette->count; ++i) {
@@ -638,9 +635,6 @@ void graphics_canvas_palette_set(WrenVM *vm)
         const int aux_slot_id = slots;
         wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
 
-#ifdef __DEBUG_API_CALLS__
-        Log_write(LOG_LEVELS_DEBUG, "Canvas.palette() -> %d", count);
-#endif
         for (size_t i = 0; i < palette.count; ++i) {
             wrenGetListElement(vm, 1, i, aux_slot_id);
 
@@ -705,6 +699,9 @@ void graphics_canvas_points_call2(WrenVM *vm)
 {
     int vertices = wrenGetListCount(vm, 1);
     int color = (int)wrenGetSlotDouble(vm, 2);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.points(%d, %d, %d)", vertices, color);
+#endif
 
     int slots = wrenGetSlotCount(vm);
 #ifdef __DEBUG_VM_CALLS__
@@ -713,13 +710,9 @@ void graphics_canvas_points_call2(WrenVM *vm)
     const int aux_slot_id = slots;
     wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
 
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.polygon(%d, %d, %d)", mode, color, vertices);
-#endif
-
     const size_t count = vertices / 2;
     if (count == 0) {
-        Log_write(LOG_LEVELS_INFO, "<GRAPHICS> points as no vertices");
+        Log_write(LOG_LEVELS_INFO, "<GRAPHICS> point-sequence as no vertices");
         return;
     }
 
@@ -742,6 +735,9 @@ void graphics_canvas_polyline_call2(WrenVM *vm)
 {
     int vertices = wrenGetListCount(vm, 1);
     int color = (int)wrenGetSlotDouble(vm, 2);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.polyline(%d, %d)", vertices, color);
+#endif
 
     int slots = wrenGetSlotCount(vm);
 #ifdef __DEBUG_VM_CALLS__
@@ -750,13 +746,9 @@ void graphics_canvas_polyline_call2(WrenVM *vm)
     const int aux_slot_id = slots;
     wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
 
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.polygon(%d, %d, %d)", mode, color, vertices);
-#endif
-
     const size_t count = vertices / 2;
     if (count == 0) {
-        Log_write(LOG_LEVELS_INFO, "<GRAPHICS> lines as no vertices");
+        Log_write(LOG_LEVELS_INFO, "<GRAPHICS> polyline as no vertices");
         return;
     }
 
@@ -779,6 +771,9 @@ void graphics_canvas_strip_call2(WrenVM *vm)
 {
     int vertices = wrenGetListCount(vm, 1);
     int color = (int)wrenGetSlotDouble(vm, 2);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.strip(%d, %d)", vertices, color);
+#endif
 
     int slots = wrenGetSlotCount(vm);
 #ifdef __DEBUG_VM_CALLS__
@@ -786,10 +781,6 @@ void graphics_canvas_strip_call2(WrenVM *vm)
 #endif
     const int aux_slot_id = slots;
     wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
-
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.polygon(%d, %d, %d)", mode, color, vertices);
-#endif
 
     const size_t count = vertices / 2;
     if (count == 0) {
@@ -816,6 +807,9 @@ void graphics_canvas_fan_call2(WrenVM *vm)
 {
     int vertices = wrenGetListCount(vm, 1);
     int color = (int)wrenGetSlotDouble(vm, 2);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.fat(%d, %d)", vertices, color);
+#endif
 
     int slots = wrenGetSlotCount(vm);
 #ifdef __DEBUG_VM_CALLS__
@@ -823,10 +817,6 @@ void graphics_canvas_fan_call2(WrenVM *vm)
 #endif
     const int aux_slot_id = slots;
     wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
-
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.polygon(%d, %d, %d)", mode, color, vertices);
-#endif
 
     const size_t count = vertices / 2;
     if (count == 0) {

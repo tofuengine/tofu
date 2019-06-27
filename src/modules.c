@@ -71,6 +71,7 @@ const Method_Entry_t _methods[] = {
     { "graphics", "Canvas", true, "palette=(_)", graphics_canvas_palette_set },
     { "graphics", "Canvas", true, "background=(_)", graphics_canvas_background_set },
     { "graphics", "Canvas", true, "shader=(_)", graphics_canvas_shader_set },
+    { "graphics", "Canvas", true, "colorFromArgb(_)", graphics_canvas_colorfromargb_call1 },
     { "graphics", "Canvas", true, "points(_,_)", graphics_canvas_points_call2 },
     { "graphics", "Canvas", true, "polyline(_,_)", graphics_canvas_polyline_call2 },
     { "graphics", "Canvas", true, "strip(_,_)", graphics_canvas_strip_call2 },
