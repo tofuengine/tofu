@@ -37,7 +37,7 @@
 #define BLUE_WEIGHT     3.0f
 
 // https://en.wikipedia.org/wiki/Color_difference
-static size_t find_nearest_color(const GL_Palette_t *palette, GL_Color_t color)
+static size_t find_nearest_color(const GL_Palette_t *palette, const GL_Color_t color)
 {
     size_t index = 0;
     double minimum = __DBL_MAX__;
