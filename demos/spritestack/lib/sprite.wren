@@ -56,9 +56,11 @@ class Sprite {
                 _bank.blit(id, x, y - j, _angle - (Num.pi / 2), _scale, _scale) // Compensate for sprite alignment
             }
         }
-        //var x = _x + _angle.cos * 32
-        //var y = _y + _angle.sin * 32
-        //Canvas.line(_x, _y, x, y, 32)
+
+//        var direction = Vector2D.fromPolar(_angle, 48)
+//        Canvas.line(x, y, x + direction.x, y + direction.y, 32)
+        var color = Canvas.colorFromArgb("FFFF4444")
+        Canvas.line(x, y, x + _velocity.x, y + _velocity.y, color)
     }
 
 }

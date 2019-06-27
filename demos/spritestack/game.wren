@@ -2,59 +2,17 @@ import "random" for Random
 
 import "graphics" for Bank, Canvas, Font
 import "events" for Environment, Input
+import "util" for Math
 
-import "./lib/sprite" for Sprite
 import "./lib/algorithms" for Algorithms
+import "./lib/easing" for Easing
+import "./lib/sprite" for Sprite
 
 var CHUNK_SIZE = 1
 
-var TORQUE = 0.02
-var THROTTLE = 4.0
-var BRAKE = -2.0
-
-class Tween {
-
-    static lerp(a, b, r) { // https://en.wikipedia.org/wiki/Linear_interpolation
-        return (1 - r) * a + r * b // Precise method, which guarantees v = v1 when t = 1.
-    }
-    quad(a, b, r) {
-        var t = r * r
-        return lerp(a, b, t)
-    }
-    cubic(a, b, r) {
-        var t = r * r * r
-        return lerp(a, b, t)
-    }
-    quart(a, b, r) {
-        var t = r * r * r * r
-        return lerp(a, b, t)
-    }
-    quint(a, b, r) {
-        var t = r * r * r * r * r
-        return lerp(a, b, t)
-    }
-    expo(a, b, r) {
-        var t = 2.pow(10 * (r - 1))
-        return lerp(a, b, t)
-    }
-    sine(a, b, r) {
-        var t = -(r * (Num.pi * 0.5)).cos + 1
-        return lerp(a, b, t)
-    }
-    circ(a, b, r) {
-        var t = -((1 - (r * r)).sqrt - 1)
-        return lerp(a, b, t)
-    }
-    back(a, b, r) {
-        var t = r * r * (2.7 * r - 1.7)
-        return lerp(a, b, t)
-    }
-    elastic(a, b, r) {
-        var t = -(2.pow(10 * (r - 1)) * ((r - 1.075) * (Num.pi * 2) / .3).sin)
-        return lerp(a, b, t)
-    }
-
-}
+var TORQUE = 0.25
+var THROTTLE = 50.0
+var BRAKE = -25.0
 
 class Game {
 
@@ -94,8 +52,8 @@ class Game {
 
         _force = 0
         _torque = 0
-        _pedalLife = 0
-        _steerLife = 0
+        _forceLife = 0
+        _torqueLife = 0
     }
 
     // http://www.iforce2d.net/b2dtut/top-down-car
@@ -103,32 +61,22 @@ class Game {
     input() {
         if (Input.isKeyPressed(Input.start)) {
             for (i in 1 .. CHUNK_SIZE) {
-//                var sprite = Sprite.new(_bank, 0, 13, _random.int(1, 4))
-//                sprite.move(_random.int(0, Canvas.width), _random.int(0, Canvas.height))
                 var sprite = Sprite.new(_bank, 0, 13, 1)
                 sprite.move(Canvas.width / 2, Canvas.height / 2)
                 _sprites.insert(-1, sprite)
             }
         }
         if (Input.isKeyDown(Input.left)) {
-            for (sprite in _sprites) {
-                _torque = _torque - TORQUE
-            }
+            _torque = -TORQUE
         }
         if (Input.isKeyDown(Input.right)) {
-            for (sprite in _sprites) {
-                _torque = _torque + TORQUE
-            }
+            _torque = TORQUE
         }
         if (Input.isKeyDown(Input.up)) {
-            for (sprite in _sprites) {
-                _force = _force + THROTTLE
-            }
+            _force = THROTTLE
         }
         if (Input.isKeyDown(Input.down)) {
-            for (sprite in _sprites) {
-                _force = _force + BRAKE
-            }
+            _force = BRAKE
         }
         if (Input.isKeyPressed(Input.select)) {
         }
@@ -138,15 +86,19 @@ class Game {
     }
 
     update(deltaTime) {
-        if (_force > 0) {
-            _forceLife = _forceLife + deltaTime
+        if (_force != 0) {
+            _forceLife = Math.min(_forceLife + deltaTime, 1)
+        } else {
+            _forceLife = 0
         }
-        if (_torque > 0) {
-            _forceLife = _forceLife + deltaTime
+        if (_torque != 0) {
+            _torqueLife = Math.min(_torqueLife + deltaTime, 1)
+        } else {
+            _torqueLife = 0
         }
         for (sprite in _sprites) {
-            sprite.accelerate(_force)
-            sprite.rotate(_torque)
+            sprite.accelerate(Easing.tween(_forceLife, 1, 0, _force, Easing.linear))
+            sprite.rotate(Easing.tween(_torqueLife, 1, 0, _torque, Easing.linear))
             sprite.update(deltaTime)
         }
         _force = 0
