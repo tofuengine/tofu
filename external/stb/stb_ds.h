@@ -1,4 +1,4 @@
-/* stb_ds.h - v0.4 - public domain data structures - Sean Barrett 2019
+/* stb_ds.h - v0.5 - public domain data structures - Sean Barrett 2019
   
    This is a single-header-file library that provides easy-to-use
    dynamic arrays and hash tables for C (also works in C++).
@@ -40,6 +40,16 @@ COMPILE-TIME OPTIONS
      stb_ds.h to use specification-compliant SipHash-2-4 for all keys. Doing so makes
      hash table insertion about 20% slower on 4- and 8-byte keys, 5% slower on
      64-byte keys, and 10% slower on 256-byte keys on my test computer.
+
+  #define STBDS_REALLOC(context,ptr,size) better_realloc
+  #define STBDS_FREE(context,ptr)         better_free
+
+     These defines only need to be set in the file containing #define STB_DS_IMPLEMENTATION.
+
+     By default stb_ds uses stdlib realloc() and free() for memory management. You can
+     substitute your own functions instead by defining these symbols. You must either
+     define both, or neither. Note that at the moment, 'context' will always be NULL.
+     @TODO add an array/hash initialization function that takes a memory context pointer.
 
 LICENSE
 
@@ -232,7 +242,7 @@ DOCUMENTATION
         void sh_new_strdup(T*);
           Overwrites the existing pointer with a newly allocated
           string hashmap which will automatically allocate and free
-          each string key using malloc/free
+          each string key using realloc/free
 
       sh_new_arena
         void sh_new_arena(T*);
@@ -312,6 +322,10 @@ CREDITS
   Sean Barrett -- library, idea for dynamic array API/implementation
   Per Vognsen  -- idea for hash table API/implementation
   Rafael Sachetto -- arrpop()
+
+  Bugfixes:
+    Vinh Truong
+    Andy Durdin
 */
 
 #ifdef STBDS_UNIT_TESTS
@@ -321,7 +335,6 @@ CREDITS
 #ifndef INCLUDE_STB_DS_H
 #define INCLUDE_STB_DS_H
 
-#include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
 
@@ -374,6 +387,16 @@ CREDITS
 #define stralloc    stbds_stralloc
 #define strreset    stbds_strreset
 #endif      
+
+#if defined(STBDS_REALLOC) && !defined(STBDS_FREE) || !defined(STBDS_REALLOC) && defined(STBDS_FREE)
+#error "You must define both STBDS_REALLOC and STBDS_FREE, or neither."
+#endif
+#if !defined(STBDS_REALLOC) && !defined(STBDS_FREE)
+#include <stdlib.h>
+#define STBDS_REALLOC(c,p,s) realloc(p,s)
+#define STBDS_FREE(c,p)      free(p)
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -449,7 +472,7 @@ extern void * stbds_shmode_func(size_t elemsize, int mode);
 #define stbds_arrpop(a)       (stbds_header(a)->length--, (a)[stbds_header(a)->length])
 #define stbds_arraddn(a,n)    (stbds_arrmaybegrow(a,n), stbds_header(a)->length += (n))
 #define stbds_arrlast(a)      ((a)[stbds_header(a)->length-1])
-#define stbds_arrfree(a)      ((void) ((a) ? realloc(stbds_header(a),0) : 0), (a)=NULL)
+#define stbds_arrfree(a)      ((void) ((a) ? STBDS_FREE(NULL,stbds_header(a)) : (void)0), (a)=NULL)
 #define stbds_arrdel(a,i)     stbds_arrdeln(a,i,1)
 #define stbds_arrdeln(a,i,n)  (memmove(&(a)[i], &(a)[(i)+(n)], sizeof *(a) * (stbds_header(a)->length-(n)-(i))), stbds_header(a)->length -= (n))
 #define stbds_arrdelswap(a,i) ((a)[i] = stbds_arrlast(a), stbds_header(a)->length -= 1)
@@ -491,8 +514,8 @@ extern void * stbds_shmode_func(size_t elemsize, int mode);
 
 #define stbds_hmgets(t, k) (*stbds_hmgetp(t,k))
 #define stbds_hmget(t, k)  (stbds_hmgetp(t,k)->value)
-#define stbds_hmlen(t)     (stbds_arrlen((t)-1)-1)
-#define stbds_hmlenu(t)    (stbds_arrlenu((t)-1)-1)
+#define stbds_hmlen(t)     ((t) ? (ptrdiff_t) stbds_header((t)-1)->length-1 : 0)
+#define stbds_hmlenu(t)    ((t) ?             stbds_header((t)-1)->length-1 : 0)
 
 #define stbds_shput(t, k, v) \
     ((t) = stbds_hmput_key_wrapper((t), sizeof *(t), (void*) (k), sizeof (t)->key, STBDS_HM_STRING),   \
@@ -645,7 +668,7 @@ void *stbds_arrgrowf(void *a, size_t elemsize, size_t addlen, size_t min_cap)
   else if (min_cap < 4)
     min_cap = 4;
 
-  b = realloc((a) ? stbds_header(a) : 0, elemsize * min_cap + sizeof(stbds_array_header));
+  b = STBDS_REALLOC(NULL, (a) ? stbds_header(a) : 0, elemsize * min_cap + sizeof(stbds_array_header));
   b = (char *) b + sizeof(stbds_array_header);
   if (a == NULL) {
     stbds_header(b)->length = 0;
@@ -737,7 +760,7 @@ static size_t stbds_log2(size_t slot_count)
 static stbds_hash_index *stbds_make_hash_index(size_t slot_count, stbds_hash_index *ot)
 {
   stbds_hash_index *t;
-  t = (stbds_hash_index *) realloc(0,(slot_count >> STBDS_BUCKET_SHIFT) * sizeof(stbds_hash_bucket) + sizeof(stbds_hash_index) + STBDS_CACHE_LINE_SIZE-1);
+  t = (stbds_hash_index *) STBDS_REALLOC(NULL,0,(slot_count >> STBDS_BUCKET_SHIFT) * sizeof(stbds_hash_bucket) + sizeof(stbds_hash_index) + STBDS_CACHE_LINE_SIZE-1);
   t->storage = (stbds_hash_bucket *) STBDS_ALIGN_FWD((size_t) (t+1), STBDS_CACHE_LINE_SIZE);
   t->slot_count = slot_count;
   t->slot_count_log2 = stbds_log2(slot_count);
@@ -1053,7 +1076,6 @@ static int stbds_is_key_equal(void *a, size_t elemsize, void *key, size_t keysiz
 
 #define STBDS_HASH_TO_ARR(x,elemsize) ((char*) (x) - (elemsize))
 #define STBDS_ARR_TO_HASH(x,elemsize) ((char*) (x) + (elemsize))
-#define STBDS_FREE(x)  realloc(x,0)
 
 #define stbds_hash_table(a)  ((stbds_hash_index *) stbds_header(a)->hash_table)
  
@@ -1065,12 +1087,12 @@ void stbds_hmfree_func(void *a, size_t elemsize, size_t keyoff)
        size_t i;
        // skip 0th element, which is default
        for (i=1; i < stbds_header(a)->length; ++i)
-         STBDS_FREE(*(char**) ((char *) a + elemsize*i));
+         STBDS_FREE(NULL, *(char**) ((char *) a + elemsize*i));
      }
      stbds_strreset(&stbds_hash_table(a)->string);
    }
-  STBDS_FREE(stbds_header(a)->hash_table);
-  STBDS_FREE(stbds_header(a));
+  STBDS_FREE(NULL, stbds_header(a)->hash_table);
+  STBDS_FREE(NULL, stbds_header(a));
 }
 
 static ptrdiff_t stbds_hm_find_slot(void *a, size_t elemsize, void *key, size_t keysize, int mode)
@@ -1196,7 +1218,7 @@ void *stbds_hmput_key(void *a, size_t elemsize, void *key, size_t keysize, int m
     slot_count = (table == NULL) ? STBDS_BUCKET_LENGTH : table->slot_count*2;
     nt = stbds_make_hash_index(slot_count, table);
     if (table) {
-      STBDS_FREE(table);
+      STBDS_FREE(NULL, table);
     }
     stbds_header(a)->hash_table = table = nt;
     STBDS_STATS(++stbds_hash_grow);
@@ -1331,7 +1353,7 @@ void * stbds_hmdel_key(void *a, size_t elemsize, void *key, size_t keysize, size
         b->index[i] = STBDS_INDEX_DELETED;
 
         if (mode == STBDS_HM_STRING && table->string.mode == STBDS_SH_STRDUP)
-          STBDS_FREE(*(char**) ((char *) a+elemsize*old_index));
+          STBDS_FREE(NULL, *(char**) ((char *) a+elemsize*old_index));
 
         // if indices are the same, memcpy is a no-op, but back-pointer-fixup will fail, so skip
         if (old_index != final_index) {
@@ -1353,11 +1375,11 @@ void * stbds_hmdel_key(void *a, size_t elemsize, void *key, size_t keysize, size
 
         if (table->used_count < table->used_count_shrink_threshold && table->slot_count > STBDS_BUCKET_LENGTH) {
           stbds_header(raw_a)->hash_table = stbds_make_hash_index(table->slot_count>>1, table);
-          STBDS_FREE(table);
+          STBDS_FREE(NULL, table);
           STBDS_STATS(++stbds_hash_shrink);
         } else if (table->tombstone_count > table->tombstone_count_threshold) {
           stbds_header(raw_a)->hash_table = stbds_make_hash_index(table->slot_count   , table);
-          STBDS_FREE(table);
+          STBDS_FREE(NULL, table);
           STBDS_STATS(++stbds_hash_rebuild);
         }
 
@@ -1374,7 +1396,7 @@ static char *stbds_strdup(char *str)
   // to keep replaceable allocator simple, we don't want to use strdup.
   // rolling our own also avoids problem of strdup vs _strdup
   size_t len = strlen(str)+1;
-  char *p = (char*) realloc(0, len);
+  char *p = (char*) STBDS_REALLOC(NULL, 0, len);
   memmove(p, str, len);
   return p;
 }
@@ -1407,7 +1429,7 @@ char *stbds_stralloc(stbds_string_arena *a, char *str)
       // note that we still advance string_block so block size will continue
       // increasing, so e.g. if somebody only calls this with 1000-long strings,
       // eventually the arena will start doubling and handling those as well
-      stbds_string_block *sb = (stbds_string_block *) realloc(0, sizeof(*sb)-8 + len);
+      stbds_string_block *sb = (stbds_string_block *) STBDS_REALLOC(NULL, 0, sizeof(*sb)-8 + len);
       memmove(sb->storage, str, len);
       if (a->storage) {
         // insert it after the first element, so that we don't waste the space there
@@ -1420,7 +1442,7 @@ char *stbds_stralloc(stbds_string_arena *a, char *str)
       }
       return sb->storage;
     } else {
-      stbds_string_block *sb = (stbds_string_block *) realloc(0, sizeof(*sb)-8 + blocksize);
+      stbds_string_block *sb = (stbds_string_block *) STBDS_REALLOC(NULL, 0, sizeof(*sb)-8 + blocksize);
       sb->next = a->storage;
       a->storage = sb;
       a->remaining = blocksize;
@@ -1440,7 +1462,7 @@ void stbds_strreset(stbds_string_arena *a)
   x = a->storage;
   while (x) {
     y = x->next;
-    realloc(x,0);
+    STBDS_FREE(NULL, x);
     x = y;
   }
   memset(a, 0, sizeof(*a));
