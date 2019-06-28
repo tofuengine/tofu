@@ -54,6 +54,8 @@ class Game {
         _torque = 0
         _forceLife = 0
         _torqueLife = 0
+
+        _tweener = Easing.tweener(Easing.sineOut)
     }
 
     // http://www.iforce2d.net/b2dtut/top-down-car
@@ -97,8 +99,8 @@ class Game {
             _torqueLife = 0
         }
         for (sprite in _sprites) {
-            sprite.accelerate(Easing.tween(_forceLife, 1, 0, _force, Easing.linear))
-            sprite.rotate(Easing.tween(_torqueLife, 1, 0, _torque, Easing.linear))
+            sprite.accelerate(_tweener.call(_forceLife) * _force)
+            sprite.rotate(_tweener.call(_torqueLife) * _torque)
             sprite.update(deltaTime)
         }
         _force = 0

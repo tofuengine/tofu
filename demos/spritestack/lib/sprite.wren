@@ -1,12 +1,10 @@
-import "graphics" for Canvas, Font
+import "graphics" for Canvas
 
 import "./lib/math" for Vector2D
 
 class Sprite {
 
     construct new(bank, from, to, scale) {
-        _font = Font.default
-
         _bank = bank
         _from = from
         _to = to
