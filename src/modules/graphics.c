@@ -137,7 +137,7 @@ const char graphics_wren[] =
     "    foreign static palette=(colors)\n"
     "    foreign static background=(color)\n"
     "    foreign static shader=(code)\n"
-    "    foreign static colorFromArgb(rgb)\n"
+    "    foreign static color(rgb)\n"
     "\n"
     "    foreign static points(vertices, color)\n"
     "    foreign static polyline(vertices, color)\n"
@@ -672,11 +672,11 @@ void graphics_canvas_shader_set(WrenVM *vm)
     Display_shader(environment->display, code);
 }
 
-void graphics_canvas_colorfromargb_call1(WrenVM *vm)
+void graphics_canvas_color_call1(WrenVM *vm)
 {
     const char *argb = wrenGetSlotString(vm, 1);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.colorFromArgb() -> %s", argb);
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.color() -> %s", argb);
 #endif
 
     Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
