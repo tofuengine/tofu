@@ -25,7 +25,7 @@
 
 #include <stdbool.h>
 
-#include <wren/wren.h>
+typedef int Callback_t;
 
 typedef enum _Timer_State_t {
     TIMER_STATE_FINALIZED,
@@ -36,7 +36,7 @@ typedef enum _Timer_State_t {
 typedef struct _Timer_Value_t {
     double period;
     size_t repeats;
-    WrenHandle *callback; // Need to be released explicitly. Should be opaque?
+    Callback_t callback;
 } Timer_Value_t;
 
 typedef struct _Timer_t {
