@@ -1,12 +1,24 @@
-import "random" for Random
+local Bunny = require("lib/bunny")
 
-import "graphics" for Bank, Canvas, Font
-import "events" for Environment, Input
+local LITTER_SIZE = 250
+local MAX_BUNNIES = 32768
 
-import "./lib/bunny" for Bunny
+local Game = {}
 
-var LITTER_SIZE = 250
-var MAX_BUNNIES = 32768
+Game.__index = Game
+
+function Game.new(position, angle, fov, radius)
+  return setmetatable({}, Game)
+end
+
+function Game:input()
+end
+
+function Game:update(delta_time)
+end
+
+function Game:render(ratio)
+end
 
 class Game {
 
@@ -64,3 +76,5 @@ class Game {
     }
 
 }
+
+return Game
