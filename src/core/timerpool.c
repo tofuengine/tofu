@@ -84,7 +84,7 @@ static bool contains(Timer_Pool_t *pool, Timer_t *timer)
     return false;
 }
 
-void TimerPool_initialize(Timer_Pool_t *pool, size_t initial_capacity)
+void TimerPool_initialize(Timer_Pool_t *pool)
 {
     pool->timers = NULL;
 }

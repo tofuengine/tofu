@@ -56,7 +56,7 @@ typedef struct _Timer_Pool_t {
 
 typedef void (*TimerPool_Callback_t)(Timer_t *timer, void *parameters);
 
-extern void TimerPool_initialize(Timer_Pool_t *pool, size_t initial_capacity);
+extern void TimerPool_initialize(Timer_Pool_t *pool);
 extern void TimerPool_terminate(Timer_Pool_t *pool, TimerPool_Callback_t callback, void *parameters);
 extern Timer_t *TimerPool_allocate(Timer_Pool_t *pool, const Timer_Value_t value);
 extern void TimerPool_update(Timer_Pool_t *pool, double delta_time, TimerPool_Callback_t callback, void *parameters);
