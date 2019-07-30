@@ -26,7 +26,9 @@
 #include <limits.h>
 #include <stdbool.h>
 
-#include <wren/wren.h>
+#include <lua/lua.h>
+#include <lua/lualib.h>
+#include <lua/lauxlib.h>
 
 #include "core/timerpool.h"
 
@@ -44,8 +46,7 @@ typedef enum _Handles_t {
 typedef struct _Interpreter_t {
     const Environment_t *environment;
 
-    WrenVM *vm;
-    WrenHandle *handles[Handles_t_CountOf];
+    lua_State *state;
 
     double gc_age;
 

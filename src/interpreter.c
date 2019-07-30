@@ -20,6 +20,12 @@
  * SOFTWARE.
  **/
 
+#if 0
+https://www.lua.org/manual/5.2/manual.html
+https://www.lua.org/pil/27.3.2.html
+https://www.lua.org/pil/25.2.html
+#endif
+
 #include "interpreter.h"
 
 #include "config.h"
@@ -40,11 +46,11 @@
 #define ROOT_INSTANCE           "tofu"
 
 #define BOOT_SCRIPT \
-    "import \"./tofu\" for Tofu\n" \
-    "var tofu = Tofu.new()\n"
+    "Tofu = require(\"tofu\")\n" \
+    "local tofu = Tofu.new()\n"
 
 #define SHUTDOWN_SCRIPT \
-    "tofu = null\n"
+    "tofu = nil\n"
 
 static const char *get_filename_extension(const char *name) {
     const char *dot = strrchr(name, '.');
@@ -140,66 +146,62 @@ static void timerpool_call_callback(Timer_t *timer, void *parameters)
 {
     Interpreter_t *interpreter = (Interpreter_t *)parameters;
 
-    wrenEnsureSlots(interpreter->vm, 1);
-    wrenSetSlotHandle(interpreter->vm, 0, timer->value.callback);
-    wrenCall(interpreter->vm, interpreter->handles[CALL]);
+    lua_rawgeti(interpreter->state, LUA_REGISTRYINDEX, timer->value.callback);
+    int result = lua_pcall(interpreter->state, 0, 0, 0);
+    if (result != 0) {
+        Log_write(LOG_LEVELS_ERROR, "<VM> error calling timer callback: %s", lua_tostring(interpreter->state, -1));
+    }
 }
 
 static void timerpool_release_callback(Timer_t *timer, void *parameters)
 {
     Interpreter_t *interpreter = (Interpreter_t *)parameters;
 
-    wrenReleaseHandle(interpreter->vm, timer->value.callback);
+    luaL_unref(interpreter->state, LUA_REGISTRYINDEX, timer->value.callback);
 }
 
 bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *environment)
 {
     interpreter->environment = environment;
 
-    WrenConfiguration vm_configuration;
-    wrenInitConfiguration(&vm_configuration);
-    vm_configuration.loadModuleFn = load_module_function;
-    vm_configuration.bindForeignClassFn = bind_foreign_class_function;
-    vm_configuration.bindForeignMethodFn = bind_foreign_method_function;
-    vm_configuration.writeFn = write_function;
-    vm_configuration.errorFn = error_function;
-
-    interpreter->vm = wrenNewVM(&vm_configuration);
-    if (!interpreter->vm) {
+    interpreter->state = luaL_newstate();
+    if (!interpreter->state) {
         Log_write(LOG_LEVELS_FATAL, "<VM> can't initialize interpreter");
         return false;
     }
-
-    wrenSetUserData(interpreter->vm, (void *)environment); // HACK: we discard the const qualifier :(
+	luaL_openlibs(interpreter->state);
+//    luaA_open(interpreter->state);
 
     interpreter->gc_age = 0.0;
 
-    TimerPool_initialize(&interpreter->timer_pool, 32); // Need to initialized before boot-script interpretation.
+    TimerPool_initialize(&interpreter->timer_pool); // Need to initialized before boot-script interpretation.
 
-    WrenInterpretResult result = wrenInterpret(interpreter->vm, ROOT_MODULE, BOOT_SCRIPT);
-    if (result != WREN_RESULT_SUCCESS) {
-        Log_write(LOG_LEVELS_FATAL, "<VM> can't interpret boot script");
-        wrenFreeVM(interpreter->vm);
+    int result = luaL_dostring(interpreter->state, BOOT_SCRIPT);
+    if (result != 0) {
+        Log_write(LOG_LEVELS_FATAL, "<VM> can't interpret boot script: %d", result);
+        lua_close(interpreter->state);
         return false;
     }
-
-    wrenEnsureSlots(interpreter->vm, 1);
-    wrenGetVariable(interpreter->vm, ROOT_MODULE, ROOT_INSTANCE, 0);
-    interpreter->handles[RECEIVER] = wrenGetSlotHandle(interpreter->vm, 0);
-
-    interpreter->handles[INPUT] = wrenMakeCallHandle(interpreter->vm, "input()");
-    interpreter->handles[UPDATE] = wrenMakeCallHandle(interpreter->vm, "update(_)");
-    interpreter->handles[RENDER] = wrenMakeCallHandle(interpreter->vm, "render(_)");
-    interpreter->handles[CALL] = wrenMakeCallHandle(interpreter->vm, "call()"); // Generic, for timers.
 
     return true;
 }
 
 void Interpreter_input(Interpreter_t *interpreter)
 {
-    wrenEnsureSlots(interpreter->vm, 1);
-    wrenSetSlotHandle(interpreter->vm, 0, interpreter->handles[RECEIVER]);
-    wrenCall(interpreter->vm, interpreter->handles[INPUT]);
+    lua_getglobal(interpreter->state, ROOT_INSTANCE); // TODO: define a helper "call" function.
+	if (lua_isnil(interpreter->state, -1)) {
+        Log_write(LOG_LEVELS_ERROR, "<VM> could not find root instance");
+        return;
+    }
+    lua_getfield(interpreter->state, -1, "input");
+	if (lua_isnil(interpreter->state, -1)) {
+        Log_write(LOG_LEVELS_ERROR, "<VM> could not find input method");
+        return;
+    }
+    int result = lua_pcall(interpreter->state, 0, 0, 0);
+    if (result != 0) {
+        Log_write(LOG_LEVELS_ERROR, "<VM> error calling input function: %s", lua_tostring(interpreter->state, -1));
+    }
 }
 
 void Interpreter_update(Interpreter_t *interpreter, const double delta_time)
@@ -214,7 +216,7 @@ void Interpreter_update(Interpreter_t *interpreter, const double delta_time)
         Log_write(LOG_LEVELS_DEBUG, "<VM> performing periodical garbage collection");
         double start_time = (double)clock() / CLOCKS_PER_SEC;
 #endif
-        wrenCollectGarbage(interpreter->vm);
+        lua_gc(interpreter->state, LUA_GCCOLLECT, 0);
         TimerPool_gc(&interpreter->timer_pool, timerpool_release_callback, interpreter);
 #ifdef __DEBUG_GARBAGE_COLLECTOR__
         double elapsed = ((double)clock() / CLOCKS_PER_SEC) - start_time;
@@ -222,34 +224,52 @@ void Interpreter_update(Interpreter_t *interpreter, const double delta_time)
 #endif
     }
 
-    wrenEnsureSlots(interpreter->vm, 2);
-    wrenSetSlotHandle(interpreter->vm, 0, interpreter->handles[RECEIVER]);
-    wrenSetSlotDouble(interpreter->vm, 1, delta_time);
-    wrenCall(interpreter->vm, interpreter->handles[UPDATE]);
+    lua_getglobal(interpreter->state, ROOT_INSTANCE); // TODO: define a helper "call" function.
+	if (lua_isnil(interpreter->state, -1)) {
+        Log_write(LOG_LEVELS_ERROR, "<VM> could not find root instance");
+        return;
+    }
+    lua_getfield(interpreter->state, -1, "update");
+	if (lua_isnil(interpreter->state, -1)) {
+        Log_write(LOG_LEVELS_ERROR, "<VM> could not find update method");
+        return;
+    }
+    lua_pushnumber(interpreter->state, delta_time);
+    int result = lua_pcall(interpreter->state, 1, 0, 0);
+    if (result != 0) {
+        Log_write(LOG_LEVELS_ERROR, "<VM> error calling update function: %s", lua_tostring(interpreter->state, -1));
+    }
 }
 
 void Interpreter_render(Interpreter_t *interpreter, const double ratio)
 {
-    wrenEnsureSlots(interpreter->vm, 1);
-    wrenSetSlotHandle(interpreter->vm, 0, interpreter->handles[RECEIVER]);
-    wrenCall(interpreter->vm, interpreter->handles[RENDER]);
+    lua_getglobal(interpreter->state, ROOT_INSTANCE); // TODO: define a helper "call" function.
+	if (lua_isnil(interpreter->state, -1)) {
+        Log_write(LOG_LEVELS_ERROR, "<VM> could not find root instance");
+        return;
+    }
+    lua_getfield(interpreter->state, -1, "render");
+	if (lua_isnil(interpreter->state, -1)) {
+        Log_write(LOG_LEVELS_ERROR, "<VM> could not find render method");
+        return;
+    }
+    lua_pushnumber(interpreter->state, ratio);
+    int result = lua_pcall(interpreter->state, 1, 0, 0);
+    if (result != 0) {
+        Log_write(LOG_LEVELS_ERROR, "<VM> error calling render function: %s", lua_tostring(interpreter->state, -1));
+    }
 }
 
 void Interpreter_terminate(Interpreter_t *interpreter)
 {
-    WrenInterpretResult result = wrenInterpret(interpreter->vm, ROOT_MODULE, SHUTDOWN_SCRIPT);
-    if (result != WREN_RESULT_SUCCESS) {
+    int result = luaL_dostring(interpreter->state, SHUTDOWN_SCRIPT);
+    if (result != 0) {
         Log_write(LOG_LEVELS_FATAL, "<VM> can't interpret shutdown script");
     }
 
-    wrenCollectGarbage(interpreter->vm);
+    lua_gc(interpreter->state, LUA_GCCOLLECT, 0);
 
     TimerPool_terminate(&interpreter->timer_pool, timerpool_release_callback, interpreter);
 
-    for (int i = 0; i < Handles_t_CountOf; ++i) {
-        WrenHandle *handle = interpreter->handles[i];
-        wrenReleaseHandle(interpreter->vm, handle);
-    }
-
-    wrenFreeVM(interpreter->vm);
+    lua_close(interpreter->state);
 }
