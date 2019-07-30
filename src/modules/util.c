@@ -33,7 +33,7 @@ typedef struct _Timer_Class_t {
     Timer_t *timer;
 } Timer_Class_t;
 
-const char util_wren[] =
+const char util_lua[] =
     "foreign class Timer {\n"
     "\n"
     "    construct new(period, repeats, callback) {}\n"
@@ -61,6 +61,62 @@ const char util_wren[] =
     "\n"
     "}\n"
 ;
+
+static const luaL_Reg util_module[] = {
+  {"abs",   math_abs},
+  {"acos",  math_acos},
+  {"asin",  math_asin},
+  {"atan",  math_atan},
+  {"ceil",  math_ceil},
+  {"cos",   math_cos},
+  {"deg",   math_deg},
+  {"exp",   math_exp},
+  {"tointeger", math_toint},
+  {"floor", math_floor},
+  {"fmod",   math_fmod},
+  {"ult",   math_ult},
+  {"log",   math_log},
+  {"max",   math_max},
+  {"min",   math_min},
+  {"modf",   math_modf},
+  {"rad",   math_rad},
+  {"random",     math_random},
+  {"randomseed", math_randomseed},
+  {"sin",   math_sin},
+  {"sqrt",  math_sqrt},
+  {"tan",   math_tan},
+  {"type", math_type},
+#if defined(LUA_COMPAT_MATHLIB)
+  {"atan2", math_atan},
+  {"cosh",   math_cosh},
+  {"sinh",   math_sinh},
+  {"tanh",   math_tanh},
+  {"pow",   math_pow},
+  {"frexp", math_frexp},
+  {"ldexp", math_ldexp},
+  {"log10", math_log10},
+#endif
+  /* placeholders */
+  {"pi", NULL},
+  {"huge", NULL},
+  {"maxinteger", NULL},
+  {"mininteger", NULL},
+  {NULL, NULL}
+};
+
+bool util_initialize(lua_State *state)
+{
+    luaL_newlib(state, util_module);
+    lua_pushnumber(state, PI);
+    lua_setfield(state, -2, "pi");
+    lua_pushnumber(state, (lua_Number)HUGE_VAL);
+    lua_setfield(state, -2, "huge");
+    lua_pushinteger(state, LUA_MAXINTEGER);
+    lua_setfield(state, -2, "maxinteger");
+    lua_pushinteger(L, LUA_MININTEGER);
+    lua_setfield(state, -2, "mininteger");
+    return true;
+}
 
 void util_timer_allocate(WrenVM *vm)
 {

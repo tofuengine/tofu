@@ -28,13 +28,13 @@
 #include "modules/io.h"
 #include "modules/util.h"
 
-const Module_Entry_t _modules[] = {
-//  { "<module-name>", "<module-source>" }
-    { "collections", collections_wren },
-    { "events", events_wren },
-    { "graphics", graphics_wren },
-    { "io", io_wren },
-    { "util", util_wren },
+const Module_Entry_t modules_entries[] = {
+//  { "<module-name>", "<module-initialize>", "<module-finalize>", "<module-source>" }
+    { "collections", collections_lua },
+    { "events", events_lua },
+    { "graphics", graphics_lua },
+    { "io", io_lua },
+    { "util", util_lua },
     { NULL, NULL }
 };
 const Class_Entry_t _classes[] = {
