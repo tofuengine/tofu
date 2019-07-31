@@ -27,6 +27,7 @@ typedef bool (*Module_Callback_t)();
 
 typedef struct _Module_Entry_t {
     const char *name;
+    lua_CFunction loader;
     Module_Callback_t initialize;
     Module_Callback_t finalize;
     const char *source;

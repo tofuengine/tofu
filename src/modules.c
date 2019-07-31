@@ -29,7 +29,7 @@
 #include "modules/util.h"
 
 const Module_Entry_t modules_entries[] = {
-//  { "<module-name>", "<module-initialize>", "<module-finalize>", "<module-source>" }
+//  { "<module-name>", "module-loader", "<module-initialize>", "<module-finalize>", "<module-source>" }
     { "collections", collections_lua },
     { "events", events_lua },
     { "graphics", graphics_lua },
@@ -37,6 +37,7 @@ const Module_Entry_t modules_entries[] = {
     { "util", util_lua },
     { NULL, NULL }
 };
+
 const Class_Entry_t _classes[] = {
 //  { "<module-name>", "<class-name>", <allocator>, <deallocator> }
     { "collections", "Grid", collections_grid_allocate, collections_grid_finalize },
@@ -45,6 +46,7 @@ const Class_Entry_t _classes[] = {
     { "util", "Timer", util_timer_allocate, util_timer_finalize },
     { NULL, NULL, NULL, NULL }
 };
+
 const Method_Entry_t _methods[] = {
 //  { "<module-name>", "<class-name>", <is-static>, "<signature>", <function> }
     { "collections", "Grid", false, "width", collections_grid_width_get },
