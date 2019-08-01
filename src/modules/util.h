@@ -23,7 +23,9 @@
 #ifndef __MODULES_UTIL_H__
 #define __MODULES_UTIL_H__
 
-#include <wren/wren.h>
+#include <lua/lua.h>
+#include <lua/lualib.h>
+#include <lua/lauxlib.h>
 
 extern const char util_wren[];
 

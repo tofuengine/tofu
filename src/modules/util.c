@@ -62,111 +62,156 @@ const char util_lua[] =
     "}\n"
 ;
 
-static const luaL_Reg util_module[] = {
-  {"abs",   math_abs},
-  {"acos",  math_acos},
-  {"asin",  math_asin},
-  {"atan",  math_atan},
-  {"ceil",  math_ceil},
-  {"cos",   math_cos},
-  {"deg",   math_deg},
-  {"exp",   math_exp},
-  {"tointeger", math_toint},
-  {"floor", math_floor},
-  {"fmod",   math_fmod},
-  {"ult",   math_ult},
-  {"log",   math_log},
-  {"max",   math_max},
-  {"min",   math_min},
-  {"modf",   math_modf},
-  {"rad",   math_rad},
-  {"random",     math_random},
-  {"randomseed", math_randomseed},
-  {"sin",   math_sin},
-  {"sqrt",  math_sqrt},
-  {"tan",   math_tan},
-  {"type", math_type},
-#if defined(LUA_COMPAT_MATHLIB)
-  {"atan2", math_atan},
-  {"cosh",   math_cosh},
-  {"sinh",   math_sinh},
-  {"tanh",   math_tanh},
-  {"pow",   math_pow},
-  {"frexp", math_frexp},
-  {"ldexp", math_ldexp},
-  {"log10", math_log10},
-#endif
-  /* placeholders */
-  {"pi", NULL},
-  {"huge", NULL},
-  {"maxinteger", NULL},
-  {"mininteger", NULL},
-  {NULL, NULL}
+
+/*
+http://webcache.googleusercontent.com/search?q=cache:RLoR9dkMeowJ:howtomakeanrpg.com/a/classes-in-lua.html+&cd=4&hl=en&ct=clnk&gl=it
+https://hisham.hm/2014/01/02/how-to-write-lua-modules-in-a-post-module-world/
+https://www.oreilly.com/library/view/creating-solid-apis/9781491986301/ch01.html
+file:///C:/Users/mlizza/Downloads/[Roberto_Ierusalimschy]_Programming_in_Lua(z-lib.org).pdf (page 269)
+https://nachtimwald.com/2014/07/12/wrapping-a-c-library-in-lua/
+https://www.lua.org/pil/28.5.html
+https://stackoverflow.com/questions/16713837/hand-over-global-custom-data-to-lua-implemented-functions
+https://stackoverflow.com/questions/29449296/extending-lua-check-number-of-parameters-passed-to-a-function
+*/
+
+static const char *util_timer_module = "util.Timer";
+static const char *util_timer_metatable = "util.Timer_mt";
+
+static const struct luaL_Reg util_timer_f[] = {
+    { "new", util_timer_new },
+    { NULL, NULL }
 };
 
-bool util_initialize(lua_State *state)
+static const struct luaL_Reg util_timer_m[] = {
+    {"__gc", util_timer_gc },
+    { "reset", util_timer_reset },
+    { "cancel", util_timer_cancel },
+    { NULL, NULL }
+};
+
+int luaopen_util_timer(lua_State *L)
 {
-    luaL_newlib(state, util_module);
-    lua_pushnumber(state, PI);
-    lua_setfield(state, -2, "pi");
-    lua_pushnumber(state, (lua_Number)HUGE_VAL);
-    lua_setfield(state, -2, "huge");
-    lua_pushinteger(state, LUA_MAXINTEGER);
-    lua_setfield(state, -2, "maxinteger");
-    lua_pushinteger(L, LUA_MININTEGER);
-    lua_setfield(state, -2, "mininteger");
+    luaL_newmetatable(L, util_timer_metatable); /* create metatable */
+    lua_pushvalue(L, -1); /* duplicate the metatable */
+    lua_setfield(L, -2, "__index"); /* mt.__index = mt */
+    luaL_setfuncs(L, util_timer_f, 0); /* register metamethods */
+    luaL_newlib(L, util_timer_m); /* create lib table */
+    return 1;
+}
+
+int luax_preload(lua_State *L, const char *name, lua_CFunction f)
+{
+    lua_getglobal(L, "package");
+    lua_getfield(L, -1, "preload");
+    lua_pushcfunction(L, f);
+    lua_setfield(L, -2, name);
+    lua_pop(L, 2);
+    return 0;
+}
+
+bool util_initialize(lua_State *L)
+{
+    luax_preload(L, util_timer_module, luaopen_util_timer);
     return true;
 }
 
-void util_timer_allocate(WrenVM *vm)
+LUALIB_API lua_Integer luaL_checkfunction (lua_State *L, int arg) {
+  if (lua_type(L, arg) != LUA_TFUNCTION)) {
+    tag_error(L, arg, LUA_TFUNCTION);
+    return -1;
+  }
+  lua_pushvalue(L, arg);
+  return luaL_ref(L, LUA_REGISTRYINDEX);
+}
+
+
+static int util_timer_new(lua_State *L)
 {
-    double period = wrenGetSlotDouble(vm, 1);
-    int repeats = (int)wrenGetSlotDouble(vm, 2);
-    WrenHandle *callback = wrenGetSlotHandle(vm, 3); // NOTE! This need to be released when the timer is detached!
+    if (lua_gettop(L) != 3) {
+        return luaL_error(L, "expecting exactly 3 arguments");
+    }
+    double period = luaL_checknumber(L, 1);
+    int repeats = luaL_checkinteger(L, 2);
+    int callback = luaL_checkfunction(L, 3); // NOTE! This need to be released when the timer is detached!
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Timer.new() -> %f, %d, %p", period, repeats, callback);
+    Log_write(LOG_LEVELS_DEBUG, "Timer.new() -> %f, %d, %d", period, repeats, callback);
 #endif
 
-    Timer_Class_t *instance = (Timer_Class_t *)wrenSetSlotNewForeign(vm, 0, 0, sizeof(Timer_Class_t)); // `0, 0` since we are in the allocate callback.
+/*
+//Set your userdata as a global
+lua_pushlightuserdata(L, environment);
+lua_setglobal(L, "environment");
+*/
 
-    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+    lua_getglobal(L, "environment");
+    Environment_t *environment = (Environment_t *)lua_touserdata(L, -1);  //Get it from the top of the stack
     Timer_Pool_t *timer_pool = environment->timer_pool;
 
+    Timer_Class_t *instance = (Timer_Class_t *)lua_newuserdata(L, sizeof(Timer_Class_t));
     instance->timer_pool = timer_pool;
     instance->timer = TimerPool_allocate(timer_pool, (Timer_Value_t){
             .period = period,
             .repeats = repeats,
             .callback = callback
         });
+
+    luaL_setmetatable(L, util_timer_metatable);
+
+    return 1;
 }
 
-void util_timer_finalize(void *userData, void *data)
+#if 0
+static int lua_callback(lua_State * L, int ref, EXTRA_ARGS)
 {
-    Timer_Class_t *instance = (Timer_Class_t *)data;
+  lua_rawgeti(L, ref); /* push stored function */
+  int nargs = /* Number of EXTRA_ARGS */;
+  /* ...push EXTRA_ARGS to stack... */
+  /* call function (error checking omitted) */
+  lua_pcall(L, nargs,  LUA_MULTRET);
+  /* Process results */
+}
+
+#endif
+
+static int util_timer_gc(lua_State *L)
+{
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Timer.gc()");
+#endif
+
+    Timer_Class_t *instance = (Timer_Class_t *)luaL_checkudata(L, 1, util_timer_metatable);
 
     Log_write(LOG_LEVELS_DEBUG, "<UTIL> finalizing timer #%p", instance->timer);
 
+    lua_unref(L, instance->timer->callback); // TODO: move to the timer gc callback.
+
     TimerPool_release(instance->timer_pool, instance->timer);
+
+    return 0;
 }
 
-void util_timer_reset_call0(WrenVM *vm)
+static int util_timer_reset(lua_State *L)
 {
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Timer.cancel()");
 #endif
 
-    Timer_Class_t *instance = (Timer_Class_t *)wrenGetSlotForeign(vm, 0);
+    Timer_Class_t *instance = (Timer_Class_t *)luaL_checkudata(L, 1, util_timer_metatable);
 
     TimerPool_reset(instance->timer_pool, instance->timer);
+
+    return 0;
 }
 
-void util_timer_cancel_call0(WrenVM *vm)
+static int util_timer_cancel(lua_State *L)
 {
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Timer.cancel()");
 #endif
 
-    Timer_Class_t *instance = (Timer_Class_t *)wrenGetSlotForeign(vm, 0);
+    Timer_Class_t *instance = (Timer_Class_t *)luaL_checkudata(L, 1, util_timer_metatable);
 
     TimerPool_cancel(instance->timer_pool, instance->timer);
+
+    return 0;
 }
