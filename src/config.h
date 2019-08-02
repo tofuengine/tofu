@@ -55,7 +55,6 @@
 #undef  __LOWERCASE_ARGB__
 #undef  __DEBUG_TRIANGLES_WINDING__
 #undef  __FIND_NEAREST_COLOR_EUCLIDIAN__
-#define __GRID_REPEAT_CONTENT__
 #undef  __GRID_INTEGER_CELL__
 #undef  __DEBUG_API_CALLS__
 #undef  __DEBUG_VM_CALLS__

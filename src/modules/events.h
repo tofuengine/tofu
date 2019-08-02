@@ -23,16 +23,10 @@
 #ifndef __MODULES_EVENTS_H__
 #define __MODULES_EVENTS_H__
 
-#include <wren/wren.h>
+#include <stdbool.h>
 
-extern const char events_wren[];
+#include "../core/luax.h"
 
-extern void events_input_iskeydown_call1(WrenVM *vm);
-extern void events_input_iskeyup_call1(WrenVM *vm);
-extern void events_input_iskeypressed_call1(WrenVM *vm);
-extern void events_input_iskeyreleased_call1(WrenVM *vm);
-
-extern void events_environment_fps_get(WrenVM *vm);
-extern void events_environment_quit_call0(WrenVM *vm);
+extern bool events_initialize(lua_State *L);
 
 #endif  /* __MODULES_EVENTS_H__ */

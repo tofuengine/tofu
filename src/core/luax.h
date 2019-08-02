@@ -20,31 +20,21 @@
  * SOFTWARE.
  **/
 
-#ifndef __INTERPRETER_H__
-#define __INTERPRETER_H__
+#ifndef __CORE_LUAX_H__
+#define __CORE_LUAX_H__
 
-#include <limits.h>
-#include <stdbool.h>
+#include <lua/lua.h>
+#include <lua/lualib.h>
+#include <lua/lauxlib.h>
 
-#include "core/luax.h"
-#include "core/timerpool.h"
+#define LUAX_MODULE(n)          (n)
+#define LUAX_CLASS(n)           (n)"_mt"
 
-#include "environment.h"
+extern int luaX_newclass(lua_State *L, const luaL_Reg *f, const luaL_Reg *m, const char *name);
+extern void luaX_preload(lua_State *L, const char *name, lua_CFunction f);
+extern void luaX_require(lua_State *L, const char *name);
+extern int luaX_checkfunction(lua_State *L, int arg);
+extern void luaX_setuserdata(lua_State *L, const char *name, void *p);
+extern void *luaX_getuserdata(lua_State *L, const char *name);
 
-typedef struct _Interpreter_t {
-    const Environment_t *environment;
-
-    double gc_age;
-
-    lua_State *state;
-
-    Timer_Pool_t timer_pool;
-} Interpreter_t;
-
-extern bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *environment);
-extern void Interpreter_input(Interpreter_t *interpreter);
-extern void Interpreter_update(Interpreter_t *interpreter, const double delta_time);
-extern void Interpreter_render(Interpreter_t *interpreter, const double ratio);
-extern void Interpreter_terminate(Interpreter_t *interpreter);
-
-#endif  /* __INTERPRETER_H__ */
+#endif  /* __CORE_LUAX_H__ */

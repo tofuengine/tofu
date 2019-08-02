@@ -84,15 +84,18 @@ static bool contains(Timer_Pool_t *pool, Timer_t *timer)
     return false;
 }
 
-void TimerPool_initialize(Timer_Pool_t *pool)
+void TimerPool_initialize(Timer_Pool_t *pool, TimerPool_Callback_t update_callback, void *parameters)
 {
-    pool->timers = NULL;
+    *pool = (Timer_Pool_t){
+            .timers = NULL,
+            .update_callback = update_callback,
+            .parameters = parameters
+        };
 }
 
-void TimerPool_terminate(Timer_Pool_t *pool, TimerPool_Callback_t callback, void *parameters)
+void TimerPool_terminate(Timer_Pool_t *pool)
 {
     for (Timer_t *timer = pool->timers; timer != NULL; ) {
-        callback(timer, parameters);
         Log_write(LOG_LEVELS_DEBUG, "<TIMERPOOL> timer #%p released", timer);
         timer = pop_next(pool, timer);
     }
@@ -103,11 +106,10 @@ Timer_t *TimerPool_allocate(Timer_Pool_t *pool, const Timer_Value_t value)
     return push(pool, value);
 }
 
-void TimerPool_gc(Timer_Pool_t *pool, TimerPool_Callback_t callback, void *parameters)
+void TimerPool_gc(Timer_Pool_t *pool)
 {
     for (Timer_t *timer = pool->timers; timer != NULL; ) {
         if (timer->state == TIMER_STATE_FINALIZED) { // Periodically release garbage-collected timers.
-            callback(timer, parameters);
             Log_write(LOG_LEVELS_DEBUG, "<TIMERPOOL> timer #%p garbage-collected", timer);
             timer = pop_next(pool, timer);
         } else {
@@ -116,7 +118,7 @@ void TimerPool_gc(Timer_Pool_t *pool, TimerPool_Callback_t callback, void *param
     }
 }
 
-void TimerPool_update(Timer_Pool_t *pool, double delta_time, TimerPool_Callback_t callback, void *parameters)
+void TimerPool_update(Timer_Pool_t *pool, double delta_time)
 {
     for (Timer_t *timer = pool->timers; timer != NULL; timer = timer->next) {
         if (timer->state != TIMER_STATE_RUNNING) {
@@ -131,7 +133,7 @@ void TimerPool_update(Timer_Pool_t *pool, double delta_time, TimerPool_Callback_
 
             timer->age -= timer->value.period;
 
-            callback(timer, parameters);
+            pool->update_callback(timer, pool->parameters);
 
             if (timer->loops > 0) {
                 timer->loops -= 1;

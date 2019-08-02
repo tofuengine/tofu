@@ -22,22 +22,8 @@
 
 #include "collections.h"
 
+#include "../config.h"
 #include "../log.h"
-
-const char collections_wren[] =
-    "foreign class Grid {\n"
-    "\n"
-    "    construct new(width, height, content) {}\n"
-    "\n"
-    "    foreign width\n"
-    "    foreign height\n"
-    "    foreign fill(content)\n"
-    "    foreign stride(column, row, content, amount)\n"
-    "    foreign peek(column, row)\n"
-    "    foreign poke(column, row, value)\n"
-    "\n"
-    "}\n"
-;
 
 #ifdef __GRID_INTEGER_CELL__
 typedef long Cell_t;
@@ -52,13 +38,59 @@ typedef struct _Grid_Class_t {
     Cell_t **offsets; // Precomputed pointers to the line of data.
 } Grid_Class_t;
 
-void collections_grid_allocate(WrenVM *vm)
-{
-    int width = (int)wrenGetSlotDouble(vm, 1);
-    int height = (int)wrenGetSlotDouble(vm, 2);
-    WrenType type = wrenGetSlotType(vm, 3);
+static const char *collections_lua =
+    "\n"
+;
 
-    Grid_Class_t *instance = (Grid_Class_t *)wrenSetSlotNewForeign(vm, 0, 0, sizeof(Grid_Class_t)); // `0, 0` since we are in the allocate callback.
+static const char *collections_grid_module = "collections.Grid";
+static const char *collections_grid_metatable = "collections.Grid_mt";
+
+static int collections_grid_new(lua_State *L);
+static int collections_grid_gc(lua_State *L);
+static int collections_grid_width(lua_State *L);
+static int collections_grid_height(lua_State *L);
+static int collections_grid_fill(lua_State *L);
+static int collections_grid_stride(lua_State *L);
+static int collections_grid_peek(lua_State *L);
+static int collections_grid_poke(lua_State *L);
+
+static const struct luaL_Reg collections_grid_f[] = {
+    { "new", collections_grid_new },
+    { NULL, NULL }
+};
+
+static const struct luaL_Reg collections_grid_m[] = {
+    {"__gc", collections_grid_gc },
+    { NULL, NULL }
+};
+
+static int luaopen_collections_grid(lua_State *L)
+{
+    return luaX_newclass(L, collections_grid_f, collections_grid_m, collections_grid_metatable);
+}
+
+bool collections_initialize(lua_State *L)
+{
+    luaX_preload(L, collections_grid_module, luaopen_collections_grid);
+
+    if (luaL_dostring(L, collections_lua) != 0) {
+        Log_write(LOG_LEVELS_FATAL, "<VM> can't open script: %s", lua_tostring(L, -1));
+        return false;
+    }
+
+    return true;
+}
+
+static int collections_grid_new(lua_State *L)
+{
+    if (lua_gettop(L) != 3) {
+        return luaL_error(L, "<COLLECTIONS> grid constructor requires 3 arguments");
+    }
+    int width = luaL_checkinteger(L, 1);
+    int height = luaL_checkinteger(L, 2);
+    int type = lua_type(L, 3);
+
+    Grid_Class_t *instance = (Grid_Class_t *)lua_newuserdata(L, sizeof(Grid_Class_t));
 
     Cell_t *data = malloc((width * height) * sizeof(Cell_t));
     Cell_t **offsets = malloc(height * sizeof(Cell_t *));
@@ -70,43 +102,21 @@ void collections_grid_allocate(WrenVM *vm)
     Cell_t *ptr = data;
     Cell_t *eod = ptr + (width * height);
 
-    if (type == WREN_TYPE_LIST) {
-        int count = wrenGetListCount(vm, 3);
-#ifdef __DEBUG_VM_CALLS__
-        Log_write(LOG_LEVELS_DEBUG, "List has #%d elements(s)", count);
-#endif
+    if (type == LUA_TTABLE) {
+        lua_pushnil(L); // first key
+        while (lua_next(L, 3) != 0) {
+            const char *key_type = lua_typename(L, lua_type(L, -2)); // uses 'key' (at index -2) and 'value' (at index -1)
+            Cell_t value = (Cell_t)lua_tonumber(L, -1);
 
-        int slots = wrenGetSlotCount(vm);
-#ifdef __DEBUG_VM_CALLS__
-        Log_write(LOG_LEVELS_DEBUG, "Currently #%d slot(s) available, asking for an additional slot", slots);
-#endif
-        const int aux_slot_id = slots;
-        wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
+            if (ptr < eod) {
+                *(ptr++) = value;
+            }
 
-        // FIXME: At the moment Wren has a bug that prevents the foreign constructor to "modify" the VM (for
-        //        example to request an additional slot). This code doesn't work, but we leave it here in the
-        //        case the interpreter will be fixed.
-
-#ifdef __GRID_REPEAT_CONTENT__
-        for (int i = 0; (ptr < eod) && (count > 0); ++i) {
-            wrenGetListElement(vm, 3, i % count, aux_slot_id);
-
-            Cell_t value = (Cell_t)wrenGetSlotDouble(vm, aux_slot_id);
-
-            *(ptr++) = value;
+            lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
         }
-#else
-        for (int i = 0; (ptr < eod) && (i < count); ++i) { // Don't exceed buffer if list is too long to fit!
-            wrenGetListElement(vm, 3, i, aux_slot_id);
-
-            Cell_t value = (Cell_t)wrenGetSlotDouble(vm, aux_slot_id);
-
-            *(ptr++) = value;
-        }
-#endif
     } else
-    if (type == WREN_TYPE_NUM) {
-        Cell_t value = (Cell_t)wrenGetSlotDouble(vm, 3);
+    if (type = LUA_TNUMBER) {
+        Cell_t value = (Cell_t)lua_tonumber(L, 3);;
 
         while (ptr < eod) {
             *(ptr++) = value;
@@ -119,34 +129,60 @@ void collections_grid_allocate(WrenVM *vm)
             .data = data,
             .offsets = offsets
         };
+
+    Log_write(LOG_LEVELS_DEBUG, "<COLLECTIONS> grid #%p allocated", instance);
+
+    luaL_setmetatable(L, collections_grid_metatable);
+
+    return 1;
 }
 
-void collections_grid_finalize(void *userData, void *data)
+static int collections_grid_gc(lua_State *L)
 {
-    Grid_Class_t *instance = (Grid_Class_t *)data;
+    if (lua_gettop(L) != 1) {
+        return luaL_error(L, "<COLLECTIONS> method requires 1 arguments");
+    }
+    Grid_Class_t *instance = (Grid_Class_t *)luaL_checkudata(L, 1, collections_grid_metatable);
+
+    Log_write(LOG_LEVELS_DEBUG, "<COLLECTIONS> finalizing grid #%p", instance);
+
     free(instance->data);
     free(instance->offsets);
+
+    return 0;
 }
 
-void collections_grid_width_get(WrenVM *vm)
+static int collections_grid_width(lua_State *L)
 {
-    Grid_Class_t *instance = (Grid_Class_t *)wrenGetSlotForeign(vm, 0);
+    if (lua_gettop(L) != 1) {
+        return luaL_error(L, "<COLLECTIONS> method requires 1 arguments");
+    }
+    Grid_Class_t *instance = (Grid_Class_t *)luaL_checkudata(L, 1, collections_grid_metatable);
 
-    wrenSetSlotDouble(vm, 0, instance->width);
+    lua_pushinteger(L, instance->width);
+
+    return 1;
 }
 
-void collections_grid_height_get(WrenVM *vm)
+static int collections_grid_height(lua_State *L)
 {
-    Grid_Class_t *instance = (Grid_Class_t *)wrenGetSlotForeign(vm, 0);
+    if (lua_gettop(L) != 1) {
+        return luaL_error(L, "<COLLECTIONS> method requires 1 arguments");
+    }
+    Grid_Class_t *instance = (Grid_Class_t *)luaL_checkudata(L, 1, collections_grid_metatable);
 
-    wrenSetSlotDouble(vm, 0, instance->height);
+    lua_pushinteger(L, instance->height);
+
+    return 1;
 }
 
-void collections_grid_fill_call1(WrenVM *vm)
+static int collections_grid_fill(lua_State *L)
 {
-    WrenType type = wrenGetSlotType(vm, 1);
-
-    Grid_Class_t *instance = (Grid_Class_t *)wrenGetSlotForeign(vm, 0);
+    if (lua_gettop(L) != 2) {
+        return luaL_error(L, "<COLLECTIONS> method requires 2 arguments");
+    }
+    Grid_Class_t *instance = (Grid_Class_t *)luaL_checkudata(L, 1, collections_grid_metatable);
+    int type = lua_type(L, 2);
 
     int width = instance->width;
     int height = instance->height;
@@ -155,119 +191,103 @@ void collections_grid_fill_call1(WrenVM *vm)
     Cell_t *ptr = data;
     Cell_t *eod = ptr + (width * height);
 
-    if (type == WREN_TYPE_LIST) {
-        int count = wrenGetListCount(vm, 1);
+    if (type == LUA_TTABLE) {
+        lua_pushnil(L); // first key
+        while (lua_next(L, 1) != 0) {
+            const char *key_type = lua_typename(L, lua_type(L, -2)); // uses 'key' (at index -2) and 'value' (at index -1)
+            Cell_t value = (Cell_t)lua_tonumber(L, -1);
 
-        int slots = wrenGetSlotCount(vm);
-        const int aux_slot_id = slots;
-#ifdef __DEBUG_VM_CALLS__
-        Log_write(LOG_LEVELS_DEBUG, "Currently #%d slot(s) available, asking for additional slot", slots);
-#endif
-        wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
+            if (ptr < eod) {
+                *(ptr++) = value;
+            }
 
-#ifdef __GRID_REPEAT_CONTENT__
-        for (int i = 0; (ptr < eod) && (count > 0); ++i) {
-            wrenGetListElement(vm, 1, i % count, aux_slot_id);
-
-            Cell_t value = (Cell_t)wrenGetSlotDouble(vm, aux_slot_id);
-
-            *(ptr++) = value;
+            lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
         }
-#else
-        for (int i = 0; (ptr < eod) && (i < count); ++i) { // Don't exceed buffer if list is too long to fit!
-            wrenGetListElement(vm, 1, i, aux_slot_id);
-
-            Cell_t value = (Cell_t)wrenGetSlotDouble(vm, aux_slot_id);
-
-            *(ptr++) = value;
-        }
-#endif
     } else
-    if (type == WREN_TYPE_NUM) {
-        Cell_t value = (Cell_t)wrenGetSlotDouble(vm, 1);
+    if (type = LUA_TNUMBER) {
+        Cell_t value = (Cell_t)lua_tonumber(L, 1);;
 
         while (ptr < eod) {
             *(ptr++) = value;
         }
     }
+
+    return 0;
 }
 
-void collections_grid_stride_call4(WrenVM *vm)
+static int collections_grid_stride(lua_State *L)
 {
-    int column = (int)wrenGetSlotDouble(vm, 1);
-    int row = (int)wrenGetSlotDouble(vm, 2);
-    WrenType type = wrenGetSlotType(vm, 3);
-    int amount = (int)wrenGetSlotDouble(vm, 4);
-
-    Grid_Class_t *instance = (Grid_Class_t *)wrenGetSlotForeign(vm, 0);
+    if (lua_gettop(L) != 5) {
+        return luaL_error(L, "<COLLECTIONS> method requires 5 arguments");
+    }
+    Grid_Class_t *instance = (Grid_Class_t *)luaL_checkudata(L, 1, collections_grid_metatable);
+    int column = luaL_checkinteger(L, 2);
+    int row = luaL_checkinteger(L, 3);
+    int type = lua_type(L, 4);
+    int amount = luaL_checkinteger(L, 5);
 
     int width = instance->width;
     int height = instance->height;
     Cell_t *data = instance->offsets[row];
 
     Cell_t *ptr = data + column;
-    Cell_t *eod = ptr + (width * height);
+    Cell_t *eod = ptr + ((width * height < amount) ? (width * height) : amount);
 
-    if (type == WREN_TYPE_LIST) {
-        int count = wrenGetListCount(vm, 3);
+    if (type == LUA_TTABLE) {
+        lua_pushnil(L); // first key
+        while (lua_next(L, 1) != 0) {
+            const char *key_type = lua_typename(L, lua_type(L, -2)); // uses 'key' (at index -2) and 'value' (at index -1)
+            Cell_t value = (Cell_t)lua_tonumber(L, -1);
 
-        int slots = wrenGetSlotCount(vm);
-        const int aux_slot_id = slots;
-#ifdef __DEBUG_VM_CALLS__
-        Log_write(LOG_LEVELS_DEBUG, "Currently #%d slot(s) available, asking for additional slot", slots);
-#endif
-        wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
+            if (ptr < eod) {
+                *(ptr++) = value;
+            }
 
-#ifdef __GRID_REPEAT_CONTENT__
-        for (int i = 0; (ptr < eod) && (i < amount) && (count > 0); ++i) {
-            wrenGetListElement(vm, 1, i % count, aux_slot_id);
-
-            Cell_t value = (Cell_t)wrenGetSlotDouble(vm, aux_slot_id);
-
-            *(ptr++) = value;
+            lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
         }
-#else
-        for (int i = 0; (ptr < eod) && (i < amount) && (i < count); ++i) { // Don't exceed buffer if list is too long to fit!
-            wrenGetListElement(vm, 3, i, aux_slot_id);
-
-            Cell_t value = (Cell_t)wrenGetSlotDouble(vm, aux_slot_id);
-
-            *(ptr++) = value;
-        }
-#endif
     } else
-    if (type == WREN_TYPE_NUM) {
-        Cell_t value = (Cell_t)wrenGetSlotDouble(vm, 3);
+    if (type = LUA_TNUMBER) {
+        Cell_t value = (Cell_t)lua_tonumber(L, 1);;
 
         for (int i = 0; (ptr < eod) && (i < amount); ++i) {
             *(ptr++) = value;
         }
     }
+
+    return 0;
 }
 
-void collections_grid_peek_call2(WrenVM *vm)
+static int collections_grid_peek(lua_State *L)
 {
-    int column = (int)wrenGetSlotDouble(vm, 1);
-    int row = (int)wrenGetSlotDouble(vm, 2);
-
-    Grid_Class_t *instance = (Grid_Class_t *)wrenGetSlotForeign(vm, 0);
+    if (lua_gettop(L) != 3) {
+        return luaL_error(L, "<COLLECTIONS> method requires 3 arguments");
+    }
+    Grid_Class_t *instance = (Grid_Class_t *)luaL_checkudata(L, 1, collections_grid_metatable);
+    int column = luaL_checkinteger(L, 2);
+    int row = luaL_checkinteger(L, 3);
 
     Cell_t *data = instance->offsets[row];
 
     Cell_t value = data[column];
 
-    wrenSetSlotDouble(vm, 0, value);
+    lua_pushnumber(L, (lua_Number)value);
+
+    return 1;
 }
 
-void collections_grid_poke_call3(WrenVM *vm)
+static int collections_grid_poke(lua_State *L)
 {
-    int column = (int)wrenGetSlotDouble(vm, 1);
-    int row = (int)wrenGetSlotDouble(vm, 2);
-    Cell_t value = (Cell_t)wrenGetSlotDouble(vm, 3);
-
-    Grid_Class_t *instance = (Grid_Class_t *)wrenGetSlotForeign(vm, 0);
+    if (lua_gettop(L) != 4) {
+        return luaL_error(L, "<COLLECTIONS> method requires 4 arguments");
+    }
+    Grid_Class_t *instance = (Grid_Class_t *)luaL_checkudata(L, 1, collections_grid_metatable);
+    int column = luaL_checkinteger(L, 2);
+    int row = luaL_checkinteger(L, 3);
+    Cell_t value = (Cell_t)luaL_checknumber(vm, 4);
 
     Cell_t *data = instance->offsets[row];
 
     data[column] = value;
+
+    return 0;
 }

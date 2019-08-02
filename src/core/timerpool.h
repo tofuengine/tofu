@@ -50,17 +50,20 @@ typedef struct _Timer_t {
     struct _Timer_t *next;
 } Timer_t;
 
-typedef struct _Timer_Pool_t {
-    Timer_t *timers;
-} Timer_Pool_t;
-
 typedef void (*TimerPool_Callback_t)(Timer_t *timer, void *parameters);
 
-extern void TimerPool_initialize(Timer_Pool_t *pool);
-extern void TimerPool_terminate(Timer_Pool_t *pool, TimerPool_Callback_t callback, void *parameters);
+typedef struct _Timer_Pool_t {
+    Timer_t *timers;
+
+    TimerPool_Callback_t update_callback;
+    void *parameters;
+} Timer_Pool_t;
+
+extern void TimerPool_initialize(Timer_Pool_t *pool, TimerPool_Callback_t update_callback, void *parameters);
+extern void TimerPool_terminate(Timer_Pool_t *pool);
 extern Timer_t *TimerPool_allocate(Timer_Pool_t *pool, const Timer_Value_t value);
-extern void TimerPool_update(Timer_Pool_t *pool, double delta_time, TimerPool_Callback_t callback, void *parameters);
-extern void TimerPool_gc(Timer_Pool_t *pool, TimerPool_Callback_t callback, void *parameters);
+extern void TimerPool_update(Timer_Pool_t *pool, double delta_time);
+extern void TimerPool_gc(Timer_Pool_t *pool);
 extern void TimerPool_release(Timer_Pool_t *pool, Timer_t *timer);
 extern void TimerPool_reset(Timer_Pool_t *pool, Timer_t *timer);
 extern void TimerPool_cancel(Timer_Pool_t *pool, Timer_t *timer);

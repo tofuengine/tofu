@@ -23,18 +23,10 @@
 #ifndef __MODULES_COLLECTIONS_H__
 #define __MODULES_COLLECTIONS_H__
 
-#include <wren/wren.h>
+#include <stdbool.h>
 
-extern const char collections_wren[];
+#include "../core/luax.h"
 
-extern void collections_grid_allocate(WrenVM* vm);
-extern void collections_grid_finalize(void *userData, void* data);
-
-extern void collections_grid_width_get(WrenVM *vm);
-extern void collections_grid_height_get(WrenVM *vm);
-extern void collections_grid_fill_call1(WrenVM *vm);
-extern void collections_grid_stride_call4(WrenVM *vm); // TODO: rename to "fill()" and override?
-extern void collections_grid_peek_call2(WrenVM *vm);
-extern void collections_grid_poke_call3(WrenVM *vm);
+extern bool collections_initialize(lua_State *L);
 
 #endif  /* __MODULES_COLLECTIONS_H__ */

@@ -23,16 +23,12 @@
 #ifndef __TOFU_MODULES_H__
 #define __TOFU_MODULES_H__
 
-typedef bool (*Module_Callback_t)();
+#include <stdbool.h>
 
-typedef struct _Module_Entry_t {
-    const char *name;
-    lua_CFunction loader;
-    Module_Callback_t initialize;
-    Module_Callback_t finalize;
-    const char *source;
-} Module_Entry_t;
+#include "core/luax.h"
 
-extern const Module_Entry_t modules_entries[];
+typedef bool (*Module_Callback_t)(lua_State *L);
+
+extern const Module_Callback_t modules[];
 
 #endif  /* __TOFU_MODULES_H__ */

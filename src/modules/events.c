@@ -27,85 +27,155 @@
 
 #include <string.h>
 
-const char events_wren[] =
-    "foreign class Environment {\n"
-    "\n"
-    "    foreign static fps\n"
-    "    foreign static quit()\n"
-    "\n"
-    "}\n"
-    "\n"
-    "foreign class Input {\n"
-    "\n"
-    "    static up { 0 }\n"
-    "    static down { 1 }\n"
-    "    static left { 2 }\n"
-    "    static right { 3 }\n"
-    "    static y { 4 }\n"
-    "    static x { 5 }\n"
-    "    static b { 6 }\n"
-    "    static a { 7 }\n"
-    "    static select { 8 }\n"
-    "    static start { 9 }\n"
-    "\n"
-    "    foreign static isKeyDown(key)\n"
-    "    foreign static isKeyUp(key)\n"
-    "    foreign static isKeyPressed(key)\n"
-    "    foreign static isKeyReleased(key)\n"
-    "\n"
-    "}\n"
+#define NAMESPACE_EVENTS_ENVIRONMENT        "events.Environment"
+#define NAMESPACE_EVENTS_INPUT              "events.Input"
+
+static const char *events_lua =
+    "events.Input.up = 265\n"
+    "events.Input.down = 264\n"
+    "events.Input.left = 263\n"
+    "events.Input.right = 262\n"
+    "events.Input.space = 32\n"
+    "events.Input.enter = 257\n"
+    "events.Input.escape = 256\n"
+    "events.Input.z = 90\n"
+    "events.Input.x = 88\n"
+    "events.Input.q = 81\n"
 ;
 
-void events_input_iskeydown_call1(WrenVM *vm)
+static int events_environment_fps(lua_State *L);
+static int events_environment_quit(lua_State *L);
+static int events_input_is_key_down(lua_State *L);
+static int events_input_is_key_up(lua_State *L);
+static int events_input_is_key_pressed(lua_State *L);
+static int events_input_is_key_released(lua_State *L);
+
+static const struct luaL_Reg events_environment_f[] = {
+    { "fps", events_environment_fps },
+    { "quit", events_environment_quit },
+    { NULL, NULL }
+};
+
+static const struct luaL_Reg events_environment_m[] = {
+    { NULL, NULL }
+};
+
+static const struct luaL_Reg events_input_f[] = {
+    { "is_key_down", events_input_is_key_down },
+    { "is_key_up", events_input_is_key_up },
+    { "is_key_pressed", events_input_is_key_pressed },
+    { "is_key_released", events_input_is_key_released },
+    { NULL, NULL }
+};
+
+static const struct luaL_Reg events_input_m[] = {
+    { NULL, NULL }
+};
+
+static int luaopen_events_environment(lua_State *L)
 {
-    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
-
-    int key = (int)wrenGetSlotDouble(vm, 1);
-
-    bool is_down = (key >= Display_Keys_t_First && key <= Display_Keys_t_Last) ? environment->display->keys_state[key].down : false;
-    wrenSetSlotBool(vm, 0, is_down);
+    return luaX_newclass(L, events_environment_f, events_environment_m, LUAX_CLASS(NAMESPACE_EVENTS_ENVIRONMENT));
 }
 
-void events_input_iskeyup_call1(WrenVM *vm)
+static int luaopen_events_input(lua_State *L)
 {
-    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
-
-    int key = (int)wrenGetSlotDouble(vm, 1);
-
-    bool is_down = (key >= Display_Keys_t_First && key <= Display_Keys_t_Last) ? environment->display->keys_state[key].down : false;
-    wrenSetSlotBool(vm, 0, !is_down);
+    return luaX_newclass(L, events_input_f, events_input_m, LUAX_CLASS(NAMESPACE_EVENTS_INPUT));
 }
 
-void events_input_iskeypressed_call1(WrenVM *vm)
+bool collections_initialize(lua_State *L)
 {
-    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+    luaX_preload(L, LUAX_MODULE(NAMESPACE_EVENTS_ENVIRONMENT), luaopen_events_environment);
+    luaX_preload(L, LUAX_MODULE(NAMESPACE_EVENTS_INPUT), luaopen_events_input);
 
-    int key = (int)wrenGetSlotDouble(vm, 1);
+    if (luaL_dostring(L, events_lua) != 0) {
+        Log_write(LOG_LEVELS_FATAL, "<VM> can't open script: %s", lua_tostring(L, -1));
+        return false;
+    }
 
-    bool is_pressed = (key >= Display_Keys_t_First && key <= Display_Keys_t_Last) ? environment->display->keys_state[key].pressed : false;
-    wrenSetSlotBool(vm, 0, is_pressed);
+    return true;
 }
 
-void events_input_iskeyreleased_call1(WrenVM *vm)
+static int events_environment_fps(lua_State *L)
 {
-    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+    if (lua_gettop(L) != 10 {
+        return luaL_error(L, "<EVENTS> function requires 0 argument");
+    }
 
-    int key = (int)wrenGetSlotDouble(vm, 1);
+    Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
 
-    bool is_released = (key >= Display_Keys_t_First && key <= Display_Keys_t_Last) ? environment->display->keys_state[key].released : false;
-    wrenSetSlotBool(vm, 0, is_released);
+    lua_pushinteger(L, environment->fps);
+    return 1;
 }
 
-void events_environment_fps_get(WrenVM *vm)
+static int events_environment_quit(lua_State *L)
 {
-    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+    if (lua_gettop(L) != 10 {
+        return luaL_error(L, "<EVENTS> function requires 0 argument");
+    }
 
-    wrenSetSlotDouble(vm, 0, environment->fps);
-}
-
-void events_environment_quit_call0(WrenVM *vm)
-{
-    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+    Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
 
     environment->should_close = true;
+
+    return 0;
+}
+
+static int events_input_is_key_down(lua_State *L)
+{
+    if (lua_gettop(L) != 1) {
+        return luaL_error(L, "<EVENTS> function requires 1 argument");
+    }
+    int key = luaL_checkinteger(L, 1);
+
+    Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
+
+    bool is_down = (key >= Display_Keys_t_First && key <= Display_Keys_t_Last) ? environment->display->keys_state[key].down : false;
+
+    lua_pushboolean(L, is_down);
+    return 1;
+}
+
+static int events_input_is_key_up(lua_State *L)
+{
+    if (lua_gettop(L) != 1) {
+        return luaL_error(L, "<EVENTS> function requires 1 argument");
+    }
+    int key = luaL_checkinteger(L, 1);
+
+    Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
+
+    bool is_down = (key >= Display_Keys_t_First && key <= Display_Keys_t_Last) ? environment->display->keys_state[key].down : false;
+
+    lua_pushboolean(L, !is_down);
+    return 1;
+}
+
+static int events_input_is_key_pressed(lua_State *L)
+{
+    if (lua_gettop(L) != 1) {
+        return luaL_error(L, "<EVENTS> function requires 1 argument");
+    }
+    int key = luaL_checkinteger(L, 1);
+
+    Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
+
+    bool is_pressed = (key >= Display_Keys_t_First && key <= Display_Keys_t_Last) ? environment->display->keys_state[key].pressed : false;
+
+    lua_pushboolean(L, is_pressed);
+    return 1;
+}
+
+static int events_input_is_key_released(lua_State *L)
+{
+    if (lua_gettop(L) != 1) {
+        return luaL_error(L, "<EVENTS> function requires 1 argument");
+    }
+    int key = luaL_checkinteger(L, 1);
+
+    Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
+
+    bool is_released = (key >= Display_Keys_t_First && key <= Display_Keys_t_Last) ? environment->display->keys_state[key].released : false;
+
+    lua_pushboolean(L, is_released);
+    return 1;
 }

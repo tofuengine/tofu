@@ -23,15 +23,10 @@
 #ifndef __MODULES_UTIL_H__
 #define __MODULES_UTIL_H__
 
-#include <lua/lua.h>
-#include <lua/lualib.h>
-#include <lua/lauxlib.h>
+#include <stdbool.h>
 
-extern const char util_wren[];
+#include "core/luax.h"
 
-extern void util_timer_allocate(WrenVM* vm);
-extern void util_timer_finalize(void *userData, void* data);
-extern void util_timer_reset_call0(WrenVM *vm);
-extern void util_timer_cancel_call0(WrenVM *vm);
+extern bool util_initialize(lua_State *L);
 
 #endif  /* __MODULES_UTIL_H__ */
