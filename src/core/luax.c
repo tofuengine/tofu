@@ -36,11 +36,17 @@ https://stackoverflow.com/questions/32673835/how-do-i-create-a-lua-module-inside
 
 int luaX_newclass(lua_State *L, const luaL_Reg *f, const luaL_Reg *m, const luaX_Const *c, const char *name)
 {
+    size_t methods = 0;
+    for (int i = 0; m[i].name; ++i) {
+        methods++;
+    }
     luaL_newmetatable(L, name); /* create metatable */
     lua_pushvalue(L, -1); /* duplicate the metatable */
     lua_setfield(L, -2, "__index"); /* mt.__index = mt */
     luaL_setfuncs(L, f, 0); /* register metamethods */
 //    luaL_newlib(L, m); /* create lib table */
+    lua_createtable(L, 0, methods);
+    luaL_setfuncs(L, m, 0);
     for (; c->name; c++) {
         switch (c->type) {
             case LUA_CT_BOOLEAN: { lua_pushboolean(L, c->value.b); } break;
