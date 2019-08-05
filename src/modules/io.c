@@ -28,24 +28,54 @@
 
 #include <string.h>
 
-// TODO: annotate "native" methods with a "_" suffix? Or only private ones?
+#define NAMESPACE_IO_FILE           "io.File"
 
-const char io_wren[] =
-    "foreign class File {\n"
+static const char *file_lua =
     "\n"
-    "    foreign static read(file)\n"
-    "\n"
-    "}\n"
 ;
 
-void io_file_read_call1(WrenVM *vm)
-{
-    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+static int io_file_read(lua_State *L);
 
-    const char *file = wrenGetSlotString(vm, 1);
+static const struct luaL_Reg io_file_f[] = {
+    { "read", io_file_read },
+    { NULL, NULL }
+};
+
+static const struct luaL_Reg io_file_m[] = {
+    { NULL, NULL }
+};
+
+static const luaX_Const io_file_c[] = {
+    { NULL }
+};
+
+static int luaopen_util_timer(lua_State *L)
+{
+    return luaX_newclass(L, io_file_f, io_file_m, io_file_c, LUAX_CLASS(NAMESPACE_IO_FILE));
+}
+
+bool io_initialize(lua_State *L)
+{
+    luaX_preload(L, LUAX_MODULE(NAMESPACE_IO_FILE), luaopen_util_timer);
+
+    if (luaL_dostring(L, file_lua) != 0) {
+        Log_write(LOG_LEVELS_FATAL, "<VM> can't open script: %s", lua_tostring(L, -1));
+        return false;
+    }
+
+    return true;
+}
+
+static int io_file_read(lua_State *L)
+{
+    if (lua_gettop(L) != 1) {
+        return luaL_error(L, "<IO> function requires 1 argument");
+    }
+    const char *file = luaL_checkstring(L, 1);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "File.read() -> %s", file);
 #endif
+    Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
 
     char pathfile[PATH_FILE_MAX] = {};
     strcpy(pathfile, environment->base_path);
@@ -54,5 +84,7 @@ void io_file_read_call1(WrenVM *vm)
     const char *result = file_load_as_string(pathfile, "rt");
     Log_write(LOG_LEVELS_DEBUG, "<IO> file '%s' loaded at %p", pathfile, result);
 
-    wrenSetSlotString(vm, 0, result);
+    lua_pushstring(L, result);
+
+    return 1;
 }

@@ -23,10 +23,10 @@
 #ifndef __MODULES_IO_H__
 #define __MODULES_IO_H__
 
-#include <wren/wren.h>
+#include <stdbool.h>
 
-extern const char io_wren[];
+#include "../core/luax.h"
 
-extern void io_file_read_call1(WrenVM *vm);
+extern bool io_initialize(lua_State *L);
 
 #endif  /* __MODULES_IO_H__ */

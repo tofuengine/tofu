@@ -56,9 +56,13 @@ static const struct luaL_Reg util_timer_m[] = {
     { NULL, NULL }
 };
 
+static const luaX_Const util_timer_c[] = {
+    { NULL }
+};
+
 static int luaopen_util_timer(lua_State *L)
 {
-    return luaX_newclass(L, util_timer_f, util_timer_m, LUAX_CLASS(NAMESPACE_UTIL_TIMER));
+    return luaX_newclass(L, util_timer_f, util_timer_m, util_timer_c, LUAX_CLASS(NAMESPACE_UTIL_TIMER));
 }
 
 bool util_initialize(lua_State *L)

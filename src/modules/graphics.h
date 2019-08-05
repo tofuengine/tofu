@@ -23,32 +23,10 @@
 #ifndef __MODULES_GRAPHICS_H__
 #define __MODULES_GRAPHICS_H__
 
-#include <wren/wren.h>
+#include <stdbool.h>
 
-extern const char graphics_wren[];
+#include "../core/luax.h"
 
-extern void graphics_bank_allocate(WrenVM* vm);
-extern void graphics_bank_finalize(void *userData, void* data);
-extern void graphics_bank_cell_width_get(WrenVM *vm);
-extern void graphics_bank_cell_height_get(WrenVM *vm);
-extern void graphics_bank_blit_call3(WrenVM *vm);
-extern void graphics_bank_blit_call5(WrenVM *vm);
-extern void graphics_bank_blit_call6(WrenVM *vm);
-
-extern void graphics_font_allocate(WrenVM* vm);
-extern void graphics_font_finalize(void *userData, void* data);
-extern void graphics_font_write_call6(WrenVM *vm);
-
-extern void graphics_canvas_width_get(WrenVM *vm);
-extern void graphics_canvas_height_get(WrenVM *vm);
-extern void graphics_canvas_palette_get(WrenVM *vm);
-extern void graphics_canvas_palette_set(WrenVM *vm);
-extern void graphics_canvas_background_set(WrenVM *vm);
-extern void graphics_canvas_shader_set(WrenVM *vm);
-extern void graphics_canvas_color_call1(WrenVM *vm);
-extern void graphics_canvas_points_call2(WrenVM *vm); // TODO: should points, polygons and circles be objects?
-extern void graphics_canvas_polyline_call2(WrenVM *vm);
-extern void graphics_canvas_strip_call2(WrenVM *vm);
-extern void graphics_canvas_fan_call2(WrenVM *vm);
+extern bool graphics_initialize(lua_State *L);
 
 #endif  /* __MODULES_GRAPHICS_H__ */

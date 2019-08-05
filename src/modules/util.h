@@ -25,7 +25,7 @@
 
 #include <stdbool.h>
 
-#include "core/luax.h"
+#include "../core/luax.h"
 
 extern bool util_initialize(lua_State *L);
 

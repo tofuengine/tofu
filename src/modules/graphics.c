@@ -32,6 +32,187 @@
 #include <math.h>
 #include <string.h>
 
+typedef struct _Font_Class_t {
+    // char pathfile[PATH_FILE_MAX];
+    GL_Sheet_t sheet;
+} Font_Class_t;
+
+typedef struct _Bank_Class_t {
+    // char pathfile[PATH_FILE_MAX];
+    GL_Sheet_t sheet;
+} Bank_Class_t;
+
+#define GRAPHICS_BANK       "graphics.Bank"
+#define GRAPHICS_CANVAS     "graphics.Canvas"
+#define GRAPHICS_FONT       "graphics.Font"
+
+static const char *graphics_lua =
+    "graphics.Font.default = function()\n"
+    "  return graphics.Font.new(\"5x8\", 0, 0)\n"
+    "end\n"
+    "\n"
+    "graphics.Canvas.point = function(x0, y0, color)\n"
+    "  graphics.Canvas.points({ x0, y0 }, color)\n"
+    "end\n"
+    "\n"
+    "graphics.Canvas.line = function(x0, y0, x1, y1, color)\n"
+    "  graphics.Canvas.polyline({ x0, y0, x1, y1, x0, y0 }, color)\n"
+    "end\n"
+    "\n"
+    "graphics.Canvas.triangle = function(mode, x0, y0, x1, y1, x2, y2, color)\n"
+    "  if mode == \"line\" then\n"
+    "    graphics.Canvas.polyline({ x0, y0, x1, y1, x2, y2, x0, y0 }, color)\n"
+    "  else\n"
+    "    graphics.Canvas.strip({ x0, y0, x1, y1, x2, y2 }, color)\n"
+    "  end\n"
+    "end\n"
+    "\n"
+    "graphics.Canvas.rectangle = function(mode, x, y, width, height, color)\n"
+    "  local offset = mode == \"line\" and 1 or 0\n"
+    "  local x0 = x\n"
+    "  local y0 = y\n"
+    "  local x1 = x0 + width - offset\n"
+    "  local y1= y0 + height - offset\n"
+    "  if mode == \"line\" then\n"
+    "    graphics.Canvas.polyline({ x0, y0, x0, y1, x1, y1, x1, y0, x0, y0 }, color)\n"
+    "  else\n"
+    "    graphics.Canvas.strip({ x0, y0, x0, y1, x1, y0, x1, y1 }, color)\n"
+    "  end\n"
+    "end\n"
+    "\n"
+    "graphics.Canvas.square = function(mode, x, y, size, color)\n"
+    "  graphics.Canvas.rectangle(mode, x, y, size, size, color)\n"
+    "end\n"
+    "\n"
+    "graphics.Canvas.circle = function(mode, x, y, radius, color, segments)\n"
+    "  segments = segments or 30\n"
+    "  local step = (2 * math.PI) / segments\n"
+    "  if mode == \"line\" then\n"
+    "    local vertices = {}\n"
+    "    for i = 1, segments do\n"
+    "      local angle = step * i\n"
+    "      table.insert(vertices, x + math.sin(angle) * radius)\n"
+    "      table.insert(vertices, y + math.cos(angle) * radius)\n"
+    "    end\n"
+    "    graphics.Canvas.polyline(vertices, color)\n"
+    "  else\n"
+    "    local vertices = {}\n"
+    "    vertices.insert(-1, x)\n"
+    "    vertices.insert(-1, y)\n"
+    "    for i = 1, segments do\n"
+    "      local angle = step * i\n"
+    "      table.insert(vertices, x + math.sin(angle) * radius)\n"
+    "      table.insert(vertices, y + math.cos(angle) * radius)\n"
+    "    end\n"
+    "    graphics.Canvas.fan(vertices, color)\n"
+    "  end\n"
+    "end\n"
+;
+
+static int graphics_bank_new(lua_State *L);
+static int graphics_bank_gc(lua_State *L);
+static int graphics_bank_cell_width(lua_State *L);
+static int graphics_bank_cell_height(lua_State *L);
+static int graphics_bank_blit(lua_State *L);
+
+static const struct luaL_Reg graphics_bank_f[] = {
+    { "new", graphics_bank_new },
+    { NULL, NULL }
+};
+
+static const struct luaL_Reg graphics_bank_m[] = {
+    {"__gc", graphics_bank_gc },
+    { "cell_width", graphics_bank_cell_width },
+    { "cell_height", graphics_bank_cell_height },
+    { "blit", graphics_bank_blit },
+    { NULL, NULL }
+};
+
+static const luaX_Const graphics_bank_c[] = {
+    { NULL }
+};
+
+static int graphics_canvas_width(lua_State *L);
+static int graphics_canvas_height(lua_State *L);
+static int graphics_canvas_palette(lua_State *L);
+static int graphics_canvas_background(lua_State *L);
+static int graphics_canvas_shader(lua_State *L);
+static int graphics_canvas_color(lua_State *L);
+static int graphics_canvas_points(lua_State *L);
+static int graphics_canvas_polyline(lua_State *L);
+static int graphics_canvas_strip(lua_State *L);
+static int graphics_canvas_fan(lua_State *L);
+
+static const struct luaL_Reg graphics_canvas_f[] = {
+    { "width", graphics_canvas_width },
+    { "height", graphics_canvas_height },
+    { "palette", graphics_canvas_palette },
+    { "background", graphics_canvas_background },
+    { "shader", graphics_canvas_shader },
+    { "color", graphics_canvas_color },
+    { "points", graphics_canvas_points },
+    { "polyline", graphics_canvas_polyline },
+    { "strip", graphics_canvas_strip },
+    { "fan", graphics_canvas_fan },
+    { NULL, NULL }
+};
+
+static const struct luaL_Reg graphics_canvas_m[] = {
+    { NULL, NULL }
+};
+
+static const luaX_Const graphics_canvas_c[] = {
+    { NULL }
+};
+
+static int graphics_font_new(lua_State *L);
+static int graphics_font_gc(lua_State *L);
+static int graphics_font_write(lua_State *L);
+
+static const struct luaL_Reg graphics_font_f[] = {
+    { "new", graphics_font_new },
+    { NULL, NULL }
+};
+
+static const struct luaL_Reg graphics_font_m[] = {
+    {"__gc", graphics_font_gc },
+    { "write", graphics_font_write },
+    { NULL, NULL }
+};
+
+static const luaX_Const graphics_font_c[] = {
+    { NULL }
+};
+
+static int luaopen_graphics_bank(lua_State *L)
+{
+    return luaX_newclass(L, graphics_bank_f, graphics_bank_m, graphics_bank_c, LUAX_CLASS(GRAPHICS_BANK));
+}
+
+static int luaopen_graphics_canvas(lua_State *L)
+{
+    return luaX_newclass(L, graphics_canvas_f, graphics_canvas_m, graphics_canvas_c, LUAX_CLASS(GRAPHICS_CANVAS));
+}
+
+static int luaopen_graphics_font(lua_State *L)
+{
+    return luaX_newclass(L, graphics_font_f, graphics_font_m, graphics_font_c, LUAX_CLASS(GRAPHICS_FONT));
+}
+
+bool graphics_initialize(lua_State *L)
+{
+    luaX_preload(L, LUAX_MODULE(GRAPHICS_BANK), luaopen_graphics_bank);
+    luaX_preload(L, LUAX_MODULE(GRAPHICS_CANVAS), luaopen_graphics_canvas);
+    luaX_preload(L, LUAX_MODULE(GRAPHICS_FONT), luaopen_graphics_font);
+
+    if (luaL_dostring(L, graphics_lua) != 0) {
+        Log_write(LOG_LEVELS_FATAL, "<VM> can't open script: %s", lua_tostring(L, -1));
+        return false;
+    }
+
+    return true;
+}
+
 #define RED_WEIGHT      2.0f
 #define GREEN_WEIGHT    4.0f
 #define BLUE_WEIGHT     3.0f
@@ -102,194 +283,20 @@ static void to_font_atlas_callback(void *parameters, void *data, int width, int 
     }
 }
 
-const char graphics_wren[] =
-    "foreign class Bank {\n"
-    "\n"
-    "    construct new(file, cellWidth, cellHeight) {}\n"
-    "\n"
-    "    foreign cellWidth\n"
-    "    foreign cellHeight\n"
-    "\n"
-    "    blit(cellId, x, y, r) {\n"
-    "        blit(cellId, x, y, r, 1.0, 1.0)\n"
-    "    }\n"
-    "    foreign blit(cellId, x, y)\n"
-    "    foreign blit(cellId, x, y, sx, sy)\n"
-    "    foreign blit(cellId, x, y, r, sx, sy)\n"
-    "\n"
-    "}\n"
-    "\n"
-    "foreign class Font {\n"
-    "\n"
-    "    construct new(file, glyphWidth, glyphHeight) {}\n"
-    "\n"
-    "    static default { Font.new(\"5x8\", 0, 0) }\n"
-    "\n"
-    "    foreign write(text, x, y, color, scale, align)\n"
-    "\n"
-    "}\n"
-    "\n"
-    "foreign class Canvas {\n"
-    "\n"
-    "    foreign static width\n"
-    "    foreign static height\n"
-    "    foreign static palette\n"
-    "    foreign static palette=(colors)\n"
-    "    foreign static background=(color)\n"
-    "    foreign static shader=(code)\n"
-    "    foreign static color(rgb)\n"
-    "\n"
-    "    foreign static points(vertices, color)\n"
-    "    foreign static polyline(vertices, color)\n"
-    "    foreign static strip(vertices, color)\n"
-    "    foreign static fan(vertices, color)\n"
-    "\n"
-    "    static point(x0, y0, color) {\n"
-    "        points([ x0, y0 ], color)\n"
-    "    }\n"
-    "    static line(x0, y0, x1, y1, color) {\n"
-    "        polyline([ x0, y0, x1, y1, x0, y0 ], color)\n"
-    "    }\n"
-    "    static triangle(mode, x0, y0, x1, y1, x2, y2, color) {\n"
-    "        if (mode == \"line\") {\n"
-    "            polyline([ x0, y0, x1, y1, x2, y2, x0, y0 ], color)\n"
-    "        } else {\n"
-    "            strip([ x0, y0, x1, y1, x2, y2 ], color)\n"
-    "        }\n"
-    "    }\n"
-    "    static rectangle(mode, x, y, width, height, color) {\n"
-    "        var offset = mode == \"line\" ? 1 : 0\n"
-    "        var x0 = x\n"
-    "        var y0 = y\n"
-    "        var x1 = x0 + width - offset\n"
-    "        var y1= y0 + height - offset\n"
-    "        if (mode == \"line\") {\n"
-    "            polyline([ x0, y0, x0, y1, x1, y1, x1, y0, x0, y0 ], color)\n"
-    "        } else {\n"
-    "            strip([ x0, y0, x0, y1, x1, y0, x1, y1 ], color)\n"
-    "        }\n"
-    "    }\n"
-    "    static square(mode, x, y, size, color) {\n"
-    "        rectangle(mode, x, y, size, size, color)\n"
-    "    }\n"
-    "    static circle(mode, x, y, radius, color) {\n"
-    "        circle(mode, x, y, radius, color, 30)\n"
-    "    }\n"
-    "    static circle(mode, x, y, radius, color, segments) {\n"
-    "        var step = (2 * Num.pi) / segments\n"
-    "        if (mode == \"line\") {\n"
-    "            var vertices = []\n"
-    "            for (i in 0 .. segments) {\n"
-    "                var angle = step * i\n"
-    "                vertices.insert(-1, x + angle.sin * radius)\n"
-    "                vertices.insert(-1, y + angle.cos * radius)\n"
-    "            }\n"
-    "            Canvas.polyline(vertices, color)\n"
-    "        } else {\n"
-    "            var vertices = []\n"
-    "            vertices.insert(-1, x)\n"
-    "            vertices.insert(-1, y)\n"
-    "            for (i in 0 .. segments) {\n"
-    "                var angle = step * i\n"
-    "                vertices.insert(-1, x + angle.sin * radius)\n"
-    "                vertices.insert(-1, y + angle.cos * radius)\n"
-    "            }\n"
-    "            Canvas.fan(vertices, color)\n"
-    "        }\n"
-    "    }\n"
-    "\n"
-    "}\n"
-    "\n"
-    "class BankBatch {\n"
-    "\n"
-    "    construct new(bank) {\n"
-    "        _bank = bank\n"
-    "        _batch = []\n"
-    "    }\n"
-    "\n"
-    "    push(cellId, x, y) {\n"
-    "        _batch.add(BankBatchEntry.new(cellId, x, y, 0.0, 1.0, 1.0, 0))\n"
-    "    }\n"
-    "\n"
-    "    push(cellId, x, y, r) {\n"
-    "        _batch.add(BankBatchEntry.new(cellId, x, y, r, 1.0, 1.0, 0))\n"
-    "    }\n"
-    "\n"
-    "    push(cellId, x, y, r, sx, sy) {\n"
-    "        _batch.add(BankBatchEntry.new(cellId, x, y, r, sx, sy, 0))\n"
-    "    }\n"
-    "\n"
-    "    push(cellId, x, y, r, sx, sy, priority) {\n"
-    "        var item = BankBatchEntry.new(cellId, x, y, r, sx, sy, priority)\n"
-    "\n"
-    "        var index = _batch.count\n"
-    "        for (i in 0 ... _batch.count) {\n"
-    "            var other = _batch[i]\n"
-    "            if (item.priority <= other.priority) {\n"
-    "                index = i\n"
-    "                break\n"
-    "            }\n"
-    "        }\n"
-    "        _batch.insert(index, item)\n"
-    "    }\n"
-    "\n"
-    "    clear() {\n"
-    "        _batch.clear()\n"
-    "    }\n"
-    "\n"
-    "    blit() {\n"
-    "        for (item in _batch) {\n"
-    "            item.blit(_bank)\n"
-    "        }\n"
-    "    }\n"
-    "\n"
-    "}\n"
-    "\n"
-    "class BankBatchEntry {\n"
-    "\n"
-    "    construct new(cellId, x, y, r, sx, sy, priority) {\n"
-    "        _cellId = cellId\n"
-    "        _cameraX = x\n"
-    "        _cameraY = y\n"
-    "        _r = r\n"
-    "        _sx = sx\n"
-    "        _sy = sy\n"
-    "        _priority = priority\n"
-    "    }\n"
-    "\n"
-    "    priority {\n"
-    "        return _priority\n"
-    "    }\n"
-    "\n"
-    "    blit(bank) {\n"
-    "        bank.blit(_cellId, _cameraX, _cameraY, _r, _sx, _sy)\n"
-    "    }\n"
-    "\n"
-    "}\n"
-;
-
-typedef struct _Font_Class_t {
-    // char pathfile[PATH_FILE_MAX];
-    GL_Sheet_t sheet;
-} Font_Class_t;
-
-typedef struct _Bank_Class_t {
-    // char pathfile[PATH_FILE_MAX];
-    GL_Sheet_t sheet;
-} Bank_Class_t;
-
-void graphics_bank_allocate(WrenVM *vm)
+static int graphics_bank_new(lua_State *L)
 {
-    const char *file = wrenGetSlotString(vm, 1);
-    int cell_width = (int)wrenGetSlotDouble(vm, 2);
-    int cell_height = (int)wrenGetSlotDouble(vm, 3);
+    if (lua_gettop(L) != 3) {
+        return luaL_error(L, "<GRAPHICS> bank constructor requires 3 arguments");
+    }
+    const char *file = luaL_checkstring(L, 1);
+    int cell_width = luaL_checkinteger(L, 2);
+    int cell_height = luaL_checkinteger(L, 3);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Bank.new() -> %s, %d, %d", file, cell_width, cell_height);
 #endif
+    Bank_Class_t *instance = (Bank_Class_t *)lua_newuserdata(L, sizeof(Bank_Class_t));
 
-    Bank_Class_t *instance = (Bank_Class_t *)wrenSetSlotNewForeign(vm, 0, 0, sizeof(Bank_Class_t)); // `0, 0` since we are in the allocate callback.
-
-    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+    Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
 
     char pathfile[PATH_FILE_MAX] = {};
     strcpy(pathfile, environment->base_path);
@@ -302,44 +309,63 @@ void graphics_bank_allocate(WrenVM *vm)
     *instance = (Bank_Class_t){
             .sheet = sheet
         };
+
+    luaL_setmetatable(L, LUAX_CLASS(GRAPHICS_BANK));
+
+    return 1;
 }
 
-void graphics_bank_finalize(void *userData, void *data)
+static int graphics_bank_gc(lua_State *L)
 {
-    Bank_Class_t *instance = (Bank_Class_t *)data;
+    if (lua_gettop(L) != 1) {
+        return luaL_error(L, "<GRAPHICS> method requires 1 arguments");
+    }
+    Bank_Class_t *instance = (Bank_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(GRAPHICS_BANK));
 
     GL_sheet_delete(&instance->sheet);
     Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> bank #%p finalized", instance);
 
     *instance = (Bank_Class_t){};
+
+    return 0;
 }
 
-void graphics_bank_cell_width_get(WrenVM *vm)
+static int graphics_bank_cell_width(lua_State *L)
 {
-    const Bank_Class_t *instance = (const Bank_Class_t *)wrenGetSlotForeign(vm, 0);
+    if (lua_gettop(L) != 0) {
+        return luaL_error(L, "<GRAPHICS> method requires 0 arguments");
+    }
+    Bank_Class_t *instance = (Bank_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(GRAPHICS_BANK));
 
-    wrenSetSlotDouble(vm, 0, instance->sheet.quad.width);
+    lua_pushinteger(L, instance->sheet.quad.width);
+
+    return 1;
 }
 
-void graphics_bank_cell_height_get(WrenVM *vm)
+static int graphics_bank_cell_height(lua_State *L)
 {
-    const Bank_Class_t *instance = (const Bank_Class_t *)wrenGetSlotForeign(vm, 0);
+    if (lua_gettop(L) != 0) {
+        return luaL_error(L, "<GRAPHICS> method requires 0 arguments");
+    }
+    Bank_Class_t *instance = (Bank_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(GRAPHICS_BANK));
 
-    wrenSetSlotDouble(vm, 0, instance->sheet.quad.height);
+    lua_pushinteger(L, instance->sheet.quad.height);
+
+    return 1;
 }
 
-void graphics_bank_blit_call3(WrenVM *vm)
+static int graphics_bank_blit4(lua_State *L)
 {
-    int cell_id = (int)wrenGetSlotDouble(vm, 1);
-    double x = wrenGetSlotDouble(vm, 2);
-    double y = wrenGetSlotDouble(vm, 3);
+    if (lua_gettop(L) != 4) {
+        return luaL_error(L, "<GRAPHICS> method requires 4 arguments");
+    }
+    Bank_Class_t *instance = (Bank_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(GRAPHICS_BANK));
+    int cell_id = luaL_checkinteger(L, 2);
+    double x = (double)luaL_checknumber(L, 3);
+    double y = (double)luaL_checknumber(L, 4);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %d, %d", cell_id, x, y);
+    Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f", cell_id, x, y);
 #endif
-
-    const Bank_Class_t *instance = (const Bank_Class_t *)wrenGetSlotForeign(vm, 0);
-
-//    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
     double dw = (double)instance->sheet.quad.width;
     double dh = (double)instance->sheet.quad.height;
@@ -351,22 +377,52 @@ void graphics_bank_blit_call3(WrenVM *vm)
 
     const GL_Sheet_t *sheet = &instance->sheet;
     GL_sheet_blit_fast(sheet, cell_id, destination, (GL_Color_t){ 255, 255, 255, 255 });
+
+    return 0;
 }
 
-void graphics_bank_blit_call5(WrenVM *vm)
+static int graphics_bank_blit5(lua_State *L)
 {
-    int cell_id = (int)wrenGetSlotDouble(vm, 1);
-    double x = wrenGetSlotDouble(vm, 2);
-    double y = wrenGetSlotDouble(vm, 3);
-    double scale_x = wrenGetSlotDouble(vm, 4);
-    double scale_y = wrenGetSlotDouble(vm, 5);
+    if (lua_gettop(L) != 5) {
+        return luaL_error(L, "<GRAPHICS> method requires 5 arguments");
+    }
+    Bank_Class_t *instance = (Bank_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(GRAPHICS_BANK));
+    int cell_id = luaL_checkinteger(L, 2);
+    double x = (double)luaL_checknumber(L, 3);
+    double y = (double)luaL_checknumber(L, 4);
+    double rotation = (double)luaL_checknumber(L, 5);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %d, %d, %.3f, %.3f", cell_id, x, y, scale_x, scale_y);
+    Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f, %.f", cell_id, x, y, rotation);
 #endif
 
-    const Bank_Class_t *instance = (const Bank_Class_t *)wrenGetSlotForeign(vm, 0);
+    double dw = (double)instance->sheet.quad.width;
+    double dh = (double)instance->sheet.quad.height;
 
-//    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+    int dx = (int)x;
+    int dy = (int)y;
+
+    GL_Quad_t destination = (GL_Quad_t){ (GLfloat)dx, (GLfloat)dy, (GLfloat)dx + (GLfloat)dw, (GLfloat)dy + (GLfloat)dh };
+
+    const GL_Sheet_t *sheet = &instance->sheet;
+    GL_sheet_blit(sheet, cell_id, destination, rotation, (GL_Color_t){ 255, 255, 255, 255 });
+
+    return 0;
+}
+
+static int graphics_bank_blit6(lua_State *L)
+{
+    if (lua_gettop(L) != 6) {
+        return luaL_error(L, "<GRAPHICS> method requires 6 arguments");
+    }
+    Bank_Class_t *instance = (Bank_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(GRAPHICS_BANK));
+    int cell_id = luaL_checkinteger(L, 2);
+    double x = (double)luaL_checknumber(L, 3);
+    double y = (double)luaL_checknumber(L, 4);
+    double scale_x = (double)luaL_checknumber(L, 5);
+    double scale_y = (double)luaL_checknumber(L, 6);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f, %.f, %.f", cell_id, x, y, scale_x, scale_y);
+#endif
 
 #ifdef __NO_MIRRORING__
     double dw = (double)instance->sheet.quad.width * fabs(scale_x);
@@ -394,23 +450,25 @@ void graphics_bank_blit_call5(WrenVM *vm)
 
     const GL_Sheet_t *sheet = &instance->sheet;
     GL_sheet_blit_fast(sheet, cell_id, destination, (GL_Color_t){ 255, 255, 255, 255 });
+
+    return 0;
 }
 
-void graphics_bank_blit_call6(WrenVM *vm)
+static int graphics_bank_blit7(lua_State *L)
 {
-    int cell_id = (int)wrenGetSlotDouble(vm, 1);
-    double x = wrenGetSlotDouble(vm, 2);
-    double y = wrenGetSlotDouble(vm, 3);
-    double rotation = wrenGetSlotDouble(vm, 4);
-    double scale_x = wrenGetSlotDouble(vm, 5);
-    double scale_y = wrenGetSlotDouble(vm, 6);
+    if (lua_gettop(L) != 7) {
+        return luaL_error(L, "<GRAPHICS> method requires 7 arguments");
+    }
+    Bank_Class_t *instance = (Bank_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(GRAPHICS_BANK));
+    int cell_id = luaL_checkinteger(L, 2);
+    double x = (double)luaL_checknumber(L, 3);
+    double y = (double)luaL_checknumber(L, 4);
+    double rotation = (double)luaL_checknumber(L, 5);
+    double scale_x = (double)luaL_checknumber(L, 6);
+    double scale_y = (double)luaL_checknumber(L, 7);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %d, %d, %.3f, %.3f, %.3f", cell_id, x, y, rotation, scale_x, scale_y);
+    Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f, %.f, %.f, %.f", cell_id, x, y, rotation, scale_x, scale_y);
 #endif
-
-    const Bank_Class_t *instance = (const Bank_Class_t *)wrenGetSlotForeign(vm, 0);
-
-//    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
 #ifdef __NO_MIRRORING__
     double dw = (double)instance->sheet.quad.width * fabs(scale_x);
@@ -438,20 +496,365 @@ void graphics_bank_blit_call6(WrenVM *vm)
 
     const GL_Sheet_t *sheet = &instance->sheet;
     GL_sheet_blit(sheet, cell_id, destination, rotation, (GL_Color_t){ 255, 255, 255, 255 });
+
+    return 0;
 }
 
-void graphics_font_allocate(WrenVM *vm)
+static int graphics_bank_blit(lua_State *L)
 {
-    const char *file = wrenGetSlotString(vm, 1);
-    int glyph_width = (int)wrenGetSlotDouble(vm, 2);
-    int glyph_height = (int)wrenGetSlotDouble(vm, 3);
+    if (lua_gettop(L) != 4) {
+        return graphics_bank_blit4(L);
+    } else
+    if (lua_gettop(L) != 5) {
+        return graphics_bank_blit5(L);
+    } else
+    if (lua_gettop(L) != 6) {
+        return graphics_bank_blit6(L);
+    } else
+    if (lua_gettop(L) != 7) {
+        return graphics_bank_blit7(L);
+    } else {
+        return luaL_error(L, "<GRAPHICS> method requires 1 arguments");
+    }
+}
+
+static int graphics_canvas_width(lua_State *L)
+{
+    if (lua_gettop(L) != 0) {
+        return luaL_error(L, "<GRAPHICS> canvas function 0 arguments");
+    }
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.width()");
+#endif
+
+    Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
+
+    lua_pushinteger(L, environment->display->configuration.width);
+
+    return 1;
+}
+
+static int graphics_canvas_height(lua_State *L)
+{
+    if (lua_gettop(L) != 0) {
+        return luaL_error(L, "<GRAPHICS> canvas function 0 arguments");
+    }
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.height()");
+#endif
+
+    Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
+
+    lua_pushinteger(L, environment->display->configuration.height);
+
+    return 1;
+}
+
+static int graphics_canvas_palette0(lua_State *L)
+{
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.palette()");
+#endif
+
+    Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
+
+    GL_Palette_t *palette = &environment->display->palette;
+
+    lua_newtable(L);
+    for (size_t i = 0; i < palette->count; ++i) {
+        char argb[12] = {};
+        GL_palette_format_color(argb, palette->colors[i]);
+
+        lua_pushstring(L, argb);
+        lua_rawseti(L, -2, i + 1);
+    }
+
+    return 1;
+}
+
+static int graphics_canvas_palette1(lua_State *L)
+{
+    int type = lua_type(L, 1);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.palette(%d)", type);
+#endif
+
+    Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
+
+    GL_Palette_t palette = {};
+
+    if (type == LUA_TSTRING) { // Predefined palette!
+        const char *id = luaL_checkstring(L, 1);
+        const GL_Palette_t *predefined_palette = graphics_palettes_find(id);
+        if (predefined_palette != NULL) {
+            palette = *predefined_palette;
+
+            Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> setting predefined palette '%s' w/ %d color(s)", id, predefined_palette->count);
+        } else {
+            Log_write(LOG_LEVELS_WARNING, "<GRAPHICS> unknown predefined palette w/ id '%s'", id);
+        }
+    } else
+    if (type == LUA_TTABLE) { // User supplied palette.
+        palette.count = lua_rawlen(L, 1);
+        Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> setting custom palette of #%d color(s)", palette.count);
+
+        if (palette.count > GL_MAX_PALETTE_COLORS) {
+            Log_write(LOG_LEVELS_WARNING, "<GRAPHICS> palette has too many colors (%d) - clamping", palette.count);
+            palette.count = MAX_PALETTE_COLORS;
+        }
+
+        lua_pushnil(L); // first key
+        int i = 0; // TODO: define a helper function
+        while (lua_next(L, 1) != 0) {
+#if 0
+            const char *key_type = lua_typename(L, lua_type(L, -2)); // uses 'key' (at index -2) and 'value' (at index -1)
+#endif
+            const char *argb = lua_tostring(L, -1);
+            palette.colors[i++] = GL_palette_parse_color(argb);
+
+            lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
+        }
+    } else {
+        Log_write(LOG_LEVELS_ERROR, "<GRAPHICS> wrong palette type, need to be string or list");
+    }
+
+    if (palette.count == 0) {
+        return 0;
+    }
+
+    Display_palette(environment->display, &palette);
+
+    return 0;
+}
+
+static int graphics_canvas_palette(lua_State *L)
+{
+    if (lua_gettop(L) == 0) {
+        return graphics_canvas_palette0(L);
+    } else
+    if (lua_gettop(L) == 1) {
+        return graphics_canvas_palette1(L);
+    } else {
+        return luaL_error(L, "<GRAPHICS> canvas function 0 arguments");
+    }
+}
+
+static int graphics_canvas_background(lua_State *L)
+{
+    if (lua_gettop(L) != 1) {
+        return luaL_error(L, "<GRAPHICS> canvas function takes 1 arguments");
+    }
+    int color = luaL_checkinteger(L, 1);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.background(%d)", color);
+#endif
+
+    Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
+
+    Display_background(environment->display, color);
+
+    return 0;
+}
+
+static int graphics_canvas_shader(lua_State *L)
+{
+    if (lua_gettop(L) != 1) {
+        return luaL_error(L, "<GRAPHICS> canvas function takes 1 arguments");
+    }
+    const char *code = luaL_checkstring(L, 1);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.shader('%s')", code);
+#endif
+
+    Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
+
+    Display_shader(environment->display, code);
+
+    return 0;
+}
+
+static int graphics_canvas_color(lua_State *L)
+{
+    if (lua_gettop(L) != 1) {
+        return luaL_error(L, "<GRAPHICS> canvas function takes 1 arguments");
+    }
+    const char *argb = luaL_checkstring(L, 1);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.color('%s')", argb);
+#endif
+
+    Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
+
+    GL_Color_t color = GL_palette_parse_color(argb);
+    size_t index = find_nearest_color(&environment->display->palette, color);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "color '%s' mapped to index %d", argb, index);
+#endif
+
+    lua_pushinteger(L, index);
+
+    return 1;
+}
+
+// When drawing points and lines we need to ensure to be in mid-pixel coordinates, according to
+// the "diamond exit rule" in OpenGL's rasterization. Also, the ending pixel of a line segment
+// is not drawn to avoid lighting a pixel twice in a loop.
+//
+// http://glprogramming.com/red/appendixg.html#name1
+static int graphics_canvas_points(lua_State *L)
+{
+    if (lua_gettop(L) != 2) {
+        return luaL_error(L, "<GRAPHICS> canvas function takes 2 arguments");
+    }
+    int vertices = lua_rawlen(L, 1);
+    int color = luaL_checkinteger(L, 2);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.points(%d, %d)", vertices, color);
+#endif
+
+    const size_t count = vertices / 2;
+    if (count == 0) {
+        Log_write(LOG_LEVELS_INFO, "<GRAPHICS> point-sequence as no vertices");
+        return 0;
+    }
+
+    double array[vertices];
+    luaX_getnumberarray(L, 1, array);
+
+    GL_Point_t points[count];
+    for (size_t i = 0; i < count; ++i) {
+        double x = array[(i * 2)];
+        double y = array[(i * 2) + 1];
+
+        points[i] = (GL_Point_t){
+                .x = (GLfloat)x + 0.375f, .y = (GLfloat)y + 0.375f
+            };
+    }
+
+    GL_primitive_points(points, count, (GL_Color_t){ color, color, color, 255 });
+
+    return 0;
+}
+
+static int graphics_canvas_polyline(lua_State *L)
+{
+    if (lua_gettop(L) != 2) {
+        return luaL_error(L, "<GRAPHICS> canvas function takes 2 arguments");
+    }
+    int vertices = lua_rawlen(L, 1);
+    int color = luaL_checkinteger(L, 2);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.polyline(%d, %d)", vertices, color);
+#endif
+
+    const size_t count = vertices / 2;
+    if (count == 0) {
+        Log_write(LOG_LEVELS_INFO, "<GRAPHICS> polyline as no vertices");
+        return 0;
+    }
+
+    double array[vertices];
+    luaX_getnumberarray(L, 1, array);
+
+    GL_Point_t points[count];
+    for (size_t i = 0; i < count; ++i) {
+        double x = array[(i * 2)];
+        double y = array[(i * 2) + 1];
+
+        points[i] = (GL_Point_t){
+                .x = (GLfloat)x + 0.375f, .y = (GLfloat)y + 0.375f
+            };
+    }
+
+    GL_primitive_polyline(points, count, (GL_Color_t){ color, color, color, 255 });
+
+    return 0;
+}
+
+static int graphics_canvas_strip(lua_State *L)
+{
+    if (lua_gettop(L) != 2) {
+        return luaL_error(L, "<GRAPHICS> canvas function takes 2 arguments");
+    }
+    int vertices = lua_rawlen(L, 1);
+    int color = luaL_checkinteger(L, 2);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.strip(%d, %d)", vertices, color);
+#endif
+
+    const size_t count = vertices / 2;
+    if (count == 0) {
+        Log_write(LOG_LEVELS_INFO, "<GRAPHICS> strip as no vertices");
+        return 0;
+    }
+
+    double array[vertices];
+    luaX_getnumberarray(L, 1, array);
+
+    GL_Point_t points[count];
+    for (size_t i = 0; i < count; ++i) {
+        double x = array[(i * 2)];
+        double y = array[(i * 2) + 1];
+
+        points[i] = (GL_Point_t){
+                .x = (GLfloat)x + 0.375f, .y = (GLfloat)y + 0.375f
+            };
+    }
+
+    GL_primitive_strip(points, count, (GL_Color_t){ color, color, color, 255 });
+
+    return 0;
+}
+
+static int graphics_canvas_fan(lua_State *L)
+{
+    if (lua_gettop(L) != 2) {
+        return luaL_error(L, "<GRAPHICS> canvas function takes 2 arguments");
+    }
+    int vertices = lua_rawlen(L, 1);
+    int color = luaL_checkinteger(L, 2);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.fan(%d, %d)", vertices, color);
+#endif
+
+    const size_t count = vertices / 2;
+    if (count == 0) {
+        Log_write(LOG_LEVELS_INFO, "<GRAPHICS> fan as no vertices");
+        return 0;
+    }
+
+    double array[vertices];
+    luaX_getnumberarray(L, 1, array);
+
+    GL_Point_t points[count];
+    for (size_t i = 0; i < count; ++i) {
+        double x = array[(i * 2)];
+        double y = array[(i * 2) + 1];
+
+        points[i] = (GL_Point_t){
+                .x = (GLfloat)x + 0.375f, .y = (GLfloat)y + 0.375f
+            };
+    }
+
+    GL_primitive_fan(points, count, (GL_Color_t){ color, color, color, 255 });
+
+    return 0;
+}
+
+static int graphics_font_new(lua_State *L)
+{
+    if (lua_gettop(L) != 3) {
+        return luaL_error(L, "<GRAPHICS> bank constructor requires 3 arguments");
+    }
+    const char *file = luaL_checkstring(L, 1);
+    int glyph_width = luaL_checkinteger(L, 2);
+    int glyph_height = luaL_checkinteger(L, 3);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Font.new() -> %s, %d, %d", file, glyph_width, glyph_height);
 #endif
+    Font_Class_t *instance = (Font_Class_t *)lua_newuserdata(L, sizeof(Font_Class_t));
 
-    Font_Class_t *instance = (Font_Class_t *)wrenSetSlotNewForeign(vm, 0, 0, sizeof(Font_Class_t)); // `0, 0` since we are in the allocate callback.
-
-    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
+    Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
 
     const Sheet_Data_t *data = graphics_sheets_find(file);
 
@@ -471,33 +874,42 @@ void graphics_font_allocate(WrenVM *vm)
     *instance = (Font_Class_t){
             .sheet = sheet
         };
+
+    luaL_setmetatable(L, LUAX_CLASS(GRAPHICS_FONT));
+
+    return 1;
 }
 
-void graphics_font_finalize(void *userData, void *data)
+static int graphics_font_gc(lua_State *L)
 {
-    Font_Class_t *instance = (Font_Class_t *)data;
+    if (lua_gettop(L) != 1) {
+        return luaL_error(L, "<FONT> method requires 1 arguments");
+    }
+    Font_Class_t *instance = (Font_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(GRAPHICS_FONT));
 
     GL_sheet_delete(&instance->sheet);
     Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> font #%p finalized", instance);
 
     *instance = (Font_Class_t){};
+
+    return 0;
 }
 
-void graphics_font_write_call6(WrenVM *vm) // foreign write(text, x, y, color, scale, align)
+static int graphics_font_write(lua_State *L)
 {
-    const char *text = wrenGetSlotString(vm, 1);
-    double x = wrenGetSlotDouble(vm, 2);
-    double y = wrenGetSlotDouble(vm, 3);
-    int color = (int)wrenGetSlotDouble(vm, 4);
-    double scale = wrenGetSlotDouble(vm, 5);
-    const char *align = wrenGetSlotString(vm, 6);
+    if (lua_gettop(L) != 7) {
+        return luaL_error(L, "<FONT> method requires 7 arguments");
+    }
+    Font_Class_t *instance = (Font_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(GRAPHICS_FONT));
+    const char *text = luaL_checkstring(L, 2);
+    double x = luaL_checknumber(L, 3);
+    double y = luaL_checknumber(L, 4);
+    int color = luaL_checkinteger(L, 5);
+    double scale = luaL_checknumber(L, 6);
+    const char *align = luaL_checkstring(L, 7);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %s, %d, %d, %d, %d, %s", text, x, y, color, scale, align);
 #endif
-
-    const Font_Class_t *instance = (const Font_Class_t *)wrenGetSlotForeign(vm, 0);
-
-//    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
 
     const GL_Sheet_t *sheet = &instance->sheet;
 
@@ -562,279 +974,6 @@ void graphics_font_write_call6(WrenVM *vm) // foreign write(text, x, y, color, s
         destination.x0 += dw;
         destination.x1 = destination.x0 + dw;
     }
-}
 
-void graphics_canvas_width_get(WrenVM *vm)
-{
-    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
-
-    wrenSetSlotDouble(vm, 0, environment->display->configuration.width);
-}
-
-void graphics_canvas_height_get(WrenVM *vm)
-{
-    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
-
-    wrenSetSlotDouble(vm, 0, environment->display->configuration.height);
-}
-
-void graphics_canvas_palette_get(WrenVM *vm)
-{
-    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
-
-    GL_Palette_t *palette = &environment->display->palette;
-
-    int slots = wrenGetSlotCount(vm);
-#ifdef __DEBUG_VM_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> currently #%d slot(s) available, asking for an additional slot", slots);
-#endif
-    const int aux_slot_id = slots;
-    wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
-
-    wrenSetSlotNewList(vm, 0); // Create a new list in the return value.
-
-    for (size_t i = 0; i < palette->count; ++i) {
-        char argb[12] = {};
-        GL_palette_format_color(argb, palette->colors[i]);
-        wrenSetSlotString(vm, aux_slot_id, argb);
-
-        wrenInsertInList(vm, 0, i, aux_slot_id);
-    }
-}
-
-void graphics_canvas_palette_set(WrenVM *vm)
-{
-    WrenType type = wrenGetSlotType(vm, 1);
-
-    GL_Palette_t palette = {};
-
-    if (type == WREN_TYPE_STRING) { // Predefined palette!
-        const char *id = wrenGetSlotString(vm, 1);
-        const GL_Palette_t *predefined_palette = graphics_palettes_find(id);
-        if (predefined_palette != NULL) {
-            palette = *predefined_palette;
-
-            Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> setting predefined palette '%s' w/ %d color(s)", id, predefined_palette->count);
-        } else {
-            Log_write(LOG_LEVELS_WARNING, "<GRAPHICS> unknown predefined palette w/ id '%s'", id);
-        }
-    } else
-    if (type == WREN_TYPE_LIST) { // User supplied palette.
-        palette.count = wrenGetListCount(vm, 1);
-        Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> setting custom palette of #%d color(s)", palette.count);
-
-        if (palette.count > GL_MAX_PALETTE_COLORS) {
-            Log_write(LOG_LEVELS_WARNING, "<GRAPHICS> palette has too many colors (%d) - clamping", palette.count);
-            palette.count = MAX_PALETTE_COLORS;
-        }
-
-        int slots = wrenGetSlotCount(vm);
-#ifdef __DEBUG_VM_CALLS__
-        Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> currently #%d slot(s) available, asking for an additional slot", slots);
-#endif
-        const int aux_slot_id = slots;
-        wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
-
-        for (size_t i = 0; i < palette.count; ++i) {
-            wrenGetListElement(vm, 1, i, aux_slot_id);
-
-            const char *argb = wrenGetSlotString(vm, aux_slot_id);
-            palette.colors[i] = GL_palette_parse_color(argb);
-        }
-    } else {
-        Log_write(LOG_LEVELS_ERROR, "<GRAPHICS> wrong palette type, need to be string or list");
-    }
-
-    if (palette.count == 0) {
-        return;
-    }
-
-    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
-
-    Display_palette(environment->display, &palette);
-}
-
-void graphics_canvas_background_set(WrenVM *vm)
-{
-    int color = (int)wrenGetSlotDouble(vm, 1);
-
-    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
-
-    Display_background(environment->display, color);
-}
-
-void graphics_canvas_shader_set(WrenVM *vm)
-{
-    const char *code= wrenGetSlotString(vm, 1);
-
-    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
-
-    Display_shader(environment->display, code);
-}
-
-void graphics_canvas_color_call1(WrenVM *vm)
-{
-    const char *argb = wrenGetSlotString(vm, 1);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.color() -> %s", argb);
-#endif
-
-    Environment_t *environment = (Environment_t *)wrenGetUserData(vm);
-
-    GL_Color_t color = GL_palette_parse_color(argb);
-    size_t index = find_nearest_color(&environment->display->palette, color);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "color '%s' mapped to index %d", argb, index);
-#endif
-
-    wrenSetSlotDouble(vm, 0, index);
-}
-
-// When drawing points and lines we need to ensure to be in mid-pixel coordinates, according to
-// the "diamond exit rule" in OpenGL's rasterization. Also, the ending pixel of a line segment
-// is not drawn to avoid lighting a pixel twice in a loop.
-//
-// http://glprogramming.com/red/appendixg.html#name1
-void graphics_canvas_points_call2(WrenVM *vm)
-{
-    int vertices = wrenGetListCount(vm, 1);
-    int color = (int)wrenGetSlotDouble(vm, 2);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.points(%d, %d, %d)", vertices, color);
-#endif
-
-    int slots = wrenGetSlotCount(vm);
-#ifdef __DEBUG_VM_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> currently #%d slot(s) available, asking for an additional slot", slots);
-#endif
-    const int aux_slot_id = slots;
-    wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
-
-    const size_t count = vertices / 2;
-    if (count == 0) {
-        Log_write(LOG_LEVELS_INFO, "<GRAPHICS> point-sequence as no vertices");
-        return;
-    }
-
-    GL_Point_t points[count];
-    for (size_t i = 0; i < count; ++i) {
-        wrenGetListElement(vm, 1, (i * 2), aux_slot_id);
-        double x = wrenGetSlotDouble(vm, aux_slot_id);
-        wrenGetListElement(vm, 1, (i * 2) + 1, aux_slot_id);
-        double y = wrenGetSlotDouble(vm, aux_slot_id);
-
-        points[i] = (GL_Point_t){
-                .x = (GLfloat)x + 0.375f, .y = (GLfloat)y + 0.375f
-            };
-    }
-
-    GL_primitive_points(points, count, (GL_Color_t){ color, color, color, 255 });
-}
-
-void graphics_canvas_polyline_call2(WrenVM *vm)
-{
-    int vertices = wrenGetListCount(vm, 1);
-    int color = (int)wrenGetSlotDouble(vm, 2);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.polyline(%d, %d)", vertices, color);
-#endif
-
-    int slots = wrenGetSlotCount(vm);
-#ifdef __DEBUG_VM_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> currently #%d slot(s) available, asking for an additional slot", slots);
-#endif
-    const int aux_slot_id = slots;
-    wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
-
-    const size_t count = vertices / 2;
-    if (count == 0) {
-        Log_write(LOG_LEVELS_INFO, "<GRAPHICS> polyline as no vertices");
-        return;
-    }
-
-    GL_Point_t points[count];
-    for (size_t i = 0; i < count; ++i) {
-        wrenGetListElement(vm, 1, (i * 2), aux_slot_id);
-        double x = wrenGetSlotDouble(vm, aux_slot_id);
-        wrenGetListElement(vm, 1, (i * 2) + 1, aux_slot_id);
-        double y = wrenGetSlotDouble(vm, aux_slot_id);
-
-        points[i] = (GL_Point_t){
-                .x = (GLfloat)x + 0.375f, .y = (GLfloat)y + 0.375f
-            };
-    }
-
-    GL_primitive_polyline(points, count, (GL_Color_t){ color, color, color, 255 });
-}
-
-void graphics_canvas_strip_call2(WrenVM *vm)
-{
-    int vertices = wrenGetListCount(vm, 1);
-    int color = (int)wrenGetSlotDouble(vm, 2);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.strip(%d, %d)", vertices, color);
-#endif
-
-    int slots = wrenGetSlotCount(vm);
-#ifdef __DEBUG_VM_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> currently #%d slot(s) available, asking for an additional slot", slots);
-#endif
-    const int aux_slot_id = slots;
-    wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
-
-    const size_t count = vertices / 2;
-    if (count == 0) {
-        Log_write(LOG_LEVELS_INFO, "<GRAPHICS> strip as no vertices");
-        return;
-    }
-
-    GL_Point_t points[count];
-    for (size_t i = 0; i < count; ++i) {
-        wrenGetListElement(vm, 1, (i * 2), aux_slot_id);
-        double x = wrenGetSlotDouble(vm, aux_slot_id);
-        wrenGetListElement(vm, 1, (i * 2) + 1, aux_slot_id);
-        double y = wrenGetSlotDouble(vm, aux_slot_id);
-
-        points[i] = (GL_Point_t){
-                .x = (GLfloat)x, .y = (GLfloat)y
-            };
-    }
-
-    GL_primitive_strip(points, count, (GL_Color_t){ color, color, color, 255 });
-}
-
-void graphics_canvas_fan_call2(WrenVM *vm)
-{
-    int vertices = wrenGetListCount(vm, 1);
-    int color = (int)wrenGetSlotDouble(vm, 2);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.fat(%d, %d)", vertices, color);
-#endif
-
-    int slots = wrenGetSlotCount(vm);
-#ifdef __DEBUG_VM_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> currently #%d slot(s) available, asking for an additional slot", slots);
-#endif
-    const int aux_slot_id = slots;
-    wrenEnsureSlots(vm, aux_slot_id + 1); // Ask for an additional temporary slot.
-
-    const size_t count = vertices / 2;
-    if (count == 0) {
-        Log_write(LOG_LEVELS_INFO, "<GRAPHICS> fan as no vertices");
-        return;
-    }
-
-    GL_Point_t points[count];
-    for (size_t i = 0; i < count; ++i) {
-        wrenGetListElement(vm, 1, (i * 2), aux_slot_id);
-        double x = wrenGetSlotDouble(vm, aux_slot_id);
-        wrenGetListElement(vm, 1, (i * 2) + 1, aux_slot_id);
-        double y = wrenGetSlotDouble(vm, aux_slot_id);
-
-        points[i] = (GL_Point_t){
-                .x = (GLfloat)x, .y = (GLfloat)y
-            };
-    }
-
-    GL_primitive_fan(points, count, (GL_Color_t){ color, color, color, 255 });
+    return 0;
 }

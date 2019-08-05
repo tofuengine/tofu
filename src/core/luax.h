@@ -27,14 +27,33 @@
 #include <lua/lualib.h>
 #include <lua/lauxlib.h>
 
-#define LUAX_MODULE(n)          (n)
-#define LUAX_CLASS(n)           (n)"_mt"
+typedef enum _luaX_Const_Type {
+    LUA_CT_BOOLEAN,
+    LUA_CT_INTEGER,
+    LUA_CT_NUMBER,
+    LUA_CT_STRING,
+} luaX_Const_Type;
 
-extern int luaX_newclass(lua_State *L, const luaL_Reg *f, const luaL_Reg *m, const char *name);
+typedef struct _luaX_Const {
+    const char *name;
+    luaX_Const_Type type;
+    union {
+        int b;
+        lua_Integer i;
+        lua_Number n;
+        const char *sz;
+    } value;
+} luaX_Const;
+
+#define LUAX_MODULE(n)          n
+#define LUAX_CLASS(n)           n "_mt"
+
+extern int luaX_newclass(lua_State *L, const luaL_Reg *f, const luaL_Reg *m, const luaX_Const *c, const char *name);
 extern void luaX_preload(lua_State *L, const char *name, lua_CFunction f);
 extern void luaX_require(lua_State *L, const char *name);
 extern int luaX_checkfunction(lua_State *L, int arg);
 extern void luaX_setuserdata(lua_State *L, const char *name, void *p);
 extern void *luaX_getuserdata(lua_State *L, const char *name);
+extern void luaX_getnumberarray(lua_State *L, int idx, double *array);
 
 #endif  /* __CORE_LUAX_H__ */

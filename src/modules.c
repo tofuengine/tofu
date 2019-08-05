@@ -29,6 +29,10 @@
 #include "modules/util.h"
 
 const Module_Callback_t modules[] = {
+    collections_initialize,
+    events_initialize,
+    graphics_initialize,
+    io_initialize,
     util_initialize,
     NULL
 };

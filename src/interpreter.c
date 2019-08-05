@@ -78,7 +78,13 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *env
     }
 	luaL_openlibs(interpreter->state);
 //    luaA_open(interpreter->state);
-	util_initialize(interpreter->state);
+
+    for (size_t i = 0; modules[i]; ++i) {
+        bool initialized = modules[i](interpreter->state);
+        if (!initialized) {
+            Log_write(LOG_LEVELS_ERROR, "<VM> can't initialize module #%d", i);
+        }
+    }
 
     TimerPool_initialize(&interpreter->timer_pool, timerpool_update_callback, interpreter); // Need to initialized before boot-script interpretation.
 

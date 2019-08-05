@@ -28,6 +28,7 @@
 #include "log.h"
 
 #include <memory.h>
+#include <stdlib.h>
 
 typedef struct _Program_Data_t {
     const char *vertex_shader;

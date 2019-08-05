@@ -24,6 +24,7 @@
 #define __CORE_TIMERPOOL_H__
 
 #include <stdbool.h>
+#include <stdlib.h>
 
 typedef int Callback_t;
 

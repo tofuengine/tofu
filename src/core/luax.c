@@ -34,13 +34,22 @@ https://stackoverflow.com/questions/29449296/extending-lua-check-number-of-param
 https://stackoverflow.com/questions/32673835/how-do-i-create-a-lua-module-inside-a-lua-module-in-c
 */
 
-int luaX_newclass(lua_State *L, const luaL_Reg *f, const luaL_Reg *m, const char *name)
+int luaX_newclass(lua_State *L, const luaL_Reg *f, const luaL_Reg *m, const luaX_Const *c, const char *name)
 {
     luaL_newmetatable(L, name); /* create metatable */
     lua_pushvalue(L, -1); /* duplicate the metatable */
     lua_setfield(L, -2, "__index"); /* mt.__index = mt */
     luaL_setfuncs(L, f, 0); /* register metamethods */
-    luaL_newlib(L, m); /* create lib table */
+//    luaL_newlib(L, m); /* create lib table */
+    for (; c->name; c++) {
+        switch (c->type) {
+            case LUA_CT_BOOLEAN: { lua_pushboolean(L, c->value.b); } break;
+            case LUA_CT_INTEGER: { lua_pushinteger(L, c->value.i); } break;
+            case LUA_CT_NUMBER: { lua_pushnumber(L, c->value.n); } break;
+            case LUA_CT_STRING: { lua_pushstring(L, c->value.sz); } break;
+        }
+        lua_setfield(L, -2, c->name);
+    }
     return 1;
 }
 
@@ -62,8 +71,10 @@ void luaX_require(lua_State *L, const char *name)
 
 int luaX_checkfunction(lua_State *L, int arg)
 {
-    if (lua_type(L, arg) != LUA_TFUNCTION)) {
+    if (lua_type(L, arg) != LUA_TFUNCTION) {
+#if 0
         tag_error(L, arg, LUA_TFUNCTION);
+#endif
         return -1;
     }
     lua_pushvalue(L, arg);
@@ -80,4 +91,18 @@ void *luaX_getuserdata(lua_State *L, const char *name)
 {
     lua_getglobal(L, name);
     return lua_touserdata(L, -1);  //Get it from the top of the stack
+}
+
+void luaX_getnumberarray(lua_State *L, int idx, double *array)
+{
+    int j = 0;
+    lua_pushnil(L); // first key
+    while (lua_next(L, idx) != 0) {
+#if 0
+        const char *key_type = lua_typename(L, lua_type(L, -2)); // uses 'key' (at index -2) and 'value' (at index -1)
+#endif
+        array[j++] = lua_tonumber(L, -1);
+
+        lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
+    }
 }

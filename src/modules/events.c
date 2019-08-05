@@ -27,20 +27,11 @@
 
 #include <string.h>
 
-#define NAMESPACE_EVENTS_ENVIRONMENT        "events.Environment"
-#define NAMESPACE_EVENTS_INPUT              "events.Input"
+#define EVENTS_ENVIRONMENT      "events.Environment"
+#define EVENTS_INPUT            "events.Input"
 
 static const char *events_lua =
-    "events.Input.up = 265\n"
-    "events.Input.down = 264\n"
-    "events.Input.left = 263\n"
-    "events.Input.right = 262\n"
-    "events.Input.space = 32\n"
-    "events.Input.enter = 257\n"
-    "events.Input.escape = 256\n"
-    "events.Input.z = 90\n"
-    "events.Input.x = 88\n"
-    "events.Input.q = 81\n"
+    "\n"
 ;
 
 static int events_environment_fps(lua_State *L);
@@ -60,11 +51,26 @@ static const struct luaL_Reg events_environment_m[] = {
     { NULL, NULL }
 };
 
+static const luaX_Const events_environment_c[] = {
+    { NULL }
+};
+
 static const struct luaL_Reg events_input_f[] = {
     { "is_key_down", events_input_is_key_down },
     { "is_key_up", events_input_is_key_up },
     { "is_key_pressed", events_input_is_key_pressed },
     { "is_key_released", events_input_is_key_released },
+    /* */
+    { "up", NULL },
+    { "down", NULL },
+    { "left", NULL },
+    { "right", NULL },
+    { "space", NULL },
+    { "enter", NULL },
+    { "escape", NULL },
+    { "z", NULL },
+    { "x", NULL },
+    { "q", NULL },
     { NULL, NULL }
 };
 
@@ -72,20 +78,34 @@ static const struct luaL_Reg events_input_m[] = {
     { NULL, NULL }
 };
 
+static const luaX_Const events_input_c[] = {
+    { "UP", LUA_CT_INTEGER, { .i = 265 } },
+    { "DOWN", LUA_CT_INTEGER, { .i = 264 } },
+    { "LEFT", LUA_CT_INTEGER, { .i = 263 } },
+    { "RIGHT", LUA_CT_INTEGER, { .i = 262 } },
+    { "SPACE", LUA_CT_INTEGER, { .i = 32 } },
+    { "ENTER", LUA_CT_INTEGER, { .i = 257 } },
+    { "ESCAPE", LUA_CT_INTEGER, { .i = 256 } },
+    { "Z", LUA_CT_INTEGER, { .i = 90 } },
+    { "X", LUA_CT_INTEGER, { .i = 88 } },
+    { "Q", LUA_CT_INTEGER, { .i = 81 } },
+    { NULL }
+};
+
 static int luaopen_events_environment(lua_State *L)
 {
-    return luaX_newclass(L, events_environment_f, events_environment_m, LUAX_CLASS(NAMESPACE_EVENTS_ENVIRONMENT));
+    return luaX_newclass(L, events_environment_f, events_environment_m, events_environment_c, LUAX_CLASS(EVENTS_ENVIRONMENT));
 }
 
 static int luaopen_events_input(lua_State *L)
 {
-    return luaX_newclass(L, events_input_f, events_input_m, LUAX_CLASS(NAMESPACE_EVENTS_INPUT));
+    return luaX_newclass(L, events_input_f, events_input_m, events_input_c, LUAX_CLASS(EVENTS_INPUT));
 }
 
-bool collections_initialize(lua_State *L)
+bool events_initialize(lua_State *L)
 {
-    luaX_preload(L, LUAX_MODULE(NAMESPACE_EVENTS_ENVIRONMENT), luaopen_events_environment);
-    luaX_preload(L, LUAX_MODULE(NAMESPACE_EVENTS_INPUT), luaopen_events_input);
+    luaX_preload(L, LUAX_MODULE(EVENTS_ENVIRONMENT), luaopen_events_environment);
+    luaX_preload(L, LUAX_MODULE(EVENTS_INPUT), luaopen_events_input);
 
     if (luaL_dostring(L, events_lua) != 0) {
         Log_write(LOG_LEVELS_FATAL, "<VM> can't open script: %s", lua_tostring(L, -1));
@@ -97,7 +117,7 @@ bool collections_initialize(lua_State *L)
 
 static int events_environment_fps(lua_State *L)
 {
-    if (lua_gettop(L) != 10 {
+    if (lua_gettop(L) != 0) {
         return luaL_error(L, "<EVENTS> function requires 0 argument");
     }
 
@@ -109,7 +129,7 @@ static int events_environment_fps(lua_State *L)
 
 static int events_environment_quit(lua_State *L)
 {
-    if (lua_gettop(L) != 10 {
+    if (lua_gettop(L) != 0) {
         return luaL_error(L, "<EVENTS> function requires 0 argument");
     }
 

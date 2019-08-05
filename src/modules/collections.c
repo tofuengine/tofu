@@ -22,6 +22,8 @@
 
 #include "collections.h"
 
+#include <stdlib.h>
+
 #include "../config.h"
 #include "../log.h"
 
@@ -38,7 +40,7 @@ typedef struct _Grid_Class_t {
     Cell_t **offsets; // Precomputed pointers to the line of data.
 } Grid_Class_t;
 
-#define NAMESPACE_COLLECTIONS_GRID          "collections.Grid"
+#define COLLECTIONS_GRID            "collections.Grid"
 
 static const char *collections_lua =
     "\n"
@@ -60,17 +62,27 @@ static const struct luaL_Reg collections_grid_f[] = {
 
 static const struct luaL_Reg collections_grid_m[] = {
     {"__gc", collections_grid_gc },
+    {"width", collections_grid_width },
+    {"height", collections_grid_height },
+    {"fill", collections_grid_fill },
+    {"stride", collections_grid_stride },
+    {"peek", collections_grid_peek },
+    {"poke", collections_grid_poke },
     { NULL, NULL }
+};
+
+static const luaX_Const collections_grid_c[] = {
+    { NULL }
 };
 
 static int luaopen_collections_grid(lua_State *L)
 {
-    return luaX_newclass(L, collections_grid_f, collections_grid_m, LUAX_CLASS(NAMESPACE_COLLECTIONS_GRID));
+    return luaX_newclass(L, collections_grid_f, collections_grid_m, collections_grid_c, LUAX_CLASS(COLLECTIONS_GRID));
 }
 
 bool collections_initialize(lua_State *L)
 {
-    luaX_preload(L, LUAX_MODULE(NAMESPACE_COLLECTIONS_GRID), luaopen_collections_grid);
+    luaX_preload(L, LUAX_MODULE(COLLECTIONS_GRID), luaopen_collections_grid);
 
     if (luaL_dostring(L, collections_lua) != 0) {
         Log_write(LOG_LEVELS_FATAL, "<VM> can't open script: %s", lua_tostring(L, -1));
@@ -104,7 +116,9 @@ static int collections_grid_new(lua_State *L)
     if (type == LUA_TTABLE) {
         lua_pushnil(L); // first key
         while (lua_next(L, 3) != 0) {
+#if 0
             const char *key_type = lua_typename(L, lua_type(L, -2)); // uses 'key' (at index -2) and 'value' (at index -1)
+#endif
             Cell_t value = (Cell_t)lua_tonumber(L, -1);
 
             if (ptr < eod) {
@@ -114,7 +128,7 @@ static int collections_grid_new(lua_State *L)
             lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
         }
     } else
-    if (type = LUA_TNUMBER) {
+    if (type == LUA_TNUMBER) {
         Cell_t value = (Cell_t)lua_tonumber(L, 3);;
 
         while (ptr < eod) {
@@ -131,7 +145,7 @@ static int collections_grid_new(lua_State *L)
 
     Log_write(LOG_LEVELS_DEBUG, "<COLLECTIONS> grid #%p allocated", instance);
 
-    luaL_setmetatable(L, LUA_CLASS(NAMESPACE_COLLECTIONS_GRID));
+    luaL_setmetatable(L, LUAX_CLASS(COLLECTIONS_GRID));
 
     return 1;
 }
@@ -141,7 +155,7 @@ static int collections_grid_gc(lua_State *L)
     if (lua_gettop(L) != 1) {
         return luaL_error(L, "<COLLECTIONS> method requires 1 arguments");
     }
-    Grid_Class_t *instance = (Grid_Class_t *)luaL_checkudata(L, 1, LUA_CLASS(NAMESPACE_COLLECTIONS_GRID));
+    Grid_Class_t *instance = (Grid_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(COLLECTIONS_GRID));
 
     Log_write(LOG_LEVELS_DEBUG, "<COLLECTIONS> finalizing grid #%p", instance);
 
@@ -156,7 +170,7 @@ static int collections_grid_width(lua_State *L)
     if (lua_gettop(L) != 1) {
         return luaL_error(L, "<COLLECTIONS> method requires 1 arguments");
     }
-    Grid_Class_t *instance = (Grid_Class_t *)luaL_checkudata(L, 1, LUA_CLASS(NAMESPACE_COLLECTIONS_GRID));
+    Grid_Class_t *instance = (Grid_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(COLLECTIONS_GRID));
 
     lua_pushinteger(L, instance->width);
 
@@ -168,7 +182,7 @@ static int collections_grid_height(lua_State *L)
     if (lua_gettop(L) != 1) {
         return luaL_error(L, "<COLLECTIONS> method requires 1 arguments");
     }
-    Grid_Class_t *instance = (Grid_Class_t *)luaL_checkudata(L, 1, LUA_CLASS(NAMESPACE_COLLECTIONS_GRID));
+    Grid_Class_t *instance = (Grid_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(COLLECTIONS_GRID));
 
     lua_pushinteger(L, instance->height);
 
@@ -180,7 +194,7 @@ static int collections_grid_fill(lua_State *L)
     if (lua_gettop(L) != 2) {
         return luaL_error(L, "<COLLECTIONS> method requires 2 arguments");
     }
-    Grid_Class_t *instance = (Grid_Class_t *)luaL_checkudata(L, 1, LUA_CLASS(NAMESPACE_COLLECTIONS_GRID));
+    Grid_Class_t *instance = (Grid_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(COLLECTIONS_GRID));
     int type = lua_type(L, 2);
 
     int width = instance->width;
@@ -193,7 +207,9 @@ static int collections_grid_fill(lua_State *L)
     if (type == LUA_TTABLE) {
         lua_pushnil(L); // first key
         while (lua_next(L, 1) != 0) {
+#if 0
             const char *key_type = lua_typename(L, lua_type(L, -2)); // uses 'key' (at index -2) and 'value' (at index -1)
+#endif
             Cell_t value = (Cell_t)lua_tonumber(L, -1);
 
             if (ptr < eod) {
@@ -203,7 +219,7 @@ static int collections_grid_fill(lua_State *L)
             lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
         }
     } else
-    if (type = LUA_TNUMBER) {
+    if (type == LUA_TNUMBER) {
         Cell_t value = (Cell_t)lua_tonumber(L, 1);;
 
         while (ptr < eod) {
@@ -219,7 +235,7 @@ static int collections_grid_stride(lua_State *L)
     if (lua_gettop(L) != 5) {
         return luaL_error(L, "<COLLECTIONS> method requires 5 arguments");
     }
-    Grid_Class_t *instance = (Grid_Class_t *)luaL_checkudata(L, 1, LUA_CLASS(NAMESPACE_COLLECTIONS_GRID));
+    Grid_Class_t *instance = (Grid_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(COLLECTIONS_GRID));
     int column = luaL_checkinteger(L, 2);
     int row = luaL_checkinteger(L, 3);
     int type = lua_type(L, 4);
@@ -235,7 +251,9 @@ static int collections_grid_stride(lua_State *L)
     if (type == LUA_TTABLE) {
         lua_pushnil(L); // first key
         while (lua_next(L, 1) != 0) {
+#if 0
             const char *key_type = lua_typename(L, lua_type(L, -2)); // uses 'key' (at index -2) and 'value' (at index -1)
+#endif
             Cell_t value = (Cell_t)lua_tonumber(L, -1);
 
             if (ptr < eod) {
@@ -245,7 +263,7 @@ static int collections_grid_stride(lua_State *L)
             lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
         }
     } else
-    if (type = LUA_TNUMBER) {
+    if (type == LUA_TNUMBER) {
         Cell_t value = (Cell_t)lua_tonumber(L, 1);;
 
         for (int i = 0; (ptr < eod) && (i < amount); ++i) {
@@ -261,7 +279,7 @@ static int collections_grid_peek(lua_State *L)
     if (lua_gettop(L) != 3) {
         return luaL_error(L, "<COLLECTIONS> method requires 3 arguments");
     }
-    Grid_Class_t *instance = (Grid_Class_t *)luaL_checkudata(L, 1, LUA_CLASS(NAMESPACE_COLLECTIONS_GRID));
+    Grid_Class_t *instance = (Grid_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(COLLECTIONS_GRID));
     int column = luaL_checkinteger(L, 2);
     int row = luaL_checkinteger(L, 3);
 
@@ -279,10 +297,10 @@ static int collections_grid_poke(lua_State *L)
     if (lua_gettop(L) != 4) {
         return luaL_error(L, "<COLLECTIONS> method requires 4 arguments");
     }
-    Grid_Class_t *instance = (Grid_Class_t *)luaL_checkudata(L, 1, LUA_CLASS(NAMESPACE_COLLECTIONS_GRID));
+    Grid_Class_t *instance = (Grid_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(COLLECTIONS_GRID));
     int column = luaL_checkinteger(L, 2);
     int row = luaL_checkinteger(L, 3);
-    Cell_t value = (Cell_t)luaL_checknumber(vm, 4);
+    Cell_t value = (Cell_t)luaL_checknumber(L, 4);
 
     Cell_t *data = instance->offsets[row];
 
