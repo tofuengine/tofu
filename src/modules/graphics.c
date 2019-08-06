@@ -47,6 +47,11 @@ typedef struct _Bank_Class_t {
 #define GRAPHICS_FONT       "graphics.Font"
 
 static const char *graphics_lua =
+    "local graphics = {}\n"
+    "graphics.Font = require(\"graphics.Font\")\n"
+    "graphics.Bank = require(\"graphics.Bank\")\n"
+    "graphics.Canvas = require(\"graphics.Canvas\")\n"
+    "\n"
     "graphics.Font.default = function()\n"
     "  return graphics.Font.new(\"5x8\", 0, 0)\n"
     "end\n"

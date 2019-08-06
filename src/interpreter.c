@@ -83,7 +83,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *env
         }
     }
 
-    luaX_append_path(interpreter->state, environment->base_path);
+    luaX_appendpath(interpreter->state, environment->base_path);
     // TODO: register a custom searcher for the "packaed" archive feature.
 
     TimerPool_initialize(&interpreter->timer_pool, timerpool_update_callback, interpreter); // Need to initialized before boot-script interpretation.

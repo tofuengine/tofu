@@ -48,7 +48,8 @@ typedef struct _luaX_Const {
 #define LUAX_MODULE(n)          n
 #define LUAX_CLASS(n)           n "_mt"
 
-extern void luaX_append_path(lua_State *L, const char *path);
+extern void luaX_stackdump(lua_State *L);
+extern void luaX_appendpath(lua_State *L, const char *path);
 extern int luaX_newclass(lua_State *L, const luaL_Reg *f, const luaL_Reg *m, const luaX_Const *c, const char *name);
 extern void luaX_preload(lua_State *L, const char *name, lua_CFunction f);
 extern void luaX_require(lua_State *L, const char *name);

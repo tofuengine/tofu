@@ -62,16 +62,16 @@ static const struct luaL_Reg events_input_f[] = {
     { "is_key_pressed", events_input_is_key_pressed },
     { "is_key_released", events_input_is_key_released },
     /* */
-    { "up", NULL },
-    { "down", NULL },
-    { "left", NULL },
-    { "right", NULL },
-    { "space", NULL },
-    { "enter", NULL },
-    { "escape", NULL },
-    { "z", NULL },
-    { "x", NULL },
-    { "q", NULL },
+    { "UP", NULL },
+    { "DOWN", NULL },
+    { "LEFT", NULL },
+    { "RIGHT", NULL },
+    { "SPACE", NULL },
+    { "ENTER", NULL },
+    { "ESCAPE", NULL },
+    { "Z", NULL },
+    { "X", NULL },
+    { "Q", NULL },
     { NULL, NULL }
 };
 
@@ -105,14 +105,18 @@ static int luaopen_events_input(lua_State *L)
 */
 static int luaopen_events(lua_State *L)
 {
+luaX_stackdump(L);
     lua_newtable(L);
 
+luaX_stackdump(L);
     luaX_newclass(L, events_environment_f, events_environment_m, events_environment_c, LUAX_CLASS(EVENTS_ENVIRONMENT));
     lua_setfield(L, -2, "Environment");
 
+luaX_stackdump(L);
     luaX_newclass(L, events_input_f, events_input_m, events_input_c, LUAX_CLASS(EVENTS_INPUT));
     lua_setfield(L, -2, "Input");
 
+luaX_stackdump(L);
     return 1;
 }
 

@@ -37,8 +37,31 @@ https://stackoverflow.com/questions/29449296/extending-lua-check-number-of-param
 https://stackoverflow.com/questions/32673835/how-do-i-create-a-lua-module-inside-a-lua-module-in-c
 */
 
+void luaX_stackdump(lua_State *L)
+{
+          int i=lua_gettop(L);
+          printf(" ----------------  Stack Dump ----------------\n" );
+          while(  i   ) {
+            int t = lua_type(L, i);
+            switch (t) {
+              case LUA_TSTRING:
+                printf("%d:'%s'\n", i, lua_tostring(L, i));
+              break;
+              case LUA_TBOOLEAN:
+                printf("%d: %s\n",i,lua_toboolean(L, i) ? "true" : "false");
+              break;
+              case LUA_TNUMBER:
+                printf("%d: %g\n",  i, lua_tonumber(L, i));
+             break;
+             default: printf("%d: %s\n", i, lua_typename(L, t)); break;
+            }
+           i--;
+          }
+         printf("--------------- Stack Dump Finished ---------------\n" );
+    }
+
 // We also could have used the "LUA_PATH" environment variable.
-void luaX_append_path(lua_State *L, const char *path)
+void luaX_appendpath(lua_State *L, const char *path)
 {
     lua_getglobal(L, "package");
     lua_getfield(L, -1, "path"); // get field "path" from table at top of stack (-1)
