@@ -5,7 +5,9 @@ local Tofu = {}
 Tofu.__index = Tofu
 
 function Tofu.new()
-  self.game = Game.new()
+  return setmetatable({
+      game = Game.new()
+    }, Tofu)
 end
 
 function Tofu:input()
