@@ -24,6 +24,8 @@
 https://www.lua.org/manual/5.2/manual.html
 https://www.lua.org/pil/27.3.2.html
 https://www.lua.org/pil/25.2.html
+
+https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 #endif
 
 #include "interpreter.h"
@@ -39,15 +41,11 @@ https://www.lua.org/pil/25.2.html
 #include <time.h>
 #endif
 
-#define SCRIPT_EXTENSION        ".wren"
-
-#define ROOT_MODULE             "@root@"
-
 #define ROOT_INSTANCE           "tofu"
 
 #define BOOT_SCRIPT \
-    "Tofu = require(\"tofu\")\n" \
-    "local tofu = Tofu.new()\n"
+    "local Tofu = require(\"tofu\")\n" \
+    "tofu = Tofu.new()\n"
 
 #define SHUTDOWN_SCRIPT \
     "tofu = nil\n"
@@ -77,7 +75,6 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *env
         return false;
     }
 	luaL_openlibs(interpreter->state);
-//    luaA_open(interpreter->state);
 
     for (size_t i = 0; modules[i]; ++i) {
         bool initialized = modules[i](interpreter->state);
@@ -93,7 +90,15 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *env
 
     int result = luaL_dostring(interpreter->state, BOOT_SCRIPT);
     if (result != 0) {
-        Log_write(LOG_LEVELS_FATAL, "<VM> can't interpret boot script: %d", result);
+        Log_write(LOG_LEVELS_FATAL, "<VM> can't interpret boot script: %s", lua_tostring(interpreter->state, -1));
+        lua_close(interpreter->state);
+        return false;
+    }
+
+    // TODO: implement a register/unregister pattern the for the input/update/render callbacks.
+    lua_getglobal(interpreter->state, ROOT_INSTANCE); // Get the global variable on top of the stack.
+	if (lua_isnil(interpreter->state, -1)) {
+        Log_write(LOG_LEVELS_ERROR, "<VM> can't find root instance: %s", lua_tostring(interpreter->state, -1));
         lua_close(interpreter->state);
         return false;
     }
@@ -103,19 +108,15 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *env
 
 void Interpreter_input(Interpreter_t *interpreter)
 {
-    lua_getglobal(interpreter->state, ROOT_INSTANCE); // TODO: define a helper "call" function.
-	if (lua_isnil(interpreter->state, -1)) {
-        Log_write(LOG_LEVELS_ERROR, "<VM> can't find root instance");
-        return;
-    }
     lua_getfield(interpreter->state, -1, "input");
 	if (lua_isnil(interpreter->state, -1)) {
-        Log_write(LOG_LEVELS_ERROR, "<VM> can't find input method");
+        Log_write(LOG_LEVELS_ERROR, "<VM> can't find input method: %s", lua_tostring(interpreter->state, -1));
         return;
     }
-    int result = lua_pcall(interpreter->state, 0, 0, 0);
+    lua_pushvalue(interpreter->state, -2); // Duplicate the "self" object.
+    int result = lua_pcall(interpreter->state, 1, 0, 0);
     if (result != 0) {
-        Log_write(LOG_LEVELS_ERROR, "<VM> error calling input function: %s", lua_tostring(interpreter->state, -1));
+        Log_write(LOG_LEVELS_ERROR, "<VM> error calling input method: %s", lua_tostring(interpreter->state, -1));
     }
 }
 
@@ -139,47 +140,41 @@ void Interpreter_update(Interpreter_t *interpreter, const double delta_time)
 #endif
     }
 
-    lua_getglobal(interpreter->state, ROOT_INSTANCE); // TODO: define a helper "call" function.
-	if (lua_isnil(interpreter->state, -1)) {
-        Log_write(LOG_LEVELS_ERROR, "<VM> can't find root instance");
-        return;
-    }
     lua_getfield(interpreter->state, -1, "update");
 	if (lua_isnil(interpreter->state, -1)) {
-        Log_write(LOG_LEVELS_ERROR, "<VM> can't find update method");
+        Log_write(LOG_LEVELS_ERROR, "<VM> can't find update method: %s", lua_tostring(interpreter->state, -1));
         return;
     }
+    lua_pushvalue(interpreter->state, -2); // Duplicate the "self" object.
     lua_pushnumber(interpreter->state, delta_time);
-    int result = lua_pcall(interpreter->state, 1, 0, 0);
+    int result = lua_pcall(interpreter->state, 2, 0, 0);
     if (result != 0) {
-        Log_write(LOG_LEVELS_ERROR, "<VM> error calling update function: %s", lua_tostring(interpreter->state, -1));
+        Log_write(LOG_LEVELS_ERROR, "<VM> error calling update method: %s", lua_tostring(interpreter->state, -1));
     }
 }
 
 void Interpreter_render(Interpreter_t *interpreter, const double ratio)
 {
-    lua_getglobal(interpreter->state, ROOT_INSTANCE); // TODO: define a helper "call" function.
-	if (lua_isnil(interpreter->state, -1)) {
-        Log_write(LOG_LEVELS_ERROR, "<VM> can't find root instance");
-        return;
-    }
     lua_getfield(interpreter->state, -1, "render");
 	if (lua_isnil(interpreter->state, -1)) {
-        Log_write(LOG_LEVELS_ERROR, "<VM> can't find render method");
+        Log_write(LOG_LEVELS_ERROR, "<VM> can't find render method: %s", lua_tostring(interpreter->state, -1));
         return;
     }
+    lua_pushvalue(interpreter->state, -2); // Duplicate the "self" object.
     lua_pushnumber(interpreter->state, ratio);
-    int result = lua_pcall(interpreter->state, 1, 0, 0);
+    int result = lua_pcall(interpreter->state, 2, 0, 0);
     if (result != 0) {
-        Log_write(LOG_LEVELS_ERROR, "<VM> error calling render function: %s", lua_tostring(interpreter->state, -1));
+        Log_write(LOG_LEVELS_ERROR, "<VM> error calling render method: %s", lua_tostring(interpreter->state, -1));
     }
 }
 
 void Interpreter_terminate(Interpreter_t *interpreter)
 {
+//    lua_pushnil(interpreter->state);
+//    lua_setglobal(interpreter->state, "tofu");
     int result = luaL_dostring(interpreter->state, SHUTDOWN_SCRIPT);
     if (result != 0) {
-        Log_write(LOG_LEVELS_FATAL, "<VM> can't interpret shutdown script");
+        Log_write(LOG_LEVELS_FATAL, "<VM> can't interpret shutdown script: %s", lua_tostring(interpreter->state, -1));
     }
 
     lua_gc(interpreter->state, LUA_GCCOLLECT, 0);
