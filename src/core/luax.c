@@ -22,6 +22,9 @@
 
 #include "luax.h"
 
+#include <stdlib.h>
+#include <string.h>
+
 /*
 http://webcache.googleusercontent.com/search?q=cache:RLoR9dkMeowJ:howtomakeanrpg.com/a/classes-in-lua.html+&cd=4&hl=en&ct=clnk&gl=it
 https://hisham.hm/2014/01/02/how-to-write-lua-modules-in-a-post-module-world/
@@ -33,6 +36,25 @@ https://stackoverflow.com/questions/16713837/hand-over-global-custom-data-to-lua
 https://stackoverflow.com/questions/29449296/extending-lua-check-number-of-parameters-passed-to-a-function
 https://stackoverflow.com/questions/32673835/how-do-i-create-a-lua-module-inside-a-lua-module-in-c
 */
+
+// We also could have used the "LUA_PATH" environment variable.
+void luaX_append_path(lua_State *L, const char *path)
+{
+    lua_getglobal(L, "package");
+    lua_getfield(L, -1, "path"); // get field "path" from table at top of stack (-1)
+    const char *current = lua_tostring( L, -1 ); // grab path string from top of stack
+
+    char *final = calloc(strlen(current) + 1 + strlen(path) + 5 + 1, sizeof(char));
+    strcat(final, current);
+    strcat(final, ";");
+    strcat(final, path);
+    strcat(final, "?.lua");
+
+    lua_pop(L, 1); // get rid of the string on the stack we just pushed on line 5
+    lua_pushstring(L, final); // push the new one
+    lua_setfield(L, -2, "path"); // set the field "path" in table at -2 with value at top of stack
+    lua_pop(L, 1); // get rid of package table from top of stack
+}
 
 int luaX_newclass(lua_State *L, const luaL_Reg *f, const luaL_Reg *m, const luaX_Const *c, const char *name)
 {
