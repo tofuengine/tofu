@@ -189,13 +189,10 @@ static const luaX_Const graphics_font_c[] = {
 
 static int luaopen_graphics(lua_State *L)
 {
-luaX_dump(L);
     lua_newtable(L);
-luaX_dump(L);
+
     luaX_newclass(L, graphics_bank_f, graphics_bank_m, graphics_bank_c, LUAX_CLASS(Bank_Class_t));
-luaX_dump(L);
     lua_setfield(L, -2, "Bank");
-luaX_dump(L);
 
     luaX_newclass(L, graphics_canvas_f, graphics_canvas_m, graphics_canvas_c, LUAX_CLASS(Canvas_Class_t));
     lua_setfield(L, -2, "Canvas");

@@ -101,7 +101,7 @@ int luaX_newclass(lua_State *L, const luaL_Reg *f, const luaL_Reg *m, const luaX
     lua_setfield(L, -2, "__index"); /* mt.__index = mt */
 
     luaL_setfuncs(L, m, 0); /* register metamethods */
-
+lua_pop(L, 1); // ??? THIS FIXES ALL ??
     lua_createtable(L, 0, 0); /* create lib table */
     luaL_setfuncs(L, f, 0);
 

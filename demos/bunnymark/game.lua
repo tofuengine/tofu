@@ -10,7 +10,16 @@ function Game.new()
   for k, v in pairs(graphics) do
     print(k)
   end
+  print("---")
   for k, v in pairs(graphics.Font) do
+    print(k)
+  end
+  print("---")
+  for k, v in pairs(graphics.Canvas) do
+    print(k)
+  end
+  print("---")
+  for k, v in pairs(graphics.Bank) do
     print(k)
   end
 
