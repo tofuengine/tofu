@@ -32,29 +32,30 @@
 #include <math.h>
 #include <string.h>
 
-typedef struct _Font_Class_t {
-    // char pathfile[PATH_FILE_MAX];
-    GL_Sheet_t sheet;
-} Font_Class_t;
-
 typedef struct _Bank_Class_t {
     // char pathfile[PATH_FILE_MAX];
     GL_Sheet_t sheet;
 } Bank_Class_t;
+
+typedef struct _Canvas_Class_t {
+} Canvas_Class_t;
+
+typedef struct _Font_Class_t {
+    // char pathfile[PATH_FILE_MAX];
+    GL_Sheet_t sheet;
+} Font_Class_t;
 
 #define GRAPHICS_BANK       "graphics.Bank"
 #define GRAPHICS_CANVAS     "graphics.Canvas"
 #define GRAPHICS_FONT       "graphics.Font"
 
 static const char *graphics_lua =
-    "local graphics = {}\n"
-    "graphics.Font = require(\"graphics.Font\")\n"
-    "graphics.Bank = require(\"graphics.Bank\")\n"
-    "graphics.Canvas = require(\"graphics.Canvas\")\n"
+    "local graphics = require(\"graphics\")\n"
     "\n"
     "graphics.Font.default = function()\n"
     "  return graphics.Font.new(\"5x8\", 0, 0)\n"
     "end\n"
+#if 0
     "\n"
     "graphics.Canvas.point = function(x0, y0, color)\n"
     "  graphics.Canvas.points({ x0, y0 }, color)\n"
@@ -112,6 +113,7 @@ static const char *graphics_lua =
     "    graphics.Canvas.fan(vertices, color)\n"
     "  end\n"
     "end\n"
+#endif
 ;
 
 static int graphics_bank_new(lua_State *L);
@@ -189,29 +191,28 @@ static const luaX_Const graphics_font_c[] = {
     { NULL }
 };
 
-static int luaopen_graphics_bank(lua_State *L)
+static int luaopen_graphics(lua_State *L)
 {
-    return luaX_newclass(L, graphics_bank_f, graphics_bank_m, graphics_bank_c, LUAX_CLASS(GRAPHICS_BANK));
-}
+    lua_newtable(L);
 
-static int luaopen_graphics_canvas(lua_State *L)
-{
-    return luaX_newclass(L, graphics_canvas_f, graphics_canvas_m, graphics_canvas_c, LUAX_CLASS(GRAPHICS_CANVAS));
-}
+    luaX_newclass(L, graphics_bank_f, graphics_bank_m, graphics_bank_c, LUAX_CLASS(Bank_Class_t));
+    lua_setfield(L, -2, "Bank");
 
-static int luaopen_graphics_font(lua_State *L)
-{
-    return luaX_newclass(L, graphics_font_f, graphics_font_m, graphics_font_c, LUAX_CLASS(GRAPHICS_FONT));
+    luaX_newclass(L, graphics_canvas_f, graphics_canvas_m, graphics_canvas_c, LUAX_CLASS(Canvas_Class_t));
+    lua_setfield(L, -2, "Canvas");
+
+    luaX_newclass(L, graphics_font_f, graphics_font_m, graphics_font_c, LUAX_CLASS(Font_Class_t));
+    lua_setfield(L, -2, "Font");
+
+    return 1;
 }
 
 bool graphics_initialize(lua_State *L)
 {
-    luaX_preload(L, LUAX_MODULE(GRAPHICS_BANK), luaopen_graphics_bank);
-    luaX_preload(L, LUAX_MODULE(GRAPHICS_CANVAS), luaopen_graphics_canvas);
-    luaX_preload(L, LUAX_MODULE(GRAPHICS_FONT), luaopen_graphics_font);
+    luaX_preload(L, "graphics", luaopen_graphics);
 
     if (luaL_dostring(L, graphics_lua) != 0) {
-        Log_write(LOG_LEVELS_FATAL, "<VM> can't open script: %s", lua_tostring(L, -1));
+        Log_write(LOG_LEVELS_FATAL, "<GRAPHICS> can't open script: %s", lua_tostring(L, -1));
         return false;
     }
 
@@ -315,7 +316,7 @@ static int graphics_bank_new(lua_State *L)
             .sheet = sheet
         };
 
-    luaL_setmetatable(L, LUAX_CLASS(GRAPHICS_BANK));
+    luaL_setmetatable(L, LUAX_CLASS(Bank_Class_t));
 
     return 1;
 }
@@ -325,7 +326,7 @@ static int graphics_bank_gc(lua_State *L)
     if (lua_gettop(L) != 1) {
         return luaL_error(L, "<GRAPHICS> method requires 1 arguments");
     }
-    Bank_Class_t *instance = (Bank_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(GRAPHICS_BANK));
+    Bank_Class_t *instance = (Bank_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Bank_Class_t));
 
     GL_sheet_delete(&instance->sheet);
     Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> bank #%p finalized", instance);
@@ -340,7 +341,7 @@ static int graphics_bank_cell_width(lua_State *L)
     if (lua_gettop(L) != 0) {
         return luaL_error(L, "<GRAPHICS> method requires 0 arguments");
     }
-    Bank_Class_t *instance = (Bank_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(GRAPHICS_BANK));
+    Bank_Class_t *instance = (Bank_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Bank_Class_t));
 
     lua_pushinteger(L, instance->sheet.quad.width);
 
@@ -352,7 +353,7 @@ static int graphics_bank_cell_height(lua_State *L)
     if (lua_gettop(L) != 0) {
         return luaL_error(L, "<GRAPHICS> method requires 0 arguments");
     }
-    Bank_Class_t *instance = (Bank_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(GRAPHICS_BANK));
+    Bank_Class_t *instance = (Bank_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Bank_Class_t));
 
     lua_pushinteger(L, instance->sheet.quad.height);
 
@@ -364,7 +365,7 @@ static int graphics_bank_blit4(lua_State *L)
     if (lua_gettop(L) != 4) {
         return luaL_error(L, "<GRAPHICS> method requires 4 arguments");
     }
-    Bank_Class_t *instance = (Bank_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(GRAPHICS_BANK));
+    Bank_Class_t *instance = (Bank_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Bank_Class_t));
     int cell_id = luaL_checkinteger(L, 2);
     double x = (double)luaL_checknumber(L, 3);
     double y = (double)luaL_checknumber(L, 4);
@@ -391,7 +392,7 @@ static int graphics_bank_blit5(lua_State *L)
     if (lua_gettop(L) != 5) {
         return luaL_error(L, "<GRAPHICS> method requires 5 arguments");
     }
-    Bank_Class_t *instance = (Bank_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(GRAPHICS_BANK));
+    Bank_Class_t *instance = (Bank_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Bank_Class_t));
     int cell_id = luaL_checkinteger(L, 2);
     double x = (double)luaL_checknumber(L, 3);
     double y = (double)luaL_checknumber(L, 4);
@@ -419,7 +420,7 @@ static int graphics_bank_blit6(lua_State *L)
     if (lua_gettop(L) != 6) {
         return luaL_error(L, "<GRAPHICS> method requires 6 arguments");
     }
-    Bank_Class_t *instance = (Bank_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(GRAPHICS_BANK));
+    Bank_Class_t *instance = (Bank_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Bank_Class_t));
     int cell_id = luaL_checkinteger(L, 2);
     double x = (double)luaL_checknumber(L, 3);
     double y = (double)luaL_checknumber(L, 4);
@@ -464,7 +465,7 @@ static int graphics_bank_blit7(lua_State *L)
     if (lua_gettop(L) != 7) {
         return luaL_error(L, "<GRAPHICS> method requires 7 arguments");
     }
-    Bank_Class_t *instance = (Bank_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(GRAPHICS_BANK));
+    Bank_Class_t *instance = (Bank_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Bank_Class_t));
     int cell_id = luaL_checkinteger(L, 2);
     double x = (double)luaL_checknumber(L, 3);
     double y = (double)luaL_checknumber(L, 4);
@@ -880,17 +881,18 @@ static int graphics_font_new(lua_State *L)
             .sheet = sheet
         };
 
-    luaL_setmetatable(L, LUAX_CLASS(GRAPHICS_FONT));
+    luaL_setmetatable(L, LUAX_CLASS(Font_Class_t));
 
     return 1;
 }
 
 static int graphics_font_gc(lua_State *L)
 {
+luaX_dump(L);
     if (lua_gettop(L) != 1) {
         return luaL_error(L, "<FONT> method requires 1 arguments");
     }
-    Font_Class_t *instance = (Font_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(GRAPHICS_FONT));
+    Font_Class_t *instance = (Font_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Font_Class_t));
 
     GL_sheet_delete(&instance->sheet);
     Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> font #%p finalized", instance);
@@ -905,7 +907,7 @@ static int graphics_font_write(lua_State *L)
     if (lua_gettop(L) != 7) {
         return luaL_error(L, "<FONT> method requires 7 arguments");
     }
-    Font_Class_t *instance = (Font_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(GRAPHICS_FONT));
+    Font_Class_t *instance = (Font_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Font_Class_t));
     const char *text = luaL_checkstring(L, 2);
     double x = luaL_checknumber(L, 3);
     double y = luaL_checknumber(L, 4);

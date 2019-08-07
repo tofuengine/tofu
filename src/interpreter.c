@@ -83,6 +83,8 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *env
         }
     }
 
+    luaX_setuserdata(interpreter->state, "environment", (void *)environment);
+
     luaX_appendpath(interpreter->state, environment->base_path);
     // TODO: register a custom searcher for the "packaed" archive feature.
 
@@ -131,12 +133,14 @@ void Interpreter_update(Interpreter_t *interpreter, const double delta_time)
 #ifdef __DEBUG_GARBAGE_COLLECTOR__
         Log_write(LOG_LEVELS_DEBUG, "<VM> performing periodical garbage collection");
         double start_time = (double)clock() / CLOCKS_PER_SEC;
+        luaX_dump(interpreter->state);
 #endif
         lua_gc(interpreter->state, LUA_GCCOLLECT, 0);
         TimerPool_gc(&interpreter->timer_pool);
 #ifdef __DEBUG_GARBAGE_COLLECTOR__
         double elapsed = ((double)clock() / CLOCKS_PER_SEC) - start_time;
         Log_write(LOG_LEVELS_DEBUG, "<VM> garbage collection took %.3fs", elapsed);
+        luaX_dump(interpreter->state);
 #endif
     }
 

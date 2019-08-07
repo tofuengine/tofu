@@ -33,8 +33,6 @@ typedef struct _Timer_Class_t {
     Timer_t *timer;
 } Timer_Class_t;
 
-#define NAMESPACE_UTIL_TIMER            "util.Timer"
-
 static const char *util_lua =
     "\n"
 ;
@@ -60,14 +58,19 @@ static const luaX_Const util_timer_c[] = {
     { NULL }
 };
 
-static int luaopen_util_timer(lua_State *L)
+static int luaopen_util(lua_State *L)
 {
-    return luaX_newclass(L, util_timer_f, util_timer_m, util_timer_c, LUAX_CLASS(NAMESPACE_UTIL_TIMER));
+    lua_newtable(L);
+
+    return luaX_newclass(L, util_timer_f, util_timer_m, util_timer_c, LUAX_CLASS(Timer_Class_t));
+    lua_setfield(L, -2, "Timer");
+
+    return 1;
 }
 
 bool util_initialize(lua_State *L)
 {
-    luaX_preload(L, LUAX_MODULE(NAMESPACE_UTIL_TIMER), luaopen_util_timer);
+    luaX_preload(L, "util", luaopen_util);
 
     if (luaL_dostring(L, util_lua) != 0) {
         Log_write(LOG_LEVELS_FATAL, "<VM> can't open script: %s", lua_tostring(L, -1));
@@ -102,7 +105,7 @@ static int util_timer_new(lua_State *L)
 
     Log_write(LOG_LEVELS_DEBUG, "<UTIL> timer #%p allocated", instance->timer);
 
-    luaL_setmetatable(L, LUAX_CLASS(NAMESPACE_UTIL_TIMER));
+    luaL_setmetatable(L, LUAX_CLASS(Timer_Class_t));
 
     return 1;
 }
@@ -113,7 +116,7 @@ static int util_timer_gc(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Timer.gc()");
 #endif
 
-    Timer_Class_t *instance = (Timer_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(NAMESPACE_UTIL_TIMER));
+    Timer_Class_t *instance = (Timer_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Timer_Class_t));
 
     Log_write(LOG_LEVELS_DEBUG, "<UTIL> finalizing timer #%p", instance->timer);
 
@@ -130,7 +133,7 @@ static int util_timer_reset(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Timer.cancel()");
 #endif
 
-    Timer_Class_t *instance = (Timer_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(NAMESPACE_UTIL_TIMER));
+    Timer_Class_t *instance = (Timer_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Timer_Class_t));
 
     TimerPool_reset(instance->timer_pool, instance->timer);
 
@@ -143,7 +146,7 @@ static int util_timer_cancel(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Timer.cancel()");
 #endif
 
-    Timer_Class_t *instance = (Timer_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(NAMESPACE_UTIL_TIMER));
+    Timer_Class_t *instance = (Timer_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Timer_Class_t));
 
     TimerPool_cancel(instance->timer_pool, instance->timer);
 

@@ -27,10 +27,6 @@
 
 #include <string.h>
 
-#define EVENTS_ENVIRONMENT      "events.Environment"
-#define EVENTS_INPUT            "events.Input"
-#define EVENTS                  "events"
-
 static const char *events_lua =
     "\n"
 ;
@@ -61,17 +57,6 @@ static const struct luaL_Reg events_input_f[] = {
     { "is_key_up", events_input_is_key_up },
     { "is_key_pressed", events_input_is_key_pressed },
     { "is_key_released", events_input_is_key_released },
-    /* */
-    { "UP", NULL },
-    { "DOWN", NULL },
-    { "LEFT", NULL },
-    { "RIGHT", NULL },
-    { "SPACE", NULL },
-    { "ENTER", NULL },
-    { "ESCAPE", NULL },
-    { "Z", NULL },
-    { "X", NULL },
-    { "Q", NULL },
     { NULL, NULL }
 };
 
@@ -92,43 +77,26 @@ static const luaX_Const events_input_c[] = {
     { "Q", LUA_CT_INTEGER, { .i = 81 } },
     { NULL }
 };
-/*
-static int luaopen_events_environment(lua_State *L)
-{
-    return luaX_newclass(L, events_environment_f, events_environment_m, events_environment_c, LUAX_CLASS(EVENTS_ENVIRONMENT));
-}
 
-static int luaopen_events_input(lua_State *L)
-{
-    return luaX_newclass(L, events_input_f, events_input_m, events_input_c, LUAX_CLASS(EVENTS_INPUT));
-}
-*/
 static int luaopen_events(lua_State *L)
 {
-luaX_stackdump(L);
     lua_newtable(L);
 
-luaX_stackdump(L);
-    luaX_newclass(L, events_environment_f, events_environment_m, events_environment_c, LUAX_CLASS(EVENTS_ENVIRONMENT));
+    luaX_newclass(L, events_environment_f, events_environment_m, events_environment_c, "Environment");
     lua_setfield(L, -2, "Environment");
 
-luaX_stackdump(L);
-    luaX_newclass(L, events_input_f, events_input_m, events_input_c, LUAX_CLASS(EVENTS_INPUT));
+    luaX_newclass(L, events_input_f, events_input_m, events_input_c, "Input");
     lua_setfield(L, -2, "Input");
 
-luaX_stackdump(L);
     return 1;
 }
 
 bool events_initialize(lua_State *L)
 {
-//    luaX_preload(L, LUAX_MODULE(EVENTS_ENVIRONMENT), luaopen_events_environment);
-//    luaX_preload(L, LUAX_MODULE(EVENTS_INPUT), luaopen_events_input);
-
-    luaX_preload(L, LUAX_MODULE(EVENTS), luaopen_events);
+    luaX_preload(L, "events", luaopen_events);
 
     if (luaL_dostring(L, events_lua) != 0) {
-        Log_write(LOG_LEVELS_FATAL, "<VM> can't open script: %s", lua_tostring(L, -1));
+        Log_write(LOG_LEVELS_FATAL, "<EVENTS> can't open script: %s", lua_tostring(L, -1));
         return false;
     }
 

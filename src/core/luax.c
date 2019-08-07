@@ -37,28 +37,42 @@ https://stackoverflow.com/questions/29449296/extending-lua-check-number-of-param
 https://stackoverflow.com/questions/32673835/how-do-i-create-a-lua-module-inside-a-lua-module-in-c
 */
 
-void luaX_stackdump(lua_State *L)
+void luaX_stackdump(lua_State *L, const char* func, int line)
 {
-          int i=lua_gettop(L);
-          printf(" ----------------  Stack Dump ----------------\n" );
-          while(  i   ) {
-            int t = lua_type(L, i);
-            switch (t) {
-              case LUA_TSTRING:
-                printf("%d:'%s'\n", i, lua_tostring(L, i));
-              break;
-              case LUA_TBOOLEAN:
-                printf("%d: %s\n",i,lua_toboolean(L, i) ? "true" : "false");
-              break;
-              case LUA_TNUMBER:
-                printf("%d: %g\n",  i, lua_tonumber(L, i));
-             break;
-             default: printf("%d: %s\n", i, lua_typename(L, t)); break;
-            }
-           i--;
-          }
-         printf("--------------- Stack Dump Finished ---------------\n" );
+    int top = lua_gettop(L);
+    printf("----------[ STACK DUMP (%s:%d) top=%d ]----------\n", func, line, top);
+    for (int i = 0; i < top; i++) {
+        int positive = top - i;
+        int negative = -(i + 1);
+        int type = lua_type(L, positive);
+#if 0
+        int typeN = lua_type(L, negative);
+        if (type != typeN) {
+            printf("  %d/%d: type mismatch %d != %d\n", positive, negative, type, typeN);
+            continue;
+        }
+#endif
+        const char* type_name = lua_typename(L, type);
+        printf("  %d/%d: type=%s", positive, negative, type_name);
+        switch (type) {
+            case LUA_TBOOLEAN:
+                printf("\t%s", lua_toboolean(L, i) ? "true" : "false");
+                break;
+            case LUA_TNUMBER:
+                printf("\t%f", lua_tonumber(L, positive));
+                break;
+            case LUA_TSTRING:
+                printf("\t%s", lua_tostring(L, positive));
+                break;
+            case LUA_TFUNCTION:
+                if (lua_iscfunction(L, positive)) {
+                    printf("\t%p", lua_tocfunction(L, positive));
+                }
+                break;
+        }
+        printf("\n");
     }
+}
 
 // We also could have used the "LUA_PATH" environment variable.
 void luaX_appendpath(lua_State *L, const char *path)
@@ -81,17 +95,16 @@ void luaX_appendpath(lua_State *L, const char *path)
 
 int luaX_newclass(lua_State *L, const luaL_Reg *f, const luaL_Reg *m, const luaX_Const *c, const char *name)
 {
-    size_t methods = 0;
-    for (int i = 0; m[i].name; ++i) {
-        methods++;
-    }
     luaL_newmetatable(L, name); /* create metatable */
+
     lua_pushvalue(L, -1); /* duplicate the metatable */
     lua_setfield(L, -2, "__index"); /* mt.__index = mt */
-    luaL_setfuncs(L, f, 0); /* register metamethods */
-//    luaL_newlib(L, m); /* create lib table */
-    lua_createtable(L, 0, methods);
-    luaL_setfuncs(L, m, 0);
+
+    luaL_setfuncs(L, m, 0); /* register metamethods */
+
+    lua_createtable(L, 0, 0); /* create lib table */
+    luaL_setfuncs(L, f, 0);
+
     for (; c->name; c++) {
         switch (c->type) {
             case LUA_CT_BOOLEAN: { lua_pushboolean(L, c->value.b); } break;
@@ -101,6 +114,7 @@ int luaX_newclass(lua_State *L, const luaL_Reg *f, const luaL_Reg *m, const luaX
         }
         lua_setfield(L, -2, c->name);
     }
+
     return 1;
 }
 
@@ -115,9 +129,9 @@ void luaX_preload(lua_State *L, const char *name, lua_CFunction f)
 
 void luaX_require(lua_State *L, const char *name)
 {
-	lua_getglobal(L, "require");
-	lua_pushstring(L, name);
-	lua_call(L, 1, 1);
+    lua_getglobal(L, "require");
+    lua_pushstring(L, name);
+    lua_call(L, 1, 1);
 }
 
 int luaX_checkfunction(lua_State *L, int arg)
@@ -141,7 +155,9 @@ void luaX_setuserdata(lua_State *L, const char *name, void *p)
 void *luaX_getuserdata(lua_State *L, const char *name)
 {
     lua_getglobal(L, name);
-    return lua_touserdata(L, -1);  //Get it from the top of the stack
+    void *ptr = lua_touserdata(L, -1);  //Get it from the top of the stack
+    lua_pop(L, 1); // Remove the global data from the stack.
+    return ptr;
 }
 
 void luaX_getnumberarray(lua_State *L, int idx, double *array)

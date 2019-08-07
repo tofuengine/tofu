@@ -28,8 +28,6 @@
 
 #include <string.h>
 
-#define NAMESPACE_IO_FILE           "io.File"
-
 static const char *file_lua =
     "\n"
 ;
@@ -49,17 +47,22 @@ static const luaX_Const io_file_c[] = {
     { NULL }
 };
 
-static int luaopen_util_timer(lua_State *L)
+static int luaopen_tio(lua_State *L)
 {
-    return luaX_newclass(L, io_file_f, io_file_m, io_file_c, LUAX_CLASS(NAMESPACE_IO_FILE));
+    lua_newtable(L);
+
+    luaX_newclass(L, io_file_f, io_file_m, io_file_c, "File");
+    lua_setfield(L, -2, "File");
+
+    return 1;
 }
 
 bool io_initialize(lua_State *L)
 {
-    luaX_preload(L, LUAX_MODULE(NAMESPACE_IO_FILE), luaopen_util_timer);
+    luaX_preload(L, "tio", luaopen_tio);
 
     if (luaL_dostring(L, file_lua) != 0) {
-        Log_write(LOG_LEVELS_FATAL, "<VM> can't open script: %s", lua_tostring(L, -1));
+        Log_write(LOG_LEVELS_FATAL, "<IO> can't open script: %s", lua_tostring(L, -1));
         return false;
     }
 
