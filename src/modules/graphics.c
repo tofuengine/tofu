@@ -51,7 +51,6 @@ static const char *graphics_lua =
     "graphics.Font.default = function()\n"
     "  return graphics.Font.new(\"5x8\", 0, 0)\n"
     "end\n"
-#if 0
     "\n"
     "graphics.Canvas.point = function(x0, y0, color)\n"
     "  graphics.Canvas.points({ x0, y0 }, color)\n"
@@ -109,7 +108,6 @@ static const char *graphics_lua =
     "    graphics.Canvas.fan(vertices, color)\n"
     "  end\n"
     "end\n"
-#endif
 ;
 
 static int graphics_bank_new(lua_State *L);
