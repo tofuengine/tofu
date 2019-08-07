@@ -59,7 +59,7 @@ static int luaopen_tio(lua_State *L)
 
 bool io_initialize(lua_State *L)
 {
-    luaX_preload(L, "tio", luaopen_tio);
+    luaX_preload(L, "tofu.io", luaopen_tio);
 
     if (luaL_dostring(L, file_lua) != 0) {
         Log_write(LOG_LEVELS_FATAL, "<IO> can't open script: %s", lua_tostring(L, -1));

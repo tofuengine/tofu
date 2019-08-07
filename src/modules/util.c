@@ -62,7 +62,7 @@ static int luaopen_util(lua_State *L)
 {
     lua_newtable(L);
 
-    return luaX_newclass(L, util_timer_f, util_timer_m, util_timer_c, LUAX_CLASS(Timer_Class_t));
+    luaX_newclass(L, util_timer_f, util_timer_m, util_timer_c, LUAX_CLASS(Timer_Class_t));
     lua_setfield(L, -2, "Timer");
 
     return 1;

@@ -1,11 +1,19 @@
-local events = require("events")
-local graphics = require("graphics")
+local events = require("tofu.events")
+local graphics = require("tofu.graphics")
+local io = require("tofu.io")
 
 local Game = {}
 
 Game.__index = Game
 
 function Game.new()
+  for k, v in pairs(graphics) do
+    print(k)
+  end
+  for k, v in pairs(graphics.Font) do
+    print(k)
+  end
+
   return setmetatable({
       font = graphics.Font.default()
     }, Game)

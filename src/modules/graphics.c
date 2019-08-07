@@ -45,12 +45,8 @@ typedef struct _Font_Class_t {
     GL_Sheet_t sheet;
 } Font_Class_t;
 
-#define GRAPHICS_BANK       "graphics.Bank"
-#define GRAPHICS_CANVAS     "graphics.Canvas"
-#define GRAPHICS_FONT       "graphics.Font"
-
 static const char *graphics_lua =
-    "local graphics = require(\"graphics\")\n"
+    "local graphics = require(\"tofu.graphics\")\n"
     "\n"
     "graphics.Font.default = function()\n"
     "  return graphics.Font.new(\"5x8\", 0, 0)\n"
@@ -193,10 +189,13 @@ static const luaX_Const graphics_font_c[] = {
 
 static int luaopen_graphics(lua_State *L)
 {
+luaX_dump(L);
     lua_newtable(L);
-
+luaX_dump(L);
     luaX_newclass(L, graphics_bank_f, graphics_bank_m, graphics_bank_c, LUAX_CLASS(Bank_Class_t));
+luaX_dump(L);
     lua_setfield(L, -2, "Bank");
+luaX_dump(L);
 
     luaX_newclass(L, graphics_canvas_f, graphics_canvas_m, graphics_canvas_c, LUAX_CLASS(Canvas_Class_t));
     lua_setfield(L, -2, "Canvas");
@@ -209,7 +208,7 @@ static int luaopen_graphics(lua_State *L)
 
 bool graphics_initialize(lua_State *L)
 {
-    luaX_preload(L, "graphics", luaopen_graphics);
+    luaX_preload(L, "tofu.graphics", luaopen_graphics);
 
     if (luaL_dostring(L, graphics_lua) != 0) {
         Log_write(LOG_LEVELS_FATAL, "<GRAPHICS> can't open script: %s", lua_tostring(L, -1));

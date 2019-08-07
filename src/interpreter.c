@@ -98,7 +98,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *env
     }
 
     // TODO: implement a register/unregister pattern the for the input/update/render callbacks.
-    lua_getglobal(interpreter->state, ROOT_INSTANCE); // Get the global variable on top of the stack.
+    lua_getglobal(interpreter->state, ROOT_INSTANCE); // Get the global variable on top of the stack (will always stay on top).
 	if (lua_isnil(interpreter->state, -1)) {
         Log_write(LOG_LEVELS_ERROR, "<VM> can't find root instance: %s", lua_tostring(interpreter->state, -1));
         lua_close(interpreter->state);
@@ -133,14 +133,14 @@ void Interpreter_update(Interpreter_t *interpreter, const double delta_time)
 #ifdef __DEBUG_GARBAGE_COLLECTOR__
         Log_write(LOG_LEVELS_DEBUG, "<VM> performing periodical garbage collection");
         double start_time = (double)clock() / CLOCKS_PER_SEC;
-        luaX_dump(interpreter->state);
+        //luaX_dump(interpreter->state);
 #endif
         lua_gc(interpreter->state, LUA_GCCOLLECT, 0);
         TimerPool_gc(&interpreter->timer_pool);
 #ifdef __DEBUG_GARBAGE_COLLECTOR__
         double elapsed = ((double)clock() / CLOCKS_PER_SEC) - start_time;
         Log_write(LOG_LEVELS_DEBUG, "<VM> garbage collection took %.3fs", elapsed);
-        luaX_dump(interpreter->state);
+        //luaX_dump(interpreter->state);
 #endif
     }
 

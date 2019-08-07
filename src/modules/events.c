@@ -93,7 +93,7 @@ static int luaopen_events(lua_State *L)
 
 bool events_initialize(lua_State *L)
 {
-    luaX_preload(L, "events", luaopen_events);
+    luaX_preload(L, "tofu.events", luaopen_events);
 
     if (luaL_dostring(L, events_lua) != 0) {
         Log_write(LOG_LEVELS_FATAL, "<EVENTS> can't open script: %s", lua_tostring(L, -1));
