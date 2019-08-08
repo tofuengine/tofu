@@ -44,14 +44,6 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 #define ROOT_INSTANCE           "main"
 
 #define BOOT_SCRIPT \
-    "tofu = {\n" \
-    "    collections = require(\"collections\"),\n" \
-    "    events = require(\"events\"),\n" \
-    "    graphics = require(\"graphics\"),\n" \
-    "    io = require(\"tofu.io\"),\n" \
-    "    util = require(\"util\")\n" \
-    "  }\n" \
-    "\n" \
     "local Main = require(\"main\")\n" \
     "main = Main.new()\n"
 
@@ -84,17 +76,17 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *env
     }
 	luaL_openlibs(interpreter->state);
 
-    for (size_t i = 0; modules[i]; ++i) {
-        bool initialized = modules[i](interpreter->state);
-        if (!initialized) {
-            Log_write(LOG_LEVELS_ERROR, "<VM> can't initialize module #%d", i);
-        }
+    bool initialized = modules_initialize(interpreter->state);
+    if (!initialized) {
+        Log_write(LOG_LEVELS_FATAL, "<VM> can't initialize modules");
+        lua_close(interpreter->state);
+        return false;
     }
 
     luaX_setuserdata(interpreter->state, "environment", (void *)environment);
 
     luaX_appendpath(interpreter->state, environment->base_path);
-    // TODO: register a custom searcher for the "packaed" archive feature.
+    // TODO: register a custom searcher for the "packed" archive feature.
 
     TimerPool_initialize(&interpreter->timer_pool, timerpool_update_callback, interpreter); // Need to initialized before boot-script interpretation.
 
@@ -109,8 +101,21 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *env
     lua_getglobal(interpreter->state, ROOT_INSTANCE); // Get the global variable on top of the stack (will always stay on top).
 	if (lua_isnil(interpreter->state, -1)) {
         Log_write(LOG_LEVELS_ERROR, "<VM> can't find root instance: %s", lua_tostring(interpreter->state, -1));
+        lua_pop(interpreter->state, 1);
         lua_close(interpreter->state);
         return false;
+    }
+
+    lua_getfield(interpreter->state, -1, "init");
+	if (lua_isnil(interpreter->state, -1)) {
+        Log_write(LOG_LEVELS_WARNING, "<VM> can't find init method: %s", lua_tostring(interpreter->state, -1));
+        lua_pop(interpreter->state, 1);
+        return true;
+    }
+    lua_pushvalue(interpreter->state, -2); // Duplicate the "self" object.
+    result = lua_pcall(interpreter->state, 1, 0, 0);
+    if (result != 0) {
+        Log_write(LOG_LEVELS_ERROR, "<VM> error calling init method: %s", lua_tostring(interpreter->state, -1));
     }
 
     return true;
@@ -120,7 +125,8 @@ void Interpreter_input(Interpreter_t *interpreter)
 {
     lua_getfield(interpreter->state, -1, "input");
 	if (lua_isnil(interpreter->state, -1)) {
-        Log_write(LOG_LEVELS_ERROR, "<VM> can't find input method: %s", lua_tostring(interpreter->state, -1));
+        Log_write(LOG_LEVELS_WARNING, "<VM> can't find input method: %s", lua_tostring(interpreter->state, -1));
+        lua_pop(interpreter->state, 1);
         return;
     }
     lua_pushvalue(interpreter->state, -2); // Duplicate the "self" object.
@@ -154,7 +160,8 @@ void Interpreter_update(Interpreter_t *interpreter, const double delta_time)
 
     lua_getfield(interpreter->state, -1, "update");
 	if (lua_isnil(interpreter->state, -1)) {
-        Log_write(LOG_LEVELS_ERROR, "<VM> can't find update method: %s", lua_tostring(interpreter->state, -1));
+        Log_write(LOG_LEVELS_WARNING, "<VM> can't find update method: %s", lua_tostring(interpreter->state, -1));
+        lua_pop(interpreter->state, 1);
         return;
     }
     lua_pushvalue(interpreter->state, -2); // Duplicate the "self" object.
@@ -169,7 +176,8 @@ void Interpreter_render(Interpreter_t *interpreter, const double ratio)
 {
     lua_getfield(interpreter->state, -1, "render");
 	if (lua_isnil(interpreter->state, -1)) {
-        Log_write(LOG_LEVELS_ERROR, "<VM> can't find render method: %s", lua_tostring(interpreter->state, -1));
+        Log_write(LOG_LEVELS_WARNING, "<VM> can't find render method: %s", lua_tostring(interpreter->state, -1));
+        lua_pop(interpreter->state, 1);
         return;
     }
     lua_pushvalue(interpreter->state, -2); // Duplicate the "self" object.

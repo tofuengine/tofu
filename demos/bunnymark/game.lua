@@ -1,10 +1,10 @@
 local Bunny = require("lib.bunny")
 
-local Bank = tofu.graphics.Bank
-local Canvas = tofu.graphics.Canvas
-local Font = tofu.graphics.Font
-local Input = tofu.events.Input
-local Environment = tofu.events.Environment
+local Bank = require("tofu.graphics.Bank")
+local Canvas = require("tofu.graphics.Canvas")
+local Font = require("tofu.graphics.Font")
+local Environment = require("tofu.events.Environment")
+local Input = require("tofu.events.Input")
 
 local LITTER_SIZE = 250
 local MAX_BUNNIES = 32768
@@ -26,21 +26,22 @@ function dump(t, spaces)
 end
 
 function Game.new()
-  --  dump(tofu)
-  Canvas.palette("gameboy")
-  Canvas.background(1)
   return setmetatable({
       bunnies = {},
-      bank = Bank.new("./assets/sheet.png", 26, 37),
-      font = Font.default(),
+      bank = nil,
+      font = nil,
       speed = 1.0,
       running = true
     }, Game)
 end
 
 function Game:init()
+--dump(Canvas)
   Canvas.palette("gameboy")
   Canvas.background(1)
+
+  self.bank = Bank.new("./assets/sheet.png", 26, 37)
+  self.font = Font.default()
 end
 
 function Game:input()
@@ -58,7 +59,7 @@ function Game:input()
   elseif Input.is_key_pressed(Input.DOWN) then
     self.speed = 1.0
   elseif Input.is_key_pressed(Input.SELECT) then
-    self.bunnies.clear()
+    self.bunnies = {}
   elseif Input.is_key_pressed(Input.Y) then
     self.running = not self.running
   end

@@ -20,13 +20,13 @@
  * SOFTWARE.
  **/
 
-#ifndef __MODULES_GRAPHICS_H__
-#define __MODULES_GRAPHICS_H__
+#ifndef __MODULES_TIMER_H__
+#define __MODULES_TIMER_H__
 
-#include <stdbool.h>
+typedef struct lua_State lua_State;
 
-#include "../core/luax.h"
+extern const char timer_script[];
 
-extern bool graphics_initialize(lua_State *L);
+extern int timer_loader(lua_State *L);
 
-#endif  /* __MODULES_GRAPHICS_H__ */
+#endif  /* __MODULES_TIMER_H__ */

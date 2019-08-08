@@ -20,25 +20,13 @@
  * SOFTWARE.
  **/
 
-#ifndef __GL_PALETTE_H__
-#define __GL_PALETTE_H__
+#ifndef __MODULES_FONT_H__
+#define __MODULES_FONT_H__
 
-#include <stddef.h>
+typedef struct lua_State lua_State;
 
-#include "common.h"
+extern const char font_script[];
 
-#define GL_MAX_PALETTE_COLORS       256
+extern int font_loader(lua_State *L);
 
-typedef struct _GL_Palette_t {
-    GL_Color_t colors[GL_MAX_PALETTE_COLORS];
-    size_t count;
-} GL_Palette_t;
-
-extern void GL_palette_greyscale(GL_Palette_t *palette, size_t count);
-extern GL_Color_t GL_palette_parse_color(const char *argb);
-extern void GL_palette_format_color(char *argb, const GL_Color_t color);
-extern void GL_palette_normalize(const GL_Palette_t *palette, GLfloat *colors);
-extern void GL_palette_normalize_color(const GL_Color_t color, GLfloat rgba[4]);
-extern size_t GL_palette_find_nearest_color(const GL_Palette_t *palette, const GL_Color_t color);
-
-#endif  /* __GL_PALETTE_H__ */
+#endif  /* __MODULES_FONT_H__ */

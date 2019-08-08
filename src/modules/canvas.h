@@ -20,13 +20,13 @@
  * SOFTWARE.
  **/
 
-#ifndef __MODULES_COLLECTIONS_H__
-#define __MODULES_COLLECTIONS_H__
+#ifndef __MODULES_CANVAS_H__
+#define __MODULES_CANVAS_H__
 
-#include <stdbool.h>
+typedef struct lua_State lua_State;
 
-#include "../core/luax.h"
+extern const char canvas_script[];
 
-extern bool collections_initialize(lua_State *L);
+extern int canvas_loader(lua_State *L);
 
-#endif  /* __MODULES_COLLECTIONS_H__ */
+#endif  /* __MODULES_CANVAS_H__ */

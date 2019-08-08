@@ -106,8 +106,6 @@ int luaX_newclass(lua_State *L, const luaL_Reg *f, const luaL_Reg *m, const luaX
 
     luaL_setfuncs(L, f, 0); // Register the function into the table at the top of the stack, i.e. create the methods
 
-    luaL_setfuncs(L, m, 0); // Set the methods to the metatable that should be accessed via object:func
-
     for (; c->name; c++) {
         switch (c->type) {
             case LUA_CT_BOOLEAN: { lua_pushboolean(L, c->value.b); } break;
@@ -117,6 +115,9 @@ int luaX_newclass(lua_State *L, const luaL_Reg *f, const luaL_Reg *m, const luaX
         }
         lua_setfield(L, -2, c->name);
     }
+
+//    lua_createtable(L, 0, 0);
+    luaL_setfuncs(L, m, 0); // Set the methods to the metatable that should be accessed via object:func
 
     return 1;
 }

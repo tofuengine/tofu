@@ -20,8 +20,9 @@
  * SOFTWARE.
  **/
 
-#include "util.h"
+#include "timer.h"
 
+#include "../core/luax.h"
 #include "../core/timerpool.h"
 
 #include "../config.h"
@@ -33,57 +34,40 @@ typedef struct _Timer_Class_t {
     Timer_t *timer;
 } Timer_Class_t;
 
-static const char *util_lua =
-    "\n"
-;
+static int timer_new(lua_State *L);
+static int timer_gc(lua_State *L);
+static int timer_reset(lua_State *L);
+static int timer_cancel(lua_State *L);
 
-static int util_timer_new(lua_State *L);
-static int util_timer_gc(lua_State *L);
-static int util_timer_reset(lua_State *L);
-static int util_timer_cancel(lua_State *L);
-
-static const struct luaL_Reg util_timer_f[] = {
-    { "new", util_timer_new },
+static const struct luaL_Reg timer_f[] = {
+    { "new", timer_new },
     { NULL, NULL }
 };
 
-static const struct luaL_Reg util_timer_m[] = {
-    {"__gc", util_timer_gc },
-    { "reset", util_timer_reset },
-    { "cancel", util_timer_cancel },
+static const struct luaL_Reg timer_m[] = {
+    {"__gc", timer_gc },
+    { "reset", timer_reset },
+    { "cancel", timer_cancel },
     { NULL, NULL }
 };
 
-static const luaX_Const util_timer_c[] = {
+static const luaX_Const timer_c[] = {
     { NULL }
 };
 
-static int luaopen_module(lua_State *L)
+const char timer_script[] =
+    "\n"
+;
+
+int timer_loader(lua_State *L)
 {
-    lua_newtable(L);
-
-    luaX_newclass(L, util_timer_f, util_timer_m, util_timer_c, LUAX_CLASS(Timer_Class_t));
-    lua_setfield(L, -2, "Timer");
-
-    return 1;
+    return luaX_newclass(L, timer_f, timer_m, timer_c, LUAX_CLASS(Timer_Class_t));
 }
 
-bool util_initialize(lua_State *L)
-{
-    luaX_preload(L, "util", luaopen_module);
-
-    if (luaL_dostring(L, util_lua) != 0) {
-        Log_write(LOG_LEVELS_FATAL, "<VM> can't open script: %s", lua_tostring(L, -1));
-        return false;
-    }
-
-    return true;
-}
-
-static int util_timer_new(lua_State *L)
+static int timer_new(lua_State *L)
 {
     if (lua_gettop(L) != 3) {
-        return luaL_error(L, "<UTIL> timer constructor requires 3 arguments");
+        return luaL_error(L, "<TIMER> timer constructor requires 3 arguments");
     }
     double period = luaL_checknumber(L, 1);
     int repeats = luaL_checkinteger(L, 2);
@@ -103,14 +87,14 @@ static int util_timer_new(lua_State *L)
             .callback = callback
         });
 
-    Log_write(LOG_LEVELS_DEBUG, "<UTIL> timer #%p allocated", instance->timer);
+    Log_write(LOG_LEVELS_DEBUG, "<TIMER> timer #%p allocated", instance->timer);
 
     luaL_setmetatable(L, LUAX_CLASS(Timer_Class_t));
 
     return 1;
 }
 
-static int util_timer_gc(lua_State *L)
+static int timer_gc(lua_State *L)
 {
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Timer.gc()");
@@ -118,7 +102,7 @@ static int util_timer_gc(lua_State *L)
 
     Timer_Class_t *instance = (Timer_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Timer_Class_t));
 
-    Log_write(LOG_LEVELS_DEBUG, "<UTIL> finalizing timer #%p", instance->timer);
+    Log_write(LOG_LEVELS_DEBUG, "<TIMER> finalizing timer #%p", instance->timer);
 
     luaL_unref(L, LUA_REGISTRYINDEX, instance->timer->value.callback); // TODO: move to the timer gc callback.
 
@@ -127,7 +111,7 @@ static int util_timer_gc(lua_State *L)
     return 0;
 }
 
-static int util_timer_reset(lua_State *L)
+static int timer_reset(lua_State *L)
 {
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Timer.cancel()");
@@ -140,7 +124,7 @@ static int util_timer_reset(lua_State *L)
     return 0;
 }
 
-static int util_timer_cancel(lua_State *L)
+static int timer_cancel(lua_State *L)
 {
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Timer.cancel()");

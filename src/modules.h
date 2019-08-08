@@ -27,8 +27,6 @@
 
 #include "core/luax.h"
 
-typedef bool (*Module_Callback_t)(lua_State *L);
-
-extern const Module_Callback_t modules[];
+extern bool modules_initialize(lua_State *L);
 
 #endif  /* __TOFU_MODULES_H__ */

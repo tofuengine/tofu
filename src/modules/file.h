@@ -20,13 +20,13 @@
  * SOFTWARE.
  **/
 
-#ifndef __MODULES_IO_H__
-#define __MODULES_IO_H__
+#ifndef __MODULES_FILE_H__
+#define __MODULES_FILE_H__
 
-#include <stdbool.h>
+typedef struct lua_State lua_State;
 
-#include "../core/luax.h"
+extern const char file_script[];
 
-extern bool io_initialize(lua_State *L);
+extern int file_loader(lua_State *L);
 
-#endif  /* __MODULES_IO_H__ */
+#endif  /* __MODULES_FILE_H__ */

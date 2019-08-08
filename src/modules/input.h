@@ -20,13 +20,13 @@
  * SOFTWARE.
  **/
 
-#ifndef __MODULES_EVENTS_H__
-#define __MODULES_EVENTS_H__
+#ifndef __MODULES_INPUT_H__
+#define __MODULES_INPUT_H__
 
-#include <stdbool.h>
+typedef struct lua_State lua_State;
 
-#include "../core/luax.h"
+extern const char input_script[];
 
-extern bool events_initialize(lua_State *L);
+extern int input_loader(lua_State *L);
 
-#endif  /* __MODULES_EVENTS_H__ */
+#endif  /* __MODULES_INPUT_H__ */

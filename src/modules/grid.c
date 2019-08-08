@@ -20,12 +20,14 @@
  * SOFTWARE.
  **/
 
-#include "collections.h"
+#include "grid.h"
 
-#include <stdlib.h>
+#include "../core/luax.h"
 
 #include "../config.h"
 #include "../log.h"
+
+#include <stdlib.h>
 
 #ifdef __GRID_INTEGER_CELL__
 typedef long Cell_t;
@@ -40,62 +42,45 @@ typedef struct _Grid_Class_t {
     Cell_t **offsets; // Precomputed pointers to the line of data.
 } Grid_Class_t;
 
-static const char *collections_lua =
-    "\n"
-;
+static int grid_new(lua_State *L);
+static int grid_gc(lua_State *L);
+static int grid_width(lua_State *L);
+static int grid_height(lua_State *L);
+static int grid_fill(lua_State *L);
+static int grid_stride(lua_State *L);
+static int grid_peek(lua_State *L);
+static int grid_poke(lua_State *L);
 
-static int collections_grid_new(lua_State *L);
-static int collections_grid_gc(lua_State *L);
-static int collections_grid_width(lua_State *L);
-static int collections_grid_height(lua_State *L);
-static int collections_grid_fill(lua_State *L);
-static int collections_grid_stride(lua_State *L);
-static int collections_grid_peek(lua_State *L);
-static int collections_grid_poke(lua_State *L);
-
-static const struct luaL_Reg collections_grid_f[] = {
-    { "new", collections_grid_new },
+static const struct luaL_Reg grid_f[] = {
+    { "new", grid_new },
     { NULL, NULL }
 };
 
-static const struct luaL_Reg collections_grid_m[] = {
-    {"__gc", collections_grid_gc },
-    {"width", collections_grid_width },
-    {"height", collections_grid_height },
-    {"fill", collections_grid_fill },
-    {"stride", collections_grid_stride },
-    {"peek", collections_grid_peek },
-    {"poke", collections_grid_poke },
+static const struct luaL_Reg grid_m[] = {
+    {"__gc", grid_gc },
+    {"width", grid_width },
+    {"height", grid_height },
+    {"fill", grid_fill },
+    {"stride", grid_stride },
+    {"peek", grid_peek },
+    {"poke", grid_poke },
     { NULL, NULL }
 };
 
-static const luaX_Const collections_grid_c[] = {
+static const luaX_Const grid_c[] = {
     { NULL }
 };
 
-static int luaopen_module(lua_State *L)
+const char grid_script[] =
+    "\n"
+;
+
+int grid_loader(lua_State *L)
 {
-    lua_newtable(L);
-
-    luaX_newclass(L, collections_grid_f, collections_grid_m, collections_grid_c, LUAX_CLASS(Grid_Class_t));
-    lua_setfield(L, -2, "Grid");
-
-    return 1;
+    return luaX_newclass(L, grid_f, grid_m, grid_c, LUAX_CLASS(Grid_Class_t));
 }
 
-bool collections_initialize(lua_State *L)
-{
-    luaX_preload(L, "collections", luaopen_module);
-
-    if (luaL_dostring(L, collections_lua) != 0) {
-        Log_write(LOG_LEVELS_FATAL, "<VM> can't open script: %s", lua_tostring(L, -1));
-        return false;
-    }
-
-    return true;
-}
-
-static int collections_grid_new(lua_State *L)
+static int grid_new(lua_State *L)
 {
     if (lua_gettop(L) != 3) {
         return luaL_error(L, "<COLLECTIONS> grid constructor requires 3 arguments");
@@ -153,7 +138,7 @@ static int collections_grid_new(lua_State *L)
     return 1;
 }
 
-static int collections_grid_gc(lua_State *L)
+static int grid_gc(lua_State *L)
 {
     if (lua_gettop(L) != 1) {
         return luaL_error(L, "<COLLECTIONS> method requires 1 arguments");
@@ -168,7 +153,7 @@ static int collections_grid_gc(lua_State *L)
     return 0;
 }
 
-static int collections_grid_width(lua_State *L)
+static int grid_width(lua_State *L)
 {
     if (lua_gettop(L) != 1) {
         return luaL_error(L, "<COLLECTIONS> method requires 1 arguments");
@@ -180,7 +165,7 @@ static int collections_grid_width(lua_State *L)
     return 1;
 }
 
-static int collections_grid_height(lua_State *L)
+static int grid_height(lua_State *L)
 {
     if (lua_gettop(L) != 1) {
         return luaL_error(L, "<COLLECTIONS> method requires 1 arguments");
@@ -192,7 +177,7 @@ static int collections_grid_height(lua_State *L)
     return 1;
 }
 
-static int collections_grid_fill(lua_State *L)
+static int grid_fill(lua_State *L)
 {
     if (lua_gettop(L) != 2) {
         return luaL_error(L, "<COLLECTIONS> method requires 2 arguments");
@@ -233,7 +218,7 @@ static int collections_grid_fill(lua_State *L)
     return 0;
 }
 
-static int collections_grid_stride(lua_State *L)
+static int grid_stride(lua_State *L)
 {
     if (lua_gettop(L) != 5) {
         return luaL_error(L, "<COLLECTIONS> method requires 5 arguments");
@@ -277,7 +262,7 @@ static int collections_grid_stride(lua_State *L)
     return 0;
 }
 
-static int collections_grid_peek(lua_State *L)
+static int grid_peek(lua_State *L)
 {
     if (lua_gettop(L) != 3) {
         return luaL_error(L, "<COLLECTIONS> method requires 3 arguments");
@@ -295,7 +280,7 @@ static int collections_grid_peek(lua_State *L)
     return 1;
 }
 
-static int collections_grid_poke(lua_State *L)
+static int grid_poke(lua_State *L)
 {
     if (lua_gettop(L) != 4) {
         return luaL_error(L, "<COLLECTIONS> method requires 4 arguments");

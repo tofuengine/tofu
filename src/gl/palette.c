@@ -26,6 +26,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define RED_WEIGHT      2.0f
+#define GREEN_WEIGHT    4.0f
+#define BLUE_WEIGHT     3.0f
+
 void GL_palette_greyscale(GL_Palette_t *palette, const size_t count)
 {
     for (size_t i = 0; i < count; ++i) {
@@ -71,4 +75,32 @@ void GL_palette_normalize_color(const GL_Color_t color, GLfloat rgba[4])
     rgba[1] = (GLfloat)color.g / (GLfloat)255.0;
     rgba[2] = (GLfloat)color.b / (GLfloat)255.0;
     rgba[3] = (GLfloat)color.b / (GLfloat)255.0;
+}
+
+// https://en.wikipedia.org/wiki/Color_difference
+size_t GL_palette_find_nearest_color(const GL_Palette_t *palette, const GL_Color_t color)
+{
+    size_t index = 0;
+    double minimum = __DBL_MAX__;
+    for (size_t i = 0; i < palette->count; ++i) {
+        const GL_Color_t *current = &palette->colors[i];
+
+        double delta_r = (double)(color.r - current->r);
+        double delta_g = (double)(color.g - current->g);
+        double delta_b = (double)(color.b - current->b);
+#ifdef __FIND_NEAREST_COLOR_EUCLIDIAN__
+        double distance = sqrt((delta_r * delta_r) * RED_WEIGHT
+            + (delta_g * delta_g) * GREEN_WEIGHT
+            + (delta_b * delta_b)) * BLUE_WEIGHT;
+#else
+        double distance = (delta_r * delta_r) * RED_WEIGHT
+            + (delta_g * delta_g) * GREEN_WEIGHT
+            + (delta_b * delta_b) * BLUE_WEIGHT; // Faster, no need to get the Euclidean distance.
+#endif
+        if (minimum > distance) {
+            minimum = distance;
+            index = i;
+        }
+    }
+    return index;
 }

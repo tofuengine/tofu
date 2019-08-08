@@ -1,3 +1,5 @@
+local Canvas = require("tofu.graphics.Canvas")
+
 local Bunny = {}
 
 Bunny.__index = Bunny
@@ -6,9 +8,9 @@ local MAX_SPEED = 500
 local GRAVITY = 981
 local DAMPENING = 0.9
 local MIN_X = 0
-local MAX_X = tofu.graphics.Canvas.width()
+local MAX_X = Canvas.width()
 local MIN_Y = 0
-local MAX_Y = tofu.graphics.Canvas.height()
+local MAX_Y = Canvas.height()
 
 function Bunny.new(bank)
   return setmetatable({

@@ -20,7 +20,9 @@
  * SOFTWARE.
  **/
 
-#include "io.h"
+#include "file.h"
+
+#include "../core/luax.h"
 
 #include "../environment.h"
 #include "../file.h"
@@ -28,51 +30,37 @@
 
 #include <string.h>
 
-static const char *io_lua =
-    "\n"
-;
+typedef struct _File_Class_t {
+} File_Class_t;
 
-static int io_file_read(lua_State *L);
+static int file_read(lua_State *L);
 
-static const struct luaL_Reg io_file_f[] = {
-    { "read", io_file_read },
+static const struct luaL_Reg file_f[] = {
+    { "read", file_read },
     { NULL, NULL }
 };
 
-static const struct luaL_Reg io_file_m[] = {
+static const struct luaL_Reg file_m[] = {
     { NULL, NULL }
 };
 
-static const luaX_Const io_file_c[] = {
+static const luaX_Const file_c[] = {
     { NULL }
 };
 
-static int luaopen_module(lua_State *L)
+const char file_script[] =
+    "\n"
+;
+
+int file_loader(lua_State *L)
 {
-    lua_newtable(L);
-
-    luaX_newclass(L, io_file_f, io_file_m, io_file_c, "File");
-    lua_setfield(L, -2, "File");
-
-    return 1;
+    return luaX_newclass(L, file_f, file_m, file_c, LUAX_CLASS(File_Class_t));
 }
 
-bool io_initialize(lua_State *L)
-{
-    luaX_preload(L, "tofu.io", luaopen_module);
-
-    if (luaL_dostring(L, io_lua) != 0) {
-        Log_write(LOG_LEVELS_FATAL, "<IO> can't open script: %s", lua_tostring(L, -1));
-        return false;
-    }
-
-    return true;
-}
-
-static int io_file_read(lua_State *L)
+static int file_read(lua_State *L)
 {
     if (lua_gettop(L) != 1) {
-        return luaL_error(L, "<IO> function requires 1 argument");
+        return luaL_error(L, "<FILE> function requires 1 argument");
     }
     const char *file = luaL_checkstring(L, 1);
 #ifdef __DEBUG_API_CALLS__
@@ -85,7 +73,7 @@ static int io_file_read(lua_State *L)
     strcat(pathfile, file + 2);
 
     const char *result = file_load_as_string(pathfile, "rt");
-    Log_write(LOG_LEVELS_DEBUG, "<IO> file '%s' loaded at %p", pathfile, result);
+    Log_write(LOG_LEVELS_DEBUG, "<FILE> file '%s' loaded at %p", pathfile, result);
 
     lua_pushstring(L, result);
 

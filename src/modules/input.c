@@ -20,51 +20,36 @@
  * SOFTWARE.
  **/
 
-#include "events.h"
+#include "input.h"
+
+#include "../core/luax.h"
 
 #include "../environment.h"
 #include "../log.h"
 
 #include <string.h>
 
-static const char *events_lua =
-    "\n"
-;
+typedef struct _Input_Class_t {
+} Input_Class_t;
 
-static int events_environment_fps(lua_State *L);
-static int events_environment_quit(lua_State *L);
-static int events_input_is_key_down(lua_State *L);
-static int events_input_is_key_up(lua_State *L);
-static int events_input_is_key_pressed(lua_State *L);
-static int events_input_is_key_released(lua_State *L);
+static int input_is_key_down(lua_State *L);
+static int input_is_key_up(lua_State *L);
+static int input_is_key_pressed(lua_State *L);
+static int input_is_key_released(lua_State *L);
 
-static const struct luaL_Reg events_environment_f[] = {
-    { "fps", events_environment_fps },
-    { "quit", events_environment_quit },
+static const struct luaL_Reg input_f[] = {
+    { "is_key_down", input_is_key_down },
+    { "is_key_up", input_is_key_up },
+    { "is_key_pressed", input_is_key_pressed },
+    { "is_key_released", input_is_key_released },
     { NULL, NULL }
 };
 
-static const struct luaL_Reg events_environment_m[] = {
+static const struct luaL_Reg input_m[] = {
     { NULL, NULL }
 };
 
-static const luaX_Const events_environment_c[] = {
-    { NULL }
-};
-
-static const struct luaL_Reg events_input_f[] = {
-    { "is_key_down", events_input_is_key_down },
-    { "is_key_up", events_input_is_key_up },
-    { "is_key_pressed", events_input_is_key_pressed },
-    { "is_key_released", events_input_is_key_released },
-    { NULL, NULL }
-};
-
-static const struct luaL_Reg events_input_m[] = {
-    { NULL, NULL }
-};
-
-static const luaX_Const events_input_c[] = {
+static const luaX_Const input_c[] = {
     { "UP", LUA_CT_INTEGER, { .i = 0 } },
     { "DOWN", LUA_CT_INTEGER, { .i = 1 } },
     { "LEFT", LUA_CT_INTEGER, { .i = 2 } },
@@ -78,60 +63,19 @@ static const luaX_Const events_input_c[] = {
     { NULL }
 };
 
-static int luaopen_module(lua_State *L)
+const char input_script[] =
+    "\n"
+;
+
+int input_loader(lua_State *L)
 {
-    lua_newtable(L);
-
-    luaX_newclass(L, events_environment_f, events_environment_m, events_environment_c, "Environment");
-    lua_setfield(L, -2, "Environment");
-
-    luaX_newclass(L, events_input_f, events_input_m, events_input_c, "Input");
-    lua_setfield(L, -2, "Input");
-
-    return 1;
+    return luaX_newclass(L, input_f, input_m, input_c, LUAX_CLASS(Input_Class_t));
 }
 
-bool events_initialize(lua_State *L)
-{
-    luaX_preload(L, "events", luaopen_module);
-
-    if (luaL_dostring(L, events_lua) != 0) {
-        Log_write(LOG_LEVELS_FATAL, "<EVENTS> can't open script: %s", lua_tostring(L, -1));
-        return false;
-    }
-
-    return true;
-}
-
-static int events_environment_fps(lua_State *L)
-{
-    if (lua_gettop(L) != 0) {
-        return luaL_error(L, "<EVENTS> function requires 0 argument");
-    }
-
-    Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
-
-    lua_pushinteger(L, environment->fps);
-    return 1;
-}
-
-static int events_environment_quit(lua_State *L)
-{
-    if (lua_gettop(L) != 0) {
-        return luaL_error(L, "<EVENTS> function requires 0 argument");
-    }
-
-    Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
-
-    environment->should_close = true;
-
-    return 0;
-}
-
-static int events_input_is_key_down(lua_State *L)
+static int input_is_key_down(lua_State *L)
 {
     if (lua_gettop(L) != 1) {
-        return luaL_error(L, "<EVENTS> function requires 1 argument");
+        return luaL_error(L, "<INPUT> function requires 1 argument");
     }
     int key = luaL_checkinteger(L, 1);
 
@@ -143,10 +87,10 @@ static int events_input_is_key_down(lua_State *L)
     return 1;
 }
 
-static int events_input_is_key_up(lua_State *L)
+static int input_is_key_up(lua_State *L)
 {
     if (lua_gettop(L) != 1) {
-        return luaL_error(L, "<EVENTS> function requires 1 argument");
+        return luaL_error(L, "<INPUT> function requires 1 argument");
     }
     int key = luaL_checkinteger(L, 1);
 
@@ -158,10 +102,10 @@ static int events_input_is_key_up(lua_State *L)
     return 1;
 }
 
-static int events_input_is_key_pressed(lua_State *L)
+static int input_is_key_pressed(lua_State *L)
 {
     if (lua_gettop(L) != 1) {
-        return luaL_error(L, "<EVENTS> function requires 1 argument");
+        return luaL_error(L, "<INPUT> function requires 1 argument");
     }
     int key = luaL_checkinteger(L, 1);
 
@@ -173,10 +117,10 @@ static int events_input_is_key_pressed(lua_State *L)
     return 1;
 }
 
-static int events_input_is_key_released(lua_State *L)
+static int input_is_key_released(lua_State *L)
 {
     if (lua_gettop(L) != 1) {
-        return luaL_error(L, "<EVENTS> function requires 1 argument");
+        return luaL_error(L, "<INPUT> function requires 1 argument");
     }
     int key = luaL_checkinteger(L, 1);
 

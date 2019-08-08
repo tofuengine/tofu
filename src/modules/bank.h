@@ -20,13 +20,13 @@
  * SOFTWARE.
  **/
 
-#ifndef __MODULES_UTIL_H__
-#define __MODULES_UTIL_H__
+#ifndef __MODULES_BANK_H__
+#define __MODULES_BANK_H__
 
-#include <stdbool.h>
+typedef struct lua_State lua_State;
 
-#include "../core/luax.h"
+extern const char bank_script[];
 
-extern bool util_initialize(lua_State *L);
+extern int bank_loader(lua_State *L);
 
-#endif  /* __MODULES_UTIL_H__ */
+#endif  /* __MODULES_BANK_H__ */

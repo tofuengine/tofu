@@ -1,0 +1,330 @@
+/*
+ * Copyright (c) 2019 Marco Lizza (marco.lizza@gmail.com)
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ **/
+
+#include "canvas.h"
+
+#include "../core/luax.h"
+
+#include "../config.h"
+#include "../environment.h"
+#include "../log.h"
+#include "../gl/gl.h"
+
+#include "graphics/palettes.h"
+#include "graphics/sheets.h"
+
+#include <math.h>
+#include <string.h>
+
+typedef struct _Bank_Class_t {
+    // char pathfile[PATH_FILE_MAX];
+    GL_Sheet_t sheet;
+} Bank_Class_t;
+
+static int bank_new(lua_State *L);
+static int bank_gc(lua_State *L);
+static int bank_cell_width(lua_State *L);
+static int bank_cell_height(lua_State *L);
+static int bank_blit(lua_State *L);
+
+static const struct luaL_Reg bank_f[] = {
+    { "new", bank_new },
+    { NULL, NULL }
+};
+
+static const struct luaL_Reg bank_m[] = {
+    {"__gc", bank_gc },
+    { "cell_width", bank_cell_width },
+    { "cell_height", bank_cell_height },
+    { "blit", bank_blit },
+    { NULL, NULL }
+};
+
+static const luaX_Const bank_c[] = {
+    { NULL }
+};
+
+const char bank_script[] =
+    "\n"
+;
+
+int bank_loader(lua_State *L)
+{
+    return luaX_newclass(L, bank_f, bank_m, bank_c, LUAX_CLASS(Bank_Class_t));
+}
+
+static void to_indexed_atlas_callback(void *parameters, void *data, int width, int height) // TODO: convert image with a shader.
+{
+    const GL_Palette_t *palette = (const GL_Palette_t *)parameters;
+
+    GL_Color_t *pixels = (GL_Color_t *)data;
+
+    for (int y = 0; y < height; ++y) {
+        int row_offset = width * y;
+        for (int x = 0; x < width; ++x) {
+            int offset = row_offset + x;
+
+            GL_Color_t color = pixels[offset];
+            if (color.a == 0) { // Skip transparent colors.
+                continue;
+            }
+
+            size_t index = GL_palette_find_nearest_color(palette, color);
+            pixels[offset] = (GL_Color_t){ index, index, index, color.a };
+        }
+    }
+}
+
+static int bank_new(lua_State *L)
+{
+    if (lua_gettop(L) != 3) {
+        return luaL_error(L, "<BANK>> bank constructor requires 3 arguments");
+    }
+    const char *file = luaL_checkstring(L, 1);
+    int cell_width = luaL_checkinteger(L, 2);
+    int cell_height = luaL_checkinteger(L, 3);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Bank.new() -> %s, %d, %d", file, cell_width, cell_height);
+#endif
+    Bank_Class_t *instance = (Bank_Class_t *)lua_newuserdata(L, sizeof(Bank_Class_t));
+
+    Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
+
+    char pathfile[PATH_FILE_MAX] = {};
+    strcpy(pathfile, environment->base_path);
+    strcat(pathfile, file + 2);
+
+    GL_Sheet_t sheet;
+    GL_sheet_load(&sheet, pathfile, cell_width, cell_height, to_indexed_atlas_callback, (void *)&environment->display->palette);
+    Log_write(LOG_LEVELS_DEBUG, "<BANK> bank '%s' allocated as #%p", pathfile, instance);
+
+    *instance = (Bank_Class_t){
+            .sheet = sheet
+        };
+
+    luaL_setmetatable(L, LUAX_CLASS(Bank_Class_t));
+
+    return 1;
+}
+
+static int bank_gc(lua_State *L)
+{
+    if (lua_gettop(L) != 1) {
+        return luaL_error(L, "<BANK> method requires 1 arguments");
+    }
+    Bank_Class_t *instance = (Bank_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Bank_Class_t));
+
+    GL_sheet_delete(&instance->sheet);
+    Log_write(LOG_LEVELS_DEBUG, "<BANK> bank #%p finalized", instance);
+
+    *instance = (Bank_Class_t){};
+
+    return 0;
+}
+
+static int bank_cell_width(lua_State *L)
+{
+    if (lua_gettop(L) != 0) {
+        return luaL_error(L, "<BANK> method requires 0 arguments");
+    }
+    Bank_Class_t *instance = (Bank_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Bank_Class_t));
+
+    lua_pushinteger(L, instance->sheet.quad.width);
+
+    return 1;
+}
+
+static int bank_cell_height(lua_State *L)
+{
+    if (lua_gettop(L) != 0) {
+        return luaL_error(L, "<BANK> method requires 0 arguments");
+    }
+    Bank_Class_t *instance = (Bank_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Bank_Class_t));
+
+    lua_pushinteger(L, instance->sheet.quad.height);
+
+    return 1;
+}
+
+static int bank_blit4(lua_State *L)
+{
+    if (lua_gettop(L) != 4) {
+        return luaL_error(L, "<BANK> method requires 4 arguments");
+    }
+    Bank_Class_t *instance = (Bank_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Bank_Class_t));
+    int cell_id = luaL_checkinteger(L, 2);
+    double x = (double)luaL_checknumber(L, 3);
+    double y = (double)luaL_checknumber(L, 4);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f", cell_id, x, y);
+#endif
+
+    double dw = (double)instance->sheet.quad.width;
+    double dh = (double)instance->sheet.quad.height;
+
+    int dx = (int)x;
+    int dy = (int)y;
+
+    GL_Quad_t destination = (GL_Quad_t){ (GLfloat)dx, (GLfloat)dy, (GLfloat)dx + (GLfloat)dw, (GLfloat)dy + (GLfloat)dh };
+
+    const GL_Sheet_t *sheet = &instance->sheet;
+    GL_sheet_blit_fast(sheet, cell_id, destination, (GL_Color_t){ 255, 255, 255, 255 });
+
+    return 0;
+}
+
+static int bank_blit5(lua_State *L)
+{
+    if (lua_gettop(L) != 5) {
+        return luaL_error(L, "<BANK> method requires 5 arguments");
+    }
+    Bank_Class_t *instance = (Bank_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Bank_Class_t));
+    int cell_id = luaL_checkinteger(L, 2);
+    double x = (double)luaL_checknumber(L, 3);
+    double y = (double)luaL_checknumber(L, 4);
+    double rotation = (double)luaL_checknumber(L, 5);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f, %.f", cell_id, x, y, rotation);
+#endif
+
+    double dw = (double)instance->sheet.quad.width;
+    double dh = (double)instance->sheet.quad.height;
+
+    int dx = (int)x;
+    int dy = (int)y;
+
+    GL_Quad_t destination = (GL_Quad_t){ (GLfloat)dx, (GLfloat)dy, (GLfloat)dx + (GLfloat)dw, (GLfloat)dy + (GLfloat)dh };
+
+    const GL_Sheet_t *sheet = &instance->sheet;
+    GL_sheet_blit(sheet, cell_id, destination, rotation, (GL_Color_t){ 255, 255, 255, 255 });
+
+    return 0;
+}
+
+static int bank_blit6(lua_State *L)
+{
+    if (lua_gettop(L) != 6) {
+        return luaL_error(L, "<BANK> method requires 6 arguments");
+    }
+    Bank_Class_t *instance = (Bank_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Bank_Class_t));
+    int cell_id = luaL_checkinteger(L, 2);
+    double x = (double)luaL_checknumber(L, 3);
+    double y = (double)luaL_checknumber(L, 4);
+    double scale_x = (double)luaL_checknumber(L, 5);
+    double scale_y = (double)luaL_checknumber(L, 6);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f, %.f, %.f", cell_id, x, y, scale_x, scale_y);
+#endif
+
+#ifdef __NO_MIRRORING__
+    double dw = (double)instance->sheet.quad.width * fabs(scale_x);
+    double dh = (double)instance->sheet.quad.height * fabs(scale_y);
+#else
+    double dw = (double)instance->sheet.quad.width * scale_x; // The sign controls the mirroring.
+    double dh = (double)instance->sheet.quad.height * scale_y;
+#endif
+
+    int dx = (int)x;
+    int dy = (int)y;
+
+    GL_Quad_t destination = (GL_Quad_t){ (GLfloat)dx, (GLfloat)dy, (GLfloat)dx + (GLfloat)dw, (GLfloat)dy + (GLfloat)dh };
+
+#ifndef __NO_MIRRORING__
+    if (dw < 0.0) { // Compensate for mirroring!
+        destination.x0 -= dw;
+        destination.x1 -= dw;
+    }
+    if (dh < 0.0) {
+        destination.y0 -= dh;
+        destination.y1 -= dh;
+    }
+#endif
+
+    const GL_Sheet_t *sheet = &instance->sheet;
+    GL_sheet_blit_fast(sheet, cell_id, destination, (GL_Color_t){ 255, 255, 255, 255 });
+
+    return 0;
+}
+
+static int bank_blit7(lua_State *L)
+{
+    if (lua_gettop(L) != 7) {
+        return luaL_error(L, "<BANK> method requires 7 arguments");
+    }
+    Bank_Class_t *instance = (Bank_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Bank_Class_t));
+    int cell_id = luaL_checkinteger(L, 2);
+    double x = (double)luaL_checknumber(L, 3);
+    double y = (double)luaL_checknumber(L, 4);
+    double rotation = (double)luaL_checknumber(L, 5);
+    double scale_x = (double)luaL_checknumber(L, 6);
+    double scale_y = (double)luaL_checknumber(L, 7);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f, %.f, %.f, %.f", cell_id, x, y, rotation, scale_x, scale_y);
+#endif
+
+#ifdef __NO_MIRRORING__
+    double dw = (double)instance->sheet.quad.width * fabs(scale_x);
+    double dw = (double)instance->sheet.quad.height * fabs(scale_y);
+#else
+    double dw = (double)instance->sheet.quad.width * scale_x; // The sign controls the mirroring.
+    double dh = (double)instance->sheet.quad.height * scale_y;
+#endif
+
+    int dx = (int)x;
+    int dy = (int)y;
+
+    GL_Quad_t destination = (GL_Quad_t){ (GLfloat)dx, (GLfloat)dy, (GLfloat)dx + (GLfloat)dw, (GLfloat)dy + (GLfloat)dh };
+
+#ifndef __NO_MIRRORING__
+    if (dw < 0.0) { // Compensate for mirroring!
+        destination.x0 -= dw;
+        destination.x1 -= dw;
+    }
+    if (dh < 0.0) {
+        destination.y0 -= dh;
+        destination.y1 -= dh;
+    }
+#endif
+
+    const GL_Sheet_t *sheet = &instance->sheet;
+    GL_sheet_blit(sheet, cell_id, destination, rotation, (GL_Color_t){ 255, 255, 255, 255 });
+
+    return 0;
+}
+
+static int bank_blit(lua_State *L)
+{
+    if (lua_gettop(L) == 4) {
+        return bank_blit4(L);
+    } else
+    if (lua_gettop(L) == 5) {
+        return bank_blit5(L);
+    } else
+    if (lua_gettop(L) == 6) {
+        return bank_blit6(L);
+    } else
+    if (lua_gettop(L) == 7) {
+        return bank_blit7(L);
+    } else {
+        return luaL_error(L, "<BANK> wrong argument number for method");
+    }
+}

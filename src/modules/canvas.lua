@@ -1,3 +1,5 @@
+local Canvas = require("tofu.graphics.Canvas")
+
 Canvas.point = function(x0, y0, color)
   Canvas.points({ x0, y0 }, color)
 end
