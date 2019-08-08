@@ -58,7 +58,7 @@ static const luaX_Const util_timer_c[] = {
     { NULL }
 };
 
-static int luaopen_util(lua_State *L)
+static int luaopen_module(lua_State *L)
 {
     lua_newtable(L);
 
@@ -70,7 +70,7 @@ static int luaopen_util(lua_State *L)
 
 bool util_initialize(lua_State *L)
 {
-    luaX_preload(L, "util", luaopen_util);
+    luaX_preload(L, "util", luaopen_module);
 
     if (luaL_dostring(L, util_lua) != 0) {
         Log_write(LOG_LEVELS_FATAL, "<VM> can't open script: %s", lua_tostring(L, -1));

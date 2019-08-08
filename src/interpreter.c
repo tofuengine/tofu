@@ -41,14 +41,22 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 #include <time.h>
 #endif
 
-#define ROOT_INSTANCE           "tofu"
+#define ROOT_INSTANCE           "main"
 
 #define BOOT_SCRIPT \
-    "local Tofu = require(\"tofu\")\n" \
-    "tofu = Tofu.new()\n"
+    "tofu = {\n" \
+    "    collections = require(\"collections\"),\n" \
+    "    events = require(\"events\"),\n" \
+    "    graphics = require(\"graphics\"),\n" \
+    "    io = require(\"tofu.io\"),\n" \
+    "    util = require(\"util\")\n" \
+    "  }\n" \
+    "\n" \
+    "local Main = require(\"main\")\n" \
+    "main = Main.new()\n"
 
 #define SHUTDOWN_SCRIPT \
-    "tofu = nil\n"
+    "main = nil\n"
 
 static void timerpool_update_callback(Timer_t *timer, void *parameters)
 {

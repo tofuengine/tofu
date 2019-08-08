@@ -65,20 +65,20 @@ static const struct luaL_Reg events_input_m[] = {
 };
 
 static const luaX_Const events_input_c[] = {
-    { "UP", LUA_CT_INTEGER, { .i = 265 } },
-    { "DOWN", LUA_CT_INTEGER, { .i = 264 } },
-    { "LEFT", LUA_CT_INTEGER, { .i = 263 } },
-    { "RIGHT", LUA_CT_INTEGER, { .i = 262 } },
-    { "SPACE", LUA_CT_INTEGER, { .i = 32 } },
-    { "ENTER", LUA_CT_INTEGER, { .i = 257 } },
-    { "ESCAPE", LUA_CT_INTEGER, { .i = 256 } },
-    { "Z", LUA_CT_INTEGER, { .i = 90 } },
-    { "X", LUA_CT_INTEGER, { .i = 88 } },
-    { "Q", LUA_CT_INTEGER, { .i = 81 } },
+    { "UP", LUA_CT_INTEGER, { .i = 0 } },
+    { "DOWN", LUA_CT_INTEGER, { .i = 1 } },
+    { "LEFT", LUA_CT_INTEGER, { .i = 2 } },
+    { "RIGHT", LUA_CT_INTEGER, { .i = 3 } },
+    { "Y", LUA_CT_INTEGER, { .i = 4 } },
+    { "X", LUA_CT_INTEGER, { .i = 5 } },
+    { "B", LUA_CT_INTEGER, { .i = 6 } },
+    { "A", LUA_CT_INTEGER, { .i = 7 } },
+    { "SELECT", LUA_CT_INTEGER, { .i = 8 } },
+    { "START", LUA_CT_INTEGER, { .i = 9 } },
     { NULL }
 };
 
-static int luaopen_events(lua_State *L)
+static int luaopen_module(lua_State *L)
 {
     lua_newtable(L);
 
@@ -93,7 +93,7 @@ static int luaopen_events(lua_State *L)
 
 bool events_initialize(lua_State *L)
 {
-    luaX_preload(L, "tofu.events", luaopen_events);
+    luaX_preload(L, "events", luaopen_module);
 
     if (luaL_dostring(L, events_lua) != 0) {
         Log_write(LOG_LEVELS_FATAL, "<EVENTS> can't open script: %s", lua_tostring(L, -1));

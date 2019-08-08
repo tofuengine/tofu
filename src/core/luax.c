@@ -97,13 +97,16 @@ int luaX_newclass(lua_State *L, const luaL_Reg *f, const luaL_Reg *m, const luaX
 {
     luaL_newmetatable(L, name); /* create metatable */
 
+    // Duplicate the metatable, since it will be popped by the 'lua_setfield()' call.
+    // This is equivalent to the following in lua:
+    // metatable = {}
+    // metatable.__index = metatable
     lua_pushvalue(L, -1); /* duplicate the metatable */
     lua_setfield(L, -2, "__index"); /* mt.__index = mt */
 
-    luaL_setfuncs(L, m, 0); /* register metamethods */
-lua_pop(L, 1); // ??? THIS FIXES ALL ??
-    lua_createtable(L, 0, 0); /* create lib table */
-    luaL_setfuncs(L, f, 0);
+    luaL_setfuncs(L, f, 0); // Register the function into the table at the top of the stack, i.e. create the methods
+
+    luaL_setfuncs(L, m, 0); // Set the methods to the metatable that should be accessed via object:func
 
     for (; c->name; c++) {
         switch (c->type) {

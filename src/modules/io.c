@@ -28,7 +28,7 @@
 
 #include <string.h>
 
-static const char *file_lua =
+static const char *io_lua =
     "\n"
 ;
 
@@ -47,7 +47,7 @@ static const luaX_Const io_file_c[] = {
     { NULL }
 };
 
-static int luaopen_tio(lua_State *L)
+static int luaopen_module(lua_State *L)
 {
     lua_newtable(L);
 
@@ -59,9 +59,9 @@ static int luaopen_tio(lua_State *L)
 
 bool io_initialize(lua_State *L)
 {
-    luaX_preload(L, "tofu.io", luaopen_tio);
+    luaX_preload(L, "tofu.io", luaopen_module);
 
-    if (luaL_dostring(L, file_lua) != 0) {
+    if (luaL_dostring(L, io_lua) != 0) {
         Log_write(LOG_LEVELS_FATAL, "<IO> can't open script: %s", lua_tostring(L, -1));
         return false;
     }

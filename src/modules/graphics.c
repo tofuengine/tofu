@@ -46,7 +46,7 @@ typedef struct _Font_Class_t {
 } Font_Class_t;
 
 static const char *graphics_lua =
-    "local graphics = require(\"tofu.graphics\")\n"
+    "local graphics = require(\"graphics\")\n"
     "\n"
     "graphics.Font.default = function()\n"
     "  return graphics.Font.new(\"5x8\", 0, 0)\n"
@@ -185,7 +185,7 @@ static const luaX_Const graphics_font_c[] = {
     { NULL }
 };
 
-static int luaopen_graphics(lua_State *L)
+static int luaopen_module(lua_State *L)
 {
     lua_newtable(L);
 
@@ -203,7 +203,7 @@ static int luaopen_graphics(lua_State *L)
 
 bool graphics_initialize(lua_State *L)
 {
-    luaX_preload(L, "tofu.graphics", luaopen_graphics);
+    luaX_preload(L, "graphics", luaopen_module);
 
     if (luaL_dostring(L, graphics_lua) != 0) {
         Log_write(LOG_LEVELS_FATAL, "<GRAPHICS> can't open script: %s", lua_tostring(L, -1));
@@ -502,19 +502,19 @@ static int graphics_bank_blit7(lua_State *L)
 
 static int graphics_bank_blit(lua_State *L)
 {
-    if (lua_gettop(L) != 4) {
+    if (lua_gettop(L) == 4) {
         return graphics_bank_blit4(L);
     } else
-    if (lua_gettop(L) != 5) {
+    if (lua_gettop(L) == 5) {
         return graphics_bank_blit5(L);
     } else
-    if (lua_gettop(L) != 6) {
+    if (lua_gettop(L) == 6) {
         return graphics_bank_blit6(L);
     } else
-    if (lua_gettop(L) != 7) {
+    if (lua_gettop(L) == 7) {
         return graphics_bank_blit7(L);
     } else {
-        return luaL_error(L, "<GRAPHICS> method requires 1 arguments");
+        return luaL_error(L, "<GRAPHICS> wrong argument number for method");
     }
 }
 

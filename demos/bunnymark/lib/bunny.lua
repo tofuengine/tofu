@@ -1,59 +1,59 @@
-import "graphics" for Canvas
+local Bunny = {}
 
-var MAX_SPEED = 500
-var GRAVITY = 981
-var DAMPENING = 0.9
-var MIN_X = 0
-var MAX_X = Canvas.width
-var MIN_Y = 0
-var MAX_Y = Canvas.height
+Bunny.__index = Bunny
 
-class Bunny {
+local MAX_SPEED = 500
+local GRAVITY = 981
+local DAMPENING = 0.9
+local MIN_X = 0
+local MAX_X = tofu.graphics.Canvas.width()
+local MIN_Y = 0
+local MAX_Y = tofu.graphics.Canvas.height()
 
-    construct new(random, bank) {
-        _x = (MAX_X - MIN_X) / 2 // Spawn in the top-center part of the screen.
-        _y = (MAX_Y - MIN_Y) / 8
-        _vx = (random.float() * MAX_SPEED) - (MAX_SPEED / 2.0)
-        _vy = (random.float() * MAX_SPEED) - (MAX_SPEED / 2.0)
+function Bunny.new(bank)
+  return setmetatable({
+      x = (MAX_X - MIN_X) / 2, -- Spawn in the top-center part of the screen.
+      y = (MAX_Y - MIN_Y) / 8,
+      vx = (math.random() * MAX_SPEED) - (MAX_SPEED / 2.0),
+      vy = (math.random() * MAX_SPEED) - (MAX_SPEED / 2.0),
+      bank = bank
+    }, Bunny)
+end
 
-        _random = random
-        _bank = bank
-    }
+function Bunny:update(delta_time)
+  self.x = self.x + self.vx * delta_time
+  self.y = self.y + self.vy * delta_time
 
-    update(deltaTime) {
-        _x = _x + _vx * deltaTime
-        _y = _y + _vy * deltaTime
+  self.vy = self.vy + GRAVITY * delta_time
 
-        _vy = _vy + GRAVITY * deltaTime
+  if self.x > MAX_X then
+    self.vx = self.vx * DAMPENING * -1.0
+    self.x = MAX_X
+  elseif self.x < MIN_X then
+    self.vx = self.vx * DAMPENING * -1.0
+    self.x = MIN_X
+  end
 
-        if (_x > MAX_X) {
-            _vx = _vx * DAMPENING * -1.0
-            _x = MAX_X
-        } else if (_x < MIN_X) {
-            _vx = _vx * DAMPENING * -1.0
-            _x = MIN_X
-        }
+  if self.y > MAX_Y then
+    self.vy = self.vy * DAMPENING * -1.0
+    self.y = MAX_Y
 
-        if (_y > MAX_Y) {
-            _vy = _vy * DAMPENING * -1.0
-            _y = MAX_Y
+    if math.abs(self.vy) <= 400.0 and math.random() <= 0.10 then  -- Higher bounce occasionally.
+      self.vy = self.vy - ((math.random() * 150.0) + 100.0)
+    end
+  elseif self.y < MIN_Y then
+    self.vy = self.vy * DAMPENING * -1.0
+    self.y = MIN_Y
+  end
+end
 
-            if (_vy.abs <= 400.0 && _random.float() <= 0.10) { // Higher bounce occasionally.
-                _vy = _vy - ((_random.float() * 150.0) + 100.0)
-            }
-        } else if (_y < MIN_Y) {
-            _vy = _vy * DAMPENING * -1.0
-            _y = MIN_Y
-        }
-    }
+function Bunny:render()
+  --var angle = (((_vx.abs > MAX_SPEED) ? MAX_SPEED : _vx.abs) / MAX_SPEED) * 60.0
+  --var rotation = _vx.sign * angle
+  --_bank.blit(0, _x, _y, rotation)
+  --_bank.blit(0, _x, _y, -1.0, -1.0)
+  --_bank.blit(0, _x, _y, _vx.sign, _vy.sign)
+  self.bank:blit(0, self.x, self.y)
+end
 
-    render() {
-        //var angle = (((_vx.abs > MAX_SPEED) ? MAX_SPEED : _vx.abs) / MAX_SPEED) * 60.0
-        //var rotation = _vx.sign * angle
-        //_bank.blit(0, _x, _y, rotation)
-        //_bank.blit(0, _x, _y, -1.0, -1.0)
-        //_bank.blit(0, _x, _y, _vx.sign, _vy.sign)
-        _bank.blit(0, _x, _y)
-    }
-
-}
+return Bunny

@@ -73,7 +73,7 @@ static const luaX_Const collections_grid_c[] = {
     { NULL }
 };
 
-static int luaopen_collections(lua_State *L)
+static int luaopen_module(lua_State *L)
 {
     lua_newtable(L);
 
@@ -85,7 +85,7 @@ static int luaopen_collections(lua_State *L)
 
 bool collections_initialize(lua_State *L)
 {
-    luaX_preload(L, "collections", luaopen_collections);
+    luaX_preload(L, "collections", luaopen_module);
 
     if (luaL_dostring(L, collections_lua) != 0) {
         Log_write(LOG_LEVELS_FATAL, "<VM> can't open script: %s", lua_tostring(L, -1));
