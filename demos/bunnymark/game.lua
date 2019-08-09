@@ -47,7 +47,7 @@ end
 function Game:input()
   if Input.is_key_pressed(Input.START) then
     for i = 1, LITTER_SIZE do
-        table.insert(self.bunnies, Bunny.new(self.bank))
+      table.insert(self.bunnies, Bunny.new(self.bank))
     end
     if #self.bunnies >= MAX_BUNNIES then
       Environment.quit()
@@ -78,8 +78,8 @@ function Game:render(ratio)
   for _, bunny in pairs(self.bunnies) do
     bunny:render()
   end
-  self.font:write(string.format("FPS: %d", Environment.fps()), 0, 0, 0, 1.0, "left")
-  self.font:write(string.format("#%d bunnies", #self.bunnies), Canvas.width(), 0, 3, 1.0, "right")
+  self.font:write(string.format("FPS: %d", Environment.fps()), 0, 0, 0, 1.0, Font.ALIGNMENT_LEFT)
+  self.font:write(string.format("#%d bunnies", #self.bunnies), Canvas.width(), 0, 3, 1.0, Font.ALIGNMENT_RIGHT)
 end
 
 return Game

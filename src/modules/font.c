@@ -35,6 +35,12 @@
 #include <math.h>
 #include <string.h>
 
+typedef enum _Alignment_t {
+    ALIGNMENT_LEFT,
+    ALIGNMENT_RIGHT,
+    ALIGNMENT_CENTER
+} Alignment_t;
+
 typedef struct _Font_Class_t {
     // char pathfile[PATH_FILE_MAX];
     GL_Sheet_t sheet;
@@ -56,6 +62,9 @@ static const struct luaL_Reg font_m[] = {
 };
 
 static const luaX_Const font_c[] = {
+    { "ALIGNMENT_LEFT", LUA_CT_INTEGER, { .i = ALIGNMENT_LEFT } },
+    { "ALIGNMENT_RIGHT", LUA_CT_INTEGER, { .i = ALIGNMENT_RIGHT } },
+    { "ALIGNMENT_CENTER", LUA_CT_INTEGER, { .i = ALIGNMENT_CENTER } },
     { NULL }
 };
 
@@ -153,9 +162,9 @@ static int font_write(lua_State *L)
     double y = luaL_checknumber(L, 4);
     int color = luaL_checkinteger(L, 5);
     double scale = luaL_checknumber(L, 6);
-    const char *align = luaL_checkstring(L, 7);
+    int alignment = luaL_checkinteger(L, 7);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %s, %d, %d, %d, %d, %s", text, x, y, color, scale, align);
+    Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %s, %d, %d, %d, %d, %d", text, x, y, color, scale, alignment);
 #endif
 
     const GL_Sheet_t *sheet = &instance->sheet;
@@ -184,15 +193,15 @@ static int font_write(lua_State *L)
 #endif
 
     int dx, dy; // Always pixel-aligned positions.
-    if (strcasecmp(align, "left") == 0) {
+    if (alignment == ALIGNMENT_LEFT) {
         dx = (int)x;
         dy = (int)y;
     } else
-    if (strcasecmp(align, "center") == 0) {
+    if (alignment == ALIGNMENT_CENTER) {
         dx = (int)(x - (width * 0.5f));
         dy = (int)y;
     } else
-    if (strcasecmp(align, "right") == 0) {
+    if (alignment == ALIGNMENT_RIGHT) {
         dx = (int)(x - width);
         dy = (int)y;
     } else {
