@@ -78,8 +78,8 @@ function Game:render(ratio)
   for _, bunny in pairs(self.bunnies) do
     bunny:render()
   end
-  self.font:write(string.format("FPS: %d", Environment.fps()), 0, 0, 0, 1.0, Font.ALIGNMENT_LEFT)
-  self.font:write(string.format("#%d bunnies", #self.bunnies), Canvas.width(), 0, 3, 1.0, Font.ALIGNMENT_RIGHT)
+  self.font:write(string.format("FPS: %d", Environment.fps()), 0, 0, 0, 1.0, "left")
+  self.font:write(string.format("#%d bunnies", #self.bunnies), Canvas.width(), 0, 3, 1.0, "right")
 end
 
 return Game
