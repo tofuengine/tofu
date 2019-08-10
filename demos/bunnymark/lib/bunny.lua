@@ -1,8 +1,7 @@
 local Canvas = require("tofu.graphics.Canvas")
+local Class = require("tofu.util.class")
 
-local Bunny = {}
-
-Bunny.__index = Bunny
+local Bunny = Class.define()
 
 local MAX_SPEED = 500
 local GRAVITY = 981
@@ -12,14 +11,12 @@ local MAX_X = Canvas.width()
 local MIN_Y = 0
 local MAX_Y = Canvas.height()
 
-function Bunny.new(bank)
-  return setmetatable({
-      x = (MAX_X - MIN_X) / 2, -- Spawn in the top-center part of the screen.
-      y = (MAX_Y - MIN_Y) / 8,
-      vx = (math.random() * MAX_SPEED) - (MAX_SPEED / 2.0),
-      vy = (math.random() * MAX_SPEED) - (MAX_SPEED / 2.0),
-      bank = bank
-    }, Bunny)
+function Bunny:__ctor(bank)
+  self.bank = bank
+  self.x = (MAX_X - MIN_X) / 2 -- Spawn in the top-center part of the screen.
+  self.y = (MAX_Y - MIN_Y) / 8
+  self.vx = (math.random() * MAX_SPEED) - (MAX_SPEED / 2.0)
+  self.vy = (math.random() * MAX_SPEED) - (MAX_SPEED / 2.0)
 end
 
 function Bunny:update(delta_time)

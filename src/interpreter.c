@@ -50,6 +50,8 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 #define SHUTDOWN_SCRIPT \
     "main = nil\n"
 
+// TODO: can the configuration be a Lua file?
+
 static void timerpool_update_callback(Timer_t *timer, void *parameters)
 {
     Interpreter_t *interpreter = (Interpreter_t *)parameters;

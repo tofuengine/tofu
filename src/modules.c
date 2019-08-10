@@ -26,6 +26,7 @@
 
 #include "modules/bank.h"
 #include "modules/canvas.h"
+#include "modules/class.h"
 #include "modules/grid.h"
 #include "modules/environment.h"
 #include "modules/font.h"
@@ -47,6 +48,7 @@ static const Module_t modules[] = {
     { "tofu.graphics.Canvas", canvas_loader, canvas_script },
     { "tofu.graphics.Font", font_loader, font_script },
     { "tofu.io.File", file_loader, file_script },
+    { "tofu.util.class", class_loader, class_script },
     { "tofu.util.Timer", timer_loader, timer_script },
     { NULL, NULL, NULL }
 };

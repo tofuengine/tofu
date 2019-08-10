@@ -1,13 +1,11 @@
+local Class = require("tofu.util.class")
+
 local Game = require("game")
 
-local Main = {}
+local Main = Class.define()
 
-Main.__index = Main
-
-function Main.new()
-  return setmetatable({
-      game = Game.new()
-    }, Main)
+function Main:__ctor()
+  self.game = Game.new()
 end
 
 function Main:init()

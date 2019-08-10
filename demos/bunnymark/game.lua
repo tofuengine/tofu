@@ -1,5 +1,6 @@
 local Bunny = require("lib.bunny")
 
+local Class = require("tofu.util.class")
 local Bank = require("tofu.graphics.Bank")
 local Canvas = require("tofu.graphics.Canvas")
 local Font = require("tofu.graphics.Font")
@@ -9,9 +10,7 @@ local Input = require("tofu.events.Input")
 local LITTER_SIZE = 250
 local MAX_BUNNIES = 32768
 
-local Game = {}
-
-Game.__index = Game
+local Game = Class.define()
 
 function dump(t, spaces)
   spaces = spaces or ""
@@ -25,14 +24,12 @@ function dump(t, spaces)
   end
 end
 
-function Game.new()
-  return setmetatable({
-      bunnies = {},
-      bank = nil,
-      font = nil,
-      speed = 1.0,
-      running = true
-    }, Game)
+function Game:__ctor()
+  self.bunnies = {}
+  self.bank = nil
+  self.font = nil
+  self.speed = 1.0
+  self.running = true
 end
 
 function Game:init()
