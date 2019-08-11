@@ -50,16 +50,16 @@ static const struct luaL_Reg input_m[] = {
 };
 
 static const luaX_Const input_c[] = {
-    { "UP", LUA_CT_INTEGER, { .i = 0 } },
-    { "DOWN", LUA_CT_INTEGER, { .i = 1 } },
-    { "LEFT", LUA_CT_INTEGER, { .i = 2 } },
-    { "RIGHT", LUA_CT_INTEGER, { .i = 3 } },
-    { "Y", LUA_CT_INTEGER, { .i = 4 } },
-    { "X", LUA_CT_INTEGER, { .i = 5 } },
-    { "B", LUA_CT_INTEGER, { .i = 6 } },
-    { "A", LUA_CT_INTEGER, { .i = 7 } },
-    { "SELECT", LUA_CT_INTEGER, { .i = 8 } },
-    { "START", LUA_CT_INTEGER, { .i = 9 } },
+    { "UP", LUA_CT_INTEGER, { .i = DISPLAY_KEY_UP } },
+    { "DOWN", LUA_CT_INTEGER, { .i = DISPLAY_KEY_DOWN } },
+    { "LEFT", LUA_CT_INTEGER, { .i = DISPLAY_KEY_LEFT } },
+    { "RIGHT", LUA_CT_INTEGER, { .i = DISPLAY_KEY_RIGHT } },
+    { "Y", LUA_CT_INTEGER, { .i = DISPLAY_KEY_Y } },
+    { "X", LUA_CT_INTEGER, { .i = DISPLAY_KEY_X } },
+    { "B", LUA_CT_INTEGER, { .i = DISPLAY_KEY_B } },
+    { "A", LUA_CT_INTEGER, { .i = DISPLAY_KEY_A } },
+    { "SELECT", LUA_CT_INTEGER, { .i = DISPLAY_KEY_SELECT } },
+    { "START", LUA_CT_INTEGER, { .i = DISPLAY_KEY_START } },
     { NULL }
 };
 
