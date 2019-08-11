@@ -1,13 +1,13 @@
 local Class = {}
 
-function Class.define(base)
+function Class.define(model)
   local proto = {}
   -- If a base class is defined, the copy all the functions.
   --
   -- This is an instant snapshot, any new field defined runtime in the base
   -- class won't be visible in the derived class.
-  if base then
-    soop.implement(proto, base)
+  if model then
+    Class.implement(proto, model)
   end
   -- This is the standard way in Lua to implement classes.
   proto.__index = proto
