@@ -25,8 +25,6 @@
 
 typedef struct lua_State lua_State;
 
-extern const char font_script[];
-
 extern int font_loader(lua_State *L);
 
 #endif  /* __MODULES_FONT_H__ */

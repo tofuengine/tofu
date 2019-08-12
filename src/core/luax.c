@@ -93,6 +93,37 @@ void luaX_appendpath(lua_State *L, const char *path)
     lua_pop(L, 1); // get rid of package table from top of stack
 }
 
+int luaX_newmodule(lua_State *L, const char *script, const luaL_Reg *f, const luaX_Const *c, const char *name)
+{
+    if (script) {
+        luaL_loadstring(L, script);
+        lua_pcall(L, 0, 1, 0); // Just the export table is returned.
+        lua_pushstring(L, name);
+        lua_setfield(L, -2, "__name");  /* metatable.__name = tname */
+        lua_pushvalue(L, -1);
+        lua_setfield(L, LUA_REGISTRYINDEX, name);  /* registry.name = metatable */
+    } else {
+        luaL_newmetatable(L, name); /* create metatable */
+    }
+
+    lua_pushvalue(L, -1);
+    lua_setfield(L, -2, "__index");  /* metatable.__index = metatable */
+
+    luaL_setfuncs(L, f, 0); // Register the function into the table at the top of the stack, i.e. create the methods
+
+    for (; c->name; c++) {
+        switch (c->type) {
+            case LUA_CT_BOOLEAN: { lua_pushboolean(L, c->value.b); } break;
+            case LUA_CT_INTEGER: { lua_pushinteger(L, c->value.i); } break;
+            case LUA_CT_NUMBER: { lua_pushnumber(L, c->value.n); } break;
+            case LUA_CT_STRING: { lua_pushstring(L, c->value.sz); } break;
+        }
+        lua_setfield(L, -2, c->name);
+    }
+
+    return 1;
+}
+
 int luaX_newclass(lua_State *L, const luaL_Reg *f, const luaL_Reg *m, const luaX_Const *c, const char *name)
 {
     luaL_newmetatable(L, name); /* create metatable */

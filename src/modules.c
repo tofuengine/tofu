@@ -46,7 +46,7 @@ static const Module_t modules[] = {
     { "tofu.events.Input", input_loader, input_script },
     { "tofu.graphics.Bank", bank_loader, bank_script },
     { "tofu.graphics.Canvas", canvas_loader, canvas_script },
-    { "tofu.graphics.Font", font_loader, font_script },
+    { "tofu.graphics.Font", font_loader, NULL },
     { "tofu.io.File", file_loader, file_script },
     { "tofu.util.class", class_loader, class_script },
     { "tofu.util.Timer", timer_loader, timer_script },
@@ -59,6 +59,10 @@ bool modules_initialize(lua_State *L)
         luaX_preload(L, modules[i].namespace, modules[i].loader);
 //        luaL_requiref(L, modules[i].namespace, modules[i].loader, 1);
 //        lua_pop(L, 1);  /* remove lib */
+
+        if (!modules[i].script) {
+            continue;
+        }
 
         if (luaL_dostring(L, modules[i].script) != 0) {
             Log_write(LOG_LEVELS_FATAL, "<MODULES> can't open script: %s", lua_tostring(L, -1));

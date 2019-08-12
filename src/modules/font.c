@@ -44,32 +44,32 @@ static int font_new(lua_State *L);
 static int font_gc(lua_State *L);
 static int font_write(lua_State *L);
 
-static const struct luaL_Reg font_f[] = {
-    { "new", font_new },
-    { NULL, NULL }
-};
+static const char font_script[] =
+    "local Font = {}\n"
+    "\n"
+    "--Font.__index = Font\n"
+    "\n"
+    "Font.default = function()\n"
+    "  return Font.new(\"5x8\", 0, 0)\n"
+    "end\n"
+    "\n"
+    "return Font\n"
+;
 
-static const struct luaL_Reg font_m[] = {
+static const struct luaL_Reg font_functions[] = {
+    { "new", font_new },
     {"__gc", font_gc },
     { "write", font_write },
     { NULL, NULL }
 };
 
-static const luaX_Const font_c[] = {
+static const luaX_Const font_constants[] = {
     { NULL }
 };
 
-const char font_script[] =
-    "local Font = require(\"tofu.graphics.Font\")\n"
-    "\n"
-    "Font.default = function()\n"
-    "  return Font.new(\"5x8\", 0, 0)\n"
-    "end\n"
-;
-
 int font_loader(lua_State *L)
 {
-    return luaX_newclass(L, font_f, font_m, font_c, LUAX_CLASS(Font_Class_t));
+    return luaX_newmodule(L, font_script, font_functions, font_constants, LUAX_CLASS(Font_Class_t));
 }
 
 static void to_font_atlas_callback(void *parameters, void *data, int width, int height)
