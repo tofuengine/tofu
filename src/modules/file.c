@@ -35,26 +35,18 @@ typedef struct _File_Class_t {
 
 static int file_read(lua_State *L);
 
-static const struct luaL_Reg file_f[] = {
+static const struct luaL_Reg file_functions[] = {
     { "read", file_read },
     { NULL, NULL }
 };
 
-static const struct luaL_Reg file_m[] = {
-    { NULL, NULL }
-};
-
-static const luaX_Const file_c[] = {
+static const luaX_Const file_constants[] = {
     { NULL }
 };
 
-const char file_script[] =
-    "\n"
-;
-
 int file_loader(lua_State *L)
 {
-    return luaX_newclass(L, file_f, file_m, file_c, LUAX_CLASS(File_Class_t));
+    return luaX_newmodule(L, NULL, file_functions, file_constants, LUAX_CLASS(File_Class_t));
 }
 
 static int file_read(lua_State *L)

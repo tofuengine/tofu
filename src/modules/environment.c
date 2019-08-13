@@ -35,27 +35,19 @@ typedef struct _Environment_Class_t {
 static int environment_fps(lua_State *L);
 static int environment_quit(lua_State *L);
 
-static const struct luaL_Reg environment_f[] = {
+static const struct luaL_Reg environment_functions[] = {
     { "fps", environment_fps },
     { "quit", environment_quit },
     { NULL, NULL }
 };
 
-static const struct luaL_Reg environment_m[] = {
-    { NULL, NULL }
-};
-
-static const luaX_Const environment_c[] = {
+static const luaX_Const environment_constants[] = {
     { NULL }
 };
 
-const char environment_script[] =
-    "\n"
-;
-
 int environment_loader(lua_State *L)
 {
-    return luaX_newclass(L, environment_f, environment_m, environment_c, LUAX_CLASS(Environment_Class_t));
+    return luaX_newmodule(L, NULL, environment_functions, environment_constants, LUAX_CLASS(Environment_Class_t));
 }
 
 static int environment_fps(lua_State *L)

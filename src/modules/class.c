@@ -26,11 +26,7 @@
 
 #include "../log.h"
 
-const char class_script[] =
-    "\n"
-;
-
-static const char loader_script[] =
+static const char class_script[] =
     "local Class = {}\n"
     "\n"
     "function Class.define(model)\n"
@@ -67,7 +63,5 @@ static const char loader_script[] =
 
 int class_loader(lua_State *L)
 {
-    luaL_loadstring(L, loader_script); // TODO: pack these in a helper function.
-    lua_pcall(L, 0, 1, 0); // Just the export table is returned.
-    return 1;
+    return luaX_newmodule(L, class_script, NULL, NULL, NULL);
 }

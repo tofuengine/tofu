@@ -97,58 +97,39 @@ int luaX_newmodule(lua_State *L, const char *script, const luaL_Reg *f, const lu
 {
     if (script) {
         luaL_loadstring(L, script);
-        lua_pcall(L, 0, 1, 0); // Just the export table is returned.
-        lua_pushstring(L, name);
-        lua_setfield(L, -2, "__name");  /* metatable.__name = tname */
-        lua_pushvalue(L, -1);
-        lua_setfield(L, LUA_REGISTRYINDEX, name);  /* registry.name = metatable */
+        lua_pcall(L, 0, LUA_MULTRET, 0); // Just the export table is returned.
+        if (name) {
+            lua_pushstring(L, name);
+            lua_setfield(L, -2, "__name");  /* metatable.__name = tname */
+            lua_pushvalue(L, -1);
+            lua_setfield(L, LUA_REGISTRYINDEX, name);  /* registry.name = metatable */
+        }
     } else {
         luaL_newmetatable(L, name); /* create metatable */
     }
-
-    lua_pushvalue(L, -1);
-    lua_setfield(L, -2, "__index");  /* metatable.__index = metatable */
-
-    luaL_setfuncs(L, f, 0); // Register the function into the table at the top of the stack, i.e. create the methods
-
-    for (; c->name; c++) {
-        switch (c->type) {
-            case LUA_CT_BOOLEAN: { lua_pushboolean(L, c->value.b); } break;
-            case LUA_CT_INTEGER: { lua_pushinteger(L, c->value.i); } break;
-            case LUA_CT_NUMBER: { lua_pushnumber(L, c->value.n); } break;
-            case LUA_CT_STRING: { lua_pushstring(L, c->value.sz); } break;
-        }
-        lua_setfield(L, -2, c->name);
-    }
-
-    return 1;
-}
-
-int luaX_newclass(lua_State *L, const luaL_Reg *f, const luaL_Reg *m, const luaX_Const *c, const char *name)
-{
-    luaL_newmetatable(L, name); /* create metatable */
 
     // Duplicate the metatable, since it will be popped by the 'lua_setfield()' call.
     // This is equivalent to the following in lua:
     // metatable = {}
     // metatable.__index = metatable
-    lua_pushvalue(L, -1); /* duplicate the metatable */
-    lua_setfield(L, -2, "__index"); /* mt.__index = mt */
+    lua_pushvalue(L, -1); // Possibly redundant, if already done in the script.
+    lua_setfield(L, -2, "__index");  /* metatable.__index = metatable */
 
-    luaL_setfuncs(L, f, 0); // Register the function into the table at the top of the stack, i.e. create the methods
-
-    for (; c->name; c++) {
-        switch (c->type) {
-            case LUA_CT_BOOLEAN: { lua_pushboolean(L, c->value.b); } break;
-            case LUA_CT_INTEGER: { lua_pushinteger(L, c->value.i); } break;
-            case LUA_CT_NUMBER: { lua_pushnumber(L, c->value.n); } break;
-            case LUA_CT_STRING: { lua_pushstring(L, c->value.sz); } break;
-        }
-        lua_setfield(L, -2, c->name);
+    if (f) {
+        luaL_setfuncs(L, f, 0); // Register the function into the table at the top of the stack, i.e. create the methods
     }
 
-//    lua_createtable(L, 0, 0);
-    luaL_setfuncs(L, m, 0); // Set the methods to the metatable that should be accessed via object:func
+    if (c) {
+        for (; c->name; c++) {
+            switch (c->type) {
+                case LUA_CT_BOOLEAN: { lua_pushboolean(L, c->value.b); } break;
+                case LUA_CT_INTEGER: { lua_pushinteger(L, c->value.i); } break;
+                case LUA_CT_NUMBER: { lua_pushnumber(L, c->value.n); } break;
+                case LUA_CT_STRING: { lua_pushstring(L, c->value.sz); } break;
+            }
+            lua_setfield(L, -2, c->name);
+        }
+    }
 
     return 1;
 }
@@ -160,13 +141,6 @@ void luaX_preload(lua_State *L, const char *name, lua_CFunction f)
     lua_pushcfunction(L, f);
     lua_setfield(L, -2, name);
     lua_pop(L, 2);
-}
-
-void luaX_require(lua_State *L, const char *name)
-{
-    lua_getglobal(L, "require");
-    lua_pushstring(L, name);
-    lua_call(L, 1, 1);
 }
 
 int luaX_checkfunction(lua_State *L, int arg)

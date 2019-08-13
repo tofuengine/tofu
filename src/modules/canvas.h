@@ -25,8 +25,6 @@
 
 typedef struct lua_State lua_State;
 
-extern const char canvas_script[];
-
 extern int canvas_loader(lua_State *L);
 
 #endif  /* __MODULES_CANVAS_H__ */

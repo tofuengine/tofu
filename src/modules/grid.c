@@ -51,12 +51,8 @@ static int grid_stride(lua_State *L);
 static int grid_peek(lua_State *L);
 static int grid_poke(lua_State *L);
 
-static const struct luaL_Reg grid_f[] = {
+static const struct luaL_Reg grid_functions[] = {
     { "new", grid_new },
-    { NULL, NULL }
-};
-
-static const struct luaL_Reg grid_m[] = {
     {"__gc", grid_gc },
     {"width", grid_width },
     {"height", grid_height },
@@ -67,17 +63,13 @@ static const struct luaL_Reg grid_m[] = {
     { NULL, NULL }
 };
 
-static const luaX_Const grid_c[] = {
+static const luaX_Const grid_constants[] = {
     { NULL }
 };
 
-const char grid_script[] =
-    "\n"
-;
-
 int grid_loader(lua_State *L)
 {
-    return luaX_newclass(L, grid_f, grid_m, grid_c, LUAX_CLASS(Grid_Class_t));
+    return luaX_newmodule(L, NULL, grid_functions, grid_constants, LUAX_CLASS(Grid_Class_t));
 }
 
 static int grid_new(lua_State *L)

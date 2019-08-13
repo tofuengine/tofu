@@ -25,8 +25,6 @@
 
 typedef struct lua_State lua_State;
 
-extern const char grid_script[];
-
 extern int grid_loader(lua_State *L);
 
 #endif  /* __MODULES_GRID_H__ */

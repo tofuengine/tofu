@@ -1,14 +1,14 @@
-local Canvas = require("tofu.graphics.Canvas")
+local Canvas = {}
 
-Canvas.point = function(x0, y0, color)
+function Canvas.point(x0, y0, color)
   Canvas.points({ x0, y0 }, color)
 end
 
-Canvas.line = function(x0, y0, x1, y1, color)
+function Canvas.line(x0, y0, x1, y1, color)
   Canvas.polyline({ x0, y0, x1, y1, x0, y0 }, color)
 end
 
-Canvas.triangle = function(mode, x0, y0, x1, y1, x2, y2, color)
+function Canvas.triangle(mode, x0, y0, x1, y1, x2, y2, color)
   if mode == "line" then
     Canvas.polyline({ x0, y0, x1, y1, x2, y2, x0, y0 }, color)
   else
@@ -16,7 +16,7 @@ Canvas.triangle = function(mode, x0, y0, x1, y1, x2, y2, color)
   end
 end
 
-Canvas.rectangle = function(mode, x, y, width, height, color)
+function Canvas.rectangle(mode, x, y, width, height, color)
   local offset = mode == "line" and 1 or 0
   local x0 = x
   local y0 = y
@@ -29,30 +29,32 @@ Canvas.rectangle = function(mode, x, y, width, height, color)
   end
 end
 
-Canvas.square = function(mode, x, y, size, color)
+function Canvas.square(mode, x, y, size, color)
   Canvas.rectangle(mode, x, y, size, size, color)
 end
 
-Canvas.circle = function(mode, x, y, radius, color, segments)
+function Canvas.circle(mode, x, y, radius, color, segments)
   segments = segments or 30
   local step = (2 * math.PI) / segments
   if mode == "line" then
     local vertices = {}
-      for i = 1, segments do
-        local angle = step * i
-        table.insert(vertices, x + math.sin(angle) * radius)
-        table.insert(vertices, y + math.cos(angle) * radius)
-      end
-      Canvas.polyline(vertices, color)
+    for i = 1, segments do
+      local angle = step * i
+      table.insert(vertices, x + math.sin(angle) * radius)
+      table.insert(vertices, y + math.cos(angle) * radius)
+    end
+    Canvas.polyline(vertices, color)
   else
     local vertices = {}
-      vertices.insert(-1, x)
-      vertices.insert(-1, y)
-      for i = 1, segments do
-        local angle = step * i
-        table.insert(vertices, x + math.sin(angle) * radius)
-        table.insert(vertices, y + math.cos(angle) * radius)
-      end
+    vertices.insert(-1, x)
+    vertices.insert(-1, y)
+    for i = 1, segments do
+      local angle = step * i
+      table.insert(vertices, x + math.sin(angle) * radius)
+      table.insert(vertices, y + math.cos(angle) * radius)
+    end
     Canvas.fan(vertices, color)
   end
 end
+
+return Canvas

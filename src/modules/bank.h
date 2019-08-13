@@ -25,8 +25,6 @@
 
 typedef struct lua_State lua_State;
 
-extern const char bank_script[];
-
 extern int bank_loader(lua_State *L);
 
 #endif  /* __MODULES_BANK_H__ */

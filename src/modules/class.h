@@ -25,8 +25,6 @@
 
 typedef struct lua_State lua_State;
 
-extern const char class_script[];
-
 extern int class_loader(lua_State *L);
 
 #endif  /* __MODULES_CLASS_H__ */

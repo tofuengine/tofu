@@ -49,41 +49,18 @@ static int canvas_polyline(lua_State *L);
 static int canvas_strip(lua_State *L);
 static int canvas_fan(lua_State *L);
 
-static const struct luaL_Reg canvas_f[] = {
-    { "width", canvas_width },
-    { "height", canvas_height },
-    { "palette", canvas_palette },
-    { "background", canvas_background },
-    { "shader", canvas_shader },
-    { "color", canvas_color },
-    { "points", canvas_points },
-    { "polyline", canvas_polyline },
-    { "strip", canvas_strip },
-    { "fan", canvas_fan },
-    { NULL, NULL }
-};
-
-static const struct luaL_Reg canvas_m[] = {
-    { NULL, NULL }
-};
-
-static const luaX_Const canvas_c[] = {
-    { NULL }
-};
-
-const char canvas_script[] =
-    "local Canvas = require(\"tofu.graphics.Canvas\")\n"
+static const char canvas_script[] =
+    "local Canvas = {}\n"
     "\n"
-    "\n"
-    "Canvas.point = function(x0, y0, color)\n"
+    "function Canvas.point(x0, y0, color)\n"
     "  Canvas.points({ x0, y0 }, color)\n"
     "end\n"
     "\n"
-    "Canvas.line = function(x0, y0, x1, y1, color)\n"
+    "function Canvas.line(x0, y0, x1, y1, color)\n"
     "  Canvas.polyline({ x0, y0, x1, y1, x0, y0 }, color)\n"
     "end\n"
     "\n"
-    "Canvas.triangle = function(mode, x0, y0, x1, y1, x2, y2, color)\n"
+    "function Canvas.triangle(mode, x0, y0, x1, y1, x2, y2, color)\n"
     "  if mode == \"line\" then\n"
     "    Canvas.polyline({ x0, y0, x1, y1, x2, y2, x0, y0 }, color)\n"
     "  else\n"
@@ -91,7 +68,7 @@ const char canvas_script[] =
     "  end\n"
     "end\n"
     "\n"
-    "Canvas.rectangle = function(mode, x, y, width, height, color)\n"
+    "function Canvas.rectangle(mode, x, y, width, height, color)\n"
     "  local offset = mode == \"line\" and 1 or 0\n"
     "  local x0 = x\n"
     "  local y0 = y\n"
@@ -104,11 +81,11 @@ const char canvas_script[] =
     "  end\n"
     "end\n"
     "\n"
-    "Canvas.square = function(mode, x, y, size, color)\n"
+    "function Canvas.square(mode, x, y, size, color)\n"
     "  Canvas.rectangle(mode, x, y, size, size, color)\n"
     "end\n"
     "\n"
-    "Canvas.circle = function(mode, x, y, radius, color, segments)\n"
+    "function Canvas.circle(mode, x, y, radius, color, segments)\n"
     "  segments = segments or 30\n"
     "  local step = (2 * math.PI) / segments\n"
     "  if mode == \"line\" then\n"
@@ -131,11 +108,31 @@ const char canvas_script[] =
     "    Canvas.fan(vertices, color)\n"
     "  end\n"
     "end\n"
+    "\n"
+    "return Canvas\n"
 ;
+
+static const struct luaL_Reg canvas_functions[] = {
+    { "width", canvas_width },
+    { "height", canvas_height },
+    { "palette", canvas_palette },
+    { "background", canvas_background },
+    { "shader", canvas_shader },
+    { "color", canvas_color },
+    { "points", canvas_points },
+    { "polyline", canvas_polyline },
+    { "strip", canvas_strip },
+    { "fan", canvas_fan },
+    { NULL, NULL }
+};
+
+static const luaX_Const canvas_constants[] = {
+    { NULL }
+};
 
 int canvas_loader(lua_State *L)
 {
-    return luaX_newclass(L, canvas_f, canvas_m, canvas_c, LUAX_CLASS(Canvas_Class_t));
+    return luaX_newmodule(L, canvas_script, canvas_functions, canvas_constants, LUAX_CLASS(Canvas_Class_t));
 }
 
 static int canvas_width(lua_State *L)

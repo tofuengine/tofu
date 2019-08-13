@@ -25,8 +25,6 @@
 
 typedef struct lua_State lua_State;
 
-extern const char timer_script[];
-
 extern int timer_loader(lua_State *L);
 
 #endif  /* __MODULES_TIMER_H__ */

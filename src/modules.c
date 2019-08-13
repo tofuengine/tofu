@@ -37,20 +37,19 @@
 typedef struct _Module_t {
     const char *namespace;
     int (*loader)(lua_State *L);
-    const char *script;
 } Module_t;
 
 static const Module_t modules[] = {
-    { "tofu.colletions.Grid", grid_loader, grid_script },
-    { "tofu.events.Environment", environment_loader, environment_script },
-    { "tofu.events.Input", input_loader, input_script },
-    { "tofu.graphics.Bank", bank_loader, bank_script },
-    { "tofu.graphics.Canvas", canvas_loader, canvas_script },
-    { "tofu.graphics.Font", font_loader, NULL },
-    { "tofu.io.File", file_loader, file_script },
-    { "tofu.util.class", class_loader, class_script },
-    { "tofu.util.Timer", timer_loader, timer_script },
-    { NULL, NULL, NULL }
+    { "tofu.colletions.Grid", grid_loader },
+    { "tofu.events.Environment", environment_loader },
+    { "tofu.events.Input", input_loader },
+    { "tofu.graphics.Bank", bank_loader },
+    { "tofu.graphics.Canvas", canvas_loader },
+    { "tofu.graphics.Font", font_loader },
+    { "tofu.io.File", file_loader },
+    { "tofu.util.class", class_loader },
+    { "tofu.util.Timer", timer_loader },
+    { NULL, NULL }
 };
 
 bool modules_initialize(lua_State *L)
@@ -59,15 +58,6 @@ bool modules_initialize(lua_State *L)
         luaX_preload(L, modules[i].namespace, modules[i].loader);
 //        luaL_requiref(L, modules[i].namespace, modules[i].loader, 1);
 //        lua_pop(L, 1);  /* remove lib */
-
-        if (!modules[i].script) {
-            continue;
-        }
-
-        if (luaL_dostring(L, modules[i].script) != 0) {
-            Log_write(LOG_LEVELS_FATAL, "<MODULES> can't open script: %s", lua_tostring(L, -1));
-            return false;
-        }
     }
 
     return true;

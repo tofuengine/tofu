@@ -25,8 +25,6 @@
 
 typedef struct lua_State lua_State;
 
-extern const char environment_script[];
-
 extern int environment_loader(lua_State *L);
 
 #endif  /* __MODULES_ENVIRONMENT_H__ */

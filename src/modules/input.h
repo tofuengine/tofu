@@ -25,8 +25,6 @@
 
 typedef struct lua_State lua_State;
 
-extern const char input_script[];
-
 extern int input_loader(lua_State *L);
 
 #endif  /* __MODULES_INPUT_H__ */
