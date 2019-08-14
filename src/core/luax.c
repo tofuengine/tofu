@@ -114,8 +114,10 @@ int luaX_newmodule(lua_State *L, const char *script, const luaL_Reg *f, const lu
     // This is equivalent to the following in lua:
     // metatable = {}
     // metatable.__index = metatable
-    lua_pushvalue(L, -1); // Possibly redundant, if already done in the script.
-    lua_setfield(L, -2, "__index");  /* metatable.__index = metatable */
+    if (name) {
+        lua_pushvalue(L, -1); // Possibly redundant, if already done in the script.
+        lua_setfield(L, -2, "__index");  /* metatable.__index = metatable */
+    }
 
     if (f) {
         luaL_setfuncs(L, f, 0); // Register the function into the table at the top of the stack, i.e. create the methods
