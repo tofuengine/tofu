@@ -25,6 +25,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define __LUAX_USE_REGISTRY_INDEX_FOR_USERDATA__
+
 /*
 http://webcache.googleusercontent.com/search?q=cache:RLoR9dkMeowJ:howtomakeanrpg.com/a/classes-in-lua.html+&cd=4&hl=en&ct=clnk&gl=it
 https://hisham.hm/2014/01/02/how-to-write-lua-modules-in-a-post-module-world/
@@ -158,12 +160,20 @@ int luaX_checkfunction(lua_State *L, int arg)
 void luaX_setuserdata(lua_State *L, const char *name, void *p)
 {
     lua_pushlightuserdata(L, p);  //Set your userdata as a global
+#ifdef __LUAX_USE_REGISTRY_INDEX_FOR_USERDATA__
+    lua_setfield(L, LUA_REGISTRYINDEX, name);
+#else
     lua_setglobal(L, name);
+#endif
 }
 
 void *luaX_getuserdata(lua_State *L, const char *name)
 {
+#ifdef __LUAX_USE_REGISTRY_INDEX_FOR_USERDATA__
+    lua_getfield(L, LUA_REGISTRYINDEX, name);
+#else
     lua_getglobal(L, name);
+#endif
     void *ptr = lua_touserdata(L, -1);  //Get it from the top of the stack
     lua_pop(L, 1); // Remove the global data from the stack.
     return ptr;
