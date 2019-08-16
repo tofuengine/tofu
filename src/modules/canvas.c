@@ -222,7 +222,7 @@ static int canvas_palette1(lua_State *L)
 
         lua_pushnil(L); // first key
         int i = 0; // TODO: define a helper function
-        while (lua_next(L, 1) != 0) {
+        while (lua_next(L, 1)) {
 #if 0
             const char *key_type = lua_typename(L, lua_type(L, -2)); // uses 'key' (at index -2) and 'value' (at index -1)
 #endif
