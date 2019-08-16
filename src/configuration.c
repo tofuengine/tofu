@@ -25,65 +25,97 @@
 #include "file.h"
 #include "log.h"
 
-#include <jsmn/jsmn.h>
+#include "core/luax.h"
 
 //#include <memory.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_JSON_TOKENS             32
-#define MAX_JSON_KEY_LENGTH         32
-#define MAX_JSON_VALUE_LENGTH       32
-
 #define SCREEN_WIDTH    320
 #define SCREEN_HEIGHT   240
 #define WINDOW_TITLE    ".: Tofu Engine :."
 
-static void parse_pair(Configuration_t *configuration, const char *key, const char *value, int type)
+typedef int (*luaEx_CFunction)(lua_State*, void*);
+
+// This is a static (common) dispatching function that bounces to
+// the intended callback function, passing the additional parameter.
+static int luaEx_dispatcher(lua_State* state)
 {
-    if (strcmp(key, "title") == 0) {
-        strncpy(configuration->title, value, MAX_CONFIGURATION_TITLE_LENGTH);
-    } else
-    if (strcmp(key, "width") == 0) {
-        configuration->width = (int)strtod(value, NULL);
-    } else
-    if (strcmp(key, "height") == 0) {
-        configuration->height = (int)strtod(value, NULL);
-    } else
-    if (strcmp(key, "depth") == 0) {
-        configuration->depth = (int)strtod(value, NULL);
-    } else
-    if (strcmp(key, "fullscreen") == 0) {
-        configuration->fullscreen = strcmp(value, "true") == 0;
-    } else
-#ifndef __NO_AUTOFIT__
-    if (strcmp(key, "autofit") == 0) {
-        configuration->autofit = strcmp(value, "true") == 0;
-    } else
-#endif
-    if (strcmp(key, "fps") == 0) {
-        configuration->fps = (int)strtod(value, NULL);
-    } else
-    if (strcmp(key, "skippable_frames") == 0) {
-        configuration->skippable_frames = (int)strtod(value, NULL);
-    } else
-    if (strcmp(key, "hide_cursor") == 0) {
-        configuration->hide_cursor = strcmp(value, "true") == 0;
-    } else
-    if (strcmp(key, "exit-key-enabled") == 0) {
-        configuration->exit_key_enabled = strcmp(value, "true") == 0;
-    } else
-    if (strcmp(key, "debug") == 0) {
-        configuration->debug = strcmp(value, "true") == 0;
-    }
+    void* parameter = (void*)lua_touserdata(state, lua_upvalueindex(1));
+    luaEx_CFunction callback = (luaEx_CFunction)lua_touserdata(state, lua_upvalueindex(2));
+    return callback(state, parameter);
 }
 
-static void extract_token(const char *json, const jsmntok_t token, char *buffer, size_t buffer_size)
+// Register a new global [function], by creating a closure with the passed
+// name bound to the common dispatcher, encapsulating the real function pointer
+// and the passed parameter.
+//
+// We are using the light-userdata datatype since we are not going to need to
+// interact with the garbage-collection for its management.
+void luaEx_register(lua_State* state, const char* name, luaEx_CFunction function, void* parameter)
 {
-    size_t token_length = token.end - token.start;
-    memcpy(buffer, json + token.start, token_length);
-    buffer[token_length] = '\0';
+    lua_pushlightuserdata(state, parameter);
+    lua_pushlightuserdata(state, function);
+    lua_pushcclosure(state, luaEx_dispatcher, 2);
+    lua_setglobal(state, name);
+}
+
+static int parse(lua_State *L, void *parameters)
+{
+    Configuration_t *configuration = (Configuration_t *)parameters;
+
+    if (lua_gettop(L) != 1) {
+        return luaL_error(L, "<INTERPRETER> function requires 1 argument");
+    }
+    if (!lua_istable(L, 1)) {
+        return luaL_error(L, "<INTERPRETER> function requires a table as argument");
+    }
+
+    lua_pushnil(L); // first key
+    while (lua_next(L, 1)) {
+        const char *key = lua_tostring(L, -2); // uses 'key' (at index -2) and 'value' (at index -1)
+
+        if (strcmp(key, "title") == 0) {
+            strncpy(configuration->title, lua_tostring(L, -1), MAX_CONFIGURATION_TITLE_LENGTH);
+        } else
+        if (strcmp(key, "width") == 0) {
+            configuration->width = lua_tointeger(L, -1);
+        } else
+        if (strcmp(key, "height") == 0) {
+            configuration->height = lua_tointeger(L, -1);
+        } else
+        if (strcmp(key, "depth") == 0) {
+            configuration->depth = lua_tointeger(L, -1);
+        } else
+        if (strcmp(key, "fullscreen") == 0) {
+            configuration->fullscreen = lua_toboolean(L, -1);
+        } else
+#ifndef __NO_AUTOFIT__
+        if (strcmp(key, "autofit") == 0) {
+            configuration->autofit = lua_toboolean(L, -1);
+        } else
+#endif
+        if (strcmp(key, "fps") == 0) {
+            configuration->fps = lua_tointeger(L, -1);
+        } else
+        if (strcmp(key, "skippable_frames") == 0) {
+            configuration->skippable_frames = lua_tointeger(L, -1);
+        } else
+        if (strcmp(key, "hide_cursor") == 0) {
+            configuration->hide_cursor = lua_toboolean(L, -1);
+        } else
+        if (strcmp(key, "exit-key-enabled") == 0) {
+            configuration->exit_key_enabled = lua_toboolean(L, -1);
+        } else
+        if (strcmp(key, "debug") == 0) {
+            configuration->debug = lua_toboolean(L, -1);
+        }
+
+        lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
+    }
+
+    return 1;
 }
 
 void Configuration_initialize(Configuration_t *configuration)
@@ -101,43 +133,22 @@ void Configuration_initialize(Configuration_t *configuration)
     configuration->debug = true;
 }
 
-void Configuration_load(Configuration_t *configuration, const char *pathfile)
+void Configuration_load(Configuration_t *configuration, const char *base_path)
 {
-    char *json = file_load_as_string(pathfile, "rt");
-    if (!json) {
-        Log_write(LOG_LEVELS_WARNING, "Configuration file '%s' not found", pathfile);
+    lua_State *L = luaL_newstate();
+    if (!L) {
+        Log_write(LOG_LEVELS_FATAL, "<CONFIGURATION> can't initialize interpreter");
         return;
     }
+	luaL_openlibs(L);
 
-    jsmn_parser parser;
-    jsmn_init(&parser);
-    jsmntok_t tokens[MAX_JSON_TOKENS];
-    size_t token_count = jsmn_parse(&parser, json, strlen(json), tokens, MAX_JSON_TOKENS);
-    if ((token_count < 1) || (tokens[0].type != JSMN_OBJECT)) {
-        Log_write(LOG_LEVELS_WARNING, "Configuration file '%s' is malformed", pathfile);
+    luaX_appendpath(L, base_path);
+
+    luaEx_register(L, "parse", parse, configuration);
+    int result = luaL_dostring(L, "parse(require(\"configuration\"))\n");
+    if (!result) {
+        Log_write(LOG_LEVELS_FATAL, "<CONFIGURATION> can't parse configuration file");
     }
 
-    for (size_t i = 1; i < token_count; i += 2) {
-        jsmntok_t json_key = tokens[i];
-        if (json_key.type != JSMN_STRING) {
-            Log_write(LOG_LEVELS_WARNING, "Configuration token #%d not of STRING type", i);
-            break;
-        }
-
-        jsmntok_t json_value = tokens[i + 1];
-#if 0
-        if (json_value.type != JSMN_PRIMITIVE) {
-            Log_write(LOG_LEVELS_WARNING, "Token #%d is not of PRIMITIVE type", i + 1);
-            break;
-        }
-#endif
-
-        char key[MAX_JSON_KEY_LENGTH], value[MAX_JSON_VALUE_LENGTH];
-        extract_token(json, json_key, key, MAX_JSON_KEY_LENGTH);
-        extract_token(json, json_value, value, MAX_JSON_VALUE_LENGTH);
-
-        parse_pair(configuration, key, value, json_value.type);
-    }
-
-    free(json);
+    lua_close(L);
 }

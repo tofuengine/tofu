@@ -18,7 +18,6 @@ Guess what? Yup, that's another game engine/framework.
 
 * [Glad](https://glad.dav1d.de/)
 * [GLFW](https://www.glfw.org/) v3.3
-* [jsmn](https://zserge.com/jsmn.html/) v1.0.0
 * [Lua](https://lua.org/) v5.3.4
 * [LuaAutoC](https://github.com/orangeduck/LuaAutoC) v2.0.1
 * [spleen](https://github.com/fcambus/spleen) fonts
