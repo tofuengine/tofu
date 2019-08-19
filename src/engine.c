@@ -62,16 +62,20 @@ static bool update_statistics(Engine_Statistics_t *statistics, double elapsed) {
 bool Engine_initialize(Engine_t *engine, const char *base_path)
 {
     Log_initialize();
-
+    Environment_initialize(&engine->environment, base_path, &engine->display);
     Configuration_initialize(&engine->configuration);
-    Configuration_load(&engine->configuration, base_path);
+
+    bool result = Interpreter_initialize(&engine->interpreter, &engine->configuration, &engine->environment);
+    if (!result) {
+        Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't initialize interpreter");
+        return false;
+    }
 
     Log_configure(engine->configuration.debug);
 
     Display_Configuration_t display_configuration = {
             .width = engine->configuration.width,
             .height = engine->configuration.height,
-            .colors = engine->configuration.debug,
             .fullscreen = engine->configuration.fullscreen,
 #ifndef __NO_AUTOFIT__
             .autofit = engine->configuration.autofit,
@@ -79,31 +83,25 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             .hide_cursor = engine->configuration.hide_cursor,
             .exit_key_enabled = engine->configuration.exit_key_enabled,
         };
-    bool result = Display_initialize(&engine->display, &display_configuration, engine->configuration.title);
+    result = Display_initialize(&engine->display, &display_configuration, engine->configuration.title);
     if (!result) {
         Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't initialize display");
+        Interpreter_terminate(&engine->interpreter);
         return false;
     }
-
-    Environment_initialize(&engine->environment, base_path, &engine->display); // TODO> add environment configuration.
 
     engine->environment.timer_pool = &engine->interpreter.timer_pool; // HACK: inject the timer-pool pointer.
 
-    result = Interpreter_initialize(&engine->interpreter, &engine->environment);
-    if (!result) {
-        Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't initialize interpreter");
-        Display_terminate(&engine->display);
-        return false;
-    }
+    Interpreter_init(&engine->interpreter);
 
     return true;
 }
 
 void Engine_terminate(Engine_t *engine)
 {
-    Interpreter_terminate(&engine->interpreter);
-    Environment_terminate(&engine->environment);
+    Interpreter_terminate(&engine->interpreter); // Terminate the interpreter to unlock all resources.
     Display_terminate(&engine->display);
+    Environment_terminate(&engine->environment);
 }
 
 bool Engine_isRunning(Engine_t *engine)

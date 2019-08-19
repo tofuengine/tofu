@@ -58,7 +58,6 @@ typedef enum _Display_Programs_t {
 
 typedef struct _Display_Configuration_t {
     int width, height;
-    int colors;
     bool fullscreen;
 #ifndef __NO_AUTOFIT__
     bool autofit;

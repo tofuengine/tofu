@@ -50,14 +50,12 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 #define SHUTDOWN_SCRIPT \
     "main = nil\n"
 
-// TODO: can the configuration be a Lua file?
-
 static void timerpool_update_callback(Timer_t *timer, void *parameters)
 {
     Interpreter_t *interpreter = (Interpreter_t *)parameters;
 
     lua_rawgeti(interpreter->state, LUA_REGISTRYINDEX, timer->value.callback);
-	if (lua_isnil(interpreter->state, -1)) {
+    if (lua_isnil(interpreter->state, -1)) {
         Log_write(LOG_LEVELS_ERROR, "<VM> can't find timer callback: %s", lua_tostring(interpreter->state, -1));
         return;
     }
@@ -67,7 +65,7 @@ static void timerpool_update_callback(Timer_t *timer, void *parameters)
     }
 }
 
-bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *environment)
+bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configuration, const Environment_t *environment)
 {
     interpreter->environment = environment;
     interpreter->gc_age = 0.0;
@@ -76,7 +74,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *env
         Log_write(LOG_LEVELS_FATAL, "<VM> can't initialize interpreter");
         return false;
     }
-	luaL_openlibs(interpreter->state);
+    luaL_openlibs(interpreter->state);
 
     bool initialized = modules_initialize(interpreter->state);
     if (!initialized) {
@@ -101,32 +99,49 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *env
 
     // TODO: implement a register/unregister pattern the for the input/update/render callbacks.
     lua_getglobal(interpreter->state, ROOT_INSTANCE); // Get the global variable on top of the stack (will always stay on top).
-	if (lua_isnil(interpreter->state, -1)) {
+    if (lua_isnil(interpreter->state, -1)) {
         Log_write(LOG_LEVELS_ERROR, "<VM> can't find root instance: %s", lua_tostring(interpreter->state, -1));
         lua_pop(interpreter->state, 1);
         lua_close(interpreter->state);
         return false;
     }
 
-    lua_getfield(interpreter->state, -1, "init");
-	if (lua_isnil(interpreter->state, -1)) {
-        Log_write(LOG_LEVELS_WARNING, "<VM> can't find init method: %s", lua_tostring(interpreter->state, -1));
+    lua_getfield(interpreter->state, -1, "setup");
+    if (lua_isnil(interpreter->state, -1)) {
+        Log_write(LOG_LEVELS_WARNING, "<VM> can't find setup method: %s", lua_tostring(interpreter->state, -1));
         lua_pop(interpreter->state, 1);
         return true;
     }
     lua_pushvalue(interpreter->state, -2); // Duplicate the "self" object.
-    result = lua_pcall(interpreter->state, 1, 0, 0);
+    result = lua_pcall(interpreter->state, 1, 1, 0);
+    if (result != 0) {
+        Log_write(LOG_LEVELS_ERROR, "<VM> error calling setup method: %s", lua_tostring(interpreter->state, -1));
+    }
+    Configuration_parse(interpreter->state, configuration);
+    lua_pop(interpreter->state, 1); // Remove the configuration table from the stack.
+
+    return true;
+}
+
+void Interpreter_init(Interpreter_t *interpreter)
+{
+    lua_getfield(interpreter->state, -1, "init");
+    if (lua_isnil(interpreter->state, -1)) {
+        Log_write(LOG_LEVELS_WARNING, "<VM> can't find init method: %s", lua_tostring(interpreter->state, -1));
+        lua_pop(interpreter->state, 1);
+        return;
+    }
+    lua_pushvalue(interpreter->state, -2); // Duplicate the "self" object.
+    int result = lua_pcall(interpreter->state, 1, 0, 0);
     if (result != 0) {
         Log_write(LOG_LEVELS_ERROR, "<VM> error calling init method: %s", lua_tostring(interpreter->state, -1));
     }
-
-    return true;
 }
 
 void Interpreter_input(Interpreter_t *interpreter)
 {
     lua_getfield(interpreter->state, -1, "input");
-	if (lua_isnil(interpreter->state, -1)) {
+    if (lua_isnil(interpreter->state, -1)) {
         Log_write(LOG_LEVELS_WARNING, "<VM> can't find input method: %s", lua_tostring(interpreter->state, -1));
         lua_pop(interpreter->state, 1);
         return;
@@ -161,7 +176,7 @@ void Interpreter_update(Interpreter_t *interpreter, const double delta_time)
     }
 
     lua_getfield(interpreter->state, -1, "update");
-	if (lua_isnil(interpreter->state, -1)) {
+    if (lua_isnil(interpreter->state, -1)) {
         Log_write(LOG_LEVELS_WARNING, "<VM> can't find update method: %s", lua_tostring(interpreter->state, -1));
         lua_pop(interpreter->state, 1);
         return;
@@ -177,7 +192,7 @@ void Interpreter_update(Interpreter_t *interpreter, const double delta_time)
 void Interpreter_render(Interpreter_t *interpreter, const double ratio)
 {
     lua_getfield(interpreter->state, -1, "render");
-	if (lua_isnil(interpreter->state, -1)) {
+    if (lua_isnil(interpreter->state, -1)) {
         Log_write(LOG_LEVELS_WARNING, "<VM> can't find render method: %s", lua_tostring(interpreter->state, -1));
         lua_pop(interpreter->state, 1);
         return;

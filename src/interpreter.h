@@ -29,6 +29,7 @@
 #include "core/luax.h"
 #include "core/timerpool.h"
 
+#include "configuration.h"
 #include "environment.h"
 
 typedef struct _Interpreter_t {
@@ -36,12 +37,13 @@ typedef struct _Interpreter_t {
 
     double gc_age;
 
-    lua_State *state;
+    lua_State *state; // TODO: rename to `L`?
 
     Timer_Pool_t timer_pool;
 } Interpreter_t;
 
-extern bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *environment);
+extern bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configuration, const Environment_t *environment);
+extern void Interpreter_init(Interpreter_t *interpreter);
 extern void Interpreter_input(Interpreter_t *interpreter);
 extern void Interpreter_update(Interpreter_t *interpreter, const double delta_time);
 extern void Interpreter_render(Interpreter_t *interpreter, const double ratio);

@@ -36,19 +36,29 @@
 #define SCREEN_HEIGHT   240
 #define WINDOW_TITLE    ".: Tofu Engine :."
 
-static int parse(lua_State *L)
+void Configuration_initialize(Configuration_t *configuration)
 {
-    if (lua_gettop(L) != 1) {
-        return luaL_error(L, "<INTERPRETER> function requires 1 argument");
-    }
-    if (!lua_istable(L, 1)) {
-        return luaL_error(L, "<INTERPRETER> function requires a table as argument");
-    }
+    strncpy(configuration->title, WINDOW_TITLE, MAX_CONFIGURATION_TITLE_LENGTH);
+    configuration->width = SCREEN_WIDTH;
+    configuration->height = SCREEN_HEIGHT;
+    configuration->fullscreen = false;
+    configuration->autofit = true;
+    configuration->fps = 60;
+    configuration->skippable_frames = 12; // About 20% of the FTP amount.
+    configuration->hide_cursor = true;
+    configuration->exit_key_enabled = true;
+    configuration->debug = true;
+}
 
-    Configuration_t *configuration = (Configuration_t *)lua_touserdata(L, lua_upvalueindex(1));
+void Configuration_parse(lua_State *L, Configuration_t *configuration)
+{
+    if (!lua_istable(L, -1)) {
+        Log_write(LOG_LEVELS_WARNING, "<CONFIGURATION> setup method returned no value");
+        return;
+    }
 
     lua_pushnil(L); // first key
-    while (lua_next(L, 1)) {
+    while (lua_next(L, -2)) { // Table is at the top, prior pushing NIL!
         const char *key = lua_tostring(L, -2); // uses 'key' (at index -2) and 'value' (at index -1)
 
         if (strcmp(key, "title") == 0) {
@@ -59,9 +69,6 @@ static int parse(lua_State *L)
         } else
         if (strcmp(key, "height") == 0) {
             configuration->height = lua_tointeger(L, -1);
-        } else
-        if (strcmp(key, "depth") == 0) {
-            configuration->depth = lua_tointeger(L, -1);
         } else
         if (strcmp(key, "fullscreen") == 0) {
             configuration->fullscreen = lua_toboolean(L, -1);
@@ -89,60 +96,4 @@ static int parse(lua_State *L)
 
         lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
     }
-
-    return 1;
-}
-
-void luaX_setglobals(lua_State *L, const luaL_Reg *l, int nup) {
-    luaL_checkstack(L, nup, "too many upvalues");
-    for (; l->name != NULL; l++) {  /* fill the table with given functions */
-        for (int i = 0; i < nup; i++) { /* copy upvalues to the top */
-            lua_pushvalue(L, -nup);
-        }
-        lua_pushcclosure(L, l->func, nup);  /* closure with those upvalues */
-        lua_setglobal(L, l->name);
-    }
-    lua_pop(L, nup);  /* remove upvalues */
-}
-
-static const luaL_Reg funcs[] = {
-    { "parse", parse },
-    { NULL, NULL }
-};
-
-void Configuration_initialize(Configuration_t *configuration)
-{
-    strncpy(configuration->title, WINDOW_TITLE, MAX_CONFIGURATION_TITLE_LENGTH);
-    configuration->width = SCREEN_WIDTH;
-    configuration->height = SCREEN_HEIGHT;
-    configuration->depth = 8;
-    configuration->fullscreen = false;
-    configuration->autofit = true;
-    configuration->fps = 60;
-    configuration->skippable_frames = 12; // About 20% of the FTP amount.
-    configuration->hide_cursor = true;
-    configuration->exit_key_enabled = true;
-    configuration->debug = true;
-}
-
-void Configuration_load(Configuration_t *configuration, const char *base_path)
-{
-    lua_State *L = luaL_newstate();
-    if (!L) {
-        Log_write(LOG_LEVELS_FATAL, "<CONFIGURATION> can't initialize interpreter");
-        return;
-    }
-	luaL_openlibs(L);
-
-    luaX_appendpath(L, base_path);
-
-    lua_pushlightuserdata(L, configuration);
-    luaX_setglobals(L, funcs, 1);
-
-    int result = luaL_dostring(L, "parse(require(\"configuration\"))\n");
-    if (!result) {
-        Log_write(LOG_LEVELS_FATAL, "<CONFIGURATION> can't parse configuration file");
-    }
-
-    lua_close(L);
 }
