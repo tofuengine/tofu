@@ -1,5 +1,3 @@
-local Bunny = require("lib.bunny")
-
 local Class = require("tofu.util.class")
 local Bank = require("tofu.graphics.Bank")
 local Canvas = require("tofu.graphics.Canvas")
@@ -12,7 +10,7 @@ local MAX_BUNNIES = 32768
 
 local Game = Class.define()
 
-function dump(t, spaces)
+local function dump(t, spaces)
   spaces = spaces or ""
   for k, v in pairs(t) do
     print(spaces .. k .. " " .. type(v) .. " " .. tostring(v))
@@ -43,6 +41,7 @@ end
 
 function Game:input()
   if Input.is_key_pressed(Input.START) then
+    local Bunny = require("lib.bunny") -- Lazily require the module only in this scope.
     for i = 1, LITTER_SIZE do
       table.insert(self.bunnies, Bunny.new(self.bank))
     end

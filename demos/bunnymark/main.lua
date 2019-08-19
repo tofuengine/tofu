@@ -1,11 +1,22 @@
 local Class = require("tofu.util.class")
 
-local Game = require("game")
-
 local Main = Class.define()
 
 function Main:__ctor()
+  local Game = require("game") -- Lazily require.
   self.game = Game.new()
+end
+
+function Main:setup()
+  return {
+      ["title"] = "BunnyMark",
+      ["width"] = 512,
+      ["height"] = 512,
+      ["fullscreen"] = false,
+      ["autofit"] = false,
+      ["exit-key-enabled"] = true,
+      ["debug"] = true
+  }
 end
 
 function Main:init()
