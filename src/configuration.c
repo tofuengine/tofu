@@ -36,41 +36,16 @@
 #define SCREEN_HEIGHT   240
 #define WINDOW_TITLE    ".: Tofu Engine :."
 
-typedef int (*luaEx_CFunction)(lua_State*, void*);
-
-// This is a static (common) dispatching function that bounces to
-// the intended callback function, passing the additional parameter.
-static int luaEx_dispatcher(lua_State* state)
+static int parse(lua_State *L)
 {
-    void* parameter = (void*)lua_touserdata(state, lua_upvalueindex(1));
-    luaEx_CFunction callback = (luaEx_CFunction)lua_touserdata(state, lua_upvalueindex(2));
-    return callback(state, parameter);
-}
-
-// Register a new global [function], by creating a closure with the passed
-// name bound to the common dispatcher, encapsulating the real function pointer
-// and the passed parameter.
-//
-// We are using the light-userdata datatype since we are not going to need to
-// interact with the garbage-collection for its management.
-void luaEx_register(lua_State* state, const char* name, luaEx_CFunction function, void* parameter)
-{
-    lua_pushlightuserdata(state, parameter);
-    lua_pushlightuserdata(state, function);
-    lua_pushcclosure(state, luaEx_dispatcher, 2);
-    lua_setglobal(state, name);
-}
-
-static int parse(lua_State *L, void *parameters)
-{
-    Configuration_t *configuration = (Configuration_t *)parameters;
-
     if (lua_gettop(L) != 1) {
         return luaL_error(L, "<INTERPRETER> function requires 1 argument");
     }
     if (!lua_istable(L, 1)) {
         return luaL_error(L, "<INTERPRETER> function requires a table as argument");
     }
+
+    Configuration_t *configuration = (Configuration_t *)lua_touserdata(L, lua_upvalueindex(1));
 
     lua_pushnil(L); // first key
     while (lua_next(L, 1)) {
@@ -118,6 +93,23 @@ static int parse(lua_State *L, void *parameters)
     return 1;
 }
 
+void luaX_setglobals(lua_State *L, const luaL_Reg *l, int nup) {
+    luaL_checkstack(L, nup, "too many upvalues");
+    for (; l->name != NULL; l++) {  /* fill the table with given functions */
+        for (int i = 0; i < nup; i++) { /* copy upvalues to the top */
+            lua_pushvalue(L, -nup);
+        }
+        lua_pushcclosure(L, l->func, nup);  /* closure with those upvalues */
+        lua_setglobal(L, l->name);
+    }
+    lua_pop(L, nup);  /* remove upvalues */
+}
+
+static const luaL_Reg funcs[] = {
+    { "parse", parse },
+    { NULL, NULL }
+};
+
 void Configuration_initialize(Configuration_t *configuration)
 {
     strncpy(configuration->title, WINDOW_TITLE, MAX_CONFIGURATION_TITLE_LENGTH);
@@ -144,7 +136,9 @@ void Configuration_load(Configuration_t *configuration, const char *base_path)
 
     luaX_appendpath(L, base_path);
 
-    luaEx_register(L, "parse", parse, configuration);
+    lua_pushlightuserdata(L, configuration);
+    luaX_setglobals(L, funcs, 1);
+
     int result = luaL_dostring(L, "parse(require(\"configuration\"))\n");
     if (!result) {
         Log_write(LOG_LEVELS_FATAL, "<CONFIGURATION> can't parse configuration file");
