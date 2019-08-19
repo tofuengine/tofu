@@ -60,16 +60,30 @@ void luaX_stackdump(lua_State *L, const char* func, int line)
             case LUA_TBOOLEAN:
                 printf("\t%s", lua_toboolean(L, i) ? "true" : "false");
                 break;
+            case LUA_TLIGHTUSERDATA:
+                printf("\t%p", lua_topointer(L, positive));
+                break;
             case LUA_TNUMBER:
                 printf("\t%f", lua_tonumber(L, positive));
                 break;
             case LUA_TSTRING:
                 printf("\t%s", lua_tostring(L, positive));
                 break;
+            case LUA_TTABLE:
+                printf("\t%p", lua_topointer(L, positive));
+                break;
             case LUA_TFUNCTION:
                 if (lua_iscfunction(L, positive)) {
                     printf("\t%p", lua_tocfunction(L, positive));
+                } else {
+                    printf("\t%p", lua_topointer(L, positive));
                 }
+                break;
+            case LUA_TUSERDATA:
+                printf("\t%p", lua_topointer(L, positive));
+                break;
+            case LUA_TTHREAD:
+                printf("\t%p", lua_topointer(L, positive));
                 break;
         }
         printf("\n");
@@ -193,4 +207,16 @@ void luaX_getnumberarray(lua_State *L, int idx, double *array)
 
         lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
     }
+}
+
+void luaX_setglobals(lua_State *L, const luaL_Reg *l, int nup) {
+    luaL_checkstack(L, nup, "too many upvalues");
+    for (; l->name != NULL; l++) {  /* fill the table with given functions */
+        for (int i = 0; i < nup; i++) { /* copy upvalues to the top */
+            lua_pushvalue(L, -nup);
+        }
+        lua_pushcclosure(L, l->func, nup);  /* closure with those upvalues */
+        lua_setglobal(L, l->name);
+    }
+    lua_pop(L, nup);  /* remove upvalues */
 }

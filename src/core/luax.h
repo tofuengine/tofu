@@ -58,5 +58,6 @@ extern int luaX_checkfunction(lua_State *L, int arg);
 extern void luaX_setuserdata(lua_State *L, const char *name, void *p);
 extern void *luaX_getuserdata(lua_State *L, const char *name);
 extern void luaX_getnumberarray(lua_State *L, int idx, double *array);
+extern void luaX_setglobals(lua_State *L, const luaL_Reg *l, int nup);
 
 #endif  /* __CORE_LUAX_H__ */
