@@ -109,7 +109,7 @@ void luaX_appendpath(lua_State *L, const char *path)
     lua_pop(L, 1); // get rid of package table from top of stack
 }
 
-int luaX_newmodule(lua_State *L, const char *script, const luaL_Reg *f, const luaX_Const *c, const char *name)
+int luaX_newmodule(lua_State *L, const char *script, const luaL_Reg *f, const luaX_Const *c, int nup, const char *name)
 {
     if (script) {
         luaL_loadstring(L, script);
@@ -134,7 +134,7 @@ int luaX_newmodule(lua_State *L, const char *script, const luaL_Reg *f, const lu
     }
 
     if (f) {
-        luaL_setfuncs(L, f, 0); // Register the function into the table at the top of the stack, i.e. create the methods
+        luaL_setfuncs(L, f, nup); // Register the function into the table at the top of the stack, i.e. create the methods
     }
 
     if (c) {
