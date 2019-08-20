@@ -45,17 +45,28 @@ typedef struct _luaX_Const {
     } value;
 } luaX_Const;
 
-#define LUAX_MODULE(n)          #n
 #define LUAX_CLASS(n)           #n "_mt"
 
-#define luaX_dump(L)   luaX_stackdump(L, __FILE__, __LINE__)
+#ifdef DEBUG
+#define luaX_checkcall(L, args)     luaX_checksignature(L, args, __FILE__, __LINE__)
+#else
+#define luaX_checkcall(L, args)
+#endif
+
+#define luaX_dump(L)                luaX_stackdump(L, __FILE__, __LINE__)
+
+#define luaX_tofunction(L, arg)     luaX_toref(L, arg)
 
 extern void luaX_stackdump(lua_State *L, const char* func, int line);
 extern void luaX_appendpath(lua_State *L, const char *path);
 extern int luaX_newmodule(lua_State *L, const char *script, const luaL_Reg *f, const luaX_Const *c, int nup, const char *name);
 extern void luaX_preload(lua_State *L, const char *name, lua_CFunction f);
-extern int luaX_checkfunction(lua_State *L, int arg);
+extern int luaX_toref(lua_State *L, int arg);
+extern void luaX_setuserdata(lua_State *L, const char *name, void *p);
+extern void *luaX_getuserdata(lua_State *L, const char *name);
 extern void luaX_getnumberarray(lua_State *L, int idx, double *array);
 extern void luaX_setglobals(lua_State *L, const luaL_Reg *l, int nup);
+extern void luaX_checkarguments(lua_State *L, int n, const char* func, int line);
+extern void luaX_checksignature(lua_State *L, const char *signature, const char* func, int line);
 
 #endif  /* __CORE_LUAX_H__ */

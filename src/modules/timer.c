@@ -53,17 +53,15 @@ static const luaX_Const timer_constants[] = {
 
 int timer_loader(lua_State *L)
 {
-    return luaX_newmodule(L, NULL, timer_functions, timer_constants, LUAX_CLASS(Timer_Class_t));
+    return luaX_newmodule(L, NULL, timer_functions, timer_constants, 0, LUAX_CLASS(Timer_Class_t));
 }
 
 static int timer_new(lua_State *L)
 {
-    if (lua_gettop(L) != 3) {
-        return luaL_error(L, "<TIMER> timer constructor requires 3 arguments");
-    }
-    double period = luaL_checknumber(L, 1);
-    int repeats = luaL_checkinteger(L, 2);
-    int callback = luaX_checkfunction(L, 3); // NOTE! This need to be released when the timer is detached!
+    luaX_checkcall(L, "nif");
+    double period = lua_tonumber(L, 1);
+    int repeats = lua_tointeger(L, 2);
+    int callback = luaX_tofunction(L, 3); // NOTE! This need to be released when the timer is detached!
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Timer.new() -> %f, %d, %d", period, repeats, callback);
 #endif
@@ -88,11 +86,11 @@ static int timer_new(lua_State *L)
 
 static int timer_gc(lua_State *L)
 {
+    luaX_checkcall(L, "u");
+    Timer_Class_t *instance = (Timer_Class_t *)lua_touserdata(L, 1);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Timer.gc()");
 #endif
-
-    Timer_Class_t *instance = (Timer_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Timer_Class_t));
 
     Log_write(LOG_LEVELS_DEBUG, "<TIMER> finalizing timer #%p", instance->timer);
 
@@ -105,11 +103,11 @@ static int timer_gc(lua_State *L)
 
 static int timer_reset(lua_State *L)
 {
+    luaX_checkcall(L, "u");
+    Timer_Class_t *instance = (Timer_Class_t *)lua_touserdata(L, 1);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Timer.cancel()");
 #endif
-
-    Timer_Class_t *instance = (Timer_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Timer_Class_t));
 
     TimerPool_reset(instance->timer_pool, instance->timer);
 
@@ -118,11 +116,11 @@ static int timer_reset(lua_State *L)
 
 static int timer_cancel(lua_State *L)
 {
+    luaX_checkcall(L, "u");
+    Timer_Class_t *instance = (Timer_Class_t *)lua_touserdata(L, 1);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Timer.cancel()");
 #endif
-
-    Timer_Class_t *instance = (Timer_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Timer_Class_t));
 
     TimerPool_cancel(instance->timer_pool, instance->timer);
 

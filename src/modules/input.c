@@ -61,15 +61,13 @@ static const luaX_Const input_constants[] = {
 
 int input_loader(lua_State *L)
 {
-    return luaX_newmodule(L, NULL, input_functions, input_constants, LUAX_CLASS(Input_Class_t));
+    return luaX_newmodule(L, NULL, input_functions, input_constants, 0, LUAX_CLASS(Input_Class_t));
 }
 
 static int input_is_key_down(lua_State *L)
 {
-    if (lua_gettop(L) != 1) {
-        return luaL_error(L, "<INPUT> function requires 1 argument");
-    }
-    int key = luaL_checkinteger(L, 1);
+    luaX_checkcall(L, "i");
+    int key = lua_tointeger(L, 1);
 
     Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
 
@@ -81,10 +79,8 @@ static int input_is_key_down(lua_State *L)
 
 static int input_is_key_up(lua_State *L)
 {
-    if (lua_gettop(L) != 1) {
-        return luaL_error(L, "<INPUT> function requires 1 argument");
-    }
-    int key = luaL_checkinteger(L, 1);
+    luaX_checkcall(L, "i");
+    int key = lua_tointeger(L, 1);
 
     Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
 
@@ -96,10 +92,8 @@ static int input_is_key_up(lua_State *L)
 
 static int input_is_key_pressed(lua_State *L)
 {
-    if (lua_gettop(L) != 1) {
-        return luaL_error(L, "<INPUT> function requires 1 argument");
-    }
-    int key = luaL_checkinteger(L, 1);
+    luaX_checkcall(L, "i");
+    int key = lua_tointeger(L, 1);
 
     Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
 
@@ -111,10 +105,8 @@ static int input_is_key_pressed(lua_State *L)
 
 static int input_is_key_released(lua_State *L)
 {
-    if (lua_gettop(L) != 1) {
-        return luaL_error(L, "<INPUT> function requires 1 argument");
-    }
-    int key = luaL_checkinteger(L, 1);
+    luaX_checkcall(L, "i");
+    int key = lua_tointeger(L, 1);
 
     Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
 

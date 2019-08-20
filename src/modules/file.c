@@ -46,15 +46,13 @@ static const luaX_Const file_constants[] = {
 
 int file_loader(lua_State *L)
 {
-    return luaX_newmodule(L, NULL, file_functions, file_constants, LUAX_CLASS(File_Class_t));
+    return luaX_newmodule(L, NULL, file_functions, file_constants, 0, LUAX_CLASS(File_Class_t));
 }
 
 static int file_read(lua_State *L)
 {
-    if (lua_gettop(L) != 1) {
-        return luaL_error(L, "<FILE> function requires 1 argument");
-    }
-    const char *file = luaL_checkstring(L, 1);
+    luaX_checkcall(L, "s");
+    const char *file = lua_tostring(L, 1);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "File.read() -> %s", file);
 #endif

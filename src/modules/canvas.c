@@ -132,14 +132,12 @@ static const luaX_Const canvas_constants[] = {
 
 int canvas_loader(lua_State *L)
 {
-    return luaX_newmodule(L, canvas_script, canvas_functions, canvas_constants, LUAX_CLASS(Canvas_Class_t));
+    return luaX_newmodule(L, canvas_script, canvas_functions, canvas_constants, 0, LUAX_CLASS(Canvas_Class_t));
 }
 
 static int canvas_width(lua_State *L)
 {
-    if (lua_gettop(L) != 0) {
-        return luaL_error(L, "<GRAPHICS> canvas function 0 arguments");
-    }
+    luaX_checkcall(L, "");
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Canvas.width()");
 #endif
@@ -153,9 +151,7 @@ static int canvas_width(lua_State *L)
 
 static int canvas_height(lua_State *L)
 {
-    if (lua_gettop(L) != 0) {
-        return luaL_error(L, "<GRAPHICS> canvas function 0 arguments");
-    }
+    luaX_checkcall(L, "");
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Canvas.height()");
 #endif
@@ -169,6 +165,7 @@ static int canvas_height(lua_State *L)
 
 static int canvas_palette0(lua_State *L)
 {
+    luaX_checkcall(L, "");
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Canvas.palette()");
 #endif
@@ -191,6 +188,7 @@ static int canvas_palette0(lua_State *L)
 
 static int canvas_palette1(lua_State *L)
 {
+    luaX_checkcall(L, "*");
     int type = lua_type(L, 1);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Canvas.palette(%d)", type);
@@ -246,22 +244,18 @@ static int canvas_palette1(lua_State *L)
 
 static int canvas_palette(lua_State *L)
 {
-    if (lua_gettop(L) == 0) {
-        return canvas_palette0(L);
-    } else
-    if (lua_gettop(L) == 1) {
-        return canvas_palette1(L);
-    } else {
-        return luaL_error(L, "<GRAPHICS> canvas function 0 arguments");
+    int argc = lua_gettop(L);
+    switch (argc) {
+        case 0: { return canvas_palette0(L); }
+        case 1: { return canvas_palette1(L); }
+        default: { return luaL_error(L, "[%s:%d] wrong number of arguments (got %d)", __FILE__, __LINE__, argc); }
     }
 }
 
 static int canvas_background(lua_State *L)
 {
-    if (lua_gettop(L) != 1) {
-        return luaL_error(L, "<GRAPHICS> canvas function takes 1 arguments");
-    }
-    int color = luaL_checkinteger(L, 1);
+    luaX_checkcall(L, "i");
+    int color = lua_tointeger(L, 1);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Canvas.background(%d)", color);
 #endif
@@ -275,10 +269,8 @@ static int canvas_background(lua_State *L)
 
 static int canvas_shader(lua_State *L)
 {
-    if (lua_gettop(L) != 1) {
-        return luaL_error(L, "<GRAPHICS> canvas function takes 1 arguments");
-    }
-    const char *code = luaL_checkstring(L, 1);
+    luaX_checkcall(L, "s");
+    const char *code = lua_tostring(L, 1);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Canvas.shader('%s')", code);
 #endif
@@ -292,10 +284,8 @@ static int canvas_shader(lua_State *L)
 
 static int canvas_color(lua_State *L)
 {
-    if (lua_gettop(L) != 1) {
-        return luaL_error(L, "<GRAPHICS> canvas function takes 1 arguments");
-    }
-    const char *argb = luaL_checkstring(L, 1);
+    luaX_checkcall(L, "s");
+    const char *argb = lua_tostring(L, 1);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Canvas.color('%s')", argb);
 #endif
@@ -320,11 +310,9 @@ static int canvas_color(lua_State *L)
 // http://glprogramming.com/red/appendixg.html#name1
 static int canvas_points(lua_State *L)
 {
-    if (lua_gettop(L) != 2) {
-        return luaL_error(L, "<GRAPHICS> canvas function takes 2 arguments");
-    }
+    luaX_checkcall(L, "ti");
     int vertices = lua_rawlen(L, 1);
-    int color = luaL_checkinteger(L, 2);
+    int color = lua_tointeger(L, 2);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Canvas.points(%d, %d)", vertices, color);
 #endif
@@ -355,11 +343,9 @@ static int canvas_points(lua_State *L)
 
 static int canvas_polyline(lua_State *L)
 {
-    if (lua_gettop(L) != 2) {
-        return luaL_error(L, "<GRAPHICS> canvas function takes 2 arguments");
-    }
+    luaX_checkcall(L, "ti");
     int vertices = lua_rawlen(L, 1);
-    int color = luaL_checkinteger(L, 2);
+    int color = lua_tointeger(L, 2);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Canvas.polyline(%d, %d)", vertices, color);
 #endif
@@ -390,11 +376,9 @@ static int canvas_polyline(lua_State *L)
 
 static int canvas_strip(lua_State *L)
 {
-    if (lua_gettop(L) != 2) {
-        return luaL_error(L, "<GRAPHICS> canvas function takes 2 arguments");
-    }
+    luaX_checkcall(L, "ti");
     int vertices = lua_rawlen(L, 1);
-    int color = luaL_checkinteger(L, 2);
+    int color = lua_tointeger(L, 2);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Canvas.strip(%d, %d)", vertices, color);
 #endif
@@ -425,11 +409,9 @@ static int canvas_strip(lua_State *L)
 
 static int canvas_fan(lua_State *L)
 {
-    if (lua_gettop(L) != 2) {
-        return luaL_error(L, "<GRAPHICS> canvas function takes 2 arguments");
-    }
+    luaX_checkcall(L, "ti");
     int vertices = lua_rawlen(L, 1);
-    int color = luaL_checkinteger(L, 2);
+    int color = lua_tointeger(L, 2);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Canvas.fan(%d, %d)", vertices, color);
 #endif

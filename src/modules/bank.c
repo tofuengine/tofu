@@ -61,7 +61,7 @@ static const luaX_Const bank_constants[] = {
 
 int bank_loader(lua_State *L)
 {
-    return luaX_newmodule(L, NULL, bank_functions, bank_constants, LUAX_CLASS(Bank_Class_t));
+    return luaX_newmodule(L, NULL, bank_functions, bank_constants, 0, LUAX_CLASS(Bank_Class_t));
 }
 
 static void to_indexed_atlas_callback(void *parameters, void *data, int width, int height) // TODO: convert image with a shader.
@@ -88,12 +88,11 @@ static void to_indexed_atlas_callback(void *parameters, void *data, int width, i
 
 static int bank_new(lua_State *L)
 {
-    if (lua_gettop(L) != 3) {
-        return luaL_error(L, "<BANK>> bank constructor requires 3 arguments");
-    }
-    const char *file = luaL_checkstring(L, 1);
-    int cell_width = luaL_checkinteger(L, 2);
-    int cell_height = luaL_checkinteger(L, 3);
+    luaX_checkcall(L, "sii");
+    const char *file = lua_tostring(L, 1);
+    int cell_width = lua_tointeger(L, 2);
+    int cell_height = lua_tointeger(L, 3);
+
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Bank.new() -> %s, %d, %d", file, cell_width, cell_height);
 #endif
@@ -120,10 +119,8 @@ static int bank_new(lua_State *L)
 
 static int bank_gc(lua_State *L)
 {
-    if (lua_gettop(L) != 1) {
-        return luaL_error(L, "<BANK> method requires 1 arguments");
-    }
-    Bank_Class_t *instance = (Bank_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Bank_Class_t));
+    luaX_checkcall(L, "u");
+    Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
 
     GL_sheet_delete(&instance->sheet);
     Log_write(LOG_LEVELS_DEBUG, "<BANK> bank #%p finalized", instance);
@@ -135,10 +132,8 @@ static int bank_gc(lua_State *L)
 
 static int bank_cell_width(lua_State *L)
 {
-    if (lua_gettop(L) != 0) {
-        return luaL_error(L, "<BANK> method requires 0 arguments");
-    }
-    Bank_Class_t *instance = (Bank_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Bank_Class_t));
+    luaX_checkcall(L, "u");
+    Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
 
     lua_pushinteger(L, instance->sheet.quad.width);
 
@@ -147,10 +142,8 @@ static int bank_cell_width(lua_State *L)
 
 static int bank_cell_height(lua_State *L)
 {
-    if (lua_gettop(L) != 0) {
-        return luaL_error(L, "<BANK> method requires 0 arguments");
-    }
-    Bank_Class_t *instance = (Bank_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Bank_Class_t));
+    luaX_checkcall(L, "u");
+    Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
 
     lua_pushinteger(L, instance->sheet.quad.height);
 
@@ -159,13 +152,11 @@ static int bank_cell_height(lua_State *L)
 
 static int bank_blit4(lua_State *L)
 {
-    if (lua_gettop(L) != 4) {
-        return luaL_error(L, "<BANK> method requires 4 arguments");
-    }
-    Bank_Class_t *instance = (Bank_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Bank_Class_t));
-    int cell_id = luaL_checkinteger(L, 2);
-    double x = (double)luaL_checknumber(L, 3);
-    double y = (double)luaL_checknumber(L, 4);
+    luaX_checkcall(L, "uinn");
+    Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
+    int cell_id = lua_tointeger(L, 2);
+    double x = (double)lua_tonumber(L, 3);
+    double y = (double)lua_tonumber(L, 4);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f", cell_id, x, y);
 #endif
@@ -186,14 +177,12 @@ static int bank_blit4(lua_State *L)
 
 static int bank_blit5(lua_State *L)
 {
-    if (lua_gettop(L) != 5) {
-        return luaL_error(L, "<BANK> method requires 5 arguments");
-    }
-    Bank_Class_t *instance = (Bank_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Bank_Class_t));
-    int cell_id = luaL_checkinteger(L, 2);
-    double x = (double)luaL_checknumber(L, 3);
-    double y = (double)luaL_checknumber(L, 4);
-    double rotation = (double)luaL_checknumber(L, 5);
+    luaX_checkcall(L, "uinnn");
+    Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
+    int cell_id = lua_tointeger(L, 2);
+    double x = (double)lua_tonumber(L, 3);
+    double y = (double)lua_tonumber(L, 4);
+    double rotation = (double)lua_tonumber(L, 5);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f, %.f", cell_id, x, y, rotation);
 #endif
@@ -214,15 +203,13 @@ static int bank_blit5(lua_State *L)
 
 static int bank_blit6(lua_State *L)
 {
-    if (lua_gettop(L) != 6) {
-        return luaL_error(L, "<BANK> method requires 6 arguments");
-    }
-    Bank_Class_t *instance = (Bank_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Bank_Class_t));
-    int cell_id = luaL_checkinteger(L, 2);
-    double x = (double)luaL_checknumber(L, 3);
-    double y = (double)luaL_checknumber(L, 4);
-    double scale_x = (double)luaL_checknumber(L, 5);
-    double scale_y = (double)luaL_checknumber(L, 6);
+    luaX_checkcall(L, "uinnnn");
+    Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
+    int cell_id = lua_tointeger(L, 2);
+    double x = (double)lua_tonumber(L, 3);
+    double y = (double)lua_tonumber(L, 4);
+    double scale_x = (double)lua_tonumber(L, 5);
+    double scale_y = (double)lua_tonumber(L, 6);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f, %.f, %.f", cell_id, x, y, scale_x, scale_y);
 #endif
@@ -259,16 +246,14 @@ static int bank_blit6(lua_State *L)
 
 static int bank_blit7(lua_State *L)
 {
-    if (lua_gettop(L) != 7) {
-        return luaL_error(L, "<BANK> method requires 7 arguments");
-    }
-    Bank_Class_t *instance = (Bank_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Bank_Class_t));
-    int cell_id = luaL_checkinteger(L, 2);
-    double x = (double)luaL_checknumber(L, 3);
-    double y = (double)luaL_checknumber(L, 4);
-    double rotation = (double)luaL_checknumber(L, 5);
-    double scale_x = (double)luaL_checknumber(L, 6);
-    double scale_y = (double)luaL_checknumber(L, 7);
+    luaX_checkcall(L, "uinnnnn");
+    Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
+    int cell_id = lua_tointeger(L, 2);
+    double x = (double)lua_tonumber(L, 3);
+    double y = (double)lua_tonumber(L, 4);
+    double rotation = (double)lua_tonumber(L, 5);
+    double scale_x = (double)lua_tonumber(L, 6);
+    double scale_y = (double)lua_tonumber(L, 7);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f, %.f, %.f, %.f", cell_id, x, y, rotation, scale_x, scale_y);
 #endif
@@ -305,18 +290,12 @@ static int bank_blit7(lua_State *L)
 
 static int bank_blit(lua_State *L)
 {
-    if (lua_gettop(L) == 4) {
-        return bank_blit4(L);
-    } else
-    if (lua_gettop(L) == 5) {
-        return bank_blit5(L);
-    } else
-    if (lua_gettop(L) == 6) {
-        return bank_blit6(L);
-    } else
-    if (lua_gettop(L) == 7) {
-        return bank_blit7(L);
-    } else {
-        return luaL_error(L, "<BANK> wrong argument number for method");
+    int argc = lua_gettop(L);
+    switch (argc) {
+        case 4: { return bank_blit4(L); }
+        case 5: { return bank_blit5(L); }
+        case 6: { return bank_blit6(L); }
+        case 7: { return bank_blit7(L); }
+        default: { return luaL_error(L, "[%s:%d] wrong number of arguments (got %d)", __FILE__, __LINE__, argc); }
     }
 }

@@ -63,5 +63,5 @@ static const char class_script[] =
 
 int class_loader(lua_State *L)
 {
-    return luaX_newmodule(L, class_script, NULL, NULL, NULL);
+    return luaX_newmodule(L, class_script, NULL, NULL, 0, NULL);
 }

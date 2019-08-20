@@ -47,14 +47,12 @@ static const luaX_Const environment_constants[] = {
 
 int environment_loader(lua_State *L)
 {
-    return luaX_newmodule(L, NULL, environment_functions, environment_constants, LUAX_CLASS(Environment_Class_t));
+    return luaX_newmodule(L, NULL, environment_functions, environment_constants, 0, LUAX_CLASS(Environment_Class_t));
 }
 
 static int environment_fps(lua_State *L)
 {
-    if (lua_gettop(L) != 0) {
-        return luaL_error(L, "<ENVIRONMENT> function requires 0 argument");
-    }
+    luaX_checkcall(L, "");
 
     Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
 
@@ -64,9 +62,7 @@ static int environment_fps(lua_State *L)
 
 static int environment_quit(lua_State *L)
 {
-    if (lua_gettop(L) != 0) {
-        return luaL_error(L, "<ENVIRONMENT> function requires 0 argument");
-    }
+    luaX_checkcall(L, "");
 
     Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
 

@@ -69,16 +69,14 @@ static const luaX_Const grid_constants[] = {
 
 int grid_loader(lua_State *L)
 {
-    return luaX_newmodule(L, NULL, grid_functions, grid_constants, LUAX_CLASS(Grid_Class_t));
+    return luaX_newmodule(L, NULL, grid_functions, grid_constants, 0, LUAX_CLASS(Grid_Class_t));
 }
 
 static int grid_new(lua_State *L)
 {
-    if (lua_gettop(L) != 3) {
-        return luaL_error(L, "<COLLECTIONS> grid constructor requires 3 arguments");
-    }
-    int width = luaL_checkinteger(L, 1);
-    int height = luaL_checkinteger(L, 2);
+    luaX_checkcall(L, "ii*");
+    int width = lua_tointeger(L, 1);
+    int height = lua_tointeger(L, 2);
     int type = lua_type(L, 3);
 
     Grid_Class_t *instance = (Grid_Class_t *)lua_newuserdata(L, sizeof(Grid_Class_t));
@@ -132,10 +130,8 @@ static int grid_new(lua_State *L)
 
 static int grid_gc(lua_State *L)
 {
-    if (lua_gettop(L) != 1) {
-        return luaL_error(L, "<COLLECTIONS> method requires 1 arguments");
-    }
-    Grid_Class_t *instance = (Grid_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Grid_Class_t));
+    luaX_checkcall(L, "u");
+    Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
 
     Log_write(LOG_LEVELS_DEBUG, "<COLLECTIONS> finalizing grid #%p", instance);
 
@@ -147,10 +143,8 @@ static int grid_gc(lua_State *L)
 
 static int grid_width(lua_State *L)
 {
-    if (lua_gettop(L) != 1) {
-        return luaL_error(L, "<COLLECTIONS> method requires 1 arguments");
-    }
-    Grid_Class_t *instance = (Grid_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Grid_Class_t));
+    luaX_checkcall(L, "u");
+    Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
 
     lua_pushinteger(L, instance->width);
 
@@ -159,10 +153,8 @@ static int grid_width(lua_State *L)
 
 static int grid_height(lua_State *L)
 {
-    if (lua_gettop(L) != 1) {
-        return luaL_error(L, "<COLLECTIONS> method requires 1 arguments");
-    }
-    Grid_Class_t *instance = (Grid_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Grid_Class_t));
+    luaX_checkcall(L, "u");
+    Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
 
     lua_pushinteger(L, instance->height);
 
@@ -171,10 +163,8 @@ static int grid_height(lua_State *L)
 
 static int grid_fill(lua_State *L)
 {
-    if (lua_gettop(L) != 2) {
-        return luaL_error(L, "<COLLECTIONS> method requires 2 arguments");
-    }
-    Grid_Class_t *instance = (Grid_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Grid_Class_t));
+    luaX_checkcall(L, "u*");
+    Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
     int type = lua_type(L, 2);
 
     int width = instance->width;
@@ -212,14 +202,12 @@ static int grid_fill(lua_State *L)
 
 static int grid_stride(lua_State *L)
 {
-    if (lua_gettop(L) != 5) {
-        return luaL_error(L, "<COLLECTIONS> method requires 5 arguments");
-    }
-    Grid_Class_t *instance = (Grid_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Grid_Class_t));
-    int column = luaL_checkinteger(L, 2);
-    int row = luaL_checkinteger(L, 3);
+    luaX_checkcall(L, "uii*i");
+    Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
+    int column = lua_tointeger(L, 2);
+    int row = lua_tointeger(L, 3);
     int type = lua_type(L, 4);
-    int amount = luaL_checkinteger(L, 5);
+    int amount = lua_tointeger(L, 5);
 
     int width = instance->width;
     int height = instance->height;
@@ -256,12 +244,10 @@ static int grid_stride(lua_State *L)
 
 static int grid_peek(lua_State *L)
 {
-    if (lua_gettop(L) != 3) {
-        return luaL_error(L, "<COLLECTIONS> method requires 3 arguments");
-    }
-    Grid_Class_t *instance = (Grid_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Grid_Class_t));
-    int column = luaL_checkinteger(L, 2);
-    int row = luaL_checkinteger(L, 3);
+    luaX_checkcall(L, "uii");
+    Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
+    int column = lua_tointeger(L, 2);
+    int row = lua_tointeger(L, 3);
 
     Cell_t *data = instance->offsets[row];
 
@@ -274,13 +260,11 @@ static int grid_peek(lua_State *L)
 
 static int grid_poke(lua_State *L)
 {
-    if (lua_gettop(L) != 4) {
-        return luaL_error(L, "<COLLECTIONS> method requires 4 arguments");
-    }
-    Grid_Class_t *instance = (Grid_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Grid_Class_t));
-    int column = luaL_checkinteger(L, 2);
-    int row = luaL_checkinteger(L, 3);
-    Cell_t value = (Cell_t)luaL_checknumber(L, 4);
+    luaX_checkcall(L, "uiin");
+    Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
+    int column = lua_tointeger(L, 2);
+    int row = lua_tointeger(L, 3);
+    Cell_t value = (Cell_t)lua_tonumber(L, 4);
 
     Cell_t *data = instance->offsets[row];
 

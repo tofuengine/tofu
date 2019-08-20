@@ -69,7 +69,7 @@ static const luaX_Const font_constants[] = {
 
 int font_loader(lua_State *L)
 {
-    return luaX_newmodule(L, font_script, font_functions, font_constants, LUAX_CLASS(Font_Class_t));
+    return luaX_newmodule(L, font_script, font_functions, font_constants, 0, LUAX_CLASS(Font_Class_t));
 }
 
 static void to_font_atlas_callback(void *parameters, void *data, int width, int height)
@@ -90,12 +90,10 @@ static void to_font_atlas_callback(void *parameters, void *data, int width, int 
 
 static int font_new(lua_State *L)
 {
-    if (lua_gettop(L) != 3) {
-        return luaL_error(L, "<GRAPHICS> bank constructor requires 3 arguments");
-    }
-    const char *file = luaL_checkstring(L, 1);
-    int glyph_width = luaL_checkinteger(L, 2);
-    int glyph_height = luaL_checkinteger(L, 3);
+    luaX_checkcall(L, "sii");
+    const char *file = lua_tostring(L, 1);
+    int glyph_width = lua_tointeger(L, 2);
+    int glyph_height = lua_tointeger(L, 3);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Font.new() -> %s, %d, %d", file, glyph_width, glyph_height);
 #endif
@@ -129,10 +127,8 @@ static int font_new(lua_State *L)
 
 static int font_gc(lua_State *L)
 {
-    if (lua_gettop(L) != 1) {
-        return luaL_error(L, "<FONT> method requires 1 arguments");
-    }
-    Font_Class_t *instance = (Font_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Font_Class_t));
+    luaX_checkcall(L, "u");
+    Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
 
     GL_sheet_delete(&instance->sheet);
     Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> font #%p finalized", instance);
@@ -144,16 +140,14 @@ static int font_gc(lua_State *L)
 
 static int font_write(lua_State *L)
 {
-    if (lua_gettop(L) != 7) {
-        return luaL_error(L, "<FONT> method requires 7 arguments");
-    }
-    Font_Class_t *instance = (Font_Class_t *)luaL_checkudata(L, 1, LUAX_CLASS(Font_Class_t));
-    const char *text = luaL_checkstring(L, 2);
-    double x = luaL_checknumber(L, 3);
-    double y = luaL_checknumber(L, 4);
-    int color = luaL_checkinteger(L, 5);
-    double scale = luaL_checknumber(L, 6);
-    const char *alignment = luaL_checkstring(L, 7);
+    luaX_checkcall(L, "usnnins");
+    Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
+    const char *text = lua_tostring(L, 2);
+    double x = (double)lua_tonumber(L, 3);
+    double y = (double)lua_tonumber(L, 4);
+    int color = lua_tointeger(L, 5);
+    double scale = (double)lua_tonumber(L, 6);
+    const char *alignment = lua_tostring(L, 7);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %s, %d, %d, %d, %d, %s", text, x, y, color, scale, alignment);
 #endif

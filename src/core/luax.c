@@ -161,14 +161,8 @@ void luaX_preload(lua_State *L, const char *name, lua_CFunction f)
     lua_pop(L, 2);
 }
 
-int luaX_checkfunction(lua_State *L, int arg)
+int luaX_toref(lua_State *L, int arg)
 {
-    if (lua_type(L, arg) != LUA_TFUNCTION) {
-#if 0
-        tag_error(L, arg, LUA_TFUNCTION);
-#endif
-        return -1;
-    }
     lua_pushvalue(L, arg);
     return luaL_ref(L, LUA_REGISTRYINDEX);
 }
@@ -219,4 +213,43 @@ void luaX_setglobals(lua_State *L, const luaL_Reg *l, int nup) {
         lua_setglobal(L, l->name);
     }
     lua_pop(L, nup);  /* remove upvalues */
+}
+
+void luaX_checkarguments(lua_State *L, int n, const char* func, int line)
+{
+    int argc = lua_gettop(L);
+    if (argc != n) {
+        luaL_error(L, "[%s:%d] wrong arguments count (need %d, got %d)", func, line, argc, n);
+        return; // Unreachable code.
+    }
+}
+
+void luaX_checksignature(lua_State *L, const char *signature, const char* func, int line)
+{
+    int argc = lua_gettop(L);
+    int n = strlen(signature);
+    if (argc != n) {
+        luaL_error(L, "[%s:%d] wrong arguments count (need %d, got %d)", func, line, argc, n);
+        return; // Unreachable code.
+    }
+    for (int i = 0; i < n; ++i) {
+        char c = signature[i];
+        int index = i + 1;
+        if (((c == '*'))
+            || ((c == 'v') && lua_isnil(L, index))
+            || ((c == 'b') && lua_isboolean(L, index))
+            || ((c == 'l') && lua_islightuserdata(L, index))
+            || ((c == 'i') && lua_isinteger(L, index))
+            || ((c == 'n') && lua_isnumber(L, index))
+            || ((c == 's') && lua_isstring(L, index))
+            || ((c == 't') && lua_istable(L, index))
+            || ((c == 'f') && lua_isfunction(L, index))
+            || ((c == 'c') && lua_iscfunction(L, index))
+            || ((c == 'u') && lua_isuserdata(L, index))
+            || ((c == 'x') && lua_isthread(L, index))) {
+            continue;
+        }
+        luaL_error(L, "[%s:%d] wrong type for argument #%d (need '%c', got %d)", func, line, i, c, lua_type(L, index));
+        return; // Unreachable code.
+    }
 }
