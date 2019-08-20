@@ -69,7 +69,8 @@ static const luaX_Const grid_constants[] = {
 
 int grid_loader(lua_State *L)
 {
-    return luaX_newmodule(L, NULL, grid_functions, grid_constants, 0, LUAX_CLASS(Grid_Class_t));
+    lua_pushvalue(L, lua_upvalueindex(1)); // Duplicate the upvalue to pass it to the module.
+    return luaX_newmodule(L, NULL, grid_functions, grid_constants, 1, LUAX_CLASS(Grid_Class_t));
 }
 
 static int grid_new(lua_State *L)
@@ -121,7 +122,7 @@ static int grid_new(lua_State *L)
             .offsets = offsets
         };
 
-    Log_write(LOG_LEVELS_DEBUG, "<COLLECTIONS> grid #%p allocated", instance);
+    Log_write(LOG_LEVELS_DEBUG, "<GRID> grid #%p allocated", instance);
 
     luaL_setmetatable(L, LUAX_CLASS(Grid_Class_t));
 
@@ -133,7 +134,7 @@ static int grid_gc(lua_State *L)
     luaX_checkcall(L, "u");
     Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
 
-    Log_write(LOG_LEVELS_DEBUG, "<COLLECTIONS> finalizing grid #%p", instance);
+    Log_write(LOG_LEVELS_DEBUG, "<GRID> finalizing grid #%p", instance);
 
     free(instance->data);
     free(instance->offsets);

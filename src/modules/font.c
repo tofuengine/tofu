@@ -69,7 +69,8 @@ static const luaX_Const font_constants[] = {
 
 int font_loader(lua_State *L)
 {
-    return luaX_newmodule(L, font_script, font_functions, font_constants, 0, LUAX_CLASS(Font_Class_t));
+    lua_pushvalue(L, lua_upvalueindex(1)); // Duplicate the upvalue to pass it to the module.
+    return luaX_newmodule(L, font_script, font_functions, font_constants, 1, LUAX_CLASS(Font_Class_t));
 }
 
 static void to_font_atlas_callback(void *parameters, void *data, int width, int height)
@@ -97,28 +98,29 @@ static int font_new(lua_State *L)
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Font.new() -> %s, %d, %d", file, glyph_width, glyph_height);
 #endif
-    Font_Class_t *instance = (Font_Class_t *)lua_newuserdata(L, sizeof(Font_Class_t));
 
-    Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
+    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
 
     const Sheet_Data_t *data = graphics_sheets_find(file);
 
     GL_Sheet_t sheet;
     if (data) {
         GL_sheet_decode(&sheet, data->buffer, data->size, data->quad_width, data->quad_height, to_font_atlas_callback, NULL);
-        Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> default font %dx%d allocated", data->quad_width, data->quad_height);
+        Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet '%s' decoded", file);
     } else {
         char pathfile[PATH_FILE_MAX] = {};
         strcpy(pathfile, environment->base_path);
         strcat(pathfile, file + 2);
 
         GL_sheet_load(&sheet, pathfile, glyph_width, glyph_height, to_font_atlas_callback, NULL);
-        Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> font '%s' allocated as #%p", pathfile, instance);
+        Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet '%s' loaded", pathfile);
     }
 
+    Font_Class_t *instance = (Font_Class_t *)lua_newuserdata(L, sizeof(Font_Class_t));
     *instance = (Font_Class_t){
             .sheet = sheet
         };
+    Log_write(LOG_LEVELS_DEBUG, "<FONT> font allocated as #%p", instance);
 
     luaL_setmetatable(L, LUAX_CLASS(Font_Class_t));
 
@@ -131,7 +133,7 @@ static int font_gc(lua_State *L)
     Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
 
     GL_sheet_delete(&instance->sheet);
-    Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> font #%p finalized", instance);
+    Log_write(LOG_LEVELS_DEBUG, "<FONT> font #%p finalized", instance);
 
     *instance = (Font_Class_t){};
 

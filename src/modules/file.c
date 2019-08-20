@@ -46,7 +46,8 @@ static const luaX_Const file_constants[] = {
 
 int file_loader(lua_State *L)
 {
-    return luaX_newmodule(L, NULL, file_functions, file_constants, 0, LUAX_CLASS(File_Class_t));
+    lua_pushvalue(L, lua_upvalueindex(1)); // Duplicate the upvalue to pass it to the module.
+    return luaX_newmodule(L, NULL, file_functions, file_constants, 1, LUAX_CLASS(File_Class_t));
 }
 
 static int file_read(lua_State *L)
@@ -56,7 +57,8 @@ static int file_read(lua_State *L)
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "File.read() -> %s", file);
 #endif
-    Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
+
+    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
 
     char pathfile[PATH_FILE_MAX] = {};
     strcpy(pathfile, environment->base_path);

@@ -134,6 +134,9 @@ int luaX_newmodule(lua_State *L, const char *script, const luaL_Reg *f, const lu
     }
 
     if (f) {
+        for (int i = 0; i < nup; ++i) { // Duplicate upvalues (take a "+ 1" into account to skip the table).
+            lua_pushvalue(L, -(nup + 1));
+        }
         luaL_setfuncs(L, f, nup); // Register the function into the table at the top of the stack, i.e. create the methods
     }
 
@@ -149,16 +152,24 @@ int luaX_newmodule(lua_State *L, const char *script, const luaL_Reg *f, const lu
         }
     }
 
+    // We need to return the module table on top of the stack upon return. Since it's a common idiom that upvalues are
+    // consumed by the called function, we move the table "under" the upvalues and pop them.
+    lua_insert(L, -(nup + 1));
+    lua_pop(L, nup);
+
     return 1;
 }
 
-void luaX_preload(lua_State *L, const char *name, lua_CFunction f)
+void luaX_preload(lua_State *L, const char *name, lua_CFunction f, int nup)
 {
     lua_getglobal(L, "package");
     lua_getfield(L, -1, "preload");
-    lua_pushcfunction(L, f);
+    for (int i = 0; i < nup; ++i) { // Copy the upvalues to the top
+        lua_pushvalue(L, -(nup + 2));
+    }
+    lua_pushcclosure(L, f, nup); // Closure with those upvalues (the one just pushed will be removed)
     lua_setfield(L, -2, name);
-    lua_pop(L, 2);
+    lua_pop(L, nup + 2); // Pop the upvalues and the "package.preload" pair
 }
 
 int luaX_toref(lua_State *L, int arg)
@@ -167,33 +178,11 @@ int luaX_toref(lua_State *L, int arg)
     return luaL_ref(L, LUA_REGISTRYINDEX);
 }
 
-void luaX_setuserdata(lua_State *L, const char *name, void *p)
-{
-    lua_pushlightuserdata(L, p);  //Set your userdata as a global
-#ifdef __LUAX_USE_REGISTRY_INDEX_FOR_USERDATA__
-    lua_setfield(L, LUA_REGISTRYINDEX, name);
-#else
-    lua_setglobal(L, name);
-#endif
-}
-
-void *luaX_getuserdata(lua_State *L, const char *name)
-{
-#ifdef __LUAX_USE_REGISTRY_INDEX_FOR_USERDATA__
-    lua_getfield(L, LUA_REGISTRYINDEX, name);
-#else
-    lua_getglobal(L, name);
-#endif
-    void *ptr = lua_touserdata(L, -1);  //Get it from the top of the stack
-    lua_pop(L, 1); // Remove the global data from the stack.
-    return ptr;
-}
-
 void luaX_getnumberarray(lua_State *L, int idx, double *array)
 {
     int j = 0;
     lua_pushnil(L); // first key
-    while (lua_next(L, idx) != 0) {
+    while (lua_next(L, idx)) {
 #if 0
         const char *key_type = lua_typename(L, lua_type(L, -2)); // uses 'key' (at index -2) and 'value' (at index -1)
 #endif
@@ -201,18 +190,6 @@ void luaX_getnumberarray(lua_State *L, int idx, double *array)
 
         lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
     }
-}
-
-void luaX_setglobals(lua_State *L, const luaL_Reg *l, int nup) {
-    luaL_checkstack(L, nup, "too many upvalues");
-    for (; l->name != NULL; l++) {  /* fill the table with given functions */
-        for (int i = 0; i < nup; i++) { /* copy upvalues to the top */
-            lua_pushvalue(L, -nup);
-        }
-        lua_pushcclosure(L, l->func, nup);  /* closure with those upvalues */
-        lua_setglobal(L, l->name);
-    }
-    lua_pop(L, nup);  /* remove upvalues */
 }
 
 void luaX_checkarguments(lua_State *L, int n, const char* func, int line)

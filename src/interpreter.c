@@ -76,14 +76,8 @@ bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configu
     }
     luaL_openlibs(interpreter->state);
 
-    bool initialized = modules_initialize(interpreter->state);
-    if (!initialized) {
-        Log_write(LOG_LEVELS_FATAL, "<VM> can't initialize modules");
-        lua_close(interpreter->state);
-        return false;
-    }
-
-    luaX_setuserdata(interpreter->state, "environment", (void *)environment);
+    lua_pushlightuserdata(interpreter->state, (void *)environment); // Discard `const` qualifier.
+    modules_initialize(interpreter->state, 1);
 
     luaX_appendpath(interpreter->state, environment->base_path);
     // TODO: register a custom searcher for the "packed" archive feature.

@@ -26,11 +26,11 @@
 #include <limits.h>
 #include <stdbool.h>
 
-#include "core/luax.h"
-#include "core/timerpool.h"
-
 #include "configuration.h"
 #include "environment.h"
+
+#include "core/luax.h"
+#include "core/timerpool.h"
 
 typedef struct _Interpreter_t {
     const Environment_t *environment;

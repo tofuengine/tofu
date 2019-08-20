@@ -24,6 +24,7 @@
 
 #include "log.h"
 
+#include "core/luax.h"
 #include "modules/bank.h"
 #include "modules/canvas.h"
 #include "modules/class.h"
@@ -52,13 +53,15 @@ static const Module_t modules[] = {
     { NULL, NULL }
 };
 
-bool modules_initialize(lua_State *L)
+void modules_initialize(lua_State *L, int nup)
 {
-    for (int i = 0; modules[i].loader; ++i) {
-        luaX_preload(L, modules[i].namespace, modules[i].loader);
 //        luaL_requiref(L, modules[i].namespace, modules[i].loader, 1);
 //        lua_pop(L, 1);  /* remove lib */
+    for (int i = 0; modules[i].loader; ++i) {
+        for (int j = 0; j < nup; ++j) {
+            lua_pushvalue(L, -nup);
+        }
+        luaX_preload(L, modules[i].namespace, modules[i].loader, nup);
     }
-
-    return true;
+    lua_pop(L, nup);
 }

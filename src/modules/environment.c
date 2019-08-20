@@ -47,14 +47,15 @@ static const luaX_Const environment_constants[] = {
 
 int environment_loader(lua_State *L)
 {
-    return luaX_newmodule(L, NULL, environment_functions, environment_constants, 0, LUAX_CLASS(Environment_Class_t));
+    lua_pushvalue(L, lua_upvalueindex(1)); // Duplicate the upvalue to pass it to the module.
+    return luaX_newmodule(L, NULL, environment_functions, environment_constants, 1, LUAX_CLASS(Environment_Class_t));
 }
 
 static int environment_fps(lua_State *L)
 {
     luaX_checkcall(L, "");
 
-    Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
+    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
 
     lua_pushinteger(L, environment->fps);
     return 1;
@@ -64,7 +65,7 @@ static int environment_quit(lua_State *L)
 {
     luaX_checkcall(L, "");
 
-    Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
+    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
 
     environment->should_close = true;
 

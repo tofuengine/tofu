@@ -53,7 +53,8 @@ static const luaX_Const timer_constants[] = {
 
 int timer_loader(lua_State *L)
 {
-    return luaX_newmodule(L, NULL, timer_functions, timer_constants, 0, LUAX_CLASS(Timer_Class_t));
+    lua_pushvalue(L, lua_upvalueindex(1)); // Duplicate the upvalue to pass it to the module.
+    return luaX_newmodule(L, NULL, timer_functions, timer_constants, 1, LUAX_CLASS(Timer_Class_t));
 }
 
 static int timer_new(lua_State *L)
@@ -66,7 +67,7 @@ static int timer_new(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Timer.new() -> %f, %d, %d", period, repeats, callback);
 #endif
 
-    Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
+    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
     Timer_Pool_t *timer_pool = environment->timer_pool;
 
     Timer_Class_t *instance = (Timer_Class_t *)lua_newuserdata(L, sizeof(Timer_Class_t));
@@ -76,7 +77,6 @@ static int timer_new(lua_State *L)
             .repeats = repeats,
             .callback = callback
         });
-
     Log_write(LOG_LEVELS_DEBUG, "<TIMER> timer #%p allocated", instance->timer);
 
     luaL_setmetatable(L, LUAX_CLASS(Timer_Class_t));

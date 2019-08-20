@@ -25,8 +25,8 @@
 
 #include <stdbool.h>
 
-#include "core/luax.h"
+typedef struct lua_State lua_State;
 
-extern bool modules_initialize(lua_State *L);
+extern void modules_initialize(lua_State *L, int nup);
 
 #endif  /* __TOFU_MODULES_H__ */

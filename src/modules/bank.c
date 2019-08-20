@@ -61,7 +61,8 @@ static const luaX_Const bank_constants[] = {
 
 int bank_loader(lua_State *L)
 {
-    return luaX_newmodule(L, NULL, bank_functions, bank_constants, 0, LUAX_CLASS(Bank_Class_t));
+    lua_pushvalue(L, lua_upvalueindex(1)); // Duplicate the upvalue to pass it to the module.
+    return luaX_newmodule(L, NULL, bank_functions, bank_constants, 1, LUAX_CLASS(Bank_Class_t));
 }
 
 static void to_indexed_atlas_callback(void *parameters, void *data, int width, int height) // TODO: convert image with a shader.
@@ -96,9 +97,8 @@ static int bank_new(lua_State *L)
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Bank.new() -> %s, %d, %d", file, cell_width, cell_height);
 #endif
-    Bank_Class_t *instance = (Bank_Class_t *)lua_newuserdata(L, sizeof(Bank_Class_t));
 
-    Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
+    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
 
     char pathfile[PATH_FILE_MAX] = {};
     strcpy(pathfile, environment->base_path);
@@ -106,11 +106,13 @@ static int bank_new(lua_State *L)
 
     GL_Sheet_t sheet;
     GL_sheet_load(&sheet, pathfile, cell_width, cell_height, to_indexed_atlas_callback, (void *)&environment->display->palette);
-    Log_write(LOG_LEVELS_DEBUG, "<BANK> bank '%s' allocated as #%p", pathfile, instance);
+    Log_write(LOG_LEVELS_DEBUG, "<BANK> sheet '%s' loaded", pathfile);
 
+    Bank_Class_t *instance = (Bank_Class_t *)lua_newuserdata(L, sizeof(Bank_Class_t));
     *instance = (Bank_Class_t){
             .sheet = sheet
         };
+    Log_write(LOG_LEVELS_DEBUG, "<BANK> bank allocated as #%p", pathfile, instance);
 
     luaL_setmetatable(L, LUAX_CLASS(Bank_Class_t));
 

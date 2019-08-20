@@ -132,7 +132,8 @@ static const luaX_Const canvas_constants[] = {
 
 int canvas_loader(lua_State *L)
 {
-    return luaX_newmodule(L, canvas_script, canvas_functions, canvas_constants, 0, LUAX_CLASS(Canvas_Class_t));
+    lua_pushvalue(L, lua_upvalueindex(1)); // Duplicate the upvalue to pass it to the module.
+    return luaX_newmodule(L, canvas_script, canvas_functions, canvas_constants, 1, LUAX_CLASS(Canvas_Class_t));
 }
 
 static int canvas_width(lua_State *L)
@@ -142,7 +143,7 @@ static int canvas_width(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.width()");
 #endif
 
-    Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
+    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
 
     lua_pushinteger(L, environment->display->configuration.width);
 
@@ -156,7 +157,7 @@ static int canvas_height(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.height()");
 #endif
 
-    Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
+    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
 
     lua_pushinteger(L, environment->display->configuration.height);
 
@@ -170,7 +171,7 @@ static int canvas_palette0(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.palette()");
 #endif
 
-    Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
+    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
 
     GL_Palette_t *palette = &environment->display->palette;
 
@@ -194,7 +195,7 @@ static int canvas_palette1(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.palette(%d)", type);
 #endif
 
-    Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
+    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
 
     GL_Palette_t palette = {};
 
@@ -204,17 +205,17 @@ static int canvas_palette1(lua_State *L)
         if (predefined_palette != NULL) {
             palette = *predefined_palette;
 
-            Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> setting predefined palette '%s' w/ %d color(s)", id, predefined_palette->count);
+            Log_write(LOG_LEVELS_DEBUG, "<CANVAS> setting predefined palette '%s' w/ %d color(s)", id, predefined_palette->count);
         } else {
-            Log_write(LOG_LEVELS_WARNING, "<GRAPHICS> unknown predefined palette w/ id '%s'", id);
+            Log_write(LOG_LEVELS_WARNING, "<CANVAS> unknown predefined palette w/ id '%s'", id);
         }
     } else
     if (type == LUA_TTABLE) { // User supplied palette.
         palette.count = lua_rawlen(L, 1);
-        Log_write(LOG_LEVELS_DEBUG, "<GRAPHICS> setting custom palette of #%d color(s)", palette.count);
+        Log_write(LOG_LEVELS_DEBUG, "<CANVAS> setting custom palette of #%d color(s)", palette.count);
 
         if (palette.count > GL_MAX_PALETTE_COLORS) {
-            Log_write(LOG_LEVELS_WARNING, "<GRAPHICS> palette has too many colors (%d) - clamping", palette.count);
+            Log_write(LOG_LEVELS_WARNING, "<CANVAS> palette has too many colors (%d) - clamping", palette.count);
             palette.count = MAX_PALETTE_COLORS;
         }
 
@@ -230,7 +231,7 @@ static int canvas_palette1(lua_State *L)
             lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
         }
     } else {
-        Log_write(LOG_LEVELS_ERROR, "<GRAPHICS> wrong palette type, need to be string or list");
+        Log_write(LOG_LEVELS_ERROR, "<CANVAS> wrong palette type, need to be string or list");
     }
 
     if (palette.count == 0) {
@@ -260,7 +261,7 @@ static int canvas_background(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.background(%d)", color);
 #endif
 
-    Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
+    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
 
     Display_background(environment->display, color);
 
@@ -275,7 +276,7 @@ static int canvas_shader(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.shader('%s')", code);
 #endif
 
-    Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
+    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
 
     Display_shader(environment->display, code);
 
@@ -290,7 +291,7 @@ static int canvas_color(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.color('%s')", argb);
 #endif
 
-    Environment_t *environment = (Environment_t *)luaX_getuserdata(L, "environment");
+    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
 
     GL_Color_t color = GL_palette_parse_color(argb);
     size_t index = GL_palette_find_nearest_color(&environment->display->palette, color);
@@ -319,7 +320,7 @@ static int canvas_points(lua_State *L)
 
     const size_t count = vertices / 2;
     if (count == 0) {
-        Log_write(LOG_LEVELS_INFO, "<GRAPHICS> point-sequence as no vertices");
+        Log_write(LOG_LEVELS_INFO, "<CANVAS> point-sequence as no vertices");
         return 0;
     }
 
@@ -352,7 +353,7 @@ static int canvas_polyline(lua_State *L)
 
     const size_t count = vertices / 2;
     if (count == 0) {
-        Log_write(LOG_LEVELS_INFO, "<GRAPHICS> polyline as no vertices");
+        Log_write(LOG_LEVELS_INFO, "<CANVAS> polyline as no vertices");
         return 0;
     }
 
@@ -385,7 +386,7 @@ static int canvas_strip(lua_State *L)
 
     const size_t count = vertices / 2;
     if (count == 0) {
-        Log_write(LOG_LEVELS_INFO, "<GRAPHICS> strip as no vertices");
+        Log_write(LOG_LEVELS_INFO, "<CANVAS> strip as no vertices");
         return 0;
     }
 
@@ -418,7 +419,7 @@ static int canvas_fan(lua_State *L)
 
     const size_t count = vertices / 2;
     if (count == 0) {
-        Log_write(LOG_LEVELS_INFO, "<GRAPHICS> fan as no vertices");
+        Log_write(LOG_LEVELS_INFO, "<CANVAS> fan as no vertices");
         return 0;
     }
 
