@@ -2,11 +2,6 @@ local Class = require("tofu.util.class")
 
 local Main = Class.define()
 
-function Main:__ctor()
-  local Game = require("game") -- Lazily require.
-  self.game = Game.new()
-end
-
 function Main:setup()
   return {
       ["title"] = "BunnyMark",
@@ -20,7 +15,8 @@ function Main:setup()
 end
 
 function Main:init()
-  self.game:init()
+  local Game = require("game") -- Lazily require.
+  self.game = Game.new()
 end
 
 function Main:input()

@@ -23,20 +23,15 @@ local function dump(t, spaces)
 end
 
 function Game:__ctor()
-  self.bunnies = {}
-  self.bank = nil
-  self.font = nil
-  self.speed = 1.0
-  self.running = true
-end
-
-function Game:init()
 --dump(Canvas)
-  Canvas.palette("gameboy")
+Canvas.palette("gameboy")
   Canvas.background(1)
 
+  self.bunnies = {}
   self.bank = Bank.new("./assets/sheet.png", 26, 37)
   self.font = Font.default()
+  self.speed = 1.0
+  self.running = true
 end
 
 function Game:input()
