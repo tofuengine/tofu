@@ -94,7 +94,7 @@ static int timer_gc(lua_State *L)
 
     Log_write(LOG_LEVELS_DEBUG, "<TIMER> finalizing timer #%p", instance->timer);
 
-    luaL_unref(L, LUA_REGISTRYINDEX, instance->timer->value.callback); // TODO: move to the timer gc callback.
+    luaL_unref(L, LUA_REGISTRYINDEX, instance->timer->value.callback);
 
     TimerPool_release(instance->timer_pool, instance->timer);
 
