@@ -35,19 +35,19 @@ typedef struct _File_Class_t {
 
 static int file_read(lua_State *L);
 
-static const struct luaL_Reg file_functions[] = {
+static const struct luaL_Reg _file_functions[] = {
     { "read", file_read },
     { NULL, NULL }
 };
 
-static const luaX_Const file_constants[] = {
+static const luaX_Const _file_constants[] = {
     { NULL }
 };
 
 int file_loader(lua_State *L)
 {
     lua_pushvalue(L, lua_upvalueindex(1)); // Duplicate the upvalue to pass it to the module.
-    return luaX_newmodule(L, NULL, file_functions, file_constants, 1, LUAX_CLASS(File_Class_t));
+    return luaX_newmodule(L, NULL, _file_functions, _file_constants, 1, LUAX_CLASS(File_Class_t));
 }
 
 static int file_read(lua_State *L)

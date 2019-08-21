@@ -62,7 +62,7 @@ typedef enum _Methods_t {
     Methods_t_CountOf
 } Methods_t;
 
-static const char *methods[] = {
+static const char *_methods[] = {
     "setup",
     "init",
     "input",
@@ -165,7 +165,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configu
         return false;
     }
 
-    if (!detect(interpreter->state, ROOT_INSTANCE, methods)) {
+    if (!detect(interpreter->state, ROOT_INSTANCE, _methods)) {
         lua_close(interpreter->state);
         return false;
     }

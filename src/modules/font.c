@@ -44,7 +44,7 @@ static int font_new(lua_State *L);
 static int font_gc(lua_State *L);
 static int font_write(lua_State *L);
 
-static const char font_script[] =
+static const char _font_script[] =
     "local Font = {}\n"
     "\n"
     "--Font.__index = Font\n"
@@ -56,21 +56,21 @@ static const char font_script[] =
     "return Font\n"
 ;
 
-static const struct luaL_Reg font_functions[] = {
+static const struct luaL_Reg _font_functions[] = {
     { "new", font_new },
     {"__gc", font_gc },
     { "write", font_write },
     { NULL, NULL }
 };
 
-static const luaX_Const font_constants[] = {
+static const luaX_Const _font_constants[] = {
     { NULL }
 };
 
 int font_loader(lua_State *L)
 {
     lua_pushvalue(L, lua_upvalueindex(1)); // Duplicate the upvalue to pass it to the module.
-    return luaX_newmodule(L, font_script, font_functions, font_constants, 1, LUAX_CLASS(Font_Class_t));
+    return luaX_newmodule(L, _font_script, _font_functions, _font_constants, 1, LUAX_CLASS(Font_Class_t));
 }
 
 static void to_font_atlas_callback(void *parameters, void *data, int width, int height)

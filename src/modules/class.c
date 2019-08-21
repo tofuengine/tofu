@@ -26,7 +26,7 @@
 
 #include "../log.h"
 
-static const char class_script[] =
+static const char _class_script[] =
     "local Class = {}\n"
     "\n"
     "function Class.define(model)\n"
@@ -64,5 +64,5 @@ static const char class_script[] =
 int class_loader(lua_State *L)
 {
     lua_pushvalue(L, lua_upvalueindex(1)); // Duplicate the upvalue to pass it to the module.
-    return luaX_newmodule(L, class_script, NULL, NULL, 1, NULL);
+    return luaX_newmodule(L, _class_script, NULL, NULL, 1, NULL);
 }

@@ -49,7 +49,7 @@ static int canvas_polyline(lua_State *L);
 static int canvas_strip(lua_State *L);
 static int canvas_fan(lua_State *L);
 
-static const char canvas_script[] =
+static const char _canvas_script[] =
     "local Canvas = {}\n"
     "\n"
     "function Canvas.point(x0, y0, color)\n"
@@ -112,7 +112,7 @@ static const char canvas_script[] =
     "return Canvas\n"
 ;
 
-static const struct luaL_Reg canvas_functions[] = {
+static const struct luaL_Reg _canvas_functions[] = {
     { "width", canvas_width },
     { "height", canvas_height },
     { "palette", canvas_palette },
@@ -126,14 +126,14 @@ static const struct luaL_Reg canvas_functions[] = {
     { NULL, NULL }
 };
 
-static const luaX_Const canvas_constants[] = {
+static const luaX_Const _canvas_constants[] = {
     { NULL }
 };
 
 int canvas_loader(lua_State *L)
 {
     lua_pushvalue(L, lua_upvalueindex(1)); // Duplicate the upvalue to pass it to the module.
-    return luaX_newmodule(L, canvas_script, canvas_functions, canvas_constants, 1, LUAX_CLASS(Canvas_Class_t));
+    return luaX_newmodule(L, _canvas_script, _canvas_functions, _canvas_constants, 1, LUAX_CLASS(Canvas_Class_t));
 }
 
 static int canvas_width(lua_State *L)

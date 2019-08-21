@@ -39,7 +39,7 @@ static int timer_gc(lua_State *L);
 static int timer_reset(lua_State *L);
 static int timer_cancel(lua_State *L);
 
-static const struct luaL_Reg timer_functions[] = {
+static const struct luaL_Reg _timer_functions[] = {
     { "new", timer_new },
     {"__gc", timer_gc },
     { "reset", timer_reset },
@@ -47,14 +47,14 @@ static const struct luaL_Reg timer_functions[] = {
     { NULL, NULL }
 };
 
-static const luaX_Const timer_constants[] = {
+static const luaX_Const _timer_constants[] = {
     { NULL }
 };
 
 int timer_loader(lua_State *L)
 {
     lua_pushvalue(L, lua_upvalueindex(1)); // Duplicate the upvalue to pass it to the module.
-    return luaX_newmodule(L, NULL, timer_functions, timer_constants, 1, LUAX_CLASS(Timer_Class_t));
+    return luaX_newmodule(L, NULL, _timer_functions, _timer_constants, 1, LUAX_CLASS(Timer_Class_t));
 }
 
 static int timer_new(lua_State *L)

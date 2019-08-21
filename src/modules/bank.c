@@ -46,7 +46,7 @@ static int bank_cell_width(lua_State *L);
 static int bank_cell_height(lua_State *L);
 static int bank_blit(lua_State *L);
 
-static const struct luaL_Reg bank_functions[] = {
+static const struct luaL_Reg _bank_functions[] = {
     { "new", bank_new },
     {"__gc", bank_gc },
     { "cell_width", bank_cell_width },
@@ -55,14 +55,14 @@ static const struct luaL_Reg bank_functions[] = {
     { NULL, NULL }
 };
 
-static const luaX_Const bank_constants[] = {
+static const luaX_Const _bank_constants[] = {
     { NULL }
 };
 
 int bank_loader(lua_State *L)
 {
     lua_pushvalue(L, lua_upvalueindex(1)); // Duplicate the upvalue to pass it to the module.
-    return luaX_newmodule(L, NULL, bank_functions, bank_constants, 1, LUAX_CLASS(Bank_Class_t));
+    return luaX_newmodule(L, NULL, _bank_functions, _bank_constants, 1, LUAX_CLASS(Bank_Class_t));
 }
 
 static void to_indexed_atlas_callback(void *parameters, void *data, int width, int height) // TODO: convert image with a shader.

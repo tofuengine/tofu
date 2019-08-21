@@ -35,20 +35,20 @@ typedef struct _Environment_Class_t {
 static int environment_fps(lua_State *L);
 static int environment_quit(lua_State *L);
 
-static const struct luaL_Reg environment_functions[] = {
+static const struct luaL_Reg _environment_functions[] = {
     { "fps", environment_fps },
     { "quit", environment_quit },
     { NULL, NULL }
 };
 
-static const luaX_Const environment_constants[] = {
+static const luaX_Const _environment_constants[] = {
     { NULL }
 };
 
 int environment_loader(lua_State *L)
 {
     lua_pushvalue(L, lua_upvalueindex(1)); // Duplicate the upvalue to pass it to the module.
-    return luaX_newmodule(L, NULL, environment_functions, environment_constants, 1, LUAX_CLASS(Environment_Class_t));
+    return luaX_newmodule(L, NULL, _environment_functions, _environment_constants, 1, LUAX_CLASS(Environment_Class_t));
 }
 
 static int environment_fps(lua_State *L)

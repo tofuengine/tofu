@@ -37,7 +37,7 @@ static int input_is_key_up(lua_State *L);
 static int input_is_key_pressed(lua_State *L);
 static int input_is_key_released(lua_State *L);
 
-static const struct luaL_Reg input_functions[] = {
+static const struct luaL_Reg _input_functions[] = {
     { "is_key_down", input_is_key_down },
     { "is_key_up", input_is_key_up },
     { "is_key_pressed", input_is_key_pressed },
@@ -45,7 +45,7 @@ static const struct luaL_Reg input_functions[] = {
     { NULL, NULL }
 };
 
-static const luaX_Const input_constants[] = {
+static const luaX_Const _input_constants[] = {
     { "UP", LUA_CT_INTEGER, { .i = DISPLAY_KEY_UP } },
     { "DOWN", LUA_CT_INTEGER, { .i = DISPLAY_KEY_DOWN } },
     { "LEFT", LUA_CT_INTEGER, { .i = DISPLAY_KEY_LEFT } },
@@ -62,7 +62,7 @@ static const luaX_Const input_constants[] = {
 int input_loader(lua_State *L)
 {
     lua_pushvalue(L, lua_upvalueindex(1)); // Duplicate the upvalue to pass it to the module.
-    return luaX_newmodule(L, NULL, input_functions, input_constants, 1, LUAX_CLASS(Input_Class_t));
+    return luaX_newmodule(L, NULL, _input_functions, _input_constants, 1, LUAX_CLASS(Input_Class_t));
 }
 
 static int input_is_key_down(lua_State *L)
