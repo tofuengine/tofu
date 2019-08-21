@@ -108,7 +108,7 @@ static int grid_new(lua_State *L)
         }
     } else
     if (type == LUA_TNUMBER) {
-        Cell_t value = (Cell_t)lua_tonumber(L, 3);;
+        Cell_t value = (Cell_t)lua_tonumber(L, 3);
 
         while (ptr < eod) {
             *(ptr++) = value;
@@ -177,7 +177,7 @@ static int grid_fill(lua_State *L)
 
     if (type == LUA_TTABLE) {
         lua_pushnil(L); // first key
-        while (lua_next(L, 1)) {
+        while (lua_next(L, 2)) {
 #if 0
             const char *key_type = lua_typename(L, lua_type(L, -2)); // uses 'key' (at index -2) and 'value' (at index -1)
 #endif
@@ -191,7 +191,7 @@ static int grid_fill(lua_State *L)
         }
     } else
     if (type == LUA_TNUMBER) {
-        Cell_t value = (Cell_t)lua_tonumber(L, 1);;
+        Cell_t value = (Cell_t)lua_tonumber(L, 2);
 
         while (ptr < eod) {
             *(ptr++) = value;
@@ -219,7 +219,7 @@ static int grid_stride(lua_State *L)
 
     if (type == LUA_TTABLE) {
         lua_pushnil(L); // first key
-        while (lua_next(L, 1)) {
+        while (lua_next(L, 4)) {
 #if 0
             const char *key_type = lua_typename(L, lua_type(L, -2)); // uses 'key' (at index -2) and 'value' (at index -1)
 #endif
@@ -233,7 +233,7 @@ static int grid_stride(lua_State *L)
         }
     } else
     if (type == LUA_TNUMBER) {
-        Cell_t value = (Cell_t)lua_tonumber(L, 1);;
+        Cell_t value = (Cell_t)lua_tonumber(L, 4);
 
         for (int i = 0; (ptr < eod) && (i < amount); ++i) {
             *(ptr++) = value;

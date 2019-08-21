@@ -41,7 +41,7 @@ typedef struct _Module_t {
 } Module_t;
 
 static const Module_t modules[] = {
-    { "tofu.colletions.Grid", grid_loader },
+    { "tofu.collections.Grid", grid_loader },
     { "tofu.events.Environment", environment_loader },
     { "tofu.events.Input", input_loader },
     { "tofu.graphics.Bank", bank_loader },
