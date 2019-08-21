@@ -101,15 +101,10 @@ static int call(lua_State *L, Entry_Point_Method_t *method, int nargs, int nresu
 {
     if (!method->available || method->failure) {
         lua_pop(L, nargs); // Discard the unused arguments pushed by the caller.
-#if 0
-        lua_pushstring(L, "method *not* available");
-        return LUA_ERRRUN;
-#else
         for (int i = 0; i < nresults; ++i) {
             lua_pushnil(L);
         }
         return LUA_OK;
-#endif
     }
     lua_getfield(L, -(nargs + 1), method->name); // O A1 .. An -> O A1 .. An F
     lua_pushvalue(L, -(nargs + 2)); // O A1 .. An F -> O A1 .. An F O
@@ -119,7 +114,7 @@ static int call(lua_State *L, Entry_Point_Method_t *method, int nargs, int nresu
         Log_write(LOG_LEVELS_ERROR, "<VM> error calling method '%s': %s", method->name, lua_tostring(L, -1));
         lua_pop(L, 1);
 
-        Log_write(LOG_LEVELS_WARNING, "<VM> setting method '%s' as unavailable", method->name);
+        Log_write(LOG_LEVELS_WARNING, "<VM> setting failure flag for method '%s'", method->name);
         method->failure = true;
     }
     return result;
