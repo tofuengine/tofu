@@ -50,17 +50,95 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 #define SHUTDOWN_SCRIPT \
     "main = nil\n"
 
+typedef struct _Entry_Point_Method_t {
+    const char *name;
+    bool available;
+    bool failure;
+} Entry_Point_Method_t;
+
+typedef enum _Entry_Point_Methods_t {
+    METHOD_SETUP,
+    METHOD_INIT,
+    METHOD_INPUT,
+    METHOD_UPDATE,
+    METHOD_RENDER,
+    Entry_Point_Methods_t_CountOf
+} Entry_Point_Methods_t;
+
+static Entry_Point_Method_t methods[] = {
+    { "setup", false, false },
+    { "init", false, false },
+    { "input", false, false },
+    { "update", false, false },
+    { "render", false, false },
+    { NULL, false, false }
+};
+
+static bool detect(lua_State *L, Entry_Point_Method_t *methods)
+{
+    lua_getglobal(L, ROOT_INSTANCE); // Get the global variable on top of the stack (will always stay on top).
+    if (lua_isnil(L, -1)) {
+        Log_write(LOG_LEVELS_ERROR, "<VM> can't find root instance: %s", lua_tostring(L, -1));
+        lua_pop(L, 1);
+        return false;
+    }
+
+    for (; methods->name; ++methods) {
+        lua_getfield(L, -1, methods->name);
+        methods->available = !lua_isnil(L, -1);
+        if (methods->available) {
+            Log_write(LOG_LEVELS_INFO, "<VM> method '%s' found", methods->name);
+        } else {
+            Log_write(LOG_LEVELS_WARNING, "<VM> method '%s' is missing", methods->name);
+        }
+        lua_pop(L, 1);
+    }
+
+    return true;
+}
+
+static int call(lua_State *L, Entry_Point_Method_t *method, int nargs, int nresults)
+{
+    if (!method->available || method->failure) {
+        lua_pop(L, nargs); // Discard the unused arguments pushed by the caller.
+#if 0
+        lua_pushstring(L, "method *not* available");
+        return LUA_ERRRUN;
+#else
+        for (int i = 0; i < nresults; ++i) {
+            lua_pushnil(L);
+        }
+        return LUA_OK;
+#endif
+    }
+    lua_getfield(L, -(nargs + 1), method->name); // O A1 .. An -> O A1 .. An F
+    lua_pushvalue(L, -(nargs + 2)); // O A1 .. An F -> O A1 .. An F O
+    lua_rotate(L, -(nargs + 2), 2); // O A1 .. An F O -> O F O A1 .. An
+    int result = lua_pcall(L, nargs + 1, nresults, 0); // Acoount for the `self` object.
+    if (result != LUA_OK) {
+        Log_write(LOG_LEVELS_ERROR, "<VM> error calling method '%s': %s", method->name, lua_tostring(L, -1));
+        lua_pop(L, 1);
+
+        Log_write(LOG_LEVELS_WARNING, "<VM> setting method '%s' as unavailable", method->name);
+        method->failure = true;
+    }
+    return result;
+}
+
 static void timerpool_update_callback(Timer_t *timer, void *parameters)
 {
     Interpreter_t *interpreter = (Interpreter_t *)parameters;
 
     lua_rawgeti(interpreter->state, LUA_REGISTRYINDEX, timer->value.callback);
+#if 0
     if (lua_isnil(interpreter->state, -1)) {
-        Log_write(LOG_LEVELS_ERROR, "<VM> can't find timer callback: %s", lua_tostring(interpreter->state, -1));
+        lua_pop(interpreter->state, -1);
+        Log_write(LOG_LEVELS_ERROR, "<VM> can't find timer callback");
         return;
     }
+#endif
     int result = lua_pcall(interpreter->state, 0, 0, 0);
-    if (result != 0) {
+    if (result != LUA_OK) {
         Log_write(LOG_LEVELS_ERROR, "<VM> error calling timer callback: %s", lua_tostring(interpreter->state, -1));
     }
 }
@@ -79,72 +157,41 @@ bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configu
     lua_pushlightuserdata(interpreter->state, (void *)environment); // Discard `const` qualifier.
     modules_initialize(interpreter->state, 1);
 
-    luaX_appendpath(interpreter->state, environment->base_path);
     // TODO: register a custom searcher for the "packed" archive feature.
+    luaX_appendpath(interpreter->state, environment->base_path);
 
     TimerPool_initialize(&interpreter->timer_pool, timerpool_update_callback, interpreter); // Need to initialized before boot-script interpretation.
 
     int result = luaL_dostring(interpreter->state, BOOT_SCRIPT);
     if (result != 0) {
         Log_write(LOG_LEVELS_FATAL, "<VM> can't interpret boot script: %s", lua_tostring(interpreter->state, -1));
+        lua_pop(interpreter->state, -1);
         lua_close(interpreter->state);
         return false;
     }
 
-    // TODO: implement a register/unregister pattern the for the input/update/render callbacks.
-    lua_getglobal(interpreter->state, ROOT_INSTANCE); // Get the global variable on top of the stack (will always stay on top).
-    if (lua_isnil(interpreter->state, -1)) {
-        Log_write(LOG_LEVELS_ERROR, "<VM> can't find root instance: %s", lua_tostring(interpreter->state, -1));
-        lua_pop(interpreter->state, 1);
+    if (!detect(interpreter->state, methods)) {
         lua_close(interpreter->state);
         return false;
     }
 
-    lua_getfield(interpreter->state, -1, "setup");
-    if (lua_isnil(interpreter->state, -1)) {
-        Log_write(LOG_LEVELS_WARNING, "<VM> can't find setup method: %s", lua_tostring(interpreter->state, -1));
-        lua_pop(interpreter->state, 1);
-        return true;
+    result = call(interpreter->state, &methods[METHOD_SETUP], 0, 1);
+    if (result == LUA_OK) {
+        Configuration_parse(interpreter->state, configuration);
+        lua_pop(interpreter->state, 1); // Remove the configuration table from the stack.
     }
-    lua_pushvalue(interpreter->state, -2); // Duplicate the "self" object.
-    result = lua_pcall(interpreter->state, 1, 1, 0);
-    if (result != 0) {
-        Log_write(LOG_LEVELS_ERROR, "<VM> error calling setup method: %s", lua_tostring(interpreter->state, -1));
-    }
-    Configuration_parse(interpreter->state, configuration);
-    lua_pop(interpreter->state, 1); // Remove the configuration table from the stack.
 
     return true;
 }
 
 void Interpreter_init(Interpreter_t *interpreter)
 {
-    lua_getfield(interpreter->state, -1, "init");
-    if (lua_isnil(interpreter->state, -1)) {
-        Log_write(LOG_LEVELS_WARNING, "<VM> can't find init method: %s", lua_tostring(interpreter->state, -1));
-        lua_pop(interpreter->state, 1);
-        return;
-    }
-    lua_pushvalue(interpreter->state, -2); // Duplicate the "self" object.
-    int result = lua_pcall(interpreter->state, 1, 0, 0);
-    if (result != 0) {
-        Log_write(LOG_LEVELS_ERROR, "<VM> error calling init method: %s", lua_tostring(interpreter->state, -1));
-    }
+    call(interpreter->state, &methods[METHOD_INIT], 0, 0);
 }
 
 void Interpreter_input(Interpreter_t *interpreter)
 {
-    lua_getfield(interpreter->state, -1, "input");
-    if (lua_isnil(interpreter->state, -1)) {
-        Log_write(LOG_LEVELS_WARNING, "<VM> can't find input method: %s", lua_tostring(interpreter->state, -1));
-        lua_pop(interpreter->state, 1);
-        return;
-    }
-    lua_pushvalue(interpreter->state, -2); // Duplicate the "self" object.
-    int result = lua_pcall(interpreter->state, 1, 0, 0);
-    if (result != 0) {
-        Log_write(LOG_LEVELS_ERROR, "<VM> error calling input method: %s", lua_tostring(interpreter->state, -1));
-    }
+    call(interpreter->state, &methods[METHOD_INPUT], 0, 0);
 }
 
 void Interpreter_update(Interpreter_t *interpreter, const double delta_time)
@@ -169,34 +216,14 @@ void Interpreter_update(Interpreter_t *interpreter, const double delta_time)
 #endif
     }
 
-    lua_getfield(interpreter->state, -1, "update");
-    if (lua_isnil(interpreter->state, -1)) {
-        Log_write(LOG_LEVELS_WARNING, "<VM> can't find update method: %s", lua_tostring(interpreter->state, -1));
-        lua_pop(interpreter->state, 1);
-        return;
-    }
-    lua_pushvalue(interpreter->state, -2); // Duplicate the "self" object.
     lua_pushnumber(interpreter->state, delta_time);
-    int result = lua_pcall(interpreter->state, 2, 0, 0);
-    if (result != 0) {
-        Log_write(LOG_LEVELS_ERROR, "<VM> error calling update method: %s", lua_tostring(interpreter->state, -1));
-    }
+    call(interpreter->state, &methods[METHOD_UPDATE], 1, 0);
 }
 
 void Interpreter_render(Interpreter_t *interpreter, const double ratio)
 {
-    lua_getfield(interpreter->state, -1, "render");
-    if (lua_isnil(interpreter->state, -1)) {
-        Log_write(LOG_LEVELS_WARNING, "<VM> can't find render method: %s", lua_tostring(interpreter->state, -1));
-        lua_pop(interpreter->state, 1);
-        return;
-    }
-    lua_pushvalue(interpreter->state, -2); // Duplicate the "self" object.
     lua_pushnumber(interpreter->state, ratio);
-    int result = lua_pcall(interpreter->state, 2, 0, 0);
-    if (result != 0) {
-        Log_write(LOG_LEVELS_ERROR, "<VM> error calling render method: %s", lua_tostring(interpreter->state, -1));
-    }
+    call(interpreter->state, &methods[METHOD_RENDER], 1, 0);
 }
 
 void Interpreter_terminate(Interpreter_t *interpreter)
@@ -206,6 +233,7 @@ void Interpreter_terminate(Interpreter_t *interpreter)
     int result = luaL_dostring(interpreter->state, SHUTDOWN_SCRIPT);
     if (result != 0) {
         Log_write(LOG_LEVELS_FATAL, "<VM> can't interpret shutdown script: %s", lua_tostring(interpreter->state, -1));
+        lua_pop(interpreter->state, 1);
     }
 
     lua_gc(interpreter->state, LUA_GCCOLLECT, 0);
