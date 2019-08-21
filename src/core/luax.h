@@ -45,7 +45,7 @@ typedef struct _luaX_Const {
     } value;
 } luaX_Const;
 
-#define LUAX_CLASS(n)           #n "_mt"
+#define LUAX_CLASS(n)               #n "_mt"
 
 #define luaX_dump(L)                luaX_stackdump(L, __FILE__, __LINE__)
 
