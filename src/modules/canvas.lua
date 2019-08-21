@@ -35,7 +35,7 @@ end
 
 function Canvas.circle(mode, x, y, radius, color, segments)
   segments = segments or 30
-  local step = (2 * math.PI) / segments
+  local step = (2 * math.pi) / segments
   if mode == "line" then
     local vertices = {}
     for i = 1, segments do
@@ -46,8 +46,8 @@ function Canvas.circle(mode, x, y, radius, color, segments)
     Canvas.polyline(vertices, color)
   else
     local vertices = {}
-    vertices.insert(-1, x)
-    vertices.insert(-1, y)
+    table.insert(vertices, x)
+    table.insert(vertices, y)
     for i = 1, segments do
       local angle = step * i
       table.insert(vertices, x + math.sin(angle) * radius)
