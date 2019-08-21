@@ -1,5 +1,5 @@
-local Class = require("tofu.util.class")
 local Canvas = require("tofu.graphics.Canvas")
+local Class = require("tofu.util.Class")
 local Timer = require("tofu.util.Timer")
 
 local Game = Class.define()

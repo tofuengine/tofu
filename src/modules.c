@@ -48,7 +48,7 @@ static const Module_t modules[] = {
     { "tofu.graphics.Canvas", canvas_loader },
     { "tofu.graphics.Font", font_loader },
     { "tofu.io.File", file_loader },
-    { "tofu.util.class", class_loader },
+    { "tofu.util.Class", class_loader },
     { "tofu.util.Timer", timer_loader },
     { NULL, NULL }
 };

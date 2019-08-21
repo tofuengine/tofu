@@ -1,4 +1,4 @@
-local Class = require("tofu.util.class")
+local Class = require("tofu.util.Class")
 local Bank = require("tofu.graphics.Bank")
 local Canvas = require("tofu.graphics.Canvas")
 local Font = require("tofu.graphics.Font")
@@ -24,11 +24,11 @@ end
 
 function Game:__ctor()
 --dump(Canvas)
-Canvas.palette("gameboy")
+  Canvas.palette("gameboy")
   Canvas.background(1)
 
   self.bunnies = {}
-  self.bank = Bank.new("./assets/sheet.png", 26, 37)
+  self.bank = Bank.new("assets/sheet.png", 26, 37)
   self.font = Font.default()
   self.speed = 1.0
   self.running = true
