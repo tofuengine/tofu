@@ -62,7 +62,7 @@ static int file_read(lua_State *L)
 
     char pathfile[PATH_FILE_MAX] = {};
     strcpy(pathfile, environment->base_path);
-    strcat(pathfile, file + 2);
+    strcat(pathfile, file);
 
     const char *result = file_load_as_string(pathfile, "rt");
     Log_write(LOG_LEVELS_DEBUG, "<FILE> file '%s' loaded at %p", pathfile, result);

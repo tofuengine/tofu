@@ -110,7 +110,7 @@ static int font_new(lua_State *L)
     } else {
         char pathfile[PATH_FILE_MAX] = {};
         strcpy(pathfile, environment->base_path);
-        strcat(pathfile, file + 2);
+        strcat(pathfile, file);
 
         GL_sheet_load(&sheet, pathfile, glyph_width, glyph_height, to_font_atlas_callback, NULL);
         Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet '%s' loaded", pathfile);

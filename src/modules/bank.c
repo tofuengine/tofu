@@ -102,7 +102,7 @@ static int bank_new(lua_State *L)
 
     char pathfile[PATH_FILE_MAX] = {};
     strcpy(pathfile, environment->base_path);
-    strcat(pathfile, file + 2);
+    strcat(pathfile, file);
 
     GL_Sheet_t sheet;
     GL_sheet_load(&sheet, pathfile, cell_width, cell_height, to_indexed_atlas_callback, (void *)&environment->display->palette);
