@@ -71,6 +71,12 @@ static const char *methods[] = {
     NULL
 };
 
+static int panic(lua_State *L)
+{
+    Log_write(LOG_LEVELS_FATAL, "<VM> error in call: %s", lua_tostring(L, -1));
+    return 0; // return to Lua to abort
+}
+
 //
 // Detect the presence of the root instance with passed methods. If successful,
 // the stack will contain the object instance followed by the fields (which can
@@ -82,7 +88,7 @@ static bool detect(lua_State *L, const char *root, const char *methods[])
 {
     lua_getglobal(L, root); // Get the global variable on top of the stack (will always stay on top).
     if (lua_isnil(L, -1)) {
-        Log_write(LOG_LEVELS_ERROR, "<VM> can't find root instance: %s", lua_tostring(L, -1));
+        Log_write(LOG_LEVELS_FATAL, "<VM> can't find root instance: %s", lua_tostring(L, -1));
         lua_pop(L, 1);
         return false;
     }
@@ -107,6 +113,7 @@ static void call(lua_State *L, Methods_t method, int nargs, int nresults)
         for (int i = 0; i < nresults; ++i) { // Push fake NIL results for the caller.
             lua_pushnil(L);
         }
+        return;
     }
     lua_pushvalue(L, index);                // O F1 .. Fn A1 .. An     -> O F1 .. Fn A1 .. An F
     lua_pushvalue(L, OBJECT_STACK_INDEX);   // O F1 .. Fn A1 .. An F   -> O F1 .. Fn A1 .. An F O
@@ -127,12 +134,6 @@ static void timerpool_callback(Timer_t *timer, void *parameters)
     }
 #endif
     lua_call(interpreter->state, 0, 0);
-}
-
-static int panic(lua_State *L)
-{
-    Log_write(LOG_LEVELS_FATAL, "<VM> error in call: %s", lua_tostring(L, -1));
-    return 0; // return to Lua to abort
 }
 
 bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configuration, const Environment_t *environment)
@@ -220,6 +221,8 @@ void Interpreter_terminate(Interpreter_t *interpreter)
 {
 //    lua_pushnil(interpreter->state);
 //    lua_setglobal(interpreter->state, "tofu");
+    lua_settop(interpreter->state, 0);
+
     int result = luaL_dostring(interpreter->state, SHUTDOWN_SCRIPT);
     if (result != 0) {
         Log_write(LOG_LEVELS_FATAL, "<VM> can't interpret shutdown script: %s", lua_tostring(interpreter->state, -1));
