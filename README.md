@@ -8,18 +8,13 @@ Guess what? Yup, that's another game engine/framework.
 
 * C99 code only.
 * Self-contained, no external modules/libraries required.
-* Cross-compiling multi-platform (hopefully).
-
-## Cons
-
-* **Wren** is not as popular as others (e.g. **Lua** or **JavaScript**), which translates into less *ready-to-use* code. However, embedding is much more seamless than with **Lua**.
+* Cross-compiling multi-platform (hopefully, someday in the future).
 
 ## Uses
 
 * [Glad](https://glad.dav1d.de/)
 * [GLFW](https://www.glfw.org/) v3.3
 * [Lua](https://lua.org/) v5.3.4
-* [LuaAutoC](https://github.com/orangeduck/LuaAutoC) v2.0.1
 * [spleen](https://github.com/fcambus/spleen) fonts
 * [stb](https://github.com/nothings/stb) libraries
 
