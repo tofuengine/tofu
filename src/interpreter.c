@@ -50,77 +50,71 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 #define SHUTDOWN_SCRIPT \
     "main = nil\n"
 
-typedef struct _Entry_Point_Method_t {
-    const char *name;
-    bool available;
-    bool failure;
-} Entry_Point_Method_t;
+#define METHOD_STACK_INDEX(m)   2 + (m)
+#define OBJECT_STACK_INDEX      1
 
-typedef enum _Entry_Point_Methods_t {
+typedef enum _Methods_t {
     METHOD_SETUP,
     METHOD_INIT,
     METHOD_INPUT,
     METHOD_UPDATE,
     METHOD_RENDER,
-    Entry_Point_Methods_t_CountOf
-} Entry_Point_Methods_t;
+    Methods_t_CountOf
+} Methods_t;
 
-static Entry_Point_Method_t methods[] = {
-    { "setup", false, false },
-    { "init", false, false },
-    { "input", false, false },
-    { "update", false, false },
-    { "render", false, false },
-    { NULL, false, false }
+static const char *methods[] = {
+    "setup",
+    "init",
+    "input",
+    "update",
+    "render",
+    NULL
 };
 
-static bool detect(lua_State *L, Entry_Point_Method_t *methods)
+//
+// Detect the presence of the root instance with passed methods. If successful,
+// the stack will contain the object instance followed by the fields (which can
+// be NIL if not found).
+//
+//     O F1 ... Fn
+//
+static bool detect(lua_State *L, const char *root, const char *methods[])
 {
-    lua_getglobal(L, ROOT_INSTANCE); // Get the global variable on top of the stack (will always stay on top).
+    lua_getglobal(L, root); // Get the global variable on top of the stack (will always stay on top).
     if (lua_isnil(L, -1)) {
         Log_write(LOG_LEVELS_ERROR, "<VM> can't find root instance: %s", lua_tostring(L, -1));
         lua_pop(L, 1);
         return false;
     }
 
-    for (; methods->name; ++methods) {
-        lua_getfield(L, -1, methods->name);
-        methods->available = !lua_isnil(L, -1);
-        if (methods->available) {
-            Log_write(LOG_LEVELS_INFO, "<VM> method '%s' found", methods->name);
+    for (int i = 0; methods[i]; ++i) { // Push the methods on stack
+        lua_getfield(L, -(i + 1), methods[i]); // The table become farer and farer along the loop.
+        if (!lua_isnil(L, -1)) {
+            Log_write(LOG_LEVELS_INFO, "<VM> method '%s' found", methods[i]);
         } else {
-            Log_write(LOG_LEVELS_WARNING, "<VM> method '%s' is missing", methods->name);
+            Log_write(LOG_LEVELS_WARNING, "<VM> method '%s' is missing", methods[i]);
         }
-        lua_pop(L, 1);
     }
 
     return true;
 }
 
-static int call(lua_State *L, Entry_Point_Method_t *method, int nargs, int nresults)
+static void call(lua_State *L, Methods_t method, int nargs, int nresults)
 {
-    if (!method->available || method->failure) {
+    int index = METHOD_STACK_INDEX(method); // O F1 ... Fn
+    if (lua_isnil(L, index)) {
         lua_pop(L, nargs); // Discard the unused arguments pushed by the caller.
-        for (int i = 0; i < nresults; ++i) {
+        for (int i = 0; i < nresults; ++i) { // Push fake NIL results for the caller.
             lua_pushnil(L);
         }
-        return LUA_OK;
     }
-    lua_getfield(L, -(nargs + 1), method->name); // O A1 .. An -> O A1 .. An F
-    lua_pushvalue(L, -(nargs + 2)); // O A1 .. An F -> O A1 .. An F O
-    lua_rotate(L, -(nargs + 2), 2); // O A1 .. An F O -> O F O A1 .. An
-    int result = lua_pcall(L, nargs + 1, nresults, 0); // Acoount for the `self` object.
-    if (result != LUA_OK) {
-        Log_write(LOG_LEVELS_ERROR, "<VM> error calling method '%s': %s", method->name, lua_tostring(L, -1));
-        lua_pop(L, 1);
-
-        Log_write(LOG_LEVELS_WARNING, "<VM> setting failure flag for method '%s'", method->name);
-        method->failure = true;
-    }
-    return result;
+    lua_pushvalue(L, index);                // O F1 .. Fn A1 .. An     -> O F1 .. Fn A1 .. An F
+    lua_pushvalue(L, OBJECT_STACK_INDEX);   // O F1 .. Fn A1 .. An F   -> O F1 .. Fn A1 .. An F O
+    lua_rotate(L, -(nargs + 2), 2);         // O F1 .. Fn A1 .. An F O -> O F1 ... Fn F O A1 .. An
+    lua_call(L, nargs + 1, nresults); // Account for the `self` object.
 }
 
-static void timerpool_update_callback(Timer_t *timer, void *parameters)
+static void timerpool_callback(Timer_t *timer, void *parameters)
 {
     Interpreter_t *interpreter = (Interpreter_t *)parameters;
 
@@ -132,10 +126,13 @@ static void timerpool_update_callback(Timer_t *timer, void *parameters)
         return;
     }
 #endif
-    int result = lua_pcall(interpreter->state, 0, 0, 0);
-    if (result != LUA_OK) {
-        Log_write(LOG_LEVELS_ERROR, "<VM> error calling timer callback: %s", lua_tostring(interpreter->state, -1));
-    }
+    lua_call(interpreter->state, 0, 0);
+}
+
+static int panic(lua_State *L)
+{
+    Log_write(LOG_LEVELS_FATAL, "<VM> error in call: %s", lua_tostring(L, -1));
+    return 0; // return to Lua to abort
 }
 
 bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configuration, const Environment_t *environment)
@@ -147,6 +144,8 @@ bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configu
         Log_write(LOG_LEVELS_FATAL, "<VM> can't initialize interpreter");
         return false;
     }
+    lua_atpanic(interpreter->state, panic);
+
     luaL_openlibs(interpreter->state);
 
     lua_pushlightuserdata(interpreter->state, (void *)environment); // Discard `const` qualifier.
@@ -155,7 +154,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configu
     // TODO: register a custom searcher for the "packed" archive feature.
     luaX_appendpath(interpreter->state, environment->base_path);
 
-    TimerPool_initialize(&interpreter->timer_pool, timerpool_update_callback, interpreter); // Need to initialized before boot-script interpretation.
+    TimerPool_initialize(&interpreter->timer_pool, timerpool_callback, interpreter); // Need to initialized before boot-script interpretation.
 
     int result = luaL_dostring(interpreter->state, BOOT_SCRIPT);
     if (result != 0) {
@@ -165,28 +164,26 @@ bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configu
         return false;
     }
 
-    if (!detect(interpreter->state, methods)) {
+    if (!detect(interpreter->state, ROOT_INSTANCE, methods)) {
         lua_close(interpreter->state);
         return false;
     }
 
-    result = call(interpreter->state, &methods[METHOD_SETUP], 0, 1);
-    if (result == LUA_OK) {
-        Configuration_parse(interpreter->state, configuration);
-        lua_pop(interpreter->state, 1); // Remove the configuration table from the stack.
-    }
+    call(interpreter->state, METHOD_SETUP, 0, 1);
+    Configuration_parse(interpreter->state, configuration);
+    lua_pop(interpreter->state, 1); // Remove the configuration table from the stack.
 
     return true;
 }
 
 void Interpreter_init(Interpreter_t *interpreter)
 {
-    call(interpreter->state, &methods[METHOD_INIT], 0, 0);
+    call(interpreter->state, METHOD_INIT, 0, 0);
 }
 
 void Interpreter_input(Interpreter_t *interpreter)
 {
-    call(interpreter->state, &methods[METHOD_INPUT], 0, 0);
+    call(interpreter->state, METHOD_INPUT, 0, 0);
 }
 
 void Interpreter_update(Interpreter_t *interpreter, const double delta_time)
@@ -200,25 +197,23 @@ void Interpreter_update(Interpreter_t *interpreter, const double delta_time)
 #ifdef __DEBUG_GARBAGE_COLLECTOR__
         Log_write(LOG_LEVELS_DEBUG, "<VM> performing periodical garbage collection");
         double start_time = (double)clock() / CLOCKS_PER_SEC;
-        //luaX_dump(interpreter->state);
 #endif
         lua_gc(interpreter->state, LUA_GCCOLLECT, 0);
         TimerPool_gc(&interpreter->timer_pool);
 #ifdef __DEBUG_GARBAGE_COLLECTOR__
         double elapsed = ((double)clock() / CLOCKS_PER_SEC) - start_time;
         Log_write(LOG_LEVELS_DEBUG, "<VM> garbage collection took %.3fs", elapsed);
-        //luaX_dump(interpreter->state);
 #endif
     }
 
     lua_pushnumber(interpreter->state, delta_time);
-    call(interpreter->state, &methods[METHOD_UPDATE], 1, 0);
+    call(interpreter->state, METHOD_UPDATE, 1, 0);
 }
 
 void Interpreter_render(Interpreter_t *interpreter, const double ratio)
 {
     lua_pushnumber(interpreter->state, ratio);
-    call(interpreter->state, &methods[METHOD_RENDER], 1, 0);
+    call(interpreter->state, METHOD_RENDER, 1, 0);
 }
 
 void Interpreter_terminate(Interpreter_t *interpreter)
