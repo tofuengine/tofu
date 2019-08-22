@@ -63,11 +63,10 @@
 #define __DEBUG_GARBAGE_COLLECTOR__
 #define __REPACK_TIMER_POOL_DURING_GC___
 
-#ifndef __DEBUG_VM_CALLS__
-  #ifdef DEBUG
-    #define __DEBUG_VM_CALLS__
-    #define __DEBUG_VM_USE_CUSTOM_TRACEBACK__
-  #endif
+// In release build, disable VM calls debug for faster execution.
+#ifndef DEBUG
+  #undef __DEBUG_VM_CALLS__
+  #undef __DEBUG_VM_USE_CUSTOM_TRACEBACK__
 #endif
 
 #endif  /* __TOFU_CONFIG_H__ */

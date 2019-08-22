@@ -50,8 +50,9 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 #define SHUTDOWN_SCRIPT \
     "main = nil\n"
 
-#define METHOD_STACK_INDEX(m)   2 + (m)
 #define OBJECT_STACK_INDEX      1
+#define METHOD_STACK_INDEX(m)   1 + 1 + (m)
+#define TRACEBACK_STACK_INDEX   1 + Methods_t_CountOf + 1
 
 typedef enum _Methods_t {
     METHOD_SETUP,
@@ -77,12 +78,30 @@ static int panic(lua_State *L)
     return 0; // return to Lua to abort
 }
 
+#ifdef __DEBUG_VM_USE_CUSTOM_TRACEBACK__
+static int error_handler(lua_State *L)
+{
+    const char *msg = lua_tostring(L, 1);
+    if (msg == NULL) {  /* is error object not a string? */
+        if (luaL_callmeta(L, 1, "__tostring")  /* does it have a metamethod */
+            && lua_type(L, -1) == LUA_TSTRING) { /* that produces a string? */
+            return 1;  /* that is the message */
+        } else {
+            msg = lua_pushfstring(L, "(error object is a %s value)", luaL_typename(L, 1));
+        }
+    }
+    luaL_traceback(L, L, msg, 1);  /* append a standard traceback */
+    return 1;  /* return the traceback */
+}
+#endif
+
 //
 // Detect the presence of the root instance with passed methods. If successful,
 // the stack will contain the object instance followed by the fields (which can
-// be NIL if not found).
+// be NIL if not found). When debug mode is enabled, a traceback function is also
+// pushed onto the stack.
 //
-//     O F1 ... Fn
+//     O F1 ... Fn T
 //
 static bool detect(lua_State *L, const char *root, const char *methods[])
 {
@@ -102,25 +121,18 @@ static bool detect(lua_State *L, const char *root, const char *methods[])
         }
     }
 
+#ifdef __DEBUG_VM_CALLS__
+#ifndef __DEBUG_VM_USE_CUSTOM_TRACEBACK__
+    lua_getglobal(L, "debug");
+    lua_getfield(L, -1, "traceback");
+    lua_remove(L, -2);
+#else
+    lua_pushcfunction(L, error_handler);
+#endif
+#endif
+
     return true;
 }
-
-#ifdef __DEBUG_VM_USE_CUSTOM_TRACEBACK__
-static int error_handler(lua_State *L)
-{
-    const char *msg = lua_tostring(L, 1);
-    if (msg == NULL) {  /* is error object not a string? */
-        if (luaL_callmeta(L, 1, "__tostring")  /* does it have a metamethod */
-            && lua_type(L, -1) == LUA_TSTRING) { /* that produces a string? */
-            return 1;  /* that is the message */
-        } else {
-            msg = lua_pushfstring(L, "(error object is a %s value)", luaL_typename(L, 1));
-        }
-    }
-    luaL_traceback(L, L, msg, 1);  /* append a standard traceback */
-    return 1;  /* return the traceback */
-}
-#endif
 
 static void call(lua_State *L, Methods_t method, int nargs, int nresults)
 {
@@ -135,21 +147,12 @@ static void call(lua_State *L, Methods_t method, int nargs, int nresults)
     lua_pushvalue(L, index);                // O F1 .. Fn A1 .. An     -> O F1 .. Fn A1 .. An F
     lua_pushvalue(L, OBJECT_STACK_INDEX);   // O F1 .. Fn A1 .. An F   -> O F1 .. Fn A1 .. An F O
     lua_rotate(L, -(nargs + 2), 2);         // O F1 .. Fn A1 .. An F O -> O F1 ... Fn F O A1 .. An
+
 #ifdef __DEBUG_VM_CALLS__
-    int base = lua_gettop(L) - (nargs + 1);
-#ifndef __DEBUG_VM_USE_CUSTOM_TRACEBACK__
-    lua_getglobal(L, "debug");
-    lua_getfield(L, -1, "traceback");
-    lua_remove(L, -2);                      // O F1 ... Fn F O A1 .. An   -> O F1 ... Fn T F O A1 .. An T
-#else
-    lua_pushcfunction(L, error_handler);    // O F1 ... Fn F O A1 .. An   -> O F1 ... Fn T F O A1 .. An T
-#endif
-    lua_insert(L, base);                    // O F1 ... Fn F O A1 .. An T -> O F1 ... Fn T F O A1 .. An
-    int result = lua_pcall(L, nargs + 1, nresults, base);
+    int result = lua_pcall(L, nargs + 1, nresults, TRACEBACK_STACK_INDEX);
     if (result != LUA_OK) {
         Log_write(LOG_LEVELS_FATAL, "<VM> error in call: %s", lua_tostring(L, -1));
     }
-    lua_remove(L, base);
 #else
     lua_call(L, nargs + 1, nresults);
 #endif
@@ -159,6 +162,8 @@ static void timerpool_callback(Timer_t *timer, void *parameters)
 {
     Interpreter_t *interpreter = (Interpreter_t *)parameters;
 
+    // TODO: explicit access the VM state and expose `L` variable.
+
     lua_rawgeti(interpreter->state, LUA_REGISTRYINDEX, timer->value.callback);
 #if 0
     if (lua_isnil(interpreter->state, -1)) {
@@ -167,7 +172,14 @@ static void timerpool_callback(Timer_t *timer, void *parameters)
         return;
     }
 #endif
+#ifdef __DEBUG_VM_CALLS__
+    int result = lua_pcall(interpreter->state, 0, 0, TRACEBACK_STACK_INDEX);
+    if (result != LUA_OK) {
+        Log_write(LOG_LEVELS_FATAL, "<VM> error in call: %s", lua_tostring(interpreter->state, -1));
+    }
+#else
     lua_call(interpreter->state, 0, 0);
+#endif
 }
 
 bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configuration, const Environment_t *environment)
