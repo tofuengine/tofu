@@ -151,7 +151,7 @@ static void call(lua_State *L, Methods_t method, int nargs, int nresults)
 #ifdef __DEBUG_VM_CALLS__
     int result = lua_pcall(L, nargs + 1, nresults, TRACEBACK_STACK_INDEX);
     if (result != LUA_OK) {
-        Log_write(LOG_LEVELS_FATAL, "<VM> error in call: %s", lua_tostring(L, -1));
+        Log_write(LOG_LEVELS_ERROR, "<VM> error in call: %s", lua_tostring(L, -1));
     }
 #else
     lua_call(L, nargs + 1, nresults);
@@ -175,7 +175,7 @@ static void timerpool_callback(Timer_t *timer, void *parameters)
 #ifdef __DEBUG_VM_CALLS__
     int result = lua_pcall(interpreter->state, 0, 0, TRACEBACK_STACK_INDEX);
     if (result != LUA_OK) {
-        Log_write(LOG_LEVELS_FATAL, "<VM> error in call: %s", lua_tostring(interpreter->state, -1));
+        Log_write(LOG_LEVELS_ERROR, "<VM> error in call: %s", lua_tostring(interpreter->state, -1));
     }
 #else
     lua_call(interpreter->state, 0, 0);
