@@ -67,7 +67,9 @@ int input_loader(lua_State *L)
 
 static int input_is_key_down(lua_State *L)
 {
-    luaX_checkcall(L, "i");
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+    LUAX_SIGNATURE_END
     int key = lua_tointeger(L, 1);
 
     Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
@@ -80,7 +82,9 @@ static int input_is_key_down(lua_State *L)
 
 static int input_is_key_up(lua_State *L)
 {
-    luaX_checkcall(L, "i");
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+    LUAX_SIGNATURE_END
     int key = lua_tointeger(L, 1);
 
     Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
@@ -93,7 +97,9 @@ static int input_is_key_up(lua_State *L)
 
 static int input_is_key_pressed(lua_State *L)
 {
-    luaX_checkcall(L, "i");
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+    LUAX_SIGNATURE_END
     int key = lua_tointeger(L, 1);
 
     Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
@@ -106,7 +112,9 @@ static int input_is_key_pressed(lua_State *L)
 
 static int input_is_key_released(lua_State *L)
 {
-    luaX_checkcall(L, "i");
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+    LUAX_SIGNATURE_END
     int key = lua_tointeger(L, 1);
 
     Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));

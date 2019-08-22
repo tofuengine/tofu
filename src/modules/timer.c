@@ -59,7 +59,11 @@ int timer_loader(lua_State *L)
 
 static int timer_new(lua_State *L)
 {
-    luaX_checkcall(L, "nif");
+    LUAX_SIGNATURE_BEGIN(L, 3)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isfunction)
+    LUAX_SIGNATURE_END
     double period = lua_tonumber(L, 1);
     int repeats = lua_tointeger(L, 2);
     int callback = luaX_tofunction(L, 3); // NOTE! This need to be released when the timer is detached!
@@ -86,7 +90,9 @@ static int timer_new(lua_State *L)
 
 static int timer_gc(lua_State *L)
 {
-    luaX_checkcall(L, "u");
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+    LUAX_SIGNATURE_END
     Timer_Class_t *instance = (Timer_Class_t *)lua_touserdata(L, 1);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Timer.gc()");
@@ -103,7 +109,9 @@ static int timer_gc(lua_State *L)
 
 static int timer_reset(lua_State *L)
 {
-    luaX_checkcall(L, "u");
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+    LUAX_SIGNATURE_END
     Timer_Class_t *instance = (Timer_Class_t *)lua_touserdata(L, 1);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Timer.cancel()");
@@ -116,7 +124,9 @@ static int timer_reset(lua_State *L)
 
 static int timer_cancel(lua_State *L)
 {
-    luaX_checkcall(L, "u");
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+    LUAX_SIGNATURE_END
     Timer_Class_t *instance = (Timer_Class_t *)lua_touserdata(L, 1);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Timer.cancel()");

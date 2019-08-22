@@ -138,7 +138,8 @@ int canvas_loader(lua_State *L)
 
 static int canvas_width(lua_State *L)
 {
-    luaX_checkcall(L, "");
+    LUAX_SIGNATURE_BEGIN(L, 0)
+    LUAX_SIGNATURE_END
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Canvas.width()");
 #endif
@@ -152,7 +153,8 @@ static int canvas_width(lua_State *L)
 
 static int canvas_height(lua_State *L)
 {
-    luaX_checkcall(L, "");
+    LUAX_SIGNATURE_BEGIN(L, 0)
+    LUAX_SIGNATURE_END
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Canvas.height()");
 #endif
@@ -166,7 +168,8 @@ static int canvas_height(lua_State *L)
 
 static int canvas_palette0(lua_State *L)
 {
-    luaX_checkcall(L, "");
+    LUAX_SIGNATURE_BEGIN(L, 0)
+    LUAX_SIGNATURE_END
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Canvas.palette()");
 #endif
@@ -189,7 +192,9 @@ static int canvas_palette0(lua_State *L)
 
 static int canvas_palette1(lua_State *L)
 {
-    luaX_checkcall(L, "*");
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isstring, luaX_istable)
+    LUAX_SIGNATURE_END
     int type = lua_type(L, 1);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Canvas.palette(%d)", type);
@@ -255,7 +260,9 @@ static int canvas_palette(lua_State *L)
 
 static int canvas_background(lua_State *L)
 {
-    luaX_checkcall(L, "i");
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+    LUAX_SIGNATURE_END
     int color = lua_tointeger(L, 1);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Canvas.background(%d)", color);
@@ -270,7 +277,9 @@ static int canvas_background(lua_State *L)
 
 static int canvas_shader(lua_State *L)
 {
-    luaX_checkcall(L, "s");
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
+    LUAX_SIGNATURE_END
     const char *code = lua_tostring(L, 1);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Canvas.shader('%s')", code);
@@ -285,7 +294,9 @@ static int canvas_shader(lua_State *L)
 
 static int canvas_color(lua_State *L)
 {
-    luaX_checkcall(L, "s");
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
+    LUAX_SIGNATURE_END
     const char *argb = lua_tostring(L, 1);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Canvas.color('%s')", argb);
@@ -311,7 +322,10 @@ static int canvas_color(lua_State *L)
 // http://glprogramming.com/red/appendixg.html#name1
 static int canvas_points(lua_State *L)
 {
-    luaX_checkcall(L, "ti");
+    LUAX_SIGNATURE_BEGIN(L, 2)
+        LUAX_SIGNATURE_ARGUMENT(luaX_istable)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+    LUAX_SIGNATURE_END
     int vertices = lua_rawlen(L, 1);
     int color = lua_tointeger(L, 2);
 #ifdef __DEBUG_API_CALLS__
@@ -344,7 +358,10 @@ static int canvas_points(lua_State *L)
 
 static int canvas_polyline(lua_State *L)
 {
-    luaX_checkcall(L, "ti");
+    LUAX_SIGNATURE_BEGIN(L, 2)
+        LUAX_SIGNATURE_ARGUMENT(luaX_istable)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+    LUAX_SIGNATURE_END
     int vertices = lua_rawlen(L, 1);
     int color = lua_tointeger(L, 2);
 #ifdef __DEBUG_API_CALLS__
@@ -377,7 +394,10 @@ static int canvas_polyline(lua_State *L)
 
 static int canvas_strip(lua_State *L)
 {
-    luaX_checkcall(L, "ti");
+    LUAX_SIGNATURE_BEGIN(L, 2)
+        LUAX_SIGNATURE_ARGUMENT(luaX_istable)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+    LUAX_SIGNATURE_END
     int vertices = lua_rawlen(L, 1);
     int color = lua_tointeger(L, 2);
 #ifdef __DEBUG_API_CALLS__
@@ -410,7 +430,10 @@ static int canvas_strip(lua_State *L)
 
 static int canvas_fan(lua_State *L)
 {
-    luaX_checkcall(L, "ti");
+    LUAX_SIGNATURE_BEGIN(L, 2)
+        LUAX_SIGNATURE_ARGUMENT(luaX_istable)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+    LUAX_SIGNATURE_END
     int vertices = lua_rawlen(L, 1);
     int color = lua_tointeger(L, 2);
 #ifdef __DEBUG_API_CALLS__

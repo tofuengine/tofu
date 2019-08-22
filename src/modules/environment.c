@@ -53,7 +53,8 @@ int environment_loader(lua_State *L)
 
 static int environment_fps(lua_State *L)
 {
-    luaX_checkcall(L, "");
+    LUAX_SIGNATURE_BEGIN(L, 0)
+    LUAX_SIGNATURE_END
 
     Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
 
@@ -63,7 +64,8 @@ static int environment_fps(lua_State *L)
 
 static int environment_quit(lua_State *L)
 {
-    luaX_checkcall(L, "");
+    LUAX_SIGNATURE_BEGIN(L, 0)
+    LUAX_SIGNATURE_END
 
     Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
 

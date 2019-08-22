@@ -91,7 +91,11 @@ static void to_font_atlas_callback(void *parameters, void *data, int width, int 
 
 static int font_new(lua_State *L)
 {
-    luaX_checkcall(L, "sii");
+    LUAX_SIGNATURE_BEGIN(L, 3)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+    LUAX_SIGNATURE_END
     const char *file = lua_tostring(L, 1);
     int glyph_width = lua_tointeger(L, 2);
     int glyph_height = lua_tointeger(L, 3);
@@ -129,7 +133,9 @@ static int font_new(lua_State *L)
 
 static int font_gc(lua_State *L)
 {
-    luaX_checkcall(L, "u");
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+    LUAX_SIGNATURE_END
     Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
 
     GL_sheet_delete(&instance->sheet);
@@ -142,7 +148,15 @@ static int font_gc(lua_State *L)
 
 static int font_write(lua_State *L)
 {
-    luaX_checkcall(L, "usnnins");
+    LUAX_SIGNATURE_BEGIN(L, 7)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
+    LUAX_SIGNATURE_END
     Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
     const char *text = lua_tostring(L, 2);
     double x = (double)lua_tonumber(L, 3);

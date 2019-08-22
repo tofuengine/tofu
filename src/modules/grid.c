@@ -75,7 +75,11 @@ int grid_loader(lua_State *L)
 
 static int grid_new(lua_State *L)
 {
-    luaX_checkcall(L, "ii*");
+    LUAX_SIGNATURE_BEGIN(L, 3)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(luaX_istable, luaX_isnumber)
+    LUAX_SIGNATURE_END
     int width = lua_tointeger(L, 1);
     int height = lua_tointeger(L, 2);
     int type = lua_type(L, 3);
@@ -131,7 +135,9 @@ static int grid_new(lua_State *L)
 
 static int grid_gc(lua_State *L)
 {
-    luaX_checkcall(L, "u");
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+    LUAX_SIGNATURE_END
     Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
 
     Log_write(LOG_LEVELS_DEBUG, "<GRID> finalizing grid #%p", instance);
@@ -144,7 +150,9 @@ static int grid_gc(lua_State *L)
 
 static int grid_width(lua_State *L)
 {
-    luaX_checkcall(L, "u");
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+    LUAX_SIGNATURE_END
     Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
 
     lua_pushinteger(L, instance->width);
@@ -154,7 +162,9 @@ static int grid_width(lua_State *L)
 
 static int grid_height(lua_State *L)
 {
-    luaX_checkcall(L, "u");
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+    LUAX_SIGNATURE_END
     Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
 
     lua_pushinteger(L, instance->height);
@@ -164,7 +174,10 @@ static int grid_height(lua_State *L)
 
 static int grid_fill(lua_State *L)
 {
-    luaX_checkcall(L, "u*");
+    LUAX_SIGNATURE_BEGIN(L, 2)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+        LUAX_SIGNATURE_ARGUMENT(luaX_istable, luaX_isnumber)
+    LUAX_SIGNATURE_END
     Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
     int type = lua_type(L, 2);
 
@@ -203,7 +216,13 @@ static int grid_fill(lua_State *L)
 
 static int grid_stride(lua_State *L)
 {
-    luaX_checkcall(L, "uii*i");
+    LUAX_SIGNATURE_BEGIN(L, 5)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(luaX_istable, luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+    LUAX_SIGNATURE_END
     Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
     int column = lua_tointeger(L, 2);
     int row = lua_tointeger(L, 3);
@@ -245,7 +264,11 @@ static int grid_stride(lua_State *L)
 
 static int grid_peek(lua_State *L)
 {
-    luaX_checkcall(L, "uii");
+    LUAX_SIGNATURE_BEGIN(L, 3)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+    LUAX_SIGNATURE_END
     Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
     int column = lua_tointeger(L, 2);
     int row = lua_tointeger(L, 3);
@@ -261,7 +284,12 @@ static int grid_peek(lua_State *L)
 
 static int grid_poke(lua_State *L)
 {
-    luaX_checkcall(L, "uiin");
+    LUAX_SIGNATURE_BEGIN(L, 4)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+    LUAX_SIGNATURE_END
     Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
     int column = lua_tointeger(L, 2);
     int row = lua_tointeger(L, 3);

@@ -25,7 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define __LUAX_USE_REGISTRY_INDEX_FOR_USERDATA__
+typedef int (*luaX_TFunction)(lua_State *, int);
 
 /*
 http://webcache.googleusercontent.com/search?q=cache:RLoR9dkMeowJ:howtomakeanrpg.com/a/classes-in-lua.html+&cd=4&hl=en&ct=clnk&gl=it
@@ -192,41 +192,82 @@ void luaX_getnumberarray(lua_State *L, int idx, double *array)
     }
 }
 
-void luaX_checkarguments(lua_State *L, int n, const char* func, int line)
+void luaX_checkargument(lua_State *L, int index, const char *file, int line, ...)
 {
-    int argc = lua_gettop(L);
-    if (argc != n) {
-        luaL_error(L, "[%s:%d] wrong arguments count (need %d, got %d)", func, line, argc, n);
+    int count = 0;
+    int success = 0;
+    va_list args;
+    va_start(args, line);
+    for (; ; ++count) {
+        luaX_TFunction func = va_arg(args, luaX_TFunction);
+        if (!func) {
+            break;
+        }
+        success |= func(L, index);
+    }
+    va_end(args);
+    if ((count > 0) && !success) {
+        luaL_error(L, "[%s:%d] signature failure for argument #%d w/ type %d", file, line, index, lua_type(L, index));
         return; // Unreachable code.
     }
 }
 
-void luaX_checksignature(lua_State *L, const char *signature, const char* func, int line)
+extern int luaX_isnil(lua_State *L, int index)
 {
-    int argc = lua_gettop(L);
-    int n = strlen(signature);
-    if (argc != n) {
-        luaL_error(L, "[%s:%d] wrong arguments count (need %d, got %d)", func, line, argc, n);
-        return; // Unreachable code.
-    }
-    for (int i = 0; i < n; ++i) {
-        char c = signature[i];
-        int index = i + 1;
-        if (((c == '*'))
-            || ((c == 'v') && lua_isnil(L, index))
-            || ((c == 'b') && lua_isboolean(L, index))
-            || ((c == 'l') && lua_islightuserdata(L, index))
-            || ((c == 'i') && lua_isinteger(L, index))
-            || ((c == 'n') && lua_isnumber(L, index))
-            || ((c == 's') && lua_isstring(L, index))
-            || ((c == 't') && lua_istable(L, index))
-            || ((c == 'f') && lua_isfunction(L, index))
-            || ((c == 'c') && lua_iscfunction(L, index))
-            || ((c == 'u') && lua_isuserdata(L, index))
-            || ((c == 'x') && lua_isthread(L, index))) {
-            continue;
-        }
-        luaL_error(L, "[%s:%d] wrong type for argument #%d (need '%c', got %d)", func, line, i, c, lua_type(L, index));
-        return; // Unreachable code.
-    }
+    return lua_isnil(L, index);
+}
+
+extern int luaX_isboolean(lua_State *L, int index)
+{
+    return lua_isboolean(L, index);
+}
+
+int luaX_isinteger(lua_State *L, int index)
+{
+    return lua_isinteger(L, index);
+}
+
+int luaX_isnumber(lua_State *L, int index)
+{
+    return lua_isnumber(L, index);
+}
+
+int luaX_isstring(lua_State *L, int index)
+{
+    return lua_isstring(L, index);
+}
+
+int luaX_istable(lua_State *L, int index)
+{
+    return lua_istable(L, index);
+}
+
+int luaX_isfunction(lua_State *L, int index)
+{
+    return lua_isfunction(L, index);
+}
+
+int luaX_iscfunction(lua_State *L, int index)
+{
+    return lua_iscfunction(L, index);
+}
+
+int luaX_islightuserdata(lua_State *L, int index)
+{
+    return lua_islightuserdata(L, index);
+}
+
+int luaX_isuserdata(lua_State *L, int index)
+{
+    return lua_isuserdata(L, index);
+}
+
+int luaX_isthread(lua_State *L, int index)
+{
+    return lua_isthread(L, index);
+}
+
+int luaX_isany(lua_State *L, int index)
+{
+    return !lua_isnil(L, index);
 }

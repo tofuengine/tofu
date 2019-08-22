@@ -89,7 +89,11 @@ static void to_indexed_atlas_callback(void *parameters, void *data, int width, i
 
 static int bank_new(lua_State *L)
 {
-    luaX_checkcall(L, "sii");
+    LUAX_SIGNATURE_BEGIN(L, 3)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+    LUAX_SIGNATURE_END
     const char *file = lua_tostring(L, 1);
     int cell_width = lua_tointeger(L, 2);
     int cell_height = lua_tointeger(L, 3);
@@ -121,7 +125,9 @@ static int bank_new(lua_State *L)
 
 static int bank_gc(lua_State *L)
 {
-    luaX_checkcall(L, "u");
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+    LUAX_SIGNATURE_END
     Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
 
     GL_sheet_delete(&instance->sheet);
@@ -134,7 +140,9 @@ static int bank_gc(lua_State *L)
 
 static int bank_cell_width(lua_State *L)
 {
-    luaX_checkcall(L, "u");
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+    LUAX_SIGNATURE_END
     Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
 
     lua_pushinteger(L, instance->sheet.quad.width);
@@ -144,7 +152,9 @@ static int bank_cell_width(lua_State *L)
 
 static int bank_cell_height(lua_State *L)
 {
-    luaX_checkcall(L, "u");
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+    LUAX_SIGNATURE_END
     Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
 
     lua_pushinteger(L, instance->sheet.quad.height);
@@ -154,7 +164,12 @@ static int bank_cell_height(lua_State *L)
 
 static int bank_blit4(lua_State *L)
 {
-    luaX_checkcall(L, "uinn");
+    LUAX_SIGNATURE_BEGIN(L, 4)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+    LUAX_SIGNATURE_END
     Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
     int cell_id = lua_tointeger(L, 2);
     double x = (double)lua_tonumber(L, 3);
@@ -179,7 +194,13 @@ static int bank_blit4(lua_State *L)
 
 static int bank_blit5(lua_State *L)
 {
-    luaX_checkcall(L, "uinnn");
+    LUAX_SIGNATURE_BEGIN(L, 5)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+    LUAX_SIGNATURE_END
     Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
     int cell_id = lua_tointeger(L, 2);
     double x = (double)lua_tonumber(L, 3);
@@ -205,7 +226,14 @@ static int bank_blit5(lua_State *L)
 
 static int bank_blit6(lua_State *L)
 {
-    luaX_checkcall(L, "uinnnn");
+    LUAX_SIGNATURE_BEGIN(L, 6)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+    LUAX_SIGNATURE_END
     Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
     int cell_id = lua_tointeger(L, 2);
     double x = (double)lua_tonumber(L, 3);
@@ -248,7 +276,15 @@ static int bank_blit6(lua_State *L)
 
 static int bank_blit7(lua_State *L)
 {
-    luaX_checkcall(L, "uinnnnn");
+    LUAX_SIGNATURE_BEGIN(L, 7)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+    LUAX_SIGNATURE_END
     Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
     int cell_id = lua_tointeger(L, 2);
     double x = (double)lua_tonumber(L, 3);

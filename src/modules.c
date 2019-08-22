@@ -37,7 +37,7 @@
 
 typedef struct _Module_t {
     const char *namespace;
-    int (*loader)(lua_State *L);
+    lua_CFunction loader;
 } Module_t;
 
 static const Module_t modules[] = {
