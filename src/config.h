@@ -43,9 +43,9 @@
 
 // Includes checks inside some crucial functions. Could be useful in DEBUG mode.
 #ifdef DEBUG
-#define __DEFENSIVE_CHECKS__
+  #define __DEFENSIVE_CHECKS__
 #else
-#undef  __DEFENSIVE_CHECKS__
+  #undef  __DEFENSIVE_CHECKS__
 #endif
 
 #define __NO_LINEFEEDS__
@@ -57,9 +57,17 @@
 #undef  __FIND_NEAREST_COLOR_EUCLIDIAN__
 #undef  __GRID_INTEGER_CELL__
 #undef  __DEBUG_API_CALLS__
-#undef  __DEBUG_VM_CALLS__
+#define __DEBUG_VM_CALLS__
+#define __DEBUG_VM_USE_CUSTOM_TRACEBACK__
 #undef  __DEBUG_SHADER_CALLS__
 #define __DEBUG_GARBAGE_COLLECTOR__
 #define __REPACK_TIMER_POOL_DURING_GC___
+
+#ifndef __DEBUG_VM_CALLS__
+  #ifdef DEBUG
+    #define __DEBUG_VM_CALLS__
+    #define __DEBUG_VM_USE_CUSTOM_TRACEBACK__
+  #endif
+#endif
 
 #endif  /* __TOFU_CONFIG_H__ */

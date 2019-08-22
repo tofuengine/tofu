@@ -105,6 +105,23 @@ static bool detect(lua_State *L, const char *root, const char *methods[])
     return true;
 }
 
+#ifdef __DEBUG_VM_USE_CUSTOM_TRACEBACK__
+static int error_handler(lua_State *L)
+{
+    const char *msg = lua_tostring(L, 1);
+    if (msg == NULL) {  /* is error object not a string? */
+        if (luaL_callmeta(L, 1, "__tostring")  /* does it have a metamethod */
+            && lua_type(L, -1) == LUA_TSTRING) { /* that produces a string? */
+            return 1;  /* that is the message */
+        } else {
+            msg = lua_pushfstring(L, "(error object is a %s value)", luaL_typename(L, 1));
+        }
+    }
+    luaL_traceback(L, L, msg, 1);  /* append a standard traceback */
+    return 1;  /* return the traceback */
+}
+#endif
+
 static void call(lua_State *L, Methods_t method, int nargs, int nresults)
 {
     int index = METHOD_STACK_INDEX(method); // O F1 ... Fn
@@ -118,7 +135,24 @@ static void call(lua_State *L, Methods_t method, int nargs, int nresults)
     lua_pushvalue(L, index);                // O F1 .. Fn A1 .. An     -> O F1 .. Fn A1 .. An F
     lua_pushvalue(L, OBJECT_STACK_INDEX);   // O F1 .. Fn A1 .. An F   -> O F1 .. Fn A1 .. An F O
     lua_rotate(L, -(nargs + 2), 2);         // O F1 .. Fn A1 .. An F O -> O F1 ... Fn F O A1 .. An
-    lua_call(L, nargs + 1, nresults); // Account for the `self` object.
+#ifdef __DEBUG_VM_CALLS__
+    int base = lua_gettop(L) - (nargs + 1);
+#ifndef __DEBUG_VM_USE_CUSTOM_TRACEBACK__
+    lua_getglobal(L, "debug");
+    lua_getfield(L, -1, "traceback");
+    lua_remove(L, -2);                      // O F1 ... Fn F O A1 .. An   -> O F1 ... Fn T F O A1 .. An T
+#else
+    lua_pushcfunction(L, error_handler);    // O F1 ... Fn F O A1 .. An   -> O F1 ... Fn T F O A1 .. An T
+#endif
+    lua_insert(L, base);                    // O F1 ... Fn F O A1 .. An T -> O F1 ... Fn T F O A1 .. An
+    int result = lua_pcall(L, nargs + 1, nresults, base);
+    if (result != LUA_OK) {
+        Log_write(LOG_LEVELS_FATAL, "<VM> error in call: %s", lua_tostring(L, -1));
+    }
+    lua_remove(L, base);
+#else
+    lua_call(L, nargs + 1, nresults);
+#endif
 }
 
 static void timerpool_callback(Timer_t *timer, void *parameters)
