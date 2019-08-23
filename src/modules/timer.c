@@ -30,7 +30,7 @@
 #include "../log.h"
 
 typedef struct _Timer_Class_t {
-    Timer_Pool_t *timer_pool;
+    int callback;
     Timer_t *timer;
 } Timer_Class_t;
 
@@ -66,22 +66,19 @@ static int timer_new(lua_State *L)
     LUAX_SIGNATURE_END
     double period = lua_tonumber(L, 1);
     int repeats = lua_tointeger(L, 2);
-    int callback = luaX_tofunction(L, 3); // NOTE! This need to be released when the timer is detached!
+    int callback = luaX_tofunction(L, 3);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Timer.new() -> %f, %d, %d", period, repeats, callback);
 #endif
 
     Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
-    Timer_Pool_t *timer_pool = environment->timer_pool;
 
     Timer_Class_t *instance = (Timer_Class_t *)lua_newuserdata(L, sizeof(Timer_Class_t));
-    instance->timer_pool = timer_pool;
-    instance->timer = TimerPool_allocate(timer_pool, (Timer_Value_t){
-            .period = period,
-            .repeats = repeats,
-            .callback = callback
-        });
-    Log_write(LOG_LEVELS_DEBUG, "<TIMER> timer #%p allocated", instance->timer);
+    *instance = (Timer_Class_t){
+            .callback = callback,
+            .timer = TimerPool_allocate(environment->timer_pool, period, repeats, BUNDLE_FROM_INT(callback))
+        };
+    Log_write(LOG_LEVELS_DEBUG, "<TIMER> timer #%p allocated (pool-entry #%p)", instance, instance->timer);
 
     luaL_setmetatable(L, LUAX_CLASS(Timer_Class_t));
 
@@ -98,11 +95,11 @@ static int timer_gc(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Timer.gc()");
 #endif
 
-    Log_write(LOG_LEVELS_DEBUG, "<TIMER> finalizing timer #%p", instance->timer);
+    Log_write(LOG_LEVELS_DEBUG, "<TIMER> finalizing timer #%p (pool-entry #%p)", instance, instance->timer);
 
-    luaL_unref(L, LUA_REGISTRYINDEX, instance->timer->value.callback);
+    TimerPool_release(instance->timer); // Mark the entry as finalized.
 
-    TimerPool_release(instance->timer_pool, instance->timer);
+    luaL_unref(L, LUA_REGISTRYINDEX, instance->callback);
 
     return 0;
 }
@@ -117,7 +114,7 @@ static int timer_reset(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Timer.cancel()");
 #endif
 
-    TimerPool_reset(instance->timer_pool, instance->timer);
+    TimerPool_reset(instance->timer);
 
     return 0;
 }
@@ -132,7 +129,7 @@ static int timer_cancel(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Timer.cancel()");
 #endif
 
-    TimerPool_cancel(instance->timer_pool, instance->timer);
+    TimerPool_cancel(instance->timer);
 
     return 0;
 }
