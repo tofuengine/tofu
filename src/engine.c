@@ -92,7 +92,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 
     engine->environment.timer_pool = &engine->interpreter.timer_pool; // HACK: inject the timer-pool pointer.
 
-    Interpreter_init(&engine->interpreter);
+    engine->operative = Interpreter_init(&engine->interpreter);
 
     return true;
 }
@@ -113,21 +113,21 @@ static void input_callback(void *parameters)
 {
     Engine_t *engine = (Engine_t *)parameters;
 
-    if (engine->interpreter.result != LUA_OK) {
+    if (!engine->operative) {
         return;
     }
-    Interpreter_input(&engine->interpreter);
+    engine->operative = Interpreter_input(&engine->interpreter);
 }
 
 static void render_callback(void *parameters)
 {
     Engine_t *engine = (Engine_t *)parameters;
 
-    if (engine->interpreter.result != LUA_OK) { // TODO: implement "crash screen" here.
-        Display_background(&engine->display, 5);
+    if (!engine->operative) {
+        Display_screen_of_death(&engine->display);
         return;
     }
-    Interpreter_render(&engine->interpreter, 0.0); //lag / delta_time);
+    engine->operative = Interpreter_render(&engine->interpreter, 0.0); //lag / delta_time);
 }
 
 void Engine_run(Engine_t *engine)
@@ -157,11 +157,11 @@ void Engine_run(Engine_t *engine)
 
         lag += elapsed; // Count a maximum amount of skippable frames in order no to stall on slower machines.
         for (int frames = 0; (frames < skippable_frames) && (lag >= delta_time); ++frames) {
-            // TODO: move `TimerPool_update()` here?
-            if (engine->interpreter.result != LUA_OK) {
+            // TODO: To move `TimerPool_update()` here the interpreter should expose the "timerpool_update" callback.
+            if (!engine->operative) {
                 continue;
             }
-            Interpreter_update(&engine->interpreter, delta_time);
+            engine->operative = Interpreter_update(&engine->interpreter, delta_time);
             lag -= delta_time;
         }
 

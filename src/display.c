@@ -503,6 +503,12 @@ void Display_shader(Display_t *display, const char *effect)
     free(code);
 }
 
+void Display_screen_of_death(Display_t *display) // TODO: implement "crash screen"
+{
+    int color = GL_palette_find_nearest_color(&display->palette, (GL_Color_t){ 255, 0, 0, 255 });
+    Display_background(display, color);
+}
+
 void Display_terminate(Display_t *display)
 {
     for (size_t i = 0; i < Display_Programs_t_CountOf; ++i) {

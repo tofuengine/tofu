@@ -105,6 +105,7 @@ extern void Display_render(Display_t *display, const Display_Callback_t callback
 extern void Display_palette(Display_t *display, const GL_Palette_t *palette);
 extern void Display_background(Display_t *display, const size_t color);
 extern void Display_shader(Display_t *display, const char *code);
+extern void Display_screen_of_death(Display_t *display);
 extern void Display_terminate(Display_t *display);
 
 #endif  /* __DISPLAY_H__ */

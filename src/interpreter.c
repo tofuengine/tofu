@@ -209,7 +209,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configu
         Log_write(LOG_LEVELS_FATAL, "<VM> can't initialize interpreter");
         return false;
     }
-    lua_atpanic(interpreter->state, panic);
+    lua_atpanic(interpreter->state, panic); // TODO: remove the panic handler?
 
     luaL_openlibs(interpreter->state);
 
@@ -250,22 +250,26 @@ bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configu
     return true;
 }
 
-void Interpreter_init(Interpreter_t *interpreter)
+bool Interpreter_init(Interpreter_t *interpreter)
 {
-    interpreter->result = call(interpreter->state, METHOD_INIT, 0, 0);
+    return call(interpreter->state, METHOD_INIT, 0, 0) == LUA_OK;
 }
 
-void Interpreter_input(Interpreter_t *interpreter)
+bool Interpreter_input(Interpreter_t *interpreter)
 {
-    interpreter->result = call(interpreter->state, METHOD_INPUT, 0, 0);
+    return call(interpreter->state, METHOD_INPUT, 0, 0) == LUA_OK;
 }
 
-void Interpreter_update(Interpreter_t *interpreter, const double delta_time)
+bool Interpreter_update(Interpreter_t *interpreter, const double delta_time)
 {
-    TimerPool_update(&interpreter->timer_pool, delta_time);
+    if (!TimerPool_update(&interpreter->timer_pool, delta_time)) {
+        return false;
+    }
 
     lua_pushnumber(interpreter->state, delta_time);
-    interpreter->result = call(interpreter->state, METHOD_UPDATE, 1, 0);
+    if (call(interpreter->state, METHOD_UPDATE, 1, 0) != LUA_OK) {
+        return false;
+    }
 
     interpreter->gc_age += delta_time;
     while (interpreter->gc_age >= GARBAGE_COLLECTION_PERIOD) { // Periodically collect GC.
@@ -282,12 +286,14 @@ void Interpreter_update(Interpreter_t *interpreter, const double delta_time)
         Log_write(LOG_LEVELS_DEBUG, "<VM> garbage collection took %.3fs", elapsed);
 #endif
     }
+
+    return true;
 }
 
-void Interpreter_render(Interpreter_t *interpreter, const double ratio)
+bool Interpreter_render(Interpreter_t *interpreter, const double ratio)
 {
     lua_pushnumber(interpreter->state, ratio);
-    interpreter->result = call(interpreter->state, METHOD_RENDER, 1, 0);
+    return call(interpreter->state, METHOD_RENDER, 1, 0) == LUA_OK;
 }
 
 void Interpreter_terminate(Interpreter_t *interpreter)
