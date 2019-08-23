@@ -38,6 +38,7 @@ typedef struct _Interpreter_t {
     double gc_age;
 
     lua_State *state; // TODO: rename to `L`?
+    int result;
 
     Timer_Pool_t timer_pool;
 } Interpreter_t;

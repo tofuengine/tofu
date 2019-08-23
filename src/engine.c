@@ -113,6 +113,9 @@ static void input_callback(void *parameters)
 {
     Engine_t *engine = (Engine_t *)parameters;
 
+    if (engine->interpreter.result != LUA_OK) {
+        return;
+    }
     Interpreter_input(&engine->interpreter);
 }
 
@@ -120,6 +123,10 @@ static void render_callback(void *parameters)
 {
     Engine_t *engine = (Engine_t *)parameters;
 
+    if (engine->interpreter.result != LUA_OK) { // TODO: implement "crash screen" here.
+        Display_background(&engine->display, 5);
+        return;
+    }
     Interpreter_render(&engine->interpreter, 0.0); //lag / delta_time);
 }
 
@@ -151,7 +158,9 @@ void Engine_run(Engine_t *engine)
         lag += elapsed; // Count a maximum amount of skippable frames in order no to stall on slower machines.
         for (int frames = 0; (frames < skippable_frames) && (lag >= delta_time); ++frames) {
             // TODO: move `TimerPool_update()` here?
-            // TODO: Should the `Tofu` class be hardcoded?
+            if (engine->interpreter.result != LUA_OK) {
+                continue;
+            }
             Interpreter_update(&engine->interpreter, delta_time);
             lag -= delta_time;
         }
