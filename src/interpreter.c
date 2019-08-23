@@ -174,7 +174,7 @@ static int call(lua_State *L, Methods_t method, int nargs, int nresults)
 #endif
 }
 
-static void timerpool_callback(Timer_t *timer, void *parameters)
+static bool timerpool_callback(Timer_t *timer, void *parameters)
 {
     Interpreter_t *interpreter = (Interpreter_t *)parameters;
 
@@ -197,7 +197,7 @@ static void timerpool_callback(Timer_t *timer, void *parameters)
     lua_call(interpreter->state, 0, 0);
     int result = LUA_OK;
 #endif
-    interpreter->result = result;
+    return result == LUA_OK;
 }
 
 bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configuration, const Environment_t *environment)

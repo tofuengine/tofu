@@ -111,7 +111,7 @@ void TimerPool_gc(Timer_Pool_t *pool)
     }
 }
 
-void TimerPool_update(Timer_Pool_t *pool, double delta_time)
+bool TimerPool_update(Timer_Pool_t *pool, double delta_time)
 {
     for (Timer_t *timer = pool->timers; timer != NULL; timer = timer->next) {
         if (timer->state != TIMER_STATE_RUNNING) {
@@ -126,7 +126,9 @@ void TimerPool_update(Timer_Pool_t *pool, double delta_time)
 
             timer->age -= timer->period;
 
-            pool->update_callback(timer, pool->parameters);
+            if (!pool->update_callback(timer, pool->parameters)) {
+                return false;
+            }
 
             if (timer->loops > 0) {
                 timer->loops -= 1;
@@ -136,6 +138,7 @@ void TimerPool_update(Timer_Pool_t *pool, double delta_time)
             }
         }
     }
+    return true;
 }
 
 void TimerPool_release(Timer_t *timer)

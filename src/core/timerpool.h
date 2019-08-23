@@ -52,7 +52,7 @@ typedef struct _Timer_t {
     struct _Timer_t *next;
 } Timer_t;
 
-typedef void (*TimerPool_Callback_t)(Timer_t *timer, void *parameters);
+typedef bool (*TimerPool_Callback_t)(Timer_t *timer, void *parameters);
 
 typedef struct _Timer_Pool_t {
     Timer_t *timers;
@@ -64,7 +64,7 @@ typedef struct _Timer_Pool_t {
 extern void TimerPool_initialize(Timer_Pool_t *pool, TimerPool_Callback_t update_callback, void *parameters);
 extern void TimerPool_terminate(Timer_Pool_t *pool);
 extern Timer_t *TimerPool_allocate(Timer_Pool_t *pool, double period, size_t repeats, void *bundle);
-extern void TimerPool_update(Timer_Pool_t *pool, double delta_time);
+extern bool TimerPool_update(Timer_Pool_t *pool, double delta_time);
 extern void TimerPool_gc(Timer_Pool_t *pool);
 
 extern void TimerPool_release(Timer_t *timer);
