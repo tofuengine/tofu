@@ -58,15 +58,13 @@
 #undef  __GRID_INTEGER_CELL__
 #undef  __DEBUG_API_CALLS__
 #define __DEBUG_VM_CALLS__
-#define __DEBUG_VM_USE_CUSTOM_TRACEBACK__
 #undef  __DEBUG_SHADER_CALLS__
 #define __DEBUG_GARBAGE_COLLECTOR__
-#define __REPACK_TIMER_POOL_DURING_GC___
+#define __VM_USE_CUSTOM_TRACEBACK__
 
 // In release build, disable VM calls debug for faster execution.
-#ifndef DEBUG
+#ifdef RELEASE
   #undef __DEBUG_VM_CALLS__
-  #undef __DEBUG_VM_USE_CUSTOM_TRACEBACK__
 #endif
 
 #endif  /* __TOFU_CONFIG_H__ */
