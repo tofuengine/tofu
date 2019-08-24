@@ -109,13 +109,6 @@ bool Engine_isRunning(Engine_t *engine)
     return !engine->environment.should_close && !Display_shouldClose(&engine->display);
 }
 
-static void render_callback(void *parameters)
-{
-    Engine_t *engine = (Engine_t *)parameters;
-
-    engine->operative = Interpreter_render(&engine->interpreter, 0.0); //lag / delta_time);
-}
-
 void Engine_run(Engine_t *engine)
 {
     const double delta_time = 1.0 / (double)engine->configuration.fps;
@@ -129,7 +122,7 @@ void Engine_run(Engine_t *engine)
     double previous = glfwGetTime();
     double lag = 0.0;
 
-    while (Engine_isRunning(engine)) {
+    for (bool running = true; running && Engine_isRunning(engine); ) { // Lazy evaluate `running`, will avoid calls when error.
         double current = glfwGetTime();
         double elapsed = current - previous;
         previous = current;
@@ -141,17 +134,12 @@ void Engine_run(Engine_t *engine)
 
         Display_processInput(&engine->display);
 
-        if (!engine->operative) {
-            Display_screen_of_death(&engine->display);
-            continue;
-        }
-
-        engine->operative = Interpreter_input(&engine->interpreter);
+        running = running && Interpreter_input(&engine->interpreter);
 
         lag += elapsed; // Count a maximum amount of skippable frames in order no to stall on slower machines.
         for (int frames = 0; (frames < skippable_frames) && (lag >= delta_time); ++frames) {
             // TODO: To move `TimerPool_update()` here the interpreter should expose the "timerpool_update" callback.
-            engine->operative = Interpreter_update(&engine->interpreter, delta_time);
+            running = running && Interpreter_update(&engine->interpreter, delta_time);
             lag -= delta_time;
         }
 
@@ -159,6 +147,8 @@ void Engine_run(Engine_t *engine)
 //            glfwWait
 //        }
 
-        Display_render(&engine->display, render_callback, engine);
+        Display_renderBegin(&engine->display);
+            running = running && Interpreter_render(&engine->interpreter, lag / delta_time);
+        Display_renderEnd(&engine->display);
     }
 }

@@ -385,7 +385,7 @@ void Display_processInput(Display_t *display)
     }
 }
 
-void Display_render(Display_t *display, const Display_Callback_t callback, void *parameters)
+void Display_renderBegin(Display_t *display)
 {
     // TODO: we could direct the rendering routines differently in the case `autofit` is disabled.
 #ifndef __NO_AUTOFIT__
@@ -404,13 +404,16 @@ void Display_render(Display_t *display, const Display_Callback_t callback, void 
 #else
     glEnable(GL_BLEND);
 #endif
-
+#endif
     GLfloat *rgba = display->background_rgba;
     glClearColor(rgba[0], rgba[1], rgba[2], rgba[3]); // Required, to clear previous content.
     glClear(GL_COLOR_BUFFER_BIT);
-
     GL_program_use(&display->programs[DISPLAY_PROGRAM_PALETTE]);
-    callback(parameters);
+}
+
+void Display_renderEnd(Display_t *display)
+{
+#ifndef __NO_AUTOFIT__
     GLfloat time[] = { (GLfloat)glfwGetTime() };
     GL_program_send(&display->programs[display->program_index], "u_time", GL_PROGRAM_UNIFORM_FLOAT, 1, time);
     GL_program_use(&display->programs[display->program_index]);
@@ -433,16 +436,7 @@ void Display_render(Display_t *display, const Display_Callback_t callback, void 
 #endif
 
     GL_texture_blit_fast(&display->offscreen_texture, display->offscreen_source, display->offscreen_destination, (GL_Color_t){ 255, 255, 255, 255 });
-
-#else
-    GLfloat *rgba = display->background_rgba;
-    glClearColor(rgba[0], rgba[1], rgba[2], rgba[3]); // Required, to clear previous content.
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    GL_program_use(&display->programs[DISPLAY_PROGRAM_PALETTE]);
-    callback(parameters);
 #endif
-
     glfwSwapBuffers(display->window);
 }
 
@@ -500,28 +494,6 @@ void Display_shader(Display_t *display, const char *effect)
     }
 
     free(code);
-}
-
-void Display_screen_of_death(Display_t *display) // TODO: implement "crash screen"
-{
-//    int bgcolor = GL_palette_find_nearest_color(&display->palette, (GL_Color_t){ 0, 0, 0, 255 });
-//    Display_background(display, bgcolor);
-
-    glClearColor(0.25, 0.50, 0.25, 1.0); // Required, to clear previous content.
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    glEnable(GL_BLEND);
-    glDisable(GL_ALPHA_TEST);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    GL_program_use(&display->programs[DISPLAY_PROGRAM_PASSTHRU]);
-
-    GL_Texture_t texture;
-    GL_texture_load(&texture, "/home/nemo/workspace/tofu-engine/src/assets/ghost.png", NULL, NULL);
-    GL_texture_blit_fast(&texture, (GL_Quad_t){ 0, 0, texture.width, texture.height }, (GL_Quad_t){ 0, display->physical_height, display->physical_width, 0 }, (GL_Color_t){ 127, 255, 127, 255 });
-    GL_texture_delete(&texture);
-
-    glfwSwapBuffers(display->window);
 }
 
 void Display_terminate(Display_t *display)
