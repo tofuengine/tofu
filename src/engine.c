@@ -109,24 +109,10 @@ bool Engine_isRunning(Engine_t *engine)
     return !engine->environment.should_close && !Display_shouldClose(&engine->display);
 }
 
-static void input_callback(void *parameters)
-{
-    Engine_t *engine = (Engine_t *)parameters;
-
-    if (!engine->operative) {
-        return;
-    }
-    engine->operative = Interpreter_input(&engine->interpreter);
-}
-
 static void render_callback(void *parameters)
 {
     Engine_t *engine = (Engine_t *)parameters;
 
-    if (!engine->operative) {
-        Display_screen_of_death(&engine->display);
-        return;
-    }
     engine->operative = Interpreter_render(&engine->interpreter, 0.0); //lag / delta_time);
 }
 
@@ -153,14 +139,18 @@ void Engine_run(Engine_t *engine)
             engine->environment.fps = ready ? statistics.fps : 0.0;
         }
 
-        Display_processInput(&engine->display, input_callback, engine);
+        Display_processInput(&engine->display);
+
+        if (!engine->operative) {
+            Display_screen_of_death(&engine->display);
+            continue;
+        }
+
+        engine->operative = Interpreter_input(&engine->interpreter);
 
         lag += elapsed; // Count a maximum amount of skippable frames in order no to stall on slower machines.
         for (int frames = 0; (frames < skippable_frames) && (lag >= delta_time); ++frames) {
             // TODO: To move `TimerPool_update()` here the interpreter should expose the "timerpool_update" callback.
-            if (!engine->operative) {
-                continue;
-            }
             engine->operative = Interpreter_update(&engine->interpreter, delta_time);
             lag -= delta_time;
         }

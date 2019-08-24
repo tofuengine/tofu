@@ -352,7 +352,7 @@ bool Display_shouldClose(Display_t *display)
     return glfwWindowShouldClose(display->window);
 }
 
-void Display_processInput(Display_t *display, const Display_Callback_t callback, void *parameters)
+void Display_processInput(Display_t *display)
 {
     static const int keys[Display_Keys_t_CountOf] = {
         GLFW_KEY_UP,
@@ -366,6 +366,8 @@ void Display_processInput(Display_t *display, const Display_Callback_t callback,
         GLFW_KEY_ENTER,
         GLFW_KEY_SPACE
     };
+
+    glfwPollEvents();
 
     for (int i = 0; i < Display_Keys_t_CountOf; ++i) {
         Display_Key_State_t *key_state = &display->keys_state[i];
@@ -381,8 +383,6 @@ void Display_processInput(Display_t *display, const Display_Callback_t callback,
             glfwSetWindowShouldClose(display->window, true);
         }
     }
-
-    callback(parameters);
 }
 
 void Display_render(Display_t *display, const Display_Callback_t callback, void *parameters)
@@ -444,7 +444,6 @@ void Display_render(Display_t *display, const Display_Callback_t callback, void 
 #endif
 
     glfwSwapBuffers(display->window);
-    glfwPollEvents();
 }
 
 void Display_palette(Display_t *display, const GL_Palette_t *palette)
@@ -503,38 +502,26 @@ void Display_shader(Display_t *display, const char *effect)
     free(code);
 }
 
-static void to_indexed_atlas_callback(void *parameters, void *data, int width, int height) // TODO: convert image with a shader.
-{
-    const GL_Palette_t *palette = (const GL_Palette_t *)parameters;
-
-    GL_Color_t *pixels = (GL_Color_t *)data;
-
-    for (int y = 0; y < height; ++y) {
-        int row_offset = width * y;
-        for (int x = 0; x < width; ++x) {
-            int offset = row_offset + x;
-
-            GL_Color_t color = pixels[offset];
-            if (color.a == 0) { // Skip transparent colors.
-                continue;
-            }
-
-            size_t index = GL_palette_find_nearest_color(palette, color);
-            pixels[offset] = (GL_Color_t){ index, index, index, color.a };
-        }
-    }
-}
-
 void Display_screen_of_death(Display_t *display) // TODO: implement "crash screen"
 {
-    int bgcolor = GL_palette_find_nearest_color(&display->palette, (GL_Color_t){ 255, 0, 0, 255 });
-    Display_background(display, bgcolor);
+//    int bgcolor = GL_palette_find_nearest_color(&display->palette, (GL_Color_t){ 0, 0, 0, 255 });
+//    Display_background(display, bgcolor);
 
-    int fgcolor = GL_palette_find_nearest_color(&display->palette, (GL_Color_t){ 0, 255, 0, 255 });
+    glClearColor(0.25, 0.50, 0.25, 1.0); // Required, to clear previous content.
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    glEnable(GL_BLEND);
+    glDisable(GL_ALPHA_TEST);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    GL_program_use(&display->programs[DISPLAY_PROGRAM_PASSTHRU]);
+
     GL_Texture_t texture;
-    GL_texture_load(&texture, "/home/mlizza/work/tofu-engine/src/assets/ghost.png", to_indexed_atlas_callback, &display->palette);
-    GL_texture_blit_fast(&texture, (GL_Quad_t){ 0, 0, texture.height, texture.height }, (GL_Quad_t){ 0, 0, display->physical_width, display->physical_height}, (GL_Color_t){ fgcolor, fgcolor, fgcolor, 255 });
+    GL_texture_load(&texture, "/home/nemo/workspace/tofu-engine/src/assets/ghost.png", NULL, NULL);
+    GL_texture_blit_fast(&texture, (GL_Quad_t){ 0, 0, texture.width, texture.height }, (GL_Quad_t){ 0, display->physical_height, display->physical_width, 0 }, (GL_Color_t){ 127, 255, 127, 255 });
     GL_texture_delete(&texture);
+
+    glfwSwapBuffers(display->window);
 }
 
 void Display_terminate(Display_t *display)
