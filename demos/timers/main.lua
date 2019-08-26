@@ -7,8 +7,8 @@ function Main:setup()
       ["title"] = "Timers",
       ["width"] = 256,
       ["height"] = 256,
+      ["scale"] = 1,
       ["fullscreen"] = false,
-      ["autofit"] = false,
       ["exit-key-enabled"] = true,
       ["debug"] = true
   }

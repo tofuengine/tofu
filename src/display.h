@@ -57,11 +57,8 @@ typedef enum _Display_Programs_t {
 } Display_Programs_t;
 
 typedef struct _Display_Configuration_t {
-    int width, height;
+    int width, height, scale;
     bool fullscreen;
-#ifndef __NO_AUTOFIT__
-    bool autofit;
-#endif
     bool hide_cursor;
     bool exit_key_enabled;
 } Display_Configuration_t;
@@ -80,13 +77,11 @@ typedef struct _Display_t {
 
     GLFWwindow *window;
     int window_width, window_height, window_scale;
-#ifndef __NO_AUTOFIT__
     int physical_width, physical_height;
     GL_Quad_t offscreen_source;
     GL_Quad_t offscreen_destination;
     GL_Texture_t offscreen_texture;
     GLuint offscreen_framebuffer;
-#endif
 
     GL_Program_t programs[Display_Programs_t_CountOf];
     size_t program_index;

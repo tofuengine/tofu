@@ -7,8 +7,8 @@ function Main:setup()
       ["title"] = "Fire",
       ["width"] = 512,
       ["height"] = 512,
+      ["scale"] = 1,
       ["fullscreen"] = false,
-      ["autofit"] = false,
       ["exit-key-enabled"] = true,
       ["debug"] = true
   }

@@ -165,7 +165,6 @@ static void size_callback(GLFWwindow* window, int width, int height)
 #endif
 }
 
-#ifndef __NO_AUTOFIT__
 static bool initialize_framebuffer(Display_t *display)
 {
     GL_texture_create(&display->offscreen_texture, display->configuration.width, display->configuration.height, NULL);
@@ -181,13 +180,12 @@ static bool initialize_framebuffer(Display_t *display)
     return true;
 }
 
-void deinitialize_framebuffer(Display_t *display)
+static void deinitialize_framebuffer(Display_t *display)
 {
     GL_texture_delete(&display->offscreen_texture);
 
     glDeleteFramebuffersEXT(1, &display->offscreen_framebuffer);
 }
-#endif
 
 bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title)
 {
@@ -256,8 +254,8 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     display->window_height = configuration->height;
     display->window_scale = 1;
 
-#ifndef __NO_AUTOFIT__
-    if (configuration->autofit) {
+    // TODO: check if provided scaling is way to big to fit the current display!
+    if (configuration->scale == 0) {
         Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> auto-fitting...");
 
         for (int s = 1; ; ++s) {
@@ -271,7 +269,6 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
             display->window_scale = s;
         }
     }
-#endif
 
     Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> window size is %dx%d (%dx)", display->window_width, display->window_height,
         display->window_scale);
@@ -279,7 +276,6 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     int x = (display_width - display->window_width) / 2;
     int y = (display_height - display->window_height) / 2;
     if (!configuration->fullscreen) {
-#ifndef __NO_AUTOFIT__
         display->offscreen_source = (GL_Quad_t){
 //                0, configuration->height, configuration->width, 0
                 0, 0, configuration->width, configuration->height
@@ -290,11 +286,10 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
             };
         display->physical_width = display->window_width;
         display->physical_height = display->window_height;
-#endif
+
         glfwSetWindowMonitor(display->window, NULL, x, y, display->window_width, display->window_height, GLFW_DONT_CARE);
         glfwShowWindow(display->window);
     } else { // Toggle fullscreen by passing primary monitor!
-#ifndef __NO_AUTOFIT__
         display->offscreen_source = (GL_Quad_t){
                 0, 0, configuration->width, configuration->height
             };
@@ -303,18 +298,16 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
             };
         display->physical_width = display_width;
         display->physical_height = display_height;
-#endif
+
         glfwSetWindowMonitor(display->window, glfwGetPrimaryMonitor(), 0, 0, display_width, display_height, GLFW_DONT_CARE);
     }
 
-#ifndef __NO_AUTOFIT__
     if (!initialize_framebuffer(display)) {
         Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't create framebuffer");
         GL_terminate();
         glfwDestroyWindow(display->window);
         glfwTerminate();
     }
-#endif
 
     for (size_t i = 0; i < Display_Programs_t_CountOf; ++i) {
         const Program_Data_t *data = &_programs_data[i];
@@ -325,9 +318,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
             !GL_program_attach(&display->programs[i], data->vertex_shader, GL_PROGRAM_SHADER_VERTEX) ||
             !GL_program_attach(&display->programs[i], data->fragment_shader, GL_PROGRAM_SHADER_FRAGMENT)) {
             Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't initialize shaders");
-#ifndef __NO_AUTOFIT__
             deinitialize_framebuffer(display);
-#endif
             GL_terminate();
             glfwDestroyWindow(display->window);
             glfwTerminate();
@@ -387,8 +378,6 @@ void Display_process_input(Display_t *display)
 
 void Display_render_prepare(Display_t *display)
 {
-    // TODO: we could direct the rendering routines differently in the case `autofit` is disabled.
-#ifndef __NO_AUTOFIT__
     const int w = display->configuration.width;
     const int h = display->configuration.height;
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, display->offscreen_framebuffer);
@@ -404,20 +393,16 @@ void Display_render_prepare(Display_t *display)
 #else
     glEnable(GL_BLEND);
 #endif
-#endif
+
     GLfloat *rgba = display->background_rgba;
     glClearColor(rgba[0], rgba[1], rgba[2], rgba[3]); // Required, to clear previous content.
     glClear(GL_COLOR_BUFFER_BIT);
+
     GL_program_use(&display->programs[DISPLAY_PROGRAM_PALETTE]);
 }
 
 void Display_render_finish(Display_t *display)
 {
-#ifndef __NO_AUTOFIT__
-    GLfloat time[] = { (GLfloat)glfwGetTime() };
-    GL_program_send(&display->programs[display->program_index], "u_time", GL_PROGRAM_UNIFORM_FLOAT, 1, time);
-    GL_program_use(&display->programs[display->program_index]);
-
     const int pw = display->physical_width; // We need to y-flip the texture, either by inverting the quad or
     const int ph = display->physical_height; // the ortho matrix or the with a shader.
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
@@ -435,8 +420,12 @@ void Display_render_finish(Display_t *display)
     glDisable(GL_BLEND);
 #endif
 
+    GLfloat time[] = { (GLfloat)glfwGetTime() };
+    GL_program_send(&display->programs[display->program_index], "u_time", GL_PROGRAM_UNIFORM_FLOAT, 1, time);
+    GL_program_use(&display->programs[display->program_index]);
+
     GL_texture_blit_fast(&display->offscreen_texture, display->offscreen_source, display->offscreen_destination, (GL_Color_t){ 255, 255, 255, 255 });
-#endif
+
     glfwSwapBuffers(display->window);
 }
 
@@ -505,9 +494,7 @@ void Display_terminate(Display_t *display)
         GL_program_delete(&display->programs[i]);
     }
 
-#ifndef __NO_AUTOFIT__
     deinitialize_framebuffer(display);
-#endif
     GL_terminate();
 
     glfwDestroyWindow(display->window);

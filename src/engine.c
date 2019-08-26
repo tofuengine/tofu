@@ -77,9 +77,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             .width = engine->configuration.width,
             .height = engine->configuration.height,
             .fullscreen = engine->configuration.fullscreen,
-#ifndef __NO_AUTOFIT__
-            .autofit = engine->configuration.autofit,
-#endif
+            .scale = engine->configuration.scale,
             .hide_cursor = engine->configuration.hide_cursor,
             .exit_key_enabled = engine->configuration.exit_key_enabled,
         };

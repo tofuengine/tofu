@@ -31,9 +31,8 @@ typedef struct lua_State lua_State;
 
 typedef struct _Configuration {
     char title[MAX_CONFIGURATION_TITLE_LENGTH];
-    int width, height;
+    int width, height, scale;
     bool fullscreen;  // TODO: rename to "windowed"?
-    bool autofit;
     int fps;
     int skippable_frames;
     bool hide_cursor;

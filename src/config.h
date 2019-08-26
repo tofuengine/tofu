@@ -36,11 +36,6 @@
 #define __GL_VERSION__                      0x0201
 #define __GSLS_VERSION__                    0x0114
 
-// Fully disable `autofit` behaviour. The configuration setting is not parsed
-// and the offscreen framebuffer is not created. This will ensure the fastest
-// possibile FPS throughput.
-#undef  __NO_AUTOFIT__
-
 // Includes checks inside some crucial functions. Could be useful in DEBUG mode.
 #ifdef DEBUG
   #define __DEFENSIVE_CHECKS__

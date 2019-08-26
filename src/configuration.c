@@ -34,6 +34,7 @@
 
 #define SCREEN_WIDTH    320
 #define SCREEN_HEIGHT   240
+#define SCREEN_SCALE    0
 #define WINDOW_TITLE    ".: Tofu Engine :."
 
 void Configuration_initialize(Configuration_t *configuration)
@@ -41,8 +42,8 @@ void Configuration_initialize(Configuration_t *configuration)
     strncpy(configuration->title, WINDOW_TITLE, MAX_CONFIGURATION_TITLE_LENGTH);
     configuration->width = SCREEN_WIDTH;
     configuration->height = SCREEN_HEIGHT;
+    configuration->scale = SCREEN_SCALE;
     configuration->fullscreen = false;
-    configuration->autofit = true;
     configuration->fps = 60;
     configuration->skippable_frames = 12; // About 20% of the FTP amount.
     configuration->hide_cursor = true;
@@ -70,14 +71,12 @@ void Configuration_parse(lua_State *L, Configuration_t *configuration)
         if (strcmp(key, "height") == 0) {
             configuration->height = lua_tointeger(L, -1);
         } else
+        if (strcmp(key, "scale") == 0) {
+            configuration->scale = lua_tointeger(L, -1);
+        } else
         if (strcmp(key, "fullscreen") == 0) {
             configuration->fullscreen = lua_toboolean(L, -1);
         } else
-#ifndef __NO_AUTOFIT__
-        if (strcmp(key, "autofit") == 0) {
-            configuration->autofit = lua_toboolean(L, -1);
-        } else
-#endif
         if (strcmp(key, "fps") == 0) {
             configuration->fps = lua_tointeger(L, -1);
         } else
