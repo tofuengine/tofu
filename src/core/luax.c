@@ -95,7 +95,22 @@ void luaX_appendpath(lua_State *L, const char *path)
 {
     lua_getglobal(L, "package");
     lua_getfield(L, -1, "path"); // get field "path" from table at top of stack (-1)
-    const char *current = lua_tostring( L, -1 ); // grab path string from top of stack
+
+    const char *current = lua_tostring(L, -1); // grab path string from top of stack
+    char *fullpath = calloc(strlen(current) + 1 + strlen(path) + 5 + 1, sizeof(char));
+    strcat(fullpath, current);
+    strcat(fullpath, ";");
+    strcat(fullpath, path);
+    strcat(fullpath, "?.lua");
+
+    lua_pushstring(L, fullpath); // push the new one
+    lua_setfield(L, -3, "path"); // set the field "path" in table at -2 with value at top of stack
+
+    free(fullpath);
+
+    lua_pop(L, 2); // get rid of package table from top of stack
+}
+
 void luaX_overridesearchers(lua_State *L, lua_CFunction searcher, int nup)
 {
     lua_getglobal(L, "package"); // Access the `package.searchers` table.
