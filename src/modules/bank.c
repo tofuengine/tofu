@@ -328,12 +328,10 @@ static int bank_blit7(lua_State *L)
 
 static int bank_blit(lua_State *L)
 {
-    int argc = lua_gettop(L);
-    switch (argc) {
-        case 4: { return bank_blit4(L); }
-        case 5: { return bank_blit5(L); }
-        case 6: { return bank_blit6(L); }
-        case 7: { return bank_blit7(L); }
-        default: { return luaL_error(L, "[%s:%d] wrong number of arguments (got %d)", __FILE__, __LINE__, argc); }
-    }
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(4, bank_blit4)
+        LUAX_OVERLOAD_ARITY(5, bank_blit5)
+        LUAX_OVERLOAD_ARITY(6, bank_blit6)
+        LUAX_OVERLOAD_ARITY(7, bank_blit7)
+    LUAX_OVERLOAD_END
 }

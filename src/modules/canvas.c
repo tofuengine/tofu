@@ -250,12 +250,10 @@ static int canvas_palette1(lua_State *L)
 
 static int canvas_palette(lua_State *L)
 {
-    int argc = lua_gettop(L);
-    switch (argc) {
-        case 0: { return canvas_palette0(L); }
-        case 1: { return canvas_palette1(L); }
-        default: { return luaL_error(L, "[%s:%d] wrong number of arguments (got %d)", __FILE__, __LINE__, argc); }
-    }
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(0, canvas_palette0)
+        LUAX_OVERLOAD_ARITY(1, canvas_palette1)
+    LUAX_OVERLOAD_END
 }
 
 static int canvas_background(lua_State *L)

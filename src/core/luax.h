@@ -66,6 +66,18 @@ typedef struct _luaX_Const {
     #define LUAX_SIGNATURE_END
 #endif
 
+#define LUAX_OVERLOAD_BEGIN(l) \
+    do { \
+        lua_State *_L = (l); \
+        int _argc = lua_gettop(_L); \
+        switch (_argc) {
+#define LUAX_OVERLOAD_ARITY(n, f) \
+            case (n): { return (f)(_L); }
+#define LUAX_OVERLOAD_END \
+            default: { return luaL_error(L, "[%s:%d] wrong number of arguments (got %d)", __FILE__, __LINE__, _argc); } \
+        } \
+    } while (0);
+
 #define LUAX_CLASS(n)               #n "_mt"
 
 #define luaX_dump(L)                luaX_stackdump(L, __FILE__, __LINE__)
