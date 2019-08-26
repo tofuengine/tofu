@@ -2,8 +2,8 @@ TARGET=tofu
 
 COMPILER=cc
 CWARNINGS=-Wall -Wextra -Werror -Wno-unused-parameter
-CFLAGS=-O0 -DDEBUG -g -D_DEFAULT_SOURCE -DLUA_USE_LINUX -std=c99 -Iexternal
-#CFLAGS=-O2 -g -D_DEFAULT_SOURCE -DLUA_USE_LINUX -std=c99 -Iexternal
+CFLAGS=-O0 -g -DDEBUG -D_DEFAULT_SOURCE -DLUA_USE_LINUX -std=c99 -Iexternal
+#CFLAGS=-O2 -g -DRELEASE -D_DEFAULT_SOURCE -DLUA_USE_LINUX -std=c99 -Iexternal
 
 LINKER=cc
 LFLAGS=-Wall -Wextra -Werror -Lexternal/GLFW -lglfw3 -lm  -ldl -lpthread -lrt -lX11

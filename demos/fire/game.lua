@@ -1,9 +1,9 @@
 local Grid = require("tofu.collections.Grid")
 local Canvas = require("tofu.graphics.Canvas")
 local Font = require("tofu.graphics.Font")
-local Environment = require("tofu.events.Environment")
 local Input = require("tofu.events.Input")
 local Class = require("tofu.util.Class")
+local System = require("tofu.core.System")
 
 local STEPS = 64
 local PALETTE = {
@@ -78,7 +78,7 @@ function Game:render(ratio)
     end
   end
 
-  self.font:write(string.format("FPS: %d", Environment.fps()), 0, 0, 15, 1.0, "left")
+  self.font:write(string.format("FPS: %d", System.fps()), 0, 0, 15, 1.0, "left")
 end
 
 return Game
