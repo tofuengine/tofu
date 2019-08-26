@@ -1,6 +1,6 @@
+local System = require("tofu.core.System")
 local Canvas = require("tofu.graphics.Canvas")
 local Font = require("tofu.graphics.Font")
-local Environment = require("tofu.events.Environment")
 local Input = require("tofu.events.Input")
 local Class = require("tofu.util.Class")
 
@@ -15,7 +15,7 @@ end
 
 function Game:input()
   if Input.is_key_pressed(Input.START) then
-    Environment.quit()
+    System.quit()
   elseif Input.is_key_pressed(Input.LEFT) then
     self.segments = self.segments - 1
   elseif Input.is_key_pressed(Input.RIGHT) then
@@ -37,7 +37,7 @@ function Game:render(ratio)
 --Canvas.circle("fill", 200, 100, 50, 1)
 --Canvas.circle("fill", 300, 100, 50, 1, _segments)
 
-  self.font:write(string.format("FPS: %d", Environment.fps()), Canvas.width(), 0, 1, 1.0, "right")
+  self.font:write(string.format("FPS: %d", System.fps()), Canvas.width(), 0, 1, 1.0, "right")
 end
 
 return Game

@@ -20,7 +20,7 @@
  * SOFTWARE.
  **/
 
-#include "environment.h"
+#include "system.h"
 
 #include "../core/luax.h"
 
@@ -29,29 +29,31 @@
 
 #include <string.h>
 
-typedef struct _Environment_Class_t {
-} Environment_Class_t;
+typedef struct _System_Class_t {
+} System_Class_t;
 
-static int environment_fps(lua_State *L);
-static int environment_quit(lua_State *L);
+static int system_fps(lua_State *L);
+static int system_quit(lua_State *L);
+static int system_log(lua_State *L);
 
-static const struct luaL_Reg _environment_functions[] = {
-    { "fps", environment_fps },
-    { "quit", environment_quit },
+static const struct luaL_Reg _system_functions[] = {
+    { "fps", system_fps },
+    { "quit", system_quit },
+    { "log", system_log },
     { NULL, NULL }
 };
 
-static const luaX_Const _environment_constants[] = {
+static const luaX_Const _system_constants[] = {
     { NULL }
 };
 
-int environment_loader(lua_State *L)
+int system_loader(lua_State *L)
 {
     lua_pushvalue(L, lua_upvalueindex(1)); // Duplicate the upvalue to pass it to the module.
-    return luaX_newmodule(L, NULL, _environment_functions, _environment_constants, 1, LUAX_CLASS(Environment_Class_t));
+    return luaX_newmodule(L, NULL, _system_functions, _system_constants, 1, LUAX_CLASS(System_Class_t));
 }
 
-static int environment_fps(lua_State *L)
+static int system_fps(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 0)
     LUAX_SIGNATURE_END
@@ -62,7 +64,7 @@ static int environment_fps(lua_State *L)
     return 1;
 }
 
-static int environment_quit(lua_State *L)
+static int system_quit(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 0)
     LUAX_SIGNATURE_END
@@ -70,6 +72,25 @@ static int environment_quit(lua_State *L)
     Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
 
     environment->quit = true;
+
+    return 0;
+}
+
+static int system_log(lua_State *L)
+{
+    int argc = lua_gettop(L);  /* number of arguments */
+    lua_getglobal(L, "tostring");
+    for (int i = 1; i <= argc; i++) {
+        lua_pushvalue(L, -1);  /* function to be called */
+        lua_pushvalue(L, i);   /* value to print */
+        lua_call(L, 1, 1);
+        const char *s = lua_tostring(L, -1);  /* get result */
+        if (s == NULL) {
+            return luaL_error(L, "`tostring` must return a string `log`");
+        }
+        Log_write(LOG_LEVELS_INFO, (i > 1) ? "\t%s" : "<SYSTEM> %s", s);
+        lua_pop(L, 1);  /* pop result */
+    }
 
     return 0;
 }

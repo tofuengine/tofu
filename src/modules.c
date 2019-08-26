@@ -29,10 +29,10 @@
 #include "modules/canvas.h"
 #include "modules/class.h"
 #include "modules/grid.h"
-#include "modules/environment.h"
 #include "modules/font.h"
 #include "modules/input.h"
 #include "modules/file.h"
+#include "modules/system.h"
 #include "modules/timer.h"
 
 typedef struct _Module_t {
@@ -42,7 +42,7 @@ typedef struct _Module_t {
 
 static const Module_t modules[] = {
     { "tofu.collections.Grid", grid_loader },
-    { "tofu.events.Environment", environment_loader },
+    { "tofu.core.System", system_loader },
     { "tofu.events.Input", input_loader },
     { "tofu.graphics.Bank", bank_loader },
     { "tofu.graphics.Canvas", canvas_loader },

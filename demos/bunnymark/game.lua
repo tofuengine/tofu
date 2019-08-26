@@ -1,7 +1,7 @@
+local System = require("tofu.core.System")
 local Bank = require("tofu.graphics.Bank")
 local Canvas = require("tofu.graphics.Canvas")
 local Font = require("tofu.graphics.Font")
-local Environment = require("tofu.events.Environment")
 local Input = require("tofu.events.Input")
 local Class = require("tofu.util.Class")
 
@@ -41,7 +41,7 @@ function Game:input()
       table.insert(self.bunnies, Bunny.new(self.bank))
     end
     if #self.bunnies >= MAX_BUNNIES then
-      Environment.quit()
+      System.quit()
     end
   elseif Input.is_key_pressed(Input.LEFT) then
     self.speed = self.speed * 0.5
@@ -69,7 +69,7 @@ function Game:render(ratio)
   for _, bunny in pairs(self.bunnies) do
     bunny:render()
   end
-  self.font:write(string.format("FPS: %d", Environment.fps()), 0, 0, 0, 1.0, "left")
+  self.font:write(string.format("FPS: %d", System.fps()), 0, 0, 0, 1.0, "left")
   self.font:write(string.format("#%d bunnies", #self.bunnies), Canvas.width(), 0, 3, 1.0, "right")
 end
 

@@ -20,11 +20,11 @@
  * SOFTWARE.
  **/
 
-#ifndef __MODULES_ENVIRONMENT_H__
-#define __MODULES_ENVIRONMENT_H__
+#ifndef __MODULES_SYSTEM_H__
+#define __MODULES_SYSTEM_H__
 
 typedef struct lua_State lua_State;
 
-extern int environment_loader(lua_State *L);
+extern int system_loader(lua_State *L);
 
-#endif  /* __MODULES_ENVIRONMENT_H__ */
+#endif  /* __MODULES_SYSTEM_H__ */

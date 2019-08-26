@@ -7,8 +7,8 @@ function Main:setup()
       ["title"] = "Primitives",
       ["width"] = 128,
       ["height"] = 128,
+      ["scale"] = 1,
       ["fullscreen"] = false,
-      ["autofit"] = false,
       ["exit-key-enabled"] = true,
       ["debug"] = true
   }

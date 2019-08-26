@@ -1,7 +1,7 @@
+local System = require("tofu.core.System")
 local Bank = require("tofu.graphics.Bank")
 local Canvas = require("tofu.graphics.Canvas")
 local Font = require("tofu.graphics.Font")
-local Environment = require("tofu.events.Environment")
 local Input = require("tofu.events.Input")
 local File = require("tofu.io.File")
 local Class = require("tofu.util.Class")
@@ -55,7 +55,7 @@ function Game:render(ratio)
   for _, sprite in pairs(self.sprites) do
     sprite:render()
   end
-  self.font:write(string.format("FPS: %d", Environment.fps()), 0, 0, 0, 1.0, "left")
+  self.font:write(string.format("FPS: %d", System.fps()), 0, 0, 0, 1.0, "left")
   self.font:write(string.format("#%d sprites", #self.sprites), Canvas.width(), 0, 0, 1.0, "right")
 end
 
