@@ -461,10 +461,11 @@ void Display_shader(Display_t *display, const char *effect)
         return;
     }
 
-    const size_t length = strlen(FRAGMENT_SHADER_CUSTOM) + strlen(effect) + 1;
-    char *code = malloc(length * sizeof(char));
+    const size_t length = strlen(FRAGMENT_SHADER_CUSTOM) + strlen(effect);
+    char *code = malloc((length + 1) * sizeof(char)); // Add null terminator for the string.
     memcpy(code, FRAGMENT_SHADER_CUSTOM, strlen(FRAGMENT_SHADER_CUSTOM));
     memcpy(code + strlen(FRAGMENT_SHADER_CUSTOM), effect, strlen(effect));
+    code[length] = '\0';
 
     GL_Program_t *program = &display->programs[DISPLAY_PROGRAM_CUSTOM];
 
