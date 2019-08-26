@@ -69,7 +69,7 @@ static int environment_quit(lua_State *L)
 
     Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
 
-    environment->should_close = true;
+    environment->quit = true;
 
     return 0;
 }

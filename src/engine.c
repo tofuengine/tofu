@@ -104,11 +104,6 @@ void Engine_terminate(Engine_t *engine)
     Environment_terminate(&engine->environment);
 }
 
-bool Engine_isRunning(Engine_t *engine)
-{
-    return !engine->environment.should_close && !Display_shouldClose(&engine->display);
-}
-
 void Engine_run(Engine_t *engine)
 {
     const double delta_time = 1.0 / (double)engine->configuration.fps;
@@ -122,7 +117,7 @@ void Engine_run(Engine_t *engine)
     double previous = glfwGetTime();
     double lag = 0.0;
 
-    for (bool running = true; running && Engine_isRunning(engine); ) { // Lazy evaluate `running`, will avoid calls when error.
+    for (bool running = true; running && !engine->environment.quit && !Display_should_close(&engine->display); ) {
         double current = glfwGetTime();
         double elapsed = current - previous;
         previous = current;
@@ -132,9 +127,9 @@ void Engine_run(Engine_t *engine)
             engine->environment.fps = ready ? statistics.fps : 0.0;
         }
 
-        Display_processInput(&engine->display);
+        Display_process_input(&engine->display);
 
-        running = running && Interpreter_input(&engine->interpreter);
+        running = running && Interpreter_input(&engine->interpreter); // Lazy evaluate `running`, will avoid calls when error.
 
         lag += elapsed; // Count a maximum amount of skippable frames in order no to stall on slower machines.
         for (int frames = 0; (frames < skippable_frames) && (lag >= delta_time); ++frames) {
@@ -143,12 +138,12 @@ void Engine_run(Engine_t *engine)
             lag -= delta_time;
         }
 
+        Display_render_prepare(&engine->display);
+            running = running && Interpreter_render(&engine->interpreter, lag / delta_time);
+        Display_render_finish(&engine->display);
+
 //        if (used < delta_time) {
 //            glfwWait
 //        }
-
-        Display_renderBegin(&engine->display);
-            running = running && Interpreter_render(&engine->interpreter, lag / delta_time);
-        Display_renderEnd(&engine->display);
     }
 }

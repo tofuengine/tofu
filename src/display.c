@@ -347,12 +347,12 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     return true;
 }
 
-bool Display_shouldClose(Display_t *display)
+bool Display_should_close(Display_t *display)
 {
     return glfwWindowShouldClose(display->window);
 }
 
-void Display_processInput(Display_t *display)
+void Display_process_input(Display_t *display)
 {
     static const int keys[Display_Keys_t_CountOf] = {
         GLFW_KEY_UP,
@@ -385,7 +385,7 @@ void Display_processInput(Display_t *display)
     }
 }
 
-void Display_renderBegin(Display_t *display)
+void Display_render_prepare(Display_t *display)
 {
     // TODO: we could direct the rendering routines differently in the case `autofit` is disabled.
 #ifndef __NO_AUTOFIT__
@@ -411,7 +411,7 @@ void Display_renderBegin(Display_t *display)
     GL_program_use(&display->programs[DISPLAY_PROGRAM_PALETTE]);
 }
 
-void Display_renderEnd(Display_t *display)
+void Display_render_finish(Display_t *display)
 {
 #ifndef __NO_AUTOFIT__
     GLfloat time[] = { (GLfloat)glfwGetTime() };

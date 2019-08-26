@@ -124,8 +124,6 @@ static bool detect(lua_State *L, const char *root, const char *methods[])
     return true;
 }
 
-// TODO: application should "freeze" on error.
-
 static int execute(lua_State *L, const char *script)
 {
     int loaded = luaL_loadstring(L, script);

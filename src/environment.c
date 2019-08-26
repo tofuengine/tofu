@@ -29,7 +29,7 @@ void Environment_initialize(Environment_t *environment, const char *base_path, D
 {
     memset(environment, 0x00, sizeof(Environment_t));
 
-    environment->should_close = false;
+    environment->quit = false;
     environment->fps = 0.0;
 
     strcpy(environment->base_path, base_path);
