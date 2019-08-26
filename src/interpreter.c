@@ -96,6 +96,32 @@ static int error_handler(lua_State *L)
 }
 #endif
 
+static int custom_searcher(lua_State *L)
+{
+    const char *base_path = lua_tostring(L, lua_upvalueindex(1));
+
+    const char *file = lua_tostring(L, 1);
+
+    char path_file[PATH_FILE_MAX] = {};
+    strcpy(path_file, base_path);
+    strcat(path_file, file);
+    for (int i = 0; path_file[i] != '\0'; ++i) { // Replace `.' with '/` to map file system entry.
+        if (path_file[i] == '.') {
+            path_file[i] = FILE_PATH_SEPARATOR;
+        }
+    }
+    strcat(path_file, ".lua");
+
+    char *buffer = file_load_as_string(path_file, "rt");
+    if (buffer != NULL) {
+        luaL_loadstring(L, buffer);
+        free(buffer);
+    } else {
+        lua_pushstring(L, "Error: file not found");
+    }
+    return 1;
+}
+
 //
 // Detect the presence of the root instance with passed methods. If successful,
 // the stack will contain the object instance followed by the fields (which can
@@ -214,8 +240,12 @@ bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configu
     lua_pushlightuserdata(interpreter->state, (void *)environment); // Discard `const` qualifier.
     modules_initialize(interpreter->state, 1);
 
-    // TODO: register a custom searcher for the "packed" archive feature.
+#if 0
     luaX_appendpath(interpreter->state, environment->base_path);
+#else
+    lua_pushstring(interpreter->state, environment->base_path);
+    luaX_overridesearchers(interpreter->state, custom_searcher, 1);
+#endif
 
 #ifdef __DEBUG_VM_CALLS__
 #ifndef __VM_USE_CUSTOM_TRACEBACK__

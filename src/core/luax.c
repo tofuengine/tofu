@@ -96,17 +96,24 @@ void luaX_appendpath(lua_State *L, const char *path)
     lua_getglobal(L, "package");
     lua_getfield(L, -1, "path"); // get field "path" from table at top of stack (-1)
     const char *current = lua_tostring( L, -1 ); // grab path string from top of stack
+void luaX_overridesearchers(lua_State *L, lua_CFunction searcher, int nup)
+{
+    lua_getglobal(L, "package"); // Access the `package.searchers` table.
+    lua_getfield(L, -1, "searchers");
 
-    char *final = calloc(strlen(current) + 1 + strlen(path) + 5 + 1, sizeof(char));
-    strcat(final, current);
-    strcat(final, ";");
-    strcat(final, path);
-    strcat(final, "?.lua");
+    for (int i = 0; i < nup; ++i) {
+        lua_pushvalue(L, -(2 + nup));
+    }
+    lua_pushcclosure(L, searcher, 1);
+    lua_rawseti(L, -2, 2); // Override the 2nd searcher (keep the "preloaded" helper).
 
-    lua_pop(L, 1); // get rid of the string on the stack we just pushed on line 5
-    lua_pushstring(L, final); // push the new one
-    lua_setfield(L, -2, "path"); // set the field "path" in table at -2 with value at top of stack
-    lua_pop(L, 1); // get rid of package table from top of stack
+    int n = lua_rawlen(L, -1);
+    for (int i = 3; i <= n; ++i) { // Discard the others (two) searchers.
+        lua_pushnil(L);
+        lua_rawseti(L, -2, i);
+    }
+
+    lua_pop(L, 2 + nup); // Pop the `package` and `searchers` table, and consume the upvalues.
 }
 
 int luaX_newmodule(lua_State *L, const char *script, const luaL_Reg *f, const luaX_Const *c, int nup, const char *name)
