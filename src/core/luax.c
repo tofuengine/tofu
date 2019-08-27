@@ -182,16 +182,39 @@ int luaX_newmodule(lua_State *L, const char *script, const luaL_Reg *f, const lu
     return 1;
 }
 
-void luaX_preload(lua_State *L, const char *name, lua_CFunction f, int nup)
+void luaX_preload(lua_State *L, const char *modname, lua_CFunction loadf, int nup)
 {
     lua_getglobal(L, "package");
     lua_getfield(L, -1, "preload");
     for (int i = 0; i < nup; ++i) { // Copy the upvalues to the top
         lua_pushvalue(L, -(nup + 2));
     }
-    lua_pushcclosure(L, f, nup); // Closure with those upvalues (the one just pushed will be removed)
-    lua_setfield(L, -2, name);
+    lua_pushcclosure(L, loadf, nup); // Closure with those upvalues (the one just pushed will be removed)
+    lua_setfield(L, -2, modname);
     lua_pop(L, nup + 2); // Pop the upvalues and the "package.preload" pair
+}
+
+void luaX_require(lua_State *L, const char *modname, lua_CFunction openf, int nup, int glb)
+{
+    luaL_getsubtable(L, LUA_REGISTRYINDEX, LUA_LOADED_TABLE);
+    lua_getfield(L, -1, modname); /* LOADED[modname] */
+    if (!lua_toboolean(L, -1)) { /* package not already loaded? */
+        lua_pop(L, 1); /* remove field */
+        for (int i = 0; i < nup; ++i) { // Copy the upvalues to the top
+            lua_pushvalue(L, -(nup + 1));
+        }
+        lua_pushcclosure(L, openf, nup); // Closure with those upvalues (the one just pushed will be removed)
+        lua_pushstring(L, modname);      /* argument to open function */
+        lua_call(L, 1, 1);               /* call 'openf' to open module */
+        lua_pushvalue(L, -1);            /* make copy of module (call result) */
+        lua_setfield(L, -3, modname);    /* LOADED[modname] = module */
+    }
+    lua_remove(L, -2); /* remove LOADED table */
+    if (glb) {
+        lua_pushvalue(L, -1);      /* copy of module */
+        lua_setglobal(L, modname); /* _G[modname] = module */
+    }
+    lua_pop(L, nup); // Pop the upvalues
 }
 
 int luaX_toref(lua_State *L, int arg)
