@@ -1,5 +1,5 @@
-local Canvas = require("tofu.graphics.Canvas")
-local Class = require("tofu.util.Class")
+local Canvas = require("tofu.graphics").Canvas
+local Class = require("tofu.util").Class
 
 local Bunny = Class.define()
 

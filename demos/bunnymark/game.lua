@@ -1,9 +1,9 @@
-local System = require("tofu.core.System")
-local Bank = require("tofu.graphics.Bank")
-local Canvas = require("tofu.graphics.Canvas")
-local Font = require("tofu.graphics.Font")
-local Input = require("tofu.events.Input")
-local Class = require("tofu.util.Class")
+local System = require("tofu.core").System
+local Bank = require("tofu.graphics").Bank
+local Canvas = require("tofu.graphics").Canvas
+local Font = require("tofu.graphics").Font
+local Input = require("tofu.events").Input
+local Class = require("tofu.util").Class
 
 local LITTER_SIZE = 250
 local MAX_BUNNIES = 32768

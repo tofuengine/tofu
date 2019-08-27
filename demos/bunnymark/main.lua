@@ -1,4 +1,4 @@
-local Class = require("tofu.util.Class")
+local Class = require("tofu.util").Class
 
 local Main = Class.define()
 

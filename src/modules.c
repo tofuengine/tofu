@@ -35,33 +35,100 @@
 #include "modules/system.h"
 #include "modules/timer.h"
 
-typedef struct _Module_t {
-    const char *namespace;
-    lua_CFunction loader;
-} Module_t;
+static int create_module(lua_State *L, const luaL_Reg *entries)
+{
+    lua_newtable(L);
 
-static const Module_t modules[] = {
-    { "tofu.collections.Grid", grid_loader },
-    { "tofu.core.System", system_loader },
-    { "tofu.events.Input", input_loader },
-    { "tofu.graphics.Bank", bank_loader },
-    { "tofu.graphics.Canvas", canvas_loader },
-    { "tofu.graphics.Font", font_loader },
-    { "tofu.io.File", file_loader },
-    { "tofu.util.Class", class_loader },
-    { "tofu.util.Timer", timer_loader },
-    { NULL, NULL }
-};
+    for (int i = 0; entries[i].func; ++i) {
+        if (entries[i].func(L) != 1) {
+            Log_write(LOG_LEVELS_ERROR, "<MODULES> can't initialize class '%s'", entries[i].name);
+            return 0;
+        }
+        lua_setfield(L, -2, entries[i].name);
+    }
+
+    return 1;
+}
+
+static int collections_loader(lua_State *L)
+{
+    static const luaL_Reg classes[] = {
+        { "Grid", grid_loader },
+        { NULL, NULL }
+    };
+    return create_module(L, classes);
+}
+
+static int core_loader(lua_State *L)
+{
+    static const luaL_Reg classes[] = {
+        { "System", system_loader },
+        { NULL, NULL }
+    };
+    return create_module(L, classes);
+}
+
+static int events_loader(lua_State *L)
+{
+    static const luaL_Reg classes[] = {
+        { "Input", input_loader },
+        { NULL, NULL }
+    };
+    return create_module(L, classes);
+}
+
+static int graphics_loader(lua_State *L)
+{
+    static const luaL_Reg classes[] = {
+        { "Bank", bank_loader },
+        { "Canvas", canvas_loader },
+        { "Font", font_loader },
+        { NULL, NULL }
+    };
+    return create_module(L, classes);
+}
+
+static int io_loader(lua_State *L)
+{
+    static const luaL_Reg classes[] = {
+        { "File", file_loader },
+        { NULL, NULL }
+    };
+    return create_module(L, classes);
+}
+
+static int util_loader(lua_State *L)
+{
+    static const luaL_Reg classes[] = {
+        { "Class", class_loader },
+        { "Timer", timer_loader },
+        { NULL, NULL }
+    };
+    return create_module(L, classes);
+}
 
 void modules_initialize(lua_State *L, int nup)
 {
-//        luaL_requiref(L, modules[i].namespace, modules[i].loader, 1);
-//        lua_pop(L, 1);  /* remove lib */
-    for (int i = 0; modules[i].loader; ++i) {
+    static const luaL_Reg modules[] = {
+        { "tofu.collections", collections_loader },
+        { "tofu.core", core_loader },
+        { "tofu.events", events_loader },
+        { "tofu.graphics", graphics_loader },
+        { "tofu.io", io_loader },
+        { "tofu.util", util_loader },
+        { NULL, NULL }
+    };
+
+    for (int i = 0; modules[i].func; ++i) {
         for (int j = 0; j < nup; ++j) {
             lua_pushvalue(L, -nup);
         }
-        luaX_preload(L, modules[i].namespace, modules[i].loader, nup);
+#ifdef __REQUIRE__
+        luaX_require(L, modules[i].name, modules[i].func, nup, 1);
+        lua_pop(L, 1);  /* remove lib */
+#else
+        luaX_preload(L, modules[i].name, modules[i].func, nup);
+#endif
     }
     lua_pop(L, nup);
 }

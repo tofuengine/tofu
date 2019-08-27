@@ -1,8 +1,8 @@
-local System = require("tofu.core.System")
-local Canvas = require("tofu.graphics.Canvas")
-local Font = require("tofu.graphics.Font")
-local Input = require("tofu.events.Input")
-local Class = require("tofu.util.Class")
+local System = require("tofu.core").System
+local Canvas = require("tofu.graphics").Canvas
+local Font = require("tofu.graphics").Font
+local Input = require("tofu.events").Input
+local Class = require("tofu.util").Class
 
 local Game = Class.define()
 
