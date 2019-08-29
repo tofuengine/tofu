@@ -120,6 +120,11 @@ static const Program_Data_t _programs_data[Display_Programs_t_CountOf] = {
 
 static const int _texture_id_0[] = { 0 };
 
+static int min(int a, int b)
+{
+    return a < b ? a : b;
+}
+
 static void error_callback(int error, const char *description)
 {
     Log_write(LOG_LEVELS_ERROR, "<GLFW> %s", description);
@@ -250,25 +255,32 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     glfwGetMonitorWorkarea(glfwGetPrimaryMonitor(), NULL, NULL, &display_width, &display_height);
     Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> display size is %dx%d", display_width, display_height);
 
+    // <BEGIN-AUTOSCALING>
+    // TODO: refactor into a function.
     display->window_width = configuration->width;
     display->window_height = configuration->height;
     display->window_scale = 1;
 
-    // TODO: check if provided scaling is way to big to fit the current display!
-    if (configuration->scale == 0) {
-        Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> auto-fitting...");
+    int max_scale = min(display_width / configuration->width, display_height / configuration->height);
+    int scale = configuration->scale != 0 ? configuration->scale : max_scale;
 
-        for (int s = 1; ; ++s) {
-            int w = configuration->width * s;
-            int h = configuration->height * s;
-            if ((w > display_width) || (h > display_height)) {
-                break;
-            }
-            display->window_width = w;
-            display->window_height = h;
-            display->window_scale = s;
-        }
+    if (max_scale == 0) {
+        Log_write(LOG_LEVELS_FATAL, "<DISPLAY> requested display size can't fit display!");
+        glfwDestroyWindow(display->window);
+        glfwTerminate();
+        return false;
+    } else
+    if (scale > max_scale) {
+        Log_write(LOG_LEVELS_WARNING, "<DISPLAY> requested scaling x%d too big, forcing to x%d", scale, max_scale);
+        scale = max_scale;
     }
+
+    display->window_width = configuration->width * scale;
+    display->window_height = configuration->height * scale;
+    display->window_scale = scale;
+    // <END-AUTOSCALING>
+
+    // FIXME: when the display is scale the circles are plain wrong! Due to sub-pixel positioning?
 
     Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> window size is %dx%d (%dx)", display->window_width, display->window_height,
         display->window_scale);
