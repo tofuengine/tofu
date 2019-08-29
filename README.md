@@ -2,15 +2,15 @@
 
 Welcome!
 
-Guess what? Yup, that's another game engine/framework.
+Guess what? Yup, that's yet another game engine/framework.
 
 ## Pros
 
 * C99 code only.
 * Self-contained, no external modules/libraries required.
-* Cross-compiling multi-platform (hopefully, someday in the future).
+* Multi-platform support through coss-compilation (hopefully, someday in the future).
 
-## Uses
+## Dependecies
 
 * [Glad](https://glad.dav1d.de/)
 * [GLFW](https://www.glfw.org/) v3.3
@@ -20,7 +20,9 @@ Guess what? Yup, that's another game engine/framework.
 
 ## Features
 
-* [x] Straight multimedia support, no intermediate third-party libraries.
+* [x] Fully script-based, using Lua.
+* [x] Straight multimedia support, no intermediate third-party libraries (OpenGL 2.1 required).
+* [x] Windowed/fullscreen support with automatic scaling.
 * [x] Palette based graphics (through shader) with up to 256 colors.
 * [x] Automatic nearest-color palette indexing of images.
 * [x] Predefined library of 8/16/32/64 colors palettes.
@@ -28,7 +30,7 @@ Guess what? Yup, that's another game engine/framework.
 * [x] Out-of-the-box timers support.
 * [ ] Out-of-the-box easing functions (see [this](https://github.com/kikito/tween.lua/blob/master/tween.lua) and [this](https://github.com/rxi/flux/blob/master/flux.lua)).
 * [ ] Animation support w/ frameset DSL (i.e. compiling a string where each token can be a single frame, a range or a "keep-current-frame for some time" command). Each frameset can have its one update period, and will be most likely based upon a timer.
-* [ ] Out-of-the-box palette switching features.
+* [ ] Out-of-the-box palette switching (with tweening) features.
 * [ ] Game state and display transitions (at which level? Engine or script?).
 * [ ] **Bit** **Bl**ock **T**ransfer operations when drawing (also, [stencil](https://learnopengl.com/Advanced-OpenGL/Stencil-testing) support, see [this](https://open.gl/depthstencils)).
 * [ ] Library of "retro-feel" shaders.
@@ -37,9 +39,10 @@ Guess what? Yup, that's another game engine/framework.
 * [ ] Engine splash screen (during which resources are loaded).
 * [ ] Hot-reload of selected resources (fonts, banks, maps, shaders, sounds).
 * [ ] Digital/analogue game-controller support.
+* [ ] Audio support (based upon [OpenAL](https://www.openal.org/)) w/ run-time multi-voice synth (a-la [Bfxr](https://www.bfxr.net)).
 * [ ] Support for TARed/ZIPed games ([rxi/microtar](https://github.com/rxi/microtar), [kuba--/zip](https://github.com/kuba--/zip)).
 
-## TODO
+## Desiderata
 
 * [ ] Define some fixed resolutions (see [this](https://pacoup.com/2011/06/12/list-of-true-169-resolutions/))?
 * [ ] Use a *smarter* string library (implement or use [utstring](http://troydhanson.github.io/uthash/utstring.html)).
