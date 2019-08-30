@@ -33,25 +33,29 @@ function Canvas.square(mode, x, y, size, color)
   Canvas.rectangle(mode, x, y, size, size, color)
 end
 
-function Canvas.circle(mode, x, y, radius, color, segments)
-  segments = segments or 30
-  local step = (2 * math.pi) / segments
+function Canvas.circle(mode, cx, cy, radius, color, segments)
+  segments = segments or 128
+  local rate = (2 * math.pi) / segments
   if mode == "line" then
     local vertices = {}
-    for i = 1, segments do
-      local angle = step * i
-      table.insert(vertices, x + math.sin(angle) * radius)
-      table.insert(vertices, y + math.cos(angle) * radius)
+    local x, y = radius, 0
+    for i = 0, segments do
+      y = y + x * rate
+      x = x - y * rate
+      table.insert(vertices, cx + x)
+      table.insert(vertices, cy + y)
     end
     Canvas.polyline(vertices, color)
   else
     local vertices = {}
     table.insert(vertices, x)
     table.insert(vertices, y)
-    for i = 1, segments do
-      local angle = step * i
-      table.insert(vertices, x + math.sin(angle) * radius)
-      table.insert(vertices, y + math.cos(angle) * radius)
+    local x, y = radius, 0
+    for i = 0, segments do
+      y = y + x * rate
+      x = x - y * rate
+      table.insert(vertices, cx + x)
+      table.insert(vertices, cy + y)
     end
     Canvas.fan(vertices, color)
   end
