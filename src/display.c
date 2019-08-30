@@ -125,6 +125,66 @@ static int min(int a, int b)
     return a < b ? a : b;
 }
 
+static bool compute_size(Display_t *display, const Display_Configuration_t *configuration, GL_Point_t *position)
+{
+    int display_width, display_height;
+    glfwGetMonitorWorkarea(glfwGetPrimaryMonitor(), NULL, NULL, &display_width, &display_height);
+    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> display size is %dx%d", display_width, display_height);
+
+    display->window_width = configuration->width; // TODO: width/height set to `0` means fit the display?
+    display->window_height = configuration->height;
+    display->window_scale = 1;
+
+    int max_scale = min(display_width / configuration->width, display_height / configuration->height);
+    int scale = configuration->scale != 0 ? configuration->scale : max_scale;
+
+    if (max_scale == 0) {
+        Log_write(LOG_LEVELS_FATAL, "<DISPLAY> requested display size can't fit display!");
+        return false;
+    } else
+    if (scale > max_scale) {
+        Log_write(LOG_LEVELS_WARNING, "<DISPLAY> requested scaling x%d too big, forcing to x%d", scale, max_scale);
+        scale = max_scale;
+    }
+
+    display->window_width = configuration->width * scale;
+    display->window_height = configuration->height * scale;
+    display->window_scale = scale;
+
+    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> window size is %dx%d (%dx)", display->window_width, display->window_height,
+        display->window_scale);
+
+    int x = (display_width - display->window_width) / 2;
+    int y = (display_height - display->window_height) / 2;
+    if (!configuration->fullscreen) {
+        display->offscreen_source = (GL_Quad_t){
+                0, 0, configuration->width, configuration->height
+            };
+        display->offscreen_destination = (GL_Quad_t){
+                0, 0, display->window_width, display->window_height
+            };
+        display->physical_width = display->window_width;
+        display->physical_height = display->window_height;
+
+        position->x = x;
+        position->y = y;
+    } else { // Toggle fullscreen by passing primary monitor!
+        display->offscreen_source = (GL_Quad_t){
+                0, 0, configuration->width, configuration->height
+            };
+        display->offscreen_destination = (GL_Quad_t){
+                x, y, x + display->window_width, y + display->window_height
+            };
+        display->physical_width = display_width;
+        display->physical_height = display_height;
+
+        position->x = 0;
+        position->y = 0;
+    }
+
+    return true;
+}
+
 static void error_callback(int error, const char *description)
 {
     Log_write(LOG_LEVELS_ERROR, "<GLFW> %s", description);
@@ -255,63 +315,19 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     glfwGetMonitorWorkarea(glfwGetPrimaryMonitor(), NULL, NULL, &display_width, &display_height);
     Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> display size is %dx%d", display_width, display_height);
 
-    // <BEGIN-AUTOSCALING>
-    // TODO: refactor into a function.
-    display->window_width = configuration->width;
-    display->window_height = configuration->height;
-    display->window_scale = 1;
-
-    int max_scale = min(display_width / configuration->width, display_height / configuration->height);
-    int scale = configuration->scale != 0 ? configuration->scale : max_scale;
-
-    if (max_scale == 0) {
-        Log_write(LOG_LEVELS_FATAL, "<DISPLAY> requested display size can't fit display!");
+    GL_Point_t position = {};
+    if (!compute_size(display, configuration, &position)) {
         glfwDestroyWindow(display->window);
         glfwTerminate();
         return false;
-    } else
-    if (scale > max_scale) {
-        Log_write(LOG_LEVELS_WARNING, "<DISPLAY> requested scaling x%d too big, forcing to x%d", scale, max_scale);
-        scale = max_scale;
     }
-
-    display->window_width = configuration->width * scale;
-    display->window_height = configuration->height * scale;
-    display->window_scale = scale;
-    // <END-AUTOSCALING>
-
     // FIXME: when the display is scale the circles are plain wrong! Due to sub-pixel positioning?
 
-    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> window size is %dx%d (%dx)", display->window_width, display->window_height,
-        display->window_scale);
-
-    int x = (display_width - display->window_width) / 2;
-    int y = (display_height - display->window_height) / 2;
     if (!configuration->fullscreen) {
-        display->offscreen_source = (GL_Quad_t){
-//                0, configuration->height, configuration->width, 0
-                0, 0, configuration->width, configuration->height
-            };
-        display->offscreen_destination = (GL_Quad_t){
-//                0, configuration->height, configuration->width, 0
-                0, 0, display->window_width, display->window_height
-            };
-        display->physical_width = display->window_width;
-        display->physical_height = display->window_height;
-
-        glfwSetWindowMonitor(display->window, NULL, x, y, display->window_width, display->window_height, GLFW_DONT_CARE);
+        glfwSetWindowMonitor(display->window, NULL, position.x, position.y, display->physical_width, display->physical_height, GLFW_DONT_CARE);
         glfwShowWindow(display->window);
     } else { // Toggle fullscreen by passing primary monitor!
-        display->offscreen_source = (GL_Quad_t){
-                0, 0, configuration->width, configuration->height
-            };
-        display->offscreen_destination = (GL_Quad_t){
-                x, y, x + display->window_width, y + display->window_height
-            };
-        display->physical_width = display_width;
-        display->physical_height = display_height;
-
-        glfwSetWindowMonitor(display->window, glfwGetPrimaryMonitor(), 0, 0, display_width, display_height, GLFW_DONT_CARE);
+        glfwSetWindowMonitor(display->window, glfwGetPrimaryMonitor(), position.x, position.y, display->physical_width, display->physical_height, GLFW_DONT_CARE);
     }
 
     if (!initialize_framebuffer(display)) {
