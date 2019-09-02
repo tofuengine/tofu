@@ -257,6 +257,17 @@ void luaX_checkargument(lua_State *L, int index, const char *file, int line, ...
     }
 }
 
+int luaX_count(lua_State *L, int idx)
+{
+    int count = 0;
+    lua_pushnil(L); // first key
+    while (lua_next(L, idx)) {
+        count += 1;
+        lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
+    }
+    return count;
+}
+
 extern int luaX_isnil(lua_State *L, int index)
 {
     return lua_isnil(L, index);
