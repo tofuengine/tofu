@@ -35,6 +35,8 @@
 #include <math.h>
 #include <string.h>
 
+#define OPENGL_PIXEL_OFFSET     0.375f
+
 typedef struct _Canvas_Class_t {
 } Canvas_Class_t;
 
@@ -87,25 +89,27 @@ static const char _canvas_script[] =
     "\n"
     "function Canvas.circle(mode, cx, cy, radius, color, segments)\n"
     "  segments = segments or 128\n"
-    "  local rate = (2 * math.pi) / segments\n"
+    "  local step = (2 * math.pi) / segments\n"
     "  if mode == \"line\" then\n"
+    "    local angle = 0\n"
     "    local vertices = {}\n"
-    "    local x, y = radius, 0\n"
     "    for i = 0, segments do\n"
-    "      y = y + x * rate\n"
-    "      x = x - y * rate\n"
+    "      angle = angle + step\n"
+    "      y = math.sin(angle) * radius\n"
+    "      x = math.cos(angle) * radius\n"
     "      table.insert(vertices, cx + x)\n"
     "      table.insert(vertices, cy + y)\n"
     "    end\n"
     "    Canvas.polyline(vertices, color)\n"
     "  else\n"
+    "    local angle = 0\n"
     "    local vertices = {}\n"
-    "    table.insert(vertices, x)\n"
-    "    table.insert(vertices, y)\n"
-    "    local x, y = radius, 0\n"
+    "    table.insert(vertices, cx)\n"
+    "    table.insert(vertices, cy)\n"
     "    for i = 0, segments do\n"
-    "      y = y + x * rate\n"
-    "      x = x - y * rate\n"
+    "      angle = angle + step\n"
+    "      y = math.sin(angle) * radius\n"
+    "      x = math.cos(angle) * radius\n"
     "      table.insert(vertices, cx + x)\n"
     "      table.insert(vertices, cy + y)\n"
     "    end\n"
@@ -349,7 +353,7 @@ static int canvas_points(lua_State *L)
         double y = array[(i * 2) + 1];
 
         points[i] = (GL_Point_t){
-                .x = (GLfloat)x + 0.375f, .y = (GLfloat)y + 0.375f
+                .x = (GLfloat)x + OPENGL_PIXEL_OFFSET, .y = (GLfloat)y + OPENGL_PIXEL_OFFSET
             };
     }
 
@@ -385,7 +389,7 @@ static int canvas_polyline(lua_State *L)
         double y = array[(i * 2) + 1];
 
         points[i] = (GL_Point_t){
-                .x = (GLfloat)x + 0.375f, .y = (GLfloat)y + 0.375f
+                .x = (GLfloat)x + OPENGL_PIXEL_OFFSET, .y = (GLfloat)y + OPENGL_PIXEL_OFFSET
             };
     }
 
@@ -421,7 +425,7 @@ static int canvas_strip(lua_State *L)
         double y = array[(i * 2) + 1];
 
         points[i] = (GL_Point_t){
-                .x = (GLfloat)x + 0.375f, .y = (GLfloat)y + 0.375f
+                .x = (GLfloat)x + OPENGL_PIXEL_OFFSET, .y = (GLfloat)y + OPENGL_PIXEL_OFFSET
             };
     }
 
@@ -457,7 +461,7 @@ static int canvas_fan(lua_State *L)
         double y = array[(i * 2) + 1];
 
         points[i] = (GL_Point_t){
-                .x = (GLfloat)x + 0.375f, .y = (GLfloat)y + 0.375f
+                .x = (GLfloat)x + OPENGL_PIXEL_OFFSET, .y = (GLfloat)y + OPENGL_PIXEL_OFFSET
             };
     }
 
