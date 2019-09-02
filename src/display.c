@@ -493,11 +493,7 @@ void Display_shift(Display_t *display, const size_t *from, const size_t *to, siz
         }
     }
 
-    GLint shifting[MAX_PALETTE_COLORS];
-    for (size_t i = 0; i < MAX_PALETTE_COLORS; ++i) {
-        shifting[i] = display->shifting[i];
-    }
-    GL_program_send(&display->programs[DISPLAY_PROGRAM_PALETTE], "u_shifting", GL_PROGRAM_UNIFORM_INT, MAX_PALETTE_COLORS, shifting);
+    GL_program_send(&display->programs[DISPLAY_PROGRAM_PALETTE], "u_shifting", GL_PROGRAM_UNIFORM_INT, MAX_PALETTE_COLORS, display->shifting);
 }
 
 void Display_transparent(Display_t *display, const size_t *color, const bool *is_transparent, size_t count)
@@ -513,11 +509,7 @@ void Display_transparent(Display_t *display, const size_t *color, const bool *is
         }
     }
 
-    GLint transparent[MAX_PALETTE_COLORS];
-    for (size_t i = 0; i < MAX_PALETTE_COLORS; ++i) {
-        transparent[i] = display->transparent[i];
-    }
-    GL_program_send(&display->programs[DISPLAY_PROGRAM_PALETTE], "u_transparent", GL_PROGRAM_UNIFORM_INT, MAX_PALETTE_COLORS, transparent);
+    GL_program_send(&display->programs[DISPLAY_PROGRAM_PALETTE], "u_transparent", GL_PROGRAM_UNIFORM_INT, MAX_PALETTE_COLORS, display->transparent);
 }
 
 void Display_background(Display_t *display, const size_t color)
