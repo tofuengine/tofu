@@ -77,12 +77,9 @@ static void to_indexed_atlas_callback(void *parameters, void *data, int width, i
             int offset = row_offset + x;
 
             GL_Color_t color = pixels[offset];
-            if (color.a == 0) { // Skip transparent colors.
-                continue;
-            }
 
             size_t index = GL_palette_find_nearest_color(palette, color);
-            pixels[offset] = (GL_Color_t){ index, index, index, color.a };
+            pixels[offset] = (GL_Color_t){ index, index, index, 255 };
         }
     }
 }
