@@ -24,12 +24,13 @@ end
 
 function Game:__ctor()
 --dump(Canvas)
-  Canvas.palette("gameboy")
-  Canvas.background(1)
+  Canvas.palette("pico-8")
+  Canvas.transparent({ ["0"] = false, ["15"] = true })
+  Canvas.background(0)
 
   self.bunnies = {}
   self.bank = Bank.new("assets/sheet.png", 26, 37)
-  self.font = Font.default()
+  self.font = Font.default(15, 3)
   self.speed = 1.0
   self.running = true
 end
@@ -69,8 +70,9 @@ function Game:render(ratio)
   for _, bunny in pairs(self.bunnies) do
     bunny:render()
   end
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0, 0, 1.0, "left")
-  self.font:write(string.format("#%d bunnies", #self.bunnies), Canvas.width(), 0, 3, 1.0, "right")
+
+  self.font:write(string.format("FPS: %d", System.fps()), 0, 0, 1.0, "left")
+  self.font:write(string.format("#%d bunnies", #self.bunnies), Canvas.width(), 0, 1.0, "right")
 end
 
 return Game
