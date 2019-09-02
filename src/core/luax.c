@@ -225,15 +225,10 @@ int luaX_toref(lua_State *L, int arg)
 
 void luaX_getnumberarray(lua_State *L, int idx, double *array)
 {
-    int j = 0;
-    lua_pushnil(L); // first key
-    while (lua_next(L, idx)) {
-#if 0
-        const char *key_type = lua_typename(L, lua_type(L, -2)); // uses 'key' (at index -2) and 'value' (at index -1)
-#endif
-        array[j++] = lua_tonumber(L, -1);
-
-        lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
+    lua_pushnil(L);
+    for (int i = 0; lua_next(L, idx); ++i) {
+        array[i] = lua_tonumber(L, -1);
+        lua_pop(L, 1);
     }
 }
 
