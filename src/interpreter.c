@@ -20,6 +20,14 @@
  * SOFTWARE.
  **/
 
+#if 0
+https://www.lua.org/manual/5.2/manual.html
+https://www.lua.org/pil/27.3.2.html
+https://www.lua.org/pil/25.2.html
+
+https://nachtimwald.com/2014/07/26/calling-lua-from-c/
+#endif
+
 #include "interpreter.h"
 
 #include "config.h"
@@ -33,178 +41,263 @@
 #include <time.h>
 #endif
 
-#define SCRIPT_EXTENSION        ".wren"
-
-#define ROOT_MODULE             "@root@"
-
-#define ROOT_INSTANCE           "tofu"
+#define ROOT_INSTANCE           "main"
 
 #define BOOT_SCRIPT \
-    "import \"./tofu\" for Tofu\n" \
-    "var tofu = Tofu.new()\n"
+    "local Main = require(\"main\")\n" \
+    "main = Main.new()\n"
 
 #define SHUTDOWN_SCRIPT \
-    "tofu = null\n"
+    "main = nil\n"
 
-static const char *get_filename_extension(const char *name) {
-    const char *dot = strrchr(name, '.');
-    if (!dot || dot == name) {
-        return "";
-    }
-    return dot + 1;
+#define TRACEBACK_STACK_INDEX   1
+#define OBJECT_STACK_INDEX      TRACEBACK_STACK_INDEX + 1
+#define METHOD_STACK_INDEX(m)   OBJECT_STACK_INDEX + 1 + (m)
+
+typedef enum _Methods_t {
+    METHOD_SETUP,
+    METHOD_INIT,
+    METHOD_INPUT,
+    METHOD_UPDATE,
+    METHOD_RENDER,
+    Methods_t_CountOf
+} Methods_t;
+
+static const char *_methods[] = {
+    "setup",
+    "init",
+    "input",
+    "update",
+    "render",
+    NULL
+};
+
+static int panic(lua_State *L)
+{
+    Log_write(LOG_LEVELS_FATAL, "<VM> error in call: %s", lua_tostring(L, -1));
+    lua_pop(L, 1);
+    return 0; // return to Lua to abort
 }
 
-static char *load_module_function(WrenVM *vm, const char *name)
+#ifdef __VM_USE_CUSTOM_TRACEBACK__
+static int error_handler(lua_State *L)
 {
-    // User-defined modules are specified as "relative" paths (where "./" indicates the current directory)
-    if (strncmp(name, "./", 2) != 0) {
-        Log_write(LOG_LEVELS_INFO, "<VM> loading built-in module '%s'", name);
-
-        for (int i = 0; _modules[i].module != NULL; ++i) {
-            const Module_Entry_t *entry = &_modules[i];
-            if (strcmp(name, entry->module) == 0) {
-                size_t size = (strlen(entry->script) + 1) * sizeof(char);
-                void *ptr = malloc(size);
-                if (ptr) {
-                    memcpy(ptr, entry->script, size);
-                }
-                return ptr;
-            }
+    const char *msg = lua_tostring(L, 1);
+    if (msg == NULL) {  /* is error object not a string? */
+        if (luaL_callmeta(L, 1, "__tostring")  /* does it have a metamethod */
+            && lua_type(L, -1) == LUA_TSTRING) { /* that produces a string? */
+            return 1;  /* that is the message */
+        } else {
+            msg = lua_pushfstring(L, "(error object is a %s value)", luaL_typename(L, 1));
         }
-        return NULL;
     }
+    luaL_traceback(L, L, msg, 1);  /* append a standard traceback */
+    return 1;  /* return the traceback */
+}
+#endif
 
-    const Environment_t *environment = (const Environment_t *)wrenGetUserData(vm);
+static int custom_searcher(lua_State *L)
+{
+    const char *base_path = lua_tostring(L, lua_upvalueindex(1));
 
-    char pathfile[PATH_FILE_MAX]; // Build the absolute path.
-    strcpy(pathfile, environment->base_path);
-    if (strlen(get_filename_extension(name)) > 0) { // Has a valid extension, use it.
-        strcat(pathfile, name);
+    const char *file = lua_tostring(L, 1);
+
+    char path_file[PATH_FILE_MAX] = {};
+    strcpy(path_file, base_path);
+    strcat(path_file, file);
+    for (int i = 0; path_file[i] != '\0'; ++i) { // Replace `.' with '/` to map file system entry.
+        if (path_file[i] == '.') {
+            path_file[i] = FILE_PATH_SEPARATOR;
+        }
+    }
+    strcat(path_file, ".lua");
+
+    char *buffer = file_load_as_string(path_file, "rt");
+    if (buffer != NULL) {
+        luaL_loadstring(L, buffer);
+        free(buffer);
     } else {
-        strcat(pathfile, name + 2);
-        strcat(pathfile, SCRIPT_EXTENSION);
+        lua_pushstring(L, "Error: file not found");
     }
-
-    Log_write(LOG_LEVELS_INFO, "<VM> loading module '%s'", pathfile);
-    return file_load_as_string(pathfile, "rt");
+    return 1;
 }
 
-static void write_function(WrenVM *vm, const char *text)
+//
+// Detect the presence of the root instance with passed methods. If successful,
+// the stack will contain the object instance followed by the fields (which can
+// be NIL if not found). The traceback function is already on the stack.
+//
+//     T O F1 ... Fn
+//
+static bool detect(lua_State *L, const char *root, const char *methods[])
 {
-    Log_write(LOG_LEVELS_TRACE, text);
-}
-
-static void error_function(WrenVM* vm, WrenErrorType type, const char *module, int line, const char *message)
-{
-    if (type == WREN_ERROR_COMPILE) {
-        Log_write(LOG_LEVELS_ERROR, "<VM> compile error: [%s@%d] %s", module, line, message);
-    } else if (type == WREN_ERROR_RUNTIME) {
-        Log_write(LOG_LEVELS_ERROR, "<VM> runtime error: %s", message);
-    } else if (type == WREN_ERROR_STACK_TRACE) {
-        Log_write(LOG_LEVELS_ERROR, "  [%s@%d] in %s", module, line, message);
-    }
-}
-
-static WrenForeignClassMethods bind_foreign_class_function(WrenVM* vm, const char *module, const char *className)
-{
-//    Log_write(LOG_LEVELS_TRACE, "%s %s %d %s", module, className);
-    for (int i = 0; _classes[i].module != NULL; ++i) {
-        const Class_Entry_t *entry = &_classes[i];
-        if ((strcmp(module, entry->module) == 0) &&
-            (strcmp(className, entry->className) == 0)) {
-                return (WrenForeignClassMethods){
-                        .allocate = entry->allocate,
-                        .finalize = entry->finalize
-                    };
-            }
-    }
-    return (WrenForeignClassMethods){};
-}
-
-static WrenForeignMethodFn bind_foreign_method_function(WrenVM *vm, const char *module, const char* className, bool isStatic, const char *signature)
-{
-//    Log_write(LOG_LEVELS_TRACE, "%s %s %d %s", module, className, isStatic, signature);
-    for (int i = 0; _methods[i].module != NULL; ++i) {
-        const Method_Entry_t *entry = &_methods[i];
-        if ((strcmp(module, entry->module) == 0) &&
-            (strcmp(className, entry->className) == 0) &&
-            (isStatic == entry->isStatic) &&
-            (strcmp(signature, entry->signature) == 0)) {
-                return entry->method;
-            }
-    }
-    return NULL;
-}
-
-static void timerpool_call_callback(Timer_t *timer, void *parameters)
-{
-    Interpreter_t *interpreter = (Interpreter_t *)parameters;
-
-    wrenEnsureSlots(interpreter->vm, 1);
-    wrenSetSlotHandle(interpreter->vm, 0, timer->value.callback);
-    wrenCall(interpreter->vm, interpreter->handles[CALL]);
-}
-
-static void timerpool_release_callback(Timer_t *timer, void *parameters)
-{
-    Interpreter_t *interpreter = (Interpreter_t *)parameters;
-
-    wrenReleaseHandle(interpreter->vm, timer->value.callback);
-}
-
-bool Interpreter_initialize(Interpreter_t *interpreter, const Environment_t *environment)
-{
-    interpreter->environment = environment;
-
-    WrenConfiguration vm_configuration;
-    wrenInitConfiguration(&vm_configuration);
-    vm_configuration.loadModuleFn = load_module_function;
-    vm_configuration.bindForeignClassFn = bind_foreign_class_function;
-    vm_configuration.bindForeignMethodFn = bind_foreign_method_function;
-    vm_configuration.writeFn = write_function;
-    vm_configuration.errorFn = error_function;
-
-    interpreter->vm = wrenNewVM(&vm_configuration);
-    if (!interpreter->vm) {
-        Log_write(LOG_LEVELS_FATAL, "<VM> can't initialize interpreter");
+    lua_getglobal(L, root); // Get the global variable on top of the stack (will always stay on top).
+    if (lua_isnil(L, -1)) {
+        Log_write(LOG_LEVELS_FATAL, "<VM> can't find root instance: %s", lua_tostring(L, -1));
+        lua_pop(L, 1);
         return false;
     }
 
-    wrenSetUserData(interpreter->vm, (void *)environment); // HACK: we discard the const qualifier :(
-
-    interpreter->gc_age = 0.0;
-
-    TimerPool_initialize(&interpreter->timer_pool, 32); // Need to initialized before boot-script interpretation.
-
-    WrenInterpretResult result = wrenInterpret(interpreter->vm, ROOT_MODULE, BOOT_SCRIPT);
-    if (result != WREN_RESULT_SUCCESS) {
-        Log_write(LOG_LEVELS_FATAL, "<VM> can't interpret boot script");
-        wrenFreeVM(interpreter->vm);
-        return false;
+    for (int i = 0; methods[i]; ++i) { // Push the methods on stack
+        lua_getfield(L, -(i + 1), methods[i]); // The table become farer and farer along the loop.
+        if (!lua_isnil(L, -1)) {
+            Log_write(LOG_LEVELS_INFO, "<VM> method '%s' found", methods[i]);
+        } else {
+            Log_write(LOG_LEVELS_WARNING, "<VM> method '%s' is missing", methods[i]);
+        }
     }
-
-    wrenEnsureSlots(interpreter->vm, 1);
-    wrenGetVariable(interpreter->vm, ROOT_MODULE, ROOT_INSTANCE, 0);
-    interpreter->handles[RECEIVER] = wrenGetSlotHandle(interpreter->vm, 0);
-
-    interpreter->handles[INPUT] = wrenMakeCallHandle(interpreter->vm, "input()");
-    interpreter->handles[UPDATE] = wrenMakeCallHandle(interpreter->vm, "update(_)");
-    interpreter->handles[RENDER] = wrenMakeCallHandle(interpreter->vm, "render(_)");
-    interpreter->handles[CALL] = wrenMakeCallHandle(interpreter->vm, "call()"); // Generic, for timers.
 
     return true;
 }
 
-void Interpreter_input(Interpreter_t *interpreter)
+static int execute(lua_State *L, const char *script)
 {
-    wrenEnsureSlots(interpreter->vm, 1);
-    wrenSetSlotHandle(interpreter->vm, 0, interpreter->handles[RECEIVER]);
-    wrenCall(interpreter->vm, interpreter->handles[INPUT]);
+    int loaded = luaL_loadstring(L, script);
+    if (loaded != LUA_OK) {
+        Log_write(LOG_LEVELS_ERROR, "<VM> error in execute: %s", lua_tostring(L, -1));
+        lua_pop(L, 1);
+        return loaded;
+    }
+#ifdef __DEBUG_VM_CALLS__
+    int called = lua_pcall(L, 0, 0, TRACEBACK_STACK_INDEX);
+    if (called != LUA_OK) {
+        Log_write(LOG_LEVELS_ERROR, "<VM> error in execute: %s", lua_tostring(L, -1));
+        lua_pop(L, 1);
+    }
+    return called;
+#else
+    lua_call(L, 0, 0);
+    return LUA_OK;
+#endif
 }
 
-void Interpreter_update(Interpreter_t *interpreter, const double delta_time)
+static int call(lua_State *L, Methods_t method, int nargs, int nresults)
 {
-    TimerPool_update(&interpreter->timer_pool, delta_time, timerpool_call_callback, interpreter);
+    int index = METHOD_STACK_INDEX(method); // O F1 .. Fn T
+    if (lua_isnil(L, index)) {
+        lua_pop(L, nargs); // Discard the unused arguments pushed by the caller.
+        for (int i = 0; i < nresults; ++i) { // Push fake NIL results for the caller.
+            lua_pushnil(L);
+        }
+        return LUA_OK;
+    }
+    lua_pushvalue(L, index);                // O F1 ... Fn T A1 ... An     -> O F1 ... Fn T A1 ... An F
+    lua_pushvalue(L, OBJECT_STACK_INDEX);   // O F1 ... Fn T A1 ... An F   -> O F1 ... Fn T A1 ... An F O
+    lua_rotate(L, -(nargs + 2), 2);         // O F1 ... Fn T A1 ... An F O -> O F1 ... Fn T F O A1 ... An
+
+#ifdef __DEBUG_VM_CALLS__
+    int called = lua_pcall(L, nargs + 1, nresults, TRACEBACK_STACK_INDEX);
+    if (called != LUA_OK) {
+        Log_write(LOG_LEVELS_ERROR, "<VM> error in call: %s", lua_tostring(L, -1));
+        lua_pop(L, 1);
+    }
+    return called;
+#else
+    lua_call(L, nargs + 1, nresults);
+    return LUA_OK;
+#endif
+}
+
+static bool timerpool_callback(Timer_t *timer, void *parameters)
+{
+    Interpreter_t *interpreter = (Interpreter_t *)parameters;
+
+    // TODO: explicit access the VM state and expose `L` variable.
+
+    lua_rawgeti(interpreter->state, LUA_REGISTRYINDEX, BUNDLE_TO_INT(timer->bundle));
+#if 0
+    if (lua_isnil(interpreter->state, -1)) {
+        lua_pop(interpreter->state, -1);
+        Log_write(LOG_LEVELS_ERROR, "<VM> can't find timer callback");
+        return;
+    }
+#endif
+#ifdef __DEBUG_VM_CALLS__
+    int result = lua_pcall(interpreter->state, 0, 0, TRACEBACK_STACK_INDEX);
+    if (result != LUA_OK) {
+        Log_write(LOG_LEVELS_ERROR, "<VM> error in call: %s", lua_tostring(interpreter->state, -1));
+    }
+#else
+    lua_call(interpreter->state, 0, 0);
+    int result = LUA_OK;
+#endif
+    return result == LUA_OK;
+}
+
+bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configuration, const Environment_t *environment)
+{
+    interpreter->environment = environment;
+    interpreter->gc_age = 0.0;
+    interpreter->state = luaL_newstate();
+    if (!interpreter->state) {
+        Log_write(LOG_LEVELS_FATAL, "<VM> can't initialize interpreter");
+        return false;
+    }
+    lua_atpanic(interpreter->state, panic); // TODO: remove the panic handler?
+
+    luaL_openlibs(interpreter->state);
+
+    lua_pushlightuserdata(interpreter->state, (void *)environment); // Discard `const` qualifier.
+    modules_initialize(interpreter->state, 1);
+
+#if 0
+    luaX_appendpath(interpreter->state, environment->base_path);
+#else
+    lua_pushstring(interpreter->state, environment->base_path);
+    luaX_overridesearchers(interpreter->state, custom_searcher, 1);
+#endif
+
+#ifdef __DEBUG_VM_CALLS__
+#ifndef __VM_USE_CUSTOM_TRACEBACK__
+    lua_getglobal(interpreter->state, "debug");
+    lua_getfield(interpreter->state, -1, "traceback");
+    lua_remove(interpreter->state, -2);
+#else
+    lua_pushcfunction(interpreter->state, error_handler);
+#endif
+#endif
+
+    int result = execute(interpreter->state, BOOT_SCRIPT);
+    if (result != 0) {
+        Log_write(LOG_LEVELS_FATAL, "<VM> can't interpret boot script");
+        lua_close(interpreter->state);
+        return false;
+    }
+
+    if (!detect(interpreter->state, ROOT_INSTANCE, _methods)) {
+        lua_close(interpreter->state);
+        return false;
+    }
+
+    call(interpreter->state, METHOD_SETUP, 0, 1);
+    Configuration_parse(interpreter->state, configuration);
+    lua_pop(interpreter->state, 1); // Remove the configuration table from the stack.
+
+    TimerPool_initialize(&interpreter->timer_pool, timerpool_callback, interpreter);
+
+    return true;
+}
+
+bool Interpreter_init(Interpreter_t *interpreter)
+{
+    return call(interpreter->state, METHOD_INIT, 0, 0) == LUA_OK;
+}
+
+bool Interpreter_input(Interpreter_t *interpreter)
+{
+    return call(interpreter->state, METHOD_INPUT, 0, 0) == LUA_OK;
+}
+
+bool Interpreter_update(Interpreter_t *interpreter, const double delta_time)
+{
+    if (!TimerPool_update(&interpreter->timer_pool, delta_time)) {
+        return false;
+    }
+
+    lua_pushnumber(interpreter->state, delta_time);
+    if (call(interpreter->state, METHOD_UPDATE, 1, 0) != LUA_OK) {
+        return false;
+    }
 
     interpreter->gc_age += delta_time;
     while (interpreter->gc_age >= GARBAGE_COLLECTION_PERIOD) { // Periodically collect GC.
@@ -214,42 +307,38 @@ void Interpreter_update(Interpreter_t *interpreter, const double delta_time)
         Log_write(LOG_LEVELS_DEBUG, "<VM> performing periodical garbage collection");
         double start_time = (double)clock() / CLOCKS_PER_SEC;
 #endif
-        wrenCollectGarbage(interpreter->vm);
-        TimerPool_gc(&interpreter->timer_pool, timerpool_release_callback, interpreter);
+        lua_gc(interpreter->state, LUA_GCCOLLECT, 0);
+        TimerPool_gc(&interpreter->timer_pool);
 #ifdef __DEBUG_GARBAGE_COLLECTOR__
         double elapsed = ((double)clock() / CLOCKS_PER_SEC) - start_time;
         Log_write(LOG_LEVELS_DEBUG, "<VM> garbage collection took %.3fs", elapsed);
 #endif
     }
 
-    wrenEnsureSlots(interpreter->vm, 2);
-    wrenSetSlotHandle(interpreter->vm, 0, interpreter->handles[RECEIVER]);
-    wrenSetSlotDouble(interpreter->vm, 1, delta_time);
-    wrenCall(interpreter->vm, interpreter->handles[UPDATE]);
+    return true;
 }
 
-void Interpreter_render(Interpreter_t *interpreter, const double ratio)
+bool Interpreter_render(Interpreter_t *interpreter, const double ratio)
 {
-    wrenEnsureSlots(interpreter->vm, 1);
-    wrenSetSlotHandle(interpreter->vm, 0, interpreter->handles[RECEIVER]);
-    wrenCall(interpreter->vm, interpreter->handles[RENDER]);
+    lua_pushnumber(interpreter->state, ratio);
+    return call(interpreter->state, METHOD_RENDER, 1, 0) == LUA_OK;
 }
 
 void Interpreter_terminate(Interpreter_t *interpreter)
 {
-    WrenInterpretResult result = wrenInterpret(interpreter->vm, ROOT_MODULE, SHUTDOWN_SCRIPT);
-    if (result != WREN_RESULT_SUCCESS) {
+#ifdef SHUTDOWN_SCRIPT
+    lua_settop(interpreter->state, 1);      // T O F1 ... Fn -> T
+    int result = execute(interpreter->state, SHUTDOWN_SCRIPT);
+    if (result != 0) {
         Log_write(LOG_LEVELS_FATAL, "<VM> can't interpret shutdown script");
     }
+    lua_settop(interpreter->state, 0);      // T -> <empty>
+#else
+    lua_pushnil(interpreter->state);
+    lua_setglobal(interpreter->state, ROOT_INSTANCE); // Just set the (global) *root* instance to `nil`.
+#endif
+    lua_gc(interpreter->state, LUA_GCCOLLECT, 0);
+    lua_close(interpreter->state);
 
-    wrenCollectGarbage(interpreter->vm);
-
-    TimerPool_terminate(&interpreter->timer_pool, timerpool_release_callback, interpreter);
-
-    for (int i = 0; i < Handles_t_CountOf; ++i) {
-        WrenHandle *handle = interpreter->handles[i];
-        wrenReleaseHandle(interpreter->vm, handle);
-    }
-
-    wrenFreeVM(interpreter->vm);
+    TimerPool_terminate(&interpreter->timer_pool);
 }

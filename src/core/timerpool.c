@@ -28,13 +28,15 @@
 
 #include <memory.h>
 
-static Timer_t *push(Timer_Pool_t *pool, const Timer_Value_t value)
+static Timer_t *push(Timer_Pool_t *pool, double period, size_t repeats, void *bundle)
 {
     Timer_t *timer = malloc(sizeof(Timer_t));
     *timer = (Timer_t){
-            .value = value,
+            .period = period,
+            .repeats = repeats,
+            .bundle = bundle,
             .age = 0.0f,
-            .loops = value.repeats,
+            .loops = repeats,
             .state = TIMER_STATE_RUNNING,
             .prev = NULL,
             .next = pool->timers
@@ -74,40 +76,33 @@ static Timer_t *pop_next(Timer_Pool_t *pool, Timer_t *timer)
     return next;
 }
 
-static bool contains(Timer_Pool_t *pool, Timer_t *timer)
+void TimerPool_initialize(Timer_Pool_t *pool, TimerPool_Callback_t update_callback, void *parameters)
 {
-    for (Timer_t *current = pool->timers; current != NULL; current = current->next) {
-        if (current == timer) {
-            return true;
-        }
-    }
-    return false;
+    memset(pool, 0, sizeof(Timer_Pool_t));
+    *pool = (Timer_Pool_t){
+            .update_callback = update_callback,
+            .parameters = parameters
+        };
 }
 
-void TimerPool_initialize(Timer_Pool_t *pool, size_t initial_capacity)
-{
-    pool->timers = NULL;
-}
-
-void TimerPool_terminate(Timer_Pool_t *pool, TimerPool_Callback_t callback, void *parameters)
+void TimerPool_terminate(Timer_Pool_t *pool)
 {
     for (Timer_t *timer = pool->timers; timer != NULL; ) {
-        callback(timer, parameters);
         Log_write(LOG_LEVELS_DEBUG, "<TIMERPOOL> timer #%p released", timer);
         timer = pop_next(pool, timer);
     }
+    memset(pool, 0, sizeof(Timer_Pool_t));
 }
 
-Timer_t *TimerPool_allocate(Timer_Pool_t *pool, const Timer_Value_t value)
+Timer_t *TimerPool_allocate(Timer_Pool_t *pool, double period, size_t repeats, void *bundle)
 {
-    return push(pool, value);
+    return push(pool, period, repeats, bundle);
 }
 
-void TimerPool_gc(Timer_Pool_t *pool, TimerPool_Callback_t callback, void *parameters)
+void TimerPool_gc(Timer_Pool_t *pool)
 {
     for (Timer_t *timer = pool->timers; timer != NULL; ) {
         if (timer->state == TIMER_STATE_FINALIZED) { // Periodically release garbage-collected timers.
-            callback(timer, parameters);
             Log_write(LOG_LEVELS_DEBUG, "<TIMERPOOL> timer #%p garbage-collected", timer);
             timer = pop_next(pool, timer);
         } else {
@@ -116,7 +111,7 @@ void TimerPool_gc(Timer_Pool_t *pool, TimerPool_Callback_t callback, void *param
     }
 }
 
-void TimerPool_update(Timer_Pool_t *pool, double delta_time, TimerPool_Callback_t callback, void *parameters)
+bool TimerPool_update(Timer_Pool_t *pool, double delta_time)
 {
     for (Timer_t *timer = pool->timers; timer != NULL; timer = timer->next) {
         if (timer->state != TIMER_STATE_RUNNING) {
@@ -124,14 +119,16 @@ void TimerPool_update(Timer_Pool_t *pool, double delta_time, TimerPool_Callback_
         }
 
         timer->age += delta_time;
-        while (timer->age >= timer->value.period) {
-            if (timer->state != TIMER_STATE_RUNNING) { // The timer could have been terminated
+        while (timer->age >= timer->period) {
+            if (timer->state != TIMER_STATE_RUNNING) { // The timer could have been terminated on the previous callback loop (when age is large enough).
                 break;
             }
 
-            timer->age -= timer->value.period;
+            timer->age -= timer->period;
 
-            callback(timer, parameters);
+            if (!pool->update_callback(timer, pool->parameters)) {
+                return false;
+            }
 
             if (timer->loops > 0) {
                 timer->loops -= 1;
@@ -141,40 +138,29 @@ void TimerPool_update(Timer_Pool_t *pool, double delta_time, TimerPool_Callback_
             }
         }
     }
+    return true;
 }
 
-void TimerPool_release(Timer_Pool_t *pool, Timer_t *timer)
+void TimerPool_release(Timer_t *timer)
 {
-    if (!contains(pool, timer)) { // Check if the timer is still present in the pool (could have been freed by `TimerPool_terminate()`).
-        return;
-    }
-
     timer->state = TIMER_STATE_FINALIZED; // Mark as to-be-released, it not already done (e.g. on closing)
 
     Log_write(LOG_LEVELS_DEBUG, "<TIMERPOOL> timer #%p finalized, ready for GC", timer);
 }
 
-void TimerPool_reset(Timer_Pool_t *pool, Timer_t *timer)
+void TimerPool_reset(Timer_t *timer)
 {
-    if (!contains(pool, timer)) {
-        return;
-    }
-
     if (timer->state != TIMER_STATE_FINALIZED) {
         timer->age = 0.0;
-        timer->loops = timer->value.repeats;
+        timer->loops = timer->repeats;
         timer->state = TIMER_STATE_RUNNING;
 
         Log_write(LOG_LEVELS_DEBUG, "<TIMERPOOL> timer #%p reset", timer);
     }
 }
 
-void TimerPool_cancel(Timer_Pool_t *pool, Timer_t *timer)
+void TimerPool_cancel(Timer_t *timer)
 {
-    if (!contains(pool, timer)) {
-        return;
-    }
-
     if (timer->state == TIMER_STATE_RUNNING) {
         timer->state = TIMER_STATE_FROZEN;
 

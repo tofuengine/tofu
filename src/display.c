@@ -28,6 +28,7 @@
 #include "log.h"
 
 #include <memory.h>
+#include <stdlib.h>
 
 typedef struct _Program_Data_t {
     const char *vertex_shader;
@@ -119,6 +120,71 @@ static const Program_Data_t _programs_data[Display_Programs_t_CountOf] = {
 
 static const int _texture_id_0[] = { 0 };
 
+static int min(int a, int b)
+{
+    return a < b ? a : b;
+}
+
+static bool compute_size(Display_t *display, const Display_Configuration_t *configuration, GL_Point_t *position)
+{
+    int display_width, display_height;
+    glfwGetMonitorWorkarea(glfwGetPrimaryMonitor(), NULL, NULL, &display_width, &display_height);
+    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> display size is %dx%d", display_width, display_height);
+
+    display->window_width = configuration->width; // TODO: width/height set to `0` means fit the display?
+    display->window_height = configuration->height;
+    display->window_scale = 1;
+
+    int max_scale = min(display_width / configuration->width, display_height / configuration->height);
+    int scale = configuration->scale != 0 ? configuration->scale : max_scale;
+
+    if (max_scale == 0) {
+        Log_write(LOG_LEVELS_FATAL, "<DISPLAY> requested display size can't fit display!");
+        return false;
+    } else
+    if (scale > max_scale) {
+        Log_write(LOG_LEVELS_WARNING, "<DISPLAY> requested scaling x%d too big, forcing to x%d", scale, max_scale);
+        scale = max_scale;
+    }
+
+    display->window_width = configuration->width * scale;
+    display->window_height = configuration->height * scale;
+    display->window_scale = scale;
+
+    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> window size is %dx%d (%dx)", display->window_width, display->window_height,
+        display->window_scale);
+
+    int x = (display_width - display->window_width) / 2;
+    int y = (display_height - display->window_height) / 2;
+    if (!configuration->fullscreen) {
+        display->offscreen_source = (GL_Quad_t){
+                0, 0, configuration->width, configuration->height
+            };
+        display->offscreen_destination = (GL_Quad_t){
+                0, 0, display->window_width, display->window_height
+            };
+        display->physical_width = display->window_width;
+        display->physical_height = display->window_height;
+
+        position->x = x;
+        position->y = y;
+    } else { // Toggle fullscreen by passing primary monitor!
+        display->offscreen_source = (GL_Quad_t){
+                0, 0, configuration->width, configuration->height
+            };
+        display->offscreen_destination = (GL_Quad_t){
+                x, y, x + display->window_width, y + display->window_height
+            };
+        display->physical_width = display_width;
+        display->physical_height = display_height;
+
+        position->x = 0;
+        position->y = 0;
+    }
+
+    return true;
+}
+
 static void error_callback(int error, const char *description)
 {
     Log_write(LOG_LEVELS_ERROR, "<GLFW> %s", description);
@@ -164,7 +230,6 @@ static void size_callback(GLFWwindow* window, int width, int height)
 #endif
 }
 
-#ifndef __NO_AUTOFIT__
 static bool initialize_framebuffer(Display_t *display)
 {
     GL_texture_create(&display->offscreen_texture, display->configuration.width, display->configuration.height, NULL);
@@ -180,13 +245,12 @@ static bool initialize_framebuffer(Display_t *display)
     return true;
 }
 
-void deinitialize_framebuffer(Display_t *display)
+static void deinitialize_framebuffer(Display_t *display)
 {
     GL_texture_delete(&display->offscreen_texture);
 
     glDeleteFramebuffersEXT(1, &display->offscreen_framebuffer);
 }
-#endif
 
 bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title)
 {
@@ -251,69 +315,27 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     glfwGetMonitorWorkarea(glfwGetPrimaryMonitor(), NULL, NULL, &display_width, &display_height);
     Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> display size is %dx%d", display_width, display_height);
 
-    display->window_width = configuration->width;
-    display->window_height = configuration->height;
-    display->window_scale = 1;
-
-#ifndef __NO_AUTOFIT__
-    if (configuration->autofit) {
-        Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> auto-fitting...");
-
-        for (int s = 1; ; ++s) {
-            int w = configuration->width * s;
-            int h = configuration->height * s;
-            if ((w > display_width) || (h > display_height)) {
-                break;
-            }
-            display->window_width = w;
-            display->window_height = h;
-            display->window_scale = s;
-        }
+    GL_Point_t position = {};
+    if (!compute_size(display, configuration, &position)) {
+        glfwDestroyWindow(display->window);
+        glfwTerminate();
+        return false;
     }
-#endif
+    // FIXME: when the display is scale the circles are plain wrong! Due to sub-pixel positioning?
 
-    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> window size is %dx%d (%dx)", display->window_width, display->window_height,
-        display->window_scale);
-
-    int x = (display_width - display->window_width) / 2;
-    int y = (display_height - display->window_height) / 2;
     if (!configuration->fullscreen) {
-#ifndef __NO_AUTOFIT__
-        display->offscreen_source = (GL_Quad_t){
-//                0, configuration->height, configuration->width, 0
-                0, 0, configuration->width, configuration->height
-            };
-        display->offscreen_destination = (GL_Quad_t){
-//                0, configuration->height, configuration->width, 0
-                0, 0, display->window_width, display->window_height
-            };
-        display->physical_width = display->window_width;
-        display->physical_height = display->window_height;
-#endif
-        glfwSetWindowMonitor(display->window, NULL, x, y, display->window_width, display->window_height, GLFW_DONT_CARE);
+        glfwSetWindowMonitor(display->window, NULL, position.x, position.y, display->physical_width, display->physical_height, GLFW_DONT_CARE);
         glfwShowWindow(display->window);
     } else { // Toggle fullscreen by passing primary monitor!
-#ifndef __NO_AUTOFIT__
-        display->offscreen_source = (GL_Quad_t){
-                0, 0, configuration->width, configuration->height
-            };
-        display->offscreen_destination = (GL_Quad_t){
-                x, y, x + display->window_width, y + display->window_height
-            };
-        display->physical_width = display_width;
-        display->physical_height = display_height;
-#endif
-        glfwSetWindowMonitor(display->window, glfwGetPrimaryMonitor(), 0, 0, display_width, display_height, GLFW_DONT_CARE);
+        glfwSetWindowMonitor(display->window, glfwGetPrimaryMonitor(), position.x, position.y, display->physical_width, display->physical_height, GLFW_DONT_CARE);
     }
 
-#ifndef __NO_AUTOFIT__
     if (!initialize_framebuffer(display)) {
         Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't create framebuffer");
         GL_terminate();
         glfwDestroyWindow(display->window);
         glfwTerminate();
     }
-#endif
 
     for (size_t i = 0; i < Display_Programs_t_CountOf; ++i) {
         const Program_Data_t *data = &_programs_data[i];
@@ -324,9 +346,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
             !GL_program_attach(&display->programs[i], data->vertex_shader, GL_PROGRAM_SHADER_VERTEX) ||
             !GL_program_attach(&display->programs[i], data->fragment_shader, GL_PROGRAM_SHADER_FRAGMENT)) {
             Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't initialize shaders");
-#ifndef __NO_AUTOFIT__
             deinitialize_framebuffer(display);
-#endif
             GL_terminate();
             glfwDestroyWindow(display->window);
             glfwTerminate();
@@ -346,12 +366,12 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     return true;
 }
 
-bool Display_shouldClose(Display_t *display)
+bool Display_should_close(Display_t *display)
 {
     return glfwWindowShouldClose(display->window);
 }
 
-void Display_processInput(Display_t *display, const Display_Callback_t callback, void *parameters)
+void Display_process_input(Display_t *display)
 {
     static const int keys[Display_Keys_t_CountOf] = {
         GLFW_KEY_UP,
@@ -365,6 +385,8 @@ void Display_processInput(Display_t *display, const Display_Callback_t callback,
         GLFW_KEY_ENTER,
         GLFW_KEY_SPACE
     };
+
+    glfwPollEvents();
 
     for (int i = 0; i < Display_Keys_t_CountOf; ++i) {
         Display_Key_State_t *key_state = &display->keys_state[i];
@@ -380,14 +402,10 @@ void Display_processInput(Display_t *display, const Display_Callback_t callback,
             glfwSetWindowShouldClose(display->window, true);
         }
     }
-
-    callback(parameters);
 }
 
-void Display_render(Display_t *display, const Display_Callback_t callback, void *parameters)
+void Display_render_prepare(Display_t *display)
 {
-    // TODO: we could direct the rendering routines differently in the case `autofit` is disabled.
-#ifndef __NO_AUTOFIT__
     const int w = display->configuration.width;
     const int h = display->configuration.height;
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, display->offscreen_framebuffer);
@@ -409,11 +427,10 @@ void Display_render(Display_t *display, const Display_Callback_t callback, void 
     glClear(GL_COLOR_BUFFER_BIT);
 
     GL_program_use(&display->programs[DISPLAY_PROGRAM_PALETTE]);
-    callback(parameters);
-    GLfloat time[] = { (GLfloat)glfwGetTime() };
-    GL_program_send(&display->programs[display->program_index], "u_time", GL_PROGRAM_UNIFORM_FLOAT, 1, time);
-    GL_program_use(&display->programs[display->program_index]);
+}
 
+void Display_render_finish(Display_t *display)
+{
     const int pw = display->physical_width; // We need to y-flip the texture, either by inverting the quad or
     const int ph = display->physical_height; // the ortho matrix or the with a shader.
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
@@ -431,19 +448,13 @@ void Display_render(Display_t *display, const Display_Callback_t callback, void 
     glDisable(GL_BLEND);
 #endif
 
+    GLfloat time[] = { (GLfloat)glfwGetTime() };
+    GL_program_send(&display->programs[display->program_index], "u_time", GL_PROGRAM_UNIFORM_FLOAT, 1, time);
+    GL_program_use(&display->programs[display->program_index]);
+
     GL_texture_blit_fast(&display->offscreen_texture, display->offscreen_source, display->offscreen_destination, (GL_Color_t){ 255, 255, 255, 255 });
 
-#else
-    GLfloat *rgba = display->background_rgba;
-    glClearColor(rgba[0], rgba[1], rgba[2], rgba[3]); // Required, to clear previous content.
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    GL_program_use(&display->programs[DISPLAY_PROGRAM_PALETTE]);
-    callback(parameters);
-#endif
-
     glfwSwapBuffers(display->window);
-    glfwPollEvents();
 }
 
 void Display_palette(Display_t *display, const GL_Palette_t *palette)
@@ -478,10 +489,11 @@ void Display_shader(Display_t *display, const char *effect)
         return;
     }
 
-    const size_t length = strlen(FRAGMENT_SHADER_CUSTOM) + strlen(effect) + 1;
-    char *code = malloc(length * sizeof(char));
+    const size_t length = strlen(FRAGMENT_SHADER_CUSTOM) + strlen(effect);
+    char *code = malloc((length + 1) * sizeof(char)); // Add null terminator for the string.
     memcpy(code, FRAGMENT_SHADER_CUSTOM, strlen(FRAGMENT_SHADER_CUSTOM));
     memcpy(code + strlen(FRAGMENT_SHADER_CUSTOM), effect, strlen(effect));
+    code[length] = '\0';
 
     GL_Program_t *program = &display->programs[DISPLAY_PROGRAM_CUSTOM];
 
@@ -511,9 +523,7 @@ void Display_terminate(Display_t *display)
         GL_program_delete(&display->programs[i]);
     }
 
-#ifndef __NO_AUTOFIT__
     deinitialize_framebuffer(display);
-#endif
     GL_terminate();
 
     glfwDestroyWindow(display->window);

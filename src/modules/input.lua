@@ -1,0 +1,10 @@
+events.Input.up = 265
+events.Input.down = 264
+events.Input.left = 263
+events.Input.right = 262
+events.Input.space = 32
+events.Input.enter = 257
+events.Input.escape = 256
+events.Input.z = 90
+events.Input.x = 88
+events.Input.q = 81

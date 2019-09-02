@@ -25,13 +25,14 @@
 
 #include <stdbool.h>
 
+typedef struct lua_State lua_State;
+
 #define MAX_CONFIGURATION_TITLE_LENGTH      128
 
 typedef struct _Configuration {
     char title[MAX_CONFIGURATION_TITLE_LENGTH];
-    int width, height, depth;
+    int width, height, scale;
     bool fullscreen;  // TODO: rename to "windowed"?
-    bool autofit;
     int fps;
     int skippable_frames;
     bool hide_cursor;
@@ -41,6 +42,6 @@ typedef struct _Configuration {
 } Configuration_t;
 
 extern void Configuration_initialize(Configuration_t *configuration);
-extern void Configuration_load(Configuration_t *configuration, const char *pathfile);
+extern void Configuration_parse(lua_State *L, Configuration_t *configuration);
 
 #endif  /* __CONFIGURATION_H__ */

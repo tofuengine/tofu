@@ -61,72 +61,45 @@ static bool update_statistics(Engine_Statistics_t *statistics, double elapsed) {
 
 bool Engine_initialize(Engine_t *engine, const char *base_path)
 {
-    char pathfile[PATH_FILE_MAX];
-    strcpy(pathfile, base_path);
-    strcat(pathfile, CONFIGURATION_FILE_NAME);
-
     Log_initialize();
-
+    Environment_initialize(&engine->environment, base_path, &engine->display);
     Configuration_initialize(&engine->configuration);
-    Configuration_load(&engine->configuration, pathfile);
+
+    bool result = Interpreter_initialize(&engine->interpreter, &engine->configuration, &engine->environment);
+    if (!result) {
+        Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't initialize interpreter");
+        return false;
+    }
 
     Log_configure(engine->configuration.debug);
 
     Display_Configuration_t display_configuration = {
             .width = engine->configuration.width,
             .height = engine->configuration.height,
-            .colors = engine->configuration.debug,
             .fullscreen = engine->configuration.fullscreen,
-#ifndef __NO_AUTOFIT__
-            .autofit = engine->configuration.autofit,
-#endif
+            .scale = engine->configuration.scale,
             .hide_cursor = engine->configuration.hide_cursor,
             .exit_key_enabled = engine->configuration.exit_key_enabled,
         };
-    bool result = Display_initialize(&engine->display, &display_configuration, engine->configuration.title);
+    result = Display_initialize(&engine->display, &display_configuration, engine->configuration.title);
     if (!result) {
         Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't initialize display");
+        Interpreter_terminate(&engine->interpreter);
         return false;
     }
-
-    Environment_initialize(&engine->environment, base_path, &engine->display); // TODO> add environment configuration.
 
     engine->environment.timer_pool = &engine->interpreter.timer_pool; // HACK: inject the timer-pool pointer.
 
-    result = Interpreter_initialize(&engine->interpreter, &engine->environment);
-    if (!result) {
-        Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't initialize interpreter");
-        Display_terminate(&engine->display);
-        return false;
-    }
+    engine->operative = Interpreter_init(&engine->interpreter);
 
     return true;
 }
 
 void Engine_terminate(Engine_t *engine)
 {
-    Interpreter_terminate(&engine->interpreter);
-    Environment_terminate(&engine->environment);
+    Interpreter_terminate(&engine->interpreter); // Terminate the interpreter to unlock all resources.
     Display_terminate(&engine->display);
-}
-
-bool Engine_isRunning(Engine_t *engine)
-{
-    return !engine->environment.should_close && !Display_shouldClose(&engine->display);
-}
-
-static void input_callback(void *parameters)
-{
-    Engine_t *engine = (Engine_t *)parameters;
-
-    Interpreter_input(&engine->interpreter);
-}
-
-static void render_callback(void *parameters)
-{
-    Engine_t *engine = (Engine_t *)parameters;
-
-    Interpreter_render(&engine->interpreter, 0.0); //lag / delta_time);
+    Environment_terminate(&engine->environment);
 }
 
 void Engine_run(Engine_t *engine)
@@ -142,7 +115,7 @@ void Engine_run(Engine_t *engine)
     double previous = glfwGetTime();
     double lag = 0.0;
 
-    while (Engine_isRunning(engine)) {
+    for (bool running = true; running && !engine->environment.quit && !Display_should_close(&engine->display); ) {
         double current = glfwGetTime();
         double elapsed = current - previous;
         previous = current;
@@ -152,20 +125,23 @@ void Engine_run(Engine_t *engine)
             engine->environment.fps = ready ? statistics.fps : 0.0;
         }
 
-        Display_processInput(&engine->display, input_callback, engine);
+        Display_process_input(&engine->display);
+
+        running = running && Interpreter_input(&engine->interpreter); // Lazy evaluate `running`, will avoid calls when error.
 
         lag += elapsed; // Count a maximum amount of skippable frames in order no to stall on slower machines.
         for (int frames = 0; (frames < skippable_frames) && (lag >= delta_time); ++frames) {
-            // TODO: move `TimerPool_update()` here?
-            // TODO: Should the `Tofu` class be hardcoded?
-            Interpreter_update(&engine->interpreter, delta_time);
+            // TODO: To move `TimerPool_update()` here the interpreter should expose the "timerpool_update" callback.
+            running = running && Interpreter_update(&engine->interpreter, delta_time);
             lag -= delta_time;
         }
+
+        Display_render_prepare(&engine->display);
+            running = running && Interpreter_render(&engine->interpreter, lag / delta_time);
+        Display_render_finish(&engine->display);
 
 //        if (used < delta_time) {
 //            glfwWait
 //        }
-
-        Display_render(&engine->display, render_callback, engine);
     }
 }

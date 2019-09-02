@@ -22,6 +22,8 @@
 
 #include "main.h"
 
+#include <stdlib.h>
+
 #include "engine.h"
 #include "file.h"
 #include "log.h"

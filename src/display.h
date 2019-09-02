@@ -57,12 +57,8 @@ typedef enum _Display_Programs_t {
 } Display_Programs_t;
 
 typedef struct _Display_Configuration_t {
-    int width, height;
-    int colors;
+    int width, height, scale;
     bool fullscreen;
-#ifndef __NO_AUTOFIT__
-    bool autofit;
-#endif
     bool hide_cursor;
     bool exit_key_enabled;
 } Display_Configuration_t;
@@ -81,13 +77,11 @@ typedef struct _Display_t {
 
     GLFWwindow *window;
     int window_width, window_height, window_scale;
-#ifndef __NO_AUTOFIT__
     int physical_width, physical_height;
     GL_Quad_t offscreen_source;
     GL_Quad_t offscreen_destination;
     GL_Texture_t offscreen_texture;
     GLuint offscreen_framebuffer;
-#endif
 
     GL_Program_t programs[Display_Programs_t_CountOf];
     size_t program_index;
@@ -97,15 +91,14 @@ typedef struct _Display_t {
     GLfloat background_rgba[4];
 } Display_t;
 
-typedef void (*Display_Callback_t)(void *parameters);
-
 extern bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title);
-extern bool Display_shouldClose(Display_t *display);
-extern void Display_processInput(Display_t *display, const Display_Callback_t callback, void *parameters);
-extern void Display_render(Display_t *display, const Display_Callback_t callback, void *parameters);
+extern bool Display_should_close(Display_t *display);
+extern void Display_process_input(Display_t *display);
+extern void Display_render_prepare(Display_t *display);
+extern void Display_render_finish(Display_t *display);
 extern void Display_palette(Display_t *display, const GL_Palette_t *palette);
 extern void Display_background(Display_t *display, const size_t color);
-extern void Display_shader(Display_t *display, const char *code);
+extern void Display_shader(Display_t *display, const char *code);extern void Display_screen_of_death(Display_t *display);
 extern void Display_terminate(Display_t *display);
 
 #endif  /* __DISPLAY_H__ */

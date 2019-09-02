@@ -39,6 +39,8 @@ typedef struct _Engine_t {
 
     Display_t display;
     Interpreter_t interpreter;
+
+    bool operative;
 } Engine_t;
 
 typedef struct _Engine_Statistics_t {

@@ -36,16 +36,11 @@
 #define __GL_VERSION__                      0x0201
 #define __GSLS_VERSION__                    0x0114
 
-// Fully disable `autofit` behaviour. The configuration setting is not parsed
-// and the offscreen framebuffer is not created. This will ensure the fastest
-// possibile FPS throughput.
-#undef  __NO_AUTOFIT__
-
 // Includes checks inside some crucial functions. Could be useful in DEBUG mode.
 #ifdef DEBUG
-#define __DEFENSIVE_CHECKS__
+  #define __DEFENSIVE_CHECKS__
 #else
-#undef  __DEFENSIVE_CHECKS__
+  #undef  __DEFENSIVE_CHECKS__
 #endif
 
 #define __NO_LINEFEEDS__
@@ -55,12 +50,16 @@
 #undef  __LOWERCASE_ARGB__
 #undef  __DEBUG_TRIANGLES_WINDING__
 #undef  __FIND_NEAREST_COLOR_EUCLIDIAN__
-#define __GRID_REPEAT_CONTENT__
 #undef  __GRID_INTEGER_CELL__
 #undef  __DEBUG_API_CALLS__
-#undef  __DEBUG_VM_CALLS__
+#define __DEBUG_VM_CALLS__
 #undef  __DEBUG_SHADER_CALLS__
 #define __DEBUG_GARBAGE_COLLECTOR__
-#define __REPACK_TIMER_POOL_DURING_GC___
+#define __VM_USE_CUSTOM_TRACEBACK__
+
+// In release build, disable VM calls debug for faster execution.
+#ifdef RELEASE
+  #undef __DEBUG_VM_CALLS__
+#endif
 
 #endif  /* __TOFU_CONFIG_H__ */
