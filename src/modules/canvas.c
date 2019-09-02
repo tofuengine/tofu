@@ -44,6 +44,8 @@ static int canvas_width(lua_State *L);
 static int canvas_height(lua_State *L);
 static int canvas_palette(lua_State *L);
 static int canvas_background(lua_State *L);
+static int canvas_shift(lua_State *L);
+static int canvas_transparent(lua_State *L);
 static int canvas_shader(lua_State *L);
 static int canvas_color(lua_State *L);
 static int canvas_points(lua_State *L);
@@ -125,6 +127,8 @@ static const struct luaL_Reg _canvas_functions[] = {
     { "height", canvas_height },
     { "palette", canvas_palette },
     { "background", canvas_background },
+    { "shift", canvas_shift },
+    { "transparent", canvas_transparent },
     { "shader", canvas_shader },
     { "color", canvas_color },
     { "points", canvas_points },
@@ -233,13 +237,12 @@ static int canvas_palette1(lua_State *L)
         }
 
         lua_pushnil(L); // first key
-        int i = 0; // TODO: define a helper function
-        while (lua_next(L, 1)) {
+        for (int i = 0; lua_next(L, 1); ++i) {
 #if 0
             const char *key_type = lua_typename(L, lua_type(L, -2)); // uses 'key' (at index -2) and 'value' (at index -1)
 #endif
             const char *argb = lua_tostring(L, -1);
-            palette.colors[i++] = GL_palette_parse_color(argb);
+            palette.colors[i] = GL_palette_parse_color(argb);
 
             lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
         }
@@ -279,6 +282,110 @@ static int canvas_background(lua_State *L)
     Display_background(environment->display, color);
 
     return 0;
+}
+
+static int canvas_shift0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 0)
+    LUAX_SIGNATURE_END
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.shift()");
+#endif
+
+    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+
+    Display_shift(environment->display, NULL, NULL, 0);
+
+    return 0;
+}
+
+static int canvas_shift1(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_istable)
+    LUAX_SIGNATURE_END
+#ifdef __DEBUG_API_CALLS__
+    int type = lua_type(L, 1);
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.shift(%d)", type);
+#endif
+
+    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+
+    int count = luaX_count(L, 1);
+
+    size_t from[count];
+    size_t to[count];
+    lua_pushnil(L); // first key
+    for (size_t i = 0; lua_next(L, 1); ++i) {
+        from[i] = lua_tointeger(L, -2);
+        to[i] = lua_tointeger(L, -1);
+
+        lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
+    }
+
+    Display_shift(environment->display, from, to, count);
+
+    return 0;
+}
+
+static int canvas_shift(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(0, canvas_shift0)
+        LUAX_OVERLOAD_ARITY(1, canvas_shift1)
+    LUAX_OVERLOAD_END
+}
+
+static int canvas_transparent0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 0)
+    LUAX_SIGNATURE_END
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.transparent()");
+#endif
+
+    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+
+    Display_transparent(environment->display, NULL, NULL, 0);
+
+    return 0;
+}
+
+static int canvas_transparent1(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_istable)
+    LUAX_SIGNATURE_END
+#ifdef __DEBUG_API_CALLS__
+    int type = lua_type(L, 1);
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.transparent(%d)", type);
+#endif
+
+    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+
+    int count = luaX_count(L, 1);
+
+    size_t color[count];
+    bool is_transparent[count];
+    lua_pushnil(L); // first key
+    for (size_t i = 0; lua_next(L, 1); ++i) {
+        color[i] = lua_tointeger(L, -2);
+        is_transparent[i] = lua_toboolean(L, -1) ? true : false;
+
+        lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
+    }
+
+    Display_transparent(environment->display, color, is_transparent, count);
+
+    return 0;
+}
+
+static int canvas_transparent(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(0, canvas_transparent0)
+        LUAX_OVERLOAD_ARITY(1, canvas_transparent1)
+    LUAX_OVERLOAD_END
 }
 
 static int canvas_shader(lua_State *L)
