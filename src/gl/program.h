@@ -32,6 +32,7 @@ typedef struct _GL_Program_t {
 } GL_Program_t;
 
 typedef enum _GL_Program_Uniforms_t {
+    GL_PROGRAM_UNIFORM_BOOL,
     GL_PROGRAM_UNIFORM_INT,
     GL_PROGRAM_UNIFORM_FLOAT,
     GL_PROGRAM_UNIFORM_VEC2,

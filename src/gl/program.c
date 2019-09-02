@@ -127,6 +127,7 @@ void GL_program_send(const GL_Program_t *program, const char *id, GL_Program_Uni
     }
     glUseProgram(program->id);
     switch (type) {
+        case GL_PROGRAM_UNIFORM_BOOL: { glUniform1iv(location, count, value); } break;
         case GL_PROGRAM_UNIFORM_INT: { glUniform1iv(location, count, value); } break;
         case GL_PROGRAM_UNIFORM_FLOAT: { glUniform1fv(location, count, value); } break;
         case GL_PROGRAM_UNIFORM_VEC2: { glUniform2fv(location, count, value); } break;

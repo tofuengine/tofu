@@ -58,6 +58,8 @@ typedef struct _Program_Data_t {
     "uniform float u_time;\n" \
     "\n" \
     "uniform vec3 u_palette[256];\n" \
+    "uniform int u_shifting[256];\n" \
+    "uniform bool u_transparent[256];\n" \
     "\n" \
     "vec4 palette(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {\n" \
     "    // Texel color fetching from texture sampler\n" \
@@ -66,6 +68,14 @@ typedef struct _Program_Data_t {
     "    // Convert the (normalized) texel color RED component (GB would work, too)\n" \
     "    // to the palette index by scaling up from [0, 1] to [0, 255].\n" \
     "    int index = int(floor((texel.r * 255.0) + 0.5));\n" \
+    "\n" \
+    "    // Re-index the current color according to the shifting table.\n" \
+    "    index = u_shifting[index];\n" \
+    "\n" \
+    "    // If the final color index is transparent, emit a transparent pixel.\n" \
+    "    if (u_transparent[index]) {\n" \
+    "        return vec4(0.0);\n" \
+    "    }\n" \
     "\n" \
     "    // Pick the palette color as final fragment color (retain the texel alpha value).\n" \
     "    // Note: palette components are pre-normalized in the OpenGL range [0, 1].\n" \
@@ -362,6 +372,8 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     GL_Palette_t palette; // Initial gray-scale palette.
     GL_palette_greyscale(&palette, GL_MAX_PALETTE_COLORS);
     Display_palette(display, &palette);
+    Display_shift(display, NULL, NULL, 0);
+    Display_transparent(display, NULL, NULL, 0);
 
     return true;
 }
@@ -467,6 +479,45 @@ void Display_palette(Display_t *display, const GL_Palette_t *palette)
     GL_palette_normalize_color(palette->colors[display->background_index], display->background_rgba); // Update current bg-color.
 
     Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> palette updated");
+}
+
+void Display_shift(Display_t *display, const size_t *from, const size_t *to, size_t count)
+{
+    if (from == NULL) {
+        for (size_t i = 0; i < MAX_PALETTE_COLORS; ++i) {
+            display->shifting[i] = i;
+        }
+    } else {
+        for (size_t i = 0; i < count; ++i) {
+            display->shifting[from[i]] = to[i];
+        }
+    }
+
+    GLint shifting[MAX_PALETTE_COLORS];
+    for (size_t i = 0; i < MAX_PALETTE_COLORS; ++i) {
+        shifting[i] = display->shifting[i];
+    }
+    GL_program_send(&display->programs[DISPLAY_PROGRAM_PALETTE], "u_shifting", GL_PROGRAM_UNIFORM_INT, MAX_PALETTE_COLORS, shifting);
+}
+
+void Display_transparent(Display_t *display, const size_t *color, const bool *is_transparent, size_t count)
+{
+    if (color == NULL) {
+        for (size_t i = 0; i < MAX_PALETTE_COLORS; ++i) {
+            display->transparent[i] = false;
+        }
+        display->transparent[0] = true;
+    } else {
+        for (size_t i = 0; i < count; ++i) {
+            display->transparent[color[i]] = is_transparent[i];
+        }
+    }
+
+    GLint transparent[MAX_PALETTE_COLORS];
+    for (size_t i = 0; i < MAX_PALETTE_COLORS; ++i) {
+        transparent[i] = display->transparent[i];
+    }
+    GL_program_send(&display->programs[DISPLAY_PROGRAM_PALETTE], "u_transparent", GL_PROGRAM_UNIFORM_INT, MAX_PALETTE_COLORS, transparent);
 }
 
 void Display_background(Display_t *display, const size_t color)

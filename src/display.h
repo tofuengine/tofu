@@ -87,6 +87,8 @@ typedef struct _Display_t {
     size_t program_index;
 
     GL_Palette_t palette;
+    size_t shifting[GL_MAX_PALETTE_COLORS];
+    bool transparent[GL_MAX_PALETTE_COLORS];
     int background_index;
     GLfloat background_rgba[4];
 } Display_t;
@@ -97,8 +99,10 @@ extern void Display_process_input(Display_t *display);
 extern void Display_render_prepare(Display_t *display);
 extern void Display_render_finish(Display_t *display);
 extern void Display_palette(Display_t *display, const GL_Palette_t *palette);
+extern void Display_shift(Display_t *display, const size_t *from, const size_t *to, size_t count);
+extern void Display_transparent(Display_t *display, const size_t *color, const bool *is_transparent, size_t count);
 extern void Display_background(Display_t *display, const size_t color);
-extern void Display_shader(Display_t *display, const char *code);extern void Display_screen_of_death(Display_t *display);
+extern void Display_shader(Display_t *display, const char *code);
 extern void Display_terminate(Display_t *display);
 
 #endif  /* __DISPLAY_H__ */
