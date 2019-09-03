@@ -65,7 +65,7 @@ int bank_loader(lua_State *L)
     return luaX_newmodule(L, NULL, _bank_functions, _bank_constants, 1, LUAX_CLASS(Bank_Class_t));
 }
 
-static void to_indexed_atlas_callback(void *parameters, void *data, int width, int height) // TODO: convert image with a shader.
+static void to_indexed_atlas_callback(void *parameters, void *data, int width, int height)
 {
     const GL_Palette_t *palette = (const GL_Palette_t *)parameters;
 
