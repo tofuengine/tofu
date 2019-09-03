@@ -59,27 +59,20 @@ typedef struct _Program_Data_t {
     "\n" \
     "uniform vec3 u_palette[256];\n" \
     "uniform int u_shifting[256];\n" \
-    "uniform bool u_transparent[256];\n" \
+    "uniform float u_transparency[256];\n" \
     "\n" \
     "vec4 palette(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {\n" \
     "    // Texel color fetching from texture sampler\n" \
     "    vec4 texel = texture2D(texture, texture_coords) * color;\n" \
     "\n" \
     "    // Convert the (normalized) texel color RED component (GB would work, too)\n" \
-    "    // to the palette index by scaling up from [0, 1] to [0, 255].\n" \
-    "    int index = int(floor((texel.r * 255.0) + 0.5));\n" \
-    "\n" \
-    "    // Re-index the current color according to the shifting table.\n" \
-    "    index = u_shifting[index];\n" \
-    "\n" \
-    "    // If the final color index is transparent, emit a transparent pixel.\n" \
-    "    if (u_transparent[index]) {\n" \
-    "        return vec4(0.0);\n" \
-    "    }\n" \
+    "    // to the palette index by scaling up from [0, 1] to [0, 255], then re-index it\n" \
+    "    // according to the shifting table.\n" \
+    "    int index = u_shifting[int(floor((texel.r * 255.0) + 0.5))];\n" \
     "\n" \
     "    // Pick the palette color as final fragment color (retain the texel alpha value).\n" \
     "    // Note: palette components are pre-normalized in the OpenGL range [0, 1].\n" \
-    "    return vec4(u_palette[index].rgb, texel.a);\n" \
+    "    return vec4(u_palette[index].rgb, u_transparency[index]);\n" \
     "}\n" \
     "\n" \
     "void main()\n" \
@@ -500,16 +493,16 @@ void Display_transparent(Display_t *display, const size_t *color, const bool *is
 {
     if (color == NULL) {
         for (size_t i = 0; i < MAX_PALETTE_COLORS; ++i) {
-            display->transparent[i] = false;
+            display->transparency[i] = 1.0; // Opaque.
         }
-        display->transparent[0] = true;
+        display->transparency[0] = 0.0; // Transparent.
     } else {
         for (size_t i = 0; i < count; ++i) {
-            display->transparent[color[i]] = is_transparent[i];
+            display->transparency[color[i]] = is_transparent[i] ? 0.0f : 1.0f;
         }
     }
 
-    GL_program_send(&display->programs[DISPLAY_PROGRAM_PALETTE], "u_transparent", GL_PROGRAM_UNIFORM_INT, MAX_PALETTE_COLORS, display->transparent);
+    GL_program_send(&display->programs[DISPLAY_PROGRAM_PALETTE], "u_transparency", GL_PROGRAM_UNIFORM_FLOAT, MAX_PALETTE_COLORS, display->transparency);
 }
 
 void Display_background(Display_t *display, const size_t color)

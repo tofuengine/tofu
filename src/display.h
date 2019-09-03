@@ -88,7 +88,7 @@ typedef struct _Display_t {
 
     GL_Palette_t palette;
     GLint shifting[GL_MAX_PALETTE_COLORS];
-    GLint transparent[GL_MAX_PALETTE_COLORS];
+    GLfloat transparency[GL_MAX_PALETTE_COLORS];
     int background_index;
     GLfloat background_rgba[4];
 } Display_t;
