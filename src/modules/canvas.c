@@ -52,7 +52,6 @@ static int canvas_points(lua_State *L);
 static int canvas_polyline(lua_State *L);
 static int canvas_strip(lua_State *L);
 static int canvas_fan(lua_State *L);
-static int canvas_circle(lua_State *L);
 
 static const char _canvas_script[] =
     "local Canvas = {}\n"
@@ -91,33 +90,44 @@ static const char _canvas_script[] =
     "end\n"
     "\n"
     "function Canvas.circle(mode, cx, cy, radius, color, segments)\n"
-    "  segments = segments or 128\n"
-    "  local step = (2 * math.pi) / segments\n"
+    "  local radius_squared = radius * radius\n"
+    "  local points = {}\n"
     "  if mode == \"line\" then\n"
-    "    local angle = 0\n"
-    "    local vertices = {}\n"
-    "    for i = 0, segments do\n"
-    "      angle = angle + step\n"
-    "      y = math.sin(angle) * radius\n"
-    "      x = math.cos(angle) * radius\n"
-    "      table.insert(vertices, cx + x)\n"
-    "      table.insert(vertices, cy + y)\n"
+    "    local steps = radius * math.cos(math.pi / 4.0);\n"
+    "    for x = 0, steps do\n"
+    "      local y = math.sqrt(radius_squared - (x * x))\n"
+    "\n"
+    "      table.insert(points, cx + x)\n"
+    "      table.insert(points, cy + y)\n"
+    "      table.insert(points, cx + x)\n"
+    "      table.insert(points, cy - y)\n"
+    "      table.insert(points, cx - x)\n"
+    "      table.insert(points, cy + y)\n"
+    "      table.insert(points, cx - x)\n"
+    "      table.insert(points, cy - y)\n"
+    "\n"
+    "      table.insert(points, cx + y)\n"
+    "      table.insert(points, cy + x)\n"
+    "      table.insert(points, cx + y)\n"
+    "      table.insert(points, cy - x)\n"
+    "      table.insert(points, cx - y)\n"
+    "      table.insert(points, cy + x)\n"
+    "      table.insert(points, cx - y)\n"
+    "      table.insert(points, cy - x)\n"
     "    end\n"
-    "    Canvas.polyline(vertices, color)\n"
     "  else\n"
-    "    local angle = 0\n"
-    "    local vertices = {}\n"
-    "    table.insert(vertices, cx)\n"
-    "    table.insert(vertices, cy)\n"
-    "    for i = 0, segments do\n"
-    "      angle = angle + step\n"
-    "      y = math.sin(angle) * radius\n"
-    "      x = math.cos(angle) * radius\n"
-    "      table.insert(vertices, cx + x)\n"
-    "      table.insert(vertices, cy + y)\n"
+    "    for y = -radius, radius do\n"
+    "      local y_squared = y * y\n"
+    "      for x = -radius, radius do\n"
+    "        local x_squared = x * x\n"
+    "        if (x_squared + y_squared) <= radius_squared then\n"
+    "          table.insert(points, cx + x)\n"
+    "          table.insert(points, cy + y)\n"
+    "        end\n"
+    "      end\n"
     "    end\n"
-    "    Canvas.fan(vertices, color)\n"
     "  end\n"
+    "  Canvas.points(points, color)\n"
     "end\n"
     "\n"
     "return Canvas\n"
@@ -136,7 +146,6 @@ static const struct luaL_Reg _canvas_functions[] = {
     { "polyline", canvas_polyline },
     { "strip", canvas_strip },
     { "fan", canvas_fan },
-    { "circle", canvas_circle },
     { NULL, NULL }
 };
 
@@ -330,11 +339,32 @@ static int canvas_shift1(lua_State *L)
     return 0;
 }
 
+static int canvas_shift2(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 2)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+    LUAX_SIGNATURE_END
+    size_t from = lua_tointeger(L, 1);
+    size_t to = lua_tointeger(L, 2);
+#ifdef __DEBUG_API_CALLS__
+    int type = lua_type(L, 1);
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.shift(%d, %d)", from, to);
+#endif
+
+    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+
+    Display_shift(environment->display, &from, &to, 1);
+
+    return 0;
+}
+
 static int canvas_shift(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(0, canvas_shift0)
         LUAX_OVERLOAD_ARITY(1, canvas_shift1)
+        LUAX_OVERLOAD_ARITY(2, canvas_shift2)
     LUAX_OVERLOAD_END
 }
 
@@ -382,11 +412,31 @@ static int canvas_transparent1(lua_State *L)
     return 0;
 }
 
+static int canvas_transparent2(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 2)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isboolean)
+    LUAX_SIGNATURE_END
+    size_t color = lua_tointeger(L, 1);
+    bool transparent = lua_toboolean(L, 2);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.transparent(%d, %d)", color, transparent);
+#endif
+
+    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+
+    Display_transparent(environment->display, &color, &transparent, 1);
+
+    return 0;
+}
+
 static int canvas_transparent(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(0, canvas_transparent0)
         LUAX_OVERLOAD_ARITY(1, canvas_transparent1)
+        LUAX_OVERLOAD_ARITY(2, canvas_transparent2)
     LUAX_OVERLOAD_END
 }
 
@@ -575,76 +625,6 @@ static int canvas_fan(lua_State *L)
     }
 
     GL_primitive_fan(points, count, (GL_Color_t){ color, color, color, 255 });
-
-    return 0;
-}
-
-static int canvas_circle(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L, 5)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
-    LUAX_SIGNATURE_END
-    const char *mode = lua_tostring(L, 1);
-    int cx = (int)lua_tonumber(L, 2); // FIXME: float values?
-    int cy = (int)lua_tonumber(L, 3);
-    int radius = (int)lua_tonumber(L, 4);
-    int color = lua_tointeger(L, 5);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.circle(%s, %f, %f, %d, %d)", mode, cx, cy, radius, color);
-#endif
-
-    if (mode[0] == 'f') { // Implementing naive `O(n^2)` algorithm.
-        int radius_squared = (radius * radius);
-
-        size_t count = 4 * radius_squared;
-        GL_Point_t points[count];
-
-        int k = 0;
-        for (int y = -radius; y <= radius; y++) {
-            int y_squared = y * y;
-            for (int x = -radius; x <= radius; x++) {
-                int x_squared = x * x;
-                if ((x_squared + y_squared) <= radius_squared) {
-                    points[k++] = (GL_Point_t){
-                            .x = (GLfloat)(cx + x) + OPENGL_PIXEL_OFFSET, .y = (GLfloat)(cy + y) + OPENGL_PIXEL_OFFSET
-                        };
-                }
-            }
-        }
-
-        GL_primitive_points(points, k, (GL_Color_t){ color, color, color, 255 });
-    } else
-    if (mode[0] == 'l') { // Octant-based Bresenham circle drawing algorithm.
-        int radius_squared = (radius * radius);
-
-        int steps = (int)(radius * cosf((float)M_PI / 4.0f));
-
-        size_t count = (steps + 1) * 8;
-        GL_Point_t points[count];
-
-        int k = 0;
-        for (int x = 0; x <= steps; x++) {
-            int y = (int)sqrt((double)radius_squared - (x * x));
-
-            points[k++] = (GL_Point_t){ (GLfloat)(cx + x) + OPENGL_PIXEL_OFFSET, (GLfloat)(cy + y) + OPENGL_PIXEL_OFFSET };
-            points[k++] = (GL_Point_t){ (GLfloat)(cx + x) + OPENGL_PIXEL_OFFSET, (GLfloat)(cy - y) + OPENGL_PIXEL_OFFSET };
-            points[k++] = (GL_Point_t){ (GLfloat)(cx - x) + OPENGL_PIXEL_OFFSET, (GLfloat)(cy + y) + OPENGL_PIXEL_OFFSET };
-            points[k++] = (GL_Point_t){ (GLfloat)(cx - x) + OPENGL_PIXEL_OFFSET, (GLfloat)(cy - y) + OPENGL_PIXEL_OFFSET };
- 
-            points[k++] = (GL_Point_t){ (GLfloat)(cx + y) + OPENGL_PIXEL_OFFSET, (GLfloat)(cy + x) + OPENGL_PIXEL_OFFSET };
-            points[k++] = (GL_Point_t){ (GLfloat)(cx + y) + OPENGL_PIXEL_OFFSET, (GLfloat)(cy - x) + OPENGL_PIXEL_OFFSET };
-            points[k++] = (GL_Point_t){ (GLfloat)(cx - y) + OPENGL_PIXEL_OFFSET, (GLfloat)(cy + x) + OPENGL_PIXEL_OFFSET };
-            points[k++] = (GL_Point_t){ (GLfloat)(cx - y) + OPENGL_PIXEL_OFFSET, (GLfloat)(cy - x) + OPENGL_PIXEL_OFFSET };
-        }
-
-        GL_primitive_points(points, count, (GL_Color_t){ color, color, color, 255 });
-    } else {
-        luaL_error(L, "undefined mode for circle: %s", mode);
-    }
 
     return 0;
 }

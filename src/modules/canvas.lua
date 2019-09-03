@@ -33,4 +33,45 @@ function Canvas.square(mode, x, y, size, color)
   Canvas.rectangle(mode, x, y, size, size, color)
 end
 
+function Canvas.circle(mode, cx, cy, radius, color, segments)
+  local radius_squared = radius * radius
+  local points = {}
+  if mode == line then
+    local steps = radius * math.cos(math.pi / 4.0);
+    for x = 0, steps do
+      local y = math.sqrt(radius_squared - (x * x))
+
+      table.insert(points, cx + x)
+      table.insert(points, cy + y)
+      table.insert(points, cx + x)
+      table.insert(points, cy - y)
+      table.insert(points, cx - x)
+      table.insert(points, cy + y)
+      table.insert(points, cx - x)
+      table.insert(points, cy - y)
+
+      table.insert(points, cx + y)
+      table.insert(points, cy + x)
+      table.insert(points, cx + y)
+      table.insert(points, cy - x)
+      table.insert(points, cx - y)
+      table.insert(points, cy + x)
+      table.insert(points, cx - y)
+      table.insert(points, cy - x)
+    end
+  else
+    for y = -radius, radius do
+      local y_squared = y * y
+      for x = -radius, radius do
+        local x_squared = x * x
+        if (x_squared + y_squared) <= radius_squared then
+          table.insert(points, cx + x)
+          table.insert(points, cy + y)
+        end
+      end
+    end
+  end
+  Canvas.points(points, color)
+end
+
 return Canvas
