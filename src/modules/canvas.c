@@ -52,6 +52,7 @@ static int canvas_points(lua_State *L);
 static int canvas_polyline(lua_State *L);
 static int canvas_strip(lua_State *L);
 static int canvas_fan(lua_State *L);
+static int canvas_circle(lua_State *L);
 
 static const char _canvas_script[] =
     "local Canvas = {}\n"
@@ -135,6 +136,7 @@ static const struct luaL_Reg _canvas_functions[] = {
     { "polyline", canvas_polyline },
     { "strip", canvas_strip },
     { "fan", canvas_fan },
+    { "circle", canvas_circle },
     { NULL, NULL }
 };
 
@@ -573,6 +575,76 @@ static int canvas_fan(lua_State *L)
     }
 
     GL_primitive_fan(points, count, (GL_Color_t){ color, color, color, 255 });
+
+    return 0;
+}
+
+static int canvas_circle(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 5)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+    LUAX_SIGNATURE_END
+    const char *mode = lua_tostring(L, 1);
+    int cx = (int)lua_tonumber(L, 2); // FIXME: float values?
+    int cy = (int)lua_tonumber(L, 3);
+    int radius = (int)lua_tonumber(L, 4);
+    int color = lua_tointeger(L, 5);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.circle(%s, %f, %f, %d, %d)", mode, cx, cy, radius, color);
+#endif
+
+    if (mode[0] == 'f') { // Implementing naive `O(n^2)` algorithm.
+        int radius_squared = (radius * radius);
+
+        size_t count = 4 * radius_squared;
+        GL_Point_t points[count];
+
+        int k = 0;
+        for (int y = -radius; y <= radius; y++) {
+            int y_squared = y * y;
+            for (int x = -radius; x <= radius; x++) {
+                int x_squared = x * x;
+                if ((x_squared + y_squared) <= radius_squared) {
+                    points[k++] = (GL_Point_t){
+                            .x = (GLfloat)(cx + x) + OPENGL_PIXEL_OFFSET, .y = (GLfloat)(cy + y) + OPENGL_PIXEL_OFFSET
+                        };
+                }
+            }
+        }
+
+        GL_primitive_points(points, k, (GL_Color_t){ color, color, color, 255 });
+    } else
+    if (mode[0] == 'l') { // Octant-based Bresenham circle drawing algorithm.
+        int radius_squared = (radius * radius);
+
+        int steps = (int)(radius * cosf((float)M_PI / 4.0f));
+
+        size_t count = (steps + 1) * 8;
+        GL_Point_t points[count];
+
+        int k = 0;
+        for (int x = 0; x <= steps; x++) {
+            int y = (int)sqrt((double)radius_squared - (x * x));
+
+            points[k++] = (GL_Point_t){ (GLfloat)(cx + x) + OPENGL_PIXEL_OFFSET, (GLfloat)(cy + y) + OPENGL_PIXEL_OFFSET };
+            points[k++] = (GL_Point_t){ (GLfloat)(cx + x) + OPENGL_PIXEL_OFFSET, (GLfloat)(cy - y) + OPENGL_PIXEL_OFFSET };
+            points[k++] = (GL_Point_t){ (GLfloat)(cx - x) + OPENGL_PIXEL_OFFSET, (GLfloat)(cy + y) + OPENGL_PIXEL_OFFSET };
+            points[k++] = (GL_Point_t){ (GLfloat)(cx - x) + OPENGL_PIXEL_OFFSET, (GLfloat)(cy - y) + OPENGL_PIXEL_OFFSET };
+ 
+            points[k++] = (GL_Point_t){ (GLfloat)(cx + y) + OPENGL_PIXEL_OFFSET, (GLfloat)(cy + x) + OPENGL_PIXEL_OFFSET };
+            points[k++] = (GL_Point_t){ (GLfloat)(cx + y) + OPENGL_PIXEL_OFFSET, (GLfloat)(cy - x) + OPENGL_PIXEL_OFFSET };
+            points[k++] = (GL_Point_t){ (GLfloat)(cx - y) + OPENGL_PIXEL_OFFSET, (GLfloat)(cy + x) + OPENGL_PIXEL_OFFSET };
+            points[k++] = (GL_Point_t){ (GLfloat)(cx - y) + OPENGL_PIXEL_OFFSET, (GLfloat)(cy - x) + OPENGL_PIXEL_OFFSET };
+        }
+
+        GL_primitive_points(points, count, (GL_Color_t){ color, color, color, 255 });
+    } else {
+        luaL_error(L, "undefined mode for circle: %s", mode);
+    }
 
     return 0;
 }
