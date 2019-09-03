@@ -52,6 +52,10 @@ spritestack: $(TARGET)
 	@echo "Launching Sprite-Stack application!"
 	./$(TARGET) ./demos/spritestack
 
+palette: $(TARGET)
+	@echo "Launching Palette application!"
+	./$(TARGET) ./demos/palette
+
 .PHONY: clean
 clean:
 	@$(RM) $(OBJECTS)
