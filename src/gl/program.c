@@ -128,8 +128,10 @@ void GL_program_prepare(GL_Program_t *program, const char *ids[], size_t count)
     if (program->locations) {
         free(program->locations);
         program->locations = NULL;
+        Log_write(LOG_LEVELS_DEBUG, "<GL> shader uniforms LUT for program #%d deleted", program->id);
     }
     if (count == 0) {
+        Log_write(LOG_LEVELS_DEBUG, "<GL> no uniforms to prepare for program #%d", program->id);
         return;
     }
     program->locations = malloc(count * sizeof(GLuint));
@@ -140,7 +142,12 @@ void GL_program_prepare(GL_Program_t *program, const char *ids[], size_t count)
 
 void GL_program_send(const GL_Program_t *program, size_t index, GL_Program_Uniforms_t type, size_t count, const void *value)
 {
-    // TODO: add safety checks!
+#ifdef __DEFENSIVE_CHECKS__
+    if (!program->locations) {
+        Log_write(LOG_LEVELS_WARNING, "<GL> program uniforms are not prepared");
+        return;
+    }
+#endif
     GLint location = program->locations[index];
     if (location == -1) {
 #ifdef __DEBUG_SHADER_CALLS__
