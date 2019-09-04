@@ -128,6 +128,25 @@ static int min(int a, int b)
     return a < b ? a : b;
 }
 
+typedef enum _Uniforms_t {
+    UNIFORM_TEXTURE,
+    UNIFORM_RESOLUTION,
+    UNIFORM_TIME,
+    UNIFORM_PALETTE,
+    UNIFORM_SHIFTING,
+    UNIFORM_TRANSPARENCY,
+    Uniforms_t_CountOf
+} Uniforms_t;
+
+static const char *_uniforms[Uniforms_t_CountOf] = {
+    "u_texture0",
+    "u_resolution",
+    "u_time",
+    "u_palette",
+    "u_shifting",
+    "u_transparency",
+};
+
 static bool compute_size(Display_t *display, const Display_Configuration_t *configuration, GL_Point_t *position)
 {
     int display_width, display_height;
@@ -356,9 +375,11 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
             return false;
         }
 
-        GL_program_send(&display->programs[i], "u_texture0", GL_PROGRAM_UNIFORM_TEXTURE, 1, _texture_id_0); // Redundant
+        GL_program_prepare(&display->programs[i], _uniforms, Uniforms_t_CountOf);
+
+        GL_program_send(&display->programs[i], UNIFORM_TEXTURE, GL_PROGRAM_UNIFORM_TEXTURE, 1, _texture_id_0); // Redundant
         GLfloat resolution[] = { (GLfloat)display->window_width, (GLfloat)display->window_height };
-        GL_program_send(&display->programs[i], "u_resolution", GL_PROGRAM_UNIFORM_VEC2, 1, resolution);
+        GL_program_send(&display->programs[i], UNIFORM_RESOLUTION, GL_PROGRAM_UNIFORM_VEC2, 1, resolution);
     }
     display->program_index = DISPLAY_PROGRAM_PASSTHRU; // Use pass-thru at the beginning.
 
@@ -454,7 +475,7 @@ void Display_render_finish(Display_t *display)
 #endif
 
     GLfloat time[] = { (GLfloat)glfwGetTime() };
-    GL_program_send(&display->programs[display->program_index], "u_time", GL_PROGRAM_UNIFORM_FLOAT, 1, time);
+    GL_program_send(&display->programs[display->program_index], UNIFORM_TIME, GL_PROGRAM_UNIFORM_FLOAT, 1, time);
     GL_program_use(&display->programs[display->program_index]);
 
     GL_texture_blit_fast(&display->offscreen_texture, display->offscreen_source, display->offscreen_destination, (GL_Color_t){ 255, 255, 255, 255 });
@@ -464,9 +485,9 @@ void Display_render_finish(Display_t *display)
 
 void Display_palette(Display_t *display, const GL_Palette_t *palette)
 {
-    GLfloat colors[MAX_PALETTE_COLORS * 3] = {};
+    GLfloat colors[GL_MAX_PALETTE_COLORS * 3] = {};
     GL_palette_normalize(palette, colors);
-    GL_program_send(&display->programs[DISPLAY_PROGRAM_PALETTE], "u_palette", GL_PROGRAM_UNIFORM_VEC3, MAX_PALETTE_COLORS, colors);
+    GL_program_send(&display->programs[DISPLAY_PROGRAM_PALETTE], UNIFORM_PALETTE, GL_PROGRAM_UNIFORM_VEC3, GL_MAX_PALETTE_COLORS, colors);
     display->palette = *palette;
 
     GL_palette_normalize_color(palette->colors[display->background_index], display->background_rgba); // Update current bg-color.
@@ -477,7 +498,7 @@ void Display_palette(Display_t *display, const GL_Palette_t *palette)
 void Display_shift(Display_t *display, const size_t *from, const size_t *to, size_t count)
 {
     if (from == NULL) {
-        for (size_t i = 0; i < MAX_PALETTE_COLORS; ++i) {
+        for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
             display->shifting[i] = i;
         }
     } else {
@@ -486,13 +507,13 @@ void Display_shift(Display_t *display, const size_t *from, const size_t *to, siz
         }
     }
 
-    GL_program_send(&display->programs[DISPLAY_PROGRAM_PALETTE], "u_shifting", GL_PROGRAM_UNIFORM_INT, MAX_PALETTE_COLORS, display->shifting);
+    GL_program_send(&display->programs[DISPLAY_PROGRAM_PALETTE], UNIFORM_SHIFTING, GL_PROGRAM_UNIFORM_INT, GL_MAX_PALETTE_COLORS, display->shifting);
 }
 
 void Display_transparent(Display_t *display, const size_t *color, const bool *is_transparent, size_t count)
 {
     if (color == NULL) {
-        for (size_t i = 0; i < MAX_PALETTE_COLORS; ++i) {
+        for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
             display->transparency[i] = 1.0; // Opaque.
         }
         display->transparency[0] = 0.0; // Transparent.
@@ -502,7 +523,7 @@ void Display_transparent(Display_t *display, const size_t *color, const bool *is
         }
     }
 
-    GL_program_send(&display->programs[DISPLAY_PROGRAM_PALETTE], "u_transparency", GL_PROGRAM_UNIFORM_FLOAT, MAX_PALETTE_COLORS, display->transparency);
+    GL_program_send(&display->programs[DISPLAY_PROGRAM_PALETTE], UNIFORM_TRANSPARENCY, GL_PROGRAM_UNIFORM_FLOAT, GL_MAX_PALETTE_COLORS, display->transparency);
 }
 
 void Display_background(Display_t *display, const size_t color)
@@ -536,9 +557,11 @@ void Display_shader(Display_t *display, const char *effect)
     if (GL_program_create(program) &&
         GL_program_attach(program, VERTEX_SHADER, GL_PROGRAM_SHADER_VERTEX) &&
         GL_program_attach(program, code, GL_PROGRAM_SHADER_FRAGMENT)) {
-        GL_program_send(program, "u_texture0", GL_PROGRAM_UNIFORM_TEXTURE, 1, _texture_id_0); // Redundant
+        GL_program_prepare(program, _uniforms, Uniforms_t_CountOf);
+
+        GL_program_send(program, UNIFORM_TEXTURE, GL_PROGRAM_UNIFORM_TEXTURE, 1, _texture_id_0); // Redundant
         GLfloat resolution[] = { (GLfloat)display->window_width, (GLfloat)display->window_height };
-        GL_program_send(program, "u_resolution", GL_PROGRAM_UNIFORM_VEC2, 1, resolution);
+        GL_program_send(program, UNIFORM_RESOLUTION, GL_PROGRAM_UNIFORM_VEC2, 1, resolution);
 
         display->program_index = DISPLAY_PROGRAM_CUSTOM;
         Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> switched to custom shader");

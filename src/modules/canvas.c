@@ -244,7 +244,7 @@ static int canvas_palette1(lua_State *L)
 
         if (palette.count > GL_MAX_PALETTE_COLORS) {
             Log_write(LOG_LEVELS_WARNING, "<CANVAS> palette has too many colors (%d) - clamping", palette.count);
-            palette.count = MAX_PALETTE_COLORS;
+            palette.count = GL_MAX_PALETTE_COLORS;
         }
 
         lua_pushnil(L); // first key

@@ -28,8 +28,6 @@
 #define FPS_AVERAGE_SAMPLES         128
 #define FPS_STATISTICS_RESOLUTION   10
 
-#define MAX_PALETTE_COLORS          256
-
 #define GARBAGE_COLLECTION_PERIOD   60.0
 
 // Behavioural MACROs are uses the "__" prefix/suffix.
