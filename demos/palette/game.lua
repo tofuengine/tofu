@@ -46,6 +46,13 @@ function Game:render(ratio)
       local y = Canvas.height() * (math.sin(self.time * 1.5 + i * 0.250 + j * 0.125) + 1) * 0.5
       Canvas.shift(1, color)
       self.bank:blit(index, x, y)
+      -- local cluster = {}
+      -- for k = 0, 15 do
+      --   table.insert(cluster, math.random(-7, 7) + x)
+      --   table.insert(cluster, math.random(-7, 7) + y)
+      --   table.insert(cluster, color)
+      -- end
+      -- Canvas.cluster(cluster)
       end
   end
 
