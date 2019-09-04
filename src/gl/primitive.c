@@ -123,3 +123,14 @@ void GL_primitive_fan(const GL_Point_t *points, const size_t count, const GL_Col
         }
     glEnd();
 }
+
+void GL_primitive_cluster(const GL_Point_t *points, const GL_Color_t *colors, const size_t count)
+{
+    glBindTexture(GL_TEXTURE_2D, _default_texture_id);
+    glBegin(GL_POINTS);
+        for (size_t i = 0; i < count; ++i) {
+            glColor4ub(colors[i].r, colors[i].g, colors[i].b, colors[i].a);
+            glVertex2f(points[i].x, points[i].y);
+        }
+    glEnd();
+}

@@ -49,6 +49,7 @@ static int canvas_transparent(lua_State *L);
 static int canvas_shader(lua_State *L);
 static int canvas_color(lua_State *L);
 static int canvas_points(lua_State *L);
+static int canvas_cluster(lua_State *L);
 static int canvas_polyline(lua_State *L);
 static int canvas_strip(lua_State *L);
 static int canvas_fan(lua_State *L);
@@ -143,6 +144,7 @@ static const struct luaL_Reg _canvas_functions[] = {
     { "shader", canvas_shader },
     { "color", canvas_color },
     { "points", canvas_points },
+    { "cluster", canvas_cluster },
     { "polyline", canvas_polyline },
     { "strip", canvas_strip },
     { "fan", canvas_fan },
@@ -517,6 +519,45 @@ static int canvas_points(lua_State *L)
     }
 
     GL_primitive_points(points, count, (GL_Color_t){ color, color, color, 255 });
+
+    return 0;
+}
+
+static int canvas_cluster(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_istable)
+    LUAX_SIGNATURE_END
+    int amount = lua_rawlen(L, 1);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.cluster(%d)", amount);
+#endif
+
+    const size_t count = amount / 3;
+    if (count == 0) {
+        Log_write(LOG_LEVELS_INFO, "<CANVAS> cluster-sequence as no elements");
+        return 0;
+    }
+
+    double array[amount];
+    luaX_getnumberarray(L, 1, array);
+
+    GL_Point_t points[count];
+    GL_Color_t colors[count];
+    for (size_t i = 0; i < count; ++i) {
+        double x = array[(i * 3)];
+        double y = array[(i * 3) + 1];
+        double c = array[(i * 3) + 2];
+
+        points[i] = (GL_Point_t){
+                .x = (GLfloat)x + OPENGL_PIXEL_OFFSET, .y = (GLfloat)y + OPENGL_PIXEL_OFFSET
+            };
+        colors[i] = (GL_Color_t){
+                (GLubyte)c, (GLubyte)c, (GLubyte)c, 255
+            };
+    }
+
+    GL_primitive_cluster(points, colors, count);
 
     return 0;
 }
