@@ -38,7 +38,7 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 #include <limits.h>
 #include <string.h>
 #ifdef __DEBUG_GARBAGE_COLLECTOR__
-#include <time.h>
+  #include <time.h>
 #endif
 
 #define ROOT_INSTANCE           "main"
@@ -50,9 +50,14 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 #define SHUTDOWN_SCRIPT \
     "main = nil\n"
 
-#define TRACEBACK_STACK_INDEX   1
-#define OBJECT_STACK_INDEX      TRACEBACK_STACK_INDEX + 1
-#define METHOD_STACK_INDEX(m)   OBJECT_STACK_INDEX + 1 + (m)
+#ifdef __DEBUG_VM_CALLS__
+  #define TRACEBACK_STACK_INDEX   1
+  #define OBJECT_STACK_INDEX      TRACEBACK_STACK_INDEX + 1
+  #define METHOD_STACK_INDEX(m)   OBJECT_STACK_INDEX + 1 + (m)
+#else
+  #define OBJECT_STACK_INDEX      1
+  #define METHOD_STACK_INDEX(m)   OBJECT_STACK_INDEX + 1 + (m)
+#endif
 
 typedef enum _Methods_t {
     METHOD_SETUP,
@@ -79,6 +84,7 @@ static int panic(lua_State *L)
     return 0; // return to Lua to abort
 }
 
+#ifdef __DEBUG_VM_CALLS__
 #ifdef __VM_USE_CUSTOM_TRACEBACK__
 static int error_handler(lua_State *L)
 {
@@ -94,6 +100,7 @@ static int error_handler(lua_State *L)
     luaL_traceback(L, L, msg, 1);  /* append a standard traceback */
     return 1;  /* return the traceback */
 }
+#endif
 #endif
 
 static int custom_searcher(lua_State *L)
