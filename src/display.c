@@ -57,9 +57,9 @@ typedef struct _Program_Data_t {
     "uniform vec2 u_resolution;\n" \
     "uniform float u_time;\n" \
     "\n" \
-    "uniform vec3 u_palette[256];\n" \
-    "uniform int u_shifting[256];\n" \
-    "uniform float u_transparency[256];\n" \
+    "uniform vec3 u_palette[64];\n" \
+    "uniform int u_shifting[64];\n" \
+    "uniform float u_transparency[64];\n" \
     "\n" \
     "vec4 palette(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {\n" \
     "    // Texel color fetching from texture sampler\n" \

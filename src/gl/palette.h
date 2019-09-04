@@ -27,7 +27,7 @@
 
 #include "common.h"
 
-#define GL_MAX_PALETTE_COLORS       256
+#define GL_MAX_PALETTE_COLORS       64
 
 typedef struct _GL_Palette_t {
     GL_Color_t colors[GL_MAX_PALETTE_COLORS];
