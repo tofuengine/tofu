@@ -32,7 +32,7 @@ typedef struct _GL_Texture_t {
     GLuint width, height;
 } GL_Texture_t;
 
-typedef void (*GL_Texture_Callback_t)(void *parameters, void *data, int width, int height);
+typedef void (*GL_Texture_Callback_t)(void *parameters, void *data, size_t width, size_t height);
 
 extern bool GL_texture_load(GL_Texture_t *texture, const char *pathfile, const GL_Texture_Callback_t callback, void *parameters);
 extern bool GL_texture_decode(GL_Texture_t *texture, const void *buffer, const size_t size, const GL_Texture_Callback_t callback, void *parameters);

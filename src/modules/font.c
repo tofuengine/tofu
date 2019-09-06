@@ -73,16 +73,16 @@ int font_loader(lua_State *L)
     return luaX_newmodule(L, _font_script, _font_functions, _font_constants, 1, LUAX_CLASS(Font_Class_t));
 }
 
-static void to_font_atlas_callback(void *parameters, void *data, int width, int height)
+static void to_font_atlas_callback(void *parameters, void *data, size_t width, size_t height)
 {
     const size_t *colors = (const size_t *)parameters;
 
     GL_Color_t *pixels = (GL_Color_t *)data;
 
-    for (int y = 0; y < height; ++y) {
+    for (size_t y = 0; y < height; ++y) {
         int row_offset = width * y;
-        for (int x = 0; x < width; ++x) {
-            int offset = row_offset + x;
+        for (size_t x = 0; x < width; ++x) {
+            size_t offset = row_offset + x;
 
             GL_Color_t color = pixels[offset];
             GLubyte index = color.a == 0 ? colors[0] : colors[1]; // TODO: don't use alpha for transparency?

@@ -65,16 +65,16 @@ int bank_loader(lua_State *L)
     return luaX_newmodule(L, NULL, _bank_functions, _bank_constants, 1, LUAX_CLASS(Bank_Class_t));
 }
 
-static void to_indexed_atlas_callback(void *parameters, void *data, int width, int height)
+static void to_indexed_atlas_callback(void *parameters, void *data, size_t width, size_t height)
 {
     const GL_Palette_t *palette = (const GL_Palette_t *)parameters;
 
     GL_Color_t *pixels = (GL_Color_t *)data;
 
-    for (int y = 0; y < height; ++y) {
+    for (size_t y = 0; y < height; ++y) {
         int row_offset = width * y;
-        for (int x = 0; x < width; ++x) {
-            int offset = row_offset + x;
+        for (size_t x = 0; x < width; ++x) {
+            size_t offset = row_offset + x;
 
             GL_Color_t color = pixels[offset];
 
