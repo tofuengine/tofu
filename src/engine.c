@@ -123,6 +123,13 @@ void Engine_run(Engine_t *engine)
         if (engine->configuration.debug) {
             bool ready = update_statistics(&statistics, elapsed);
             engine->environment.fps = ready ? statistics.fps : 0.0;
+#ifdef __DEBUG_ENGINE_FPS__
+            static size_t count = 0;
+            if (++count == 250) {
+                Log_write(LOG_LEVELS_INFO, "<ENGINE> currently running at %.0f FPS", engine->environment.fps);
+                count = 0;
+            }
+#endif
         }
 
         Display_process_input(&engine->display);
