@@ -22,118 +22,67 @@
 
 #include "primitive.h"
 
-#include "../log.h"
-
-static const GLubyte _white_pixel[4] = { 255, 255, 255, 255 };
-static GLuint _default_texture_id;
-
-// https://www.khronos.org/opengl/wiki/Primitive#Triangle_primitives
-bool GL_primitive_initialize()
+void GL_primitive_point(GL_t *gl, const GL_Point_t position, const uint8_t color)
 {
-    glGenTextures(1, &_default_texture_id); // We need a 1x1 white texture to properly colorize the primitives!
-    if (_default_texture_id == 0) {
-        Log_write(LOG_LEVELS_DEBUG, "<GL> can't create default texture");
-        return false;
-    }
+    const GL_Context_t *context = &gl->context;
 
-    glBindTexture(GL_TEXTURE_2D, _default_texture_id); //Binding the texture
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // Just to be safe!
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0); // Disable mip-mapping
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-    glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, _white_pixel);
-
-    Log_write(LOG_LEVELS_DEBUG, "<GL> default (white) 1x1 texture created w/ id #%d", _default_texture_id);
-
-    return true;
-}
-
-void GL_primitive_terminate()
-{
-    glDeleteTextures(1, &_default_texture_id);
-    Log_write(LOG_LEVELS_DEBUG, "<GL> default texture w/ id #%d deleted", _default_texture_id);
-    _default_texture_id = 0U;
-}
-
-void GL_primitive_points(const GL_Point_t *points, const size_t count, const GL_Color_t color)
-{
-    glBindTexture(GL_TEXTURE_2D, _default_texture_id);
-    glBegin(GL_POINTS);
-        glColor4ub(color.r, color.g, color.b, color.a);
-
-        for (size_t i = 0; i < count; ++i) {
-            glVertex2f(points[i].x, points[i].y);
-        }
-    glEnd();
-}
-
-void GL_primitive_polyline(const GL_Point_t *points, const size_t count, const GL_Color_t color)
-{
-#ifdef __DEFENSIVE_CHECKS__
-    if (count < 2) {
-        Log_write(LOG_LEVELS_WARNING, "<GL> chain w/ %d points", count);
+    if (!GL_is_visible(context, position)) {
         return;
     }
-#endif
 
-    glBindTexture(GL_TEXTURE_2D, _default_texture_id);
-    glBegin(GL_LINE_STRIP);
-        glColor4ub(color.r, color.g, color.b, color.a);
+    const uint8_t value = context->shifting[color];
 
-        for (size_t i = 0; i < count; ++i) {
-            glVertex2f(points[i].x, points[i].y);
-        }
-    glEnd();
-}
-
-void GL_primitive_strip(const GL_Point_t *points, const size_t count, const GL_Color_t color)
-{
-#ifdef __DEFENSIVE_CHECKS__
-    if (count < 3) {
-        Log_write(LOG_LEVELS_WARNING, "<GL> strip w/ %d points", count);
+    if (context->transparent[value]) {
         return;
     }
-#endif
 
-    glBindTexture(GL_TEXTURE_2D, _default_texture_id); // TODO: add rotation?
-    glBegin(GL_TRIANGLE_STRIP);
-        glColor4ub(color.r, color.g, color.b, color.a);
-
-        for (size_t i = 0; i < count; ++i) {
-            glVertex2f(points[i].x, points[i].y);
-        }
-    glEnd();
+    uint8_t *dst = gl->rows[position.y] + position.x;
+    *dst = value;
 }
 
-void GL_primitive_fan(const GL_Point_t *points, const size_t count, const GL_Color_t color)
+void GL_primitive_line(GL_t *gl, const GL_Point_t from, const GL_Point_t to, const uint8_t color)
 {
-#ifdef __DEFENSIVE_CHECKS__
-    if (count < 3) {
-        Log_write(LOG_LEVELS_WARNING, "<GL> fan w/ %d points", count);
+
+}
+
+void GL_primitive_hline(GL_t *gl, const GL_Point_t origin, const size_t width, const uint8_t color)
+{
+    if (!GL_is_visible(gl, origin)) {
         return;
     }
-#endif
-
-    glBindTexture(GL_TEXTURE_2D, _default_texture_id);
-    glBegin(GL_TRIANGLE_FAN);
-        glColor4ub(color.r, color.g, color.b, color.a);
-
-        for (size_t i = 0; i < count; ++i) {
-            glVertex2f(points[i].x, points[i].y);
-        }
-    glEnd();
+    uint8_t *dst = gl->rows[origin.y] + origin.x;
+    for (size_t i = 0; i < width; ++i) {
+        *(dst++) = color;
+    }
 }
 
-void GL_primitive_cluster(const GL_Point_t *points, const GL_Color_t *colors, const size_t count)
+void GL_primitive_vline(GL_t *gl, const GL_Point_t origin, const size_t height, const uint8_t color)
 {
-    glBindTexture(GL_TEXTURE_2D, _default_texture_id);
-    glBegin(GL_POINTS);
-        for (size_t i = 0; i < count; ++i) {
-            glColor4ub(colors[i].r, colors[i].g, colors[i].b, colors[i].a);
-            glVertex2f(points[i].x, points[i].y);
-        }
-    glEnd();
+    if (!GL_is_visible(gl, origin)) {
+        return;
+    }
+    for (size_t i = 0; i < height; ++i) {
+        uint8_t *dst = gl->rows[origin.y + i] + origin.x;
+        *dst = color;
+    }
+}
+
+void GL_primitive_rectangle(GL_t *gl, const GL_Rectangle_t rectangle, const float angle, const uint8_t color)
+{
+
+}
+
+void GL_primitive_filled_rectangle(GL_t *gl, const GL_Rectangle_t rectangle, const float angle, const uint8_t color)
+{
+
+}
+
+void GL_primitive_circle(GL_t *gl, const GL_Point_t center, const size_t radius, const uint8_t color)
+{
+
+}
+
+void GL_primitive_filled_circle(GL_t *gl, const GL_Point_t center, const size_t radius, const uint8_t color)
+{
+
 }

@@ -29,21 +29,21 @@
 #include <GLFW/glfw3.h>
 
 typedef struct _GL_Point_t {
-    GLfloat x, y;
+    int32_t x, y;
 } GL_Point_t;
 
 typedef struct _GL_Size_t {
-    GLfloat width, height;
+    int32_t width, height;
 } GL_Size_t;
 
 typedef struct _GL_Rectangle_t {
-    GLfloat x, y;
-    GLfloat width, height;
+    int32_t x, y;
+    uint32_t width, height;
 } GL_Rectangle_t;
 
 typedef struct _GL_Quad_t {
-    GLfloat x0, y0;
-    GLfloat x1, y1;
+    int32_t x0, y0;
+    int32_t x1, y1;
 } GL_Quad_t;
 
 #pragma pack(push, 1)

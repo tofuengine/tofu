@@ -23,18 +23,20 @@
 #ifndef __GL_PRIMITIVE_H__
 #define __GL_PRIMITIVE_H__
 
-#include <stdbool.h>
+#include "gl.h"
 
-#include "common.h"
+extern void GL_primitive_point(GL_t *gl, const GL_Point_t position, const uint8_t color);
+extern void GL_primitive_line(GL_t *gl, const GL_Point_t from, const GL_Point_t to, const uint8_t color);
+extern void GL_primitive_hline(GL_t *gl, const GL_Point_t from, const size_t width, const uint8_t color);
+extern void GL_primitive_vline(GL_t *gl, const GL_Point_t from, const size_t height, const uint8_t color);
 
-extern bool GL_primitive_initialize();
-extern void GL_primitive_terminate();
+extern void GL_primitive_rectangle(GL_t *gl, const GL_Rectangle_t rectangle, const float angle, const uint8_t color);
+extern void GL_primitive_filled_rectangle(GL_t *gl, const GL_Rectangle_t rectangle, const float angle, const uint8_t color);
 
-extern void GL_primitive_points(const GL_Point_t *points, const size_t count, const GL_Color_t color);
-extern void GL_primitive_polyline(const GL_Point_t *points, const size_t count, const GL_Color_t color);
-extern void GL_primitive_strip(const GL_Point_t *points, const size_t count, const GL_Color_t color);
-extern void GL_primitive_fan(const GL_Point_t *points, const size_t count, const GL_Color_t color);
-extern void GL_primitive_cluster(const GL_Point_t *points, const GL_Color_t *colors, const size_t count);
+extern void GL_primitive_circle(GL_t *gl, const GL_Point_t center, const size_t radius, const uint8_t color);
+extern void GL_primitive_filled_circle(GL_t *gl, const GL_Point_t center, const size_t radius, const uint8_t color);
 
+// extern void GL_primitive_ellipse(GL_t *gl, const GL_Point_t center, const size_t xradius, const size_t yradius, const float angle, const uint8_t color);
+// extern void GL_primitive_filled_ellipse(GL_t *gl, const GL_Point_t center, , const size_t xradius, const size_t yradius, const float angle, const uint8_t color);
 
 #endif  /* __GL_PRIMITIVE_H__ */
