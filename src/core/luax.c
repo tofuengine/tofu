@@ -225,15 +225,10 @@ int luaX_toref(lua_State *L, int arg)
 
 void luaX_getnumberarray(lua_State *L, int idx, double *array)
 {
-    int j = 0;
-    lua_pushnil(L); // first key
-    while (lua_next(L, idx)) {
-#if 0
-        const char *key_type = lua_typename(L, lua_type(L, -2)); // uses 'key' (at index -2) and 'value' (at index -1)
-#endif
-        array[j++] = lua_tonumber(L, -1);
-
-        lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
+    lua_pushnil(L);
+    for (int i = 0; lua_next(L, idx); ++i) {
+        array[i] = lua_tonumber(L, -1);
+        lua_pop(L, 1);
     }
 }
 
@@ -255,6 +250,17 @@ void luaX_checkargument(lua_State *L, int index, const char *file, int line, ...
         luaL_error(L, "[%s:%d] signature failure for argument #%d w/ type %d", file, line, index, lua_type(L, index));
         return; // Unreachable code.
     }
+}
+
+int luaX_count(lua_State *L, int idx)
+{
+    int count = 0;
+    lua_pushnil(L); // first key
+    while (lua_next(L, idx)) {
+        count += 1;
+        lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
+    }
+    return count;
 }
 
 extern int luaX_isnil(lua_State *L, int index)

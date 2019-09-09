@@ -28,8 +28,6 @@
 #define FPS_AVERAGE_SAMPLES         128
 #define FPS_STATISTICS_RESOLUTION   10
 
-#define MAX_PALETTE_COLORS          256
-
 #define GARBAGE_COLLECTION_PERIOD   60.0
 
 // Behavioural MACROs are uses the "__" prefix/suffix.
@@ -51,6 +49,7 @@
 #undef  __DEBUG_TRIANGLES_WINDING__
 #undef  __FIND_NEAREST_COLOR_EUCLIDIAN__
 #undef  __GRID_INTEGER_CELL__
+#undef  __DEBUG_ENGINE_FPS__
 #undef  __DEBUG_API_CALLS__
 #define __DEBUG_VM_CALLS__
 #undef  __DEBUG_SHADER_CALLS__

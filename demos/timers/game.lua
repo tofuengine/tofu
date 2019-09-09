@@ -35,7 +35,7 @@ end
 
 function Game:render(ratio)
   --local x = X.new()
-  Canvas.circle("fill", self.x, self.y, 2, 1)
+  Canvas.circle("fill", self.x, self.y, 5, 15)
 end
 
 return Game

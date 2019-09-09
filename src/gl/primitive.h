@@ -34,5 +34,7 @@ extern void GL_primitive_points(const GL_Point_t *points, const size_t count, co
 extern void GL_primitive_polyline(const GL_Point_t *points, const size_t count, const GL_Color_t color);
 extern void GL_primitive_strip(const GL_Point_t *points, const size_t count, const GL_Color_t color);
 extern void GL_primitive_fan(const GL_Point_t *points, const size_t count, const GL_Color_t color);
+extern void GL_primitive_cluster(const GL_Point_t *points, const GL_Color_t *colors, const size_t count);
+
 
 #endif  /* __GL_PRIMITIVE_H__ */

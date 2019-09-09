@@ -18,7 +18,7 @@ local Game = Class.define()
 function Game:__ctor()
   Canvas.palette(PALETTE)
 
-  self.font = Font.default()
+  self.font = Font.default(0, 15)
   self.x_size = Canvas.width() / STEPS
   self.y_size = Canvas.height() / STEPS
   self.windy = false
@@ -78,7 +78,7 @@ function Game:render(ratio)
     end
   end
 
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0, 15, 1.0, "left")
+  self.font:write(string.format("FPS: %d", System.fps()), 0, 0, 1.0, "left")
 end
 
 return Game

@@ -41,6 +41,9 @@ bool GL_primitive_initialize()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0); // Disable mip-mapping
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, _white_pixel);
 
     Log_write(LOG_LEVELS_DEBUG, "<GL> default (white) 1x1 texture created w/ id #%d", _default_texture_id);
@@ -119,6 +122,17 @@ void GL_primitive_fan(const GL_Point_t *points, const size_t count, const GL_Col
         glColor4ub(color.r, color.g, color.b, color.a);
 
         for (size_t i = 0; i < count; ++i) {
+            glVertex2f(points[i].x, points[i].y);
+        }
+    glEnd();
+}
+
+void GL_primitive_cluster(const GL_Point_t *points, const GL_Color_t *colors, const size_t count)
+{
+    glBindTexture(GL_TEXTURE_2D, _default_texture_id);
+    glBegin(GL_POINTS);
+        for (size_t i = 0; i < count; ++i) {
+            glColor4ub(colors[i].r, colors[i].g, colors[i].b, colors[i].a);
             glVertex2f(points[i].x, points[i].y);
         }
     glEnd();

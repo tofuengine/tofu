@@ -94,6 +94,8 @@ extern int luaX_toref(lua_State *L, int arg);
 extern void luaX_getnumberarray(lua_State *L, int index, double *array);
 extern void luaX_checkargument(lua_State *L, int index, const char *file, int line, ...);
 
+extern int luaX_count(lua_State *L, int idx);
+
 extern int luaX_isnil(lua_State *L, int index);
 extern int luaX_isboolean(lua_State *L, int index);
 extern int luaX_islightuserdata(lua_State *L, int index);

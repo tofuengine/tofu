@@ -12,13 +12,14 @@ local Game = Class.define()
 
 function Game:__ctor()
   Canvas.palette("nes")
+  Canvas.transparent({ [0] = false, [13] = true })
   Canvas.background(63)
   Canvas.shader(File.read("assets/shaders/water.glsl"))
 --Canvas.send("u_strength", 100)
 
   self.sprites = {}
   self.bank = Bank.new("assets/images/diamonds.png", 16, 16)
-  self.font = Font.default()
+  self.font = Font.default(13, 0)
   self.speed = 1.0
   self.running = true
 end
@@ -55,8 +56,8 @@ function Game:render(ratio)
   for _, sprite in pairs(self.sprites) do
     sprite:render()
   end
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0, 0, 1.0, "left")
-  self.font:write(string.format("#%d sprites", #self.sprites), Canvas.width(), 0, 0, 1.0, "right")
+  self.font:write(string.format("FPS: %d", System.fps()), 0, 0, 1.0, "left")
+  self.font:write(string.format("#%d sprites", #self.sprites), Canvas.width(), 0, 1.0, "right")
 end
 
 return Game

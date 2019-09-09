@@ -49,8 +49,8 @@ static const char _font_script[] =
     "\n"
     "--Font.__index = Font\n"
     "\n"
-    "Font.default = function()\n"
-    "  return Font.new(\"5x8\", 0, 0)\n"
+    "Font.default = function(background_color, foreground_color)\n"
+    "  return Font.new(\"5x8\", 0, 0, background_color, foreground_color)\n"
     "end\n"
     "\n"
     "return Font\n"
@@ -73,50 +73,57 @@ int font_loader(lua_State *L)
     return luaX_newmodule(L, _font_script, _font_functions, _font_constants, 1, LUAX_CLASS(Font_Class_t));
 }
 
-static void to_font_atlas_callback(void *parameters, void *data, int width, int height)
+static void to_font_atlas_callback(void *parameters, void *data, size_t width, size_t height)
 {
+    const size_t *colors = (const size_t *)parameters;
+
     GL_Color_t *pixels = (GL_Color_t *)data;
 
-    for (int y = 0; y < height; ++y) {
+    for (size_t y = 0; y < height; ++y) {
         int row_offset = width * y;
-        for (int x = 0; x < width; ++x) {
-            int offset = row_offset + x;
+        for (size_t x = 0; x < width; ++x) {
+            size_t offset = row_offset + x;
 
             GL_Color_t color = pixels[offset];
-            GLubyte index = color.a == 0 ? 0 : 255;
-            pixels[offset] = (GL_Color_t){ index, index, index, color.a };
+            GLubyte index = color.a == 0 ? colors[0] : colors[1]; // TODO: don't use alpha for transparency?
+            pixels[offset] = (GL_Color_t){ index, index, index, 255 };
         }
     }
 }
 
 static int font_new(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 3)
+    LUAX_SIGNATURE_BEGIN(L, 5)
         LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
     LUAX_SIGNATURE_END
     const char *file = lua_tostring(L, 1);
     int glyph_width = lua_tointeger(L, 2);
     int glyph_height = lua_tointeger(L, 3);
+    size_t background_color = lua_tointeger(L, 4);
+    size_t foreground_color = lua_tointeger(L, 5);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Font.new() -> %s, %d, %d", file, glyph_width, glyph_height);
+    Log_write(LOG_LEVELS_DEBUG, "Font.new() -> %s, %d, %d, %d, %d", file, glyph_width, glyph_height, background_color, foreground_color);
 #endif
 
     Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
 
     const Sheet_Data_t *data = graphics_sheets_find(file);
 
+    const size_t colors[] = { background_color, foreground_color };
     GL_Sheet_t sheet;
     if (data) {
-        GL_sheet_decode(&sheet, data->buffer, data->size, data->quad_width, data->quad_height, to_font_atlas_callback, NULL);
+        GL_sheet_decode(&sheet, data->buffer, data->size, data->quad_width, data->quad_height, to_font_atlas_callback, (void *)colors);
         Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet '%s' decoded", file);
     } else {
         char pathfile[PATH_FILE_MAX] = {};
         strcpy(pathfile, environment->base_path);
         strcat(pathfile, file);
 
-        GL_sheet_load(&sheet, pathfile, glyph_width, glyph_height, to_font_atlas_callback, NULL);
+        GL_sheet_load(&sheet, pathfile, glyph_width, glyph_height, to_font_atlas_callback, (void *)colors);
         Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet '%s' loaded", pathfile);
     }
 
@@ -148,12 +155,11 @@ static int font_gc(lua_State *L)
 
 static int font_write(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 7)
+    LUAX_SIGNATURE_BEGIN(L, 6)
         LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
         LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
         LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
     LUAX_SIGNATURE_END
@@ -161,11 +167,10 @@ static int font_write(lua_State *L)
     const char *text = lua_tostring(L, 2);
     double x = (double)lua_tonumber(L, 3);
     double y = (double)lua_tonumber(L, 4);
-    int color = lua_tointeger(L, 5);
-    double scale = (double)lua_tonumber(L, 6);
-    const char *alignment = lua_tostring(L, 7);
+    double scale = (double)lua_tonumber(L, 5);
+    const char *alignment = lua_tostring(L, 6);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %s, %d, %d, %d, %d, %s", text, x, y, color, scale, alignment);
+    Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %s, %d, %d, %f, %s", text, x, y, scale, alignment);
 #endif
 
     const GL_Sheet_t *sheet = &instance->sheet;
@@ -227,7 +232,7 @@ static int font_write(lua_State *L)
         if (*ptr < ' ') {
             continue;
         }
-        GL_sheet_blit_fast(sheet, *ptr - ' ', destination, (GL_Color_t){ color, color, color, 255 });
+        GL_sheet_blit_fast(sheet, *ptr - ' ', destination, (GL_Color_t){ 255, 255, 255, 255 });
         destination.x0 += dw;
         destination.x1 = destination.x0 + dw;
     }

@@ -23,7 +23,8 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Fully script-based, using Lua.
 * [x] Straight multimedia support, no intermediate third-party libraries (OpenGL 2.1 required).
 * [x] Windowed/fullscreen support with automatic scaling.
-* [x] Palette based graphics (through shader) with up to 256 colors.
+* [x] Palette based graphics (through shader) with up to 64 colors.
+* [x] Per-color re-indexing (*shifting*) and transparency, affecting drawing operations (global, too?).
 * [x] Automatic nearest-color palette indexing of images.
 * [x] Predefined library of 8/16/32/64 colors palettes.
 * [ ] Tiled-map support w/ camera support (shader-level zoom and scrolling?).
@@ -53,6 +54,9 @@ Guess what? Yup, that's yet another game engine/framework.
 ## Inspirations
 
 * [Love2D](https://love2d.org/)
+* [Pico-8](https://www.lexaloffle.com/pico-8.php)
+* [tac08](https://github.com/0xcafed00d/tac08/)
+* [picolove](https://github.com/picolove/picolove/)
 * [raylib](https://www.raylib.com/)
 * [DOME Engine](https://github.com/avivbeeri/dome/)
 
