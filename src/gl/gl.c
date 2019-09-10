@@ -38,9 +38,9 @@ bool GL_initialize(GL_t *gl, size_t width, size_t height)
     gl->context.background = 0;
     for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
         gl->context.shifting[i] = i;
-        gl->context.transparent[i] = 1;
+        gl->context.transparent[i] = GL_BOOL_FALSE;
     }
-    gl->context.transparent[0] = 0;
+    gl->context.transparent[0] = GL_BOOL_TRUE;
 
     GL_palette_greyscale(&gl->context.palette, GL_MAX_PALETTE_COLORS);
     Log_write(LOG_LEVELS_DEBUG, "<GL> calculating greyscale palette of #%d entries", GL_MAX_PALETTE_COLORS);

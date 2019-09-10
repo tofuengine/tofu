@@ -22,7 +22,8 @@
 
 #include "sheet.h"
 
-#include "../GL/gl.h"
+#include "gl.h"
+
 #include "../log.h"
 
 #include <stdlib.h>
@@ -91,12 +92,12 @@ void GL_sheet_delete(GL_Sheet_t *sheet)
     *sheet = (GL_Sheet_t){};
 }
 
-void GL_sheet_blit(const GL_Sheet_t *sheet, size_t cell_id, GL_Surface_t *target, GL_Point_t position, float scale, float rotation)
+void GL_sheet_blit(const GL_Context_t *context, const GL_Sheet_t *sheet, size_t cell_id, GL_Surface_t *target, GL_Point_t position, float scale, float rotation)
 {
-    GL_surface_blit(&sheet->atlas, sheet->cells[cell_id], target, position, scale, rotation);
+    GL_surface_blit(context, &sheet->atlas, sheet->cells[cell_id], target, position, scale, rotation);
 }
 
-void GL_sheet_blit_fast(const GL_Sheet_t *sheet, size_t cell_id, GL_Surface_t *target, GL_Point_t position)
+void GL_sheet_blit_fast(const GL_Context_t *context, const GL_Sheet_t *sheet, size_t cell_id, GL_Surface_t *target, GL_Point_t position)
 {
-    GL_surface_blit_fast(&sheet->atlas, sheet->cells[cell_id], target, position);
+    GL_surface_blit_fast(context, &sheet->atlas, sheet->cells[cell_id], target, position);
 }

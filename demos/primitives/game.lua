@@ -9,7 +9,7 @@ local Game = Class.define()
 function Game:__ctor()
   Canvas.palette("arne-16")
 
-  self.font = Font.default()
+  self.font = Font.default(0, 1)
   self.segments = 30
 end
 
@@ -37,7 +37,7 @@ function Game:render(ratio)
 --Canvas.circle("fill", 200, 100, 50, 1)
 --Canvas.circle("fill", 300, 100, 50, 1, _segments)
 
-  self.font:write(string.format("FPS: %d", System.fps()), Canvas.width(), 0, 1, 1.0, "right")
+  self.font:write(string.format("FPS: %d", System.fps()), Canvas.width(), 0, 1.0, "right")
 end
 
 return Game

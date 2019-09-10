@@ -179,9 +179,10 @@ static int bank_blit4(lua_State *L)
 
     GL_Point_t destination = (GL_Point_t){ .x = (int)x, .y = (int)y };
 
-    GL_Surface_t *target = &environment->display->gl.surface;
+    const GL_Context_t *context = &environment->display->gl.context;
     const GL_Sheet_t *sheet = &instance->sheet;
-    GL_sheet_blit_fast(sheet, cell_id, target, destination);
+    GL_Surface_t *target = &environment->display->gl.surface;
+    GL_sheet_blit_fast(context, sheet, cell_id, target, destination);
 
     return 0;
 }
@@ -208,9 +209,10 @@ static int bank_blit5(lua_State *L)
 
     GL_Point_t destination = (GL_Point_t){ .x = (int)x, .y = (int)y };
 
-    GL_Surface_t *target = &environment->display->gl.surface;
+    const GL_Context_t *context = &environment->display->gl.context;
     const GL_Sheet_t *sheet = &instance->sheet;
-    GL_sheet_blit(sheet, cell_id, target, destination, 1.0f, rotation);
+    GL_Surface_t *target = &environment->display->gl.surface;
+    GL_sheet_blit(context, sheet, cell_id, target, destination, 1.0f, rotation);
 
     return 0;
 }
@@ -256,9 +258,10 @@ static int bank_blit6(lua_State *L)
     }
 #endif
 
-    GL_Surface_t *target = &environment->display->gl.surface;
+    const GL_Context_t *context = &environment->display->gl.context;
     const GL_Sheet_t *sheet = &instance->sheet;
-    GL_sheet_blit_fast(sheet, cell_id, target, destination);
+    GL_Surface_t *target = &environment->display->gl.surface;
+    GL_sheet_blit_fast(context, sheet, cell_id, target, destination);
 
     return 0;
 }
@@ -306,9 +309,10 @@ static int bank_blit7(lua_State *L)
     }
 #endif
 
-    GL_Surface_t *target = &environment->display->gl.surface;
+    const GL_Context_t *context = &environment->display->gl.context;
     const GL_Sheet_t *sheet = &instance->sheet;
-    GL_sheet_blit(sheet, cell_id, target, destination, scale_x, rotation);
+    GL_Surface_t *target = &environment->display->gl.surface;
+    GL_sheet_blit(context, sheet, cell_id, target, destination, scale_x, rotation);
 
     return 0;
 }

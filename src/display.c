@@ -389,10 +389,12 @@ void Display_present(Display_t *display)
     GLfloat time[] = { (GLfloat)glfwGetTime() };
     GL_program_send(&display->programs[display->program_index], UNIFORM_TIME, GL_PROGRAM_UNIFORM_FLOAT, 1, time);
     GL_program_use(&display->programs[display->program_index]);
+
 /*
     glClearColor(0.0f, 0.0f, 0.0, 1.0f); // Required, to clear previous content.
     glClear(GL_COLOR_BUFFER_BIT);
 */
+
     GL_prepare(&display->gl, display->vram);
 /*
 int i = stbi_write_png("/home/mlizza/work/image.png", display->configuration.width, display->configuration.height, 4, display->vram, display->configuration.width * 4);
@@ -402,7 +404,7 @@ i = i;
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, display->configuration.width, display->configuration.height, GL_RGBA, GL_UNSIGNED_BYTE, display->vram);
 
     glBegin(GL_TRIANGLE_STRIP);
-//        glColor4ub(color.r, color.g, color.b, color.a);
+//        glColor4ub(255, 255, 255, 255);
 
         glTexCoord2f(0, 0); // CCW strip, top-left is <0,0> (the face direction of the strip is determined by the winding of the first triangle)
         glVertex2f(display->vram_destination.x0, display->vram_destination.y0);
@@ -440,12 +442,12 @@ void Display_transparent(Display_t *display, const size_t *color, const bool *is
 {
     if (color == NULL) {
         for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
-            display->gl.context.transparent[i] = 0; // Opaque.
+            display->gl.context.transparent[i] = GL_BOOL_FALSE;
         }
-        display->gl.context.transparent[0] = 1; // Transparent.
+        display->gl.context.transparent[0] = GL_BOOL_TRUE;
     } else {
         for (size_t i = 0; i < count; ++i) {
-            display->gl.context.transparent[color[i]] = is_transparent[i] ? 1 : 0;
+            display->gl.context.transparent[color[i]] = is_transparent[i] ? GL_BOOL_TRUE : GL_BOOL_FALSE;
         }
     }
 }

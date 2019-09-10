@@ -27,6 +27,8 @@
 
 #include "common.h"
 
+typedef struct _GL_Context_t GL_Context_t;
+
 typedef struct _GL_Surface_t {
     size_t width, height;
     void *data; // TODO: aligned to `sizeof(uint32_t)`?
@@ -40,7 +42,7 @@ extern bool GL_surface_load(GL_Surface_t *surface, const char *pathfile, GL_Surf
 extern bool GL_surface_decode(GL_Surface_t *surface, const void *buffer, size_t size, const GL_Surface_Callback_t callback, void *parameters);
 extern bool GL_surface_create(GL_Surface_t *surface, size_t width, size_t height);
 extern void GL_surface_delete(GL_Surface_t *surface);
-extern void GL_surface_blit(const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Surface_t *target, GL_Point_t position, float scale, float rotation);
-extern void GL_surface_blit_fast(const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Surface_t *target, GL_Point_t position);
+extern void GL_surface_blit(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Surface_t *target, GL_Point_t position, float scale, float rotation);
+extern void GL_surface_blit_fast(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Surface_t *target, GL_Point_t position);
 
 #endif  /* __GL_SURFACE_H__ */
