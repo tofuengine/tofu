@@ -22,67 +22,74 @@
 
 #include "primitive.h"
 
-void GL_primitive_point(GL_t *gl, const GL_Point_t position, const uint8_t color)
+#include "gl.h"
+
+static bool GL_is_visible(GL_t *gl, GL_Point_t position)
+{
+    return true;
+}
+
+void GL_primitive_point(GL_t *gl, GL_Point_t position, GL_Pixel_t color)
 {
     const GL_Context_t *context = &gl->context;
 
-    if (!GL_is_visible(context, position)) {
+    if (!GL_is_visible(gl, position)) {
         return;
     }
 
-    const uint8_t value = context->shifting[color];
+    GL_Pixel_t value = context->shifting[color];
 
     if (context->transparent[value]) {
         return;
     }
 
-    uint8_t *dst = gl->rows[position.y] + position.x;
+    GL_Pixel_t *dst = (GL_Pixel_t *)gl->surface.data_rows[position.y] + position.x;
     *dst = value;
 }
 
-void GL_primitive_line(GL_t *gl, const GL_Point_t from, const GL_Point_t to, const uint8_t color)
+void GL_primitive_line(GL_t *gl, GL_Point_t from, GL_Point_t to, GL_Pixel_t color)
 {
 
 }
 
-void GL_primitive_hline(GL_t *gl, const GL_Point_t origin, const size_t width, const uint8_t color)
+void GL_primitive_hline(GL_t *gl, GL_Point_t origin, size_t width, GL_Pixel_t color)
 {
     if (!GL_is_visible(gl, origin)) {
         return;
     }
-    uint8_t *dst = gl->rows[origin.y] + origin.x;
+    GL_Pixel_t *dst = (GL_Pixel_t *)gl->surface.data_rows[origin.y] + origin.x;
     for (size_t i = 0; i < width; ++i) {
         *(dst++) = color;
     }
 }
 
-void GL_primitive_vline(GL_t *gl, const GL_Point_t origin, const size_t height, const uint8_t color)
+void GL_primitive_vline(GL_t *gl, GL_Point_t origin, size_t height, GL_Pixel_t color)
 {
     if (!GL_is_visible(gl, origin)) {
         return;
     }
     for (size_t i = 0; i < height; ++i) {
-        uint8_t *dst = gl->rows[origin.y + i] + origin.x;
+        GL_Pixel_t *dst = (GL_Pixel_t *)gl->surface.data_rows[origin.y] + origin.x;
         *dst = color;
     }
 }
 
-void GL_primitive_rectangle(GL_t *gl, const GL_Rectangle_t rectangle, const float angle, const uint8_t color)
+void GL_primitive_rectangle(GL_t *gl, GL_Rectangle_t rectangle, GL_Pixel_t color)
 {
 
 }
 
-void GL_primitive_filled_rectangle(GL_t *gl, const GL_Rectangle_t rectangle, const float angle, const uint8_t color)
+void GL_primitive_filled_rectangle(GL_t *gl, GL_Rectangle_t rectangle, GL_Pixel_t color)
 {
 
 }
 
-void GL_primitive_circle(GL_t *gl, const GL_Point_t center, const size_t radius, const uint8_t color)
+void GL_primitive_circle(GL_t *gl, GL_Point_t center, float radius, GL_Pixel_t color)
 {
 
 }
 
-void GL_primitive_filled_circle(GL_t *gl, const GL_Point_t center, const size_t radius, const uint8_t color)
+void GL_primitive_filled_circle(GL_t *gl, GL_Point_t center, float radius, GL_Pixel_t color)
 {
 
 }

@@ -26,18 +26,18 @@
 #include <stdbool.h>
 
 #include "common.h"
-#include "texture.h"
+#include "surface.h"
 
 typedef struct _GL_Sheet_t {
-    GL_Texture_t atlas; // TODO: is texture useless, i.e. a special case of a 1x1 sheet?
-    GL_Quad_t *quads; // TODO: Add specific "sheet-use" primitive to save texture switches.
-    GL_Size_t quad;
+    GL_Surface_t atlas;
+    GL_Rectangle_t *cells;
+    GL_Size_t size;
 } GL_Sheet_t;
 
-extern bool GL_sheet_load(GL_Sheet_t *sheet, const char *pathfile, GLuint quad_width, GLuint quad_height, const GL_Texture_Callback_t callback, void *parameters);
-extern bool GL_sheet_decode(GL_Sheet_t *sheet, const void *buffer, size_t size, GLuint quad_width, GLuint quad_height, const GL_Texture_Callback_t callback, void *parameters);
+extern bool GL_sheet_load(GL_Sheet_t *sheet, const char *pathfile, size_t cell_width, size_t cell_height, GL_Surface_Callback_t callback, void *parameters);
+extern bool GL_sheet_decode(GL_Sheet_t *sheet, const void *buffer, size_t size, size_t cell_width, size_t cell_height, GL_Surface_Callback_t callback, void *parameters);
 extern void GL_sheet_delete(GL_Sheet_t *sheet);
-extern void GL_sheet_blit(const GL_Sheet_t *sheet, size_t quad, const GL_Quad_t destination, GLfloat rotation, const GL_Color_t color);
-extern void GL_sheet_blit_fast(const GL_Sheet_t *sheet, size_t quad, const GL_Quad_t destination, const GL_Color_t color);
+extern void GL_sheet_blit(const GL_Sheet_t *sheet, size_t cell_id, GL_Surface_t *target, GL_Point_t position, float scale, float rotation);
+extern void GL_sheet_blit_fast(const GL_Sheet_t *sheet, size_t cell_id, GL_Surface_t *target, GL_Point_t position);
 
 #endif  /* __GL_SHEET_H__ */

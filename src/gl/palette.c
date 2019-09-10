@@ -78,9 +78,9 @@ void GL_palette_normalize_color(const GL_Color_t color, GLfloat rgba[4])
 }
 
 // https://en.wikipedia.org/wiki/Color_difference
-size_t GL_palette_find_nearest_color(const GL_Palette_t *palette, const GL_Color_t color)
+GL_Pixel_t GL_palette_find_nearest_color(const GL_Palette_t *palette, const GL_Color_t color)
 {
-    size_t index = 0;
+    GL_Pixel_t index = 0;
     double minimum = __DBL_MAX__;
     for (size_t i = 0; i < palette->count; ++i) {
         const GL_Color_t *current = &palette->colors[i];
@@ -99,7 +99,7 @@ size_t GL_palette_find_nearest_color(const GL_Palette_t *palette, const GL_Color
 #endif
         if (minimum > distance) {
             minimum = distance;
-            index = i;
+            index = (GL_Pixel_t)i;
         }
     }
     return index;

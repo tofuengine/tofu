@@ -30,6 +30,7 @@
 #include "primitive.h"
 #include "program.h"
 #include "sheet.h"
+#include "surface.h"
 #include "texture.h"
 
 typedef enum _GL_Raster_Operations_t {
@@ -42,32 +43,25 @@ typedef enum _GL_Raster_Operations_t {
     GL_Raster_Operations_t_CountOf
 } GL_Raster_Operations_t;
 
-typedef void (*GL_Raster_Operation_t)(const GL_Context_t *context, const uint8_t *ptr, const uint8_t color);
-
 typedef struct _GL_Context_t {
-    uint8_t shifting[GL_MAX_PALETTE_COLORS];
-    uint8_t transparent[GL_MAX_PALETTE_COLORS];
+    GL_Pixel_t background;
+    GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
+    GL_Bool_t transparent[GL_MAX_PALETTE_COLORS];
     GL_Rectangle_t clipping_region;
     GL_Palette_t palette;
     GL_Raster_Operations_t raster_operation;
 } GL_Context_t;
 
 typedef struct _GL_t {
-    size_t width, height;
-    uint8_t *buffer; // Aligned to `sizeof(uint32_t)`.
-    uint8_t **rows;
-
-    uint8_t *vram;
-    size_t vram_size;
-    GLuint texture;
-
+    GL_Surface_t surface;
     GL_Context_t context;
 } GL_t;
 
-extern bool GL_initialize(GL_t *gl, size_t width, size_t height, size_t colors);
+extern bool GL_initialize(GL_t *gl, size_t width, size_t height);
 extern void GL_terminate(GL_t *gl);
 extern void GL_push(GL_t *gl);
 extern void GL_pop(GL_t *gl);
-extern void GL_prepare(const GL_t *gl);
+extern void GL_clear(GL_t *gl);
+extern void GL_prepare(const GL_t *gl, void *vram);
 
 #endif  /* __GL_H__ */

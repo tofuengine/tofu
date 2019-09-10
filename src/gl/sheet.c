@@ -27,56 +27,56 @@
 
 #include <stdlib.h>
 
-GL_Quad_t *precompute_quads(GLuint width, GLuint height, GLuint quad_width, GLuint quad_height)
+GL_Rectangle_t *precompute_cells(size_t width, size_t height, size_t cell_width, size_t cell_height)
 {
-    GLuint columns = width / quad_width;
-    GLuint rows = height / quad_height;
-    GLuint amount = columns * rows;
-    GL_Quad_t *quads = malloc(amount * sizeof(GL_Quad_t));
-    GLuint k = 0;
-    for (GLuint i = 0; i < rows; ++i) {
-        GLfloat y = i * quad_height;
-        for (GLuint j = 0; j < columns; ++j) {
-            GLfloat x = j * quad_width;
-            quads[k++] = (GL_Quad_t){ // Pre-normalized.
-                    .x0 = x / width,
-                    .y0 = y / height,
-                    .x1 = (x + quad_width) / width,
-                    .y1 = (y + quad_height) / height
+    size_t columns = width / cell_width;
+    size_t rows = height / cell_height;
+    size_t amount = columns * rows;
+    GL_Rectangle_t *offsets = malloc(amount * sizeof(GL_Rectangle_t));
+    size_t k = 0;
+    for (size_t i = 0; i < rows; ++i) {
+        int32_t y = i * cell_height;
+        for (size_t j = 0; j < columns; ++j) {
+            int32_t x = j * cell_width;
+            offsets[k++] = (GL_Rectangle_t){
+                    .x = x,
+                    .y = y,
+                    .width = cell_width,
+                    .height = cell_height
                 };
         }
     }
-    return quads;
+    return offsets;
 }
 
-bool GL_sheet_load(GL_Sheet_t *sheet, const char *pathfile, GLuint quad_width, GLuint quad_height, const GL_Texture_Callback_t callback, void *parameters)
+bool GL_sheet_load(GL_Sheet_t *sheet, const char *pathfile, size_t cell_width, size_t cell_height, GL_Surface_Callback_t callback, void *parameters)
 {
-    GL_Texture_t atlas;
-    if (!GL_texture_load(&atlas, pathfile, callback, parameters)) {
+    GL_Surface_t atlas;
+    if (!GL_surface_load(&atlas, pathfile, callback, parameters)) {
         return false;
     }
 
     *sheet = (GL_Sheet_t){
             .atlas = atlas,
-            .quads = precompute_quads(atlas.width, atlas.height, quad_width, quad_height),
-            .quad = (GL_Size_t){ quad_width, quad_height }
+            .cells = precompute_cells(atlas.width, atlas.height, cell_width, cell_height),
+            .size = (GL_Size_t){ cell_width, cell_height }
         };
     Log_write(LOG_LEVELS_DEBUG, "<GL> sheet #%p created", sheet);
 
     return true;
 }
 
-bool GL_sheet_decode(GL_Sheet_t *sheet, const void *buffer, size_t size, GLuint quad_width, GLuint quad_height, const GL_Texture_Callback_t callback, void *parameters)
+bool GL_sheet_decode(GL_Sheet_t *sheet, const void *buffer, size_t size, size_t cell_width, size_t cell_height, GL_Surface_Callback_t callback, void *parameters)
 {
-    GL_Texture_t atlas;
-    if (!GL_texture_decode(&atlas, buffer, size, callback, parameters)) {
+    GL_Surface_t atlas;
+    if (!GL_surface_decode(&atlas, buffer, size, callback, parameters)) {
         return false;
     }
 
     *sheet = (GL_Sheet_t){
             .atlas = atlas,
-            .quads = precompute_quads(atlas.width, atlas.height, quad_width, quad_height),
-            .quad = (GL_Size_t){ quad_width, quad_height }
+            .cells = precompute_cells(atlas.width, atlas.height, cell_width, cell_height),
+            .size = (GL_Size_t){ cell_width, cell_height }
         };
     Log_write(LOG_LEVELS_DEBUG, "<GL> sheet #%p created", sheet);
 
@@ -85,90 +85,18 @@ bool GL_sheet_decode(GL_Sheet_t *sheet, const void *buffer, size_t size, GLuint 
 
 void GL_sheet_delete(GL_Sheet_t *sheet)
 {
-    free(sheet->quads);
-    GL_texture_delete(&sheet->atlas);
+    free(sheet->cells);
+    GL_surface_delete(&sheet->atlas);
     Log_write(LOG_LEVELS_DEBUG, "<GL> sheet #%p deleted", sheet);
     *sheet = (GL_Sheet_t){};
 }
 
-void GL_sheet_blit(const GL_Sheet_t *sheet, size_t quad, const GL_Quad_t destination, GLfloat rotation, const GL_Color_t color)
+void GL_sheet_blit(const GL_Sheet_t *sheet, size_t cell_id, GL_Surface_t *target, GL_Point_t position, float scale, float rotation)
 {
-#ifdef __DEFENSIVE_CHECKS__
-    if (texture->id == 0) {
-        // TODO: output log here?
-        return;
-    }
-#endif
-
-    const GL_Quad_t *source = sheet->quads + quad;
-
-    GLfloat sx0 = source->x0;
-    GLfloat sy0 = source->y0;
-    GLfloat sx1 = source->x1;
-    GLfloat sy1 = source->y1;
-
-    GLfloat dx0 = 0.0f;
-    GLfloat dy0 = 0.0f;
-    GLfloat dx1 = destination.x1 - destination.x0;
-    GLfloat dy1 = destination.y1 - destination.y0;
-
-    GLfloat px = dx1 * 0.5f; // Always rotate along center.
-    GLfloat py = dy1 * 0.5f;
-
-    glBindTexture(GL_TEXTURE_2D, sheet->atlas.id);
-
-    glPushMatrix();
-        glTranslatef(destination.x0, destination.y0, 0.0f);
-        glRotatef((GLfloat)GL_DEGREES_OVER_RADIANS * rotation, 0.0f, 0.0f, 1.0f); // OpenGL works with degrees!
-        glTranslatef(-px, -py, 0.0f);
-        glBegin(GL_TRIANGLE_STRIP);
-            glColor4ub(color.r, color.g, color.b, color.a);
-
-            glTexCoord2f(sx0, sy0); // CCW strip, top-left is <0,0> (the face direction of the strip is determined by the winding of the first triangle)
-            glVertex2f(dx0, dy0);
-            glTexCoord2f(sx0, sy1);
-            glVertex2f(dx0, dy1);
-            glTexCoord2f(sx1, sy0);
-            glVertex2f(dx1, dy0);
-            glTexCoord2f(sx1, sy1);
-            glVertex2f(dx1, dy1);
-        glEnd();
-    glPopMatrix();
+    GL_surface_blit(&sheet->atlas, sheet->cells[cell_id], target, position, scale, rotation);
 }
 
-void GL_sheet_blit_fast(const GL_Sheet_t *sheet, size_t quad, const GL_Quad_t destination, const GL_Color_t color)
+void GL_sheet_blit_fast(const GL_Sheet_t *sheet, size_t cell_id, GL_Surface_t *target, GL_Point_t position)
 {
-#ifdef __DEFENSIVE_CHECKS__
-    if (texture->id == 0) {
-        // TODO: output log here?
-        return;
-    }
-#endif
-
-    const GL_Quad_t *source = sheet->quads + quad;
-
-    GLfloat sx0 = source->x0;
-    GLfloat sy0 = source->y0;
-    GLfloat sx1 = source->x1;
-    GLfloat sy1 = source->y1;
-
-    GLfloat dx0 = destination.x0;
-    GLfloat dy0 = destination.y0;
-    GLfloat dx1 = destination.x1;
-    GLfloat dy1 = destination.y1;
-
-    glBindTexture(GL_TEXTURE_2D, sheet->atlas.id);
-
-    glBegin(GL_TRIANGLE_STRIP);
-        glColor4ub(color.r, color.g, color.b, color.a);
-
-        glTexCoord2f(sx0, sy0); // CCW strip, top-left is <0,0> (the face direction of the strip is determined by the winding of the first triangle)
-        glVertex2f(dx0, dy0);
-        glTexCoord2f(sx0, sy1);
-        glVertex2f(dx0, dy1);
-        glTexCoord2f(sx1, sy0);
-        glVertex2f(dx1, dy0);
-        glTexCoord2f(sx1, sy1);
-        glVertex2f(dx1, dy1);
-    glEnd();
+    GL_surface_blit_fast(&sheet->atlas, sheet->cells[cell_id], target, position);
 }

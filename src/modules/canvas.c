@@ -35,8 +35,6 @@
 #include <math.h>
 #include <string.h>
 
-#define OPENGL_PIXEL_OFFSET     0.375f
-
 typedef struct _Canvas_Class_t {
 } Canvas_Class_t;
 
@@ -201,7 +199,7 @@ static int canvas_palette0(lua_State *L)
 
     Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
 
-    GL_Palette_t *palette = &environment->display->palette;
+    GL_Palette_t *palette = &environment->display->gl.context.palette;
 
     lua_newtable(L);
     for (size_t i = 0; i < palette->count; ++i) {
@@ -472,7 +470,7 @@ static int canvas_color(lua_State *L)
     Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
 
     GL_Color_t color = GL_palette_parse_color(argb);
-    size_t index = GL_palette_find_nearest_color(&environment->display->palette, color);
+    size_t index = GL_palette_find_nearest_color(&environment->display->gl.context.palette, color);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "color '%s' mapped to index %d", argb, index);
 #endif
@@ -499,6 +497,9 @@ static int canvas_points(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.points(%d, %d)", vertices, color);
 #endif
 
+    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    // TODO: pass the `GL_t` structure, too.
+
     const size_t count = vertices / 2;
     if (count == 0) {
         Log_write(LOG_LEVELS_INFO, "<CANVAS> point-sequence as no vertices");
@@ -508,17 +509,12 @@ static int canvas_points(lua_State *L)
     double array[vertices];
     luaX_getnumberarray(L, 1, array);
 
-    GL_Point_t points[count];
     for (size_t i = 0; i < count; ++i) {
         double x = array[(i * 2)];
         double y = array[(i * 2) + 1];
 
-        points[i] = (GL_Point_t){
-                .x = (GLfloat)x + OPENGL_PIXEL_OFFSET, .y = (GLfloat)y + OPENGL_PIXEL_OFFSET
-            };
+        GL_primitive_point(&environment->display->gl, (GL_Point_t){ (int)x, (int)y }, color);
     }
-
-    GL_primitive_points(points, count, (GL_Color_t){ color, color, color, 255 });
 
     return 0;
 }
@@ -533,6 +529,8 @@ static int canvas_cluster(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.cluster(%d)", amount);
 #endif
 
+    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+
     const size_t count = amount / 3;
     if (count == 0) {
         Log_write(LOG_LEVELS_INFO, "<CANVAS> cluster-sequence as no elements");
@@ -542,22 +540,13 @@ static int canvas_cluster(lua_State *L)
     double array[amount];
     luaX_getnumberarray(L, 1, array);
 
-    GL_Point_t points[count];
-    GL_Color_t colors[count];
     for (size_t i = 0; i < count; ++i) {
         double x = array[(i * 3)];
         double y = array[(i * 3) + 1];
         double c = array[(i * 3) + 2];
 
-        points[i] = (GL_Point_t){
-                .x = (GLfloat)x + OPENGL_PIXEL_OFFSET, .y = (GLfloat)y + OPENGL_PIXEL_OFFSET
-            };
-        colors[i] = (GL_Color_t){
-                (GLubyte)c, (GLubyte)c, (GLubyte)c, 255
-            };
+        GL_primitive_point(&environment->display->gl, (GL_Point_t){ (int)x, (int)y }, c);
     }
-
-    GL_primitive_cluster(points, colors, count);
 
     return 0;
 }
@@ -574,6 +563,8 @@ static int canvas_polyline(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.polyline(%d, %d)", vertices, color);
 #endif
 
+    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+
     const size_t count = vertices / 2;
     if (count == 0) {
         Log_write(LOG_LEVELS_INFO, "<CANVAS> polyline as no vertices");
@@ -583,17 +574,12 @@ static int canvas_polyline(lua_State *L)
     double array[vertices];
     luaX_getnumberarray(L, 1, array);
 
-    GL_Point_t points[count];
     for (size_t i = 0; i < count; ++i) {
         double x = array[(i * 2)];
         double y = array[(i * 2) + 1];
 
-        points[i] = (GL_Point_t){
-                .x = (GLfloat)x + OPENGL_PIXEL_OFFSET, .y = (GLfloat)y + OPENGL_PIXEL_OFFSET
-            };
+        GL_primitive_point(&environment->display->gl, (GL_Point_t){ (int)x, (int)y }, color);
     }
-
-    GL_primitive_polyline(points, count, (GL_Color_t){ color, color, color, 255 });
 
     return 0;
 }
@@ -610,6 +596,8 @@ static int canvas_strip(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.strip(%d, %d)", vertices, color);
 #endif
 
+    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+
     const size_t count = vertices / 2;
     if (count == 0) {
         Log_write(LOG_LEVELS_INFO, "<CANVAS> strip as no vertices");
@@ -619,17 +607,12 @@ static int canvas_strip(lua_State *L)
     double array[vertices];
     luaX_getnumberarray(L, 1, array);
 
-    GL_Point_t points[count];
     for (size_t i = 0; i < count; ++i) {
         double x = array[(i * 2)];
         double y = array[(i * 2) + 1];
 
-        points[i] = (GL_Point_t){
-                .x = (GLfloat)x + OPENGL_PIXEL_OFFSET, .y = (GLfloat)y + OPENGL_PIXEL_OFFSET
-            };
+        GL_primitive_point(&environment->display->gl, (GL_Point_t){ (int)x, (int)y }, color);
     }
-
-    GL_primitive_strip(points, count, (GL_Color_t){ color, color, color, 255 });
 
     return 0;
 }
@@ -646,6 +629,8 @@ static int canvas_fan(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.fan(%d, %d)", vertices, color);
 #endif
 
+    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+
     const size_t count = vertices / 2;
     if (count == 0) {
         Log_write(LOG_LEVELS_INFO, "<CANVAS> fan as no vertices");
@@ -655,17 +640,12 @@ static int canvas_fan(lua_State *L)
     double array[vertices];
     luaX_getnumberarray(L, 1, array);
 
-    GL_Point_t points[count];
     for (size_t i = 0; i < count; ++i) {
         double x = array[(i * 2)];
         double y = array[(i * 2) + 1];
 
-        points[i] = (GL_Point_t){
-                .x = (GLfloat)x + OPENGL_PIXEL_OFFSET, .y = (GLfloat)y + OPENGL_PIXEL_OFFSET
-            };
+        GL_primitive_point(&environment->display->gl, (GL_Point_t){ (int)x, (int)y }, color);
     }
-
-    GL_primitive_fan(points, count, (GL_Color_t){ color, color, color, 255 });
 
     return 0;
 }

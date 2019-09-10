@@ -24,71 +24,33 @@
 
 #include "../log.h"
 
-bool GL_initialize(GL_t *gl, size_t width, size_t height, size_t colors)
+#include <memory.h>
+#include <stdio.h>
+
+bool GL_initialize(GL_t *gl, size_t width, size_t height)
 {
-    uint8_t *buffer = malloc(width * height * sizeof(uint8_t));
-    if (!buffer) {
+    *gl = (GL_t){};
+
+    if (!GL_surface_create(&gl->surface, width, height)) {
         return false;
     }
 
-    uint8_t **rows = malloc(height * sizeof(uint8_t *));
-    if (!rows) {
-        free(buffer);
-        return false;
-    }
-    for (size_t i = 0; i < height; ++i) {
-        rows[i] = width * i;
-    }
-
-    uint8_t *vram = malloc(width * height * sizeof(uint8_t));
-    if (!vram) {
-        free(buffer);
-        free(rows);
-        return false;
-    }
-
-    GLuint texture;
-    glGenTextures(1, &texture); //allocate the memory for texture
-    glBindTexture(GL_TEXTURE_2D, texture); //Binding the texture
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0); // Disable mip-mapping
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-    glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, vram);
-
-    *gl = (GL_t){
-            .width = width,
-            .height = height,
-            .buffer = buffer,
-            .rows = rows,
-            .vram = vram,
-            .texture = texture,
-            .context = (GL_Context_t){}
-        };
-
+    gl->context.background = 0;
     for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
         gl->context.shifting[i] = i;
         gl->context.transparent[i] = 1;
     }
     gl->context.transparent[0] = 0;
 
-    GL_palette_greyscale(&gl->context.palette, colors);
-    Log_write(LOG_LEVELS_DEBUG, "<GL> calculating greyscale palette of #%d entries", colors);
+    GL_palette_greyscale(&gl->context.palette, GL_MAX_PALETTE_COLORS);
+    Log_write(LOG_LEVELS_DEBUG, "<GL> calculating greyscale palette of #%d entries", GL_MAX_PALETTE_COLORS);
 
     return true;
 }
 
 void GL_terminate(GL_t *gl)
 {
-    free(gl->buffer);
-    free(gl->rows);
-    free(gl->vram);
-
-    glDeleteBuffers(1, &gl->texture);
-    Log_write(LOG_LEVELS_DEBUG, "<GL> texture w/ id #%d deleted", gl->texture);
+    GL_surface_delete(&gl->surface);
 
     *gl = (GL_t){};
 }
@@ -101,21 +63,30 @@ void GL_pop(GL_t *gl)
 {
 }
 
-void GL_prepare(const GL_t *gl)
+void GL_clear(GL_t *gl)
 {
-    const GL_Color_t *colors = &gl->context.palette;
+    memset(gl->surface.data, gl->context.background, gl->surface.data_size);
+}
 
-    uint8_t *src = gl->buffer;
-    GL_Color_t *dst = gl->vram;
-    for (size_t i = 0; i < gl->height; ++i) {
-        for (size_t j = 0; j < gl->width; ++j) {
+void GL_prepare(const GL_t *gl, void *vram)
+{
+    const GL_Color_t *colors = gl->context.palette.colors;
+
+#if 1
+    const GL_Pixel_t *src = (const GL_Pixel_t *)gl->surface.data;
+    GL_Color_t *dst = (GL_Color_t *)vram;
+    for (size_t i = 0; i < gl->surface.data_size; ++i) {
+        *(dst++) = colors[*(src++)];
+    }
+#else
+    const GL_Pixel_t *src = (const GL_Pixel_t *)gl->surface.data;
+    GL_Color_t *dst = (GL_Color_t *)vram;
+    for (size_t i = 0; i < gl->surface.height; ++i) {
+        for (size_t j = 0; j < gl->surface.width; ++j) {
             dst[j] = colors[src[j]];
         }
-        src += gl->width;
-        dst += gl->width;
+        src += gl->surface.width;
+        dst += gl->surface.width;
     }
-
-    glBindTexture(GL_TEXTURE_2D, gl->texture);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, gl->width, gl->height, GL_RGBA, GL_UNSIGNED_BYTE, gl->vram);
-//    glBindTexture(GL_TEXTURE_2D, 0);
+#endif
 }

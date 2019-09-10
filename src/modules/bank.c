@@ -65,21 +65,21 @@ int bank_loader(lua_State *L)
     return luaX_newmodule(L, NULL, _bank_functions, _bank_constants, 1, LUAX_CLASS(Bank_Class_t));
 }
 
-static void to_indexed_atlas_callback(void *parameters, void *data, size_t width, size_t height)
+static void to_indexed_atlas_callback(void *parameters, GL_Surface_t *surface, const void *data)
 {
     const GL_Palette_t *palette = (const GL_Palette_t *)parameters;
 
-    GL_Color_t *pixels = (GL_Color_t *)data;
+    const GL_Color_t *src = (const GL_Color_t *)data;
+    GL_Pixel_t *dst = (GL_Pixel_t *)surface->data;
 
-    for (size_t y = 0; y < height; ++y) {
-        int row_offset = width * y;
-        for (size_t x = 0; x < width; ++x) {
+    for (size_t y = 0; y < surface->height; ++y) {
+        int row_offset = surface->width * y;
+
+        for (size_t x = 0; x < surface->width; ++x) {
             size_t offset = row_offset + x;
 
-            GL_Color_t color = pixels[offset];
-
-            size_t index = GL_palette_find_nearest_color(palette, color);
-            pixels[offset] = (GL_Color_t){ index, index, index, 255 };
+            GL_Color_t color = src[offset];
+            dst[offset] = GL_palette_find_nearest_color(palette, color);
         }
     }
 }
@@ -106,7 +106,7 @@ static int bank_new(lua_State *L)
     strcat(pathfile, file);
 
     GL_Sheet_t sheet;
-    GL_sheet_load(&sheet, pathfile, cell_width, cell_height, to_indexed_atlas_callback, (void *)&environment->display->palette);
+    GL_sheet_load(&sheet, pathfile, cell_width, cell_height, to_indexed_atlas_callback, (void *)&environment->display->gl.context.palette);
     Log_write(LOG_LEVELS_DEBUG, "<BANK> sheet '%s' loaded", pathfile);
 
     Bank_Class_t *instance = (Bank_Class_t *)lua_newuserdata(L, sizeof(Bank_Class_t));
@@ -142,7 +142,7 @@ static int bank_cell_width(lua_State *L)
     LUAX_SIGNATURE_END
     Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
 
-    lua_pushinteger(L, instance->sheet.quad.width);
+    lua_pushinteger(L, instance->sheet.size.width);
 
     return 1;
 }
@@ -154,7 +154,7 @@ static int bank_cell_height(lua_State *L)
     LUAX_SIGNATURE_END
     Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
 
-    lua_pushinteger(L, instance->sheet.quad.height);
+    lua_pushinteger(L, instance->sheet.size.height);
 
     return 1;
 }
@@ -175,16 +175,13 @@ static int bank_blit4(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f", cell_id, x, y);
 #endif
 
-    double dw = (double)instance->sheet.quad.width;
-    double dh = (double)instance->sheet.quad.height;
+    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
 
-    int dx = (int)x;
-    int dy = (int)y;
+    GL_Point_t destination = (GL_Point_t){ .x = (int)x, .y = (int)y };
 
-    GL_Quad_t destination = (GL_Quad_t){ (GLfloat)dx, (GLfloat)dy, (GLfloat)dx + (GLfloat)dw, (GLfloat)dy + (GLfloat)dh };
-
+    GL_Surface_t *target = &environment->display->gl.surface;
     const GL_Sheet_t *sheet = &instance->sheet;
-    GL_sheet_blit_fast(sheet, cell_id, destination, (GL_Color_t){ 255, 255, 255, 255 });
+    GL_sheet_blit_fast(sheet, cell_id, target, destination);
 
     return 0;
 }
@@ -207,16 +204,13 @@ static int bank_blit5(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f, %.f", cell_id, x, y, rotation);
 #endif
 
-    double dw = (double)instance->sheet.quad.width;
-    double dh = (double)instance->sheet.quad.height;
+    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
 
-    int dx = (int)x;
-    int dy = (int)y;
+    GL_Point_t destination = (GL_Point_t){ .x = (int)x, .y = (int)y };
 
-    GL_Quad_t destination = (GL_Quad_t){ (GLfloat)dx, (GLfloat)dy, (GLfloat)dx + (GLfloat)dw, (GLfloat)dy + (GLfloat)dh };
-
+    GL_Surface_t *target = &environment->display->gl.surface;
     const GL_Sheet_t *sheet = &instance->sheet;
-    GL_sheet_blit(sheet, cell_id, destination, rotation, (GL_Color_t){ 255, 255, 255, 255 });
+    GL_sheet_blit(sheet, cell_id, target, destination, 1.0f, rotation);
 
     return 0;
 }
@@ -241,32 +235,30 @@ static int bank_blit6(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f, %.f, %.f", cell_id, x, y, scale_x, scale_y);
 #endif
 
+    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+
 #ifdef __NO_MIRRORING__
-    double dw = (double)instance->sheet.quad.width * fabs(scale_x);
-    double dh = (double)instance->sheet.quad.height * fabs(scale_y);
+    double dw = (double)instance->sheet.size.width * fabs(scale_x);
+    double dh = (double)instance->sheet.size.height * fabs(scale_y);
 #else
-    double dw = (double)instance->sheet.quad.width * scale_x; // The sign controls the mirroring.
-    double dh = (double)instance->sheet.quad.height * scale_y;
+    double dw = (double)instance->sheet.size.width * scale_x; // The sign controls the mirroring.
+    double dh = (double)instance->sheet.size.height * scale_y;
 #endif
 
-    int dx = (int)x;
-    int dy = (int)y;
-
-    GL_Quad_t destination = (GL_Quad_t){ (GLfloat)dx, (GLfloat)dy, (GLfloat)dx + (GLfloat)dw, (GLfloat)dy + (GLfloat)dh };
+    GL_Point_t destination = (GL_Point_t){ .x = (int)x, .y = (int)y };
 
 #ifndef __NO_MIRRORING__
     if (dw < 0.0) { // Compensate for mirroring!
-        destination.x0 -= dw;
-        destination.x1 -= dw;
+        destination.x -= dw;
     }
     if (dh < 0.0) {
-        destination.y0 -= dh;
-        destination.y1 -= dh;
+        destination.y -= dh;
     }
 #endif
 
+    GL_Surface_t *target = &environment->display->gl.surface;
     const GL_Sheet_t *sheet = &instance->sheet;
-    GL_sheet_blit_fast(sheet, cell_id, destination, (GL_Color_t){ 255, 255, 255, 255 });
+    GL_sheet_blit_fast(sheet, cell_id, target, destination);
 
     return 0;
 }
@@ -293,32 +285,30 @@ static int bank_blit7(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f, %.f, %.f, %.f", cell_id, x, y, rotation, scale_x, scale_y);
 #endif
 
+    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+
 #ifdef __NO_MIRRORING__
-    double dw = (double)instance->sheet.quad.width * fabs(scale_x);
-    double dw = (double)instance->sheet.quad.height * fabs(scale_y);
+    double dw = (double)instance->sheet.size.width * fabs(scale_x);
+    double dw = (double)instance->sheet.size.height * fabs(scale_y);
 #else
-    double dw = (double)instance->sheet.quad.width * scale_x; // The sign controls the mirroring.
-    double dh = (double)instance->sheet.quad.height * scale_y;
+    double dw = (double)instance->sheet.size.width * scale_x; // The sign controls the mirroring.
+    double dh = (double)instance->sheet.size.height * scale_y;
 #endif
 
-    int dx = (int)x;
-    int dy = (int)y;
-
-    GL_Quad_t destination = (GL_Quad_t){ (GLfloat)dx, (GLfloat)dy, (GLfloat)dx + (GLfloat)dw, (GLfloat)dy + (GLfloat)dh };
+    GL_Point_t destination = (GL_Point_t){ .x = (int)x, .y = (int)y };
 
 #ifndef __NO_MIRRORING__
     if (dw < 0.0) { // Compensate for mirroring!
-        destination.x0 -= dw;
-        destination.x1 -= dw;
+        destination.x -= dw;
     }
     if (dh < 0.0) {
-        destination.y0 -= dh;
-        destination.y1 -= dh;
+        destination.y -= dh;
     }
 #endif
 
+    GL_Surface_t *target = &environment->display->gl.surface;
     const GL_Sheet_t *sheet = &instance->sheet;
-    GL_sheet_blit(sheet, cell_id, destination, rotation, (GL_Color_t){ 255, 255, 255, 255 });
+    GL_sheet_blit(sheet, cell_id, target, destination, scale_x, rotation);
 
     return 0;
 }

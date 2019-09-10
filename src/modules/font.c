@@ -73,20 +73,21 @@ int font_loader(lua_State *L)
     return luaX_newmodule(L, _font_script, _font_functions, _font_constants, 1, LUAX_CLASS(Font_Class_t));
 }
 
-static void to_font_atlas_callback(void *parameters, void *data, size_t width, size_t height)
+static void to_font_atlas_callback(void *parameters, GL_Surface_t *surface, const void *data)
 {
-    const size_t *colors = (const size_t *)parameters;
+    const GL_Pixel_t *colors = (const GL_Pixel_t *)parameters;
 
-    GL_Color_t *pixels = (GL_Color_t *)data;
+    const GL_Color_t *src = (const GL_Color_t *)data;
+    GL_Pixel_t *dst = (GL_Pixel_t *)surface->data;
 
-    for (size_t y = 0; y < height; ++y) {
-        int row_offset = width * y;
-        for (size_t x = 0; x < width; ++x) {
+    for (size_t y = 0; y < surface->height; ++y) {
+        int row_offset = surface->width * y;
+
+        for (size_t x = 0; x < surface->width; ++x) {
             size_t offset = row_offset + x;
 
-            GL_Color_t color = pixels[offset];
-            GLubyte index = color.a == 0 ? colors[0] : colors[1]; // TODO: don't use alpha for transparency?
-            pixels[offset] = (GL_Color_t){ index, index, index, 255 };
+            GL_Color_t color = src[offset];
+            dst[offset] = color.a == 0 ? colors[0] : colors[1]; // TODO: don't use alpha for transparency?
         }
     }
 }
@@ -113,7 +114,7 @@ static int font_new(lua_State *L)
 
     const Sheet_Data_t *data = graphics_sheets_find(file);
 
-    const size_t colors[] = { background_color, foreground_color };
+    const GL_Pixel_t colors[] = { background_color, foreground_color };
     GL_Sheet_t sheet;
     if (data) {
         GL_sheet_decode(&sheet, data->buffer, data->size, data->quad_width, data->quad_height, to_font_atlas_callback, (void *)colors);
@@ -173,10 +174,14 @@ static int font_write(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %s, %d, %d, %f, %s", text, x, y, scale, alignment);
 #endif
 
+    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+
     const GL_Sheet_t *sheet = &instance->sheet;
 
-    double dw = sheet->quad.width * fabs(scale);
-    double dh = sheet->quad.height * fabs(scale);
+    double dw = sheet->size.width * fabs(scale);
+#ifndef __NO_LINEFEEDS__
+    double dh = sheet->tile.height * fabs(scale);
+#endif
 
 #ifndef __NO_LINEFEEDS__
     size_t width = 0;
@@ -218,23 +223,22 @@ static int font_write(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %d, %d, %d", width, dx, dy);
 #endif
 
-    GL_Quad_t destination = { .x0 = dx, .y0 = dy, .x1 = dx + dw, .y1 = dy + dh };
+    GL_Surface_t *target = &environment->display->gl.surface;
+
+    GL_Point_t position = { .x = dx, .y = dy };
     for (const char *ptr = text; *ptr != '\0'; ++ptr) {
 #ifndef __NO_LINEFEEDS__
         if (*ptr == '\n') { // Handle carriage-return
-            destination.x0 = dx;
-            destination.x1 = destination.x0 + dw;
-            destination.y0 += dh;
-            destination.y1 = destination.y0 + dh;
+            destination.x = dx;
+            destination.y += dh;
             continue;
         } else
 #endif
         if (*ptr < ' ') {
             continue;
         }
-        GL_sheet_blit_fast(sheet, *ptr - ' ', destination, (GL_Color_t){ 255, 255, 255, 255 });
-        destination.x0 += dw;
-        destination.x1 = destination.x0 + dw;
+        GL_sheet_blit(sheet, *ptr - ' ', target, position, (float)scale, 0.0f);
+        position.x += dw;
     }
 
     return 0;
