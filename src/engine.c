@@ -143,8 +143,8 @@ void Engine_run(Engine_t *engine)
             lag -= delta_time;
         }
 
-        Display_clear(&engine->display);
-            running = running && Interpreter_render(&engine->interpreter, lag / delta_time);
+        running = running && Interpreter_render(&engine->interpreter, lag / delta_time);
+
         Display_present(&engine->display);
 
 //        if (used < delta_time) {

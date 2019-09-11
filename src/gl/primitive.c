@@ -24,72 +24,90 @@
 
 #include "gl.h"
 
-static bool GL_is_visible(GL_t *gl, GL_Point_t position)
+static bool GL_is_visible(GL_Context_t *gl, GL_Point_t position)
 {
     return true;
 }
 
-void GL_primitive_point(GL_t *gl, GL_Point_t position, GL_Pixel_t color)
+void GL_primitive_point(GL_Context_t *gl, GL_Point_t position, GL_Pixel_t color)
 {
-    const GL_Context_t *context = &gl->context;
-
     if (!GL_is_visible(gl, position)) {
         return;
     }
 
-    GL_Pixel_t value = context->shifting[color];
+    const GL_Pixel_t index = gl->shifting[color];
 
-    if (context->transparent[value]) {
+    if (gl->transparent[index]) {
         return;
     }
 
-    GL_Pixel_t *dst = (GL_Pixel_t *)gl->surface.data_rows[position.y] + position.x;
-    *dst = value;
+    const GL_Color_t rgba = gl->palette.colors[index];
+
+    GL_Color_t *dst = (GL_Color_t *)gl->vram_rows[position.y] + position.x;
+    *dst = rgba;
 }
 
-void GL_primitive_line(GL_t *gl, GL_Point_t from, GL_Point_t to, GL_Pixel_t color)
+void GL_primitive_line(GL_Context_t *gl, GL_Point_t from, GL_Point_t to, GL_Pixel_t color)
 {
 
 }
 
-void GL_primitive_hline(GL_t *gl, GL_Point_t origin, size_t width, GL_Pixel_t color)
+void GL_primitive_hline(GL_Context_t *gl, GL_Point_t origin, size_t width, GL_Pixel_t color)
 {
     if (!GL_is_visible(gl, origin)) {
         return;
     }
-    GL_Pixel_t *dst = (GL_Pixel_t *)gl->surface.data_rows[origin.y] + origin.x;
+
+    const GL_Pixel_t index = gl->shifting[color];
+
+    if (gl->transparent[index]) {
+        return;
+    }
+
+    const GL_Color_t rgba = gl->palette.colors[index];
+
+    GL_Color_t *dst = (GL_Color_t *)gl->vram_rows[origin.y] + origin.x;
     for (size_t i = 0; i < width; ++i) {
-        *(dst++) = color;
+        *(dst++) = rgba;
     }
 }
 
-void GL_primitive_vline(GL_t *gl, GL_Point_t origin, size_t height, GL_Pixel_t color)
+void GL_primitive_vline(GL_Context_t *gl, GL_Point_t origin, size_t height, GL_Pixel_t color)
 {
     if (!GL_is_visible(gl, origin)) {
         return;
     }
+
+    const GL_Pixel_t index = gl->shifting[color];
+
+    if (gl->transparent[index]) {
+        return;
+    }
+
+    const GL_Color_t rgba = gl->palette.colors[index];
+
     for (size_t i = 0; i < height; ++i) {
-        GL_Pixel_t *dst = (GL_Pixel_t *)gl->surface.data_rows[origin.y] + origin.x;
-        *dst = color;
+        GL_Color_t *dst = (GL_Color_t *)gl->vram_rows[origin.y] + origin.x;
+        *(dst++) = rgba;
     }
 }
 
-void GL_primitive_rectangle(GL_t *gl, GL_Rectangle_t rectangle, GL_Pixel_t color)
+void GL_primitive_rectangle(GL_Context_t *gl, GL_Rectangle_t rectangle, GL_Pixel_t color)
 {
 
 }
 
-void GL_primitive_filled_rectangle(GL_t *gl, GL_Rectangle_t rectangle, GL_Pixel_t color)
+void GL_primitive_filled_rectangle(GL_Context_t *gl, GL_Rectangle_t rectangle, GL_Pixel_t color)
 {
 
 }
 
-void GL_primitive_circle(GL_t *gl, GL_Point_t center, float radius, GL_Pixel_t color)
+void GL_primitive_circle(GL_Context_t *gl, GL_Point_t center, float radius, GL_Pixel_t color)
 {
 
 }
 
-void GL_primitive_filled_circle(GL_t *gl, GL_Point_t center, float radius, GL_Pixel_t color)
+void GL_primitive_filled_circle(GL_Context_t *gl, GL_Point_t center, float radius, GL_Pixel_t color)
 {
 
 }

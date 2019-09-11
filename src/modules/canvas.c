@@ -46,6 +46,7 @@ static int canvas_shift(lua_State *L);
 static int canvas_transparent(lua_State *L);
 static int canvas_shader(lua_State *L);
 static int canvas_color(lua_State *L);
+static int canvas_clear(lua_State *L);
 static int canvas_points(lua_State *L);
 static int canvas_cluster(lua_State *L);
 static int canvas_polyline(lua_State *L);
@@ -141,6 +142,7 @@ static const struct luaL_Reg _canvas_functions[] = {
     { "transparent", canvas_transparent },
     { "shader", canvas_shader },
     { "color", canvas_color },
+    { "clear", canvas_clear },
     { "points", canvas_points },
     { "cluster", canvas_cluster },
     { "polyline", canvas_polyline },
@@ -199,7 +201,7 @@ static int canvas_palette0(lua_State *L)
 
     Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
 
-    GL_Palette_t *palette = &environment->display->gl.context.palette;
+    GL_Palette_t *palette = &environment->display->gl.palette;
 
     lua_newtable(L);
     for (size_t i = 0; i < palette->count; ++i) {
@@ -470,7 +472,7 @@ static int canvas_color(lua_State *L)
     Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
 
     GL_Color_t color = GL_palette_parse_color(argb);
-    size_t index = GL_palette_find_nearest_color(&environment->display->gl.context.palette, color);
+    size_t index = GL_palette_find_nearest_color(&environment->display->gl.palette, color);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "color '%s' mapped to index %d", argb, index);
 #endif
@@ -478,6 +480,21 @@ static int canvas_color(lua_State *L)
     lua_pushinteger(L, index);
 
     return 1;
+}
+
+static int canvas_clear(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 0)
+    LUAX_SIGNATURE_END
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.clear()");
+#endif
+
+    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+
+    GL_context_clear(&environment->display->gl);
+
+    return 0;
 }
 
 // When drawing points and lines we need to ensure to be in mid-pixel coordinates, according to

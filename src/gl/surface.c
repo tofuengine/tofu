@@ -74,7 +74,7 @@ bool GL_surface_create(GL_Surface_t *surface, size_t width, size_t height)
         return false;
     }
 
-    void **data_rows = malloc(height * sizeof(GL_Pixel_t *));
+    void **data_rows = malloc(height * sizeof(void *));
     if (!data_rows) {
         free(data);
         return false;
@@ -103,62 +103,4 @@ void GL_surface_delete(GL_Surface_t *surface)
     Log_write(LOG_LEVELS_DEBUG, "<GL> surface at #%p deleted", surface->data);
 
     *surface = (GL_Surface_t){};
-}
-
-void GL_surface_blit(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Surface_t *target, GL_Point_t position, float scale, float rotation)
-{
-    // TODO: specifies `const` always? Is pedantic or useful?
-    // https://dev.to/fenbf/please-declare-your-variables-as-const
-    const GL_Pixel_t *shifting = context->shifting;
-    const GL_Bool_t *transparent = context->transparent;
-
-    const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[tile.y] + tile.x;
-    GL_Pixel_t *dst = (GL_Pixel_t *)target->data_rows[position.y] + position.x;
-    // const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data + (tile.y * surface->width) + tile.x;
-    // GL_Pixel_t *dst = (GL_Pixel_t *)target->data + (position.y * target->width) + position.x;
-
-    size_t src_skip = surface->width - tile.width;
-    size_t dst_skip = target->width - tile.width;
-
-    for (size_t i = 0; i < tile.height; ++i) {
-        for (size_t j = 0; j < tile.width; ++j) {
-            GL_Pixel_t color = shifting[*(src++)];
-            if (transparent[color]) {
-                dst++;
-            } else {
-                *(dst++) = color;
-            }
-        }
-        src += src_skip;
-        dst += dst_skip;
-    }
-
-    // TODO: implement clipping, rotation and scaling.
-}
-
-void GL_surface_blit_fast(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Surface_t *target, GL_Point_t position)
-{
-    const GL_Pixel_t *shifting = context->shifting;
-    const GL_Bool_t *transparent = context->transparent;
-
-    const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[tile.y] + tile.x;
-    GL_Pixel_t *dst = (GL_Pixel_t *)target->data_rows[position.y] + position.x;
-    // const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data + (tile.y * surface->width) + tile.x;
-    // GL_Pixel_t *dst = (GL_Pixel_t *)target->data + (position.y * target->width) + position.x;
-
-    size_t src_skip = surface->width - tile.width;
-    size_t dst_skip = target->width - tile.width;
-
-    for (size_t i = 0; i < tile.height; ++i) {
-        for (size_t j = 0; j < tile.width; ++j) {
-            GL_Pixel_t color = shifting[*(src++)];
-            if (transparent[color]) {
-                dst++;
-            } else {
-                *(dst++) = color;
-            }
-        }
-        src += src_skip;
-        dst += dst_skip;
-    }
 }

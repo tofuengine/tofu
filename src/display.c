@@ -203,32 +203,6 @@ static void size_callback(GLFWwindow* window, int width, int height)
 #endif
 }
 
-static bool initialize_buffers(Display_t *display)
-{
-    display->vram = malloc(display->configuration.width * display->configuration.height * sizeof(GL_Color_t));
-    if (!display->vram) {
-        Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't allocate VRAM buffer");
-        return false;
-    }
-
-    GL_texture_create(&display->vram_texture, display->configuration.width, display->configuration.height, NULL);
-    if (display->vram_texture.id == 0) {
-        Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't allocate VRAM texture");
-        free(display->vram);
-        return false;
-    }
-
-    glBindTexture(GL_TEXTURE_2D, display->vram_texture.id); // The VRAM texture is always the active and bound one.
-
-    return true;
-}
-
-static void deinitialize_buffers(Display_t *display)
-{
-    free(display->vram);
-    GL_texture_delete(&display->vram_texture);
-}
-
 bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title)
 {
     display->configuration = *configuration;
@@ -281,16 +255,12 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     glfwSetKeyCallback(display->window, key_callback);
     glfwSetInputMode(display->window, GLFW_CURSOR, configuration->hide_cursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
 
-    if (!GL_initialize(&display->gl, configuration->width, configuration->height)) {
+    if (!GL_context_initialize(&display->gl, configuration->width, configuration->height)) {
         Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't initialize GL");
         glfwDestroyWindow(display->window);
         glfwTerminate();
         return false;
     }
-
-    int display_width, display_height;
-    glfwGetMonitorWorkarea(glfwGetPrimaryMonitor(), NULL, NULL, &display_width, &display_height);
-    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> display size is %dx%d", display_width, display_height);
 
     GL_Point_t position = {};
     if (!compute_size(display, configuration, &position)) {
@@ -307,12 +277,16 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         glfwSetWindowMonitor(display->window, glfwGetPrimaryMonitor(), position.x, position.y, display->physical_width, display->physical_height, GLFW_DONT_CARE);
     }
 
-    if (!initialize_buffers(display)) {
-        Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't create framebuffer");
-        GL_terminate(&display->gl);
+    GL_texture_create(&display->vram_texture, display->configuration.width, display->configuration.height, NULL);
+    if (display->vram_texture.id == 0) {
+        Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't allocate VRAM texture");
+        GL_context_terminate(&display->gl);
         glfwDestroyWindow(display->window);
         glfwTerminate();
+        return false;
     }
+
+    glBindTexture(GL_TEXTURE_2D, display->vram_texture.id); // The VRAM texture is always the active and bound one.
 
     for (size_t i = 0; i < Display_Programs_t_CountOf; ++i) {
         const Program_Data_t *data = &_programs_data[i];
@@ -323,8 +297,8 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
             !GL_program_attach(&display->programs[i], data->vertex_shader, GL_PROGRAM_SHADER_VERTEX) ||
             !GL_program_attach(&display->programs[i], data->fragment_shader, GL_PROGRAM_SHADER_FRAGMENT)) {
             Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't initialize shaders");
-            deinitialize_buffers(display);
-            GL_terminate(&display->gl);
+            GL_texture_delete(&display->vram_texture);
+            GL_context_terminate(&display->gl);
             glfwDestroyWindow(display->window);
             glfwTerminate();
             return false;
@@ -379,29 +353,21 @@ void Display_process_input(Display_t *display)
     }
 }
 
-void Display_clear(Display_t *display)
-{
-    GL_clear(&display->gl);
-}
-
 void Display_present(Display_t *display)
 {
     GLfloat time[] = { (GLfloat)glfwGetTime() };
     GL_program_send(&display->programs[display->program_index], UNIFORM_TIME, GL_PROGRAM_UNIFORM_FLOAT, 1, time);
     GL_program_use(&display->programs[display->program_index]);
 
-/*
-    glClearColor(0.0f, 0.0f, 0.0, 1.0f); // Required, to clear previous content.
-    glClear(GL_COLOR_BUFFER_BIT);
-*/
+//    glClearColor(0.0f, 0.0f, 0.0, 1.0f); // Required, to clear previous content.
+//    glClear(GL_COLOR_BUFFER_BIT);
 
-    GL_prepare(&display->gl, display->vram);
 /*
 int i = stbi_write_png("/home/mlizza/work/image.png", display->configuration.width, display->configuration.height, 4, display->vram, display->configuration.width * 4);
 i = i;
 */
 
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, display->configuration.width, display->configuration.height, GL_RGBA, GL_UNSIGNED_BYTE, display->vram);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, display->gl.width, display->gl.height, GL_RGBA, GL_UNSIGNED_BYTE, display->gl.vram);
 
     glBegin(GL_TRIANGLE_STRIP);
 //        glColor4ub(255, 255, 255, 255);
@@ -421,7 +387,7 @@ i = i;
 
 void Display_palette(Display_t *display, const GL_Palette_t *palette)
 {
-    display->gl.context.palette = *palette;
+    display->gl.palette = *palette;
     Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> palette updated");
 }
 
@@ -429,11 +395,11 @@ void Display_shift(Display_t *display, const size_t *from, const size_t *to, siz
 {
     if (from == NULL) {
         for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
-            display->gl.context.shifting[i] = i;
+            display->gl.shifting[i] = i;
         }
     } else {
         for (size_t i = 0; i < count; ++i) {
-            display->gl.context.shifting[from[i]] = to[i];
+            display->gl.shifting[from[i]] = to[i];
         }
     }
 }
@@ -442,23 +408,23 @@ void Display_transparent(Display_t *display, const size_t *color, const bool *is
 {
     if (color == NULL) {
         for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
-            display->gl.context.transparent[i] = GL_BOOL_FALSE;
+            display->gl.transparent[i] = GL_BOOL_FALSE;
         }
-        display->gl.context.transparent[0] = GL_BOOL_TRUE;
+        display->gl.transparent[0] = GL_BOOL_TRUE;
     } else {
         for (size_t i = 0; i < count; ++i) {
-            display->gl.context.transparent[color[i]] = is_transparent[i] ? GL_BOOL_TRUE : GL_BOOL_FALSE;
+            display->gl.transparent[color[i]] = is_transparent[i] ? GL_BOOL_TRUE : GL_BOOL_FALSE;
         }
     }
 }
 
 void Display_background(Display_t *display, const size_t color)
 {
-    if (color >= display->gl.context.palette.count) {
+    if (color >= display->gl.palette.count) {
         Log_write(LOG_LEVELS_WARNING, "<DISPLAY> color index #%d not available in current palette", color);
         return;
     }
-    display->gl.context.background = color;
+    display->gl.background = color;
 }
 
 void Display_shader(Display_t *display, const char *effect)
@@ -506,9 +472,8 @@ void Display_terminate(Display_t *display)
         GL_program_delete(&display->programs[i]);
     }
 
-    deinitialize_buffers(display);
-    GL_terminate(&display->gl);
-
+    GL_texture_delete(&display->vram_texture);
+    GL_context_terminate(&display->gl);
     glfwDestroyWindow(display->window);
     glfwTerminate();
 }

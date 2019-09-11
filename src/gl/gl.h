@@ -26,42 +26,12 @@
 #include <stdbool.h>
 
 #include "common.h"
+#include "context.h"
 #include "palette.h"
 #include "primitive.h"
 #include "program.h"
 #include "sheet.h"
 #include "surface.h"
 #include "texture.h"
-
-typedef enum _GL_Raster_Operations_t {
-    RASTER_OPERATION_NOP,
-    RASTER_OPERATION_SET,
-    RASTER_OPERATION_AND,
-    RASTER_OPERATION_OR,
-    RASTER_OPERATION_NOT,
-    RASTER_OPERATION_XOR,
-    GL_Raster_Operations_t_CountOf
-} GL_Raster_Operations_t;
-
-typedef struct _GL_Context_t {
-    GL_Pixel_t background;
-    GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
-    GL_Bool_t transparent[GL_MAX_PALETTE_COLORS];
-    GL_Rectangle_t clipping_region;
-    GL_Palette_t palette;
-    GL_Raster_Operations_t raster_operation;
-} GL_Context_t;
-
-typedef struct _GL_t {
-    GL_Surface_t surface;
-    GL_Context_t context;
-} GL_t;
-
-extern bool GL_initialize(GL_t *gl, size_t width, size_t height);
-extern void GL_terminate(GL_t *gl);
-extern void GL_push(GL_t *gl);
-extern void GL_pop(GL_t *gl);
-extern void GL_clear(GL_t *gl);
-extern void GL_prepare(const GL_t *gl, void *vram);
 
 #endif  /* __GL_H__ */

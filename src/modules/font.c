@@ -176,9 +176,8 @@ static int font_write(lua_State *L)
 
     Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
 
-    const GL_Context_t *context = &environment->display->gl.context;
+    const GL_Context_t *context = &environment->display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
-    GL_Surface_t *target = &environment->display->gl.surface;
 
     double dw = sheet->size.width * fabs(scale);
 #ifndef __NO_LINEFEEDS__
@@ -237,7 +236,7 @@ static int font_write(lua_State *L)
         if (*ptr < ' ') {
             continue;
         }
-        GL_sheet_blit(context, sheet, *ptr - ' ', target, position, (float)scale, 0.0f);
+        GL_sheet_blit(context, sheet, *ptr - ' ', position, (float)scale, 0.0f);
         position.x += dw;
     }
 

@@ -78,20 +78,18 @@ typedef struct _Display_t {
     int window_width, window_height, window_scale;
     int physical_width, physical_height;
 
-    GL_Color_t *vram;
     GL_Texture_t vram_texture;
     GL_Quad_t vram_destination;
 
     GL_Program_t programs[Display_Programs_t_CountOf];
     size_t program_index;
 
-    GL_t gl;
+    GL_Context_t gl;
 } Display_t;
 
 extern bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title);
 extern bool Display_should_close(Display_t *display);
 extern void Display_process_input(Display_t *display);
-extern void Display_clear(Display_t *display);
 extern void Display_present(Display_t *display);
 
 extern void Display_palette(Display_t *display, const GL_Palette_t *palette);

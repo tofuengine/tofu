@@ -106,7 +106,7 @@ static int bank_new(lua_State *L)
     strcat(pathfile, file);
 
     GL_Sheet_t sheet;
-    GL_sheet_load(&sheet, pathfile, cell_width, cell_height, to_indexed_atlas_callback, (void *)&environment->display->gl.context.palette);
+    GL_sheet_load(&sheet, pathfile, cell_width, cell_height, to_indexed_atlas_callback, (void *)&environment->display->gl.palette);
     Log_write(LOG_LEVELS_DEBUG, "<BANK> sheet '%s' loaded", pathfile);
 
     Bank_Class_t *instance = (Bank_Class_t *)lua_newuserdata(L, sizeof(Bank_Class_t));
@@ -179,10 +179,9 @@ static int bank_blit4(lua_State *L)
 
     GL_Point_t destination = (GL_Point_t){ .x = (int)x, .y = (int)y };
 
-    const GL_Context_t *context = &environment->display->gl.context;
+    const GL_Context_t *context = &environment->display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
-    GL_Surface_t *target = &environment->display->gl.surface;
-    GL_sheet_blit_fast(context, sheet, cell_id, target, destination);
+    GL_sheet_blit_fast(context, sheet, cell_id, destination);
 
     return 0;
 }
@@ -209,10 +208,9 @@ static int bank_blit5(lua_State *L)
 
     GL_Point_t destination = (GL_Point_t){ .x = (int)x, .y = (int)y };
 
-    const GL_Context_t *context = &environment->display->gl.context;
+    const GL_Context_t *context = &environment->display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
-    GL_Surface_t *target = &environment->display->gl.surface;
-    GL_sheet_blit(context, sheet, cell_id, target, destination, 1.0f, rotation);
+    GL_sheet_blit(context, sheet, cell_id, destination, 1.0f, rotation);
 
     return 0;
 }
@@ -258,10 +256,9 @@ static int bank_blit6(lua_State *L)
     }
 #endif
 
-    const GL_Context_t *context = &environment->display->gl.context;
+    const GL_Context_t *context = &environment->display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
-    GL_Surface_t *target = &environment->display->gl.surface;
-    GL_sheet_blit_fast(context, sheet, cell_id, target, destination);
+    GL_sheet_blit_fast(context, sheet, cell_id, destination);
 
     return 0;
 }
@@ -309,10 +306,9 @@ static int bank_blit7(lua_State *L)
     }
 #endif
 
-    const GL_Context_t *context = &environment->display->gl.context;
+    const GL_Context_t *context = &environment->display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
-    GL_Surface_t *target = &environment->display->gl.surface;
-    GL_sheet_blit(context, sheet, cell_id, target, destination, scale_x, rotation);
+    GL_sheet_blit(context, sheet, cell_id, destination, scale_x, rotation);
 
     return 0;
 }
