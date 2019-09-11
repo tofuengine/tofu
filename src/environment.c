@@ -25,7 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-void Environment_initialize(Environment_t *environment, const char *base_path, Display_t *display)
+void Environment_initialize(Environment_t *environment, const char *base_path)
 {
     memset(environment, 0x00, sizeof(Environment_t));
 
@@ -33,7 +33,6 @@ void Environment_initialize(Environment_t *environment, const char *base_path, D
     environment->fps = 0.0;
 
     strcpy(environment->base_path, base_path);
-    environment->display = display;
 }
 
 void Environment_terminate(Environment_t *environment)

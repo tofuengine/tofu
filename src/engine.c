@@ -62,10 +62,10 @@ static bool update_statistics(Engine_Statistics_t *statistics, double elapsed) {
 bool Engine_initialize(Engine_t *engine, const char *base_path)
 {
     Log_initialize();
-    Environment_initialize(&engine->environment, base_path, &engine->display);
+    Environment_initialize(&engine->environment, base_path);
     Configuration_initialize(&engine->configuration);
 
-    bool result = Interpreter_initialize(&engine->interpreter, &engine->configuration, &engine->environment);
+    bool result = Interpreter_initialize(&engine->interpreter, &engine->configuration, &engine->environment, &engine->display);
     if (!result) {
         Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't initialize interpreter");
         return false;

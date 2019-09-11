@@ -36,12 +36,10 @@ typedef struct _Environment_t {
     bool quit;
     double fps;
 
-    Display_t *display;
-
     Timer_Pool_t *timer_pool;
 } Environment_t;
 
-extern void Environment_initialize(Environment_t *environment, const char *base_path, Display_t *display);
+extern void Environment_initialize(Environment_t *environment, const char *base_path);
 extern void Environment_terminate(Environment_t *environment);
 
 #endif  /* __ENVIRONMENT_H__ */

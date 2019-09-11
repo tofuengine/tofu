@@ -231,7 +231,7 @@ static bool timerpool_callback(Timer_t *timer, void *parameters)
     return result == LUA_OK;
 }
 
-bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configuration, const Environment_t *environment)
+bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configuration, const Environment_t *environment, const Display_t *display)
 {
     interpreter->environment = environment;
     interpreter->gc_age = 0.0;
@@ -245,7 +245,8 @@ bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configu
     luaL_openlibs(interpreter->state);
 
     lua_pushlightuserdata(interpreter->state, (void *)environment); // Discard `const` qualifier.
-    modules_initialize(interpreter->state, 1);
+    lua_pushlightuserdata(interpreter->state, (void *)display);
+    modules_initialize(interpreter->state, 2);
 
 #if 0
     luaX_appendpath(interpreter->state, environment->base_path);

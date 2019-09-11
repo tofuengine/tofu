@@ -61,8 +61,8 @@ static const luaX_Const _bank_constants[] = {
 
 int bank_loader(lua_State *L)
 {
-    lua_pushvalue(L, lua_upvalueindex(1)); // Duplicate the upvalue to pass it to the module.
-    return luaX_newmodule(L, NULL, _bank_functions, _bank_constants, 1, LUAX_CLASS(Bank_Class_t));
+    luaX_pushupvalues(L, 2); // Duplicate the upvalues to pass it to the module.
+    return luaX_newmodule(L, NULL, _bank_functions, _bank_constants, 2, LUAX_CLASS(Bank_Class_t));
 }
 
 static void to_indexed_atlas_callback(void *parameters, GL_Surface_t *surface, const void *data)
@@ -100,13 +100,14 @@ static int bank_new(lua_State *L)
 #endif
 
     Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
     char pathfile[PATH_FILE_MAX] = {};
     strcpy(pathfile, environment->base_path);
     strcat(pathfile, file);
 
     GL_Sheet_t sheet;
-    GL_sheet_load(&sheet, pathfile, cell_width, cell_height, to_indexed_atlas_callback, (void *)&environment->display->gl.palette);
+    GL_sheet_load(&sheet, pathfile, cell_width, cell_height, to_indexed_atlas_callback, (void *)&display->gl.palette);
     Log_write(LOG_LEVELS_DEBUG, "<BANK> sheet '%s' loaded", pathfile);
 
     Bank_Class_t *instance = (Bank_Class_t *)lua_newuserdata(L, sizeof(Bank_Class_t));
@@ -175,11 +176,11 @@ static int bank_blit4(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f", cell_id, x, y);
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
     GL_Point_t destination = (GL_Point_t){ .x = (int)x, .y = (int)y };
 
-    const GL_Context_t *context = &environment->display->gl;
+    const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
     GL_sheet_blit_fast(context, sheet, cell_id, destination);
 
@@ -204,11 +205,11 @@ static int bank_blit5(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f, %.f", cell_id, x, y, rotation);
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
     GL_Point_t destination = (GL_Point_t){ .x = (int)x, .y = (int)y };
 
-    const GL_Context_t *context = &environment->display->gl;
+    const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
     GL_sheet_blit(context, sheet, cell_id, destination, 1.0f, rotation);
 
@@ -235,7 +236,7 @@ static int bank_blit6(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f, %.f, %.f", cell_id, x, y, scale_x, scale_y);
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
 #ifdef __NO_MIRRORING__
     double dw = (double)instance->sheet.size.width * fabs(scale_x);
@@ -256,7 +257,7 @@ static int bank_blit6(lua_State *L)
     }
 #endif
 
-    const GL_Context_t *context = &environment->display->gl;
+    const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
     GL_sheet_blit_fast(context, sheet, cell_id, destination);
 
@@ -285,7 +286,7 @@ static int bank_blit7(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f, %.f, %.f, %.f", cell_id, x, y, rotation, scale_x, scale_y);
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
 #ifdef __NO_MIRRORING__
     double dw = (double)instance->sheet.size.width * fabs(scale_x);
@@ -306,7 +307,7 @@ static int bank_blit7(lua_State *L)
     }
 #endif
 
-    const GL_Context_t *context = &environment->display->gl;
+    const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
     GL_sheet_blit(context, sheet, cell_id, destination, scale_x, rotation);
 

@@ -157,8 +157,8 @@ static const luaX_Const _canvas_constants[] = {
 
 int canvas_loader(lua_State *L)
 {
-    lua_pushvalue(L, lua_upvalueindex(1)); // Duplicate the upvalue to pass it to the module.
-    return luaX_newmodule(L, _canvas_script, _canvas_functions, _canvas_constants, 1, LUAX_CLASS(Canvas_Class_t));
+    luaX_pushupvalues(L, 2); // Duplicate the upvalues to pass it to the module.
+    return luaX_newmodule(L, _canvas_script, _canvas_functions, _canvas_constants, 2, LUAX_CLASS(Canvas_Class_t));
 }
 
 static int canvas_width(lua_State *L)
@@ -169,9 +169,9 @@ static int canvas_width(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.width()");
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    lua_pushinteger(L, environment->display->configuration.width);
+    lua_pushinteger(L, display->gl.width);
 
     return 1;
 }
@@ -184,9 +184,9 @@ static int canvas_height(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.height()");
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    lua_pushinteger(L, environment->display->configuration.height);
+    lua_pushinteger(L, display->gl.height);
 
     return 1;
 }
@@ -199,9 +199,9 @@ static int canvas_palette0(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.palette()");
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    GL_Palette_t *palette = &environment->display->gl.palette;
+    GL_Palette_t *palette = &display->gl.palette;
 
     lua_newtable(L);
     for (size_t i = 0; i < palette->count; ++i) {
@@ -225,7 +225,7 @@ static int canvas_palette1(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.palette(%d)", type);
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
     GL_Palette_t palette = {};
 
@@ -267,7 +267,7 @@ static int canvas_palette1(lua_State *L)
         return 0;
     }
 
-    Display_palette(environment->display, &palette);
+    Display_palette(display, &palette); // TODO: discard "Display_palette()" and similar functions.
 
     return 0;
 }
@@ -290,9 +290,9 @@ static int canvas_background(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.background(%d)", color);
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    Display_background(environment->display, color);
+    Display_background(display, color);
 
     return 0;
 }
@@ -305,9 +305,9 @@ static int canvas_shift0(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.shift()");
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    Display_shift(environment->display, NULL, NULL, 0);
+    Display_shift(display, NULL, NULL, 0);
 
     return 0;
 }
@@ -322,7 +322,7 @@ static int canvas_shift1(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.shift(%d)", type);
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
     int count = luaX_count(L, 1);
 
@@ -336,7 +336,7 @@ static int canvas_shift1(lua_State *L)
         lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
     }
 
-    Display_shift(environment->display, from, to, count);
+    Display_shift(display, from, to, count);
 
     return 0;
 }
@@ -354,9 +354,9 @@ static int canvas_shift2(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.shift(%d, %d)", from, to);
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    Display_shift(environment->display, &from, &to, 1);
+    Display_shift(display, &from, &to, 1);
 
     return 0;
 }
@@ -378,9 +378,9 @@ static int canvas_transparent0(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.transparent()");
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    Display_transparent(environment->display, NULL, NULL, 0);
+    Display_transparent(display, NULL, NULL, 0);
 
     return 0;
 }
@@ -395,7 +395,7 @@ static int canvas_transparent1(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.transparent(%d)", type);
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
     int count = luaX_count(L, 1);
 
@@ -409,7 +409,7 @@ static int canvas_transparent1(lua_State *L)
         lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
     }
 
-    Display_transparent(environment->display, color, is_transparent, count);
+    Display_transparent(display, color, is_transparent, count);
 
     return 0;
 }
@@ -426,9 +426,9 @@ static int canvas_transparent2(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.transparent(%d, %d)", color, transparent);
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    Display_transparent(environment->display, &color, &transparent, 1);
+    Display_transparent(display, &color, &transparent, 1);
 
     return 0;
 }
@@ -452,9 +452,9 @@ static int canvas_shader(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.shader('%s')", code);
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    Display_shader(environment->display, code);
+    Display_shader(display, code);
 
     return 0;
 }
@@ -469,10 +469,10 @@ static int canvas_color(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.color('%s')", argb);
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
     GL_Color_t color = GL_palette_parse_color(argb);
-    size_t index = GL_palette_find_nearest_color(&environment->display->gl.palette, color);
+    size_t index = GL_palette_find_nearest_color(&display->gl.palette, color);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "color '%s' mapped to index %d", argb, index);
 #endif
@@ -490,9 +490,9 @@ static int canvas_clear(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.clear()");
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    GL_context_clear(&environment->display->gl);
+    GL_context_clear(&display->gl);
 
     return 0;
 }
@@ -514,8 +514,7 @@ static int canvas_points(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.points(%d, %d)", vertices, color);
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
-    // TODO: pass the `GL_t` structure, too.
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
     const size_t count = vertices / 2;
     if (count == 0) {
@@ -530,7 +529,7 @@ static int canvas_points(lua_State *L)
         double x = array[(i * 2)];
         double y = array[(i * 2) + 1];
 
-        GL_primitive_point(&environment->display->gl, (GL_Point_t){ (int)x, (int)y }, color);
+        GL_primitive_point(&display->gl, (GL_Point_t){ (int)x, (int)y }, color);
     }
 
     return 0;
@@ -546,7 +545,7 @@ static int canvas_cluster(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.cluster(%d)", amount);
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
     const size_t count = amount / 3;
     if (count == 0) {
@@ -562,7 +561,7 @@ static int canvas_cluster(lua_State *L)
         double y = array[(i * 3) + 1];
         double c = array[(i * 3) + 2];
 
-        GL_primitive_point(&environment->display->gl, (GL_Point_t){ (int)x, (int)y }, c);
+        GL_primitive_point(&display->gl, (GL_Point_t){ (int)x, (int)y }, c);
     }
 
     return 0;
@@ -580,7 +579,7 @@ static int canvas_polyline(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.polyline(%d, %d)", vertices, color);
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
     const size_t count = vertices / 2;
     if (count == 0) {
@@ -595,7 +594,7 @@ static int canvas_polyline(lua_State *L)
         double x = array[(i * 2)];
         double y = array[(i * 2) + 1];
 
-        GL_primitive_point(&environment->display->gl, (GL_Point_t){ (int)x, (int)y }, color);
+        GL_primitive_point(&display->gl, (GL_Point_t){ (int)x, (int)y }, color);
     }
 
     return 0;
@@ -613,7 +612,7 @@ static int canvas_strip(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.strip(%d, %d)", vertices, color);
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
     const size_t count = vertices / 2;
     if (count == 0) {
@@ -628,7 +627,7 @@ static int canvas_strip(lua_State *L)
         double x = array[(i * 2)];
         double y = array[(i * 2) + 1];
 
-        GL_primitive_point(&environment->display->gl, (GL_Point_t){ (int)x, (int)y }, color);
+        GL_primitive_point(&display->gl, (GL_Point_t){ (int)x, (int)y }, color);
     }
 
     return 0;
@@ -646,7 +645,7 @@ static int canvas_fan(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.fan(%d, %d)", vertices, color);
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
     const size_t count = vertices / 2;
     if (count == 0) {
@@ -661,7 +660,7 @@ static int canvas_fan(lua_State *L)
         double x = array[(i * 2)];
         double y = array[(i * 2) + 1];
 
-        GL_primitive_point(&environment->display->gl, (GL_Point_t){ (int)x, (int)y }, color);
+        GL_primitive_point(&display->gl, (GL_Point_t){ (int)x, (int)y }, color);
     }
 
     return 0;

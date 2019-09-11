@@ -46,8 +46,8 @@ static const luaX_Const _file_constants[] = {
 
 int file_loader(lua_State *L)
 {
-    lua_pushvalue(L, lua_upvalueindex(1)); // Duplicate the upvalue to pass it to the module.
-    return luaX_newmodule(L, NULL, _file_functions, _file_constants, 1, LUAX_CLASS(File_Class_t));
+    luaX_pushupvalues(L, 2); // Duplicate the upvalues to pass it to the module.
+    return luaX_newmodule(L, NULL, _file_functions, _file_constants, 2, LUAX_CLASS(File_Class_t));
 }
 
 static int file_read(lua_State *L)

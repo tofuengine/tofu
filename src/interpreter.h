@@ -42,7 +42,7 @@ typedef struct _Interpreter_t {
     Timer_Pool_t timer_pool;
 } Interpreter_t;
 
-extern bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configuration, const Environment_t *environment);
+extern bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configuration, const Environment_t *environment, const Display_t *display);
 extern bool Interpreter_init(Interpreter_t *interpreter);
 extern bool Interpreter_input(Interpreter_t *interpreter);
 extern bool Interpreter_update(Interpreter_t *interpreter, const double delta_time);

@@ -252,6 +252,13 @@ void luaX_checkargument(lua_State *L, int index, const char *file, int line, ...
     }
 }
 
+void luaX_pushupvalues(lua_State *L, int nup)
+{
+    for (int i = 0; i< nup; ++i) {
+        lua_pushvalue(L, lua_upvalueindex(i + 1));
+    }
+}
+
 int luaX_count(lua_State *L, int idx)
 {
     int count = 0;
