@@ -67,12 +67,14 @@ function Game:update(delta_time)
 end
 
 function Game:render(ratio)
+  Canvas.clear()
+
   for _, bunny in pairs(self.bunnies) do
     bunny:render()
   end
 
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0, 1.0, "left")
-  self.font:write(string.format("#%d bunnies", #self.bunnies), Canvas.width(), 0, 1.0, "right")
+  self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
+  self.font:write(string.format("#%d bunnies", #self.bunnies), Canvas.width(), 0, "right")
 end
 
 return Game

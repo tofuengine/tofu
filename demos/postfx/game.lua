@@ -57,8 +57,8 @@ function Game:render(ratio)
   for _, sprite in pairs(self.sprites) do
     sprite:render()
   end
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0, 1.0, "left")
-  self.font:write(string.format("#%d sprites", #self.sprites), Canvas.width(), 0, 1.0, "right")
+  self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
+  self.font:write(string.format("#%d sprites", #self.sprites), Canvas.width(), 0, "right")
 end
 
 return Game

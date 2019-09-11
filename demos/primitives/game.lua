@@ -27,6 +27,8 @@ function Game:update(delta_time)
 end
 
 function Game:render(ratio)
+  Canvas.clear()
+
   Canvas.point(4, 4, 1)
   Canvas.line(4, 8, 7, 8, 2)
 --Canvas.triangle("fill", 150, 150, 50, 250, 250, 250, 3)
@@ -37,7 +39,7 @@ function Game:render(ratio)
 --Canvas.circle("fill", 200, 100, 50, 1)
 --Canvas.circle("fill", 300, 100, 50, 1, _segments)
 
-  self.font:write(string.format("FPS: %d", System.fps()), Canvas.width(), 0, 1.0, "right")
+  self.font:write(string.format("FPS: %d", System.fps()), Canvas.width(), 0, "right")
 end
 
 return Game
