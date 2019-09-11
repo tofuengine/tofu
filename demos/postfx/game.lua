@@ -53,6 +53,7 @@ function Game:update(delta_time)
 end
 
 function Game:render(ratio)
+  Canvas.clear()
   for _, sprite in pairs(self.sprites) do
     sprite:render()
   end
