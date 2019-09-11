@@ -105,23 +105,28 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
     const GL_Bool_t *transparent = context->transparent;
     const GL_Color_t *colors = context->palette.colors;
 
-    size_t dst_width = (size_t)tile.width;
-    size_t dst_height = (size_t)tile.height;
+    const size_t width = (size_t)tile.width;
+    const size_t height = (size_t)tile.height;
 
-    const size_t src_skip = surface->width - dst_width;
-    const size_t dst_skip = context->width - dst_width;
+    const size_t src_skip = surface->width - width;
+    const size_t dst_skip = context->width - width;
 
     GL_Color_t *dst = (GL_Color_t *)context->vram_rows[position.y] + position.x;
     const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[tile.y] + tile.x;
 
-    for (size_t i = 0; i < dst_height; ++i) {
-        for (size_t j = 0; j < dst_width; ++j) {
+    for (size_t i = 0; i < height; ++i) {
+        for (size_t j = 0; j < width; ++j) {
             GL_Pixel_t index = shifting[*(src++)];
+#if 1
             if (transparent[index]) {
                 dst++;
             } else {
                 *(dst++) = colors[index];
             }
+#else
+            *dst = transparent[index] ? *dst : colors[index];
+            dst++;
+#endif
         }
         src += src_skip;
         dst += dst_skip;
@@ -130,41 +135,44 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
 
 // Simple implementation of nearest-neighbour scaling.
 // See `http://tech-algorithm.com/articles/nearest-neighbor-image-scaling/` for a reference code.
-void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Point_t position, float scale)
+void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Point_t position, float sx, float sy)
 {
     const GL_Pixel_t *shifting = context->shifting;
     const GL_Bool_t *transparent = context->transparent;
     const GL_Color_t *colors = context->palette.colors;
 
-    size_t dst_width = (size_t)(scale * (float)tile.width); // To avoid empty pixels we scan the destination area and calculate the source pixel.
-    size_t dst_height = (size_t)(scale * (float)tile.height);
+    const size_t width = (size_t)(sx * (float)tile.width); // To avoid empty pixels we scan the destination area and calculate the source pixel.
+    const size_t height = (size_t)(sy * (float)tile.height);
 
-    const float x_step = 1.0f / scale;
-    const float y_step = 1.0f / scale;
+    const float du = 1.0f / sx;
+    const float dv = 1.0f / sy;
 
-    const size_t dst_skip = context->width - dst_width;
+    const size_t skip = context->width - width;
 
     GL_Color_t *dst = (GL_Color_t *)context->vram_rows[position.y] + position.x;
 
-    float offset_y = (float)tile.y;
-    for (size_t i = 0; i < dst_height; ++i) {
-        const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[(int)offset_y];
+    float v = (float)tile.y;
+    for (size_t i = 0; i < height; ++i) {
+        const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[(int)v];
 
-        float  offset_x = (float)tile.x;
-        for (size_t j = 0; j < dst_width; ++j) {
-            GL_Pixel_t index = shifting[src[(int)offset_x]];
-
+        float u = (float)tile.x;
+        for (size_t j = 0; j < width; ++j) {
+            GL_Pixel_t index = shifting[src[(int)u]];
+#if 1
             if (transparent[index]) {
                 dst++;
             } else {
                 *(dst++) = colors[index];
             }
-
-            offset_x += x_step;
+#else
+            *dst = transparent[index] ? *dst : colors[index];
+            dst++;
+#endif
+            u += du;
         }
 
-        offset_y += y_step;
-        dst += dst_skip;
+        v += dv;
+        dst += skip;
     }
 }
 
@@ -173,7 +181,10 @@ void GL_context_blit_r(const GL_Context_t *context, const GL_Surface_t *surface,
     GL_context_blit(context, surface, tile, position);
 }
 
-void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Point_t position, float scale, float rotation)
+// https://www.lexaloffle.com/bbs/?pid=52525
+// https://github.com/morgan3d/misc/tree/master/p8particle
+// https://web.archive.org/web/20190305223938/http://www.drdobbs.com/architecture-and-design/fast-bitmap-rotation-and-scaling/184416337
+void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Point_t position, float sx, float sy, float rotation)
 {
     GL_context_blit(context, surface, tile, position);
 }
