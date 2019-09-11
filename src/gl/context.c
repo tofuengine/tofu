@@ -29,7 +29,7 @@
 #include <memory.h>
 #include <stdlib.h>
 
-bool GL_context_initialize(GL_Context_t *gl, size_t width, size_t height)
+bool GL_context_initialize(GL_Context_t *context, size_t width, size_t height)
 {
     void *vram = malloc(width * height * sizeof(GL_Color_t));
     if (!vram) {
@@ -49,7 +49,7 @@ bool GL_context_initialize(GL_Context_t *gl, size_t width, size_t height)
 
     Log_write(LOG_LEVELS_DEBUG, "<GL> VRAM allocated at #%p (%dx%d)", vram, width, height);
 
-    *gl = (GL_Context_t){
+    *context = (GL_Context_t){
             .width = width,
             .height = height,
             .vram = vram,
@@ -57,40 +57,41 @@ bool GL_context_initialize(GL_Context_t *gl, size_t width, size_t height)
             .vram_size = width * height,
         };
 
-    gl->background = 0;
+    context->background = 0;
     for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
-        gl->shifting[i] = i;
-        gl->transparent[i] = GL_BOOL_FALSE;
+        context->shifting[i] = i;
+        context->transparent[i] = GL_BOOL_FALSE;
     }
-    gl->transparent[0] = GL_BOOL_TRUE;
+    context->transparent[0] = GL_BOOL_TRUE;
 
-    GL_palette_greyscale(&gl->palette, GL_MAX_PALETTE_COLORS);
+    GL_palette_greyscale(&context->palette, GL_MAX_PALETTE_COLORS);
     Log_write(LOG_LEVELS_DEBUG, "<GL> calculating greyscale palette of #%d entries", GL_MAX_PALETTE_COLORS);
 
     return true;
 }
 
-void GL_context_terminate(GL_Context_t *gl)
+void GL_context_terminate(GL_Context_t *context)
 {
-    free(gl->vram);
-    free(gl->vram_rows);
+    free(context->vram);
+    free(context->vram_rows);
+    Log_write(LOG_LEVELS_DEBUG, "<GL> context deallocated");
 
-    *gl = (GL_Context_t){};
+    *context = (GL_Context_t){};
 }
 
-void GL_context_push(GL_Context_t *gl)
-{
-}
-
-void GL_context_pop(GL_Context_t *gl)
+void GL_context_push(const GL_Context_t *context)
 {
 }
 
-void GL_context_clear(GL_Context_t *gl)
+void GL_context_pop(const GL_Context_t *context)
 {
-    const GL_Color_t color = gl->palette.colors[gl->background];
-    GL_Color_t *dst = (GL_Color_t *)gl->vram;
-    for (size_t i = gl->vram_size; i > 0; --i) {
+}
+
+void GL_context_clear(const GL_Context_t *context)
+{
+    const GL_Color_t color = context->palette.colors[context->background];
+    GL_Color_t *dst = (GL_Color_t *)context->vram;
+    for (size_t i = context->vram_size; i > 0; --i) {
         *(dst++) = color;
     }
 }
@@ -153,4 +154,46 @@ void GL_context_blit_fast(const GL_Context_t *context, const GL_Surface_t *surfa
         src += src_skip;
         dst += dst_skip;
     }
+}
+
+void GL_context_palette(GL_Context_t *context, const GL_Palette_t *palette)
+{
+    context->palette = *palette;
+    Log_write(LOG_LEVELS_DEBUG, "<GL> palette updated");
+}
+
+void GL_context_shifting(GL_Context_t *context, const size_t *from, const size_t *to, size_t count)
+{
+    if (from == NULL) {
+        for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
+            context->shifting[i] = i;
+        }
+    } else {
+        for (size_t i = 0; i < count; ++i) {
+            context->shifting[from[i]] = to[i];
+        }
+    }
+}
+
+void GL_context_transparent(GL_Context_t *context, const GL_Pixel_t *indexes, const GL_Bool_t *transparent, size_t count)
+{
+    if (indexes == NULL) {
+        for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
+            context->transparent[i] = GL_BOOL_FALSE;
+        }
+        context->transparent[0] = GL_BOOL_TRUE;
+    } else {
+        for (size_t i = 0; i < count; ++i) {
+            context->transparent[indexes[i]] = transparent[i];
+        }
+    }
+}
+
+void GL_context_background(GL_Context_t *context, const GL_Pixel_t index)
+{
+    if (index >= context->palette.count) {
+        Log_write(LOG_LEVELS_WARNING, "<GL> color index #%d not available in current palette", index);
+        return;
+    }
+    context->background = index;
 }

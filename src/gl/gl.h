@@ -23,8 +23,6 @@
 #ifndef __GL_H__
 #define __GL_H__
 
-#include <stdbool.h>
-
 #include "common.h"
 #include "context.h"
 #include "palette.h"
@@ -32,6 +30,5 @@
 #include "program.h"
 #include "sheet.h"
 #include "surface.h"
-#include "texture.h"
 
 #endif  /* __GL_H__ */

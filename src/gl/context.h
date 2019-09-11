@@ -54,12 +54,19 @@ typedef struct _GL_Context_t {
     GL_Raster_Operations_t raster_operation;
 } GL_Context_t;
 
-extern bool GL_context_initialize(GL_Context_t *gl, size_t width, size_t height);
-extern void GL_context_terminate(GL_Context_t *gl);
-extern void GL_context_push(GL_Context_t *gl);
-extern void GL_context_pop(GL_Context_t *gl);
-extern void GL_context_clear(GL_Context_t *gl);
+extern bool GL_context_initialize(GL_Context_t *context, size_t width, size_t height);
+extern void GL_context_terminate(GL_Context_t *context);
+
+extern void GL_context_push(const GL_Context_t *context);
+extern void GL_context_pop(const GL_Context_t *context);
+
+extern void GL_context_clear(const GL_Context_t *context);
 extern void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Point_t position, float scale, float rotation);
 extern void GL_context_blit_fast(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Point_t position);
+
+extern void GL_context_palette(GL_Context_t *context, const GL_Palette_t *palette);
+extern void GL_context_shifting(GL_Context_t *context, const size_t *from, const size_t *to, size_t count);
+extern void GL_context_transparent(GL_Context_t *context, const GL_Pixel_t *indexes, const GL_Bool_t *transparent, size_t count);
+extern void GL_context_background(GL_Context_t *context, GL_Pixel_t index);
 
 #endif  /* __GL_CONTEXT_H__ */

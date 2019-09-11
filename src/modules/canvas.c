@@ -267,7 +267,7 @@ static int canvas_palette1(lua_State *L)
         return 0;
     }
 
-    Display_palette(display, &palette); // TODO: discard "Display_palette()" and similar functions.
+    GL_context_palette(&display->gl, &palette);
 
     return 0;
 }
@@ -292,7 +292,7 @@ static int canvas_background(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    Display_background(display, color);
+    GL_context_background(&display->gl, color);
 
     return 0;
 }
@@ -307,7 +307,7 @@ static int canvas_shift0(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    Display_shift(display, NULL, NULL, 0);
+    GL_context_shifting(&display->gl, NULL, NULL, 0);
 
     return 0;
 }
@@ -336,7 +336,7 @@ static int canvas_shift1(lua_State *L)
         lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
     }
 
-    Display_shift(display, from, to, count);
+    GL_context_shifting(&display->gl, from, to, count);
 
     return 0;
 }
@@ -356,7 +356,7 @@ static int canvas_shift2(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    Display_shift(display, &from, &to, 1);
+    GL_context_shifting(&display->gl, &from, &to, 1);
 
     return 0;
 }
@@ -380,7 +380,7 @@ static int canvas_transparent0(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    Display_transparent(display, NULL, NULL, 0);
+    GL_context_transparent(&display->gl, NULL, NULL, 0);
 
     return 0;
 }
@@ -399,17 +399,17 @@ static int canvas_transparent1(lua_State *L)
 
     int count = luaX_count(L, 1);
 
-    size_t color[count];
-    bool is_transparent[count];
+    GL_Pixel_t indexes[count];
+    GL_Bool_t transparent[count];
     lua_pushnil(L); // first key
     for (size_t i = 0; lua_next(L, 1); ++i) {
-        color[i] = lua_tointeger(L, -2);
-        is_transparent[i] = lua_toboolean(L, -1) ? true : false;
+        indexes[i] = lua_tointeger(L, -2);
+        transparent[i] = lua_toboolean(L, -1) ? GL_BOOL_TRUE : GL_BOOL_FALSE;
 
         lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
     }
 
-    Display_transparent(display, color, is_transparent, count);
+    GL_context_transparent(&display->gl, indexes, transparent, count);
 
     return 0;
 }
@@ -420,15 +420,15 @@ static int canvas_transparent2(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
         LUAX_SIGNATURE_ARGUMENT(luaX_isboolean)
     LUAX_SIGNATURE_END
-    size_t color = lua_tointeger(L, 1);
-    bool transparent = lua_toboolean(L, 2);
+    GL_Pixel_t color = lua_tointeger(L, 1);
+    GL_Bool_t transparent = lua_toboolean(L, 2) ? GL_BOOL_TRUE : GL_BOOL_FALSE;
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Canvas.transparent(%d, %d)", color, transparent);
 #endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    Display_transparent(display, &color, &transparent, 1);
+    GL_context_transparent(&display->gl, &color, &transparent, 1);
 
     return 0;
 }
@@ -471,8 +471,8 @@ static int canvas_color(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    GL_Color_t color = GL_palette_parse_color(argb);
-    size_t index = GL_palette_find_nearest_color(&display->gl.palette, color);
+    const GL_Color_t color = GL_palette_parse_color(argb);
+    const size_t index = GL_palette_find_nearest_color(&display->gl.palette, color);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "color '%s' mapped to index %d", argb, index);
 #endif

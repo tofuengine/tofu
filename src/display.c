@@ -274,19 +274,28 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         glfwSetWindowMonitor(display->window, NULL, position.x, position.y, display->physical_width, display->physical_height, GLFW_DONT_CARE);
         glfwShowWindow(display->window);
     } else { // Toggle fullscreen by passing primary monitor!
+        Log_write(LOG_LEVELS_INFO, "<DISPLAY> entering full-screen mode");
         glfwSetWindowMonitor(display->window, glfwGetPrimaryMonitor(), position.x, position.y, display->physical_width, display->physical_height, GLFW_DONT_CARE);
     }
 
-    GL_texture_create(&display->vram_texture, display->configuration.width, display->configuration.height, NULL);
-    if (display->vram_texture.id == 0) {
+    glGenTextures(1, &display->vram_texture); //allocate the memory for texture
+    if (display->vram_texture == 0) {
         Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't allocate VRAM texture");
         GL_context_terminate(&display->gl);
         glfwDestroyWindow(display->window);
         glfwTerminate();
         return false;
     }
-
-    glBindTexture(GL_TEXTURE_2D, display->vram_texture.id); // The VRAM texture is always the active and bound one.
+    glBindTexture(GL_TEXTURE_2D, display->vram_texture); // The VRAM texture is always the active and bound one.
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0); // Disable mip-mapping
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, display->configuration.width, display->configuration.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    Log_write(LOG_LEVELS_DEBUG, "<GL> texture created w/ id #%d (%dx%d)", display->vram_texture, display->configuration.width, display->configuration.height);
 
     for (size_t i = 0; i < Display_Programs_t_CountOf; ++i) {
         const Program_Data_t *data = &_programs_data[i];
@@ -297,7 +306,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
             !GL_program_attach(&display->programs[i], data->vertex_shader, GL_PROGRAM_SHADER_VERTEX) ||
             !GL_program_attach(&display->programs[i], data->fragment_shader, GL_PROGRAM_SHADER_FRAGMENT)) {
             Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't initialize shaders");
-            GL_texture_delete(&display->vram_texture);
+            glDeleteBuffers(1, &display->vram_texture);
             GL_context_terminate(&display->gl);
             glfwDestroyWindow(display->window);
             glfwTerminate();
@@ -313,6 +322,63 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     display->program_index = DISPLAY_PROGRAM_PASSTHRU; // Use pass-thru at the beginning.
 
     return true;
+}
+
+void Display_terminate(Display_t *display)
+{
+    for (size_t i = 0; i < Display_Programs_t_CountOf; ++i) {
+        if (display->programs[i].id == 0) {
+            continue;
+        }
+        GL_program_delete(&display->programs[i]);
+    }
+
+    glDeleteBuffers(1, &display->vram_texture);
+    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> texture w/ id #%d deleted", display->vram_texture);
+
+    GL_context_terminate(&display->gl);
+
+    glfwDestroyWindow(display->window);
+    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> windows #%p destroyed", display->window);
+
+    glfwTerminate();
+    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> terminated");
+}
+
+void Display_shader(Display_t *display, const char *effect)
+{
+    if (!effect) {
+        GL_program_delete(&display->programs[DISPLAY_PROGRAM_CUSTOM]);
+        display->program_index = DISPLAY_PROGRAM_PASSTHRU;
+        Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> switched to default shader");
+        return;
+    }
+
+    const size_t length = strlen(FRAGMENT_SHADER_CUSTOM) + strlen(effect);
+    char *code = malloc((length + 1) * sizeof(char)); // Add null terminator for the string.
+    memcpy(code, FRAGMENT_SHADER_CUSTOM, strlen(FRAGMENT_SHADER_CUSTOM));
+    memcpy(code + strlen(FRAGMENT_SHADER_CUSTOM), effect, strlen(effect));
+    code[length] = '\0';
+
+    GL_Program_t *program = &display->programs[DISPLAY_PROGRAM_CUSTOM];
+
+    if (GL_program_create(program) &&
+        GL_program_attach(program, VERTEX_SHADER, GL_PROGRAM_SHADER_VERTEX) &&
+        GL_program_attach(program, code, GL_PROGRAM_SHADER_FRAGMENT)) {
+        GL_program_prepare(program, _uniforms, Uniforms_t_CountOf);
+
+        GL_program_send(program, UNIFORM_TEXTURE, GL_PROGRAM_UNIFORM_TEXTURE, 1, _texture_id_0); // Redundant
+        GLfloat resolution[] = { (GLfloat)display->window_width, (GLfloat)display->window_height };
+        GL_program_send(program, UNIFORM_RESOLUTION, GL_PROGRAM_UNIFORM_VEC2, 1, resolution);
+
+        display->program_index = DISPLAY_PROGRAM_CUSTOM;
+        Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> switched to custom shader");
+    } else {
+        GL_program_delete(program);
+        Log_write(LOG_LEVELS_WARNING, "<DISPLAY> can't load custom shader");
+    }
+
+    free(code);
 }
 
 bool Display_should_close(Display_t *display)
@@ -383,97 +449,4 @@ i = i;
     glEnd();
 
     glfwSwapBuffers(display->window);
-}
-
-void Display_palette(Display_t *display, const GL_Palette_t *palette)
-{
-    display->gl.palette = *palette;
-    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> palette updated");
-}
-
-void Display_shift(Display_t *display, const size_t *from, const size_t *to, size_t count)
-{
-    if (from == NULL) {
-        for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
-            display->gl.shifting[i] = i;
-        }
-    } else {
-        for (size_t i = 0; i < count; ++i) {
-            display->gl.shifting[from[i]] = to[i];
-        }
-    }
-}
-
-void Display_transparent(Display_t *display, const size_t *color, const bool *is_transparent, size_t count)
-{
-    if (color == NULL) {
-        for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
-            display->gl.transparent[i] = GL_BOOL_FALSE;
-        }
-        display->gl.transparent[0] = GL_BOOL_TRUE;
-    } else {
-        for (size_t i = 0; i < count; ++i) {
-            display->gl.transparent[color[i]] = is_transparent[i] ? GL_BOOL_TRUE : GL_BOOL_FALSE;
-        }
-    }
-}
-
-void Display_background(Display_t *display, const size_t color)
-{
-    if (color >= display->gl.palette.count) {
-        Log_write(LOG_LEVELS_WARNING, "<DISPLAY> color index #%d not available in current palette", color);
-        return;
-    }
-    display->gl.background = color;
-}
-
-void Display_shader(Display_t *display, const char *effect)
-{
-    if (!effect) {
-        GL_program_delete(&display->programs[DISPLAY_PROGRAM_CUSTOM]);
-        display->program_index = DISPLAY_PROGRAM_PASSTHRU;
-        Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> switched to default shader");
-        return;
-    }
-
-    const size_t length = strlen(FRAGMENT_SHADER_CUSTOM) + strlen(effect);
-    char *code = malloc((length + 1) * sizeof(char)); // Add null terminator for the string.
-    memcpy(code, FRAGMENT_SHADER_CUSTOM, strlen(FRAGMENT_SHADER_CUSTOM));
-    memcpy(code + strlen(FRAGMENT_SHADER_CUSTOM), effect, strlen(effect));
-    code[length] = '\0';
-
-    GL_Program_t *program = &display->programs[DISPLAY_PROGRAM_CUSTOM];
-
-    if (GL_program_create(program) &&
-        GL_program_attach(program, VERTEX_SHADER, GL_PROGRAM_SHADER_VERTEX) &&
-        GL_program_attach(program, code, GL_PROGRAM_SHADER_FRAGMENT)) {
-        GL_program_prepare(program, _uniforms, Uniforms_t_CountOf);
-
-        GL_program_send(program, UNIFORM_TEXTURE, GL_PROGRAM_UNIFORM_TEXTURE, 1, _texture_id_0); // Redundant
-        GLfloat resolution[] = { (GLfloat)display->window_width, (GLfloat)display->window_height };
-        GL_program_send(program, UNIFORM_RESOLUTION, GL_PROGRAM_UNIFORM_VEC2, 1, resolution);
-
-        display->program_index = DISPLAY_PROGRAM_CUSTOM;
-        Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> switched to custom shader");
-    } else {
-        GL_program_delete(program);
-        Log_write(LOG_LEVELS_WARNING, "<DISPLAY> can't load custom shader");
-    }
-
-    free(code);
-}
-
-void Display_terminate(Display_t *display)
-{
-    for (size_t i = 0; i < Display_Programs_t_CountOf; ++i) {
-        if (display->programs[i].id == 0) {
-            continue;
-        }
-        GL_program_delete(&display->programs[i]);
-    }
-
-    GL_texture_delete(&display->vram_texture);
-    GL_context_terminate(&display->gl);
-    glfwDestroyWindow(display->window);
-    glfwTerminate();
 }
