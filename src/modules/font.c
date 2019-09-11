@@ -154,7 +154,94 @@ static int font_gc(lua_State *L)
     return 0;
 }
 
-static int font_write(lua_State *L)
+static int font_write5(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 5)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
+    LUAX_SIGNATURE_END
+    Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
+    const char *text = lua_tostring(L, 2);
+    double x = (double)lua_tonumber(L, 3);
+    double y = (double)lua_tonumber(L, 4);
+    const char *alignment = lua_tostring(L, 5);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %s, %d, %d, %s", text, x, y, alignment);
+#endif
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+    const GL_Context_t *context = &display->gl;
+    const GL_Sheet_t *sheet = &instance->sheet;
+
+    double dw = sheet->size.width;
+#ifndef __NO_LINEFEEDS__
+    double dh = sheet->tile.height;
+#endif
+
+#ifndef __NO_LINEFEEDS__
+    size_t width = 0;
+    size_t slen = strlen(text);
+    size_t offset = 0;
+    while (offset < slen) {
+        const char *start = text + offset;
+        const char *end = strchr(start, '\n');
+        if (!end) {
+            end = text + slen;
+        }
+        size_t length = end - start;
+        if (width < length * dw) {
+            width = length * dw;
+        }
+        offset += length + 1;
+    }
+#else
+    size_t width = strlen(text) * dw;
+#endif
+
+    int dx, dy; // Always pixel-aligned positions.
+    if (alignment[0] == 'l') {
+        dx = (int)x;
+        dy = (int)y;
+    } else
+    if (alignment[0] == 'c') {
+        dx = (int)(x - (width * 0.5f));
+        dy = (int)y;
+    } else
+    if (alignment[0] == 'r') {
+        dx = (int)(x - width);
+        dy = (int)y;
+    } else {
+        dx = (int)x;
+        dy = (int)y;
+    }
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %d, %d, %d", width, dx, dy);
+#endif
+
+    GL_Point_t position = { .x = dx, .y = dy };
+    for (const char *ptr = text; *ptr != '\0'; ++ptr) {
+#ifndef __NO_LINEFEEDS__
+        if (*ptr == '\n') { // Handle carriage-return
+            destination.x = dx;
+            destination.y += dh;
+            continue;
+        } else
+#endif
+        if (*ptr < ' ') {
+            continue;
+        }
+        GL_sheet_blit(context, sheet, *ptr - ' ', position);
+        position.x += dw;
+    }
+
+    return 0;
+}
+
+static int font_write6(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 6)
         LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
@@ -236,9 +323,17 @@ static int font_write(lua_State *L)
         if (*ptr < ' ') {
             continue;
         }
-        GL_sheet_blit_s(context, sheet, *ptr - ' ', position, (float)scale);
+        GL_sheet_blit_s(context, sheet, *ptr - ' ', position, scale);
         position.x += dw;
     }
 
     return 0;
+}
+
+static int font_write(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(5, font_write5)
+        LUAX_OVERLOAD_ARITY(6, font_write6)
+    LUAX_OVERLOAD_END
 }

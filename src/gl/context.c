@@ -129,13 +129,14 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
 }
 
 // Simple implementation of nearest-neighbour scaling.
+// See `http://tech-algorithm.com/articles/nearest-neighbor-image-scaling/` for a reference code.
 void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Point_t position, float scale)
 {
     const GL_Pixel_t *shifting = context->shifting;
     const GL_Bool_t *transparent = context->transparent;
     const GL_Color_t *colors = context->palette.colors;
 
-    size_t dst_width = (size_t)(scale * (float)tile.width);
+    size_t dst_width = (size_t)(scale * (float)tile.width); // To avoid empty pixels we scan the destination area and calculate the source pixel.
     size_t dst_height = (size_t)(scale * (float)tile.height);
 
     const float x_step = 1.0f / scale;
