@@ -420,7 +420,7 @@ static int canvas_transparent2(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
         LUAX_SIGNATURE_ARGUMENT(luaX_isboolean)
     LUAX_SIGNATURE_END
-    GL_Pixel_t color = lua_tointeger(L, 1);
+    GL_Pixel_t index = lua_tointeger(L, 1);
     GL_Bool_t transparent = lua_toboolean(L, 2) ? GL_BOOL_TRUE : GL_BOOL_FALSE;
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Canvas.transparent(%d, %d)", color, transparent);
@@ -428,7 +428,7 @@ static int canvas_transparent2(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    GL_context_transparent(&display->gl, &color, &transparent, 1);
+    GL_context_transparent(&display->gl, &index, &transparent, 1);
 
     return 0;
 }

@@ -96,24 +96,26 @@ void GL_context_clear(const GL_Context_t *context)
     }
 }
 
-void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Point_t position, float scale, float rotation)
+// TODO: specifies `const` always? Is pedantic or useful?
+// https://dev.to/fenbf/please-declare-your-variables-as-const
+
+void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Point_t position)
 {
-    // TODO: specifies `const` always? Is pedantic or useful?
-    // https://dev.to/fenbf/please-declare-your-variables-as-const
     const GL_Pixel_t *shifting = context->shifting;
     const GL_Bool_t *transparent = context->transparent;
     const GL_Color_t *colors = context->palette.colors;
 
-    const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[tile.y] + tile.x;
+    size_t dst_width = (size_t)tile.width;
+    size_t dst_height = (size_t)tile.height;
+
+    const size_t src_skip = surface->width - dst_width;
+    const size_t dst_skip = context->width - dst_width;
+
     GL_Color_t *dst = (GL_Color_t *)context->vram_rows[position.y] + position.x;
-    // const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data + (tile.y * surface->width) + tile.x;
-    // GL_Pixel_t *dst = (GL_Pixel_t *)target->data + (position.y * target->width) + position.x;
+    const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[tile.y] + tile.x;
 
-    const size_t src_skip = surface->width - tile.width;
-    const size_t dst_skip = context->width - tile.width;
-
-    for (size_t i = 0; i < tile.height; ++i) {
-        for (size_t j = 0; j < tile.width; ++j) {
+    for (size_t i = 0; i < dst_height; ++i) {
+        for (size_t j = 0; j < dst_width; ++j) {
             GL_Pixel_t index = shifting[*(src++)];
             if (transparent[index]) {
                 dst++;
@@ -124,36 +126,55 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
         src += src_skip;
         dst += dst_skip;
     }
-
-    // TODO: implement clipping, rotation and scaling.
 }
 
-void GL_context_blit_fast(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Point_t position)
+// Simple implementation of nearest-neighbour scaling.
+void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Point_t position, float scale)
 {
     const GL_Pixel_t *shifting = context->shifting;
     const GL_Bool_t *transparent = context->transparent;
     const GL_Color_t *colors = context->palette.colors;
 
-    const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[tile.y] + tile.x;
+    size_t dst_width = (size_t)(scale * (float)tile.width);
+    size_t dst_height = (size_t)(scale * (float)tile.height);
+
+    const float x_step = 1.0f / scale;
+    const float y_step = 1.0f / scale;
+
+    const size_t dst_skip = context->width - dst_width;
+
     GL_Color_t *dst = (GL_Color_t *)context->vram_rows[position.y] + position.x;
-    // const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data + (tile.y * surface->width) + tile.x;
-    // GL_Pixel_t *dst = (GL_Pixel_t *)target->data + (position.y * target->width) + position.x;
 
-    const size_t src_skip = surface->width - tile.width;
-    const size_t dst_skip = context->width - tile.width;
+    float offset_y = (float)tile.y;
+    for (size_t i = 0; i < dst_height; ++i) {
+        const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[(int)offset_y];
 
-    for (size_t i = 0; i < tile.height; ++i) {
-        for (size_t j = 0; j < tile.width; ++j) {
-            GL_Pixel_t index = shifting[*(src++)];
+        float  offset_x = (float)tile.x;
+        for (size_t j = 0; j < dst_width; ++j) {
+            GL_Pixel_t index = shifting[src[(int)offset_x]];
+
             if (transparent[index]) {
                 dst++;
             } else {
                 *(dst++) = colors[index];
             }
+
+            offset_x += x_step;
         }
-        src += src_skip;
+
+        offset_y += y_step;
         dst += dst_skip;
     }
+}
+
+void GL_context_blit_r(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Point_t position, float rotation)
+{
+    GL_context_blit(context, surface, tile, position);
+}
+
+void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Point_t position, float scale, float rotation)
+{
+    GL_context_blit(context, surface, tile, position);
 }
 
 void GL_context_palette(GL_Context_t *context, const GL_Palette_t *palette)

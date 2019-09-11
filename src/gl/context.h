@@ -27,8 +27,7 @@
 
 #include "common.h"
 #include "palette.h"
-
-typedef struct _GL_Surface_t GL_Surface_t;
+#include "surface.h"
 
 typedef enum _GL_Raster_Operations_t {
     RASTER_OPERATION_NOP,
@@ -61,8 +60,10 @@ extern void GL_context_push(const GL_Context_t *context);
 extern void GL_context_pop(const GL_Context_t *context);
 
 extern void GL_context_clear(const GL_Context_t *context);
-extern void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Point_t position, float scale, float rotation);
-extern void GL_context_blit_fast(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Point_t position);
+extern void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Point_t position);
+extern void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Point_t position, float scale);
+extern void GL_context_blit_r(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Point_t position, float rotation);
+extern void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Point_t position, float scale, float rotation);
 
 extern void GL_context_palette(GL_Context_t *context, const GL_Palette_t *palette);
 extern void GL_context_shifting(GL_Context_t *context, const size_t *from, const size_t *to, size_t count);

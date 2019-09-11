@@ -26,7 +26,6 @@
 #include <stdbool.h>
 
 #include "common.h"
-#include "context.h"
 
 typedef struct _GL_Surface_t {
     size_t width, height;

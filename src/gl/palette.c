@@ -59,24 +59,6 @@ void GL_palette_format_color(char *argb, const GL_Color_t color)
 #endif
 }
 
-void GL_palette_normalize(const GL_Palette_t *palette, GLfloat *colors) // palette->count * 3
-{
-    for (size_t i = 0; i < palette->count; ++i) {
-        int j = i * 3;
-        colors[j    ] = (GLfloat)palette->colors[i].r / (GLfloat)255.0;
-        colors[j + 1] = (GLfloat)palette->colors[i].g / (GLfloat)255.0;
-        colors[j + 2] = (GLfloat)palette->colors[i].b / (GLfloat)255.0;
-    }
-}
-
-void GL_palette_normalize_color(const GL_Color_t color, GLfloat rgba[4])
-{
-    rgba[0] = (GLfloat)color.r / (GLfloat)255.0;
-    rgba[1] = (GLfloat)color.g / (GLfloat)255.0;
-    rgba[2] = (GLfloat)color.b / (GLfloat)255.0;
-    rgba[3] = (GLfloat)color.b / (GLfloat)255.0;
-}
-
 // https://en.wikipedia.org/wiki/Color_difference
 GL_Pixel_t GL_palette_find_nearest_color(const GL_Palette_t *palette, const GL_Color_t color)
 {

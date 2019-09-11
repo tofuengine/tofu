@@ -75,7 +75,7 @@ int font_loader(lua_State *L)
 
 static void to_font_atlas_callback(void *parameters, GL_Surface_t *surface, const void *data)
 {
-    const GL_Pixel_t *colors = (const GL_Pixel_t *)parameters;
+    const GL_Pixel_t *indexes = (const GL_Pixel_t *)parameters;
 
     const GL_Color_t *src = (const GL_Color_t *)data;
     GL_Pixel_t *dst = (GL_Pixel_t *)surface->data;
@@ -87,7 +87,7 @@ static void to_font_atlas_callback(void *parameters, GL_Surface_t *surface, cons
             size_t offset = row_offset + x;
 
             GL_Color_t color = src[offset];
-            dst[offset] = color.a == 0 ? colors[0] : colors[1]; // TODO: don't use alpha for transparency?
+            dst[offset] = indexes[color.a == 0 ? 0 : 1]; // TODO: don't use alpha for transparency?
         }
     }
 }
@@ -114,17 +114,17 @@ static int font_new(lua_State *L)
 
     const Sheet_Data_t *data = graphics_sheets_find(file);
 
-    const GL_Pixel_t colors[] = { background_color, foreground_color };
+    const GL_Pixel_t indexes[] = { background_color, foreground_color };
     GL_Sheet_t sheet;
     if (data) {
-        GL_sheet_decode(&sheet, data->buffer, data->size, data->quad_width, data->quad_height, to_font_atlas_callback, (void *)colors);
+        GL_sheet_decode(&sheet, data->buffer, data->size, data->quad_width, data->quad_height, to_font_atlas_callback, (void *)indexes);
         Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet '%s' decoded", file);
     } else {
         char pathfile[PATH_FILE_MAX] = {};
         strcpy(pathfile, environment->base_path);
         strcat(pathfile, file);
 
-        GL_sheet_load(&sheet, pathfile, glyph_width, glyph_height, to_font_atlas_callback, (void *)colors);
+        GL_sheet_load(&sheet, pathfile, glyph_width, glyph_height, to_font_atlas_callback, (void *)indexes);
         Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet '%s' loaded", pathfile);
     }
 
@@ -236,7 +236,7 @@ static int font_write(lua_State *L)
         if (*ptr < ' ') {
             continue;
         }
-        GL_sheet_blit(context, sheet, *ptr - ' ', position, (float)scale, 0.0f);
+        GL_sheet_blit_s(context, sheet, *ptr - ' ', position, (float)scale);
         position.x += dw;
     }
 
