@@ -196,57 +196,46 @@ void GL_context_blit_r(const GL_Context_t *context, const GL_Surface_t *surface,
     const size_t width = tile.width; // To avoid empty pixels we scan the destination area and calculate the source pixel.
     const size_t height = tile.height;
 
+    const size_t hw = width / 2;
+    const size_t hh = height / 2;
+
     const float c = cosf(rotation);
     const float s = sinf(rotation);
-
-    const float du = c;
-    const float dv = s;
 
     // c -s (CCW)
     // s  c
     // c  s (CW)
     // -s c
-    float x0 = -(width * 0.5f);
-    float y0 = -(height * 0.5f);
-    float u0 = (x0 * c + y0 * s);
-    float v0 = (y0 * c - x0 * s);
+    const size_t skip = context->width - width;
 
-    const size_t box_width = width * 2;
-    const size_t box_height = height * 2;
+    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[position.y - hh] + position.x - hw;
 
-    const size_t skip = context->width - box_width;
+    float y = -(float)hh;
+    for (size_t i = 0; i < height; ++i) {
 
-    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[position.y] + position.x;
- 
-    for (size_t i = 0; i < box_height; ++i) {
-        float u = u0;
-        float v = v0;
+        float x = -(float)hw;
+        for (size_t j = 0; j < width; ++j) {
 
-        for (size_t j = 0; j < box_width; ++j) {
-            int x = (int)((float)tile.x + u);
-            int y = (int)((float)tile.y + v);
-            if (x < tile.x || y < tile.y || x >= (int)(tile.x + tile.width) || y >= (int)(tile.y + tile.height)) {
-                continue;
+            float u = (x * c + y * s) + hw;
+            float v = (y * c - x * s) + hh;
+
+            int sx = (int)((float)tile.x + u);
+            int sy = (int)((float)tile.y + v);
+
+            if (sx >= tile.x && sy >= tile.y && sx < (int)(tile.x + tile.width) && sy < (int)(tile.y + tile.height)) {
+                const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[sy];
+                GL_Pixel_t index = shifting[src[sx]];
+
+                if (!transparent[index]) {
+                    *dst = colors[index];
+                }
             }
-            const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[y];
-            GL_Pixel_t index = shifting[src[x]];
-#if 1
-            if (transparent[index]) {
-                dst++;
-            } else {
-                *(dst++) = colors[index];
-            }
-#else
-            *dst = transparent[index] ? *dst : colors[index];
+
+            x += 1.0f;
             dst++;
-#endif
-            u -= dv;
-            v += du;
         }
 
-        u0 += du;
-        v0 += dv;
-
+        y += 1.0f;
         dst += skip;
     }
 }
