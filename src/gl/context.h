@@ -40,7 +40,7 @@ typedef enum _GL_Raster_Operations_t {
 } GL_Raster_Operations_t;
 
 typedef struct _GL_Context_t {
-    size_t width, height;
+    size_t width, height, stride; // `stride` is the width in bytes.
     void *vram;
     void **vram_rows;
     size_t vram_size;
@@ -60,6 +60,8 @@ extern void GL_context_push(const GL_Context_t *context);
 extern void GL_context_pop(const GL_Context_t *context);
 
 extern void GL_context_clear(const GL_Context_t *context);
+extern void GL_context_screenshot(const GL_Context_t *context, const char *pathfile);
+
 extern void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Point_t position);
 extern void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Point_t position, float sx, float sy);
 extern void GL_context_blit_r(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Point_t position, float rotation);

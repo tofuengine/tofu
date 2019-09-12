@@ -27,9 +27,6 @@
 #include "hal.h"
 #include "log.h"
 
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include <stb/stb_image_write.h>
-
 #include <memory.h>
 #include <stdlib.h>
 
@@ -61,7 +58,6 @@ typedef struct _Program_Data_t {
     "uniform float u_time;\n" \
     "\n" \
     "vec4 passthru(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {\n" \
-    "//    return texture2D(texture, vec2(texture_coords.x, 1.0 - texture_coords.y)) * color;\n" \
     "    return texture2D(texture, texture_coords) * color;\n" \
     "}\n" \
     "\n" \
@@ -427,11 +423,6 @@ void Display_present(Display_t *display)
 
 //    glClearColor(0.0f, 0.0f, 0.0, 1.0f); // Required, to clear previous content.
 //    glClear(GL_COLOR_BUFFER_BIT);
-
-/*
-int i = stbi_write_png("/home/mlizza/work/image.png", display->configuration.width, display->configuration.height, 4, display->vram, display->configuration.width * 4);
-i = i;
-*/
 
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, display->gl.width, display->gl.height, GL_RGBA, GL_UNSIGNED_BYTE, display->gl.vram);
 

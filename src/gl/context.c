@@ -29,6 +29,9 @@
 #include <memory.h>
 #include <stdlib.h>
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb/stb_image_write.h>
+
 bool GL_context_initialize(GL_Context_t *context, size_t width, size_t height)
 {
     void *vram = malloc(width * height * sizeof(GL_Color_t));
@@ -52,6 +55,7 @@ bool GL_context_initialize(GL_Context_t *context, size_t width, size_t height)
     *context = (GL_Context_t){
             .width = width,
             .height = height,
+            .stride = width * sizeof(GL_Color_t),
             .vram = vram,
             .vram_rows = vram_rows,
             .vram_size = width * height,
@@ -96,9 +100,16 @@ void GL_context_clear(const GL_Context_t *context)
     }
 }
 
+void GL_context_screenshot(const GL_Context_t *context, const char *pathfile)
+{
+    int result = stbi_write_png(pathfile, context->width, context->height, sizeof(GL_Color_t), context->vram, context->stride);
+    if (!result) {
+        Log_write(LOG_LEVELS_WARNING, "<GL> can't save screenshot to '%s'", pathfile);
+    }
+}
+
 // TODO: specifies `const` always? Is pedantic or useful?
 // https://dev.to/fenbf/please-declare-your-variables-as-const
-
 void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Point_t position)
 {
     const GL_Pixel_t *shifting = context->shifting;

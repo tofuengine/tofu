@@ -47,6 +47,7 @@ static int canvas_transparent(lua_State *L);
 static int canvas_shader(lua_State *L);
 static int canvas_color(lua_State *L);
 static int canvas_clear(lua_State *L);
+static int canvas_screenshot(lua_State *L);
 static int canvas_points(lua_State *L);
 static int canvas_cluster(lua_State *L);
 static int canvas_polyline(lua_State *L);
@@ -143,6 +144,7 @@ static const struct luaL_Reg _canvas_functions[] = {
     { "shader", canvas_shader },
     { "color", canvas_color },
     { "clear", canvas_clear },
+    { "screenshot", canvas_screenshot },
     { "points", canvas_points },
     { "cluster", canvas_cluster },
     { "polyline", canvas_polyline },
@@ -497,11 +499,30 @@ static int canvas_clear(lua_State *L)
     return 0;
 }
 
-// When drawing points and lines we need to ensure to be in mid-pixel coordinates, according to
-// the "diamond exit rule" in OpenGL's rasterization. Also, the ending pixel of a line segment
-// is not drawn to avoid lighting a pixel twice in a loop.
-//
-// http://glprogramming.com/red/appendixg.html#name1
+static int canvas_screenshot(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
+    LUAX_SIGNATURE_END
+    const char *file = lua_tostring(L, 1);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.screenshot('%s')", file);
+#endif
+
+    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+    // TODO: auto numbering?
+
+    char pathfile[PATH_FILE_MAX] = {};
+    strcpy(pathfile, environment->base_path);
+    strcat(pathfile, file);
+
+    GL_context_screenshot(&display->gl, pathfile);
+
+    return 0;
+}
+
 static int canvas_points(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 2)
