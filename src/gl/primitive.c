@@ -47,9 +47,34 @@ void GL_primitive_point(const GL_Context_t *context, GL_Point_t position, GL_Pix
     *dst = color;
 }
 
+// DDA algorithm, no branches in the inner-loop.
 void GL_primitive_line(const GL_Context_t *context, GL_Point_t from, GL_Point_t to, GL_Pixel_t index)
 {
+    index = context->shifting[index];
 
+    if (context->transparent[index]) {
+        return;
+    }
+
+    const GL_Color_t color = context->palette.colors[index];
+
+    int32_t dx = to.x - from.x;
+    int32_t dy = to.y - from.y;
+
+    int32_t step = (dx >= dy) ? dx : dy;
+
+    float xin = (float)dx / (float)step;
+    float yin = (float)dy / (float)step;
+
+    float x = from.x + 0.5f;
+    float y = from.y + 0.5f;
+    for (int i = 0; i < step; ++i) {
+        GL_Color_t *dst = (GL_Color_t *)context->vram_rows[(int)y] + (int)x;
+        *dst = color;
+
+        x += xin;
+        y += yin;
+    }
 }
 
 void GL_primitive_hline(const GL_Context_t *context, GL_Point_t origin, size_t width, GL_Pixel_t index)
