@@ -189,7 +189,66 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
 
 void GL_context_blit_r(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Point_t position, float rotation)
 {
-    GL_context_blit(context, surface, tile, position);
+    const GL_Pixel_t *shifting = context->shifting;
+    const GL_Bool_t *transparent = context->transparent;
+    const GL_Color_t *colors = context->palette.colors;
+
+    const size_t width = tile.width; // To avoid empty pixels we scan the destination area and calculate the source pixel.
+    const size_t height = tile.height;
+
+    const float c = cosf(rotation);
+    const float s = sinf(rotation);
+
+    const float du = c;
+    const float dv = s;
+
+    // c -s (CCW)
+    // s  c
+    // c  s (CW)
+    // -s c
+    float x0 = -(width * 0.5f);
+    float y0 = -(height * 0.5f);
+    float u0 = (x0 * c + y0 * s);
+    float v0 = (y0 * c - x0 * s);
+
+    const size_t box_width = width * 2;
+    const size_t box_height = height * 2;
+
+    const size_t skip = context->width - box_width;
+
+    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[position.y] + position.x;
+ 
+    for (size_t i = 0; i < box_height; ++i) {
+        float u = u0;
+        float v = v0;
+
+        for (size_t j = 0; j < box_width; ++j) {
+            int x = (int)((float)tile.x + u);
+            int y = (int)((float)tile.y + v);
+            if (x < tile.x || y < tile.y || x >= (int)(tile.x + tile.width) || y >= (int)(tile.y + tile.height)) {
+                continue;
+            }
+            const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[y];
+            GL_Pixel_t index = shifting[src[x]];
+#if 1
+            if (transparent[index]) {
+                dst++;
+            } else {
+                *(dst++) = colors[index];
+            }
+#else
+            *dst = transparent[index] ? *dst : colors[index];
+            dst++;
+#endif
+            u -= dv;
+            v += du;
+        }
+
+        u0 += du;
+        v0 += dv;
+
+        dst += skip;
+    }
 }
 
 // https://www.lexaloffle.com/bbs/?pid=52525

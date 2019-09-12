@@ -10,6 +10,8 @@ local Game = Class.define()
 local AMOUNT = 16
 local PALETTES = { "pico-8", "arne-16", "c64", "cga" }
 
+--384 x 224 pixels 
+
 function Game:__ctor()
   Canvas.palette("pico-8")
 
@@ -57,6 +59,8 @@ function Game:render(ratio)
       -- Canvas.cluster(cluster)
       end
   end
+
+  self.bank:blit(0, Canvas.width() / 2, Canvas.height() / 2, self.time)
 
   self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
 end
