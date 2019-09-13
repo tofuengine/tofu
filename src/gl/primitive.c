@@ -24,10 +24,13 @@
 
 #include "gl.h"
 
+//#define __DDA__
+#ifndef __DDA__
 static int32_t i32_abs(int32_t v)
 {
     return v >= 0 ? v : -v;
 }
+#endif
 
 static bool GL_is_visible(const GL_Context_t *context, GL_Point_t position)
 {
@@ -63,7 +66,7 @@ void GL_primitive_line(const GL_Context_t *context, GL_Point_t from, GL_Point_t 
 
     const GL_Color_t color = context->palette.colors[index];
 
-#if __DDA__
+#ifdef __DDA__
     int32_t dx = to.x - from.x;
     int32_t dy = to.y - from.y;
 
@@ -83,34 +86,33 @@ void GL_primitive_line(const GL_Context_t *context, GL_Point_t from, GL_Point_t 
     }
 #else
     const int32_t dx = i32_abs(to.x - from.x);
-    const int32_t dy = i32_abs(to.y - from.y);
+    const int32_t dy = -i32_abs(to.y - from.y);
 
     const int32_t sx = from.x < to.x ? 1 : -1;
-    const int32_t sy = from.y < to.y ? 1 : -1;
+    const int32_t sy = from.y < to.y ? context->width : -context->width;
 
     int32_t err = dx + dy;
 
-    int32_t x = from.x;
-    int32_t y = from.y;
+    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[from.y] + from.x;
+    GL_Color_t *eod = (GL_Color_t *)context->vram_rows[to.y] + to.x;
 
     for (;;) {
-        GL_Color_t *dst = (GL_Color_t *)context->vram_rows[y] + x;
         *dst = color;
 
         int32_t e2 = 2 * err;
         if (e2 >= dy) {
-            if (x == to.x) {
+            if (dst == eod) {
                 break;
             }
             err += dy;
-            x += sx;
+            dst += sx;
         }
         if (e2 <= dx) {
-            if (y == to.y) {
+            if (dst == eod) {
                 break;
             }
             err += dx;
-            y += sy;
+            dst += sy;
         }
     }
 #endif
