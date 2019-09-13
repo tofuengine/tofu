@@ -211,7 +211,7 @@ static int bank_blit5(lua_State *L)
 
     const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
-    GL_sheet_blit_sr(context, sheet, cell_id, destination, 2.0f, 2.0f, rotation, 0.5f, 0.5f);
+    GL_sheet_blit_sr(context, sheet, cell_id, destination, 1.0f, 1.0f, rotation, 0.5f, 0.5f);
 
     return 0;
 }
@@ -279,11 +279,11 @@ static int bank_blit7(lua_State *L)
     int cell_id = lua_tointeger(L, 2);
     double x = (double)lua_tonumber(L, 3);
     double y = (double)lua_tonumber(L, 4);
-    double rotation = (double)lua_tonumber(L, 5);
-    double scale_x = (double)lua_tonumber(L, 6);
-    double scale_y = (double)lua_tonumber(L, 7);
+    double scale_x = (double)lua_tonumber(L, 5);
+    double scale_y = (double)lua_tonumber(L, 6);
+    double rotation = (double)lua_tonumber(L, 7);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f, %.f, %.f, %.f", cell_id, x, y, rotation, scale_x, scale_y);
+    Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f, %.f, %.f, %.f", cell_id, x, y, scale_x, scale_y, rotation);
 #endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
@@ -314,6 +314,60 @@ static int bank_blit7(lua_State *L)
     return 0;
 }
 
+static int bank_blit9(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 9)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+    LUAX_SIGNATURE_END
+    Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
+    int cell_id = lua_tointeger(L, 2);
+    double x = (double)lua_tonumber(L, 3);
+    double y = (double)lua_tonumber(L, 4);
+    double scale_x = (double)lua_tonumber(L, 5);
+    double scale_y = (double)lua_tonumber(L, 6);
+    double rotation = (double)lua_tonumber(L, 7);
+    double anchor_x = (double)lua_tonumber(L, 8);
+    double anchor_y = (double)lua_tonumber(L, 9);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f, %.f, %.f, %.f, %.f, %.f", cell_id, x, y, scale_x, scale_y, rotation, anchor_x, anchor_y);
+#endif
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+#ifdef __NO_MIRRORING__
+    double dw = (double)instance->sheet.size.width * fabs(scale_x);
+    double dw = (double)instance->sheet.size.height * fabs(scale_y);
+#else
+    double dw = (double)instance->sheet.size.width * scale_x; // The sign controls the mirroring.
+    double dh = (double)instance->sheet.size.height * scale_y;
+#endif
+
+    GL_Point_t destination = (GL_Point_t){ .x = (int)x, .y = (int)y };
+
+#ifndef __NO_MIRRORING__
+    if (dw < 0.0) { // Compensate for mirroring!
+        destination.x -= dw;
+    }
+    if (dh < 0.0) {
+        destination.y -= dh;
+    }
+#endif
+
+    const GL_Context_t *context = &display->gl;
+    const GL_Sheet_t *sheet = &instance->sheet;
+    GL_sheet_blit_sr(context, sheet, cell_id, destination, scale_x, scale_y, rotation, anchor_x, anchor_y);
+
+    return 0;
+}
+
 static int bank_blit(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
@@ -321,5 +375,6 @@ static int bank_blit(lua_State *L)
         LUAX_OVERLOAD_ARITY(5, bank_blit5)
         LUAX_OVERLOAD_ARITY(6, bank_blit6)
         LUAX_OVERLOAD_ARITY(7, bank_blit7)
+        LUAX_OVERLOAD_ARITY(9, bank_blit9)
     LUAX_OVERLOAD_END
 }
