@@ -48,87 +48,70 @@ static int canvas_shader(lua_State *L);
 static int canvas_color(lua_State *L);
 static int canvas_clear(lua_State *L);
 static int canvas_screenshot(lua_State *L);
-static int canvas_points(lua_State *L);
-static int canvas_cluster(lua_State *L);
-static int canvas_polyline(lua_State *L);
-static int canvas_strip(lua_State *L);
-static int canvas_fan(lua_State *L);
+static int canvas_point(lua_State *L);
+static int canvas_hline(lua_State *L);
+static int canvas_vline(lua_State *L);
+static int canvas_line(lua_State *L);
 
 static const char _canvas_script[] =
     "local Canvas = {}\n"
     "\n"
-    "function Canvas.point(x0, y0, color)\n"
-    "  Canvas.points({ x0, y0 }, color)\n"
-    "end\n"
-    "\n"
-    "function Canvas.line(x0, y0, x1, y1, color)\n"
-    "  Canvas.polyline({ x0, y0, x1, y1, x0, y0 }, color)\n"
-    "end\n"
-    "\n"
-    "function Canvas.triangle(mode, x0, y0, x1, y1, x2, y2, color)\n"
+    "function Canvas.triangle(mode, x0, y0, x1, y1, x2, y2, index)\n"
     "  if mode == \"line\" then\n"
-    "    Canvas.polyline({ x0, y0, x1, y1, x2, y2, x0, y0 }, color)\n"
+    "    Canvas.line(x0, y0, x1, y1, index)\n"
+    "    Canvas.line(x1, y1, x2, y2, index)\n"
+    "    Canvas.line(x2, y2, x0, y0, index)\n"
     "  else\n"
-    "    Canvas.strip({ x0, y0, x1, y1, x2, y2 }, color)\n"
+    "    Canvas.line(x0, y0, x1, y1, index)\n"
+    "    Canvas.line(x1, y1, x2, y2, index)\n"
+    "    Canvas.line(x2, y2, x0, y0, index)\n"
     "  end\n"
     "end\n"
     "\n"
-    "function Canvas.rectangle(mode, x, y, width, height, color)\n"
-    "  local offset = mode == \"line\" and 1 or 0\n"
-    "  local x0 = x\n"
-    "  local y0 = y\n"
-    "  local x1 = x0 + width - offset\n"
-    "  local y1= y0 + height - offset\n"
+    "function Canvas.rectangle(mode, x, y, width, height, index)\n"
     "  if mode == \"line\" then\n"
-    "    Canvas.polyline({ x0, y0, x0, y1, x1, y1, x1, y0, x0, y0 }, color)\n"
+    "    local x0 = x\n"
+    "    local y0 = y\n"
+    "    local x1 = x0 + width - 1\n"
+    "    local y1= y0 + height - 1\n"
+    "    Canvas.line(x0, y0, x0, y1, index)\n"
+    "    Canvas.line(x0, y1, x1, y1, index)\n"
+    "    Canvas.line(x1, y1, x1, y0, index)\n"
+    "    Canvas.line(x1, y0, x0, y0, index)\n"
     "  else\n"
-    "    Canvas.strip({ x0, y0, x0, y1, x1, y0, x1, y1 }, color)\n"
-    "  end\n"
-    "end\n"
-    "\n"
-    "function Canvas.square(mode, x, y, size, color)\n"
-    "  Canvas.rectangle(mode, x, y, size, size, color)\n"
-    "end\n"
-    "\n"
-    "function Canvas.circle(mode, cx, cy, radius, color, segments)\n"
-    "  local radius_squared = radius * radius\n"
-    "  local points = {}\n"
-    "  if mode == \"line\" then\n"
-    "    local steps = radius * math.cos(math.pi / 4.0);\n"
-    "    for x = 0, steps do\n"
-    "      local y = math.sqrt(radius_squared - (x * x))\n"
-    "\n"
-    "      table.insert(points, cx + x)\n"
-    "      table.insert(points, cy + y)\n"
-    "      table.insert(points, cx + x)\n"
-    "      table.insert(points, cy - y)\n"
-    "      table.insert(points, cx - x)\n"
-    "      table.insert(points, cy + y)\n"
-    "      table.insert(points, cx - x)\n"
-    "      table.insert(points, cy - y)\n"
-    "\n"
-    "      table.insert(points, cx + y)\n"
-    "      table.insert(points, cy + x)\n"
-    "      table.insert(points, cx + y)\n"
-    "      table.insert(points, cy - x)\n"
-    "      table.insert(points, cx - y)\n"
-    "      table.insert(points, cy + x)\n"
-    "      table.insert(points, cx - y)\n"
-    "      table.insert(points, cy - x)\n"
-    "    end\n"
-    "  else\n"
-    "    for y = -radius, radius do\n"
-    "      local y_squared = y * y\n"
-    "      for x = -radius, radius do\n"
-    "        local x_squared = x * x\n"
-    "        if (x_squared + y_squared) <= radius_squared then\n"
-    "          table.insert(points, cx + x)\n"
-    "          table.insert(points, cy + y)\n"
-    "        end\n"
-    "      end\n"
+    "    for i = 0, height - 1 do\n"
+    "      Canvas.hline(x, y + i, width, index)\n"
     "    end\n"
     "  end\n"
-    "  Canvas.points(points, color)\n"
+    "end\n"
+    "\n"
+    "function Canvas.square(mode, x, y, size, index)\n"
+    "  Canvas.rectangle(mode, x, y, size, size, index)\n"
+    "end\n"
+    "\n"
+    "function Canvas.circle(mode, cx, cy, radius, index)\n"
+    "  local r, x, y, err = radius, -radius, 0, 2 - 2 * radius\n"
+    "  repeat\n"
+    "    if mode == \"line\" then\n"
+    "      Canvas.point(cx - x, cy + y, index)\n"
+    "      Canvas.point(cx - y, cy - x, index)\n"
+    "      Canvas.point(cx + x, cy - y, index)\n"
+    "      Canvas.point(cx + y, cy + x, index)\n"
+    "    else\n"
+    "      local w = math.abs(2 * x)\n"
+    "      Canvas.hline(cx + x, cy + y, w, index)\n"
+    "      Canvas.hline(cx + x, cy - y, w, index)\n"
+    "    end\n"
+    "    r = err\n"
+    "    if r <= y then\n"
+    "      y = y + 1\n"
+    "      err = err + y * 2 + 1\n"
+    "    end\n"
+    "    if r > x or err > y then\n"
+    "      x = x + 1\n"
+    "      err = err + x * 2 + 1\n"
+    "    end\n"
+    "  until x == 0\n"
     "end\n"
     "\n"
     "return Canvas\n"
@@ -145,11 +128,10 @@ static const struct luaL_Reg _canvas_functions[] = {
     { "color", canvas_color },
     { "clear", canvas_clear },
     { "screenshot", canvas_screenshot },
-    { "points", canvas_points },
-    { "cluster", canvas_cluster },
-    { "polyline", canvas_polyline },
-    { "strip", canvas_strip },
-    { "fan", canvas_fan },
+    { "point", canvas_point },
+    { "hline", canvas_hline },
+    { "vline", canvas_vline },
+    { "line", canvas_line },
     { NULL, NULL }
 };
 
@@ -523,166 +505,94 @@ static int canvas_screenshot(lua_State *L)
     return 0;
 }
 
-static int canvas_points(lua_State *L)
+static int canvas_point(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 2)
-        LUAX_SIGNATURE_ARGUMENT(luaX_istable)
+    LUAX_SIGNATURE_BEGIN(L, 3)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
     LUAX_SIGNATURE_END
-    int vertices = lua_rawlen(L, 1);
-    int color = lua_tointeger(L, 2);
+    double x = lua_tonumber(L, 1);
+    double y = lua_tonumber(L, 2);
+    int index = lua_tointeger(L, 3);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.points(%d, %d)", vertices, color);
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.point(%f, %f, %d)", x, y, index);
 #endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    const size_t count = vertices / 2;
-    if (count == 0) {
-        Log_write(LOG_LEVELS_INFO, "<CANVAS> point-sequence as no vertices");
-        return 0;
-    }
-
-    double array[vertices];
-    luaX_getnumberarray(L, 1, array);
-
-    for (size_t i = 0; i < count; ++i) {
-        double x = array[(i * 2)];
-        double y = array[(i * 2) + 1];
-
-        GL_primitive_point(&display->gl, (GL_Point_t){ (int)x, (int)y }, color);
-    }
+    GL_primitive_point(&display->gl, (GL_Point_t){ (int)x, (int)y }, index);
 
     return 0;
 }
 
-static int canvas_cluster(lua_State *L)
+static int canvas_hline(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(luaX_istable)
+    LUAX_SIGNATURE_BEGIN(L, 4)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
     LUAX_SIGNATURE_END
-    int amount = lua_rawlen(L, 1);
+    double x = lua_tonumber(L, 1);
+    double y = lua_tonumber(L, 2);
+    double width = lua_tonumber(L, 3);
+    int index = lua_tointeger(L, 4);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.cluster(%d)", amount);
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.hline(%f, %f, %f, %d)", x, y, width, index);
 #endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    const size_t count = amount / 3;
-    if (count == 0) {
-        Log_write(LOG_LEVELS_INFO, "<CANVAS> cluster-sequence as no elements");
-        return 0;
-    }
-
-    double array[amount];
-    luaX_getnumberarray(L, 1, array);
-
-    for (size_t i = 0; i < count; ++i) {
-        double x = array[(i * 3)];
-        double y = array[(i * 3) + 1];
-        double c = array[(i * 3) + 2];
-
-        GL_primitive_point(&display->gl, (GL_Point_t){ (int)x, (int)y }, c);
-    }
+    GL_primitive_hline(&display->gl, (GL_Point_t){ (int)x, (int)y }, (size_t)width, index);
 
     return 0;
 }
 
-static int canvas_polyline(lua_State *L)
+static int canvas_vline(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 2)
-        LUAX_SIGNATURE_ARGUMENT(luaX_istable)
+    LUAX_SIGNATURE_BEGIN(L, 4)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
     LUAX_SIGNATURE_END
-    int vertices = lua_rawlen(L, 1);
-    int color = lua_tointeger(L, 2);
+    double x = lua_tonumber(L, 1);
+    double y = lua_tonumber(L, 2);
+    double height = lua_tonumber(L, 3);
+    int index = lua_tointeger(L, 4);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.polyline(%d, %d)", vertices, color);
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.vline(%f, %f, %f, %d)", x, y, height, index);
 #endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    const size_t count = vertices / 2;
-    if (count == 0) {
-        Log_write(LOG_LEVELS_INFO, "<CANVAS> polyline as no vertices");
-        return 0;
-    }
-
-    double array[vertices];
-    luaX_getnumberarray(L, 1, array);
-
-    for (size_t i = 0; i < count; ++i) {
-        double x = array[(i * 2)];
-        double y = array[(i * 2) + 1];
-
-        GL_primitive_point(&display->gl, (GL_Point_t){ (int)x, (int)y }, color);
-    }
+    GL_primitive_vline(&display->gl, (GL_Point_t){ (int)x, (int)y }, (size_t)height, index);
 
     return 0;
 }
 
-static int canvas_strip(lua_State *L)
+static int canvas_line(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 2)
-        LUAX_SIGNATURE_ARGUMENT(luaX_istable)
+    LUAX_SIGNATURE_BEGIN(L, 5)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
     LUAX_SIGNATURE_END
-    int vertices = lua_rawlen(L, 1);
-    int color = lua_tointeger(L, 2);
+    double x0 = lua_tonumber(L, 1);
+    double y0 = lua_tonumber(L, 2);
+    double x1 = lua_tonumber(L, 3);
+    double y1 = lua_tonumber(L, 4);
+    int index = lua_tointeger(L, 5);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.strip(%d, %d)", vertices, color);
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.line(%f, %f, %f, %f, %d)", x0, y0, x1, y1, index);
 #endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    const size_t count = vertices / 2;
-    if (count == 0) {
-        Log_write(LOG_LEVELS_INFO, "<CANVAS> strip as no vertices");
-        return 0;
-    }
-
-    double array[vertices];
-    luaX_getnumberarray(L, 1, array);
-
-    for (size_t i = 0; i < count; ++i) {
-        double x = array[(i * 2)];
-        double y = array[(i * 2) + 1];
-
-        GL_primitive_point(&display->gl, (GL_Point_t){ (int)x, (int)y }, color);
-    }
-
-    return 0;
-}
-
-static int canvas_fan(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L, 2)
-        LUAX_SIGNATURE_ARGUMENT(luaX_istable)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
-    LUAX_SIGNATURE_END
-    int vertices = lua_rawlen(L, 1);
-    int color = lua_tointeger(L, 2);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.fan(%d, %d)", vertices, color);
-#endif
-
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
-
-    const size_t count = vertices / 2;
-    if (count == 0) {
-        Log_write(LOG_LEVELS_INFO, "<CANVAS> fan as no vertices");
-        return 0;
-    }
-
-    double array[vertices];
-    luaX_getnumberarray(L, 1, array);
-
-    for (size_t i = 0; i < count; ++i) {
-        double x = array[(i * 2)];
-        double y = array[(i * 2) + 1];
-
-        GL_primitive_point(&display->gl, (GL_Point_t){ (int)x, (int)y }, color);
-    }
+    GL_primitive_line(&display->gl, (GL_Point_t){ (int)x0, (int)y0 }, (GL_Point_t){ (int)x1, (int)y1 }, index);
 
     return 0;
 }

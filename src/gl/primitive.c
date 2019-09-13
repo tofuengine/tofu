@@ -157,23 +157,3 @@ void GL_primitive_vline(const GL_Context_t *context, GL_Point_t origin, size_t h
         *(dst++) = color;
     }
 }
-
-void GL_primitive_rectangle(const GL_Context_t *context, GL_Rectangle_t rectangle, GL_Pixel_t index)
-{
-
-}
-
-void GL_primitive_filled_rectangle(const GL_Context_t *context, GL_Rectangle_t rectangle, GL_Pixel_t index)
-{
-
-}
-
-void GL_primitive_circle(const GL_Context_t *context, GL_Point_t center, float radius, GL_Pixel_t index)
-{
-
-}
-
-void GL_primitive_filled_circle(const GL_Context_t *context, GL_Point_t center, float radius, GL_Pixel_t index)
-{
-
-}
