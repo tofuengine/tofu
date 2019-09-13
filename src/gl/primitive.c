@@ -24,6 +24,11 @@
 
 #include "gl.h"
 
+static int32_t i32_abs(int32_t v)
+{
+    return v >= 0 ? v : -v;
+}
+
 static bool GL_is_visible(const GL_Context_t *context, GL_Point_t position)
 {
     return true;
@@ -58,6 +63,7 @@ void GL_primitive_line(const GL_Context_t *context, GL_Point_t from, GL_Point_t 
 
     const GL_Color_t color = context->palette.colors[index];
 
+#if __DDA__
     int32_t dx = to.x - from.x;
     int32_t dy = to.y - from.y;
 
@@ -75,6 +81,39 @@ void GL_primitive_line(const GL_Context_t *context, GL_Point_t from, GL_Point_t 
         x += xin;
         y += yin;
     }
+#else
+    const int32_t dx = i32_abs(to.x - from.x);
+    const int32_t dy = i32_abs(to.y - from.y);
+
+    const int32_t sx = from.x < to.x ? 1 : -1;
+    const int32_t sy = from.y < to.y ? 1 : -1;
+
+    int32_t err = dx + dy;
+
+    int32_t x = from.x;
+    int32_t y = from.y;
+
+    for (;;) {
+        GL_Color_t *dst = (GL_Color_t *)context->vram_rows[y] + x;
+        *dst = color;
+
+        int32_t e2 = 2 * err;
+        if (e2 >= dy) {
+            if (x == to.x) {
+                break;
+            }
+            err += dy;
+            x += sx;
+        }
+        if (e2 <= dx) {
+            if (y == to.y) {
+                break;
+            }
+            err += dx;
+            y += sy;
+        }
+    }
+#endif
 }
 
 void GL_primitive_hline(const GL_Context_t *context, GL_Point_t origin, size_t width, GL_Pixel_t index)
