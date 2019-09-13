@@ -266,10 +266,12 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
 
             u += ru;
             v += rv;
+            dx += 1;
         }
 
         ou += cu;
         ov += cv;
+        dy += 1;
     }
 }
 
