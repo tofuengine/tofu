@@ -20,8 +20,6 @@ function Sprite:__ctor(bank, index)
   self.frequency_x = 0.75 --(random.float() * (MAX_FREQUENCY - MIN_FREQUENCY)) + MIN_FREQUENCY
   self.frequency_y = 0.50 --(random.float() * (MAX_FREQUENCY - MIN_FREQUENCY)) + MIN_FREQUENCY
   self.frequency_s = 3.00 --(random.float() * (MAX_FREQUENCY - MIN_FREQUENCY)) + MIN_FREQUENCY
-  self.offset_x = bank:cell_width() / 2
-  self.offset_y = bank:cell_height() / 2
 
   self.id = math.random(0, 11)
 end
@@ -35,7 +33,9 @@ function Sprite:render()
   local y = CENTER_Y + math.sin(self.angle * self.frequency_y) * Y_AMPLITUDE
 
   local s = ((math.sin(self.angle * self.frequency_s) + 1.0) / 2.0) * 1.5 + 0.5
-  self.bank:blit(self.id, x - self.offset_x, y - self.offset_y, s, s)
+  --local o = self.bank:cell_width() * s * 0.5
+  --self.bank:blit(self.id, x - o, y - o, s, s)
+  self.bank:blit(self.id, x, y, s, s, 0.0, 0.5, 0.5)
 end
 
 return Sprite

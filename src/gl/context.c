@@ -32,7 +32,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb/stb_image_write.h>
 
-//#define __POSITION_REFERS_TO_ANCHOR__
+#define __POSITION_REFERS_TO_ANCHOR__
 
 bool GL_context_initialize(GL_Context_t *context, size_t width, size_t height)
 {
