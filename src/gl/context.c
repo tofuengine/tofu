@@ -236,25 +236,22 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
 
     float ou = stx - (dtx * cv + dty * cu);
     float ov = sty - (dtx * rv + dty * ru);
-
+#ifdef __POSITION_REFERS_TO_ANCHOR__
+    int dy = position.y - dty; // Offset the anchor point to center scaling.
+#else
+    int dy = position.y;
+#endif
     for (size_t i = 0; i < height; ++i) {
+        float u = (float)tile.x + ou;
+        float v = (float)tile.y + ov;
 #ifdef __POSITION_REFERS_TO_ANCHOR__
-        int dx = position.x + i - dtx; // Offset the anchor point to center scaling.
+        int dx = position.x - dtx; // Ditto.
 #else
-        int dx = position.x + i;
+        int dx = position.x;
 #endif
-
-        float u = ou;
-        float v = ov;
-
         for (size_t j = 0; j < width; ++j) {
-#ifdef __POSITION_REFERS_TO_ANCHOR__
-            int dy = position.y + j - dty; // Ditto.
-#else
-            int dy = position.y + j;
-#endif
-            int sx = (int)((float)tile.x + u);
-            int sy = (int)((float)tile.y + v);
+            int sx = (int)u;
+            int sy = (int)v;
 
             if (dx >= dminx && dy >= dminy && dx <= dmaxx && dy <= dmaxy &&
                 sx >= sminx && sy >= sminy && sx <= smaxx && sy <= smaxy) {
