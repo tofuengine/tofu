@@ -202,10 +202,19 @@ void GL_context_blit_r(const GL_Context_t *context, const GL_Surface_t *surface,
     const float c = cosf(rotation);
     const float s = sinf(rotation);
 
-    // c -s (CCW)
-    // s  c
-    // c  s (CW)
-    // -s c
+    // The counter-clockwise 2D rotation matrix is
+    //
+    //      |  c  -s |
+    //  R = |        |
+    //      |  s   c |
+    //
+    // In order to calculate the clockwise rotation matrix one can use the
+    // similarities `cos(-a) = cos(a)` and `sin(-a) = -sin(a)` and get
+    //
+    //      |  c   s |
+    //  R = |        |
+    //      | -s   c |
+    //
     const size_t skip = context->width - width;
 
     GL_Color_t *dst = (GL_Color_t *)context->vram_rows[position.y - hh] + position.x - hw;
