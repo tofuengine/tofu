@@ -60,7 +60,8 @@ function Game:render(ratio)
       end
   end
 
-  self.bank:blit(0, Canvas.width() / 2, Canvas.height() / 2, self.time)
+  local scale = (math.cos(self.time) + 1) * 4
+  self.bank:blit(2, Canvas.width() / 2, Canvas.height() / 2, scale, scale, self.time, 0.5, 0.5)
 
   self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
 end
