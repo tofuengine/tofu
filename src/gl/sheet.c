@@ -102,12 +102,7 @@ void GL_sheet_blit_s(const GL_Context_t *context, const GL_Sheet_t *sheet, size_
     GL_context_blit_s(context, &sheet->atlas, sheet->cells[cell_id], position, sx, sy);
 }
 
-void GL_sheet_blit_r(const GL_Context_t *context, const GL_Sheet_t *sheet, size_t cell_id, GL_Point_t position, float rotation)
+void GL_sheet_blit_sr(const GL_Context_t *context, const GL_Sheet_t *sheet, size_t cell_id, GL_Point_t position, float sx, float sy, float rotation, float ax, float ay)
 {
-    GL_context_blit_r(context, &sheet->atlas, sheet->cells[cell_id], position, rotation);
-}
-
-void GL_sheet_blit_sr(const GL_Context_t *context, const GL_Sheet_t *sheet, size_t cell_id, GL_Point_t position, float sx, float sy, float rotation)
-{
-    GL_context_blit_sr(context, &sheet->atlas, sheet->cells[cell_id], position, sx, sy, rotation);
+    GL_context_blit_sr(context, &sheet->atlas, sheet->cells[cell_id], position, sx, sy, rotation, ax, ay);
 }

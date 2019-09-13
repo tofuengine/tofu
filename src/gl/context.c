@@ -187,7 +187,7 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
     }
 }
 
-void GL_context_blit_r(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Point_t position, float rotation)
+void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Point_t position, float sx, float sy, float rotation, float ax, float ay)
 {
     const GL_Pixel_t *shifting = context->shifting;
     const GL_Bool_t *transparent = context->transparent;
@@ -196,8 +196,8 @@ void GL_context_blit_r(const GL_Context_t *context, const GL_Surface_t *surface,
     const size_t width = tile.width; // To avoid empty pixels we scan the destination area and calculate the source pixel.
     const size_t height = tile.height;
 
-    const size_t hw = width / 2;
-    const size_t hh = height / 2;
+    const float tx = (float)width * ax;
+    const float ty = (float)height * ay;
 
     const float c = cosf(rotation);
     const float s = sinf(rotation);
@@ -214,47 +214,44 @@ void GL_context_blit_r(const GL_Context_t *context, const GL_Surface_t *surface,
     //      |  c   s |
     //  R = |        |
     //      | -s   c |
-    //
-    const size_t skip = context->width - width;
 
-    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[position.y - hh] + position.x - hw;
+    const float cu = s * (1.0f / sx);
+    const float cv = c * (1.0f / sy);
+    const float ru = cv;
+    const float rv = -cu;
 
-    float y = -(float)hh;
+    float ou = tx - (tx * cv + ty * cu);
+    float ov = ty - (tx * rv + ty * ru);
+
     for (size_t i = 0; i < height; ++i) {
+        int dx = position.x + i;
 
-        float x = -(float)hw;
+        float u = ou;
+        float v = ov;
+
         for (size_t j = 0; j < width; ++j) {
-
-            float u = (x * c + y * s) + hw;
-            float v = (y * c - x * s) + hh;
-
+            int dy = position.y + j;
             int sx = (int)((float)tile.x + u);
             int sy = (int)((float)tile.y + v);
 
-            if (sx >= tile.x && sy >= tile.y && sx < (int)(tile.x + tile.width) && sy < (int)(tile.y + tile.height)) {
-                const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[sy];
-                GL_Pixel_t index = shifting[src[sx]];
+            if (dx >= 0 && dy >= 0 && dx < (int)context->width && dy < (int)context->height &&
+               sx >= tile.x && sy >= tile.y && sx < (int)(tile.x + tile.width) && sy < (int)(tile.y + tile.height)) {
+                const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[sy] + sx;
+                GL_Pixel_t index = shifting[*src];
 
                 if (!transparent[index]) {
+                    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[dy] + dx;
                     *dst = colors[index];
                 }
             }
 
-            x += 1.0f;
-            dst++;
+            u += ru;
+            v += rv;
         }
 
-        y += 1.0f;
-        dst += skip;
+        ou += cu;
+        ov += cv;
     }
-}
-
-// https://www.lexaloffle.com/bbs/?pid=52525
-// https://github.com/morgan3d/misc/tree/master/p8particle
-// https://web.archive.org/web/20190305223938/http://www.drdobbs.com/architecture-and-design/fast-bitmap-rotation-and-scaling/184416337
-void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Point_t position, float sx, float sy, float rotation)
-{
-    GL_context_blit(context, surface, tile, position);
 }
 
 void GL_context_palette(GL_Context_t *context, const GL_Palette_t *palette)

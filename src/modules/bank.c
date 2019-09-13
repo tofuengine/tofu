@@ -211,7 +211,7 @@ static int bank_blit5(lua_State *L)
 
     const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
-    GL_sheet_blit_r(context, sheet, cell_id, destination, rotation);
+    GL_sheet_blit_sr(context, sheet, cell_id, destination, 2.0f, 2.0f, rotation, 0.5f, 0.5f);
 
     return 0;
 }
@@ -309,7 +309,7 @@ static int bank_blit7(lua_State *L)
 
     const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
-    GL_sheet_blit_sr(context, sheet, cell_id, destination, scale_x, scale_y, rotation);
+    GL_sheet_blit_sr(context, sheet, cell_id, destination, scale_x, scale_y, rotation, 0.5f, 0.5f);
 
     return 0;
 }

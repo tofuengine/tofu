@@ -43,7 +43,6 @@ extern void GL_sheet_delete(GL_Sheet_t *sheet);
 
 extern void GL_sheet_blit(const GL_Context_t *context, const GL_Sheet_t *sheet, size_t cell_id, GL_Point_t position);
 extern void GL_sheet_blit_s(const GL_Context_t *context, const GL_Sheet_t *sheet, size_t cell_id, GL_Point_t position, float sx, float sy);
-extern void GL_sheet_blit_r(const GL_Context_t *context, const GL_Sheet_t *sheet, size_t cell_id, GL_Point_t position, float rotation);
-extern void GL_sheet_blit_sr(const GL_Context_t *context, const GL_Sheet_t *sheet, size_t cell_id, GL_Point_t position, float sx, float sy, float rotation);
+extern void GL_sheet_blit_sr(const GL_Context_t *context, const GL_Sheet_t *sheet, size_t cell_id, GL_Point_t position, float sx, float sy, float rotation, float ax, float ay);
 
 #endif  /* __GL_SHEET_H__ */
