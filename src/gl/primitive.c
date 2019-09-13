@@ -26,7 +26,7 @@
 
 //#define __DDA__
 #ifndef __DDA__
-static int32_t i32_abs(int32_t v)
+static int iabs(int v)
 {
     return v >= 0 ? v : -v;
 }
@@ -67,10 +67,10 @@ void GL_primitive_line(const GL_Context_t *context, GL_Point_t from, GL_Point_t 
     const GL_Color_t color = context->palette.colors[index];
 
 #ifdef __DDA__
-    int32_t dx = to.x - from.x;
-    int32_t dy = to.y - from.y;
+    int dx = to.x - from.x;
+    int dy = to.y - from.y;
 
-    int32_t step = (dx >= dy) ? dx : dy;
+    int step = (dx >= dy) ? dx : dy;
 
     float xin = (float)dx / (float)step;
     float yin = (float)dy / (float)step;
@@ -85,13 +85,13 @@ void GL_primitive_line(const GL_Context_t *context, GL_Point_t from, GL_Point_t 
         y += yin;
     }
 #else
-    const int32_t dx = i32_abs(to.x - from.x);
-    const int32_t dy = -i32_abs(to.y - from.y);
+    const int dx = iabs(to.x - from.x);
+    const int dy = -iabs(to.y - from.y);
 
-    const int32_t sx = from.x < to.x ? 1 : -1;
-    const int32_t sy = from.y < to.y ? context->width : -context->width;
+    const int sx = from.x < to.x ? 1 : -1;
+    const int sy = from.y < to.y ? context->width : -context->width;
 
-    int32_t err = dx + dy;
+    int err = dx + dy;
 
     GL_Color_t *dst = (GL_Color_t *)context->vram_rows[from.y] + from.x;
     GL_Color_t *eod = (GL_Color_t *)context->vram_rows[to.y] + to.x;
@@ -99,7 +99,7 @@ void GL_primitive_line(const GL_Context_t *context, GL_Point_t from, GL_Point_t 
     for (;;) {
         *dst = color;
 
-        int32_t e2 = 2 * err;
+        int e2 = 2 * err;
         if (e2 >= dy) {
             if (dst == eod) {
                 break;

@@ -36,9 +36,9 @@ GL_Rectangle_t *precompute_cells(size_t width, size_t height, size_t cell_width,
     GL_Rectangle_t *offsets = malloc(amount * sizeof(GL_Rectangle_t));
     size_t k = 0;
     for (size_t i = 0; i < rows; ++i) {
-        int32_t y = i * cell_height;
+        int y = i * cell_height;
         for (size_t j = 0; j < columns; ++j) {
-            int32_t x = j * cell_width;
+            int x = j * cell_width;
             offsets[k++] = (GL_Rectangle_t){
                     .x = x,
                     .y = y,
