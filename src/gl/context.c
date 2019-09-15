@@ -196,22 +196,21 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const GL_Bool_t *transparent = context->transparent;
     const GL_Color_t *colors = context->palette.colors;
 
-    const size_t width = (int)(tile.width * sx);
-    const size_t height = (int)(tile.height * sy);
+    const float sw = (float)tile.width * sx;
+    const float sh = (float)tile.height * sy;
 
-    const int sminx = tile.x;
-    const int sminy = tile.y;
-    const int smaxx = tile.x + tile.width - 1;
-    const int smaxy = tile.y + tile.height - 1;
-    const int dminx = 0;
-    const int dminy = 0;
-    const int dmaxx = context->width - 1;
-    const int dmaxy = context->height - 1;
-
-    const float stx = (float)tile.width * ax; // Anchor points, relative to the source and destination areas.
-    const float sty = (float)tile.height * ay;
+    //const float stx = (float)tile.width * ax; // Anchor points, relative to the source and destination areas.
+    //const float sty = (float)tile.height * ay;
     const float dtx = (float)tile.width * sx * ax;
-    const float dty = (float)tile.height * sx * ay;
+    const float dty = (float)tile.height * sy * ay;
+
+#ifdef __POSITION_REFERS_TO_ANCHOR__
+    const float px = position.x-dtx; // Ditto.
+    const float py = position.y-dty; // Offset the anchor point to center scaling.
+#else
+    const float px = position.x;
+    const float py = position.y;
+#endif
 
     const float c = cosf(rotation);
     const float s = sinf(rotation);
@@ -229,49 +228,76 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     //  R = |        |
     //      | -s   c |
 
-    const float cu = s * (1.0f / sx);
-    const float cv = c * (1.0f / sy);
+    /* Compute the position of where each corner on the source bitmap
+    will be on the destination to get a bounding box for scanning */
+    int dminx = context->width - 1, dminy = context->height - 1;
+    int dmaxx = 0, dmaxy = 0;
+    float dx, dy;
+    dx = -c * dtx + s * dty + px;
+    dy = -s * dtx - c * dty + py;
+    if(dx < dminx) dminx = (int)dx;
+    if(dx > dmaxx) dmaxx = (int)dx;
+    if(dy < dminy) dminy = (int)dy;
+    if(dy > dmaxy) dmaxy = (int)dy;
+
+    dx = c * (sw - dtx) + s * dty + px;
+    dy = s * (sw - dtx) - c * dty + py;
+    if(dx < dminx) dminx = (int)dx;
+    if(dx > dmaxx) dmaxx = (int)dx;
+    if(dy < dminy) dminy = (int)dy;
+    if(dy > dmaxy) dmaxy = (int)dy;
+
+    dx = c * (sw - dtx) - s * (sh - dty) + px;
+    dy = s * (sw - dtx) + c * (sh - dty) + py;
+    if(dx < dminx) dminx = (int)dx;
+    if(dx > dmaxx) dmaxx = (int)dx;
+    if(dy < dminy) dminy = (int)dy;
+    if(dy > dmaxy) dmaxy = (int)dy;
+
+    dx = -c * dtx - s * (sh - dty) + px;
+    dy = -s * dtx + c * (sh - dty) + py;
+    if(dx < dminx) dminx = (int)dx;
+    if(dx > dmaxx) dmaxx = (int)dx;
+    if(dy < dminy) dminy = (int)dy;
+    if(dy > dmaxy) dmaxy = (int)dy;
+    
+    const int sminx = tile.x;
+    const int sminy = tile.y;
+    const int smaxx = tile.x + tile.width - 1;
+    const int smaxy = tile.y + tile.height - 1;
+
+    const float cu = s / sx;
+    const float cv = c / sy;
     const float ru = cv;
     const float rv = -cu;
+//https://github.com/wernsey/bitmap/blob/master/bmp.c
+    float ou = tile.x - (px * cv + py * cu) + dminy * cu;
+    float ov = tile.y - (px * rv + py * ru) + dminy * cv;
 
-    float ou = stx - (dtx * cv + dty * cu);
-    float ov = sty - (dtx * rv + dty * ru);
-#ifdef __POSITION_REFERS_TO_ANCHOR__
-    int dy = position.y - dty; // Offset the anchor point to center scaling.
-#else
-    int dy = position.y;
-#endif
-    for (size_t i = 0; i < height; ++i) {
-        float u = (float)tile.x + ou;
-        float v = (float)tile.y + ov;
-#ifdef __POSITION_REFERS_TO_ANCHOR__
-        int dx = position.x - dtx; // Ditto.
-#else
-        int dx = position.x;
-#endif
-        for (size_t j = 0; j < width; ++j) {
+    for (int y = dminy; y <= dmaxy; ++y) {
+        float u = ou + dminx * ru;
+        float v = ov + dminx * rv;
+
+        for (int x = dminx; x <= dmaxx; ++x) {
             int sx = (int)u;
             int sy = (int)v;
 
-            if (dx >= dminx && dy >= dminy && dx <= dmaxx && dy <= dmaxy &&
-                sx >= sminx && sy >= sminy && sx <= smaxx && sy <= smaxy) {
+            if (sx >= sminx && sy >= sminy && sx <= smaxx && sy <= smaxy) {
                 const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[sy] + sx;
                 GL_Pixel_t index = shifting[*src];
 
                 if (!transparent[index]) {
-                    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[dy] + dx;
+                    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[y] + x;
                     *dst = colors[index];
                 }
             }
 
             u += ru;
             v += rv;
-            dx += 1;
         }
 
         ou += cu;
         ov += cv;
-        dy += 1;
     }
 }
 
