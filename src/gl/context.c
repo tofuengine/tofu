@@ -32,8 +32,6 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb/stb_image_write.h>
 
-#define __POSITION_REFERS_TO_ANCHOR__
-
 bool GL_context_initialize(GL_Context_t *context, size_t width, size_t height)
 {
     void *vram = malloc(width * height * sizeof(GL_Color_t));
@@ -189,31 +187,36 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
     }
 }
 
+void pixel(const GL_Context_t *context, int x, int y, int index)
+{
+    *((GL_Color_t *)context->vram_rows[y] + x) = context->palette.colors[index];
+}
+
 // https://web.archive.org/web/20190305223938/http://www.drdobbs.com/architecture-and-design/fast-bitmap-rotation-and-scaling/184416337
-void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Point_t position, float sx, float sy, float rotation, float ax, float ay)
+void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Point_t position, float scale_x, float scale_y, float angle, float anchor_x, float anchor_y)
 {
     const GL_Pixel_t *shifting = context->shifting;
     const GL_Bool_t *transparent = context->transparent;
     const GL_Color_t *colors = context->palette.colors;
 
-    const float sw = (float)tile.width * sx;
-    const float sh = (float)tile.height * sy;
+    const float w = (float)tile.width;
+    const float h = (float)tile.height;
+    const float sw = w * scale_x;
+    const float sh = h * scale_y;
 
-    //const float stx = (float)tile.width * ax; // Anchor points, relative to the source and destination areas.
-    //const float sty = (float)tile.height * ay;
-    const float dtx = (float)tile.width * sx * ax;
-    const float dty = (float)tile.height * sy * ay;
+    const float stx = w * anchor_x; // Anchor points, relative to the source and destination areas.
+    const float sty = w * anchor_y;
+    const float dtx = sw * anchor_x;
+    const float dty = sw * anchor_y;
 
-#ifdef __POSITION_REFERS_TO_ANCHOR__
-    const float px = position.x-dtx; // Ditto.
-    const float py = position.y-dty; // Offset the anchor point to center scaling.
-#else
+    const float ox = tile.x;
+    const float oy = tile.y;
+
     const float px = position.x;
     const float py = position.y;
-#endif
 
-    const float c = cosf(rotation);
-    const float s = sinf(rotation);
+    const float c = cosf(angle);
+    const float s = sinf(angle);
 
     // The counter-clockwise 2D rotation matrix is
     //
@@ -233,56 +236,60 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     int dminx = context->width - 1, dminy = context->height - 1;
     int dmaxx = 0, dmaxy = 0;
     float dx, dy;
-    dx = -c * dtx + s * dty + px;
-    dy = -s * dtx - c * dty + py;
+    dx = dtx + c * -dtx - s * -dty + px;
+    dy = dty + s * -dtx + c * -dty + py;
     if(dx < dminx) dminx = (int)dx;
     if(dx > dmaxx) dmaxx = (int)dx;
     if(dy < dminy) dminy = (int)dy;
     if(dy > dmaxy) dmaxy = (int)dy;
 
-    dx = c * (sw - dtx) + s * dty + px;
-    dy = s * (sw - dtx) - c * dty + py;
+    dx = dtx + c * (sw - dtx) - s * -dty + px;
+    dy = dty + s * (sw - dtx) + c * -dty + py;
     if(dx < dminx) dminx = (int)dx;
     if(dx > dmaxx) dmaxx = (int)dx;
     if(dy < dminy) dminy = (int)dy;
     if(dy > dmaxy) dmaxy = (int)dy;
 
-    dx = c * (sw - dtx) - s * (sh - dty) + px;
-    dy = s * (sw - dtx) + c * (sh - dty) + py;
+    dx = dtx + c * (sw - dtx) - s * (sh - dty) + px;
+    dy = dty + s * (sw - dtx) + c * (sh - dty) + py;
     if(dx < dminx) dminx = (int)dx;
     if(dx > dmaxx) dmaxx = (int)dx;
     if(dy < dminy) dminy = (int)dy;
     if(dy > dmaxy) dmaxy = (int)dy;
 
-    dx = -c * dtx - s * (sh - dty) + px;
-    dy = -s * dtx + c * (sh - dty) + py;
+    dx = dtx + c * - dtx - s * (sh - dty) + px;
+    dy = dty + s * - dtx + c * (sh - dty) + py;
     if(dx < dminx) dminx = (int)dx;
     if(dx > dmaxx) dmaxx = (int)dx;
     if(dy < dminy) dminy = (int)dy;
     if(dy > dmaxy) dmaxy = (int)dy;
-    
+pixel(context, dminx, dminy, 3);
+pixel(context, dmaxx, dminy, 3);
+pixel(context, dmaxx, dmaxy, 3);
+pixel(context, dminx, dmaxy, 3);
+
     const int sminx = tile.x;
     const int sminy = tile.y;
     const int smaxx = tile.x + tile.width - 1;
     const int smaxy = tile.y + tile.height - 1;
 
-    const float cu = s / sx;
-    const float cv = c / sy;
-    const float ru = cv;
-    const float rv = -cu;
-//https://github.com/wernsey/bitmap/blob/master/bmp.c
-    float ou = tile.x - (px * cv + py * cu) + dminy * cu;
-    float ov = tile.y - (px * rv + py * ru) + dminy * cv;
+    float ou = stx - (stx * c - sty * s) + ox;
+    float ov = sty - (stx * s + sty * c) + oy;
+
+    const float du = c / scale_x;
+    const float dv = s / scale_y;
 
     for (int y = dminy; y <= dmaxy; ++y) {
-        float u = ou + dminx * ru;
-        float v = ov + dminx * rv;
+        float u = ou;
+        float v = ov;
 
         for (int x = dminx; x <= dmaxx; ++x) {
+pixel(context, x, y, 7);
             int sx = (int)u;
             int sy = (int)v;
 
             if (sx >= sminx && sy >= sminy && sx <= smaxx && sy <= smaxy) {
+pixel(context, x, y, 3);
                 const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[sy] + sx;
                 GL_Pixel_t index = shifting[*src];
 
@@ -292,12 +299,12 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
                 }
             }
 
-            u += ru;
-            v += rv;
+            u += du;
+            v += dv;
         }
 
-        ou += cu;
-        ov += cv;
+        ou -= dv;
+        ov += du;
     }
 }
 
