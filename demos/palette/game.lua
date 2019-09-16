@@ -41,7 +41,7 @@ end
 
 function Game:render(ratio)
   Canvas.clear()
-
+--[[
   for i = 0, AMOUNT - 1 do
     local x = self.x_size * i
     for j = 0, AMOUNT - 1 do
@@ -59,9 +59,9 @@ function Game:render(ratio)
       -- Canvas.cluster(cluster)
       end
   end
-
-  local scale = (math.cos(self.time) + 1) * 4
-  self.bank:blit(2, Canvas.width() / 2, Canvas.height() / 2, scale, scale, self.time, 0.5, 0.5)
+--]]
+  local scale = (math.cos(self.time) + 1) * 7
+  self.bank:blit(0, Canvas.width() / 2, Canvas.height() / 2, 10, 10, self.time * 0.5, 0.5, 0.5)
 
   self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
 end

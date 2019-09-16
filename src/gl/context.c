@@ -199,20 +199,20 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const GL_Bool_t *transparent = context->transparent;
     const GL_Color_t *colors = context->palette.colors;
 
-    const float w = (float)tile.width;
+    const float w = (float)tile.width; // Percompute width and scaled with for faster reuse.
     const float h = (float)tile.height;
     const float sw = w * scale_x;
     const float sh = h * scale_y;
 
     const float stx = w * anchor_x; // Anchor points, relative to the source and destination areas.
-    const float sty = w * anchor_y;
+    const float sty = h * anchor_y;
     const float dtx = sw * anchor_x;
-    const float dty = sw * anchor_y;
+    const float dty = sh * anchor_y;
 
     const float ox = tile.x;
     const float oy = tile.y;
-    const float px = position.x - dtx;
-    const float py = position.y - dty;
+    const float px = position.x;
+    const float py = position.y;
 
     const float c = cosf(angle);
     const float s = sinf(angle);
@@ -230,53 +230,44 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     //  R = |        |
     //      | -s   c |
 
-    /* Compute the position of where each corner on the source bitmap
-    will be on the destination to get a bounding box for scanning */
-    int dminx = context->width - 1, dminy = context->height - 1;
-    int dmaxx = 0, dmaxy = 0;
-    float dx, dy;
-    dx = dtx + c * -dtx - s * -dty + px;
-    dy = dty + s * -dtx + c * -dty + py;
-    if(dx < dminx) dminx = (int)dx;
-    if(dx > dmaxx) dmaxx = (int)dx;
-    if(dy < dminy) dminy = (int)dy;
-    if(dy > dmaxy) dmaxy = (int)dy;
+    // Rotate the four corners of the scaled image to compute the rotate/scaled AABB.
+    //
+    // Note that we aren *not* adding `dst/dty` on purpose to rotate around the anchor point.
+    const float x0 = c * -dtx - s * -dty + px;
+    const float y0 = s * -dtx + c * -dty + py;
 
-    dx = dtx + c * (sw - dtx) - s * -dty + px;
-    dy = dty + s * (sw - dtx) + c * -dty + py;
-    if(dx < dminx) dminx = (int)dx;
-    if(dx > dmaxx) dmaxx = (int)dx;
-    if(dy < dminy) dminy = (int)dy;
-    if(dy > dmaxy) dmaxy = (int)dy;
+    const float x1 = c * (sw - dtx) - s * -dty + px;
+    const float y1 = s * (sw - dtx) + c * -dty + py;
 
-    dx = dtx + c * (sw - dtx) - s * (sh - dty) + px;
-    dy = dty + s * (sw - dtx) + c * (sh - dty) + py;
-    if(dx < dminx) dminx = (int)dx;
-    if(dx > dmaxx) dmaxx = (int)dx;
-    if(dy < dminy) dminy = (int)dy;
-    if(dy > dmaxy) dmaxy = (int)dy;
+    const float x2 = c * (sw - dtx) - s * (sh - dty) + px;
+    const float y2 = s * (sw - dtx) + c * (sh - dty) + py;
 
-    dx = dtx + c * - dtx - s * (sh - dty) + px;
-    dy = dty + s * - dtx + c * (sh - dty) + py;
-    if(dx < dminx) dminx = (int)dx;
-    if(dx > dmaxx) dmaxx = (int)dx;
-    if(dy < dminy) dminy = (int)dy;
-    if(dy > dmaxy) dmaxy = (int)dy;
-pixel(context, dminx, dminy, 3);
-pixel(context, dmaxx, dminy, 3);
-pixel(context, dmaxx, dmaxy, 3);
-pixel(context, dminx, dmaxy, 3);
+    const float x3 = c * - dtx - s * (sh - dty) + px;
+    const float y3 = s * - dtx + c * (sh - dty) + py;
+
+    const float aabb_x0 = fmin(fmin(fmin(x0, x1), x2), x3);
+    const float aabb_y0 = fmin(fmin(fmin(y0, y1), y2), y3);
+    const float aabb_x1 = fmax(fmax(fmax(x0, x1), x2), x3);
+    const float aabb_y1 = fmax(fmax(fmax(y0, y1), y2), y3);
+
+    // Clip both destination and target rectangles. Round for better result.
+    const int dminx = (int)(fmax(aabb_x0, 0.0f) + 0.0f);
+    const int dminy = (int)(fmax(aabb_y0, 0.0f) + 0.0f);
+    const int dmaxx = (int)(fmin(aabb_x1, context->width - 1) + 0.0f);
+    const int dmaxy = (int)(fmin(aabb_y1, context->height - 1) + 0.0f);
 
     const int sminx = tile.x;
     const int sminy = tile.y;
     const int smaxx = tile.x + tile.width - 1;
     const int smaxy = tile.y + tile.height - 1;
 
-    const float du = c / scale_x;
+    const float du = c / scale_x; // Invert rotation and scale to get straight to-texture-space factors.
     const float dv = -s / scale_y;
 
-    float ou = stx - (stx * c + sty * s) + ox;
-    float ov = sty - (sty * c - stx * s) + oy;
+    const float tlx = dminx - px; // Transform the top-left corner of the to-be-drawn rectangle to texture space.
+    const float tly = dminy - py;
+    float ou = (tlx * du - tly * dv) + stx + ox;
+    float ov = (tlx * dv + tly * du) + sty + oy;
 
     for (int y = dminy; y <= dmaxy; ++y) {
         float u = ou;
@@ -305,6 +296,10 @@ pixel(context, x, y, 3);
         ou -= dv;
         ov += du;
     }
+pixel(context, dminx, dminy, 3);
+pixel(context, dmaxx, dminy, 3);
+pixel(context, dmaxx, dmaxy, 3);
+pixel(context, dminx, dmaxy, 3);
 }
 
 void GL_context_palette(GL_Context_t *context, const GL_Palette_t *palette)
