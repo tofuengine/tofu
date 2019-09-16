@@ -199,6 +199,8 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const GL_Bool_t *transparent = context->transparent;
     const GL_Color_t *colors = context->palette.colors;
 
+    // FIXME: there's a rounding error here, that generates a spourious line.
+
     const float w = (float)tile.width; // Percompute width and scaled with for faster reuse.
     const float h = (float)tile.height;
     const float sw = w * scale_x;
@@ -251,10 +253,10 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const float aabb_y1 = fmax(fmax(fmax(y0, y1), y2), y3);
 
     // Clip both destination and target rectangles. Round for better result.
-    const int dminx = (int)(fmax(aabb_x0, 0.0f) + 0.0f);
-    const int dminy = (int)(fmax(aabb_y0, 0.0f) + 0.0f);
-    const int dmaxx = (int)(fmin(aabb_x1, context->width - 1) + 0.0f);
-    const int dmaxy = (int)(fmin(aabb_y1, context->height - 1) + 0.0f);
+    const int dminx = (int)fmax(aabb_x0 + 0.5f, 0.0f);
+    const int dminy = (int)fmax(aabb_y0 + 0.5f, 0.0f);
+    const int dmaxx = (int)fmin(aabb_x1 + 0.5f, context->width - 1);
+    const int dmaxy = (int)fmin(aabb_y1 + 0.5f, context->height - 1);
 
     const int sminx = tile.x;
     const int sminy = tile.y;
