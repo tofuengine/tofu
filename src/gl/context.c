@@ -211,9 +211,8 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
 
     const float ox = tile.x;
     const float oy = tile.y;
-
-    const float px = position.x;
-    const float py = position.y;
+    const float px = position.x - dtx;
+    const float py = position.y - dty;
 
     const float c = cosf(angle);
     const float s = sinf(angle);
@@ -273,11 +272,11 @@ pixel(context, dminx, dmaxy, 3);
     const int smaxx = tile.x + tile.width - 1;
     const int smaxy = tile.y + tile.height - 1;
 
-    float ou = stx - (stx * c - sty * s) + ox;
-    float ov = sty - (stx * s + sty * c) + oy;
-
     const float du = c / scale_x;
-    const float dv = s / scale_y;
+    const float dv = -s / scale_y;
+
+    float ou = stx - (stx * c + sty * s) + ox;
+    float ov = sty - (sty * c - stx * s) + oy;
 
     for (int y = dminy; y <= dmaxy; ++y) {
         float u = ou;
