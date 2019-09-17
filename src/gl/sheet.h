@@ -31,7 +31,7 @@
 
 typedef struct _GL_Sheet_t {
     GL_Surface_t atlas;
-    GL_Rectangle_t *cells;
+    GL_Quad_t *cells;
     GL_Size_t size;
 } GL_Sheet_t;
 

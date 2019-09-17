@@ -111,20 +111,23 @@ void GL_context_screenshot(const GL_Context_t *context, const char *pathfile)
 
 // TODO: specifies `const` always? Is pedantic or useful?
 // https://dev.to/fenbf/please-declare-your-variables-as-const
-void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Point_t position)
+void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, GL_Quad_t quad, GL_Point_t position)
 {
     const GL_Pixel_t *shifting = context->shifting;
     const GL_Bool_t *transparent = context->transparent;
     const GL_Color_t *colors = context->palette.colors;
 
-    const size_t width = (size_t)tile.width;
-    const size_t height = (size_t)tile.height;
+    const float w = (float)(quad.x1 - quad.x0 + 1);
+    const float h = (float)(quad.y1 - quad.y0 + 1);
+
+    const size_t width = (size_t)w;
+    const size_t height = (size_t)h;
 
     const size_t src_skip = surface->width - width;
     const size_t dst_skip = context->width - width;
 
     GL_Color_t *dst = (GL_Color_t *)context->vram_rows[position.y] + position.x;
-    const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[tile.y] + tile.x;
+    const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[quad.y0] + quad.x0;
 
     for (size_t i = 0; i < height; ++i) {
         for (size_t j = 0; j < width; ++j) {
@@ -147,27 +150,31 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
 
 // Simple implementation of nearest-neighbour scaling.
 // See `http://tech-algorithm.com/articles/nearest-neighbor-image-scaling/` for a reference code.
-void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Point_t position, float sx, float sy)
+void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface, GL_Quad_t quad, GL_Point_t position, float scale_x, float scale_y)
 {
     const GL_Pixel_t *shifting = context->shifting;
     const GL_Bool_t *transparent = context->transparent;
     const GL_Color_t *colors = context->palette.colors;
 
-    const size_t width = (size_t)(sx * (float)tile.width); // To avoid empty pixels we scan the destination area and calculate the source pixel.
-    const size_t height = (size_t)(sy * (float)tile.height);
+    const float w = (float)(quad.x1 - quad.x0 + 1); // Percompute width and scaled with for faster reuse.
+    const float h = (float)(quad.y1 - quad.y0 + 1);
+    const float sw = scale_x * w; // To avoid empty pixels we scan the destination area and calculate the source pixel.
+    const float sh = scale_y * h;
 
-    const float du = 1.0f / sx;
-    const float dv = 1.0f / sy;
+    const float du = 1.0f / scale_x;
+    const float dv = 1.0f / scale_y;
 
+    const size_t width = (size_t)(sw + 0.5f); // To avoid empty pixels we scan the destination area and calculate the source pixel.
+    const size_t height = (size_t)(sh + 0.5f);
     const size_t skip = context->width - width;
 
     GL_Color_t *dst = (GL_Color_t *)context->vram_rows[position.y] + position.x;
 
-    float v = (float)tile.y;
+    float v = (float)quad.y0 + 0.5f;
     for (size_t i = 0; i < height; ++i) {
         const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[(int)v];
 
-        float u = (float)tile.x;
+        float u = (float)quad.x0 + 0.5f;
         for (size_t j = 0; j < width; ++j) {
             GL_Pixel_t index = shifting[src[(int)u]];
 #if 1
@@ -194,7 +201,7 @@ void pixel(const GL_Context_t *context, int x, int y, int index)
 }
 
 // https://web.archive.org/web/20190305223938/http://www.drdobbs.com/architecture-and-design/fast-bitmap-rotation-and-scaling/184416337
-void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Point_t position, float scale_x, float scale_y, float angle, float anchor_x, float anchor_y)
+void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface, GL_Quad_t quad, GL_Point_t position, float scale_x, float scale_y, float angle, float anchor_x, float anchor_y)
 {
     const GL_Quad_t clipping_region = context->clipping_region;
     const GL_Pixel_t *shifting = context->shifting;
@@ -203,8 +210,8 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
 
     // FIXME: there's a rounding error here, that generates a spourious line.
 
-    const float w = (float)tile.width; // Percompute width and scaled with for faster reuse.
-    const float h = (float)tile.height;
+    const float w = (float)(quad.x1 - quad.x0 + 1); // Percompute width and scaled with for faster reuse.
+    const float h = (float)(quad.y1 - quad.y0 + 1);
     const float sw = w * scale_x;
     const float sh = h * scale_y;
 
@@ -213,8 +220,8 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const float dtx = sw * anchor_x;
     const float dty = sh * anchor_y;
 
-    const float ox = tile.x;
-    const float oy = tile.y;
+    const float ox = quad.x0;
+    const float oy = quad.y0;
     const float px = position.x;
     const float py = position.y;
 
@@ -260,11 +267,11 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const int dmaxx = (int)fmin(aabb_x1 + 0.5f, (float)clipping_region.x1);
     const int dmaxy = (int)fmin(aabb_y1 + 0.5f, (float)clipping_region.y1);
 
-    const int sminx = tile.x;
-    const int sminy = tile.y;
-    const int smaxx = tile.x + tile.width - 1;
-    const int smaxy = tile.y + tile.height - 1;
-
+    const int sminx = quad.x0;
+    const int sminy = quad.y0;
+    const int smaxx = quad.x1;
+    const int smaxy = quad.y1;
+#ifdef __ROTATE_AND_SCALE__
     const float du = c / scale_x; // Invert rotation and scale to get straight to-texture-space factors.
     const float dv = -s / scale_y;
 
