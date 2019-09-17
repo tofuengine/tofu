@@ -148,10 +148,13 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
     }
 }
 
+#ifdef DEBUG
 void pixel(const GL_Context_t *context, int x, int y, int index)
 {
-    *((GL_Color_t *)context->vram_rows[y] + x) = context->palette.colors[index];
+    int v = (index % 16) * 8;
+    *((GL_Color_t *)context->vram_rows[y] + x) = (GL_Color_t){ 0, 63 + v, 0, 255 };
 }
+#endif
 
 // Simple implementation of nearest-neighbour scaling, with x/y flipping according to scaling-factor sign.
 // See `http://tech-algorithm.com/articles/nearest-neighbor-image-scaling/` for a reference code.
@@ -184,7 +187,9 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
 
         float u = ou;
         for (size_t j = 0; j < width; ++j) {
-pixel(context, position.x + j, position.y + i, 4 + (int)v);
+#ifdef DEBUG
+            pixel(context, position.x + j, position.y + i, (int)u + (int)v);
+#endif
             GL_Pixel_t index = shifting[src[(int)u]];
 #if 1
             if (transparent[index]) {
@@ -271,10 +276,10 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const float aabb_y1 = fmax(fmax(fmax(y0, y1), y2), y3);
 
     // Clip both destination and target rectangles. Round for better result.
-    const int dminx = (int)fmax(aabb_x0 + 0.5f, (float)clipping_region.x0);
-    const int dminy = (int)fmax(aabb_y0 + 0.5f, (float)clipping_region.y0);
-    const int dmaxx = (int)fmin(aabb_x1 + 0.5f, (float)clipping_region.x1);
-    const int dmaxy = (int)fmin(aabb_y1 + 0.5f, (float)clipping_region.y1);
+    const int dminx = (int)fmax(aabb_x0, (float)clipping_region.x0);
+    const int dminy = (int)fmax(aabb_y0, (float)clipping_region.y0);
+    const int dmaxx = (int)fmin(aabb_x1, (float)clipping_region.x1);
+    const int dmaxy = (int)fmin(aabb_y1, (float)clipping_region.y1);
 
     const int sminx = quad.x0;
     const int sminy = quad.y0;
@@ -302,12 +307,16 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
         float v = ov;
 
         for (int x = dminx; x <= dmaxx; ++x) {
-pixel(context, x, y, 1);
+#ifdef DEBUG
+            pixel(context, x, y, 15);
+#endif
             int sx = (int)u;
             int sy = (int)v;
 
             if (sx >= sminx && sy >= sminy && sx <= smaxx && sy <= smaxy) {
-pixel(context, x, y, 3 + sy);
+#ifdef DEBUG
+                pixel(context, x, y, sx + sy);
+#endif
                 const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[sy] + sx;
                 GL_Pixel_t index = shifting[*src];
 
@@ -324,10 +333,12 @@ pixel(context, x, y, 3 + sy);
         ou -= M21;
         ov += M11;
     }
-pixel(context, dminx, dminy, 2);
-pixel(context, dmaxx, dminy, 2);
-pixel(context, dmaxx, dmaxy, 2);
-pixel(context, dminx, dmaxy, 2);
+#ifdef DEBUG
+    pixel(context, dminx, dminy, 7);
+    pixel(context, dmaxx, dminy, 7);
+    pixel(context, dmaxx, dmaxy, 7);
+    pixel(context, dminx, dmaxy, 7);
+#endif
 }
 
 void GL_context_palette(GL_Context_t *context, const GL_Palette_t *palette)
