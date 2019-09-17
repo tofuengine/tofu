@@ -248,17 +248,22 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     // Rotate the four corners of the scaled image to compute the rotate/scaled AABB.
     //
     // Note that we aren *not* adding `dst/dty` on purpose to rotate around the anchor point.
-    const float x0 = c * -dtx - s * -dty + px;
-    const float y0 = s * -dtx + c * -dty + py;
+    const float ax = -dtx;
+    const float ay = -dty;
+    const float bx = sw - dtx;
+    const float by = sh - dty;
+    
+    const float x0 = c * ax - s * ay + px;
+    const float y0 = s * ax + c * ay + py;
 
-    const float x1 = c * (sw - dtx) - s * -dty + px;
-    const float y1 = s * (sw - dtx) + c * -dty + py;
+    const float x1 = c * bx - s * ay + px;
+    const float y1 = s * bx + c * ay + py;
 
-    const float x2 = c * (sw - dtx) - s * (sh - dty) + px;
-    const float y2 = s * (sw - dtx) + c * (sh - dty) + py;
+    const float x2 = c * bx - s * by + px;
+    const float y2 = s * bx + c * by + py;
 
-    const float x3 = c * -dtx - s * (sh - dty) + px;
-    const float y3 = s * -dtx + c * (sh - dty) + py;
+    const float x3 = c * ax - s * by + px;
+    const float y3 = s * ax + c * by + py;
 
     const float aabb_x0 = fmin(fmin(fmin(x0, x1), x2), x3);
     const float aabb_y0 = fmin(fmin(fmin(y0, y1), y2), y3);
