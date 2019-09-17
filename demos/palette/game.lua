@@ -10,7 +10,7 @@ local Game = Class.define()
 local AMOUNT = 16
 local PALETTES = { "pico-8", "arne-16", "c64", "cga" }
 
---384 x 224 pixels 
+--384 x 224 pixels
 
 function Game:__ctor()
   Canvas.palette("pico-8")
@@ -21,12 +21,22 @@ function Game:__ctor()
   self.x_size = Canvas.width() / AMOUNT
   self.y_size = Canvas.height() / AMOUNT
   self.palette = 1
+  self.scale_x = 1.0
+  self.scale_y = -1.0
 end
 
 function Game:input()
   if Input.is_key_pressed(Input.SELECT) then
     self.palette = (self.palette % #PALETTES) + 1
     Canvas.palette(PALETTES[self.palette])
+  elseif Input.is_key_pressed(Input.DOWN) then
+    self.scale_y = 1.0
+  elseif Input.is_key_pressed(Input.UP) then
+    self.scale_y = -1.0
+  elseif Input.is_key_pressed(Input.RIGHT) then
+    self.scale_x = 1.0
+  elseif Input.is_key_pressed(Input.UP) then
+    self.scale_x = -1.0
   end
 end
 
@@ -60,8 +70,12 @@ function Game:render(ratio)
       end
   end
 --]]
-  local scale = (math.cos(self.time) + 1) * 7
-  self.bank:blit(0, Canvas.width() / 2, Canvas.height() / 2, 10, 10, self.time * 0.5, 0.5, 0.5)
+  local scale = (math.cos(self.time) + 1) * 3
+  self.bank:blit(0, Canvas.width() / 2, Canvas.height() / 2, 10, 10, self.time * 0.5 * 0 + math.pi / 4, 0.5, 0.5)
+
+  local x, y = Canvas.width() / 3, Canvas.height() / 3
+  Canvas.point(x, y, 3)
+  self.bank:blit(1, x, y, 8 * self.scale_x, 8 * self.scale_y)
 
   self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
 end
