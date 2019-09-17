@@ -148,7 +148,12 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
     }
 }
 
-// Simple implementation of nearest-neighbour scaling.
+void pixel(const GL_Context_t *context, int x, int y, int index)
+{
+    *((GL_Color_t *)context->vram_rows[y] + x) = context->palette.colors[index];
+}
+
+// Simple implementation of nearest-neighbour scaling, with x/y flipping according to scaling-factor sign.
 // See `http://tech-algorithm.com/articles/nearest-neighbor-image-scaling/` for a reference code.
 void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface, GL_Quad_t quad, GL_Point_t position, float scale_x, float scale_y)
 {
@@ -170,8 +175,8 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
 
     GL_Color_t *dst = (GL_Color_t *)context->vram_rows[position.y] + position.x;
 
-    const float ou = (float)(scale_x >= 0.0f ? quad.x0 : quad.x1) + 0.5f;
-    const float ov = (float)(scale_y >= 0.0f ? quad.y0 : quad.y1) + 0.5f;
+    const float ou = (float)(scale_x >= 0.0f ? quad.x0 : quad.x1 + 1.0f + du); // Compute first or last pixel (scaled)
+    const float ov = (float)(scale_y >= 0.0f ? quad.y0 : quad.y1 + 1.0f + dv);
 
     float v = ov;
     for (size_t i = 0; i < height; ++i) {
@@ -179,7 +184,7 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
 
         float u = ou;
         for (size_t j = 0; j < width; ++j) {
-pixel(context, position.x + j, position.y + i, 4);
+pixel(context, position.x + j, position.y + i, 4 + (int)v);
             GL_Pixel_t index = shifting[src[(int)u]];
 #if 1
             if (transparent[index]) {
@@ -199,11 +204,6 @@ pixel(context, position.x + j, position.y + i, 4);
     }
 }
 
-void pixel(const GL_Context_t *context, int x, int y, int index)
-{
-    *((GL_Color_t *)context->vram_rows[y] + x) = context->palette.colors[index];
-}
-
 // https://web.archive.org/web/20190305223938/http://www.drdobbs.com/architecture-and-design/fast-bitmap-rotation-and-scaling/184416337
 void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface, GL_Quad_t quad, GL_Point_t position, float scale_x, float scale_y, float angle, float anchor_x, float anchor_y)
 {
@@ -212,7 +212,7 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const GL_Bool_t *transparent = context->transparent;
     const GL_Color_t *colors = context->palette.colors;
 
-    // FIXME: there's a rounding error here, that generates a spourious line.
+    // FIXME: there's a rounding error here, that generates a spurious row/column.
 
     const float w = (float)(quad.x1 - quad.x0 + 1); // Percompute width and scaled with for faster reuse.
     const float h = (float)(quad.y1 - quad.y0 + 1);
