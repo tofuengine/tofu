@@ -272,25 +272,32 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const int smaxx = quad.x1;
     const int smaxy = quad.y1;
 #ifdef __ROTATE_AND_SCALE__
-    const float du = c / scale_x; // Invert rotation and scale to get straight to-texture-space factors.
-    const float dv = -s / scale_y;
-
-    const float tlx = dminx - px; // Transform the top-left corner of the to-be-drawn rectangle to texture space.
-    const float tly = dminy - py;
-    float ou = (tlx * du - tly * dv) + stx + ox;
-    float ov = (tlx * dv + tly * du) + sty + oy;
+    const float M11 = c / scale_x; // Combine (inverse) rotation and then scaling matrices.
+    const float M12 = s / scale_x;  // | 1/sx    0 | |  c s |
+    const float M21 = -s / scale_y; // |           | |      |
+    const float M22 = c / scale_y;  // |    0 1/sy | | -s c |
+#else
+    const float M11 = c / scale_x; // Combine scaling down and (inverse) rotate into a single matrix.
+    const float M12 = s / scale_y;  // |  c s |   | 1/sx   0  |
+    const float M21 = -s / scale_x;  // |      | x |           |
+    const float M22 = c / scale_y; // | -s c |   |   0  1/sy |
+#endif
+    const float tlx = (dminx - px); // Transform the top-left corner of the to-be-drawn rectangle to texture space.
+    const float tly = (dminy - py);
+    float ou = (tlx * M11 + tly * M12) + stx + ox; // Offset to the source  texture quad.
+    float ov = (tlx * M21 + tly * M22) + sty + oy;
 
     for (int y = dminy; y <= dmaxy; ++y) {
         float u = ou;
         float v = ov;
 
         for (int x = dminx; x <= dmaxx; ++x) {
-pixel(context, x, y, 7);
+pixel(context, x, y, 1);
             int sx = (int)u;
             int sy = (int)v;
 
             if (sx >= sminx && sy >= sminy && sx <= smaxx && sy <= smaxy) {
-pixel(context, x, y, 3);
+pixel(context, x, y, 3 + sy);
                 const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[sy] + sx;
                 GL_Pixel_t index = shifting[*src];
 
@@ -300,17 +307,17 @@ pixel(context, x, y, 3);
                 }
             }
 
-            u += du;
-            v += dv;
+            u += M22;
+            v -= M12;
         }
 
-        ou -= dv;
-        ov += du;
+        ou -= M21;
+        ov += M11;
     }
-pixel(context, dminx, dminy, 3);
-pixel(context, dmaxx, dminy, 3);
-pixel(context, dmaxx, dmaxy, 3);
-pixel(context, dminx, dmaxy, 3);
+pixel(context, dminx, dminy, 2);
+pixel(context, dmaxx, dminy, 2);
+pixel(context, dmaxx, dmaxy, 2);
+pixel(context, dminx, dmaxy, 2);
 }
 
 void GL_context_palette(GL_Context_t *context, const GL_Palette_t *palette)
