@@ -158,24 +158,28 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
 
     const float w = (float)(quad.x1 - quad.x0 + 1); // Percompute width and scaled with for faster reuse.
     const float h = (float)(quad.y1 - quad.y0 + 1);
-    const float sw = scale_x * w; // To avoid empty pixels we scan the destination area and calculate the source pixel.
-    const float sh = scale_y * h;
+    const float sw = fabs(scale_x) * w; // To avoid empty pixels we scan the destination area and calculate the source pixel.
+    const float sh = fabs(scale_y) * h;
 
     const float du = 1.0f / scale_x;
     const float dv = 1.0f / scale_y;
 
-    const size_t width = (size_t)(sw + 0.5f); // To avoid empty pixels we scan the destination area and calculate the source pixel.
+    const size_t width = (size_t)(sw + 0.5f); // Round width and height to nearest pixel.
     const size_t height = (size_t)(sh + 0.5f);
     const size_t skip = context->width - width;
 
     GL_Color_t *dst = (GL_Color_t *)context->vram_rows[position.y] + position.x;
 
-    float v = (float)quad.y0 + 0.5f;
+    const float ou = (float)(scale_x >= 0.0f ? quad.x0 : quad.x1) + 0.5f;
+    const float ov = (float)(scale_y >= 0.0f ? quad.y0 : quad.y1) + 0.5f;
+
+    float v = ov;
     for (size_t i = 0; i < height; ++i) {
         const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[(int)v];
 
-        float u = (float)quad.x0 + 0.5f;
+        float u = ou;
         for (size_t j = 0; j < width; ++j) {
+pixel(context, position.x + j, position.y + i, 4);
             GL_Pixel_t index = shifting[src[(int)u]];
 #if 1
             if (transparent[index]) {

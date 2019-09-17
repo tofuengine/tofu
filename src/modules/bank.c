@@ -238,24 +238,7 @@ static int bank_blit6(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-#ifdef __NO_MIRRORING__
-    double dw = (double)instance->sheet.size.width * fabs(scale_x);
-    double dh = (double)instance->sheet.size.height * fabs(scale_y);
-#else
-    double dw = (double)instance->sheet.size.width * scale_x; // The sign controls the mirroring.
-    double dh = (double)instance->sheet.size.height * scale_y;
-#endif
-
     GL_Point_t destination = (GL_Point_t){ .x = (int)x, .y = (int)y };
-
-#ifndef __NO_MIRRORING__
-    if (dw < 0.0) { // Compensate for mirroring!
-        destination.x -= dw;
-    }
-    if (dh < 0.0) {
-        destination.y -= dh;
-    }
-#endif
 
     const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
@@ -288,24 +271,7 @@ static int bank_blit7(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-#ifdef __NO_MIRRORING__
-    double dw = (double)instance->sheet.size.width * fabs(scale_x);
-    double dw = (double)instance->sheet.size.height * fabs(scale_y);
-#else
-    double dw = (double)instance->sheet.size.width * scale_x; // The sign controls the mirroring.
-    double dh = (double)instance->sheet.size.height * scale_y;
-#endif
-
     GL_Point_t destination = (GL_Point_t){ .x = (int)x, .y = (int)y };
-
-#ifndef __NO_MIRRORING__
-    if (dw < 0.0) { // Compensate for mirroring!
-        destination.x -= dw;
-    }
-    if (dh < 0.0) {
-        destination.y -= dh;
-    }
-#endif
 
     const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
@@ -342,24 +308,7 @@ static int bank_blit9(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-#ifdef __NO_MIRRORING__
-    double dw = (double)instance->sheet.size.width * fabs(scale_x);
-    double dw = (double)instance->sheet.size.height * fabs(scale_y);
-#else
-    double dw = (double)instance->sheet.size.width * scale_x; // The sign controls the mirroring.
-    double dh = (double)instance->sheet.size.height * scale_y;
-#endif
-
     GL_Point_t destination = (GL_Point_t){ .x = (int)x, .y = (int)y };
-
-#ifndef __NO_MIRRORING__
-    if (dw < 0.0) { // Compensate for mirroring!
-        destination.x -= dw;
-    }
-    if (dh < 0.0) {
-        destination.y -= dh;
-    }
-#endif
 
     const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
