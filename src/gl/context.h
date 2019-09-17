@@ -29,15 +29,7 @@
 #include "palette.h"
 #include "surface.h"
 
-typedef enum _GL_Raster_Operations_t {
-    RASTER_OPERATION_NOP,
-    RASTER_OPERATION_SET,
-    RASTER_OPERATION_AND,
-    RASTER_OPERATION_OR,
-    RASTER_OPERATION_NOT,
-    RASTER_OPERATION_XOR,
-    GL_Raster_Operations_t_CountOf
-} GL_Raster_Operations_t;
+// TODO: move from `float` to 'double`.
 
 typedef struct _GL_Context_t {
     size_t width, height, stride; // `stride` is the width in bytes.
@@ -48,9 +40,8 @@ typedef struct _GL_Context_t {
     GL_Pixel_t background;
     GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
     GL_Bool_t transparent[GL_MAX_PALETTE_COLORS];
-    GL_Rectangle_t clipping_region;
     GL_Palette_t palette;
-    GL_Raster_Operations_t raster_operation;
+    GL_Quad_t clipping_region;
 } GL_Context_t;
 
 extern bool GL_context_initialize(GL_Context_t *context, size_t width, size_t height);

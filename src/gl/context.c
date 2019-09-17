@@ -59,6 +59,7 @@ bool GL_context_initialize(GL_Context_t *context, size_t width, size_t height)
             .vram = vram,
             .vram_rows = vram_rows,
             .vram_size = width * height,
+            .clipping_region = (GL_Quad_t){ .x0 = 0, .y0 = 0, .x1 = width - 1, .y1 = height - 1 }
         };
 
     context->background = 0;
@@ -195,6 +196,7 @@ void pixel(const GL_Context_t *context, int x, int y, int index)
 // https://web.archive.org/web/20190305223938/http://www.drdobbs.com/architecture-and-design/fast-bitmap-rotation-and-scaling/184416337
 void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t tile, GL_Point_t position, float scale_x, float scale_y, float angle, float anchor_x, float anchor_y)
 {
+    const GL_Quad_t clipping_region = context->clipping_region;
     const GL_Pixel_t *shifting = context->shifting;
     const GL_Bool_t *transparent = context->transparent;
     const GL_Color_t *colors = context->palette.colors;
@@ -253,10 +255,10 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const float aabb_y1 = fmax(fmax(fmax(y0, y1), y2), y3);
 
     // Clip both destination and target rectangles. Round for better result.
-    const int dminx = (int)fmax(aabb_x0 + 0.5f, 0.0f);
-    const int dminy = (int)fmax(aabb_y0 + 0.5f, 0.0f);
-    const int dmaxx = (int)fmin(aabb_x1 + 0.5f, context->width - 1);
-    const int dmaxy = (int)fmin(aabb_y1 + 0.5f, context->height - 1);
+    const int dminx = (int)fmax(aabb_x0 + 0.5f, (float)clipping_region.x0);
+    const int dminy = (int)fmax(aabb_y0 + 0.5f, (float)clipping_region.y0);
+    const int dmaxx = (int)fmin(aabb_x1 + 0.5f, (float)clipping_region.x1);
+    const int dmaxy = (int)fmin(aabb_y1 + 0.5f, (float)clipping_region.y1);
 
     const int sminx = tile.x;
     const int sminy = tile.y;
