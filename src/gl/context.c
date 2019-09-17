@@ -253,8 +253,8 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const float x2 = c * (sw - dtx) - s * (sh - dty) + px;
     const float y2 = s * (sw - dtx) + c * (sh - dty) + py;
 
-    const float x3 = c * - dtx - s * (sh - dty) + px;
-    const float y3 = s * - dtx + c * (sh - dty) + py;
+    const float x3 = c * -dtx - s * (sh - dty) + px;
+    const float y3 = s * -dtx + c * (sh - dty) + py;
 
     const float aabb_x0 = fmin(fmin(fmin(x0, x1), x2), x3);
     const float aabb_y0 = fmin(fmin(fmin(y0, y1), y2), y3);
@@ -271,6 +271,7 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const int sminy = quad.y0;
     const int smaxx = quad.x1;
     const int smaxy = quad.y1;
+
 #ifdef __ROTATE_AND_SCALE__
     const float M11 = c / scale_x; // Combine (inverse) rotation and then scaling matrices.
     const float M12 = s / scale_x;  // | 1/sx    0 | |  c s |
