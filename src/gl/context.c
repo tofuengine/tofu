@@ -22,6 +22,7 @@
 
 #include "context.h"
 
+#include "../config.h"
 #include "surface.h"
 
 #include "../log.h"
@@ -32,7 +33,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb/stb_image_write.h>
 
-#ifdef DEBUG
+#ifdef __DEBUG_GRAPHICS__
 static void pixel(const GL_Context_t *context, int x, int y, int index)
 {
     int v = (index % 16) * 8;
@@ -119,6 +120,7 @@ void GL_context_screenshot(const GL_Context_t *context, const char *pathfile)
 
 // TODO: specifies `const` always? Is pedantic or useful?
 // TODO: define a `BlitInfo` and `BlitFunc` types to generalize?
+// TODO: revert back to using `GL_Rectangles_t` over `GL_Quad_t`?
 // https://dev.to/fenbf/please-declare-your-variables-as-const
 void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, GL_Quad_t quad, GL_Point_t position)
 {
@@ -169,7 +171,7 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
 
     for (int i = height; i; --i) {
         for (int j = width; j; --j) {
-#ifdef DEBUG
+#ifdef __DEBUG_GRAPHICS__
             pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)i + (int)j);
 #endif
             GL_Pixel_t index = shifting[*(src++)];
@@ -258,8 +260,8 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
 
         float u = ou;
         for (int j = width; j; --j) {
-#ifdef DEBUG
-            pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)i + (int)j);
+#ifdef __DEBUG_GRAPHICS__
+            pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)u + (int)v);
 #endif
             GL_Pixel_t index = shifting[src[(int)u]];
 #if 1
@@ -384,7 +386,7 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
         float v = ov;
 
         for (int x = dminx; x <= dmaxx; ++x) {
-#ifdef DEBUG
+#ifdef __DEBUG_GRAPHICS__
             pixel(context, x, y, 15);
 #endif
 //#define __NAIVE_ROTATION__
@@ -403,7 +405,7 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
 #endif
 
             if (xx >= sminx && xy >= sminy && xx <= smaxx && xy <= smaxy) {
-#ifdef DEBUG
+#ifdef __DEBUG_GRAPHICS__
                 pixel(context, x, y, xx + xy);
 #endif
                 const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[xy] + xx;
@@ -422,7 +424,7 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
         ou += M12;
         ov += M22;
     }
-#ifdef DEBUG
+#ifdef __DEBUG_GRAPHICS__
     pixel(context, dminx, dminy, 7);
     pixel(context, dmaxx, dminy, 7);
     pixel(context, dmaxx, dmaxy, 7);
