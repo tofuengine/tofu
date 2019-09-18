@@ -326,12 +326,12 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
                 }
             }
 
-            u += M22;
-            v -= M12;
+            u += M11;
+            v += M21;
         }
 
-        ou -= M21;
-        ov += M11;
+        ou += M12;
+        ov += M22;
     }
 #ifdef DEBUG
     pixel(context, dminx, dminy, 7);
