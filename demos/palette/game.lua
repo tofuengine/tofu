@@ -23,6 +23,8 @@ function Game:__ctor()
   self.palette = 1
   self.scale_x = 1.0
   self.scale_y = -1.0
+  self.x = Canvas.width() * 0.5
+  self.y = Canvas.height() * 0.5
   self.mode = 0
 end
 
@@ -34,12 +36,16 @@ function Game:input()
     self.mode = (self.mode + 1) % 10
   elseif Input.is_key_pressed(Input.DOWN) then
     self.scale_y = 1.0
+    self.y = self.y + 1
   elseif Input.is_key_pressed(Input.UP) then
     self.scale_y = -1.0
+    self.y = self.y - 1
   elseif Input.is_key_pressed(Input.RIGHT) then
     self.scale_x = 1.0
-  elseif Input.is_key_pressed(Input.UP) then
+    self.x = self.x + 1
+  elseif Input.is_key_pressed(Input.LEFT) then
     self.scale_x = -1.0
+    self.x = self.x - 1
   end
 end
 
@@ -74,13 +80,11 @@ function Game:render(ratio)
   elseif self.mode == 3 then
     self.bank:blit(0, Canvas.width() / 2, Canvas.height() / 2, 10, 10, math.pi / 4 * 1, 0.5, 0.5)
   elseif self.mode == 4 then
-    local x = (Canvas.width() + 8) * (math.cos(self.time * 2.5) + 1) * 0.5
-    local y = (Canvas.height() + 8) * (math.sin(self.time * 1.75) + 1) * 0.5
+    local x = (Canvas.width() + 16) * (math.cos(self.time * 0.75) + 1) * 0.5 - 8
+    local y = (Canvas.height() + 16) * (math.sin(self.time * 0.25) + 1) * 0.5 - 8
     self.bank:blit(0, x - 4, y - 4)
   elseif self.mode == 5 then
-    local x = Canvas.width() * 0.25
-    local y = Canvas.height() * 0.25
-    self.bank:blit(1, x, y, self.scale_x * 8.0, self.scale_y * 8.0)
+    self.bank:blit(1, self.x - 32, self.y - 32, self.scale_x * 8.0, self.scale_y * 8.0)
   end
 
   self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")

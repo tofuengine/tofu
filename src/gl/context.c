@@ -127,21 +127,25 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
     const GL_Bool_t *transparent = context->transparent;
     const GL_Color_t *colors = context->palette.colors;
 
-    const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[quad.y0] + quad.x0;
+    const int quad_width = quad.x1 - quad.x0 + 1;
+    const int quad_height = quad.y1 - quad.y0 + 1;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
             .y0 = position.y,
-            .x1 = position.x + (quad.x1 - quad.x0),
-            .y1 = position.y + (quad.y1 - quad.y0)
+            .x1 = position.x + quad_width - 1,
+            .y1 = position.y + quad_height - 1
         };
 
+    int skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
+    int skip_y = 0;
+
     if (drawing_region.x0 < clipping_region.x0) {
-        src += (clipping_region.x0 - drawing_region.x0); // Adjust source (surface) data pointer, meanwhile...
+        skip_x = clipping_region.x0 - drawing_region.x0;
         drawing_region.x0 = clipping_region.x0;
     }
     if (drawing_region.y0 < clipping_region.y0) {
-        src += (clipping_region.y0 - drawing_region.y0) * surface->width;
+        skip_y = clipping_region.y0 - drawing_region.y0;
         drawing_region.y0 = clipping_region.y0;
     }
     if (drawing_region.x1 > clipping_region.x1) {
@@ -157,6 +161,7 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
         return;
     }
 
+    const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[quad.y0 + skip_y] + (quad.x0 + skip_x);
     GL_Color_t *dst = (GL_Color_t *)context->vram_rows[drawing_region.y0] + drawing_region.x0;
 
     const int src_skip = surface->width - width;
@@ -186,37 +191,75 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
 
 // Simple implementation of nearest-neighbour scaling, with x/y flipping according to scaling-factor sign.
 // See `http://tech-algorithm.com/articles/nearest-neighbor-image-scaling/` for a reference code.
+// To avoid empty pixels we scan the destination area and calculate the source pixel.
 void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface, GL_Quad_t quad, GL_Point_t position, float scale_x, float scale_y)
 {
+    const GL_Quad_t clipping_region = context->clipping_region;
     const GL_Pixel_t *shifting = context->shifting;
     const GL_Bool_t *transparent = context->transparent;
     const GL_Color_t *colors = context->palette.colors;
 
-    const float w = (float)(quad.x1 - quad.x0 + 1); // Percompute width and scaled with for faster reuse.
-    const float h = (float)(quad.y1 - quad.y0 + 1);
-    const float sw = fabs(scale_x) * w; // To avoid empty pixels we scan the destination area and calculate the source pixel.
-    const float sh = fabs(scale_y) * h;
+    const int quad_width = quad.x1 - quad.x0 + 1;
+    const int quad_height = quad.y1 - quad.y0 + 1;
 
-    const float du = 1.0f / scale_x;
-    const float dv = 1.0f / scale_y;
+    const int scaled_width = (int)((float)(quad_width * fabs(scale_x)) + 0.5f);
+    const int scaled_height = (int)((float)(quad_height * fabs(scale_y)) + 0.5f);
 
-    const size_t width = (size_t)(sw + 0.5f); // Round width and height to nearest pixel.
-    const size_t height = (size_t)(sh + 0.5f);
+    GL_Quad_t drawing_region = (GL_Quad_t){
+            .x0 = position.x,
+            .y0 = position.y,
+            .x1 = position.x + scaled_width - 1,
+            .y1 = position.y + scaled_height - 1,
+        };
+
+    float skip_x = 0.0f; // Offset into the (source) surface/texture, update during clipping.
+    float skip_y = 0.0f;
+
+    if (drawing_region.x0 < clipping_region.x0) {
+        skip_x = (float)(clipping_region.x0 - drawing_region.x0) / scale_x;
+        drawing_region.x0 = clipping_region.x0;
+    }
+    if (drawing_region.y0 < clipping_region.y0) {
+        skip_y = (float)(clipping_region.y0 - drawing_region.y0) / scale_y;
+        drawing_region.y0 = clipping_region.y0;
+    }
+    if (drawing_region.x1 > clipping_region.x1) {
+        drawing_region.x1 = clipping_region.x1;
+    }
+    if (drawing_region.y1 > clipping_region.y1) {
+        drawing_region.y1 = clipping_region.y1;
+    }
+
+    const int width = drawing_region.x1 - drawing_region.x0 + 1;
+    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!
+        return;
+    }
+
+    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[drawing_region.y0] + drawing_region.x0;
+
     const size_t skip = context->width - width;
 
-    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[position.y] + position.x;
+    const float du = 1.0f / scale_x; // Texture coordinates deltas (signed).
+    const float dv = 1.0f / scale_y;
 
-    const float ou = (float)(scale_x >= 0.0f ? quad.x0 : quad.x1 + 1.0f + du); // Compute first or last pixel (scaled)
-    const float ov = (float)(scale_y >= 0.0f ? quad.y0 : quad.y1 + 1.0f + dv);
+    float ou = quad.x0 + skip_x;
+    if (scale_x < 0.0f) {
+        ou += (float)quad_width + du; // Move to last pixel, scaled, into the texture.
+    }
+    float ov = quad.y0 + skip_y;
+    if (scale_y < 0.0f) {
+        ov += (float)quad_height + dv;
+    }
 
-    float v = ov;
-    for (size_t i = 0; i < height; ++i) {
+    float v = ov; // NOTE: we can also apply an integer-based DDA method, using reminders.
+    for (int i = height; i; --i) {
         const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[(int)v];
 
         float u = ou;
-        for (size_t j = 0; j < width; ++j) {
+        for (int j = width; j; --j) {
 #ifdef DEBUG
-            pixel(context, position.x + j, position.y + i, (int)u + (int)v);
+            pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)i + (int)j);
 #endif
             GL_Pixel_t index = shifting[src[(int)u]];
 #if 1
