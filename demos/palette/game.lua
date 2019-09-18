@@ -71,11 +71,11 @@ function Game:render(ratio)
   end
 --]]
   local scale = (math.cos(self.time) + 1) * 3
-  self.bank:blit(0, Canvas.width() / 2, Canvas.height() / 2, 10, 10, self.time * 0.5 * 0 + math.pi / 4, 0.5, 0.5)
+  self.bank:blit(0, Canvas.width() / 2, Canvas.height() / 2, 10, 10, self.time * 0.5 * 0 + math.pi / 2 * 1, 0.5, 0.5)
 
-  local x, y = Canvas.width() / 3, Canvas.height() / 3
-  Canvas.point(x, y, 3)
-  self.bank:blit(1, x, y, 8 * self.scale_x, 8 * self.scale_y)
+--  local x, y = Canvas.width() / 3, Canvas.height() / 3
+--  Canvas.point(x, y, 3)
+--  self.bank:blit(1, x, y, 8 * self.scale_x, 8 * self.scale_y)
 
   self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
 end
