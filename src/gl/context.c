@@ -257,49 +257,55 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const float ay = -dty;
     const float bx = sw - dtx;
     const float by = sh - dty;
-    
-    const float x0 = c * ax - s * ay + px;
-    const float y0 = s * ax + c * ay + py;
 
-    const float x1 = c * bx - s * ay + px;
-    const float y1 = s * bx + c * ay + py;
+    const float x0 = c * ax - s * ay;
+    const float y0 = s * ax + c * ay;
 
-    const float x2 = c * bx - s * by + px;
-    const float y2 = s * bx + c * by + py;
+    const float x1 = c * bx - s * ay;
+    const float y1 = s * bx + c * ay;
 
-    const float x3 = c * ax - s * by + px;
-    const float y3 = s * ax + c * by + py;
+    const float x2 = c * bx - s * by;
+    const float y2 = s * bx + c * by;
+
+    const float x3 = c * ax - s * by;
+    const float y3 = s * ax + c * by;
 
     const float aabb_x0 = fmin(fmin(fmin(x0, x1), x2), x3);
     const float aabb_y0 = fmin(fmin(fmin(y0, y1), y2), y3);
     const float aabb_x1 = fmax(fmax(fmax(x0, x1), x2), x3);
     const float aabb_y1 = fmax(fmax(fmax(y0, y1), y2), y3);
-
+/*
+    float fh = sw * s + sh * c;
+    float fw = sh * s + sw * c;
+    fh = fh;
+    fw = fw;
+*/
     // Clip both destination and target rectangles. Round for better result.
-    const int dminx = (int)fmax(aabb_x0, (float)clipping_region.x0);
-    const int dminy = (int)fmax(aabb_y0, (float)clipping_region.y0);
-    const int dmaxx = (int)fmin(aabb_x1, (float)clipping_region.x1);
-    const int dmaxy = (int)fmin(aabb_y1, (float)clipping_region.y1);
+    const int dminx = (int)fmax(aabb_x0 + 0.5f + px, (float)clipping_region.x0);
+    const int dminy = (int)fmax(aabb_y0 + 0.5f + py, (float)clipping_region.y0);
+    const int dmaxx = (int)fmin(aabb_x1 + 0.5f + px, (float)clipping_region.x1);
+    const int dmaxy = (int)fmin(aabb_y1 + 0.5f + py, (float)clipping_region.y1);
 
     const int sminx = quad.x0;
     const int sminy = quad.y0;
     const int smaxx = quad.x1;
     const int smaxy = quad.y1;
 
+#define __ROTATE_AND_SCALE__
 #ifdef __ROTATE_AND_SCALE__
-    const float M11 = c / scale_x; // Combine (inverse) rotation and then scaling matrices.
+    const float M11 = c / scale_x; // Combine (inverse) rotation and *then* scaling matrices.
     const float M12 = s / scale_x;  // | 1/sx    0 | |  c s |
     const float M21 = -s / scale_y; // |           | |      |
     const float M22 = c / scale_y;  // |    0 1/sy | | -s c |
 #else
     const float M11 = c / scale_x; // Combine scaling down and (inverse) rotate into a single matrix.
     const float M12 = s / scale_y;  // |  c s |   | 1/sx   0  |
-    const float M21 = -s / scale_x;  // |      | x |           |
-    const float M22 = c / scale_y; // | -s c |   |   0  1/sy |
+    const float M21 = -s / scale_x; // |      | x |           |
+    const float M22 = c / scale_y;  // | -s c |   |   0  1/sy |
 #endif
     const float tlx = (dminx - px); // Transform the top-left corner of the to-be-drawn rectangle to texture space.
     const float tly = (dminy - py);
-    float ou = (tlx * M11 + tly * M12) + stx + ox; // Offset to the source  texture quad.
+    float ou = (tlx * M11 + tly * M12) + stx + ox; // Offset to the source texture quad.
     float ov = (tlx * M21 + tly * M22) + sty + oy;
 
     for (int y = dminy; y <= dmaxy; ++y) {
@@ -310,14 +316,26 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
 #ifdef DEBUG
             pixel(context, x, y, 15);
 #endif
-            int sx = (int)u;
-            int sy = (int)v;
-
-            if (sx >= sminx && sy >= sminy && sx <= smaxx && sy <= smaxy) {
-#ifdef DEBUG
-                pixel(context, x, y, sx + sy);
+//#define __NAIVE_ROTATION__
+#ifdef __NAIVE_ROTATION__
+            float tx = (float)x - px; // Move relative to center
+            float ty = (float)y - py;
+            float rx = tx * c + ty * s; // Rotate the point.
+            float ry = ty * c - tx * s;
+            float sx = rx / scale_x; // Scale into the texture.
+            float sy = ry / scale_y;
+            int xx = (int)(sx + stx + ox);
+            int xy = (int)(sy + sty + oy);
+#else
+            int xx = (int)u;
+            int xy = (int)v;
 #endif
-                const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[sy] + sx;
+
+            if (xx >= sminx && xy >= sminy && xx <= smaxx && xy <= smaxy) {
+#ifdef DEBUG
+                pixel(context, x, y, xx + xy);
+#endif
+                const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[xy] + xx;
                 GL_Pixel_t index = shifting[*src];
 
                 if (!transparent[index]) {
