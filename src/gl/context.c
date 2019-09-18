@@ -110,27 +110,52 @@ void GL_context_screenshot(const GL_Context_t *context, const char *pathfile)
 }
 
 // TODO: specifies `const` always? Is pedantic or useful?
+// TODO: define a `BlitInfo` and `BlitFunc` types to generalize?
 // https://dev.to/fenbf/please-declare-your-variables-as-const
 void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, GL_Quad_t quad, GL_Point_t position)
 {
+    const GL_Quad_t clipping_region = context->clipping_region;
     const GL_Pixel_t *shifting = context->shifting;
     const GL_Bool_t *transparent = context->transparent;
     const GL_Color_t *colors = context->palette.colors;
 
-    const float w = (float)(quad.x1 - quad.x0 + 1);
-    const float h = (float)(quad.y1 - quad.y0 + 1);
-
-    const size_t width = (size_t)w;
-    const size_t height = (size_t)h;
-
-    const size_t src_skip = surface->width - width;
-    const size_t dst_skip = context->width - width;
-
-    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[position.y] + position.x;
     const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[quad.y0] + quad.x0;
 
-    for (size_t i = 0; i < height; ++i) {
-        for (size_t j = 0; j < width; ++j) {
+    GL_Quad_t drawing_region = (GL_Quad_t){
+            .x0 = position.x,
+            .y0 = position.y,
+            .x1 = position.x + (quad.x1 - quad.x0),
+            .y1 = position.y + (quad.y1 - quad.y0)
+        };
+
+    if (drawing_region.x0 < clipping_region.x0) {
+        src += (clipping_region.x0 - drawing_region.x0); // Adjust source (surface) data pointer, meanwhile...
+        drawing_region.x0 = clipping_region.x0;
+    }
+    if (drawing_region.y0 < clipping_region.y0) {
+        src += (clipping_region.y0 - drawing_region.y0) * surface->width;
+        drawing_region.y0 = clipping_region.y0;
+    }
+    if (drawing_region.x1 > clipping_region.x1) {
+        drawing_region.x1 = clipping_region.x1;
+    }
+    if (drawing_region.y1 > clipping_region.y1) {
+        drawing_region.y1 = clipping_region.y1;
+    }
+
+    const int width = drawing_region.x1 - drawing_region.x0 + 1;
+    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!
+        return;
+    }
+
+    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[drawing_region.y0] + drawing_region.x0;
+
+    const int src_skip = surface->width - width;
+    const int dst_skip = context->width - width;
+
+    for (int i = height; i; --i) {
+        for (int j = width; j; --j) {
             GL_Pixel_t index = shifting[*(src++)];
 #if 1
             if (transparent[index]) {
