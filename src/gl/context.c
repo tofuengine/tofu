@@ -438,7 +438,7 @@ void GL_context_palette(GL_Context_t *context, const GL_Palette_t *palette)
 
 void GL_context_shifting(GL_Context_t *context, const size_t *from, const size_t *to, size_t count)
 {
-    if (from == NULL) {
+    if (!from) {
         for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
             context->shifting[i] = i;
         }
@@ -451,7 +451,7 @@ void GL_context_shifting(GL_Context_t *context, const size_t *from, const size_t
 
 void GL_context_transparent(GL_Context_t *context, const GL_Pixel_t *indexes, const GL_Bool_t *transparent, size_t count)
 {
-    if (indexes == NULL) {
+    if (!indexes) {
         for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
             context->transparent[i] = GL_BOOL_FALSE;
         }
@@ -470,4 +470,18 @@ void GL_context_background(GL_Context_t *context, const GL_Pixel_t index)
         return;
     }
     context->background = index;
+}
+
+void GL_context_clipping(GL_Context_t *context, const GL_Quad_t *clipping_region)
+{
+    if (!clipping_region) {
+        context->clipping_region = (GL_Quad_t){
+                .x0 = 0,
+                .y0 = 0,
+                .x1 = context->width - 1,
+                .y1 = context->height - 1
+            };
+    } else {
+        context->clipping_region = *clipping_region;
+    }
 }

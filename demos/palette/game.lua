@@ -14,6 +14,7 @@ local PALETTES = { "pico-8", "arne-16", "c64", "cga" }
 
 function Game:__ctor()
   Canvas.palette("pico-8")
+  --Canvas.clipping(32, 32, 95, 95)
 
   self.bank = Bank.new("assets/sheet.png", 8, 8)
   self.font = Font.default(0, 15)

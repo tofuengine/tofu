@@ -44,6 +44,7 @@ static int canvas_palette(lua_State *L);
 static int canvas_background(lua_State *L);
 static int canvas_shift(lua_State *L);
 static int canvas_transparent(lua_State *L);
+static int canvas_clipping(lua_State *L);
 static int canvas_shader(lua_State *L);
 static int canvas_color(lua_State *L);
 static int canvas_clear(lua_State *L);
@@ -124,6 +125,7 @@ static const struct luaL_Reg _canvas_functions[] = {
     { "background", canvas_background },
     { "shift", canvas_shift },
     { "transparent", canvas_transparent },
+    { "clipping", canvas_clipping },
     { "shader", canvas_shader },
     { "color", canvas_color },
     { "clear", canvas_clear },
@@ -423,6 +425,59 @@ static int canvas_transparent(lua_State *L)
         LUAX_OVERLOAD_ARITY(0, canvas_transparent0)
         LUAX_OVERLOAD_ARITY(1, canvas_transparent1)
         LUAX_OVERLOAD_ARITY(2, canvas_transparent2)
+    LUAX_OVERLOAD_END
+}
+
+static int canvas_clipping0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 0)
+    LUAX_SIGNATURE_END
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.clipping()");
+#endif
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+    GL_context_clipping(&display->gl, NULL);
+
+    return 0;
+}
+
+static int canvas_clipping4(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 4)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+    LUAX_SIGNATURE_END
+    int x0 = lua_tointeger(L, 1);
+    int y0 = lua_tointeger(L, 2);
+    int x1 = lua_tointeger(L, 3);
+    int y1 = lua_tointeger(L, 4);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.clipping(%d, %d, %d, %d)", x0, y0, x1, y1);
+#endif
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+    GL_Quad_t clipping_region = (GL_Quad_t){
+            .x0 = x0,
+            .y0 = y0,
+            .x1 = x1,
+            .y1 = y1
+        };
+
+    GL_context_clipping(&display->gl, &clipping_region);
+
+    return 0;
+}
+
+static int canvas_clipping(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(0, canvas_clipping0)
+        LUAX_OVERLOAD_ARITY(4, canvas_clipping4)
     LUAX_OVERLOAD_END
 }
 

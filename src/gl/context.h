@@ -61,5 +61,6 @@ extern void GL_context_palette(GL_Context_t *context, const GL_Palette_t *palett
 extern void GL_context_shifting(GL_Context_t *context, const size_t *from, const size_t *to, size_t count);
 extern void GL_context_transparent(GL_Context_t *context, const GL_Pixel_t *indexes, const GL_Bool_t *transparent, size_t count);
 extern void GL_context_background(GL_Context_t *context, GL_Pixel_t index);
+extern void GL_context_clipping(GL_Context_t *context, const GL_Quad_t *clipping_region);
 
 #endif  /* __GL_CONTEXT_H__ */
