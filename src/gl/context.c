@@ -32,6 +32,14 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb/stb_image_write.h>
 
+#ifdef DEBUG
+static void pixel(const GL_Context_t *context, int x, int y, int index)
+{
+    int v = (index % 16) * 8;
+    *((GL_Color_t *)context->vram_rows[y] + x) = (GL_Color_t){ 0, 63 + v, 0, 255 };
+}
+#endif
+
 bool GL_context_initialize(GL_Context_t *context, size_t width, size_t height)
 {
     void *vram = malloc(width * height * sizeof(GL_Color_t));
@@ -156,6 +164,9 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
 
     for (int i = height; i; --i) {
         for (int j = width; j; --j) {
+#ifdef DEBUG
+            pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)i + (int)j);
+#endif
             GL_Pixel_t index = shifting[*(src++)];
 #if 1
             if (transparent[index]) {
@@ -172,14 +183,6 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
         dst += dst_skip;
     }
 }
-
-#ifdef DEBUG
-void pixel(const GL_Context_t *context, int x, int y, int index)
-{
-    int v = (index % 16) * 8;
-    *((GL_Color_t *)context->vram_rows[y] + x) = (GL_Color_t){ 0, 63 + v, 0, 255 };
-}
-#endif
 
 // Simple implementation of nearest-neighbour scaling, with x/y flipping according to scaling-factor sign.
 // See `http://tech-algorithm.com/articles/nearest-neighbor-image-scaling/` for a reference code.
