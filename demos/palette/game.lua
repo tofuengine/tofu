@@ -17,7 +17,6 @@ function Game:__ctor()
 
   self.bank = Bank.new("assets/sheet.png", 8, 8)
   self.font = Font.default(0, 15)
-  self.time = 0
   self.x_size = Canvas.width() / AMOUNT
   self.y_size = Canvas.height() / AMOUNT
   self.palette = 1
@@ -58,8 +57,7 @@ function Game:input()
 end
 
 function Game:update(delta_time)
-  self.time = self.time + delta_time
-  local index = (math.floor(self.time * 0.2) % #PALETTES) + 1
+  local index = (math.floor(System.time() * 0.2) % #PALETTES) + 1
   if self.palette ~= index then
     self.palette = index
     Canvas.palette(PALETTES[index])
@@ -75,14 +73,14 @@ function Game:render(ratio)
       for j = 0, AMOUNT - 1 do
         local index = (i + j) % 7
         local color = (i + j) % AMOUNT
-        local y = (Canvas.height() - 8) * (math.sin(self.time * 1.5 + i * 0.250 + j * 0.125) + 1) * 0.5
+        local y = (Canvas.height() - 8) * (math.sin(System.time() * 1.5 + i * 0.250 + j * 0.125) + 1) * 0.5
         Canvas.shift(1, color)
         self.bank:blit(index, x, y)
       end
     end
   elseif self.mode == 1 then
-    local scale = (math.cos(self.time) + 1) * 3
-    self.bank:blit(0, Canvas.width() / 2, Canvas.height() / 2, scale, scale, self.time * 0.5, 0.5, 0.5)
+    local scale = (math.cos(System.time()) + 1) * 3
+    self.bank:blit(0, Canvas.width() / 2, Canvas.height() / 2, scale, scale, System.time() * 0.5, 0.5, 0.5)
   elseif self.mode == 2 then
     self.bank:blit(0, Canvas.width() / 2, Canvas.height() / 2, 10, 10, math.pi / 2 * 1, 0.5, 0.5)
   elseif self.mode == 3 then

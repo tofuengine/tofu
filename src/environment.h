@@ -35,6 +35,7 @@ typedef struct _Environment_t {
     char base_path[PATH_FILE_MAX];
     bool quit;
     double fps;
+    double time;
 
     Timer_Pool_t *timer_pool;
 } Environment_t;
