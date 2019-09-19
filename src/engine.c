@@ -90,7 +90,13 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 
     engine->environment.timer_pool = &engine->interpreter.timer_pool; // HACK: inject the timer-pool pointer.
 
-    engine->operative = Interpreter_init(&engine->interpreter);
+    result = Interpreter_init(&engine->interpreter);
+    if (!result) {
+        Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't call init method");
+        Interpreter_terminate(&engine->interpreter);
+        Display_terminate(&engine->display);
+        return false;
+    }
 
     return true;
 }
