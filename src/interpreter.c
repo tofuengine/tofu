@@ -62,7 +62,7 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 typedef enum _Methods_t {
     METHOD_SETUP,
     METHOD_INIT,
-    METHOD_INPUT,
+    METHOD_INPUT, // TODO: is the `input()` method useless? Probably...
     METHOD_UPDATE,
     METHOD_RENDER,
     Methods_t_CountOf

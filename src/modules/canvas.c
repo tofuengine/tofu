@@ -54,6 +54,9 @@ static int canvas_hline(lua_State *L);
 static int canvas_vline(lua_State *L);
 static int canvas_line(lua_State *L);
 
+// TODO: discard triangle and add polyline and fill?
+// TODO: color index is optional, if not present use the current (drawstate) pen color
+
 static const char _canvas_script[] =
     "local Canvas = {}\n"
     "\n"

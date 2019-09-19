@@ -123,7 +123,7 @@ void Engine_run(Engine_t *engine)
 
     for (bool running = true; running && !engine->environment.quit && !Display_should_close(&engine->display); ) {
         double current = glfwGetTime();
-        double elapsed = current - previous;
+        double elapsed = current - previous; // TODO: use only doubles everywhere?
         previous = current;
 
         if (engine->configuration.debug) {
