@@ -122,21 +122,18 @@ void GL_context_screenshot(const GL_Context_t *context, const char *pathfile)
 // TODO: define a `BlitInfo` and `BlitFunc` types to generalize?
 // TODO: revert back to using `GL_Rectangles_t` over `GL_Quad_t`?
 // https://dev.to/fenbf/please-declare-your-variables-as-const
-void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, GL_Quad_t quad, GL_Point_t position)
+void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position)
 {
     const GL_Quad_t clipping_region = context->clipping_region;
     const GL_Pixel_t *shifting = context->shifting;
     const GL_Bool_t *transparent = context->transparent;
     const GL_Color_t *colors = context->palette.colors;
 
-    const int quad_width = quad.x1 - quad.x0 + 1;
-    const int quad_height = quad.y1 - quad.y0 + 1;
-
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
             .y0 = position.y,
-            .x1 = position.x + quad_width - 1,
-            .y1 = position.y + quad_height - 1
+            .x1 = position.x + area.width - 1,
+            .y1 = position.y + area.height - 1
         };
 
     int skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
@@ -163,7 +160,7 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
         return;
     }
 
-    const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[quad.y0 + skip_y] + (quad.x0 + skip_x);
+    const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[area.y + skip_y] + (area.x + skip_x);
     GL_Color_t *dst = (GL_Color_t *)context->vram_rows[drawing_region.y0] + drawing_region.x0;
 
     const int src_skip = surface->width - width;
@@ -194,24 +191,21 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
 // Simple implementation of nearest-neighbour scaling, with x/y flipping according to scaling-factor sign.
 // See `http://tech-algorithm.com/articles/nearest-neighbor-image-scaling/` for a reference code.
 // To avoid empty pixels we scan the destination area and calculate the source pixel.
-void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface, GL_Quad_t quad, GL_Point_t position, float scale_x, float scale_y)
+void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y)
 {
     const GL_Quad_t clipping_region = context->clipping_region;
     const GL_Pixel_t *shifting = context->shifting;
     const GL_Bool_t *transparent = context->transparent;
     const GL_Color_t *colors = context->palette.colors;
 
-    const int quad_width = quad.x1 - quad.x0 + 1;
-    const int quad_height = quad.y1 - quad.y0 + 1;
-
-    const int scaled_width = (int)((float)(quad_width * fabs(scale_x)) + 0.5f);
-    const int scaled_height = (int)((float)(quad_height * fabs(scale_y)) + 0.5f);
+    const int drawing_width = (int)((float)(area.width * fabs(scale_x)) + 0.5f);
+    const int drawing_height = (int)((float)(area.height * fabs(scale_y)) + 0.5f);
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
             .y0 = position.y,
-            .x1 = position.x + scaled_width - 1,
-            .y1 = position.y + scaled_height - 1,
+            .x1 = position.x + drawing_width - 1,
+            .y1 = position.y + drawing_height - 1,
         };
 
     float skip_x = 0.0f; // Offset into the (source) surface/texture, update during clipping.
@@ -245,13 +239,13 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
     const float du = 1.0f / scale_x; // Texture coordinates deltas (signed).
     const float dv = 1.0f / scale_y;
 
-    float ou = quad.x0 + skip_x;
+    float ou = (float)area.x + skip_x;
     if (scale_x < 0.0f) {
-        ou += (float)quad_width + du; // Move to last pixel, scaled, into the texture.
+        ou += (float)area.width + du; // Move to last pixel, scaled, into the texture.
     }
-    float ov = quad.y0 + skip_y;
+    float ov = (float)area.y + skip_y;
     if (scale_y < 0.0f) {
-        ov += (float)quad_height + dv;
+        ov += (float)area.height + dv;
     }
 
     float v = ov; // NOTE: we can also apply an integer-based DDA method, using reminders.
@@ -283,7 +277,7 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
 }
 
 // https://web.archive.org/web/20190305223938/http://www.drdobbs.com/architecture-and-design/fast-bitmap-rotation-and-scaling/184416337
-void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface, GL_Quad_t quad, GL_Point_t position, float scale_x, float scale_y, float angle, float anchor_x, float anchor_y)
+void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y, float angle, float anchor_x, float anchor_y)
 {
     const GL_Quad_t clipping_region = context->clipping_region;
     const GL_Pixel_t *shifting = context->shifting;
@@ -292,18 +286,18 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
 
     // FIXME: there's a rounding error here, that generates a spurious row/column.
 
-    const float w = (float)(quad.x1 - quad.x0 + 1); // Percompute width and scaled with for faster reuse.
-    const float h = (float)(quad.y1 - quad.y0 + 1);
-    const float sw = w * scale_x;
-    const float sh = h * scale_y;
+    const float w = (float)area.width;
+    const float h = (float)area.height;
+    const float sw = (float)w * scale_x;
+    const float sh = (float)h * scale_y;
 
     const float stx = w * anchor_x; // Anchor points, relative to the source and destination areas.
     const float sty = h * anchor_y;
     const float dtx = sw * anchor_x;
     const float dty = sh * anchor_y;
 
-    const float ox = quad.x0;
-    const float oy = quad.y0;
+    const float ox = area.x;
+    const float oy = area.y;
     const float px = position.x;
     const float py = position.y;
 
@@ -359,10 +353,10 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const int dmaxx = (int)fmin(aabb_x1 + 0.5f + px, (float)clipping_region.x1);
     const int dmaxy = (int)fmin(aabb_y1 + 0.5f + py, (float)clipping_region.y1);
 
-    const int sminx = quad.x0;
-    const int sminy = quad.y0;
-    const int smaxx = quad.x1;
-    const int smaxy = quad.y1;
+    const int sminx = area.x;
+    const int sminy = area.y;
+    const int smaxx = area.x + area.width - 1;
+    const int smaxy = area.y + area.height - 1;
 
 #define __ROTATE_AND_SCALE__
 #ifdef __ROTATE_AND_SCALE__

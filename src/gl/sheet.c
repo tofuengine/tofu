@@ -28,22 +28,22 @@
 
 #include <stdlib.h>
 
-GL_Quad_t *precompute_cells(size_t width, size_t height, size_t cell_width, size_t cell_height)
+GL_Rectangle_t *precompute_cells(size_t width, size_t height, size_t cell_width, size_t cell_height)
 {
     size_t columns = width / cell_width;
     size_t rows = height / cell_height;
     size_t amount = columns * rows;
-    GL_Quad_t *cells = malloc(amount * sizeof(GL_Quad_t));
+    GL_Rectangle_t *cells = malloc(amount * sizeof(GL_Rectangle_t));
     size_t k = 0;
     for (size_t i = 0; i < rows; ++i) {
         int y = i * cell_height;
         for (size_t j = 0; j < columns; ++j) {
             int x = j * cell_width;
-            cells[k++] = (GL_Quad_t){
-                    .x0 = x,
-                    .y0 = y,
-                    .x1 = x + (cell_width - 1),
-                    .y1 = y + (cell_height - 1)
+            cells[k++] = (GL_Rectangle_t){
+                    .x = x,
+                    .y = y,
+                    .width = cell_width,
+                    .height =cell_height
                 };
         }
     }
