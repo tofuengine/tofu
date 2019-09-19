@@ -252,11 +252,25 @@ void luaX_checkargument(lua_State *L, int index, const char *file, int line, ...
     }
 }
 
-void luaX_pushupvalues(lua_State *L, int nup)
+int luaX_packupvalues(lua_State *L, int nup)
 {
-    for (int i = 0; i< nup; ++i) {
-        lua_pushvalue(L, lua_upvalueindex(i + 1));
+    lua_pushinteger(L, nup); // Pass the upvalues count, for later usage.
+    for (int j = 0; j < nup; ++j) {
+        lua_pushvalue(L, -(nup + 1)); // Copy the upvalue, skipping the counter.
     }
+    return nup + 1;
+}
+
+int luaX_unpackupvalues(lua_State *L)
+{
+    if (!lua_isinteger(L, lua_upvalueindex(1))) { // Check if the 1st upvalue is defined and is an integer.
+        return 0;
+    }
+    int nup = lua_tointeger(L, lua_upvalueindex(1)); // The first upvalue tells how many upvalues we are handling.
+    for (int i = 0; i< nup; ++i) {
+        lua_pushvalue(L, lua_upvalueindex(2 + i)); // Copy the upvalues onto the stack, skipping the counter.
+    }
+    return nup;
 }
 
 int luaX_count(lua_State *L, int idx)

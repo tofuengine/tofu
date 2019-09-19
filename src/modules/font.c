@@ -69,8 +69,8 @@ static const luaX_Const _font_constants[] = {
 
 int font_loader(lua_State *L)
 {
-    luaX_pushupvalues(L, 2); // Duplicate the upvalues to pass it to the module.
-    return luaX_newmodule(L, _font_script, _font_functions, _font_constants, 2, LUAX_CLASS(Font_Class_t));
+    int nup = luaX_unpackupvalues(L);
+    return luaX_newmodule(L, _font_script, _font_functions, _font_constants, nup, LUAX_CLASS(Font_Class_t));
 }
 
 static void to_font_atlas_callback(void *parameters, GL_Surface_t *surface, const void *data)

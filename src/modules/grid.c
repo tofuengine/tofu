@@ -69,8 +69,8 @@ static const luaX_Const _grid_constants[] = {
 
 int grid_loader(lua_State *L)
 {
-    luaX_pushupvalues(L, 2); // Duplicate the upvalues to pass it to the module.
-    return luaX_newmodule(L, NULL, _grid_functions, _grid_constants, 2, LUAX_CLASS(Grid_Class_t));
+    int nup = luaX_unpackupvalues(L);
+    return luaX_newmodule(L, NULL, _grid_functions, _grid_constants, nup, LUAX_CLASS(Grid_Class_t));
 }
 
 static int grid_new(lua_State *L)

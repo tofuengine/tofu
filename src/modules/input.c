@@ -61,8 +61,8 @@ static const luaX_Const _input_constants[] = {
 
 int input_loader(lua_State *L)
 {
-    luaX_pushupvalues(L, 2); // Duplicate the upvalues to pass it to the module.
-    return luaX_newmodule(L, NULL, _input_functions, _input_constants, 2, LUAX_CLASS(Input_Class_t));
+    int nup = luaX_unpackupvalues(L);
+    return luaX_newmodule(L, NULL, _input_functions, _input_constants, nup, LUAX_CLASS(Input_Class_t));
 }
 
 static int input_is_key_down(lua_State *L)

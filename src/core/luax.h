@@ -93,7 +93,9 @@ extern void luaX_require(lua_State *L, const char *modname, lua_CFunction openf,
 extern int luaX_toref(lua_State *L, int arg);
 extern void luaX_getnumberarray(lua_State *L, int index, double *array);
 extern void luaX_checkargument(lua_State *L, int index, const char *file, int line, ...);
-extern void luaX_pushupvalues(lua_State *L, int nup);
+
+extern int luaX_packupvalues(lua_State *L, int nup);
+extern int luaX_unpackupvalues(lua_State *L);
 
 extern int luaX_count(lua_State *L, int idx);
 

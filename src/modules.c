@@ -38,7 +38,6 @@
 static int create_module(lua_State *L, const luaL_Reg *entries)
 {
     lua_newtable(L);
-
     for (int i = 0; entries[i].func; ++i) {
         if (entries[i].func(L) != 1) {
             Log_write(LOG_LEVELS_ERROR, "<MODULES> can't initialize class '%s'", entries[i].name);
@@ -46,7 +45,6 @@ static int create_module(lua_State *L, const luaL_Reg *entries)
         }
         lua_setfield(L, -2, entries[i].name);
     }
-
     return 1;
 }
 
@@ -120,14 +118,12 @@ void modules_initialize(lua_State *L, int nup)
     };
 
     for (int i = 0; modules[i].func; ++i) {
-        for (int j = 0; j < nup; ++j) {
-            lua_pushvalue(L, -nup);
-        }
+        int pnup = luaX_packupvalues(L, nup);
 #ifdef __REQUIRE__
-        luaX_require(L, modules[i].name, modules[i].func, nup, 1);
+        luaX_require(L, modules[i].name, modules[i].func, pnup, 1);
         lua_pop(L, 1);  /* remove lib */
 #else
-        luaX_preload(L, modules[i].name, modules[i].func, nup);
+        luaX_preload(L, modules[i].name, modules[i].func, pnup);
 #endif
     }
     lua_pop(L, nup);

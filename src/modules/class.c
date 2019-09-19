@@ -63,6 +63,6 @@ static const char _class_script[] =
 
 int class_loader(lua_State *L)
 {
-    luaX_pushupvalues(L, 2); // Duplicate the upvalues to pass it to the module.
-    return luaX_newmodule(L, _class_script, NULL, NULL, 2, NULL);
+    int nup = luaX_unpackupvalues(L);
+    return luaX_newmodule(L, _class_script, NULL, NULL, nup, NULL);
 }

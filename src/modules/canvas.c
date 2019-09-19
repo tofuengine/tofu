@@ -143,8 +143,8 @@ static const luaX_Const _canvas_constants[] = {
 
 int canvas_loader(lua_State *L)
 {
-    luaX_pushupvalues(L, 2); // Duplicate the upvalues to pass it to the module.
-    return luaX_newmodule(L, _canvas_script, _canvas_functions, _canvas_constants, 2, LUAX_CLASS(Canvas_Class_t));
+    int nup = luaX_unpackupvalues(L);
+    return luaX_newmodule(L, _canvas_script, _canvas_functions, _canvas_constants, nup, LUAX_CLASS(Canvas_Class_t));
 }
 
 static int canvas_width(lua_State *L)

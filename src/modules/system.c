@@ -49,8 +49,8 @@ static const luaX_Const _system_constants[] = {
 
 int system_loader(lua_State *L)
 {
-    luaX_pushupvalues(L, 2); // Duplicate the upvalues to pass it to the module.
-    return luaX_newmodule(L, NULL, _system_functions, _system_constants, 2, LUAX_CLASS(System_Class_t));
+    int nup = luaX_unpackupvalues(L);
+    return luaX_newmodule(L, NULL, _system_functions, _system_constants, nup, LUAX_CLASS(System_Class_t));
 }
 
 static int system_fps(lua_State *L)
