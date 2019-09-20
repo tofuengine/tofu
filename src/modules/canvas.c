@@ -34,6 +34,7 @@
 
 #include <math.h>
 #include <string.h>
+#include <time.h>
 
 typedef struct _Canvas_Class_t {
 } Canvas_Class_t;
@@ -544,7 +545,7 @@ static int canvas_screenshot(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L, 1)
         LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
     LUAX_SIGNATURE_END
-    const char *file = lua_tostring(L, 1);
+    const char *prefix = lua_tostring(L, 1);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Canvas.screenshot('%s')", file);
 #endif
@@ -552,7 +553,12 @@ static int canvas_screenshot(lua_State *L)
     Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    // TODO: auto numbering?
+    time_t marker = time(NULL); // Generate a timedate based name.
+    struct tm *now = localtime(&marker);
+    char file[32] = {};
+    sprintf(file, "%s-%04d%02d%02d%02d%02d%02d.png", prefix,
+        1900 + now->tm_year, now->tm_mon + 1, now->tm_mday,
+        now->tm_hour, now->tm_min, now->tm_sec);
 
     char pathfile[PATH_FILE_MAX] = {};
     strcpy(pathfile, environment->base_path);
