@@ -25,6 +25,9 @@
 #include "../log.h"
 
 #include <stdlib.h>
+#ifdef DEBUG
+  #include <stb/stb_leakcheck.h>
+#endif
 
 bool GL_program_create(GL_Program_t *program)
 {

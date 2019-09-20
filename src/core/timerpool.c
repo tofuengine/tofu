@@ -27,6 +27,9 @@
 #include "../log.h"
 
 #include <memory.h>
+#ifdef DEBUG
+  #include <stb/stb_leakcheck.h>
+#endif
 
 static Timer_t *push(Timer_Pool_t *pool, double period, size_t repeats, void *bundle)
 {

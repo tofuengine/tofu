@@ -31,8 +31,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-
-#define CONFIGURATION_FILE_NAME    "configuration.json"
+#ifdef DEBUG
+  #define STB_LEAKCHECK_IMPLEMENTATION
+  #include <stb/stb_leakcheck.h>
+#endif
 
 static bool update_statistics(Engine_Statistics_t *statistics, double elapsed) {
     static double history[FPS_AVERAGE_SAMPLES] = {};
@@ -106,6 +108,9 @@ void Engine_terminate(Engine_t *engine)
     Interpreter_terminate(&engine->interpreter); // Terminate the interpreter to unlock all resources.
     Display_terminate(&engine->display);
     Environment_terminate(&engine->environment);
+#if DEBUG
+    stb_leakcheck_dumpmem();
+#endif
 }
 
 void Engine_run(Engine_t *engine)

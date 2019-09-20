@@ -40,6 +40,9 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 #ifdef __DEBUG_GARBAGE_COLLECTOR__
   #include <time.h>
 #endif
+#ifdef DEBUG
+  #include <stb/stb_leakcheck.h>
+#endif
 
 #define ROOT_INSTANCE           "main"
 
@@ -207,25 +210,23 @@ static int call(lua_State *L, Methods_t method, int nargs, int nresults)
 
 static bool timerpool_callback(Timer_t *timer, void *parameters)
 {
-    Interpreter_t *interpreter = (Interpreter_t *)parameters;
+    lua_State *L = (lua_State *)parameters;
 
-    // TODO: explicit access the VM state and expose `L` variable.
-
-    lua_rawgeti(interpreter->state, LUA_REGISTRYINDEX, BUNDLE_TO_INT(timer->bundle));
+    lua_rawgeti(L, LUA_REGISTRYINDEX, BUNDLE_TO_INT(timer->bundle));
 #if 0
-    if (lua_isnil(interpreter->state, -1)) {
-        lua_pop(interpreter->state, -1);
+    if (lua_isnil(L, -1)) {
+        lua_pop(L, -1);
         Log_write(LOG_LEVELS_ERROR, "<VM> can't find timer callback");
         return;
     }
 #endif
 #ifdef __DEBUG_VM_CALLS__
-    int result = lua_pcall(interpreter->state, 0, 0, TRACEBACK_STACK_INDEX);
+    int result = lua_pcall(L, 0, 0, TRACEBACK_STACK_INDEX);
     if (result != LUA_OK) {
-        Log_write(LOG_LEVELS_ERROR, "<VM> error in call: %s", lua_tostring(interpreter->state, -1));
+        Log_write(LOG_LEVELS_ERROR, "<VM> error in call: %s", lua_tostring(L, -1));
     }
 #else
-    lua_call(interpreter->state, 0, 0);
+    lua_call(L, 0, 0);
     int result = LUA_OK;
 #endif
     return result == LUA_OK;
@@ -281,7 +282,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configu
     Configuration_parse(interpreter->state, configuration);
     lua_pop(interpreter->state, 1); // Remove the configuration table from the stack.
 
-    TimerPool_initialize(&interpreter->timer_pool, timerpool_callback, interpreter);
+    TimerPool_initialize(&interpreter->timer_pool, timerpool_callback, interpreter->state);
 
     return true;
 }

@@ -28,6 +28,9 @@
 #include "../log.h"
 
 #include <stdlib.h>
+#ifdef DEBUG
+    #include <stb/stb_leakcheck.h>
+#endif
 
 #ifdef __GRID_INTEGER_CELL__
 typedef long Cell_t;

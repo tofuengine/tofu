@@ -27,9 +27,10 @@
 
 #include "../log.h"
 
-#include <memory.h>
 #include <stdlib.h>
-
+#ifdef DEBUG
+  #include <stb/stb_leakcheck.h>
+#endif
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb/stb_image_write.h>
 
@@ -120,7 +121,6 @@ void GL_context_screenshot(const GL_Context_t *context, const char *pathfile)
 
 // TODO: specifies `const` always? Is pedantic or useful?
 // TODO: define a `BlitInfo` and `BlitFunc` types to generalize?
-// TODO: revert back to using `GL_Rectangles_t` over `GL_Quad_t`?
 // https://dev.to/fenbf/please-declare-your-variables-as-const
 void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position)
 {

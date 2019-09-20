@@ -29,6 +29,9 @@
 
 #include <memory.h>
 #include <stdlib.h>
+#ifdef DEBUG
+  #include <stb/stb_leakcheck.h>
+#endif
 
 typedef struct _Program_Data_t {
     const char *vertex_shader;
