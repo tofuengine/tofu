@@ -24,11 +24,11 @@
 
 #include "gl.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb/stb_image.h>
 #ifdef DEBUG
   #include <stb/stb_leakcheck.h>
 #endif
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb/stb_image.h>
 
 #include "../log.h"
 
