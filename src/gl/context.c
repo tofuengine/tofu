@@ -500,6 +500,7 @@ void GL_context_pattern(GL_Context_t *context, uint32_t mask)
     context->mask = mask;
 }
 
+// https://lodev.org/cgtutor/floodfill.html
 void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t index)
 {
     const GL_Quad_t clipping_region = context->clipping_region;
