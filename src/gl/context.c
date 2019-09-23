@@ -31,14 +31,18 @@
 #ifdef DEBUG
   #include <stb/stb_leakcheck.h>
 #endif
+#define STB_DS_IMPLEMENTATION
+#include <stb/stb_ds.h>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb/stb_image_write.h>
+
+#define PIXEL(c, x, y)  ((GL_Color_t *)(c)->vram_rows[(y)] + (x))
 
 #ifdef __DEBUG_GRAPHICS__
 static void pixel(const GL_Context_t *context, int x, int y, int index)
 {
     int v = (index % 16) * 8;
-    *((GL_Color_t *)context->vram_rows[y] + x) = (GL_Color_t){ 0, 63 + v, 0, 255 };
+    *PIXEL(context, x, y) = (GL_Color_t){ 0, 63 + v, 0, 255 };
 }
 #endif
 
@@ -459,15 +463,6 @@ void GL_context_transparent(GL_Context_t *context, const GL_Pixel_t *indexes, co
     }
 }
 
-void GL_context_background(GL_Context_t *context, const GL_Pixel_t index)
-{
-    if (index >= context->palette.count) {
-        Log_write(LOG_LEVELS_WARNING, "<GL> color index #%d not available in current palette", index);
-        return;
-    }
-    context->background = index;
-}
-
 void GL_context_clipping(GL_Context_t *context, const GL_Quad_t *clipping_region)
 {
     if (!clipping_region) {
@@ -480,4 +475,84 @@ void GL_context_clipping(GL_Context_t *context, const GL_Quad_t *clipping_region
     } else {
         context->clipping_region = *clipping_region;
     }
+}
+
+void GL_context_background(GL_Context_t *context, const GL_Pixel_t index)
+{
+    if (index >= context->palette.count) {
+        Log_write(LOG_LEVELS_WARNING, "<GL> color index #%d not available in current palette", index);
+        return;
+    }
+    context->background = index;
+}
+
+void GL_context_color(GL_Context_t *context, GL_Pixel_t index)
+{
+    if (index >= context->palette.count) {
+        Log_write(LOG_LEVELS_WARNING, "<GL> color index #%d not available in current palette", index);
+        return;
+    }
+    context->color = index;
+}
+
+void GL_context_pattern(GL_Context_t *context, uint32_t mask)
+{
+    context->mask = mask;
+}
+
+void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t index)
+{
+    const GL_Quad_t clipping_region = context->clipping_region;
+
+    if (seed.x < clipping_region.x0 || seed.x > clipping_region.x1
+        || seed.y < clipping_region.y0 || seed.y > clipping_region.y1) {
+        return;
+    }
+
+    GL_Color_t match = *PIXEL(context, seed.x, seed.y);
+    GL_Color_t replacement = context->palette.colors[index];
+
+    GL_Point_t *stack = NULL;
+    arrpush(stack, seed);
+
+    while (arrlen(stack) > 0) {
+        GL_Point_t position = arrpop(stack);
+
+        int x = position.x;
+        int y = position.y;
+
+        while (x >= clipping_region.x0 && !memcmp(PIXEL(context, x, y), &match, sizeof(GL_Color_t))) {
+            --x;
+        }
+        ++x;
+
+        bool above = false;
+        bool below = false;
+
+        while (x <= clipping_region.x1 && !memcmp(PIXEL(context, x, y), &match, sizeof(GL_Color_t))) {
+            *PIXEL(context, x, y) = replacement;
+
+            if (!above && y >= clipping_region.y0 && !memcmp(PIXEL(context, x, y - 1), &match, sizeof(GL_Color_t))) {
+                GL_Point_t p = (GL_Point_t){ .x = x, .y = y - 1 };
+                arrpush(stack, p);
+                above = true;
+            } else
+            if (above && y >= clipping_region.y0 && memcmp(PIXEL(context, x, y - 1), &match, sizeof(GL_Color_t))) {
+                above = false;
+            }
+
+            if (!below && y < clipping_region.y1 && !memcmp(PIXEL(context, x, y + 1), &match, sizeof(GL_Color_t))) {
+                GL_Point_t p = (GL_Point_t){ .x = x, .y = y + 1 };
+                arrpush(stack, p);
+                below = true;
+            } else
+            if (below && y < clipping_region.y1 && memcmp(PIXEL(context, x, y + 1), &match, sizeof(GL_Color_t))) {
+                above = false;
+            }
+
+            ++x;
+        }
+    }
+
+    arrfree(stack);
 }

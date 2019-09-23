@@ -39,37 +39,50 @@
 typedef struct _Canvas_Class_t {
 } Canvas_Class_t;
 
+static int canvas_color_to_index(lua_State *L);
+static int canvas_screenshot(lua_State *L);
 static int canvas_width(lua_State *L);
 static int canvas_height(lua_State *L);
 static int canvas_palette(lua_State *L);
 static int canvas_background(lua_State *L);
+static int canvas_color(lua_State *L);
+static int canvas_pattern(lua_State *L);
 static int canvas_shift(lua_State *L);
 static int canvas_transparent(lua_State *L);
 static int canvas_clipping(lua_State *L);
 static int canvas_shader(lua_State *L);
-static int canvas_color(lua_State *L);
 static int canvas_clear(lua_State *L);
-static int canvas_screenshot(lua_State *L);
 static int canvas_point(lua_State *L);
 static int canvas_hline(lua_State *L);
 static int canvas_vline(lua_State *L);
 static int canvas_line(lua_State *L);
+static int canvas_fill(lua_State *L);
 
-// TODO: discard triangle and add polyline and fill?
 // TODO: color index is optional, if not present use the current (drawstate) pen color
 
 static const char _canvas_script[] =
     "local Canvas = {}\n"
     "\n"
+    "function Canvas.polyline(vertices, index)\n"
+    "  local count = #vertices\n"
+    "  if count < 4 then -- At least two vertices are required for a line!\n"
+    "    return\n"
+    "  end\n"
+    "  local x0, y0 = vertices[1], vertices[2]\n"
+    "  for i = 3, count, 2 do\n"
+    "    local x1, y1 = vertices[i], vertices[i + 1]\n"
+    "    Canvas.line(x0, y0, x1, y1, index)\n"
+    "    x0, y0 = x1, y1\n"
+    "  end\n"
+    "end\n"
+    "\n"
+    "-- That's not a proper filled-triangle drawing, since it is potentially\n"
+    "-- messed up by any previous existent content.\n"
     "function Canvas.triangle(mode, x0, y0, x1, y1, x2, y2, index)\n"
-    "  if mode == \"line\" then\n"
-    "    Canvas.line(x0, y0, x1, y1, index)\n"
-    "    Canvas.line(x1, y1, x2, y2, index)\n"
-    "    Canvas.line(x2, y2, x0, y0, index)\n"
-    "  else\n"
-    "    Canvas.line(x0, y0, x1, y1, index)\n"
-    "    Canvas.line(x1, y1, x2, y2, index)\n"
-    "    Canvas.line(x2, y2, x0, y0, index)\n"
+    "  Canvas.polyline({ x0, y0, x1, y1, x2, y2, x0, y0 }, index)\n"
+    "  if mode ~= \"line\" then\n"
+    "    local gx, gy = (x0 + x1 + x2) / 3, (y0 + y1 + y2) / 3\n"
+    "    Canvas.fill(gx, gy, index)\n"
     "  end\n"
     "end\n"
     "\n"
@@ -140,6 +153,7 @@ static const struct luaL_Reg _canvas_functions[] = {
     { "hline", canvas_hline },
     { "vline", canvas_vline },
     { "line", canvas_line },
+    { "fill", canvas_fill },
     { NULL, NULL }
 };
 
@@ -693,6 +707,27 @@ static int canvas_line(lua_State *L)
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
     GL_primitive_line(&display->gl, (GL_Point_t){ (int)x0, (int)y0 }, (GL_Point_t){ (int)x1, (int)y1 }, index);
+
+    return 0;
+}
+
+static int canvas_fill(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 3)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+    LUAX_SIGNATURE_END
+    double x = lua_tonumber(L, 1);
+    double y = lua_tonumber(L, 2);
+    int index = lua_tointeger(L, 3);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.fill(%f, %f, %d)", x, y, index);
+#endif
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+    GL_context_fill(&display->gl, (GL_Point_t){ (int)x, (int)y }, index);
 
     return 0;
 }
