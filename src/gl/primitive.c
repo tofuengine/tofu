@@ -157,3 +157,91 @@ void GL_primitive_vline(const GL_Context_t *context, GL_Point_t origin, size_t h
         *(dst++) = color;
     }
 }
+
+// http://www-users.mat.uni.torun.pl/~wrona/3d_tutor/tri_fillers.html
+/*
+the coordinates of vertices are (A.x,A.y), (B.x,B.y), (C.x,C.y); we assume that A.y<=B.y<=C.y (you should sort them first)
+dx1,dx2,dx3 are deltas used in interpolation
+horizline draws horizontal segment with coordinates (S.x,Y), (E.x,Y)
+S.x, E.x are left and right x-coordinates of the segment we have to draw
+S=A means that S.x=A.x; S.y=A.y;
+
+	if (B.y-A.y > 0) dx1=(B.x-A.x)/(B.y-A.y) else dx1=0;
+	if (C.y-A.y > 0) dx2=(C.x-A.x)/(C.y-A.y) else dx2=0;
+	if (C.y-B.y > 0) dx3=(C.x-B.x)/(C.y-B.y) else dx3=0;
+
+	S=E=A;
+	if(dx1 > dx2) {
+		for(;S.y<=B.y;S.y++,E.y++,S.x+=dx2,E.x+=dx1)
+			horizline(S.x,E.x,S.y,color);
+		E=B;
+		for(;S.y<=C.y;S.y++,E.y++,S.x+=dx2,E.x+=dx3)
+			horizline(S.x,E.x,S.y,color);
+	} else {
+		for(;S.y<=B.y;S.y++,E.y++,S.x+=dx1,E.x+=dx2)
+			horizline(S.x,E.x,S.y,color);
+		S=B;
+		for(;S.y<=C.y;S.y++,E.y++,S.x+=dx3,E.x+=dx2)
+			horizline(S.x,E.x,S.y,color);
+	}
+*/
+#define SWAP(a, b)      { GL_Point_t t = (a); (a) = (b); (b) = t; }
+
+static void HLINE(int x0, int x1, int y, int index)
+{
+}
+
+void GL_primitive_filled_triangle(const GL_Context_t *context, GL_Point_t a, GL_Point_t b, GL_Point_t c, GL_Pixel_t index)
+{
+    // sort a, b, c by increasing y coordinates.
+    if (a.y > c.y) {
+        SWAP(a, c);
+    }
+    if (a.y > b.y) {
+        SWAP(a, b);
+    }
+    if (b.y > c.y) {
+        SWAP(b, c);
+    }
+
+    float dx1 = (b.y - a.y > 0) ? (float)(b.x - a.x) / (float)(b.y - a.y) : 0.0f;
+    float dx2 = (c.y - a.y > 0) ? (float)(c.x - a.x) / (float)(c.y - a.y) : 0.0f;
+    float dx3 = (c.y - b.y > 0) ? (float)(c.x - b.x) / (float)(c.y - b.y) : 0.0f;
+
+    GL_Point_t s = a;
+    GL_Point_t e = s;
+
+    if (dx1 > dx2) {
+        while (s.y <= b.y) {
+            HLINE(s.x, e.x, s.y, index);
+            s.y += 1;
+            e.y += 1;
+            s.x += dx2;
+            e.x += dx1;
+        }
+        e = b;
+        while (s.y <= c.y) {
+            HLINE(s.x, e.x, s.y, index);
+            s.y += 1;
+            e.y += 1;
+            s.x += dx2;
+            e.x += dx3;
+        }
+    } else {
+        while (s.y <= b.y) {
+            HLINE(s.x, e.x, s.y, index);
+            s.y += 1;
+            e.y += 1;
+            s.x += dx1;
+            e.x += dx2;
+        }
+        e = b;
+        while (s.y <= c.y) {
+            HLINE(s.x, e.x, s.y, index);
+            s.y += 1;
+            e.y += 1;
+            s.x += dx3;
+            e.x += dx2;
+        }
+    }
+}

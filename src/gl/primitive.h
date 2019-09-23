@@ -33,7 +33,7 @@ extern void GL_primitive_vline(const GL_Context_t *context, GL_Point_t origin, s
 
 // TODO: implement those?
 // http://www.sunshine2k.de/coding/java/TriangleRasterization/TriangleRasterization.html
-extern void GL_primitive_triangle(const GL_Context_t *context, GL_Point_t vertices[3], GL_Pixel_t index);
-extern void GL_primitive_filled_triangle(const GL_Context_t *context, GL_Point_t vertices[3], GL_Pixel_t index);
+extern void GL_primitive_triangle(const GL_Context_t *context, GL_Point_t a, GL_Point_t b, GL_Point_t c, GL_Pixel_t index);
+extern void GL_primitive_filled_triangle(const GL_Context_t *context, GL_Point_t a, GL_Point_t b, GL_Point_t c, GL_Pixel_t index);
 
 #endif  /* __GL_PRIMITIVE_H__ */
