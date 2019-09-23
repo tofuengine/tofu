@@ -29,7 +29,7 @@
 
 #include <stdlib.h>
 #ifdef DEBUG
-    #include <stb/stb_leakcheck.h>
+  #include <stb/stb_leakcheck.h>
 #endif
 
 #ifdef __GRID_INTEGER_CELL__
