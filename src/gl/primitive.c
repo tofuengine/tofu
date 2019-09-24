@@ -24,8 +24,6 @@
 
 #include "gl.h"
 
-#include <math.h>
-
 //#define __DDA__
 #ifndef __DDA__
 static int iabs(int v)
@@ -33,6 +31,16 @@ static int iabs(int v)
     return v >= 0 ? v : -v;
 }
 #endif
+
+static int imin(int a, int b)
+{
+    return a < b ? a : b;
+}
+
+static int imax(int a, int b)
+{
+    return a > b ? a : b;
+}
 
 static bool GL_is_visible(const GL_Context_t *context, GL_Point_t position)
 {
@@ -160,55 +168,58 @@ void GL_primitive_vline(const GL_Context_t *context, GL_Point_t origin, size_t h
     }
 }
 
-// http://www-users.mat.uni.torun.pl/~wrona/3d_tutor/tri_fillers.html
-/*
-the coordinates of vertices are (A.x,A.y), (B.x,B.y), (C.x,C.y); we assume that A.y<=B.y<=C.y (you should sort them first)
-dx1,dx2,dx3 are deltas used in interpolation
-horizline draws horizontal segment with coordinates (S.x,Y), (E.x,Y)
-S.x, E.x are left and right x-coordinates of the segment we have to draw
-S=A means that S.x=A.x; S.y=A.y;
+// http://www.sunshine2k.de/coding/java/TriangleRasterization/TriangleRasterization.html
+#define SWAP(a, b)      { GL_Point_t t = (a); (a) = (b); (b) = t; }
+#define GL_ROUND(x)     (int)((x) + 0.5f)
 
-	if (B.y-A.y > 0) dx1=(B.x-A.x)/(B.y-A.y) else dx1=0;
-	if (C.y-A.y > 0) dx2=(C.x-A.x)/(C.y-A.y) else dx2=0;
-	if (C.y-B.y > 0) dx3=(C.x-B.x)/(C.y-B.y) else dx3=0;
-
-	S=E=A;
-	if(dx1 > dx2) {
-		for(;S.y<=B.y;S.y++,E.y++,S.x+=dx2,E.x+=dx1)
-			horizline(S.x,E.x,S.y,color);
-		E=B;
-		for(;S.y<=C.y;S.y++,E.y++,S.x+=dx2,E.x+=dx3)
-			horizline(S.x,E.x,S.y,color);
-	} else {
-		for(;S.y<=B.y;S.y++,E.y++,S.x+=dx1,E.x+=dx2)
-			horizline(S.x,E.x,S.y,color);
-		S=B;
-		for(;S.y<=C.y;S.y++,E.y++,S.x+=dx3,E.x+=dx2)
-			horizline(S.x,E.x,S.y,color);
-	}
-*/
-static void ensure_ccw(GL_Point_t *a, GL_Point_t *b, GL_Point_t *c)
+static void bottom_flat_triangle(const GL_Context_t *context, GL_Quad_t region, GL_Point_t a, GL_Point_t b, GL_Point_t c, GL_Color_t color)
 {
-    if ((b->x - a->x) * (c->y - a->y) > (c->x - a->x) * (b->y - a->y)) {
-        GL_Point_t t = *a;
-        *a = *b;
-        *b = t;
+    const float dsx = (float)(b.x - a.x) / (float)(b.y - a.y);
+    const float dex = (float)(c.x - a.x) / (float)(c.y - a.y);
+
+    float sx = (float)a.x + 0.5f;
+    float ex = sx;
+
+    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[a.y];
+    for (int y = a.y; y <= b.y; ++y) {
+        int ax = GL_ROUND(sx);
+        int bx = GL_ROUND(ex);
+        if (ax > bx) {
+            int t = ax; ax = bx; bx = t;
+        }
+        for (int x = ax; x <= bx; ++x) {
+            dst[x] = color;
+        }
+        dst += context->width;
+        sx += dsx;
+        ex += dex;
     }
 }
 
-static int imax(int a, int b)
+static void top_flat_triangle(const GL_Context_t *context, GL_Quad_t region, GL_Point_t a, GL_Point_t b, GL_Point_t c, GL_Color_t color)
 {
-    return a > b ? a : b;
+    const float dsx = (float)(c.x - a.x) / (float)(c.y - a.y);
+    const float dex = (float)(c.x - b.x) / (float)(c.y - b.y);
+
+    float sx = (float)c.x + 0.5f;
+    float ex = sx;
+
+    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[c.y];
+    for (int y = c.y; y > a.y; --y) {
+        int ax = GL_ROUND(sx);
+        int bx = GL_ROUND(ex);
+        if (ax > bx) {
+            int t = ax; ax = bx; bx = t;
+        }
+        for (int x = ax; x <= bx; ++x) {
+            dst[x] = color;
+        }
+        dst -= context->width;
+        sx -= dsx;
+        ex -= dex;
+    }
 }
 
-static int imin(int a, int b)
-{
-    return a < b ? a : b;
-}
-
-// https://www.scratchapixel.com/lessons/3d-basic-rendering/rasterization-practical-implementation/rasterization-stage
-// https://fgiesen.wordpress.com/2013/02/08/triangle-rasterization-in-practice/
-// https://github.com/dpethes/2D-rasterizer/blob/master/rasterizer2d.pas
 void GL_primitive_filled_triangle(const GL_Context_t *context, GL_Point_t a, GL_Point_t b, GL_Point_t c, GL_Pixel_t index)
 {
     const GL_Quad_t clipping_region = context->clipping_region;
@@ -248,56 +259,30 @@ void GL_primitive_filled_triangle(const GL_Context_t *context, GL_Point_t a, GL_
         return;
     }
 
-    ensure_ccw(&a, &b, &c);
-
-    int DX12 = a.x - b.x;
-    int DX23 = b.x - c.x;
-    int DX31 = c.x - a.x;
-    int DY12 = a.y - b.y;
-    int DY23 = b.y - c.y;
-    int DY31 = c.y - a.y;
-
-    int C1 = DY12 * a.x - DX12 * a.y;
-    int C2 = DY23 * b.x - DX23 * b.y;
-    int C3 = DY31 * c.x - DX31 * c.y;
-
-    if ((DY12 < 0) || ((DY12 == 0) && (DX12 > 0))) { C1 += 1; }
-    if ((DY23 < 0) || ((DY23 == 0) && (DX23 > 0))) { C2 += 1; }
-    if ((DY31 < 0) || ((DY31 == 0) && (DX31 > 0))) { C3 += 1; }
-
-    int CY1 = C1 + DX12 * drawing_region.y0 - DY12 * drawing_region.x0;
-    int CY2 = C2 + DX23 * drawing_region.y0 - DY23 * drawing_region.x0;
-    int CY3 = C3 + DX31 * drawing_region.y0 - DY31 * drawing_region.x0;
-
     const GL_Color_t color = colors[index];
 
-    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[drawing_region.y0];
+    // sort a, b, c by increasing y coordinates.
+    if (a.y > b.y) {
+        SWAP(a, b);
+    }
+    if (a.y > c.y) {
+        SWAP(a, c);
+    }
+    if (b.y > c.y) {
+        SWAP(b, c);
+    }
 
-    const int skip = context->width;
-
-    for (int y = drawing_region.y0; y <= drawing_region.y1; ++y) {
-        int CX1 = CY1;
-        int CX2 = CY2;
-        int CX3 = CY3;
-        int count = 0;
-        int last_x = 0;
-        for (int x = drawing_region.x0; x <= drawing_region.x1; ++x) {
-            if ((CX1 | CX2 | CX3) > 0) {
-                count += 1;
-                last_x = x;
-            }
-            CX1 -= DY12;
-            CX2 -= DY23;
-            CX3 -= DY31;
-        }
-        CY1 += DX12;
-        CY2 += DX23;
-        CY3 += DX31;
-
-        const int offset = last_x + 1 - count;
-        for (int i = 0; i < count; ++i) {
-            dst[offset + i] = color;
-        }
-        dst += skip;
+    if (b.y == c.y) { // Bottom flat.
+        bottom_flat_triangle(context, drawing_region, a, b, c, color);
+    } else
+    if (a.y == b.y) { // Top flat.
+        top_flat_triangle(context, drawing_region, a, b, c, color);
+    } else {
+        GL_Point_t d = (GL_Point_t){
+                .x = (int)(a.x + ((float)(b.y - a.y) / (float)(c.y - a.y)) * (c.x - a.x)),
+                .y = b.y
+            };
+        bottom_flat_triangle(context, drawing_region, a, b, d, color);
+        top_flat_triangle(context, drawing_region, b, d, c, color);
     }
 }
