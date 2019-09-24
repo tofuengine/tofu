@@ -57,6 +57,7 @@ static int canvas_hline(lua_State *L);
 static int canvas_vline(lua_State *L);
 static int canvas_line(lua_State *L);
 static int canvas_fill(lua_State *L);
+static int canvas_triangle(lua_State *L);
 
 // TODO: color index is optional, if not present use the current (drawstate) pen color
 
@@ -73,16 +74,6 @@ static const char _canvas_script[] =
     "    local x1, y1 = vertices[i], vertices[i + 1]\n"
     "    Canvas.line(x0, y0, x1, y1, index)\n"
     "    x0, y0 = x1, y1\n"
-    "  end\n"
-    "end\n"
-    "\n"
-    "-- That's not a proper filled-triangle drawing, since it is potentially\n"
-    "-- messed up by any previous existent content.\n"
-    "function Canvas.triangle(mode, x0, y0, x1, y1, x2, y2, index)\n"
-    "  Canvas.polyline({ x0, y0, x1, y1, x2, y2, x0, y0 }, index)\n"
-    "  if mode ~= \"line\" then\n"
-    "    local gx, gy = (x0 + x1 + x2) / 3, (y0 + y1 + y2) / 3\n"
-    "    Canvas.fill(gx, gy, index)\n"
     "  end\n"
     "end\n"
     "\n"
@@ -154,6 +145,7 @@ static const struct luaL_Reg _canvas_functions[] = {
     { "vline", canvas_vline },
     { "line", canvas_line },
     { "fill", canvas_fill },
+    { "triangle", canvas_triangle },
     { NULL, NULL }
 };
 
@@ -728,6 +720,43 @@ static int canvas_fill(lua_State *L)
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
     GL_context_fill(&display->gl, (GL_Point_t){ (int)x, (int)y }, index);
+
+    return 0;
+}
+
+static int canvas_triangle(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 8)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+    LUAX_SIGNATURE_END
+    const char *mode = lua_tostring(L, 1);
+    double x0 = lua_tonumber(L, 2);
+    double y0 = lua_tonumber(L, 3);
+    double x1 = lua_tonumber(L, 4);
+    double y1 = lua_tonumber(L, 5);
+    double x2 = lua_tonumber(L, 6);
+    double y2 = lua_tonumber(L, 7);
+    int index = lua_tointeger(L, 8);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.triangle(%s, %f, %f, %f, %f, %d)", mode, x0, y0, x1, y1, x2, y2, index);
+#endif
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+    if (mode[0] == 'l') {
+        GL_primitive_line(&display->gl, (GL_Point_t){ (int)x0, (int)y0 }, (GL_Point_t){ (int)x1, (int)y1 }, index);
+        GL_primitive_line(&display->gl, (GL_Point_t){ (int)x1, (int)y1 }, (GL_Point_t){ (int)x2, (int)y2 }, index);
+        GL_primitive_line(&display->gl, (GL_Point_t){ (int)x2, (int)y2 }, (GL_Point_t){ (int)x0, (int)y0 }, index);
+    } else {
+        GL_primitive_filled_triangle(&display->gl, (GL_Point_t){ (int)x0, (int)y0 }, (GL_Point_t){ (int)x1, (int)y1 }, (GL_Point_t){ (int)x2, (int)y2 }, index);
+    }
 
     return 0;
 }

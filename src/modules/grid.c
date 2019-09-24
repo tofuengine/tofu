@@ -63,6 +63,7 @@ static const struct luaL_Reg _grid_functions[] = {
     {"stride", grid_stride },
     {"peek", grid_peek },
     {"poke", grid_poke },
+//    {"path", grid_path },
     { NULL, NULL }
 };
 

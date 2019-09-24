@@ -186,13 +186,23 @@ S=A means that S.x=A.x; S.y=A.y;
 	}
 */
 #define SWAP(a, b)      { GL_Point_t t = (a); (a) = (b); (b) = t; }
-
-static void HLINE(int x0, int x1, int y, int index)
-{
-}
+#define GL_ROUND(x)     (int)((x) + 0.5f)
 
 void GL_primitive_filled_triangle(const GL_Context_t *context, GL_Point_t a, GL_Point_t b, GL_Point_t c, GL_Pixel_t index)
 {
+//    const GL_Quad_t clipping_region = context->clipping_region;
+    const GL_Pixel_t *shifting = context->shifting;
+    const GL_Bool_t *transparent = context->transparent;
+    const GL_Color_t *colors = context->palette.colors;
+
+    index = shifting[index];
+
+    if (transparent[index]) {
+        return;
+    }
+
+    const GL_Color_t color = colors[index];
+
     // sort a, b, c by increasing y coordinates.
     if (a.y > c.y) {
         SWAP(a, c);
@@ -208,40 +218,46 @@ void GL_primitive_filled_triangle(const GL_Context_t *context, GL_Point_t a, GL_
     float dx2 = (c.y - a.y > 0) ? (float)(c.x - a.x) / (float)(c.y - a.y) : 0.0f;
     float dx3 = (c.y - b.y > 0) ? (float)(c.x - b.x) / (float)(c.y - b.y) : 0.0f;
 
-    GL_Point_t s = a;
-    GL_Point_t e = s;
+    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[a.y];
+
+    float sx = (float)a.x + 0.5f;
+    float ex = sx;
 
     if (dx1 > dx2) {
-        while (s.y <= b.y) {
-            HLINE(s.x, e.x, s.y, index);
-            s.y += 1;
-            e.y += 1;
-            s.x += dx2;
-            e.x += dx1;
+        for (int y = a.y; y < b.y; ++y) {
+            for (int x = GL_ROUND(sx); x <= GL_ROUND(ex); ++x) {
+                dst[x] = color;
+            }
+            dst += context->width;
+            sx += dx2;
+            ex += dx1;
         }
-        e = b;
-        while (s.y <= c.y) {
-            HLINE(s.x, e.x, s.y, index);
-            s.y += 1;
-            e.y += 1;
-            s.x += dx2;
-            e.x += dx3;
+        ex = (float)b.x;
+        for (int y = b.y; y <= c.y; ++y) {
+            for (int x = GL_ROUND(sx); x <= GL_ROUND(ex); ++x) {
+                dst[x] = color;
+            }
+            dst += context->width;
+            sx += dx2;
+            ex += dx3;
         }
     } else {
-        while (s.y <= b.y) {
-            HLINE(s.x, e.x, s.y, index);
-            s.y += 1;
-            e.y += 1;
-            s.x += dx1;
-            e.x += dx2;
+        for (int y = a.y; y < b.y; ++y) {
+            for (int x = GL_ROUND(sx); x <= GL_ROUND(ex); ++x) {
+                dst[x] = color;
+            }
+            dst += context->width;
+            sx += dx1;
+            ex += dx2;
         }
-        e = b;
-        while (s.y <= c.y) {
-            HLINE(s.x, e.x, s.y, index);
-            s.y += 1;
-            e.y += 1;
-            s.x += dx3;
-            e.x += dx2;
+        ex = (float)b.x;
+        for (int y = b.y; y <= c.y; ++y) {
+            for (int x = GL_ROUND(sx); x <= GL_ROUND(ex); ++x) {
+                dst[x] = color;
+            }
+            dst += context->width;
+            sx += dx3;
+            ex += dx2;
         }
     }
 }
