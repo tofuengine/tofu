@@ -243,20 +243,20 @@ void GL_primitive_filled_triangle(const GL_Context_t *context, GL_Point_t a, GL_
 
     const GL_Color_t color = colors[index];
 
-    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[drawing_region.y0];
+    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[drawing_region.y0] + drawing_region.x0;
 
     const int skip = context->width;
 
-    for (int y = drawing_region.y0; y <= drawing_region.y1; ++y) {
+    for (int y = 0; y <= height; ++y) { // Pinada's edge function is linear, we can cast it...
         int CX1 = CY1;
         int CX2 = CY2;
         int CX3 = CY3;
         int count = 0;
-        int last_x = 0;
-        for (int x = drawing_region.x0; x <= drawing_region.x1; ++x) {
-            if ((CX1 | CX2 | CX3) > 0) {
+        int eod = 0;
+        for (int x = 0; x <= width; ++x) {
+            if ((CX1 | CX2 | CX3) > 0) { // Check the sign bit only.
                 count += 1;
-                last_x = x;
+                eod = x;
             }
             CX1 -= DY12;
             CX2 -= DY23;
@@ -266,10 +266,11 @@ void GL_primitive_filled_triangle(const GL_Context_t *context, GL_Point_t a, GL_
         CY2 += DX23;
         CY3 += DX31;
 
-        const int offset = last_x + 1 - count;
-        for (int i = 0; i < count; ++i) {
-            dst[offset + i] = color;
+        const int offset = eod - count;
+        dst += eod;
+        for (int i = 0; i < count; ++i) { // BAckward copy, simpler math.
+            *(dst--) = color;
         }
-        dst += skip;
+        dst += skip - offset;
     }
 }
