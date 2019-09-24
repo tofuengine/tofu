@@ -55,41 +55,30 @@ void GL_primitive_point(const GL_Context_t *context, GL_Point_t position, GL_Pix
         return;
     }
 
-    GL_Quad_t drawing_region = (GL_Quad_t){
-            .x0 = position.x,
-            .y0 = position.y,
-            .x1 = position.x,
-            .y1 = position.y
-        };
-
-    if (drawing_region.x0 < clipping_region.x0) {
-        drawing_region.x0 = clipping_region.x0;
+    if (position.x < clipping_region.x0) {
+        return;
     }
-    if (drawing_region.y0 < clipping_region.y0) {
-        drawing_region.y0 = clipping_region.y0;
+    if (position.y < clipping_region.y0) {
+        return;
     }
-    if (drawing_region.x1 > clipping_region.x1) {
-        drawing_region.x1 = clipping_region.x1;
+    if (position.x > clipping_region.x1) {
+        return;
     }
-    if (drawing_region.y1 > clipping_region.y1) {
-        drawing_region.y1 = clipping_region.y1;
-    }
-
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
-    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!
+    if (position.y > clipping_region.y1) {
         return;
     }
 
     const GL_Color_t color = colors[index];
 
-    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[drawing_region.y0] + drawing_region.x0;
+    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[position.y] + position.x;
     *dst = color;
 }
 
 // DDA algorithm, no branches in the inner-loop.
 void GL_primitive_line(const GL_Context_t *context, GL_Point_t from, GL_Point_t to, GL_Pixel_t index)
 {
+    // TODO: implement line clipping.
+
     index = context->shifting[index];
 
     if (context->transparent[index]) {
@@ -253,15 +242,6 @@ void GL_primitive_vline(const GL_Context_t *context, GL_Point_t origin, size_t s
 // https://www.scratchapixel.com/lessons/3d-basic-rendering/rasterization-practical-implementation/rasterization-stage
 // https://fgiesen.wordpress.com/2013/02/08/triangle-rasterization-in-practice/
 // https://github.com/dpethes/2D-rasterizer/blob/master/rasterizer2d.pas
-static void ensure_ccw(GL_Point_t *a, GL_Point_t *b, GL_Point_t *c)
-{
-    if ((b->x - a->x) * (c->y - a->y) > (c->x - a->x) * (b->y - a->y)) {
-        GL_Point_t t = *a;
-        *a = *b;
-        *b = t;
-    }
-}
-
 void GL_primitive_filled_triangle(const GL_Context_t *context, GL_Point_t a, GL_Point_t b, GL_Point_t c, GL_Pixel_t index)
 {
     const GL_Quad_t clipping_region = context->clipping_region;
@@ -301,7 +281,11 @@ void GL_primitive_filled_triangle(const GL_Context_t *context, GL_Point_t a, GL_
         return;
     }
 
-    ensure_ccw(&a, &b, &c);
+    if ((b.x - a.x) * (c.y - a.y) > (c.x - a.x) * (b.y - a.y)) { // Ensure CCW winding.
+        GL_Point_t t = a;
+        a = b;
+        b = t;
+    }
 
     int DX12 = a.x - b.x;
     int DX23 = b.x - c.x;
