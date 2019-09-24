@@ -42,26 +42,48 @@ static int imax(int a, int b)
     return a > b ? a : b;
 }
 
-static bool GL_is_visible(const GL_Context_t *context, GL_Point_t position)
-{
-    return true;
-}
-
 void GL_primitive_point(const GL_Context_t *context, GL_Point_t position, GL_Pixel_t index)
 {
-    if (!GL_is_visible(context, position)) {
+    const GL_Quad_t clipping_region = context->clipping_region;
+    const GL_Pixel_t *shifting = context->shifting;
+    const GL_Bool_t *transparent = context->transparent;
+    const GL_Color_t *colors = context->palette.colors;
+
+    index = shifting[index];
+
+    if (transparent[index]) {
         return;
     }
 
-    index = context->shifting[index];
+    GL_Quad_t drawing_region = (GL_Quad_t){
+            .x0 = position.x,
+            .y0 = position.y,
+            .x1 = position.x,
+            .y1 = position.y
+        };
 
-    if (context->transparent[index]) {
+    if (drawing_region.x0 < clipping_region.x0) {
+        drawing_region.x0 = clipping_region.x0;
+    }
+    if (drawing_region.y0 < clipping_region.y0) {
+        drawing_region.y0 = clipping_region.y0;
+    }
+    if (drawing_region.x1 > clipping_region.x1) {
+        drawing_region.x1 = clipping_region.x1;
+    }
+    if (drawing_region.y1 > clipping_region.y1) {
+        drawing_region.y1 = clipping_region.y1;
+    }
+
+    const int width = drawing_region.x1 - drawing_region.x0 + 1;
+    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!
         return;
     }
 
-    const GL_Color_t color = context->palette.colors[index];
+    const GL_Color_t color = colors[index];
 
-    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[position.y] + position.x;
+    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[drawing_region.y0] + drawing_region.x0;
     *dst = color;
 }
 
@@ -128,43 +150,102 @@ void GL_primitive_line(const GL_Context_t *context, GL_Point_t from, GL_Point_t 
 #endif
 }
 
-void GL_primitive_hline(const GL_Context_t *context, GL_Point_t origin, size_t width, GL_Pixel_t index)
+void GL_primitive_hline(const GL_Context_t *context, GL_Point_t origin, size_t span, GL_Pixel_t index)
 {
-    if (!GL_is_visible(context, origin)) {
+    const GL_Quad_t clipping_region = context->clipping_region;
+    const GL_Pixel_t *shifting = context->shifting;
+    const GL_Bool_t *transparent = context->transparent;
+    const GL_Color_t *colors = context->palette.colors;
+
+    index = shifting[index];
+
+    if (transparent[index]) {
         return;
     }
 
-    index = context->shifting[index];
+    GL_Quad_t drawing_region = (GL_Quad_t){
+            .x0 = origin.x,
+            .y0 = origin.y,
+            .x1 = origin.x + span - 1,
+            .y1 = origin.y
+        };
 
-    if (context->transparent[index]) {
+    if (drawing_region.x0 < clipping_region.x0) {
+        drawing_region.x0 = clipping_region.x0;
+    }
+    if (drawing_region.y0 < clipping_region.y0) {
+        drawing_region.y0 = clipping_region.y0;
+    }
+    if (drawing_region.x1 > clipping_region.x1) {
+        drawing_region.x1 = clipping_region.x1;
+    }
+    if (drawing_region.y1 > clipping_region.y1) {
+        drawing_region.y1 = clipping_region.y1;
+    }
+
+    const int width = drawing_region.x1 - drawing_region.x0 + 1;
+    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!
         return;
     }
 
-    const GL_Color_t color = context->palette.colors[index];
+    const GL_Color_t color = colors[index];
 
-    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[origin.y] + origin.x;
-    for (size_t i = 0; i < width; ++i) {
+    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[drawing_region.y0] + drawing_region.x0;
+
+    for (int i = width; i; --i) {
         *(dst++) = color;
     }
 }
 
-void GL_primitive_vline(const GL_Context_t *context, GL_Point_t origin, size_t height, GL_Pixel_t index)
+void GL_primitive_vline(const GL_Context_t *context, GL_Point_t origin, size_t span, GL_Pixel_t index)
 {
-    if (!GL_is_visible(context, origin)) {
+    const GL_Quad_t clipping_region = context->clipping_region;
+    const GL_Pixel_t *shifting = context->shifting;
+    const GL_Bool_t *transparent = context->transparent;
+    const GL_Color_t *colors = context->palette.colors;
+
+    index = shifting[index];
+
+    if (transparent[index]) {
         return;
     }
 
-    index = context->shifting[index];
+    GL_Quad_t drawing_region = (GL_Quad_t){
+            .x0 = origin.x,
+            .y0 = origin.y,
+            .x1 = origin.x,
+            .y1 = origin.x + span - 1
+        };
 
-    if (context->transparent[index]) {
+    if (drawing_region.x0 < clipping_region.x0) {
+        drawing_region.x0 = clipping_region.x0;
+    }
+    if (drawing_region.y0 < clipping_region.y0) {
+        drawing_region.y0 = clipping_region.y0;
+    }
+    if (drawing_region.x1 > clipping_region.x1) {
+        drawing_region.x1 = clipping_region.x1;
+    }
+    if (drawing_region.y1 > clipping_region.y1) {
+        drawing_region.y1 = clipping_region.y1;
+    }
+
+    const int width = drawing_region.x1 - drawing_region.x0 + 1;
+    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!
         return;
     }
 
-    const GL_Color_t color = context->palette.colors[index];
+    const GL_Color_t color = colors[index];
 
-    for (size_t i = 0; i < height; ++i) {
-        GL_Color_t *dst = (GL_Color_t *)context->vram_rows[origin.y + i] + origin.x;
-        *(dst++) = color;
+    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[drawing_region.y0] + drawing_region.x0;
+
+    const int skip = context->width;
+
+    for (int i = height; i; --i) {
+        *dst = color;
+        dst += skip;
     }
 }
 
