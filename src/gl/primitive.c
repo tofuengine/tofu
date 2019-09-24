@@ -204,60 +204,55 @@ void GL_primitive_filled_triangle(const GL_Context_t *context, GL_Point_t a, GL_
     const GL_Color_t color = colors[index];
 
     // sort a, b, c by increasing y coordinates.
-    if (a.y > c.y) {
-        SWAP(a, c);
-    }
     if (a.y > b.y) {
         SWAP(a, b);
+    }
+    if (a.y > c.y) {
+        SWAP(a, c);
     }
     if (b.y > c.y) {
         SWAP(b, c);
     }
 
-    float dx1 = (b.y - a.y > 0) ? (float)(b.x - a.x) / (float)(b.y - a.y) : 0.0f;
-    float dx2 = (c.y - a.y > 0) ? (float)(c.x - a.x) / (float)(c.y - a.y) : 0.0f;
-    float dx3 = (c.y - b.y > 0) ? (float)(c.x - b.x) / (float)(c.y - b.y) : 0.0f;
+    float sx, ex;
 
-    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[a.y];
+    if (a.y == b.y) { // Horizontal top edge.
+        sx = a.x;
+        ex = b.x;
+    } else {
+        float dsx = (float)(c.x - a.x) / (float)(c.y - a.y);
+        float dex = (float)(b.x - a.x) / (float)(b.y - a.y);
 
-    float sx = (float)a.x + 0.5f;
-    float ex = sx;
+        sx = ex = (float)a.x + 0.5f;
 
-    if (dx1 > dx2) {
+        GL_Color_t *dst = (GL_Color_t *)context->vram_rows[a.y];
         for (int y = a.y; y < b.y; ++y) {
             for (int x = GL_ROUND(sx); x <= GL_ROUND(ex); ++x) {
                 dst[x] = color;
             }
             dst += context->width;
-            sx += dx2;
-            ex += dx1;
+            sx += dsx;
+            ex += dex;
         }
-        ex = (float)b.x;
-        for (int y = b.y; y <= c.y; ++y) {
-            for (int x = GL_ROUND(sx); x <= GL_ROUND(ex); ++x) {
-                dst[x] = color;
-            }
-            dst += context->width;
-            sx += dx2;
-            ex += dx3;
+    }
+
+    if (c.y == b.y) { // Horizontal bottom edge.
+        GL_Color_t *dst = (GL_Color_t *)context->vram_rows[c.y];
+        for (int x = GL_ROUND(sx); x <= GL_ROUND(ex); ++x) {
+            dst[x] = color;
         }
     } else {
-        for (int y = a.y; y < b.y; ++y) {
-            for (int x = GL_ROUND(sx); x <= GL_ROUND(ex); ++x) {
-                dst[x] = color;
-            }
-            dst += context->width;
-            sx += dx1;
-            ex += dx2;
-        }
-        ex = (float)b.x;
+        float dsx = (float)(c.x - a.x) / (float)(c.y - a.y);
+        float dex = (float)(c.x - b.x) / (float)(c.y - b.y);
+
+        GL_Color_t *dst = (GL_Color_t *)context->vram_rows[b.y];
         for (int y = b.y; y <= c.y; ++y) {
             for (int x = GL_ROUND(sx); x <= GL_ROUND(ex); ++x) {
                 dst[x] = color;
             }
             dst += context->width;
-            sx += dx3;
-            ex += dx2;
+            sx += dsx;
+            ex += dex;
         }
     }
 }
