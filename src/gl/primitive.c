@@ -169,54 +169,15 @@ void GL_primitive_vline(const GL_Context_t *context, GL_Point_t origin, size_t h
 }
 
 // http://www.sunshine2k.de/coding/java/TriangleRasterization/TriangleRasterization.html
-#define SWAP(a, b)      { GL_Point_t t = (a); (a) = (b); (b) = t; }
-#define GL_ROUND(x)     (int)((x) + 0.5f)
-
-static void bottom_flat_triangle(const GL_Context_t *context, GL_Quad_t region, GL_Point_t a, GL_Point_t b, GL_Point_t c, GL_Color_t color)
+// https://www.scratchapixel.com/lessons/3d-basic-rendering/rasterization-practical-implementation/rasterization-stage
+// https://fgiesen.wordpress.com/2013/02/08/triangle-rasterization-in-practice/
+// https://github.com/dpethes/2D-rasterizer/blob/master/rasterizer2d.pas
+static void ensure_ccw(GL_Point_t *a, GL_Point_t *b, GL_Point_t *c)
 {
-    const float dsx = (float)(b.x - a.x) / (float)(b.y - a.y);
-    const float dex = (float)(c.x - a.x) / (float)(c.y - a.y);
-
-    float sx = (float)a.x + 0.5f;
-    float ex = sx;
-
-    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[a.y];
-    for (int y = a.y; y <= b.y; ++y) {
-        int ax = GL_ROUND(sx);
-        int bx = GL_ROUND(ex);
-        if (ax > bx) {
-            int t = ax; ax = bx; bx = t;
-        }
-        for (int x = ax; x <= bx; ++x) {
-            dst[x] = color;
-        }
-        dst += context->width;
-        sx += dsx;
-        ex += dex;
-    }
-}
-
-static void top_flat_triangle(const GL_Context_t *context, GL_Quad_t region, GL_Point_t a, GL_Point_t b, GL_Point_t c, GL_Color_t color)
-{
-    const float dsx = (float)(c.x - a.x) / (float)(c.y - a.y);
-    const float dex = (float)(c.x - b.x) / (float)(c.y - b.y);
-
-    float sx = (float)c.x + 0.5f;
-    float ex = sx;
-
-    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[c.y];
-    for (int y = c.y; y > a.y; --y) {
-        int ax = GL_ROUND(sx);
-        int bx = GL_ROUND(ex);
-        if (ax > bx) {
-            int t = ax; ax = bx; bx = t;
-        }
-        for (int x = ax; x <= bx; ++x) {
-            dst[x] = color;
-        }
-        dst -= context->width;
-        sx -= dsx;
-        ex -= dex;
+    if ((b->x - a->x) * (c->y - a->y) > (c->x - a->x) * (b->y - a->y)) {
+        GL_Point_t t = *a;
+        *a = *b;
+        *b = t;
     }
 }
 
@@ -259,30 +220,56 @@ void GL_primitive_filled_triangle(const GL_Context_t *context, GL_Point_t a, GL_
         return;
     }
 
+    ensure_ccw(&a, &b, &c);
+
+    int DX12 = a.x - b.x;
+    int DX23 = b.x - c.x;
+    int DX31 = c.x - a.x;
+    int DY12 = a.y - b.y;
+    int DY23 = b.y - c.y;
+    int DY31 = c.y - a.y;
+
+    int C1 = DY12 * a.x - DX12 * a.y;
+    int C2 = DY23 * b.x - DX23 * b.y;
+    int C3 = DY31 * c.x - DX31 * c.y;
+
+    if ((DY12 < 0) || ((DY12 == 0) && (DX12 > 0))) { C1 += 1; }
+    if ((DY23 < 0) || ((DY23 == 0) && (DX23 > 0))) { C2 += 1; }
+    if ((DY31 < 0) || ((DY31 == 0) && (DX31 > 0))) { C3 += 1; }
+
+    int CY1 = C1 + DX12 * drawing_region.y0 - DY12 * drawing_region.x0;
+    int CY2 = C2 + DX23 * drawing_region.y0 - DY23 * drawing_region.x0;
+    int CY3 = C3 + DX31 * drawing_region.y0 - DY31 * drawing_region.x0;
+
     const GL_Color_t color = colors[index];
 
-    // sort a, b, c by increasing y coordinates.
-    if (a.y > b.y) {
-        SWAP(a, b);
-    }
-    if (a.y > c.y) {
-        SWAP(a, c);
-    }
-    if (b.y > c.y) {
-        SWAP(b, c);
-    }
+    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[drawing_region.y0];
 
-    if (b.y == c.y) { // Bottom flat.
-        bottom_flat_triangle(context, drawing_region, a, b, c, color);
-    } else
-    if (a.y == b.y) { // Top flat.
-        top_flat_triangle(context, drawing_region, a, b, c, color);
-    } else {
-        GL_Point_t d = (GL_Point_t){
-                .x = (int)(a.x + ((float)(b.y - a.y) / (float)(c.y - a.y)) * (c.x - a.x)),
-                .y = b.y
-            };
-        bottom_flat_triangle(context, drawing_region, a, b, d, color);
-        top_flat_triangle(context, drawing_region, b, d, c, color);
+    const int skip = context->width;
+
+    for (int y = drawing_region.y0; y <= drawing_region.y1; ++y) {
+        int CX1 = CY1;
+        int CX2 = CY2;
+        int CX3 = CY3;
+        int count = 0;
+        int last_x = 0;
+        for (int x = drawing_region.x0; x <= drawing_region.x1; ++x) {
+            if ((CX1 | CX2 | CX3) > 0) {
+                count += 1;
+                last_x = x;
+            }
+            CX1 -= DY12;
+            CX2 -= DY23;
+            CX3 -= DY31;
+        }
+        CY1 += DX12;
+        CY2 += DX23;
+        CY3 += DX31;
+
+        const int offset = last_x + 1 - count;
+        for (int i = 0; i < count; ++i) {
+            dst[offset + i] = color;
+        }
+        dst += skip;
     }
 }
