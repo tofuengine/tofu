@@ -6,8 +6,15 @@ local Class = require("tofu.util").Class
 
 local Game = Class.define()
 
+local PALETTE = {
+  "FF000000", "FF240000", "FF480000", "FF6D0000",
+  "FF910000", "FFB60000", "FFDA0000", "FFFF0000",
+  "FFFF3F00", "FFFF7F00", "FFFFBF00", "FFFFFF00",
+  "FFFFFF3F", "FFFFFF7F", "FFFFFFBF", "FFFFFFFF"
+}
+
 function Game:__ctor()
-  Canvas.palette("arne-16")
+  Canvas.palette(PALETTE) -- "arne-16")
 
   self.font = Font.default(0, 1)
   self.mode = 0
@@ -65,17 +72,24 @@ function Game:render(_) -- ratio
     local cx = ((math.cos(System.time() * 0.125) + 1.0) * 0.5) * Canvas.width()
     local cy = ((math.cos(System.time() * 0.342) + 1.0) * 0.5) * Canvas.height()
     local r = ((math.sin(System.time() * 0.184) + 1.0) * 0.5) * 63 + 1
-    Canvas.circle("fill", cx, cy, math.floor(r), 6)
+    Canvas.circle("fill", cx, cy, r, 6)
   elseif self.mode == 7 then
     local cx = ((math.cos(System.time() * 0.125) + 1.0) * 0.5) * Canvas.width()
     local cy = ((math.cos(System.time() * 0.342) + 1.0) * 0.5) * Canvas.height()
     local r = ((math.sin(System.time() * 0.184) + 1.0) * 0.5) * 63 + 1
-    Canvas.circle("line", cx, cy, math.floor(r), 7)
+    Canvas.circle("line", cx, cy, r, 7)
   elseif self.mode == 8 then
+    local colors = { 13, 11, 9, 7, 5, 3, 1 }
+    local y = (math.sin(System.time()) + 1.0) * 0.5 * Canvas.height()
+    Canvas.rectangle("fill", 0, y, Canvas.width() - 1, 1, 15)
+    for i, c in ipairs(colors) do
+      Canvas.rectangle("fill", 0, y - i, Canvas.width() - 1, 1, c)
+      Canvas.rectangle("fill", 0, y + i, Canvas.width() - 1, 1, c)
+    end
+  elseif self.mode == 9 then
     Canvas.point(4, 4, 1)
     Canvas.line(8, 8, 32, 32, 2)
     Canvas.rectangle("line", 4, 23, 8, 8, 3)
-  elseif self.mode == 9 then
     Canvas.triangle("line", 150, 150, 50, 250, 250, 250, 3)
     Canvas.rectangle("fill", 4, 12, 8, 8, 3)
   end
