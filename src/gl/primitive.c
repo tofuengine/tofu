@@ -139,7 +139,7 @@ void GL_primitive_line(const GL_Context_t *context, GL_Point_t from, GL_Point_t 
 #endif
 }
 
-void GL_primitive_hline(const GL_Context_t *context, GL_Point_t origin, size_t span, GL_Pixel_t index)
+void GL_primitive_hline(const GL_Context_t *context, GL_Point_t origin, size_t w, GL_Pixel_t index)
 {
     const GL_Quad_t clipping_region = context->clipping_region;
     const GL_Pixel_t *shifting = context->shifting;
@@ -155,7 +155,7 @@ void GL_primitive_hline(const GL_Context_t *context, GL_Point_t origin, size_t s
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = origin.x,
             .y0 = origin.y,
-            .x1 = origin.x + span - 1,
+            .x1 = origin.x + w - 1,
             .y1 = origin.y
         };
 
@@ -187,7 +187,7 @@ void GL_primitive_hline(const GL_Context_t *context, GL_Point_t origin, size_t s
     }
 }
 
-void GL_primitive_vline(const GL_Context_t *context, GL_Point_t origin, size_t span, GL_Pixel_t index)
+void GL_primitive_vline(const GL_Context_t *context, GL_Point_t origin, size_t h, GL_Pixel_t index)
 {
     const GL_Quad_t clipping_region = context->clipping_region;
     const GL_Pixel_t *shifting = context->shifting;
@@ -204,7 +204,7 @@ void GL_primitive_vline(const GL_Context_t *context, GL_Point_t origin, size_t s
             .x0 = origin.x,
             .y0 = origin.y,
             .x1 = origin.x,
-            .y1 = origin.x + span - 1
+            .y1 = origin.y + h - 1
         };
 
     if (drawing_region.x0 < clipping_region.x0) {
