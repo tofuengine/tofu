@@ -107,7 +107,7 @@ static const char _canvas_script[] =
     "      Canvas.point(cx + x, cy - y, index)\n"
     "      Canvas.point(cx + y, cy + x, index)\n"
     "    else\n"
-    "      local w = math.abs(2 * x)\n"
+    "      local w = math.abs(2 * x) + 1\n"
     "      Canvas.hline(cx + x, cy + y, w, index)\n"
     "      Canvas.hline(cx + x, cy - y, w, index)\n"
     "    end\n"
