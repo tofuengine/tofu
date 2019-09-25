@@ -238,6 +238,59 @@ void GL_primitive_vline(const GL_Context_t *context, GL_Point_t origin, size_t s
     }
 }
 
+void GL_primitive_filled_rectangle(const GL_Context_t *context, GL_Point_t origin, size_t w, size_t h, GL_Pixel_t index)
+{
+    const GL_Quad_t clipping_region = context->clipping_region;
+    const GL_Pixel_t *shifting = context->shifting;
+    const GL_Bool_t *transparent = context->transparent;
+    const GL_Color_t *colors = context->palette.colors;
+
+    index = shifting[index];
+
+    if (transparent[index]) {
+        return;
+    }
+
+    GL_Quad_t drawing_region = (GL_Quad_t){
+            .x0 = origin.x,
+            .y0 = origin.y,
+            .x1 = origin.x + w - 1,
+            .y1 = origin.y + h - 1
+        };
+
+    if (drawing_region.x0 < clipping_region.x0) {
+        drawing_region.x0 = clipping_region.x0;
+    }
+    if (drawing_region.y0 < clipping_region.y0) {
+        drawing_region.y0 = clipping_region.y0;
+    }
+    if (drawing_region.x1 > clipping_region.x1) {
+        drawing_region.x1 = clipping_region.x1;
+    }
+    if (drawing_region.y1 > clipping_region.y1) {
+        drawing_region.y1 = clipping_region.y1;
+    }
+
+    const int width = drawing_region.x1 - drawing_region.x0 + 1;
+    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!
+        return;
+    }
+
+    const GL_Color_t color = colors[index];
+
+    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[drawing_region.y0] + drawing_region.x0;
+
+    const int skip = context->width - width;
+
+    for (int i = height; i; --i) {
+        for (int j = width; j; --j) {
+            *(dst++) = color;
+        }
+        dst += skip;
+    }
+}
+
 // http://www.sunshine2k.de/coding/java/TriangleRasterization/TriangleRasterization.html
 // https://www.scratchapixel.com/lessons/3d-basic-rendering/rasterization-practical-implementation/rasterization-stage
 // https://fgiesen.wordpress.com/2013/02/08/triangle-rasterization-in-practice/
