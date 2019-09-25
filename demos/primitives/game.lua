@@ -81,10 +81,10 @@ function Game:render(_) -- ratio
   elseif self.mode == 8 then
     local colors = { 13, 11, 9, 7, 5, 3, 1 }
     local y = (math.sin(System.time()) + 1.0) * 0.5 * Canvas.height()
-    Canvas.rectangle("fill", 0, y, Canvas.width() - 1, 1, 15)
+    Canvas.hline(0, y, Canvas.width() - 1, 15)
     for i, c in ipairs(colors) do
-      Canvas.rectangle("fill", 0, y - i, Canvas.width() - 1, 1, c)
-      Canvas.rectangle("fill", 0, y + i, Canvas.width() - 1, 1, c)
+      Canvas.hline(0, y - i, Canvas.width() - 1, c)
+      Canvas.hline(0, y + i, Canvas.width() - 1, c)
     end
   elseif self.mode == 9 then
     Canvas.point(4, 4, 1)
