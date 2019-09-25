@@ -183,7 +183,7 @@ static int execute(lua_State *L, const char *script)
 
 static int call(lua_State *L, Methods_t method, int nargs, int nresults)
 {
-    int index = METHOD_STACK_INDEX(method); // O F1 .. Fn T
+    int index = METHOD_STACK_INDEX(method); // T O F1 .. Fn
     if (lua_isnil(L, index)) {
         lua_pop(L, nargs); // Discard the unused arguments pushed by the caller.
         for (int i = 0; i < nresults; ++i) { // Push fake NIL results for the caller.
@@ -191,9 +191,9 @@ static int call(lua_State *L, Methods_t method, int nargs, int nresults)
         }
         return LUA_OK;
     }
-    lua_pushvalue(L, index);                // O F1 ... Fn T A1 ... An     -> O F1 ... Fn T A1 ... An F
-    lua_pushvalue(L, OBJECT_STACK_INDEX);   // O F1 ... Fn T A1 ... An F   -> O F1 ... Fn T A1 ... An F O
-    lua_rotate(L, -(nargs + 2), 2);         // O F1 ... Fn T A1 ... An F O -> O F1 ... Fn T F O A1 ... An
+    lua_pushvalue(L, index);                // T O F1 ... Fn A1 ... An     -> T O F1 ... Fn A1 ... An F
+    lua_pushvalue(L, OBJECT_STACK_INDEX);   // T O F1 ... Fn A1 ... An F   -> T O F1 ... Fn A1 ... An F O
+    lua_rotate(L, -(nargs + 2), 2);         // T O F1 ... Fn A1 ... An F O -> T O F1 ... Fn F O A1 ... An
 
 #ifdef __DEBUG_VM_CALLS__
     int called = lua_pcall(L, nargs + 1, nresults, TRACEBACK_STACK_INDEX);
