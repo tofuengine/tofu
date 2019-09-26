@@ -20,7 +20,7 @@
  * SOFTWARE.
  **/
 
-#include "canvas.h"
+#include "bank.h"
 
 #include "../core/luax.h"
 
@@ -28,9 +28,6 @@
 #include "../environment.h"
 #include "../log.h"
 #include "../gl/gl.h"
-
-#include "graphics/palettes.h"
-#include "graphics/sheets.h"
 
 #include <math.h>
 #include <string.h>

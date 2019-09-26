@@ -33,6 +33,7 @@
 #include "modules/input.h"
 #include "modules/file.h"
 #include "modules/system.h"
+#include "modules/surface.h"
 #include "modules/timer.h"
 
 static int create_module(lua_State *L, const luaL_Reg *entries)
@@ -81,6 +82,7 @@ static int graphics_loader(lua_State *L)
         { "Bank", bank_loader },
         { "Canvas", canvas_loader },
         { "Font", font_loader },
+        { "Surface", surface_loader },
         { NULL, NULL }
     };
     return create_module(L, classes);

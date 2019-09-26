@@ -408,7 +408,6 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
 #endif
                 const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[xy] + xx;
                 GL_Pixel_t index = shifting[*src];
-
                 if (!transparent[index]) {
                     GL_Color_t *dst = (GL_Color_t *)context->vram_rows[y] + x;
                     *dst = colors[index];
@@ -556,4 +555,62 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
     }
 
     arrfree(stack);
+}
+
+// https://www.youtube.com/watch?v=3FVN_Ze7bzw
+// http://www.coranac.com/tonc/text/mode7.htm
+void GL_context_blit_m7(const GL_Context_t *context, const GL_Surface_t *surface, GL_Transformation_t transformation) // TODO: add scanline callback
+{
+    const GL_Quad_t clipping_region = context->clipping_region;
+    const GL_Pixel_t *shifting = context->shifting;
+    const GL_Bool_t *transparent = context->transparent;
+    const GL_Color_t *colors = context->palette.colors;
+
+    const float h = transformation.h;
+    const float v = transformation.v;
+    const float x0 = transformation.x0;
+    const float y0 = transformation.y0;
+    const float a = transformation.a;
+    const float b = transformation.b;
+    const float c = transformation.c;
+    const float d = transformation.d;
+
+    const GL_Quad_t drawing_region = clipping_region;
+
+    const int width = drawing_region.x1 - drawing_region.x0 + 1;
+    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!
+        return;
+    }
+
+    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[clipping_region.y0] + clipping_region.x0;
+
+    const int skip = context->width - width;
+
+    for (int y = drawing_region.y0; y <= drawing_region.y1; ++y) {
+        float yi = (float)y + v - y0;
+        for (int x = drawing_region.x0; x <= drawing_region.x1; ++x) {
+            float xi = (float)x + h - x0;
+
+            float xp = (a * xi + b * yi) + x0;
+            float yp = (c * xi + d * yi) + y0;
+
+            int u = (int)xp % surface->width;
+            int v = (int)yp % surface->height;
+
+            if (u >= 0 && u < (int)surface->width && v >= 0 && v < (int)surface->height) {
+                const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[v] + u;
+                GL_Pixel_t index = shifting[*src];
+                if (!transparent[index]) {
+                    *dst = colors[index];
+                }
+            } else {
+                // TODO: implement out-of-map behaviour.
+            }
+
+            ++dst;
+        }
+
+        dst += skip;
+    }
 }

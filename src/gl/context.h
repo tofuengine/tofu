@@ -46,6 +46,12 @@ typedef struct _GL_Context_t {
     GL_Quad_t clipping_region;
 } GL_Context_t;
 
+typedef struct _GL_Transformation_t {
+    float h, v;
+    float x0, y0;
+    float a, b, c, d;
+} GL_Transformation_t;
+
 extern bool GL_context_initialize(GL_Context_t *context, size_t width, size_t height);
 extern void GL_context_terminate(GL_Context_t *context);
 
@@ -68,5 +74,7 @@ extern void GL_context_color(GL_Context_t *context, GL_Pixel_t index);
 extern void GL_context_pattern(GL_Context_t *context, uint32_t mask);
 
 extern void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t index);
+
+extern void GL_context_blit_m7(const GL_Context_t *context, const GL_Surface_t *surface, GL_Transformation_t transformation);
 
 #endif  /* __GL_CONTEXT_H__ */
