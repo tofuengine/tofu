@@ -741,7 +741,7 @@ static int canvas_triangle(lua_State *L)
         GL_primitive_line(&display->gl, (GL_Point_t){ (int)x1, (int)y1 }, (GL_Point_t){ (int)x2, (int)y2 }, index);
         GL_primitive_line(&display->gl, (GL_Point_t){ (int)x2, (int)y2 }, (GL_Point_t){ (int)x0, (int)y0 }, index);
     } else {
-        GL_primitive_filled_triangle(&display->gl, (GL_Point_t){ (int)x0, (int)y0 }, (GL_Point_t){ (int)x1, (int)y1 }, (GL_Point_t){ (int)x2, (int)y2 }, index);
+        GL_primitive_triangle(&display->gl, (GL_Point_t){ (int)x0, (int)y0 }, (GL_Point_t){ (int)x1, (int)y1 }, (GL_Point_t){ (int)x2, (int)y2 }, index);
     }
 
     return 0;
@@ -769,17 +769,18 @@ static int canvas_rectangle(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
+    double x0 = x;
+    double y0 = y;
+    double x1 = x0 + width - 1.0f;
+    double y1 = y0 + height - 1.0f;
+
     if (mode[0] == 'l') {
-        double x0 = x;
-        double y0 = y;
-        double x1 = x0 + width - 1.0f;
-        double y1 = y0 + height - 1.0f;
         GL_primitive_line(&display->gl, (GL_Point_t){ (int)x0, (int)y0 }, (GL_Point_t){ (int)x0, (int)y1 }, index);
         GL_primitive_line(&display->gl, (GL_Point_t){ (int)x0, (int)y1 }, (GL_Point_t){ (int)x1, (int)y1 }, index);
         GL_primitive_line(&display->gl, (GL_Point_t){ (int)x1, (int)y1 }, (GL_Point_t){ (int)x1, (int)y0 }, index);
         GL_primitive_line(&display->gl, (GL_Point_t){ (int)x1, (int)y0 }, (GL_Point_t){ (int)x0, (int)y0 }, index);
     } else {
-        GL_primitive_filled_rectangle(&display->gl, (GL_Point_t){ (int)x, (int)y }, width, height, index);
+        GL_primitive_quad(&display->gl, (GL_Quad_t){ (int)x0, (int)y0, (int)x1, (int)y1 }, index);
     }
 
     return 0;

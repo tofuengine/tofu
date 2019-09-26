@@ -238,7 +238,7 @@ void GL_primitive_vline(const GL_Context_t *context, GL_Point_t origin, size_t h
     }
 }
 
-void GL_primitive_filled_rectangle(const GL_Context_t *context, GL_Point_t origin, size_t w, size_t h, GL_Pixel_t index)
+void GL_primitive_quad(const GL_Context_t *context, GL_Quad_t quad, GL_Pixel_t index)
 {
     const GL_Quad_t clipping_region = context->clipping_region;
     const GL_Pixel_t *shifting = context->shifting;
@@ -251,12 +251,7 @@ void GL_primitive_filled_rectangle(const GL_Context_t *context, GL_Point_t origi
         return;
     }
 
-    GL_Quad_t drawing_region = (GL_Quad_t){
-            .x0 = origin.x,
-            .y0 = origin.y,
-            .x1 = origin.x + w - 1,
-            .y1 = origin.y + h - 1
-        };
+    GL_Quad_t drawing_region = quad; // use `imin()` and `imax()` to get the AABB independent of ordering?
 
     if (drawing_region.x0 < clipping_region.x0) {
         drawing_region.x0 = clipping_region.x0;
@@ -295,7 +290,7 @@ void GL_primitive_filled_rectangle(const GL_Context_t *context, GL_Point_t origi
 // https://www.scratchapixel.com/lessons/3d-basic-rendering/rasterization-practical-implementation/rasterization-stage
 // https://fgiesen.wordpress.com/2013/02/08/triangle-rasterization-in-practice/
 // https://github.com/dpethes/2D-rasterizer/blob/master/rasterizer2d.pas
-void GL_primitive_filled_triangle(const GL_Context_t *context, GL_Point_t a, GL_Point_t b, GL_Point_t c, GL_Pixel_t index)
+void GL_primitive_triangle(const GL_Context_t *context, GL_Point_t a, GL_Point_t b, GL_Point_t c, GL_Pixel_t index)
 {
     const GL_Quad_t clipping_region = context->clipping_region;
     const GL_Pixel_t *shifting = context->shifting;
