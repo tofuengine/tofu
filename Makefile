@@ -80,7 +80,7 @@ palette: $(TARGET)
 .PHONY: clean
 clean:
 	@$(RM) $(OBJECTS)
-	@$(RM) $(SCRIPTED)
+	@$(RM) $(BLOBS)
 	@echo "Cleanup complete!"
 
 .PHONY: remove
