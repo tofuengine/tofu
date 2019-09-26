@@ -238,7 +238,7 @@ void GL_primitive_vline(const GL_Context_t *context, GL_Point_t origin, size_t h
     }
 }
 
-void GL_primitive_quad(const GL_Context_t *context, GL_Quad_t quad, GL_Pixel_t index)
+void GL_primitive_rectangle(const GL_Context_t *context, GL_Rectangle_t rectangle, GL_Pixel_t index)
 {
     const GL_Quad_t clipping_region = context->clipping_region;
     const GL_Pixel_t *shifting = context->shifting;
@@ -251,7 +251,12 @@ void GL_primitive_quad(const GL_Context_t *context, GL_Quad_t quad, GL_Pixel_t i
         return;
     }
 
-    GL_Quad_t drawing_region = quad; // use `imin()` and `imax()` to get the AABB independent of ordering?
+    GL_Quad_t drawing_region = (GL_Quad_t){
+            .x0 = rectangle.x,
+            .y0 = rectangle.y,
+            .x1 = rectangle.x + rectangle.width - 1,
+            .y1 = rectangle.y + rectangle.height - 1
+        };
 
     if (drawing_region.x0 < clipping_region.x0) {
         drawing_region.x0 = clipping_region.x0;
