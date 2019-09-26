@@ -78,6 +78,11 @@ palette: $(TARGET)
 	@$(ANALYZER) $(AFLAGS) ./demos/palette
 	@./$(TARGET) ./demos/palette
 
+mode7: $(TARGET)
+	@echo "Launching Mode7 application!"
+	@$(ANALYZER) $(AFLAGS) ./demos/mode7
+	@./$(TARGET) ./demos/mode7
+
 .PHONY: clean
 clean:
 	@$(RM) $(OBJECTS)

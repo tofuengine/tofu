@@ -8,11 +8,11 @@ local Class = require("tofu.util").Class
 local Game = Class.define()
 
 function Game:__ctor()
-  Canvas.palette("gameboy")
+  Canvas.palette("arne-32")
   Canvas.background(0)
 
   self.surface = Surface.new("assets/map.png")
-  self.font = Font.default(15, 3)
+  self.font = Font.default(0, 1)
   self.time = 0
   self.speed = 1.0
   self.running = true
@@ -37,19 +37,21 @@ function Game:update(delta_time)
   end
   local t = self.time
   local cos, sin = math.cos(t), math.sin(t)
-  local tx, ty = (math.cos(t) + 1) * 0.5 * self.surface:width(), 0
-  local s = (math.sin(t) + 1) * 0.5 * 3 + 0.125
-  local x0 = tx
-  local y0 = ty
-  local a, b = cos * s, sin
-  local c, d = -sin, cos * s
+  local tx, ty = self.surface:width() * 0.5, self.surface:height() * 0.5
+  local sx, sy = (math.sin(t * 2.3) + 1) * 0.5 * 4, (math.cos(t * 3.2) + 1) * 0.5 * 4
+  local x0, y0 = tx, ty
+--  local a, b = s, 0
+--  local c, d = 0, s
+  local a, b = cos * sx, sin * sx
+  local c, d = -sin * sy, cos * sy
   self.surface:transformation(x0, y0, a, b, c, d)
 end
 
 function Game:render(_)
   Canvas.clear()
 
-  self.surface:blit(128, 128)
+--  self.surface:blit(self.surface:width() / 2, self.surface:height() / 2)
+  self.surface:blit(0, 0)
 
   self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
 end
