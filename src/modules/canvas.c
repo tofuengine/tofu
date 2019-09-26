@@ -62,55 +62,6 @@ static int canvas_rectangle(lua_State *L);
 
 // TODO: color index is optional, if not present use the current (drawstate) pen color
 
-static const char _canvas_script[] =
-    "local Canvas = {}\n"
-    "\n"
-    "function Canvas.polyline(vertices, index)\n"
-    "  local count = #vertices\n"
-    "  if count < 4 then -- At least two vertices are required for a line!\n"
-    "    return\n"
-    "  end\n"
-    "  local x0, y0 = vertices[1], vertices[2]\n"
-    "  for i = 3, count, 2 do\n"
-    "    local x1, y1 = vertices[i], vertices[i + 1]\n"
-    "    Canvas.line(x0, y0, x1, y1, index)\n"
-    "    x0, y0 = x1, y1\n"
-    "  end\n"
-    "end\n"
-    "\n"
-    "function Canvas.square(mode, x, y, size, index)\n"
-    "  Canvas.rectangle(mode, x, y, size, size, index)\n"
-    "end\n"
-    "\n"
-    "function Canvas.circle(mode, center_x, center_y, radius, index)\n"
-    "  local r, cx, cy = math.floor(radius), math.floor(center_x), math.floor(center_y)\n"
-    "  local x, y, err = -r, 0, 2 - 2 * r\n"
-    "  repeat\n"
-    "    if mode == \"line\" then\n"
-    "      Canvas.point(cx - x, cy + y, index)\n"
-    "      Canvas.point(cx - y, cy - x, index)\n"
-    "      Canvas.point(cx + x, cy - y, index)\n"
-    "      Canvas.point(cx + y, cy + x, index)\n"
-    "    else\n"
-    "      local w = math.abs(2 * x) + 1\n"
-    "      Canvas.hline(cx + x, cy + y, w, index)\n"
-    "      Canvas.hline(cx + x, cy - y, w, index)\n"
-    "    end\n"
-    "    r = err\n"
-    "    if r <= y then\n"
-    "      y = y + 1\n"
-    "      err = err + y * 2 + 1\n"
-    "    end\n"
-    "    if r > x or err > y then\n"
-    "      x = x + 1\n"
-    "      err = err + x * 2 + 1\n"
-    "    end\n"
-    "  until x == 0\n"
-    "end\n"
-    "\n"
-    "return Canvas\n"
-;
-
 static const struct luaL_Reg _canvas_functions[] = {
     { "color_to_index", canvas_color_to_index },
     { "screenshot", canvas_screenshot },
@@ -139,10 +90,12 @@ static const luaX_Const _canvas_constants[] = {
     { NULL }
 };
 
+#include "canvas.inc"
+
 int canvas_loader(lua_State *L)
 {
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, _canvas_script, _canvas_functions, _canvas_constants, nup, LUAX_CLASS(Canvas_Class_t));
+    return luaX_newmodule(L, (const char *)_canvas_lua, _canvas_functions, _canvas_constants, nup, LUAX_CLASS(Canvas_Class_t));
 }
 
 static int canvas_color_to_index(lua_State *L)

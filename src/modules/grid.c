@@ -71,6 +71,8 @@ static const luaX_Const _grid_constants[] = {
     { NULL }
 };
 
+#include "grid.inc"
+
 int grid_loader(lua_State *L)
 {
     int nup = luaX_unpackupvalues(L);

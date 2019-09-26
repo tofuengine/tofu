@@ -51,6 +51,8 @@ static const luaX_Const _timer_constants[] = {
     { NULL }
 };
 
+#include "timer.inc"
+
 int timer_loader(lua_State *L)
 {
     int nup = luaX_unpackupvalues(L);

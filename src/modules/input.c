@@ -45,6 +45,7 @@ static const struct luaL_Reg _input_functions[] = {
     { NULL, NULL }
 };
 
+// TODO: implement triggers delay/repeat.
 static const luaX_Const _input_constants[] = {
     { "UP", LUA_CT_INTEGER, { .i = DISPLAY_KEY_UP } },
     { "DOWN", LUA_CT_INTEGER, { .i = DISPLAY_KEY_DOWN } },
@@ -58,6 +59,8 @@ static const luaX_Const _input_constants[] = {
     { "START", LUA_CT_INTEGER, { .i = DISPLAY_KEY_START } },
     { NULL }
 };
+
+#include "input.inc"
 
 int input_loader(lua_State *L)
 {

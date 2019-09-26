@@ -14,6 +14,8 @@ LFLAGS=-Wall -Wextra -Werror -Lexternal/GLFW -lglfw3 -lm  -ldl -lpthread -lrt -l
 SOURCES:= $(wildcard src/*.c  src/core/*.c src/gl/*.c src/modules/*.c src/modules/graphics/*.c external/glad/*.c external/lua/*.c external/spleen/*.c external/stb/*.c)
 INCLUDES:= $(wildcard src/*.h src/core/*.h src/gl/*.h src/modules/*.h src/modules/graphics/*.h external/glad/*.h external/GLFW/*.h external/lua/*.h external/spleen/*.h external/stb/*.h)
 OBJECTS:= $(SOURCES:%.c=%.o)
+SCRIPTS:= $(wildcard src/modules/*.lua)
+BLOBS:= $(SCRIPTS:%.lua=%.inc)
 RM=rm -f
 
 default: $(TARGET)
@@ -23,9 +25,17 @@ $(TARGET): $(OBJECTS)
 	@$(LINKER) $(OBJECTS) $(LFLAGS) -o $@
 	@echo "Linking complete!"
 
-$(OBJECTS): %.o : %.c $(INCLUDES) Makefile
+# The dependency upon `Makefile` is redundant, since scripts are bound to it.
+$(OBJECTS): %.o : %.c $(BLOBS) $(INCLUDES) Makefile
 	@$(COMPILER) $(CFLAGS) $(CWARNINGS) -c $< -o $@
 	@echo "Compiled "$<" successfully!"
+
+# Define a rule to automatically convert `.lua` script into an embeddable-ready `.inc` file.
+# `.inc` files also depend upon `Makefile` to be rebuild in case of tweakings.
+$(BLOBS): %.inc: %.lua Makefile
+	@luacheck -q $<
+	@xxd -i $< | sed --expression='s/src_modules//g' > $@
+	@echo "Generated "$@" from "$<" successfully!"
 
 primitives: $(TARGET)
 	@echo "Launching Primitives application!"
@@ -70,6 +80,7 @@ palette: $(TARGET)
 .PHONY: clean
 clean:
 	@$(RM) $(OBJECTS)
+	@$(RM) $(SCRIPTED)
 	@echo "Cleanup complete!"
 
 .PHONY: remove

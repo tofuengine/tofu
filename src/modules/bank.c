@@ -59,6 +59,8 @@ static const luaX_Const _bank_constants[] = {
     { NULL }
 };
 
+#include "bank.inc"
+
 int bank_loader(lua_State *L)
 {
     int nup = luaX_unpackupvalues(L);

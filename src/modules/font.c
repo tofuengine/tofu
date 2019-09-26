@@ -44,18 +44,6 @@ static int font_new(lua_State *L);
 static int font_gc(lua_State *L);
 static int font_write(lua_State *L);
 
-static const char _font_script[] =
-    "local Font = {}\n"
-    "\n"
-    "--Font.__index = Font\n"
-    "\n"
-    "Font.default = function(background_color, foreground_color)\n"
-    "  return Font.new(\"5x8\", 0, 0, background_color, foreground_color)\n"
-    "end\n"
-    "\n"
-    "return Font\n"
-;
-
 static const struct luaL_Reg _font_functions[] = {
     { "new", font_new },
     {"__gc", font_gc },
@@ -67,10 +55,12 @@ static const luaX_Const _font_constants[] = {
     { NULL }
 };
 
+#include "font.inc"
+
 int font_loader(lua_State *L)
 {
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, _font_script, _font_functions, _font_constants, nup, LUAX_CLASS(Font_Class_t));
+    return luaX_newmodule(L, (const char *)_font_lua, _font_functions, _font_constants, nup, LUAX_CLASS(Font_Class_t));
 }
 
 static void to_font_atlas_callback(void *parameters, GL_Surface_t *surface, const void *data)

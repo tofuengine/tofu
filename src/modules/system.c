@@ -49,6 +49,8 @@ static const luaX_Const _system_constants[] = {
     { NULL }
 };
 
+#include "system.inc"
+
 int system_loader(lua_State *L)
 {
     int nup = luaX_unpackupvalues(L);

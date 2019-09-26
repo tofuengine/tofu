@@ -17,10 +17,11 @@ function Canvas.square(mode, x, y, size, index)
   Canvas.rectangle(mode, x, y, size, size, index)
 end
 
-function Canvas.circle(mode, cx, cy, radius, index)
-  local r, x, y, err = radius, -radius, 0, 2 - 2 * radius
+function Canvas.circle(mode, center_x, center_y, radius, index)
+  local r, cx, cy = math.floor(radius), math.floor(center_x), math.floor(center_y)
+  local x, y, err = -r, 0, 2 - 2 * r
   repeat
-    if mode == line then
+    if mode == "line" then
       Canvas.point(cx - x, cy + y, index)
       Canvas.point(cx - y, cy - x, index)
       Canvas.point(cx + x, cy - y, index)
