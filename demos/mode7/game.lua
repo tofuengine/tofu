@@ -31,10 +31,11 @@ function Game:input()
 end
 
 function Game:update(delta_time)
-  self.time = self.time + delta_time * self.speed
   if not self.running then
     return
   end
+  self.time = self.time + delta_time * self.speed
+
   local t = self.time
   local cos, sin = math.cos(t), math.sin(t)
   local tx, ty = self.surface:width() * 0.5, self.surface:height() * 0.5

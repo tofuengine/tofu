@@ -590,19 +590,22 @@ void GL_context_blit_m7(const GL_Context_t *context, const GL_Surface_t *surface
     for (int y = drawing_region.y0; y <= drawing_region.y1; ++y) {
         float yi = (float)y + v - y0;
         for (int x = drawing_region.x0; x <= drawing_region.x1; ++x) {
+#ifdef __DEBUG_GRAPHICS__
+            pixel(context, x, y, x + y);
+#endif
             float xi = (float)x + h - x0;
 
             float xp = (a * xi + b * yi) + x0;
             float yp = (c * xi + d * yi) + y0;
 
-            int u = (int)xp;
-            int v = (int)yp;
+            int sx = (int)xp;
+            int sy = (int)yp;
 #define __MODE__ 1
 #if __MODE__ == 1
-            u %= surface->width;
-            v %= surface->height;
+            sx %= surface->width;
+            sy %= surface->height;
 
-            const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[v] + u;
+            const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[sy] + sx;
             GL_Pixel_t index = shifting[*src];
             if (!transparent[index]) {
                 *dst = colors[index];
