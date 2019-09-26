@@ -583,7 +583,7 @@ void GL_context_blit_m7(const GL_Context_t *context, const GL_Surface_t *surface
         return;
     }
 
-    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[clipping_region.y0] + clipping_region.x0;
+    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[drawing_region.y0] + drawing_region.x0;
 
     const int skip = context->width - width;
 
@@ -595,18 +595,46 @@ void GL_context_blit_m7(const GL_Context_t *context, const GL_Surface_t *surface
             float xp = (a * xi + b * yi) + x0;
             float yp = (c * xi + d * yi) + y0;
 
-            int u = (int)xp % surface->width;
-            int v = (int)yp % surface->height;
+            int u = (int)xp;
+            int v = (int)yp;
+#define __MODE__ 1
+#if __MODE__ == 1
+            u %= surface->width;
+            v %= surface->height;
 
+            const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[v] + u;
+            GL_Pixel_t index = shifting[*src];
+            if (!transparent[index]) {
+                *dst = colors[index];
+            }
+#elif __MODE__ == 2
+            if (u < 0) {
+                u = 0;
+            } else
+            if (u >= (int)surface->width) {
+                u = (int)surface->width - 1;
+            }
+            if (v < 0) {
+                v = 0;
+            } else
+            if (v >= (int)surface->height) {
+                v = (int)surface->height - 1;
+            }
+
+            const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[v] + u;
+            GL_Pixel_t index = shifting[*src];
+            if (!transparent[index]) {
+                *dst = colors[index];
+            }
+#else
             if (u >= 0 && u < (int)surface->width && v >= 0 && v < (int)surface->height) {
                 const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[v] + u;
                 GL_Pixel_t index = shifting[*src];
                 if (!transparent[index]) {
                     *dst = colors[index];
                 }
-            } else {
-                // TODO: implement out-of-map behaviour.
             }
+#endif
 
             ++dst;
         }
