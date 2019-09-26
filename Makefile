@@ -1,7 +1,7 @@
 TARGET=tofu
 
 ANALYZER=luacheck
-AFLAGS=--no-self --std lua53
+AFLAGS=--no-self --std lua53 -q
 
 COMPILER=cc
 CWARNINGS=-Wall -Wextra -Werror -Wno-unused-parameter
@@ -33,49 +33,50 @@ $(OBJECTS): %.o : %.c $(BLOBS) $(INCLUDES) Makefile
 # Define a rule to automatically convert `.lua` script into an embeddable-ready `.inc` file.
 # `.inc` files also depend upon `Makefile` to be rebuild in case of tweakings.
 $(BLOBS): %.inc: %.lua Makefile
-	@luacheck -q $<
-	@xxd -i $< | sed --expression='s/src_modules//g' > $@
+	@$(ANALYZER) $(AFLAGS) $<
+	@xxd -i $< | sed -e 's/src_modules//g' > $@
 	@echo "Generated "$@" from "$<" successfully!"
+#	@xxd -i $< | sed -e 's/src_modules//g' -e 's/unsigned/static unsigned/g' > $@
 
 primitives: $(TARGET)
 	@echo "Launching Primitives application!"
-	$(ANALYZER) $(AFLAGS) ./demos/primitives
+	@$(ANALYZER) $(AFLAGS) ./demos/primitives
 	./$(TARGET) ./demos/primitives
 
 bunnymark: $(TARGET)
 	@echo "Launching Bunnymark application!"
-	$(ANALYZER) $(AFLAGS) ./demos/bunnymark
-	./$(TARGET) ./demos/bunnymark
+	@$(ANALYZER) $(AFLAGS) ./demos/bunnymark
+	@./$(TARGET) ./demos/bunnymark
 
 fire: $(TARGET)
 	@echo "Launching Fire application!"
-	$(ANALYZER) $(AFLAGS) ./demos/fire
-	./$(TARGET) ./demos/fire
+	@$(ANALYZER) $(AFLAGS) ./demos/fire
+	@./$(TARGET) ./demos/fire
 
 tiled-map: $(TARGET)
 	@echo "Launching Tiled-Map application!"
-	$(ANALYZER) $(AFLAGS) ./demos/tiled-map
-	./$(TARGET) ./demos/tiled-map
+	@$(ANALYZER) $(AFLAGS) ./demos/tiled-map
+	@./$(TARGET) ./demos/tiled-map
 
 timers: $(TARGET)
 	@echo "Launching Timers application!"
-	$(ANALYZER) $(AFLAGS) ./demos/timers
-	./$(TARGET) ./demos/timers
+	@$(ANALYZER) $(AFLAGS) ./demos/timers
+	@./$(TARGET) ./demos/timers
 
 postfx: $(TARGET)
 	@echo "Launching PostFX application!"
-	$(ANALYZER) $(AFLAGS) ./demos/postfx
-	./$(TARGET) ./demos/postfx
+	@$(ANALYZER) $(AFLAGS) ./demos/postfx
+	@./$(TARGET) ./demos/postfx
 
 spritestack: $(TARGET)
 	@echo "Launching Sprite-Stack application!"
-	$(ANALYZER) $(AFLAGS) ./demos/spritestack
-	./$(TARGET) ./demos/spritestack
+	@$(ANALYZER) $(AFLAGS) ./demos/spritestack
+	@./$(TARGET) ./demos/spritestack
 
 palette: $(TARGET)
 	@echo "Launching Palette application!"
-	$(ANALYZER) $(AFLAGS) ./demos/palette
-	./$(TARGET) ./demos/palette
+	@$(ANALYZER) $(AFLAGS) ./demos/palette
+	@./$(TARGET) ./demos/palette
 
 .PHONY: clean
 clean:
