@@ -58,7 +58,7 @@ function Game:input()
   end
 end
 
-function Game:update(delta_time)
+function Game:update(_)
   local index = (math.floor(System.time() * 0.2) % #PALETTES) + 1
   if self.palette ~= index then
     self.palette = index
@@ -66,7 +66,7 @@ function Game:update(delta_time)
   end
 end
 
-function Game:render(ratio)
+function Game:render(_)
   local time = System.time()
   Canvas.clear()
 

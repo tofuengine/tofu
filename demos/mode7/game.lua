@@ -12,7 +12,7 @@ function Game:__ctor()
   Canvas.background(0)
 
   self.surface = Surface.new("assets/map.png")
-  self.font = Font.default(0, 1)
+  self.font = Font.default(0, 31)
   self.time = 0
   self.speed = 1.0
   self.running = true
@@ -38,19 +38,21 @@ function Game:update(delta_time)
 
   local t = self.time
   local cos, sin = math.cos(t), math.sin(t)
-  local tx, ty = self.surface:width() * 0.5, self.surface:height() * 0.5
-  local sx, sy = (math.sin(t * 2.3) + 1) * 0.5 * 4, (math.cos(t * 3.2) + 1) * 0.5 * 4
-  local x0, y0 = tx, ty
+  local sx, sy = (math.sin(t * 2.3) + 1) * 0.5 * 2 + 0.5, (math.cos(t * 3.2) + 1) * 0.5 * 2 + 0.5
+  local x0, y0 = self.surface:width() * 0.5, self.surface:height() * 0.5
 --  local a, b = s, 0
 --  local c, d = 0, s
-  local a, b = cos * sx, sin * sx
-  local c, d = -sin * sy, cos * sy
+  local a, b = cos / sx, sin / sx
+  local c, d = -sin / sy, cos / sy
   self.surface:transformation(x0, y0, a, b, c, d)
 end
 
 function Game:render(_)
   Canvas.clear()
 
+--  local t = self.time
+--  local x, y = (math.sin(t) + 1) * 0.5 * self.surface:width(), (math.cos(t) + 1) * 0.5 * self.surface:height()
+--  self.surface:blit(x, y)
 --  self.surface:blit(self.surface:width() / 2, self.surface:height() / 2)
   self.surface:blit(0, 0)
 

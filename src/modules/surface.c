@@ -115,6 +115,10 @@ static int surface_new(lua_State *L)
                     .x0 = 0.0f, .y0 = 0.0f,
                     .a = 1.0f, .b = 0.0f,
                     .c = 0.0f, .d = 1.0f,
+                    .clamp = GL_CLAMP_MODE_REPEAT,
+                    .perspective = true,
+                    .elevation = 0.5f,
+                    .horizon = 0.25f
                 }
         };
     Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface allocated as #%p", pathfile, instance);

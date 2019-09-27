@@ -38,6 +38,11 @@
 
 #define PIXEL(c, x, y)  ((GL_Color_t *)(c)->vram_rows[(y)] + (x))
 
+static int iabs(int v)
+{
+    return v > 0 ? v : -v;
+}
+
 #ifdef __DEBUG_GRAPHICS__
 static void pixel(const GL_Context_t *context, int x, int y, int index)
 {
@@ -281,6 +286,7 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
 }
 
 // https://web.archive.org/web/20190305223938/http://www.drdobbs.com/architecture-and-design/fast-bitmap-rotation-and-scaling/184416337
+// https://www.flipcode.com/archives/The_Art_of_Demomaking-Issue_10_Roto-Zooming.shtml
 void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y, float angle, float anchor_x, float anchor_y)
 {
     const GL_Quad_t clipping_region = context->clipping_region;
@@ -559,7 +565,7 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
 
 // https://www.youtube.com/watch?v=3FVN_Ze7bzw
 // http://www.coranac.com/tonc/text/mode7.htm
-void GL_context_blit_m7(const GL_Context_t *context, const GL_Surface_t *surface, GL_Transformation_t transformation) // TODO: add scanline callback
+void GL_context_blit_m7(const GL_Context_t *context, const GL_Surface_t *surface, GL_Transformation_t transformation) // TODO: add scanline callback or op-table
 {
     const GL_Quad_t clipping_region = context->clipping_region;
     const GL_Pixel_t *shifting = context->shifting;
@@ -574,8 +580,21 @@ void GL_context_blit_m7(const GL_Context_t *context, const GL_Surface_t *surface
     const float b = transformation.b;
     const float c = transformation.c;
     const float d = transformation.d;
+    const int clamp = transformation.clamp;
+    const float elevation = transformation.elevation;
+    const float horizon = transformation.horizon;
+    const bool perspective = transformation.perspective;
 
-    const GL_Quad_t drawing_region = clipping_region;
+    const int yh = perspective
+        ? (float)(clipping_region.y1 - clipping_region.y0 + 1) * horizon
+        : -1;
+
+    const GL_Quad_t drawing_region = (GL_Quad_t) {
+        .x0 = clipping_region.x0,
+        .y0 = clipping_region.y0 + yh + 1, // Skip the horizon line.
+        .x1 = clipping_region.x1,
+        .y1 = clipping_region.y1
+    };
 
     const int width = drawing_region.x1 - drawing_region.x0 + 1;
     const int height = drawing_region.y1 - drawing_region.y0 + 1;
@@ -583,61 +602,65 @@ void GL_context_blit_m7(const GL_Context_t *context, const GL_Surface_t *surface
         return;
     }
 
+    const int sminx = 0;
+    const int sminy = 0;
+    const int smaxx = surface->width - 1;
+    const int smaxy = surface->height - 1;
+
+    const int ya = (float)height * elevation;
+
     GL_Color_t *dst = (GL_Color_t *)context->vram_rows[drawing_region.y0] + drawing_region.x0;
 
     const int skip = context->width - width;
 
     for (int y = drawing_region.y0; y <= drawing_region.y1; ++y) {
-        float yi = (float)y + v - y0;
+        const float yi = (float)(y - yh) + v - y0;
+
+        const float p = perspective
+            ? (float)ya / (float)(y - yh)
+            : 1.0f;
+
+        const float pa = p * a; float pb =  p * b;
+        const float pc = p * c; float pd =  p * d;
+
         for (int x = drawing_region.x0; x <= drawing_region.x1; ++x) {
 #ifdef __DEBUG_GRAPHICS__
             pixel(context, x, y, x + y);
 #endif
-            float xi = (float)x + h - x0;
+            const float xi = (float)x + h - x0;
 
-            float xp = (a * xi + b * yi) + x0;
-            float yp = (c * xi + d * yi) + y0;
+            const float xp = (pa * xi + pb * yi) + x0;
+            const float yp = (pc * xi + pd * yi) + y0;
 
             int sx = (int)xp;
             int sy = (int)yp;
-#define __MODE__ 1
-#if __MODE__ == 1
-            sx %= surface->width;
-            sy %= surface->height;
 
-            const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[sy] + sx;
-            GL_Pixel_t index = shifting[*src];
-            if (!transparent[index]) {
-                *dst = colors[index];
-            }
-#elif __MODE__ == 2
-            if (u < 0) {
-                u = 0;
+            if (clamp == GL_CLAMP_MODE_REPEAT) {
+                sx = iabs(sx) % surface->width;
+                sy = iabs(sy) % surface->height;
             } else
-            if (u >= (int)surface->width) {
-                u = (int)surface->width - 1;
-            }
-            if (v < 0) {
-                v = 0;
-            } else
-            if (v >= (int)surface->height) {
-                v = (int)surface->height - 1;
+            if (clamp == GL_CLAMP_MODE_EDGE) {
+                if (sx < sminx) {
+                    sx = sminx;
+                } else
+                if (sx > smaxx) {
+                    sx = smaxx;
+                }
+                if (sy < sminy) {
+                    sy = sminy;
+                } else
+                if (sy > smaxy) {
+                    sy = smaxy;
+                }
             }
 
-            const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[v] + u;
-            GL_Pixel_t index = shifting[*src];
-            if (!transparent[index]) {
-                *dst = colors[index];
-            }
-#else
-            if (u >= 0 && u < (int)surface->width && v >= 0 && v < (int)surface->height) {
-                const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[v] + u;
+            if (sx >= sminx && sx <= smaxx && sy >= sminy && sy <= smaxy) {
+                const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[sy] + sx;
                 GL_Pixel_t index = shifting[*src];
                 if (!transparent[index]) {
                     *dst = colors[index];
                 }
             }
-#endif
 
             ++dst;
         }

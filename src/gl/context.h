@@ -46,10 +46,20 @@ typedef struct _GL_Context_t {
     GL_Quad_t clipping_region;
 } GL_Context_t;
 
+typedef enum _GL_Clamp_Modes_t {
+    GL_CLAMP_MODE_BORDER,
+    GL_CLAMP_MODE_EDGE,
+    GL_CLAMP_MODE_REPEAT
+} GL_Clamp_Modes_t;
+
 typedef struct _GL_Transformation_t {
     float h, v;
     float x0, y0;
     float a, b, c, d;
+    GL_Clamp_Modes_t clamp;
+    bool perspective;
+    float elevation;
+    float horizon;
 } GL_Transformation_t;
 
 extern bool GL_context_initialize(GL_Context_t *context, size_t width, size_t height);
