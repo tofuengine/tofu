@@ -585,13 +585,17 @@ void GL_context_blit_m7(const GL_Context_t *context, const GL_Surface_t *surface
     const float horizon = transformation.horizon;
     const bool perspective = transformation.perspective;
 
-    const int yh = perspective
+    const float yh = perspective
         ? (float)(clipping_region.y1 - clipping_region.y0 + 1) * horizon
-        : -1;
+        : 0.0f;
+
+    const int offset_y = perspective
+        ? (int)yh + 1
+        : 0;
 
     const GL_Quad_t drawing_region = (GL_Quad_t) {
         .x0 = clipping_region.x0,
-        .y0 = clipping_region.y0 + yh + 1, // Skip the horizon line.
+        .y0 = clipping_region.y0 + offset_y, // Skip the horizon line.
         .x1 = clipping_region.x1,
         .y1 = clipping_region.y1
     };
@@ -607,17 +611,17 @@ void GL_context_blit_m7(const GL_Context_t *context, const GL_Surface_t *surface
     const int smaxx = surface->width - 1;
     const int smaxy = surface->height - 1;
 
-    const int ya = (float)height * elevation;
+    const float ya = (float)height * elevation;
 
     GL_Color_t *dst = (GL_Color_t *)context->vram_rows[drawing_region.y0] + drawing_region.x0;
 
     const int skip = context->width - width;
 
     for (int y = drawing_region.y0; y <= drawing_region.y1; ++y) {
-        const float yi = (float)(y - yh) + v - y0;
+        const float yi = ((float)y - yh) + v - y0;
 
         const float p = perspective
-            ? (float)ya / (float)(y - yh)
+            ? ya / (float)(y - yh)
             : 1.0f;
 
         const float pa = p * a; float pb =  p * b;
