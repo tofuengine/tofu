@@ -78,6 +78,7 @@ typedef struct _Display_t {
     int window_width, window_height, window_scale;
     int physical_width, physical_height;
 
+    void *vram; // Temporary buffer to create the OpenGL texture from `GL_Pixel_t` array.
     GLuint vram_texture;
     GL_Quad_t vram_destination;
 
@@ -86,7 +87,6 @@ typedef struct _Display_t {
 
     GL_Palette_t palette;
     GL_Context_t gl;
-    void *vram;
 } Display_t;
 
 extern bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title);

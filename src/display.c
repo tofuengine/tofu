@@ -254,7 +254,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     glfwSetKeyCallback(display->window, key_callback);
     glfwSetInputMode(display->window, GLFW_CURSOR, configuration->hide_cursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
 
-    if (!GL_context_initialize(&display->gl, configuration->width, configuration->height)) {
+    if (!GL_context_create(&display->gl, configuration->width, configuration->height)) {
         Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't initialize GL");
         glfwDestroyWindow(display->window);
         glfwTerminate();
@@ -280,10 +280,18 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         glfwSetWindowMonitor(display->window, glfwGetPrimaryMonitor(), position.x, position.y, display->physical_width, display->physical_height, GLFW_DONT_CARE);
     }
 
+    display->vram = malloc(display->configuration.width * display->configuration.width * sizeof(GL_Color_t));
+    if (!display->vram) {
+        Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't allocate VRAM buffer");
+        glfwDestroyWindow(display->window);
+        glfwTerminate();
+    }
+    Log_write(LOG_LEVELS_DEBUG, "<GL> VRAM allocated at #%p (%dx%d)", display->vram, display->configuration.width, display->configuration.height);
+
     glGenTextures(1, &display->vram_texture); //allocate the memory for texture
     if (display->vram_texture == 0) {
         Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't allocate VRAM texture");
-        GL_context_terminate(&display->gl);
+        GL_context_delete(&display->gl);
         glfwDestroyWindow(display->window);
         glfwTerminate();
         return false;
@@ -299,8 +307,6 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, display->configuration.width, display->configuration.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     Log_write(LOG_LEVELS_DEBUG, "<GL> texture created w/ id #%d (%dx%d)", display->vram_texture, display->configuration.width, display->configuration.height);
 
-    display->vram = malloc(display->configuration.width * display->configuration.width * sizeof(GL_Color_t));
-
     for (size_t i = 0; i < Display_Programs_t_CountOf; ++i) {
         const Program_Data_t *data = &_programs_data[i];
         if (!data->vertex_shader || !data->fragment_shader) {
@@ -311,7 +317,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
             !GL_program_attach(&display->programs[i], data->fragment_shader, GL_PROGRAM_SHADER_FRAGMENT)) {
             Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't initialize shaders");
             glDeleteBuffers(1, &display->vram_texture);
-            GL_context_terminate(&display->gl);
+            GL_context_delete(&display->gl);
             glfwDestroyWindow(display->window);
             glfwTerminate();
             return false;
@@ -337,12 +343,13 @@ void Display_terminate(Display_t *display)
         GL_program_delete(&display->programs[i]);
     }
 
-    free(display->vram);
-
     glDeleteBuffers(1, &display->vram_texture);
     Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> texture w/ id #%d deleted", display->vram_texture);
 
-    GL_context_terminate(&display->gl);
+    free(display->vram);
+    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> VRAM buffer #%p deallocated", display->vram);
+
+    GL_context_delete(&display->gl);
 
     glfwDestroyWindow(display->window);
     Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> windows #%p destroyed", display->window);
