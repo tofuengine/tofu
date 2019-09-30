@@ -387,47 +387,60 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const int dmaxx = (int)fmin(aabb_x1 + px, (float)clipping_region.x1);
     const int dmaxy = (int)fmin(aabb_y1 + py, (float)clipping_region.y1);
 
+    const int width = dmaxx - dminx + 1;
+    const int height = dmaxy - dminy + 1;
+    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!
+        return;
+    }
+
     const int sminx = area.x;
     const int sminy = area.y;
     const int smaxx = area.x + area.width - 1;
     const int smaxy = area.y + area.height - 1;
 
-    const float M11 = c / scale_x; // Combine (inverse) rotation and *then* scaling matrices.
+    const float M11 = c / scale_x;  // Combine (inverse) rotation and *then* scaling matrices.
     const float M12 = s / scale_x;  // | 1/sx    0 | |  c s |
     const float M21 = -s / scale_y; // |           | |      |
     const float M22 = c / scale_y;  // |    0 1/sy | | -s c |
 
     const float tlx = (dminx - px); // Transform the top-left corner of the to-be-drawn rectangle to texture space.
-    const float tly = (dminy - py);
+    const float tly = (dminy - py); // (could differ from AABB x0 due to clipping, we need to compute it again)
     float ou = (tlx * M11 + tly * M12) + stx + ox; // Offset to the source texture quad.
     float ov = (tlx * M21 + tly * M22) + sty + oy;
 
-    for (int y = dminy; y <= dmaxy; ++y) {
+    GL_Pixel_t *dst = (GL_Pixel_t *)context->vram_rows[dminy] + dminx;
+
+    const int skip = context->width - width;
+
+    for (int i = height; i; --i) {
         float u = ou;
         float v = ov;
 
-        for (int x = dminx; x <= dmaxx; ++x) {
+        for (int j = width; j; --j) {
 #ifdef __DEBUG_GRAPHICS__
-            pixel(context, x, y, 15);
+            pixel(context, dminx + width - j, dminy + height - i, 15);
 #endif
-            int xx = (int)floorf(u); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`)
-            int xy = (int)floorf(v);
+            int x = (int)floorf(u); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`)
+            int y = (int)floorf(v);
 
-            if (xx >= sminx && xx <= smaxx && xy >= sminy && xy <= smaxy) {
+            if (x >= sminx && x <= smaxx && y >= sminy && y <= smaxy) {
 #ifdef __DEBUG_GRAPHICS__
-                pixel(context, x, y, xx + xy);
+                pixel(context, dminx + width - j, dminy + height - i, (int)i + (int)j);
 #endif
-                const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[xy] + xx;
+                const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[y] + x;
                 GL_Pixel_t index = shifting[*src];
                 if (!transparent[index]) {
-                    GL_Pixel_t *dst = (GL_Pixel_t *)context->vram_rows[y] + x;
                     *dst = index;
                 }
             }
 
+            ++dst;
+
             u += M11;
             v += M21;
         }
+
+        dst += skip;
 
         ou += M12;
         ov += M22;
