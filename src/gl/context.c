@@ -36,7 +36,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb/stb_image_write.h>
 
-#define PIXEL(c, x, y)  ((GL_Color_t *)(c)->vram_rows[(y)] + (x))
+#define PIXEL(c, x, y)  ((GL_Pixel_t *)(c)->vram_rows[(y)] + (x))
 
 static int iabs(int v)
 {
@@ -46,14 +46,13 @@ static int iabs(int v)
 #ifdef __DEBUG_GRAPHICS__
 static void pixel(const GL_Context_t *context, int x, int y, int index)
 {
-    int v = (index % 16) * 8;
-    *PIXEL(context, x, y) = (GL_Color_t){ 0, 63 + v, 0, 255 };
+    *PIXEL(context, x, y) = 240 + (index % 16);
 }
 #endif
 
 bool GL_context_initialize(GL_Context_t *context, size_t width, size_t height)
 {
-    void *vram = malloc(width * height * sizeof(GL_Color_t));
+    void *vram = malloc(width * height * sizeof(GL_Pixel_t));
     if (!vram) {
         Log_write(LOG_LEVELS_ERROR, "<GL> can't allocate VRAM buffer");
         return false;
@@ -66,7 +65,7 @@ bool GL_context_initialize(GL_Context_t *context, size_t width, size_t height)
         return false;
     }
     for (size_t i = 0; i < height; ++i) {
-        vram_rows[i] = (GL_Color_t *)vram + (width * i);
+        vram_rows[i] = (GL_Pixel_t *)vram + (width * i);
     }
 
     Log_write(LOG_LEVELS_DEBUG, "<GL> VRAM allocated at #%p (%dx%d)", vram, width, height);
@@ -74,7 +73,7 @@ bool GL_context_initialize(GL_Context_t *context, size_t width, size_t height)
     *context = (GL_Context_t){
             .width = width,
             .height = height,
-            .stride = width * sizeof(GL_Color_t),
+            .stride = width * sizeof(GL_Pixel_t),
             .vram = vram,
             .vram_rows = vram_rows,
             .vram_size = width * height,
@@ -87,9 +86,6 @@ bool GL_context_initialize(GL_Context_t *context, size_t width, size_t height)
         context->transparent[i] = GL_BOOL_FALSE;
     }
     context->transparent[0] = GL_BOOL_TRUE;
-
-    GL_palette_greyscale(&context->palette, GL_MAX_PALETTE_COLORS);
-    Log_write(LOG_LEVELS_DEBUG, "<GL> calculating greyscale palette of #%d entries", GL_MAX_PALETTE_COLORS);
 
     return true;
 }
@@ -113,8 +109,8 @@ void GL_context_pop(const GL_Context_t *context)
 
 void GL_context_clear(const GL_Context_t *context)
 {
-    const GL_Color_t color = context->palette.colors[context->background];
-    GL_Color_t *dst = (GL_Color_t *)context->vram;
+    const GL_Pixel_t color = context->background;
+    GL_Pixel_t *dst = (GL_Pixel_t *)context->vram;
     for (size_t i = context->vram_size; i > 0; --i) {
         *(dst++) = color;
     }
@@ -122,9 +118,37 @@ void GL_context_clear(const GL_Context_t *context)
 
 void GL_context_screenshot(const GL_Context_t *context, const char *pathfile)
 {
+    // TODO: convert to temporary bitmap to save!
     int result = stbi_write_png(pathfile, context->width, context->height, sizeof(GL_Color_t), context->vram, context->stride);
     if (!result) {
         Log_write(LOG_LEVELS_WARNING, "<GL> can't save screenshot to '%s'", pathfile);
+    }
+}
+
+void GL_context_to_rgba(const GL_Context_t *context, const GL_Palette_t *palette, void *vram)
+{
+    const int width = context->width;
+    const int height = context->height;
+    const GL_Color_t *colors = palette->colors;
+    int count = palette->count;
+    const GL_Pixel_t *src = (const GL_Pixel_t *)context->vram;
+    GL_Color_t *dst = (GL_Color_t *)vram;
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+#ifdef __DEBUG_GRAPHICS__
+            GL_Pixel_t index = *src++;
+            GL_Color_t color;
+            if (index >= count) {
+                int y = (index - 240) * 8;
+                color = (GL_Color_t){ 0, 63 + y, 0, 255 };
+            } else {
+                color = colors[index];
+            }
+            *(dst++) = color;
+#else
+            *(dst++) = colors[index];
+#endif
+        }
     }
 }
 
@@ -136,7 +160,6 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
     const GL_Quad_t clipping_region = context->clipping_region;
     const GL_Pixel_t *shifting = context->shifting;
     const GL_Bool_t *transparent = context->transparent;
-    const GL_Color_t *colors = context->palette.colors;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
@@ -170,7 +193,7 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
     }
 
     const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[area.y + skip_y] + (area.x + skip_x);
-    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[drawing_region.y0] + drawing_region.x0;
+    GL_Pixel_t *dst = (GL_Pixel_t *)context->vram_rows[drawing_region.y0] + drawing_region.x0;
 
     const int src_skip = surface->width - width;
     const int dst_skip = context->width - width;
@@ -185,7 +208,7 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
             if (transparent[index]) {
                 dst++;
             } else {
-                *(dst++) = colors[index];
+                *(dst++) = index;
             }
 #else
             *dst = transparent[index] ? *dst : colors[index];
@@ -205,7 +228,6 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
     const GL_Quad_t clipping_region = context->clipping_region;
     const GL_Pixel_t *shifting = context->shifting;
     const GL_Bool_t *transparent = context->transparent;
-    const GL_Color_t *colors = context->palette.colors;
 
     const int drawing_width = (int)((float)(area.width * fabs(scale_x)) + 0.5f);
     const int drawing_height = (int)((float)(area.height * fabs(scale_y)) + 0.5f);
@@ -241,7 +263,7 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
         return;
     }
 
-    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[drawing_region.y0] + drawing_region.x0;
+    GL_Pixel_t *dst = (GL_Pixel_t *)context->vram_rows[drawing_region.y0] + drawing_region.x0;
 
     const size_t skip = context->width - width;
 
@@ -271,7 +293,7 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
             if (transparent[index]) {
                 dst++;
             } else {
-                *(dst++) = colors[index];
+                *(dst++) = index;
             }
 #else
             *dst = transparent[index] ? *dst : colors[index];
@@ -293,7 +315,6 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const GL_Quad_t clipping_region = context->clipping_region;
     const GL_Pixel_t *shifting = context->shifting;
     const GL_Bool_t *transparent = context->transparent;
-    const GL_Color_t *colors = context->palette.colors;
 
     const float w = (float)area.width;
     const float h = (float)area.height;
@@ -391,8 +412,8 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
                 const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[xy] + xx;
                 GL_Pixel_t index = shifting[*src];
                 if (!transparent[index]) {
-                    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[y] + x;
-                    *dst = colors[index];
+                    GL_Pixel_t *dst = (GL_Pixel_t *)context->vram_rows[y] + x;
+                    *dst = index;
                 }
             }
 
@@ -409,12 +430,6 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     pixel(context, dmaxx, dmaxy, 7);
     pixel(context, dminx, dmaxy, 7);
 #endif
-}
-
-void GL_context_palette(GL_Context_t *context, const GL_Palette_t *palette)
-{
-    context->palette = *palette;
-    Log_write(LOG_LEVELS_DEBUG, "<GL> palette updated");
 }
 
 void GL_context_shifting(GL_Context_t *context, const size_t *from, const size_t *to, size_t count)
@@ -460,19 +475,11 @@ void GL_context_clipping(GL_Context_t *context, const GL_Quad_t *clipping_region
 
 void GL_context_background(GL_Context_t *context, const GL_Pixel_t index)
 {
-    if (index >= context->palette.count) {
-        Log_write(LOG_LEVELS_WARNING, "<GL> color index #%d not available in current palette", index);
-        return;
-    }
     context->background = index;
 }
 
 void GL_context_color(GL_Context_t *context, GL_Pixel_t index)
 {
-    if (index >= context->palette.count) {
-        Log_write(LOG_LEVELS_WARNING, "<GL> color index #%d not available in current palette", index);
-        return;
-    }
     context->color = index;
 }
 
@@ -491,8 +498,8 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
         return;
     }
 
-    GL_Color_t match = *PIXEL(context, seed.x, seed.y);
-    GL_Color_t replacement = context->palette.colors[index];
+    GL_Pixel_t match = *PIXEL(context, seed.x, seed.y);
+    GL_Pixel_t replacement = index;
 
     GL_Point_t *stack = NULL;
     arrpush(stack, seed);
@@ -503,7 +510,7 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
         int x = position.x;
         int y = position.y;
 
-        while (x >= clipping_region.x0 && !memcmp(PIXEL(context, x, y), &match, sizeof(GL_Color_t))) {
+        while (x >= clipping_region.x0 && !memcmp(PIXEL(context, x, y), &match, sizeof(GL_Pixel_t))) {
             --x;
         }
         ++x;
@@ -511,24 +518,24 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
         bool above = false;
         bool below = false;
 
-        while (x <= clipping_region.x1 && !memcmp(PIXEL(context, x, y), &match, sizeof(GL_Color_t))) {
+        while (x <= clipping_region.x1 && !memcmp(PIXEL(context, x, y), &match, sizeof(GL_Pixel_t))) {
             *PIXEL(context, x, y) = replacement;
 
-            if (!above && y >= clipping_region.y0 && !memcmp(PIXEL(context, x, y - 1), &match, sizeof(GL_Color_t))) {
+            if (!above && y >= clipping_region.y0 && !memcmp(PIXEL(context, x, y - 1), &match, sizeof(GL_Pixel_t))) {
                 GL_Point_t p = (GL_Point_t){ .x = x, .y = y - 1 };
                 arrpush(stack, p);
                 above = true;
             } else
-            if (above && y >= clipping_region.y0 && memcmp(PIXEL(context, x, y - 1), &match, sizeof(GL_Color_t))) {
+            if (above && y >= clipping_region.y0 && memcmp(PIXEL(context, x, y - 1), &match, sizeof(GL_Pixel_t))) {
                 above = false;
             }
 
-            if (!below && y < clipping_region.y1 && !memcmp(PIXEL(context, x, y + 1), &match, sizeof(GL_Color_t))) {
+            if (!below && y < clipping_region.y1 && !memcmp(PIXEL(context, x, y + 1), &match, sizeof(GL_Pixel_t))) {
                 GL_Point_t p = (GL_Point_t){ .x = x, .y = y + 1 };
                 arrpush(stack, p);
                 below = true;
             } else
-            if (below && y < clipping_region.y1 && memcmp(PIXEL(context, x, y + 1), &match, sizeof(GL_Color_t))) {
+            if (below && y < clipping_region.y1 && memcmp(PIXEL(context, x, y + 1), &match, sizeof(GL_Pixel_t))) {
                 above = false;
             }
 
@@ -546,7 +553,6 @@ void GL_context_blit_m7(const GL_Context_t *context, const GL_Surface_t *surface
     const GL_Quad_t clipping_region = context->clipping_region;
     const GL_Pixel_t *shifting = context->shifting;
     const GL_Bool_t *transparent = context->transparent;
-    const GL_Color_t *colors = context->palette.colors;
 
     const float h = transformation.h;
     const float v = transformation.v;
@@ -589,7 +595,7 @@ void GL_context_blit_m7(const GL_Context_t *context, const GL_Surface_t *surface
 
     const float ya = (float)height * elevation;
 
-    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[drawing_region.y0] + drawing_region.x0;
+    GL_Pixel_t *dst = (GL_Pixel_t *)context->vram_rows[drawing_region.y0] + drawing_region.x0;
 
     const int skip = context->width - width;
 
@@ -638,7 +644,7 @@ void GL_context_blit_m7(const GL_Context_t *context, const GL_Surface_t *surface
                 const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[sy] + sx;
                 GL_Pixel_t index = shifting[*src];
                 if (!transparent[index]) {
-                    *dst = colors[index];
+                    *dst = index;
                 }
             }
 

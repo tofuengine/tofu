@@ -261,6 +261,9 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         return false;
     }
 
+    GL_palette_greyscale(&display->palette, GL_MAX_PALETTE_COLORS);
+    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> calculating greyscale palette of #%d entries", GL_MAX_PALETTE_COLORS);
+
     GL_Point_t position = {};
     if (!compute_size(display, configuration, &position)) {
         glfwDestroyWindow(display->window);
@@ -295,6 +298,8 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, display->configuration.width, display->configuration.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     Log_write(LOG_LEVELS_DEBUG, "<GL> texture created w/ id #%d (%dx%d)", display->vram_texture, display->configuration.width, display->configuration.height);
+
+    display->vram = malloc(display->configuration.width * display->configuration.width * sizeof(GL_Color_t));
 
     for (size_t i = 0; i < Display_Programs_t_CountOf; ++i) {
         const Program_Data_t *data = &_programs_data[i];
@@ -332,6 +337,8 @@ void Display_terminate(Display_t *display)
         GL_program_delete(&display->programs[i]);
     }
 
+    free(display->vram);
+
     glDeleteBuffers(1, &display->vram_texture);
     Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> texture w/ id #%d deleted", display->vram_texture);
 
@@ -342,6 +349,12 @@ void Display_terminate(Display_t *display)
 
     glfwTerminate();
     Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> terminated");
+}
+
+void Display_palette(Display_t *display, const GL_Palette_t *palette)
+{
+    display->palette = *palette;
+    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> palette updated");
 }
 
 void Display_shader(Display_t *display, const char *effect)
@@ -424,10 +437,9 @@ void Display_present(Display_t *display)
     GL_program_send(&display->programs[display->program_index], UNIFORM_TIME, GL_PROGRAM_UNIFORM_FLOAT, 1, time);
     GL_program_use(&display->programs[display->program_index]);
 
-//    glClearColor(0.0f, 0.0f, 0.0, 1.0f); // Required, to clear previous content.
-//    glClear(GL_COLOR_BUFFER_BIT);
+    GL_context_to_rgba(&display->gl, &display->palette, display->vram);
 
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, display->gl.width, display->gl.height, GL_RGBA, GL_UNSIGNED_BYTE, display->gl.vram);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, display->gl.width, display->gl.height, GL_RGBA, GL_UNSIGNED_BYTE, display->vram);
 
     glBegin(GL_TRIANGLE_STRIP);
 //        glColor4ub(255, 255, 255, 255);

@@ -47,7 +47,6 @@ void GL_primitive_point(const GL_Context_t *context, GL_Point_t position, GL_Pix
     const GL_Quad_t clipping_region = context->clipping_region;
     const GL_Pixel_t *shifting = context->shifting;
     const GL_Bool_t *transparent = context->transparent;
-    const GL_Color_t *colors = context->palette.colors;
 
     index = shifting[index];
 
@@ -68,10 +67,8 @@ void GL_primitive_point(const GL_Context_t *context, GL_Point_t position, GL_Pix
         return;
     }
 
-    const GL_Color_t color = colors[index];
-
-    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[position.y] + position.x;
-    *dst = color;
+    GL_Pixel_t *dst = (GL_Pixel_t *)context->vram_rows[position.y] + position.x;
+    *dst = index;
 }
 
 // DDA algorithm, no branches in the inner-loop.
@@ -85,8 +82,6 @@ void GL_primitive_line(const GL_Context_t *context, GL_Point_t from, GL_Point_t 
         return;
     }
 
-    const GL_Color_t color = context->palette.colors[index];
-
 #ifdef __DDA__
     int dx = to.x - from.x;
     int dy = to.y - from.y;
@@ -99,8 +94,8 @@ void GL_primitive_line(const GL_Context_t *context, GL_Point_t from, GL_Point_t 
     float x = from.x + 0.5f;
     float y = from.y + 0.5f;
     for (int i = 0; i < step; ++i) {
-        GL_Color_t *dst = (GL_Color_t *)context->vram_rows[(int)y] + (int)x;
-        *dst = color;
+        GL_Pixel_t *dst = (GL_Pixel_t *)context->vram_rows[(int)y] + (int)x;
+        *dst = index;
 
         x += xin;
         y += yin;
@@ -114,11 +109,11 @@ void GL_primitive_line(const GL_Context_t *context, GL_Point_t from, GL_Point_t 
 
     int err = dx + dy;
 
-    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[from.y] + from.x;
-    GL_Color_t *eod = (GL_Color_t *)context->vram_rows[to.y] + to.x;
+    GL_Pixel_t *dst = (GL_Pixel_t *)context->vram_rows[from.y] + from.x;
+    GL_Pixel_t *eod = (GL_Pixel_t *)context->vram_rows[to.y] + to.x;
 
     for (;;) {
-        *dst = color;
+        *dst = index;
 
         int e2 = 2 * err;
         if (e2 >= dy) {
@@ -144,7 +139,6 @@ void GL_primitive_hline(const GL_Context_t *context, GL_Point_t origin, size_t w
     const GL_Quad_t clipping_region = context->clipping_region;
     const GL_Pixel_t *shifting = context->shifting;
     const GL_Bool_t *transparent = context->transparent;
-    const GL_Color_t *colors = context->palette.colors;
 
     index = shifting[index];
 
@@ -178,12 +172,10 @@ void GL_primitive_hline(const GL_Context_t *context, GL_Point_t origin, size_t w
         return;
     }
 
-    const GL_Color_t color = colors[index];
-
-    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[drawing_region.y0] + drawing_region.x0;
+    GL_Pixel_t *dst = (GL_Pixel_t *)context->vram_rows[drawing_region.y0] + drawing_region.x0;
 
     for (int i = width; i; --i) {
-        *(dst++) = color;
+        *(dst++) = index;
     }
 }
 
@@ -192,7 +184,6 @@ void GL_primitive_vline(const GL_Context_t *context, GL_Point_t origin, size_t h
     const GL_Quad_t clipping_region = context->clipping_region;
     const GL_Pixel_t *shifting = context->shifting;
     const GL_Bool_t *transparent = context->transparent;
-    const GL_Color_t *colors = context->palette.colors;
 
     index = shifting[index];
 
@@ -226,14 +217,12 @@ void GL_primitive_vline(const GL_Context_t *context, GL_Point_t origin, size_t h
         return;
     }
 
-    const GL_Color_t color = colors[index];
-
-    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[drawing_region.y0] + drawing_region.x0;
+    GL_Pixel_t *dst = (GL_Pixel_t *)context->vram_rows[drawing_region.y0] + drawing_region.x0;
 
     const int skip = context->width;
 
     for (int i = height; i; --i) {
-        *dst = color;
+        *dst = index;
         dst += skip;
     }
 }
@@ -243,7 +232,6 @@ void GL_primitive_rectangle(const GL_Context_t *context, GL_Rectangle_t rectangl
     const GL_Quad_t clipping_region = context->clipping_region;
     const GL_Pixel_t *shifting = context->shifting;
     const GL_Bool_t *transparent = context->transparent;
-    const GL_Color_t *colors = context->palette.colors;
 
     index = shifting[index];
 
@@ -277,15 +265,13 @@ void GL_primitive_rectangle(const GL_Context_t *context, GL_Rectangle_t rectangl
         return;
     }
 
-    const GL_Color_t color = colors[index];
-
-    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[drawing_region.y0] + drawing_region.x0;
+    GL_Pixel_t *dst = (GL_Pixel_t *)context->vram_rows[drawing_region.y0] + drawing_region.x0;
 
     const int skip = context->width - width;
 
     for (int i = height; i; --i) {
         for (int j = width; j; --j) {
-            *(dst++) = color;
+            *(dst++) = index;
         }
         dst += skip;
     }
@@ -300,7 +286,6 @@ void GL_primitive_triangle(const GL_Context_t *context, GL_Point_t a, GL_Point_t
     const GL_Quad_t clipping_region = context->clipping_region;
     const GL_Pixel_t *shifting = context->shifting;
     const GL_Bool_t *transparent = context->transparent;
-    const GL_Color_t *colors = context->palette.colors;
 
     index = shifting[index];
 
@@ -359,9 +344,7 @@ void GL_primitive_triangle(const GL_Context_t *context, GL_Point_t a, GL_Point_t
     int CY2 = C2 + DX23 * drawing_region.y0 - DY23 * drawing_region.x0;
     int CY3 = C3 + DX31 * drawing_region.y0 - DY31 * drawing_region.x0;
 
-    const GL_Color_t color = colors[index];
-
-    GL_Color_t *dst = (GL_Color_t *)context->vram_rows[drawing_region.y0] + drawing_region.x0;
+    GL_Pixel_t *dst = (GL_Pixel_t *)context->vram_rows[drawing_region.y0] + drawing_region.x0;
 
     const int skip = context->width;
 
@@ -386,8 +369,8 @@ void GL_primitive_triangle(const GL_Context_t *context, GL_Point_t a, GL_Point_t
 
         const int offset = eod - count;
         dst += eod;
-        for (int i = 0; i < count; ++i) { // BAckward copy, simpler math.
-            *(dst--) = color;
+        for (int i = 0; i < count; ++i) { // Backward copy, simpler math.
+            *(dst--) = index;
         }
         dst += skip - offset;
     }

@@ -84,7 +84,9 @@ typedef struct _Display_t {
     GL_Program_t programs[Display_Programs_t_CountOf];
     size_t program_index;
 
+    GL_Palette_t palette;
     GL_Context_t gl;
+    void *vram;
 } Display_t;
 
 extern bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title);

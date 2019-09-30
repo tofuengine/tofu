@@ -42,7 +42,6 @@ typedef struct _GL_Context_t {
     uint32_t mask;
     GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
     GL_Bool_t transparent[GL_MAX_PALETTE_COLORS];
-    GL_Palette_t palette;
     GL_Quad_t clipping_region;
 } GL_Context_t;
 
@@ -70,12 +69,12 @@ extern void GL_context_pop(const GL_Context_t *context);
 
 extern void GL_context_clear(const GL_Context_t *context);
 extern void GL_context_screenshot(const GL_Context_t *context, const char *pathfile);
+extern void GL_context_to_rgba(const GL_Context_t *context, const GL_Palette_t *palette, void *vram);
 
 extern void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position);
 extern void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, float sx, float sy);
 extern void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, float sx, float sy, float rotation, float ax, float ay);
 
-extern void GL_context_palette(GL_Context_t *context, const GL_Palette_t *palette);
 extern void GL_context_shifting(GL_Context_t *context, const size_t *from, const size_t *to, size_t count);
 extern void GL_context_transparent(GL_Context_t *context, const GL_Pixel_t *indexes, const GL_Bool_t *transparent, size_t count);
 extern void GL_context_clipping(GL_Context_t *context, const GL_Quad_t *clipping_region);

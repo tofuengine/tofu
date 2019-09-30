@@ -106,7 +106,7 @@ static int bank_new(lua_State *L)
     strcat(pathfile, file);
 
     GL_Sheet_t sheet;
-    GL_sheet_load(&sheet, pathfile, cell_width, cell_height, to_indexed_atlas_callback, (void *)&display->gl.palette);
+    GL_sheet_load(&sheet, pathfile, cell_width, cell_height, to_indexed_atlas_callback, (void *)&display->palette);
     Log_write(LOG_LEVELS_DEBUG, "<BANK> sheet '%s' loaded", pathfile);
 
     Bank_Class_t *instance = (Bank_Class_t *)lua_newuserdata(L, sizeof(Bank_Class_t));

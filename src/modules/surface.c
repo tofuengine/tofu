@@ -105,7 +105,7 @@ static int surface_new(lua_State *L)
     strcat(pathfile, file);
 
     GL_Surface_t surface;
-    GL_surface_load(&surface, pathfile, to_indexed_atlas_callback, (void *)&display->gl.palette);
+    GL_surface_load(&surface, pathfile, to_indexed_atlas_callback, (void *)&display->palette);
     Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface '%s' loaded", pathfile);
 
     Surface_Class_t *instance = (Surface_Class_t *)lua_newuserdata(L, sizeof(Surface_Class_t));
