@@ -189,7 +189,7 @@ static int surface_blit3(lua_State *L)
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
-    GL_context_blit_m7(context, surface, instance->transformation);
+    GL_context_blit_x(context, surface, (GL_Point_t){ 0, 0 }, instance->transformation);
 
     return 0;
 }
@@ -219,7 +219,7 @@ static int surface_blit4(lua_State *L)
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
-    GL_context_blit_m7(context, surface, instance->transformation);
+    GL_context_blit_x(context, surface, (GL_Point_t){ 0, 0 }, instance->transformation);
 
     return 0;
 }

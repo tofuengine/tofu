@@ -548,7 +548,7 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
 
 // https://www.youtube.com/watch?v=3FVN_Ze7bzw
 // http://www.coranac.com/tonc/text/mode7.htm
-void GL_context_blit_m7(const GL_Context_t *context, const GL_Surface_t *surface, GL_Transformation_t transformation) // TODO: add scanline callback or op-table
+void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface, GL_Point_t position, GL_Transformation_t transformation) // TODO: add scanline callback or op-table
 {
     const GL_Quad_t clipping_region = context->clipping_region;
     const GL_Pixel_t *shifting = context->shifting;
@@ -568,19 +568,32 @@ void GL_context_blit_m7(const GL_Context_t *context, const GL_Surface_t *surface
     const bool perspective = transformation.perspective;
 
     const float yh = perspective
-        ? (float)(clipping_region.y1 - clipping_region.y0 + 1) * horizon
+        ? (float)(clipping_region.y1 - clipping_region.y0 + 1) * horizon // TODO: Pass explicit H? Clipping region is wrong.
         : 0.0f;
 
     const int offset_y = perspective
         ? (int)yh + 1
         : 0;
 
-    const GL_Quad_t drawing_region = (GL_Quad_t) {
-        .x0 = clipping_region.x0,
-        .y0 = clipping_region.y0 + offset_y, // Skip the horizon line.
-        .x1 = clipping_region.x1,
-        .y1 = clipping_region.y1
+    GL_Quad_t drawing_region = (GL_Quad_t) {
+        .x0 = position.x,
+        .y0 = position.y + offset_y, // Skip the horizon line.
+        .x1 = position.x + (clipping_region.x1 - clipping_region.x0),
+        .y1 = position.y + (clipping_region.y1 - clipping_region.y0)
     };
+
+    if (drawing_region.x0 < clipping_region.x0) {
+        drawing_region.x0 = clipping_region.x0;
+    }
+    if (drawing_region.y0 < clipping_region.y0) {
+        drawing_region.y0 = clipping_region.y0;
+    }
+    if (drawing_region.x1 > clipping_region.x1) {
+        drawing_region.x1 = clipping_region.x1;
+    }
+    if (drawing_region.y1 > clipping_region.y1) {
+        drawing_region.y1 = clipping_region.y1;
+    }
 
     const int width = drawing_region.x1 - drawing_region.x0 + 1;
     const int height = drawing_region.y1 - drawing_region.y0 + 1;
@@ -588,22 +601,27 @@ void GL_context_blit_m7(const GL_Context_t *context, const GL_Surface_t *surface
         return;
     }
 
+    const int ox = position.x;
+    const int oy = position.y;
+
+    const int sw = surface->width;
+    const int sh = surface->height;
     const int sminx = 0;
     const int sminy = 0;
-    const int smaxx = surface->width - 1;
-    const int smaxy = surface->height - 1;
+    const int smaxx = sw - 1;
+    const int smaxy = sh - 1;
 
-    const float ya = (float)height * elevation;
+    const float ya = (float)height * elevation; // TODO: elevation need to be independent from drawing region height.
 
     GL_Pixel_t *dst = (GL_Pixel_t *)context->vram_rows[drawing_region.y0] + drawing_region.x0;
 
     const int skip = context->width - width;
 
     for (int y = drawing_region.y0; y <= drawing_region.y1; ++y) {
-        const float yi = ((float)y - yh) + v - y0;
+        const float yi = ((float)(y - oy) - yh) + v - y0;
 
         const float p = perspective
-            ? ya / (float)(y - yh)
+            ? ya / ((float)(y - oy) - yh)
             : 1.0f;
 
         const float pa = p * a; float pb =  p * b;
@@ -613,7 +631,7 @@ void GL_context_blit_m7(const GL_Context_t *context, const GL_Surface_t *surface
 #ifdef __DEBUG_GRAPHICS__
             pixel(context, x, y, x + y);
 #endif
-            const float xi = (float)x + h - x0;
+            const float xi = (float)(x - ox) + h - x0;
 
             const float xp = (pa * xi + pb * yi) + x0;
             const float yp = (pc * xi + pd * yi) + y0;
@@ -622,8 +640,8 @@ void GL_context_blit_m7(const GL_Context_t *context, const GL_Surface_t *surface
             int sy = (int)yp;
 
             if (clamp == GL_CLAMP_MODE_REPEAT) {
-                sx = iabs(sx) % surface->width;
-                sy = iabs(sy) % surface->height;
+                sx = iabs(sx) % sw;
+                sy = iabs(sy) % sh;
             } else
             if (clamp == GL_CLAMP_MODE_EDGE) {
                 if (sx < sminx) {
