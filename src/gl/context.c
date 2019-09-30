@@ -567,13 +567,10 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
     const float horizon = transformation.horizon;
     const bool perspective = transformation.perspective;
 
-    const float yh = perspective
-        ? (float)(clipping_region.y1 - clipping_region.y0 + 1) * horizon // TODO: Pass explicit H? Clipping region is wrong.
-        : 0.0f;
+    const float yh = perspective ? horizon : 0.0f;
+    const float ya = elevation;
 
-    const int offset_y = perspective
-        ? (int)yh + 1
-        : 0;
+    const int offset_y = perspective ? (int)yh + 1 : 0;
 
     GL_Quad_t drawing_region = (GL_Quad_t) {
         .x0 = position.x,
@@ -610,8 +607,6 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
     const int sminy = 0;
     const int smaxx = sw - 1;
     const int smaxy = sh - 1;
-
-    const float ya = (float)height * elevation; // TODO: elevation need to be independent from drawing region height.
 
     GL_Pixel_t *dst = (GL_Pixel_t *)context->vram_rows[drawing_region.y0] + drawing_region.x0;
 

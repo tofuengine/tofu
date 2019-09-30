@@ -17,6 +17,8 @@ function Game:__ctor()
   self.mode = 0
   self.speed = 1.0
   self.running = true
+  self.elevation = 64
+  self.horizon = Canvas.height() * 0.5
 end
 
 function Game:input()
@@ -26,12 +28,20 @@ function Game:input()
     self.speed = self.speed * 2.0
   elseif Input.is_key_pressed(Input.SELECT) then
     self.speed = 1.0
+  elseif Input.is_key_pressed(Input.START) then
+    self.running = not self.running
   elseif Input.is_key_pressed(Input.LEFT) then
     self.mode = (self.mode + 9) % 10
   elseif Input.is_key_pressed(Input.RIGHT) then
     self.mode = (self.mode + 1) % 10
+  elseif Input.is_key_pressed(Input.X) then
+    self.elevation = self.elevation + 8
   elseif Input.is_key_pressed(Input.Y) then
-    self.running = not self.running
+    self.elevation = self.elevation - 8
+  elseif Input.is_key_pressed(Input.A) then
+    self.horizon = self.horizon + 8
+  elseif Input.is_key_pressed(Input.B) then
+    self.horizon = self.horizon - 8
   end
 end
 
@@ -65,8 +75,16 @@ function Game:render(_)
     self.surface:blit(x, y)
   elseif self.mode == 3 then
     local t = self.time
-    local elevation = (math.sin(t) + 1) * 0.5 * 5
-    self.surface:blit(0, 0, elevation)
+    local elevation = 512
+    local horizon = (math.sin(t * 1.2) + 1) * 0.5 * Canvas.height()
+    self.surface:blit(0, 0, elevation, horizon)
+  elseif self.mode == 4 then
+    local t = self.time
+    local elevation = (math.sin(t * 1.2) + 1) * 0.5 * 2048
+    local horizon = Canvas.height() * 0.25
+    self.surface:blit(0, 0, elevation, horizon)
+  elseif self.mode == 5 then
+    self.surface:blit(0, 0, self.elevation, self.horizon)
   end
 
   self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
