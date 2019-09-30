@@ -116,9 +116,9 @@ static int surface_new(lua_State *L)
                     .a = 1.0f, .b = 0.0f,
                     .c = 0.0f, .d = 1.0f,
                     .clamp = GL_CLAMP_MODE_REPEAT,
-                    .perspective = true,
-                    .elevation = 0.5f,
-                    .horizon = 0.25f
+                    .perspective = false,
+                    .elevation = 0.0f,
+                    .horizon = 0.0f
                 }
         };
     Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface allocated as #%p", pathfile, instance);
@@ -194,10 +194,11 @@ static int surface_blit3(lua_State *L)
     return 0;
 }
 
-static int surface_blit4(lua_State *L)
+static int surface_blit5(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 4)
+    LUAX_SIGNATURE_BEGIN(L, 5)
         LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
@@ -206,14 +207,16 @@ static int surface_blit4(lua_State *L)
     double h = (double)lua_tonumber(L, 2);
     double v = (double)lua_tonumber(L, 3);
     double elevation = (double)lua_tonumber(L, 4);
+    double horizon = (double)lua_tonumber(L, 5);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Surface.blit() -> %.f, %.f, %.f", h, v, elevation);
+    Log_write(LOG_LEVELS_DEBUG, "Surface.blit() -> %.f, %.f, %.f, %.f", h, v, elevation, horizon);
 #endif
 
     instance->transformation.h = h;
     instance->transformation.v = v;
     instance->transformation.perspective = true;
     instance->transformation.elevation = elevation;
+    instance->transformation.horizon = horizon;
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
@@ -228,7 +231,7 @@ static int surface_blit(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(3, surface_blit3)
-        LUAX_OVERLOAD_ARITY(4, surface_blit4)
+        LUAX_OVERLOAD_ARITY(5, surface_blit5)
     LUAX_OVERLOAD_END
 }
 
