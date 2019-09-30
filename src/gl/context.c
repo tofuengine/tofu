@@ -116,13 +116,21 @@ void GL_context_clear(const GL_Context_t *context)
     }
 }
 
-void GL_context_screenshot(const GL_Context_t *context, const char *pathfile)
+void GL_context_screenshot(const GL_Context_t *context, const GL_Palette_t *palette, const char *pathfile)
 {
-    // TODO: convert to temporary bitmap to save!
-    int result = stbi_write_png(pathfile, context->width, context->height, sizeof(GL_Color_t), context->vram, context->stride);
+    void *vram = malloc(context->width * context->height * sizeof(GL_Color_t));
+    if (!vram) {
+        Log_write(LOG_LEVELS_WARNING, "<GL> can't create buffer for screenshot");
+    }
+
+    GL_context_to_rgba(context, palette, vram);
+
+    int result = stbi_write_png(pathfile, context->width, context->height, sizeof(GL_Color_t), vram, context->width * sizeof(GL_Color_t));
     if (!result) {
         Log_write(LOG_LEVELS_WARNING, "<GL> can't save screenshot to '%s'", pathfile);
     }
+
+    free(vram);
 }
 
 void GL_context_to_rgba(const GL_Context_t *context, const GL_Palette_t *palette, void *vram)

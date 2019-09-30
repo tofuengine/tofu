@@ -68,7 +68,7 @@ extern void GL_context_push(const GL_Context_t *context);
 extern void GL_context_pop(const GL_Context_t *context);
 
 extern void GL_context_clear(const GL_Context_t *context);
-extern void GL_context_screenshot(const GL_Context_t *context, const char *pathfile);
+extern void GL_context_screenshot(const GL_Context_t *context, const GL_Palette_t *palette, const char *pathfile);
 extern void GL_context_to_rgba(const GL_Context_t *context, const GL_Palette_t *palette, void *vram);
 
 extern void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position);

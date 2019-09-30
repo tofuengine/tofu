@@ -98,6 +98,8 @@ int canvas_loader(lua_State *L)
     return luaX_newmodule(L, (const char *)_canvas_lua, _canvas_functions, _canvas_constants, nup, LUAX_CLASS(Canvas_Class_t));
 }
 
+// TODO: add a canvas constructor with overload (from file, from WxH, default one). Surface will become Canvas, in the end.
+
 static int canvas_color_to_index(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
@@ -145,7 +147,7 @@ static int canvas_screenshot(lua_State *L)
     strcpy(pathfile, environment->base_path);
     strcat(pathfile, file);
 
-    GL_context_screenshot(&display->gl, pathfile);
+    GL_context_screenshot(&display->gl, &display->palette, pathfile);
 
     return 0;
 }
