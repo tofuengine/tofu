@@ -287,14 +287,13 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
 
 // https://web.archive.org/web/20190305223938/http://www.drdobbs.com/architecture-and-design/fast-bitmap-rotation-and-scaling/184416337
 // https://www.flipcode.com/archives/The_Art_of_Demomaking-Issue_10_Roto-Zooming.shtml
+// TODO: add 90/180/270 rotations?
 void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y, float angle, float anchor_x, float anchor_y)
 {
     const GL_Quad_t clipping_region = context->clipping_region;
     const GL_Pixel_t *shifting = context->shifting;
     const GL_Bool_t *transparent = context->transparent;
     const GL_Color_t *colors = context->palette.colors;
-
-    // FIXME: there's a rounding error here, that generates a spurious row/column.
 
     const float w = (float)area.width;
     const float h = (float)area.height;
@@ -351,35 +350,24 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const float aabb_y0 = fmin(fmin(fmin(y0, y1), y2), y3);
     const float aabb_x1 = fmax(fmax(fmax(x0, x1), x2), x3);
     const float aabb_y1 = fmax(fmax(fmax(y0, y1), y2), y3);
-/*
-    float fh = sw * s + sh * c;
-    float fw = sh * s + sw * c;
-    fh = fh;
-    fw = fw;
-*/
-    // Clip both destination and target rectangles. Round for better result.
-    const int dminx = (int)fmax(aabb_x0 + 0.5f + px, (float)clipping_region.x0);
-    const int dminy = (int)fmax(aabb_y0 + 0.5f + py, (float)clipping_region.y0);
-    const int dmaxx = (int)fmin(aabb_x1 + 0.5f + px, (float)clipping_region.x1);
-    const int dmaxy = (int)fmin(aabb_y1 + 0.5f + py, (float)clipping_region.y1);
+
+    // Clip both destination and target rectangles.
+    // Note, `floorf()` is not needed here, since we have always a positive-valued clipping region.
+    const int dminx = (int)fmax(aabb_x0 + px, (float)clipping_region.x0);
+    const int dminy = (int)fmax(aabb_y0 + py, (float)clipping_region.y0);
+    const int dmaxx = (int)fmin(aabb_x1 + px, (float)clipping_region.x1);
+    const int dmaxy = (int)fmin(aabb_y1 + py, (float)clipping_region.y1);
 
     const int sminx = area.x;
     const int sminy = area.y;
     const int smaxx = area.x + area.width - 1;
     const int smaxy = area.y + area.height - 1;
 
-#define __ROTATE_AND_SCALE__
-#ifdef __ROTATE_AND_SCALE__
     const float M11 = c / scale_x; // Combine (inverse) rotation and *then* scaling matrices.
     const float M12 = s / scale_x;  // | 1/sx    0 | |  c s |
     const float M21 = -s / scale_y; // |           | |      |
     const float M22 = c / scale_y;  // |    0 1/sy | | -s c |
-#else
-    const float M11 = c / scale_x; // Combine scaling down and (inverse) rotate into a single matrix.
-    const float M12 = s / scale_y;  // |  c s |   | 1/sx   0  |
-    const float M21 = -s / scale_x; // |      | x |           |
-    const float M22 = c / scale_y;  // | -s c |   |   0  1/sy |
-#endif
+
     const float tlx = (dminx - px); // Transform the top-left corner of the to-be-drawn rectangle to texture space.
     const float tly = (dminy - py);
     float ou = (tlx * M11 + tly * M12) + stx + ox; // Offset to the source texture quad.
@@ -393,22 +381,10 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
 #ifdef __DEBUG_GRAPHICS__
             pixel(context, x, y, 15);
 #endif
-//#define __NAIVE_ROTATION__
-#ifdef __NAIVE_ROTATION__
-            float tx = (float)x - px; // Move relative to center
-            float ty = (float)y - py;
-            float rx = tx * c + ty * s; // Rotate the point.
-            float ry = ty * c - tx * s;
-            float sx = rx / scale_x; // Scale into the texture.
-            float sy = ry / scale_y;
-            int xx = (int)(sx + stx + ox);
-            int xy = (int)(sy + sty + oy);
-#else
-            int xx = (int)u;
-            int xy = (int)v;
-#endif
+            int xx = (int)floorf(u); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`)
+            int xy = (int)floorf(v);
 
-            if (xx >= sminx && xy >= sminy && xx <= smaxx && xy <= smaxy) {
+            if (xx >= sminx && xx <= smaxx && xy >= sminy && xy <= smaxy) {
 #ifdef __DEBUG_GRAPHICS__
                 pixel(context, x, y, xx + xy);
 #endif
