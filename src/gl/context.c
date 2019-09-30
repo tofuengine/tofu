@@ -50,7 +50,7 @@ static void pixel(const GL_Context_t *context, int x, int y, int index)
 }
 #endif
 
-bool GL_context_initialize(GL_Context_t *context, size_t width, size_t height)
+bool GL_context_create(GL_Context_t *context, size_t width, size_t height)
 {
     void *vram = malloc(width * height * sizeof(GL_Pixel_t));
     if (!vram) {
@@ -90,7 +90,7 @@ bool GL_context_initialize(GL_Context_t *context, size_t width, size_t height)
     return true;
 }
 
-void GL_context_terminate(GL_Context_t *context)
+void GL_context_delete(GL_Context_t *context)
 {
     free(context->vram);
     free(context->vram_rows);

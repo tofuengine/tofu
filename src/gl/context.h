@@ -61,8 +61,8 @@ typedef struct _GL_Transformation_t {
     float horizon;
 } GL_Transformation_t;
 
-extern bool GL_context_initialize(GL_Context_t *context, size_t width, size_t height);
-extern void GL_context_terminate(GL_Context_t *context);
+extern bool GL_context_create(GL_Context_t *context, size_t width, size_t height);
+extern void GL_context_delete(GL_Context_t *context); // TODO: rename to `*_destroy()`?
 
 extern void GL_context_push(const GL_Context_t *context);
 extern void GL_context_pop(const GL_Context_t *context);
