@@ -1,5 +1,8 @@
 TARGET=tofu
 
+ANALYZER=luacheck
+AFLAGS=--no-self --std lua53 -q
+
 COMPILER=cc
 CWARNINGS=-Wall -Wextra -Werror -Wno-unused-parameter
 CFLAGS=-O0 -g -DDEBUG -D_DEFAULT_SOURCE -DLUA_USE_LINUX -std=c99 -Iexternal
@@ -11,6 +14,8 @@ LFLAGS=-Wall -Wextra -Werror -Lexternal/GLFW -lglfw3 -lm  -ldl -lpthread -lrt -l
 SOURCES:= $(wildcard src/*.c  src/core/*.c src/gl/*.c src/modules/*.c src/modules/graphics/*.c external/glad/*.c external/lua/*.c external/spleen/*.c external/stb/*.c)
 INCLUDES:= $(wildcard src/*.h src/core/*.h src/gl/*.h src/modules/*.h src/modules/graphics/*.h external/glad/*.h external/GLFW/*.h external/lua/*.h external/spleen/*.h external/stb/*.h)
 OBJECTS:= $(SOURCES:%.c=%.o)
+SCRIPTS:= $(wildcard src/modules/*.lua)
+BLOBS:= $(SCRIPTS:%.lua=%.inc)
 RM=rm -f
 
 default: $(TARGET)
@@ -20,45 +25,68 @@ $(TARGET): $(OBJECTS)
 	@$(LINKER) $(OBJECTS) $(LFLAGS) -o $@
 	@echo "Linking complete!"
 
-$(OBJECTS): %.o : %.c $(INCLUDES) Makefile
+# The dependency upon `Makefile` is redundant, since scripts are bound to it.
+$(OBJECTS): %.o : %.c $(BLOBS) $(INCLUDES) Makefile
 	@$(COMPILER) $(CFLAGS) $(CWARNINGS) -c $< -o $@
 	@echo "Compiled "$<" successfully!"
 
+# Define a rule to automatically convert `.lua` script into an embeddable-ready `.inc` file.
+# `.inc` files also depend upon `Makefile` to be rebuild in case of tweakings.
+$(BLOBS): %.inc: %.lua Makefile
+	@$(ANALYZER) $(AFLAGS) $<
+	@xxd -i $< | sed -e 's/src_modules//g' > $@
+	@echo "Generated "$@" from "$<" successfully!"
+#	@xxd -i $< | sed -e 's/src_modules//g' -e 's/unsigned/static unsigned/g' > $@
+
 primitives: $(TARGET)
 	@echo "Launching Primitives application!"
+	@$(ANALYZER) $(AFLAGS) ./demos/primitives
 	./$(TARGET) ./demos/primitives
 
 bunnymark: $(TARGET)
 	@echo "Launching Bunnymark application!"
-	./$(TARGET) ./demos/bunnymark
+	@$(ANALYZER) $(AFLAGS) ./demos/bunnymark
+	@./$(TARGET) ./demos/bunnymark
 
 fire: $(TARGET)
 	@echo "Launching Fire application!"
-	./$(TARGET) ./demos/fire
+	@$(ANALYZER) $(AFLAGS) ./demos/fire
+	@./$(TARGET) ./demos/fire
 
 tiled-map: $(TARGET)
 	@echo "Launching Tiled-Map application!"
-	./$(TARGET) ./demos/tiled-map
+	@$(ANALYZER) $(AFLAGS) ./demos/tiled-map
+	@./$(TARGET) ./demos/tiled-map
 
 timers: $(TARGET)
 	@echo "Launching Timers application!"
-	./$(TARGET) ./demos/timers
+	@$(ANALYZER) $(AFLAGS) ./demos/timers
+	@./$(TARGET) ./demos/timers
 
 postfx: $(TARGET)
 	@echo "Launching PostFX application!"
-	./$(TARGET) ./demos/postfx
+	@$(ANALYZER) $(AFLAGS) ./demos/postfx
+	@./$(TARGET) ./demos/postfx
 
 spritestack: $(TARGET)
 	@echo "Launching Sprite-Stack application!"
-	./$(TARGET) ./demos/spritestack
+	@$(ANALYZER) $(AFLAGS) ./demos/spritestack
+	@./$(TARGET) ./demos/spritestack
 
 palette: $(TARGET)
 	@echo "Launching Palette application!"
-	./$(TARGET) ./demos/palette
+	@$(ANALYZER) $(AFLAGS) ./demos/palette
+	@./$(TARGET) ./demos/palette
+
+mode7: $(TARGET)
+	@echo "Launching Mode7 application!"
+	@$(ANALYZER) $(AFLAGS) ./demos/mode7
+	@./$(TARGET) ./demos/mode7
 
 .PHONY: clean
 clean:
 	@$(RM) $(OBJECTS)
+	@$(RM) $(BLOBS)
 	@echo "Cleanup complete!"
 
 .PHONY: remove

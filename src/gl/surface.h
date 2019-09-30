@@ -20,14 +20,25 @@
  * SOFTWARE.
  **/
 
-#include "gl.h"
+#ifndef __GL_SURFACE_H__
+#define __GL_SURFACE_H__
 
-bool GL_initialize()
-{
-    return GL_primitive_initialize();
-}
+#include <stdbool.h>
 
-void GL_terminate()
-{
-    GL_primitive_terminate();
-}
+#include "common.h"
+
+typedef struct _GL_Surface_t {
+    size_t width, height;
+    void *data; // TODO: aligned to `sizeof(uint32_t)`?
+    void **data_rows;
+    size_t data_size;
+} GL_Surface_t;
+
+typedef void (*GL_Surface_Callback_t)(void *parameters, GL_Surface_t *surface, const void *data);
+
+extern bool GL_surface_load(GL_Surface_t *surface, const char *pathfile, GL_Surface_Callback_t callback, void *parameters);
+extern bool GL_surface_decode(GL_Surface_t *surface, const void *buffer, size_t size, const GL_Surface_Callback_t callback, void *parameters);
+extern bool GL_surface_create(GL_Surface_t *surface, size_t width, size_t height);
+extern void GL_surface_delete(GL_Surface_t *surface);
+
+#endif  /* __GL_SURFACE_H__ */

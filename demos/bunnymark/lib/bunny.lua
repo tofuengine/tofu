@@ -7,9 +7,9 @@ local MAX_SPEED = 500
 local GRAVITY = 981
 local DAMPENING = 0.9
 local MIN_X = 0
-local MAX_X = Canvas.width()
+local MAX_X = Canvas.width() - 26
 local MIN_Y = 0
-local MAX_Y = Canvas.height()
+local MAX_Y = Canvas.height() - 37
 
 function Bunny:__ctor(bank)
   self.bank = bank

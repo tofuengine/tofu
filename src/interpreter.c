@@ -40,6 +40,9 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 #ifdef __DEBUG_GARBAGE_COLLECTOR__
   #include <time.h>
 #endif
+#ifdef DEBUG
+  #include <stb/stb_leakcheck.h>
+#endif
 
 #define ROOT_INSTANCE           "main"
 
@@ -62,7 +65,7 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 typedef enum _Methods_t {
     METHOD_SETUP,
     METHOD_INIT,
-    METHOD_INPUT,
+    METHOD_INPUT, // TODO: is the `input()` method useless? Probably...
     METHOD_UPDATE,
     METHOD_RENDER,
     Methods_t_CountOf
@@ -180,7 +183,7 @@ static int execute(lua_State *L, const char *script)
 
 static int call(lua_State *L, Methods_t method, int nargs, int nresults)
 {
-    int index = METHOD_STACK_INDEX(method); // O F1 .. Fn T
+    int index = METHOD_STACK_INDEX(method); // T O F1 .. Fn
     if (lua_isnil(L, index)) {
         lua_pop(L, nargs); // Discard the unused arguments pushed by the caller.
         for (int i = 0; i < nresults; ++i) { // Push fake NIL results for the caller.
@@ -188,9 +191,9 @@ static int call(lua_State *L, Methods_t method, int nargs, int nresults)
         }
         return LUA_OK;
     }
-    lua_pushvalue(L, index);                // O F1 ... Fn T A1 ... An     -> O F1 ... Fn T A1 ... An F
-    lua_pushvalue(L, OBJECT_STACK_INDEX);   // O F1 ... Fn T A1 ... An F   -> O F1 ... Fn T A1 ... An F O
-    lua_rotate(L, -(nargs + 2), 2);         // O F1 ... Fn T A1 ... An F O -> O F1 ... Fn T F O A1 ... An
+    lua_pushvalue(L, index);                // T O F1 ... Fn A1 ... An     -> T O F1 ... Fn A1 ... An F
+    lua_pushvalue(L, OBJECT_STACK_INDEX);   // T O F1 ... Fn A1 ... An F   -> T O F1 ... Fn A1 ... An F O
+    lua_rotate(L, -(nargs + 2), 2);         // T O F1 ... Fn A1 ... An F O -> T O F1 ... Fn F O A1 ... An
 
 #ifdef __DEBUG_VM_CALLS__
     int called = lua_pcall(L, nargs + 1, nresults, TRACEBACK_STACK_INDEX);
@@ -207,31 +210,29 @@ static int call(lua_State *L, Methods_t method, int nargs, int nresults)
 
 static bool timerpool_callback(Timer_t *timer, void *parameters)
 {
-    Interpreter_t *interpreter = (Interpreter_t *)parameters;
+    lua_State *L = (lua_State *)parameters;
 
-    // TODO: explicit access the VM state and expose `L` variable.
-
-    lua_rawgeti(interpreter->state, LUA_REGISTRYINDEX, BUNDLE_TO_INT(timer->bundle));
+    lua_rawgeti(L, LUA_REGISTRYINDEX, BUNDLE_TO_INT(timer->bundle));
 #if 0
-    if (lua_isnil(interpreter->state, -1)) {
-        lua_pop(interpreter->state, -1);
+    if (lua_isnil(L, -1)) {
+        lua_pop(L, -1);
         Log_write(LOG_LEVELS_ERROR, "<VM> can't find timer callback");
         return;
     }
 #endif
 #ifdef __DEBUG_VM_CALLS__
-    int result = lua_pcall(interpreter->state, 0, 0, TRACEBACK_STACK_INDEX);
+    int result = lua_pcall(L, 0, 0, TRACEBACK_STACK_INDEX);
     if (result != LUA_OK) {
-        Log_write(LOG_LEVELS_ERROR, "<VM> error in call: %s", lua_tostring(interpreter->state, -1));
+        Log_write(LOG_LEVELS_ERROR, "<VM> error in call: %s", lua_tostring(L, -1));
     }
 #else
-    lua_call(interpreter->state, 0, 0);
+    lua_call(L, 0, 0);
     int result = LUA_OK;
 #endif
     return result == LUA_OK;
 }
 
-bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configuration, const Environment_t *environment)
+bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configuration, const Environment_t *environment, const Display_t *display)
 {
     interpreter->environment = environment;
     interpreter->gc_age = 0.0;
@@ -245,7 +246,8 @@ bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configu
     luaL_openlibs(interpreter->state);
 
     lua_pushlightuserdata(interpreter->state, (void *)environment); // Discard `const` qualifier.
-    modules_initialize(interpreter->state, 1);
+    lua_pushlightuserdata(interpreter->state, (void *)display);
+    modules_initialize(interpreter->state, 2);
 
 #if 0
     luaX_appendpath(interpreter->state, environment->base_path);
@@ -280,7 +282,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configu
     Configuration_parse(interpreter->state, configuration);
     lua_pop(interpreter->state, 1); // Remove the configuration table from the stack.
 
-    TimerPool_initialize(&interpreter->timer_pool, timerpool_callback, interpreter);
+    TimerPool_initialize(&interpreter->timer_pool, timerpool_callback, interpreter->state);
 
     return true;
 }

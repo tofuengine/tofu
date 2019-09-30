@@ -82,7 +82,7 @@ vec4 getDistortedSample(sampler2D image, vec2 baseLoc, float distanceFromShore, 
 
 const vec4 EDGE_COLOR = vec4(0,0,0,0);
 //const float EDGE_OF_WATER = 0.25;
-const float EDGE_OF_WATER = 64.0;
+const float EDGE_OF_WATER = 256.0;
 const float ANGLE_RATE = 3.0;
 
 vec4 effect(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {
@@ -96,12 +96,12 @@ vec4 effect(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coor
 
     vec4 normal = texture2D(texture, uv);
 
-    if (uv.y >= edge) {
+    if (uv.y < edge) {
         return normal;
     }
 
-    float distFromEdge = edge - uv.y;
-    vec2 mirrorCoords = vec2(uv.x, edge + distFromEdge * ANGLE_RATE);
+    float distFromEdge = uv.y - edge;
+    vec2 mirrorCoords = vec2(uv.x, edge - distFromEdge * ANGLE_RATE);
 
     vec2 bumpNormal =  getAsBump(uv, u_time, u_resolution).xy;
 

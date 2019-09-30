@@ -34,120 +34,55 @@
 
 #include <math.h>
 #include <string.h>
-
-#define OPENGL_PIXEL_OFFSET     0.375f
+#include <time.h>
 
 typedef struct _Canvas_Class_t {
 } Canvas_Class_t;
 
+static int canvas_color_to_index(lua_State *L);
+static int canvas_screenshot(lua_State *L);
 static int canvas_width(lua_State *L);
 static int canvas_height(lua_State *L);
 static int canvas_palette(lua_State *L);
 static int canvas_background(lua_State *L);
+static int canvas_color(lua_State *L);
+static int canvas_pattern(lua_State *L);
 static int canvas_shift(lua_State *L);
 static int canvas_transparent(lua_State *L);
+static int canvas_clipping(lua_State *L);
 static int canvas_shader(lua_State *L);
-static int canvas_color(lua_State *L);
-static int canvas_points(lua_State *L);
-static int canvas_cluster(lua_State *L);
-static int canvas_polyline(lua_State *L);
-static int canvas_strip(lua_State *L);
-static int canvas_fan(lua_State *L);
+static int canvas_clear(lua_State *L);
+static int canvas_point(lua_State *L);
+static int canvas_hline(lua_State *L);
+static int canvas_vline(lua_State *L);
+static int canvas_line(lua_State *L);
+static int canvas_fill(lua_State *L);
+static int canvas_triangle(lua_State *L);
+static int canvas_rectangle(lua_State *L);
 
-static const char _canvas_script[] =
-    "local Canvas = {}\n"
-    "\n"
-    "function Canvas.point(x0, y0, color)\n"
-    "  Canvas.points({ x0, y0 }, color)\n"
-    "end\n"
-    "\n"
-    "function Canvas.line(x0, y0, x1, y1, color)\n"
-    "  Canvas.polyline({ x0, y0, x1, y1, x0, y0 }, color)\n"
-    "end\n"
-    "\n"
-    "function Canvas.triangle(mode, x0, y0, x1, y1, x2, y2, color)\n"
-    "  if mode == \"line\" then\n"
-    "    Canvas.polyline({ x0, y0, x1, y1, x2, y2, x0, y0 }, color)\n"
-    "  else\n"
-    "    Canvas.strip({ x0, y0, x1, y1, x2, y2 }, color)\n"
-    "  end\n"
-    "end\n"
-    "\n"
-    "function Canvas.rectangle(mode, x, y, width, height, color)\n"
-    "  local offset = mode == \"line\" and 1 or 0\n"
-    "  local x0 = x\n"
-    "  local y0 = y\n"
-    "  local x1 = x0 + width - offset\n"
-    "  local y1= y0 + height - offset\n"
-    "  if mode == \"line\" then\n"
-    "    Canvas.polyline({ x0, y0, x0, y1, x1, y1, x1, y0, x0, y0 }, color)\n"
-    "  else\n"
-    "    Canvas.strip({ x0, y0, x0, y1, x1, y0, x1, y1 }, color)\n"
-    "  end\n"
-    "end\n"
-    "\n"
-    "function Canvas.square(mode, x, y, size, color)\n"
-    "  Canvas.rectangle(mode, x, y, size, size, color)\n"
-    "end\n"
-    "\n"
-    "function Canvas.circle(mode, cx, cy, radius, color, segments)\n"
-    "  local radius_squared = radius * radius\n"
-    "  local points = {}\n"
-    "  if mode == \"line\" then\n"
-    "    local steps = radius * math.cos(math.pi / 4.0);\n"
-    "    for x = 0, steps do\n"
-    "      local y = math.sqrt(radius_squared - (x * x))\n"
-    "\n"
-    "      table.insert(points, cx + x)\n"
-    "      table.insert(points, cy + y)\n"
-    "      table.insert(points, cx + x)\n"
-    "      table.insert(points, cy - y)\n"
-    "      table.insert(points, cx - x)\n"
-    "      table.insert(points, cy + y)\n"
-    "      table.insert(points, cx - x)\n"
-    "      table.insert(points, cy - y)\n"
-    "\n"
-    "      table.insert(points, cx + y)\n"
-    "      table.insert(points, cy + x)\n"
-    "      table.insert(points, cx + y)\n"
-    "      table.insert(points, cy - x)\n"
-    "      table.insert(points, cx - y)\n"
-    "      table.insert(points, cy + x)\n"
-    "      table.insert(points, cx - y)\n"
-    "      table.insert(points, cy - x)\n"
-    "    end\n"
-    "  else\n"
-    "    for y = -radius, radius do\n"
-    "      local y_squared = y * y\n"
-    "      for x = -radius, radius do\n"
-    "        local x_squared = x * x\n"
-    "        if (x_squared + y_squared) <= radius_squared then\n"
-    "          table.insert(points, cx + x)\n"
-    "          table.insert(points, cy + y)\n"
-    "        end\n"
-    "      end\n"
-    "    end\n"
-    "  end\n"
-    "  Canvas.points(points, color)\n"
-    "end\n"
-    "\n"
-    "return Canvas\n"
-;
+// TODO: color index is optional, if not present use the current (drawstate) pen color
 
 static const struct luaL_Reg _canvas_functions[] = {
+    { "color_to_index", canvas_color_to_index },
+    { "screenshot", canvas_screenshot },
     { "width", canvas_width },
     { "height", canvas_height },
     { "palette", canvas_palette },
     { "background", canvas_background },
+    { "color", canvas_color },
+    { "pattern", canvas_pattern },
     { "shift", canvas_shift },
     { "transparent", canvas_transparent },
+    { "clipping", canvas_clipping },
     { "shader", canvas_shader },
-    { "color", canvas_color },
-    { "points", canvas_points },
-    { "cluster", canvas_cluster },
-    { "polyline", canvas_polyline },
-    { "strip", canvas_strip },
-    { "fan", canvas_fan },
+    { "clear", canvas_clear },
+    { "point", canvas_point },
+    { "hline", canvas_hline },
+    { "vline", canvas_vline },
+    { "line", canvas_line },
+    { "fill", canvas_fill },
+    { "triangle", canvas_triangle },
+    { "rectangle", canvas_rectangle },
     { NULL, NULL }
 };
 
@@ -155,10 +90,64 @@ static const luaX_Const _canvas_constants[] = {
     { NULL }
 };
 
+#include "canvas.inc"
+
 int canvas_loader(lua_State *L)
 {
-    lua_pushvalue(L, lua_upvalueindex(1)); // Duplicate the upvalue to pass it to the module.
-    return luaX_newmodule(L, _canvas_script, _canvas_functions, _canvas_constants, 1, LUAX_CLASS(Canvas_Class_t));
+    int nup = luaX_unpackupvalues(L);
+    return luaX_newmodule(L, (const char *)_canvas_lua, _canvas_functions, _canvas_constants, nup, LUAX_CLASS(Canvas_Class_t));
+}
+
+static int canvas_color_to_index(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
+    LUAX_SIGNATURE_END
+    const char *argb = lua_tostring(L, 1);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.color_to_index('%s')", argb);
+#endif
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+    const GL_Color_t color = GL_palette_parse_color(argb);
+    const size_t index = GL_palette_find_nearest_color(&display->gl.palette, color);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "color '%s' mapped to index %d", argb, index);
+#endif
+
+    lua_pushinteger(L, index);
+
+    return 1;
+}
+
+static int canvas_screenshot(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
+    LUAX_SIGNATURE_END
+    const char *prefix = lua_tostring(L, 1);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.screenshot('%s')", file);
+#endif
+
+    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+    time_t marker = time(NULL); // Generate a timedate based name.
+    struct tm *now = localtime(&marker);
+    char file[32] = {};
+    sprintf(file, "%s-%04d%02d%02d%02d%02d%02d.png", prefix,
+        1900 + now->tm_year, now->tm_mon + 1, now->tm_mday,
+        now->tm_hour, now->tm_min, now->tm_sec);
+
+    char pathfile[PATH_FILE_MAX] = {};
+    strcpy(pathfile, environment->base_path);
+    strcat(pathfile, file);
+
+    GL_context_screenshot(&display->gl, pathfile);
+
+    return 0;
 }
 
 static int canvas_width(lua_State *L)
@@ -169,9 +158,9 @@ static int canvas_width(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.width()");
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    lua_pushinteger(L, environment->display->configuration.width);
+    lua_pushinteger(L, display->gl.width);
 
     return 1;
 }
@@ -184,9 +173,9 @@ static int canvas_height(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.height()");
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    lua_pushinteger(L, environment->display->configuration.height);
+    lua_pushinteger(L, display->gl.height);
 
     return 1;
 }
@@ -199,9 +188,9 @@ static int canvas_palette0(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.palette()");
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    GL_Palette_t *palette = &environment->display->palette;
+    GL_Palette_t *palette = &display->gl.palette;
 
     lua_newtable(L);
     for (size_t i = 0; i < palette->count; ++i) {
@@ -225,7 +214,7 @@ static int canvas_palette1(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.palette(%d)", type);
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
     GL_Palette_t palette = {};
 
@@ -267,7 +256,7 @@ static int canvas_palette1(lua_State *L)
         return 0;
     }
 
-    Display_palette(environment->display, &palette);
+    GL_context_palette(&display->gl, &palette);
 
     return 0;
 }
@@ -285,14 +274,48 @@ static int canvas_background(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L, 1)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
     LUAX_SIGNATURE_END
-    int color = lua_tointeger(L, 1);
+    int index = lua_tointeger(L, 1);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.background(%d)", color);
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.background(%d)", index);
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    Display_background(environment->display, color);
+    GL_context_background(&display->gl, index);
+
+    return 0;
+}
+
+static int canvas_color(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+    LUAX_SIGNATURE_END
+    int index = lua_tointeger(L, 1);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.color(%d)", index);
+#endif
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+    GL_context_color(&display->gl, index);
+
+    return 0;
+}
+
+static int canvas_pattern(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+    LUAX_SIGNATURE_END
+    int mask = lua_tointeger(L, 1);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.pattern(%08x)", mask);
+#endif
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+    GL_context_pattern(&display->gl, mask);
 
     return 0;
 }
@@ -305,9 +328,9 @@ static int canvas_shift0(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.shift()");
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    Display_shift(environment->display, NULL, NULL, 0);
+    GL_context_shifting(&display->gl, NULL, NULL, 0);
 
     return 0;
 }
@@ -322,7 +345,7 @@ static int canvas_shift1(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.shift(%d)", type);
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
     int count = luaX_count(L, 1);
 
@@ -336,7 +359,7 @@ static int canvas_shift1(lua_State *L)
         lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
     }
 
-    Display_shift(environment->display, from, to, count);
+    GL_context_shifting(&display->gl, from, to, count);
 
     return 0;
 }
@@ -354,9 +377,9 @@ static int canvas_shift2(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.shift(%d, %d)", from, to);
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    Display_shift(environment->display, &from, &to, 1);
+    GL_context_shifting(&display->gl, &from, &to, 1);
 
     return 0;
 }
@@ -378,9 +401,9 @@ static int canvas_transparent0(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.transparent()");
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    Display_transparent(environment->display, NULL, NULL, 0);
+    GL_context_transparent(&display->gl, NULL, NULL, 0);
 
     return 0;
 }
@@ -395,21 +418,21 @@ static int canvas_transparent1(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.transparent(%d)", type);
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
     int count = luaX_count(L, 1);
 
-    size_t color[count];
-    bool is_transparent[count];
+    GL_Pixel_t indexes[count];
+    GL_Bool_t transparent[count];
     lua_pushnil(L); // first key
     for (size_t i = 0; lua_next(L, 1); ++i) {
-        color[i] = lua_tointeger(L, -2);
-        is_transparent[i] = lua_toboolean(L, -1) ? true : false;
+        indexes[i] = lua_tointeger(L, -2);
+        transparent[i] = lua_toboolean(L, -1) ? GL_BOOL_TRUE : GL_BOOL_FALSE;
 
         lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
     }
 
-    Display_transparent(environment->display, color, is_transparent, count);
+    GL_context_transparent(&display->gl, indexes, transparent, count);
 
     return 0;
 }
@@ -420,15 +443,15 @@ static int canvas_transparent2(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
         LUAX_SIGNATURE_ARGUMENT(luaX_isboolean)
     LUAX_SIGNATURE_END
-    size_t color = lua_tointeger(L, 1);
-    bool transparent = lua_toboolean(L, 2);
+    GL_Pixel_t index = lua_tointeger(L, 1);
+    GL_Bool_t transparent = lua_toboolean(L, 2) ? GL_BOOL_TRUE : GL_BOOL_FALSE;
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Canvas.transparent(%d, %d)", color, transparent);
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    Display_transparent(environment->display, &color, &transparent, 1);
+    GL_context_transparent(&display->gl, &index, &transparent, 1);
 
     return 0;
 }
@@ -442,6 +465,59 @@ static int canvas_transparent(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
+static int canvas_clipping0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 0)
+    LUAX_SIGNATURE_END
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.clipping()");
+#endif
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+    GL_context_clipping(&display->gl, NULL);
+
+    return 0;
+}
+
+static int canvas_clipping4(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 4)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+    LUAX_SIGNATURE_END
+    int x0 = lua_tointeger(L, 1);
+    int y0 = lua_tointeger(L, 2);
+    int x1 = lua_tointeger(L, 3);
+    int y1 = lua_tointeger(L, 4);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.clipping(%d, %d, %d, %d)", x0, y0, x1, y1);
+#endif
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+    GL_Quad_t clipping_region = (GL_Quad_t){
+            .x0 = x0,
+            .y0 = y0,
+            .x1 = x1,
+            .y1 = y1
+        };
+
+    GL_context_clipping(&display->gl, &clipping_region);
+
+    return 0;
+}
+
+static int canvas_clipping(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(0, canvas_clipping0)
+        LUAX_OVERLOAD_ARITY(4, canvas_clipping4)
+    LUAX_OVERLOAD_END
+}
+
 static int canvas_shader(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
@@ -452,220 +528,213 @@ static int canvas_shader(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Canvas.shader('%s')", code);
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    Display_shader(environment->display, code);
+    Display_shader(display, code);
 
     return 0;
 }
 
-static int canvas_color(lua_State *L)
+static int canvas_clear(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 1)
+    LUAX_SIGNATURE_BEGIN(L, 0)
+    LUAX_SIGNATURE_END
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.clear()");
+#endif
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+    GL_context_clear(&display->gl);
+
+    return 0;
+}
+
+static int canvas_point(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 3)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+    LUAX_SIGNATURE_END
+    double x = lua_tonumber(L, 1);
+    double y = lua_tonumber(L, 2);
+    int index = lua_tointeger(L, 3);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.point(%f, %f, %d)", x, y, index);
+#endif
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+    GL_primitive_point(&display->gl, (GL_Point_t){ (int)x, (int)y }, index);
+
+    return 0;
+}
+
+static int canvas_hline(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 4)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+    LUAX_SIGNATURE_END
+    double x = lua_tonumber(L, 1);
+    double y = lua_tonumber(L, 2);
+    double width = lua_tonumber(L, 3);
+    int index = lua_tointeger(L, 4);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.hline(%f, %f, %f, %d)", x, y, width, index);
+#endif
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+    GL_primitive_hline(&display->gl, (GL_Point_t){ (int)x, (int)y }, (size_t)width, index);
+
+    return 0;
+}
+
+static int canvas_vline(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 4)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+    LUAX_SIGNATURE_END
+    double x = lua_tonumber(L, 1);
+    double y = lua_tonumber(L, 2);
+    double height = lua_tonumber(L, 3);
+    int index = lua_tointeger(L, 4);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.vline(%f, %f, %f, %d)", x, y, height, index);
+#endif
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+    GL_primitive_vline(&display->gl, (GL_Point_t){ (int)x, (int)y }, (size_t)height, index);
+
+    return 0;
+}
+
+static int canvas_line(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 5)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+    LUAX_SIGNATURE_END
+    double x0 = lua_tonumber(L, 1);
+    double y0 = lua_tonumber(L, 2);
+    double x1 = lua_tonumber(L, 3);
+    double y1 = lua_tonumber(L, 4);
+    int index = lua_tointeger(L, 5);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.line(%f, %f, %f, %f, %d)", x0, y0, x1, y1, index);
+#endif
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+    GL_primitive_line(&display->gl, (GL_Point_t){ (int)x0, (int)y0 }, (GL_Point_t){ (int)x1, (int)y1 }, index);
+
+    return 0;
+}
+
+static int canvas_fill(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 3)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+    LUAX_SIGNATURE_END
+    double x = lua_tonumber(L, 1);
+    double y = lua_tonumber(L, 2);
+    int index = lua_tointeger(L, 3);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.fill(%f, %f, %d)", x, y, index);
+#endif
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+    GL_context_fill(&display->gl, (GL_Point_t){ (int)x, (int)y }, index);
+
+    return 0;
+}
+
+static int canvas_triangle(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 8)
         LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
-    LUAX_SIGNATURE_END
-    const char *argb = lua_tostring(L, 1);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.color('%s')", argb);
-#endif
-
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
-
-    GL_Color_t color = GL_palette_parse_color(argb);
-    size_t index = GL_palette_find_nearest_color(&environment->display->palette, color);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "color '%s' mapped to index %d", argb, index);
-#endif
-
-    lua_pushinteger(L, index);
-
-    return 1;
-}
-
-// When drawing points and lines we need to ensure to be in mid-pixel coordinates, according to
-// the "diamond exit rule" in OpenGL's rasterization. Also, the ending pixel of a line segment
-// is not drawn to avoid lighting a pixel twice in a loop.
-//
-// http://glprogramming.com/red/appendixg.html#name1
-static int canvas_points(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L, 2)
-        LUAX_SIGNATURE_ARGUMENT(luaX_istable)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
     LUAX_SIGNATURE_END
-    int vertices = lua_rawlen(L, 1);
-    int color = lua_tointeger(L, 2);
+    const char *mode = lua_tostring(L, 1);
+    double x0 = lua_tonumber(L, 2);
+    double y0 = lua_tonumber(L, 3);
+    double x1 = lua_tonumber(L, 4);
+    double y1 = lua_tonumber(L, 5);
+    double x2 = lua_tonumber(L, 6);
+    double y2 = lua_tonumber(L, 7);
+    int index = lua_tointeger(L, 8);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.points(%d, %d)", vertices, color);
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.triangle(%s, %f, %f, %f, %f, %f, %f, %d)", mode, x0, y0, x1, y1, x2, y2, index);
 #endif
 
-    const size_t count = vertices / 2;
-    if (count == 0) {
-        Log_write(LOG_LEVELS_INFO, "<CANVAS> point-sequence as no vertices");
-        return 0;
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+    if (mode[0] == 'l') {
+        GL_primitive_line(&display->gl, (GL_Point_t){ (int)x0, (int)y0 }, (GL_Point_t){ (int)x1, (int)y1 }, index);
+        GL_primitive_line(&display->gl, (GL_Point_t){ (int)x1, (int)y1 }, (GL_Point_t){ (int)x2, (int)y2 }, index);
+        GL_primitive_line(&display->gl, (GL_Point_t){ (int)x2, (int)y2 }, (GL_Point_t){ (int)x0, (int)y0 }, index);
+    } else {
+        GL_primitive_triangle(&display->gl, (GL_Point_t){ (int)x0, (int)y0 }, (GL_Point_t){ (int)x1, (int)y1 }, (GL_Point_t){ (int)x2, (int)y2 }, index);
     }
-
-    double array[vertices];
-    luaX_getnumberarray(L, 1, array);
-
-    GL_Point_t points[count];
-    for (size_t i = 0; i < count; ++i) {
-        double x = array[(i * 2)];
-        double y = array[(i * 2) + 1];
-
-        points[i] = (GL_Point_t){
-                .x = (GLfloat)x + OPENGL_PIXEL_OFFSET, .y = (GLfloat)y + OPENGL_PIXEL_OFFSET
-            };
-    }
-
-    GL_primitive_points(points, count, (GL_Color_t){ color, color, color, 255 });
 
     return 0;
 }
 
-static int canvas_cluster(lua_State *L)
+static int canvas_rectangle(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(luaX_istable)
-    LUAX_SIGNATURE_END
-    int amount = lua_rawlen(L, 1);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.cluster(%d)", amount);
-#endif
-
-    const size_t count = amount / 3;
-    if (count == 0) {
-        Log_write(LOG_LEVELS_INFO, "<CANVAS> cluster-sequence as no elements");
-        return 0;
-    }
-
-    double array[amount];
-    luaX_getnumberarray(L, 1, array);
-
-    GL_Point_t points[count];
-    GL_Color_t colors[count];
-    for (size_t i = 0; i < count; ++i) {
-        double x = array[(i * 3)];
-        double y = array[(i * 3) + 1];
-        double c = array[(i * 3) + 2];
-
-        points[i] = (GL_Point_t){
-                .x = (GLfloat)x + OPENGL_PIXEL_OFFSET, .y = (GLfloat)y + OPENGL_PIXEL_OFFSET
-            };
-        colors[i] = (GL_Color_t){
-                (GLubyte)c, (GLubyte)c, (GLubyte)c, 255
-            };
-    }
-
-    GL_primitive_cluster(points, colors, count);
-
-    return 0;
-}
-
-static int canvas_polyline(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L, 2)
-        LUAX_SIGNATURE_ARGUMENT(luaX_istable)
+    LUAX_SIGNATURE_BEGIN(L, 6)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
     LUAX_SIGNATURE_END
-    int vertices = lua_rawlen(L, 1);
-    int color = lua_tointeger(L, 2);
+    const char *mode = lua_tostring(L, 1);
+    double x = lua_tonumber(L, 2);
+    double y = lua_tonumber(L, 3);
+    double width = lua_tonumber(L, 4);
+    double height = lua_tonumber(L, 5);
+    int index = lua_tointeger(L, 6);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.polyline(%d, %d)", vertices, color);
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.rectangle(%s, %f, %f, %f, %f, %d)", mode, x, y, width, height, index);
 #endif
 
-    const size_t count = vertices / 2;
-    if (count == 0) {
-        Log_write(LOG_LEVELS_INFO, "<CANVAS> polyline as no vertices");
-        return 0;
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+    if (mode[0] == 'l') {
+        double x0 = x;
+        double y0 = y;
+        double x1 = x0 + width - 1.0f;
+        double y1 = y0 + height - 1.0f;
+
+        GL_primitive_line(&display->gl, (GL_Point_t){ (int)x0, (int)y0 }, (GL_Point_t){ (int)x0, (int)y1 }, index);
+        GL_primitive_line(&display->gl, (GL_Point_t){ (int)x0, (int)y1 }, (GL_Point_t){ (int)x1, (int)y1 }, index);
+        GL_primitive_line(&display->gl, (GL_Point_t){ (int)x1, (int)y1 }, (GL_Point_t){ (int)x1, (int)y0 }, index);
+        GL_primitive_line(&display->gl, (GL_Point_t){ (int)x1, (int)y0 }, (GL_Point_t){ (int)x0, (int)y0 }, index);
+    } else {
+        GL_primitive_rectangle(&display->gl, (GL_Rectangle_t){ (int)x, (int)y, (int)width, (int)height }, index);
     }
-
-    double array[vertices];
-    luaX_getnumberarray(L, 1, array);
-
-    GL_Point_t points[count];
-    for (size_t i = 0; i < count; ++i) {
-        double x = array[(i * 2)];
-        double y = array[(i * 2) + 1];
-
-        points[i] = (GL_Point_t){
-                .x = (GLfloat)x + OPENGL_PIXEL_OFFSET, .y = (GLfloat)y + OPENGL_PIXEL_OFFSET
-            };
-    }
-
-    GL_primitive_polyline(points, count, (GL_Color_t){ color, color, color, 255 });
-
-    return 0;
-}
-
-static int canvas_strip(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L, 2)
-        LUAX_SIGNATURE_ARGUMENT(luaX_istable)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
-    LUAX_SIGNATURE_END
-    int vertices = lua_rawlen(L, 1);
-    int color = lua_tointeger(L, 2);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.strip(%d, %d)", vertices, color);
-#endif
-
-    const size_t count = vertices / 2;
-    if (count == 0) {
-        Log_write(LOG_LEVELS_INFO, "<CANVAS> strip as no vertices");
-        return 0;
-    }
-
-    double array[vertices];
-    luaX_getnumberarray(L, 1, array);
-
-    GL_Point_t points[count];
-    for (size_t i = 0; i < count; ++i) {
-        double x = array[(i * 2)];
-        double y = array[(i * 2) + 1];
-
-        points[i] = (GL_Point_t){
-                .x = (GLfloat)x + OPENGL_PIXEL_OFFSET, .y = (GLfloat)y + OPENGL_PIXEL_OFFSET
-            };
-    }
-
-    GL_primitive_strip(points, count, (GL_Color_t){ color, color, color, 255 });
-
-    return 0;
-}
-
-static int canvas_fan(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L, 2)
-        LUAX_SIGNATURE_ARGUMENT(luaX_istable)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
-    LUAX_SIGNATURE_END
-    int vertices = lua_rawlen(L, 1);
-    int color = lua_tointeger(L, 2);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.fan(%d, %d)", vertices, color);
-#endif
-
-    const size_t count = vertices / 2;
-    if (count == 0) {
-        Log_write(LOG_LEVELS_INFO, "<CANVAS> fan as no vertices");
-        return 0;
-    }
-
-    double array[vertices];
-    luaX_getnumberarray(L, 1, array);
-
-    GL_Point_t points[count];
-    for (size_t i = 0; i < count; ++i) {
-        double x = array[(i * 2)];
-        double y = array[(i * 2) + 1];
-
-        points[i] = (GL_Point_t){
-                .x = (GLfloat)x + OPENGL_PIXEL_OFFSET, .y = (GLfloat)y + OPENGL_PIXEL_OFFSET
-            };
-    }
-
-    GL_primitive_fan(points, count, (GL_Color_t){ color, color, color, 255 });
 
     return 0;
 }

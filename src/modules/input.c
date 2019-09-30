@@ -45,6 +45,7 @@ static const struct luaL_Reg _input_functions[] = {
     { NULL, NULL }
 };
 
+// TODO: implement triggers delay/repeat.
 static const luaX_Const _input_constants[] = {
     { "UP", LUA_CT_INTEGER, { .i = DISPLAY_KEY_UP } },
     { "DOWN", LUA_CT_INTEGER, { .i = DISPLAY_KEY_DOWN } },
@@ -59,10 +60,12 @@ static const luaX_Const _input_constants[] = {
     { NULL }
 };
 
+#include "input.inc"
+
 int input_loader(lua_State *L)
 {
-    lua_pushvalue(L, lua_upvalueindex(1)); // Duplicate the upvalue to pass it to the module.
-    return luaX_newmodule(L, NULL, _input_functions, _input_constants, 1, LUAX_CLASS(Input_Class_t));
+    int nup = luaX_unpackupvalues(L);
+    return luaX_newmodule(L, NULL, _input_functions, _input_constants, nup, LUAX_CLASS(Input_Class_t));
 }
 
 static int input_is_key_down(lua_State *L)
@@ -72,9 +75,9 @@ static int input_is_key_down(lua_State *L)
     LUAX_SIGNATURE_END
     int key = lua_tointeger(L, 1);
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    bool is_down = (key >= Display_Keys_t_First && key <= Display_Keys_t_Last) ? environment->display->keys_state[key].down : false;
+    bool is_down = (key >= Display_Keys_t_First && key <= Display_Keys_t_Last) ? display->keys_state[key].down : false;
 
     lua_pushboolean(L, is_down);
     return 1;
@@ -87,9 +90,9 @@ static int input_is_key_up(lua_State *L)
     LUAX_SIGNATURE_END
     int key = lua_tointeger(L, 1);
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    bool is_down = (key >= Display_Keys_t_First && key <= Display_Keys_t_Last) ? environment->display->keys_state[key].down : false;
+    bool is_down = (key >= Display_Keys_t_First && key <= Display_Keys_t_Last) ? display->keys_state[key].down : false;
 
     lua_pushboolean(L, !is_down);
     return 1;
@@ -102,9 +105,9 @@ static int input_is_key_pressed(lua_State *L)
     LUAX_SIGNATURE_END
     int key = lua_tointeger(L, 1);
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    bool is_pressed = (key >= Display_Keys_t_First && key <= Display_Keys_t_Last) ? environment->display->keys_state[key].pressed : false;
+    bool is_pressed = (key >= Display_Keys_t_First && key <= Display_Keys_t_Last) ? display->keys_state[key].pressed : false;
 
     lua_pushboolean(L, is_pressed);
     return 1;
@@ -117,9 +120,9 @@ static int input_is_key_released(lua_State *L)
     LUAX_SIGNATURE_END
     int key = lua_tointeger(L, 1);
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    bool is_released = (key >= Display_Keys_t_First && key <= Display_Keys_t_Last) ? environment->display->keys_state[key].released : false;
+    bool is_released = (key >= Display_Keys_t_First && key <= Display_Keys_t_Last) ? display->keys_state[key].released : false;
 
     lua_pushboolean(L, is_released);
     return 1;

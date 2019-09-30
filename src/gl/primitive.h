@@ -23,18 +23,15 @@
 #ifndef __GL_PRIMITIVE_H__
 #define __GL_PRIMITIVE_H__
 
-#include <stdbool.h>
-
 #include "common.h"
+#include "context.h"
 
-extern bool GL_primitive_initialize();
-extern void GL_primitive_terminate();
+extern void GL_primitive_point(const GL_Context_t *context, GL_Point_t position, GL_Pixel_t index);
+extern void GL_primitive_line(const GL_Context_t *context, GL_Point_t from, GL_Point_t to, GL_Pixel_t index);
+extern void GL_primitive_hline(const GL_Context_t *context, GL_Point_t origin,  size_t w, GL_Pixel_t index);
+extern void GL_primitive_vline(const GL_Context_t *context, GL_Point_t origin, size_t h, GL_Pixel_t index);
 
-extern void GL_primitive_points(const GL_Point_t *points, const size_t count, const GL_Color_t color);
-extern void GL_primitive_polyline(const GL_Point_t *points, const size_t count, const GL_Color_t color);
-extern void GL_primitive_strip(const GL_Point_t *points, const size_t count, const GL_Color_t color);
-extern void GL_primitive_fan(const GL_Point_t *points, const size_t count, const GL_Color_t color);
-extern void GL_primitive_cluster(const GL_Point_t *points, const GL_Color_t *colors, const size_t count);
-
+extern void GL_primitive_rectangle(const GL_Context_t *context, GL_Rectangle_t rectangle, GL_Pixel_t index);
+extern void GL_primitive_triangle(const GL_Context_t *context, GL_Point_t a, GL_Point_t b, GL_Point_t c, GL_Pixel_t index);
 
 #endif  /* __GL_PRIMITIVE_H__ */

@@ -32,11 +32,13 @@
 typedef struct _System_Class_t {
 } System_Class_t;
 
+static int system_time(lua_State *L);
 static int system_fps(lua_State *L);
 static int system_quit(lua_State *L);
 static int system_log(lua_State *L);
 
 static const struct luaL_Reg _system_functions[] = {
+    { "time", system_time },
     { "fps", system_fps },
     { "quit", system_quit },
     { "log", system_log },
@@ -47,10 +49,23 @@ static const luaX_Const _system_constants[] = {
     { NULL }
 };
 
+#include "system.inc"
+
 int system_loader(lua_State *L)
 {
-    lua_pushvalue(L, lua_upvalueindex(1)); // Duplicate the upvalue to pass it to the module.
-    return luaX_newmodule(L, NULL, _system_functions, _system_constants, 1, LUAX_CLASS(System_Class_t));
+    int nup = luaX_unpackupvalues(L);
+    return luaX_newmodule(L, NULL, _system_functions, _system_constants, nup, LUAX_CLASS(System_Class_t));
+}
+
+static int system_time(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 0)
+    LUAX_SIGNATURE_END
+
+    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+
+    lua_pushnumber(L, environment->time);
+    return 1;
 }
 
 static int system_fps(lua_State *L)

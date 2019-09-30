@@ -51,10 +51,12 @@ static const luaX_Const _timer_constants[] = {
     { NULL }
 };
 
+#include "timer.inc"
+
 int timer_loader(lua_State *L)
 {
-    lua_pushvalue(L, lua_upvalueindex(1)); // Duplicate the upvalue to pass it to the module.
-    return luaX_newmodule(L, NULL, _timer_functions, _timer_constants, 1, LUAX_CLASS(Timer_Class_t));
+    int nup = luaX_unpackupvalues(L);
+    return luaX_newmodule(L, NULL, _timer_functions, _timer_constants, nup, LUAX_CLASS(Timer_Class_t));
 }
 
 static int timer_new(lua_State *L)

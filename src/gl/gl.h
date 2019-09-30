@@ -23,20 +23,12 @@
 #ifndef __GL_H__
 #define __GL_H__
 
-#include <stdbool.h>
-
 #include "common.h"
+#include "context.h"
 #include "palette.h"
 #include "primitive.h"
 #include "program.h"
 #include "sheet.h"
-#include "texture.h"
-
-typedef struct _GL_Context_t {
-    // TODO: use it to hold everything!
-} GL_Context_t;
-
-extern bool GL_initialize(); // TODO: rename `GL_*` to `HAL_*`.
-extern void GL_terminate();
+#include "surface.h"
 
 #endif  /* __GL_H__ */

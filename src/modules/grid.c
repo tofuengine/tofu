@@ -28,6 +28,9 @@
 #include "../log.h"
 
 #include <stdlib.h>
+#ifdef DEBUG
+  #include <stb/stb_leakcheck.h>
+#endif
 
 #ifdef __GRID_INTEGER_CELL__
 typedef long Cell_t;
@@ -60,6 +63,7 @@ static const struct luaL_Reg _grid_functions[] = {
     {"stride", grid_stride },
     {"peek", grid_peek },
     {"poke", grid_poke },
+//    {"path", grid_path },
     { NULL, NULL }
 };
 
@@ -67,10 +71,12 @@ static const luaX_Const _grid_constants[] = {
     { NULL }
 };
 
+#include "grid.inc"
+
 int grid_loader(lua_State *L)
 {
-    lua_pushvalue(L, lua_upvalueindex(1)); // Duplicate the upvalue to pass it to the module.
-    return luaX_newmodule(L, NULL, _grid_functions, _grid_constants, 1, LUAX_CLASS(Grid_Class_t));
+    int nup = luaX_unpackupvalues(L);
+    return luaX_newmodule(L, NULL, _grid_functions, _grid_constants, nup, LUAX_CLASS(Grid_Class_t));
 }
 
 static int grid_new(lua_State *L)

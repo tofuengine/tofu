@@ -31,8 +31,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-
-#define CONFIGURATION_FILE_NAME    "configuration.json"
+#ifdef DEBUG
+  #define STB_LEAKCHECK_IMPLEMENTATION
+  #include <stb/stb_leakcheck.h>
+#endif
 
 static bool update_statistics(Engine_Statistics_t *statistics, double elapsed) {
     static double history[FPS_AVERAGE_SAMPLES] = {};
@@ -62,10 +64,10 @@ static bool update_statistics(Engine_Statistics_t *statistics, double elapsed) {
 bool Engine_initialize(Engine_t *engine, const char *base_path)
 {
     Log_initialize();
-    Environment_initialize(&engine->environment, base_path, &engine->display);
+    Environment_initialize(&engine->environment, base_path);
     Configuration_initialize(&engine->configuration);
 
-    bool result = Interpreter_initialize(&engine->interpreter, &engine->configuration, &engine->environment);
+    bool result = Interpreter_initialize(&engine->interpreter, &engine->configuration, &engine->environment, &engine->display);
     if (!result) {
         Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't initialize interpreter");
         return false;
@@ -90,7 +92,13 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 
     engine->environment.timer_pool = &engine->interpreter.timer_pool; // HACK: inject the timer-pool pointer.
 
-    engine->operative = Interpreter_init(&engine->interpreter);
+    result = Interpreter_init(&engine->interpreter);
+    if (!result) {
+        Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't call init method");
+        Interpreter_terminate(&engine->interpreter);
+        Display_terminate(&engine->display);
+        return false;
+    }
 
     return true;
 }
@@ -100,6 +108,9 @@ void Engine_terminate(Engine_t *engine)
     Interpreter_terminate(&engine->interpreter); // Terminate the interpreter to unlock all resources.
     Display_terminate(&engine->display);
     Environment_terminate(&engine->environment);
+#if DEBUG
+    stb_leakcheck_dumpmem();
+#endif
 }
 
 void Engine_run(Engine_t *engine)
@@ -117,7 +128,7 @@ void Engine_run(Engine_t *engine)
 
     for (bool running = true; running && !engine->environment.quit && !Display_should_close(&engine->display); ) {
         double current = glfwGetTime();
-        double elapsed = current - previous;
+        double elapsed = current - previous; // TODO: use only doubles everywhere?
         previous = current;
 
         if (engine->configuration.debug) {
@@ -139,13 +150,14 @@ void Engine_run(Engine_t *engine)
         lag += elapsed; // Count a maximum amount of skippable frames in order no to stall on slower machines.
         for (int frames = 0; (frames < skippable_frames) && (lag >= delta_time); ++frames) {
             // TODO: To move `TimerPool_update()` here the interpreter should expose the "timerpool_update" callback.
+            engine->environment.time += delta_time;
             running = running && Interpreter_update(&engine->interpreter, delta_time);
             lag -= delta_time;
         }
 
-        Display_render_prepare(&engine->display);
-            running = running && Interpreter_render(&engine->interpreter, lag / delta_time);
-        Display_render_finish(&engine->display);
+        running = running && Interpreter_render(&engine->interpreter, lag / delta_time);
+
+        Display_present(&engine->display);
 
 //        if (used < delta_time) {
 //            glfwWait

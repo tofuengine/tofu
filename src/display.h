@@ -49,8 +49,7 @@ typedef enum _Display_Keys_t {
 
 typedef enum _Display_Programs_t {
     Display_Programs_t_First = 0,
-    DISPLAY_PROGRAM_PALETTE = Display_Programs_t_First,
-    DISPLAY_PROGRAM_PASSTHRU,
+    DISPLAY_PROGRAM_PASSTHRU = Display_Programs_t_First,
     DISPLAY_PROGRAM_CUSTOM,
     Display_Programs_t_Last = DISPLAY_PROGRAM_CUSTOM,
     Display_Programs_t_CountOf
@@ -78,31 +77,26 @@ typedef struct _Display_t {
     GLFWwindow *window;
     int window_width, window_height, window_scale;
     int physical_width, physical_height;
-    GL_Quad_t offscreen_source;
-    GL_Quad_t offscreen_destination;
-    GL_Texture_t offscreen_texture;
-    GLuint offscreen_framebuffer;
+
+    GLuint vram_texture;
+    GL_Quad_t vram_destination;
 
     GL_Program_t programs[Display_Programs_t_CountOf];
     size_t program_index;
 
-    GL_Palette_t palette;
-    GLint shifting[GL_MAX_PALETTE_COLORS];
-    GLfloat transparency[GL_MAX_PALETTE_COLORS];
-    int background_index;
-    GLfloat background_rgba[4];
+    GL_Context_t gl;
 } Display_t;
 
 extern bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title);
+extern void Display_terminate(Display_t *display);
+extern void Display_shader(Display_t *display, const char *code);
 extern bool Display_should_close(Display_t *display);
 extern void Display_process_input(Display_t *display);
-extern void Display_render_prepare(Display_t *display);
-extern void Display_render_finish(Display_t *display);
+extern void Display_present(Display_t *display);
+
 extern void Display_palette(Display_t *display, const GL_Palette_t *palette);
 extern void Display_shift(Display_t *display, const size_t *from, const size_t *to, size_t count);
 extern void Display_transparent(Display_t *display, const size_t *color, const bool *is_transparent, size_t count);
 extern void Display_background(Display_t *display, const size_t color);
-extern void Display_shader(Display_t *display, const char *code);
-extern void Display_terminate(Display_t *display);
 
 #endif  /* __DISPLAY_H__ */

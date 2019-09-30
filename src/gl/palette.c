@@ -43,10 +43,18 @@ GL_Color_t GL_palette_parse_color(const char *argb)
 {
     GL_Color_t color;
     char hex[3] = {};
-    strncpy(hex, argb    , 2); color.a = strtol(hex, NULL, 16);
-    strncpy(hex, argb + 2, 2); color.r = strtol(hex, NULL, 16);
-    strncpy(hex, argb + 4, 2); color.g = strtol(hex, NULL, 16);
-    strncpy(hex, argb + 6, 2); color.b = strtol(hex, NULL, 16);
+    if (strlen(argb) == 8) {
+        strncpy(hex, argb    , 2); color.a = strtol(hex, NULL, 16);
+        strncpy(hex, argb + 2, 2); color.r = strtol(hex, NULL, 16);
+        strncpy(hex, argb + 4, 2); color.g = strtol(hex, NULL, 16);
+        strncpy(hex, argb + 6, 2); color.b = strtol(hex, NULL, 16);
+    } else
+    if (strlen(argb) == 6) {
+        color.a = 255; // Fully opaque.
+        strncpy(hex, argb    , 2); color.r = strtol(hex, NULL, 16);
+        strncpy(hex, argb + 2, 2); color.g = strtol(hex, NULL, 16);
+        strncpy(hex, argb + 4, 2); color.b = strtol(hex, NULL, 16);
+    }
     return color;
 }
 
@@ -59,28 +67,10 @@ void GL_palette_format_color(char *argb, const GL_Color_t color)
 #endif
 }
 
-void GL_palette_normalize(const GL_Palette_t *palette, GLfloat *colors) // palette->count * 3
-{
-    for (size_t i = 0; i < palette->count; ++i) {
-        int j = i * 3;
-        colors[j    ] = (GLfloat)palette->colors[i].r / (GLfloat)255.0;
-        colors[j + 1] = (GLfloat)palette->colors[i].g / (GLfloat)255.0;
-        colors[j + 2] = (GLfloat)palette->colors[i].b / (GLfloat)255.0;
-    }
-}
-
-void GL_palette_normalize_color(const GL_Color_t color, GLfloat rgba[4])
-{
-    rgba[0] = (GLfloat)color.r / (GLfloat)255.0;
-    rgba[1] = (GLfloat)color.g / (GLfloat)255.0;
-    rgba[2] = (GLfloat)color.b / (GLfloat)255.0;
-    rgba[3] = (GLfloat)color.b / (GLfloat)255.0;
-}
-
 // https://en.wikipedia.org/wiki/Color_difference
-size_t GL_palette_find_nearest_color(const GL_Palette_t *palette, const GL_Color_t color)
+GL_Pixel_t GL_palette_find_nearest_color(const GL_Palette_t *palette, const GL_Color_t color)
 {
-    size_t index = 0;
+    GL_Pixel_t index = 0;
     double minimum = __DBL_MAX__;
     for (size_t i = 0; i < palette->count; ++i) {
         const GL_Color_t *current = &palette->colors[i];
@@ -99,7 +89,7 @@ size_t GL_palette_find_nearest_color(const GL_Palette_t *palette, const GL_Color
 #endif
         if (minimum > distance) {
             minimum = distance;
-            index = i;
+            index = (GL_Pixel_t)i;
         }
     }
     return index;

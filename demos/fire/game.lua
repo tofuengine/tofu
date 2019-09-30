@@ -67,6 +67,8 @@ function Game:update(delta_time)
 end
 
 function Game:render(ratio)
+  Canvas.clear()
+
   for i = 0, STEPS - 1 do
     local y = i * self.y_size
     for j = 0, STEPS - 1 do
@@ -78,7 +80,7 @@ function Game:render(ratio)
     end
   end
 
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0, 1.0, "left")
+  self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
 end
 
 return Game
