@@ -141,8 +141,8 @@ void GL_context_to_rgba(const GL_Context_t *context, const GL_Palette_t *palette
     int count = palette->count;
     const GL_Pixel_t *src = (const GL_Pixel_t *)context->vram;
     GL_Color_t *dst = (GL_Color_t *)vram;
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
+    for (int i = height; i; --i) {
+        for (int j = width; j; --j) {
 #ifdef __DEBUG_GRAPHICS__
             GL_Pixel_t index = *src++;
             GL_Color_t color;
