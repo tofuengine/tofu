@@ -17,6 +17,9 @@ function Game:__ctor()
   self.mode = 0
   self.speed = 1.0
   self.running = true
+
+  self.offset_x = 0
+  self.offset_y = 0
   self.elevation = 64
   self.horizon = Canvas.height() * 0.5
 end
@@ -59,32 +62,47 @@ function Game:update(delta_time)
 --  local c, d = 0, s
   local a, b = cos / sx, sin / sx
   local c, d = -sin / sy, cos / sy
-  self.surface:transformation(x0, y0, a, b, c, d)
+  self.surface:matrix(x0, y0, a, b, c, d)
 end
 
 function Game:render(_)
   Canvas.clear()
 
   if self.mode == 0 then
-    self.surface:blit(0, 0)
+    self.surface:xform()
   elseif self.mode == 1 then
-    self.surface:blit(self.surface:width() / 2, self.surface:height() / 2)
+    self.surface:offset(self.surface:width() / 2, self.surface:height() / 2)
+    self.surface:xform()
   elseif self.mode == 2 then
     local t = self.time
     local x, y = (math.sin(t) + 1) * 0.5 * self.surface:width(), (math.cos(t) + 1) * 0.5 * self.surface:height()
-    self.surface:blit(x, y)
+    self.surface:offset(x, y)
+    self.surface:xform()
   elseif self.mode == 3 then
     local t = self.time
     local elevation = 512
     local horizon = (math.sin(t * 1.2) + 1) * 0.5 * Canvas.height()
-    self.surface:blit(0, 0, elevation, horizon)
+    self.surface:offset(0, 0)
+    self.surface:projection(true, elevation, horizon)
+    self.surface:xform()
   elseif self.mode == 4 then
     local t = self.time
     local elevation = (math.sin(t * 1.2) + 1) * 0.5 * 2048
     local horizon = Canvas.height() * 0.25
-    self.surface:blit(0, 0, elevation, horizon)
+    self.surface:offset(0, 0)
+    self.surface:projection(true, elevation, horizon)
+    self.surface:xform()
   elseif self.mode == 5 then
-    self.surface:blit(0, 0, self.elevation, self.horizon)
+    self.surface:offset(self.offset_x, self.offset_y)
+    self.surface:projection(true, self.elevation, self.horizon)
+    self.surface:xform()
+  elseif self.mode == 6 then
+    local t = self.time
+    local offset_x = t * 8
+    local offset_y = 0
+    self.surface:offset(offset_x, offset_y)
+    self.surface:projection(true, self.elevation, self.horizon)
+    self.surface:xform()
   end
 
   self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
