@@ -417,6 +417,17 @@ void GL_Transformation_Callback_Perspective(float *a, float *b, float *c, float 
     *c *= p; *d *= p;
 }
 
+void GL_Transformation_Callback_Barrell(float *a, float *b, float *c, float *d, size_t yc, void *parameters)
+{
+    // 1) call the Lua callback passing a/b/c/d
+    // 2) retrieve the 4 return values
+    // 3) modify the passed values
+    const float angle = ((float)yc / 256.0f) * 3.14f;
+    const float sx = (1.0f - sinf(angle)) * 0.4f + 1.0f;
+
+    *a *= sx; *b *= 1.0f;
+    *c *= sx; *d *= 1.0f;
+}
 
 static int surface_projection2(lua_State *L)
 {
