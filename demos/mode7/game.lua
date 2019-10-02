@@ -54,15 +54,19 @@ function Game:update(delta_time)
   end
   self.time = self.time + delta_time * self.speed
 
-  local t = self.time
-  local cos, sin = math.cos(t), math.sin(t)
-  local sx, sy = 1, 1 --(math.sin(t * 2.3) + 1) * 0.5 * 2 + 0.5, (math.cos(t * 3.2) + 1) * 0.5 * 2 + 0.5
-  local x0, y0 = self.surface:width() * 0.5, self.surface:height() * 0.5
+  if self.mode == 7 then
+    self.surface:matrix(0, 0, 1, 0, 0, 1)
+  else
+    local t = self.time
+    local cos, sin = math.cos(t), math.sin(t)
+    local sx, sy = 1, 1 --(math.sin(t * 2.3) + 1) * 0.5 * 2 + 0.5, (math.cos(t * 3.2) + 1) * 0.5 * 2 + 0.5
+    local x0, y0 = self.surface:width() * 0.5, self.surface:height() * 0.5
 --  local a, b = s, 0
 --  local c, d = 0, s
-  local a, b = cos / sx, sin / sx
-  local c, d = -sin / sy, cos / sy
-  self.surface:matrix(x0, y0, a, b, c, d)
+    local a, b = cos / sx, sin / sx
+    local c, d = -sin / sy, cos / sy
+    self.surface:matrix(x0, y0, a, b, c, d)
+  end
 end
 
 function Game:render(_)
@@ -98,8 +102,15 @@ function Game:render(_)
     self.surface:xform()
   elseif self.mode == 6 then
     local t = self.time
-    local offset_x = t * 8
+    local offset_x = t * 64
     local offset_y = 0
+    self.surface:offset(offset_x, offset_y)
+    self.surface:projection(false)
+    self.surface:xform()
+  elseif self.mode == 7 then
+    local t = self.time
+    local offset_x = 0
+    local offset_y = t * 128
     self.surface:offset(offset_x, offset_y)
     self.surface:projection(true, self.elevation, self.horizon)
     self.surface:xform()
