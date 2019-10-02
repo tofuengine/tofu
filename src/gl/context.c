@@ -584,9 +584,21 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
     arrfree(stack);
 }
 
+void GL_Transformation_Callback_Perspective(float *a, float *b, float *c, float *d, size_t yc, void *parameters)
+{
+    if (yc <= perspective->yh) {
+        return;
+    }
+
+    const float p = perspective->ya / ((float)yc - perspective->yh);
+
+    *a *= p; *b *= p;
+    *c *= p; *d *= p;
+}
+
 // https://www.youtube.com/watch?v=3FVN_Ze7bzw
 // http://www.coranac.com/tonc/text/mode7.htm
-void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface, GL_Point_t position, GL_Transformation_t transformation) // TODO: add scanline callback or op-table
+void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface, GL_Point_t position, GL_Transformation_t transformation)
 {
     const GL_Quad_t clipping_region = context->clipping_region;
     const GL_Pixel_t *shifting = context->shifting;
@@ -601,18 +613,12 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
     const float c = transformation.c;
     const float d = transformation.d;
     const int clamp = transformation.clamp;
-    const float elevation = transformation.elevation;
-    const float horizon = transformation.horizon;
-    const bool perspective = transformation.perspective;
-
-    const float yh = perspective ? horizon : 0.0f;
-    const float ya = elevation;
-
-    const int offset_y = perspective ? (int)yh + 1 : 0;
+    const GL_Transformation_Callback_t callback = transformation.callback;
+    const void *callback_parameters = transformation.callback_parameters;
 
     GL_Quad_t drawing_region = (GL_Quad_t) {
         .x0 = position.x,
-        .y0 = position.y + offset_y, // Skip the horizon line.
+        .y0 = position.y,
         .x1 = position.x + (clipping_region.x1 - clipping_region.x0),
         .y1 = position.y + (clipping_region.y1 - clipping_region.y0)
     };
@@ -651,20 +657,21 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
     const int skip = context->surface.width - width;
 
     for (int y = drawing_region.y0; y <= drawing_region.y1; ++y) {
-        const float yi = ((float)(y - oy) - yh) + v - y0;
+        const int yc = y - oy;
+        const float yi = (float)yc + v - y0;
 
-        const float p = perspective
-            ? ya / ((float)(y - oy) - yh)
-            : 1.0f;
-
-        const float pa = p * a; float pb =  p * b;
-        const float pc = p * c; float pd =  p * d;
+        float pa = a; float pb =  b;
+        float pc = c; float pd =  d;
+        if (callback) {
+            callback(&pa, &pb, &pc, &pd, yc, callback_parameters);
+        }
 
         for (int x = drawing_region.x0; x <= drawing_region.x1; ++x) {
 #ifdef __DEBUG_GRAPHICS__
             pixel(context, x, y, x + y);
 #endif
-            const float xi = (float)(x - ox) + h - x0;
+            const int xc = x - ox;
+            const float xi = (float)xc + h - x0;
 
             const float xp = (pa * xi + pb * yi) + x0;
             const float yp = (pc * xi + pd * yi) + y0;

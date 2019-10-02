@@ -52,10 +52,11 @@ typedef struct _GL_Transformation_t {
     float x0, y0;
     float a, b, c, d;
     GL_Clamp_Modes_t clamp;
-    bool perspective;
-    float elevation;
-    float horizon;
+    GL_Transformation_Callback_t callback;
+    void *callback_parameters;
 } GL_Transformation_t;
+
+typedef void (*GL_Transformation_Callback_t)(float *a, float *b, float *c, float *d, size_t row, void *parameters);
 
 extern bool GL_context_create(GL_Context_t *context, size_t width, size_t height);
 extern void GL_context_delete(GL_Context_t *context); // TODO: rename to `*_destroy()`?
