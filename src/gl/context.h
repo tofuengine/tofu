@@ -32,22 +32,18 @@
 // TODO: move from `float` to 'double`.
 
 typedef struct _GL_Context_t {
-    size_t width, height, stride; // `stride` is the width in bytes.
-    void *vram;
-    void **vram_rows;
-    size_t vram_size;
-
+    GL_Surface_t surface;
+    GL_Quad_t clipping_region;
     GL_Pixel_t background;
     GL_Pixel_t color;
     uint32_t mask;
     GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
     GL_Bool_t transparent[GL_MAX_PALETTE_COLORS];
-    GL_Quad_t clipping_region;
 } GL_Context_t;
 
 typedef enum _GL_Clamp_Modes_t {
-    GL_CLAMP_MODE_BORDER,
     GL_CLAMP_MODE_EDGE,
+    GL_CLAMP_MODE_BORDER,
     GL_CLAMP_MODE_REPEAT
 } GL_Clamp_Modes_t;
 
@@ -70,6 +66,7 @@ extern void GL_context_pop(const GL_Context_t *context);
 extern void GL_context_clear(const GL_Context_t *context);
 extern void GL_context_screenshot(const GL_Context_t *context, const GL_Palette_t *palette, const char *pathfile);
 extern void GL_context_to_rgba(const GL_Context_t *context, const GL_Palette_t *palette, void *vram);
+extern void GL_context_to_surface(const GL_Context_t *context, const GL_Surface_t *surface);
 
 extern void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position);
 extern void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, float sx, float sy);

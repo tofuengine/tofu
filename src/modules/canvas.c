@@ -162,7 +162,7 @@ static int canvas_width(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    lua_pushinteger(L, display->gl.width);
+    lua_pushinteger(L, display->gl.surface.width);
 
     return 1;
 }
@@ -177,7 +177,7 @@ static int canvas_height(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    lua_pushinteger(L, display->gl.height);
+    lua_pushinteger(L, display->gl.surface.height);
 
     return 1;
 }
