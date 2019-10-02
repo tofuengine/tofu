@@ -36,7 +36,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb/stb_image_write.h>
 
-#define PIXEL(c, x, y)  ((GL_Pixel_t *)(c)->surface.data_rows[(y)] + (x))
+#define PIXEL(c, x, y)  ((c)->surface.data_rows[(y)] + (x))
 
 static int iabs(int v)
 {
@@ -89,7 +89,7 @@ void GL_context_pop(const GL_Context_t *context)
 void GL_context_clear(const GL_Context_t *context)
 {
     const GL_Pixel_t color = context->background;
-    GL_Pixel_t *dst = (GL_Pixel_t *)context->surface.data;
+    GL_Pixel_t *dst = context->surface.data;
     for (size_t i = context->surface.data_size; i; --i) {
         *(dst++) = color;
     }
@@ -118,7 +118,7 @@ void GL_context_to_rgba(const GL_Context_t *context, const GL_Palette_t *palette
     const int height = context->surface.height;
     const GL_Color_t *colors = palette->colors;
     int count = palette->count;
-    const GL_Pixel_t *src = (const GL_Pixel_t *)context->surface.data;
+    const GL_Pixel_t *src = context->surface.data;
     GL_Color_t *dst = (GL_Color_t *)vram;
     for (int i = height; i; --i) {
         for (int j = width; j; --j) {
@@ -151,8 +151,8 @@ void GL_context_to_surface(const GL_Context_t *context, const GL_Surface_t *surf
         height = surface->height;
     }
 
-    const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data;
-    GL_Pixel_t *dst = (GL_Pixel_t *)context->surface.data;
+    const GL_Pixel_t *src = surface->data;
+    GL_Pixel_t *dst = context->surface.data;
 
     const int src_skip = surface->width - width;
     const int dst_skip = context->surface.width - width;
@@ -206,8 +206,8 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
         return;
     }
 
-    const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[area.y + skip_y] + (area.x + skip_x);
-    GL_Pixel_t *dst = (GL_Pixel_t *)context->surface.data_rows[drawing_region.y0] + drawing_region.x0;
+    const GL_Pixel_t *src = surface->data_rows[area.y + skip_y] + (area.x + skip_x);
+    GL_Pixel_t *dst = context->surface.data_rows[drawing_region.y0] + drawing_region.x0;
 
     const int src_skip = surface->width - width;
     const int dst_skip = context->surface.width - width;
@@ -277,7 +277,7 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
         return;
     }
 
-    GL_Pixel_t *dst = (GL_Pixel_t *)context->surface.data_rows[drawing_region.y0] + drawing_region.x0;
+    GL_Pixel_t *dst = context->surface.data_rows[drawing_region.y0] + drawing_region.x0;
 
     const size_t skip = context->surface.width - width;
 
@@ -295,7 +295,7 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
 
     float v = ov; // NOTE: we can also apply an integer-based DDA method, using reminders.
     for (int i = height; i; --i) {
-        const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[(int)v];
+        const GL_Pixel_t *src = surface->data_rows[(int)v];
 
         float u = ou;
         for (int j = width; j; --j) {
@@ -424,7 +424,7 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     float ou = (tlx * M11 + tly * M12) + sax + sx; // Offset to the source texture quad.
     float ov = (tlx * M21 + tly * M22) + say + sy;
 
-    GL_Pixel_t *dst = (GL_Pixel_t *)context->surface.data_rows[drawing_region.y0] + drawing_region.x0;
+    GL_Pixel_t *dst = context->surface.data_rows[drawing_region.y0] + drawing_region.x0;
 
     const int skip = context->surface.width - width;
 
@@ -443,7 +443,7 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
 #ifdef __DEBUG_GRAPHICS__
                 pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)i + (int)j);
 #endif
-                const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[y] + x;
+                const GL_Pixel_t *src = surface->data_rows[y] + x;
                 GL_Pixel_t index = shifting[*src];
                 if (!transparent[index]) {
                     *dst = index;
@@ -646,7 +646,7 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
     const int smaxx = sw - 1;
     const int smaxy = sh - 1;
 
-    GL_Pixel_t *dst = (GL_Pixel_t *)context->surface.data_rows[drawing_region.y0] + drawing_region.x0;
+    GL_Pixel_t *dst = context->surface.data_rows[drawing_region.y0] + drawing_region.x0;
 
     const int skip = context->surface.width - width;
 
@@ -692,7 +692,7 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
             }
 
             if (sx >= sminx && sx <= smaxx && sy >= sminy && sy <= smaxy) {
-                const GL_Pixel_t *src = (const GL_Pixel_t *)surface->data_rows[sy] + sx;
+                const GL_Pixel_t *src = surface->data_rows[sy] + sx;
                 GL_Pixel_t index = shifting[*src];
                 if (!transparent[index]) {
                     *dst = index;
