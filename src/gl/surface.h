@@ -29,8 +29,8 @@
 
 typedef struct _GL_Surface_t {
     size_t width, height;
-    void *data; // TODO: aligned to `sizeof(uint32_t)`?
-    void **data_rows;
+    GL_Pixel_t *data; // TODO: aligned to `sizeof(uint32_t)`?
+    GL_Pixel_t **data_rows;
     size_t data_size;
 } GL_Surface_t;
 

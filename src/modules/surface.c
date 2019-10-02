@@ -72,7 +72,7 @@ static void to_indexed_atlas_callback(void *parameters, GL_Surface_t *surface, c
     const GL_Palette_t *palette = (const GL_Palette_t *)parameters;
 
     const GL_Color_t *src = (const GL_Color_t *)data;
-    GL_Pixel_t *dst = (GL_Pixel_t *)surface->data;
+    GL_Pixel_t *dst = surface->data;
 
     for (size_t y = 0; y < surface->height; ++y) {
         int row_offset = surface->width * y;

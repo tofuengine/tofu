@@ -72,18 +72,18 @@ bool GL_surface_decode(GL_Surface_t *surface, const void *buffer, size_t size, c
 
 bool GL_surface_create(GL_Surface_t *surface, size_t width, size_t height)
 {
-    void *data = malloc(width * height * sizeof(GL_Pixel_t));
+    GL_Pixel_t *data = malloc(width * height * sizeof(GL_Pixel_t));
     if (!data) {
         return false;
     }
 
-    void **data_rows = malloc(height * sizeof(void *));
+    GL_Pixel_t **data_rows = malloc(height * sizeof(GL_Pixel_t *));
     if (!data_rows) {
         free(data);
         return false;
     }
     for (size_t i = 0; i < height; ++i) {
-        data_rows[i] = (GL_Pixel_t *)data + (width * i);
+        data_rows[i] = data + (width * i);
     }
 
     Log_write(LOG_LEVELS_DEBUG, "<GL> surface created at #%p (%dx%d)", data, width, height);
