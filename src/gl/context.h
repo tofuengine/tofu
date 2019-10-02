@@ -47,6 +47,8 @@ typedef enum _GL_Clamp_Modes_t {
     GL_CLAMP_MODE_REPEAT
 } GL_Clamp_Modes_t;
 
+typedef void (*GL_Transformation_Callback_t)(float *a, float *b, float *c, float *d, size_t row, void *parameters);
+
 typedef struct _GL_Transformation_t {
     float h, v;
     float x0, y0;
@@ -55,8 +57,6 @@ typedef struct _GL_Transformation_t {
     GL_Transformation_Callback_t callback;
     void *callback_parameters;
 } GL_Transformation_t;
-
-typedef void (*GL_Transformation_Callback_t)(float *a, float *b, float *c, float *d, size_t row, void *parameters);
 
 extern bool GL_context_create(GL_Context_t *context, size_t width, size_t height);
 extern void GL_context_delete(GL_Context_t *context); // TODO: rename to `*_destroy()`?

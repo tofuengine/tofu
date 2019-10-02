@@ -584,18 +584,6 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
     arrfree(stack);
 }
 
-void GL_Transformation_Callback_Perspective(float *a, float *b, float *c, float *d, size_t yc, void *parameters)
-{
-    if (yc <= perspective->yh) {
-        return;
-    }
-
-    const float p = perspective->ya / ((float)yc - perspective->yh);
-
-    *a *= p; *b *= p;
-    *c *= p; *d *= p;
-}
-
 // https://www.youtube.com/watch?v=3FVN_Ze7bzw
 // http://www.coranac.com/tonc/text/mode7.htm
 void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface, GL_Point_t position, GL_Transformation_t transformation)
@@ -614,7 +602,7 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
     const float d = transformation.d;
     const int clamp = transformation.clamp;
     const GL_Transformation_Callback_t callback = transformation.callback;
-    const void *callback_parameters = transformation.callback_parameters;
+    void *callback_parameters = transformation.callback_parameters;
 
     GL_Quad_t drawing_region = (GL_Quad_t) {
         .x0 = position.x,

@@ -126,9 +126,8 @@ static int surface_new(lua_State *L)
                     .a = 1.0f, .b = 0.0f,
                     .c = 0.0f, .d = 1.0f,
                     .clamp = GL_CLAMP_MODE_REPEAT,
-                    .perspective = false,
-                    .elevation = 0.0f,
-                    .horizon = 0.0f
+                    .callback = NULL,
+                    .callback_parameters = NULL
                 }
         };
     Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface allocated as #%p", pathfile, instance);
@@ -403,6 +402,22 @@ static int surface_clamp(lua_State *L)
     return 0;
 }
 
+void GL_Transformation_Callback_Perspective(float *a, float *b, float *c, float *d, size_t yc, void *parameters)
+{
+    // 1) call the Lua callback passing a/b/c/d
+    // 2) retrieve the 4 return values
+    // 3) modify the passed values
+    if (yc <= 160) {
+        return;
+    }
+
+    const float p = 256.0f / ((float)yc - 160.0f);
+
+    *a *= p; *b *= p;
+    *c *= p; *d *= p;
+}
+
+
 static int surface_projection2(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 2)
@@ -415,7 +430,7 @@ static int surface_projection2(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Surface.projection() -> %.d", perspective);
 #endif
 
-    instance->transformation.perspective = perspective;
+    instance->transformation.callback = perspective ? GL_Transformation_Callback_Perspective : NULL;
 
     return 0;
 }
@@ -436,9 +451,9 @@ static int surface_projection4(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Surface.projection() -> %.d, %.f, %.f", perspective, elevation, horizon);
 #endif
 
-    instance->transformation.perspective = perspective;
-    instance->transformation.elevation = elevation;
-    instance->transformation.horizon = horizon;
+    instance->transformation.callback = perspective ? GL_Transformation_Callback_Perspective : NULL;
+    (void)elevation;
+    (void)horizon;
 
     return 0;
 }

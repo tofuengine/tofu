@@ -76,11 +76,13 @@ function Game:render(_)
     self.surface:xform()
   elseif self.mode == 1 then
     self.surface:offset(self.surface:width() / 2, self.surface:height() / 2)
+    self.surface:projection(false)
     self.surface:xform()
   elseif self.mode == 2 then
     local t = self.time
     local x, y = (math.sin(t) + 1) * 0.5 * self.surface:width(), (math.cos(t) + 1) * 0.5 * self.surface:height()
     self.surface:offset(x, y)
+    self.surface:projection(false)
     self.surface:xform()
   elseif self.mode == 3 then
     local t = self.time
