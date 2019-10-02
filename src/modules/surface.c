@@ -42,16 +42,26 @@ static int surface_new(lua_State *L);
 static int surface_gc(lua_State *L);
 static int surface_width(lua_State *L);
 static int surface_height(lua_State *L);
+static int surface_grab(lua_State *L);
 static int surface_blit(lua_State *L);
-static int surface_transformation(lua_State *L);
+static int surface_xform(lua_State *L);
+static int surface_offset(lua_State *L);
+static int surface_matrix(lua_State *L);
+static int surface_clamp(lua_State *L);
+static int surface_projection(lua_State *L);
 
 static const struct luaL_Reg _surface_functions[] = {
     { "new", surface_new },
     {"__gc", surface_gc },
     { "width", surface_width },
     { "height", surface_height },
+    { "grab", surface_grab },
     { "blit", surface_blit },
-    { "transformation", surface_transformation },
+    { "xform", surface_xform },
+    { "offset", surface_offset },
+    { "matrix", surface_matrix },
+    { "clamp", surface_clamp },
+    { "projection", surface_projection },
     { NULL, NULL }
 };
 
@@ -167,7 +177,100 @@ static int surface_height(lua_State *L)
     return 1;
 }
 
-static int surface_blit3(lua_State *L)
+static int surface_grab(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+    LUAX_SIGNATURE_END
+    Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+    GL_context_to_surface(&display->gl, &instance->surface);
+
+    return 0;
+}
+
+// static int surface_blit1(lua_State *L)
+// static int surface_blit3(lua_State *L) x y
+// static int surface_blit5(lua_State *L) x y w h
+// static int surface_blit7(lua_State *L) x y ox oy w h
+// static int surface_blit9(lua_State *L) x y ox oy w h sx sy
+// static int surface_blit10(lua_State *L) x y ox oy w h sx sy r
+static int surface_blit(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 3)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+    LUAX_SIGNATURE_END
+    Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
+    double x = (double)lua_tonumber(L, 2);
+    double y = (double)lua_tonumber(L, 3);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Surface.blit() -> %.f, %.f", x, y);
+#endif
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+    const GL_Context_t *context = &display->gl;
+    const GL_Surface_t *surface = &instance->surface;
+    GL_context_blit(context, surface, (GL_Rectangle_t){ 0, 0, surface->width, surface->height }, (GL_Point_t){ (int)x, (int)y });
+
+    return 0;
+}
+
+static int surface_xform1(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+    LUAX_SIGNATURE_END
+    Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Surface.xform()");
+#endif
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+    const GL_Context_t *context = &display->gl;
+    const GL_Surface_t *surface = &instance->surface;
+    GL_context_blit_x(context, surface, (GL_Point_t){ 0, 0 }, instance->transformation);
+
+    return 0;
+}
+
+static int surface_xform3(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 3)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+    LUAX_SIGNATURE_END
+    Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
+    double x = (double)lua_tonumber(L, 2);
+    double y = (double)lua_tonumber(L, 3);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Surface.xform() -> %.f, %.f", x, y);
+#endif
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+    const GL_Context_t *context = &display->gl;
+    const GL_Surface_t *surface = &instance->surface;
+    GL_context_blit_x(context, surface, (GL_Point_t){ (int)x, (int)y }, instance->transformation);
+
+    return 0;
+}
+
+static int surface_xform(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, surface_xform1)
+        LUAX_OVERLOAD_ARITY(3, surface_xform3)
+    LUAX_OVERLOAD_END
+}
+
+static int surface_offset(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 3)
         LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
@@ -178,64 +281,16 @@ static int surface_blit3(lua_State *L)
     double h = (double)lua_tonumber(L, 2);
     double v = (double)lua_tonumber(L, 3);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Surface.blit() -> %.f, %.f", h, v);
+    Log_write(LOG_LEVELS_DEBUG, "Surface.offset() -> %.f, %.f", h, v);
 #endif
 
     instance->transformation.h = h;
     instance->transformation.v = v;
-    instance->transformation.perspective = false;
-
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
-
-    const GL_Context_t *context = &display->gl;
-    const GL_Surface_t *surface = &instance->surface;
-    GL_context_blit_x(context, surface, (GL_Point_t){ 0, 0 }, instance->transformation);
 
     return 0;
 }
 
-static int surface_blit5(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L, 5)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-    LUAX_SIGNATURE_END
-    Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
-    double h = (double)lua_tonumber(L, 2);
-    double v = (double)lua_tonumber(L, 3);
-    double elevation = (double)lua_tonumber(L, 4);
-    double horizon = (double)lua_tonumber(L, 5);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Surface.blit() -> %.f, %.f, %.f, %.f", h, v, elevation, horizon);
-#endif
-
-    instance->transformation.h = h;
-    instance->transformation.v = v;
-    instance->transformation.perspective = true;
-    instance->transformation.elevation = elevation;
-    instance->transformation.horizon = horizon;
-
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
-
-    const GL_Context_t *context = &display->gl;
-    const GL_Surface_t *surface = &instance->surface;
-    GL_context_blit_x(context, surface, (GL_Point_t){ 0, 0 }, instance->transformation);
-
-    return 0;
-}
-
-static int surface_blit(lua_State *L)
-{
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(3, surface_blit3)
-        LUAX_OVERLOAD_ARITY(5, surface_blit5)
-    LUAX_OVERLOAD_END
-}
-
-static int surface_transformation3(lua_State *L)
+static int surface_matrix3(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 3)
         LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
@@ -246,7 +301,7 @@ static int surface_transformation3(lua_State *L)
     double x0 = (double)lua_tonumber(L, 2);
     double y0 = (double)lua_tonumber(L, 3);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Surface.transformation() -> %.f, %.f", x0, y0);
+    Log_write(LOG_LEVELS_DEBUG, "Surface.matrix() -> %.f, %.f", x0, y0);
 #endif
 
     instance->transformation.x0 = x0;
@@ -255,7 +310,7 @@ static int surface_transformation3(lua_State *L)
     return 0;
 }
 
-static int surface_transformation5(lua_State *L)
+static int surface_matrix5(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 5)
         LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
@@ -270,7 +325,7 @@ static int surface_transformation5(lua_State *L)
     double c = (double)lua_tonumber(L, 4);
     double d = (double)lua_tonumber(L, 5);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Surface.transformation() -> %.f, %.f, %.f, %.f", a, b, c, d);
+    Log_write(LOG_LEVELS_DEBUG, "Surface.matrix() -> %.f, %.f, %.f, %.f", a, b, c, d);
 #endif
 
     instance->transformation.a = a;
@@ -281,7 +336,7 @@ static int surface_transformation5(lua_State *L)
     return 0;
 }
 
-static int surface_transformation7(lua_State *L)
+static int surface_matrix7(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 7)
         LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
@@ -300,7 +355,7 @@ static int surface_transformation7(lua_State *L)
     double c = (double)lua_tonumber(L, 6);
     double d = (double)lua_tonumber(L, 7);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Surface.transformation() -> %.f, %.f, %.f, %.f, %.f, %.f", x0, y0, a, b, c, d);
+    Log_write(LOG_LEVELS_DEBUG, "Surface.matrix() -> %.f, %.f, %.f, %.f, %.f, %.f", x0, y0, a, b, c, d);
 #endif
 
     instance->transformation.x0 = x0;
@@ -313,11 +368,86 @@ static int surface_transformation7(lua_State *L)
     return 0;
 }
 
-static int surface_transformation(lua_State *L)
+static int surface_matrix(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(3, surface_transformation3)
-        LUAX_OVERLOAD_ARITY(5, surface_transformation5)
-        LUAX_OVERLOAD_ARITY(7, surface_transformation7)
+        LUAX_OVERLOAD_ARITY(3, surface_matrix3)
+        LUAX_OVERLOAD_ARITY(5, surface_matrix5)
+        LUAX_OVERLOAD_ARITY(7, surface_matrix7)
+    LUAX_OVERLOAD_END
+}
+
+
+static int surface_clamp(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 2)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
+    LUAX_SIGNATURE_END
+    Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
+    const char *clamp = lua_tostring(L, 2);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Surface.clamp() -> %s", clamp);
+#endif
+
+    if (clamp[0] == 'e') {
+        instance->transformation.clamp = GL_CLAMP_MODE_EDGE;
+    } else
+    if (clamp[0] == 'b') {
+        instance->transformation.clamp = GL_CLAMP_MODE_BORDER;
+    } else
+    if (clamp[0] == 'r') {
+        instance->transformation.clamp = GL_CLAMP_MODE_REPEAT;
+    }
+    Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface clamp mode is '%s'", clamp);
+
+    return 0;
+}
+
+static int surface_projection2(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 2)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isboolean)
+    LUAX_SIGNATURE_END
+    Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
+    bool perspective = lua_toboolean(L, 2) ? true : false;
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Surface.projection() -> %.d", perspective);
+#endif
+
+    instance->transformation.perspective = perspective;
+
+    return 0;
+}
+
+static int surface_projection4(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 4)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isboolean)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+    LUAX_SIGNATURE_END
+    Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
+    bool perspective = lua_toboolean(L, 2) ? true : false;
+    double elevation = (double)lua_tonumber(L, 3);
+    double horizon = (double)lua_tonumber(L, 4);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Surface.projection() -> %.d, %.f, %.f", perspective, elevation, horizon);
+#endif
+
+    instance->transformation.perspective = perspective;
+    instance->transformation.elevation = elevation;
+    instance->transformation.horizon = horizon;
+
+    return 0;
+}
+
+static int surface_projection(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(2, surface_projection2)
+        LUAX_OVERLOAD_ARITY(4, surface_projection4)
     LUAX_OVERLOAD_END
 }
