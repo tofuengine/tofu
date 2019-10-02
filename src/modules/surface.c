@@ -399,7 +399,6 @@ static int surface_clamp(lua_State *L)
     if (clamp[0] == 'r') {
         instance->transformation.clamp = GL_CLAMP_MODE_REPEAT;
     }
-    Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface clamp mode is '%s'", clamp);
 
     return 0;
 }
