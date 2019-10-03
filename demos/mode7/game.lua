@@ -11,7 +11,7 @@ function Game:__ctor()
   Canvas.palette("arne-32")
   Canvas.background(0)
 
-  self.surface = Surface.new("assets/map.png")
+  self.surface = Surface.new("assets/background.png")
   self.font = Font.default(0, 31)
   self.time = 0
   self.mode = 7

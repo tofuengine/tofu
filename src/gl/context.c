@@ -624,9 +624,6 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
         return;
     }
 
-    const int ox = position.x;
-    const int oy = position.y;
-
     const int sw = surface->width;
     const int sh = surface->height;
     const int sminx = 0;
@@ -638,17 +635,29 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
 
     const int skip = context->surface.width - width;
 
+    // The basic Mode7 formula is the following
+    //
     // [ X ]   [ A B ]   [ SX + H - CX ]   [ CX ]
     // [   ] = [     ] * [             ] + [    ]
     // [ Y ]   [ C D ]   [ SY + V - CY ]   [ CY ]
-    for (int y = drawing_region.y0; y <= drawing_region.y1; ++y) {
-        const int yc = y - oy;
-
+    //
+    // However, it can be optimized by (re)computing the transformed X/Y pair at each scanline,
+    // then moving along the projected matrix line using the 1st matrix column-vector.
+    //
+    // X[0,y] = A*(H-CX) + B*y + B*(V-CY) + CX
+    //        = A*(H-CX) + B*(y+V-CY) + CX
+    // Y[0,y] = C*(H-CX) + D*y + D*(V-CY) + CY
+    //        = C*(H-CX) + D*(y+V-CY) + CY
+    //
+    // X[x,y] = X[x-1,y] + A
+    // Y[x,y] = Y[x-1,y] + C
+    //
+    // The current scan-line need to be (re)projected due to the presence of the HDMA modifier.
+    for (int i = 0; i < height; ++i) {
         float y_registers[GL_XForm_Registers_t_CountOf];
-        int i = sizeof(y_registers);
-        memcpy(y_registers, registers, i);
+        memcpy(y_registers, registers, sizeof(y_registers));
         if (callback) {
-            callback(y_registers, yc, callback_parameters);
+            callback(y_registers, i, callback_parameters);
         }
 
         const float h = y_registers[GL_XFORM_REGISTER_H]; const float v = y_registers[GL_XFORM_REGISTER_V];
@@ -656,18 +665,16 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
         const float c = y_registers[GL_XFORM_REGISTER_C]; const float d =  y_registers[GL_XFORM_REGISTER_D];
         const float x0 = y_registers[GL_XFORM_REGISTER_X]; const float y0 = y_registers[GL_XFORM_REGISTER_Y];
 
-        const float yi = (float)yc + v - y0;
+        const float xi = h - x0;
+        const float yi = (float)i + v - y0;
 
-        for (int x = drawing_region.x0; x <= drawing_region.x1; ++x) {
+        float xp = (a * xi + b * yi) + x0;
+        float yp = (c * xi + d * yi) + y0;
+
+        for (int j = 0; j < width; ++j) {
 #ifdef __DEBUG_GRAPHICS__
-            pixel(context, x, y, x + y);
+            pixel(context, drawing_region.x0 + j, drawing_region.y0 + i, i + j);
 #endif
-            const int xc = x - ox;
-            const float xi = (float)xc + h - x0;
-
-            const float xp = (a * xi + b * yi) + x0;
-            const float yp = (c * xi + d * yi) + y0;
-
             int sx = (int)xp;
             int sy = (int)yp;
 
@@ -699,6 +706,9 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
             }
 
             ++dst;
+
+            xp += a;
+            yp += c;
         }
 
         dst += skip;
