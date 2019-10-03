@@ -587,6 +587,8 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
 // https://www.youtube.com/watch?v=3FVN_Ze7bzw
 // http://www.coranac.com/tonc/text/mode7.htm
 // https://wiki.superfamicom.org/registers
+#define REG(a,idx)      (a)[GL_XFORM_REGISTER_##idx]
+
 void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface, GL_Point_t position, GL_XForm_t xform)
 {
     const GL_Quad_t clipping_region = context->clipping_region;
@@ -654,16 +656,16 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
     //
     // The current scan-line need to be (re)projected due to the presence of the HDMA modifier.
     for (int i = 0; i < height; ++i) {
-        float y_registers[GL_XForm_Registers_t_CountOf];
-        memcpy(y_registers, registers, sizeof(y_registers));
+        float m7r[GL_XForm_Registers_t_CountOf];
+        memcpy(m7r, registers, sizeof(m7r));
         if (callback) {
-            callback(y_registers, i, callback_parameters);
+            callback(m7r, i, callback_parameters);
         }
 
-        const float h = y_registers[GL_XFORM_REGISTER_H]; const float v = y_registers[GL_XFORM_REGISTER_V];
-        const float a = y_registers[GL_XFORM_REGISTER_A]; const float b =  y_registers[GL_XFORM_REGISTER_B];
-        const float c = y_registers[GL_XFORM_REGISTER_C]; const float d =  y_registers[GL_XFORM_REGISTER_D];
-        const float x0 = y_registers[GL_XFORM_REGISTER_X]; const float y0 = y_registers[GL_XFORM_REGISTER_Y];
+        const float h = REG(m7r, H); const float v = REG(m7r, V);
+        const float a = REG(m7r, A); const float b =  REG(m7r, B);
+        const float c = REG(m7r, C); const float d =  REG(m7r, D);
+        const float x0 = REG(m7r, X); const float y0 = REG(m7r, Y);
 
         const float xi = h - x0;
         const float yi = (float)i + v - y0;
