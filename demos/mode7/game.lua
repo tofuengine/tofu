@@ -14,7 +14,7 @@ function Game:__ctor()
   self.surface = Surface.new("assets/map.png")
   self.font = Font.default(0, 31)
   self.time = 0
-  self.mode = 0
+  self.mode = 7
   self.speed = 1.0
   self.running = true
 
@@ -55,7 +55,8 @@ function Game:update(delta_time)
   self.time = self.time + delta_time * self.speed
 
   if self.mode == 7 then
-    self.surface:matrix(0, 0, 1, 0, 0, 1)
+    local x0, y0 = self.surface:width() * 0.5, self.surface:height() * 0.5
+    self.surface:matrix(1, 0, 0, 1, x0, y0)
   else
     local t = self.time
     local cos, sin = math.cos(t), math.sin(t)
@@ -65,7 +66,7 @@ function Game:update(delta_time)
 --  local c, d = 0, s
     local a, b = cos / sx, sin / sx
     local c, d = -sin / sy, cos / sy
-    self.surface:matrix(x0, y0, a, b, c, d)
+    self.surface:matrix(a, b, c, d, x0, y0)
   end
 end
 
@@ -112,7 +113,7 @@ function Game:render(_)
   elseif self.mode == 7 then
     local t = self.time
     local offset_x = 0
-    local offset_y = t * 128
+    local offset_y = t * 0
     self.surface:offset(offset_x, offset_y)
     self.surface:projection(true, self.elevation, self.horizon)
     self.surface:xform()
