@@ -638,9 +638,9 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
 
     const int skip = context->surface.width - width;
 
-    // [ X ]   [ A B ]   [ SX + M7HOFS - CX ]   [ CX ]
-    // [   ] = [     ] * [                  ] + [    ]
-    // [ Y ]   [ C D ]   [ SY + M7VOFS - CY ]   [ CY ]
+    // [ X ]   [ A B ]   [ SX + H - CX ]   [ CX ]
+    // [   ] = [     ] * [             ] + [    ]
+    // [ Y ]   [ C D ]   [ SY + V - CY ]   [ CY ]
     for (int y = drawing_region.y0; y <= drawing_region.y1; ++y) {
         const int yc = y - oy;
 
