@@ -223,10 +223,23 @@ int luaX_toref(lua_State *L, int arg)
     return luaL_ref(L, LUA_REGISTRYINDEX);
 }
 
-void luaX_getnumberarray(lua_State *L, int idx, double *array)
+void luaX_pushnumberarray(lua_State *L, double *array, int count)
+{
+    lua_createtable(L, count, 0);
+    for (int i = 0; i < count; i++) {
+        lua_pushinteger(L, array[i]);
+        lua_rawseti(L, -2, i + 1); /* In lua indices start at 1 */
+    }    
+}
+
+void luaX_tonumberarray(lua_State *L, int idx, double *array, int count)
 {
     lua_pushnil(L);
     for (int i = 0; lua_next(L, idx); ++i) {
+        if (i >= count) {
+            lua_pop(L, 2); // Pops both key and value and bail out!
+            break;
+        }
         array[i] = lua_tonumber(L, -1);
         lua_pop(L, 1);
     }
