@@ -35,7 +35,7 @@
 typedef struct _Surface_Class_t {
     // char pathfile[PATH_FILE_MAX];
     GL_Surface_t surface;
-    GL_Transformation_t transformation;
+    GL_XForm_t xform;
 } Surface_Class_t;
 
 static int surface_new(lua_State *L);
@@ -121,11 +121,9 @@ static int surface_new(lua_State *L)
     Surface_Class_t *instance = (Surface_Class_t *)lua_newuserdata(L, sizeof(Surface_Class_t));
     *instance = (Surface_Class_t){
             .surface = surface,
-            .transformation = (GL_Transformation_t){
-                    .x0 = 0.0f, .y0 = 0.0f,
-                    .a = 1.0f, .b = 0.0f,
-                    .c = 0.0f, .d = 1.0f,
-                    .clamp = GL_CLAMP_MODE_REPEAT,
+            .xform = (GL_XForm_t){
+                    .registers = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+                    .clamp = GL_XFORM_CLAMP_REPEAT,
                     .callback = NULL,
                     .callback_parameters = NULL
                 }
@@ -233,7 +231,7 @@ static int surface_xform1(lua_State *L)
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
-    GL_context_blit_x(context, surface, (GL_Point_t){ 0, 0 }, instance->transformation);
+    GL_context_blit_x(context, surface, (GL_Point_t){ 0, 0 }, instance->xform);
 
     return 0;
 }
@@ -256,7 +254,7 @@ static int surface_xform3(lua_State *L)
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
-    GL_context_blit_x(context, surface, (GL_Point_t){ (int)x, (int)y }, instance->transformation);
+    GL_context_blit_x(context, surface, (GL_Point_t){ (int)x, (int)y }, instance->xform);
 
     return 0;
 }
@@ -283,8 +281,8 @@ static int surface_offset(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Surface.offset() -> %.f, %.f", h, v);
 #endif
 
-    instance->transformation.h = h;
-    instance->transformation.v = v;
+    instance->xform.registers[GL_XFORM_REGISTER_H] = h;
+    instance->xform.registers[GL_XFORM_REGISTER_V] = v;
 
     return 0;
 }
@@ -303,8 +301,8 @@ static int surface_matrix3(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Surface.matrix() -> %.f, %.f", x0, y0);
 #endif
 
-    instance->transformation.x0 = x0;
-    instance->transformation.y0 = y0;
+    instance->xform.registers[GL_XFORM_REGISTER_X] = x0;
+    instance->xform.registers[GL_XFORM_REGISTER_Y] = y0;
 
     return 0;
 }
@@ -327,10 +325,10 @@ static int surface_matrix5(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Surface.matrix() -> %.f, %.f, %.f, %.f", a, b, c, d);
 #endif
 
-    instance->transformation.a = a;
-    instance->transformation.b = b;
-    instance->transformation.c = c;
-    instance->transformation.d = d;
+    instance->xform.registers[GL_XFORM_REGISTER_A] = a;
+    instance->xform.registers[GL_XFORM_REGISTER_B] = b;
+    instance->xform.registers[GL_XFORM_REGISTER_C] = c;
+    instance->xform.registers[GL_XFORM_REGISTER_D] = d;
 
     return 0;
 }
@@ -347,22 +345,22 @@ static int surface_matrix7(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
-    double x0 = (double)lua_tonumber(L, 2);
-    double y0 = (double)lua_tonumber(L, 3);
-    double a = (double)lua_tonumber(L, 4);
-    double b = (double)lua_tonumber(L, 5);
-    double c = (double)lua_tonumber(L, 6);
-    double d = (double)lua_tonumber(L, 7);
+    double a = (double)lua_tonumber(L, 2);
+    double b = (double)lua_tonumber(L, 3);
+    double c = (double)lua_tonumber(L, 4);
+    double d = (double)lua_tonumber(L, 5);
+    double x0 = (double)lua_tonumber(L, 6);
+    double y0 = (double)lua_tonumber(L, 7);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Surface.matrix() -> %.f, %.f, %.f, %.f, %.f, %.f", x0, y0, a, b, c, d);
+    Log_write(LOG_LEVELS_DEBUG, "Surface.matrix() -> %.f, %.f, %.f, %.f, %.f, %.f", a, b, c, d, x0, y0);
 #endif
 
-    instance->transformation.x0 = x0;
-    instance->transformation.y0 = y0;
-    instance->transformation.a = a;
-    instance->transformation.b = b;
-    instance->transformation.c = c;
-    instance->transformation.d = d;
+    instance->xform.registers[GL_XFORM_REGISTER_A] = a;
+    instance->xform.registers[GL_XFORM_REGISTER_B] = b;
+    instance->xform.registers[GL_XFORM_REGISTER_C] = c;
+    instance->xform.registers[GL_XFORM_REGISTER_D] = d;
+    instance->xform.registers[GL_XFORM_REGISTER_X] = x0;
+    instance->xform.registers[GL_XFORM_REGISTER_Y] = y0;
 
     return 0;
 }
@@ -390,43 +388,44 @@ static int surface_clamp(lua_State *L)
 #endif
 
     if (clamp[0] == 'e') {
-        instance->transformation.clamp = GL_CLAMP_MODE_EDGE;
+        instance->xform.clamp = GL_XFORM_CLAMP_EDGE;
     } else
     if (clamp[0] == 'b') {
-        instance->transformation.clamp = GL_CLAMP_MODE_BORDER;
+        instance->xform.clamp = GL_XFORM_CLAMP_BORDER;
     } else
     if (clamp[0] == 'r') {
-        instance->transformation.clamp = GL_CLAMP_MODE_REPEAT;
+        instance->xform.clamp = GL_XFORM_CLAMP_REPEAT;
     }
 
     return 0;
 }
 
-void GL_Transformation_Callback_Perspective(float *a, float *b, float *c, float *d, size_t yc, void *parameters)
+void GL_Transformation_Callback_Perspective(float registers[GL_XForm_Registers_t_CountOf], size_t scan_line, void *parameters)
 {
     // 1) call the Lua callback passing a/b/c/d
     // 2) retrieve the 4 return values
     // 3) modify the passed values
-    if (yc <= 160) {
+    const int yc = scan_line - 160;
+    if (yc <= 0) {
         return;
     }
 
-    const float p = 256.0f / ((float)yc - 160.0f);
+    const float p = 256.0f / (float)yc;
 
-    *a *= p; *b *= p;
-    *c *= p; *d *= p;
+    registers[GL_XFORM_REGISTER_A] *= p; registers[GL_XFORM_REGISTER_B] *= p;
+    registers[GL_XFORM_REGISTER_C] *= p; registers[GL_XFORM_REGISTER_D] *= p;
 }
 
-void GL_Transformation_Callback_Barrell(float *a, float *b, float *c, float *d, size_t yc, void *parameters)
+void GL_Transformation_Callback_Barrell(float registers[GL_XForm_Registers_t_CountOf], size_t scan_line, void *parameters)
 {
     // 1) call the Lua callback passing a/b/c/d
     // 2) retrieve the 4 return values
     // 3) modify the passed values
-    const float angle = ((float)yc / 256.0f) * 3.14f;
+    const float angle = ((float)scan_line / 256.0f) * 3.14f;
     const float sx = (1.0f - sinf(angle)) * 0.4f + 1.0f;
 
-    *a *= sx; *b *= 1.0f;
-    *c *= sx; *d *= 1.0f;
+    registers[GL_XFORM_REGISTER_A] = sx; registers[GL_XFORM_REGISTER_B] *= 1.0f;
+    registers[GL_XFORM_REGISTER_C] = sx; registers[GL_XFORM_REGISTER_D] *= 1.0f;
 }
 
 static int surface_projection2(lua_State *L)
@@ -441,7 +440,7 @@ static int surface_projection2(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Surface.projection() -> %.d", perspective);
 #endif
 
-    instance->transformation.callback = perspective ? GL_Transformation_Callback_Perspective : NULL;
+    instance->xform.callback = perspective ? GL_Transformation_Callback_Perspective : NULL;
 
     return 0;
 }
@@ -462,7 +461,7 @@ static int surface_projection4(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Surface.projection() -> %.d, %.f, %.f", perspective, elevation, horizon);
 #endif
 
-    instance->transformation.callback = perspective ? GL_Transformation_Callback_Perspective : NULL;
+    instance->xform.callback = perspective ? GL_Transformation_Callback_Perspective : NULL;
     (void)elevation;
     (void)horizon;
 

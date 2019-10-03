@@ -414,7 +414,7 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const int smaxx = area.x + area.width - 1;
     const int smaxy = area.y + area.height - 1;
 
-    const float M11 = c / scale_x;  // Combine (inverse) rotation and *then* scaling matrices.
+    const float M11 = c / scale_x;  // Since we are doing an *inverse* transformation, we combine rotation and *then* scaling (TRS -> SRT).
     const float M12 = s / scale_x;  // | 1/sx    0 | |  c s |
     const float M21 = -s / scale_y; // |           | |      |
     const float M22 = c / scale_y;  // |    0 1/sy | | -s c |
@@ -586,23 +586,17 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
 
 // https://www.youtube.com/watch?v=3FVN_Ze7bzw
 // http://www.coranac.com/tonc/text/mode7.htm
-void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface, GL_Point_t position, GL_Transformation_t transformation)
+// https://wiki.superfamicom.org/registers
+void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface, GL_Point_t position, GL_XForm_t xform)
 {
     const GL_Quad_t clipping_region = context->clipping_region;
     const GL_Pixel_t *shifting = context->shifting;
     const GL_Bool_t *transparent = context->transparent;
 
-    const float h = transformation.h;
-    const float v = transformation.v;
-    const float x0 = transformation.x0;
-    const float y0 = transformation.y0;
-    const float a = transformation.a;
-    const float b = transformation.b;
-    const float c = transformation.c;
-    const float d = transformation.d;
-    const int clamp = transformation.clamp;
-    const GL_Transformation_Callback_t callback = transformation.callback;
-    void *callback_parameters = transformation.callback_parameters;
+    const int clamp = xform.clamp;
+    const float *registers = xform.registers;
+    const GL_XForm_Callback_t callback = xform.callback;
+    void *callback_parameters = xform.callback_parameters;
 
     GL_Quad_t drawing_region = (GL_Quad_t) {
         .x0 = position.x,
@@ -644,15 +638,25 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
 
     const int skip = context->surface.width - width;
 
+    // [ X ]   [ A B ]   [ SX + M7HOFS - CX ]   [ CX ]
+    // [   ] = [     ] * [                  ] + [    ]
+    // [ Y ]   [ C D ]   [ SY + M7VOFS - CY ]   [ CY ]
     for (int y = drawing_region.y0; y <= drawing_region.y1; ++y) {
         const int yc = y - oy;
-        const float yi = (float)yc + v - y0;
 
-        float pa = a; float pb =  b;
-        float pc = c; float pd =  d;
+        float y_registers[GL_XForm_Registers_t_CountOf];
+        int i = sizeof(y_registers);
+        memcpy(y_registers, registers, i);
         if (callback) {
-            callback(&pa, &pb, &pc, &pd, yc, callback_parameters);
+            callback(y_registers, yc, callback_parameters);
         }
+
+        const float h = y_registers[GL_XFORM_REGISTER_H]; const float v = y_registers[GL_XFORM_REGISTER_V];
+        const float a = y_registers[GL_XFORM_REGISTER_A]; const float b =  y_registers[GL_XFORM_REGISTER_B];
+        const float c = y_registers[GL_XFORM_REGISTER_C]; const float d =  y_registers[GL_XFORM_REGISTER_D];
+        const float x0 = y_registers[GL_XFORM_REGISTER_X]; const float y0 = y_registers[GL_XFORM_REGISTER_Y];
+
+        const float yi = (float)yc + v - y0;
 
         for (int x = drawing_region.x0; x <= drawing_region.x1; ++x) {
 #ifdef __DEBUG_GRAPHICS__
@@ -661,17 +665,17 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
             const int xc = x - ox;
             const float xi = (float)xc + h - x0;
 
-            const float xp = (pa * xi + pb * yi) + x0;
-            const float yp = (pc * xi + pd * yi) + y0;
+            const float xp = (a * xi + b * yi) + x0;
+            const float yp = (c * xi + d * yi) + y0;
 
             int sx = (int)xp;
             int sy = (int)yp;
 
-            if (clamp == GL_CLAMP_MODE_REPEAT) {
+            if (clamp == GL_XFORM_CLAMP_REPEAT) {
                 sx = iabs(sx) % sw;
                 sy = iabs(sy) % sh;
             } else
-            if (clamp == GL_CLAMP_MODE_EDGE) {
+            if (clamp == GL_XFORM_CLAMP_EDGE) {
                 if (sx < sminx) {
                     sx = sminx;
                 } else
