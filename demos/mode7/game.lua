@@ -8,12 +8,12 @@ local Class = require("tofu.util").Class
 local Game = Class.define()
 
 local function perspective(regs, scan_line) -- H V A B C D X Y
-  local yc = scan_line - Canvas.height() * 0.25
+  local yc = scan_line -- - 128 -- Canvas.height() * 0.25
   if yc <= 0 then
     return regs
   end
 
-  local p = (Canvas.height() - 1) / yc;
+  local p = 128 / yc -- (Canvas.height() * 0.25) / yc;
 
   regs[3] = regs[3] * p
   regs[4] = regs[4] * p
@@ -37,7 +37,7 @@ function Game:__ctor()
   self.speed = 0.0
 
   self.surface:projection(perspective)
-  self.surface:projection()
+--  self.surface:projection()
 end
 
 function Game:input()
@@ -61,21 +61,20 @@ function Game:update(delta_time)
     return
   end
 
-  local cos, sin = math.cos(self.angle), math.sin(self.angle)
+  local cos, sin = math.sin(self.angle), math.cos(self.angle)
 
-  self.x = self.x + (cos * self.speed * delta_time)
-  self.y = self.y + (sin * self.speed * delta_time)
+  self.x = self.x + (cos * -self.speed * delta_time)
+  self.y = self.y + (sin * -self.speed * delta_time)
   self.surface:offset(self.x, self.y)
 
   local a, b = cos, sin
   local c, d = -sin, cos
-  self.surface:matrix(a, b, c, d, self.x, self.y)
+  self.surface:matrix(a, b, c, d, Canvas.width() * 0.5, Canvas.height() * 0.5)
 end
 
 function Game:render(_)
   Canvas.clear()
 
-  self.surface:offset(self.surface:width() / 2, self.surface:height() / 2)
   self.surface:xform()
 
   self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
