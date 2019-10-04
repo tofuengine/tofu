@@ -37,10 +37,16 @@
 #include <stb/stb_image_write.h>
 
 #define PIXEL(c, x, y)  ((c)->surface.data_rows[(y)] + (x))
-
+/*
 static int iabs(int v)
 {
     return v > 0 ? v : -v;
+}
+*/
+static int imod(int a, int b)
+{
+//    return a < 0 ? b + (a % b) : a % b;
+    return ((a % b) + b) % b; // Solve the `-b` case.
 }
 
 #ifdef __DEBUG_GRAPHICS__
@@ -117,13 +123,15 @@ void GL_context_to_rgba(const GL_Context_t *context, const GL_Palette_t *palette
     const int width = context->surface.width;
     const int height = context->surface.height;
     const GL_Color_t *colors = palette->colors;
+#ifdef __DEBUG_GRAPHICS__
     int count = palette->count;
+#endif
     const GL_Pixel_t *src = context->surface.data;
     GL_Color_t *dst = (GL_Color_t *)vram;
     for (int i = height; i; --i) {
         for (int j = width; j; --j) {
-#ifdef __DEBUG_GRAPHICS__
             GL_Pixel_t index = *src++;
+#ifdef __DEBUG_GRAPHICS__
             GL_Color_t color;
             if (index >= count) {
                 int y = (index - 240) * 8;
@@ -667,22 +675,27 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
         const float c = REG(m7r, C); const float d =  REG(m7r, D);
         const float x0 = REG(m7r, X); const float y0 = REG(m7r, Y);
 
-        const float xi = h - x0;
-        const float yi = (float)i + v - y0;
+        const float xi = 0.0f - x0;
+        const float yi = (float)i - y0;
 
-        float xp = (a * xi + b * yi) + x0;
-        float yp = (c * xi + d * yi) + y0;
+#if 0
+        float xp = (a * xi + b * yi) + x0 + h;
+        float yp = (c * xi + d * yi) + y0 + v;
+#else
+        float xp = (a * xi + b * yi) + x0 + fmodf(h, sw); // Clip to avoid cancellation when H/V are large.
+        float yp = (c * xi + d * yi) + y0 + fmodf(v, sh);
+#endif
 
         for (int j = 0; j < width; ++j) {
 #ifdef __DEBUG_GRAPHICS__
             pixel(context, drawing_region.x0 + j, drawing_region.y0 + i, i + j);
 #endif
-            int sx = (int)xp;
-            int sy = (int)yp;
+            int sx = (int)floorf(xp); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`)
+            int sy = (int)floorf(yp);
 
             if (clamp == GL_XFORM_CLAMP_REPEAT) {
-                sx = iabs(sx) % sw;
-                sy = iabs(sy) % sh;
+                sx = imod(sx, sw);
+                sy = imod(sy, sh);
             } else
             if (clamp == GL_XFORM_CLAMP_EDGE) {
                 if (sx < sminx) {
