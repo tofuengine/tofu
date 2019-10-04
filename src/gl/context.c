@@ -444,7 +444,7 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
 #ifdef __DEBUG_GRAPHICS__
             pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, 15);
 #endif
-            int x = (int)floorf(u); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`)
+            int x = (int)floorf(u); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`) and avoid mirror effect.
             int y = (int)floorf(v);
 
             if (x >= sminx && x <= smaxx && y >= sminy && y <= smaxy) {
@@ -678,7 +678,7 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
         const float xi = 0.0f - x0;
         const float yi = (float)i - y0;
 
-#if 0
+#ifndef __CLIP_OFFSET__
         float xp = (a * xi + b * yi) + x0 + h;
         float yp = (c * xi + d * yi) + y0 + v;
 #else
@@ -690,8 +690,8 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
 #ifdef __DEBUG_GRAPHICS__
             pixel(context, drawing_region.x0 + j, drawing_region.y0 + i, i + j);
 #endif
-            int sx = (int)floorf(xp); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`)
-            int sy = (int)floorf(yp);
+            int sx = (int)(xp + 0.5f); // Round to avoid artifacts.
+            int sy = (int)(yp + 0.5f);
 
             if (clamp == GL_XFORM_CLAMP_REPEAT) {
                 sx = imod(sx, sw);
