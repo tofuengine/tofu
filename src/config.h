@@ -51,7 +51,7 @@
 #undef  __DEBUG_ENGINE_FPS__
 #undef  __DEBUG_API_CALLS__
 #define __DEBUG_VM_CALLS__
-#define __DEBUG_GRAPHICS__
+#undef  __DEBUG_GRAPHICS__
 #undef  __DEBUG_SHADER_CALLS__
 #define __DEBUG_GARBAGE_COLLECTOR__
 #define __VM_USE_CUSTOM_TRACEBACK__

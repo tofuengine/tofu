@@ -26,6 +26,7 @@
 
 #include "../config.h"
 #include "../environment.h"
+#include "../interpreter.h"
 #include "../log.h"
 #include "../gl/gl.h"
 
@@ -225,7 +226,7 @@ static int surface_blit(lua_State *L)
 }
 
 typedef struct _Callback_Closure_t {
-    lua_State *state;
+    Interpreter_t *interpreter;
     int callback;
 } Callback_Closure_t;
 
@@ -233,31 +234,25 @@ void xform_callback(float registers[GL_XForm_Registers_t_CountOf], size_t scan_l
 {
     Callback_Closure_t *closure = (Callback_Closure_t *)parameters;
 
-    lua_State *L = closure->state;
+    Interpreter_t *interpreter = closure->interpreter;
     int callback = closure->callback;
     // ASSERT(callback != -1);
 
-    lua_rawgeti(L, LUA_REGISTRYINDEX, callback);
+    lua_rawgeti(interpreter->state, LUA_REGISTRYINDEX, callback);
 #if 0
     if (lua_isnil(L, -1)) {
         lua_pop(L, -1);
-        Log_write(LOG_LEVELS_ERROR, "<VM> can't find timer callback");
+        Log_write(LOG_LEVELS_ERROR, "<VM> can't find xform callback");
         return;
     }
 #endif
-    lua_pushnumberarray(L, registers, GL_XForm_Registers_t_CountOf); // TODO: push a named array?
-    lua_pushinteger(L, scan_line);
-#ifdef __DEBUG_VM_CALLS__
-    int result = lua_pcall(L, 2, 1, 1); // The traceback function is in slot #1 when debugging VM calls.
-    if (result != LUA_OK) {
-        Log_write(LOG_LEVELS_ERROR, "<VM> error in call: %s", lua_tostring(L, -1));
-        return;
+    luaX_pushnumberarray(interpreter->state, registers, GL_XForm_Registers_t_CountOf); // TODO: push a named array?
+    lua_pushinteger(interpreter->state, scan_line);
+    bool result = Interpreter_call(interpreter, 2, 1);
+    if (result) {
+        luaX_tonumberarray(interpreter->state, -1, registers, GL_XForm_Registers_t_CountOf);
+        lua_pop(interpreter->state, 1);
     }
-#else
-    lua_call(L, 2, 1);
-    int result = LUA_OK;
-#endif
-    lua_tonumberarray(L, 1, registers, GL_XForm_Registers_t_CountOf);
 }
 
 static int surface_xform1(lua_State *L)
@@ -271,12 +266,12 @@ static int surface_xform1(lua_State *L)
 #endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+    Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(3));
 
     Callback_Closure_t closure = (Callback_Closure_t){
             .callback = instance->callback,
-            .state = L
+            .interpreter = interpreter
         };
-    instance->xform.callback = xform_callback;
     instance->xform.callback_parameters = &closure;
 
     const GL_Context_t *context = &display->gl;
@@ -301,6 +296,13 @@ static int surface_xform3(lua_State *L)
 #endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+    Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(3));
+
+    Callback_Closure_t closure = (Callback_Closure_t){
+            .callback = instance->callback,
+            .interpreter = interpreter
+        };
+    instance->xform.callback_parameters = &closure;
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
@@ -449,37 +451,9 @@ static int surface_clamp(lua_State *L)
     return 0;
 }
 
-#if 0
-function perspective(regs, scan_line) -- H V A B C D X Y
-  local yc = scan_line - 160;
-  if yc <= 0 then
-    return
-  end
-
-  local p = 256 / yc;
-
-  regs[3] = regs[3] * p
-  regs[4] = regs[4] * p
-  regs[5] = regs[5] * p
-  regs[6] = regs[6] * p
-end
-
-void GL_Transformation_Callback_Barrell(float registers[GL_XForm_Registers_t_CountOf], size_t scan_line, void *parameters)
-{
-    // 1) call the Lua callback passing a/b/c/d
-    // 2) retrieve the 4 return values
-    // 3) modify the passed values
-    const float angle = ((float)scan_line / 256.0f) * 3.14f;
-    const float sx = (1.0f - sinf(angle)) * 0.4f + 1.0f;
-
-    registers[GL_XFORM_REGISTER_A] = sx; registers[GL_XFORM_REGISTER_B] *= 1.0f;
-    registers[GL_XFORM_REGISTER_C] = sx; registers[GL_XFORM_REGISTER_D] *= 1.0f;
-}
-#endif
-
 static int surface_projection1(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 2)
+    LUAX_SIGNATURE_BEGIN(L, 1)
         LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
@@ -491,8 +465,8 @@ static int surface_projection1(lua_State *L)
     if (instance->callback != -1) {
         luaL_unref(L, LUA_REGISTRYINDEX, instance->callback);
         Log_write(LOG_LEVELS_DEBUG, "<SURFACE> scan-line callback #%d released", instance->callback);
-        instance->callback = -1;
     }
+    instance->callback = -1;
 
     return 0;
 }
@@ -513,8 +487,8 @@ static int surface_projection2(lua_State *L)
     if (instance->callback != -1) {
         luaL_unref(L, LUA_REGISTRYINDEX, instance->callback);
         Log_write(LOG_LEVELS_DEBUG, "<SURFACE> scan-line callback #%d released", instance->callback);
-        instance->callback = callback;
     }
+    instance->callback = callback;
 
     return 0;
 }
