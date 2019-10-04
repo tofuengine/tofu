@@ -61,11 +61,11 @@ function Game:update(delta_time)
     return
   end
 
-  local cos, sin = math.sin(self.angle), math.cos(self.angle)
+  local cos, sin = math.cos(self.angle), math.sin(self.angle)
 
   self.x = self.x + (cos * -self.speed * delta_time)
   self.y = self.y + (sin * -self.speed * delta_time)
-  self.surface:offset(self.x, self.y)
+  self.surface:offset(-self.x, -self.y)
 
   local a, b = cos, sin
   local c, d = -sin, cos
@@ -76,6 +76,9 @@ function Game:render(_)
   Canvas.clear()
 
   self.surface:xform()
+
+  local cx, cy = Canvas.width() * 0.5, Canvas.height() * 0.5
+  Canvas.line(cx, cy, cx + math.cos(self.angle) * 10, cy + math.sin(self.angle) * 10, 15)
 
   self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
 end

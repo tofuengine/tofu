@@ -595,6 +595,7 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
 // https://www.youtube.com/watch?v=3FVN_Ze7bzw
 // http://www.coranac.com/tonc/text/mode7.htm
 // https://wiki.superfamicom.org/registers
+// https://www.smwcentral.net/?p=viewthread&t=27054
 #define REG(a,idx)      (a)[GL_XFORM_REGISTER_##idx]
 
 void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface, GL_Point_t position, GL_XForm_t xform)
