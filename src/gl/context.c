@@ -596,8 +596,6 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
 // http://www.coranac.com/tonc/text/mode7.htm
 // https://wiki.superfamicom.org/registers
 // https://www.smwcentral.net/?p=viewthread&t=27054
-#define REG(a,idx)      (a)[GL_XFORM_REGISTER_##idx]
-
 void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface, GL_Point_t position, GL_XForm_t xform)
 {
     const GL_Quad_t clipping_region = context->clipping_region;
@@ -674,12 +672,15 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
     float x0 = xform.x; float y0 = xform.y;
 
     for (int i = 0; i < height; ++i) {
-        if (table) {
-            if (i == table->y) {
-                a = table->a; b = table->b;
-                c = table->c; d = table->d;
-                ++table;
+        if (table && i == table->y) {
+            a = table->a; b = table->b;
+            c = table->c; d = table->d;
+            ++table;
+#ifdef __DETACH_XFORM_TABLE__
+            if (table->y == -1) { // End-of-data reached, detach pointer for faster loop.
+                table = NULL;
             }
+#endif
         }
 
         const float xi = 0.0f - x0;

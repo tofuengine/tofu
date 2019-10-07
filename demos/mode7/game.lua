@@ -7,6 +7,22 @@ local Class = require("tofu.util").Class
 
 local Game = Class.define()
 
+--[[
+local function build_table(factor) -- 0.4
+  local entries = {}
+
+  for i = 1, Canvas.height() do
+    local angle = (i / Canvas.height()) * math.pi
+    local sx = (1.0 - math.sin(angle)) * factor + 1.0
+
+    local entry = { i - 1, sx, 0.0, 0.0, sx } -- Y A B C D
+    table.insert(entries, entry)
+  end
+
+  return entries
+end
+]]--
+
 local function build_table(angle, elevation)
   local cos, sin = math.cos(angle), math.sin(angle)
   local a, b = cos, sin
@@ -24,12 +40,12 @@ local function build_table(angle, elevation)
 end
 
 function Game:__ctor()
-  Canvas.palette("arne-32")
+  Canvas.palette("6-bit-rgb")
   Canvas.background(0)
 
 --  self.surface = Surface.new("assets/world.png")
   self.surface = Surface.new("assets/road.png")
-  self.font = Font.default(0, 31)
+  self.font = Font.default(0, 63)
   self.running = true
 
   self.x = 0
@@ -69,7 +85,7 @@ function Game:input()
 
   if recompute then
     self.surface:table(build_table(math.pi * 0.5 - self.angle, self.elevation))
-  end
+end
 end
 
 function Game:update(delta_time)
