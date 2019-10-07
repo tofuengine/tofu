@@ -666,15 +666,18 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
     //
     // X = A * (SX - CX) + B * (SY - CY) + CX + H
     // Y = C * (SX - CX) + D * (SY - CY) + CY + V
-    float h = xform.h; float v = xform.v;
-    float a = xform.a; float b = xform.b;
-    float c = xform.c; float d = xform.d;
-    float x0 = xform.x; float y0 = xform.y;
+    GL_XForm_State_t state;
+    memcpy(&state, &xform.state, sizeof(GL_XForm_State_t));
+    float h = state.h; float v = state.v; float a = state.a; float b = state.b;
+    float c = state.c; float d = state.d; float x0 = state.x; float y0 = state.y;
 
     for (int i = 0; i < height; ++i) {
         if (table && i == table->y) {
-            a = table->a; b = table->b;
-            c = table->c; d = table->d;
+            for (int k = 0; k < table->count; ++k) {
+                state.registers[table->operations[k].id] = table->operations[k].value;
+            }
+            h = state.h; v = state.v; a = state.a; b = state.b;
+            c = state.c; d = state.d; x0 = state.x; y0 = state.y;
             ++table;
 #ifdef __DETACH_XFORM_TABLE__
             if (table->y == -1) { // End-of-data reached, detach pointer for faster loop.

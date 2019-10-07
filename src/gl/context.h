@@ -41,9 +41,36 @@ typedef struct _GL_Context_t {
     GL_Bool_t transparent[GL_MAX_PALETTE_COLORS];
 } GL_Context_t;
 
+typedef enum _GL_XForm_Registers_t {
+    GL_XForm_Registers_t_First,
+    GL_XFORM_REGISTER_H = GL_XForm_Registers_t_First,
+    GL_XFORM_REGISTER_V,
+    GL_XFORM_REGISTER_A,
+    GL_XFORM_REGISTER_B,
+    GL_XFORM_REGISTER_C,
+    GL_XFORM_REGISTER_D,
+    GL_XFORM_REGISTER_X,
+    GL_XFORM_REGISTER_Y,
+    GL_XForm_Registers_t_Last = GL_XFORM_REGISTER_Y,
+    GL_XForm_Registers_t_CountOf
+} GL_XForm_Registers_t;
+
+typedef struct _GL_XForm_State_t {
+    union {
+        struct { float h, v, a, b, c, d, x, y; };
+        float registers[GL_XForm_Registers_t_CountOf];
+    };
+} GL_XForm_State_t;
+
+typedef struct _GL_XForm_State_Operation_t {
+    GL_XForm_Registers_t id;
+    float value;
+} GL_XForm_State_Operation_t;
+
 typedef struct _GL_XForm_Table_Entry_t {
     int y;
-    float a, b, c, d;
+    GL_XForm_State_Operation_t operations[GL_XForm_Registers_t_CountOf]; // At most, change all the registries.
+    int count;
 } GL_XForm_Table_Entry_t;
 
 typedef enum _GL_XForm_Clamps_t {
@@ -53,7 +80,7 @@ typedef enum _GL_XForm_Clamps_t {
 } GL_XForm_Clamps_t;
 
 typedef struct _GL_XForm_t {
-    float h, v, a, b, c, d, x, y;
+    GL_XForm_State_t state;
     GL_XForm_Clamps_t clamp;
     GL_XForm_Table_Entry_t *table;
 } GL_XForm_t;

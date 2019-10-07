@@ -30,10 +30,15 @@ local function build_table(angle, elevation)
 
   local entries = {}
 
-  for i = 1, Canvas.height() do
-    local p = elevation / i
-    local entry = { i - 1, a * p, b * p, c * p, d * p } -- Y A B C D
-    table.insert(entries, entry)
+  for scan_line = 1, Canvas.height() do
+    local yc = scan_line
+    local p = elevation / yc
+    entries[scan_line] = {
+        a = a * p,
+        b = b * p,
+        c = c * p,
+        d = d * p,
+      }
   end
 
   return entries

@@ -100,6 +100,36 @@ static void to_indexed_atlas_callback(void *parameters, GL_Surface_t *surface, c
     }
 }
 
+static GL_XForm_Registers_t string_to_register(const char *id)
+{
+    if (id[0] == 'h') {
+        return GL_XFORM_REGISTER_H;
+    } else
+    if (id[0] == 'v') {
+        return GL_XFORM_REGISTER_V;
+    } else
+    if (id[0] == 'a') {
+        return GL_XFORM_REGISTER_A;
+    } else
+    if (id[0] == 'b') {
+        return GL_XFORM_REGISTER_B;
+    } else
+    if (id[0] == 'c') {
+        return GL_XFORM_REGISTER_C;
+    } else
+    if (id[0] == 'd') {
+        return GL_XFORM_REGISTER_D;
+    } else
+    if (id[0] == 'x') {
+        return GL_XFORM_REGISTER_X;
+    } else
+    if (id[0] == 'y') {
+        return GL_XFORM_REGISTER_Y;
+    }
+    Log_write(LOG_LEVELS_WARNING, "<SURFACE> unknown register w/ id '%s'", id);
+    return GL_XFORM_REGISTER_A;
+}
+
 static int surface_new(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
@@ -126,9 +156,11 @@ static int surface_new(lua_State *L)
     *instance = (Surface_Class_t){
             .surface = surface,
             .xform = (GL_XForm_t){
-                    .h = 0.0f, .v = 0.0f,
-                    .a = 1.0f, .b = 0.0f, .c = 1.0f, .d = 0.0f,
-                    .x = 0.0f, .y = 0.0f,
+                    .state = (GL_XForm_State_t){
+                        .h = 0.0f, .v = 0.0f,
+                        .a = 1.0f, .b = 0.0f, .c = 1.0f, .d = 0.0f,
+                        .x = 0.0f, .y = 0.0f,
+                    },
                     .clamp = GL_XFORM_CLAMP_REPEAT,
                     .table = NULL
                 }
@@ -291,8 +323,8 @@ static int surface_offset(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Surface.offset() -> %.f, %.f", h, v);
 #endif
 
-    instance->xform.h = h;
-    instance->xform.v = v;
+    instance->xform.state.h = h;
+    instance->xform.state.v = v;
 
     return 0;
 }
@@ -311,8 +343,8 @@ static int surface_matrix3(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Surface.matrix() -> %.f, %.f", x0, y0);
 #endif
 
-    instance->xform.x = x0;
-    instance->xform.y = y0;
+    instance->xform.state.x = x0;
+    instance->xform.state.y = y0;
 
     return 0;
 }
@@ -335,10 +367,10 @@ static int surface_matrix5(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Surface.matrix() -> %.f, %.f, %.f, %.f", a, b, c, d);
 #endif
 
-    instance->xform.a = a;
-    instance->xform.b = b;
-    instance->xform.c = c;
-    instance->xform.d = d;
+    instance->xform.state.a = a;
+    instance->xform.state.b = b;
+    instance->xform.state.c = c;
+    instance->xform.state.d = d;
 
     return 0;
 }
@@ -365,12 +397,12 @@ static int surface_matrix7(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Surface.matrix() -> %.f, %.f, %.f, %.f, %.f, %.f", a, b, c, d, x0, y0);
 #endif
 
-    instance->xform.a = a;
-    instance->xform.b = b;
-    instance->xform.c = c;
-    instance->xform.d = d;
-    instance->xform.x = x0;
-    instance->xform.y = y0;
+    instance->xform.state.a = a;
+    instance->xform.state.b = b;
+    instance->xform.state.c = c;
+    instance->xform.state.d = d;
+    instance->xform.state.x = x0;
+    instance->xform.state.y = y0;
 
     return 0;
 }
@@ -447,17 +479,20 @@ static int surface_table2(lua_State *L)
         return luaL_error(L, "<SURFACE> can't allocate memory");
     }
 
-    lua_pushnil(L); // first key
-    for (size_t i = 0; lua_next(L, 2); ++i) {
-//        int index = lua_tointeger(L, -2);
-        float YABCD[5];
-        luaX_tonumberarray(L, -1, YABCD, 5);
+    lua_pushnil(L);
+    for (int i = 0; lua_next(L, 2); ++i) {
+        int index = lua_tointeger(L, -2);
+        table[i].y = index; // The scan-line indicator is the array index.
 
-        table[i].y = YABCD[0];
-        table[i].a = YABCD[1]; table[i].b = YABCD[2];
-        table[i].c = YABCD[3]; table[i].d = YABCD[4];
+        lua_pushnil(L);
+        for (int j = 0; lua_next(L, -2); ++j) { // Scan the value, which is an array.
+            table[i].count = j + 1;
+            table[i].operations[j].id = lua_isstring(L, -2) ? string_to_register(lua_tostring(L, -2)) : lua_tointeger(L, -2);
+            table[i].operations[j].value = (float)lua_tonumber(L, -1);
+            lua_pop(L, 1);
+        }
 
-        lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
+        lua_pop(L, 1);
     }
     table[count].y = -1; // Set the end-of-data (safety) marker
 
