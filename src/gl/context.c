@@ -664,6 +664,12 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
     // Y[x,y] = Y[x-1,y] + C
     //
     // The current scan-line need to be (re)projected due to the presence of the HDMA modifier.
+    //
+    // The formula above seems to be incorrect. The H/V displacement should be applied only at last,
+    // to get the final position on the texture, that is
+    //
+    // X = A * (SX - CX) + B * (SY - CY) + CX + H
+    // Y = C * (SX - CX) + D * (SY - CY) + CY + V
     for (int i = 0; i < height; ++i) {
         float m7r[GL_XForm_Registers_t_CountOf];
         memcpy(m7r, registers, sizeof(m7r));
