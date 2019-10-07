@@ -95,6 +95,10 @@ static int grid_new(lua_State *L)
     Cell_t *data = malloc((width * height) * sizeof(Cell_t));
     Cell_t **offsets = malloc(height * sizeof(Cell_t *));
 
+    if (!data || !offsets) {
+        return luaL_error(L, "<GRID> can't allocate memory");
+    }
+
     for (int i = 0; i < height; ++i) { // Precompute the pointers to the data rows for faster access (old-school! :D).
         offsets[i] = data + (i * width);
     }

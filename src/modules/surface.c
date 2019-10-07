@@ -32,6 +32,9 @@
 
 #include <math.h>
 #include <string.h>
+#ifdef DEBUG
+  #include <stb/stb_leakcheck.h>
+#endif
 
 typedef struct _Surface_Class_t {
     // char pathfile[PATH_FILE_MAX];
@@ -440,6 +443,9 @@ static int surface_table2(lua_State *L)
     int count = luaX_count(L, 2) + 1; // Make room for the EOD marker.
 
     GL_XForm_Table_Entry_t *table = malloc(count * sizeof(GL_XForm_Table_Entry_t));
+    if (!table) {
+        return luaL_error(L, "<SURFACE> can't allocate memory");
+    }
 
     lua_pushnil(L); // first key
     for (size_t i = 0; lua_next(L, 2); ++i) {
