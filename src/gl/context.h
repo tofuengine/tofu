@@ -41,21 +41,10 @@ typedef struct _GL_Context_t {
     GL_Bool_t transparent[GL_MAX_PALETTE_COLORS];
 } GL_Context_t;
 
-typedef enum _GL_XForm_Registers_t {
-    GL_XForm_Registers_t_First,
-    GL_XFORM_REGISTER_H = GL_XForm_Registers_t_First,
-    GL_XFORM_REGISTER_V,
-    GL_XFORM_REGISTER_A,
-    GL_XFORM_REGISTER_B,
-    GL_XFORM_REGISTER_C,
-    GL_XFORM_REGISTER_D,
-    GL_XFORM_REGISTER_X,
-    GL_XFORM_REGISTER_Y,
-    GL_XForm_Registers_t_Last = GL_XFORM_REGISTER_Y,
-    GL_XForm_Registers_t_CountOf
-} GL_XForm_Registers_t;
-
-typedef void (*GL_XForm_Callback_t)(float registers[GL_XForm_Registers_t_CountOf], size_t scan_line, void *parameters);
+typedef struct _GL_XForm_Table_Entry_t {
+    int y;
+    float a, b, c, d;
+} GL_XForm_Table_Entry_t;
 
 typedef enum _GL_XForm_Clamps_t {
     GL_XFORM_CLAMP_EDGE,
@@ -64,10 +53,9 @@ typedef enum _GL_XForm_Clamps_t {
 } GL_XForm_Clamps_t;
 
 typedef struct _GL_XForm_t {
-    float registers[GL_XForm_Registers_t_CountOf];
+    float h, v, a, b, c, d, x, y;
     GL_XForm_Clamps_t clamp;
-    GL_XForm_Callback_t callback;
-    void *callback_parameters;
+    GL_XForm_Table_Entry_t *table;
 } GL_XForm_t;
 
 extern bool GL_context_create(GL_Context_t *context, size_t width, size_t height);

@@ -605,9 +605,7 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
     const GL_Bool_t *transparent = context->transparent;
 
     const int clamp = xform.clamp;
-    const float *registers = xform.registers;
-    const GL_XForm_Callback_t callback = xform.callback;
-    void *callback_parameters = xform.callback_parameters;
+    const GL_XForm_Table_Entry_t *table = xform.table;
 
     GL_Quad_t drawing_region = (GL_Quad_t) {
         .x0 = position.x,
@@ -670,17 +668,19 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
     //
     // X = A * (SX - CX) + B * (SY - CY) + CX + H
     // Y = C * (SX - CX) + D * (SY - CY) + CY + V
-    for (int i = 0; i < height; ++i) {
-        float m7r[GL_XForm_Registers_t_CountOf];
-        memcpy(m7r, registers, sizeof(m7r));
-        if (callback) {
-            callback(m7r, i, callback_parameters);
-        }
+    float h = xform.h; float v = xform.v;
+    float a = xform.a; float b = xform.b;
+    float c = xform.c; float d = xform.d;
+    float x0 = xform.x; float y0 = xform.y;
 
-        const float h = REG(m7r, H); const float v = REG(m7r, V);
-        const float a = REG(m7r, A); const float b =  REG(m7r, B);
-        const float c = REG(m7r, C); const float d =  REG(m7r, D);
-        const float x0 = REG(m7r, X); const float y0 = REG(m7r, Y);
+    for (int i = 0; i < height; ++i) {
+        if (table) {
+            if (i == table->y) {
+                a = table->a; b = table->b;
+                c = table->c; d = table->d;
+                ++table;
+            }
+        }
 
         const float xi = 0.0f - x0;
         const float yi = (float)i - y0;

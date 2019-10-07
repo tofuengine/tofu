@@ -7,20 +7,20 @@ local Class = require("tofu.util").Class
 
 local Game = Class.define()
 
-local function perspective(regs, scan_line) -- H V A B C D X Y
-  local yc = scan_line -- - Canvas.height() * 0.25
-  if yc <= 0 then
-    return regs
+local function build_table(angle, elevation)
+  local cos, sin = math.cos(angle), math.sin(angle)
+  local a, b = cos, sin
+  local c, d = -sin, cos
+
+  local entries = {}
+
+  for i = 1, Canvas.height() do
+    local p = elevation / i
+    local entry = { i - 1, a * p, b * p, c * p, d * p } -- Y A B C D
+    table.insert(entries, entry)
   end
 
-  local p = 64 / yc -- (Canvas.height() * 0.25) / yc;
-
-  regs[3] = regs[3] * p
-  regs[4] = regs[4] * p
-  regs[5] = regs[5] * p
-  regs[6] = regs[6] * p
-
-  return regs
+  return entries
 end
 
 function Game:__ctor()
@@ -36,24 +36,39 @@ function Game:__ctor()
   self.y = 0
   self.angle = 0
   self.speed = 0.0
+  self.elevation = 48
 
-  self.surface:projection(perspective)
---  self.surface:projection()
+  self.surface:matrix(1, 0, 0, 1, Canvas.width() * 0.5, Canvas.height() * 0.5)
+  self.surface:table(build_table(math.pi * 0.5 - self.angle, self.elevation))
 end
 
 function Game:input()
+  local recompute = false
+
   if Input.is_key_pressed(Input.SELECT) then
     self.speed = 1.0
   elseif Input.is_key_pressed(Input.START) then
     self.running = not self.running
+  elseif Input.is_key_pressed(Input.Y) then
+    self.elevation = self.elevation + 8.0
+    recompute = true
+  elseif Input.is_key_pressed(Input.X) then
+    self.elevation = self.elevation - 8.0
+    recompute = true
   elseif Input.is_key_pressed(Input.UP) then
     self.speed = self.speed + 8.0
   elseif Input.is_key_pressed(Input.DOWN) then
     self.speed = self.speed - 8.0
   elseif Input.is_key_pressed(Input.LEFT) then
     self.angle = self.angle - math.pi * 0.05
+    recompute = true
   elseif Input.is_key_pressed(Input.RIGHT) then
     self.angle = self.angle + math.pi * 0.05
+    recompute = true
+  end
+
+  if recompute then
+    self.surface:table(build_table(math.pi * 0.5 - self.angle, self.elevation))
   end
 end
 
@@ -66,11 +81,6 @@ function Game:update(delta_time)
   self.x = self.x + (cos * self.speed * delta_time)
   self.y = self.y + (sin * self.speed * delta_time)
   self.surface:offset(-self.x, -self.y)
-
-  local cosPi2, sinPi2 = math.cos(math.pi * 0.5 - self.angle), math.sin(math.pi * 0.5 - self.angle)
-  local a, b = cosPi2, sinPi2
-  local c, d = -sinPi2, cosPi2
-  self.surface:matrix(a, b, c, d, Canvas.width() * 0.5, Canvas.height() * 0.5)
 end
 
 function Game:render(_)

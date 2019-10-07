@@ -37,7 +37,6 @@ typedef struct _Surface_Class_t {
     // char pathfile[PATH_FILE_MAX];
     GL_Surface_t surface;
     GL_XForm_t xform;
-    int callback;
 } Surface_Class_t;
 
 static int surface_new(lua_State *L);
@@ -50,7 +49,7 @@ static int surface_xform(lua_State *L);
 static int surface_offset(lua_State *L);
 static int surface_matrix(lua_State *L);
 static int surface_clamp(lua_State *L);
-static int surface_projection(lua_State *L);
+static int surface_table(lua_State *L);
 
 static const struct luaL_Reg _surface_functions[] = {
     { "new", surface_new },
@@ -63,7 +62,7 @@ static const struct luaL_Reg _surface_functions[] = {
     { "offset", surface_offset },
     { "matrix", surface_matrix },
     { "clamp", surface_clamp },
-    { "projection", surface_projection },
+    { "table", surface_table },
     { NULL, NULL }
 };
 
@@ -124,12 +123,12 @@ static int surface_new(lua_State *L)
     *instance = (Surface_Class_t){
             .surface = surface,
             .xform = (GL_XForm_t){
-                    .registers = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+                    .h = 0.0f, .v = 0.0f,
+                    .a = 1.0f, .b = 0.0f, .c = 1.0f, .d = 0.0f,
+                    .x = 0.0f, .y = 0.0f,
                     .clamp = GL_XFORM_CLAMP_REPEAT,
-                    .callback = NULL,
-                    .callback_parameters = NULL
-                },
-            .callback = -1
+                    .table = NULL
+                }
         };
     Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface allocated as #%p", pathfile, instance);
 
@@ -145,9 +144,9 @@ static int surface_gc(lua_State *L)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
 
-    if (instance->callback != -1) {
-        luaL_unref(L, LUA_REGISTRYINDEX, instance->callback);
-        Log_write(LOG_LEVELS_DEBUG, "<SURFACE> scan-line callback #%d released", instance->callback);
+    if (instance->xform.table) {
+        free(instance->xform.table);
+        Log_write(LOG_LEVELS_DEBUG, "<SURFACE> scan-line table #%p deallocated", instance->xform.table);
     }
 
     GL_surface_delete(&instance->surface);
@@ -225,36 +224,6 @@ static int surface_blit(lua_State *L)
     return 0;
 }
 
-typedef struct _Callback_Closure_t {
-    Interpreter_t *interpreter;
-    int callback;
-} Callback_Closure_t;
-
-void xform_callback(float registers[GL_XForm_Registers_t_CountOf], size_t scan_line, void *parameters)
-{
-    Callback_Closure_t *closure = (Callback_Closure_t *)parameters;
-
-    Interpreter_t *interpreter = closure->interpreter;
-    int callback = closure->callback;
-    // ASSERT(callback != -1);
-
-    lua_rawgeti(interpreter->state, LUA_REGISTRYINDEX, callback);
-#if 0
-    if (lua_isnil(L, -1)) {
-        lua_pop(L, -1);
-        Log_write(LOG_LEVELS_ERROR, "<VM> can't find xform callback");
-        return;
-    }
-#endif
-    luaX_pushnumberarray(interpreter->state, registers, GL_XForm_Registers_t_CountOf); // TODO: push a named array?
-    lua_pushinteger(interpreter->state, scan_line);
-    bool result = Interpreter_call(interpreter, 2, 1);
-    if (result) {
-        luaX_tonumberarray(interpreter->state, -1, registers, GL_XForm_Registers_t_CountOf);
-        lua_pop(interpreter->state, 1);
-    }
-}
-
 static int surface_xform1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
@@ -266,13 +235,6 @@ static int surface_xform1(lua_State *L)
 #endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
-    Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(3));
-
-    Callback_Closure_t closure = (Callback_Closure_t){
-            .callback = instance->callback,
-            .interpreter = interpreter
-        };
-    instance->xform.callback_parameters = &closure;
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
@@ -296,13 +258,6 @@ static int surface_xform3(lua_State *L)
 #endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
-    Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(3));
-
-    Callback_Closure_t closure = (Callback_Closure_t){
-            .callback = instance->callback,
-            .interpreter = interpreter
-        };
-    instance->xform.callback_parameters = &closure;
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
@@ -333,8 +288,8 @@ static int surface_offset(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Surface.offset() -> %.f, %.f", h, v);
 #endif
 
-    instance->xform.registers[GL_XFORM_REGISTER_H] = h;
-    instance->xform.registers[GL_XFORM_REGISTER_V] = v;
+    instance->xform.h = h;
+    instance->xform.v = v;
 
     return 0;
 }
@@ -353,8 +308,8 @@ static int surface_matrix3(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Surface.matrix() -> %.f, %.f", x0, y0);
 #endif
 
-    instance->xform.registers[GL_XFORM_REGISTER_X] = x0;
-    instance->xform.registers[GL_XFORM_REGISTER_Y] = y0;
+    instance->xform.x = x0;
+    instance->xform.y = y0;
 
     return 0;
 }
@@ -377,10 +332,10 @@ static int surface_matrix5(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Surface.matrix() -> %.f, %.f, %.f, %.f", a, b, c, d);
 #endif
 
-    instance->xform.registers[GL_XFORM_REGISTER_A] = a;
-    instance->xform.registers[GL_XFORM_REGISTER_B] = b;
-    instance->xform.registers[GL_XFORM_REGISTER_C] = c;
-    instance->xform.registers[GL_XFORM_REGISTER_D] = d;
+    instance->xform.a = a;
+    instance->xform.b = b;
+    instance->xform.c = c;
+    instance->xform.d = d;
 
     return 0;
 }
@@ -407,12 +362,12 @@ static int surface_matrix7(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Surface.matrix() -> %.f, %.f, %.f, %.f, %.f, %.f", a, b, c, d, x0, y0);
 #endif
 
-    instance->xform.registers[GL_XFORM_REGISTER_A] = a;
-    instance->xform.registers[GL_XFORM_REGISTER_B] = b;
-    instance->xform.registers[GL_XFORM_REGISTER_C] = c;
-    instance->xform.registers[GL_XFORM_REGISTER_D] = d;
-    instance->xform.registers[GL_XFORM_REGISTER_X] = x0;
-    instance->xform.registers[GL_XFORM_REGISTER_Y] = y0;
+    instance->xform.a = a;
+    instance->xform.b = b;
+    instance->xform.c = c;
+    instance->xform.d = d;
+    instance->xform.x = x0;
+    instance->xform.y = y0;
 
     return 0;
 }
@@ -451,52 +406,68 @@ static int surface_clamp(lua_State *L)
     return 0;
 }
 
-static int surface_projection1(lua_State *L)
+static int surface_table1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
         LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Surface.projection()");
+    Log_write(LOG_LEVELS_DEBUG, "Surface.table()");
 #endif
 
-    instance->xform.callback = NULL;
-    if (instance->callback != -1) {
-        luaL_unref(L, LUA_REGISTRYINDEX, instance->callback);
-        Log_write(LOG_LEVELS_DEBUG, "<SURFACE> scan-line callback #%d released", instance->callback);
+    if (instance->xform.table) {
+        free(instance->xform.table);
+//        Log_write(LOG_LEVELS_DEBUG, "<SURFACE> scan-line table #%p deallocated", instance->xform.table);
     }
-    instance->callback = -1;
+    instance->xform.table = NULL;
 
     return 0;
 }
 
-static int surface_projection2(lua_State *L)
+static int surface_table2(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 2)
         LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isfunction)
+        LUAX_SIGNATURE_ARGUMENT(luaX_istable)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
-    int callback = luaX_tofunction(L, 2);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Surface.projection() -> %d", callback);
+    int type = lua_type(L, 2);
+    Log_write(LOG_LEVELS_DEBUG, "Surface.table(%d)", type);
 #endif
 
-    instance->xform.callback = xform_callback;
-    if (instance->callback != -1) {
-        luaL_unref(L, LUA_REGISTRYINDEX, instance->callback);
-        Log_write(LOG_LEVELS_DEBUG, "<SURFACE> scan-line callback #%d released", instance->callback);
+    int count = luaX_count(L, 2) + 1; // Make room for the EOD marker.
+
+    GL_XForm_Table_Entry_t *table = malloc(count * sizeof(GL_XForm_Table_Entry_t));
+
+    lua_pushnil(L); // first key
+    for (size_t i = 0; lua_next(L, 2); ++i) {
+//        int index = lua_tointeger(L, -2);
+        float YABCD[5];
+        luaX_tonumberarray(L, -1, YABCD, 5);
+
+        table[i].y = YABCD[0];
+        table[i].a = YABCD[1]; table[i].b = YABCD[2];
+        table[i].c = YABCD[3]; table[i].d = YABCD[4];
+
+        lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
     }
-    instance->callback = callback;
+    table[count].y = -1; // Set the end-of-data (safety) marker
+
+    if (instance->xform.table) {
+        free(instance->xform.table);
+//        Log_write(LOG_LEVELS_DEBUG, "<SURFACE> scan-line table #%p deallocated", instance->xform.table);
+    }
+    instance->xform.table = table;
 
     return 0;
 }
 
-static int surface_projection(lua_State *L)
+static int surface_table(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, surface_projection1)
-        LUAX_OVERLOAD_ARITY(2, surface_projection2)
+        LUAX_OVERLOAD_ARITY(1, surface_table1)
+        LUAX_OVERLOAD_ARITY(2, surface_table2)
     LUAX_OVERLOAD_END
 }
