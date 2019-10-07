@@ -71,10 +71,18 @@ function Game:input()
   elseif Input.is_key_pressed(Input.X) then
     self.elevation = self.elevation - 8.0
     recompute = true
+  elseif Input.is_key_pressed(Input.A) then -- STRAFE
+    local a = self.angle + math.pi * 0.5
+    self.x = self.x + math.cos(a) * 8
+    self.y = self.y + math.sin(a) * 8
+  elseif Input.is_key_pressed(Input.B) then -- STRAFE
+    local a = self.angle + math.pi * 0.5
+    self.x = self.x - math.cos(a) * 8
+    self.y = self.y - math.sin(a) * 8
   elseif Input.is_key_pressed(Input.UP) then
-    self.speed = self.speed + 8.0
+    self.speed = self.speed + 16.0
   elseif Input.is_key_pressed(Input.DOWN) then
-    self.speed = self.speed - 8.0
+    self.speed = self.speed - 16.0
   elseif Input.is_key_pressed(Input.LEFT) then
     self.angle = self.angle - math.pi * 0.05
     recompute = true
@@ -102,13 +110,14 @@ end
 function Game:render(_)
   Canvas.clear()
 
+  Canvas.rectangle("fill", 0, 0, Canvas.width(), Canvas.height() * 0.25, 21)
   self.surface:xform(0, Canvas.height() * 0.25)
 
   local cx, cy = Canvas.width() * 0.5, Canvas.height() * 0.5
-  Canvas.line(cx, cy, cx + math.cos(self.angle) * 10, cy + math.sin(self.angle) * 10, 15)
+  Canvas.line(cx, cy, cx + math.cos(self.angle) * 10, cy + math.sin(self.angle) * 10, 31)
 
   Canvas.line(cx, cy, cx + math.cos(math.pi * 0.5 - self.angle) * 10,
-              cy + math.sin(math.pi * 0.5 - self.angle) * 10, 14)
+              cy + math.sin(math.pi * 0.5 - self.angle) * 10, 47)
 
   self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
 end

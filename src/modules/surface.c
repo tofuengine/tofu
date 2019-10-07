@@ -463,7 +463,7 @@ static int surface_table2(lua_State *L)
 
     if (instance->xform.table) {
         free(instance->xform.table);
-//        Log_write(LOG_LEVELS_DEBUG, "<SURFACE> scan-line table #%p deallocated", instance->xform.table);
+//        Log_write(LOG_LEVELS_TRACE, "<SURFACE> scan-line table #%p reallocated as #%p", instance->xform.table, table);
     }
     instance->xform.table = table;
 
