@@ -8,12 +8,12 @@ local Class = require("tofu.util").Class
 local Game = Class.define()
 
 local function perspective(regs, scan_line) -- H V A B C D X Y
-  local yc = scan_line -- - 128 -- Canvas.height() * 0.25
+  local yc = scan_line -- - Canvas.height() * 0.25
   if yc <= 0 then
     return regs
   end
 
-  local p = 128 / yc -- (Canvas.height() * 0.25) / yc;
+  local p = 64 / yc -- (Canvas.height() * 0.25) / yc;
 
   regs[3] = regs[3] * p
   regs[4] = regs[4] * p
@@ -27,7 +27,8 @@ function Game:__ctor()
   Canvas.palette("arne-32")
   Canvas.background(0)
 
-  self.surface = Surface.new("assets/world.png")
+--  self.surface = Surface.new("assets/world.png")
+  self.surface = Surface.new("assets/road.png")
   self.font = Font.default(0, 31)
   self.running = true
 
@@ -50,9 +51,9 @@ function Game:input()
   elseif Input.is_key_pressed(Input.DOWN) then
     self.speed = self.speed - 8.0
   elseif Input.is_key_pressed(Input.LEFT) then
-    self.angle = self.angle + math.pi * 0.01
+    self.angle = self.angle - math.pi * 0.05
   elseif Input.is_key_pressed(Input.RIGHT) then
-    self.angle = self.angle - math.pi * 0.01
+    self.angle = self.angle + math.pi * 0.05
   end
 end
 
@@ -62,23 +63,26 @@ function Game:update(delta_time)
   end
 
   local cos, sin = math.cos(self.angle), math.sin(self.angle)
-
-  self.x = self.x + (cos * -self.speed * delta_time)
-  self.y = self.y + (sin * -self.speed * delta_time)
+  self.x = self.x + (cos * self.speed * delta_time)
+  self.y = self.y + (sin * self.speed * delta_time)
   self.surface:offset(-self.x, -self.y)
 
-  local a, b = cos, sin
-  local c, d = -sin, cos
+  local cosPi2, sinPi2 = math.cos(math.pi * 0.5 - self.angle), math.sin(math.pi * 0.5 - self.angle)
+  local a, b = cosPi2, sinPi2
+  local c, d = -sinPi2, cosPi2
   self.surface:matrix(a, b, c, d, Canvas.width() * 0.5, Canvas.height() * 0.5)
 end
 
 function Game:render(_)
   Canvas.clear()
 
-  self.surface:xform()
+  self.surface:xform(0, Canvas.height() * 0.25)
 
   local cx, cy = Canvas.width() * 0.5, Canvas.height() * 0.5
   Canvas.line(cx, cy, cx + math.cos(self.angle) * 10, cy + math.sin(self.angle) * 10, 15)
+
+  Canvas.line(cx, cy, cx + math.cos(math.pi * 0.5 - self.angle) * 10,
+              cy + math.sin(math.pi * 0.5 - self.angle) * 10, 14)
 
   self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
 end
