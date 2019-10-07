@@ -486,6 +486,11 @@ static int surface_table2(lua_State *L)
 
         lua_pushnil(L);
         for (int j = 0; lua_next(L, -2); ++j) { // Scan the value, which is an array.
+            if (j == GL_XForm_Registers_t_CountOf) {
+                Log_write(LOG_LEVELS_WARNING, "<SURFACE> too many operation for table entry #%d (id #%d)", i, index);
+                lua_pop(L, 2);
+                break;
+            }
             table[i].count = j + 1;
             table[i].operations[j].id = lua_isstring(L, -2) ? string_to_register(lua_tostring(L, -2)) : lua_tointeger(L, -2);
             table[i].operations[j].value = (float)lua_tonumber(L, -1);

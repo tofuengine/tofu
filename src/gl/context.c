@@ -676,7 +676,7 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
             for (int k = 0; k < table->count; ++k) {
                 state.registers[table->operations[k].id] = table->operations[k].value;
             }
-            h = state.h; v = state.v; a = state.a; b = state.b;
+            h = state.h; v = state.v; a = state.a; b = state.b; // Kepp the fast-access variables updated.
             c = state.c; d = state.d; x0 = state.x; y0 = state.y;
             ++table;
 #ifdef __DETACH_XFORM_TABLE__
