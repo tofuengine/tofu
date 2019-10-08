@@ -453,7 +453,7 @@ static int surface_table1(lua_State *L)
 
     if (instance->xform.table) {
         free(instance->xform.table);
-//        Log_write(LOG_LEVELS_DEBUG, "<SURFACE> scan-line table #%p deallocated", instance->xform.table);
+        Log_write(LOG_LEVELS_DEBUG, "<SURFACE> scan-line table #%p deallocated", instance->xform.table);
     }
     instance->xform.table = NULL;
 
@@ -482,11 +482,11 @@ static int surface_table2(lua_State *L)
     lua_pushnil(L);
     for (int i = 0; lua_next(L, 2); ++i) {
         int index = lua_tointeger(L, -2);
-        table[i].y = index; // The scan-line indicator is the array index.
+        table[i].scan_line = index; // The scan-line indicator is the array index.
 
         lua_pushnil(L);
         for (int j = 0; lua_next(L, -2); ++j) { // Scan the value, which is an array.
-            if (j == GL_XForm_Registers_t_CountOf) {
+            if (j == GL_XFORM_TABLE_MAX_OPERATIONS) {
                 Log_write(LOG_LEVELS_WARNING, "<SURFACE> too many operation for table entry #%d (id #%d)", i, index);
                 lua_pop(L, 2);
                 break;
@@ -499,7 +499,7 @@ static int surface_table2(lua_State *L)
 
         lua_pop(L, 1);
     }
-    table[count].y = -1; // Set the end-of-data (safety) marker
+    table[count].scan_line = -1; // Set the end-of-data (safety) marker
 
     if (instance->xform.table) {
         free(instance->xform.table);

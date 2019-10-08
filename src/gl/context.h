@@ -29,7 +29,9 @@
 #include "palette.h"
 #include "surface.h"
 
-// TODO: move from `float` to 'double`.
+// TODO: move from `float` to 'double` or to `fix16_t`?
+
+#define GL_XFORM_TABLE_MAX_OPERATIONS       16
 
 typedef struct _GL_Context_t {
     GL_Surface_t surface;
@@ -68,8 +70,8 @@ typedef struct _GL_XForm_State_Operation_t {
 } GL_XForm_State_Operation_t;
 
 typedef struct _GL_XForm_Table_Entry_t {
-    int y;
-    GL_XForm_State_Operation_t operations[GL_XForm_Registers_t_CountOf]; // At most, change all the registries.
+    int scan_line;
+    GL_XForm_State_Operation_t operations[GL_XFORM_TABLE_MAX_OPERATIONS]; // At most, change all the registries.
     int count;
 } GL_XForm_Table_Entry_t;
 

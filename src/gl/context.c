@@ -672,7 +672,7 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
     float c = state.c; float d = state.d; float x0 = state.x; float y0 = state.y;
 
     for (int i = 0; i < height; ++i) {
-        if (table && i == table->y) {
+        if (table && i == table->scan_line) {
             for (int k = 0; k < table->count; ++k) {
                 state.registers[table->operations[k].id] = table->operations[k].value;
             }
