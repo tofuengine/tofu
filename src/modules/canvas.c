@@ -43,6 +43,8 @@ static int canvas_color_to_index(lua_State *L);
 static int canvas_screenshot(lua_State *L);
 static int canvas_width(lua_State *L);
 static int canvas_height(lua_State *L);
+static int canvas_push(lua_State *L);
+static int canvas_pop(lua_State *L);
 static int canvas_palette(lua_State *L);
 static int canvas_background(lua_State *L);
 static int canvas_color(lua_State *L);
@@ -67,6 +69,8 @@ static const struct luaL_Reg _canvas_functions[] = {
     { "screenshot", canvas_screenshot },
     { "width", canvas_width },
     { "height", canvas_height },
+    { "push", canvas_push },
+    { "pop", canvas_pop },
     { "palette", canvas_palette },
     { "background", canvas_background },
     { "color", canvas_color },
@@ -180,6 +184,36 @@ static int canvas_height(lua_State *L)
     lua_pushinteger(L, display->gl.surface.height);
 
     return 1;
+}
+
+static int canvas_push(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 0)
+    LUAX_SIGNATURE_END
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.push()");
+#endif
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+    GL_context_push(&display->gl);
+
+    return 0;
+}
+
+static int canvas_pop(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 0)
+    LUAX_SIGNATURE_END
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.pop()");
+#endif
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+    GL_context_pop(&display->gl);
+
+    return 0;
 }
 
 static int canvas_palette0(lua_State *L)

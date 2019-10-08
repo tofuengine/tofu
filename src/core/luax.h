@@ -91,7 +91,8 @@ extern int luaX_newmodule(lua_State *L, const char *script, const luaL_Reg *f, c
 extern void luaX_preload(lua_State *L, const char *modname, lua_CFunction openf, int nup);
 extern void luaX_require(lua_State *L, const char *modname, lua_CFunction openf, int nup, int glb);
 extern int luaX_toref(lua_State *L, int arg);
-extern void luaX_getnumberarray(lua_State *L, int index, double *array);
+extern void luaX_pushnumberarray(lua_State *L, float *array, int count);
+extern void luaX_tonumberarray(lua_State *L, int index, float *array, int count);
 extern void luaX_checkargument(lua_State *L, int index, const char *file, int line, ...);
 
 extern int luaX_packupvalues(lua_State *L, int nup);

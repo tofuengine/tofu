@@ -247,7 +247,8 @@ bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configu
 
     lua_pushlightuserdata(interpreter->state, (void *)environment); // Discard `const` qualifier.
     lua_pushlightuserdata(interpreter->state, (void *)display);
-    modules_initialize(interpreter->state, 2);
+    lua_pushlightuserdata(interpreter->state, (void *)interpreter);
+    modules_initialize(interpreter->state, 3);
 
 #if 0
     luaX_appendpath(interpreter->state, environment->base_path);
@@ -285,6 +286,25 @@ bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configu
     TimerPool_initialize(&interpreter->timer_pool, timerpool_callback, interpreter->state);
 
     return true;
+}
+
+void Interpreter_terminate(Interpreter_t *interpreter)
+{
+#ifdef SHUTDOWN_SCRIPT
+    lua_settop(interpreter->state, 1);      // T O F1 ... Fn -> T
+    int result = execute(interpreter->state, SHUTDOWN_SCRIPT);
+    if (result != 0) {
+        Log_write(LOG_LEVELS_FATAL, "<VM> can't interpret shutdown script");
+    }
+    lua_settop(interpreter->state, 0);      // T -> <empty>
+#else
+    lua_pushnil(interpreter->state);
+    lua_setglobal(interpreter->state, ROOT_INSTANCE); // Just set the (global) *root* instance to `nil`.
+#endif
+    lua_gc(interpreter->state, LUA_GCCOLLECT, 0);
+    lua_close(interpreter->state);
+
+    TimerPool_terminate(&interpreter->timer_pool);
 }
 
 bool Interpreter_init(Interpreter_t *interpreter)
@@ -333,21 +353,18 @@ bool Interpreter_render(Interpreter_t *interpreter, const double ratio)
     return call(interpreter->state, METHOD_RENDER, 1, 0) == LUA_OK;
 }
 
-void Interpreter_terminate(Interpreter_t *interpreter)
+bool Interpreter_call(Interpreter_t *interpreter, int nargs, int nresults)
 {
-#ifdef SHUTDOWN_SCRIPT
-    lua_settop(interpreter->state, 1);      // T O F1 ... Fn -> T
-    int result = execute(interpreter->state, SHUTDOWN_SCRIPT);
-    if (result != 0) {
-        Log_write(LOG_LEVELS_FATAL, "<VM> can't interpret shutdown script");
+    lua_State *L = interpreter->state;
+#ifdef __DEBUG_VM_CALLS__
+    int called = lua_pcall(L, nargs, nresults, TRACEBACK_STACK_INDEX);
+    if (called != LUA_OK) {
+        Log_write(LOG_LEVELS_ERROR, "<VM> error in execute: %s", lua_tostring(L, -1));
+        lua_pop(L, 1);
     }
-    lua_settop(interpreter->state, 0);      // T -> <empty>
+    return called == LUA_OK ? true : false;
 #else
-    lua_pushnil(interpreter->state);
-    lua_setglobal(interpreter->state, ROOT_INSTANCE); // Just set the (global) *root* instance to `nil`.
+    lua_call(L, nargs, nresults);
+    return true;
 #endif
-    lua_gc(interpreter->state, LUA_GCCOLLECT, 0);
-    lua_close(interpreter->state);
-
-    TimerPool_terminate(&interpreter->timer_pool);
 }
