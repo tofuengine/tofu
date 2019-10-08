@@ -22,25 +22,8 @@
 
 #include "primitive.h"
 
+#include "../core/imath.h"
 #include "gl.h"
-
-//#define __DDA__
-#ifndef __DDA__
-static int iabs(int v)
-{
-    return v >= 0 ? v : -v;
-}
-#endif
-
-static int imin(int a, int b)
-{
-    return a < b ? a : b;
-}
-
-static int imax(int a, int b)
-{
-    return a > b ? a : b;
-}
 
 void GL_primitive_point(const GL_Context_t *context, GL_Point_t position, GL_Pixel_t index)
 {

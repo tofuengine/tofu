@@ -25,6 +25,7 @@
 #include "../config.h"
 #include "surface.h"
 
+#include "../core/imath.h"
 #include "../log.h"
 
 #include <stdlib.h>
@@ -37,20 +38,9 @@
 #include <stb/stb_image_write.h>
 
 #define PIXEL(c, x, y)  ((c)->surface.data_rows[(y)] + (x))
-/*
-static int iabs(int v)
-{
-    return v > 0 ? v : -v;
-}
-*/
-static int imod(int a, int b)
-{
-//    return a < 0 ? b + (a % b) : a % b;
-    return ((a % b) + b) % b; // Solve the `-b` case.
-}
 
 #ifdef __DEBUG_GRAPHICS__
-static void pixel(const GL_Context_t *context, int x, int y, int index)
+static inline void pixel(const GL_Context_t *context, int x, int y, int index)
 {
     *PIXEL(context, x, y) = 240 + (index % 16);
 }
