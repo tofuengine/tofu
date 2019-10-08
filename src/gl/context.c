@@ -707,7 +707,6 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
     const GL_State_t *state = &context->state;
     const GL_Quad_t clipping_region = state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
-    const GL_Bool_t *transparent = state->transparent;
 
     if (seed.x < clipping_region.x0 || seed.x > clipping_region.x1
         || seed.y < clipping_region.y0 || seed.y > clipping_region.y1) {
