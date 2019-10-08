@@ -46,10 +46,11 @@ static inline void pixel(const GL_Context_t *context, int x, int y, int index)
 }
 #endif
 
-static inline GL_State_t initialize_state(size_t width, size_t height)
+static inline GL_State_t initialize_state(GL_Surface_t *surface)
 {
     GL_State_t state = (GL_State_t){
-            .clipping_region = (GL_Quad_t){ .x0 = 0, .y0 = 0, .x1 = width - 1, .y1 = height - 1 },
+            .surface = surface,
+            .clipping_region = (GL_Quad_t){ .x0 = 0, .y0 = 0, .x1 = surface->width - 1, .y1 = surface->height - 1 },
             .background = 0
         };
     for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
@@ -62,14 +63,11 @@ static inline GL_State_t initialize_state(size_t width, size_t height)
 
 bool GL_context_create(GL_Context_t *context, size_t width, size_t height)
 {
-    GL_Surface_t surface;
-    GL_surface_create(&surface, width, height);
+    *context = (GL_Context_t){};
 
-    *context = (GL_Context_t){
-            .surface = surface,
-            .state = initialize_state(width, height),
-            .stack = NULL
-        };
+    GL_surface_create(&context->buffer, width, height);
+
+    context->state = initialize_state(&context->buffer);
 
     return true;
 }
@@ -77,17 +75,18 @@ bool GL_context_create(GL_Context_t *context, size_t width, size_t height)
 void GL_context_delete(GL_Context_t *context)
 {
     arrfree(context->stack);
+    Log_write(LOG_LEVELS_DEBUG, "<GL> context stack deallocated");
 
-    GL_surface_delete(&context->surface);
-    Log_write(LOG_LEVELS_DEBUG, "<GL> context deallocated");
+    GL_surface_delete(&context->buffer);
+    Log_write(LOG_LEVELS_DEBUG, "<GL> context buffer deallocated");
 
     *context = (GL_Context_t){};
+    Log_write(LOG_LEVELS_DEBUG, "<GL> context deallocated");
 }
 
 void GL_context_push(GL_Context_t *context)
 {
-    arrpush(context->stack, context->state);
-    context->state = initialize_state(context->surface.width, context->surface.height);
+    arrpush(context->stack, context->state); // Store current state into stack.
 }
 
 void GL_context_pop(GL_Context_t *context)
@@ -103,9 +102,18 @@ void GL_context_clear(const GL_Context_t *context)
 {
     const GL_State_t *state = &context->state;
     const GL_Pixel_t color = state->background;
-    GL_Pixel_t *dst = context->surface.data;
-    for (size_t i = context->surface.data_size; i; --i) {
+    GL_Pixel_t *dst = state->surface->data;
+    for (size_t i = state->surface->data_size; i; --i) {
         *(dst++) = color;
+    }
+}
+
+void GL_context_surface(GL_Context_t *context, GL_Surface_t *surface)
+{
+    GL_Surface_t *buffer = !surface ? &context->buffer : surface;
+    if (context->state.surface != buffer) {
+        context->state.surface = buffer;
+        GL_context_clipping(context, NULL); // Reset the clipping region on surface change.
     }
 }
 
@@ -141,16 +149,21 @@ void GL_context_transparent(GL_Context_t *context, const GL_Pixel_t *indexes, co
 void GL_context_clipping(GL_Context_t *context, const GL_Quad_t *clipping_region)
 {
     GL_State_t *state = &context->state;
+
     if (!clipping_region) {
         state->clipping_region = (GL_Quad_t){
                 .x0 = 0,
                 .y0 = 0,
-                .x1 = context->surface.width - 1,
-                .y1 = context->surface.height - 1
+                .x1 = state->surface->width - 1,
+                .y1 = state->surface->height - 1
             };
     } else {
-        // TODO: check is clipping region is legit and restrict if necessary.
-        state->clipping_region = *clipping_region;
+        state->clipping_region = (GL_Quad_t){
+                .x0 = imax(0, clipping_region->x0),
+                .y0 = imax(0, clipping_region->y0),
+                .x1 = imin(state->surface->width - 1, clipping_region->x1),
+                .y1 = imin(state->surface->height - 1, clipping_region->y1)
+            };
     }
 }
 
@@ -174,14 +187,16 @@ void GL_context_pattern(GL_Context_t *context, uint32_t mask)
 
 void GL_context_screenshot(const GL_Context_t *context, const GL_Palette_t *palette, const char *pathfile)
 {
-    void *vram = malloc(context->surface.width * context->surface.height * sizeof(GL_Color_t));
+    const GL_State_t *state = &context->state;
+
+    void *vram = malloc(state->surface->width * state->surface->height * sizeof(GL_Color_t));
     if (!vram) {
         Log_write(LOG_LEVELS_WARNING, "<GL> can't create buffer for screenshot");
     }
 
     GL_context_to_rgba(context, palette, vram);
 
-    int result = stbi_write_png(pathfile, context->surface.width, context->surface.height, sizeof(GL_Color_t), vram, context->surface.width * sizeof(GL_Color_t));
+    int result = stbi_write_png(pathfile, state->surface->width, state->surface->height, sizeof(GL_Color_t), vram, state->surface->width * sizeof(GL_Color_t));
     if (!result) {
         Log_write(LOG_LEVELS_WARNING, "<GL> can't save screenshot to '%s'", pathfile);
     }
@@ -191,13 +206,15 @@ void GL_context_screenshot(const GL_Context_t *context, const GL_Palette_t *pale
 
 void GL_context_to_rgba(const GL_Context_t *context, const GL_Palette_t *palette, void *vram)
 {
-    const int width = context->surface.width;
-    const int height = context->surface.height;
+    const GL_State_t *state = &context->state;
+
+    const int width = state->surface->width;
+    const int height = state->surface->height;
     const GL_Color_t *colors = palette->colors;
 #ifdef __DEBUG_GRAPHICS__
     int count = palette->count;
 #endif
-    const GL_Pixel_t *src = context->surface.data;
+    const GL_Pixel_t *src = state->surface->data;
     GL_Color_t *dst = (GL_Color_t *)vram;
     for (int i = height; i; --i) {
         for (int j = width; j; --j) {
@@ -220,8 +237,10 @@ void GL_context_to_rgba(const GL_Context_t *context, const GL_Palette_t *palette
 
 void GL_context_to_surface(const GL_Context_t *context, const GL_Surface_t *surface)
 {
-    size_t width = context->surface.width;
-    size_t height = context->surface.height;
+    const GL_State_t *state = &context->state;
+
+    size_t width = state->surface->width; // TODO: adopt `imin()` and `imax()`.
+    size_t height = state->surface->height;
 
     if (width > surface->width) {
         width = surface->width;
@@ -231,10 +250,10 @@ void GL_context_to_surface(const GL_Context_t *context, const GL_Surface_t *surf
     }
 
     const GL_Pixel_t *src = surface->data;
-    GL_Pixel_t *dst = context->surface.data;
+    GL_Pixel_t *dst = state->surface->data;
 
     const int src_skip = surface->width - width;
-    const int dst_skip = context->surface.width - width;
+    const int dst_skip = state->surface->width - width;
 
     for (int i = height; i; --i) {
         for (int j = width; j; --j) {
@@ -287,10 +306,10 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
     }
 
     const GL_Pixel_t *src = surface->data_rows[area.y + skip_y] + (area.x + skip_x);
-    GL_Pixel_t *dst = context->surface.data_rows[drawing_region.y0] + drawing_region.x0;
+    GL_Pixel_t *dst = state->surface->data_rows[drawing_region.y0] + drawing_region.x0;
 
     const int src_skip = surface->width - width;
-    const int dst_skip = context->surface.width - width;
+    const int dst_skip = state->surface->width - width;
 
     for (int i = height; i; --i) {
         for (int j = width; j; --j) {
@@ -358,9 +377,9 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
         return;
     }
 
-    GL_Pixel_t *dst = context->surface.data_rows[drawing_region.y0] + drawing_region.x0;
+    GL_Pixel_t *dst = state->surface->data_rows[drawing_region.y0] + drawing_region.x0;
 
-    const size_t skip = context->surface.width - width;
+    const size_t skip = state->surface->width - width;
 
     const float du = 1.0f / scale_x; // Texture coordinates deltas (signed).
     const float dv = 1.0f / scale_y;
@@ -506,9 +525,9 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     float ou = (tlx * M11 + tly * M12) + sax + sx; // Offset to the source texture quad.
     float ov = (tlx * M21 + tly * M22) + say + sy;
 
-    GL_Pixel_t *dst = context->surface.data_rows[drawing_region.y0] + drawing_region.x0;
+    GL_Pixel_t *dst = state->surface->data_rows[drawing_region.y0] + drawing_region.x0;
 
-    const int skip = context->surface.width - width;
+    const int skip = state->surface->width - width;
 
     for (int i = height; i; --i) {
         float u = ou;
@@ -598,9 +617,9 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
     const int smaxx = sw - 1;
     const int smaxy = sh - 1;
 
-    GL_Pixel_t *dst = context->surface.data_rows[drawing_region.y0] + drawing_region.x0;
+    GL_Pixel_t *dst = state->surface->data_rows[drawing_region.y0] + drawing_region.x0;
 
-    const int skip = context->surface.width - width;
+    const int skip = state->surface->width - width;
 
     // The basic Mode7 formula is the following
     //
@@ -713,13 +732,13 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
         return;
     }
 
-    const GL_Pixel_t match = *context->surface.data_rows[seed.y] + seed.x;
+    const GL_Pixel_t match = *state->surface->data_rows[seed.y] + seed.x;
     const GL_Pixel_t replacement = shifting[index];
 
     GL_Point_t *stack = NULL;
     arrpush(stack, seed);
 
-    const int skip = context->surface.width;
+    const int skip = state->surface->width;
 
     while (arrlen(stack) > 0) {
         const GL_Point_t position = arrpop(stack);
@@ -727,7 +746,7 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
         int x = position.x;
         int y = position.y;
 
-        GL_Pixel_t *dst = context->surface.data_rows[y] + x;
+        GL_Pixel_t *dst = state->surface->data_rows[y] + x;
         while (x >= clipping_region.x0 && *dst == match) {
             --x;
             --dst;

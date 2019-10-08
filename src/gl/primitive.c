@@ -51,7 +51,7 @@ void GL_primitive_point(const GL_Context_t *context, GL_Point_t position, GL_Pix
         return;
     }
 
-    GL_Pixel_t *dst = context->surface.data_rows[position.y] + position.x;
+    GL_Pixel_t *dst = state->surface->data_rows[position.y] + position.x;
     *dst = index;
 }
 
@@ -93,12 +93,12 @@ void GL_primitive_line(const GL_Context_t *context, GL_Point_t from, GL_Point_t 
     const int dy = -iabs(to.y - from.y);
 
     const int sx = from.x < to.x ? 1 : -1;
-    const int sy = from.y < to.y ? context->surface.width : -context->surface.width;
+    const int sy = from.y < to.y ? state->surface->width : -state->surface->width;
 
     int err = dx + dy;
 
-    GL_Pixel_t *dst = context->surface.data_rows[from.y] + from.x;
-    GL_Pixel_t *eod = context->surface.data_rows[to.y] + to.x;
+    GL_Pixel_t *dst = state->surface->data_rows[from.y] + from.x;
+    GL_Pixel_t *eod = state->surface->data_rows[to.y] + to.x;
 
     for (;;) {
         *dst = index;
@@ -161,7 +161,7 @@ void GL_primitive_hline(const GL_Context_t *context, GL_Point_t origin, size_t w
         return;
     }
 
-    GL_Pixel_t *dst = context->surface.data_rows[drawing_region.y0] + drawing_region.x0;
+    GL_Pixel_t *dst = state->surface->data_rows[drawing_region.y0] + drawing_region.x0;
 
     for (int i = width; i; --i) {
         *(dst++) = index;
@@ -207,9 +207,9 @@ void GL_primitive_vline(const GL_Context_t *context, GL_Point_t origin, size_t h
         return;
     }
 
-    GL_Pixel_t *dst = context->surface.data_rows[drawing_region.y0] + drawing_region.x0;
+    GL_Pixel_t *dst = state->surface->data_rows[drawing_region.y0] + drawing_region.x0;
 
-    const int skip = context->surface.width;
+    const int skip = state->surface->width;
 
     for (int i = height; i; --i) {
         *dst = index;
@@ -256,9 +256,9 @@ void GL_primitive_rectangle(const GL_Context_t *context, GL_Rectangle_t rectangl
         return;
     }
 
-    GL_Pixel_t *dst = context->surface.data_rows[drawing_region.y0] + drawing_region.x0;
+    GL_Pixel_t *dst = state->surface->data_rows[drawing_region.y0] + drawing_region.x0;
 
-    const int skip = context->surface.width - width;
+    const int skip = state->surface->width - width;
 
     for (int i = height; i; --i) {
         for (int j = width; j; --j) {
@@ -336,9 +336,9 @@ void GL_primitive_triangle(const GL_Context_t *context, GL_Point_t a, GL_Point_t
     int CY2 = C2 + DX23 * drawing_region.y0 - DY23 * drawing_region.x0;
     int CY3 = C3 + DX31 * drawing_region.y0 - DY31 * drawing_region.x0;
 
-    GL_Pixel_t *dst = context->surface.data_rows[drawing_region.y0] + drawing_region.x0;
+    GL_Pixel_t *dst = state->surface->data_rows[drawing_region.y0] + drawing_region.x0;
 
-    const int skip = context->surface.width;
+    const int skip = state->surface->width;
 
     for (int y = 0; y <= height; ++y) { // Pinada's edge function is linear, we can cast it...
         int CX1 = CY1;

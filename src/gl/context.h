@@ -30,10 +30,12 @@
 #include "surface.h"
 
 // TODO: move from `float` to 'double` or to `fix16_t`?
+// TODO: patch all doubles to float!
 
 #define GL_XFORM_TABLE_MAX_OPERATIONS       16
 
 typedef struct _GL_State_t {
+    GL_Surface_t *surface;
     GL_Quad_t clipping_region;
     GL_Pixel_t background;
     GL_Pixel_t color;
@@ -43,7 +45,7 @@ typedef struct _GL_State_t {
 } GL_State_t;
 
 typedef struct _GL_Context_t {
-    GL_Surface_t surface;
+    GL_Surface_t buffer;
     GL_State_t state;
     GL_State_t *stack;
 } GL_Context_t;
@@ -108,6 +110,7 @@ extern void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *s
 extern void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, float sx, float sy, float rotation, float ax, float ay);
 extern void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface, GL_Point_t position, GL_XForm_t transformation);
 
+extern void GL_context_surface(GL_Context_t *context, GL_Surface_t *surface);
 extern void GL_context_shifting(GL_Context_t *context, const size_t *from, const size_t *to, size_t count);
 extern void GL_context_transparent(GL_Context_t *context, const GL_Pixel_t *indexes, const GL_Bool_t *transparent, size_t count);
 extern void GL_context_clipping(GL_Context_t *context, const GL_Quad_t *clipping_region);

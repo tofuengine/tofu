@@ -187,6 +187,8 @@ static int surface_gc(lua_State *L)
     GL_surface_delete(&instance->surface);
     Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface #%p finalized", instance);
 
+    // TODO: when a surface is GC-ed we check if it's the current used and propagate.
+
     *instance = (Surface_Class_t){};
 
     return 0;

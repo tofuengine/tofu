@@ -45,6 +45,7 @@ static int canvas_width(lua_State *L);
 static int canvas_height(lua_State *L);
 static int canvas_push(lua_State *L);
 static int canvas_pop(lua_State *L);
+static int canvas_surface(lua_State *L);
 static int canvas_palette(lua_State *L);
 static int canvas_background(lua_State *L);
 static int canvas_color(lua_State *L);
@@ -63,6 +64,7 @@ static int canvas_triangle(lua_State *L);
 static int canvas_rectangle(lua_State *L);
 
 // TODO: color index is optional, if not present use the current (drawstate) pen color
+// TODO: rename `Canvas` to `Context`?
 
 static const struct luaL_Reg _canvas_functions[] = {
     { "color_to_index", canvas_color_to_index },
@@ -71,6 +73,7 @@ static const struct luaL_Reg _canvas_functions[] = {
     { "height", canvas_height },
     { "push", canvas_push },
     { "pop", canvas_pop },
+    { "surface", canvas_surface },
     { "palette", canvas_palette },
     { "background", canvas_background },
     { "color", canvas_color },
@@ -166,7 +169,7 @@ static int canvas_width(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    lua_pushinteger(L, display->gl.surface.width);
+    lua_pushinteger(L, display->gl.state.surface->width);
 
     return 1;
 }
@@ -181,7 +184,7 @@ static int canvas_height(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    lua_pushinteger(L, display->gl.surface.height);
+    lua_pushinteger(L, display->gl.state.surface->height);
 
     return 1;
 }
@@ -214,6 +217,53 @@ static int canvas_pop(lua_State *L)
     GL_context_pop(&display->gl);
 
     return 0;
+}
+
+static int canvas_surface0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 0)
+    LUAX_SIGNATURE_END
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.surface()");
+#endif
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+    GL_context_surface(&display->gl, NULL);
+
+    return 0;
+}
+
+// TODO: !!! MOVE THESE `*_Class_t` UDT to a seperate header or move to header file.
+typedef struct _Surface_Class_t {
+    // char pathfile[PATH_FILE_MAX];
+    GL_Surface_t surface;
+    GL_XForm_t xform;
+} Surface_Class_t;
+
+static int canvas_surface1(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+    LUAX_SIGNATURE_END
+    Surface_Class_t *surface = (Surface_Class_t *)lua_touserdata(L, 1);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.surface(%p)", type);
+#endif
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+    GL_context_surface(&display->gl, &surface->surface);
+
+    return 0;
+}
+
+static int canvas_surface(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(0, canvas_surface0)
+        LUAX_OVERLOAD_ARITY(1, canvas_surface1)
+    LUAX_OVERLOAD_END
 }
 
 static int canvas_palette0(lua_State *L)

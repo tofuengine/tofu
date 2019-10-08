@@ -446,7 +446,7 @@ void Display_present(Display_t *display)
 
     GL_context_to_rgba(&display->gl, &display->palette, display->vram);
 
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, display->gl.surface.width, display->gl.surface.height, GL_RGBA, GL_UNSIGNED_BYTE, display->vram);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, display->gl.buffer.width, display->gl.buffer.height, GL_RGBA, GL_UNSIGNED_BYTE, display->vram);
 
     glBegin(GL_TRIANGLE_STRIP);
 //        glColor4ub(255, 255, 255, 255);
