@@ -33,14 +33,19 @@
 
 #define GL_XFORM_TABLE_MAX_OPERATIONS       16
 
-typedef struct _GL_Context_t {
-    GL_Surface_t surface;
+typedef struct _GL_State_t {
     GL_Quad_t clipping_region;
     GL_Pixel_t background;
     GL_Pixel_t color;
     uint32_t mask;
     GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
     GL_Bool_t transparent[GL_MAX_PALETTE_COLORS];
+} GL_State_t;
+
+typedef struct _GL_Context_t {
+    GL_Surface_t surface;
+    GL_State_t state;
+    GL_State_t *stack;
 } GL_Context_t;
 
 typedef enum _GL_XForm_Registers_t {
@@ -90,8 +95,8 @@ typedef struct _GL_XForm_t {
 extern bool GL_context_create(GL_Context_t *context, size_t width, size_t height);
 extern void GL_context_delete(GL_Context_t *context); // TODO: rename to `*_destroy()`?
 
-extern void GL_context_push(const GL_Context_t *context);
-extern void GL_context_pop(const GL_Context_t *context);
+extern void GL_context_push(GL_Context_t *context);
+extern void GL_context_pop(GL_Context_t *context);
 
 extern void GL_context_clear(const GL_Context_t *context);
 extern void GL_context_screenshot(const GL_Context_t *context, const GL_Palette_t *palette, const char *pathfile);

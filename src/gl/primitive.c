@@ -27,9 +27,10 @@
 
 void GL_primitive_point(const GL_Context_t *context, GL_Point_t position, GL_Pixel_t index)
 {
-    const GL_Quad_t clipping_region = context->clipping_region;
-    const GL_Pixel_t *shifting = context->shifting;
-    const GL_Bool_t *transparent = context->transparent;
+    const GL_State_t *state = &context->state;
+    const GL_Quad_t clipping_region = state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
 
     index = shifting[index];
 
@@ -58,10 +59,14 @@ void GL_primitive_point(const GL_Context_t *context, GL_Point_t position, GL_Pix
 void GL_primitive_line(const GL_Context_t *context, GL_Point_t from, GL_Point_t to, GL_Pixel_t index)
 {
     // TODO: implement line clipping.
+    const GL_State_t *state = &context->state;
+    //const GL_Quad_t clipping_region = state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
 
-    index = context->shifting[index];
+    index = shifting[index];
 
-    if (context->transparent[index]) {
+    if (transparent[index]) {
         return;
     }
 
@@ -119,9 +124,10 @@ void GL_primitive_line(const GL_Context_t *context, GL_Point_t from, GL_Point_t 
 
 void GL_primitive_hline(const GL_Context_t *context, GL_Point_t origin, size_t w, GL_Pixel_t index)
 {
-    const GL_Quad_t clipping_region = context->clipping_region;
-    const GL_Pixel_t *shifting = context->shifting;
-    const GL_Bool_t *transparent = context->transparent;
+    const GL_State_t *state = &context->state;
+    const GL_Quad_t clipping_region = state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
 
     index = shifting[index];
 
@@ -164,9 +170,10 @@ void GL_primitive_hline(const GL_Context_t *context, GL_Point_t origin, size_t w
 
 void GL_primitive_vline(const GL_Context_t *context, GL_Point_t origin, size_t h, GL_Pixel_t index)
 {
-    const GL_Quad_t clipping_region = context->clipping_region;
-    const GL_Pixel_t *shifting = context->shifting;
-    const GL_Bool_t *transparent = context->transparent;
+    const GL_State_t *state = &context->state;
+    const GL_Quad_t clipping_region = state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
 
     index = shifting[index];
 
@@ -212,9 +219,10 @@ void GL_primitive_vline(const GL_Context_t *context, GL_Point_t origin, size_t h
 
 void GL_primitive_rectangle(const GL_Context_t *context, GL_Rectangle_t rectangle, GL_Pixel_t index)
 {
-    const GL_Quad_t clipping_region = context->clipping_region;
-    const GL_Pixel_t *shifting = context->shifting;
-    const GL_Bool_t *transparent = context->transparent;
+    const GL_State_t *state = &context->state;
+    const GL_Quad_t clipping_region = state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
 
     index = shifting[index];
 
@@ -266,9 +274,10 @@ void GL_primitive_rectangle(const GL_Context_t *context, GL_Rectangle_t rectangl
 // https://github.com/dpethes/2D-rasterizer/blob/master/rasterizer2d.pas
 void GL_primitive_triangle(const GL_Context_t *context, GL_Point_t a, GL_Point_t b, GL_Point_t c, GL_Pixel_t index)
 {
-    const GL_Quad_t clipping_region = context->clipping_region;
-    const GL_Pixel_t *shifting = context->shifting;
-    const GL_Bool_t *transparent = context->transparent;
+    const GL_State_t *state = &context->state;
+    const GL_Quad_t clipping_region = state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
 
     index = shifting[index];
 

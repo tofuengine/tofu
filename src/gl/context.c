@@ -46,6 +46,20 @@ static inline void pixel(const GL_Context_t *context, int x, int y, int index)
 }
 #endif
 
+static inline GL_State_t initialize_state(size_t width, size_t height)
+{
+    GL_State_t state = (GL_State_t){
+            .clipping_region = (GL_Quad_t){ .x0 = 0, .y0 = 0, .x1 = width - 1, .y1 = height - 1 },
+            .background = 0
+        };
+    for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
+        state.shifting[i] = i;
+        state.transparent[i] = GL_BOOL_FALSE;
+    }
+    state.transparent[0] = GL_BOOL_TRUE;
+    return state;
+}
+
 bool GL_context_create(GL_Context_t *context, size_t width, size_t height)
 {
     GL_Surface_t surface;
@@ -53,42 +67,109 @@ bool GL_context_create(GL_Context_t *context, size_t width, size_t height)
 
     *context = (GL_Context_t){
             .surface = surface,
-            .clipping_region = (GL_Quad_t){ .x0 = 0, .y0 = 0, .x1 = width - 1, .y1 = height - 1 },
-            .background = 0
+            .state = initialize_state(width, height),
+            .stack = NULL
         };
-
-    for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
-        context->shifting[i] = i;
-        context->transparent[i] = GL_BOOL_FALSE;
-    }
-    context->transparent[0] = GL_BOOL_TRUE;
 
     return true;
 }
 
 void GL_context_delete(GL_Context_t *context)
 {
+    arrfree(context->stack);
+
     GL_surface_delete(&context->surface);
     Log_write(LOG_LEVELS_DEBUG, "<GL> context deallocated");
 
     *context = (GL_Context_t){};
 }
 
-void GL_context_push(const GL_Context_t *context)
+void GL_context_push(GL_Context_t *context)
 {
+    arrpush(context->stack, context->state);
+    context->state = initialize_state(context->surface.width, context->surface.height);
 }
 
-void GL_context_pop(const GL_Context_t *context)
+void GL_context_pop(GL_Context_t *context)
 {
+    if (arrlen(context->stack) == 0) {
+        Log_write(LOG_LEVELS_WARNING, "<GL> no states to pop from stack");
+        return;
+    }
+    context->state = arrpop(context->stack);
 }
 
 void GL_context_clear(const GL_Context_t *context)
 {
-    const GL_Pixel_t color = context->background;
+    const GL_State_t *state = &context->state;
+    const GL_Pixel_t color = state->background;
     GL_Pixel_t *dst = context->surface.data;
     for (size_t i = context->surface.data_size; i; --i) {
         *(dst++) = color;
     }
+}
+
+void GL_context_shifting(GL_Context_t *context, const size_t *from, const size_t *to, size_t count)
+{
+    GL_State_t *state = &context->state;
+    if (!from) {
+        for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
+            state->shifting[i] = i;
+        }
+    } else {
+        for (size_t i = 0; i < count; ++i) {
+            state->shifting[from[i]] = to[i];
+        }
+    }
+}
+
+void GL_context_transparent(GL_Context_t *context, const GL_Pixel_t *indexes, const GL_Bool_t *transparent, size_t count)
+{
+    GL_State_t *state = &context->state;
+    if (!indexes) {
+        for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
+            state->transparent[i] = GL_BOOL_FALSE;
+        }
+        state->transparent[0] = GL_BOOL_TRUE;
+    } else {
+        for (size_t i = 0; i < count; ++i) {
+            state->transparent[indexes[i]] = transparent[i];
+        }
+    }
+}
+
+void GL_context_clipping(GL_Context_t *context, const GL_Quad_t *clipping_region)
+{
+    GL_State_t *state = &context->state;
+    if (!clipping_region) {
+        state->clipping_region = (GL_Quad_t){
+                .x0 = 0,
+                .y0 = 0,
+                .x1 = context->surface.width - 1,
+                .y1 = context->surface.height - 1
+            };
+    } else {
+        // TODO: check is clipping region is legit and restrict if necessary.
+        state->clipping_region = *clipping_region;
+    }
+}
+
+void GL_context_background(GL_Context_t *context, const GL_Pixel_t index)
+{
+    GL_State_t *state = &context->state;
+    state->background = index;
+}
+
+void GL_context_color(GL_Context_t *context, GL_Pixel_t index)
+{
+    GL_State_t *state = &context->state;
+    state->color = index;
+}
+
+void GL_context_pattern(GL_Context_t *context, uint32_t mask)
+{
+    GL_State_t *state = &context->state;
+    state->mask = mask;
 }
 
 void GL_context_screenshot(const GL_Context_t *context, const GL_Palette_t *palette, const char *pathfile)
@@ -169,9 +250,10 @@ void GL_context_to_surface(const GL_Context_t *context, const GL_Surface_t *surf
 // https://dev.to/fenbf/please-declare-your-variables-as-const
 void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position)
 {
-    const GL_Quad_t clipping_region = context->clipping_region;
-    const GL_Pixel_t *shifting = context->shifting;
-    const GL_Bool_t *transparent = context->transparent;
+    const GL_State_t *state = &context->state;
+    const GL_Quad_t clipping_region = state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
@@ -237,9 +319,10 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
 // To avoid empty pixels we scan the destination area and calculate the source pixel.
 void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y)
 {
-    const GL_Quad_t clipping_region = context->clipping_region;
-    const GL_Pixel_t *shifting = context->shifting;
-    const GL_Bool_t *transparent = context->transparent;
+    const GL_State_t *state = &context->state;
+    const GL_Quad_t clipping_region = state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
 
     const int drawing_width = (int)((float)(area.width * fabs(scale_x)) + 0.5f);
     const int drawing_height = (int)((float)(area.height * fabs(scale_y)) + 0.5f);
@@ -324,9 +407,10 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
 // TODO: add 90/180/270 rotations?
 void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y, float angle, float anchor_x, float anchor_y)
 {
-    const GL_Quad_t clipping_region = context->clipping_region;
-    const GL_Pixel_t *shifting = context->shifting;
-    const GL_Bool_t *transparent = context->transparent;
+    const GL_State_t *state = &context->state;
+    const GL_Quad_t clipping_region = state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
 
     const float w = (float)area.width;
     const float h = (float)area.height;
@@ -467,130 +551,16 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
 #endif
 }
 
-void GL_context_shifting(GL_Context_t *context, const size_t *from, const size_t *to, size_t count)
-{
-    if (!from) {
-        for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
-            context->shifting[i] = i;
-        }
-    } else {
-        for (size_t i = 0; i < count; ++i) {
-            context->shifting[from[i]] = to[i];
-        }
-    }
-}
-
-void GL_context_transparent(GL_Context_t *context, const GL_Pixel_t *indexes, const GL_Bool_t *transparent, size_t count)
-{
-    if (!indexes) {
-        for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
-            context->transparent[i] = GL_BOOL_FALSE;
-        }
-        context->transparent[0] = GL_BOOL_TRUE;
-    } else {
-        for (size_t i = 0; i < count; ++i) {
-            context->transparent[indexes[i]] = transparent[i];
-        }
-    }
-}
-
-void GL_context_clipping(GL_Context_t *context, const GL_Quad_t *clipping_region)
-{
-    if (!clipping_region) {
-        context->clipping_region = (GL_Quad_t){
-                .x0 = 0,
-                .y0 = 0,
-                .x1 = context->surface.width - 1,
-                .y1 = context->surface.height - 1
-            };
-    } else {
-        // TODO: check is clipping region is legit and restrict if necessary.
-        context->clipping_region = *clipping_region;
-    }
-}
-
-void GL_context_background(GL_Context_t *context, const GL_Pixel_t index)
-{
-    context->background = index;
-}
-
-void GL_context_color(GL_Context_t *context, GL_Pixel_t index)
-{
-    context->color = index;
-}
-
-void GL_context_pattern(GL_Context_t *context, uint32_t mask)
-{
-    context->mask = mask;
-}
-
-// https://lodev.org/cgtutor/floodfill.html
-void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t index)
-{
-    const GL_Quad_t clipping_region = context->clipping_region;
-
-    if (seed.x < clipping_region.x0 || seed.x > clipping_region.x1
-        || seed.y < clipping_region.y0 || seed.y > clipping_region.y1) {
-        return;
-    }
-
-    GL_Pixel_t match = *PIXEL(context, seed.x, seed.y);
-    GL_Pixel_t replacement = index;
-
-    GL_Point_t *stack = NULL;
-    arrpush(stack, seed);
-
-    while (arrlen(stack) > 0) {
-        GL_Point_t position = arrpop(stack);
-
-        int x = position.x;
-        int y = position.y;
-
-        while (x >= clipping_region.x0 && !memcmp(PIXEL(context, x, y), &match, sizeof(GL_Pixel_t))) {
-            --x;
-        }
-        ++x;
-
-        bool above = false;
-        bool below = false;
-
-        while (x <= clipping_region.x1 && !memcmp(PIXEL(context, x, y), &match, sizeof(GL_Pixel_t))) {
-            *PIXEL(context, x, y) = replacement;
-
-            if (!above && y >= clipping_region.y0 && !memcmp(PIXEL(context, x, y - 1), &match, sizeof(GL_Pixel_t))) {
-                GL_Point_t p = (GL_Point_t){ .x = x, .y = y - 1 };
-                arrpush(stack, p);
-                above = true;
-            } else
-            if (above && y >= clipping_region.y0 && memcmp(PIXEL(context, x, y - 1), &match, sizeof(GL_Pixel_t))) {
-                above = false;
-            }
-
-            if (!below && y < clipping_region.y1 && !memcmp(PIXEL(context, x, y + 1), &match, sizeof(GL_Pixel_t))) {
-                GL_Point_t p = (GL_Point_t){ .x = x, .y = y + 1 };
-                arrpush(stack, p);
-                below = true;
-            } else
-            if (below && y < clipping_region.y1 && memcmp(PIXEL(context, x, y + 1), &match, sizeof(GL_Pixel_t))) {
-                above = false;
-            }
-
-            ++x;
-        }
-    }
-
-    arrfree(stack);
-}
-
 // https://www.youtube.com/watch?v=3FVN_Ze7bzw
 // http://www.coranac.com/tonc/text/mode7.htm
 // https://wiki.superfamicom.org/registers
 // https://www.smwcentral.net/?p=viewthread&t=27054
 void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface, GL_Point_t position, GL_XForm_t xform)
 {
-    const GL_Quad_t clipping_region = context->clipping_region;
-    const GL_Pixel_t *shifting = context->shifting;
-    const GL_Bool_t *transparent = context->transparent;
+    const GL_State_t *state = &context->state;
+    const GL_Quad_t clipping_region = state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
 
     const int clamp = xform.clamp;
     const GL_XForm_Table_Entry_t *table = xform.table;
@@ -656,18 +626,18 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
     //
     // X = A * (SX - CX) + B * (SY - CY) + CX + H
     // Y = C * (SX - CX) + D * (SY - CY) + CY + V
-    GL_XForm_State_t state;
-    memcpy(&state, &xform.state, sizeof(GL_XForm_State_t));
-    float h = state.h; float v = state.v; float a = state.a; float b = state.b;
-    float c = state.c; float d = state.d; float x0 = state.x; float y0 = state.y;
+    GL_XForm_State_t xform_state;
+    memcpy(&xform_state, &xform.state, sizeof(GL_XForm_State_t));
+    float h = xform_state.h; float v = xform_state.v; float a = xform_state.a; float b = xform_state.b;
+    float c = xform_state.c; float d = xform_state.d; float x0 = xform_state.x; float y0 = xform_state.y;
 
     for (int i = 0; i < height; ++i) {
         if (table && i == table->scan_line) {
             for (int k = 0; k < table->count; ++k) {
-                state.registers[table->operations[k].id] = table->operations[k].value;
+                xform_state.registers[table->operations[k].id] = table->operations[k].value;
             }
-            h = state.h; v = state.v; a = state.a; b = state.b; // Keep the fast-access variables updated.
-            c = state.c; d = state.d; x0 = state.x; y0 = state.y;
+            h = xform_state.h; v = xform_state.v; a = xform_state.a; b = xform_state.b; // Keep the fast-access variables updated.
+            c = xform_state.c; d = xform_state.d; x0 = xform_state.x; y0 = xform_state.y;
             ++table;
 #ifdef __DETACH_XFORM_TABLE__
             if (table->y == -1) { // End-of-data reached, detach pointer for faster loop.
@@ -729,4 +699,73 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
 
         dst += skip;
     }
+}
+
+// https://lodev.org/cgtutor/floodfill.html
+void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t index)
+{
+    const GL_State_t *state = &context->state;
+    const GL_Quad_t clipping_region = state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
+
+    if (seed.x < clipping_region.x0 || seed.x > clipping_region.x1
+        || seed.y < clipping_region.y0 || seed.y > clipping_region.y1) {
+        return;
+    }
+
+    const GL_Pixel_t match = *context->surface.data_rows[seed.y] + seed.x;
+    const GL_Pixel_t replacement = shifting[index];
+
+    GL_Point_t *stack = NULL;
+    arrpush(stack, seed);
+
+    const int skip = context->surface.width;
+
+    while (arrlen(stack) > 0) {
+        const GL_Point_t position = arrpop(stack);
+
+        int x = position.x;
+        int y = position.y;
+
+        GL_Pixel_t *dst = context->surface.data_rows[y] + x;
+        while (x >= clipping_region.x0 && *dst == match) {
+            --x;
+            --dst;
+        }
+        ++x;
+        ++dst;
+
+        bool above = false;
+        bool below = false;
+
+        while (x <= clipping_region.x1 && *dst == match) {
+            *dst = replacement;
+
+            const GL_Pixel_t pixel_above = *(dst - skip);
+            if (!above && y >= clipping_region.y0 && pixel_above == match) {
+                const GL_Point_t p = (GL_Point_t){ .x = x, .y = y - 1 };
+                arrpush(stack, p);
+                above = true;
+            } else
+            if (above && y >= clipping_region.y0 && pixel_above != match) {
+                above = false;
+            }
+
+            const GL_Pixel_t pixel_below = *(dst + skip);
+            if (!below && y < clipping_region.y1 && pixel_below == match) {
+                const GL_Point_t p = (GL_Point_t){ .x = x, .y = y + 1 };
+                arrpush(stack, p);
+                below = true;
+            } else
+            if (below && y < clipping_region.y1 && pixel_below != match) {
+                above = false;
+            }
+
+            ++x;
+            ++dst;
+        }
+    }
+
+    arrfree(stack);
 }
