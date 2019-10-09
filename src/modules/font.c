@@ -70,15 +70,9 @@ static void to_font_atlas_callback(void *parameters, GL_Surface_t *surface, cons
     const GL_Color_t *src = (const GL_Color_t *)data;
     GL_Pixel_t *dst = surface->data;
 
-    for (size_t y = 0; y < surface->height; ++y) {
-        int row_offset = surface->width * y;
-
-        for (size_t x = 0; x < surface->width; ++x) {
-            size_t offset = row_offset + x;
-
-            GL_Color_t color = src[offset];
-            dst[offset] = indexes[color.a == 0 ? 0 : 1]; // TODO: don't use alpha for transparency?
-        }
+    for (int i = surface->data_size; i; --i) {
+        GL_Color_t color = *(src++);
+        *(dst++) = indexes[color.a == 0 ? 0 : 1]; // TODO: don't use alpha for transparency?
     }
 }
 

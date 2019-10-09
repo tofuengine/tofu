@@ -71,15 +71,9 @@ static void to_indexed_atlas_callback(void *parameters, GL_Surface_t *surface, c
     const GL_Color_t *src = (const GL_Color_t *)data;
     GL_Pixel_t *dst = (GL_Pixel_t *)surface->data;
 
-    for (size_t y = 0; y < surface->height; ++y) {
-        int row_offset = surface->width * y;
-
-        for (size_t x = 0; x < surface->width; ++x) {
-            size_t offset = row_offset + x;
-
-            GL_Color_t color = src[offset];
-            dst[offset] = GL_palette_find_nearest_color(palette, color);
-        }
+    for (int i = surface->data_size; i; --i) {
+        GL_Color_t color = *(src++);
+        *(dst++) = GL_palette_find_nearest_color(palette, color);
     }
 }
 
