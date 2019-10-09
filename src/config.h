@@ -30,7 +30,7 @@
 
 #define GARBAGE_COLLECTION_PERIOD   60.0
 
-// Behavioural MACROs are uses the "__" prefix/suffix.
+// Behavioural MACROs use the `__` prefix/suffix.
 #define __GL_VERSION__                      0x0201
 #define __GSLS_VERSION__                    0x0114
 

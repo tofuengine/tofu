@@ -50,9 +50,17 @@ typedef struct _GL_Quad_t {
     int x1, y1;
 } GL_Quad_t;
 
+#pragma pack(push, 1)
+#ifdef __GL_BGRA_PALETTE__
 typedef struct _GL_Color_t {
-    uint8_t r, g, b, a;
+    GLubyte b, g, r, a;
 } GL_Color_t;
+#else
+typedef struct _GL_Color_t {
+    GLubyte r, g, b, a;
+} GL_Color_t;
+#endif
+#pragma pack(pop)
 
 #define GL_DEGREES_OVER_RADIANS 57.295779513082320876798154814105
 
