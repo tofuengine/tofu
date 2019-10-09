@@ -28,7 +28,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "hal.h"
 #include "gl/gl.h"
 
 typedef enum _Display_Keys_t {
@@ -78,7 +77,7 @@ typedef struct _Display_t {
     int window_width, window_height, window_scale;
     int physical_width, physical_height;
 
-    void *vram; // Temporary buffer to create the OpenGL texture from `GL_Pixel_t` array.
+    GL_Color_t *vram; // Temporary buffer to create the OpenGL texture from `GL_Pixel_t` array.
     GLuint vram_texture;
     GL_Quad_t vram_destination;
 

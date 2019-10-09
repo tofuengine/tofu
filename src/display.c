@@ -24,7 +24,6 @@
 
 #include "config.h"
 #include "engine.h"
-#include "hal.h"
 #include "log.h"
 
 #include <memory.h>
@@ -444,7 +443,7 @@ void Display_present(Display_t *display)
     GL_program_send(&display->programs[display->program_index], UNIFORM_TIME, GL_PROGRAM_UNIFORM_FLOAT, 1, time);
     GL_program_use(&display->programs[display->program_index]);
 
-    GL_context_to_rgba(&display->gl, &display->palette, display->vram);
+    GL_surface_to_rgba(&display->gl.buffer, &display->palette, display->vram);
 
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, display->gl.buffer.width, display->gl.buffer.height, GL_RGBA, GL_UNSIGNED_BYTE, display->vram);
 

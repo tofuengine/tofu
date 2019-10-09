@@ -25,6 +25,11 @@
 #include "../core/imath.h"
 #include "gl.h"
 
+#ifdef DEBUG
+  #include <stb/stb_leakcheck.h>
+#endif
+#include <stb/stb_ds.h>
+
 void GL_primitive_point(const GL_Context_t *context, GL_Point_t position, GL_Pixel_t index)
 {
     const GL_State_t *state = &context->state;
@@ -366,4 +371,72 @@ void GL_primitive_triangle(const GL_Context_t *context, GL_Point_t a, GL_Point_t
         }
         dst += skip - offset;
     }
+}
+
+// https://lodev.org/cgtutor/floodfill.html
+void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t index)
+{
+    const GL_State_t *state = &context->state;
+    const GL_Quad_t clipping_region = state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+
+    if (seed.x < clipping_region.x0 || seed.x > clipping_region.x1
+        || seed.y < clipping_region.y0 || seed.y > clipping_region.y1) {
+        return;
+    }
+
+    const GL_Pixel_t match = *state->surface->data_rows[seed.y] + seed.x;
+    const GL_Pixel_t replacement = shifting[index];
+
+    GL_Point_t *stack = NULL;
+    arrpush(stack, seed);
+
+    const int skip = state->surface->width;
+
+    while (arrlen(stack) > 0) {
+        const GL_Point_t position = arrpop(stack);
+
+        int x = position.x;
+        int y = position.y;
+
+        GL_Pixel_t *dst = state->surface->data_rows[y] + x;
+        while (x >= clipping_region.x0 && *dst == match) {
+            --x;
+            --dst;
+        }
+        ++x;
+        ++dst;
+
+        bool above = false;
+        bool below = false;
+
+        while (x <= clipping_region.x1 && *dst == match) {
+            *dst = replacement;
+
+            const GL_Pixel_t pixel_above = *(dst - skip);
+            if (!above && y >= clipping_region.y0 && pixel_above == match) {
+                const GL_Point_t p = (GL_Point_t){ .x = x, .y = y - 1 };
+                arrpush(stack, p);
+                above = true;
+            } else
+            if (above && y >= clipping_region.y0 && pixel_above != match) {
+                above = false;
+            }
+
+            const GL_Pixel_t pixel_below = *(dst + skip);
+            if (!below && y < clipping_region.y1 && pixel_below == match) {
+                const GL_Point_t p = (GL_Point_t){ .x = x, .y = y + 1 };
+                arrpush(stack, p);
+                below = true;
+            } else
+            if (below && y < clipping_region.y1 && pixel_below != match) {
+                above = false;
+            }
+
+            ++x;
+            ++dst;
+        }
+    }
+
+    arrfree(stack);
 }

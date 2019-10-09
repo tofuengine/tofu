@@ -130,7 +130,7 @@ static GL_XForm_Registers_t string_to_register(const char *id)
     return GL_XFORM_REGISTER_A;
 }
 
-static int surface_new(lua_State *L)
+static int surface_new1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
         LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
@@ -165,11 +165,55 @@ static int surface_new(lua_State *L)
                     .table = NULL
                 }
         };
-    Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface allocated as #%p", pathfile, instance);
+    Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface allocated as #%p", instance);
 
     luaL_setmetatable(L, LUAX_CLASS(Surface_Class_t));
 
     return 1;
+}
+
+static int surface_new2(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 2)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+    LUAX_SIGNATURE_END
+    size_t width = (size_t)lua_tonumber(L, 1);
+    size_t height = (size_t)lua_tonumber(L, 2);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Surface.new() -> %s", file);
+#endif
+
+    GL_Surface_t surface;
+    GL_surface_create(&surface, width, height);
+    Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface %d x %d create", width, height);
+
+    Surface_Class_t *instance = (Surface_Class_t *)lua_newuserdata(L, sizeof(Surface_Class_t));
+    *instance = (Surface_Class_t){
+            .surface = surface,
+            .xform = (GL_XForm_t){
+                    .state = (GL_XForm_State_t){
+                        .h = 0.0f, .v = 0.0f,
+                        .a = 1.0f, .b = 0.0f, .c = 1.0f, .d = 0.0f,
+                        .x = 0.0f, .y = 0.0f,
+                    },
+                    .clamp = GL_XFORM_CLAMP_REPEAT,
+                    .table = NULL
+                }
+        };
+    Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface allocated as #%p", instance);
+
+    luaL_setmetatable(L, LUAX_CLASS(Surface_Class_t));
+
+    return 1;
+}
+
+static int surface_new(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, surface_new1) // file
+        LUAX_OVERLOAD_ARITY(2, surface_new2) // width, height
+    LUAX_OVERLOAD_END
 }
 
 static int surface_gc(lua_State *L)

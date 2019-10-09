@@ -224,7 +224,7 @@ static int font_write5(lua_State *L)
         if (*ptr < ' ') {
             continue;
         }
-        GL_sheet_blit(context, sheet, *ptr - ' ', position);
+        GL_context_blit(context, &sheet->atlas, sheet->cells[*ptr - ' '], position);
         position.x += dw;
     }
 
@@ -313,7 +313,7 @@ static int font_write6(lua_State *L)
         if (*ptr < ' ') {
             continue;
         }
-        GL_sheet_blit_s(context, sheet, *ptr - ' ', position, scale, scale);
+        GL_context_blit_s(context, &sheet->atlas, sheet->cells[*ptr - ' '], position, scale, scale);
         position.x += dw;
     }
 
@@ -404,7 +404,7 @@ static int font_write7(lua_State *L)
         if (*ptr < ' ') {
             continue;
         }
-        GL_sheet_blit_s(context, sheet, *ptr - ' ', position, scale_x, scale_y);
+        GL_context_blit_s(context, &sheet->atlas, sheet->cells[*ptr - ' '], position, scale_x, scale_y);
         position.x += dw;
     }
 

@@ -20,28 +20,17 @@
  * SOFTWARE.
  **/
 
-#ifndef __GL_SURFACE_H__
-#define __GL_SURFACE_H__
-
-#include <stdbool.h>
+#ifndef __GL_BLIT_H__
+#define __GL_BLIT_H__
 
 #include "common.h"
-#include "palette.h"
+#include "context.h"
+#include "surface.h"
+#include "xform.h"
 
-typedef struct _GL_Surface_t {
-    size_t width, height;
-    GL_Pixel_t *data; // TODO: aligned to `sizeof(uint32_t)`?
-    GL_Pixel_t **data_rows;
-    size_t data_size;
-} GL_Surface_t;
+extern void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position);
+extern void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, float sx, float sy);
+extern void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, float sx, float sy, float rotation, float ax, float ay);
+extern void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface, GL_Point_t position, GL_XForm_t transformation);
 
-typedef void (*GL_Surface_Callback_t)(void *parameters, GL_Surface_t *surface, const void *data);
-
-extern bool GL_surface_load(GL_Surface_t *surface, const char *pathfile, GL_Surface_Callback_t callback, void *parameters);
-extern bool GL_surface_decode(GL_Surface_t *surface, const void *buffer, size_t size, const GL_Surface_Callback_t callback, void *parameters);
-extern bool GL_surface_create(GL_Surface_t *surface, size_t width, size_t height);
-extern void GL_surface_delete(GL_Surface_t *surface);
-
-extern void GL_surface_to_rgba(const GL_Surface_t *context, const GL_Palette_t *palette, GL_Color_t *vram);
-
-#endif  /* __GL_SURFACE_H__ */
+#endif  /* __GL_BLIT_H__ */

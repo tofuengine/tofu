@@ -94,18 +94,3 @@ void GL_sheet_delete(GL_Sheet_t *sheet)
     Log_write(LOG_LEVELS_DEBUG, "<GL> sheet #%p deleted", sheet);
     *sheet = (GL_Sheet_t){};
 }
-
-void GL_sheet_blit(const GL_Context_t *context, const GL_Sheet_t *sheet, size_t cell_id, GL_Point_t position)
-{
-    GL_context_blit(context, &sheet->atlas, sheet->cells[cell_id], position);
-}
-
-void GL_sheet_blit_s(const GL_Context_t *context, const GL_Sheet_t *sheet, size_t cell_id, GL_Point_t position, float sx, float sy)
-{
-    GL_context_blit_s(context, &sheet->atlas, sheet->cells[cell_id], position, sx, sy);
-}
-
-void GL_sheet_blit_sr(const GL_Context_t *context, const GL_Sheet_t *sheet, size_t cell_id, GL_Point_t position, float sx, float sy, float rotation, float ax, float ay)
-{
-    GL_context_blit_sr(context, &sheet->atlas, sheet->cells[cell_id], position, sx, sy, rotation, ax, ay);
-}

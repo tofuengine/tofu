@@ -34,4 +34,6 @@ extern void GL_primitive_vline(const GL_Context_t *context, GL_Point_t origin, s
 extern void GL_primitive_rectangle(const GL_Context_t *context, GL_Rectangle_t rectangle, GL_Pixel_t index);
 extern void GL_primitive_triangle(const GL_Context_t *context, GL_Point_t a, GL_Point_t b, GL_Point_t c, GL_Pixel_t index);
 
+extern void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t index);
+
 #endif  /* __GL_PRIMITIVE_H__ */

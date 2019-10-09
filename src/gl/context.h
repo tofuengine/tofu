@@ -50,50 +50,6 @@ typedef struct _GL_Context_t {
     GL_State_t *stack;
 } GL_Context_t;
 
-typedef enum _GL_XForm_Registers_t {
-    GL_XForm_Registers_t_First,
-    GL_XFORM_REGISTER_H = GL_XForm_Registers_t_First,
-    GL_XFORM_REGISTER_V,
-    GL_XFORM_REGISTER_A,
-    GL_XFORM_REGISTER_B,
-    GL_XFORM_REGISTER_C,
-    GL_XFORM_REGISTER_D,
-    GL_XFORM_REGISTER_X,
-    GL_XFORM_REGISTER_Y,
-    GL_XForm_Registers_t_Last = GL_XFORM_REGISTER_Y,
-    GL_XForm_Registers_t_CountOf
-} GL_XForm_Registers_t;
-
-typedef struct _GL_XForm_State_t {
-    union {
-        struct { float h, v, a, b, c, d, x, y; };
-        float registers[GL_XForm_Registers_t_CountOf];
-    };
-} GL_XForm_State_t;
-
-typedef struct _GL_XForm_State_Operation_t {
-    GL_XForm_Registers_t id;
-    float value;
-} GL_XForm_State_Operation_t;
-
-typedef struct _GL_XForm_Table_Entry_t {
-    int scan_line;
-    GL_XForm_State_Operation_t operations[GL_XFORM_TABLE_MAX_OPERATIONS]; // At most, change all the registries.
-    int count;
-} GL_XForm_Table_Entry_t;
-
-typedef enum _GL_XForm_Clamps_t {
-    GL_XFORM_CLAMP_EDGE,
-    GL_XFORM_CLAMP_BORDER,
-    GL_XFORM_CLAMP_REPEAT
-} GL_XForm_Clamps_t;
-
-typedef struct _GL_XForm_t {
-    GL_XForm_State_t state;
-    GL_XForm_Clamps_t clamp;
-    GL_XForm_Table_Entry_t *table;
-} GL_XForm_t;
-
 extern bool GL_context_create(GL_Context_t *context, size_t width, size_t height);
 extern void GL_context_delete(GL_Context_t *context); // TODO: rename to `*_destroy()`?
 
@@ -102,13 +58,7 @@ extern void GL_context_pop(GL_Context_t *context);
 
 extern void GL_context_clear(const GL_Context_t *context);
 extern void GL_context_screenshot(const GL_Context_t *context, const GL_Palette_t *palette, const char *pathfile);
-extern void GL_context_to_rgba(const GL_Context_t *context, const GL_Palette_t *palette, void *vram);
-extern void GL_context_to_surface(const GL_Context_t *context, const GL_Surface_t *surface);
-
-extern void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position);
-extern void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, float sx, float sy);
-extern void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, float sx, float sy, float rotation, float ax, float ay);
-extern void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface, GL_Point_t position, GL_XForm_t transformation);
+extern void GL_context_to_surface(const GL_Context_t *context, const GL_Surface_t *to);
 
 extern void GL_context_surface(GL_Context_t *context, GL_Surface_t *surface);
 extern void GL_context_shifting(GL_Context_t *context, const size_t *from, const size_t *to, size_t count);
@@ -117,7 +67,5 @@ extern void GL_context_clipping(GL_Context_t *context, const GL_Quad_t *clipping
 extern void GL_context_background(GL_Context_t *context, GL_Pixel_t index);
 extern void GL_context_color(GL_Context_t *context, GL_Pixel_t index);
 extern void GL_context_pattern(GL_Context_t *context, uint32_t mask);
-
-extern void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t index);
 
 #endif  /* __GL_CONTEXT_H__ */

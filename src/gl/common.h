@@ -23,7 +23,7 @@
 #ifndef __GL_COMMON_H__
 #define __GL_COMMON_H__
 
-#include <stddef.h>
+#include <stdint.h>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -50,11 +50,9 @@ typedef struct _GL_Quad_t {
     int x1, y1;
 } GL_Quad_t;
 
-#pragma pack(push, 1)
 typedef struct _GL_Color_t {
-    GLubyte r, g, b, a;
+    uint8_t r, g, b, a;
 } GL_Color_t;
-#pragma pack(pop)
 
 #define GL_DEGREES_OVER_RADIANS 57.295779513082320876798154814105
 

@@ -23,14 +23,13 @@
 #include "surface.h"
 
 #include "gl.h"
+#include "../log.h"
 
 #ifdef DEBUG
   #include <stb/stb_leakcheck.h>
 #endif
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
-
-#include "../log.h"
 
 bool GL_surface_load(GL_Surface_t *surface, const char *pathfile, GL_Surface_Callback_t callback, void *parameters)
 {
@@ -106,4 +105,33 @@ void GL_surface_delete(GL_Surface_t *surface)
     Log_write(LOG_LEVELS_DEBUG, "<GL> surface at #%p deleted", surface->data);
 
     *surface = (GL_Surface_t){};
+}
+
+void GL_surface_to_rgba(const GL_Surface_t *surface, const GL_Palette_t *palette, GL_Color_t *vram)
+{
+    const int width = surface->width;
+    const int height = surface->height;
+    const GL_Color_t *colors = palette->colors;
+#ifdef __DEBUG_GRAPHICS__
+    int count = palette->count;
+#endif
+    const GL_Pixel_t *src = surface->data;
+    GL_Color_t *dst = vram;
+    for (int i = height; i; --i) {
+        for (int j = width; j; --j) {
+            GL_Pixel_t index = *src++;
+#ifdef __DEBUG_GRAPHICS__
+            GL_Color_t color;
+            if (index >= count) {
+                int y = (index - 240) * 8;
+                color = (GL_Color_t){ 0, 63 + y, 0, 255 };
+            } else {
+                color = colors[index];
+            }
+            *(dst++) = color;
+#else
+            *(dst++) = colors[index];
+#endif
+        }
+    }
 }
