@@ -225,7 +225,8 @@ static int surface_gc(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    GL_context_sanitize(&display->gl, &instance->surface);
+    GL_Context_t *context = &display->gl;
+    GL_context_sanitize(context, &instance->surface);
     Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface #%p sanitized from context", instance);
 
     if (instance->xform.table) {
@@ -274,7 +275,8 @@ static int surface_grab(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    GL_context_to_surface(&display->gl, &instance->surface);
+    const GL_Context_t *context = &display->gl;
+    GL_context_to_surface(context, &instance->surface);
 
     return 0;
 }

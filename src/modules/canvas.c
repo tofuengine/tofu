@@ -154,7 +154,8 @@ static int canvas_screenshot(lua_State *L)
     strcpy(pathfile, environment->base_path);
     strcat(pathfile, file);
 
-    GL_context_screenshot(&display->gl, &display->palette, pathfile);
+    const GL_Context_t *context = &display->gl;
+    GL_context_screenshot(context, &display->palette, pathfile);
 
     return 0;
 }
@@ -169,7 +170,9 @@ static int canvas_width(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    lua_pushinteger(L, display->gl.state.surface->width);
+    const GL_Context_t *context = &display->gl;
+
+    lua_pushinteger(L, context->state.surface->width);
 
     return 1;
 }
@@ -184,7 +187,9 @@ static int canvas_height(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    lua_pushinteger(L, display->gl.state.surface->height);
+    const GL_Context_t *context = &display->gl;
+
+    lua_pushinteger(L, context->state.surface->height);
 
     return 1;
 }
@@ -199,7 +204,8 @@ static int canvas_push(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    GL_context_push(&display->gl);
+    GL_Context_t *context = &display->gl;
+    GL_context_push(context);
 
     return 0;
 }
@@ -214,7 +220,8 @@ static int canvas_pop(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    GL_context_pop(&display->gl);
+    GL_Context_t *context = &display->gl;
+    GL_context_pop(context);
 
     return 0;
 }
@@ -229,12 +236,13 @@ static int canvas_surface0(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    GL_context_surface(&display->gl, NULL);
+    GL_Context_t *context = &display->gl;
+    GL_context_surface(context, NULL);
 
     return 0;
 }
 
-// TODO: !!! MOVE THESE `*_Class_t` UDT to a seperate header or move to header file.
+// TODO: !!! MOVE THESE `*_Class_t` UDT to a separate header or move to header file.
 typedef struct _Surface_Class_t {
     // char pathfile[PATH_FILE_MAX];
     GL_Surface_t surface;
@@ -253,7 +261,8 @@ static int canvas_surface1(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    GL_context_surface(&display->gl, &surface->surface);
+    GL_Context_t *context = &display->gl;
+    GL_context_surface(context, &surface->surface);
 
     return 0;
 }
@@ -369,7 +378,8 @@ static int canvas_background(lua_State *L)
 
     index %= display->palette.count;
 
-    GL_context_background(&display->gl, index);
+    GL_Context_t *context = &display->gl;
+    GL_context_background(context, index);
 
     return 0;
 }
@@ -388,7 +398,8 @@ static int canvas_color(lua_State *L)
 
     index %= display->palette.count;
 
-    GL_context_color(&display->gl, index);
+    GL_Context_t *context = &display->gl;
+    GL_context_color(context, index);
 
     return 0;
 }
@@ -405,7 +416,8 @@ static int canvas_pattern(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    GL_context_pattern(&display->gl, mask);
+    GL_Context_t *context = &display->gl;
+    GL_context_pattern(context, mask);
 
     return 0;
 }
@@ -420,7 +432,8 @@ static int canvas_shift0(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    GL_context_shifting(&display->gl, NULL, NULL, 0);
+    GL_Context_t *context = &display->gl;
+    GL_context_shifting(context, NULL, NULL, 0);
 
     return 0;
 }
@@ -449,7 +462,8 @@ static int canvas_shift1(lua_State *L)
         lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
     }
 
-    GL_context_shifting(&display->gl, from, to, count);
+    GL_Context_t *context = &display->gl;
+    GL_context_shifting(context, from, to, count);
 
     return 0;
 }
@@ -469,7 +483,8 @@ static int canvas_shift2(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    GL_context_shifting(&display->gl, &from, &to, 1);
+    GL_Context_t *context = &display->gl;
+    GL_context_shifting(context, &from, &to, 1);
 
     return 0;
 }
@@ -493,7 +508,8 @@ static int canvas_transparent0(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    GL_context_transparent(&display->gl, NULL, NULL, 0);
+    GL_Context_t *context = &display->gl;
+    GL_context_transparent(context, NULL, NULL, 0);
 
     return 0;
 }
@@ -512,7 +528,7 @@ static int canvas_transparent1(lua_State *L)
 
     int count = luaX_count(L, 1);
 
-    GL_Pixel_t indexes[count];
+    GL_Pixel_t indexes[count]; // TOOD: use hashes over VLAs?
     GL_Bool_t transparent[count];
     lua_pushnil(L); // first key
     for (size_t i = 0; lua_next(L, 1); ++i) {
@@ -522,7 +538,8 @@ static int canvas_transparent1(lua_State *L)
         lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
     }
 
-    GL_context_transparent(&display->gl, indexes, transparent, count);
+    GL_Context_t *context = &display->gl;
+    GL_context_transparent(context, indexes, transparent, count);
 
     return 0;
 }
@@ -543,7 +560,8 @@ static int canvas_transparent2(lua_State *L)
 
     index %= display->palette.count;
 
-    GL_context_transparent(&display->gl, &index, &transparent, 1);
+    GL_Context_t *context = &display->gl;
+    GL_context_transparent(context, &index, &transparent, 1);
 
     return 0;
 }
@@ -567,7 +585,8 @@ static int canvas_clipping0(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    GL_context_clipping(&display->gl, NULL);
+    GL_Context_t *context = &display->gl;
+    GL_context_clipping(context, NULL);
 
     return 0;
 }
@@ -597,7 +616,8 @@ static int canvas_clipping4(lua_State *L)
             .y1 = y1
         };
 
-    GL_context_clipping(&display->gl, &clipping_region);
+    GL_Context_t *context = &display->gl; // TODO: pass context and palette directly?
+    GL_context_clipping(context, &clipping_region);
 
     return 0;
 }
@@ -637,7 +657,8 @@ static int canvas_clear(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    GL_context_clear(&display->gl);
+    const GL_Context_t *context = &display->gl;
+    GL_context_clear(context);
 
     return 0;
 }
@@ -660,7 +681,8 @@ static int canvas_point(lua_State *L)
 
     index %= display->palette.count;
 
-    GL_primitive_point(&display->gl, (GL_Point_t){ (int)x, (int)y }, index);
+    const GL_Context_t *context = &display->gl;
+    GL_primitive_point(context, (GL_Point_t){ .x = (int)x, .y = (int)y }, index);
 
     return 0;
 }
@@ -685,7 +707,8 @@ static int canvas_hline(lua_State *L)
 
     index %= display->palette.count;
 
-    GL_primitive_hline(&display->gl, (GL_Point_t){ (int)x, (int)y }, (size_t)width, index);
+    const GL_Context_t *context = &display->gl;
+    GL_primitive_hline(context, (GL_Point_t){ (int)x, (int)y }, (size_t)width, index);
 
     return 0;
 }
@@ -710,7 +733,8 @@ static int canvas_vline(lua_State *L)
 
     index %= display->palette.count;
 
-    GL_primitive_vline(&display->gl, (GL_Point_t){ (int)x, (int)y }, (size_t)height, index);
+    const GL_Context_t *context = &display->gl;
+    GL_primitive_vline(context, (GL_Point_t){ (int)x, (int)y }, (size_t)height, index);
 
     return 0;
 }
@@ -737,7 +761,8 @@ static int canvas_line(lua_State *L)
 
     index %= display->palette.count;
 
-    GL_primitive_line(&display->gl, (GL_Point_t){ (int)x0, (int)y0 }, (GL_Point_t){ (int)x1, (int)y1 }, index);
+    const GL_Context_t *context = &display->gl;
+    GL_primitive_line(context, (GL_Point_t){ (int)x0, (int)y0 }, (GL_Point_t){ (int)x1, (int)y1 }, index);
 
     return 0;
 }
@@ -760,7 +785,8 @@ static int canvas_fill(lua_State *L)
 
     index %= display->palette.count;
 
-    GL_context_fill(&display->gl, (GL_Point_t){ (int)x, (int)y }, index);
+    const GL_Context_t *context = &display->gl;
+    GL_context_fill(context, (GL_Point_t){ (int)x, (int)y }, index); // TODO: add explicit .x and .y
 
     return 0;
 }
@@ -793,12 +819,13 @@ static int canvas_triangle(lua_State *L)
 
     index %= display->palette.count;
 
+    const GL_Context_t *context = &display->gl;
     if (mode[0] == 'l') {
-        GL_primitive_line(&display->gl, (GL_Point_t){ (int)x0, (int)y0 }, (GL_Point_t){ (int)x1, (int)y1 }, index);
-        GL_primitive_line(&display->gl, (GL_Point_t){ (int)x1, (int)y1 }, (GL_Point_t){ (int)x2, (int)y2 }, index);
-        GL_primitive_line(&display->gl, (GL_Point_t){ (int)x2, (int)y2 }, (GL_Point_t){ (int)x0, (int)y0 }, index);
+        GL_primitive_line(context, (GL_Point_t){ (int)x0, (int)y0 }, (GL_Point_t){ (int)x1, (int)y1 }, index);
+        GL_primitive_line(context, (GL_Point_t){ (int)x1, (int)y1 }, (GL_Point_t){ (int)x2, (int)y2 }, index);
+        GL_primitive_line(context, (GL_Point_t){ (int)x2, (int)y2 }, (GL_Point_t){ (int)x0, (int)y0 }, index);
     } else {
-        GL_primitive_triangle(&display->gl, (GL_Point_t){ (int)x0, (int)y0 }, (GL_Point_t){ (int)x1, (int)y1 }, (GL_Point_t){ (int)x2, (int)y2 }, index);
+        GL_primitive_triangle(context, (GL_Point_t){ (int)x0, (int)y0 }, (GL_Point_t){ (int)x1, (int)y1 }, (GL_Point_t){ (int)x2, (int)y2 }, index);
     }
 
     return 0;
@@ -828,18 +855,19 @@ static int canvas_rectangle(lua_State *L)
 
     index %= display->palette.count;
 
+    const GL_Context_t *context = &display->gl;
     if (mode[0] == 'l') {
         double x0 = x;
         double y0 = y;
         double x1 = x0 + width - 1.0f;
         double y1 = y0 + height - 1.0f;
 
-        GL_primitive_line(&display->gl, (GL_Point_t){ (int)x0, (int)y0 }, (GL_Point_t){ (int)x0, (int)y1 }, index);
-        GL_primitive_line(&display->gl, (GL_Point_t){ (int)x0, (int)y1 }, (GL_Point_t){ (int)x1, (int)y1 }, index);
-        GL_primitive_line(&display->gl, (GL_Point_t){ (int)x1, (int)y1 }, (GL_Point_t){ (int)x1, (int)y0 }, index);
-        GL_primitive_line(&display->gl, (GL_Point_t){ (int)x1, (int)y0 }, (GL_Point_t){ (int)x0, (int)y0 }, index);
+        GL_primitive_line(context, (GL_Point_t){ (int)x0, (int)y0 }, (GL_Point_t){ (int)x0, (int)y1 }, index);
+        GL_primitive_line(context, (GL_Point_t){ (int)x0, (int)y1 }, (GL_Point_t){ (int)x1, (int)y1 }, index);
+        GL_primitive_line(context, (GL_Point_t){ (int)x1, (int)y1 }, (GL_Point_t){ (int)x1, (int)y0 }, index);
+        GL_primitive_line(context, (GL_Point_t){ (int)x1, (int)y0 }, (GL_Point_t){ (int)x0, (int)y0 }, index);
     } else {
-        GL_primitive_rectangle(&display->gl, (GL_Rectangle_t){ (int)x, (int)y, (int)width, (int)height }, index);
+        GL_primitive_rectangle(context, (GL_Rectangle_t){ (int)x, (int)y, (int)width, (int)height }, index);
     }
 
     return 0;
