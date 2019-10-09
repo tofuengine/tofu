@@ -97,16 +97,6 @@ void GL_context_sanitize(GL_Context_t *context, const GL_Surface_t *surface)
     }
 }
 
-void GL_context_clear(const GL_Context_t *context)
-{
-    const GL_State_t *state = &context->state;
-    const GL_Pixel_t color = state->background;
-    GL_Pixel_t *dst = state->surface->data;
-    for (size_t i = state->surface->data_size; i; --i) {
-        *(dst++) = color;
-    }
-}
-
 void GL_context_surface(GL_Context_t *context, GL_Surface_t *surface)
 {
     GL_Surface_t *buffer = !surface ? &context->buffer : surface;
@@ -182,6 +172,16 @@ void GL_context_pattern(GL_Context_t *context, uint32_t mask)
 {
     GL_State_t *state = &context->state;
     state->mask = mask;
+}
+
+void GL_context_clear(const GL_Context_t *context)
+{
+    const GL_State_t *state = &context->state;
+    const GL_Pixel_t color = state->background;
+    GL_Pixel_t *dst = state->surface->data;
+    for (size_t i = state->surface->data_size; i; --i) {
+        *(dst++) = color;
+    }
 }
 
 void GL_context_screenshot(const GL_Context_t *context, const GL_Palette_t *palette, const char *pathfile)
