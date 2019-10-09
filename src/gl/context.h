@@ -55,6 +55,7 @@ extern void GL_context_delete(GL_Context_t *context); // TODO: rename to `*_dest
 
 extern void GL_context_push(GL_Context_t *context);
 extern void GL_context_pop(GL_Context_t *context);
+extern void GL_context_sanitize(GL_Context_t *context, const GL_Surface_t *surface);
 
 extern void GL_context_clear(const GL_Context_t *context);
 extern void GL_context_screenshot(const GL_Context_t *context, const GL_Palette_t *palette, const char *pathfile);

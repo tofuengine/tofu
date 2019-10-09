@@ -36,19 +36,18 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb/stb_image_write.h>
 
-static inline GL_State_t initialize_state(GL_Surface_t *surface)
+static inline void reset_state(GL_State_t *state, GL_Surface_t *surface)
 {
-    GL_State_t state = (GL_State_t){
+    *state = (GL_State_t){
             .surface = surface,
             .clipping_region = (GL_Quad_t){ .x0 = 0, .y0 = 0, .x1 = surface->width - 1, .y1 = surface->height - 1 },
             .background = 0
         };
     for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
-        state.shifting[i] = i;
-        state.transparent[i] = GL_BOOL_FALSE;
+        state->shifting[i] = i;
+        state->transparent[i] = GL_BOOL_FALSE;
     }
-    state.transparent[0] = GL_BOOL_TRUE;
-    return state;
+    state->transparent[0] = GL_BOOL_TRUE;
 }
 
 bool GL_context_create(GL_Context_t *context, size_t width, size_t height)
@@ -57,7 +56,7 @@ bool GL_context_create(GL_Context_t *context, size_t width, size_t height)
 
     GL_surface_create(&context->buffer, width, height);
 
-    context->state = initialize_state(&context->buffer);
+    reset_state(&context->state, &context->buffer);
 
     return true;
 }
@@ -82,10 +81,20 @@ void GL_context_push(GL_Context_t *context)
 void GL_context_pop(GL_Context_t *context)
 {
     if (arrlen(context->stack) < 1) {
-        Log_write(LOG_LEVELS_WARNING, "<GL> no states to pop from stack");
+        Log_write(LOG_LEVELS_WARNING, "<GL> no states to pop from context");
         return;
     }
     context->state = arrpop(context->stack);
+}
+
+void GL_context_sanitize(GL_Context_t *context, const GL_Surface_t *surface)
+{
+    for (int i = arrlen(context->stack) - 1; i >= 0; --i) {
+        if (context->stack[i].surface == surface) {
+            arrdel(context->stack, i);
+            Log_write(LOG_LEVELS_WARNING, "<GL> state #%d sanitized from context", i);
+        }
+    }
 }
 
 void GL_context_clear(const GL_Context_t *context)

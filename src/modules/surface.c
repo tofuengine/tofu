@@ -223,6 +223,11 @@ static int surface_gc(lua_State *L)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
 
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+    GL_context_sanitize(&display->gl, &instance->surface);
+    Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface #%p sanitized from context", instance);
+
     if (instance->xform.table) {
         free(instance->xform.table);
         Log_write(LOG_LEVELS_DEBUG, "<SURFACE> scan-line table #%p deallocated", instance->xform.table);
@@ -230,8 +235,6 @@ static int surface_gc(lua_State *L)
 
     GL_surface_delete(&instance->surface);
     Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface #%p finalized", instance);
-
-    // TODO: when a surface is GC-ed we check if it's the current used and propagate.
 
     *instance = (Surface_Class_t){};
 
