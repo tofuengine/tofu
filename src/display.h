@@ -92,12 +92,9 @@ extern bool Display_initialize(Display_t *display, const Display_Configuration_t
 extern void Display_terminate(Display_t *display);
 extern void Display_shader(Display_t *display, const char *code);
 extern bool Display_should_close(Display_t *display);
-extern void Display_process_input(Display_t *display);
+extern void Display_process_input(Display_t *display); // Create `Input_t` class and pass delta-time.
 extern void Display_present(Display_t *display);
 
 extern void Display_palette(Display_t *display, const GL_Palette_t *palette);
-extern void Display_shift(Display_t *display, const size_t *from, const size_t *to, size_t count);
-extern void Display_transparent(Display_t *display, const size_t *color, const bool *is_transparent, size_t count);
-extern void Display_background(Display_t *display, const size_t color);
 
 #endif  /* __DISPLAY_H__ */
