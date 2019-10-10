@@ -15,6 +15,7 @@ local PALETTE = {
 
 function Game:__ctor()
   Canvas.palette(PALETTE) -- "arne-16")
+  Canvas.palette("arne-16")
 
   self.font = Font.default(0, 1)
   self.mode = 0
