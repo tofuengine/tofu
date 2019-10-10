@@ -30,6 +30,7 @@ local function plotlines(cx, cy, x, y, index)
   Canvas.hline(cx + x, cy - y, w, index)
 end
 
+-- https://gist.github.com/bert/1085538/f288057c6fb08b61bf97e999d9237f6e04e4f444
 function Canvas.circle(mode, center_x, center_y, radius, index)
   local r, cx, cy = math.floor(radius), math.floor(center_x), math.floor(center_y)
   local x, y, err = -r, 0, 2 - 2 * r
