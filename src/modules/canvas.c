@@ -820,12 +820,12 @@ static int canvas_triangle(lua_State *L)
     index %= display->palette.count;
 
     const GL_Context_t *context = &display->gl;
-    if (mode[0] == 'l') {
+    if (mode[0] == 'f') {
+        GL_primitive_triangle(context, (GL_Point_t){ (int)x0, (int)y0 }, (GL_Point_t){ (int)x1, (int)y1 }, (GL_Point_t){ (int)x2, (int)y2 }, index);
+    } else {
         GL_primitive_line(context, (GL_Point_t){ (int)x0, (int)y0 }, (GL_Point_t){ (int)x1, (int)y1 }, index);
         GL_primitive_line(context, (GL_Point_t){ (int)x1, (int)y1 }, (GL_Point_t){ (int)x2, (int)y2 }, index);
         GL_primitive_line(context, (GL_Point_t){ (int)x2, (int)y2 }, (GL_Point_t){ (int)x0, (int)y0 }, index);
-    } else {
-        GL_primitive_triangle(context, (GL_Point_t){ (int)x0, (int)y0 }, (GL_Point_t){ (int)x1, (int)y1 }, (GL_Point_t){ (int)x2, (int)y2 }, index);
     }
 
     return 0;
@@ -856,7 +856,9 @@ static int canvas_rectangle(lua_State *L)
     index %= display->palette.count;
 
     const GL_Context_t *context = &display->gl;
-    if (mode[0] == 'l') {
+    if (mode[0] == 'f') {
+        GL_primitive_rectangle(context, (GL_Rectangle_t){ (int)x, (int)y, (int)width, (int)height }, index);
+    } else {
         double x0 = x;
         double y0 = y;
         double x1 = x0 + width - 1.0f;
@@ -866,8 +868,6 @@ static int canvas_rectangle(lua_State *L)
         GL_primitive_line(context, (GL_Point_t){ (int)x0, (int)y1 }, (GL_Point_t){ (int)x1, (int)y1 }, index);
         GL_primitive_line(context, (GL_Point_t){ (int)x1, (int)y1 }, (GL_Point_t){ (int)x1, (int)y0 }, index);
         GL_primitive_line(context, (GL_Point_t){ (int)x1, (int)y0 }, (GL_Point_t){ (int)x0, (int)y0 }, index);
-    } else {
-        GL_primitive_rectangle(context, (GL_Rectangle_t){ (int)x, (int)y, (int)width, (int)height }, index);
     }
 
     return 0;
