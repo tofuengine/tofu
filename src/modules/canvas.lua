@@ -32,9 +32,9 @@ end
 
 -- https://gist.github.com/bert/1085538/f288057c6fb08b61bf97e999d9237f6e04e4f444
 function Canvas.circle(mode, center_x, center_y, radius, index)
+  local plot = mode == "fill" and plotlines or plotpoints
   local r, cx, cy = math.floor(radius), math.floor(center_x), math.floor(center_y)
   local x, y, err = -r, 0, 2 - 2 * r
-  local plot = mode == "fill" and plotlines or plotpoints
   repeat
     plot(cx, cy, x, y, index)
     r = err
