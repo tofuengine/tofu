@@ -792,17 +792,23 @@ static int canvas_polyline(lua_State *L)
 
     index %= display->palette.count;
 
-    int count = luaX_count(L, 1);
-    float points[count];
-    luaX_tonumberarray(L, 1, points, count);
+    int count = luaX_count(L, 1) / 2;
 
-    GL_Point_t vertices[count / 2];
-    for (int i = 0; i < count / 2; ++i) {
-        vertices[i] = (GL_Point_t){ .x = points[i * 2] , .y = points[i * 2 + 1] };
+    if (count > 1) {
+        GL_Point_t vertices[count];
+        for (int i = 0; i < count; ++i) {
+            int base = i * 2;
+            lua_rawgeti(L, 1, base + 1);
+            lua_rawgeti(L, 1, base + 2);
+            vertices[i] = (GL_Point_t){ .x = (int)lua_tonumber(L, -2), .y = (int)lua_tonumber(L, -1) };
+            lua_pop(L, 2);
+        }
+
+        const GL_Context_t *context = &display->gl;
+        GL_primitive_polyline(context, vertices, count, index);
+    } else {
+        Log_write(LOG_LEVELS_WARNING, "<CANVAS> no enough points for polyline (%d)", count);
     }
-
-    const GL_Context_t *context = &display->gl;
-    GL_primitive_polyline(context, vertices, count / 2, index);
 
     return 0;
 }
@@ -916,6 +922,12 @@ static int canvas_rectangle(lua_State *L)
                 (GL_Point_t){ .x = (int)x0, .y = (int)y0 }
             };
         GL_primitive_polyline(context, vertices, 5, index);
+/*
+        GL_primitive_hline(context, (GL_Point_t){ .x = (int)x0, .y = (int)y0 }, width, index);
+        GL_primitive_vline(context, (GL_Point_t){ .x = (int)x0, .y = (int)y0 }, height, index);
+        GL_primitive_hline(context, (GL_Point_t){ .x = (int)x0, .y = (int)y1 }, width, index);
+        GL_primitive_vline(context, (GL_Point_t){ .x = (int)x1, .y = (int)y0 }, height, index);
+*/
     }
 
     return 0;
