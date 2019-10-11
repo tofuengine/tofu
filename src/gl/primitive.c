@@ -32,12 +32,109 @@
 #endif
 #include <stb/stb_ds.h>
 
+static
+void point(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x, int y, GL_Pixel_t index)
+{
+    if (x < clipping_region->x0) {
+        return;
+    }
+    if (y < clipping_region->y0) {
+        return;
+    }
+    if (x > clipping_region->x1) {
+        return;
+    }
+    if (y > clipping_region->y1) {
+        return;
+    }
+
+    GL_Pixel_t *dst = surface->data_rows[y] + x;
+
+    *dst = index;
+}
+
+static
+void hline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x, int y, int length, GL_Pixel_t index)
+{
+    GL_Quad_t drawing_region = (GL_Quad_t){
+            .x0 = x,
+            .y0 = y,
+            .x1 = x + length - 1,
+            .y1 = y
+        };
+
+    if (drawing_region.x0 < clipping_region->x0) {
+        drawing_region.x0 = clipping_region->x0;
+    }
+    if (drawing_region.y0 < clipping_region->y0) {
+        drawing_region.y0 = clipping_region->y0;
+    }
+    if (drawing_region.x1 > clipping_region->x1) {
+        drawing_region.x1 = clipping_region->x1;
+    }
+    if (drawing_region.y1 > clipping_region->y1) {
+        drawing_region.y1 = clipping_region->y1;
+    }
+
+    const int width = drawing_region.x1 - drawing_region.x0 + 1;
+    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!
+        return;
+    }
+
+    GL_Pixel_t *dst = surface->data_rows[drawing_region.y0] + drawing_region.x0;
+
+    for (int i = width; i; --i) {
+        *(dst++) = index;
+    }
+}
+
+static
+void vline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x, int y, int length, GL_Pixel_t index)
+{
+    GL_Quad_t drawing_region = (GL_Quad_t){
+            .x0 = x,
+            .y0 = y,
+            .x1 = x,
+            .y1 = y + length - 1
+        };
+
+    if (drawing_region.x0 < clipping_region->x0) {
+        drawing_region.x0 = clipping_region->x0;
+    }
+    if (drawing_region.y0 < clipping_region->y0) {
+        drawing_region.y0 = clipping_region->y0;
+    }
+    if (drawing_region.x1 > clipping_region->x1) {
+        drawing_region.x1 = clipping_region->x1;
+    }
+    if (drawing_region.y1 > clipping_region->y1) {
+        drawing_region.y1 = clipping_region->y1;
+    }
+
+    const int width = drawing_region.x1 - drawing_region.x0 + 1;
+    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!
+        return;
+    }
+
+    GL_Pixel_t *dst = surface->data_rows[drawing_region.y0] + drawing_region.x0;
+
+    const int skip = surface->width;
+
+    for (int i = height; i; --i) {
+        *dst = index;
+        dst += skip;
+    }
+}
+
 void GL_primitive_point(const GL_Context_t *context, GL_Point_t position, GL_Pixel_t index)
 {
     const GL_State_t *state = &context->state;
     const GL_Quad_t clipping_region = state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
+    const GL_Surface_t *surface = state->surface;
 
     index = shifting[index];
 
@@ -45,21 +142,7 @@ void GL_primitive_point(const GL_Context_t *context, GL_Point_t position, GL_Pix
         return;
     }
 
-    if (position.x < clipping_region.x0) {
-        return;
-    }
-    if (position.y < clipping_region.y0) {
-        return;
-    }
-    if (position.x > clipping_region.x1) {
-        return;
-    }
-    if (position.y > clipping_region.y1) {
-        return;
-    }
-
-    GL_Pixel_t *dst = state->surface->data_rows[position.y] + position.x;
-    *dst = index;
+    point(surface, &clipping_region, position.x, position.y, index);
 }
 
 // DDA algorithm, no branches in the inner-loop.
@@ -70,6 +153,7 @@ void GL_primitive_line(const GL_Context_t *context, GL_Point_t from, GL_Point_t 
     //const GL_Quad_t clipping_region = state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
+    const GL_Surface_t *surface = state->surface;
 
     index = shifting[index];
 
@@ -100,12 +184,12 @@ void GL_primitive_line(const GL_Context_t *context, GL_Point_t from, GL_Point_t 
     const int dy = -iabs(to.y - from.y);
 
     const int sx = from.x < to.x ? 1 : -1;
-    const int sy = from.y < to.y ? state->surface->width : -state->surface->width;
+    const int sy = from.y < to.y ? surface->width : -surface->width;
 
     int err = dx + dy;
 
-    GL_Pixel_t *dst = state->surface->data_rows[from.y] + from.x;
-    GL_Pixel_t *eod = state->surface->data_rows[to.y] + to.x;
+    GL_Pixel_t *dst = surface->data_rows[from.y] + from.x;
+    GL_Pixel_t *eod = surface->data_rows[to.y] + to.x;
 
     for (;;) {
         *dst = index;
@@ -135,6 +219,7 @@ void GL_primitive_hline(const GL_Context_t *context, GL_Point_t origin, size_t w
     const GL_Quad_t clipping_region = state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
+    const GL_Surface_t *surface = state->surface;
 
     index = shifting[index];
 
@@ -142,37 +227,7 @@ void GL_primitive_hline(const GL_Context_t *context, GL_Point_t origin, size_t w
         return;
     }
 
-    GL_Quad_t drawing_region = (GL_Quad_t){
-            .x0 = origin.x,
-            .y0 = origin.y,
-            .x1 = origin.x + w - 1,
-            .y1 = origin.y
-        };
-
-    if (drawing_region.x0 < clipping_region.x0) {
-        drawing_region.x0 = clipping_region.x0;
-    }
-    if (drawing_region.y0 < clipping_region.y0) {
-        drawing_region.y0 = clipping_region.y0;
-    }
-    if (drawing_region.x1 > clipping_region.x1) {
-        drawing_region.x1 = clipping_region.x1;
-    }
-    if (drawing_region.y1 > clipping_region.y1) {
-        drawing_region.y1 = clipping_region.y1;
-    }
-
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
-    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!
-        return;
-    }
-
-    GL_Pixel_t *dst = state->surface->data_rows[drawing_region.y0] + drawing_region.x0;
-
-    for (int i = width; i; --i) {
-        *(dst++) = index;
-    }
+    hline(surface, &clipping_region, origin.x, origin.y, w, index);
 }
 
 void GL_primitive_vline(const GL_Context_t *context, GL_Point_t origin, size_t h, GL_Pixel_t index)
@@ -181,6 +236,7 @@ void GL_primitive_vline(const GL_Context_t *context, GL_Point_t origin, size_t h
     const GL_Quad_t clipping_region = state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
+    const GL_Surface_t *surface = state->surface;
 
     index = shifting[index];
 
@@ -188,48 +244,16 @@ void GL_primitive_vline(const GL_Context_t *context, GL_Point_t origin, size_t h
         return;
     }
 
-    GL_Quad_t drawing_region = (GL_Quad_t){
-            .x0 = origin.x,
-            .y0 = origin.y,
-            .x1 = origin.x,
-            .y1 = origin.y + h - 1
-        };
-
-    if (drawing_region.x0 < clipping_region.x0) {
-        drawing_region.x0 = clipping_region.x0;
-    }
-    if (drawing_region.y0 < clipping_region.y0) {
-        drawing_region.y0 = clipping_region.y0;
-    }
-    if (drawing_region.x1 > clipping_region.x1) {
-        drawing_region.x1 = clipping_region.x1;
-    }
-    if (drawing_region.y1 > clipping_region.y1) {
-        drawing_region.y1 = clipping_region.y1;
-    }
-
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
-    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!
-        return;
-    }
-
-    GL_Pixel_t *dst = state->surface->data_rows[drawing_region.y0] + drawing_region.x0;
-
-    const int skip = state->surface->width;
-
-    for (int i = height; i; --i) {
-        *dst = index;
-        dst += skip;
-    }
+    vline(surface, &clipping_region, origin.x, origin.y, h, index);
 }
 
-void GL_primitive_rectangle(const GL_Context_t *context, GL_Rectangle_t rectangle, GL_Pixel_t index)
+void GL_primitive_filled_rectangle(const GL_Context_t *context, GL_Rectangle_t rectangle, GL_Pixel_t index)
 {
     const GL_State_t *state = &context->state;
     const GL_Quad_t clipping_region = state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
+    const GL_Surface_t *surface = state->surface;
 
     index = shifting[index];
 
@@ -263,9 +287,9 @@ void GL_primitive_rectangle(const GL_Context_t *context, GL_Rectangle_t rectangl
         return;
     }
 
-    GL_Pixel_t *dst = state->surface->data_rows[drawing_region.y0] + drawing_region.x0;
+    GL_Pixel_t *dst = surface->data_rows[drawing_region.y0] + drawing_region.x0;
 
-    const int skip = state->surface->width - width;
+    const int skip = surface->width - width;
 
     for (int i = height; i; --i) {
         for (int j = width; j; --j) {
@@ -373,12 +397,13 @@ static void render_lower(const GL_Context_t *context, int xL, int xT, int xR, in
     }
 }
 
-void GL_primitive_triangle(const GL_Context_t *context, GL_Point_t a, GL_Point_t b, GL_Point_t c, GL_Pixel_t index)
+void GL_primitive_filled_triangle(const GL_Context_t *context, GL_Point_t a, GL_Point_t b, GL_Point_t c, GL_Pixel_t index)
 {
     const GL_State_t *state = &context->state;
     const GL_Quad_t clipping_region = state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
+//    const GL_Surface_t *surface = state->surface;
 
     index = shifting[index];
 
@@ -454,6 +479,7 @@ void GL_primitive_triangle2(const GL_Context_t *context, GL_Point_t a, GL_Point_
     const GL_Quad_t clipping_region = state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
+    const GL_Surface_t *surface = state->surface;
 
     index = shifting[index];
 
@@ -512,9 +538,9 @@ void GL_primitive_triangle2(const GL_Context_t *context, GL_Point_t a, GL_Point_
     int CY2 = C2 + DX23 * drawing_region.y0 - DY23 * drawing_region.x0;
     int CY3 = C3 + DX31 * drawing_region.y0 - DY31 * drawing_region.x0;
 
-    GL_Pixel_t *dst = state->surface->data_rows[drawing_region.y0] + drawing_region.x0;
+    GL_Pixel_t *dst = surface->data_rows[drawing_region.y0] + drawing_region.x0;
 
-    const int skip = state->surface->width;
+    const int skip = surface->width;
 
     for (int y = 0; y <= height; ++y) { // Pinada's edge function is linear, we can cast it...
         int CX1 = CY1;
@@ -544,19 +570,99 @@ void GL_primitive_triangle2(const GL_Context_t *context, GL_Point_t a, GL_Point_
     }
 }
 
+void GL_primitive_filled_circle(const GL_Context_t *context, GL_Point_t center, int radius, GL_Pixel_t index)
+{
+    const GL_State_t *state = &context->state;
+    const GL_Quad_t clipping_region = state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
+    const GL_Surface_t *surface = state->surface;
+
+    index = shifting[index];
+
+    if (transparent[index]) {
+        return;
+    }
+
+    const int cx = center.x;
+    const int cy = center.y;
+
+    int r = radius;
+    int x = -r;
+    int y = 0;
+    int e = 2 - 2 * r;
+
+    do {
+        const int length = iabs(2 * x) + 1;
+        hline(surface, &clipping_region, cx + x, cy + y, length, index);
+        hline(surface, &clipping_region, cx + x, cy - y, length, index);
+
+        r = e;
+        if (r <= y) {
+            y += 1;
+            e += y * 2 + 1;
+        }
+        if (r > x || e > y) {
+            x += 1;
+            e += x * 2 + 1;
+        }
+    } while (x != 0);
+}
+
+void GL_primitive_circle(const GL_Context_t *context, GL_Point_t center, int radius, GL_Pixel_t index)
+{
+    const GL_State_t *state = &context->state;
+    const GL_Quad_t clipping_region = state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
+    const GL_Surface_t *surface = state->surface;
+
+    index = shifting[index];
+
+    if (transparent[index]) {
+        return;
+    }
+
+    const int cx = center.x;
+    const int cy = center.y;
+
+    int r = radius;
+    int x = -r;
+    int y = 0;
+    int e = 2 - 2 * r;
+
+    do {
+        point(surface, &clipping_region, cx - x, cy + y, index);
+        point(surface, &clipping_region, cx - y, cy - x, index);
+        point(surface, &clipping_region, cx + x, cy - y, index);
+        point(surface, &clipping_region, cx + y, cy + x, index);
+
+        r = e;
+        if (r <= y) {
+            y += 1;
+            e += y * 2 + 1;
+        }
+        if (r > x || e > y) {
+            x += 1;
+            e += x * 2 + 1;
+        }
+    } while (x != 0);
+}
+
 // https://lodev.org/cgtutor/floodfill.html
 void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t index)
 {
     const GL_State_t *state = &context->state;
     const GL_Quad_t clipping_region = state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
+    const GL_Surface_t *surface = state->surface;
 
     if (seed.x < clipping_region.x0 || seed.x > clipping_region.x1
         || seed.y < clipping_region.y0 || seed.y > clipping_region.y1) {
         return;
     }
 
-    const GL_Pixel_t match = *state->surface->data_rows[seed.y] + seed.x;
+    const GL_Pixel_t match = *surface->data_rows[seed.y] + seed.x;
     const GL_Pixel_t replacement = shifting[index];
 
     GL_Point_t *stack = NULL;
@@ -570,7 +676,7 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
         int x = position.x;
         int y = position.y;
 
-        GL_Pixel_t *dst = state->surface->data_rows[y] + x;
+        GL_Pixel_t *dst = surface->data_rows[y] + x;
         while (x >= clipping_region.x0 && *dst == match) {
             --x;
             --dst;

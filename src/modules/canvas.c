@@ -62,6 +62,7 @@ static int canvas_line(lua_State *L);
 static int canvas_fill(lua_State *L);
 static int canvas_triangle(lua_State *L);
 static int canvas_rectangle(lua_State *L);
+static int canvas_circle(lua_State *L);
 
 // TODO: color index is optional, if not present use the current (drawstate) pen color
 // TODO: rename `Canvas` to `Context`?
@@ -90,6 +91,7 @@ static const struct luaL_Reg _canvas_functions[] = {
     { "fill", canvas_fill },
     { "triangle", canvas_triangle },
     { "rectangle", canvas_rectangle },
+    { "circle", canvas_circle },
     { NULL, NULL }
 };
 
@@ -102,7 +104,7 @@ static const luaX_Const _canvas_constants[] = {
 int canvas_loader(lua_State *L)
 {
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, (const char *)_canvas_lua, _canvas_functions, _canvas_constants, nup, LUAX_CLASS(Canvas_Class_t));
+    return luaX_newmodule(L, (const char *)_canvas_lua, _canvas_lua_len, _canvas_functions, _canvas_constants, nup, LUAX_CLASS(Canvas_Class_t));
 }
 
 // TODO: add a canvas constructor with overload (from file, from WxH, default one). Surface will become Canvas, in the end.
@@ -821,7 +823,7 @@ static int canvas_triangle(lua_State *L)
 
     const GL_Context_t *context = &display->gl;
     if (mode[0] == 'f') {
-        GL_primitive_triangle(context, (GL_Point_t){ (int)x0, (int)y0 }, (GL_Point_t){ (int)x1, (int)y1 }, (GL_Point_t){ (int)x2, (int)y2 }, index);
+        GL_primitive_filled_triangle(context, (GL_Point_t){ (int)x0, (int)y0 }, (GL_Point_t){ (int)x1, (int)y1 }, (GL_Point_t){ (int)x2, (int)y2 }, index);
     } else {
         GL_primitive_line(context, (GL_Point_t){ (int)x0, (int)y0 }, (GL_Point_t){ (int)x1, (int)y1 }, index);
         GL_primitive_line(context, (GL_Point_t){ (int)x1, (int)y1 }, (GL_Point_t){ (int)x2, (int)y2 }, index);
@@ -857,7 +859,7 @@ static int canvas_rectangle(lua_State *L)
 
     const GL_Context_t *context = &display->gl;
     if (mode[0] == 'f') {
-        GL_primitive_rectangle(context, (GL_Rectangle_t){ (int)x, (int)y, (int)width, (int)height }, index);
+        GL_primitive_filled_rectangle(context, (GL_Rectangle_t){ (int)x, (int)y, (int)width, (int)height }, index);
     } else {
         double x0 = x;
         double y0 = y;
@@ -868,6 +870,42 @@ static int canvas_rectangle(lua_State *L)
         GL_primitive_line(context, (GL_Point_t){ (int)x0, (int)y1 }, (GL_Point_t){ (int)x1, (int)y1 }, index);
         GL_primitive_line(context, (GL_Point_t){ (int)x1, (int)y1 }, (GL_Point_t){ (int)x1, (int)y0 }, index);
         GL_primitive_line(context, (GL_Point_t){ (int)x1, (int)y0 }, (GL_Point_t){ (int)x0, (int)y0 }, index);
+    }
+
+    return 0;
+}
+
+static int canvas_circle(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 5)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+    LUAX_SIGNATURE_END
+    const char *mode = lua_tostring(L, 1);
+    double cx = lua_tonumber(L, 2);
+    double cy = lua_tonumber(L, 3);
+    double radius = lua_tonumber(L, 4);
+    GL_Pixel_t index = lua_tointeger(L, 5);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.circle(%s, %f, %f, %f, %f, %d)", mode, cx, cy, radius);
+#endif
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+    index %= display->palette.count;
+
+    const GL_Context_t *context = &display->gl;
+
+    if (radius < 1.0f) {
+        GL_primitive_point(context, (GL_Point_t){ (int)cx, (int)cy }, index);
+    } else
+    if (mode[0] == 'f') {
+        GL_primitive_filled_circle(context, (GL_Point_t){ (int)cx, (int)cy }, (int)radius, index);
+    } else {
+        GL_primitive_circle(context, (GL_Point_t){ (int)cx, (int)cy }, (int)radius, index);
     }
 
     return 0;
