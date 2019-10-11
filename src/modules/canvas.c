@@ -103,8 +103,9 @@ static const luaX_Const _canvas_constants[] = {
 
 int canvas_loader(lua_State *L)
 {
+    luaX_Script script = { (const char *)_canvas_lua, _canvas_lua_len, "canvas.lua" };
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, (const char *)_canvas_lua, _canvas_lua_len, _canvas_functions, _canvas_constants, nup, LUAX_CLASS(Canvas_Class_t));
+    return luaX_newmodule(L, &script, _canvas_functions, _canvas_constants, nup, LUAX_CLASS(Canvas_Class_t));
 }
 
 // TODO: add a canvas constructor with overload (from file, from WxH, default one). Surface will become Canvas, in the end.

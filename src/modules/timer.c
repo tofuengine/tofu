@@ -55,8 +55,9 @@ static const luaX_Const _timer_constants[] = {
 
 int timer_loader(lua_State *L)
 {
+    luaX_Script script = { (const char *)_timer_lua, _timer_lua_len, "timer.lua" };
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, NULL, _timer_functions, _timer_constants, nup, LUAX_CLASS(Timer_Class_t));
+    return luaX_newmodule(L, &script, _timer_functions, _timer_constants, nup, LUAX_CLASS(Timer_Class_t));
 }
 
 static int timer_new(lua_State *L)

@@ -53,8 +53,9 @@ static const luaX_Const _system_constants[] = {
 
 int system_loader(lua_State *L)
 {
+    luaX_Script script = { (const char *)_system_lua, _system_lua_len, "system.lua" };
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, NULL, _system_functions, _system_constants, nup, LUAX_CLASS(System_Class_t));
+    return luaX_newmodule(L, &script, _system_functions, _system_constants, nup, LUAX_CLASS(System_Class_t));
 }
 
 static int system_time(lua_State *L)

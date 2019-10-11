@@ -77,8 +77,9 @@ static const luaX_Const _surface_constants[] = {
 
 int surface_loader(lua_State *L)
 {
+    luaX_Script script = { (const char *)_surface_lua, _surface_lua_len, "surface.lua" };
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, NULL, _surface_functions, _surface_constants, nup, LUAX_CLASS(Surface_Class_t));
+    return luaX_newmodule(L, &script, _surface_functions, _surface_constants, nup, LUAX_CLASS(Surface_Class_t));
 }
 
 static void to_indexed_atlas_callback(void *parameters, GL_Surface_t *surface, const void *data)

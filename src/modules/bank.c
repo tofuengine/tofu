@@ -60,8 +60,9 @@ static const luaX_Const _bank_constants[] = {
 
 int bank_loader(lua_State *L)
 {
+    luaX_Script script = { (const char *)_bank_lua, _bank_lua_len, "bank.lua" };
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, NULL, _bank_functions, _bank_constants, nup, LUAX_CLASS(Bank_Class_t));
+    return luaX_newmodule(L, &script, _bank_functions, _bank_constants, nup, LUAX_CLASS(Bank_Class_t));
 }
 
 static void to_indexed_atlas_callback(void *parameters, GL_Surface_t *surface, const void *data)

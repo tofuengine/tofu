@@ -45,6 +45,12 @@ typedef struct _luaX_Const {
     } value;
 } luaX_Const;
 
+typedef struct _luaX_Script {
+    const char *data;
+    size_t length;
+    const char *name;
+} luaX_Script;
+
 #if DEBUG
     #define LUAX_SIGNATURE_BEGIN(l, n) \
         do { \
@@ -87,7 +93,7 @@ typedef struct _luaX_Const {
 extern void luaX_stackdump(lua_State *L, const char *file, int line);
 extern void luaX_appendpath(lua_State *L, const char *path);
 extern void luaX_overridesearchers(lua_State *L, lua_CFunction searcher, int nup);
-extern int luaX_newmodule(lua_State *L, const char *script, const luaL_Reg *f, const luaX_Const *c, int nup, const char *name);
+extern int luaX_newmodule(lua_State *L, const luaX_Script *script, const luaL_Reg *f, const luaX_Const *c, int nup, const char *name);
 extern void luaX_preload(lua_State *L, const char *modname, lua_CFunction openf, int nup);
 extern void luaX_require(lua_State *L, const char *modname, lua_CFunction openf, int nup, int glb);
 extern int luaX_toref(lua_State *L, int arg);

@@ -48,8 +48,9 @@ static const luaX_Const _file_constants[] = {
 
 int file_loader(lua_State *L)
 {
+    luaX_Script script = { (const char *)_file_lua, _file_lua_len, "file.lua" };
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, NULL, _file_functions, _file_constants, nup, LUAX_CLASS(File_Class_t));
+    return luaX_newmodule(L, &script, _file_functions, _file_constants, nup, LUAX_CLASS(File_Class_t));
 }
 
 static int file_read(lua_State *L)

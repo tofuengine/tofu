@@ -131,10 +131,10 @@ void luaX_overridesearchers(lua_State *L, lua_CFunction searcher, int nup)
     lua_pop(L, 2 + nup); // Pop the `package` and `searchers` table, and consume the upvalues.
 }
 
-int luaX_newmodule(lua_State *L, const char *script, const luaL_Reg *f, const luaX_Const *c, int nup, const char *name)
+int luaX_newmodule(lua_State *L, const luaX_Script *script, const luaL_Reg *f, const luaX_Const *c, int nup, const char *name)
 {
-    if (script) {
-        luaL_loadstring(L, script);
+    if (script && script->data && script->length > 0) {
+        luaL_loadbuffer(L, script->data, script->length, script->name);
         lua_pcall(L, 0, LUA_MULTRET, 0); // Just the export table is returned.
         if (name) {
             lua_pushstring(L, name);
