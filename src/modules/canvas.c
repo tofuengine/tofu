@@ -59,6 +59,7 @@ static int canvas_point(lua_State *L);
 static int canvas_hline(lua_State *L);
 static int canvas_vline(lua_State *L);
 static int canvas_line(lua_State *L);
+static int canvas_polyline(lua_State *L);
 static int canvas_fill(lua_State *L);
 static int canvas_triangle(lua_State *L);
 static int canvas_rectangle(lua_State *L);
@@ -88,6 +89,7 @@ static const struct luaL_Reg _canvas_functions[] = {
     { "hline", canvas_hline },
     { "vline", canvas_vline },
     { "line", canvas_line },
+    { "polyline", canvas_polyline },
     { "fill", canvas_fill },
     { "triangle", canvas_triangle },
     { "rectangle", canvas_rectangle },
@@ -711,7 +713,7 @@ static int canvas_hline(lua_State *L)
     index %= display->palette.count;
 
     const GL_Context_t *context = &display->gl;
-    GL_primitive_hline(context, (GL_Point_t){ (int)x, (int)y }, (size_t)width, index);
+    GL_primitive_hline(context, (GL_Point_t){ .x = (int)x, .y = (int)y }, (size_t)width, index);
 
     return 0;
 }
@@ -737,7 +739,7 @@ static int canvas_vline(lua_State *L)
     index %= display->palette.count;
 
     const GL_Context_t *context = &display->gl;
-    GL_primitive_vline(context, (GL_Point_t){ (int)x, (int)y }, (size_t)height, index);
+    GL_primitive_vline(context, (GL_Point_t){ .x = (int)x, .y = (int)y }, (size_t)height, index);
 
     return 0;
 }
@@ -765,7 +767,42 @@ static int canvas_line(lua_State *L)
     index %= display->palette.count;
 
     const GL_Context_t *context = &display->gl;
-    GL_primitive_line(context, (GL_Point_t){ (int)x0, (int)y0 }, (GL_Point_t){ (int)x1, (int)y1 }, index);
+    GL_Point_t vertices[2] = {
+            (GL_Point_t){ .x = (int)x0, .y = (int)y0 },
+            (GL_Point_t){ .x = (int)x1, .y = (int)y1 }
+        };
+    GL_primitive_polyline(context, vertices, 2, index);
+
+    return 0;
+}
+
+static int canvas_polyline(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 2)
+        LUAX_SIGNATURE_ARGUMENT(luaX_istable)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+    LUAX_SIGNATURE_END
+    GL_Pixel_t index = lua_tointeger(L, 2);
+#ifdef __DEBUG_API_CALLS__
+    int type = lua_type(L, 1);
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.polyline(%d, %d)", type, index);
+#endif
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+    index %= display->palette.count;
+
+    int count = luaX_count(L, 1);
+    float points[count];
+    luaX_tonumberarray(L, 1, points, count);
+
+    GL_Point_t vertices[count / 2];
+    for (int i = 0; i < count / 2; ++i) {
+        vertices[i] = (GL_Point_t){ .x = points[i * 2] , .y = points[i * 2 + 1] };
+    }
+
+    const GL_Context_t *context = &display->gl;
+    GL_primitive_polyline(context, vertices, count / 2, index);
 
     return 0;
 }
@@ -789,7 +826,7 @@ static int canvas_fill(lua_State *L)
     index %= display->palette.count;
 
     const GL_Context_t *context = &display->gl;
-    GL_context_fill(context, (GL_Point_t){ (int)x, (int)y }, index); // TODO: add explicit .x and .y
+    GL_context_fill(context, (GL_Point_t){ .x = (int)x, .y = (int)y }, index);
 
     return 0;
 }
@@ -824,11 +861,15 @@ static int canvas_triangle(lua_State *L)
 
     const GL_Context_t *context = &display->gl;
     if (mode[0] == 'f') {
-        GL_primitive_filled_triangle(context, (GL_Point_t){ (int)x0, (int)y0 }, (GL_Point_t){ (int)x1, (int)y1 }, (GL_Point_t){ (int)x2, (int)y2 }, index);
+        GL_primitive_filled_triangle(context, (GL_Point_t){ .x = (int)x0, (int)y0 }, (GL_Point_t){ .x = (int)x1, .y = (int)y1 }, (GL_Point_t){ .x = (int)x2, .y = (int)y2 }, index);
     } else {
-        GL_primitive_line(context, (GL_Point_t){ (int)x0, (int)y0 }, (GL_Point_t){ (int)x1, (int)y1 }, index);
-        GL_primitive_line(context, (GL_Point_t){ (int)x1, (int)y1 }, (GL_Point_t){ (int)x2, (int)y2 }, index);
-        GL_primitive_line(context, (GL_Point_t){ (int)x2, (int)y2 }, (GL_Point_t){ (int)x0, (int)y0 }, index);
+        GL_Point_t vertices[4] = {
+                (GL_Point_t){ .x = (int)x0, .y = (int)y0 },
+                (GL_Point_t){ .x = (int)x1, .y = (int)y1 },
+                (GL_Point_t){ .x = (int)x2, .y = (int)y2 },
+                (GL_Point_t){ .x = (int)x0, .y = (int)y0 }
+            };
+        GL_primitive_polyline(context, vertices, 4, index);
     }
 
     return 0;
@@ -860,17 +901,21 @@ static int canvas_rectangle(lua_State *L)
 
     const GL_Context_t *context = &display->gl;
     if (mode[0] == 'f') {
-        GL_primitive_filled_rectangle(context, (GL_Rectangle_t){ (int)x, (int)y, (int)width, (int)height }, index);
+        GL_primitive_filled_rectangle(context, (GL_Rectangle_t){ .x = (int)x, .y = (int)y, .width = (int)width, .height = (int)height }, index);
     } else {
         double x0 = x;
         double y0 = y;
         double x1 = x0 + width - 1.0f;
         double y1 = y0 + height - 1.0f;
 
-        GL_primitive_line(context, (GL_Point_t){ (int)x0, (int)y0 }, (GL_Point_t){ (int)x0, (int)y1 }, index);
-        GL_primitive_line(context, (GL_Point_t){ (int)x0, (int)y1 }, (GL_Point_t){ (int)x1, (int)y1 }, index);
-        GL_primitive_line(context, (GL_Point_t){ (int)x1, (int)y1 }, (GL_Point_t){ (int)x1, (int)y0 }, index);
-        GL_primitive_line(context, (GL_Point_t){ (int)x1, (int)y0 }, (GL_Point_t){ (int)x0, (int)y0 }, index);
+        GL_Point_t vertices[5] = {
+                (GL_Point_t){ .x = (int)x0, .y = (int)y0 },
+                (GL_Point_t){ .x = (int)x0, .y = (int)y1 },
+                (GL_Point_t){ .x = (int)x1, .y = (int)y1 },
+                (GL_Point_t){ .x = (int)x1, .y = (int)y0 },
+                (GL_Point_t){ .x = (int)x0, .y = (int)y0 }
+            };
+        GL_primitive_polyline(context, vertices, 5, index);
     }
 
     return 0;
@@ -900,13 +945,13 @@ static int canvas_circle(lua_State *L)
 
     const GL_Context_t *context = &display->gl;
 
-    if (radius < 1.0f) {
-        GL_primitive_point(context, (GL_Point_t){ (int)cx, (int)cy }, index);
+    if (radius < 1.0f) { // Null radius, just a point regardless mode!
+        GL_primitive_point(context, (GL_Point_t){ .x = (int)cx, .y = (int)cy }, index);
     } else
     if (mode[0] == 'f') {
-        GL_primitive_filled_circle(context, (GL_Point_t){ (int)cx, (int)cy }, (int)radius, index);
+        GL_primitive_filled_circle(context, (GL_Point_t){ .x = (int)cx, .y = (int)cy }, (int)radius, index);
     } else {
-        GL_primitive_circle(context, (GL_Point_t){ (int)cx, (int)cy }, (int)radius, index);
+        GL_primitive_circle(context, (GL_Point_t){ .x = (int)cx, .y = (int)cy }, (int)radius, index);
     }
 
     return 0;

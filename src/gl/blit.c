@@ -44,7 +44,7 @@ static inline void pixel(const GL_Context_t *context, int x, int y, int index)
 void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position)
 {
     const GL_State_t *state = &context->state;
-    const GL_Quad_t clipping_region = state->clipping_region;
+    const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
 
@@ -58,19 +58,19 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
     int skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
     int skip_y = 0;
 
-    if (drawing_region.x0 < clipping_region.x0) {
-        skip_x = clipping_region.x0 - drawing_region.x0;
-        drawing_region.x0 = clipping_region.x0;
+    if (drawing_region.x0 < clipping_region->x0) {
+        skip_x = clipping_region->x0 - drawing_region.x0;
+        drawing_region.x0 = clipping_region->x0;
     }
-    if (drawing_region.y0 < clipping_region.y0) {
-        skip_y = clipping_region.y0 - drawing_region.y0;
-        drawing_region.y0 = clipping_region.y0;
+    if (drawing_region.y0 < clipping_region->y0) {
+        skip_y = clipping_region->y0 - drawing_region.y0;
+        drawing_region.y0 = clipping_region->y0;
     }
-    if (drawing_region.x1 > clipping_region.x1) {
-        drawing_region.x1 = clipping_region.x1;
+    if (drawing_region.x1 > clipping_region->x1) {
+        drawing_region.x1 = clipping_region->x1;
     }
-    if (drawing_region.y1 > clipping_region.y1) {
-        drawing_region.y1 = clipping_region.y1;
+    if (drawing_region.y1 > clipping_region->y1) {
+        drawing_region.y1 = clipping_region->y1;
     }
 
     const int width = drawing_region.x1 - drawing_region.x0 + 1;
@@ -113,7 +113,7 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
 void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y)
 {
     const GL_State_t *state = &context->state;
-    const GL_Quad_t clipping_region = state->clipping_region;
+    const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
 
@@ -130,19 +130,19 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
     float skip_x = 0.0f; // Offset into the (source) surface/texture, update during clipping.
     float skip_y = 0.0f;
 
-    if (drawing_region.x0 < clipping_region.x0) {
-        skip_x = (float)(clipping_region.x0 - drawing_region.x0) / scale_x;
-        drawing_region.x0 = clipping_region.x0;
+    if (drawing_region.x0 < clipping_region->x0) {
+        skip_x = (float)(clipping_region->x0 - drawing_region.x0) / scale_x;
+        drawing_region.x0 = clipping_region->x0;
     }
-    if (drawing_region.y0 < clipping_region.y0) {
-        skip_y = (float)(clipping_region.y0 - drawing_region.y0) / scale_y;
-        drawing_region.y0 = clipping_region.y0;
+    if (drawing_region.y0 < clipping_region->y0) {
+        skip_y = (float)(clipping_region->y0 - drawing_region.y0) / scale_y;
+        drawing_region.y0 = clipping_region->y0;
     }
-    if (drawing_region.x1 > clipping_region.x1) {
-        drawing_region.x1 = clipping_region.x1;
+    if (drawing_region.x1 > clipping_region->x1) {
+        drawing_region.x1 = clipping_region->x1;
     }
-    if (drawing_region.y1 > clipping_region.y1) {
-        drawing_region.y1 = clipping_region.y1;
+    if (drawing_region.y1 > clipping_region->y1) {
+        drawing_region.y1 = clipping_region->y1;
     }
 
     const int width = drawing_region.x1 - drawing_region.x0 + 1;
@@ -201,7 +201,7 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
 void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y, float angle, float anchor_x, float anchor_y)
 {
     const GL_State_t *state = &context->state;
-    const GL_Quad_t clipping_region = state->clipping_region;
+    const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
 
@@ -265,17 +265,17 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
             .y1 = (int)(fmax(fmax(fmax(y0, y1), y2), y3) + dy)
         };
 
-    if (drawing_region.x0 < clipping_region.x0) {
-        drawing_region.x0 = clipping_region.x0;
+    if (drawing_region.x0 < clipping_region->x0) {
+        drawing_region.x0 = clipping_region->x0;
     }
-    if (drawing_region.y0 < clipping_region.y0) {
-        drawing_region.y0 = clipping_region.y0;
+    if (drawing_region.y0 < clipping_region->y0) {
+        drawing_region.y0 = clipping_region->y0;
     }
-    if (drawing_region.x1 > clipping_region.x1) {
-        drawing_region.x1 = clipping_region.x1;
+    if (drawing_region.x1 > clipping_region->x1) {
+        drawing_region.x1 = clipping_region->x1;
     }
-    if (drawing_region.y1 > clipping_region.y1) {
-        drawing_region.y1 = clipping_region.y1;
+    if (drawing_region.y1 > clipping_region->y1) {
+        drawing_region.y1 = clipping_region->y1;
     }
 
     const int width = drawing_region.x1 - drawing_region.x0 + 1;
@@ -348,34 +348,34 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
 // http://www.coranac.com/tonc/text/mode7.htm
 // https://wiki.superfamicom.org/registers
 // https://www.smwcentral.net/?p=viewthread&t=27054
-void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface, GL_Point_t position, GL_XForm_t xform)
+void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface, GL_Point_t position, const GL_XForm_t *xform)
 {
     const GL_State_t *state = &context->state;
-    const GL_Quad_t clipping_region = state->clipping_region;
+    const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
 
-    const int clamp = xform.clamp;
-    const GL_XForm_Table_Entry_t *table = xform.table;
+    const int clamp = xform->clamp;
+    const GL_XForm_Table_Entry_t *table = xform->table;
 
     GL_Quad_t drawing_region = (GL_Quad_t) {
         .x0 = position.x,
         .y0 = position.y,
-        .x1 = position.x + (clipping_region.x1 - clipping_region.x0),
-        .y1 = position.y + (clipping_region.y1 - clipping_region.y0)
+        .x1 = position.x + (clipping_region->x1 - clipping_region->x0),
+        .y1 = position.y + (clipping_region->y1 - clipping_region->y0)
     };
 
-    if (drawing_region.x0 < clipping_region.x0) {
-        drawing_region.x0 = clipping_region.x0;
+    if (drawing_region.x0 < clipping_region->x0) {
+        drawing_region.x0 = clipping_region->x0;
     }
-    if (drawing_region.y0 < clipping_region.y0) {
-        drawing_region.y0 = clipping_region.y0;
+    if (drawing_region.y0 < clipping_region->y0) {
+        drawing_region.y0 = clipping_region->y0;
     }
-    if (drawing_region.x1 > clipping_region.x1) {
-        drawing_region.x1 = clipping_region.x1;
+    if (drawing_region.x1 > clipping_region->x1) {
+        drawing_region.x1 = clipping_region->x1;
     }
-    if (drawing_region.y1 > clipping_region.y1) {
-        drawing_region.y1 = clipping_region.y1;
+    if (drawing_region.y1 > clipping_region->y1) {
+        drawing_region.y1 = clipping_region->y1;
     }
 
     const int width = drawing_region.x1 - drawing_region.x0 + 1;
@@ -420,7 +420,7 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
     // X = A * (SX - CX) + B * (SY - CY) + CX + H
     // Y = C * (SX - CX) + D * (SY - CY) + CY + V
     GL_XForm_State_t xform_state;
-    memcpy(&xform_state, &xform.state, sizeof(GL_XForm_State_t));
+    memcpy(&xform_state, &xform->state, sizeof(GL_XForm_State_t));
     float h = xform_state.h; float v = xform_state.v; float a = xform_state.a; float b = xform_state.b;
     float c = xform_state.c; float d = xform_state.d; float x0 = xform_state.x; float y0 = xform_state.y;
 

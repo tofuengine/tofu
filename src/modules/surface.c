@@ -544,7 +544,7 @@ static int surface_xform1(lua_State *L)
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
-    GL_context_blit_x(context, surface, (GL_Point_t){ 0, 0 }, instance->xform);
+    GL_context_blit_x(context, surface, (GL_Point_t){ 0, 0 }, &instance->xform);
 
     return 0;
 }
@@ -567,7 +567,7 @@ static int surface_xform3(lua_State *L)
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
-    GL_context_blit_x(context, surface, (GL_Point_t){ (int)x, (int)y }, instance->xform);
+    GL_context_blit_x(context, surface, (GL_Point_t){ (int)x, (int)y }, &instance->xform);
 
     return 0;
 }
