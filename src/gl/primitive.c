@@ -32,8 +32,7 @@
 #endif
 #include <stb/stb_ds.h>
 
-static
-void point(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x, int y, GL_Pixel_t index)
+static void point(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x, int y, GL_Pixel_t index)
 {
     if (x < clipping_region->x0) {
         return;
@@ -53,8 +52,7 @@ void point(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x,
     *dst = index;
 }
 
-static
-void hline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x, int y, int length, GL_Pixel_t index)
+static void hline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x, int y, int length, GL_Pixel_t index)
 {
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = x,
@@ -89,8 +87,7 @@ void hline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x,
     }
 }
 
-static
-void vline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x, int y, int length, GL_Pixel_t index)
+static void vline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x, int y, int length, GL_Pixel_t index)
 {
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = x,
@@ -299,181 +296,11 @@ void GL_primitive_filled_rectangle(const GL_Context_t *context, GL_Rectangle_t r
     }
 }
 
-// https://github.com/morgan3d/misc/blob/master/javarasterizer/Rasterizer.java
-
-static void swap(GL_Point_t *a, GL_Point_t *b)
-{
-    GL_Point_t t = *a;
-    *a = *b;
-    *b = t;
-}
-
-/** Arranges the first three vertices in order of increasing y using bubble sort.*/
-static void y_sort(GL_Point_t *a, GL_Point_t *b, GL_Point_t *c)
-{
-    if (b->y < a->y) swap(a, b);
-    if (c->y < b->y) swap(b, c);
-    if (b->y < a->y) swap(a, b);
-}
-
-/** Arranges the first three vertices in order of increasing x using bubble sort.*/
-static void x_sort(GL_Point_t *a, GL_Point_t *b, GL_Point_t *c)
-{
-    if (b->x < a->x) swap(a, b);
-    if (c->x < b->x) swap(b, c);
-    if (b->x < a->x) swap(a, b);
-}
-
-/** Draws a solid horizontal line */
-static void fill_line(const GL_Context_t *context, int x0, int x1, int y, int index)
-{
-    const GL_State_t *state = &context->state;
-    const GL_Quad_t clipping_region = state->clipping_region;
-    
-    GL_Quad_t drawing_region = (GL_Quad_t){
-            .x0 = x0,
-            .y0 = y,
-            .x1 = x1,
-            .y1 = y
-        };
-
-    if (drawing_region.x0 < clipping_region.x0) {
-        drawing_region.x0 = clipping_region.x0;
-    }
-    if (drawing_region.y0 < clipping_region.y0) {
-        drawing_region.y0 = clipping_region.y0;
-    }
-    if (drawing_region.x1 > clipping_region.x1) {
-        drawing_region.x1 = clipping_region.x1;
-    }
-    if (drawing_region.y1 > clipping_region.y1) {
-        drawing_region.y1 = clipping_region.y1;
-    }
-
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
-    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!
-        return;
-    }
-
-    GL_Pixel_t *dst = state->surface->data_rows[drawing_region.y0] + drawing_region.x0;
-
-    for (int i = width; i; --i) {
-        *(dst++) = index;
-    }
-}
-
-static void render_upper(const GL_Context_t *context, int xL, int xT, int xR, int y0, int y1, int index)
-{
-    float dy = (float)(y1 - y0);
-    float dxA = (float)(xL - xT) / dy;
-    float dxB = (float)(xR - xT) / dy;
-
-    for (int y = y0; y <= y1; ++y) {
-        float d = (float)(y - y0);
-
-        // Both of these start at xT and move towards xL or xR
-        int xA = xT + floorf(dxA * d);
-        int xB = xT + floorf(dxB * d);
-
-        fill_line(context, xA, xB, y, index);
-    }
-}
-
-static void render_lower(const GL_Context_t *context, int xL, int xT, int xR, int y0, int y1, int index)
-{
-    float dy = (float)(y1 - y0);
-    float dxA = (float)(xL - xT) / dy;
-    float dxB = (float)(xR - xT) / dy;
-
-    for (int y = y1; y >= y0; --y) {
-        float d = (float)(y1 - y);
-
-        // Both of these start at xT and move towards xL or xR
-        int xA = xT + floorf(dxA * d);
-        int xB = xT + floorf(dxB * d);
-
-        fill_line(context, xA, xB, y, index);
-    }
-}
-
-void GL_primitive_filled_triangle(const GL_Context_t *context, GL_Point_t a, GL_Point_t b, GL_Point_t c, GL_Pixel_t index)
-{
-    const GL_State_t *state = &context->state;
-    const GL_Quad_t clipping_region = state->clipping_region;
-    const GL_Pixel_t *shifting = state->shifting;
-    const GL_Bool_t *transparent = state->transparent;
-//    const GL_Surface_t *surface = state->surface;
-
-    index = shifting[index];
-
-    if (transparent[index]) {
-        return;
-    }
-
-    GL_Quad_t drawing_region = (GL_Quad_t){
-            .x0 = imin(imin(a.x, b.x), c.x),
-            .y0 = imin(imin(a.y, b.y), c.y),
-            .x1 = imax(imax(a.x, b.x), c.x),
-            .y1 = imax(imax(a.y, b.y), c.y)
-        };
-
-    if (drawing_region.x0 < clipping_region.x0) {
-        drawing_region.x0 = clipping_region.x0;
-    }
-    if (drawing_region.y0 < clipping_region.y0) {
-        drawing_region.y0 = clipping_region.y0;
-    }
-    if (drawing_region.x1 > clipping_region.x1) {
-        drawing_region.x1 = clipping_region.x1;
-    }
-    if (drawing_region.y1 > clipping_region.y1) {
-        drawing_region.y1 = clipping_region.y1;
-    }
-
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
-    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!
-        return;
-    }
-
-    y_sort(&a, &b, &c);
-
-    if (a.y == b.y) {
-        if (b.y == c.y) { // The triangle is a horizontal lin
-            x_sort(&a, &b, &c);
-            fill_line(context, a.x, b.x, a.y, index);
-        } else { // There is no upper triangle.
-            if (a.x > b.x) swap(&a, &b); // Ensure that v[0] is on the left
-            render_lower(context, a.x, c.x, b.x, a.y, c.y, index);
-        }
-    } else {
-        if (b.x > c.x) swap(&b, &c); // Ensure that v[1] is on the left
-        if (b.y == c.y) { // There is no lower triangle
-            render_upper(context, b.x, a.x, c.x, a.y, b.y, index);
-        } else {
-            if (b.y > c.y) { // Determine triangle facing direction
-                int yMid = c.y; // Triangle points right   |>
-                int xLeft = a.x + (b.x - a.x) * (yMid - a.y) / (b.y - a.y); // Interpolate to find the intersection of the mid-line with the left side
-
-                render_upper(context, xLeft, a.x, c.x, a.y, yMid, index);
-                render_lower(context, xLeft, b.x, c.x, yMid, b.y, index);
-            } else {
-                int yMid = b.y; // Triangle points left   <|
-                int xRight = a.x + (c.x - a.x) * (yMid - a.y) / (c.y - a.y); // Interpolate to find the intersection of the mid-line with the left side
-
-                render_upper(context, b.x, a.x, xRight, a.y, yMid, index);
-                render_lower(context, b.x, c.x, xRight, yMid, c.y, index);
-            }
-        }
-    }
-}
-
 // http://www.sunshine2k.de/coding/java/TriangleRasterization/TriangleRasterization.html
 // https://www.scratchapixel.com/lessons/3d-basic-rendering/rasterization-practical-implementation/rasterization-stage
 // https://fgiesen.wordpress.com/2013/02/08/triangle-rasterization-in-practice/
 // https://github.com/dpethes/2D-rasterizer/blob/master/rasterizer2d.pas
-void GL_primitive_triangle2(const GL_Context_t *context, GL_Point_t a, GL_Point_t b, GL_Point_t c, GL_Pixel_t index)
+void GL_primitive_filled_triangle(const GL_Context_t *context, GL_Point_t a, GL_Point_t b, GL_Point_t c, GL_Pixel_t index)
 {
     const GL_State_t *state = &context->state;
     const GL_Quad_t clipping_region = state->clipping_region;
@@ -570,6 +397,7 @@ void GL_primitive_triangle2(const GL_Context_t *context, GL_Point_t a, GL_Point_
     }
 }
 
+// https://www.javatpoint.com/computer-graphics-bresenhams-circle-algorithm
 void GL_primitive_filled_circle(const GL_Context_t *context, GL_Point_t center, int radius, GL_Pixel_t index)
 {
     const GL_State_t *state = &context->state;
@@ -587,26 +415,27 @@ void GL_primitive_filled_circle(const GL_Context_t *context, GL_Point_t center, 
     const int cx = center.x;
     const int cy = center.y;
 
-    int r = radius;
-    int x = -r;
-    int y = 0;
-    int e = 2 - 2 * r;
+    int x = 0;
+    int y = radius;
+    int d = 3 - 2 * radius;
 
-    do {
-        const int length = iabs(2 * x) + 1;
-        hline(surface, &clipping_region, cx + x, cy + y, length, index);
-        hline(surface, &clipping_region, cx + x, cy - y, length, index);
+    while (x <= y) {
+        const int length_x = iabs(2 * x) + 1;
+        const int length_y = iabs(2 * y) + 1;
+        hline(surface, &clipping_region, cx - x, cy - y, length_x, index);
+        hline(surface, &clipping_region, cx - y, cy - x, length_y, index);
+        hline(surface, &clipping_region, cx - y, cy + x, length_y, index);
+        hline(surface, &clipping_region, cx - x, cy + y, length_x, index);
 
-        r = e;
-        if (r <= y) {
-            y += 1;
-            e += y * 2 + 1;
-        }
-        if (r > x || e > y) {
+        if (d < 0) {
+            d += 4 * x + 6;
             x += 1;
-            e += x * 2 + 1;
+        } else {
+            d += 4 * (x - y) + 10;
+            x += 1;
+            y -= 1;
         }
-    } while (x != 0);
+    }
 }
 
 void GL_primitive_circle(const GL_Context_t *context, GL_Point_t center, int radius, GL_Pixel_t index)
@@ -626,27 +455,29 @@ void GL_primitive_circle(const GL_Context_t *context, GL_Point_t center, int rad
     const int cx = center.x;
     const int cy = center.y;
 
-    int r = radius;
-    int x = -r;
-    int y = 0;
-    int e = 2 - 2 * r;
+    int x = 0;
+    int y = radius;
+    int d = 3 - 2 * radius;
 
-    do {
-        point(surface, &clipping_region, cx - x, cy + y, index);
-        point(surface, &clipping_region, cx - y, cy - x, index);
-        point(surface, &clipping_region, cx + x, cy - y, index);
+    while (x <= y) {
+        point(surface, &clipping_region, cx + x, cy + y, index);
         point(surface, &clipping_region, cx + y, cy + x, index);
+        point(surface, &clipping_region, cx - y, cy + x, index);
+        point(surface, &clipping_region, cx - x, cy + y, index);
+        point(surface, &clipping_region, cx - x, cy - y, index);
+        point(surface, &clipping_region, cx - y, cy - x, index);
+        point(surface, &clipping_region, cx + y, cy - x, index);
+        point(surface, &clipping_region, cx + x, cy - y, index);
 
-        r = e;
-        if (r <= y) {
-            y += 1;
-            e += y * 2 + 1;
-        }
-        if (r > x || e > y) {
+        if (d < 0) {
+            d += 4 * x + 6;
             x += 1;
-            e += x * 2 + 1;
+        } else {
+            d += 4 * (x - y) + 10;
+            x += 1;
+            y -= 1;
         }
-    } while (x != 0);
+    }
 }
 
 // https://lodev.org/cgtutor/floodfill.html
