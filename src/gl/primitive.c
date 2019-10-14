@@ -88,8 +88,8 @@ static bool clip(const GL_Quad_t *clipping_region, int *x0, int *y0, int *x1, in
             break;
         }  else
         if (code_0 & code_1) {
-            // bitwise AND is not 0: both points share an outside zone (LEFT, RIGHT, TOP,
-            // or BOTTOM), so both must be outside window; exit loop (accept is false)
+            // bitwise AND is not 0: both points share an outside zone (LEFT, RIGHT, ABOVE,
+            // or BELOW), so both must be outside window; exit loop (accept is false)
             break;
         } else {
             // at least one endpoint is outside the clip rectangle; pick it.
@@ -103,7 +103,6 @@ static bool clip(const GL_Quad_t *clipping_region, int *x0, int *y0, int *x1, in
             // No need to worry about divide-by-zero because, in each case, the
             // outcode bit being tested guarantees the denominator is non-zero
             int x, y;
-
             if (code_out & REGION_ABOVE) {
                 y = clipping_region->y0;
                 x = (int)((float)*x0 + (float)(*x1 - *x0) * (float)(y - *y0) / (float)(*y1 - *y0));
@@ -122,12 +121,13 @@ static bool clip(const GL_Quad_t *clipping_region, int *x0, int *y0, int *x1, in
             }
 
             // Now we move outside point to intersection point to clip and get ready for next pass.
+            int code = compute_code(clipping_region, x, y);
             if (code_out == code_0) {
-                code_0 = compute_code(clipping_region, x, y);
+                code_0 = code;
                 *x0 = x;
                 *y0 = y;
             } else {
-                code_1 = compute_code(clipping_region, x, y);
+                code_1 = code;
                 *x1 = x;
                 *y1 = y;
             }

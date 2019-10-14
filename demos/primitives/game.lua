@@ -37,9 +37,6 @@ end
 function Game:render(_) -- ratio
   Canvas.clear()
 
-  Canvas.line(-16, 16, 16, -16, 2)
-  Canvas.line(16, -16, 16, 16, 2)
-
   if self.mode == 0 then
     local cx, cy = 8, 32
     for r = 0, 12 do
@@ -48,7 +45,13 @@ function Game:render(_) -- ratio
       cx = cx + 2 * r + 8
     end
 
-    Canvas.polyline({ 64, 64, 64, 128, 128, 128 }, 3)
+    Canvas.polyline({ 64, 64, 64, 128, 128, 128 }, 2)
+
+    local x0 = (math.random() * Canvas.width() * 2) - Canvas.width() * 0.5
+    local y0 = (math.random() * Canvas.width() * 2) - Canvas.width() * 0.5
+    local x1 = (math.random() * Canvas.width() * 2) - Canvas.width() * 0.5
+    local y1 = (math.random() * Canvas.width() * 2) - Canvas.width() * 0.5
+    Canvas.line(x0, y0, x1, y1, 3)
   elseif self.mode == 1 then
     local dx = math.cos(System.time()) * 32
     local dy = math.sin(System.time()) * 32
