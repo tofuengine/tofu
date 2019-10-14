@@ -32,6 +32,12 @@
 #endif
 #include <stb/stb_ds.h>
 
+#define REGION_INSIDE   0
+#define REGION_LEFT     1
+#define REGION_ABOVE    2
+#define REGION_RIGHT    4
+#define REGION_BELOW    8
+
 static void point(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x, int y, GL_Pixel_t index)
 {
     if (x < clipping_region->x0) {
@@ -52,10 +58,92 @@ static void point(const GL_Surface_t *surface, const GL_Quad_t *clipping_region,
     *dst = index;
 }
 
-// TODO: implement line clipping.
+static int compute_code(const GL_Quad_t *clipping_region, int x, int y)
+{
+    int code = REGION_INSIDE;
+    if (x < clipping_region->x0) {
+        code |= REGION_LEFT;
+    }
+    if (y < clipping_region->y0) {
+        code |= REGION_ABOVE;
+    }
+    if (x > clipping_region->x1) {
+        code |= REGION_RIGHT;
+    }
+    if (y > clipping_region->y1) {
+        code |= REGION_BELOW;
+    }
+    return code;
+}
+
+static bool clip(const GL_Quad_t *clipping_region, int *x0, int *y0, int *x1, int *y1)
+{
+    int code_0 = compute_code(clipping_region, *x0, *y0);
+    int code_1 = compute_code(clipping_region, *x1, *y1);
+
+    bool accept = false;
+    while (true) {
+        if (!(code_0 | code_1)) { // bitwise OR is 0: both points inside window; trivially accept and exit loop
+            accept = true;
+            break;
+        }  else
+        if (code_0 & code_1) {
+            // bitwise AND is not 0: both points share an outside zone (LEFT, RIGHT, TOP,
+            // or BOTTOM), so both must be outside window; exit loop (accept is false)
+            break;
+        } else {
+            // at least one endpoint is outside the clip rectangle; pick it.
+            int code_out = code_0 ? code_0 : code_1;
+
+            // Now find the intersection point;
+            // use formulas:
+            //   slope = (y1 - y0) / (x1 - x0)
+            //   x = x0 + (1 / slope) * (ym - y0), where ym is ymin or ymax
+            //   y = y0 + slope * (xm - x0), where xm is xmin or xmax
+            // No need to worry about divide-by-zero because, in each case, the
+            // outcode bit being tested guarantees the denominator is non-zero
+            int x, y;
+
+            if (code_out & REGION_ABOVE) {
+                y = clipping_region->y0;
+                x = (int)((float)*x0 + (float)(*x1 - *x0) * (float)(y - *y0) / (float)(*y1 - *y0));
+            } else
+            if (code_out & REGION_BELOW) {
+                y = clipping_region->y1;
+                x = (int)((float)*x0 + (float)(*x1 - *x0) * (float)(y - *y0) / (float)(*y1 - *y0));
+            } else
+            if (code_out & REGION_LEFT) {
+                x = clipping_region->x0;
+                y = (int)((float)*y0 + (float)(*y1 - *y0) * (float)(x - *x0) / (float)(*x1 - *x0));
+            } else
+            if (code_out & REGION_RIGHT) {
+                x = clipping_region->x1;
+                y = (int)((float)*y0 + (float)(*y1 - *y0) * (float)(x - *x0) / (float)(*x1 - *x0));
+            }
+
+            // Now we move outside point to intersection point to clip and get ready for next pass.
+            if (code_out == code_0) {
+                code_0 = compute_code(clipping_region, x, y);
+                *x0 = x;
+                *y0 = y;
+            } else {
+                code_1 = compute_code(clipping_region, x, y);
+                *x1 = x;
+                *y1 = y;
+            }
+        }
+    }
+
+    return accept;
+}
+
 // DDA algorithm, no branches in the inner-loop.
 static void line(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x0, int y0, int x1, int y1, GL_Pixel_t index)
 {
+    bool accepted = clip(clipping_region, &x0, &y0, &x1, &y1);
+    if (!accepted) {
+        return;
+    }
 #ifdef __DDA__
     int dx = x1 - x0;
     int dy = y1 - y0;

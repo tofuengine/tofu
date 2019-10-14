@@ -37,13 +37,18 @@ end
 function Game:render(_) -- ratio
   Canvas.clear()
 
+  Canvas.line(-16, 16, 16, -16, 2)
+  Canvas.line(16, -16, 16, 16, 2)
+
   if self.mode == 0 then
     local cx, cy = 8, 32
-    for r = 1, 12 do
+    for r = 0, 12 do
       Canvas.circle("fill", cx, cy, r, 1)
       Canvas.circle("line", cx, cy + 64, r, 1)
       cx = cx + 2 * r + 8
     end
+
+    Canvas.polyline({ 64, 64, 64, 128, 128, 128 }, 3)
   elseif self.mode == 1 then
     local dx = math.cos(System.time()) * 32
     local dy = math.sin(System.time()) * 32
