@@ -1,5 +1,9 @@
 TARGET=tofu
 
+# Use software renderer to use VALGRIND
+# > export LIBGL_ALWAYS_SOFTWARE=1
+# valgrind --track-origins=yes ./tofu ./demos/mode7/
+
 ANALYZER=luacheck
 AFLAGS=--no-self --std lua53 -q
 

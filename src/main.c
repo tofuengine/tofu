@@ -30,10 +30,10 @@
 
 int main(int argc, char **argv)
 {
-    char resolved_path[PATH_FILE_MAX];
+    char resolved_path[PATH_FILE_MAX] = {};
     file_resolve_path(resolved_path, (argc > 1) ? argv[1] : FILE_PATH_CURRENT_SZ);
 
-    Engine_t engine;
+    Engine_t engine = {};
     bool result = Engine_initialize(&engine, resolved_path);
     if (!result) {
         Log_write(LOG_LEVELS_FATAL, "<MAIN> can't initialize engine");
