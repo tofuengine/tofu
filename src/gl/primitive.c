@@ -145,18 +145,18 @@ static void line(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, 
         return;
     }
 #ifdef __DDA__
-    int dx = x1 - x0;
-    int dy = y1 - y0;
+    const int dx = x1 - x0;
+    const int dy = y1 - y0;
 
-    int step = (dx >= dy) ? dx : dy;
+    const int delta = iabs(dx) >= iabs(dy) ? iabs(dx) : iabs(dy); // Move along the longest delta
 
-    float xin = (float)dx / (float)step;
-    float yin = (float)dy / (float)step;
+    const float xin = (float)dx / (float)delta;
+    const float yin = (float)dy / (float)delta;
 
     float x = x0 + 0.5f;
     float y = y0 + 0.5f;
-    for (int i = 0; i < step; ++i) {
-        GL_Pixel_t *dst = context->vram_rows[(int)y] + (int)x;
+    for (int i = delta + 1; i; --i) { // One more step, to reach and ending pixel.
+        GL_Pixel_t *dst = surface->data_rows[(int)y] + (int)x;
         *dst = index;
 
         x += xin;
@@ -176,19 +176,15 @@ static void line(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, 
 
     for (;;) {
         *dst = index;
-
+        if (dst == eod) {
+            break;
+        }
         int e2 = 2 * err;
         if (e2 >= dy) {
-            if (dst == eod) {
-                break;
-            }
             err += dy;
             dst += sx;
         }
         if (e2 <= dx) {
-            if (dst == eod) {
-                break;
-            }
             err += dx;
             dst += sy;
         }
