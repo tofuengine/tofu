@@ -58,92 +58,85 @@ static void point(const GL_Surface_t *surface, const GL_Quad_t *clipping_region,
     *dst = index;
 }
 
-static int compute_code(const GL_Quad_t *clipping_region, int x, int y)
+// https://sighack.com/post/cohen-sutherland-line-clipping-algorithm
+static inline int compute_code(const GL_Quad_t *clipping_region, int x, int y)
 {
     int code = REGION_INSIDE;
     if (x < clipping_region->x0) {
         code |= REGION_LEFT;
-    }
-    if (y < clipping_region->y0) {
-        code |= REGION_ABOVE;
-    }
+    } else
     if (x > clipping_region->x1) {
         code |= REGION_RIGHT;
     }
+    if (y < clipping_region->y0) {
+        code |= REGION_ABOVE;
+    } else
     if (y > clipping_region->y1) {
         code |= REGION_BELOW;
     }
     return code;
 }
 
-static bool clip(const GL_Quad_t *clipping_region, int *x0, int *y0, int *x1, int *y1)
+// DDA algorithm, no branches in the inner-loop.
+static void line(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x0, int y0, int x1, int y1, GL_Pixel_t index)
 {
-    int code_0 = compute_code(clipping_region, *x0, *y0);
-    int code_1 = compute_code(clipping_region, *x1, *y1);
+    int code0 = compute_code(clipping_region, x0, y0);
+    int code1 = compute_code(clipping_region, x1, y1);
 
-    bool accept = false;
-    while (true) {
-        if (!(code_0 | code_1)) { // bitwise OR is 0: both points inside window; trivially accept and exit loop
-            accept = true;
+    for (;;) {
+        if (!(code0 | code1)) { // bitwise OR is 0: both points inside window; trivially accept and exit loop
             break;
         }  else
-        if (code_0 & code_1) {
+        if (code0 & code1) {
             // bitwise AND is not 0: both points share an outside zone (LEFT, RIGHT, ABOVE,
-            // or BELOW), so both must be outside window; exit loop (accept is false)
-            break;
+            // or BELOW), so both must be outside window; exit loop bailing out
+            return;
         } else {
             // at least one endpoint is outside the clip rectangle; pick it.
-            int code_out = code_0 ? code_0 : code_1;
+            int code = code0 ? code0 : code1;
 
             // Now find the intersection point;
             // use formulas:
+            //
             //   slope = (y1 - y0) / (x1 - x0)
             //   x = x0 + (1 / slope) * (ym - y0), where ym is ymin or ymax
             //   y = y0 + slope * (xm - x0), where xm is xmin or xmax
+            //
             // No need to worry about divide-by-zero because, in each case, the
             // outcode bit being tested guarantees the denominator is non-zero
-            int x, y;
-            if (code_out & REGION_ABOVE) {
+            //
+            // Note that we are safe in using integer math (only, the division need to be performed at last).
+            int x = 0, y = 0;
+            if (code & REGION_ABOVE) {
                 y = clipping_region->y0;
-                x = (int)((float)*x0 + (float)(*x1 - *x0) * (float)(y - *y0) / (float)(*y1 - *y0));
+                x = (x0 + (x1 - x0) * (y - y0) / (y1 - y0));
             } else
-            if (code_out & REGION_BELOW) {
+            if (code & REGION_BELOW) {
                 y = clipping_region->y1;
-                x = (int)((float)*x0 + (float)(*x1 - *x0) * (float)(y - *y0) / (float)(*y1 - *y0));
+                x = (x0 + (x1 - x0) * (y - y0) / (y1 - y0));
             } else
-            if (code_out & REGION_LEFT) {
+            if (code & REGION_LEFT) {
                 x = clipping_region->x0;
-                y = (int)((float)*y0 + (float)(*y1 - *y0) * (float)(x - *x0) / (float)(*x1 - *x0));
+                y = (y0 + (y1 - y0) * (x - x0) / (x1 - x0));
             } else
-            if (code_out & REGION_RIGHT) {
+            if (code & REGION_RIGHT) {
                 x = clipping_region->x1;
-                y = (int)((float)*y0 + (float)(*y1 - *y0) * (float)(x - *x0) / (float)(*x1 - *x0));
+                y = (y0 + (y1 - y0) * (x - x0) / (x1 - x0));
             }
 
             // Now we move outside point to intersection point to clip and get ready for next pass.
-            int code = compute_code(clipping_region, x, y);
-            if (code_out == code_0) {
-                code_0 = code;
-                *x0 = x;
-                *y0 = y;
+            if (code == code0) {
+                code0 = compute_code(clipping_region, x, y);
+                x0 = x;
+                y0 = y;
             } else {
-                code_1 = code;
-                *x1 = x;
-                *y1 = y;
+                code1 = compute_code(clipping_region, x, y);
+                x1 = x;
+                y1 = y;
             }
         }
     }
 
-    return accept;
-}
-
-// DDA algorithm, no branches in the inner-loop.
-static void line(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x0, int y0, int x1, int y1, GL_Pixel_t index)
-{
-    bool accepted = clip(clipping_region, &x0, &y0, &x1, &y1);
-    if (!accepted) {
-        return;
-    }
 #ifdef __DDA__
     const int dx = x1 - x0;
     const int dy = y1 - y0;
