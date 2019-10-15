@@ -5,8 +5,10 @@ AFLAGS=--no-self --std lua53 -q
 
 COMPILER=cc
 CWARNINGS=-Wall -Wextra -Werror -Wno-unused-parameter
-CFLAGS=-O0 -g -DDEBUG -D_DEFAULT_SOURCE -DLUA_USE_LINUX -std=c99 -Iexternal
-#CFLAGS=-O2 -g -DRELEASE -D_DEFAULT_SOURCE -DLUA_USE_LINUX -std=c99 -Iexternal
+CFLAGS=-Og -g -DDEBUG -D_DEFAULT_SOURCE -DLUA_USE_LINUX -std=c99 -Iexternal
+#CFLAGS=-O3 -DRELEASE -D_DEFAULT_SOURCE -DLUA_USE_LINUX -std=c99 -Iexternal
+# -Ofast => -O3 -ffast-math
+# -Os => -O2, favouring size
 
 LINKER=cc
 LFLAGS=-Wall -Wextra -Werror -Lexternal/GLFW -lglfw3 -lm  -ldl -lpthread -lrt -lX11
