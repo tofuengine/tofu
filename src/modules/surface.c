@@ -764,7 +764,7 @@ static int surface_table2(lua_State *L)
 
         lua_pop(L, 1);
     }
-    table[count].scan_line = -1; // Set the end-of-data (safety) marker
+    table[count - 1].scan_line = -1; // Set the end-of-data (safety) marker
 
     if (instance->xform.table) {
         free(instance->xform.table);
