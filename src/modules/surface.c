@@ -89,15 +89,9 @@ static void to_indexed_atlas_callback(void *parameters, GL_Surface_t *surface, c
     const GL_Color_t *src = (const GL_Color_t *)data;
     GL_Pixel_t *dst = surface->data;
 
-    for (size_t y = 0; y < surface->height; ++y) {
-        int row_offset = surface->width * y;
-
-        for (size_t x = 0; x < surface->width; ++x) {
-            size_t offset = row_offset + x;
-
-            GL_Color_t color = src[offset];
-            dst[offset] = GL_palette_find_nearest_color(palette, color);
-        }
+    for (size_t i = surface->data_size; i; --i) {
+        GL_Color_t color = *(src++);
+        *(dst++) = GL_palette_find_nearest_color(palette, color);
     }
 }
 
@@ -743,7 +737,7 @@ static int surface_table2(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Surface.table(%d)", type);
 #endif
 
-    int count = luaX_count(L, 2) + 1; // Make room for the EOD marker.
+    size_t count = luaX_count(L, 2) + 1; // Make room for the EOD marker.
 
     GL_XForm_Table_Entry_t *table = malloc(count * sizeof(GL_XForm_Table_Entry_t));
     if (!table) {
@@ -751,12 +745,12 @@ static int surface_table2(lua_State *L)
     }
 
     lua_pushnil(L);
-    for (int i = 0; lua_next(L, 2); ++i) {
-        int index = lua_tointeger(L, -2);
+    for (size_t i = 0; lua_next(L, 2); ++i) {
+        int index = (int)lua_tointeger(L, -2);
         table[i].scan_line = index; // The scan-line indicator is the array index.
 
         lua_pushnil(L);
-        for (int j = 0; lua_next(L, -2); ++j) { // Scan the value, which is an array.
+        for (size_t j = 0; lua_next(L, -2); ++j) { // Scan the value, which is an array.
             if (j == GL_XFORM_TABLE_MAX_OPERATIONS) {
                 Log_write(LOG_LEVELS_WARNING, "<SURFACE> too many operation for table entry #%d (id #%d)", i, index);
                 lua_pop(L, 2);

@@ -71,9 +71,38 @@ static void to_font_atlas_callback(void *parameters, GL_Surface_t *surface, cons
     const GL_Color_t *src = (const GL_Color_t *)data;
     GL_Pixel_t *dst = surface->data;
 
-    for (int i = surface->data_size; i; --i) {
+    for (size_t i = surface->data_size; i; --i) {
         GL_Color_t color = *(src++);
         *(dst++) = indexes[color.a == 0 ? 0 : 1]; // TODO: don't use alpha for transparency?
+    }
+}
+
+static void align(const char *text, const char *alignment, float *x, float *y, float w, float h)
+{
+#ifndef __NO_LINEFEEDS__
+    float width = 0.0f;
+    size_t slen = strlen(text);
+    size_t offset = 0;
+    while (offset < slen) {
+        const char *start = text + offset;
+        const char *end = strchr(start, '\n');
+        if (!end) {
+            end = text + slen;
+        }
+        size_t length = end - start;
+        if (width < length * dw) {
+            width = length * dw;
+        }
+        offset += length + 1;
+    }
+#else
+    float width = strlen(text) * w;
+#endif
+    if (alignment[0] == 'c') {
+        *x -= width * 0.5f;
+    } else
+    if (alignment[0] == 'r') {
+        *x -= width;
     }
 }
 
@@ -87,10 +116,10 @@ static int font_new(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
     LUAX_SIGNATURE_END
     const char *file = lua_tostring(L, 1);
-    int glyph_width = lua_tointeger(L, 2);
-    int glyph_height = lua_tointeger(L, 3);
-    size_t background_color = lua_tointeger(L, 4);
-    size_t foreground_color = lua_tointeger(L, 5);
+    size_t glyph_width = (size_t)lua_tointeger(L, 2);
+    size_t glyph_height = (size_t)lua_tointeger(L, 3);
+    GL_Pixel_t background_index = (GL_Pixel_t)lua_tointeger(L, 4);
+    GL_Pixel_t foreground_index = (GL_Pixel_t)lua_tointeger(L, 5);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Font.new() -> %s, %d, %d, %d, %d", file, glyph_width, glyph_height, background_color, foreground_color);
 #endif
@@ -99,7 +128,7 @@ static int font_new(lua_State *L)
 
     const Sheet_Data_t *data = graphics_sheets_find(file);
 
-    const GL_Pixel_t indexes[] = { background_color, foreground_color };
+    const GL_Pixel_t indexes[] = { background_index, foreground_index };
     GL_Sheet_t sheet;
     if (data) {
         GL_sheet_decode(&sheet, data->buffer, data->size, data->quad_width, data->quad_height, to_font_atlas_callback, (void *)indexes);
@@ -163,64 +192,25 @@ static int font_write5(lua_State *L)
     const GL_Sheet_t *sheet = &instance->sheet;
 
     float dw = sheet->size.width;
-#ifndef __NO_LINEFEEDS__
-    float dh = sheet->tile.height;
-#endif
+    float dh = sheet->size.height;
 
-#ifndef __NO_LINEFEEDS__
-    size_t width = 0;
-    size_t slen = strlen(text);
-    size_t offset = 0;
-    while (offset < slen) {
-        const char *start = text + offset;
-        const char *end = strchr(start, '\n');
-        if (!end) {
-            end = text + slen;
-        }
-        size_t length = end - start;
-        if (width < length * dw) {
-            width = length * dw;
-        }
-        offset += length + 1;
-    }
-#else
-    size_t width = strlen(text) * dw;
-#endif
+    float ox = x, oy = y;
+    align(text, alignment, &ox, &oy, dw, dh);
 
-    int dx, dy; // Always pixel-aligned positions.
-    if (alignment[0] == 'l') {
-        dx = (int)x;
-        dy = (int)y;
-    } else
-    if (alignment[0] == 'c') {
-        dx = (int)(x - (width * 0.5f));
-        dy = (int)y;
-    } else
-    if (alignment[0] == 'r') {
-        dx = (int)(x - width);
-        dy = (int)y;
-    } else {
-        dx = (int)x;
-        dy = (int)y;
-    }
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %d, %d, %d", width, dx, dy);
-#endif
-
-    GL_Point_t position = { .x = dx, .y = dy };
+    float dx = ox, dy = oy;
     for (const char *ptr = text; *ptr != '\0'; ++ptr) {
 #ifndef __NO_LINEFEEDS__
         if (*ptr == '\n') { // Handle carriage-return
-            destination.x = dx;
-            destination.y += dh;
+            dx = ox;
+            dy += dh;
             continue;
         } else
 #endif
         if (*ptr < ' ') {
             continue;
         }
-        GL_context_blit(context, &sheet->atlas, sheet->cells[*ptr - ' '], position);
-        position.x += dw;
+        GL_context_blit(context, &sheet->atlas, sheet->cells[*ptr - ' '], (GL_Point_t){ .x = (int)dx, .y = (int)dy });
+        dx += dw;
     }
 
     return 0;
@@ -252,64 +242,25 @@ static int font_write6(lua_State *L)
     const GL_Sheet_t *sheet = &instance->sheet;
 
     float dw = sheet->size.width * fabsf(scale);
-#ifndef __NO_LINEFEEDS__
-    float dh = sheet->tile.height * fabsf(scale);
-#endif
+    float dh = sheet->size.height * fabsf(scale);
 
-#ifndef __NO_LINEFEEDS__
-    size_t width = 0;
-    size_t slen = strlen(text);
-    size_t offset = 0;
-    while (offset < slen) {
-        const char *start = text + offset;
-        const char *end = strchr(start, '\n');
-        if (!end) {
-            end = text + slen;
-        }
-        size_t length = end - start;
-        if (width < length * dw) {
-            width = length * dw;
-        }
-        offset += length + 1;
-    }
-#else
-    size_t width = strlen(text) * dw;
-#endif
+    float ox = x, oy = y;
+    align(text, alignment, &ox, &oy, dw, dh);
 
-    int dx, dy; // Always pixel-aligned positions.
-    if (alignment[0] == 'l') {
-        dx = (int)x;
-        dy = (int)y;
-    } else
-    if (alignment[0] == 'c') {
-        dx = (int)(x - (width * 0.5f));
-        dy = (int)y;
-    } else
-    if (alignment[0] == 'r') {
-        dx = (int)(x - width);
-        dy = (int)y;
-    } else {
-        dx = (int)x;
-        dy = (int)y;
-    }
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %d, %d, %d", width, dx, dy);
-#endif
-
-    GL_Point_t position = { .x = dx, .y = dy };
+    float dx = ox, dy = oy;
     for (const char *ptr = text; *ptr != '\0'; ++ptr) {
 #ifndef __NO_LINEFEEDS__
         if (*ptr == '\n') { // Handle carriage-return
-            destination.x = dx;
-            destination.y += dh;
+            dx = ow;
+            dy += dh;
             continue;
         } else
 #endif
         if (*ptr < ' ') {
             continue;
         }
-        GL_context_blit_s(context, &sheet->atlas, sheet->cells[*ptr - ' '], position, scale, scale);
-        position.x += dw;
+        GL_context_blit_s(context, &sheet->atlas, sheet->cells[*ptr - ' '], (GL_Point_t){ .x = (int)dx, .y = (int)dy }, scale, scale);
+        dx += dw;
     }
 
     return 0;
@@ -343,64 +294,25 @@ static int font_write7(lua_State *L)
     const GL_Sheet_t *sheet = &instance->sheet;
 
     float dw = sheet->size.width * fabsf(scale_x);
-#ifndef __NO_LINEFEEDS__
-    float dh = sheet->tile.height * fabsf(scale_y);
-#endif
+    float dh = sheet->size.height * fabsf(scale_y);
 
-#ifndef __NO_LINEFEEDS__
-    size_t width = 0;
-    size_t slen = strlen(text);
-    size_t offset = 0;
-    while (offset < slen) {
-        const char *start = text + offset;
-        const char *end = strchr(start, '\n');
-        if (!end) {
-            end = text + slen;
-        }
-        size_t length = end - start;
-        if (width < length * dw) {
-            width = length * dw;
-        }
-        offset += length + 1;
-    }
-#else
-    size_t width = strlen(text) * dw;
-#endif
+    float ox = x, oy = y;
+    align(text, alignment, &ox, &oy, dw, dh);
 
-    int dx, dy; // Always pixel-aligned positions.
-    if (alignment[0] == 'l') {
-        dx = (int)x;
-        dy = (int)y;
-    } else
-    if (alignment[0] == 'c') {
-        dx = (int)(x - (width * 0.5f));
-        dy = (int)y;
-    } else
-    if (alignment[0] == 'r') {
-        dx = (int)(x - width);
-        dy = (int)y;
-    } else {
-        dx = (int)x;
-        dy = (int)y;
-    }
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %d, %d, %d", width, dx, dy);
-#endif
-
-    GL_Point_t position = { .x = dx, .y = dy };
+    float dx = ox, dy = oy;
     for (const char *ptr = text; *ptr != '\0'; ++ptr) {
 #ifndef __NO_LINEFEEDS__
         if (*ptr == '\n') { // Handle carriage-return
-            destination.x = dx;
-            destination.y += dh;
+            dx = ox;
+            dy += dh;
             continue;
         } else
 #endif
         if (*ptr < ' ') {
             continue;
         }
-        GL_context_blit_s(context, &sheet->atlas, sheet->cells[*ptr - ' '], position, scale_x, scale_y);
-        position.x += dw;
+        GL_context_blit_s(context, &sheet->atlas, sheet->cells[*ptr - ' '], (GL_Point_t){ .x = (int)dx, .y = (int)dy }, scale_x, scale_y);
+        dx += dw;
     }
 
     return 0;

@@ -149,7 +149,6 @@ void Engine_run(Engine_t *engine)
 
         lag += elapsed; // Count a maximum amount of skippable frames in order no to stall on slower machines.
         for (int frames = 0; (frames < skippable_frames) && (lag >= delta_time); ++frames) {
-            // TODO: To move `TimerPool_update()` here the interpreter should expose the "timerpool_update" callback.
             engine->environment.time += delta_time;
             running = running && Interpreter_update(&engine->interpreter, delta_time);
             lag -= delta_time;

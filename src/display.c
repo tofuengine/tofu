@@ -25,6 +25,7 @@
 #include "config.h"
 #include "engine.h"
 #include "log.h"
+#include "core/imath.h"
 
 #include <memory.h>
 #include <stdlib.h>
@@ -91,11 +92,6 @@ static const Program_Data_t _programs_data[Display_Programs_t_CountOf] = {
 
 static const int _texture_id_0[] = { 0 };
 
-static int min(int a, int b)
-{
-    return a < b ? a : b;
-}
-
 typedef enum _Uniforms_t {
     UNIFORM_TEXTURE,
     UNIFORM_RESOLUTION,
@@ -119,7 +115,7 @@ static bool compute_size(Display_t *display, const Display_Configuration_t *conf
     display->window_height = configuration->height;
     display->window_scale = 1;
 
-    int max_scale = min(display_width / configuration->width, display_height / configuration->height);
+    int max_scale = imin(display_width / configuration->width, display_height / configuration->height);
     int scale = configuration->scale != 0 ? configuration->scale : max_scale;
 
     if (max_scale == 0) {

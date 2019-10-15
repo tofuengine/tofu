@@ -72,7 +72,7 @@ static void to_indexed_atlas_callback(void *parameters, GL_Surface_t *surface, c
     const GL_Color_t *src = (const GL_Color_t *)data;
     GL_Pixel_t *dst = (GL_Pixel_t *)surface->data;
 
-    for (int i = surface->data_size; i; --i) {
+    for (size_t i = surface->data_size; i; --i) {
         GL_Color_t color = *(src++);
         *(dst++) = GL_palette_find_nearest_color(palette, color);
     }
@@ -86,8 +86,8 @@ static int bank_new(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
     LUAX_SIGNATURE_END
     const char *file = lua_tostring(L, 1);
-    int cell_width = lua_tointeger(L, 2);
-    int cell_height = lua_tointeger(L, 3);
+    size_t cell_width = (size_t)lua_tointeger(L, 2);
+    size_t cell_height = (size_t)lua_tointeger(L, 3);
 
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Bank.new() -> %s, %d, %d", file, cell_width, cell_height);

@@ -97,26 +97,26 @@ extern int luaX_newmodule(lua_State *L, const luaX_Script *script, const luaL_Re
 extern void luaX_preload(lua_State *L, const char *modname, lua_CFunction openf, int nup);
 extern void luaX_require(lua_State *L, const char *modname, lua_CFunction openf, int nup, int glb);
 extern int luaX_toref(lua_State *L, int arg);
-extern void luaX_pushnumberarray(lua_State *L, float *array, int count);
-extern void luaX_tonumberarray(lua_State *L, int index, float *array, int count);
-extern void luaX_checkargument(lua_State *L, int index, const char *file, int line, ...);
+extern void luaX_pushnumberarray(lua_State *L, float *array, size_t count);
+extern void luaX_tonumberarray(lua_State *L, int idx, float *array, size_t count);
+extern void luaX_checkargument(lua_State *L, int idx, const char *file, int line, ...);
 
-extern int luaX_packupvalues(lua_State *L, int nup);
-extern int luaX_unpackupvalues(lua_State *L);
+extern size_t luaX_packupvalues(lua_State *L, int nup);
+extern size_t luaX_unpackupvalues(lua_State *L);
 
-extern int luaX_count(lua_State *L, int idx);
+extern size_t luaX_count(lua_State *L, int idx);
 
-extern int luaX_isnil(lua_State *L, int index);
-extern int luaX_isboolean(lua_State *L, int index);
-extern int luaX_islightuserdata(lua_State *L, int index);
-extern int luaX_isinteger(lua_State *L, int index);
-extern int luaX_isnumber(lua_State *L, int index);
-extern int luaX_isstring(lua_State *L, int index);
-extern int luaX_istable(lua_State *L, int index);
-extern int luaX_isfunction(lua_State *L, int index);
-extern int luaX_iscfunction(lua_State *L, int index);
-extern int luaX_isuserdata(lua_State *L, int index);
-extern int luaX_isthread(lua_State *L, int index);
-extern int luaX_isany(lua_State *L, int index);
+extern int luaX_isnil(lua_State *L, int idx);
+extern int luaX_isboolean(lua_State *L, int idx);
+extern int luaX_islightuserdata(lua_State *L, int idx);
+extern int luaX_isinteger(lua_State *L, int idx);
+extern int luaX_isnumber(lua_State *L, int idx);
+extern int luaX_isstring(lua_State *L, int idx);
+extern int luaX_istable(lua_State *L, int idx);
+extern int luaX_isfunction(lua_State *L, int idx);
+extern int luaX_iscfunction(lua_State *L, int idx);
+extern int luaX_isuserdata(lua_State *L, int idx);
+extern int luaX_isthread(lua_State *L, int idx);
+extern int luaX_isany(lua_State *L, int idx);
 
 #endif  /* __CORE_LUAX_H__ */

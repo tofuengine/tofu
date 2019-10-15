@@ -426,7 +426,7 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
 
     for (int i = 0; i < height; ++i) {
         if (table && i == table->scan_line) {
-            for (int k = 0; k < table->count; ++k) {
+            for (size_t k = 0; k < table->count; ++k) {
                 xform_state.registers[table->operations[k].id] = table->operations[k].value;
             }
             h = xform_state.h; v = xform_state.v; a = xform_state.a; b = xform_state.b; // Keep the fast-access variables updated.

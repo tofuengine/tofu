@@ -223,20 +223,20 @@ int luaX_toref(lua_State *L, int arg)
     return luaL_ref(L, LUA_REGISTRYINDEX);
 }
 
-void luaX_pushnumberarray(lua_State *L, float *array, int count)
+void luaX_pushnumberarray(lua_State *L, float *array, size_t count)
 {
     lua_createtable(L, count, 0);
-    for (int i = 0; i < count; i++) {
+    for (size_t i = 0; i < count; i++) {
         lua_pushnumber(L, (double)array[i]);
         lua_rawseti(L, -2, i + 1); /* In lua indices start at 1 */
-    }    
+    }
 }
 
-void luaX_tonumberarray(lua_State *L, int idx, float *array, int count)
+void luaX_tonumberarray(lua_State *L, int idx, float *array, size_t count)
 {
     int ref = (idx > 0) ? idx : idx - 1; // If negative, adjust to skip the iteration key.
     lua_pushnil(L);
-    for (int i = 0; lua_next(L, ref); ++i) {
+    for (size_t i = 0; lua_next(L, ref); ++i) {
         if (i >= count) {
             lua_pop(L, 2); // Pops both key and value and bail out!
             break;
@@ -246,7 +246,7 @@ void luaX_tonumberarray(lua_State *L, int idx, float *array, int count)
     }
 }
 
-void luaX_checkargument(lua_State *L, int index, const char *file, int line, ...)
+void luaX_checkargument(lua_State *L, int idx, const char *file, int line, ...)
 {
     int count = 0;
     int success = 0;
@@ -257,16 +257,16 @@ void luaX_checkargument(lua_State *L, int index, const char *file, int line, ...
         if (!func) {
             break;
         }
-        success |= func(L, index);
+        success |= func(L, idx);
     }
     va_end(args);
     if ((count > 0) && !success) {
-        luaL_error(L, "[%s:%d] signature failure for argument #%d w/ type %d", file, line, index, lua_type(L, index));
+        luaL_error(L, "[%s:%d] signature failure for argument #%d w/ type %d", file, line, idx, lua_type(L, idx));
         return; // Unreachable code.
     }
 }
 
-int luaX_packupvalues(lua_State *L, int nup)
+size_t luaX_packupvalues(lua_State *L, int nup)
 {
     lua_pushinteger(L, nup); // Pass the upvalues count, for later usage.
     for (int j = 0; j < nup; ++j) {
@@ -275,7 +275,7 @@ int luaX_packupvalues(lua_State *L, int nup)
     return nup + 1;
 }
 
-int luaX_unpackupvalues(lua_State *L)
+size_t luaX_unpackupvalues(lua_State *L)
 {
     if (!lua_isinteger(L, lua_upvalueindex(1))) { // Check if the 1st upvalue is defined and is an integer.
         return 0;
@@ -284,12 +284,12 @@ int luaX_unpackupvalues(lua_State *L)
     for (int i = 0; i< nup; ++i) {
         lua_pushvalue(L, lua_upvalueindex(2 + i)); // Copy the upvalues onto the stack, skipping the counter.
     }
-    return nup;
+    return (size_t)nup;
 }
 
-int luaX_count(lua_State *L, int idx)
+size_t luaX_count(lua_State *L, int idx)
 {
-    int count = 0;
+    size_t count = 0;
     lua_pushnil(L); // first key
     while (lua_next(L, idx)) {
         count += 1;
@@ -298,62 +298,62 @@ int luaX_count(lua_State *L, int idx)
     return count;
 }
 
-extern int luaX_isnil(lua_State *L, int index)
+extern int luaX_isnil(lua_State *L, int idx)
 {
-    return lua_isnil(L, index);
+    return lua_isnil(L, idx);
 }
 
-extern int luaX_isboolean(lua_State *L, int index)
+extern int luaX_isboolean(lua_State *L, int idx)
 {
-    return lua_isboolean(L, index);
+    return lua_isboolean(L, idx);
 }
 
-int luaX_isinteger(lua_State *L, int index)
+int luaX_isinteger(lua_State *L, int idx)
 {
-    return lua_isinteger(L, index);
+    return lua_isinteger(L, idx);
 }
 
-int luaX_isnumber(lua_State *L, int index)
+int luaX_isnumber(lua_State *L, int idx)
 {
-    return lua_isnumber(L, index);
+    return lua_isnumber(L, idx);
 }
 
-int luaX_isstring(lua_State *L, int index)
+int luaX_isstring(lua_State *L, int idx)
 {
-    return lua_isstring(L, index);
+    return lua_isstring(L, idx);
 }
 
-int luaX_istable(lua_State *L, int index)
+int luaX_istable(lua_State *L, int idx)
 {
-    return lua_istable(L, index);
+    return lua_istable(L, idx);
 }
 
-int luaX_isfunction(lua_State *L, int index)
+int luaX_isfunction(lua_State *L, int idx)
 {
-    return lua_isfunction(L, index);
+    return lua_isfunction(L, idx);
 }
 
-int luaX_iscfunction(lua_State *L, int index)
+int luaX_iscfunction(lua_State *L, int idx)
 {
-    return lua_iscfunction(L, index);
+    return lua_iscfunction(L, idx);
 }
 
-int luaX_islightuserdata(lua_State *L, int index)
+int luaX_islightuserdata(lua_State *L, int idx)
 {
-    return lua_islightuserdata(L, index);
+    return lua_islightuserdata(L, idx);
 }
 
-int luaX_isuserdata(lua_State *L, int index)
+int luaX_isuserdata(lua_State *L, int idx)
 {
-    return lua_isuserdata(L, index);
+    return lua_isuserdata(L, idx);
 }
 
-int luaX_isthread(lua_State *L, int index)
+int luaX_isthread(lua_State *L, int idx)
 {
-    return lua_isthread(L, index);
+    return lua_isthread(L, idx);
 }
 
-int luaX_isany(lua_State *L, int index)
+int luaX_isany(lua_State *L, int idx)
 {
-    return !lua_isnil(L, index);
+    return !lua_isnil(L, idx);
 }
