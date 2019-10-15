@@ -309,8 +309,8 @@ static int surface_blit3(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
-    double x = (double)lua_tonumber(L, 2);
-    double y = (double)lua_tonumber(L, 3);
+    float x = (float)lua_tonumber(L, 2);
+    float y = (float)lua_tonumber(L, 3);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Surface.blit() -> %.f, %.f", x, y);
 #endif
@@ -333,9 +333,9 @@ static int surface_blit4(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
-    double x = (double)lua_tonumber(L, 2);
-    double y = (double)lua_tonumber(L, 3);
-    double rotation = (double)lua_tonumber(L, 4);
+    float x = (float)lua_tonumber(L, 2);
+    float y = (float)lua_tonumber(L, 3);
+    float rotation = (float)lua_tonumber(L, 4);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Surface.blit() -> %.f, %.f, %.f", x, y, rotation);
 #endif
@@ -359,10 +359,10 @@ static int surface_blit5(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
-    double x = (double)lua_tonumber(L, 2);
-    double y = (double)lua_tonumber(L, 3);
-    double scale_x = (double)lua_tonumber(L, 4);
-    double scale_y = (double)lua_tonumber(L, 5);
+    float x = (float)lua_tonumber(L, 2);
+    float y = (float)lua_tonumber(L, 3);
+    float scale_x = (float)lua_tonumber(L, 4);
+    float scale_y = (float)lua_tonumber(L, 5);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Surface.blit() -> %.f, %.f, %.f, %.f", x, y, scale_x, scale_y);
 #endif
@@ -387,11 +387,11 @@ static int surface_blit6(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
-    double x = (double)lua_tonumber(L, 2);
-    double y = (double)lua_tonumber(L, 3);
-    double scale_x = (double)lua_tonumber(L, 4);
-    double scale_y = (double)lua_tonumber(L, 5);
-    double rotation = (double)lua_tonumber(L, 6);
+    float x = (float)lua_tonumber(L, 2);
+    float y = (float)lua_tonumber(L, 3);
+    float scale_x = (float)lua_tonumber(L, 4);
+    float scale_y = (float)lua_tonumber(L, 5);
+    float rotation = (float)lua_tonumber(L, 6);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Surface.blit() -> %.f, %.f, %.f, %.f, %.f", x, y, scale_x, scale_y, rotation);
 #endif
@@ -417,12 +417,12 @@ static int surface_blit7(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
-    double x = (double)lua_tonumber(L, 2);
-    double y = (double)lua_tonumber(L, 3);
-    double ox = (double)lua_tonumber(L, 4);
-    double oy = (double)lua_tonumber(L, 5);
-    double width = (double)lua_tonumber(L, 6);
-    double height = (double)lua_tonumber(L, 7);
+    float x = (float)lua_tonumber(L, 2);
+    float y = (float)lua_tonumber(L, 3);
+    float ox = (float)lua_tonumber(L, 4);
+    float oy = (float)lua_tonumber(L, 5);
+    float width = (float)lua_tonumber(L, 6);
+    float height = (float)lua_tonumber(L, 7);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Surface.blit() -> %.f, %.f, %.f, %.f, %.f, %.f", x, y, ox, oy, width, height);
 #endif
@@ -450,14 +450,14 @@ static int surface_blit9(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
-    double x = (double)lua_tonumber(L, 2);
-    double y = (double)lua_tonumber(L, 3);
-    double ox = (double)lua_tonumber(L, 4);
-    double oy = (double)lua_tonumber(L, 5);
-    double width = (double)lua_tonumber(L, 6);
-    double height = (double)lua_tonumber(L, 7);
-    double scale_x = (double)lua_tonumber(L, 8);
-    double scale_y = (double)lua_tonumber(L, 9);
+    float x = (float)lua_tonumber(L, 2);
+    float y = (float)lua_tonumber(L, 3);
+    float ox = (float)lua_tonumber(L, 4);
+    float oy = (float)lua_tonumber(L, 5);
+    float width = (float)lua_tonumber(L, 6);
+    float height = (float)lua_tonumber(L, 7);
+    float scale_x = (float)lua_tonumber(L, 8);
+    float scale_y = (float)lua_tonumber(L, 9);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Surface.blit() -> %.f, %.f, %.f, %.f, %.f, %.f, %.f, %.f", x, y, ox, oy, width, height, scale_x, scale_y);
 #endif
@@ -486,15 +486,15 @@ static int surface_blit10(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
-    double x = (double)lua_tonumber(L, 2);
-    double y = (double)lua_tonumber(L, 3);
-    double ox = (double)lua_tonumber(L, 4);
-    double oy = (double)lua_tonumber(L, 5);
-    double width = (double)lua_tonumber(L, 6);
-    double height = (double)lua_tonumber(L, 7);
-    double scale_x = (double)lua_tonumber(L, 8);
-    double scale_y = (double)lua_tonumber(L, 9);
-    double rotation = (double)lua_tonumber(L, 10);
+    float x = (float)lua_tonumber(L, 2);
+    float y = (float)lua_tonumber(L, 3);
+    float ox = (float)lua_tonumber(L, 4);
+    float oy = (float)lua_tonumber(L, 5);
+    float width = (float)lua_tonumber(L, 6);
+    float height = (float)lua_tonumber(L, 7);
+    float scale_x = (float)lua_tonumber(L, 8);
+    float scale_y = (float)lua_tonumber(L, 9);
+    float rotation = (float)lua_tonumber(L, 10);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Surface.blit() -> %.f, %.f, %.f, %.f, %.f, %.f, %.f, %.f, %.f", x, y, ox, oy, width, height, scale_x, scale_y, rotation);
 #endif
@@ -557,8 +557,8 @@ static int surface_xform3(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
-    double x = (double)lua_tonumber(L, 2);
-    double y = (double)lua_tonumber(L, 3);
+    float x = (float)lua_tonumber(L, 2);
+    float y = (float)lua_tonumber(L, 3);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Surface.xform() -> %.f, %.f", x, y);
 #endif
@@ -588,8 +588,8 @@ static int surface_offset(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
-    double h = (double)lua_tonumber(L, 2);
-    double v = (double)lua_tonumber(L, 3);
+    float h = (float)lua_tonumber(L, 2);
+    float v = (float)lua_tonumber(L, 3);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Surface.offset() -> %.f, %.f", h, v);
 #endif
@@ -608,8 +608,8 @@ static int surface_matrix3(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
-    double x0 = (double)lua_tonumber(L, 2);
-    double y0 = (double)lua_tonumber(L, 3);
+    float x0 = (float)lua_tonumber(L, 2);
+    float y0 = (float)lua_tonumber(L, 3);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Surface.matrix() -> %.f, %.f", x0, y0);
 #endif
@@ -630,10 +630,10 @@ static int surface_matrix5(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
-    double a = (double)lua_tonumber(L, 2);
-    double b = (double)lua_tonumber(L, 3);
-    double c = (double)lua_tonumber(L, 4);
-    double d = (double)lua_tonumber(L, 5);
+    float a = (float)lua_tonumber(L, 2);
+    float b = (float)lua_tonumber(L, 3);
+    float c = (float)lua_tonumber(L, 4);
+    float d = (float)lua_tonumber(L, 5);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Surface.matrix() -> %.f, %.f, %.f, %.f", a, b, c, d);
 #endif
@@ -658,12 +658,12 @@ static int surface_matrix7(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
-    double a = (double)lua_tonumber(L, 2);
-    double b = (double)lua_tonumber(L, 3);
-    double c = (double)lua_tonumber(L, 4);
-    double d = (double)lua_tonumber(L, 5);
-    double x0 = (double)lua_tonumber(L, 6);
-    double y0 = (double)lua_tonumber(L, 7);
+    float a = (float)lua_tonumber(L, 2);
+    float b = (float)lua_tonumber(L, 3);
+    float c = (float)lua_tonumber(L, 4);
+    float d = (float)lua_tonumber(L, 5);
+    float x0 = (float)lua_tonumber(L, 6);
+    float y0 = (float)lua_tonumber(L, 7);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Surface.matrix() -> %.f, %.f, %.f, %.f, %.f, %.f", a, b, c, d, x0, y0);
 #endif
@@ -763,7 +763,7 @@ static int surface_table2(lua_State *L)
                 break;
             }
             table[i].count = j + 1;
-            table[i].operations[j].id = lua_isstring(L, -2) ? string_to_register(lua_tostring(L, -2)) : lua_tointeger(L, -2);
+            table[i].operations[j].id = lua_isstring(L, -2) ? string_to_register(lua_tostring(L, -2)) : (GL_XForm_Registers_t)lua_tointeger(L, -2);
             table[i].operations[j].value = (float)lua_tonumber(L, -1);
             lua_pop(L, 1);
         }

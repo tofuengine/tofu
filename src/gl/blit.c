@@ -117,8 +117,8 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
 
-    const int drawing_width = (int)((float)(area.width * fabs(scale_x)) + 0.5f);
-    const int drawing_height = (int)((float)(area.height * fabs(scale_y)) + 0.5f);
+    const int drawing_width = (int)((float)(area.width * fabsf(scale_x)) + 0.5f);
+    const int drawing_height = (int)((float)(area.height * fabsf(scale_y)) + 0.5f);
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,

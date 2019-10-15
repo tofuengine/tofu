@@ -150,8 +150,8 @@ static int font_write5(lua_State *L)
     LUAX_SIGNATURE_END
     Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
     const char *text = lua_tostring(L, 2);
-    double x = (double)lua_tonumber(L, 3);
-    double y = (double)lua_tonumber(L, 4);
+    float x = (float)lua_tonumber(L, 3);
+    float y = (float)lua_tonumber(L, 4);
     const char *alignment = lua_tostring(L, 5);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %s, %d, %d, %s", text, x, y, alignment);
@@ -162,9 +162,9 @@ static int font_write5(lua_State *L)
     const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
 
-    double dw = sheet->size.width;
+    float dw = sheet->size.width;
 #ifndef __NO_LINEFEEDS__
-    double dh = sheet->tile.height;
+    float dh = sheet->tile.height;
 #endif
 
 #ifndef __NO_LINEFEEDS__
@@ -238,9 +238,9 @@ static int font_write6(lua_State *L)
     LUAX_SIGNATURE_END
     Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
     const char *text = lua_tostring(L, 2);
-    double x = (double)lua_tonumber(L, 3);
-    double y = (double)lua_tonumber(L, 4);
-    double scale = (double)lua_tonumber(L, 5);
+    float x = (float)lua_tonumber(L, 3);
+    float y = (float)lua_tonumber(L, 4);
+    float scale = (float)lua_tonumber(L, 5);
     const char *alignment = lua_tostring(L, 6);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %s, %f, %f, %f, %s", text, x, y, scale, alignment);
@@ -251,9 +251,9 @@ static int font_write6(lua_State *L)
     const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
 
-    double dw = sheet->size.width * fabs(scale);
+    float dw = sheet->size.width * fabsf(scale);
 #ifndef __NO_LINEFEEDS__
-    double dh = sheet->tile.height * fabs(scale);
+    float dh = sheet->tile.height * fabsf(scale);
 #endif
 
 #ifndef __NO_LINEFEEDS__
@@ -328,10 +328,10 @@ static int font_write7(lua_State *L)
     LUAX_SIGNATURE_END
     Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
     const char *text = lua_tostring(L, 2);
-    double x = (double)lua_tonumber(L, 3);
-    double y = (double)lua_tonumber(L, 4);
-    double scale_x = (double)lua_tonumber(L, 5);
-    double scale_y = (double)lua_tonumber(L, 6);
+    float x = (float)lua_tonumber(L, 3);
+    float y = (float)lua_tonumber(L, 4);
+    float scale_x = (float)lua_tonumber(L, 5);
+    float scale_y = (float)lua_tonumber(L, 6);
     const char *alignment = lua_tostring(L, 7);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %s, %f, %f, %f, %f, %s", text, x, y, scale_x, scale_y, alignment);
@@ -342,9 +342,9 @@ static int font_write7(lua_State *L)
     const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
 
-    double dw = sheet->size.width * fabs(scale_x);
+    float dw = sheet->size.width * fabsf(scale_x);
 #ifndef __NO_LINEFEEDS__
-    double dh = sheet->tile.height * fabs(scale_y);
+    float dh = sheet->tile.height * fabsf(scale_y);
 #endif
 
 #ifndef __NO_LINEFEEDS__

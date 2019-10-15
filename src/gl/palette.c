@@ -33,7 +33,7 @@
 void GL_palette_greyscale(GL_Palette_t *palette, const size_t count)
 {
     for (size_t i = 0; i < count; ++i) {
-        unsigned char v = (unsigned char)(((double)i / (double)(count - 1)) * 255.0);
+        unsigned char v = (unsigned char)(((float)i / (float)(count - 1)) * 255.0f);
         palette->colors[i] = (GL_Color_t){ v, v, v, 255 };
     }
     palette->count = count;
@@ -71,19 +71,19 @@ void GL_palette_format_color(char *argb, const GL_Color_t color)
 GL_Pixel_t GL_palette_find_nearest_color(const GL_Palette_t *palette, const GL_Color_t color)
 {
     GL_Pixel_t index = 0;
-    double minimum = __DBL_MAX__;
+    float minimum = __FLT_MAX__;
     for (size_t i = 0; i < palette->count; ++i) {
         const GL_Color_t *current = &palette->colors[i];
 
-        double delta_r = (double)(color.r - current->r);
-        double delta_g = (double)(color.g - current->g);
-        double delta_b = (double)(color.b - current->b);
+        float delta_r = (float)(color.r - current->r);
+        float delta_g = (float)(color.g - current->g);
+        float delta_b = (float)(color.b - current->b);
 #ifdef __FIND_NEAREST_COLOR_EUCLIDIAN__
-        double distance = sqrt((delta_r * delta_r) * RED_WEIGHT
+        float distance = sqrtf((delta_r * delta_r) * RED_WEIGHT
             + (delta_g * delta_g) * GREEN_WEIGHT
             + (delta_b * delta_b)) * BLUE_WEIGHT;
 #else
-        double distance = (delta_r * delta_r) * RED_WEIGHT
+        float distance = (delta_r * delta_r) * RED_WEIGHT
             + (delta_g * delta_g) * GREEN_WEIGHT
             + (delta_b * delta_b) * BLUE_WEIGHT; // Faster, no need to get the Euclidean distance.
 #endif
