@@ -433,7 +433,7 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
             c = xform_state.c; d = xform_state.d; x0 = xform_state.x; y0 = xform_state.y;
             ++table;
 #ifdef __DETACH_XFORM_TABLE__
-            if (table->y == -1) { // End-of-data reached, detach pointer for faster loop.
+            if (table->scan_line == -1) { // End-of-data reached, detach pointer for faster loop.
                 table = NULL;
             }
 #endif

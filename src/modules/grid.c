@@ -33,16 +33,16 @@
 #endif
 
 #ifdef __GRID_INTEGER_CELL__
-typedef long Cell_t;
+typedef int Cell_t;
 #else
-typedef double Cell_t;
+typedef float Cell_t;
 #endif
 
 typedef struct _Grid_Class_t {
-    int width;
-    int height;
+    size_t width, height;
     Cell_t *data;
-    Cell_t **offsets; // Precomputed pointers to the line of data.
+    Cell_t **data_rows; // Precomputed pointers to the line of data.
+    size_t data_size;
 } Grid_Class_t;
 
 static int grid_new(lua_State *L);
@@ -87,25 +87,26 @@ static int grid_new(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
         LUAX_SIGNATURE_ARGUMENT(luaX_istable, luaX_isnumber)
     LUAX_SIGNATURE_END
-    int width = lua_tointeger(L, 1);
-    int height = lua_tointeger(L, 2);
+    size_t width = (size_t)lua_tointeger(L, 1);
+    size_t height = (size_t)lua_tointeger(L, 2);
     int type = lua_type(L, 3);
 
     Grid_Class_t *instance = (Grid_Class_t *)lua_newuserdata(L, sizeof(Grid_Class_t));
 
-    Cell_t *data = malloc((width * height) * sizeof(Cell_t));
-    Cell_t **offsets = malloc(height * sizeof(Cell_t *));
+    size_t data_size = width * height;
+    Cell_t *data = malloc(data_size * sizeof(Cell_t));
+    Cell_t **data_rows = malloc(height * sizeof(Cell_t *));
 
-    if (!data || !offsets) {
+    if (!data || !data_rows) {
         return luaL_error(L, "<GRID> can't allocate memory");
     }
 
-    for (int i = 0; i < height; ++i) { // Precompute the pointers to the data rows for faster access (old-school! :D).
-        offsets[i] = data + (i * width);
+    for (size_t i = 0; i < height; ++i) { // Precompute the pointers to the data rows for faster access (old-school! :D).
+        data_rows[i] = data + (i * width);
     }
 
     Cell_t *ptr = data;
-    Cell_t *eod = ptr + (width * height);
+    Cell_t *eod = ptr + data_size;
 
     if (type == LUA_TTABLE) {
         lua_pushnil(L); // first key
@@ -134,7 +135,8 @@ static int grid_new(lua_State *L)
             .width = width,
             .height = height,
             .data = data,
-            .offsets = offsets
+            .data_rows = data_rows,
+            .data_size = data_size
         };
 
     Log_write(LOG_LEVELS_DEBUG, "<GRID> grid #%p allocated", instance);
@@ -154,7 +156,7 @@ static int grid_gc(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "<GRID> finalizing grid #%p", instance);
 
     free(instance->data);
-    free(instance->offsets);
+    free(instance->data_rows);
 
     return 0;
 }
@@ -192,12 +194,8 @@ static int grid_fill(lua_State *L)
     Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
     int type = lua_type(L, 2);
 
-    int width = instance->width;
-    int height = instance->height;
-    Cell_t *data = instance->data;
-
-    Cell_t *ptr = data;
-    Cell_t *eod = ptr + (width * height);
+    Cell_t *ptr = instance->data;
+    Cell_t *eod = ptr + instance->data_size;
 
     if (type == LUA_TTABLE) {
         lua_pushnil(L); // first key
@@ -235,17 +233,13 @@ static int grid_stride(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
     LUAX_SIGNATURE_END
     Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
-    int column = lua_tointeger(L, 2);
-    int row = lua_tointeger(L, 3);
+    size_t column = (size_t)lua_tointeger(L, 2);
+    size_t row = (size_t)lua_tointeger(L, 3);
     int type = lua_type(L, 4);
-    int amount = lua_tointeger(L, 5);
+    size_t amount = (size_t)lua_tointeger(L, 5);
 
-    int width = instance->width;
-    int height = instance->height;
-    Cell_t *data = instance->offsets[row];
-
-    Cell_t *ptr = data + column;
-    Cell_t *eod = ptr + ((width * height < amount) ? (width * height) : amount);
+    Cell_t *ptr = instance->data_rows[row] + column;
+    Cell_t *eod = ptr + (instance->data_size < amount ? instance->data_size : amount);
 
     if (type == LUA_TTABLE) {
         lua_pushnil(L); // first key
@@ -265,7 +259,7 @@ static int grid_stride(lua_State *L)
     if (type == LUA_TNUMBER) {
         Cell_t value = (Cell_t)lua_tonumber(L, 4);
 
-        for (int i = 0; (ptr < eod) && (i < amount); ++i) {
+        for (size_t i = 0; (ptr < eod) && (i < amount); ++i) {
             *(ptr++) = value;
         }
     }
@@ -281,10 +275,10 @@ static int grid_peek(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
     LUAX_SIGNATURE_END
     Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
-    int column = lua_tointeger(L, 2);
-    int row = lua_tointeger(L, 3);
+    size_t column = (size_t)lua_tointeger(L, 2);
+    size_t row = (size_t)lua_tointeger(L, 3);
 
-    Cell_t *data = instance->offsets[row];
+    Cell_t *data = instance->data_rows[row];
 
     Cell_t value = data[column];
 
@@ -302,11 +296,11 @@ static int grid_poke(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
     LUAX_SIGNATURE_END
     Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
-    int column = lua_tointeger(L, 2);
-    int row = lua_tointeger(L, 3);
+    size_t column = (size_t)lua_tointeger(L, 2);
+    size_t row = (size_t)lua_tointeger(L, 3);
     Cell_t value = (Cell_t)lua_tonumber(L, 4);
 
-    Cell_t *data = instance->offsets[row];
+    Cell_t *data = instance->data_rows[row];
 
     data[column] = value;
 
