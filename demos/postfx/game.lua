@@ -27,7 +27,7 @@ end
 function Game:input()
   if Input.is_key_pressed(Input.START) then
     local Sprite = require("lib.sprite") -- Lazily require the module only in this scope.
-    for i = 1, LITTER_SIZE do
+    for _ = 1, LITTER_SIZE do
       table.insert(self.sprites, Sprite.new(self.bank, #self.sprites))
     end
   elseif Input.is_key_pressed(Input.LEFT) then
@@ -52,7 +52,7 @@ function Game:update(delta_time)
   end
 end
 
-function Game:render(ratio)
+function Game:render(_)
   Canvas.clear()
   for _, sprite in pairs(self.sprites) do
     sprite:render()
