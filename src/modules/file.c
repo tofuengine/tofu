@@ -29,6 +29,9 @@
 #include "../log.h"
 
 #include <string.h>
+#ifdef DEBUG
+  #include <stb/stb_leakcheck.h>
+#endif
 
 typedef struct _File_Class_t {
 } File_Class_t;
