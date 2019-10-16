@@ -24,6 +24,9 @@
 
 #include <stdlib.h>
 #include <string.h>
+#ifdef DEBUG
+  #include <stb/stb_leakcheck.h>
+#endif
 
 typedef int (*luaX_TFunction)(lua_State *, int);
 
@@ -97,8 +100,9 @@ void luaX_appendpath(lua_State *L, const char *path)
     lua_getfield(L, -1, "path"); // get field "path" from table at top of stack (-1)
 
     const char *current = lua_tostring(L, -1); // grab path string from top of stack
-    char *fullpath = calloc(strlen(current) + 1 + strlen(path) + 5 + 1, sizeof(char));
-    strcat(fullpath, current);
+    size_t length = strlen(current) + 1 + strlen(path) + 5; // <current>;<path>?.lua
+    char *fullpath = malloc((length + 1) * sizeof(char));
+    strcpy(fullpath, current);
     strcat(fullpath, ";");
     strcat(fullpath, path);
     strcat(fullpath, "?.lua");
