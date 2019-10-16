@@ -133,7 +133,7 @@ void Engine_run(Engine_t *engine)
 
         if (engine->configuration.debug) {
             bool ready = update_statistics(&statistics, elapsed);
-            engine->environment.fps = ready ? statistics.fps : 0.0;
+            engine->environment.fps = ready ? statistics.fps : 0.0f;
 #ifdef __DEBUG_ENGINE_FPS__
             static size_t count = 0;
             if (++count == 250) {
