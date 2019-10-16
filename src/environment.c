@@ -31,8 +31,8 @@ void Environment_initialize(Environment_t *environment, const char *base_path)
     memset(environment, 0x00, sizeof(Environment_t));
 
     environment->quit = false;
-    environment->fps = 0.0;
-    environment->time = 0.0;
+    environment->fps = 0.0f;
+    environment->time = 0.0f;
 
     strcpy(environment->base_path, base_path);
 }

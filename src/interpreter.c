@@ -235,7 +235,7 @@ static bool timerpool_callback(Timer_t *timer, void *parameters)
 bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configuration, const Environment_t *environment, const Display_t *display)
 {
     interpreter->environment = environment;
-    interpreter->gc_age = 0.0;
+    interpreter->gc_age = 0.0f;
     interpreter->state = luaL_newstate();
     if (!interpreter->state) {
         Log_write(LOG_LEVELS_FATAL, "<VM> can't initialize interpreter");
@@ -317,7 +317,7 @@ bool Interpreter_input(Interpreter_t *interpreter)
     return call(interpreter->state, METHOD_INPUT, 0, 0) == LUA_OK;
 }
 
-bool Interpreter_update(Interpreter_t *interpreter, const double delta_time)
+bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
 {
     if (!TimerPool_update(&interpreter->timer_pool, delta_time)) {
         return false;
@@ -334,12 +334,12 @@ bool Interpreter_update(Interpreter_t *interpreter, const double delta_time)
 
 #ifdef __DEBUG_GARBAGE_COLLECTOR__
         Log_write(LOG_LEVELS_DEBUG, "<VM> performing periodical garbage collection");
-        double start_time = (double)clock() / CLOCKS_PER_SEC;
+        float start_time = (float)clock() / CLOCKS_PER_SEC;
 #endif
         lua_gc(interpreter->state, LUA_GCCOLLECT, 0);
         TimerPool_gc(&interpreter->timer_pool);
 #ifdef __DEBUG_GARBAGE_COLLECTOR__
-        double elapsed = ((double)clock() / CLOCKS_PER_SEC) - start_time;
+        float elapsed = ((float)clock() / CLOCKS_PER_SEC) - start_time;
         Log_write(LOG_LEVELS_DEBUG, "<VM> garbage collection took %.3fs", elapsed);
 #endif
     }
@@ -347,7 +347,7 @@ bool Interpreter_update(Interpreter_t *interpreter, const double delta_time)
     return true;
 }
 
-bool Interpreter_render(Interpreter_t *interpreter, const double ratio)
+bool Interpreter_render(Interpreter_t *interpreter, float ratio)
 {
     lua_pushnumber(interpreter->state, ratio);
     return call(interpreter->state, METHOD_RENDER, 1, 0) == LUA_OK;

@@ -10,7 +10,7 @@ AFLAGS=--no-self --std lua53 -q
 COMPILER=cc
 CWARNINGS=-Wall -Wextra -Werror -Wno-unused-parameter
 CFLAGS=-Og -g -DDEBUG -D_DEFAULT_SOURCE -DLUA_32BITS -DLUA_USE_LINUX -std=c99 -Iexternal
-#CFLAGS=-O3 -g -DRELEASE -D_DEFAULT_SOURCE -DLUA_32BITS -DLUA_USE_LINUX -std=c99 -Iexternal
+#CFLAGS=-O3 -DRELEASE -D_DEFAULT_SOURCE -DLUA_32BITS -DLUA_USE_LINUX -std=c99 -Iexternal
 # -Ofast => -O3 -ffast-math
 # -Os => -O2, favouring size
 

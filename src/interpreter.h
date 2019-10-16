@@ -35,7 +35,7 @@
 typedef struct _Interpreter_t {
     const Environment_t *environment;
 
-    double gc_age;
+    float gc_age;
 
     lua_State *state; // TODO: rename to `L`?
 
@@ -46,8 +46,8 @@ extern bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *
 extern void Interpreter_terminate(Interpreter_t *interpreter);
 extern bool Interpreter_init(Interpreter_t *interpreter);
 extern bool Interpreter_input(Interpreter_t *interpreter);
-extern bool Interpreter_update(Interpreter_t *interpreter, const double delta_time);
-extern bool Interpreter_render(Interpreter_t *interpreter, const double ratio);
+extern bool Interpreter_update(Interpreter_t *interpreter, float delta_time);
+extern bool Interpreter_render(Interpreter_t *interpreter, float ratio);
 extern bool Interpreter_call(Interpreter_t *interpreter, int nargs, int nresults);
 
 #endif  /* __INTERPRETER_H__ */

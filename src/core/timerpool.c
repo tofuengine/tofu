@@ -31,7 +31,7 @@
   #include <stb/stb_leakcheck.h>
 #endif
 
-static Timer_t *push(Timer_Pool_t *pool, double period, size_t repeats, void *bundle)
+static Timer_t *push(Timer_Pool_t *pool, float period, size_t repeats, void *bundle)
 {
     Timer_t *timer = malloc(sizeof(Timer_t));
     *timer = (Timer_t){
@@ -97,7 +97,7 @@ void TimerPool_terminate(Timer_Pool_t *pool)
     memset(pool, 0, sizeof(Timer_Pool_t));
 }
 
-Timer_t *TimerPool_allocate(Timer_Pool_t *pool, double period, size_t repeats, void *bundle)
+Timer_t *TimerPool_allocate(Timer_Pool_t *pool, float period, size_t repeats, void *bundle)
 {
     return push(pool, period, repeats, bundle);
 }
@@ -114,7 +114,7 @@ void TimerPool_gc(Timer_Pool_t *pool)
     }
 }
 
-bool TimerPool_update(Timer_Pool_t *pool, double delta_time)
+bool TimerPool_update(Timer_Pool_t *pool, float delta_time)
 {
     for (Timer_t *timer = pool->timers; timer != NULL; timer = timer->next) {
         if (timer->state != TIMER_STATE_RUNNING) {
@@ -154,7 +154,7 @@ void TimerPool_release(Timer_t *timer)
 void TimerPool_reset(Timer_t *timer)
 {
     if (timer->state != TIMER_STATE_FINALIZED) {
-        timer->age = 0.0;
+        timer->age = 0.0f;
         timer->loops = timer->repeats;
         timer->state = TIMER_STATE_RUNNING;
 

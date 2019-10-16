@@ -30,7 +30,7 @@
 #include "../log.h"
 
 typedef struct _Timer_Class_t {
-    int callback;
+    luaX_Reference callback;
     Timer_t *timer;
 } Timer_Class_t;
 
@@ -67,9 +67,9 @@ static int timer_new(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
         LUAX_SIGNATURE_ARGUMENT(luaX_isfunction)
     LUAX_SIGNATURE_END
-    double period = lua_tonumber(L, 1);
+    float period = (float)lua_tonumber(L, 1);
     int repeats = lua_tointeger(L, 2);
-    int callback = luaX_tofunction(L, 3);
+    luaX_Reference callback = luaX_tofunction(L, 3);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Timer.new() -> %f, %d, %d", period, repeats, callback);
 #endif
