@@ -88,6 +88,10 @@ mode7: $(TARGET)
 	@$(ANALYZER) $(AFLAGS) ./demos/mode7
 	@./$(TARGET) ./demos/mode7
 
+valgrind: $(TARGET)
+	@echo "Valgrind Palette application!"
+	@valgrind --leak-check=full env LIBGL_ALWAYS_SOFTWARE=1 ./$(TARGET) ./demos/palette
+
 .PHONY: clean
 clean:
 	@$(RM) $(OBJECTS)
