@@ -23,6 +23,8 @@
 #ifndef __FS_H__
 #define __FS_H__
 
+#include <stdbool.h>
+#include <stddef.h>
 #include <limits.h>
 
 #include "platform.h"
@@ -57,10 +59,9 @@ typedef struct _File_System_t {
 extern void FS_initialize(File_System_t *fs, const char *base_path);
 extern void FS_terminate(File_System_t *fs);
 
-extern char *FS_path(const File_System_t *fs, const char *file);
 extern char *FS_load_as_string(const File_System_t *fs, const char *file);
 //extern bool FS_write_as_string(const File_System_t *fs, const char *file, const char *string);
-//extern void *FS_load_as_binary(const File_System_t *fs, const char *file, size_t *size);
+extern void *FS_load_as_binary(const File_System_t *fs, const char *file, size_t *size);
 //extern bool FS_write_as_binary(const File_System_t *fs, const char *file, const char *data, size_t size);
 
 #endif /* __FS_H__ */

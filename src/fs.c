@@ -31,6 +31,39 @@
   #include <stb/stb_leakcheck.h>
 #endif
 
+typedef enum _File_System_Modes_t {
+    FILE_SYSTEM_MODE_BINARY,
+    FILE_SYSTEM_MODE_TEXT,
+    File_System_Modes_t_CountOf
+} File_System_Modes_t;
+
+static void *load(const File_System_t *fs, const char *file, File_System_Modes_t mode, size_t *size)
+{
+    char full_path[PATH_FILE_MAX] = {};
+    strcpy(full_path, fs->base_path);
+    strcat(full_path, file);
+
+    FILE *stream = fopen(full_path, mode == FILE_SYSTEM_MODE_BINARY ? "rb" :"rt");
+    if (!stream) {
+        return NULL;
+    }
+    fseek(stream, 0L, SEEK_END);
+    const size_t length = ftell(stream);
+    void *data = malloc((length + (mode == FILE_SYSTEM_MODE_TEXT ? 1 : 0)) * sizeof(char)); // Add null terminator for the string.
+    rewind(stream);
+    size_t read_bytes = fread(data, sizeof(char), length, stream);
+    fclose(stream);
+    if (read_bytes < length) {
+        free(data);
+        return NULL;
+    }
+    if (mode == FILE_SYSTEM_MODE_TEXT) {
+        ((char *)data)[length] = '\0';
+    }
+    *size = read_bytes;
+    return data;
+}
+
 // TODO: implement a generic resource-loader, for later use with bundled applications.
 void FS_initialize(File_System_t *fs, const char *base_path)
 {
@@ -58,35 +91,13 @@ void FS_terminate(File_System_t *fs)
     *fs = (File_System_t){};
 }
 
-char *FS_path(const File_System_t *fs, const char *file) // TODO: add binary read/write functions, instead.
+char *FS_load_as_string(const File_System_t *fs, const char *file)
 {
-    size_t length = strlen(fs->base_path) + strlen(file);
-    char *full_path = malloc((length + 1) * sizeof(char));
-    strcpy(full_path, fs->base_path);
-    strcat(full_path, file);
-    return full_path;
+    size_t size;
+    return load(fs, file, FILE_SYSTEM_MODE_TEXT, &size);
 }
 
-char *FS_load_as_string(const File_System_t *fs, const char *path)
+void *FS_load_as_binary(const File_System_t *fs, const char *file, size_t *size)
 {
-    char full_path[PATH_FILE_MAX] = {};
-    strcpy(full_path, fs->base_path);
-    strcat(full_path, path);
-
-    FILE *file = fopen(full_path, "rt");
-    if (!file) {
-        return NULL;
-    }
-    fseek(file, 0L, SEEK_END);
-    const size_t length = ftell(file);
-    char *data = malloc((length + 1) * sizeof(char)); // Add null terminator for the string.
-    rewind(file);
-    size_t read_bytes = fread(data, sizeof(char), length, file);
-    fclose(file);
-    if (read_bytes < length) {
-        free(data);
-        return NULL;
-    }
-    data[length] = '\0';
-    return data;
+    return load(fs, file, FILE_SYSTEM_MODE_BINARY, size);
 }

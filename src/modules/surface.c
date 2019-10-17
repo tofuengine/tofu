@@ -139,13 +139,15 @@ static int surface_new1(lua_State *L)
     Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    char *full_path = FS_path(&environment->fs, file);
-
+    size_t buffer_size;
+    void *buffer = FS_load_as_binary(&environment->fs, file, &buffer_size);
+    if (!buffer) {
+        return luaL_error(L, "<SURFACE> can't load file '%s'", file);
+    }
     GL_Surface_t surface;
-    GL_surface_load(&surface, full_path, to_indexed_atlas_callback, (void *)&display->palette);
-    Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface '%s' loaded", full_path);
-
-    free(full_path);
+    GL_surface_decode(&surface, buffer, buffer_size, to_indexed_atlas_callback, (void *)&display->palette);
+    Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface '%s' loaded", file);
+    free(buffer);
 
     Surface_Class_t *instance = (Surface_Class_t *)lua_newuserdata(L, sizeof(Surface_Class_t));
     *instance = (Surface_Class_t){

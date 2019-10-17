@@ -99,19 +99,21 @@ static int bank_new(lua_State *L)
     Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    char *full_path = FS_path(&environment->fs, file);
-
+    size_t buffer_size;
+    void *buffer = FS_load_as_binary(&environment->fs, file, &buffer_size);
+    if (!buffer) {
+        return luaL_error(L, "<BANK> can't load file '%s'", file);
+    }
     GL_Sheet_t sheet;
-    GL_sheet_load(&sheet, full_path, cell_width, cell_height, to_indexed_atlas_callback, (void *)&display->palette);
-    Log_write(LOG_LEVELS_DEBUG, "<BANK> sheet '%s' loaded", full_path);
+    GL_sheet_decode(&sheet, buffer, buffer_size, cell_width, cell_height, to_indexed_atlas_callback, (void *)&display->palette);
+    Log_write(LOG_LEVELS_DEBUG, "<BANK> sheet '%s' loaded", file);
+    free(buffer);
 
     Bank_Class_t *instance = (Bank_Class_t *)lua_newuserdata(L, sizeof(Bank_Class_t));
     *instance = (Bank_Class_t){
             .sheet = sheet
         };
-    Log_write(LOG_LEVELS_DEBUG, "<BANK> bank allocated as #%p", full_path, instance);
-
-    free(full_path);
+    Log_write(LOG_LEVELS_DEBUG, "<BANK> bank allocated as #%p", instance);
 
     luaL_setmetatable(L, LUAX_CLASS(Bank_Class_t));
 

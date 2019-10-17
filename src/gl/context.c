@@ -33,8 +33,6 @@
 #endif
 #define STB_DS_IMPLEMENTATION
 #include <stb/stb_ds.h>
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include <stb/stb_image_write.h>
 
 static inline void reset_state(GL_State_t *state, GL_Surface_t *surface)
 {
@@ -182,26 +180,6 @@ void GL_context_clear(const GL_Context_t *context)
     for (size_t i = state->surface->data_size; i; --i) {
         *(dst++) = color;
     }
-}
-
-void GL_context_screenshot(const GL_Context_t *context, const GL_Palette_t *palette, const char *full_path)
-{
-    const GL_State_t *state = &context->state;
-    const GL_Surface_t *surface = state->surface;
-
-    GL_Color_t *vram = malloc(surface->width * surface->height * sizeof(GL_Color_t));
-    if (!vram) {
-        Log_write(LOG_LEVELS_WARNING, "<GL> can't create buffer for screenshot");
-    }
-
-    GL_surface_to_rgba(surface, palette, vram);
-
-    int result = stbi_write_png(full_path, surface->width, surface->height, sizeof(GL_Color_t), vram, surface->width * sizeof(GL_Color_t));
-    if (!result) {
-        Log_write(LOG_LEVELS_WARNING, "<GL> can't save screenshot to '%s'", full_path);
-    }
-
-    free(vram);
 }
 
 void GL_context_to_surface(const GL_Context_t *context, const GL_Surface_t *to)
