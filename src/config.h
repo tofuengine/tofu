@@ -30,7 +30,7 @@
 
 #define GARBAGE_COLLECTION_PERIOD   60.0
 
-// Behavioural MACROs are uses the "__" prefix/suffix.
+// Behavioural MACROs use the `__` prefix/suffix.
 #define __GL_VERSION__                      0x0201
 #define __GSLS_VERSION__                    0x0114
 
@@ -51,7 +51,7 @@
 #undef  __DEBUG_ENGINE_FPS__
 #undef  __DEBUG_API_CALLS__
 #define __DEBUG_VM_CALLS__
-#define __DEBUG_GRAPHICS__
+#undef  __DEBUG_GRAPHICS__
 #undef  __DEBUG_SHADER_CALLS__
 #define __DEBUG_GARBAGE_COLLECTOR__
 #define __VM_USE_CUSTOM_TRACEBACK__

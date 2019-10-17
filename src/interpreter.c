@@ -235,7 +235,7 @@ static bool timerpool_callback(Timer_t *timer, void *parameters)
 bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configuration, const Environment_t *environment, const Display_t *display)
 {
     interpreter->environment = environment;
-    interpreter->gc_age = 0.0;
+    interpreter->gc_age = 0.0f;
     interpreter->state = luaL_newstate();
     if (!interpreter->state) {
         Log_write(LOG_LEVELS_FATAL, "<VM> can't initialize interpreter");
@@ -247,7 +247,8 @@ bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configu
 
     lua_pushlightuserdata(interpreter->state, (void *)environment); // Discard `const` qualifier.
     lua_pushlightuserdata(interpreter->state, (void *)display);
-    modules_initialize(interpreter->state, 2);
+    lua_pushlightuserdata(interpreter->state, (void *)interpreter);
+    modules_initialize(interpreter->state, 3);
 
 #if 0
     luaX_appendpath(interpreter->state, environment->base_path);
@@ -287,52 +288,6 @@ bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configu
     return true;
 }
 
-bool Interpreter_init(Interpreter_t *interpreter)
-{
-    return call(interpreter->state, METHOD_INIT, 0, 0) == LUA_OK;
-}
-
-bool Interpreter_input(Interpreter_t *interpreter)
-{
-    return call(interpreter->state, METHOD_INPUT, 0, 0) == LUA_OK;
-}
-
-bool Interpreter_update(Interpreter_t *interpreter, const double delta_time)
-{
-    if (!TimerPool_update(&interpreter->timer_pool, delta_time)) {
-        return false;
-    }
-
-    lua_pushnumber(interpreter->state, delta_time);
-    if (call(interpreter->state, METHOD_UPDATE, 1, 0) != LUA_OK) {
-        return false;
-    }
-
-    interpreter->gc_age += delta_time;
-    while (interpreter->gc_age >= GARBAGE_COLLECTION_PERIOD) { // Periodically collect GC.
-        interpreter->gc_age -= GARBAGE_COLLECTION_PERIOD;
-
-#ifdef __DEBUG_GARBAGE_COLLECTOR__
-        Log_write(LOG_LEVELS_DEBUG, "<VM> performing periodical garbage collection");
-        double start_time = (double)clock() / CLOCKS_PER_SEC;
-#endif
-        lua_gc(interpreter->state, LUA_GCCOLLECT, 0);
-        TimerPool_gc(&interpreter->timer_pool);
-#ifdef __DEBUG_GARBAGE_COLLECTOR__
-        double elapsed = ((double)clock() / CLOCKS_PER_SEC) - start_time;
-        Log_write(LOG_LEVELS_DEBUG, "<VM> garbage collection took %.3fs", elapsed);
-#endif
-    }
-
-    return true;
-}
-
-bool Interpreter_render(Interpreter_t *interpreter, const double ratio)
-{
-    lua_pushnumber(interpreter->state, ratio);
-    return call(interpreter->state, METHOD_RENDER, 1, 0) == LUA_OK;
-}
-
 void Interpreter_terminate(Interpreter_t *interpreter)
 {
 #ifdef SHUTDOWN_SCRIPT
@@ -350,4 +305,66 @@ void Interpreter_terminate(Interpreter_t *interpreter)
     lua_close(interpreter->state);
 
     TimerPool_terminate(&interpreter->timer_pool);
+}
+
+bool Interpreter_init(Interpreter_t *interpreter)
+{
+    return call(interpreter->state, METHOD_INIT, 0, 0) == LUA_OK;
+}
+
+bool Interpreter_input(Interpreter_t *interpreter)
+{
+    return call(interpreter->state, METHOD_INPUT, 0, 0) == LUA_OK;
+}
+
+bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
+{
+    if (!TimerPool_update(&interpreter->timer_pool, delta_time)) {
+        return false;
+    }
+
+    lua_pushnumber(interpreter->state, delta_time);
+    if (call(interpreter->state, METHOD_UPDATE, 1, 0) != LUA_OK) {
+        return false;
+    }
+
+    interpreter->gc_age += delta_time;
+    while (interpreter->gc_age >= GARBAGE_COLLECTION_PERIOD) { // Periodically collect GC.
+        interpreter->gc_age -= GARBAGE_COLLECTION_PERIOD;
+
+#ifdef __DEBUG_GARBAGE_COLLECTOR__
+        Log_write(LOG_LEVELS_DEBUG, "<VM> performing periodical garbage collection");
+        float start_time = (float)clock() / CLOCKS_PER_SEC;
+#endif
+        lua_gc(interpreter->state, LUA_GCCOLLECT, 0);
+        TimerPool_gc(&interpreter->timer_pool);
+#ifdef __DEBUG_GARBAGE_COLLECTOR__
+        float elapsed = ((float)clock() / CLOCKS_PER_SEC) - start_time;
+        Log_write(LOG_LEVELS_DEBUG, "<VM> garbage collection took %.3fs", elapsed);
+#endif
+    }
+
+    return true;
+}
+
+bool Interpreter_render(Interpreter_t *interpreter, float ratio)
+{
+    lua_pushnumber(interpreter->state, ratio);
+    return call(interpreter->state, METHOD_RENDER, 1, 0) == LUA_OK;
+}
+
+bool Interpreter_call(Interpreter_t *interpreter, int nargs, int nresults)
+{
+    lua_State *L = interpreter->state;
+#ifdef __DEBUG_VM_CALLS__
+    int called = lua_pcall(L, nargs, nresults, TRACEBACK_STACK_INDEX);
+    if (called != LUA_OK) {
+        Log_write(LOG_LEVELS_ERROR, "<VM> error in execute: %s", lua_tostring(L, -1));
+        lua_pop(L, 1);
+    }
+    return called == LUA_OK ? true : false;
+#else
+    lua_call(L, nargs, nresults);
+    return true;
+#endif
 }

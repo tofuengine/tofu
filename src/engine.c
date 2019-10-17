@@ -36,11 +36,11 @@
   #include <stb/stb_leakcheck.h>
 #endif
 
-static bool update_statistics(Engine_Statistics_t *statistics, double elapsed) {
-    static double history[FPS_AVERAGE_SAMPLES] = {};
+static bool update_statistics(Engine_Statistics_t *statistics, float elapsed) {
+    static float history[FPS_AVERAGE_SAMPLES] = {};
     static int index = 0;
     static int samples = 0;
-    static double sum = 0.0;
+    static float sum = 0.0f;
     static int count = 0;
 
     sum -= history[index];
@@ -51,7 +51,7 @@ static bool update_statistics(Engine_Statistics_t *statistics, double elapsed) {
         samples += 1;
         return false;
     }
-    double fps = (double)FPS_AVERAGE_SAMPLES / sum;
+    float fps = (float)FPS_AVERAGE_SAMPLES / sum;
     statistics->fps = fps;
     if (count == 0) {
         statistics->history[statistics->index] = fps;
@@ -115,7 +115,7 @@ void Engine_terminate(Engine_t *engine)
 
 void Engine_run(Engine_t *engine)
 {
-    const double delta_time = 1.0 / (double)engine->configuration.fps;
+    const float delta_time = 1.0f / (float)engine->configuration.fps;
     const int skippable_frames = engine->configuration.skippable_frames;
     Log_write(LOG_LEVELS_INFO, "<ENGINE> now running, delta-time is %.3fs w/ %d skippable frames", delta_time, skippable_frames);
 
@@ -123,17 +123,17 @@ void Engine_run(Engine_t *engine)
             .delta_time = delta_time,
         };
 
-    double previous = glfwGetTime();
-    double lag = 0.0;
+    float previous = (float)glfwGetTime();
+    float lag = 0.0f;
 
     for (bool running = true; running && !engine->environment.quit && !Display_should_close(&engine->display); ) {
-        double current = glfwGetTime();
-        double elapsed = current - previous; // TODO: use only doubles everywhere?
+        float current = (float)glfwGetTime();
+        float elapsed = current - previous;
         previous = current;
 
         if (engine->configuration.debug) {
             bool ready = update_statistics(&statistics, elapsed);
-            engine->environment.fps = ready ? statistics.fps : 0.0;
+            engine->environment.fps = ready ? statistics.fps : 0.0f;
 #ifdef __DEBUG_ENGINE_FPS__
             static size_t count = 0;
             if (++count == 250) {
@@ -149,7 +149,6 @@ void Engine_run(Engine_t *engine)
 
         lag += elapsed; // Count a maximum amount of skippable frames in order no to stall on slower machines.
         for (int frames = 0; (frames < skippable_frames) && (lag >= delta_time); ++frames) {
-            // TODO: To move `TimerPool_update()` here the interpreter should expose the "timerpool_update" callback.
             engine->environment.time += delta_time;
             running = running && Interpreter_update(&engine->interpreter, delta_time);
             lag -= delta_time;

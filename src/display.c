@@ -24,8 +24,8 @@
 
 #include "config.h"
 #include "engine.h"
-#include "hal.h"
 #include "log.h"
+#include "core/imath.h"
 
 #include <memory.h>
 #include <stdlib.h>
@@ -92,11 +92,6 @@ static const Program_Data_t _programs_data[Display_Programs_t_CountOf] = {
 
 static const int _texture_id_0[] = { 0 };
 
-static int min(int a, int b)
-{
-    return a < b ? a : b;
-}
-
 typedef enum _Uniforms_t {
     UNIFORM_TEXTURE,
     UNIFORM_RESOLUTION,
@@ -120,7 +115,7 @@ static bool compute_size(Display_t *display, const Display_Configuration_t *conf
     display->window_height = configuration->height;
     display->window_scale = 1;
 
-    int max_scale = min(display_width / configuration->width, display_height / configuration->height);
+    int max_scale = imin(display_width / configuration->width, display_height / configuration->height);
     int scale = configuration->scale != 0 ? configuration->scale : max_scale;
 
     if (max_scale == 0) {
@@ -254,12 +249,15 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     glfwSetKeyCallback(display->window, key_callback);
     glfwSetInputMode(display->window, GLFW_CURSOR, configuration->hide_cursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
 
-    if (!GL_context_initialize(&display->gl, configuration->width, configuration->height)) {
+    if (!GL_context_create(&display->gl, configuration->width, configuration->height)) {
         Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't initialize GL");
         glfwDestroyWindow(display->window);
         glfwTerminate();
         return false;
     }
+
+    GL_palette_greyscale(&display->palette, GL_MAX_PALETTE_COLORS);
+    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> calculating greyscale palette of #%d entries", GL_MAX_PALETTE_COLORS);
 
     GL_Point_t position = {};
     if (!compute_size(display, configuration, &position)) {
@@ -277,10 +275,18 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         glfwSetWindowMonitor(display->window, glfwGetPrimaryMonitor(), position.x, position.y, display->physical_width, display->physical_height, GLFW_DONT_CARE);
     }
 
+    display->vram = malloc(display->configuration.width * display->configuration.width * sizeof(GL_Color_t));
+    if (!display->vram) {
+        Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't allocate VRAM buffer");
+        glfwDestroyWindow(display->window);
+        glfwTerminate();
+    }
+    Log_write(LOG_LEVELS_DEBUG, "<GL> VRAM allocated at #%p (%dx%d)", display->vram, display->configuration.width, display->configuration.height);
+
     glGenTextures(1, &display->vram_texture); //allocate the memory for texture
     if (display->vram_texture == 0) {
         Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't allocate VRAM texture");
-        GL_context_terminate(&display->gl);
+        GL_context_delete(&display->gl);
         glfwDestroyWindow(display->window);
         glfwTerminate();
         return false;
@@ -306,7 +312,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
             !GL_program_attach(&display->programs[i], data->fragment_shader, GL_PROGRAM_SHADER_FRAGMENT)) {
             Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't initialize shaders");
             glDeleteBuffers(1, &display->vram_texture);
-            GL_context_terminate(&display->gl);
+            GL_context_delete(&display->gl);
             glfwDestroyWindow(display->window);
             glfwTerminate();
             return false;
@@ -335,13 +341,22 @@ void Display_terminate(Display_t *display)
     glDeleteBuffers(1, &display->vram_texture);
     Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> texture w/ id #%d deleted", display->vram_texture);
 
-    GL_context_terminate(&display->gl);
+    free(display->vram);
+    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> VRAM buffer #%p deallocated", display->vram);
+
+    GL_context_delete(&display->gl);
 
     glfwDestroyWindow(display->window);
     Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> windows #%p destroyed", display->window);
 
     glfwTerminate();
     Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> terminated");
+}
+
+void Display_palette(Display_t *display, const GL_Palette_t *palette)
+{
+    display->palette = *palette;
+    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> palette updated");
 }
 
 void Display_shader(Display_t *display, const char *effect)
@@ -355,9 +370,8 @@ void Display_shader(Display_t *display, const char *effect)
 
     const size_t length = strlen(FRAGMENT_SHADER_CUSTOM) + strlen(effect);
     char *code = malloc((length + 1) * sizeof(char)); // Add null terminator for the string.
-    memcpy(code, FRAGMENT_SHADER_CUSTOM, strlen(FRAGMENT_SHADER_CUSTOM));
-    memcpy(code + strlen(FRAGMENT_SHADER_CUSTOM), effect, strlen(effect));
-    code[length] = '\0';
+    strcpy(code, FRAGMENT_SHADER_CUSTOM);
+    strcat(code, effect);
 
     GL_Program_t *program = &display->programs[DISPLAY_PROGRAM_CUSTOM];
 
@@ -424,10 +438,13 @@ void Display_present(Display_t *display)
     GL_program_send(&display->programs[display->program_index], UNIFORM_TIME, GL_PROGRAM_UNIFORM_FLOAT, 1, time);
     GL_program_use(&display->programs[display->program_index]);
 
-//    glClearColor(0.0f, 0.0f, 0.0, 1.0f); // Required, to clear previous content.
-//    glClear(GL_COLOR_BUFFER_BIT);
+    GL_surface_to_rgba(&display->gl.buffer, &display->palette, display->vram);
 
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, display->gl.width, display->gl.height, GL_RGBA, GL_UNSIGNED_BYTE, display->gl.vram);
+#ifdef __GL_BGRA_PALETTE__
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, display->gl.buffer.width, display->gl.buffer.height, GL_BGRA, GL_UNSIGNED_BYTE, display->vram);
+#else
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, display->gl.buffer.width, display->gl.buffer.height, GL_RGBA, GL_UNSIGNED_BYTE, display->vram);
+#endif
 
     glBegin(GL_TRIANGLE_STRIP);
 //        glColor4ub(255, 255, 255, 255);

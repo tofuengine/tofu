@@ -27,6 +27,8 @@
 
 #include "common.h"
 
+// TODO: move program.h out from GL to Display.
+
 typedef struct _GL_Program_t {
     GLuint id;
     GLuint *locations;

@@ -60,8 +60,9 @@ static const luaX_Const _bank_constants[] = {
 
 int bank_loader(lua_State *L)
 {
+    luaX_Script script = { (const char *)_bank_lua, _bank_lua_len, "bank.lua" };
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, NULL, _bank_functions, _bank_constants, nup, LUAX_CLASS(Bank_Class_t));
+    return luaX_newmodule(L, &script, _bank_functions, _bank_constants, nup, LUAX_CLASS(Bank_Class_t));
 }
 
 static void to_indexed_atlas_callback(void *parameters, GL_Surface_t *surface, const void *data)
@@ -71,15 +72,9 @@ static void to_indexed_atlas_callback(void *parameters, GL_Surface_t *surface, c
     const GL_Color_t *src = (const GL_Color_t *)data;
     GL_Pixel_t *dst = (GL_Pixel_t *)surface->data;
 
-    for (size_t y = 0; y < surface->height; ++y) {
-        int row_offset = surface->width * y;
-
-        for (size_t x = 0; x < surface->width; ++x) {
-            size_t offset = row_offset + x;
-
-            GL_Color_t color = src[offset];
-            dst[offset] = GL_palette_find_nearest_color(palette, color);
-        }
+    for (size_t i = surface->data_size; i; --i) {
+        GL_Color_t color = *(src++);
+        *(dst++) = GL_palette_find_nearest_color(palette, color);
     }
 }
 
@@ -91,8 +86,8 @@ static int bank_new(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
     LUAX_SIGNATURE_END
     const char *file = lua_tostring(L, 1);
-    int cell_width = lua_tointeger(L, 2);
-    int cell_height = lua_tointeger(L, 3);
+    size_t cell_width = (size_t)lua_tointeger(L, 2);
+    size_t cell_height = (size_t)lua_tointeger(L, 3);
 
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Bank.new() -> %s, %d, %d", file, cell_width, cell_height);
@@ -106,7 +101,7 @@ static int bank_new(lua_State *L)
     strcat(pathfile, file);
 
     GL_Sheet_t sheet;
-    GL_sheet_load(&sheet, pathfile, cell_width, cell_height, to_indexed_atlas_callback, (void *)&display->gl.palette);
+    GL_sheet_load(&sheet, pathfile, cell_width, cell_height, to_indexed_atlas_callback, (void *)&display->palette);
     Log_write(LOG_LEVELS_DEBUG, "<BANK> sheet '%s' loaded", pathfile);
 
     Bank_Class_t *instance = (Bank_Class_t *)lua_newuserdata(L, sizeof(Bank_Class_t));
@@ -169,19 +164,17 @@ static int bank_blit4(lua_State *L)
     LUAX_SIGNATURE_END
     Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
     int cell_id = lua_tointeger(L, 2);
-    double x = (double)lua_tonumber(L, 3);
-    double y = (double)lua_tonumber(L, 4);
+    float x = (float)lua_tonumber(L, 3);
+    float y = (float)lua_tonumber(L, 4);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f", cell_id, x, y);
 #endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    GL_Point_t destination = (GL_Point_t){ .x = (int)x, .y = (int)y };
-
     const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
-    GL_sheet_blit(context, sheet, cell_id, destination);
+    GL_context_blit(context, &sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = (int)x, .y = (int)y });
 
     return 0;
 }
@@ -197,20 +190,18 @@ static int bank_blit5(lua_State *L)
     LUAX_SIGNATURE_END
     Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
     int cell_id = lua_tointeger(L, 2);
-    double x = (double)lua_tonumber(L, 3);
-    double y = (double)lua_tonumber(L, 4);
-    double rotation = (double)lua_tonumber(L, 5);
+    float x = (float)lua_tonumber(L, 3);
+    float y = (float)lua_tonumber(L, 4);
+    float rotation = (float)lua_tonumber(L, 5);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f, %.f", cell_id, x, y, rotation);
 #endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    GL_Point_t destination = (GL_Point_t){ .x = (int)x, .y = (int)y };
-
     const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
-    GL_sheet_blit_sr(context, sheet, cell_id, destination, 1.0f, 1.0f, rotation, 0.5f, 0.5f);
+    GL_context_blit_sr(context, &sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = (int)x, .y = (int)y }, 1.0f, 1.0f, rotation, 0.5f, 0.5f);
 
     return 0;
 }
@@ -227,21 +218,19 @@ static int bank_blit6(lua_State *L)
     LUAX_SIGNATURE_END
     Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
     int cell_id = lua_tointeger(L, 2);
-    double x = (double)lua_tonumber(L, 3);
-    double y = (double)lua_tonumber(L, 4);
-    double scale_x = (double)lua_tonumber(L, 5);
-    double scale_y = (double)lua_tonumber(L, 6);
+    float x = (float)lua_tonumber(L, 3);
+    float y = (float)lua_tonumber(L, 4);
+    float scale_x = (float)lua_tonumber(L, 5);
+    float scale_y = (float)lua_tonumber(L, 6);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f, %.f, %.f", cell_id, x, y, scale_x, scale_y);
 #endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    GL_Point_t destination = (GL_Point_t){ .x = (int)x, .y = (int)y };
-
     const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
-    GL_sheet_blit_s(context, sheet, cell_id, destination, scale_x, scale_y);
+    GL_context_blit_s(context, &sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = (int)x, .y = (int)y }, scale_x, scale_y);
 
     return 0;
 }
@@ -259,22 +248,20 @@ static int bank_blit7(lua_State *L)
     LUAX_SIGNATURE_END
     Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
     int cell_id = lua_tointeger(L, 2);
-    double x = (double)lua_tonumber(L, 3);
-    double y = (double)lua_tonumber(L, 4);
-    double scale_x = (double)lua_tonumber(L, 5);
-    double scale_y = (double)lua_tonumber(L, 6);
-    double rotation = (double)lua_tonumber(L, 7);
+    float x = (float)lua_tonumber(L, 3);
+    float y = (float)lua_tonumber(L, 4);
+    float scale_x = (float)lua_tonumber(L, 5);
+    float scale_y = (float)lua_tonumber(L, 6);
+    float rotation = (float)lua_tonumber(L, 7);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f, %.f, %.f, %.f", cell_id, x, y, scale_x, scale_y, rotation);
 #endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    GL_Point_t destination = (GL_Point_t){ .x = (int)x, .y = (int)y };
-
     const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
-    GL_sheet_blit_sr(context, sheet, cell_id, destination, scale_x, scale_y, rotation, 0.5f, 0.5f);
+    GL_context_blit_sr(context, &sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = (int)x, .y = (int)y }, scale_x, scale_y, rotation, 0.5f, 0.5f);
 
     return 0;
 }
@@ -294,24 +281,22 @@ static int bank_blit9(lua_State *L)
     LUAX_SIGNATURE_END
     Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
     int cell_id = lua_tointeger(L, 2);
-    double x = (double)lua_tonumber(L, 3);
-    double y = (double)lua_tonumber(L, 4);
-    double scale_x = (double)lua_tonumber(L, 5);
-    double scale_y = (double)lua_tonumber(L, 6);
-    double rotation = (double)lua_tonumber(L, 7);
-    double anchor_x = (double)lua_tonumber(L, 8);
-    double anchor_y = (double)lua_tonumber(L, 9);
+    float x = (float)lua_tonumber(L, 3);
+    float y = (float)lua_tonumber(L, 4);
+    float scale_x = (float)lua_tonumber(L, 5);
+    float scale_y = (float)lua_tonumber(L, 6);
+    float rotation = (float)lua_tonumber(L, 7);
+    float anchor_x = (float)lua_tonumber(L, 8);
+    float anchor_y = (float)lua_tonumber(L, 9);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f, %.f, %.f, %.f, %.f, %.f", cell_id, x, y, scale_x, scale_y, rotation, anchor_x, anchor_y);
 #endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    GL_Point_t destination = (GL_Point_t){ .x = (int)x, .y = (int)y };
-
     const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
-    GL_sheet_blit_sr(context, sheet, cell_id, destination, scale_x, scale_y, rotation, anchor_x, anchor_y);
+    GL_context_blit_sr(context, &sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = (int)x, .y = (int)y }, scale_x, scale_y, rotation, anchor_x, anchor_y);
 
     return 0;
 }

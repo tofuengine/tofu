@@ -53,8 +53,9 @@ static const luaX_Const _system_constants[] = {
 
 int system_loader(lua_State *L)
 {
+    luaX_Script script = { (const char *)_system_lua, _system_lua_len, "system.lua" };
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, NULL, _system_functions, _system_constants, nup, LUAX_CLASS(System_Class_t));
+    return luaX_newmodule(L, &script, _system_functions, _system_constants, nup, LUAX_CLASS(System_Class_t));
 }
 
 static int system_time(lua_State *L)
@@ -65,6 +66,7 @@ static int system_time(lua_State *L)
     Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
 
     lua_pushnumber(L, environment->time);
+
     return 1;
 }
 
@@ -76,6 +78,7 @@ static int system_fps(lua_State *L)
     Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
 
     lua_pushinteger(L, environment->fps);
+
     return 1;
 }
 
@@ -93,19 +96,20 @@ static int system_quit(lua_State *L)
 
 static int system_log(lua_State *L)
 {
-    int argc = lua_gettop(L);  /* number of arguments */
-    lua_getglobal(L, "tostring");
+    int argc = lua_gettop(L);
+    lua_getglobal(L, "tostring"); // F
     for (int i = 1; i <= argc; i++) {
-        lua_pushvalue(L, -1);  /* function to be called */
-        lua_pushvalue(L, i);   /* value to print */
-        lua_call(L, 1, 1);
-        const char *s = lua_tostring(L, -1);  /* get result */
+        lua_pushvalue(L, -1); // F -> F F
+        lua_pushvalue(L, i); // F F -> F F I
+        lua_call(L, 1, 1); // F F I -> F R
+        const char *s = lua_tostring(L, -1);
         if (s == NULL) {
             return luaL_error(L, "`tostring` must return a string `log`");
         }
         Log_write(LOG_LEVELS_INFO, (i > 1) ? "\t%s" : "<SYSTEM> %s", s);
-        lua_pop(L, 1);  /* pop result */
+        lua_pop(L, 1); // F R -> F
     }
+    lua_pop(L, 1); // F -> <empty>
 
     return 0;
 }

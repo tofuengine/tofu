@@ -1,12 +1,18 @@
 TARGET=tofu
 
+# Use software renderer to use VALGRIND
+# > export LIBGL_ALWAYS_SOFTWARE=1
+# valgrind --track-origins=yes ./tofu ./demos/mode7/
+
 ANALYZER=luacheck
 AFLAGS=--no-self --std lua53 -q
 
 COMPILER=cc
 CWARNINGS=-Wall -Wextra -Werror -Wno-unused-parameter
-CFLAGS=-O0 -g -DDEBUG -D_DEFAULT_SOURCE -DLUA_USE_LINUX -std=c99 -Iexternal
-#CFLAGS=-O2 -g -DRELEASE -D_DEFAULT_SOURCE -DLUA_USE_LINUX -std=c99 -Iexternal
+CFLAGS=-Og -g -DDEBUG -D_DEFAULT_SOURCE -DLUA_32BITS -DLUA_USE_LINUX -std=c99 -Iexternal
+#CFLAGS=-O3 -DRELEASE -D_DEFAULT_SOURCE -DLUA_32BITS -DLUA_USE_LINUX -std=c99 -Iexternal
+# -Ofast => -O3 -ffast-math
+# -Os => -O2, favouring size
 
 LINKER=cc
 LFLAGS=-Wall -Wextra -Werror -Lexternal/GLFW -lglfw3 -lm  -ldl -lpthread -lrt -lX11
@@ -34,9 +40,8 @@ $(OBJECTS): %.o : %.c $(BLOBS) $(INCLUDES) Makefile
 # `.inc` files also depend upon `Makefile` to be rebuild in case of tweakings.
 $(BLOBS): %.inc: %.lua Makefile
 	@$(ANALYZER) $(AFLAGS) $<
-	@xxd -i $< | sed -e 's/src_modules//g' > $@
+	@xxd -i $< | sed -e 's/src_modules//g' -e 's/unsigned/static unsigned/g' > $@
 	@echo "Generated "$@" from "$<" successfully!"
-#	@xxd -i $< | sed -e 's/src_modules//g' -e 's/unsigned/static unsigned/g' > $@
 
 primitives: $(TARGET)
 	@echo "Launching Primitives application!"
@@ -82,6 +87,10 @@ mode7: $(TARGET)
 	@echo "Launching Mode7 application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/mode7
 	@./$(TARGET) ./demos/mode7
+
+valgrind: $(TARGET)
+	@echo "Valgrind Palette application!"
+	@valgrind --leak-check=full env LIBGL_ALWAYS_SOFTWARE=1 ./$(TARGET) ./demos/palette
 
 .PHONY: clean
 clean:

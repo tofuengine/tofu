@@ -29,53 +29,35 @@
 #include "palette.h"
 #include "surface.h"
 
-// TODO: move from `float` to 'double`.
+// TODO: move from `float` to 'double` or to `fix16_t`?
+// TODO: patch all doubles to float!
 
-typedef struct _GL_Context_t {
-    size_t width, height, stride; // `stride` is the width in bytes.
-    void *vram;
-    void **vram_rows;
-    size_t vram_size;
+#define GL_XFORM_TABLE_MAX_OPERATIONS       16
 
+typedef struct _GL_State_t {
+    GL_Surface_t *surface;
+    GL_Quad_t clipping_region;
     GL_Pixel_t background;
-    GL_Pixel_t color;
-    uint32_t mask;
+    GL_Pixel_t color; // TODO: use it!
+    uint32_t mask; // TODO: ditto
     GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
     GL_Bool_t transparent[GL_MAX_PALETTE_COLORS];
-    GL_Palette_t palette;
-    GL_Quad_t clipping_region;
+} GL_State_t;
+
+typedef struct _GL_Context_t {
+    GL_Surface_t buffer;
+    GL_State_t state;
+    GL_State_t *stack;
 } GL_Context_t;
 
-typedef enum _GL_Clamp_Modes_t {
-    GL_CLAMP_MODE_BORDER,
-    GL_CLAMP_MODE_EDGE,
-    GL_CLAMP_MODE_REPEAT
-} GL_Clamp_Modes_t;
+extern bool GL_context_create(GL_Context_t *context, size_t width, size_t height);
+extern void GL_context_delete(GL_Context_t *context); // TODO: rename to `*_destroy()`?
 
-typedef struct _GL_Transformation_t {
-    float h, v;
-    float x0, y0;
-    float a, b, c, d;
-    GL_Clamp_Modes_t clamp;
-    bool perspective;
-    float elevation;
-    float horizon;
-} GL_Transformation_t;
+extern void GL_context_push(GL_Context_t *context);
+extern void GL_context_pop(GL_Context_t *context);
+extern void GL_context_sanitize(GL_Context_t *context, const GL_Surface_t *surface);
 
-extern bool GL_context_initialize(GL_Context_t *context, size_t width, size_t height);
-extern void GL_context_terminate(GL_Context_t *context);
-
-extern void GL_context_push(const GL_Context_t *context);
-extern void GL_context_pop(const GL_Context_t *context);
-
-extern void GL_context_clear(const GL_Context_t *context);
-extern void GL_context_screenshot(const GL_Context_t *context, const char *pathfile);
-
-extern void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position);
-extern void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, float sx, float sy);
-extern void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, float sx, float sy, float rotation, float ax, float ay);
-
-extern void GL_context_palette(GL_Context_t *context, const GL_Palette_t *palette);
+extern void GL_context_surface(GL_Context_t *context, GL_Surface_t *surface);
 extern void GL_context_shifting(GL_Context_t *context, const size_t *from, const size_t *to, size_t count);
 extern void GL_context_transparent(GL_Context_t *context, const GL_Pixel_t *indexes, const GL_Bool_t *transparent, size_t count);
 extern void GL_context_clipping(GL_Context_t *context, const GL_Quad_t *clipping_region);
@@ -83,8 +65,8 @@ extern void GL_context_background(GL_Context_t *context, GL_Pixel_t index);
 extern void GL_context_color(GL_Context_t *context, GL_Pixel_t index);
 extern void GL_context_pattern(GL_Context_t *context, uint32_t mask);
 
-extern void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t index);
-
-extern void GL_context_blit_m7(const GL_Context_t *context, const GL_Surface_t *surface, GL_Transformation_t transformation);
+extern void GL_context_clear(const GL_Context_t *context);
+extern void GL_context_screenshot(const GL_Context_t *context, const GL_Palette_t *palette, const char *pathfile);
+extern void GL_context_to_surface(const GL_Context_t *context, const GL_Surface_t *to);
 
 #endif  /* __GL_CONTEXT_H__ */

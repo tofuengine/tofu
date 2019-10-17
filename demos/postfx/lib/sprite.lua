@@ -3,9 +3,9 @@ local Class = require("tofu.util").Class
 
 local Sprite = Class.define()
 
-local MIN_FREQUENCY = 0.25
-local MAX_FREQUENCY = 2.50
-local MAX_ANGLE = math.pi * 2
+--local MIN_FREQUENCY = 0.25
+--local MAX_FREQUENCY = 2.50
+--local MAX_ANGLE = math.pi * 2
 local CENTER_X = Canvas.width() / 2
 local CENTER_Y = (Canvas.height() - 64) / 2
 local PADDING = 16
