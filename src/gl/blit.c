@@ -197,7 +197,7 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
 
 // https://web.archive.org/web/20190305223938/http://www.drdobbs.com/architecture-and-design/fast-bitmap-rotation-and-scaling/184416337
 // https://www.flipcode.com/archives/The_Art_of_Demomaking-Issue_10_Roto-Zooming.shtml
-// TODO: add 90/180/270 rotations?
+// TODO: add 90/180/270 rotations? Or fix sin/cos values?
 void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y, float angle, float anchor_x, float anchor_y)
 {
     const GL_State_t *state = &context->state;
