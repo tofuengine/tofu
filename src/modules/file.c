@@ -25,7 +25,7 @@
 #include "../core/luax.h"
 
 #include "../environment.h"
-#include "../file.h"
+#include "../fs.h"
 #include "../log.h"
 
 #include <string.h>
@@ -68,12 +68,8 @@ static int file_read(lua_State *L)
 
     Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
 
-    char pathfile[PATH_FILE_MAX] = {};
-    strcpy(pathfile, environment->base_path);
-    strcat(pathfile, file);
-
-    char *result = file_load_as_string(pathfile, "rt");
-    Log_write(LOG_LEVELS_DEBUG, "<FILE> file '%s' loaded at %p", pathfile, result);
+    char *result = FS_load_as_string(&environment->fs, file);
+    Log_write(LOG_LEVELS_DEBUG, "<FILE> file '%s' loaded at %p", file, result);
 
     lua_pushstring(L, result);
 

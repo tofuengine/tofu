@@ -31,12 +31,12 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
-bool GL_surface_load(GL_Surface_t *surface, const char *pathfile, GL_Surface_Callback_t callback, void *parameters)
+bool GL_surface_load(GL_Surface_t *surface, const char *full_path, GL_Surface_Callback_t callback, void *parameters)
 {
     int width, height, components;
-    void *data = stbi_load(pathfile, &width, &height, &components, STBI_rgb_alpha); //STBI_default);
+    void *data = stbi_load(full_path, &width, &height, &components, STBI_rgb_alpha); //STBI_default);
     if (!data) {
-        Log_write(LOG_LEVELS_ERROR, "<GL> can't load surface from '%s': %s", pathfile, stbi_failure_reason());
+        Log_write(LOG_LEVELS_ERROR, "<GL> can't load surface from '%s': %s", full_path, stbi_failure_reason());
         return false;
     }
     GL_surface_create(surface, width, height);
@@ -45,7 +45,7 @@ bool GL_surface_load(GL_Surface_t *surface, const char *pathfile, GL_Surface_Cal
     }
     stbi_image_free(data);
 
-    Log_write(LOG_LEVELS_DEBUG, "<GL> surface '%s' loaded at #%p (%dx%d w/ %d)", pathfile, surface->data, width, height, components);
+    Log_write(LOG_LEVELS_DEBUG, "<GL> surface '%s' loaded at #%p (%dx%d w/ %d)", full_path, surface->data, width, height, components);
 
     return true;
 }

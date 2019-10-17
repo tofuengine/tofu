@@ -25,16 +25,12 @@
 #include <stdlib.h>
 
 #include "engine.h"
-#include "file.h"
 #include "log.h"
 
 int main(int argc, char **argv)
 {
-    char resolved_path[PATH_FILE_MAX] = {};
-    file_resolve_path(resolved_path, (argc > 1) ? argv[1] : FILE_PATH_CURRENT_SZ);
-
     Engine_t engine = {};
-    bool result = Engine_initialize(&engine, resolved_path);
+    bool result = Engine_initialize(&engine, (argc > 1) ? argv[1] : NULL);
     if (!result) {
         Log_write(LOG_LEVELS_FATAL, "<MAIN> can't initialize engine");
         return EXIT_FAILURE;

@@ -184,7 +184,7 @@ void GL_context_clear(const GL_Context_t *context)
     }
 }
 
-void GL_context_screenshot(const GL_Context_t *context, const GL_Palette_t *palette, const char *pathfile)
+void GL_context_screenshot(const GL_Context_t *context, const GL_Palette_t *palette, const char *full_path)
 {
     const GL_State_t *state = &context->state;
     const GL_Surface_t *surface = state->surface;
@@ -196,9 +196,9 @@ void GL_context_screenshot(const GL_Context_t *context, const GL_Palette_t *pale
 
     GL_surface_to_rgba(surface, palette, vram);
 
-    int result = stbi_write_png(pathfile, surface->width, surface->height, sizeof(GL_Color_t), vram, surface->width * sizeof(GL_Color_t));
+    int result = stbi_write_png(full_path, surface->width, surface->height, sizeof(GL_Color_t), vram, surface->width * sizeof(GL_Color_t));
     if (!result) {
-        Log_write(LOG_LEVELS_WARNING, "<GL> can't save screenshot to '%s'", pathfile);
+        Log_write(LOG_LEVELS_WARNING, "<GL> can't save screenshot to '%s'", full_path);
     }
 
     free(vram);

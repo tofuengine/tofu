@@ -66,7 +66,7 @@ extern void GL_context_color(GL_Context_t *context, GL_Pixel_t index);
 extern void GL_context_pattern(GL_Context_t *context, uint32_t mask);
 
 extern void GL_context_clear(const GL_Context_t *context);
-extern void GL_context_screenshot(const GL_Context_t *context, const GL_Palette_t *palette, const char *pathfile);
+extern void GL_context_screenshot(const GL_Context_t *context, const GL_Palette_t *palette, const char *full_path);
 extern void GL_context_to_surface(const GL_Context_t *context, const GL_Surface_t *to);
 
 #endif  /* __GL_CONTEXT_H__ */

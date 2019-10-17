@@ -24,19 +24,23 @@
 
 #include <stdlib.h>
 #include <string.h>
+#ifdef DEBUG
+  #include <stb/stb_leakcheck.h>
+#endif
 
 void Environment_initialize(Environment_t *environment, const char *base_path)
 {
     // *environment = (Environment_t){};
-    memset(environment, 0x00, sizeof(Environment_t));
+    memset(environment, 0x00, sizeof(Environment_t)); // TODO: use memset or assignment?
 
     environment->quit = false;
     environment->fps = 0.0f;
     environment->time = 0.0f;
 
-    strcpy(environment->base_path, base_path);
+    FS_initialize(&environment->fs, base_path);
 }
 
 void Environment_terminate(Environment_t *environment)
 {
+    FS_terminate(&environment->fs);
 }

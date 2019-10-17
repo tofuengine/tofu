@@ -35,6 +35,9 @@
 #include <math.h>
 #include <string.h>
 #include <time.h>
+#ifdef DEBUG
+  #include <stb/stb_leakcheck.h>
+#endif
 
 typedef struct _Canvas_Class_t {
 } Canvas_Class_t;
@@ -155,12 +158,12 @@ static int canvas_screenshot(lua_State *L)
         1900 + now->tm_year, now->tm_mon + 1, now->tm_mday,
         now->tm_hour, now->tm_min, now->tm_sec);
 
-    char pathfile[PATH_FILE_MAX] = {};
-    strcpy(pathfile, environment->base_path);
-    strcat(pathfile, file);
+    char *full_path = FS_path(&environment->fs, file);
 
     const GL_Context_t *context = &display->gl;
-    GL_context_screenshot(context, &display->palette, pathfile);
+    GL_context_screenshot(context, &display->palette, full_path);
+
+    free(full_path);
 
     return 0;
 }
@@ -249,7 +252,7 @@ static int canvas_surface0(lua_State *L)
 
 // TODO: !!! MOVE THESE `*_Class_t` UDT to a separate header or move to header file.
 typedef struct _Surface_Class_t {
-    // char pathfile[PATH_FILE_MAX];
+    // char full_path[PATH_FILE_MAX];
     GL_Surface_t surface;
     GL_XForm_t xform;
 } Surface_Class_t;

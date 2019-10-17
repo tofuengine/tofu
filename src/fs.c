@@ -20,8 +20,10 @@
  * SOFTWARE.
  **/
 
-#include "file.h"
+#include "fs.h"
 
+#include <stdarg.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -29,21 +31,49 @@
   #include <stb/stb_leakcheck.h>
 #endif
 
-void file_resolve_path(char *resolved, const char *path)
+// TODO: implement a generic resource-loader, for later use with bundled applications.
+void FS_initialize(File_System_t *fs, const char *base_path)
 {
-    char *ptr = realpath(path, resolved);
+    *fs = (File_System_t){};
+
+    char resolved[PATH_FILE_MAX] = {}; // Using local buffer to avoid un-tracked `malloc()` for the syscall.
+    char *ptr = realpath(base_path ? base_path : FILE_PATH_CURRENT_SZ, resolved);
     if (!ptr) {
         return;
     }
+
     size_t length = strlen(resolved);
     if (resolved[length - 1] != '/') {
         strcat(resolved, FILE_PATH_SEPARATOR_SZ);
+        length += 1;
     }
+
+    fs->base_path = malloc((length + 1) * sizeof(char));
+    strcpy(fs->base_path, resolved);
 }
 
-char *file_load_as_string(const char *pathfile, const char *mode)
+void FS_terminate(File_System_t *fs)
 {
-    FILE *file = fopen(pathfile, mode);
+    free(fs->base_path);
+    *fs = (File_System_t){};
+}
+
+char *FS_path(const File_System_t *fs, const char *file) // TODO: add binary read/write functions, instead.
+{
+    size_t length = strlen(fs->base_path) + strlen(file);
+    char *full_path = malloc((length + 1) * sizeof(char));
+    strcpy(full_path, fs->base_path);
+    strcat(full_path, file);
+    return full_path;
+}
+
+char *FS_load_as_string(const File_System_t *fs, const char *path)
+{
+    char full_path[PATH_FILE_MAX] = {};
+    strcpy(full_path, fs->base_path);
+    strcat(full_path, path);
+
+    FILE *file = fopen(full_path, "rt");
     if (!file) {
         return NULL;
     }

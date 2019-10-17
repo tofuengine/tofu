@@ -31,7 +31,7 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 #include "interpreter.h"
 
 #include "config.h"
-#include "file.h"
+#include "fs.h"
 #include "log.h"
 #include "modules.h"
 
@@ -108,13 +108,12 @@ static int error_handler(lua_State *L)
 
 static int custom_searcher(lua_State *L)
 {
-    const char *base_path = lua_tostring(L, lua_upvalueindex(1));
+    const File_System_t *fs = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(1));
 
     const char *file = lua_tostring(L, 1);
 
     char path_file[PATH_FILE_MAX] = {};
-    strcpy(path_file, base_path);
-    strcat(path_file, file);
+    strcpy(path_file, file);
     for (int i = 0; path_file[i] != '\0'; ++i) { // Replace `.' with '/` to map file system entry.
         if (path_file[i] == '.') {
             path_file[i] = FILE_PATH_SEPARATOR;
@@ -122,13 +121,15 @@ static int custom_searcher(lua_State *L)
     }
     strcat(path_file, ".lua");
 
-    char *buffer = file_load_as_string(path_file, "rt");
+    char *buffer = FS_load_as_string(fs, path_file);
+
     if (buffer != NULL) {
         luaL_loadstring(L, buffer);
         free(buffer);
     } else {
         lua_pushstring(L, "Error: file not found");
     }
+
     return 1;
 }
 
@@ -253,7 +254,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configu
 #if 0
     luaX_appendpath(interpreter->state, environment->base_path);
 #else
-    lua_pushstring(interpreter->state, environment->base_path);
+    lua_pushlightuserdata(interpreter->state, (void *)&environment->fs);
     luaX_overridesearchers(interpreter->state, custom_searcher, 1);
 #endif
 

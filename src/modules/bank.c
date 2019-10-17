@@ -31,9 +31,12 @@
 
 #include <math.h>
 #include <string.h>
+#ifdef DEBUG
+  #include <stb/stb_leakcheck.h>
+#endif
 
 typedef struct _Bank_Class_t {
-    // char pathfile[PATH_FILE_MAX];
+    // char full_path[PATH_FILE_MAX];
     GL_Sheet_t sheet;
 } Bank_Class_t;
 
@@ -96,19 +99,19 @@ static int bank_new(lua_State *L)
     Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    char pathfile[PATH_FILE_MAX] = {};
-    strcpy(pathfile, environment->base_path);
-    strcat(pathfile, file);
+    char *full_path = FS_path(&environment->fs, file);
 
     GL_Sheet_t sheet;
-    GL_sheet_load(&sheet, pathfile, cell_width, cell_height, to_indexed_atlas_callback, (void *)&display->palette);
-    Log_write(LOG_LEVELS_DEBUG, "<BANK> sheet '%s' loaded", pathfile);
+    GL_sheet_load(&sheet, full_path, cell_width, cell_height, to_indexed_atlas_callback, (void *)&display->palette);
+    Log_write(LOG_LEVELS_DEBUG, "<BANK> sheet '%s' loaded", full_path);
 
     Bank_Class_t *instance = (Bank_Class_t *)lua_newuserdata(L, sizeof(Bank_Class_t));
     *instance = (Bank_Class_t){
             .sheet = sheet
         };
-    Log_write(LOG_LEVELS_DEBUG, "<BANK> bank allocated as #%p", pathfile, instance);
+    Log_write(LOG_LEVELS_DEBUG, "<BANK> bank allocated as #%p", full_path, instance);
+
+    free(full_path);
 
     luaL_setmetatable(L, LUAX_CLASS(Bank_Class_t));
 
