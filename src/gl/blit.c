@@ -25,6 +25,7 @@
 #include "../config.h"
 
 #include "../core/imath.h"
+#include "../core/sincos.h"
 #include "../log.h"
 
 #include <memory.h>
@@ -220,8 +221,8 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const float dx = position.x;
     const float dy = position.y;
 
-    const float c = cosf(angle);
-    const float s = sinf(angle);
+    float s, c;
+    fsincos(angle, &s, &c);
 
     // The counter-clockwise 2D rotation matrix is
     //

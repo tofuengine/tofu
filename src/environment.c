@@ -28,6 +28,8 @@
   #include <stb/stb_leakcheck.h>
 #endif
 
+// TODO: http://www.ilikebigbits.com/2017_06_01_float_or_double.html
+
 void Environment_initialize(Environment_t *environment, const char *base_path)
 {
     // *environment = (Environment_t){};

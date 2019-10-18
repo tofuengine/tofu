@@ -36,6 +36,9 @@
 #include "modules/surface.h"
 #include "modules/timer.h"
 
+// TODO: http://www.ilikebigbits.com/2017_06_01_float_or_double.html
+// TODO: add a math module exposing the `sincos` function.
+
 static int create_module(lua_State *L, const luaL_Reg *entries)
 {
     lua_newtable(L);
