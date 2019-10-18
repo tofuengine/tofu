@@ -24,7 +24,8 @@ void fsincos(const float lut[], size_t lut_size, float angle, float *sin, float 
 
 void generate_lut(float lut[], size_t lut_size)
 {
-    for (size_t i = 0; i < lut_size; ++i) {
+    const size_t lut_size_4th = lut_size / 4;
+    for (size_t i = 0; i < lut_size + lut_size_4th; ++i) {
         float angle = (float)(2.0f * M_PI) * (float)i / (float)lut_size;
         float s = sinf(angle);
         if (fabs(s - 0.0f) <= __FLT_EPSILON__)
@@ -108,22 +109,27 @@ int main(int argc, char *argv[])
     const size_t lut_size_4th = lut_size / 4;
     const float lut_over_twice_pi = (float)lut_size / (float)(2.0f * M_PI);
 
-    float lut[lut_size];
+    float lut[lut_size + lut_size_4th];
     generate_lut(lut, lut_size);
 
     printf("#include <stddef.h>\n");
     printf("\n");
-    printf("static const float _lut[%lu] = {\n", lut_size);
-    for (int i = 0; i < lut_size; ++i) {
+    printf("static const float _lut[%lu] = {\n", lut_size + lut_size_4th);
+    for (int i = 0; i < lut_size + lut_size_4th; ++i) {
         printf("    %.9ff, /* [%d] */\n", lut[i], i);
     }
     printf("};\n");
     printf("\n");
-    printf("void fsincos(float angle, float *sin, float *cos)\n");
+    printf("void fsincos(int angle, float *sin, float *cos)\n");
     printf("{\n");
-    printf("    size_t index = (size_t)(angle * %.9ff);\n", lut_over_twice_pi);
-    printf("    *sin = _lut[index %% %lu];\n", lut_size);
-    printf("    *cos = _lut[(index + %lu) %% %lu];\n", lut_size_4th, lut_size);
+    printf("    const int index = angle & 0x%lx;\n", lut_size - 1);
+    printf("    *sin = _lut[index];\n");
+    printf("    *cos = _lut[index + 0x%lx];\n", lut_size_4th);
+    printf("}\n");
+    printf("\n");
+    printf("int fatoi(float angle)\n");
+    printf("{\n");
+    printf("    return (int)(angle * 81.487327576f) & 0x1ff;\n");
     printf("}\n");
 
 

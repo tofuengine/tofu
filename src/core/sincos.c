@@ -1,12 +1,34 @@
+/*
+ * Copyright (c) 2019 Marco Lizza (marco.lizza@gmail.com)
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ **/
+
 // https://jfdube.wordpress.com/2011/12/06/trigonometric-look-up-tables-revisited/
 // http://www.ilikebigbits.com/2017_06_01_float_or_double.html
 
 #include "sincos.h"
 
+// 128 steps per quadrant seems more than enough.
 #include <stddef.h>
 
-// 128 steps per quadrant seems more than enough.
-static const float _lut[512] = {
+static const float _lut[640] = {
     0.000000000f, /* [0] */
     0.012271538f, /* [1] */
     0.024541229f, /* [2] */
@@ -519,11 +541,144 @@ static const float _lut[512] = {
     -0.036807153f, /* [509] */
     -0.024541123f, /* [510] */
     -0.012271399f, /* [511] */
+    0.000000000f, /* [512] */
+    0.012271748f, /* [513] */
+    0.024541473f, /* [514] */
+    0.036807504f, /* [515] */
+    0.049067989f, /* [516] */
+    0.061321083f, /* [517] */
+    0.073564947f, /* [518] */
+    0.085797258f, /* [519] */
+    0.098017119f, /* [520] */
+    0.110222220f, /* [521] */
+    0.122410722f, /* [522] */
+    0.134580791f, /* [523] */
+    0.146730587f, /* [524] */
+    0.158858299f, /* [525] */
+    0.170962065f, /* [526] */
+    0.183040097f, /* [527] */
+    0.195090577f, /* [528] */
+    0.207111657f, /* [529] */
+    0.219101563f, /* [530] */
+    0.231058463f, /* [531] */
+    0.242980555f, /* [532] */
+    0.254865617f, /* [533] */
+    0.266712755f, /* [534] */
+    0.278519720f, /* [535] */
+    0.290284723f, /* [536] */
+    0.302006036f, /* [537] */
+    0.313681871f, /* [538] */
+    0.325310439f, /* [539] */
+    0.336890042f, /* [540] */
+    0.348418891f, /* [541] */
+    0.359895289f, /* [542] */
+    0.371317476f, /* [543] */
+    0.382683754f, /* [544] */
+    0.393992394f, /* [545] */
+    0.405241698f, /* [546] */
+    0.416429520f, /* [547] */
+    0.427555084f, /* [548] */
+    0.438616276f, /* [549] */
+    0.449611396f, /* [550] */
+    0.460538805f, /* [551] */
+    0.471396863f, /* [552] */
+    0.482183933f, /* [553] */
+    0.492898375f, /* [554] */
+    0.503538609f, /* [555] */
+    0.514102995f, /* [556] */
+    0.524589956f, /* [557] */
+    0.534997940f, /* [558] */
+    0.545325279f, /* [559] */
+    0.555570602f, /* [560] */
+    0.565731764f, /* [561] */
+    0.575808227f, /* [562] */
+    0.585797906f, /* [563] */
+    0.595699370f, /* [564] */
+    0.605511129f, /* [565] */
+    0.615231693f, /* [566] */
+    0.624859631f, /* [567] */
+    0.634393454f, /* [568] */
+    0.643831730f, /* [569] */
+    0.653173089f, /* [570] */
+    0.662416041f, /* [571] */
+    0.671559215f, /* [572] */
+    0.680601299f, /* [573] */
+    0.689540863f, /* [574] */
+    0.698376238f, /* [575] */
+    0.707106769f, /* [576] */
+    0.715730846f, /* [577] */
+    0.724247158f, /* [578] */
+    0.732654333f, /* [579] */
+    0.740951240f, /* [580] */
+    0.749136508f, /* [581] */
+    0.757209003f, /* [582] */
+    0.765167415f, /* [583] */
+    0.773010612f, /* [584] */
+    0.780737460f, /* [585] */
+    0.788346648f, /* [586] */
+    0.795837164f, /* [587] */
+    0.803207815f, /* [588] */
+    0.810457170f, /* [589] */
+    0.817584813f, /* [590] */
+    0.824589312f, /* [591] */
+    0.831469655f, /* [592] */
+    0.838224769f, /* [593] */
+    0.844853640f, /* [594] */
+    0.851355314f, /* [595] */
+    0.857728720f, /* [596] */
+    0.863973022f, /* [597] */
+    0.870087147f, /* [598] */
+    0.876070261f, /* [599] */
+    0.881921470f, /* [600] */
+    0.887639821f, /* [601] */
+    0.893224299f, /* [602] */
+    0.898674488f, /* [603] */
+    0.903989315f, /* [604] */
+    0.909168005f, /* [605] */
+    0.914209783f, /* [606] */
+    0.919113934f, /* [607] */
+    0.923879623f, /* [608] */
+    0.928506136f, /* [609] */
+    0.932992876f, /* [610] */
+    0.937339127f, /* [611] */
+    0.941544175f, /* [612] */
+    0.945607424f, /* [613] */
+    0.949528277f, /* [614] */
+    0.953306139f, /* [615] */
+    0.956940353f, /* [616] */
+    0.960430503f, /* [617] */
+    0.963776052f, /* [618] */
+    0.966976464f, /* [619] */
+    0.970031261f, /* [620] */
+    0.972939968f, /* [621] */
+    0.975702167f, /* [622] */
+    0.978317440f, /* [623] */
+    0.980785310f, /* [624] */
+    0.983105540f, /* [625] */
+    0.985277712f, /* [626] */
+    0.987301469f, /* [627] */
+    0.989176571f, /* [628] */
+    0.990902722f, /* [629] */
+    0.992479563f, /* [630] */
+    0.993906975f, /* [631] */
+    0.995184720f, /* [632] */
+    0.996312618f, /* [633] */
+    0.997290492f, /* [634] */
+    0.998118103f, /* [635] */
+    0.998795450f, /* [636] */
+    0.999322414f, /* [637] */
+    0.999698818f, /* [638] */
+    0.999924719f, /* [639] */
 };
 
-void fsincos(float angle, float *sin, float *cos)
+void fsincos(int angle, float *sin, float *cos)
 {
-    size_t index = (size_t)(angle * 81.487327576f);
-    *sin = _lut[index % 512];
-    *cos = _lut[(index + 128) % 512];
+    const int index = angle & 0x1ff;
+    *sin = _lut[index];
+    *cos = _lut[index + 0x80];
+}
+
+int fatoi(float angle)
+{
+    return (int)(angle * 81.487327576f) & 0x1ff;
 }
