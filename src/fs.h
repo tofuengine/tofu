@@ -20,9 +20,11 @@
  * SOFTWARE.
  **/
 
-#ifndef __FILE_H__
-#define __FILE_H__
+#ifndef __FS_H__
+#define __FS_H__
 
+#include <stdbool.h>
+#include <stddef.h>
 #include <limits.h>
 
 #include "platform.h"
@@ -50,8 +52,16 @@
   #define PATH_FILE_MAX       1024
 #endif
 
-extern void file_resolve_path(char *resolved, const char *path);
+typedef struct _File_System_t {
+    char *base_path;
+} File_System_t;
 
-extern char *file_load_as_string(const char *pathfile, const char *mode);
+extern void FS_initialize(File_System_t *fs, const char *base_path);
+extern void FS_terminate(File_System_t *fs);
 
-#endif/* __FILE_H__ */
+extern char *FS_load_as_string(const File_System_t *fs, const char *file);
+//extern bool FS_write_as_string(const File_System_t *fs, const char *file, const char *string);
+extern void *FS_load_as_binary(const File_System_t *fs, const char *file, size_t *size);
+//extern bool FS_write_as_binary(const File_System_t *fs, const char *file, const char *data, size_t size);
+
+#endif /* __FS_H__ */

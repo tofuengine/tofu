@@ -37,7 +37,7 @@
 #endif
 
 typedef struct _Surface_Class_t {
-    // char pathfile[PATH_FILE_MAX];
+    // char full_path[PATH_FILE_MAX];
     GL_Surface_t surface;
     GL_XForm_t xform;
 } Surface_Class_t;
@@ -139,13 +139,15 @@ static int surface_new1(lua_State *L)
     Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    char pathfile[PATH_FILE_MAX] = {};
-    strcpy(pathfile, environment->base_path);
-    strcat(pathfile, file);
-
+    size_t buffer_size;
+    void *buffer = FS_load_as_binary(&environment->fs, file, &buffer_size);
+    if (!buffer) {
+        return luaL_error(L, "<SURFACE> can't load file '%s'", file);
+    }
     GL_Surface_t surface;
-    GL_surface_load(&surface, pathfile, to_indexed_atlas_callback, (void *)&display->palette);
-    Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface '%s' loaded", pathfile);
+    GL_surface_decode(&surface, buffer, buffer_size, to_indexed_atlas_callback, (void *)&display->palette);
+    Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface '%s' loaded", file);
+    free(buffer);
 
     Surface_Class_t *instance = (Surface_Class_t *)lua_newuserdata(L, sizeof(Surface_Class_t));
     *instance = (Surface_Class_t){

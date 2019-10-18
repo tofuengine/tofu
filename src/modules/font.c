@@ -34,9 +34,12 @@
 
 #include <math.h>
 #include <string.h>
+#ifdef DEBUG
+  #include <stb/stb_leakcheck.h>
+#endif
 
 typedef struct _Font_Class_t {
-    // char pathfile[PATH_FILE_MAX];
+    // char full_path[PATH_FILE_MAX];
     GL_Sheet_t sheet;
 } Font_Class_t;
 
@@ -134,12 +137,14 @@ static int font_new(lua_State *L)
         GL_sheet_decode(&sheet, data->buffer, data->size, data->quad_width, data->quad_height, to_font_atlas_callback, (void *)indexes);
         Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet '%s' decoded", file);
     } else {
-        char pathfile[PATH_FILE_MAX] = {};
-        strcpy(pathfile, environment->base_path);
-        strcat(pathfile, file);
-
-        GL_sheet_load(&sheet, pathfile, glyph_width, glyph_height, to_font_atlas_callback, (void *)indexes);
-        Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet '%s' loaded", pathfile);
+        size_t buffer_size;
+        void *buffer = FS_load_as_binary(&environment->fs, file, &buffer_size);
+        if (!buffer) {
+            return luaL_error(L, "<FONT> can't load file '%s'", file);
+        }
+        GL_sheet_decode(&sheet, buffer, buffer_size, glyph_width, glyph_height, to_font_atlas_callback, (void *)indexes);
+        Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet '%s' loaded", file);
+        free(buffer);
     }
 
     Font_Class_t *instance = (Font_Class_t *)lua_newuserdata(L, sizeof(Font_Class_t));

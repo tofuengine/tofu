@@ -31,31 +31,12 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
-bool GL_surface_load(GL_Surface_t *surface, const char *pathfile, GL_Surface_Callback_t callback, void *parameters)
+bool GL_surface_decode(GL_Surface_t *surface, const void *buffer, size_t buffer_size, const GL_Surface_Callback_t callback, void *parameters)
 {
     int width, height, components;
-    void *data = stbi_load(pathfile, &width, &height, &components, STBI_rgb_alpha); //STBI_default);
+    void *data = stbi_load_from_memory(buffer, buffer_size, &width, &height, &components, STBI_rgb_alpha); //STBI_default);
     if (!data) {
-        Log_write(LOG_LEVELS_ERROR, "<GL> can't load surface from '%s': %s", pathfile, stbi_failure_reason());
-        return false;
-    }
-    GL_surface_create(surface, width, height);
-    if (callback != NULL) {
-        callback(parameters, surface, data);
-    }
-    stbi_image_free(data);
-
-    Log_write(LOG_LEVELS_DEBUG, "<GL> surface '%s' loaded at #%p (%dx%d w/ %d)", pathfile, surface->data, width, height, components);
-
-    return true;
-}
-
-bool GL_surface_decode(GL_Surface_t *surface, const void *buffer, size_t size, const GL_Surface_Callback_t callback, void *parameters)
-{
-    int width, height, components;
-    void *data = stbi_load_from_memory(buffer, size, &width, &height, &components, STBI_rgb_alpha); //STBI_default);
-    if (!data) {
-        Log_write(LOG_LEVELS_ERROR, "<GL> can't decoder surface from #%p: %s", data, stbi_failure_reason());
+        Log_write(LOG_LEVELS_ERROR, "<GL> can't decode surface from #%p: %s", data, stbi_failure_reason());
         return false;
     }
     GL_surface_create(surface, width, height);

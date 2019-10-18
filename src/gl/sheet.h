@@ -36,7 +36,6 @@ typedef struct _GL_Sheet_t {
 
 // TODO: is the GL_Sheet_t really needed?
 
-extern bool GL_sheet_load(GL_Sheet_t *sheet, const char *pathfile, size_t cell_width, size_t cell_height, GL_Surface_Callback_t callback, void *parameters);
 extern bool GL_sheet_decode(GL_Sheet_t *sheet, const void *buffer, size_t size, size_t cell_width, size_t cell_height, GL_Surface_Callback_t callback, void *parameters);
 extern void GL_sheet_delete(GL_Sheet_t *sheet);
 

@@ -51,6 +51,11 @@ typedef struct _luaX_Script {
     const char *name;
 } luaX_Script;
 
+// Type definition for the `luaX_is*()` argument-checking functions.
+typedef int (*luaX_TFunction)(lua_State *, int);
+
+typedef int luaX_Reference;
+
 #if DEBUG
     #define LUAX_SIGNATURE_BEGIN(l, n) \
         do { \
@@ -89,8 +94,6 @@ typedef struct _luaX_Script {
 #define luaX_dump(L)                luaX_stackdump(L, __FILE__, __LINE__)
 
 #define luaX_tofunction(L, arg)     luaX_toref(L, arg)
-
-typedef int luaX_Reference;
 
 extern void luaX_stackdump(lua_State *L, const char *file, int line);
 extern void luaX_appendpath(lua_State *L, const char *path);

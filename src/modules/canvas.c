@@ -35,12 +35,14 @@
 #include <math.h>
 #include <string.h>
 #include <time.h>
+#ifdef DEBUG
+  #include <stb/stb_leakcheck.h>
+#endif
 
 typedef struct _Canvas_Class_t {
 } Canvas_Class_t;
 
 static int canvas_color_to_index(lua_State *L);
-static int canvas_screenshot(lua_State *L);
 static int canvas_width(lua_State *L);
 static int canvas_height(lua_State *L);
 static int canvas_push(lua_State *L);
@@ -70,7 +72,6 @@ static int canvas_circle(lua_State *L);
 
 static const struct luaL_Reg _canvas_functions[] = {
     { "color_to_index", canvas_color_to_index },
-    { "screenshot", canvas_screenshot },
     { "width", canvas_width },
     { "height", canvas_height },
     { "push", canvas_push },
@@ -133,36 +134,6 @@ static int canvas_color_to_index(lua_State *L)
     lua_pushinteger(L, index);
 
     return 1;
-}
-
-static int canvas_screenshot(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
-    LUAX_SIGNATURE_END
-    const char *prefix = lua_tostring(L, 1);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.screenshot('%s')", file);
-#endif
-
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
-
-    time_t marker = time(NULL); // Generate a timedate based name.
-    struct tm *now = localtime(&marker);
-    char file[32] = {};
-    sprintf(file, "%s-%04d%02d%02d%02d%02d%02d.png", prefix,
-        1900 + now->tm_year, now->tm_mon + 1, now->tm_mday,
-        now->tm_hour, now->tm_min, now->tm_sec);
-
-    char pathfile[PATH_FILE_MAX] = {};
-    strcpy(pathfile, environment->base_path);
-    strcat(pathfile, file);
-
-    const GL_Context_t *context = &display->gl;
-    GL_context_screenshot(context, &display->palette, pathfile);
-
-    return 0;
 }
 
 static int canvas_width(lua_State *L)
@@ -249,7 +220,7 @@ static int canvas_surface0(lua_State *L)
 
 // TODO: !!! MOVE THESE `*_Class_t` UDT to a separate header or move to header file.
 typedef struct _Surface_Class_t {
-    // char pathfile[PATH_FILE_MAX];
+    // char full_path[PATH_FILE_MAX];
     GL_Surface_t surface;
     GL_XForm_t xform;
 } Surface_Class_t;

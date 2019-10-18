@@ -53,23 +53,6 @@ GL_Rectangle_t *precompute_cells(size_t width, size_t height, size_t cell_width,
     return cells;
 }
 
-bool GL_sheet_load(GL_Sheet_t *sheet, const char *pathfile, size_t cell_width, size_t cell_height, GL_Surface_Callback_t callback, void *parameters)
-{
-    GL_Surface_t atlas;
-    if (!GL_surface_load(&atlas, pathfile, callback, parameters)) {
-        return false;
-    }
-
-    *sheet = (GL_Sheet_t){
-            .atlas = atlas,
-            .cells = precompute_cells(atlas.width, atlas.height, cell_width, cell_height),
-            .size = (GL_Size_t){ cell_width, cell_height }
-        };
-    Log_write(LOG_LEVELS_DEBUG, "<GL> sheet #%p created", sheet);
-
-    return true;
-}
-
 bool GL_sheet_decode(GL_Sheet_t *sheet, const void *buffer, size_t size, size_t cell_width, size_t cell_height, GL_Surface_Callback_t callback, void *parameters)
 {
     GL_Surface_t atlas;

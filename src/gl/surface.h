@@ -30,15 +30,14 @@
 
 typedef struct _GL_Surface_t {
     size_t width, height;
-    GL_Pixel_t *data; // TODO: aligned to `sizeof(uint32_t)`?
+    GL_Pixel_t *data;
     GL_Pixel_t **data_rows;
     size_t data_size;
 } GL_Surface_t;
 
 typedef void (*GL_Surface_Callback_t)(void *parameters, GL_Surface_t *surface, const void *data);
 
-extern bool GL_surface_load(GL_Surface_t *surface, const char *pathfile, GL_Surface_Callback_t callback, void *parameters);
-extern bool GL_surface_decode(GL_Surface_t *surface, const void *buffer, size_t size, const GL_Surface_Callback_t callback, void *parameters);
+extern bool GL_surface_decode(GL_Surface_t *surface, const void *buffer, size_t buffer_size, const GL_Surface_Callback_t callback, void *parameters);
 extern bool GL_surface_create(GL_Surface_t *surface, size_t width, size_t height);
 extern void GL_surface_delete(GL_Surface_t *surface);
 

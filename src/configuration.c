@@ -22,7 +22,6 @@
 
 #include "configuration.h"
 
-#include "file.h"
 #include "log.h"
 
 #include "core/luax.h"
