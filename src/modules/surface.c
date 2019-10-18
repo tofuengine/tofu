@@ -305,17 +305,17 @@ static int surface_blit3(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
-    float x = (float)lua_tonumber(L, 2);
-    float y = (float)lua_tonumber(L, 3);
+    int x = lua_tointeger(L, 2);
+    int y = lua_tointeger(L, 3);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Surface.blit() -> %.f, %.f", x, y);
+    Log_write(LOG_LEVELS_DEBUG, "Surface.blit() -> %d, %d", x, y);
 #endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
-    GL_context_blit(context, surface, (GL_Rectangle_t){ 0, 0, surface->width, surface->height }, (GL_Point_t){ (int)x, (int)y });
+    GL_context_blit(context, surface, (GL_Rectangle_t){ 0, 0, surface->width, surface->height }, (GL_Point_t){ x, y });
 
     return 0;
 }
@@ -329,18 +329,18 @@ static int surface_blit4(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
-    float x = (float)lua_tonumber(L, 2);
-    float y = (float)lua_tonumber(L, 3);
-    float rotation = (float)lua_tonumber(L, 4);
+    int x = lua_tointeger(L, 2);
+    int y = lua_tointeger(L, 3);
+    int rotation = lua_tointeger(L, 4);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Surface.blit() -> %.f, %.f, %.f", x, y, rotation);
+    Log_write(LOG_LEVELS_DEBUG, "Surface.blit() -> %d, %d, %d", x, y, rotation);
 #endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
     const GL_Context_t *context = &display->gl;
-    const GL_Surface_t *surface = &instance->surface;
-    GL_context_blit_sr(context, surface, (GL_Rectangle_t){ 0, 0, surface->width, surface->height }, (GL_Point_t){ (int)x, (int)y }, 0.0f, 0.0f, rotation, 0.5, 0.5f);
+    const GL_Surface_t *surface = &instance->surface; // TODO: fix explicit struct elements
+    GL_context_blit_sr(context, surface, (GL_Rectangle_t){ 0, 0, surface->width, surface->height }, (GL_Point_t){ x, y }, 0.0f, 0.0f, rotation, 0.5, 0.5f);
 
     return 0;
 }
@@ -355,19 +355,19 @@ static int surface_blit5(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
-    float x = (float)lua_tonumber(L, 2);
-    float y = (float)lua_tonumber(L, 3);
+    int x = lua_tointeger(L, 2);
+    int y = lua_tointeger(L, 3);
     float scale_x = (float)lua_tonumber(L, 4);
     float scale_y = (float)lua_tonumber(L, 5);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Surface.blit() -> %.f, %.f, %.f, %.f", x, y, scale_x, scale_y);
+    Log_write(LOG_LEVELS_DEBUG, "Surface.blit() -> %d, %d, %.f, %.f", x, y, scale_x, scale_y);
 #endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
-    GL_context_blit_s(context, surface, (GL_Rectangle_t){ 0, 0, surface->width, surface->height }, (GL_Point_t){ (int)x, (int)y }, scale_x, scale_y);
+    GL_context_blit_s(context, surface, (GL_Rectangle_t){ 0, 0, surface->width, surface->height }, (GL_Point_t){ x, y }, scale_x, scale_y);
 
     return 0;
 }
@@ -383,20 +383,20 @@ static int surface_blit6(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
-    float x = (float)lua_tonumber(L, 2);
-    float y = (float)lua_tonumber(L, 3);
+    int x = lua_tointeger(L, 2);
+    int y = lua_tointeger(L, 3);
     float scale_x = (float)lua_tonumber(L, 4);
     float scale_y = (float)lua_tonumber(L, 5);
-    float rotation = (float)lua_tonumber(L, 6);
+    int rotation = lua_tointeger(L, 6);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Surface.blit() -> %.f, %.f, %.f, %.f, %.f", x, y, scale_x, scale_y, rotation);
+    Log_write(LOG_LEVELS_DEBUG, "Surface.blit() -> %d, %d, %.f, %.f, %d", x, y, scale_x, scale_y, rotation);
 #endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
-    GL_context_blit_sr(context, surface, (GL_Rectangle_t){ 0, 0, surface->width, surface->height }, (GL_Point_t){ (int)x, (int)y }, scale_x, scale_y, rotation, 0.5, 0.5f);
+    GL_context_blit_sr(context, surface, (GL_Rectangle_t){ 0, 0, surface->width, surface->height }, (GL_Point_t){ x, y }, scale_x, scale_y, rotation, 0.5, 0.5f);
 
     return 0;
 }
@@ -413,21 +413,21 @@ static int surface_blit7(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
-    float x = (float)lua_tonumber(L, 2);
-    float y = (float)lua_tonumber(L, 3);
-    float ox = (float)lua_tonumber(L, 4);
-    float oy = (float)lua_tonumber(L, 5);
-    float width = (float)lua_tonumber(L, 6);
-    float height = (float)lua_tonumber(L, 7);
+    int x = lua_tointeger(L, 2);
+    int y = lua_tointeger(L, 3);
+    int ox = lua_tointeger(L, 4);
+    int oy = lua_tointeger(L, 5);
+    int width = lua_tointeger(L, 6);
+    int height = lua_tointeger(L, 7);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Surface.blit() -> %.f, %.f, %.f, %.f, %.f, %.f", x, y, ox, oy, width, height);
+    Log_write(LOG_LEVELS_DEBUG, "Surface.blit() -> %d, %d, %d, %d, %d, %d", x, y, ox, oy, width, height);
 #endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
-    GL_context_blit(context, surface, (GL_Rectangle_t){ (int)ox, (int)oy, (int)width, (int)height }, (GL_Point_t){ (int)x, (int)y });
+    GL_context_blit(context, surface, (GL_Rectangle_t){ ox, oy, width, height }, (GL_Point_t){ x, y });
 
     return 0;
 }
@@ -446,23 +446,23 @@ static int surface_blit9(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
-    float x = (float)lua_tonumber(L, 2);
-    float y = (float)lua_tonumber(L, 3);
-    float ox = (float)lua_tonumber(L, 4);
-    float oy = (float)lua_tonumber(L, 5);
-    float width = (float)lua_tonumber(L, 6);
-    float height = (float)lua_tonumber(L, 7);
+    int x = lua_tointeger(L, 2);
+    int y = lua_tointeger(L, 3);
+    int ox = lua_tointeger(L, 4);
+    int oy = lua_tointeger(L, 5);
+    int width = lua_tointeger(L, 6);
+    int height = lua_tointeger(L, 7);
     float scale_x = (float)lua_tonumber(L, 8);
     float scale_y = (float)lua_tonumber(L, 9);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Surface.blit() -> %.f, %.f, %.f, %.f, %.f, %.f, %.f, %.f", x, y, ox, oy, width, height, scale_x, scale_y);
+    Log_write(LOG_LEVELS_DEBUG, "Surface.blit() -> %d, %d, %d, %d, %d, %d, %.f, %.f", x, y, ox, oy, width, height, scale_x, scale_y);
 #endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
-    GL_context_blit_s(context, surface, (GL_Rectangle_t){ (int)ox, (int)oy, (int)width, (int)height }, (GL_Point_t){ (int)x, (int)y }, scale_x, scale_y);
+    GL_context_blit_s(context, surface, (GL_Rectangle_t){ ox, oy, width, height }, (GL_Point_t){ x, y }, scale_x, scale_y);
 
     return 0;
 }
@@ -482,24 +482,24 @@ static int surface_blit10(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
-    float x = (float)lua_tonumber(L, 2);
-    float y = (float)lua_tonumber(L, 3);
-    float ox = (float)lua_tonumber(L, 4);
-    float oy = (float)lua_tonumber(L, 5);
-    float width = (float)lua_tonumber(L, 6);
-    float height = (float)lua_tonumber(L, 7);
+    int x = lua_tointeger(L, 2);
+    int y = lua_tointeger(L, 3);
+    int ox = lua_tointeger(L, 4);
+    int oy = lua_tointeger(L, 5);
+    int width = lua_tointeger(L, 6);
+    int height = lua_tointeger(L, 7);
     float scale_x = (float)lua_tonumber(L, 8);
     float scale_y = (float)lua_tonumber(L, 9);
-    float rotation = (float)lua_tonumber(L, 10);
+    int rotation = lua_tointeger(L, 10);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Surface.blit() -> %.f, %.f, %.f, %.f, %.f, %.f, %.f, %.f, %.f", x, y, ox, oy, width, height, scale_x, scale_y, rotation);
+    Log_write(LOG_LEVELS_DEBUG, "Surface.blit() -> %d, %d, %.d, %d, %d, %d, %.f, %.f, %d", x, y, ox, oy, width, height, scale_x, scale_y, rotation);
 #endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
-    GL_context_blit_sr(context, surface, (GL_Rectangle_t){ (int)ox, (int)oy, (int)width, (int)height }, (GL_Point_t){ (int)x, (int)y }, scale_x, scale_y, rotation, 0.5, 0.5f);
+    GL_context_blit_sr(context, surface, (GL_Rectangle_t){ ox, oy, width, height }, (GL_Point_t){ x, y }, scale_x, scale_y, rotation, 0.5, 0.5f);
 
     return 0;
 }
@@ -553,17 +553,17 @@ static int surface_xform3(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
-    float x = (float)lua_tonumber(L, 2);
-    float y = (float)lua_tonumber(L, 3);
+    int x = lua_tointeger(L, 2);
+    int y = lua_tointeger(L, 3);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Surface.xform() -> %.f, %.f", x, y);
+    Log_write(LOG_LEVELS_DEBUG, "Surface.xform() -> %d, %d", x, y);
 #endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
-    GL_context_blit_x(context, surface, (GL_Point_t){ (int)x, (int)y }, &instance->xform);
+    GL_context_blit_x(context, surface, (GL_Point_t){ x, y }, &instance->xform);
 
     return 0;
 }

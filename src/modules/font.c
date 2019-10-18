@@ -80,7 +80,7 @@ static void to_font_atlas_callback(void *parameters, GL_Surface_t *surface, cons
     }
 }
 
-static void align(const char *text, const char *alignment, float *x, float *y, float w, float h)
+static void align(const char *text, const char *alignment, int *x, int *y, int w, int h)
 {
 #ifndef __NO_LINEFEEDS__
     float width = 0.0f;
@@ -102,7 +102,7 @@ static void align(const char *text, const char *alignment, float *x, float *y, f
     float width = strlen(text) * w;
 #endif
     if (alignment[0] == 'c') {
-        *x -= width * 0.5f;
+        *x -= width / 2;
     } else
     if (alignment[0] == 'r') {
         *x -= width;
@@ -184,8 +184,8 @@ static int font_write5(lua_State *L)
     LUAX_SIGNATURE_END
     Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
     const char *text = lua_tostring(L, 2);
-    float x = (float)lua_tonumber(L, 3);
-    float y = (float)lua_tonumber(L, 4);
+    int x = lua_tointeger(L, 3);
+    int y = lua_tointeger(L, 4);
     const char *alignment = lua_tostring(L, 5);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %s, %d, %d, %s", text, x, y, alignment);
@@ -196,13 +196,13 @@ static int font_write5(lua_State *L)
     const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
 
-    float dw = sheet->size.width;
-    float dh = sheet->size.height;
+    int dw = sheet->size.width;
+    int dh = sheet->size.height;
 
-    float ox = x, oy = y;
+    int ox = x, oy = y;
     align(text, alignment, &ox, &oy, dw, dh);
 
-    float dx = ox, dy = oy;
+    int dx = ox, dy = oy;
     for (const char *ptr = text; *ptr != '\0'; ++ptr) {
 #ifndef __NO_LINEFEEDS__
         if (*ptr == '\n') { // Handle carriage-return
@@ -214,7 +214,7 @@ static int font_write5(lua_State *L)
         if (*ptr < ' ') {
             continue;
         }
-        GL_context_blit(context, &sheet->atlas, sheet->cells[*ptr - ' '], (GL_Point_t){ .x = (int)dx, .y = (int)dy });
+        GL_context_blit(context, &sheet->atlas, sheet->cells[*ptr - ' '], (GL_Point_t){ .x = dx, .y = dy });
         dx += dw;
     }
 
@@ -233,8 +233,8 @@ static int font_write6(lua_State *L)
     LUAX_SIGNATURE_END
     Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
     const char *text = lua_tostring(L, 2);
-    float x = (float)lua_tonumber(L, 3);
-    float y = (float)lua_tonumber(L, 4);
+    int x = lua_tointeger(L, 3);
+    int y = lua_tointeger(L, 4);
     float scale = (float)lua_tonumber(L, 5);
     const char *alignment = lua_tostring(L, 6);
 #ifdef __DEBUG_API_CALLS__
@@ -246,13 +246,13 @@ static int font_write6(lua_State *L)
     const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
 
-    float dw = sheet->size.width * fabsf(scale);
-    float dh = sheet->size.height * fabsf(scale);
+    int dw = (int)(sheet->size.width * fabsf(scale));
+    int dh = (int)(sheet->size.height * fabsf(scale));
 
-    float ox = x, oy = y;
+    int ox = x, oy = y;
     align(text, alignment, &ox, &oy, dw, dh);
 
-    float dx = ox, dy = oy;
+    int dx = ox, dy = oy;
     for (const char *ptr = text; *ptr != '\0'; ++ptr) {
 #ifndef __NO_LINEFEEDS__
         if (*ptr == '\n') { // Handle carriage-return
@@ -264,7 +264,7 @@ static int font_write6(lua_State *L)
         if (*ptr < ' ') {
             continue;
         }
-        GL_context_blit_s(context, &sheet->atlas, sheet->cells[*ptr - ' '], (GL_Point_t){ .x = (int)dx, .y = (int)dy }, scale, scale);
+        GL_context_blit_s(context, &sheet->atlas, sheet->cells[*ptr - ' '], (GL_Point_t){ .x = dx, .y = dy }, scale, scale);
         dx += dw;
     }
 
@@ -284,8 +284,8 @@ static int font_write7(lua_State *L)
     LUAX_SIGNATURE_END
     Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
     const char *text = lua_tostring(L, 2);
-    float x = (float)lua_tonumber(L, 3);
-    float y = (float)lua_tonumber(L, 4);
+    int x = lua_tointeger(L, 3);
+    int y = lua_tointeger(L, 4);
     float scale_x = (float)lua_tonumber(L, 5);
     float scale_y = (float)lua_tonumber(L, 6);
     const char *alignment = lua_tostring(L, 7);
@@ -298,10 +298,10 @@ static int font_write7(lua_State *L)
     const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
 
-    float dw = sheet->size.width * fabsf(scale_x);
-    float dh = sheet->size.height * fabsf(scale_y);
+    int dw = (int)(sheet->size.width * fabsf(scale_x));
+    int dh = (int)(sheet->size.height * fabsf(scale_y));
 
-    float ox = x, oy = y;
+    int ox = x, oy = y;
     align(text, alignment, &ox, &oy, dw, dh);
 
     float dx = ox, dy = oy;
@@ -316,7 +316,7 @@ static int font_write7(lua_State *L)
         if (*ptr < ' ') {
             continue;
         }
-        GL_context_blit_s(context, &sheet->atlas, sheet->cells[*ptr - ' '], (GL_Point_t){ .x = (int)dx, .y = (int)dy }, scale_x, scale_y);
+        GL_context_blit_s(context, &sheet->atlas, sheet->cells[*ptr - ' '], (GL_Point_t){ .x = dx, .y = dy }, scale_x, scale_y);
         dx += dw;
     }
 

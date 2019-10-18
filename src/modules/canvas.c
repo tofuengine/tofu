@@ -646,11 +646,11 @@ static int canvas_point(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
     LUAX_SIGNATURE_END
-    float x = (float)lua_tonumber(L, 1);
-    float y = (float)lua_tonumber(L, 2);
+    int x = lua_tointeger(L, 1);
+    int y = lua_tointeger(L, 2);
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 3);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.point(%f, %f, %d)", x, y, index);
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.point(%d, %d, %d)", x, y, index);
 #endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
@@ -658,7 +658,7 @@ static int canvas_point(lua_State *L)
     index %= display->palette.count;
 
     const GL_Context_t *context = &display->gl;
-    GL_primitive_point(context, (GL_Point_t){ .x = (int)x, .y = (int)y }, index);
+    GL_primitive_point(context, (GL_Point_t){ .x = x, .y = y }, index);
 
     return 0;
 }
@@ -671,12 +671,12 @@ static int canvas_hline(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
     LUAX_SIGNATURE_END
-    float x = (float)lua_tonumber(L, 1);
-    float y = (float)lua_tonumber(L, 2);
+    int x = lua_tointeger(L, 1);
+    int y = lua_tointeger(L, 2);
     float width = (float)lua_tonumber(L, 3);
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 4);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.hline(%f, %f, %f, %d)", x, y, width, index);
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.hline(%d, %d, %f, %d)", x, y, width, index);
 #endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
@@ -684,7 +684,7 @@ static int canvas_hline(lua_State *L)
     index %= display->palette.count;
 
     const GL_Context_t *context = &display->gl;
-    GL_primitive_hline(context, (GL_Point_t){ .x = (int)x, .y = (int)y }, (size_t)width, index);
+    GL_primitive_hline(context, (GL_Point_t){ .x = x, .y = y }, (size_t)width, index);
 
     return 0;
 }
@@ -697,12 +697,12 @@ static int canvas_vline(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
     LUAX_SIGNATURE_END
-    float x = (float)lua_tonumber(L, 1);
-    float y = (float)lua_tonumber(L, 2);
-    float height = (float)lua_tonumber(L, 3);
+    int x = lua_tointeger(L, 1);
+    int y = lua_tointeger(L, 2);
+    size_t height = (size_t)lua_tointeger(L, 3);
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 4);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.vline(%f, %f, %f, %d)", x, y, height, index);
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.vline(%d, %d, %d, %d)", x, y, height, index);
 #endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
@@ -710,7 +710,7 @@ static int canvas_vline(lua_State *L)
     index %= display->palette.count;
 
     const GL_Context_t *context = &display->gl;
-    GL_primitive_vline(context, (GL_Point_t){ .x = (int)x, .y = (int)y }, (size_t)height, index);
+    GL_primitive_vline(context, (GL_Point_t){ .x = x, .y = y }, height, index);
 
     return 0;
 }
@@ -791,11 +791,11 @@ static int canvas_fill(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
     LUAX_SIGNATURE_END
-    float x = (float)lua_tonumber(L, 1);
-    float y = (float)lua_tonumber(L, 2);
+    int x = lua_tointeger(L, 1);
+    int y = lua_tointeger(L, 2);
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 3);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.fill(%f, %f, %d)", x, y, index);
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.fill(%d, %d, %d)", x, y, index);
 #endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
@@ -803,7 +803,7 @@ static int canvas_fill(lua_State *L)
     index %= display->palette.count;
 
     const GL_Context_t *context = &display->gl;
-    GL_context_fill(context, (GL_Point_t){ .x = (int)x, .y = (int)y }, index);
+    GL_context_fill(context, (GL_Point_t){ .x = x, .y = y }, index);
 
     return 0;
 }
@@ -863,13 +863,13 @@ static int canvas_rectangle(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
     LUAX_SIGNATURE_END
     const char *mode = lua_tostring(L, 1);
-    float x = (float)lua_tonumber(L, 2);
-    float y = (float)lua_tonumber(L, 3);
-    float width = (float)lua_tonumber(L, 4);
-    float height = (float)lua_tonumber(L, 5);
+    int x = lua_tointeger(L, 2);
+    int y = lua_tointeger(L, 3);
+    int width = lua_tointeger(L, 4);
+    int height = lua_tointeger(L, 5);
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 6);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.rectangle(%s, %f, %f, %f, %f, %d)", mode, x, y, width, height, index);
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.rectangle(%s, %d, %d, %d, %d, %d)", mode, x, y, width, height, index);
 #endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
@@ -878,26 +878,26 @@ static int canvas_rectangle(lua_State *L)
 
     const GL_Context_t *context = &display->gl;
     if (mode[0] == 'f') {
-        GL_primitive_filled_rectangle(context, (GL_Rectangle_t){ .x = (int)x, .y = (int)y, .width = (int)width, .height = (int)height }, index);
+        GL_primitive_filled_rectangle(context, (GL_Rectangle_t){ .x = x, .y = y, .width = width, .height = height }, index);
     } else {
-        float x0 = x;
-        float y0 = y;
-        float x1 = x0 + width - 1.0f;
-        float y1 = y0 + height - 1.0f;
+        int x0 = x;
+        int y0 = y;
+        int x1 = x0 + width - 1;
+        int y1 = y0 + height - 1;
 
         GL_Point_t vertices[5] = {
-                (GL_Point_t){ .x = (int)x0, .y = (int)y0 },
-                (GL_Point_t){ .x = (int)x0, .y = (int)y1 },
-                (GL_Point_t){ .x = (int)x1, .y = (int)y1 },
-                (GL_Point_t){ .x = (int)x1, .y = (int)y0 },
-                (GL_Point_t){ .x = (int)x0, .y = (int)y0 }
+                (GL_Point_t){ .x = x0, .y = y0 },
+                (GL_Point_t){ .x = x0, .y = y1 },
+                (GL_Point_t){ .x = x1, .y = y1 },
+                (GL_Point_t){ .x = x1, .y = y0 },
+                (GL_Point_t){ .x = x0, .y = y0 }
             };
         GL_primitive_polyline(context, vertices, 5, index);
 /*
-        GL_primitive_hline(context, (GL_Point_t){ .x = (int)x0, .y = (int)y0 }, width, index);
-        GL_primitive_vline(context, (GL_Point_t){ .x = (int)x0, .y = (int)y0 }, height, index);
-        GL_primitive_hline(context, (GL_Point_t){ .x = (int)x0, .y = (int)y1 }, width, index);
-        GL_primitive_vline(context, (GL_Point_t){ .x = (int)x1, .y = (int)y0 }, height, index);
+        GL_primitive_hline(context, (GL_Point_t){ .x = x0, .y = y0 }, width, index);
+        GL_primitive_vline(context, (GL_Point_t){ .x = x0, .y = y0 }, height, index);
+        GL_primitive_hline(context, (GL_Point_t){ .x = x0, .y = y1 }, width, index);
+        GL_primitive_vline(context, (GL_Point_t){ .x = x1, .y = y0 }, height, index);
 */
     }
 
