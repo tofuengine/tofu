@@ -671,6 +671,11 @@ static const float _lut[640] = {
     0.999924719f, /* [639] */
 };
 
+// We are generating a 640 entries LUT (512 plus 128). The additional 128 entries are used
+// To calculate the cosine without the additional module/masking. We can simplify the 
+// LUT boundaries calculation by using a power-of-two size for the LUT and just bit-mask;
+// by doing do, both positive and negative indices are handled properly without additional
+// computation (see `imod()`).
 void fsincos(int angle, float *sin, float *cos)
 {
     const int index = angle & 0x1ff;
@@ -678,6 +683,9 @@ void fsincos(int angle, float *sin, float *cos)
     *cos = _lut[index + 0x80];
 }
 
+// Instead of adding the whole trigonometric function set, we provide a way to convert
+// radians to rotation index. This is useful, for example, when using `atan2()` to get
+// a direction, then convert to the appropriate rotation index.
 int fatoi(float angle)
 {
     return (int)(angle * 81.487327576f) & 0x1ff;
