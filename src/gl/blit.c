@@ -316,7 +316,7 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
 
             if (x >= sminx && x <= smaxx && y >= sminy && y <= smaxy) {
 #ifdef __DEBUG_GRAPHICS__
-                pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)i + (int)j);
+                pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
                 const GL_Pixel_t *src = surface->data_rows[y] + x;
                 GL_Pixel_t index = shifting[*src];
