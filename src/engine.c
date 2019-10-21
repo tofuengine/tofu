@@ -166,6 +166,8 @@ void Engine_run(Engine_t *engine)
 
         Display_present(&engine->display);
 
+        // TODO: unleash capping.
+        // if (fps_capping) {
 #ifdef __CAP_FPS__
         float used = (float)glfwGetTime() - current;
         if (used < delta_time) {
@@ -182,5 +184,6 @@ void Engine_run(Engine_t *engine)
 #endif
         }
 #endif
+        // }
     }
 }

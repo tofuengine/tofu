@@ -35,6 +35,7 @@ typedef struct _Configuration {
     bool fullscreen;  // TODO: rename to "windowed"?
     int fps;
     int skippable_frames;
+    bool fps_capping;
     bool hide_cursor;
     bool exit_key_enabled;
     bool debug;

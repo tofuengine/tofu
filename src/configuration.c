@@ -46,6 +46,7 @@ void Configuration_initialize(Configuration_t *configuration)
     configuration->fullscreen = false;
     configuration->fps = FRAMES_PER_SECOND;
     configuration->skippable_frames = FRAMES_PER_SECOND / 5; // About 20% of the FPS amount.
+    configuration->fps_capping = false;
     configuration->hide_cursor = true;
     configuration->exit_key_enabled = true;
     configuration->debug = true;
@@ -84,6 +85,9 @@ void Configuration_parse(lua_State *L, Configuration_t *configuration)
         if (strcmp(key, "skippable_frames") == 0) {
             int suggested = configuration->fps / 5;
             configuration->skippable_frames = imin(lua_tointeger(L, -1), suggested); // TODO: not sure if `imin` or `imax`. :P
+        } else
+        if (strcmp(key, "fps_capping") == 0) {
+            configuration->fps_capping = lua_toboolean(L, -1);
         } else
         if (strcmp(key, "hide_cursor") == 0) {
             configuration->hide_cursor = lua_toboolean(L, -1);
