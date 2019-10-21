@@ -673,10 +673,10 @@ static int canvas_hline(lua_State *L)
     LUAX_SIGNATURE_END
     int x = lua_tointeger(L, 1);
     int y = lua_tointeger(L, 2);
-    float width = (float)lua_tonumber(L, 3);
+    int width = lua_tointeger(L, 3);
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 4);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.hline(%d, %d, %f, %d)", x, y, width, index);
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.hline(%d, %d, %d, %d)", x, y, width, index);
 #endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
@@ -724,10 +724,10 @@ static int canvas_line(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
     LUAX_SIGNATURE_END
-    float x0 = (float)lua_tonumber(L, 1);
-    float y0 = (float)lua_tonumber(L, 2);
-    float x1 = (float)lua_tonumber(L, 3);
-    float y1 = (float)lua_tonumber(L, 4);
+    int x0 = lua_tointeger(L, 1);
+    int y0 = lua_tointeger(L, 2);
+    int x1 = lua_tointeger(L, 3);
+    int y1 = lua_tointeger(L, 4);
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 5);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Canvas.line(%f, %f, %f, %f, %d)", x0, y0, x1, y1, index);
@@ -821,15 +821,15 @@ static int canvas_triangle(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
     LUAX_SIGNATURE_END
     const char *mode = lua_tostring(L, 1);
-    float x0 = (float)lua_tonumber(L, 2);
-    float y0 = (float)lua_tonumber(L, 3);
-    float x1 = (float)lua_tonumber(L, 4);
-    float y1 = (float)lua_tonumber(L, 5);
-    float x2 = (float)lua_tonumber(L, 6);
-    float y2 = (float)lua_tonumber(L, 7);
+    float x0 = lua_tointeger(L, 2);
+    float y0 = lua_tointeger(L, 3);
+    float x1 = lua_tointeger(L, 4);
+    float y1 = lua_tointeger(L, 5);
+    float x2 = lua_tointeger(L, 6);
+    float y2 = lua_tointeger(L, 7);
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 8);
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.triangle(%s, %f, %f, %f, %f, %f, %f, %d)", mode, x0, y0, x1, y1, x2, y2, index);
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.triangle(%s, %d, %d, %d, %d, %d, %d, %d)", mode, x0, y0, x1, y1, x2, y2, index);
 #endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
@@ -838,13 +838,13 @@ static int canvas_triangle(lua_State *L)
 
     const GL_Context_t *context = &display->gl;
     if (mode[0] == 'f') {
-        GL_primitive_filled_triangle(context, (GL_Point_t){ .x = (int)x0, (int)y0 }, (GL_Point_t){ .x = (int)x1, .y = (int)y1 }, (GL_Point_t){ .x = (int)x2, .y = (int)y2 }, index);
+        GL_primitive_filled_triangle(context, (GL_Point_t){ .x = x0, y0 }, (GL_Point_t){ .x = x1, .y = y1 }, (GL_Point_t){ .x = x2, .y = y2 }, index);
     } else {
         GL_Point_t vertices[4] = {
-                (GL_Point_t){ .x = (int)x0, .y = (int)y0 },
-                (GL_Point_t){ .x = (int)x1, .y = (int)y1 },
-                (GL_Point_t){ .x = (int)x2, .y = (int)y2 },
-                (GL_Point_t){ .x = (int)x0, .y = (int)y0 }
+                (GL_Point_t){ .x = x0, .y = y0 },
+                (GL_Point_t){ .x = x1, .y = y1 },
+                (GL_Point_t){ .x = x2, .y = y2 },
+                (GL_Point_t){ .x = x0, .y = y0 }
             };
         GL_primitive_polyline(context, vertices, 4, index);
     }
@@ -914,9 +914,9 @@ static int canvas_circle(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
     LUAX_SIGNATURE_END
     const char *mode = lua_tostring(L, 1);
-    float cx = (float)lua_tonumber(L, 2);
-    float cy = (float)lua_tonumber(L, 3);
-    float radius = (float)lua_tonumber(L, 4);
+    int cx = lua_tointeger(L, 2);
+    int cy = lua_tointeger(L, 3);
+    int radius = lua_tointeger(L, 4);
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 5);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Canvas.circle(%s, %f, %f, %f, %f, %d)", mode, cx, cy, radius);
@@ -929,12 +929,12 @@ static int canvas_circle(lua_State *L)
     const GL_Context_t *context = &display->gl;
 
     if (radius < 1.0f) { // Null radius, just a point regardless mode!
-        GL_primitive_point(context, (GL_Point_t){ .x = (int)cx, .y = (int)cy }, index);
+        GL_primitive_point(context, (GL_Point_t){ .x = cx, .y = cy }, index);
     } else
     if (mode[0] == 'f') {
-        GL_primitive_filled_circle(context, (GL_Point_t){ .x = (int)cx, .y = (int)cy }, (int)radius, index);
+        GL_primitive_filled_circle(context, (GL_Point_t){ .x = cx, .y = cy }, radius, index);
     } else {
-        GL_primitive_circle(context, (GL_Point_t){ .x = (int)cx, .y = (int)cy }, (int)radius, index);
+        GL_primitive_circle(context, (GL_Point_t){ .x = cx, .y = cy }, radius, index);
     }
 
     return 0;
