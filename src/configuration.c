@@ -24,16 +24,18 @@
 
 #include "log.h"
 
+#include "core/imath.h"
 #include "core/luax.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define SCREEN_WIDTH    320
-#define SCREEN_HEIGHT   240
-#define SCREEN_SCALE    0
-#define WINDOW_TITLE    ".: Tofu Engine :."
+#define SCREEN_WIDTH        320
+#define SCREEN_HEIGHT       240
+#define SCREEN_SCALE        0
+#define WINDOW_TITLE        ".: Tofu Engine :."
+#define FRAMES_PER_SECOND   60
 
 void Configuration_initialize(Configuration_t *configuration)
 {
@@ -42,8 +44,8 @@ void Configuration_initialize(Configuration_t *configuration)
     configuration->height = SCREEN_HEIGHT;
     configuration->scale = SCREEN_SCALE;
     configuration->fullscreen = false;
-    configuration->fps = 60;
-    configuration->skippable_frames = 12; // About 20% of the FTP amount.
+    configuration->fps = FRAMES_PER_SECOND;
+    configuration->skippable_frames = FRAMES_PER_SECOND / 5; // About 20% of the FPS amount.
     configuration->hide_cursor = true;
     configuration->exit_key_enabled = true;
     configuration->debug = true;
@@ -77,9 +79,11 @@ void Configuration_parse(lua_State *L, Configuration_t *configuration)
         } else
         if (strcmp(key, "fps") == 0) {
             configuration->fps = lua_tointeger(L, -1);
+            configuration->skippable_frames = configuration->fps / 5; // Keep synched. About 20% of the FPS amount.
         } else
         if (strcmp(key, "skippable_frames") == 0) {
-            configuration->skippable_frames = lua_tointeger(L, -1);
+            int suggested = configuration->fps / 5;
+            configuration->skippable_frames = imin(lua_tointeger(L, -1), suggested); // TODO: not sure if `imin` or `imax`. :P
         } else
         if (strcmp(key, "hide_cursor") == 0) {
             configuration->hide_cursor = lua_toboolean(L, -1);
