@@ -32,12 +32,12 @@
 #include "modules/font.h"
 #include "modules/input.h"
 #include "modules/file.h"
+#include "modules/math.h"
 #include "modules/system.h"
 #include "modules/surface.h"
 #include "modules/timer.h"
 
 // TODO: http://www.ilikebigbits.com/2017_06_01_float_or_double.html
-// TODO: add a math module exposing the `sincos` function.
 
 static int create_module(lua_State *L, const luaL_Reg *entries)
 {
@@ -64,6 +64,7 @@ static int collections_loader(lua_State *L)
 static int core_loader(lua_State *L)
 {
     static const luaL_Reg classes[] = {
+        { "Math", math_loader },
         { "System", system_loader },
         { NULL, NULL }
     };
