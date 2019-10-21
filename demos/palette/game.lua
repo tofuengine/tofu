@@ -3,6 +3,7 @@ local Canvas = require("tofu.graphics").Canvas
 local Font = require("tofu.graphics").Font
 local Input = require("tofu.events").Input
 local Class = require("tofu.util").Class
+local Math = require("tofu.core").Math
 local System = require("tofu.core").System
 
 local Game = Class.define()
@@ -66,10 +67,6 @@ function Game:update(_)
   end
 end
 
-local function triangle(x, period)
-  return period - math.abs(x % (2 * period) - period)
-end
-
 function Game:render(_)
   local time = System.time()
   Canvas.clear()
@@ -88,7 +85,7 @@ function Game:render(_)
   elseif self.mode == 1 then
     local scale = (math.cos(time) + 1) * 3 * 0 + 5
 --    local rotation = math.sin(time * 0.5) * 512
-    local rotation = triangle(math.floor(time * 64.0), 512)
+    local rotation = Math.triangle_wave(10.0, time) * 128
     self.bank:blit(0, Canvas.width() / 2, Canvas.height() / 2, scale, scale, rotation, 0.5, 0.5)
   elseif self.mode == 2 then
     self.bank:blit(0, Canvas.width() / 2, Canvas.height() / 2, 10, 10, 256 * 1, 0.5, 0.5)
