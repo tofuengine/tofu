@@ -38,6 +38,7 @@
 #ifdef DEBUG
   #include <stb/stb_leakcheck.h>
 #endif
+#include <stb/stb_ds.h>
 
 typedef struct _Canvas_Class_t {
 } Canvas_Class_t;
@@ -309,7 +310,7 @@ static int canvas_palette1(lua_State *L)
             palette.count = GL_MAX_PALETTE_COLORS;
         }
 
-        lua_pushnil(L); // first key
+        lua_pushnil(L);
         for (size_t i = 0; lua_next(L, 1); ++i) {
 #if 0
             const char *key_type = lua_typename(L, lua_type(L, -2)); // uses 'key' (at index -2) and 'value' (at index -1)
@@ -317,7 +318,7 @@ static int canvas_palette1(lua_State *L)
             const char *argb = lua_tostring(L, -1);
             palette.colors[i] = GL_palette_parse_color(argb);
 
-            lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
+            lua_pop(L, 1);
         }
     } else {
         Log_write(LOG_LEVELS_ERROR, "<CANVAS> wrong palette type, need to be string or list");
@@ -426,20 +427,24 @@ static int canvas_shift1(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    size_t count = luaX_count(L, 1);
+    size_t *from = NULL;
+    size_t *to = NULL;
+    size_t count = 0;
 
-    size_t from[count];
-    size_t to[count];
-    lua_pushnil(L); // first key
-    for (size_t i = 0; lua_next(L, 1); ++i) {
-        from[i] = lua_tointeger(L, -2);
-        to[i] = lua_tointeger(L, -1);
+    lua_pushnil(L);
+    while (lua_next(L, 1)) {
+        arrpush(from, lua_tointeger(L, -2));
+        arrpush(to, lua_tointeger(L, -1));
+        ++count;
 
-        lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
+        lua_pop(L, 1);
     }
 
     GL_Context_t *context = &display->gl;
     GL_context_shifting(context, from, to, count);
+
+    arrfree(from);
+    arrfree(to);
 
     return 0;
 }
@@ -502,20 +507,24 @@ static int canvas_transparent1(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    size_t count = luaX_count(L, 1);
+    GL_Pixel_t *indexes = NULL;
+    GL_Bool_t *transparent = NULL;
+    size_t count = 0;
 
-    GL_Pixel_t indexes[count]; // TOOD: use hashes over VLAs?
-    GL_Bool_t transparent[count];
-    lua_pushnil(L); // first key
-    for (size_t i = 0; lua_next(L, 1); ++i) {
-        indexes[i] = (GL_Pixel_t)lua_tointeger(L, -2);
-        transparent[i] = lua_toboolean(L, -1) ? GL_BOOL_TRUE : GL_BOOL_FALSE;
+    lua_pushnil(L);
+    while (lua_next(L, 1)) {
+        arrpush(indexes, (GL_Pixel_t)lua_tointeger(L, -2));
+        arrpush(transparent, lua_toboolean(L, -1) ? GL_BOOL_TRUE : GL_BOOL_FALSE);
+        ++count;
 
-        lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
+        lua_pop(L, 1);
     }
 
     GL_Context_t *context = &display->gl;
     GL_context_transparent(context, indexes, transparent, count);
+
+    arrfree(indexes);
+    arrfree(transparent);
 
     return 0;
 }
@@ -763,23 +772,31 @@ static int canvas_polyline(lua_State *L)
 
     index %= display->palette.count;
 
-    size_t count = luaX_count(L, 1) / 2;
+    GL_Point_t *vertices = NULL;
+    size_t count = 0;
+    int aux = 0;
+
+    lua_pushnil(L);
+    while (lua_next(L, 1)) {
+        int value = lua_tointeger(L, -1);
+        ++count;
+        if (count > 0 && (count % 2) == 0) {
+            GL_Point_t point = (GL_Point_t){ .x = aux, .y = value }; // Can't pass compound-literal to macro. :(
+            arrpush(vertices, point);
+        } else {
+            aux = value;
+        }
+        lua_pop(L, 1);
+    }
 
     if (count > 1) {
-        GL_Point_t vertices[count];
-        for (size_t i = 0; i < count; ++i) {
-            int base = i * 2;
-            lua_rawgeti(L, 1, base + 1);
-            lua_rawgeti(L, 1, base + 2);
-            vertices[i] = (GL_Point_t){ .x = (int)lua_tonumber(L, -2), .y = (int)lua_tonumber(L, -1) };
-            lua_pop(L, 2);
-        }
-
         const GL_Context_t *context = &display->gl;
-        GL_primitive_polyline(context, vertices, count, index);
+        GL_primitive_polyline(context, vertices, count / 2, index);
     } else {
         Log_write(LOG_LEVELS_WARNING, "<CANVAS> no enough points for polyline (%d)", count);
     }
+
+    arrfree(vertices);
 
     return 0;
 }

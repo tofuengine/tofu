@@ -35,6 +35,7 @@
 #ifdef DEBUG
   #include <stb/stb_leakcheck.h>
 #endif
+#include <stb/stb_ds.h>
 
 typedef struct _Surface_Class_t {
     // char full_path[PATH_FILE_MAX];
@@ -227,7 +228,7 @@ static int surface_gc(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface #%p sanitized from context", instance);
 
     if (instance->xform.table) {
-        free(instance->xform.table);
+        arrfree(instance->xform.table);
         Log_write(LOG_LEVELS_DEBUG, "<SURFACE> scan-line table #%p deallocated", instance->xform.table);
     }
 
@@ -719,7 +720,7 @@ static int surface_table1(lua_State *L)
 #endif
 
     if (instance->xform.table) {
-        free(instance->xform.table);
+        arrfree(instance->xform.table);
         Log_write(LOG_LEVELS_DEBUG, "<SURFACE> scan-line table #%p deallocated", instance->xform.table);
     }
     instance->xform.table = NULL;
@@ -739,37 +740,37 @@ static int surface_table2(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Surface.table(%d)", type);
 #endif
 
-    size_t count = luaX_count(L, 2) + 1; // Make room for the EOD marker.
-
-    GL_XForm_Table_Entry_t *table = malloc(count * sizeof(GL_XForm_Table_Entry_t));
-    if (!table) {
-        return luaL_error(L, "<SURFACE> can't allocate memory");
-    }
+    GL_XForm_Table_Entry_t *table = NULL;
+    size_t count = 0;
 
     lua_pushnil(L);
-    for (size_t i = 0; lua_next(L, 2); ++i) {
-        int index = lua_tointeger(L, -2);
-        table[i].scan_line = index; // The scan-line indicator is the array index.
+    while (lua_next(L, 2)) {
+        GL_XForm_Table_Entry_t entry = {};
+        entry.scan_line = lua_tointeger(L, -2); // The scan-line indicator is the array index.
 
         lua_pushnil(L);
-        for (size_t j = 0; lua_next(L, -2); ++j) { // Scan the value, which is an array.
-            if (j == GL_XFORM_TABLE_MAX_OPERATIONS) {
-                Log_write(LOG_LEVELS_WARNING, "<SURFACE> too many operation for table entry #%d (id #%d)", i, index);
+        for (size_t i = 0; lua_next(L, -2); ++i) { // Scan the value, which is an array.
+            if (i == GL_XFORM_TABLE_MAX_OPERATIONS) {
+                Log_write(LOG_LEVELS_WARNING, "<SURFACE> too many operation for table entry #%d (id #%d)", count, index);
                 lua_pop(L, 2);
                 break;
             }
-            table[i].count = j + 1;
-            table[i].operations[j].id = lua_isstring(L, -2) ? string_to_register(lua_tostring(L, -2)) : (GL_XForm_Registers_t)lua_tointeger(L, -2);
-            table[i].operations[j].value = (float)lua_tonumber(L, -1);
+            entry.count = i + 1;
+            entry.operations[i].id = lua_isstring(L, -2) ? string_to_register(lua_tostring(L, -2)) : (GL_XForm_Registers_t)lua_tointeger(L, -2);
+            entry.operations[i].value = (float)lua_tonumber(L, -1);
+
             lua_pop(L, 1);
         }
 
+        arrpush(table, entry);
+        ++count;
+
         lua_pop(L, 1);
     }
-    table[count - 1].scan_line = -1; // Set the end-of-data (safety) marker
+    arrpush(table, (GL_XForm_Table_Entry_t){ .scan_line = -1 }); // Set the end-of-data (safety) marker
 
     if (instance->xform.table) {
-        free(instance->xform.table);
+        arrfree(instance->xform.table);
 //        Log_write(LOG_LEVELS_TRACE, "<SURFACE> scan-line table #%p reallocated as #%p", instance->xform.table, table);
     }
     instance->xform.table = table;

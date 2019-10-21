@@ -89,6 +89,7 @@ typedef int luaX_Reference;
         } \
     } while (0);
 
+// TODO: the following macro is more convoluted than useful... :|
 #define LUAX_CLASS(n)               #n "_mt"
 
 #define luaX_dump(L)                luaX_stackdump(L, __FILE__, __LINE__)
@@ -102,14 +103,10 @@ extern int luaX_newmodule(lua_State *L, const luaX_Script *script, const luaL_Re
 extern void luaX_preload(lua_State *L, const char *modname, lua_CFunction openf, int nup);
 extern void luaX_require(lua_State *L, const char *modname, lua_CFunction openf, int nup, int glb);
 extern int luaX_toref(lua_State *L, int arg);
-extern void luaX_pushnumberarray(lua_State *L, float *array, size_t count);
-extern void luaX_tonumberarray(lua_State *L, int idx, float *array, size_t count);
 extern void luaX_checkargument(lua_State *L, int idx, const char *file, int line, ...);
 
 extern size_t luaX_packupvalues(lua_State *L, int nup);
 extern size_t luaX_unpackupvalues(lua_State *L);
-
-extern size_t luaX_count(lua_State *L, int idx);
 
 extern int luaX_isnil(lua_State *L, int idx);
 extern int luaX_isboolean(lua_State *L, int idx);
