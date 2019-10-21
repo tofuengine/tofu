@@ -31,6 +31,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#ifdef __CAP_FPS__
+  #include "platform.h"
+  #if PLATFORM_ID == PLATFORM_LINUX
+    #include <unistd.h>
+  #elif PLATFORM_ID == PLATFORM_WINDOWS
+    #include <windows.h>
+  #endif
+#endif
 #ifdef DEBUG
   #define STB_LEAKCHECK_IMPLEMENTATION
   #include <stb/stb_leakcheck.h>
@@ -158,8 +166,21 @@ void Engine_run(Engine_t *engine)
 
         Display_present(&engine->display);
 
-//        if (used < delta_time) {
-//            glfwWait
-//        }
+#ifdef __CAP_FPS__
+        float used = (float)glfwGetTime() - current;
+        if (used < delta_time) {
+            int millis = (int)((delta_time - used) * 1000.0f);
+#if PLATFORM_ID == PLATFORM_LINUX
+            usleep(millis * 1000);   // usleep takes sleep time in us (1 millionth of a second)
+#elif PLATFORM_ID == PLATFORM_LINUX
+            Sleep(millis);
+#else
+            struct timespec ts;
+            ts.tv_sec = millis / 1000;
+            ts.tv_nsec = (millis % 1000) * 1000000;
+            nanosleep(&ts, NULL);
+#endif
+        }
+#endif
     }
 }
