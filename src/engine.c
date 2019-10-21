@@ -27,6 +27,7 @@
 #include "log.h"
 
 #include <limits.h>
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -50,7 +51,7 @@ static bool update_statistics(Engine_Statistics_t *statistics, float elapsed) {
         samples += 1;
         return false;
     }
-    float fps = (float)FPS_AVERAGE_SAMPLES / sum;
+    float fps = roundf((float)FPS_AVERAGE_SAMPLES / sum);
     statistics->fps = fps;
     if (count == 0) {
         statistics->history[statistics->index] = fps;
