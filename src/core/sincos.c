@@ -676,9 +676,9 @@ static const float _lut[640] = {
 // LUT boundaries calculation by using a power-of-two size for the LUT and just bit-mask;
 // by doing do, both positive and negative indices are handled properly without additional
 // computation (see `imod()`).
-void fsincos(int angle, float *sin, float *cos)
+void fsincos(int rotation, float *sin, float *cos)
 {
-    const int index = angle & 0x1ff;
+    const int index = rotation & 0x1ff;
     *sin = _lut[index];
     *cos = _lut[index + 0x80];
 }
@@ -686,7 +686,7 @@ void fsincos(int angle, float *sin, float *cos)
 // Instead of adding the whole trigonometric function set, we provide a way to convert
 // radians to rotation index. This is useful, for example, when using `atan2()` to get
 // a direction, then convert to the appropriate rotation index.
-int fatoi(float angle)
+int fator(float angle)
 {
     return (int)(angle * 81.487327576f) & 0x1ff;
 }

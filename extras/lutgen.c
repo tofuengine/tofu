@@ -120,16 +120,18 @@ int main(int argc, char *argv[])
     }
     printf("};\n");
     printf("\n");
-    printf("void fsincos(int angle, float *sin, float *cos)\n");
+    printf("#define SINCOS_PERIOD\t%lu\n", lut_size);
+    printf("\n");
+    printf("void fsincos(int rotation, float *sin, float *cos)\n");
     printf("{\n");
-    printf("    const int index = angle & 0x%lx;\n", lut_size - 1);
+    printf("    const int index = rotation & 0x%lx;\n", lut_size - 1);
     printf("    *sin = _lut[index];\n");
     printf("    *cos = _lut[index + 0x%lx];\n", lut_size_4th);
     printf("}\n");
     printf("\n");
-    printf("int fatoi(float angle)\n");
+    printf("int fator(float angle)\n");
     printf("{\n");
-    printf("    return (int)(angle * 81.487327576f) & 0x1ff;\n");
+    printf("    return (int)(angle * %.9ff) & 0x1ff;\n", lut_over_twice_pi);
     printf("}\n");
 
 

@@ -20,10 +20,12 @@
  * SOFTWARE.
  **/
 
-#ifndef __SIN_COS_H__
-#define __SIN_COS_H__
+#ifndef __SINCOS_H__
+#define __SINCOS_H__
 
-extern void fsincos(int angle, float *sin, float *cos);
-extern int fatoi(float angle);
+#define SINCOS_PERIOD  512
 
-#endif  /* __SIN_COS_H__ */
+extern void fsincos(int rotation, float *sin, float *cos);
+extern int fator(float angle);
+
+#endif  /* __SINCOS_H__ */
