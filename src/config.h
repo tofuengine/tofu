@@ -43,7 +43,6 @@
 
 #define __NO_LINEFEEDS__
 
-#undef  __CAP_FPS__
 #undef  __LOWERCASE_ARGB__
 #undef  __DEBUG_TRIANGLES_WINDING__
 #undef  __FIND_NEAREST_COLOR_EUCLIDIAN__

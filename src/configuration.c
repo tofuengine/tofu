@@ -44,9 +44,9 @@ void Configuration_initialize(Configuration_t *configuration)
     configuration->height = SCREEN_HEIGHT;
     configuration->scale = SCREEN_SCALE;
     configuration->fullscreen = false;
-    configuration->fps = FRAMES_PER_SECOND;
+    configuration->update_fps = FRAMES_PER_SECOND;
     configuration->skippable_frames = FRAMES_PER_SECOND / 5; // About 20% of the FPS amount.
-    configuration->fps_capping = false;
+    configuration->render_fps = -1;
     configuration->hide_cursor = true;
     configuration->exit_key_enabled = true;
     configuration->debug = true;
@@ -78,16 +78,16 @@ void Configuration_parse(lua_State *L, Configuration_t *configuration)
         if (strcmp(key, "fullscreen") == 0) {
             configuration->fullscreen = lua_toboolean(L, -1);
         } else
-        if (strcmp(key, "fps") == 0) {
-            configuration->fps = lua_tointeger(L, -1);
-            configuration->skippable_frames = configuration->fps / 5; // Keep synched. About 20% of the FPS amount.
+        if (strcmp(key, "update_fps") == 0) {
+            configuration->update_fps = lua_tointeger(L, -1);
+            configuration->skippable_frames = configuration->update_fps / 5; // Keep synched. About 20% of the FPS amount.
         } else
-        if (strcmp(key, "skippable_frames") == 0) {
-            int suggested = configuration->fps / 5;
+        if (strcmp(key, "skippable-frames") == 0) {
+            int suggested = configuration->update_fps / 5;
             configuration->skippable_frames = imin(lua_tointeger(L, -1), suggested); // TODO: not sure if `imin` or `imax`. :P
         } else
-        if (strcmp(key, "fps_capping") == 0) {
-            configuration->fps_capping = lua_toboolean(L, -1);
+        if (strcmp(key, "render-fps") == 0) {
+            configuration->render_fps = lua_tointeger(L, -1);
         } else
         if (strcmp(key, "hide_cursor") == 0) {
             configuration->hide_cursor = lua_toboolean(L, -1);

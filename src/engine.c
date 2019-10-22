@@ -25,26 +25,39 @@
 #include "config.h"
 #include "configuration.h"
 #include "log.h"
+#include "platform.h"
 
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-#ifdef __CAP_FPS__
-  #include "platform.h"
-  #if PLATFORM_ID == PLATFORM_LINUX
-    #include <unistd.h>
-  #elif PLATFORM_ID == PLATFORM_WINDOWS
-    #include <windows.h>
-  #endif
+#if PLATFORM_ID == PLATFORM_LINUX
+  #include <unistd.h>
+#elif PLATFORM_ID == PLATFORM_WINDOWS
+  #include <windows.h>
 #endif
 #ifdef DEBUG
   #define STB_LEAKCHECK_IMPLEMENTATION
   #include <stb/stb_leakcheck.h>
 #endif
 
-static bool update_statistics(Engine_Statistics_t *statistics, float elapsed) {
+static inline void wait_for(float seconds)
+{
+    int millis = (int)(seconds * 1000.0f);
+#if PLATFORM_ID == PLATFORM_LINUX
+    usleep(millis * 1000);   // usleep takes sleep time in us (1 millionth of a second)
+#elif PLATFORM_ID == PLATFORM_WINDOWS
+    Sleep(millis);
+#else
+    struct timespec ts;
+    ts.tv_sec = millis / 1000;
+    ts.tv_nsec = (millis % 1000) * 1000000;
+    nanosleep(&ts, NULL);
+#endif
+}
+
+static inline bool update_statistics(Engine_Statistics_t *statistics, float elapsed) {
     static float history[FPS_AVERAGE_SAMPLES] = {};
     static int index = 0;
     static int samples = 0;
@@ -123,12 +136,13 @@ void Engine_terminate(Engine_t *engine)
 
 void Engine_run(Engine_t *engine)
 {
-    const float delta_time = 1.0f / (float)engine->configuration.fps;
+    const float update_time = 1.0f / (float)engine->configuration.update_fps;
     const int skippable_frames = engine->configuration.skippable_frames;
-    Log_write(LOG_LEVELS_INFO, "<ENGINE> now running, delta-time is %.3fs w/ %d skippable frames", delta_time, skippable_frames);
+    const float render_time = 1.0f / (float)engine->configuration.render_fps;
+    Log_write(LOG_LEVELS_INFO, "<ENGINE> now running, update-time is %.3fs w/ %d skippable frames (%.3fs render-time)", update_time, skippable_frames, render_time);
 
     Engine_Statistics_t statistics = (Engine_Statistics_t){
-            .delta_time = delta_time,
+            .delta_time = update_time,
         };
 
     float previous = (float)glfwGetTime();
@@ -156,34 +170,32 @@ void Engine_run(Engine_t *engine)
         running = running && Interpreter_input(&engine->interpreter); // Lazy evaluate `running`, will avoid calls when error.
 
         lag += elapsed; // Count a maximum amount of skippable frames in order no to stall on slower machines.
-        for (int frames = 0; (frames < skippable_frames) && (lag >= delta_time); ++frames) {
-            engine->environment.time += delta_time;
-            running = running && Interpreter_update(&engine->interpreter, delta_time);
-            lag -= delta_time;
+        for (int frames = 0; (frames < skippable_frames) && (lag >= update_time); ++frames) {
+            engine->environment.time += update_time;
+            running = running && Interpreter_update(&engine->interpreter, update_time);
+            lag -= update_time;
         }
 
-        running = running && Interpreter_render(&engine->interpreter, lag / delta_time);
+        running = running && Interpreter_render(&engine->interpreter, lag / update_time);
 
         Display_present(&engine->display);
 
-        // TODO: unleash capping.
-        // if (fps_capping) {
-#ifdef __CAP_FPS__
-        float used = (float)glfwGetTime() - current;
-        if (used < delta_time) {
-            int millis = (int)((delta_time - used) * 1000.0f);
-#if PLATFORM_ID == PLATFORM_LINUX
-            usleep(millis * 1000);   // usleep takes sleep time in us (1 millionth of a second)
-#elif PLATFORM_ID == PLATFORM_LINUX
-            Sleep(millis);
-#else
-            struct timespec ts;
-            ts.tv_sec = millis / 1000;
-            ts.tv_nsec = (millis % 1000) * 1000000;
-            nanosleep(&ts, NULL);
-#endif
+        float frame_time = (float)glfwGetTime() - current;
+#ifdef __AUTO_LOCK_FPS__
+        int fps = 1.0f / ((float)glfwGetTime() - current);
+        if (fps > 60) { // Higher than 60 FPS is generally not visible on LCDs.
+            fps = 60;
+        } else
+        if (fps > 45) { // Mid-range, lock for better consistency.
+            fps = 45;
+        } else
+        if (fps > 30) { // Lower frame rate is not acceptable
+            fps = 30;
         }
+        float render_time = 1.0f / (float)fps;
 #endif
-        // }
+        if (render_time > frame_time) {
+            wait_for(render_time - frame_time);
+        }
     }
 }
