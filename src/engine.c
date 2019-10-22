@@ -136,13 +136,13 @@ void Engine_terminate(Engine_t *engine)
 
 void Engine_run(Engine_t *engine)
 {
-    const float update_time = 1.0f / (float)engine->configuration.update_fps;
+    const float delta_time = 1.0f / (float)engine->configuration.fps;
     const int skippable_frames = engine->configuration.skippable_frames;
-    const float render_time = 1.0f / (float)engine->configuration.render_fps;
-    Log_write(LOG_LEVELS_INFO, "<ENGINE> now running, update-time is %.3fs w/ %d skippable frames (%.3fs render-time)", update_time, skippable_frames, render_time);
+    const float *frame_caps = engine->configuration.frame_caps;
+    Log_write(LOG_LEVELS_INFO, "<ENGINE> now running, update-time is %.3fs w/ %d skippable frames", delta_time, skippable_frames);
 
     Engine_Statistics_t statistics = (Engine_Statistics_t){
-            .delta_time = update_time,
+            .delta_time = delta_time,
         };
 
     float previous = (float)glfwGetTime();
@@ -166,36 +166,28 @@ void Engine_run(Engine_t *engine)
         }
 
         Display_process_input(&engine->display);
-
         running = running && Interpreter_input(&engine->interpreter); // Lazy evaluate `running`, will avoid calls when error.
 
         lag += elapsed; // Count a maximum amount of skippable frames in order no to stall on slower machines.
-        for (int frames = 0; (frames < skippable_frames) && (lag >= update_time); ++frames) {
-            engine->environment.time += update_time;
-            running = running && Interpreter_update(&engine->interpreter, update_time);
-            lag -= update_time;
+        for (int frames = 0; (frames < skippable_frames) && (lag >= delta_time); ++frames) {
+            engine->environment.time += delta_time;
+            running = running && Interpreter_update(&engine->interpreter, delta_time);
+            lag -= delta_time;
         }
 
-        running = running && Interpreter_render(&engine->interpreter, lag / update_time);
-
+        running = running && Interpreter_render(&engine->interpreter, lag / delta_time);
         Display_present(&engine->display);
 
         float frame_time = (float)glfwGetTime() - current;
-#ifdef __AUTO_LOCK_FPS__
-        int fps = 1.0f / ((float)glfwGetTime() - current);
-        if (fps > 60) { // Higher than 60 FPS is generally not visible on LCDs.
-            fps = 60;
-        } else
-        if (fps > 45) { // Mid-range, lock for better consistency.
-            fps = 45;
-        } else
-        if (fps > 30) { // Lower frame rate is not acceptable
-            fps = 30;
+        float reference_time = frame_time;
+        for (int i = MAX_CONFIGURATION_FRAME_CAPS - 1; i; --i) { // Backward scanning, to match the (inverted) "greatest" one
+            if (frame_time < frame_caps[i]) {
+                reference_time = frame_caps[i];
+                break;
+            }
         }
-        float render_time = 1.0f / (float)fps;
-#endif
-        if (render_time > frame_time) {
-            wait_for(render_time - frame_time);
+        if (reference_time > frame_time) {
+            wait_for(reference_time - frame_time);
         }
     }
 }

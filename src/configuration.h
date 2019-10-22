@@ -28,14 +28,15 @@
 typedef struct lua_State lua_State;
 
 #define MAX_CONFIGURATION_TITLE_LENGTH      128
+#define MAX_CONFIGURATION_FRAME_CAPS        4
 
 typedef struct _Configuration {
     char title[MAX_CONFIGURATION_TITLE_LENGTH];
     int width, height, scale;
     bool fullscreen;  // TODO: rename to "windowed"?
-    int update_fps;
+    int fps;
     int skippable_frames;
-    int render_fps;
+    float frame_caps[MAX_CONFIGURATION_FRAME_CAPS]; // We are storing the reciprocal of the FPS, i.e. the frame times.
     bool hide_cursor;
     bool exit_key_enabled;
     bool debug;
