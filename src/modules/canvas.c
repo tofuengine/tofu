@@ -748,8 +748,8 @@ static int canvas_line(lua_State *L)
 
     const GL_Context_t *context = &display->gl;
     GL_Point_t vertices[2] = {
-            (GL_Point_t){ .x = (int)x0, .y = (int)y0 },
-            (GL_Point_t){ .x = (int)x1, .y = (int)y1 }
+            (GL_Point_t){ .x = x0, .y = y0 },
+            (GL_Point_t){ .x = x1, .y = y1 }
         };
     GL_primitive_polyline(context, vertices, 2, index);
 
