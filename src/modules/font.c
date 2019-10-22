@@ -235,7 +235,7 @@ static int font_write6(lua_State *L)
     const char *text = lua_tostring(L, 2);
     int x = lua_tointeger(L, 3);
     int y = lua_tointeger(L, 4);
-    float scale = (float)lua_tonumber(L, 5);
+    float scale = lua_tonumber(L, 5);
     const char *alignment = lua_tostring(L, 6);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %s, %f, %f, %f, %s", text, x, y, scale, alignment);
@@ -286,8 +286,8 @@ static int font_write7(lua_State *L)
     const char *text = lua_tostring(L, 2);
     int x = lua_tointeger(L, 3);
     int y = lua_tointeger(L, 4);
-    float scale_x = (float)lua_tonumber(L, 5);
-    float scale_y = (float)lua_tonumber(L, 6);
+    float scale_x = lua_tonumber(L, 5);
+    float scale_y = lua_tonumber(L, 6);
     const char *alignment = lua_tostring(L, 7);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %s, %f, %f, %f, %f, %s", text, x, y, scale_x, scale_y, alignment);

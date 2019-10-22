@@ -225,8 +225,8 @@ static int bank_blit6(lua_State *L)
     int cell_id = lua_tointeger(L, 2);
     int x = lua_tointeger(L, 3);
     int y = lua_tointeger(L, 4);
-    float scale_x = (float)lua_tonumber(L, 5);
-    float scale_y = (float)lua_tonumber(L, 6);
+    float scale_x = lua_tonumber(L, 5);
+    float scale_y = lua_tonumber(L, 6);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f, %.f, %.f", cell_id, x, y, scale_x, scale_y);
 #endif
@@ -255,8 +255,8 @@ static int bank_blit7(lua_State *L)
     int cell_id = lua_tointeger(L, 2);
     int x = lua_tointeger(L, 3);
     int y = lua_tointeger(L, 4);
-    float scale_x = (float)lua_tonumber(L, 5);
-    float scale_y = (float)lua_tonumber(L, 6);
+    float scale_x = lua_tonumber(L, 5);
+    float scale_y = lua_tonumber(L, 6);
     int rotation = lua_tointeger(L, 7);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f, %.f, %.f, %d", cell_id, x, y, scale_x, scale_y, rotation);
@@ -288,11 +288,11 @@ static int bank_blit9(lua_State *L)
     int cell_id = lua_tointeger(L, 2);
     int x = lua_tointeger(L, 3);
     int y = lua_tointeger(L, 4);
-    float scale_x = (float)lua_tonumber(L, 5);
-    float scale_y = (float)lua_tonumber(L, 6);
+    float scale_x = lua_tonumber(L, 5);
+    float scale_y = lua_tonumber(L, 6);
     int rotation = lua_tointeger(L, 7);
-    float anchor_x = (float)lua_tonumber(L, 8);
-    float anchor_y = (float)lua_tonumber(L, 9);
+    float anchor_x = lua_tonumber(L, 8);
+    float anchor_y = lua_tonumber(L, 9);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f, %.f, %.f, %d, %.f, %.f", cell_id, x, y, scale_x, scale_y, rotation, anchor_x, anchor_y);
 #endif

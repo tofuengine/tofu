@@ -455,8 +455,8 @@ static int canvas_shift2(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
     LUAX_SIGNATURE_END
-    size_t from = lua_tointeger(L, 1);
-    size_t to = lua_tointeger(L, 2);
+    size_t from = (size_t)lua_tointeger(L, 1);
+    size_t to = (size_t)lua_tointeger(L, 2);
 #ifdef __DEBUG_API_CALLS__
     int type = lua_type(L, 1);
     Log_write(LOG_LEVELS_DEBUG, "Canvas.shift(%d, %d)", from, to);

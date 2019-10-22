@@ -67,7 +67,7 @@ static int timer_new(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
         LUAX_SIGNATURE_ARGUMENT(luaX_isfunction)
     LUAX_SIGNATURE_END
-    float period = (float)lua_tonumber(L, 1);
+    float period = lua_tonumber(L, 1);
     int repeats = lua_tointeger(L, 2);
     luaX_Reference callback = luaX_tofunction(L, 3);
 #ifdef __DEBUG_API_CALLS__
