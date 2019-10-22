@@ -23,7 +23,6 @@
 #include "log.h"
 
 #include <stdarg.h>
-#include <stdio.h>
 #include <string.h>
 
 // http://jafrog.com/2013/11/23/colors-in-terminal.html
@@ -47,27 +46,27 @@
 
 #define COLOR_OFF           "\x1b[0m"
 
-static Log_Levels_t _level = LOG_LEVELS_ALL;
+static const char *_colors[Log_Levels_t_CountOf] = {
+    COLOR_WHITE, COLOR_BLUE_HC, COLOR_CYAN, COLOR_GREEN, COLOR_YELLOW, COLOR_RED, COLOR_MAGENTA, COLOR_WHITE
+};
 
-static void log_output(int msg_type, const char *text, va_list args)
-{
-    static const char *color[] = { COLOR_WHITE, COLOR_BLUE_HC, COLOR_CYAN, COLOR_GREEN, COLOR_YELLOW, COLOR_RED, COLOR_MAGENTA, COLOR_WHITE };
-    printf("%s", color[msg_type]);
-    vprintf(text, args);
-    printf(COLOR_OFF);
-    if (text[strlen(text) - 1] != '\n') {
-        printf("\n");
-    }
-}
+static Log_Levels_t _level;
+static FILE *_stream;
 
 void Log_initialize()
 {
     _level = LOG_LEVELS_ALL;
+    _stream = stderr;
 }
 
 void Log_configure(bool enabled)
 {
     _level = enabled ? LOG_LEVELS_ALL : LOG_LEVELS_NONE;
+}
+
+void Log_redirect(FILE *stream)
+{
+    _stream = stream;
 }
 
 void Log_write(Log_Levels_t level, const char *text, ...)
@@ -76,8 +75,19 @@ void Log_write(Log_Levels_t level, const char *text, ...)
         return;
     }
 
+    if (!_stream) {
+        return;
+    }
+
     va_list args;
     va_start(args, text);
-    log_output((int)level, text, args);
+
+    fputs(_colors[level], _stream);
+    vfprintf(_stream, text, args);
+    fputs(COLOR_OFF, _stream);
+    if (text[strlen(text) - 1] != '\n') {
+        fputs("\n", _stream);
+    }
+
     va_end(args);
 }
