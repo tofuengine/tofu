@@ -47,7 +47,7 @@ void Configuration_initialize(Configuration_t *configuration)
             .fullscreen = false,
             .fps = FRAMES_PER_SECOND,
             .skippable_frames = FRAMES_PER_SECOND / 5, // About 20% of the FPS amount.
-            .frame_caps = {}, // No capping as a default.
+            .frame_caps = {}, // No capping as a default. TODO: make it run-time configurable?
             .hide_cursor = true,
             .exit_key_enabled = true,
             .debug = true
