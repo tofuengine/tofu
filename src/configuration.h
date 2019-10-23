@@ -25,7 +25,7 @@
 
 #include <stdbool.h>
 
-typedef struct lua_State lua_State;
+#include <lua/lua.h>
 
 #define MAX_CONFIGURATION_TITLE_LENGTH      128
 #define MAX_CONFIGURATION_FRAME_CAPS        4

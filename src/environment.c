@@ -45,5 +45,5 @@ void Environment_terminate(Environment_t *environment)
 {
     FS_terminate(&environment->fs);
 
-    *environment = (Environment_t){};
+    *environment = (Environment_t){ 0 };
 }

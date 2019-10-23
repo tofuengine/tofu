@@ -41,9 +41,9 @@ typedef enum _GL_XForm_Registers_t {
 
 typedef struct _GL_XForm_State_t {
     union {
-        struct { float h, v, a, b, c, d, x, y; };
-        float registers[GL_XForm_Registers_t_CountOf];
-    };
+        struct { float h, v, a, b, c, d, x, y; } l;
+        float a[GL_XForm_Registers_t_CountOf];
+    } registers;
 } GL_XForm_State_t;
 
 typedef struct _GL_XForm_State_Operation_t {
