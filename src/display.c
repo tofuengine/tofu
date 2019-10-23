@@ -265,7 +265,6 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         glfwTerminate();
         return false;
     }
-    // FIXME: when the display is scale the circles are plain wrong! Due to sub-pixel positioning?
 
     if (!configuration->fullscreen) {
         glfwSetWindowMonitor(display->window, NULL, position.x, position.y, display->physical_width, display->physical_height, GLFW_DONT_CARE);

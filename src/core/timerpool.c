@@ -67,7 +67,7 @@ static void pop(Timer_Pool_t *pool, Timer_t *timer)
     }
 
 #if DEBUG
-    memset(timer, 0, sizeof(Timer_t)); // Clear in DEBUG mode for easier, umm, debugging.
+    *timer = (Timer_t){}; // Clear in DEBUG mode for easier, umm, debugging.
 #endif
     free(timer);
 }
@@ -81,8 +81,8 @@ static Timer_t *pop_next(Timer_Pool_t *pool, Timer_t *timer)
 
 void TimerPool_initialize(Timer_Pool_t *pool, TimerPool_Callback_t update_callback, void *parameters)
 {
-    memset(pool, 0, sizeof(Timer_Pool_t));
     *pool = (Timer_Pool_t){
+            .timers = NULL,
             .update_callback = update_callback,
             .parameters = parameters
         };
@@ -94,7 +94,7 @@ void TimerPool_terminate(Timer_Pool_t *pool)
         Log_write(LOG_LEVELS_DEBUG, "<TIMERPOOL> timer #%p released", timer);
         timer = pop_next(pool, timer);
     }
-    memset(pool, 0, sizeof(Timer_Pool_t));
+    *pool = (Timer_Pool_t){};
 }
 
 Timer_t *TimerPool_allocate(Timer_Pool_t *pool, float period, size_t repeats, void *bundle)

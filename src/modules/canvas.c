@@ -895,6 +895,7 @@ static int canvas_rectangle(lua_State *L)
 
     const GL_Context_t *context = &display->gl;
     if (mode[0] == 'f') {
+        // TODO: move to pointers for compound literals, too.
         GL_primitive_filled_rectangle(context, (GL_Rectangle_t){ .x = x, .y = y, .width = width, .height = height }, index);
     } else {
         int x0 = x;
