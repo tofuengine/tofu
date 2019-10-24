@@ -38,7 +38,7 @@ function Game:input()
   end
 end
 
-function Game:update(delta_time)
+function Game:update(_)
   for i = 0, STEPS - 2 do
     for j = 0, STEPS - 1 do
       local value = self.grid:peek(j, i + 1)
@@ -66,7 +66,7 @@ function Game:update(delta_time)
   end
 end
 
-function Game:render(ratio)
+function Game:render(_)
   Canvas.clear()
 
   for i = 0, STEPS - 1 do
