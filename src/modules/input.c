@@ -29,6 +29,8 @@
 
 #include <string.h>
 
+#define INPUT_MT        "Tofu_Input_mt"
+
 static int input_is_key_down(lua_State *L);
 static int input_is_key_up(lua_State *L);
 static int input_is_key_pressed(lua_State *L);
@@ -60,7 +62,7 @@ static const luaX_Const _input_constants[] = {
 int input_loader(lua_State *L)
 {
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, NULL, _input_functions, _input_constants, nup, LUAX_CLASS(Input_Class_t));
+    return luaX_newmodule(L, NULL, _input_functions, _input_constants, nup, INPUT_MT);
 }
 
 static int input_is_key_down(lua_State *L)

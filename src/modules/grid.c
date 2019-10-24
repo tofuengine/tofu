@@ -32,6 +32,8 @@
   #include <stb/stb_leakcheck.h>
 #endif
 
+#define GRID_MT        "Tofu_Grid_mt"
+
 static int grid_new(lua_State *L);
 static int grid_gc(lua_State *L);
 static int grid_width(lua_State *L);
@@ -61,7 +63,7 @@ static const luaX_Const _grid_constants[] = {
 int grid_loader(lua_State *L)
 {
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, NULL, _grid_functions, _grid_constants, nup, LUAX_CLASS(Grid_Class_t));
+    return luaX_newmodule(L, NULL, _grid_functions, _grid_constants, nup, GRID_MT);
 }
 
 static int grid_new(lua_State *L)
@@ -125,7 +127,7 @@ static int grid_new(lua_State *L)
 
     Log_write(LOG_LEVELS_DEBUG, "<GRID> grid #%p allocated", instance);
 
-    luaL_setmetatable(L, LUAX_CLASS(Grid_Class_t));
+    luaL_setmetatable(L, GRID_MT);
 
     return 1;
 }

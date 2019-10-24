@@ -29,6 +29,8 @@
 
 #include <string.h>
 
+#define SYSTEM_MT       "Tofu_System_mt"
+
 static int system_time(lua_State *L);
 static int system_fps(lua_State *L);
 static int system_quit(lua_State *L);
@@ -49,7 +51,7 @@ static const luaX_Const _system_constants[] = {
 int system_loader(lua_State *L)
 {
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, NULL, _system_functions, _system_constants, nup, LUAX_CLASS(System_Class_t));
+    return luaX_newmodule(L, NULL, _system_functions, _system_constants, nup, SYSTEM_MT);
 }
 
 static int system_time(lua_State *L)

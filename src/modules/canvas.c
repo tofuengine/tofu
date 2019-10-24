@@ -39,6 +39,8 @@
 #endif
 #include <stb/stb_ds.h>
 
+#define CANVAS_MT        "Tofu_Canvas_mt"
+
 static int canvas_color_to_index(lua_State *L);
 static int canvas_width(lua_State *L);
 static int canvas_height(lua_State *L);
@@ -104,7 +106,7 @@ static const luaX_Const _canvas_constants[] = {
 int canvas_loader(lua_State *L)
 {
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, &(luaX_Script){ (const char *)_canvas_lua, _canvas_lua_len, "canvas.lua" }, _canvas_functions, _canvas_constants, nup, LUAX_CLASS(Canvas_Class_t));
+    return luaX_newmodule(L, &(luaX_Script){ (const char *)_canvas_lua, _canvas_lua_len, "canvas.lua" }, _canvas_functions, _canvas_constants, nup, CANVAS_MT);
 }
 
 // TODO: add a canvas constructor with overload (from file, from WxH, default one). Surface will become Canvas, in the end.

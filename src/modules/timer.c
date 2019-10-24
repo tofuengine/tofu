@@ -27,6 +27,8 @@
 #include "../environment.h"
 #include "../log.h"
 
+#define TIMER_MT    "Tofu_Timer_mt"
+
 static int timer_new(lua_State *L);
 static int timer_gc(lua_State *L);
 static int timer_reset(lua_State *L);
@@ -47,7 +49,7 @@ static const luaX_Const _timer_constants[] = {
 int timer_loader(lua_State *L)
 {
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, NULL, _timer_functions, _timer_constants, nup, LUAX_CLASS(Timer_Class_t));
+    return luaX_newmodule(L, NULL, _timer_functions, _timer_constants, nup, TIMER_MT);
 }
 
 static int timer_new(lua_State *L)
@@ -73,7 +75,7 @@ static int timer_new(lua_State *L)
         };
     Log_write(LOG_LEVELS_DEBUG, "<TIMER> timer #%p allocated (pool-entry #%p)", instance, instance->timer);
 
-    luaL_setmetatable(L, LUAX_CLASS(Timer_Class_t));
+    luaL_setmetatable(L, TIMER_MT);
 
     return 1;
 }

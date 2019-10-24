@@ -37,6 +37,8 @@
   #include <stb/stb_leakcheck.h>
 #endif
 
+#define FONT_MT        "Tofu_Font_mt"
+
 static int font_new(lua_State *L);
 static int font_gc(lua_State *L);
 static int font_write(lua_State *L);
@@ -57,7 +59,7 @@ static const luaX_Const _font_constants[] = {
 int font_loader(lua_State *L)
 {
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, &(luaX_Script){ (const char *)_font_lua, _font_lua_len, "font.lua" }, _font_functions, _font_constants, nup, LUAX_CLASS(Font_Class_t));
+    return luaX_newmodule(L, &(luaX_Script){ (const char *)_font_lua, _font_lua_len, "font.lua" }, _font_functions, _font_constants, nup, FONT_MT);
 }
 
 static void to_font_atlas_callback(void *parameters, GL_Surface_t *surface, const void *data)
@@ -146,7 +148,7 @@ static int font_new(lua_State *L)
         };
     Log_write(LOG_LEVELS_DEBUG, "<FONT> font allocated as #%p", instance);
 
-    luaL_setmetatable(L, LUAX_CLASS(Font_Class_t));
+    luaL_setmetatable(L, FONT_MT);
 
     return 1;
 }

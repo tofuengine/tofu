@@ -35,6 +35,8 @@
 #endif
 #include <stb/stb_ds.h>
 
+#define SURFACE_MT      "Tofu_Surface_mt"
+
 static int surface_new(lua_State *L);
 static int surface_gc(lua_State *L);
 static int surface_width(lua_State *L);
@@ -69,7 +71,7 @@ static const luaX_Const _surface_constants[] = {
 int surface_loader(lua_State *L)
 {
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, NULL, _surface_functions, _surface_constants, nup, LUAX_CLASS(Surface_Class_t));
+    return luaX_newmodule(L, NULL, _surface_functions, _surface_constants, nup, SURFACE_MT);
 }
 
 static void to_indexed_atlas_callback(void *parameters, GL_Surface_t *surface, const void *data)
@@ -154,7 +156,7 @@ static int surface_new1(lua_State *L)
         };
     Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface allocated as #%p", instance);
 
-    luaL_setmetatable(L, LUAX_CLASS(Surface_Class_t));
+    luaL_setmetatable(L, SURFACE_MT);
 
     return 1;
 }
@@ -190,7 +192,7 @@ static int surface_new2(lua_State *L)
         };
     Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface allocated as #%p", instance);
 
-    luaL_setmetatable(L, LUAX_CLASS(Surface_Class_t));
+    luaL_setmetatable(L, SURFACE_MT);
 
     return 1;
 }

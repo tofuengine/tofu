@@ -33,6 +33,8 @@
   #include <stb/stb_leakcheck.h>
 #endif
 
+#define FILE_MT        "Tofu_File_mt"
+
 static int file_read(lua_State *L);
 
 static const struct luaL_Reg _file_functions[] = {
@@ -47,7 +49,7 @@ static const luaX_Const _file_constants[] = {
 int file_loader(lua_State *L)
 {
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, NULL, _file_functions, _file_constants, nup, LUAX_CLASS(File_Class_t));
+    return luaX_newmodule(L, NULL, _file_functions, _file_constants, nup, FILE_MT);
 }
 
 static int file_read(lua_State *L)
