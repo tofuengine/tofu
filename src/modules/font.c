@@ -39,6 +39,7 @@
 #endif
 
 typedef struct _Font_Class_t {
+    const void *bogus;
     // char full_path[PATH_FILE_MAX];
     GL_Sheet_t sheet;
 } Font_Class_t;
@@ -62,9 +63,8 @@ static const luaX_Const _font_constants[] = {
 
 int font_loader(lua_State *L)
 {
-    luaX_Script script = { (const char *)_font_lua, _font_lua_len, "font.lua" };
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, &script, _font_functions, _font_constants, nup, LUAX_CLASS(Font_Class_t));
+    return luaX_newmodule(L, &(luaX_Script){ (const char *)_font_lua, _font_lua_len, "font.lua" }, _font_functions, _font_constants, nup, LUAX_CLASS(Font_Class_t));
 }
 
 static void to_font_atlas_callback(void *parameters, GL_Surface_t *surface, const void *data)
@@ -168,7 +168,7 @@ static int font_gc(lua_State *L)
     GL_sheet_delete(&instance->sheet);
     Log_write(LOG_LEVELS_DEBUG, "<FONT> font #%p finalized", instance);
 
-    *instance = (Font_Class_t){};
+    *instance = (Font_Class_t){ 0 };
 
     return 0;
 }

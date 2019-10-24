@@ -418,18 +418,29 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
     //
     // X = A * (SX - CX) + B * (SY - CY) + CX + H
     // Y = C * (SX - CX) + D * (SY - CY) + CY + V
-    GL_XForm_State_t xform_state;
-    memcpy(&xform_state, &xform->state, sizeof(GL_XForm_State_t));
-    float h = xform_state.h; float v = xform_state.v; float a = xform_state.a; float b = xform_state.b;
-    float c = xform_state.c; float d = xform_state.d; float x0 = xform_state.x; float y0 = xform_state.y;
+    const float *registers = xform->registers;
+    float h = registers[GL_XFORM_REGISTER_H]; float v = registers[GL_XFORM_REGISTER_V];
+    float a = registers[GL_XFORM_REGISTER_A]; float b = registers[GL_XFORM_REGISTER_B];
+    float c = registers[GL_XFORM_REGISTER_C]; float d = registers[GL_XFORM_REGISTER_D];
+    float x0 = registers[GL_XFORM_REGISTER_X]; float y0 = registers[GL_XFORM_REGISTER_Y];
 
     for (int i = 0; i < height; ++i) {
         if (table && i == table->scan_line) {
             for (size_t k = 0; k < table->count; ++k) {
-                xform_state.registers[table->operations[k].id] = table->operations[k].value;
+                const GL_XForm_Registers_t id = table->operations[k].id;
+                const float value = table->operations[k].value;
+                switch (id) {
+                    case GL_XFORM_REGISTER_H: { h = value; } break;
+                    case GL_XFORM_REGISTER_V: { v = value; } break;
+                    case GL_XFORM_REGISTER_A: { a = value; } break;
+                    case GL_XFORM_REGISTER_B: { b = value; } break;
+                    case GL_XFORM_REGISTER_C: { c = value; } break;
+                    case GL_XFORM_REGISTER_D: { d = value; } break;
+                    case GL_XFORM_REGISTER_X: { x0 = value; } break;
+                    case GL_XFORM_REGISTER_Y: { y0 = value; } break;
+                    default: { ; } break;
+                }
             }
-            h = xform_state.h; v = xform_state.v; a = xform_state.a; b = xform_state.b; // Keep the fast-access variables updated.
-            c = xform_state.c; d = xform_state.d; x0 = xform_state.x; y0 = xform_state.y;
             ++table;
 #ifdef __DETACH_XFORM_TABLE__
             if (table->scan_line == -1) { // End-of-data reached, detach pointer for faster loop.

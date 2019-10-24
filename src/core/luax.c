@@ -22,6 +22,7 @@
 
 #include "luax.h"
 
+#include <inttypes.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
@@ -76,7 +77,7 @@ void luaX_stackdump(lua_State *L, const char* func, int line)
                 break;
             case LUA_TFUNCTION:
                 if (lua_iscfunction(L, positive)) {
-                    printf("\t%p", lua_tocfunction(L, positive));
+                    printf("\t%" PRIXPTR "", (uintptr_t)lua_tocfunction(L, positive));
                 } else {
                     printf("\t%p", lua_topointer(L, positive));
                 }

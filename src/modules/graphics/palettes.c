@@ -388,9 +388,9 @@ static const Predefined_Palette_t _palettes[] = {
             { 248, 216, 248, 255 },
             { 0, 0, 0, 255 },
             { 0, 0, 0, 255 }
-    }, 64 }
+        }, 64 }
     },
-    { NULL, { {}, 0 } }
+    { NULL, { { { 0 } }, 0 } }
 };
 
 const GL_Palette_t *graphics_palettes_find(const char *id)

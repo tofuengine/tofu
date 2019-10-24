@@ -36,6 +36,7 @@
 #endif
 
 typedef struct _Bank_Class_t {
+    const void *bogus;
     // char full_path[PATH_FILE_MAX];
     GL_Sheet_t sheet;
 } Bank_Class_t;
@@ -59,13 +60,10 @@ static const luaX_Const _bank_constants[] = {
     { NULL }
 };
 
-#include "bank.inc"
-
 int bank_loader(lua_State *L)
 {
-    luaX_Script script = { (const char *)_bank_lua, _bank_lua_len, "bank.lua" };
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, &script, _bank_functions, _bank_constants, nup, LUAX_CLASS(Bank_Class_t));
+    return luaX_newmodule(L, NULL, _bank_functions, _bank_constants, nup, LUAX_CLASS(Bank_Class_t));
 }
 
 static void to_indexed_atlas_callback(void *parameters, GL_Surface_t *surface, const void *data)
@@ -130,7 +128,7 @@ static int bank_gc(lua_State *L)
     GL_sheet_delete(&instance->sheet);
     Log_write(LOG_LEVELS_DEBUG, "<BANK> bank #%p finalized", instance);
 
-    *instance = (Bank_Class_t){};
+    *instance = (Bank_Class_t){ 0 };
 
     return 0;
 }

@@ -75,5 +75,5 @@ void GL_sheet_delete(GL_Sheet_t *sheet)
     free(sheet->cells);
     GL_surface_delete(&sheet->atlas);
     Log_write(LOG_LEVELS_DEBUG, "<GL> sheet #%p deleted", sheet);
-    *sheet = (GL_Sheet_t){};
+    *sheet = (GL_Sheet_t){ 0 };
 }

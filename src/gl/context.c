@@ -50,7 +50,7 @@ static inline void reset_state(GL_State_t *state, GL_Surface_t *surface)
 
 bool GL_context_create(GL_Context_t *context, size_t width, size_t height)
 {
-    *context = (GL_Context_t){};
+    *context = (GL_Context_t){ 0 };
 
     GL_surface_create(&context->buffer, width, height);
 
@@ -67,7 +67,7 @@ void GL_context_delete(GL_Context_t *context)
     GL_surface_delete(&context->buffer);
     Log_write(LOG_LEVELS_DEBUG, "<GL> context buffer deallocated");
 
-    *context = (GL_Context_t){};
+    *context = (GL_Context_t){ 0 };
     Log_write(LOG_LEVELS_DEBUG, "<GL> context deallocated");
 }
 
