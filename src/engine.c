@@ -58,7 +58,7 @@ static inline void wait_for(float seconds)
 }
 
 static inline bool update_statistics(Engine_Statistics_t *statistics, float elapsed) {
-    static float history[FPS_AVERAGE_SAMPLES] = {};
+    static float history[FPS_AVERAGE_SAMPLES] = { 0 };
     static int index = 0;
     static int samples = 0;
     static float sum = 0.0f;

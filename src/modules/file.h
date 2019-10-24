@@ -23,7 +23,7 @@
 #ifndef __MODULES_FILE_H__
 #define __MODULES_FILE_H__
 
-typedef struct lua_State lua_State;
+#include <lua/lua.h>
 
 extern int file_loader(lua_State *L);
 

@@ -23,4 +23,9 @@
 #ifndef __HAL_H__
 #define __HAL_H__
 
+#include <stdbool.h>
+
+extern bool hal_initialize();
+extern void hal_terminate();
+
 #endif  /* __HAL_H__*/

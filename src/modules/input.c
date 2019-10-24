@@ -30,6 +30,7 @@
 #include <string.h>
 
 typedef struct _Input_Class_t {
+    const void *bogus;
 } Input_Class_t;
 
 static int input_is_key_down(lua_State *L);
@@ -60,13 +61,10 @@ static const luaX_Const _input_constants[] = {
     { NULL }
 };
 
-#include "input.inc"
-
 int input_loader(lua_State *L)
 {
-    luaX_Script script = { (const char *)_input_lua, _input_lua_len, "input.lua" };
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, &script, _input_functions, _input_constants, nup, LUAX_CLASS(Input_Class_t));
+    return luaX_newmodule(L, NULL, _input_functions, _input_constants, nup, LUAX_CLASS(Input_Class_t));
 }
 
 static int input_is_key_down(lua_State *L)

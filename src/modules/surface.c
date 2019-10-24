@@ -38,6 +38,7 @@
 #include <stb/stb_ds.h>
 
 typedef struct _Surface_Class_t {
+    const void *bogus;
     // char full_path[PATH_FILE_MAX];
     GL_Surface_t surface;
     GL_XForm_t xform;
@@ -74,13 +75,10 @@ static const luaX_Const _surface_constants[] = {
     { NULL }
 };
 
-#include "surface.inc"
-
 int surface_loader(lua_State *L)
 {
-    luaX_Script script = { (const char *)_surface_lua, _surface_lua_len, "surface.lua" };
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, &script, _surface_functions, _surface_constants, nup, LUAX_CLASS(Surface_Class_t));
+    return luaX_newmodule(L, NULL, _surface_functions, _surface_constants, nup, LUAX_CLASS(Surface_Class_t));
 }
 
 static void to_indexed_atlas_callback(void *parameters, GL_Surface_t *surface, const void *data)
@@ -154,10 +152,10 @@ static int surface_new1(lua_State *L)
     *instance = (Surface_Class_t){
             .surface = surface,
             .xform = (GL_XForm_t){
-                    .state = (GL_XForm_State_t){
-                        .h = 0.0f, .v = 0.0f,
-                        .a = 1.0f, .b = 0.0f, .c = 1.0f, .d = 0.0f,
-                        .x = 0.0f, .y = 0.0f,
+                    .registers = {
+                        0.0f, 0.0f, // No offset
+                        1.0f, 0.0f, 1.0f, 0.0f, // Identity matrix.
+                        0.0f, 0.0f, // No offset
                     },
                     .clamp = GL_XFORM_CLAMP_REPEAT,
                     .table = NULL
@@ -190,10 +188,10 @@ static int surface_new2(lua_State *L)
     *instance = (Surface_Class_t){
             .surface = surface,
             .xform = (GL_XForm_t){
-                    .state = (GL_XForm_State_t){
-                        .h = 0.0f, .v = 0.0f,
-                        .a = 1.0f, .b = 0.0f, .c = 1.0f, .d = 0.0f,
-                        .x = 0.0f, .y = 0.0f,
+                    .registers = {
+                        0.0f, 0.0f, // No offset
+                        1.0f, 0.0f, 1.0f, 0.0f, // Identity matrix.
+                        0.0f, 0.0f, // No offset
                     },
                     .clamp = GL_XFORM_CLAMP_REPEAT,
                     .table = NULL
@@ -235,7 +233,7 @@ static int surface_gc(lua_State *L)
     GL_surface_delete(&instance->surface);
     Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface #%p finalized", instance);
 
-    *instance = (Surface_Class_t){};
+    *instance = (Surface_Class_t){ 0 };
 
     return 0;
 }
@@ -585,14 +583,14 @@ static int surface_offset(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
-    float h = lua_tonumber(L, 2); // TODO are lua numbers float NON double?
+    float h = lua_tonumber(L, 2);
     float v = lua_tonumber(L, 3);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Surface.offset() -> %.f, %.f", h, v);
 #endif
 
-    instance->xform.state.h = h;
-    instance->xform.state.v = v;
+    instance->xform.registers[GL_XFORM_REGISTER_H] = h;
+    instance->xform.registers[GL_XFORM_REGISTER_V] = v;
 
     return 0;
 }
@@ -611,8 +609,8 @@ static int surface_matrix3(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Surface.matrix() -> %.f, %.f", x0, y0);
 #endif
 
-    instance->xform.state.x = x0;
-    instance->xform.state.y = y0;
+    instance->xform.registers[GL_XFORM_REGISTER_X] = x0;
+    instance->xform.registers[GL_XFORM_REGISTER_Y] = y0;
 
     return 0;
 }
@@ -635,10 +633,10 @@ static int surface_matrix5(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Surface.matrix() -> %.f, %.f, %.f, %.f", a, b, c, d);
 #endif
 
-    instance->xform.state.a = a;
-    instance->xform.state.b = b;
-    instance->xform.state.c = c;
-    instance->xform.state.d = d;
+    instance->xform.registers[GL_XFORM_REGISTER_A] = a;
+    instance->xform.registers[GL_XFORM_REGISTER_B] = b;
+    instance->xform.registers[GL_XFORM_REGISTER_C] = c;
+    instance->xform.registers[GL_XFORM_REGISTER_D] = d;
 
     return 0;
 }
@@ -665,12 +663,12 @@ static int surface_matrix7(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Surface.matrix() -> %.f, %.f, %.f, %.f, %.f, %.f", a, b, c, d, x0, y0);
 #endif
 
-    instance->xform.state.a = a;
-    instance->xform.state.b = b;
-    instance->xform.state.c = c;
-    instance->xform.state.d = d;
-    instance->xform.state.x = x0;
-    instance->xform.state.y = y0;
+    instance->xform.registers[GL_XFORM_REGISTER_A] = a;
+    instance->xform.registers[GL_XFORM_REGISTER_B] = b;
+    instance->xform.registers[GL_XFORM_REGISTER_C] = c;
+    instance->xform.registers[GL_XFORM_REGISTER_D] = d;
+    instance->xform.registers[GL_XFORM_REGISTER_X] = x0;
+    instance->xform.registers[GL_XFORM_REGISTER_Y] = y0;
 
     return 0;
 }
@@ -745,8 +743,9 @@ static int surface_table2(lua_State *L)
 
     lua_pushnil(L);
     while (lua_next(L, 2)) {
-        GL_XForm_Table_Entry_t entry = {};
-        entry.scan_line = lua_tointeger(L, -2); // The scan-line indicator is the array index.
+        int index = lua_tointeger(L, -2);
+        GL_XForm_Table_Entry_t entry = { 0 };
+        entry.scan_line = index - 1; // The scan-line indicator is the array index (minus one).
 
         lua_pushnil(L);
         for (size_t i = 0; lua_next(L, -2); ++i) { // Scan the value, which is an array.

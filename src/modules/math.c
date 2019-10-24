@@ -28,6 +28,7 @@
 #include "../log.h"
 
 typedef struct _Math_Class_t {
+    const void *bogus;
 } Math_Class_t;
 
 static int math_sincos(lua_State *L);
@@ -48,9 +49,8 @@ static const luaX_Const _math_constants[] = {
 
 int math_loader(lua_State *L)
 {
-    luaX_Script script = { (const char *)_math_lua, _math_lua_len, "math.lua" };
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, &script, _math_functions, _math_constants, nup, LUAX_CLASS(Math_Class_t));
+    return luaX_newmodule(L, &(luaX_Script){ (const char *)_math_lua, _math_lua_len, "math.lua" }, _math_functions, _math_constants, nup, LUAX_CLASS(Math_Class_t));
 }
 
 static int math_sincos(lua_State *L)

@@ -41,6 +41,7 @@
 #include <stb/stb_ds.h>
 
 typedef struct _Canvas_Class_t {
+    const void *bogus;
 } Canvas_Class_t;
 
 static int canvas_color_to_index(lua_State *L);
@@ -107,9 +108,8 @@ static const luaX_Const _canvas_constants[] = {
 
 int canvas_loader(lua_State *L)
 {
-    luaX_Script script = { (const char *)_canvas_lua, _canvas_lua_len, "canvas.lua" };
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, &script, _canvas_functions, _canvas_constants, nup, LUAX_CLASS(Canvas_Class_t));
+    return luaX_newmodule(L, &(luaX_Script){ (const char *)_canvas_lua, _canvas_lua_len, "canvas.lua" }, _canvas_functions, _canvas_constants, nup, LUAX_CLASS(Canvas_Class_t));
 }
 
 // TODO: add a canvas constructor with overload (from file, from WxH, default one). Surface will become Canvas, in the end.
@@ -221,6 +221,7 @@ static int canvas_surface0(lua_State *L)
 
 // TODO: !!! MOVE THESE `*_Class_t` UDT to a separate header or move to header file.
 typedef struct _Surface_Class_t {
+    const void *bogus;
     // char full_path[PATH_FILE_MAX];
     GL_Surface_t surface;
     GL_XForm_t xform;
@@ -266,7 +267,7 @@ static int canvas_palette0(lua_State *L)
 
     lua_newtable(L);
     for (size_t i = 0; i < palette->count; ++i) {
-        char argb[12] = {};
+        char argb[12] = { 0 };
         GL_palette_format_color(argb, palette->colors[i]);
 
         lua_pushstring(L, argb);
@@ -288,7 +289,7 @@ static int canvas_palette1(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    GL_Palette_t palette = {};
+    GL_Palette_t palette = { 0 };
 
     if (type == LUA_TSTRING) { // Predefined palette!
         const char *id = luaL_checkstring(L, 1);

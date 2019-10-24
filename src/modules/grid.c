@@ -39,6 +39,7 @@ typedef float Cell_t;
 #endif
 
 typedef struct _Grid_Class_t {
+    const void *bogus;
     size_t width, height;
     Cell_t *data;
     Cell_t **data_rows; // Precomputed pointers to the line of data.
@@ -71,13 +72,10 @@ static const luaX_Const _grid_constants[] = {
     { NULL }
 };
 
-#include "grid.inc"
-
 int grid_loader(lua_State *L)
 {
-    luaX_Script script = { (const char *)_grid_lua, _grid_lua_len, "grid.lua" };
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, &script, _grid_functions, _grid_constants, nup, LUAX_CLASS(Grid_Class_t));
+    return luaX_newmodule(L, NULL, _grid_functions, _grid_constants, nup, LUAX_CLASS(Grid_Class_t));
 }
 
 static int grid_new(lua_State *L)

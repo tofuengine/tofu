@@ -22,3 +22,11 @@
 
 #include "hal.h"
 
+bool hal_initialize()
+{
+    return true;
+}
+
+void hal_terminate()
+{
+}

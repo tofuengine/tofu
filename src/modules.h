@@ -25,7 +25,7 @@
 
 #include <stdbool.h>
 
-typedef struct lua_State lua_State;
+#include <lua/lua.h>
 
 extern void modules_initialize(lua_State *L, int nup);
 

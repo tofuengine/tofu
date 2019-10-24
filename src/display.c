@@ -259,7 +259,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     GL_palette_greyscale(&display->palette, GL_MAX_PALETTE_COLORS);
     Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> calculating greyscale palette of #%d entries", GL_MAX_PALETTE_COLORS);
 
-    GL_Point_t position = {};
+    GL_Point_t position = { 0 };
     if (!compute_size(display, configuration, &position)) {
         glfwDestroyWindow(display->window);
         glfwTerminate();
