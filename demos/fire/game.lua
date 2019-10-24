@@ -69,16 +69,15 @@ end
 function Game:render(_)
   Canvas.clear()
 
-  for i = 0, STEPS - 1 do
-    local y = i * self.y_size
-    for j = 0, STEPS - 1 do
-      local x = j * self.x_size
-      local value = self.grid:peek(j, i)
+  local w = self.x_size
+  local h = self.y_size
+  self.grid:scan(function(column, row, value)
+      local x = column * w
+      local y = row * h
       if value > 0 then
-        Canvas.rectangle("fill", x, y, self.x_size, self.y_size, math.floor(value))
+        Canvas.rectangle("fill", x, y, w, h, math.floor(value))
       end
-    end
-  end
+    end)
 
   self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
 end

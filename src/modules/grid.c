@@ -25,6 +25,7 @@
 #include "udt.h"
 #include "../core/luax.h"
 #include "../config.h"
+#include "../interpreter.h"
 #include "../log.h"
 
 #include <stdlib.h>
@@ -42,6 +43,7 @@ static int grid_fill(lua_State *L);
 static int grid_stride(lua_State *L);
 static int grid_peek(lua_State *L);
 static int grid_poke(lua_State *L);
+static int grid_scan(lua_State *L);
 
 static const struct luaL_Reg _grid_functions[] = {
     { "new", grid_new },
@@ -52,6 +54,8 @@ static const struct luaL_Reg _grid_functions[] = {
     {"stride", grid_stride },
     {"peek", grid_peek },
     {"poke", grid_poke },
+    {"scan", grid_scan },
+//    {"update", grid_update },
 //    {"path", grid_path },
     { NULL, NULL }
 };
@@ -289,6 +293,39 @@ static int grid_poke(lua_State *L)
     Cell_t *data = instance->data_rows[row];
 
     data[column] = value;
+
+    return 0;
+}
+
+static int grid_scan(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 2)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isfunction)
+    LUAX_SIGNATURE_END
+    Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
+    luaX_Reference callback = luaX_tofunction(L, 2);
+
+    Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(3));
+
+    const Cell_t *data = instance->data;
+//    Cell_t *data = instance->data;
+
+    for (size_t row = 0; row < instance->height; ++row) {
+        for (size_t column = 0; column < instance->width; ++column) {
+            lua_rawgeti(L, LUA_REGISTRYINDEX, callback);
+            lua_pushinteger(L, column);
+            lua_pushinteger(L, row);
+            lua_pushnumber(L, *(data++));
+            Interpreter_call(interpreter, 3, 0);
+//            lua_pushnumber(L, *data);
+///            Interpreter_call(interpreter, 3, 1);
+//            *(data++) = lua_tonumber(L, -1);
+//            lua_pop(L, 1);
+        }
+    }
+
+    luaL_unref(L, LUA_REGISTRYINDEX, callback);
 
     return 0;
 }
