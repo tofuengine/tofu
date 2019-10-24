@@ -418,12 +418,7 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
     //
     // X = A * (SX - CX) + B * (SY - CY) + CX + H
     // Y = C * (SX - CX) + D * (SY - CY) + CY + V
-#ifdef __BOLT__
     const float *registers = xform->registers;
-#else
-    float registers[GL_XForm_Registers_t_CountOf];
-    memcpy(&registers, xform->registers, sizeof(registers));
-#endif
     float h = registers[GL_XFORM_REGISTER_H]; float v = registers[GL_XFORM_REGISTER_V];
     float a = registers[GL_XFORM_REGISTER_A]; float b = registers[GL_XFORM_REGISTER_B];
     float c = registers[GL_XFORM_REGISTER_C]; float d = registers[GL_XFORM_REGISTER_D];
@@ -432,8 +427,6 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
     for (int i = 0; i < height; ++i) {
         if (table && i == table->scan_line) {
             for (size_t k = 0; k < table->count; ++k) {
-//#define __BOLT__
-#ifdef __BOLT__
                 const GL_XForm_Registers_t id = table->operations[k].id;
                 const float value = table->operations[k].value;
                 switch (id) {
@@ -447,16 +440,7 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
                     case GL_XFORM_REGISTER_Y: { y0 = value; } break;
                     default: { ; } break;
                 }
-#else
-                registers[table->operations[k].id] = table->operations[k].value;
-#endif
             }
-#ifndef __BOLT__
-            h = registers[GL_XFORM_REGISTER_H]; v = registers[GL_XFORM_REGISTER_V]; // Keep the fast-access variables updated.
-            a = registers[GL_XFORM_REGISTER_A]; b = registers[GL_XFORM_REGISTER_B];
-            c = registers[GL_XFORM_REGISTER_C]; d = registers[GL_XFORM_REGISTER_D];
-            x0 = registers[GL_XFORM_REGISTER_X]; y0 = registers[GL_XFORM_REGISTER_Y];
-#endif
             ++table;
 #ifdef __DETACH_XFORM_TABLE__
             if (table->scan_line == -1) { // End-of-data reached, detach pointer for faster loop.
