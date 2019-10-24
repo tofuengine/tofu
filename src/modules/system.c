@@ -22,16 +22,12 @@
 
 #include "system.h"
 
+#include "udt.h"
 #include "../core/luax.h"
-
 #include "../environment.h"
 #include "../log.h"
 
 #include <string.h>
-
-typedef struct _System_Class_t {
-    const void *bogus;
-} System_Class_t;
 
 static int system_time(lua_State *L);
 static int system_fps(lua_State *L);

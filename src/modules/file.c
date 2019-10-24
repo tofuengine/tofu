@@ -22,8 +22,8 @@
 
 #include "file.h"
 
+#include "udt.h"
 #include "../core/luax.h"
-
 #include "../environment.h"
 #include "../fs.h"
 #include "../log.h"
@@ -32,10 +32,6 @@
 #ifdef DEBUG
   #include <stb/stb_leakcheck.h>
 #endif
-
-typedef struct _File_Class_t {
-    const void *bogus;
-} File_Class_t;
 
 static int file_read(lua_State *L);
 

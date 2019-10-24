@@ -22,18 +22,10 @@
 
 #include "timer.h"
 
-#include "../core/luax.h"
-#include "../core/timerpool.h"
-
+#include "udt.h"
 #include "../config.h"
 #include "../environment.h"
 #include "../log.h"
-
-typedef struct _Timer_Class_t {
-    const void *bogus;
-    luaX_Reference callback;
-    Timer_t *timer;
-} Timer_Class_t;
 
 static int timer_new(lua_State *L);
 static int timer_gc(lua_State *L);

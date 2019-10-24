@@ -22,14 +22,9 @@
 
 #include "math.h"
 
-#include "../core/luax.h"
+#include "udt.h"
 #include "../core/sincos.h"
-
 #include "../log.h"
-
-typedef struct _Math_Class_t {
-    const void *bogus;
-} Math_Class_t;
 
 static int math_sincos(lua_State *L);
 static int math_angle_to_rotation(lua_State *L);

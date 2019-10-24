@@ -22,13 +22,12 @@
 
 #include "font.h"
 
+#include "udt.h"
 #include "../core/luax.h"
-
 #include "../config.h"
 #include "../environment.h"
 #include "../log.h"
 #include "../gl/gl.h"
-
 #include "graphics/palettes.h"
 #include "graphics/sheets.h"
 
@@ -37,12 +36,6 @@
 #ifdef DEBUG
   #include <stb/stb_leakcheck.h>
 #endif
-
-typedef struct _Font_Class_t {
-    const void *bogus;
-    // char full_path[PATH_FILE_MAX];
-    GL_Sheet_t sheet;
-} Font_Class_t;
 
 static int font_new(lua_State *L);
 static int font_gc(lua_State *L);

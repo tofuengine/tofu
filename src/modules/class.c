@@ -22,8 +22,8 @@
 
 #include "class.h"
 
+#include "udt.h"
 #include "../core/luax.h"
-
 #include "../log.h"
 
 #include "class.inc"

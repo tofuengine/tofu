@@ -22,13 +22,11 @@
 
 #include "surface.h"
 
-#include "../core/luax.h"
-
+#include "udt.h"
 #include "../config.h"
 #include "../environment.h"
 #include "../interpreter.h"
 #include "../log.h"
-#include "../gl/gl.h"
 
 #include <math.h>
 #include <string.h>
@@ -36,13 +34,6 @@
   #include <stb/stb_leakcheck.h>
 #endif
 #include <stb/stb_ds.h>
-
-typedef struct _Surface_Class_t {
-    const void *bogus;
-    // char full_path[PATH_FILE_MAX];
-    GL_Surface_t surface;
-    GL_XForm_t xform;
-} Surface_Class_t;
 
 static int surface_new(lua_State *L);
 static int surface_gc(lua_State *L);

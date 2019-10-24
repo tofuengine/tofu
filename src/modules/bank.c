@@ -22,8 +22,8 @@
 
 #include "bank.h"
 
+#include "metatables.h"
 #include "../core/luax.h"
-
 #include "../config.h"
 #include "../environment.h"
 #include "../log.h"
@@ -34,12 +34,6 @@
 #ifdef DEBUG
   #include <stb/stb_leakcheck.h>
 #endif
-
-typedef struct _Bank_Class_t {
-    const void *bogus;
-    // char full_path[PATH_FILE_MAX];
-    GL_Sheet_t sheet;
-} Bank_Class_t;
 
 static int bank_new(lua_State *L);
 static int bank_gc(lua_State *L);

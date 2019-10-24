@@ -22,13 +22,12 @@
 
 #include "canvas.h"
 
+#include "udt.h"
 #include "../core/luax.h"
-
 #include "../config.h"
 #include "../environment.h"
 #include "../log.h"
 #include "../gl/gl.h"
-
 #include "graphics/palettes.h"
 #include "graphics/sheets.h"
 
@@ -39,10 +38,6 @@
   #include <stb/stb_leakcheck.h>
 #endif
 #include <stb/stb_ds.h>
-
-typedef struct _Canvas_Class_t {
-    const void *bogus;
-} Canvas_Class_t;
 
 static int canvas_color_to_index(lua_State *L);
 static int canvas_width(lua_State *L);
@@ -218,14 +213,6 @@ static int canvas_surface0(lua_State *L)
 
     return 0;
 }
-
-// TODO: !!! MOVE THESE `*_Class_t` UDT to a separate header or move to header file.
-typedef struct _Surface_Class_t {
-    const void *bogus;
-    // char full_path[PATH_FILE_MAX];
-    GL_Surface_t surface;
-    GL_XForm_t xform;
-} Surface_Class_t;
 
 static int canvas_surface1(lua_State *L)
 {

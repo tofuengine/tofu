@@ -22,8 +22,8 @@
 
 #include "grid.h"
 
+#include "udt.h"
 #include "../core/luax.h"
-
 #include "../config.h"
 #include "../log.h"
 
@@ -31,20 +31,6 @@
 #ifdef DEBUG
   #include <stb/stb_leakcheck.h>
 #endif
-
-#ifdef __GRID_INTEGER_CELL__
-typedef int Cell_t;
-#else
-typedef float Cell_t;
-#endif
-
-typedef struct _Grid_Class_t {
-    const void *bogus;
-    size_t width, height;
-    Cell_t *data;
-    Cell_t **data_rows; // Precomputed pointers to the line of data.
-    size_t data_size;
-} Grid_Class_t;
 
 static int grid_new(lua_State *L);
 static int grid_gc(lua_State *L);

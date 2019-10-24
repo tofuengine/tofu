@@ -22,16 +22,12 @@
 
 #include "input.h"
 
+#include "udt.h"
 #include "../core/luax.h"
-
 #include "../environment.h"
 #include "../log.h"
 
 #include <string.h>
-
-typedef struct _Input_Class_t {
-    const void *bogus;
-} Input_Class_t;
 
 static int input_is_key_down(lua_State *L);
 static int input_is_key_up(lua_State *L);
