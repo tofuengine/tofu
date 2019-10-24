@@ -24,6 +24,7 @@
 #define __LOG_H__
 
 #include <stdbool.h>
+#include <stdio.h>
 
 typedef enum _Log_Levels_t {
     LOG_LEVELS_ALL,
@@ -33,11 +34,13 @@ typedef enum _Log_Levels_t {
     LOG_LEVELS_WARNING,
     LOG_LEVELS_ERROR,
     LOG_LEVELS_FATAL,
-    LOG_LEVELS_NONE
+    LOG_LEVELS_NONE,
+    Log_Levels_t_CountOf
 } Log_Levels_t;
 
 extern void Log_initialize();
 extern void Log_configure(bool enabled);
+extern void Log_redirect(FILE *stream);
 extern void Log_write(Log_Levels_t level, const char *text, ...);
 
 #endif  /* __LOG_H__ */

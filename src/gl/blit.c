@@ -25,6 +25,7 @@
 #include "../config.h"
 
 #include "../core/imath.h"
+#include "../core/sincos.h"
 #include "../log.h"
 
 #include <memory.h>
@@ -39,7 +40,6 @@ static inline void pixel(const GL_Context_t *context, int x, int y, int index)
 
 // TODO: specifies `const` always? Is pedantic or useful?
 // TODO: define a `BlitInfo` and `BlitFunc` types to generalize?
-// TODO: const GL_Surface_t *surface = state->surface;
 // https://dev.to/fenbf/please-declare-your-variables-as-const
 void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position)
 {
@@ -197,8 +197,7 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
 
 // https://web.archive.org/web/20190305223938/http://www.drdobbs.com/architecture-and-design/fast-bitmap-rotation-and-scaling/184416337
 // https://www.flipcode.com/archives/The_Art_of_Demomaking-Issue_10_Roto-Zooming.shtml
-// TODO: add 90/180/270 rotations? Or fix sin/cos values?
-void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y, float angle, float anchor_x, float anchor_y)
+void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y)
 {
     const GL_State_t *state = &context->state;
     const GL_Quad_t *clipping_region = &state->clipping_region;
@@ -207,8 +206,8 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
 
     const float w = (float)area.width;
     const float h = (float)area.height;
-    const float sw = (float)w * scale_x;
-    const float sh = (float)h * scale_y;
+    const float sw = w * scale_x;
+    const float sh = h * scale_y;
 
     const float sax = w * anchor_x; // Anchor points, relative to the source and destination areas.
     const float say = h * anchor_y;
@@ -220,8 +219,8 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const float dx = position.x;
     const float dy = position.y;
 
-    const float c = cosf(angle);
-    const float s = sinf(angle);
+    float s, c;
+    fsincos(rotation, &s, &c);
 
     // The counter-clockwise 2D rotation matrix is
     //
@@ -316,7 +315,7 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
 
             if (x >= sminx && x <= smaxx && y >= sminy && y <= smaxy) {
 #ifdef __DEBUG_GRAPHICS__
-                pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)i + (int)j);
+                pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
                 const GL_Pixel_t *src = surface->data_rows[y] + x;
                 GL_Pixel_t index = shifting[*src];
@@ -419,18 +418,29 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
     //
     // X = A * (SX - CX) + B * (SY - CY) + CX + H
     // Y = C * (SX - CX) + D * (SY - CY) + CY + V
-    GL_XForm_State_t xform_state;
-    memcpy(&xform_state, &xform->state, sizeof(GL_XForm_State_t));
-    float h = xform_state.h; float v = xform_state.v; float a = xform_state.a; float b = xform_state.b;
-    float c = xform_state.c; float d = xform_state.d; float x0 = xform_state.x; float y0 = xform_state.y;
+    const float *registers = xform->registers;
+    float h = registers[GL_XFORM_REGISTER_H]; float v = registers[GL_XFORM_REGISTER_V];
+    float a = registers[GL_XFORM_REGISTER_A]; float b = registers[GL_XFORM_REGISTER_B];
+    float c = registers[GL_XFORM_REGISTER_C]; float d = registers[GL_XFORM_REGISTER_D];
+    float x0 = registers[GL_XFORM_REGISTER_X]; float y0 = registers[GL_XFORM_REGISTER_Y];
 
     for (int i = 0; i < height; ++i) {
         if (table && i == table->scan_line) {
             for (size_t k = 0; k < table->count; ++k) {
-                xform_state.registers[table->operations[k].id] = table->operations[k].value;
+                const GL_XForm_Registers_t id = table->operations[k].id;
+                const float value = table->operations[k].value;
+                switch (id) {
+                    case GL_XFORM_REGISTER_H: { h = value; } break;
+                    case GL_XFORM_REGISTER_V: { v = value; } break;
+                    case GL_XFORM_REGISTER_A: { a = value; } break;
+                    case GL_XFORM_REGISTER_B: { b = value; } break;
+                    case GL_XFORM_REGISTER_C: { c = value; } break;
+                    case GL_XFORM_REGISTER_D: { d = value; } break;
+                    case GL_XFORM_REGISTER_X: { x0 = value; } break;
+                    case GL_XFORM_REGISTER_Y: { y0 = value; } break;
+                    default: { ; } break;
+                }
             }
-            h = xform_state.h; v = xform_state.v; a = xform_state.a; b = xform_state.b; // Keep the fast-access variables updated.
-            c = xform_state.c; d = xform_state.d; x0 = xform_state.x; y0 = xform_state.y;
             ++table;
 #ifdef __DETACH_XFORM_TABLE__
             if (table->scan_line == -1) { // End-of-data reached, detach pointer for faster loop.

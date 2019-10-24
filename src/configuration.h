@@ -25,16 +25,18 @@
 
 #include <stdbool.h>
 
-typedef struct lua_State lua_State;
+#include <lua/lua.h>
 
 #define MAX_CONFIGURATION_TITLE_LENGTH      128
+#define MAX_CONFIGURATION_FRAME_CAPS        4
 
 typedef struct _Configuration {
     char title[MAX_CONFIGURATION_TITLE_LENGTH];
     int width, height, scale;
     bool fullscreen;  // TODO: rename to "windowed"?
-    int fps;
+    int fps; // TODO: rename to "frequency"?
     int skippable_frames;
+    float frame_caps[MAX_CONFIGURATION_FRAME_CAPS]; // We are storing the reciprocal of the FPS, i.e. the frame times.
     bool hide_cursor;
     bool exit_key_enabled;
     bool debug;

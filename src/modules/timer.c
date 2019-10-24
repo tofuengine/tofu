@@ -30,6 +30,7 @@
 #include "../log.h"
 
 typedef struct _Timer_Class_t {
+    const void *bogus;
     luaX_Reference callback;
     Timer_t *timer;
 } Timer_Class_t;
@@ -51,13 +52,10 @@ static const luaX_Const _timer_constants[] = {
     { NULL }
 };
 
-#include "timer.inc"
-
 int timer_loader(lua_State *L)
 {
-    luaX_Script script = { (const char *)_timer_lua, _timer_lua_len, "timer.lua" };
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, &script, _timer_functions, _timer_constants, nup, LUAX_CLASS(Timer_Class_t));
+    return luaX_newmodule(L, NULL, _timer_functions, _timer_constants, nup, LUAX_CLASS(Timer_Class_t));
 }
 
 static int timer_new(lua_State *L)
@@ -67,7 +65,7 @@ static int timer_new(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
         LUAX_SIGNATURE_ARGUMENT(luaX_isfunction)
     LUAX_SIGNATURE_END
-    float period = (float)lua_tonumber(L, 1);
+    float period = lua_tonumber(L, 1);
     int repeats = lua_tointeger(L, 2);
     luaX_Reference callback = luaX_tofunction(L, 3);
 #ifdef __DEBUG_API_CALLS__

@@ -20,11 +20,11 @@
  * SOFTWARE.
  **/
 
-#ifndef __MODULES_CLASS_H__
-#define __MODULES_CLASS_H__
+#ifndef __MODULES_MATH_H__
+#define __MODULES_MATH_H__
 
 #include <lua/lua.h>
 
-extern int class_loader(lua_State *L);
+extern int math_loader(lua_State *L);
 
-#endif  /* __MODULES_CLASS_H__ */
+#endif  /* __MODULES_MATH_H__ */

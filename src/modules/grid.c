@@ -39,6 +39,7 @@ typedef float Cell_t;
 #endif
 
 typedef struct _Grid_Class_t {
+    const void *bogus;
     size_t width, height;
     Cell_t *data;
     Cell_t **data_rows; // Precomputed pointers to the line of data.
@@ -71,13 +72,10 @@ static const luaX_Const _grid_constants[] = {
     { NULL }
 };
 
-#include "grid.inc"
-
 int grid_loader(lua_State *L)
 {
-    luaX_Script script = { (const char *)_grid_lua, _grid_lua_len, "grid.lua" };
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, &script, _grid_functions, _grid_constants, nup, LUAX_CLASS(Grid_Class_t));
+    return luaX_newmodule(L, NULL, _grid_functions, _grid_constants, nup, LUAX_CLASS(Grid_Class_t));
 }
 
 static int grid_new(lua_State *L)
@@ -109,7 +107,7 @@ static int grid_new(lua_State *L)
     Cell_t *eod = ptr + data_size;
 
     if (type == LUA_TTABLE) {
-        lua_pushnil(L); // first key
+        lua_pushnil(L);
         while (lua_next(L, 3)) {
 #if 0
             const char *key_type = lua_typename(L, lua_type(L, -2)); // uses 'key' (at index -2) and 'value' (at index -1)
@@ -120,7 +118,7 @@ static int grid_new(lua_State *L)
                 *(ptr++) = value;
             }
 
-            lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
+            lua_pop(L, 1);
         }
     } else
     if (type == LUA_TNUMBER) {
@@ -198,7 +196,7 @@ static int grid_fill(lua_State *L)
     Cell_t *eod = ptr + instance->data_size;
 
     if (type == LUA_TTABLE) {
-        lua_pushnil(L); // first key
+        lua_pushnil(L);
         while (lua_next(L, 2)) {
 #if 0
             const char *key_type = lua_typename(L, lua_type(L, -2)); // uses 'key' (at index -2) and 'value' (at index -1)
@@ -209,7 +207,7 @@ static int grid_fill(lua_State *L)
                 *(ptr++) = value;
             }
 
-            lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
+            lua_pop(L, 1);
         }
     } else
     if (type == LUA_TNUMBER) {
@@ -242,7 +240,7 @@ static int grid_stride(lua_State *L)
     Cell_t *eod = ptr + (instance->data_size < amount ? instance->data_size : amount);
 
     if (type == LUA_TTABLE) {
-        lua_pushnil(L); // first key
+        lua_pushnil(L);
         while (lua_next(L, 4)) {
 #if 0
             const char *key_type = lua_typename(L, lua_type(L, -2)); // uses 'key' (at index -2) and 'value' (at index -1)
@@ -253,7 +251,7 @@ static int grid_stride(lua_State *L)
                 *(ptr++) = value;
             }
 
-            lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
+            lua_pop(L, 1);
         }
     } else
     if (type == LUA_TNUMBER) {

@@ -29,9 +29,6 @@
 #include "palette.h"
 #include "surface.h"
 
-// TODO: move from `float` to 'double` or to `fix16_t`?
-// TODO: patch all doubles to float!
-
 #define GL_XFORM_TABLE_MAX_OPERATIONS       16
 
 typedef struct _GL_State_t {

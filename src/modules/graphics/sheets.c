@@ -37,7 +37,7 @@ static const Predefined_Sheet_t _sheets[] = {
     { "12x24", { spleen_12x24_png, spleen_12x24_png_len, 12,24 } },
     { "16x32", { spleen_16x32_png, spleen_16x32_png_len, 16, 32 } },
     { "32x64", { spleen_32x64_png, spleen_32x64_png_len, 32, 64 } },
-    { NULL, { } }
+    { NULL, { 0 } }
 };
 
 const Sheet_Data_t *graphics_sheets_find(const char *id)

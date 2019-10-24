@@ -25,18 +25,40 @@
 #include "config.h"
 #include "configuration.h"
 #include "log.h"
+#include "platform.h"
 
 #include <limits.h>
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#if PLATFORM_ID == PLATFORM_LINUX
+  #include <unistd.h>
+#elif PLATFORM_ID == PLATFORM_WINDOWS
+  #include <windows.h>
+#endif
 #ifdef DEBUG
   #define STB_LEAKCHECK_IMPLEMENTATION
   #include <stb/stb_leakcheck.h>
 #endif
 
-static bool update_statistics(Engine_Statistics_t *statistics, float elapsed) {
-    static float history[FPS_AVERAGE_SAMPLES] = {};
+static inline void wait_for(float seconds)
+{
+    int millis = (int)(seconds * 1000.0f);
+#if PLATFORM_ID == PLATFORM_LINUX
+    usleep(millis * 1000);   // usleep takes sleep time in us (1 millionth of a second)
+#elif PLATFORM_ID == PLATFORM_WINDOWS
+    Sleep(millis);
+#else
+    struct timespec ts;
+    ts.tv_sec = millis / 1000;
+    ts.tv_nsec = (millis % 1000) * 1000000;
+    nanosleep(&ts, NULL);
+#endif
+}
+
+static inline bool update_statistics(Engine_Statistics_t *statistics, float elapsed) {
+    static float history[FPS_AVERAGE_SAMPLES] = { 0 };
     static int index = 0;
     static int samples = 0;
     static float sum = 0.0f;
@@ -50,7 +72,7 @@ static bool update_statistics(Engine_Statistics_t *statistics, float elapsed) {
         samples += 1;
         return false;
     }
-    float fps = (float)FPS_AVERAGE_SAMPLES / sum;
+    float fps = roundf((float)FPS_AVERAGE_SAMPLES / sum);
     statistics->fps = fps;
     if (count == 0) {
         statistics->history[statistics->index] = fps;
@@ -116,7 +138,8 @@ void Engine_run(Engine_t *engine)
 {
     const float delta_time = 1.0f / (float)engine->configuration.fps;
     const int skippable_frames = engine->configuration.skippable_frames;
-    Log_write(LOG_LEVELS_INFO, "<ENGINE> now running, delta-time is %.3fs w/ %d skippable frames", delta_time, skippable_frames);
+    const float *frame_caps = engine->configuration.frame_caps;
+    Log_write(LOG_LEVELS_INFO, "<ENGINE> now running, update-time is %.3fs w/ %d skippable frames", delta_time, skippable_frames);
 
     Engine_Statistics_t statistics = (Engine_Statistics_t){
             .delta_time = delta_time,
@@ -143,7 +166,6 @@ void Engine_run(Engine_t *engine)
         }
 
         Display_process_input(&engine->display);
-
         running = running && Interpreter_input(&engine->interpreter); // Lazy evaluate `running`, will avoid calls when error.
 
         lag += elapsed; // Count a maximum amount of skippable frames in order no to stall on slower machines.
@@ -154,11 +176,18 @@ void Engine_run(Engine_t *engine)
         }
 
         running = running && Interpreter_render(&engine->interpreter, lag / delta_time);
-
         Display_present(&engine->display);
 
-//        if (used < delta_time) {
-//            glfwWait
-//        }
+        float frame_time = (float)glfwGetTime() - current;
+        float reference_time = frame_time;
+        for (int i = MAX_CONFIGURATION_FRAME_CAPS - 1; i; --i) { // Backward scanning, to match the (inverted) "greatest" one
+            if (frame_time < frame_caps[i]) {
+                reference_time = frame_caps[i];
+                break;
+            }
+        }
+        if (reference_time > frame_time) {
+            wait_for(reference_time - frame_time);
+        }
     }
 }

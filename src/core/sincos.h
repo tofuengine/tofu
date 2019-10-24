@@ -20,11 +20,12 @@
  * SOFTWARE.
  **/
 
-#ifndef __MODULES_CLASS_H__
-#define __MODULES_CLASS_H__
+#ifndef __SINCOS_H__
+#define __SINCOS_H__
 
-#include <lua/lua.h>
+#define SINCOS_PERIOD  512
 
-extern int class_loader(lua_State *L);
+extern void fsincos(int rotation, float *sin, float *cos);
+extern int fator(float angle);
 
-#endif  /* __MODULES_CLASS_H__ */
+#endif  /* __SINCOS_H__ */

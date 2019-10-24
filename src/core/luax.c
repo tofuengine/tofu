@@ -22,6 +22,7 @@
 
 #include "luax.h"
 
+#include <inttypes.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
@@ -76,7 +77,7 @@ void luaX_stackdump(lua_State *L, const char* func, int line)
                 break;
             case LUA_TFUNCTION:
                 if (lua_iscfunction(L, positive)) {
-                    printf("\t%p", lua_tocfunction(L, positive));
+                    printf("\t%" PRIXPTR "", (uintptr_t)lua_tocfunction(L, positive));
                 } else {
                     printf("\t%p", lua_topointer(L, positive));
                 }
@@ -226,29 +227,6 @@ int luaX_toref(lua_State *L, int arg)
     return luaL_ref(L, LUA_REGISTRYINDEX);
 }
 
-void luaX_pushnumberarray(lua_State *L, float *array, size_t count)
-{
-    lua_createtable(L, count, 0);
-    for (size_t i = 0; i < count; i++) {
-        lua_pushnumber(L, (double)array[i]);
-        lua_rawseti(L, -2, i + 1); /* In lua indices start at 1 */
-    }
-}
-
-void luaX_tonumberarray(lua_State *L, int idx, float *array, size_t count)
-{
-    int ref = (idx > 0) ? idx : idx - 1; // If negative, adjust to skip the iteration key.
-    lua_pushnil(L);
-    for (size_t i = 0; lua_next(L, ref); ++i) {
-        if (i >= count) {
-            lua_pop(L, 2); // Pops both key and value and bail out!
-            break;
-        }
-        array[i] = (float)lua_tonumber(L, -1);
-        lua_pop(L, 1);
-    }
-}
-
 void luaX_checkargument(lua_State *L, int idx, const char *file, int line, ...)
 {
     int count = 0;
@@ -288,17 +266,6 @@ size_t luaX_unpackupvalues(lua_State *L)
         lua_pushvalue(L, lua_upvalueindex(2 + i)); // Copy the upvalues onto the stack, skipping the counter.
     }
     return (size_t)nup;
-}
-
-size_t luaX_count(lua_State *L, int idx)
-{
-    size_t count = 0;
-    lua_pushnil(L); // first key
-    while (lua_next(L, idx)) {
-        count += 1;
-        lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
-    }
-    return count;
 }
 
 extern int luaX_isnil(lua_State *L, int idx)

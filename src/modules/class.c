@@ -30,7 +30,6 @@
 
 int class_loader(lua_State *L)
 {
-    luaX_Script script = { (const char *)_class_lua, _class_lua_len, "class.lua" };
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, &script, NULL, NULL, nup, NULL);
+    return luaX_newmodule(L, &(luaX_Script){ (const char *)_class_lua, _class_lua_len, "class.lua" }, NULL, NULL, nup, NULL);
 }

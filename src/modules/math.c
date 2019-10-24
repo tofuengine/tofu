@@ -20,58 +20,65 @@
  * SOFTWARE.
  **/
 
-#include "file.h"
+#include "math.h"
 
 #include "../core/luax.h"
+#include "../core/sincos.h"
 
-#include "../environment.h"
-#include "../fs.h"
 #include "../log.h"
 
-#include <string.h>
-#ifdef DEBUG
-  #include <stb/stb_leakcheck.h>
-#endif
-
-typedef struct _File_Class_t {
+typedef struct _Math_Class_t {
     const void *bogus;
-} File_Class_t;
+} Math_Class_t;
 
-static int file_read(lua_State *L);
+static int math_sincos(lua_State *L);
+static int math_angle_to_rotation(lua_State *L);
 
-static const struct luaL_Reg _file_functions[] = {
-    { "read", file_read },
+static const struct luaL_Reg _math_functions[] = {
+    { "sincos", math_sincos },
+    { "angle_to_rotation", math_angle_to_rotation },
     { NULL, NULL }
 };
 
-static const luaX_Const _file_constants[] = {
+static const luaX_Const _math_constants[] = {
+    { "SINCOS_PERIOD", LUA_CT_INTEGER, { .i = SINCOS_PERIOD } },
     { NULL }
 };
 
-int file_loader(lua_State *L)
+#include "math.inc"
+
+int math_loader(lua_State *L)
 {
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, NULL, _file_functions, _file_constants, nup, LUAX_CLASS(File_Class_t));
+    return luaX_newmodule(L, &(luaX_Script){ (const char *)_math_lua, _math_lua_len, "math.lua" }, _math_functions, _math_constants, nup, LUAX_CLASS(Math_Class_t));
 }
 
-static int file_read(lua_State *L)
+static int math_sincos(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
     LUAX_SIGNATURE_END
-    const char *file = lua_tostring(L, 1);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "File.read() -> %s", file);
-#endif
+    int rotation = lua_tointeger(L, 1);
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    float s, c;
+    fsincos(rotation, &s, &c);
 
-    char *result = FS_load_as_string(&environment->fs, file);
-    Log_write(LOG_LEVELS_DEBUG, "<FILE> file '%s' loaded at %p", file, result);
+    lua_pushnumber(L, s);
+    lua_pushnumber(L, c);
 
-    lua_pushstring(L, result);
+    return 2;
+}
 
-    free(result);
+static int math_angle_to_rotation(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+    LUAX_SIGNATURE_END
+    float angle = lua_tonumber(L, 1);
+
+    int rotation = fator(angle);
+
+    lua_pushinteger(L, rotation);
 
     return 1;
 }

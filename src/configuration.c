@@ -24,29 +24,34 @@
 
 #include "log.h"
 
+#include "core/imath.h"
 #include "core/luax.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define SCREEN_WIDTH    320
-#define SCREEN_HEIGHT   240
-#define SCREEN_SCALE    0
-#define WINDOW_TITLE    ".: Tofu Engine :."
+#define SCREEN_WIDTH        320
+#define SCREEN_HEIGHT       240
+#define SCREEN_SCALE        0
+#define WINDOW_TITLE        ".: Tofu Engine :."
+#define FRAMES_PER_SECOND   60
 
 void Configuration_initialize(Configuration_t *configuration)
 {
     strncpy(configuration->title, WINDOW_TITLE, MAX_CONFIGURATION_TITLE_LENGTH);
-    configuration->width = SCREEN_WIDTH;
-    configuration->height = SCREEN_HEIGHT;
-    configuration->scale = SCREEN_SCALE;
-    configuration->fullscreen = false;
-    configuration->fps = 60;
-    configuration->skippable_frames = 12; // About 20% of the FTP amount.
-    configuration->hide_cursor = true;
-    configuration->exit_key_enabled = true;
-    configuration->debug = true;
+    *configuration = (Configuration_t){
+            .width = SCREEN_WIDTH,
+            .height = SCREEN_HEIGHT,
+            .scale = SCREEN_SCALE,
+            .fullscreen = false,
+            .fps = FRAMES_PER_SECOND,
+            .skippable_frames = FRAMES_PER_SECOND / 5, // About 20% of the FPS amount.
+            .frame_caps = { 0 }, // No capping as a default. TODO: make it run-time configurable?
+            .hide_cursor = true,
+            .exit_key_enabled = true,
+            .debug = true
+        };
 }
 
 void Configuration_parse(lua_State *L, Configuration_t *configuration)
@@ -77,9 +82,26 @@ void Configuration_parse(lua_State *L, Configuration_t *configuration)
         } else
         if (strcmp(key, "fps") == 0) {
             configuration->fps = lua_tointeger(L, -1);
+            configuration->skippable_frames = configuration->fps / 5; // Keep synched. About 20% of the FPS amount.
         } else
-        if (strcmp(key, "skippable_frames") == 0) {
-            configuration->skippable_frames = lua_tointeger(L, -1);
+        if (strcmp(key, "skippable-frames") == 0) {
+            int suggested = configuration->fps / 5;
+            configuration->skippable_frames = imin(lua_tointeger(L, -1), suggested); // TODO: not sure if `imin` or `imax`. :P
+        } else
+        if (strcmp(key, "fps-caps") == 0) {
+            lua_pushnil(L);
+            for (int i = 0; i < MAX_CONFIGURATION_FRAME_CAPS; ++i) { // Reset cappings to "no frame capping"
+                configuration->frame_caps[i] = 0.0f;
+            }
+            for (int i = MAX_CONFIGURATION_FRAME_CAPS - 1; lua_next(L, -2); --i) {
+                if (i == 0) {
+                    Log_write(LOG_LEVELS_WARNING, "<CONFIGURATION> maximum amount of frame-cappings reached");
+                    lua_pop(L, 2);
+                    break;
+                }
+                configuration->frame_caps[i] = 1.0f / (float)lua_tointeger(L, -1); // Automatically convert FPS to frame-time (optimization).
+                lua_pop(L, 1);
+            }
         } else
         if (strcmp(key, "hide_cursor") == 0) {
             configuration->hide_cursor = lua_toboolean(L, -1);
