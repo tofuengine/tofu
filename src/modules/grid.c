@@ -44,6 +44,7 @@ static int grid_stride(lua_State *L);
 static int grid_peek(lua_State *L);
 static int grid_poke(lua_State *L);
 static int grid_scan(lua_State *L);
+static int grid_process(lua_State *L);
 
 static const struct luaL_Reg _grid_functions[] = {
     { "new", grid_new },
@@ -55,7 +56,7 @@ static const struct luaL_Reg _grid_functions[] = {
     {"peek", grid_peek },
     {"poke", grid_poke },
     {"scan", grid_scan },
-//    {"update", grid_update },
+    {"process", grid_process },
 //    {"path", grid_path },
     { NULL, NULL }
 };
@@ -64,10 +65,12 @@ static const luaX_Const _grid_constants[] = {
     { NULL }
 };
 
+#include "grid.inc"
+
 int grid_loader(lua_State *L)
 {
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, NULL, _grid_functions, _grid_constants, nup, GRID_MT);
+    return luaX_newmodule(L, &(luaX_Script){ (const char *)_grid_lua, _grid_lua_len, "grid.lua" }, _grid_functions, _grid_constants, nup, GRID_MT);
 }
 
 static int grid_new(lua_State *L)
@@ -304,28 +307,54 @@ static int grid_scan(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isfunction)
     LUAX_SIGNATURE_END
     Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
-    luaX_Reference callback = luaX_tofunction(L, 2);
+//    luaX_Reference callback = luaX_tofunction(L, 2);
 
     Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(3));
 
     const Cell_t *data = instance->data;
-//    Cell_t *data = instance->data;
 
     for (size_t row = 0; row < instance->height; ++row) {
         for (size_t column = 0; column < instance->width; ++column) {
-            lua_rawgeti(L, LUA_REGISTRYINDEX, callback);
+            lua_pushvalue(L, 2); // Copy directly from stack argument, don't need to ref/unref (won't be GC-ed meanwhile)
             lua_pushinteger(L, column);
             lua_pushinteger(L, row);
             lua_pushnumber(L, *(data++));
             Interpreter_call(interpreter, 3, 0);
-//            lua_pushnumber(L, *data);
-///            Interpreter_call(interpreter, 3, 1);
-//            *(data++) = lua_tonumber(L, -1);
-//            lua_pop(L, 1);
         }
     }
 
-    luaL_unref(L, LUA_REGISTRYINDEX, callback);
+    return 0;
+}
+
+static int grid_process(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 2)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isfunction)
+    LUAX_SIGNATURE_END
+    Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
+//    luaX_Reference callback = luaX_tofunction(L, 2);
+
+    Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(3));
+
+    const Cell_t *data = instance->data;
+
+    for (size_t row = 0; row < instance->height; ++row) {
+        for (size_t column = 0; column < instance->width; ++column) {
+            lua_pushvalue(L, 2); // Copy directly from stack argument, don't need to ref/unref (won't be GC-ed meanwhile)
+            lua_pushinteger(L, column);
+            lua_pushinteger(L, row);
+            lua_pushnumber(L, *(data++));
+            Interpreter_call(interpreter, 3, 3);
+
+            size_t column = lua_tointeger(L, -3);
+            size_t row = lua_tointeger(L, -2);
+            Cell_t value = lua_tonumber(L, -1);
+            instance->data_rows[row][column] = value;
+
+            lua_pop(L, 3);
+        }
+    }
 
     return 0;
 }
