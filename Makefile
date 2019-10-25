@@ -40,6 +40,7 @@ $(OBJECTS): %.o : %.c $(BLOBS) $(INCLUDES) Makefile
 # `.inc` files also depend upon `Makefile` to be rebuild in case of tweakings.
 $(BLOBS): %.inc: %.lua Makefile
 	@$(ANALYZER) $(AFLAGS) $<
+#	@luac -o - $< | xxd -i | sed -e 's/src_modules//g' -e 's/unsigned/static unsigned/g' > $@
 	@xxd -i $< | sed -e 's/src_modules//g' -e 's/unsigned/static unsigned/g' > $@
 	@echo "Generated "$@" from "$<" successfully!"
 

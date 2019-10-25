@@ -22,6 +22,7 @@ function Game:__ctor()
   self.x_size = Canvas.width() / STEPS
   self.y_size = Canvas.height() / STEPS
   self.windy = false
+  self.damping = 1.0
   self.grid = Grid.new(STEPS, STEPS, 0)
 
   self:reset()
@@ -35,35 +36,41 @@ end
 function Game:input()
   if Input.is_key_pressed(Input.SELECT) then
     self.windy = not self.windy
+  elseif Input.is_key_pressed(Input.LEFT) then
+    self.damping = self.damping - 0.1
+  elseif Input.is_key_pressed(Input.RIGHT) then
+    self.damping = self.damping + 0.1
+  elseif Input.is_key_pressed(Input.START) then
+    self:reset()
   end
 end
 
 function Game:update(_)
-  for i = 0, STEPS - 2 do
-    for j = 0, STEPS - 1 do
-      local value = self.grid:peek(j, i + 1)
+  local windy = self.windy
+  self.grid:process(function(column, row, value)
+      if row == 0 then -- Skip the 1st row entirely.
+        return column, row, value
+      end
+
       if value > 0 then
-        local delta = math.random(0, 2)
+        local delta = math.random(0, 1) * self.damping
         value = value - delta
         if value < 0 then
-            value = 0
+          value = 0
         end
       end
 
-      local x = j
-      if self.windy then
-        x = x + math.random(0, 3) - 1
-        if x < 0 then
-          x = 0
-        end
-        if x >= STEPS then
-          x = STEPS - 1
+      if windy then
+        column = column + math.random(0, 3) - 1
+        if column < 0 then
+          column = 0
+        elseif column > STEPS - 1 then
+          column = STEPS - 1
         end
       end
 
-      self.grid:poke(x, i, value)
-    end
-  end
+      return column, row - 1, value -- Move up one row!
+    end)
 end
 
 function Game:render(_)
@@ -79,7 +86,8 @@ function Game:render(_)
       end
     end)
 
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
+    self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
+    self.font:write(string.format("D: %.2f", self.damping), Canvas.width(), 0, "right")
 end
 
 return Game
