@@ -26,10 +26,12 @@
 #include "../core/luax.h"
 #include "../log.h"
 
+static const uint8_t _class_lua[] = {
 #include "class.inc"
+};
 
 int class_loader(lua_State *L)
 {
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, &(luaX_Script){ (const char *)_class_lua, _class_lua_len, "class.lua" }, NULL, NULL, nup, NULL);
+    return luaX_newmodule(L, &(luaX_Script){ (const char *)_class_lua, sizeof(_class_lua), "class.lua" }, NULL, NULL, nup, NULL);
 }

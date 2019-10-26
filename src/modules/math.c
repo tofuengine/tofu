@@ -42,12 +42,14 @@ static const luaX_Const _math_constants[] = {
     { NULL }
 };
 
+static const unsigned char _math_lua[] = {
 #include "math.inc"
+};
 
 int math_loader(lua_State *L)
 {
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, &(luaX_Script){ (const char *)_math_lua, _math_lua_len, "math.lua" }, _math_functions, _math_constants, nup, MATH_MT);
+    return luaX_newmodule(L, &(luaX_Script){ (const char *)_math_lua, sizeof(_math_lua), "math.lua" }, _math_functions, _math_constants, nup, MATH_MT);
 }
 
 static int math_sincos(lua_State *L)

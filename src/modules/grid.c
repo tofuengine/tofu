@@ -65,12 +65,14 @@ static const luaX_Const _grid_constants[] = {
     { NULL }
 };
 
+static const unsigned char _grid_lua[] = {
 #include "grid.inc"
+};
 
 int grid_loader(lua_State *L)
 {
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, &(luaX_Script){ (const char *)_grid_lua, _grid_lua_len, "grid.lua" }, _grid_functions, _grid_constants, nup, GRID_MT);
+    return luaX_newmodule(L, &(luaX_Script){ (const char *)_grid_lua, sizeof(_grid_lua), "grid.lua" }, _grid_functions, _grid_constants, nup, GRID_MT);
 }
 
 static int grid_new(lua_State *L)
