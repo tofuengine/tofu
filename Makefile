@@ -40,7 +40,8 @@ $(OBJECTS): %.o : %.c $(BLOBS) $(INCLUDES) Makefile
 # `.inc` files also depend upon `Makefile` to be rebuild in case of tweakings.
 $(BLOBS): %.inc: %.lua Makefile
 	@$(ANALYZER) $(AFLAGS) $<
-	@luac5.3 -o - $< | xxd -i > $@
+	@hexdump -v -e '1/1 "0x%02X,"' $< > $@
+#	@luac5.3 -o - $< | xxd -i > $@
 	@echo "Generated "$@" from "$<" successfully!"
 
 primitives: $(TARGET)
