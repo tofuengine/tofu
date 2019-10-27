@@ -58,10 +58,12 @@ static const unsigned char _font_lua[] = {
 #include "font.inc"
 };
 
+static luaX_Script _font_script = { (const char *)_font_lua, sizeof(_font_lua), "font.lua" };
+
 int font_loader(lua_State *L)
 {
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, &(luaX_Script){ (const char *)_font_lua, sizeof(_font_lua), "font.lua" }, _font_functions, _font_constants, nup, FONT_MT);
+    return luaX_newmodule(L, &_font_script, _font_functions, _font_constants, nup, FONT_MT);
 }
 
 static void to_font_atlas_callback(void *parameters, GL_Surface_t *surface, const void *data)
