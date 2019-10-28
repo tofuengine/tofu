@@ -405,6 +405,8 @@ void Display_process_input(Display_t *display)
         GLFW_KEY_DOWN,
         GLFW_KEY_LEFT,
         GLFW_KEY_RIGHT,
+        GLFW_KEY_LEFT_CONTROL,
+        GLFW_KEY_RIGHT_CONTROL,
         GLFW_KEY_Z,
         GLFW_KEY_S,
         GLFW_KEY_X,
