@@ -92,6 +92,11 @@ mode7: $(TARGET)
 	@$(ANALYZER) $(AFLAGS) ./demos/mode7
 	@./$(TARGET) ./demos/mode7
 
+snake: $(TARGET)
+	@echo "Launching Snake application!"
+	@$(ANALYZER) $(AFLAGS) ./demos/snake
+	@./$(TARGET) ./demos/snake
+
 valgrind: $(TARGET)
 	@echo "Valgrind Palette application!"
 	@valgrind --leak-check=full env LIBGL_ALWAYS_SOFTWARE=1 ./$(TARGET) ./demos/palette

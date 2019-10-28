@@ -421,6 +421,14 @@ void Display_process_input(Display_t *display)
         Display_Key_State_t *key_state = &display->keys_state[i];
         bool was_down = key_state->down;
         bool is_down = glfwGetKey(display->window, keys[i]) == GLFW_PRESS;
+/*
+        if (key_state->auto_trigger > 0.0f) {
+            while (key_state->accumulator >= key_state->auto_trigger) {
+                key_state->accumulator -= key_state->auto_trigger;
+                is_down = true;
+            }
+        }
+*/
         key_state->down = is_down;
         key_state->pressed = !was_down && is_down;
         key_state->released = was_down && !is_down;
