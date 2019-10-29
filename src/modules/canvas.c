@@ -573,10 +573,10 @@ static int canvas_clipping0(lua_State *L)
 static int canvas_clipping4(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 4)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
     LUAX_SIGNATURE_END
     int x0 = lua_tointeger(L, 1);
     int y0 = lua_tointeger(L, 2);
@@ -832,12 +832,12 @@ static int canvas_triangle(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
     LUAX_SIGNATURE_END
     const char *mode = lua_tostring(L, 1);
-    float x0 = lua_tointeger(L, 2);
-    float y0 = lua_tointeger(L, 3);
-    float x1 = lua_tointeger(L, 4);
-    float y1 = lua_tointeger(L, 5);
-    float x2 = lua_tointeger(L, 6);
-    float y2 = lua_tointeger(L, 7);
+    int x0 = lua_tointeger(L, 2);
+    int y0 = lua_tointeger(L, 3);
+    int x1 = lua_tointeger(L, 4);
+    int y1 = lua_tointeger(L, 5);
+    int x2 = lua_tointeger(L, 6);
+    int y2 = lua_tointeger(L, 7);
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 8);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Canvas.triangle(%s, %d, %d, %d, %d, %d, %d, %d)", mode, x0, y0, x1, y1, x2, y2, index);

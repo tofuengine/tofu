@@ -222,8 +222,8 @@ static int grid_stride(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 5)
         LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
         LUAX_SIGNATURE_ARGUMENT(luaX_istable, luaX_isnumber)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
     LUAX_SIGNATURE_END
@@ -232,6 +232,14 @@ static int grid_stride(lua_State *L)
     size_t row = (size_t)lua_tointeger(L, 3);
     int type = lua_type(L, 4);
     size_t amount = (size_t)lua_tointeger(L, 5);
+#ifdef DEBUG
+    if (column >= instance->width) {
+        return luaL_error(L, "column %d is out of range (0, %d)", column, instance->width);
+    } else
+    if (row >= instance->height) {
+        return luaL_error(L, "row %d is out of range (0, %d)", row, instance->height);
+    }
+#endif
 
     Cell_t *ptr = instance->data_rows[row] + column;
     Cell_t *eod = ptr + (instance->data_size < amount ? instance->data_size : amount);
@@ -265,12 +273,20 @@ static int grid_peek(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 3)
         LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
     LUAX_SIGNATURE_END
     Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
     size_t column = (size_t)lua_tointeger(L, 2);
     size_t row = (size_t)lua_tointeger(L, 3);
+#ifdef DEBUG
+    if (column >= instance->width) {
+        return luaL_error(L, "column %d is out of range (0, %d)", column, instance->width);
+    } else
+    if (row >= instance->height) {
+        return luaL_error(L, "row %d is out of range (0, %d)", row, instance->height);
+    }
+#endif
 
     Cell_t *data = instance->data_rows[row];
 
@@ -285,14 +301,22 @@ static int grid_poke(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 4)
         LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
     LUAX_SIGNATURE_END
     Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
     size_t column = (size_t)lua_tointeger(L, 2);
     size_t row = (size_t)lua_tointeger(L, 3);
     Cell_t value = (Cell_t)lua_tonumber(L, 4);
+#ifdef DEBUG
+    if (column >= instance->width) {
+        return luaL_error(L, "column %d is out of range (0, %d)", column, instance->width);
+    } else
+    if (row >= instance->height) {
+        return luaL_error(L, "row %d is out of range (0, %d)", row, instance->height);
+    }
+#endif
 
     Cell_t *data = instance->data_rows[row];
 
