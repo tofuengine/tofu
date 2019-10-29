@@ -89,9 +89,6 @@ typedef int luaX_Reference;
         } \
     } while (0);
 
-// TODO: the following macro is more convoluted than useful... :|
-#define LUAX_CLASS(n)               #n "_mt"
-
 #define luaX_dump(L)                luaX_stackdump(L, __FILE__, __LINE__)
 
 #define luaX_tofunction(L, arg)     luaX_toref(L, arg)

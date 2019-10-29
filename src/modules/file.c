@@ -22,8 +22,8 @@
 
 #include "file.h"
 
+#include "udt.h"
 #include "../core/luax.h"
-
 #include "../environment.h"
 #include "../fs.h"
 #include "../log.h"
@@ -33,9 +33,7 @@
   #include <stb/stb_leakcheck.h>
 #endif
 
-typedef struct _File_Class_t {
-    const void *bogus;
-} File_Class_t;
+#define FILE_MT        "Tofu_File_mt"
 
 static int file_read(lua_State *L);
 
@@ -51,7 +49,7 @@ static const luaX_Const _file_constants[] = {
 int file_loader(lua_State *L)
 {
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, NULL, _file_functions, _file_constants, nup, LUAX_CLASS(File_Class_t));
+    return luaX_newmodule(L, NULL, _file_functions, _file_constants, nup, FILE_MT);
 }
 
 static int file_read(lua_State *L)

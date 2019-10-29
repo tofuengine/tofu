@@ -22,13 +22,11 @@
 
 #include "surface.h"
 
-#include "../core/luax.h"
-
+#include "udt.h"
 #include "../config.h"
 #include "../environment.h"
 #include "../interpreter.h"
 #include "../log.h"
-#include "../gl/gl.h"
 
 #include <math.h>
 #include <string.h>
@@ -37,12 +35,7 @@
 #endif
 #include <stb/stb_ds.h>
 
-typedef struct _Surface_Class_t {
-    const void *bogus;
-    // char full_path[PATH_FILE_MAX];
-    GL_Surface_t surface;
-    GL_XForm_t xform;
-} Surface_Class_t;
+#define SURFACE_MT      "Tofu_Surface_mt"
 
 static int surface_new(lua_State *L);
 static int surface_gc(lua_State *L);
@@ -78,7 +71,7 @@ static const luaX_Const _surface_constants[] = {
 int surface_loader(lua_State *L)
 {
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, NULL, _surface_functions, _surface_constants, nup, LUAX_CLASS(Surface_Class_t));
+    return luaX_newmodule(L, NULL, _surface_functions, _surface_constants, nup, SURFACE_MT);
 }
 
 static void to_indexed_atlas_callback(void *parameters, GL_Surface_t *surface, const void *data)
@@ -163,7 +156,7 @@ static int surface_new1(lua_State *L)
         };
     Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface allocated as #%p", instance);
 
-    luaL_setmetatable(L, LUAX_CLASS(Surface_Class_t));
+    luaL_setmetatable(L, SURFACE_MT);
 
     return 1;
 }
@@ -199,7 +192,7 @@ static int surface_new2(lua_State *L)
         };
     Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface allocated as #%p", instance);
 
-    luaL_setmetatable(L, LUAX_CLASS(Surface_Class_t));
+    luaL_setmetatable(L, SURFACE_MT);
 
     return 1;
 }

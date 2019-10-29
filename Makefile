@@ -7,6 +7,10 @@ TARGET=tofu
 ANALYZER=luacheck
 AFLAGS=--no-self --std lua53 -q
 
+#	@luac5.3 -o - $< | xxd -i > $@
+DUMPER=hexdump
+DFLAGS=-v -e '1/1 "0x%02X,"'
+
 COMPILER=cc
 CWARNINGS=-Wall -Wextra -Werror -Wno-unused-parameter -Wpedantic 
 CFLAGS=-Og -g -DDEBUG -D_DEFAULT_SOURCE -DLUA_32BITS -DLUA_FLOORN2I=1 -DLUA_USE_LINUX -DSTBI_ONLY_PNG -DSTBI_NO_STDIO -std=c99 -Iexternal
@@ -40,7 +44,7 @@ $(OBJECTS): %.o : %.c $(BLOBS) $(INCLUDES) Makefile
 # `.inc` files also depend upon `Makefile` to be rebuild in case of tweakings.
 $(BLOBS): %.inc: %.lua Makefile
 	@$(ANALYZER) $(AFLAGS) $<
-	@xxd -i $< | sed -e 's/src_modules//g' -e 's/unsigned/static unsigned/g' > $@
+	@$(DUMPER) $(DFLAGS) $< > $@
 	@echo "Generated "$@" from "$<" successfully!"
 
 primitives: $(TARGET)
@@ -87,6 +91,11 @@ mode7: $(TARGET)
 	@echo "Launching Mode7 application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/mode7
 	@./$(TARGET) ./demos/mode7
+
+snake: $(TARGET)
+	@echo "Launching Snake application!"
+	@$(ANALYZER) $(AFLAGS) ./demos/snake
+	@./$(TARGET) ./demos/snake
 
 valgrind: $(TARGET)
 	@echo "Valgrind Palette application!"

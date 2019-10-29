@@ -22,14 +22,18 @@
 
 #include "class.h"
 
+#include "udt.h"
 #include "../core/luax.h"
-
 #include "../log.h"
 
+static const uint8_t _class_lua[] = {
 #include "class.inc"
+};
+
+static luaX_Script _class_script = { (const char *)_class_lua, sizeof(_class_lua), "class.lua" };
 
 int class_loader(lua_State *L)
 {
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, &(luaX_Script){ (const char *)_class_lua, _class_lua_len, "class.lua" }, NULL, NULL, nup, NULL);
+    return luaX_newmodule(L, &_class_script, NULL, NULL, nup, NULL);
 }

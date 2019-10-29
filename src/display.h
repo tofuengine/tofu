@@ -36,6 +36,8 @@ typedef enum _Display_Keys_t {
     DISPLAY_KEY_DOWN,
     DISPLAY_KEY_LEFT,
     DISPLAY_KEY_RIGHT,
+    DISPLAY_KEY_LT,
+    DISPLAY_KEY_RT,
     DISPLAY_KEY_Y,
     DISPLAY_KEY_X,
     DISPLAY_KEY_B,

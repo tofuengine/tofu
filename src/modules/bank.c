@@ -22,8 +22,8 @@
 
 #include "bank.h"
 
+#include "udt.h"
 #include "../core/luax.h"
-
 #include "../config.h"
 #include "../environment.h"
 #include "../log.h"
@@ -35,11 +35,7 @@
   #include <stb/stb_leakcheck.h>
 #endif
 
-typedef struct _Bank_Class_t {
-    const void *bogus;
-    // char full_path[PATH_FILE_MAX];
-    GL_Sheet_t sheet;
-} Bank_Class_t;
+#define BANK_MT     "Tofu_Bank_mt"
 
 static int bank_new(lua_State *L);
 static int bank_gc(lua_State *L);
@@ -63,7 +59,7 @@ static const luaX_Const _bank_constants[] = {
 int bank_loader(lua_State *L)
 {
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, NULL, _bank_functions, _bank_constants, nup, LUAX_CLASS(Bank_Class_t));
+    return luaX_newmodule(L, NULL, _bank_functions, _bank_constants, nup, BANK_MT);
 }
 
 static void to_indexed_atlas_callback(void *parameters, GL_Surface_t *surface, const void *data)
@@ -113,7 +109,7 @@ static int bank_new(lua_State *L)
         };
     Log_write(LOG_LEVELS_DEBUG, "<BANK> bank allocated as #%p", instance);
 
-    luaL_setmetatable(L, LUAX_CLASS(Bank_Class_t));
+    luaL_setmetatable(L, BANK_MT);
 
     return 1;
 }

@@ -22,13 +22,12 @@
 
 #include "canvas.h"
 
+#include "udt.h"
 #include "../core/luax.h"
-
 #include "../config.h"
 #include "../environment.h"
 #include "../log.h"
 #include "../gl/gl.h"
-
 #include "graphics/palettes.h"
 #include "graphics/sheets.h"
 
@@ -40,9 +39,7 @@
 #endif
 #include <stb/stb_ds.h>
 
-typedef struct _Canvas_Class_t {
-    const void *bogus;
-} Canvas_Class_t;
+#define CANVAS_MT        "Tofu_Canvas_mt"
 
 static int canvas_color_to_index(lua_State *L);
 static int canvas_width(lua_State *L);
@@ -104,12 +101,16 @@ static const luaX_Const _canvas_constants[] = {
     { NULL }
 };
 
+static const uint8_t _canvas_lua[] = {
 #include "canvas.inc"
+};
+
+static luaX_Script _canvas_script = { (const char *)_canvas_lua, sizeof(_canvas_lua), "canvas.lua" };
 
 int canvas_loader(lua_State *L)
 {
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, &(luaX_Script){ (const char *)_canvas_lua, _canvas_lua_len, "canvas.lua" }, _canvas_functions, _canvas_constants, nup, LUAX_CLASS(Canvas_Class_t));
+    return luaX_newmodule(L, &_canvas_script, _canvas_functions, _canvas_constants, nup, CANVAS_MT);
 }
 
 // TODO: add a canvas constructor with overload (from file, from WxH, default one). Surface will become Canvas, in the end.
@@ -218,14 +219,6 @@ static int canvas_surface0(lua_State *L)
 
     return 0;
 }
-
-// TODO: !!! MOVE THESE `*_Class_t` UDT to a separate header or move to header file.
-typedef struct _Surface_Class_t {
-    const void *bogus;
-    // char full_path[PATH_FILE_MAX];
-    GL_Surface_t surface;
-    GL_XForm_t xform;
-} Surface_Class_t;
 
 static int canvas_surface1(lua_State *L)
 {
@@ -580,10 +573,10 @@ static int canvas_clipping0(lua_State *L)
 static int canvas_clipping4(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 4)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
     LUAX_SIGNATURE_END
     int x0 = lua_tointeger(L, 1);
     int y0 = lua_tointeger(L, 2);
@@ -839,12 +832,12 @@ static int canvas_triangle(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
     LUAX_SIGNATURE_END
     const char *mode = lua_tostring(L, 1);
-    float x0 = lua_tointeger(L, 2);
-    float y0 = lua_tointeger(L, 3);
-    float x1 = lua_tointeger(L, 4);
-    float y1 = lua_tointeger(L, 5);
-    float x2 = lua_tointeger(L, 6);
-    float y2 = lua_tointeger(L, 7);
+    int x0 = lua_tointeger(L, 2);
+    int y0 = lua_tointeger(L, 3);
+    int x1 = lua_tointeger(L, 4);
+    int y1 = lua_tointeger(L, 5);
+    int x2 = lua_tointeger(L, 6);
+    int y2 = lua_tointeger(L, 7);
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 8);
 #ifdef __DEBUG_API_CALLS__
     Log_write(LOG_LEVELS_DEBUG, "Canvas.triangle(%s, %d, %d, %d, %d, %d, %d, %d)", mode, x0, y0, x1, y1, x2, y2, index);

@@ -22,16 +22,14 @@
 
 #include "input.h"
 
+#include "udt.h"
 #include "../core/luax.h"
-
 #include "../environment.h"
 #include "../log.h"
 
 #include <string.h>
 
-typedef struct _Input_Class_t {
-    const void *bogus;
-} Input_Class_t;
+#define INPUT_MT        "Tofu_Input_mt"
 
 static int input_is_key_down(lua_State *L);
 static int input_is_key_up(lua_State *L);
@@ -52,6 +50,8 @@ static const luaX_Const _input_constants[] = {
     { "DOWN", LUA_CT_INTEGER, { .i = DISPLAY_KEY_DOWN } },
     { "LEFT", LUA_CT_INTEGER, { .i = DISPLAY_KEY_LEFT } },
     { "RIGHT", LUA_CT_INTEGER, { .i = DISPLAY_KEY_RIGHT } },
+    { "LT", LUA_CT_INTEGER, { .i = DISPLAY_KEY_LT } },
+    { "RT", LUA_CT_INTEGER, { .i = DISPLAY_KEY_RT } },
     { "Y", LUA_CT_INTEGER, { .i = DISPLAY_KEY_Y } },
     { "X", LUA_CT_INTEGER, { .i = DISPLAY_KEY_X } },
     { "B", LUA_CT_INTEGER, { .i = DISPLAY_KEY_B } },
@@ -64,7 +64,7 @@ static const luaX_Const _input_constants[] = {
 int input_loader(lua_State *L)
 {
     int nup = luaX_unpackupvalues(L);
-    return luaX_newmodule(L, NULL, _input_functions, _input_constants, nup, LUAX_CLASS(Input_Class_t));
+    return luaX_newmodule(L, NULL, _input_functions, _input_constants, nup, INPUT_MT);
 }
 
 static int input_is_key_down(lua_State *L)
