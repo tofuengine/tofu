@@ -41,6 +41,8 @@
   #define STB_LEAKCHECK_IMPLEMENTATION
   #include <stb/stb_leakcheck.h>
 #endif
+#define MINIAUDIO_IMPLEMENTATION
+#include <miniaudio/miniaudio.h>
 
 static inline void wait_for(float seconds)
 {
@@ -110,6 +112,35 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
         Interpreter_terminate(&engine->interpreter);
         return false;
     }
+
+    ma_device_config device_config = ma_device_config_init(ma_device_type_playback);
+    ma_device device;
+    if (ma_device_init(NULL, &device_config, &device) != MA_SUCCESS) {
+        Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't initialize audio");
+        return false;
+    }
+    static const char *_backends[] = {
+        "wasapi",
+        "dsound",
+        "winmm",
+        "coreaudio",
+        "sndio",
+        "audio4",
+        "oss",
+        "pulseaudio",
+        "alsa",
+        "jack",
+        "aaudio",
+        "opensl",
+        "webaudio",
+        "null"
+    };
+    Log_write(LOG_LEVELS_INFO, "<AUDIO> backend = %s", _backends[device.pContext->backend]);
+    Log_write(LOG_LEVELS_INFO, "<AUDIO> name = %s", device.playback.name);
+    Log_write(LOG_LEVELS_INFO, "<AUDIO> format = %d", device.playback.format);
+    Log_write(LOG_LEVELS_INFO, "<AUDIO> channels = %d", device.playback.channels);
+    ma_device_uninit(&device);
+
 
     engine->environment.timer_pool = &engine->interpreter.timer_pool; // HACK: inject the timer-pool pointer.
 
