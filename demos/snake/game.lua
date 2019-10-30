@@ -185,9 +185,7 @@ function Game:render(_)
         Canvas.rectangle("fill", x, y, CELL_SIZE, CELL_SIZE, 3)
       elseif value == -1 then
         Canvas.rectangle("fill", x, y, CELL_SIZE, CELL_SIZE, 1)
-      elseif value == 0 then
-        Canvas.rectangle("fill", x, y, CELL_SIZE, CELL_SIZE, 0)
-      else
+      elseif value ~= 0 then
         Canvas.rectangle("fill", x, y, CELL_SIZE, CELL_SIZE, 2)
       end
     end)
