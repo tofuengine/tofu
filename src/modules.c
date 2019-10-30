@@ -91,7 +91,17 @@ static int graphics_loader(lua_State *L)
     };
     return create_module(L, classes);
 }
-
+/*
+static int audio_loader(lua_State *L)
+{
+    static const luaL_Reg classes[] = {
+        { "Sound", sound_loader },
+        { "Wave", wave_loader },
+        { NULL, NULL }
+    };
+    return create_module(L, classes);
+}
+*/
 static int io_loader(lua_State *L)
 {
     static const luaL_Reg classes[] = {
@@ -118,6 +128,9 @@ void modules_initialize(lua_State *L, int nup)
         { "tofu.core", core_loader },
         { "tofu.events", events_loader },
         { "tofu.graphics", graphics_loader },
+/*
+        { "tofu.audio", audio_loader },
+*/
         { "tofu.io", io_loader },
         { "tofu.util", util_loader },
         { NULL, NULL }

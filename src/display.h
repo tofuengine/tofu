@@ -23,6 +23,8 @@
 #ifndef __DISPLAY_H__
 #define __DISPLAY_H__
 
+// TODO: rename Display to Video?
+
 #include "config.h"
 
 #include <stdbool.h>
