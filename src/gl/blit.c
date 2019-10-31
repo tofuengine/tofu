@@ -79,32 +79,57 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
         return;
     }
 
-    const GL_Pixel_t *src = surface->data_rows[area.y + skip_y] + (area.x + skip_x);
-    GL_Pixel_t *dst = state->surface->data_rows[drawing_region.y0] + drawing_region.x0;
+    const GL_Pixel_t *sptr = surface->data_rows[area.y + skip_y] + (area.x + skip_x);
+    GL_Pixel_t *dptr = state->surface->data_rows[drawing_region.y0] + drawing_region.x0;
 
-    const int src_skip = surface->width - width;
-    const int dst_skip = state->surface->width - width;
+    const int sskip = surface->width - width;
+    const int dskip = state->surface->width - width;
+#ifdef __GL_MASK_SUPPORT__
+    if (context->state.mask) {
+        const GL_Surface_t *mask = context->state.mask;
+        const GL_Pixel_t threshold = context->state.threshold;
 
-    for (int i = height; i; --i) {
-        for (int j = width; j; --j) {
+        const GL_Pixel_t *mptr = mask->data_rows[area.y + skip_y] + (area.x + skip_x);
+
+        const int mskip = mask->width - width;
+
+        for (int i = height; i; --i) {
+            for (int j = width; j; --j) {
 #ifdef __DEBUG_GRAPHICS__
-            pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)i + (int)j);
+                pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)i + (int)j);
 #endif
-            GL_Pixel_t index = shifting[*(src++)];
-#if 1
-            if (transparent[index]) {
-                dst++;
-            } else {
-                *(dst++) = index;
+                GL_Pixel_t index = shifting[*(sptr++)];
+                GL_Pixel_t mask = *(mptr++);
+                if (transparent[index] || (mask < threshold)) {
+                    dptr++;
+                } else {
+                    *(dptr++) = index;
+                }
             }
-#else
-            *dst = transparent[index] ? *dst : colors[index];
-            dst++;
-#endif
+            sptr += sskip;
+            mptr += mskip;
+            dptr += dskip;
         }
-        src += src_skip;
-        dst += dst_skip;
+    } else {
+#endif
+        for (int i = height; i; --i) {
+            for (int j = width; j; --j) {
+#ifdef __DEBUG_GRAPHICS__
+                pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)i + (int)j);
+#endif
+                GL_Pixel_t index = shifting[*(sptr++)];
+                if (transparent[index]) {
+                    dptr++;
+                } else {
+                    *(dptr++) = index;
+                }
+            }
+            sptr += sskip;
+            dptr += dskip;
+        }
+#ifdef __GL_MASK_SUPPORT__
     }
+#endif
 }
 
 // Simple implementation of nearest-neighbour scaling, with x/y flipping according to scaling-factor sign.
@@ -151,9 +176,9 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
         return;
     }
 
-    GL_Pixel_t *dst = state->surface->data_rows[drawing_region.y0] + drawing_region.x0;
+    GL_Pixel_t *dptr = state->surface->data_rows[drawing_region.y0] + drawing_region.x0;
 
-    const size_t skip = state->surface->width - width;
+    const size_t dskip = state->surface->width - width;
 
     const float du = 1.0f / scale_x; // Texture coordinates deltas (signed).
     const float dv = 1.0f / scale_y;
@@ -166,33 +191,62 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
     if (scale_y < 0.0f) {
         ov += (float)area.height + dv;
     }
+    // NOTE: we can also apply an integer-based DDA method, using remainders.
 
-    float v = ov; // NOTE: we can also apply an integer-based DDA method, using remainders.
-    for (int i = height; i; --i) {
-        const GL_Pixel_t *src = surface->data_rows[(int)v];
+#ifdef __GL_MASK_SUPPORT__
+    if (context->state.mask) {
+        const GL_Surface_t *mask = context->state.mask;
+        const GL_Pixel_t threshold = context->state.threshold;
 
-        float u = ou;
-        for (int j = width; j; --j) {
+        float v = ov;
+        for (int i = height; i; --i) {
+            const GL_Pixel_t *sptr = surface->data_rows[(int)v];
+            const GL_Pixel_t *mptr = mask->data_rows[(int)v];
+
+            float u = ou;
+            for (int j = width; j; --j) {
 #ifdef __DEBUG_GRAPHICS__
-            pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)u + (int)v);
+                pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)u + (int)v);
 #endif
-            GL_Pixel_t index = shifting[src[(int)u]];
-#if 1
-            if (transparent[index]) {
-                dst++;
-            } else {
-                *(dst++) = index;
+                GL_Pixel_t index = shifting[sptr[(int)u]];
+                GL_Pixel_t mask = mptr[(int)u];
+                if (transparent[index] || (mask < threshold)) {
+                    dptr++;
+                } else {
+                    *(dptr++) = index;
+                }
+                u += du;
             }
-#else
-            *dst = transparent[index] ? *dst : colors[index];
-            dst++;
-#endif
-            u += du;
-        }
 
-        v += dv;
-        dst += skip;
+            v += dv;
+            dptr += dskip;
+        }
+    } else {
+#endif
+        float v = ov;
+        for (int i = height; i; --i) {
+            const GL_Pixel_t *sptr = surface->data_rows[(int)v];
+
+            float u = ou;
+            for (int j = width; j; --j) {
+#ifdef __DEBUG_GRAPHICS__
+                pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)u + (int)v);
+#endif
+                GL_Pixel_t index = shifting[sptr[(int)u]];
+                if (transparent[index]) {
+                    dptr++;
+                } else {
+                    *(dptr++) = index;
+                }
+                u += du;
+            }
+
+            v += dv;
+            dptr += dskip;
+        }
+#ifdef __GL_MASK_SUPPORT__
     }
+#endif
 }
 
 // https://web.archive.org/web/20190305223938/http://www.drdobbs.com/architecture-and-design/fast-bitmap-rotation-and-scaling/184416337
@@ -298,43 +352,88 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     float ou = (tlx * M11 + tly * M12) + sax + sx; // Offset to the source texture quad.
     float ov = (tlx * M21 + tly * M22) + say + sy;
 
-    GL_Pixel_t *dst = state->surface->data_rows[drawing_region.y0] + drawing_region.x0;
+    GL_Pixel_t *dptr = state->surface->data_rows[drawing_region.y0] + drawing_region.x0;
 
-    const int skip = state->surface->width - width;
+    const int dskip = state->surface->width - width;
 
-    for (int i = height; i; --i) {
-        float u = ou;
-        float v = ov;
+#ifdef __GL_MASK_SUPPORT__
+    if (context->state.mask) {
+        const GL_Surface_t *mask = context->state.mask;
+        const GL_Pixel_t threshold = context->state.threshold;
 
-        for (int j = width; j; --j) {
+        for (int i = height; i; --i) {
+            float u = ou;
+            float v = ov;
+
+            for (int j = width; j; --j) {
 #ifdef __DEBUG_GRAPHICS__
-            pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, 15);
+                pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, 15);
 #endif
-            int x = (int)floorf(u); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`) and avoid mirror effect.
-            int y = (int)floorf(v);
+                int x = (int)floorf(u); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`) and avoid mirror effect.
+                int y = (int)floorf(v);
 
-            if (x >= sminx && x <= smaxx && y >= sminy && y <= smaxy) {
+                if (x >= sminx && x <= smaxx && y >= sminy && y <= smaxy) {
 #ifdef __DEBUG_GRAPHICS__
-                pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
+                    pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
-                const GL_Pixel_t *src = surface->data_rows[y] + x;
-                GL_Pixel_t index = shifting[*src];
-                if (!transparent[index]) {
-                    *dst = index;
+                    const GL_Pixel_t *sptr = surface->data_rows[y] + x;
+                    const GL_Pixel_t *mptr = mask->data_rows[y] + x;
+                    GL_Pixel_t index = shifting[*sptr];
+                    GL_Pixel_t mask = *mptr;
+                    if (transparent[index] || (mask < threshold)) {
+                        *dptr = index;
+                    }
                 }
+
+                ++dptr;
+
+                u += M11;
+                v += M21;
             }
 
-            ++dst;
+            dptr += dskip;
 
-            u += M11;
-            v += M21;
+            ou += M12;
+            ov += M22;
         }
+    } else {
+#endif
+        for (int i = height; i; --i) {
+            float u = ou;
+            float v = ov;
 
-        dst += skip;
+            for (int j = width; j; --j) {
+#ifdef __DEBUG_GRAPHICS__
+                pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, 15);
+#endif
+                int x = (int)floorf(u); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`) and avoid mirror effect.
+                int y = (int)floorf(v);
 
-        ou += M12;
-        ov += M22;
+                if (x >= sminx && x <= smaxx && y >= sminy && y <= smaxy) {
+#ifdef __DEBUG_GRAPHICS__
+                    pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
+#endif
+                    const GL_Pixel_t *sptr = surface->data_rows[y] + x;
+                    GL_Pixel_t index = shifting[*sptr];
+                    if (!transparent[index]) {
+                        *dptr = index;
+                    }
+                }
+
+                ++dptr;
+
+                u += M11;
+                v += M21;
+            }
+
+            dptr += dskip;
+
+            ou += M12;
+            ov += M22;
+        }
+#ifdef __GL_MASK_SUPPORT__
     }
+#endif
 #ifdef __DEBUG_GRAPHICS__
     pixel(context, drawing_region.x0, drawing_region.y0, 7);
     pixel(context, drawing_region.x1, drawing_region.y0, 7);
@@ -390,9 +489,9 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
     const int smaxx = sw - 1;
     const int smaxy = sh - 1;
 
-    GL_Pixel_t *dst = state->surface->data_rows[drawing_region.y0] + drawing_region.x0;
+    GL_Pixel_t *dptr = state->surface->data_rows[drawing_region.y0] + drawing_region.x0;
 
-    const int skip = state->surface->width - width;
+    const int dskip = state->surface->width - width;
 
     // The basic Mode7 formula is the following
     //
@@ -487,19 +586,19 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
             }
 
             if (sx >= sminx && sx <= smaxx && sy >= sminy && sy <= smaxy) {
-                const GL_Pixel_t *src = surface->data_rows[sy] + sx;
-                GL_Pixel_t index = shifting[*src];
+                const GL_Pixel_t *sptr = surface->data_rows[sy] + sx;
+                GL_Pixel_t index = shifting[*sptr];
                 if (!transparent[index]) {
-                    *dst = index;
+                    *dptr = index;
                 }
             }
 
-            ++dst;
+            ++dptr;
 
             xp += a;
             yp += c;
         }
 
-        dst += skip;
+        dptr += dskip;
     }
 }

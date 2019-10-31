@@ -39,7 +39,11 @@ static inline void reset_state(GL_State_t *state, GL_Surface_t *surface)
     *state = (GL_State_t){
             .surface = surface,
             .clipping_region = (GL_Quad_t){ .x0 = 0, .y0 = 0, .x1 = surface->width - 1, .y1 = surface->height - 1 },
-            .background = 0
+            .background = 0,
+#ifdef __STENCIL_SUPPORT__
+            .stencil = NULL,
+            .threshold = 0
+#endif
         };
     for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
         state->shifting[i] = i;
@@ -166,10 +170,10 @@ void GL_context_color(GL_Context_t *context, GL_Pixel_t index)
     state->color = index;
 }
 
-void GL_context_pattern(GL_Context_t *context, uint32_t mask)
+void GL_context_pattern(GL_Context_t *context, uint32_t pattern)
 {
     GL_State_t *state = &context->state;
-    state->mask = mask;
+    state->pattern = pattern;
 }
 
 void GL_context_clear(const GL_Context_t *context)

@@ -23,6 +23,8 @@
 #ifndef __GL_CONTEXT_H__
 #define __GL_CONTEXT_H__
 
+#include "../config.h"
+
 #include <stdbool.h>
 
 #include "common.h"
@@ -36,9 +38,13 @@ typedef struct _GL_State_t {
     GL_Quad_t clipping_region;
     GL_Pixel_t background;
     GL_Pixel_t color; // TODO: use it!
-    uint32_t mask; // TODO: ditto
+    uint32_t pattern; // TODO: ditto
     GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
     GL_Bool_t transparent[GL_MAX_PALETTE_COLORS];
+#ifdef __GL_MASK_SUPPORT__
+    GL_Surface_t *mask;
+    GL_Pixel_t threshold; // This is the mask threshold.
+#endif
 } GL_State_t;
 
 typedef struct _GL_Context_t {
@@ -60,7 +66,7 @@ extern void GL_context_transparent(GL_Context_t *context, const GL_Pixel_t *inde
 extern void GL_context_clipping(GL_Context_t *context, const GL_Quad_t *clipping_region);
 extern void GL_context_background(GL_Context_t *context, GL_Pixel_t index);
 extern void GL_context_color(GL_Context_t *context, GL_Pixel_t index);
-extern void GL_context_pattern(GL_Context_t *context, uint32_t mask);
+extern void GL_context_pattern(GL_Context_t *context, uint32_t pattern);
 
 extern void GL_context_clear(const GL_Context_t *context);
 extern void GL_context_to_surface(const GL_Context_t *context, const GL_Surface_t *to);
