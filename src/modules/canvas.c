@@ -588,15 +588,8 @@ static int canvas_clipping4(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    GL_Quad_t clipping_region = (GL_Quad_t){
-            .x0 = x0,
-            .y0 = y0,
-            .x1 = x1,
-            .y1 = y1
-        };
-
     GL_Context_t *context = &display->gl; // TODO: pass context and palette directly?
-    GL_context_clipping(context, &clipping_region);
+    GL_context_clipping(context, &(GL_Quad_t){ .x0 = x0, .y0 = y0, .x1 = x1, .y1 = y1 });
 
     return 0;
 }
