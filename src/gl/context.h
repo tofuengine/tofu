@@ -29,8 +29,6 @@
 #include "palette.h"
 #include "surface.h"
 
-#define GL_XFORM_TABLE_MAX_OPERATIONS       16
-
 typedef struct _GL_State_t {
     GL_Surface_t *surface;
     GL_Quad_t clipping_region;

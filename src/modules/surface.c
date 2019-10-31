@@ -742,7 +742,7 @@ static int surface_table2(lua_State *L)
 
         lua_pushnil(L);
         for (size_t i = 0; lua_next(L, -2); ++i) { // Scan the value, which is an array.
-            if (i == GL_XFORM_TABLE_MAX_OPERATIONS) {
+            if (i == GL_XForm_Registers_t_CountOf) {
                 Log_write(LOG_LEVELS_WARNING, "<SURFACE> too many operation for table entry #%d (id #%d)", count, index);
                 lua_pop(L, 2);
                 break;
