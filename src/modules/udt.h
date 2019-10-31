@@ -31,6 +31,7 @@ typedef struct _Bank_Class_t {
     const void *bogus;
     // char full_path[PATH_FILE_MAX];
     GL_Sheet_t sheet;
+    bool owned;
 } Bank_Class_t;
 
 typedef struct _Canvas_Class_t {
@@ -45,6 +46,7 @@ typedef struct _Font_Class_t {
     const void *bogus;
     // char full_path[PATH_FILE_MAX];
     GL_Sheet_t sheet;
+    bool owned;
 } Font_Class_t;
 
 #ifdef __GRID_INTEGER_CELL__
