@@ -65,6 +65,8 @@ static int canvas_fill(lua_State *L);
 static int canvas_triangle(lua_State *L);
 static int canvas_rectangle(lua_State *L);
 static int canvas_circle(lua_State *L);
+static int canvas_peek(lua_State *L);
+static int canvas_poke(lua_State *L);
 
 // TODO: color index is optional, if not present use the current (drawstate) pen color
 // TODO: rename `Canvas` to `Context`?
@@ -94,6 +96,8 @@ static const struct luaL_Reg _canvas_functions[] = {
     { "triangle", canvas_triangle },
     { "rectangle", canvas_rectangle },
     { "circle", canvas_circle },
+    { "peek", canvas_peek },
+    { "poke", canvas_poke },
     { NULL, NULL }
 };
 
@@ -941,6 +945,54 @@ static int canvas_circle(lua_State *L)
     } else {
         GL_primitive_circle(context, (GL_Point_t){ .x = cx, .y = cy }, radius, index);
     }
+
+    return 0;
+}
+
+static int canvas_peek(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 2)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+    LUAX_SIGNATURE_END
+    int x = lua_tointeger(L, 1);
+    int y = lua_tointeger(L, 2);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.peek(%d, %d)", x, y);
+#endif
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+    const GL_Context_t *context = &display->gl;
+    const GL_Surface_t *surface = context->state.surface;
+    GL_Pixel_t index = surface->data_rows[y % surface->height][x % surface->width];
+
+    lua_pushinteger(L, index);
+
+    return 1;
+}
+
+static int canvas_poke(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 3)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+    LUAX_SIGNATURE_END
+    int x = lua_tointeger(L, 1);
+    int y = lua_tointeger(L, 2);
+    GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 3);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "Canvas.poke(%d, %d, %d)", x, y, index);
+#endif
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+    index %= display->palette.count;
+
+    const GL_Context_t *context = &display->gl;
+    GL_Surface_t *surface = context->state.surface;
+    surface->data_rows[y % surface->height][x % surface->width] = index;
 
     return 0;
 }
