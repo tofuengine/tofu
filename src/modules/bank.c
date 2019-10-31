@@ -78,34 +78,46 @@ static void to_indexed_atlas_callback(void *parameters, GL_Surface_t *surface, c
 static int bank_new(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 3)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isstring, luaX_isuserdata)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
     LUAX_SIGNATURE_END
-    const char *file = lua_tostring(L, 1);
+    int type = lua_type(L, 1);
     size_t cell_width = (size_t)lua_tointeger(L, 2);
     size_t cell_height = (size_t)lua_tointeger(L, 3);
 
 #ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Bank.new() -> %s, %d, %d", file, cell_width, cell_height);
+    Log_write(LOG_LEVELS_DEBUG, "Bank.new() -> %d, %d, %d", type, cell_width, cell_height);
 #endif
 
     Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
 
-    size_t buffer_size;
-    void *buffer = FS_load_as_binary(&environment->fs, file, &buffer_size);
-    if (!buffer) {
-        return luaL_error(L, "<BANK> can't load file '%s'", file);
-    }
     GL_Sheet_t sheet;
-    GL_sheet_decode(&sheet, buffer, buffer_size, cell_width, cell_height, to_indexed_atlas_callback, (void *)&display->palette);
-    Log_write(LOG_LEVELS_DEBUG, "<BANK> sheet '%s' loaded", file);
-    free(buffer);
+
+    if (type == LUA_TSTRING) {
+        const char *file = lua_tostring(L, 1);
+
+        size_t buffer_size;
+        void *buffer = FS_load_as_binary(&environment->fs, file, &buffer_size);
+        if (!buffer) {
+            return luaL_error(L, "<BANK> can't load file '%s'", file);
+        }
+        GL_sheet_decode(&sheet, buffer, buffer_size, cell_width, cell_height, to_indexed_atlas_callback, (void *)&display->palette);
+        Log_write(LOG_LEVELS_DEBUG, "<BANK> sheet '%s' loaded", file);
+        free(buffer);
+    } else
+    if (type == LUA_TUSERDATA) {
+        const Surface_Class_t *instance = (const Surface_Class_t *)lua_touserdata(L, 1);
+
+        GL_sheet_attach(&sheet, &instance->surface, cell_width, cell_height);
+        Log_write(LOG_LEVELS_DEBUG, "<BANK> sheet %p attached", instance);
+    }
 
     Bank_Class_t *instance = (Bank_Class_t *)lua_newuserdata(L, sizeof(Bank_Class_t));
     *instance = (Bank_Class_t){
-            .sheet = sheet
+            .sheet = sheet,
+            .owned = type == LUA_TSTRING ? true : false
         };
     Log_write(LOG_LEVELS_DEBUG, "<BANK> bank allocated as #%p", instance);
 
@@ -121,7 +133,11 @@ static int bank_gc(lua_State *L)
     LUAX_SIGNATURE_END
     Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
 
-    GL_sheet_delete(&instance->sheet);
+    if (instance->owned) {
+        GL_sheet_delete(&instance->sheet);
+    } else {
+        GL_sheet_detach(&instance->sheet);
+    }
     Log_write(LOG_LEVELS_DEBUG, "<BANK> bank #%p finalized", instance);
 
     *instance = (Bank_Class_t){ 0 };

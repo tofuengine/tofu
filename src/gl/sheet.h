@@ -38,5 +38,8 @@ typedef struct _GL_Sheet_t {
 
 extern bool GL_sheet_decode(GL_Sheet_t *sheet, const void *buffer, size_t size, size_t cell_width, size_t cell_height, GL_Surface_Callback_t callback, void *parameters);
 extern void GL_sheet_delete(GL_Sheet_t *sheet);
+extern void GL_sheet_attach(GL_Sheet_t *sheet, const GL_Surface_t *atlas, size_t cell_width, size_t cell_height);
+extern void GL_sheet_detach(GL_Sheet_t *sheet);
+
 
 #endif  /* __GL_SHEET_H__ */

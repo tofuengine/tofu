@@ -59,21 +59,31 @@ bool GL_sheet_decode(GL_Sheet_t *sheet, const void *buffer, size_t size, size_t 
     if (!GL_surface_decode(&atlas, buffer, size, callback, parameters)) {
         return false;
     }
-
-    *sheet = (GL_Sheet_t){
-            .atlas = atlas,
-            .cells = precompute_cells(atlas.width, atlas.height, cell_width, cell_height),
-            .size = (GL_Size_t){ cell_width, cell_height }
-        };
-    Log_write(LOG_LEVELS_DEBUG, "<GL> sheet #%p created", sheet);
-
+    GL_sheet_attach(sheet, &atlas, cell_width, cell_height);
+    Log_write(LOG_LEVELS_DEBUG, "<GL> sheet #%p decoded", sheet);
     return true;
 }
 
 void GL_sheet_delete(GL_Sheet_t *sheet)
 {
-    free(sheet->cells);
-    GL_surface_delete(&sheet->atlas);
+    GL_surface_delete(&sheet->atlas); // Delete prior detach or the atlas will be cleared!
+    GL_sheet_detach(sheet);
     Log_write(LOG_LEVELS_DEBUG, "<GL> sheet #%p deleted", sheet);
+}
+
+void GL_sheet_attach(GL_Sheet_t *sheet, const GL_Surface_t *atlas, size_t cell_width, size_t cell_height)
+{
+    *sheet = (GL_Sheet_t){
+            .atlas = *atlas,
+            .cells = precompute_cells(atlas->width, atlas->height, cell_width, cell_height),
+            .size = (GL_Size_t){ cell_width, cell_height }
+        };
+    Log_write(LOG_LEVELS_DEBUG, "<GL> sheet #%p attached", sheet);
+}
+
+void GL_sheet_detach(GL_Sheet_t *sheet)
+{
+    free(sheet->cells);
     *sheet = (GL_Sheet_t){ 0 };
+    Log_write(LOG_LEVELS_DEBUG, "<GL> sheet #%p detached", sheet);
 }
