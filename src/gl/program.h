@@ -57,7 +57,6 @@ extern void GL_program_delete(GL_Program_t *program);
 extern bool GL_program_attach(GL_Program_t *program, const char *shader_code, GL_Program_Shaders_t shader_type);
 extern void GL_program_prepare(GL_Program_t *program, const char *ids[], size_t count);
 extern void GL_program_send(const GL_Program_t *program, size_t index, GL_Program_Uniforms_t type, size_t count, const void *value);
-extern void GL_program_prepare_and_send(const GL_Program_t *program, const char *id, GL_Program_Uniforms_t type, size_t count, const void *value);
 extern void GL_program_use(const GL_Program_t *program);
 
 #endif  /* __GL_PROGRAM_H__ */

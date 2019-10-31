@@ -173,30 +173,6 @@ void GL_program_send(const GL_Program_t *program, size_t index, GL_Program_Unifo
     }
 }
 
-void GL_program_prepare_and_send(const GL_Program_t *program, const char *id, GL_Program_Uniforms_t type, size_t count, const void *value)
-{
-    GLint location = glGetUniformLocation(program->id, id);
-    if (location == -1) {
-#ifdef __DEBUG_SHADER_CALLS__
-        Log_write(LOG_LEVELS_WARNING, "<GL> can't find uniform '%s' for program #%d", id, program->id);
-#endif
-        return;
-    }
-    glUseProgram(program->id);
-    switch (type) {
-        case GL_PROGRAM_UNIFORM_BOOL: { glUniform1iv(location, count, value); } break;
-        case GL_PROGRAM_UNIFORM_INT: { glUniform1iv(location, count, value); } break;
-        case GL_PROGRAM_UNIFORM_FLOAT: { glUniform1fv(location, count, value); } break;
-        case GL_PROGRAM_UNIFORM_VEC2: { glUniform2fv(location, count, value); } break;
-        case GL_PROGRAM_UNIFORM_VEC3: { glUniform3fv(location, count, value); } break;
-        case GL_PROGRAM_UNIFORM_VEC4: { glUniform4fv(location, count, value); } break;
-        case GL_PROGRAM_UNIFORM_VEC2I: { glUniform2iv(location, count, value); } break;
-        case GL_PROGRAM_UNIFORM_VEC3I: { glUniform3iv(location, count, value); } break;
-        case GL_PROGRAM_UNIFORM_VEC4I: { glUniform4iv(location, count, value); } break;
-        case GL_PROGRAM_UNIFORM_TEXTURE: { glUniform1iv(location, count, value); } break;
-    }
-}
-
 void GL_program_use(const GL_Program_t *program)
 {
     glUseProgram(program->id);
