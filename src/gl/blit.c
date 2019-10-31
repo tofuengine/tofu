@@ -47,6 +47,9 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
+#ifdef __GL_MASK_SUPPORT__
+    const GL_Mask_t *mask = &state->mask;
+#endif
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
@@ -85,13 +88,13 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
     const int sskip = surface->width - width;
     const int dskip = state->surface->width - width;
 #ifdef __GL_MASK_SUPPORT__
-    if (context->state.mask) {
-        const GL_Surface_t *mask = context->state.mask;
-        const GL_Pixel_t threshold = context->state.threshold;
+    if (mask->stencil) {
+        const GL_Surface_t *stencil = mask->stencil;
+        const GL_Pixel_t threshold = mask->threshold;
 
-        const GL_Pixel_t *mptr = mask->data_rows[area.y + skip_y] + (area.x + skip_x);
+        const GL_Pixel_t *mptr = stencil->data_rows[area.y + skip_y] + (area.x + skip_x);
 
-        const int mskip = mask->width - width;
+        const int mskip = stencil->width - width;
 
         for (int i = height; i; --i) {
             for (int j = width; j; --j) {
@@ -141,6 +144,9 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
+#ifdef __GL_MASK_SUPPORT__
+    const GL_Mask_t *mask = &state->mask;
+#endif
 
     const int drawing_width = (int)((float)(area.width * fabsf(scale_x)) + 0.5f);
     const int drawing_height = (int)((float)(area.height * fabsf(scale_y)) + 0.5f);
@@ -194,14 +200,14 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
     // NOTE: we can also apply an integer-based DDA method, using remainders.
 
 #ifdef __GL_MASK_SUPPORT__
-    if (context->state.mask) {
-        const GL_Surface_t *mask = context->state.mask;
-        const GL_Pixel_t threshold = context->state.threshold;
+    if (mask->stencil) {
+        const GL_Surface_t *stencil = mask->stencil;
+        const GL_Pixel_t threshold = mask->threshold;
 
         float v = ov;
         for (int i = height; i; --i) {
             const GL_Pixel_t *sptr = surface->data_rows[(int)v];
-            const GL_Pixel_t *mptr = mask->data_rows[(int)v];
+            const GL_Pixel_t *mptr = stencil->data_rows[(int)v];
 
             float u = ou;
             for (int j = width; j; --j) {
@@ -257,6 +263,9 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
+#ifdef __GL_MASK_SUPPORT__
+    const GL_Mask_t *mask = &state->mask;
+#endif
 
     const float w = (float)area.width;
     const float h = (float)area.height;
@@ -357,9 +366,9 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const int dskip = state->surface->width - width;
 
 #ifdef __GL_MASK_SUPPORT__
-    if (context->state.mask) {
-        const GL_Surface_t *mask = context->state.mask;
-        const GL_Pixel_t threshold = context->state.threshold;
+    if (mask->stencil) {
+        const GL_Surface_t *stencil = mask->stencil;
+        const GL_Pixel_t threshold = mask->threshold;
 
         for (int i = height; i; --i) {
             float u = ou;
@@ -377,7 +386,7 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
                     pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
                     const GL_Pixel_t *sptr = surface->data_rows[y] + x;
-                    const GL_Pixel_t *mptr = mask->data_rows[y] + x;
+                    const GL_Pixel_t *mptr = stencil->data_rows[y] + x;
                     GL_Pixel_t index = shifting[*sptr];
                     GL_Pixel_t mask = *mptr;
                     if (transparent[index] || (mask < threshold)) {

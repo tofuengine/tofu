@@ -33,6 +33,13 @@
 
 #define GL_XFORM_TABLE_MAX_OPERATIONS       16
 
+#ifdef __GL_MASK_SUPPORT__
+typedef struct _GL_Mask_t {
+    const GL_Surface_t *stencil;
+    GL_Pixel_t threshold;
+} GL_Mask_t;
+#endif
+
 typedef struct _GL_State_t {
     GL_Surface_t *surface;
     GL_Quad_t clipping_region;
@@ -42,8 +49,7 @@ typedef struct _GL_State_t {
     GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
     GL_Bool_t transparent[GL_MAX_PALETTE_COLORS];
 #ifdef __GL_MASK_SUPPORT__
-    GL_Surface_t *mask;
-    GL_Pixel_t threshold; // This is the mask threshold.
+    GL_Mask_t mask;
 #endif
 } GL_State_t;
 
@@ -67,6 +73,9 @@ extern void GL_context_clipping(GL_Context_t *context, const GL_Quad_t *clipping
 extern void GL_context_background(GL_Context_t *context, GL_Pixel_t index);
 extern void GL_context_color(GL_Context_t *context, GL_Pixel_t index);
 extern void GL_context_pattern(GL_Context_t *context, uint32_t pattern);
+#ifdef __GL_MASK_SUPPORT__
+extern void GL_context_mask(GL_Context_t *context, const GL_Mask_t *mask);
+#endif
 
 extern void GL_context_clear(const GL_Context_t *context);
 extern void GL_context_to_surface(const GL_Context_t *context, const GL_Surface_t *to);

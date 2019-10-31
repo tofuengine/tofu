@@ -55,6 +55,9 @@ static int canvas_shift(lua_State *L);
 static int canvas_transparent(lua_State *L);
 static int canvas_clipping(lua_State *L);
 static int canvas_shader(lua_State *L);
+#ifdef __GL_MASK_SUPPORT__
+static int canvas_mask(lua_State *L);
+#endif
 static int canvas_clear(lua_State *L);
 static int canvas_point(lua_State *L);
 static int canvas_hline(lua_State *L);
@@ -87,6 +90,9 @@ static const struct luaL_Reg _canvas_functions[] = {
     { "clipping", canvas_clipping },
     { "shader", canvas_shader },
     { "clear", canvas_clear },
+#ifdef __GL_MASK_SUPPORT__
+    { "mask", canvas_mask },
+#endif
     { "point", canvas_point },
     { "hline", canvas_hline },
     { "vline", canvas_vline },
@@ -622,6 +628,73 @@ static int canvas_shader(lua_State *L)
 
     return 0;
 }
+
+#ifdef __GL_MASK_SUPPORT__
+static int canvas_mask0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 0)
+    LUAX_SIGNATURE_END
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+    GL_Context_t *context = &display->gl;
+    GL_context_mask(context, NULL);
+
+    return 0;
+}
+
+static int canvas_mask1(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata, luaX_isinteger)
+    LUAX_SIGNATURE_END
+    int type = lua_type(L, 1);
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+    GL_Context_t *context = &display->gl;
+    GL_Mask_t mask = context->state.mask;
+    if (type == LUA_TUSERDATA) {
+        const Surface_Class_t *instance = (const Surface_Class_t *)lua_touserdata(L, 1);
+
+        mask.stencil = &instance->surface;
+    } else
+    if (type == LUA_TNUMBER) {
+        GL_Pixel_t index = lua_tointeger(L, 1);
+
+        mask.threshold = index;
+    }
+    GL_context_mask(context, &mask);
+
+    return 0;
+}
+
+static int canvas_mask2(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 2)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+    LUAX_SIGNATURE_END
+    const Surface_Class_t *instance = (const Surface_Class_t *)lua_touserdata(L, 1);
+    GL_Pixel_t index = lua_tointeger(L, 2);
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+
+    GL_Context_t *context = &display->gl;
+    GL_context_mask(context, &(GL_Mask_t){ &instance->surface, index });
+
+    return 0;
+}
+
+static int canvas_mask(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(0, canvas_mask0)
+        LUAX_OVERLOAD_ARITY(1, canvas_mask1)
+        LUAX_OVERLOAD_ARITY(2, canvas_mask2)
+    LUAX_OVERLOAD_END
+}
+#endif
 
 static int canvas_clear(lua_State *L)
 {

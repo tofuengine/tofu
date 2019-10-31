@@ -352,47 +352,6 @@ void Display_terminate(Display_t *display)
     Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> terminated");
 }
 
-void Display_palette(Display_t *display, const GL_Palette_t *palette)
-{
-    display->palette = *palette;
-    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> palette updated");
-}
-
-void Display_shader(Display_t *display, const char *effect)
-{
-    if (!effect) {
-        GL_program_delete(&display->programs[DISPLAY_PROGRAM_CUSTOM]);
-        display->program_index = DISPLAY_PROGRAM_PASSTHRU;
-        Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> switched to default shader");
-        return;
-    }
-
-    const size_t length = strlen(FRAGMENT_SHADER_CUSTOM) + strlen(effect);
-    char *code = malloc((length + 1) * sizeof(char)); // Add null terminator for the string.
-    strcpy(code, FRAGMENT_SHADER_CUSTOM);
-    strcat(code, effect);
-
-    GL_Program_t *program = &display->programs[DISPLAY_PROGRAM_CUSTOM];
-
-    if (GL_program_create(program) &&
-        GL_program_attach(program, VERTEX_SHADER, GL_PROGRAM_SHADER_VERTEX) &&
-        GL_program_attach(program, code, GL_PROGRAM_SHADER_FRAGMENT)) {
-        GL_program_prepare(program, _uniforms, Uniforms_t_CountOf);
-
-        GL_program_send(program, UNIFORM_TEXTURE, GL_PROGRAM_UNIFORM_TEXTURE, 1, _texture_id_0); // Redundant
-        GLfloat resolution[] = { (GLfloat)display->window_width, (GLfloat)display->window_height };
-        GL_program_send(program, UNIFORM_RESOLUTION, GL_PROGRAM_UNIFORM_VEC2, 1, resolution);
-
-        display->program_index = DISPLAY_PROGRAM_CUSTOM;
-        Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> switched to custom shader");
-    } else {
-        GL_program_delete(program);
-        Log_write(LOG_LEVELS_WARNING, "<DISPLAY> can't load custom shader");
-    }
-
-    free(code);
-}
-
 bool Display_should_close(Display_t *display)
 {
     return glfwWindowShouldClose(display->window);
@@ -469,4 +428,45 @@ void Display_present(Display_t *display)
     glEnd();
 
     glfwSwapBuffers(display->window);
+}
+
+void Display_shader(Display_t *display, const char *effect)
+{
+    if (!effect) {
+        GL_program_delete(&display->programs[DISPLAY_PROGRAM_CUSTOM]);
+        display->program_index = DISPLAY_PROGRAM_PASSTHRU;
+        Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> switched to default shader");
+        return;
+    }
+
+    const size_t length = strlen(FRAGMENT_SHADER_CUSTOM) + strlen(effect);
+    char *code = malloc((length + 1) * sizeof(char)); // Add null terminator for the string.
+    strcpy(code, FRAGMENT_SHADER_CUSTOM);
+    strcat(code, effect);
+
+    GL_Program_t *program = &display->programs[DISPLAY_PROGRAM_CUSTOM];
+
+    if (GL_program_create(program) &&
+        GL_program_attach(program, VERTEX_SHADER, GL_PROGRAM_SHADER_VERTEX) &&
+        GL_program_attach(program, code, GL_PROGRAM_SHADER_FRAGMENT)) {
+        GL_program_prepare(program, _uniforms, Uniforms_t_CountOf);
+
+        GL_program_send(program, UNIFORM_TEXTURE, GL_PROGRAM_UNIFORM_TEXTURE, 1, _texture_id_0); // Redundant
+        GLfloat resolution[] = { (GLfloat)display->window_width, (GLfloat)display->window_height };
+        GL_program_send(program, UNIFORM_RESOLUTION, GL_PROGRAM_UNIFORM_VEC2, 1, resolution);
+
+        display->program_index = DISPLAY_PROGRAM_CUSTOM;
+        Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> switched to custom shader");
+    } else {
+        GL_program_delete(program);
+        Log_write(LOG_LEVELS_WARNING, "<DISPLAY> can't load custom shader");
+    }
+
+    free(code);
+}
+
+void Display_palette(Display_t *display, const GL_Palette_t *palette)
+{
+    display->palette = *palette;
+    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> palette updated");
 }

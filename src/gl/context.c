@@ -92,7 +92,11 @@ void GL_context_pop(GL_Context_t *context)
 void GL_context_sanitize(GL_Context_t *context, const GL_Surface_t *surface)
 {
     for (int i = arrlen(context->stack) - 1; i >= 0; --i) {
+#ifdef __GL_MASK_SUPPORT__
+        if (context->stack[i].surface == surface || context->stack[i].mask.stencil == surface) {
+#else
         if (context->stack[i].surface == surface) {
+#endif
             arrdel(context->stack, i);
             Log_write(LOG_LEVELS_WARNING, "<GL> state #%d sanitized from context", i);
         }
@@ -140,7 +144,6 @@ void GL_context_transparent(GL_Context_t *context, const GL_Pixel_t *indexes, co
 void GL_context_clipping(GL_Context_t *context, const GL_Quad_t *clipping_region)
 {
     GL_State_t *state = &context->state;
-
     if (!clipping_region) {
         state->clipping_region = (GL_Quad_t){
                 .x0 = 0,
@@ -175,6 +178,18 @@ void GL_context_pattern(GL_Context_t *context, uint32_t pattern)
     GL_State_t *state = &context->state;
     state->pattern = pattern;
 }
+
+#ifdef __GL_MASK_SUPPORT__
+void GL_context_mask(GL_Context_t *context, const GL_Mask_t *mask)
+{
+    GL_State_t *state = &context->state;
+    if (!mask) {
+        state->mask = (GL_Mask_t){ 0 };
+    } else {
+        state->mask = *mask;
+    }
+}
+#endif
 
 void GL_context_clear(const GL_Context_t *context)
 {

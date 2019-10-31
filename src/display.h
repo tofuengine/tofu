@@ -92,11 +92,11 @@ typedef struct _Display_t {
 
 extern bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title);
 extern void Display_terminate(Display_t *display);
-extern void Display_shader(Display_t *display, const char *code);
 extern bool Display_should_close(Display_t *display);
 extern void Display_process_input(Display_t *display); // Create `Input_t` class and pass delta-time.
 extern void Display_present(Display_t *display);
 
+extern void Display_shader(Display_t *display, const char *code);
 extern void Display_palette(Display_t *display, const GL_Palette_t *palette);
 
 #endif  /* __DISPLAY_H__ */
