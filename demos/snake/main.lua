@@ -5,8 +5,8 @@ local Main = Class.define()
 function Main:setup()
   return {
       ["title"] = "Snake",
-      ["width"] = 256,
-      ["height"] = 256,
+      ["width"] = 384,
+      ["height"] = 224,
       ["scale"] = 1,
       ["fullscreen"] = false,
       ["exit-key-enabled"] = true,

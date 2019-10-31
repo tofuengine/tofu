@@ -14,39 +14,34 @@ local SPEED = 5.0
 local DELTA_X = { up = 0, down = 0, left = -1, right = 1 }
 local DELTA_Y = { up = -1, down = 1, left = 0, right = 0 }
 
-local MAP =  "********************************"
-          .. "*                              *"
-          .. "*                              *"
-          .. "*                              *"
-          .. "*                              *"
-          .. "*                              *"
-          .. "*                              *"
-          .. "*                              *"
-          .. "*                              *"
-          .. "*                              *"
-          .. "*                              *"
-          .. "*                              *"
-          .. "*                              *"
-          .. "*                              *"
-          .. "*                              *"
-          .. "*                              *"
-          .. "*                              *"
-          .. "*                              *"
-          .. "*                              *"
-          .. "*                              *"
-          .. "*                              *"
-          .. "*                              *"
-          .. "*                              *"
-          .. "*                              *"
-          .. "*                              *"
-          .. "*                              *"
-          .. "*                              *"
-          .. "*                              *"
-          .. "*                              *"
-          .. "*                              *"
-          .. "*                              *"
-          .. "********************************"
-
+local MAP =  "************************************************"
+          .. "*                                              *"
+          .. "*                                              *"
+          .. "*                                              *"
+          .. "*                                              *"
+          .. "*                                              *"
+          .. "*                                              *"
+          .. "*                                              *"
+          .. "*                                              *"
+          .. "*                                              *"
+          .. "*                                              *"
+          .. "*                                              *"
+          .. "*                                              *"
+          .. "*                                              *"
+          .. "*                                              *"
+          .. "*                                              *"
+          .. "*                                              *"
+          .. "*                                              *"
+          .. "*                                              *"
+          .. "*                                              *"
+          .. "*                                              *"
+          .. "*                                              *"
+          .. "*                                              *"
+          .. "*                                              *"
+          .. "*                                              *"
+          .. "*                                              *"
+          .. "*                                              *"
+          .. "************************************************"
 
 local Game = Class.define()
 
@@ -66,9 +61,7 @@ function Game:__ctor()
   Canvas.palette("gameboy")
 
   self.font = Font.default(0, 3)
-  self.x_size = Canvas.width() / CELLS
-  self.y_size = Canvas.height() / CELLS
-  self.grid = Grid.new(CELLS, CELLS, 0)
+  self.grid = Grid.new(math.floor(Canvas.width() / CELL_SIZE), math.floor(Canvas.height() / CELL_SIZE), 0)
 dump(self)
 
   self:reset()
@@ -77,8 +70,8 @@ end
 function Game:draw_map(map)
   for i = 1, map:len() do
     local c = map:byte(i)
-    local row = (i - 1) % CELLS
-    local column = (i - 1) / CELLS
+    local column = (i - 1) % self.grid:width()
+    local row = (i - 1) / self.grid:width()
     local value = 0
     if c == 42 then
       value = -1
@@ -93,7 +86,7 @@ function Game:reset()
 
   self:draw_map(MAP)
 
-  self.position = { x = CELLS / 2, y = CELLS / 2 }
+  self.position = { x = self.grid:width() / 2, y = self.grid:height() / 2 }
   self.accumulator = 0.0
   for i = 1, self.length do
     self.grid:poke(self.position.x - self.length + i, self.position.y, i * LIFE)
@@ -139,8 +132,8 @@ end
 
 function Game:generate_food()
   while true do
-    local column = math.random(0, CELLS - 1)
-    local row = math.random(0, CELLS - 1)
+    local column = math.random(0, self.grid:width() - 1)
+    local row = math.random(0, self.grid:height() - 1)
     local value = self.grid:peek(column, row)
     if value == 0 then
       self.grid:poke(column, row, -2)
@@ -170,8 +163,8 @@ function Game:update(delta_time)
 
     self.accumulator = self.accumulator - LIFE
 
-    self.position.x = (self.position.x + DELTA_X[self.direction]) % CELLS
-    self.position.y = (self.position.y + DELTA_Y[self.direction]) % CELLS
+    self.position.x = (self.position.x + DELTA_X[self.direction]) % self.grid:width()
+    self.position.y = (self.position.y + DELTA_Y[self.direction]) % self.grid:height()
 
     local value = self.grid:peek(self.position.x, self.position.y)
 
@@ -189,19 +182,15 @@ end
 function Game:render(_)
   Canvas.clear()
 
-  local w = self.x_size
-  local h = self.y_size
   self.grid:scan(function(column, row, value)
-      local x = column * w
-      local y = row * h
+      local x = column * CELL_SIZE
+      local y = row * CELL_SIZE
       if value == -2 then
-        Canvas.rectangle("fill", x, y, w, h, 3)
+        Canvas.rectangle("fill", x, y, CELL_SIZE, CELL_SIZE, 3)
       elseif value == -1 then
-        Canvas.rectangle("fill", x, y, w, h, 1)
-      elseif value == 0 then
-        Canvas.rectangle("fill", x, y, w, h, 0)
-      else
-        Canvas.rectangle("fill", x, y, w, h, 2)
+        Canvas.rectangle("fill", x, y, CELL_SIZE, CELL_SIZE, 1)
+      elseif value ~= 0 then
+        Canvas.rectangle("fill", x, y, CELL_SIZE, CELL_SIZE, 2)
       end
     end)
 

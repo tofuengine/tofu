@@ -20,32 +20,36 @@
  * SOFTWARE.
  **/
 
-#ifndef __ENGINE_H__
-#define __ENGINE_H__
-
-#include <stdbool.h>
-#include <limits.h>
+#ifndef __AUDIO_H__
+#define __AUDIO_H__
 
 #include "config.h"
 
-#include "audio.h"
-#include "configuration.h"
-#include "display.h"
-#include "environment.h"
-#include "interpreter.h"
+#include <stdbool.h>
 
-typedef struct _Engine_t {
-    Configuration_t configuration;
+#include <miniaudio/miniaudio.h>
 
-    Interpreter_t interpreter;
-    Audio_t audio;
-    Display_t display;
+typedef struct _Audio_Configuration_t {
+    size_t channels;
+    size_t sample_rate;
+    size_t voices;
+} Audio_Configuration_t;
 
-    Environment_t environment;
-} Engine_t;
+typedef struct _Audio_Voice_t {
+    uint8_t *buffer;
+    size_t buffer_size;
+} Audio_Voice_t;
 
-extern bool Engine_initialize(Engine_t *engine, const char *base_path);
-extern void Engine_terminate(Engine_t *engine);
-extern void Engine_run(Engine_t *engine);
+typedef struct _Audio_t {
+    Audio_Configuration_t configuration;
 
-#endif  /* __ENGINE_H__ */
+    ma_device_config device_config;
+    ma_device device;
+
+    Audio_Voice_t *voices;
+} Audio_t;
+
+extern bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration);
+extern void Audio_terminate(Audio_t *audio);
+
+#endif  /* __AUDIO_H__ */

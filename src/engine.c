@@ -57,6 +57,13 @@ static inline void wait_for(float seconds)
 #endif
 }
 
+typedef struct _Engine_Statistics_t {
+    float delta_time;
+    float fps;
+    float history[STATISTICS_LENGTH];
+    int index;
+} Engine_Statistics_t;
+
 static inline bool update_statistics(Engine_Statistics_t *statistics, float elapsed) {
     static float history[FPS_AVERAGE_SAMPLES] = { 0 };
     static int index = 0;
@@ -111,12 +118,21 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
         return false;
     }
 
+    result = Audio_initialize(&engine->audio, &(Audio_Configuration_t){ .channels = 2, .sample_rate = 44100, .voices = 8 });
+    if (!result) {
+        Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't initialize audio");
+        Interpreter_terminate(&engine->interpreter);
+        Display_terminate(&engine->display);
+        return false;
+    }
+
     engine->environment.timer_pool = &engine->interpreter.timer_pool; // HACK: inject the timer-pool pointer.
 
     result = Interpreter_init(&engine->interpreter);
     if (!result) {
         Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't call init method");
         Interpreter_terminate(&engine->interpreter);
+        Audio_terminate(&engine->audio);
         Display_terminate(&engine->display);
         return false;
     }
@@ -127,6 +143,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 void Engine_terminate(Engine_t *engine)
 {
     Interpreter_terminate(&engine->interpreter); // Terminate the interpreter to unlock all resources.
+    Audio_terminate(&engine->audio);
     Display_terminate(&engine->display);
     Environment_terminate(&engine->environment);
 #if DEBUG

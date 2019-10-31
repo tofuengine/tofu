@@ -46,7 +46,7 @@ typedef struct _GL_XForm_State_Operation_t {
 
 typedef struct _GL_XForm_Table_Entry_t {
     int scan_line;
-    GL_XForm_State_Operation_t operations[GL_XFORM_TABLE_MAX_OPERATIONS]; // At most, change all the registries.
+    GL_XForm_State_Operation_t operations[GL_XForm_Registers_t_CountOf]; // At most, change all the registries.
     size_t count;
 } GL_XForm_Table_Entry_t;
 
