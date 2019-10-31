@@ -24,7 +24,7 @@
 #define __ENVIRONMENT_H__
 
 #include "display.h"
-#include "file.h"
+#include "fs.h"
 #include "hal.h"
 
 #include "core/timerpool.h"
@@ -32,16 +32,16 @@
 #include <stdbool.h>
 
 typedef struct _Environment_t {
-    char base_path[PATH_FILE_MAX];
-    bool quit;
-    double fps;
+    File_System_t fs;
 
-    Display_t *display;
+    bool quit;
+    float fps;
+    float time;
 
     Timer_Pool_t *timer_pool;
 } Environment_t;
 
-extern void Environment_initialize(Environment_t *environment, const char *base_path, Display_t *display);
+extern void Environment_initialize(Environment_t *environment, const char *base_path);
 extern void Environment_terminate(Environment_t *environment);
 
 #endif  /* __ENVIRONMENT_H__ */

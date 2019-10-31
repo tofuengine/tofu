@@ -22,10 +22,13 @@
 
 #include "luax.h"
 
+#include <inttypes.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
-
-typedef int (*luaX_TFunction)(lua_State *, int);
+#ifdef DEBUG
+  #include <stb/stb_leakcheck.h>
+#endif
 
 /*
 http://webcache.googleusercontent.com/search?q=cache:RLoR9dkMeowJ:howtomakeanrpg.com/a/classes-in-lua.html+&cd=4&hl=en&ct=clnk&gl=it
@@ -74,7 +77,7 @@ void luaX_stackdump(lua_State *L, const char* func, int line)
                 break;
             case LUA_TFUNCTION:
                 if (lua_iscfunction(L, positive)) {
-                    printf("\t%p", lua_tocfunction(L, positive));
+                    printf("\t%" PRIXPTR "", (uintptr_t)lua_tocfunction(L, positive));
                 } else {
                     printf("\t%p", lua_topointer(L, positive));
                 }
@@ -97,8 +100,9 @@ void luaX_appendpath(lua_State *L, const char *path)
     lua_getfield(L, -1, "path"); // get field "path" from table at top of stack (-1)
 
     const char *current = lua_tostring(L, -1); // grab path string from top of stack
-    char *fullpath = calloc(strlen(current) + 1 + strlen(path) + 5 + 1, sizeof(char));
-    strcat(fullpath, current);
+    size_t length = strlen(current) + 1 + strlen(path) + 5; // <current>;<path>?.lua
+    char *fullpath = malloc((length + 1) * sizeof(char));
+    strcpy(fullpath, current);
     strcat(fullpath, ";");
     strcat(fullpath, path);
     strcat(fullpath, "?.lua");
@@ -131,10 +135,10 @@ void luaX_overridesearchers(lua_State *L, lua_CFunction searcher, int nup)
     lua_pop(L, 2 + nup); // Pop the `package` and `searchers` table, and consume the upvalues.
 }
 
-int luaX_newmodule(lua_State *L, const char *script, const luaL_Reg *f, const luaX_Const *c, int nup, const char *name)
+int luaX_newmodule(lua_State *L, const luaX_Script *script, const luaL_Reg *f, const luaX_Const *c, int nup, const char *name)
 {
-    if (script) {
-        luaL_loadstring(L, script);
+    if (script && script->data && script->length > 0) {
+        luaL_loadbuffer(L, script->data, script->length, script->name);
         lua_pcall(L, 0, LUA_MULTRET, 0); // Just the export table is returned.
         if (name) {
             lua_pushstring(L, name);
@@ -223,16 +227,7 @@ int luaX_toref(lua_State *L, int arg)
     return luaL_ref(L, LUA_REGISTRYINDEX);
 }
 
-void luaX_getnumberarray(lua_State *L, int idx, double *array)
-{
-    lua_pushnil(L);
-    for (int i = 0; lua_next(L, idx); ++i) {
-        array[i] = lua_tonumber(L, -1);
-        lua_pop(L, 1);
-    }
-}
-
-void luaX_checkargument(lua_State *L, int index, const char *file, int line, ...)
+void luaX_checkargument(lua_State *L, int idx, const char *file, int line, ...)
 {
     int count = 0;
     int success = 0;
@@ -243,82 +238,92 @@ void luaX_checkargument(lua_State *L, int index, const char *file, int line, ...
         if (!func) {
             break;
         }
-        success |= func(L, index);
+        success |= func(L, idx);
     }
     va_end(args);
     if ((count > 0) && !success) {
-        luaL_error(L, "[%s:%d] signature failure for argument #%d w/ type %d", file, line, index, lua_type(L, index));
+        luaL_error(L, "[%s:%d] signature failure for argument #%d w/ type %d", file, line, idx, lua_type(L, idx));
         return; // Unreachable code.
     }
 }
 
-int luaX_count(lua_State *L, int idx)
+size_t luaX_packupvalues(lua_State *L, int nup)
 {
-    int count = 0;
-    lua_pushnil(L); // first key
-    while (lua_next(L, idx)) {
-        count += 1;
-        lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
+    lua_pushinteger(L, nup); // Pass the upvalues count, for later usage.
+    for (int j = 0; j < nup; ++j) {
+        lua_pushvalue(L, -(nup + 1)); // Copy the upvalue, skipping the counter.
     }
-    return count;
+    return nup + 1;
 }
 
-extern int luaX_isnil(lua_State *L, int index)
+size_t luaX_unpackupvalues(lua_State *L)
 {
-    return lua_isnil(L, index);
+    if (!lua_isinteger(L, lua_upvalueindex(1))) { // Check if the 1st upvalue is defined and is an integer.
+        return 0;
+    }
+    int nup = lua_tointeger(L, lua_upvalueindex(1)); // The first upvalue tells how many upvalues we are handling.
+    for (int i = 0; i< nup; ++i) {
+        lua_pushvalue(L, lua_upvalueindex(2 + i)); // Copy the upvalues onto the stack, skipping the counter.
+    }
+    return (size_t)nup;
 }
 
-extern int luaX_isboolean(lua_State *L, int index)
+extern int luaX_isnil(lua_State *L, int idx)
 {
-    return lua_isboolean(L, index);
+    return lua_isnil(L, idx);
 }
 
-int luaX_isinteger(lua_State *L, int index)
+extern int luaX_isboolean(lua_State *L, int idx)
 {
-    return lua_isinteger(L, index);
+    return lua_isboolean(L, idx);
 }
 
-int luaX_isnumber(lua_State *L, int index)
+int luaX_isinteger(lua_State *L, int idx)
 {
-    return lua_isnumber(L, index);
+    return lua_isinteger(L, idx);
 }
 
-int luaX_isstring(lua_State *L, int index)
+int luaX_isnumber(lua_State *L, int idx)
 {
-    return lua_isstring(L, index);
+    return lua_isnumber(L, idx);
 }
 
-int luaX_istable(lua_State *L, int index)
+int luaX_isstring(lua_State *L, int idx)
 {
-    return lua_istable(L, index);
+    return lua_isstring(L, idx);
 }
 
-int luaX_isfunction(lua_State *L, int index)
+int luaX_istable(lua_State *L, int idx)
 {
-    return lua_isfunction(L, index);
+    return lua_istable(L, idx);
 }
 
-int luaX_iscfunction(lua_State *L, int index)
+int luaX_isfunction(lua_State *L, int idx)
 {
-    return lua_iscfunction(L, index);
+    return lua_isfunction(L, idx);
 }
 
-int luaX_islightuserdata(lua_State *L, int index)
+int luaX_iscfunction(lua_State *L, int idx)
 {
-    return lua_islightuserdata(L, index);
+    return lua_iscfunction(L, idx);
 }
 
-int luaX_isuserdata(lua_State *L, int index)
+int luaX_islightuserdata(lua_State *L, int idx)
 {
-    return lua_isuserdata(L, index);
+    return lua_islightuserdata(L, idx);
 }
 
-int luaX_isthread(lua_State *L, int index)
+int luaX_isuserdata(lua_State *L, int idx)
 {
-    return lua_isthread(L, index);
+    return lua_isuserdata(L, idx);
 }
 
-int luaX_isany(lua_State *L, int index)
+int luaX_isthread(lua_State *L, int idx)
 {
-    return !lua_isnil(L, index);
+    return lua_isthread(L, idx);
+}
+
+int luaX_isany(lua_State *L, int idx)
+{
+    return !lua_isnil(L, idx);
 }

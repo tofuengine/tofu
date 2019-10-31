@@ -24,21 +24,44 @@
 
 #include "config.h"
 #include "configuration.h"
-#include "file.h"
 #include "log.h"
+#include "platform.h"
 
 #include <limits.h>
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#if PLATFORM_ID == PLATFORM_LINUX
+  #include <unistd.h>
+#elif PLATFORM_ID == PLATFORM_WINDOWS
+  #include <windows.h>
+#endif
+#ifdef DEBUG
+  #define STB_LEAKCHECK_IMPLEMENTATION
+  #include <stb/stb_leakcheck.h>
+#endif
 
-#define CONFIGURATION_FILE_NAME    "configuration.json"
+static inline void wait_for(float seconds)
+{
+    int millis = (int)(seconds * 1000.0f);
+#if PLATFORM_ID == PLATFORM_LINUX
+    usleep(millis * 1000);   // usleep takes sleep time in us (1 millionth of a second)
+#elif PLATFORM_ID == PLATFORM_WINDOWS
+    Sleep(millis);
+#else
+    struct timespec ts;
+    ts.tv_sec = millis / 1000;
+    ts.tv_nsec = (millis % 1000) * 1000000;
+    nanosleep(&ts, NULL);
+#endif
+}
 
-static bool update_statistics(Engine_Statistics_t *statistics, double elapsed) {
-    static double history[FPS_AVERAGE_SAMPLES] = {};
+static inline bool update_statistics(Engine_Statistics_t *statistics, float elapsed) {
+    static float history[FPS_AVERAGE_SAMPLES] = { 0 };
     static int index = 0;
     static int samples = 0;
-    static double sum = 0.0;
+    static float sum = 0.0f;
     static int count = 0;
 
     sum -= history[index];
@@ -49,7 +72,7 @@ static bool update_statistics(Engine_Statistics_t *statistics, double elapsed) {
         samples += 1;
         return false;
     }
-    double fps = (double)FPS_AVERAGE_SAMPLES / sum;
+    float fps = roundf((float)FPS_AVERAGE_SAMPLES / sum);
     statistics->fps = fps;
     if (count == 0) {
         statistics->history[statistics->index] = fps;
@@ -62,10 +85,10 @@ static bool update_statistics(Engine_Statistics_t *statistics, double elapsed) {
 bool Engine_initialize(Engine_t *engine, const char *base_path)
 {
     Log_initialize();
-    Environment_initialize(&engine->environment, base_path, &engine->display);
+    Environment_initialize(&engine->environment, base_path);
     Configuration_initialize(&engine->configuration);
 
-    bool result = Interpreter_initialize(&engine->interpreter, &engine->configuration, &engine->environment);
+    bool result = Interpreter_initialize(&engine->interpreter, &engine->configuration, &engine->environment, &engine->display);
     if (!result) {
         Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't initialize interpreter");
         return false;
@@ -90,7 +113,13 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 
     engine->environment.timer_pool = &engine->interpreter.timer_pool; // HACK: inject the timer-pool pointer.
 
-    engine->operative = Interpreter_init(&engine->interpreter);
+    result = Interpreter_init(&engine->interpreter);
+    if (!result) {
+        Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't call init method");
+        Interpreter_terminate(&engine->interpreter);
+        Display_terminate(&engine->display);
+        return false;
+    }
 
     return true;
 }
@@ -100,29 +129,33 @@ void Engine_terminate(Engine_t *engine)
     Interpreter_terminate(&engine->interpreter); // Terminate the interpreter to unlock all resources.
     Display_terminate(&engine->display);
     Environment_terminate(&engine->environment);
+#if DEBUG
+    stb_leakcheck_dumpmem();
+#endif
 }
 
 void Engine_run(Engine_t *engine)
 {
-    const double delta_time = 1.0 / (double)engine->configuration.fps;
+    const float delta_time = 1.0f / (float)engine->configuration.fps;
     const int skippable_frames = engine->configuration.skippable_frames;
-    Log_write(LOG_LEVELS_INFO, "<ENGINE> now running, delta-time is %.3fs w/ %d skippable frames", delta_time, skippable_frames);
+    const float *frame_caps = engine->configuration.frame_caps;
+    Log_write(LOG_LEVELS_INFO, "<ENGINE> now running, update-time is %.3fs w/ %d skippable frames", delta_time, skippable_frames);
 
     Engine_Statistics_t statistics = (Engine_Statistics_t){
             .delta_time = delta_time,
         };
 
-    double previous = glfwGetTime();
-    double lag = 0.0;
+    float previous = (float)glfwGetTime();
+    float lag = 0.0f;
 
     for (bool running = true; running && !engine->environment.quit && !Display_should_close(&engine->display); ) {
-        double current = glfwGetTime();
-        double elapsed = current - previous;
+        float current = (float)glfwGetTime();
+        float elapsed = current - previous;
         previous = current;
 
         if (engine->configuration.debug) {
             bool ready = update_statistics(&statistics, elapsed);
-            engine->environment.fps = ready ? statistics.fps : 0.0;
+            engine->environment.fps = ready ? statistics.fps : 0.0f;
 #ifdef __DEBUG_ENGINE_FPS__
             static size_t count = 0;
             if (++count == 250) {
@@ -133,22 +166,28 @@ void Engine_run(Engine_t *engine)
         }
 
         Display_process_input(&engine->display);
-
         running = running && Interpreter_input(&engine->interpreter); // Lazy evaluate `running`, will avoid calls when error.
 
         lag += elapsed; // Count a maximum amount of skippable frames in order no to stall on slower machines.
         for (int frames = 0; (frames < skippable_frames) && (lag >= delta_time); ++frames) {
-            // TODO: To move `TimerPool_update()` here the interpreter should expose the "timerpool_update" callback.
+            engine->environment.time += delta_time;
             running = running && Interpreter_update(&engine->interpreter, delta_time);
             lag -= delta_time;
         }
 
-        Display_render_prepare(&engine->display);
-            running = running && Interpreter_render(&engine->interpreter, lag / delta_time);
-        Display_render_finish(&engine->display);
+        running = running && Interpreter_render(&engine->interpreter, lag / delta_time);
+        Display_present(&engine->display);
 
-//        if (used < delta_time) {
-//            glfwWait
-//        }
+        float frame_time = (float)glfwGetTime() - current;
+        float reference_time = frame_time;
+        for (int i = MAX_CONFIGURATION_FRAME_CAPS - 1; i; --i) { // Backward scanning, to match the (inverted) "greatest" one
+            if (frame_time < frame_caps[i]) {
+                reference_time = frame_caps[i];
+                break;
+            }
+        }
+        if (reference_time > frame_time) {
+            wait_for(reference_time - frame_time);
+        }
     }
 }

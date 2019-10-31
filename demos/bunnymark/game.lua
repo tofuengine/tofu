@@ -23,7 +23,7 @@ local function dump(t, spaces)
 end
 
 function Game:__ctor()
---dump(Canvas)
+dump(Canvas)
   Canvas.palette("pico-8")
   Canvas.transparent({ ["0"] = false, ["15"] = true })
   Canvas.background(0)
@@ -38,7 +38,7 @@ end
 function Game:input()
   if Input.is_key_pressed(Input.START) then
     local Bunny = require("lib.bunny") -- Lazily require the module only in this scope.
-    for i = 1, LITTER_SIZE do
+    for _ = 1, LITTER_SIZE do
       table.insert(self.bunnies, Bunny.new(self.bank))
     end
     if #self.bunnies >= MAX_BUNNIES then
@@ -66,13 +66,15 @@ function Game:update(delta_time)
   end
 end
 
-function Game:render(ratio)
+function Game:render(_)
+  Canvas.clear()
+
   for _, bunny in pairs(self.bunnies) do
     bunny:render()
   end
 
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0, 1.0, "left")
-  self.font:write(string.format("#%d bunnies", #self.bunnies), Canvas.width(), 0, 1.0, "right")
+  self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
+  self.font:write(string.format("#%d bunnies", #self.bunnies), Canvas.width(), 0, "right")
 end
 
 return Game

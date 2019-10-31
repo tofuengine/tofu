@@ -40,11 +40,11 @@ typedef struct _Timer_t {
     // Timer_Pool_t *pool;
     // SEE: https://blog.noctua-software.com/entity-references.html
 
-    double period;
+    float period;
     size_t repeats;
     void *bundle;
 
-    double age;
+    float age;
     size_t loops;
     Timer_State_t state;
 
@@ -63,8 +63,8 @@ typedef struct _Timer_Pool_t {
 
 extern void TimerPool_initialize(Timer_Pool_t *pool, TimerPool_Callback_t update_callback, void *parameters);
 extern void TimerPool_terminate(Timer_Pool_t *pool);
-extern Timer_t *TimerPool_allocate(Timer_Pool_t *pool, double period, size_t repeats, void *bundle);
-extern bool TimerPool_update(Timer_Pool_t *pool, double delta_time);
+extern Timer_t *TimerPool_allocate(Timer_Pool_t *pool, float period, size_t repeats, void *bundle);
+extern bool TimerPool_update(Timer_Pool_t *pool, float delta_time);
 extern void TimerPool_gc(Timer_Pool_t *pool);
 
 extern void TimerPool_release(Timer_t *timer);

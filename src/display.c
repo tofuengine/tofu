@@ -24,11 +24,14 @@
 
 #include "config.h"
 #include "engine.h"
-#include "hal.h"
 #include "log.h"
+#include "core/imath.h"
 
 #include <memory.h>
 #include <stdlib.h>
+#ifdef DEBUG
+  #include <stb/stb_leakcheck.h>
+#endif
 
 typedef struct _Program_Data_t {
     const char *vertex_shader;
@@ -48,38 +51,6 @@ typedef struct _Program_Data_t {
     "   v_texture_coords = gl_MultiTexCoord0.st; // Retain texture 2D position.\n" \
     "}\n" \
 
-#define FRAGMENT_SHADER_PALETTE \
-    "#version 120\n" \
-    "\n" \
-    "varying vec2 v_texture_coords;\n" \
-    "\n" \
-    "uniform sampler2D u_texture0;\n" \
-    "uniform vec2 u_resolution;\n" \
-    "uniform float u_time;\n" \
-    "\n" \
-    "uniform vec3 u_palette[64];\n" \
-    "uniform int u_shifting[64];\n" \
-    "uniform float u_transparency[64];\n" \
-    "\n" \
-    "vec4 palette(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {\n" \
-    "    // Texel color fetching from texture sampler\n" \
-    "    vec4 texel = texture2D(texture, texture_coords) * color;\n" \
-    "\n" \
-    "    // Convert the (normalized) texel color RED component (GB would work, too)\n" \
-    "    // to the palette index by scaling up from [0, 1] to [0, 255], then re-index it\n" \
-    "    // according to the shifting table.\n" \
-    "    int index = u_shifting[int(floor((texel.r * 255.0) + 0.5))];\n" \
-    "\n" \
-    "    // Pick the palette color as final fragment color (retain the texel alpha value).\n" \
-    "    // Note: palette components are pre-normalized in the OpenGL range [0, 1].\n" \
-    "    return vec4(u_palette[index].rgb, u_transparency[index]);\n" \
-    "}\n" \
-    "\n" \
-    "void main()\n" \
-    "{\n" \
-    "    gl_FragColor = palette(gl_Color, u_texture0, v_texture_coords, gl_FragCoord.xy);\n" \
-    "}\n"
-
 #define FRAGMENT_SHADER_PASSTHRU \
     "#version 120\n" \
     "\n" \
@@ -90,7 +61,6 @@ typedef struct _Program_Data_t {
     "uniform float u_time;\n" \
     "\n" \
     "vec4 passthru(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {\n" \
-    "//    return texture2D(texture, vec2(texture_coords.x, 1.0 - texture_coords.y)) * color;\n" \
     "    return texture2D(texture, texture_coords) * color;\n" \
     "}\n" \
     "\n" \
@@ -116,25 +86,16 @@ typedef struct _Program_Data_t {
     "}\n"
 
 static const Program_Data_t _programs_data[Display_Programs_t_CountOf] = {
-    { VERTEX_SHADER, FRAGMENT_SHADER_PALETTE },
     { VERTEX_SHADER, FRAGMENT_SHADER_PASSTHRU },
     { NULL, NULL }
 };
 
 static const int _texture_id_0[] = { 0 };
 
-static int min(int a, int b)
-{
-    return a < b ? a : b;
-}
-
 typedef enum _Uniforms_t {
     UNIFORM_TEXTURE,
     UNIFORM_RESOLUTION,
     UNIFORM_TIME,
-    UNIFORM_PALETTE,
-    UNIFORM_SHIFTING,
-    UNIFORM_TRANSPARENCY,
     Uniforms_t_CountOf
 } Uniforms_t;
 
@@ -142,9 +103,6 @@ static const char *_uniforms[Uniforms_t_CountOf] = {
     "u_texture0",
     "u_resolution",
     "u_time",
-    "u_palette",
-    "u_shifting",
-    "u_transparency",
 };
 
 static bool compute_size(Display_t *display, const Display_Configuration_t *configuration, GL_Point_t *position)
@@ -157,7 +115,7 @@ static bool compute_size(Display_t *display, const Display_Configuration_t *conf
     display->window_height = configuration->height;
     display->window_scale = 1;
 
-    int max_scale = min(display_width / configuration->width, display_height / configuration->height);
+    int max_scale = imin(display_width / configuration->width, display_height / configuration->height);
     int scale = configuration->scale != 0 ? configuration->scale : max_scale;
 
     if (max_scale == 0) {
@@ -179,10 +137,7 @@ static bool compute_size(Display_t *display, const Display_Configuration_t *conf
     int x = (display_width - display->window_width) / 2;
     int y = (display_height - display->window_height) / 2;
     if (!configuration->fullscreen) {
-        display->offscreen_source = (GL_Quad_t){
-                0, 0, configuration->width, configuration->height
-            };
-        display->offscreen_destination = (GL_Quad_t){
+        display->vram_destination = (GL_Quad_t){
                 0, 0, display->window_width, display->window_height
             };
         display->physical_width = display->window_width;
@@ -191,10 +146,7 @@ static bool compute_size(Display_t *display, const Display_Configuration_t *conf
         position->x = x;
         position->y = y;
     } else { // Toggle fullscreen by passing primary monitor!
-        display->offscreen_source = (GL_Quad_t){
-                0, 0, configuration->width, configuration->height
-            };
-        display->offscreen_destination = (GL_Quad_t){
+        display->vram_destination = (GL_Quad_t){
                 x, y, x + display->window_width, y + display->window_height
             };
         display->physical_width = display_width;
@@ -232,15 +184,8 @@ static void size_callback(GLFWwindow* window, int width, int height)
     glEnable(GL_TEXTURE_2D); // Default, always enabled.
     glDisable(GL_DEPTH_TEST); // We just don't need it!
     glDisable(GL_STENCIL_TEST); // Ditto.
-#ifdef __FAST_TRANSPARENCY__
-    glDisable(GL_BLEND); // Trade in proper alpha-blending for faster single color transparency.
-    glEnable(GL_ALPHA_TEST);
-    glAlphaFunc(GL_NOTEQUAL, 0.0f);
-#else
-    glEnable(GL_BLEND);
+    glDisable(GL_BLEND); // Blending is disabled.
     glDisable(GL_ALPHA_TEST);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-#endif
     Log_write(LOG_LEVELS_DEBUG, "<GLFW> optimizing OpenGL features");
 
 #ifdef __DEBUG_TRIANGLES_WINDING__
@@ -250,28 +195,6 @@ static void size_callback(GLFWwindow* window, int width, int height)
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     Log_write(LOG_LEVELS_DEBUG, "<GLFW> enabling OpenGL debug");
 #endif
-}
-
-static bool initialize_framebuffer(Display_t *display)
-{
-    GL_texture_create(&display->offscreen_texture, display->configuration.width, display->configuration.height, NULL);
-
-    glGenFramebuffersEXT(1, &display->offscreen_framebuffer);
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, display->offscreen_framebuffer);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, display->offscreen_texture.id, 0);
-    GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
-    if (status != GL_FRAMEBUFFER_COMPLETE_EXT) {
-        return false;
-    }
-
-    return true;
-}
-
-static void deinitialize_framebuffer(Display_t *display)
-{
-    GL_texture_delete(&display->offscreen_texture);
-
-    glDeleteFramebuffersEXT(1, &display->offscreen_framebuffer);
 }
 
 bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title)
@@ -326,38 +249,57 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     glfwSetKeyCallback(display->window, key_callback);
     glfwSetInputMode(display->window, GLFW_CURSOR, configuration->hide_cursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
 
-    if (!GL_initialize()) {
+    if (!GL_context_create(&display->gl, configuration->width, configuration->height)) {
         Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't initialize GL");
         glfwDestroyWindow(display->window);
         glfwTerminate();
         return false;
     }
 
-    int display_width, display_height;
-    glfwGetMonitorWorkarea(glfwGetPrimaryMonitor(), NULL, NULL, &display_width, &display_height);
-    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> display size is %dx%d", display_width, display_height);
+    GL_palette_greyscale(&display->palette, GL_MAX_PALETTE_COLORS);
+    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> calculating greyscale palette of #%d entries", GL_MAX_PALETTE_COLORS);
 
-    GL_Point_t position = {};
+    GL_Point_t position = { 0 };
     if (!compute_size(display, configuration, &position)) {
         glfwDestroyWindow(display->window);
         glfwTerminate();
         return false;
     }
-    // FIXME: when the display is scale the circles are plain wrong! Due to sub-pixel positioning?
 
     if (!configuration->fullscreen) {
         glfwSetWindowMonitor(display->window, NULL, position.x, position.y, display->physical_width, display->physical_height, GLFW_DONT_CARE);
         glfwShowWindow(display->window);
     } else { // Toggle fullscreen by passing primary monitor!
+        Log_write(LOG_LEVELS_INFO, "<DISPLAY> entering full-screen mode");
         glfwSetWindowMonitor(display->window, glfwGetPrimaryMonitor(), position.x, position.y, display->physical_width, display->physical_height, GLFW_DONT_CARE);
     }
 
-    if (!initialize_framebuffer(display)) {
-        Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't create framebuffer");
-        GL_terminate();
+    display->vram = malloc(display->configuration.width * display->configuration.width * sizeof(GL_Color_t));
+    if (!display->vram) {
+        Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't allocate VRAM buffer");
         glfwDestroyWindow(display->window);
         glfwTerminate();
     }
+    Log_write(LOG_LEVELS_DEBUG, "<GL> VRAM allocated at #%p (%dx%d)", display->vram, display->configuration.width, display->configuration.height);
+
+    glGenTextures(1, &display->vram_texture); //allocate the memory for texture
+    if (display->vram_texture == 0) {
+        Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't allocate VRAM texture");
+        GL_context_delete(&display->gl);
+        glfwDestroyWindow(display->window);
+        glfwTerminate();
+        return false;
+    }
+    glBindTexture(GL_TEXTURE_2D, display->vram_texture); // The VRAM texture is always the active and bound one.
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0); // Disable mip-mapping
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, display->configuration.width, display->configuration.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    Log_write(LOG_LEVELS_DEBUG, "<GL> texture created w/ id #%d (%dx%d)", display->vram_texture, display->configuration.width, display->configuration.height);
 
     for (size_t i = 0; i < Display_Programs_t_CountOf; ++i) {
         const Program_Data_t *data = &_programs_data[i];
@@ -368,8 +310,8 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
             !GL_program_attach(&display->programs[i], data->vertex_shader, GL_PROGRAM_SHADER_VERTEX) ||
             !GL_program_attach(&display->programs[i], data->fragment_shader, GL_PROGRAM_SHADER_FRAGMENT)) {
             Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't initialize shaders");
-            deinitialize_framebuffer(display);
-            GL_terminate();
+            glDeleteBuffers(1, &display->vram_texture);
+            GL_context_delete(&display->gl);
             glfwDestroyWindow(display->window);
             glfwTerminate();
             return false;
@@ -383,13 +325,31 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     }
     display->program_index = DISPLAY_PROGRAM_PASSTHRU; // Use pass-thru at the beginning.
 
-    GL_Palette_t palette; // Initial gray-scale palette.
-    GL_palette_greyscale(&palette, GL_MAX_PALETTE_COLORS);
-    Display_palette(display, &palette);
-    Display_shift(display, NULL, NULL, 0);
-    Display_transparent(display, NULL, NULL, 0);
-
     return true;
+}
+
+void Display_terminate(Display_t *display)
+{
+    for (size_t i = 0; i < Display_Programs_t_CountOf; ++i) {
+        if (display->programs[i].id == 0) {
+            continue;
+        }
+        GL_program_delete(&display->programs[i]);
+    }
+
+    glDeleteBuffers(1, &display->vram_texture);
+    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> texture w/ id #%d deleted", display->vram_texture);
+
+    free(display->vram);
+    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> VRAM buffer #%p deallocated", display->vram);
+
+    GL_context_delete(&display->gl);
+
+    glfwDestroyWindow(display->window);
+    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> windows #%p destroyed", display->window);
+
+    glfwTerminate();
+    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> terminated");
 }
 
 bool Display_should_close(Display_t *display)
@@ -404,6 +364,8 @@ void Display_process_input(Display_t *display)
         GLFW_KEY_DOWN,
         GLFW_KEY_LEFT,
         GLFW_KEY_RIGHT,
+        GLFW_KEY_LEFT_CONTROL,
+        GLFW_KEY_RIGHT_CONTROL,
         GLFW_KEY_Z,
         GLFW_KEY_S,
         GLFW_KEY_X,
@@ -418,6 +380,14 @@ void Display_process_input(Display_t *display)
         Display_Key_State_t *key_state = &display->keys_state[i];
         bool was_down = key_state->down;
         bool is_down = glfwGetKey(display->window, keys[i]) == GLFW_PRESS;
+/*
+        if (key_state->auto_trigger > 0.0f) {
+            while (key_state->accumulator >= key_state->auto_trigger) {
+                key_state->accumulator -= key_state->auto_trigger;
+                is_down = true;
+            }
+        }
+*/
         key_state->down = is_down;
         key_state->pressed = !was_down && is_down;
         key_state->released = was_down && !is_down;
@@ -430,111 +400,34 @@ void Display_process_input(Display_t *display)
     }
 }
 
-void Display_render_prepare(Display_t *display)
+void Display_present(Display_t *display)
 {
-    const int w = display->configuration.width;
-    const int h = display->configuration.height;
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, display->offscreen_framebuffer);
-    glViewport(0, 0, w, h);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0.0, (GLdouble)w, (GLdouble)h, 0.0, 0.0, 1.0); // Configure top-left corner at <0, 0>
-    glMatrixMode(GL_MODELVIEW); // Reset the model-view matrix.
-    glLoadIdentity();
-
-#ifdef __FAST_TRANSPARENCY__
-    glEnable(GL_ALPHA_TEST);
-#else
-    glEnable(GL_BLEND);
-#endif
-
-    GLfloat *rgba = display->background_rgba;
-    glClearColor(rgba[0], rgba[1], rgba[2], rgba[3]); // Required, to clear previous content.
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    GL_program_use(&display->programs[DISPLAY_PROGRAM_PALETTE]);
-}
-
-void Display_render_finish(Display_t *display)
-{
-    const int pw = display->physical_width; // We need to y-flip the texture, either by inverting the quad or
-    const int ph = display->physical_height; // the ortho matrix or the with a shader.
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-    glViewport(0, 0, pw, ph);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-//    glOrtho(0.0, (GLdouble)pw, (GLdouble)ph, 0.0, 0.0, 1.0);
-    glOrtho(0.0, (GLdouble)pw, 0.0, (GLdouble)ph, 0.0, 1.0); // Configure bottom-left corner at <0, 0> (FOB is inverted)
-    glMatrixMode(GL_MODELVIEW); // Reset the model-view matrix.
-    glLoadIdentity();
-
-#ifdef __FAST_TRANSPARENCY__
-    glDisable(GL_ALPHA_TEST);
-#else
-    glDisable(GL_BLEND);
-#endif
-
     GLfloat time[] = { (GLfloat)glfwGetTime() };
     GL_program_send(&display->programs[display->program_index], UNIFORM_TIME, GL_PROGRAM_UNIFORM_FLOAT, 1, time);
     GL_program_use(&display->programs[display->program_index]);
 
-    GL_texture_blit_fast(&display->offscreen_texture, display->offscreen_source, display->offscreen_destination, (GL_Color_t){ 255, 255, 255, 255 });
+    GL_surface_to_rgba(&display->gl.buffer, &display->palette, display->vram);
+
+#ifdef __GL_BGRA_PALETTE__
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, display->gl.buffer.width, display->gl.buffer.height, GL_BGRA, GL_UNSIGNED_BYTE, display->vram);
+#else
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, display->gl.buffer.width, display->gl.buffer.height, GL_RGBA, GL_UNSIGNED_BYTE, display->vram);
+#endif
+
+    glBegin(GL_TRIANGLE_STRIP);
+//        glColor4ub(255, 255, 255, 255);
+
+        glTexCoord2f(0, 0); // CCW strip, top-left is <0,0> (the face direction of the strip is determined by the winding of the first triangle)
+        glVertex2f(display->vram_destination.x0, display->vram_destination.y0);
+        glTexCoord2f(0, 1);
+        glVertex2f(display->vram_destination.x0, display->vram_destination.y1);
+        glTexCoord2f(1, 0);
+        glVertex2f(display->vram_destination.x1, display->vram_destination.y0);
+        glTexCoord2f(1, 1);
+        glVertex2f(display->vram_destination.x1, display->vram_destination.y1);
+    glEnd();
 
     glfwSwapBuffers(display->window);
-}
-
-void Display_palette(Display_t *display, const GL_Palette_t *palette)
-{
-    GLfloat colors[GL_MAX_PALETTE_COLORS * 3] = {};
-    GL_palette_normalize(palette, colors);
-    GL_program_send(&display->programs[DISPLAY_PROGRAM_PALETTE], UNIFORM_PALETTE, GL_PROGRAM_UNIFORM_VEC3, GL_MAX_PALETTE_COLORS, colors);
-    display->palette = *palette;
-
-    GL_palette_normalize_color(palette->colors[display->background_index], display->background_rgba); // Update current bg-color.
-
-    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> palette updated");
-}
-
-void Display_shift(Display_t *display, const size_t *from, const size_t *to, size_t count)
-{
-    if (from == NULL) {
-        for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
-            display->shifting[i] = i;
-        }
-    } else {
-        for (size_t i = 0; i < count; ++i) {
-            display->shifting[from[i]] = to[i];
-        }
-    }
-
-    GL_program_send(&display->programs[DISPLAY_PROGRAM_PALETTE], UNIFORM_SHIFTING, GL_PROGRAM_UNIFORM_INT, GL_MAX_PALETTE_COLORS, display->shifting);
-}
-
-void Display_transparent(Display_t *display, const size_t *color, const bool *is_transparent, size_t count)
-{
-    if (color == NULL) {
-        for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
-            display->transparency[i] = 1.0; // Opaque.
-        }
-        display->transparency[0] = 0.0; // Transparent.
-    } else {
-        for (size_t i = 0; i < count; ++i) {
-            display->transparency[color[i]] = is_transparent[i] ? 0.0f : 1.0f;
-        }
-    }
-
-    GL_program_send(&display->programs[DISPLAY_PROGRAM_PALETTE], UNIFORM_TRANSPARENCY, GL_PROGRAM_UNIFORM_FLOAT, GL_MAX_PALETTE_COLORS, display->transparency);
-}
-
-void Display_background(Display_t *display, const size_t color)
-{
-    if (color >= display->palette.count) {
-        Log_write(LOG_LEVELS_WARNING, "<DISPLAY> color index #%d not available in current palette", color);
-        return;
-    }
-    display->background_index = color;
-
-    GL_palette_normalize_color(display->palette.colors[color], display->background_rgba);
 }
 
 void Display_shader(Display_t *display, const char *effect)
@@ -548,9 +441,8 @@ void Display_shader(Display_t *display, const char *effect)
 
     const size_t length = strlen(FRAGMENT_SHADER_CUSTOM) + strlen(effect);
     char *code = malloc((length + 1) * sizeof(char)); // Add null terminator for the string.
-    memcpy(code, FRAGMENT_SHADER_CUSTOM, strlen(FRAGMENT_SHADER_CUSTOM));
-    memcpy(code + strlen(FRAGMENT_SHADER_CUSTOM), effect, strlen(effect));
-    code[length] = '\0';
+    strcpy(code, FRAGMENT_SHADER_CUSTOM);
+    strcat(code, effect);
 
     GL_Program_t *program = &display->programs[DISPLAY_PROGRAM_CUSTOM];
 
@@ -573,18 +465,8 @@ void Display_shader(Display_t *display, const char *effect)
     free(code);
 }
 
-void Display_terminate(Display_t *display)
+void Display_palette(Display_t *display, const GL_Palette_t *palette)
 {
-    for (size_t i = 0; i < Display_Programs_t_CountOf; ++i) {
-        if (display->programs[i].id == 0) {
-            continue;
-        }
-        GL_program_delete(&display->programs[i]);
-    }
-
-    deinitialize_framebuffer(display);
-    GL_terminate();
-
-    glfwDestroyWindow(display->window);
-    glfwTerminate();
+    display->palette = *palette;
+    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> palette updated");
 }

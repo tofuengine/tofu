@@ -39,14 +39,12 @@ typedef struct _Engine_t {
 
     Display_t display;
     Interpreter_t interpreter;
-
-    bool operative;
 } Engine_t;
 
 typedef struct _Engine_Statistics_t {
-    double delta_time;
-    double fps;
-    double history[STATISTICS_LENGTH];
+    float delta_time;
+    float fps;
+    float history[STATISTICS_LENGTH];
     int index;
 } Engine_Statistics_t;
 

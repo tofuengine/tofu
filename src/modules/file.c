@@ -22,16 +22,18 @@
 
 #include "file.h"
 
+#include "udt.h"
 #include "../core/luax.h"
-
 #include "../environment.h"
-#include "../file.h"
+#include "../fs.h"
 #include "../log.h"
 
 #include <string.h>
+#ifdef DEBUG
+  #include <stb/stb_leakcheck.h>
+#endif
 
-typedef struct _File_Class_t {
-} File_Class_t;
+#define FILE_MT        "Tofu_File_mt"
 
 static int file_read(lua_State *L);
 
@@ -46,8 +48,8 @@ static const luaX_Const _file_constants[] = {
 
 int file_loader(lua_State *L)
 {
-    lua_pushvalue(L, lua_upvalueindex(1)); // Duplicate the upvalue to pass it to the module.
-    return luaX_newmodule(L, NULL, _file_functions, _file_constants, 1, LUAX_CLASS(File_Class_t));
+    int nup = luaX_unpackupvalues(L);
+    return luaX_newmodule(L, NULL, _file_functions, _file_constants, nup, FILE_MT);
 }
 
 static int file_read(lua_State *L)
@@ -62,12 +64,8 @@ static int file_read(lua_State *L)
 
     Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
 
-    char pathfile[PATH_FILE_MAX] = {};
-    strcpy(pathfile, environment->base_path);
-    strcat(pathfile, file);
-
-    char *result = file_load_as_string(pathfile, "rt");
-    Log_write(LOG_LEVELS_DEBUG, "<FILE> file '%s' loaded at %p", pathfile, result);
+    char *result = FS_load_as_string(&environment->fs, file);
+    Log_write(LOG_LEVELS_DEBUG, "<FILE> file '%s' loaded at %p", file, result);
 
     lua_pushstring(L, result);
 

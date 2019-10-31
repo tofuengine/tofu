@@ -24,18 +24,26 @@
 
 #include <stdlib.h>
 #include <string.h>
+#ifdef DEBUG
+  #include <stb/stb_leakcheck.h>
+#endif
 
-void Environment_initialize(Environment_t *environment, const char *base_path, Display_t *display)
+// TODO: http://www.ilikebigbits.com/2017_06_01_float_or_double.html
+
+void Environment_initialize(Environment_t *environment, const char *base_path)
 {
-    memset(environment, 0x00, sizeof(Environment_t));
+    *environment = (Environment_t){
+        .quit = false,
+        .fps = 0.0f,
+        .time = 0.0f
+    };
 
-    environment->quit = false;
-    environment->fps = 0.0;
-
-    strcpy(environment->base_path, base_path);
-    environment->display = display;
+    FS_initialize(&environment->fs, base_path);
 }
 
 void Environment_terminate(Environment_t *environment)
 {
+    FS_terminate(&environment->fs);
+
+    *environment = (Environment_t){ 0 };
 }

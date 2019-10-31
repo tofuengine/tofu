@@ -23,35 +23,48 @@
 #ifndef __GL_COMMON_H__
 #define __GL_COMMON_H__
 
-#include <stddef.h>
+#include <stdint.h>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+typedef uint8_t GL_Pixel_t;
+
+typedef int8_t GL_Bool_t;
+
 typedef struct _GL_Point_t {
-    GLfloat x, y;
+    int x, y;
 } GL_Point_t;
 
 typedef struct _GL_Size_t {
-    GLfloat width, height;
+    int width, height;
 } GL_Size_t;
 
 typedef struct _GL_Rectangle_t {
-    GLfloat x, y;
-    GLfloat width, height;
+    int x, y;
+    unsigned int width, height;
 } GL_Rectangle_t;
 
 typedef struct _GL_Quad_t {
-    GLfloat x0, y0;
-    GLfloat x1, y1;
+    int x0, y0;
+    int x1, y1;
 } GL_Quad_t;
 
 #pragma pack(push, 1)
+#ifdef __GL_BGRA_PALETTE__
+typedef struct _GL_Color_t {
+    GLubyte b, g, r, a;
+} GL_Color_t;
+#else
 typedef struct _GL_Color_t {
     GLubyte r, g, b, a;
 } GL_Color_t;
+#endif
 #pragma pack(pop)
 
 #define GL_DEGREES_OVER_RADIANS 57.295779513082320876798154814105
+
+#define GL_BOOL_FALSE   0
+#define GL_BOOL_TRUE    1
 
 #endif  /* __GL_COMMON_H__ */

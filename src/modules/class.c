@@ -22,47 +22,18 @@
 
 #include "class.h"
 
+#include "udt.h"
 #include "../core/luax.h"
-
 #include "../log.h"
 
-static const char _class_script[] =
-    "local Class = {}\n"
-    "\n"
-    "function Class.define(model)\n"
-    "  local proto = {}\n"
-    "  -- If a base class is defined, the copy all the functions.\n"
-    "  --\n"
-    "  -- This is an instant snapshot, any new field defined runtime in the base\n"
-    "  -- class won't be visible in the derived class.\n"
-    "  if model then\n"
-    "    Class.implement(proto, model)\n"
-    "  end\n"
-    "  -- This is the standard way in Lua to implement classes.\n"
-    "  proto.__index = proto\n"
-    "  proto.new = function(...)\n"
-    "      local self = setmetatable({}, proto)\n"
-    "      if self.__ctor then\n"
-    "        self:__ctor(...)\n"
-    "      end\n"
-    "      return self\n"
-    "    end\n"
-    "  return proto\n"
-    "end\n"
-    "\n"
-    "function Class.implement(proto, model)\n"
-    "  for key, value in pairs(model) do\n"
-    "    if type(value) == 'function' then\n"
-    "      proto[key] = value\n"
-    "    end\n"
-    "  end\n"
-    "end\n"
-    "\n"
-    "return Class\n"
-;
+static const uint8_t _class_lua[] = {
+#include "class.inc"
+};
+
+static luaX_Script _class_script = { (const char *)_class_lua, sizeof(_class_lua), "class.lua" };
 
 int class_loader(lua_State *L)
 {
-    lua_pushvalue(L, lua_upvalueindex(1)); // Duplicate the upvalue to pass it to the module.
-    return luaX_newmodule(L, _class_script, NULL, NULL, 1, NULL);
+    int nup = luaX_unpackupvalues(L);
+    return luaX_newmodule(L, &_class_script, NULL, NULL, nup, NULL);
 }

@@ -31,7 +31,7 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 #include "interpreter.h"
 
 #include "config.h"
-#include "file.h"
+#include "fs.h"
 #include "log.h"
 #include "modules.h"
 
@@ -39,6 +39,9 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 #include <string.h>
 #ifdef __DEBUG_GARBAGE_COLLECTOR__
   #include <time.h>
+#endif
+#ifdef DEBUG
+  #include <stb/stb_leakcheck.h>
 #endif
 
 #define ROOT_INSTANCE           "main"
@@ -62,7 +65,7 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 typedef enum _Methods_t {
     METHOD_SETUP,
     METHOD_INIT,
-    METHOD_INPUT,
+    METHOD_INPUT, // TODO: is the `input()` method useless? Probably...
     METHOD_UPDATE,
     METHOD_RENDER,
     Methods_t_CountOf
@@ -105,13 +108,12 @@ static int error_handler(lua_State *L)
 
 static int custom_searcher(lua_State *L)
 {
-    const char *base_path = lua_tostring(L, lua_upvalueindex(1));
+    const File_System_t *fs = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(1));
 
     const char *file = lua_tostring(L, 1);
 
-    char path_file[PATH_FILE_MAX] = {};
-    strcpy(path_file, base_path);
-    strcat(path_file, file);
+    char path_file[PATH_FILE_MAX] = { 0 };
+    strcpy(path_file, file);
     for (int i = 0; path_file[i] != '\0'; ++i) { // Replace `.' with '/` to map file system entry.
         if (path_file[i] == '.') {
             path_file[i] = FILE_PATH_SEPARATOR;
@@ -119,13 +121,15 @@ static int custom_searcher(lua_State *L)
     }
     strcat(path_file, ".lua");
 
-    char *buffer = file_load_as_string(path_file, "rt");
+    char *buffer = FS_load_as_string(fs, path_file);
+
     if (buffer != NULL) {
         luaL_loadstring(L, buffer);
         free(buffer);
     } else {
         lua_pushstring(L, "Error: file not found");
     }
+
     return 1;
 }
 
@@ -180,7 +184,7 @@ static int execute(lua_State *L, const char *script)
 
 static int call(lua_State *L, Methods_t method, int nargs, int nresults)
 {
-    int index = METHOD_STACK_INDEX(method); // O F1 .. Fn T
+    int index = METHOD_STACK_INDEX(method); // T O F1 .. Fn
     if (lua_isnil(L, index)) {
         lua_pop(L, nargs); // Discard the unused arguments pushed by the caller.
         for (int i = 0; i < nresults; ++i) { // Push fake NIL results for the caller.
@@ -188,9 +192,9 @@ static int call(lua_State *L, Methods_t method, int nargs, int nresults)
         }
         return LUA_OK;
     }
-    lua_pushvalue(L, index);                // O F1 ... Fn T A1 ... An     -> O F1 ... Fn T A1 ... An F
-    lua_pushvalue(L, OBJECT_STACK_INDEX);   // O F1 ... Fn T A1 ... An F   -> O F1 ... Fn T A1 ... An F O
-    lua_rotate(L, -(nargs + 2), 2);         // O F1 ... Fn T A1 ... An F O -> O F1 ... Fn T F O A1 ... An
+    lua_pushvalue(L, index);                // T O F1 ... Fn A1 ... An     -> T O F1 ... Fn A1 ... An F
+    lua_pushvalue(L, OBJECT_STACK_INDEX);   // T O F1 ... Fn A1 ... An F   -> T O F1 ... Fn A1 ... An F O
+    lua_rotate(L, -(nargs + 2), 2);         // T O F1 ... Fn A1 ... An F O -> T O F1 ... Fn F O A1 ... An
 
 #ifdef __DEBUG_VM_CALLS__
     int called = lua_pcall(L, nargs + 1, nresults, TRACEBACK_STACK_INDEX);
@@ -207,34 +211,32 @@ static int call(lua_State *L, Methods_t method, int nargs, int nresults)
 
 static bool timerpool_callback(Timer_t *timer, void *parameters)
 {
-    Interpreter_t *interpreter = (Interpreter_t *)parameters;
+    lua_State *L = (lua_State *)parameters;
 
-    // TODO: explicit access the VM state and expose `L` variable.
-
-    lua_rawgeti(interpreter->state, LUA_REGISTRYINDEX, BUNDLE_TO_INT(timer->bundle));
+    lua_rawgeti(L, LUA_REGISTRYINDEX, BUNDLE_TO_INT(timer->bundle));
 #if 0
-    if (lua_isnil(interpreter->state, -1)) {
-        lua_pop(interpreter->state, -1);
+    if (lua_isnil(L, -1)) {
+        lua_pop(L, -1);
         Log_write(LOG_LEVELS_ERROR, "<VM> can't find timer callback");
         return;
     }
 #endif
 #ifdef __DEBUG_VM_CALLS__
-    int result = lua_pcall(interpreter->state, 0, 0, TRACEBACK_STACK_INDEX);
+    int result = lua_pcall(L, 0, 0, TRACEBACK_STACK_INDEX);
     if (result != LUA_OK) {
-        Log_write(LOG_LEVELS_ERROR, "<VM> error in call: %s", lua_tostring(interpreter->state, -1));
+        Log_write(LOG_LEVELS_ERROR, "<VM> error in call: %s", lua_tostring(L, -1));
     }
 #else
-    lua_call(interpreter->state, 0, 0);
+    lua_call(L, 0, 0);
     int result = LUA_OK;
 #endif
     return result == LUA_OK;
 }
 
-bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configuration, const Environment_t *environment)
+bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configuration, const Environment_t *environment, const Display_t *display)
 {
     interpreter->environment = environment;
-    interpreter->gc_age = 0.0;
+    interpreter->gc_age = 0.0f;
     interpreter->state = luaL_newstate();
     if (!interpreter->state) {
         Log_write(LOG_LEVELS_FATAL, "<VM> can't initialize interpreter");
@@ -245,12 +247,14 @@ bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configu
     luaL_openlibs(interpreter->state);
 
     lua_pushlightuserdata(interpreter->state, (void *)environment); // Discard `const` qualifier.
-    modules_initialize(interpreter->state, 1);
+    lua_pushlightuserdata(interpreter->state, (void *)display);
+    lua_pushlightuserdata(interpreter->state, (void *)interpreter);
+    modules_initialize(interpreter->state, 3);
 
 #if 0
     luaX_appendpath(interpreter->state, environment->base_path);
 #else
-    lua_pushstring(interpreter->state, environment->base_path);
+    lua_pushlightuserdata(interpreter->state, (void *)&environment->fs);
     luaX_overridesearchers(interpreter->state, custom_searcher, 1);
 #endif
 
@@ -280,55 +284,9 @@ bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configu
     Configuration_parse(interpreter->state, configuration);
     lua_pop(interpreter->state, 1); // Remove the configuration table from the stack.
 
-    TimerPool_initialize(&interpreter->timer_pool, timerpool_callback, interpreter);
+    TimerPool_initialize(&interpreter->timer_pool, timerpool_callback, interpreter->state);
 
     return true;
-}
-
-bool Interpreter_init(Interpreter_t *interpreter)
-{
-    return call(interpreter->state, METHOD_INIT, 0, 0) == LUA_OK;
-}
-
-bool Interpreter_input(Interpreter_t *interpreter)
-{
-    return call(interpreter->state, METHOD_INPUT, 0, 0) == LUA_OK;
-}
-
-bool Interpreter_update(Interpreter_t *interpreter, const double delta_time)
-{
-    if (!TimerPool_update(&interpreter->timer_pool, delta_time)) {
-        return false;
-    }
-
-    lua_pushnumber(interpreter->state, delta_time);
-    if (call(interpreter->state, METHOD_UPDATE, 1, 0) != LUA_OK) {
-        return false;
-    }
-
-    interpreter->gc_age += delta_time;
-    while (interpreter->gc_age >= GARBAGE_COLLECTION_PERIOD) { // Periodically collect GC.
-        interpreter->gc_age -= GARBAGE_COLLECTION_PERIOD;
-
-#ifdef __DEBUG_GARBAGE_COLLECTOR__
-        Log_write(LOG_LEVELS_DEBUG, "<VM> performing periodical garbage collection");
-        double start_time = (double)clock() / CLOCKS_PER_SEC;
-#endif
-        lua_gc(interpreter->state, LUA_GCCOLLECT, 0);
-        TimerPool_gc(&interpreter->timer_pool);
-#ifdef __DEBUG_GARBAGE_COLLECTOR__
-        double elapsed = ((double)clock() / CLOCKS_PER_SEC) - start_time;
-        Log_write(LOG_LEVELS_DEBUG, "<VM> garbage collection took %.3fs", elapsed);
-#endif
-    }
-
-    return true;
-}
-
-bool Interpreter_render(Interpreter_t *interpreter, const double ratio)
-{
-    lua_pushnumber(interpreter->state, ratio);
-    return call(interpreter->state, METHOD_RENDER, 1, 0) == LUA_OK;
 }
 
 void Interpreter_terminate(Interpreter_t *interpreter)
@@ -348,4 +306,66 @@ void Interpreter_terminate(Interpreter_t *interpreter)
     lua_close(interpreter->state);
 
     TimerPool_terminate(&interpreter->timer_pool);
+}
+
+bool Interpreter_init(Interpreter_t *interpreter)
+{
+    return call(interpreter->state, METHOD_INIT, 0, 0) == LUA_OK;
+}
+
+bool Interpreter_input(Interpreter_t *interpreter)
+{
+    return call(interpreter->state, METHOD_INPUT, 0, 0) == LUA_OK;
+}
+
+bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
+{
+    if (!TimerPool_update(&interpreter->timer_pool, delta_time)) {
+        return false;
+    }
+
+    lua_pushnumber(interpreter->state, delta_time);
+    if (call(interpreter->state, METHOD_UPDATE, 1, 0) != LUA_OK) {
+        return false;
+    }
+
+    interpreter->gc_age += delta_time;
+    while (interpreter->gc_age >= GARBAGE_COLLECTION_PERIOD) { // Periodically collect GC.
+        interpreter->gc_age -= GARBAGE_COLLECTION_PERIOD;
+
+#ifdef __DEBUG_GARBAGE_COLLECTOR__
+        Log_write(LOG_LEVELS_DEBUG, "<VM> performing periodical garbage collection");
+        float start_time = (float)clock() / CLOCKS_PER_SEC;
+#endif
+        lua_gc(interpreter->state, LUA_GCCOLLECT, 0);
+        TimerPool_gc(&interpreter->timer_pool);
+#ifdef __DEBUG_GARBAGE_COLLECTOR__
+        float elapsed = ((float)clock() / CLOCKS_PER_SEC) - start_time;
+        Log_write(LOG_LEVELS_DEBUG, "<VM> garbage collection took %.3fs", elapsed);
+#endif
+    }
+
+    return true;
+}
+
+bool Interpreter_render(Interpreter_t *interpreter, float ratio)
+{
+    lua_pushnumber(interpreter->state, ratio);
+    return call(interpreter->state, METHOD_RENDER, 1, 0) == LUA_OK;
+}
+
+bool Interpreter_call(Interpreter_t *interpreter, int nargs, int nresults)
+{
+    lua_State *L = interpreter->state;
+#ifdef __DEBUG_VM_CALLS__
+    int called = lua_pcall(L, nargs, nresults, TRACEBACK_STACK_INDEX);
+    if (called != LUA_OK) {
+        Log_write(LOG_LEVELS_ERROR, "<VM> error in execute: %s", lua_tostring(L, -1));
+        lua_pop(L, 1);
+    }
+    return called == LUA_OK ? true : false;
+#else
+    lua_call(L, nargs, nresults);
+    return true;
+#endif
 }

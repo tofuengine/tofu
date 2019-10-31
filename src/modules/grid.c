@@ -22,25 +22,18 @@
 
 #include "grid.h"
 
+#include "udt.h"
 #include "../core/luax.h"
-
 #include "../config.h"
+#include "../interpreter.h"
 #include "../log.h"
 
 #include <stdlib.h>
-
-#ifdef __GRID_INTEGER_CELL__
-typedef long Cell_t;
-#else
-typedef double Cell_t;
+#ifdef DEBUG
+  #include <stb/stb_leakcheck.h>
 #endif
 
-typedef struct _Grid_Class_t {
-    int width;
-    int height;
-    Cell_t *data;
-    Cell_t **offsets; // Precomputed pointers to the line of data.
-} Grid_Class_t;
+#define GRID_MT        "Tofu_Grid_mt"
 
 static int grid_new(lua_State *L);
 static int grid_gc(lua_State *L);
@@ -50,6 +43,8 @@ static int grid_fill(lua_State *L);
 static int grid_stride(lua_State *L);
 static int grid_peek(lua_State *L);
 static int grid_poke(lua_State *L);
+static int grid_scan(lua_State *L);
+static int grid_process(lua_State *L);
 
 static const struct luaL_Reg _grid_functions[] = {
     { "new", grid_new },
@@ -60,6 +55,9 @@ static const struct luaL_Reg _grid_functions[] = {
     {"stride", grid_stride },
     {"peek", grid_peek },
     {"poke", grid_poke },
+    {"scan", grid_scan },
+    {"process", grid_process },
+//    {"path", grid_path },
     { NULL, NULL }
 };
 
@@ -67,10 +65,16 @@ static const luaX_Const _grid_constants[] = {
     { NULL }
 };
 
+static const unsigned char _grid_lua[] = {
+#include "grid.inc"
+};
+
+static luaX_Script _grid_script = { (const char *)_grid_lua, sizeof(_grid_lua), "grid.lua" };
+
 int grid_loader(lua_State *L)
 {
-    lua_pushvalue(L, lua_upvalueindex(1)); // Duplicate the upvalue to pass it to the module.
-    return luaX_newmodule(L, NULL, _grid_functions, _grid_constants, 1, LUAX_CLASS(Grid_Class_t));
+    int nup = luaX_unpackupvalues(L);
+    return luaX_newmodule(L, &_grid_script, _grid_functions, _grid_constants, nup, GRID_MT);
 }
 
 static int grid_new(lua_State *L)
@@ -80,35 +84,39 @@ static int grid_new(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
         LUAX_SIGNATURE_ARGUMENT(luaX_istable, luaX_isnumber)
     LUAX_SIGNATURE_END
-    int width = lua_tointeger(L, 1);
-    int height = lua_tointeger(L, 2);
+    size_t width = (size_t)lua_tointeger(L, 1);
+    size_t height = (size_t)lua_tointeger(L, 2);
     int type = lua_type(L, 3);
 
     Grid_Class_t *instance = (Grid_Class_t *)lua_newuserdata(L, sizeof(Grid_Class_t));
 
-    Cell_t *data = malloc((width * height) * sizeof(Cell_t));
-    Cell_t **offsets = malloc(height * sizeof(Cell_t *));
+    size_t data_size = width * height;
+    Cell_t *data = malloc(data_size * sizeof(Cell_t));
+    Cell_t **data_rows = malloc(height * sizeof(Cell_t *));
 
-    for (int i = 0; i < height; ++i) { // Precompute the pointers to the data rows for faster access (old-school! :D).
-        offsets[i] = data + (i * width);
+    if (!data || !data_rows) {
+        return luaL_error(L, "<GRID> can't allocate memory");
+    }
+
+    for (size_t i = 0; i < height; ++i) { // Precompute the pointers to the data rows for faster access (old-school! :D).
+        data_rows[i] = data + (i * width);
     }
 
     Cell_t *ptr = data;
-    Cell_t *eod = ptr + (width * height);
+    Cell_t *eod = ptr + data_size;
 
     if (type == LUA_TTABLE) {
-        lua_pushnil(L); // first key
+        lua_pushnil(L);
         while (lua_next(L, 3)) {
-#if 0
-            const char *key_type = lua_typename(L, lua_type(L, -2)); // uses 'key' (at index -2) and 'value' (at index -1)
-#endif
-            Cell_t value = (Cell_t)lua_tonumber(L, -1);
-
-            if (ptr < eod) {
-                *(ptr++) = value;
+            if (ptr == eod) {
+                lua_pop(L, 2);
+                break;
             }
 
-            lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
+            Cell_t value = (Cell_t)lua_tonumber(L, -1);
+            *(ptr++) = value;
+
+            lua_pop(L, 1);
         }
     } else
     if (type == LUA_TNUMBER) {
@@ -123,12 +131,13 @@ static int grid_new(lua_State *L)
             .width = width,
             .height = height,
             .data = data,
-            .offsets = offsets
+            .data_rows = data_rows,
+            .data_size = data_size
         };
 
     Log_write(LOG_LEVELS_DEBUG, "<GRID> grid #%p allocated", instance);
 
-    luaL_setmetatable(L, LUAX_CLASS(Grid_Class_t));
+    luaL_setmetatable(L, GRID_MT);
 
     return 1;
 }
@@ -143,7 +152,7 @@ static int grid_gc(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "<GRID> finalizing grid #%p", instance);
 
     free(instance->data);
-    free(instance->offsets);
+    free(instance->data_rows);
 
     return 0;
 }
@@ -181,26 +190,21 @@ static int grid_fill(lua_State *L)
     Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
     int type = lua_type(L, 2);
 
-    int width = instance->width;
-    int height = instance->height;
-    Cell_t *data = instance->data;
-
-    Cell_t *ptr = data;
-    Cell_t *eod = ptr + (width * height);
+    Cell_t *ptr = instance->data;
+    Cell_t *eod = ptr + instance->data_size;
 
     if (type == LUA_TTABLE) {
-        lua_pushnil(L); // first key
+        lua_pushnil(L);
         while (lua_next(L, 2)) {
-#if 0
-            const char *key_type = lua_typename(L, lua_type(L, -2)); // uses 'key' (at index -2) and 'value' (at index -1)
-#endif
-            Cell_t value = (Cell_t)lua_tonumber(L, -1);
-
-            if (ptr < eod) {
-                *(ptr++) = value;
+            if (ptr == eod) {
+                lua_pop(L, 2);
+                break;
             }
 
-            lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
+            Cell_t value = (Cell_t)lua_tonumber(L, -1);
+            *(ptr++) = value;
+
+            lua_pop(L, 1);
         }
     } else
     if (type == LUA_TNUMBER) {
@@ -218,43 +222,46 @@ static int grid_stride(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 5)
         LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
         LUAX_SIGNATURE_ARGUMENT(luaX_istable, luaX_isnumber)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
     LUAX_SIGNATURE_END
     Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
-    int column = lua_tointeger(L, 2);
-    int row = lua_tointeger(L, 3);
+    size_t column = (size_t)lua_tointeger(L, 2);
+    size_t row = (size_t)lua_tointeger(L, 3);
     int type = lua_type(L, 4);
-    int amount = lua_tointeger(L, 5);
+    size_t amount = (size_t)lua_tointeger(L, 5);
+#ifdef DEBUG
+    if (column >= instance->width) {
+        return luaL_error(L, "column %d is out of range (0, %d)", column, instance->width);
+    } else
+    if (row >= instance->height) {
+        return luaL_error(L, "row %d is out of range (0, %d)", row, instance->height);
+    }
+#endif
 
-    int width = instance->width;
-    int height = instance->height;
-    Cell_t *data = instance->offsets[row];
-
-    Cell_t *ptr = data + column;
-    Cell_t *eod = ptr + ((width * height < amount) ? (width * height) : amount);
+    Cell_t *ptr = instance->data_rows[row] + column;
+    Cell_t *eod = ptr + (instance->data_size < amount ? instance->data_size : amount);
 
     if (type == LUA_TTABLE) {
-        lua_pushnil(L); // first key
+        lua_pushnil(L);
         while (lua_next(L, 4)) {
-#if 0
-            const char *key_type = lua_typename(L, lua_type(L, -2)); // uses 'key' (at index -2) and 'value' (at index -1)
-#endif
-            Cell_t value = (Cell_t)lua_tonumber(L, -1);
-
-            if (ptr < eod) {
-                *(ptr++) = value;
+            if (ptr == eod) {
+                lua_pop(L, 2);
+                break;
             }
 
-            lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
+            Cell_t value = (Cell_t)lua_tonumber(L, -1);
+            *(ptr++) = value;
+
+            lua_pop(L, 1);
         }
     } else
     if (type == LUA_TNUMBER) {
         Cell_t value = (Cell_t)lua_tonumber(L, 4);
 
-        for (int i = 0; (ptr < eod) && (i < amount); ++i) {
+        for (size_t i = 0; (ptr < eod) && (i < amount); ++i) {
             *(ptr++) = value;
         }
     }
@@ -266,14 +273,22 @@ static int grid_peek(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 3)
         LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
     LUAX_SIGNATURE_END
     Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
-    int column = lua_tointeger(L, 2);
-    int row = lua_tointeger(L, 3);
+    size_t column = (size_t)lua_tointeger(L, 2);
+    size_t row = (size_t)lua_tointeger(L, 3);
+#ifdef DEBUG
+    if (column >= instance->width) {
+        return luaL_error(L, "column %d is out of range (0, %d)", column, instance->width);
+    } else
+    if (row >= instance->height) {
+        return luaL_error(L, "row %d is out of range (0, %d)", row, instance->height);
+    }
+#endif
 
-    Cell_t *data = instance->offsets[row];
+    Cell_t *data = instance->data_rows[row];
 
     Cell_t value = data[column];
 
@@ -286,18 +301,85 @@ static int grid_poke(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 4)
         LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
     LUAX_SIGNATURE_END
     Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
-    int column = lua_tointeger(L, 2);
-    int row = lua_tointeger(L, 3);
+    size_t column = (size_t)lua_tointeger(L, 2);
+    size_t row = (size_t)lua_tointeger(L, 3);
     Cell_t value = (Cell_t)lua_tonumber(L, 4);
+#ifdef DEBUG
+    if (column >= instance->width) {
+        return luaL_error(L, "column %d is out of range (0, %d)", column, instance->width);
+    } else
+    if (row >= instance->height) {
+        return luaL_error(L, "row %d is out of range (0, %d)", row, instance->height);
+    }
+#endif
 
-    Cell_t *data = instance->offsets[row];
+    Cell_t *data = instance->data_rows[row];
 
     data[column] = value;
+
+    return 0;
+}
+
+static int grid_scan(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 2)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isfunction)
+    LUAX_SIGNATURE_END
+    Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
+//    luaX_Reference callback = luaX_tofunction(L, 2);
+
+    Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(3));
+
+    const Cell_t *data = instance->data;
+
+    for (size_t row = 0; row < instance->height; ++row) {
+        for (size_t column = 0; column < instance->width; ++column) {
+            lua_pushvalue(L, 2); // Copy directly from stack argument, don't need to ref/unref (won't be GC-ed meanwhile)
+            lua_pushinteger(L, column);
+            lua_pushinteger(L, row);
+            lua_pushnumber(L, *(data++));
+            Interpreter_call(interpreter, 3, 0);
+        }
+    }
+
+    return 0;
+}
+
+static int grid_process(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 2)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isfunction)
+    LUAX_SIGNATURE_END
+    Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
+//    luaX_Reference callback = luaX_tofunction(L, 2);
+
+    Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(3));
+
+    const Cell_t *data = instance->data;
+
+    for (size_t row = 0; row < instance->height; ++row) {
+        for (size_t column = 0; column < instance->width; ++column) {
+            lua_pushvalue(L, 2); // Copy directly from stack argument, don't need to ref/unref (won't be GC-ed meanwhile)
+            lua_pushinteger(L, column);
+            lua_pushinteger(L, row);
+            lua_pushnumber(L, *(data++));
+            Interpreter_call(interpreter, 3, 3);
+
+            size_t column = lua_tointeger(L, -3);
+            size_t row = lua_tointeger(L, -2);
+            Cell_t value = lua_tonumber(L, -1);
+            instance->data_rows[row][column] = value;
+
+            lua_pop(L, 3);
+        }
+    }
 
     return 0;
 }
