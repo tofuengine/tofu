@@ -5,9 +5,11 @@ local Input = require("tofu.events").Input
 local Class = require("tofu.util").Class
 local System = require("tofu.core").System
 
+local INITIAL_LENGHT = 5
+local SPEED_RATIO = 5e
 local CELLS = 32
 local LIFE = 1.0
-local SPEED = 10.0
+local SPEED = 5.0
 
 local DELTA_X = { up = 0, down = 0, left = -1, right = 1 }
 local DELTA_Y = { up = -1, down = 1, left = 0, right = 0 }
@@ -86,7 +88,7 @@ function Game:draw_map(map)
 end
 
 function Game:reset()
-  self.length = 5
+  self.length = INITIAL_LENGHT
   self.state = "running"
 
   self:draw_map(MAP)
@@ -152,15 +154,17 @@ function Game:update(delta_time)
     return
   end
 
+  local speed = SPEED * (self.length / SPEED_RATIO)
+
   self.grid:process(function(column, row, value)
       if value <= 0 then
         return column, row, value
       end
-      value = math.max(value - SPEED * delta_time, 0)
+      value = math.max(value - speed * delta_time, 0)
       return column, row, value
     end)
 
-  self.accumulator = self.accumulator + SPEED * delta_time
+  self.accumulator = self.accumulator + speed * delta_time
   while self.accumulator >= LIFE do
     self.can_move = true
 
