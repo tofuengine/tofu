@@ -20,23 +20,56 @@
  * SOFTWARE.
  **/
 
-#include "main.h"
+#include "file.h"
 
-#include <core/engine.h>
+#include <config.h>
+#include <core/environment.h>
 #include <libs/log.h>
 
-#include <stdlib.h>
+#include "udt.h"
 
-int main(int argc, char **argv)
+#include <string.h>
+#ifdef DEBUG
+  #include <external/stb/stb_leakcheck.h>
+#endif
+
+#define FILE_MT        "Tofu_File_mt"
+
+static int file_read(lua_State *L);
+
+static const struct luaL_Reg _file_functions[] = {
+    { "read", file_read },
+    { NULL, NULL }
+};
+
+static const luaX_Const _file_constants[] = {
+    { NULL }
+};
+
+int file_loader(lua_State *L)
 {
-    Engine_t engine = { 0 };
-    bool result = Engine_initialize(&engine, (argc > 1) ? argv[1] : NULL);
-    if (!result) {
-        Log_write(LOG_LEVELS_FATAL, "<MAIN> can't initialize engine");
-        return EXIT_FAILURE;
-    }
-    Engine_run(&engine);
-    Engine_terminate(&engine);
+    int nup = luaX_unpackupvalues(L);
+    return luaX_newmodule(L, NULL, _file_functions, _file_constants, nup, FILE_MT);
+}
 
-    return EXIT_SUCCESS;
+static int file_read(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
+    LUAX_SIGNATURE_END
+    const char *file = lua_tostring(L, 1);
+#ifdef __DEBUG_API_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, "File.read() -> %s", file);
+#endif
+
+    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+
+    char *result = FS_load_as_string(&environment->fs, file);
+    Log_write(LOG_LEVELS_DEBUG, "<FILE> file '%s' loaded at %p", file, result);
+
+    lua_pushstring(L, result);
+
+    free(result);
+
+    return 1;
 }

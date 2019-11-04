@@ -20,23 +20,27 @@
  * SOFTWARE.
  **/
 
-#include "main.h"
+#ifndef __LIBS_LOG_H__
+#define __LIBS_LOG_H__
 
-#include <core/engine.h>
-#include <libs/log.h>
+#include <stdbool.h>
+#include <stdio.h>
 
-#include <stdlib.h>
+typedef enum _Log_Levels_t {
+    LOG_LEVELS_ALL,
+    LOG_LEVELS_TRACE,
+    LOG_LEVELS_DEBUG,
+    LOG_LEVELS_INFO,
+    LOG_LEVELS_WARNING,
+    LOG_LEVELS_ERROR,
+    LOG_LEVELS_FATAL,
+    LOG_LEVELS_NONE,
+    Log_Levels_t_CountOf
+} Log_Levels_t;
 
-int main(int argc, char **argv)
-{
-    Engine_t engine = { 0 };
-    bool result = Engine_initialize(&engine, (argc > 1) ? argv[1] : NULL);
-    if (!result) {
-        Log_write(LOG_LEVELS_FATAL, "<MAIN> can't initialize engine");
-        return EXIT_FAILURE;
-    }
-    Engine_run(&engine);
-    Engine_terminate(&engine);
+extern void Log_initialize();
+extern void Log_configure(bool enabled);
+extern void Log_redirect(FILE *stream);
+extern void Log_write(Log_Levels_t level, const char *text, ...);
 
-    return EXIT_SUCCESS;
-}
+#endif  /* __LIBS_LOG_H__ */

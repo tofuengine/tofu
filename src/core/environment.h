@@ -20,23 +20,25 @@
  * SOFTWARE.
  **/
 
-#include "main.h"
+#ifndef __ENVIRONMENT_H__
+#define __ENVIRONMENT_H__
 
-#include <core/engine.h>
-#include <libs/log.h>
+#include <core/io/fs.h>
+#include <core/vm/timerpool.h>
 
-#include <stdlib.h>
+#include <stdbool.h>
 
-int main(int argc, char **argv)
-{
-    Engine_t engine = { 0 };
-    bool result = Engine_initialize(&engine, (argc > 1) ? argv[1] : NULL);
-    if (!result) {
-        Log_write(LOG_LEVELS_FATAL, "<MAIN> can't initialize engine");
-        return EXIT_FAILURE;
-    }
-    Engine_run(&engine);
-    Engine_terminate(&engine);
+typedef struct _Environment_t {
+    File_System_t fs;
 
-    return EXIT_SUCCESS;
-}
+    bool quit;
+    float fps;
+    float time;
+
+    Timer_Pool_t *timer_pool;
+} Environment_t;
+
+extern void Environment_initialize(Environment_t *environment, const char *base_path);
+extern void Environment_terminate(Environment_t *environment);
+
+#endif  /* __ENVIRONMENT_H__ */

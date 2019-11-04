@@ -20,23 +20,13 @@
  * SOFTWARE.
  **/
 
-#include "main.h"
+#ifndef __TOFU_MODULES_H__
+#define __TOFU_MODULES_H__
 
-#include <core/engine.h>
-#include <libs/log.h>
+#include <stdbool.h>
 
-#include <stdlib.h>
+#include <external/lua/lua.h>
 
-int main(int argc, char **argv)
-{
-    Engine_t engine = { 0 };
-    bool result = Engine_initialize(&engine, (argc > 1) ? argv[1] : NULL);
-    if (!result) {
-        Log_write(LOG_LEVELS_FATAL, "<MAIN> can't initialize engine");
-        return EXIT_FAILURE;
-    }
-    Engine_run(&engine);
-    Engine_terminate(&engine);
+extern void modules_initialize(lua_State *L, int nup);
 
-    return EXIT_SUCCESS;
-}
+#endif  /* __TOFU_MODULES_H__ */

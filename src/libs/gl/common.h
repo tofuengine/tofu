@@ -20,23 +20,51 @@
  * SOFTWARE.
  **/
 
-#include "main.h"
+#ifndef __GL_COMMON_H__
+#define __GL_COMMON_H__
 
-#include <core/engine.h>
-#include <libs/log.h>
+#include <stdint.h>
 
-#include <stdlib.h>
+#include <external/glad/glad.h>
+#include <external/GLFW/glfw3.h>
 
-int main(int argc, char **argv)
-{
-    Engine_t engine = { 0 };
-    bool result = Engine_initialize(&engine, (argc > 1) ? argv[1] : NULL);
-    if (!result) {
-        Log_write(LOG_LEVELS_FATAL, "<MAIN> can't initialize engine");
-        return EXIT_FAILURE;
-    }
-    Engine_run(&engine);
-    Engine_terminate(&engine);
+typedef uint8_t GL_Pixel_t;
 
-    return EXIT_SUCCESS;
-}
+typedef int8_t GL_Bool_t;
+
+typedef struct _GL_Point_t {
+    int x, y;
+} GL_Point_t;
+
+typedef struct _GL_Size_t {
+    int width, height;
+} GL_Size_t;
+
+typedef struct _GL_Rectangle_t {
+    int x, y;
+    unsigned int width, height;
+} GL_Rectangle_t;
+
+typedef struct _GL_Quad_t {
+    int x0, y0;
+    int x1, y1;
+} GL_Quad_t;
+
+#pragma pack(push, 1)
+#ifdef __GL_BGRA_PALETTE__
+typedef struct _GL_Color_t {
+    GLubyte b, g, r, a;
+} GL_Color_t;
+#else
+typedef struct _GL_Color_t {
+    GLubyte r, g, b, a;
+} GL_Color_t;
+#endif
+#pragma pack(pop)
+
+#define GL_DEGREES_OVER_RADIANS 57.295779513082320876798154814105
+
+#define GL_BOOL_FALSE   0
+#define GL_BOOL_TRUE    1
+
+#endif  /* __GL_COMMON_H__ */

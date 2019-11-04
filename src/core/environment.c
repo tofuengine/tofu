@@ -20,23 +20,30 @@
  * SOFTWARE.
  **/
 
-#include "main.h"
-
-#include <core/engine.h>
-#include <libs/log.h>
+#include "environment.h"
 
 #include <stdlib.h>
+#include <string.h>
+#ifdef DEBUG
+  #include <external/stb/stb_leakcheck.h>
+#endif
 
-int main(int argc, char **argv)
+// TODO: http://www.ilikebigbits.com/2017_06_01_float_or_double.html
+
+void Environment_initialize(Environment_t *environment, const char *base_path)
 {
-    Engine_t engine = { 0 };
-    bool result = Engine_initialize(&engine, (argc > 1) ? argv[1] : NULL);
-    if (!result) {
-        Log_write(LOG_LEVELS_FATAL, "<MAIN> can't initialize engine");
-        return EXIT_FAILURE;
-    }
-    Engine_run(&engine);
-    Engine_terminate(&engine);
+    *environment = (Environment_t){
+        .quit = false,
+        .fps = 0.0f,
+        .time = 0.0f
+    };
 
-    return EXIT_SUCCESS;
+    FS_initialize(&environment->fs, base_path);
+}
+
+void Environment_terminate(Environment_t *environment)
+{
+    FS_terminate(&environment->fs);
+
+    *environment = (Environment_t){ 0 };
 }

@@ -20,23 +20,11 @@
  * SOFTWARE.
  **/
 
-#include "main.h"
+#ifndef __MODULES_CLASS_H__
+#define __MODULES_CLASS_H__
 
-#include <core/engine.h>
-#include <libs/log.h>
+#include <external/lua/lua.h>
 
-#include <stdlib.h>
+extern int class_loader(lua_State *L);
 
-int main(int argc, char **argv)
-{
-    Engine_t engine = { 0 };
-    bool result = Engine_initialize(&engine, (argc > 1) ? argv[1] : NULL);
-    if (!result) {
-        Log_write(LOG_LEVELS_FATAL, "<MAIN> can't initialize engine");
-        return EXIT_FAILURE;
-    }
-    Engine_run(&engine);
-    Engine_terminate(&engine);
-
-    return EXIT_SUCCESS;
-}
+#endif  /* __MODULES_CLASS_H__ */

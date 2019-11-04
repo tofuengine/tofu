@@ -20,23 +20,30 @@
  * SOFTWARE.
  **/
 
-#include "main.h"
+#ifndef __CONFIGURATION_H__
+#define __CONFIGURATION_H__
 
-#include <core/engine.h>
-#include <libs/log.h>
+#include <stdbool.h>
 
-#include <stdlib.h>
+#include <external/lua/lua.h>
 
-int main(int argc, char **argv)
-{
-    Engine_t engine = { 0 };
-    bool result = Engine_initialize(&engine, (argc > 1) ? argv[1] : NULL);
-    if (!result) {
-        Log_write(LOG_LEVELS_FATAL, "<MAIN> can't initialize engine");
-        return EXIT_FAILURE;
-    }
-    Engine_run(&engine);
-    Engine_terminate(&engine);
+#define MAX_CONFIGURATION_TITLE_LENGTH      128
+#define MAX_CONFIGURATION_FRAME_CAPS        4
 
-    return EXIT_SUCCESS;
-}
+typedef struct _Configuration {
+    char title[MAX_CONFIGURATION_TITLE_LENGTH];
+    int width, height, scale;
+    bool fullscreen;  // TODO: rename to "windowed"?
+    int fps; // TODO: rename to "frequency"?
+    int skippable_frames;
+    float frame_caps[MAX_CONFIGURATION_FRAME_CAPS]; // We are storing the reciprocal of the FPS, i.e. the frame times.
+    bool hide_cursor;
+    bool exit_key_enabled;
+    bool debug;
+    // TODO: key-remapping?
+} Configuration_t;
+
+extern void Configuration_initialize(Configuration_t *configuration);
+extern void Configuration_parse(lua_State *L, Configuration_t *configuration);
+
+#endif  /* __CONFIGURATION_H__ */

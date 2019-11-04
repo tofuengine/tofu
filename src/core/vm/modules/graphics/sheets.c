@@ -20,23 +20,32 @@
  * SOFTWARE.
  **/
 
-#include "main.h"
+#include "sheets.h"
 
-#include <core/engine.h>
-#include <libs/log.h>
+#include <external/spleen/spleen.h>
 
-#include <stdlib.h>
+#include <strings.h>
 
-int main(int argc, char **argv)
+typedef struct _Predefined_Sheet_t {
+    const char *id;
+    Sheet_Data_t data;
+} Predefined_Sheet_t;
+
+static const Predefined_Sheet_t _sheets[] = {
+    { "5x8", { spleen_5x8_png, spleen_5x8_png_len, 5, 8 } },
+    { "8x16", { spleen_8x16_png, spleen_8x16_png_len, 8, 16 } },
+    { "12x24", { spleen_12x24_png, spleen_12x24_png_len, 12,24 } },
+    { "16x32", { spleen_16x32_png, spleen_16x32_png_len, 16, 32 } },
+    { "32x64", { spleen_32x64_png, spleen_32x64_png_len, 32, 64 } },
+    { NULL, { 0 } }
+};
+
+const Sheet_Data_t *graphics_sheets_find(const char *id)
 {
-    Engine_t engine = { 0 };
-    bool result = Engine_initialize(&engine, (argc > 1) ? argv[1] : NULL);
-    if (!result) {
-        Log_write(LOG_LEVELS_FATAL, "<MAIN> can't initialize engine");
-        return EXIT_FAILURE;
+    for (const Predefined_Sheet_t *sheet = _sheets; sheet->id != NULL; ++sheet) {
+        if (strcasecmp(sheet->id, id) == 0) {
+            return &sheet->data;
+        }
     }
-    Engine_run(&engine);
-    Engine_terminate(&engine);
-
-    return EXIT_SUCCESS;
+    return NULL;
 }

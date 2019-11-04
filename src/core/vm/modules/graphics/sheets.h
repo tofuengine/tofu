@@ -20,23 +20,17 @@
  * SOFTWARE.
  **/
 
-#include "main.h"
+#ifndef __GRAPHICS_SHEETS_H__
+#define __GRAPHICS_SHEETS_H__
 
-#include <core/engine.h>
-#include <libs/log.h>
+#include <stddef.h>
 
-#include <stdlib.h>
+typedef struct _Sheet_Data_t {
+    const void *buffer;
+    size_t size;
+    int quad_width, quad_height;
+} Sheet_Data_t;
 
-int main(int argc, char **argv)
-{
-    Engine_t engine = { 0 };
-    bool result = Engine_initialize(&engine, (argc > 1) ? argv[1] : NULL);
-    if (!result) {
-        Log_write(LOG_LEVELS_FATAL, "<MAIN> can't initialize engine");
-        return EXIT_FAILURE;
-    }
-    Engine_run(&engine);
-    Engine_terminate(&engine);
+extern const Sheet_Data_t *graphics_sheets_find(const char *id);
 
-    return EXIT_SUCCESS;
-}
+#endif  /* __GRAPHICS_SHEETS_H__ */
