@@ -29,26 +29,11 @@
 #include <config.h>
 #include <libs/gl/gl.h>
 
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
 #include <stdbool.h>
 #include <stddef.h>
-
-typedef enum _Display_Keys_t {
-    Display_Keys_t_First = 0,
-    DISPLAY_KEY_UP = Display_Keys_t_First,
-    DISPLAY_KEY_DOWN,
-    DISPLAY_KEY_LEFT,
-    DISPLAY_KEY_RIGHT,
-    DISPLAY_KEY_LT,
-    DISPLAY_KEY_RT,
-    DISPLAY_KEY_Y,
-    DISPLAY_KEY_X,
-    DISPLAY_KEY_B,
-    DISPLAY_KEY_A,
-    DISPLAY_KEY_SELECT,
-    DISPLAY_KEY_START,
-    Display_Keys_t_Last = DISPLAY_KEY_START,
-    Display_Keys_t_CountOf
-} Display_Keys_t;
 
 typedef enum _Display_Programs_t {
     Display_Programs_t_First = 0,
@@ -62,20 +47,10 @@ typedef struct _Display_Configuration_t {
     int width, height, scale;
     bool fullscreen;
     bool hide_cursor;
-    bool exit_key_enabled;
 } Display_Configuration_t;
-
-typedef struct _Display_Key_State_t { // TODO: use explicit masks?
-    uint8_t down : 1;
-    uint8_t pressed : 1;
-    uint8_t released : 1;
-    uint8_t : 5;
-} Display_Key_State_t;
 
 typedef struct _Display_t {
     Display_Configuration_t configuration;
-
-    Display_Key_State_t keys_state[Display_Keys_t_CountOf];
 
     GLFWwindow *window;
     int window_width, window_height, window_scale;
@@ -95,7 +70,6 @@ typedef struct _Display_t {
 extern bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title);
 extern void Display_terminate(Display_t *display);
 extern bool Display_should_close(Display_t *display);
-extern void Display_process_input(Display_t *display); // Create `Input_t` class and pass delta-time.
 extern void Display_present(Display_t *display);
 
 extern void Display_shader(Display_t *display, const char *code);

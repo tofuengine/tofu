@@ -23,7 +23,8 @@
 #include "surface.h"
 
 #include <config.h>
-#include <core/environment.h>
+#include <core/io/display.h>
+#include <core/io/fs.h>
 #include <core/vm/interpreter.h>
 #include <libs/log.h>
 
@@ -129,11 +130,11 @@ static int surface_new1(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Surface.new() -> %s", file);
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(3));
+    File_System_t *fs = (File_System_t *)lua_touserdata(L, lua_upvalueindex(5));
 
     size_t buffer_size;
-    void *buffer = FS_load_as_binary(&environment->fs, file, &buffer_size);
+    void *buffer = FS_load_as_binary(fs, file, &buffer_size);
     if (!buffer) {
         return luaL_error(L, "<SURFACE> can't load file '%s'", file);
     }
@@ -213,7 +214,7 @@ static int surface_gc(lua_State *L)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(3));
 
     GL_Context_t *context = &display->gl;
     GL_context_sanitize(context, &instance->surface);
@@ -263,7 +264,7 @@ static int surface_grab(lua_State *L)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(3));
 
     const GL_Context_t *context = &display->gl;
     GL_context_to_surface(context, &instance->surface);
@@ -281,7 +282,7 @@ static int surface_blit1(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Surface.blit()");
 #endif
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(3));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
@@ -304,7 +305,7 @@ static int surface_blit3(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Surface.blit() -> %d, %d", x, y);
 #endif
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(3));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
@@ -329,7 +330,7 @@ static int surface_blit4(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Surface.blit() -> %d, %d, %d", x, y, rotation);
 #endif
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(3));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface; // TODO: fix explicit struct elements
@@ -356,7 +357,7 @@ static int surface_blit5(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Surface.blit() -> %d, %d, %.f, %.f", x, y, scale_x, scale_y);
 #endif
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(3));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
@@ -385,7 +386,7 @@ static int surface_blit6(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Surface.blit() -> %d, %d, %.f, %.f, %d", x, y, scale_x, scale_y, rotation);
 #endif
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(3));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
@@ -416,7 +417,7 @@ static int surface_blit7(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Surface.blit() -> %d, %d, %d, %d, %d, %d", x, y, ox, oy, width, height);
 #endif
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(3));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
@@ -451,7 +452,7 @@ static int surface_blit9(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Surface.blit() -> %d, %d, %d, %d, %d, %d, %.f, %.f", x, y, ox, oy, width, height, scale_x, scale_y);
 #endif
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(3));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
@@ -488,7 +489,7 @@ static int surface_blit10(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Surface.blit() -> %d, %d, %.d, %d, %d, %d, %.f, %.f, %d", x, y, ox, oy, width, height, scale_x, scale_y, rotation);
 #endif
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(3));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
@@ -529,7 +530,7 @@ static int surface_xform1(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Surface.xform()");
 #endif
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(3));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
@@ -552,7 +553,7 @@ static int surface_xform3(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Surface.xform() -> %d, %d", x, y);
 #endif
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(3));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;

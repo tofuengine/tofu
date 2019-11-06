@@ -24,6 +24,9 @@
 
 #include <libs/log.h>
 
+#include <GLFW/glfw3.h>
+#include <glad/glad.h>
+
 #include <stdlib.h>
 #ifdef DEBUG
   #include <stb/stb_leakcheck.h>

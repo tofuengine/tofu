@@ -28,22 +28,20 @@
 
 #include <core/configuration.h>
 #include <core/environment.h>
-#include <core/io/display.h>
+#include <core/io/fs.h>
 #include <core/vm/timerpool.h>
 
 #include <libs/luax.h>
 
 typedef struct _Interpreter_t {
-    const Environment_t *environment;
-
     float gc_age;
 
     lua_State *state; // TODO: rename to `L`?
 
-    Timer_Pool_t timer_pool;
+    Timer_Pool_t timer_pool; // TODO: need the timer pool point be shared?
 } Interpreter_t;
 
-extern bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configuration, const Environment_t *environment, const Display_t *display);
+extern bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configuration, const File_System_t *fs, const void *userdatas[]);
 extern void Interpreter_terminate(Interpreter_t *interpreter);
 extern bool Interpreter_init(Interpreter_t *interpreter);
 extern bool Interpreter_input(Interpreter_t *interpreter);

@@ -23,8 +23,8 @@
 #include "font.h"
 
 #include <config.h>
-#include <core/environment.h>
 #include <core/io/display.h>
+#include <core/io/fs.h>
 #include <libs/log.h>
 #include <libs/gl/gl.h>
 
@@ -127,7 +127,7 @@ static int font_new(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Font.new() -> %d, %d, %d, %d, %d", type, glyph_width, glyph_height, background_color, foreground_color);
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    File_System_t *fs = (File_System_t *)lua_touserdata(L, lua_upvalueindex(5));
 
     GL_Sheet_t sheet;
 
@@ -142,7 +142,7 @@ static int font_new(lua_State *L)
             Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet '%s' decoded", file);
         } else {
             size_t buffer_size;
-            void *buffer = FS_load_as_binary(&environment->fs, file, &buffer_size);
+            void *buffer = FS_load_as_binary(fs, file, &buffer_size);
             if (!buffer) {
                 return luaL_error(L, "<FONT> can't load file '%s'", file);
             }
@@ -207,7 +207,7 @@ static int font_write5(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %s, %d, %d, %s", text, x, y, alignment);
 #endif
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(3));
 
     const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
@@ -257,7 +257,7 @@ static int font_write6(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %s, %f, %f, %f, %s", text, x, y, scale, alignment);
 #endif
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(3));
 
     const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
@@ -309,7 +309,7 @@ static int font_write7(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %s, %f, %f, %f, %f, %s", text, x, y, scale_x, scale_y, alignment);
 #endif
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(3));
 
     const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;

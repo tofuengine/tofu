@@ -20,35 +20,55 @@
  * SOFTWARE.
  **/
 
-#ifndef __ENGINE_H__
-#define __ENGINE_H__
+#ifndef __INPUT_H__
+#define __INPUT_H__
 
-#include <config.h>
-#include <core/configuration.h>
-#include <core/environment.h>
-#include <core/io/audio.h>
-#include <core/io/display.h>
-#include <core/io/fs.h>
-#include <core/io/input.h>
-#include <core/vm/interpreter.h>
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 
 #include <stdbool.h>
-#include <limits.h>
+#include <stdint.h>
 
-typedef struct _Engine_t {
-    Configuration_t configuration;
+typedef enum _Input_Keys_t {
+    Input_Keys_t_First = 0,
+    INPUT_KEY_UP = Input_Keys_t_First,
+    INPUT_KEY_DOWN,
+    INPUT_KEY_LEFT,
+    INPUT_KEY_RIGHT,
+    INPUT_KEY_LT,
+    INPUT_KEY_RT,
+    INPUT_KEY_Y,
+    INPUT_KEY_X,
+    INPUT_KEY_B,
+    INPUT_KEY_A,
+    INPUT_KEY_SELECT,
+    INPUT_KEY_START,
+    Input_Keys_t_Last = INPUT_KEY_START,
+    Input_Keys_t_CountOf
+} Input_Keys_t;
 
-    Interpreter_t interpreter;
-    Audio_t audio;
-    Display_t display;
-    Input_t input;
-    File_System_t fs;
+typedef struct _Input_Key_State_t { // TODO: use explicit masks?
+    uint8_t down : 1;
+    uint8_t pressed : 1;
+    uint8_t released : 1;
+    uint8_t : 5;
+} Input_Key_State_t;
 
-    Environment_t environment;
-} Engine_t;
+typedef struct _Input_Configuration_t {
+    bool exit_key_enabled;
+} Input_Configuration_t;
 
-extern bool Engine_initialize(Engine_t *engine, const char *base_path);
-extern void Engine_terminate(Engine_t *engine);
-extern void Engine_run(Engine_t *engine);
+typedef struct _Input_t {
+    Input_Configuration_t configuration;
 
-#endif  /* __ENGINE_H__ */
+    GLFWwindow *window;
+
+    Input_Key_State_t keys_state[Input_Keys_t_CountOf];
+} Input_t;
+
+extern bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration, GLFWwindow *window);
+extern void Input_terminate(Input_t *input);
+
+extern void Input_process(Input_t *input, float delta_time);
+
+#endif  /* __INPUT_H__ */

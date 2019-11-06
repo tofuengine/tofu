@@ -23,9 +23,12 @@
 #ifndef __GL_PROGRAM_H__
 #define __GL_PROGRAM_H__
 
-#include <stdbool.h>
-
 #include "common.h"
+
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
+#include <stdbool.h>
 
 // TODO: move program.h out from GL to Display.
 

@@ -24,7 +24,7 @@
 
 #include <config.h>
 #include <core/environment.h>
-#include <core/io/display.h>
+#include <core/io/input.h>
 #include <libs/log.h>
 
 #include "udt.h"
@@ -48,18 +48,18 @@ static const struct luaL_Reg _input_functions[] = {
 
 // TODO: implement triggers delay/repeat.
 static const luaX_Const _input_constants[] = {
-    { "UP", LUA_CT_INTEGER, { .i = DISPLAY_KEY_UP } },
-    { "DOWN", LUA_CT_INTEGER, { .i = DISPLAY_KEY_DOWN } },
-    { "LEFT", LUA_CT_INTEGER, { .i = DISPLAY_KEY_LEFT } },
-    { "RIGHT", LUA_CT_INTEGER, { .i = DISPLAY_KEY_RIGHT } },
-    { "LT", LUA_CT_INTEGER, { .i = DISPLAY_KEY_LT } },
-    { "RT", LUA_CT_INTEGER, { .i = DISPLAY_KEY_RT } },
-    { "Y", LUA_CT_INTEGER, { .i = DISPLAY_KEY_Y } },
-    { "X", LUA_CT_INTEGER, { .i = DISPLAY_KEY_X } },
-    { "B", LUA_CT_INTEGER, { .i = DISPLAY_KEY_B } },
-    { "A", LUA_CT_INTEGER, { .i = DISPLAY_KEY_A } },
-    { "SELECT", LUA_CT_INTEGER, { .i = DISPLAY_KEY_SELECT } },
-    { "START", LUA_CT_INTEGER, { .i = DISPLAY_KEY_START } },
+    { "UP", LUA_CT_INTEGER, { .i = INPUT_KEY_UP } },
+    { "DOWN", LUA_CT_INTEGER, { .i = INPUT_KEY_DOWN } },
+    { "LEFT", LUA_CT_INTEGER, { .i = INPUT_KEY_LEFT } },
+    { "RIGHT", LUA_CT_INTEGER, { .i = INPUT_KEY_RIGHT } },
+    { "LT", LUA_CT_INTEGER, { .i = INPUT_KEY_LT } },
+    { "RT", LUA_CT_INTEGER, { .i = INPUT_KEY_RT } },
+    { "Y", LUA_CT_INTEGER, { .i = INPUT_KEY_Y } },
+    { "X", LUA_CT_INTEGER, { .i = INPUT_KEY_X } },
+    { "B", LUA_CT_INTEGER, { .i = INPUT_KEY_B } },
+    { "A", LUA_CT_INTEGER, { .i = INPUT_KEY_A } },
+    { "SELECT", LUA_CT_INTEGER, { .i = INPUT_KEY_SELECT } },
+    { "START", LUA_CT_INTEGER, { .i = INPUT_KEY_START } },
     { NULL }
 };
 
@@ -76,9 +76,9 @@ static int input_is_key_down(lua_State *L)
     LUAX_SIGNATURE_END
     int key = lua_tointeger(L, 1);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+    Input_t *input = (Input_t *)lua_touserdata(L, lua_upvalueindex(4));
 
-    bool is_down = (key >= Display_Keys_t_First && key <= Display_Keys_t_Last) ? display->keys_state[key].down : false;
+    bool is_down = (key >= Input_Keys_t_First && key <= Input_Keys_t_Last) ? input->keys_state[key].down : false;
 
     lua_pushboolean(L, is_down);
     return 1;
@@ -91,9 +91,9 @@ static int input_is_key_up(lua_State *L)
     LUAX_SIGNATURE_END
     int key = lua_tointeger(L, 1);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+    Input_t *input = (Input_t *)lua_touserdata(L, lua_upvalueindex(4));
 
-    bool is_down = (key >= Display_Keys_t_First && key <= Display_Keys_t_Last) ? display->keys_state[key].down : false;
+    bool is_down = (key >= Input_Keys_t_First && key <= Input_Keys_t_Last) ? input->keys_state[key].down : false;
 
     lua_pushboolean(L, !is_down);
     return 1;
@@ -106,9 +106,9 @@ static int input_is_key_pressed(lua_State *L)
     LUAX_SIGNATURE_END
     int key = lua_tointeger(L, 1);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+    Input_t *input = (Input_t *)lua_touserdata(L, lua_upvalueindex(4));
 
-    bool is_pressed = (key >= Display_Keys_t_First && key <= Display_Keys_t_Last) ? display->keys_state[key].pressed : false;
+    bool is_pressed = (key >= Input_Keys_t_First && key <= Input_Keys_t_Last) ? input->keys_state[key].pressed : false;
 
     lua_pushboolean(L, is_pressed);
     return 1;
@@ -121,9 +121,9 @@ static int input_is_key_released(lua_State *L)
     LUAX_SIGNATURE_END
     int key = lua_tointeger(L, 1);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(2));
+    Input_t *input = (Input_t *)lua_touserdata(L, lua_upvalueindex(4));
 
-    bool is_released = (key >= Display_Keys_t_First && key <= Display_Keys_t_Last) ? display->keys_state[key].released : false;
+    bool is_released = (key >= Input_Keys_t_First && key <= Input_Keys_t_Last) ? input->keys_state[key].released : false;
 
     lua_pushboolean(L, is_released);
     return 1;

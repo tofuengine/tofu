@@ -93,9 +93,17 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 {
     Log_initialize();
     Environment_initialize(&engine->environment, base_path);
+    FS_initialize(&engine->fs, base_path);
     Configuration_initialize(&engine->configuration);
 
-    bool result = Interpreter_initialize(&engine->interpreter, &engine->configuration, &engine->environment, &engine->display);
+    const void *userdatas[] = {
+            &engine->interpreter,
+            &engine->environment,
+            &engine->display,
+            &engine->input,
+            &engine->fs,
+        };
+    bool result = Interpreter_initialize(&engine->interpreter, &engine->configuration, &engine->fs, userdatas);
     if (!result) {
         Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't initialize interpreter");
         return false;
@@ -108,8 +116,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             .height = engine->configuration.height,
             .fullscreen = engine->configuration.fullscreen,
             .scale = engine->configuration.scale,
-            .hide_cursor = engine->configuration.hide_cursor,
-            .exit_key_enabled = engine->configuration.exit_key_enabled,
+            .hide_cursor = engine->configuration.hide_cursor
         };
     result = Display_initialize(&engine->display, &display_configuration, engine->configuration.title);
     if (!result) {
@@ -118,11 +125,23 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
         return false;
     }
 
+    Input_Configuration_t input_configuration = {
+            .exit_key_enabled = engine->configuration.exit_key_enabled,
+        };
+    result = Input_initialize(&engine->input, &input_configuration, engine->display.window);
+    if (!result) {
+        Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't initialize input");
+        Interpreter_terminate(&engine->interpreter);
+        Display_terminate(&engine->display);
+        return false;
+    }
+
     result = Audio_initialize(&engine->audio, &(Audio_Configuration_t){ .channels = 2, .sample_rate = 44100, .voices = 8 });
     if (!result) {
         Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't initialize audio");
         Interpreter_terminate(&engine->interpreter);
         Display_terminate(&engine->display);
+        Input_terminate(&engine->input);
         return false;
     }
 
@@ -132,8 +151,9 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
     if (!result) {
         Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't call init method");
         Interpreter_terminate(&engine->interpreter);
-        Audio_terminate(&engine->audio);
         Display_terminate(&engine->display);
+        Input_terminate(&engine->input);
+        Audio_terminate(&engine->audio);
         return false;
     }
 
@@ -143,9 +163,12 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 void Engine_terminate(Engine_t *engine)
 {
     Interpreter_terminate(&engine->interpreter); // Terminate the interpreter to unlock all resources.
-    Audio_terminate(&engine->audio);
     Display_terminate(&engine->display);
+    Input_terminate(&engine->input);
+    Audio_terminate(&engine->audio);
+
     Environment_terminate(&engine->environment);
+    FS_terminate(&engine->fs);
 #if DEBUG
     stb_leakcheck_dumpmem();
 #endif
@@ -182,7 +205,7 @@ void Engine_run(Engine_t *engine)
 #endif
         }
 
-        Display_process_input(&engine->display);
+        Input_process(&engine->input, delta_time);
         running = running && Interpreter_input(&engine->interpreter); // Lazy evaluate `running`, will avoid calls when error.
 
         lag += elapsed; // Count a maximum amount of skippable frames in order no to stall on slower machines.

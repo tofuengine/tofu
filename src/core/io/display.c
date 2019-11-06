@@ -357,49 +357,6 @@ bool Display_should_close(Display_t *display)
     return glfwWindowShouldClose(display->window);
 }
 
-void Display_process_input(Display_t *display)
-{
-    static const int keys[Display_Keys_t_CountOf] = {
-        GLFW_KEY_UP,
-        GLFW_KEY_DOWN,
-        GLFW_KEY_LEFT,
-        GLFW_KEY_RIGHT,
-        GLFW_KEY_LEFT_CONTROL,
-        GLFW_KEY_RIGHT_CONTROL,
-        GLFW_KEY_Z,
-        GLFW_KEY_S,
-        GLFW_KEY_X,
-        GLFW_KEY_D,
-        GLFW_KEY_ENTER,
-        GLFW_KEY_SPACE
-    };
-
-    glfwPollEvents();
-
-    for (int i = 0; i < Display_Keys_t_CountOf; ++i) {
-        Display_Key_State_t *key_state = &display->keys_state[i];
-        bool was_down = key_state->down;
-        bool is_down = glfwGetKey(display->window, keys[i]) == GLFW_PRESS;
-/*
-        if (key_state->auto_trigger > 0.0f) {
-            while (key_state->accumulator >= key_state->auto_trigger) {
-                key_state->accumulator -= key_state->auto_trigger;
-                is_down = true;
-            }
-        }
-*/
-        key_state->down = is_down;
-        key_state->pressed = !was_down && is_down;
-        key_state->released = was_down && !is_down;
-    }
-
-    if (display->configuration.exit_key_enabled) {
-        if (glfwGetKey(display->window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-            glfwSetWindowShouldClose(display->window, true);
-        }
-    }
-}
-
 void Display_present(Display_t *display)
 {
     GLfloat time[] = { (GLfloat)glfwGetTime() };

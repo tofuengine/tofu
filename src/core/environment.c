@@ -37,13 +37,9 @@ void Environment_initialize(Environment_t *environment, const char *base_path)
         .fps = 0.0f,
         .time = 0.0f
     };
-
-    FS_initialize(&environment->fs, base_path);
 }
 
 void Environment_terminate(Environment_t *environment)
 {
-    FS_terminate(&environment->fs);
-
     *environment = (Environment_t){ 0 };
 }

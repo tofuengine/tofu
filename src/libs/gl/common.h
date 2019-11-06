@@ -25,9 +25,6 @@
 
 #include <stdint.h>
 
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-
 typedef uint8_t GL_Pixel_t;
 
 typedef int8_t GL_Bool_t;
@@ -53,11 +50,11 @@ typedef struct _GL_Quad_t {
 #pragma pack(push, 1)
 #ifdef __GL_BGRA_PALETTE__
 typedef struct _GL_Color_t {
-    GLubyte b, g, r, a;
+    uint8_t b, g, r, a;
 } GL_Color_t;
 #else
 typedef struct _GL_Color_t {
-    GLubyte r, g, b, a;
+    uint8_t r, g, b, a;
 } GL_Color_t;
 #endif
 #pragma pack(pop)

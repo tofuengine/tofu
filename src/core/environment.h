@@ -23,14 +23,11 @@
 #ifndef __ENVIRONMENT_H__
 #define __ENVIRONMENT_H__
 
-#include <core/io/fs.h>
 #include <core/vm/timerpool.h>
 
 #include <stdbool.h>
 
 typedef struct _Environment_t {
-    File_System_t fs;
-
     bool quit;
     float fps;
     float time;

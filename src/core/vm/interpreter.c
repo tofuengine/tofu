@@ -234,9 +234,8 @@ static bool timerpool_callback(Timer_t *timer, void *parameters)
     return result == LUA_OK;
 }
 
-bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configuration, const Environment_t *environment, const Display_t *display)
+bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configuration, const File_System_t *fs, const void *userdatas[])
 {
-    interpreter->environment = environment;
     interpreter->gc_age = 0.0f;
     interpreter->state = luaL_newstate();
     if (!interpreter->state) {
@@ -247,17 +246,16 @@ bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configu
 
     luaL_openlibs(interpreter->state);
 
-    lua_pushlightuserdata(interpreter->state, (void *)environment); // Discard `const` qualifier.
-    lua_pushlightuserdata(interpreter->state, (void *)display);
-    lua_pushlightuserdata(interpreter->state, (void *)interpreter);
-    modules_initialize(interpreter->state, 3);
+    lua_pushlightuserdata(interpreter->state, (void *)interpreter); // Discard `const` qualifier.
+    int nup = 0;
+    for (int i = 0; userdatas[i]; ++i) {
+        lua_pushlightuserdata(interpreter->state, (void *)userdatas[i]);
+        nup += 1;
+    }
+    modules_initialize(interpreter->state, nup);
 
-#if 0
-    luaX_appendpath(interpreter->state, environment->base_path);
-#else
-    lua_pushlightuserdata(interpreter->state, (void *)&environment->fs);
+    lua_pushlightuserdata(interpreter->state, (void *)fs);
     luaX_overridesearchers(interpreter->state, custom_searcher, 1);
-#endif
 
 #ifdef __DEBUG_VM_CALLS__
 #ifndef __VM_USE_CUSTOM_TRACEBACK__
