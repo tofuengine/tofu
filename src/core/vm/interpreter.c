@@ -253,7 +253,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configu
     }
     modules_initialize(interpreter->state, nup);
 
-    lua_pushlightuserdata(interpreter->state, (void *)fs);
+    lua_pushlightuserdata(interpreter->state, (void *)fs); // TODO: should the FS belong to the interpreter?
     luaX_overridesearchers(interpreter->state, custom_searcher, 1);
 
 #ifdef __DEBUG_VM_CALLS__

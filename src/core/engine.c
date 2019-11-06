@@ -101,7 +101,8 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             &engine->environment,
             &engine->display,
             &engine->input,
-            &engine->fs
+            &engine->fs,
+            NULL
         };
     bool result = Interpreter_initialize(&engine->interpreter, &engine->configuration, &engine->fs, userdatas);
     if (!result) {
