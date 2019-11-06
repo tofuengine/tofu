@@ -62,7 +62,7 @@ static int file_read(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "File.read() -> %s", file);
 #endif
 
-    File_System_t *fs = (File_System_t *)lua_touserdata(L, lua_upvalueindex(5));
+    File_System_t *fs = (File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILESYSTEM));
 
     char *result = FS_load_as_string(fs, file);
     Log_write(LOG_LEVELS_DEBUG, "<FILE> file '%s' loaded at %p", file, result);
