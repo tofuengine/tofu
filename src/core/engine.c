@@ -101,7 +101,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             &engine->environment,
             &engine->display,
             &engine->input,
-            &engine->fs,
+            &engine->fs
         };
     bool result = Interpreter_initialize(&engine->interpreter, &engine->configuration, &engine->fs, userdatas);
     if (!result) {
@@ -144,8 +144,6 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
         Input_terminate(&engine->input);
         return false;
     }
-
-    engine->environment.timer_pool = &engine->interpreter.timer_pool; // HACK: inject the timer-pool pointer.
 
     result = Interpreter_init(&engine->interpreter);
     if (!result) {

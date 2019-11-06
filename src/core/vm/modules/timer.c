@@ -23,7 +23,7 @@
 #include "timer.h"
 
 #include <config.h>
-#include <core/environment.h>
+#include <core/vm/interpreter.h>
 #include <libs/log.h>
 
 #include "udt.h"
@@ -67,12 +67,12 @@ static int timer_new(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Timer.new() -> %f, %d, %d", period, repeats, callback);
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
+    Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INTERPRETER));
 
     Timer_Class_t *instance = (Timer_Class_t *)lua_newuserdata(L, sizeof(Timer_Class_t));
     *instance = (Timer_Class_t){
             .callback = callback,
-            .timer = TimerPool_allocate(environment->timer_pool, period, repeats, BUNDLE_FROM_INT(callback))
+            .timer = TimerPool_allocate(&interpreter->timer_pool, period, repeats, BUNDLE_FROM_INT(callback))
         };
     Log_write(LOG_LEVELS_DEBUG, "<TIMER> timer #%p allocated (pool-entry #%p)", instance, instance->timer);
 

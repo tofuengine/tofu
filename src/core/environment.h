@@ -23,16 +23,12 @@
 #ifndef __ENVIRONMENT_H__
 #define __ENVIRONMENT_H__
 
-#include <core/vm/timerpool.h>
-
 #include <stdbool.h>
 
 typedef struct _Environment_t {
     bool quit;
     float fps;
     float time;
-
-    Timer_Pool_t *timer_pool;
 } Environment_t;
 
 extern void Environment_initialize(Environment_t *environment);
