@@ -25,7 +25,7 @@
 
 #include <stdbool.h>
 
-#include <external/lua/lua.h>
+#include <lua/lua.h>
 
 extern void modules_initialize(lua_State *L, int nup);
 

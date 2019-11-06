@@ -29,10 +29,10 @@
 #include "surface.h"
 
 #ifdef DEBUG
-  #include <external/stb/stb_leakcheck.h>
+  #include <stb/stb_leakcheck.h>
 #endif
 #define STB_DS_IMPLEMENTATION
-#include <external/stb/stb_ds.h>
+#include <stb/stb_ds.h>
 
 static inline void reset_state(GL_State_t *state, GL_Surface_t *surface)
 {

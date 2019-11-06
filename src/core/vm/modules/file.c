@@ -30,7 +30,7 @@
 
 #include <string.h>
 #ifdef DEBUG
-  #include <external/stb/stb_leakcheck.h>
+  #include <stb/stb_leakcheck.h>
 #endif
 
 #define FILE_MT        "Tofu_File_mt"

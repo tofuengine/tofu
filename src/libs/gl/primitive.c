@@ -29,9 +29,9 @@
 #include <math.h>
 
 #ifdef DEBUG
-  #include <external/stb/stb_leakcheck.h>
+  #include <stb/stb_leakcheck.h>
 #endif
-#include <external/stb/stb_ds.h>
+#include <stb/stb_ds.h>
 
 #define REGION_INSIDE   0
 #define REGION_LEFT     1

@@ -23,7 +23,7 @@
 #ifndef __MODULES_GRID_H__
 #define __MODULES_GRID_H__
 
-#include <external/lua/lua.h>
+#include <lua/lua.h>
 
 extern int grid_loader(lua_State *L);
 

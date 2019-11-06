@@ -35,7 +35,7 @@
 #include <math.h>
 #include <string.h>
 #ifdef DEBUG
-  #include <external/stb/stb_leakcheck.h>
+  #include <stb/stb_leakcheck.h>
 #endif
 
 #define FONT_MT        "Tofu_Font_mt"

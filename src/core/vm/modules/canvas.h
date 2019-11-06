@@ -23,7 +23,7 @@
 #ifndef __MODULES_CANVAS_H__
 #define __MODULES_CANVAS_H__
 
-#include <external/lua/lua.h>
+#include <lua/lua.h>
 
 extern int canvas_loader(lua_State *L);
 

@@ -36,9 +36,9 @@
 #include <string.h>
 #include <time.h>
 #ifdef DEBUG
-  #include <external/stb/stb_leakcheck.h>
+  #include <stb/stb_leakcheck.h>
 #endif
-#include <external/stb/stb_ds.h>
+#include <stb/stb_ds.h>
 
 #define CANVAS_MT        "Tofu_Canvas_mt"
 

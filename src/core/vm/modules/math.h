@@ -23,7 +23,7 @@
 #ifndef __MODULES_MATH_H__
 #define __MODULES_MATH_H__
 
-#include <external/lua/lua.h>
+#include <lua/lua.h>
 
 extern int math_loader(lua_State *L);
 

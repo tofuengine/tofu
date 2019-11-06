@@ -42,7 +42,7 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
   #include <time.h>
 #endif
 #ifdef DEBUG
-  #include <external/stb/stb_leakcheck.h>
+  #include <stb/stb_leakcheck.h>
 #endif
 
 #define ROOT_INSTANCE           "main"

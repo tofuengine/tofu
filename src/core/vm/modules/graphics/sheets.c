@@ -22,7 +22,7 @@
 
 #include "sheets.h"
 
-#include <external/spleen/spleen.h>
+#include <spleen/spleen.h>
 
 #include <strings.h>
 

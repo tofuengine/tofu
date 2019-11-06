@@ -33,7 +33,7 @@
 #include <math.h>
 #include <string.h>
 #ifdef DEBUG
-  #include <external/stb/stb_leakcheck.h>
+  #include <stb/stb_leakcheck.h>
 #endif
 
 #define BANK_MT     "Tofu_Bank_mt"

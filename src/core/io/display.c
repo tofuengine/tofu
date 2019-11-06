@@ -30,7 +30,7 @@
 #include <memory.h>
 #include <stdlib.h>
 #ifdef DEBUG
-  #include <external/stb/stb_leakcheck.h>
+  #include <stb/stb_leakcheck.h>
 #endif
 
 typedef struct _Program_Data_t {

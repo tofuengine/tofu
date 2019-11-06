@@ -25,8 +25,8 @@
 
 #include <stdint.h>
 
-#include <external/glad/glad.h>
-#include <external/GLFW/glfw3.h>
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 
 typedef uint8_t GL_Pixel_t;
 

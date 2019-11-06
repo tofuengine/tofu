@@ -30,7 +30,7 @@
 
 #include <stdlib.h>
 #ifdef DEBUG
-  #include <external/stb/stb_leakcheck.h>
+  #include <stb/stb_leakcheck.h>
 #endif
 
 #define GRID_MT        "Tofu_Grid_mt"

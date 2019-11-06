@@ -23,7 +23,7 @@
 #ifndef __MODULES_SURFACE_H__
 #define __MODULES_SURFACE_H__
 
-#include <external/lua/lua.h>
+#include <lua/lua.h>
 
 extern int surface_loader(lua_State *L);
 

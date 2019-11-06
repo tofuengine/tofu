@@ -23,9 +23,9 @@
 #ifndef __LIBS_LUAX_H__
 #define __LIBS_LUAX_H__
 
-#include <external/lua/lua.h>
-#include <external/lua/lualib.h>
-#include <external/lua/lauxlib.h>
+#include <lua/lua.h>
+#include <lua/lualib.h>
+#include <lua/lauxlib.h>
 
 typedef enum _luaX_Const_Type {
     LUA_CT_BOOLEAN,

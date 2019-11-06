@@ -32,9 +32,9 @@
 #include <math.h>
 #include <string.h>
 #ifdef DEBUG
-  #include <external/stb/stb_leakcheck.h>
+  #include <stb/stb_leakcheck.h>
 #endif
-#include <external/stb/stb_ds.h>
+#include <stb/stb_ds.h>
 
 #define SURFACE_MT      "Tofu_Surface_mt"
 

@@ -26,7 +26,7 @@
 
 #include <stdlib.h>
 #ifdef DEBUG
-  #include <external/stb/stb_leakcheck.h>
+  #include <stb/stb_leakcheck.h>
 #endif
 
 bool GL_program_create(GL_Program_t *program)

@@ -23,7 +23,7 @@
 #ifndef __MODULES_FONT_H__
 #define __MODULES_FONT_H__
 
-#include <external/lua/lua.h>
+#include <lua/lua.h>
 
 extern int font_loader(lua_State *L);
 

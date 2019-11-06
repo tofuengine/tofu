@@ -27,10 +27,10 @@
 #include <libs/gl/gl.h>
 
 #ifdef DEBUG
-  #include <external/stb/stb_leakcheck.h>
+  #include <stb/stb_leakcheck.h>
 #endif
 #define STB_IMAGE_IMPLEMENTATION
-#include <external/stb/stb_image.h>
+#include <stb/stb_image.h>
 
 bool GL_surface_decode(GL_Surface_t *surface, const void *buffer, size_t buffer_size, const GL_Surface_Callback_t callback, void *parameters)
 {
