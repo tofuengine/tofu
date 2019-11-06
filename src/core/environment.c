@@ -25,7 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #ifdef DEBUG
-  #include <external/stb/stb_leakcheck.h>
+  #include <stb/stb_leakcheck.h>
 #endif
 
 // TODO: http://www.ilikebigbits.com/2017_06_01_float_or_double.html

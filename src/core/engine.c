@@ -39,7 +39,7 @@
 #endif
 #ifdef DEBUG
   #define STB_LEAKCHECK_IMPLEMENTATION
-  #include <external/stb/stb_leakcheck.h>
+  #include <stb/stb_leakcheck.h>
 #endif
 
 static inline void wait_for(float seconds)

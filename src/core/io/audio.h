@@ -25,7 +25,7 @@
 
 #include "config.h"
 
-#include <external/miniaudio/miniaudio.h>
+#include <miniaudio/miniaudio.h>
 
 #include <stdbool.h>
 

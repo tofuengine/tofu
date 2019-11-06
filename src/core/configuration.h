@@ -25,7 +25,7 @@
 
 #include <stdbool.h>
 
-#include <external/lua/lua.h>
+#include <lua/lua.h>
 
 #define MAX_CONFIGURATION_TITLE_LENGTH      128
 #define MAX_CONFIGURATION_FRAME_CAPS        4

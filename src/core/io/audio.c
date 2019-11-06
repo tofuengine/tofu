@@ -27,7 +27,7 @@
 
 #include <stdbool.h>
 #define MINIAUDIO_IMPLEMENTATION
-#include <external/miniaudio/miniaudio.h>
+#include <miniaudio/miniaudio.h>
 
 static const char *_backends[] = {
     "wasapi",
