@@ -30,7 +30,7 @@
 
 // TODO: http://www.ilikebigbits.com/2017_06_01_float_or_double.html
 
-void Environment_initialize(Environment_t *environment, const char *base_path)
+void Environment_initialize(Environment_t *environment)
 {
     *environment = (Environment_t){
         .quit = false,

@@ -67,7 +67,7 @@ static int timer_new(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Timer.new() -> %f, %d, %d", period, repeats, callback);
 #endif
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
 
     Timer_Class_t *instance = (Timer_Class_t *)lua_newuserdata(L, sizeof(Timer_Class_t));
     *instance = (Timer_Class_t){

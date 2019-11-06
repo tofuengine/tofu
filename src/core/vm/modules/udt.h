@@ -27,6 +27,14 @@
 #include <libs/luax.h>
 #include <libs/gl/gl.h>
 
+typedef enum _UserData_t { // TODO: move to a suitable space.
+    USERDATA_INTERPRETER = 1,
+    USERDATA_ENVIRONMENT,
+    USERDATA_DISPLAY,
+    USERDATA_INPUT,
+    USERDATA_FILESYSTEM,
+} UserData_t;
+
 typedef struct _Bank_Class_t {
     const void *bogus;
     // char full_path[PATH_FILE_MAX];

@@ -246,10 +246,9 @@ bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configu
 
     luaL_openlibs(interpreter->state);
 
-    lua_pushlightuserdata(interpreter->state, (void *)interpreter); // Discard `const` qualifier.
     int nup = 0;
     for (int i = 0; userdatas[i]; ++i) {
-        lua_pushlightuserdata(interpreter->state, (void *)userdatas[i]);
+        lua_pushlightuserdata(interpreter->state, (void *)userdatas[i]); // Discard `const` qualifier.
         nup += 1;
     }
     modules_initialize(interpreter->state, nup);

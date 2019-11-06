@@ -91,8 +91,8 @@ static int bank_new(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Bank.new() -> %d, %d, %d", type, cell_width, cell_height);
 #endif
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(3));
-    File_System_t *fs = (File_System_t *)lua_touserdata(L, lua_upvalueindex(5));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    File_System_t *fs = (File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILESYSTEM));
 
     GL_Sheet_t sheet;
 
@@ -186,7 +186,7 @@ static int bank_blit4(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f", cell_id, x, y);
 #endif
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(3));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
@@ -213,7 +213,7 @@ static int bank_blit5(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f, %d", cell_id, x, y, rotation);
 #endif
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(3));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
@@ -242,7 +242,7 @@ static int bank_blit6(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f, %.f, %.f", cell_id, x, y, scale_x, scale_y);
 #endif
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(3));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
@@ -273,7 +273,7 @@ static int bank_blit7(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f, %.f, %.f, %d", cell_id, x, y, scale_x, scale_y, rotation);
 #endif
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(3));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
@@ -308,7 +308,7 @@ static int bank_blit9(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f, %.f, %.f, %d, %.f, %.f", cell_id, x, y, scale_x, scale_y, rotation, anchor_x, anchor_y);
 #endif
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(3));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;

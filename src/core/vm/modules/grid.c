@@ -334,7 +334,7 @@ static int grid_scan(lua_State *L)
     Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
 //    luaX_Reference callback = luaX_tofunction(L, 2);
 
-    Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INTERPRETER));
 
     const Cell_t *data = instance->data;
 
@@ -360,7 +360,7 @@ static int grid_process(lua_State *L)
     Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
 //    luaX_Reference callback = luaX_tofunction(L, 2);
 
-    Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INTERPRETER));
 
     const Cell_t *data = instance->data;
 

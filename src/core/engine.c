@@ -92,9 +92,9 @@ static inline bool update_statistics(Engine_Statistics_t *statistics, float elap
 bool Engine_initialize(Engine_t *engine, const char *base_path)
 {
     Log_initialize();
-    Environment_initialize(&engine->environment, base_path);
-    FS_initialize(&engine->fs, base_path);
     Configuration_initialize(&engine->configuration);
+    Environment_initialize(&engine->environment);
+    FS_initialize(&engine->fs, base_path);
 
     const void *userdatas[] = {
             &engine->interpreter,

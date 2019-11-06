@@ -127,7 +127,7 @@ static int font_new(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Font.new() -> %d, %d, %d, %d, %d", type, glyph_width, glyph_height, background_color, foreground_color);
 #endif
 
-    File_System_t *fs = (File_System_t *)lua_touserdata(L, lua_upvalueindex(5));
+    File_System_t *fs = (File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILESYSTEM));
 
     GL_Sheet_t sheet;
 
@@ -207,7 +207,7 @@ static int font_write5(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %s, %d, %d, %s", text, x, y, alignment);
 #endif
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(3));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
@@ -257,7 +257,7 @@ static int font_write6(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %s, %f, %f, %f, %s", text, x, y, scale, alignment);
 #endif
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(3));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
@@ -309,7 +309,7 @@ static int font_write7(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %s, %f, %f, %f, %f, %s", text, x, y, scale_x, scale_y, alignment);
 #endif
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(3));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
