@@ -42,7 +42,6 @@ typedef struct _Engine_t {
     Audio_t audio;
     Display_t display;
     Input_t input;
-    File_System_t fs;
 
     Environment_t environment;
 } Engine_t;

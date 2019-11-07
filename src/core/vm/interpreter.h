@@ -38,10 +38,11 @@ typedef struct _Interpreter_t {
 
     lua_State *state; // TODO: rename to `L`?
 
-    Timer_Pool_t timer_pool; // TODO: need the timer pool point be shared?
+    File_System_t file_system;
+    Timer_Pool_t timer_pool;
 } Interpreter_t;
 
-extern bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configuration, const File_System_t *fs, const void *userdatas[]);
+extern bool Interpreter_initialize(Interpreter_t *interpreter, const char *base_path, Configuration_t *configuration, const void *userdatas[]);
 extern void Interpreter_terminate(Interpreter_t *interpreter);
 extern bool Interpreter_init(Interpreter_t *interpreter);
 extern bool Interpreter_input(Interpreter_t *interpreter);

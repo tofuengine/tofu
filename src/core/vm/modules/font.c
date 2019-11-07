@@ -24,7 +24,7 @@
 
 #include <config.h>
 #include <core/io/display.h>
-#include <core/io/fs.h>
+#include <core/vm/interpreter.h>
 #include <libs/log.h>
 #include <libs/gl/gl.h>
 
@@ -127,7 +127,7 @@ static int font_new(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Font.new() -> %d, %d, %d, %d, %d", type, glyph_width, glyph_height, background_color, foreground_color);
 #endif
 
-    File_System_t *fs = (File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILESYSTEM));
+    Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INTERPRETER));
 
     GL_Sheet_t sheet;
 
@@ -142,7 +142,7 @@ static int font_new(lua_State *L)
             Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet '%s' decoded", file);
         } else {
             size_t buffer_size;
-            void *buffer = FS_load_as_binary(fs, file, &buffer_size);
+            void *buffer = FS_load_as_binary(&interpreter->file_system, file, &buffer_size);
             if (!buffer) {
                 return luaL_error(L, "<FONT> can't load file '%s'", file);
             }

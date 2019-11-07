@@ -234,8 +234,11 @@ static bool timerpool_callback(Timer_t *timer, void *parameters)
     return result == LUA_OK;
 }
 
-bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configuration, const File_System_t *fs, const void *userdatas[])
+bool Interpreter_initialize(Interpreter_t *interpreter, const char *base_path, Configuration_t *configuration, const void *userdatas[])
 {
+    FS_initialize(&interpreter->file_system, base_path);
+    TimerPool_initialize(&interpreter->timer_pool, timerpool_callback, interpreter->state);
+
     interpreter->gc_age = 0.0f;
     interpreter->state = luaL_newstate();
     if (!interpreter->state) {
@@ -253,7 +256,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configu
     }
     modules_initialize(interpreter->state, nup);
 
-    lua_pushlightuserdata(interpreter->state, (void *)fs); // TODO: should the FS belong to the interpreter?
+    lua_pushlightuserdata(interpreter->state, (void *)&interpreter->file_system);
     luaX_overridesearchers(interpreter->state, custom_searcher, 1);
 
 #ifdef __DEBUG_VM_CALLS__
@@ -282,8 +285,6 @@ bool Interpreter_initialize(Interpreter_t *interpreter, Configuration_t *configu
     Configuration_parse(interpreter->state, configuration);
     lua_pop(interpreter->state, 1); // Remove the configuration table from the stack.
 
-    TimerPool_initialize(&interpreter->timer_pool, timerpool_callback, interpreter->state);
-
     return true;
 }
 
@@ -304,6 +305,7 @@ void Interpreter_terminate(Interpreter_t *interpreter)
     lua_close(interpreter->state);
 
     TimerPool_terminate(&interpreter->timer_pool);
+    FS_terminate(&interpreter->file_system);
 }
 
 bool Interpreter_init(Interpreter_t *interpreter)

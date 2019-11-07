@@ -23,7 +23,7 @@
 #include "file.h"
 
 #include <config.h>
-#include <core/io/fs.h>
+#include <core/vm/interpreter.h>
 #include <libs/log.h>
 
 #include "udt.h"
@@ -62,9 +62,9 @@ static int file_read(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "File.read() -> %s", file);
 #endif
 
-    File_System_t *fs = (File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILESYSTEM));
+    Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INTERPRETER));
 
-    char *result = FS_load_as_string(fs, file);
+    char *result = FS_load_as_string(&interpreter->file_system, file);
     Log_write(LOG_LEVELS_DEBUG, "<FILE> file '%s' loaded at %p", file, result);
 
     lua_pushstring(L, result);

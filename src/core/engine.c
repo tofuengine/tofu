@@ -94,17 +94,15 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
     Log_initialize();
     Configuration_initialize(&engine->configuration);
     Environment_initialize(&engine->environment);
-    FS_initialize(&engine->fs, base_path);
 
     const void *userdatas[] = {
             &engine->interpreter,
             &engine->environment,
             &engine->display,
             &engine->input,
-            &engine->fs,
             NULL
         };
-    bool result = Interpreter_initialize(&engine->interpreter, &engine->configuration, &engine->fs, userdatas);
+    bool result = Interpreter_initialize(&engine->interpreter, base_path, &engine->configuration, userdatas);
     if (!result) {
         Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't initialize interpreter");
         return false;
@@ -167,7 +165,6 @@ void Engine_terminate(Engine_t *engine)
     Audio_terminate(&engine->audio);
 
     Environment_terminate(&engine->environment);
-    FS_terminate(&engine->fs);
 #if DEBUG
     stb_leakcheck_dumpmem();
 #endif

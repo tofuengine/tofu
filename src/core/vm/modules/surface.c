@@ -24,7 +24,6 @@
 
 #include <config.h>
 #include <core/io/display.h>
-#include <core/io/fs.h>
 #include <core/vm/interpreter.h>
 #include <libs/log.h>
 
@@ -130,11 +129,11 @@ static int surface_new1(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "Surface.new() -> %s", file);
 #endif
 
+    Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INTERPRETER));
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
-    File_System_t *fs = (File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILESYSTEM));
 
     size_t buffer_size;
-    void *buffer = FS_load_as_binary(fs, file, &buffer_size);
+    void *buffer = FS_load_as_binary(&interpreter->file_system, file, &buffer_size);
     if (!buffer) {
         return luaL_error(L, "<SURFACE> can't load file '%s'", file);
     }
