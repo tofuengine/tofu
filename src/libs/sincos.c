@@ -26,6 +26,7 @@
 #include "sincos.h"
 
 // 128 steps per quadrant seems more than enough.
+#include <math.h>
 #include <stddef.h>
 
 static const float _lut[640] = {
@@ -689,4 +690,9 @@ void fsincos(int rotation, float *sin, float *cos)
 int fator(float angle)
 {
     return (int)roundf(angle * 81.487327576f) & 0x1ff; // Round to nearest, so that `pi` is equal to `0`.
+}
+
+float frtoa(int rotation)
+{
+    return (float)(rotation & 0x1ff) / 81.487327576f;
 }

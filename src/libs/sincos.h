@@ -27,5 +27,6 @@
 
 extern void fsincos(int rotation, float *sin, float *cos);
 extern int fator(float angle);
+extern float frtoa(int rotation);
 
 #endif  /* __LIBS_SINCOS_H__ */

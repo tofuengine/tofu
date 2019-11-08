@@ -32,10 +32,12 @@
 
 static int math_sincos(lua_State *L);
 static int math_angle_to_rotation(lua_State *L);
+static int math_rotation_to_angle(lua_State *L);
 
 static const struct luaL_Reg _math_functions[] = {
     { "sincos", math_sincos },
     { "angle_to_rotation", math_angle_to_rotation },
+    { "rotation_to_angle", math_rotation_to_angle },
     { NULL, NULL }
 };
 
@@ -82,6 +84,20 @@ static int math_angle_to_rotation(lua_State *L)
     int rotation = fator(angle);
 
     lua_pushinteger(L, rotation);
+
+    return 1;
+}
+
+static int math_rotation_to_angle(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+    LUAX_SIGNATURE_END
+    int rotation = lua_tointeger(L, 1);
+
+    float angle = frtoa(rotation);
+
+    lua_pushnumber(L, angle);
 
     return 1;
 }
