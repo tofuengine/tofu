@@ -688,5 +688,5 @@ void fsincos(int rotation, float *sin, float *cos)
 // a direction, then convert to the appropriate rotation index.
 int fator(float angle)
 {
-    return (int)(angle * 81.487327576f) & 0x1ff;
+    return (int)roundf(angle * 81.487327576f) & 0x1ff; // Round to nearest, so that `pi` is equal to `0`.
 }
