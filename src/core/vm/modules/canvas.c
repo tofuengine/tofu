@@ -132,18 +132,11 @@ static int canvas_color_to_index(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
     LUAX_SIGNATURE_END
     const char *argb = lua_tostring(L, 1);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.color_to_index('%s')", argb);
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-
     const GL_Color_t color = GL_palette_parse_color(argb);
     const GL_Pixel_t index = GL_palette_find_nearest_color(&display->palette, color);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "color '%s' mapped to index %d", argb, index);
-#endif
 
     lua_pushinteger(L, index);
 
@@ -154,9 +147,6 @@ static int canvas_width(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 0)
     LUAX_SIGNATURE_END
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.width()");
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -171,9 +161,6 @@ static int canvas_height(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 0)
     LUAX_SIGNATURE_END
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.height()");
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -188,9 +175,6 @@ static int canvas_push(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 0)
     LUAX_SIGNATURE_END
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.push()");
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -204,9 +188,6 @@ static int canvas_pop(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 0)
     LUAX_SIGNATURE_END
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.pop()");
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -220,9 +201,6 @@ static int canvas_surface0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 0)
     LUAX_SIGNATURE_END
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.surface()");
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -238,9 +216,6 @@ static int canvas_surface1(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
     LUAX_SIGNATURE_END
     Surface_Class_t *surface = (Surface_Class_t *)lua_touserdata(L, 1);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.surface(%p)", type);
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -262,9 +237,6 @@ static int canvas_palette0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 0)
     LUAX_SIGNATURE_END
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.palette()");
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -288,9 +260,6 @@ static int canvas_palette1(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isstring, luaX_istable)
     LUAX_SIGNATURE_END
     int type = lua_type(L, 1);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.palette(%d)", type);
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -353,9 +322,6 @@ static int canvas_background(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
     LUAX_SIGNATURE_END
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 1);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.background(%d)", index);
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -373,9 +339,6 @@ static int canvas_color(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
     LUAX_SIGNATURE_END
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 1);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.color(%d)", index);
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -393,9 +356,6 @@ static int canvas_pattern(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
     LUAX_SIGNATURE_END
     int mask = lua_tointeger(L, 1);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.pattern(%08x)", mask);
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -409,9 +369,6 @@ static int canvas_shift0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 0)
     LUAX_SIGNATURE_END
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.shift()");
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -426,10 +383,6 @@ static int canvas_shift1(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L, 1)
         LUAX_SIGNATURE_ARGUMENT(luaX_istable)
     LUAX_SIGNATURE_END
-#ifdef __DEBUG_API_CALLS__
-    int type = lua_type(L, 1);
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.shift(%d)", type);
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -463,10 +416,6 @@ static int canvas_shift2(lua_State *L)
     LUAX_SIGNATURE_END
     size_t from = (size_t)lua_tointeger(L, 1);
     size_t to = (size_t)lua_tointeger(L, 2);
-#ifdef __DEBUG_API_CALLS__
-    int type = lua_type(L, 1);
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.shift(%d, %d)", from, to);
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -489,9 +438,6 @@ static int canvas_transparent0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 0)
     LUAX_SIGNATURE_END
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.transparent()");
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -506,10 +452,6 @@ static int canvas_transparent1(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L, 1)
         LUAX_SIGNATURE_ARGUMENT(luaX_istable)
     LUAX_SIGNATURE_END
-#ifdef __DEBUG_API_CALLS__
-    int type = lua_type(L, 1);
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.transparent(%d)", type);
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -543,9 +485,6 @@ static int canvas_transparent2(lua_State *L)
     LUAX_SIGNATURE_END
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 1);
     GL_Bool_t transparent = lua_toboolean(L, 2) ? GL_BOOL_TRUE : GL_BOOL_FALSE;
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.transparent(%d, %d)", color, transparent);
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -570,9 +509,6 @@ static int canvas_clipping0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 0)
     LUAX_SIGNATURE_END
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.clipping()");
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -594,9 +530,6 @@ static int canvas_clipping4(lua_State *L)
     int y0 = lua_tointeger(L, 2);
     int x1 = lua_tointeger(L, 3);
     int y1 = lua_tointeger(L, 4);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.clipping(%d, %d, %d, %d)", x0, y0, x1, y1);
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -620,9 +553,6 @@ static int canvas_shader(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
     LUAX_SIGNATURE_END
     const char *code = lua_tostring(L, 1);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.shader('%s')", code);
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -702,9 +632,6 @@ static int canvas_clear(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 0)
     LUAX_SIGNATURE_END
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.clear()");
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -724,9 +651,6 @@ static int canvas_point(lua_State *L)
     int x = lua_tointeger(L, 1);
     int y = lua_tointeger(L, 2);
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 3);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.point(%d, %d, %d)", x, y, index);
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -750,9 +674,6 @@ static int canvas_hline(lua_State *L)
     int y = lua_tointeger(L, 2);
     int width = lua_tointeger(L, 3);
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 4);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.hline(%d, %d, %d, %d)", x, y, width, index);
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -776,9 +697,6 @@ static int canvas_vline(lua_State *L)
     int y = lua_tointeger(L, 2);
     size_t height = (size_t)lua_tointeger(L, 3);
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 4);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.vline(%d, %d, %d, %d)", x, y, height, index);
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -804,9 +722,6 @@ static int canvas_line(lua_State *L)
     int x1 = lua_tointeger(L, 3);
     int y1 = lua_tointeger(L, 4);
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 5);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.line(%f, %f, %f, %f, %d)", x0, y0, x1, y1, index);
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -829,10 +744,6 @@ static int canvas_polyline(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
     LUAX_SIGNATURE_END
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 2);
-#ifdef __DEBUG_API_CALLS__
-    int type = lua_type(L, 1);
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.polyline(%d, %d)", type, index);
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -877,9 +788,6 @@ static int canvas_fill(lua_State *L)
     int x = lua_tointeger(L, 1);
     int y = lua_tointeger(L, 2);
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 3);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.fill(%d, %d, %d)", x, y, index);
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -911,9 +819,6 @@ static int canvas_triangle(lua_State *L)
     int x2 = lua_tointeger(L, 6);
     int y2 = lua_tointeger(L, 7);
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 8);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.triangle(%s, %d, %d, %d, %d, %d, %d, %d)", mode, x0, y0, x1, y1, x2, y2, index);
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -951,9 +856,6 @@ static int canvas_rectangle(lua_State *L)
     int width = lua_tointeger(L, 4);
     int height = lua_tointeger(L, 5);
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 6);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.rectangle(%s, %d, %d, %d, %d, %d)", mode, x, y, width, height, index);
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -1002,9 +904,6 @@ static int canvas_circle(lua_State *L)
     int cy = lua_tointeger(L, 3);
     int radius = lua_tointeger(L, 4);
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 5);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.circle(%s, %f, %f, %f, %f, %d)", mode, cx, cy, radius);
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -1032,9 +931,6 @@ static int canvas_peek(lua_State *L)
     LUAX_SIGNATURE_END
     int x = lua_tointeger(L, 1);
     int y = lua_tointeger(L, 2);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.peek(%d, %d)", x, y);
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -1057,9 +953,6 @@ static int canvas_poke(lua_State *L)
     int x = lua_tointeger(L, 1);
     int y = lua_tointeger(L, 2);
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 3);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Canvas.poke(%d, %d, %d)", x, y, index);
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 

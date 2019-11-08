@@ -63,9 +63,6 @@ static int timer_new(lua_State *L)
     float period = lua_tonumber(L, 1);
     int repeats = lua_tointeger(L, 2);
     luaX_Reference callback = luaX_tofunction(L, 3);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Timer.new() -> %f, %d, %d", period, repeats, callback);
-#endif
 
     Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INTERPRETER));
 
@@ -87,9 +84,6 @@ static int timer_gc(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
     LUAX_SIGNATURE_END
     Timer_Class_t *instance = (Timer_Class_t *)lua_touserdata(L, 1);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Timer.gc()");
-#endif
 
     Log_write(LOG_LEVELS_DEBUG, "<TIMER> finalizing timer #%p (pool-entry #%p)", instance, instance->timer);
 
@@ -106,9 +100,6 @@ static int timer_reset(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
     LUAX_SIGNATURE_END
     Timer_Class_t *instance = (Timer_Class_t *)lua_touserdata(L, 1);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Timer.cancel()");
-#endif
 
     TimerPool_reset(instance->timer);
 
@@ -121,9 +112,6 @@ static int timer_cancel(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
     LUAX_SIGNATURE_END
     Timer_Class_t *instance = (Timer_Class_t *)lua_touserdata(L, 1);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Timer.cancel()");
-#endif
 
     TimerPool_cancel(instance->timer);
 

@@ -58,9 +58,6 @@ static int file_read(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
     LUAX_SIGNATURE_END
     const char *file = lua_tostring(L, 1);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "File.read() -> %s", file);
-#endif
 
     Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INTERPRETER));
 

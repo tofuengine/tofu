@@ -123,9 +123,6 @@ static int font_new(lua_State *L)
     size_t glyph_height = (size_t)lua_tointeger(L, 3);
     GL_Pixel_t background_index = (GL_Pixel_t)lua_tointeger(L, 4);
     GL_Pixel_t foreground_index = (GL_Pixel_t)lua_tointeger(L, 5);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Font.new() -> %d, %d, %d, %d, %d", type, glyph_width, glyph_height, background_color, foreground_color);
-#endif
 
     Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INTERPRETER));
 
@@ -203,9 +200,6 @@ static int font_write5(lua_State *L)
     int x = lua_tointeger(L, 3);
     int y = lua_tointeger(L, 4);
     const char *alignment = lua_tostring(L, 5);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %s, %d, %d, %s", text, x, y, alignment);
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -253,9 +247,6 @@ static int font_write6(lua_State *L)
     int y = lua_tointeger(L, 4);
     float scale = lua_tonumber(L, 5);
     const char *alignment = lua_tostring(L, 6);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %s, %f, %f, %f, %s", text, x, y, scale, alignment);
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -305,9 +296,6 @@ static int font_write7(lua_State *L)
     float scale_x = lua_tonumber(L, 5);
     float scale_y = lua_tonumber(L, 6);
     const char *alignment = lua_tostring(L, 7);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Font.write() -> %s, %f, %f, %f, %f, %s", text, x, y, scale_x, scale_y, alignment);
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 

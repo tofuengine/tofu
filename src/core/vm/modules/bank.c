@@ -87,10 +87,6 @@ static int bank_new(lua_State *L)
     size_t cell_width = (size_t)lua_tointeger(L, 2);
     size_t cell_height = (size_t)lua_tointeger(L, 3);
 
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Bank.new() -> %d, %d, %d", type, cell_width, cell_height);
-#endif
-
     Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INTERPRETER));
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -182,9 +178,6 @@ static int bank_blit4(lua_State *L)
     int cell_id = lua_tointeger(L, 2);
     int x = lua_tointeger(L, 3);
     int y = lua_tointeger(L, 4);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f", cell_id, x, y);
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -209,9 +202,6 @@ static int bank_blit5(lua_State *L)
     int x = lua_tointeger(L, 3);
     int y = lua_tointeger(L, 4);
     int rotation = lua_tointeger(L, 5);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f, %d", cell_id, x, y, rotation);
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -238,9 +228,6 @@ static int bank_blit6(lua_State *L)
     int y = lua_tointeger(L, 4);
     float scale_x = lua_tonumber(L, 5);
     float scale_y = lua_tonumber(L, 6);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f, %.f, %.f", cell_id, x, y, scale_x, scale_y);
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -269,9 +256,6 @@ static int bank_blit7(lua_State *L)
     float scale_x = lua_tonumber(L, 5);
     float scale_y = lua_tonumber(L, 6);
     int rotation = lua_tointeger(L, 7);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f, %.f, %.f, %d", cell_id, x, y, scale_x, scale_y, rotation);
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -304,9 +288,6 @@ static int bank_blit9(lua_State *L)
     int rotation = lua_tointeger(L, 7);
     float anchor_x = lua_tonumber(L, 8);
     float anchor_y = lua_tonumber(L, 9);
-#ifdef __DEBUG_API_CALLS__
-    Log_write(LOG_LEVELS_DEBUG, "Bank.blit() -> %d, %.f, %.f, %.f, %.f, %d, %.f, %.f", cell_id, x, y, scale_x, scale_y, rotation, anchor_x, anchor_y);
-#endif
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
