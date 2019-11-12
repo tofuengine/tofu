@@ -28,7 +28,6 @@
 #include "context.h"
 #include "palette.h"
 #include "primitive.h"
-#include "program.h"
 #include "sheet.h"
 #include "surface.h"
 

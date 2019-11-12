@@ -32,23 +32,22 @@
   #include <stb/stb_leakcheck.h>
 #endif
 
-bool GL_program_create(GL_Program_t *program)
+bool program_create(Program_t *program)
 {
-    GLuint program_id = glCreateProgram();
-    if (program_id == 0) {
+    *program = (Program_t){ 0 }; // Initialzed the object structure to clear all the fields.
+
+    program->id = glCreateProgram();
+    if (program->id == 0) {
         Log_write(LOG_LEVELS_ERROR, "<GL> can't create shader program");
         return false;
     }
 
-    Log_write(LOG_LEVELS_DEBUG, "<GL> shader program #%d created", program_id);
-    *program = (GL_Program_t){
-            .id = program_id
-        };
+    Log_write(LOG_LEVELS_DEBUG, "<GL> shader program #%d created", program->id);
 
     return true;
 }
 
-void GL_program_delete(GL_Program_t *program)
+void program_delete(Program_t *program)
 {
     GLint count = 0;
     glGetProgramiv(program->id, GL_ATTACHED_SHADERS, &count);
@@ -69,10 +68,10 @@ void GL_program_delete(GL_Program_t *program)
         Log_write(LOG_LEVELS_DEBUG, "<GL> shader uniforms LUT for program #%d deleted", program->id);
     }
 
-    *program = (GL_Program_t){ 0 };
+    *program = (Program_t){ 0 };
 }
 
-bool GL_program_attach(GL_Program_t *program, const char *shader_code, GL_Program_Shaders_t shader_type)
+bool program_attach(Program_t *program, const char *shader_code, Program_Shaders_t shader_type)
 {
 #ifdef __DEFENSIVE_CHECKS__
     if (program->id == 0) {
@@ -85,7 +84,7 @@ bool GL_program_attach(GL_Program_t *program, const char *shader_code, GL_Progra
     }
 #endif
 
-    GLuint shader_id = glCreateShader(shader_type == GL_PROGRAM_SHADER_VERTEX ? GL_VERTEX_SHADER : GL_FRAGMENT_SHADER);
+    GLuint shader_id = glCreateShader(shader_type == PROGRAM_SHADER_VERTEX ? GL_VERTEX_SHADER : GL_FRAGMENT_SHADER);
     if (shader_id == 0) {
         Log_write(LOG_LEVELS_ERROR, "<GL> can't create shader");
         return false;
@@ -129,7 +128,7 @@ bool GL_program_attach(GL_Program_t *program, const char *shader_code, GL_Progra
     return success;
 }
 
-void GL_program_prepare(GL_Program_t *program, const char *ids[], size_t count)
+void program_prepare(Program_t *program, const char *ids[], size_t count)
 {
     if (program->locations) {
         free(program->locations);
@@ -146,7 +145,7 @@ void GL_program_prepare(GL_Program_t *program, const char *ids[], size_t count)
     }
 }
 
-void GL_program_send(const GL_Program_t *program, size_t index, GL_Program_Uniforms_t type, size_t count, const void *value)
+void program_send(const Program_t *program, size_t index, Program_Uniforms_t type, size_t count, const void *value)
 {
 #ifdef __DEFENSIVE_CHECKS__
     if (!program->locations) {
@@ -163,20 +162,20 @@ void GL_program_send(const GL_Program_t *program, size_t index, GL_Program_Unifo
     }
     glUseProgram(program->id);
     switch (type) {
-        case GL_PROGRAM_UNIFORM_BOOL: { glUniform1iv(location, count, value); } break;
-        case GL_PROGRAM_UNIFORM_INT: { glUniform1iv(location, count, value); } break;
-        case GL_PROGRAM_UNIFORM_FLOAT: { glUniform1fv(location, count, value); } break;
-        case GL_PROGRAM_UNIFORM_VEC2: { glUniform2fv(location, count, value); } break;
-        case GL_PROGRAM_UNIFORM_VEC3: { glUniform3fv(location, count, value); } break;
-        case GL_PROGRAM_UNIFORM_VEC4: { glUniform4fv(location, count, value); } break;
-        case GL_PROGRAM_UNIFORM_VEC2I: { glUniform2iv(location, count, value); } break;
-        case GL_PROGRAM_UNIFORM_VEC3I: { glUniform3iv(location, count, value); } break;
-        case GL_PROGRAM_UNIFORM_VEC4I: { glUniform4iv(location, count, value); } break;
-        case GL_PROGRAM_UNIFORM_TEXTURE: { glUniform1iv(location, count, value); } break;
+        case PROGRAM_UNIFORM_BOOL: { glUniform1iv(location, count, value); } break;
+        case PROGRAM_UNIFORM_INT: { glUniform1iv(location, count, value); } break;
+        case PROGRAM_UNIFORM_FLOAT: { glUniform1fv(location, count, value); } break;
+        case PROGRAM_UNIFORM_VEC2: { glUniform2fv(location, count, value); } break;
+        case PROGRAM_UNIFORM_VEC3: { glUniform3fv(location, count, value); } break;
+        case PROGRAM_UNIFORM_VEC4: { glUniform4fv(location, count, value); } break;
+        case PROGRAM_UNIFORM_VEC2I: { glUniform2iv(location, count, value); } break;
+        case PROGRAM_UNIFORM_VEC3I: { glUniform3iv(location, count, value); } break;
+        case PROGRAM_UNIFORM_VEC4I: { glUniform4iv(location, count, value); } break;
+        case PROGRAM_UNIFORM_TEXTURE: { glUniform1iv(location, count, value); } break;
     }
 }
 
-void GL_program_use(const GL_Program_t *program)
+void program_use(const Program_t *program)
 {
     glUseProgram(program->id);
 //    Log_write(LOG_LEVELS_TRACE, "<GL> using shader program", program->id);

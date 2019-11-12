@@ -277,6 +277,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     display->vram = malloc(display->configuration.width * display->configuration.width * sizeof(GL_Color_t));
     if (!display->vram) {
         Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't allocate VRAM buffer");
+        GL_context_delete(&display->gl);
         glfwDestroyWindow(display->window);
         glfwTerminate();
     }
@@ -285,6 +286,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     glGenTextures(1, &display->vram_texture); //allocate the memory for texture
     if (display->vram_texture == 0) {
         Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't allocate VRAM texture");
+        free(display->vram);
         GL_context_delete(&display->gl);
         glfwDestroyWindow(display->window);
         glfwTerminate();
@@ -306,22 +308,26 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         if (!data->vertex_shader || !data->fragment_shader) {
             continue;
         }
-        if (!GL_program_create(&display->programs[i]) ||
-            !GL_program_attach(&display->programs[i], data->vertex_shader, GL_PROGRAM_SHADER_VERTEX) ||
-            !GL_program_attach(&display->programs[i], data->fragment_shader, GL_PROGRAM_SHADER_FRAGMENT)) {
+        if (!program_create(&display->programs[i]) ||
+            !program_attach(&display->programs[i], data->vertex_shader, PROGRAM_SHADER_VERTEX) ||
+            !program_attach(&display->programs[i], data->fragment_shader, PROGRAM_SHADER_FRAGMENT)) {
             Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't initialize shaders");
+            for (size_t j = 0; j < i; ++j) {
+                program_delete(&display->programs[j]);
+            }
             glDeleteBuffers(1, &display->vram_texture);
+            free(display->vram);
             GL_context_delete(&display->gl);
             glfwDestroyWindow(display->window);
             glfwTerminate();
             return false;
         }
 
-        GL_program_prepare(&display->programs[i], _uniforms, Uniforms_t_CountOf);
+        program_prepare(&display->programs[i], _uniforms, Uniforms_t_CountOf);
 
-        GL_program_send(&display->programs[i], UNIFORM_TEXTURE, GL_PROGRAM_UNIFORM_TEXTURE, 1, _texture_id_0); // Redundant
+        program_send(&display->programs[i], UNIFORM_TEXTURE, PROGRAM_UNIFORM_TEXTURE, 1, _texture_id_0); // Redundant
         GLfloat resolution[] = { (GLfloat)display->window_width, (GLfloat)display->window_height };
-        GL_program_send(&display->programs[i], UNIFORM_RESOLUTION, GL_PROGRAM_UNIFORM_VEC2, 1, resolution);
+        program_send(&display->programs[i], UNIFORM_RESOLUTION, PROGRAM_UNIFORM_VEC2, 1, resolution);
     }
     display->program_index = DISPLAY_PROGRAM_PASSTHRU; // Use pass-thru at the beginning.
 
@@ -334,7 +340,7 @@ void Display_terminate(Display_t *display)
         if (display->programs[i].id == 0) {
             continue;
         }
-        GL_program_delete(&display->programs[i]);
+        program_delete(&display->programs[i]);
     }
 
     glDeleteBuffers(1, &display->vram_texture);
@@ -360,8 +366,8 @@ bool Display_should_close(Display_t *display)
 void Display_present(Display_t *display)
 {
     GLfloat time[] = { (GLfloat)glfwGetTime() };
-    GL_program_send(&display->programs[display->program_index], UNIFORM_TIME, GL_PROGRAM_UNIFORM_FLOAT, 1, time);
-    GL_program_use(&display->programs[display->program_index]);
+    program_send(&display->programs[display->program_index], UNIFORM_TIME, PROGRAM_UNIFORM_FLOAT, 1, time);
+    program_use(&display->programs[display->program_index]);
 
     GL_surface_to_rgba(&display->gl.buffer, &display->palette, display->vram);
 
@@ -390,7 +396,7 @@ void Display_present(Display_t *display)
 void Display_shader(Display_t *display, const char *effect)
 {
     if (!effect) {
-        GL_program_delete(&display->programs[DISPLAY_PROGRAM_CUSTOM]);
+        program_delete(&display->programs[DISPLAY_PROGRAM_CUSTOM]);
         display->program_index = DISPLAY_PROGRAM_PASSTHRU;
         Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> switched to default shader");
         return;
@@ -401,21 +407,21 @@ void Display_shader(Display_t *display, const char *effect)
     strcpy(code, FRAGMENT_SHADER_CUSTOM);
     strcat(code, effect);
 
-    GL_Program_t *program = &display->programs[DISPLAY_PROGRAM_CUSTOM];
+    Program_t *program = &display->programs[DISPLAY_PROGRAM_CUSTOM];
 
-    if (GL_program_create(program) &&
-        GL_program_attach(program, VERTEX_SHADER, GL_PROGRAM_SHADER_VERTEX) &&
-        GL_program_attach(program, code, GL_PROGRAM_SHADER_FRAGMENT)) {
-        GL_program_prepare(program, _uniforms, Uniforms_t_CountOf);
+    if (program_create(program) &&
+        program_attach(program, VERTEX_SHADER, PROGRAM_SHADER_VERTEX) &&
+        program_attach(program, code, PROGRAM_SHADER_FRAGMENT)) {
+        program_prepare(program, _uniforms, Uniforms_t_CountOf);
 
-        GL_program_send(program, UNIFORM_TEXTURE, GL_PROGRAM_UNIFORM_TEXTURE, 1, _texture_id_0); // Redundant
+        program_send(program, UNIFORM_TEXTURE, PROGRAM_UNIFORM_TEXTURE, 1, _texture_id_0); // Redundant
         GLfloat resolution[] = { (GLfloat)display->window_width, (GLfloat)display->window_height };
-        GL_program_send(program, UNIFORM_RESOLUTION, GL_PROGRAM_UNIFORM_VEC2, 1, resolution);
+        program_send(program, UNIFORM_RESOLUTION, PROGRAM_UNIFORM_VEC2, 1, resolution);
 
         display->program_index = DISPLAY_PROGRAM_CUSTOM;
         Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> switched to custom shader");
     } else {
-        GL_program_delete(program);
+        program_delete(program);
         Log_write(LOG_LEVELS_WARNING, "<DISPLAY> can't load custom shader");
     }
 

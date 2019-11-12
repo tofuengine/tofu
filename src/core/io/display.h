@@ -24,7 +24,6 @@
 #define __DISPLAY_H__
 
 // TODO: rename Display to Video?
-// TODO: take to Input part out to a separate file.
 
 #include <config.h>
 #include <libs/gl/gl.h>
@@ -34,6 +33,8 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+
+#include "program.h"
 
 typedef enum _Display_Programs_t {
     Display_Programs_t_First = 0,
@@ -60,7 +61,7 @@ typedef struct _Display_t {
     GLuint vram_texture;
     GL_Quad_t vram_destination;
 
-    GL_Program_t programs[Display_Programs_t_CountOf];
+    Program_t programs[Display_Programs_t_CountOf];
     size_t program_index;
 
     GL_Palette_t palette;
