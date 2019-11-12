@@ -38,34 +38,36 @@ bool program_create(Program_t *program)
 
     program->id = glCreateProgram();
     if (program->id == 0) {
-        Log_write(LOG_LEVELS_ERROR, "<GL> can't create shader program");
+        Log_write(LOG_LEVELS_ERROR, "<PROGRAM> can't create shader program");
         return false;
     }
 
-    Log_write(LOG_LEVELS_DEBUG, "<GL> shader program #%d created", program->id);
+    Log_write(LOG_LEVELS_DEBUG, "<PROGRAM> shader program #%d created", program->id);
 
     return true;
 }
 
 void program_delete(Program_t *program)
 {
-    GLint count = 0;
-    glGetProgramiv(program->id, GL_ATTACHED_SHADERS, &count);
-    if (count > 0) {
-        GLuint shaders[count];
-        glGetAttachedShaders(program->id, count, NULL, shaders);
-        for (GLint i = 0; i < count; ++i) {
-            glDetachShader(program->id, shaders[i]);
-            Log_write(LOG_LEVELS_DEBUG, "<GL> shader #%d detached from program #%d", shaders[i], program->id);
+    if (program->id != 0) {
+        GLint count = 0;
+        glGetProgramiv(program->id, GL_ATTACHED_SHADERS, &count);
+        if (count > 0) {
+            GLuint shaders[count];
+            glGetAttachedShaders(program->id, count, NULL, shaders);
+            for (GLint i = 0; i < count; ++i) {
+                glDetachShader(program->id, shaders[i]);
+                Log_write(LOG_LEVELS_DEBUG, "<PROGRAM> shader #%d detached from program #%d", shaders[i], program->id);
+            }
         }
-    }
 
-    glDeleteProgram(program->id);
-    Log_write(LOG_LEVELS_DEBUG, "<GL> shader program #%d deleted", program->id);
+        glDeleteProgram(program->id);
+        Log_write(LOG_LEVELS_DEBUG, "<PROGRAM> shader program #%d deleted", program->id);
+    }
 
     if (program->locations) {
         free(program->locations);
-        Log_write(LOG_LEVELS_DEBUG, "<GL> shader uniforms LUT for program #%d deleted", program->id);
+        Log_write(LOG_LEVELS_DEBUG, "<PROGRAM> shader uniforms LUT for program #%d deleted", program->id);
     }
 
     *program = (Program_t){ 0 };
@@ -75,22 +77,22 @@ bool program_attach(Program_t *program, const char *shader_code, Program_Shaders
 {
 #ifdef __DEFENSIVE_CHECKS__
     if (program->id == 0) {
-        Log_write(LOG_LEVELS_WARNING, "<GL> shader program can't be zero");
+        Log_write(LOG_LEVELS_WARNING, "<PROGRAM> shader program can't be zero");
         return false;
     }
     if (!shader_code) {
-        Log_write(LOG_LEVELS_WARNING, "<GL> shader code can't be null");
+        Log_write(LOG_LEVELS_WARNING, "<PROGRAM> shader code can't be null");
         return false;
     }
 #endif
 
     GLuint shader_id = glCreateShader(shader_type == PROGRAM_SHADER_VERTEX ? GL_VERTEX_SHADER : GL_FRAGMENT_SHADER);
     if (shader_id == 0) {
-        Log_write(LOG_LEVELS_ERROR, "<GL> can't create shader");
+        Log_write(LOG_LEVELS_ERROR, "<PROGRAM> can't create shader");
         return false;
     }
 
-    Log_write(LOG_LEVELS_TRACE, "<GL> compiling shader\n<SHADER type=\"%d\">\n%s\n</SHADER>", shader_type, shader_code);
+    Log_write(LOG_LEVELS_TRACE, "<PROGRAM> compiling shader\n<SHADER type=\"%d\">\n%s\n</SHADER>", shader_type, shader_code);
     glShaderSource(shader_id, 1, &shader_code, NULL);
     glCompileShader(shader_id);
 
@@ -102,7 +104,7 @@ bool program_attach(Program_t *program, const char *shader_code, Program_Shaders
 
         GLchar description[length];
         glGetShaderInfoLog(shader_id, length, NULL, description);
-        Log_write(LOG_LEVELS_ERROR, "<GL> shader compile error: %s", description);
+        Log_write(LOG_LEVELS_ERROR, "<PROGRAM> shader compile error: %s", description);
     } else {
         glAttachShader(program->id, shader_id);
 
@@ -115,11 +117,11 @@ bool program_attach(Program_t *program, const char *shader_code, Program_Shaders
 
             GLchar description[length];
             glGetProgramInfoLog(program->id, length, NULL, description);
-            Log_write(LOG_LEVELS_ERROR, "<GL> program link error: %s", description);
+            Log_write(LOG_LEVELS_ERROR, "<PROGRAM> program link error: %s", description);
 
             glDetachShader(program->id, shader_id);
         } else {
-            Log_write(LOG_LEVELS_DEBUG, "<GL> shader #%d compiled into program #%d", shader_id, program->id);
+            Log_write(LOG_LEVELS_DEBUG, "<PROGRAM> shader #%d compiled into program #%d", shader_id, program->id);
         }
     }
 
@@ -133,10 +135,10 @@ void program_prepare(Program_t *program, const char *ids[], size_t count)
     if (program->locations) {
         free(program->locations);
         program->locations = NULL;
-        Log_write(LOG_LEVELS_DEBUG, "<GL> shader uniforms LUT for program #%d deleted", program->id);
+        Log_write(LOG_LEVELS_DEBUG, "<PROGRAM> shader uniforms LUT for program #%d deleted", program->id);
     }
     if (count == 0) {
-        Log_write(LOG_LEVELS_DEBUG, "<GL> no uniforms to prepare for program #%d", program->id);
+        Log_write(LOG_LEVELS_DEBUG, "<PROGRAM> no uniforms to prepare for program #%d", program->id);
         return;
     }
     program->locations = malloc(count * sizeof(GLuint));
@@ -149,14 +151,14 @@ void program_send(const Program_t *program, size_t index, Program_Uniforms_t typ
 {
 #ifdef __DEFENSIVE_CHECKS__
     if (!program->locations) {
-        Log_write(LOG_LEVELS_WARNING, "<GL> program uniforms are not prepared");
+        Log_write(LOG_LEVELS_WARNING, "<PROGRAM> program uniforms are not prepared");
         return;
     }
 #endif
     GLint location = program->locations[index];
     if (location == -1) {
 #ifdef __DEBUG_SHADER_CALLS__
-        Log_write(LOG_LEVELS_WARNING, "<GL> can't find uniform '%s' for program #%d", id, program->id);
+        Log_write(LOG_LEVELS_WARNING, "<PROGRAM> can't find uniform '%s' for program #%d", id, program->id);
 #endif
         return;
     }
@@ -178,5 +180,4 @@ void program_send(const Program_t *program, size_t index, Program_Uniforms_t typ
 void program_use(const Program_t *program)
 {
     glUseProgram(program->id);
-//    Log_write(LOG_LEVELS_TRACE, "<GL> using shader program", program->id);
 }

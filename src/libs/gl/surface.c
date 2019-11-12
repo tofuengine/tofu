@@ -46,7 +46,7 @@ bool GL_surface_decode(GL_Surface_t *surface, const void *buffer, size_t buffer_
     }
     stbi_image_free(data);
 
-    Log_write(LOG_LEVELS_DEBUG, "<GL> surface decoded at #%p (%dx%d w/ %d)", surface->data, width, height, components);
+    Log_write(LOG_LEVELS_DEBUG, "<GL> surface decoded at #%p (%dx%d w/ %d bpp)", surface->data, width, height, components);
 
     return true;
 }

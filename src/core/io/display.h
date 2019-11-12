@@ -62,7 +62,7 @@ typedef struct _Display_t {
     GL_Quad_t vram_destination;
 
     Program_t programs[Display_Programs_t_CountOf];
-    size_t program_index;
+    Program_t *active_program;
 
     GL_Palette_t palette;
     GL_Context_t gl;

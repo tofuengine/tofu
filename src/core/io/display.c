@@ -38,6 +38,13 @@ typedef struct _Program_Data_t {
     const char *fragment_shader;
 } Program_Data_t;
 
+typedef enum Uniforms_t {
+    UNIFORM_TEXTURE,
+    UNIFORM_RESOLUTION,
+    UNIFORM_TIME,
+    Uniforms_t_CountOf
+} Uniforms_t;
+
 #define VERTEX_SHADER \
     "#version 120\n" \
     "\n" \
@@ -91,14 +98,7 @@ static const Program_Data_t _programs_data[Display_Programs_t_CountOf] = {
     { NULL, NULL }
 };
 
-static const int _texture_id_0[] = { 0 };
-
-typedef enum _Uniforms_t {
-    UNIFORM_TEXTURE,
-    UNIFORM_RESOLUTION,
-    UNIFORM_TIME,
-    Uniforms_t_CountOf
-} Uniforms_t;
+static const int _texture_id_0 = 0;
 
 static const char *_uniforms[Uniforms_t_CountOf] = {
     "u_texture0",
@@ -282,7 +282,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         glfwDestroyWindow(display->window);
         glfwTerminate();
     }
-    Log_write(LOG_LEVELS_DEBUG, "<GL> VRAM allocated at #%p (%dx%d)", display->vram, display->configuration.width, display->configuration.height);
+    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> VRAM allocated at #%p (%dx%d)", display->vram, display->configuration.width, display->configuration.height);
 
     glGenTextures(1, &display->vram_texture); //allocate the memory for texture
     if (display->vram_texture == 0) {
@@ -302,16 +302,17 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
     glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, display->configuration.width, display->configuration.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    Log_write(LOG_LEVELS_DEBUG, "<GL> texture created w/ id #%d (%dx%d)", display->vram_texture, display->configuration.width, display->configuration.height);
+    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> texture created w/ id #%d (%dx%d)", display->vram_texture, display->configuration.width, display->configuration.height);
 
     for (size_t i = 0; i < Display_Programs_t_CountOf; ++i) {
         const Program_Data_t *data = &_programs_data[i];
         if (!data->vertex_shader || !data->fragment_shader) {
             continue;
         }
-        if (!program_create(&display->programs[i]) ||
-            !program_attach(&display->programs[i], data->vertex_shader, PROGRAM_SHADER_VERTEX) ||
-            !program_attach(&display->programs[i], data->fragment_shader, PROGRAM_SHADER_FRAGMENT)) {
+        Program_t *program= &display->programs[i];
+        if (!program_create(program) ||
+            !program_attach(program, data->vertex_shader, PROGRAM_SHADER_VERTEX) ||
+            !program_attach(program, data->fragment_shader, PROGRAM_SHADER_FRAGMENT)) {
             Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't initialize shaders");
             for (size_t j = 0; j < i; ++j) {
                 program_delete(&display->programs[j]);
@@ -324,13 +325,11 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
             return false;
         }
 
-        program_prepare(&display->programs[i], _uniforms, Uniforms_t_CountOf);
-
-        program_send(&display->programs[i], UNIFORM_TEXTURE, PROGRAM_UNIFORM_TEXTURE, 1, _texture_id_0); // Redundant
-        GLfloat resolution[] = { (GLfloat)display->window_width, (GLfloat)display->window_height };
-        program_send(&display->programs[i], UNIFORM_RESOLUTION, PROGRAM_UNIFORM_VEC2, 1, resolution);
+        program_prepare(program, _uniforms, Uniforms_t_CountOf);
+        Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> program #%p prepared w/ id #%d", program, program->id);
     }
-    display->program_index = DISPLAY_PROGRAM_PASSTHRU; // Use pass-thru at the beginning.
+
+    Display_shader(display, NULL); // Use pass-thru at the beginning.
 
     return true;
 }
@@ -366,9 +365,8 @@ bool Display_should_close(Display_t *display)
 
 void Display_present(Display_t *display)
 {
-    GLfloat time[] = { (GLfloat)glfwGetTime() };
-    program_send(&display->programs[display->program_index], UNIFORM_TIME, PROGRAM_UNIFORM_FLOAT, 1, time);
-    program_use(&display->programs[display->program_index]);
+    GLfloat time = (GLfloat)glfwGetTime();
+    program_send(display->active_program, UNIFORM_TIME, PROGRAM_UNIFORM_FLOAT, 1, &time);
 
     GL_surface_to_rgba(&display->gl.buffer, &display->palette, display->vram);
 
@@ -397,36 +395,40 @@ void Display_present(Display_t *display)
 void Display_shader(Display_t *display, const char *effect)
 {
     if (!effect) {
+        Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> loading pass-thru shader");
         program_delete(&display->programs[DISPLAY_PROGRAM_CUSTOM]);
-        display->program_index = DISPLAY_PROGRAM_PASSTHRU;
-        Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> switched to default shader");
-        return;
-    }
-
-    const size_t length = strlen(FRAGMENT_SHADER_CUSTOM) + strlen(effect);
-    char *code = malloc((length + 1) * sizeof(char)); // Add null terminator for the string.
-    strcpy(code, FRAGMENT_SHADER_CUSTOM);
-    strcat(code, effect);
-
-    Program_t *program = &display->programs[DISPLAY_PROGRAM_CUSTOM];
-
-    if (program_create(program) &&
-        program_attach(program, VERTEX_SHADER, PROGRAM_SHADER_VERTEX) &&
-        program_attach(program, code, PROGRAM_SHADER_FRAGMENT)) {
-        program_prepare(program, _uniforms, Uniforms_t_CountOf);
-
-        program_send(program, UNIFORM_TEXTURE, PROGRAM_UNIFORM_TEXTURE, 1, _texture_id_0); // Redundant
-        GLfloat resolution[] = { (GLfloat)display->window_width, (GLfloat)display->window_height };
-        program_send(program, UNIFORM_RESOLUTION, PROGRAM_UNIFORM_VEC2, 1, resolution);
-
-        display->program_index = DISPLAY_PROGRAM_CUSTOM;
-        Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> switched to custom shader");
+        display->active_program = &display->programs[DISPLAY_PROGRAM_PASSTHRU];
     } else {
-        program_delete(program);
-        Log_write(LOG_LEVELS_WARNING, "<DISPLAY> can't load custom shader");
+        Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> loading custom shader");
+        const size_t length = strlen(FRAGMENT_SHADER_CUSTOM) + strlen(effect);
+        char *code = malloc((length + 1) * sizeof(char)); // Add null terminator for the string.
+        strcpy(code, FRAGMENT_SHADER_CUSTOM);
+        strcat(code, effect);
+
+        Program_t *program = &display->programs[DISPLAY_PROGRAM_CUSTOM];
+
+        if (program_create(program) &&
+            program_attach(program, VERTEX_SHADER, PROGRAM_SHADER_VERTEX) &&
+            program_attach(program, code, PROGRAM_SHADER_FRAGMENT)) {
+            program_prepare(program, _uniforms, Uniforms_t_CountOf);
+            display->active_program = program;
+        } else {
+            program_delete(program);
+            Log_write(LOG_LEVELS_WARNING, "<DISPLAY> can't load custom shader");
+        }
+
+        free(code);
     }
 
-    free(code);
+    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> switched to program #%p", display->active_program);
+
+    program_send(display->active_program, UNIFORM_TEXTURE, PROGRAM_UNIFORM_TEXTURE, 1, &_texture_id_0); // Redundant
+    GLfloat resolution[] = { (GLfloat)display->window_width, (GLfloat)display->window_height };
+    program_send(display->active_program, UNIFORM_RESOLUTION, PROGRAM_UNIFORM_VEC2, 1, resolution);
+    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> program #%p initialized", display->active_program);
+
+    program_use(display->active_program);
+    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> program #%p active", display->active_program);
 }
 
 void Display_palette(Display_t *display, const GL_Palette_t *palette)
