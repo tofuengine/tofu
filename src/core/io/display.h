@@ -34,7 +34,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "program.h"
+#include "display/program.h"
 
 typedef enum _Display_Programs_t {
     Display_Programs_t_First = 0,
