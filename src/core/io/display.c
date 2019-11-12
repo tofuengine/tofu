@@ -83,7 +83,8 @@ typedef struct _Program_Data_t {
     "void main()\n" \
     "{\n" \
     "    gl_FragColor = effect(gl_Color, u_texture0, v_texture_coords, gl_FragCoord.xy);\n" \
-    "}\n"
+    "}\n" \
+    "\n"
 
 static const Program_Data_t _programs_data[Display_Programs_t_CountOf] = {
     { VERTEX_SHADER, FRAGMENT_SHADER_PASSTHRU },
