@@ -169,7 +169,7 @@ static int surface_new2(lua_State *L)
 
     GL_Surface_t surface;
     GL_surface_create(&surface, width, height);
-    Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface %d x %d created", width, height);
+    Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface %dx%d created", width, height);
 
     Surface_Class_t *instance = (Surface_Class_t *)lua_newuserdata(L, sizeof(Surface_Class_t));
     *instance = (Surface_Class_t){
