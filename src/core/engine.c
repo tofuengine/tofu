@@ -210,6 +210,7 @@ void Engine_run(Engine_t *engine)
         for (int frames = 0; (frames < skippable_frames) && (lag >= delta_time); ++frames) {
             engine->environment.time += delta_time;
             running = running && Interpreter_update(&engine->interpreter, delta_time);
+            Display_update(&engine->display, delta_time);
             lag -= delta_time;
         }
 

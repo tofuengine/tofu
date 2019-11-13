@@ -64,6 +64,7 @@ typedef struct _Display_t {
 
     Program_t programs[Display_Programs_t_CountOf];
     Program_t *active_program;
+    GLfloat time;
 
     GL_Palette_t palette;
     GL_Context_t gl;
@@ -72,6 +73,7 @@ typedef struct _Display_t {
 extern bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title);
 extern void Display_terminate(Display_t *display);
 extern bool Display_should_close(Display_t *display);
+extern void Display_update(Display_t *display, float delta_time);
 extern void Display_present(Display_t *display);
 
 extern void Display_shader(Display_t *display, const char *code);

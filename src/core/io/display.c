@@ -366,11 +366,14 @@ bool Display_should_close(Display_t *display)
     return glfwWindowShouldClose(display->window);
 }
 
+void Display_update(Display_t *display, float delta_time)
+{
+    display->time += (GLfloat)delta_time;
+    program_send(display->active_program, UNIFORM_TIME, PROGRAM_UNIFORM_FLOAT, 1, &display->time);
+}
+
 void Display_present(Display_t *display)
 {
-    GLfloat time = (GLfloat)glfwGetTime();
-    program_send(display->active_program, UNIFORM_TIME, PROGRAM_UNIFORM_FLOAT, 1, &time);
-
     GL_surface_to_rgba(&display->gl.buffer, &display->palette, display->vram);
 
 #ifdef __GL_BGRA_PALETTE__
