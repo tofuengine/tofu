@@ -56,6 +56,7 @@ typedef struct _Input_Key_State_t { // TODO: use explicit masks?
 
 typedef struct _Input_Configuration_t {
     bool exit_key_enabled;
+    // TODO: key-remapping?
 } Input_Configuration_t;
 
 typedef struct _Input_t {
