@@ -200,6 +200,8 @@ static void size_callback(GLFWwindow* window, int width, int height)
 
 bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title)
 {
+    *display = (Display_t){ 0 };
+
     display->configuration = *configuration;
 
     glfwSetErrorCallback(error_callback);
