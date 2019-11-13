@@ -402,6 +402,8 @@ void Display_present(Display_t *display)
 
 void Display_shader(Display_t *display, const char *effect)
 {
+    // FIXME: there's a leak, when calling shader with an effect twice!!!
+
     if (!effect) { // TODO: check if already in use, to simplify the `program_delete()` function w/o checks.
         Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> loading pass-thru shader");
         program_delete(&display->programs[DISPLAY_PROGRAM_CUSTOM]);
