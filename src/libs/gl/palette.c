@@ -42,7 +42,7 @@ void GL_palette_greyscale(GL_Palette_t *palette, const size_t count)
 GL_Color_t GL_palette_parse_color(const char *argb)
 {
     GL_Color_t color;
-    char hex[3] = { 0 };
+    char hex[3];
     if (strlen(argb) == 8) {
         strncpy(hex, argb    , 2); color.a = strtol(hex, NULL, 16);
         strncpy(hex, argb + 2, 2); color.r = strtol(hex, NULL, 16);

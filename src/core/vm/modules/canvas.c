@@ -263,8 +263,7 @@ static int canvas_palette1(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    GL_Palette_t palette = { 0 };
-
+    GL_Palette_t palette;
     if (type == LUA_TSTRING) { // Predefined palette!
         const char *id = luaL_checkstring(L, 1);
         const GL_Palette_t *predefined_palette = graphics_palettes_find(id);
@@ -296,6 +295,7 @@ static int canvas_palette1(lua_State *L)
             lua_pop(L, 1);
         }
     } else {
+        palette = (GL_Palette_t){ 0 };
         Log_write(LOG_LEVELS_ERROR, "<CANVAS> wrong palette type, need to be string or list");
     }
 
