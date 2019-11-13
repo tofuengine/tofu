@@ -47,6 +47,7 @@ typedef enum _Display_Programs_t {
 typedef struct _Display_Configuration_t {
     int width, height, scale;
     bool fullscreen;
+    bool vertical_sync;
     bool hide_cursor;
 } Display_Configuration_t;
 

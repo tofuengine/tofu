@@ -110,10 +110,11 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 
     Log_configure(engine->configuration.debug);
 
-    Display_Configuration_t display_configuration = {
+    Display_Configuration_t display_configuration = { // TODO: reorganize configuration.
             .width = engine->configuration.width,
             .height = engine->configuration.height,
             .fullscreen = engine->configuration.fullscreen,
+            .vertical_sync = engine->configuration.vertical_sync,
             .scale = engine->configuration.scale,
             .hide_cursor = engine->configuration.hide_cursor
         };

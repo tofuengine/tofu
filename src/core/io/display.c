@@ -234,6 +234,9 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     }
     glfwMakeContextCurrent(display->window);
 
+    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> %sabling vertical synchronization", configuration->vertical_sync ? "en" : "dis");
+    glfwSwapInterval(configuration->vertical_sync ? 1 : 0); // Set vertical sync, if required.
+
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't initialize GLAD");
         glfwDestroyWindow(display->window);

@@ -44,6 +44,7 @@ void Configuration_initialize(Configuration_t *configuration)
             .height = SCREEN_HEIGHT,
             .scale = SCREEN_SCALE,
             .fullscreen = false,
+            .vertical_sync = false,
             .fps = FRAMES_PER_SECOND,
             .skippable_frames = FRAMES_PER_SECOND / 5, // About 20% of the FPS amount.
             .frame_caps = { 0 }, // No capping as a default. TODO: make it run-time configurable?
@@ -79,6 +80,9 @@ void Configuration_parse(lua_State *L, Configuration_t *configuration)
         if (strcmp(key, "fullscreen") == 0) {
             configuration->fullscreen = lua_toboolean(L, -1);
         } else
+        if (strcmp(key, "vertical-sync") == 0) {
+            configuration->vertical_sync = lua_toboolean(L, -1);
+        } else
         if (strcmp(key, "fps") == 0) {
             configuration->fps = lua_tointeger(L, -1);
             configuration->skippable_frames = configuration->fps / 5; // Keep synched. About 20% of the FPS amount.
@@ -102,7 +106,7 @@ void Configuration_parse(lua_State *L, Configuration_t *configuration)
                 lua_pop(L, 1);
             }
         } else
-        if (strcmp(key, "hide_cursor") == 0) {
+        if (strcmp(key, "hide-cursor") == 0) {
             configuration->hide_cursor = lua_toboolean(L, -1);
         } else
         if (strcmp(key, "exit-key-enabled") == 0) {

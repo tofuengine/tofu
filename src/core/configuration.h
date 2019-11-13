@@ -34,6 +34,7 @@ typedef struct _Configuration {
     char title[MAX_CONFIGURATION_TITLE_LENGTH];
     int width, height, scale;
     bool fullscreen;  // TODO: rename to "windowed"?
+    bool vertical_sync;
     int fps; // TODO: rename to "frequency"?
     int skippable_frames;
     float frame_caps[MAX_CONFIGURATION_FRAME_CAPS]; // We are storing the reciprocal of the FPS, i.e. the frame times.
