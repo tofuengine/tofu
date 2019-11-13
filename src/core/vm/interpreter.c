@@ -34,6 +34,7 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 #include <core/io/display.h>
 #include <core/io/fs.h>
 #include <core/vm/modules.h>
+#include <libs/imath.h>
 #include <libs/log.h>
 
 #include <limits.h>
@@ -234,6 +235,87 @@ static bool timerpool_callback(Timer_t *timer, void *parameters)
     return result == LUA_OK;
 }
 
+void parse(lua_State *L, Configuration_t *configuration)
+{
+    strncpy(configuration->title, DEFAULT_WINDOW_TITLE, MAX_CONFIGURATION_TITLE_LENGTH);
+    *configuration = (Configuration_t){
+            .width = DEFAULT_SCREEN_WIDTH,
+            .height = DEFAULT_SCREEN_HEIGHT,
+            .scale = DEFAULT_SCREEN_SCALE,
+            .fullscreen = false,
+            .vertical_sync = false,
+            .fps = DEFAULT_FRAMES_PER_SECOND,
+            .skippable_frames = DEFAULT_FRAMES_PER_SECOND / 5, // About 20% of the FPS amount.
+            .frame_caps = { 0 }, // No capping as a default. TODO: make it run-time configurable?
+            .hide_cursor = true,
+            .exit_key_enabled = true,
+            .debug = true
+        };
+
+    if (!lua_istable(L, -1)) {
+        Log_write(LOG_LEVELS_WARNING, "<VM> setup method returned no value");
+        return;
+    }
+
+    lua_pushnil(L); // first key
+    while (lua_next(L, -2)) { // Table is at the top, prior pushing NIL!
+        const char *key = lua_tostring(L, -2); // uses 'key' (at index -2) and 'value' (at index -1)
+
+        if (strcmp(key, "title") == 0) {
+            strncpy(configuration->title, lua_tostring(L, -1), MAX_CONFIGURATION_TITLE_LENGTH);
+        } else
+        if (strcmp(key, "width") == 0) {
+            configuration->width = lua_tointeger(L, -1);
+        } else
+        if (strcmp(key, "height") == 0) {
+            configuration->height = lua_tointeger(L, -1);
+        } else
+        if (strcmp(key, "scale") == 0) {
+            configuration->scale = lua_tointeger(L, -1);
+        } else
+        if (strcmp(key, "fullscreen") == 0) {
+            configuration->fullscreen = lua_toboolean(L, -1);
+        } else
+        if (strcmp(key, "vertical-sync") == 0) {
+            configuration->vertical_sync = lua_toboolean(L, -1);
+        } else
+        if (strcmp(key, "fps") == 0) {
+            configuration->fps = lua_tointeger(L, -1);
+            configuration->skippable_frames = configuration->fps / 5; // Keep synched. About 20% of the FPS amount.
+        } else
+        if (strcmp(key, "skippable-frames") == 0) {
+            int suggested = configuration->fps / 5;
+            configuration->skippable_frames = imin(lua_tointeger(L, -1), suggested); // TODO: not sure if `imin` or `imax`. :P
+        } else
+        if (strcmp(key, "fps-caps") == 0) {
+            lua_pushnil(L);
+            for (int i = 0; i < MAX_CONFIGURATION_FRAME_CAPS; ++i) { // Reset cappings to "no frame capping"
+                configuration->frame_caps[i] = 0.0f;
+            }
+            for (int i = MAX_CONFIGURATION_FRAME_CAPS - 1; lua_next(L, -2); --i) {
+                if (i == 0) {
+                    Log_write(LOG_LEVELS_WARNING, "<CONFIGURATION> maximum amount of frame-cappings reached");
+                    lua_pop(L, 2);
+                    break;
+                }
+                configuration->frame_caps[i] = 1.0f / (float)lua_tointeger(L, -1); // Automatically convert FPS to frame-time (optimization).
+                lua_pop(L, 1);
+            }
+        } else
+        if (strcmp(key, "hide-cursor") == 0) {
+            configuration->hide_cursor = lua_toboolean(L, -1);
+        } else
+        if (strcmp(key, "exit-key-enabled") == 0) {
+            configuration->exit_key_enabled = lua_toboolean(L, -1);
+        } else
+        if (strcmp(key, "debug") == 0) {
+            configuration->debug = lua_toboolean(L, -1);
+        }
+
+        lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
+    }
+}
+
 bool Interpreter_initialize(Interpreter_t *interpreter, const char *base_path, Configuration_t *configuration, const void *userdatas[])
 {
     FS_initialize(&interpreter->file_system, base_path);
@@ -282,7 +364,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const char *base_path, C
     }
 
     call(interpreter->state, METHOD_SETUP, 0, 1);
-    Configuration_parse(interpreter->state, configuration);
+    parse(interpreter->state, configuration);
     lua_pop(interpreter->state, 1); // Remove the configuration table from the stack.
 
     return true;

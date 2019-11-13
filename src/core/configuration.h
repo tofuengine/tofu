@@ -25,10 +25,14 @@
 
 #include <stdbool.h>
 
-#include <lua/lua.h>
-
 #define MAX_CONFIGURATION_TITLE_LENGTH      128
 #define MAX_CONFIGURATION_FRAME_CAPS        4
+
+#define DEFAULT_SCREEN_WIDTH        320
+#define DEFAULT_SCREEN_HEIGHT       240
+#define DEFAULT_SCREEN_SCALE        0
+#define DEFAULT_WINDOW_TITLE        ".: Tofu Engine :."
+#define DEFAULT_FRAMES_PER_SECOND   60
 
 typedef struct _Configuration {
     char title[MAX_CONFIGURATION_TITLE_LENGTH];
@@ -43,8 +47,5 @@ typedef struct _Configuration {
     bool debug;
     // TODO: key-remapping?
 } Configuration_t;
-
-extern void Configuration_initialize(Configuration_t *configuration);
-extern void Configuration_parse(lua_State *L, Configuration_t *configuration);
 
 #endif  /* __CONFIGURATION_H__ */
