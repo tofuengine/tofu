@@ -63,6 +63,8 @@ static void device_callback(ma_device *device, void *output, const void *input, 
 
 bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration)
 {
+    *audio = (Audio_t){ 0 };
+
     audio->configuration = *configuration;
 
     audio->device_config = ma_device_config_init(ma_device_type_playback);

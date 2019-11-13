@@ -91,6 +91,8 @@ static inline bool update_statistics(Engine_Statistics_t *statistics, float elap
 
 bool Engine_initialize(Engine_t *engine, const char *base_path)
 {
+    *engine = (Engine_t){ 0 }; // Ensure is cleared at first.
+
     Log_initialize();
     Environment_initialize(&engine->environment);
 
