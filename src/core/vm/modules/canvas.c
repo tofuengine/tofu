@@ -244,7 +244,7 @@ static int canvas_palette0(lua_State *L)
 
     lua_newtable(L);
     for (size_t i = 0; i < palette->count; ++i) {
-        char argb[12] = { 0 };
+        char argb[12];
         GL_palette_format_color(argb, palette->colors[i]);
 
         lua_pushstring(L, argb);

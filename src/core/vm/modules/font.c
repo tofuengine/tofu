@@ -181,8 +181,6 @@ static int font_gc(lua_State *L)
     }
     Log_write(LOG_LEVELS_DEBUG, "<FONT> font #%p finalized", instance);
 
-    *instance = (Font_Class_t){ 0 };
-
     return 0;
 }
 

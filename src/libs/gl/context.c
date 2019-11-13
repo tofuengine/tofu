@@ -60,6 +60,7 @@ bool GL_context_create(GL_Context_t *context, size_t width, size_t height)
 
     reset_state(&context->state, &context->buffer);
 
+    Log_write(LOG_LEVELS_DEBUG, "<GL> context created");
     return true;
 }
 
@@ -71,8 +72,7 @@ void GL_context_delete(GL_Context_t *context)
     GL_surface_delete(&context->buffer);
     Log_write(LOG_LEVELS_DEBUG, "<GL> context buffer deallocated");
 
-    *context = (GL_Context_t){ 0 };
-    Log_write(LOG_LEVELS_DEBUG, "<GL> context deallocated");
+    Log_write(LOG_LEVELS_DEBUG, "<GL> context deleted");
 }
 
 void GL_context_push(GL_Context_t *context)

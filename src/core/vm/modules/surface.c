@@ -220,8 +220,6 @@ static int surface_gc(lua_State *L)
     GL_surface_delete(&instance->surface);
     Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface #%p finalized", instance);
 
-    *instance = (Surface_Class_t){ 0 };
-
     return 0;
 }
 

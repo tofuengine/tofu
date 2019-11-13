@@ -84,6 +84,5 @@ void GL_sheet_attach(GL_Sheet_t *sheet, const GL_Surface_t *atlas, size_t cell_w
 void GL_sheet_detach(GL_Sheet_t *sheet)
 {
     free(sheet->cells);
-    *sheet = (GL_Sheet_t){ 0 };
     Log_write(LOG_LEVELS_DEBUG, "<GL> sheet #%p detached", sheet);
 }

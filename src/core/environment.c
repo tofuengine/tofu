@@ -41,5 +41,4 @@ void Environment_initialize(Environment_t *environment)
 
 void Environment_terminate(Environment_t *environment)
 {
-    *environment = (Environment_t){ 0 };
 }

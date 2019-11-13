@@ -69,8 +69,6 @@ void program_delete(Program_t *program)
         free(program->locations);
         Log_write(LOG_LEVELS_DEBUG, "<PROGRAM> shader uniforms LUT for program #%d deleted", program->id);
     }
-
-    *program = (Program_t){ 0 };
 }
 
 bool program_attach(Program_t *program, const char *shader_code, Program_Shaders_t shader_type)

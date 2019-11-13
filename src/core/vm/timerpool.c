@@ -65,9 +65,6 @@ static void pop(Timer_Pool_t *pool, Timer_t *timer)
         timer->next->prev = timer->prev;
     }
 
-#if DEBUG
-    *timer = (Timer_t){ 0 }; // Clear in DEBUG mode for easier, umm, debugging.
-#endif
     free(timer);
 }
 
@@ -93,7 +90,6 @@ void TimerPool_terminate(Timer_Pool_t *pool)
         Log_write(LOG_LEVELS_DEBUG, "<TIMERPOOL> timer #%p released", timer);
         timer = pop_next(pool, timer);
     }
-    *pool = (Timer_Pool_t){ 0 };
 }
 
 Timer_t *TimerPool_allocate(Timer_Pool_t *pool, float period, size_t repeats, void *bundle)

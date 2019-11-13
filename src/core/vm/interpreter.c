@@ -114,7 +114,7 @@ static int custom_searcher(lua_State *L)
 
     const char *file = lua_tostring(L, 1);
 
-    char path_file[PATH_FILE_MAX] = { 0 };
+    char path_file[PATH_FILE_MAX];
     strcpy(path_file, file);
     for (int i = 0; path_file[i] != '\0'; ++i) { // Replace `.' with '/` to map file system entry.
         if (path_file[i] == '.') {

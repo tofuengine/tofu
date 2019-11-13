@@ -33,7 +33,6 @@ bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration
 
 void Input_terminate(Input_t *input)
 {
-    *input = (Input_t){ 0 };
 }
 
 void Input_process(Input_t *input, float delta_time)

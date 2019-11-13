@@ -39,7 +39,7 @@ typedef enum _File_System_Modes_t {
 
 static void *load(const File_System_t *fs, const char *file, File_System_Modes_t mode, size_t *size)
 {
-    char full_path[PATH_FILE_MAX] = { 0 };
+    char full_path[PATH_FILE_MAX];
     strcpy(full_path, fs->base_path);
     strcat(full_path, file);
 
@@ -69,7 +69,7 @@ void FS_initialize(File_System_t *fs, const char *base_path)
 {
     *fs = (File_System_t){ 0 };
 
-    char resolved[PATH_FILE_MAX] = { 0 }; // Using local buffer to avoid un-tracked `malloc()` for the syscall.
+    char resolved[PATH_FILE_MAX]; // Using local buffer to avoid un-tracked `malloc()` for the syscall.
     char *ptr = realpath(base_path ? base_path : FILE_PATH_CURRENT_SZ, resolved);
     if (!ptr) {
         return;
@@ -88,7 +88,6 @@ void FS_initialize(File_System_t *fs, const char *base_path)
 void FS_terminate(File_System_t *fs)
 {
     free(fs->base_path);
-    *fs = (File_System_t){ 0 };
 }
 
 char *FS_load_as_string(const File_System_t *fs, const char *file)

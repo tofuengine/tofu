@@ -91,6 +91,4 @@ bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration
 void Audio_terminate(Audio_t *audio)
 {
     ma_device_uninit(&audio->device);
-
-    *audio = (Audio_t){ 0 };
 }

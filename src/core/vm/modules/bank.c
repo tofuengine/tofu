@@ -137,8 +137,6 @@ static int bank_gc(lua_State *L)
     }
     Log_write(LOG_LEVELS_DEBUG, "<BANK> bank #%p finalized", instance);
 
-    *instance = (Bank_Class_t){ 0 };
-
     return 0;
 }
 
