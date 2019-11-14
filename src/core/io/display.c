@@ -402,9 +402,19 @@ void Display_present(Display_t *display)
 
 void Display_shader(Display_t *display, const char *effect)
 {
-    // FIXME: there's a leak, when calling shader with an effect twice!!!
+    bool is_passthru = display->active_program == &display->programs[DISPLAY_PROGRAM_PASSTHRU];
 
-    if (!effect) { // TODO: check if already in use, to simplify the `program_delete()` function w/o checks.
+    if (!is_passthru) {
+        if (display->active_program) {
+            program_delete(display->active_program);
+        }
+    } else
+    if (!effect) {
+        Log_write(LOG_LEVELS_INFO, "<DISPLAY> pass-thru shader already active, bailing out");
+        return;
+    }
+
+    if (!effect) {
         Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> loading pass-thru shader");
         program_delete(&display->programs[DISPLAY_PROGRAM_CUSTOM]);
         display->active_program = &display->programs[DISPLAY_PROGRAM_PASSTHRU];

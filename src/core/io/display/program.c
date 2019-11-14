@@ -49,26 +49,22 @@ bool program_create(Program_t *program)
 
 void program_delete(Program_t *program)
 {
-    if (program->id != 0) {
-        GLint count = 0;
-        glGetProgramiv(program->id, GL_ATTACHED_SHADERS, &count);
-        if (count > 0) {
-            GLuint shaders[count];
-            glGetAttachedShaders(program->id, count, NULL, shaders);
-            for (GLint i = 0; i < count; ++i) {
-                glDetachShader(program->id, shaders[i]);
-                Log_write(LOG_LEVELS_DEBUG, "<PROGRAM> shader #%d detached from program #%d", shaders[i], program->id);
-            }
+    GLint count = 0;
+    glGetProgramiv(program->id, GL_ATTACHED_SHADERS, &count);
+    if (count > 0) {
+        GLuint shaders[count];
+        glGetAttachedShaders(program->id, count, NULL, shaders);
+        for (GLint i = 0; i < count; ++i) {
+            glDetachShader(program->id, shaders[i]);
+            Log_write(LOG_LEVELS_DEBUG, "<PROGRAM> shader #%d detached from program #%d", shaders[i], program->id);
         }
-
-        glDeleteProgram(program->id);
-        Log_write(LOG_LEVELS_DEBUG, "<PROGRAM> shader program #%d deleted", program->id);
     }
 
-    if (program->locations) {
-        free(program->locations);
-        Log_write(LOG_LEVELS_DEBUG, "<PROGRAM> shader uniforms LUT for program #%d deleted", program->id);
-    }
+    glDeleteProgram(program->id);
+    Log_write(LOG_LEVELS_DEBUG, "<PROGRAM> shader program #%d deleted", program->id);
+
+    free(program->locations); // Safe when passing NULL.
+    Log_write(LOG_LEVELS_DEBUG, "<PROGRAM> shader uniforms LUT for program #%d deleted", program->id);
 }
 
 bool program_attach(Program_t *program, const char *shader_code, Program_Shaders_t shader_type)
