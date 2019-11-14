@@ -20,23 +20,20 @@
  * SOFTWARE.
  **/
 
-#include "main.h"
+#include "class.h"
 
-#include <core/engine.h>
 #include <libs/log.h>
 
-#include <stdlib.h>
+#include "udt.h"
 
-int main(int argc, char **argv)
+static const uint8_t _class_lua[] = {
+#include "class.inc"
+};
+
+static luaX_Script _class_script = { (const char *)_class_lua, sizeof(_class_lua), "class.lua" };
+
+int class_loader(lua_State *L)
 {
-    Engine_t engine;
-    bool result = Engine_initialize(&engine, (argc > 1) ? argv[1] : NULL);
-    if (!result) {
-        Log_write(LOG_LEVELS_FATAL, "<MAIN> can't initialize engine");
-        return EXIT_FAILURE;
-    }
-    Engine_run(&engine);
-    Engine_terminate(&engine);
-
-    return EXIT_SUCCESS;
+    int nup = luaX_unpackupvalues(L);
+    return luaX_newmodule(L, &_class_script, NULL, NULL, nup, NULL);
 }

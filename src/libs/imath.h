@@ -20,23 +20,12 @@
  * SOFTWARE.
  **/
 
-#include "main.h"
+#ifndef __LIBS_IMATH_H__
+#define __LIBS_IMATH_H__
 
-#include <core/engine.h>
-#include <libs/log.h>
+extern int iabs(int v);
+extern int imod(int a, int b);
+extern int imin(int a, int b);
+extern int imax(int a, int b);
 
-#include <stdlib.h>
-
-int main(int argc, char **argv)
-{
-    Engine_t engine;
-    bool result = Engine_initialize(&engine, (argc > 1) ? argv[1] : NULL);
-    if (!result) {
-        Log_write(LOG_LEVELS_FATAL, "<MAIN> can't initialize engine");
-        return EXIT_FAILURE;
-    }
-    Engine_run(&engine);
-    Engine_terminate(&engine);
-
-    return EXIT_SUCCESS;
-}
+#endif  /* __LIBS_IMATH_H__ */

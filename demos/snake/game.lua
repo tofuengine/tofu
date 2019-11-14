@@ -6,8 +6,8 @@ local Class = require("tofu.util").Class
 local System = require("tofu.core").System
 
 local INITIAL_LENGHT = 5
-local SPEED_RATIO = 5e
-local CELLS = 32
+local SPEED_RATIO = 5
+local CELL_SIZE = 8
 local LIFE = 1.0
 local SPEED = 5.0
 

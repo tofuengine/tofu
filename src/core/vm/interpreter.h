@@ -20,23 +20,34 @@
  * SOFTWARE.
  **/
 
-#include "main.h"
+#ifndef __INTERPRETER_H__
+#define __INTERPRETER_H__
 
-#include <core/engine.h>
-#include <libs/log.h>
+#include <limits.h>
+#include <stdbool.h>
 
-#include <stdlib.h>
+#include <core/configuration.h>
+#include <core/environment.h>
+#include <core/io/fs.h>
+#include <core/vm/timerpool.h>
 
-int main(int argc, char **argv)
-{
-    Engine_t engine;
-    bool result = Engine_initialize(&engine, (argc > 1) ? argv[1] : NULL);
-    if (!result) {
-        Log_write(LOG_LEVELS_FATAL, "<MAIN> can't initialize engine");
-        return EXIT_FAILURE;
-    }
-    Engine_run(&engine);
-    Engine_terminate(&engine);
+#include <libs/luax.h>
 
-    return EXIT_SUCCESS;
-}
+typedef struct _Interpreter_t {
+    float gc_age;
+
+    lua_State *state; // TODO: rename to `L`?
+
+    File_System_t file_system;
+    Timer_Pool_t timer_pool;
+} Interpreter_t;
+
+extern bool Interpreter_initialize(Interpreter_t *interpreter, const char *base_path, Configuration_t *configuration, const void *userdatas[]);
+extern void Interpreter_terminate(Interpreter_t *interpreter);
+extern bool Interpreter_init(Interpreter_t *interpreter);
+extern bool Interpreter_input(Interpreter_t *interpreter);
+extern bool Interpreter_update(Interpreter_t *interpreter, float delta_time);
+extern bool Interpreter_render(Interpreter_t *interpreter, float ratio);
+extern bool Interpreter_call(Interpreter_t *interpreter, int nargs, int nresults);
+
+#endif  /* __INTERPRETER_H__ */

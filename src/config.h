@@ -48,7 +48,6 @@
 #undef  __FIND_NEAREST_COLOR_EUCLIDIAN__
 #undef  __GRID_INTEGER_CELL__
 #undef  __DEBUG_ENGINE_FPS__
-#undef  __DEBUG_API_CALLS__
 #define __DEBUG_VM_CALLS__
 #undef  __DEBUG_GRAPHICS__
 #undef  __DEBUG_SHADER_CALLS__
