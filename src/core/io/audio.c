@@ -94,3 +94,8 @@ void Audio_terminate(Audio_t *audio)
 {
     ma_device_uninit(&audio->device);
 }
+
+void Audio_update(Audio_t *audio, float delta_time)
+{
+    audio->time += delta_time;
+}

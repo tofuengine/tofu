@@ -24,9 +24,12 @@
 
 bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration, GLFWwindow *window)
 {
+    // TODO: should perform a single "zeroing" call and the set the single fields?
+
     *input = (Input_t){
             .configuration = *configuration,
-            .window = window
+            .window = window,
+            .time = 0.0f
         };
     return true;
 }
@@ -35,7 +38,12 @@ void Input_terminate(Input_t *input)
 {
 }
 
-void Input_process(Input_t *input, float delta_time)
+void Input_update(Input_t *input, float delta_time)
+{
+    input->time += delta_time;
+}
+
+void Input_process(Input_t *input)
 {
     static const int keys[Input_Keys_t_CountOf] = {
         GLFW_KEY_UP,

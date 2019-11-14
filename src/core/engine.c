@@ -177,7 +177,7 @@ void Engine_run(Engine_t *engine)
     const float delta_time = 1.0f / (float)engine->configuration.fps;
     const int skippable_frames = engine->configuration.skippable_frames;
     const float *frame_caps = engine->configuration.frame_caps;
-    Log_write(LOG_LEVELS_INFO, "<ENGINE> now running, update-time is %.3fs w/ %d skippable frames", delta_time, skippable_frames);
+    Log_write(LOG_LEVELS_INFO, "<ENGINE> now running, update-time is %.6fs w/ %d skippable frames", delta_time, skippable_frames);
 
     Engine_Statistics_t statistics = (Engine_Statistics_t){
             .delta_time = delta_time,
@@ -203,14 +203,17 @@ void Engine_run(Engine_t *engine)
 #endif
         }
 
-        Input_process(&engine->input, delta_time);
+        Audio_update(&engine->audio, elapsed); // Update the subsystems w/ regard to the variable time.
+        Input_update(&engine->input, elapsed);
+        Display_update(&engine->display, elapsed);
+
+        Input_process(&engine->input);
         running = running && Interpreter_input(&engine->interpreter); // Lazy evaluate `running`, will avoid calls when error.
 
         lag += elapsed; // Count a maximum amount of skippable frames in order no to stall on slower machines.
         for (int frames = 0; (frames < skippable_frames) && (lag >= delta_time); ++frames) {
             engine->environment.time += delta_time;
             running = running && Interpreter_update(&engine->interpreter, delta_time);
-            Display_update(&engine->display, delta_time);
             lag -= delta_time;
         }
 

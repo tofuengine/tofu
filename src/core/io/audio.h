@@ -46,10 +46,14 @@ typedef struct _Audio_t {
     ma_device_config device_config;
     ma_device device;
 
+    float time;
+
     Audio_Voice_t *voices;
 } Audio_t;
 
 extern bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration);
 extern void Audio_terminate(Audio_t *audio);
+
+extern void Audio_update(Audio_t *audio, float delta_time);
 
 #endif  /* __AUDIO_H__ */

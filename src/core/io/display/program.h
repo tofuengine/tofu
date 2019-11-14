@@ -20,8 +20,8 @@
  * SOFTWARE.
  **/
 
-#ifndef __PROGRAM_H__
-#define __PROGRAM_H__
+#ifndef __DISPLAY_PROGRAM_H__
+#define __DISPLAY_PROGRAM_H__
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -58,4 +58,4 @@ extern void program_prepare(Program_t *program, const char *ids[], size_t count)
 extern void program_send(const Program_t *program, size_t index, Program_Uniforms_t type, size_t count, const void *value);
 extern void program_use(const Program_t *program);
 
-#endif  /* __PROGRAM_H__ */
+#endif  /* __DISPLAY_PROGRAM_H__ */

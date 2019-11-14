@@ -64,12 +64,15 @@ typedef struct _Input_t {
 
     GLFWwindow *window;
 
+    float time;
+
     Input_Key_State_t keys_state[Input_Keys_t_CountOf];
 } Input_t;
 
 extern bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration, GLFWwindow *window);
 extern void Input_terminate(Input_t *input);
 
-extern void Input_process(Input_t *input, float delta_time);
+extern void Input_update(Input_t *input, float delta_time);
+extern void Input_process(Input_t *input);
 
 #endif  /* __INPUT_H__ */
