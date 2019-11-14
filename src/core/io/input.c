@@ -22,6 +22,8 @@
 
 #include "input.h"
 
+#include <libs/log.h>
+
 bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration, GLFWwindow *window)
 {
     // TODO: should perform a single "zeroing" call and the set the single fields?
@@ -41,6 +43,30 @@ void Input_terminate(Input_t *input)
 void Input_update(Input_t *input, float delta_time)
 {
     input->time += delta_time;
+
+    for (int i = 0; i < Input_Keys_t_CountOf; ++i) {
+        Input_Key_t *key = &input->keys[i];
+
+        if (!key->state.triggered) {
+            continue;
+        }
+
+        key->state.pressed = false; // Consume both flags.
+        key->state.released = false;
+
+        key->time += delta_time;
+
+        while (key->time >= key->period) {
+            Log_write(LOG_LEVELS_TRACE, "<INPUT> #%d %.3fs", i, key->time);
+            key->time -= key->period;
+
+            key->state.down = !key->state.down;
+            key->state.pressed = key->state.down;
+            key->state.released = !key->state.down;
+            Log_write(LOG_LEVELS_TRACE, "<INPUT> #%d %.3fs %d %d %d", i, key->time, key->state.down, key->state.pressed, key->state.released);
+        }
+    }
+
 }
 
 void Input_process(Input_t *input)
@@ -63,20 +89,29 @@ void Input_process(Input_t *input)
     glfwPollEvents();
 
     for (int i = 0; i < Input_Keys_t_CountOf; ++i) {
-        Input_Key_State_t *key_state = &input->keys_state[i];
-        bool was_down = key_state->down;
+        Input_Key_t *key = &input->keys[i];
+
+        bool was_down = key->state.down;
         bool is_down = glfwGetKey(input->window, keys[i]) == GLFW_PRESS;
-/*
-        if (key_state->auto_trigger > 0.0f) {
-            while (key_state->accumulator >= key_state->auto_trigger) {
-                key_state->accumulator -= key_state->auto_trigger;
-                is_down = true;
+
+        if (!key->state.triggered) { // If not triggered use the current physical status.
+            key->state.down = is_down;
+            key->state.pressed = !was_down && is_down;
+            key->state.released = was_down && !is_down;
+
+            if (key->state.pressed && key->period > 0.0f) { // On press, track the trigger state and reset counter.
+                key->state.triggered = true;
+                key->time = 0.0f;
             }
+        } else
+        if (!is_down) { // Key released, was triggered.
+            key->state.down = false;
+            key->state.pressed = false;
+            key->state.released = was_down; // Track release is was previously down.
+
+            key->state.triggered = false;
+            Log_write(LOG_LEVELS_TRACE, "<INPUT> button #%d held for %.3fs %d %d %d", i, key->time, key->state.down, key->state.pressed, key->state.released);
         }
-*/
-        key_state->down = is_down;
-        key_state->pressed = !was_down && is_down;
-        key_state->released = was_down && !is_down;
     }
 
     if (input->configuration.exit_key_enabled) {
@@ -84,4 +119,14 @@ void Input_process(Input_t *input)
             glfwSetWindowShouldClose(input->window, true);
         }
     }
+}
+
+void Input_set_period(Input_t *input, Input_Keys_t id, float period)
+{
+    Input_Key_t *key = &input->keys[id];
+
+    *key = (Input_Key_t){
+            .period = period,
+            .time = 0.0f
+        };
 }

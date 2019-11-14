@@ -78,7 +78,7 @@ static int input_is_key_down(lua_State *L)
 
     Input_t *input = (Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
-    bool is_down = (key >= Input_Keys_t_First && key <= Input_Keys_t_Last) ? input->keys_state[key].down : false;
+    bool is_down = (key >= Input_Keys_t_First && key <= Input_Keys_t_Last) ? input->keys[key].state.down : false;
 
     lua_pushboolean(L, is_down);
     return 1;
@@ -93,7 +93,7 @@ static int input_is_key_up(lua_State *L)
 
     Input_t *input = (Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
-    bool is_down = (key >= Input_Keys_t_First && key <= Input_Keys_t_Last) ? input->keys_state[key].down : false;
+    bool is_down = (key >= Input_Keys_t_First && key <= Input_Keys_t_Last) ? input->keys[key].state.down : false;
 
     lua_pushboolean(L, !is_down);
     return 1;
@@ -108,7 +108,7 @@ static int input_is_key_pressed(lua_State *L)
 
     Input_t *input = (Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
-    bool is_pressed = (key >= Input_Keys_t_First && key <= Input_Keys_t_Last) ? input->keys_state[key].pressed : false;
+    bool is_pressed = (key >= Input_Keys_t_First && key <= Input_Keys_t_Last) ? input->keys[key].state.pressed : false;
 
     lua_pushboolean(L, is_pressed);
     return 1;
@@ -123,7 +123,7 @@ static int input_is_key_released(lua_State *L)
 
     Input_t *input = (Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
-    bool is_released = (key >= Input_Keys_t_First && key <= Input_Keys_t_Last) ? input->keys_state[key].released : false;
+    bool is_released = (key >= Input_Keys_t_First && key <= Input_Keys_t_Last) ? input->keys[key].state.released : false;
 
     lua_pushboolean(L, is_released);
     return 1;

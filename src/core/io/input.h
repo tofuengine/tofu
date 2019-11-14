@@ -51,8 +51,15 @@ typedef struct _Input_Key_State_t { // TODO: use explicit masks?
     uint8_t down : 1;
     uint8_t pressed : 1;
     uint8_t released : 1;
+    uint8_t triggered : 1;
     uint8_t : 5;
 } Input_Key_State_t;
+
+typedef struct _Input_Key_t {
+    Input_Key_State_t state;
+    float period;
+    float time;
+} Input_Key_t;
 
 typedef struct _Input_Configuration_t {
     bool exit_key_enabled;
@@ -66,7 +73,7 @@ typedef struct _Input_t {
 
     float time;
 
-    Input_Key_State_t keys_state[Input_Keys_t_CountOf];
+    Input_Key_t keys[Input_Keys_t_CountOf];
 } Input_t;
 
 extern bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration, GLFWwindow *window);
@@ -74,5 +81,7 @@ extern void Input_terminate(Input_t *input);
 
 extern void Input_update(Input_t *input, float delta_time);
 extern void Input_process(Input_t *input);
+
+extern void Input_set_period(Input_t *input, Input_Keys_t id, float period);
 
 #endif  /* __INPUT_H__ */
