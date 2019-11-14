@@ -385,7 +385,7 @@ void Display_present(Display_t *display)
 #endif
 
     glBegin(GL_TRIANGLE_STRIP);
-//        glColor4ub(255, 255, 255, 255);
+//        glColor4ub(255, 255, 255, 255); // Change this color to "tint".
 
         glTexCoord2f(0, 0); // CCW strip, top-left is <0,0> (the face direction of the strip is determined by the winding of the first triangle)
         glVertex2f(display->vram_destination.x0, display->vram_destination.y0);
@@ -442,13 +442,13 @@ void Display_shader(Display_t *display, const char *effect)
 
     Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> switched to program #%p", display->active_program);
 
+    program_use(display->active_program);
+    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> program #%p active", display->active_program);
+
     program_send(display->active_program, UNIFORM_TEXTURE, PROGRAM_UNIFORM_TEXTURE, 1, &_texture_id_0); // Redundant
     GLfloat resolution[] = { (GLfloat)display->window_width, (GLfloat)display->window_height };
     program_send(display->active_program, UNIFORM_RESOLUTION, PROGRAM_UNIFORM_VEC2, 1, resolution);
     Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> program #%p initialized", display->active_program);
-
-    program_use(display->active_program);
-    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> program #%p active", display->active_program);
 }
 
 void Display_palette(Display_t *display, const GL_Palette_t *palette)

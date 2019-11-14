@@ -141,6 +141,7 @@ void program_prepare(Program_t *program, const char *ids[], size_t count)
     }
 }
 
+// `program_use` need to be called prior sending data to the program.
 void program_send(const Program_t *program, size_t index, Program_Uniforms_t type, size_t count, const void *value)
 {
 #ifdef __DEFENSIVE_CHECKS__
@@ -156,7 +157,6 @@ void program_send(const Program_t *program, size_t index, Program_Uniforms_t typ
 #endif
         return;
     }
-    glUseProgram(program->id);
     switch (type) {
         case PROGRAM_UNIFORM_BOOL: { glUniform1iv(location, count, value); } break;
         case PROGRAM_UNIFORM_INT: { glUniform1iv(location, count, value); } break;
