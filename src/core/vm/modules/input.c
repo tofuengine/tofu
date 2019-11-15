@@ -25,7 +25,6 @@
 #include <config.h>
 #include <core/environment.h>
 #include <core/io/input.h>
-#include <libs/log.h>
 
 #include "udt.h"
 
@@ -37,16 +36,17 @@ static int input_is_key_down(lua_State *L);
 static int input_is_key_up(lua_State *L);
 static int input_is_key_pressed(lua_State *L);
 static int input_is_key_released(lua_State *L);
+static int input_auto_repeat(lua_State *L);
 
 static const struct luaL_Reg _input_functions[] = {
     { "is_key_down", input_is_key_down },
     { "is_key_up", input_is_key_up },
     { "is_key_pressed", input_is_key_pressed },
     { "is_key_released", input_is_key_released },
+    { "auto_repeat", input_auto_repeat },
     { NULL, NULL }
 };
 
-// TODO: implement triggers delay/repeat.
 static const luaX_Const _input_constants[] = {
     { "UP", LUA_CT_INTEGER, { .i = INPUT_KEY_UP } },
     { "DOWN", LUA_CT_INTEGER, { .i = INPUT_KEY_DOWN } },
@@ -127,4 +127,46 @@ static int input_is_key_released(lua_State *L)
 
     lua_pushboolean(L, is_released);
     return 1;
+}
+
+static int input_auto_repeat1(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+    LUAX_SIGNATURE_END
+    int key = lua_tointeger(L, 1);
+
+    Input_t *input = (Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
+
+    if (key >= Input_Keys_t_First && key <= Input_Keys_t_Last) {
+        Input_auto_repeat(input, key, 0.0f);
+    }
+
+    return 0;
+}
+
+static int input_auto_repeat2(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 2)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+    LUAX_SIGNATURE_END
+    int key = lua_tointeger(L, 1);
+    float period = lua_tonumber(L, 2);
+
+    Input_t *input = (Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
+
+    if (key >= Input_Keys_t_First && key <= Input_Keys_t_Last) {
+        Input_auto_repeat(input, key, period);
+    }
+
+    return 0;
+}
+
+static int input_auto_repeat(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, input_auto_repeat1)
+        LUAX_OVERLOAD_ARITY(2, input_auto_repeat2)
+    LUAX_OVERLOAD_END
 }

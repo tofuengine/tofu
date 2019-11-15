@@ -121,7 +121,7 @@ void Input_process(Input_t *input)
     }
 }
 
-void Input_set_period(Input_t *input, Input_Keys_t id, float period)
+void Input_auto_repeat(Input_t *input, Input_Keys_t id, float period)
 {
     Input_Key_t *key = &input->keys[id];
 

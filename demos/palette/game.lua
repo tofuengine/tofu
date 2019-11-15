@@ -16,6 +16,8 @@ local PALETTES = { "pico-8", "arne-16", "c64", "cga" }
 function Game:__ctor()
   Canvas.palette("pico-8")
 
+  Input.auto_repeat(Input.Y, 0.5)
+
   self.bank = Bank.new("assets/sheet.png", 8, 8)
   self.font = Font.default(0, 15)
   self.x_size = Canvas.width() / AMOUNT
