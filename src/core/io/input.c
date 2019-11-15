@@ -44,14 +44,14 @@ void Input_update(Input_t *input, float delta_time)
 {
     input->time += delta_time;
 
-    for (int i = 0; i < Input_Keys_t_CountOf; ++i) {
+    for (int i = Input_Keys_t_First; i <= Input_Keys_t_Last; ++i) {
         Input_Key_t *key = &input->keys[i];
 
         if (!key->state.triggered) {
             continue;
         }
 
-        key->state.pressed = false; // Consume both flags.
+        key->state.pressed = false; // Clear the flags, will be eventually updated.
         key->state.released = false;
 
         key->time += delta_time;
@@ -88,7 +88,7 @@ void Input_process(Input_t *input)
 
     glfwPollEvents();
 
-    for (int i = 0; i < Input_Keys_t_CountOf; ++i) {
+    for (int i = Input_Keys_t_First; i <= Input_Keys_t_Last; ++i) {
         Input_Key_t *key = &input->keys[i];
 
         bool was_down = key->state.down;
@@ -102,9 +102,10 @@ void Input_process(Input_t *input)
             if (key->state.pressed && key->period > 0.0f) { // On press, track the trigger state and reset counter.
                 key->state.triggered = true;
                 key->time = 0.0f;
+                Log_write(LOG_LEVELS_TRACE, "<INPUT> key #%d triggered, %.3fs %d %d %d", i, key->time, key->state.down, key->state.pressed, key->state.released);
             }
         } else
-        if (!is_down) { // Key released, was triggered.
+        if (!is_down) {
             key->state.down = false;
             key->state.pressed = false;
             key->state.released = was_down; // Track release is was previously down.
@@ -123,10 +124,9 @@ void Input_process(Input_t *input)
 
 void Input_auto_repeat(Input_t *input, Input_Keys_t id, float period)
 {
-    Input_Key_t *key = &input->keys[id];
-
-    *key = (Input_Key_t){
+    input->keys[id] = (Input_Key_t){
             .period = period,
             .time = 0.0f
         };
+    Log_write(LOG_LEVELS_DEBUG, "<INPUT> auto-repeat set to %.3fs for button #%d", period, id);
 }

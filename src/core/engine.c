@@ -203,10 +203,6 @@ void Engine_run(Engine_t *engine)
 #endif
         }
 
-        Audio_update(&engine->audio, elapsed); // Update the subsystems w/ regard to the variable time.
-        Input_update(&engine->input, elapsed);
-        Display_update(&engine->display, elapsed);
-
         Input_process(&engine->input);
         running = running && Interpreter_input(&engine->interpreter); // Lazy evaluate `running`, will avoid calls when error.
 
@@ -218,6 +214,9 @@ void Engine_run(Engine_t *engine)
         }
 
 //        running = running && Interpreter_update_variable(&engine->interpreter, elapsed); // Variable update.
+        Audio_update(&engine->audio, elapsed); // Update the subsystems w/ regard to the variable time.
+        Input_update(&engine->input, elapsed);
+        Display_update(&engine->display, elapsed);
 
         running = running && Interpreter_render(&engine->interpreter, lag / delta_time);
         Display_present(&engine->display);
