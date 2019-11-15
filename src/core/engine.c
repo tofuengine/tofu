@@ -186,6 +186,8 @@ void Engine_run(Engine_t *engine)
     float previous = (float)glfwGetTime();
     float lag = 0.0f;
 
+    // TODO: track time using `double`?
+    // https://nkga.github.io/post/frame-pacing-analysis-of-the-game-loop/
     for (bool running = true; running && !engine->environment.quit && !Display_should_close(&engine->display); ) {
         float current = (float)glfwGetTime();
         float elapsed = current - previous;
