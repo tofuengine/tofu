@@ -49,9 +49,9 @@ function Game:input()
   elseif Input.is_key_pressed(Input.LEFT) then
     self.scale_x = -1.0
     self.x = self.x - 1
-  elseif Input.is_key_pressed(Input.X) then
-    self.mode = (self.mode + 1) % 10
   elseif Input.is_key_pressed(Input.Y) then
+    self.mode = (self.mode + 1) % 10
+  elseif Input.is_key_pressed(Input.X) then
     self.clipping = not self.clipping
     if self.clipping then
       Canvas.clipping(32, 32, 95, 95)
