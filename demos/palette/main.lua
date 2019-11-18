@@ -9,7 +9,7 @@ function Main:setup()
       ["height"] = 128,
       ["scale"] = 2,
       ["fullscreen"] = false,
-      ["fps-caps"] = { 60, 45, 30 },
+      ["fps-cap"] = 60,
       ["exit-key-enabled"] = true,
       ["debug"] = true
   }

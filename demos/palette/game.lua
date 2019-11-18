@@ -16,6 +16,8 @@ local PALETTES = { "pico-8", "arne-16", "c64", "cga" }
 function Game:__ctor()
   Canvas.palette("pico-8")
 
+  Input.auto_repeat(Input.Y, 0.5)
+
   self.bank = Bank.new("assets/sheet.png", 8, 8)
   self.font = Font.default(0, 15)
   self.x_size = Canvas.width() / AMOUNT
@@ -47,9 +49,9 @@ function Game:input()
   elseif Input.is_key_pressed(Input.LEFT) then
     self.scale_x = -1.0
     self.x = self.x - 1
-  elseif Input.is_key_pressed(Input.X) then
-    self.mode = (self.mode + 1) % 10
   elseif Input.is_key_pressed(Input.Y) then
+    self.mode = (self.mode + 1) % 10
+  elseif Input.is_key_pressed(Input.X) then
     self.clipping = not self.clipping
     if self.clipping then
       Canvas.clipping(32, 32, 95, 95)

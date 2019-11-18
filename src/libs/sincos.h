@@ -20,23 +20,13 @@
  * SOFTWARE.
  **/
 
-#include "main.h"
+#ifndef __LIBS_SINCOS_H__
+#define __LIBS_SINCOS_H__
 
-#include <core/engine.h>
-#include <libs/log.h>
+#define SINCOS_PERIOD  512
 
-#include <stdlib.h>
+extern void fsincos(int rotation, float *sin, float *cos);
+extern int fator(float angle);
+extern float frtoa(int rotation);
 
-int main(int argc, char **argv)
-{
-    Engine_t engine;
-    bool result = Engine_initialize(&engine, (argc > 1) ? argv[1] : NULL);
-    if (!result) {
-        Log_write(LOG_LEVELS_FATAL, "<MAIN> can't initialize engine");
-        return EXIT_FAILURE;
-    }
-    Engine_run(&engine);
-    Engine_terminate(&engine);
-
-    return EXIT_SUCCESS;
-}
+#endif  /* __LIBS_SINCOS_H__ */

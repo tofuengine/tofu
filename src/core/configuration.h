@@ -20,23 +20,31 @@
  * SOFTWARE.
  **/
 
-#include "main.h"
+#ifndef __CONFIGURATION_H__
+#define __CONFIGURATION_H__
 
-#include <core/engine.h>
-#include <libs/log.h>
+#include <stdbool.h>
 
-#include <stdlib.h>
+#define MAX_CONFIGURATION_TITLE_LENGTH      128
 
-int main(int argc, char **argv)
-{
-    Engine_t engine;
-    bool result = Engine_initialize(&engine, (argc > 1) ? argv[1] : NULL);
-    if (!result) {
-        Log_write(LOG_LEVELS_FATAL, "<MAIN> can't initialize engine");
-        return EXIT_FAILURE;
-    }
-    Engine_run(&engine);
-    Engine_terminate(&engine);
+#define DEFAULT_SCREEN_WIDTH        320
+#define DEFAULT_SCREEN_HEIGHT       240
+#define DEFAULT_SCREEN_SCALE        0
+#define DEFAULT_WINDOW_TITLE        ".: Tofu Engine :."
+#define DEFAULT_FRAMES_PER_SECOND   60
 
-    return EXIT_SUCCESS;
-}
+typedef struct _Configuration {
+    char title[MAX_CONFIGURATION_TITLE_LENGTH];
+    int width, height, scale;
+    bool fullscreen;  // TODO: rename to "windowed"?
+    bool vertical_sync;
+    int fps; // TODO: rename to "frequency"?
+    int skippable_frames;
+    int fps_cap;
+    bool hide_cursor;
+    bool exit_key_enabled;
+    bool debug;
+    // TODO: key-remapping?
+} Configuration_t;
+
+#endif  /* __CONFIGURATION_H__ */

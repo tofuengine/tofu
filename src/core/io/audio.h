@@ -20,23 +20,40 @@
  * SOFTWARE.
  **/
 
-#include "main.h"
+#ifndef __AUDIO_H__
+#define __AUDIO_H__
 
-#include <core/engine.h>
-#include <libs/log.h>
+#include "config.h"
 
-#include <stdlib.h>
+#include <miniaudio/miniaudio.h>
 
-int main(int argc, char **argv)
-{
-    Engine_t engine;
-    bool result = Engine_initialize(&engine, (argc > 1) ? argv[1] : NULL);
-    if (!result) {
-        Log_write(LOG_LEVELS_FATAL, "<MAIN> can't initialize engine");
-        return EXIT_FAILURE;
-    }
-    Engine_run(&engine);
-    Engine_terminate(&engine);
+#include <stdbool.h>
 
-    return EXIT_SUCCESS;
-}
+typedef struct _Audio_Configuration_t {
+    size_t channels;
+    size_t sample_rate;
+    size_t voices;
+} Audio_Configuration_t;
+
+typedef struct _Audio_Voice_t {
+    uint8_t *buffer;
+    size_t buffer_size;
+} Audio_Voice_t;
+
+typedef struct _Audio_t {
+    Audio_Configuration_t configuration;
+
+    ma_device_config device_config;
+    ma_device device;
+
+    float time;
+
+    Audio_Voice_t *voices;
+} Audio_t;
+
+extern bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration);
+extern void Audio_terminate(Audio_t *audio);
+
+extern void Audio_update(Audio_t *audio, float delta_time);
+
+#endif  /* __AUDIO_H__ */

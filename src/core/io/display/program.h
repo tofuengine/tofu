@@ -20,23 +20,42 @@
  * SOFTWARE.
  **/
 
-#include "main.h"
+#ifndef __DISPLAY_PROGRAM_H__
+#define __DISPLAY_PROGRAM_H__
 
-#include <core/engine.h>
-#include <libs/log.h>
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 
-#include <stdlib.h>
+#include <stdbool.h>
 
-int main(int argc, char **argv)
-{
-    Engine_t engine;
-    bool result = Engine_initialize(&engine, (argc > 1) ? argv[1] : NULL);
-    if (!result) {
-        Log_write(LOG_LEVELS_FATAL, "<MAIN> can't initialize engine");
-        return EXIT_FAILURE;
-    }
-    Engine_run(&engine);
-    Engine_terminate(&engine);
+typedef struct _Program_t {
+    GLuint id;
+    GLuint *locations;
+} Program_t;
 
-    return EXIT_SUCCESS;
-}
+typedef enum _Program_Uniforms_t {
+    PROGRAM_UNIFORM_BOOL,
+    PROGRAM_UNIFORM_INT,
+    PROGRAM_UNIFORM_FLOAT,
+    PROGRAM_UNIFORM_VEC2,
+    PROGRAM_UNIFORM_VEC3,
+    PROGRAM_UNIFORM_VEC4,
+    PROGRAM_UNIFORM_VEC2I,
+    PROGRAM_UNIFORM_VEC3I,
+    PROGRAM_UNIFORM_VEC4I,
+    PROGRAM_UNIFORM_TEXTURE
+} Program_Uniforms_t;
+
+typedef enum _Program_Shaders_t {
+    PROGRAM_SHADER_VERTEX,
+    PROGRAM_SHADER_FRAGMENT,
+} Program_Shaders_t;
+
+extern bool program_create(Program_t *program);
+extern void program_delete(Program_t *program);
+extern bool program_attach(Program_t *program, const char *shader_code, Program_Shaders_t shader_type);
+extern void program_prepare(Program_t *program, const char *ids[], size_t count);
+extern void program_send(const Program_t *program, size_t index, Program_Uniforms_t type, size_t count, const void *value);
+extern void program_use(const Program_t *program);
+
+#endif  /* __DISPLAY_PROGRAM_H__ */
