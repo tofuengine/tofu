@@ -24,9 +24,7 @@
 #define __TOFU_CONFIG_H__
 
 // Constant MACROs have no prefix.
-#define STATISTICS_LENGTH           120
-#define FPS_AVERAGE_SAMPLES         128
-#define FPS_STATISTICS_RESOLUTION   10
+#define FPS_AVERAGE_SAMPLES         100
 
 #define GARBAGE_COLLECTION_PERIOD   60.0
 

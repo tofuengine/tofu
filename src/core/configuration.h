@@ -26,7 +26,6 @@
 #include <stdbool.h>
 
 #define MAX_CONFIGURATION_TITLE_LENGTH      128
-#define MAX_CONFIGURATION_FRAME_CAPS        4
 
 #define DEFAULT_SCREEN_WIDTH        320
 #define DEFAULT_SCREEN_HEIGHT       240
@@ -41,7 +40,7 @@ typedef struct _Configuration {
     bool vertical_sync;
     int fps; // TODO: rename to "frequency"?
     int skippable_frames;
-    float frame_caps[MAX_CONFIGURATION_FRAME_CAPS]; // We are storing the reciprocal of the FPS, i.e. the frame times.
+    int fps_cap;
     bool hide_cursor;
     bool exit_key_enabled;
     bool debug;

@@ -246,7 +246,7 @@ void parse(lua_State *L, Configuration_t *configuration)
             .vertical_sync = false,
             .fps = DEFAULT_FRAMES_PER_SECOND,
             .skippable_frames = DEFAULT_FRAMES_PER_SECOND / 5, // About 20% of the FPS amount.
-            .frame_caps = { 0 }, // No capping as a default. TODO: make it run-time configurable?
+            .fps_cap = -1, // No capping as a default. TODO: make it run-time configurable?
             .hide_cursor = true,
             .exit_key_enabled = true,
             .debug = true
@@ -287,20 +287,8 @@ void parse(lua_State *L, Configuration_t *configuration)
             int suggested = configuration->fps / 5;
             configuration->skippable_frames = imin(lua_tointeger(L, -1), suggested); // TODO: not sure if `imin` or `imax`. :P
         } else
-        if (strcmp(key, "fps-caps") == 0) {
-            lua_pushnil(L);
-            for (int i = 0; i < MAX_CONFIGURATION_FRAME_CAPS; ++i) { // Reset cappings to "no frame capping"
-                configuration->frame_caps[i] = 0.0f;
-            }
-            for (int i = MAX_CONFIGURATION_FRAME_CAPS - 1; lua_next(L, -2); --i) {
-                if (i == 0) {
-                    Log_write(LOG_LEVELS_WARNING, "<CONFIGURATION> maximum amount of frame-cappings reached");
-                    lua_pop(L, 2);
-                    break;
-                }
-                configuration->frame_caps[i] = 1.0f / (float)lua_tointeger(L, -1); // Automatically convert FPS to frame-time (optimization).
-                lua_pop(L, 1);
-            }
+        if (strcmp(key, "fps-cap") == 0) {
+            configuration->fps_cap = lua_tointeger(L, -1);
         } else
         if (strcmp(key, "hide-cursor") == 0) {
             configuration->hide_cursor = lua_toboolean(L, -1);
