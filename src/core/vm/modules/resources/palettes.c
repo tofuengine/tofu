@@ -24,12 +24,12 @@
 
 #include <strings.h>
 
-typedef struct _Predefined_Palette_t {
+typedef struct _Resource_Palette_t {
     const char *id;
     GL_Palette_t palette;
-} Predefined_Palette_t;
+} Resource_Palette_t;
 
-static const Predefined_Palette_t _palettes[] = {
+static const Resource_Palette_t _palettes[] = {
     { "gameboy", {
         {
             { 8, 24, 32, 255 },
@@ -393,7 +393,7 @@ static const Predefined_Palette_t _palettes[] = {
     { NULL, { { { 0 } }, 0 } }
 };
 
-const GL_Palette_t *graphics_palettes_find(const char *id)
+const GL_Palette_t *resources_palettes_find(const char *id)
 {
     for (size_t i = 0; _palettes[i].id != NULL; ++i) {
         if (strcasecmp(_palettes[i].id, id) == 0) {

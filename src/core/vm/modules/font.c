@@ -29,8 +29,7 @@
 #include <libs/gl/gl.h>
 
 #include "udt.h"
-#include "graphics/palettes.h"
-#include "graphics/sheets.h"
+#include "resources/sheets.h"
 
 #include <math.h>
 #include <string.h>
@@ -133,7 +132,7 @@ static int font_new(lua_State *L)
 
         const GL_Pixel_t indexes[] = { background_index, foreground_index };
 
-        const Sheet_Data_t *data = graphics_sheets_find(file);
+        const Sheet_Data_t *data = resources_sheets_find(file);
         if (data) {
             GL_sheet_decode(&sheet, data->buffer, data->size, data->quad_width, data->quad_height, to_font_atlas_callback, (void *)indexes);
             Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet '%s' decoded", file);

@@ -29,8 +29,7 @@
 #include <libs/gl/gl.h>
 
 #include "udt.h"
-#include "graphics/palettes.h"
-#include "graphics/sheets.h"
+#include "resources/palettes.h"
 
 #include <math.h>
 #include <string.h>
@@ -266,7 +265,7 @@ static int canvas_palette1(lua_State *L)
     GL_Palette_t palette;
     if (type == LUA_TSTRING) { // Predefined palette!
         const char *id = luaL_checkstring(L, 1);
-        const GL_Palette_t *predefined_palette = graphics_palettes_find(id);
+        const GL_Palette_t *predefined_palette = resources_palettes_find(id);
         if (predefined_palette != NULL) {
             palette = *predefined_palette;
 

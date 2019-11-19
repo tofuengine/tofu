@@ -20,17 +20,32 @@
  * SOFTWARE.
  **/
 
-#ifndef __GRAPHICS_SHEETS_H__
-#define __GRAPHICS_SHEETS_H__
+#include "sheets.h"
 
-#include <stddef.h>
+#include <spleen/spleen.h>
 
-typedef struct _Sheet_Data_t {
-    const void *buffer;
-    size_t size;
-    int quad_width, quad_height;
-} Sheet_Data_t;
+#include <strings.h>
 
-extern const Sheet_Data_t *graphics_sheets_find(const char *id);
+typedef struct _Resource_Sheet_t {
+    const char *id;
+    Sheet_Data_t data;
+} Resource_Sheet_t;
 
-#endif  /* __GRAPHICS_SHEETS_H__ */
+static const Resource_Sheet_t _sheets[] = {
+    { "5x8", { spleen_5x8_png, spleen_5x8_png_len, 5, 8 } },
+    { "8x16", { spleen_8x16_png, spleen_8x16_png_len, 8, 16 } },
+    { "12x24", { spleen_12x24_png, spleen_12x24_png_len, 12,24 } },
+    { "16x32", { spleen_16x32_png, spleen_16x32_png_len, 16, 32 } },
+    { "32x64", { spleen_32x64_png, spleen_32x64_png_len, 32, 64 } },
+    { NULL, { 0 } }
+};
+
+const Sheet_Data_t *resources_sheets_find(const char *id)
+{
+    for (const Resource_Sheet_t *sheet = _sheets; sheet->id != NULL; ++sheet) {
+        if (strcasecmp(sheet->id, id) == 0) {
+            return &sheet->data;
+        }
+    }
+    return NULL;
+}

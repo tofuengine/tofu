@@ -20,11 +20,17 @@
  * SOFTWARE.
  **/
 
-#ifndef __GRAPHICS_PALETTES_H__
-#define __GRAPHICS_PALETTES_H__
+#ifndef __RESOURCES_SHEETS_H__
+#define __RESOURCES_SHEETS_H__
 
-#include <libs/gl/gl.h>
+#include <stddef.h>
 
-extern const GL_Palette_t *graphics_palettes_find(const char *id);
+typedef struct _Sheet_Data_t {
+    const void *buffer;
+    size_t size;
+    int quad_width, quad_height;
+} Sheet_Data_t;
 
-#endif  /* __GRAPHICS_PALETTES_H__ */
+extern const Sheet_Data_t *resources_sheets_find(const char *id);
+
+#endif  /* __RESOURCES_SHEETS_H__ */

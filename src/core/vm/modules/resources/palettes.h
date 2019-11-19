@@ -20,32 +20,11 @@
  * SOFTWARE.
  **/
 
-#include "sheets.h"
+#ifndef __RESOURCES_PALETTES_H__
+#define __RESOURCES_PALETTES_H__
 
-#include <spleen/spleen.h>
+#include <libs/gl/gl.h>
 
-#include <strings.h>
+extern const GL_Palette_t *resources_palettes_find(const char *id);
 
-typedef struct _Predefined_Sheet_t {
-    const char *id;
-    Sheet_Data_t data;
-} Predefined_Sheet_t;
-
-static const Predefined_Sheet_t _sheets[] = {
-    { "5x8", { spleen_5x8_png, spleen_5x8_png_len, 5, 8 } },
-    { "8x16", { spleen_8x16_png, spleen_8x16_png_len, 8, 16 } },
-    { "12x24", { spleen_12x24_png, spleen_12x24_png_len, 12,24 } },
-    { "16x32", { spleen_16x32_png, spleen_16x32_png_len, 16, 32 } },
-    { "32x64", { spleen_32x64_png, spleen_32x64_png_len, 32, 64 } },
-    { NULL, { 0 } }
-};
-
-const Sheet_Data_t *graphics_sheets_find(const char *id)
-{
-    for (const Predefined_Sheet_t *sheet = _sheets; sheet->id != NULL; ++sheet) {
-        if (strcasecmp(sheet->id, id) == 0) {
-            return &sheet->data;
-        }
-    }
-    return NULL;
-}
+#endif  /* __RESOURCES_PALETTES_H__ */
