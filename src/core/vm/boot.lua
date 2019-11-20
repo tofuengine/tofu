@@ -83,36 +83,42 @@ function Tofu:init()
 end
 
 function Tofu:deinit()
-  self.state:leave()
+  local state = self.state
+  self:try_catch(state.leave, state)
 end
 
 function Tofu:input()
-  self:try_catch(self.state, self.state.input)
+  local state = self.state
+  self:try_catch(state.input, state)
 end
 
 function Tofu:update(delta_time)
-  self:try_catch(self.state, self.state.update, delta_time)
+  local state = self.state
+  self:try_catch(state.update, state, delta_time)
 end
 
 function Tofu:render(ratio)
-  self:try_catch(self.state, self.state.render, ratio)
+  local state = self.state
+  self:try_catch(state.render, state, ratio)
 end
 
 function Tofu:switch_to(id)
-  local state = self.states[id]
-  if self.state == state then -- Moving to the current state is an error!
+  local current = self.state
+  local next = self.states[id]
+  if current == next then -- Moving to the current state is an error!
     return false
   end
-  if self.state then
-    self.state:leave()
+  if current then
+    self:try_catch(current.leave, current)
+    self.state = nil
   end
-  self.state = state
-  self.state:enter()
+  self:try_catch(next.enter, next)
+  self.state = next
   return true
 end
 
-function Tofu:try_catch(obj, func, ...)
-  local success, message = pcall(func, obj, ...)
+function Tofu:try_catch(func, ...)
+  local success, message = pcall(func, ...)
   if not success then
     if not self:switch_to("error") then
       error("internal error\n" .. message)
