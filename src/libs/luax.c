@@ -46,7 +46,7 @@ void luaX_stackdump(lua_State *L, const char* func, int line)
 {
     int top = lua_gettop(L);
     printf("----------[ STACK DUMP (%s:%d) top=%d ]----------\n", func, line, top);
-    for (int i = 0; i < top; i++) {
+    for (int i = 0; i < top; ++i) {
         int positive = top - i;
         int negative = -(i + 1);
         int type = lua_type(L, positive);
