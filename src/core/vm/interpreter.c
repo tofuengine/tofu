@@ -46,14 +46,38 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
   #include <stb/stb_leakcheck.h>
 #endif
 
-#define ROOT_INSTANCE           "main"
+#define ROOT_INSTANCE           "tofu"
 
 #define BOOT_SCRIPT \
-    "local Main = require(\"main\")\n" \
-    "main = Main.new()\n"
+    "local Class = require(\"tofu.util\").Class\n" \
+    "\n" \
+    "local Tofu = Class.define()\n" \
+    "\n" \
+    "function Tofu:setup()\n" \
+    "  return require(\"configuration\")\n" \
+    "end\n" \
+    "\n" \
+    "function Tofu:init()\n" \
+    "  local Main = require(\"main\") -- Lazily require.\n" \
+    "  self.main = Main.new()\n" \
+    "end\n" \
+    "\n" \
+    "function Tofu:input()\n" \
+    "  self.main:input()\n" \
+    "end\n" \
+    "\n" \
+    "function Tofu:update(delta_time)\n" \
+    "  self.main:update(delta_time)\n" \
+    "end\n" \
+    "\n" \
+    "function Tofu:render(ratio)\n" \
+    "  self.main:render(ratio)\n" \
+    "end\n" \
+    "\n" \
+    "tofu = Tofu.new()\n"
 
 #define SHUTDOWN_SCRIPT \
-    "main = nil\n"
+    "tofu = nil\n"
 
 #ifdef __DEBUG_VM_CALLS__
   #define TRACEBACK_STACK_INDEX   1
