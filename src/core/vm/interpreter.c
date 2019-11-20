@@ -143,7 +143,7 @@ static int custom_searcher(lua_State *L)
 static bool detect(lua_State *L, int index, const char *methods[])
 {
     if (lua_isnil(L, index)) {
-        Log_write(LOG_LEVELS_FATAL, "<VM> can't find root instance: %s", lua_tostring(L, -1));
+        Log_write(LOG_LEVELS_FATAL, "<VM> can't find root instance");
         lua_pop(L, 1);
         return false;
     }
