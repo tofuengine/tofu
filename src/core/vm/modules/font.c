@@ -41,11 +41,15 @@
 
 static int font_new(lua_State *L);
 static int font_gc(lua_State *L);
+static int font_width(lua_State *L);
+static int font_height(lua_State *L);
 static int font_write(lua_State *L);
 
 static const struct luaL_Reg _font_functions[] = {
     { "new", font_new },
     {"__gc", font_gc },
+    { "width", font_width },
+    { "height", font_height },
     { "write", font_write },
     { NULL, NULL }
 };
@@ -181,6 +185,30 @@ static int font_gc(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "<FONT> font #%p finalized", instance);
 
     return 0;
+}
+
+static int font_width(lua_State *L) // TODO: add message size calculation
+{
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+    LUAX_SIGNATURE_END
+    Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
+
+    lua_pushinteger(L, instance->sheet.size.width);
+
+    return 1;
+}
+
+static int font_height(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+    LUAX_SIGNATURE_END
+    Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
+
+    lua_pushinteger(L, instance->sheet.size.height);
+
+    return 1;
 }
 
 static int font_write5(lua_State *L)
