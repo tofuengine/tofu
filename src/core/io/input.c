@@ -83,7 +83,8 @@ void Input_process(Input_t *input)
         GLFW_KEY_X,
         GLFW_KEY_D,
         GLFW_KEY_ENTER,
-        GLFW_KEY_SPACE
+        GLFW_KEY_SPACE,
+        GLFW_KEY_ESCAPE
     };
 
     glfwPollEvents();
