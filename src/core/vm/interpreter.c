@@ -121,7 +121,7 @@ static int custom_searcher(lua_State *L)
     char *buffer = FS_load_as_string(fs, path_file);
 
     if (buffer != NULL) {
-        luaL_loadstring(L, buffer);
+        luaL_loadbuffer(L, buffer, strlen(buffer), path_file);
         free(buffer);
     } else {
         lua_pushstring(L, "Error: file not found");
@@ -139,7 +139,6 @@ static int custom_searcher(lua_State *L)
 //
 static bool detect(lua_State *L, int index, const char *methods[])
 {
-luaX_dump(L);
     if (lua_isnil(L, index)) {
         Log_write(LOG_LEVELS_FATAL, "<VM> can't find root instance: %s", lua_tostring(L, -1));
         lua_pop(L, 1);
@@ -158,9 +157,9 @@ luaX_dump(L);
     return true;
 }
 
-static int execute(lua_State *L, const char *script, int nargs, int nresults)
+static int execute(lua_State *L, const char *script, const char *name, int nargs, int nresults)
 {
-    int loaded = luaL_loadstring(L, script);
+    int loaded = luaL_loadbuffer(L, script, strlen(script), name);
     if (loaded != LUA_OK) {
         Log_write(LOG_LEVELS_ERROR, "<VM> error in execute: %s", lua_tostring(L, -1));
         lua_pop(L, 1);
@@ -334,7 +333,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const char *base_path, C
 #endif
 #endif
 
-    int result = execute(interpreter->state, (const char *)_tofu_lua, 0, 1);
+    int result = execute(interpreter->state, (const char *)_boot_lua, "boot.lua", 0, 1);
     if (result != 0) {
         Log_write(LOG_LEVELS_FATAL, "<VM> can't interpret boot script");
         lua_close(interpreter->state);
