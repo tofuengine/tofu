@@ -7,21 +7,31 @@ local Class = require("tofu.util").Class
 local Tofu = Class.define() -- To be precise, the class name is irrelevant since it's locally used.
 
 function Tofu:setup()
-  return require("configuration")
+  self.configuration = require("configuration")
+  return self.configuration
 end
 
 function Tofu:init()
   self.states = {
     ["splash"] = {
-      enter = function(_)
+      enter = function(state)
+          state.duration = 2.5
+          state.time = 0.0
         end,
       leave = function(_)
         end,
       input = function(_)
         end,
-      update = function(_, _)
+      update = function(state, delta_time)
+          state.time = state.time + delta_time
+          if state.time >= state.duration then
+            self:switch_to("normal")
+          end
         end,
-      render = function(_, _)
+      render = function(state, _)
+          local y = math.floor((1.0 - state.time / state.duration) * 255.0)
+          Canvas.clear()
+          Canvas.rectangle("fill", 0, 0, Canvas.width(), Canvas.height(), y)
         end
     },
     ["normal"] = {
@@ -68,7 +78,8 @@ function Tofu:init()
         end
     }
   }
-  self:switch_to("normal")
+--  self:switch_to(self.configuration.splash and "splash" or "normal")
+  self:switch_to("splash")
 end
 
 function Tofu:deinit()
