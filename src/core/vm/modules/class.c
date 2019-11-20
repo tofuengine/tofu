@@ -30,7 +30,7 @@ static const uint8_t _class_lua[] = {
 #include "class.inc"
 };
 
-static luaX_Script _class_script = { (const char *)_class_lua, sizeof(_class_lua), "class.lua" };
+static luaX_Script _class_script = { (const char *)_class_lua, sizeof(_class_lua), "@class.lua" }; // Trace as filename internally.
 
 int class_loader(lua_State *L)
 {

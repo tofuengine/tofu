@@ -115,7 +115,7 @@ static const uint8_t _canvas_lua[] = {
 #include "canvas.inc"
 };
 
-static luaX_Script _canvas_script = { (const char *)_canvas_lua, sizeof(_canvas_lua), "canvas.lua" };
+static luaX_Script _canvas_script = { (const char *)_canvas_lua, sizeof(_canvas_lua), "@canvas.lua" }; // Trace as filename internally.
 
 int canvas_loader(lua_State *L)
 {

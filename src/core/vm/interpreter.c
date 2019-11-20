@@ -55,8 +55,8 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
   #define METHOD_STACK_INDEX(m)   OBJECT_STACK_INDEX + 1 + (m)
 #endif
 
-static const uint8_t _tofu_lua[] = {
-#include "tofu.inc"
+static const uint8_t _boot_lua[] = {
+#include "boot.inc"
 };
 
 typedef enum _Methods_t {
@@ -110,7 +110,8 @@ static int custom_searcher(lua_State *L)
     const char *file = lua_tostring(L, 1);
 
     char path_file[PATH_FILE_MAX];
-    strcpy(path_file, file);
+    strcpy(path_file, "@");
+    strcat(path_file, file);
     for (int i = 0; path_file[i] != '\0'; ++i) { // Replace `.' with '/` to map file system entry.
         if (path_file[i] == '.') {
             path_file[i] = FILE_PATH_SEPARATOR;
@@ -118,13 +119,13 @@ static int custom_searcher(lua_State *L)
     }
     strcat(path_file, ".lua");
 
-    char *buffer = FS_load_as_string(fs, path_file);
+    char *buffer = FS_load_as_string(fs, path_file + 1); // Skip the '@', we are using it for Lua to trace the file.
 
     if (buffer != NULL) {
         luaL_loadbuffer(L, buffer, strlen(buffer), path_file);
         free(buffer);
     } else {
-        lua_pushstring(L, "Error: file not found");
+        lua_pushfstring(L, "<VM> file '%s' not found", path_file);
     }
 
     return 1;
@@ -333,7 +334,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const char *base_path, C
 #endif
 #endif
 
-    int result = execute(interpreter->state, (const char *)_boot_lua, "boot.lua", 0, 1);
+    int result = execute(interpreter->state, (const char *)_boot_lua, "@boot.lua", 0, 1); // Prefix '@' to trace as filename internally in Lua.
     if (result != 0) {
         Log_write(LOG_LEVELS_FATAL, "<VM> can't interpret boot script");
         lua_close(interpreter->state);

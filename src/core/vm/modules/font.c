@@ -62,7 +62,7 @@ static const unsigned char _font_lua[] = {
 #include "font.inc"
 };
 
-static luaX_Script _font_script = { (const char *)_font_lua, sizeof(_font_lua), "font.lua" };
+static luaX_Script _font_script = { (const char *)_font_lua, sizeof(_font_lua), "@font.lua" }; // Trace as filename internally.
 
 int font_loader(lua_State *L)
 {

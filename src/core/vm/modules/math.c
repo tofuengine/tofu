@@ -50,7 +50,7 @@ static const unsigned char _math_lua[] = {
 #include "math.inc"
 };
 
-static luaX_Script _math_script = { (const char *)_math_lua, sizeof(_math_lua), "math.lua" };
+static luaX_Script _math_script = { (const char *)_math_lua, sizeof(_math_lua), "@math.lua" }; // Trace as filename internally.
 
 int math_loader(lua_State *L)
 {
