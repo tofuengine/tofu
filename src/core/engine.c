@@ -87,6 +87,8 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
     Log_initialize();
     Environment_initialize(&engine->environment);
 
+    // The interpreter is the first to be loaded, since it also manages the configuration. Later on, we will call to
+    // initialization function once the sub-systems are ready.
     const void *userdatas[] = {
             &engine->interpreter,
             &engine->environment,
