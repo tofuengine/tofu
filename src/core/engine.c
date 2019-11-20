@@ -152,6 +152,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 
 void Engine_terminate(Engine_t *engine)
 {
+    Interpreter_deinit(&engine->interpreter);
     Interpreter_terminate(&engine->interpreter); // Terminate the interpreter to unlock all resources.
     Display_terminate(&engine->display);
     Input_terminate(&engine->input);

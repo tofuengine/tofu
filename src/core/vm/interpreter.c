@@ -62,6 +62,7 @@ static const uint8_t _boot_lua[] = {
 typedef enum _Methods_t {
     METHOD_SETUP,
     METHOD_INIT,
+    METHOD_DEINIT,
     METHOD_INPUT, // TODO: is the `input()` method useless? Probably...
     METHOD_UPDATE,
     METHOD_RENDER,
@@ -71,6 +72,7 @@ typedef enum _Methods_t {
 static const char *_methods[] = {
     "setup",
     "init",
+    "deinit",
     "input",
     "update",
     "render",
@@ -364,9 +366,14 @@ void Interpreter_terminate(Interpreter_t *interpreter)
     FS_terminate(&interpreter->file_system);
 }
 
-bool Interpreter_init(Interpreter_t *interpreter)
+bool Interpreter_init(Interpreter_t *interpreter) // TODO: we can move this into the "boot.lua" script.
 {
     return call(interpreter->state, METHOD_INIT, 0, 0) == LUA_OK;
+}
+
+bool Interpreter_deinit(Interpreter_t *interpreter) // TODO: not sure it's really needed.
+{
+    return call(interpreter->state, METHOD_DEINIT, 0, 0) == LUA_OK;
 }
 
 bool Interpreter_input(Interpreter_t *interpreter)
