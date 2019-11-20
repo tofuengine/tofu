@@ -384,17 +384,18 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const char *base_path, C
 
 void Interpreter_terminate(Interpreter_t *interpreter)
 {
-#ifdef SHUTDOWN_SCRIPT
     lua_settop(interpreter->state, 1);      // T O F1 ... Fn -> T
+#ifdef SHUTDOWN_SCRIPT
     int result = execute(interpreter->state, SHUTDOWN_SCRIPT);
     if (result != 0) {
         Log_write(LOG_LEVELS_FATAL, "<VM> can't interpret shutdown script");
     }
-    lua_settop(interpreter->state, 0);      // T -> <empty>
 #else
     lua_pushnil(interpreter->state);
     lua_setglobal(interpreter->state, ROOT_INSTANCE); // Just set the (global) *root* instance to `nil`.
 #endif
+    lua_settop(interpreter->state, 0);      // T -> <empty>
+
     lua_gc(interpreter->state, LUA_GCCOLLECT, 0);
     lua_close(interpreter->state);
 
