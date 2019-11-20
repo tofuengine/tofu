@@ -60,6 +60,7 @@ static const luaX_Const _input_constants[] = {
     { "A", LUA_CT_INTEGER, { .i = INPUT_KEY_A } },
     { "SELECT", LUA_CT_INTEGER, { .i = INPUT_KEY_SELECT } },
     { "START", LUA_CT_INTEGER, { .i = INPUT_KEY_START } },
+    { "RESET", LUA_CT_INTEGER, { .i = INPUT_KEY_RESET } },
     { NULL }
 };
 
