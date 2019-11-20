@@ -46,39 +46,6 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
   #include <stb/stb_leakcheck.h>
 #endif
 
-#define ROOT_INSTANCE           "tofu"
-
-#define BOOT_SCRIPT \
-    "local Class = require(\"tofu.util\").Class\n" \
-    "\n" \
-    "local Tofu = Class.define()\n" \
-    "\n" \
-    "function Tofu:setup()\n" \
-    "  return require(\"configuration\")\n" \
-    "end\n" \
-    "\n" \
-    "function Tofu:init()\n" \
-    "  local Main = require(\"main\") -- Lazily require.\n" \
-    "  self.main = Main.new()\n" \
-    "end\n" \
-    "\n" \
-    "function Tofu:input()\n" \
-    "  self.main:input()\n" \
-    "end\n" \
-    "\n" \
-    "function Tofu:update(delta_time)\n" \
-    "  self.main:update(delta_time)\n" \
-    "end\n" \
-    "\n" \
-    "function Tofu:render(ratio)\n" \
-    "  self.main:render(ratio)\n" \
-    "end\n" \
-    "\n" \
-    "tofu = Tofu.new()\n"
-
-#define SHUTDOWN_SCRIPT \
-    "tofu = nil\n"
-
 #ifdef __DEBUG_VM_CALLS__
   #define TRACEBACK_STACK_INDEX   1
   #define OBJECT_STACK_INDEX      TRACEBACK_STACK_INDEX + 1
@@ -87,6 +54,10 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
   #define OBJECT_STACK_INDEX      1
   #define METHOD_STACK_INDEX(m)   OBJECT_STACK_INDEX + 1 + (m)
 #endif
+
+static const uint8_t _tofu_lua[] = {
+#include "tofu.inc"
+};
 
 typedef enum _Methods_t {
     METHOD_SETUP,
@@ -166,10 +137,10 @@ static int custom_searcher(lua_State *L)
 //
 //     T O F1 ... Fn
 //
-static bool detect(lua_State *L, const char *root, const char *methods[])
+static bool detect(lua_State *L, int index, const char *methods[])
 {
-    lua_getglobal(L, root); // Get the global variable on top of the stack (will always stay on top).
-    if (lua_isnil(L, -1)) {
+luaX_dump(L);
+    if (lua_isnil(L, index)) {
         Log_write(LOG_LEVELS_FATAL, "<VM> can't find root instance: %s", lua_tostring(L, -1));
         lua_pop(L, 1);
         return false;
@@ -187,7 +158,7 @@ static bool detect(lua_State *L, const char *root, const char *methods[])
     return true;
 }
 
-static int execute(lua_State *L, const char *script)
+static int execute(lua_State *L, const char *script, int nargs, int nresults)
 {
     int loaded = luaL_loadstring(L, script);
     if (loaded != LUA_OK) {
@@ -196,14 +167,14 @@ static int execute(lua_State *L, const char *script)
         return loaded;
     }
 #ifdef __DEBUG_VM_CALLS__
-    int called = lua_pcall(L, 0, 0, TRACEBACK_STACK_INDEX);
+    int called = lua_pcall(L, nargs, nresults, TRACEBACK_STACK_INDEX);
     if (called != LUA_OK) {
         Log_write(LOG_LEVELS_ERROR, "<VM> error in execute: %s", lua_tostring(L, -1));
         lua_pop(L, 1);
     }
     return called;
 #else
-    lua_call(L, 0, 0);
+    lua_call(L, nargs, nresults);
     return LUA_OK;
 #endif
 }
@@ -363,14 +334,14 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const char *base_path, C
 #endif
 #endif
 
-    int result = execute(interpreter->state, BOOT_SCRIPT);
+    int result = execute(interpreter->state, (const char *)_tofu_lua, 0, 1);
     if (result != 0) {
         Log_write(LOG_LEVELS_FATAL, "<VM> can't interpret boot script");
         lua_close(interpreter->state);
         return false;
     }
 
-    if (!detect(interpreter->state, ROOT_INSTANCE, _methods)) {
+    if (!detect(interpreter->state, -1, _methods)) {
         lua_close(interpreter->state);
         return false;
     }
@@ -384,17 +355,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const char *base_path, C
 
 void Interpreter_terminate(Interpreter_t *interpreter)
 {
-    lua_settop(interpreter->state, 1);      // T O F1 ... Fn -> T
-#ifdef SHUTDOWN_SCRIPT
-    int result = execute(interpreter->state, SHUTDOWN_SCRIPT);
-    if (result != 0) {
-        Log_write(LOG_LEVELS_FATAL, "<VM> can't interpret shutdown script");
-    }
-#else
-    lua_pushnil(interpreter->state);
-    lua_setglobal(interpreter->state, ROOT_INSTANCE); // Just set the (global) *root* instance to `nil`.
-#endif
-    lua_settop(interpreter->state, 0);      // T -> <empty>
+    lua_settop(interpreter->state, 0);      // T O F1 ... Fn -> <empty>
 
     lua_gc(interpreter->state, LUA_GCCOLLECT, 0);
     lua_close(interpreter->state);
