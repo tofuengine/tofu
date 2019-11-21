@@ -105,6 +105,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
     Log_configure(engine->configuration.debug);
 
     Display_Configuration_t display_configuration = { // TODO: reorganize configuration.
+            .title = engine->configuration.title,
             .width = engine->configuration.width,
             .height = engine->configuration.height,
             .fullscreen = engine->configuration.fullscreen,
@@ -112,7 +113,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             .scale = engine->configuration.scale,
             .hide_cursor = engine->configuration.hide_cursor
         };
-    result = Display_initialize(&engine->display, &display_configuration, engine->configuration.title);
+    result = Display_initialize(&engine->display, &display_configuration);
     if (!result) {
         Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't initialize display");
         Interpreter_terminate(&engine->interpreter);

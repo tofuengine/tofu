@@ -45,6 +45,8 @@ typedef enum _Display_Programs_t {
 } Display_Programs_t;
 
 typedef struct _Display_Configuration_t {
+    const char *title;
+//    const uint8_t *icon;
     int width, height, scale;
     bool fullscreen;
     bool vertical_sync;
@@ -70,7 +72,7 @@ typedef struct _Display_t {
     GL_Context_t gl;
 } Display_t;
 
-extern bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title);
+extern bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration);
 extern void Display_terminate(Display_t *display);
 extern bool Display_should_close(Display_t *display);
 extern void Display_update(Display_t *display, float delta_time);

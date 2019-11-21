@@ -219,7 +219,7 @@ static void size_callback(GLFWwindow* window, int width, int height)
 #endif
 }
 
-bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration, const char *title)
+bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration)
 {
     *display = (Display_t){ 0 };
 
@@ -249,7 +249,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     glfwWindowHint(GLFW_FOCUSED, GLFW_TRUE);
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // We'll show it after the real-size has been calculated.
 
-    display->window = glfwCreateWindow(1, 1, title, NULL, NULL); // 1x1 window, in order to have a context early.
+    display->window = glfwCreateWindow(1, 1, configuration->title, NULL, NULL); // 1x1 window, in order to have a context early.
     if (display->window == NULL) {
         Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't create window");
         glfwTerminate();
