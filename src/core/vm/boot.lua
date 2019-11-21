@@ -78,8 +78,7 @@ function Tofu:init()
         end
     }
   }
---  self:switch_to(self.configuration.splash and "splash" or "normal")
-  self:switch_to("splash")
+  self:switch_to(self.configuration["splash-screen"] and "splash" or "normal")
 end
 
 function Tofu:deinit()
