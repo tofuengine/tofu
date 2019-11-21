@@ -106,6 +106,27 @@ static const char *_uniforms[Uniforms_t_CountOf] = {
     "u_time",
 };
 
+static const unsigned char _window_icon_pixels[] = {
+#include "icon.inc"
+};
+/*
+#include <stb/stb_image.h>
+
+static void load_icon(GLFWwindow *window, const uint8_t *buffer, size_t buffer_size)
+{
+    int width, height, components;
+    void *data = stbi_load_from_memory(buffer, buffer_size, &width, &height, &components, STBI_rgb_alpha); //STBI_default);
+    if (!data) {
+        Log_write(LOG_LEVELS_ERROR, "<GL> can't decode surface from #%p: %s", data, stbi_failure_reason());
+        return;
+    }
+    Log_write(LOG_LEVELS_DEBUG, "<GL> icon decoded (%dx%d w/ %d bpp)", width, height, components);
+
+    glfwSetWindowIcon(window, 1, &(GLFWimage){ width, height, (unsigned char *)data });
+
+    stbi_image_free(data);
+}
+*/
 static bool compute_size(Display_t *display, const Display_Configuration_t *configuration, GL_Point_t *position)
 {
     int display_width, display_height;
@@ -235,6 +256,10 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         return false;
     }
     glfwMakeContextCurrent(display->window);
+
+    // TODO: add custom icon support.
+//    load_icon(display->window, configuration->icon);
+    glfwSetWindowIcon(display->window, 1, &(GLFWimage){ 64, 64, (unsigned char *)_window_icon_pixels });
 
     Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> %sabling vertical synchronization", configuration->vertical_sync ? "en" : "dis");
     glfwSwapInterval(configuration->vertical_sync ? 1 : 0); // Set vertical sync, if required.
