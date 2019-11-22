@@ -100,7 +100,60 @@ static void align(const char *text, const char *alignment, int *x, int *y, int w
     }
 }
 
-static int font_new(lua_State *L)
+static int font_new3(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 3)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isstring, luaX_isuserdata)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+    LUAX_SIGNATURE_END
+    int type = lua_type(L, 1);
+    size_t glyph_width = (size_t)lua_tointeger(L, 2);
+    size_t glyph_height = (size_t)lua_tointeger(L, 3);
+
+    Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INTERPRETER));
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    GL_Sheet_t sheet;
+
+    if (type == LUA_TSTRING) {
+        const char *file = lua_tostring(L, 1);
+
+        const Sheet_Data_t *data = resources_sheets_find(file);
+        if (data) {
+            GL_sheet_decode(&sheet, data->buffer, data->size, data->quad_width, data->quad_height, to_indexed_atlas_callback, (void *)&display->palette);
+            Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet '%s' decoded", file);
+        } else {
+            size_t buffer_size;
+            void *buffer = FS_load_as_binary(&interpreter->file_system, file, &buffer_size);
+            if (!buffer) {
+                return luaL_error(L, "<FONT> can't load file '%s'", file);
+            }
+            GL_sheet_decode(&sheet, buffer, buffer_size, glyph_width, glyph_height, to_indexed_atlas_callback, (void *)&display->palette);
+            Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet '%s' loaded", file);
+            free(buffer);
+        }
+    } else
+    if (type == LUA_TUSERDATA) {
+        const Surface_Class_t *instance = (const Surface_Class_t *)lua_touserdata(L, 1);
+
+        GL_sheet_attach(&sheet, &instance->surface, glyph_width, glyph_height);
+        Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet %p attached", instance);
+    }
+
+    Font_Class_t *instance = (Font_Class_t *)lua_newuserdata(L, sizeof(Font_Class_t));
+    *instance = (Font_Class_t){
+            .sheet = sheet,
+            .owned = type == LUA_TSTRING ? true : false
+        };
+    Log_write(LOG_LEVELS_DEBUG, "<FONT> font allocated as #%p", instance);
+
+    luaL_setmetatable(L, FONT_MT);
+
+    return 1;
+}
+
+static int font_new5(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 5)
         LUAX_SIGNATURE_ARGUMENT(luaX_isstring, luaX_isuserdata)
@@ -156,6 +209,14 @@ static int font_new(lua_State *L)
     luaL_setmetatable(L, FONT_MT);
 
     return 1;
+}
+
+static int font_new(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(3, font_new3)
+        LUAX_OVERLOAD_ARITY(5, font_new5)
+    LUAX_OVERLOAD_END
 }
 
 static int font_gc(lua_State *L)
