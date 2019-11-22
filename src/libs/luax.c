@@ -221,10 +221,15 @@ void luaX_require(lua_State *L, const char *modname, lua_CFunction openf, int nu
     lua_pop(L, nup); // Pop the upvalues
 }
 
-int luaX_toref(lua_State *L, int arg)
+luaX_Reference luaX_ref(lua_State *L, int idx)
 {
-    lua_pushvalue(L, arg);
+    lua_pushvalue(L, idx);
     return luaL_ref(L, LUA_REGISTRYINDEX);
+}
+
+void luaX_unref(lua_State *L, luaX_Reference ref)
+{
+    luaL_unref(L, ref, LUA_REGISTRYINDEX);
 }
 
 void luaX_checkargument(lua_State *L, int idx, const char *file, int line, ...)

@@ -115,6 +115,7 @@ static int font_new3(lua_State *L)
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     GL_Sheet_t sheet;
+    luaX_Reference surface = LUAX_REFERENCE_NIL;
 
     if (type == LUA_TSTRING) {
         const char *file = lua_tostring(L, 1);
@@ -136,15 +137,15 @@ static int font_new3(lua_State *L)
     } else
     if (type == LUA_TUSERDATA) {
         const Surface_Class_t *instance = (const Surface_Class_t *)lua_touserdata(L, 1);
-
         GL_sheet_attach(&sheet, &instance->surface, glyph_width, glyph_height);
         Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet %p attached", instance);
+        surface = luaX_ref(L, 1); // Track the attached surface as a reference to prevent garbage collection.
     }
 
     Font_Class_t *instance = (Font_Class_t *)lua_newuserdata(L, sizeof(Font_Class_t));
     *instance = (Font_Class_t){
             .sheet = sheet,
-            .owned = type == LUA_TSTRING ? true : false
+            .surface = surface
         };
     Log_write(LOG_LEVELS_DEBUG, "<FONT> font allocated as #%p", instance);
 
@@ -171,6 +172,7 @@ static int font_new5(lua_State *L)
     Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INTERPRETER));
 
     GL_Sheet_t sheet;
+    luaX_Reference surface = LUAX_REFERENCE_NIL;
 
     if (type == LUA_TSTRING) {
         const char *file = lua_tostring(L, 1);
@@ -194,15 +196,15 @@ static int font_new5(lua_State *L)
     } else
     if (type == LUA_TUSERDATA) {
         const Surface_Class_t *instance = (const Surface_Class_t *)lua_touserdata(L, 1);
-
         GL_sheet_attach(&sheet, &instance->surface, glyph_width, glyph_height);
         Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet %p attached", instance);
+        surface = luaX_ref(L, 1); // Track the attached surface as a reference to prevent garbage collection.
     }
 
     Font_Class_t *instance = (Font_Class_t *)lua_newuserdata(L, sizeof(Font_Class_t));
     *instance = (Font_Class_t){
             .sheet = sheet,
-            .owned = type == LUA_TSTRING ? true : false
+            .surface = surface,
         };
     Log_write(LOG_LEVELS_DEBUG, "<FONT> font allocated as #%p", instance);
 
@@ -226,9 +228,10 @@ static int font_gc(lua_State *L)
     LUAX_SIGNATURE_END
     Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
 
-    if (instance->owned) {
+    if (instance->surface == LUAX_REFERENCE_NIL) {
         GL_sheet_delete(&instance->sheet);
     } else {
+        luaX_unref(L, instance->surface);
         GL_sheet_detach(&instance->sheet);
     }
     Log_write(LOG_LEVELS_DEBUG, "<FONT> font #%p finalized", instance);

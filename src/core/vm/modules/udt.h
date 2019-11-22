@@ -53,8 +53,10 @@ typedef struct _Font_Class_t {
     const void *bogus;
     // char full_path[PATH_FILE_MAX];
     GL_Sheet_t sheet;
-    bool owned;
+    luaX_Reference surface;
 } Font_Class_t;
+
+#define LUAX_REFERENCE_NIL  -1
 
 #ifdef __GRID_INTEGER_CELL__
 typedef int Cell_t;

@@ -89,7 +89,7 @@ static int timer_gc(lua_State *L)
 
     TimerPool_release(instance->timer); // Mark the entry as finalized.
 
-    luaL_unref(L, LUA_REGISTRYINDEX, instance->callback);
+    luaX_unref(L, instance->callback);
 
     return 0;
 }

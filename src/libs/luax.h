@@ -91,7 +91,7 @@ typedef int luaX_Reference;
 
 #define luaX_dump(L)                luaX_stackdump(L, __FILE__, __LINE__)
 
-#define luaX_tofunction(L, arg)     luaX_toref(L, arg)
+#define luaX_tofunction(L, arg)     luaX_ref(L, arg)
 
 extern void luaX_stackdump(lua_State *L, const char *file, int line);
 extern void luaX_appendpath(lua_State *L, const char *path);
@@ -99,7 +99,10 @@ extern void luaX_overridesearchers(lua_State *L, lua_CFunction searcher, int nup
 extern int luaX_newmodule(lua_State *L, const luaX_Script *script, const luaL_Reg *f, const luaX_Const *c, int nup, const char *name);
 extern void luaX_preload(lua_State *L, const char *modname, lua_CFunction openf, int nup);
 extern void luaX_require(lua_State *L, const char *modname, lua_CFunction openf, int nup, int glb);
-extern int luaX_toref(lua_State *L, int arg);
+
+extern luaX_Reference luaX_ref(lua_State *L, int idx);
+extern void luaX_unref(lua_State *L, luaX_Reference ref);
+
 extern void luaX_checkargument(lua_State *L, int idx, const char *file, int line, ...);
 
 extern size_t luaX_packupvalues(lua_State *L, int nup);

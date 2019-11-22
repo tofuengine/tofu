@@ -218,6 +218,7 @@ static int canvas_surface1(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
+    // TODO: we should track the surface to prevent GC.
     GL_Context_t *context = &display->gl;
     GL_context_surface(context, &surface->surface);
 
