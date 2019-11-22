@@ -28,6 +28,7 @@
 #include <libs/log.h>
 
 #include "udt.h"
+#include "callbacks.h"
 
 #include <math.h>
 #include <string.h>
@@ -73,19 +74,6 @@ int surface_loader(lua_State *L)
 {
     int nup = luaX_unpackupvalues(L);
     return luaX_newmodule(L, NULL, _surface_functions, _surface_constants, nup, SURFACE_MT);
-}
-
-static void to_indexed_atlas_callback(void *parameters, GL_Surface_t *surface, const void *data)
-{
-    const GL_Palette_t *palette = (const GL_Palette_t *)parameters;
-
-    const GL_Color_t *src = (const GL_Color_t *)data;
-    GL_Pixel_t *dst = surface->data;
-
-    for (size_t i = surface->data_size; i; --i) {
-        GL_Color_t color = *(src++);
-        *(dst++) = GL_palette_find_nearest_color(palette, color);
-    }
 }
 
 static GL_XForm_Registers_t string_to_register(const char *id)

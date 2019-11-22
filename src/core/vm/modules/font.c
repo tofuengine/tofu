@@ -29,6 +29,7 @@
 #include <libs/gl/gl.h>
 
 #include "udt.h"
+#include "callbacks.h"
 #include "resources/sheets.h"
 
 #include <math.h>
@@ -68,19 +69,6 @@ int font_loader(lua_State *L)
 {
     int nup = luaX_unpackupvalues(L);
     return luaX_newmodule(L, &_font_script, _font_functions, _font_constants, nup, FONT_MT);
-}
-
-static void to_font_atlas_callback(void *parameters, GL_Surface_t *surface, const void *data)
-{
-    const GL_Pixel_t *indexes = (const GL_Pixel_t *)parameters;
-
-    const GL_Color_t *src = (const GL_Color_t *)data;
-    GL_Pixel_t *dst = surface->data;
-
-    for (size_t i = surface->data_size; i; --i) {
-        GL_Color_t color = *(src++);
-        *(dst++) = indexes[color.a == 0 ? 0 : 1]; // TODO: don't use alpha for transparency?
-    }
 }
 
 static void align(const char *text, const char *alignment, int *x, int *y, int w, int h)
