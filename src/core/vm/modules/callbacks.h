@@ -25,7 +25,7 @@
 
 #include <libs/gl/gl.h>
 
-extern void to_indexed_atlas_callback(void *parameters, GL_Surface_t *surface, const void *data);
-extern void to_font_atlas_callback(void *parameters, GL_Surface_t *surface, const void *data);
+extern void surface_callback_palette(void *parameters, GL_Surface_t *surface, const void *data);
+extern void surface_callback_indexes(void *parameters, GL_Surface_t *surface, const void *data);
 
 #endif  /* __MODULES_CALLBACKS_H__ */

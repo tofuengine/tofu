@@ -24,7 +24,7 @@
 
 #include <memory.h>
 
-void to_indexed_atlas_callback(void *parameters, GL_Surface_t *surface, const void *data)
+void surface_callback_palette(void *parameters, GL_Surface_t *surface, const void *data)
 {
     const GL_Palette_t *palette = (const GL_Palette_t *)parameters;
 
@@ -37,7 +37,7 @@ void to_indexed_atlas_callback(void *parameters, GL_Surface_t *surface, const vo
     }
 }
 
-void to_font_atlas_callback(void *parameters, GL_Surface_t *surface, const void *data)
+void surface_callback_indexes(void *parameters, GL_Surface_t *surface, const void *data)
 {
     const GL_Pixel_t *indexes = (const GL_Pixel_t *)parameters;
     const GL_Pixel_t bg_index = indexes[0];

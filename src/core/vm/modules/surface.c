@@ -122,7 +122,7 @@ static int surface_new1(lua_State *L)
         return luaL_error(L, "<SURFACE> can't load file '%s'", file);
     }
     GL_Surface_t surface;
-    GL_surface_decode(&surface, buffer, buffer_size, to_indexed_atlas_callback, (void *)&display->palette);
+    GL_surface_decode(&surface, buffer, buffer_size, surface_callback_palette, (void *)&display->palette);
     Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface '%s' loaded", file);
     free(buffer);
 

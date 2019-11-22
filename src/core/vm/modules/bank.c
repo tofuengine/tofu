@@ -88,7 +88,7 @@ static int bank_new(lua_State *L)
         if (!buffer) {
             return luaL_error(L, "<BANK> can't load file '%s'", file);
         }
-        GL_sheet_decode(&sheet, buffer, buffer_size, cell_width, cell_height, to_indexed_atlas_callback, (void *)&display->palette);
+        GL_sheet_decode(&sheet, buffer, buffer_size, cell_width, cell_height, surface_callback_palette, (void *)&display->palette);
         Log_write(LOG_LEVELS_DEBUG, "<BANK> sheet '%s' loaded", file);
         free(buffer);
     } else
