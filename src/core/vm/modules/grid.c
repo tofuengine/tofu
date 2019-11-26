@@ -69,7 +69,7 @@ static const unsigned char _grid_lua[] = {
 #include "grid.inc"
 };
 
-static luaX_Script _grid_script = { (const char *)_grid_lua, sizeof(_grid_lua), "grid.lua" };
+static luaX_Script _grid_script = { (const char *)_grid_lua, sizeof(_grid_lua), "@grid.lua" }; // Trace as filename internally.
 
 int grid_loader(lua_State *L)
 {

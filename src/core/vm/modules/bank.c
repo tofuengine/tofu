@@ -29,6 +29,7 @@
 #include <libs/gl/gl.h>
 
 #include "udt.h"
+#include "callbacks.h"
 
 #include <math.h>
 #include <string.h>
@@ -63,19 +64,6 @@ int bank_loader(lua_State *L)
     return luaX_newmodule(L, NULL, _bank_functions, _bank_constants, nup, BANK_MT);
 }
 
-static void to_indexed_atlas_callback(void *parameters, GL_Surface_t *surface, const void *data)
-{
-    const GL_Palette_t *palette = (const GL_Palette_t *)parameters;
-
-    const GL_Color_t *src = (const GL_Color_t *)data;
-    GL_Pixel_t *dst = (GL_Pixel_t *)surface->data;
-
-    for (size_t i = surface->data_size; i; --i) {
-        GL_Color_t color = *(src++);
-        *(dst++) = GL_palette_find_nearest_color(palette, color);
-    }
-}
-
 static int bank_new(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 3)
@@ -100,7 +88,7 @@ static int bank_new(lua_State *L)
         if (!buffer) {
             return luaL_error(L, "<BANK> can't load file '%s'", file);
         }
-        GL_sheet_decode(&sheet, buffer, buffer_size, cell_width, cell_height, to_indexed_atlas_callback, (void *)&display->palette);
+        GL_sheet_decode(&sheet, buffer, buffer_size, cell_width, cell_height, surface_callback_palette, (void *)&display->palette);
         Log_write(LOG_LEVELS_DEBUG, "<BANK> sheet '%s' loaded", file);
         free(buffer);
     } else

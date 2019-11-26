@@ -20,35 +20,36 @@
  * SOFTWARE.
  **/
 
-#ifndef __INTERPRETER_H__
-#define __INTERPRETER_H__
+#include "callbacks.h"
 
-#include <limits.h>
-#include <stdbool.h>
+#include <memory.h>
 
-#include <core/configuration.h>
-#include <core/environment.h>
-#include <core/io/fs.h>
-#include <core/vm/timerpool.h>
+void surface_callback_palette(void *parameters, GL_Surface_t *surface, const void *data)
+{
+    const GL_Palette_t *palette = (const GL_Palette_t *)parameters;
 
-#include <libs/luax.h>
+    const GL_Color_t *src = (const GL_Color_t *)data;
+    GL_Pixel_t *dst = surface->data;
 
-typedef struct _Interpreter_t {
-    float gc_age;
+    for (size_t i = surface->data_size; i; --i) {
+        GL_Color_t color = *(src++);
+        *(dst++) = GL_palette_find_nearest_color(palette, color);
+    }
+}
 
-    lua_State *state; // TODO: rename to `L`?
+void surface_callback_indexes(void *parameters, GL_Surface_t *surface, const void *data)
+{
+    const GL_Pixel_t *indexes = (const GL_Pixel_t *)parameters;
+    const GL_Pixel_t bg_index = indexes[0];
+    const GL_Pixel_t fg_index = indexes[1];
 
-    File_System_t file_system;
-    Timer_Pool_t timer_pool;
-} Interpreter_t;
+    const GL_Color_t *src = (const GL_Color_t *)data;
+    GL_Pixel_t *dst = surface->data;
 
-extern bool Interpreter_initialize(Interpreter_t *interpreter, const char *base_path, Configuration_t *configuration, const void *userdatas[]);
-extern void Interpreter_terminate(Interpreter_t *interpreter);
-extern bool Interpreter_init(Interpreter_t *interpreter);
-extern bool Interpreter_deinit(Interpreter_t *interpreter);
-extern bool Interpreter_input(Interpreter_t *interpreter);
-extern bool Interpreter_update(Interpreter_t *interpreter, float delta_time);
-extern bool Interpreter_render(Interpreter_t *interpreter, float ratio);
-extern bool Interpreter_call(Interpreter_t *interpreter, int nargs, int nresults);
+    const GL_Color_t background = *src; // The top-left pixel color defines the background.
 
-#endif  /* __INTERPRETER_H__ */
+    for (size_t i = surface->data_size; i; --i) {
+        GL_Color_t color = *(src++);
+        *(dst++) = memcmp(&color, &background, sizeof(GL_Color_t)) == 0 ? bg_index : fg_index;
+    }
+}

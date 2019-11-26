@@ -43,7 +43,8 @@ typedef enum _Input_Keys_t {
     INPUT_KEY_A,
     INPUT_KEY_SELECT,
     INPUT_KEY_START,
-    Input_Keys_t_Last = INPUT_KEY_START,
+    INPUT_KEY_RESET,
+    Input_Keys_t_Last = INPUT_KEY_RESET,
     Input_Keys_t_CountOf
 } Input_Keys_t;
 

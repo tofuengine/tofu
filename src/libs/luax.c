@@ -46,7 +46,7 @@ void luaX_stackdump(lua_State *L, const char* func, int line)
 {
     int top = lua_gettop(L);
     printf("----------[ STACK DUMP (%s:%d) top=%d ]----------\n", func, line, top);
-    for (int i = 0; i < top; i++) {
+    for (int i = 0; i < top; ++i) {
         int positive = top - i;
         int negative = -(i + 1);
         int type = lua_type(L, positive);
@@ -221,10 +221,15 @@ void luaX_require(lua_State *L, const char *modname, lua_CFunction openf, int nu
     lua_pop(L, nup); // Pop the upvalues
 }
 
-int luaX_toref(lua_State *L, int arg)
+luaX_Reference luaX_ref(lua_State *L, int idx)
 {
-    lua_pushvalue(L, arg);
+    lua_pushvalue(L, idx);
     return luaL_ref(L, LUA_REGISTRYINDEX);
+}
+
+void luaX_unref(lua_State *L, luaX_Reference ref)
+{
+    luaL_unref(L, ref, LUA_REGISTRYINDEX);
 }
 
 void luaX_checkargument(lua_State *L, int idx, const char *file, int line, ...)

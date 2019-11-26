@@ -87,6 +87,8 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
     Log_initialize();
     Environment_initialize(&engine->environment);
 
+    // The interpreter is the first to be loaded, since it also manages the configuration. Later on, we will call to
+    // initialization function once the sub-systems are ready.
     const void *userdatas[] = {
             &engine->interpreter,
             &engine->environment,
@@ -103,6 +105,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
     Log_configure(engine->configuration.debug);
 
     Display_Configuration_t display_configuration = { // TODO: reorganize configuration.
+            .title = engine->configuration.title,
             .width = engine->configuration.width,
             .height = engine->configuration.height,
             .fullscreen = engine->configuration.fullscreen,
@@ -110,7 +113,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             .scale = engine->configuration.scale,
             .hide_cursor = engine->configuration.hide_cursor
         };
-    result = Display_initialize(&engine->display, &display_configuration, engine->configuration.title);
+    result = Display_initialize(&engine->display, &display_configuration);
     if (!result) {
         Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't initialize display");
         Interpreter_terminate(&engine->interpreter);
@@ -152,6 +155,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 
 void Engine_terminate(Engine_t *engine)
 {
+    Interpreter_deinit(&engine->interpreter);
     Interpreter_terminate(&engine->interpreter); // Terminate the interpreter to unlock all resources.
     Display_terminate(&engine->display);
     Input_terminate(&engine->input);

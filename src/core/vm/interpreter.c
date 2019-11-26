@@ -46,15 +46,6 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
   #include <stb/stb_leakcheck.h>
 #endif
 
-#define ROOT_INSTANCE           "main"
-
-#define BOOT_SCRIPT \
-    "local Main = require(\"main\")\n" \
-    "main = Main.new()\n"
-
-#define SHUTDOWN_SCRIPT \
-    "main = nil\n"
-
 #ifdef __DEBUG_VM_CALLS__
   #define TRACEBACK_STACK_INDEX   1
   #define OBJECT_STACK_INDEX      TRACEBACK_STACK_INDEX + 1
@@ -64,9 +55,14 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
   #define METHOD_STACK_INDEX(m)   OBJECT_STACK_INDEX + 1 + (m)
 #endif
 
+static const uint8_t _boot_lua[] = {
+#include "boot.inc"
+};
+
 typedef enum _Methods_t {
     METHOD_SETUP,
     METHOD_INIT,
+    METHOD_DEINIT,
     METHOD_INPUT, // TODO: is the `input()` method useless? Probably...
     METHOD_UPDATE,
     METHOD_RENDER,
@@ -76,6 +72,7 @@ typedef enum _Methods_t {
 static const char *_methods[] = {
     "setup",
     "init",
+    "deinit",
     "input",
     "update",
     "render",
@@ -115,7 +112,8 @@ static int custom_searcher(lua_State *L)
     const char *file = lua_tostring(L, 1);
 
     char path_file[PATH_FILE_MAX];
-    strcpy(path_file, file);
+    strcpy(path_file, "@");
+    strcat(path_file, file);
     for (int i = 0; path_file[i] != '\0'; ++i) { // Replace `.' with '/` to map file system entry.
         if (path_file[i] == '.') {
             path_file[i] = FILE_PATH_SEPARATOR;
@@ -123,13 +121,13 @@ static int custom_searcher(lua_State *L)
     }
     strcat(path_file, ".lua");
 
-    char *buffer = FS_load_as_string(fs, path_file);
+    char *buffer = FS_load_as_string(fs, path_file + 1); // Skip the '@', we are using it for Lua to trace the file.
 
     if (buffer != NULL) {
-        luaL_loadstring(L, buffer);
+        luaL_loadbuffer(L, buffer, strlen(buffer), path_file);
         free(buffer);
     } else {
-        lua_pushstring(L, "Error: file not found");
+        lua_pushfstring(L, "<VM> file '%s' not found", path_file);
     }
 
     return 1;
@@ -142,11 +140,10 @@ static int custom_searcher(lua_State *L)
 //
 //     T O F1 ... Fn
 //
-static bool detect(lua_State *L, const char *root, const char *methods[])
+static bool detect(lua_State *L, int index, const char *methods[])
 {
-    lua_getglobal(L, root); // Get the global variable on top of the stack (will always stay on top).
-    if (lua_isnil(L, -1)) {
-        Log_write(LOG_LEVELS_FATAL, "<VM> can't find root instance: %s", lua_tostring(L, -1));
+    if (lua_isnil(L, index)) {
+        Log_write(LOG_LEVELS_FATAL, "<VM> can't find root instance");
         lua_pop(L, 1);
         return false;
     }
@@ -163,23 +160,23 @@ static bool detect(lua_State *L, const char *root, const char *methods[])
     return true;
 }
 
-static int execute(lua_State *L, const char *script)
+static int execute(lua_State *L, const char *script, const char *name, int nargs, int nresults)
 {
-    int loaded = luaL_loadstring(L, script);
+    int loaded = luaL_loadbuffer(L, script, strlen(script), name);
     if (loaded != LUA_OK) {
         Log_write(LOG_LEVELS_ERROR, "<VM> error in execute: %s", lua_tostring(L, -1));
         lua_pop(L, 1);
         return loaded;
     }
 #ifdef __DEBUG_VM_CALLS__
-    int called = lua_pcall(L, 0, 0, TRACEBACK_STACK_INDEX);
+    int called = lua_pcall(L, nargs, nresults, TRACEBACK_STACK_INDEX);
     if (called != LUA_OK) {
         Log_write(LOG_LEVELS_ERROR, "<VM> error in execute: %s", lua_tostring(L, -1));
         lua_pop(L, 1);
     }
     return called;
 #else
-    lua_call(L, 0, 0);
+    lua_call(L, nargs, nresults);
     return LUA_OK;
 #endif
 }
@@ -339,14 +336,14 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const char *base_path, C
 #endif
 #endif
 
-    int result = execute(interpreter->state, BOOT_SCRIPT);
+    int result = execute(interpreter->state, (const char *)_boot_lua, "@boot.lua", 0, 1); // Prefix '@' to trace as filename internally in Lua.
     if (result != 0) {
         Log_write(LOG_LEVELS_FATAL, "<VM> can't interpret boot script");
         lua_close(interpreter->state);
         return false;
     }
 
-    if (!detect(interpreter->state, ROOT_INSTANCE, _methods)) {
+    if (!detect(interpreter->state, -1, _methods)) {
         lua_close(interpreter->state);
         return false;
     }
@@ -360,17 +357,8 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const char *base_path, C
 
 void Interpreter_terminate(Interpreter_t *interpreter)
 {
-#ifdef SHUTDOWN_SCRIPT
-    lua_settop(interpreter->state, 1);      // T O F1 ... Fn -> T
-    int result = execute(interpreter->state, SHUTDOWN_SCRIPT);
-    if (result != 0) {
-        Log_write(LOG_LEVELS_FATAL, "<VM> can't interpret shutdown script");
-    }
-    lua_settop(interpreter->state, 0);      // T -> <empty>
-#else
-    lua_pushnil(interpreter->state);
-    lua_setglobal(interpreter->state, ROOT_INSTANCE); // Just set the (global) *root* instance to `nil`.
-#endif
+    lua_settop(interpreter->state, 0);      // T O F1 ... Fn -> <empty>
+
     lua_gc(interpreter->state, LUA_GCCOLLECT, 0);
     lua_close(interpreter->state);
 
@@ -378,9 +366,14 @@ void Interpreter_terminate(Interpreter_t *interpreter)
     FS_terminate(&interpreter->file_system);
 }
 
-bool Interpreter_init(Interpreter_t *interpreter)
+bool Interpreter_init(Interpreter_t *interpreter) // TODO: we can move this into the "boot.lua" script.
 {
     return call(interpreter->state, METHOD_INIT, 0, 0) == LUA_OK;
+}
+
+bool Interpreter_deinit(Interpreter_t *interpreter) // TODO: not sure it's really needed.
+{
+    return call(interpreter->state, METHOD_DEINIT, 0, 0) == LUA_OK;
 }
 
 bool Interpreter_input(Interpreter_t *interpreter)

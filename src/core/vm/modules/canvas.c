@@ -115,7 +115,7 @@ static const uint8_t _canvas_lua[] = {
 #include "canvas.inc"
 };
 
-static luaX_Script _canvas_script = { (const char *)_canvas_lua, sizeof(_canvas_lua), "canvas.lua" };
+static luaX_Script _canvas_script = { (const char *)_canvas_lua, sizeof(_canvas_lua), "@canvas.lua" }; // Trace as filename internally.
 
 int canvas_loader(lua_State *L)
 {
@@ -218,6 +218,7 @@ static int canvas_surface1(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
+    // TODO: we should track the surface to prevent GC.
     GL_Context_t *context = &display->gl;
     GL_context_surface(context, &surface->surface);
 
