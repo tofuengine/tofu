@@ -59,11 +59,18 @@ function Main:input()
 end
 
 function Main:update(delta_time)
+  local t = System.time() * 0.5
+  local c, s = math.cos(t), math.sin(t)
+  local x = 640 + c * 320
+  local y = 640 + s * 320
+  self.map:move_to(x, y)
+
   local dx = self.dx * CAMERA_SPEED * delta_time
   local dy = self.dy * CAMERA_SPEED * delta_time
   if dx ~= 0.0 or dy ~= 0.0 then
     self.map:scroll_by(dx, dy)
   end
+
   self.map:update(delta_time)
 end
 

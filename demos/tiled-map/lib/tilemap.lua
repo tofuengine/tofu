@@ -6,18 +6,6 @@ local Class = require("tofu.util").Class
 
 -- https://developer.mozilla.org/en-US/docs/Games/Techniques/Tilemaps/Square_tilemaps_implementation:_Scrolling_maps
 
-local function dump(t, spaces)
-  spaces = spaces or ""
-  for k, v in pairs(t) do
-    print(spaces .. k .. " " .. type(v) .. " " .. tostring(v))
-    if type(v) == "table" then
-      if (k ~= "__index") then
-        dump(v, spaces .. " ")
-      end
-    end
-  end
-end
-
 local Tilemap = Class.define()
 
 function Tilemap:__ctor(file, camera_columns, camera_rows) -- TODO: pass a camera easing function.
@@ -50,7 +38,6 @@ function Tilemap:camera(camera_columns, camera_rows)
   self.camera_rows = camera_rows
   self.camera_width = camera_columns * self.bank:cell_width()
   self.camera_height = camera_rows * self.bank:cell_height()
-dump(self)
 
   self:center_at(self.camera_anchor_x or 0.5, self.camera_anchor_y or 0.5)
 end
