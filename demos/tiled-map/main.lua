@@ -35,10 +35,10 @@ end
 function Main:__ctor()
   Canvas.palette("gameboy")
 
-  self.font = Font.default(2, 3)
-  self.map = Tilemap.new("assets/world.map", 15, 10, { ["horizontal"] = "left", ["vertical"] = "top" })
+  self.font = Font.default(0, 3)
+  self.map = Tilemap.new("assets/world.map", 13, 8)
 
-  self.map:move_to(160, 160)
+  self.map:move_to(320, 320)
 end
 
 function Main:input()
@@ -67,12 +67,11 @@ function Main:update(delta_time)
   self.map:update(delta_time)
 end
 
-function Main:render(ratio)
+function Main:render(_)
   Canvas.clear()
-  self.map:render(ratio)
+  self.map:draw(32, 32)
 
-  self.font:write(string.format("%.0f %0.f %0.f %0.f", self.map.camera_start_column, self.map.camera_start_row,
-      self.map.camera_offset_x, self.map.camera_offset_y), Canvas.width(), 0, "right")
+  self.font:write(self.map:to_string(), Canvas.width(), 0, "right")
   self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
 end
 
