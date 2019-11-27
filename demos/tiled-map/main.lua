@@ -8,7 +8,7 @@ local Tilemap = require("lib.tilemap")
 
 local Main = Class.define()
 
-local CAMERA_SPEED = 64.0
+local CAMERA_SPEED = 128.0
 
 --[[
 function string.split(s, sep)
@@ -37,7 +37,7 @@ function Main:__ctor()
   self.font = Font.default(0, 3)
   self.map = Tilemap.new("assets/world.map", 13, 8)
 
---  self.map:move_to(320, 320)
+  self.map:move_to(640, 640)
 end
 
 function Main:input()
@@ -58,13 +58,12 @@ function Main:input()
 end
 
 function Main:update(delta_time)
---[[
-  local t = System.time() * 0.5
+  local t = System.time() * 0.75
   local c, s = math.cos(t), math.sin(t)
-  local x = 640 + c * 320
-  local y = 640 + s * 320
-  self.map:move_to(x, y)
-]]
+  local x = (c + 1) * 0.25 + 0.25 -- [0.25, 0.75]
+  local y = (s + 1) * 0.25 + 0.25
+  self.map:center_at(x, y)
+
   local dx = self.dx * CAMERA_SPEED * delta_time
   local dy = self.dy * CAMERA_SPEED * delta_time
   if dx ~= 0.0 or dy ~= 0.0 then
@@ -77,6 +76,9 @@ end
 function Main:render(_)
   Canvas.clear()
   self.map:draw(32, 32)
+
+  local x, y = self.map:to_screen(32, 32, self.map.x, self.map.y)
+  Canvas.rectangle("fill", x - 2, y - 2, 4, 4, 1)
 
   self.font:write(self.map:to_string(), Canvas.width(), 0, "right")
   self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")

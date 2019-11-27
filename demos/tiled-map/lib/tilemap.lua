@@ -12,19 +12,7 @@ local function bound(x, y, aabb)
   return math.min(math.max(x, aabb.x0), aabb.x1), math.min(math.max(y, aabb.y0), aabb.y1)
 end
 
-local function dump(t, spaces)
-  spaces = spaces or ""
-  for k, v in pairs(t) do
-    print(spaces .. k .. " " .. type(v) .. " " .. tostring(v))
-    if type(v) == "table" then
-      if (k ~= "__index") then
-        dump(v, spaces .. " ")
-      end
-    end
-  end
-end
-
-function Tilemap:__ctor(file, columns, rows) -- TODO: pass a camera easing function.
+function Tilemap:__ctor(file, columns, rows)
   local content = File.read(file)
 
   local tokens = {}
@@ -42,7 +30,7 @@ function Tilemap:__ctor(file, columns, rows) -- TODO: pass a camera easing funct
 
   self.bank = Bank.new(tokens[1], tonumber(tokens[2]), tonumber(tokens[3]))
   self.grid = Grid.new(tonumber(tokens[4]), tonumber(tokens[5]), cells)
-  self.batch = {}
+  self.batch = nil
 
 --  self.tile_width, self.tile_height = self.bank:cell_width(), self.bank:cell_height()
   self.aabb = {
@@ -51,7 +39,7 @@ function Tilemap:__ctor(file, columns, rows) -- TODO: pass a camera easing funct
       x1 = self.grid:width() * self.bank:cell_width() - 1,
       y1 = self.grid:height() * self.bank:cell_height() - 1
     }
-  self.x, self.y = 0, 0
+  self.x, self.y = 0, 0 -- TODO: move them outside the map, they are the avatar coordinates!
 
   self:camera(columns, rows)
 end
@@ -80,20 +68,22 @@ function Tilemap:center_at(anchor_x, anchor_y)
       x1 = self.grid:width() * self.bank:cell_width() - (camera.width - camera.offset_x) - 1,
       y1 = self.grid:height() * self.bank:cell_height() - (camera.height - camera.offset_y) - 1
     }
-dump(camera)
+
   self:move_to(self.x, self.y)
 end
 
 function Tilemap:scroll_by(dx, dy)
   self:move_to(self.x + dx, self.y + dy)
 end
---[[
-function Tilemap:map_to_screen(x, y)
+
+function Tilemap:to_screen(dx, dy, x, y)
+  return x - self.camera.x + self.camera.offset_x + dx, y - self.camera.y + self.camera.offset_y + dy
 end
 
-function Tilemap:screen_to_map(x, y)
+function Tilemap:to_world(dx, dy, x, y)
+  return x - dx - self.camera.offset_x + self.camera.x, y - dy - self.camera.offset_y + self.camera.y
 end
-]]
+
 function Tilemap:move_to(x, y)
   self.x, self.y = bound(x, y, self.aabb)
 
@@ -112,16 +102,34 @@ function Tilemap:move_to(x, y)
   if camera.start_column ~= start_column or camera.start_row ~= start_row then
     camera.start_column = start_column
     camera.start_row = start_row
-    self.recalculate = true
+    self.batch = nil
   end
   camera.column_offset = column_offset
   camera.row_offset = row_offset
 end
 
 function Tilemap:update(_) -- delta_time
-  -- TODO: update the camera position in the case we are performing easings and/or following the user
-  -- (or some more advanced techniques).
-  if not self.recalculate then -- Check if we need to rebuild the bank batch.
+end
+
+function Tilemap:draw(x, y)
+  self:prepare_()
+
+  local camera = self.camera
+  Canvas.push()
+  Canvas.clipping(x, y, camera.width, camera.height)
+
+  local ox, oy = x + camera.column_offset, y + camera.row_offset
+  for _, v in ipairs(self.batch) do
+    local cell_id, cell_x, cell_y = table.unpack(v)
+    self.bank:blit(math.tointeger(cell_id), cell_x + ox, cell_y + oy)
+    --Canvas.rectangle("line", cell_x, cell_y, 32, 32, 1)
+  end
+
+  Canvas.pop()
+end
+
+function Tilemap:prepare_()
+  if self.batch then -- Check if we need to rebuild the bank batch.
     return
   end
 
@@ -148,24 +156,6 @@ function Tilemap:update(_) -- delta_time
     r = r + 1
   end
   self.batch = batch
-
-  self.recalculate = false
-end
-
-function Tilemap:draw(x, y)
-  local camera = self.camera
-
-  Canvas.push()
-  Canvas.clipping(x, y, camera.width, camera.height)
-
-  local ox, oy = x + camera.column_offset, y + camera.row_offset
-  for _, v in ipairs(self.batch) do
-    local cell_id, cell_x, cell_y = table.unpack(v)
-    self.bank:blit(math.tointeger(cell_id), cell_x + ox, cell_y + oy)
-    --Canvas.rectangle("line", cell_x, cell_y, 32, 32, 1)
-  end
-
-  Canvas.pop()
 end
 
 function Tilemap:to_string()
