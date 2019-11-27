@@ -59,6 +59,7 @@ function Main:input()
 end
 
 function Main:update(delta_time)
+
   local t = System.time() * 0.5
   local c, s = math.cos(t), math.sin(t)
   local ax = (c + 1) * 0.5 + 0.0 -- [0.25, 0.75]
@@ -72,7 +73,14 @@ function Main:update(delta_time)
   end
 
   self.map:move_to(self.player.x, self.player.y)
-
+--[[
+  local dx = self.dx * CAMERA_SPEED * delta_time
+  local dy = self.dy * CAMERA_SPEED * delta_time
+  if dx ~= 0.0 or dy ~= 0.0 then
+    self.player.x, self.player.y = self.map:bound(self.player.x + dx, self.player.y + dy)
+    self.map:move_to(self.player.x, self.player.y)
+  end
+]]
   self.map:update(delta_time)
 end
 

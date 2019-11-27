@@ -104,6 +104,11 @@ function Tilemap:move_to(x, y)
   local map_x = math.tointeger(camera.x) - camera.offset_x
   local map_y = math.tointeger(camera.y) - camera.offset_y
 
+  if self.map_x == map_x and self.map_y == map_y then
+    return
+  end
+  self.map_x, self.map_y = map_x, map_y -- Track offsetted map position to track *real* changes.
+
   local cw, ch = self.bank:cell_width(), self.bank:cell_height()
   local start_column = math.tointeger(map_x / cw)
   local start_row = math.tointeger(map_y / ch)
@@ -113,7 +118,7 @@ function Tilemap:move_to(x, y)
   if camera.start_column ~= start_column or camera.start_row ~= start_row then
     camera.start_column = start_column
     camera.start_row = start_row
-    self.batch = nil
+    self.batch = nil -- Starting row/column changed, recreate the batch!
   end
   camera.column_offset = column_offset
   camera.row_offset = row_offset
