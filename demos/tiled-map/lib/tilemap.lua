@@ -86,8 +86,8 @@ function Tilemap:center_at(anchor_x, anchor_y)
   local camera = self.camera
   camera.anchor_x = anchor_x
   camera.anchor_y = anchor_y
-  camera.offset_x = math.tointeger(anchor_x * (camera.width - 1)) -- Always an integer offset
-  camera.offset_y = math.tointeger(anchor_y * (camera.height - 1))
+  camera.offset_x = math.tointeger(anchor_x * camera.width) -- Always an integer offset
+  camera.offset_y = math.tointeger(anchor_y * camera.height)
   camera.aabb = {
       x0 = camera.offset_x,
       y0 = camera.offset_y,

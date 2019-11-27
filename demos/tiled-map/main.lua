@@ -59,10 +59,10 @@ function Main:input()
 end
 
 function Main:update(delta_time)
-  local t = System.time() * 1
+  local t = System.time() * 0.5
   local c, s = math.cos(t), math.sin(t)
-  local ax = (c + 1) * 0.25 + 0.25 -- [0.25, 0.75]
-  local ay = (s + 1) * 0.25 + 0.25
+  local ax = (c + 1) * 0.5 + 0.0 -- [0.25, 0.75]
+  local ay = (s + 1) * 0.5 + 0.0
   self.map:center_at(ax, ay)
 
   local dx = self.dx * CAMERA_SPEED * delta_time
