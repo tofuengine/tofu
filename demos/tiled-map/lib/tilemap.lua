@@ -1,3 +1,25 @@
+--[[
+  Copyright (c) 2019 Marco Lizza (marco.lizza@gmail.com)
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+]]--
+
 local Grid = require("tofu.collections").Grid
 local Bank = require("tofu.graphics").Bank
 local Canvas = require("tofu.graphics").Canvas
@@ -30,7 +52,6 @@ function Tilemap:__ctor(file, columns, rows)
 
   self.bank = Bank.new(tokens[1], tonumber(tokens[2]), tonumber(tokens[3]))
   self.grid = Grid.new(tonumber(tokens[4]), tonumber(tokens[5]), cells)
-  self.batch = nil
 
 --  self.tile_width, self.tile_height = self.bank:cell_width(), self.bank:cell_height()
   self.aabb = {
@@ -118,7 +139,6 @@ function Tilemap:draw(x, y)
   for _, v in ipairs(self.batch) do
     local cell_id, cell_x, cell_y = table.unpack(v)
     self.bank:blit(math.tointeger(cell_id), cell_x + ox, cell_y + oy)
-    --Canvas.rectangle("line", cell_x, cell_y, 32, 32, 1)
   end
 
   Canvas.pop()
