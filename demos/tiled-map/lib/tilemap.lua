@@ -34,7 +34,7 @@ local function bound(x, y, aabb)
   return math.min(math.max(x, aabb.x0), aabb.x1), math.min(math.max(y, aabb.y0), aabb.y1)
 end
 
-function Tilemap:__ctor(file, columns, rows)
+function Tilemap:__ctor(file, columns, rows, screen_x, screen_y)
   local content = File.read(file)
 
   local tokens = {}
@@ -61,17 +61,19 @@ function Tilemap:__ctor(file, columns, rows)
       y1 = self.grid:height() * self.bank:cell_height() - 1
     }
 
-  self:camera(columns, rows)
+  self:camera(columns, rows, screen_x, screen_y)
 end
 
 function Tilemap:bound(x, y)
   return bound(x, y, self.aabb)
 end
 
-function Tilemap:camera(columns, rows, anchor_x, anchor_y) -- last two arguments are optional
+function Tilemap:camera(columns, rows, screen_x, screen_y, anchor_x, anchor_y) -- last two arguments are optional
   local camera = {}
   self.camera = camera
 
+  camera.screen_x = screen_x
+  camera.screen_y = screen_y
   camera.columns = columns
   camera.rows = rows
   camera.width = columns * self.bank:cell_width()
@@ -103,8 +105,8 @@ function Tilemap:move_to(x, y)
   local map_y = math.tointeger(camera.y) - camera.offset_y
 
   local cw, ch = self.bank:cell_width(), self.bank:cell_height()
-  local start_column = math.floor(map_x / cw)
-  local start_row = math.floor(map_y / ch)
+  local start_column = math.tointeger(map_x / cw)
+  local start_row = math.tointeger(map_y / ch)
   local column_offset = -(map_x % cw)
   local row_offset = -(map_y % ch)
 
@@ -117,25 +119,27 @@ function Tilemap:move_to(x, y)
   camera.row_offset = row_offset
 end
 
-function Tilemap:to_screen(dx, dy, x, y)
-  return x - self.camera.x + self.camera.offset_x + dx, y - self.camera.y + self.camera.offset_y + dy
+function Tilemap:to_screen(x, y)
+  local camera = self.camera
+  return x - camera.x + camera.offset_x + camera.screen_x, y - camera.y + camera.offset_y + camera.screen_y
 end
 
-function Tilemap:to_world(dx, dy, x, y)
-  return x - dx - self.camera.offset_x + self.camera.x, y - dy - self.camera.offset_y + self.camera.y
+function Tilemap:to_world(x, y)
+  local camera = self.camera
+  return x - camera.screen_x - camera.offset_x + camera.x, y - camera.screen_y - camera.offset_y + camera.y
 end
 
 function Tilemap:update(_) -- delta_time
 end
 
-function Tilemap:draw(x, y)
+function Tilemap:draw()
   self:prepare_()
 
   local camera = self.camera
   Canvas.push()
-  Canvas.clipping(x, y, camera.width, camera.height)
+  Canvas.clipping(camera.screen_x, camera.screen_y, camera.width, camera.height)
 
-  local ox, oy = x + camera.column_offset, y + camera.row_offset
+  local ox, oy = camera.screen_x + camera.column_offset, camera.screen_y + camera.row_offset
   for _, v in ipairs(self.batch) do
     local cell_id, cell_x, cell_y = table.unpack(v)
     self.bank:blit(math.tointeger(cell_id), cell_x + ox, cell_y + oy)

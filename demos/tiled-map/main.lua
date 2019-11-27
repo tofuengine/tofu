@@ -35,7 +35,7 @@ function Main:__ctor()
   Canvas.palette("gameboy")
 
   self.font = Font.default(0, 3)
-  self.map = Tilemap.new("assets/world.map", 13, 8)
+  self.map = Tilemap.new("assets/world.map", 13, 8, 32, 32)
 
   self.player = { x = 640, y = 640 }
   self.map:move_to(self.player.x, self.player.y)
@@ -78,9 +78,9 @@ end
 
 function Main:render(_)
   Canvas.clear()
-  self.map:draw(32, 32)
+  self.map:draw()
 
-  local x, y = self.map:to_screen(32, 32, self.player.x, self.player.y)
+  local x, y = self.map:to_screen(self.player.x, self.player.y)
   Canvas.rectangle("fill", x - 2, y - 2, 4, 4, 1)
 
   self.font:write(self.map:to_string(), Canvas.width(), 0, "right")
