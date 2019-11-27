@@ -18,7 +18,6 @@ function string.split(s, sep)
   return fields
 end
 
-
 function table.dump(t, spaces)
   spaces = spaces or ""
   for k, v in pairs(t) do
@@ -38,7 +37,7 @@ function Main:__ctor()
   self.font = Font.default(0, 3)
   self.map = Tilemap.new("assets/world.map", 13, 8)
 
-  self.map:move_to(320, 320)
+--  self.map:move_to(320, 320)
 end
 
 function Main:input()
@@ -59,12 +58,13 @@ function Main:input()
 end
 
 function Main:update(delta_time)
+--[[
   local t = System.time() * 0.5
   local c, s = math.cos(t), math.sin(t)
   local x = 640 + c * 320
   local y = 640 + s * 320
   self.map:move_to(x, y)
-
+]]
   local dx = self.dx * CAMERA_SPEED * delta_time
   local dy = self.dy * CAMERA_SPEED * delta_time
   if dx ~= 0.0 or dy ~= 0.0 then

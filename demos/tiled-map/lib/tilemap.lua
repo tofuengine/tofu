@@ -8,7 +8,23 @@ local Class = require("tofu.util").Class
 
 local Tilemap = Class.define()
 
-function Tilemap:__ctor(file, camera_columns, camera_rows) -- TODO: pass a camera easing function.
+local function bound(x, y, aabb)
+  return math.min(math.max(x, aabb.x0), aabb.x1), math.min(math.max(y, aabb.y0), aabb.y1)
+end
+
+local function dump(t, spaces)
+  spaces = spaces or ""
+  for k, v in pairs(t) do
+    print(spaces .. k .. " " .. type(v) .. " " .. tostring(v))
+    if type(v) == "table" then
+      if (k ~= "__index") then
+        dump(v, spaces .. " ")
+      end
+    end
+  end
+end
+
+function Tilemap:__ctor(file, columns, rows) -- TODO: pass a camera easing function.
   local content = File.read(file)
 
   local tokens = {}
@@ -29,90 +45,120 @@ function Tilemap:__ctor(file, camera_columns, camera_rows) -- TODO: pass a camer
   self.batch = {}
 
 --  self.tile_width, self.tile_height = self.bank:cell_width(), self.bank:cell_height()
+  self.aabb = {
+      x0 = 0,
+      y0 = 0,
+      x1 = self.grid:width() * self.bank:cell_width() - 1,
+      y1 = self.grid:height() * self.bank:cell_height() - 1
+    }
+  self.x, self.y = 0, 0
 
-  self:camera(camera_columns, camera_rows)
+  self:camera(columns, rows)
 end
 
-function Tilemap:camera(camera_columns, camera_rows)
-  self.camera_columns = camera_columns
-  self.camera_rows = camera_rows
-  self.camera_width = camera_columns * self.bank:cell_width()
-  self.camera_height = camera_rows * self.bank:cell_height()
+function Tilemap:camera(columns, rows)
+  local camera = {}
+  self.camera = camera
 
-  self:center_at(self.camera_anchor_x or 0.5, self.camera_anchor_y or 0.5)
+  camera.columns = columns
+  camera.rows = rows
+  camera.width = columns * self.bank:cell_width()
+  camera.height = rows * self.bank:cell_height()
+
+  self:center_at(self.camera.anchor_x or 0.5, self.camera.anchor_y or 0.5)
 end
 
-function Tilemap:center_at(ax, ay)
-  self.camera_anchor_x = ax
-  self.camera_anchor_y = ay
-
-  self.camera_alignment_x = ax * self.camera_width
-  self.camera_alignment_y = ay * self.camera_height
-
-  self.camera_min_x = self.camera_alignment_x
-  self.camera_max_x = (self.grid:width() - self.camera_columns - 1) * self.bank:cell_width() - self.camera_alignment_x
-  self.camera_min_y = self.camera_alignment_y
-  self.camera_max_y = (self.grid:height() - self.camera_rows - 1) * self.bank:cell_height() - self.camera_alignment_y
-
-  self:move_to(self.camera_x or self.camera_min_x, self.camera_y or self.camera_min_y)
+function Tilemap:center_at(anchor_x, anchor_y)
+  local camera = self.camera
+  camera.anchor_x = anchor_x
+  camera.anchor_y = anchor_y
+  camera.offset_x = anchor_x * camera.width
+  camera.offset_y = anchor_y * camera.height
+  camera.aabb = {
+      x0 = camera.offset_x,
+      y0 = camera.offset_y,
+      x1 = self.grid:width() * self.bank:cell_width() - (camera.width - camera.offset_x) - 1,
+      y1 = self.grid:height() * self.bank:cell_height() - (camera.height - camera.offset_y) - 1
+    }
+dump(camera)
+  self:move_to(self.x, self.y)
 end
 
 function Tilemap:scroll_by(dx, dy)
-  self:move_to(self.camera_x + dx, self.camera_y + dy)
+  self:move_to(self.x + dx, self.y + dy)
+end
+--[[
+function Tilemap:map_to_screen(x, y)
 end
 
+function Tilemap:screen_to_map(x, y)
+end
+]]
 function Tilemap:move_to(x, y)
-  self.camera_x = math.min(math.max(x, self.camera_min_x), self.camera_max_x)
-  self.camera_y = math.min(math.max(y, self.camera_min_y), self.camera_max_y)
+  self.x, self.y = bound(x, y, self.aabb)
 
-  local map_x = math.floor(self.camera_x - self.camera_alignment_x)
-  local map_y = math.floor(self.camera_y - self.camera_alignment_y)
+  local camera = self.camera
+  camera.x, camera.y = bound(x, y, camera.aabb)
 
-  local camera_start_column = self.camera_start_column
-  local camera_start_row = self.camera_start_row
+  local map_x = math.floor(camera.x - camera.offset_x)
+  local map_y = math.floor(camera.y - camera.offset_y)
 
   local cw, ch = self.bank:cell_width(), self.bank:cell_height()
-  self.camera_start_column = math.floor(map_x / cw)
-  self.camera_start_row = math.floor(map_y / ch)
-  self.camera_offset_x = -(map_x % cw)
-  self.camera_offset_y = -(map_y % ch)
+  local start_column = math.floor(map_x / cw)
+  local start_row = math.floor(map_y / ch)
+  local column_offset = -(map_x % cw)
+  local row_offset = -(map_y % ch)
 
-  self.modified = (camera_start_column ~= self.camera_start_column) or (camera_start_row ~= self.camera_start_row)
+  if camera.start_column ~= start_column or camera.start_row ~= start_row then
+    camera.start_column = start_column
+    camera.start_row = start_row
+    self.recalculate = true
+  end
+  camera.column_offset = column_offset
+  camera.row_offset = row_offset
 end
 
 function Tilemap:update(_) -- delta_time
   -- TODO: update the camera position in the case we are performing easings and/or following the user
   -- (or some more advanced techniques).
-
-  if self.modified then -- Check if we need to rebuild the bank batch.
-    self.modified = false
-
-    local cw, ch = self.bank:cell_width(), self.bank:cell_height()
-
-    local batch = {}
-    local y = 0
-    local r = self.camera_start_row
-    for _ = 0, self.camera_rows do -- We handle an additional row/column for sub-tile scrolling.
-      local x = 0
-      local c = self.camera_start_column
-      for _ = 0, self.camera_columns do
-        local cell_id = self.grid:peek(c, r)
-        table.insert(batch, { cell_id, x, y })
-        x = x + cw
-        c = c + 1
-      end
-      y = y + ch
-      r = r + 1
-    end
-    self.batch = batch
+  if not self.recalculate then -- Check if we need to rebuild the bank batch.
+    return
   end
+
+  local camera = self.camera
+
+  local cw, ch = self.bank:cell_width(), self.bank:cell_height()
+
+  local rows = math.min(self.grid:width() - camera.start_row, camera.rows + 1) -- We handle an additional row/column
+  local columns = math.min(self.grid:height() - camera.start_column, camera.columns + 1) -- for sub-tile scrolling
+
+  local batch = {}
+  local y = 0
+  local r = camera.start_row
+  for _ = 1, rows do
+    local x = 0
+    local c = camera.start_column
+    for _ = 1, columns do
+      local cell_id = self.grid:peek(c, r)
+      table.insert(batch, { cell_id, x, y })
+      x = x + cw
+      c = c + 1
+    end
+    y = y + ch
+    r = r + 1
+  end
+  self.batch = batch
+
+  self.recalculate = false
 end
 
 function Tilemap:draw(x, y)
-  Canvas.push()
-  Canvas.clipping(x, y, self.camera_width, self.camera_height)
+  local camera = self.camera
 
-  local ox, oy = x + self.camera_offset_x, y + self.camera_offset_y
+  Canvas.push()
+  Canvas.clipping(x, y, camera.width, camera.height)
+
+  local ox, oy = x + camera.column_offset, y + camera.row_offset
   for _, v in ipairs(self.batch) do
     local cell_id, cell_x, cell_y = table.unpack(v)
     self.bank:blit(math.tointeger(cell_id), cell_x + ox, cell_y + oy)
@@ -123,10 +169,13 @@ function Tilemap:draw(x, y)
 end
 
 function Tilemap:to_string()
-  return string.format("%.0f %0.f | %.0f %0.f | %0.f %0.f",
-    self.camera_x, self.camera_y,
-    self.camera_start_column, self.camera_start_row,
-    self.camera_offset_x, self.camera_offset_y)
+  local camera = self.camera
+
+  return string.format("%.0f %0.f | %.0f %0.f | %.0f %0.f | %0.f %0.f",
+    self.x, self.y,
+    camera.x, camera.y,
+    camera.start_column, camera.start_row,
+    camera.column_offset, camera.row_offset)
 end
 
 return Tilemap
