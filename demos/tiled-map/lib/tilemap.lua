@@ -39,12 +39,15 @@ function Tilemap:__ctor(file, columns, rows)
       x1 = self.grid:width() * self.bank:cell_width() - 1,
       y1 = self.grid:height() * self.bank:cell_height() - 1
     }
-  self.x, self.y = 0, 0 -- TODO: move them outside the map, they are the avatar coordinates!
 
   self:camera(columns, rows)
 end
 
-function Tilemap:camera(columns, rows)
+function Tilemap:bound(x, y)
+  return bound(x, y, self.aabb)
+end
+
+function Tilemap:camera(columns, rows, anchor_x, anchor_y) -- last two arguments are optional
   local camera = {}
   self.camera = camera
 
@@ -53,7 +56,7 @@ function Tilemap:camera(columns, rows)
   camera.width = columns * self.bank:cell_width()
   camera.height = rows * self.bank:cell_height()
 
-  self:center_at(self.camera.anchor_x or 0.5, self.camera.anchor_y or 0.5)
+  self:center_at(anchor_x or 0.5, anchor_y or 0.5)
 end
 
 function Tilemap:center_at(anchor_x, anchor_y)
@@ -68,25 +71,10 @@ function Tilemap:center_at(anchor_x, anchor_y)
       x1 = self.grid:width() * self.bank:cell_width() - (camera.width - camera.offset_x) - 1,
       y1 = self.grid:height() * self.bank:cell_height() - (camera.height - camera.offset_y) - 1
     }
-
-  self:move_to(self.x, self.y)
-end
-
-function Tilemap:scroll_by(dx, dy)
-  self:move_to(self.x + dx, self.y + dy)
-end
-
-function Tilemap:to_screen(dx, dy, x, y)
-  return x - self.camera.x + self.camera.offset_x + dx, y - self.camera.y + self.camera.offset_y + dy
-end
-
-function Tilemap:to_world(dx, dy, x, y)
-  return x - dx - self.camera.offset_x + self.camera.x, y - dy - self.camera.offset_y + self.camera.y
+  self:move_to(camera.x or 0, camera.y or 0)
 end
 
 function Tilemap:move_to(x, y)
-  self.x, self.y = bound(x, y, self.aabb)
-
   local camera = self.camera
   camera.x, camera.y = bound(x, y, camera.aabb)
 
@@ -106,6 +94,14 @@ function Tilemap:move_to(x, y)
   end
   camera.column_offset = column_offset
   camera.row_offset = row_offset
+end
+
+function Tilemap:to_screen(dx, dy, x, y)
+  return x - self.camera.x + self.camera.offset_x + dx, y - self.camera.y + self.camera.offset_y + dy
+end
+
+function Tilemap:to_world(dx, dy, x, y)
+  return x - dx - self.camera.offset_x + self.camera.x, y - dy - self.camera.offset_y + self.camera.y
 end
 
 function Tilemap:update(_) -- delta_time
@@ -161,8 +157,7 @@ end
 function Tilemap:to_string()
   local camera = self.camera
 
-  return string.format("%.0f %0.f | %.0f %0.f | %.0f %0.f | %0.f %0.f",
-    self.x, self.y,
+  return string.format("%.0f %0.f | %.0f %0.f | %0.f %0.f",
     camera.x, camera.y,
     camera.start_column, camera.start_row,
     camera.column_offset, camera.row_offset)

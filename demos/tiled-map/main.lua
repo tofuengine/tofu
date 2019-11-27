@@ -37,7 +37,8 @@ function Main:__ctor()
   self.font = Font.default(0, 3)
   self.map = Tilemap.new("assets/world.map", 13, 8)
 
-  self.map:move_to(640, 640)
+  self.player = { x = 640, y = 640 }
+  self.map:move_to(self.player.x, self.player.y)
 end
 
 function Main:input()
@@ -58,17 +59,19 @@ function Main:input()
 end
 
 function Main:update(delta_time)
-  local t = System.time() * 0.75
+  local t = System.time() * 1
   local c, s = math.cos(t), math.sin(t)
-  local x = (c + 1) * 0.25 + 0.25 -- [0.25, 0.75]
-  local y = (s + 1) * 0.25 + 0.25
-  self.map:center_at(x, y)
+  local ax = (c + 1) * 0.25 + 0.25 -- [0.25, 0.75]
+  local ay = (s + 1) * 0.25 + 0.25
+  self.map:center_at(ax, ay)
 
   local dx = self.dx * CAMERA_SPEED * delta_time
   local dy = self.dy * CAMERA_SPEED * delta_time
   if dx ~= 0.0 or dy ~= 0.0 then
-    self.map:scroll_by(dx, dy)
+    self.player.x, self.player.y = self.map:bound(self.player.x + dx, self.player.y + dy)
   end
+
+  self.map:move_to(self.player.x, self.player.y)
 
   self.map:update(delta_time)
 end
@@ -77,7 +80,7 @@ function Main:render(_)
   Canvas.clear()
   self.map:draw(32, 32)
 
-  local x, y = self.map:to_screen(32, 32, self.map.x, self.map.y)
+  local x, y = self.map:to_screen(32, 32, self.player.x, self.player.y)
   Canvas.rectangle("fill", x - 2, y - 2, 4, 4, 1)
 
   self.font:write(self.map:to_string(), Canvas.width(), 0, "right")
