@@ -84,8 +84,8 @@ function Tilemap:center_at(anchor_x, anchor_y)
   local camera = self.camera
   camera.anchor_x = anchor_x
   camera.anchor_y = anchor_y
-  camera.offset_x = anchor_x * camera.width
-  camera.offset_y = anchor_y * camera.height
+  camera.offset_x = math.tointeger(anchor_x * (camera.width - 1)) -- Always an integer offset
+  camera.offset_y = math.tointeger(anchor_y * (camera.height - 1))
   camera.aabb = {
       x0 = camera.offset_x,
       y0 = camera.offset_y,
@@ -99,8 +99,8 @@ function Tilemap:move_to(x, y)
   local camera = self.camera
   camera.x, camera.y = bound(x, y, camera.aabb)
 
-  local map_x = math.floor(camera.x - camera.offset_x)
-  local map_y = math.floor(camera.y - camera.offset_y)
+  local map_x = math.tointeger(camera.x) - camera.offset_x
+  local map_y = math.tointeger(camera.y) - camera.offset_y
 
   local cw, ch = self.bank:cell_width(), self.bank:cell_height()
   local start_column = math.floor(map_x / cw)
