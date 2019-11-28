@@ -23,19 +23,18 @@
 local Canvas = require("tofu.graphics").Canvas
 local Class = require("tofu.util").Class
 
--- https://developer.mozilla.org/en-US/docs/Games/Techniques/Tilemaps/Square_tilemaps_implementation:_Scrolling_maps
-
 local function bound(x, y, aabb)
   return math.min(math.max(x, aabb.x0), aabb.x1), math.min(math.max(y, aabb.y0), aabb.y1)
 end
 
 local Camera = Class.define()
 
+-- TODO: add camera scaling, useful to draw minimap.
 function Camera:__ctor(grid, bank, columns, rows, screen_x, screen_y, anchor_x, anchor_y)
   self.grid = grid
   self.bank = bank
-  self.screen_x = screen_x
-  self.screen_y = screen_y
+  self.screen_x = screen_x or 0
+  self.screen_y = screen_y or 0
   self.columns = columns
   self.rows = rows
   self.width = columns * self.bank:cell_width()
@@ -78,7 +77,7 @@ function Camera:move_to(x, y)
   if self.start_column ~= start_column or self.start_row ~= start_row then
     self.start_column = start_column
     self.start_row = start_row
-    self.batch = nil -- Starting row/column changed, recreate the batch!
+    self:prepare_()
   end
   self.column_offset = column_offset
   self.row_offset = row_offset
@@ -92,11 +91,7 @@ function Camera:to_world(x, y)
   return x - self.screen_x + self.offset_x + self.x, y - self.screen_y + self.offset_y + self.y
 end
 
-function Camera:prepare()
-  if self.batch then -- Check if we need to rebuild the bank batch.
-    return
-  end
-
+function Camera:prepare_()
   local cw, ch = self.bank:cell_width(), self.bank:cell_height()
 
   local rows = math.min(self.grid:width() - self.start_row, self.rows + 1) -- We handle an additional row/column
@@ -121,8 +116,6 @@ function Camera:prepare()
 end
 
 function Camera:draw()
-  self:prepare()
-
   Canvas.clipping(self.screen_x, self.screen_y, self.width, self.height)
 
   local ox, oy = self.screen_x + self.column_offset, self.screen_y + self.row_offset
@@ -130,6 +123,8 @@ function Camera:draw()
     local cell_id, cell_x, cell_y = table.unpack(v)
     self.bank:blit(math.tointeger(cell_id), cell_x + ox, cell_y + oy)
   end
+
+--  Canvas.rectangle("fill", self.screen_x + self.offset_x - 2, self.screen_y + self.offset_y - 2, 4, 4, 2)
 end
 
 function Camera:to_string()

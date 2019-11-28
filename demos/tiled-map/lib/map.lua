@@ -74,7 +74,7 @@ function Map:remove_camera(id)
   self.cameras[id] = nil
 end
 
-function Map:get_camera(id) -- last two arguments are optional
+function Map:camera_from_id(id) -- last two arguments are optional
   return self.cameras[id]
 end
 
@@ -90,8 +90,13 @@ function Map:draw()
 end
 
 function Map:to_string()
-  local s = ""
+  local s = nil
   for id, camera in pairs(self.cameras) do
+    if not s then
+      s = ""
+    else
+      s = s .. " "
+    end
     s = s .. "[" .. id .. "] " .. camera:to_string()
   end
   return s

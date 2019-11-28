@@ -37,13 +37,13 @@ function Main:__ctor()
   self.font = Font.default(0, 3)
   self.map = Map.new("assets/world.map")
 --  self.map:add_camera("main", 13, 8, 32, 32)
-  self.map:add_camera("main", 7, 8, 8, 32)
-  self.map:add_camera("pip", 7, 8, 248, 32)
+  self.map:add_camera("left", 7, 8, 8, 32)
+  self.map:add_camera("right", 7, 8, 248, 32)
 
   self.player = { x = 640, y = 640 }
 
---  local camera = self.map:get_camera("main")
---  camera:move_to(self.player.x, self.player.y)
+  self.map:camera_from_id("left"):move_to(200, 200)
+  self.map:camera_from_id("right"):move_to(800, 200)
 end
 
 function Main:input()
@@ -64,7 +64,7 @@ function Main:input()
 end
 
 function Main:update(delta_time)
-  local camera = self.map:get_camera("main")
+  local camera = self.map:camera_from_id("left")
 
   local t = System.time() * 0.5
   local c, s = math.cos(t), math.sin(t)
@@ -72,12 +72,12 @@ function Main:update(delta_time)
   local ay = (s + 1) * 0.5 + 0.0
   camera:center_at(ax, ay)
 
+  camera = self.map:camera_from_id("right")
   local dx = self.dx * CAMERA_SPEED * delta_time
   local dy = self.dy * CAMERA_SPEED * delta_time
   if dx ~= 0.0 or dy ~= 0.0 then
     self.player.x, self.player.y = self.map:bound(self.player.x + dx, self.player.y + dy)
   end
-
   camera:move_to(self.player.x, self.player.y)
 --[[
   local dx = self.dx * CAMERA_SPEED * delta_time
@@ -94,7 +94,7 @@ function Main:render(_)
   Canvas.clear()
   self.map:draw()
 
-  local camera = self.map:get_camera("main")
+  local camera = self.map:camera_from_id("right")
   local x, y = camera:to_screen(self.player.x, self.player.y)
   Canvas.rectangle("fill", x - 2, y - 2, 4, 4, 1)
 
