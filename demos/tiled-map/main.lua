@@ -4,7 +4,7 @@ local Font = require("tofu.graphics").Font
 local Input = require("tofu.events").Input
 local Class = require("tofu.util").Class
 
-local Tilemap = require("lib.tilemap")
+local Map = require("lib.map")
 
 local Main = Class.define()
 
@@ -35,10 +35,15 @@ function Main:__ctor()
   Canvas.palette("gameboy")
 
   self.font = Font.default(0, 3)
-  self.map = Tilemap.new("assets/world.map", 13, 8, 32, 32)
+  self.map = Map.new("assets/world.map")
+--  self.map:add_camera("main", 13, 8, 32, 32)
+  self.map:add_camera("main", 7, 8, 8, 32)
+  self.map:add_camera("pip", 7, 8, 248, 32)
 
   self.player = { x = 640, y = 640 }
-  self.map:move_to(self.player.x, self.player.y)
+
+--  local camera = self.map:get_camera("main")
+--  camera:move_to(self.player.x, self.player.y)
 end
 
 function Main:input()
@@ -59,12 +64,13 @@ function Main:input()
 end
 
 function Main:update(delta_time)
+  local camera = self.map:get_camera("main")
 
   local t = System.time() * 0.5
   local c, s = math.cos(t), math.sin(t)
   local ax = (c + 1) * 0.5 + 0.0 -- [0.25, 0.75]
   local ay = (s + 1) * 0.5 + 0.0
-  self.map:center_at(ax, ay)
+  camera:center_at(ax, ay)
 
   local dx = self.dx * CAMERA_SPEED * delta_time
   local dy = self.dy * CAMERA_SPEED * delta_time
@@ -72,13 +78,13 @@ function Main:update(delta_time)
     self.player.x, self.player.y = self.map:bound(self.player.x + dx, self.player.y + dy)
   end
 
-  self.map:move_to(self.player.x, self.player.y)
+  camera:move_to(self.player.x, self.player.y)
 --[[
   local dx = self.dx * CAMERA_SPEED * delta_time
   local dy = self.dy * CAMERA_SPEED * delta_time
   if dx ~= 0.0 or dy ~= 0.0 then
-    self.player.x, self.player.y = self.map:bound(self.player.x + dx, self.player.y + dy)
-    self.map:move_to(self.player.x, self.player.y)
+    self.player.x, self.player.y = camera:bound(self.player.x + dx, self.player.y + dy)
+    camera:move_to(self.player.x, self.player.y)
   end
 ]]
   self.map:update(delta_time)
@@ -88,7 +94,8 @@ function Main:render(_)
   Canvas.clear()
   self.map:draw()
 
-  local x, y = self.map:to_screen(self.player.x, self.player.y)
+  local camera = self.map:get_camera("main")
+  local x, y = camera:to_screen(self.player.x, self.player.y)
   Canvas.rectangle("fill", x - 2, y - 2, 4, 4, 1)
 
   self.font:write(self.map:to_string(), Canvas.width(), 0, "right")
