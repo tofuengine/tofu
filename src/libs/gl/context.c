@@ -141,10 +141,10 @@ void GL_context_transparent(GL_Context_t *context, const GL_Pixel_t *indexes, co
     }
 }
 
-void GL_context_clipping(GL_Context_t *context, const GL_Quad_t *clipping_region)
+void GL_context_clipping(GL_Context_t *context, const GL_Rectangle_t *region)
 {
     GL_State_t *state = &context->state;
-    if (!clipping_region) {
+    if (!region) {
         state->clipping_region = (GL_Quad_t){
                 .x0 = 0,
                 .y0 = 0,
@@ -153,10 +153,10 @@ void GL_context_clipping(GL_Context_t *context, const GL_Quad_t *clipping_region
             };
     } else {
         state->clipping_region = (GL_Quad_t){
-                .x0 = imax(0, clipping_region->x0),
-                .y0 = imax(0, clipping_region->y0),
-                .x1 = imin(state->surface->width - 1, clipping_region->x1),
-                .y1 = imin(state->surface->height - 1, clipping_region->y1)
+                .x0 = imax(0, region->x),
+                .y0 = imax(0, region->y),
+                .x1 = imin(state->surface->width, region->x + region->width) - 1,
+                .y1 = imin(state->surface->height, region->y + region->height) - 1
             };
     }
 }

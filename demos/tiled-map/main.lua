@@ -4,11 +4,11 @@ local Font = require("tofu.graphics").Font
 local Input = require("tofu.events").Input
 local Class = require("tofu.util").Class
 
-local Tilemap = require("lib.tilemap")
+local Map = require("lib.map")
 
 local Main = Class.define()
 
-local CAMERA_SPEED = 64.0
+local CAMERA_SPEED = 128.0
 
 --[[
 function string.split(s, sep)
@@ -17,7 +17,6 @@ function string.split(s, sep)
   string.gsub(s, pattern, function(c) fields[#fields + 1] = c end)
   return fields
 end
-
 
 function table.dump(t, spaces)
   spaces = spaces or ""
@@ -35,10 +34,17 @@ end
 function Main:__ctor()
   Canvas.palette("gameboy")
 
-  self.font = Font.default(2, 3)
-  self.map = Tilemap.new("assets/world.map", 15, 10, { ["horizontal"] = "left", ["vertical"] = "top" })
+  self.font = Font.default(0, 3)
+  self.map = Map.new("assets/world.map")
 
-  self.map:move_to(160, 160)
+  self.map:add_camera("left", 7, 5, 8, 0)
+  self.map:add_camera("right", 7, 5, 248, 0)
+  self.map:add_camera("main", 14, 5, 8, 160)
+
+  self.player = { x = 640, y = 640 }
+
+  self.map:camera_from_id("left"):move_to(200, 200)
+  self.map:camera_from_id("right"):move_to(800, 200)
 end
 
 function Main:input()
@@ -59,20 +65,41 @@ function Main:input()
 end
 
 function Main:update(delta_time)
+  local camera = self.map:camera_from_id("left")
+
+  local t = System.time() * 0.5
+  local c, s = math.cos(t), math.sin(t)
+  local ax = (c + 1) * 0.5 + 0.0 -- [0.25, 0.75]
+  local ay = (s + 1) * 0.5 + 0.0
+  camera:center_at(ax, ay)
+
+  camera = self.map:camera_from_id("right")
   local dx = self.dx * CAMERA_SPEED * delta_time
   local dy = self.dy * CAMERA_SPEED * delta_time
   if dx ~= 0.0 or dy ~= 0.0 then
-    self.map:scroll_by(dx, dy)
+    self.player.x, self.player.y = self.map:bound(self.player.x + dx, self.player.y + dy)
   end
+  camera:move_to(self.player.x, self.player.y)
+--[[
+  local dx = self.dx * CAMERA_SPEED * delta_time
+  local dy = self.dy * CAMERA_SPEED * delta_time
+  if dx ~= 0.0 or dy ~= 0.0 then
+    self.player.x, self.player.y = camera:bound(self.player.x + dx, self.player.y + dy)
+    camera:move_to(self.player.x, self.player.y)
+  end
+]]
   self.map:update(delta_time)
 end
 
-function Main:render(ratio)
+function Main:render(_)
   Canvas.clear()
-  self.map:render(ratio)
+  self.map:draw()
 
-  self.font:write(string.format("%.0f %0.f %0.f %0.f", self.map.camera_start_column, self.map.camera_start_row,
-      self.map.camera_offset_x, self.map.camera_offset_y), Canvas.width(), 0, "right")
+  local camera = self.map:camera_from_id("right")
+  local x, y = camera:to_screen(self.player.x, self.player.y)
+  Canvas.rectangle("fill", x - 2, y - 2, 4, 4, 1)
+
+  self.font:write(self.map:to_string(), Canvas.width(), 0, "right")
   self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
 end
 

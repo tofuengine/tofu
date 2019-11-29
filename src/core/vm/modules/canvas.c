@@ -526,15 +526,15 @@ static int canvas_clipping4(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
         LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
     LUAX_SIGNATURE_END
-    int x0 = lua_tointeger(L, 1);
-    int y0 = lua_tointeger(L, 2);
-    int x1 = lua_tointeger(L, 3);
-    int y1 = lua_tointeger(L, 4);
+    int x = lua_tointeger(L, 1);
+    int y = lua_tointeger(L, 2);
+    int width = lua_tointeger(L, 3);
+    int height = lua_tointeger(L, 4);
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     GL_Context_t *context = &display->gl; // TODO: pass context and palette directly?
-    GL_context_clipping(context, &(GL_Quad_t){ .x0 = x0, .y0 = y0, .x1 = x1, .y1 = y1 });
+    GL_context_clipping(context, &(GL_Rectangle_t){ .x = x, .y = y, .width = width, .height = height });
 
     return 0;
 }
