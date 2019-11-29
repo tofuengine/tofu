@@ -256,6 +256,17 @@ static int canvas_palette0(lua_State *L)
     return 1;
 }
 
+lua_Integer luaX_getintegerfield(lua_State *L, int idx, const char *name, lua_Integer fallback) {
+    lua_Integer res = fallback;
+    lua_getfield(L, -1, "r");
+    if (!lua_isnoneornil(L, -1)) {
+        res = lua_tointeger(L, -1);
+    } else {
+        lua_pop(L, 1);
+    }
+    return res;
+}
+
 static int canvas_palette1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
@@ -291,8 +302,30 @@ static int canvas_palette1(lua_State *L)
 #if 0
             const char *key_type = lua_typename(L, lua_type(L, -2)); // uses 'key' (at index -2) and 'value' (at index -1)
 #endif
-            const char *argb = lua_tostring(L, -1);
-            palette.colors[i] = GL_palette_parse_color(argb);
+            GL_Color_t color = (GL_Color_t){ 0 };
+
+            int type = lua_typename(L, lua_type(L, -1));
+            if (type == LUA_TSTRING) {
+                const char *argb = lua_tostring(L, -1);
+                color = GL_palette_parse_color(argb);
+            } else
+            if (type == LUA_TTABLE) {
+                lua_getfield(L, -1, "r");
+                if (!lua_isnoneornil(L, -1)) {
+                    color.r = (uint8_t)lua_tointeger(L, -1);
+                } else {
+                    lua_pop(L, 1);
+                }
+                color.r = (uint8_t)lua_tointeger(L, -1);
+                lua_getfield(L, -1, "g");
+                color.g = (uint8_t)lua_tointeger(L, -1);
+                lua_getfield(L, -1, "b");
+                color.b = (uint8_t)lua_tointeger(L, -1);
+                lua_getfield(L, -1, "a");
+                color.a = (uint8_t)lua_tointeger(L, -1);
+                // TODO: parse color from table entries.
+            }
+            palette.colors[i] = color;
 
             lua_pop(L, 1);
         }
