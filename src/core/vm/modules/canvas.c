@@ -70,6 +70,7 @@ static int canvas_rectangle(lua_State *L);
 static int canvas_circle(lua_State *L);
 static int canvas_peek(lua_State *L);
 static int canvas_poke(lua_State *L);
+static int canvas_process(lua_State *L);
 
 // TODO: color index is optional, if not present use the current (drawstate) pen color
 // TODO: rename `Canvas` to `Context`?
@@ -104,6 +105,7 @@ static const struct luaL_Reg _canvas_functions[] = {
     { "circle", canvas_circle },
     { "peek", canvas_peek },
     { "poke", canvas_poke },
+    { "process", canvas_process },
     { NULL, NULL }
 };
 
@@ -528,8 +530,8 @@ static int canvas_clipping4(lua_State *L)
     LUAX_SIGNATURE_END
     int x = lua_tointeger(L, 1);
     int y = lua_tointeger(L, 2);
-    int width = lua_tointeger(L, 3);
-    int height = lua_tointeger(L, 4);
+    size_t width = (size_t)lua_tointeger(L, 3);
+    size_t height = (size_t)lua_tointeger(L, 4);
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -672,7 +674,7 @@ static int canvas_hline(lua_State *L)
     LUAX_SIGNATURE_END
     int x = lua_tointeger(L, 1);
     int y = lua_tointeger(L, 2);
-    int width = lua_tointeger(L, 3);
+    size_t width = (size_t)lua_tointeger(L, 3);
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 4);
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
@@ -680,7 +682,7 @@ static int canvas_hline(lua_State *L)
     index %= display->palette.count;
 
     const GL_Context_t *context = &display->gl;
-    GL_primitive_hline(context, (GL_Point_t){ .x = x, .y = y }, (size_t)width, index);
+    GL_primitive_hline(context, (GL_Point_t){ .x = x, .y = y }, width, index);
 
     return 0;
 }
@@ -853,8 +855,8 @@ static int canvas_rectangle(lua_State *L)
     const char *mode = lua_tostring(L, 1);
     int x = lua_tointeger(L, 2);
     int y = lua_tointeger(L, 3);
-    int width = lua_tointeger(L, 4);
-    int height = lua_tointeger(L, 5);
+    size_t width = (size_t)lua_tointeger(L, 4);
+    size_t height = (size_t)lua_tointeger(L, 5);
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 6);
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
@@ -961,6 +963,29 @@ static int canvas_poke(lua_State *L)
     const GL_Context_t *context = &display->gl;
     GL_Surface_t *surface = context->state.surface;
     surface->data_rows[y % surface->height][x % surface->width] = index;
+
+    return 0;
+}
+
+static int canvas_process(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 4)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+    LUAX_SIGNATURE_END
+    int x = lua_tointeger(L, 1);
+    int y = lua_tointeger(L, 2);
+    size_t width = (size_t)lua_tointeger(L, 3);
+    size_t height = (size_t)lua_tointeger(L, 4);
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    const GL_Context_t *context = &display->gl;
+
+    // TODO: pass pointers!!!
+    GL_context_process(context, (GL_Rectangle_t){ .x = x, .y = y, .width = width, .height = height });
 
     return 0;
 }

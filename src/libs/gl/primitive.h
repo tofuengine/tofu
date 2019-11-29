@@ -31,6 +31,8 @@ extern void GL_primitive_hline(const GL_Context_t *context, GL_Point_t origin,  
 extern void GL_primitive_vline(const GL_Context_t *context, GL_Point_t origin, size_t h, GL_Pixel_t index);
 extern void GL_primitive_polyline(const GL_Context_t *context, const GL_Point_t *vertices, size_t count, GL_Pixel_t index);
 
+extern void GL_context_process(const GL_Context_t *context, GL_Rectangle_t rectangle);
+
 extern void GL_primitive_filled_rectangle(const GL_Context_t *context, GL_Rectangle_t rectangle, GL_Pixel_t index);
 extern void GL_primitive_filled_triangle(const GL_Context_t *context, GL_Point_t a, GL_Point_t b, GL_Point_t c, GL_Pixel_t index);
 extern void GL_primitive_filled_circle(const GL_Context_t *context, GL_Point_t center, int radius, GL_Pixel_t index);

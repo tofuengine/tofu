@@ -374,8 +374,8 @@ static int surface_blit7(lua_State *L)
     int y = lua_tointeger(L, 3);
     int ox = lua_tointeger(L, 4);
     int oy = lua_tointeger(L, 5);
-    int width = lua_tointeger(L, 6);
-    int height = lua_tointeger(L, 7);
+    size_t width = (size_t)lua_tointeger(L, 6);
+    size_t height = (size_t)lua_tointeger(L, 7);
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -404,8 +404,8 @@ static int surface_blit9(lua_State *L)
     int y = lua_tointeger(L, 3);
     int ox = lua_tointeger(L, 4);
     int oy = lua_tointeger(L, 5);
-    int width = lua_tointeger(L, 6);
-    int height = lua_tointeger(L, 7);
+    size_t width = (size_t)lua_tointeger(L, 6);
+    size_t height = (size_t)lua_tointeger(L, 7);
     float scale_x = lua_tonumber(L, 8);
     float scale_y = lua_tonumber(L, 9);
 
@@ -437,8 +437,8 @@ static int surface_blit10(lua_State *L)
     int y = lua_tointeger(L, 3);
     int ox = lua_tointeger(L, 4);
     int oy = lua_tointeger(L, 5);
-    int width = lua_tointeger(L, 6);
-    int height = lua_tointeger(L, 7);
+    size_t width = (size_t)lua_tointeger(L, 6);
+    size_t height = (size_t)lua_tointeger(L, 7);
     float scale_x = lua_tonumber(L, 8);
     float scale_y = lua_tonumber(L, 9);
     int rotation = lua_tointeger(L, 10);
