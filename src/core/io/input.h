@@ -48,12 +48,12 @@ typedef enum _Input_Keys_t {
     Input_Keys_t_CountOf
 } Input_Keys_t;
 
-typedef struct _Input_Key_State_t { // TODO: use explicit masks?
+typedef struct _Input_Key_State_t {
     uint8_t down : 1;
     uint8_t pressed : 1;
     uint8_t released : 1;
     uint8_t triggered : 1;
-    uint8_t : 5;
+    uint8_t : 4;
 } Input_Key_State_t;
 
 typedef struct _Input_Key_t {
@@ -61,6 +61,31 @@ typedef struct _Input_Key_t {
     float period;
     float time;
 } Input_Key_t;
+
+typedef struct _Input_Keyboard_t {
+    Input_Key_t keys[Input_Keys_t_CountOf];
+} Input_Keyboard_t;
+
+typedef enum _Input_Buttons_t {
+    Input_Buttons_t_First = 0,
+    INPUT_BUTTON_LEFT = Input_Buttons_t_First,
+    INPUT_BUTTON_MIDDLE,
+    INPUT_BUTTON_RIGHT,
+    Input_Buttons_t_Last = INPUT_BUTTON_RIGHT,
+    Input_Buttons_t_CountOf
+} Input_Buttons_t;
+
+typedef struct _Input_Button_State_t {
+    uint8_t down : 1;
+    uint8_t pressed : 1;
+    uint8_t released : 1;
+    uint8_t : 5;
+} Input_Button_State_t;
+
+typedef struct _Input_Mouse_t {
+    Input_Button_State_t buttons[Input_Buttons_t_CountOf];
+    float x, y;
+} Input_Mouse_t;
 
 typedef struct _Input_Configuration_t {
     bool exit_key_enabled;
@@ -74,7 +99,8 @@ typedef struct _Input_t {
 
     float time;
 
-    Input_Key_t keys[Input_Keys_t_CountOf];
+    Input_Mouse_t mouse;
+    Input_Keyboard_t keyboard;
 } Input_t;
 
 extern bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration, GLFWwindow *window);

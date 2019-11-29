@@ -44,8 +44,9 @@ void Input_update(Input_t *input, float delta_time)
 {
     input->time += delta_time;
 
+    Input_Keyboard_t *keyboard = &input->keyboard;
     for (int i = Input_Keys_t_First; i <= Input_Keys_t_Last; ++i) {
-        Input_Key_t *key = &input->keys[i];
+        Input_Key_t *key = &keyboard->keys[i];
 
         if (!key->state.triggered) {
             continue;
@@ -86,11 +87,17 @@ void Input_process(Input_t *input)
         GLFW_KEY_SPACE,
         GLFW_KEY_ESCAPE
     };
+    static const int buttons[Input_Buttons_t_CountOf] = {
+        GLFW_MOUSE_BUTTON_LEFT,
+        GLFW_MOUSE_BUTTON_MIDDLE,
+        GLFW_MOUSE_BUTTON_RIGHT
+    };
 
     glfwPollEvents();
 
+    Input_Keyboard_t *keyboard = &input->keyboard;
     for (int i = Input_Keys_t_First; i <= Input_Keys_t_Last; ++i) {
-        Input_Key_t *key = &input->keys[i];
+        Input_Key_t *key = &keyboard->keys[i];
 
         bool was_down = key->state.down;
         bool is_down = glfwGetKey(input->window, keys[i]) == GLFW_PRESS;
@@ -116,6 +123,22 @@ void Input_process(Input_t *input)
         }
     }
 
+    Input_Mouse_t *mouse = &input->mouse;
+    for (int i = Input_Buttons_t_First; i <= Input_Buttons_t_Last; ++i) {
+        Input_Button_State_t *button = &mouse->buttons[i];
+
+        bool was_down = button->down;
+        bool is_down = glfwGetMouseButton(input->window, buttons[i]) == GLFW_PRESS;
+
+        button->down = is_down;
+        button->pressed = !was_down && is_down;
+        button->released = was_down && !is_down;
+    }
+    double x, y;
+    glfwGetCursorPos(input->window, &x, &y);
+    mouse->x = (float)x;
+    mouse->y = (float)y;
+
     if (input->configuration.exit_key_enabled) {
         if (glfwGetKey(input->window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
             glfwSetWindowShouldClose(input->window, true);
@@ -125,7 +148,7 @@ void Input_process(Input_t *input)
 
 void Input_auto_repeat(Input_t *input, Input_Keys_t id, float period)
 {
-    input->keys[id] = (Input_Key_t){
+    input->keyboard.keys[id] = (Input_Key_t){
             .period = period,
             .time = 0.0f
         };
