@@ -36,9 +36,10 @@ function Main:__ctor()
 
   self.font = Font.default(0, 3)
   self.map = Map.new("assets/world.map")
---  self.map:add_camera("main", 13, 8, 32, 32)
-  self.map:add_camera("left", 7, 8, 8, 32)
-  self.map:add_camera("right", 7, 8, 248, 32)
+
+  self.map:add_camera("left", 7, 5, 8, 0)
+  self.map:add_camera("right", 7, 5, 248, 0)
+  self.map:add_camera("main", 14, 5, 8, 160)
 
   self.player = { x = 640, y = 640 }
 
