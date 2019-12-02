@@ -12,7 +12,7 @@ DUMPER=hexdump
 DFLAGS=-v -e '1/1 "0x%02X,"'
 
 COMPILER=cc
-CWARNINGS=-Wall -Wextra -Werror -Wno-unused-parameter -Wpedantic 
+CWARNINGS=-Wall -Wextra -Werror -Wno-unused-parameter -Wpedantic
 CFLAGS=-Og -g -DDEBUG -D_DEFAULT_SOURCE -DLUA_32BITS -DLUA_FLOORN2I=1 -DLUA_USE_LINUX -DSTBI_ONLY_PNG -DSTBI_NO_STDIO -std=c99 -Isrc -Iexternal
 #CFLAGS=-O3 -DRELEASE -D_DEFAULT_SOURCE -DLUA_32BITS -DLUA_FLOORN2I=1 -DLUA_USE_LINUX -DSTBI_ONLY_PNG -DSTBI_NO_STDIO -std=c99 -Isrc -Iexternal
 # -Ofast => -O3 -ffast-math
@@ -96,6 +96,11 @@ snake: $(TARGET)
 	@echo "Launching Snake application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/snake
 	@./$(TARGET) ./demos/snake
+
+shades: $(TARGET)
+	@echo "Launching *shades* application!"
+	@$(ANALYZER) $(AFLAGS) ./demos/shades
+	@./$(TARGET) ./demos/shades
 
 valgrind: $(TARGET)
 	@echo "Valgrind Palette application!"
