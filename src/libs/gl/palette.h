@@ -35,10 +35,8 @@ typedef struct _GL_Palette_t {
 } GL_Palette_t;
 
 extern void GL_palette_greyscale(GL_Palette_t *palette, size_t count);
-extern GL_Color_t GL_palette_parse_color(const char *argb);
-extern GL_Color_t GL_palette_unpack_color(unsigned int argb);
-extern void GL_palette_format_color(char *argb, const GL_Color_t color);
-extern unsigned int GL_palette_pack_color(const GL_Color_t color);
+extern GL_Color_t GL_palette_unpack_color(uint32_t argb);
+extern uint32_t GL_palette_pack_color(const GL_Color_t color);
 extern GL_Pixel_t GL_palette_find_nearest_color(const GL_Palette_t *palette, const GL_Color_t color);
 
 #endif  /* __GL_PALETTE_H__ */

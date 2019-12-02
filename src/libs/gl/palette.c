@@ -33,51 +33,27 @@
 void GL_palette_greyscale(GL_Palette_t *palette, const size_t count)
 {
     for (size_t i = 0; i < count; ++i) {
-        unsigned char v = (unsigned char)(((float)i / (float)(count - 1)) * 255.0f);
-        palette->colors[i] = (GL_Color_t){ v, v, v, 255 };
+        unsigned char y = (unsigned char)(((float)i / (float)(count - 1)) * 255.0f);
+        palette->colors[i] = (GL_Color_t){ .a = 255, .r = y, .g = y, .b = y };
     }
     palette->count = count;
 }
 
-GL_Color_t GL_palette_parse_color(const char *argb)
-{
-    GL_Color_t color;
-    char hex[3];
-    if (strlen(argb) == 8) {
-        strncpy(hex, argb    , 2); color.a = strtol(hex, NULL, 16);
-        strncpy(hex, argb + 2, 2); color.r = strtol(hex, NULL, 16);
-        strncpy(hex, argb + 4, 2); color.g = strtol(hex, NULL, 16);
-        strncpy(hex, argb + 6, 2); color.b = strtol(hex, NULL, 16);
-    } else
-    if (strlen(argb) == 6) {
-        color.a = 255; // Fully opaque.
-        strncpy(hex, argb    , 2); color.r = strtol(hex, NULL, 16);
-        strncpy(hex, argb + 2, 2); color.g = strtol(hex, NULL, 16);
-        strncpy(hex, argb + 4, 2); color.b = strtol(hex, NULL, 16);
-    }
-    return color;
-}
-
-GL_Color_t GL_palette_unpack_color(const unsigned int argb)
+GL_Color_t GL_palette_unpack_color(uint32_t argb)
 {
     return (GL_Color_t){
+#ifdef __IGNORE_ALPHA_ON_COLORS__
+            .a = 255,
+#else
             .a = (uint8_t)((argb >> 24) & 0xff),
+#endif
             .r = (uint8_t)((argb >> 16) & 0xff),
             .g = (uint8_t)((argb >>  8) & 0xff),
             .b = (uint8_t)( argb        & 0xff)
         };
 }
 
-void GL_palette_format_color(char *argb, const GL_Color_t color)
-{
-#ifdef __LOWERCASE_ARGB__
-    sprintf(argb, "%02x%02x%02x%02x", color.a, color.r, color.g, color.b);
-#else
-    sprintf(argb, "%02X%02X%02X%02X", color.a, color.r, color.g, color.b);
-#endif
-}
-
-unsigned int GL_palette_pack_color(const GL_Color_t color)
+uint32_t GL_palette_pack_color(const GL_Color_t color)
 {
     return (color.a << 24) | (color.r << 16) | (color.g << 8) | color.b;
 }

@@ -129,21 +129,13 @@ int canvas_loader(lua_State *L)
 static int canvas_color_to_index(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isstring, luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
     LUAX_SIGNATURE_END
-    int type = lua_type(L, 1);
+    uint32_t argb = (uint32_t)lua_tointeger(L, 1);
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    GL_Color_t color = (GL_Color_t){ 0 };
-    if (type == LUA_TSTRING) {
-        const char *argb = lua_tostring(L, 1);
-        color = GL_palette_parse_color(argb);
-    } else
-    if (type == LUA_TNUMBER) {
-        unsigned int argb = (unsigned int)lua_tointeger(L, 1);
-        color = GL_palette_unpack_color(argb);
-    }
+    GL_Color_t color = GL_palette_unpack_color(argb);
     const GL_Pixel_t index = GL_palette_find_nearest_color(&display->palette, color);
 
     lua_pushinteger(L, index);
@@ -294,17 +286,8 @@ static int canvas_palette1(lua_State *L)
 
         lua_pushnil(L);
         for (size_t i = 0; lua_next(L, 1); ++i) {
-            int type = lua_type(L, -1);
-
-            GL_Color_t color = (GL_Color_t){ 0 };
-            if (type == LUA_TSTRING) {
-                const char *argb = lua_tostring(L, -1);
-                color = GL_palette_parse_color(argb);
-            } else
-            if (type == LUA_TNUMBER) {
-                unsigned int argb = (unsigned int)lua_tointeger(L, -1);
-                color = GL_palette_unpack_color(argb);
-            }
+            uint32_t argb = (uint32_t)lua_tointeger(L, -1);
+            GL_Color_t color = GL_palette_unpack_color(argb);
             palette.colors[i] = color;
 
             lua_pop(L, 1);

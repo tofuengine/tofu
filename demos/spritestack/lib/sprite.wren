@@ -57,7 +57,7 @@ class Sprite {
 
 //        var direction = Vector2D.fromPolar(_angle, 48)
 //        Canvas.line(x, y, x + direction.x, y + direction.y, 32)
-        var color = Canvas.color("FFFF4444")
+        var color = Canvas.color(0xFFFF4444)
         Canvas.line(x, y, x + _velocity.x, y + _velocity.y, color)
     }
 

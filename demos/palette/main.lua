@@ -16,7 +16,7 @@ local PALETTES = { "pico-8", "arne-16", "c64", "cga" }
 function Main:__ctor()
   Canvas.palette("pico-8")
 
-  Input.auto_repeat(Input.Y, 0.5)
+  Input.key_auto_repeat(Input.Y, 0.5)
 
   self.bank = Bank.new("assets/sheet.png", 8, 8)
   self.font = Font.default(0, 15)
@@ -72,7 +72,7 @@ end
 function Main:render(_)
   local time = System.time()
   Canvas.clear()
-
+--Canvas.clear(1)
   if self.mode == 0 then
     for i = 0, AMOUNT - 1 do
       local x = self.x_size * i

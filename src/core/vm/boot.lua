@@ -54,7 +54,7 @@ function Tofu:init()
     },
     ["error"] = {
       enter = function(state)
-          Canvas.palette({ "FF000000", "FFFF0000" })
+          Canvas.palette({ 0xFF000000, 0xFFFF0000 })
           state.font = Font.default(0, 1)
         end,
       leave = function(state)
