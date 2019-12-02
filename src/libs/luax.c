@@ -137,8 +137,8 @@ void luaX_overridesearchers(lua_State *L, lua_CFunction searcher, int nup)
 
 int luaX_newmodule(lua_State *L, const luaX_Script *script, const luaL_Reg *f, const luaX_Const *c, int nup, const char *name)
 {
-    if (script && script->data && script->length > 0) {
-        luaL_loadbuffer(L, script->data, script->length, script->name);
+    if (script && script->buffer && script->size > 0) {
+        luaL_loadbuffer(L, script->buffer, script->size, script->name);
         lua_pcall(L, 0, LUA_MULTRET, 0); // Just the export table is returned.
         if (name) {
             lua_pushstring(L, name);

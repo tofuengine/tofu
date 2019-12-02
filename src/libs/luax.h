@@ -46,8 +46,8 @@ typedef struct _luaX_Const {
 } luaX_Const;
 
 typedef struct _luaX_Script {
-    const char *data;
-    size_t length;
+    const char *buffer;
+    size_t size;
     const char *name;
 } luaX_Script;
 

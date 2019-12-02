@@ -90,10 +90,9 @@ void FS_terminate(File_System_t *fs)
     free(fs->base_path);
 }
 
-char *FS_load_as_string(const File_System_t *fs, const char *file)
+char *FS_load_as_string(const File_System_t *fs, const char *file, size_t *size)
 {
-    size_t size;
-    return load(fs, file, FILE_SYSTEM_MODE_TEXT, &size);
+    return load(fs, file, FILE_SYSTEM_MODE_TEXT, size);
 }
 
 void *FS_load_as_binary(const File_System_t *fs, const char *file, size_t *size)

@@ -121,14 +121,13 @@ static int custom_searcher(lua_State *L)
     }
     strcat(path_file, ".lua");
 
-    char *buffer = FS_load_as_string(fs, path_file + 1); // Skip the '@', we are using it for Lua to trace the file.
-
-    if (buffer != NULL) {
-        luaL_loadbuffer(L, buffer, strlen(buffer), path_file);
-        free(buffer);
-    } else {
-        lua_pushfstring(L, "<VM> file '%s' not found", path_file);
+    size_t size;
+    char *buffer = FS_load_as_string(fs, path_file + 1, &size); // Skip the '@', we are using it for Lua to trace the file.
+    if (!buffer) {
+        luaL_error(L, "<VM> can't load file '%s'", path_file + 1);
     }
+    luaL_loadbuffer(L, buffer, size, path_file);
+    free(buffer);
 
     return 1;
 }
@@ -160,9 +159,9 @@ static bool detect(lua_State *L, int index, const char *methods[])
     return true;
 }
 
-static int execute(lua_State *L, const char *script, const char *name, int nargs, int nresults)
+static int execute(lua_State *L, const char *script, size_t size, const char *name, int nargs, int nresults)
 {
-    int loaded = luaL_loadbuffer(L, script, strlen(script), name);
+    int loaded = luaL_loadbuffer(L, script, size, name);
     if (loaded != LUA_OK) {
         Log_write(LOG_LEVELS_ERROR, "<VM> error in execute: %s", lua_tostring(L, -1));
         lua_pop(L, 1);
@@ -336,7 +335,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const char *base_path, C
 #endif
 #endif
 
-    int result = execute(interpreter->state, (const char *)_boot_lua, "@boot.lua", 0, 1); // Prefix '@' to trace as filename internally in Lua.
+    int result = execute(interpreter->state, (const char *)_boot_lua, sizeof(_boot_lua) / sizeof(char), "@boot.lua", 0, 1); // Prefix '@' to trace as filename internally in Lua.
     if (result != 0) {
         Log_write(LOG_LEVELS_FATAL, "<VM> can't interpret boot script");
         lua_close(interpreter->state);

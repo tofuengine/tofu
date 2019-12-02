@@ -61,12 +61,13 @@ static int file_read(lua_State *L)
 
     Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INTERPRETER));
 
-    char *result = FS_load_as_string(&interpreter->file_system, file);
-    Log_write(LOG_LEVELS_DEBUG, "<FILE> file '%s' loaded at %p", file, result);
-
-    lua_pushstring(L, result);
-
-    free(result);
+    size_t size;
+    char *buffer = FS_load_as_string(&interpreter->file_system, file, &size);
+    if (!buffer) {
+        luaL_error(L, "<FILE> can't load file '%s'", file);
+    }
+    lua_pushlstring(L, buffer, size);
+    free(buffer);
 
     return 1;
 }
