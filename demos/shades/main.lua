@@ -105,7 +105,7 @@ function Main:render(_)
     end
   else
     local t = System.time()
-    local index = math.floor((math.sin(t * 2.5) + 1) * 0.5 * STEPS)
+    local index = math.floor((math.sin(t * 2.5) + 1) * 0.5 * (STEPS - 1))
     Canvas.shift(self.lut[index])
     Canvas.process(0, 0, Canvas.width(), Canvas.height() / 2)
   end
