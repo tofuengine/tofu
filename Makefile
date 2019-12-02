@@ -48,52 +48,52 @@ $(BLOBS): %.inc: %.lua Makefile
 	@echo "Generated "$@" from "$<" successfully!"
 
 primitives: $(TARGET)
-	@echo "Launching Primitives application!"
+	@echo "Launching *primitives* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/primitives
 	./$(TARGET) ./demos/primitives
 
 bunnymark: $(TARGET)
-	@echo "Launching Bunnymark application!"
+	@echo "Launching *bunnymark* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/bunnymark
 	@./$(TARGET) ./demos/bunnymark
 
 fire: $(TARGET)
-	@echo "Launching Fire application!"
+	@echo "Launching *fire* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/fire
 	@./$(TARGET) ./demos/fire
 
 tiled-map: $(TARGET)
-	@echo "Launching Tiled-Map application!"
+	@echo "Launching *tiled-map* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/tiled-map
 	@./$(TARGET) ./demos/tiled-map
 
 timers: $(TARGET)
-	@echo "Launching Timers application!"
+	@echo "Launching *timers* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/timers
 	@./$(TARGET) ./demos/timers
 
 postfx: $(TARGET)
-	@echo "Launching PostFX application!"
+	@echo "Launching *postfx* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/postfx
 	@./$(TARGET) ./demos/postfx
 
 spritestack: $(TARGET)
-	@echo "Launching Sprite-Stack application!"
+	@echo "Launching *spritestack* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/spritestack
 	@./$(TARGET) ./demos/spritestack
 
 palette: $(TARGET)
-	@echo "Launching Palette application!"
+	@echo "Launching *palette* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/palette
 	@./$(TARGET) ./demos/palette
 
 mode7: $(TARGET)
-	@echo "Launching Mode7 application!"
+	@echo "Launching *mode7* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/mode7
 	@./$(TARGET) ./demos/mode7
 
 snake: $(TARGET)
-	@echo "Launching Snake application!"
+	@echo "Launching *snake* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/snake
 	@./$(TARGET) ./demos/snake
 
@@ -103,8 +103,8 @@ shades: $(TARGET)
 	@./$(TARGET) ./demos/shades
 
 valgrind: $(TARGET)
-	@echo "Valgrind Palette application!"
-	@valgrind --leak-check=full env LIBGL_ALWAYS_SOFTWARE=1 ./$(TARGET) ./demos/palette
+	@echo "Valgrind *$(DEMO)* application!"
+	@valgrind --leak-check=full env LIBGL_ALWAYS_SOFTWARE=1 ./$(TARGET) ./demos/$(DEMO)
 
 .PHONY: clean
 clean:
