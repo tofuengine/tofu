@@ -58,6 +58,16 @@ GL_Color_t GL_palette_parse_color(const char *argb)
     return color;
 }
 
+GL_Color_t GL_palette_unpack_color(const unsigned int argb)
+{
+    return (GL_Color_t){
+            .a = (uint8_t)((argb >> 24) & 0xff),
+            .r = (uint8_t)((argb >> 16) & 0xff),
+            .g = (uint8_t)((argb >>  8) & 0xff),
+            .b = (uint8_t)( argb        & 0xff)
+        };
+}
+
 void GL_palette_format_color(char *argb, const GL_Color_t color)
 {
 #ifdef __LOWERCASE_ARGB__
@@ -65,6 +75,11 @@ void GL_palette_format_color(char *argb, const GL_Color_t color)
 #else
     sprintf(argb, "%02X%02X%02X%02X", color.a, color.r, color.g, color.b);
 #endif
+}
+
+unsigned int GL_palette_pack_color(const GL_Color_t color)
+{
+    return (color.a << 24) | (color.r << 16) | (color.g << 8) | color.b;
 }
 
 // https://en.wikipedia.org/wiki/Color_difference

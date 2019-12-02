@@ -273,12 +273,12 @@ size_t luaX_unpackupvalues(lua_State *L)
     return (size_t)nup;
 }
 
-extern int luaX_isnil(lua_State *L, int idx)
+int luaX_isnil(lua_State *L, int idx)
 {
     return lua_isnil(L, idx);
 }
 
-extern int luaX_isboolean(lua_State *L, int idx)
+int luaX_isboolean(lua_State *L, int idx)
 {
     return lua_isboolean(L, idx);
 }
