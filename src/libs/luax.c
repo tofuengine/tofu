@@ -247,7 +247,7 @@ void luaX_checkargument(lua_State *L, int idx, const char *file, int line, ...)
     }
     va_end(args);
     if ((count > 0) && !success) {
-        luaL_error(L, "[%s:%d] signature failure for argument #%d w/ type %d", file, line, idx, lua_type(L, idx));
+        luaL_error(L, "[%s:%d] signature failure for argument #%d w/ type %s", file, line, idx, lua_typename(L, lua_type(L, idx)));
         return; // Unreachable code.
     }
 }
