@@ -1,3 +1,25 @@
+--[[
+  Copyright (c) 2019 Marco Lizza (marco.lizza@gmail.com)
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+]]--
+
 local System = require("tofu.core").System
 local Input = require("tofu.events").Input
 local Canvas = require("tofu.graphics").Canvas
@@ -83,22 +105,22 @@ end
 
 function Tofu:deinit()
   local state = self.state
-  self:try_catch(state.leave, state)
+  self:call(state.leave, state)
 end
 
 function Tofu:input()
   local state = self.state
-  self:try_catch(state.input, state)
+  self:call(state.input, state)
 end
 
 function Tofu:update(delta_time)
   local state = self.state
-  self:try_catch(state.update, state, delta_time)
+  self:call(state.update, state, delta_time)
 end
 
 function Tofu:render(ratio)
   local state = self.state
-  self:try_catch(state.render, state, ratio)
+  self:call(state.render, state, ratio)
 end
 
 function Tofu:switch_to(id)
@@ -108,15 +130,15 @@ function Tofu:switch_to(id)
     return false
   end
   if current then
-    self:try_catch(current.leave, current)
+    self:call(current.leave, current)
     self.state = nil
   end
-  self:try_catch(next.enter, next)
+  self:call(next.enter, next)
   self.state = next
   return true
 end
 
-function Tofu:try_catch(func, ...)
+function Tofu:call(func, ...)
   local success, message = pcall(func, ...)
   if not success then
     if not self:switch_to("error") then

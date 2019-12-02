@@ -7,7 +7,8 @@ TARGET=tofu
 ANALYZER=luacheck
 AFLAGS=--no-self --std lua53 -q
 
-#	@luac5.3 -o - $< | xxd -i > $@
+# In case we want to embed pre-compiled script, we need to disable the `LUA_32BITS` compile flag!
+#	@luac5.3 -o - $< | $(DUMPER) $(DFLAGS) > $@
 DUMPER=hexdump
 DFLAGS=-v -e '1/1 "0x%02X,"'
 
@@ -104,7 +105,7 @@ shades: $(TARGET)
 
 valgrind: $(TARGET)
 	@echo "Valgrind *$(DEMO)* application!"
-	@valgrind --leak-check=full env LIBGL_ALWAYS_SOFTWARE=1 ./$(TARGET) ./demos/$(DEMO)
+	@valgrind --track-origins=yes --leak-check=full env LIBGL_ALWAYS_SOFTWARE=1 ./$(TARGET) ./demos/$(DEMO)
 
 .PHONY: clean
 clean:
