@@ -126,17 +126,24 @@ int canvas_loader(lua_State *L)
 }
 
 // TODO: add a canvas constructor with overload (from file, from WxH, default one). Surface will become Canvas, in the end.
-
 static int canvas_color_to_index(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isstring, luaX_isnumber)
     LUAX_SIGNATURE_END
-    const char *argb = lua_tostring(L, 1);
+    int type = lua_type(L, 1);
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    const GL_Color_t color = GL_palette_parse_color(argb);
+    GL_Color_t color = (GL_Color_t){ 0 };
+    if (type == LUA_TSTRING) {
+        const char *argb = lua_tostring(L, 1);
+        color = GL_palette_parse_color(argb);
+    } else
+    if (type == LUA_TNUMBER) {
+        unsigned int argb = (unsigned int)lua_tointeger(L, 1);
+        color = GL_palette_unpack_color(argb);
+    }
     const GL_Pixel_t index = GL_palette_find_nearest_color(&display->palette, color);
 
     lua_pushinteger(L, index);
@@ -244,27 +251,15 @@ static int canvas_palette0(lua_State *L)
 
     GL_Palette_t *palette = &display->palette;
 
-    lua_newtable(L);
+    lua_createtable(L, palette->count, 0);
     for (size_t i = 0; i < palette->count; ++i) {
-        char argb[12];
-        GL_palette_format_color(argb, palette->colors[i]);
+        unsigned int argb = GL_palette_pack_color(palette->colors[i]);
 
-        lua_pushstring(L, argb);
+        lua_pushinteger(L, argb);
         lua_rawseti(L, -2, i + 1);
     }
 
     return 1;
-}
-
-lua_Integer luaX_getintegerfield(lua_State *L, int idx, const char *name, lua_Integer fallback) {
-    lua_Integer res = fallback;
-    lua_getfield(L, -1, "r");
-    if (!lua_isnoneornil(L, -1)) {
-        res = lua_tointeger(L, -1);
-    } else {
-        lua_pop(L, 1);
-    }
-    return res;
 }
 
 static int canvas_palette1(lua_State *L)
@@ -299,31 +294,16 @@ static int canvas_palette1(lua_State *L)
 
         lua_pushnil(L);
         for (size_t i = 0; lua_next(L, 1); ++i) {
-#if 0
-            const char *key_type = lua_typename(L, lua_type(L, -2)); // uses 'key' (at index -2) and 'value' (at index -1)
-#endif
-            GL_Color_t color = (GL_Color_t){ 0 };
+            int type = lua_type(L, -1);
 
-            int type = lua_typename(L, lua_type(L, -1));
+            GL_Color_t color = (GL_Color_t){ 0 };
             if (type == LUA_TSTRING) {
                 const char *argb = lua_tostring(L, -1);
                 color = GL_palette_parse_color(argb);
             } else
-            if (type == LUA_TTABLE) {
-                lua_getfield(L, -1, "r");
-                if (!lua_isnoneornil(L, -1)) {
-                    color.r = (uint8_t)lua_tointeger(L, -1);
-                } else {
-                    lua_pop(L, 1);
-                }
-                color.r = (uint8_t)lua_tointeger(L, -1);
-                lua_getfield(L, -1, "g");
-                color.g = (uint8_t)lua_tointeger(L, -1);
-                lua_getfield(L, -1, "b");
-                color.b = (uint8_t)lua_tointeger(L, -1);
-                lua_getfield(L, -1, "a");
-                color.a = (uint8_t)lua_tointeger(L, -1);
-                // TODO: parse color from table entries.
+            if (type == LUA_TNUMBER) {
+                unsigned int argb = (unsigned int)lua_tointeger(L, -1);
+                color = GL_palette_unpack_color(argb);
             }
             palette.colors[i] = color;
 
