@@ -69,7 +69,7 @@ local Timer = {}
 
 Timer.__index = Timer
 
-Timer.Pool = Pool.new()
+Timer.pool = Pool.new()
 
 function Timer.new(period, repeats, callback)
   local instance = setmetatable({
