@@ -50,7 +50,7 @@ function Map:__ctor(file)
 end
 
 function Map:load_(file)
-  local content = File.read(file)
+  local content = File.as_string(file)
   local tokens = {}
   for chunk in string.gmatch(content, "[^\n]+") do
     table.insert(tokens, chunk)

@@ -14,7 +14,7 @@ function Main:__ctor()
   Canvas.palette("nes")
   Canvas.transparent({ [0] = false, [13] = true })
   Canvas.background(63)
-  Canvas.shader(File.read("assets/shaders/water.glsl"))
+  Canvas.shader(File.as_string("assets/shaders/water.glsl"))
 --Canvas.send("u_strength", 100)
 
   self.sprites = {}

@@ -35,10 +35,12 @@
 
 #define FILE_MT        "Tofu_File_mt"
 
-static int file_read(lua_State *L);
+static int file_as_string(lua_State *L);
+static int file_as_binary(lua_State *L);
 
 static const struct luaL_Reg _file_functions[] = {
-    { "read", file_read },
+    { "as_string", file_as_string },
+    { "as_binary", file_as_binary },
     { NULL, NULL }
 };
 
@@ -52,7 +54,7 @@ int file_loader(lua_State *L)
     return luaX_newmodule(L, NULL, _file_functions, _file_constants, nup, FILE_MT);
 }
 
-static int file_read(lua_State *L)
+static int file_as_string(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
         LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
@@ -67,6 +69,27 @@ static int file_read(lua_State *L)
         luaL_error(L, "<FILE> can't load file '%s'", file);
     }
     lua_pushlstring(L, buffer, size);
+    free(buffer);
+
+    return 1;
+}
+
+static int file_as_binary(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
+    LUAX_SIGNATURE_END
+    const char *file = lua_tostring(L, 1);
+
+    Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INTERPRETER));
+
+    size_t size;
+    void *buffer = FS_load_as_binary(&interpreter->file_system, file, &size);
+    if (!buffer) {
+        luaL_error(L, "<FILE> can't load file '%s'", file);
+    }
+//    lua_pushlstring(L, buffer, size);
+    lua_pushnil(L); // TODO: read the file as a Base64 or similar encoded string.
     free(buffer);
 
     return 1;
