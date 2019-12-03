@@ -207,30 +207,6 @@ static int call(lua_State *L, Methods_t method, int nargs, int nresults)
 #endif
 }
 
-static bool timerpool_callback(Timer_t *timer, void *parameters)
-{
-    lua_State *L = (lua_State *)parameters;
-
-    lua_rawgeti(L, LUA_REGISTRYINDEX, BUNDLE_TO_INT(timer->bundle));
-#if 0
-    if (lua_isnil(L, -1)) {
-        lua_pop(L, -1);
-        Log_write(LOG_LEVELS_ERROR, "<VM> can't find timer callback");
-        return;
-    }
-#endif
-#ifdef __DEBUG_VM_CALLS__
-    int result = lua_pcall(L, 0, 0, TRACEBACK_STACK_INDEX);
-    if (result != LUA_OK) {
-        Log_write(LOG_LEVELS_ERROR, "<VM> error in call: %s", lua_tostring(L, -1));
-    }
-#else
-    lua_call(L, 0, 0);
-    int result = LUA_OK;
-#endif
-    return result == LUA_OK;
-}
-
 void parse(lua_State *L, Configuration_t *configuration)
 {
     strncpy(configuration->title, DEFAULT_WINDOW_TITLE, MAX_CONFIGURATION_TITLE_LENGTH);
@@ -302,6 +278,8 @@ void parse(lua_State *L, Configuration_t *configuration)
 
 bool Interpreter_initialize(Interpreter_t *interpreter, const char *base_path, Configuration_t *configuration, const void *userdatas[])
 {
+    FS_initialize(&interpreter->file_system, base_path);
+
     interpreter->gc_age = 0.0f;
     interpreter->state = luaL_newstate();
     if (!interpreter->state) {
@@ -311,9 +289,6 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const char *base_path, C
     lua_atpanic(interpreter->state, panic); // TODO: remove the panic handler?
 
     luaL_openlibs(interpreter->state);
-
-    FS_initialize(&interpreter->file_system, base_path);
-    TimerPool_initialize(&interpreter->timer_pool, timerpool_callback, interpreter->state);
 
     int nup = 0;
     for (int i = 0; userdatas[i]; ++i) {
@@ -361,7 +336,6 @@ void Interpreter_terminate(Interpreter_t *interpreter)
     lua_gc(interpreter->state, LUA_GCCOLLECT, 0);
     lua_close(interpreter->state);
 
-    TimerPool_terminate(&interpreter->timer_pool);
     FS_terminate(&interpreter->file_system);
 }
 
@@ -382,10 +356,6 @@ bool Interpreter_input(Interpreter_t *interpreter)
 
 bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
 {
-    if (!TimerPool_update(&interpreter->timer_pool, delta_time)) {
-        return false;
-    }
-
     lua_pushnumber(interpreter->state, delta_time);
     if (call(interpreter->state, METHOD_UPDATE, 1, 0) != LUA_OK) {
         return false;
@@ -400,7 +370,6 @@ bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
         float start_time = (float)clock() / CLOCKS_PER_SEC;
 #endif
         lua_gc(interpreter->state, LUA_GCCOLLECT, 0);
-        TimerPool_gc(&interpreter->timer_pool);
 #ifdef __DEBUG_GARBAGE_COLLECTOR__
         float elapsed = ((float)clock() / CLOCKS_PER_SEC) - start_time;
         Log_write(LOG_LEVELS_DEBUG, "<VM> garbage collection took %.3fs", elapsed);

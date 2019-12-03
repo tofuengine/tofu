@@ -29,7 +29,6 @@
 #include <core/configuration.h>
 #include <core/environment.h>
 #include <core/io/fs.h>
-#include <core/vm/timerpool.h>
 
 #include <libs/luax.h>
 
@@ -39,7 +38,6 @@ typedef struct _Interpreter_t {
     lua_State *state; // TODO: rename to `L`?
 
     File_System_t file_system;
-    Timer_Pool_t timer_pool;
 } Interpreter_t;
 
 extern bool Interpreter_initialize(Interpreter_t *interpreter, const char *base_path, Configuration_t *configuration, const void *userdatas[]);

@@ -23,7 +23,6 @@
 #ifndef __MODULES_UDT_H__
 #define __MODULES_UDT_H__
 
-#include <core/vm/timerpool.h>
 #include <libs/luax.h>
 #include <libs/gl/gl.h>
 
@@ -90,11 +89,5 @@ typedef struct _Surface_Class_t {
 typedef struct _System_Class_t {
     const void *bogus;
 } System_Class_t;
-
-typedef struct _Timer_Class_t {
-    const void *bogus;
-    luaX_Reference callback;
-    Timer_t *timer;
-} Timer_Class_t;
 
 #endif  /* __MODULES_UDT_H__ */

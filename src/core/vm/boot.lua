@@ -25,6 +25,7 @@ local Input = require("tofu.events").Input
 local Canvas = require("tofu.graphics").Canvas
 local Font = require("tofu.graphics").Font
 local Class = require("tofu.util").Class
+local Timer = require("tofu.util").Timer
 
 local Tofu = Class.define() -- To be precise, the class name is irrelevant since it's locally used.
 
@@ -62,12 +63,14 @@ function Tofu:init()
           me.main = Main.new()
         end,
       leave = function(me)
+          Timer.pool:clear()
           me.main = nil
         end,
       input = function(me)
           me.main:input()
         end,
       update = function(me, delta_time)
+          Timer.pool:update(delta_time)
           me.main:update(delta_time)
         end,
       render = function(me, ratio)
