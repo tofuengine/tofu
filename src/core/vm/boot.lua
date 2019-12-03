@@ -29,12 +29,7 @@ local Timer = require("tofu.util").Timer
 
 local Tofu = Class.define() -- To be precise, the class name is irrelevant since it's locally used.
 
-function Tofu:setup()
-  self.configuration = require("configuration")
-  return self.configuration
-end
-
-function Tofu:init()
+function Tofu:__ctor()
   self.states = {
     ["splash"] = {
       enter = function(me)
@@ -93,9 +88,9 @@ function Tofu:init()
       update = function(_, _)
         end,
       render = function(me, _)
-        local w = Canvas.width() -- TODO: could precalculate these values.
-        local fh = me.font:height()
-        local on = (System.time() % 2) == 0
+          local w = Canvas.width() -- TODO: could precalculate these values.
+          local fh = me.font:height()
+          local on = (System.time() % 2) == 0
           Canvas.clear()
           Canvas.rectangle("line", 0, 0, w, fh * 2 + 8, on and 1 or 0)
           me.font:write("Software Failure.", w * 0.5, 0 + 4, "center")
@@ -103,10 +98,21 @@ function Tofu:init()
         end
     }
   }
-  self:switch_to(self.configuration["splash-screen"] and "splash" or "normal")
+--  self.state = self.states["splash"]
 end
 
-function Tofu:deinit()
+function Tofu:setup()
+  self.configuration = require("configuration")
+  self.state = self.states[self.configuration["splash-screen"] and "splash" or "normal"]
+  return self.configuration
+end
+
+function Tofu:enter()
+  local me = self.state
+  self:call(me.enter, me)
+end
+
+function Tofu:leave()
   local me = self.state
   self:call(me.leave, me)
 end

@@ -61,8 +61,8 @@ static const uint8_t _boot_lua[] = {
 
 typedef enum _Methods_t {
     METHOD_SETUP,
-    METHOD_INIT,
-    METHOD_DEINIT,
+    METHOD_ENTER,
+    METHOD_LEAVE,
     METHOD_INPUT, // TODO: is the `input()` method useless? Probably...
     METHOD_UPDATE,
     METHOD_RENDER,
@@ -71,8 +71,8 @@ typedef enum _Methods_t {
 
 static const char *_methods[] = {
     "setup",
-    "init",
-    "deinit",
+    "enter",
+    "leave",
     "input",
     "update",
     "render",
@@ -310,15 +310,21 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const char *base_path, C
 #endif
 #endif
 
+    // TODO: execute a Lua script that load and return the configuration, ditching the setup call.
+
+    // TODO: then, load the boot/main script as last. init/deinit won't be needed, then.
+
     int result = execute(interpreter->state, (const char *)_boot_lua, sizeof(_boot_lua) / sizeof(char), "@boot.lua", 0, 1); // Prefix '@' to trace as filename internally in Lua.
     if (result != 0) {
         Log_write(LOG_LEVELS_FATAL, "<VM> can't interpret boot script");
         lua_close(interpreter->state);
+        FS_terminate(&interpreter->file_system);
         return false;
     }
 
     if (!detect(interpreter->state, -1, _methods)) {
         lua_close(interpreter->state);
+        FS_terminate(&interpreter->file_system);
         return false;
     }
 
@@ -339,14 +345,14 @@ void Interpreter_terminate(Interpreter_t *interpreter)
     FS_terminate(&interpreter->file_system);
 }
 
-bool Interpreter_init(Interpreter_t *interpreter) // TODO: we can move this into the "boot.lua" script.
+bool Interpreter_enter(Interpreter_t *interpreter) // TODO: we can move this into the "boot.lua" script.
 {
-    return call(interpreter->state, METHOD_INIT, 0, 0) == LUA_OK;
+    return call(interpreter->state, METHOD_ENTER, 0, 0) == LUA_OK;
 }
 
-bool Interpreter_deinit(Interpreter_t *interpreter) // TODO: not sure it's really needed.
+bool Interpreter_leave(Interpreter_t *interpreter) // TODO: not sure it's really needed.
 {
-    return call(interpreter->state, METHOD_DEINIT, 0, 0) == LUA_OK;
+    return call(interpreter->state, METHOD_LEAVE, 0, 0) == LUA_OK;
 }
 
 bool Interpreter_input(Interpreter_t *interpreter)
