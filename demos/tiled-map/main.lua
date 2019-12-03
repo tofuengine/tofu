@@ -34,7 +34,7 @@ end
 function Main:__ctor()
   Canvas.palette("gameboy")
 
-  self.font = Font.default(0, 3)
+  self.font = Font.default(3, 1)
   self.map = Map.new("assets/world.map")
 
   self.map:add_camera("left", 7, 5, 8, 0)
@@ -45,6 +45,12 @@ function Main:__ctor()
 
   self.map:camera_from_id("left"):move_to(200, 200)
   self.map:camera_from_id("right"):move_to(800, 200)
+  for _, camera in pairs(self.map:get_cameras()) do
+    camera.post_draw = function(me)
+        Canvas.rectangle("fill", me.screen_x + me.offset_x - 2, me.screen_y + me.offset_y - 2, 4, 4, 2)
+        self.font:write(tostring(me), me.screen_x + me.width, me.screen_y, "right")
+      end
+  end
 end
 
 function Main:input()
@@ -99,7 +105,6 @@ function Main:render(_)
   local x, y = camera:to_screen(self.player.x, self.player.y)
   Canvas.rectangle("fill", x - 2, y - 2, 4, 4, 1)
 
-  self.font:write(self.map:to_string(), Canvas.width(), 0, "right")
   self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
 end
 

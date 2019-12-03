@@ -30,7 +30,8 @@ end
 local Camera = Class.define()
 
 -- TODO: add camera scaling, useful to draw minimap.
-function Camera:__ctor(grid, bank, columns, rows, screen_x, screen_y, anchor_x, anchor_y)
+function Camera:__ctor(id, grid, bank, columns, rows, screen_x, screen_y, anchor_x, anchor_y)
+  self.id = id
   self.grid = grid
   self.bank = bank
   self.screen_x = screen_x or 0
@@ -91,6 +92,28 @@ function Camera:to_world(x, y)
   return x - self.screen_x + self.offset_x + self.x, y - self.screen_y + self.offset_y + self.y
 end
 
+function Camera:update(_)
+  -- Override.
+end
+
+function Camera:pre_draw()
+  -- Override.
+end
+
+function Camera:draw()
+  Canvas.clipping(self.screen_x, self.screen_y, self.width, self.height)
+
+  local ox, oy = self.screen_x + self.column_offset, self.screen_y + self.row_offset
+  for _, v in ipairs(self.batch) do
+    local cell_id, cell_x, cell_y = table.unpack(v)
+    self.bank:blit(math.tointeger(cell_id), cell_x + ox, cell_y + oy)
+  end
+end
+
+function Camera:post_draw()
+  -- Override.
+end
+
 function Camera:prepare_()
   local cw, ch = self.bank:cell_width(), self.bank:cell_height()
 
@@ -115,20 +138,9 @@ function Camera:prepare_()
   self.batch = batch
 end
 
-function Camera:draw()
-  Canvas.clipping(self.screen_x, self.screen_y, self.width, self.height)
-
-  local ox, oy = self.screen_x + self.column_offset, self.screen_y + self.row_offset
-  for _, v in ipairs(self.batch) do
-    local cell_id, cell_x, cell_y = table.unpack(v)
-    self.bank:blit(math.tointeger(cell_id), cell_x + ox, cell_y + oy)
-  end
-
---  Canvas.rectangle("fill", self.screen_x + self.offset_x - 2, self.screen_y + self.offset_y - 2, 4, 4, 2)
-end
-
-function Camera:to_string()
-  return string.format("%.0f %0.f | %.0f %0.f | %0.f %0.f",
+function Camera:__tostring()
+  return string.format("[%s] %.0f %0.f | %.0f %0.f | %0.f %0.f",
+      self.id,
       self.x, self.y,
       self.start_column, self.start_row,
       self.column_offset, self.row_offset)
