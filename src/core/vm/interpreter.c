@@ -302,9 +302,6 @@ void parse(lua_State *L, Configuration_t *configuration)
 
 bool Interpreter_initialize(Interpreter_t *interpreter, const char *base_path, Configuration_t *configuration, const void *userdatas[])
 {
-    FS_initialize(&interpreter->file_system, base_path);
-    TimerPool_initialize(&interpreter->timer_pool, timerpool_callback, interpreter->state);
-
     interpreter->gc_age = 0.0f;
     interpreter->state = luaL_newstate();
     if (!interpreter->state) {
@@ -314,6 +311,9 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const char *base_path, C
     lua_atpanic(interpreter->state, panic); // TODO: remove the panic handler?
 
     luaL_openlibs(interpreter->state);
+
+    FS_initialize(&interpreter->file_system, base_path);
+    TimerPool_initialize(&interpreter->timer_pool, timerpool_callback, interpreter->state);
 
     int nup = 0;
     for (int i = 0; userdatas[i]; ++i) {
