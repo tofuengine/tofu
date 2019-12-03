@@ -36,51 +36,51 @@ end
 function Tofu:init()
   self.states = {
     ["splash"] = {
-      enter = function(state)
-          state.duration = 2.5
-          state.time = 0.0
+      enter = function(me)
+          me.duration = self.configuration["splash-screen-duration"] or 2.5
+          me.time = 0.0
         end,
       leave = function(_)
         end,
       input = function(_)
         end,
-      update = function(state, delta_time)
-          state.time = state.time + delta_time
-          if state.time >= state.duration then
+      update = function(me, delta_time)
+          me.time = me.time + delta_time
+          if me.time >= me.duration then
             self:switch_to("normal")
           end
         end,
-      render = function(state, _)
-          local y = math.floor((1.0 - state.time / state.duration) * 255.0)
+      render = function(me, _)
+          local y = math.floor((1.0 - me.time / me.duration) * 255.0)
           Canvas.clear()
           Canvas.rectangle("fill", 0, 0, Canvas.width(), Canvas.height(), y)
         end
     },
     ["normal"] = {
-      enter = function(state)
+      enter = function(me)
           local Main = require("main") -- Lazily require, to permit a `Tofu:setup()` call prior main script loading.
-          state.main = Main.new()
+          me.main = Main.new()
         end,
-      leave = function(state)
-          state.main = nil
+      leave = function(me)
+          me.main = nil
         end,
-      input = function(state)
-          state.main:input()
+      input = function(me)
+          me.main:input()
         end,
-      update = function(state, delta_time)
-          state.main:update(delta_time)
+      update = function(me, delta_time)
+          me.main:update(delta_time)
         end,
-      render = function(state, ratio)
-          state.main:render(ratio)
+      render = function(me, ratio)
+          me.main:render(ratio)
         end
     },
     ["error"] = {
-      enter = function(state)
+      enter = function(me)
           Canvas.palette({ 0xFF000000, 0xFFFF0000 })
-          state.font = Font.default(0, 1)
+          me.font = Font.default(0, 1)
         end,
-      leave = function(state)
-          state.font = nil
+      leave = function(me)
+          me.font = nil
         end,
       input = function(_)
           if Input.is_key_pressed(Input.RESET) then
@@ -89,14 +89,14 @@ function Tofu:init()
         end,
       update = function(_, _)
         end,
-      render = function(state, _)
+      render = function(me, _)
         local w = Canvas.width() -- TODO: could precalculate these values.
-        local fh = state.font:height()
+        local fh = me.font:height()
         local on = (System.time() % 2) == 0
           Canvas.clear()
           Canvas.rectangle("line", 0, 0, w, fh * 2 + 8, on and 1 or 0)
-          state.font:write("Software Failure.", w * 0.5, 0 + 4, "center")
-          state.font:write("Guru Meditation", w * 0.5, fh + 4, "center")
+          me.font:write("Software Failure.", w * 0.5, 0 + 4, "center")
+          me.font:write("Guru Meditation", w * 0.5, fh + 4, "center")
         end
     }
   }
@@ -104,23 +104,23 @@ function Tofu:init()
 end
 
 function Tofu:deinit()
-  local state = self.state
-  self:call(state.leave, state)
+  local me = self.state
+  self:call(me.leave, me)
 end
 
 function Tofu:input()
-  local state = self.state
-  self:call(state.input, state)
+  local me = self.state
+  self:call(me.input, me)
 end
 
 function Tofu:update(delta_time)
-  local state = self.state
-  self:call(state.update, state, delta_time)
+  local me = self.state
+  self:call(me.update, me, delta_time)
 end
 
 function Tofu:render(ratio)
-  local state = self.state
-  self:call(state.render, state, ratio)
+  local me = self.state
+  self:call(me.render, me, ratio)
 end
 
 function Tofu:switch_to(id)
