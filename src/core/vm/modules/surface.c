@@ -660,7 +660,6 @@ static int surface_table2(lua_State *L)
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
 
     GL_XForm_Table_Entry_t *table = NULL;
-    size_t count = 0;
 
     lua_pushnil(L);
     while (lua_next(L, 2)) {
@@ -671,7 +670,7 @@ static int surface_table2(lua_State *L)
         lua_pushnil(L);
         for (size_t i = 0; lua_next(L, -2); ++i) { // Scan the value, which is an array.
             if (i == GL_XForm_Registers_t_CountOf) {
-                Log_write(LOG_LEVELS_WARNING, "<SURFACE> too many operation for table entry #%d (id #%d)", count, index);
+                Log_write(LOG_LEVELS_WARNING, "<SURFACE> too many operation for table entry w/ id #%d", index);
                 lua_pop(L, 2);
                 break;
             }
@@ -683,7 +682,6 @@ static int surface_table2(lua_State *L)
         }
 
         arrpush(table, entry);
-        ++count;
 
         lua_pop(L, 1);
     }
