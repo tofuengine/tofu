@@ -20,6 +20,7 @@
   SOFTWARE.
 ]]--
 
+local Math = require("tofu.core").Math
 local System = require("tofu.core").System
 local Input = require("tofu.events").Input
 local Canvas = require("tofu.graphics").Canvas
@@ -28,6 +29,21 @@ local Class = require("tofu.util").Class
 local Timer = require("tofu.util").Timer
 
 local Tofu = Class.define() -- To be precise, the class name is irrelevant since it's locally used.
+
+local function get_font_name(width, ratio)
+  local t = {
+      ["32x64"] = 352,
+      ["16x32"] = 176,
+      ["12x24"] = 132,
+      ["8x16"] = 88,
+      ["5x8"] = 55,
+    }
+  for id, span in pairs(t) do
+    if span * ratio >= width then
+      return id
+    end
+  end
+end
 
 function Tofu:__ctor()
   self.states = {
@@ -47,26 +63,35 @@ function Tofu:__ctor()
     },
     ["splash"] = {
       enter = function(me)
-          me.duration = self.configuration["splash-screen-duration"] or 2.5
-          me.time = 0.0
+          me.font = Font.new(get_font_name(Canvas.width(), 2.0), 0, 255)
+          me.duration = self.configuration["splash-screen-duration"] or 10.0
+          me.age = 0.0
         end,
-      leave = function(_)
+      leave = function(me)
+          me.font = nil
         end,
       input = function(_)
         end,
       update = function(me, delta_time)
-          me.time = me.time + delta_time
-          if me.time >= me.duration then
-            self:switch_to("normal")
+          me.age = me.age + delta_time
+          if me.age >= me.duration then
+            self:switch_to("running")
           end
         end,
       render = function(me, _)
-          local y = math.floor((1.0 - me.time / me.duration) * 255.0)
+          local fh = me.font:height()
+          local y = (Canvas.height() - fh * 2) * 0.5
+--          local v = math.tointeger(((Math.triangle_wave(me.duration, me.age) + 1) * 0.5) * 255.0)
+          local v = math.min(math.tointeger(((Math.triangle_wave(me.duration, me.age) + 1) * 255.0)), 255)
           Canvas.clear()
-          Canvas.rectangle("fill", 0, 0, Canvas.width(), Canvas.height(), y)
+          Canvas.push()
+            Canvas.shift({ [255] = v })
+            me.font:write("made with", Canvas.width() * 0.5, y, "center")
+            me.font:write("TOFU ENGINE", Canvas.width() * 0.5, y + fh, "center")
+          Canvas.pop()
         end
     },
-    ["normal"] = {
+    ["running"] = {
       enter = function(me)
           local Main = require("main") -- Lazily require, to permit a `Tofu:setup()` call prior main script loading.
           me.main = Main.new()
