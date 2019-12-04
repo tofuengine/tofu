@@ -32,15 +32,15 @@ local Tofu = Class.define() -- To be precise, the class name is irrelevant since
 
 local function get_font_name(width, ratio)
   local t = {
-      ["32x64"] = 352,
-      ["16x32"] = 176,
-      ["12x24"] = 132,
-      ["8x16"] = 88,
-      ["5x8"] = 55,
+      { id = "32x64", width = 352 },
+      { id = "16x32", width = 176 },
+      { id = "12x24", width = 132 },
+      { id = "8x16", width = 88 },
+      { id = "5x8", width = 55 },
     }
-  for id, span in pairs(t) do
-    if span * ratio >= width then
-      return id
+  for _, font in ipairs(t) do
+    if width >= font.width * ratio then
+      return font.id
     end
   end
 end
