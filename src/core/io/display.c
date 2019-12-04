@@ -186,11 +186,6 @@ static void error_callback(int error, const char *description)
     Log_write(LOG_LEVELS_ERROR, "<GLFW> %s", description);
 }
 
-static void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
-{
-//    Log_write(LOG_LEVELS_TRACE, "<GLFW> key #%d is %d", scancode, action);
-}
-
 static void size_callback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height); // Viewport matches window
@@ -277,7 +272,6 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     Log_write(LOG_LEVELS_INFO, "<DISPLAY> GLSL: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
     glfwSetFramebufferSizeCallback(display->window, size_callback);
-    glfwSetKeyCallback(display->window, key_callback);
     glfwSetInputMode(display->window, GLFW_CURSOR, configuration->hide_cursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
 
     if (!GL_context_create(&display->gl, configuration->width, configuration->height)) {
