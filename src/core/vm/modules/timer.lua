@@ -40,7 +40,7 @@ function Pool:update(delta_time)
   local zombies = {}
 
   for index, timer in ipairs(self.timers) do
-    if timer.frozen then
+    if timer.cancelled then
       table.insert(zombies, index)
     else
       timer.age = timer.age + delta_time
@@ -52,7 +52,7 @@ function Pool:update(delta_time)
         if timer.loops > 0 then
           timer.loops = timer.loops - 1;
           if timer.loops == 0 then
-              timer.frozen = true
+              timer:cancel()
               break
           end
         end
@@ -78,6 +78,7 @@ function Timer.new(period, repeats, callback)
       callback = callback,
       age = 0.0,
       loops = repeats,
+      cancelled = false
     }, Timer)
   Timer.pool:append(instance)
   return instance
@@ -86,11 +87,11 @@ end
 function Timer:reset()
   self.age = 0.0
   self.loops = self.repeats
-  self.frozen = false
+  self.cancelled = false
 end
 
 function Timer:cancel()
-  self.frozen = true
+  self.cancelled = true
 end
 
 return Timer
