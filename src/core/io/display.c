@@ -137,8 +137,8 @@ static bool compute_size(Display_t *display, const Display_Configuration_t *conf
     display->window_height = configuration->height;
     display->window_scale = 1;
 
-    int max_scale = imin(display_width / configuration->width, display_height / configuration->height);
-    int scale = configuration->scale != 0 ? configuration->scale : max_scale;
+    size_t max_scale = (size_t)imin(display_width / configuration->width, display_height / configuration->height);
+    size_t scale = configuration->scale != 0 ? configuration->scale : max_scale;
 
     if (max_scale == 0) {
         Log_write(LOG_LEVELS_FATAL, "<DISPLAY> requested display size can't fit display!");

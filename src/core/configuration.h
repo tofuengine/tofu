@@ -24,6 +24,7 @@
 #define __CONFIGURATION_H__
 
 #include <stdbool.h>
+#include <stddef.h>
 
 #define MAX_CONFIGURATION_TITLE_LENGTH      128
 
@@ -35,12 +36,12 @@
 
 typedef struct _Configuration {
     char title[MAX_CONFIGURATION_TITLE_LENGTH];
-    int width, height, scale;
+    size_t width, height, scale;
     bool fullscreen;  // TODO: rename to "windowed"?
     bool vertical_sync;
-    int fps; // TODO: rename to "frequency"?
-    int skippable_frames;
-    int fps_cap;
+    size_t fps; // TODO: rename to "frequency"?
+    size_t skippable_frames;
+    size_t fps_cap;
     bool hide_cursor;
     bool exit_key_enabled;
     bool debug;

@@ -46,7 +46,7 @@ typedef struct _Audio_t {
     ma_device_config device_config;
     ma_device device;
 
-    float time;
+    double time;
 
     Audio_Voice_t *voices;
 } Audio_t;

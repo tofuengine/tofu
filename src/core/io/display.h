@@ -47,7 +47,7 @@ typedef enum _Display_Programs_t {
 typedef struct _Display_Configuration_t {
     const char *title;
 //    const uint8_t *icon;
-    int width, height, scale;
+    size_t width, height, scale;
     bool fullscreen;
     bool vertical_sync;
     bool hide_cursor;
@@ -57,8 +57,8 @@ typedef struct _Display_t {
     Display_Configuration_t configuration;
 
     GLFWwindow *window;
-    int window_width, window_height, window_scale;
-    int physical_width, physical_height;
+    size_t window_width, window_height, window_scale;
+    size_t physical_width, physical_height;
 
     GL_Color_t *vram; // Temporary buffer to create the OpenGL texture from `GL_Pixel_t` array.
     GLuint vram_texture;

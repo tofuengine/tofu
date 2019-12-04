@@ -34,8 +34,8 @@ void Environment_initialize(Environment_t *environment)
 {
     *environment = (Environment_t){
         .quit = false,
-        .fps = 0.0f,
-        .time = 0.0f
+        .fps = 0,
+        .time = 0.0
     };
 }
 

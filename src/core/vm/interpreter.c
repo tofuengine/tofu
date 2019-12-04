@@ -237,13 +237,13 @@ void parse(lua_State *L, Configuration_t *configuration)
             strncpy(configuration->title, lua_tostring(L, -1), MAX_CONFIGURATION_TITLE_LENGTH);
         } else
         if (strcmp(key, "width") == 0) {
-            configuration->width = lua_tointeger(L, -1);
+            configuration->width = (size_t)lua_tointeger(L, -1);
         } else
         if (strcmp(key, "height") == 0) {
-            configuration->height = lua_tointeger(L, -1);
+            configuration->height = (size_t)lua_tointeger(L, -1);
         } else
         if (strcmp(key, "scale") == 0) {
-            configuration->scale = lua_tointeger(L, -1);
+            configuration->scale = (size_t)lua_tointeger(L, -1);
         } else
         if (strcmp(key, "fullscreen") == 0) {
             configuration->fullscreen = lua_toboolean(L, -1);
@@ -252,15 +252,15 @@ void parse(lua_State *L, Configuration_t *configuration)
             configuration->vertical_sync = lua_toboolean(L, -1);
         } else
         if (strcmp(key, "fps") == 0) {
-            configuration->fps = lua_tointeger(L, -1);
+            configuration->fps = (size_t)lua_tointeger(L, -1);
             configuration->skippable_frames = configuration->fps / 5; // Keep synched. About 20% of the FPS amount.
         } else
         if (strcmp(key, "skippable-frames") == 0) {
-            int suggested = configuration->fps / 5;
-            configuration->skippable_frames = imin(lua_tointeger(L, -1), suggested); // TODO: not sure if `imin` or `imax`. :P
+            size_t suggested = configuration->fps / 5;
+            configuration->skippable_frames = (size_t)imin(lua_tointeger(L, -1), suggested); // TODO: not sure if `imin` or `imax`. :P
         } else
         if (strcmp(key, "fps-cap") == 0) {
-            configuration->fps_cap = lua_tointeger(L, -1);
+            configuration->fps_cap = (size_t)lua_tointeger(L, -1);
         } else
         if (strcmp(key, "hide-cursor") == 0) {
             configuration->hide_cursor = lua_toboolean(L, -1);

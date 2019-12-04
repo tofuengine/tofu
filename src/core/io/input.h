@@ -97,7 +97,7 @@ typedef struct _Input_t {
 
     GLFWwindow *window;
 
-    float time;
+    double time;
 
     Input_Mouse_t mouse;
     Input_Keyboard_t keyboard;

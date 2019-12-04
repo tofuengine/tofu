@@ -67,9 +67,9 @@ static inline void wait_for(float seconds)
 #endif
 }
 
-static inline float calculate_fps(float elapsed) {
+static inline size_t calculate_fps(float elapsed) {
     static float samples[FPS_AVERAGE_SAMPLES] = { 0 };
-    static int index = 0;
+    static size_t index = 0;
     static double sum = 0.0; // Need to store the game life...
 
     sum -= samples[index];
@@ -77,7 +77,7 @@ static inline float calculate_fps(float elapsed) {
     samples[index] = elapsed;
     index = (index + 1) % FPS_AVERAGE_SAMPLES;
 
-    return (float)round((double)FPS_AVERAGE_SAMPLES / sum);
+    return (size_t)round((double)FPS_AVERAGE_SAMPLES / sum);
 }
 
 bool Engine_initialize(Engine_t *engine, const char *base_path)
@@ -170,9 +170,9 @@ void Engine_terminate(Engine_t *engine)
 void Engine_run(Engine_t *engine)
 {
     const float delta_time = 1.0f / (float)engine->configuration.fps;
-    const int skippable_frames = engine->configuration.skippable_frames;
+    const size_t skippable_frames = engine->configuration.skippable_frames;
     const float reference_time = 1.0f / engine->configuration.fps_cap;
-    Log_write(LOG_LEVELS_INFO, "<ENGINE> now running, update-time is %.6fs w/ %d skippable frames", delta_time, skippable_frames);
+    Log_write(LOG_LEVELS_INFO, "<ENGINE> now running, update-time is %.6fs w/ %d skippable frames, reference-time is %.6fs", delta_time, skippable_frames, reference_time);
 
     // Track time using double to keep the min resolution consistent over time!
     // https://randomascii.wordpress.com/2012/02/13/dont-store-that-in-a-float/
@@ -181,8 +181,8 @@ void Engine_run(Engine_t *engine)
 
     // https://nkga.github.io/post/frame-pacing-analysis-of-the-game-loop/
     for (bool running = true; running && !engine->environment.quit && !Display_should_close(&engine->display); ) {
-        double current = glfwGetTime();
-        float elapsed = (float)(current - previous);
+        const double current = glfwGetTime();
+        const float elapsed = (float)(current - previous);
         previous = current;
 
         engine->environment.fps = calculate_fps(elapsed);
@@ -198,7 +198,7 @@ void Engine_run(Engine_t *engine)
         running = running && Interpreter_input(&engine->interpreter); // Lazy evaluate `running`, will avoid calls when error.
 
         lag += elapsed; // Count a maximum amount of skippable frames in order no to stall on slower machines.
-        for (int frames = 0; (frames < skippable_frames) && (lag >= delta_time); ++frames) {
+        for (size_t frames = 0; (frames < skippable_frames) && (lag >= delta_time); ++frames) {
             engine->environment.time += delta_time;
             running = running && Interpreter_update(&engine->interpreter, delta_time); // Fixed update.
             lag -= delta_time;
@@ -212,9 +212,10 @@ void Engine_run(Engine_t *engine)
         running = running && Interpreter_render(&engine->interpreter, lag / delta_time);
         Display_present(&engine->display);
 
-        float frame_time = (float)(glfwGetTime() - current);
-        if (reference_time > frame_time) {
-            wait_for(reference_time - frame_time);
+        const float frame_time = (float)(glfwGetTime() - current);
+        const float leftover = reference_time - frame_time;
+        if (leftover > 0.0f) {
+            wait_for(leftover);
         }
     }
 }

@@ -31,7 +31,7 @@ bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration
     *input = (Input_t){
             .configuration = *configuration,
             .window = window,
-            .time = 0.0f
+            .time = 0
         };
     return true;
 }

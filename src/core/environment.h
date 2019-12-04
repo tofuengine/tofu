@@ -24,11 +24,12 @@
 #define __ENVIRONMENT_H__
 
 #include <stdbool.h>
+#include <stddef.h>
 
 typedef struct _Environment_t {
     bool quit;
-    float fps;
-    float time;
+    size_t fps;
+    double time;
 } Environment_t;
 
 extern void Environment_initialize(Environment_t *environment);
