@@ -11,13 +11,13 @@ local LEVELS
 local TARGET = 0x00000000
 
 local function get_r(c)
-  return math.floor(c >> 16) & 0xff
+  return (c >> 16) & 0xff
 end
 local function get_g(c)
-  return math.floor(c >> 8) & 0xff
+  return (c >> 8) & 0xff
 end
 local function get_b(c)
-  return math.floor(c) & 0xff
+  return c & 0xff
 end
 
 local function find_best_match(palette, match)
@@ -40,9 +40,9 @@ local function build_table(palette, levels, target)
     local shifting = {}
     local ratio = 1 / (levels - 1) * i
     for j, color in ipairs(palette) do
-      local r = math.floor((get_r(color) - get_r(target)) * ratio + get_r(target))
-      local g = math.floor((get_g(color) - get_g(target)) * ratio + get_g(target))
-      local b = math.floor((get_b(color) - get_b(target)) * ratio + get_b(target))
+      local r = math.tointeger((get_r(color) - get_r(target)) * ratio + get_r(target))
+      local g = math.tointeger((get_g(color) - get_g(target)) * ratio + get_g(target))
+      local b = math.tointeger((get_b(color) - get_b(target)) * ratio + get_b(target))
       local k = find_best_match(palette, r * 65536 + g * 256 + b)
       shifting[j - 1] = k - 1
     end
@@ -105,7 +105,7 @@ function Main:render(_)
     end
   else
     local t = System.time()
-    local index = math.floor((math.sin(t * 2.5) + 1) * 0.5 * (STEPS - 1))
+    local index = math.tointeger((math.sin(t * 2.5) + 1) * 0.5 * (STEPS - 1))
     Canvas.shift(self.lut[index])
     Canvas.process(0, 0, Canvas.width(), Canvas.height() / 2)
   end

@@ -62,7 +62,7 @@ function Main:input()
 end
 
 function Main:update(_)
-  local index = (math.floor(System.time() * 0.2) % #PALETTES) + 1
+  local index = (math.tointeger(System.time() * 0.2) % #PALETTES) + 1
   if self.palette ~= index then
     self.palette = index
     Canvas.palette(PALETTES[index])

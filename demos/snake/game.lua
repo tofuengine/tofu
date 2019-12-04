@@ -61,7 +61,7 @@ function Game:__ctor()
   Canvas.palette("gameboy")
 
   self.font = Font.default(0, 3)
-  self.grid = Grid.new(math.floor(Canvas.width() / CELL_SIZE), math.floor(Canvas.height() / CELL_SIZE), 0)
+  self.grid = Grid.new(math.tointeger(Canvas.width() / CELL_SIZE), math.tointeger(Canvas.height() / CELL_SIZE), 0)
 dump(self)
 
   self:reset()

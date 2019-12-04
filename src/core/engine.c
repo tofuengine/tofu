@@ -67,7 +67,8 @@ static inline void wait_for(float seconds)
 #endif
 }
 
-static inline size_t calculate_fps(float elapsed) {
+static inline size_t calculate_fps(float elapsed)
+{
     static float samples[FPS_AVERAGE_SAMPLES] = { 0 };
     static size_t index = 0;
     static double sum = 0.0; // Need to store the game life...

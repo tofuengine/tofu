@@ -82,7 +82,7 @@ function Game:render(_)
       local x = column * w
       local y = row * h
       if value > 0 then
-        Canvas.rectangle("fill", x, y, w, h, math.floor(value))
+        Canvas.rectangle("fill", x, y, w, h, math.tointeger(value))
       end
     end)
 

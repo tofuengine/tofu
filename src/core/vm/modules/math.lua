@@ -22,9 +22,9 @@
 
 local Math = {}
 
-function Math.lerp(a, b, x)
-  -- More precise than `a + (b - a) * x`.
-  return a * (1.0 - x) + b * x
+function Math.lerp(a, b, r)
+  -- More precise than `a + (b - a) * r`.
+  return a * (1.0 - r) + b * r
 end
 
 function Math.sine_wave(period, t)
