@@ -31,6 +31,20 @@ local Tofu = Class.define() -- To be precise, the class name is irrelevant since
 
 function Tofu:__ctor()
   self.states = {
+    ["idle"] = {
+      enter = function(_)
+        end,
+      leave = function(_)
+        end,
+      input = function(_)
+        end,
+      update = function(_, _)
+          self:switch_to(self.configuration["splash-screen"] and "splash" or "normal")
+          -- FIXME: don't call render after switch!!!
+        end,
+      render = function(_, _)
+        end
+    },
     ["splash"] = {
       enter = function(me)
           me.duration = self.configuration["splash-screen-duration"] or 2.5
@@ -98,23 +112,12 @@ function Tofu:__ctor()
         end
     }
   }
---  self.state = self.states["splash"]
+  self.state = self.states["idle"]
 end
 
 function Tofu:setup()
   self.configuration = require("configuration")
-  self.state = self.states[self.configuration["splash-screen"] and "splash" or "normal"]
   return self.configuration
-end
-
-function Tofu:enter()
-  local me = self.state
-  self:call(me.enter, me)
-end
-
-function Tofu:leave()
-  local me = self.state
-  self:call(me.leave, me)
 end
 
 function Tofu:input()

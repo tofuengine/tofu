@@ -140,22 +140,11 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
         return false;
     }
 
-    result = Interpreter_enter(&engine->interpreter);
-    if (!result) {
-        Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't call init method");
-        Interpreter_terminate(&engine->interpreter);
-        Display_terminate(&engine->display);
-        Input_terminate(&engine->input);
-        Audio_terminate(&engine->audio);
-        return false;
-    }
-
     return true;
 }
 
 void Engine_terminate(Engine_t *engine)
 {
-    Interpreter_leave(&engine->interpreter);
     Interpreter_terminate(&engine->interpreter); // Terminate the interpreter to unlock all resources.
     Display_terminate(&engine->display);
     Input_terminate(&engine->input);
