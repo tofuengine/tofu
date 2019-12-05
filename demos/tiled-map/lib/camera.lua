@@ -30,10 +30,10 @@ end
 local Camera = Class.define()
 
 -- TODO: add camera scaling, useful to draw minimap.
-function Camera:__ctor(id, grid, bank, columns, rows, screen_x, screen_y, anchor_x, anchor_y)
+function Camera:__ctor(id, bank, grid, columns, rows, screen_x, screen_y, anchor_x, anchor_y, scale)
   self.id = id
-  self.grid = grid
   self.bank = bank
+  self.grid = grid
   self.screen_x = screen_x or 0
   self.screen_y = screen_y or 0
   self.columns = columns
@@ -41,6 +41,7 @@ function Camera:__ctor(id, grid, bank, columns, rows, screen_x, screen_y, anchor
   self.width = columns * self.bank:cell_width()
   self.height = rows * self.bank:cell_height()
 
+  self:scale_by(scale or 1.0)
   self:center_at(anchor_x or 0.5, anchor_y or 0.5)
 end
 

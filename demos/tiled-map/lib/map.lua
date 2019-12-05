@@ -36,8 +36,9 @@ end
 
 local Map = Class.define()
 
-function Map:__ctor(file)
-  self:load_(file)
+function Map:__ctor(bank, grid)
+  self.bank = bank
+  self.grid = grid
 
   self.aabb = {
       x0 = 0,
@@ -49,7 +50,7 @@ function Map:__ctor(file)
   self.cameras = {}
 end
 
-function Map:load_(file)
+function Map.from_file(file)
   local content = File.as_string(file)
   local tokens = {}
   for chunk in string.gmatch(content, "[^\n]+") do
@@ -62,8 +63,11 @@ function Map:load_(file)
       table.insert(cells, tonumber(cell))
     end
   end
-  self.bank = Bank.new(tokens[1], tonumber(tokens[2]), tonumber(tokens[3]))
-  self.grid = Grid.new(tonumber(tokens[4]), tonumber(tokens[5]), cells)
+
+  local bank = Bank.new(tokens[1], tonumber(tokens[2]), tonumber(tokens[3]))
+  local grid = Grid.new(tonumber(tokens[4]), tonumber(tokens[5]), cells)
+
+  return Map.new(bank, grid)
 end
 
 function Map:bound(x, y)

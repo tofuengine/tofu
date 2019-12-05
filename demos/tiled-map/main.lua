@@ -35,7 +35,7 @@ function Main:__ctor()
   Canvas.palette("gameboy")
 
   self.font = Font.default(3, 1)
-  self.map = Map.new("assets/world.map")
+  self.map = Map.from_file("assets/world.map")
 
   self.map:add_camera("left", 7, 5, 8, 0)
   self.map:add_camera("right", 7, 5, 248, 0)
