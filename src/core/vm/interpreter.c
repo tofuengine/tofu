@@ -307,8 +307,8 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const char *base_path, C
 #endif
 
     // TODO: execute a Lua script that load and return the configuration, ditching the setup call.
-
-    // TODO: then, load the boot/main script as last. init/deinit won't be needed, then.
+    size_t version = (size_t)*lua_version(interpreter->state);
+    Log_write(LOG_LEVELS_INFO, "<VM> Interpreter: Lua %d.%d", version / 100, version % 100);
 
     int result = execute(interpreter->state, (const char *)_boot_lua, sizeof(_boot_lua) / sizeof(char), "@boot.lua", 0, 1); // Prefix '@' to trace as filename internally in Lua.
     if (result != 0) {
