@@ -22,6 +22,14 @@
 
 local Canvas = {}
 
+function Canvas.reset()
+  -- TODO: should also reset the palette and flush the state stack!
+  Canvas.surface()
+  Canvas.shift()
+  Canvas.transparent()
+  Canvas.clipping()
+end
+
 function Canvas.square(mode, x, y, size, index)
   Canvas.rectangle(mode, x, y, size, size, index)
 end

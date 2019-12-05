@@ -63,7 +63,8 @@ function Tofu:__ctor()
     },
     ["splash"] = {
       enter = function(me)
-          me.font = Font.new(get_font_name(Canvas.width(), 2.0), 0, 255)
+          Canvas.reset()
+          me.font = Font.new(get_font_name(Canvas.width(), 1.5), 0, 255)
           me.duration = self.configuration["splash-screen-duration"] or 10.0
           me.age = 0.0
         end,
@@ -93,6 +94,7 @@ function Tofu:__ctor()
     },
     ["running"] = {
       enter = function(me)
+          Canvas.reset()
           local Main = require("main") -- Lazily require, to permit a `Tofu:setup()` call prior main script loading.
           me.main = Main.new()
         end,
@@ -113,6 +115,7 @@ function Tofu:__ctor()
     },
     ["error"] = {
       enter = function(me)
+          Canvas.reset()
           Canvas.palette({ 0xFF000000, 0xFFFF0000 })
           me.font = Font.default(0, 1)
         end,
