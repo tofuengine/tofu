@@ -246,18 +246,21 @@ void luaX_unref(lua_State *L, luaX_Reference ref)
 void luaX_checkargument(lua_State *L, int idx, const char *file, int line, ...)
 {
     int count = 0;
-    int success = 0;
+    int success = 1;
     va_list args;
     va_start(args, line);
     for (; ; ++count) {
         luaX_TFunction func = va_arg(args, luaX_TFunction);
         if (!func) {
+            success = 0;
             break;
         }
-        success |= func(L, idx);
+        if (func(L, idx)) {
+            break;
+        }
     }
     va_end(args);
-    if ((count > 0) && !success) {
+    if (!success) {
         luaL_error(L, "[%s:%d] signature failure for argument #%d w/ type %s", file, line, idx, lua_typename(L, lua_type(L, idx)));
         return; // Unreachable code.
     }
