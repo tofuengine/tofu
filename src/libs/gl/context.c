@@ -84,6 +84,15 @@ void GL_context_pop(GL_Context_t *context)
     context->state = arrpop(context->stack);
 }
 
+void GL_context_reset(GL_Context_t *context)
+{
+    arrfree(context->stack);
+    Log_write(LOG_LEVELS_DEBUG, "<GL> context stack deallocated");
+
+    reset_state(&context->state, &context->buffer);
+    Log_write(LOG_LEVELS_DEBUG, "<GL> context reset");
+}
+
 void GL_context_sanitize(GL_Context_t *context, const GL_Surface_t *surface)
 {
     for (int i = arrlen(context->stack) - 1; i >= 0; --i) {

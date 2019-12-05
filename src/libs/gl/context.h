@@ -64,6 +64,7 @@ extern void GL_context_delete(GL_Context_t *context); // TODO: rename to `*_dest
 
 extern void GL_context_push(GL_Context_t *context);
 extern void GL_context_pop(GL_Context_t *context);
+extern void GL_context_reset(GL_Context_t *context);
 extern void GL_context_sanitize(GL_Context_t *context, const GL_Surface_t *surface);
 
 extern void GL_context_surface(GL_Context_t *context, GL_Surface_t *surface);
