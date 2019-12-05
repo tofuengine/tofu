@@ -285,12 +285,12 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const char *base_path, C
 
     FS_initialize(&interpreter->file_system, base_path);
 
-    interpreter->state = lua_newstate(allocate, NULL); // No user-data is passed-
+    interpreter->state = lua_newstate(allocate, NULL); // No user-data is passed.
     if (!interpreter->state) {
         Log_write(LOG_LEVELS_FATAL, "<VM> can't initialize interpreter");
         return false;
     }
-    lua_atpanic(interpreter->state, panic); // TODO: remove the panic handler?
+    lua_atpanic(interpreter->state, panic); // Set a custom panic-handler, just like `luaL_newstate()`.
 
     luaL_openlibs(interpreter->state);
 

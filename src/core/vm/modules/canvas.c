@@ -43,6 +43,7 @@ static int canvas_width(lua_State *L);
 static int canvas_height(lua_State *L);
 static int canvas_push(lua_State *L);
 static int canvas_pop(lua_State *L);
+static int canvas_reset(lua_State *L);
 static int canvas_surface(lua_State *L);
 static int canvas_palette(lua_State *L);
 static int canvas_background(lua_State *L);
@@ -78,6 +79,7 @@ static const struct luaL_Reg _canvas_functions[] = {
     { "height", canvas_height },
     { "push", canvas_push },
     { "pop", canvas_pop },
+    { "reset", canvas_reset },
     { "surface", canvas_surface },
     { "palette", canvas_palette },
     { "background", canvas_background },
@@ -190,6 +192,19 @@ static int canvas_pop(lua_State *L)
 
     GL_Context_t *context = &display->gl;
     GL_context_pop(context);
+
+    return 0;
+}
+
+static int canvas_reset(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 0)
+    LUAX_SIGNATURE_END
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    GL_Context_t *context = &display->gl;
+    GL_context_reset(context);
 
     return 0;
 }
