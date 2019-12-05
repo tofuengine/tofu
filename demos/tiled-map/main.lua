@@ -38,7 +38,7 @@ function Main:__ctor()
   self.map = Map.from_file("assets/world.map")
 
   self.map:add_camera("left", 7, 5, 8, 0)
-  self.map:add_camera("right", 7, 5, 248, 0)
+  self.map:add_camera("right", 7, 5, 248, 0, 0.5, 0.5, 0.25)
   self.map:add_camera("main", 14, 5, 8, 160)
 
   self.player = { x = 640, y = 640 }
@@ -47,7 +47,8 @@ function Main:__ctor()
   self.map:camera_from_id("right"):move_to(800, 200)
   for _, camera in pairs(self.map:get_cameras()) do
     camera.post_draw = function(me)
-        Canvas.rectangle("fill", me.screen_x + me.offset_x - 2, me.screen_y + me.offset_y - 2, 4, 4, 2)
+        local x, y = me:to_screen(me.x, me.y)
+        Canvas.rectangle("fill", x - 2, y - 2, 4, 4, 2)
         self.font:write(tostring(me), me.screen_x + me.width, me.screen_y, "right")
       end
   end

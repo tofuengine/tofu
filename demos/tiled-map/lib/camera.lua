@@ -45,16 +45,20 @@ function Camera:__ctor(id, bank, grid, columns, rows, screen_x, screen_y, anchor
   self:center_at(anchor_x or 0.5, anchor_y or 0.5)
 end
 
+function Camera:scale_by(scale)
+  self.scale = scale
+end
+
 function Camera:center_at(anchor_x, anchor_y)
   self.anchor_x = anchor_x
   self.anchor_y = anchor_y
-  self.offset_x = math.tointeger(anchor_x * self.width) -- Always an integer offset
-  self.offset_y = math.tointeger(anchor_y * self.height)
+  self.center_x = math.tointeger(anchor_x * self.width) -- Always an integer offset
+  self.center_y = math.tointeger(anchor_y * self.height)
   self.aabb = {
-      x0 = self.offset_x,
-      y0 = self.offset_y,
-      x1 = self.grid:width() * self.bank:cell_width() - (self.width - self.offset_x) - 1,
-      y1 = self.grid:height() * self.bank:cell_height() - (self.height - self.offset_y) - 1
+      x0 = self.center_x,
+      y0 = self.center_y,
+      x1 = self.grid:width() * self.bank:cell_width() - (self.width - self.center_x) - 1,
+      y1 = self.grid:height() * self.bank:cell_height() - (self.height - self.center_y) - 1
     }
   self:move_to(self.x or 0, self.y or 0)
 end
@@ -62,8 +66,8 @@ end
 function Camera:move_to(x, y)
   self.x, self.y = bound(x, y, self.aabb)
 
-  local map_x = math.tointeger(self.x) - self.offset_x
-  local map_y = math.tointeger(self.y) - self.offset_y
+  local map_x = math.tointeger(self.x) - self.center_x
+  local map_y = math.tointeger(self.y) - self.center_y
 
   if self.map_x == map_x and self.map_y == map_y then
     return
@@ -86,11 +90,13 @@ function Camera:move_to(x, y)
 end
 
 function Camera:to_screen(x, y)
-  return x - self.x + self.offset_x + self.screen_x, y - self.y + self.offset_y + self.screen_y
+  local scale = self.scale
+  return (x - self.x + self.center_x) * scale + self.screen_x, (y - self.y + self.center_y) * scale + self.screen_y
 end
 
 function Camera:to_world(x, y)
-  return x - self.screen_x + self.offset_x + self.x, y - self.screen_y + self.offset_y + self.y
+  local scale = self.scale
+  return (x - self.screen_x) / scale + self.center_x + self.x, (y - self.screen_y) / scale + self.center_y + self.y
 end
 
 function Camera:update(_)
@@ -102,12 +108,14 @@ function Camera:pre_draw()
 end
 
 function Camera:draw()
-  Canvas.clipping(self.screen_x, self.screen_y, self.width, self.height)
+  local scale = self.scale
 
-  local ox, oy = self.screen_x + self.column_offset, self.screen_y + self.row_offset
+  Canvas.clipping(self.screen_x, self.screen_y, self.width * scale, self.height * scale)
+
+  local ox, oy = self.screen_x + self.column_offset * scale, self.screen_y + self.row_offset * scale
   for _, v in ipairs(self.batch) do
     local cell_id, cell_x, cell_y = table.unpack(v)
-    self.bank:blit(math.tointeger(cell_id), cell_x + ox, cell_y + oy)
+    self.bank:blit(cell_id, cell_x * scale + ox, cell_y * scale + oy, scale, scale)
   end
 end
 
@@ -129,7 +137,7 @@ function Camera:prepare_()
     local c = self.start_column
     for _ = 1, columns do
       local cell_id = self.grid:peek(c, r)
-      table.insert(batch, { cell_id, x, y })
+      table.insert(batch, { math.tointeger(cell_id), x, y })
       x = x + cw
       c = c + 1
     end

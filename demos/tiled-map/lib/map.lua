@@ -78,8 +78,8 @@ function Map:get_cameras()
   return self.cameras
 end
 
-function Map:add_camera(id, columns, rows, screen_x, screen_y, anchor_x, anchor_y) -- last two arguments optional
-  self.cameras[id] = Camera.new(id, self.grid, self.bank, columns, rows, screen_x, screen_y, anchor_x, anchor_y)
+function Map:add_camera(id, columns, rows, screen_x, screen_y, anchor_x, anchor_y, scale) -- last 3 arguments optional
+  self.cameras[id] = Camera.new(id, self.bank, self.grid, columns, rows, screen_x, screen_y, anchor_x, anchor_y, scale)
 end
 
 function Map:remove_camera(id)
