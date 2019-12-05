@@ -212,7 +212,6 @@ static int call(lua_State *L, Methods_t method, int nargs, int nresults)
 
 void parse(lua_State *L, Configuration_t *configuration)
 {
-    strncpy(configuration->title, DEFAULT_WINDOW_TITLE, MAX_CONFIGURATION_TITLE_LENGTH);
     *configuration = (Configuration_t){
             .width = DEFAULT_SCREEN_WIDTH,
             .height = DEFAULT_SCREEN_HEIGHT,
@@ -226,6 +225,7 @@ void parse(lua_State *L, Configuration_t *configuration)
             .exit_key_enabled = true,
             .debug = true
         };
+    strncpy(configuration->title, DEFAULT_WINDOW_TITLE, MAX_CONFIGURATION_TITLE_LENGTH);
 
     if (!lua_istable(L, -1)) {
         Log_write(LOG_LEVELS_WARNING, "<VM> setup method returned no value");
