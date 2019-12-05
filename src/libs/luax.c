@@ -187,14 +187,13 @@ int luaX_newmodule(lua_State *L, const luaX_Script *script, const luaL_Reg *f, c
 
 void luaX_preload(lua_State *L, const char *modname, lua_CFunction loadf, int nup)
 {
-    lua_getglobal(L, "package");
-    lua_getfield(L, -1, "preload");
+    luaL_getsubtable(L, LUA_REGISTRYINDEX, LUA_PRELOAD_TABLE);
     for (int i = 0; i < nup; ++i) { // Copy the upvalues to the top
-        lua_pushvalue(L, -(nup + 2));
+        lua_pushvalue(L, -(nup + 1));
     }
     lua_pushcclosure(L, loadf, nup); // Closure with those upvalues (the one just pushed will be removed)
     lua_setfield(L, -2, modname);
-    lua_pop(L, nup + 2); // Pop the upvalues and the "package.preload" pair
+    lua_pop(L, nup + 1); // Pop the upvalues and the "_PRELOAD" table
 }
 
 void luaX_require(lua_State *L, const char *modname, lua_CFunction openf, int nup, int glb)
