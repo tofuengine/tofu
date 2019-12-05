@@ -42,7 +42,7 @@ typedef struct _Interpreter_t {
 
 extern bool Interpreter_initialize(Interpreter_t *interpreter, const char *base_path, Configuration_t *configuration, const void *userdatas[]);
 extern void Interpreter_terminate(Interpreter_t *interpreter);
-extern bool Interpreter_input(Interpreter_t *interpreter);
+extern bool Interpreter_loop(Interpreter_t *interpreter);
 extern bool Interpreter_update(Interpreter_t *interpreter, float delta_time);
 extern bool Interpreter_render(Interpreter_t *interpreter, float ratio);
 extern bool Interpreter_call(Interpreter_t *interpreter, int nargs, int nresults);

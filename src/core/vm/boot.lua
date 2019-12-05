@@ -49,14 +49,13 @@ function Tofu:__ctor()
   self.states = {
     ["idle"] = {
       enter = function(_)
+          self:switch_to(self.configuration["splash-screen"] and "splash" or "running")
         end,
       leave = function(_)
         end,
-      input = function(_)
+      loop = function(_)
         end,
       update = function(_, _)
-          self:switch_to(self.configuration["splash-screen"] and "splash" or "running")
-          -- FIXME: don't call render after switch!!!
         end,
       render = function(_, _)
         end
@@ -71,7 +70,7 @@ function Tofu:__ctor()
       leave = function(me)
           me.font = nil
         end,
-      input = function(_)
+      loop = function(_)
         end,
       update = function(me, delta_time)
           me.age = me.age + delta_time
@@ -102,7 +101,7 @@ function Tofu:__ctor()
           Timer.pool:clear()
           me.main = nil
         end,
-      input = function(me)
+      loop = function(me)
           me.main:input()
         end,
       update = function(me, delta_time)
@@ -122,7 +121,7 @@ function Tofu:__ctor()
       leave = function(me)
           me.font = nil
         end,
-      input = function(_)
+      loop = function(_)
           if Input.is_key_pressed(Input.RESET) then
             System.quit()
           end
@@ -140,7 +139,8 @@ function Tofu:__ctor()
         end
     }
   }
-  self.state = self.states["idle"]
+  self.queue = {}
+  self:switch_to("idle")
 end
 
 function Tofu:setup()
@@ -148,9 +148,11 @@ function Tofu:setup()
   return self.configuration
 end
 
-function Tofu:input()
+function Tofu:loop()
+  self:switch_if_needed()
+
   local me = self.state
-  self:call(me.input, me)
+  self:call(me.loop, me)
 end
 
 function Tofu:update(delta_time)
@@ -163,28 +165,34 @@ function Tofu:render(ratio)
   self:call(me.render, me, ratio)
 end
 
-function Tofu:switch_to(id)
-  local current = self.state
+function Tofu:switch_if_needed()
+  if #self.queue == 0 then
+    return
+  end
+
+  local id = table.remove(self.queue)
   local next = self.states[id]
-  if current == next then -- Moving to the current state is an error!
-    return false
-  end
+
+  local current = self.state
   if current then
-    self:call(current.leave, current)
-    self.state = nil
+    current:leave()
   end
-  self:call(next.enter, next)
+  next:enter()
   self.state = next
-  return true
+end
+
+function Tofu:switch_to(id)
+  table.insert(self.queue, id)
 end
 
 function Tofu:call(func, ...)
+  if #self.queue > 0 then
+    return
+  end
   local success, message = pcall(func, ...)
   if not success then
-    if not self:switch_to("error") then
-      error("internal error\n" .. message)
-    end
-    System.error(message .. "\n" .. debug.traceback())
+    System.error(message)
+    self.next = "error"
   end
 end
 

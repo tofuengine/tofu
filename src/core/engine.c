@@ -182,7 +182,8 @@ void Engine_run(Engine_t *engine)
 #endif
 
         Input_process(&engine->input);
-        running = running && Interpreter_input(&engine->interpreter); // Lazy evaluate `running`, will avoid calls when error.
+
+        running = running && Interpreter_loop(&engine->interpreter); // Lazy evaluate `running`, will avoid calls when error.
 
         lag += elapsed; // Count a maximum amount of skippable frames in order no to stall on slower machines.
         for (size_t frames = 0; (frames < skippable_frames) && (lag >= delta_time); ++frames) {
@@ -197,6 +198,7 @@ void Engine_run(Engine_t *engine)
         Display_update(&engine->display, elapsed);
 
         running = running && Interpreter_render(&engine->interpreter, lag / delta_time);
+
         Display_present(&engine->display);
 
         const float frame_time = (float)(glfwGetTime() - current);
