@@ -160,11 +160,6 @@ function Tofu:update(delta_time)
   self:call(me.update, me, delta_time)
 end
 
-function Tofu:update(delta_time)
-  local me = self.state
-  self:call(me.update, me, delta_time)
-end
-
 function Tofu:render(ratio)
   local me = self.state
   self:call(me.render, me, ratio)
@@ -197,7 +192,7 @@ function Tofu:call(func, ...)
   local success, message = pcall(func, ...)
   if not success then
     System.error(message)
-    self.next = "error"
+    self:switch_to("error")
   end
 end
 
