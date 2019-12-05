@@ -20,24 +20,11 @@
  * SOFTWARE.
  **/
 
-#include "environment.h"
-
-#include <libs/stb.h>
-
-#include <stdlib.h>
-#include <string.h>
-
-// TODO: http://www.ilikebigbits.com/2017_06_01_float_or_double.html
-
-void Environment_initialize(Environment_t *environment)
-{
-    *environment = (Environment_t){
-        .quit = false,
-        .fps = 0,
-        .time = 0.0
-    };
-}
-
-void Environment_terminate(Environment_t *environment)
-{
-}
+#ifdef DEBUG
+  #define STB_LEAKCHECK_IMPLEMENTATION
+  #include <stb/stb_leakcheck.h>
+#endif
+#define STB_DS_IMPLEMENTATION
+#include <stb/stb_ds.h>
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb/stb_image.h>

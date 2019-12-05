@@ -36,14 +36,12 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 #include <core/vm/modules.h>
 #include <libs/imath.h>
 #include <libs/log.h>
+#include <libs/stb.h>
 
 #include <limits.h>
 #include <string.h>
 #ifdef __DEBUG_GARBAGE_COLLECTOR__
   #include <time.h>
-#endif
-#ifdef DEBUG
-  #include <stb/stb_leakcheck.h>
 #endif
 
 #ifdef __DEBUG_VM_CALLS__

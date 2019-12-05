@@ -25,13 +25,9 @@
 #include <config.h>
 #include <libs/imath.h>
 #include <libs/gl/gl.h>
+#include <libs/stb.h>
 
 #include <math.h>
-
-#ifdef DEBUG
-  #include <stb/stb_leakcheck.h>
-#endif
-#include <stb/stb_ds.h>
 
 #define REGION_INSIDE   0
 #define REGION_LEFT     1

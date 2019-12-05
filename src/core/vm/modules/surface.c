@@ -26,16 +26,13 @@
 #include <core/io/display.h>
 #include <core/vm/interpreter.h>
 #include <libs/log.h>
+#include <libs/stb.h>
 
 #include "udt.h"
 #include "callbacks.h"
 
 #include <math.h>
 #include <string.h>
-#ifdef DEBUG
-  #include <stb/stb_leakcheck.h>
-#endif
-#include <stb/stb_ds.h>
 
 #define SURFACE_MT      "Tofu_Surface_mt"
 

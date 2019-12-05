@@ -27,6 +27,7 @@
 #include <core/io/display.h>
 #include <libs/log.h>
 #include <libs/gl/gl.h>
+#include <libs/stb.h>
 
 #include "udt.h"
 #include "resources/palettes.h"
@@ -34,10 +35,6 @@
 #include <math.h>
 #include <string.h>
 #include <time.h>
-#ifdef DEBUG
-  #include <stb/stb_leakcheck.h>
-#endif
-#include <stb/stb_ds.h>
 
 #define CANVAS_MT        "Tofu_Canvas_mt"
 

@@ -26,12 +26,10 @@
 #include <core/engine.h>
 #include <libs/log.h>
 #include <libs/imath.h>
+#include <libs/stb.h>
 
 #include <memory.h>
 #include <stdlib.h>
-#ifdef DEBUG
-  #include <stb/stb_leakcheck.h>
-#endif
 
 typedef struct _Program_Data_t {
     const char *vertex_shader;
@@ -110,8 +108,6 @@ static const unsigned char _window_icon_pixels[] = {
 #include "icon.inc"
 };
 /*
-#include <stb/stb_image.h>
-
 static void load_icon(GLFWwindow *window, const uint8_t *buffer, size_t buffer_size)
 {
     int width, height, components;

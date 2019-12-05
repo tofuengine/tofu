@@ -26,6 +26,7 @@
 #include <core/configuration.h>
 #include <core/platform.h>
 #include <libs/log.h>
+#include <libs/stb.h>
 
 #include <limits.h>
 #include <math.h>
@@ -36,10 +37,6 @@
   #include <unistd.h>
 #elif PLATFORM_ID == PLATFORM_WINDOWS
   #include <windows.h>
-#endif
-#ifdef DEBUG
-  #define STB_LEAKCHECK_IMPLEMENTATION
-  #include <stb/stb_leakcheck.h>
 #endif
 
 static inline void wait_for(float seconds)

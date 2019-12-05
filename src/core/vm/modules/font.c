@@ -27,6 +27,7 @@
 #include <core/vm/interpreter.h>
 #include <libs/log.h>
 #include <libs/gl/gl.h>
+#include <libs/stb.h>
 
 #include "udt.h"
 #include "callbacks.h"
@@ -34,9 +35,6 @@
 
 #include <math.h>
 #include <string.h>
-#ifdef DEBUG
-  #include <stb/stb_leakcheck.h>
-#endif
 
 #define FONT_MT        "Tofu_Font_mt"
 

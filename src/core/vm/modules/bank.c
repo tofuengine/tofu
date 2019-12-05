@@ -27,15 +27,13 @@
 #include <core/vm/interpreter.h>
 #include <libs/log.h>
 #include <libs/gl/gl.h>
+#include <libs/stb.h>
 
 #include "udt.h"
 #include "callbacks.h"
 
 #include <math.h>
 #include <string.h>
-#ifdef DEBUG
-  #include <stb/stb_leakcheck.h>
-#endif
 
 #define BANK_MT     "Tofu_Bank_mt"
 

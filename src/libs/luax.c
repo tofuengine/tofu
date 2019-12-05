@@ -22,13 +22,12 @@
 
 #include "luax.h"
 
+#include <libs/stb.h>
+
 #include <inttypes.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef DEBUG
-  #include <stb/stb_leakcheck.h>
-#endif
 
 /*
 http://webcache.googleusercontent.com/search?q=cache:RLoR9dkMeowJ:howtomakeanrpg.com/a/classes-in-lua.html+&cd=4&hl=en&ct=clnk&gl=it

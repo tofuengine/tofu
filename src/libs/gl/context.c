@@ -25,14 +25,9 @@
 #include <config.h>
 #include <libs/imath.h>
 #include <libs/log.h>
+#include <libs/stb.h>
 
 #include "surface.h"
-
-#ifdef DEBUG
-  #include <stb/stb_leakcheck.h>
-#endif
-#define STB_DS_IMPLEMENTATION
-#include <stb/stb_ds.h>
 
 static inline void reset_state(GL_State_t *state, GL_Surface_t *surface)
 {

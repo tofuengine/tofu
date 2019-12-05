@@ -22,14 +22,13 @@
 
 #include "fs.h"
 
+#include <libs/stb.h>
+
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef DEBUG
-  #include <stb/stb_leakcheck.h>
-#endif
 
 typedef enum _File_System_Modes_t {
     FILE_SYSTEM_MODE_BINARY,

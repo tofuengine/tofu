@@ -25,12 +25,7 @@
 #include <config.h>
 #include <libs/log.h>
 #include <libs/gl/gl.h>
-
-#ifdef DEBUG
-  #include <stb/stb_leakcheck.h>
-#endif
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb/stb_image.h>
+#include <libs/stb.h>
 
 bool GL_surface_decode(GL_Surface_t *surface, const void *buffer, size_t buffer_size, const GL_Surface_Callback_t callback, void *parameters)
 {

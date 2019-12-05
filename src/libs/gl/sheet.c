@@ -25,11 +25,9 @@
 #include <config.h>
 #include <libs/log.h>
 #include <libs/gl/gl.h>
+#include <libs/stb.h>
 
 #include <stdlib.h>
-#ifdef DEBUG
-  #include <stb/stb_leakcheck.h>
-#endif
 
 GL_Rectangle_t *precompute_cells(size_t width, size_t height, size_t cell_width, size_t cell_height)
 {
