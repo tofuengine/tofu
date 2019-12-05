@@ -69,7 +69,7 @@ local Timer = {}
 
 Timer.__index = Timer
 
-Timer.pool = Pool.new()
+Timer.pool = Pool.new() -- this is a "static" member.
 
 function Timer.new(period, repeats, callback)
   local instance = setmetatable({

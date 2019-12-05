@@ -55,7 +55,7 @@ function Tofu:__ctor()
       input = function(_)
         end,
       update = function(_, _)
-          self:switch_to(self.configuration["splash-screen"] and "splash" or "normal")
+          self:switch_to(self.configuration["splash-screen"] and "splash" or "running")
           -- FIXME: don't call render after switch!!!
         end,
       render = function(_, _)
