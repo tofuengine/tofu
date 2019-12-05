@@ -54,7 +54,7 @@ function Main:input()
   elseif Input.is_key_pressed(Input.X) then
     self.clipping = not self.clipping
     if self.clipping then
-      Canvas.clipping(32, 32, 95, 95)
+      Canvas.clipping(32, 32, 64, 64)
     else
       Canvas.clipping()
     end
