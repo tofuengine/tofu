@@ -84,7 +84,7 @@ static void *allocate(void *ud, void *ptr, size_t osize, size_t nsize)
 
 static int panic(lua_State *L)
 {
-    Log_write(LOG_LEVELS_FATAL, "<VM> error in call: %s", lua_tostring(L, -1));
+    Log_write(LOG_LEVELS_FATAL, "<VM> %s", lua_tostring(L, -1));
     lua_pop(L, 1);
     return 0; // return to Lua to abort
 }
@@ -166,14 +166,14 @@ static int execute(lua_State *L, const char *script, size_t size, const char *na
 {
     int loaded = luaL_loadbuffer(L, script, size, name);
     if (loaded != LUA_OK) {
-        Log_write(LOG_LEVELS_ERROR, "<VM> error in execute: %s", lua_tostring(L, -1));
+        Log_write(LOG_LEVELS_ERROR, "<VM> %s", lua_tostring(L, -1));
         lua_pop(L, 1);
         return loaded;
     }
 #ifdef __DEBUG_VM_CALLS__
     int called = lua_pcall(L, nargs, nresults, TRACEBACK_STACK_INDEX);
     if (called != LUA_OK) {
-        Log_write(LOG_LEVELS_ERROR, "<VM> error in execute: %s", lua_tostring(L, -1));
+        Log_write(LOG_LEVELS_ERROR, "<VM> %s", lua_tostring(L, -1));
         lua_pop(L, 1);
     }
     return called;
@@ -200,7 +200,7 @@ static int call(lua_State *L, Methods_t method, int nargs, int nresults)
 #ifdef __DEBUG_VM_CALLS__
     int called = lua_pcall(L, nargs + 1, nresults, TRACEBACK_STACK_INDEX);
     if (called != LUA_OK) {
-        Log_write(LOG_LEVELS_ERROR, "<VM> error in call: %s", lua_tostring(L, -1));
+        Log_write(LOG_LEVELS_ERROR, "<VM> %s", lua_tostring(L, -1));
         lua_pop(L, 1);
     }
     return called;
