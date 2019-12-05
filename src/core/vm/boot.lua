@@ -53,7 +53,7 @@ function Tofu:__ctor()
         end,
       leave = function(_)
         end,
-      loop = function(_)
+      process = function(_)
         end,
       update = function(_, _)
         end,
@@ -70,7 +70,7 @@ function Tofu:__ctor()
       leave = function(me)
           me.font = nil
         end,
-      loop = function(_)
+      process = function(_)
         end,
       update = function(me, delta_time)
           me.age = me.age + delta_time
@@ -101,7 +101,7 @@ function Tofu:__ctor()
           Timer.pool:clear()
           me.main = nil
         end,
-      loop = function(me)
+      process = function(me)
           me.main:input()
         end,
       update = function(me, delta_time)
@@ -121,7 +121,7 @@ function Tofu:__ctor()
       leave = function(me)
           me.font = nil
         end,
-      loop = function(_)
+      process = function(_)
           if Input.is_key_pressed(Input.RESET) then
             System.quit()
           end
@@ -148,11 +148,16 @@ function Tofu:setup()
   return self.configuration
 end
 
-function Tofu:loop()
+function Tofu:process()
   self:switch_if_needed()
 
   local me = self.state
-  self:call(me.loop, me)
+  self:call(me.process, me)
+end
+
+function Tofu:update(delta_time)
+  local me = self.state
+  self:call(me.update, me, delta_time)
 end
 
 function Tofu:update(delta_time)
@@ -166,7 +171,7 @@ function Tofu:render(ratio)
 end
 
 function Tofu:switch_if_needed()
-  if #self.queue == 0 then
+  if not next(self.queue) then
     return
   end
 
@@ -186,7 +191,7 @@ function Tofu:switch_to(id)
 end
 
 function Tofu:call(func, ...)
-  if #self.queue > 0 then
+  if next(self.queue) then
     return
   end
   local success, message = pcall(func, ...)
