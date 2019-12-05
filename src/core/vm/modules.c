@@ -135,14 +135,9 @@ void modules_initialize(lua_State *L, int nup)
         { NULL, NULL }
     };
 
-    for (int i = 0; modules[i].func; ++i) {
+    for (const luaL_Reg *module = modules; module->func; ++module) {
         int pnup = luaX_packupvalues(L, nup);
-#ifdef __REQUIRE__
-        luaX_require(L, modules[i].name, modules[i].func, pnup, 1);
-        lua_pop(L, 1);  /* remove lib */
-#else
-        luaX_preload(L, modules[i].name, modules[i].func, pnup);
-#endif
+        luaX_preload(L, module->name, module->func, pnup);
     }
     lua_pop(L, nup);
 }
