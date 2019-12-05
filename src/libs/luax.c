@@ -163,6 +163,36 @@ int luaX_newmodule(lua_State *L, const luaX_Script *script, const luaL_Reg *f, c
     return 1;
 }
 
+void luaX_openlibs(lua_State *L)
+{
+    static const luaL_Reg libraries[] = {
+        {"_G", luaopen_base},
+        {LUA_LOADLIBNAME, luaopen_package},
+        {LUA_COLIBNAME, luaopen_coroutine},
+        {LUA_TABLIBNAME, luaopen_table},
+#ifdef __INCLUDE_SYSTEM_LIBRARIES__
+        {LUA_IOLIBNAME, luaopen_io},
+        {LUA_OSLIBNAME, luaopen_os},
+#endif
+        {LUA_STRLIBNAME, luaopen_string},
+        {LUA_MATHLIBNAME, luaopen_math},
+        {LUA_UTF8LIBNAME, luaopen_utf8},
+#ifdef DEBUG
+        {LUA_DBLIBNAME, luaopen_debug},
+#endif
+#ifdef LUA_COMPAT_BITLIB
+        {LUA_BITLIBNAME, luaopen_bit32},
+#endif
+        {NULL, NULL}
+    };
+    // "require" is different from preload in the sense that is also make the
+    // library-module ready to be used (i.e. defined in the global space).
+    for (const luaL_Reg *library = libraries; library->func; ++library) {
+        luaL_requiref(L, library->name, library->func, 1);
+        lua_pop(L, 1); // Remove the library (table) from the stack.
+    }
+}
+
 void luaX_preload(lua_State *L, const char *modname, lua_CFunction loadf, int nup)
 {
     luaL_getsubtable(L, LUA_REGISTRYINDEX, LUA_PRELOAD_TABLE);
@@ -171,30 +201,8 @@ void luaX_preload(lua_State *L, const char *modname, lua_CFunction loadf, int nu
     }
     lua_pushcclosure(L, loadf, nup); // Closure with those upvalues (the one just pushed will be removed)
     lua_setfield(L, -2, modname);
-    lua_pop(L, nup + 1); // Pop the upvalues and the "_PRELOAD" table
-}
-
-void luaX_require(lua_State *L, const char *modname, lua_CFunction openf, int nup, int glb)
-{
-    luaL_getsubtable(L, LUA_REGISTRYINDEX, LUA_LOADED_TABLE);
-    lua_getfield(L, -1, modname); /* LOADED[modname] */
-    if (!lua_toboolean(L, -1)) { /* package not already loaded? */
-        lua_pop(L, 1); /* remove field */
-        for (int i = 0; i < nup; ++i) { // Copy the upvalues to the top
-            lua_pushvalue(L, -(nup + 1));
-        }
-        lua_pushcclosure(L, openf, nup); // Closure with those upvalues (the one just pushed will be removed)
-        lua_pushstring(L, modname);      /* argument to open function */
-        lua_call(L, 1, 1);               /* call 'openf' to open module */
-        lua_pushvalue(L, -1);            /* make copy of module (call result) */
-        lua_setfield(L, -3, modname);    /* LOADED[modname] = module */
-    }
-    lua_remove(L, -2); /* remove LOADED table */
-    if (glb) {
-        lua_pushvalue(L, -1);      /* copy of module */
-        lua_setglobal(L, modname); /* _G[modname] = module */
-    }
-    lua_pop(L, nup); // Pop the upvalues
+    lua_pop(L, nup + 1); // Pop the upvalues and the `_PRELOAD` table
+#endif
 }
 
 luaX_Reference luaX_ref(lua_State *L, int idx)

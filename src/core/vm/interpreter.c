@@ -292,7 +292,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const char *base_path, C
     }
     lua_atpanic(interpreter->state, panic); // Set a custom panic-handler, just like `luaL_newstate()`.
 
-    luaL_openlibs(interpreter->state);
+    luaX_openlibs(interpreter->state); // Custom loader, only selected libraries.
 
     int nup = 0;
     for (int i = 0; userdatas[i]; ++i) {
