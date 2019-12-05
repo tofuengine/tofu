@@ -49,7 +49,7 @@ function Main:__ctor()
     camera.post_draw = function(me)
         local x, y = me:to_screen(me.x, me.y)
         Canvas.rectangle("fill", x - 2, y - 2, 4, 4, 2)
-        self.font:write(tostring(me), me.screen_x + me.width, me.screen_y, "right")
+        self.font:write(tostring(me), me.screen_x + me.screen_width, me.screen_y, "right")
       end
   end
 end

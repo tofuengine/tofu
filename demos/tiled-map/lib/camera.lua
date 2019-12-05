@@ -38,8 +38,8 @@ function Camera:__ctor(id, bank, grid, columns, rows, screen_x, screen_y, anchor
   self.screen_y = screen_y or 0
   self.columns = columns
   self.rows = rows
-  self.width = columns * self.bank:cell_width()
-  self.height = rows * self.bank:cell_height()
+  self.map_width = columns * self.bank:cell_width()
+  self.map_height = rows * self.bank:cell_height()
 
   self:scale_by(scale or 1.0)
   self:center_at(anchor_x or 0.5, anchor_y or 0.5)
@@ -47,18 +47,20 @@ end
 
 function Camera:scale_by(scale)
   self.scale = scale
+  self.screen_width = self.map_width * scale
+  self.screen_height = self.map_height * scale
 end
 
 function Camera:center_at(anchor_x, anchor_y)
   self.anchor_x = anchor_x
   self.anchor_y = anchor_y
-  self.center_x = math.tointeger(anchor_x * self.width) -- Always an integer offset
-  self.center_y = math.tointeger(anchor_y * self.height)
+  self.center_x = math.tointeger(anchor_x * self.map_width) -- Always an integer offset
+  self.center_y = math.tointeger(anchor_y * self.map_height)
   self.aabb = {
       x0 = self.center_x,
       y0 = self.center_y,
-      x1 = self.grid:width() * self.bank:cell_width() - (self.width - self.center_x) - 1,
-      y1 = self.grid:height() * self.bank:cell_height() - (self.height - self.center_y) - 1
+      x1 = self.grid:width() * self.bank:cell_width() - (self.map_width - self.center_x) - 1,
+      y1 = self.grid:height() * self.bank:cell_height() - (self.map_height - self.center_y) - 1
     }
   self:move_to(self.x or 0, self.y or 0)
 end
@@ -74,11 +76,12 @@ function Camera:move_to(x, y)
   end
   self.map_x, self.map_y = map_x, map_y -- Track offsetted map position to track *real* changes.
 
+  local scale = self.scale
   local cw, ch = self.bank:cell_width(), self.bank:cell_height()
   local start_column = math.tointeger(map_x / cw)
   local start_row = math.tointeger(map_y / ch)
-  local column_offset = -(map_x % cw)
-  local row_offset = -(map_y % ch)
+  local column_offset = -math.tointeger((map_x % cw) * scale)
+  local row_offset = -math.tointeger((map_y % ch) * scale)
 
   if self.start_column ~= start_column or self.start_row ~= start_row then
     self.start_column = start_column
@@ -110,12 +113,12 @@ end
 function Camera:draw()
   local scale = self.scale
 
-  Canvas.clipping(self.screen_x, self.screen_y, self.width * scale, self.height * scale)
+  Canvas.clipping(self.screen_x, self.screen_y, self.screen_width, self.screen_height)
 
-  local ox, oy = self.screen_x + self.column_offset * scale, self.screen_y + self.row_offset * scale
+  local ox, oy = self.screen_x + self.column_offset, self.screen_y + self.row_offset
   for _, v in ipairs(self.batch) do
     local cell_id, cell_x, cell_y = table.unpack(v)
-    self.bank:blit(cell_id, cell_x * scale + ox, cell_y * scale + oy, scale, scale)
+    self.bank:blit(cell_id, cell_x + ox, cell_y + oy, scale, scale)
   end
 end
 
@@ -124,7 +127,8 @@ function Camera:post_draw()
 end
 
 function Camera:prepare_()
-  local cw, ch = self.bank:cell_width(), self.bank:cell_height()
+  local scale = self.scale
+  local cw, ch = self.bank:cell_width() * scale, self.bank:cell_height() * scale
 
   local rows = math.min(self.grid:width() - self.start_row, self.rows + 1) -- We handle an additional row/column
   local columns = math.min(self.grid:height() - self.start_column, self.columns + 1) -- for sub-tile scrolling
