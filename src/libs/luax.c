@@ -96,9 +96,22 @@ void luaX_overridesearchers(lua_State *L, lua_CFunction searcher, int nup)
 {
     lua_getglobal(L, "package"); // Access the `package.searchers` table.
     lua_getfield(L, -1, "searchers");
+#ifdef __OPTIMIZED__
+    lua_insert(L, -(nup + 2)); // Move the `package` table above the upvalues.
+    lua_insert(L, -(nup + 2)); // Move the `searchers` table above the upvalues.
+    lua_pushcclosure(L, searcher, nup);
+    lua_rawseti(L, -2, 2); // Override the 2nd searcher (keep the "preloaded" helper).
 
+    int n = lua_rawlen(L, -1);
+    for (int i = 3; i <= n; ++i) { // Discard the others (two) searchers.
+        lua_pushnil(L);
+        lua_rawseti(L, -2, i);
+    }
+
+    lua_pop(L, 2); // Pop the `package` and `searchers` table.
+#else
     for (int i = 0; i < nup; ++i) {
-        lua_pushvalue(L, -(2 + nup));
+        lua_pushvalue(L, -(nup + 2));
     }
     lua_pushcclosure(L, searcher, 1);
     lua_rawseti(L, -2, 2); // Override the 2nd searcher (keep the "preloaded" helper).
@@ -110,6 +123,7 @@ void luaX_overridesearchers(lua_State *L, lua_CFunction searcher, int nup)
     }
 
     lua_pop(L, 2 + nup); // Pop the `package` and `searchers` table, and consume the upvalues.
+#endif
 }
 
 int luaX_newmodule(lua_State *L, const luaX_Script *script, const luaL_Reg *f, const luaX_Const *c, int nup, const char *name)
@@ -137,10 +151,15 @@ int luaX_newmodule(lua_State *L, const luaX_Script *script, const luaL_Reg *f, c
     }
 
     if (f) {
+#ifdef __OPTIMIZED__
+        lua_insert(L, -(nup + 1)); // Move the table above the upvalues.
+        luaL_setfuncs(L, f, nup); // Register the function into the table at the top of the stack, i.e. create the methods
+#else
         for (int i = 0; i < nup; ++i) { // Duplicate upvalues (take a "+ 1" into account to skip the table).
             lua_pushvalue(L, -(nup + 1));
         }
         luaL_setfuncs(L, f, nup); // Register the function into the table at the top of the stack, i.e. create the methods
+#endif
     }
 
     if (c) {
@@ -157,8 +176,10 @@ int luaX_newmodule(lua_State *L, const luaX_Script *script, const luaL_Reg *f, c
 
     // We need to return the module table on top of the stack upon return. Since it's a common idiom that upvalues are
     // consumed by the called function, we move the table "under" the upvalues and pop them.
+#ifndef __OPTIMIZED__
     lua_insert(L, -(nup + 1));
     lua_pop(L, nup);
+#endif
 
     return 1;
 }
@@ -196,7 +217,13 @@ void luaX_openlibs(lua_State *L)
 void luaX_preload(lua_State *L, const char *modname, lua_CFunction loadf, int nup)
 {
     luaL_getsubtable(L, LUA_REGISTRYINDEX, LUA_PRELOAD_TABLE);
-    for (int i = 0; i < nup; ++i) { // Copy the upvalues to the top
+#ifdef __OPTIMIZED__
+    lua_insert(L, -(nup + 1)); // Move the `_PRELOAD` table above the upvalues.
+    lua_pushcclosure(L, loadf, nup); // Closure with the upvalues (they are be consumed)
+    lua_setfield(L, -2, modname);
+    lua_pop(L, 1); // Pop the `_PRELOAD` table
+#else
+    for (int i = 0; i < nup; ++i) { // Copy the upvalues to the top (skip the pushed `_PRELOAD` table)
         lua_pushvalue(L, -(nup + 1));
     }
     lua_pushcclosure(L, loadf, nup); // Closure with those upvalues (the one just pushed will be removed)
