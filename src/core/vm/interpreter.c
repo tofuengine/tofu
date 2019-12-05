@@ -75,6 +75,15 @@ static const char *_methods[] = {
     NULL
 };
 
+static void *allocate(void *ud, void *ptr, size_t osize, size_t nsize)
+{
+    if (nsize == 0) {
+        free(ptr);
+        return NULL;
+    }
+    return realloc(ptr, nsize);
+}
+
 static int panic(lua_State *L)
 {
     Log_write(LOG_LEVELS_FATAL, "<VM> error in call: %s", lua_tostring(L, -1));
@@ -146,7 +155,7 @@ static bool detect(lua_State *L, int index, const char *methods[])
     for (int i = 0; methods[i]; ++i) { // Push the methods on stack
         lua_getfield(L, -(i + 1), methods[i]); // The table become farer and farer along the loop.
         if (!lua_isnil(L, -1)) {
-            Log_write(LOG_LEVELS_INFO, "<VM> method '%s' found", methods[i]);
+            Log_write(LOG_LEVELS_DEBUG, "<VM> method '%s' found", methods[i]);
         } else {
             Log_write(LOG_LEVELS_WARNING, "<VM> method '%s' is missing", methods[i]);
         }
@@ -274,10 +283,11 @@ void parse(lua_State *L, Configuration_t *configuration)
 
 bool Interpreter_initialize(Interpreter_t *interpreter, const char *base_path, Configuration_t *configuration, const void *userdatas[])
 {
+    *interpreter = (Interpreter_t){ 0 };
+
     FS_initialize(&interpreter->file_system, base_path);
 
-    interpreter->gc_age = 0.0f;
-    interpreter->state = luaL_newstate();
+    interpreter->state = lua_newstate(allocate, NULL); // No user-data is passed-
     if (!interpreter->state) {
         Log_write(LOG_LEVELS_FATAL, "<VM> can't initialize interpreter");
         return false;
