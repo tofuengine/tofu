@@ -210,25 +210,23 @@ void luaX_unref(lua_State *L, luaX_Reference ref)
 
 void luaX_checkargument(lua_State *L, int idx, const char *file, int line, ...)
 {
-    int count = 0;
+    int actual_type = lua_type(L, idx);
     int success = 1;
     va_list args;
     va_start(args, line);
-    int type = lua_type(L, idx);
-    for (; ; ++count) {
-        int t = va_arg(args, int);
-        if (t == LUA_TNONE) {
+    for (;;) {
+        int type = va_arg(args, int);
+        if (type == LUA_TNONE) {
             success = 0;
             break;
         }
-        if (type == t) {
+        if (actual_type == type) {
             break;
         }
     }
     va_end(args);
     if (!success) {
-        luaL_error(L, "[%s:%d] signature failure for argument #%d w/ type %s", file, line, idx, lua_typename(L, type));
-        return; // Unreachable code.
+        luaL_error(L, "[%s:%d] signature failure for argument #%d (wrong actual type, got `%s`)", file, line, idx, lua_typename(L, actual_type));
     }
 }
 
