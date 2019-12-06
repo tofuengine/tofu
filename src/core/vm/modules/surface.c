@@ -69,7 +69,7 @@ static const luaX_Const _surface_constants[] = {
 
 int surface_loader(lua_State *L)
 {
-    int nup = luaX_unpackupvalues(L);
+    int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, NULL, _surface_functions, _surface_constants, nup, SURFACE_MT);
 }
 

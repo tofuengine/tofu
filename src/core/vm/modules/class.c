@@ -34,6 +34,6 @@ static luaX_Script _class_script = { (const char *)_class_lua, sizeof(_class_lua
 
 int class_loader(lua_State *L)
 {
-    int nup = luaX_unpackupvalues(L);
+    int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, &_class_script, NULL, NULL, nup, NULL);
 }

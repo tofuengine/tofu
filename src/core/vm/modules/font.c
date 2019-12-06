@@ -65,7 +65,7 @@ static luaX_Script _font_script = { (const char *)_font_lua, sizeof(_font_lua), 
 
 int font_loader(lua_State *L)
 {
-    int nup = luaX_unpackupvalues(L);
+    int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, &_font_script, _font_functions, _font_constants, nup, FONT_MT);
 }
 

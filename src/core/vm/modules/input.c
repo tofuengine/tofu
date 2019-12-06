@@ -77,7 +77,7 @@ static const luaX_Const _input_constants[] = {
 
 int input_loader(lua_State *L)
 {
-    int nup = luaX_unpackupvalues(L);
+    int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, NULL, _input_functions, _input_constants, nup, INPUT_MT);
 }
 

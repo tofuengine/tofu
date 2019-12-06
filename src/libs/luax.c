@@ -187,24 +187,24 @@ int luaX_newmodule(lua_State *L, const luaX_Script *script, const luaL_Reg *f, c
 void luaX_openlibs(lua_State *L)
 {
     static const luaL_Reg libraries[] = {
-        {"_G", luaopen_base},
-        {LUA_LOADLIBNAME, luaopen_package},
-        {LUA_COLIBNAME, luaopen_coroutine},
-        {LUA_TABLIBNAME, luaopen_table},
+        { "_G", luaopen_base },
+        { LUA_LOADLIBNAME, luaopen_package },
+        { LUA_COLIBNAME, luaopen_coroutine },
+        { LUA_TABLIBNAME, luaopen_table },
 #ifdef __INCLUDE_SYSTEM_LIBRARIES__
-        {LUA_IOLIBNAME, luaopen_io},
-        {LUA_OSLIBNAME, luaopen_os},
+        { LUA_IOLIBNAME, luaopen_io },
+        { LUA_OSLIBNAME, luaopen_os },
 #endif
-        {LUA_STRLIBNAME, luaopen_string},
-        {LUA_MATHLIBNAME, luaopen_math},
-        {LUA_UTF8LIBNAME, luaopen_utf8},
+        { LUA_STRLIBNAME, luaopen_string },
+        { LUA_MATHLIBNAME, luaopen_math },
+        { LUA_UTF8LIBNAME, luaopen_utf8 },
 #ifdef DEBUG
-        {LUA_DBLIBNAME, luaopen_debug},
+        { LUA_DBLIBNAME, luaopen_debug },
 #endif
 #ifdef LUA_COMPAT_BITLIB
-        {LUA_BITLIBNAME, luaopen_bit32},
+        { LUA_BITLIBNAME, luaopen_bit32 },
 #endif
-        {NULL, NULL}
+        { NULL, NULL }
     };
     // "require" is different from preload in the sense that is also make the
     // library-module ready to be used (i.e. defined in the global space).
@@ -266,25 +266,37 @@ void luaX_checkargument(lua_State *L, int idx, const char *file, int line, ...)
     }
 }
 
-size_t luaX_packupvalues(lua_State *L, int nup)
+int luaX_pushupvalues(lua_State *L)
 {
-    lua_pushinteger(L, nup); // Pass the upvalues count, for later usage.
-    for (int j = 0; j < nup; ++j) {
-        lua_pushvalue(L, -(nup + 1)); // Copy the upvalue, skipping the counter.
+    int nup = 0;
+    for (int i = 1; ; ++i) {
+        int idx = lua_upvalueindex(i);
+        if (lua_isnone(L, idx)) {
+            break;
+        }
+        lua_pushvalue(L, idx);
+        ++nup;
     }
-    return nup + 1;
+    return nup;
 }
 
-size_t luaX_unpackupvalues(lua_State *L)
+void luaX_pushvalues(lua_State *L, int nup)
 {
-    if (!lua_isinteger(L, lua_upvalueindex(1))) { // Check if the 1st upvalue is defined and is an integer.
-        return 0;
+    for (int i = 0; i < nup; ++i) {
+        lua_pushvalue(L, -nup);
     }
-    int nup = lua_tointeger(L, lua_upvalueindex(1)); // The first upvalue tells how many upvalues we are handling.
-    for (int i = 0; i< nup; ++i) {
-        lua_pushvalue(L, lua_upvalueindex(2 + i)); // Copy the upvalues onto the stack, skipping the counter.
+}
+
+int luaX_upvaluescount(lua_State *L)
+{
+    int nup = 0;
+    for (int idx = 1; ; ++idx) {
+        if (lua_isnone(L, lua_upvalueindex(idx))) {
+            break;
+        }
+        ++nup;
     }
-    return (size_t)nup;
+    return nup;
 }
 
 int luaX_isnil(lua_State *L, int idx)

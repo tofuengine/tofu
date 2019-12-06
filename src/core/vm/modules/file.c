@@ -48,7 +48,7 @@ static const luaX_Const _file_constants[] = {
 
 int file_loader(lua_State *L)
 {
-    int nup = luaX_unpackupvalues(L);
+    int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, NULL, _file_functions, _file_constants, nup, FILE_MT);
 }
 

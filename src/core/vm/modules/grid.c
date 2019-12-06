@@ -71,7 +71,7 @@ static luaX_Script _grid_script = { (const char *)_grid_lua, sizeof(_grid_lua), 
 
 int grid_loader(lua_State *L)
 {
-    int nup = luaX_unpackupvalues(L);
+    int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, &_grid_script, _grid_functions, _grid_constants, nup, GRID_MT);
 }
 

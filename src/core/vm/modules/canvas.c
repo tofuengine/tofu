@@ -120,7 +120,7 @@ static luaX_Script _canvas_script = { (const char *)_canvas_lua, sizeof(_canvas_
 
 int canvas_loader(lua_State *L)
 {
-    int nup = luaX_unpackupvalues(L);
+    int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, &_canvas_script, _canvas_functions, _canvas_constants, nup, CANVAS_MT);
 }
 

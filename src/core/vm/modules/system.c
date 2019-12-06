@@ -57,7 +57,7 @@ static const luaX_Const _system_constants[] = {
 
 int system_loader(lua_State *L)
 {
-    int nup = luaX_unpackupvalues(L);
+    int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, NULL, _system_functions, _system_constants, nup, SYSTEM_MT);
 }
 

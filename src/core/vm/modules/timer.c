@@ -36,6 +36,6 @@ static luaX_Script _timer_script = { (const char *)_timer_lua, sizeof(_timer_lua
 
 int timer_loader(lua_State *L)
 {
-    int nup = luaX_unpackupvalues(L);
+    int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, &_timer_script, NULL, NULL, nup, NULL);
 }

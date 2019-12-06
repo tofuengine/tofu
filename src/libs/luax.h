@@ -104,8 +104,9 @@ extern void luaX_unref(lua_State *L, luaX_Reference ref);
 
 extern void luaX_checkargument(lua_State *L, int idx, const char *file, int line, ...);
 
-extern size_t luaX_packupvalues(lua_State *L, int nup);
-extern size_t luaX_unpackupvalues(lua_State *L);
+extern void luaX_pushvalues(lua_State *L, int nup);
+extern int luaX_pushupvalues(lua_State *L);
+extern int luaX_upvaluescount(lua_State *L); // UNUSED
 
 extern int luaX_isnil(lua_State *L, int idx);
 extern int luaX_isboolean(lua_State *L, int idx);

@@ -136,8 +136,8 @@ void modules_initialize(lua_State *L, int nup)
     };
 
     for (const luaL_Reg *module = modules; module->func; ++module) {
-        int pnup = luaX_packupvalues(L, nup);
-        luaX_preload(L, module->name, module->func, pnup);
+        luaX_pushvalues(L, nup);
+        luaX_preload(L, module->name, module->func, nup);
     }
     lua_pop(L, nup);
 }

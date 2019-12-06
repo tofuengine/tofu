@@ -54,7 +54,7 @@ static luaX_Script _math_script = { (const char *)_math_lua, sizeof(_math_lua), 
 
 int math_loader(lua_State *L)
 {
-    int nup = luaX_unpackupvalues(L);
+    int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, &_math_script, _math_functions, _math_constants, nup, MATH_MT);
 }
 
