@@ -35,12 +35,6 @@
 #include <stdbool.h>
 #include <limits.h>
 
-typedef enum _Engine_States_t {
-    ENGINE_STATE_RUNNING,
-    ENGINE_STATE_PAUSED,
-    ENGINE_STATE_CRASHED
-} Engine_States_t;
-
 typedef struct _Engine_t {
     Configuration_t configuration;
 
@@ -48,8 +42,6 @@ typedef struct _Engine_t {
     Audio_t audio;
     Display_t display;
     Input_t input;
-
-    Engine_States_t state; // TODO: handle automatic pause and crash.
 
     Environment_t environment;
 } Engine_t;

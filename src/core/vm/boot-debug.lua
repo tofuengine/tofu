@@ -140,12 +140,15 @@ function Tofu:__ctor()
     }
   }
   self.queue = {}
-  self:switch_to("idle")
 end
 
 function Tofu:setup()
   self.configuration = require("configuration")
   return self.configuration
+end
+
+function Tofu:prepare()
+  self:switch_to("idle")
 end
 
 function Tofu:process()

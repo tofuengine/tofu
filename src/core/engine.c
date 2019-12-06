@@ -138,7 +138,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
         return false;
     }
 
-    return true;
+    return Interpreter_prepare(&engine->interpreter);
 }
 
 void Engine_terminate(Engine_t *engine)
