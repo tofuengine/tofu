@@ -128,7 +128,7 @@ int canvas_loader(lua_State *L)
 static int canvas_color_to_index(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     uint32_t argb = (uint32_t)lua_tointeger(L, 1);
 
@@ -225,7 +225,7 @@ static int canvas_surface0(lua_State *L)
 static int canvas_surface1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     Surface_Class_t *surface = (Surface_Class_t *)lua_touserdata(L, 1);
 
@@ -269,7 +269,7 @@ static int canvas_palette0(lua_State *L)
 static int canvas_palette1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isstring, luaX_istable)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING, LUA_TTABLE)
     LUAX_SIGNATURE_END
     int type = lua_type(L, 1);
 
@@ -304,9 +304,6 @@ static int canvas_palette1(lua_State *L)
 
             lua_pop(L, 1);
         }
-    } else {
-        palette = (GL_Palette_t){ 0 };
-        Log_write(LOG_LEVELS_ERROR, "<CANVAS> wrong palette type, need to be string or list");
     }
 
     if (palette.count == 0) {
@@ -329,7 +326,7 @@ static int canvas_palette(lua_State *L)
 static int canvas_background(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 1);
 
@@ -346,7 +343,7 @@ static int canvas_background(lua_State *L)
 static int canvas_color(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 1);
 
@@ -363,7 +360,7 @@ static int canvas_color(lua_State *L)
 static int canvas_pattern(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     int mask = lua_tointeger(L, 1);
 
@@ -391,7 +388,7 @@ static int canvas_shift0(lua_State *L)
 static int canvas_shift1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(luaX_istable)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TTABLE)
     LUAX_SIGNATURE_END
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
@@ -421,8 +418,8 @@ static int canvas_shift1(lua_State *L)
 static int canvas_shift2(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 2)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     size_t from = (size_t)lua_tointeger(L, 1);
     size_t to = (size_t)lua_tointeger(L, 2);
@@ -460,7 +457,7 @@ static int canvas_transparent0(lua_State *L)
 static int canvas_transparent1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(luaX_istable)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TTABLE)
     LUAX_SIGNATURE_END
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
@@ -490,8 +487,8 @@ static int canvas_transparent1(lua_State *L)
 static int canvas_transparent2(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 2)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isboolean)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TBOOLEAN)
     LUAX_SIGNATURE_END
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 1);
     GL_Bool_t transparent = lua_toboolean(L, 2) ? GL_BOOL_TRUE : GL_BOOL_FALSE;
@@ -531,10 +528,10 @@ static int canvas_clipping0(lua_State *L)
 static int canvas_clipping4(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 4)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     int x = lua_tointeger(L, 1);
     int y = lua_tointeger(L, 2);
@@ -560,7 +557,7 @@ static int canvas_clipping(lua_State *L)
 static int canvas_shader(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
     LUAX_SIGNATURE_END
     const char *code = lua_tostring(L, 1);
 
@@ -588,7 +585,7 @@ static int canvas_mask0(lua_State *L)
 static int canvas_mask1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata, luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA, LUA_TNUMBER)
     LUAX_SIGNATURE_END
     int type = lua_type(L, 1);
 
@@ -614,8 +611,8 @@ static int canvas_mask1(lua_State *L)
 static int canvas_mask2(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 2)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const Surface_Class_t *instance = (const Surface_Class_t *)lua_touserdata(L, 1);
     GL_Pixel_t index = lua_tointeger(L, 2);
@@ -654,9 +651,9 @@ static int canvas_clear(lua_State *L)
 static int canvas_point(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 3)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     int x = lua_tointeger(L, 1);
     int y = lua_tointeger(L, 2);
@@ -675,10 +672,10 @@ static int canvas_point(lua_State *L)
 static int canvas_hline(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 4)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     int x = lua_tointeger(L, 1);
     int y = lua_tointeger(L, 2);
@@ -698,10 +695,10 @@ static int canvas_hline(lua_State *L)
 static int canvas_vline(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 4)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     int x = lua_tointeger(L, 1);
     int y = lua_tointeger(L, 2);
@@ -721,11 +718,11 @@ static int canvas_vline(lua_State *L)
 static int canvas_line(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 5)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     int x0 = lua_tointeger(L, 1);
     int y0 = lua_tointeger(L, 2);
@@ -750,8 +747,8 @@ static int canvas_line(lua_State *L)
 static int canvas_polyline(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 2)
-        LUAX_SIGNATURE_ARGUMENT(luaX_istable)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TTABLE)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 2);
 
@@ -791,9 +788,9 @@ static int canvas_polyline(lua_State *L)
 static int canvas_fill(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 3)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     int x = lua_tointeger(L, 1);
     int y = lua_tointeger(L, 2);
@@ -812,14 +809,14 @@ static int canvas_fill(lua_State *L)
 static int canvas_triangle(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 8)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const char *mode = lua_tostring(L, 1);
     int x0 = lua_tointeger(L, 2);
@@ -853,12 +850,12 @@ static int canvas_triangle(lua_State *L)
 static int canvas_rectangle(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 6)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const char *mode = lua_tostring(L, 1);
     int x = lua_tointeger(L, 2);
@@ -903,11 +900,11 @@ static int canvas_rectangle(lua_State *L)
 static int canvas_circle(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 5)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const char *mode = lua_tostring(L, 1);
     int cx = lua_tointeger(L, 2);
@@ -936,8 +933,8 @@ static int canvas_circle(lua_State *L)
 static int canvas_peek(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 2)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     int x = lua_tointeger(L, 1);
     int y = lua_tointeger(L, 2);
@@ -956,9 +953,9 @@ static int canvas_peek(lua_State *L)
 static int canvas_poke(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 3)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     int x = lua_tointeger(L, 1);
     int y = lua_tointeger(L, 2);
@@ -978,10 +975,10 @@ static int canvas_poke(lua_State *L)
 static int canvas_process(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 4)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     int x = lua_tointeger(L, 1);
     int y = lua_tointeger(L, 2);

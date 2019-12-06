@@ -51,9 +51,6 @@ typedef struct _luaX_Script {
     const char *name;
 } luaX_Script;
 
-// Type definition for the `luaX_is*()` argument-checking functions.
-typedef int (*luaX_TFunction)(lua_State *, int);
-
 typedef int luaX_Reference;
 
 #if DEBUG
@@ -67,7 +64,7 @@ typedef int luaX_Reference;
             } \
             int _index = 1;
     #define LUAX_SIGNATURE_ARGUMENT(...) \
-            luaX_checkargument(_L, _index++, __FILE__, __LINE__, __VA_ARGS__, NULL);
+            luaX_checkargument(_L, _index++, __FILE__, __LINE__, __VA_ARGS__, LUA_TNONE);
     #define LUAX_SIGNATURE_END \
             (void)_index; \
         } while (0);
@@ -107,18 +104,5 @@ extern void luaX_checkargument(lua_State *L, int idx, const char *file, int line
 extern void luaX_pushvalues(lua_State *L, int nup);
 extern int luaX_pushupvalues(lua_State *L);
 extern int luaX_upvaluescount(lua_State *L); // UNUSED
-
-extern int luaX_isnil(lua_State *L, int idx);
-extern int luaX_isboolean(lua_State *L, int idx);
-extern int luaX_islightuserdata(lua_State *L, int idx);
-extern int luaX_isinteger(lua_State *L, int idx);
-extern int luaX_isnumber(lua_State *L, int idx);
-extern int luaX_isstring(lua_State *L, int idx);
-extern int luaX_istable(lua_State *L, int idx);
-extern int luaX_isfunction(lua_State *L, int idx);
-extern int luaX_iscfunction(lua_State *L, int idx);
-extern int luaX_isuserdata(lua_State *L, int idx);
-extern int luaX_isthread(lua_State *L, int idx);
-extern int luaX_isany(lua_State *L, int idx);
 
 #endif  /* __LIBS_LUAX_H__ */

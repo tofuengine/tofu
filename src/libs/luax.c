@@ -249,19 +249,20 @@ void luaX_checkargument(lua_State *L, int idx, const char *file, int line, ...)
     int success = 1;
     va_list args;
     va_start(args, line);
+    int type = lua_type(L, idx);
     for (; ; ++count) {
-        luaX_TFunction func = va_arg(args, luaX_TFunction);
-        if (!func) {
+        int t = va_arg(args, int);
+        if (t == LUA_TNONE) {
             success = 0;
             break;
         }
-        if (func(L, idx)) {
+        if (type == t) {
             break;
         }
     }
     va_end(args);
     if (!success) {
-        luaL_error(L, "[%s:%d] signature failure for argument #%d w/ type %s", file, line, idx, lua_typename(L, lua_type(L, idx)));
+        luaL_error(L, "[%s:%d] signature failure for argument #%d w/ type %s", file, line, idx, lua_typename(L, type));
         return; // Unreachable code.
     }
 }
@@ -297,64 +298,4 @@ int luaX_upvaluescount(lua_State *L)
         ++nup;
     }
     return nup;
-}
-
-int luaX_isnil(lua_State *L, int idx)
-{
-    return lua_isnil(L, idx);
-}
-
-int luaX_isboolean(lua_State *L, int idx)
-{
-    return lua_isboolean(L, idx);
-}
-
-int luaX_isinteger(lua_State *L, int idx)
-{
-    return lua_isinteger(L, idx);
-}
-
-int luaX_isnumber(lua_State *L, int idx)
-{
-    return lua_isnumber(L, idx);
-}
-
-int luaX_isstring(lua_State *L, int idx)
-{
-    return lua_isstring(L, idx);
-}
-
-int luaX_istable(lua_State *L, int idx)
-{
-    return lua_istable(L, idx);
-}
-
-int luaX_isfunction(lua_State *L, int idx)
-{
-    return lua_isfunction(L, idx);
-}
-
-int luaX_iscfunction(lua_State *L, int idx)
-{
-    return lua_iscfunction(L, idx);
-}
-
-int luaX_islightuserdata(lua_State *L, int idx)
-{
-    return lua_islightuserdata(L, idx);
-}
-
-int luaX_isuserdata(lua_State *L, int idx)
-{
-    return lua_isuserdata(L, idx);
-}
-
-int luaX_isthread(lua_State *L, int idx)
-{
-    return lua_isthread(L, idx);
-}
-
-int luaX_isany(lua_State *L, int idx)
-{
-    return !lua_isnil(L, idx);
 }

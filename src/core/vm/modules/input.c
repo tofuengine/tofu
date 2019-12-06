@@ -84,7 +84,7 @@ int input_loader(lua_State *L)
 static int input_is_key_down(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     int key = lua_tointeger(L, 1);
 
@@ -99,7 +99,7 @@ static int input_is_key_down(lua_State *L)
 static int input_is_key_up(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     int key = lua_tointeger(L, 1);
 
@@ -114,7 +114,7 @@ static int input_is_key_up(lua_State *L)
 static int input_is_key_pressed(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     int key = lua_tointeger(L, 1);
 
@@ -129,7 +129,7 @@ static int input_is_key_pressed(lua_State *L)
 static int input_is_key_released(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     int key = lua_tointeger(L, 1);
 
@@ -144,7 +144,7 @@ static int input_is_key_released(lua_State *L)
 static int input_key_auto_repeat1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     int key = lua_tointeger(L, 1);
 
@@ -160,8 +160,8 @@ static int input_key_auto_repeat1(lua_State *L)
 static int input_key_auto_repeat2(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 2)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     int key = lua_tointeger(L, 1);
     float period = lua_tonumber(L, 2);
