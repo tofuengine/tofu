@@ -54,11 +54,16 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 #endif
 
 static const uint8_t _boot_lua[] = {
-#include "boot.inc"
+#ifdef DEBUG
+  #include "boot-debug.inc"
+#else
+  #include "boot-release.inc"
+#endif
 };
 
 typedef enum _Methods_t {
-    METHOD_SETUP,
+    METHOD_SETUP, // TODO: merge setup and prepare?
+    METHOD_PREPARE,
     METHOD_PROCESS,
     METHOD_UPDATE,
     METHOD_RENDER,
@@ -67,6 +72,7 @@ typedef enum _Methods_t {
 
 static const char *_methods[] = {
     "setup",
+    "prepare",
     "process",
     "update",
     "render",
@@ -347,6 +353,11 @@ void Interpreter_terminate(Interpreter_t *interpreter)
     lua_close(interpreter->state);
 
     FS_terminate(&interpreter->file_system);
+}
+
+bool Interpreter_prepare(Interpreter_t *interpreter)
+{
+    return call(interpreter->state, METHOD_PREPARE, 0, 0) == LUA_OK;
 }
 
 bool Interpreter_process(Interpreter_t *interpreter)
