@@ -127,7 +127,7 @@ function Tofu:__ctor()
     }
   }
   self.queue = {}
-  self:switch_to("splash")
+  self:switch_to("running") -- "splash")
 end
 
 function Tofu:process()

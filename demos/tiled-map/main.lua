@@ -29,7 +29,50 @@ function table.dump(t, spaces)
     end
   end
 end
---]]--
+]]--
+--[[
+local function roundm(n, m)
+  return math.floor(((n + m - 1) / m)) * m
+end
+
+local function getRandomPointInEllipse(ellipse_width, ellipse_height)
+  local t = 2*math.pi*math.random()
+  local u = math.random()+math.random()
+  local r = nil
+  if u > 1 then r = 2-u else r = u end
+  return roundm(ellipse_width*r*math.cos(t)/2, tile_size),
+         roundm(ellipse_height*r*math.sin(t)/2, tile_size)
+end
+
+local function random_point_in_circle(radius)
+  local t =  2 * math.pi * math.random()
+  local u = math.random()+math.random()
+  local r = nil
+  if u > 1 then
+    r = 2 - u
+  else
+    r = u
+  end
+  return radius * r * math.cos(t), radius * r * math.sin(t)
+end
+
+local function generate(width, height)
+  local grid = Grid.new(width, height)
+
+  local rw, rh = width * 0.125, height * 0.125
+
+  local hw, hh = width * 0.5, height * 0.5
+  local radius = math.min(hw, hh)
+
+  for _ = 1, 100 do
+    local x, y = random_point_in_circle(radius)
+    x = x + hw
+    y = y + hh
+    local w = math.rand() * rw + rw
+    local h = math.rand() * rh + rh
+  end
+end
+]]--
 
 function Main:__ctor()
   Canvas.palette("gameboy")
@@ -88,10 +131,9 @@ function Main:update(delta_time)
   end
   camera:move_to(self.player.x, self.player.y)
 --[[
-  local dx = self.dx * CAMERA_SPEED * delta_time
-  local dy = self.dy * CAMERA_SPEED * delta_time
+  camera = self.map:camera_from_id("main")
   if dx ~= 0.0 or dy ~= 0.0 then
-    self.player.x, self.player.y = camera:bound(self.player.x + dx, self.player.y + dy)
+    self.player.x, self.player.y = self.map:bound(self.player.x + dx, self.player.y + dy)
     camera:move_to(self.player.x, self.player.y)
   end
 ]]

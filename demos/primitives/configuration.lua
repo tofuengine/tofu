@@ -1,9 +1,0 @@
-return {
-  ["title"] = "Primitives",
-  ["width"] = 256,
-  ["height"] = 256,
-  ["scale"] = 1,
-  ["fullscreen"] = false,
-  ["exit-key-enabled"] = true,
-  ["debug"] = true
-}
