@@ -121,15 +121,15 @@ static int font_new3(lua_State *L)
         const Sheet_Data_t *data = resources_sheets_find(file);
         if (data) {
             GL_sheet_decode(&sheet, data->buffer, data->size, data->quad_width, data->quad_height, surface_callback_palette, (void *)&display->palette);
-            Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet '%s' decoded", file);
+            Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet `%s` decoded", file);
         } else {
             size_t buffer_size;
             void *buffer = FS_load_as_binary(file_system, file, &buffer_size);
             if (!buffer) {
-                return luaL_error(L, "<FONT> can't load file '%s'", file);
+                return luaL_error(L, "<FONT> can't load file `%s`", file);
             }
             GL_sheet_decode(&sheet, buffer, buffer_size, glyph_width, glyph_height, surface_callback_palette, (void *)&display->palette);
-            Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet '%s' loaded", file);
+            Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet `%s` loaded", file);
             free(buffer);
         }
     } else
@@ -180,15 +180,15 @@ static int font_new5(lua_State *L)
         const Sheet_Data_t *data = resources_sheets_find(file);
         if (data) {
             GL_sheet_decode(&sheet, data->buffer, data->size, data->quad_width, data->quad_height, surface_callback_indexes, (void *)indexes);
-            Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet '%s' decoded", file);
+            Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet `%s` decoded", file);
         } else {
             size_t buffer_size;
             void *buffer = FS_load_as_binary(file_system, file, &buffer_size);
             if (!buffer) {
-                return luaL_error(L, "<FONT> can't load file '%s'", file);
+                return luaL_error(L, "<FONT> can't load file `%s`", file);
             }
             GL_sheet_decode(&sheet, buffer, buffer_size, glyph_width, glyph_height, surface_callback_indexes, (void *)indexes);
-            Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet '%s' loaded", file);
+            Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet `%s` loaded", file);
             free(buffer);
         }
     } else

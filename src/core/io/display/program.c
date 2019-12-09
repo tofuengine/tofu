@@ -151,7 +151,7 @@ void program_send(const Program_t *program, size_t index, Program_Uniforms_t typ
     GLint location = program->locations[index];
     if (location == -1) {
 #ifdef __DEBUG_SHADER_CALLS__
-        Log_write(LOG_LEVELS_WARNING, "<PROGRAM> can't find uniform '%s' for program #%d", id, program->id);
+        Log_write(LOG_LEVELS_WARNING, "<PROGRAM> can't find uniform `%s` for program #%d", id, program->id);
 #endif
         return;
     }

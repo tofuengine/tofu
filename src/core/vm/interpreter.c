@@ -129,7 +129,7 @@ static int custom_searcher(lua_State *L)
     size_t size;
     char *buffer = FS_load_as_string(fs, path_file + 1, &size); // Skip the '@', we are using it for Lua to trace the file.
     if (!buffer) {
-        luaL_error(L, "<VM> can't load file '%s'", path_file + 1);
+        luaL_error(L, "<VM> can't load file `%s`", path_file + 1);
     }
     luaL_loadbuffer(L, buffer, size, path_file);
     free(buffer);
@@ -155,9 +155,9 @@ static bool detect(lua_State *L, int index, const char *methods[])
     for (int i = 0; methods[i]; ++i) { // Push the methods on stack
         lua_getfield(L, -(i + 1), methods[i]); // The table become farer and farer along the loop.
         if (!lua_isnil(L, -1)) {
-            Log_write(LOG_LEVELS_DEBUG, "<VM> method '%s' found", methods[i]);
+            Log_write(LOG_LEVELS_DEBUG, "<VM> method `%s` found", methods[i]);
         } else {
-            Log_write(LOG_LEVELS_WARNING, "<VM> method '%s' is missing", methods[i]);
+            Log_write(LOG_LEVELS_WARNING, "<VM> method `%s` is missing", methods[i]);
         }
     }
 

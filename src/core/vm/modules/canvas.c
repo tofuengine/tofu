@@ -282,9 +282,9 @@ static int canvas_palette1(lua_State *L)
         if (predefined_palette != NULL) {
             palette = *predefined_palette;
 
-            Log_write(LOG_LEVELS_DEBUG, "<CANVAS> setting predefined palette '%s' w/ %d color(s)", id, predefined_palette->count);
+            Log_write(LOG_LEVELS_DEBUG, "<CANVAS> setting predefined palette `%s` w/ %d color(s)", id, predefined_palette->count);
         } else {
-            Log_write(LOG_LEVELS_WARNING, "<CANVAS> unknown predefined palette w/ id '%s'", id);
+            Log_write(LOG_LEVELS_WARNING, "<CANVAS> unknown predefined palette w/ id `%s`", id);
         }
     } else
     if (type == LUA_TTABLE) { // User supplied palette.

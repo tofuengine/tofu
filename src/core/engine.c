@@ -78,16 +78,23 @@ static inline size_t calculate_fps(float elapsed)
     return (size_t)round((double)FPS_AVERAGE_SAMPLES / sum);
 }
 
+static void configure(const File_System_t *file_system, Configuration_t *configuration)
+{
+    size_t size;
+    char *data = FS_load_as_string(file_system, "tofu.config", &size);
+    Configuration_load(configuration, data);
+    if (data) {
+        free(data);
+    }
+}
+
 bool Engine_initialize(Engine_t *engine, const char *base_path)
 {
     *engine = (Engine_t){ 0 }; // Ensure is cleared at first.
 
     FS_initialize(&engine->file_system, base_path);
 
-    size_t size;
-    char *config = FS_load_as_string(&engine->file_system, "tofu.config", &size);
-    Configuration_load(&engine->configuration, config);
-    free(config);
+    configure(&engine->file_system, &engine->configuration);
 
     Log_initialize(engine->configuration.debug, NULL);
     Environment_initialize(&engine->environment);

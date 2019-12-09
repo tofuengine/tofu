@@ -99,7 +99,7 @@ static GL_XForm_Registers_t string_to_register(const char *id)
     if (id[0] == 'y') {
         return GL_XFORM_REGISTER_Y;
     }
-    Log_write(LOG_LEVELS_WARNING, "<SURFACE> unknown register w/ id '%s'", id);
+    Log_write(LOG_LEVELS_WARNING, "<SURFACE> unknown register w/ id `%s`", id);
     return GL_XFORM_REGISTER_A;
 }
 
@@ -116,11 +116,11 @@ static int surface_new1(lua_State *L)
     size_t buffer_size;
     void *buffer = FS_load_as_binary(file_system, file, &buffer_size);
     if (!buffer) {
-        return luaL_error(L, "<SURFACE> can't load file '%s'", file);
+        return luaL_error(L, "<SURFACE> can't load file `%s`", file);
     }
     GL_Surface_t surface;
     GL_surface_decode(&surface, buffer, buffer_size, surface_callback_palette, (void *)&display->palette);
-    Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface '%s' loaded", file);
+    Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface `%s` loaded", file);
     free(buffer);
 
     Surface_Class_t *instance = (Surface_Class_t *)lua_newuserdata(L, sizeof(Surface_Class_t));
