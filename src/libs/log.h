@@ -38,9 +38,7 @@ typedef enum _Log_Levels_t {
     Log_Levels_t_CountOf
 } Log_Levels_t;
 
-extern void Log_initialize();
-extern void Log_configure(bool enabled);
-extern void Log_redirect(FILE *stream);
+extern void Log_initialize(bool enabled, FILE *stream);
 extern void Log_write(Log_Levels_t level, const char *text, ...);
 
 #endif  /* __LIBS_LOG_H__ */

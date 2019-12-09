@@ -82,17 +82,15 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 {
     *engine = (Engine_t){ 0 }; // Ensure is cleared at first.
 
-    Log_initialize();
-    Environment_initialize(&engine->environment);
-
     FS_initialize(&engine->file_system, base_path);
 
     size_t size;
-    char *config = FS_load_as_string(&engine->file_system, "main.config", &size);
+    char *config = FS_load_as_string(&engine->file_system, "tofu.config", &size);
     Configuration_load(&engine->configuration, config);
     free(config);
 
-    Log_configure(engine->configuration.debug);
+    Log_initialize(engine->configuration.debug, NULL);
+    Environment_initialize(&engine->environment);
 
     Display_Configuration_t display_configuration = { // TODO: reorganize configuration.
             .title = engine->configuration.title,

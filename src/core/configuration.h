@@ -28,12 +28,6 @@
 
 #define MAX_CONFIGURATION_TITLE_LENGTH      128
 
-#define DEFAULT_SCREEN_WIDTH        320
-#define DEFAULT_SCREEN_HEIGHT       240
-#define DEFAULT_SCREEN_SCALE        0
-#define DEFAULT_WINDOW_TITLE        ".: Tofu Engine :."
-#define DEFAULT_FRAMES_PER_SECOND   60
-
 typedef struct _Configuration {
     char title[MAX_CONFIGURATION_TITLE_LENGTH];
     size_t width, height, scale;

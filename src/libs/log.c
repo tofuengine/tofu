@@ -53,20 +53,10 @@ static const char *_colors[Log_Levels_t_CountOf] = {
 static Log_Levels_t _level;
 static FILE *_stream;
 
-void Log_initialize()
-{
-    _level = LOG_LEVELS_ALL;
-    _stream = stderr;
-}
-
-void Log_configure(bool enabled)
+void Log_initialize(bool enabled, FILE *stream)
 {
     _level = enabled ? LOG_LEVELS_ALL : LOG_LEVELS_NONE;
-}
-
-void Log_redirect(FILE *stream)
-{
-    _stream = stream;
+    _stream = stream ? _stream : stderr;
 }
 
 void Log_write(Log_Levels_t level, const char *text, ...)

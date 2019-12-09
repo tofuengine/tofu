@@ -122,24 +122,23 @@ static bool parse(char *line, const char **key, const char **value)
 void Configuration_load(Configuration_t *configuration, const char *data)
 {
     *configuration = (Configuration_t){
-            .width = DEFAULT_SCREEN_WIDTH,
-            .height = DEFAULT_SCREEN_HEIGHT,
-            .scale = DEFAULT_SCREEN_SCALE,
+            .title = ".: Tofu Engine :.",
+            .width = 320,
+            .height = 240,
+            .scale = 0,
             .fullscreen = false,
             .vertical_sync = false,
-            .fps = DEFAULT_FRAMES_PER_SECOND,
-            .skippable_frames = DEFAULT_FRAMES_PER_SECOND / 5, // About 20% of the FPS amount.
+            .fps = 60,
+            .skippable_frames = 3, // About 20% of the FPS amount.
             .fps_cap = -1, // No capping as a default. TODO: make it run-time configurable?
             .hide_cursor = true,
             .exit_key_enabled = true,
             .debug = true
         };
-    strncpy(configuration->title, DEFAULT_WINDOW_TITLE, MAX_CONFIGURATION_TITLE_LENGTH);
 
     char line[256];
-    for (const char *ptr = data; ptr; ) {
+    for (const char *ptr = data; ptr;) {
         ptr = next(ptr, line);
-
         const char *key, *value;
         if (!parse(line, &key, &value)) {
             break;
