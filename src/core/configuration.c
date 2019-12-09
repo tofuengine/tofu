@@ -136,6 +136,10 @@ void Configuration_load(Configuration_t *configuration, const char *data)
             .debug = true
         };
 
+    if (!data) {
+        return;
+    }
+
     char line[256];
     for (const char *ptr = data; ptr;) {
         ptr = next(ptr, line);
