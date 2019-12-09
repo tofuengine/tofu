@@ -73,7 +73,7 @@ static int bank_new(lua_State *L)
     size_t cell_width = (size_t)lua_tointeger(L, 2);
     size_t cell_height = (size_t)lua_tointeger(L, 3);
 
-    Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INTERPRETER));
+    File_System_t *file_system = (File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     GL_Sheet_t sheet;
@@ -82,7 +82,7 @@ static int bank_new(lua_State *L)
         const char *file = lua_tostring(L, 1);
 
         size_t buffer_size;
-        void *buffer = FS_load_as_binary(&interpreter->file_system, file, &buffer_size);
+        void *buffer = FS_load_as_binary(file_system, file, &buffer_size);
         if (!buffer) {
             return luaL_error(L, "<BANK> can't load file '%s'", file);
         }

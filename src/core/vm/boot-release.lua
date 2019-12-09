@@ -26,16 +26,7 @@ local Timer = require("tofu.util").Timer
 local Tofu = Class.define() -- To be precise, the class name is irrelevant since it's locally used.
 
 function Tofu:__ctor()
-  self.main = nil
-end
-
-function Tofu:setup()
-  self.configuration = require("configuration")
-  return self.configuration
-end
-
-function Tofu:prepare()
-  local Main = require("main") -- Lazily require, to permit a `Tofu:setup()` call prior main script loading.
+  local Main = require("main") -- Lazily require.
   self.main = Main.new()
 end
 

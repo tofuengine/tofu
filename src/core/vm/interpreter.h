@@ -26,7 +26,6 @@
 #include <limits.h>
 #include <stdbool.h>
 
-#include <core/configuration.h>
 #include <core/environment.h>
 #include <core/io/fs.h>
 
@@ -36,13 +35,10 @@ typedef struct _Interpreter_t {
     float gc_age;
 
     lua_State *state; // TODO: rename to `L`?
-
-    File_System_t file_system;
 } Interpreter_t;
 
-extern bool Interpreter_initialize(Interpreter_t *interpreter, const char *base_path, Configuration_t *configuration, const void *userdatas[]);
+extern bool Interpreter_initialize(Interpreter_t *interpreter, const File_System_t *file_system, const void *userdatas[]);
 extern void Interpreter_terminate(Interpreter_t *interpreter);
-extern bool Interpreter_prepare(Interpreter_t *interpreter);
 extern bool Interpreter_process(Interpreter_t *interpreter);
 extern bool Interpreter_update(Interpreter_t *interpreter, float delta_time);
 extern bool Interpreter_render(Interpreter_t *interpreter, float ratio);

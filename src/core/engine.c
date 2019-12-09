@@ -85,20 +85,12 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
     Log_initialize();
     Environment_initialize(&engine->environment);
 
-    // The interpreter is the first to be loaded, since it also manages the configuration. Later on, we will call to
-    // initialization function once the sub-systems are ready.
-    const void *userdatas[] = {
-            &engine->interpreter,
-            &engine->environment,
-            &engine->display,
-            &engine->input,
-            NULL
-        };
-    bool result = Interpreter_initialize(&engine->interpreter, base_path, &engine->configuration, userdatas);
-    if (!result) {
-        Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't initialize interpreter");
-        return false;
-    }
+    FS_initialize(&engine->file_system, base_path);
+
+    size_t size;
+    char *config = FS_load_as_string(&engine->file_system, "main.config", &size);
+    Configuration_load(&engine->configuration, config);
+    free(config);
 
     Log_configure(engine->configuration.debug);
 
@@ -111,10 +103,10 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             .scale = engine->configuration.scale,
             .hide_cursor = engine->configuration.hide_cursor
         };
-    result = Display_initialize(&engine->display, &display_configuration);
+    bool result = Display_initialize(&engine->display, &display_configuration);
     if (!result) {
         Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't initialize display");
-        Interpreter_terminate(&engine->interpreter);
+        FS_terminate(&engine->file_system);
         return false;
     }
 
@@ -124,31 +116,53 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
     result = Input_initialize(&engine->input, &input_configuration, engine->display.window);
     if (!result) {
         Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't initialize input");
-        Interpreter_terminate(&engine->interpreter);
         Display_terminate(&engine->display);
+        FS_terminate(&engine->file_system);
         return false;
     }
 
     result = Audio_initialize(&engine->audio, &(Audio_Configuration_t){ .channels = 2, .sample_rate = 44100, .voices = 8 });
     if (!result) {
         Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't initialize audio");
-        Interpreter_terminate(&engine->interpreter);
-        Display_terminate(&engine->display);
         Input_terminate(&engine->input);
+        Display_terminate(&engine->display);
+        FS_terminate(&engine->file_system);
         return false;
     }
 
-    return Interpreter_prepare(&engine->interpreter);
+    // The interpreter is the first to be loaded, since it also manages the configuration. Later on, we will call to
+    // initialization function once the sub-systems are ready.
+    const void *userdatas[] = {
+            &engine->interpreter,
+            &engine->file_system,
+            &engine->environment,
+            &engine->display,
+            &engine->input,
+            NULL
+        };
+    result = Interpreter_initialize(&engine->interpreter, &engine->file_system, userdatas);
+    if (!result) {
+        Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't initialize interpreter");
+        Audio_terminate(&engine->audio);
+        Input_terminate(&engine->input);
+        Display_terminate(&engine->display);
+        FS_terminate(&engine->file_system);
+        return false;
+    }
+
+    return true;
 }
 
 void Engine_terminate(Engine_t *engine)
 {
     Interpreter_terminate(&engine->interpreter); // Terminate the interpreter to unlock all resources.
+    Audio_terminate(&engine->audio);
     Display_terminate(&engine->display);
     Input_terminate(&engine->input);
-    Audio_terminate(&engine->audio);
 
     Environment_terminate(&engine->environment);
+
+    FS_terminate(&engine->file_system);
 #if DEBUG
     stb_leakcheck_dumpmem();
 #endif

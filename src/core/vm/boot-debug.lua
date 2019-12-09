@@ -47,24 +47,11 @@ end
 
 function Tofu:__ctor()
   self.states = {
-    ["idle"] = {
-      enter = function(_)
-          self:switch_to(self.configuration["splash-screen"] and "splash" or "running")
-        end,
-      leave = function(_)
-        end,
-      process = function(_)
-        end,
-      update = function(_, _)
-        end,
-      render = function(_, _)
-        end
-    },
     ["splash"] = {
       enter = function(me)
           Canvas.reset()
           me.font = Font.new(get_font_name(Canvas.width(), 1.5), 0, 255)
-          me.duration = self.configuration["splash-screen-duration"] or 10.0
+          me.duration = 5.0
           me.age = 0.0
         end,
       leave = function(me)
@@ -140,15 +127,7 @@ function Tofu:__ctor()
     }
   }
   self.queue = {}
-end
-
-function Tofu:setup()
-  self.configuration = require("configuration")
-  return self.configuration
-end
-
-function Tofu:prepare()
-  self:switch_to("idle")
+  self:switch_to("splash")
 end
 
 function Tofu:process()

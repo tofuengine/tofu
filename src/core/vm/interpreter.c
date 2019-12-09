@@ -62,8 +62,6 @@ static const uint8_t _boot_lua[] = {
 };
 
 typedef enum _Methods_t {
-    METHOD_SETUP, // TODO: merge setup and prepare?
-    METHOD_PREPARE,
     METHOD_PROCESS,
     METHOD_UPDATE,
     METHOD_RENDER,
@@ -71,8 +69,6 @@ typedef enum _Methods_t {
 } Methods_t;
 
 static const char *_methods[] = {
-    "setup",
-    "prepare",
     "process",
     "update",
     "render",
@@ -216,80 +212,9 @@ static int call(lua_State *L, Methods_t method, int nargs, int nresults)
 #endif
 }
 
-void parse(lua_State *L, Configuration_t *configuration)
-{
-    *configuration = (Configuration_t){
-            .width = DEFAULT_SCREEN_WIDTH,
-            .height = DEFAULT_SCREEN_HEIGHT,
-            .scale = DEFAULT_SCREEN_SCALE,
-            .fullscreen = false,
-            .vertical_sync = false,
-            .fps = DEFAULT_FRAMES_PER_SECOND,
-            .skippable_frames = DEFAULT_FRAMES_PER_SECOND / 5, // About 20% of the FPS amount.
-            .fps_cap = -1, // No capping as a default. TODO: make it run-time configurable?
-            .hide_cursor = true,
-            .exit_key_enabled = true,
-            .debug = true
-        };
-    strncpy(configuration->title, DEFAULT_WINDOW_TITLE, MAX_CONFIGURATION_TITLE_LENGTH);
-
-    if (!lua_istable(L, -1)) {
-        Log_write(LOG_LEVELS_WARNING, "<VM> setup method returned no value");
-        return;
-    }
-
-    lua_pushnil(L); // first key
-    while (lua_next(L, -2)) { // Table is at the top, prior pushing NIL!
-        const char *key = lua_tostring(L, -2); // uses 'key' (at index -2) and 'value' (at index -1)
-
-        if (strcmp(key, "title") == 0) {
-            strncpy(configuration->title, lua_tostring(L, -1), MAX_CONFIGURATION_TITLE_LENGTH);
-        } else
-        if (strcmp(key, "width") == 0) {
-            configuration->width = (size_t)lua_tointeger(L, -1);
-        } else
-        if (strcmp(key, "height") == 0) {
-            configuration->height = (size_t)lua_tointeger(L, -1);
-        } else
-        if (strcmp(key, "scale") == 0) {
-            configuration->scale = (size_t)lua_tointeger(L, -1);
-        } else
-        if (strcmp(key, "fullscreen") == 0) {
-            configuration->fullscreen = lua_toboolean(L, -1);
-        } else
-        if (strcmp(key, "vertical-sync") == 0) {
-            configuration->vertical_sync = lua_toboolean(L, -1);
-        } else
-        if (strcmp(key, "fps") == 0) {
-            configuration->fps = (size_t)lua_tointeger(L, -1);
-            configuration->skippable_frames = configuration->fps / 5; // Keep synched. About 20% of the FPS amount.
-        } else
-        if (strcmp(key, "skippable-frames") == 0) {
-            size_t suggested = configuration->fps / 5;
-            configuration->skippable_frames = (size_t)imin(lua_tointeger(L, -1), suggested); // TODO: not sure if `imin` or `imax`. :P
-        } else
-        if (strcmp(key, "fps-cap") == 0) {
-            configuration->fps_cap = (size_t)lua_tointeger(L, -1);
-        } else
-        if (strcmp(key, "hide-cursor") == 0) {
-            configuration->hide_cursor = lua_toboolean(L, -1);
-        } else
-        if (strcmp(key, "exit-key-enabled") == 0) {
-            configuration->exit_key_enabled = lua_toboolean(L, -1);
-        } else
-        if (strcmp(key, "debug") == 0) {
-            configuration->debug = lua_toboolean(L, -1);
-        }
-
-        lua_pop(L, 1); // removes 'value'; keeps 'key' for next iteration
-    }
-}
-
-bool Interpreter_initialize(Interpreter_t *interpreter, const char *base_path, Configuration_t *configuration, const void *userdatas[])
+bool Interpreter_initialize(Interpreter_t *interpreter, const File_System_t *file_system, const void *userdatas[])
 {
     *interpreter = (Interpreter_t){ 0 };
-
-    FS_initialize(&interpreter->file_system, base_path);
 
     interpreter->state = lua_newstate(allocate, NULL); // No user-data is passed.
     if (!interpreter->state) {
@@ -307,7 +232,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const char *base_path, C
     }
     modules_initialize(interpreter->state, nup);
 
-    lua_pushlightuserdata(interpreter->state, (void *)&interpreter->file_system);
+    lua_pushlightuserdata(interpreter->state, (void *)file_system);
     luaX_overridesearchers(interpreter->state, custom_searcher, 1);
 
 #ifdef __DEBUG_VM_CALLS__
@@ -320,7 +245,6 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const char *base_path, C
 #endif
 #endif
 
-    // TODO: execute a Lua script that load and return the configuration, ditching the setup call.
     size_t version = (size_t)*lua_version(interpreter->state);
     Log_write(LOG_LEVELS_INFO, "<VM> Interpreter: Lua %d.%d", version / 100, version % 100);
 
@@ -328,19 +252,13 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const char *base_path, C
     if (result != 0) {
         Log_write(LOG_LEVELS_FATAL, "<VM> can't interpret boot script");
         lua_close(interpreter->state);
-        FS_terminate(&interpreter->file_system);
         return false;
     }
 
     if (!detect(interpreter->state, -1, _methods)) {
         lua_close(interpreter->state);
-        FS_terminate(&interpreter->file_system);
         return false;
     }
-
-    call(interpreter->state, METHOD_SETUP, 0, 1);
-    parse(interpreter->state, configuration);
-    lua_pop(interpreter->state, 1); // Remove the configuration table from the stack.
 
     return true;
 }
@@ -351,13 +269,6 @@ void Interpreter_terminate(Interpreter_t *interpreter)
 
     lua_gc(interpreter->state, LUA_GCCOLLECT, 0);
     lua_close(interpreter->state);
-
-    FS_terminate(&interpreter->file_system);
-}
-
-bool Interpreter_prepare(Interpreter_t *interpreter)
-{
-    return call(interpreter->state, METHOD_PREPARE, 0, 0) == LUA_OK;
 }
 
 bool Interpreter_process(Interpreter_t *interpreter)

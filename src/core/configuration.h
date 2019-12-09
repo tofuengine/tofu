@@ -48,4 +48,6 @@ typedef struct _Configuration {
     // TODO: key-remapping?
 } Configuration_t;
 
+extern void Configuration_load(Configuration_t *configuration, const char *data);
+
 #endif  /* __CONFIGURATION_H__ */

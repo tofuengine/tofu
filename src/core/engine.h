@@ -36,6 +36,8 @@
 #include <limits.h>
 
 typedef struct _Engine_t {
+    File_System_t file_system;
+
     Configuration_t configuration;
 
     Interpreter_t interpreter;

@@ -110,11 +110,11 @@ static int surface_new1(lua_State *L)
     LUAX_SIGNATURE_END
     const char *file = lua_tostring(L, 1);
 
-    Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INTERPRETER));
+    File_System_t *file_system = (File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     size_t buffer_size;
-    void *buffer = FS_load_as_binary(&interpreter->file_system, file, &buffer_size);
+    void *buffer = FS_load_as_binary(file_system, file, &buffer_size);
     if (!buffer) {
         return luaL_error(L, "<SURFACE> can't load file '%s'", file);
     }

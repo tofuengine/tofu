@@ -59,10 +59,10 @@ static int file_as_string(lua_State *L)
     LUAX_SIGNATURE_END
     const char *file = lua_tostring(L, 1);
 
-    Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INTERPRETER));
+    File_System_t *file_system = (File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
 
     size_t size;
-    char *buffer = FS_load_as_string(&interpreter->file_system, file, &size);
+    char *buffer = FS_load_as_string(file_system, file, &size);
     if (!buffer) {
         luaL_error(L, "<FILE> can't load file '%s'", file);
     }
@@ -79,10 +79,10 @@ static int file_as_binary(lua_State *L)
     LUAX_SIGNATURE_END
     const char *file = lua_tostring(L, 1);
 
-    Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INTERPRETER));
+    File_System_t *file_system = (File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
 
     size_t size;
-    void *buffer = FS_load_as_binary(&interpreter->file_system, file, &size);
+    void *buffer = FS_load_as_binary(file_system, file, &size);
     if (!buffer) {
         luaL_error(L, "<FILE> can't load file '%s'", file);
     }
