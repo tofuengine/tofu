@@ -668,7 +668,7 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
     GL_Point_t *stack = NULL;
     arrpush(stack, seed);
 
-    const int skip = state->surface->width;
+    const int dskip = state->surface->width;
 
     while (arrlen(stack) > 0) {
         const GL_Point_t position = arrpop(stack);
@@ -690,7 +690,7 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
         while (x <= clipping_region->x1 && *dptr == match) {
             *dptr = replacement;
 
-            const GL_Pixel_t pixel_above = *(dptr - skip);
+            const GL_Pixel_t pixel_above = *(dptr - dskip);
             if (!above && y >= clipping_region->y0 && pixel_above == match) {
                 const GL_Point_t p = (GL_Point_t){ .x = x, .y = y - 1 };
                 arrpush(stack, p);
@@ -700,7 +700,7 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
                 above = false;
             }
 
-            const GL_Pixel_t pixel_below = *(dptr + skip);
+            const GL_Pixel_t pixel_below = *(dptr + dskip);
             if (!below && y < clipping_region->y1 && pixel_below == match) {
                 const GL_Point_t p = (GL_Point_t){ .x = x, .y = y + 1 };
                 arrpush(stack, p);
