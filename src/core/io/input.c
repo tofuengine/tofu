@@ -87,6 +87,21 @@ void Input_process(Input_t *input)
         GLFW_KEY_SPACE,
         GLFW_KEY_ESCAPE
     };
+    static const int gamepad[Input_Keys_t_CountOf] = {
+        GLFW_GAMEPAD_BUTTON_DPAD_UP,
+        GLFW_GAMEPAD_BUTTON_DPAD_DOWN,
+        GLFW_GAMEPAD_BUTTON_DPAD_LEFT,
+        GLFW_GAMEPAD_BUTTON_DPAD_RIGHT,
+        GLFW_GAMEPAD_BUTTON_LEFT_BUMPER,
+        GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER,
+        GLFW_GAMEPAD_BUTTON_Y,
+        GLFW_GAMEPAD_BUTTON_X,
+        GLFW_GAMEPAD_BUTTON_B,
+        GLFW_GAMEPAD_BUTTON_A,
+        GLFW_GAMEPAD_BUTTON_BACK,
+        GLFW_GAMEPAD_BUTTON_START,
+        GLFW_GAMEPAD_BUTTON_GUIDE
+    };
     static const int buttons[Input_Buttons_t_CountOf] = {
         GLFW_MOUSE_BUTTON_LEFT,
         GLFW_MOUSE_BUTTON_MIDDLE,
@@ -120,6 +135,40 @@ void Input_process(Input_t *input)
 
             key->state.triggered = false;
             Log_write(LOG_LEVELS_TRACE, "<INPUT> button #%d held for %.3fs %d %d %d", i, key->time, key->state.down, key->state.pressed, key->state.released);
+        }
+    }
+
+    int result = glfwJoystickPresent(0);
+    if (result == GLFW_TRUE) {
+        GLFWgamepadstate state;
+        int result = glfwGetGamepadState(0, &state);
+        if (result == GLFW_TRUE) {
+            for (int i = Input_Keys_t_First; i <= Input_Keys_t_Last; ++i) {
+                Input_Key_t *key = &keyboard->keys[i];
+
+                bool was_down = key->state.down;
+                bool is_down = state.buttons[gamepad[i]] == GLFW_PRESS;
+
+                if (!key->state.triggered) { // If not triggered use the current physical status.
+                    key->state.down = is_down;
+                    key->state.pressed = !was_down && is_down;
+                    key->state.released = was_down && !is_down;
+
+                    if (key->state.pressed && key->period > 0.0f) { // On press, track the trigger state and reset counter.
+                        key->state.triggered = true;
+                        key->time = 0.0f;
+                        Log_write(LOG_LEVELS_TRACE, "<INPUT> key #%d triggered, %.3fs %d %d %d", i, key->time, key->state.down, key->state.pressed, key->state.released);
+                    }
+                } else
+                if (!is_down) {
+                    key->state.down = false;
+                    key->state.pressed = false;
+                    key->state.released = was_down; // Track release is was previously down.
+
+                    key->state.triggered = false;
+                    Log_write(LOG_LEVELS_TRACE, "<INPUT> button #%d held for %.3fs %d %d %d", i, key->time, key->state.down, key->state.pressed, key->state.released);
+                }
+            }
         }
     }
 
