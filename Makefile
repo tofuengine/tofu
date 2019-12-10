@@ -14,7 +14,7 @@ DFLAGS=-v -e '1/1 "0x%02X,"'
 
 COMPILER=cc
 CWARNINGS=-Wall -Wextra -Werror -Wno-unused-parameter -Wpedantic
-CFLAGS=-O0 -g -DDEBUG -D_DEFAULT_SOURCE -DLUA_32BITS -DLUA_FLOORN2I=1 -DLUA_USE_LINUX -DSTBI_ONLY_PNG -DSTBI_NO_STDIO -std=c99 -Isrc -Iexternal
+CFLAGS=-Og -g -DDEBUG -D_DEFAULT_SOURCE -DLUA_32BITS -DLUA_FLOORN2I=1 -DLUA_USE_LINUX -DSTBI_ONLY_PNG -DSTBI_NO_STDIO -std=c99 -Isrc -Iexternal
 #CFLAGS=-O3 -DRELEASE -D_DEFAULT_SOURCE -DLUA_32BITS -DLUA_FLOORN2I=1 -DLUA_USE_LINUX -DSTBI_ONLY_PNG -DSTBI_NO_STDIO -std=c99 -Isrc -Iexternal
 # -Ofast => -O3 -ffast-math
 # -Os => -O2, favouring size
@@ -102,6 +102,11 @@ shades: $(TARGET)
 	@echo "Launching *shades* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/shades
 	@./$(TARGET) ./demos/shades
+
+gamepad: $(TARGET)
+	@echo "Launching *gamepad* application!"
+	@$(ANALYZER) $(AFLAGS) ./demos/gamepad
+	@./$(TARGET) ./demos/gamepad
 
 valgrind: $(TARGET)
 	@echo "Valgrind *$(DEMO)* application!"
