@@ -31,7 +31,6 @@
 typedef struct _GL_Surface_t {
     size_t width, height;
     GL_Pixel_t *data;
-    GL_Pixel_t **data_rows;
     size_t data_size;
 } GL_Surface_t;
 

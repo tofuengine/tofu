@@ -25,6 +25,7 @@
 #include <config.h>
 #include <core/environment.h>
 #include <core/io/display.h>
+#include <libs/imath.h>
 #include <libs/log.h>
 #include <libs/gl/gl.h>
 #include <libs/stb.h>
@@ -943,7 +944,7 @@ static int canvas_peek(lua_State *L)
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = context->state.surface;
-    GL_Pixel_t index = surface->data_rows[y % surface->height][x % surface->width];
+    GL_Pixel_t index = *IFMA(surface->data, surface->width, x, y);
 
     lua_pushinteger(L, index);
 
@@ -967,7 +968,7 @@ static int canvas_poke(lua_State *L)
 
     const GL_Context_t *context = &display->gl;
     GL_Surface_t *surface = context->state.surface;
-    surface->data_rows[y % surface->height][x % surface->width] = index;
+    *IFMA(surface->data, surface->width, x, y) = index;
 
     return 0;
 }

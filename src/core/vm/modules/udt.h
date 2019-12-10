@@ -68,7 +68,6 @@ typedef struct _Grid_Class_t {
     const void *bogus;
     size_t width, height;
     Cell_t *data;
-    Cell_t **data_rows; // Precomputed pointers to the line of data.
     size_t data_size;
 } Grid_Class_t;
 

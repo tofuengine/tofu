@@ -50,9 +50,7 @@ static void point(const GL_Surface_t *surface, const GL_Quad_t *clipping_region,
         return;
     }
 
-    GL_Pixel_t *dptr = surface->data_rows[y] + x;
-
-    *dptr = index;
+    *IFMA(surface->data, surface->width, x, y) = index;
 }
 
 // https://sighack.com/post/cohen-sutherland-line-clipping-algorithm
@@ -135,6 +133,10 @@ static void line(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, 
     }
 
 #ifdef __DDA__
+    GL_Pixel_t *ddata = surface->data;
+
+    const int dwidth = surface->width;
+
     const int dx = x1 - x0;
     const int dy = y1 - y0;
 
@@ -146,23 +148,27 @@ static void line(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, 
     float x = x0 + 0.5f;
     float y = y0 + 0.5f;
     for (int i = delta + 1; i; --i) { // One more step, to reach and ending pixel.
-        GL_Pixel_t *dptr = surface->data_rows[(int)y] + (int)x;
+        GL_Pixel_t *dptr = IFMA(ddata, dwidth, (int)x, (int)y);
         *dptr = index;
 
         x += xin;
         y += yin;
     }
 #else
+    const int dwidth = surface->width;
+
     const int dx = iabs(x1 - x0);
     const int dy = -iabs(y1 - y0);
 
     const int sx = x0 < x1 ? 1 : -1;
-    const int sy = y0 < y1 ? surface->width : -surface->width;
+    const int sy = y0 < y1 ? dwidth : -dwidth;
 
     int err = dx + dy;
 
-    GL_Pixel_t *dptr = surface->data_rows[y0] + x0;
-    GL_Pixel_t *eod = surface->data_rows[y1] + x1;
+    GL_Pixel_t *ddata = surface->data;
+
+    GL_Pixel_t *dptr = IFMA(ddata, dwidth, x0, y0);
+    GL_Pixel_t *eod = IFMA(ddata, dwidth, x1, y1);
 
     for (;;) {
         *dptr = index;
@@ -210,7 +216,11 @@ static void hline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region,
         return;
     }
 
-    GL_Pixel_t *dptr = surface->data_rows[drawing_region.y0] + drawing_region.x0;
+    GL_Pixel_t *ddata = surface->data;
+
+    const int dwidth = surface->width;
+
+    GL_Pixel_t *dptr = IFMA(ddata, dwidth, drawing_region.x0, drawing_region.y0);
 
     for (int i = width; i; --i) {
         *(dptr++) = index;
@@ -245,13 +255,17 @@ static void vline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region,
         return;
     }
 
-    GL_Pixel_t *dptr = surface->data_rows[drawing_region.y0] + drawing_region.x0;
+    GL_Pixel_t *ddata = surface->data;
 
-    const int skip = surface->width;
+    const int dwidth = surface->width;
+
+    GL_Pixel_t *dptr = IFMA(ddata, dwidth, drawing_region.x0, drawing_region.y0);
+
+    const int dskip = dwidth;
 
     for (int i = height; i; --i) {
         *dptr = index;
-        dptr += skip;
+        dptr += dskip;
     }
 }
 
@@ -366,9 +380,13 @@ void GL_context_process(const GL_Context_t *context, GL_Rectangle_t rectangle)
         return;
     }
 
-    GL_Pixel_t *sdptr = surface->data_rows[drawing_region.y0] + drawing_region.x0;
+    GL_Pixel_t *sddata = surface->data;
 
-    const int skip = surface->width - width;
+    const int sdwidth = surface->width;
+
+    GL_Pixel_t *sdptr = IFMA(sddata, sdwidth, drawing_region.x0, drawing_region.y0);
+
+    const int sdskip = sdwidth - width;
 
     for (int i = height; i; --i) {
         for (int j = width; j; --j) {
@@ -379,7 +397,7 @@ void GL_context_process(const GL_Context_t *context, GL_Rectangle_t rectangle)
                 *(sdptr++) = index;
             }
         }
-        sdptr += skip;
+        sdptr += sdskip;
     }
 }
 
@@ -423,15 +441,19 @@ void GL_primitive_filled_rectangle(const GL_Context_t *context, GL_Rectangle_t r
         return;
     }
 
-    GL_Pixel_t *dptr = surface->data_rows[drawing_region.y0] + drawing_region.x0;
+    GL_Pixel_t *ddata = surface->data;
 
-    const int skip = surface->width - width;
+    const int dwidth = surface->width;
+
+    GL_Pixel_t *dptr = IFMA(ddata, dwidth, drawing_region.x0, drawing_region.y0);
+
+    const int dskip = dwidth - width;
 
     for (int i = height; i; --i) {
         for (int j = width; j; --j) {
             *(dptr++) = index;
         }
-        dptr += skip;
+        dptr += dskip;
     }
 }
 
@@ -504,9 +526,13 @@ void GL_primitive_filled_triangle(const GL_Context_t *context, GL_Point_t a, GL_
     int CY2 = C2 + DX23 * drawing_region.y0 - DY23 * drawing_region.x0;
     int CY3 = C3 + DX31 * drawing_region.y0 - DY31 * drawing_region.x0;
 
-    GL_Pixel_t *dptr = surface->data_rows[drawing_region.y0] + drawing_region.x0;
+    GL_Pixel_t *ddata = surface->data;
 
-    const int skip = surface->width;
+    const int dwidth = surface->width;
+
+    GL_Pixel_t *dptr = IFMA(ddata, dwidth, drawing_region.x0, drawing_region.y0);
+
+    const int dskip = dwidth;
 
     for (int y = 0; y <= height; ++y) { // Pinada's edge function is linear, we can cast it...
         int CX1 = CY1;
@@ -532,7 +558,7 @@ void GL_primitive_filled_triangle(const GL_Context_t *context, GL_Point_t a, GL_
         for (int i = count; i; --i) { // Backward copy, simpler math.
             *(dptr--) = index;
         }
-        dptr += skip - offset;
+        dptr += dskip - offset;
     }
 }
 
@@ -632,7 +658,11 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
         return;
     }
 
-    const GL_Pixel_t match = *surface->data_rows[seed.y] + seed.x;
+    GL_Pixel_t *ddata = surface->data;
+
+    const int dwidth = surface->width;
+
+    const GL_Pixel_t match = *IFMA(ddata, dwidth, seed.x, seed.y);
     const GL_Pixel_t replacement = shifting[index];
 
     GL_Point_t *stack = NULL;
@@ -646,7 +676,7 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
         int x = position.x;
         int y = position.y;
 
-        GL_Pixel_t *dptr = surface->data_rows[y] + x;
+        GL_Pixel_t *dptr = IFMA(ddata, dwidth, x, y);
         while (x >= clipping_region->x0 && *dptr == match) {
             --x;
             --dptr;

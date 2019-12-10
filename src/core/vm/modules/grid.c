@@ -24,6 +24,7 @@
 
 #include <config.h>
 #include <core/vm/interpreter.h>
+#include <libs/imath.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 
@@ -90,14 +91,9 @@ static int grid_new(lua_State *L)
 
     size_t data_size = width * height;
     Cell_t *data = malloc(data_size * sizeof(Cell_t));
-    Cell_t **data_rows = malloc(height * sizeof(Cell_t *));
 
-    if (!data || !data_rows) {
+    if (!data) {
         return luaL_error(L, "<GRID> can't allocate memory");
-    }
-
-    for (size_t i = 0; i < height; ++i) { // Precompute the pointers to the data rows for faster access (old-school! :D).
-        data_rows[i] = data + (i * width);
     }
 
     Cell_t *ptr = data;
@@ -129,7 +125,6 @@ static int grid_new(lua_State *L)
             .width = width,
             .height = height,
             .data = data,
-            .data_rows = data_rows,
             .data_size = data_size
         };
 
@@ -150,7 +145,6 @@ static int grid_gc(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, "<GRID> finalizing grid #%p", instance);
 
     free(instance->data);
-    free(instance->data_rows);
 
     return 0;
 }
@@ -239,7 +233,7 @@ static int grid_stride(lua_State *L)
     }
 #endif
 
-    Cell_t *ptr = instance->data_rows[row] + column;
+    Cell_t *ptr = IFMA(instance->data, instance->width, column, row);
     Cell_t *eod = ptr + (instance->data_size < amount ? instance->data_size : amount);
 
     if (type == LUA_TTABLE) {
@@ -286,9 +280,7 @@ static int grid_peek(lua_State *L)
     }
 #endif
 
-    Cell_t *data = instance->data_rows[row];
-
-    Cell_t value = data[column];
+    Cell_t value = *IFMA(instance->data, instance->width, column, row);
 
     lua_pushnumber(L, (lua_Number)value);
 
@@ -316,9 +308,7 @@ static int grid_poke(lua_State *L)
     }
 #endif
 
-    Cell_t *data = instance->data_rows[row];
-
-    data[column] = value;
+    *IFMA(instance->data, instance->width, column, row) = value;
 
     return 0;
 }
@@ -360,20 +350,25 @@ static int grid_process(lua_State *L)
 
     Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INTERPRETER));
 
-    const Cell_t *data = instance->data;
+    Cell_t *data = instance->data;
 
-    for (size_t row = 0; row < instance->height; ++row) {
-        for (size_t column = 0; column < instance->width; ++column) {
+    const size_t width = instance->width;
+    const size_t height = instance->height;
+
+    const Cell_t *ptr = data;
+
+    for (size_t row = 0; row < height; ++row) {
+        for (size_t column = 0; column < width; ++column) {
             lua_pushvalue(L, 2); // Copy directly from stack argument, don't need to ref/unref (won't be GC-ed meanwhile)
             lua_pushinteger(L, column);
             lua_pushinteger(L, row);
-            lua_pushnumber(L, *(data++));
+            lua_pushnumber(L, *(ptr++));
             Interpreter_call(interpreter, 3, 3);
 
-            size_t column = lua_tointeger(L, -3);
-            size_t row = lua_tointeger(L, -2);
-            Cell_t value = lua_tonumber(L, -1);
-            instance->data_rows[row][column] = value;
+            size_t dcolumn = lua_tointeger(L, -3);
+            size_t drow = lua_tointeger(L, -2);
+            Cell_t dvalue = lua_tonumber(L, -1);
+            *IFMA(data, width, dcolumn, drow) = dvalue;
 
             lua_pop(L, 3);
         }

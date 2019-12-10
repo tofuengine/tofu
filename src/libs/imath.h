@@ -23,9 +23,27 @@
 #ifndef __LIBS_IMATH_H__
 #define __LIBS_IMATH_H__
 
-extern int iabs(int v);
-extern int imod(int a, int b);
-extern int imin(int a, int b);
-extern int imax(int a, int b);
+// Fused multiply-and-add operation.
+#define IFMA(p, w, x, y)     ((p) + (y) * (w) + (x))
+
+static inline int iabs(int v)
+{
+    return v > 0 ? v : -v;
+}
+
+static inline int imod(int a, int b)
+{
+    return ((a % b) + b) % b; // Solves the `-b` case.
+}
+
+static inline int imin(int a, int b)
+{
+    return a < b ? a : b;
+}
+
+static inline int imax(int a, int b)
+{
+    return a > b ? a : b;
+}
 
 #endif  /* __LIBS_IMATH_H__ */

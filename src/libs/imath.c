@@ -22,22 +22,3 @@
 
 #include "imath.h"
 
-int iabs(int v)
-{
-    return v > 0 ? v : -v;
-}
-
-int imod(int a, int b)
-{
-    return ((a % b) + b) % b; // Solves the `-b` case.
-}
-
-int imin(int a, int b)
-{
-    return a < b ? a : b;
-}
-
-int imax(int a, int b)
-{
-    return a > b ? a : b;
-}

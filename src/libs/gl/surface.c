@@ -53,22 +53,12 @@ bool GL_surface_create(GL_Surface_t *surface, size_t width, size_t height)
         return false;
     }
 
-    GL_Pixel_t **data_rows = malloc(height * sizeof(GL_Pixel_t *));
-    if (!data_rows) {
-        free(data);
-        return false;
-    }
-    for (size_t i = 0; i < height; ++i) {
-        data_rows[i] = data + (width * i);
-    }
-
     Log_write(LOG_LEVELS_DEBUG, "<GL> surface created at #%p (%dx%d)", data, width, height);
 
     *surface = (GL_Surface_t){
             .width = width,
             .height = height,
             .data = data,
-            .data_rows = data_rows,
             .data_size = width * height
         };
 
@@ -78,7 +68,6 @@ bool GL_surface_create(GL_Surface_t *surface, size_t width, size_t height)
 void GL_surface_delete(GL_Surface_t *surface)
 {
     free(surface->data);
-    free(surface->data_rows);
     Log_write(LOG_LEVELS_DEBUG, "<GL> surface at #%p deleted", surface->data);
 }
 
