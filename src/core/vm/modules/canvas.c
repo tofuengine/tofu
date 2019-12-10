@@ -944,7 +944,7 @@ static int canvas_peek(lua_State *L)
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = context->state.surface;
-    GL_Pixel_t index = *IFMA(surface->data, surface->width, x, y);
+    GL_Pixel_t index = surface->data[y * surface->width + x];
 
     lua_pushinteger(L, index);
 
@@ -968,7 +968,7 @@ static int canvas_poke(lua_State *L)
 
     const GL_Context_t *context = &display->gl;
     GL_Surface_t *surface = context->state.surface;
-    *IFMA(surface->data, surface->width, x, y) = index;
+    surface->data[y * surface->width + x] = index;
 
     return 0;
 }

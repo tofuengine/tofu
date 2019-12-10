@@ -34,7 +34,7 @@
 static inline void pixel(const GL_Context_t *context, int x, int y, int index)
 {
     GL_Surface_t *surface = context->state->surface;
-    *IFMA(surface->data, surface->width, x, y) = 240 + (index % 16);
+    surface->data[y * surface->width + x]= 240 + (index % 16);
 }
 #endif
 
@@ -88,8 +88,8 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
     const int swidth = surface->width;
     const int dwidth = state->surface->width;
 
-    const GL_Pixel_t *sptr = IFMA(sdata, swidth, area.x + skip_x, area.y + skip_y);
-    GL_Pixel_t *dptr = IFMA(ddata, dwidth, drawing_region.x0, drawing_region.y0);
+    const GL_Pixel_t *sptr = sdata + (area.y + skip_y) * swidth + (area.x + skip_x);
+    GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
     const int sskip = swidth - width;
     const int dskip = dwidth - width;
@@ -194,7 +194,7 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
     const int swidth = surface->width;
     const int dwidth = state->surface->width;
 
-    GL_Pixel_t *dptr = IFMA(ddata, dwidth, drawing_region.x0, drawing_region.y0);
+    GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
     const size_t dskip = dwidth - width;
 
@@ -243,7 +243,7 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
 #endif
         float v = ov;
         for (int i = height; i; --i) {
-            const GL_Pixel_t *sptr = IFMA(sdata, swidth, 0, (int)v);
+            const GL_Pixel_t *sptr = sdata + (int)v * swidth;
 
             float u = ou;
             for (int j = width; j; --j) {
@@ -379,7 +379,7 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const int swidth = surface->width;
     const int dwidth = state->surface->width;
 
-    GL_Pixel_t *dptr = IFMA(ddata, dwidth, drawing_region.x0, drawing_region.y0);
+    GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
     const int dskip = dwidth - width;
 
@@ -440,7 +440,7 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
 #ifdef __DEBUG_GRAPHICS__
                     pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
-                    const GL_Pixel_t *sptr = IFMA(sdata, swidth, x, y);
+                    const GL_Pixel_t *sptr = sdata + y * swidth + x;
                     GL_Pixel_t index = shifting[*sptr];
                     if (!transparent[index]) {
                         *dptr = index;
@@ -522,7 +522,7 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
     const int swidth = surface->width;
     const int dwidth = state->surface->width;
 
-    GL_Pixel_t *dptr = IFMA(ddata, dwidth, drawing_region.x0, drawing_region.y0);
+    GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
     const int dskip = dwidth - width;
 
@@ -619,7 +619,7 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
             }
 
             if (sx >= sminx && sx <= smaxx && sy >= sminy && sy <= smaxy) {
-                const GL_Pixel_t *sptr = IFMA(sdata, swidth, sx, sy);
+                const GL_Pixel_t *sptr = sdata + sy * swidth + sx;
                 GL_Pixel_t index = shifting[*sptr];
                 if (!transparent[index]) {
                     *dptr = index;

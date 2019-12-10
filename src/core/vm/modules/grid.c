@@ -233,7 +233,7 @@ static int grid_stride(lua_State *L)
     }
 #endif
 
-    Cell_t *ptr = IFMA(instance->data, instance->width, column, row);
+    Cell_t *ptr = instance->data + row * instance->width + column;
     Cell_t *eod = ptr + (instance->data_size < amount ? instance->data_size : amount);
 
     if (type == LUA_TTABLE) {
@@ -280,7 +280,7 @@ static int grid_peek(lua_State *L)
     }
 #endif
 
-    Cell_t value = *IFMA(instance->data, instance->width, column, row);
+    Cell_t value = instance->data[row * instance->width + column];
 
     lua_pushnumber(L, (lua_Number)value);
 
@@ -308,7 +308,7 @@ static int grid_poke(lua_State *L)
     }
 #endif
 
-    *IFMA(instance->data, instance->width, column, row) = value;
+    instance->data[row * instance->width + column] = value;
 
     return 0;
 }
@@ -368,7 +368,7 @@ static int grid_process(lua_State *L)
             size_t dcolumn = lua_tointeger(L, -3);
             size_t drow = lua_tointeger(L, -2);
             Cell_t dvalue = lua_tonumber(L, -1);
-            *IFMA(data, width, dcolumn, drow) = dvalue;
+            data[drow * width + dcolumn] = dvalue;
 
             lua_pop(L, 3);
         }
