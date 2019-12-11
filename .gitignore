@@ -14,4 +14,4 @@ external/glad/*.o
 external/lua/*.o
 external/spleen/*.o
 external/stb/*.o
-tofu
+tofu*
