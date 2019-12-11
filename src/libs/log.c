@@ -53,13 +53,7 @@ static const char *_colors[Log_Levels_t_CountOf] = {
 static Log_Levels_t _level;
 static FILE *_stream;
 
-void Log_initialize(bool enabled, FILE *stream)
-{
-    _level = enabled ? LOG_LEVELS_ALL : LOG_LEVELS_NONE;
-    _stream = stream ? _stream : stderr;
-}
-
-void Log_write(Log_Levels_t level, const char *text, ...)
+static void write(Log_Levels_t level, const char *text, va_list args)
 {
     if (level < _level) {
         return;
@@ -69,15 +63,35 @@ void Log_write(Log_Levels_t level, const char *text, ...)
         return;
     }
 
-    va_list args;
-    va_start(args, text);
-
     fputs(_colors[level], _stream);
     vfprintf(_stream, text, args);
     fputs(COLOR_OFF, _stream);
     if (text[strlen(text) - 1] != '\n') {
         fputs("\n", _stream);
     }
+}
 
+void Log_initialize(bool enabled, FILE *stream)
+{
+    _level = enabled ? LOG_LEVELS_ALL : LOG_LEVELS_NONE;
+    _stream = stream ? _stream : stderr;
+}
+
+void Log_write(Log_Levels_t level, const char *text, ...)
+{
+    va_list args;
+    va_start(args, text);
+    write(level, text, args);
+    va_end(args);
+}
+
+void Log_assert(bool condition, Log_Levels_t level, const char *text, ...)
+{
+    if (condition) {
+        return;
+    }
+    va_list args;
+    va_start(args, text);
+    write(level, text, args);
     va_end(args);
 }

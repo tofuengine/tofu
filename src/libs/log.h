@@ -40,5 +40,6 @@ typedef enum _Log_Levels_t {
 
 extern void Log_initialize(bool enabled, FILE *stream);
 extern void Log_write(Log_Levels_t level, const char *text, ...);
+extern void Log_assert(bool condition, Log_Levels_t level, const char *text, ...);
 
 #endif  /* __LIBS_LOG_H__ */
