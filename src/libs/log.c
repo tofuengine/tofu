@@ -22,29 +22,53 @@
 
 #include "log.h"
 
+#include <core/platform.h>
+
 #include <stdarg.h>
 #include <string.h>
 
 // http://jafrog.com/2013/11/23/colors-in-terminal.html
-#define COLOR_BLACK         "\x1b[30m"
-#define COLOR_RED           "\x1b[31m"
-#define COLOR_GREEN         "\x1b[32m"
-#define COLOR_YELLOW        "\x1b[33m"
-#define COLOR_BLUE          "\x1b[34m"
-#define COLOR_MAGENTA       "\x1b[35m"
-#define COLOR_CYAN          "\x1b[36m"
-#define COLOR_WHITE         "\x1b[37m"
-
-#define COLOR_BLACK_HC      "\x1b[90m"
-#define COLOR_RED_HC        "\x1b[91m"
-#define COLOR_GREEN_HC      "\x1b[92m"
-#define COLOR_YELLOW_HC     "\x1b[93m"
-#define COLOR_BLUE_HC       "\x1b[94m"
-#define COLOR_MAGENTA_HC    "\x1b[95m"
-#define COLOR_CYAN_HC       "\x1b[96m"
-#define COLOR_WHITE_HC      "\x1b[97m"
-
-#define COLOR_OFF           "\x1b[0m"
+#if PLATFORM_ID == PLATFORM_LINUX
+  #define COLOR_BLACK         "\x1b[30m"
+  #define COLOR_RED           "\x1b[31m"
+  #define COLOR_GREEN         "\x1b[32m"
+  #define COLOR_YELLOW        "\x1b[33m"
+  #define COLOR_BLUE          "\x1b[34m"
+  #define COLOR_MAGENTA       "\x1b[35m"
+  #define COLOR_CYAN          "\x1b[36m"
+  #define COLOR_WHITE         "\x1b[37m"
+  
+  #define COLOR_BLACK_HC      "\x1b[90m"
+  #define COLOR_RED_HC        "\x1b[91m"
+  #define COLOR_GREEN_HC      "\x1b[92m"
+  #define COLOR_YELLOW_HC     "\x1b[93m"
+  #define COLOR_BLUE_HC       "\x1b[94m"
+  #define COLOR_MAGENTA_HC    "\x1b[95m"
+  #define COLOR_CYAN_HC       "\x1b[96m"
+  #define COLOR_WHITE_HC      "\x1b[97m"
+  
+  #define COLOR_OFF           "\x1b[0m"
+#else
+  #define COLOR_BLACK         ""
+  #define COLOR_RED           ""
+  #define COLOR_GREEN         ""
+  #define COLOR_YELLOW        ""
+  #define COLOR_BLUE          ""
+  #define COLOR_MAGENTA       ""
+  #define COLOR_CYAN          ""
+  #define COLOR_WHITE         ""
+  
+  #define COLOR_BLACK_HC      ""
+  #define COLOR_RED_HC        ""
+  #define COLOR_GREEN_HC      ""
+  #define COLOR_YELLOW_HC     ""
+  #define COLOR_BLUE_HC       ""
+  #define COLOR_MAGENTA_HC    ""
+  #define COLOR_CYAN_HC       ""
+  #define COLOR_WHITE_HC      ""
+  
+  #define COLOR_OFF           ""
+#endif
 
 static const char *_colors[Log_Levels_t_CountOf] = {
     COLOR_WHITE, COLOR_BLUE_HC, COLOR_CYAN, COLOR_GREEN, COLOR_YELLOW, COLOR_RED, COLOR_MAGENTA, COLOR_WHITE
