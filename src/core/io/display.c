@@ -31,6 +31,12 @@
 #include <memory.h>
 #include <stdlib.h>
 
+#if PLATFORM_ID == PLATFORM_WINDOWS
+  #define PIXEL_FORMAT    GL_BGRA
+#else
+  #define PIXEL_FORMAT    GL_RGBA
+#endif
+
 typedef struct _Program_Data_t {
     const char *vertex_shader;
     const char *fragment_shader;
@@ -123,6 +129,29 @@ static void load_icon(GLFWwindow *window, const uint8_t *buffer, size_t buffer_s
     stbi_image_free(data);
 }
 */
+#ifdef DEBUG
+static bool has_errors()
+{
+    bool result = false;
+    for (GLenum code = glGetError(); code != GL_NO_ERROR; code = glGetError()) {
+        const char *message = "UKNOWN";
+        switch (code) {
+            case GL_INVALID_ENUM: { message = "INVALID_ENUM"; } break;
+            case GL_INVALID_VALUE: { message = "INVALID_VALUE"; } break;
+            case GL_INVALID_OPERATION: { message = "INVALID_OPERATION"; } break;
+            case 0x506: { message = "INVALID_FRAMEBUFFER_OPERATION"; } break;
+            case GL_OUT_OF_MEMORY: { message = "OUT_OF_MEMORY"; } break;
+            case GL_STACK_UNDERFLOW: { message = "STACK_UNDERFLOW"; } break;
+            case GL_STACK_OVERFLOW: { message = "STACK_OVERFLOW"; } break;
+        }
+        Log_write(LOG_LEVELS_ERROR, "<DISPLAY> OpenGL error #%04x: `GL_%s`", code, message);
+
+        result = true;
+    }
+    return result;
+}
+#endif
+
 static bool compute_size(Display_t *display, const Display_Configuration_t *configuration, GL_Point_t *position)
 {
     int display_width, display_height;
@@ -216,6 +245,8 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
 
     display->configuration = *configuration;
 
+    Log_write(LOG_LEVELS_INFO, "<DISPLAY> GLFW: %s", glfwGetVersionString());
+
     glfwSetErrorCallback(error_callback);
 
     if (!glfwInit()) {
@@ -295,14 +326,15 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         glfwSetWindowMonitor(display->window, glfwGetPrimaryMonitor(), position.x, position.y, display->physical_width, display->physical_height, GLFW_DONT_CARE);
     }
 
-    display->vram = malloc(display->configuration.width * display->configuration.width * sizeof(GL_Color_t));
+    display->vram_size = display->configuration.width * display->configuration.width * sizeof(GL_Color_t);
+    display->vram = malloc(display->vram_size);
     if (!display->vram) {
         Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't allocate VRAM buffer");
         GL_context_delete(&display->gl);
         glfwDestroyWindow(display->window);
         glfwTerminate();
     }
-    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> VRAM allocated at #%p (%dx%d)", display->vram, display->configuration.width, display->configuration.height);
+    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> %d bytes VRAM allocated at #%p (%dx%d)", display->vram_size, display->vram, display->configuration.width, display->configuration.height);
 
     glGenTextures(1, &display->vram_texture); //allocate the memory for texture
     if (display->vram_texture == 0) {
@@ -321,7 +353,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0); // Disable mip-mapping
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
     glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, display->configuration.width, display->configuration.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, display->configuration.width, display->configuration.height, 0, PIXEL_FORMAT, GL_UNSIGNED_BYTE, NULL);
     Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> texture created w/ id #%d (%dx%d)", display->vram_texture, display->configuration.width, display->configuration.height);
 
     for (size_t i = 0; i < Display_Programs_t_CountOf; ++i) {
@@ -350,6 +382,10 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     }
 
     Display_shader(display, NULL); // Use pass-thru at the beginning.
+
+#ifdef DEBUG
+    has_errors(); // Display pending OpenGL errors.
+#endif
 
     return true;
 }
@@ -387,17 +423,17 @@ void Display_update(Display_t *display, float delta_time)
 {
     display->time += (GLfloat)delta_time;
     program_send(display->active_program, UNIFORM_TIME, PROGRAM_UNIFORM_FLOAT, 1, &display->time);
+
+#ifdef DEBUG
+    has_errors(); // Display pending OpenGL errors.
+#endif
 }
 
 void Display_present(Display_t *display)
 {
     GL_surface_to_rgba(&display->gl.buffer, &display->palette, display->vram);
 
-#ifdef __GL_BGRA_PALETTE__
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, display->gl.buffer.width, display->gl.buffer.height, GL_BGRA, GL_UNSIGNED_BYTE, display->vram);
-#else
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, display->gl.buffer.width, display->gl.buffer.height, GL_RGBA, GL_UNSIGNED_BYTE, display->vram);
-#endif
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, display->gl.buffer.width, display->gl.buffer.height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, display->vram);
 
     glBegin(GL_TRIANGLE_STRIP);
 //        glColor4ub(255, 255, 255, 255); // Change this color to "tint".
