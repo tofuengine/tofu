@@ -30,10 +30,11 @@ else
 	COMPILER=gcc
 endif
 CWARNINGS=-Wall -Wextra -Werror -Wno-unused-parameter -Wpedantic
+CFLAGS=-D_DEFAULT_SOURCE -DLUA_32BITS -DLUA_FLOORN2I=1 -DSTBI_ONLY_PNG -DSTBI_NO_STDIO -std=c99 -Isrc -Iexternal
 ifeq ($(BUILD),release)
-	CFLAGS=-O3 -DRELEASE -D_DEFAULT_SOURCE -DLUA_32BITS -DLUA_FLOORN2I=1 -DSTBI_ONLY_PNG -DSTBI_NO_STDIO -std=c99 -Isrc -Iexternal
+	COPTS=-O3 -DRELEASE
 else
-	CFLAGS=-Og -g -DDEBUG -D_DEFAULT_SOURCE -DLUA_32BITS -DLUA_FLOORN2I=1 -DSTBI_ONLY_PNG -DSTBI_NO_STDIO -std=c99 -Isrc -Iexternal
+	COPTS=-Og -g -DDEBUG
 endif
 # -Ofast => -O3 -ffast-math
 # -Os => -O2, favouring size
@@ -41,15 +42,16 @@ endif
 ifeq ($(PLATFORM),windows)
     ifeq ($(VARIANT),x64)
 		LINKER=x86_64-w64-mingw32-gcc
-		LFLAGS=-Wall -Wextra -Werror -Lexternal/GLFW/windows/x64 -lglfw3 -lgdi32
+		LFLAGS=-Lexternal/GLFW/windows/x64 -lglfw3 -lgdi32
     else
 		LINKER=i686-w64-mingw32-gcc
-		LFLAGS=-Wall -Wextra -Werror -Lexternal/GLFW/windows/x32 -lglfw3 -lgdi32
+		LFLAGS=-Lexternal/GLFW/windows/x32 -lglfw3 -lgdi32
     endif
 else
 	LINKER=gcc
-	LFLAGS=-Wall -Wextra -Werror -Lexternal/GLFW/linux -lglfw3 -lm -lpthread -lX11
+	LFLAGS=-Lexternal/GLFW/linux -lglfw3 -lm -lpthread -lX11 -ldl
 endif
+LWARNINGS=-Wall -Wextra -Werror
 
 SOURCES:= $(wildcard src/*.c src/core/*.c src/core/io/*.c src/core/io/display/*.c src/core/vm/*.c src/core/vm/modules/*.c src/core/vm/modules/resources/*.c src/libs/*.c src/libs/gl/*.c external/glad/*.c external/GLFW/*.c external/lua/*.c external/miniaudio/*.c external/spleen/*.c external/stb/*.c)
 INCLUDES:= $(wildcard src/*.h src/core/*.h src/core/io/*.h src/core/io/display/*.h src/core/vm/*.h src/core/vm/modules/*.h src/core/vm/modules/resources/*.h src/libs/*.h src/libs/gl/*.h external/glad/*.h external/GLFW/*.h external/lua/*.h external/miniaudio/*.h external/spleen/*.h external/stb/*.h)
@@ -62,12 +64,12 @@ default: $(TARGET)
 all: default
 
 $(TARGET): $(OBJECTS)
-	@$(LINKER) $(OBJECTS) $(LFLAGS) -o $@
+	@$(LINKER) $(OBJECTS) $(LWARNINGS) $(LFLAGS) -o $@
 	@echo "Linking complete!"
 
 # The dependency upon `Makefile` is redundant, since scripts are bound to it.
 $(OBJECTS): %.o : %.c $(BLOBS) $(INCLUDES) Makefile
-	@$(COMPILER) $(CFLAGS) $(CWARNINGS) -c $< -o $@
+	@$(COMPILER) $(CWARNINGS) $(CFLAGS) $(COPTS) -c $< -o $@
 	@echo "Compiled "$<" successfully!"
 
 # Define a rule to automatically convert `.lua` script into an embeddable-ready `.inc` file.
