@@ -24,6 +24,7 @@
 
 #include <config.h>
 #include <core/engine.h>
+#include <core/platform.h>
 #include <libs/log.h>
 #include <libs/imath.h>
 #include <libs/stb.h>
@@ -32,7 +33,8 @@
 #include <stdlib.h>
 
 #if PLATFORM_ID == PLATFORM_WINDOWS
-  #define PIXEL_FORMAT    GL_BGRA
+  //#define PIXEL_FORMAT    GL_BGRA
+  #define PIXEL_FORMAT    GL_RGBA
 #else
   #define PIXEL_FORMAT    GL_RGBA
 #endif
