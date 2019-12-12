@@ -76,8 +76,11 @@ void luaX_stackdump(lua_State *L, const char* func, int line)
                 break;
             case LUA_TFUNCTION:
                 if (lua_iscfunction(L, positive)) {
-//                    printf("\t%" PRIXPTR "", (uintptr_t)lua_tocfunction(L, positive));
-                    printf("\t%08x", (unsigned int)(long long)lua_tocfunction(L, positive));
+                    union {
+                        lua_CFunction f;
+                        const void *p;
+                    } u = { .f = lua_tocfunction(L, positive) };
+                    printf("\t%p", u.p);
                 } else {
                     printf("\t%p", lua_topointer(L, positive));
                 }
