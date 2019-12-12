@@ -39,6 +39,10 @@
   #include <windows.h>
 #endif
 
+#define _TOFU_CONCAT_VERSION(m, n, r) #m "." #n "." #r
+#define _TOFU_MAKE_VERSION(m, n, r) _TOFU_CONCAT_VERSION(m, n, r)
+#define TOFU_VERSION_NUMBER _TOFU_MAKE_VERSION(TOFU_VERSION_MAJOR, TOFU_VERSION_MINOR, TOFU_VERSION_REVISION)
+
 static inline void wait_for(float seconds)
 {
 #if PLATFORM_ID == PLATFORM_LINUX
@@ -98,6 +102,8 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 
     Log_initialize(engine->configuration.debug, NULL);
     Environment_initialize(&engine->environment);
+
+    Log_write(LOG_LEVELS_INFO, "<ENGINE> %s", TOFU_VERSION_NUMBER);
 
     Display_Configuration_t display_configuration = { // TODO: reorganize configuration.
             .title = engine->configuration.title,

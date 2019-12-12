@@ -35,6 +35,10 @@
 #include <stdbool.h>
 #include <limits.h>
 
+#define TOFU_VERSION_MAJOR          0
+#define TOFU_VERSION_MINOR          6
+#define TOFU_VERSION_REVISION       0
+
 typedef struct _Engine_t {
     File_System_t file_system;
 
