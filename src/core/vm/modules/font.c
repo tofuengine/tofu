@@ -36,6 +36,8 @@
 #include <math.h>
 #include <string.h>
 
+#define LOG_CONTEXT "font"
+
 #define FONT_MT        "Tofu_Font_mt"
 
 static int font_new(lua_State *L);
@@ -121,22 +123,22 @@ static int font_new3(lua_State *L)
         const Sheet_Data_t *data = resources_sheets_find(file);
         if (data) {
             GL_sheet_decode(&sheet, data->buffer, data->size, data->quad_width, data->quad_height, surface_callback_palette, (void *)&display->palette);
-            Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet `%s` decoded", file);
+            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` decoded", file);
         } else {
             size_t buffer_size;
             void *buffer = FS_load_as_binary(file_system, file, &buffer_size);
             if (!buffer) {
-                return luaL_error(L, "<FONT> can't load file `%s`", file);
+                return luaL_error(L, "can't load file `%s`", file);
             }
             GL_sheet_decode(&sheet, buffer, buffer_size, glyph_width, glyph_height, surface_callback_palette, (void *)&display->palette);
-            Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet `%s` loaded", file);
+            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` loaded", file);
             free(buffer);
         }
     } else
     if (type == LUA_TUSERDATA) {
         const Surface_Class_t *instance = (const Surface_Class_t *)lua_touserdata(L, 1);
         GL_sheet_attach(&sheet, &instance->surface, glyph_width, glyph_height);
-        Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet %p attached", instance);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p attached", instance);
         surface = luaX_ref(L, 1); // Track the attached surface as a reference to prevent garbage collection.
     }
 
@@ -145,7 +147,7 @@ static int font_new3(lua_State *L)
             .sheet = sheet,
             .surface = surface
         };
-    Log_write(LOG_LEVELS_DEBUG, "<FONT> font allocated as #%p", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font allocated as #%p", instance);
 
     luaL_setmetatable(L, FONT_MT);
 
@@ -180,22 +182,22 @@ static int font_new5(lua_State *L)
         const Sheet_Data_t *data = resources_sheets_find(file);
         if (data) {
             GL_sheet_decode(&sheet, data->buffer, data->size, data->quad_width, data->quad_height, surface_callback_indexes, (void *)indexes);
-            Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet `%s` decoded", file);
+            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` decoded", file);
         } else {
             size_t buffer_size;
             void *buffer = FS_load_as_binary(file_system, file, &buffer_size);
             if (!buffer) {
-                return luaL_error(L, "<FONT> can't load file `%s`", file);
+                return luaL_error(L, "can't load file `%s`", file);
             }
             GL_sheet_decode(&sheet, buffer, buffer_size, glyph_width, glyph_height, surface_callback_indexes, (void *)indexes);
-            Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet `%s` loaded", file);
+            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` loaded", file);
             free(buffer);
         }
     } else
     if (type == LUA_TUSERDATA) {
         const Surface_Class_t *instance = (const Surface_Class_t *)lua_touserdata(L, 1);
         GL_sheet_attach(&sheet, &instance->surface, glyph_width, glyph_height);
-        Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet %p attached", instance);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p attached", instance);
         surface = luaX_ref(L, 1); // Track the attached surface as a reference to prevent garbage collection.
     }
 
@@ -204,7 +206,7 @@ static int font_new5(lua_State *L)
             .sheet = sheet,
             .surface = surface,
         };
-    Log_write(LOG_LEVELS_DEBUG, "<FONT> font allocated as #%p", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font allocated as #%p", instance);
 
     luaL_setmetatable(L, FONT_MT);
 
@@ -232,7 +234,7 @@ static int font_gc(lua_State *L)
         luaX_unref(L, instance->surface);
         GL_sheet_detach(&instance->sheet);
     }
-    Log_write(LOG_LEVELS_DEBUG, "<FONT> font #%p finalized", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font #%p finalized", instance);
 
     return 0;
 }

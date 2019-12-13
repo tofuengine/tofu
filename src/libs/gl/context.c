@@ -29,6 +29,8 @@
 
 #include "surface.h"
 
+#define LOG_CONTEXT "gl"
+
 static inline void reset_state(GL_State_t *state, GL_Surface_t *surface)
 {
     *state = (GL_State_t){
@@ -55,19 +57,19 @@ bool GL_context_create(GL_Context_t *context, size_t width, size_t height)
 
     reset_state(&context->state, &context->buffer);
 
-    Log_write(LOG_LEVELS_DEBUG, "<GL> context created");
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context created");
     return true;
 }
 
 void GL_context_delete(GL_Context_t *context)
 {
     arrfree(context->stack);
-    Log_write(LOG_LEVELS_DEBUG, "<GL> context stack deallocated");
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context stack deallocated");
 
     GL_surface_delete(&context->buffer);
-    Log_write(LOG_LEVELS_DEBUG, "<GL> context buffer deallocated");
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context buffer deallocated");
 
-    Log_write(LOG_LEVELS_DEBUG, "<GL> context deleted");
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context deleted");
 }
 
 void GL_context_push(GL_Context_t *context)
@@ -78,7 +80,7 @@ void GL_context_push(GL_Context_t *context)
 void GL_context_pop(GL_Context_t *context)
 {
     if (arrlen(context->stack) < 1) {
-        Log_write(LOG_LEVELS_WARNING, "<GL> no states to pop from context");
+        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "no states to pop from context");
         return;
     }
     context->state = arrpop(context->stack);
@@ -87,10 +89,10 @@ void GL_context_pop(GL_Context_t *context)
 void GL_context_reset(GL_Context_t *context)
 {
     arrfree(context->stack);
-    Log_write(LOG_LEVELS_DEBUG, "<GL> context stack deallocated");
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context stack deallocated");
 
     reset_state(&context->state, &context->buffer);
-    Log_write(LOG_LEVELS_DEBUG, "<GL> context reset");
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context reset");
 }
 
 void GL_context_sanitize(GL_Context_t *context, const GL_Surface_t *surface)
@@ -102,7 +104,7 @@ void GL_context_sanitize(GL_Context_t *context, const GL_Surface_t *surface)
         if (context->stack[i].surface == surface) {
 #endif
             arrdel(context->stack, i);
-            Log_write(LOG_LEVELS_WARNING, "<GL> state #%d sanitized from context", i);
+            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "state #%d sanitized from context", i);
         }
     }
 }

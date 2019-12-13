@@ -24,6 +24,8 @@
 
 #include <libs/log.h>
 
+#define LOG_CONTEXT "input"
+
 bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration, GLFWwindow *window)
 {
     // TODO: should perform a single "zeroing" call and the set the single fields?
@@ -58,13 +60,13 @@ void Input_update(Input_t *input, float delta_time)
         key->time += delta_time;
 
         while (key->time >= key->period) {
-            Log_write(LOG_LEVELS_TRACE, "<INPUT> #%d %.3fs", i, key->time);
+            Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "#%d %.3fs", i, key->time);
             key->time -= key->period;
 
             key->state.down = !key->state.down;
             key->state.pressed = key->state.down;
             key->state.released = !key->state.down;
-            Log_write(LOG_LEVELS_TRACE, "<INPUT> #%d %.3fs %d %d %d", i, key->time, key->state.down, key->state.pressed, key->state.released);
+            Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "#%d %.3fs %d %d %d", i, key->time, key->state.down, key->state.pressed, key->state.released);
         }
     }
 
@@ -125,7 +127,7 @@ void Input_process(Input_t *input)
             if (key->state.pressed && key->period > 0.0f) { // On press, track the trigger state and reset counter.
                 key->state.triggered = true;
                 key->time = 0.0f;
-                Log_write(LOG_LEVELS_TRACE, "<INPUT> key #%d triggered, %.3fs %d %d %d", i, key->time, key->state.down, key->state.pressed, key->state.released);
+                Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "key #%d triggered, %.3fs %d %d %d", i, key->time, key->state.down, key->state.pressed, key->state.released);
             }
         } else
         if (!is_down) {
@@ -134,7 +136,7 @@ void Input_process(Input_t *input)
             key->state.released = was_down; // Track release is was previously down.
 
             key->state.triggered = false;
-            Log_write(LOG_LEVELS_TRACE, "<INPUT> button #%d held for %.3fs %d %d %d", i, key->time, key->state.down, key->state.pressed, key->state.released);
+            Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "button #%d held for %.3fs %d %d %d", i, key->time, key->state.down, key->state.pressed, key->state.released);
         }
     }
 
@@ -157,7 +159,7 @@ void Input_process(Input_t *input)
                     if (key->state.pressed && key->period > 0.0f) { // On press, track the trigger state and reset counter.
                         key->state.triggered = true;
                         key->time = 0.0f;
-                        Log_write(LOG_LEVELS_TRACE, "<INPUT> key #%d triggered, %.3fs %d %d %d", i, key->time, key->state.down, key->state.pressed, key->state.released);
+                        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "key #%d triggered, %.3fs %d %d %d", i, key->time, key->state.down, key->state.pressed, key->state.released);
                     }
                 } else
                 if (!is_down) {
@@ -166,7 +168,7 @@ void Input_process(Input_t *input)
                     key->state.released = was_down; // Track release is was previously down.
 
                     key->state.triggered = false;
-                    Log_write(LOG_LEVELS_TRACE, "<INPUT> button #%d held for %.3fs %d %d %d", i, key->time, key->state.down, key->state.pressed, key->state.released);
+                    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "button #%d held for %.3fs %d %d %d", i, key->time, key->state.down, key->state.pressed, key->state.released);
                 }
             }
         }
@@ -201,5 +203,5 @@ void Input_auto_repeat(Input_t *input, Input_Keys_t id, float period)
             .period = period,
             .time = 0.0f
         };
-    Log_write(LOG_LEVELS_DEBUG, "<INPUT> auto-repeat set to %.3fs for button #%d", period, id);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "auto-repeat set to %.3fs for button #%d", period, id);
 }

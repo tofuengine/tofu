@@ -34,6 +34,8 @@
 #include <math.h>
 #include <string.h>
 
+#define LOG_CONTEXT "surface"
+
 #define SURFACE_MT      "Tofu_Surface_mt"
 
 static int surface_new(lua_State *L);
@@ -99,7 +101,7 @@ static GL_XForm_Registers_t string_to_register(const char *id)
     if (id[0] == 'y') {
         return GL_XFORM_REGISTER_Y;
     }
-    Log_write(LOG_LEVELS_WARNING, "<SURFACE> unknown register w/ id `%s`", id);
+    Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "unknown register w/ id `%s`", id);
     return GL_XFORM_REGISTER_A;
 }
 
@@ -116,11 +118,11 @@ static int surface_new1(lua_State *L)
     size_t buffer_size;
     void *buffer = FS_load_as_binary(file_system, file, &buffer_size);
     if (!buffer) {
-        return luaL_error(L, "<SURFACE> can't load file `%s`", file);
+        return luaL_error(L, "can't load file `%s`", file);
     }
     GL_Surface_t surface;
     GL_surface_decode(&surface, buffer, buffer_size, surface_callback_palette, (void *)&display->palette);
-    Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface `%s` loaded", file);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface `%s` loaded", file);
     free(buffer);
 
     Surface_Class_t *instance = (Surface_Class_t *)lua_newuserdata(L, sizeof(Surface_Class_t));
@@ -136,7 +138,7 @@ static int surface_new1(lua_State *L)
                     .table = NULL
                 }
         };
-    Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface allocated as #%p", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface allocated as #%p", instance);
 
     luaL_setmetatable(L, SURFACE_MT);
 
@@ -154,7 +156,7 @@ static int surface_new2(lua_State *L)
 
     GL_Surface_t surface;
     GL_surface_create(&surface, width, height);
-    Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface %dx%d created", width, height);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface %dx%d created", width, height);
 
     Surface_Class_t *instance = (Surface_Class_t *)lua_newuserdata(L, sizeof(Surface_Class_t));
     *instance = (Surface_Class_t){
@@ -169,7 +171,7 @@ static int surface_new2(lua_State *L)
                     .table = NULL
                 }
         };
-    Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface allocated as #%p", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface allocated as #%p", instance);
 
     luaL_setmetatable(L, SURFACE_MT);
 
@@ -195,15 +197,15 @@ static int surface_gc(lua_State *L)
 
     GL_Context_t *context = &display->gl;
     GL_context_sanitize(context, &instance->surface);
-    Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface #%p sanitized from context", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface #%p sanitized from context", instance);
 
     if (instance->xform.table) {
         arrfree(instance->xform.table);
-        Log_write(LOG_LEVELS_DEBUG, "<SURFACE> scan-line table #%p deallocated", instance->xform.table);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "scan-line table #%p deallocated", instance->xform.table);
     }
 
     GL_surface_delete(&instance->surface);
-    Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface #%p finalized", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface #%p finalized", instance);
 
     return 0;
 }
@@ -641,7 +643,7 @@ static int surface_table1(lua_State *L)
 
     if (instance->xform.table) {
         arrfree(instance->xform.table);
-        Log_write(LOG_LEVELS_DEBUG, "<SURFACE> scan-line table #%p deallocated", instance->xform.table);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "scan-line table #%p deallocated", instance->xform.table);
     }
     instance->xform.table = NULL;
 
@@ -667,7 +669,7 @@ static int surface_table2(lua_State *L)
         lua_pushnil(L);
         for (size_t i = 0; lua_next(L, -2); ++i) { // Scan the value, which is an array.
             if (i == GL_XForm_Registers_t_CountOf) {
-                Log_write(LOG_LEVELS_WARNING, "<SURFACE> too many operation for table entry w/ id #%d", index);
+                Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "too many operation for table entry w/ id #%d", index);
                 lua_pop(L, 2);
                 break;
             }
@@ -686,7 +688,7 @@ static int surface_table2(lua_State *L)
 
     if (instance->xform.table) {
         arrfree(instance->xform.table);
-//        Log_write(LOG_LEVELS_TRACE, "<SURFACE> scan-line table #%p reallocated as #%p", instance->xform.table, table);
+//        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "scan-line table #%p reallocated as #%p", instance->xform.table, table);
     }
     instance->xform.table = table;
 

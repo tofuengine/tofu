@@ -35,6 +35,8 @@
 #include <math.h>
 #include <string.h>
 
+#define LOG_CONTEXT "bank"
+
 #define BANK_MT     "Tofu_Bank_mt"
 
 static int bank_new(lua_State *L);
@@ -84,17 +86,17 @@ static int bank_new(lua_State *L)
         size_t buffer_size;
         void *buffer = FS_load_as_binary(file_system, file, &buffer_size);
         if (!buffer) {
-            return luaL_error(L, "<BANK> can't load file `%s`", file);
+            return luaL_error(L, "can't load file `%s`", file);
         }
         GL_sheet_decode(&sheet, buffer, buffer_size, cell_width, cell_height, surface_callback_palette, (void *)&display->palette);
-        Log_write(LOG_LEVELS_DEBUG, "<BANK> sheet `%s` loaded", file);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` loaded", file);
         free(buffer);
     } else
     if (type == LUA_TUSERDATA) {
         const Surface_Class_t *instance = (const Surface_Class_t *)lua_touserdata(L, 1);
 
         GL_sheet_attach(&sheet, &instance->surface, cell_width, cell_height);
-        Log_write(LOG_LEVELS_DEBUG, "<BANK> sheet %p attached", instance);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p attached", instance);
     }
 
     Bank_Class_t *instance = (Bank_Class_t *)lua_newuserdata(L, sizeof(Bank_Class_t));
@@ -102,7 +104,7 @@ static int bank_new(lua_State *L)
             .sheet = sheet,
             .owned = type == LUA_TSTRING ? true : false
         };
-    Log_write(LOG_LEVELS_DEBUG, "<BANK> bank allocated as #%p", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank allocated as #%p", instance);
 
     luaL_setmetatable(L, BANK_MT);
 
@@ -121,7 +123,7 @@ static int bank_gc(lua_State *L)
     } else {
         GL_sheet_detach(&instance->sheet);
     }
-    Log_write(LOG_LEVELS_DEBUG, "<BANK> bank #%p finalized", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank #%p finalized", instance);
 
     return 0;
 }

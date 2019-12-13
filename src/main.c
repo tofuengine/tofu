@@ -27,12 +27,14 @@
 
 #include <stdlib.h>
 
+#define LOG_CONTEXT "main"
+
 int main(int argc, char **argv)
 {
     Engine_t engine;
     bool result = Engine_initialize(&engine, (argc > 1) ? argv[1] : NULL);
     if (!result) {
-        Log_write(LOG_LEVELS_FATAL, "<MAIN> can't initialize engine");
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize engine");
         return EXIT_FAILURE;
     }
     Engine_run(&engine);

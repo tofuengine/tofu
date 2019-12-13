@@ -29,6 +29,8 @@
 #define MINIAUDIO_IMPLEMENTATION
 #include <miniaudio/miniaudio.h>
 
+#define LOG_CONTEXT "audio"
+
 static const char *_backends[] = {
     "wasapi",
     "dsound",
@@ -58,7 +60,7 @@ static const char *_formats[] = {
 static void device_callback(ma_device *device, void *output, const void *input, ma_uint32 frame_count)
 {
     Audio_t *audio = (Audio_t *)device->pUserData;
-    Log_write(LOG_LEVELS_DEBUG, "<AUDIO> %d frames requested for instance %p", frame_count, audio);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d frames requested for instance %p", frame_count, audio);
 }
 
 bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration)
@@ -77,15 +79,15 @@ bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration
 
     ma_result result = ma_device_init(NULL, &audio->device_config, &audio->device);
     if (result != MA_SUCCESS) {
-        Log_write(LOG_LEVELS_FATAL, "<AUDIO> can't initialize device");
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize device");
         return false;
     }
 
-    Log_write(LOG_LEVELS_INFO, "<AUDIO> Backend: %s", _backends[audio->device.pContext->backend]);
-    Log_write(LOG_LEVELS_INFO, "<AUDIO> Format: %s/%d", _formats[audio->device.playback.format], audio->device.playback.channels);
-    Log_write(LOG_LEVELS_INFO, "<AUDIO> Internal format: %s/%d", _formats[audio->device.playback.internalFormat], audio->device.playback.internalChannels);
-    Log_write(LOG_LEVELS_INFO, "<AUDIO> Sample-rate: %d", audio->device.sampleRate);
-    Log_write(LOG_LEVELS_INFO, "<AUDIO> Device-name: %s", audio->device.playback.name);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "backend: %s", _backends[audio->device.pContext->backend]);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "format: %s/%d", _formats[audio->device.playback.format], audio->device.playback.channels);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "internal-format: %s/%d", _formats[audio->device.playback.internalFormat], audio->device.playback.internalChannels);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "sample-rate: %d", audio->device.sampleRate);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "device-name: %s", audio->device.playback.name);
 
     return true;
 }
