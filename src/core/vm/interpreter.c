@@ -129,7 +129,7 @@ static int custom_searcher(lua_State *L)
     size_t size;
     char *buffer = FS_load_as_string(fs, path_file + 1, &size); // Skip the '@', we are using it for Lua to trace the file.
     if (!buffer) {
-        luaL_error(L, "<VM> can't load file `%s`", path_file + 1);
+        luaL_error(L, "can't load file `%s`", path_file + 1);
     }
     luaL_loadbuffer(L, buffer, size, path_file);
     free(buffer);
