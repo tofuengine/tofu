@@ -116,22 +116,28 @@ static const char *_uniforms[Uniforms_t_CountOf] = {
 static const unsigned char _window_icon_pixels[] = {
 #include "icon.inc"
 };
-/*
-static void load_icon(GLFWwindow *window, const uint8_t *buffer, size_t buffer_size)
+
+static bool set_icon(GLFWwindow *window, const void *icon, size_t icon_size)
 {
-    int width, height, components;
-    void *data = stbi_load_from_memory(buffer, buffer_size, &width, &height, &components, STBI_rgb_alpha); //STBI_default);
-    if (!data) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't decode surface from %p: %s", data, stbi_failure_reason());
-        return;
+    if (!icon || icon_size == 0) {
+        return false;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "icon decoded (%dx%d w/ %d bpp)", width, height, components);
+
+    int width, height, components;
+    void *data = stbi_load_from_memory(icon, icon_size, &width, &height, &components, STBI_rgb_alpha); //STBI_default);
+    if (!data) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't decode icon from %p: %s", data, stbi_failure_reason());
+        return false;
+    }
 
     glfwSetWindowIcon(window, 1, &(GLFWimage){ width, height, (unsigned char *)data });
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "setting custom icon (%dx%d w/ %d bpp)", width, height, components);
 
     stbi_image_free(data);
+
+    return true;
 }
-*/
+
 #ifdef DEBUG
 static bool has_errors()
 {
@@ -296,14 +302,15 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         return false;
     }
 
+    if (!set_icon(display->window, configuration->icon, configuration->icon_size)) {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "setting default icon");
+        glfwSetWindowIcon(display->window, 1, &(GLFWimage){ 64, 64, (unsigned char *)_window_icon_pixels });
+    }
+
     size_callback(display->window, display->physical_width, display->physical_height);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%s mouse cursor", configuration->hide_cursor ? "hiding" : "showing");
     glfwSetInputMode(display->window, GLFW_CURSOR, configuration->hide_cursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
-
-    // TODO: add custom icon support.
-//    load_icon(display->window, configuration->icon);
-    glfwSetWindowIcon(display->window, 1, &(GLFWimage){ 64, 64, (unsigned char *)_window_icon_pixels });
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%sabling vertical synchronization", configuration->vertical_sync ? "en" : "dis");
     glfwSwapInterval(configuration->vertical_sync ? 1 : 0); // Set vertical sync, if required.
