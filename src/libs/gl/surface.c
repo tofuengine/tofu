@@ -96,11 +96,5 @@ void GL_surface_to_rgba(const GL_Surface_t *surface, const GL_Palette_t *palette
 #else
         *(dst++) = colors[index];
 #endif
-        {
-            char hex[12];
-            const uint8_t *ptr = (const uint8_t *)dst - 1;
-            sprintf(hex, "%02x%02x%02x%02x ", ptr[0], ptr[1], ptr[2], ptr[3]);
-            printf(hex);
-        }
     }
 }
