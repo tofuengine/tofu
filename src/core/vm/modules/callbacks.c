@@ -43,13 +43,13 @@ void surface_callback_indexes(void *parameters, GL_Surface_t *surface, const voi
     const GL_Pixel_t bg_index = indexes[0];
     const GL_Pixel_t fg_index = indexes[1];
 
-    const GL_Color_t *src = (const GL_Color_t *)data;
+    const uint32_t *src = (const uint32_t *)data;
     GL_Pixel_t *dst = surface->data;
 
-    const GL_Color_t background = *src; // The top-left pixel color defines the background.
+    const uint32_t background = *src; // The top-left pixel color defines the background.
 
     for (size_t i = surface->data_size; i; --i) {
-        GL_Color_t color = *(src++);
-        *(dst++) = memcmp(&color, &background, sizeof(GL_Color_t)) == 0 ? bg_index : fg_index;
+        uint32_t rgba = *(src++);
+        *(dst++) = rgba == background ? bg_index : fg_index;
     }
 }
