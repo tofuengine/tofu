@@ -32,6 +32,8 @@
 
 #include <stdlib.h>
 
+#define LOG_CONTEXT "grid"
+
 #define GRID_MT        "Tofu_Grid_mt"
 
 static int grid_new(lua_State *L);
@@ -93,7 +95,7 @@ static int grid_new(lua_State *L)
     Cell_t *data = malloc(data_size * sizeof(Cell_t));
 
     if (!data) {
-        return luaL_error(L, "<GRID> can't allocate memory");
+        return luaL_error(L, "can't allocate memory");
     }
 
     Cell_t *ptr = data;
@@ -128,7 +130,7 @@ static int grid_new(lua_State *L)
             .data_size = data_size
         };
 
-    Log_write(LOG_LEVELS_DEBUG, "<GRID> grid #%p allocated", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "grid %p allocated", instance);
 
     luaL_setmetatable(L, GRID_MT);
 
@@ -142,7 +144,7 @@ static int grid_gc(lua_State *L)
     LUAX_SIGNATURE_END
     Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
 
-    Log_write(LOG_LEVELS_DEBUG, "<GRID> finalizing grid #%p", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "finalizing grid %p", instance);
 
     free(instance->data);
 

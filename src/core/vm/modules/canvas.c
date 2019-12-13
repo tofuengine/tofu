@@ -37,6 +37,8 @@
 #include <string.h>
 #include <time.h>
 
+#define LOG_CONTEXT "canvas"
+
 #define CANVAS_MT        "Tofu_Canvas_mt"
 
 static int canvas_color_to_index(lua_State *L);
@@ -283,17 +285,17 @@ static int canvas_palette1(lua_State *L)
         if (predefined_palette != NULL) {
             palette = *predefined_palette;
 
-            Log_write(LOG_LEVELS_DEBUG, "<CANVAS> setting predefined palette `%s` w/ %d color(s)", id, predefined_palette->count);
+            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "setting predefined palette `%s` w/ %d color(s)", id, predefined_palette->count);
         } else {
-            Log_write(LOG_LEVELS_WARNING, "<CANVAS> unknown predefined palette w/ id `%s`", id);
+            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "unknown predefined palette w/ id `%s`", id);
         }
     } else
     if (type == LUA_TTABLE) { // User supplied palette.
         palette.count = lua_rawlen(L, 1);
-        Log_write(LOG_LEVELS_DEBUG, "<CANVAS> setting custom palette of #%d color(s)", palette.count);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "setting custom palette of #%d color(s)", palette.count);
 
         if (palette.count > GL_MAX_PALETTE_COLORS) {
-            Log_write(LOG_LEVELS_WARNING, "<CANVAS> palette has too many colors (%d) - clamping", palette.count);
+            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "palette has too many colors (%d) - clamping", palette.count);
             palette.count = GL_MAX_PALETTE_COLORS;
         }
 
@@ -778,7 +780,7 @@ static int canvas_polyline(lua_State *L)
         const GL_Context_t *context = &display->gl;
         GL_primitive_polyline(context, vertices, count / 2, index);
     } else {
-        Log_write(LOG_LEVELS_WARNING, "<CANVAS> no enough points for polyline (%d)", count);
+        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "no enough points for polyline (%d)", count);
     }
 
     arrfree(vertices);

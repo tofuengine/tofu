@@ -64,7 +64,7 @@ static int file_as_string(lua_State *L)
     size_t size;
     char *buffer = FS_load_as_string(file_system, file, &size);
     if (!buffer) {
-        luaL_error(L, "<FILE> can't load file `%s`", file);
+        luaL_error(L, "can't load file `%s`", file);
     }
     lua_pushlstring(L, buffer, size);
     free(buffer);
@@ -84,7 +84,7 @@ static int file_as_binary(lua_State *L)
     size_t size;
     void *buffer = FS_load_as_binary(file_system, file, &size);
     if (!buffer) {
-        luaL_error(L, "<FILE> can't load file `%s`", file);
+        luaL_error(L, "can't load file `%s`", file);
     }
 //    lua_pushlstring(L, buffer, size);
     lua_pushnil(L); // TODO: read the file as a Base64 or similar encoded string.

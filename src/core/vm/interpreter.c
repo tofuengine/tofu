@@ -44,6 +44,8 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
   #include <time.h>
 #endif
 
+#define LOG_CONTEXT "interpreter"
+
 #ifdef __DEBUG_VM_CALLS__
   #define TRACEBACK_STACK_INDEX   1
   #define OBJECT_STACK_INDEX      TRACEBACK_STACK_INDEX + 1
@@ -86,7 +88,7 @@ static void *allocate(void *ud, void *ptr, size_t osize, size_t nsize)
 
 static int panic(lua_State *L)
 {
-    Log_write(LOG_LEVELS_FATAL, "<VM> %s", lua_tostring(L, -1));
+    Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "%s", lua_tostring(L, -1));
     lua_pop(L, 1);
     return 0; // return to Lua to abort
 }
@@ -129,7 +131,7 @@ static int custom_searcher(lua_State *L)
     size_t size;
     char *buffer = FS_load_as_string(fs, path_file + 1, &size); // Skip the '@', we are using it for Lua to trace the file.
     if (!buffer) {
-        luaL_error(L, "<VM> can't load file `%s`", path_file + 1);
+        luaL_error(L, "can't load file `%s`", path_file + 1);
     }
     luaL_loadbuffer(L, buffer, size, path_file);
     free(buffer);
@@ -147,7 +149,7 @@ static int custom_searcher(lua_State *L)
 static bool detect(lua_State *L, int index, const char *methods[])
 {
     if (lua_isnil(L, index)) {
-        Log_write(LOG_LEVELS_FATAL, "<VM> can't find root instance");
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't find root instance");
         lua_pop(L, 1);
         return false;
     }
@@ -155,9 +157,9 @@ static bool detect(lua_State *L, int index, const char *methods[])
     for (int i = 0; methods[i]; ++i) { // Push the methods on stack
         lua_getfield(L, -(i + 1), methods[i]); // The table become farer and farer along the loop.
         if (!lua_isnil(L, -1)) {
-            Log_write(LOG_LEVELS_DEBUG, "<VM> method `%s` found", methods[i]);
+            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "method `%s` found", methods[i]);
         } else {
-            Log_write(LOG_LEVELS_WARNING, "<VM> method `%s` is missing", methods[i]);
+            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "method `%s` is missing", methods[i]);
         }
     }
 
@@ -168,14 +170,14 @@ static int execute(lua_State *L, const char *script, size_t size, const char *na
 {
     int loaded = luaL_loadbuffer(L, script, size, name);
     if (loaded != LUA_OK) {
-        Log_write(LOG_LEVELS_ERROR, "<VM> %s", lua_tostring(L, -1));
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "%s", lua_tostring(L, -1));
         lua_pop(L, 1);
         return loaded;
     }
 #ifdef __DEBUG_VM_CALLS__
     int called = lua_pcall(L, nargs, nresults, TRACEBACK_STACK_INDEX);
     if (called != LUA_OK) {
-        Log_write(LOG_LEVELS_ERROR, "<VM> %s", lua_tostring(L, -1));
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "%s", lua_tostring(L, -1));
         lua_pop(L, 1);
     }
     return called;
@@ -202,7 +204,7 @@ static int call(lua_State *L, Methods_t method, int nargs, int nresults)
 #ifdef __DEBUG_VM_CALLS__
     int called = lua_pcall(L, nargs + 1, nresults, TRACEBACK_STACK_INDEX);
     if (called != LUA_OK) {
-        Log_write(LOG_LEVELS_ERROR, "<VM> %s", lua_tostring(L, -1));
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "%s", lua_tostring(L, -1));
         lua_pop(L, 1);
     }
     return called;
@@ -218,7 +220,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const File_System_t *fil
 
     interpreter->state = lua_newstate(allocate, NULL); // No user-data is passed.
     if (!interpreter->state) {
-        Log_write(LOG_LEVELS_FATAL, "<VM> can't initialize interpreter");
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize interpreter");
         return false;
     }
     lua_atpanic(interpreter->state, panic); // Set a custom panic-handler, just like `luaL_newstate()`.
@@ -246,11 +248,11 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const File_System_t *fil
 #endif
 
     size_t version = (size_t)*lua_version(interpreter->state);
-    Log_write(LOG_LEVELS_INFO, "<VM> Interpreter: Lua %d.%d", version / 100, version % 100);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "Lua: %d.%d", version / 100, version % 100);
 
     int result = execute(interpreter->state, (const char *)_boot_lua, sizeof(_boot_lua) / sizeof(char), "@boot.lua", 0, 1); // Prefix '@' to trace as filename internally in Lua.
     if (result != 0) {
-        Log_write(LOG_LEVELS_FATAL, "<VM> can't interpret boot script");
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't interpret boot script");
         lua_close(interpreter->state);
         return false;
     }
@@ -290,13 +292,13 @@ bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
 #ifdef __DEBUG_GARBAGE_COLLECTOR__
         float start_time = (float)clock() / CLOCKS_PER_SEC;
         int pre = lua_gc(interpreter->state, LUA_GCCOUNT, 0);
-        Log_write(LOG_LEVELS_DEBUG, "<VM> performing periodical garbage collection (%dKb of memory in use)", pre);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "performing periodical garbage collection (%dKb of memory in use)", pre);
 #endif
         lua_gc(interpreter->state, LUA_GCCOLLECT, 0); // TODO: should we disable incremental GC and perform steps here?
 #ifdef __DEBUG_GARBAGE_COLLECTOR__
         int post = lua_gc(interpreter->state, LUA_GCCOUNT, 0);
         float elapsed = ((float)clock() / CLOCKS_PER_SEC) - start_time;
-        Log_write(LOG_LEVELS_DEBUG, "<VM> garbage collection took %.3fs (memory used %dKb, %dKb freed)", elapsed, post, pre - post);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "garbage collection took %.3fs (memory used %dKb, %dKb freed)", elapsed, post, pre - post);
 #endif
     }
 
@@ -315,7 +317,7 @@ bool Interpreter_call(Interpreter_t *interpreter, int nargs, int nresults)
 #ifdef __DEBUG_VM_CALLS__
     int called = lua_pcall(L, nargs, nresults, TRACEBACK_STACK_INDEX);
     if (called != LUA_OK) {
-        Log_write(LOG_LEVELS_ERROR, "<VM> error in execute: %s", lua_tostring(L, -1));
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "error in execute: %s", lua_tostring(L, -1));
         lua_pop(L, 1);
     }
     return called == LUA_OK ? true : false;

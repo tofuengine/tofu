@@ -25,6 +25,8 @@
 
 #include <stdint.h>
 
+#include <core/platform.h>
+
 typedef uint8_t GL_Pixel_t;
 
 typedef int8_t GL_Bool_t;
@@ -49,7 +51,11 @@ typedef struct _GL_Quad_t {
 
 #pragma pack(push, 1)
 typedef struct _GL_Color_t {
+#if PLATFORM_ID == PLATFORM_WINDOWS
+    uint8_t b, g, r, a;
+#else
     uint8_t r, g, b, a;
+#endif
 } GL_Color_t;
 #pragma pack(pop)
 

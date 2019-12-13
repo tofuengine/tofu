@@ -43,6 +43,8 @@
 #define _TOFU_MAKE_VERSION(m, n, r) _TOFU_CONCAT_VERSION(m, n, r)
 #define TOFU_VERSION_NUMBER _TOFU_MAKE_VERSION(TOFU_VERSION_MAJOR, TOFU_VERSION_MINOR, TOFU_VERSION_REVISION)
 
+#define LOG_CONTEXT "engine"
+
 static inline void wait_for(float seconds)
 {
 #if PLATFORM_ID == PLATFORM_LINUX
@@ -103,7 +105,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
     Log_initialize(engine->configuration.debug, NULL);
     Environment_initialize(&engine->environment);
 
-    Log_write(LOG_LEVELS_INFO, "<ENGINE> %s", TOFU_VERSION_NUMBER);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "%s", TOFU_VERSION_NUMBER);
 
     Display_Configuration_t display_configuration = { // TODO: reorganize configuration.
             .title = engine->configuration.title,
@@ -116,7 +118,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
         };
     bool result = Display_initialize(&engine->display, &display_configuration);
     if (!result) {
-        Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't initialize display");
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize display");
         FS_terminate(&engine->file_system);
         return false;
     }
@@ -126,7 +128,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
         };
     result = Input_initialize(&engine->input, &input_configuration, engine->display.window);
     if (!result) {
-        Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't initialize input");
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize input");
         Display_terminate(&engine->display);
         FS_terminate(&engine->file_system);
         return false;
@@ -134,7 +136,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 
     result = Audio_initialize(&engine->audio, &(Audio_Configuration_t){ .channels = 2, .sample_rate = 44100, .voices = 8 });
     if (!result) {
-        Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't initialize audio");
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize audio");
         Input_terminate(&engine->input);
         Display_terminate(&engine->display);
         FS_terminate(&engine->file_system);
@@ -153,7 +155,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
         };
     result = Interpreter_initialize(&engine->interpreter, &engine->file_system, userdatas);
     if (!result) {
-        Log_write(LOG_LEVELS_FATAL, "<ENGINE> can't initialize interpreter");
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize interpreter");
         Audio_terminate(&engine->audio);
         Input_terminate(&engine->input);
         Display_terminate(&engine->display);
@@ -184,7 +186,7 @@ void Engine_run(Engine_t *engine)
     const float delta_time = 1.0f / (float)engine->configuration.fps;
     const size_t skippable_frames = engine->configuration.skippable_frames;
     const float reference_time = 1.0f / engine->configuration.fps_cap;
-    Log_write(LOG_LEVELS_INFO, "<ENGINE> now running, update-time is %.6fs w/ %d skippable frames, reference-time is %.6fs", delta_time, skippable_frames, reference_time);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "now running, update-time is %.6fs w/ %d skippable frames, reference-time is %.6fs", delta_time, skippable_frames, reference_time);
 
     // Track time using double to keep the min resolution consistent over time!
     // https://randomascii.wordpress.com/2012/02/13/dont-store-that-in-a-float/
@@ -201,7 +203,7 @@ void Engine_run(Engine_t *engine)
 #ifdef __DEBUG_ENGINE_FPS__
         static size_t count = 0;
         if (++count == 250) {
-            Log_write(LOG_LEVELS_INFO, "<ENGINE> currently running at %.0f FPS", engine->environment.fps);
+            Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "currently running at %.0f FPS", engine->environment.fps);
             count = 0;
         }
 #endif

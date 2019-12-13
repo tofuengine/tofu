@@ -63,6 +63,10 @@ static void *load(const File_System_t *fs, const char *file, File_System_Modes_t
     return data;
 }
 
+#if PLATFORM_ID == PLATFORM_WINDOWS
+#define realpath(N,R) _fullpath((R),(N),PATH_MAX)
+#endif
+
 // TODO: implement a generic resource-loader, for later use with bundled applications.
 void FS_initialize(File_System_t *fs, const char *base_path)
 {

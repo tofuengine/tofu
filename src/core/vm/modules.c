@@ -36,6 +36,8 @@
 #include <libs/log.h>
 #include <libs/luax.h>
 
+#define LOG_CONTEXT "modules"
+
 // TODO: http://www.ilikebigbits.com/2017_06_01_float_or_double.html
 
 static int create_module(lua_State *L, const luaL_Reg *entries)
@@ -43,7 +45,7 @@ static int create_module(lua_State *L, const luaL_Reg *entries)
     lua_newtable(L);
     for (int i = 0; entries[i].func; ++i) {
         if (entries[i].func(L) != 1) {
-            Log_write(LOG_LEVELS_ERROR, "<MODULES> can't initialize class `%s`", entries[i].name);
+            Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize class `%s`", entries[i].name);
             return 0;
         }
         lua_setfield(L, -2, entries[i].name);

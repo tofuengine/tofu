@@ -24,15 +24,22 @@
 
 #include <memory.h>
 
+#pragma pack(push, 1)
+typedef struct rgba_t {
+    uint8_t r, g, b, a;
+} rgba_t;
+#pragma pack(pop)
+
 void surface_callback_palette(void *parameters, GL_Surface_t *surface, const void *data)
 {
     const GL_Palette_t *palette = (const GL_Palette_t *)parameters;
 
-    const GL_Color_t *src = (const GL_Color_t *)data;
+    const rgba_t *src = (const rgba_t *)data;
     GL_Pixel_t *dst = surface->data;
 
     for (size_t i = surface->data_size; i; --i) {
-        GL_Color_t color = *(src++);
+        rgba_t rgba = *(src++);
+        GL_Color_t color = (GL_Color_t){ .r = rgba.r, .g = rgba.g, .b = rgba.b, .a = rgba.a };
         *(dst++) = GL_palette_find_nearest_color(palette, color);
     }
 }
@@ -43,13 +50,13 @@ void surface_callback_indexes(void *parameters, GL_Surface_t *surface, const voi
     const GL_Pixel_t bg_index = indexes[0];
     const GL_Pixel_t fg_index = indexes[1];
 
-    const GL_Color_t *src = (const GL_Color_t *)data;
+    const uint32_t *src = (const uint32_t *)data; // Faster than the `rgba_t` struct, we don't need to unpack components.
     GL_Pixel_t *dst = surface->data;
 
-    const GL_Color_t background = *src; // The top-left pixel color defines the background.
+    const uint32_t background = *src; // The top-left pixel color defines the background.
 
     for (size_t i = surface->data_size; i; --i) {
-        GL_Color_t color = *(src++);
-        *(dst++) = memcmp(&color, &background, sizeof(GL_Color_t)) == 0 ? bg_index : fg_index;
+        uint32_t rgba = *(src++);
+        *(dst++) = rgba == background ? bg_index : fg_index;
     }
 }
