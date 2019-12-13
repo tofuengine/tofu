@@ -107,8 +107,8 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "version %s", TOFU_VERSION_NUMBER);
 
-    void *icon;
-    size_t icon_size;
+    void *icon = NULL;
+    size_t icon_size = 0;
     if (engine->configuration.icon[0] != '\0') {
         icon = FS_load_as_binary(&engine->file_system, engine->configuration.icon, &icon_size);
     }
