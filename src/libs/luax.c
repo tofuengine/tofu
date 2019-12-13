@@ -79,7 +79,7 @@ void luaX_stackdump(lua_State *L, const char* func, int line)
                     union {
                         lua_CFunction f;
                         const void *p;
-                    } u = { .f = lua_tocfunction(L, positive) };
+                    } u = { .f = lua_tocfunction(L, positive) }; // Trick the compiler to print function address.
                     printf("\t%p", u.p);
                 } else {
                     printf("\t%p", lua_topointer(L, positive));
