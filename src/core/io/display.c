@@ -256,6 +256,12 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         return false;
     }
 
+    GL_Point_t position;
+    if (!compute_size(display, configuration, &position)) {
+        glfwTerminate();
+        return false;
+    }
+
 #if __GL_VERSION__ >= 0x0303
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -271,22 +277,16 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
     glfwWindowHint(GLFW_FOCUSED, GLFW_TRUE);
-    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // We'll show it after the real-size has been calculated.
+//    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // We'll show it after the real-size has been calculated.
 
-    display->window = glfwCreateWindow(1, 1, configuration->title, NULL, NULL); // 1x1 window, in order to have a context early.
+    display->window = glfwCreateWindow(display->physical_width, display->physical_height, configuration->title,
+            configuration->fullscreen ? glfwGetPrimaryMonitor() : NULL, NULL);
     if (display->window == NULL) {
         Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't create window");
         glfwTerminate();
         return false;
     }
     glfwMakeContextCurrent(display->window);
-
-    // TODO: add custom icon support.
-//    load_icon(display->window, configuration->icon);
-    glfwSetWindowIcon(display->window, 1, &(GLFWimage){ 64, 64, (unsigned char *)_window_icon_pixels });
-
-    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> %sabling vertical synchronization", configuration->vertical_sync ? "en" : "dis");
-    glfwSwapInterval(configuration->vertical_sync ? 1 : 0); // Set vertical sync, if required.
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't initialize GLAD");
@@ -295,13 +295,22 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         return false;
     }
 
+    size_callback(display->window, display->physical_width, display->physical_height);
+
+    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> %s mouse cursor", configuration->hide_cursor ? "hiding" : "showing");
+    glfwSetInputMode(display->window, GLFW_CURSOR, configuration->hide_cursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
+
+    // TODO: add custom icon support.
+//    load_icon(display->window, configuration->icon);
+    glfwSetWindowIcon(display->window, 1, &(GLFWimage){ 64, 64, (unsigned char *)_window_icon_pixels });
+
+    Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> %sabling vertical synchronization", configuration->vertical_sync ? "en" : "dis");
+    glfwSwapInterval(configuration->vertical_sync ? 1 : 0); // Set vertical sync, if required.
+
     Log_write(LOG_LEVELS_INFO, "<DISPLAY> Vendor: %s", glGetString(GL_VENDOR));
     Log_write(LOG_LEVELS_INFO, "<DISPLAY> Renderer: %s", glGetString(GL_RENDERER));
     Log_write(LOG_LEVELS_INFO, "<DISPLAY> Version: %s", glGetString(GL_VERSION));
     Log_write(LOG_LEVELS_INFO, "<DISPLAY> GLSL: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
-
-    glfwSetFramebufferSizeCallback(display->window, size_callback);
-    glfwSetInputMode(display->window, GLFW_CURSOR, configuration->hide_cursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
 
     if (!GL_context_create(&display->gl, configuration->width, configuration->height)) {
         Log_write(LOG_LEVELS_FATAL, "<DISPLAY> can't initialize GL");
@@ -312,21 +321,6 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
 
     GL_palette_greyscale(&display->palette, GL_MAX_PALETTE_COLORS);
     Log_write(LOG_LEVELS_DEBUG, "<DISPLAY> calculating greyscale palette of #%d entries", GL_MAX_PALETTE_COLORS);
-
-    GL_Point_t position;
-    if (!compute_size(display, configuration, &position)) {
-        glfwDestroyWindow(display->window);
-        glfwTerminate();
-        return false;
-    }
-
-    if (!configuration->fullscreen) {
-        glfwSetWindowMonitor(display->window, NULL, position.x, position.y, display->physical_width, display->physical_height, GLFW_DONT_CARE);
-        glfwShowWindow(display->window);
-    } else { // Toggle fullscreen by passing primary monitor!
-        Log_write(LOG_LEVELS_INFO, "<DISPLAY> entering full-screen mode");
-        glfwSetWindowMonitor(display->window, glfwGetPrimaryMonitor(), position.x, position.y, display->physical_width, display->physical_height, GLFW_DONT_CARE);
-    }
 
     display->vram_size = display->configuration.width * display->configuration.width * sizeof(GL_Color_t);
     display->vram = malloc(display->vram_size);
