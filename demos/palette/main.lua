@@ -9,7 +9,7 @@ local System = require("tofu.core").System
 local Main = Class.define()
 
 local AMOUNT = 16
-local PALETTES = { "pico-8", "arne-16", "c64", "cga" }
+local PALETTES = { "pico-8", "arne-16", "dawnbringer-16", "c64", "cga" }
 
 --384 x 224 pixels
 
@@ -32,12 +32,7 @@ function Main:__ctor()
 end
 
 function Main:input()
-  if Input.is_key_pressed(Input.SELECT) then
-    self.palette = (self.palette % #PALETTES) + 1
-    Canvas.palette(PALETTES[self.palette])
-  elseif Input.is_key_pressed(Input.START) then
-    Canvas.screenshot("palette");
-  elseif Input.is_key_pressed(Input.DOWN) then
+  if Input.is_key_pressed(Input.DOWN) then
     self.scale_y = 1.0
     self.y = self.y + 1
   elseif Input.is_key_pressed(Input.UP) then
