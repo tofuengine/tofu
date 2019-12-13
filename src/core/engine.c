@@ -107,16 +107,8 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "version %s", TOFU_VERSION_NUMBER);
 
-    void *icon = NULL;
-    size_t icon_size = 0;
-    if (engine->configuration.icon[0] != '\0') {
-        icon = FS_load_as_binary(&engine->file_system, engine->configuration.icon, &icon_size);
-    }
-
     Display_Configuration_t display_configuration = { // TODO: reorganize configuration.
             .title = engine->configuration.title,
-            .icon = icon,
-            .icon_size = icon_size,
             .width = engine->configuration.width,
             .height = engine->configuration.height,
             .fullscreen = engine->configuration.fullscreen,
@@ -124,6 +116,9 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             .scale = engine->configuration.scale,
             .hide_cursor = engine->configuration.hide_cursor
         };
+    if (engine->configuration.icon[0] != '\0') {
+        display_configuration.icon = FS_load_as_binary(&engine->file_system, engine->configuration.icon, &display_configuration.icon_size);
+    }
     bool result = Display_initialize(&engine->display, &display_configuration);
     if (!result) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize display");
