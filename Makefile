@@ -34,7 +34,8 @@ CFLAGS=-D_DEFAULT_SOURCE -DLUA_32BITS -DLUA_FLOORN2I=1 -DSTBI_ONLY_PNG -DSTBI_NO
 ifeq ($(BUILD),release)
 	COPTS=-O3 -DRELEASE
 else
-	COPTS=-Og -g -DDEBUG
+#	COPTS=-Og -g -DDEBUG
+	COPTS=-O0 -g -DDEBUG
 endif
 # -Ofast => -O3 -ffast-math
 # -Os => -O2, favouring size
