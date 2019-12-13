@@ -30,6 +30,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Predefined library of 8/16/32/64 colors palettes.
 * [x] Tiled-map support w/ camera support (zoom and scrolling).
 * [x] Out-of-the-box timers support.
+* [x] Customizable application icon.
 * [ ] Out-of-the-box easing functions (see [this](https://github.com/kikito/tween.lua/blob/master/tween.lua) and [this](https://github.com/rxi/flux/blob/master/flux.lua)).
 * [ ] Animation support w/ frameset DSL (i.e. compiling a string where each token can be a single frame, a range or a "keep-current-frame for some time" command). Each frameset can have its one update period, and will be most likely based upon a timer.
 * [ ] Out-of-the-box palette switching (with tweening) features.
