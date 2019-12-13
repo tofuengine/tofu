@@ -28,11 +28,11 @@ void surface_callback_palette(void *parameters, GL_Surface_t *surface, const voi
 {
     const GL_Palette_t *palette = (const GL_Palette_t *)parameters;
 
-    const GL_Color_t *src = (const GL_Color_t *)data;
+    const uint8_t *src = (const uint8_t *)data; // rgba ordered.
     GL_Pixel_t *dst = surface->data;
 
     for (size_t i = surface->data_size; i; --i) {
-        GL_Color_t color = *(src++);
+        GL_Color_t color = (GL_Color_t){ .r = src[0], .g = src[1], .b = src[2], .a = src[3] }; src += 4;
         *(dst++) = GL_palette_find_nearest_color(palette, color);
     }
 }
