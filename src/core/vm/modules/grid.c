@@ -130,7 +130,7 @@ static int grid_new(lua_State *L)
             .data_size = data_size
         };
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "grid #%p allocated", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "grid %p allocated", instance);
 
     luaL_setmetatable(L, GRID_MT);
 
@@ -144,7 +144,7 @@ static int grid_gc(lua_State *L)
     LUAX_SIGNATURE_END
     Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "finalizing grid #%p", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "finalizing grid %p", instance);
 
     free(instance->data);
 

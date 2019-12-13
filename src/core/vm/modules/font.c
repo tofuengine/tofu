@@ -147,7 +147,7 @@ static int font_new3(lua_State *L)
             .sheet = sheet,
             .surface = surface
         };
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font allocated as #%p", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font allocated as %p", instance);
 
     luaL_setmetatable(L, FONT_MT);
 
@@ -206,7 +206,7 @@ static int font_new5(lua_State *L)
             .sheet = sheet,
             .surface = surface,
         };
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font allocated as #%p", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font allocated as %p", instance);
 
     luaL_setmetatable(L, FONT_MT);
 
@@ -234,7 +234,7 @@ static int font_gc(lua_State *L)
         luaX_unref(L, instance->surface);
         GL_sheet_detach(&instance->sheet);
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font #%p finalized", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font %p finalized", instance);
 
     return 0;
 }

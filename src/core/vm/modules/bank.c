@@ -104,7 +104,7 @@ static int bank_new(lua_State *L)
             .sheet = sheet,
             .owned = type == LUA_TSTRING ? true : false
         };
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank allocated as #%p", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank allocated as %p", instance);
 
     luaL_setmetatable(L, BANK_MT);
 
@@ -123,7 +123,7 @@ static int bank_gc(lua_State *L)
     } else {
         GL_sheet_detach(&instance->sheet);
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank #%p finalized", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p finalized", instance);
 
     return 0;
 }

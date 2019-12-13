@@ -138,7 +138,7 @@ static int surface_new1(lua_State *L)
                     .table = NULL
                 }
         };
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface allocated as #%p", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface allocated as %p", instance);
 
     luaL_setmetatable(L, SURFACE_MT);
 
@@ -171,7 +171,7 @@ static int surface_new2(lua_State *L)
                     .table = NULL
                 }
         };
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface allocated as #%p", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface allocated as %p", instance);
 
     luaL_setmetatable(L, SURFACE_MT);
 
@@ -197,15 +197,15 @@ static int surface_gc(lua_State *L)
 
     GL_Context_t *context = &display->gl;
     GL_context_sanitize(context, &instance->surface);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface #%p sanitized from context", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface %p sanitized from context", instance);
 
     if (instance->xform.table) {
         arrfree(instance->xform.table);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "scan-line table #%p deallocated", instance->xform.table);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "scan-line table %p deallocated", instance->xform.table);
     }
 
     GL_surface_delete(&instance->surface);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface #%p finalized", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface %p finalized", instance);
 
     return 0;
 }
@@ -643,7 +643,7 @@ static int surface_table1(lua_State *L)
 
     if (instance->xform.table) {
         arrfree(instance->xform.table);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "scan-line table #%p deallocated", instance->xform.table);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "scan-line table %p deallocated", instance->xform.table);
     }
     instance->xform.table = NULL;
 
@@ -688,7 +688,7 @@ static int surface_table2(lua_State *L)
 
     if (instance->xform.table) {
         arrfree(instance->xform.table);
-//        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "scan-line table #%p reallocated as #%p", instance->xform.table, table);
+//        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "scan-line table %p reallocated as %p", instance->xform.table, table);
     }
     instance->xform.table = table;
 

@@ -34,7 +34,7 @@ bool GL_surface_decode(GL_Surface_t *surface, const void *buffer, size_t buffer_
     int width, height, components;
     void *data = stbi_load_from_memory(buffer, buffer_size, &width, &height, &components, STBI_rgb_alpha); //STBI_default);
     if (!data) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't decode surface from #%p: %s", data, stbi_failure_reason());
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't decode surface from %p: %s", data, stbi_failure_reason());
         return false;
     }
     GL_surface_create(surface, width, height);
@@ -43,7 +43,7 @@ bool GL_surface_decode(GL_Surface_t *surface, const void *buffer, size_t buffer_
     }
     stbi_image_free(data);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface decoded at #%p (%dx%d w/ %d bpp)", surface->data, width, height, components);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface decoded at %p (%dx%d w/ %d bpp)", surface->data, width, height, components);
 
     return true;
 }
@@ -55,7 +55,7 @@ bool GL_surface_create(GL_Surface_t *surface, size_t width, size_t height)
         return false;
     }
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface created at #%p (%dx%d)", data, width, height);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface created at %p (%dx%d)", data, width, height);
 
     *surface = (GL_Surface_t){
             .width = width,
@@ -70,7 +70,7 @@ bool GL_surface_create(GL_Surface_t *surface, size_t width, size_t height)
 void GL_surface_delete(GL_Surface_t *surface)
 {
     free(surface->data);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface at #%p deleted", surface->data);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface at %p deleted", surface->data);
 }
 
 void GL_surface_to_rgba(const GL_Surface_t *surface, const GL_Palette_t *palette, GL_Color_t *vram)

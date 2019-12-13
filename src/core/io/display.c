@@ -122,7 +122,7 @@ static void load_icon(GLFWwindow *window, const uint8_t *buffer, size_t buffer_s
     int width, height, components;
     void *data = stbi_load_from_memory(buffer, buffer_size, &width, &height, &components, STBI_rgb_alpha); //STBI_default);
     if (!data) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't decode surface from #%p: %s", data, stbi_failure_reason());
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't decode surface from %p: %s", data, stbi_failure_reason());
         return;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "icon decoded (%dx%d w/ %d bpp)", width, height, components);
@@ -331,7 +331,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         glfwDestroyWindow(display->window);
         glfwTerminate();
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes VRAM allocated at #%p (%dx%d)", display->vram_size, display->vram, display->configuration.width, display->configuration.height);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes VRAM allocated at %p (%dx%d)", display->vram_size, display->vram, display->configuration.width, display->configuration.height);
 
     glGenTextures(1, &display->vram_texture); //allocate the memory for texture
     if (display->vram_texture == 0) {
@@ -375,7 +375,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         }
 
         program_prepare(program, _uniforms, Uniforms_t_CountOf);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program #%p prepared w/ id #%d", program, program->id);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p prepared w/ id #%d", program, program->id);
     }
 
     Display_shader(display, NULL); // Use pass-thru at the beginning.
@@ -400,12 +400,12 @@ void Display_terminate(Display_t *display)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "texture w/ id #%d deleted", display->vram_texture);
 
     free(display->vram);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "VRAM buffer #%p deallocated", display->vram);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "VRAM buffer %p deallocated", display->vram);
 
     GL_context_delete(&display->gl);
 
     glfwDestroyWindow(display->window);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window #%p destroyed", display->window);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window %p destroyed", display->window);
 
     glfwTerminate();
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "terminated");
@@ -488,15 +488,15 @@ void Display_shader(Display_t *display, const char *effect)
         free(code);
     }
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "switched to program #%p", display->active_program);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "switched to program %p", display->active_program);
 
     program_use(display->active_program);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program #%p active", display->active_program);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p active", display->active_program);
 
     program_send(display->active_program, UNIFORM_TEXTURE, PROGRAM_UNIFORM_TEXTURE, 1, &_texture_id_0); // Redundant
     GLfloat resolution[] = { (GLfloat)display->window_width, (GLfloat)display->window_height };
     program_send(display->active_program, UNIFORM_RESOLUTION, PROGRAM_UNIFORM_VEC2, 1, resolution);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program #%p initialized", display->active_program);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p initialized", display->active_program);
 }
 
 void Display_palette(Display_t *display, const GL_Palette_t *palette)
