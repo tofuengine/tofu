@@ -27,8 +27,12 @@
 #include <stdarg.h>
 #include <string.h>
 
-// http://jafrog.com/2013/11/23/colors-in-terminal.html
 #if PLATFORM_ID == PLATFORM_LINUX
+  #define USE_COLORS
+#endif
+
+// http://jafrog.com/2013/11/23/colors-in-terminal.html
+#ifdef USE_COLORS
   #define COLOR_BLACK         "\x1b[30m"
   #define COLOR_RED           "\x1b[31m"
   #define COLOR_GREEN         "\x1b[32m"
@@ -48,30 +52,16 @@
   #define COLOR_WHITE_HC      "\x1b[97m"
   
   #define COLOR_OFF           "\x1b[0m"
-#else
-  #define COLOR_BLACK         ""
-  #define COLOR_RED           ""
-  #define COLOR_GREEN         ""
-  #define COLOR_YELLOW        ""
-  #define COLOR_BLUE          ""
-  #define COLOR_MAGENTA       ""
-  #define COLOR_CYAN          ""
-  #define COLOR_WHITE         ""
-  
-  #define COLOR_BLACK_HC      ""
-  #define COLOR_RED_HC        ""
-  #define COLOR_GREEN_HC      ""
-  #define COLOR_YELLOW_HC     ""
-  #define COLOR_BLUE_HC       ""
-  #define COLOR_MAGENTA_HC    ""
-  #define COLOR_CYAN_HC       ""
-  #define COLOR_WHITE_HC      ""
-  
-  #define COLOR_OFF           ""
 #endif
 
+#ifdef USE_COLORS
 static const char *_colors[Log_Levels_t_CountOf] = {
     COLOR_WHITE, COLOR_BLUE_HC, COLOR_CYAN, COLOR_GREEN, COLOR_YELLOW, COLOR_RED, COLOR_MAGENTA, COLOR_WHITE
+};
+#endif
+
+static const char *_prefixes[Log_Levels_t_CountOf] = {
+    "ALL", "TRACE", "DEBUG", "INFO", "WARNING", "ERROR", "FATAL", "NONE"
 };
 
 static Log_Levels_t _level;
@@ -87,9 +77,14 @@ static void write(Log_Levels_t level, const char *text, va_list args)
         return;
     }
 
+#ifdef USE_COLORS
     fputs(_colors[level], _stream);
+#endif
+    fprintf(_stream, "[%s] ", _prefixes[level]);
     vfprintf(_stream, text, args);
+#ifdef USE_COLORS
     fputs(COLOR_OFF, _stream);
+#endif
     if (text[strlen(text) - 1] != '\n') {
         fputs("\n", _stream);
     }
