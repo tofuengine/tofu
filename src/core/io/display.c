@@ -35,8 +35,7 @@
 #define LOG_CONTEXT "display"
 
 #if PLATFORM_ID == PLATFORM_WINDOWS
-  //#define PIXEL_FORMAT    GL_BGRA
-  #define PIXEL_FORMAT    GL_RGBA
+  #define PIXEL_FORMAT    GL_BGRA
 #else
   #define PIXEL_FORMAT    GL_RGBA
 #endif
