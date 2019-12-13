@@ -105,7 +105,8 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
     Log_initialize(engine->configuration.debug, NULL);
     Environment_initialize(&engine->environment);
 
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "%s", TOFU_VERSION_NUMBER);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "version %s", TOFU_VERSION_NUMBER);
+
     void *icon;
     size_t icon_size;
     if (engine->configuration.icon[0] != '\0') {
