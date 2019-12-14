@@ -23,8 +23,14 @@
 #include "input.h"
 
 #include <libs/log.h>
+#include <libs/stb.h>
 
 #define LOG_CONTEXT "input"
+
+static const uint8_t _mappings[] = {
+#include "gamecontrollerdb.inc"
+    0x00
+};
 
 bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration, GLFWwindow *window)
 {
@@ -35,7 +41,8 @@ bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration
             .window = window,
             .time = 0
         };
-    return true;
+
+    return Input_configure(input, (const char *)_mappings);
 }
 
 void Input_terminate(Input_t *input)
@@ -204,4 +211,14 @@ void Input_auto_repeat(Input_t *input, Input_Keys_t id, float period)
             .time = 0.0f
         };
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "auto-repeat set to %.3fs for button #%d", period, id);
+}
+
+bool Input_configure(Input_t *input, const char *mappings)
+{
+    int result = glfwUpdateGamepadMappings(mappings);
+    if (result == GLFW_FALSE) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't update gamepad mappings");
+        return false;
+    }
+    return true;
 }

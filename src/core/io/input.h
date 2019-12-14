@@ -111,4 +111,6 @@ extern void Input_process(Input_t *input);
 
 extern void Input_auto_repeat(Input_t *input, Input_Keys_t id, float period);
 
+extern bool Input_configure(Input_t *input, const char *mappings);
+
 #endif  /* __INPUT_H__ */
