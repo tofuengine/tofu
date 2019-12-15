@@ -117,25 +117,16 @@ static const unsigned char _window_icon_pixels[] = {
 #include "icon.inc"
 };
 
-static bool set_icon(GLFWwindow *window, const void *icon, size_t icon_size)
+static void set_icon(GLFWwindow *window, const GLFWimage *icon)
 {
-    if (!icon || icon_size == 0) {
-        return false;
+    if (!icon || !icon->pixels) {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "setting default icon");
+        glfwSetWindowIcon(window, 1, &(GLFWimage){ 64, 64, (unsigned char *)_window_icon_pixels });
+        return;
     }
 
-    int width, height, components;
-    void *data = stbi_load_from_memory(icon, icon_size, &width, &height, &components, STBI_rgb_alpha); //STBI_default);
-    if (!data) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't decode icon from %p: %s", data, stbi_failure_reason());
-        return false;
-    }
-
-    glfwSetWindowIcon(window, 1, &(GLFWimage){ width, height, (unsigned char *)data });
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "setting custom icon (%dx%d w/ %d bpp)", width, height, components);
-
-    stbi_image_free(data);
-
-    return true;
+    glfwSetWindowIcon(window, 1, icon);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "setting custom %dx%d icon", icon->width, icon->height);
 }
 
 #ifdef DEBUG
@@ -302,10 +293,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         return false;
     }
 
-    if (!set_icon(display->window, configuration->icon, configuration->icon_size)) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "setting default icon");
-        glfwSetWindowIcon(display->window, 1, &(GLFWimage){ 64, 64, (unsigned char *)_window_icon_pixels });
-    }
+    set_icon(display->window, &configuration->icon);
 
     size_callback(display->window, display->physical_width, display->physical_height);
 

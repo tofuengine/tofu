@@ -94,6 +94,28 @@ static void configure(const File_System_t *file_system, Configuration_t *configu
     }
 }
 
+static GLFWimage load_icon(const File_System_t *file_system, const char *file)
+{
+    if (!file || file[0] == '\0') {
+        return (GLFWimage){ 0 };
+    }
+
+    size_t icon_size;
+    void *icon = FS_load_as_binary(file_system, file, &icon_size);
+
+    if (!icon || icon_size == 0) {
+        return (GLFWimage){ 0 };
+    }
+
+    int width, height, components;
+    void *data = stbi_load_from_memory(icon, icon_size, &width, &height, &components, STBI_rgb_alpha); // TODO: create FS image loader w/ callbacks.
+    Log_assert(data, LOG_LEVELS_ERROR, LOG_CONTEXT, "can't decode icon from %p: %s", data, stbi_failure_reason());
+
+    free(icon);
+
+    return (GLFWimage){ .width = width, .height = height, .pixels = data };
+}
+
 bool Engine_initialize(Engine_t *engine, const char *base_path)
 {
     *engine = (Engine_t){ 0 }; // Ensure is cleared at first.
@@ -109,6 +131,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 
     Display_Configuration_t display_configuration = { // TODO: reorganize configuration.
             .title = engine->configuration.title,
+            .icon = load_icon(&engine->file_system, engine->configuration.icon),
             .width = engine->configuration.width,
             .height = engine->configuration.height,
             .fullscreen = engine->configuration.fullscreen,
@@ -116,9 +139,6 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             .scale = engine->configuration.scale,
             .hide_cursor = engine->configuration.hide_cursor
         };
-    if (engine->configuration.icon[0] != '\0') {
-        display_configuration.icon = FS_load_as_binary(&engine->file_system, engine->configuration.icon, &display_configuration.icon_size);
-    }
     bool result = Display_initialize(&engine->display, &display_configuration);
     if (!result) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize display");
@@ -177,6 +197,8 @@ void Engine_terminate(Engine_t *engine)
     Input_terminate(&engine->input);
 
     Environment_terminate(&engine->environment);
+
+    stbi_image_free(engine->display.configuration.icon.pixels);
 
     FS_terminate(&engine->file_system);
 #if DEBUG

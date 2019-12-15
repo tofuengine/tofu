@@ -46,7 +46,7 @@ typedef enum _Display_Programs_t {
 
 typedef struct _Display_Configuration_t {
     const char *title;
-    void *icon;
+    GLFWimage icon;
     size_t icon_size;
     size_t width, height, scale;
     bool fullscreen;
