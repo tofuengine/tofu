@@ -1,11 +1,11 @@
 ifeq ($(PLATFORM),windows)
     ifeq ($(VARIANT),x64)
-		TARGET=tofu_w64.exe
+		TARGET=tofu_x64.exe
     else
-		TARGET=tofu_w32.exe
+		TARGET=tofu_x32.exe
     endif
 else ifeq ($(PLATFORM),raspberry)
-	TARGET=tofu-rpi
+	TARGET=tofu-rpi_x32
 else
 	TARGET=tofu
 endif
@@ -55,7 +55,7 @@ else ifeq ($(PLATFORM),raspberry)
 	LFLAGS=-Lexternal/GLFW/rpi/x32 -lglfw3 -lm -lpthread -lX11 -ldl
 else
 	LINKER=gcc
-	LFLAGS=-Lexternal/GLFW/linux -lglfw3 -lm -lpthread -lX11 -ldl
+	LFLAGS=-Lexternal/GLFW/linux/x64 -lglfw3 -lm -lpthread -lX11 -ldl
 endif
 LWARNINGS=-Wall -Wextra -Werror
 
