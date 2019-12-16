@@ -23,6 +23,7 @@
 #ifndef __GL_COMMON_H__
 #define __GL_COMMON_H__
 
+#include <stddef.h>
 #include <stdint.h>
 
 #include <core/platform.h>
@@ -36,12 +37,12 @@ typedef struct _GL_Point_t {
 } GL_Point_t;
 
 typedef struct _GL_Size_t {
-    int width, height;
+    size_t width, height;
 } GL_Size_t;
 
 typedef struct _GL_Rectangle_t {
     int x, y;
-    unsigned int width, height;
+    size_t width, height;
 } GL_Rectangle_t;
 
 typedef struct _GL_Quad_t {
