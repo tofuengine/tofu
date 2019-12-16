@@ -23,13 +23,12 @@
 #ifndef __INTERPRETER_H__
 #define __INTERPRETER_H__
 
+#include <core/environment.h>
+#include <libs/fs.h>
+#include <libs/luax.h>
+
 #include <limits.h>
 #include <stdbool.h>
-
-#include <core/environment.h>
-#include <core/io/fs.h>
-
-#include <libs/luax.h>
 
 typedef struct _Interpreter_t {
     float gc_age;

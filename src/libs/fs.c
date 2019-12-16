@@ -22,6 +22,7 @@
 
 #include "fs.h"
 
+#include <libs/log.h>
 #include <libs/stb.h>
 
 #include <stdarg.h>
@@ -29,6 +30,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#define LOG_CONTEXT "fs"
 
 typedef enum _File_System_Modes_t {
     FILE_SYSTEM_MODE_BINARY,
@@ -44,15 +47,22 @@ static void *load(const File_System_t *fs, const char *file, File_System_Modes_t
 
     FILE *stream = fopen(full_path, mode == FILE_SYSTEM_MODE_BINARY ? "rb" :"rt");
     if (!stream) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't access file `%s`", full_path);
         return NULL;
     }
     fseek(stream, 0L, SEEK_END);
     const size_t length = ftell(stream);
     void *data = malloc((length + (mode == FILE_SYSTEM_MODE_TEXT ? 1 : 0)) * sizeof(char)); // Add null terminator for the string.
+    if (!data) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d bytes of memory", length);
+        fclose(stream);
+        return NULL;
+    }
     rewind(stream);
     size_t read_bytes = fread(data, sizeof(char), length, stream);
     fclose(stream);
     if (read_bytes < length) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d bytes of data (%d read)", length, read_bytes);
         free(data);
         return NULL;
     }
@@ -61,6 +71,65 @@ static void *load(const File_System_t *fs, const char *file, File_System_Modes_t
     }
     *size = read_bytes;
     return data;
+}
+
+static File_System_Chunk_t load_as_string(const File_System_t *fs, const char *file)
+{
+    size_t length;
+    char *chars = load(fs, file, FILE_SYSTEM_MODE_TEXT, &length);
+    return (File_System_Chunk_t){
+            .type = FILE_SYSTEM_CHUNK_STRING,
+            .var = {
+                .string = {
+                        .chars = chars,
+                        .length = length
+                    }
+            }
+        };
+}
+
+static File_System_Chunk_t load_as_binary(const File_System_t *fs, const char *file)
+{
+    size_t size;
+    void *ptr = load(fs, file, FILE_SYSTEM_MODE_BINARY, &size);
+    return (File_System_Chunk_t){
+            .type = FILE_SYSTEM_CHUNK_BLOB,
+            .var = {
+                .blob = {
+                        .ptr = ptr,
+                        .size = size
+                    }
+            }
+        };
+}
+
+static File_System_Chunk_t load_as_image(const File_System_t *fs, const char *file)
+{
+    size_t size;
+    void *data = load(fs, file, FILE_SYSTEM_MODE_BINARY, &size);
+    if (!data) {
+        return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
+    }
+
+    int width, height, components;
+    void *pixels = stbi_load_from_memory(data, size, &width, &height, &components, STBI_rgb_alpha);
+    if (!pixels) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't decode surface from %p: %s", data, stbi_failure_reason());
+        return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
+    }
+
+    free(data);
+
+    return (File_System_Chunk_t){
+            .type = FILE_SYSTEM_CHUNK_IMAGE,
+            .var = {
+                .image = {
+                        .width = width,
+                        .height = height,
+                        .pixels = pixels
+                    }
+                }
+        };
 }
 
 #if PLATFORM_ID == PLATFORM_WINDOWS
@@ -75,6 +144,7 @@ void FS_initialize(File_System_t *fs, const char *base_path)
     char resolved[PATH_FILE_MAX]; // Using local buffer to avoid un-tracked `malloc()` for the syscall.
     char *ptr = realpath(base_path ? base_path : FILE_PATH_CURRENT_SZ, resolved);
     if (!ptr) {
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't resolve path `%s`", base_path);
         return;
     }
 
@@ -93,12 +163,29 @@ void FS_terminate(File_System_t *fs)
     free(fs->base_path);
 }
 
-char *FS_load_as_string(const File_System_t *fs, const char *file, size_t *size)
+File_System_Chunk_t FS_load(const File_System_t *fs, const char *file, File_System_Chunk_Types_t type)
 {
-    return load(fs, file, FILE_SYSTEM_MODE_TEXT, size);
+    if (type == FILE_SYSTEM_CHUNK_STRING) {
+        return load_as_string(fs, file);
+    } else
+    if (type == FILE_SYSTEM_CHUNK_BLOB) {
+        return load_as_binary(fs, file);
+    } else
+    if (type == FILE_SYSTEM_CHUNK_IMAGE) {
+        return load_as_image(fs, file);
+    }
+    return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
 }
 
-void *FS_load_as_binary(const File_System_t *fs, const char *file, size_t *size)
+void FS_release(File_System_Chunk_t chunk)
 {
-    return load(fs, file, FILE_SYSTEM_MODE_BINARY, size);
+    if (chunk.type == FILE_SYSTEM_CHUNK_STRING) {
+        free(chunk.var.string.chars);
+    } else
+    if (chunk.type == FILE_SYSTEM_CHUNK_BLOB) {
+        free(chunk.var.blob.ptr);
+    } else
+    if (chunk.type == FILE_SYSTEM_CHUNK_IMAGE) {
+        stbi_image_free(chunk.var.image.pixels);
+    }
 }

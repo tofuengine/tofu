@@ -86,34 +86,21 @@ static inline size_t calculate_fps(float elapsed)
 
 static void configure(const File_System_t *file_system, Configuration_t *configuration)
 {
-    size_t size;
-    char *data = FS_load_as_string(file_system, "tofu.config", &size);
-    Configuration_load(configuration, data);
-    if (data) {
-        free(data);
+    File_System_Chunk_t chunk = FS_load(file_system, "tofu.config", FILE_SYSTEM_CHUNK_STRING);
+    if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
+        return;
     }
+    Configuration_load(configuration, chunk.var.string.chars);
+    FS_release(chunk);
 }
 
-static GLFWimage load_icon(const File_System_t *file_system, const char *file)
+static File_System_Chunk_t load_icon(const File_System_t *file_system, const char *file)
 {
     if (!file || file[0] == '\0') {
-        return (GLFWimage){ 0 };
+        return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
     }
 
-    size_t icon_size;
-    void *icon = FS_load_as_binary(file_system, file, &icon_size);
-
-    if (!icon || icon_size == 0) {
-        return (GLFWimage){ 0 };
-    }
-
-    int width, height, components;
-    void *data = stbi_load_from_memory(icon, icon_size, &width, &height, &components, STBI_rgb_alpha); // TODO: create FS image loader w/ callbacks.
-    Log_assert(data, LOG_LEVELS_ERROR, LOG_CONTEXT, "can't decode icon from %p: %s", data, stbi_failure_reason());
-
-    free(icon);
-
-    return (GLFWimage){ .width = width, .height = height, .pixels = data };
+    return FS_load(file_system, file, FILE_SYSTEM_CHUNK_IMAGE);
 }
 
 bool Engine_initialize(Engine_t *engine, const char *base_path)
@@ -198,7 +185,7 @@ void Engine_terminate(Engine_t *engine)
 
     Environment_terminate(&engine->environment);
 
-    stbi_image_free(engine->display.configuration.icon.pixels);
+    FS_release(engine->display.configuration.icon);
 
     FS_terminate(&engine->file_system);
 #if DEBUG

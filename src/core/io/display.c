@@ -117,16 +117,16 @@ static const unsigned char _window_icon_pixels[] = {
 #include "icon.inc"
 };
 
-static void set_icon(GLFWwindow *window, const GLFWimage *icon)
+static void set_icon(GLFWwindow *window, File_System_Chunk_t icon)
 {
-    if (!icon || !icon->pixels) {
+    if (icon.type == FILE_SYSTEM_CHUNK_NULL) {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "setting default icon");
         glfwSetWindowIcon(window, 1, &(GLFWimage){ 64, 64, (unsigned char *)_window_icon_pixels });
         return;
     }
 
-    glfwSetWindowIcon(window, 1, icon);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "setting custom %dx%d icon", icon->width, icon->height);
+    glfwSetWindowIcon(window, 1, &(GLFWimage){ .width = icon.var.image.width, .height = icon.var.image.height, .pixels = icon.var.image.pixels });
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "setting custom %dx%d icon", icon.var.image.width, icon.var.image.height);
 }
 
 #ifdef DEBUG
@@ -293,7 +293,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         return false;
     }
 
-    set_icon(display->window, &configuration->icon);
+    set_icon(display->window, configuration->icon);
 
     size_callback(display->window, display->physical_width, display->physical_height);
 

@@ -75,7 +75,7 @@ static int bank_new(lua_State *L)
     size_t cell_width = (size_t)lua_tointeger(L, 2);
     size_t cell_height = (size_t)lua_tointeger(L, 3);
 
-    File_System_t *file_system = (File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
+    const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     GL_Sheet_t sheet;
@@ -83,14 +83,13 @@ static int bank_new(lua_State *L)
     if (type == LUA_TSTRING) {
         const char *file = lua_tostring(L, 1);
 
-        size_t buffer_size;
-        void *buffer = FS_load_as_binary(file_system, file, &buffer_size);
-        if (!buffer) {
+        File_System_Chunk_t chunk = FS_load(file_system, file, FILE_SYSTEM_CHUNK_IMAGE);
+        if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
             return luaL_error(L, "can't load file `%s`", file);
         }
-        GL_sheet_decode(&sheet, buffer, buffer_size, cell_width, cell_height, surface_callback_palette, (void *)&display->palette);
+        GL_sheet_fetch(&sheet, (GL_Image_t){ .width = chunk.var.image.width, .height = chunk.var.image.height, .data = chunk.var.image.pixels }, cell_width, cell_height, surface_callback_palette, (void *)&display->palette);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` loaded", file);
-        free(buffer);
+        FS_release(chunk);
     } else
     if (type == LUA_TUSERDATA) {
         const Surface_Class_t *instance = (const Surface_Class_t *)lua_touserdata(L, 1);

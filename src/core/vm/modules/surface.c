@@ -112,18 +112,17 @@ static int surface_new1(lua_State *L)
     LUAX_SIGNATURE_END
     const char *file = lua_tostring(L, 1);
 
-    File_System_t *file_system = (File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
+    const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    size_t buffer_size;
-    void *buffer = FS_load_as_binary(file_system, file, &buffer_size);
-    if (!buffer) {
+    File_System_Chunk_t chunk = FS_load(file_system, file, FILE_SYSTEM_CHUNK_IMAGE);
+    if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
         return luaL_error(L, "can't load file `%s`", file);
     }
     GL_Surface_t surface;
-    GL_surface_decode(&surface, buffer, buffer_size, surface_callback_palette, (void *)&display->palette);
+    GL_surface_fetch(&surface, (GL_Image_t){ .width = chunk.var.image.width, .height = chunk.var.image.height, .data = chunk.var.image.pixels }, surface_callback_palette, (void *)&display->palette);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface `%s` loaded", file);
-    free(buffer);
+    FS_release(chunk);
 
     Surface_Class_t *instance = (Surface_Class_t *)lua_newuserdata(L, sizeof(Surface_Class_t));
     *instance = (Surface_Class_t){

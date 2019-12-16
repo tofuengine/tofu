@@ -32,8 +32,8 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 
 #include <config.h>
 #include <core/io/display.h>
-#include <core/io/fs.h>
 #include <core/vm/modules.h>
+#include <libs/fs.h>
 #include <libs/imath.h>
 #include <libs/log.h>
 #include <libs/stb.h>
@@ -114,7 +114,7 @@ static int error_handler(lua_State *L)
 
 static int custom_searcher(lua_State *L)
 {
-    const File_System_t *fs = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(1));
+    const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(1));
 
     const char *file = lua_tostring(L, 1);
 
@@ -128,13 +128,13 @@ static int custom_searcher(lua_State *L)
     }
     strcat(path_file, ".lua");
 
-    size_t size;
-    char *buffer = FS_load_as_string(fs, path_file + 1, &size); // Skip the '@', we are using it for Lua to trace the file.
-    if (!buffer) {
+    File_System_Chunk_t chunk = FS_load(file_system, path_file + 1, FILE_SYSTEM_CHUNK_STRING);
+    if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
         luaL_error(L, "can't load file `%s`", path_file + 1);
     }
-    luaL_loadbuffer(L, buffer, size, path_file);
-    free(buffer);
+
+    luaL_loadbuffer(L, chunk.var.string.chars, chunk.var.string.length, path_file);
+    FS_release(chunk);
 
     return 1;
 }

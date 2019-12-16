@@ -64,6 +64,17 @@ bool GL_sheet_decode(GL_Sheet_t *sheet, const void *buffer, size_t size, size_t 
     return true;
 }
 
+bool GL_sheet_fetch(GL_Sheet_t *sheet, GL_Image_t image, size_t cell_width, size_t cell_height, const GL_Surface_Callback_t callback, void *parameters)
+{
+    GL_Surface_t atlas;
+    if (!GL_surface_fetch(&atlas, image, callback, parameters)) {
+        return false;
+    }
+    GL_sheet_attach(sheet, &atlas, cell_width, cell_height);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p decoded", sheet);
+    return true;
+}
+
 void GL_sheet_delete(GL_Sheet_t *sheet)
 {
     GL_surface_delete(&sheet->atlas); // Delete prior detach or the atlas will be cleared!

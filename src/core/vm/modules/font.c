@@ -111,7 +111,7 @@ static int font_new3(lua_State *L)
     size_t glyph_width = (size_t)lua_tointeger(L, 2);
     size_t glyph_height = (size_t)lua_tointeger(L, 3);
 
-    File_System_t *file_system = (File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
+    const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     GL_Sheet_t sheet;
@@ -122,17 +122,16 @@ static int font_new3(lua_State *L)
 
         const Sheet_Data_t *data = resources_sheets_find(file);
         if (data) {
-            GL_sheet_decode(&sheet, data->buffer, data->size, data->quad_width, data->quad_height, surface_callback_palette, (void *)&display->palette);
+            GL_sheet_decode(&sheet, data->data, data->size, data->cell_width, data->cell_height, surface_callback_palette, (void *)&display->palette);
             Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` decoded", file);
         } else {
-            size_t buffer_size;
-            void *buffer = FS_load_as_binary(file_system, file, &buffer_size);
-            if (!buffer) {
+            File_System_Chunk_t chunk = FS_load(file_system, file, FILE_SYSTEM_CHUNK_IMAGE);
+            if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
                 return luaL_error(L, "can't load file `%s`", file);
             }
-            GL_sheet_decode(&sheet, buffer, buffer_size, glyph_width, glyph_height, surface_callback_palette, (void *)&display->palette);
+            GL_sheet_fetch(&sheet, (GL_Image_t){ .width = chunk.var.image.width, .height = chunk.var.image.height, .data = chunk.var.image.pixels }, glyph_width, glyph_height, surface_callback_palette, (void *)&display->palette);
             Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` loaded", file);
-            free(buffer);
+            FS_release(chunk);
         }
     } else
     if (type == LUA_TUSERDATA) {
@@ -169,7 +168,7 @@ static int font_new5(lua_State *L)
     GL_Pixel_t background_index = (GL_Pixel_t)lua_tointeger(L, 4);
     GL_Pixel_t foreground_index = (GL_Pixel_t)lua_tointeger(L, 5);
 
-    File_System_t *file_system = (File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
+    const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
 
     GL_Sheet_t sheet;
     luaX_Reference surface = LUAX_REFERENCE_NIL;
@@ -181,17 +180,16 @@ static int font_new5(lua_State *L)
 
         const Sheet_Data_t *data = resources_sheets_find(file);
         if (data) {
-            GL_sheet_decode(&sheet, data->buffer, data->size, data->quad_width, data->quad_height, surface_callback_indexes, (void *)indexes);
+            GL_sheet_decode(&sheet, data->data, data->size, data->cell_width, data->cell_height, surface_callback_indexes, (void *)indexes);
             Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` decoded", file);
         } else {
-            size_t buffer_size;
-            void *buffer = FS_load_as_binary(file_system, file, &buffer_size);
-            if (!buffer) {
+            File_System_Chunk_t chunk = FS_load(file_system, file, FILE_SYSTEM_CHUNK_IMAGE);
+            if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
                 return luaL_error(L, "can't load file `%s`", file);
             }
-            GL_sheet_decode(&sheet, buffer, buffer_size, glyph_width, glyph_height, surface_callback_indexes, (void *)indexes);
+            GL_sheet_fetch(&sheet, (GL_Image_t){ .width = chunk.var.image.width, .height = chunk.var.image.height, .data = chunk.var.image.pixels }, glyph_width, glyph_height, surface_callback_palette, (void *)indexes);
             Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` loaded", file);
-            free(buffer);
+            FS_release(chunk);
         }
     } else
     if (type == LUA_TUSERDATA) {

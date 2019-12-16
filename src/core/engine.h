@@ -28,9 +28,9 @@
 #include <core/environment.h>
 #include <core/io/audio.h>
 #include <core/io/display.h>
-#include <core/io/fs.h>
 #include <core/io/input.h>
 #include <core/vm/interpreter.h>
+#include <libs/fs.h>
 
 #include <stdbool.h>
 #include <limits.h>

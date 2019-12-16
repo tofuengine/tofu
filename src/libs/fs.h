@@ -56,12 +56,35 @@ typedef struct _File_System_t {
     char *base_path;
 } File_System_t;
 
+typedef enum _File_System_Chunk_Types_t {
+    FILE_SYSTEM_CHUNK_NULL,
+    FILE_SYSTEM_CHUNK_STRING,
+    FILE_SYSTEM_CHUNK_BLOB,
+    FILE_SYSTEM_CHUNK_IMAGE,
+} File_System_Chunk_Types_t;
+
+typedef struct _File_System_Chunk_t {
+    File_System_Chunk_Types_t type;
+    union {
+      struct {
+        char *chars;
+        size_t length;
+      } string;
+      struct {
+        void *ptr;
+        size_t size;
+      } blob;
+      struct {
+        size_t width, height;
+        void *pixels;
+      } image;
+    } var;
+} File_System_Chunk_t;
+
 extern void FS_initialize(File_System_t *fs, const char *base_path);
 extern void FS_terminate(File_System_t *fs);
 
-extern char *FS_load_as_string(const File_System_t *fs, const char *file, size_t *size);
-//extern bool FS_write_as_string(const File_System_t *fs, const char *file, const char *string);
-extern void *FS_load_as_binary(const File_System_t *fs, const char *file, size_t *size);
-//extern bool FS_write_as_binary(const File_System_t *fs, const char *file, const char *data, size_t size);
+extern File_System_Chunk_t FS_load(const File_System_t *fs, const char *file, File_System_Chunk_Types_t type);
+extern void FS_release(File_System_Chunk_t chunk);
 
 #endif /* __FS_H__ */

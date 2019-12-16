@@ -48,6 +48,22 @@ bool GL_surface_decode(GL_Surface_t *surface, const void *buffer, size_t buffer_
     return true;
 }
 
+bool GL_surface_fetch(GL_Surface_t *surface, GL_Image_t image, const GL_Surface_Callback_t callback, void *parameters)
+{
+    bool result = GL_surface_create(surface, image.width, image.height);
+    if (!result) {
+        return false;
+    }
+
+    if (callback != NULL) {
+        callback(parameters, surface, image.data);
+    }
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface fetched at %p (%dx%d)", surface->data, image.width, image.height);
+
+    return true;
+}
+
 bool GL_surface_create(GL_Surface_t *surface, size_t width, size_t height)
 {
     GL_Pixel_t *data = malloc(width * height * sizeof(GL_Pixel_t));

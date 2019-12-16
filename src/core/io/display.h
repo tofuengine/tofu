@@ -27,6 +27,7 @@
 
 #include <config.h>
 #include <libs/gl/gl.h>
+#include <libs/fs.h>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -46,7 +47,7 @@ typedef enum _Display_Programs_t {
 
 typedef struct _Display_Configuration_t {
     const char *title;
-    GLFWimage icon;
+    File_System_Chunk_t icon;
     size_t icon_size;
     size_t width, height, scale;
     bool fullscreen;
