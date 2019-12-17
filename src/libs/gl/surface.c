@@ -29,7 +29,7 @@
 
 #define LOG_CONTEXT "gl"
 
-bool GL_surface_decode(GL_Surface_t *surface, const void *buffer, size_t buffer_size, const GL_Surface_Callback_t callback, void *parameters)
+bool GL_surface_decode(GL_Surface_t *surface, const void *buffer, size_t buffer_size, const GL_Surface_Callback_t callback, void *user_data)
 {
     int width, height, components;
     void *data = stbi_load_from_memory(buffer, buffer_size, &width, &height, &components, STBI_rgb_alpha); //STBI_default);
@@ -39,7 +39,7 @@ bool GL_surface_decode(GL_Surface_t *surface, const void *buffer, size_t buffer_
     }
     GL_surface_create(surface, width, height);
     if (callback != NULL) {
-        callback(parameters, surface, data);
+        callback(user_data, surface, data);
     }
     stbi_image_free(data);
 
@@ -48,7 +48,7 @@ bool GL_surface_decode(GL_Surface_t *surface, const void *buffer, size_t buffer_
     return true;
 }
 
-bool GL_surface_fetch(GL_Surface_t *surface, GL_Image_t image, const GL_Surface_Callback_t callback, void *parameters)
+bool GL_surface_fetch(GL_Surface_t *surface, GL_Image_t image, const GL_Surface_Callback_t callback, void *user_data)
 {
     bool result = GL_surface_create(surface, image.width, image.height);
     if (!result) {
@@ -56,7 +56,7 @@ bool GL_surface_fetch(GL_Surface_t *surface, GL_Image_t image, const GL_Surface_
     }
 
     if (callback != NULL) {
-        callback(parameters, surface, image.data);
+        callback(user_data, surface, image.data);
     }
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface fetched at %p (%dx%d)", surface->data, image.width, image.height);

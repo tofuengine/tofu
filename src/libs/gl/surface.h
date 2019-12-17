@@ -34,10 +34,10 @@ typedef struct _GL_Surface_t {
     size_t data_size;
 } GL_Surface_t;
 
-typedef void (*GL_Surface_Callback_t)(void *parameters, GL_Surface_t *surface, const void *data);
+typedef void (*GL_Surface_Callback_t)(void *user_data, GL_Surface_t *surface, const void *data);
 
-extern bool GL_surface_decode(GL_Surface_t *surface, const void *buffer, size_t buffer_size, const GL_Surface_Callback_t callback, void *parameters);
-extern bool GL_surface_fetch(GL_Surface_t *surface, GL_Image_t image, const GL_Surface_Callback_t callback, void *parameters);
+extern bool GL_surface_decode(GL_Surface_t *surface, const void *buffer, size_t buffer_size, const GL_Surface_Callback_t callback, void *user_data);
+extern bool GL_surface_fetch(GL_Surface_t *surface, GL_Image_t image, const GL_Surface_Callback_t callback, void *user_data);
 extern bool GL_surface_create(GL_Surface_t *surface, size_t width, size_t height);
 extern void GL_surface_delete(GL_Surface_t *surface);
 

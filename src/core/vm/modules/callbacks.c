@@ -30,9 +30,9 @@ typedef struct rgba_t {
 } rgba_t;
 #pragma pack(pop)
 
-void surface_callback_palette(void *parameters, GL_Surface_t *surface, const void *data)
+void surface_callback_palette(void *user_data, GL_Surface_t *surface, const void *data)
 {
-    const GL_Palette_t *palette = (const GL_Palette_t *)parameters;
+    const GL_Palette_t *palette = (const GL_Palette_t *)user_data;
 
     const rgba_t *src = (const rgba_t *)data;
     GL_Pixel_t *dst = surface->data;
@@ -44,9 +44,9 @@ void surface_callback_palette(void *parameters, GL_Surface_t *surface, const voi
     }
 }
 
-void surface_callback_indexes(void *parameters, GL_Surface_t *surface, const void *data)
+void surface_callback_indexes(void *user_data, GL_Surface_t *surface, const void *data)
 {
-    const GL_Pixel_t *indexes = (const GL_Pixel_t *)parameters;
+    const GL_Pixel_t *indexes = (const GL_Pixel_t *)user_data;
     const GL_Pixel_t bg_index = indexes[0];
     const GL_Pixel_t fg_index = indexes[1];
 

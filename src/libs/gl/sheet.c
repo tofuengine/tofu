@@ -53,10 +53,10 @@ GL_Rectangle_t *precompute_cells(size_t width, size_t height, size_t cell_width,
     return cells;
 }
 
-bool GL_sheet_decode(GL_Sheet_t *sheet, const void *buffer, size_t size, size_t cell_width, size_t cell_height, GL_Surface_Callback_t callback, void *parameters)
+bool GL_sheet_decode(GL_Sheet_t *sheet, const void *buffer, size_t size, size_t cell_width, size_t cell_height, GL_Surface_Callback_t callback, void *user_data)
 {
     GL_Surface_t atlas;
-    if (!GL_surface_decode(&atlas, buffer, size, callback, parameters)) {
+    if (!GL_surface_decode(&atlas, buffer, size, callback, user_data)) {
         return false;
     }
     GL_sheet_attach(sheet, &atlas, cell_width, cell_height);
@@ -64,10 +64,10 @@ bool GL_sheet_decode(GL_Sheet_t *sheet, const void *buffer, size_t size, size_t 
     return true;
 }
 
-bool GL_sheet_fetch(GL_Sheet_t *sheet, GL_Image_t image, size_t cell_width, size_t cell_height, const GL_Surface_Callback_t callback, void *parameters)
+bool GL_sheet_fetch(GL_Sheet_t *sheet, GL_Image_t image, size_t cell_width, size_t cell_height, const GL_Surface_Callback_t callback, void *user_data)
 {
     GL_Surface_t atlas;
-    if (!GL_surface_fetch(&atlas, image, callback, parameters)) {
+    if (!GL_surface_fetch(&atlas, image, callback, user_data)) {
         return false;
     }
     GL_sheet_attach(sheet, &atlas, cell_width, cell_height);

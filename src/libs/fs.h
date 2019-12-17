@@ -52,8 +52,25 @@
   #define PATH_FILE_MAX       1024
 #endif
 
+typedef enum _File_System_Types_t {
+    FILE_SYSTEM_TYPE_FOLDER,
+    FILE_SYSTEM_TYPE_PACKED,
+    File_System_Types_t_CountOf
+} File_System_Types_t;
+
+typedef struct _File_System_Modes_IO_Callbacks_t {
+   void * (*open) (void *user_data, const char *file);
+   int    (*read) (void *user_data, void *handle, char *buffer, int size);
+   void   (*skip) (void *user_data, void *handle, int offset);
+   int    (*eof)  (void *user_data, void *handle);
+   void   (*close)(void *user_data, void *handle);
+} File_System_Modes_IO_Callbacks_t;
+
 typedef struct _File_System_t {
     char *base_path;
+    File_System_Types_t type;
+    File_System_Modes_IO_Callbacks_t callbacks;
+    void *user_data;
 } File_System_t;
 
 typedef enum _File_System_Chunk_Types_t {
