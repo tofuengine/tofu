@@ -137,9 +137,19 @@ void modules_initialize(lua_State *L, int nup)
         { NULL, NULL }
     };
 
+#ifdef INSIST
+    luaX_insisttable(L, "tofu");
+    for (const luaL_Reg *module = modules; module->func; ++module) {
+        luaX_pushvalues(L, nup);
+        luaX_require(L, module->name, module->func, nup, 1);
+        lua_setfield(L, -1, module->name);
+    }
+    lua_pop(L, nup);
+#else
     for (const luaL_Reg *module = modules; module->func; ++module) {
         luaX_pushvalues(L, nup);
         luaX_preload(L, module->name, module->func, nup);
     }
     lua_pop(L, nup);
+#endif
 }

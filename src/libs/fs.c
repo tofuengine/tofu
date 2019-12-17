@@ -82,6 +82,29 @@ static void stdio_close(const File_System_t *file_system, void *handle)
     fclose((FILE *)handle);
 }
 
+static void *zipio_open(const File_System_t *file_system, const char *file, File_System_Modes_t mode, size_t *size_in_bytes)
+{
+    return NULL;
+}
+
+static size_t zipio_read(const File_System_t *file_system, void *handle, char *buffer, size_t bytes_to_read)
+{
+    return 0;
+}
+
+static void zipio_skip(const File_System_t *file_system, void *handle, int offset)
+{
+}
+
+static bool zipio_eof(const File_System_t *file_system, void *handle)
+{
+    return true;
+}
+
+static void zipio_close(const File_System_t *file_system, void *handle)
+{
+}
+
 static void *fs_load(const File_System_t *file_system, const char *file, File_System_Modes_t mode, size_t *size)
 {
    
@@ -226,13 +249,25 @@ void FS_initialize(File_System_t *fs, const char *base_path)
     fs->base_path = malloc((length + 1) * sizeof(char));
     strcpy(fs->base_path, resolved);
 
-    fs->callbacks = (File_System_Modes_IO_Callbacks_t){
-            stdio_open,
-            stdio_read,
-            stdio_skip,
-            stdio_eof,
-            stdio_close,
-        };
+    void *zip = NULL;
+    if (zip) {
+        fs->user_data = (void *)zip;
+        fs->callbacks = (File_System_Modes_IO_Callbacks_t){
+                zipio_open,
+                zipio_read,
+                zipio_skip,
+                zipio_eof,
+                zipio_close,
+            };
+    } else {
+        fs->callbacks = (File_System_Modes_IO_Callbacks_t){
+                stdio_open,
+                stdio_read,
+                stdio_skip,
+                stdio_eof,
+                stdio_close,
+            };
+    }
 }
 
 void FS_terminate(File_System_t *fs)
