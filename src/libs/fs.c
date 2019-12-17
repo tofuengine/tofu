@@ -38,16 +38,12 @@
 
 #define LOG_CONTEXT "fs"
 
-typedef enum _File_System_Modes_t {
-    FILE_SYSTEM_MODE_BINARY,
-    FILE_SYSTEM_MODE_TEXT,
-    File_System_Modes_t_CountOf
-} File_System_Modes_t;
-
-static void *fs_open(const File_System_t *fs, const char *file, File_System_Modes_t mode, size_t *size_in_bytes)
+static void *stdio_open(void *user_data, const char *file, File_System_Modes_t mode, size_t *size_in_bytes)
 {
+    const File_System_t *file_system = (const File_System_t *)user_data;
+
     char full_path[PATH_FILE_MAX];
-    strcpy(full_path, fs->base_path);
+    strcpy(full_path, file_system->base_path);
     strcat(full_path, file);
 
     FILE *stream = fopen(full_path, mode == FILE_SYSTEM_MODE_BINARY ? "rb" :"rt");
@@ -68,34 +64,46 @@ static void *fs_open(const File_System_t *fs, const char *file, File_System_Mode
     return (void *)stream;
 }
 
-static size_t fs_read(const File_System_t *fs, void *handle, void *buffer, size_t bytes_to_read)
+static size_t stdio_read(void *user_data, void *handle, char *buffer, size_t bytes_to_read)
 {
-    return (size_t)fread(buffer, sizeof(char), bytes_to_read, (FILE *)handle);
+    return fread(buffer, sizeof(char), bytes_to_read, (FILE *)handle);
 }
 
-static void fs_close(const File_System_t *fs, void *handle)
+static void stdio_skip(void *user_data, void *handle, int offset)
+{
+    fseek((FILE*)user_data, offset, SEEK_CUR);
+}
+
+static bool stdio_eof(void *user_data, void *handle)
+{
+    return feof((FILE *)handle) != 0;
+}
+
+static void stdio_close(void *user_data, void *handle)
 {
     fclose((FILE *)handle);
 }
 
-static void *fs_load(const File_System_t *fs, const char *file, File_System_Modes_t mode, size_t *size)
+static void *fs_load(void *user_data, const char *file, File_System_Modes_t mode, size_t *size)
 {
-    size_t byte_to_read;
-    void *handle = fs_open(fs, file, mode, &byte_to_read);
+    const File_System_t *file_system = (const File_System_t *)user_data;
+    
+    size_t bytes_to_read;
+    void *handle = file_system->callbacks.open(user_data, file, mode, &bytes_to_read);
     if (!handle) {
         return NULL;
     }
-    size_t bytes_to_allocate = byte_to_read + (mode == FILE_SYSTEM_MODE_TEXT ? 1 : 0);
+    size_t bytes_to_allocate = bytes_to_read + (mode == FILE_SYSTEM_MODE_TEXT ? 1 : 0);
     void *data = malloc(bytes_to_allocate * sizeof(uint8_t)); // Add null terminator for the string.
     if (!data) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d bytes of memory", bytes_to_allocate);
-        fs_close(fs, handle);
+        file_system->callbacks.close(user_data, handle);
         return NULL;
     }
-    size_t read_bytes = fs_read(fs, handle, data, byte_to_read);
-    fs_close(fs, handle);
-    if (read_bytes < byte_to_read) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d bytes of data (%d available)", byte_to_read, read_bytes);
+    size_t read_bytes = file_system->callbacks.read(user_data, handle, data, bytes_to_read);
+    file_system->callbacks.close(user_data, handle);
+    if (read_bytes < bytes_to_read) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d bytes of data (%d available)", bytes_to_read, read_bytes);
         free(data);
         return NULL;
     }
@@ -106,27 +114,25 @@ static void *fs_load(const File_System_t *fs, const char *file, File_System_Mode
     return data;
 }
 
-static File_System_Modes_IO_Callbacks_t _callbacks = { 0 };
-
-static File_System_Chunk_t load_as_string(const File_System_t *fs, const char *file)
+static File_System_Chunk_t load_as_string(const File_System_t *file_system, const char *file)
 {
-    size_t length;
-    char *chars = fs_load(fs, file, FILE_SYSTEM_MODE_TEXT, &length);
+    size_t size;
+    void *chars = fs_load((void *)file_system, file, FILE_SYSTEM_MODE_TEXT, &size);
     return (File_System_Chunk_t){
             .type = FILE_SYSTEM_CHUNK_STRING,
             .var = {
                 .string = {
-                        .chars = chars,
-                        .length = length
+                        .chars = ((char *)chars),
+                        .length = size
                     }
             }
         };
 }
 
-static File_System_Chunk_t load_as_binary(const File_System_t *fs, const char *file)
+static File_System_Chunk_t load_as_binary(const File_System_t *file_system, const char *file)
 {
     size_t size;
-    void *ptr = fs_load(fs, file, FILE_SYSTEM_MODE_BINARY, &size);
+    void *ptr = fs_load((void *)file_system, file, FILE_SYSTEM_MODE_BINARY, &size);
     return (File_System_Chunk_t){
             .type = FILE_SYSTEM_CHUNK_BLOB,
             .var = {
@@ -138,38 +144,53 @@ static File_System_Chunk_t load_as_binary(const File_System_t *fs, const char *f
         };
 }
 
-static int stb_stdin_read(void *user, char *data, int size)
+typedef struct _stbi_context_t {
+    const File_System_t *file_system;
+    void *user_data;
+    void *handle;
+} stbi_context_t;
+
+static int stb_stdio_read(void *user, char *data, int size)
 {
-    return (int) fread(data,1,size,(FILE*) user);
+    const stbi_context_t *context = (const stbi_context_t *)user;
+    return (int)context->file_system->callbacks.read(context->user_data, context->handle, data, (size_t)size);
 }
 
-static void stb_stdin_skip(void *user, int n)
+static void stb_stdio_skip(void *user, int n)
 {
-    fseek((FILE*) user, n, SEEK_CUR);
+    const stbi_context_t *context = (const stbi_context_t *)user;
+    context->file_system->callbacks.skip(context->user_data, context->handle, n);
 }
 
-static int stb_stdin_eof(void *user)
+static int stb_stdio_eof(void *user)
 {
-    return feof((FILE*) user);
+    const stbi_context_t *context = (const stbi_context_t *)user;
+    return context->file_system->callbacks.eof(context->user_data, context->handle) ? -1 : 0;
 }
 
 static const stbi_io_callbacks _io_callbacks = {
-    stb_stdin_read,
-    stb_stdin_skip,
-    stb_stdin_eof,
+    stb_stdio_read,
+    stb_stdio_skip,
+    stb_stdio_eof,
 };
 
-static File_System_Chunk_t load_as_image(const File_System_t *fs, const char *file)
+static File_System_Chunk_t load_as_image(const File_System_t *file_system, const char *file)
 {
+    void *user_data = (void *)file_system;
+
     size_t byte_to_read;
-    void *handle = fs_open(fs, file, FILE_SYSTEM_MODE_BINARY, &byte_to_read);
+    void *handle = file_system->callbacks.open(user_data, file, FILE_SYSTEM_MODE_BINARY, &byte_to_read);
     if (!handle) {
         return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
     }
 
+    stbi_context_t context = {
+            .file_system = file_system, .user_data = (void *)file_system, .handle = handle
+        };
+
     int width, height, components;
-    void *pixels = stbi_load_from_callbacks(&_io_callbacks, handle, &width, &height, &components, STBI_rgb_alpha);
-    fs_close(fs, handle);
+    void *pixels = stbi_load_from_callbacks(&_io_callbacks, &context, &width, &height, &components, STBI_rgb_alpha);
+    file_system->callbacks.close(user_data, handle);
     if (!pixels) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't decode surface from file: %s", stbi_failure_reason());
         return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
@@ -211,6 +232,14 @@ void FS_initialize(File_System_t *fs, const char *base_path)
 
     fs->base_path = malloc((length + 1) * sizeof(char));
     strcpy(fs->base_path, resolved);
+
+    fs->callbacks = (File_System_Modes_IO_Callbacks_t){
+            stdio_open,
+            stdio_read,
+            stdio_skip,
+            stdio_eof,
+            stdio_close,
+        };
 }
 
 void FS_terminate(File_System_t *fs)

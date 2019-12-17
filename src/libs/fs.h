@@ -58,11 +58,17 @@ typedef enum _File_System_Types_t {
     File_System_Types_t_CountOf
 } File_System_Types_t;
 
+typedef enum _File_System_Modes_t {
+    FILE_SYSTEM_MODE_BINARY,
+    FILE_SYSTEM_MODE_TEXT,
+    File_System_Modes_t_CountOf
+} File_System_Modes_t;
+
 typedef struct _File_System_Modes_IO_Callbacks_t {
-   void * (*open) (void *user_data, const char *file);
-   int    (*read) (void *user_data, void *handle, char *buffer, int size);
+   void * (*open) (void *user_data, const char *file, File_System_Modes_t mode, size_t *size);
+   size_t (*read) (void *user_data, void *handle, char *buffer, size_t size);
    void   (*skip) (void *user_data, void *handle, int offset);
-   int    (*eof)  (void *user_data, void *handle);
+   bool   (*eof)  (void *user_data, void *handle);
    void   (*close)(void *user_data, void *handle);
 } File_System_Modes_IO_Callbacks_t;
 
