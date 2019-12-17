@@ -64,20 +64,22 @@ typedef enum _File_System_Modes_t {
     File_System_Modes_t_CountOf
 } File_System_Modes_t;
 
+typedef struct _File_System_t File_System_t;
+
 typedef struct _File_System_Modes_IO_Callbacks_t {
-   void * (*open) (void *user_data, const char *file, File_System_Modes_t mode, size_t *size);
-   size_t (*read) (void *user_data, void *handle, char *buffer, size_t size);
-   void   (*skip) (void *user_data, void *handle, int offset);
-   bool   (*eof)  (void *user_data, void *handle);
-   void   (*close)(void *user_data, void *handle);
+   void * (*open) (const File_System_t *file_system, const char *file, File_System_Modes_t mode, size_t *size);
+   size_t (*read) (const File_System_t *file_system, void *handle, char *buffer, size_t size);
+   void   (*skip) (const File_System_t *file_system, void *handle, int offset);
+   bool   (*eof)  (const File_System_t *file_system, void *handle);
+   void   (*close)(const File_System_t *file_system, void *handle);
 } File_System_Modes_IO_Callbacks_t;
 
-typedef struct _File_System_t {
+struct _File_System_t { // Don't typedef, the alias has been already defined in the forward declaration.
     char *base_path;
     File_System_Types_t type;
     File_System_Modes_IO_Callbacks_t callbacks;
     void *user_data;
-} File_System_t;
+};
 
 typedef enum _File_System_Chunk_Types_t {
     FILE_SYSTEM_CHUNK_NULL,
