@@ -145,6 +145,12 @@ gamepad: $(TARGET)
 	@$(ANALYZER) $(AFLAGS) ./demos/gamepad
 	@./$(TARGET) ./demos/gamepad
 
+gamepad-pak: $(TARGET)
+	@echo "Launching *gamepad (PAK)* application!"
+	@$(ANALYZER) $(AFLAGS) ./demos/gamepad
+	@lua ./extras/pakgen.lua ./demos/gamepad ./demos/gamepad.pak
+	@./$(TARGET) ./demos/gamepad.pak
+
 valgrind: $(TARGET)
 	@echo "Valgrind *$(DEMO)* application!"
 	@valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes env LIBGL_ALWAYS_SOFTWARE=1 ./$(TARGET) ./demos/$(DEMO)
