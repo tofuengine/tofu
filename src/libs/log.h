@@ -38,7 +38,8 @@ typedef enum _Log_Levels_t {
     Log_Levels_t_CountOf
 } Log_Levels_t;
 
-extern void Log_initialize(bool enabled, FILE *stream);
+extern void Log_initialize();
+extern void Log_configure(bool enabled, FILE *stream);
 extern void Log_write(Log_Levels_t level, const char *context, const char *text, ...);
 extern void Log_assert(bool condition, Log_Levels_t level, const char *context, const char *text, ...);
 

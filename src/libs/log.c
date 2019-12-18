@@ -90,7 +90,17 @@ static void write(Log_Levels_t level, const char *context, const char *text, va_
     }
 }
 
-void Log_initialize(bool enabled, FILE *stream)
+extern void Log_initialize()
+{
+#ifdef DEBUG
+    _level = LOG_LEVELS_ALL;
+#else
+    _level = LOG_LEVELS_ERROR;
+#endif
+    _stream = stderr;
+}
+
+extern void Log_configure(bool enabled, FILE *stream)
 {
     _level = enabled ? LOG_LEVELS_ALL : LOG_LEVELS_NONE;
     _stream = stream ? _stream : stderr;

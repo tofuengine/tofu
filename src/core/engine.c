@@ -107,6 +107,8 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 {
     *engine = (Engine_t){ 0 }; // Ensure is cleared at first.
 
+    Log_initialize();
+
     bool result = FS_initialize(&engine->file_system, base_path);
     if (!result) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize file-system w/ path `%s`", base_path);
@@ -115,7 +117,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 
     configure(&engine->file_system, &engine->configuration);
 
-    Log_initialize(engine->configuration.debug, NULL);
+    Log_configure(engine->configuration.debug, NULL);
     Environment_initialize(&engine->environment);
 
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "version %s", TOFU_VERSION_NUMBER);
