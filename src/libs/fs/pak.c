@@ -24,6 +24,7 @@
 
 #include <libs/log.h>
 #include <libs/stb.h>
+// TODO: add RC4 encryption.
 
 #include <stdio.h>
 #include <stdint.h>
