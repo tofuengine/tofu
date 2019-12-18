@@ -30,6 +30,8 @@
 
 #include <string.h>
 
+#define LOG_CONTEXT "system"
+
 #define SYSTEM_MT       "Tofu_System_mt"
 
 static int system_time(lua_State *L);
@@ -109,7 +111,7 @@ static int log_write(lua_State *L, Log_Levels_t level)
         if (s == NULL) {
             return luaL_error(L, "`tostring` must return a string `log_write`");
         }
-        Log_write(level, (i > 1) ? "\t%s" : "<SYSTEM> %s", s);
+        Log_write(level, LOG_CONTEXT, (i > 1) ? "\t%s" : "%s", s);
         lua_pop(L, 1); // F R -> F
     }
     lua_pop(L, 1); // F -> <empty>

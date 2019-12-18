@@ -28,7 +28,7 @@
 #include <stdio.h>
 #include <sys/stat.h>
 
-#define LOG_CONTEXT "fs_std"
+#define LOG_CONTEXT "fs-std"
 
 typedef struct _Std_Context_t {
     char base_path[FILE_PATH_MAX];
@@ -95,7 +95,7 @@ static void *stdio_open(const void *context, const char *file, char mode, size_t
 
     *std_handle = (Std_Handle_t){ .stream = stream };
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` opened w/ handle %p (#%d bytes)", file, std_handle, stat.st_size);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` opened w/ handle %p (%d bytes)", file, std_handle, stat.st_size);
 
     return std_handle;
 }

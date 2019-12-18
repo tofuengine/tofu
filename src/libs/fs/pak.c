@@ -29,7 +29,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#define LOG_CONTEXT "fs_pak"
+#define LOG_CONTEXT "fs-pak"
 
 #pragma pack(push, 1)
 typedef struct _Pak_Header_t {
@@ -207,7 +207,7 @@ static void *pakio_open(const void *context, const char *file, char mode, size_t
 
     *pak_handle = (Pak_Handle_t){ .stream = stream, .eof = entry->offset + entry->size };
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` opened w/ handle %p (#%d bytes at %d)", file, pak_handle, entry->size, entry->offset);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` opened w/ handle %p (%d bytes at %d)", file, pak_handle, entry->size, entry->offset);
 
     return pak_handle;
 }
