@@ -123,7 +123,7 @@ static int custom_searcher(lua_State *L)
     strcat(path_file, file);
     for (int i = 0; path_file[i] != '\0'; ++i) { // Replace `.' with '/` to map file system entry.
         if (path_file[i] == '.') {
-            path_file[i] = FILE_PATH_SEPARATOR;
+            path_file[i] = FILE_SYSTEM_PATH_SEPARATOR;
         }
     }
     strcat(path_file, ".lua");

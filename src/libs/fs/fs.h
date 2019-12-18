@@ -50,6 +50,9 @@
   #define FILE_PATH_MAX           1024
 #endif
 
+#define FILE_SYSTEM_PATH_SEPARATOR    '/'
+#define FILE_SYSTEM_PATH_SEPARATOR_SZ "/"
+
 typedef struct _File_System_Callbacks_t {
    void * (*init)  (const char *path);
    void   (*deinit)(void *context);
