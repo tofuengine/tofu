@@ -30,7 +30,7 @@
 #include <core/io/display.h>
 #include <core/io/input.h>
 #include <core/vm/interpreter.h>
-#include <libs/fs.h>
+#include <libs/fs/fs.h>
 
 #include <stdbool.h>
 #include <limits.h>

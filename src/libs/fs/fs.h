@@ -27,36 +27,28 @@
 
 #include <stdbool.h>
 #include <stddef.h>
-#include <limits.h>
 
 #if PLATFORM_ID == PLATFORM_LINUX
+  #include <linux/limits.h>
+
   #define FILE_PATH_SEPARATOR     '/'
   #define FILE_PATH_SEPARATOR_SZ  "/"
   #define FILE_PATH_CURRENT_SZ    "./"
   #define FILE_PATH_PARENT_SZ     "../"
+  #define FILE_PATH_MAX           PATH_MAX
 #elif PLATFORM_ID == PLATFORM_WINDOWS
   #define FILE_PATH_SEPARATOR     '\\'
   #define FILE_PATH_SEPARATOR_SZ  "\\"
   #define FILE_PATH_CURRENT_SZ    ".\\"
   #define FILE_PATH_PARENT_SZ     "..\\"
+  #define FILE_PATH_MAX           256
 #elif PLATFORM_ID == PLATFORM_OSX
   #define FILE_PATH_SEPARATOR     '/'
   #define FILE_PATH_SEPARATOR_SZ  "/"
   #define FILE_PATH_CURRENT_SZ    "./"
   #define FILE_PATH_PARENT_SZ     "../"
+  #define FILE_PATH_MAX           1024
 #endif
-
-#ifdef PATH_MAX
-  #define PATH_FILE_MAX       PATH_MAX
-#else
-  #define PATH_FILE_MAX       1024
-#endif
-
-typedef enum _File_System_Types_t {
-    FILE_SYSTEM_TYPE_FOLDER,
-    FILE_SYSTEM_TYPE_PACKED,
-    File_System_Types_t_CountOf
-} File_System_Types_t;
 
 typedef enum _File_System_Modes_t {
     FILE_SYSTEM_MODE_BINARY,
@@ -64,22 +56,20 @@ typedef enum _File_System_Modes_t {
     File_System_Modes_t_CountOf
 } File_System_Modes_t;
 
-typedef struct _File_System_t File_System_t;
-
 typedef struct _File_System_Modes_IO_Callbacks_t {
-   void * (*open) (const File_System_t *file_system, const char *file, File_System_Modes_t mode, size_t *size);
-   size_t (*read) (const File_System_t *file_system, void *handle, char *buffer, size_t size);
-   void   (*skip) (const File_System_t *file_system, void *handle, int offset);
-   bool   (*eof)  (const File_System_t *file_system, void *handle);
-   void   (*close)(const File_System_t *file_system, void *handle);
+   void * (*init)  (const char *path);
+   void   (*deinit)(void *context);
+   void * (*open) (const void *context, const char *file, File_System_Modes_t mode, size_t *size);
+   size_t (*read) (void *handle, char *buffer, size_t size);
+   void   (*skip) (void *handle, int offset);
+   bool   (*eof)  (void *handle);
+   void   (*close)(void *handle);
 } File_System_Modes_IO_Callbacks_t;
 
-struct _File_System_t { // Don't typedef, the alias has been already defined in the forward declaration.
-    char *base_path;
-    File_System_Types_t type;
-    File_System_Modes_IO_Callbacks_t callbacks;
-    void *user_data;
-};
+typedef struct _File_System_t {
+    const File_System_Modes_IO_Callbacks_t *callbacks;
+    void *context;
+} File_System_t;
 
 typedef enum _File_System_Chunk_Types_t {
     FILE_SYSTEM_CHUNK_NULL,
@@ -106,10 +96,10 @@ typedef struct _File_System_Chunk_t {
     } var;
 } File_System_Chunk_t;
 
-extern void FS_initialize(File_System_t *fs, const char *base_path);
-extern void FS_terminate(File_System_t *fs);
+extern void FS_initialize(File_System_t *file_system, const char *base_path);
+extern void FS_terminate(File_System_t *file_system);
 
-extern File_System_Chunk_t FS_load(const File_System_t *fs, const char *file, File_System_Chunk_Types_t type);
+extern File_System_Chunk_t FS_load(const File_System_t *file_system, const char *file, File_System_Chunk_Types_t type);
 extern void FS_release(File_System_Chunk_t chunk);
 
 #endif /* __FS_H__ */

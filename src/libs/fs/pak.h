@@ -20,27 +20,11 @@
  * SOFTWARE.
  **/
 
-#ifndef __INTERPRETER_H__
-#define __INTERPRETER_H__
+#ifndef __FS_PAK_H__
+#define __FS_PAK_H__
 
-#include <core/environment.h>
-#include <libs/fs/fs.h>
-#include <libs/luax.h>
+#include "fs.h"
 
-#include <limits.h>
-#include <stdbool.h>
+extern const File_System_Modes_IO_Callbacks_t *pak_callbacks;
 
-typedef struct _Interpreter_t {
-    float gc_age;
-
-    lua_State *state; // TODO: rename to `L`?
-} Interpreter_t;
-
-extern bool Interpreter_initialize(Interpreter_t *interpreter, const File_System_t *file_system, const void *userdatas[]);
-extern void Interpreter_terminate(Interpreter_t *interpreter);
-extern bool Interpreter_process(Interpreter_t *interpreter);
-extern bool Interpreter_update(Interpreter_t *interpreter, float delta_time);
-extern bool Interpreter_render(Interpreter_t *interpreter, float ratio);
-extern bool Interpreter_call(Interpreter_t *interpreter, int nargs, int nresults);
-
-#endif  /* __INTERPRETER_H__ */
+#endif /* __FS_PAK_H__ */

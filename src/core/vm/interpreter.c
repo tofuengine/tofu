@@ -33,7 +33,7 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 #include <config.h>
 #include <core/io/display.h>
 #include <core/vm/modules.h>
-#include <libs/fs.h>
+#include <libs/fs/fs.h>
 #include <libs/imath.h>
 #include <libs/log.h>
 #include <libs/stb.h>
@@ -118,7 +118,7 @@ static int custom_searcher(lua_State *L)
 
     const char *file = lua_tostring(L, 1);
 
-    char path_file[PATH_FILE_MAX];
+    char path_file[FILE_PATH_MAX];
     strcpy(path_file, "@");
     strcat(path_file, file);
     for (int i = 0; path_file[i] != '\0'; ++i) { // Replace `.' with '/` to map file system entry.

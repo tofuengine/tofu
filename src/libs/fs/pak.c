@@ -20,27 +20,64 @@
  * SOFTWARE.
  **/
 
-#ifndef __INTERPRETER_H__
-#define __INTERPRETER_H__
+#include "pak.h"
 
-#include <core/environment.h>
-#include <libs/fs/fs.h>
-#include <libs/luax.h>
+#include <libs/log.h>
+#include <libs/stb.h>
 
-#include <limits.h>
-#include <stdbool.h>
+#include <lz4/lz4.h>
 
-typedef struct _Interpreter_t {
-    float gc_age;
+#define LOG_CONTEXT "fs_pak"
 
-    lua_State *state; // TODO: rename to `L`?
-} Interpreter_t;
+typedef struct _Pak_Context_t {
+    char base_path[PATH_MAX];
+} Pak_Context_t;
 
-extern bool Interpreter_initialize(Interpreter_t *interpreter, const File_System_t *file_system, const void *userdatas[]);
-extern void Interpreter_terminate(Interpreter_t *interpreter);
-extern bool Interpreter_process(Interpreter_t *interpreter);
-extern bool Interpreter_update(Interpreter_t *interpreter, float delta_time);
-extern bool Interpreter_render(Interpreter_t *interpreter, float ratio);
-extern bool Interpreter_call(Interpreter_t *interpreter, int nargs, int nresults);
+static void *pakio_init(const char *path)
+{
+    Pak_Context_t *pak_context = malloc(sizeof(Pak_Context_t));
+    *pak_context = (Pak_Context_t){ 0 };
 
-#endif  /* __INTERPRETER_H__ */
+    return pak_context;
+}
+
+static void pakio_deinit(void *context)
+{
+    Pak_Context_t *pak_context = (Pak_Context_t *)context;
+
+    free(pak_context->base_path);
+    free(pak_context);
+}
+
+static void *pakio_open(const void *context, const char *file, File_System_Modes_t mode, size_t *size_in_bytes)
+{
+    return NULL;
+}
+
+static size_t pakio_read(void *handle, char *buffer, size_t bytes_to_read)
+{
+    return 0;
+}
+
+static void pakio_skip(void *handle, int offset)
+{
+}
+
+static bool pakio_eof(void *handle)
+{
+    return false;
+}
+
+static void pakio_close(void *handle)
+{
+}
+
+const File_System_Modes_IO_Callbacks_t *pak_callbacks = &(File_System_Modes_IO_Callbacks_t){
+    pakio_init,
+    pakio_deinit,
+    pakio_open,
+    pakio_read,
+    pakio_skip,
+    pakio_eof,
+    pakio_close,
+};

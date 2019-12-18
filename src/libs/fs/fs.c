@@ -22,9 +22,13 @@
 
 #include "fs.h"
 
+#include "pak.h"
+#include "std.h"
+
 #include <libs/log.h>
 #include <libs/stb.h>
 
+#include <limits.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -38,78 +42,10 @@
 
 #define LOG_CONTEXT "fs"
 
-static void *stdio_open(const File_System_t *file_system, const char *file, File_System_Modes_t mode, size_t *size_in_bytes)
-{
-    char full_path[PATH_FILE_MAX];
-    strcpy(full_path, file_system->base_path);
-    strcat(full_path, file);
-
-    FILE *stream = fopen(full_path, mode == FILE_SYSTEM_MODE_BINARY ? "rb" :"rt");
-    if (!stream) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't access file `%s`", full_path);
-    }
-
-    struct stat stat;
-    int result = fstat(fileno(stream), &stat);
-    if (result != 0) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get file `%s` stats", full_path);
-        fclose(stream);
-        return NULL;
-    }
-
-    *size_in_bytes = stat.st_size;
-
-    return (void *)stream;
-}
-
-static size_t stdio_read(const File_System_t *file_system, void *handle, char *buffer, size_t bytes_to_read)
-{
-    return fread(buffer, sizeof(char), bytes_to_read, (FILE *)handle);
-}
-
-static void stdio_skip(const File_System_t *file_system, void *handle, int offset)
-{
-    fseek((FILE*)handle, offset, SEEK_CUR);
-}
-
-static bool stdio_eof(const File_System_t *file_system, void *handle)
-{
-    return feof((FILE *)handle) != 0;
-}
-
-static void stdio_close(const File_System_t *file_system, void *handle)
-{
-    fclose((FILE *)handle);
-}
-
-static void *zipio_open(const File_System_t *file_system, const char *file, File_System_Modes_t mode, size_t *size_in_bytes)
-{
-    return NULL;
-}
-
-static size_t zipio_read(const File_System_t *file_system, void *handle, char *buffer, size_t bytes_to_read)
-{
-    return 0;
-}
-
-static void zipio_skip(const File_System_t *file_system, void *handle, int offset)
-{
-}
-
-static bool zipio_eof(const File_System_t *file_system, void *handle)
-{
-    return true;
-}
-
-static void zipio_close(const File_System_t *file_system, void *handle)
-{
-}
-
 static void *fs_load(const File_System_t *file_system, const char *file, File_System_Modes_t mode, size_t *size)
 {
-   
     size_t bytes_to_read;
-    void *handle = file_system->callbacks.open(file_system, file, mode, &bytes_to_read);
+    void *handle = file_system->callbacks->open(file_system->context, file, mode, &bytes_to_read);
     if (!handle) {
         return NULL;
     }
@@ -117,11 +53,11 @@ static void *fs_load(const File_System_t *file_system, const char *file, File_Sy
     void *data = malloc(bytes_to_allocate * sizeof(uint8_t)); // Add null terminator for the string.
     if (!data) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d bytes of memory", bytes_to_allocate);
-        file_system->callbacks.close(file_system, handle);
+        file_system->callbacks->close(handle);
         return NULL;
     }
-    size_t read_bytes = file_system->callbacks.read(file_system, handle, data, bytes_to_read);
-    file_system->callbacks.close(file_system, handle);
+    size_t read_bytes = file_system->callbacks->read(handle, data, bytes_to_read);
+    file_system->callbacks->close(handle);
     if (read_bytes < bytes_to_read) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d bytes of data (%d available)", bytes_to_read, read_bytes);
         free(data);
@@ -172,19 +108,19 @@ typedef struct _stbi_context_t {
 static int stb_stdio_read(void *user, char *data, int size)
 {
     const stbi_context_t *context = (const stbi_context_t *)user;
-    return (int)context->file_system->callbacks.read(context->file_system, context->handle, data, (size_t)size);
+    return (int)context->file_system->callbacks->read(context->handle, data, (size_t)size);
 }
 
 static void stb_stdio_skip(void *user, int n)
 {
     const stbi_context_t *context = (const stbi_context_t *)user;
-    context->file_system->callbacks.skip(context->file_system, context->handle, n);
+    context->file_system->callbacks->skip(context->handle, n);
 }
 
 static int stb_stdio_eof(void *user)
 {
     const stbi_context_t *context = (const stbi_context_t *)user;
-    return context->file_system->callbacks.eof(context->file_system, context->handle) ? -1 : 0;
+    return context->file_system->callbacks->eof(context->handle) ? -1 : 0;
 }
 
 static const stbi_io_callbacks _io_callbacks = {
@@ -196,7 +132,7 @@ static const stbi_io_callbacks _io_callbacks = {
 static File_System_Chunk_t load_as_image(const File_System_t *file_system, const char *file)
 {
     size_t byte_to_read;
-    void *handle = file_system->callbacks.open(file_system, file, FILE_SYSTEM_MODE_BINARY, &byte_to_read);
+    void *handle = file_system->callbacks->open(file_system->context, file, FILE_SYSTEM_MODE_BINARY, &byte_to_read);
     if (!handle) {
         return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
     }
@@ -207,7 +143,7 @@ static File_System_Chunk_t load_as_image(const File_System_t *file_system, const
 
     int width, height, components;
     void *pixels = stbi_load_from_callbacks(&_io_callbacks, &context, &width, &height, &components, STBI_rgb_alpha);
-    file_system->callbacks.close(file_system, handle);
+    file_system->callbacks->close(handle);
     if (!pixels) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't decode surface from file: %s", stbi_failure_reason());
         return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
@@ -229,11 +165,11 @@ static File_System_Chunk_t load_as_image(const File_System_t *file_system, const
 #define realpath(N,R) _fullpath((R),(N),PATH_MAX)
 #endif
 
-void FS_initialize(File_System_t *fs, const char *base_path)
+void FS_initialize(File_System_t *file_system, const char *base_path)
 {
-    *fs = (File_System_t){ 0 };
+    *file_system = (File_System_t){ 0 };
 
-    char resolved[PATH_FILE_MAX]; // Using local buffer to avoid un-tracked `malloc()` for the syscall.
+    char resolved[FILE_PATH_MAX]; // Using local buffer to avoid un-tracked `malloc()` for the syscall.
     char *ptr = realpath(base_path ? base_path : FILE_PATH_CURRENT_SZ, resolved);
     if (!ptr) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't resolve path `%s`", base_path);
@@ -246,33 +182,13 @@ void FS_initialize(File_System_t *fs, const char *base_path)
         length += 1;
     }
 
-    fs->base_path = malloc((length + 1) * sizeof(char));
-    strcpy(fs->base_path, resolved);
-
-    void *zip = NULL;
-    if (zip) {
-        fs->user_data = (void *)zip;
-        fs->callbacks = (File_System_Modes_IO_Callbacks_t){
-                zipio_open,
-                zipio_read,
-                zipio_skip,
-                zipio_eof,
-                zipio_close,
-            };
-    } else {
-        fs->callbacks = (File_System_Modes_IO_Callbacks_t){
-                stdio_open,
-                stdio_read,
-                stdio_skip,
-                stdio_eof,
-                stdio_close,
-            };
-    }
+    file_system->callbacks = std_callbacks;
+    file_system->context = file_system->callbacks->init(resolved);
 }
 
-void FS_terminate(File_System_t *fs)
+void FS_terminate(File_System_t *file_system)
 {
-    free(fs->base_path);
+    file_system->callbacks->deinit(file_system->context);
 }
 
 File_System_Chunk_t FS_load(const File_System_t *fs, const char *file, File_System_Chunk_Types_t type)
