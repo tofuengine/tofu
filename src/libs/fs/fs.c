@@ -165,7 +165,7 @@ static File_System_Chunk_t load_as_image(const File_System_t *file_system, const
 #define realpath(N,R) _fullpath((R),(N),PATH_MAX)
 #endif
 
-void FS_initialize(File_System_t *file_system, const char *base_path)
+bool FS_initialize(File_System_t *file_system, const char *base_path)
 {
     *file_system = (File_System_t){ 0 };
 
@@ -173,7 +173,7 @@ void FS_initialize(File_System_t *file_system, const char *base_path)
     char *ptr = realpath(base_path ? base_path : FILE_PATH_CURRENT_SZ, resolved);
     if (!ptr) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't resolve path `%s`", base_path);
-        return;
+        return false;
     }
 
     size_t length = strlen(resolved);
@@ -184,6 +184,8 @@ void FS_initialize(File_System_t *file_system, const char *base_path)
 
     file_system->callbacks = std_callbacks;
     file_system->context = file_system->callbacks->init(resolved);
+
+    return file_system->context;
 }
 
 void FS_terminate(File_System_t *file_system)

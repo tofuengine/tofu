@@ -107,7 +107,11 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 {
     *engine = (Engine_t){ 0 }; // Ensure is cleared at first.
 
-    FS_initialize(&engine->file_system, base_path);
+    bool result = FS_initialize(&engine->file_system, base_path);
+    if (!result) {
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize file-system w/ path `%s`", base_path);
+        return false;
+    }
 
     configure(&engine->file_system, &engine->configuration);
 
@@ -126,7 +130,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             .scale = engine->configuration.scale,
             .hide_cursor = engine->configuration.hide_cursor
         };
-    bool result = Display_initialize(&engine->display, &display_configuration);
+    result = Display_initialize(&engine->display, &display_configuration);
     if (!result) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize display");
         FS_terminate(&engine->file_system);
