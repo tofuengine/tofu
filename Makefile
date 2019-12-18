@@ -11,8 +11,8 @@ else
 endif
 
 # Use software renderer to use VALGRIND
-# > export LIBGL_ALWAYS_SOFTWARE=1
-# valgrind --track-origins=yes ./tofu ./demos/mode7/
+#   export LIBGL_ALWAYS_SOFTWARE=1
+#   valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./tofu ./demos/mode7/
 
 ANALYZER=luacheck
 AFLAGS=--no-self --std lua53 -q
@@ -147,7 +147,7 @@ gamepad: $(TARGET)
 
 valgrind: $(TARGET)
 	@echo "Valgrind *$(DEMO)* application!"
-	@valgrind --track-origins=yes --leak-check=full env LIBGL_ALWAYS_SOFTWARE=1 ./$(TARGET) ./demos/$(DEMO)
+	@valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes env LIBGL_ALWAYS_SOFTWARE=1 ./$(TARGET) ./demos/$(DEMO)
 
 .PHONY: clean
 clean:
