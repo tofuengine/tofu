@@ -33,7 +33,7 @@
 
 #pragma pack(push, 4)
 typedef struct _Pak_Header_t {
-    char header[4];
+    char signature[4];
     size_t entries;
 } Pak_Header_t;
 
@@ -79,6 +79,11 @@ static void *pakio_init(const char *path)
     Pak_Header_t header;
     int bytes_read = fread(&header, sizeof(Pak_Header_t), 1, stream);
     if (bytes_read != sizeof(Pak_Header_t)) {
+        fclose(stream);
+        return NULL;
+    }
+    if (strncmp(header.signature, "PAK!", 4) != 0) {
+        fclose(stream);
         return NULL;
     }
 
@@ -113,7 +118,7 @@ static void pakio_deinit(void *context)
     free(pak_context);
 }
 
-static void *pakio_open(const void *context, const char *file, File_System_Modes_t mode, size_t *size_in_bytes)
+static void *pakio_open(const void *context, const char *file, char mode, size_t *size_in_bytes)
 {
     Pak_Context_t *pak_context = (Pak_Context_t *)context;
 
@@ -127,7 +132,7 @@ static void *pakio_open(const void *context, const char *file, File_System_Modes
         return NULL;
     }
 
-    FILE *stream = fopen(pak_context->base_path, mode == FILE_SYSTEM_MODE_BINARY ? "rb" :"rt");
+    FILE *stream = fopen(pak_context->base_path, mode == 'b' ? "rb" :"rt");
     if (!stream) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't access entry `%s`", file);
         free(handle);
@@ -187,7 +192,7 @@ static void pakio_close(void *handle)
     free(pak_handle);
 }
 
-const File_System_Modes_IO_Callbacks_t *pak_callbacks = &(File_System_Modes_IO_Callbacks_t){
+const File_System_Callbacks_t *pak_callbacks = &(File_System_Callbacks_t){
     pakio_init,
     pakio_deinit,
     pakio_open,

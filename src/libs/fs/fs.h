@@ -50,24 +50,18 @@
   #define FILE_PATH_MAX           1024
 #endif
 
-typedef enum _File_System_Modes_t {
-    FILE_SYSTEM_MODE_BINARY,
-    FILE_SYSTEM_MODE_TEXT,
-    File_System_Modes_t_CountOf
-} File_System_Modes_t;
-
-typedef struct _File_System_Modes_IO_Callbacks_t {
+typedef struct _File_System_Callbacks_t {
    void * (*init)  (const char *path);
    void   (*deinit)(void *context);
-   void * (*open) (const void *context, const char *file, File_System_Modes_t mode, size_t *size);
+   void * (*open) (const void *context, const char *file, char mode, size_t *size);
    size_t (*read) (void *handle, char *buffer, size_t size);
    void   (*skip) (void *handle, int offset);
    bool   (*eof)  (void *handle);
    void   (*close)(void *handle);
-} File_System_Modes_IO_Callbacks_t;
+} File_System_Callbacks_t;
 
 typedef struct _File_System_t {
-    const File_System_Modes_IO_Callbacks_t *callbacks;
+    const File_System_Callbacks_t *callbacks;
     void *context;
 } File_System_t;
 

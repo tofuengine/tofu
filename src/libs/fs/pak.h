@@ -25,6 +25,6 @@
 
 #include "fs.h"
 
-extern const File_System_Modes_IO_Callbacks_t *pak_callbacks;
+extern const File_System_Callbacks_t *pak_callbacks;
 
 #endif /* __FS_PAK_H__ */

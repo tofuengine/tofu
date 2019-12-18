@@ -55,7 +55,7 @@ static void stdio_deinit(void *context)
     free(std_context);
 }
 
-static void *stdio_open(const void *context, const char *file, File_System_Modes_t mode, size_t *size_in_bytes)
+static void *stdio_open(const void *context, const char *file, char mode, size_t *size_in_bytes)
 {
     Std_Context_t *std_context = (Std_Context_t *)context;
 
@@ -68,7 +68,7 @@ static void *stdio_open(const void *context, const char *file, File_System_Modes
     strcpy(full_path, std_context->base_path);
     strcat(full_path, file);
 
-    FILE *stream = fopen(full_path, mode == FILE_SYSTEM_MODE_BINARY ? "rb" :"rt");
+    FILE *stream = fopen(full_path, mode == 'b' ? "rb" :"rt");
     if (!stream) {
         free(handle);
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't access file `%s`", full_path);
@@ -92,28 +92,33 @@ static void *stdio_open(const void *context, const char *file, File_System_Modes
 static size_t stdio_read(void *handle, char *buffer, size_t bytes_to_read)
 {
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
+
     return fread(buffer, sizeof(char), bytes_to_read, std_handle->stream);
 }
 
 static void stdio_skip(void *handle, int offset)
 {
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
+
     fseek(std_handle->stream, offset, SEEK_CUR);
 }
 
 static bool stdio_eof(void *handle)
 {
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
+
     return feof(std_handle->stream) != 0;
 }
 
 static void stdio_close(void *handle)
 {
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
+
     fclose(std_handle->stream);
+    free(std_handle);
 }
 
-const File_System_Modes_IO_Callbacks_t *std_callbacks = &(File_System_Modes_IO_Callbacks_t){
+const File_System_Callbacks_t *std_callbacks = &(File_System_Callbacks_t){
     stdio_init,
     stdio_deinit,
     stdio_open,

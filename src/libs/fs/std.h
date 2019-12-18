@@ -25,6 +25,6 @@
 
 #include "fs.h"
 
-extern const File_System_Modes_IO_Callbacks_t *std_callbacks;
+extern const File_System_Callbacks_t *std_callbacks;
 
 #endif /* __FS_STD_H__ */

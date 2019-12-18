@@ -33,14 +33,14 @@
 
 #define LOG_CONTEXT "fs"
 
-static void *fs_load(const File_System_t *file_system, const char *file, File_System_Modes_t mode, size_t *size)
+static void *fs_load(const File_System_t *file_system, const char *file, char mode, size_t *size)
 {
     size_t bytes_to_read;
     void *handle = file_system->callbacks->open(file_system->context, file, mode, &bytes_to_read);
     if (!handle) {
         return NULL;
     }
-    size_t bytes_to_allocate = bytes_to_read + (mode == FILE_SYSTEM_MODE_TEXT ? 1 : 0);
+    size_t bytes_to_allocate = bytes_to_read + (mode == 't' ? 1 : 0);
     void *data = malloc(bytes_to_allocate * sizeof(uint8_t)); // Add null terminator for the string.
     if (!data) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d bytes of memory", bytes_to_allocate);
@@ -54,7 +54,7 @@ static void *fs_load(const File_System_t *file_system, const char *file, File_Sy
         free(data);
         return NULL;
     }
-    if (mode == FILE_SYSTEM_MODE_TEXT) {
+    if (mode == 't') {
         ((char *)data)[read_bytes] = '\0';
     }
     *size = read_bytes;
@@ -64,7 +64,7 @@ static void *fs_load(const File_System_t *file_system, const char *file, File_Sy
 static File_System_Chunk_t load_as_string(const File_System_t *file_system, const char *file)
 {
     size_t size;
-    void *chars = fs_load((void *)file_system, file, FILE_SYSTEM_MODE_TEXT, &size);
+    void *chars = fs_load((void *)file_system, file, 't', &size);
     return (File_System_Chunk_t){
             .type = FILE_SYSTEM_CHUNK_STRING,
             .var = {
@@ -79,7 +79,7 @@ static File_System_Chunk_t load_as_string(const File_System_t *file_system, cons
 static File_System_Chunk_t load_as_binary(const File_System_t *file_system, const char *file)
 {
     size_t size;
-    void *ptr = fs_load((void *)file_system, file, FILE_SYSTEM_MODE_BINARY, &size);
+    void *ptr = fs_load((void *)file_system, file, 'b', &size);
     return (File_System_Chunk_t){
             .type = FILE_SYSTEM_CHUNK_BLOB,
             .var = {
@@ -123,7 +123,7 @@ static const stbi_io_callbacks _io_callbacks = {
 static File_System_Chunk_t load_as_image(const File_System_t *file_system, const char *file)
 {
     size_t byte_to_read;
-    void *handle = file_system->callbacks->open(file_system->context, file, FILE_SYSTEM_MODE_BINARY, &byte_to_read);
+    void *handle = file_system->callbacks->open(file_system->context, file, 'b', &byte_to_read);
     if (!handle) {
         return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
     }
