@@ -48,6 +48,8 @@ static void *stdio_init(const char *path)
         strcat(std_context->base_path, FILE_PATH_SEPARATOR_SZ);
     }
 
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "I/O initialized at folder `%s`", path);
+
     return std_context;
 }
 
@@ -56,16 +58,13 @@ static void stdio_deinit(void *context)
     Std_Context_t *std_context = (Std_Context_t *)context;
 
     free(std_context);
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "I/O deinitialized");
 }
 
 static void *stdio_open(const void *context, const char *file, char mode, size_t *size_in_bytes)
 {
     Std_Context_t *std_context = (Std_Context_t *)context;
-
-    Std_Handle_t *handle = malloc(sizeof(Std_Handle_t));
-    if (!handle) {
-        return NULL;
-    }
 
     char full_path[FILE_PATH_MAX];
     strcpy(full_path, std_context->base_path);
@@ -73,8 +72,8 @@ static void *stdio_open(const void *context, const char *file, char mode, size_t
 
     FILE *stream = fopen(full_path, mode == 'b' ? "rb" :"rt");
     if (!stream) {
-        free(handle);
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't access file `%s`", full_path);
+        return NULL;
     }
 
     struct stat stat;
@@ -87,9 +86,18 @@ static void *stdio_open(const void *context, const char *file, char mode, size_t
 
     *size_in_bytes = stat.st_size;
 
-    *handle = (Std_Handle_t){ .stream = stream };
+    Std_Handle_t *std_handle = malloc(sizeof(Std_Handle_t));
+    if (!std_handle) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate handle for file `%s`", file);
+        fclose(stream);
+        return NULL;
+    }
 
-    return handle;
+    *std_handle = (Std_Handle_t){ .stream = stream };
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` opened w/ handle %p (#%d bytes)", file, std_handle, stat.st_size);
+
+    return std_handle;
 }
 
 static size_t stdio_read(void *handle, char *buffer, size_t bytes_to_read)
@@ -119,6 +127,8 @@ static void stdio_close(void *handle)
 
     fclose(std_handle->stream);
     free(std_handle);
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p closed", std_handle);
 }
 
 const File_System_Callbacks_t *std_callbacks = &(File_System_Callbacks_t){

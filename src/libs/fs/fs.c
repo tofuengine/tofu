@@ -162,14 +162,14 @@ bool FS_initialize(File_System_t *file_system, const char *base_path)
     char resolved[FILE_PATH_MAX]; // Using local buffer to avoid un-tracked `malloc()` for the syscall.
     char *ptr = realpath(base_path ? base_path : FILE_PATH_CURRENT_SZ, resolved);
     if (!ptr) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't resolve path `%s`", base_path);
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't resolve `%s`", base_path);
         return false;
     }
 
     struct stat resolved_stat;
     int result = stat(resolved, &resolved_stat);
     if (result != 0) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get file `%s` stats", resolved);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get stats for `%s`", resolved);
         return false;
     }
 
