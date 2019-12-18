@@ -173,7 +173,7 @@ bool FS_initialize(File_System_t *file_system, const char *base_path)
         return false;
     }
 
-    const File_System_Callbacks_t *callbacks = (resolved_stat.st_mode & __S_IFDIR) ? std_callbacks: pak_callbacks;
+    const File_System_Callbacks_t *callbacks = S_ISDIR(resolved_stat.st_mode) ? std_callbacks: pak_callbacks;
 
     void *context = callbacks->init(resolved);
 
