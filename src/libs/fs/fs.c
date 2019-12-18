@@ -30,6 +30,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <sys/stat.h>
 
 #define LOG_CONTEXT "fs"
 
@@ -158,8 +159,6 @@ static File_System_Chunk_t load_as_image(const File_System_Callbacks_t *callback
 
 bool FS_initialize(File_System_t *file_system, const char *base_path)
 {
-    *file_system = (File_System_t){ 0 };
-
     char resolved[FILE_PATH_MAX]; // Using local buffer to avoid un-tracked `malloc()` for the syscall.
     char *ptr = realpath(base_path ? base_path : FILE_PATH_CURRENT_SZ, resolved);
     if (!ptr) {
@@ -167,16 +166,23 @@ bool FS_initialize(File_System_t *file_system, const char *base_path)
         return false;
     }
 
-    size_t length = strlen(resolved);
-    if (resolved[length - 1] != '/') {
-        strcat(resolved, FILE_PATH_SEPARATOR_SZ);
-        length += 1;
+    struct stat resolved_stat;
+    int result = stat(resolved, &resolved_stat);
+    if (result != 0) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get file `%s` stats", resolved);
+        return false;
     }
 
-    file_system->callbacks = std_callbacks;
-    file_system->context = file_system->callbacks->init(resolved);
+    const File_System_Callbacks_t *callbacks = (resolved_stat.st_mode & __S_IFDIR) ? std_callbacks: pak_callbacks;
 
-    return file_system->context;
+    void *context = callbacks->init(resolved);
+
+    *file_system = (File_System_t){
+            .callbacks = callbacks,
+            .context = context
+        };
+
+    return context;
 }
 
 void FS_terminate(File_System_t *file_system)

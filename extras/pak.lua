@@ -57,13 +57,11 @@ local input_folder = arg[1]
 if input_folder:ends_with("/") then
   input_folder = input_folder:sub(1, -2)
 end
-print(input_folder)
 
 local output_file = arg[2]
 if not output_file:ends_with(".pak") then
   output_file = output_file .. ".pak"
 end
-print(output_file)
 
 local files = {}
 attrdir(input_folder, files)
@@ -84,11 +82,9 @@ end
 local output = io.open(output_file, "wb")
 
 emit_header(output, 0, files)
-
 for _, file in ipairs(files) do
   emit_entry_header(output, file)
 end
-
 for _, file in ipairs(files) do
   emit_entry(output, file)
 end

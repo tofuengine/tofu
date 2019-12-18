@@ -25,25 +25,24 @@
 #include <libs/log.h>
 #include <libs/stb.h>
 
-#include <lz4/lz4.h>
-
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 
 #define LOG_CONTEXT "fs_pak"
 
-#pragma pack(push, 4)
+#pragma pack(push, 1)
 typedef struct _Pak_Header_t {
     char signature[8];
     uint32_t version;
     uint32_t flags;
-    size_t entries;
+    uint32_t entries;
 } Pak_Header_t;
 
 typedef struct _Pak_Entry_Header_t {
-    long offset;
-    size_t size;
-    size_t name_length; // The entry header is followed by `name_length` chars.
+    int32_t offset;
+    uint32_t size;
+    uint32_t name_length; // The entry header is followed by `name_length` chars.
 } Pak_Entry_Header_t;
 #pragma pack(pop)
 
@@ -66,7 +65,7 @@ typedef struct _Pak_Handle_t {
 
 #define PAK_SIGNATURE   "TOFUPAK!"
 
-static int _entry_compare(const void *lhs, const void *rhs)
+static int pak_entry_compare(const void *lhs, const void *rhs)
 {
     const Pak_Entry_t *l = (const Pak_Entry_t *)lhs;
     const Pak_Entry_t *r = (const Pak_Entry_t *)rhs;
@@ -81,8 +80,8 @@ static void *pakio_init(const char *path)
     }
 
     Pak_Header_t header;
-    int bytes_read = fread(&header, sizeof(Pak_Header_t), 1, stream);
-    if (bytes_read != sizeof(Pak_Header_t)) {
+    int headers_read = fread(&header, sizeof(Pak_Header_t), 1, stream);
+    if (headers_read != 1) {
         fclose(stream);
         return NULL;
     }
@@ -100,8 +99,8 @@ static void *pakio_init(const char *path)
 
     for (size_t i = 0; i < header.entries; ++i) {
         Pak_Entry_Header_t entry_header;
-        size_t bytes_read = fread(&entry_header, sizeof(Pak_Entry_Header_t), 1, stream);
-        if (bytes_read != sizeof(Pak_Entry_Header_t)) {
+        size_t entries_read = fread(&entry_header, sizeof(Pak_Entry_Header_t), 1, stream);
+        if (entries_read != 1) {
             break;
         }
 
@@ -124,7 +123,7 @@ static void *pakio_init(const char *path)
 
     fclose(stream);
 
-    qsort(directory, header.entries, sizeof(Pak_Entry_t), _entry_compare); // Keep sorted to use binary-search.
+    qsort(directory, header.entries, sizeof(Pak_Entry_t), pak_entry_compare); // Keep sorted to use binary-search.
 
     Pak_Context_t *pak_context = malloc(sizeof(Pak_Context_t));
     if (!pak_context) {
@@ -154,7 +153,8 @@ static void *pakio_open(const void *context, const char *file, char mode, size_t
 {
     Pak_Context_t *pak_context = (Pak_Context_t *)context;
 
-    Pak_Entry_t *entry = bsearch((const void *)file, pak_context->directory, pak_context->entries, sizeof(Pak_Entry_t), _entry_compare);
+    const Pak_Entry_t key = { .name = (char *)file };
+    Pak_Entry_t *entry = bsearch((const void *)&key, pak_context->directory, pak_context->entries, sizeof(Pak_Entry_t), pak_entry_compare);
     if (!entry) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't find entry `%s`", file);
         return NULL;
@@ -191,12 +191,12 @@ static size_t pakio_read(void *handle, char *buffer, size_t bytes_to_read)
         return 0;
     }
 
-    size_t bytes_to_eof = pak_handle->eof < position;
-    if (bytes_to_eof > bytes_to_read) {
-        bytes_to_eof = bytes_to_read;
+    size_t bytes_to_eof = pak_handle->eof - position;
+    if (bytes_to_read > bytes_to_eof) {
+        bytes_to_read = bytes_to_eof;
     }
 
-    return fread(buffer, sizeof(uint8_t), bytes_to_eof, pak_handle->stream);
+    return fread(buffer, sizeof(uint8_t), bytes_to_read, pak_handle->stream);
 }
 
 static void pakio_skip(void *handle, int offset)

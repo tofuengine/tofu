@@ -44,6 +44,9 @@ static void *stdio_init(const char *path)
     *std_context = (Std_Context_t){ 0 };
 
     strcpy(std_context->base_path, path);
+    if (path[strlen(path) - 1] != '/') {
+        strcat(std_context->base_path, FILE_PATH_SEPARATOR_SZ);
+    }
 
     return std_context;
 }
