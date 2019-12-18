@@ -28,6 +28,26 @@ local function attrdir(path, list)
   end
 end
 
+local function emit_header(output, flags, files)
+  output:write(struct.pack('c8', "TOFUPAK!"))
+  output:write(struct.pack('I4', 0x00000100))
+  output:write(struct.pack('I4', 0x00000000))
+  output:write(struct.pack('I4', #files))
+end
+
+local function emit_entry_header(output, file)
+  output:write(struct.pack('i4', file.offset))
+  output:write(struct.pack('I4', file.size))
+  output:write(struct.pack('I4', #file.name))
+  output:write(struct.pack("c0", file.name))
+end
+
+local function emit_entry(output, file)
+  local input = io.open(file.pathfile, "rb")
+  output:write(input:read("*all"))
+  input:close()
+end
+
 if #arg ~= 2 then
   print("Usage: pak <input folder> <output file>")
   return
@@ -49,9 +69,13 @@ local files = {}
 attrdir(input_folder, files)
 table.sort(files, function(lhs, rhs) return lhs.pathfile < rhs.pathfile end)
 
-local offset = 8
+local offset = 20
 for _, file in ipairs(files) do
   file.name = file.pathfile:sub(1 + #input_folder + 1)
+  offset = offset + (12 + #file.name)
+end
+
+for _, file in ipairs(files) do
   file.offset = offset
   print(file.pathfile .. " " .. file.name .. " " .. file.offset .. " " .. file.size)
   offset = offset + file.size
@@ -59,25 +83,14 @@ end
 
 local output = io.open(output_file, "wb")
 
-output:write(struct.pack('c4', "PAK!"))
-output:write(struct.pack('I4', #files))
+emit_header(output, 0, files)
 
-local padding = ""
-for _ = 1, 128 do
-  padding = padding .. "\0"
+for _, file in ipairs(files) do
+  emit_entry_header(output, file)
 end
 
 for _, file in ipairs(files) do
-  local input = io.open(file.pathfile, "rb")
-  local content = input:read("*all")
-  output:write(content)
-  input:close()
-end
-
-for _, file in ipairs(files) do
-  output:write(struct.pack("c128", file.name .. padding))
-  output:write(struct.pack('i4', file.offset))
-  output:write(struct.pack('I4', file.size))
+  emit_entry(output, file)
 end
 
 output:close()

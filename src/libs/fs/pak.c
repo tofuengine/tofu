@@ -28,35 +28,35 @@
 #include <lz4/lz4.h>
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #define LOG_CONTEXT "fs_pak"
 
 #pragma pack(push, 4)
 typedef struct _Pak_Header_t {
-    char signature[4];
+    char signature[8];
+    uint32_t version;
+    uint32_t flags;
     size_t entries;
 } Pak_Header_t;
 
+typedef struct _Pak_Entry_Header_t {
+    long offset;
+    size_t size;
+    size_t name_length; // The entry header is followed by `name_length` chars.
+} Pak_Entry_Header_t;
+#pragma pack(pop)
+
 typedef struct _Pak_Entry_t {
-    char name[128];
+    char *name;
     long offset;
     size_t size;
 } Pak_Entry_t;
-#pragma pack(pop)
-
-typedef struct _Entry_t {
-    long offset;
-    size_t size;
-} Entry_t;
-
-typedef struct _Directory_Entry_t {
-    char *key;
-    Entry_t value;
-} Directory_Entry_t;
 
 typedef struct _Pak_Context_t {
     char base_path[FILE_PATH_MAX];
-    Directory_Entry_t *directory;
+    size_t entries;
+    Pak_Entry_t *directory;
 } Pak_Context_t;
 
 typedef struct _Pak_Handle_t {
@@ -64,13 +64,17 @@ typedef struct _Pak_Handle_t {
     long eof;
 } Pak_Handle_t;
 
+#define PAK_SIGNATURE   "TOFUPAK!"
+
+static int _entry_compare(const void *lhs, const void *rhs)
+{
+    const Pak_Entry_t *l = (const Pak_Entry_t *)lhs;
+    const Pak_Entry_t *r = (const Pak_Entry_t *)rhs;
+    return strcmp(l->name, r->name);
+}
+
 static void *pakio_init(const char *path)
 {
-    Pak_Context_t *pak_context = malloc(sizeof(Pak_Context_t));
-    *pak_context = (Pak_Context_t){ 0 };
-
-    strcpy(pak_context->base_path, path);
-
     FILE *stream = fopen(path, "rb");
     if (!stream) {
         return NULL;
@@ -82,29 +86,55 @@ static void *pakio_init(const char *path)
         fclose(stream);
         return NULL;
     }
-    if (strncmp(header.signature, "PAK!", 4) != 0) {
+    if (strncmp(header.signature, PAK_SIGNATURE, sizeof(header.signature)) != 0) {
         fclose(stream);
         return NULL;
     }
 
-    long offset = sizeof(Pak_Entry_t) * header.entries;
-    fseek(stream, offset, SEEK_END);
+    Pak_Entry_t *directory = malloc(sizeof(Pak_Entry_t) * header.entries);
+    if (!directory) {
+        fclose(stream);
+        return NULL;
+    }
+    memset(directory, 0x00, sizeof(Pak_Entry_t) * header.entries);
 
     for (size_t i = 0; i < header.entries; ++i) {
-        Pak_Entry_t entry;
-        int bytes_read = fread(&entry, sizeof(Pak_Entry_t), 1, stream);
-        if (bytes_read != sizeof(Pak_Entry_t)) {
+        Pak_Entry_Header_t entry_header;
+        size_t bytes_read = fread(&entry_header, sizeof(Pak_Entry_Header_t), 1, stream);
+        if (bytes_read != sizeof(Pak_Entry_Header_t)) {
             break;
         }
 
-        const Entry_t pair = (Entry_t){ .offset = entry.offset, .size = entry.size };
-        shput(pak_context->directory, entry.name, pair);
+        char *entry_name = malloc((entry_header.name_length + 1) * sizeof(char));
+        if (!entry_name) {
+            break;
+        }
+        size_t chars_read = fread(entry_name, sizeof(char), entry_header.name_length, stream);
+        if (chars_read != entry_header.name_length) {
+            break;
+        }
+        entry_name[entry_header.name_length] = '\0';
+
+        directory[i] = (Pak_Entry_t){
+                .name = entry_name,
+                .offset = entry_header.offset,
+                .size = entry_header.size
+            };
     }
 
-    const Entry_t null = (Entry_t){ .offset = -1L, .size = 0 };
-    shdefault(pak_context->directory, null);
-
     fclose(stream);
+
+    qsort(directory, header.entries, sizeof(Pak_Entry_t), _entry_compare); // Keep sorted to use binary-search.
+
+    Pak_Context_t *pak_context = malloc(sizeof(Pak_Context_t));
+    if (!pak_context) {
+        free(directory);
+        return NULL;
+    }
+
+    strcpy(pak_context->base_path, path);
+    pak_context->entries = header.entries;
+    pak_context->directory = directory;
 
     return pak_context;
 }
@@ -113,8 +143,10 @@ static void pakio_deinit(void *context)
 {
     Pak_Context_t *pak_context = (Pak_Context_t *)context;
 
-    shfree(pak_context->directory);
-
+    for (size_t i = 0; i < pak_context->entries; ++i) {
+        free(pak_context->directory[i].name);
+    }
+    free(pak_context->directory);
     free(pak_context);
 }
 
@@ -122,28 +154,30 @@ static void *pakio_open(const void *context, const char *file, char mode, size_t
 {
     Pak_Context_t *pak_context = (Pak_Context_t *)context;
 
-    const Entry_t entry = shget(pak_context->directory, file);
-    if (entry.offset == -1L) {
-        return NULL;
-    }
-
-    Pak_Handle_t *handle = malloc(sizeof(Pak_Handle_t));
-    if (!handle) {
+    Pak_Entry_t *entry = bsearch((const void *)file, pak_context->directory, pak_context->entries, sizeof(Pak_Entry_t), _entry_compare);
+    if (!entry) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't find entry `%s`", file);
         return NULL;
     }
 
     FILE *stream = fopen(pak_context->base_path, mode == 'b' ? "rb" :"rt");
     if (!stream) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't access entry `%s`", file);
-        free(handle);
         return NULL;
     }
 
-    fseek(stream, entry.offset, SEEK_SET);
+    fseek(stream, entry->offset, SEEK_SET);
 
-    *size_in_bytes = entry.size;
+    *size_in_bytes = entry->size;
 
-    *handle = (Pak_Handle_t){ .stream = stream, .eof = entry.offset + entry.size };
+    Pak_Handle_t *handle = malloc(sizeof(Pak_Handle_t));
+    if (!handle) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate handle for file `%s`", file);
+        fclose(stream);
+        return NULL;
+    }
+
+    *handle = (Pak_Handle_t){ .stream = stream, .eof = entry->offset + entry->size };
 
     return handle;
 }

@@ -33,10 +33,10 @@
 
 #define LOG_CONTEXT "fs"
 
-static void *fs_load(const File_System_t *file_system, const char *file, char mode, size_t *size)
+static void *fs_load(const File_System_Callbacks_t *callbacks, const void *context, const char *file, char mode, size_t *size)
 {
     size_t bytes_to_read;
-    void *handle = file_system->callbacks->open(file_system->context, file, mode, &bytes_to_read);
+    void *handle = callbacks->open(context, file, mode, &bytes_to_read);
     if (!handle) {
         return NULL;
     }
@@ -44,11 +44,11 @@ static void *fs_load(const File_System_t *file_system, const char *file, char mo
     void *data = malloc(bytes_to_allocate * sizeof(uint8_t)); // Add null terminator for the string.
     if (!data) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d bytes of memory", bytes_to_allocate);
-        file_system->callbacks->close(handle);
+        callbacks->close(handle);
         return NULL;
     }
-    size_t read_bytes = file_system->callbacks->read(handle, data, bytes_to_read);
-    file_system->callbacks->close(handle);
+    size_t read_bytes = callbacks->read(handle, data, bytes_to_read);
+    callbacks->close(handle);
     if (read_bytes < bytes_to_read) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d bytes of data (%d available)", bytes_to_read, read_bytes);
         free(data);
@@ -61,10 +61,10 @@ static void *fs_load(const File_System_t *file_system, const char *file, char mo
     return data;
 }
 
-static File_System_Chunk_t load_as_string(const File_System_t *file_system, const char *file)
+static File_System_Chunk_t load_as_string(const File_System_Callbacks_t *callbacks, const void *context, const char *file)
 {
     size_t size;
-    void *chars = fs_load((void *)file_system, file, 't', &size);
+    void *chars = fs_load(callbacks, context, file, 't', &size);
     return (File_System_Chunk_t){
             .type = FILE_SYSTEM_CHUNK_STRING,
             .var = {
@@ -76,10 +76,10 @@ static File_System_Chunk_t load_as_string(const File_System_t *file_system, cons
         };
 }
 
-static File_System_Chunk_t load_as_binary(const File_System_t *file_system, const char *file)
+static File_System_Chunk_t load_as_binary(const File_System_Callbacks_t *callbacks, const void *context, const char *file)
 {
     size_t size;
-    void *ptr = fs_load((void *)file_system, file, 'b', &size);
+    void *ptr = fs_load(callbacks, context, file, 'b', &size);
     return (File_System_Chunk_t){
             .type = FILE_SYSTEM_CHUNK_BLOB,
             .var = {
@@ -92,26 +92,26 @@ static File_System_Chunk_t load_as_binary(const File_System_t *file_system, cons
 }
 
 typedef struct _stbi_context_t {
-    const File_System_t *file_system;
+    const File_System_Callbacks_t *callbacks;
     void *handle;
 } stbi_context_t;
 
 static int stb_stdio_read(void *user, char *data, int size)
 {
-    const stbi_context_t *context = (const stbi_context_t *)user;
-    return (int)context->file_system->callbacks->read(context->handle, data, (size_t)size);
+    const stbi_context_t *stbi_context = (const stbi_context_t *)user;
+    return (int)stbi_context->callbacks->read(stbi_context->handle, data, (size_t)size);
 }
 
 static void stb_stdio_skip(void *user, int n)
 {
-    const stbi_context_t *context = (const stbi_context_t *)user;
-    context->file_system->callbacks->skip(context->handle, n);
+    const stbi_context_t *stbi_context = (const stbi_context_t *)user;
+    stbi_context->callbacks->skip(stbi_context->handle, n);
 }
 
 static int stb_stdio_eof(void *user)
 {
-    const stbi_context_t *context = (const stbi_context_t *)user;
-    return context->file_system->callbacks->eof(context->handle) ? -1 : 0;
+    const stbi_context_t *stbi_context = (const stbi_context_t *)user;
+    return stbi_context->callbacks->eof(stbi_context->handle) ? -1 : 0;
 }
 
 static const stbi_io_callbacks _io_callbacks = {
@@ -120,21 +120,21 @@ static const stbi_io_callbacks _io_callbacks = {
     stb_stdio_eof,
 };
 
-static File_System_Chunk_t load_as_image(const File_System_t *file_system, const char *file)
+static File_System_Chunk_t load_as_image(const File_System_Callbacks_t *callbacks, const void *context, const char *file)
 {
     size_t byte_to_read;
-    void *handle = file_system->callbacks->open(file_system->context, file, 'b', &byte_to_read);
+    void *handle = callbacks->open(context, file, 'b', &byte_to_read);
     if (!handle) {
         return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
     }
 
-    stbi_context_t context = {
-            .file_system = file_system, .handle = handle
+    stbi_context_t stbi_context = {
+            .callbacks = callbacks, .handle = handle
         };
 
     int width, height, components;
-    void *pixels = stbi_load_from_callbacks(&_io_callbacks, &context, &width, &height, &components, STBI_rgb_alpha);
-    file_system->callbacks->close(handle);
+    void *pixels = stbi_load_from_callbacks(&_io_callbacks, &stbi_context, &width, &height, &components, STBI_rgb_alpha);
+    callbacks->close(handle);
     if (!pixels) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't decode surface from file: %s", stbi_failure_reason());
         return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
@@ -187,13 +187,13 @@ void FS_terminate(File_System_t *file_system)
 File_System_Chunk_t FS_load(const File_System_t *fs, const char *file, File_System_Chunk_Types_t type)
 {
     if (type == FILE_SYSTEM_CHUNK_STRING) {
-        return load_as_string(fs, file);
+        return load_as_string(fs->callbacks, fs->context, file);
     } else
     if (type == FILE_SYSTEM_CHUNK_BLOB) {
-        return load_as_binary(fs, file);
+        return load_as_binary(fs->callbacks, fs->context, file);
     } else
     if (type == FILE_SYSTEM_CHUNK_IMAGE) {
-        return load_as_image(fs, file);
+        return load_as_image(fs->callbacks, fs->context, file);
     }
     return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
 }
