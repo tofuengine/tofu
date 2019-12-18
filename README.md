@@ -15,6 +15,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [Glad](https://glad.dav1d.de/)
 * [GLFW](https://www.glfw.org/) v3.4
 * [Lua](https://lua.org/) v5.3.5
+* [LZ4](https://lz4.org/) v1.9.2
 * [spleen](https://github.com/fcambus/spleen) fonts
 * [stb](https://github.com/nothings/stb) libraries
 

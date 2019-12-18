@@ -25,22 +25,18 @@
 #include <libs/log.h>
 #include <libs/stb.h>
 
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
 
 #define LOG_CONTEXT "fs_std"
 
 typedef struct _Std_Context_t {
     char base_path[FILE_PATH_MAX];
 } Std_Context_t;
+
+typedef struct _Std_Handle_t {
+    FILE *stream;
+} Std_Handle_t;
 
 static void *stdio_init(const char *path)
 {
@@ -63,12 +59,18 @@ static void *stdio_open(const void *context, const char *file, File_System_Modes
 {
     Std_Context_t *std_context = (Std_Context_t *)context;
 
+    Std_Handle_t *handle = malloc(sizeof(Std_Handle_t));
+    if (!handle) {
+        return NULL;
+    }
+
     char full_path[FILE_PATH_MAX];
     strcpy(full_path, std_context->base_path);
     strcat(full_path, file);
 
     FILE *stream = fopen(full_path, mode == FILE_SYSTEM_MODE_BINARY ? "rb" :"rt");
     if (!stream) {
+        free(handle);
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't access file `%s`", full_path);
     }
 
@@ -82,27 +84,33 @@ static void *stdio_open(const void *context, const char *file, File_System_Modes
 
     *size_in_bytes = stat.st_size;
 
-    return (void *)stream;
+    *handle = (Std_Handle_t){ .stream = stream };
+
+    return handle;
 }
 
 static size_t stdio_read(void *handle, char *buffer, size_t bytes_to_read)
 {
-    return fread(buffer, sizeof(char), bytes_to_read, (FILE *)handle);
+    Std_Handle_t *std_handle = (Std_Handle_t *)handle;
+    return fread(buffer, sizeof(char), bytes_to_read, std_handle->stream);
 }
 
 static void stdio_skip(void *handle, int offset)
 {
-    fseek((FILE *)handle, offset, SEEK_CUR);
+    Std_Handle_t *std_handle = (Std_Handle_t *)handle;
+    fseek(std_handle->stream, offset, SEEK_CUR);
 }
 
 static bool stdio_eof(void *handle)
 {
-    return feof((FILE *)handle) != 0;
+    Std_Handle_t *std_handle = (Std_Handle_t *)handle;
+    return feof(std_handle->stream) != 0;
 }
 
 static void stdio_close(void *handle)
 {
-    fclose((FILE *)handle);
+    Std_Handle_t *std_handle = (Std_Handle_t *)handle;
+    fclose(std_handle->stream);
 }
 
 const File_System_Modes_IO_Callbacks_t *std_callbacks = &(File_System_Modes_IO_Callbacks_t){
