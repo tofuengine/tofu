@@ -22,22 +22,18 @@
 
 #include "rc4.h"
 
-static inline void swap(uint8_t S[256], size_t i, size_t j)
-{
-    uint8_t t = S[i];
-    S[i] = S[j];
-    S[j] = t;
-}
-
 void rc4_schedule(rc4_context_t *context, const uint8_t *key, size_t key_size)
 {
+    uint8_t *S = context->S;
     for (size_t k = 0; k < 256; ++k) {
-        context->S[k] = k;
+        S[k] = k;
     }
     uint8_t i = 0, j = 0;
     for (size_t k = 0; k < 256; ++k) {
-        j += context->S[i] + key[i % key_size];
-        swap(context->S, i, j);
+        const uint8_t Si = S[i];
+        j += Si + key[i % key_size];
+        S[i] = S[j]; // Swap!
+        S[j] = Si;
         i += 1;
     }
     context->i = 0;
@@ -50,9 +46,11 @@ void rc4_process(rc4_context_t *context, uint8_t *data, size_t data_size)
     uint8_t *S = context->S;
     for (size_t k = 0; k < data_size; ++k) {
         i += 1;
-        j += S[i];
-        swap(S, i, j);
-        data[k] ^= S[(uint8_t)(S[i] + S[j])];
+        const uint8_t Si = S[i];
+        j += Si;
+        const uint8_t Sj = S[i] = S[j]; // Swap!
+        S[j] = Si;
+        data[k] ^= S[(uint8_t)(Si + Sj)];
     }
     context->i = i;
     context->j = j;
