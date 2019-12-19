@@ -64,11 +64,11 @@ local function attrdir(path, list)
 end
 
 local function emit_header(output, config, files)
-  local flags = bit32.bor(bit32.lshift(config.compressed and 1 or 0, 0), bit32.lshift(config.encrypted and 1 or 0, 1))
+  local flags = bit32.lshift(config.encrypted and 1 or 0, 0)
 
   output:write(struct.pack('c8', "TOFUPAK!"))
-  output:write(struct.pack('I4', VERSION))
-  output:write(struct.pack('I4', flags))
+  output:write(struct.pack('I2', VERSION))
+  output:write(struct.pack('I2', flags))
   output:write(struct.pack('I4', #files))
 end
 
