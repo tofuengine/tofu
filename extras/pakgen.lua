@@ -81,7 +81,11 @@ local function emit_entry(output, file, config)
 
   if config.compressed then
     local stream = zlib.deflate(zlib.BEST_COMPRESSION)
-    content = stream(content, "full")
+    local deflated, eof, bytes_in, bytes_out = stream(content, "full")
+    local ratio = bytes_out / bytes_in
+    if ratio <= config.threshold then
+      content = deflated
+    end
   end
 
   if config.encrypted then
@@ -106,7 +110,8 @@ local function parse_arguments(args)
       input = nil,
       output = nil,
       compressed = false,
-      encrypted = false
+      encrypted = false,
+      threshold = 0.75
     }
   for _, arg in ipairs(args) do
     if arg:starts_with("--input=") then
