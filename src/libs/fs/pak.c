@@ -25,9 +25,7 @@
 #include <miniz/miniz.h>
 
 #include <libs/log.h>
-#include <libs/stb.h>
-
-#include "rc4.h"
+#include <libs/rc4.h>
 
 #include <stdio.h>
 #include <stdint.h>
@@ -247,12 +245,12 @@ static void *pakio_open(const void *context, const char *file, char mode, size_t
 
     if (pak_context->encrypted) {
         rc4_context_t rc4_context;
-        rc4_setup(&rc4_context, KEY, sizeof(KEY));
+        rc4_schedule(&rc4_context, KEY, sizeof(KEY));
 #ifdef DROP_256
         uint8_t drop[256] = { 0 };
-        rc4_crypt(&pak_handle->rc4_context, drop, drop, sizeof(drop));
+        rc4_process(&pak_handle->rc4_context, drop, drop, sizeof(drop));
 #endif
-        rc4_crypt(&rc4_context, source, source, entry->archive_size);
+        rc4_process(&rc4_context, source, entry->archive_size);
         Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d bytes decrypted", entry->archive_size);
     }
 
