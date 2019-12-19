@@ -83,7 +83,7 @@ local function emit_entry(output, file, config)
     local stream = zlib.deflate(zlib.BEST_COMPRESSION)
     local deflated, eof, bytes_in, bytes_out = stream(content, "full")
     local ratio = bytes_out / bytes_in
-    if ratio <= config.threshold then
+    if ratio < config.threshold then -- Stricly below, to avoid 'null' compression.
       content = deflated
     end
   end
