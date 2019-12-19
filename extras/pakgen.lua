@@ -76,18 +76,25 @@ local function emit_entry(output, file, config)
   local input = io.open(file.pathfile, "rb")
 
   local content = input:read("*all")
+
+  file.crc32 = zlib.crc32()(content)
+
   if config.compressed then
     local stream = zlib.deflate(zlib.BEST_COMPRESSION)
     content = stream(content, "full")
   end
+
   if config.encrypted then
     content = luazen.rc4raw(content, KEY)
   end
+
   file.archive_size = #content
 
+  output:write(struct.pack('I2', 0x3412))
+  output:write(struct.pack('I2', #file.name))
   output:write(struct.pack('I4', file.archive_size))
   output:write(struct.pack('I4', file.original_size))
-  output:write(struct.pack('I4', #file.name))
+  output:write(struct.pack('I4', file.crc32))
   output:write(struct.pack("c0", file.name))
   output:write(content)
 
