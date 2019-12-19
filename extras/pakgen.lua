@@ -21,14 +21,27 @@
 ]]--
 
 -- Depends upon
+--  0 bit32
 --  1 luafilesystem
---  2 struct
+--  2 luazen
+--  3 struct
+--  2 zlib
 
-local struct = require("struct")
+local bit32 = require("bit32")
 local lfs = require("lfs")
+local luazen = require("luazen")
+local struct = require("struct")
+local zlib = require("zlib")
+
+local VERSION = 0x00000000
+local KEY = string.char(0xe6, 0xea, 0xa9, 0xf5, 0xd3, 0xe1, 0xae, 0xd1, 0xce, 0xd6, 0x7d, 0x40, 0x65, 0xaa, 0x9a, 0xc9)
 
 function string:at(index)
   return self:sub(index, index)
+end
+
+function string:starts_with(prefix)
+  return self:sub(1, #prefix) == prefix
 end
 
 function string:ends_with(suffix)
@@ -44,71 +57,106 @@ local function attrdir(path, list)
             attrdir(pathfile, list)
         else
           local size = lfs.attributes(pathfile, "size")
-          table.insert(list, { pathfile = pathfile, size = size, name = nil, offset = -1 })
+          table.insert(list, { pathfile = pathfile, original_size = size, name = nil, offset = -1 })
         end
       end
   end
 end
 
-local function emit_header(output, flags, files)
+local function emit_header(output, config, files)
+  local flags = bit32.bor(bit32.lshift(config.compressed and 1 or 0, 0), bit32.lshift(config.encrypted and 1 or 0, 1))
+
   output:write(struct.pack('c8', "TOFUPAK!"))
-  output:write(struct.pack('I4', 0x00000100))
-  output:write(struct.pack('I4', 0x00000000))
+  output:write(struct.pack('I4', VERSION))
+  output:write(struct.pack('I4', flags))
   output:write(struct.pack('I4', #files))
 end
 
-local function emit_entry_header(output, file)
-  output:write(struct.pack('i4', file.offset))
-  output:write(struct.pack('I4', file.size))
+local function emit_entry(output, file, config)
+  local input = io.open(file.pathfile, "rb")
+
+  local content = input:read("*all")
+  if config.compressed then
+    local stream = zlib.deflate(zlib.BEST_COMPRESSION)
+    content = stream(content, "full")
+  end
+  if config.encrypted then
+    content = luazen.rc4raw(content, KEY)
+  end
+  file.archive_size = #content
+
+  output:write(struct.pack('I4', file.archive_size))
+  output:write(struct.pack('I4', file.original_size))
   output:write(struct.pack('I4', #file.name))
   output:write(struct.pack("c0", file.name))
-end
+  output:write(content)
 
-local function emit_entry(output, file)
-  local input = io.open(file.pathfile, "rb")
-  output:write(input:read("*all"))
   input:close()
 end
 
-if #arg ~= 2 then
-  print("Usage: pak <input folder> <output file>")
+local function parse_arguments(args)
+  local config = {
+      input = nil,
+      output = nil,
+      compressed = false,
+      encrypted = false
+    }
+  for _, arg in ipairs(args) do
+    if arg:starts_with("--input=") then
+      config.input = arg:sub(9)
+      if config.input:ends_with("/") then
+        config.input = config.input:sub(1, -2)
+      end
+    elseif arg:starts_with("--output=") then
+      config.output = arg:sub(10)
+      if not config.output:ends_with(".pak") then
+        config.output = config.output .. ".pak"
+      end
+    elseif arg:starts_with("--compressed") then
+      config.compressed = true
+    elseif arg:starts_with("--encrypted") then
+      config.encrypted = true
+    end
+  end
+  return (config.input and config.output) and config or nil
+end
+
+local function fetch_files(path)
+  local files = {}
+  attrdir(path, files)
+  table.sort(files, function(lhs, rhs) return lhs.pathfile < rhs.pathfile end)
+  for _, file in ipairs(files) do
+    file.name = file.pathfile:sub(1 + #path + 1)
+  end
+  return files
+end
+
+local config = parse_arguments(arg)
+if not config then
+  print("Usage: pakgen --input=<input folder> --output=<output file> [--compressed --encrypted]")
   return
 end
 
-local input_folder = arg[1]
-if input_folder:ends_with("/") then
-  input_folder = input_folder:sub(1, -2)
+local flags = {}
+if config.compressed then
+  table.insert(flags, "compressed")
 end
-
-local output_file = arg[2]
-if not output_file:ends_with(".pak") then
-  output_file = output_file .. ".pak"
+if config.encrypted then
+  table.insert(flags, "encrypted")
 end
+local annotation = #flags == 0 and "plain" or table.concat(flags, " and ")
 
-local files = {}
-attrdir(input_folder, files)
-table.sort(files, function(lhs, rhs) return lhs.pathfile < rhs.pathfile end)
+local files = fetch_files(config.input)
 
-local offset = 20
-for _, file in ipairs(files) do
-  file.name = file.pathfile:sub(1 + #input_folder + 1)
-  offset = offset + (12 + #file.name)
-end
+print(string.format("Creating %s archive `%s` w/ %d entries", annotation, config.output, #files))
+local output = io.open(config.output, "wb")
 
-for _, file in ipairs(files) do
-  file.offset = offset
-  print(file.pathfile .. " " .. file.name .. " " .. file.offset .. " " .. file.size)
-  offset = offset + file.size
-end
+emit_header(output, config, files)
+for index, file in ipairs(files) do
+  emit_entry(output, file, config)
 
-local output = io.open(output_file, "wb")
-
-emit_header(output, 0, files)
-for _, file in ipairs(files) do
-  emit_entry_header(output, file)
-end
-for _, file in ipairs(files) do
-  emit_entry(output, file)
+  print(string.format("  [%d] `%s` %d -> %d", index - 1, file.name, file.original_size, file.archive_size))
 end
 
 output:close()
+print("Done!")

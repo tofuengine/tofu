@@ -100,11 +100,11 @@ static void *stdio_open(const void *context, const char *file, char mode, size_t
     return std_handle;
 }
 
-static size_t stdio_read(void *handle, char *buffer, size_t bytes_to_read)
+static size_t stdio_read(void *handle, void *buffer, size_t bytes_requested)
 {
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
-    return fread(buffer, sizeof(char), bytes_to_read, std_handle->stream);
+    return fread(buffer, sizeof(char), bytes_requested, std_handle->stream);
 }
 
 static void stdio_skip(void *handle, int offset)

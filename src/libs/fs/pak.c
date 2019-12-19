@@ -22,15 +22,21 @@
 
 #include "pak.h"
 
+#include <miniz/miniz.h>
+
 #include <libs/log.h>
 #include <libs/stb.h>
-// TODO: add RC4 encryption.
+
+#include "rc4.h"
 
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 
 #define LOG_CONTEXT "fs-pak"
+
+#define PAK_FLAG_COMPRESSED     0x00000001
+#define PAK_FLAG_ENCRYPTED      0x00000002
 
 #pragma pack(push, 1)
 typedef struct _Pak_Header_t {
@@ -41,30 +47,38 @@ typedef struct _Pak_Header_t {
 } Pak_Header_t;
 
 typedef struct _Pak_Entry_Header_t {
-    int32_t offset;
-    uint32_t size;
-    uint32_t name_length; // The entry header is followed by `name_length` chars.
+    uint32_t archive_size;
+    uint32_t original_size;
+    uint32_t name_length; // The entry header is followed by `name_length` chars and `archive_size` bytes.
 } Pak_Entry_Header_t;
 #pragma pack(pop)
 
 typedef struct _Pak_Entry_t {
     char *name;
     long offset;
-    size_t size;
+    size_t archive_size;
+    size_t original_size;
 } Pak_Entry_t;
 
 typedef struct _Pak_Context_t {
     char base_path[FILE_PATH_MAX];
     size_t entries;
     Pak_Entry_t *directory;
+    bool compressed;
+    bool encrypted;
 } Pak_Context_t;
 
 typedef struct _Pak_Handle_t {
-    FILE *stream;
-    long eof;
+    uint8_t *data;
+    uint8_t *end_of_data;
+    uint8_t *pointer;
 } Pak_Handle_t;
 
 #define PAK_SIGNATURE   "TOFUPAK!"
+
+static uint8_t KEY[] = {
+    0xe6, 0xea, 0xa9, 0xf5, 0xd3, 0xe1, 0xae, 0xd1, 0xce, 0xd6, 0x7d, 0x40, 0x65, 0xaa, 0x9a, 0xc9    
+};
 
 static int pak_entry_compare(const void *lhs, const void *rhs)
 {
@@ -83,12 +97,12 @@ static void *pakio_init(const char *path)
     Pak_Header_t header;
     int headers_read = fread(&header, sizeof(Pak_Header_t), 1, stream);
     if (headers_read != 1) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read file header");
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read file `%s` header", path);
         fclose(stream);
         return NULL;
     }
     if (strncmp(header.signature, PAK_SIGNATURE, sizeof(header.signature)) != 0) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "file format mismatch");
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "file `%s` is not a valid archive", path);
         fclose(stream);
         return NULL;
     }
@@ -106,7 +120,7 @@ static void *pakio_init(const char *path)
         Pak_Entry_Header_t entry_header;
         size_t entries_read = fread(&entry_header, sizeof(Pak_Entry_Header_t), 1, stream);
         if (entries_read != 1) {
-            Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't header read for entry #%d", i);
+            Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read header for entry #%d", i);
             break;
         }
 
@@ -124,10 +138,13 @@ static void *pakio_init(const char *path)
 
         directory[i] = (Pak_Entry_t){
                 .name = entry_name,
-                .offset = entry_header.offset,
-                .size = entry_header.size
+                .offset = ftell(stream),
+                .archive_size = entry_header.archive_size,
+                .original_size = entry_header.original_size
             };
-        
+
+        fseek(stream, entry_header.archive_size, SEEK_CUR); // Skip the curren entry data and move the next entry header.
+
         entries += 1;
     }
 
@@ -138,12 +155,12 @@ static void *pakio_init(const char *path)
             free(directory[i].name);
         }
         free(directory);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "#%d entries directory deallocated", entries);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "directory w/ #%d entries deallocated", entries);
         return NULL;
     }
 
     qsort(directory, header.entries, sizeof(Pak_Entry_t), pak_entry_compare); // Keep sorted to use binary-search.
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "#%d entries directory sorted", entries);
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "directory w/ #%d entries sorted", entries);
 
     Pak_Context_t *pak_context = malloc(sizeof(Pak_Context_t));
     if (!pak_context) {
@@ -152,15 +169,20 @@ static void *pakio_init(const char *path)
             free(directory[i].name);
         }
         free(directory);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "#%d entries directory deallocated", entries);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "directory w/ #%d entries deallocated", entries);
         return NULL;
     }
 
     strcpy(pak_context->base_path, path);
     pak_context->entries = entries;
     pak_context->directory = directory;
+    pak_context->compressed = header.flags & PAK_FLAG_COMPRESSED;
+    pak_context->encrypted = header.flags & PAK_FLAG_ENCRYPTED;
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "I/O initialized for file `%s`", path);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "I/O initialized for archive `%s` w/ %d entries (%scompressed, %sencrypted)",
+        path, entries,
+        pak_context->compressed ? "" : "un",
+        pak_context->encrypted ? "" : "un");
 
     return pak_context;
 }
@@ -178,6 +200,8 @@ static void pakio_deinit(void *context)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "I/O deinitialized");
 }
 
+// Upon opening the entry data is pre-loaded into memory (decrypting and inflating, if necessary),
+// and later on is served through memory access.
 static void *pakio_open(const void *context, const char *file, char mode, size_t *size_in_bytes)
 {
     Pak_Context_t *pak_context = (Pak_Context_t *)context;
@@ -191,72 +215,115 @@ static void *pakio_open(const void *context, const char *file, char mode, size_t
 
     FILE *stream = fopen(pak_context->base_path, mode == 'b' ? "rb" :"rt");
     if (!stream) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't access entry `%s`", file);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't access file `%s`", pak_context->base_path);
         return NULL;
     }
 
     fseek(stream, entry->offset, SEEK_SET); // Move to the found entry position into the file.
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry `%s` found at position %d", file, entry->offset);
 
-    *size_in_bytes = entry->size;
-
-    Pak_Handle_t *pak_handle = malloc(sizeof(Pak_Handle_t));
-    if (!pak_handle) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate handle for file `%s`", file);
+    uint8_t *source = malloc(entry->archive_size);
+    if (!source) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate memory for entry `%s`", file);
         fclose(stream);
         return NULL;
     }
 
-    *pak_handle = (Pak_Handle_t){ .stream = stream, .eof = entry->offset + entry->size };
+    size_t bytes_read = fread(source, sizeof(uint8_t), entry->archive_size, stream);
+    if (bytes_read != entry->archive_size) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d bytes for entry `%s`", entry->archive_size, file);
+        free(source);
+        fclose(stream);
+    }
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` opened w/ handle %p (%d bytes at %d)", file, pak_handle, entry->size, entry->offset);
+    fclose(stream);
+
+    uint8_t *data = malloc(entry->original_size);
+    if (!data) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate memory for entry `%s`", file);
+        free(source);
+        return NULL;
+    }
+
+    if (pak_context->encrypted) {
+        rc4_context_t rc4_context;
+        rc4_setup(&rc4_context, KEY, sizeof(KEY));
+#ifdef DROP_256
+        uint8_t drop[256] = { 0 };
+        rc4_crypt(&pak_handle->rc4_context, drop, drop, sizeof(drop));
+#endif
+        rc4_crypt(&rc4_context, source, source, entry->archive_size);
+        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d bytes decrypted", entry->archive_size);
+    }
+
+    if (pak_context->compressed) {
+        mz_ulong data_length = entry->original_size;
+        mz_uncompress(data, &data_length, source, entry->archive_size);
+        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d bytes inflated to %d bytes", entry->archive_size, entry->original_size);
+    } else {
+        memcpy(data, source, entry->original_size);
+        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d bytes stored", entry->original_size);
+    }
+
+    free(source);
+
+    Pak_Handle_t *pak_handle = malloc(sizeof(Pak_Handle_t));
+    if (!pak_handle) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate handle for entry `%s`", file);
+        free(data);
+        return NULL;
+    }
+    *pak_handle = (Pak_Handle_t){
+            .data = data,
+            .end_of_data = data + entry->original_size,
+            .pointer = data
+        };
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry `%s` opened w/ handle %p (%d bytes)", file, pak_handle, entry->original_size);
+
+    *size_in_bytes = entry->original_size;
 
     return pak_handle;
 }
 
-static size_t pakio_read(void *handle, char *buffer, size_t bytes_to_read)
+static size_t pakio_read(void *handle, void *buffer, size_t bytes_requested)
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
-    long position = ftell(pak_handle->stream);
-    if (position == -1) {
-        return 0;
+    size_t bytes_available = pak_handle->end_of_data - pak_handle->pointer;
+    if (bytes_requested > bytes_available) {
+        bytes_requested = bytes_available;
     }
 
-    size_t bytes_to_eof = pak_handle->eof - position;
-    if (bytes_to_read > bytes_to_eof) {
-        bytes_to_read = bytes_to_eof;
-    }
+    memcpy(buffer, pak_handle->pointer, bytes_requested);
 
-    return fread(buffer, sizeof(uint8_t), bytes_to_read, pak_handle->stream);
+    pak_handle->pointer += bytes_requested;
+
+    return bytes_requested;
 }
 
 static void pakio_skip(void *handle, int offset)
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
-    fseek(pak_handle->stream, offset, SEEK_CUR);
+    pak_handle->pointer += offset;
 }
 
 static bool pakio_eof(void *handle)
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
-    long position = ftell(pak_handle->stream);
-    if (position == -1) {
-        return true;
-    }
-
-    return position >= pak_handle->eof;
+    return pak_handle->pointer >= pak_handle->end_of_data;
 }
 
 static void pakio_close(void *handle)
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
-    fclose(pak_handle->stream);
+    free(pak_handle->data);
     free(pak_handle);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p closed", pak_handle);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry w/ handle %p closed", pak_handle);
 }
 
 const File_System_Callbacks_t *pak_callbacks = &(File_System_Callbacks_t){

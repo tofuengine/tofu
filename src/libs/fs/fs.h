@@ -56,8 +56,8 @@
 typedef struct _File_System_Callbacks_t {
    void * (*init)  (const char *path);
    void   (*deinit)(void *context);
-   void * (*open) (const void *context, const char *file, char mode, size_t *size);
-   size_t (*read) (void *handle, char *buffer, size_t size);
+   void * (*open) (const void *context, const char *file, char mode, size_t *size_in_bytes);
+   size_t (*read) (void *handle, void *buffer, size_t bytes_requested);
    void   (*skip) (void *handle, int offset);
    bool   (*eof)  (void *handle);
    void   (*close)(void *handle);
