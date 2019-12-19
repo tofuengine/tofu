@@ -40,7 +40,7 @@
 typedef struct _Pak_Header_t {
     char signature[8];
     uint32_t version;
-    uint32_t flags;
+    uint32_t flags; // TODO: move the flags to the entry header? Some entries shouldn't be compressed?
     uint32_t entries;
 } Pak_Header_t;
 
