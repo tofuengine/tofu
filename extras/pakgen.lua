@@ -31,9 +31,8 @@ local bit32 = require("bit32")
 local lfs = require("lfs")
 local luazen = require("luazen")
 local struct = require("struct")
-local zlib = require("zlib")
 
-local VERSION = 0x00000000
+local VERSION = 0x0000
 local KEY = string.char(0xe6, 0xea, 0xa9, 0xf5, 0xd3, 0xe1, 0xae, 0xd1, 0xce, 0xd6, 0x7d, 0x40, 0x65, 0xaa, 0x9a, 0xc9)
 
 function string:at(index)
@@ -57,7 +56,7 @@ local function attrdir(path, list)
             attrdir(pathfile, list)
         else
           local size = lfs.attributes(pathfile, "size")
-          table.insert(list, { pathfile = pathfile, original_size = size, name = nil, offset = -1 })
+          table.insert(list, { pathfile = pathfile, size = size, name = nil, offset = -1 })
         end
       end
   end
@@ -77,28 +76,13 @@ local function emit_entry(output, file, config)
 
   local content = input:read("*all")
 
-  file.crc32 = zlib.crc32()(content)
-
-  if config.compressed then
-    local stream = zlib.deflate(zlib.BEST_COMPRESSION)
-    local deflated, eof, bytes_in, bytes_out = stream(content, "full")
-    local ratio = bytes_out / bytes_in
-    if ratio < config.threshold then -- Stricly below, to avoid 'null' compression.
-      content = deflated
-    end
-  end
-
   if config.encrypted then
     content = luazen.rc4raw(content, KEY)
   end
 
-  file.archive_size = #content
-
   output:write(struct.pack('I2', 0x3412))
   output:write(struct.pack('I2', #file.name))
-  output:write(struct.pack('I4', file.archive_size))
-  output:write(struct.pack('I4', file.original_size))
-  output:write(struct.pack('I4', file.crc32))
+  output:write(struct.pack('I4', file.size))
   output:write(struct.pack("c0", file.name))
   output:write(content)
 
@@ -109,9 +93,7 @@ local function parse_arguments(args)
   local config = {
       input = nil,
       output = nil,
-      compressed = false,
-      encrypted = false,
-      threshold = 0.75
+      encrypted = false
     }
   for _, arg in ipairs(args) do
     if arg:starts_with("--input=") then
@@ -124,8 +106,6 @@ local function parse_arguments(args)
       if not config.output:ends_with(".pak") then
         config.output = config.output .. ".pak"
       end
-    elseif arg:starts_with("--compressed") then
-      config.compressed = true
     elseif arg:starts_with("--encrypted") then
       config.encrypted = true
     end
@@ -145,14 +125,11 @@ end
 
 local config = parse_arguments(arg)
 if not config then
-  print("Usage: pakgen --input=<input folder> --output=<output file> [--compressed --encrypted]")
+  print("Usage: pakgen --input=<input folder> --output=<output file> [--encrypted]")
   return
 end
 
 local flags = {}
-if config.compressed then
-  table.insert(flags, "compressed")
-end
 if config.encrypted then
   table.insert(flags, "encrypted")
 end
@@ -167,7 +144,7 @@ emit_header(output, config, files)
 for index, file in ipairs(files) do
   emit_entry(output, file, config)
 
-  print(string.format("  [%d] `%s` %d -> %d", index - 1, file.name, file.original_size, file.archive_size))
+  print(string.format("  [%d] `%s` %d", index - 1, file.name, file.size))
 end
 
 output:close()

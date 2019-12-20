@@ -31,7 +31,7 @@ void rc4_schedule(rc4_context_t *context, const uint8_t *key, size_t key_size)
     uint8_t i = 0, j = 0;
     for (size_t k = 0; k < 256; ++k) {
         const uint8_t Si = S[i];
-        j += Si + key[i % key_size];
+        j += (uint8_t)(Si + key[i % key_size]);
         S[i] = S[j]; // Swap!
         S[j] = Si;
         i += 1;

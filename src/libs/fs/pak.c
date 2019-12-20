@@ -28,46 +28,44 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define LOG_CONTEXT "fs-pak"
 
-#define PAK_FLAG_COMPRESSED     0x00000001
-#define PAK_FLAG_ENCRYPTED      0x00000002
+#define PAK_FLAG_ENCRYPTED      0x0001
 
 #pragma pack(push, 1)
 typedef struct _Pak_Header_t {
     char signature[8];
-    uint32_t version;
-    uint32_t flags; // TODO: move the flags to the entry header? Some entries shouldn't be compressed?
+    uint16_t version;
+    uint16_t flags;
     uint32_t entries;
 } Pak_Header_t;
 
 typedef struct _Pak_Entry_Header_t {
-    uint32_t archive_size;
-    uint32_t original_size;
-    uint32_t name_length; // The entry header is followed by `name_length` chars and `archive_size` bytes.
+    uint16_t __reserved;
+    uint16_t name; // The entry header is followed by `name` chars and `size` bytes.
+    uint32_t size;
 } Pak_Entry_Header_t;
 #pragma pack(pop)
 
 typedef struct _Pak_Entry_t {
     char *name;
     long offset;
-    size_t archive_size;
-    size_t original_size;
+    size_t size;
 } Pak_Entry_t;
 
 typedef struct _Pak_Context_t {
     char base_path[FILE_PATH_MAX];
     size_t entries;
     Pak_Entry_t *directory;
-    bool compressed;
     bool encrypted;
 } Pak_Context_t;
 
 typedef struct _Pak_Handle_t {
-    uint8_t *data;
-    uint8_t *end_of_data;
-    uint8_t *pointer;
+    FILE *stream;
+    long end_of_stream;
+    bool encrypted;
 } Pak_Handle_t;
 
 #define PAK_SIGNATURE   "TOFUPAK!"
@@ -80,7 +78,7 @@ static int pak_entry_compare(const void *lhs, const void *rhs)
 {
     const Pak_Entry_t *l = (const Pak_Entry_t *)lhs;
     const Pak_Entry_t *r = (const Pak_Entry_t *)rhs;
-    return strcmp(l->name, r->name);
+    return strcasecmp(l->name, r->name);
 }
 
 static void *pakio_init(const char *path)
@@ -120,26 +118,25 @@ static void *pakio_init(const char *path)
             break;
         }
 
-        char *entry_name = malloc((entry_header.name_length + 1) * sizeof(char));
+        char *entry_name = malloc((entry_header.name + 1) * sizeof(char));
         if (!entry_name) {
             Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate memory for entry #%d", i);
             break;
         }
-        size_t chars_read = fread(entry_name, sizeof(char), entry_header.name_length, stream);
-        if (chars_read != entry_header.name_length) {
+        size_t chars_read = fread(entry_name, sizeof(char), entry_header.name, stream);
+        if (chars_read != entry_header.name) {
             Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read name for entry #%d", i);
             break;
         }
-        entry_name[entry_header.name_length] = '\0';
+        entry_name[entry_header.name] = '\0';
 
         directory[i] = (Pak_Entry_t){
                 .name = entry_name,
                 .offset = ftell(stream),
-                .archive_size = entry_header.archive_size,
-                .original_size = entry_header.original_size
+                .size = entry_header.size,
             };
 
-        fseek(stream, entry_header.archive_size, SEEK_CUR); // Skip the curren entry data and move the next entry header.
+        fseek(stream, entry_header.size, SEEK_CUR); // Skip the curren entry data and move the next entry header.
 
         entries += 1;
     }
@@ -172,12 +169,10 @@ static void *pakio_init(const char *path)
     strcpy(pak_context->base_path, path);
     pak_context->entries = entries;
     pak_context->directory = directory;
-    pak_context->compressed = header.flags & PAK_FLAG_COMPRESSED;
     pak_context->encrypted = header.flags & PAK_FLAG_ENCRYPTED;
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "I/O initialized for archive `%s` w/ %d entries (%scompressed, %sencrypted)",
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "I/O initialized for archive `%s` w/ %d entries (%sencrypted)",
         path, entries,
-        pak_context->compressed ? "" : "un",
         pak_context->encrypted ? "" : "un");
 
     return pak_context;
@@ -196,8 +191,6 @@ static void pakio_deinit(void *context)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "I/O deinitialized");
 }
 
-// Upon opening the entry data is pre-loaded into memory (decrypting and inflating, if necessary),
-// and later on is served through memory access.
 static void *pakio_open(const void *context, const char *file, char mode, size_t *size_in_bytes)
 {
     Pak_Context_t *pak_context = (Pak_Context_t *)context;
@@ -218,105 +211,90 @@ static void *pakio_open(const void *context, const char *file, char mode, size_t
     fseek(stream, entry->offset, SEEK_SET); // Move to the found entry position into the file.
     Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry `%s` found at position %d", file, entry->offset);
 
-    uint8_t *source = malloc(entry->archive_size);
-    if (!source) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate memory for entry `%s`", file);
+    Pak_Handle_t *pak_handle = malloc(sizeof(Pak_Handle_t));
+    if (!pak_handle) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate handle for entry `%s`", file);
         fclose(stream);
         return NULL;
     }
+    *pak_handle = (Pak_Handle_t){
+            .stream = stream,
+            .end_of_stream = entry->offset + entry->size,
+            .encrypted = pak_context->encrypted
+        };
 
-    size_t bytes_read = fread(source, sizeof(uint8_t), entry->archive_size, stream);
-    if (bytes_read != entry->archive_size) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d bytes for entry `%s`", entry->archive_size, file);
-        free(source);
-        fclose(stream);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry `%s` opened w/ handle %p (%d bytes)", file, pak_handle, entry->size);
+
+    *size_in_bytes = entry->size;
+
+    return pak_handle;
+}
+
+void dump(const uint8_t *data, size_t size)
+{
+    fprintf(stderr, "--- %p %lu ---\n", data, size);
+    while (size--) {
+        fprintf(stderr, "%c", *(data++));
+    }
+    fprintf(stderr, "\n---\n");
+}
+
+
+static size_t pakio_read(void *handle, void *buffer, size_t bytes_requested)
+{
+    Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
+
+    long position = ftell(pak_handle->stream);
+    if (position == -1) {
+        return 0;
     }
 
-    fclose(stream);
-
-    uint8_t *data = malloc(entry->original_size);
-    if (!data) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate memory for entry `%s`", file);
-        free(source);
-        return NULL;
+    size_t bytes_available = pak_handle->end_of_stream - position;
+    if (bytes_requested > bytes_available) {
+        bytes_requested = bytes_available;
     }
 
-    if (pak_context->encrypted) {
+    size_t bytes_read = fread(buffer, sizeof(uint8_t), bytes_requested, pak_handle->stream);
+
+    if (pak_handle->encrypted) {
         rc4_context_t rc4_context;
         rc4_schedule(&rc4_context, KEY, sizeof(KEY));
 #ifdef DROP_256
         uint8_t drop[256] = { 0 };
         rc4_process(&pak_handle->rc4_context, drop, drop, sizeof(drop));
 #endif
-        rc4_process(&rc4_context, source, entry->archive_size);
-        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d bytes decrypted", entry->archive_size);
+        rc4_process(&rc4_context, buffer, bytes_read);
     }
 
-    if (pak_context->compressed) {
-        mz_ulong data_length = entry->original_size;
-        mz_uncompress(data, &data_length, source, entry->archive_size);
-        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d bytes inflated to %d bytes", entry->archive_size, entry->original_size);
-    } else {
-        memcpy(data, source, entry->original_size);
-        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d bytes stored", entry->original_size);
-    }
+    dump(buffer, bytes_read);
 
-    free(source);
-
-    Pak_Handle_t *pak_handle = malloc(sizeof(Pak_Handle_t));
-    if (!pak_handle) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate handle for entry `%s`", file);
-        free(data);
-        return NULL;
-    }
-    *pak_handle = (Pak_Handle_t){
-            .data = data,
-            .end_of_data = data + entry->original_size,
-            .pointer = data
-        };
-
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry `%s` opened w/ handle %p (%d bytes)", file, pak_handle, entry->original_size);
-
-    *size_in_bytes = entry->original_size;
-
-    return pak_handle;
-}
-
-static size_t pakio_read(void *handle, void *buffer, size_t bytes_requested)
-{
-    Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
-
-    size_t bytes_available = pak_handle->end_of_data - pak_handle->pointer;
-    if (bytes_requested > bytes_available) {
-        bytes_requested = bytes_available;
-    }
-
-    memcpy(buffer, pak_handle->pointer, bytes_requested);
-
-    pak_handle->pointer += bytes_requested;
-
-    return bytes_requested;
+    return bytes_read;
 }
 
 static void pakio_skip(void *handle, int offset)
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
-    pak_handle->pointer += offset;
+    fseek(pak_handle->stream, offset, SEEK_CUR);
 }
 
 static bool pakio_eof(void *handle)
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
-    return pak_handle->pointer >= pak_handle->end_of_data;
+    long position = ftell(pak_handle->stream);
+    if (position == -1) {
+        return true;
+    }
+
+    return position >= pak_handle->end_of_stream;
 }
 
 static void pakio_close(void *handle)
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
-    free(pak_handle->data);
+    fclose(pak_handle->stream);
     free(pak_handle);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry w/ handle %p closed", pak_handle);
