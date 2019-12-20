@@ -71,10 +71,6 @@ typedef struct _Pak_Handle_t {
 
 #define PAK_SIGNATURE   "TOFUPAK!"
 
-static uint8_t KEY[] = {
-    0xe6, 0xea, 0xa9, 0xf5, 0xd3, 0xe1, 0xae, 0xd1, 0xce, 0xd6, 0x7d, 0x40, 0x65, 0xaa, 0x9a, 0xc9    
-};
-
 static int pak_entry_compare(const void *lhs, const void *rhs)
 {
     const Pak_Entry_t *l = (const Pak_Entry_t *)lhs;
@@ -224,7 +220,11 @@ static void *pakio_open(const void *context, const char *file, char mode, size_t
             .encrypted = pak_context->encrypted
         };
 
-    rc4_schedule(&pak_handle->rc4_context, KEY, sizeof(KEY));
+    uint8_t rc4_key[16] = { 0 };
+    for (size_t i = 0; file[i] && i < 16; ++i) {
+        rc4_key[i] = file[i];
+    }
+    rc4_schedule(&pak_handle->rc4_context, rc4_key, sizeof(rc4_key));
 #ifdef DROP_256
     uint8_t drop[256] = { 0 };
     rc4_process(&pak_handle->rc4_context, drop, drop, sizeof(drop));
