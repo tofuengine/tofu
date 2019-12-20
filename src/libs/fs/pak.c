@@ -66,6 +66,7 @@ typedef struct _Pak_Handle_t {
     FILE *stream;
     long end_of_stream;
     bool encrypted;
+    rc4_context_t rc4_context;
 } Pak_Handle_t;
 
 #define PAK_SIGNATURE   "TOFUPAK!"
@@ -209,7 +210,7 @@ static void *pakio_open(const void *context, const char *file, char mode, size_t
     }
 
     fseek(stream, entry->offset, SEEK_SET); // Move to the found entry position into the file.
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry `%s` found at position %d", file, entry->offset);
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry `%s` found at offset %d", file, entry->offset);
 
     Pak_Handle_t *pak_handle = malloc(sizeof(Pak_Handle_t));
     if (!pak_handle) {
@@ -223,6 +224,12 @@ static void *pakio_open(const void *context, const char *file, char mode, size_t
             .encrypted = pak_context->encrypted
         };
 
+    rc4_schedule(&pak_handle->rc4_context, KEY, sizeof(KEY));
+#ifdef DROP_256
+    uint8_t drop[256] = { 0 };
+    rc4_process(&pak_handle->rc4_context, drop, drop, sizeof(drop));
+#endif
+
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry `%s` opened w/ handle %p (%d bytes)", file, pak_handle, entry->size);
 
     *size_in_bytes = entry->size;
@@ -230,43 +237,30 @@ static void *pakio_open(const void *context, const char *file, char mode, size_t
     return pak_handle;
 }
 
-void dump(const uint8_t *data, size_t size)
-{
-    fprintf(stderr, "--- %p %lu ---\n", data, size);
-    while (size--) {
-        fprintf(stderr, "%c", *(data++));
-    }
-    fprintf(stderr, "\n---\n");
-}
-
-
 static size_t pakio_read(void *handle, void *buffer, size_t bytes_requested)
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
     long position = ftell(pak_handle->stream);
     if (position == -1) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get current position for handle %p", handle);
         return 0;
     }
 
     size_t bytes_available = pak_handle->end_of_stream - position;
-    if (bytes_requested > bytes_available) {
-        bytes_requested = bytes_available;
+
+    size_t bytes_to_read = bytes_requested;
+    if (bytes_to_read > bytes_available) {
+        bytes_to_read = bytes_available;
     }
 
-    size_t bytes_read = fread(buffer, sizeof(uint8_t), bytes_requested, pak_handle->stream);
+    size_t bytes_read = fread(buffer, sizeof(uint8_t), bytes_to_read, pak_handle->stream);
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d bytes read out of %d (%d requested)", bytes_read, bytes_to_read, bytes_requested);
 
     if (pak_handle->encrypted) {
-        rc4_context_t rc4_context;
-        rc4_schedule(&rc4_context, KEY, sizeof(KEY));
-#ifdef DROP_256
-        uint8_t drop[256] = { 0 };
-        rc4_process(&pak_handle->rc4_context, drop, drop, sizeof(drop));
-#endif
-        rc4_process(&rc4_context, buffer, bytes_read);
+        rc4_process(&pak_handle->rc4_context, buffer, bytes_read);
+        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d bytes decrypted", bytes_read);
     }
-
-    dump(buffer, bytes_read);
 
     return bytes_read;
 }
@@ -284,6 +278,7 @@ static bool pakio_eof(void *handle)
 
     long position = ftell(pak_handle->stream);
     if (position == -1) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get current position for handle %p", handle);
         return true;
     }
 
