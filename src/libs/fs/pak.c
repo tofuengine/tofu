@@ -22,8 +22,6 @@
 
 #include "pak.h"
 
-#include <miniz/miniz.h>
-
 #include <libs/log.h>
 #include <libs/rc4.h>
 
