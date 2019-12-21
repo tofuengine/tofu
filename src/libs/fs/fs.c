@@ -64,14 +64,14 @@ static void *fs_load(const File_System_Callbacks_t *callbacks, const void *conte
 
 static File_System_Chunk_t load_as_string(const File_System_Callbacks_t *callbacks, const void *context, const char *file)
 {
-    size_t size;
-    void *chars = fs_load(callbacks, context, file, 't', &size);
+    size_t length;
+    void *chars = fs_load(callbacks, context, file, 't', &length);
     return (File_System_Chunk_t){
             .type = FILE_SYSTEM_CHUNK_STRING,
             .var = {
                 .string = {
-                        .chars = ((char *)chars),
-                        .length = size
+                        .chars = (char *)chars,
+                        .length = chars ? length : 0
                     }
             }
         };
@@ -86,7 +86,7 @@ static File_System_Chunk_t load_as_binary(const File_System_Callbacks_t *callbac
             .var = {
                 .blob = {
                         .ptr = ptr,
-                        .size = size
+                        .size = ptr ? size : 0
                     }
             }
         };
