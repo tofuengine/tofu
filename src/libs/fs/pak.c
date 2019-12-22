@@ -188,7 +188,7 @@ static void pakio_deinit(void *context)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "I/O deinitialized");
 }
 
-static void *pakio_open(const void *context, const char *file, char mode, size_t *size_in_bytes)
+static void *pakio_open(const void *context, const char *file, size_t *size_in_bytes)
 {
     Pak_Context_t *pak_context = (Pak_Context_t *)context;
 
@@ -199,7 +199,7 @@ static void *pakio_open(const void *context, const char *file, char mode, size_t
         return NULL;
     }
 
-    FILE *stream = fopen(pak_context->base_path, mode == 'b' ? "rb" :"rt");
+    FILE *stream = fopen(pak_context->base_path, "rb"); // Always in binary mode, line-terminators aren't an issue.
     if (!stream) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't access file `%s`", pak_context->base_path);
         return NULL;

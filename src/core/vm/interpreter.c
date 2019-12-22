@@ -128,12 +128,12 @@ static int custom_searcher(lua_State *L)
     }
     strcat(path_file, ".lua");
 
-    File_System_Chunk_t chunk = FS_load(file_system, path_file + 1, FILE_SYSTEM_CHUNK_STRING);
+    File_System_Chunk_t chunk = FS_load(file_system, path_file + 1, FILE_SYSTEM_CHUNK_BLOB);
     if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
         luaL_error(L, "can't load file `%s`", path_file + 1);
     }
 
-    luaL_loadbuffer(L, chunk.var.string.chars, chunk.var.string.length, path_file);
+    luaL_loadbuffer(L, chunk.var.blob.ptr, chunk.var.blob.size, path_file);
     FS_release(chunk);
 
     return 1;
