@@ -34,6 +34,7 @@
 #define LOG_CONTEXT "fs-pak"
 
 #define PAK_SIGNATURE           "TOFUPAK!"
+
 #define PAK_FLAG_ENCRYPTED      0x0001
 
 #pragma pack(push, 1)
@@ -58,7 +59,7 @@ typedef struct _Pak_Entry_t {
 } Pak_Entry_t;
 
 typedef struct _Pak_Context_t {
-    char base_path[FILE_PATH_MAX];
+    char archive_path[FILE_PATH_MAX];
     size_t entries;
     Pak_Entry_t *directory;
     bool encrypted;
@@ -100,6 +101,7 @@ static void *pakio_init(const char *path)
 {
     FILE *stream = fopen(path, "rb");
     if (!stream) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't access file `%s`", path);
         return NULL;
     }
 
@@ -181,7 +183,7 @@ static void *pakio_init(const char *path)
         return NULL;
     }
 
-    strcpy(pak_context->base_path, path);
+    strcpy(pak_context->archive_path, path);
     pak_context->entries = entries;
     pak_context->directory = directory;
     pak_context->encrypted = header.flags & PAK_FLAG_ENCRYPTED;
@@ -217,9 +219,9 @@ static void *pakio_open(const void *context, const char *file, size_t *size_in_b
         return NULL;
     }
 
-    FILE *stream = fopen(pak_context->base_path, "rb"); // Always in binary mode, line-terminators aren't an issue.
+    FILE *stream = fopen(pak_context->archive_path, "rb"); // Always in binary mode, line-terminators aren't an issue.
     if (!stream) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't access file `%s`", pak_context->base_path);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't access file `%s`", pak_context->archive_path);
         return NULL;
     }
 

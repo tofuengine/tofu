@@ -158,6 +158,18 @@ static File_System_Chunk_t load_as_image(const File_System_Callbacks_t *callback
 #define realpath(N,R) _fullpath((R),(N),PATH_MAX)
 #endif
 
+const File_System_Callbacks_t *_detect(const char *path)
+{
+    struct stat path_stat;
+    int result = stat(path, &path_stat);
+    if (result != 0) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get stats for `%s`", path);
+        return false;
+    }
+
+    return S_ISDIR(path_stat.st_mode) ? std_callbacks: pak_callbacks;
+}
+
 bool FS_initialize(File_System_t *file_system, const char *base_path)
 {
     char resolved[FILE_PATH_MAX]; // Using local buffer to avoid un-tracked `malloc()` for the syscall.
@@ -167,14 +179,7 @@ bool FS_initialize(File_System_t *file_system, const char *base_path)
         return false;
     }
 
-    struct stat resolved_stat;
-    int result = stat(resolved, &resolved_stat);
-    if (result != 0) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get stats for `%s`", resolved);
-        return false;
-    }
-
-    const File_System_Callbacks_t *callbacks = S_ISDIR(resolved_stat.st_mode) ? std_callbacks: pak_callbacks;
+    const File_System_Callbacks_t *callbacks = _detect(resolved);
 
     void *context = callbacks->init(resolved);
 
