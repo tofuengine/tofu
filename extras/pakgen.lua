@@ -79,11 +79,10 @@ local function emit_entry(output, file, config)
   local content = input:read("*all")
 
   if config.encrypted then
-    local key = luazen.md5(file.name)
-    content = luazen.rc4raw(content, key)
+    content = luazen.rc4raw(content, luazen.md5(file.name))
   end
 
-  output:write(struct.pack('I2', 0x2123))
+  output:write(struct.pack('I2', 0xFFFF))
   output:write(struct.pack('I2', #file.name))
   output:write(struct.pack('I4', file.size))
   output:write(struct.pack("c0", file.name))
