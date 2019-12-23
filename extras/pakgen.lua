@@ -32,7 +32,8 @@ local lfs = require("lfs")
 local luazen = require("luazen")
 local struct = require("struct")
 
-local ZERO_PADDING = string.char(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
+local ZERO_PADDING = string.char(0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
+                                 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff)
 
 local VERSION = 0x0000
 
@@ -78,8 +79,8 @@ local function emit_entry(output, file, config)
   local content = input:read("*all")
 
   if config.encrypted then
-    local key = file.name .. ZERO_PADDING
-    content = luazen.rc4raw(content, key:sub(1, 16))
+    local key = luazen.md5(file.name)
+    content = luazen.rc4raw(content, key)
   end
 
   output:write(struct.pack('I2', 0x2123))

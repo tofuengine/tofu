@@ -23,6 +23,7 @@
 #include "pak.h"
 
 #include <libs/log.h>
+#include <libs/md5.h>
 #include <libs/rc4.h>
 
 #include <stdio.h>
@@ -32,6 +33,7 @@
 
 #define LOG_CONTEXT "fs-pak"
 
+#define PAK_SIGNATURE           "TOFUPAK!"
 #define PAK_FLAG_ENCRYPTED      0x0001
 
 #pragma pack(push, 1)
@@ -69,13 +71,29 @@ typedef struct _Pak_Handle_t {
     rc4_context_t rc4_context;
 } Pak_Handle_t;
 
-#define PAK_SIGNATURE   "TOFUPAK!"
-
-static int pak_entry_compare(const void *lhs, const void *rhs)
+static int _pak_entry_compare(const void *lhs, const void *rhs)
 {
     const Pak_Entry_t *l = (const Pak_Entry_t *)lhs;
     const Pak_Entry_t *r = (const Pak_Entry_t *)rhs;
     return strcasecmp(l->name, r->name);
+}
+
+// Encryption is implemented throught a RC4 stream cipher.
+// The key is the MD5 digest of the entry name (w/ relative path).
+static void _initialize_context(rc4_context_t *rc4_context, const char *file)
+{
+    md5_context_t md5_context;
+    md5_init(&md5_context);
+    md5_update(&md5_context, (const uint8_t *)file, strlen(file));
+
+    uint8_t rc4_key[MD5_SIZE];
+    md5_final(&md5_context, rc4_key);
+
+    rc4_schedule(rc4_context, rc4_key, sizeof(rc4_key));
+#ifdef DROP_256
+    uint8_t drop[256] = { 0 };
+    rc4_process(&pak_handle->rc4_context, drop, drop, sizeof(drop));
+#endif
 }
 
 static void *pakio_init(const char *path)
@@ -149,7 +167,7 @@ static void *pakio_init(const char *path)
         return NULL;
     }
 
-    qsort(directory, header.entries, sizeof(Pak_Entry_t), pak_entry_compare); // Keep sorted to use binary-search.
+    qsort(directory, header.entries, sizeof(Pak_Entry_t), _pak_entry_compare); // Keep sorted to use binary-search.
     Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "directory w/ #%d entries sorted", entries);
 
     Pak_Context_t *pak_context = malloc(sizeof(Pak_Context_t));
@@ -193,7 +211,7 @@ static void *pakio_open(const void *context, const char *file, size_t *size_in_b
     Pak_Context_t *pak_context = (Pak_Context_t *)context;
 
     const Pak_Entry_t key = { .name = (char *)file };
-    Pak_Entry_t *entry = bsearch((const void *)&key, pak_context->directory, pak_context->entries, sizeof(Pak_Entry_t), pak_entry_compare);
+    Pak_Entry_t *entry = bsearch((const void *)&key, pak_context->directory, pak_context->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
     if (!entry) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't find entry `%s`", file);
         return NULL;
@@ -220,15 +238,9 @@ static void *pakio_open(const void *context, const char *file, size_t *size_in_b
             .encrypted = pak_context->encrypted
         };
 
-    uint8_t rc4_key[16] = { 0 };
-    for (size_t i = 0; file[i] && i < 16; ++i) {
-        rc4_key[i] = file[i];
+    if (pak_context->encrypted) {
+        _initialize_context(&pak_handle->rc4_context, entry->name);
     }
-    rc4_schedule(&pak_handle->rc4_context, rc4_key, sizeof(rc4_key));
-#ifdef DROP_256
-    uint8_t drop[256] = { 0 };
-    rc4_process(&pak_handle->rc4_context, drop, drop, sizeof(drop));
-#endif
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry `%s` opened w/ handle %p (%d bytes)", file, pak_handle, entry->size);
 
