@@ -8,14 +8,13 @@ Guess what? Yup, that's yet another game engine/framework.
 
 * Carefully crafted C99 code.
 * Self-contained, no external modules/libraries required (system-wide libraries excluded).
-* Multi-platform through coss-compilation (Windows and Linux, no MacOS support will ever be provided).
+* Multi-platform through coss-compilation (at the moment Windows and Linux, no MacOS support will ever be provided).
 
 ## Dependecies
 
 * [Glad](https://glad.dav1d.de/)
 * [GLFW](https://www.glfw.org/) v3.4
 * [Lua](https://lua.org/) v5.3.5
-* [LZ4](https://lz4.org/) v1.9.2
 * [spleen](https://github.com/fcambus/spleen) fonts
 * [stb](https://github.com/nothings/stb) libraries
 
@@ -24,14 +23,16 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Fully script-based, using Lua.
 * [x] Straight multimedia support, no intermediate third-party libraries (OpenGL 2.1 required).
 * [x] Windowed/fullscreen support with automatic scaling.
-* [x] Palette based graphics with up to 256 colors.
 * [x] Internal software renderer.
-* [x] Per-color re-indexing (*shifting*) and transparency, affecting drawing operations (global, too?).
-* [x] Automatic nearest-color palette indexing of images.
+* [x] Palette based graphics with up to 256 colors.
 * [x] Predefined library of 8/16/32/64 colors palettes.
+* [x] Automatic nearest-color palette indexing of images.
+* [x] Per-color re-indexing (*shifting*) and transparency, affecting drawing operations (global, too?).
 * [x] Tiled-map support w/ camera support (zoom and scrolling).
 * [x] Out-of-the-box timers support.
 * [x] Customizable application icon.
+* [x] Support for *archived games*, via custom "packed" format (w/ optional encryption).
+* [ ] Digital/analogue game-controller support.
 * [ ] Out-of-the-box easing functions (see [this](https://github.com/kikito/tween.lua/blob/master/tween.lua) and [this](https://github.com/rxi/flux/blob/master/flux.lua)).
 * [ ] Animation support w/ frameset DSL (i.e. compiling a string where each token can be a single frame, a range or a "keep-current-frame for some time" command). Each frameset can have its one update period, and will be most likely based upon a timer.
 * [ ] Out-of-the-box palette switching (with tweening) features.
@@ -40,9 +41,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [ ] Library of "retro-feel" shaders.
 * [ ] Library of noise functions ([cellular](https://thebookofshaders.com/12/), Perlin, etc...).
 * [ ] Camera/screen shaking by using a post-processing shader.
-* [ ] Digital/analogue game-controller support.
 * [ ] Audio support (based upon [dr-soft/miniaudio](https://github.com/dr-soft/miniaudio)) w/ run-time multi-voice synth (a-la [Bfxr](https://www.bfxr.net)).
-* [ ] Support for TARed/ZIPed games ([rxi/microtar](https://github.com/rxi/microtar), [kuba--/zip](https://github.com/kuba--/zip)).
 
 ## Desiderata
 
