@@ -34,14 +34,15 @@
 
 #define LOG_CONTEXT "fs"
 
-static void *fs_load(const File_System_Callbacks_t *callbacks, const void *context, const char *file, char mode, size_t *size)
+// FIXME: convert bool argumento to flags.
+static void *fs_load(const File_System_Callbacks_t *callbacks, const void *context, const char *file, bool null_terminate, size_t *size)
 {
     size_t bytes_to_read;
-    void *handle = callbacks->open(context, file, mode, &bytes_to_read);
+    void *handle = callbacks->open(context, file, &bytes_to_read);
     if (!handle) {
         return NULL;
     }
-    size_t bytes_to_allocate = bytes_to_read + (mode == 't' ? 1 : 0);
+    size_t bytes_to_allocate = bytes_to_read + (null_terminate ? 1 : 0);
     void *data = malloc(bytes_to_allocate * sizeof(uint8_t)); // Add null terminator for the string.
     if (!data) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d bytes of memory", bytes_to_allocate);
@@ -55,7 +56,7 @@ static void *fs_load(const File_System_Callbacks_t *callbacks, const void *conte
         free(data);
         return NULL;
     }
-    if (mode == 't') {
+    if (null_terminate) {
         ((char *)data)[read_bytes] = '\0';
     }
     *size = read_bytes;
@@ -64,14 +65,14 @@ static void *fs_load(const File_System_Callbacks_t *callbacks, const void *conte
 
 static File_System_Chunk_t load_as_string(const File_System_Callbacks_t *callbacks, const void *context, const char *file)
 {
-    size_t size;
-    void *chars = fs_load(callbacks, context, file, 't', &size);
+    size_t length;
+    void *chars = fs_load(callbacks, context, file, true, &length);
     return (File_System_Chunk_t){
             .type = FILE_SYSTEM_CHUNK_STRING,
             .var = {
                 .string = {
-                        .chars = ((char *)chars),
-                        .length = size
+                        .chars = (char *)chars,
+                        .length = chars ? length : 0
                     }
             }
         };
@@ -80,13 +81,13 @@ static File_System_Chunk_t load_as_string(const File_System_Callbacks_t *callbac
 static File_System_Chunk_t load_as_binary(const File_System_Callbacks_t *callbacks, const void *context, const char *file)
 {
     size_t size;
-    void *ptr = fs_load(callbacks, context, file, 'b', &size);
+    void *ptr = fs_load(callbacks, context, file, false, &size);
     return (File_System_Chunk_t){
             .type = FILE_SYSTEM_CHUNK_BLOB,
             .var = {
                 .blob = {
                         .ptr = ptr,
-                        .size = size
+                        .size = ptr ? size : 0
                     }
             }
         };
@@ -124,7 +125,7 @@ static const stbi_io_callbacks _io_callbacks = {
 static File_System_Chunk_t load_as_image(const File_System_Callbacks_t *callbacks, const void *context, const char *file)
 {
     size_t byte_to_read;
-    void *handle = callbacks->open(context, file, 'b', &byte_to_read);
+    void *handle = callbacks->open(context, file, &byte_to_read);
     if (!handle) {
         return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
     }
@@ -137,7 +138,7 @@ static File_System_Chunk_t load_as_image(const File_System_Callbacks_t *callback
     void *pixels = stbi_load_from_callbacks(&_io_callbacks, &stbi_context, &width, &height, &components, STBI_rgb_alpha);
     callbacks->close(handle);
     if (!pixels) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't decode surface from file: %s", stbi_failure_reason());
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't decode surface from file `%s` (%s)", file, stbi_failure_reason());
         return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
     }
 
@@ -157,6 +158,18 @@ static File_System_Chunk_t load_as_image(const File_System_Callbacks_t *callback
 #define realpath(N,R) _fullpath((R),(N),PATH_MAX)
 #endif
 
+const File_System_Callbacks_t *_detect(const char *path)
+{
+    struct stat path_stat;
+    int result = stat(path, &path_stat);
+    if (result != 0) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get stats for `%s`", path);
+        return false;
+    }
+
+    return S_ISDIR(path_stat.st_mode) ? std_callbacks: pak_callbacks;
+}
+
 bool FS_initialize(File_System_t *file_system, const char *base_path)
 {
     char resolved[FILE_PATH_MAX]; // Using local buffer to avoid un-tracked `malloc()` for the syscall.
@@ -166,14 +179,7 @@ bool FS_initialize(File_System_t *file_system, const char *base_path)
         return false;
     }
 
-    struct stat resolved_stat;
-    int result = stat(resolved, &resolved_stat);
-    if (result != 0) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get stats for `%s`", resolved);
-        return false;
-    }
-
-    const File_System_Callbacks_t *callbacks = S_ISDIR(resolved_stat.st_mode) ? std_callbacks: pak_callbacks;
+    const File_System_Callbacks_t *callbacks = _detect(resolved);
 
     void *context = callbacks->init(resolved);
 

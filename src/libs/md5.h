@@ -20,38 +20,21 @@
  * SOFTWARE.
  **/
 
-#include "rc4.h"
+#ifndef __MD5_H__
+#define __MD5_H__
 
-void rc4_schedule(rc4_context_t *context, const uint8_t *key, size_t key_size)
-{
-    uint8_t *S = context->S;
-    for (size_t k = 0; k < 256; ++k) {
-        S[k] = k;
-    }
-    uint8_t i = 0, j = 0;
-    for (size_t k = 0; k < 256; ++k) {
-        const uint8_t Si = S[i];
-        j += (uint8_t)(Si + key[i % key_size]);
-        S[i] = S[j]; // Swap!
-        S[j] = Si;
-        i += 1;
-    }
-    context->i = 0;
-    context->j = 0;
-}
+#include <stdint.h>
+    
+#define MD5_SIZE    16
 
-void rc4_process(rc4_context_t *context, uint8_t *data, size_t data_size)
-{
-    uint8_t i = context->i, j = context->j;
-    uint8_t *S = context->S;
-    for (size_t k = 0; k < data_size; ++k) {
-        i += 1;
-        const uint8_t Si = S[i];
-        j += Si;
-        const uint8_t Sj = S[i] = S[j]; // Swap!
-        S[j] = Si;
-        data[k] ^= S[(uint8_t)(Si + Sj)];
-    }
-    context->i = i;
-    context->j = j;
-}
+typedef struct _md5_context_t {
+  uint32_t state[4];        /* state (ABCD) */
+  uint32_t count[2];        /* number of bits, modulo 2^64 (lsb first) */
+  uint8_t buffer[64];       /* input buffer */
+} md5_context_t;
+
+extern void md5_init(md5_context_t *context);
+extern void md5_update(md5_context_t *context, const uint8_t *msg, int len);
+extern void md5_final(md5_context_t *context, uint8_t *digest);
+
+#endif  /* __MD5_H__ */

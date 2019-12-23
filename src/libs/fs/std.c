@@ -62,7 +62,7 @@ static void stdio_deinit(void *context)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "I/O deinitialized");
 }
 
-static void *stdio_open(const void *context, const char *file, char mode, size_t *size_in_bytes)
+static void *stdio_open(const void *context, const char *file, size_t *size_in_bytes)
 {
     Std_Context_t *std_context = (Std_Context_t *)context;
 
@@ -70,7 +70,7 @@ static void *stdio_open(const void *context, const char *file, char mode, size_t
     strcpy(full_path, std_context->base_path);
     strcat(full_path, file);
 
-    FILE *stream = fopen(full_path, mode == 'b' ? "rb" :"rt");
+    FILE *stream = fopen(full_path, "rb");
     if (!stream) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't access file `%s`", full_path);
         return NULL;
