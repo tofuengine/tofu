@@ -38,9 +38,9 @@ typedef struct _Interpreter_t {
 
 extern bool Interpreter_initialize(Interpreter_t *interpreter, const File_System_t *file_system, const void *userdatas[]);
 extern void Interpreter_terminate(Interpreter_t *interpreter);
-extern bool Interpreter_process(Interpreter_t *interpreter);
+extern bool Interpreter_process(const Interpreter_t *interpreter);
 extern bool Interpreter_update(Interpreter_t *interpreter, float delta_time);
-extern bool Interpreter_render(Interpreter_t *interpreter, float ratio);
-extern bool Interpreter_call(Interpreter_t *interpreter, int nargs, int nresults);
+extern bool Interpreter_render(const Interpreter_t *interpreter, float ratio);
+extern bool Interpreter_call(const Interpreter_t *interpreter, int nargs, int nresults);
 
 #endif  /* __INTERPRETER_H__ */

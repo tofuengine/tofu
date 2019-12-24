@@ -273,7 +273,7 @@ void Interpreter_terminate(Interpreter_t *interpreter)
     lua_close(interpreter->state);
 }
 
-bool Interpreter_process(Interpreter_t *interpreter)
+bool Interpreter_process(const Interpreter_t *interpreter)
 {
     return call(interpreter->state, METHOD_PROCESS, 0, 0) == LUA_OK;
 }
@@ -305,13 +305,13 @@ bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
     return true;
 }
 
-bool Interpreter_render(Interpreter_t *interpreter, float ratio)
+bool Interpreter_render(const Interpreter_t *interpreter, float ratio)
 {
     lua_pushnumber(interpreter->state, ratio);
     return call(interpreter->state, METHOD_RENDER, 1, 0) == LUA_OK;
 }
 
-bool Interpreter_call(Interpreter_t *interpreter, int nargs, int nresults)
+bool Interpreter_call(const Interpreter_t *interpreter, int nargs, int nresults)
 {
     lua_State *L = interpreter->state;
 #ifdef __DEBUG_VM_CALLS__
