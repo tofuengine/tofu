@@ -643,7 +643,7 @@ static int canvas_clear(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L, 0)
     LUAX_SIGNATURE_END
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     GL_context_clear(context);

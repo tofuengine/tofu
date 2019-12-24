@@ -77,10 +77,10 @@ typedef struct _Display_t {
 
 extern bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration);
 extern void Display_terminate(Display_t *display);
-extern bool Display_should_close(Display_t *display);
+extern bool Display_should_close(const Display_t *display);
 extern void Display_update(Display_t *display, float delta_time);
-extern void Display_clear(Display_t *display);
-extern void Display_present(Display_t *display);
+extern void Display_clear(const Display_t *display);
+extern void Display_present(const Display_t *display);
 
 extern void Display_shader(Display_t *display, const char *code);
 extern void Display_palette(Display_t *display, const GL_Palette_t *palette);

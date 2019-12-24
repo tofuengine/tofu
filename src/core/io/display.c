@@ -230,6 +230,9 @@ static void size_callback(GLFWwindow* window, int width, int height)
     glDisable(GL_ALPHA_TEST);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "optimizing OpenGL features");
 
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // TODO: configurable?
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "setting OpenGL clear-color");
+
 #ifdef __DEBUG_TRIANGLES_WINDING__
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
@@ -406,7 +409,7 @@ void Display_terminate(Display_t *display)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "terminated");
 }
 
-bool Display_should_close(Display_t *display)
+bool Display_should_close(const Display_t *display)
 {
     return glfwWindowShouldClose(display->window);
 }
@@ -421,13 +424,12 @@ void Display_update(Display_t *display, float delta_time)
 #endif
 }
 
-void Display_clear(Display_t *display)
+void Display_clear(const Display_t *display)
 {
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
-void Display_present(Display_t *display)
+void Display_present(const Display_t *display)
 {
     GL_surface_to_rgba(&display->gl.buffer, &display->palette, display->vram);
 
