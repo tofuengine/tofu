@@ -70,18 +70,18 @@ static inline void wait_for(float seconds)
 #endif
 }
 
-static inline size_t calculate_fps(float elapsed)
+static inline float calculate_fps(float elapsed)
 {
     static float samples[FPS_AVERAGE_SAMPLES] = { 0 };
     static size_t index = 0;
-    static double sum = 0.0; // Need to store the game life...
+    static float sum = 0.0f; // We are storing just a small time interval, float is enough...
 
     sum -= samples[index];
     sum += elapsed;
     samples[index] = elapsed;
     index = (index + 1) % FPS_AVERAGE_SAMPLES;
 
-    return (size_t)round((double)FPS_AVERAGE_SAMPLES / sum);
+    return (float)FPS_AVERAGE_SAMPLES / sum;
 }
 
 static void configure(const File_System_t *file_system, Configuration_t *configuration)

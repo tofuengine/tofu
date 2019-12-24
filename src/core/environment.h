@@ -28,7 +28,7 @@
 
 typedef struct _Environment_t {
     bool quit;
-    size_t fps;
+    float fps;
     double time;
 } Environment_t;
 

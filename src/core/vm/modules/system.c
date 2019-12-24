@@ -82,7 +82,7 @@ static int system_fps(lua_State *L)
 
     const Environment_t *environment = (const Environment_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
 
-    lua_pushinteger(L, environment->fps);
+    lua_pushnumber(L, environment->fps);
 
     return 1;
 }
