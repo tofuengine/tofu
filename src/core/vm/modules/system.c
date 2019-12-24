@@ -68,7 +68,7 @@ static int system_time(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L, 0)
     LUAX_SIGNATURE_END
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
+    const Environment_t *environment = (const Environment_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
 
     lua_pushnumber(L, environment->time);
 
@@ -80,7 +80,7 @@ static int system_fps(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L, 0)
     LUAX_SIGNATURE_END
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
+    const Environment_t *environment = (const Environment_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
 
     lua_pushinteger(L, environment->fps);
 

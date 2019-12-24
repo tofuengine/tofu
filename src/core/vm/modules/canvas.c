@@ -135,7 +135,7 @@ static int canvas_color_to_index(lua_State *L)
     LUAX_SIGNATURE_END
     uint32_t argb = (uint32_t)lua_tointeger(L, 1);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     GL_Color_t color = GL_palette_unpack_color(argb);
     const GL_Pixel_t index = GL_palette_find_nearest_color(&display->palette, color);
@@ -150,7 +150,7 @@ static int canvas_width(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L, 0)
     LUAX_SIGNATURE_END
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
 
@@ -164,7 +164,7 @@ static int canvas_height(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L, 0)
     LUAX_SIGNATURE_END
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
 
@@ -254,9 +254,9 @@ static int canvas_palette0(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L, 0)
     LUAX_SIGNATURE_END
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    GL_Palette_t *palette = &display->palette;
+    const GL_Palette_t *palette = &display->palette;
 
     lua_createtable(L, palette->count, 0);
     for (size_t i = 0; i < palette->count; ++i) {
@@ -662,7 +662,7 @@ static int canvas_point(lua_State *L)
     int y = lua_tointeger(L, 2);
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 3);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     index %= display->palette.count;
 
@@ -685,7 +685,7 @@ static int canvas_hline(lua_State *L)
     size_t width = (size_t)lua_tointeger(L, 3);
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 4);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     index %= display->palette.count;
 
@@ -708,7 +708,7 @@ static int canvas_vline(lua_State *L)
     size_t height = (size_t)lua_tointeger(L, 3);
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 4);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     index %= display->palette.count;
 
@@ -733,7 +733,7 @@ static int canvas_line(lua_State *L)
     int y1 = lua_tointeger(L, 4);
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 5);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     index %= display->palette.count;
 
@@ -755,7 +755,7 @@ static int canvas_polyline(lua_State *L)
     LUAX_SIGNATURE_END
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 2);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     index %= display->palette.count;
 
@@ -799,7 +799,7 @@ static int canvas_fill(lua_State *L)
     int y = lua_tointeger(L, 2);
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 3);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     index %= display->palette.count;
 
@@ -830,7 +830,7 @@ static int canvas_triangle(lua_State *L)
     int y2 = lua_tointeger(L, 7);
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 8);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     index %= display->palette.count;
 
@@ -867,7 +867,7 @@ static int canvas_rectangle(lua_State *L)
     size_t height = (size_t)lua_tointeger(L, 5);
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 6);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     index %= display->palette.count;
 
@@ -915,7 +915,7 @@ static int canvas_circle(lua_State *L)
     int radius = lua_tointeger(L, 4);
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 5);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     index %= display->palette.count;
 
@@ -942,7 +942,7 @@ static int canvas_peek(lua_State *L)
     int x = lua_tointeger(L, 1);
     int y = lua_tointeger(L, 2);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = context->state.surface;
@@ -964,7 +964,7 @@ static int canvas_poke(lua_State *L)
     int y = lua_tointeger(L, 2);
     GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 3);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     index %= display->palette.count;
 
@@ -988,7 +988,7 @@ static int canvas_process(lua_State *L)
     size_t width = (size_t)lua_tointeger(L, 3);
     size_t height = (size_t)lua_tointeger(L, 4);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
 

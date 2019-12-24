@@ -88,7 +88,7 @@ static int input_is_key_down(lua_State *L)
     LUAX_SIGNATURE_END
     int key = lua_tointeger(L, 1);
 
-    Input_t *input = (Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
+    const Input_t *input = (const Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
     bool is_down = (key >= Input_Keys_t_First && key <= Input_Keys_t_Last) ? input->keyboard.keys[key].state.down : false;
 
@@ -103,7 +103,7 @@ static int input_is_key_up(lua_State *L)
     LUAX_SIGNATURE_END
     int key = lua_tointeger(L, 1);
 
-    Input_t *input = (Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
+    const Input_t *input = (const Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
     bool is_down = (key >= Input_Keys_t_First && key <= Input_Keys_t_Last) ? input->keyboard.keys[key].state.down : false;
 
@@ -118,7 +118,7 @@ static int input_is_key_pressed(lua_State *L)
     LUAX_SIGNATURE_END
     int key = lua_tointeger(L, 1);
 
-    Input_t *input = (Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
+    const Input_t *input = (const Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
     bool is_pressed = (key >= Input_Keys_t_First && key <= Input_Keys_t_Last) ? input->keyboard.keys[key].state.pressed : false;
 
@@ -133,7 +133,7 @@ static int input_is_key_released(lua_State *L)
     LUAX_SIGNATURE_END
     int key = lua_tointeger(L, 1);
 
-    Input_t *input = (Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
+    const Input_t *input = (const Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
     bool is_released = (key >= Input_Keys_t_First && key <= Input_Keys_t_Last) ? input->keyboard.keys[key].state.released : false;
 

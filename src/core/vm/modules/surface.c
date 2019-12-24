@@ -113,7 +113,7 @@ static int surface_new1(lua_State *L)
     const char *file = lua_tostring(L, 1);
 
     const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     File_System_Chunk_t chunk = FS_load(file_system, file, FILE_SYSTEM_CHUNK_IMAGE);
     if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
@@ -240,7 +240,7 @@ static int surface_grab(lua_State *L)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     GL_context_to_surface(context, &instance->surface);
@@ -255,7 +255,7 @@ static int surface_blit1(lua_State *L)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
@@ -275,7 +275,7 @@ static int surface_blit3(lua_State *L)
     int x = lua_tointeger(L, 2);
     int y = lua_tointeger(L, 3);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
@@ -297,7 +297,7 @@ static int surface_blit4(lua_State *L)
     int y = lua_tointeger(L, 3);
     int rotation = lua_tointeger(L, 4);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface; // TODO: fix explicit struct elements
@@ -321,7 +321,7 @@ static int surface_blit5(lua_State *L)
     float scale_x = lua_tonumber(L, 4);
     float scale_y = lua_tonumber(L, 5);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
@@ -347,7 +347,7 @@ static int surface_blit6(lua_State *L)
     float scale_y = lua_tonumber(L, 5);
     int rotation = lua_tointeger(L, 6);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
@@ -375,7 +375,7 @@ static int surface_blit7(lua_State *L)
     size_t width = (size_t)lua_tointeger(L, 6);
     size_t height = (size_t)lua_tointeger(L, 7);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
@@ -407,7 +407,7 @@ static int surface_blit9(lua_State *L)
     float scale_x = lua_tonumber(L, 8);
     float scale_y = lua_tonumber(L, 9);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
@@ -441,7 +441,7 @@ static int surface_blit10(lua_State *L)
     float scale_y = lua_tonumber(L, 9);
     int rotation = lua_tointeger(L, 10);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
@@ -479,7 +479,7 @@ static int surface_xform1(lua_State *L)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
@@ -499,7 +499,7 @@ static int surface_xform3(lua_State *L)
     int x = lua_tointeger(L, 2);
     int y = lua_tointeger(L, 3);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;

@@ -112,7 +112,7 @@ static int font_new3(lua_State *L)
     size_t glyph_height = (size_t)lua_tointeger(L, 3);
 
     const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     GL_Sheet_t sheet;
     luaX_Reference surface = LUAX_REFERENCE_NIL;
@@ -276,7 +276,7 @@ static int font_write5(lua_State *L)
     int y = lua_tointeger(L, 4);
     const char *alignment = lua_tostring(L, 5);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
@@ -323,7 +323,7 @@ static int font_write6(lua_State *L)
     float scale = lua_tonumber(L, 5);
     const char *alignment = lua_tostring(L, 6);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
@@ -372,7 +372,7 @@ static int font_write7(lua_State *L)
     float scale_y = lua_tonumber(L, 6);
     const char *alignment = lua_tostring(L, 7);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
