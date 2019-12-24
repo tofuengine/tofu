@@ -421,6 +421,12 @@ void Display_update(Display_t *display, float delta_time)
 #endif
 }
 
+void Display_clear(Display_t *display)
+{
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+}
+
 void Display_present(Display_t *display)
 {
     GL_surface_to_rgba(&display->gl.buffer, &display->palette, display->vram);

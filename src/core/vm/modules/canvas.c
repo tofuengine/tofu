@@ -648,6 +648,8 @@ static int canvas_clear(lua_State *L)
     const GL_Context_t *context = &display->gl;
     GL_context_clear(context);
 
+    Display_clear(display);
+
     return 0;
 }
 
