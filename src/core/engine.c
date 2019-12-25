@@ -231,7 +231,7 @@ void Engine_run(Engine_t *engine)
         running = running && Interpreter_process(&engine->interpreter); // Lazy evaluate `running`, will avoid calls when error.
 
         lag += elapsed; // Count a maximum amount of skippable frames in order no to stall on slower machines.
-        for (size_t frames = 0; (frames < skippable_frames) && (lag >= delta_time); ++frames) {
+        for (size_t frames = skippable_frames; frames && (lag >= delta_time); --frames) {
             engine->environment.time += delta_time;
             running = running && Interpreter_update(&engine->interpreter, delta_time); // Fixed update.
             lag -= delta_time;
