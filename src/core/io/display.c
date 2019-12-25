@@ -438,6 +438,8 @@ void Display_present(const Display_t *display)
     glBegin(GL_TRIANGLE_STRIP);
 //        glColor4ub(255, 255, 255, 255); // Change this color to "tint".
 
+        // TODO: add an offset x/y to implement shaking and similar effects.
+
         glTexCoord2f(0, 0); // CCW strip, top-left is <0,0> (the face direction of the strip is determined by the winding of the first triangle)
         glVertex2f(display->vram_destination.x0, display->vram_destination.y0);
         glTexCoord2f(0, 1);
