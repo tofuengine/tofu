@@ -435,13 +435,13 @@ void Display_present(const Display_t *display)
 {
     const GL_Surface_t *buffer = &display->gl.buffer;
     GL_Color_t *vram = display->vram;
+    const GL_Quad_t *vram_destination = &display->vram_destination;
+
+    // TODO: add an offset x/y to implement shaking and similar effects.
 
     GL_surface_to_rgba(buffer, &display->palette, vram);
 
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, buffer->width, buffer->height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, vram);
-
-    const GL_Quad_t *vram_destination = &display->vram_destination;
-    // TODO: add an offset x/y to implement shaking and similar effects.
 
     glBegin(GL_TRIANGLE_STRIP);
 //        glColor4ub(255, 255, 255, 255); // Change this color to "tint".
