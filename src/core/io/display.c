@@ -426,28 +426,34 @@ void Display_update(Display_t *display, float delta_time)
 
 void Display_clear(const Display_t *display)
 {
+    // It is advisable to clear the color buffer even if the framebuffer will be
+    // fully written (see `glTexSubImage2D()` below)
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
 void Display_present(const Display_t *display)
 {
-    GL_surface_to_rgba(&display->gl.buffer, &display->palette, display->vram);
+    const GL_Surface_t *buffer = &display->gl.buffer;
+    GL_Color_t *vram = display->vram;
 
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, display->gl.buffer.width, display->gl.buffer.height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, display->vram);
+    GL_surface_to_rgba(buffer, &display->palette, vram);
+
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, buffer->width, buffer->height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, vram);
+
+    const GL_Quad_t *vram_destination = &display->vram_destination;
+    // TODO: add an offset x/y to implement shaking and similar effects.
 
     glBegin(GL_TRIANGLE_STRIP);
 //        glColor4ub(255, 255, 255, 255); // Change this color to "tint".
 
-        // TODO: add an offset x/y to implement shaking and similar effects.
-
         glTexCoord2f(0, 0); // CCW strip, top-left is <0,0> (the face direction of the strip is determined by the winding of the first triangle)
-        glVertex2f(display->vram_destination.x0, display->vram_destination.y0);
+        glVertex2f(vram_destination->x0, vram_destination->y0);
         glTexCoord2f(0, 1);
-        glVertex2f(display->vram_destination.x0, display->vram_destination.y1);
+        glVertex2f(vram_destination->x0, vram_destination->y1);
         glTexCoord2f(1, 0);
-        glVertex2f(display->vram_destination.x1, display->vram_destination.y0);
+        glVertex2f(vram_destination->x1, vram_destination->y0);
         glTexCoord2f(1, 1);
-        glVertex2f(display->vram_destination.x1, display->vram_destination.y1);
+        glVertex2f(vram_destination->x1, vram_destination->y1);
     glEnd();
 
     glfwSwapBuffers(display->window);
