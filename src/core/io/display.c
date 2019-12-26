@@ -430,29 +430,40 @@ void Display_clear(const Display_t *display)
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
+void Display_offset(Display_t *display, GL_Point_t offset)
+{
+    display->vram_offset = offset;
+}
+
 void Display_present(const Display_t *display)
 {
     const GL_Surface_t *buffer = &display->gl.buffer;
     GL_Color_t *vram = display->vram;
-    const GL_Quad_t *vram_destination = &display->vram_destination;
-
-    // TODO: add an offset x/y to implement shaking and similar effects.
 
     GL_surface_to_rgba(buffer, &display->palette, vram);
 
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, buffer->width, buffer->height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, vram);
 
+    // Add an offset x/y to implement shaking and similar effects.
+    const GL_Quad_t *vram_destination = &display->vram_destination;
+    const GL_Point_t *vram_offset = &display->vram_offset;
+
+    const int x0 = vram_destination->x0 + vram_offset->x;
+    const int y0 = vram_destination->y0 + vram_offset->y;
+    const int x1 = vram_destination->x1 + vram_offset->x;
+    const int y1 = vram_destination->y1 + vram_offset->y;
+
     glBegin(GL_TRIANGLE_STRIP);
 //        glColor4ub(255, 255, 255, 255); // Change this color to "tint".
 
-        glTexCoord2f(0, 0); // CCW strip, top-left is <0,0> (the face direction of the strip is determined by the winding of the first triangle)
-        glVertex2f(vram_destination->x0, vram_destination->y0);
-        glTexCoord2f(0, 1);
-        glVertex2f(vram_destination->x0, vram_destination->y1);
-        glTexCoord2f(1, 0);
-        glVertex2f(vram_destination->x1, vram_destination->y0);
-        glTexCoord2f(1, 1);
-        glVertex2f(vram_destination->x1, vram_destination->y1);
+        glTexCoord2f(0.0f, 0.0f); // CCW strip, top-left is <0,0> (the face direction of the strip is determined by the winding of the first triangle)
+        glVertex2f(x0, y0);
+        glTexCoord2f(0.0f, 1.0f);
+        glVertex2f(x0, y1);
+        glTexCoord2f(1.0f, 0.0f);
+        glVertex2f(x1, y0);
+        glTexCoord2f(1.0f, 1.0f);
+        glVertex2f(x1, y1);
     glEnd();
 
     glfwSwapBuffers(display->window);
