@@ -81,6 +81,7 @@ extern void Display_terminate(Display_t *display);
 extern bool Display_should_close(const Display_t *display);
 extern void Display_update(Display_t *display, float delta_time);
 extern void Display_clear(const Display_t *display);
+extern void Display_offset(Display_t *display, GL_Point_t offset);
 extern void Display_present(const Display_t *display);
 
 extern void Display_shader(Display_t *display, const char *code);

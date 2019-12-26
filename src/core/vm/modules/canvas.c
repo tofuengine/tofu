@@ -55,6 +55,7 @@ static int canvas_pattern(lua_State *L);
 static int canvas_shift(lua_State *L);
 static int canvas_transparent(lua_State *L);
 static int canvas_clipping(lua_State *L);
+static int canvas_offset(lua_State *L);
 static int canvas_shader(lua_State *L);
 #ifdef __GL_MASK_SUPPORT__
 static int canvas_mask(lua_State *L);
@@ -91,6 +92,7 @@ static const struct luaL_Reg _canvas_functions[] = {
     { "shift", canvas_shift },
     { "transparent", canvas_transparent },
     { "clipping", canvas_clipping },
+    { "offset", canvas_offset },
     { "shader", canvas_shader },
     { "clear", canvas_clear },
 #ifdef __GL_MASK_SUPPORT__
@@ -554,6 +556,42 @@ static int canvas_clipping(lua_State *L)
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(0, canvas_clipping0)
         LUAX_OVERLOAD_ARITY(4, canvas_clipping4)
+    LUAX_OVERLOAD_END
+}
+
+static int canvas_offset0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 0)
+    LUAX_SIGNATURE_END
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    Display_offset(display, (GL_Point_t){ .x = 0, .y = 0 });
+
+    return 0;
+}
+
+static int canvas_offset2(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 2)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    int x = lua_tointeger(L, 1);
+    int y = lua_tointeger(L, 2);
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    Display_offset(display, (GL_Point_t){ .x = x, .y = y });
+
+    return 0;
+}
+
+static int canvas_offset(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(0, canvas_offset0)
+        LUAX_OVERLOAD_ARITY(2, canvas_offset2)
     LUAX_OVERLOAD_END
 }
 
