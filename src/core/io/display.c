@@ -278,7 +278,6 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
     glfwWindowHint(GLFW_FOCUSED, GLFW_TRUE);
-//    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // We'll show it after the real-size has been calculated.
 
     display->window = glfwCreateWindow(display->physical_width, display->physical_height, configuration->title,
             configuration->fullscreen ? glfwGetPrimaryMonitor() : NULL, NULL);
