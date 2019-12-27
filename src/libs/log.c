@@ -90,7 +90,7 @@ static void write(Log_Levels_t level, const char *context, const char *text, va_
     }
 }
 
-extern void Log_initialize()
+extern void Log_initialize(void)
 {
 #ifdef DEBUG
     _level = LOG_LEVELS_ALL;

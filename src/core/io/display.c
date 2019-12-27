@@ -130,7 +130,7 @@ static void set_icon(GLFWwindow *window, File_System_Chunk_t icon)
 }
 
 #ifdef DEBUG
-static bool has_errors()
+static bool has_errors(void)
 {
     bool result = false;
     for (GLenum code = glGetError(); code != GL_NO_ERROR; code = glGetError()) {
