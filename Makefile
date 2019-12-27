@@ -31,7 +31,7 @@ ifeq ($(PLATFORM),windows)
 else
 	COMPILER=gcc
 endif
-CWARNINGS=-Wall -Wextra -Werror -Wno-unused-parameter -Wpedantic
+CWARNINGS=-Wall -Wextra -Werror -Wno-unused-parameter -Wpedantic -Wstrict-prototypes
 CFLAGS=-D_DEFAULT_SOURCE -DLUA_32BITS -DLUA_FLOORN2I=1 -DSTBI_ONLY_PNG -DSTBI_NO_STDIO -std=c99 -Isrc -Iexternal
 ifeq ($(BUILD),release)
 	COPTS=-O3 -DRELEASE
