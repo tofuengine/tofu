@@ -147,10 +147,10 @@ void Input_process(Input_t *input)
         }
     }
 
-    int result = glfwJoystickPresent(0);
+    int result = glfwJoystickPresent(0); // TODO: to be completed!
     if (result == GLFW_TRUE) {
         GLFWgamepadstate state;
-        int result = glfwGetGamepadState(0, &state);
+        result = glfwGetGamepadState(0, &state);
         if (result == GLFW_TRUE) {
             for (int i = Input_Keys_t_First; i <= Input_Keys_t_Last; ++i) {
                 Input_Key_t *key = &keyboard->keys[i];
