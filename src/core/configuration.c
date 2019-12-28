@@ -67,6 +67,15 @@ static void on_parameter(Configuration_t *configuration, const char *key, const 
     if (strcmp(key, "exit-key-enabled") == 0) {
         configuration->exit_key_enabled = strcmp(value, "true") == 0;
     } else
+    if (strcmp(key, "use-keyboard") == 0) {
+        configuration->use_keyboard = strcmp(value, "true") == 0;
+    } else
+    if (strcmp(key, "use-gamepad") == 0) {
+        configuration->use_gamepad = strcmp(value, "true") == 0;
+    } else
+    if (strcmp(key, "use-mouse") == 0) {
+        configuration->use_mouse = strcmp(value, "true") == 0;
+    } else
     if (strcmp(key, "debug") == 0) {
         configuration->debug = strcmp(value, "true") == 0;
     }
@@ -137,6 +146,9 @@ void Configuration_load(Configuration_t *configuration, const char *data)
             .fps_cap = -1, // No capping as a default. TODO: make it run-time configurable?
             .hide_cursor = true,
             .exit_key_enabled = true,
+            .use_keyboard = true,
+            .use_gamepad = true,
+            .use_mouse = true,
             .debug = true
         };
 

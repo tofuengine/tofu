@@ -42,6 +42,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [ ] Library of noise functions ([cellular](https://thebookofshaders.com/12/), Perlin, etc...).
 * [ ] Camera/screen shaking by using a post-processing shader.
 * [ ] Library of "retro-feel" shaders.
+* [ ] Multiple players support.
 
 ## Desiderata
 

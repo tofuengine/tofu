@@ -89,6 +89,9 @@ typedef struct _Input_Mouse_t {
 
 typedef struct _Input_Configuration_t {
     bool exit_key_enabled;
+    bool use_keyboard;
+    bool use_gamepad;
+    bool use_mouse;
     // TODO: key-remapping?
 } Input_Configuration_t;
 

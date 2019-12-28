@@ -40,8 +40,11 @@ typedef struct _Configuration {
     size_t fps_cap;
     bool hide_cursor;
     bool exit_key_enabled;
-    bool debug;
+    bool use_keyboard;
+    bool use_gamepad;
+    bool use_mouse;
     // TODO: key-remapping?
+    bool debug;
 } Configuration_t;
 
 extern void Configuration_load(Configuration_t *configuration, const char *data);

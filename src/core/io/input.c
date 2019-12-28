@@ -42,6 +42,8 @@ bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration
             .time = 0
         };
 
+    // TODO: detect available joysticks.
+
     return Input_configure(input, (const char *)_mappings);
 }
 
@@ -96,7 +98,7 @@ void Input_process(Input_t *input)
         GLFW_KEY_SPACE,
         GLFW_KEY_ESCAPE
     };
-    static const int gamepad[Input_Keys_t_CountOf] = {
+    static const int gamepad_buttons[Input_Keys_t_CountOf] = {
         GLFW_GAMEPAD_BUTTON_DPAD_UP,
         GLFW_GAMEPAD_BUTTON_DPAD_DOWN,
         GLFW_GAMEPAD_BUTTON_DPAD_LEFT,
@@ -111,7 +113,7 @@ void Input_process(Input_t *input)
         GLFW_GAMEPAD_BUTTON_START,
         GLFW_GAMEPAD_BUTTON_GUIDE
     };
-    static const int buttons[Input_Buttons_t_CountOf] = {
+    static const int mouse_buttons[Input_Buttons_t_CountOf] = {
         GLFW_MOUSE_BUTTON_LEFT,
         GLFW_MOUSE_BUTTON_MIDDLE,
         GLFW_MOUSE_BUTTON_RIGHT
@@ -119,44 +121,47 @@ void Input_process(Input_t *input)
 
     glfwPollEvents();
 
-    Input_Keyboard_t *keyboard = &input->keyboard;
-    for (int i = Input_Keys_t_First; i <= Input_Keys_t_Last; ++i) {
-        Input_Key_t *key = &keyboard->keys[i];
+    // TODO: use array of function pointers, populated with active handlers.
 
-        bool was_down = key->state.down;
-        bool is_down = glfwGetKey(input->window, keys[i]) == GLFW_PRESS;
+    if (input->configuration.use_keyboard) {
+        Input_Keyboard_t *keyboard = &input->keyboard;
+        for (int i = Input_Keys_t_First; i <= Input_Keys_t_Last; ++i) {
+            Input_Key_t *key = &keyboard->keys[i];
 
-        if (!key->state.triggered) { // If not triggered use the current physical status.
-            key->state.down = is_down;
-            key->state.pressed = !was_down && is_down;
-            key->state.released = was_down && !is_down;
+            bool was_down = key->state.down;
+            bool is_down = glfwGetKey(input->window, keys[i]) == GLFW_PRESS;
 
-            if (key->state.pressed && key->period > 0.0f) { // On press, track the trigger state and reset counter.
-                key->state.triggered = true;
-                key->time = 0.0f;
-                Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "key #%d triggered, %.3fs %d %d %d", i, key->time, key->state.down, key->state.pressed, key->state.released);
+            if (!key->state.triggered) { // If not triggered use the current physical status.
+                key->state.down = is_down;
+                key->state.pressed = !was_down && is_down;
+                key->state.released = was_down && !is_down;
+
+                if (key->state.pressed && key->period > 0.0f) { // On press, track the trigger state and reset counter.
+                    key->state.triggered = true;
+                    key->time = 0.0f;
+                    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "key #%d triggered, %.3fs %d %d %d", i, key->time, key->state.down, key->state.pressed, key->state.released);
+                }
+            } else
+            if (!is_down) {
+                key->state.down = false;
+                key->state.pressed = false;
+                key->state.released = was_down; // Track release is was previously down.
+
+                key->state.triggered = false;
+                Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "button #%d held for %.3fs %d %d %d", i, key->time, key->state.down, key->state.pressed, key->state.released);
             }
-        } else
-        if (!is_down) {
-            key->state.down = false;
-            key->state.pressed = false;
-            key->state.released = was_down; // Track release is was previously down.
-
-            key->state.triggered = false;
-            Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "button #%d held for %.3fs %d %d %d", i, key->time, key->state.down, key->state.pressed, key->state.released);
         }
     }
 
-    int result = glfwJoystickPresent(0); // TODO: to be completed!
-    if (result == GLFW_TRUE) {
+    if (input->configuration.use_gamepad) {
         GLFWgamepadstate state;
-        result = glfwGetGamepadState(0, &state);
+        int result = glfwGetGamepadState(GLFW_JOYSTICK_1, &state);
         if (result == GLFW_TRUE) {
             for (int i = Input_Keys_t_First; i <= Input_Keys_t_Last; ++i) {
                 Input_Key_t *key = &keyboard->keys[i];
 
                 bool was_down = key->state.down;
-                bool is_down = state.buttons[gamepad[i]] == GLFW_PRESS;
+                bool is_down = state.buttons[gamepad_buttons[i]] == GLFW_PRESS;
 
                 if (!key->state.triggered) { // If not triggered use the current physical status.
                     key->state.down = is_down;
@@ -181,21 +186,23 @@ void Input_process(Input_t *input)
         }
     }
 
-    Input_Mouse_t *mouse = &input->mouse;
-    for (int i = Input_Buttons_t_First; i <= Input_Buttons_t_Last; ++i) {
-        Input_Button_State_t *button = &mouse->buttons[i];
+    if (input->configuration.use_mouse) {
+        Input_Mouse_t *mouse = &input->mouse;
+        for (int i = Input_Buttons_t_First; i <= Input_Buttons_t_Last; ++i) {
+            Input_Button_State_t *button = &mouse->buttons[i];
 
-        bool was_down = button->down;
-        bool is_down = glfwGetMouseButton(input->window, buttons[i]) == GLFW_PRESS;
+            bool was_down = button->down;
+            bool is_down = glfwGetMouseButton(input->window, mouse_buttons[i]) == GLFW_PRESS;
 
-        button->down = is_down;
-        button->pressed = !was_down && is_down;
-        button->released = was_down && !is_down;
+            button->down = is_down;
+            button->pressed = !was_down && is_down;
+            button->released = was_down && !is_down;
+        }
+        double x, y;
+        glfwGetCursorPos(input->window, &x, &y);
+        mouse->x = (float)x;
+        mouse->y = (float)y;
     }
-    double x, y;
-    glfwGetCursorPos(input->window, &x, &y);
-    mouse->x = (float)x;
-    mouse->y = (float)y;
 
     if (input->configuration.exit_key_enabled) {
         if (glfwGetKey(input->window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
