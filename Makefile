@@ -1,9 +1,9 @@
 ifeq ($(PLATFORM),windows)
-    ifeq ($(VARIANT),x64)
+	ifeq ($(VARIANT),x64)
 		TARGET=tofu_x64.exe
-    else
+	else
 		TARGET=tofu_x32.exe
-    endif
+	endif
 else ifeq ($(PLATFORM),raspberry)
 	TARGET=tofu-rpi_x32
 else
@@ -23,11 +23,11 @@ DUMPER=hexdump
 DFLAGS=-v -e '1/1 "0x%02X,"'
 
 ifeq ($(PLATFORM),windows)
-    ifeq ($(VARIANT),x64)
+	ifeq ($(VARIANT),x64)
 		COMPILER=x86_64-w64-mingw32-gcc
-    else
+	else
 		COMPILER=i686-w64-mingw32-gcc
-    endif
+	endif
 else
 	COMPILER=gcc
 endif
@@ -44,13 +44,13 @@ endif
 # -Os => -O2, favouring size
 
 ifeq ($(PLATFORM),windows)
-    ifeq ($(VARIANT),x64)
+	ifeq ($(VARIANT),x64)
 		LINKER=x86_64-w64-mingw32-gcc
 		LFLAGS=-Lexternal/GLFW/windows/x64 -lglfw3 -lgdi32
-    else
+	else
 		LINKER=i686-w64-mingw32-gcc
 		LFLAGS=-Lexternal/GLFW/windows/x32 -lglfw3 -lgdi32
-    endif
+	endif
 else ifeq ($(PLATFORM),raspberry)
 	LINKER=gcc
 	LFLAGS=-Lexternal/GLFW/rpi/x32 -lglfw3 -lm -lpthread -lX11 -ldl
