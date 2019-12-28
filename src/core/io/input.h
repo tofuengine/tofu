@@ -87,6 +87,15 @@ typedef struct _Input_Mouse_t {
     float x, y;
 } Input_Mouse_t;
 
+typedef enum _Input_Handlers_t {
+    Input_Handlers_t_First = 0,
+    INPUT_HANDLER_KEYBOARD = Input_Handlers_t_First,
+    INPUT_HANDLER_GAMEPAD,
+    INPUT_HANDLER_MOUSE,
+    Input_Handlers_t_Last = INPUT_HANDLER_MOUSE,
+    Input_Handlers_t_CountOf
+} Input_Handlers_t;
+
 typedef struct _Input_Configuration_t {
     bool exit_key_enabled;
     bool use_keyboard;
@@ -102,8 +111,10 @@ typedef struct _Input_t {
 
     double time;
 
-    Input_Mouse_t mouse;
+    Input_Mouse_t mouse; // TODO: rename both these to more generic names? pointer and buttons?
     Input_Keyboard_t keyboard;
+
+    void (*handlers[Input_Handlers_t_CountOf])(struct _Input_t *input);
 } Input_t;
 
 extern bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration, GLFWwindow *window);
