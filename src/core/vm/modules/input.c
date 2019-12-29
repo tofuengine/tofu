@@ -32,46 +32,39 @@
 
 #define INPUT_MT        "Tofu_Input_mt"
 
-static int input_is_key_down(lua_State *L);
-static int input_is_key_up(lua_State *L);
-static int input_is_key_pressed(lua_State *L);
-static int input_is_key_released(lua_State *L);
-static int input_key_auto_repeat(lua_State *L);
-static int input_is_button_down(lua_State *L);
-static int input_is_button_up(lua_State *L);
-static int input_is_button_pressed(lua_State *L);
-static int input_is_button_released(lua_State *L);
+static int input_is_down(lua_State *L);
+static int input_is_up(lua_State *L);
+static int input_is_pressed(lua_State *L);
+static int input_is_released(lua_State *L);
+static int input_auto_repeat(lua_State *L);
 
 static const struct luaL_Reg _input_functions[] = {
-    { "is_key_down", input_is_key_down },
-    { "is_key_up", input_is_key_up },
-    { "is_key_pressed", input_is_key_pressed },
-    { "is_key_released", input_is_key_released },
-    { "key_auto_repeat", input_key_auto_repeat },
-    { "is_button_down", input_is_button_down },
-    { "is_button_up", input_is_button_up },
-    { "is_button_pressed", input_is_button_pressed },
-    { "is_button_released", input_is_button_released },
+    { "is_down", input_is_down },
+    { "is_up", input_is_up },
+    { "is_pressed", input_is_pressed },
+    { "is_released", input_is_released },
+    { "auto_repeat", input_auto_repeat },
+    // { "cursor", input_cursor },
     { NULL, NULL }
 };
 
 static const luaX_Const _input_constants[] = {
-    { "UP", LUA_CT_INTEGER, { .i = INPUT_KEY_UP } },
-    { "DOWN", LUA_CT_INTEGER, { .i = INPUT_KEY_DOWN } },
-    { "LEFT", LUA_CT_INTEGER, { .i = INPUT_KEY_LEFT } },
-    { "RIGHT", LUA_CT_INTEGER, { .i = INPUT_KEY_RIGHT } },
-    { "LT", LUA_CT_INTEGER, { .i = INPUT_KEY_LT } },
-    { "RT", LUA_CT_INTEGER, { .i = INPUT_KEY_RT } },
-    { "Y", LUA_CT_INTEGER, { .i = INPUT_KEY_Y } },
-    { "X", LUA_CT_INTEGER, { .i = INPUT_KEY_X } },
-    { "B", LUA_CT_INTEGER, { .i = INPUT_KEY_B } },
-    { "A", LUA_CT_INTEGER, { .i = INPUT_KEY_A } },
-    { "SELECT", LUA_CT_INTEGER, { .i = INPUT_KEY_SELECT } },
-    { "START", LUA_CT_INTEGER, { .i = INPUT_KEY_START } },
-    { "RESET", LUA_CT_INTEGER, { .i = INPUT_KEY_RESET } },
-    { "BUTTON_LEFT", LUA_CT_INTEGER, { .i = INPUT_BUTTON_LEFT } },
-    { "BUTTON_MIDDLE", LUA_CT_INTEGER, { .i = INPUT_BUTTON_MIDDLE } },
-    { "BUTTON_RIGHT", LUA_CT_INTEGER, { .i = INPUT_BUTTON_RIGHT } },
+    { "UP", LUA_CT_INTEGER, { .i = INPUT_BUTTON_UP } },
+    { "DOWN", LUA_CT_INTEGER, { .i = INPUT_BUTTON_DOWN } },
+    { "LEFT", LUA_CT_INTEGER, { .i = INPUT_BUTTON_LEFT } },
+    { "RIGHT", LUA_CT_INTEGER, { .i = INPUT_BUTTON_RIGHT } },
+    { "LT", LUA_CT_INTEGER, { .i = INPUT_BUTTON_LT } },
+    { "RT", LUA_CT_INTEGER, { .i = INPUT_BUTTON_RT } },
+    { "Y", LUA_CT_INTEGER, { .i = INPUT_BUTTON_Y } },
+    { "X", LUA_CT_INTEGER, { .i = INPUT_BUTTON_X } },
+    { "B", LUA_CT_INTEGER, { .i = INPUT_BUTTON_B } },
+    { "A", LUA_CT_INTEGER, { .i = INPUT_BUTTON_A } },
+    { "SELECT", LUA_CT_INTEGER, { .i = INPUT_BUTTON_SELECT } },
+    { "START", LUA_CT_INTEGER, { .i = INPUT_BUTTON_START } },
+    { "RESET", LUA_CT_INTEGER, { .i = INPUT_BUTTON_RESET } },
+    { "MOUSE_LEFT", LUA_CT_INTEGER, { .i = INPUT_BUTTON_MOUSE_LEFT } },
+    { "MOUSE_MIDDLE", LUA_CT_INTEGER, { .i = INPUT_BUTTON_MOUSE_MIDDLE } },
+    { "MOUSE_RIGHT", LUA_CT_INTEGER, { .i = INPUT_BUTTON_MOUSE_RIGHT } },
     { NULL }
 };
 
@@ -81,109 +74,104 @@ int input_loader(lua_State *L)
     return luaX_newmodule(L, NULL, _input_functions, _input_constants, nup, INPUT_MT);
 }
 
-static int input_is_key_down(lua_State *L)
+static int input_is_down(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    int key = lua_tointeger(L, 1);
+    int button = lua_tointeger(L, 1);
 
     const Input_t *input = (const Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
-    bool is_down = (key >= Input_Keys_t_First && key <= Input_Keys_t_Last) ? input->keyboard.keys[key].state.down : false;
+    bool is_down = (button >= Input_Buttons_t_First && button <= Input_Buttons_t_Last) ? input->buttons[button].state.down : false;
 
     lua_pushboolean(L, is_down);
     return 1;
 }
 
-static int input_is_key_up(lua_State *L)
+static int input_is_up(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    int key = lua_tointeger(L, 1);
+    int button = lua_tointeger(L, 1);
 
     const Input_t *input = (const Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
-    bool is_down = (key >= Input_Keys_t_First && key <= Input_Keys_t_Last) ? input->keyboard.keys[key].state.down : false;
+    bool is_down = (button >= Input_Buttons_t_First && button <= Input_Buttons_t_Last) ? input->buttons[button].state.down : false;
 
     lua_pushboolean(L, !is_down);
     return 1;
 }
 
-static int input_is_key_pressed(lua_State *L)
+static int input_is_pressed(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    int key = lua_tointeger(L, 1);
+    int button = lua_tointeger(L, 1);
 
     const Input_t *input = (const Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
-    bool is_pressed = (key >= Input_Keys_t_First && key <= Input_Keys_t_Last) ? input->keyboard.keys[key].state.pressed : false;
+    bool is_pressed = (button >= Input_Buttons_t_First && button <= Input_Buttons_t_Last) ? input->buttons[button].state.pressed : false;
 
     lua_pushboolean(L, is_pressed);
     return 1;
 }
 
-static int input_is_key_released(lua_State *L)
+static int input_is_released(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    int key = lua_tointeger(L, 1);
+    int button = lua_tointeger(L, 1);
 
     const Input_t *input = (const Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
-    bool is_released = (key >= Input_Keys_t_First && key <= Input_Keys_t_Last) ? input->keyboard.keys[key].state.released : false;
+    bool is_released = (button >= Input_Buttons_t_First && button <= Input_Buttons_t_Last) ? input->buttons[button].state.released : false;
 
     lua_pushboolean(L, is_released);
     return 1;
 }
 
-static int input_key_auto_repeat1(lua_State *L)
+static int input_auto_repeat1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    int key = lua_tointeger(L, 1);
+    int button = lua_tointeger(L, 1);
 
     Input_t *input = (Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
-    if (key >= Input_Keys_t_First && key <= Input_Keys_t_Last) {
-        Input_auto_repeat(input, key, 0.0f);
+    if (button >= Input_Buttons_t_First && button <= Input_Buttons_t_Last) {
+        Input_auto_repeat(input, button, 0.0f);
     }
 
     return 0;
 }
 
-static int input_key_auto_repeat2(lua_State *L)
+static int input_auto_repeat2(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 2)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    int key = lua_tointeger(L, 1);
+    int button = lua_tointeger(L, 1);
     float period = lua_tonumber(L, 2);
 
     Input_t *input = (Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
-    if (key >= Input_Keys_t_First && key <= Input_Keys_t_Last) {
-        Input_auto_repeat(input, key, period);
+    if (button >= Input_Buttons_t_First && button <= Input_Buttons_t_Last) {
+        Input_auto_repeat(input, button, period);
     }
 
     return 0;
 }
 
-static int input_key_auto_repeat(lua_State *L)
+static int input_auto_repeat(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, input_key_auto_repeat1)
-        LUAX_OVERLOAD_ARITY(2, input_key_auto_repeat2)
+        LUAX_OVERLOAD_ARITY(1, input_auto_repeat1)
+        LUAX_OVERLOAD_ARITY(2, input_auto_repeat2)
     LUAX_OVERLOAD_END
 }
-
-static int input_is_button_down(lua_State *L) { return 0; }
-static int input_is_button_up(lua_State *L) { return 0; }
-static int input_is_button_pressed(lua_State *L) { return 0; }
-static int input_is_button_released(lua_State *L) { return 0; }

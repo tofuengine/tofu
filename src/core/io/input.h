@@ -29,49 +29,25 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-typedef enum _Input_Keys_t {
-    Input_Keys_t_First = 0,
-    INPUT_KEY_UP = Input_Keys_t_First,
-    INPUT_KEY_DOWN,
-    INPUT_KEY_LEFT,
-    INPUT_KEY_RIGHT,
-    INPUT_KEY_LT,
-    INPUT_KEY_RT,
-    INPUT_KEY_Y,
-    INPUT_KEY_X,
-    INPUT_KEY_B,
-    INPUT_KEY_A,
-    INPUT_KEY_SELECT,
-    INPUT_KEY_START,
-    INPUT_KEY_RESET,
-    Input_Keys_t_Last = INPUT_KEY_RESET,
-    Input_Keys_t_CountOf
-} Input_Keys_t;
-
-typedef struct _Input_Key_State_t {
-    uint8_t down : 1;
-    uint8_t pressed : 1;
-    uint8_t released : 1;
-    uint8_t triggered : 1;
-    uint8_t : 4;
-} Input_Key_State_t;
-
-typedef struct _Input_Key_t {
-    Input_Key_State_t state;
-    float period;
-    float time;
-} Input_Key_t;
-
-typedef struct _Input_Keyboard_t {
-    Input_Key_t keys[Input_Keys_t_CountOf];
-} Input_Keyboard_t;
-
 typedef enum _Input_Buttons_t {
     Input_Buttons_t_First = 0,
-    INPUT_BUTTON_LEFT = Input_Buttons_t_First,
-    INPUT_BUTTON_MIDDLE,
+    INPUT_BUTTON_UP = Input_Buttons_t_First,
+    INPUT_BUTTON_DOWN,
+    INPUT_BUTTON_LEFT,
     INPUT_BUTTON_RIGHT,
-    Input_Buttons_t_Last = INPUT_BUTTON_RIGHT,
+    INPUT_BUTTON_LT,
+    INPUT_BUTTON_RT,
+    INPUT_BUTTON_Y,
+    INPUT_BUTTON_X,
+    INPUT_BUTTON_B,
+    INPUT_BUTTON_A,
+    INPUT_BUTTON_SELECT,
+    INPUT_BUTTON_START,
+    INPUT_BUTTON_RESET,
+    INPUT_BUTTON_MOUSE_LEFT,
+    INPUT_BUTTON_MOUSE_MIDDLE,
+    INPUT_BUTTON_MOUSE_RIGHT,
+    Input_Buttons_t_Last = INPUT_BUTTON_MOUSE_RIGHT,
     Input_Buttons_t_CountOf
 } Input_Buttons_t;
 
@@ -79,13 +55,19 @@ typedef struct _Input_Button_State_t {
     uint8_t down : 1;
     uint8_t pressed : 1;
     uint8_t released : 1;
-    uint8_t : 5;
+    uint8_t triggered : 1;
+    uint8_t : 4;
 } Input_Button_State_t;
 
-typedef struct _Input_Mouse_t {
-    Input_Button_State_t buttons[Input_Buttons_t_CountOf];
+typedef struct _Input_Button_t {
+    Input_Button_State_t state;
+    float period;
+    float time;
+} Input_Button_t;
+
+typedef struct _Input_Pointer_t {
     float x, y;
-} Input_Mouse_t;
+} Input_Pointer_t;
 
 typedef enum _Input_Handlers_t {
     Input_Handlers_t_First = 0,
@@ -96,7 +78,7 @@ typedef enum _Input_Handlers_t {
     Input_Handlers_t_CountOf
 } Input_Handlers_t;
 
-typedef void (*Input_Handler_t)(GLFWwindow *window, Input_Keyboard_t *keyboard, Input_Mouse_t *mouse);
+typedef void (*Input_Handler_t)(GLFWwindow *window, Input_Button_t buttons[Input_Buttons_t_CountOf], Input_Pointer_t *pointer);
 
 typedef struct _Input_Configuration_t {
     bool exit_key_enabled;
@@ -113,8 +95,8 @@ typedef struct _Input_t {
 
     double time;
 
-    Input_Mouse_t mouse; // TODO: rename both these to more generic names? pointer and buttons?
-    Input_Keyboard_t keyboard;
+    Input_Button_t buttons[Input_Buttons_t_CountOf];
+    Input_Pointer_t pointer; // TODO: rename to cursor?
 
     Input_Handler_t handlers[Input_Handlers_t_CountOf];
 } Input_t;
@@ -125,7 +107,7 @@ extern void Input_terminate(Input_t *input);
 extern void Input_update(Input_t *input, float delta_time);
 extern void Input_process(Input_t *input);
 
-extern void Input_auto_repeat(Input_t *input, Input_Keys_t id, float period);
+extern void Input_auto_repeat(Input_t *input, Input_Buttons_t id, float period);
 
 extern bool Input_configure(Input_t *input, const char *mappings);
 
