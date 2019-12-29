@@ -96,6 +96,8 @@ typedef enum _Input_Handlers_t {
     Input_Handlers_t_CountOf
 } Input_Handlers_t;
 
+typedef void (*Input_Handler_t)(GLFWwindow *window, Input_Keyboard_t *keyboard, Input_Mouse_t *mouse);
+
 typedef struct _Input_Configuration_t {
     bool exit_key_enabled;
     bool use_keyboard;
@@ -114,7 +116,7 @@ typedef struct _Input_t {
     Input_Mouse_t mouse; // TODO: rename both these to more generic names? pointer and buttons?
     Input_Keyboard_t keyboard;
 
-    void (*handlers[Input_Handlers_t_CountOf])(struct _Input_t *input);
+    Input_Handler_t handlers[Input_Handlers_t_CountOf];
 } Input_t;
 
 extern bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration, GLFWwindow *window);

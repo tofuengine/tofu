@@ -32,7 +32,7 @@ static const uint8_t _mappings[] = {
     0x00
 };
 
-static void _keyboard_handler(Input_t *input)
+static void _keyboard_handler(GLFWwindow *window, Input_Keyboard_t *keyboard, Input_Mouse_t *mouse)
 {
     static const int keys[Input_Keys_t_CountOf] = {
         GLFW_KEY_UP,
@@ -50,13 +50,11 @@ static void _keyboard_handler(Input_t *input)
         GLFW_KEY_ESCAPE
     };
 
-    Input_Keyboard_t *keyboard = &input->keyboard;
-
     for (int i = Input_Keys_t_First; i <= Input_Keys_t_Last; ++i) {
         Input_Key_t *key = &keyboard->keys[i];
 
         bool was_down = key->state.down;
-        bool is_down = glfwGetKey(input->window, keys[i]) == GLFW_PRESS;
+        bool is_down = glfwGetKey(window, keys[i]) == GLFW_PRESS;
 
         if (!key->state.triggered) { // If not triggered use the current physical status.
             key->state.down = is_down;
@@ -80,7 +78,7 @@ static void _keyboard_handler(Input_t *input)
     }
 }
 
-static void _gamepad_handler(Input_t *input)
+static void _gamepad_handler(GLFWwindow *window, Input_Keyboard_t *keyboard, Input_Mouse_t *mouse)
 {
     static const int gamepad_buttons[Input_Keys_t_CountOf] = {
         GLFW_GAMEPAD_BUTTON_DPAD_UP,
@@ -97,8 +95,6 @@ static void _gamepad_handler(Input_t *input)
         GLFW_GAMEPAD_BUTTON_START,
         GLFW_GAMEPAD_BUTTON_GUIDE
     };
-
-    Input_Keyboard_t *keyboard = &input->keyboard;
 
     GLFWgamepadstate state;
     int result = glfwGetGamepadState(GLFW_JOYSTICK_1, &state);
@@ -132,7 +128,7 @@ static void _gamepad_handler(Input_t *input)
     }
 }
 
-static void _mouse_handler(Input_t *input)
+static void _mouse_handler(GLFWwindow *window, Input_Keyboard_t *keyboard, Input_Mouse_t *mouse)
 {
     static const int mouse_buttons[Input_Buttons_t_CountOf] = {
         GLFW_MOUSE_BUTTON_LEFT,
@@ -140,19 +136,18 @@ static void _mouse_handler(Input_t *input)
         GLFW_MOUSE_BUTTON_RIGHT
     };
 
-    Input_Mouse_t *mouse = &input->mouse;
     for (int i = Input_Buttons_t_First; i <= Input_Buttons_t_Last; ++i) {
         Input_Button_State_t *button = &mouse->buttons[i];
 
         bool was_down = button->down;
-        bool is_down = glfwGetMouseButton(input->window, mouse_buttons[i]) == GLFW_PRESS;
+        bool is_down = glfwGetMouseButton(window, mouse_buttons[i]) == GLFW_PRESS;
 
         button->down = is_down;
         button->pressed = !was_down && is_down;
         button->released = was_down && !is_down;
     }
     double x, y;
-    glfwGetCursorPos(input->window, &x, &y);
+    glfwGetCursorPos(window, &x, &y);
     mouse->x = (float)x;
     mouse->y = (float)y;
 }
@@ -211,11 +206,15 @@ void Input_process(Input_t *input)
 {
     glfwPollEvents();
 
+    GLFWwindow *window = input->window;
+    Input_Keyboard_t *keyboard = &input->keyboard;
+    Input_Mouse_t *mouse = &input->mouse;
+
     for (int i = Input_Handlers_t_First; i <= Input_Handlers_t_Last; ++i) {
         if (!input->handlers[i]) {
             continue;
         }
-        input->handlers[i](input);
+        input->handlers[i](window, keyboard, mouse);
     }
 
     if (input->configuration.exit_key_enabled) {
