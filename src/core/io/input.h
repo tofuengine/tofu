@@ -65,9 +65,9 @@ typedef struct _Input_Button_t {
     float time;
 } Input_Button_t;
 
-typedef struct _Input_Pointer_t {
+typedef struct _Input_Cursor_t {
     float x, y;
-} Input_Pointer_t;
+} Input_Cursor_t;
 
 typedef enum _Input_Handlers_t {
     Input_Handlers_t_First = 0,
@@ -78,7 +78,7 @@ typedef enum _Input_Handlers_t {
     Input_Handlers_t_CountOf
 } Input_Handlers_t;
 
-typedef void (*Input_Handler_t)(GLFWwindow *window, Input_Button_t buttons[Input_Buttons_t_CountOf], Input_Pointer_t *pointer);
+typedef void (*Input_Handler_t)(GLFWwindow *window, Input_Button_t buttons[Input_Buttons_t_CountOf], Input_Cursor_t *cursor);
 
 typedef struct _Input_Configuration_t {
     bool exit_key_enabled;
@@ -96,7 +96,7 @@ typedef struct _Input_t {
     double time;
 
     Input_Button_t buttons[Input_Buttons_t_CountOf];
-    Input_Pointer_t pointer; // TODO: rename to cursor?
+    Input_Cursor_t cursor;
 
     Input_Handler_t handlers[Input_Handlers_t_CountOf];
 } Input_t;

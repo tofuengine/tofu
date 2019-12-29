@@ -37,6 +37,7 @@ static int input_is_up(lua_State *L);
 static int input_is_pressed(lua_State *L);
 static int input_is_released(lua_State *L);
 static int input_auto_repeat(lua_State *L);
+static int input_cursor(lua_State *L);
 
 static const struct luaL_Reg _input_functions[] = {
     { "is_down", input_is_down },
@@ -44,7 +45,7 @@ static const struct luaL_Reg _input_functions[] = {
     { "is_pressed", input_is_pressed },
     { "is_released", input_is_released },
     { "auto_repeat", input_auto_repeat },
-    // { "cursor", input_cursor },
+    { "cursor", input_cursor },
     { NULL, NULL }
 };
 
@@ -174,4 +175,17 @@ static int input_auto_repeat(lua_State *L)
         LUAX_OVERLOAD_ARITY(1, input_auto_repeat1)
         LUAX_OVERLOAD_ARITY(2, input_auto_repeat2)
     LUAX_OVERLOAD_END
+}
+
+static int input_cursor(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 0)
+    LUAX_SIGNATURE_END
+
+    const Input_t *input = (const Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
+
+    lua_pushnumber(L, input->cursor.x);
+    lua_pushnumber(L, input->cursor.y);
+
+    return 2;
 }

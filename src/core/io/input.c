@@ -32,7 +32,7 @@ static const uint8_t _mappings[] = {
     0x00
 };
 
-static void _keyboard_handler(GLFWwindow *window, Input_Button_t buttons[Input_Buttons_t_CountOf], Input_Pointer_t *pointer)
+static void _keyboard_handler(GLFWwindow *window, Input_Button_t buttons[Input_Buttons_t_CountOf], Input_Cursor_t *cursor)
 {
     static const int keys[] = {
         GLFW_KEY_UP,
@@ -78,7 +78,7 @@ static void _keyboard_handler(GLFWwindow *window, Input_Button_t buttons[Input_B
     }
 }
 
-static void _gamepad_handler(GLFWwindow *window, Input_Button_t buttons[Input_Buttons_t_CountOf], Input_Pointer_t *pointer)
+static void _gamepad_handler(GLFWwindow *window, Input_Button_t buttons[Input_Buttons_t_CountOf], Input_Cursor_t *cursor)
 {
     static const int gamepad_buttons[] = {
         GLFW_GAMEPAD_BUTTON_DPAD_UP,
@@ -128,7 +128,7 @@ static void _gamepad_handler(GLFWwindow *window, Input_Button_t buttons[Input_Bu
     }
 }
 
-static void _mouse_handler(GLFWwindow *window, Input_Button_t buttons[Input_Buttons_t_CountOf], Input_Pointer_t *pointer)
+static void _mouse_handler(GLFWwindow *window, Input_Button_t buttons[Input_Buttons_t_CountOf], Input_Cursor_t *cursor)
 {
     static const int mouse_buttons[Input_Buttons_t_CountOf] = {
         GLFW_MOUSE_BUTTON_LEFT,
@@ -146,10 +146,10 @@ static void _mouse_handler(GLFWwindow *window, Input_Button_t buttons[Input_Butt
         button->state.pressed = !was_down && is_down;
         button->state.released = was_down && !is_down;
     }
+
     double x, y;
     glfwGetCursorPos(window, &x, &y);
-    pointer->x = (float)x;
-    pointer->y = (float)y;
+    *cursor = (Input_Cursor_t){ .x = (float)x, .y = (float)y };
 }
 
 bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration, GLFWwindow *window)
@@ -209,13 +209,13 @@ void Input_process(Input_t *input)
 
     GLFWwindow *window = input->window;
     Input_Button_t *buttons = input->buttons;
-    Input_Pointer_t *pointer = &input->pointer;
+    Input_Cursor_t *cursor = &input->cursor;
 
     for (int i = Input_Handlers_t_First; i <= Input_Handlers_t_Last; ++i) {
         if (!input->handlers[i]) {
             continue;
         }
-        input->handlers[i](window, buttons, pointer);
+        input->handlers[i](window, buttons, cursor);
     }
 
     if (input->configuration.exit_key_enabled) {
