@@ -82,15 +82,16 @@ typedef enum _Input_Handlers_t {
     Input_Handlers_t_CountOf
 } Input_Handlers_t;
 
-typedef void (*Input_Handler_t)(GLFWwindow *window, Input_Button_t buttons[Input_Buttons_t_CountOf], Input_Cursor_t *cursor);
-
 typedef struct _Input_Configuration_t {
     bool exit_key_enabled;
     bool use_keyboard;
     bool use_gamepad;
     bool use_mouse;
+    float scale; // Refers to the screen-to-canvas scaling factor.
     // TODO: key-remapping?
 } Input_Configuration_t;
+
+typedef void (*Input_Handler_t)(GLFWwindow *window, Input_Button_t buttons[Input_Buttons_t_CountOf], Input_Cursor_t *cursor, const Input_Configuration_t *configuration);
 
 typedef struct _Input_t {
     Input_Configuration_t configuration;

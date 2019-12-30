@@ -143,7 +143,8 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             .exit_key_enabled = engine->configuration.exit_key_enabled,
             .use_keyboard = engine->configuration.use_keyboard,
             .use_gamepad = engine->configuration.use_gamepad,
-            .use_mouse = engine->configuration.use_mouse
+            .use_mouse = engine->configuration.use_mouse,
+            .scale = 1.0f / (float)engine->display.configuration.scale
         };
     result = Input_initialize(&engine->input, &input_configuration, engine->display.window);
     if (!result) {

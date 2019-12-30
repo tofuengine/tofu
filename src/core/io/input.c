@@ -32,7 +32,7 @@ static const uint8_t _mappings[] = {
     0x00
 };
 
-static void _keyboard_handler(GLFWwindow *window, Input_Button_t buttons[Input_Buttons_t_CountOf], Input_Cursor_t *cursor)
+static void _keyboard_handler(GLFWwindow *window, Input_Button_t buttons[Input_Buttons_t_CountOf], Input_Cursor_t *cursor, const Input_Configuration_t *configuration)
 {
     static const int keys[] = {
         GLFW_KEY_UP,
@@ -78,7 +78,7 @@ static void _keyboard_handler(GLFWwindow *window, Input_Button_t buttons[Input_B
     }
 }
 
-static void _gamepad_handler(GLFWwindow *window, Input_Button_t buttons[Input_Buttons_t_CountOf], Input_Cursor_t *cursor)
+static void _gamepad_handler(GLFWwindow *window, Input_Button_t buttons[Input_Buttons_t_CountOf], Input_Cursor_t *cursor, const Input_Configuration_t *configuration)
 {
     static const int gamepad_buttons[] = {
         GLFW_GAMEPAD_BUTTON_DPAD_UP,
@@ -128,13 +128,10 @@ static void _gamepad_handler(GLFWwindow *window, Input_Button_t buttons[Input_Bu
 
         cursor->vx = state.axes[GLFW_GAMEPAD_AXIS_LEFT_X];
         cursor->vy = state.axes[GLFW_GAMEPAD_AXIS_LEFT_Y];
-    } else {
-        cursor->vx = 0.0f; // TODO: add dampening?
-        cursor->vy = 0.0f;
     }
 }
 
-static void _mouse_handler(GLFWwindow *window, Input_Button_t buttons[Input_Buttons_t_CountOf], Input_Cursor_t *cursor)
+static void _mouse_handler(GLFWwindow *window, Input_Button_t buttons[Input_Buttons_t_CountOf], Input_Cursor_t *cursor, const Input_Configuration_t *configuration)
 {
     static const int mouse_buttons[Input_Buttons_t_CountOf] = {
         GLFW_MOUSE_BUTTON_LEFT,
@@ -154,11 +151,9 @@ static void _mouse_handler(GLFWwindow *window, Input_Button_t buttons[Input_Butt
     }
 
     double x, y;
-    glfwGetCursorPos(window, &x, &y);
-    cursor->x = (float)x;
-    cursor->y = (float)y;
-    cursor->vx = 0.0f; // When the mouse is enabled, clear the gamepad control.
-    cursor->vy = 0.0f;
+    glfwGetCursorPos(window, &x, &y); // FIXME: should divide by scale!
+    cursor->x = (float)x * configuration->scale;
+    cursor->y = (float)y * configuration->scale;
 }
 
 bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration, GLFWwindow *window)
@@ -226,6 +221,8 @@ void Input_update(Input_t *input, float delta_time)
     if (cursor->y > cursor->area.y1) {
         cursor->y = cursor->area.y1;
     }
+    cursor->vx = 0.0f; // TODO: add dampening?
+    cursor->vy = 0.0f;
 }
 
 void Input_process(Input_t *input)
@@ -235,12 +232,13 @@ void Input_process(Input_t *input)
     GLFWwindow *window = input->window;
     Input_Button_t *buttons = input->buttons;
     Input_Cursor_t *cursor = &input->cursor;
+    Input_Configuration_t *configuration = &input->configuration;
 
     for (int i = Input_Handlers_t_First; i <= Input_Handlers_t_Last; ++i) {
         if (!input->handlers[i]) {
             continue;
         }
-        input->handlers[i](window, buttons, cursor);
+        input->handlers[i](window, buttons, cursor, configuration);
     }
 
     if (input->configuration.exit_key_enabled) {

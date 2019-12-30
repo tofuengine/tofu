@@ -27,6 +27,7 @@ function Main:__ctor()
   Canvas.palette("pico-8")
 
   Input.auto_repeat(Input.Y, 0.5)
+  Input.cursor_area(0, 0, Canvas.width(), Canvas.height())
 
   self.bank = Bank.new("assets/sheet.png", 12, 12)
   self.font = Font.default(0, 15)
@@ -83,6 +84,9 @@ function Main:render(_)
     self.bank:blit(INDICES[index], x - ox, y - oy + dy, s, s)
     x = x + cw
   end
+
+  local cx, cy = Input.cursor()
+  Canvas.square("fill", cx - 1, cy - 1, 2, 2)
 
   self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
 end
