@@ -67,6 +67,10 @@ typedef struct _Input_Button_t {
 
 typedef struct _Input_Cursor_t {
     float x, y;
+    struct {
+        int x, y;
+        size_t width, height;
+    } area;
 } Input_Cursor_t;
 
 typedef enum _Input_Handlers_t {

@@ -38,6 +38,7 @@ static int input_is_pressed(lua_State *L);
 static int input_is_released(lua_State *L);
 static int input_auto_repeat(lua_State *L);
 static int input_cursor(lua_State *L);
+static int input_cursor_area(lua_State *L);
 
 static const struct luaL_Reg _input_functions[] = {
     { "is_down", input_is_down },
@@ -46,6 +47,7 @@ static const struct luaL_Reg _input_functions[] = {
     { "is_released", input_is_released },
     { "auto_repeat", input_auto_repeat },
     { "cursor", input_cursor },
+    { "cursor_area", input_cursor_area },
     { NULL, NULL }
 };
 
@@ -177,7 +179,7 @@ static int input_auto_repeat(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
-static int input_cursor(lua_State *L)
+static int input_cursor0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 0)
     LUAX_SIGNATURE_END
@@ -188,4 +190,53 @@ static int input_cursor(lua_State *L)
     lua_pushnumber(L, input->cursor.y);
 
     return 2;
+}
+
+static int input_cursor2(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 2)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    float x = lua_tonumber(L, 1);
+    float y = lua_tonumber(L, 2);
+
+    Input_t *input = (Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
+
+    input->cursor.x = x;
+    input->cursor.y = y;
+
+    return 0;
+}
+
+static int input_cursor(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(0, input_cursor0)
+        LUAX_OVERLOAD_ARITY(2, input_cursor2)
+    LUAX_OVERLOAD_END
+}
+
+static int input_cursor_area(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 4)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    int x = lua_tointeger(L, 1);
+    int y = lua_tointeger(L, 2);
+    size_t width = (size_t)lua_tointeger(L, 3);
+    size_t height = (size_t)lua_tointeger(L, 4);
+
+    Input_t *input = (Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
+
+    input->cursor.area.x = x;
+    input->cursor.area.y = y;
+    input->cursor.area.width = width;
+    input->cursor.area.height = height;
+//     = (GL_Rectangle_t){ .x = x, .y = y, .width = width, .height = height };
+
+    return 0;
 }
