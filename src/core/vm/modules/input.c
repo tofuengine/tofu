@@ -232,10 +232,10 @@ static int input_cursor_area(lua_State *L)
 
     Input_t *input = (Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
-    input->cursor.area.x = x;
-    input->cursor.area.y = y;
-    input->cursor.area.width = width;
-    input->cursor.area.height = height;
+    input->cursor.area.x0 = x;
+    input->cursor.area.y0 = y;
+    input->cursor.area.x1 = x + width - 1;
+    input->cursor.area.y1 = y + height - 1;
 //     = (GL_Rectangle_t){ .x = x, .y = y, .width = width, .height = height };
 
     return 0;

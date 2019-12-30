@@ -67,9 +67,9 @@ typedef struct _Input_Button_t {
 
 typedef struct _Input_Cursor_t {
     float x, y;
+    float vx, vy;
     struct {
-        int x, y;
-        size_t width, height;
+        int x0, y0, x1, y1;
     } area;
 } Input_Cursor_t;
 

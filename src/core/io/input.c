@@ -125,6 +125,12 @@ static void _gamepad_handler(GLFWwindow *window, Input_Button_t buttons[Input_Bu
                 Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "button #%d held for %.3fs %d %d %d", i, button->time, button->state.down, button->state.pressed, button->state.released);
             }
         }
+
+        cursor->vx = state.axes[GLFW_GAMEPAD_AXIS_LEFT_X];
+        cursor->vy = state.axes[GLFW_GAMEPAD_AXIS_LEFT_Y];
+    } else {
+        cursor->vx = 0.0f; // TODO: add dampening?
+        cursor->vy = 0.0f;
     }
 }
 
@@ -149,7 +155,10 @@ static void _mouse_handler(GLFWwindow *window, Input_Button_t buttons[Input_Butt
 
     double x, y;
     glfwGetCursorPos(window, &x, &y);
-    *cursor = (Input_Cursor_t){ .x = (float)x, .y = (float)y };
+    cursor->x = (float)x;
+    cursor->y = (float)y;
+    cursor->vx = 0.0f; // When the mouse is enabled, clear the gamepad control.
+    cursor->vy = 0.0f;
 }
 
 bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration, GLFWwindow *window)
@@ -178,6 +187,7 @@ void Input_update(Input_t *input, float delta_time)
     input->time += delta_time;
 
     Input_Button_t *buttons = input->buttons;
+    Input_Cursor_t *cursor = &input->cursor;
 
     for (int i = Input_Buttons_t_First; i <= Input_Buttons_t_Last; ++i) {
         Input_Button_t *button = &buttons[i];
@@ -200,6 +210,21 @@ void Input_update(Input_t *input, float delta_time)
             button->state.released = !button->state.down;
             Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "#%d %.3fs %d %d %d", i, button->time, button->state.down, button->state.pressed, button->state.released);
         }
+    }
+
+    cursor->x += cursor->vx * delta_time; // TODO: we need to put a speed factor (configurable).
+    cursor->y += cursor->vy * delta_time;
+    if (cursor->x < cursor->area.x0) {
+        cursor->x = cursor->area.x0;
+    }
+    if (cursor->y < cursor->area.y0) {
+        cursor->y = cursor->area.y0;
+    }
+    if (cursor->x > cursor->area.x1) {
+        cursor->x = cursor->area.x1;
+    }
+    if (cursor->y > cursor->area.y1) {
+        cursor->y = cursor->area.y1;
     }
 }
 
