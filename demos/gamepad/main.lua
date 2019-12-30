@@ -26,7 +26,7 @@ local INDICES = {
 function Main:__ctor()
   Canvas.palette("pico-8")
 
-  Input.key_auto_repeat(Input.Y, 0.5)
+  Input.auto_repeat(Input.Y, 0.5)
 
   self.bank = Bank.new("assets/sheet.png", 12, 12)
   self.font = Font.default(0, 15)
@@ -37,8 +37,8 @@ end
 
 function Main:input()
   for _, id in ipairs(IDS) do
-    self.down[id] = Input.is_key_down(id)
-    if Input.is_key_pressed(id) then
+    self.down[id] = Input.is_down(id)
+    if Input.is_pressed(id) then
       self.rotation[id] = Math.SINCOS_PERIOD
       self.scale[id] = 3.0
     end

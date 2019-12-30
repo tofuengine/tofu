@@ -109,7 +109,7 @@ function Tofu:__ctor()
           me.font = nil
         end,
       process = function(_)
-          if Input.is_key_pressed(Input.RESET) then
+          if Input.is_pressed(Input.RESET) then
             System.quit()
           end
         end,

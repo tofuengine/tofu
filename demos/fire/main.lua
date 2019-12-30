@@ -34,13 +34,13 @@ function Main:reset()
 end
 
 function Main:input()
-  if Input.is_key_pressed(Input.SELECT) then
+  if Input.is_pressed(Input.SELECT) then
     self.windy = not self.windy
-  elseif Input.is_key_pressed(Input.LEFT) then
+  elseif Input.is_pressed(Input.LEFT) then
     self.damping = self.damping - 0.1
-  elseif Input.is_key_pressed(Input.RIGHT) then
+  elseif Input.is_pressed(Input.RIGHT) then
     self.damping = self.damping + 0.1
-  elseif Input.is_key_pressed(Input.START) then
+  elseif Input.is_pressed(Input.START) then
     self:reset()
   end
 end
