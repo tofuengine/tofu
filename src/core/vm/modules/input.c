@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Marco Lizza (marco.lizza@gmail.com)
+ * Copyright (c) 2019-2020 by Marco Lizza (marco.lizza@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -217,7 +217,7 @@ static int input_cursor(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
-static int input_cursor_area(lua_State *L)
+static int input_cursor_area(lua_State *L) // TODO: rename to `region`?
 {
     LUAX_SIGNATURE_BEGIN(L, 4)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
