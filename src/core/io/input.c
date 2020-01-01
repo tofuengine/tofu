@@ -25,6 +25,8 @@
 #include <libs/log.h>
 #include <libs/stb.h>
 
+#include <math.h>
+
 #define LOG_CONTEXT "input"
 
 #define STICK_THRESHOLD 0.5f
@@ -102,17 +104,13 @@ static void _gamepad_handler(GLFWwindow *window, Input_Button_t buttons[Input_Bu
     int result = glfwGetGamepadState(GLFW_JOYSTICK_1, &state);
     if (result == GLFW_TRUE) {
         // Simulate D-PAD with left stick.
-        if (state.axes[GLFW_GAMEPAD_AXIS_LEFT_X] < -STICK_THRESHOLD) {
-            state.buttons[GLFW_GAMEPAD_BUTTON_DPAD_LEFT] = GLFW_PRESS;
-        } else
-        if (state.axes[GLFW_GAMEPAD_AXIS_LEFT_X] > STICK_THRESHOLD) {
-            state.buttons[GLFW_GAMEPAD_BUTTON_DPAD_RIGHT] = GLFW_PRESS;
+        if (fabsf(state.axes[GLFW_GAMEPAD_AXIS_LEFT_X]) > STICK_THRESHOLD) {
+            bool negative = state.axes[GLFW_GAMEPAD_AXIS_LEFT_X] < 0.0f;
+            state.buttons[negative ? GLFW_GAMEPAD_BUTTON_DPAD_LEFT : GLFW_GAMEPAD_BUTTON_DPAD_RIGHT] = GLFW_PRESS;
         }
-        if (state.axes[GLFW_GAMEPAD_AXIS_LEFT_Y] < -STICK_THRESHOLD) {
-            state.buttons[GLFW_GAMEPAD_BUTTON_DPAD_UP] = GLFW_PRESS;
-        } else
-        if (state.axes[GLFW_GAMEPAD_AXIS_LEFT_Y] > STICK_THRESHOLD) {
-            state.buttons[GLFW_GAMEPAD_BUTTON_DPAD_DOWN] = GLFW_PRESS;
+        if (fabsf(state.axes[GLFW_GAMEPAD_AXIS_LEFT_Y]) > STICK_THRESHOLD) {
+            bool negative = state.axes[GLFW_GAMEPAD_AXIS_LEFT_Y] < 0.0f;
+            state.buttons[negative ? GLFW_GAMEPAD_BUTTON_DPAD_UP : GLFW_GAMEPAD_BUTTON_DPAD_DOWN] = GLFW_PRESS;
         }
 
         // Simulate mouse with right stick.
