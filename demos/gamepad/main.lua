@@ -86,7 +86,11 @@ function Main:render(_)
   end
 
   local cx, cy = Input.cursor()
-  Canvas.square("fill", cx - 1, cy - 1, 2, 2)
+--  Canvas.square("fill", cx - 1, cy - 1, 3, 2)
+  Canvas.line(cx - 3, cy, cx - 1, cy, 2)
+  Canvas.line(cx + 1, cy, cx + 3, cy, 2)
+  Canvas.line(cx, cy - 3, cx, cy - 1, 2)
+  Canvas.line(cx, cy + 1, cx, cy + 3, 2)
 
   self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
 end
