@@ -27,6 +27,8 @@
 
 #define LOG_CONTEXT "input"
 
+#define STICK_THRESHOLD 0.5f
+
 static const uint8_t _mappings[] = {
 #include "gamecontrollerdb.inc"
     0x00
@@ -64,7 +66,7 @@ static void _keyboard_handler(GLFWwindow *window, Input_Button_t buttons[Input_B
             if (button->state.pressed && button->period > 0.0f) { // On press, track the trigger state and reset counter.
                 button->state.triggered = true;
                 button->time = 0.0f;
-                Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "key #%d triggered, %.3fs %d %d %d", i, button->time, button->state.down, button->state.pressed, button->state.released);
+                Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "button #%d triggered, %.3fs %d %d %d", i, button->time, button->state.down, button->state.pressed, button->state.released);
             }
         } else
         if (!is_down) {
@@ -99,6 +101,24 @@ static void _gamepad_handler(GLFWwindow *window, Input_Button_t buttons[Input_Bu
     GLFWgamepadstate state;
     int result = glfwGetGamepadState(GLFW_JOYSTICK_1, &state);
     if (result == GLFW_TRUE) {
+        // Simulate D-PAD with left stick.
+        if (state.axes[GLFW_GAMEPAD_AXIS_LEFT_X] < -STICK_THRESHOLD) {
+            state.buttons[GLFW_GAMEPAD_BUTTON_DPAD_LEFT] = GLFW_PRESS;
+        } else
+        if (state.axes[GLFW_GAMEPAD_AXIS_LEFT_X] > STICK_THRESHOLD) {
+            state.buttons[GLFW_GAMEPAD_BUTTON_DPAD_RIGHT] = GLFW_PRESS;
+        }
+        if (state.axes[GLFW_GAMEPAD_AXIS_LEFT_Y] < -STICK_THRESHOLD) {
+            state.buttons[GLFW_GAMEPAD_BUTTON_DPAD_UP] = GLFW_PRESS;
+        } else
+        if (state.axes[GLFW_GAMEPAD_AXIS_LEFT_Y] > STICK_THRESHOLD) {
+            state.buttons[GLFW_GAMEPAD_BUTTON_DPAD_DOWN] = GLFW_PRESS;
+        }
+
+        // Simulate mouse with right stick.
+        cursor->vx = state.axes[GLFW_GAMEPAD_AXIS_RIGHT_X];
+        cursor->vy = state.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y];
+
         for (int i = Input_Buttons_t_First; i <= INPUT_BUTTON_RESET; ++i) {
             Input_Button_t *button = &buttons[i];
 
@@ -113,7 +133,7 @@ static void _gamepad_handler(GLFWwindow *window, Input_Button_t buttons[Input_Bu
                 if (button->state.pressed && button->period > 0.0f) { // On press, track the trigger state and reset counter.
                     button->state.triggered = true;
                     button->time = 0.0f;
-                    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "key #%d triggered, %.3fs %d %d %d", i, button->time, button->state.down, button->state.pressed, button->state.released);
+                    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "button #%d triggered, %.3fs %d %d %d", i, button->time, button->state.down, button->state.pressed, button->state.released);
                 }
             } else
             if (!is_down) {
@@ -125,9 +145,6 @@ static void _gamepad_handler(GLFWwindow *window, Input_Button_t buttons[Input_Bu
                 Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "button #%d held for %.3fs %d %d %d", i, button->time, button->state.down, button->state.pressed, button->state.released);
             }
         }
-
-        cursor->vx = state.axes[GLFW_GAMEPAD_AXIS_LEFT_X];
-        cursor->vy = state.axes[GLFW_GAMEPAD_AXIS_LEFT_Y];
     }
 }
 
@@ -151,7 +168,7 @@ static void _mouse_handler(GLFWwindow *window, Input_Button_t buttons[Input_Butt
     }
 
     double x, y;
-    glfwGetCursorPos(window, &x, &y); // FIXME: should divide by scale!
+    glfwGetCursorPos(window, &x, &y);
     cursor->x = (float)x * configuration->scale;
     cursor->y = (float)y * configuration->scale;
 }
