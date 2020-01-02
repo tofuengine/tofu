@@ -10,6 +10,7 @@ local Main = Class.define()
 
 local IDS = {
     Input.A, Input.B, Input.X, Input.Y,
+    Input.LB, Input.RB,
     Input.LT, Input.RT,
     Input.UP, Input.DOWN, Input.LEFT, Input.RIGHT,
     Input.SELECT, Input.START,
@@ -17,7 +18,9 @@ local IDS = {
   }
 
 local INDICES = {
-    0, 1, 2, 3, 4, 5,
+    0, 1, 2, 3,
+    4, 5,
+    4, 5,
     12, 13, 14, 15,
     24, 25,
     36
@@ -59,9 +62,18 @@ end
 
 local function draw_stick(cx, cy, radius, _, _, angle, magnitude)
   local dx, dy = math.cos(angle) * radius, math.sin(angle) * radius
-  Canvas.circle("fill", cx, cy, magnitude * radius, 2)
+  if magnitude > 0.0 then
+    Canvas.circle("fill", cx, cy, magnitude * radius, 2)
+  end
   Canvas.circle("line", cx, cy, radius, 1)
   Canvas.line(cx, cy, cx + dx, cy + dy, 1)
+end
+
+local function draw_trigger(cx, cy, radius, magnitude)
+  if magnitude > 0.0 then
+    Canvas.circle("fill", cx, cy, magnitude * radius, 2)
+  end
+  Canvas.circle("line", cx, cy, radius, 1)
 end
 
 function Main:render(_)
@@ -93,8 +105,13 @@ function Main:render(_)
   end
 
   local h = Canvas.height() * 0.5
-  draw_stick(24, h, 12, 0.7071, 0.7071, math.atan(0.7071, 0.7071), 1.0)
-  draw_stick(232, h, 12, -0.5, 0.5, math.atan(-0.5, 0.5), 0.5)
+  local lx, ly, la, lm = Input.stick("left")
+  local rx, ry, ra, rm = Input.stick("right")
+  draw_stick(24, h - 12, 8, lx, ly, la, lm)
+  draw_stick(232, h - 12, 8, rx, ry, ra, rm)
+  local tl, tr = Input.triggers()
+  draw_trigger(24, h + 12, 8, tl)
+  draw_trigger(232, h + 12, 8, tr)
 
   local cx, cy = Input.cursor()
 --  Canvas.square("fill", cx - 1, cy - 1, 3, 2)
