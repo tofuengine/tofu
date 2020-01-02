@@ -57,6 +57,13 @@ function Main:update(delta_time)
   end
 end
 
+local function draw_stick(cx, cy, radius, _, _, angle, magnitude)
+  local dx, dy = math.cos(angle) * radius, math.sin(angle) * radius
+  Canvas.circle("fill", cx, cy, magnitude * radius, 2)
+  Canvas.circle("line", cx, cy, radius, 1)
+  Canvas.line(cx, cy, cx + dx, cy + dy, 1)
+end
+
 function Main:render(_)
   local t = System.time()
 
@@ -84,6 +91,10 @@ function Main:render(_)
     self.bank:blit(INDICES[index], x - ox, y - oy + dy, s, s)
     x = x + cw
   end
+
+  local h = Canvas.height() * 0.5
+  draw_stick(24, h, 12, 0.7071, 0.7071, math.atan(0.7071, 0.7071), 1.0)
+  draw_stick(232, h, 12, -0.5, 0.5, math.atan(-0.5, 0.5), 0.5)
 
   local cx, cy = Input.cursor()
 --  Canvas.square("fill", cx - 1, cy - 1, 3, 2)

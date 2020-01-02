@@ -39,6 +39,8 @@ static int input_is_released(lua_State *L);
 static int input_auto_repeat(lua_State *L);
 static int input_cursor(lua_State *L);
 static int input_cursor_area(lua_State *L);
+static int input_stick(lua_State *L);
+static int input_triggers(lua_State *L);
 
 static const struct luaL_Reg _input_functions[] = {
     { "is_down", input_is_down },
@@ -48,6 +50,8 @@ static const struct luaL_Reg _input_functions[] = {
     { "auto_repeat", input_auto_repeat },
     { "cursor", input_cursor },
     { "cursor_area", input_cursor_area },
+    { "stick", input_stick },
+    { "triggers", input_triggers },
     { NULL, NULL }
 };
 
@@ -86,7 +90,8 @@ static int input_is_down(lua_State *L)
 
     const Input_t *input = (const Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
-    bool is_down = (button >= Input_Buttons_t_First && button <= Input_Buttons_t_Last) ? input->buttons[button].state.down : false;
+    const Input_State_t *state = &input->state;
+    bool is_down = (button >= Input_Buttons_t_First && button <= Input_Buttons_t_Last) ? state->buttons[button].state.down : false;
 
     lua_pushboolean(L, is_down);
     return 1;
@@ -101,7 +106,8 @@ static int input_is_up(lua_State *L)
 
     const Input_t *input = (const Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
-    bool is_down = (button >= Input_Buttons_t_First && button <= Input_Buttons_t_Last) ? input->buttons[button].state.down : false;
+    const Input_State_t *state = &input->state;
+    bool is_down = (button >= Input_Buttons_t_First && button <= Input_Buttons_t_Last) ? state->buttons[button].state.down : false;
 
     lua_pushboolean(L, !is_down);
     return 1;
@@ -116,7 +122,8 @@ static int input_is_pressed(lua_State *L)
 
     const Input_t *input = (const Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
-    bool is_pressed = (button >= Input_Buttons_t_First && button <= Input_Buttons_t_Last) ? input->buttons[button].state.pressed : false;
+    const Input_State_t *state = &input->state;
+    bool is_pressed = (button >= Input_Buttons_t_First && button <= Input_Buttons_t_Last) ? state->buttons[button].state.pressed : false;
 
     lua_pushboolean(L, is_pressed);
     return 1;
@@ -131,7 +138,8 @@ static int input_is_released(lua_State *L)
 
     const Input_t *input = (const Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
-    bool is_released = (button >= Input_Buttons_t_First && button <= Input_Buttons_t_Last) ? input->buttons[button].state.released : false;
+    const Input_State_t *state = &input->state;
+    bool is_released = (button >= Input_Buttons_t_First && button <= Input_Buttons_t_Last) ? state->buttons[button].state.released : false;
 
     lua_pushboolean(L, is_released);
     return 1;
@@ -186,8 +194,9 @@ static int input_cursor0(lua_State *L)
 
     const Input_t *input = (const Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
-    lua_pushnumber(L, input->cursor.x);
-    lua_pushnumber(L, input->cursor.y);
+    const Input_State_t *state = &input->state;
+    lua_pushnumber(L, state->cursor.x);
+    lua_pushnumber(L, state->cursor.y);
 
     return 2;
 }
@@ -203,8 +212,9 @@ static int input_cursor2(lua_State *L)
 
     Input_t *input = (Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
-    input->cursor.x = x;
-    input->cursor.y = y;
+    Input_State_t *state = &input->state;
+    state->cursor.x = x;
+    state->cursor.y = y;
 
     return 0;
 }
@@ -232,11 +242,45 @@ static int input_cursor_area(lua_State *L) // TODO: rename to `region`?
 
     Input_t *input = (Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
-    input->cursor.area.x0 = x;
-    input->cursor.area.y0 = y;
-    input->cursor.area.x1 = x + width - 1;
-    input->cursor.area.y1 = y + height - 1;
+    Input_State_t *state = &input->state;
+    state->cursor.area.x0 = x;
+    state->cursor.area.y0 = y;
+    state->cursor.area.x1 = x + width - 1;
+    state->cursor.area.y1 = y + height - 1;
 //     = (GL_Rectangle_t){ .x = x, .y = y, .width = width, .height = height };
 
     return 0;
+}
+
+static int input_stick(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
+    LUAX_SIGNATURE_END
+    const char *id = lua_tostring(L, 1);
+
+    const Input_t *input = (const Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
+
+    const Input_State_t *state = &input->state;
+    const Input_Sticks_t stick = id[0] == 'l' ? INPUT_STICK_LEFT : INPUT_STICK_RIGHT;
+    lua_pushnumber(L, state->sticks[stick].x);
+    lua_pushnumber(L, state->sticks[stick].y);
+    lua_pushnumber(L, state->sticks[stick].angle);
+    lua_pushnumber(L, state->sticks[stick].magnitude);
+
+    return 2;
+}
+
+static int input_triggers(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 0)
+    LUAX_SIGNATURE_END
+
+    const Input_t *input = (const Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
+
+    const Input_State_t *state = &input->state;
+    lua_pushnumber(L, state->triggers.left);
+    lua_pushnumber(L, state->triggers.right);
+
+    return 2;
 }

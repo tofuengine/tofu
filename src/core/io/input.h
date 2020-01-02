@@ -67,11 +67,35 @@ typedef struct _Input_Button_t {
 
 typedef struct _Input_Cursor_t {
     float x, y;
-    float vx, vy;
     struct {
         int x0, y0, x1, y1;
     } area;
 } Input_Cursor_t;
+
+typedef enum _Input_Sticks_t {
+    Input_Sticks_t_First = 0,
+    INPUT_STICK_LEFT,
+    INPUT_STICK_RIGHT,
+    Input_Sticks_t_Last = INPUT_STICK_RIGHT,
+    Input_Sticks_t_CountOf
+} Input_Sticks_t;
+
+typedef struct _Input_Stick_t {
+    float x, y;
+    float angle, magnitude;
+} Input_Stick_t;
+
+typedef struct _Input_Triggers_t {
+    float left, right;
+} Input_Triggers_t;
+
+typedef struct _Input_State_t {
+    int gamepad_id;
+    Input_Button_t buttons[Input_Buttons_t_CountOf];
+    Input_Cursor_t cursor;
+    Input_Stick_t sticks[Input_Sticks_t_CountOf];
+    Input_Triggers_t triggers;
+} Input_State_t;
 
 typedef enum _Input_Handlers_t {
     Input_Handlers_t_First = 0,
@@ -87,11 +111,14 @@ typedef struct _Input_Configuration_t {
     bool use_keyboard;
     bool use_gamepad;
     bool use_mouse;
-    float scale; // Refers to the screen-to-canvas scaling factor.
+    bool emulate_dpad;
+    bool emulate_mouse;
     // TODO: key-remapping?
+    float cursor_speed;
+    float scale; // Refers to the screen-to-canvas scaling factor.
 } Input_Configuration_t;
 
-typedef void (*Input_Handler_t)(GLFWwindow *window, Input_Button_t buttons[Input_Buttons_t_CountOf], Input_Cursor_t *cursor, const Input_Configuration_t *configuration);
+typedef void (*Input_Handler_t)(GLFWwindow *window, Input_State_t *state, const Input_Configuration_t *configuration);
 
 typedef struct _Input_t {
     Input_Configuration_t configuration;
@@ -100,9 +127,7 @@ typedef struct _Input_t {
 
     double time;
 
-    Input_Button_t buttons[Input_Buttons_t_CountOf];
-    Input_Cursor_t cursor;
-
+    Input_State_t state;
     Input_Handler_t handlers[Input_Handlers_t_CountOf];
 } Input_t;
 
@@ -113,7 +138,5 @@ extern void Input_update(Input_t *input, float delta_time);
 extern void Input_process(Input_t *input);
 
 extern void Input_auto_repeat(Input_t *input, Input_Buttons_t id, float period);
-
-extern bool Input_configure(Input_t *input, const char *mappings);
 
 #endif  /* __INPUT_H__ */
