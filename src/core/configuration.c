@@ -67,14 +67,14 @@ static void on_parameter(Configuration_t *configuration, const char *key, const 
     if (strcmp(key, "exit-key-enabled") == 0) {
         configuration->exit_key_enabled = strcmp(value, "true") == 0;
     } else
-    if (strcmp(key, "use-keyboard") == 0) {
-        configuration->use_keyboard = strcmp(value, "true") == 0;
+    if (strcmp(key, "keyboard-enabled") == 0) {
+        configuration->keyboard_enabled = strcmp(value, "true") == 0;
     } else
-    if (strcmp(key, "use-gamepad") == 0) {
-        configuration->use_gamepad = strcmp(value, "true") == 0;
+    if (strcmp(key, "gamepad-enabled") == 0) {
+        configuration->gamepad_enabled = strcmp(value, "true") == 0;
     } else
-    if (strcmp(key, "use-mouse") == 0) {
-        configuration->use_mouse = strcmp(value, "true") == 0;
+    if (strcmp(key, "mouse-enabled") == 0) {
+        configuration->mouse_enabled = strcmp(value, "true") == 0;
     } else
     if (strcmp(key, "emulate-dpad") == 0) {
         configuration->emulate_dpad = strcmp(value, "true") == 0;
@@ -155,9 +155,9 @@ void Configuration_load(Configuration_t *configuration, const char *data)
             .fps_cap = -1, // No capping as a default. TODO: make it run-time configurable?
             .hide_cursor = true,
             .exit_key_enabled = true,
-            .use_keyboard = true,
-            .use_gamepad = true,
-            .use_mouse = true,
+            .keyboard_enabled = true,
+            .gamepad_enabled = true,
+            .mouse_enabled = true,
             .emulate_dpad = true,
             .emulate_mouse = true,
             .cursor_speed = 32.0f,

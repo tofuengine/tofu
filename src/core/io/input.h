@@ -108,9 +108,9 @@ typedef enum _Input_Handlers_t {
 
 typedef struct _Input_Configuration_t {
     bool exit_key_enabled;
-    bool use_keyboard;
-    bool use_gamepad;
-    bool use_mouse;
+    bool keyboard_enabled;
+    bool gamepad_enabled;
+    bool mouse_enabled;
     bool emulate_dpad;
     bool emulate_mouse;
     // TODO: key-remapping?

@@ -141,9 +141,9 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 
     Input_Configuration_t input_configuration = {
             .exit_key_enabled = engine->configuration.exit_key_enabled,
-            .use_keyboard = engine->configuration.use_keyboard,
-            .use_gamepad = engine->configuration.use_gamepad,
-            .use_mouse = engine->configuration.use_mouse,
+            .keyboard_enabled = engine->configuration.keyboard_enabled,
+            .gamepad_enabled = engine->configuration.gamepad_enabled,
+            .mouse_enabled = engine->configuration.mouse_enabled,
             .emulate_dpad = engine->configuration.emulate_dpad,
             .emulate_mouse = engine->configuration.emulate_mouse,
             .cursor_speed = engine->configuration.cursor_speed,

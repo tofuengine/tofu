@@ -40,9 +40,9 @@ typedef struct _Configuration {
     size_t fps_cap;
     bool hide_cursor;
     bool exit_key_enabled;
-    bool use_keyboard;
-    bool use_gamepad;
-    bool use_mouse;
+    bool keyboard_enabled;
+    bool gamepad_enabled;
+    bool mouse_enabled;
     bool emulate_dpad;
     bool emulate_mouse;
     float cursor_speed;

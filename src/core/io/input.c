@@ -228,9 +228,9 @@ bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration
                     .gamepad_id = gamepad_id
                 },
             .handlers = {
-                    configuration->use_keyboard ? _keyboard_handler : NULL,
-                    configuration->use_gamepad ? _gamepad_handler : NULL,
-                    configuration->use_mouse ? _mouse_handler : NULL
+                    configuration->keyboard_enabled ? _keyboard_handler : NULL,
+                    configuration->gamepad_enabled ? _gamepad_handler : NULL,
+                    configuration->mouse_enabled ? _mouse_handler : NULL
                 }
         };
 
