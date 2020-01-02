@@ -28,11 +28,17 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Predefined library of 8/16/32/64 colors palettes.
 * [x] Automatic nearest-color palette indexing of images.
 * [x] Per-color re-indexing (*shifting*) and transparency, affecting drawing operations (global, too?).
-* [x] Tiled-map support w/ camera support (zoom and scrolling).
 * [x] Out-of-the-box timers support.
 * [x] Customizable application icon.
 * [x] Support for *archived games*, via custom "packed" format (w/ optional encryption).
-* [ ] Digital/analogue game-controller support.
+* [x] Game-controller support (w/ D-PAD and mouse emulation) w/ keyboard/mouse fallback if not available.
+* [x] Tiled-map support w/ camera support (zoom and scrolling).
+* [x] Screen shaking.
+* [x] Detailed logging facility (w/ logging level throttle).
+* [x] Crash screen (debug build).
+
+## Desiderata
+
 * [ ] **Bit** **Bl**ock **T**ransfer operations when drawing (also, [stencil](https://learnopengl.com/Advanced-OpenGL/Stencil-testing) support, see [this](https://open.gl/depthstencils)).
 * [ ] Animation support w/ frameset DSL (i.e. compiling a string where each token can be a single frame, a range or a "keep-current-frame for some time" command). Each frameset can have its one update period, and will be most likely based upon a timer.
 * [ ] Audio support (based upon [dr-soft/miniaudio](https://github.com/dr-soft/miniaudio)) w/ run-time multi-voice synth (a-la [Bfxr](https://www.bfxr.net)).
@@ -40,13 +46,8 @@ Guess what? Yup, that's yet another game engine/framework.
 * [ ] Out-of-the-box palette switching (with tweening) features.
 * [ ] Game state and display transitions (at which level? Engine or script?).
 * [ ] Library of noise functions ([cellular](https://thebookofshaders.com/12/), Perlin, etc...).
-* [ ] Camera/screen shaking by using a post-processing shader.
 * [ ] Library of "retro-feel" shaders.
 * [ ] Multiple players support.
-
-## Desiderata
-
-* [ ] Hot-reload of selected resources (fonts, banks, maps, shaders, sounds).
 * [ ] Define some fixed resolutions (see [this](https://pacoup.com/2011/06/12/list-of-true-169-resolutions/))?
 * [ ] Use a custom memory-management allocator.
 * [ ] Switch to [Vulkan API](https://www.khronos.org/vulkan/) (through [GLFW](https://www.glfw.org/)).
