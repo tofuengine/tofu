@@ -35,9 +35,9 @@ typedef enum _Input_Buttons_t {
     INPUT_BUTTON_DOWN,
     INPUT_BUTTON_LEFT,
     INPUT_BUTTON_RIGHT,
-    INPUT_BUTTON_LB,
+    INPUT_BUTTON_LB, // Bumper.
     INPUT_BUTTON_RB,
-    INPUT_BUTTON_LT,
+    INPUT_BUTTON_LT, // Thumb.
     INPUT_BUTTON_RT,
     INPUT_BUTTON_Y,
     INPUT_BUTTON_X,
@@ -102,17 +102,19 @@ typedef struct _Input_State_t {
 typedef enum _Input_Handlers_t {
     Input_Handlers_t_First = 0,
     INPUT_HANDLER_KEYBOARD = Input_Handlers_t_First,
-    INPUT_HANDLER_GAMEPAD,
     INPUT_HANDLER_MOUSE,
-    Input_Handlers_t_Last = INPUT_HANDLER_MOUSE,
+    INPUT_HANDLER_GAMEPAD,
+    Input_Handlers_t_Last = INPUT_HANDLER_GAMEPAD,
     Input_Handlers_t_CountOf
 } Input_Handlers_t;
 
 typedef struct _Input_Configuration_t {
     bool exit_key_enabled;
+#ifdef __INPUT_SELECTION__
     bool keyboard_enabled;
     bool gamepad_enabled;
     bool mouse_enabled;
+#endif
     bool emulate_dpad;
     bool emulate_mouse;
     float cursor_speed;

@@ -84,6 +84,35 @@ static void _keyboard_handler(GLFWwindow *window, Input_State_t *state, const In
     }
 }
 
+static void _mouse_handler(GLFWwindow *window, Input_State_t *state, const Input_Configuration_t *configuration)
+{
+    static const int mouse_buttons[Input_Buttons_t_CountOf] = {
+        GLFW_MOUSE_BUTTON_LEFT,
+        GLFW_MOUSE_BUTTON_MIDDLE,
+        GLFW_MOUSE_BUTTON_RIGHT
+    };
+
+    Input_Button_t *buttons = state->buttons;
+    Input_Cursor_t *cursor = &state->cursor;
+
+    for (int i = INPUT_BUTTON_MOUSE_LEFT; i <= INPUT_BUTTON_MOUSE_RIGHT; ++i) {
+        Input_Button_t *button = &buttons[i];
+
+        bool was_down = button->state.down;
+        bool is_down = glfwGetMouseButton(window, mouse_buttons[i]) == GLFW_PRESS;
+
+        button->state.down = is_down;
+        button->state.pressed = !was_down && is_down;
+        button->state.released = was_down && !is_down;
+    }
+
+    // TODO: compute deltas, in order to move the cursor like the stick.
+    double x, y;
+    glfwGetCursorPos(window, &x, &y);
+    cursor->x = (float)x * configuration->scale;
+    cursor->y = (float)y * configuration->scale;
+}
+
 static inline Input_Stick_t _gamepad_stick(float x, float y, float deadzone_threshold)
 {
     float angle = atan2f(y, x);
@@ -187,35 +216,6 @@ static void _gamepad_handler(GLFWwindow *window, Input_State_t *state, const Inp
     }
 }
 
-static void _mouse_handler(GLFWwindow *window, Input_State_t *state, const Input_Configuration_t *configuration)
-{
-    static const int mouse_buttons[Input_Buttons_t_CountOf] = {
-        GLFW_MOUSE_BUTTON_LEFT,
-        GLFW_MOUSE_BUTTON_MIDDLE,
-        GLFW_MOUSE_BUTTON_RIGHT
-    };
-
-    Input_Button_t *buttons = state->buttons;
-    Input_Cursor_t *cursor = &state->cursor;
-
-    for (int i = INPUT_BUTTON_MOUSE_LEFT; i <= INPUT_BUTTON_MOUSE_RIGHT; ++i) {
-        Input_Button_t *button = &buttons[i];
-
-        bool was_down = button->state.down;
-        bool is_down = glfwGetMouseButton(window, mouse_buttons[i]) == GLFW_PRESS;
-
-        button->state.down = is_down;
-        button->state.pressed = !was_down && is_down;
-        button->state.released = was_down && !is_down;
-    }
-
-    // TODO: compute deltas, in order to move the cursor like the stick.
-    double x, y;
-    glfwGetCursorPos(window, &x, &y);
-    cursor->x = (float)x * configuration->scale;
-    cursor->y = (float)y * configuration->scale;
-}
-
 bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration, GLFWwindow *window)
 {
     int result = glfwUpdateGamepadMappings((const char *)_mappings);
@@ -227,12 +227,12 @@ bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration
     int gamepad_id = -1;
     for (int i = GLFW_JOYSTICK_1; i <= GLFW_JOYSTICK_LAST; ++i) { // Detect the first available gamepad.
         if (glfwJoystickIsGamepad(i) == GLFW_TRUE) {
-            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "gamepad w/ id #%d found (GUID `%s`, name `%s`)", i, glfwGetJoystickGUID(i), glfwGetGamepadName(i));
+            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "gamepad #%d found (GUID `%s`, name `%s`)", i, glfwGetJoystickGUID(i), glfwGetGamepadName(i));
             gamepad_id = i;
             break;
         }
     }
-    Log_assert(gamepad_id != -1, LOG_LEVELS_WARNING, LOG_CONTEXT, "no gamepads detected");
+    Log_assert(gamepad_id != -1, LOG_LEVELS_WARNING, LOG_CONTEXT, "gamepad not detected");
 
     // TODO: should perform a single "zeroing" call and the set the single fields?
     *input = (Input_t){
@@ -243,9 +243,15 @@ bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration
                     .gamepad_id = gamepad_id
                 },
             .handlers = {
+#ifdef __INPUT_SELECTION__
                     configuration->keyboard_enabled ? _keyboard_handler : NULL,
-                    configuration->gamepad_enabled ? _gamepad_handler : NULL,
-                    configuration->mouse_enabled ? _mouse_handler : NULL
+                    configuration->mouse_enabled ? _mouse_handler : NULL,
+                    configuration->gamepad_enabled ? _gamepad_handler : NULL
+#else
+                    gamepad_id == -1 ? _keyboard_handler : NULL, // If gamepad is not detected, switch to keyboard/mouse.
+                    gamepad_id == -1 ? _mouse_handler : NULL,
+                    gamepad_id != -1 ? _gamepad_handler : NULL
+#endif
                 }
         };
 
