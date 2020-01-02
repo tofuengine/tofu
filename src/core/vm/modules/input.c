@@ -268,7 +268,7 @@ static int input_stick(lua_State *L)
     lua_pushnumber(L, state->sticks[stick].angle);
     lua_pushnumber(L, state->sticks[stick].magnitude);
 
-    return 2;
+    return 4;
 }
 
 static int input_triggers(lua_State *L)
