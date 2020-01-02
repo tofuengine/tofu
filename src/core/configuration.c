@@ -160,7 +160,7 @@ void Configuration_load(Configuration_t *configuration, const char *data)
             .mouse_enabled = true,
             .emulate_dpad = true,
             .emulate_mouse = true,
-            .cursor_speed = 32.0f,
+            .cursor_speed = 128.0f,
             .debug = true
         };
 
