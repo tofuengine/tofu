@@ -29,8 +29,6 @@
 
 #define LOG_CONTEXT "input"
 
-#define STICK_THRESHOLD 0.5f
-
 static const uint8_t _mappings[] = {
 #include "gamecontrollerdb.inc"
     0x00
@@ -86,18 +84,28 @@ static void _keyboard_handler(GLFWwindow *window, Input_State_t *state, const In
     }
 }
 
-static inline Input_Stick_t _gamepad_stick(float x, float y)
+static inline Input_Stick_t _gamepad_stick(float x, float y, float deadzone_threshold)
 {
-    // TODO: add a "safe zone". threshold.
-    const float angle = atan2f(y, x);
-    const float magnitude = sqrtf(x * x + y * y);
-    // if (magnitude < safe_zone_threshold) {
-    //     magnitude = 0.0f;
-    // } else
-    // if (magnitude > 1.0f) {
-    //     magnitude = 1.0f;
-    // }
-    return (Input_Stick_t){ .x = x, .y = y, .angle = angle, .magnitude = fminf(magnitude, 1.0f) };
+    float angle = atan2f(y, x);
+    float magnitude = sqrtf(x * x + y * y);
+    if (magnitude < deadzone_threshold) {
+        magnitude = 0.0f;
+    } else
+    if (magnitude > 1.0f) {
+        magnitude = 1.0f;
+    }
+    return (Input_Stick_t){ .x = x, .y = y, .angle = angle, .magnitude = magnitude };
+}
+
+static inline float _gamepad_trigger(float magnitude, float deadzone_threshold)
+{
+    if (magnitude < deadzone_threshold) {
+        magnitude = 0.0f;
+    } else
+    if (magnitude > 1.0f) {
+        magnitude = 1.0f;
+    }
+    return magnitude;
 }
 
 static void _gamepad_handler(GLFWwindow *window, Input_State_t *state, const Input_Configuration_t *configuration)
@@ -134,10 +142,10 @@ static void _gamepad_handler(GLFWwindow *window, Input_State_t *state, const Inp
         if (configuration->emulate_dpad) {
             const float x = gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_X];
             const float y = gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_Y];
-            if (fabsf(x) > STICK_THRESHOLD) {
+            if (fabsf(x) > configuration->gamepad_sensitivity) {
                 gamepad.buttons[x < 0.0f ? GLFW_GAMEPAD_BUTTON_DPAD_LEFT : GLFW_GAMEPAD_BUTTON_DPAD_RIGHT] = GLFW_PRESS;
             }
-            if (fabsf(y) > STICK_THRESHOLD) {
+            if (fabsf(y) > configuration->gamepad_sensitivity) {
                 gamepad.buttons[y < 0.0f ? GLFW_GAMEPAD_BUTTON_DPAD_DOWN : GLFW_GAMEPAD_BUTTON_DPAD_UP] = GLFW_PRESS;
             }
         }
@@ -169,11 +177,13 @@ static void _gamepad_handler(GLFWwindow *window, Input_State_t *state, const Inp
             }
         }
 
-        sticks[INPUT_STICK_LEFT] = _gamepad_stick(gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_X], gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_Y]);
-        sticks[INPUT_STICK_RIGHT] = _gamepad_stick(gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_X], gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y]);
+        const float deadzone = configuration->gamepad_deadzone;
 
-        triggers->left = gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER];
-        triggers->right = gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER];
+        sticks[INPUT_STICK_LEFT] = _gamepad_stick(gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_X], gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_Y], deadzone);
+        sticks[INPUT_STICK_RIGHT] = _gamepad_stick(gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_X], gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y], deadzone);
+
+        triggers->left = _gamepad_trigger(gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER], deadzone);
+        triggers->right = _gamepad_trigger(gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER], deadzone);
     }
 }
 
@@ -199,6 +209,7 @@ static void _mouse_handler(GLFWwindow *window, Input_State_t *state, const Input
         button->state.released = was_down && !is_down;
     }
 
+    // TODO: compute deltas, in order to move the cursor like the stick.
     double x, y;
     glfwGetCursorPos(window, &x, &y);
     cursor->x = (float)x * configuration->scale;

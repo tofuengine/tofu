@@ -46,6 +46,8 @@ typedef struct _Configuration {
     bool emulate_dpad;
     bool emulate_mouse;
     float cursor_speed;
+    float gamepad_sensitivity;
+    float gamepad_deadzone;
     // TODO: key-remapping?
     bool debug;
 } Configuration_t;

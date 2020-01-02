@@ -115,8 +115,10 @@ typedef struct _Input_Configuration_t {
     bool mouse_enabled;
     bool emulate_dpad;
     bool emulate_mouse;
-    // TODO: key-remapping?
     float cursor_speed;
+    float gamepad_sensitivity;
+    float gamepad_deadzone;
+    // TODO: key-remapping?
     float scale; // Refers to the screen-to-canvas scaling factor.
 } Input_Configuration_t;
 

@@ -147,6 +147,8 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             .emulate_dpad = engine->configuration.emulate_dpad,
             .emulate_mouse = engine->configuration.emulate_mouse,
             .cursor_speed = engine->configuration.cursor_speed,
+            .gamepad_sensitivity = engine->configuration.gamepad_sensitivity,
+            .gamepad_deadzone = engine->configuration.gamepad_deadzone,
             .scale = 1.0f / (float)engine->display.configuration.scale
         };
     result = Input_initialize(&engine->input, &input_configuration, engine->display.window);

@@ -85,6 +85,12 @@ static void on_parameter(Configuration_t *configuration, const char *key, const 
     if (strcmp(key, "cursor-speed") == 0) {
         configuration->cursor_speed = (float)strtod(value, NULL);
     } else
+    if (strcmp(key, "gamepad-sensitivity") == 0) {
+        configuration->gamepad_sensitivity = (float)strtod(value, NULL);
+    } else
+    if (strcmp(key, "gamepad-deadzone") == 0) {
+        configuration->gamepad_deadzone = (float)strtod(value, NULL);
+    } else
     if (strcmp(key, "debug") == 0) {
         configuration->debug = strcmp(value, "true") == 0;
     }
@@ -161,6 +167,8 @@ void Configuration_load(Configuration_t *configuration, const char *data)
             .emulate_dpad = true,
             .emulate_mouse = true,
             .cursor_speed = 128.0f,
+            .gamepad_sensitivity = 0.25f,
+            .gamepad_deadzone = 0.0f,
             .debug = true
         };
 
