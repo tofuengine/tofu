@@ -117,10 +117,11 @@ static inline Input_Stick_t _gamepad_stick(float x, float y, float deadzone_thre
 {
     float angle = atan2f(y, x);
     float magnitude = sqrtf(x * x + y * y);
-    if (magnitude < deadzone_threshold) {
+    if (magnitude < deadzone_threshold) { // TODO: is this really useful?
         magnitude = 0.0f;
     } else
     if (magnitude > 1.0f) {
+    // if (magnitude > 0.8f) {
         magnitude = 1.0f;
     }
     return (Input_Stick_t){ .x = x, .y = y, .angle = angle, .magnitude = magnitude };

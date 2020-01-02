@@ -59,12 +59,14 @@ function Main:update(delta_time)
 end
 
 local function draw_stick(cx, cy, radius, _, _, angle, magnitude, pressed)
-  local dx, dy = math.cos(angle) * radius, math.sin(angle) * radius
-  if magnitude > 0.0 then
-    Canvas.circle("fill", cx, cy, magnitude * radius, 2)
+  local dx, dy = math.floor(math.cos(angle) * magnitude * radius + 0.5),
+                 math.floor(math.sin(angle) * magnitude * radius + 0.5)
+--  local dx, dy = x * radius, y * radius
+  if pressed then
+    Canvas.circle("fill", cx, cy, radius, 2)
   end
-  Canvas.circle("line", cx, cy, radius, pressed and 8 or 1)
-  Canvas.line(cx, cy, cx + dx, cy + dy, pressed and 8 or 1)
+  Canvas.circle("line", cx, cy, radius, 1)
+  Canvas.line(cx, cy, cx + dx, cy + dy, 3)
 end
 
 local function draw_trigger(cx, cy, radius, magnitude)
@@ -118,7 +120,11 @@ function Main:render(_)
   Canvas.line(cx, cy - 3, cx, cy - 1, 2)
   Canvas.line(cx, cy + 1, cx, cy + 3, 2)
 
+--  Canvas.line(8, 8, 14, 12, 2)
+--  Canvas.line(14, 22, 8, 18, 2)
+
   self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
+  self.font:write(string.format("%.2f %.2f %.2f %.2f", lx, ly, la, lm), Canvas.width(), 0, "right")
 end
 
 return Main
