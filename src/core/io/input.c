@@ -209,29 +209,30 @@ bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration
         return false;
     }
 
+    int gamepad_id = -1;
+    for (int i = GLFW_JOYSTICK_1; i <= GLFW_JOYSTICK_LAST; ++i) { // Detect the first available gamepad.
+        if (glfwJoystickIsGamepad(i) == GLFW_TRUE) {
+            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "gamepad w/ id #%d found (GUID `%s`, name `%s`)", i, glfwGetJoystickGUID(i), glfwGetGamepadName(i));
+            gamepad_id = i;
+            break;
+        }
+    }
+    Log_assert(gamepad_id != -1, LOG_LEVELS_WARNING, LOG_CONTEXT, "no gamepads detected");
+
     // TODO: should perform a single "zeroing" call and the set the single fields?
     *input = (Input_t){
             .configuration = *configuration,
             .window = window,
-            .time = 0,
+            .time = 0.0,
             .state = (Input_State_t){
-                .gamepad_id = -1
-            },
-            .handlers = { 0 }
+                    .gamepad_id = gamepad_id
+                },
+            .handlers = {
+                    configuration->use_keyboard ? _keyboard_handler : NULL,
+                    configuration->use_gamepad ? _gamepad_handler : NULL,
+                    configuration->use_mouse ? _mouse_handler : NULL
+                }
         };
-
-    input->handlers[INPUT_HANDLER_KEYBOARD] = configuration->use_keyboard ? _keyboard_handler : NULL;
-    input->handlers[INPUT_HANDLER_GAMEPAD] = configuration->use_gamepad ? _gamepad_handler : NULL;
-    input->handlers[INPUT_HANDLER_MOUSE] = configuration->use_mouse ? _mouse_handler : NULL;
-
-    for (int i = GLFW_JOYSTICK_1; i <= GLFW_JOYSTICK_LAST; ++i) { // Detect the first available gamepad.
-        if (glfwJoystickIsGamepad(i) == GLFW_TRUE) {
-            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "gamepad w/ id #%d found (GUID `%s`, name `%s`)", i, glfwGetJoystickGUID(i), glfwGetGamepadName(i));
-            input->state.gamepad_id = i;
-            break;
-        }
-    }
-    Log_assert(input->state.gamepad_id != -1, LOG_LEVELS_WARNING, LOG_CONTEXT, "no gamepads detected");
 
     return true;
 }
