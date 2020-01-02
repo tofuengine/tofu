@@ -11,7 +11,6 @@ local Main = Class.define()
 local IDS = {
     Input.A, Input.B, Input.X, Input.Y,
     Input.LB, Input.RB,
-    Input.LT, Input.RT,
     Input.UP, Input.DOWN, Input.LEFT, Input.RIGHT,
     Input.SELECT, Input.START,
     Input.RESET
@@ -19,7 +18,6 @@ local IDS = {
 
 local INDICES = {
     0, 1, 2, 3,
-    4, 5,
     4, 5,
     12, 13, 14, 15,
     24, 25,
@@ -60,13 +58,13 @@ function Main:update(delta_time)
   end
 end
 
-local function draw_stick(cx, cy, radius, _, _, angle, magnitude)
+local function draw_stick(cx, cy, radius, _, _, angle, magnitude, pressed)
   local dx, dy = math.cos(angle) * radius, math.sin(angle) * radius
   if magnitude > 0.0 then
     Canvas.circle("fill", cx, cy, magnitude * radius, 2)
   end
-  Canvas.circle("line", cx, cy, radius, 1)
-  Canvas.line(cx, cy, cx + dx, cy + dy, 1)
+  Canvas.circle("line", cx, cy, radius, pressed and 8 or 1)
+  Canvas.line(cx, cy, cx + dx, cy + dy, pressed and 8 or 1)
 end
 
 local function draw_trigger(cx, cy, radius, magnitude)
@@ -105,10 +103,10 @@ function Main:render(_)
   end
 
   local h = Canvas.height() * 0.5
-  local lx, ly, la, lm = Input.stick("left")
+  local lx, ly, la, lm = Input.stick("left") -- TODO: use constants.
   local rx, ry, ra, rm = Input.stick("right")
-  draw_stick(24, h - 12, 8, lx, ly, la, lm)
-  draw_stick(232, h - 12, 8, rx, ry, ra, rm)
+  draw_stick(24, h - 12, 8, lx, ly, la, lm, Input.is_down(Input.LT))
+  draw_stick(232, h - 12, 8, rx, ry, ra, rm, Input.is_down(Input.RT))
   local tl, tr = Input.triggers()
   draw_trigger(24, h + 12, 8, tl)
   draw_trigger(232, h + 12, 8, tr)
