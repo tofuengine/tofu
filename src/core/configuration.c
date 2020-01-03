@@ -172,7 +172,7 @@ void Configuration_load(Configuration_t *configuration, const char *data)
             .emulate_mouse = true,
             .cursor_speed = 128.0f,
             .gamepad_sensitivity = 0.5f,
-            .gamepad_deadzone = 0.0f,
+            .gamepad_deadzone = 0.25f,
             .debug = true
         };
 

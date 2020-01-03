@@ -130,15 +130,15 @@ static void _mouse_handler(GLFWwindow *window, Input_State_t *state, const Input
     cursor->y = (float)y * configuration->scale;
 }
 
+// http://www.third-helix.com/2013/04/12/doing-thumbstick-dead-zones-right.html
 static inline Input_Stick_t _gamepad_stick(float x, float y, float deadzone_threshold)
 {
     float angle = atan2f(y, x);
     float magnitude = sqrtf(x * x + y * y);
-    if (magnitude < deadzone_threshold) { // TODO: is this really useful?
+    if (magnitude < deadzone_threshold) {
         magnitude = 0.0f;
     } else
     if (magnitude > 1.0f) {
-    // if (magnitude > 0.8f) {
         magnitude = 1.0f;
     }
     magnitude = (magnitude - deadzone_threshold) / (1.0f - deadzone_threshold); // Rescale to ensure [0, 1] range.
