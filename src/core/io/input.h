@@ -139,7 +139,7 @@ typedef struct _Input_t {
     Input_Handler_t handlers[Input_Handlers_t_CountOf];
 } Input_t;
 
-extern bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration, GLFWwindow *window);
+extern bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration, GLFWwindow *window, const char *mappings);
 extern void Input_terminate(Input_t *input);
 
 extern void Input_update(Input_t *input, float delta_time);
