@@ -29,6 +29,24 @@
 
 #define LOG_CONTEXT "input"
 
+typedef enum _System_Keys_t {
+    SYSTEM_KEY_QUIT,
+    SYSTEM_KEY_SWITCH,
+    System_Keys_t_CountOf
+} System_Keys_t;
+
+typedef struct _Key_State_t {
+    bool was, is;
+    bool pressed, released;
+} Key_State_t;
+
+static int _system_key_ids[System_Keys_t_CountOf] = {
+    GLFW_KEY_ESCAPE,
+    GLFW_KEY_F1
+};
+
+static Key_State_t _system_keys[System_Keys_t_CountOf] = { 0 }; // TODO: move to the input structure.
+
 static const uint8_t _mappings[] = {
 #include "gamecontrollerdb.inc"
     0x00
@@ -41,22 +59,21 @@ static void _keyboard_handler(GLFWwindow *window, Input_State_t *state, const In
         GLFW_KEY_DOWN,
         GLFW_KEY_LEFT,
         GLFW_KEY_RIGHT,
-        GLFW_KEY_LEFT_CONTROL,
-        GLFW_KEY_RIGHT_CONTROL,
-        GLFW_KEY_LEFT_ALT,
-        GLFW_KEY_RIGHT_ALT,
+        GLFW_KEY_Q,
+        GLFW_KEY_R,
+        GLFW_KEY_W,
+        GLFW_KEY_E,
         GLFW_KEY_Z,
         GLFW_KEY_S,
         GLFW_KEY_X,
         GLFW_KEY_D,
         GLFW_KEY_ENTER,
-        GLFW_KEY_SPACE,
-        GLFW_KEY_ESCAPE
+        GLFW_KEY_SPACE
     };
 
     Input_Button_t *buttons = state->buttons;
 
-    for (int i = Input_Buttons_t_First; i <= INPUT_BUTTON_RESET; ++i) {
+    for (int i = Input_Buttons_t_First; i <= INPUT_BUTTON_START; ++i) {
         Input_Button_t *button = &buttons[i];
 
         bool was_down = button->state.down;
@@ -106,23 +123,24 @@ static void _mouse_handler(GLFWwindow *window, Input_State_t *state, const Input
         button->state.released = was_down && !is_down;
     }
 
-    // TODO: compute deltas, in order to move the cursor like the stick.
     double x, y;
     glfwGetCursorPos(window, &x, &y);
     cursor->x = (float)x * configuration->scale;
     cursor->y = (float)y * configuration->scale;
 }
 
+// http://www.third-helix.com/2013/04/12/doing-thumbstick-dead-zones-right.html
 static inline Input_Stick_t _gamepad_stick(float x, float y, float deadzone_threshold)
 {
     float angle = atan2f(y, x);
     float magnitude = sqrtf(x * x + y * y);
-    if (magnitude < deadzone_threshold) { // TODO: is this really useful?
+    if (magnitude < deadzone_threshold) {
         magnitude = 0.0f;
     } else
     if (magnitude > 1.0f) {
-    // if (magnitude > 0.8f) {
         magnitude = 1.0f;
+    } else {
+        magnitude = (magnitude - deadzone_threshold) / (1.0f - deadzone_threshold); // Rescale to ensure [0, 1] range.
     }
     return (Input_Stick_t){ .x = x, .y = y, .angle = angle, .magnitude = magnitude };
 }
@@ -135,7 +153,7 @@ static inline float _gamepad_trigger(float magnitude, float deadzone_threshold)
     if (magnitude > 1.0f) {
         magnitude = 1.0f;
     }
-    return magnitude;
+    return (magnitude - deadzone_threshold) / (1.0f - deadzone_threshold);
 }
 
 static void _gamepad_handler(GLFWwindow *window, Input_State_t *state, const Input_Configuration_t *configuration)
@@ -154,8 +172,7 @@ static void _gamepad_handler(GLFWwindow *window, Input_State_t *state, const Inp
         GLFW_GAMEPAD_BUTTON_B,
         GLFW_GAMEPAD_BUTTON_A,
         GLFW_GAMEPAD_BUTTON_BACK,
-        GLFW_GAMEPAD_BUTTON_START,
-        GLFW_GAMEPAD_BUTTON_GUIDE
+        GLFW_GAMEPAD_BUTTON_START
     };
 
     Input_Button_t *buttons = state->buttons;
@@ -180,7 +197,7 @@ static void _gamepad_handler(GLFWwindow *window, Input_State_t *state, const Inp
             }
         }
 
-        for (int i = Input_Buttons_t_First; i <= INPUT_BUTTON_RESET; ++i) {
+        for (int i = Input_Buttons_t_First; i <= INPUT_BUTTON_START; ++i) {
             Input_Button_t *button = &buttons[i];
 
             bool was_down = button->state.down;
@@ -217,23 +234,42 @@ static void _gamepad_handler(GLFWwindow *window, Input_State_t *state, const Inp
     }
 }
 
-bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration, GLFWwindow *window)
+static void _switch(Input_t *input)
 {
-    int result = glfwUpdateGamepadMappings((const char *)_mappings);
-    if (result == GLFW_FALSE) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't update gamepad mappings");
-        return false;
-    }
+    Input_State_t *state = &input->state;
+#ifndef __INPUT_SELECTION__
+    Input_Handler_t *handlers = input->handlers;
+#endif
 
     int gamepad_id = -1;
-    for (int i = GLFW_JOYSTICK_1; i <= GLFW_JOYSTICK_LAST; ++i) { // Detect the first available gamepad.
-        if (glfwJoystickIsGamepad(i) == GLFW_TRUE) {
-            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "gamepad #%d found (GUID `%s`, name `%s`)", i, glfwGetJoystickGUID(i), glfwGetGamepadName(i));
+    for (int i = state->gamepad_id + 1; i < INPUT_GAMEPADS_COUNT; ++i) {
+        if (input->gamepads[i]) {
             gamepad_id = i;
             break;
         }
     }
-    Log_assert(gamepad_id != -1, LOG_LEVELS_WARNING, LOG_CONTEXT, "gamepad not detected");
+
+    state->gamepad_id = gamepad_id;
+    if (gamepad_id == -1) {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "keyboard/mouse input active");
+    } else {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "gamepad #%d input active (`%s`)", gamepad_id, glfwGetGamepadName(gamepad_id));
+    }
+
+#ifndef __INPUT_SELECTION__
+    handlers[INPUT_HANDLER_KEYBOARD] = gamepad_id == -1 ? _keyboard_handler : NULL;
+    handlers[INPUT_HANDLER_MOUSE] = gamepad_id == -1 ? _mouse_handler : NULL;
+    handlers[INPUT_HANDLER_GAMEPAD] = gamepad_id != -1 ? _gamepad_handler : NULL;
+#endif
+}
+
+bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration, GLFWwindow *window, const char *mappings)
+{
+    int result = glfwUpdateGamepadMappings(mappings ? mappings : (const char *)_mappings);
+    if (result == GLFW_FALSE) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't update gamepad mappings");
+        return false;
+    }
 
     // TODO: should perform a single "zeroing" call and the set the single fields?
     *input = (Input_t){
@@ -241,20 +277,34 @@ bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration
             .window = window,
             .time = 0.0,
             .state = (Input_State_t){
-                    .gamepad_id = gamepad_id
+                    .gamepad_id = -1
                 },
-            .handlers = {
 #ifdef __INPUT_SELECTION__
+            .handlers = {
                     configuration->keyboard_enabled ? _keyboard_handler : NULL,
                     configuration->mouse_enabled ? _mouse_handler : NULL,
                     configuration->gamepad_enabled ? _gamepad_handler : NULL
-#else
-                    gamepad_id == -1 ? _keyboard_handler : NULL, // If gamepad is not detected, switch to keyboard/mouse.
-                    gamepad_id == -1 ? _mouse_handler : NULL,
-                    gamepad_id != -1 ? _gamepad_handler : NULL
-#endif
                 }
+#else
+            .handlers = { 0 }
+#endif
         };
+
+    size_t gamepads_count = 0U;
+    for (int i = 0; i < INPUT_GAMEPADS_COUNT; ++i) { // Detect the available gamepads.
+        input->gamepads[i] = glfwJoystickIsGamepad(i) == GLFW_TRUE;
+        if (input->gamepads[i]) {
+            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "gamepad #%d found (GUID `%s`, name `%s`)", i, glfwGetJoystickGUID(i), glfwGetGamepadName(i));
+            ++gamepads_count;
+        }
+    }
+    if (gamepads_count == 0) {
+        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "no gamepads detected");
+    } else {
+        Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "%d gamepads detected", gamepads_count);
+    }
+
+    _switch(input);
 
     return true;
 }
@@ -333,10 +383,24 @@ void Input_process(Input_t *input)
         input->handlers[i](window, state, configuration);
     }
 
+    for (int i = 0; i < System_Keys_t_CountOf; ++i) {
+        Key_State_t *state = &_system_keys[i];
+        state->was = state->is;
+        state->is = glfwGetKey(input->window, _system_key_ids[i]) == GLFW_PRESS;
+        state->pressed = !state->was && state->is;
+        state->released = state->was && !state->is;
+    }
+
     if (input->configuration.exit_key_enabled) {
-        if (glfwGetKey(input->window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+        if (_system_keys[SYSTEM_KEY_QUIT].pressed) {
+            Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "exit key pressed");
             glfwSetWindowShouldClose(input->window, true);
         }
+    }
+
+   if (_system_keys[SYSTEM_KEY_SWITCH].pressed) {
+        Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "input switch key pressed");
+        _switch(input);
     }
 }
 

@@ -153,7 +153,9 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             .gamepad_deadzone = engine->configuration.gamepad_deadzone,
             .scale = 1.0f / (float)engine->display.configuration.scale
         };
-    result = Input_initialize(&engine->input, &input_configuration, engine->display.window);
+    File_System_Chunk_t mappings = FS_load(&engine->file_system, "gamecontrollerdb.txt", FILE_SYSTEM_CHUNK_STRING);
+    result = Input_initialize(&engine->input, &input_configuration, engine->display.window, mappings.var.string.chars);
+    FS_release(mappings);
     if (!result) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize input");
         Display_terminate(&engine->display);

@@ -3,7 +3,6 @@ local Canvas = require("tofu.graphics").Canvas
 local Font = require("tofu.graphics").Font
 local Input = require("tofu.events").Input
 local Class = require("tofu.util").Class
-local Math = require("tofu.core").Math
 local System = require("tofu.core").System
 
 local Main = Class.define()
@@ -12,28 +11,26 @@ local IDS = {
     Input.A, Input.B, Input.X, Input.Y,
     Input.LB, Input.RB,
     Input.UP, Input.DOWN, Input.LEFT, Input.RIGHT,
-    Input.SELECT, Input.START,
-    Input.RESET
+    Input.SELECT, Input.START
   }
 
 local INDICES = {
     0, 1, 2, 3,
     4, 5,
     12, 13, 14, 15,
-    24, 25,
-    36
+    24, 25
   }
 
 function Main:__ctor()
   Canvas.palette("pico-8")
 
+  Input.auto_repeat(Input.X, 0.25)
   Input.auto_repeat(Input.Y, 0.5)
   Input.cursor_area(0, 0, Canvas.width(), Canvas.height())
 
   self.bank = Bank.new("assets/sheet.png", 12, 12)
   self.font = Font.default(0, 15)
   self.down = {}
-  self.rotation = {}
   self.scale = {}
 end
 
@@ -41,7 +38,6 @@ function Main:input()
   for _, id in ipairs(IDS) do
     self.down[id] = Input.is_down(id)
     if Input.is_pressed(id) then
-      self.rotation[id] = Math.SINCOS_PERIOD
       self.scale[id] = 3.0
     end
   end
@@ -49,11 +45,8 @@ end
 
 function Main:update(delta_time)
   for _, id in ipairs(IDS) do
-    if self.rotation[id] and self.rotation[id] > 0 then
-      self.rotation[id] = math.max(0, self.rotation[id] - delta_time * 1024.0)
-    end
     if self.scale[id] and self.scale[id] > 1.0 then
-      self.scale[id] = math.max(1.0, self.scale[id] - delta_time * 3.0)
+      self.scale[id] = math.max(1.0, self.scale[id] - delta_time * 12.0)
     end
   end
 end
@@ -89,10 +82,6 @@ function Main:render(_)
     if self.down[id] then
       dy = 0
     end
-    -- local r = 0
-    -- if self.rotation[id] then
-    --   r = self.rotation[id]
-    -- end
     local ox, oy = 0, 0
     local s = 1.0
     if self.scale[id] then
@@ -114,17 +103,13 @@ function Main:render(_)
   draw_trigger(232, h + 12, 8, tr)
 
   local cx, cy = Input.cursor()
---  Canvas.square("fill", cx - 1, cy - 1, 3, 2)
   Canvas.line(cx - 3, cy, cx - 1, cy, 2)
   Canvas.line(cx + 1, cy, cx + 3, cy, 2)
   Canvas.line(cx, cy - 3, cx, cy - 1, 2)
   Canvas.line(cx, cy + 1, cx, cy + 3, 2)
 
---  Canvas.line(8, 8, 14, 12, 2)
---  Canvas.line(14, 22, 8, 18, 2)
-
   self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
-  self.font:write(string.format("%.2f %.2f %.2f %.2f", lx, ly, la, lm), Canvas.width(), 0, "right")
+  self.font:write(string.format("X:%.2f Y:%.2f A:%.2f M:%.2f", lx, ly, la, lm), Canvas.width(), 0, "right")
 end
 
 return Main
