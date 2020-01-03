@@ -70,7 +70,6 @@ static const luaX_Const _input_constants[] = {
     { "A", LUA_CT_INTEGER, { .i = INPUT_BUTTON_A } },
     { "SELECT", LUA_CT_INTEGER, { .i = INPUT_BUTTON_SELECT } },
     { "START", LUA_CT_INTEGER, { .i = INPUT_BUTTON_START } },
-    { "RESET", LUA_CT_INTEGER, { .i = INPUT_BUTTON_RESET } },
     { "MOUSE_LEFT", LUA_CT_INTEGER, { .i = INPUT_BUTTON_MOUSE_LEFT } },
     { "MOUSE_MIDDLE", LUA_CT_INTEGER, { .i = INPUT_BUTTON_MOUSE_MIDDLE } },
     { "MOUSE_RIGHT", LUA_CT_INTEGER, { .i = INPUT_BUTTON_MOUSE_RIGHT } },

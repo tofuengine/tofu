@@ -50,13 +50,12 @@ static void _keyboard_handler(GLFWwindow *window, Input_State_t *state, const In
         GLFW_KEY_X,
         GLFW_KEY_D,
         GLFW_KEY_ENTER,
-        GLFW_KEY_SPACE,
-        GLFW_KEY_ESCAPE
+        GLFW_KEY_SPACE
     };
 
     Input_Button_t *buttons = state->buttons;
 
-    for (int i = Input_Buttons_t_First; i <= INPUT_BUTTON_RESET; ++i) {
+    for (int i = Input_Buttons_t_First; i <= INPUT_BUTTON_START; ++i) {
         Input_Button_t *button = &buttons[i];
 
         bool was_down = button->state.down;
@@ -154,8 +153,7 @@ static void _gamepad_handler(GLFWwindow *window, Input_State_t *state, const Inp
         GLFW_GAMEPAD_BUTTON_B,
         GLFW_GAMEPAD_BUTTON_A,
         GLFW_GAMEPAD_BUTTON_BACK,
-        GLFW_GAMEPAD_BUTTON_START,
-        GLFW_GAMEPAD_BUTTON_GUIDE
+        GLFW_GAMEPAD_BUTTON_START
     };
 
     Input_Button_t *buttons = state->buttons;
@@ -180,7 +178,7 @@ static void _gamepad_handler(GLFWwindow *window, Input_State_t *state, const Inp
             }
         }
 
-        for (int i = Input_Buttons_t_First; i <= INPUT_BUTTON_RESET; ++i) {
+        for (int i = Input_Buttons_t_First; i <= INPUT_BUTTON_START; ++i) {
             Input_Button_t *button = &buttons[i];
 
             bool was_down = button->state.down;
