@@ -141,6 +141,7 @@ static inline Input_Stick_t _gamepad_stick(float x, float y, float deadzone_thre
     // if (magnitude > 0.8f) {
         magnitude = 1.0f;
     }
+    magnitude = (magnitude - deadzone_threshold) / (1.0f - deadzone_threshold); // Rescale to ensure [0, 1] range.
     return (Input_Stick_t){ .x = x, .y = y, .angle = angle, .magnitude = magnitude };
 }
 
@@ -152,7 +153,7 @@ static inline float _gamepad_trigger(float magnitude, float deadzone_threshold)
     if (magnitude > 1.0f) {
         magnitude = 1.0f;
     }
-    return magnitude;
+    return (magnitude - deadzone_threshold) / (1.0f - deadzone_threshold);
 }
 
 static void _gamepad_handler(GLFWwindow *window, Input_State_t *state, const Input_Configuration_t *configuration)
