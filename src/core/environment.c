@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Marco Lizza (marco.lizza@gmail.com)
+ * Copyright (c) 2019-2020 by Marco Lizza (marco.lizza@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,11 +22,10 @@
 
 #include "environment.h"
 
+#include <libs/stb.h>
+
 #include <stdlib.h>
 #include <string.h>
-#ifdef DEBUG
-  #include <stb/stb_leakcheck.h>
-#endif
 
 // TODO: http://www.ilikebigbits.com/2017_06_01_float_or_double.html
 
@@ -35,7 +34,7 @@ void Environment_initialize(Environment_t *environment)
     *environment = (Environment_t){
         .quit = false,
         .fps = 0.0f,
-        .time = 0.0f
+        .time = 0.0
     };
 }
 

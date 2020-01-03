@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Marco Lizza (marco.lizza@gmail.com)
+ * Copyright (c) 2019-2020 by Marco Lizza (marco.lizza@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,10 @@
 #ifndef __GL_COMMON_H__
 #define __GL_COMMON_H__
 
+#include <stddef.h>
 #include <stdint.h>
+
+#include <core/platform.h>
 
 typedef uint8_t GL_Pixel_t;
 
@@ -34,12 +37,12 @@ typedef struct _GL_Point_t {
 } GL_Point_t;
 
 typedef struct _GL_Size_t {
-    int width, height;
+    size_t width, height;
 } GL_Size_t;
 
 typedef struct _GL_Rectangle_t {
     int x, y;
-    unsigned int width, height;
+    size_t width, height;
 } GL_Rectangle_t;
 
 typedef struct _GL_Quad_t {
@@ -47,16 +50,19 @@ typedef struct _GL_Quad_t {
     int x1, y1;
 } GL_Quad_t;
 
+typedef struct _GL_Image_t {
+    size_t width, height;
+    const void *data;
+} GL_Image_t;
+
 #pragma pack(push, 1)
-#ifdef __GL_BGRA_PALETTE__
 typedef struct _GL_Color_t {
+#if PLATFORM_ID == PLATFORM_WINDOWS
     uint8_t b, g, r, a;
-} GL_Color_t;
 #else
-typedef struct _GL_Color_t {
     uint8_t r, g, b, a;
-} GL_Color_t;
 #endif
+} GL_Color_t;
 #pragma pack(pop)
 
 #define GL_DEGREES_OVER_RADIANS 57.295779513082320876798154814105

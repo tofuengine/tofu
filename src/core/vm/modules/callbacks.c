@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Marco Lizza (marco.lizza@gmail.com)
+ * Copyright (c) 2019-2020 by Marco Lizza (marco.lizza@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,32 +24,39 @@
 
 #include <memory.h>
 
-void surface_callback_palette(void *parameters, GL_Surface_t *surface, const void *data)
-{
-    const GL_Palette_t *palette = (const GL_Palette_t *)parameters;
+#pragma pack(push, 1)
+typedef struct rgba_t {
+    uint8_t r, g, b, a;
+} rgba_t;
+#pragma pack(pop)
 
-    const GL_Color_t *src = (const GL_Color_t *)data;
+void surface_callback_palette(void *user_data, GL_Surface_t *surface, const void *data)
+{
+    const GL_Palette_t *palette = (const GL_Palette_t *)user_data;
+
+    const rgba_t *src = (const rgba_t *)data;
     GL_Pixel_t *dst = surface->data;
 
     for (size_t i = surface->data_size; i; --i) {
-        GL_Color_t color = *(src++);
+        rgba_t rgba = *(src++);
+        GL_Color_t color = (GL_Color_t){ .r = rgba.r, .g = rgba.g, .b = rgba.b, .a = rgba.a };
         *(dst++) = GL_palette_find_nearest_color(palette, color);
     }
 }
 
-void surface_callback_indexes(void *parameters, GL_Surface_t *surface, const void *data)
+void surface_callback_indexes(void *user_data, GL_Surface_t *surface, const void *data)
 {
-    const GL_Pixel_t *indexes = (const GL_Pixel_t *)parameters;
+    const GL_Pixel_t *indexes = (const GL_Pixel_t *)user_data;
     const GL_Pixel_t bg_index = indexes[0];
     const GL_Pixel_t fg_index = indexes[1];
 
-    const GL_Color_t *src = (const GL_Color_t *)data;
+    const uint32_t *src = (const uint32_t *)data; // Faster than the `rgba_t` struct, we don't need to unpack components.
     GL_Pixel_t *dst = surface->data;
 
-    const GL_Color_t background = *src; // The top-left pixel color defines the background.
+    const uint32_t background = *src; // The top-left pixel color defines the background.
 
     for (size_t i = surface->data_size; i; --i) {
-        GL_Color_t color = *(src++);
-        *(dst++) = memcmp(&color, &background, sizeof(GL_Color_t)) == 0 ? bg_index : fg_index;
+        uint32_t rgba = *(src++);
+        *(dst++) = rgba == background ? bg_index : fg_index;
     }
 }

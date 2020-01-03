@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Marco Lizza (marco.lizza@gmail.com)
+ * Copyright (c) 2019-2020 by Marco Lizza (marco.lizza@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,6 +30,8 @@ extern void GL_primitive_point(const GL_Context_t *context, GL_Point_t position,
 extern void GL_primitive_hline(const GL_Context_t *context, GL_Point_t origin,  size_t w, GL_Pixel_t index);
 extern void GL_primitive_vline(const GL_Context_t *context, GL_Point_t origin, size_t h, GL_Pixel_t index);
 extern void GL_primitive_polyline(const GL_Context_t *context, const GL_Point_t *vertices, size_t count, GL_Pixel_t index);
+
+extern void GL_context_process(const GL_Context_t *context, GL_Rectangle_t rectangle);
 
 extern void GL_primitive_filled_rectangle(const GL_Context_t *context, GL_Rectangle_t rectangle, GL_Pixel_t index);
 extern void GL_primitive_filled_triangle(const GL_Context_t *context, GL_Point_t a, GL_Point_t b, GL_Point_t c, GL_Pixel_t index);

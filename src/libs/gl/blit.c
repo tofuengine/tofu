@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Marco Lizza (marco.lizza@gmail.com)
+ * Copyright (c) 2019-2020 by Marco Lizza (marco.lizza@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,7 +33,8 @@
 #ifdef __DEBUG_GRAPHICS__
 static inline void pixel(const GL_Context_t *context, int x, int y, int index)
 {
-    context->surface.data_rows[y][x]  = 240 + (index % 16);
+    GL_Surface_t *surface = context->state->surface;
+    surface->data[y * surface->width + x]= 240 + (index % 16);
 }
 #endif
 
@@ -81,11 +82,17 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
         return;
     }
 
-    const GL_Pixel_t *sptr = surface->data_rows[area.y + skip_y] + (area.x + skip_x);
-    GL_Pixel_t *dptr = state->surface->data_rows[drawing_region.y0] + drawing_region.x0;
+    const GL_Pixel_t *sdata = surface->data;
+    GL_Pixel_t *ddata = state->surface->data;
 
-    const int sskip = surface->width - width;
-    const int dskip = state->surface->width - width;
+    const int swidth = surface->width;
+    const int dwidth = state->surface->width;
+
+    const GL_Pixel_t *sptr = sdata + (area.y + skip_y) * swidth + (area.x + skip_x);
+    GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
+
+    const int sskip = swidth - width;
+    const int dskip = dwidth - width;
 #ifdef __GL_MASK_SUPPORT__
     if (mask->stencil) {
         const GL_Surface_t *stencil = mask->stencil;
@@ -181,9 +188,15 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
         return;
     }
 
-    GL_Pixel_t *dptr = state->surface->data_rows[drawing_region.y0] + drawing_region.x0;
+    const GL_Pixel_t *sdata = surface->data;
+    GL_Pixel_t *ddata = state->surface->data;
 
-    const size_t dskip = state->surface->width - width;
+    const int swidth = surface->width;
+    const int dwidth = state->surface->width;
+
+    GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
+
+    const size_t dskip = dwidth - width;
 
     const float du = 1.0f / scale_x; // Texture coordinates deltas (signed).
     const float dv = 1.0f / scale_y;
@@ -230,7 +243,7 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
 #endif
         float v = ov;
         for (int i = height; i; --i) {
-            const GL_Pixel_t *sptr = surface->data_rows[(int)v];
+            const GL_Pixel_t *sptr = sdata + (int)v * swidth;
 
             float u = ou;
             for (int j = width; j; --j) {
@@ -360,9 +373,15 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     float ou = (tlx * M11 + tly * M12) + sax + sx; // Offset to the source texture quad.
     float ov = (tlx * M21 + tly * M22) + say + sy;
 
-    GL_Pixel_t *dptr = state->surface->data_rows[drawing_region.y0] + drawing_region.x0;
+    const GL_Pixel_t *sdata = surface->data;
+    GL_Pixel_t *ddata = state->surface->data;
 
-    const int dskip = state->surface->width - width;
+    const int swidth = surface->width;
+    const int dwidth = state->surface->width;
+
+    GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
+
+    const int dskip = dwidth - width;
 
 #ifdef __GL_MASK_SUPPORT__
     if (mask->stencil) {
@@ -421,7 +440,7 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
 #ifdef __DEBUG_GRAPHICS__
                     pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
-                    const GL_Pixel_t *sptr = surface->data_rows[y] + x;
+                    const GL_Pixel_t *sptr = sdata + y * swidth + x;
                     GL_Pixel_t index = shifting[*sptr];
                     if (!transparent[index]) {
                         *dptr = index;
@@ -497,9 +516,15 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
     const int smaxx = sw - 1;
     const int smaxy = sh - 1;
 
-    GL_Pixel_t *dptr = state->surface->data_rows[drawing_region.y0] + drawing_region.x0;
+    const GL_Pixel_t *sdata = surface->data;
+    GL_Pixel_t *ddata = state->surface->data;
 
-    const int dskip = state->surface->width - width;
+    const int swidth = surface->width;
+    const int dwidth = state->surface->width;
+
+    GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
+
+    const int dskip = dwidth - width;
 
     // The basic Mode7 formula is the following
     //
@@ -594,7 +619,7 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
             }
 
             if (sx >= sminx && sx <= smaxx && sy >= sminy && sy <= smaxy) {
-                const GL_Pixel_t *sptr = surface->data_rows[sy] + sx;
+                const GL_Pixel_t *sptr = sdata + sy * swidth + sx;
                 GL_Pixel_t index = shifting[*sptr];
                 if (!transparent[index]) {
                     *dptr = index;

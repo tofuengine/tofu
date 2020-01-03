@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Marco Lizza (marco.lizza@gmail.com)
+ * Copyright (c) 2019-2020 by Marco Lizza (marco.lizza@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,13 +31,13 @@
 typedef struct _GL_Surface_t {
     size_t width, height;
     GL_Pixel_t *data;
-    GL_Pixel_t **data_rows;
     size_t data_size;
 } GL_Surface_t;
 
-typedef void (*GL_Surface_Callback_t)(void *parameters, GL_Surface_t *surface, const void *data);
+typedef void (*GL_Surface_Callback_t)(void *user_data, GL_Surface_t *surface, const void *data);
 
-extern bool GL_surface_decode(GL_Surface_t *surface, const void *buffer, size_t buffer_size, const GL_Surface_Callback_t callback, void *parameters);
+extern bool GL_surface_decode(GL_Surface_t *surface, const void *buffer, size_t buffer_size, const GL_Surface_Callback_t callback, void *user_data);
+extern bool GL_surface_fetch(GL_Surface_t *surface, GL_Image_t image, const GL_Surface_Callback_t callback, void *user_data);
 extern bool GL_surface_create(GL_Surface_t *surface, size_t width, size_t height);
 extern void GL_surface_delete(GL_Surface_t *surface);
 

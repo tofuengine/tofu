@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Marco Lizza (marco.lizza@gmail.com)
+ * Copyright (c) 2019-2020 by Marco Lizza (marco.lizza@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,16 +23,239 @@
 #include "input.h"
 
 #include <libs/log.h>
+#include <libs/stb.h>
+
+#include <math.h>
+
+#define LOG_CONTEXT "input"
+
+static const uint8_t _mappings[] = {
+#include "gamecontrollerdb.inc"
+    0x00
+};
+
+static void _keyboard_handler(GLFWwindow *window, Input_State_t *state, const Input_Configuration_t *configuration)
+{
+    static const int keys[] = {
+        GLFW_KEY_UP,
+        GLFW_KEY_DOWN,
+        GLFW_KEY_LEFT,
+        GLFW_KEY_RIGHT,
+        GLFW_KEY_LEFT_CONTROL,
+        GLFW_KEY_RIGHT_CONTROL,
+        GLFW_KEY_LEFT_ALT,
+        GLFW_KEY_RIGHT_ALT,
+        GLFW_KEY_Z,
+        GLFW_KEY_S,
+        GLFW_KEY_X,
+        GLFW_KEY_D,
+        GLFW_KEY_ENTER,
+        GLFW_KEY_SPACE,
+        GLFW_KEY_ESCAPE
+    };
+
+    Input_Button_t *buttons = state->buttons;
+
+    for (int i = Input_Buttons_t_First; i <= INPUT_BUTTON_RESET; ++i) {
+        Input_Button_t *button = &buttons[i];
+
+        bool was_down = button->state.down;
+        bool is_down = glfwGetKey(window, keys[i]) == GLFW_PRESS;
+
+        if (!button->state.triggered) { // If not triggered use the current physical status.
+            button->state.down = is_down;
+            button->state.pressed = !was_down && is_down;
+            button->state.released = was_down && !is_down;
+
+            if (button->state.pressed && button->period > 0.0f) { // On press, track the trigger state and reset counter.
+                button->state.triggered = true;
+                button->time = 0.0f;
+                Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "button #%d triggered, %.3fs %d %d %d", i, button->time, button->state.down, button->state.pressed, button->state.released);
+            }
+        } else
+        if (!is_down) {
+            button->state.down = false;
+            button->state.pressed = false;
+            button->state.released = was_down; // Track release is was previously down.
+
+            button->state.triggered = false;
+            Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "button #%d held for %.3fs %d %d %d", i, button->time, button->state.down, button->state.pressed, button->state.released);
+        }
+    }
+}
+
+static void _mouse_handler(GLFWwindow *window, Input_State_t *state, const Input_Configuration_t *configuration)
+{
+    static const int mouse_buttons[Input_Buttons_t_CountOf] = {
+        GLFW_MOUSE_BUTTON_LEFT,
+        GLFW_MOUSE_BUTTON_MIDDLE,
+        GLFW_MOUSE_BUTTON_RIGHT
+    };
+
+    Input_Button_t *buttons = state->buttons;
+    Input_Cursor_t *cursor = &state->cursor;
+
+    for (int i = INPUT_BUTTON_MOUSE_LEFT; i <= INPUT_BUTTON_MOUSE_RIGHT; ++i) {
+        Input_Button_t *button = &buttons[i];
+
+        bool was_down = button->state.down;
+        bool is_down = glfwGetMouseButton(window, mouse_buttons[i]) == GLFW_PRESS;
+
+        button->state.down = is_down;
+        button->state.pressed = !was_down && is_down;
+        button->state.released = was_down && !is_down;
+    }
+
+    // TODO: compute deltas, in order to move the cursor like the stick.
+    double x, y;
+    glfwGetCursorPos(window, &x, &y);
+    cursor->x = (float)x * configuration->scale;
+    cursor->y = (float)y * configuration->scale;
+}
+
+static inline Input_Stick_t _gamepad_stick(float x, float y, float deadzone_threshold)
+{
+    float angle = atan2f(y, x);
+    float magnitude = sqrtf(x * x + y * y);
+    if (magnitude < deadzone_threshold) { // TODO: is this really useful?
+        magnitude = 0.0f;
+    } else
+    if (magnitude > 1.0f) {
+    // if (magnitude > 0.8f) {
+        magnitude = 1.0f;
+    }
+    return (Input_Stick_t){ .x = x, .y = y, .angle = angle, .magnitude = magnitude };
+}
+
+static inline float _gamepad_trigger(float magnitude, float deadzone_threshold)
+{
+    if (magnitude < deadzone_threshold) {
+        magnitude = 0.0f;
+    } else
+    if (magnitude > 1.0f) {
+        magnitude = 1.0f;
+    }
+    return magnitude;
+}
+
+static void _gamepad_handler(GLFWwindow *window, Input_State_t *state, const Input_Configuration_t *configuration)
+{
+    static const int gamepad_buttons[] = {
+        GLFW_GAMEPAD_BUTTON_DPAD_UP,
+        GLFW_GAMEPAD_BUTTON_DPAD_DOWN,
+        GLFW_GAMEPAD_BUTTON_DPAD_LEFT,
+        GLFW_GAMEPAD_BUTTON_DPAD_RIGHT,
+        GLFW_GAMEPAD_BUTTON_LEFT_BUMPER,
+        GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER,
+        GLFW_GAMEPAD_BUTTON_LEFT_THUMB,
+        GLFW_GAMEPAD_BUTTON_RIGHT_THUMB,
+        GLFW_GAMEPAD_BUTTON_Y,
+        GLFW_GAMEPAD_BUTTON_X,
+        GLFW_GAMEPAD_BUTTON_B,
+        GLFW_GAMEPAD_BUTTON_A,
+        GLFW_GAMEPAD_BUTTON_BACK,
+        GLFW_GAMEPAD_BUTTON_START,
+        GLFW_GAMEPAD_BUTTON_GUIDE
+    };
+
+    Input_Button_t *buttons = state->buttons;
+    Input_Stick_t *sticks = state->sticks;
+    Input_Triggers_t *triggers = &state->triggers;
+
+    if (state->gamepad_id == -1) {
+        return;
+    }
+
+    GLFWgamepadstate gamepad;
+    int result = glfwGetGamepadState(state->gamepad_id, &gamepad);
+    if (result == GLFW_TRUE) {
+        if (configuration->emulate_dpad) {
+            const float x = gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_X];
+            const float y = gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_Y];
+            if (fabsf(x) > configuration->gamepad_sensitivity) {
+                gamepad.buttons[x < 0.0f ? GLFW_GAMEPAD_BUTTON_DPAD_LEFT : GLFW_GAMEPAD_BUTTON_DPAD_RIGHT] = GLFW_PRESS;
+            }
+            if (fabsf(y) > configuration->gamepad_sensitivity) {
+                gamepad.buttons[y < 0.0f ? GLFW_GAMEPAD_BUTTON_DPAD_DOWN : GLFW_GAMEPAD_BUTTON_DPAD_UP] = GLFW_PRESS;
+            }
+        }
+
+        for (int i = Input_Buttons_t_First; i <= INPUT_BUTTON_RESET; ++i) {
+            Input_Button_t *button = &buttons[i];
+
+            bool was_down = button->state.down;
+            bool is_down = gamepad.buttons[gamepad_buttons[i]] == GLFW_PRESS;
+
+            if (!button->state.triggered) { // If not triggered use the current physical status.
+                button->state.down = is_down;
+                button->state.pressed = !was_down && is_down;
+                button->state.released = was_down && !is_down;
+
+                if (button->state.pressed && button->period > 0.0f) { // On press, track the trigger state and reset counter.
+                    button->state.triggered = true;
+                    button->time = 0.0f;
+                    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "button #%d triggered, %.3fs %d %d %d", i, button->time, button->state.down, button->state.pressed, button->state.released);
+                }
+            } else
+            if (!is_down) {
+                button->state.down = false;
+                button->state.pressed = false;
+                button->state.released = was_down; // Track release is was previously down.
+
+                button->state.triggered = false;
+                Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "button #%d held for %.3fs %d %d %d", i, button->time, button->state.down, button->state.pressed, button->state.released);
+            }
+        }
+
+        const float deadzone = configuration->gamepad_deadzone;
+
+        sticks[INPUT_STICK_LEFT] = _gamepad_stick(gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_X], gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_Y], deadzone);
+        sticks[INPUT_STICK_RIGHT] = _gamepad_stick(gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_X], gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y], deadzone);
+
+        triggers->left = _gamepad_trigger(gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER], deadzone);
+        triggers->right = _gamepad_trigger(gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER], deadzone);
+    }
+}
 
 bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration, GLFWwindow *window)
 {
-    // TODO: should perform a single "zeroing" call and the set the single fields?
+    int result = glfwUpdateGamepadMappings((const char *)_mappings);
+    if (result == GLFW_FALSE) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't update gamepad mappings");
+        return false;
+    }
 
+    int gamepad_id = -1;
+    for (int i = GLFW_JOYSTICK_1; i <= GLFW_JOYSTICK_LAST; ++i) { // Detect the first available gamepad.
+        if (glfwJoystickIsGamepad(i) == GLFW_TRUE) {
+            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "gamepad #%d found (GUID `%s`, name `%s`)", i, glfwGetJoystickGUID(i), glfwGetGamepadName(i));
+            gamepad_id = i;
+            break;
+        }
+    }
+    Log_assert(gamepad_id != -1, LOG_LEVELS_WARNING, LOG_CONTEXT, "gamepad not detected");
+
+    // TODO: should perform a single "zeroing" call and the set the single fields?
     *input = (Input_t){
             .configuration = *configuration,
             .window = window,
-            .time = 0.0f
+            .time = 0.0,
+            .state = (Input_State_t){
+                    .gamepad_id = gamepad_id
+                },
+            .handlers = {
+#ifdef __INPUT_SELECTION__
+                    configuration->keyboard_enabled ? _keyboard_handler : NULL,
+                    configuration->mouse_enabled ? _mouse_handler : NULL,
+                    configuration->gamepad_enabled ? _gamepad_handler : NULL
+#else
+                    gamepad_id == -1 ? _keyboard_handler : NULL, // If gamepad is not detected, switch to keyboard/mouse.
+                    gamepad_id == -1 ? _mouse_handler : NULL,
+                    gamepad_id != -1 ? _gamepad_handler : NULL
+#endif
+                }
         };
+
     return true;
 }
 
@@ -44,76 +267,70 @@ void Input_update(Input_t *input, float delta_time)
 {
     input->time += delta_time;
 
-    for (int i = Input_Keys_t_First; i <= Input_Keys_t_Last; ++i) {
-        Input_Key_t *key = &input->keys[i];
+    Input_State_t *state = &input->state;
+    Input_Button_t *buttons = state->buttons;
 
-        if (!key->state.triggered) {
+    for (int i = Input_Buttons_t_First; i <= Input_Buttons_t_Last; ++i) {
+        Input_Button_t *button = &buttons[i];
+
+        if (!button->state.triggered) {
             continue;
         }
 
-        key->state.pressed = false; // Clear the flags, will be eventually updated.
-        key->state.released = false;
+        button->state.pressed = false; // Clear the flags, will be eventually updated.
+        button->state.released = false;
 
-        key->time += delta_time;
+        button->time += delta_time;
 
-        while (key->time >= key->period) {
-            Log_write(LOG_LEVELS_TRACE, "<INPUT> #%d %.3fs", i, key->time);
-            key->time -= key->period;
+        while (button->time >= button->period) {
+            Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "#%d %.3fs", i, button->time);
+            button->time -= button->period;
 
-            key->state.down = !key->state.down;
-            key->state.pressed = key->state.down;
-            key->state.released = !key->state.down;
-            Log_write(LOG_LEVELS_TRACE, "<INPUT> #%d %.3fs %d %d %d", i, key->time, key->state.down, key->state.pressed, key->state.released);
+            button->state.down = !button->state.down;
+            button->state.pressed = button->state.down;
+            button->state.released = !button->state.down;
+            Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "#%d %.3fs %d %d %d", i, button->time, button->state.down, button->state.pressed, button->state.released);
         }
     }
 
+    if (input->configuration.emulate_mouse) {
+        Input_Stick_t *sticks = state->sticks;
+        Input_Cursor_t *cursor = &state->cursor;
+
+        const float vx = sticks[INPUT_STICK_RIGHT].x * input->configuration.cursor_speed;
+        const float vy = sticks[INPUT_STICK_RIGHT].y * input->configuration.cursor_speed;
+
+        cursor->x += vx * delta_time;
+        cursor->y += vy * delta_time;
+
+        if (cursor->x < cursor->area.x0) {
+            cursor->x = cursor->area.x0;
+        }
+        if (cursor->y < cursor->area.y0) {
+            cursor->y = cursor->area.y0;
+        }
+        if (cursor->x > cursor->area.x1) {
+            cursor->x = cursor->area.x1;
+        }
+        if (cursor->y > cursor->area.y1) {
+            cursor->y = cursor->area.y1;
+        }
+    }
 }
 
 void Input_process(Input_t *input)
 {
-    static const int keys[Input_Keys_t_CountOf] = {
-        GLFW_KEY_UP,
-        GLFW_KEY_DOWN,
-        GLFW_KEY_LEFT,
-        GLFW_KEY_RIGHT,
-        GLFW_KEY_LEFT_CONTROL,
-        GLFW_KEY_RIGHT_CONTROL,
-        GLFW_KEY_Z,
-        GLFW_KEY_S,
-        GLFW_KEY_X,
-        GLFW_KEY_D,
-        GLFW_KEY_ENTER,
-        GLFW_KEY_SPACE,
-        GLFW_KEY_ESCAPE
-    };
-
     glfwPollEvents();
 
-    for (int i = Input_Keys_t_First; i <= Input_Keys_t_Last; ++i) {
-        Input_Key_t *key = &input->keys[i];
+    GLFWwindow *window = input->window;
+    Input_State_t *state = &input->state;
+    Input_Configuration_t *configuration = &input->configuration;
 
-        bool was_down = key->state.down;
-        bool is_down = glfwGetKey(input->window, keys[i]) == GLFW_PRESS;
-
-        if (!key->state.triggered) { // If not triggered use the current physical status.
-            key->state.down = is_down;
-            key->state.pressed = !was_down && is_down;
-            key->state.released = was_down && !is_down;
-
-            if (key->state.pressed && key->period > 0.0f) { // On press, track the trigger state and reset counter.
-                key->state.triggered = true;
-                key->time = 0.0f;
-                Log_write(LOG_LEVELS_TRACE, "<INPUT> key #%d triggered, %.3fs %d %d %d", i, key->time, key->state.down, key->state.pressed, key->state.released);
-            }
-        } else
-        if (!is_down) {
-            key->state.down = false;
-            key->state.pressed = false;
-            key->state.released = was_down; // Track release is was previously down.
-
-            key->state.triggered = false;
-            Log_write(LOG_LEVELS_TRACE, "<INPUT> button #%d held for %.3fs %d %d %d", i, key->time, key->state.down, key->state.pressed, key->state.released);
+    for (int i = Input_Handlers_t_First; i <= Input_Handlers_t_Last; ++i) {
+        if (!input->handlers[i]) {
+            continue;
         }
+        input->handlers[i](window, state, configuration);
     }
 
     if (input->configuration.exit_key_enabled) {
@@ -123,11 +340,11 @@ void Input_process(Input_t *input)
     }
 }
 
-void Input_auto_repeat(Input_t *input, Input_Keys_t id, float period)
+void Input_auto_repeat(Input_t *input, Input_Buttons_t id, float period)
 {
-    input->keys[id] = (Input_Key_t){
+    input->state.buttons[id] = (Input_Button_t){
             .period = period,
             .time = 0.0f
         };
-    Log_write(LOG_LEVELS_DEBUG, "<INPUT> auto-repeat set to %.3fs for button #%d", period, id);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "auto-repeat set to %.3fs for button #%d", period, id);
 }

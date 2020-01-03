@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Marco Lizza (marco.lizza@gmail.com)
+ * Copyright (c) 2019-2020 by Marco Lizza (marco.lizza@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,7 +36,8 @@ typedef struct _GL_Sheet_t {
 
 // TODO: is the GL_Sheet_t really needed?
 
-extern bool GL_sheet_decode(GL_Sheet_t *sheet, const void *buffer, size_t size, size_t cell_width, size_t cell_height, GL_Surface_Callback_t callback, void *parameters);
+extern bool GL_sheet_decode(GL_Sheet_t *sheet, const void *buffer, size_t size, size_t cell_width, size_t cell_height, GL_Surface_Callback_t callback, void *user_data);
+extern bool GL_sheet_fetch(GL_Sheet_t *sheet, GL_Image_t image, size_t cell_width, size_t cell_height, const GL_Surface_Callback_t callback, void *user_data);
 extern void GL_sheet_delete(GL_Sheet_t *sheet);
 extern void GL_sheet_attach(GL_Sheet_t *sheet, const GL_Surface_t *atlas, size_t cell_width, size_t cell_height);
 extern void GL_sheet_detach(GL_Sheet_t *sheet);

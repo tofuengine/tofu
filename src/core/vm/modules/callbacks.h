@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Marco Lizza (marco.lizza@gmail.com)
+ * Copyright (c) 2019-2020 by Marco Lizza (marco.lizza@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@
 
 #include <libs/gl/gl.h>
 
-extern void surface_callback_palette(void *parameters, GL_Surface_t *surface, const void *data);
-extern void surface_callback_indexes(void *parameters, GL_Surface_t *surface, const void *data);
+extern void surface_callback_palette(void *user_data, GL_Surface_t *surface, const void *data);
+extern void surface_callback_indexes(void *user_data, GL_Surface_t *surface, const void *data);
 
 #endif  /* __MODULES_CALLBACKS_H__ */

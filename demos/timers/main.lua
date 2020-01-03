@@ -1,34 +1,38 @@
+local Canvas = require("tofu.graphics").Canvas
 local Class = require("tofu.util").Class
+local Timer = require("tofu.util").Timer
 
 local Main = Class.define()
 
-function Main:setup()
-  return {
-      ["title"] = "Timers",
-      ["width"] = 256,
-      ["height"] = 256,
-      ["scale"] = 1,
-      ["fullscreen"] = false,
-      ["exit-key-enabled"] = true,
-      ["debug"] = true
-  }
-end
+function Main:__ctor()
+  Canvas.palette("pico-8")
 
-function Main:init()
-  local Game = require("game") -- Lazily require.
-  self.game = Game.new()
+  self.timerA = Timer.new(0.5, 50, function()
+      --local o = Object.new()
+      self.x = math.random() * Canvas.width()
+    end)
+  self.timerB = Timer.new(0.25, -1, function()
+      self.y = math.random() * Canvas.height()
+    end)
+  self.timerC = Timer.new(15, 0, function()
+      self.timerA:cancel()
+      self.timerB = nil
+    end)
+
+    self.x = math.random() * Canvas.width()
+    self.y = math.random() * Canvas.height()
 end
 
 function Main:input()
-  self.game:input()
 end
 
-function Main:update(delta_time)
-  self.game:update(delta_time)
+function Main:update(_)
 end
 
-function Main:render(ratio)
-  self.game:render(ratio)
+function Main:render(_)
+  --local x = X.new()
+  Canvas.clear()
+  Canvas.circle("fill", self.x, self.y, 5, 15)
 end
 
 return Main

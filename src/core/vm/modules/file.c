@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Marco Lizza (marco.lizza@gmail.com)
+ * Copyright (c) 2019-2020 by Marco Lizza (marco.lizza@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,20 +25,20 @@
 #include <config.h>
 #include <core/vm/interpreter.h>
 #include <libs/log.h>
+#include <libs/stb.h>
 
 #include "udt.h"
 
 #include <string.h>
-#ifdef DEBUG
-  #include <stb/stb_leakcheck.h>
-#endif
 
 #define FILE_MT        "Tofu_File_mt"
 
-static int file_read(lua_State *L);
+static int file_as_string(lua_State *L);
+static int file_as_binary(lua_State *L);
 
 static const struct luaL_Reg _file_functions[] = {
-    { "read", file_read },
+    { "as_string", file_as_string },
+    { "as_binary", file_as_binary },
     { NULL, NULL }
 };
 
@@ -48,25 +48,45 @@ static const luaX_Const _file_constants[] = {
 
 int file_loader(lua_State *L)
 {
-    int nup = luaX_unpackupvalues(L);
+    int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, NULL, _file_functions, _file_constants, nup, FILE_MT);
 }
 
-static int file_read(lua_State *L)
+static int file_as_string(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
     LUAX_SIGNATURE_END
     const char *file = lua_tostring(L, 1);
 
-    Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INTERPRETER));
+    const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
 
-    char *result = FS_load_as_string(&interpreter->file_system, file);
-    Log_write(LOG_LEVELS_DEBUG, "<FILE> file '%s' loaded at %p", file, result);
+    File_System_Chunk_t chunk = FS_load(file_system, file, FILE_SYSTEM_CHUNK_BLOB);
+    if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
+        luaL_error(L, "can't load file `%s`", file);
+    }
+    lua_pushlstring(L, chunk.var.blob.ptr, chunk.var.blob.size);
+    FS_release(chunk);
 
-    lua_pushstring(L, result);
+    return 1;
+}
 
-    free(result);
+static int file_as_binary(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
+    LUAX_SIGNATURE_END
+    const char *file = lua_tostring(L, 1);
+
+    const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
+
+    File_System_Chunk_t chunk = FS_load(file_system, file, FILE_SYSTEM_CHUNK_BLOB);
+    if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
+        luaL_error(L, "can't load file `%s`", file);
+    }
+//    lua_pushlstring(L, buffer, size);
+    lua_pushnil(L); // TODO: read the file as a Base64 or similar encoded string.
+    FS_release(chunk); // FIME: useless, Lua's strings can contain bytes.
 
     return 1;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Marco Lizza (marco.lizza@gmail.com)
+ * Copyright (c) 2019-2020 by Marco Lizza (marco.lizza@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,13 +22,12 @@
 
 #include "luax.h"
 
+#include <libs/stb.h>
+
 #include <inttypes.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef DEBUG
-  #include <stb/stb_leakcheck.h>
-#endif
 
 /*
 http://webcache.googleusercontent.com/search?q=cache:RLoR9dkMeowJ:howtomakeanrpg.com/a/classes-in-lua.html+&cd=4&hl=en&ct=clnk&gl=it
@@ -77,7 +76,11 @@ void luaX_stackdump(lua_State *L, const char* func, int line)
                 break;
             case LUA_TFUNCTION:
                 if (lua_iscfunction(L, positive)) {
-                    printf("\t%" PRIXPTR "", (uintptr_t)lua_tocfunction(L, positive));
+                    union {
+                        lua_CFunction f;
+                        const void *p;
+                    } u = { .f = lua_tocfunction(L, positive) }; // Trick the compiler to print function address.
+                    printf("\t%p", u.p);
                 } else {
                     printf("\t%p", lua_topointer(L, positive));
                 }
@@ -93,37 +96,13 @@ void luaX_stackdump(lua_State *L, const char* func, int line)
     }
 }
 
-// We also could have used the "LUA_PATH" environment variable.
-void luaX_appendpath(lua_State *L, const char *path)
-{
-    lua_getglobal(L, "package");
-    lua_getfield(L, -1, "path"); // get field "path" from table at top of stack (-1)
-
-    const char *current = lua_tostring(L, -1); // grab path string from top of stack
-    size_t length = strlen(current) + 1 + strlen(path) + 5; // <current>;<path>?.lua
-    char *fullpath = malloc((length + 1) * sizeof(char));
-    strcpy(fullpath, current);
-    strcat(fullpath, ";");
-    strcat(fullpath, path);
-    strcat(fullpath, "?.lua");
-
-    lua_pushstring(L, fullpath); // push the new one
-    lua_setfield(L, -3, "path"); // set the field "path" in table at -2 with value at top of stack
-
-    free(fullpath);
-
-    lua_pop(L, 2); // get rid of package table from top of stack
-}
-
 void luaX_overridesearchers(lua_State *L, lua_CFunction searcher, int nup)
 {
     lua_getglobal(L, "package"); // Access the `package.searchers` table.
     lua_getfield(L, -1, "searchers");
-
-    for (int i = 0; i < nup; ++i) {
-        lua_pushvalue(L, -(2 + nup));
-    }
-    lua_pushcclosure(L, searcher, 1);
+    lua_insert(L, -(nup + 2)); // Move the `searchers` table above the upvalues.
+    lua_insert(L, -(nup + 2)); // Move the `package` table above the upvalues.
+    lua_pushcclosure(L, searcher, nup);
     lua_rawseti(L, -2, 2); // Override the 2nd searcher (keep the "preloaded" helper).
 
     int n = lua_rawlen(L, -1);
@@ -132,13 +111,27 @@ void luaX_overridesearchers(lua_State *L, lua_CFunction searcher, int nup)
         lua_rawseti(L, -2, i);
     }
 
-    lua_pop(L, 2 + nup); // Pop the `package` and `searchers` table, and consume the upvalues.
+    lua_pop(L, 2); // Pop the `package` and `searchers` table.
+}
+
+int luaX_insisttable(lua_State *L, const char *name)
+{
+    lua_getglobal(L, name);
+
+    if (!lua_istable(L, -1)) {
+        lua_pop(L, 1); // Pop the non-table.
+        lua_newtable(L);
+        lua_pushvalue(L, -1);
+        lua_setglobal(L, name);
+    }
+
+    return 1;
 }
 
 int luaX_newmodule(lua_State *L, const luaX_Script *script, const luaL_Reg *f, const luaX_Const *c, int nup, const char *name)
 {
-    if (script && script->data && script->length > 0) {
-        luaL_loadbuffer(L, script->data, script->length, script->name);
+    if (script && script->buffer && script->size > 0) {
+        luaL_loadbuffer(L, script->buffer, script->size, script->name);
         lua_pcall(L, 0, LUA_MULTRET, 0); // Just the export table is returned.
         if (name) {
             lua_pushstring(L, name);
@@ -159,11 +152,11 @@ int luaX_newmodule(lua_State *L, const luaX_Script *script, const luaL_Reg *f, c
         lua_setfield(L, -2, "__index");  /* metatable.__index = metatable */
     }
 
+    lua_insert(L, -(nup + 1)); // Move the table above the upvalues.
     if (f) {
-        for (int i = 0; i < nup; ++i) { // Duplicate upvalues (take a "+ 1" into account to skip the table).
-            lua_pushvalue(L, -(nup + 1));
-        }
         luaL_setfuncs(L, f, nup); // Register the function into the table at the top of the stack, i.e. create the methods
+    } else {
+        lua_pop(L, nup); // Consume the upvalues.
     }
 
     if (c) {
@@ -178,27 +171,51 @@ int luaX_newmodule(lua_State *L, const luaX_Script *script, const luaL_Reg *f, c
         }
     }
 
-    // We need to return the module table on top of the stack upon return. Since it's a common idiom that upvalues are
-    // consumed by the called function, we move the table "under" the upvalues and pop them.
-    lua_insert(L, -(nup + 1));
-    lua_pop(L, nup);
+    // Upvalues have already been consume. No need to clear the stack.
 
     return 1;
 }
 
-void luaX_preload(lua_State *L, const char *modname, lua_CFunction loadf, int nup)
+void luaX_openlibs(lua_State *L)
 {
-    lua_getglobal(L, "package");
-    lua_getfield(L, -1, "preload");
-    for (int i = 0; i < nup; ++i) { // Copy the upvalues to the top
-        lua_pushvalue(L, -(nup + 2));
+    static const luaL_Reg libraries[] = {
+        { "_G", luaopen_base },
+        { LUA_LOADLIBNAME, luaopen_package },
+        { LUA_COLIBNAME, luaopen_coroutine },
+        { LUA_TABLIBNAME, luaopen_table },
+#ifdef __INCLUDE_SYSTEM_LIBRARIES__
+        { LUA_IOLIBNAME, luaopen_io },
+        { LUA_OSLIBNAME, luaopen_os },
+#endif
+        { LUA_STRLIBNAME, luaopen_string },
+        { LUA_MATHLIBNAME, luaopen_math },
+        { LUA_UTF8LIBNAME, luaopen_utf8 },
+#ifdef DEBUG
+        { LUA_DBLIBNAME, luaopen_debug },
+#endif
+#ifdef LUA_COMPAT_BITLIB
+        { LUA_BITLIBNAME, luaopen_bit32 },
+#endif
+        { NULL, NULL }
+    };
+    // "require" is different from preload in the sense that is also make the
+    // library-module ready to be used (i.e. defined in the global space).
+    for (const luaL_Reg *library = libraries; library->func; ++library) {
+        luaL_requiref(L, library->name, library->func, 1);
+        lua_pop(L, 1); // Remove the library (table) from the stack.
     }
-    lua_pushcclosure(L, loadf, nup); // Closure with those upvalues (the one just pushed will be removed)
-    lua_setfield(L, -2, modname);
-    lua_pop(L, nup + 2); // Pop the upvalues and the "package.preload" pair
 }
 
-void luaX_require(lua_State *L, const char *modname, lua_CFunction openf, int nup, int glb)
+void luaX_preload(lua_State *L, const char *modname, lua_CFunction loadf, int nup)
+{
+    luaL_getsubtable(L, LUA_REGISTRYINDEX, LUA_PRELOAD_TABLE);
+    lua_insert(L, -(nup + 1)); // Move the `_PRELOAD` table above the upvalues.
+    lua_pushcclosure(L, loadf, nup); // Closure with the upvalues (they are be consumed)
+    lua_setfield(L, -2, modname);
+    lua_pop(L, 1); // Pop the `_PRELOAD` table
+}
+
+void luaX_requiref(lua_State *L, const char *modname, lua_CFunction openf, int nup, int glb)
 {
     luaL_getsubtable(L, LUA_REGISTRYINDEX, LUA_LOADED_TABLE);
     lua_getfield(L, -1, modname); /* LOADED[modname] */
@@ -214,11 +231,12 @@ void luaX_require(lua_State *L, const char *modname, lua_CFunction openf, int nu
         lua_setfield(L, -3, modname);    /* LOADED[modname] = module */
     }
     lua_remove(L, -2); /* remove LOADED table */
+    lua_insert(L, -(nup + 1)); // Move the module table above the upvalues.
+    lua_pop(L, nup); // Pop the upvalues
     if (glb) {
         lua_pushvalue(L, -1);      /* copy of module */
         lua_setglobal(L, modname); /* _G[modname] = module */
     }
-    lua_pop(L, nup); // Pop the upvalues
 }
 
 luaX_Reference luaX_ref(lua_State *L, int idx)
@@ -234,101 +252,55 @@ void luaX_unref(lua_State *L, luaX_Reference ref)
 
 void luaX_checkargument(lua_State *L, int idx, const char *file, int line, ...)
 {
-    int count = 0;
-    int success = 0;
+    int actual_type = lua_type(L, idx);
+    int success = 1;
     va_list args;
     va_start(args, line);
-    for (; ; ++count) {
-        luaX_TFunction func = va_arg(args, luaX_TFunction);
-        if (!func) {
+    for (;;) {
+        int type = va_arg(args, int);
+        if (type == LUA_TNONE) {
+            success = 0;
             break;
         }
-        success |= func(L, idx);
+        if (actual_type == type) {
+            break;
+        }
     }
     va_end(args);
-    if ((count > 0) && !success) {
-        luaL_error(L, "[%s:%d] signature failure for argument #%d w/ type %d", file, line, idx, lua_type(L, idx));
-        return; // Unreachable code.
+    if (!success) {
+        luaL_error(L, "[%s:%d] signature failure for argument #%d (wrong actual type, got `%s`)", file, line, idx, lua_typename(L, actual_type));
     }
 }
 
-size_t luaX_packupvalues(lua_State *L, int nup)
+int luaX_pushupvalues(lua_State *L)
 {
-    lua_pushinteger(L, nup); // Pass the upvalues count, for later usage.
-    for (int j = 0; j < nup; ++j) {
-        lua_pushvalue(L, -(nup + 1)); // Copy the upvalue, skipping the counter.
+    int nup = 0;
+    for (int i = 1; ; ++i) {
+        int idx = lua_upvalueindex(i);
+        if (lua_isnone(L, idx)) {
+            break;
+        }
+        lua_pushvalue(L, idx);
+        ++nup;
     }
-    return nup + 1;
+    return nup;
 }
 
-size_t luaX_unpackupvalues(lua_State *L)
+void luaX_pushvalues(lua_State *L, int nup)
 {
-    if (!lua_isinteger(L, lua_upvalueindex(1))) { // Check if the 1st upvalue is defined and is an integer.
-        return 0;
+    for (int i = 0; i < nup; ++i) {
+        lua_pushvalue(L, -nup);
     }
-    int nup = lua_tointeger(L, lua_upvalueindex(1)); // The first upvalue tells how many upvalues we are handling.
-    for (int i = 0; i< nup; ++i) {
-        lua_pushvalue(L, lua_upvalueindex(2 + i)); // Copy the upvalues onto the stack, skipping the counter.
+}
+
+int luaX_upvaluescount(lua_State *L)
+{
+    int nup = 0;
+    for (int idx = 1; ; ++idx) {
+        if (lua_isnone(L, lua_upvalueindex(idx))) {
+            break;
+        }
+        ++nup;
     }
-    return (size_t)nup;
-}
-
-extern int luaX_isnil(lua_State *L, int idx)
-{
-    return lua_isnil(L, idx);
-}
-
-extern int luaX_isboolean(lua_State *L, int idx)
-{
-    return lua_isboolean(L, idx);
-}
-
-int luaX_isinteger(lua_State *L, int idx)
-{
-    return lua_isinteger(L, idx);
-}
-
-int luaX_isnumber(lua_State *L, int idx)
-{
-    return lua_isnumber(L, idx);
-}
-
-int luaX_isstring(lua_State *L, int idx)
-{
-    return lua_isstring(L, idx);
-}
-
-int luaX_istable(lua_State *L, int idx)
-{
-    return lua_istable(L, idx);
-}
-
-int luaX_isfunction(lua_State *L, int idx)
-{
-    return lua_isfunction(L, idx);
-}
-
-int luaX_iscfunction(lua_State *L, int idx)
-{
-    return lua_iscfunction(L, idx);
-}
-
-int luaX_islightuserdata(lua_State *L, int idx)
-{
-    return lua_islightuserdata(L, idx);
-}
-
-int luaX_isuserdata(lua_State *L, int idx)
-{
-    return lua_isuserdata(L, idx);
-}
-
-int luaX_isthread(lua_State *L, int idx)
-{
-    return lua_isthread(L, idx);
-}
-
-int luaX_isany(lua_State *L, int idx)
-{
-    return !lua_isnil(L, idx);
+    return nup;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Marco Lizza (marco.lizza@gmail.com)
+ * Copyright (c) 2019-2020 by Marco Lizza (marco.lizza@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -54,14 +54,14 @@ static luaX_Script _math_script = { (const char *)_math_lua, sizeof(_math_lua), 
 
 int math_loader(lua_State *L)
 {
-    int nup = luaX_unpackupvalues(L);
+    int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, &_math_script, _math_functions, _math_constants, nup, MATH_MT);
 }
 
 static int math_sincos(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     int rotation = lua_tointeger(L, 1);
 
@@ -77,7 +77,7 @@ static int math_sincos(lua_State *L)
 static int math_angle_to_rotation(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     float angle = lua_tonumber(L, 1);
 
@@ -91,7 +91,7 @@ static int math_angle_to_rotation(lua_State *L)
 static int math_rotation_to_angle(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     int rotation = lua_tointeger(L, 1);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Marco Lizza (marco.lizza@gmail.com)
+ * Copyright (c) 2019-2020 by Marco Lizza (marco.lizza@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -46,7 +46,7 @@ typedef struct _Audio_t {
     ma_device_config device_config;
     ma_device device;
 
-    float time;
+    double time;
 
     Audio_Voice_t *voices;
 } Audio_t;

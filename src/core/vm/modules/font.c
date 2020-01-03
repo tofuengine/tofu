@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Marco Lizza (marco.lizza@gmail.com)
+ * Copyright (c) 2019-2020 by Marco Lizza (marco.lizza@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,7 @@
 #include <core/vm/interpreter.h>
 #include <libs/log.h>
 #include <libs/gl/gl.h>
+#include <libs/stb.h>
 
 #include "udt.h"
 #include "callbacks.h"
@@ -34,9 +35,8 @@
 
 #include <math.h>
 #include <string.h>
-#ifdef DEBUG
-  #include <stb/stb_leakcheck.h>
-#endif
+
+#define LOG_CONTEXT "font"
 
 #define FONT_MT        "Tofu_Font_mt"
 
@@ -67,7 +67,7 @@ static luaX_Script _font_script = { (const char *)_font_lua, sizeof(_font_lua), 
 
 int font_loader(lua_State *L)
 {
-    int nup = luaX_unpackupvalues(L);
+    int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, &_font_script, _font_functions, _font_constants, nup, FONT_MT);
 }
 
@@ -103,16 +103,16 @@ static void align(const char *text, const char *alignment, int *x, int *y, int w
 static int font_new3(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 3)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isstring, luaX_isuserdata)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING, LUA_TUSERDATA)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     int type = lua_type(L, 1);
     size_t glyph_width = (size_t)lua_tointeger(L, 2);
     size_t glyph_height = (size_t)lua_tointeger(L, 3);
 
-    Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INTERPRETER));
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     GL_Sheet_t sheet;
     luaX_Reference surface = LUAX_REFERENCE_NIL;
@@ -122,23 +122,22 @@ static int font_new3(lua_State *L)
 
         const Sheet_Data_t *data = resources_sheets_find(file);
         if (data) {
-            GL_sheet_decode(&sheet, data->buffer, data->size, data->quad_width, data->quad_height, surface_callback_palette, (void *)&display->palette);
-            Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet '%s' decoded", file);
+            GL_sheet_decode(&sheet, data->data, data->size, data->cell_width, data->cell_height, surface_callback_palette, (void *)&display->palette);
+            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` decoded", file);
         } else {
-            size_t buffer_size;
-            void *buffer = FS_load_as_binary(&interpreter->file_system, file, &buffer_size);
-            if (!buffer) {
-                return luaL_error(L, "<FONT> can't load file '%s'", file);
+            File_System_Chunk_t chunk = FS_load(file_system, file, FILE_SYSTEM_CHUNK_IMAGE);
+            if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
+                return luaL_error(L, "can't load file `%s`", file);
             }
-            GL_sheet_decode(&sheet, buffer, buffer_size, glyph_width, glyph_height, surface_callback_palette, (void *)&display->palette);
-            Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet '%s' loaded", file);
-            free(buffer);
+            GL_sheet_fetch(&sheet, (GL_Image_t){ .width = chunk.var.image.width, .height = chunk.var.image.height, .data = chunk.var.image.pixels }, glyph_width, glyph_height, surface_callback_palette, (void *)&display->palette);
+            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` loaded", file);
+            FS_release(chunk);
         }
     } else
     if (type == LUA_TUSERDATA) {
         const Surface_Class_t *instance = (const Surface_Class_t *)lua_touserdata(L, 1);
         GL_sheet_attach(&sheet, &instance->surface, glyph_width, glyph_height);
-        Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet %p attached", instance);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p attached", instance);
         surface = luaX_ref(L, 1); // Track the attached surface as a reference to prevent garbage collection.
     }
 
@@ -147,7 +146,7 @@ static int font_new3(lua_State *L)
             .sheet = sheet,
             .surface = surface
         };
-    Log_write(LOG_LEVELS_DEBUG, "<FONT> font allocated as #%p", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font allocated as %p", instance);
 
     luaL_setmetatable(L, FONT_MT);
 
@@ -157,11 +156,11 @@ static int font_new3(lua_State *L)
 static int font_new5(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 5)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isstring, luaX_isuserdata)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isinteger)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING, LUA_TUSERDATA)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     int type = lua_type(L, 1);
     size_t glyph_width = (size_t)lua_tointeger(L, 2);
@@ -169,7 +168,7 @@ static int font_new5(lua_State *L)
     GL_Pixel_t background_index = (GL_Pixel_t)lua_tointeger(L, 4);
     GL_Pixel_t foreground_index = (GL_Pixel_t)lua_tointeger(L, 5);
 
-    Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INTERPRETER));
+    const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
 
     GL_Sheet_t sheet;
     luaX_Reference surface = LUAX_REFERENCE_NIL;
@@ -181,23 +180,22 @@ static int font_new5(lua_State *L)
 
         const Sheet_Data_t *data = resources_sheets_find(file);
         if (data) {
-            GL_sheet_decode(&sheet, data->buffer, data->size, data->quad_width, data->quad_height, surface_callback_indexes, (void *)indexes);
-            Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet '%s' decoded", file);
+            GL_sheet_decode(&sheet, data->data, data->size, data->cell_width, data->cell_height, surface_callback_indexes, (void *)indexes);
+            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` decoded", file);
         } else {
-            size_t buffer_size;
-            void *buffer = FS_load_as_binary(&interpreter->file_system, file, &buffer_size);
-            if (!buffer) {
-                return luaL_error(L, "<FONT> can't load file '%s'", file);
+            File_System_Chunk_t chunk = FS_load(file_system, file, FILE_SYSTEM_CHUNK_IMAGE);
+            if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
+                return luaL_error(L, "can't load file `%s`", file);
             }
-            GL_sheet_decode(&sheet, buffer, buffer_size, glyph_width, glyph_height, surface_callback_indexes, (void *)indexes);
-            Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet '%s' loaded", file);
-            free(buffer);
+            GL_sheet_fetch(&sheet, (GL_Image_t){ .width = chunk.var.image.width, .height = chunk.var.image.height, .data = chunk.var.image.pixels }, glyph_width, glyph_height, surface_callback_palette, (void *)indexes);
+            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` loaded", file);
+            FS_release(chunk);
         }
     } else
     if (type == LUA_TUSERDATA) {
         const Surface_Class_t *instance = (const Surface_Class_t *)lua_touserdata(L, 1);
         GL_sheet_attach(&sheet, &instance->surface, glyph_width, glyph_height);
-        Log_write(LOG_LEVELS_DEBUG, "<FONT> sheet %p attached", instance);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p attached", instance);
         surface = luaX_ref(L, 1); // Track the attached surface as a reference to prevent garbage collection.
     }
 
@@ -206,7 +204,7 @@ static int font_new5(lua_State *L)
             .sheet = sheet,
             .surface = surface,
         };
-    Log_write(LOG_LEVELS_DEBUG, "<FONT> font allocated as #%p", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font allocated as %p", instance);
 
     luaL_setmetatable(L, FONT_MT);
 
@@ -224,7 +222,7 @@ static int font_new(lua_State *L)
 static int font_gc(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
 
@@ -234,7 +232,7 @@ static int font_gc(lua_State *L)
         luaX_unref(L, instance->surface);
         GL_sheet_detach(&instance->sheet);
     }
-    Log_write(LOG_LEVELS_DEBUG, "<FONT> font #%p finalized", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font %p finalized", instance);
 
     return 0;
 }
@@ -242,7 +240,7 @@ static int font_gc(lua_State *L)
 static int font_width(lua_State *L) // TODO: add message size calculation
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
 
@@ -254,7 +252,7 @@ static int font_width(lua_State *L) // TODO: add message size calculation
 static int font_height(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
 
@@ -266,11 +264,11 @@ static int font_height(lua_State *L)
 static int font_write5(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 5)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
     LUAX_SIGNATURE_END
     Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
     const char *text = lua_tostring(L, 2);
@@ -278,7 +276,7 @@ static int font_write5(lua_State *L)
     int y = lua_tointeger(L, 4);
     const char *alignment = lua_tostring(L, 5);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
@@ -311,12 +309,12 @@ static int font_write5(lua_State *L)
 static int font_write6(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 6)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
     LUAX_SIGNATURE_END
     Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
     const char *text = lua_tostring(L, 2);
@@ -325,7 +323,7 @@ static int font_write6(lua_State *L)
     float scale = lua_tonumber(L, 5);
     const char *alignment = lua_tostring(L, 6);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
@@ -358,13 +356,13 @@ static int font_write6(lua_State *L)
 static int font_write7(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 7)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
     LUAX_SIGNATURE_END
     Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
     const char *text = lua_tostring(L, 2);
@@ -374,7 +372,7 @@ static int font_write7(lua_State *L)
     float scale_y = lua_tonumber(L, 6);
     const char *alignment = lua_tostring(L, 7);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;

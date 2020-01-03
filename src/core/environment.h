@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Marco Lizza (marco.lizza@gmail.com)
+ * Copyright (c) 2019-2020 by Marco Lizza (marco.lizza@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,11 +24,12 @@
 #define __ENVIRONMENT_H__
 
 #include <stdbool.h>
+#include <stddef.h>
 
 typedef struct _Environment_t {
     bool quit;
     float fps;
-    float time;
+    double time;
 } Environment_t;
 
 extern void Environment_initialize(Environment_t *environment);

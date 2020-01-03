@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Marco Lizza (marco.lizza@gmail.com)
+ * Copyright (c) 2019-2020 by Marco Lizza (marco.lizza@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,12 +23,12 @@
 #ifndef __MODULES_UDT_H__
 #define __MODULES_UDT_H__
 
-#include <core/vm/timerpool.h>
 #include <libs/luax.h>
 #include <libs/gl/gl.h>
 
 typedef enum _UserData_t { // TODO: move to a suitable space.
     USERDATA_INTERPRETER = 1,
+    USERDATA_FILE_SYSTEM,
     USERDATA_ENVIRONMENT,
     USERDATA_DISPLAY,
     USERDATA_INPUT
@@ -68,7 +68,6 @@ typedef struct _Grid_Class_t {
     const void *bogus;
     size_t width, height;
     Cell_t *data;
-    Cell_t **data_rows; // Precomputed pointers to the line of data.
     size_t data_size;
 } Grid_Class_t;
 
@@ -90,11 +89,5 @@ typedef struct _Surface_Class_t {
 typedef struct _System_Class_t {
     const void *bogus;
 } System_Class_t;
-
-typedef struct _Timer_Class_t {
-    const void *bogus;
-    luaX_Reference callback;
-    Timer_t *timer;
-} Timer_Class_t;
 
 #endif  /* __MODULES_UDT_H__ */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Marco Lizza (marco.lizza@gmail.com)
+ * Copyright (c) 2019-2020 by Marco Lizza (marco.lizza@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -38,9 +38,9 @@ typedef enum _Log_Levels_t {
     Log_Levels_t_CountOf
 } Log_Levels_t;
 
-extern void Log_initialize();
-extern void Log_configure(bool enabled);
-extern void Log_redirect(FILE *stream);
-extern void Log_write(Log_Levels_t level, const char *text, ...);
+extern void Log_initialize(void);
+extern void Log_configure(bool enabled, FILE *stream);
+extern void Log_write(Log_Levels_t level, const char *context, const char *text, ...);
+extern void Log_assert(bool condition, Log_Levels_t level, const char *context, const char *text, ...);
 
 #endif  /* __LIBS_LOG_H__ */

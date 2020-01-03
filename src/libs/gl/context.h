@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Marco Lizza (marco.lizza@gmail.com)
+ * Copyright (c) 2019-2020 by Marco Lizza (marco.lizza@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -64,6 +64,7 @@ extern void GL_context_delete(GL_Context_t *context); // TODO: rename to `*_dest
 
 extern void GL_context_push(GL_Context_t *context);
 extern void GL_context_pop(GL_Context_t *context);
+extern void GL_context_reset(GL_Context_t *context);
 extern void GL_context_sanitize(GL_Context_t *context, const GL_Surface_t *surface);
 
 extern void GL_context_surface(GL_Context_t *context, GL_Surface_t *surface);

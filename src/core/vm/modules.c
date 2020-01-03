@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Marco Lizza (marco.lizza@gmail.com)
+ * Copyright (c) 2019-2020 by Marco Lizza (marco.lizza@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,6 +36,8 @@
 #include <libs/log.h>
 #include <libs/luax.h>
 
+#define LOG_CONTEXT "modules"
+
 // TODO: http://www.ilikebigbits.com/2017_06_01_float_or_double.html
 
 static int create_module(lua_State *L, const luaL_Reg *entries)
@@ -43,7 +45,7 @@ static int create_module(lua_State *L, const luaL_Reg *entries)
     lua_newtable(L);
     for (int i = 0; entries[i].func; ++i) {
         if (entries[i].func(L) != 1) {
-            Log_write(LOG_LEVELS_ERROR, "<MODULES> can't initialize class '%s'", entries[i].name);
+            Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize class `%s`", entries[i].name);
             return 0;
         }
         lua_setfield(L, -2, entries[i].name);
@@ -135,14 +137,19 @@ void modules_initialize(lua_State *L, int nup)
         { NULL, NULL }
     };
 
-    for (int i = 0; modules[i].func; ++i) {
-        int pnup = luaX_packupvalues(L, nup);
-#ifdef __REQUIRE__
-        luaX_require(L, modules[i].name, modules[i].func, pnup, 1);
-        lua_pop(L, 1);  /* remove lib */
-#else
-        luaX_preload(L, modules[i].name, modules[i].func, pnup);
-#endif
+#ifdef INSIST
+    luaX_insisttable(L, "tofu");
+    for (const luaL_Reg *module = modules; module->func; ++module) {
+        luaX_pushvalues(L, nup);
+        luaX_require(L, module->name, module->func, nup, 1);
+        lua_setfield(L, -1, module->name);
     }
     lua_pop(L, nup);
+#else
+    for (const luaL_Reg *module = modules; module->func; ++module) {
+        luaX_pushvalues(L, nup);
+        luaX_preload(L, module->name, module->func, nup);
+    }
+    lua_pop(L, nup);
+#endif
 }

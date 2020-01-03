@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Marco Lizza (marco.lizza@gmail.com)
+ * Copyright (c) 2019-2020 by Marco Lizza (marco.lizza@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,32 +23,24 @@
 #ifndef __INTERPRETER_H__
 #define __INTERPRETER_H__
 
+#include <core/environment.h>
+#include <libs/fs/fs.h>
+#include <libs/luax.h>
+
 #include <limits.h>
 #include <stdbool.h>
-
-#include <core/configuration.h>
-#include <core/environment.h>
-#include <core/io/fs.h>
-#include <core/vm/timerpool.h>
-
-#include <libs/luax.h>
 
 typedef struct _Interpreter_t {
     float gc_age;
 
     lua_State *state; // TODO: rename to `L`?
-
-    File_System_t file_system;
-    Timer_Pool_t timer_pool;
 } Interpreter_t;
 
-extern bool Interpreter_initialize(Interpreter_t *interpreter, const char *base_path, Configuration_t *configuration, const void *userdatas[]);
+extern bool Interpreter_initialize(Interpreter_t *interpreter, const File_System_t *file_system, const void *userdatas[]);
 extern void Interpreter_terminate(Interpreter_t *interpreter);
-extern bool Interpreter_init(Interpreter_t *interpreter);
-extern bool Interpreter_deinit(Interpreter_t *interpreter);
-extern bool Interpreter_input(Interpreter_t *interpreter);
+extern bool Interpreter_process(const Interpreter_t *interpreter);
 extern bool Interpreter_update(Interpreter_t *interpreter, float delta_time);
-extern bool Interpreter_render(Interpreter_t *interpreter, float ratio);
-extern bool Interpreter_call(Interpreter_t *interpreter, int nargs, int nresults);
+extern bool Interpreter_render(const Interpreter_t *interpreter, float ratio);
+extern bool Interpreter_call(const Interpreter_t *interpreter, int nargs, int nresults);
 
 #endif  /* __INTERPRETER_H__ */

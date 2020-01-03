@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Marco Lizza (marco.lizza@gmail.com)
+ * Copyright (c) 2019-2020 by Marco Lizza (marco.lizza@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,27 +24,36 @@
 #define __CONFIGURATION_H__
 
 #include <stdbool.h>
+#include <stddef.h>
 
 #define MAX_CONFIGURATION_TITLE_LENGTH      128
-
-#define DEFAULT_SCREEN_WIDTH        320
-#define DEFAULT_SCREEN_HEIGHT       240
-#define DEFAULT_SCREEN_SCALE        0
-#define DEFAULT_WINDOW_TITLE        ".: Tofu Engine :."
-#define DEFAULT_FRAMES_PER_SECOND   60
+#define MAX_CONFIGURATION_ICON_LENGTH       128
 
 typedef struct _Configuration {
     char title[MAX_CONFIGURATION_TITLE_LENGTH];
-    int width, height, scale;
+    char icon[MAX_CONFIGURATION_ICON_LENGTH];
+    size_t width, height, scale;
     bool fullscreen;  // TODO: rename to "windowed"?
     bool vertical_sync;
-    int fps; // TODO: rename to "frequency"?
-    int skippable_frames;
-    int fps_cap;
+    size_t fps; // TODO: rename to "frequency"?
+    size_t skippable_frames;
+    size_t fps_cap;
     bool hide_cursor;
     bool exit_key_enabled;
-    bool debug;
+#ifdef __INPUT_SELECTION__
+    bool keyboard_enabled;
+    bool gamepad_enabled;
+    bool mouse_enabled;
+#endif
+    bool emulate_dpad;
+    bool emulate_mouse;
+    float cursor_speed;
+    float gamepad_sensitivity;
+    float gamepad_deadzone;
     // TODO: key-remapping?
+    bool debug;
 } Configuration_t;
+
+extern void Configuration_load(Configuration_t *configuration, const char *data);
 
 #endif  /* __CONFIGURATION_H__ */

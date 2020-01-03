@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Marco Lizza (marco.lizza@gmail.com)
+ * Copyright (c) 2019-2020 by Marco Lizza (marco.lizza@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,7 @@
 
 #include <config.h>
 #include <libs/gl/gl.h>
+#include <libs/fs/fs.h>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -46,8 +47,9 @@ typedef enum _Display_Programs_t {
 
 typedef struct _Display_Configuration_t {
     const char *title;
-//    const uint8_t *icon;
-    int width, height, scale;
+    File_System_Chunk_t icon;
+    size_t icon_size;
+    size_t width, height, scale;
     bool fullscreen;
     bool vertical_sync;
     bool hide_cursor;
@@ -57,12 +59,14 @@ typedef struct _Display_t {
     Display_Configuration_t configuration;
 
     GLFWwindow *window;
-    int window_width, window_height, window_scale;
-    int physical_width, physical_height;
+    size_t window_width, window_height, window_scale;
+    size_t physical_width, physical_height;
 
     GL_Color_t *vram; // Temporary buffer to create the OpenGL texture from `GL_Pixel_t` array.
+    size_t vram_size;
     GLuint vram_texture;
     GL_Quad_t vram_destination;
+    GL_Point_t vram_offset;
 
     Program_t programs[Display_Programs_t_CountOf];
     Program_t *active_program;
@@ -74,9 +78,11 @@ typedef struct _Display_t {
 
 extern bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration);
 extern void Display_terminate(Display_t *display);
-extern bool Display_should_close(Display_t *display);
+extern bool Display_should_close(const Display_t *display);
 extern void Display_update(Display_t *display, float delta_time);
-extern void Display_present(Display_t *display);
+extern void Display_clear(const Display_t *display);
+extern void Display_offset(Display_t *display, GL_Point_t offset);
+extern void Display_present(const Display_t *display);
 
 extern void Display_shader(Display_t *display, const char *code);
 extern void Display_palette(Display_t *display, const GL_Palette_t *palette);

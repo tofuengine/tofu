@@ -1,5 +1,5 @@
 --[[
-  Copyright (c) 2019 Marco Lizza (marco.lizza@gmail.com)
+  Copyright (c) 2019-2020 by Marco Lizza (marco.lizza@gmail.com)
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -36,21 +36,9 @@ end
 
 local Map = Class.define()
 
-function Map:__ctor(file)
-  local content = File.read(file)
-  local tokens = {}
-  for chunk in string.gmatch(content, "[^\n]+") do
-    table.insert(tokens, chunk)
-  end
-  local cells = {}
-  for i = 6, #tokens do
-    local chunk = tokens[i]
-    for cell in string.gmatch(chunk, "[^ ]+") do
-      table.insert(cells, tonumber(cell))
-    end
-  end
-  self.bank = Bank.new(tokens[1], tonumber(tokens[2]), tonumber(tokens[3]))
-  self.grid = Grid.new(tonumber(tokens[4]), tonumber(tokens[5]), cells)
+function Map:__ctor(bank, grid)
+  self.bank = bank
+  self.grid = grid
 
   self.aabb = {
       x0 = 0,
@@ -62,12 +50,36 @@ function Map:__ctor(file)
   self.cameras = {}
 end
 
+function Map.from_file(file)
+  local content = File.as_string(file)
+  local tokens = {}
+  for chunk in string.gmatch(content, "[^\n]+") do
+    table.insert(tokens, chunk)
+  end
+  local cells = {}
+  for i = 6, #tokens do
+    local chunk = tokens[i]
+    for cell in string.gmatch(chunk, "[^ ]+") do
+      table.insert(cells, tonumber(cell))
+    end
+  end
+
+  local bank = Bank.new(tokens[1], tonumber(tokens[2]), tonumber(tokens[3]))
+  local grid = Grid.new(tonumber(tokens[4]), tonumber(tokens[5]), cells)
+
+  return Map.new(bank, grid)
+end
+
 function Map:bound(x, y)
   return bound(x, y, self.aabb)
 end
 
-function Map:add_camera(id, columns, rows, screen_x, screen_y, anchor_x, anchor_y) -- last two arguments optional
-  self.cameras[id] = Camera.new(self.grid, self.bank, columns, rows, screen_x, screen_y, anchor_x, anchor_y)
+function Map:get_cameras()
+  return self.cameras
+end
+
+function Map:add_camera(id, columns, rows, screen_x, screen_y, anchor_x, anchor_y, scale) -- last 3 arguments optional
+  self.cameras[id] = Camera.new(id, self.bank, self.grid, columns, rows, screen_x, screen_y, anchor_x, anchor_y, scale)
 end
 
 function Map:remove_camera(id)
@@ -78,26 +90,31 @@ function Map:camera_from_id(id) -- last two arguments are optional
   return self.cameras[id]
 end
 
-function Map:update(_) -- delta_time
+function Map:update(delta_time)
+  for _, camera in pairs(self.cameras) do
+    camera:update(delta_time)
+  end
 end
 
 function Map:draw()
   Canvas.push()
   for _, camera in pairs(self.cameras) do
+    camera:pre_draw()
     camera:draw()
+    camera:post_draw()
   end
   Canvas.pop()
 end
 
-function Map:to_string()
+function Map:__tostring()
   local s = nil
-  for id, camera in pairs(self.cameras) do
+  for _, camera in pairs(self.cameras) do
     if not s then
       s = ""
     else
       s = s .. " "
     end
-    s = s .. "[" .. id .. "] " .. camera:to_string()
+    s = s .. tostring(camera)
   end
   return s
 end

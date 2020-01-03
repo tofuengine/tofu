@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Marco Lizza (marco.lizza@gmail.com)
+ * Copyright (c) 2019-2020 by Marco Lizza (marco.lizza@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,6 +30,8 @@
 
 #include <string.h>
 
+#define LOG_CONTEXT "system"
+
 #define SYSTEM_MT       "Tofu_System_mt"
 
 static int system_time(lua_State *L);
@@ -57,7 +59,7 @@ static const luaX_Const _system_constants[] = {
 
 int system_loader(lua_State *L)
 {
-    int nup = luaX_unpackupvalues(L);
+    int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, NULL, _system_functions, _system_constants, nup, SYSTEM_MT);
 }
 
@@ -66,7 +68,7 @@ static int system_time(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L, 0)
     LUAX_SIGNATURE_END
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
+    const Environment_t *environment = (const Environment_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
 
     lua_pushnumber(L, environment->time);
 
@@ -78,9 +80,9 @@ static int system_fps(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L, 0)
     LUAX_SIGNATURE_END
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
+    const Environment_t *environment = (const Environment_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
 
-    lua_pushinteger(L, environment->fps);
+    lua_pushnumber(L, environment->fps);
 
     return 1;
 }
@@ -109,7 +111,7 @@ static int log_write(lua_State *L, Log_Levels_t level)
         if (s == NULL) {
             return luaL_error(L, "`tostring` must return a string `log_write`");
         }
-        Log_write(level, (i > 1) ? "\t%s" : "<SYSTEM> %s", s);
+        Log_write(level, LOG_CONTEXT, (i > 1) ? "\t%s" : "%s", s);
         lua_pop(L, 1); // F R -> F
     }
     lua_pop(L, 1); // F -> <empty>

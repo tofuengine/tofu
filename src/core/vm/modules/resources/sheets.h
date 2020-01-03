@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Marco Lizza (marco.lizza@gmail.com)
+ * Copyright (c) 2019-2020 by Marco Lizza (marco.lizza@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,9 +26,9 @@
 #include <stddef.h>
 
 typedef struct _Sheet_Data_t {
-    const void *buffer;
+    const void *data;
     size_t size;
-    int quad_width, quad_height;
+    int cell_width, cell_height;
 } Sheet_Data_t;
 
 extern const Sheet_Data_t *resources_sheets_find(const char *id);

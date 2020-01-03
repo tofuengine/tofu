@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Marco Lizza (marco.lizza@gmail.com)
+ * Copyright (c) 2019-2020 by Marco Lizza (marco.lizza@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,16 +26,15 @@
 #include <core/io/display.h>
 #include <core/vm/interpreter.h>
 #include <libs/log.h>
+#include <libs/stb.h>
 
 #include "udt.h"
 #include "callbacks.h"
 
 #include <math.h>
 #include <string.h>
-#ifdef DEBUG
-  #include <stb/stb_leakcheck.h>
-#endif
-#include <stb/stb_ds.h>
+
+#define LOG_CONTEXT "surface"
 
 #define SURFACE_MT      "Tofu_Surface_mt"
 
@@ -72,7 +71,7 @@ static const luaX_Const _surface_constants[] = {
 
 int surface_loader(lua_State *L)
 {
-    int nup = luaX_unpackupvalues(L);
+    int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, NULL, _surface_functions, _surface_constants, nup, SURFACE_MT);
 }
 
@@ -102,29 +101,28 @@ static GL_XForm_Registers_t string_to_register(const char *id)
     if (id[0] == 'y') {
         return GL_XFORM_REGISTER_Y;
     }
-    Log_write(LOG_LEVELS_WARNING, "<SURFACE> unknown register w/ id '%s'", id);
+    Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "unknown register w/ id `%s`", id);
     return GL_XFORM_REGISTER_A;
 }
 
 static int surface_new1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
     LUAX_SIGNATURE_END
     const char *file = lua_tostring(L, 1);
 
-    Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INTERPRETER));
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    size_t buffer_size;
-    void *buffer = FS_load_as_binary(&interpreter->file_system, file, &buffer_size);
-    if (!buffer) {
-        return luaL_error(L, "<SURFACE> can't load file '%s'", file);
+    File_System_Chunk_t chunk = FS_load(file_system, file, FILE_SYSTEM_CHUNK_IMAGE);
+    if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
+        return luaL_error(L, "can't load file `%s`", file);
     }
     GL_Surface_t surface;
-    GL_surface_decode(&surface, buffer, buffer_size, surface_callback_palette, (void *)&display->palette);
-    Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface '%s' loaded", file);
-    free(buffer);
+    GL_surface_fetch(&surface, (GL_Image_t){ .width = chunk.var.image.width, .height = chunk.var.image.height, .data = chunk.var.image.pixels }, surface_callback_palette, (void *)&display->palette);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface `%s` loaded", file);
+    FS_release(chunk);
 
     Surface_Class_t *instance = (Surface_Class_t *)lua_newuserdata(L, sizeof(Surface_Class_t));
     *instance = (Surface_Class_t){
@@ -139,7 +137,7 @@ static int surface_new1(lua_State *L)
                     .table = NULL
                 }
         };
-    Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface allocated as #%p", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface allocated as %p", instance);
 
     luaL_setmetatable(L, SURFACE_MT);
 
@@ -149,15 +147,15 @@ static int surface_new1(lua_State *L)
 static int surface_new2(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 2)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     size_t width = (size_t)lua_tonumber(L, 1);
     size_t height = (size_t)lua_tonumber(L, 2);
 
     GL_Surface_t surface;
     GL_surface_create(&surface, width, height);
-    Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface %dx%d created", width, height);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface %dx%d created", width, height);
 
     Surface_Class_t *instance = (Surface_Class_t *)lua_newuserdata(L, sizeof(Surface_Class_t));
     *instance = (Surface_Class_t){
@@ -172,7 +170,7 @@ static int surface_new2(lua_State *L)
                     .table = NULL
                 }
         };
-    Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface allocated as #%p", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface allocated as %p", instance);
 
     luaL_setmetatable(L, SURFACE_MT);
 
@@ -190,7 +188,7 @@ static int surface_new(lua_State *L)
 static int surface_gc(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
 
@@ -198,15 +196,15 @@ static int surface_gc(lua_State *L)
 
     GL_Context_t *context = &display->gl;
     GL_context_sanitize(context, &instance->surface);
-    Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface #%p sanitized from context", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface %p sanitized from context", instance);
 
     if (instance->xform.table) {
         arrfree(instance->xform.table);
-        Log_write(LOG_LEVELS_DEBUG, "<SURFACE> scan-line table #%p deallocated", instance->xform.table);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "scan-line table %p deallocated", instance->xform.table);
     }
 
     GL_surface_delete(&instance->surface);
-    Log_write(LOG_LEVELS_DEBUG, "<SURFACE> surface #%p finalized", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface %p finalized", instance);
 
     return 0;
 }
@@ -214,7 +212,7 @@ static int surface_gc(lua_State *L)
 static int surface_width(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
 
@@ -226,7 +224,7 @@ static int surface_width(lua_State *L)
 static int surface_height(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
 
@@ -238,11 +236,11 @@ static int surface_height(lua_State *L)
 static int surface_grab(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     GL_context_to_surface(context, &instance->surface);
@@ -253,11 +251,11 @@ static int surface_grab(lua_State *L)
 static int surface_blit1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
@@ -269,15 +267,15 @@ static int surface_blit1(lua_State *L)
 static int surface_blit3(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 3)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
     int x = lua_tointeger(L, 2);
     int y = lua_tointeger(L, 3);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
@@ -289,17 +287,17 @@ static int surface_blit3(lua_State *L)
 static int surface_blit4(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 4)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
     int x = lua_tointeger(L, 2);
     int y = lua_tointeger(L, 3);
     int rotation = lua_tointeger(L, 4);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface; // TODO: fix explicit struct elements
@@ -311,11 +309,11 @@ static int surface_blit4(lua_State *L)
 static int surface_blit5(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 5)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
     int x = lua_tointeger(L, 2);
@@ -323,7 +321,7 @@ static int surface_blit5(lua_State *L)
     float scale_x = lua_tonumber(L, 4);
     float scale_y = lua_tonumber(L, 5);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
@@ -335,12 +333,12 @@ static int surface_blit5(lua_State *L)
 static int surface_blit6(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 6)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
     int x = lua_tointeger(L, 2);
@@ -349,7 +347,7 @@ static int surface_blit6(lua_State *L)
     float scale_y = lua_tonumber(L, 5);
     int rotation = lua_tointeger(L, 6);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
@@ -361,23 +359,23 @@ static int surface_blit6(lua_State *L)
 static int surface_blit7(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 7)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
     int x = lua_tointeger(L, 2);
     int y = lua_tointeger(L, 3);
     int ox = lua_tointeger(L, 4);
     int oy = lua_tointeger(L, 5);
-    int width = lua_tointeger(L, 6);
-    int height = lua_tointeger(L, 7);
+    size_t width = (size_t)lua_tointeger(L, 6);
+    size_t height = (size_t)lua_tointeger(L, 7);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
@@ -389,27 +387,27 @@ static int surface_blit7(lua_State *L)
 static int surface_blit9(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 9)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
     int x = lua_tointeger(L, 2);
     int y = lua_tointeger(L, 3);
     int ox = lua_tointeger(L, 4);
     int oy = lua_tointeger(L, 5);
-    int width = lua_tointeger(L, 6);
-    int height = lua_tointeger(L, 7);
+    size_t width = (size_t)lua_tointeger(L, 6);
+    size_t height = (size_t)lua_tointeger(L, 7);
     float scale_x = lua_tonumber(L, 8);
     float scale_y = lua_tonumber(L, 9);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
@@ -421,29 +419,29 @@ static int surface_blit9(lua_State *L)
 static int surface_blit10(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 10)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
     int x = lua_tointeger(L, 2);
     int y = lua_tointeger(L, 3);
     int ox = lua_tointeger(L, 4);
     int oy = lua_tointeger(L, 5);
-    int width = lua_tointeger(L, 6);
-    int height = lua_tointeger(L, 7);
+    size_t width = (size_t)lua_tointeger(L, 6);
+    size_t height = (size_t)lua_tointeger(L, 7);
     float scale_x = lua_tonumber(L, 8);
     float scale_y = lua_tonumber(L, 9);
     int rotation = lua_tointeger(L, 10);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
@@ -477,11 +475,11 @@ static int surface_blit(lua_State *L)
 static int surface_xform1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
@@ -493,15 +491,15 @@ static int surface_xform1(lua_State *L)
 static int surface_xform3(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 3)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
     int x = lua_tointeger(L, 2);
     int y = lua_tointeger(L, 3);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Surface_t *surface = &instance->surface;
@@ -521,9 +519,9 @@ static int surface_xform(lua_State *L)
 static int surface_offset(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 3)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
     float h = lua_tonumber(L, 2);
@@ -538,9 +536,9 @@ static int surface_offset(lua_State *L)
 static int surface_matrix3(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 3)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
     float x0 = lua_tonumber(L, 2);
@@ -555,11 +553,11 @@ static int surface_matrix3(lua_State *L)
 static int surface_matrix5(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 5)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
     float a = lua_tonumber(L, 2);
@@ -578,13 +576,13 @@ static int surface_matrix5(lua_State *L)
 static int surface_matrix7(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 7)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isnumber)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
     float a = lua_tonumber(L, 2);
@@ -616,8 +614,8 @@ static int surface_matrix(lua_State *L)
 static int surface_clamp(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 2)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isstring)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
     const char *clamp = lua_tostring(L, 2);
@@ -638,13 +636,13 @@ static int surface_clamp(lua_State *L)
 static int surface_table1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
 
     if (instance->xform.table) {
         arrfree(instance->xform.table);
-        Log_write(LOG_LEVELS_DEBUG, "<SURFACE> scan-line table #%p deallocated", instance->xform.table);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "scan-line table %p deallocated", instance->xform.table);
     }
     instance->xform.table = NULL;
 
@@ -654,13 +652,12 @@ static int surface_table1(lua_State *L)
 static int surface_table2(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 2)
-        LUAX_SIGNATURE_ARGUMENT(luaX_isuserdata)
-        LUAX_SIGNATURE_ARGUMENT(luaX_istable)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TTABLE)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
 
     GL_XForm_Table_Entry_t *table = NULL;
-    size_t count = 0;
 
     lua_pushnil(L);
     while (lua_next(L, 2)) {
@@ -671,7 +668,7 @@ static int surface_table2(lua_State *L)
         lua_pushnil(L);
         for (size_t i = 0; lua_next(L, -2); ++i) { // Scan the value, which is an array.
             if (i == GL_XForm_Registers_t_CountOf) {
-                Log_write(LOG_LEVELS_WARNING, "<SURFACE> too many operation for table entry #%d (id #%d)", count, index);
+                Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "too many operation for table entry w/ id #%d", index);
                 lua_pop(L, 2);
                 break;
             }
@@ -683,7 +680,6 @@ static int surface_table2(lua_State *L)
         }
 
         arrpush(table, entry);
-        ++count;
 
         lua_pop(L, 1);
     }
@@ -691,7 +687,7 @@ static int surface_table2(lua_State *L)
 
     if (instance->xform.table) {
         arrfree(instance->xform.table);
-//        Log_write(LOG_LEVELS_TRACE, "<SURFACE> scan-line table #%p reallocated as #%p", instance->xform.table, table);
+//        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "scan-line table %p reallocated as %p", instance->xform.table, table);
     }
     instance->xform.table = table;
 

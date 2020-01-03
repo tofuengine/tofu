@@ -9,7 +9,7 @@ local System = require("tofu.core").System
 local Main = Class.define()
 
 local AMOUNT = 16
-local PALETTES = { "pico-8", "arne-16", "c64", "cga" }
+local PALETTES = { "pico-8", "arne-16", "dawnbringer-16", "c64", "cga" }
 
 --384 x 224 pixels
 
@@ -32,29 +32,24 @@ function Main:__ctor()
 end
 
 function Main:input()
-  if Input.is_key_pressed(Input.SELECT) then
-    self.palette = (self.palette % #PALETTES) + 1
-    Canvas.palette(PALETTES[self.palette])
-  elseif Input.is_key_pressed(Input.START) then
-    Canvas.screenshot("palette");
-  elseif Input.is_key_pressed(Input.DOWN) then
+  if Input.is_pressed(Input.DOWN) then
     self.scale_y = 1.0
     self.y = self.y + 1
-  elseif Input.is_key_pressed(Input.UP) then
+  elseif Input.is_pressed(Input.UP) then
     self.scale_y = -1.0
     self.y = self.y - 1
-  elseif Input.is_key_pressed(Input.RIGHT) then
+  elseif Input.is_pressed(Input.RIGHT) then
     self.scale_x = 1.0
     self.x = self.x + 1
-  elseif Input.is_key_pressed(Input.LEFT) then
+  elseif Input.is_pressed(Input.LEFT) then
     self.scale_x = -1.0
     self.x = self.x - 1
-  elseif Input.is_key_pressed(Input.Y) then
+  elseif Input.is_pressed(Input.Y) then
     self.mode = (self.mode + 1) % 10
-  elseif Input.is_key_pressed(Input.X) then
+  elseif Input.is_pressed(Input.X) then
     self.clipping = not self.clipping
     if self.clipping then
-      Canvas.clipping(32, 32, 95, 95)
+      Canvas.clipping(32, 32, 64, 64)
     else
       Canvas.clipping()
     end
@@ -62,7 +57,7 @@ function Main:input()
 end
 
 function Main:update(_)
-  local index = (math.floor(System.time() * 0.2) % #PALETTES) + 1
+  local index = (math.tointeger(System.time() * 0.2) % #PALETTES) + 1
   if self.palette ~= index then
     self.palette = index
     Canvas.palette(PALETTES[index])
@@ -72,7 +67,7 @@ end
 function Main:render(_)
   local time = System.time()
   Canvas.clear()
-
+--Canvas.clear(1)
   if self.mode == 0 then
     for i = 0, AMOUNT - 1 do
       local x = self.x_size * i
@@ -101,7 +96,7 @@ function Main:render(_)
     self.bank:blit(1, self.x - 32, self.y - 32, self.scale_x * 8.0, self.scale_y * 8.0)
   end
 
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
+  self.font:write(string.format("FPS: %.1f", System.fps()), 0, 0, "left")
   self.font:write(string.format("mode: %d", self.mode), Canvas.width(), 0, "right")
 end
 

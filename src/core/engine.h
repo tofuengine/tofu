@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Marco Lizza (marco.lizza@gmail.com)
+ * Copyright (c) 2019-2020 by Marco Lizza (marco.lizza@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,28 +28,26 @@
 #include <core/environment.h>
 #include <core/io/audio.h>
 #include <core/io/display.h>
-#include <core/io/fs.h>
 #include <core/io/input.h>
 #include <core/vm/interpreter.h>
+#include <libs/fs/fs.h>
 
 #include <stdbool.h>
 #include <limits.h>
 
-typedef enum _Engine_States_t {
-    ENGINE_STATE_RUNNING,
-    ENGINE_STATE_PAUSED,
-    ENGINE_STATE_CRASHED
-} Engine_States_t;
+#define TOFU_VERSION_MAJOR          0
+#define TOFU_VERSION_MINOR          6
+#define TOFU_VERSION_REVISION       0
 
 typedef struct _Engine_t {
+    File_System_t file_system;
+
     Configuration_t configuration;
 
     Interpreter_t interpreter;
     Audio_t audio;
     Display_t display;
     Input_t input;
-
-    Engine_States_t state; // TODO: handle automatic pause and crash.
 
     Environment_t environment;
 } Engine_t;
