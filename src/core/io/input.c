@@ -59,10 +59,10 @@ static void _keyboard_handler(GLFWwindow *window, Input_State_t *state, const In
         GLFW_KEY_DOWN,
         GLFW_KEY_LEFT,
         GLFW_KEY_RIGHT,
-        GLFW_KEY_LEFT_CONTROL,
-        GLFW_KEY_RIGHT_CONTROL,
-        GLFW_KEY_LEFT_ALT,
-        GLFW_KEY_RIGHT_ALT,
+        GLFW_KEY_Q,
+        GLFW_KEY_R,
+        GLFW_KEY_W,
+        GLFW_KEY_E,
         GLFW_KEY_Z,
         GLFW_KEY_S,
         GLFW_KEY_X,
@@ -123,7 +123,6 @@ static void _mouse_handler(GLFWwindow *window, Input_State_t *state, const Input
         button->state.released = was_down && !is_down;
     }
 
-    // TODO: compute deltas, in order to move the cursor like the stick.
     double x, y;
     glfwGetCursorPos(window, &x, &y);
     cursor->x = (float)x * configuration->scale;
