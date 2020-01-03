@@ -142,7 +142,7 @@ static inline Input_Stick_t _gamepad_stick(float x, float y, float deadzone_thre
     } else {
         magnitude = (magnitude - deadzone_threshold) / (1.0f - deadzone_threshold); // Rescale to ensure [0, 1] range.
     }
-    return (Input_Stick_t){ .x = x, .y = y, .angle = angle, .magnitude = magnitude };
+    return (Input_Stick_t){ .x = cosf(angle) * magnitude, .y = sinf(angle) * magnitude, .angle = angle, .magnitude = magnitude };
 }
 
 static inline float _gamepad_trigger(float magnitude, float deadzone_threshold)
