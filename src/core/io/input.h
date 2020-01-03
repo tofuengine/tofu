@@ -90,6 +90,8 @@ typedef struct _Input_Triggers_t {
     float left, right;
 } Input_Triggers_t;
 
+#define INPUT_GAMEPADS_COUNT    (GLFW_JOYSTICK_LAST + 1)
+
 typedef struct _Input_State_t {
     int gamepad_id;
     Input_Button_t buttons[Input_Buttons_t_CountOf];
@@ -132,6 +134,7 @@ typedef struct _Input_t {
 
     double time;
 
+    bool gamepads[INPUT_GAMEPADS_COUNT];
     Input_State_t state;
     Input_Handler_t handlers[Input_Handlers_t_CountOf];
 } Input_t;
