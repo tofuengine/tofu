@@ -25,15 +25,11 @@
 --  1 luafilesystem
 --  2 luazen
 --  3 struct
---  2 zlib
 
 local bit32 = require("bit32")
 local lfs = require("lfs")
 local luazen = require("luazen")
 local struct = require("struct")
-
-local ZERO_PADDING = string.char(0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-                                 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff)
 
 local VERSION = 0x0000
 
@@ -47,6 +43,18 @@ end
 
 function string:ends_with(suffix)
   return self:sub(1 + self:len() - #suffix) == suffix
+end
+
+function string.from_hex(str)
+  return str:gsub('..', function(cc)
+        return string.char(tonumber(cc, 16))
+    end)
+end
+
+function string.to_hex(str)
+  return str:gsub('.', function(c)
+        return string.format('%02X', string.byte(c))
+    end)
 end
 
 local function attrdir(path, list)
@@ -67,10 +75,10 @@ end
 local function emit_header(output, config, files)
   local flags = bit32.lshift(config.encrypted and 1 or 0, 0)
 
-  output:write(struct.pack('c8', "TOFUPAK!"))
-  output:write(struct.pack('I2', VERSION))
-  output:write(struct.pack('I2', flags))
-  output:write(struct.pack('I4', #files))
+  output:write(struct.pack("c8", "TOFUPAK!"))
+  output:write(struct.pack("I2", VERSION))
+  output:write(struct.pack("I2", flags))
+  output:write(struct.pack("I4", #files))
 end
 
 local function emit_entry(output, file, config)
@@ -82,9 +90,9 @@ local function emit_entry(output, file, config)
     content = luazen.rc4raw(content, luazen.md5(file.name))
   end
 
-  output:write(struct.pack('I2', 0xFFFF))
-  output:write(struct.pack('I2', #file.name))
-  output:write(struct.pack('I4', file.size))
+  output:write(struct.pack("I2", 0xFFFF))
+  output:write(struct.pack("I2", #file.name))
+  output:write(struct.pack("I4", file.size))
   output:write(struct.pack("c0", file.name))
   output:write(content)
 
