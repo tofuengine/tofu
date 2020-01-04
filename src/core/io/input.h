@@ -120,8 +120,8 @@ typedef struct _Input_Configuration_t {
     bool emulate_mouse;
     float cursor_speed;
     float gamepad_sensitivity;
-    float gamepad_inner_deadzone; // TODO: what is anti-deadzone?
-    float gamepad_outer_deadzone;
+    float gamepad_deadzone; // TODO: what is anti-deadzone?
+    float gamepad_range;
     // TODO: key-remapping?
     float scale; // Refers to the screen-to-canvas scaling factor.
 } Input_Configuration_t;
