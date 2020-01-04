@@ -150,7 +150,8 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             .emulate_mouse = engine->configuration.emulate_mouse,
             .cursor_speed = engine->configuration.cursor_speed,
             .gamepad_sensitivity = engine->configuration.gamepad_sensitivity,
-            .gamepad_deadzone = engine->configuration.gamepad_deadzone,
+            .gamepad_inner_deadzone = engine->configuration.gamepad_inner_deadzone,
+            .gamepad_outer_deadzone = engine->configuration.gamepad_outer_deadzone,
             .scale = 1.0f / (float)engine->display.configuration.scale
         };
     File_System_Chunk_t mappings = FS_load(&engine->file_system, "gamecontrollerdb.txt", FILE_SYSTEM_CHUNK_STRING);

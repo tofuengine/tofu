@@ -130,31 +130,32 @@ static void _mouse_handler(GLFWwindow *window, Input_State_t *state, const Input
 }
 
 // http://www.third-helix.com/2013/04/12/doing-thumbstick-dead-zones-right.html
-static inline Input_Stick_t _gamepad_stick(float x, float y, float deadzone_threshold)
+// http://blog.hypersect.com/interpreting-analog-sticks/
+static inline Input_Stick_t _gamepad_stick(float x, float y, float inner_deadzone, float outer_deadzone)
 {
     float angle = atan2f(y, x);
     float magnitude = sqrtf(x * x + y * y);
     const float u = x / magnitude, v = y / magnitude; // Normalize prior fixing the magnitude.
-    if (magnitude < deadzone_threshold) {
+    if (magnitude < inner_deadzone) { // TODO: add a response curve?
         magnitude = 0.0f;
     } else
-    if (magnitude > 1.0f) {
+    if (magnitude > outer_deadzone) {
         magnitude = 1.0f;
     } else {
-        magnitude = (magnitude - deadzone_threshold) / (1.0f - deadzone_threshold); // Rescale to ensure [0, 1] range.
+        magnitude = (magnitude - inner_deadzone) / (outer_deadzone - inner_deadzone); // Rescale to ensure [0, 1] range.
     }
     return (Input_Stick_t){ .x = u * magnitude, .y = v * magnitude, .angle = angle, .magnitude = magnitude };
 }
 
-static inline float _gamepad_trigger(float magnitude, float deadzone_threshold)
+static inline float _gamepad_trigger(float magnitude, float inner_deadzone, float outer_deadzone)
 {
-    if (magnitude < deadzone_threshold) {
+    if (magnitude < inner_deadzone) {
         return 0.0f;
     } else
-    if (magnitude > 1.0f) {
+    if (magnitude > outer_deadzone) {
         return 1.0f;
     } else {
-        return (magnitude - deadzone_threshold) / (1.0f - deadzone_threshold);
+        return (magnitude - inner_deadzone) / (outer_deadzone - inner_deadzone);
     }
 }
 
@@ -226,13 +227,14 @@ static void _gamepad_handler(GLFWwindow *window, Input_State_t *state, const Inp
             }
         }
 
-        const float deadzone = configuration->gamepad_deadzone;
+        const float inner_deadzone = configuration->gamepad_inner_deadzone;
+        const float outer_deadzone = configuration->gamepad_outer_deadzone;
 
-        sticks[INPUT_STICK_LEFT] = _gamepad_stick(gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_X], gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_Y], deadzone);
-        sticks[INPUT_STICK_RIGHT] = _gamepad_stick(gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_X], gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y], deadzone);
+        sticks[INPUT_STICK_LEFT] = _gamepad_stick(gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_X], gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_Y], inner_deadzone, outer_deadzone);
+        sticks[INPUT_STICK_RIGHT] = _gamepad_stick(gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_X], gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y], inner_deadzone, outer_deadzone);
 
-        triggers->left = _gamepad_trigger(gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER], deadzone);
-        triggers->right = _gamepad_trigger(gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER], deadzone);
+        triggers->left = _gamepad_trigger(gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER], inner_deadzone, outer_deadzone);
+        triggers->right = _gamepad_trigger(gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER], inner_deadzone, outer_deadzone);
     }
 }
 
