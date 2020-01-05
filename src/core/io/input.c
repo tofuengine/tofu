@@ -342,14 +342,13 @@ void Input_update(Input_t *input, float delta_time)
     }
 
     if (input->configuration.emulate_mouse) {
-        Input_Stick_t *sticks = state->sticks;
         Input_Cursor_t *cursor = &state->cursor;
+        const Input_Stick_t *stick = &state->sticks[INPUT_STICK_RIGHT];
 
-        const float vx = sticks[INPUT_STICK_RIGHT].x * input->configuration.cursor_speed;
-        const float vy = sticks[INPUT_STICK_RIGHT].y * input->configuration.cursor_speed;
+        const float speed = input->configuration.cursor_speed * delta_time;
 
-        cursor->x += vx * delta_time;
-        cursor->y += vy * delta_time;
+        cursor->x += stick->x * speed;
+        cursor->y += stick->y * speed;
 
         if (cursor->x < cursor->area.x0) {
             cursor->x = cursor->area.x0;
