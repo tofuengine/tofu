@@ -108,10 +108,11 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
     *engine = (Engine_t){ 0 }; // Ensure is cleared at first.
 
     Log_initialize();
+    FS_initialize(&engine->file_system);
 
-    bool result = FS_initialize(&engine->file_system, base_path);
+    bool result = FS_mount(&engine->file_system, base_path);
     if (!result) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize file-system w/ path `%s`", base_path);
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't mount file-system path `%s`", base_path);
         return false;
     }
 
