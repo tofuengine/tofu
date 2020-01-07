@@ -76,8 +76,9 @@ local function emit_header(output, config, files)
   local flags = bit32.lshift(config.encrypted and 1 or 0, 0)
 
   output:write(struct.pack("c8", "TOFUPAK!"))
-  output:write(struct.pack("I2", VERSION))
-  output:write(struct.pack("I2", flags))
+  output:write(struct.pack("I1", VERSION))
+  output:write(struct.pack("I1", flags))
+  output:write(struct.pack("I2", 0xFFFF))
   output:write(struct.pack("I4", #files))
 end
 

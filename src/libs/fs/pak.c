@@ -40,8 +40,9 @@
 #pragma pack(push, 1)
 typedef struct _Pak_Header_t {
     char signature[8];
-    uint16_t version;
-    uint16_t flags;
+    uint8_t version;
+    uint8_t flags;
+    uint16_t __reserved;
     uint32_t entries;
 } Pak_Header_t;
 
@@ -208,9 +209,19 @@ static void pakio_deinit(void *context)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "I/O deinitialized");
 }
 
+static bool pakio_has(const void *context, const char *file)
+{
+    const Pak_Context_t *pak_context = (const Pak_Context_t *)context;
+
+    const Pak_Entry_t key = { .name = (char *)file };
+    Pak_Entry_t *entry = bsearch((const void *)&key, pak_context->directory, pak_context->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
+    
+    return entry;
+}
+
 static void *pakio_open(const void *context, const char *file, size_t *size_in_bytes)
 {
-    Pak_Context_t *pak_context = (Pak_Context_t *)context;
+    const Pak_Context_t *pak_context = (const Pak_Context_t *)context;
 
     const Pak_Entry_t key = { .name = (char *)file };
     Pak_Entry_t *entry = bsearch((const void *)&key, pak_context->directory, pak_context->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
@@ -312,6 +323,7 @@ static void pakio_close(void *handle)
 const File_System_Callbacks_t *pak_callbacks = &(File_System_Callbacks_t){
     pakio_init,
     pakio_deinit,
+    pakio_has,
     pakio_open,
     pakio_read,
     pakio_skip,
