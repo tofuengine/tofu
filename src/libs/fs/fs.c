@@ -206,6 +206,13 @@ bool FS_initialize(File_System_t *file_system, const char *base_path)
             continue;
         }
         FS_mount(file_system, full_path, FILE_SYSTEM_MOUNT_PAK);
+
+        // TODO: add also possibile "archive.pa0", ..., "archive.p99" file
+        // overriding "archive.pak".
+//        for (int i = 0; i < 100; ++i) {
+//            sprintf(&entry->d_name[length - 2], "%02d", i);
+//            FS_mount(file_system, full_path, FILE_SYSTEM_MOUNT_PAK);
+//        }
     }
 
     closedir(dp);

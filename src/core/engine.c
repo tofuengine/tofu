@@ -45,7 +45,7 @@
 
 #define LOG_CONTEXT "engine"
 
-static inline void wait_for(float seconds)
+static inline void _wait_for(float seconds)
 {
 #if PLATFORM_ID == PLATFORM_LINUX
     int nanos = (int)(seconds * 1000000.0f);
@@ -70,7 +70,7 @@ static inline void wait_for(float seconds)
 #endif
 }
 
-static inline float calculate_fps(float elapsed)
+static inline float _calculate_fps(float elapsed)
 {
     static float samples[FPS_AVERAGE_SAMPLES] = { 0 };
     static size_t index = 0;
@@ -84,7 +84,7 @@ static inline float calculate_fps(float elapsed)
     return (float)FPS_AVERAGE_SAMPLES / sum;
 }
 
-static void configure(const File_System_t *file_system, Configuration_t *configuration)
+static void _configure(const File_System_t *file_system, Configuration_t *configuration)
 {
     File_System_Chunk_t chunk = FS_load(file_system, "tofu.config", FILE_SYSTEM_CHUNK_STRING);
     if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
@@ -94,7 +94,7 @@ static void configure(const File_System_t *file_system, Configuration_t *configu
     FS_release(chunk);
 }
 
-static File_System_Chunk_t load_icon(const File_System_t *file_system, const char *file)
+static File_System_Chunk_t _load_icon(const File_System_t *file_system, const char *file)
 {
     if (!file || file[0] == '\0') {
         return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
@@ -114,7 +114,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
         return false;
     }
 
-    configure(&engine->file_system, &engine->configuration);
+    _configure(&engine->file_system, &engine->configuration);
 
     Log_configure(engine->configuration.debug, NULL);
     Environment_initialize(&engine->environment);
@@ -123,7 +123,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 
     Display_Configuration_t display_configuration = { // TODO: reorganize configuration.
             .title = engine->configuration.title,
-            .icon = load_icon(&engine->file_system, engine->configuration.icon),
+            .icon = _load_icon(&engine->file_system, engine->configuration.icon),
             .width = engine->configuration.width,
             .height = engine->configuration.height,
             .fullscreen = engine->configuration.fullscreen,
@@ -230,7 +230,7 @@ void Engine_run(Engine_t *engine)
         const float elapsed = (float)(current - previous);
         previous = current;
 
-        engine->environment.fps = calculate_fps(elapsed);
+        engine->environment.fps = _calculate_fps(elapsed);
 #ifdef __DEBUG_ENGINE_FPS__
         static size_t count = 0;
         if (++count == 250) {
@@ -262,7 +262,7 @@ void Engine_run(Engine_t *engine)
         const float frame_time = (float)(glfwGetTime() - current);
         const float leftover = reference_time - frame_time;
         if (leftover > 0.0f) {
-            wait_for(leftover);
+            _wait_for(leftover);
         }
     }
 }
