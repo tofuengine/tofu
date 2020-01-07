@@ -35,17 +35,23 @@
 
 #define LOG_CONTEXT "fs"
 
-typedef enum _Mount_Modes_t {
-    MOUNT_MODE_STD,
-    MOUNT_MODE_PAK,
-    Mount_Modes_t_CountOf,
-} Mount_Modes_t;
+const File_System_Callbacks_t *_detect(const char *path)
+{
+    struct stat path_stat;
+    int result = stat(path, &path_stat);
+    if (result != 0) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get stats for `%s`", path);
+        return false;
+    }
 
-static bool _mount(File_System_t *file_system, const char *base_path, Mount_Modes_t mode)
+    return S_ISDIR(path_stat.st_mode) ? std_callbacks: pak_callbacks;
+}
+
+static bool _mount(File_System_t *file_system, const char *base_path)
 {
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "adding mount-point `%s`", base_path);
 
-    const File_System_Callbacks_t *callbacks = mode == MOUNT_MODE_STD ? std_callbacks: pak_callbacks;
+    const File_System_Callbacks_t *callbacks = _detect(base_path);
 
     void *context = callbacks->init(base_path);
     if (!context) {
@@ -233,19 +239,19 @@ bool FS_initialize(File_System_t *file_system, const char *base_path)
             continue;
         }
 
-        _mount(file_system, full_path, MOUNT_MODE_PAK);
+        _mount(file_system, full_path);
 
         // TODO: add also possibile "archive.pa0", ..., "archive.p99" file
         // overriding "archive.pak".
 //        for (int i = 0; i < 100; ++i) {
 //            sprintf(&entry->d_name[length - 2], "%02d", i);
-//            FS_mount(file_system, full_path, FILE_SYSTEM_MOUNT_PAK);
+//            _mount(file_system, full_path);
 //        }
     }
 
     closedir(dp);
 
-    _mount(file_system, resolved, MOUNT_MODE_STD);
+    _mount(file_system, resolved);
 
     return true;
 }
