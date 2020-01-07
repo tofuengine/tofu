@@ -60,7 +60,7 @@ static void stdio_deinit(void *context)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "I/O deinitialized");
 }
 
-static bool stdio_has(const void *context, const char *file)
+static bool stdio_exists(const void *context, const char *file)
 {
     const Std_Context_t *std_context = (const Std_Context_t *)context;
 
@@ -143,7 +143,7 @@ static void stdio_close(void *handle)
 const File_System_Callbacks_t *std_callbacks = &(File_System_Callbacks_t){
     stdio_init,
     stdio_deinit,
-    stdio_has,
+    stdio_exists,
     stdio_open,
     stdio_read,
     stdio_skip,

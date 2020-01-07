@@ -70,7 +70,7 @@ typedef struct _Pak_Handle_t {
     FILE *stream;
     long end_of_stream;
     bool encrypted;
-    rc4_context_t rc4_context;
+    rc4_context_t cipher_context;
 } Pak_Handle_t;
 
 static int _pak_entry_compare(const void *lhs, const void *rhs)
@@ -82,7 +82,7 @@ static int _pak_entry_compare(const void *lhs, const void *rhs)
 
 // Encryption is implemented throught a RC4 stream cipher.
 // The key is the MD5 digest of the entry name (w/ relative path).
-static void _initialize_context(rc4_context_t *rc4_context, const char *file)
+static void _initialize_context(rc4_context_t *cipher_context, const char *file)
 {
     md5_context_t md5_context;
     md5_init(&md5_context);
@@ -91,10 +91,10 @@ static void _initialize_context(rc4_context_t *rc4_context, const char *file)
     uint8_t rc4_key[MD5_SIZE];
     md5_final(&md5_context, rc4_key);
 
-    rc4_schedule(rc4_context, rc4_key, sizeof(rc4_key));
+    rc4_schedule(cipher_context, rc4_key, sizeof(rc4_key));
 #ifdef DROP_256
     uint8_t drop[256] = { 0 };
-    rc4_process(&pak_handle->rc4_context, drop, drop, sizeof(drop));
+    rc4_process(cipher_context, drop, drop, sizeof(drop));
 #endif
 }
 
@@ -209,7 +209,7 @@ static void pakio_deinit(void *context)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "I/O deinitialized");
 }
 
-static bool pakio_has(const void *context, const char *file)
+static bool pakio_exists(const void *context, const char *file)
 {
     const Pak_Context_t *pak_context = (const Pak_Context_t *)context;
 
@@ -252,7 +252,7 @@ static void *pakio_open(const void *context, const char *file, size_t *size_in_b
         };
 
     if (pak_context->encrypted) {
-        _initialize_context(&pak_handle->rc4_context, entry->name);
+        _initialize_context(&pak_handle->cipher_context, entry->name);
     }
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry `%s` opened w/ handle %p (%d bytes)", file, pak_handle, entry->size);
@@ -283,7 +283,7 @@ static size_t pakio_read(void *handle, void *buffer, size_t bytes_requested)
     Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d bytes read out of %d (%d requested)", bytes_read, bytes_to_read, bytes_requested);
 
     if (pak_handle->encrypted) {
-        rc4_process(&pak_handle->rc4_context, buffer, bytes_read);
+        rc4_process(&pak_handle->cipher_context, buffer, bytes_read);
         Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d bytes decrypted", bytes_read);
     }
 
@@ -323,7 +323,7 @@ static void pakio_close(void *handle)
 const File_System_Callbacks_t *pak_callbacks = &(File_System_Callbacks_t){
     pakio_init,
     pakio_deinit,
-    pakio_has,
+    pakio_exists,
     pakio_open,
     pakio_read,
     pakio_skip,
