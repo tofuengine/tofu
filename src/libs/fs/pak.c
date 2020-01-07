@@ -40,8 +40,9 @@
 #pragma pack(push, 1)
 typedef struct _Pak_Header_t {
     char signature[8];
-    uint16_t version;
-    uint16_t flags;
+    uint8_t version;
+    uint8_t flags;
+    uint16_t __reserved;
     uint32_t entries;
 } Pak_Header_t;
 
