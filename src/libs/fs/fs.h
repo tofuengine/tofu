@@ -63,6 +63,12 @@ typedef struct _File_System_Callbacks_t {
    void   (*close)(void *handle);
 } File_System_Callbacks_t;
 
+typedef enum _File_System_Mounts_t {
+    FILE_SYSTEM_MOUNT_STD,
+    FILE_SYSTEM_MOUNT_PAK,
+    File_System_Mounts_t_CountOf,
+} File_System_Mounts_t;
+
 typedef struct _File_System_Mount_t {
     const File_System_Callbacks_t *callbacks;
     void *context;
@@ -97,10 +103,10 @@ typedef struct _File_System_Chunk_t {
     } var;
 } File_System_Chunk_t;
 
-extern void FS_initialize(File_System_t *file_system);
+extern bool FS_initialize(File_System_t *file_system, const char *base_path);
 extern void FS_terminate(File_System_t *file_system);
 
-extern bool FS_mount(File_System_t *file_system, const char *base_path);
+extern bool FS_mount(File_System_t *file_system, const char *base_path, File_System_Mounts_t mode);
 
 extern File_System_Chunk_t FS_load(const File_System_t *file_system, const char *file, File_System_Chunk_Types_t type);
 extern void FS_release(File_System_Chunk_t chunk);

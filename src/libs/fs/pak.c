@@ -211,7 +211,7 @@ static void pakio_deinit(void *context)
 
 static void *pakio_open(const void *context, const char *file, size_t *size_in_bytes)
 {
-    Pak_Context_t *pak_context = (Pak_Context_t *)context;
+    const Pak_Context_t *pak_context = (const Pak_Context_t *)context;
 
     const Pak_Entry_t key = { .name = (char *)file };
     Pak_Entry_t *entry = bsearch((const void *)&key, pak_context->directory, pak_context->entries, sizeof(Pak_Entry_t), _pak_entry_compare);

@@ -28,6 +28,7 @@
 #include <libs/log.h>
 #include <libs/stb.h>
 
+#include <dirent.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <sys/stat.h>
@@ -35,7 +36,7 @@
 #define LOG_CONTEXT "fs"
 
 // FIXME: convert bool argument to flags.
-static void *fs_load(const File_System_Callbacks_t *callbacks, const void *context, const char *file, bool null_terminate, size_t *size)
+static void *_load(const File_System_Callbacks_t *callbacks, const void *context, const char *file, bool null_terminate, size_t *size)
 {
     size_t bytes_to_read;
     void *handle = callbacks->open(context, file, &bytes_to_read);
@@ -66,7 +67,7 @@ static void *fs_load(const File_System_Callbacks_t *callbacks, const void *conte
 static File_System_Chunk_t load_as_string(const File_System_Callbacks_t *callbacks, const void *context, const char *file)
 {
     size_t length;
-    void *chars = fs_load(callbacks, context, file, true, &length);
+    void *chars = _load(callbacks, context, file, true, &length);
     if (!chars) {
         return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
     }
@@ -84,7 +85,7 @@ static File_System_Chunk_t load_as_string(const File_System_Callbacks_t *callbac
 static File_System_Chunk_t load_as_binary(const File_System_Callbacks_t *callbacks, const void *context, const char *file)
 {
     size_t size;
-    void *ptr = fs_load(callbacks, context, file, false, &size);
+    void *ptr = _load(callbacks, context, file, false, &size);
     if (!ptr) {
         return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
     }
@@ -161,24 +162,57 @@ static File_System_Chunk_t load_as_image(const File_System_Callbacks_t *callback
 }
 
 #if PLATFORM_ID == PLATFORM_WINDOWS
-#define realpath(N,R) _fullpath((R),(N),PATH_MAX)
+  #define realpath(N,R) _fullpath((R),(N),PATH_MAX)
 #endif
 
-const File_System_Callbacks_t *_detect(const char *path)
+bool FS_initialize(File_System_t *file_system, const char *base_path)
 {
-    struct stat path_stat;
-    int result = stat(path, &path_stat);
-    if (result != 0) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get stats for `%s`", path);
+    *file_system = (File_System_t){ 0 };
+
+    char resolved[FILE_PATH_MAX]; // Using local buffer to avoid un-tracked `malloc()` for the syscall.
+    char *ptr = realpath(base_path ? base_path : FILE_PATH_CURRENT_SZ, resolved);
+    if (!ptr) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't resolve `%s`", base_path);
+        return false;
+    }
+    if (resolved[strlen(resolved) - 1] != '/') {
+        strcat(resolved, FILE_PATH_SEPARATOR_SZ);
+    }
+
+    DIR *dp = opendir(resolved);
+    if (!dp) {
+        fprintf(stderr,"cannot open directory: %s\n", resolved);
         return false;
     }
 
-    return S_ISDIR(path_stat.st_mode) ? std_callbacks: pak_callbacks;
-}
+    for (struct dirent *entry = readdir(dp); entry; entry = readdir(dp)) {
+        char full_path[FILE_PATH_MAX];
+        strcpy(full_path, resolved);
+        strcat(full_path, entry->d_name);
 
-void FS_initialize(File_System_t *file_system)
-{
-    *file_system = (File_System_t){ 0 };
+        struct stat statbuf;
+        int result = lstat(full_path, &statbuf);
+        if (result != 0) {
+            continue;
+        }
+        if (!S_ISREG(statbuf.st_mode)) {
+            continue;
+        }
+        size_t length = strlen(entry->d_name);
+        if (length < 4) {
+            continue;
+        }
+        if (!strcmp(&entry->d_name[length - 4], ".pak") == 0) {
+            continue;
+        }
+        FS_mount(file_system, full_path, FILE_SYSTEM_MOUNT_PAK);
+    }
+
+    closedir(dp);
+
+    FS_mount(file_system, resolved, FILE_SYSTEM_MOUNT_STD);
+
+    return true;
 }
 
 void FS_terminate(File_System_t *file_system)
@@ -191,20 +225,13 @@ void FS_terminate(File_System_t *file_system)
     arrfree(file_system->mount_points);
 }
 
-bool FS_mount(File_System_t *file_system, const char *base_path)
+bool FS_mount(File_System_t *file_system, const char *base_path, File_System_Mounts_t mode)
 {
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "adding mount-point path `%s`", base_path);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "adding mount-point `%s`", base_path);
 
-    char resolved[FILE_PATH_MAX]; // Using local buffer to avoid un-tracked `malloc()` for the syscall.
-    char *ptr = realpath(base_path ? base_path : FILE_PATH_CURRENT_SZ, resolved);
-    if (!ptr) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't resolve `%s`", base_path);
-        return false;
-    }
+    const File_System_Callbacks_t *callbacks = mode == FILE_SYSTEM_MOUNT_STD ? std_callbacks: pak_callbacks;
 
-    const File_System_Callbacks_t *callbacks = _detect(resolved);
-
-    void *context = callbacks->init(resolved);
+    void *context = callbacks->init(base_path);
     if (!context) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize mount-point for path `%s`", base_path);
         return false;

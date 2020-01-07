@@ -27,6 +27,7 @@
 
 #include <stdio.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #define LOG_CONTEXT "fs-std"
 
@@ -43,10 +44,7 @@ static void *stdio_init(const char *path)
     Std_Context_t *std_context = malloc(sizeof(Std_Context_t));
     *std_context = (Std_Context_t){ 0 };
 
-    strcpy(std_context->base_path, path);
-    if (path[strlen(path) - 1] != '/') {
-        strcat(std_context->base_path, FILE_PATH_SEPARATOR_SZ);
-    }
+    strcpy(std_context->base_path, path); // The path *need* to be terminated with the file path-separator!!!
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "I/O initialized at folder `%s`", path);
 
@@ -64,7 +62,7 @@ static void stdio_deinit(void *context)
 
 static void *stdio_open(const void *context, const char *file, size_t *size_in_bytes)
 {
-    Std_Context_t *std_context = (Std_Context_t *)context;
+    const Std_Context_t *std_context = (const Std_Context_t *)context;
 
     char full_path[FILE_PATH_MAX];
     strcpy(full_path, std_context->base_path);
