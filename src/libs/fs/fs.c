@@ -252,8 +252,12 @@ File_System_Chunk_t FS_load(const File_System_t *file_system, const char *file, 
     File_System_Chunk_t chunk = (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
 
     size_t count = arrlen(file_system->mount_points);
-    for (size_t i = 0; i < count; ++i) {
+    for (int i = count - 1; i >= 0; --i) { // Backward search to enable resource override in multi-archives.
         File_System_Mount_t *mount_point = &file_system->mount_points[i];
+
+        if (!mount_point->callbacks->has(mount_point->context, file)) {
+            continue;
+        }
 
         if (type == FILE_SYSTEM_CHUNK_STRING) {
             chunk = load_as_string(mount_point->callbacks, mount_point->context, file);
@@ -265,9 +269,7 @@ File_System_Chunk_t FS_load(const File_System_t *file_system, const char *file, 
             chunk = load_as_image(mount_point->callbacks, mount_point->context, file);
         }
 
-        if (chunk.type != FILE_SYSTEM_CHUNK_NULL) {
-            break;
-        }
+        break;
     }
 
     return chunk;
