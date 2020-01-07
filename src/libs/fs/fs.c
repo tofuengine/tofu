@@ -35,6 +35,33 @@
 
 #define LOG_CONTEXT "fs"
 
+typedef enum _Mount_Modes_t {
+    MOUNT_MODE_STD,
+    MOUNT_MODE_PAK,
+    Mount_Modes_t_CountOf,
+} Mount_Modes_t;
+
+static bool _mount(File_System_t *file_system, const char *base_path, Mount_Modes_t mode)
+{
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "adding mount-point `%s`", base_path);
+
+    const File_System_Callbacks_t *callbacks = mode == MOUNT_MODE_STD ? std_callbacks: pak_callbacks;
+
+    void *context = callbacks->init(base_path);
+    if (!context) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize mount-point for path `%s`", base_path);
+        return false;
+    }
+
+    File_System_Mount_t mount_point = (File_System_Mount_t){
+            .callbacks = callbacks,
+            .context = context
+        };
+    arrpush(file_system->mount_points, mount_point);
+
+    return true;
+}
+
 // FIXME: convert bool argument to flags.
 static void *_load(const File_System_Callbacks_t *callbacks, const void *context, const char *file, bool null_terminate, size_t *size)
 {
@@ -205,7 +232,8 @@ bool FS_initialize(File_System_t *file_system, const char *base_path)
         if (!strcmp(&entry->d_name[length - 4], ".pak") == 0) {
             continue;
         }
-        FS_mount(file_system, full_path, FILE_SYSTEM_MOUNT_PAK);
+
+        _mount(file_system, full_path, MOUNT_MODE_PAK);
 
         // TODO: add also possibile "archive.pa0", ..., "archive.p99" file
         // overriding "archive.pak".
@@ -217,7 +245,7 @@ bool FS_initialize(File_System_t *file_system, const char *base_path)
 
     closedir(dp);
 
-    FS_mount(file_system, resolved, FILE_SYSTEM_MOUNT_STD);
+    _mount(file_system, resolved, MOUNT_MODE_STD);
 
     return true;
 }
@@ -232,28 +260,6 @@ void FS_terminate(File_System_t *file_system)
     arrfree(file_system->mount_points);
 }
 
-bool FS_mount(File_System_t *file_system, const char *base_path, File_System_Mounts_t mode)
-{
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "adding mount-point `%s`", base_path);
-
-    const File_System_Callbacks_t *callbacks = mode == FILE_SYSTEM_MOUNT_STD ? std_callbacks: pak_callbacks;
-
-    void *context = callbacks->init(base_path);
-    if (!context) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize mount-point for path `%s`", base_path);
-        return false;
-    }
-
-    File_System_Mount_t mount_point = (File_System_Mount_t){
-            .callbacks = callbacks,
-            .context = context
-        };
-    arrpush(file_system->mount_points, mount_point);
-//    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "mount-point path `%s` added", base_path);
-
-    return true;
-}
-
 File_System_Chunk_t FS_load(const File_System_t *file_system, const char *file, File_System_Chunk_Types_t type)
 {
     File_System_Chunk_t chunk = (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
@@ -262,7 +268,7 @@ File_System_Chunk_t FS_load(const File_System_t *file_system, const char *file, 
     for (int i = count - 1; i >= 0; --i) { // Backward search to enable resource override in multi-archives.
         File_System_Mount_t *mount_point = &file_system->mount_points[i];
 
-        if (!mount_point->callbacks->has(mount_point->context, file)) {
+        if (!mount_point->callbacks->exists(mount_point->context, file)) {
             continue;
         }
 
