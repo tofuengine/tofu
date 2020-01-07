@@ -34,7 +34,7 @@
 
 #define LOG_CONTEXT "fs"
 
-// FIXME: convert bool argumento to flags.
+// FIXME: convert bool argument to flags.
 static void *fs_load(const File_System_Callbacks_t *callbacks, const void *context, const char *file, bool null_terminate, size_t *size)
 {
     size_t bytes_to_read;
@@ -67,6 +67,9 @@ static File_System_Chunk_t load_as_string(const File_System_Callbacks_t *callbac
 {
     size_t length;
     void *chars = fs_load(callbacks, context, file, true, &length);
+    if (!chars) {
+        return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
+    }
     return (File_System_Chunk_t){
             .type = FILE_SYSTEM_CHUNK_STRING,
             .var = {
@@ -82,6 +85,9 @@ static File_System_Chunk_t load_as_binary(const File_System_Callbacks_t *callbac
 {
     size_t size;
     void *ptr = fs_load(callbacks, context, file, false, &size);
+    if (!ptr) {
+        return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
+    }
     return (File_System_Chunk_t){
             .type = FILE_SYSTEM_CHUNK_BLOB,
             .var = {
@@ -170,44 +176,74 @@ const File_System_Callbacks_t *_detect(const char *path)
     return S_ISDIR(path_stat.st_mode) ? std_callbacks: pak_callbacks;
 }
 
-bool FS_initialize(File_System_t *file_system, const char *base_path)
+void FS_initialize(File_System_t *file_system)
 {
+    *file_system = (File_System_t){ 0 };
+}
+
+void FS_terminate(File_System_t *file_system)
+{
+    size_t count = arrlen(file_system->mount_points);
+    for (size_t i = 0; i < count; ++i) {
+        File_System_Mount_t *mount_point = &file_system->mount_points[i];
+        mount_point->callbacks->deinit(mount_point->context);
+    }
+    arrfree(file_system->mount_points);
+}
+
+bool FS_mount(File_System_t *file_system, const char *base_path)
+{
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "adding mount-point path `%s`", base_path);
+
     char resolved[FILE_PATH_MAX]; // Using local buffer to avoid un-tracked `malloc()` for the syscall.
     char *ptr = realpath(base_path ? base_path : FILE_PATH_CURRENT_SZ, resolved);
     if (!ptr) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't resolve `%s`", base_path);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't resolve `%s`", base_path);
         return false;
     }
 
     const File_System_Callbacks_t *callbacks = _detect(resolved);
 
     void *context = callbacks->init(resolved);
+    if (!context) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize mount-point for path `%s`", base_path);
+        return false;
+    }
 
-    *file_system = (File_System_t){
+    File_System_Mount_t mount_point = (File_System_Mount_t){
             .callbacks = callbacks,
             .context = context
         };
+    arrpush(file_system->mount_points, mount_point);
+//    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "mount-point path `%s` added", base_path);
 
-    return context;
+    return true;
 }
 
-void FS_terminate(File_System_t *file_system)
+File_System_Chunk_t FS_load(const File_System_t *file_system, const char *file, File_System_Chunk_Types_t type)
 {
-    file_system->callbacks->deinit(file_system->context);
-}
+    File_System_Chunk_t chunk = (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
 
-File_System_Chunk_t FS_load(const File_System_t *fs, const char *file, File_System_Chunk_Types_t type)
-{
-    if (type == FILE_SYSTEM_CHUNK_STRING) {
-        return load_as_string(fs->callbacks, fs->context, file);
-    } else
-    if (type == FILE_SYSTEM_CHUNK_BLOB) {
-        return load_as_binary(fs->callbacks, fs->context, file);
-    } else
-    if (type == FILE_SYSTEM_CHUNK_IMAGE) {
-        return load_as_image(fs->callbacks, fs->context, file);
+    size_t count = arrlen(file_system->mount_points);
+    for (size_t i = 0; i < count; ++i) {
+        File_System_Mount_t *mount_point = &file_system->mount_points[i];
+
+        if (type == FILE_SYSTEM_CHUNK_STRING) {
+            chunk = load_as_string(mount_point->callbacks, mount_point->context, file);
+        } else
+        if (type == FILE_SYSTEM_CHUNK_BLOB) {
+            chunk = load_as_binary(mount_point->callbacks, mount_point->context, file);
+        } else
+        if (type == FILE_SYSTEM_CHUNK_IMAGE) {
+            chunk = load_as_image(mount_point->callbacks, mount_point->context, file);
+        }
+
+        if (chunk.type != FILE_SYSTEM_CHUNK_NULL) {
+            break;
+        }
     }
-    return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
+
+    return chunk;
 }
 
 void FS_release(File_System_Chunk_t chunk)
