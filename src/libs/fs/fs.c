@@ -44,7 +44,14 @@ const File_System_Callbacks_t *_detect(const char *path)
         return false;
     }
 
-    return S_ISDIR(path_stat.st_mode) ? std_callbacks: pak_callbacks;
+    if (S_ISDIR(path_stat.st_mode)) {
+        return stdio_callbacks;
+    } else
+    if (S_ISREG(path_stat.st_mode) && pakio_is_archive(path)) {
+        return pakio_callbacks;
+    }
+
+    return NULL;
 }
 
 static bool _mount(File_System_t *file_system, const char *base_path)
@@ -52,10 +59,14 @@ static bool _mount(File_System_t *file_system, const char *base_path)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "adding mount-point `%s`", base_path);
 
     const File_System_Callbacks_t *callbacks = _detect(base_path);
+    if (!callbacks) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't detect type for mount-point `%s`", base_path);
+        return false;
+    }
 
     void *context = callbacks->init(base_path);
     if (!context) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize mount-point for path `%s`", base_path);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize mount-point `%s`", base_path);
         return false;
     }
 
@@ -231,11 +242,7 @@ bool FS_initialize(File_System_t *file_system, const char *base_path)
         if (!S_ISREG(statbuf.st_mode)) {
             continue;
         }
-        size_t length = strlen(entry->d_name);
-        if (length < 4) {
-            continue;
-        }
-        if (!strcmp(&entry->d_name[length - 4], ".pak") == 0) {
+        if (!pakio_is_archive(full_path)) {
             continue;
         }
 
