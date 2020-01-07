@@ -191,7 +191,7 @@ bool FS_initialize(File_System_t *file_system, const char *base_path)
         strcat(full_path, entry->d_name);
 
         struct stat statbuf;
-        int result = lstat(full_path, &statbuf);
+        int result = stat(full_path, &statbuf);
         if (result != 0) {
             continue;
         }
