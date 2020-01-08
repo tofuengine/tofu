@@ -4,7 +4,7 @@ ifeq ($(PLATFORM),windows)
 	else
 		TARGET=tofu_x32.exe
 	endif
-else ifeq ($(PLATFORM),raspberry)
+else ifeq ($(PLATFORM),rpi)
 	TARGET=tofu-rpi_x32
 else
 	TARGET=tofu
@@ -51,7 +51,7 @@ ifeq ($(PLATFORM),windows)
 		LINKER=i686-w64-mingw32-gcc
 		LFLAGS=-Lexternal/GLFW/windows/x32 -lglfw3 -lgdi32
 	endif
-else ifeq ($(PLATFORM),raspberry)
+else ifeq ($(PLATFORM),rpi)
 	LINKER=gcc
 	LFLAGS=-Lexternal/GLFW/rpi/x32 -lglfw3 -lm -lpthread -lX11 -ldl
 else
