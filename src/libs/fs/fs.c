@@ -275,6 +275,20 @@ void FS_terminate(File_System_t *file_system)
     arrfree(file_system->mount_points);
 }
 
+bool FS_exists(const File_System_t *file_system, const char *file)
+{
+    size_t count = arrlen(file_system->mount_points);
+    for (int i = count - 1; i >= 0; --i) { // Backward search to enable resource override in multi-archives.
+        File_System_Mount_t *mount_point = &file_system->mount_points[i];
+
+        if (mount_point->callbacks->exists(mount_point->context, file)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 File_System_Chunk_t FS_load(const File_System_t *file_system, const char *file, File_System_Chunk_Types_t type)
 {
     File_System_Chunk_t chunk = (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
