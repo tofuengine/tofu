@@ -79,11 +79,11 @@ static bool _mount(File_System_t *file_system, const char *base_path)
         return false;
     }
 
-    File_System_Mount_t mount_point = (File_System_Mount_t){
+    File_System_Mount_t mount = (File_System_Mount_t){
             .callbacks = callbacks,
             .context = context
         };
-    arrpush(file_system->mount_points, mount_point);
+    arrpush(file_system->mounts, mount);
 
     return true;
 }
@@ -298,21 +298,21 @@ bool FS_initialize(File_System_t *file_system, const char *base_path)
 
 void FS_terminate(File_System_t *file_system)
 {
-    const size_t count = arrlen(file_system->mount_points);
+    const size_t count = arrlen(file_system->mounts);
     for (size_t i = 0; i < count; ++i) {
-        File_System_Mount_t *mount_point = &file_system->mount_points[i];
-        mount_point->callbacks->deinit(mount_point->context);
+        File_System_Mount_t *mount = &file_system->mounts[i];
+        mount->callbacks->deinit(mount->context);
     }
-    arrfree(file_system->mount_points);
+    arrfree(file_system->mounts);
 }
 
 bool FS_exists(const File_System_t *file_system, const char *file)
 {
-    const size_t count = arrlen(file_system->mount_points);
+    const size_t count = arrlen(file_system->mounts);
     for (size_t i = 0; i < count; ++i) {
-        File_System_Mount_t *mount_point = &file_system->mount_points[i];
+        File_System_Mount_t *mount = &file_system->mounts[i];
 
-        if (mount_point->callbacks->exists(mount_point->context, file)) {
+        if (mount->callbacks->exists(mount->context, file)) {
             return true;
         }
     }
@@ -322,11 +322,11 @@ bool FS_exists(const File_System_t *file_system, const char *file)
 
 File_System_Handle_t *FS_open(const File_System_t *file_system, const char *file, size_t *size_in_bytes)
 {
-    const size_t count = arrlen(file_system->mount_points);
+    const size_t count = arrlen(file_system->mounts);
     for (int i = count - 1; i >= 0; --i) { // Backward search to enable resource override in multi-archives.
-        File_System_Mount_t *mount_point = &file_system->mount_points[i];
+        File_System_Mount_t *mount = &file_system->mounts[i];
 
-        return mount_point->callbacks->open(mount_point->context, file, size_in_bytes);
+        return mount->callbacks->open(mount->context, file, size_in_bytes);
     }
 
     return NULL;
@@ -354,9 +354,9 @@ void FS_close(File_System_Handle_t *handle)
 
 int FS_load_script(const File_System_t *file_system, const char *file, lua_State *L)
 {
-    size_t count = arrlen(file_system->mount_points);
+    size_t count = arrlen(file_system->mounts);
     for (int i = count - 1; i >= 0; --i) { // Backward search to enable resource override in multi-archives.
-        const File_System_Mount_t *mount = &file_system->mount_points[i];
+        const File_System_Mount_t *mount = &file_system->mounts[i];
 
         if (!mount->callbacks->exists(mount->context, file)) {
             continue;
@@ -372,9 +372,9 @@ File_System_Chunk_t FS_load(const File_System_t *file_system, const char *file, 
 {
     File_System_Chunk_t chunk = (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
 
-    size_t count = arrlen(file_system->mount_points);
+    size_t count = arrlen(file_system->mounts);
     for (int i = count - 1; i >= 0; --i) { // Backward search to enable resource override in multi-archives.
-        const File_System_Mount_t *mount = &file_system->mount_points[i];
+        const File_System_Mount_t *mount = &file_system->mounts[i];
 
         if (!mount->callbacks->exists(mount->context, file)) {
             continue;

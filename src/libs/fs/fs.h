@@ -57,17 +57,17 @@
 #define FILE_SYSTEM_PATH_SEPARATOR_SZ "/"
 
 typedef struct _File_System_Mount_Callbacks_t {
-   void *(*init)  (const char *path); // MOUNT-POINT
-   void  (*deinit)(void *context); // MOUNT-POINT
-   bool  (*exists)(const void *context, const char *file); // MOUNT-POINT
-   void *(*open)  (const void *context, const char *file, size_t *size_in_bytes); // MOUNT-POINT
+   void *(*init)  (const char *path);
+   void  (*deinit)(void *context);
+   bool  (*exists)(const void *context, const char *file);
+   void *(*open)  (const void *context, const char *file, size_t *size_in_bytes);
 } File_System_Mount_Callbacks_t;
 
 typedef struct _File_System_Handle_Callbacks_t {
-   size_t (*read) (void *handle, void *buffer, size_t bytes_requested); // CONTEXT
-   void   (*skip) (void *handle, int offset); // CONTEXT
-   bool   (*eof)  (void *handle); // CONTEXT
-   void   (*close)(void *handle); // CONTEXT
+   size_t (*read) (void *handle, void *buffer, size_t bytes_requested);
+   void   (*skip) (void *handle, int offset);
+   bool   (*eof)  (void *handle);
+   void   (*close)(void *handle);
 } File_System_Handle_Callbacks_t;
 
 typedef struct _File_System_Mount_t {
@@ -81,7 +81,7 @@ typedef struct _File_System_Handle_t {
 } File_System_Handle_t;
 
 typedef struct _File_System_t {
-    File_System_Mount_t *mount_points;
+    File_System_Mount_t *mounts;
 } File_System_t;
 
 typedef enum _File_System_Chunk_Types_t {
