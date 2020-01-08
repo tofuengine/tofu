@@ -142,7 +142,7 @@ static void stdio_close(void *handle)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p closed", std_handle);
 }
 
-const File_System_Callbacks_t *std_callbacks = &(File_System_Callbacks_t){
+const File_System_Callbacks_t *stdio_callbacks = &(File_System_Callbacks_t){
     stdio_init,
     stdio_deinit,
     stdio_exists,

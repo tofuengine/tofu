@@ -36,12 +36,13 @@
 #define LOG_CONTEXT "fs-pak"
 
 #define PAK_SIGNATURE           "TOFUPAK!"
+#define PAK_SIGNATURE_LENGTH    8
 
 #define PAK_FLAG_ENCRYPTED      0x0001
 
 #pragma pack(push, 1)
 typedef struct _Pak_Header_t {
-    char signature[8];
+    char signature[PAK_SIGNATURE_LENGTH];
     uint8_t version;
     uint8_t flags;
     uint16_t __reserved;
@@ -86,14 +87,14 @@ static int _pak_entry_compare(const void *lhs, const void *rhs)
 // The key is the MD5 digest of the entry name (w/ relative path).
 static void _initialize_context(rc4_context_t *cipher_context, const char *file)
 {
-    md5_context_t md5_context;
-    md5_init(&md5_context);
-    md5_update(&md5_context, (const uint8_t *)file, strlen(file));
+    md5_context_t digest_context;
+    md5_init(&digest_context);
+    md5_update(&digest_context, (const uint8_t *)file, strlen(file));
 
-    uint8_t rc4_key[MD5_SIZE];
-    md5_final(&md5_context, rc4_key);
+    uint8_t cipher_key[MD5_SIZE];
+    md5_final(&digest_context, cipher_key);
 
-    rc4_schedule(cipher_context, rc4_key, sizeof(rc4_key));
+    rc4_schedule(cipher_context, cipher_key, sizeof(cipher_key));
 #ifdef DROP_256
     uint8_t drop[256] = { 0 };
     rc4_process(cipher_context, drop, drop, sizeof(drop));
@@ -239,7 +240,7 @@ static void *pakio_open(const void *context, const char *file, size_t *size_in_b
     }
 
     fseek(stream, entry->offset, SEEK_SET); // Move to the found entry position into the file.
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry `%s` found at offset %d", file, entry->offset);
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry `%s` found at offset %d in file `%s`", file, entry->offset, pak_context->archive_path);
 
     Pak_Handle_t *pak_handle = malloc(sizeof(Pak_Handle_t));
     if (!pak_handle) {
@@ -322,7 +323,7 @@ static void pakio_close(void *handle)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry w/ handle %p closed", pak_handle);
 }
 
-const File_System_Callbacks_t *pak_callbacks = &(File_System_Callbacks_t){
+const File_System_Callbacks_t *pakio_callbacks = &(File_System_Callbacks_t){
     pakio_init,
     pakio_deinit,
     pakio_exists,
@@ -332,3 +333,19 @@ const File_System_Callbacks_t *pak_callbacks = &(File_System_Callbacks_t){
     pakio_eof,
     pakio_close,
 };
+
+bool pakio_is_archive(const char *path)
+{
+    FILE *stream = fopen(path, "rb");
+    if (!stream) {
+        return false;
+    }
+
+    char signature[PAK_SIGNATURE_LENGTH];
+    const size_t chars_to_read = sizeof(signature) / sizeof(char);
+    size_t chars_read = fread(signature, sizeof(char), chars_to_read, stream);
+
+    fclose(stream);
+
+    return chars_read == chars_to_read && strncmp(signature, PAK_SIGNATURE, PAK_SIGNATURE_LENGTH) == 0;
+}
