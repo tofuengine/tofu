@@ -97,7 +97,7 @@ static int _panic(lua_State *L)
 
 #ifdef __DEBUG_VM_CALLS__
 #ifdef __VM_USE_CUSTOM_TRACEBACK__
-static int error_handler(lua_State *L)
+static int _error_handler(lua_State *L)
 {
     const char *msg = lua_tostring(L, 1);
     if (msg == NULL) {  /* is error object not a string? */
@@ -245,7 +245,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const File_System_t *fil
     lua_getfield(interpreter->state, -1, "traceback");
     lua_remove(interpreter->state, -2);
 #else
-    lua_pushcfunction(interpreter->state, error_handler);
+    lua_pushcfunction(interpreter->state, _error_handler);
 #endif
 #endif
 

@@ -27,6 +27,8 @@
 
 #include <core/platform.h>
 
+#include <lua/lua.h>
+
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -104,6 +106,7 @@ extern bool FS_initialize(File_System_t *file_system, const char *base_path);
 extern void FS_terminate(File_System_t *file_system);
 
 extern bool FS_exists(const File_System_t *file_system, const char *file);
+extern int FS_load_script(const File_System_t *file_system, const char *file, lua_State *L);
 extern File_System_Chunk_t FS_load(const File_System_t *file_system, const char *file, File_System_Chunk_Types_t type);
 extern void FS_release(File_System_Chunk_t chunk);
 

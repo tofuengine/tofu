@@ -30,12 +30,22 @@
 #include <libs/log.h>
 #include <libs/stb.h>
 
+#include <lua/lauxlib.h>
+
 #include <dirent.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <sys/stat.h>
 
 #define LOG_CONTEXT "fs"
+
+#define READER_BUFFER_SIZE  2048
+
+typedef struct _Reader_Context_t {
+    const File_System_Callbacks_t *callbacks;
+    void *handle;
+    char buffer[READER_BUFFER_SIZE];
+} Reader_Context_t;
 
 const File_System_Callbacks_t *_detect(const char *path)
 {
@@ -207,6 +217,42 @@ static File_System_Chunk_t load_as_image(const File_System_Callbacks_t *callback
         };
 }
 
+static const char *_reader(lua_State *L, void *ud, size_t *size)
+{
+    Reader_Context_t *context = (Reader_Context_t *)ud;
+
+    const File_System_Callbacks_t *callbacks = context->callbacks;
+    void *handle = context->handle;
+    char *buffer = context->buffer;
+
+    if (callbacks->eof(handle)) {
+        return NULL;
+    }
+
+    *size = callbacks->read(handle, buffer, READER_BUFFER_SIZE);
+
+    return buffer;
+}
+
+static int load_as_script(const File_System_Callbacks_t *callbacks, const void *context, const char *file, lua_State *L)
+{
+    size_t bytes_to_read;
+    void *handle = callbacks->open(context, file, &bytes_to_read);
+    if (!handle) {
+        return LUA_ERRFILE;
+    }
+
+    char name[FILE_PATH_MAX];
+    sprintf(name, "@%s", file);
+
+    // nor `text` nor `binary`, autodetect.
+    int result = lua_load(L, _reader, &(Reader_Context_t){ .callbacks = callbacks, .handle = handle }, name, NULL);
+
+    callbacks->close(handle);
+
+    return result;
+}
+
 #if PLATFORM_ID == PLATFORM_WINDOWS
   #define realpath(N,R) _fullpath((R),(N),PATH_MAX)
 #endif
@@ -287,6 +333,25 @@ bool FS_exists(const File_System_t *file_system, const char *file)
     }
 
     return false;
+}
+
+int FS_load_script(const File_System_t *file_system, const char *file, lua_State *L)
+{
+    size_t count = arrlen(file_system->mount_points);
+    for (int i = count - 1; i >= 0; --i) { // Backward search to enable resource override in multi-archives.
+        File_System_Mount_t *mount_point = &file_system->mount_points[i];
+
+        if (!mount_point->callbacks->exists(mount_point->context, file)) {
+            continue;
+        }
+
+        const File_System_Callbacks_t *callbacks = mount_point->callbacks;
+        const void *context = mount_point->context;
+
+        return load_as_script(callbacks, context, file, L);
+    }
+
+    return LUA_ERRFILE;
 }
 
 File_System_Chunk_t FS_load(const File_System_t *file_system, const char *file, File_System_Chunk_Types_t type)
