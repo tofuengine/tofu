@@ -70,6 +70,7 @@ typedef struct _Pak_Context_t {
 } Pak_Context_t;
 
 typedef struct _Pak_Handle_t {
+    const File_System_Callbacks_t *callbacks;
     FILE *stream;
     long end_of_stream;
     bool encrypted;
@@ -85,7 +86,7 @@ static int _pak_entry_compare(const void *lhs, const void *rhs)
 
 // Encryption is implemented throught a RC4 stream cipher.
 // The key is the MD5 digest of the entry name (w/ relative path).
-static void _initialize_context(rc4_context_t *cipher_context, const char *file)
+static void _initialize_cipher_context(rc4_context_t *cipher_context, const char *file)
 {
     md5_context_t digest_context;
     md5_init(&digest_context);
@@ -251,13 +252,14 @@ static void *pakio_open(const void *context, const char *file, size_t *size_in_b
         return NULL;
     }
     *pak_handle = (Pak_Handle_t){
+            .callbacks = pakio_callbacks,
             .stream = stream,
             .end_of_stream = entry->offset + entry->size,
             .encrypted = pak_context->encrypted
         };
 
     if (pak_context->encrypted) {
-        _initialize_context(&pak_handle->cipher_context, entry->name);
+        _initialize_cipher_context(&pak_handle->cipher_context, entry->name);
     }
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry `%s` opened w/ handle %p (%d bytes)", file, pak_handle, entry->size);

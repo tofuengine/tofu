@@ -311,7 +311,7 @@ bool FS_initialize(File_System_t *file_system, const char *base_path)
 
 void FS_terminate(File_System_t *file_system)
 {
-    size_t count = arrlen(file_system->mount_points);
+    const size_t count = arrlen(file_system->mount_points);
     for (size_t i = 0; i < count; ++i) {
         File_System_Mount_t *mount_point = &file_system->mount_points[i];
         mount_point->callbacks->deinit(mount_point->context);
@@ -321,8 +321,8 @@ void FS_terminate(File_System_t *file_system)
 
 bool FS_exists(const File_System_t *file_system, const char *file)
 {
-    size_t count = arrlen(file_system->mount_points);
-    for (int i = count - 1; i >= 0; --i) { // Backward search to enable resource override in multi-archives.
+    const size_t count = arrlen(file_system->mount_points);
+    for (size_t i = 0; i < count; ++i) {
         File_System_Mount_t *mount_point = &file_system->mount_points[i];
 
         if (mount_point->callbacks->exists(mount_point->context, file)) {
@@ -331,6 +331,46 @@ bool FS_exists(const File_System_t *file_system, const char *file)
     }
 
     return false;
+}
+
+typedef struct _File_System_Handle_t {
+    const File_System_Callbacks_t *callbacks;
+} File_System_Handle_t;
+
+void *FS_open(const File_System_t *file_system, const char *file, size_t *size_in_bytes)
+{
+    const size_t count = arrlen(file_system->mount_points);
+    for (int i = count - 1; i >= 0; --i) { // Backward search to enable resource override in multi-archives.
+        File_System_Mount_t *mount_point = &file_system->mount_points[i];
+
+        return mount_point->callbacks->open(mount_point->context, file, size_in_bytes);
+    }
+
+    return NULL;
+}
+
+size_t FS_read(void *handle, void *buffer, size_t bytes_requested)
+{
+    File_System_Handle_t *h = (File_System_Handle_t *)handle;
+    h->callbacks->read(handle, buffer, bytes_requested);
+}
+
+void FS_skip(void *handle, int offset)
+{
+    File_System_Handle_t *h = (File_System_Handle_t *)handle;
+    h->callbacks->skip(handle, offset);
+}
+
+bool FS_eof(void *handle)
+{
+    File_System_Handle_t *h = (File_System_Handle_t *)handle;
+    return h->callbacks->eof(handle);
+}
+
+void FS_close(void *handle)
+{
+    File_System_Handle_t *h = (File_System_Handle_t *)handle;
+    h->callbacks->close(handle);
 }
 
 int FS_load_script(const File_System_t *file_system, const char *file, lua_State *L)

@@ -57,16 +57,31 @@
 #define FILE_SYSTEM_PATH_SEPARATOR_SZ "/"
 
 typedef struct _File_System_Callbacks_t {
-   void * (*init)  (const char *path);
-   void   (*deinit)(void *context);
-   bool   (*exists)  (const void *context, const char *file);
-   void * (*open) (const void *context, const char *file, size_t *size_in_bytes);
-   size_t (*read) (void *handle, void *buffer, size_t bytes_requested);
-   void   (*skip) (void *handle, int offset);
-   bool   (*eof)  (void *handle);
-   void   (*close)(void *handle);
+   void * (*init)  (const char *path); // MOUNT-POINT
+   void   (*deinit)(void *context); // MOUNT-POINT
+   bool   (*exists)  (const void *context, const char *file); // MOUNT-POINT
+   void * (*open) (const void *context, const char *file, size_t *size_in_bytes); // MOUNT-POINT
+   size_t (*read) (void *handle, void *buffer, size_t bytes_requested); // CONTEXT
+   void   (*skip) (void *handle, int offset); // CONTEXT
+   bool   (*eof)  (void *handle); // CONTEXT
+   void   (*close)(void *handle); // CONTEXT
 } File_System_Callbacks_t;
+/*
+TODO: split!!!
+typedef struct _File_System_Mount_Callbacks_t {
+   void * (*init)  (const char *path); // MOUNT-POINT
+   void   (*deinit)(void *context); // MOUNT-POINT
+   bool   (*exists)  (const void *context, const char *file); // MOUNT-POINT
+   void * (*open) (const void *context, const char *file, size_t *size_in_bytes); // MOUNT-POINT
+} File_System_Mount_Callbacks_t;
 
+typedef struct _File_System_Handle_Callbacks_t {
+   size_t (*read) (void *handle, void *buffer, size_t bytes_requested); // CONTEXT
+   void   (*skip) (void *handle, int offset); // CONTEXT
+   bool   (*eof)  (void *handle); // CONTEXT
+   void   (*close)(void *handle); // CONTEXT
+} File_System_Handle_Callbacks_t;
+*/
 typedef struct _File_System_Mount_t {
     const File_System_Callbacks_t *callbacks;
     void *context;
@@ -105,6 +120,12 @@ extern bool FS_initialize(File_System_t *file_system, const char *base_path);
 extern void FS_terminate(File_System_t *file_system);
 
 extern bool FS_exists(const File_System_t *file_system, const char *file);
+extern void *FS_open(const File_System_t *file_system, const char *file, size_t *size_in_bytes);
+extern size_t FS_read(void *handle, void *buffer, size_t bytes_requested);
+extern void FS_skip(void *handle, int offset);
+extern bool FS_eof(void *handle);
+extern void FS_close(void *handle);
+
 extern int FS_load_script(const File_System_t *file_system, const char *file, lua_State *L);
 extern File_System_Chunk_t FS_load(const File_System_t *file_system, const char *file, File_System_Chunk_Types_t type);
 extern void FS_release(File_System_Chunk_t chunk);

@@ -38,6 +38,7 @@ typedef struct _Std_Context_t {
 } Std_Context_t;
 
 typedef struct _Std_Handle_t {
+    const File_System_Callbacks_t *callbacks;
     FILE *stream;
 } Std_Handle_t;
 
@@ -106,7 +107,10 @@ static void *stdio_open(const void *context, const char *file, size_t *size_in_b
         return NULL;
     }
 
-    *std_handle = (Std_Handle_t){ .stream = stream };
+    *std_handle = (Std_Handle_t){
+            .callbacks = stdio_callbacks,
+            .stream = stream
+        };
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` opened w/ handle %p (%d bytes)", file, std_handle, stat.st_size);
 
