@@ -70,12 +70,81 @@ typedef struct _Pak_Context_t {
 } Pak_Context_t;
 
 typedef struct _Pak_Handle_t {
-    const File_System_Callbacks_t *callbacks;
+    const File_System_Handle_Callbacks_t *callbacks;
     FILE *stream;
     long end_of_stream;
     bool encrypted;
     rc4_context_t cipher_context;
 } Pak_Handle_t;
+
+static size_t pakio_read(void *handle, void *buffer, size_t bytes_requested)
+{
+    Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
+
+    long position = ftell(pak_handle->stream);
+    if (position == -1) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get current position for handle %p", handle);
+        return 0;
+    }
+
+    size_t bytes_available = pak_handle->end_of_stream - position;
+
+    size_t bytes_to_read = bytes_requested;
+    if (bytes_to_read > bytes_available) {
+        bytes_to_read = bytes_available;
+    }
+
+    size_t bytes_read = fread(buffer, sizeof(uint8_t), bytes_to_read, pak_handle->stream);
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d bytes read out of %d (%d requested)", bytes_read, bytes_to_read, bytes_requested);
+
+    if (pak_handle->encrypted) {
+        rc4_process(&pak_handle->cipher_context, buffer, bytes_read);
+        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d bytes decrypted", bytes_read);
+    }
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes read for handle %p", bytes_read, handle);
+    return bytes_read;
+}
+
+static void pakio_skip(void *handle, int offset)
+{
+    Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
+
+    fseek(pak_handle->stream, offset, SEEK_CUR);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes seeked for handle %p", offset, handle);
+}
+
+static bool pakio_eof(void *handle)
+{
+    Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
+
+    long position = ftell(pak_handle->stream);
+    if (position == -1) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get current position for handle %p", handle);
+        return true;
+    }
+
+    bool end_of_file = position >= pak_handle->end_of_stream;
+    Log_assert(!end_of_file, LOG_LEVELS_DEBUG, LOG_CONTEXT, "end-of-file reached for handle %p", handle);
+    return end_of_file;
+}
+
+static void pakio_close(void *handle)
+{
+    Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
+
+    fclose(pak_handle->stream);
+    free(pak_handle);
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry w/ handle %p closed", pak_handle);
+}
+
+const File_System_Handle_Callbacks_t *_pakio_handle_callbacks = &(File_System_Handle_Callbacks_t){
+    pakio_read,
+    pakio_skip,
+    pakio_eof,
+    pakio_close
+};
 
 static int _pak_entry_compare(const void *lhs, const void *rhs)
 {
@@ -252,7 +321,7 @@ static void *pakio_open(const void *context, const char *file, size_t *size_in_b
         return NULL;
     }
     *pak_handle = (Pak_Handle_t){
-            .callbacks = pakio_callbacks,
+            .callbacks = _pakio_handle_callbacks,
             .stream = stream,
             .end_of_stream = entry->offset + entry->size,
             .encrypted = pak_context->encrypted
@@ -269,77 +338,11 @@ static void *pakio_open(const void *context, const char *file, size_t *size_in_b
     return pak_handle;
 }
 
-static size_t pakio_read(void *handle, void *buffer, size_t bytes_requested)
-{
-    Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
-
-    long position = ftell(pak_handle->stream);
-    if (position == -1) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get current position for handle %p", handle);
-        return 0;
-    }
-
-    size_t bytes_available = pak_handle->end_of_stream - position;
-
-    size_t bytes_to_read = bytes_requested;
-    if (bytes_to_read > bytes_available) {
-        bytes_to_read = bytes_available;
-    }
-
-    size_t bytes_read = fread(buffer, sizeof(uint8_t), bytes_to_read, pak_handle->stream);
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d bytes read out of %d (%d requested)", bytes_read, bytes_to_read, bytes_requested);
-
-    if (pak_handle->encrypted) {
-        rc4_process(&pak_handle->cipher_context, buffer, bytes_read);
-        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d bytes decrypted", bytes_read);
-    }
-
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes read for handle %p", bytes_read, handle);
-    return bytes_read;
-}
-
-static void pakio_skip(void *handle, int offset)
-{
-    Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
-
-    fseek(pak_handle->stream, offset, SEEK_CUR);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes seeked for handle %p", offset, handle);
-}
-
-static bool pakio_eof(void *handle)
-{
-    Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
-
-    long position = ftell(pak_handle->stream);
-    if (position == -1) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get current position for handle %p", handle);
-        return true;
-    }
-
-    bool end_of_file = position >= pak_handle->end_of_stream;
-    Log_assert(!end_of_file, LOG_LEVELS_DEBUG, LOG_CONTEXT, "end-of-file reached for handle %p", handle);
-    return end_of_file;
-}
-
-static void pakio_close(void *handle)
-{
-    Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
-
-    fclose(pak_handle->stream);
-    free(pak_handle);
-
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry w/ handle %p closed", pak_handle);
-}
-
-const File_System_Callbacks_t *pakio_callbacks = &(File_System_Callbacks_t){
+const File_System_Mount_Callbacks_t *pakio_callbacks = &(File_System_Mount_Callbacks_t){
     pakio_init,
     pakio_deinit,
     pakio_exists,
-    pakio_open,
-    pakio_read,
-    pakio_skip,
-    pakio_eof,
-    pakio_close,
+    pakio_open
 };
 
 bool pakio_is_archive(const char *path)

@@ -56,23 +56,11 @@
 #define FILE_SYSTEM_PATH_SEPARATOR    '/'
 #define FILE_SYSTEM_PATH_SEPARATOR_SZ "/"
 
-typedef struct _File_System_Callbacks_t {
-   void * (*init)  (const char *path); // MOUNT-POINT
-   void   (*deinit)(void *context); // MOUNT-POINT
-   bool   (*exists)  (const void *context, const char *file); // MOUNT-POINT
-   void * (*open) (const void *context, const char *file, size_t *size_in_bytes); // MOUNT-POINT
-   size_t (*read) (void *handle, void *buffer, size_t bytes_requested); // CONTEXT
-   void   (*skip) (void *handle, int offset); // CONTEXT
-   bool   (*eof)  (void *handle); // CONTEXT
-   void   (*close)(void *handle); // CONTEXT
-} File_System_Callbacks_t;
-/*
-TODO: split!!!
 typedef struct _File_System_Mount_Callbacks_t {
-   void * (*init)  (const char *path); // MOUNT-POINT
-   void   (*deinit)(void *context); // MOUNT-POINT
-   bool   (*exists)  (const void *context, const char *file); // MOUNT-POINT
-   void * (*open) (const void *context, const char *file, size_t *size_in_bytes); // MOUNT-POINT
+   void *(*init)  (const char *path); // MOUNT-POINT
+   void  (*deinit)(void *context); // MOUNT-POINT
+   bool  (*exists)(const void *context, const char *file); // MOUNT-POINT
+   void *(*open)  (const void *context, const char *file, size_t *size_in_bytes); // MOUNT-POINT
 } File_System_Mount_Callbacks_t;
 
 typedef struct _File_System_Handle_Callbacks_t {
@@ -81,11 +69,16 @@ typedef struct _File_System_Handle_Callbacks_t {
    bool   (*eof)  (void *handle); // CONTEXT
    void   (*close)(void *handle); // CONTEXT
 } File_System_Handle_Callbacks_t;
-*/
+
 typedef struct _File_System_Mount_t {
-    const File_System_Callbacks_t *callbacks;
-    void *context;
+    const File_System_Mount_Callbacks_t *callbacks;
+    void *context; // TODO: adopt proper OO technique here, too.
 } File_System_Mount_t;
+
+typedef struct _File_System_Handle_t {
+    const File_System_Handle_Callbacks_t *callbacks;
+    // Additional data will follow in derived structs.
+} File_System_Handle_t;
 
 typedef struct _File_System_t {
     File_System_Mount_t *mount_points;
@@ -120,11 +113,11 @@ extern bool FS_initialize(File_System_t *file_system, const char *base_path);
 extern void FS_terminate(File_System_t *file_system);
 
 extern bool FS_exists(const File_System_t *file_system, const char *file);
-extern void *FS_open(const File_System_t *file_system, const char *file, size_t *size_in_bytes);
-extern size_t FS_read(void *handle, void *buffer, size_t bytes_requested);
-extern void FS_skip(void *handle, int offset);
-extern bool FS_eof(void *handle);
-extern void FS_close(void *handle);
+extern File_System_Handle_t *FS_open(const File_System_t *file_system, const char *file, size_t *size_in_bytes);
+extern size_t FS_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
+extern void FS_skip(File_System_Handle_t *handle, int offset);
+extern bool FS_eof(File_System_Handle_t *handle);
+extern void FS_close(File_System_Handle_t *handle);
 
 extern int FS_load_script(const File_System_t *file_system, const char *file, lua_State *L);
 extern File_System_Chunk_t FS_load(const File_System_t *file_system, const char *file, File_System_Chunk_Types_t type);

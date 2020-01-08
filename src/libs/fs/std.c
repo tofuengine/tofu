@@ -38,9 +38,53 @@ typedef struct _Std_Context_t {
 } Std_Context_t;
 
 typedef struct _Std_Handle_t {
-    const File_System_Callbacks_t *callbacks;
+    const File_System_Handle_Callbacks_t *callbacks;
     FILE *stream;
 } Std_Handle_t;
+
+static size_t stdio_read(void *handle, void *buffer, size_t bytes_requested)
+{
+    Std_Handle_t *std_handle = (Std_Handle_t *)handle;
+
+    size_t bytes_read = fread(buffer, sizeof(char), bytes_requested, std_handle->stream);
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes read for handle %p", bytes_read, handle);
+    return bytes_read;
+}
+
+static void stdio_skip(void *handle, int offset)
+{
+    Std_Handle_t *std_handle = (Std_Handle_t *)handle;
+
+    fseek(std_handle->stream, offset, SEEK_CUR);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes seeked for handle %p", offset, handle);
+}
+
+static bool stdio_eof(void *handle)
+{
+    Std_Handle_t *std_handle = (Std_Handle_t *)handle;
+
+    bool end_of_file = feof(std_handle->stream) != 0;
+    Log_assert(!end_of_file, LOG_LEVELS_DEBUG, LOG_CONTEXT, "end-of-file reached for handle %p", handle);
+    return end_of_file;
+}
+
+static void stdio_close(void *handle)
+{
+    Std_Handle_t *std_handle = (Std_Handle_t *)handle;
+
+    fclose(std_handle->stream);
+    free(std_handle);
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p closed", std_handle);
+}
+
+const File_System_Handle_Callbacks_t *_stdio_handle_callbacks = &(File_System_Handle_Callbacks_t){
+    stdio_read,
+    stdio_skip,
+    stdio_eof,
+    stdio_close,
+};
 
 static void *stdio_init(const char *path)
 {
@@ -108,7 +152,7 @@ static void *stdio_open(const void *context, const char *file, size_t *size_in_b
     }
 
     *std_handle = (Std_Handle_t){
-            .callbacks = stdio_callbacks,
+            .callbacks = _stdio_handle_callbacks,
             .stream = stream
         };
 
@@ -117,50 +161,10 @@ static void *stdio_open(const void *context, const char *file, size_t *size_in_b
     return std_handle;
 }
 
-static size_t stdio_read(void *handle, void *buffer, size_t bytes_requested)
-{
-    Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
-    size_t bytes_read = fread(buffer, sizeof(char), bytes_requested, std_handle->stream);
-
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes read for handle %p", bytes_read, handle);
-    return bytes_read;
-}
-
-static void stdio_skip(void *handle, int offset)
-{
-    Std_Handle_t *std_handle = (Std_Handle_t *)handle;
-
-    fseek(std_handle->stream, offset, SEEK_CUR);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes seeked for handle %p", offset, handle);
-}
-
-static bool stdio_eof(void *handle)
-{
-    Std_Handle_t *std_handle = (Std_Handle_t *)handle;
-
-    bool end_of_file = feof(std_handle->stream) != 0;
-    Log_assert(!end_of_file, LOG_LEVELS_DEBUG, LOG_CONTEXT, "end-of-file reached for handle %p", handle);
-    return end_of_file;
-}
-
-static void stdio_close(void *handle)
-{
-    Std_Handle_t *std_handle = (Std_Handle_t *)handle;
-
-    fclose(std_handle->stream);
-    free(std_handle);
-
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p closed", std_handle);
-}
-
-const File_System_Callbacks_t *stdio_callbacks = &(File_System_Callbacks_t){
+const File_System_Mount_Callbacks_t *stdio_callbacks = &(File_System_Mount_Callbacks_t){
     stdio_init,
     stdio_deinit,
     stdio_exists,
-    stdio_open,
-    stdio_read,
-    stdio_skip,
-    stdio_eof,
-    stdio_close,
+    stdio_open
 };

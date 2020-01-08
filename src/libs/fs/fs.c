@@ -40,12 +40,11 @@
 #define READER_BUFFER_SIZE  2048
 
 typedef struct _Reader_Context_t {
-    const File_System_Callbacks_t *callbacks;
-    void *handle;
+    File_System_Handle_t *handle;
     char buffer[READER_BUFFER_SIZE];
 } Reader_Context_t;
 
-const File_System_Callbacks_t *_detect(const char *path)
+const File_System_Mount_Callbacks_t *_detect(const char *path)
 {
     struct stat path_stat;
     int result = stat(path, &path_stat);
@@ -68,7 +67,7 @@ static bool _mount(File_System_t *file_system, const char *base_path)
 {
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "adding mount-point `%s`", base_path);
 
-    const File_System_Callbacks_t *callbacks = _detect(base_path);
+    const File_System_Mount_Callbacks_t *callbacks = _detect(base_path);
     if (!callbacks) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't detect type for mount-point `%s`", base_path);
         return false;
@@ -90,10 +89,10 @@ static bool _mount(File_System_t *file_system, const char *base_path)
 }
 
 // FIXME: convert bool argument to flags.
-static void *_load(const File_System_Callbacks_t *callbacks, const void *context, const char *file, bool null_terminate, size_t *size)
+static void *_load(const File_System_Mount_t *mount, const char *file, bool null_terminate, size_t *size)
 {
     size_t bytes_to_read;
-    void *handle = callbacks->open(context, file, &bytes_to_read);
+    File_System_Handle_t *handle = mount->callbacks->open(mount->context, file, &bytes_to_read);
     if (!handle) {
         return NULL;
     }
@@ -101,11 +100,11 @@ static void *_load(const File_System_Callbacks_t *callbacks, const void *context
     void *data = malloc(bytes_to_allocate * sizeof(uint8_t)); // Add null terminator for the string.
     if (!data) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d bytes of memory", bytes_to_allocate);
-        callbacks->close(handle);
+        handle->callbacks->close(handle);
         return NULL;
     }
-    size_t read_bytes = callbacks->read(handle, data, bytes_to_read);
-    callbacks->close(handle);
+    size_t read_bytes = handle->callbacks->read(handle, data, bytes_to_read);
+    handle->callbacks->close(handle);
     if (read_bytes < bytes_to_read) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d bytes of data (%d available)", bytes_to_read, read_bytes);
         free(data);
@@ -118,10 +117,10 @@ static void *_load(const File_System_Callbacks_t *callbacks, const void *context
     return data;
 }
 
-static File_System_Chunk_t load_as_string(const File_System_Callbacks_t *callbacks, const void *context, const char *file)
+static File_System_Chunk_t load_as_string(const File_System_Mount_t *mount, const char *file)
 {
     size_t length;
-    void *chars = _load(callbacks, context, file, true, &length);
+    void *chars = _load(mount, file, true, &length);
     if (!chars) {
         return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
     }
@@ -136,10 +135,10 @@ static File_System_Chunk_t load_as_string(const File_System_Callbacks_t *callbac
         };
 }
 
-static File_System_Chunk_t load_as_binary(const File_System_Callbacks_t *callbacks, const void *context, const char *file)
+static File_System_Chunk_t load_as_binary(const File_System_Mount_t *mount, const char *file)
 {
     size_t size;
-    void *ptr = _load(callbacks, context, file, false, &size);
+    void *ptr = _load(mount, file, false, &size);
     if (!ptr) {
         return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
     }
@@ -154,27 +153,22 @@ static File_System_Chunk_t load_as_binary(const File_System_Callbacks_t *callbac
         };
 }
 
-typedef struct _stbi_context_t {
-    const File_System_Callbacks_t *callbacks;
-    void *handle;
-} stbi_context_t;
-
 static int stb_stdio_read(void *user, char *data, int size)
 {
-    const stbi_context_t *stbi_context = (const stbi_context_t *)user;
-    return (int)stbi_context->callbacks->read(stbi_context->handle, data, (size_t)size);
+    const File_System_Handle_t *handle = (const File_System_Handle_t *)user;
+    return (int)handle->callbacks->read(handle, data, (size_t)size);
 }
 
 static void stb_stdio_skip(void *user, int n)
 {
-    const stbi_context_t *stbi_context = (const stbi_context_t *)user;
-    stbi_context->callbacks->skip(stbi_context->handle, n);
+    const File_System_Handle_t *handle = (const File_System_Handle_t *)user;
+    handle->callbacks->skip(handle, n);
 }
 
 static int stb_stdio_eof(void *user)
 {
-    const stbi_context_t *stbi_context = (const stbi_context_t *)user;
-    return stbi_context->callbacks->eof(stbi_context->handle) ? -1 : 0;
+    const File_System_Handle_t *handle = (const File_System_Handle_t *)user;
+    return handle->callbacks->eof(handle) ? -1 : 0;
 }
 
 static const stbi_io_callbacks _io_callbacks = {
@@ -183,21 +177,17 @@ static const stbi_io_callbacks _io_callbacks = {
     stb_stdio_eof,
 };
 
-static File_System_Chunk_t load_as_image(const File_System_Callbacks_t *callbacks, const void *context, const char *file)
+static File_System_Chunk_t load_as_image(const File_System_Mount_t *mount, const char *file)
 {
     size_t byte_to_read;
-    void *handle = callbacks->open(context, file, &byte_to_read);
+    File_System_Handle_t *handle = mount->callbacks->open(mount->context, file, &byte_to_read);
     if (!handle) {
         return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
     }
 
-    stbi_context_t stbi_context = {
-            .callbacks = callbacks, .handle = handle
-        };
-
     int width, height, components;
-    void *pixels = stbi_load_from_callbacks(&_io_callbacks, &stbi_context, &width, &height, &components, STBI_rgb_alpha);
-    callbacks->close(handle);
+    void *pixels = stbi_load_from_callbacks(&_io_callbacks, handle, &width, &height, &components, STBI_rgb_alpha);
+    handle->callbacks->close(handle);
     if (!pixels) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't decode surface from file `%s` (%s)", file, stbi_failure_reason());
         return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
@@ -217,25 +207,22 @@ static File_System_Chunk_t load_as_image(const File_System_Callbacks_t *callback
 
 static const char *_reader(lua_State *L, void *ud, size_t *size)
 {
-    Reader_Context_t *context = (Reader_Context_t *)ud;
+    const Reader_Context_t *context = (const Reader_Context_t *)ud;
+    const File_System_Handle_t *handle = context->handle;
 
-    const File_System_Callbacks_t *callbacks = context->callbacks;
-    void *handle = context->handle;
-    char *buffer = context->buffer;
-
-    if (callbacks->eof(handle)) {
+    if (handle->callbacks->eof(handle)) {
         return NULL;
     }
 
-    *size = callbacks->read(handle, buffer, READER_BUFFER_SIZE);
+    *size = handle->callbacks->read(handle, context->buffer, READER_BUFFER_SIZE);
 
-    return buffer;
+    return context->buffer;
 }
 
-static int load_as_script(const File_System_Callbacks_t *callbacks, const void *context, const char *file, lua_State *L)
+static int load_as_script(const File_System_Mount_t *mount, const char *file, lua_State *L)
 {
     size_t bytes_to_read;
-    void *handle = callbacks->open(context, file, &bytes_to_read);
+    File_System_Handle_t *handle = mount->callbacks->open(mount->context, file, &bytes_to_read);
     if (!handle) {
         return LUA_ERRFILE;
     }
@@ -244,9 +231,9 @@ static int load_as_script(const File_System_Callbacks_t *callbacks, const void *
     sprintf(name, "@%s", file);
 
     // nor `text` nor `binary`, autodetect.
-    int result = lua_load(L, _reader, &(Reader_Context_t){ .callbacks = callbacks, .handle = handle }, name, NULL);
+    int result = lua_load(L, _reader, &(Reader_Context_t){ .handle = handle }, name, NULL);
 
-    callbacks->close(handle);
+    handle->callbacks->close(handle);
 
     return result;
 }
@@ -333,11 +320,7 @@ bool FS_exists(const File_System_t *file_system, const char *file)
     return false;
 }
 
-typedef struct _File_System_Handle_t {
-    const File_System_Callbacks_t *callbacks;
-} File_System_Handle_t;
-
-void *FS_open(const File_System_t *file_system, const char *file, size_t *size_in_bytes)
+File_System_Handle_t *FS_open(const File_System_t *file_system, const char *file, size_t *size_in_bytes)
 {
     const size_t count = arrlen(file_system->mount_points);
     for (int i = count - 1; i >= 0; --i) { // Backward search to enable resource override in multi-archives.
@@ -349,44 +332,37 @@ void *FS_open(const File_System_t *file_system, const char *file, size_t *size_i
     return NULL;
 }
 
-size_t FS_read(void *handle, void *buffer, size_t bytes_requested)
+size_t FS_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested)
 {
-    File_System_Handle_t *h = (File_System_Handle_t *)handle;
-    h->callbacks->read(handle, buffer, bytes_requested);
+    handle->callbacks->read(handle, buffer, bytes_requested);
 }
 
-void FS_skip(void *handle, int offset)
+void FS_skip(File_System_Handle_t *handle, int offset)
 {
-    File_System_Handle_t *h = (File_System_Handle_t *)handle;
-    h->callbacks->skip(handle, offset);
+    handle->callbacks->skip(handle, offset);
 }
 
-bool FS_eof(void *handle)
+bool FS_eof(File_System_Handle_t *handle)
 {
-    File_System_Handle_t *h = (File_System_Handle_t *)handle;
-    return h->callbacks->eof(handle);
+    return handle->callbacks->eof(handle);
 }
 
-void FS_close(void *handle)
+void FS_close(File_System_Handle_t *handle)
 {
-    File_System_Handle_t *h = (File_System_Handle_t *)handle;
-    h->callbacks->close(handle);
+    handle->callbacks->close(handle);
 }
 
 int FS_load_script(const File_System_t *file_system, const char *file, lua_State *L)
 {
     size_t count = arrlen(file_system->mount_points);
     for (int i = count - 1; i >= 0; --i) { // Backward search to enable resource override in multi-archives.
-        File_System_Mount_t *mount_point = &file_system->mount_points[i];
+        const File_System_Mount_t *mount = &file_system->mount_points[i];
 
-        if (!mount_point->callbacks->exists(mount_point->context, file)) {
+        if (!mount->callbacks->exists(mount->context, file)) {
             continue;
         }
 
-        const File_System_Callbacks_t *callbacks = mount_point->callbacks;
-        const void *context = mount_point->context;
-
-        return load_as_script(callbacks, context, file, L);
+        return load_as_script(mount, file, L);
     }
 
     return LUA_ERRFILE;
@@ -398,20 +374,20 @@ File_System_Chunk_t FS_load(const File_System_t *file_system, const char *file, 
 
     size_t count = arrlen(file_system->mount_points);
     for (int i = count - 1; i >= 0; --i) { // Backward search to enable resource override in multi-archives.
-        File_System_Mount_t *mount_point = &file_system->mount_points[i];
+        const File_System_Mount_t *mount = &file_system->mount_points[i];
 
-        if (!mount_point->callbacks->exists(mount_point->context, file)) {
+        if (!mount->callbacks->exists(mount->context, file)) {
             continue;
         }
 
         if (type == FILE_SYSTEM_CHUNK_STRING) {
-            chunk = load_as_string(mount_point->callbacks, mount_point->context, file);
+            chunk = load_as_string(mount, file);
         } else
         if (type == FILE_SYSTEM_CHUNK_BLOB) {
-            chunk = load_as_binary(mount_point->callbacks, mount_point->context, file);
+            chunk = load_as_binary(mount, file);
         } else
         if (type == FILE_SYSTEM_CHUNK_IMAGE) {
-            chunk = load_as_image(mount_point->callbacks, mount_point->context, file);
+            chunk = load_as_image(mount, file);
         }
 
         break;
