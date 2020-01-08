@@ -86,14 +86,15 @@ static inline float _calculate_fps(float elapsed)
     return (float)FPS_AVERAGE_SAMPLES / sum;
 }
 
-static void _configure(const File_System_t *file_system, Configuration_t *configuration)
+static bool _configure(const File_System_t *file_system, Configuration_t *configuration)
 {
     File_System_Chunk_t chunk = FS_load(file_system, "tofu.config", FILE_SYSTEM_CHUNK_STRING);
     if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
-        return;
+        return false;
     }
     Configuration_load(configuration, chunk.var.string.chars);
     FS_release(chunk);
+    return true;
 }
 
 static File_System_Chunk_t _load_icon(const File_System_t *file_system, const char *file)
@@ -116,7 +117,11 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
         return false;
     }
 
-    _configure(&engine->file_system, &engine->configuration);
+    result = _configure(&engine->file_system, &engine->configuration);
+    if (!result) {
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "configuration file is missing");
+        return false;
+    }
 
     Log_configure(engine->configuration.debug, NULL);
     Environment_initialize(&engine->environment);
