@@ -70,7 +70,9 @@ static bool stdio_exists(const void *context, const char *file)
     strcpy(full_path, std_context->base_path);
     strcat(full_path, file);
 
-    return access(full_path, R_OK) != -1;
+    bool exists = access(full_path, R_OK) != -1;
+    Log_assert(!exists, LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` found in context %p", file, context);
+    return exists;
 }
 
 static void *stdio_open(const void *context, const char *file, size_t *size_in_bytes)
@@ -115,7 +117,10 @@ static size_t stdio_read(void *handle, void *buffer, size_t bytes_requested)
 {
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
-    return fread(buffer, sizeof(char), bytes_requested, std_handle->stream);
+    size_t bytes_read = fread(buffer, sizeof(char), bytes_requested, std_handle->stream);
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes read for handle %p", bytes_read, handle);
+    return bytes_read;
 }
 
 static void stdio_skip(void *handle, int offset)
@@ -123,13 +128,16 @@ static void stdio_skip(void *handle, int offset)
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
     fseek(std_handle->stream, offset, SEEK_CUR);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes seeked for handle %p", offset, handle);
 }
 
 static bool stdio_eof(void *handle)
 {
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
-    return feof(std_handle->stream) != 0;
+    bool end_of_file = feof(std_handle->stream) != 0;
+    Log_assert(!end_of_file, LOG_LEVELS_DEBUG, LOG_CONTEXT, "end-of-file reached for handle %p", handle);
+    return end_of_file;
 }
 
 static void stdio_close(void *handle)

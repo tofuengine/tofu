@@ -219,7 +219,9 @@ static bool pakio_exists(const void *context, const char *file)
     const Pak_Entry_t key = { .name = (char *)file };
     Pak_Entry_t *entry = bsearch((const void *)&key, pak_context->directory, pak_context->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
     
-    return entry;
+    bool exists = entry;
+    Log_assert(!exists, LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry `%s` found in context %p", file, context);
+    return exists;
 }
 
 static void *pakio_open(const void *context, const char *file, size_t *size_in_bytes)
@@ -290,6 +292,7 @@ static size_t pakio_read(void *handle, void *buffer, size_t bytes_requested)
         Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d bytes decrypted", bytes_read);
     }
 
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes read for handle %p", bytes_read, handle);
     return bytes_read;
 }
 
@@ -298,6 +301,7 @@ static void pakio_skip(void *handle, int offset)
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
     fseek(pak_handle->stream, offset, SEEK_CUR);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes seeked for handle %p", offset, handle);
 }
 
 static bool pakio_eof(void *handle)
@@ -310,7 +314,9 @@ static bool pakio_eof(void *handle)
         return true;
     }
 
-    return position >= pak_handle->end_of_stream;
+    bool end_of_file = position >= pak_handle->end_of_stream;
+    Log_assert(!end_of_file, LOG_LEVELS_DEBUG, LOG_CONTEXT, "end-of-file reached for handle %p", handle);
+    return end_of_file;
 }
 
 static void pakio_close(void *handle)
