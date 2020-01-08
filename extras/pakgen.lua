@@ -1,23 +1,25 @@
 --[[
-  Copyright (c) 2019-2020 by Marco Lizza (marco.lizza@gmail.com)
+MIT License
 
-  Permission is hereby granted, free of charge, to any person obtaining a copy
-  of this software and associated documentation files (the "Software"), to deal
-  in the Software without restriction, including without limitation the rights
-  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-  copies of the Software, and to permit persons to whom the Software is
-  furnished to do so, subject to the following conditions:
+Copyright (c) 2019-2020 Marco Lizza
 
-  The above copyright notice and this permission notice shall be included in all
-  copies or substantial portions of the Software.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-  SOFTWARE.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 ]]--
 
 -- Depends upon
@@ -32,6 +34,7 @@ local luazen = require("luazen")
 local struct = require("struct")
 
 local VERSION = 0x0000
+local RESERVED = 0xFFFF
 
 function string:at(index)
   return self:sub(index, index)
@@ -78,7 +81,7 @@ local function emit_header(output, config, files)
   output:write(struct.pack("c8", "TOFUPAK!"))
   output:write(struct.pack("I1", VERSION))
   output:write(struct.pack("I1", flags))
-  output:write(struct.pack("I2", 0xFFFF))
+  output:write(struct.pack("I2", RESERVED))
   output:write(struct.pack("I4", #files))
 end
 
@@ -91,7 +94,7 @@ local function emit_entry(output, file, config)
     content = luazen.rc4raw(content, luazen.md5(file.name))
   end
 
-  output:write(struct.pack("I2", 0xFFFF))
+  output:write(struct.pack("I2", RESERVED))
   output:write(struct.pack("I2", #file.name))
   output:write(struct.pack("I4", file.size))
   output:write(struct.pack("c0", file.name))

@@ -1,4 +1,3 @@
---[[
 MIT License
 
 Copyright (c) 2019-2020 Marco Lizza
@@ -20,12 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-]]--
-
-local Canvas = {}
-
-function Canvas.square(mode, x, y, size, index)
-  Canvas.rectangle(mode, x, y, size, size, index)
-end
-
-return Canvas
