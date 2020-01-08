@@ -41,6 +41,8 @@
   #include <windows.h>
 #endif
 
+#define ENTRY_GAMECONTROLLER_DB "gamecontrollerdb.txt"
+
 #define _TOFU_CONCAT_VERSION(m, n, r) #m "." #n "." #r
 #define _TOFU_MAKE_VERSION(m, n, r) _TOFU_CONCAT_VERSION(m, n, r)
 #define TOFU_VERSION_NUMBER _TOFU_MAKE_VERSION(TOFU_VERSION_MAJOR, TOFU_VERSION_MINOR, TOFU_VERSION_REVISION)
@@ -160,9 +162,14 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             .gamepad_range = 1.0f - engine->configuration.gamepad_inner_deadzone - engine->configuration.gamepad_outer_deadzone,
             .scale = 1.0f / (float)engine->display.configuration.scale
         };
-    File_System_Chunk_t mappings = FS_load(&engine->file_system, "gamecontrollerdb.txt", FILE_SYSTEM_CHUNK_STRING);
-    result = Input_initialize(&engine->input, &input_configuration, engine->display.window, mappings.var.string.chars);
-    FS_release(mappings);
+    if (FS_exists(&engine->file_system, ENTRY_GAMECONTROLLER_DB)) {
+        File_System_Chunk_t mappings = FS_load(&engine->file_system, ENTRY_GAMECONTROLLER_DB, FILE_SYSTEM_CHUNK_STRING);
+        Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined controller mappings loaded");
+        result = Input_initialize(&engine->input, &input_configuration, engine->display.window, mappings.var.string.chars);
+        FS_release(mappings);
+    } else {
+        result = Input_initialize(&engine->input, &input_configuration, engine->display.window, NULL);
+    }
     if (!result) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize input");
         Display_terminate(&engine->display);
