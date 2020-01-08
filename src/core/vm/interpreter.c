@@ -79,7 +79,7 @@ static const char *_methods[] = {
     NULL
 };
 
-static void *allocate(void *ud, void *ptr, size_t osize, size_t nsize)
+static void *_allocate(void *ud, void *ptr, size_t osize, size_t nsize)
 {
     if (nsize == 0) {
         free(ptr);
@@ -88,7 +88,7 @@ static void *allocate(void *ud, void *ptr, size_t osize, size_t nsize)
     return realloc(ptr, nsize);
 }
 
-static int panic(lua_State *L)
+static int _panic(lua_State *L)
 {
     Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "%s", lua_tostring(L, -1));
     lua_pop(L, 1);
@@ -114,7 +114,7 @@ static int error_handler(lua_State *L)
 #endif
 #endif
 
-static int custom_searcher(lua_State *L)
+static int _searcher(lua_State *L)
 {
     const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(1));
 
@@ -148,7 +148,7 @@ static int custom_searcher(lua_State *L)
 //
 //     T O F1 ... Fn
 //
-static bool detect(lua_State *L, int index, const char *methods[])
+static bool _detect(lua_State *L, int index, const char *methods[])
 {
     if (lua_isnil(L, index)) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't find root instance");
@@ -168,7 +168,7 @@ static bool detect(lua_State *L, int index, const char *methods[])
     return true;
 }
 
-static int execute(lua_State *L, const char *script, size_t size, const char *name, int nargs, int nresults)
+static int _execute(lua_State *L, const char *script, size_t size, const char *name, int nargs, int nresults)
 {
     int loaded = luaL_loadbuffer(L, script, size, name);
     if (loaded != LUA_OK) {
@@ -189,7 +189,7 @@ static int execute(lua_State *L, const char *script, size_t size, const char *na
 #endif
 }
 
-static int call(lua_State *L, Methods_t method, int nargs, int nresults)
+static int _call(lua_State *L, Methods_t method, int nargs, int nresults)
 {
     int index = METHOD_STACK_INDEX(method); // T O F1 .. Fn
     if (lua_isnil(L, index)) {
@@ -220,12 +220,12 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const File_System_t *fil
 {
     *interpreter = (Interpreter_t){ 0 };
 
-    interpreter->state = lua_newstate(allocate, NULL); // No user-data is passed.
+    interpreter->state = lua_newstate(_allocate, NULL); // No user-data is passed.
     if (!interpreter->state) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize interpreter");
         return false;
     }
-    lua_atpanic(interpreter->state, panic); // Set a custom panic-handler, just like `luaL_newstate()`.
+    lua_atpanic(interpreter->state, _panic); // Set a custom panic-handler, just like `luaL_newstate()`.
 
     luaX_openlibs(interpreter->state); // Custom loader, only selected libraries.
 
@@ -237,7 +237,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const File_System_t *fil
     modules_initialize(interpreter->state, nup);
 
     lua_pushlightuserdata(interpreter->state, (void *)file_system);
-    luaX_overridesearchers(interpreter->state, custom_searcher, 1);
+    luaX_overridesearchers(interpreter->state, _searcher, 1);
 
 #ifdef __DEBUG_VM_CALLS__
 #ifndef __VM_USE_CUSTOM_TRACEBACK__
@@ -252,14 +252,14 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const File_System_t *fil
     size_t version = (size_t)*lua_version(interpreter->state);
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "Lua: %d.%d", version / 100, version % 100);
 
-    int result = execute(interpreter->state, (const char *)_boot_lua, sizeof(_boot_lua) / sizeof(char), "@boot.lua", 0, 1); // Prefix '@' to trace as filename internally in Lua.
+    int result = _execute(interpreter->state, (const char *)_boot_lua, sizeof(_boot_lua) / sizeof(char), "@boot.lua", 0, 1); // Prefix '@' to trace as filename internally in Lua.
     if (result != 0) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't interpret boot script");
         lua_close(interpreter->state);
         return false;
     }
 
-    if (!detect(interpreter->state, -1, _methods)) {
+    if (!_detect(interpreter->state, -1, _methods)) {
         lua_close(interpreter->state);
         return false;
     }
@@ -277,13 +277,13 @@ void Interpreter_terminate(Interpreter_t *interpreter)
 
 bool Interpreter_process(const Interpreter_t *interpreter)
 {
-    return call(interpreter->state, METHOD_PROCESS, 0, 0) == LUA_OK;
+    return _call(interpreter->state, METHOD_PROCESS, 0, 0) == LUA_OK;
 }
 
 bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
 {
     lua_pushnumber(interpreter->state, delta_time);
-    if (call(interpreter->state, METHOD_UPDATE, 1, 0) != LUA_OK) {
+    if (_call(interpreter->state, METHOD_UPDATE, 1, 0) != LUA_OK) {
         return false;
     }
 
@@ -310,7 +310,7 @@ bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
 bool Interpreter_render(const Interpreter_t *interpreter, float ratio)
 {
     lua_pushnumber(interpreter->state, ratio);
-    return call(interpreter->state, METHOD_RENDER, 1, 0) == LUA_OK;
+    return _call(interpreter->state, METHOD_RENDER, 1, 0) == LUA_OK;
 }
 
 bool Interpreter_call(const Interpreter_t *interpreter, int nargs, int nresults)
