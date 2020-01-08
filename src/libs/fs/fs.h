@@ -26,8 +26,7 @@
 #define __FS_H__
 
 #include <core/platform.h>
-
-#include <lua/lua.h>
+#include <libs/luax.h>
 
 #include <stdbool.h>
 #include <stddef.h>

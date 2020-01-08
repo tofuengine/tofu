@@ -121,7 +121,6 @@ static int _searcher(lua_State *L)
     const char *file = lua_tostring(L, 1);
 
     char path_file[FILE_PATH_MAX];
-    strcpy(path_file, "@");
     strcat(path_file, file);
     for (int i = 0; path_file[i] != '\0'; ++i) { // Replace `.' with '/` to map file system entry.
         if (path_file[i] == '.') {
@@ -130,13 +129,10 @@ static int _searcher(lua_State *L)
     }
     strcat(path_file, ".lua");
 
-    File_System_Chunk_t chunk = FS_load(file_system, path_file + 1, FILE_SYSTEM_CHUNK_BLOB);
-    if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
-        luaL_error(L, "can't load file `%s`", path_file + 1);
+    int result = FS_load_script(file_system, path_file, L);
+    if (result != LUA_OK) {
+        luaL_error(L, "can't load file `%s`", path_file);
     }
-
-    luaL_loadbuffer(L, chunk.var.blob.ptr, chunk.var.blob.size, path_file);
-    FS_release(chunk);
 
     return 1;
 }

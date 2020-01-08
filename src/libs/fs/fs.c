@@ -30,8 +30,6 @@
 #include <libs/log.h>
 #include <libs/stb.h>
 
-#include <lua/lauxlib.h>
-
 #include <dirent.h>
 #include <stdint.h>
 #include <stdio.h>
