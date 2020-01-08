@@ -155,19 +155,19 @@ static File_System_Chunk_t load_as_binary(const File_System_Mount_t *mount, cons
 
 static int stb_stdio_read(void *user, char *data, int size)
 {
-    const File_System_Handle_t *handle = (const File_System_Handle_t *)user;
+    File_System_Handle_t *handle = (File_System_Handle_t *)user;
     return (int)handle->callbacks->read(handle, data, (size_t)size);
 }
 
 static void stb_stdio_skip(void *user, int n)
 {
-    const File_System_Handle_t *handle = (const File_System_Handle_t *)user;
+    File_System_Handle_t *handle = (File_System_Handle_t *)user;
     handle->callbacks->skip(handle, n);
 }
 
 static int stb_stdio_eof(void *user)
 {
-    const File_System_Handle_t *handle = (const File_System_Handle_t *)user;
+    File_System_Handle_t *handle = (File_System_Handle_t *)user;
     return handle->callbacks->eof(handle) ? -1 : 0;
 }
 
@@ -207,8 +207,8 @@ static File_System_Chunk_t load_as_image(const File_System_Mount_t *mount, const
 
 static const char *_reader(lua_State *L, void *ud, size_t *size)
 {
-    const Reader_Context_t *context = (const Reader_Context_t *)ud;
-    const File_System_Handle_t *handle = context->handle;
+    Reader_Context_t *context = (Reader_Context_t *)ud;
+    File_System_Handle_t *handle = context->handle;
 
     if (handle->callbacks->eof(handle)) {
         return NULL;
@@ -334,7 +334,7 @@ File_System_Handle_t *FS_open(const File_System_t *file_system, const char *file
 
 size_t FS_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested)
 {
-    handle->callbacks->read(handle, buffer, bytes_requested);
+    return handle->callbacks->read(handle, buffer, bytes_requested);
 }
 
 void FS_skip(File_System_Handle_t *handle, int offset)
