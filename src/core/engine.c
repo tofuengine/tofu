@@ -27,6 +27,7 @@
 #include <config.h>
 #include <core/configuration.h>
 #include <core/platform.h>
+#include <libs/fs/fsauxlib.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 

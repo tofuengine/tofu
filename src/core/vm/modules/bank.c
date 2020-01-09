@@ -27,8 +27,9 @@
 #include <config.h>
 #include <core/io/display.h>
 #include <core/vm/interpreter.h>
-#include <libs/log.h>
+#include <libs/fs/fsauxlib.h>
 #include <libs/gl/gl.h>
+#include <libs/log.h>
 #include <libs/stb.h>
 
 #include "udt.h"

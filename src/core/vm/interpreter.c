@@ -114,6 +114,44 @@ static int _error_handler(lua_State *L)
 #endif
 #endif
 
+#define READER_BUFFER_SIZE  2048
+
+typedef struct _Reader_Context_t {
+    File_System_Handle_t *handle;
+    char buffer[READER_BUFFER_SIZE];
+} Reader_Context_t;
+
+static const char *_reader(lua_State *L, void *ud, size_t *size)
+{
+    Reader_Context_t *context = (Reader_Context_t *)ud;
+    File_System_Handle_t *handle = context->handle;
+
+    if (FS_eof(handle)) {
+        return NULL;
+    }
+
+    *size = FS_read(handle, context->buffer, READER_BUFFER_SIZE);
+
+    return context->buffer;
+}
+
+static int _loader(const File_System_t *file_system, const char *file, lua_State *L)
+{
+    File_System_Handle_t *handle = FS_open(file_system, file);
+    if (!handle) {
+        return LUA_ERRFILE;
+    }
+
+    char name[FILE_PATH_MAX];
+    sprintf(name, "@%s", file); // Prepend a `@`, required by Lua to track files.
+
+    int result = lua_load(L, _reader, &(Reader_Context_t){ .handle = handle }, name, NULL); // nor `text` nor `binary`, autodetect.
+
+    FS_close(handle);
+
+    return result;
+}
+
 static int _searcher(lua_State *L)
 {
     const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(1));
@@ -121,7 +159,7 @@ static int _searcher(lua_State *L)
     const char *file = lua_tostring(L, 1);
 
     char path_file[FILE_PATH_MAX];
-    strcat(path_file, file);
+    strcpy(path_file, file);
     for (int i = 0; path_file[i] != '\0'; ++i) { // Replace `.' with '/` to map file system entry.
         if (path_file[i] == '.') {
             path_file[i] = FILE_SYSTEM_PATH_SEPARATOR;
@@ -129,7 +167,7 @@ static int _searcher(lua_State *L)
     }
     strcat(path_file, ".lua");
 
-    int result = FS_load_script(file_system, path_file, L);
+    int result = _loader(file_system, path_file, L);
     if (result != LUA_OK) {
         luaL_error(L, "can't load file `%s`", path_file);
     }

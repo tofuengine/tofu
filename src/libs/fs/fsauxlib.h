@@ -22,12 +22,37 @@
  * SOFTWARE.
  */
 
-#ifndef __FS_STD_H__
-#define __FS_STD_H__
+#ifndef __FS_AUXLIB_H__
+#define __FS_AUXLIB_H__
 
 #include "fs.h"
 
-extern bool stdio_is_valid(const char *path);
-extern void *stdio_mount(const char *path);
+typedef enum _File_System_Chunk_Types_t {
+    FILE_SYSTEM_CHUNK_NULL,
+    FILE_SYSTEM_CHUNK_STRING,
+    FILE_SYSTEM_CHUNK_BLOB,
+    FILE_SYSTEM_CHUNK_IMAGE,
+} File_System_Chunk_Types_t;
 
-#endif /* __FS_STD_H__ */
+typedef struct _File_System_Chunk_t {
+    File_System_Chunk_Types_t type;
+    union {
+      struct {
+        char *chars;
+        size_t length;
+      } string;
+      struct {
+        void *ptr;
+        size_t size;
+      } blob;
+      struct {
+        size_t width, height;
+        void *pixels;
+      } image;
+    } var;
+} File_System_Chunk_t;
+
+extern File_System_Chunk_t FS_load(const File_System_t *file_system, const char *file, File_System_Chunk_Types_t type);
+extern void FS_release(File_System_Chunk_t chunk);
+
+#endif /* __FS_AUXLIB_H__ */
