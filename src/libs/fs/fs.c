@@ -38,7 +38,6 @@
 
 typedef struct _Mount_t {
     // v-table
-    void  (*ctor)                (File_System_Mount_t *mount, ...);
     void  (*dtor)                (File_System_Mount_t *mount);
     bool  (*contains)            (File_System_Mount_t *mount, const char *file);
     File_System_Handle_t *(*open)(File_System_Mount_t *mount, const char *file);
@@ -46,7 +45,6 @@ typedef struct _Mount_t {
 
 typedef struct _Handle_t {
     // v-table
-    void   (*ctor) (File_System_Handle_t *handle, ...);
     void   (*dtor) (File_System_Handle_t *handle);
     size_t (*size) (File_System_Handle_t *handle);
     size_t (*read) (File_System_Handle_t *handle, void *buffer, size_t bytes_requested);

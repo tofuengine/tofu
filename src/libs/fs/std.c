@@ -27,7 +27,6 @@
 #include <libs/log.h>
 #include <libs/stb.h>
 
-#include <stdarg.h>
 #include <stdio.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -36,7 +35,6 @@
 
 typedef struct _Std_Mount_t {
     // v-table
-    void  (*ctor)                (File_System_Mount_t *mount, ...);
     void  (*dtor)                (File_System_Mount_t *mount);
     bool  (*contains)            (File_System_Mount_t *mount, const char *file);
     File_System_Handle_t *(*open)(File_System_Mount_t *mount, const char *file);
@@ -46,7 +44,6 @@ typedef struct _Std_Mount_t {
 
 typedef struct _Std_Handle_t {
     // v-table
-    void   (*ctor) (File_System_Handle_t *handle, ...);
     void   (*dtor) (File_System_Handle_t *handle);
     size_t (*size) (File_System_Handle_t *handle);
     size_t (*read) (File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
@@ -56,14 +53,9 @@ typedef struct _Std_Handle_t {
     FILE *stream;
 } Std_Handle_t;
 
-static void _std_handle_ctor(File_System_Handle_t *handle, ...)
+static void _std_handle_ctor(File_System_Handle_t *handle, FILE *stream)
 {
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
-
-    va_list args;
-    va_start(args, handle);
-        FILE *stream = va_arg(args, FILE *);
-    va_end(args);
 
     std_handle->stream = stream;
 
@@ -124,14 +116,9 @@ static bool _std_handle_eof(File_System_Handle_t *handle)
     return end_of_file;
 }
 
-static void _std_mount_ctor(File_System_Mount_t *mount, ...)
+static void _std_mount_ctor(File_System_Mount_t *mount, const char *base_path)
 {
     Std_Mount_t *std_mount = (Std_Mount_t *)mount;
-
-    va_list args;
-    va_start(args, mount);
-        const char *base_path = va_arg(args, const char *);
-    va_end(args);
 
     strcpy(std_mount->base_path, base_path); // The path *need* to be terminated with the file path-separator!!!
 
@@ -182,14 +169,13 @@ static File_System_Handle_t *_std_mount_open(File_System_Mount_t *mount, const c
     }
 
     *std_handle = (Std_Handle_t){
-            .ctor = _std_handle_ctor,
             .dtor = _std_handle_dtor,
             .size = _std_handle_size,
             .read = _std_handle_read,
             .skip = _std_handle_skip,
             .eof = _std_handle_eof
         };
-    std_handle->ctor(std_handle, stream);
+    _std_handle_ctor(std_handle, stream);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` opened w/ handle %p", file, std_handle);
 
@@ -217,12 +203,11 @@ File_System_Mount_t *stdio_mount(const char *path)
     }
 
     *std_mount = (Std_Mount_t){
-            .ctor = _std_mount_ctor,
             .dtor = _std_mount_dtor,
             .contains = _std_mount_contains,
             .open = _std_mount_open
         };
-    std_mount->ctor(std_mount, path);
+    _std_mount_ctor(std_mount, path);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "I/O initialized at folder `%s`", path);
 

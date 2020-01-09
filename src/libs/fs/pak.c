@@ -28,7 +28,6 @@
 #include <libs/md5.h>
 #include <libs/rc4.h>
 
-#include <stdarg.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -66,7 +65,6 @@ typedef struct _Pak_Entry_t {
 
 typedef struct _Pak_Mount_t {
     // v-table
-    void  (*ctor)                (File_System_Mount_t *mount, ...);
     void  (*dtor)                (File_System_Mount_t *mount);
     bool  (*contains)            (File_System_Mount_t *mount, const char *file);
     File_System_Handle_t *(*open)(File_System_Mount_t *mount, const char *file);
@@ -79,7 +77,6 @@ typedef struct _Pak_Mount_t {
 
 typedef struct _Pak_Handle_t {
     // v-table
-    void   (*ctor) (File_System_Handle_t *handle, ...);
     void   (*dtor) (File_System_Handle_t *handle);
     size_t (*size) (File_System_Handle_t *handle);
     size_t (*read) (File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
@@ -93,22 +90,13 @@ typedef struct _Pak_Handle_t {
     rc4_context_t cipher_context;
 } Pak_Handle_t;
 
-static void _pak_handle_ctor(File_System_Handle_t *handle, ...)
+static void _pak_handle_ctor(File_System_Handle_t *handle, FILE *stream, long offset, size_t size, bool encrypted, const char *name)
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
-    va_list args;
-    va_start(args, handle);
-        FILE *stream = va_arg(args, FILE *);
-        long stream_offset = va_arg(args, long);
-        size_t stream_size = va_arg(args, size_t);
-        bool encrypted = va_arg(args, int);
-        const char *name = va_arg(args, const char *);
-    va_end(args);
-
     pak_handle->stream = stream;
-    pak_handle->stream_size = stream_size;
-    pak_handle->end_of_stream = stream_offset + stream_size;
+    pak_handle->stream_size = size;
+    pak_handle->end_of_stream = offset + size;
     pak_handle->encrypted = encrypted;
     if (encrypted) {
         // Encryption is implemented throught a RC4 stream cipher.
@@ -209,17 +197,9 @@ static int _pak_entry_compare(const void *lhs, const void *rhs)
     return strcasecmp(l->name, r->name);
 }
 
-static void _pak_mount_ctor(File_System_Handle_t *mount, ...)
+static void _pak_mount_ctor(File_System_Handle_t *mount, const char *archive_path, size_t entries, Pak_Entry_t *directory, uint8_t flags)
 {
     Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
-
-    va_list args;
-    va_start(args, mount);
-        const char *archive_path = va_arg(args, const char *);
-        size_t entries = va_arg(args, size_t);
-        Pak_Entry_t *directory = va_arg(args, Pak_Entry_t *);
-        uint8_t flags = va_arg(args, int);
-    va_end(args);
 
     strcpy(pak_mount->archive_path, archive_path);
     pak_mount->entries = entries;
@@ -283,14 +263,13 @@ static File_System_Handle_t *_pak_mount_open(File_System_Handle_t *mount, const 
     }
 
     *pak_handle = (Pak_Handle_t){
-            .ctor = _pak_handle_ctor,
             .dtor = _pak_handle_dtor,
             .size = _pak_handle_size,
             .read = _pak_handle_read,
             .skip = _pak_handle_skip,
             .eof = _pak_handle_eof
         };
-    pak_handle->ctor(pak_handle, stream, entry->offset, entry->size, pak_mount->flags & PAK_FLAG_ENCRYPTED, entry->name);
+    _pak_handle_ctor(pak_handle, stream, entry->offset, entry->size, pak_mount->flags & PAK_FLAG_ENCRYPTED, entry->name);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry `%s` opened w/ handle %p (%d bytes)", file, pak_handle, entry->size);
 
@@ -412,12 +391,11 @@ File_System_Handle_t *pakio_mount(const char *path)
     }
 
     *pak_mount = (Pak_Mount_t){
-            .ctor = _pak_mount_ctor,
             .dtor = _pak_mount_dtor,
             .contains = _pak_mount_contains,
             .open = _pak_mount_open
         };
-    pak_mount->ctor(pak_mount, path, entries, directory, header.flags);
+    _pak_mount_ctor(pak_mount, path, entries, directory, header.flags);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "I/O initialized for archive `%s` w/ %d entries (flags 0x%02x)",
         path, entries,
