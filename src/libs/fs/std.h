@@ -27,6 +27,6 @@
 
 #include "fs.h"
 
-extern File_System_Mount_t *stdio_mount(const char *path);
+extern void *stdio_mount(const char *path);
 
 #endif /* __FS_STD_H__ */
