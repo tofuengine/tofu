@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-#include "fsauxlib.h"
+#include "fsaux.h"
 
 #include <libs/log.h>
 #include <libs/stb.h>
@@ -137,9 +137,20 @@ static File_System_Chunk_t load_as_image(File_System_Handle_t *handle)
         };
 }
 
-File_System_Chunk_t FS_load(const File_System_t *file_system, const char *file, File_System_Chunk_Types_t type)
+bool FSaux_exists(const File_System_t *file_system, const char *file)
 {
-    File_System_Handle_t *handle = FS_open(file_system, file);
+    File_System_Mount_t *mount = FS_locate(file_system, file);
+    return mount ? true : false;
+}
+
+File_System_Chunk_t FSaux_load(const File_System_t *file_system, const char *file, File_System_Chunk_Types_t type)
+{
+    File_System_Mount_t *mount = FS_locate(file_system, file);
+    if (!mount) {
+        return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
+    }
+
+    File_System_Handle_t *handle = FS_open(mount, file);
     if (!handle) {
         return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
     }
@@ -160,7 +171,7 @@ File_System_Chunk_t FS_load(const File_System_t *file_system, const char *file, 
     return chunk;
 }
 
-void FS_release(File_System_Chunk_t chunk)
+void FSaux_release(File_System_Chunk_t chunk)
 {
     if (chunk.type == FILE_SYSTEM_CHUNK_STRING) {
         free(chunk.var.string.chars);

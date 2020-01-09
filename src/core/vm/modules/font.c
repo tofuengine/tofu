@@ -27,7 +27,7 @@
 #include <config.h>
 #include <core/io/display.h>
 #include <core/vm/interpreter.h>
-#include <libs/fs/fsauxlib.h>
+#include <libs/fs/fsaux.h>
 #include <libs/gl/gl.h>
 #include <libs/log.h>
 #include <libs/stb.h>
@@ -128,13 +128,13 @@ static int font_new3(lua_State *L)
             GL_sheet_decode(&sheet, data->data, data->size, data->cell_width, data->cell_height, surface_callback_palette, (void *)&display->palette);
             Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` decoded", file);
         } else {
-            File_System_Chunk_t chunk = FS_load(file_system, file, FILE_SYSTEM_CHUNK_IMAGE);
+            File_System_Chunk_t chunk = FSaux_load(file_system, file, FILE_SYSTEM_CHUNK_IMAGE);
             if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
                 return luaL_error(L, "can't load file `%s`", file);
             }
             GL_sheet_fetch(&sheet, (GL_Image_t){ .width = chunk.var.image.width, .height = chunk.var.image.height, .data = chunk.var.image.pixels }, glyph_width, glyph_height, surface_callback_palette, (void *)&display->palette);
             Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` loaded", file);
-            FS_release(chunk);
+            FSaux_release(chunk);
         }
     } else
     if (type == LUA_TUSERDATA) {
@@ -186,13 +186,13 @@ static int font_new5(lua_State *L)
             GL_sheet_decode(&sheet, data->data, data->size, data->cell_width, data->cell_height, surface_callback_indexes, (void *)indexes);
             Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` decoded", file);
         } else {
-            File_System_Chunk_t chunk = FS_load(file_system, file, FILE_SYSTEM_CHUNK_IMAGE);
+            File_System_Chunk_t chunk = FSaux_load(file_system, file, FILE_SYSTEM_CHUNK_IMAGE);
             if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
                 return luaL_error(L, "can't load file `%s`", file);
             }
             GL_sheet_fetch(&sheet, (GL_Image_t){ .width = chunk.var.image.width, .height = chunk.var.image.height, .data = chunk.var.image.pixels }, glyph_width, glyph_height, surface_callback_palette, (void *)indexes);
             Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` loaded", file);
-            FS_release(chunk);
+            FSaux_release(chunk);
         }
     } else
     if (type == LUA_TUSERDATA) {

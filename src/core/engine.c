@@ -27,7 +27,7 @@
 #include <config.h>
 #include <core/configuration.h>
 #include <core/platform.h>
-#include <libs/fs/fsauxlib.h>
+#include <libs/fs/fsaux.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 
@@ -91,12 +91,12 @@ static inline float _calculate_fps(float elapsed)
 
 static bool _configure(const File_System_t *file_system, Configuration_t *configuration)
 {
-    File_System_Chunk_t chunk = FS_load(file_system, "tofu.config", FILE_SYSTEM_CHUNK_STRING);
+    File_System_Chunk_t chunk = FSaux_load(file_system, "tofu.config", FILE_SYSTEM_CHUNK_STRING);
     if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
         return false;
     }
     Configuration_load(configuration, chunk.var.string.chars);
-    FS_release(chunk);
+    FSaux_release(chunk);
     return true;
 }
 
@@ -106,7 +106,7 @@ static File_System_Chunk_t _load_icon(const File_System_t *file_system, const ch
         return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
     }
 
-    return FS_load(file_system, file, FILE_SYSTEM_CHUNK_IMAGE);
+    return FSaux_load(file_system, file, FILE_SYSTEM_CHUNK_IMAGE);
 }
 
 bool Engine_initialize(Engine_t *engine, const char *base_path)
@@ -163,11 +163,11 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             .gamepad_range = 1.0f - engine->configuration.gamepad_inner_deadzone - engine->configuration.gamepad_outer_deadzone,
             .scale = 1.0f / (float)engine->display.configuration.scale
         };
-    if (FS_exists(&engine->file_system, ENTRY_GAMECONTROLLER_DB)) {
-        File_System_Chunk_t mappings = FS_load(&engine->file_system, ENTRY_GAMECONTROLLER_DB, FILE_SYSTEM_CHUNK_STRING);
+    if (FSaux_exists(&engine->file_system, ENTRY_GAMECONTROLLER_DB)) {
+        File_System_Chunk_t mappings = FSaux_load(&engine->file_system, ENTRY_GAMECONTROLLER_DB, FILE_SYSTEM_CHUNK_STRING);
         Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined controller mappings loaded");
         result = Input_initialize(&engine->input, &input_configuration, engine->display.window, mappings.var.string.chars);
-        FS_release(mappings);
+        FSaux_release(mappings);
     } else {
         result = Input_initialize(&engine->input, &input_configuration, engine->display.window, NULL);
     }
@@ -219,7 +219,7 @@ void Engine_terminate(Engine_t *engine)
 
     Environment_terminate(&engine->environment);
 
-    FS_release(engine->display.configuration.icon);
+    FSaux_release(engine->display.configuration.icon);
 
     FS_terminate(&engine->file_system);
 #if DEBUG

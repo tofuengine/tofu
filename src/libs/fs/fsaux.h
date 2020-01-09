@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __FS_AUXLIB_H__
-#define __FS_AUXLIB_H__
+#ifndef __FS_AUX_H__
+#define __FS_AUX_H__
 
 #include "fs.h"
 
@@ -52,7 +52,8 @@ typedef struct _File_System_Chunk_t {
     } var;
 } File_System_Chunk_t;
 
-extern File_System_Chunk_t FS_load(const File_System_t *file_system, const char *file, File_System_Chunk_Types_t type);
-extern void FS_release(File_System_Chunk_t chunk);
+extern bool FSaux_exists(const File_System_t *file_system, const char *file);
+extern File_System_Chunk_t FSaux_load(const File_System_t *file_system, const char *file, File_System_Chunk_Types_t type);
+extern void FSaux_release(File_System_Chunk_t chunk);
 
-#endif /* __FS_AUXLIB_H__ */
+#endif /* __FS_AUX_H__ */

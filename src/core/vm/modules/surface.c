@@ -27,7 +27,7 @@
 #include <config.h>
 #include <core/io/display.h>
 #include <core/vm/interpreter.h>
-#include <libs/fs/fsauxlib.h>
+#include <libs/fs/fsaux.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 
@@ -118,14 +118,14 @@ static int surface_new1(lua_State *L)
     const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    File_System_Chunk_t chunk = FS_load(file_system, file, FILE_SYSTEM_CHUNK_IMAGE);
+    File_System_Chunk_t chunk = FSaux_load(file_system, file, FILE_SYSTEM_CHUNK_IMAGE);
     if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
         return luaL_error(L, "can't load file `%s`", file);
     }
     GL_Surface_t surface;
     GL_surface_fetch(&surface, (GL_Image_t){ .width = chunk.var.image.width, .height = chunk.var.image.height, .data = chunk.var.image.pixels }, surface_callback_palette, (void *)&display->palette);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface `%s` loaded", file);
-    FS_release(chunk);
+    FSaux_release(chunk);
 
     Surface_Class_t *instance = (Surface_Class_t *)lua_newuserdata(L, sizeof(Surface_Class_t));
     *instance = (Surface_Class_t){

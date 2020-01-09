@@ -27,7 +27,7 @@
 #include <config.h>
 #include <core/io/display.h>
 #include <core/vm/interpreter.h>
-#include <libs/fs/fsauxlib.h>
+#include <libs/fs/fsaux.h>
 #include <libs/gl/gl.h>
 #include <libs/log.h>
 #include <libs/stb.h>
@@ -86,13 +86,13 @@ static int bank_new(lua_State *L)
     if (type == LUA_TSTRING) {
         const char *file = lua_tostring(L, 1);
 
-        File_System_Chunk_t chunk = FS_load(file_system, file, FILE_SYSTEM_CHUNK_IMAGE);
+        File_System_Chunk_t chunk = FSaux_load(file_system, file, FILE_SYSTEM_CHUNK_IMAGE);
         if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
             return luaL_error(L, "can't load file `%s`", file);
         }
         GL_sheet_fetch(&sheet, (GL_Image_t){ .width = chunk.var.image.width, .height = chunk.var.image.height, .data = chunk.var.image.pixels }, cell_width, cell_height, surface_callback_palette, (void *)&display->palette);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` loaded", file);
-        FS_release(chunk);
+        FSaux_release(chunk);
     } else
     if (type == LUA_TUSERDATA) {
         const Surface_Class_t *instance = (const Surface_Class_t *)lua_touserdata(L, 1);

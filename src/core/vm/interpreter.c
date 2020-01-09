@@ -137,7 +137,12 @@ static const char *_reader(lua_State *L, void *ud, size_t *size)
 
 static int _loader(const File_System_t *file_system, const char *file, lua_State *L)
 {
-    File_System_Handle_t *handle = FS_open(file_system, file);
+    File_System_Mount_t *mount = FS_locate(file_system, file);
+    if (!mount) {
+        return LUA_ERRFILE;
+    }
+
+    File_System_Handle_t *handle = FS_open(mount, file);
     if (!handle) {
         return LUA_ERRFILE;
     }
