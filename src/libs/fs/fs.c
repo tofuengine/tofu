@@ -145,15 +145,28 @@ bool FS_exists(const File_System_t *file_system, const char *file)
     return false;
 }
 
-File_System_Handle_t *FS_open(const File_System_t *file_system, const char *file, size_t *size_in_bytes)
+File_System_Handle_t *FS_open(const File_System_t *file_system, const char *file)
 {
     size_t count = arrlen(file_system->mounts); // Backward search to enable resource override in multi-archives.
     for (int i = count - 1; i >= 0; --i) {
         File_System_Mount_t *mount = file_system->mounts[i];
-        return mount->open(mount, file, size_in_bytes);
+        if (!mount->exists(mount, file)) {
+            continue;
+        }
+        return mount->open(mount, file);
     }
 
     return NULL;
+}
+
+void FS_close(File_System_Handle_t *handle)
+{
+    handle->close(handle);
+}
+
+size_t FS_size(File_System_Handle_t *handle)
+{
+    return handle->size(handle);
 }
 
 size_t FS_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested)
@@ -169,9 +182,4 @@ void FS_skip(File_System_Handle_t *handle, int offset)
 bool FS_eof(File_System_Handle_t *handle)
 {
     return handle->eof(handle);
-}
-
-void FS_close(File_System_Handle_t *handle)
-{
-    handle->close(handle);
 }

@@ -37,7 +37,7 @@ typedef struct _Std_Mount_t {
     // v-table
     void  (*unmount)(void *mount);
     bool  (*exists)(void *mount, const char *file);
-    void *(*open)  (void *mount, const char *file, size_t *size_in_bytes);
+    void *(*open)  (void *mount, const char *file);
     // data
     char base_path[FILE_PATH_MAX];
 } Std_Mount_t;
@@ -45,6 +45,7 @@ typedef struct _Std_Mount_t {
 typedef struct _Std_Handle_t {
     // v-table
     void   (*close)(void *handle);
+    size_t (*size) (void *handle);
     size_t (*read) (void *handle, void *buffer, size_t bytes_requested);
     void   (*skip) (void *handle, int offset);
     bool   (*eof)  (void *handle);
@@ -60,6 +61,22 @@ static void _stdio_close(void *handle)
     free(std_handle);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p closed", std_handle);
+}
+
+static size_t _stdio_size(void *handle)
+{
+    Std_Handle_t *std_handle = (Std_Handle_t *)handle;
+
+    struct stat stat;
+    int result = fstat(fileno(std_handle->stream), &stat);
+    if (result != 0) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get stats for handle %p", handle);
+        return 0;
+    }
+
+//    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p is", std_handle);
+
+    return (size_t)stat.st_size;
 }
 
 static size_t _stdio_read(void *handle, void *buffer, size_t bytes_requested)
@@ -111,7 +128,7 @@ static bool _stdio_exists(void *mount, const char *file)
     return exists;
 }
 
-static void *_stdio_open(void *mount, const char *file, size_t *size_in_bytes)
+static void *_stdio_open(void *mount, const char *file)
 {
     Std_Mount_t *std_mount = (Std_Mount_t *)mount;
 
@@ -125,16 +142,6 @@ static void *_stdio_open(void *mount, const char *file, size_t *size_in_bytes)
         return NULL;
     }
 
-    struct stat stat;
-    int result = fstat(fileno(stream), &stat);
-    if (result != 0) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get file `%s` stats", full_path);
-        fclose(stream);
-        return NULL;
-    }
-
-    *size_in_bytes = stat.st_size;
-
     Std_Handle_t *std_handle = malloc(sizeof(Std_Handle_t));
     if (!std_handle) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate handle for file `%s`", file);
@@ -144,13 +151,14 @@ static void *_stdio_open(void *mount, const char *file, size_t *size_in_bytes)
 
     *std_handle = (Std_Handle_t){
             .close = _stdio_close,
+            .size = _stdio_size,
             .read = _stdio_read,
             .skip = _stdio_skip,
             .eof = _stdio_eof
         };
     std_handle->stream = stream;
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` opened w/ handle %p (%d bytes)", file, std_handle, stat.st_size);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` opened w/ handle %p", file, std_handle);
 
     return std_handle;
 }

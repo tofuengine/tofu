@@ -66,7 +66,7 @@ typedef struct _Pak_Mount_t {
     // v-table
     void  (*unmount)(void *mount);
     bool  (*exists)(void *mount, const char *file);
-    void *(*open)  (void *mount, const char *file, size_t *size_in_bytes);
+    void *(*open)  (void *mount, const char *file);
     // data
     char archive_path[FILE_PATH_MAX];
     size_t entries;
@@ -77,11 +77,13 @@ typedef struct _Pak_Mount_t {
 typedef struct _Pak_Handle_t {
     // v-table
     void   (*close)(void *handle);
+    size_t (*size) (void *handle);
     size_t (*read) (void *handle, void *buffer, size_t bytes_requested);
     void   (*skip) (void *handle, int offset);
     bool   (*eof)  (void *handle);
     // data
     FILE *stream;
+    size_t stream_size;
     long end_of_stream;
     bool encrypted;
     rc4_context_t cipher_context;
@@ -95,6 +97,15 @@ static void _pakio_close(void *handle)
     free(pak_handle);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry w/ handle %p closed", pak_handle);
+}
+
+static size_t _pakio_size(void *handle)
+{
+    Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
+
+//    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p is", std_handle);
+
+    return pak_handle->stream_size;
 }
 
 static size_t _pakio_read(void *handle, void *buffer, size_t bytes_requested)
@@ -199,7 +210,7 @@ static bool _pakio_exists(void *mount, const char *file)
     return exists;
 }
 
-static void *_pakio_open(void *mount, const char *file, size_t *size_in_bytes)
+static void *_pakio_open(void *mount, const char *file)
 {
     Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
 
@@ -228,11 +239,13 @@ static void *_pakio_open(void *mount, const char *file, size_t *size_in_bytes)
 
     *pak_handle = (Pak_Handle_t){
             .close = _pakio_close,
+            .size = _pakio_size,
             .read = _pakio_read,
             .skip = _pakio_skip,
             .eof = _pakio_eof
         };
     pak_handle->stream = stream;
+    pak_handle->stream_size = entry->size;
     pak_handle->end_of_stream = entry->offset + entry->size;
     pak_handle->encrypted = pak_mount->encrypted;
     if (pak_mount->encrypted) {
@@ -240,8 +253,6 @@ static void *_pakio_open(void *mount, const char *file, size_t *size_in_bytes)
     }
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry `%s` opened w/ handle %p (%d bytes)", file, pak_handle, entry->size);
-
-    *size_in_bytes = entry->size;
 
     return pak_handle;
 }

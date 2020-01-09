@@ -32,18 +32,20 @@
 #define LOG_CONTEXT "fs-aux"
 
 // FIXME: convert bool argument to flags.
-static void *_load(File_System_Handle_t *handle, size_t size_in_bytes, bool null_terminate, size_t *size)
+static void *_load(File_System_Handle_t *handle, bool null_terminate, size_t *size)
 {
-    size_t bytes_to_allocate = size_in_bytes + (null_terminate ? 1 : 0);
+    size_t bytes_to_read = FS_size(handle);
+
+    size_t bytes_to_allocate = bytes_to_read + (null_terminate ? 1 : 0);
     void *data = malloc(bytes_to_allocate * sizeof(uint8_t)); // Add null terminator for the string.
     if (!data) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d bytes of memory", bytes_to_allocate);
         handle->close(handle);
         return NULL;
     }
-    size_t read_bytes = FS_read(handle, data, size_in_bytes);
-    if (read_bytes < size_in_bytes) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d bytes of data (%d available)", size_in_bytes, read_bytes);
+    size_t read_bytes = FS_read(handle, data, bytes_to_read);
+    if (read_bytes < bytes_to_read) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d bytes of data (%d available)", bytes_to_read, read_bytes);
         free(data);
         return NULL;
     }
@@ -54,10 +56,10 @@ static void *_load(File_System_Handle_t *handle, size_t size_in_bytes, bool null
     return data;
 }
 
-static File_System_Chunk_t load_as_string(File_System_Handle_t *handle, size_t size_in_bytes)
+static File_System_Chunk_t load_as_string(File_System_Handle_t *handle)
 {
     size_t length;
-    void *chars = _load(handle, size_in_bytes, true, &length);
+    void *chars = _load(handle, true, &length);
     if (!chars) {
         return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
     }
@@ -72,10 +74,10 @@ static File_System_Chunk_t load_as_string(File_System_Handle_t *handle, size_t s
         };
 }
 
-static File_System_Chunk_t load_as_binary(File_System_Handle_t *handle, size_t size_in_bytes)
+static File_System_Chunk_t load_as_binary(File_System_Handle_t *handle)
 {
     size_t size;
-    void *ptr = _load(handle, size_in_bytes, false, &size);
+    void *ptr = _load(handle, false, &size);
     if (!ptr) {
         return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
     }
@@ -114,7 +116,7 @@ static const stbi_io_callbacks _io_callbacks = {
     stbi_io_eof,
 };
 
-static File_System_Chunk_t load_as_image(File_System_Handle_t *handle, size_t size_in_bytes)
+static File_System_Chunk_t load_as_image(File_System_Handle_t *handle)
 {
     int width, height, components;
     void *pixels = stbi_load_from_callbacks(&_io_callbacks, handle, &width, &height, &components, STBI_rgb_alpha);
@@ -137,21 +139,20 @@ static File_System_Chunk_t load_as_image(File_System_Handle_t *handle, size_t si
 
 File_System_Chunk_t FS_load(const File_System_t *file_system, const char *file, File_System_Chunk_Types_t type)
 {
-    size_t size_in_bytes;
-    File_System_Handle_t *handle = FS_open(file_system, file, &size_in_bytes);
+    File_System_Handle_t *handle = FS_open(file_system, file);
     if (!handle) {
         return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
     }
 
     File_System_Chunk_t chunk = (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
     if (type == FILE_SYSTEM_CHUNK_STRING) {
-        chunk = load_as_string(handle, size_in_bytes);
+        chunk = load_as_string(handle);
     } else
     if (type == FILE_SYSTEM_CHUNK_BLOB) {
-        chunk = load_as_binary(handle, size_in_bytes);
+        chunk = load_as_binary(handle);
     } else
     if (type == FILE_SYSTEM_CHUNK_IMAGE) {
-        chunk = load_as_image(handle, size_in_bytes);
+        chunk = load_as_image(handle);
     }
 
     FS_close(handle);
