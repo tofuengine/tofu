@@ -211,7 +211,7 @@ File_System_Mount_t *std_mount(const char *path)
 
     _std_mount_ctor(mount, path);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "I/O initialized at folder `%s`", path);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "mount initialized at folder `%s`", path);
 
     return mount;
 }

@@ -400,7 +400,7 @@ File_System_Mount_t *pak_mount(const char *path)
 
     _pak_mount_ctor(mount, path, entries, directory, header.flags);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "I/O initialized for archive `%s` w/ %d entries (flags 0x%02x)",
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "mount initialized for archive `%s` w/ %d entries (flags 0x%02x)",
         path, entries, header.flags);
 
     return mount;
