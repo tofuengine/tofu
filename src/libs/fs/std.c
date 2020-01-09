@@ -35,25 +35,25 @@
 
 typedef struct _Std_Mount_t {
     // v-table
-    void  (*unmount)(void *mount);
-    bool  (*exists)(void *mount, const char *file);
-    void *(*open)  (void *mount, const char *file);
+    void  (*unmount)             (File_System_Mount_t *mount);
+    bool  (*exists)              (File_System_Mount_t *mount, const char *file);
+    File_System_Handle_t *(*open)(File_System_Mount_t *mount, const char *file);
     // data
     char base_path[FILE_PATH_MAX];
 } Std_Mount_t;
 
 typedef struct _Std_Handle_t {
     // v-table
-    void   (*close)(void *handle);
-    size_t (*size) (void *handle);
-    size_t (*read) (void *handle, void *buffer, size_t bytes_requested);
-    void   (*skip) (void *handle, int offset);
-    bool   (*eof)  (void *handle);
+    void   (*close)(File_System_Handle_t *handle);
+    size_t (*size) (File_System_Handle_t *handle);
+    size_t (*read) (File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
+    void   (*skip) (File_System_Handle_t *handle, int offset);
+    bool   (*eof)  (File_System_Handle_t *handle);
     // data
     FILE *stream;
 } Std_Handle_t;
 
-static void _stdio_close(void *handle)
+static void _stdio_close(File_System_Handle_t *handle)
 {
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
@@ -63,7 +63,7 @@ static void _stdio_close(void *handle)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p closed", std_handle);
 }
 
-static size_t _stdio_size(void *handle)
+static size_t _stdio_size(File_System_Handle_t *handle)
 {
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
@@ -79,7 +79,7 @@ static size_t _stdio_size(void *handle)
     return (size_t)stat.st_size;
 }
 
-static size_t _stdio_read(void *handle, void *buffer, size_t bytes_requested)
+static size_t _stdio_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested)
 {
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
@@ -89,7 +89,7 @@ static size_t _stdio_read(void *handle, void *buffer, size_t bytes_requested)
     return bytes_read;
 }
 
-static void _stdio_skip(void *handle, int offset)
+static void _stdio_skip(File_System_Handle_t *handle, int offset)
 {
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
@@ -97,7 +97,7 @@ static void _stdio_skip(void *handle, int offset)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes seeked for handle %p", offset, handle);
 }
 
-static bool _stdio_eof(void *handle)
+static bool _stdio_eof(File_System_Handle_t *handle)
 {
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
@@ -106,7 +106,7 @@ static bool _stdio_eof(void *handle)
     return end_of_file;
 }
 
-static void _stdio_unmount(void *mount)
+static void _stdio_unmount(File_System_Mount_t *mount)
 {
     Std_Mount_t *std_mount = (Std_Mount_t *)std_mount;
 
@@ -115,7 +115,7 @@ static void _stdio_unmount(void *mount)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "I/O deinitialized");
 }
 
-static bool _stdio_exists(void *mount, const char *file)
+static bool _stdio_exists(File_System_Mount_t *mount, const char *file)
 {
     Std_Mount_t *std_mount = (Std_Mount_t *)mount;
 
@@ -128,7 +128,7 @@ static bool _stdio_exists(void *mount, const char *file)
     return exists;
 }
 
-static void *_stdio_open(void *mount, const char *file)
+static File_System_Handle_t *_stdio_open(File_System_Mount_t *mount, const char *file)
 {
     Std_Mount_t *std_mount = (Std_Mount_t *)mount;
 
@@ -160,10 +160,22 @@ static void *_stdio_open(void *mount, const char *file)
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` opened w/ handle %p", file, std_handle);
 
-    return std_handle;
+    return (File_System_Handle_t *)std_handle;
 }
 
-void *stdio_mount(const char *path)
+bool stdio_is_valid(const char *path)
+{
+    struct stat path_stat;
+    int result = stat(path, &path_stat);
+    if (result != 0) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get stats for `%s`", path);
+        return false;
+    }
+
+    return S_ISDIR(path_stat.st_mode);
+}
+
+File_System_Mount_t *stdio_mount(const char *path)
 {
     Std_Mount_t *std_mount = malloc(sizeof(Std_Mount_t));
     if (!std_mount) {
@@ -180,5 +192,5 @@ void *stdio_mount(const char *path)
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "I/O initialized at folder `%s`", path);
 
-    return std_mount;
+    return (File_System_Mount_t *)std_mount;
 }

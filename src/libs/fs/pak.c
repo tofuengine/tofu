@@ -1,18 +1,18 @@
 /*
  * MIT License
- * 
+ *
  * Copyright (c) 2019-2020 Marco Lizza
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -32,6 +32,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #define LOG_CONTEXT "fs-pak"
 
@@ -64,9 +65,9 @@ typedef struct _Pak_Entry_t {
 
 typedef struct _Pak_Mount_t {
     // v-table
-    void  (*unmount)(void *mount);
-    bool  (*exists)(void *mount, const char *file);
-    void *(*open)  (void *mount, const char *file);
+    void  (*unmount)             (File_System_Mount_t *mount);
+    bool  (*exists)              (File_System_Mount_t *mount, const char *file);
+    File_System_Handle_t *(*open)(File_System_Mount_t *mount, const char *file);
     // data
     char archive_path[FILE_PATH_MAX];
     size_t entries;
@@ -76,11 +77,11 @@ typedef struct _Pak_Mount_t {
 
 typedef struct _Pak_Handle_t {
     // v-table
-    void   (*close)(void *handle);
-    size_t (*size) (void *handle);
-    size_t (*read) (void *handle, void *buffer, size_t bytes_requested);
-    void   (*skip) (void *handle, int offset);
-    bool   (*eof)  (void *handle);
+    void   (*close)(File_System_Handle_t *handle);
+    size_t (*size) (File_System_Handle_t *handle);
+    size_t (*read) (File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
+    void   (*skip) (File_System_Handle_t *handle, int offset);
+    bool   (*eof)  (File_System_Handle_t *handle);
     // data
     FILE *stream;
     size_t stream_size;
@@ -89,7 +90,7 @@ typedef struct _Pak_Handle_t {
     rc4_context_t cipher_context;
 } Pak_Handle_t;
 
-static void _pakio_close(void *handle)
+static void _pakio_close(File_System_Handle_t *handle)
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
@@ -99,7 +100,7 @@ static void _pakio_close(void *handle)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry w/ handle %p closed", pak_handle);
 }
 
-static size_t _pakio_size(void *handle)
+static size_t _pakio_size(File_System_Handle_t *handle)
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
@@ -108,7 +109,7 @@ static size_t _pakio_size(void *handle)
     return pak_handle->stream_size;
 }
 
-static size_t _pakio_read(void *handle, void *buffer, size_t bytes_requested)
+static size_t _pakio_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested)
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
@@ -137,7 +138,7 @@ static size_t _pakio_read(void *handle, void *buffer, size_t bytes_requested)
     return bytes_read;
 }
 
-static void _pakio_skip(void *handle, int offset)
+static void _pakio_skip(File_System_Handle_t *handle, int offset)
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
@@ -145,7 +146,7 @@ static void _pakio_skip(void *handle, int offset)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes seeked for handle %p", offset, handle);
 }
 
-static bool _pakio_eof(void *handle)
+static bool _pakio_eof(File_System_Handle_t *handle)
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
@@ -185,7 +186,7 @@ static void _initialize_cipher(Pak_Handle_t *handle, const char *file)
 #endif
 }
 
-static void _pakio_unmount(void *mount)
+static void _pakio_unmount(File_System_Handle_t *mount)
 {
     Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
 
@@ -198,24 +199,24 @@ static void _pakio_unmount(void *mount)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "I/O deinitialized");
 }
 
-static bool _pakio_exists(void *mount, const char *file)
+static bool _pakio_exists(File_System_Handle_t *mount, const char *file)
 {
     Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
 
     const Pak_Entry_t key = { .name = (char *)file };
-    Pak_Entry_t *entry = bsearch((const void *)&key, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
-    
+    const Pak_Entry_t *entry = bsearch((const void *)&key, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
+
     bool exists = entry;
     Log_assert(!exists, LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry `%s` found in mount %p", file, pak_mount);
     return exists;
 }
 
-static void *_pakio_open(void *mount, const char *file)
+static File_System_Handle_t *_pakio_open(void *mount, const char *file)
 {
     Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
 
     const Pak_Entry_t key = { .name = (char *)file };
-    Pak_Entry_t *entry = bsearch((const void *)&key, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
+    const Pak_Entry_t *entry = bsearch((const void *)&key, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
     if (!entry) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't find entry `%s`", file);
         return NULL;
@@ -254,13 +255,25 @@ static void *_pakio_open(void *mount, const char *file)
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry `%s` opened w/ handle %p (%d bytes)", file, pak_handle, entry->size);
 
-    return pak_handle;
+    return (File_System_Handle_t *)pak_handle;
 }
 
-bool pakio_is_archive(const char *path)
+bool pakio_is_valid(const char *path)
 {
+    struct stat path_stat;
+    int result = stat(path, &path_stat);
+    if (result != 0) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get stats for file `%s`", path);
+        return false;
+    }
+
+    if (!S_ISREG(path_stat.st_mode)) {
+        return false;
+    }
+
     FILE *stream = fopen(path, "rb");
     if (!stream) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't access file `%s`", path);
         return false;
     }
 
@@ -273,7 +286,7 @@ bool pakio_is_archive(const char *path)
     return chars_read == chars_to_read && strncmp(signature, PAK_SIGNATURE, PAK_SIGNATURE_LENGTH) == 0;
 }
 
-void *pakio_mount(const char *path)
+File_System_Handle_t *pakio_mount(const char *path)
 {
     FILE *stream = fopen(path, "rb");
     if (!stream) {
@@ -373,5 +386,5 @@ void *pakio_mount(const char *path)
         path, entries,
         pak_mount->encrypted ? "" : "un");
 
-    return pak_mount;
+    return (File_System_Handle_t *)pak_mount;
 }

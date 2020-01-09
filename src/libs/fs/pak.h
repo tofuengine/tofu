@@ -27,7 +27,7 @@
 
 #include "fs.h"
 
-extern bool pakio_is_archive(const char *path);
+extern bool pakio_is_valid(const char *path);
 extern void *pakio_mount(const char *path);
 
 #endif /* __FS_PAK_H__ */

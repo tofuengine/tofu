@@ -33,42 +33,34 @@
 #include <dirent.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <sys/stat.h>
 
 #define LOG_CONTEXT "fs"
 
 typedef struct _Mount_t {
     // v-table
-    void  (*unmount)(void *mount);
-    bool  (*exists)(void *mount, const char *file);
-    void *(*open)  (void *mount, const char *file);
+    void  (*unmount)             (File_System_Mount_t *mount);
+    bool  (*exists)              (File_System_Mount_t *mount, const char *file);
+    File_System_Handle_t *(*open)(File_System_Mount_t *mount, const char *file);
 } Mount_t;
 
 typedef struct _Handle_t {
     // v-table
-    void   (*close)(void *handle);
-    size_t (*size) (void *handle);
-    size_t (*read) (void *handle, void *buffer, size_t bytes_requested);
-    void   (*skip) (void *handle, int offset);
-    bool   (*eof)  (void *handle);
+    void   (*close)(File_System_Handle_t *handle);
+    size_t (*size) (File_System_Handle_t *handle);
+    size_t (*read) (File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
+    void   (*skip) (File_System_Handle_t *handle, int offset);
+    bool   (*eof)  (File_System_Handle_t *handle);
 } Handle_t;
 
 static bool _mount(File_System_t *file_system, const char *path)
 {
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "adding mount-point `%s`", path);
 
-    struct stat path_stat;
-    int result = stat(path, &path_stat);
-    if (result != 0) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get stats for `%s`", path);
-        return NULL;
-    }
-
     File_System_Mount_t *mount;
-    if (S_ISDIR(path_stat.st_mode)) {
+    if (stdio_is_valid(path)) {
         mount = stdio_mount(path);
     } else
-    if (S_ISREG(path_stat.st_mode) && pakio_is_archive(path)) {
+    if (pakio_is_valid(path)) {
         mount = pakio_mount(path);
     } else {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't detect type for mount `%s`", path);
@@ -106,8 +98,7 @@ bool FS_initialize(File_System_t *file_system, const char *base_path)
             strcpy(full_path, resolved);
             strcat(full_path, entry->d_name);
 
-            if (entry->d_type != DT_REG || !pakio_is_archive(full_path)) {
-                Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "skipping file `%s` (not an archive)", full_path);
+            if (!pakio_is_valid(full_path)) {
                 continue;
             }
 
