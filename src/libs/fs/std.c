@@ -108,7 +108,7 @@ static bool _stdio_eof(File_System_Handle_t *handle)
 
 static void _stdio_unmount(File_System_Mount_t *mount)
 {
-    Std_Mount_t *std_mount = (Std_Mount_t *)std_mount;
+    Std_Mount_t *std_mount = (Std_Mount_t *)mount;
 
     free(std_mount);
 
