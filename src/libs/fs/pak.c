@@ -100,7 +100,7 @@ static void _pak_handle_ctor(File_System_Handle_t *handle, ...)
     va_list args;
     va_start(args, handle);
         FILE *stream = va_arg(args, FILE *);
-        size_t stream_offset = va_arg(args, size_t);
+        long stream_offset = va_arg(args, long);
         size_t stream_size = va_arg(args, size_t);
         bool encrypted = va_arg(args, int);
         const char *name = va_arg(args, const char *);
