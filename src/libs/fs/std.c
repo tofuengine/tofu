@@ -44,23 +44,14 @@ typedef struct _Std_Mount_t {
 
 typedef struct _Std_Handle_t {
     // v-table
-    void   (*dtor) (File_System_Handle_t *handle);
-    size_t (*size) (File_System_Handle_t *handle);
-    size_t (*read) (File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
-    void   (*skip) (File_System_Handle_t *handle, int offset);
-    bool   (*eof)  (File_System_Handle_t *handle);
+    void   (*dtor)(File_System_Handle_t *handle);
+    size_t (*size)(File_System_Handle_t *handle);
+    size_t (*read)(File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
+    void   (*skip)(File_System_Handle_t *handle, int offset);
+    bool   (*eof) (File_System_Handle_t *handle);
     // data
     FILE *stream;
 } Std_Handle_t;
-
-static void _std_handle_ctor(File_System_Handle_t *handle, FILE *stream)
-{
-    Std_Handle_t *std_handle = (Std_Handle_t *)handle;
-
-    std_handle->stream = stream;
-
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "handle %p initialized", handle);
-}
 
 static void _std_handle_dtor(File_System_Handle_t *handle)
 {
@@ -116,13 +107,21 @@ static bool _std_handle_eof(File_System_Handle_t *handle)
     return end_of_file;
 }
 
-static void _std_mount_ctor(File_System_Mount_t *mount, const char *base_path)
+static void _std_handle_ctor(File_System_Handle_t *handle, FILE *stream)
 {
-    Std_Mount_t *std_mount = (Std_Mount_t *)mount;
+    Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
-    strcpy(std_mount->base_path, base_path); // The path *need* to be terminated with the file path-separator!!!
+    *std_handle = (Std_Handle_t){
+            .dtor = _std_handle_dtor,
+            .size = _std_handle_size,
+            .read = _std_handle_read,
+            .skip = _std_handle_skip,
+            .eof = _std_handle_eof
+        };
 
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "mount %p initialized", mount);
+    std_handle->stream = stream;
+
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "handle %p initialized", handle);
 }
 
 static void _std_mount_dtor(File_System_Mount_t *mount)
@@ -161,28 +160,36 @@ static File_System_Handle_t *_std_mount_open(File_System_Mount_t *mount, const c
         return NULL;
     }
 
-    Std_Handle_t *std_handle = malloc(sizeof(Std_Handle_t));
-    if (!std_handle) {
+    File_System_Handle_t *handle = malloc(sizeof(Std_Handle_t));
+    if (!handle) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate handle for file `%s`", file);
         fclose(stream);
         return NULL;
     }
 
-    *std_handle = (Std_Handle_t){
-            .dtor = _std_handle_dtor,
-            .size = _std_handle_size,
-            .read = _std_handle_read,
-            .skip = _std_handle_skip,
-            .eof = _std_handle_eof
-        };
-    _std_handle_ctor(std_handle, stream);
+    _std_handle_ctor(handle, stream);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` opened w/ handle %p", file, std_handle);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` opened w/ handle %p", file, handle);
 
-    return (File_System_Handle_t *)std_handle;
+    return handle;
 }
 
-bool stdio_is_valid(const char *path)
+static void _std_mount_ctor(File_System_Mount_t *mount, const char *base_path)
+{
+    Std_Mount_t *std_mount = (Std_Mount_t *)mount;
+
+    *std_mount = (Std_Mount_t){
+            .dtor = _std_mount_dtor,
+            .contains = _std_mount_contains,
+            .open = _std_mount_open
+        };
+
+    strcpy(std_mount->base_path, base_path); // The path *need* to be terminated with the file path-separator!!!
+
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "mount %p initialized", mount);
+}
+
+bool std_is_valid(const char *path)
 {
     struct stat path_stat;
     int result = stat(path, &path_stat);
@@ -194,22 +201,17 @@ bool stdio_is_valid(const char *path)
     return S_ISDIR(path_stat.st_mode);
 }
 
-File_System_Mount_t *stdio_mount(const char *path)
+File_System_Mount_t *std_mount(const char *path)
 {
-    Std_Mount_t *std_mount = malloc(sizeof(Std_Mount_t));
-    if (!std_mount) {
+    File_System_Mount_t *mount = malloc(sizeof(Std_Mount_t));
+    if (!mount) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate mount for folder `%s`", path);
         return NULL;
     }
 
-    *std_mount = (Std_Mount_t){
-            .dtor = _std_mount_dtor,
-            .contains = _std_mount_contains,
-            .open = _std_mount_open
-        };
-    _std_mount_ctor(std_mount, path);
+    _std_mount_ctor(mount, path);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "I/O initialized at folder `%s`", path);
 
-    return (File_System_Mount_t *)std_mount;
+    return mount;
 }
