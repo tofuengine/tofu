@@ -66,9 +66,9 @@ typedef struct _Pak_Entry_t {
 
 typedef struct _Pak_Mount_t {
     // v-table
-    void  (*dtor)                (File_System_Mount_t *mount);
-    bool  (*contains)            (File_System_Mount_t *mount, const char *file);
-    File_System_Handle_t *(*open)(File_System_Mount_t *mount, const char *file);
+    void                  (*dtor)    (File_System_Mount_t *mount);
+    bool                  (*contains)(File_System_Mount_t *mount, const char *file);
+    File_System_Handle_t *(*open)    (File_System_Mount_t *mount, const char *file);
     // data
     char archive_path[FILE_PATH_MAX];
     size_t entries;
@@ -78,11 +78,11 @@ typedef struct _Pak_Mount_t {
 
 typedef struct _Pak_Handle_t {
     // v-table
-    void   (*dtor) (File_System_Handle_t *handle);
-    size_t (*size) (File_System_Handle_t *handle);
-    size_t (*read) (File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
-    void   (*skip) (File_System_Handle_t *handle, int offset);
-    bool   (*eof)  (File_System_Handle_t *handle);
+    void   (*dtor)(File_System_Handle_t *handle);
+    size_t (*size)(File_System_Handle_t *handle);
+    size_t (*read)(File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
+    void   (*skip)(File_System_Handle_t *handle, int offset);
+    bool   (*eof) (File_System_Handle_t *handle);
     // data
     FILE *stream;
     size_t stream_size;
@@ -91,198 +91,17 @@ typedef struct _Pak_Handle_t {
     rc4_context_t cipher_context;
 } Pak_Handle_t;
 
-static void _pak_handle_dtor(File_System_Handle_t *handle)
-{
-    Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
+static File_System_Handle_t *_pak_mount_ctor(const char *archive_path, size_t entries, Pak_Entry_t *directory, uint8_t flags);
+static void _pak_mount_dtor(File_System_Handle_t *mount);
+static bool _pak_mount_contains(File_System_Handle_t *mount, const char *file);
+static File_System_Handle_t *_pak_mount_open(File_System_Handle_t *mount, const char *file);
 
-    fclose(pak_handle->stream);
-
-    *pak_handle = (Pak_Handle_t){ 0 };
-
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry w/ handle %p deinitialized", handle);
-}
-
-static size_t _pak_handle_size(File_System_Handle_t *handle)
-{
-    Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
-
-//    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p is", std_handle);
-
-    return pak_handle->stream_size;
-}
-
-static size_t _pak_handle_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested)
-{
-    Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
-
-    long position = ftell(pak_handle->stream);
-    if (position == -1) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get current position for handle %p", handle);
-        return 0;
-    }
-
-    size_t bytes_available = pak_handle->end_of_stream - position;
-
-    size_t bytes_to_read = bytes_requested;
-    if (bytes_to_read > bytes_available) {
-        bytes_to_read = bytes_available;
-    }
-
-    size_t bytes_read = fread(buffer, sizeof(uint8_t), bytes_to_read, pak_handle->stream);
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d bytes read out of %d (%d requested)", bytes_read, bytes_to_read, bytes_requested);
-
-    if (pak_handle->encrypted) {
-        rc4_process(&pak_handle->cipher_context, buffer, bytes_read);
-        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d bytes decrypted", bytes_read);
-    }
-
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes read for handle %p", bytes_read, handle);
-    return bytes_read;
-}
-
-static void _pak_handle_skip(File_System_Handle_t *handle, int offset)
-{
-    Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
-
-    fseek(pak_handle->stream, offset, SEEK_CUR);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes seeked for handle %p", offset, handle);
-}
-
-static bool _pak_handle_eof(File_System_Handle_t *handle)
-{
-    Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
-
-    long position = ftell(pak_handle->stream);
-    if (position == -1) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get current position for handle %p", handle);
-        return true;
-    }
-
-    bool end_of_file = position >= pak_handle->end_of_stream;
-    Log_assert(!end_of_file, LOG_LEVELS_DEBUG, LOG_CONTEXT, "end-of-file reached for handle %p", handle);
-    return end_of_file;
-}
-
-static void _pak_handle_ctor(File_System_Handle_t *handle, FILE *stream, long offset, size_t size, bool encrypted, const char *name)
-{
-    Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
-
-    *pak_handle = (Pak_Handle_t){
-            .dtor = _pak_handle_dtor,
-            .size = _pak_handle_size,
-            .read = _pak_handle_read,
-            .skip = _pak_handle_skip,
-            .eof = _pak_handle_eof
-        };
-
-    pak_handle->stream = stream;
-    pak_handle->stream_size = size;
-    pak_handle->end_of_stream = offset + size;
-    pak_handle->encrypted = encrypted;
-    if (encrypted) {
-        // Encryption is implemented throught a RC4 stream cipher.
-        // The key is the MD5 digest of the entry name (w/ relative path).
-        md5_context_t digest_context;
-        md5_init(&digest_context);
-        md5_update(&digest_context, (const uint8_t *)name, strlen(name));
-
-        uint8_t cipher_key[MD5_SIZE];
-        md5_final(&digest_context, cipher_key);
-
-        rc4_schedule(&pak_handle->cipher_context, cipher_key, sizeof(cipher_key));
-#ifdef DROP_256
-        uint8_t drop[256] = { 0 };
-        rc4_process(cipher_context, drop, drop, sizeof(drop));
-#endif
-    }
-
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry w/ handle %p initialized", handle);
-}
-
-static int _pak_entry_compare(const void *lhs, const void *rhs)
-{
-    const Pak_Entry_t *l = (const Pak_Entry_t *)lhs;
-    const Pak_Entry_t *r = (const Pak_Entry_t *)rhs;
-    return strcasecmp(l->name, r->name);
-}
-
-static void _pak_mount_dtor(File_System_Handle_t *mount)
-{
-    Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
-
-    for (size_t i = 0; i < pak_mount->entries; ++i) {
-        free(pak_mount->directory[i].name);
-    }
-    free(pak_mount->directory);
-
-    *pak_mount = (Pak_Mount_t){ 0 };
-
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "mount %p deinitialized", mount);
-}
-
-static bool _pak_mount_contains(File_System_Handle_t *mount, const char *file)
-{
-    Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
-
-    const Pak_Entry_t key = { .name = (char *)file };
-    const Pak_Entry_t *entry = bsearch((const void *)&key, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
-
-    bool exists = entry;
-    Log_assert(!exists, LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry `%s` found in mount %p", file, pak_mount);
-    return exists;
-}
-
-static File_System_Handle_t *_pak_mount_open(File_System_Handle_t *mount, const char *file)
-{
-    Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
-
-    const Pak_Entry_t key = { .name = (char *)file };
-    const Pak_Entry_t *entry = bsearch((const void *)&key, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
-    if (!entry) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't find entry `%s`", file);
-        return NULL;
-    }
-
-    FILE *stream = fopen(pak_mount->archive_path, "rb"); // Always in binary mode, line-terminators aren't an issue.
-    if (!stream) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't access file `%s`", pak_mount->archive_path);
-        return NULL;
-    }
-
-    fseek(stream, entry->offset, SEEK_SET); // Move to the found entry position into the file.
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry `%s` found at offset %d in file `%s`", file, entry->offset, pak_mount->archive_path);
-
-    File_System_Handle_t *handle = malloc(sizeof(Pak_Handle_t));
-    if (!handle) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate handle for entry `%s`", file);
-        fclose(stream);
-        return NULL;
-    }
-
-    _pak_handle_ctor(handle, stream, entry->offset, entry->size, pak_mount->flags & PAK_FLAG_ENCRYPTED, entry->name);
-
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry `%s` opened w/ handle %p (%d bytes)", file, handle, entry->size);
-
-    return handle;
-}
-
-static void _pak_mount_ctor(File_System_Handle_t *mount, const char *archive_path, size_t entries, Pak_Entry_t *directory, uint8_t flags)
-{
-    Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
-
-    *pak_mount = (Pak_Mount_t){
-            .dtor = _pak_mount_dtor,
-            .contains = _pak_mount_contains,
-            .open = _pak_mount_open
-        };
-
-    strcpy(pak_mount->archive_path, archive_path);
-    pak_mount->entries = entries;
-    pak_mount->directory = directory;
-    pak_mount->flags = flags;
-
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "mount %p initialized", mount);
-}
+static File_System_Handle_t *_pak_handle_ctor(FILE *stream, long offset, size_t size, bool encrypted, const char *name);
+static void _pak_handle_dtor(File_System_Handle_t *handle);
+static size_t _pak_handle_size(File_System_Handle_t *handle);
+static size_t _pak_handle_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
+static void _pak_handle_skip(File_System_Handle_t *handle, int offset);
+static bool _pak_handle_eof(File_System_Handle_t *handle);
 
 bool pak_is_valid(const char *path)
 {
@@ -310,6 +129,13 @@ bool pak_is_valid(const char *path)
     fclose(stream);
 
     return chars_read == chars_to_read && strncmp(signature, PAK_SIGNATURE, PAK_SIGNATURE_LENGTH) == 0;
+}
+
+static int _pak_entry_compare(const void *lhs, const void *rhs)
+{
+    const Pak_Entry_t *l = (const Pak_Entry_t *)lhs;
+    const Pak_Entry_t *r = (const Pak_Entry_t *)rhs;
+    return strcasecmp(l->name, r->name);
 }
 
 File_System_Mount_t *pak_mount(const char *path)
@@ -387,9 +213,9 @@ File_System_Mount_t *pak_mount(const char *path)
     qsort(directory, header.entries, sizeof(Pak_Entry_t), _pak_entry_compare); // Keep sorted to use binary-search.
     Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "directory w/ #%d entries sorted", entries);
 
-    File_System_Mount_t *mount = malloc(sizeof(Pak_Mount_t));
+    File_System_Mount_t *mount = _pak_mount_ctor(path, entries, directory, header.flags);
     if (!mount) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate mount");
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate mount for path `%s`", path);
         for (size_t i = 0; i < entries; ++i) {
             free(directory[i].name);
         }
@@ -398,10 +224,204 @@ File_System_Mount_t *pak_mount(const char *path)
         return NULL;
     }
 
-    _pak_mount_ctor(mount, path, entries, directory, header.flags);
-
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "mount initialized for archive `%s` w/ %d entries (flags 0x%02x)",
         path, entries, header.flags);
 
     return mount;
+}
+
+// `ctors` should't allocate and `dtors` shouldn't deallocate (to ensure separation of concerns and subclassing), but
+// this way is simpler...
+static File_System_Handle_t *_pak_mount_ctor(const char *archive_path, size_t entries, Pak_Entry_t *directory, uint8_t flags)
+{
+    Pak_Mount_t *pak_mount = malloc(sizeof(Pak_Mount_t));
+    if (!pak_mount) {
+        return NULL;
+    }
+
+    *pak_mount = (Pak_Mount_t){
+            .dtor = _pak_mount_dtor,
+            .contains = _pak_mount_contains,
+            .open = _pak_mount_open
+        };
+
+    strcpy(pak_mount->archive_path, archive_path);
+    pak_mount->entries = entries;
+    pak_mount->directory = directory;
+    pak_mount->flags = flags;
+
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "mount %p allocated and initialized", pak_mount);
+
+    return (File_System_Handle_t *)pak_mount;
+}
+
+static void _pak_mount_dtor(File_System_Handle_t *mount)
+{
+    Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
+
+    for (size_t i = 0; i < pak_mount->entries; ++i) {
+        free(pak_mount->directory[i].name);
+    }
+    free(pak_mount->directory);
+
+    free(pak_mount);
+
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "mount %p deinitialized and freed", mount);
+}
+
+static bool _pak_mount_contains(File_System_Handle_t *mount, const char *file)
+{
+    Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
+
+    const Pak_Entry_t key = { .name = (char *)file };
+    const Pak_Entry_t *entry = bsearch((const void *)&key, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
+
+    bool exists = entry;
+    Log_assert(!exists, LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry `%s` found in mount %p", file, pak_mount);
+    return exists;
+}
+
+static File_System_Handle_t *_pak_mount_open(File_System_Handle_t *mount, const char *file)
+{
+    Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
+
+    const Pak_Entry_t key = { .name = (char *)file };
+    const Pak_Entry_t *entry = bsearch((const void *)&key, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
+    if (!entry) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't find entry `%s`", file);
+        return NULL;
+    }
+
+    FILE *stream = fopen(pak_mount->archive_path, "rb"); // Always in binary mode, line-terminators aren't an issue.
+    if (!stream) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't access file `%s`", pak_mount->archive_path);
+        return NULL;
+    }
+
+    fseek(stream, entry->offset, SEEK_SET); // Move to the found entry position into the file.
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry `%s` found at offset %d in file `%s`", file, entry->offset, pak_mount->archive_path);
+
+    File_System_Handle_t *handle = _pak_handle_ctor(stream, entry->offset, entry->size, pak_mount->flags & PAK_FLAG_ENCRYPTED, entry->name);
+    if (!handle) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate handle for entry `%s`", file);
+        fclose(stream);
+        return NULL;
+    }
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry `%s` opened w/ handle %p (%d bytes)", file, handle, entry->size);
+
+    return handle;
+}
+
+static File_System_Handle_t *_pak_handle_ctor(FILE *stream, long offset, size_t size, bool encrypted, const char *name)
+{
+    Pak_Handle_t *pak_handle = malloc(sizeof(Pak_Handle_t));
+    if (!pak_handle) {
+        return NULL;
+    }
+
+    *pak_handle = (Pak_Handle_t){
+            .dtor = _pak_handle_dtor,
+            .size = _pak_handle_size,
+            .read = _pak_handle_read,
+            .skip = _pak_handle_skip,
+            .eof = _pak_handle_eof
+        };
+
+    pak_handle->stream = stream;
+    pak_handle->stream_size = size;
+    pak_handle->end_of_stream = offset + size;
+    pak_handle->encrypted = encrypted;
+    if (encrypted) {
+        // Encryption is implemented throught a RC4 stream cipher.
+        // The key is the MD5 digest of the entry name (w/ relative path).
+        md5_context_t digest_context;
+        md5_init(&digest_context);
+        md5_update(&digest_context, (const uint8_t *)name, strlen(name));
+
+        uint8_t cipher_key[MD5_SIZE];
+        md5_final(&digest_context, cipher_key);
+
+        rc4_schedule(&pak_handle->cipher_context, cipher_key, sizeof(cipher_key));
+#ifdef DROP_256
+        uint8_t drop[256] = { 0 };
+        rc4_process(cipher_context, drop, drop, sizeof(drop));
+#endif
+    }
+
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry w/ handle %p allocated and initialized", pak_handle);
+
+    return (File_System_Handle_t *)pak_handle;
+}
+
+static void _pak_handle_dtor(File_System_Handle_t *handle)
+{
+    Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
+
+    fclose(pak_handle->stream);
+
+    free(pak_handle);
+
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry w/ handle %p deinitialized and freed", handle);
+}
+
+static size_t _pak_handle_size(File_System_Handle_t *handle)
+{
+    Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
+
+//    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p is", std_handle);
+
+    return pak_handle->stream_size;
+}
+
+static size_t _pak_handle_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested)
+{
+    Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
+
+    long position = ftell(pak_handle->stream);
+    if (position == -1) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get current position for handle %p", handle);
+        return 0;
+    }
+
+    size_t bytes_available = pak_handle->end_of_stream - position;
+
+    size_t bytes_to_read = bytes_requested;
+    if (bytes_to_read > bytes_available) {
+        bytes_to_read = bytes_available;
+    }
+
+    size_t bytes_read = fread(buffer, sizeof(uint8_t), bytes_to_read, pak_handle->stream);
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d bytes read out of %d (%d requested)", bytes_read, bytes_to_read, bytes_requested);
+
+    if (pak_handle->encrypted) {
+        rc4_process(&pak_handle->cipher_context, buffer, bytes_read);
+        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d bytes decrypted", bytes_read);
+    }
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes read for handle %p", bytes_read, handle);
+    return bytes_read;
+}
+
+static void _pak_handle_skip(File_System_Handle_t *handle, int offset)
+{
+    Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
+
+    fseek(pak_handle->stream, offset, SEEK_CUR);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes seeked for handle %p", offset, handle);
+}
+
+static bool _pak_handle_eof(File_System_Handle_t *handle)
+{
+    Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
+
+    long position = ftell(pak_handle->stream);
+    if (position == -1) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get current position for handle %p", handle);
+        return true;
+    }
+
+    bool end_of_file = position >= pak_handle->end_of_stream;
+    Log_assert(!end_of_file, LOG_LEVELS_DEBUG, LOG_CONTEXT, "end-of-file reached for handle %p", handle);
+    return end_of_file;
 }

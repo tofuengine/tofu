@@ -35,9 +35,9 @@
 
 typedef struct _Std_Mount_t {
     // v-table
-    void  (*dtor)                (File_System_Mount_t *mount);
-    bool  (*contains)            (File_System_Mount_t *mount, const char *file);
-    File_System_Handle_t *(*open)(File_System_Mount_t *mount, const char *file);
+    void                  (*dtor)    (File_System_Mount_t *mount);
+    bool                  (*contains)(File_System_Mount_t *mount, const char *file);
+    File_System_Handle_t *(*open)    (File_System_Mount_t *mount, const char *file);
     // data
     char base_path[FILE_PATH_MAX];
 } Std_Mount_t;
@@ -53,15 +53,142 @@ typedef struct _Std_Handle_t {
     FILE *stream;
 } Std_Handle_t;
 
+static File_System_Mount_t *_std_mount_ctor(const char *base_path);
+static void _std_mount_dtor(File_System_Mount_t *mount);
+static bool _std_mount_contains(File_System_Mount_t *mount, const char *file);
+static File_System_Handle_t *_std_mount_open(File_System_Mount_t *mount, const char *file);
+
+static File_System_Handle_t *_std_handle_ctor(FILE *stream);
+static void _std_handle_dtor(File_System_Handle_t *handle);
+static size_t _std_handle_size(File_System_Handle_t *handle);
+static size_t _std_handle_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
+static void _std_handle_skip(File_System_Handle_t *handle, int offset);
+static bool _std_handle_eof(File_System_Handle_t *handle);
+
+bool std_is_valid(const char *path)
+{
+    struct stat path_stat;
+    int result = stat(path, &path_stat);
+    if (result != 0) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get stats for `%s`", path);
+        return false;
+    }
+
+    return S_ISDIR(path_stat.st_mode);
+}
+
+File_System_Mount_t *std_mount(const char *path)
+{
+    File_System_Mount_t *mount = _std_mount_ctor(path);
+    if (!mount) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate mount for folder `%s`", path);
+        return NULL;
+    }
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "mount initialized at folder `%s`", path);
+
+    return mount;
+}
+
+static File_System_Mount_t *_std_mount_ctor(const char *base_path)
+{
+    Std_Mount_t *std_mount = malloc(sizeof(Std_Mount_t));
+    if (!std_mount) {
+        return NULL;
+    }
+
+    *std_mount = (Std_Mount_t){
+            .dtor = _std_mount_dtor,
+            .contains = _std_mount_contains,
+            .open = _std_mount_open
+        };
+
+    strcpy(std_mount->base_path, base_path); // The path *need* to be terminated with the file path-separator!!!
+
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "mount %p allocated and initialized", std_mount);
+
+    return (File_System_Mount_t *)std_mount;
+}
+
+static void _std_mount_dtor(File_System_Mount_t *mount)
+{
+    Std_Mount_t *std_mount = (Std_Mount_t *)mount;
+
+    free(std_mount);
+
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "mount %p deinitialized and freed", mount);
+}
+
+static bool _std_mount_contains(File_System_Mount_t *mount, const char *file)
+{
+    Std_Mount_t *std_mount = (Std_Mount_t *)mount;
+
+    char full_path[FILE_PATH_MAX];
+    strcpy(full_path, std_mount->base_path);
+    strcat(full_path, file);
+
+    bool exists = access(full_path, R_OK) != -1;
+    Log_assert(!exists, LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` found in mount %p", file, mount);
+    return exists;
+}
+
+static File_System_Handle_t *_std_mount_open(File_System_Mount_t *mount, const char *file)
+{
+    Std_Mount_t *std_mount = (Std_Mount_t *)mount;
+
+    char full_path[FILE_PATH_MAX];
+    strcpy(full_path, std_mount->base_path);
+    strcat(full_path, file);
+
+    FILE *stream = fopen(full_path, "rb");
+    if (!stream) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't access file `%s`", full_path);
+        return NULL;
+    }
+
+    File_System_Handle_t *handle = _std_handle_ctor(stream);
+    if (!handle) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate handle for file `%s`", file);
+        fclose(stream);
+        return NULL;
+    }
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` opened w/ handle %p", file, handle);
+
+    return handle;
+}
+
+static File_System_Handle_t *_std_handle_ctor(FILE *stream)
+{
+    Std_Handle_t *std_handle = malloc(sizeof(Std_Handle_t));
+    if (!std_handle) {
+        return NULL;
+    }
+
+    *std_handle = (Std_Handle_t){
+            .dtor = _std_handle_dtor,
+            .size = _std_handle_size,
+            .read = _std_handle_read,
+            .skip = _std_handle_skip,
+            .eof = _std_handle_eof
+        };
+
+    std_handle->stream = stream;
+
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "handle %p initialized and initialized", std_handle);
+
+    return (File_System_Handle_t *)std_handle;
+}
+
 static void _std_handle_dtor(File_System_Handle_t *handle)
 {
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
     fclose(std_handle->stream);
 
-    *std_handle = (Std_Handle_t){ 0 };
+    free(std_handle);
 
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "handle %p deinitialized", handle);
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "handle %p deinitialized and freed", handle);
 }
 
 static size_t _std_handle_size(File_System_Handle_t *handle)
@@ -105,113 +232,4 @@ static bool _std_handle_eof(File_System_Handle_t *handle)
     bool end_of_file = feof(std_handle->stream) != 0;
     Log_assert(!end_of_file, LOG_LEVELS_DEBUG, LOG_CONTEXT, "end-of-file reached for handle %p", handle);
     return end_of_file;
-}
-
-static void _std_handle_ctor(File_System_Handle_t *handle, FILE *stream)
-{
-    Std_Handle_t *std_handle = (Std_Handle_t *)handle;
-
-    *std_handle = (Std_Handle_t){
-            .dtor = _std_handle_dtor,
-            .size = _std_handle_size,
-            .read = _std_handle_read,
-            .skip = _std_handle_skip,
-            .eof = _std_handle_eof
-        };
-
-    std_handle->stream = stream;
-
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "handle %p initialized", handle);
-}
-
-static void _std_mount_dtor(File_System_Mount_t *mount)
-{
-    Std_Mount_t *std_mount = (Std_Mount_t *)mount;
-
-    *std_mount = (Std_Mount_t){ 0 };
-
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "mount %p deinitialized", mount);
-}
-
-static bool _std_mount_contains(File_System_Mount_t *mount, const char *file)
-{
-    Std_Mount_t *std_mount = (Std_Mount_t *)mount;
-
-    char full_path[FILE_PATH_MAX];
-    strcpy(full_path, std_mount->base_path);
-    strcat(full_path, file);
-
-    bool exists = access(full_path, R_OK) != -1;
-    Log_assert(!exists, LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` found in mount %p", file, mount);
-    return exists;
-}
-
-static File_System_Handle_t *_std_mount_open(File_System_Mount_t *mount, const char *file)
-{
-    Std_Mount_t *std_mount = (Std_Mount_t *)mount;
-
-    char full_path[FILE_PATH_MAX];
-    strcpy(full_path, std_mount->base_path);
-    strcat(full_path, file);
-
-    FILE *stream = fopen(full_path, "rb");
-    if (!stream) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't access file `%s`", full_path);
-        return NULL;
-    }
-
-    File_System_Handle_t *handle = malloc(sizeof(Std_Handle_t));
-    if (!handle) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate handle for file `%s`", file);
-        fclose(stream);
-        return NULL;
-    }
-
-    _std_handle_ctor(handle, stream);
-
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` opened w/ handle %p", file, handle);
-
-    return handle;
-}
-
-static void _std_mount_ctor(File_System_Mount_t *mount, const char *base_path)
-{
-    Std_Mount_t *std_mount = (Std_Mount_t *)mount;
-
-    *std_mount = (Std_Mount_t){
-            .dtor = _std_mount_dtor,
-            .contains = _std_mount_contains,
-            .open = _std_mount_open
-        };
-
-    strcpy(std_mount->base_path, base_path); // The path *need* to be terminated with the file path-separator!!!
-
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "mount %p initialized", mount);
-}
-
-bool std_is_valid(const char *path)
-{
-    struct stat path_stat;
-    int result = stat(path, &path_stat);
-    if (result != 0) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get stats for `%s`", path);
-        return false;
-    }
-
-    return S_ISDIR(path_stat.st_mode);
-}
-
-File_System_Mount_t *std_mount(const char *path)
-{
-    File_System_Mount_t *mount = malloc(sizeof(Std_Mount_t));
-    if (!mount) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate mount for folder `%s`", path);
-        return NULL;
-    }
-
-    _std_mount_ctor(mount, path);
-
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "mount initialized at folder `%s`", path);
-
-    return mount;
 }
