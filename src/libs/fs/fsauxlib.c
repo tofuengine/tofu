@@ -40,7 +40,7 @@ static void *_load(File_System_Handle_t *handle, bool null_terminate, size_t *si
     void *data = malloc(bytes_to_allocate * sizeof(uint8_t)); // Add null terminator for the string.
     if (!data) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d bytes of memory", bytes_to_allocate);
-        handle->close(handle);
+        FS_close(handle);
         return NULL;
     }
     size_t read_bytes = FS_read(handle, data, bytes_to_read);
@@ -95,19 +95,19 @@ static File_System_Chunk_t load_as_binary(File_System_Handle_t *handle)
 static int stbi_io_read(void *user, char *data, int size)
 {
     File_System_Handle_t *handle = (File_System_Handle_t *)user;
-    return (int)handle->read(handle, data, (size_t)size);
+    return (int)FS_read(handle, data, (size_t)size);
 }
 
 static void stbi_io_skip(void *user, int n)
 {
     File_System_Handle_t *handle = (File_System_Handle_t *)user;
-    handle->skip(handle, n);
+    FS_skip(handle, n);
 }
 
 static int stbi_io_eof(void *user)
 {
     File_System_Handle_t *handle = (File_System_Handle_t *)user;
-    return handle->eof(handle) ? -1 : 0;
+    return FS_eof(handle) ? -1 : 0;
 }
 
 static const stbi_io_callbacks _io_callbacks = {
