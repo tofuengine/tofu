@@ -64,9 +64,9 @@ typedef struct _Pak_Entry_t {
 
 typedef struct _Pak_Mount_t {
     // v-table
-    void  (*unmount)(void *mount);
-    bool  (*exists)(void *mount, const char *file);
-    void *(*open)  (void *mount, const char *file, size_t *size_in_bytes);
+    void  (*unmount)             (File_System_Mount_t *mount);
+    bool  (*exists)              (File_System_Mount_t *mount, const char *file);
+    File_System_Handle_t *(*open)(File_System_Mount_t *mount, const char *file, size_t *size_in_bytes);
     // data
     char archive_path[FILE_PATH_MAX];
     size_t entries;
@@ -76,10 +76,10 @@ typedef struct _Pak_Mount_t {
 
 typedef struct _Pak_Handle_t {
     // v-table
-    void   (*close)(void *handle);
-    size_t (*read) (void *handle, void *buffer, size_t bytes_requested);
-    void   (*skip) (void *handle, int offset);
-    bool   (*eof)  (void *handle);
+    void   (*close)(File_System_Handle_t *handle);
+    size_t (*read) (File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
+    void   (*skip) (File_System_Handle_t *handle, int offset);
+    bool   (*eof)  (File_System_Handle_t *handle);
     // data
     FILE *stream;
     long end_of_stream;
@@ -87,7 +87,7 @@ typedef struct _Pak_Handle_t {
     rc4_context_t cipher_context;
 } Pak_Handle_t;
 
-static void _pakio_close(void *handle)
+static void _pakio_close(File_System_Handle_t *handle)
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
@@ -97,7 +97,7 @@ static void _pakio_close(void *handle)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry w/ handle %p closed", pak_handle);
 }
 
-static size_t _pakio_read(void *handle, void *buffer, size_t bytes_requested)
+static size_t _pakio_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested)
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
@@ -126,7 +126,7 @@ static size_t _pakio_read(void *handle, void *buffer, size_t bytes_requested)
     return bytes_read;
 }
 
-static void _pakio_skip(void *handle, int offset)
+static void _pakio_skip(File_System_Handle_t *handle, int offset)
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
@@ -134,7 +134,7 @@ static void _pakio_skip(void *handle, int offset)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes seeked for handle %p", offset, handle);
 }
 
-static bool _pakio_eof(void *handle)
+static bool _pakio_eof(File_System_Handle_t *handle)
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
@@ -174,7 +174,7 @@ static void _initialize_cipher(Pak_Handle_t *handle, const char *file)
 #endif
 }
 
-static void _pakio_unmount(void *mount)
+static void _pakio_unmount(File_System_Mount_t *mount)
 {
     Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
 
@@ -187,7 +187,7 @@ static void _pakio_unmount(void *mount)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "I/O deinitialized");
 }
 
-static bool _pakio_exists(void *mount, const char *file)
+static bool _pakio_exists(File_System_Mount_t *mount, const char *file)
 {
     Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
 
@@ -199,7 +199,7 @@ static bool _pakio_exists(void *mount, const char *file)
     return exists;
 }
 
-static void *_pakio_open(void *mount, const char *file, size_t *size_in_bytes)
+static File_System_Handle_t *_pakio_open(File_System_Mount_t *mount, const char *file, size_t *size_in_bytes)
 {
     Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
 
@@ -243,7 +243,7 @@ static void *_pakio_open(void *mount, const char *file, size_t *size_in_bytes)
 
     *size_in_bytes = entry->size;
 
-    return pak_handle;
+    return (File_System_Handle_t *)pak_handle;
 }
 
 bool pakio_is_archive(const char *path)
@@ -262,7 +262,7 @@ bool pakio_is_archive(const char *path)
     return chars_read == chars_to_read && strncmp(signature, PAK_SIGNATURE, PAK_SIGNATURE_LENGTH) == 0;
 }
 
-void *pakio_mount(const char *path)
+File_System_Mount_t *pakio_mount(const char *path)
 {
     FILE *stream = fopen(path, "rb");
     if (!stream) {
@@ -362,5 +362,5 @@ void *pakio_mount(const char *path)
         path, entries,
         pak_mount->encrypted ? "" : "un");
 
-    return pak_mount;
+    return (File_System_Mount_t *)pak_mount;
 }

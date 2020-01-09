@@ -55,20 +55,8 @@
 #define FILE_SYSTEM_PATH_SEPARATOR    '/'
 #define FILE_SYSTEM_PATH_SEPARATOR_SZ "/"
 
-typedef struct _File_System_Mount_t { // TODO: hide in opaque type?
-    // v-table
-    void  (*unmount)(void *mount);
-    bool  (*exists)(void *mount, const char *file);
-    void *(*open)  (void *mount, const char *file, size_t *size_in_bytes);
-} File_System_Mount_t;
-
-typedef struct _File_System_Handle_t {
-    // v-table
-    void   (*close)(void *handle);
-    size_t (*read) (void *handle, void *buffer, size_t bytes_requested);
-    void   (*skip) (void *handle, int offset);
-    bool   (*eof)  (void *handle);
-} File_System_Handle_t;
+typedef void *File_System_Mount_t;
+typedef void *File_System_Handle_t;
 
 typedef struct _File_System_t {
     File_System_Mount_t **mounts;

@@ -37,6 +37,21 @@
 
 #define LOG_CONTEXT "fs"
 
+typedef struct _Mount_t {
+    // v-table
+    void  (*unmount)             (File_System_Mount_t *mount);
+    bool  (*exists)              (File_System_Mount_t *mount, const char *file);
+    File_System_Handle_t *(*open)(File_System_Mount_t *mount, const char *file, size_t *size_in_bytes);
+} Mount_t;
+
+typedef struct _Handle_t {
+    // v-table
+    void   (*close)(File_System_Handle_t *handle);
+    size_t (*read) (File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
+    void   (*skip) (File_System_Handle_t *handle, int offset);
+    bool   (*eof)  (File_System_Handle_t *handle);
+} Handle_t;
+
 static bool _mount(File_System_t *file_system, const char *path)
 {
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "adding mount-point `%s`", path);
@@ -127,7 +142,8 @@ void FS_terminate(File_System_t *file_system)
     const size_t count = arrlen(file_system->mounts);
     for (size_t i = 0; i < count; ++i) {
         File_System_Mount_t *mount = file_system->mounts[i];
-        mount->unmount(mount);
+
+        ((Mount_t *)mount)->unmount(mount);
     }
     arrfree(file_system->mounts);
 }
@@ -138,7 +154,7 @@ bool FS_exists(const File_System_t *file_system, const char *file)
     for (size_t i = 0; i < count; ++i) {
         File_System_Mount_t *mount = file_system->mounts[i];
 
-        if (mount->exists(mount, file)) {
+        if (((Mount_t *)mount)->exists(mount, file)) {
             return true;
         }
     }
@@ -152,7 +168,7 @@ File_System_Handle_t *FS_open(const File_System_t *file_system, const char *file
     for (int i = count - 1; i >= 0; --i) { // Backward search to enable resource override in multi-archives.
         File_System_Mount_t *mount = file_system->mounts[i];
 
-        return mount->open(mount, file, size_in_bytes);
+        return ((Mount_t *)mount)->open(mount, file, size_in_bytes);
     }
 
     return NULL;
@@ -160,20 +176,20 @@ File_System_Handle_t *FS_open(const File_System_t *file_system, const char *file
 
 size_t FS_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested)
 {
-    return handle->read(handle, buffer, bytes_requested);
+    return ((Handle_t *)handle)->read(handle, buffer, bytes_requested);
 }
 
 void FS_skip(File_System_Handle_t *handle, int offset)
 {
-    handle->skip(handle, offset);
+    ((Handle_t *)handle)->skip(handle, offset);
 }
 
 bool FS_eof(File_System_Handle_t *handle)
 {
-    return handle->eof(handle);
+    return ((Handle_t *)handle)->eof(handle);
 }
 
 void FS_close(File_System_Handle_t *handle)
 {
-    handle->close(handle);
+    ((Handle_t *)handle)->close(handle);
 }
