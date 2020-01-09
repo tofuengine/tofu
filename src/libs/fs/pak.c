@@ -27,6 +27,7 @@
 #include <libs/log.h>
 #include <libs/md5.h>
 #include <libs/rc4.h>
+#include <libs/stb.h>
 
 #include <stdio.h>
 #include <stdint.h>
@@ -326,7 +327,7 @@ File_System_Mount_t *pak_mount(const char *path)
         fclose(stream);
         return NULL;
     }
-    if (strncmp(header.signature, PAK_SIGNATURE, sizeof(header.signature)) != 0) {
+    if (strncmp(header.signature, PAK_SIGNATURE, PAK_SIGNATURE_LENGTH) != 0) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "file `%s` is not a valid archive", path);
         fclose(stream);
         return NULL;
