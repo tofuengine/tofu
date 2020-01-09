@@ -124,8 +124,8 @@ void FS_terminate(File_System_t *file_system)
 {
     size_t count = arrlen(file_system->mounts);
     for (int i = count - 1; i >= 0; --i) {
-        Mount_t *mount = (Mount_t *)file_system->mounts[i];
-        mount->unmount(mount);
+        File_System_Mount_t *mount = file_system->mounts[i];
+        ((Mount_t *)mount)->unmount(mount);
     }
     arrfree(file_system->mounts);
 }
@@ -134,8 +134,8 @@ bool FS_exists(const File_System_t *file_system, const char *file)
 {
     size_t count = arrlen(file_system->mounts);
     for (int i = count - 1; i >= 0; --i) {
-        Mount_t *mount = (Mount_t *)file_system->mounts[i];
-        if (mount->exists(mount, file)) {
+        File_System_Mount_t *mount = file_system->mounts[i];
+        if (((Mount_t *)mount)->exists(mount, file)) {
             return true;
         }
     }
@@ -147,8 +147,8 @@ File_System_Handle_t *FS_open(const File_System_t *file_system, const char *file
 {
     size_t count = arrlen(file_system->mounts); // Backward search to enable resource override in multi-archives.
     for (int i = count - 1; i >= 0; --i) {
-        Mount_t *mount = (Mount_t *)file_system->mounts[i];
-        if (!mount->exists(mount, file)) {
+        File_System_Mount_t *mount = file_system->mounts[i];
+        if (!((Mount_t *)mount)->exists(mount, file)) {
             continue;
         }
         return ((Mount_t *)mount)->open(mount, file);
