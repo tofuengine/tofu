@@ -92,34 +92,34 @@ static File_System_Chunk_t load_as_binary(File_System_Handle_t *handle)
         };
 }
 
-static int stbi_io_read(void *user, char *data, int size)
+static int _stbi_io_read(void *user, char *data, int size)
 {
     File_System_Handle_t *handle = (File_System_Handle_t *)user;
     return (int)FS_read(handle, data, (size_t)size);
 }
 
-static void stbi_io_skip(void *user, int n)
+static void _stbi_io_skip(void *user, int n)
 {
     File_System_Handle_t *handle = (File_System_Handle_t *)user;
     FS_skip(handle, n);
 }
 
-static int stbi_io_eof(void *user)
+static int _stbi_io_eof(void *user)
 {
     File_System_Handle_t *handle = (File_System_Handle_t *)user;
     return FS_eof(handle) ? -1 : 0;
 }
 
-static const stbi_io_callbacks _io_callbacks = {
-    stbi_io_read,
-    stbi_io_skip,
-    stbi_io_eof,
+static const stbi_io_callbacks _stbi_io_callbacks = {
+    _stbi_io_read,
+    _stbi_io_skip,
+    _stbi_io_eof,
 };
 
 static File_System_Chunk_t load_as_image(File_System_Handle_t *handle)
 {
     int width, height, components;
-    void *pixels = stbi_load_from_callbacks(&_io_callbacks, handle, &width, &height, &components, STBI_rgb_alpha);
+    void *pixels = stbi_load_from_callbacks(&_stbi_io_callbacks, handle, &width, &height, &components, STBI_rgb_alpha);
     if (!pixels) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't decode surface from handle `%p` (%s)", handle, stbi_failure_reason());
         return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };

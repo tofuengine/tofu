@@ -65,6 +65,13 @@ static const uint8_t _boot_lua[] = {
 #endif
 };
 
+#define READER_BUFFER_SIZE  2048
+
+typedef struct _Reader_Context_t {
+    File_System_Handle_t *handle;
+    char buffer[READER_BUFFER_SIZE];
+} Reader_Context_t;
+
 typedef enum _Methods_t {
     METHOD_PROCESS,
     METHOD_UPDATE,
@@ -113,13 +120,6 @@ static int _error_handler(lua_State *L)
 }
 #endif
 #endif
-
-#define READER_BUFFER_SIZE  2048
-
-typedef struct _Reader_Context_t {
-    File_System_Handle_t *handle;
-    char buffer[READER_BUFFER_SIZE];
-} Reader_Context_t;
 
 static const char *_reader(lua_State *L, void *ud, size_t *size)
 {
