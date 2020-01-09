@@ -38,14 +38,16 @@
 
 typedef struct _Mount_t {
     // v-table
-    void  (*unmount)             (File_System_Mount_t *mount);
-    bool  (*exists)              (File_System_Mount_t *mount, const char *file);
+    void  (*ctor)                (File_System_Mount_t *mount, ...);
+    void  (*dtor)                (File_System_Mount_t *mount);
+    bool  (*contains)            (File_System_Mount_t *mount, const char *file);
     File_System_Handle_t *(*open)(File_System_Mount_t *mount, const char *file);
 } Mount_t;
 
 typedef struct _Handle_t {
     // v-table
-    void   (*close)(File_System_Handle_t *handle);
+    void   (*ctor) (File_System_Handle_t *handle, ...);
+    void   (*dtor) (File_System_Handle_t *handle);
     size_t (*size) (File_System_Handle_t *handle);
     size_t (*read) (File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
     void   (*skip) (File_System_Handle_t *handle, int offset);
@@ -125,7 +127,7 @@ void FS_terminate(File_System_t *file_system)
     size_t count = arrlen(file_system->mounts);
     for (int i = count - 1; i >= 0; --i) {
         File_System_Mount_t *mount = file_system->mounts[i];
-        ((Mount_t *)mount)->unmount(mount);
+        ((Mount_t *)mount)->dtor(mount);
     }
     arrfree(file_system->mounts);
 }
@@ -135,7 +137,7 @@ File_System_Mount_t *FS_locate(const File_System_t *file_system, const char *fil
     size_t count = arrlen(file_system->mounts);
     for (int i = count - 1; i >= 0; --i) {
         File_System_Mount_t *mount = file_system->mounts[i];
-        if (((Mount_t *)mount)->exists(mount, file)) {
+        if (((Mount_t *)mount)->contains(mount, file)) {
             return mount;
         }
     }
@@ -150,7 +152,7 @@ File_System_Handle_t *FS_open(File_System_Mount_t *mount, const char *file)
 
 void FS_close(File_System_Handle_t *handle)
 {
-    ((Handle_t *)handle)->close(handle);
+    ((Handle_t *)handle)->dtor(handle);
 }
 
 size_t FS_size(File_System_Handle_t *handle)

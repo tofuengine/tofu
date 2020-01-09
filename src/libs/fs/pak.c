@@ -28,6 +28,7 @@
 #include <libs/md5.h>
 #include <libs/rc4.h>
 
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -65,19 +66,21 @@ typedef struct _Pak_Entry_t {
 
 typedef struct _Pak_Mount_t {
     // v-table
-    void  (*unmount)             (File_System_Mount_t *mount);
-    bool  (*exists)              (File_System_Mount_t *mount, const char *file);
+    void  (*ctor)                (File_System_Mount_t *mount, ...);
+    void  (*dtor)                (File_System_Mount_t *mount);
+    bool  (*contains)            (File_System_Mount_t *mount, const char *file);
     File_System_Handle_t *(*open)(File_System_Mount_t *mount, const char *file);
     // data
     char archive_path[FILE_PATH_MAX];
     size_t entries;
     Pak_Entry_t *directory;
-    bool encrypted;
+    uint8_t flags;
 } Pak_Mount_t;
 
 typedef struct _Pak_Handle_t {
     // v-table
-    void   (*close)(File_System_Handle_t *handle);
+    void   (*ctor) (File_System_Handle_t *handle, ...);
+    void   (*dtor) (File_System_Handle_t *handle);
     size_t (*size) (File_System_Handle_t *handle);
     size_t (*read) (File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
     void   (*skip) (File_System_Handle_t *handle, int offset);
@@ -90,7 +93,44 @@ typedef struct _Pak_Handle_t {
     rc4_context_t cipher_context;
 } Pak_Handle_t;
 
-static void _pakio_close(File_System_Handle_t *handle)
+static void _pakio_handle_ctor(File_System_Handle_t *handle, ...)
+{
+    Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
+
+    va_list args;
+    va_start(args, handle);
+        FILE *stream = va_arg(args, FILE *);
+        size_t stream_offset = va_arg(args, size_t);
+        size_t stream_size = va_arg(args, size_t);
+        bool encrypted = va_arg(args, int);
+        const char *name = va_arg(args, const char *);
+    va_end(args);
+
+    pak_handle->stream = stream;
+    pak_handle->stream_size = stream_size;
+    pak_handle->end_of_stream = stream_offset + stream_size;
+    pak_handle->encrypted = encrypted;
+    if (encrypted) {
+        // Encryption is implemented throught a RC4 stream cipher.
+        // The key is the MD5 digest of the entry name (w/ relative path).
+        md5_context_t digest_context;
+        md5_init(&digest_context);
+        md5_update(&digest_context, (const uint8_t *)name, strlen(name));
+
+        uint8_t cipher_key[MD5_SIZE];
+        md5_final(&digest_context, cipher_key);
+
+        rc4_schedule(&pak_handle->cipher_context, cipher_key, sizeof(cipher_key));
+#ifdef DROP_256
+        uint8_t drop[256] = { 0 };
+        rc4_process(cipher_context, drop, drop, sizeof(drop));
+#endif
+    }
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry w/ handle %p closed", pak_handle);
+}
+
+static void _pakio_handle_dtor(File_System_Handle_t *handle)
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
@@ -100,7 +140,7 @@ static void _pakio_close(File_System_Handle_t *handle)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry w/ handle %p closed", pak_handle);
 }
 
-static size_t _pakio_size(File_System_Handle_t *handle)
+static size_t _pakio_handle_size(File_System_Handle_t *handle)
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
@@ -109,7 +149,7 @@ static size_t _pakio_size(File_System_Handle_t *handle)
     return pak_handle->stream_size;
 }
 
-static size_t _pakio_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested)
+static size_t _pakio_handle_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested)
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
@@ -138,7 +178,7 @@ static size_t _pakio_read(File_System_Handle_t *handle, void *buffer, size_t byt
     return bytes_read;
 }
 
-static void _pakio_skip(File_System_Handle_t *handle, int offset)
+static void _pakio_handle_skip(File_System_Handle_t *handle, int offset)
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
@@ -146,7 +186,7 @@ static void _pakio_skip(File_System_Handle_t *handle, int offset)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes seeked for handle %p", offset, handle);
 }
 
-static bool _pakio_eof(File_System_Handle_t *handle)
+static bool _pakio_handle_eof(File_System_Handle_t *handle)
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
@@ -168,25 +208,25 @@ static int _pak_entry_compare(const void *lhs, const void *rhs)
     return strcasecmp(l->name, r->name);
 }
 
-// Encryption is implemented throught a RC4 stream cipher.
-// The key is the MD5 digest of the entry name (w/ relative path).
-static void _initialize_cipher(Pak_Handle_t *handle, const char *file)
+static void _pakio_mount_ctor(File_System_Handle_t *mount, ...)
 {
-    md5_context_t digest_context;
-    md5_init(&digest_context);
-    md5_update(&digest_context, (const uint8_t *)file, strlen(file));
+    Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
 
-    uint8_t cipher_key[MD5_SIZE];
-    md5_final(&digest_context, cipher_key);
+    va_list args;
+    va_start(args, mount);
+        const char *archive_path = va_arg(args, const char *);
+        size_t entries = va_arg(args, size_t);
+        Pak_Entry_t *directory = va_arg(args, Pak_Entry_t *);
+        uint8_t flags = va_arg(args, int);
+    va_end(args);
 
-    rc4_schedule(&handle->cipher_context, cipher_key, sizeof(cipher_key));
-#ifdef DROP_256
-    uint8_t drop[256] = { 0 };
-    rc4_process(cipher_context, drop, drop, sizeof(drop));
-#endif
+    strcpy(pak_mount->archive_path, archive_path);
+    pak_mount->entries = entries;
+    pak_mount->directory = directory;
+    pak_mount->flags = flags;
 }
 
-static void _pakio_unmount(File_System_Handle_t *mount)
+static void _pakio_mount_dtor(File_System_Handle_t *mount)
 {
     Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
 
@@ -199,7 +239,7 @@ static void _pakio_unmount(File_System_Handle_t *mount)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "I/O deinitialized");
 }
 
-static bool _pakio_exists(File_System_Handle_t *mount, const char *file)
+static bool _pakio_mount_contains(File_System_Handle_t *mount, const char *file)
 {
     Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
 
@@ -211,7 +251,7 @@ static bool _pakio_exists(File_System_Handle_t *mount, const char *file)
     return exists;
 }
 
-static File_System_Handle_t *_pakio_open(void *mount, const char *file)
+static File_System_Handle_t *_pakio_mount_open(File_System_Handle_t *mount, const char *file)
 {
     Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
 
@@ -239,19 +279,14 @@ static File_System_Handle_t *_pakio_open(void *mount, const char *file)
     }
 
     *pak_handle = (Pak_Handle_t){
-            .close = _pakio_close,
-            .size = _pakio_size,
-            .read = _pakio_read,
-            .skip = _pakio_skip,
-            .eof = _pakio_eof
+            .ctor = _pakio_handle_ctor,
+            .dtor = _pakio_handle_dtor,
+            .size = _pakio_handle_size,
+            .read = _pakio_handle_read,
+            .skip = _pakio_handle_skip,
+            .eof = _pakio_handle_eof
         };
-    pak_handle->stream = stream;
-    pak_handle->stream_size = entry->size;
-    pak_handle->end_of_stream = entry->offset + entry->size;
-    pak_handle->encrypted = pak_mount->encrypted;
-    if (pak_mount->encrypted) {
-        _initialize_cipher(pak_handle, entry->name);
-    }
+    pak_handle->ctor(pak_handle, stream, entry->offset, entry->size, pak_mount->flags & PAK_FLAG_ENCRYPTED, entry->name);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry `%s` opened w/ handle %p (%d bytes)", file, pak_handle, entry->size);
 
@@ -373,18 +408,16 @@ File_System_Handle_t *pakio_mount(const char *path)
     }
 
     *pak_mount = (Pak_Mount_t){
-            .unmount = _pakio_unmount,
-            .exists = _pakio_exists,
-            .open = _pakio_open
+            .ctor = _pakio_mount_ctor,
+            .dtor = _pakio_mount_dtor,
+            .contains = _pakio_mount_contains,
+            .open = _pakio_mount_open
         };
-    strcpy(pak_mount->archive_path, path);
-    pak_mount->entries = entries;
-    pak_mount->directory = directory;
-    pak_mount->encrypted = header.flags & PAK_FLAG_ENCRYPTED;
+    pak_mount->ctor(pak_mount, path, entries, directory, header.flags);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "I/O initialized for archive `%s` w/ %d entries (%sencrypted)",
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "I/O initialized for archive `%s` w/ %d entries (flags 0x%02x)",
         path, entries,
-        pak_mount->encrypted ? "" : "un");
+        pak_mount->flags);
 
     return (File_System_Handle_t *)pak_mount;
 }
