@@ -80,9 +80,9 @@ extern void FS_terminate(File_System_t *file_system);
 extern bool FS_exists(const File_System_t *file_system, const char *file);
 extern File_System_Handle_t *FS_open(const File_System_t *file_system, const char *file);
 
-extern void FS_close(File_System_Handle_t *handle);
-extern size_t FS_size(File_System_Handle_t *handle); // TODO: convert these to macros?
-extern size_t FS_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested); // TODO: convert these to macros?
+extern void FS_close(File_System_Handle_t *handle); // TODO: convert these to macros?
+extern size_t FS_size(File_System_Handle_t *handle);
+extern size_t FS_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
 extern void FS_skip(File_System_Handle_t *handle, int offset);
 extern bool FS_eof(File_System_Handle_t *handle);
 
