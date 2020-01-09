@@ -93,7 +93,7 @@ typedef struct _Pak_Handle_t {
     rc4_context_t cipher_context;
 } Pak_Handle_t;
 
-static void _pakio_handle_ctor(File_System_Handle_t *handle, ...)
+static void _pak_handle_ctor(File_System_Handle_t *handle, ...)
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
@@ -127,20 +127,21 @@ static void _pakio_handle_ctor(File_System_Handle_t *handle, ...)
 #endif
     }
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry w/ handle %p closed", pak_handle);
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry w/ handle %p initialized", handle);
 }
 
-static void _pakio_handle_dtor(File_System_Handle_t *handle)
+static void _pak_handle_dtor(File_System_Handle_t *handle)
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
     fclose(pak_handle->stream);
-    free(pak_handle);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry w/ handle %p closed", pak_handle);
+    *pak_handle = (Pak_Handle_t){ 0 };
+
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry w/ handle %p deinitialized", handle);
 }
 
-static size_t _pakio_handle_size(File_System_Handle_t *handle)
+static size_t _pak_handle_size(File_System_Handle_t *handle)
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
@@ -149,7 +150,7 @@ static size_t _pakio_handle_size(File_System_Handle_t *handle)
     return pak_handle->stream_size;
 }
 
-static size_t _pakio_handle_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested)
+static size_t _pak_handle_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested)
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
@@ -178,7 +179,7 @@ static size_t _pakio_handle_read(File_System_Handle_t *handle, void *buffer, siz
     return bytes_read;
 }
 
-static void _pakio_handle_skip(File_System_Handle_t *handle, int offset)
+static void _pak_handle_skip(File_System_Handle_t *handle, int offset)
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
@@ -186,7 +187,7 @@ static void _pakio_handle_skip(File_System_Handle_t *handle, int offset)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes seeked for handle %p", offset, handle);
 }
 
-static bool _pakio_handle_eof(File_System_Handle_t *handle)
+static bool _pak_handle_eof(File_System_Handle_t *handle)
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
@@ -208,7 +209,7 @@ static int _pak_entry_compare(const void *lhs, const void *rhs)
     return strcasecmp(l->name, r->name);
 }
 
-static void _pakio_mount_ctor(File_System_Handle_t *mount, ...)
+static void _pak_mount_ctor(File_System_Handle_t *mount, ...)
 {
     Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
 
@@ -224,9 +225,11 @@ static void _pakio_mount_ctor(File_System_Handle_t *mount, ...)
     pak_mount->entries = entries;
     pak_mount->directory = directory;
     pak_mount->flags = flags;
+
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "mount %p initialized", mount);
 }
 
-static void _pakio_mount_dtor(File_System_Handle_t *mount)
+static void _pak_mount_dtor(File_System_Handle_t *mount)
 {
     Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
 
@@ -234,12 +237,13 @@ static void _pakio_mount_dtor(File_System_Handle_t *mount)
         free(pak_mount->directory[i].name);
     }
     free(pak_mount->directory);
-    free(pak_mount);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "I/O deinitialized");
+    *pak_mount = (Pak_Mount_t){ 0 };
+
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "mount %p deinitialized", mount);
 }
 
-static bool _pakio_mount_contains(File_System_Handle_t *mount, const char *file)
+static bool _pak_mount_contains(File_System_Handle_t *mount, const char *file)
 {
     Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
 
@@ -251,7 +255,7 @@ static bool _pakio_mount_contains(File_System_Handle_t *mount, const char *file)
     return exists;
 }
 
-static File_System_Handle_t *_pakio_mount_open(File_System_Handle_t *mount, const char *file)
+static File_System_Handle_t *_pak_mount_open(File_System_Handle_t *mount, const char *file)
 {
     Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
 
@@ -279,12 +283,12 @@ static File_System_Handle_t *_pakio_mount_open(File_System_Handle_t *mount, cons
     }
 
     *pak_handle = (Pak_Handle_t){
-            .ctor = _pakio_handle_ctor,
-            .dtor = _pakio_handle_dtor,
-            .size = _pakio_handle_size,
-            .read = _pakio_handle_read,
-            .skip = _pakio_handle_skip,
-            .eof = _pakio_handle_eof
+            .ctor = _pak_handle_ctor,
+            .dtor = _pak_handle_dtor,
+            .size = _pak_handle_size,
+            .read = _pak_handle_read,
+            .skip = _pak_handle_skip,
+            .eof = _pak_handle_eof
         };
     pak_handle->ctor(pak_handle, stream, entry->offset, entry->size, pak_mount->flags & PAK_FLAG_ENCRYPTED, entry->name);
 
@@ -408,10 +412,10 @@ File_System_Handle_t *pakio_mount(const char *path)
     }
 
     *pak_mount = (Pak_Mount_t){
-            .ctor = _pakio_mount_ctor,
-            .dtor = _pakio_mount_dtor,
-            .contains = _pakio_mount_contains,
-            .open = _pakio_mount_open
+            .ctor = _pak_mount_ctor,
+            .dtor = _pak_mount_dtor,
+            .contains = _pak_mount_contains,
+            .open = _pak_mount_open
         };
     pak_mount->ctor(pak_mount, path, entries, directory, header.flags);
 

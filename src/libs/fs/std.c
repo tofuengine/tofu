@@ -56,7 +56,7 @@ typedef struct _Std_Handle_t {
     FILE *stream;
 } Std_Handle_t;
 
-static void _stdio_handle_ctor(File_System_Handle_t *handle, ...)
+static void _std_handle_ctor(File_System_Handle_t *handle, ...)
 {
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
@@ -66,19 +66,22 @@ static void _stdio_handle_ctor(File_System_Handle_t *handle, ...)
     va_end(args);
 
     std_handle->stream = stream;
+
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "handle %p initialized", handle);
 }
 
-static void _stdio_handle_dtor(File_System_Handle_t *handle)
+static void _std_handle_dtor(File_System_Handle_t *handle)
 {
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
     fclose(std_handle->stream);
-    free(std_handle);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p closed", std_handle);
+    *std_handle = (Std_Handle_t){ 0 };
+
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "handle %p deinitialized", handle);
 }
 
-static size_t _stdio_handle_size(File_System_Handle_t *handle)
+static size_t _std_handle_size(File_System_Handle_t *handle)
 {
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
@@ -94,7 +97,7 @@ static size_t _stdio_handle_size(File_System_Handle_t *handle)
     return (size_t)stat.st_size;
 }
 
-static size_t _stdio_handle_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested)
+static size_t _std_handle_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested)
 {
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
@@ -104,7 +107,7 @@ static size_t _stdio_handle_read(File_System_Handle_t *handle, void *buffer, siz
     return bytes_read;
 }
 
-static void _stdio_handle_skip(File_System_Handle_t *handle, int offset)
+static void _std_handle_skip(File_System_Handle_t *handle, int offset)
 {
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
@@ -112,7 +115,7 @@ static void _stdio_handle_skip(File_System_Handle_t *handle, int offset)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes seeked for handle %p", offset, handle);
 }
 
-static bool _stdio_handle_eof(File_System_Handle_t *handle)
+static bool _std_handle_eof(File_System_Handle_t *handle)
 {
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
@@ -121,7 +124,7 @@ static bool _stdio_handle_eof(File_System_Handle_t *handle)
     return end_of_file;
 }
 
-static void _stdio_mount_ctor(File_System_Mount_t *mount, ...)
+static void _std_mount_ctor(File_System_Mount_t *mount, ...)
 {
     Std_Mount_t *std_mount = (Std_Mount_t *)mount;
 
@@ -131,18 +134,20 @@ static void _stdio_mount_ctor(File_System_Mount_t *mount, ...)
     va_end(args);
 
     strcpy(std_mount->base_path, base_path); // The path *need* to be terminated with the file path-separator!!!
+
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "mount %p initialized", mount);
 }
 
-static void _stdio_mount_dtor(File_System_Mount_t *mount)
+static void _std_mount_dtor(File_System_Mount_t *mount)
 {
     Std_Mount_t *std_mount = (Std_Mount_t *)mount;
 
-    free(std_mount);
+    *std_mount = (Std_Mount_t){ 0 };
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "I/O deinitialized");
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "mount %p deinitialized", mount);
 }
 
-static bool _stdio_mount_contains(File_System_Mount_t *mount, const char *file)
+static bool _std_mount_contains(File_System_Mount_t *mount, const char *file)
 {
     Std_Mount_t *std_mount = (Std_Mount_t *)mount;
 
@@ -155,7 +160,7 @@ static bool _stdio_mount_contains(File_System_Mount_t *mount, const char *file)
     return exists;
 }
 
-static File_System_Handle_t *_stdio_mount_open(File_System_Mount_t *mount, const char *file)
+static File_System_Handle_t *_std_mount_open(File_System_Mount_t *mount, const char *file)
 {
     Std_Mount_t *std_mount = (Std_Mount_t *)mount;
 
@@ -177,12 +182,12 @@ static File_System_Handle_t *_stdio_mount_open(File_System_Mount_t *mount, const
     }
 
     *std_handle = (Std_Handle_t){
-            .ctor = _stdio_handle_ctor,
-            .dtor = _stdio_handle_dtor,
-            .size = _stdio_handle_size,
-            .read = _stdio_handle_read,
-            .skip = _stdio_handle_skip,
-            .eof = _stdio_handle_eof
+            .ctor = _std_handle_ctor,
+            .dtor = _std_handle_dtor,
+            .size = _std_handle_size,
+            .read = _std_handle_read,
+            .skip = _std_handle_skip,
+            .eof = _std_handle_eof
         };
     std_handle->ctor(std_handle, stream);
 
@@ -212,10 +217,10 @@ File_System_Mount_t *stdio_mount(const char *path)
     }
 
     *std_mount = (Std_Mount_t){
-            .ctor = _stdio_mount_ctor,
-            .dtor = _stdio_mount_dtor,
-            .contains = _stdio_mount_contains,
-            .open = _stdio_mount_open
+            .ctor = _std_mount_ctor,
+            .dtor = _std_mount_dtor,
+            .contains = _std_mount_contains,
+            .open = _std_mount_open
         };
     std_mount->ctor(std_mount, path);
 
