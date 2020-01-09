@@ -26,6 +26,7 @@
 
 #include <config.h>
 #include <core/vm/interpreter.h>
+#include <libs/fs/fsauxlib.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 

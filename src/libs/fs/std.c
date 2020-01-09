@@ -33,43 +33,26 @@
 
 #define LOG_CONTEXT "fs-std"
 
-typedef struct _Std_Context_t {
+typedef struct _Std_Mount_t {
+    // v-table
+    void  (*unmount)(void *mount);
+    bool  (*exists)(void *mount, const char *file);
+    void *(*open)  (void *mount, const char *file, size_t *size_in_bytes);
+    // data
     char base_path[FILE_PATH_MAX];
-} Std_Context_t;
+} Std_Mount_t;
 
 typedef struct _Std_Handle_t {
-    const File_System_Handle_Callbacks_t *callbacks;
+    // v-table
+    void   (*close)(void *handle);
+    size_t (*read) (void *handle, void *buffer, size_t bytes_requested);
+    void   (*skip) (void *handle, int offset);
+    bool   (*eof)  (void *handle);
+    // data
     FILE *stream;
 } Std_Handle_t;
 
-static size_t stdio_read(void *handle, void *buffer, size_t bytes_requested)
-{
-    Std_Handle_t *std_handle = (Std_Handle_t *)handle;
-
-    size_t bytes_read = fread(buffer, sizeof(char), bytes_requested, std_handle->stream);
-
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes read for handle %p", bytes_read, handle);
-    return bytes_read;
-}
-
-static void stdio_skip(void *handle, int offset)
-{
-    Std_Handle_t *std_handle = (Std_Handle_t *)handle;
-
-    fseek(std_handle->stream, offset, SEEK_CUR);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes seeked for handle %p", offset, handle);
-}
-
-static bool stdio_eof(void *handle)
-{
-    Std_Handle_t *std_handle = (Std_Handle_t *)handle;
-
-    bool end_of_file = feof(std_handle->stream) != 0;
-    Log_assert(!end_of_file, LOG_LEVELS_DEBUG, LOG_CONTEXT, "end-of-file reached for handle %p", handle);
-    return end_of_file;
-}
-
-static void stdio_close(void *handle)
+static void _stdio_close(void *handle)
 {
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
@@ -79,53 +62,61 @@ static void stdio_close(void *handle)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p closed", std_handle);
 }
 
-const File_System_Handle_Callbacks_t *_stdio_handle_callbacks = &(File_System_Handle_Callbacks_t){
-    stdio_read,
-    stdio_skip,
-    stdio_eof,
-    stdio_close,
-};
-
-static void *stdio_init(const char *path)
+static size_t _stdio_read(void *handle, void *buffer, size_t bytes_requested)
 {
-    Std_Context_t *std_context = malloc(sizeof(Std_Context_t));
-    *std_context = (Std_Context_t){ 0 };
+    Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
-    strcpy(std_context->base_path, path); // The path *need* to be terminated with the file path-separator!!!
+    size_t bytes_read = fread(buffer, sizeof(char), bytes_requested, std_handle->stream);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "I/O initialized at folder `%s`", path);
-
-    return std_context;
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes read for handle %p", bytes_read, handle);
+    return bytes_read;
 }
 
-static void stdio_deinit(void *context)
+static void _stdio_skip(void *handle, int offset)
 {
-    Std_Context_t *std_context = (Std_Context_t *)context;
+    Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
-    free(std_context);
+    fseek(std_handle->stream, offset, SEEK_CUR);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes seeked for handle %p", offset, handle);
+}
+
+static bool _stdio_eof(void *handle)
+{
+    Std_Handle_t *std_handle = (Std_Handle_t *)handle;
+
+    bool end_of_file = feof(std_handle->stream) != 0;
+    Log_assert(!end_of_file, LOG_LEVELS_DEBUG, LOG_CONTEXT, "end-of-file reached for handle %p", handle);
+    return end_of_file;
+}
+
+static void _stdio_unmount(void *mount)
+{
+    Std_Mount_t *std_mount = (Std_Mount_t *)std_mount;
+
+    free(std_mount);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "I/O deinitialized");
 }
 
-static bool stdio_exists(const void *context, const char *file)
+static bool _stdio_exists(void *mount, const char *file)
 {
-    const Std_Context_t *std_context = (const Std_Context_t *)context;
+    Std_Mount_t *std_mount = (Std_Mount_t *)mount;
 
     char full_path[FILE_PATH_MAX];
-    strcpy(full_path, std_context->base_path);
+    strcpy(full_path, std_mount->base_path);
     strcat(full_path, file);
 
     bool exists = access(full_path, R_OK) != -1;
-    Log_assert(!exists, LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` found in context %p", file, context);
+    Log_assert(!exists, LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` found in mount %p", file, mount);
     return exists;
 }
 
-static void *stdio_open(const void *context, const char *file, size_t *size_in_bytes)
+static void *_stdio_open(void *mount, const char *file, size_t *size_in_bytes)
 {
-    const Std_Context_t *std_context = (const Std_Context_t *)context;
+    Std_Mount_t *std_mount = (Std_Mount_t *)mount;
 
     char full_path[FILE_PATH_MAX];
-    strcpy(full_path, std_context->base_path);
+    strcpy(full_path, std_mount->base_path);
     strcat(full_path, file);
 
     FILE *stream = fopen(full_path, "rb");
@@ -152,19 +143,34 @@ static void *stdio_open(const void *context, const char *file, size_t *size_in_b
     }
 
     *std_handle = (Std_Handle_t){
-            .callbacks = _stdio_handle_callbacks,
-            .stream = stream
+            .close = _stdio_close,
+            .read = _stdio_read,
+            .skip = _stdio_skip,
+            .eof = _stdio_eof
         };
+    std_handle->stream = stream;
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` opened w/ handle %p (%d bytes)", file, std_handle, stat.st_size);
 
     return std_handle;
 }
 
+void *stdio_mount(const char *path)
+{
+    Std_Mount_t *std_mount = malloc(sizeof(Std_Mount_t));
+    if (!std_mount) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate mount for folder `%s`", path);
+        return NULL;
+    }
 
-const File_System_Mount_Callbacks_t *stdio_callbacks = &(File_System_Mount_Callbacks_t){
-    stdio_init,
-    stdio_deinit,
-    stdio_exists,
-    stdio_open
-};
+    *std_mount = (Std_Mount_t){
+            .unmount = _stdio_unmount,
+            .exists = _stdio_exists,
+            .open = _stdio_open
+        };
+    strcpy(std_mount->base_path, path); // The path *need* to be terminated with the file path-separator!!!
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "I/O initialized at folder `%s`", path);
+
+    return std_mount;
+}

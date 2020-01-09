@@ -29,7 +29,7 @@
 
 #include <config.h>
 #include <libs/gl/gl.h>
-#include <libs/fs/fs.h>
+#include <libs/fs/fsauxlib.h>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
