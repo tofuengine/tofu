@@ -78,44 +78,35 @@ bool FS_initialize(File_System_t *file_system, const char *base_path)
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't resolve `%s`", base_path);
         return false;
     }
-    if (resolved[strlen(resolved) - 1] != '/') {
-        strcat(resolved, FILE_PATH_SEPARATOR_SZ);
-    }
 
     DIR *dp = opendir(resolved);
-    if (!dp) {
-        fprintf(stderr,"cannot open directory: %s\n", resolved);
-        return false;
+    if (dp) { // Path is a folder, ensure trailing separator, then scan and mount valid archives.
+        if (resolved[strlen(resolved) - 1] != '/') {
+            strcat(resolved, FILE_PATH_SEPARATOR_SZ);
+        }
+
+        for (struct dirent *entry = readdir(dp); entry; entry = readdir(dp)) {
+            char full_path[FILE_PATH_MAX];
+            strcpy(full_path, resolved);
+            strcat(full_path, entry->d_name);
+
+            if (entry->d_type != DT_REG || !pakio_is_archive(full_path)) {
+                Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "skipping file `%s` (not an archive)", full_path);
+                continue;
+            }
+
+            _mount(file_system, full_path);
+
+            // TODO: add also possible "archive.pa0", ..., "archive.p99" file
+            // overriding "archive.pak".
+    //        for (int i = 0; i < 100; ++i) {
+    //            sprintf(&entry->d_name[length - 2], "%02d", i);
+    //            _mount(file_system, full_path);
+    //        }
+        }
+
+        closedir(dp);
     }
-
-    for (struct dirent *entry = readdir(dp); entry; entry = readdir(dp)) {
-        char full_path[FILE_PATH_MAX];
-        strcpy(full_path, resolved);
-        strcat(full_path, entry->d_name);
-
-        struct stat statbuf;
-        int result = stat(full_path, &statbuf);
-        if (result != 0) {
-            continue;
-        }
-        if (!S_ISREG(statbuf.st_mode)) {
-            continue;
-        }
-        if (!pakio_is_archive(full_path)) {
-            continue;
-        }
-
-        _mount(file_system, full_path);
-
-        // TODO: add also possibile "archive.pa0", ..., "archive.p99" file
-        // overriding "archive.pak".
-//        for (int i = 0; i < 100; ++i) {
-//            sprintf(&entry->d_name[length - 2], "%02d", i);
-//            _mount(file_system, full_path);
-//        }
-    }
-
-    closedir(dp);
 
     _mount(file_system, resolved);
 
