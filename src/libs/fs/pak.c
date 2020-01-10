@@ -242,10 +242,10 @@ static void _pak_mount_ctor(File_System_Mount_t *mount, const char *archive_path
 
     *pak_mount = (Pak_Mount_t){ 0 };
     pak_mount->vtable = (Mount_VTable_t){
-        .dtor = _pak_mount_dtor,
-        .contains = _pak_mount_contains,
-        .open = _pak_mount_open
-    };
+            .dtor = _pak_mount_dtor,
+            .contains = _pak_mount_contains,
+            .open = _pak_mount_open
+        };
 
     strcpy(pak_mount->archive_path, archive_path);
     pak_mount->entries = entries;
@@ -325,12 +325,12 @@ static void _pak_handle_ctor(File_System_Handle_t *handle, FILE *stream, long of
 
     *pak_handle = (Pak_Handle_t){ 0 };
     pak_handle->vtable = (Handle_VTable_t){
-        .dtor = _pak_handle_dtor,
-        .size = _pak_handle_size,
-        .read = _pak_handle_read,
-        .skip = _pak_handle_skip,
-        .eof = _pak_handle_eof
-    };
+            .dtor = _pak_handle_dtor,
+            .size = _pak_handle_size,
+            .read = _pak_handle_read,
+            .skip = _pak_handle_skip,
+            .eof = _pak_handle_eof
+        };
 
     pak_handle->stream = stream;
     pak_handle->stream_size = size;

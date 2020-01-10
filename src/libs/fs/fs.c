@@ -37,6 +37,10 @@
 
 #define LOG_CONTEXT "fs"
 
+#if PLATFORM_ID == PLATFORM_WINDOWS
+  #define realpath(N,R) _fullpath((R),(N),PATH_MAX)
+#endif
+
 static File_System_Mount_t *_mount(const char *path)
 {
     if (std_is_valid(path)) {
@@ -51,13 +55,22 @@ static File_System_Mount_t *_mount(const char *path)
 
 static void _unmount(File_System_Mount_t *mount)
 {
-    ((Mount_VTable_t *)mount)->dtor(mount);
+    ((Mount_t *)mount)->vtable.dtor(mount);
     free(mount);
 }
 
-#if PLATFORM_ID == PLATFORM_WINDOWS
-  #define realpath(N,R) _fullpath((R),(N),PATH_MAX)
-#endif
+static bool _attach(File_System_t *file_system, const char *path)
+{
+    File_System_Mount_t *mount = _mount(path); // Path need to be already resolved.
+    if (!mount) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't attach mount-point `%s`", path);
+        return false;
+    }
+
+    arrpush(file_system->mounts, mount);
+
+    return true;
+}
 
 bool FS_initialize(File_System_t *file_system, const char *base_path)
 {
@@ -71,21 +84,18 @@ bool FS_initialize(File_System_t *file_system, const char *base_path)
     }
 
     DIR *dp = opendir(resolved);
-    if (dp) { // Path is a folder, ensure trailing separator, then scan and mount valid archives.
-        if (resolved[strlen(resolved) - 1] != '/') {
-            strcat(resolved, FILE_PATH_SEPARATOR_SZ);
-        }
-
+    if (dp) { // Path is a folder, scan and mount valid archives.
         for (struct dirent *entry = readdir(dp); entry; entry = readdir(dp)) {
             char full_path[FILE_PATH_MAX];
             strcpy(full_path, resolved);
+            strcat(resolved, FILE_PATH_SEPARATOR_SZ);
             strcat(full_path, entry->d_name);
 
             if (!pak_is_valid(full_path)) {
                 continue;
             }
 
-            FS_attach(file_system, full_path);
+            _attach(file_system, full_path);
 
             // TODO: add also possible "archive.pa0", ..., "archive.p99" file
             // overriding "archive.pak".
@@ -98,7 +108,7 @@ bool FS_initialize(File_System_t *file_system, const char *base_path)
         closedir(dp);
     }
 
-    FS_attach(file_system, resolved);
+    _attach(file_system, resolved);
 
     return true;
 }
@@ -115,15 +125,14 @@ void FS_terminate(File_System_t *file_system)
 
 bool FS_attach(File_System_t *file_system, const char *path)
 {
-    File_System_Mount_t *mount = _mount(path); // Path need to be already resolved.
-    if (!mount) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't attach mount-point `%s`", path);
+    char resolved[FILE_PATH_MAX]; // Using local buffer to avoid un-tracked `malloc()` for the syscall.
+    char *ptr = realpath(path ? path : FILE_PATH_CURRENT_SZ, resolved);
+    if (!ptr) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't resolve `%s`", path);
         return false;
     }
 
-    arrpush(file_system->mounts, mount);
-
-    return true;
+    return _attach(file_system, resolved);
 }
 
 File_System_Mount_t *FS_locate(const File_System_t *file_system, const char *file)
@@ -131,7 +140,7 @@ File_System_Mount_t *FS_locate(const File_System_t *file_system, const char *fil
     size_t count = arrlen(file_system->mounts);
     for (int i = count - 1; i >= 0; --i) {
         File_System_Mount_t *mount = file_system->mounts[i];
-        if (((Mount_VTable_t *)mount)->contains(mount, file)) {
+        if (((Mount_t *)mount)->vtable.contains(mount, file)) {
             return mount;
         }
     }
@@ -141,31 +150,31 @@ File_System_Mount_t *FS_locate(const File_System_t *file_system, const char *fil
 
 File_System_Handle_t *FS_open(File_System_Mount_t *mount, const char *file)
 {
-    return ((Mount_VTable_t *)mount)->open(mount, file);
+    return ((Mount_t *)mount)->vtable.open(mount, file);
 }
 
 void FS_close(File_System_Handle_t *handle)
 {
-    ((Handle_VTable_t *)handle)->dtor(handle);
+    ((Handle_t *)handle)->vtable.dtor(handle);
     free(handle);
 }
 
 size_t FS_size(File_System_Handle_t *handle)
 {
-    return ((Handle_VTable_t *)handle)->size(handle);
+    return ((Handle_t *)handle)->vtable.size(handle);
 }
 
 size_t FS_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested)
 {
-    return ((Handle_VTable_t *)handle)->read(handle, buffer, bytes_requested);
+    return ((Handle_t *)handle)->vtable.read(handle, buffer, bytes_requested);
 }
 
 void FS_skip(File_System_Handle_t *handle, int offset)
 {
-    ((Handle_VTable_t *)handle)->skip(handle, offset);
+    ((Handle_t *)handle)->vtable.skip(handle, offset);
 }
 
 bool FS_eof(File_System_Handle_t *handle)
 {
-    return ((Handle_VTable_t *)handle)->eof(handle);
+    return ((Handle_t *)handle)->vtable.eof(handle);
 }

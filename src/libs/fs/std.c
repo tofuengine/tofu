@@ -103,12 +103,12 @@ static void _std_mount_ctor(File_System_Mount_t *mount, const char *base_path)
 
     *std_mount = (Std_Mount_t){ 0 };
     std_mount->vtable = (Mount_VTable_t){
-        .dtor = _std_mount_dtor,
-        .contains = _std_mount_contains,
-        .open = _std_mount_open
-    };
+            .dtor = _std_mount_dtor,
+            .contains = _std_mount_contains,
+            .open = _std_mount_open
+        };
 
-    strcpy(std_mount->base_path, base_path); // The path *need* to be terminated with the file path-separator!!!
+    strcpy(std_mount->base_path, base_path);
 }
 
 static void _std_mount_dtor(File_System_Mount_t *mount)
@@ -124,6 +124,7 @@ static bool _std_mount_contains(File_System_Mount_t *mount, const char *file)
 
     char full_path[FILE_PATH_MAX];
     strcpy(full_path, std_mount->base_path);
+    strcat(full_path, FILE_PATH_SEPARATOR_SZ);
     strcat(full_path, file);
 
     bool exists = access(full_path, R_OK) != -1;
@@ -137,6 +138,7 @@ static File_System_Handle_t *_std_mount_open(File_System_Mount_t *mount, const c
 
     char full_path[FILE_PATH_MAX];
     strcpy(full_path, std_mount->base_path);
+    strcat(full_path, FILE_PATH_SEPARATOR_SZ);
     strcat(full_path, file);
 
     FILE *stream = fopen(full_path, "rb");
@@ -174,13 +176,13 @@ static void _std_handle_ctor(File_System_Handle_t *handle, FILE *stream)
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
     *std_handle = (Std_Handle_t){ 0 };
-    std_handle->vtable= (Handle_VTable_t){
-        .dtor = _std_handle_dtor,
-        .size = _std_handle_size,
-        .read = _std_handle_read,
-        .skip = _std_handle_skip,
-        .eof = _std_handle_eof
-    };
+    std_handle->vtable = (Handle_VTable_t){
+            .dtor = _std_handle_dtor,
+            .size = _std_handle_size,
+            .read = _std_handle_read,
+            .skip = _std_handle_skip,
+            .eof = _std_handle_eof
+        };
 
     std_handle->stream = stream;
 }
