@@ -24,7 +24,7 @@
 
 #include "std.h"
 
-#include "fsinternals.h"
+#include "internals.h"
 
 #include <libs/log.h>
 #include <libs/stb.h>
@@ -46,13 +46,11 @@ typedef struct _Std_Handle_t {
     FILE *stream;
 } Std_Handle_t;
 
-static File_System_Mount_t *_std_mount_new(const char *base_path);
 static void _std_mount_ctor(File_System_Mount_t *mount, const char *base_path);
 static void _std_mount_dtor(File_System_Mount_t *mount);
 static bool _std_mount_contains(File_System_Mount_t *mount, const char *file);
 static File_System_Handle_t *_std_mount_open(File_System_Mount_t *mount, const char *file);
 
-static File_System_Handle_t *_std_handle_new(FILE *stream);
 static void _std_handle_ctor(File_System_Handle_t *handle, FILE *stream);
 static void _std_handle_dtor(File_System_Handle_t *handle);
 static size_t _std_handle_size(File_System_Handle_t *handle);
@@ -74,25 +72,15 @@ bool std_is_valid(const char *path)
 
 File_System_Mount_t *std_mount(const char *path)
 {
-    File_System_Mount_t *mount = _std_mount_new(path);
+    File_System_Mount_t *mount = malloc(sizeof(Std_Mount_t));
     if (!mount) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate mount for folder `%s`", path);
         return NULL;
     }
 
+    _std_mount_ctor(mount, path);
+
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "mount %p initialized at folder `%s`", mount, path);
-
-    return mount;
-}
-
-static File_System_Mount_t *_std_mount_new(const char *base_path)
-{
-    File_System_Mount_t *mount = malloc(sizeof(Std_Mount_t));
-    if (!mount) {
-        return NULL;
-    }
-
-    _std_mount_ctor(mount, base_path);
 
     return mount;
 }
@@ -147,26 +135,16 @@ static File_System_Handle_t *_std_mount_open(File_System_Mount_t *mount, const c
         return NULL;
     }
 
-    File_System_Handle_t *handle = _std_handle_new(stream);
+    File_System_Handle_t *handle = malloc(sizeof(Std_Handle_t));
     if (!handle) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate handle for file `%s`", file);
         fclose(stream);
         return NULL;
     }
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` opened w/ handle %p", file, handle);
-
-    return handle;
-}
-
-static File_System_Handle_t *_std_handle_new(FILE *stream)
-{
-    File_System_Handle_t *handle = malloc(sizeof(Std_Handle_t));
-    if (!handle) {
-        return NULL;
-    }
-
     _std_handle_ctor(handle, stream);
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` opened w/ handle %p", file, handle);
 
     return handle;
 }

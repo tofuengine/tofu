@@ -24,7 +24,7 @@
 
 #include "fs.h"
 
-#include "fsinternals.h"
+#include "internals.h"
 #include "pak.h"
 #include "std.h"
 
@@ -91,18 +91,11 @@ bool FS_initialize(File_System_t *file_system, const char *base_path)
             strcat(resolved, FILE_PATH_SEPARATOR_SZ);
             strcat(full_path, entry->d_name);
 
-            if (!pak_is_valid(full_path)) {
+            if (!pak_mount_is_valid(full_path)) {
                 continue;
             }
 
             _attach(file_system, full_path);
-
-            // TODO: add also possible "archive.pa0", ..., "archive.p99" file
-            // overriding "archive.pak".
-    //        for (int i = 0; i < 100; ++i) {
-    //            sprintf(&entry->d_name[length - 2], "%02d", i);
-    //            _mount(file_system, full_path);
-    //        }
         }
 
         closedir(dp);

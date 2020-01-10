@@ -24,7 +24,7 @@
 
 #include "pak.h"
 
-#include "fsinternals.h"
+#include "internals.h"
 
 #include <libs/log.h>
 #include <libs/md5.h>
@@ -83,13 +83,11 @@ typedef struct _Pak_Handle_t {
     rc4_context_t cipher_context;
 } Pak_Handle_t;
 
-static File_System_Mount_t *_pak_mount_new(const char *archive_path, size_t entries, Pak_Entry_t *directory, uint8_t flags);
 static void _pak_mount_ctor(File_System_Mount_t *mount, const char *archive_path, size_t entries, Pak_Entry_t *directory, uint8_t flags);
 static void _pak_mount_dtor(File_System_Mount_t *mount);
 static bool _pak_mount_contains(File_System_Mount_t *mount, const char *file);
 static File_System_Handle_t *_pak_mount_open(File_System_Mount_t *mount, const char *file);
 
-static File_System_Handle_t *_pak_handle_new(FILE *stream, long offset, size_t size, bool encrypted, const char *name);
 static void _pak_handle_ctor(File_System_Handle_t *handle, FILE *stream, long offset, size_t size, bool encrypted, const char *name);
 static void _pak_handle_dtor(File_System_Handle_t *handle);
 static size_t _pak_handle_size(File_System_Handle_t *handle);
@@ -207,7 +205,7 @@ File_System_Mount_t *pak_mount(const char *path)
     qsort(directory, header.entries, sizeof(Pak_Entry_t), _pak_entry_compare); // Keep sorted to use binary-search.
     Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "directory w/ #%d entries sorted", entries);
 
-    File_System_Mount_t *mount = _pak_mount_new(path, entries, directory, header.flags);
+    File_System_Mount_t *mount = malloc(sizeof(Pak_Mount_t));
     if (!mount) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate mount for path `%s`", path);
         for (size_t i = 0; i < entries; ++i) {
@@ -218,20 +216,10 @@ File_System_Mount_t *pak_mount(const char *path)
         return NULL;
     }
 
+    _pak_mount_ctor(mount, path, entries, directory, header.flags);
+
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "mount initialized for archive `%s` w/ %d entries (flags 0x%02x)",
         path, entries, header.flags);
-
-    return mount;
-}
-
-static File_System_Mount_t *_pak_mount_new(const char *archive_path, size_t entries, Pak_Entry_t *directory, uint8_t flags)
-{
-    File_System_Mount_t *mount = malloc(sizeof(Pak_Mount_t));
-    if (!mount) {
-        return NULL;
-    }
-
-    _pak_mount_ctor(mount, archive_path, entries, directory, flags);
 
     return mount;
 }
@@ -295,26 +283,16 @@ static File_System_Handle_t *_pak_mount_open(File_System_Mount_t *mount, const c
     fseek(stream, entry->offset, SEEK_SET); // Move to the found entry position into the file.
     Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry `%s` found at offset %d in file `%s`", file, entry->offset, pak_mount->archive_path);
 
-    File_System_Handle_t *handle = _pak_handle_new(stream, entry->offset, entry->size, pak_mount->flags & PAK_FLAG_ENCRYPTED, entry->name);
+    File_System_Handle_t *handle = malloc(sizeof(Pak_Handle_t));
     if (!handle) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate handle for entry `%s`", file);
         fclose(stream);
         return NULL;
     }
 
+    _pak_handle_ctor(handle, stream, entry->offset, entry->size, pak_mount->flags & PAK_FLAG_ENCRYPTED, entry->name);
+
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry `%s` opened w/ handle %p (%d bytes)", file, handle, entry->size);
-
-    return handle;
-}
-
-static File_System_Handle_t *_pak_handle_new(FILE *stream, long offset, size_t size, bool encrypted, const char *name)
-{
-    File_System_Handle_t *handle = malloc(sizeof(Pak_Handle_t));
-    if (!handle) {
-        return NULL;
-    }
-
-    _pak_handle_ctor(handle, stream, offset, size, encrypted, name);
 
     return handle;
 }

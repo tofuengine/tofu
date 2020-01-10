@@ -27,8 +27,6 @@
 
 #include "fs.h"
 
-#include <stdbool.h>
-
 typedef struct _Mount_VTable_t {
     void                  (*dtor)    (File_System_Mount_t *mount);
     bool                  (*contains)(File_System_Mount_t *mount, const char *file);
