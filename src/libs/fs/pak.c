@@ -85,14 +85,12 @@ typedef struct _Pak_Handle_t {
 
 static File_System_Mount_t *_pak_mount_new(const char *archive_path, size_t entries, Pak_Entry_t *directory, uint8_t flags);
 static void _pak_mount_ctor(File_System_Mount_t *mount, const char *archive_path, size_t entries, Pak_Entry_t *directory, uint8_t flags);
-static void _pak_mount_delete(File_System_Mount_t *mount);
 static void _pak_mount_dtor(File_System_Mount_t *mount);
 static bool _pak_mount_contains(File_System_Mount_t *mount, const char *file);
 static File_System_Handle_t *_pak_mount_open(File_System_Mount_t *mount, const char *file);
 
 static File_System_Handle_t *_pak_handle_new(FILE *stream, long offset, size_t size, bool encrypted, const char *name);
 static void _pak_handle_ctor(File_System_Handle_t *handle, FILE *stream, long offset, size_t size, bool encrypted, const char *name);
-static void _pak_handle_delete(File_System_Handle_t *handle);
 static void _pak_handle_dtor(File_System_Handle_t *handle);
 static size_t _pak_handle_size(File_System_Handle_t *handle);
 static size_t _pak_handle_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
@@ -244,7 +242,6 @@ static void _pak_mount_ctor(File_System_Mount_t *mount, const char *archive_path
 
     *pak_mount = (Pak_Mount_t){ 0 };
     pak_mount->vtable = (Mount_VTable_t){
-        .delete = _pak_mount_delete,
         .dtor = _pak_mount_dtor,
         .contains = _pak_mount_contains,
         .open = _pak_mount_open
@@ -254,15 +251,6 @@ static void _pak_mount_ctor(File_System_Mount_t *mount, const char *archive_path
     pak_mount->entries = entries;
     pak_mount->directory = directory;
     pak_mount->flags = flags;
-
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "mount %p initialized", mount);
-}
-
-static void _pak_mount_delete(File_System_Mount_t *mount)
-{
-    ((Mount_VTable_t *)mount)->dtor(mount);
-    free(mount);
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "mount %p freed", mount);
 }
 
 static void _pak_mount_dtor(File_System_Mount_t *mount)
@@ -273,8 +261,6 @@ static void _pak_mount_dtor(File_System_Mount_t *mount)
         free(pak_mount->directory[i].name);
     }
     free(pak_mount->directory);
-
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "mount %p deinitialized", mount);
 }
 
 static bool _pak_mount_contains(File_System_Mount_t *mount, const char *file)
@@ -339,7 +325,6 @@ static void _pak_handle_ctor(File_System_Handle_t *handle, FILE *stream, long of
 
     *pak_handle = (Pak_Handle_t){ 0 };
     pak_handle->vtable = (Handle_VTable_t){
-        .delete = _pak_handle_delete,
         .dtor = _pak_handle_dtor,
         .size = _pak_handle_size,
         .read = _pak_handle_read,
@@ -367,15 +352,6 @@ static void _pak_handle_ctor(File_System_Handle_t *handle, FILE *stream, long of
         rc4_process(cipher_context, drop, drop, sizeof(drop));
 #endif
     }
-
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry w/ handle %p initialized", handle);
-}
-
-static void _pak_handle_delete(File_System_Handle_t *handle)
-{
-    ((Handle_VTable_t *)handle)->dtor(handle);
-    free(handle);
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry w/ handle  %p freed", handle);
 }
 
 static void _pak_handle_dtor(File_System_Handle_t *handle)
@@ -383,8 +359,6 @@ static void _pak_handle_dtor(File_System_Handle_t *handle)
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
     fclose(pak_handle->stream);
-
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry w/ handle %p deinitialized", handle);
 }
 
 static size_t _pak_handle_size(File_System_Handle_t *handle)

@@ -37,24 +37,22 @@
 
 #define LOG_CONTEXT "fs"
 
-static bool _mount(File_System_t *file_system, const char *path)
+static File_System_Mount_t *_mount(const char *path)
 {
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "adding mount-point `%s`", path);
-
-    File_System_Mount_t *mount;
     if (std_is_valid(path)) {
-        mount = std_mount(path);
+        return std_mount(path);
     } else
     if (pak_is_valid(path)) {
-        mount = pak_mount(path);
+        return pak_mount(path);
     } else {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't detect type for mount `%s`", path);
-        return false;
+        return NULL;
     }
+}
 
-    arrpush(file_system->mounts, mount);
-
-    return true;
+static void _unmount(File_System_Mount_t *mount)
+{
+    ((Mount_VTable_t *)mount)->dtor(mount);
+    free(mount);
 }
 
 #if PLATFORM_ID == PLATFORM_WINDOWS
@@ -87,7 +85,7 @@ bool FS_initialize(File_System_t *file_system, const char *base_path)
                 continue;
             }
 
-            _mount(file_system, full_path);
+            FS_attach(file_system, full_path);
 
             // TODO: add also possible "archive.pa0", ..., "archive.p99" file
             // overriding "archive.pak".
@@ -100,7 +98,7 @@ bool FS_initialize(File_System_t *file_system, const char *base_path)
         closedir(dp);
     }
 
-    _mount(file_system, resolved);
+    FS_attach(file_system, resolved);
 
     return true;
 }
@@ -110,9 +108,22 @@ void FS_terminate(File_System_t *file_system)
     size_t count = arrlen(file_system->mounts);
     for (int i = count - 1; i >= 0; --i) {
         File_System_Mount_t *mount = file_system->mounts[i];
-        ((Mount_VTable_t *)mount)->delete(mount);
+        _unmount(mount);
     }
     arrfree(file_system->mounts);
+}
+
+bool FS_attach(File_System_t *file_system, const char *path)
+{
+    File_System_Mount_t *mount = _mount(path); // Path need to be already resolved.
+    if (!mount) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't attach mount-point `%s`", path);
+        return false;
+    }
+
+    arrpush(file_system->mounts, mount);
+
+    return true;
 }
 
 File_System_Mount_t *FS_locate(const File_System_t *file_system, const char *file)
@@ -135,7 +146,8 @@ File_System_Handle_t *FS_open(File_System_Mount_t *mount, const char *file)
 
 void FS_close(File_System_Handle_t *handle)
 {
-    ((Handle_VTable_t *)handle)->delete(handle);
+    ((Handle_VTable_t *)handle)->dtor(handle);
+    free(handle);
 }
 
 size_t FS_size(File_System_Handle_t *handle)

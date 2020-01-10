@@ -65,8 +65,7 @@ typedef struct _File_System_t {
 extern bool FS_initialize(File_System_t *file_system, const char *base_path);
 extern void FS_terminate(File_System_t *file_system);
 
-// extern void FS_mount(File_System_t *file_system, const char *path);
-// extern void FS_unmount(File_System_t *file_system, const char *path);
+extern bool FS_attach(File_System_t *file_system, const char *path);
 extern File_System_Mount_t *FS_locate(const File_System_t *file_system, const char *file);
 
 extern File_System_Handle_t *FS_open(File_System_Mount_t *mount, const char *file);
