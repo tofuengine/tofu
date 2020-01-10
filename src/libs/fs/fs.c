@@ -88,10 +88,10 @@ bool FS_initialize(File_System_t *file_system, const char *base_path)
         for (struct dirent *entry = readdir(dp); entry; entry = readdir(dp)) {
             char full_path[FILE_PATH_MAX];
             strcpy(full_path, resolved);
-            strcat(resolved, FILE_PATH_SEPARATOR_SZ);
+            strcat(full_path, FILE_PATH_SEPARATOR_SZ);
             strcat(full_path, entry->d_name);
 
-            if (!pak_mount_is_valid(full_path)) {
+            if (!pak_is_valid(full_path)) {
                 continue;
             }
 
