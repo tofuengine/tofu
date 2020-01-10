@@ -24,9 +24,12 @@
 
 #include "std.h"
 
+#include "fsinternals.h"
+
 #include <libs/log.h>
 #include <libs/stb.h>
 
+#include <stdarg.h>
 #include <stdio.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -34,31 +37,25 @@
 #define LOG_CONTEXT "fs-std"
 
 typedef struct _Std_Mount_t {
-    // v-table
-    void                  (*dtor)    (File_System_Mount_t *mount);
-    bool                  (*contains)(File_System_Mount_t *mount, const char *file);
-    File_System_Handle_t *(*open)    (File_System_Mount_t *mount, const char *file);
-    // data
+    Mount_VTable_t vtable;
     char base_path[FILE_PATH_MAX];
 } Std_Mount_t;
 
 typedef struct _Std_Handle_t {
-    // v-table
-    void   (*dtor)(File_System_Handle_t *handle);
-    size_t (*size)(File_System_Handle_t *handle);
-    size_t (*read)(File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
-    void   (*skip)(File_System_Handle_t *handle, int offset);
-    bool   (*eof) (File_System_Handle_t *handle);
-    // data
+    Handle_VTable_t vtable;
     FILE *stream;
 } Std_Handle_t;
 
-static File_System_Mount_t *_std_mount_ctor(const char *base_path);
+static File_System_Mount_t *_std_mount_new(const char *base_path);
+static void _std_mount_ctor(File_System_Mount_t *mount, const char *base_path);
+static void _std_mount_delete(File_System_Mount_t *mount);
 static void _std_mount_dtor(File_System_Mount_t *mount);
 static bool _std_mount_contains(File_System_Mount_t *mount, const char *file);
 static File_System_Handle_t *_std_mount_open(File_System_Mount_t *mount, const char *file);
 
-static File_System_Handle_t *_std_handle_ctor(FILE *stream);
+static File_System_Handle_t *_std_handle_new(FILE *stream);
+static void _std_handle_ctor(File_System_Handle_t *handle, FILE *stream);
+static void _std_handle_delete(File_System_Handle_t *handle);
 static void _std_handle_dtor(File_System_Handle_t *handle);
 static size_t _std_handle_size(File_System_Handle_t *handle);
 static size_t _std_handle_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
@@ -79,7 +76,7 @@ bool std_is_valid(const char *path)
 
 File_System_Mount_t *std_mount(const char *path)
 {
-    File_System_Mount_t *mount = _std_mount_ctor(path);
+    File_System_Mount_t *mount = _std_mount_new(path);
     if (!mount) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate mount for folder `%s`", path);
         return NULL;
@@ -90,33 +87,51 @@ File_System_Mount_t *std_mount(const char *path)
     return mount;
 }
 
-static File_System_Mount_t *_std_mount_ctor(const char *base_path)
+static File_System_Mount_t *_std_mount_new(const char *base_path)
 {
-    Std_Mount_t *std_mount = malloc(sizeof(Std_Mount_t));
-    if (!std_mount) {
+    File_System_Mount_t *mount = malloc(sizeof(Std_Mount_t));
+    if (!mount) {
         return NULL;
     }
 
-    *std_mount = (Std_Mount_t){
-            .dtor = _std_mount_dtor,
-            .contains = _std_mount_contains,
-            .open = _std_mount_open
-        };
+    _std_mount_ctor(mount, base_path);
+
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "mount %p allocated", mount);
+
+    return mount;
+}
+
+static void _std_mount_ctor(File_System_Mount_t *mount, const char *base_path)
+{
+    Std_Mount_t *std_mount = (Std_Mount_t *)mount;
+
+    *std_mount = (Std_Mount_t){ 0 };
+    std_mount->vtable = (Mount_VTable_t){
+        .delete = _std_mount_delete,
+        .dtor = _std_mount_dtor,
+        .contains = _std_mount_contains,
+        .open = _std_mount_open
+    };
 
     strcpy(std_mount->base_path, base_path); // The path *need* to be terminated with the file path-separator!!!
 
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "mount %p allocated and initialized", std_mount);
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "mount %p initialized", std_mount);
+}
 
-    return (File_System_Mount_t *)std_mount;
+static void _std_mount_delete(File_System_Mount_t *mount)
+{
+    ((Mount_VTable_t *)mount)->dtor(mount);
+    free(mount);
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "mount %p freed", mount);
 }
 
 static void _std_mount_dtor(File_System_Mount_t *mount)
 {
     Std_Mount_t *std_mount = (Std_Mount_t *)mount;
 
-    free(std_mount);
+    *std_mount = (Std_Mount_t){ 0 };
 
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "mount %p deinitialized and freed", mount);
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "mount %p deinitialized", mount);
 }
 
 static bool _std_mount_contains(File_System_Mount_t *mount, const char *file)
@@ -146,7 +161,7 @@ static File_System_Handle_t *_std_mount_open(File_System_Mount_t *mount, const c
         return NULL;
     }
 
-    File_System_Handle_t *handle = _std_handle_ctor(stream);
+    File_System_Handle_t *handle = _std_handle_new(stream);
     if (!handle) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate handle for file `%s`", file);
         fclose(stream);
@@ -158,26 +173,44 @@ static File_System_Handle_t *_std_mount_open(File_System_Mount_t *mount, const c
     return handle;
 }
 
-static File_System_Handle_t *_std_handle_ctor(FILE *stream)
+static File_System_Handle_t *_std_handle_new(FILE *stream)
 {
-    Std_Handle_t *std_handle = malloc(sizeof(Std_Handle_t));
-    if (!std_handle) {
+    File_System_Handle_t *handle = malloc(sizeof(Std_Handle_t));
+    if (!handle) {
         return NULL;
     }
 
-    *std_handle = (Std_Handle_t){
-            .dtor = _std_handle_dtor,
-            .size = _std_handle_size,
-            .read = _std_handle_read,
-            .skip = _std_handle_skip,
-            .eof = _std_handle_eof
-        };
+    _std_handle_ctor(handle, stream);
+
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "handle %p allocated", handle);
+
+    return handle;
+}
+
+static void _std_handle_ctor(File_System_Handle_t *handle, FILE *stream)
+{
+    Std_Handle_t *std_handle = (Std_Handle_t *)handle;
+
+    *std_handle = (Std_Handle_t){ 0 };
+    std_handle->vtable= (Handle_VTable_t){
+        .delete = _std_handle_delete,
+        .dtor = _std_handle_dtor,
+        .size = _std_handle_size,
+        .read = _std_handle_read,
+        .skip = _std_handle_skip,
+        .eof = _std_handle_eof
+    };
 
     std_handle->stream = stream;
 
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "handle %p initialized and initialized", std_handle);
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "handle %p initialized", handle);
+}
 
-    return (File_System_Handle_t *)std_handle;
+static void _std_handle_delete(File_System_Handle_t *handle)
+{
+    ((Handle_VTable_t *)handle)->dtor(handle);
+    free(handle);
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry w/ handle  %p freed", handle);
 }
 
 static void _std_handle_dtor(File_System_Handle_t *handle)
@@ -186,9 +219,7 @@ static void _std_handle_dtor(File_System_Handle_t *handle)
 
     fclose(std_handle->stream);
 
-    free(std_handle);
-
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "handle %p deinitialized and freed", handle);
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "handle %p deinitialized", handle);
 }
 
 static size_t _std_handle_size(File_System_Handle_t *handle)

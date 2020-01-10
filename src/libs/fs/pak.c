@@ -24,6 +24,8 @@
 
 #include "pak.h"
 
+#include "fsinternals.h"
+
 #include <libs/log.h>
 #include <libs/md5.h>
 #include <libs/rc4.h>
@@ -65,11 +67,7 @@ typedef struct _Pak_Entry_t {
 } Pak_Entry_t;
 
 typedef struct _Pak_Mount_t {
-    // v-table
-    void                  (*dtor)    (File_System_Mount_t *mount);
-    bool                  (*contains)(File_System_Mount_t *mount, const char *file);
-    File_System_Handle_t *(*open)    (File_System_Mount_t *mount, const char *file);
-    // data
+    Mount_VTable_t vtable;
     char archive_path[FILE_PATH_MAX];
     size_t entries;
     Pak_Entry_t *directory;
@@ -77,13 +75,7 @@ typedef struct _Pak_Mount_t {
 } Pak_Mount_t;
 
 typedef struct _Pak_Handle_t {
-    // v-table
-    void   (*dtor)(File_System_Handle_t *handle);
-    size_t (*size)(File_System_Handle_t *handle);
-    size_t (*read)(File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
-    void   (*skip)(File_System_Handle_t *handle, int offset);
-    bool   (*eof) (File_System_Handle_t *handle);
-    // data
+    Handle_VTable_t vtable;
     FILE *stream;
     size_t stream_size;
     long end_of_stream;
@@ -91,12 +83,16 @@ typedef struct _Pak_Handle_t {
     rc4_context_t cipher_context;
 } Pak_Handle_t;
 
-static File_System_Handle_t *_pak_mount_ctor(const char *archive_path, size_t entries, Pak_Entry_t *directory, uint8_t flags);
-static void _pak_mount_dtor(File_System_Handle_t *mount);
-static bool _pak_mount_contains(File_System_Handle_t *mount, const char *file);
-static File_System_Handle_t *_pak_mount_open(File_System_Handle_t *mount, const char *file);
+static File_System_Mount_t *_pak_mount_new(const char *archive_path, size_t entries, Pak_Entry_t *directory, uint8_t flags);
+static void _pak_mount_ctor(File_System_Mount_t *mount, const char *archive_path, size_t entries, Pak_Entry_t *directory, uint8_t flags);
+static void _pak_mount_delete(File_System_Mount_t *mount);
+static void _pak_mount_dtor(File_System_Mount_t *mount);
+static bool _pak_mount_contains(File_System_Mount_t *mount, const char *file);
+static File_System_Handle_t *_pak_mount_open(File_System_Mount_t *mount, const char *file);
 
-static File_System_Handle_t *_pak_handle_ctor(FILE *stream, long offset, size_t size, bool encrypted, const char *name);
+static File_System_Handle_t *_pak_handle_new(FILE *stream, long offset, size_t size, bool encrypted, const char *name);
+static void _pak_handle_ctor(File_System_Handle_t *handle, FILE *stream, long offset, size_t size, bool encrypted, const char *name);
+static void _pak_handle_delete(File_System_Handle_t *handle);
 static void _pak_handle_dtor(File_System_Handle_t *handle);
 static size_t _pak_handle_size(File_System_Handle_t *handle);
 static size_t _pak_handle_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
@@ -213,7 +209,7 @@ File_System_Mount_t *pak_mount(const char *path)
     qsort(directory, header.entries, sizeof(Pak_Entry_t), _pak_entry_compare); // Keep sorted to use binary-search.
     Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "directory w/ #%d entries sorted", entries);
 
-    File_System_Mount_t *mount = _pak_mount_ctor(path, entries, directory, header.flags);
+    File_System_Mount_t *mount = _pak_mount_new(path, entries, directory, header.flags);
     if (!mount) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate mount for path `%s`", path);
         for (size_t i = 0; i < entries; ++i) {
@@ -230,32 +226,46 @@ File_System_Mount_t *pak_mount(const char *path)
     return mount;
 }
 
-// `ctors` should't allocate and `dtors` shouldn't deallocate (to ensure separation of concerns and subclassing), but
-// this way is simpler...
-static File_System_Handle_t *_pak_mount_ctor(const char *archive_path, size_t entries, Pak_Entry_t *directory, uint8_t flags)
+static File_System_Mount_t *_pak_mount_new(const char *archive_path, size_t entries, Pak_Entry_t *directory, uint8_t flags)
 {
-    Pak_Mount_t *pak_mount = malloc(sizeof(Pak_Mount_t));
-    if (!pak_mount) {
+    File_System_Mount_t *mount = malloc(sizeof(Pak_Mount_t));
+    if (!mount) {
         return NULL;
     }
 
-    *pak_mount = (Pak_Mount_t){
-            .dtor = _pak_mount_dtor,
-            .contains = _pak_mount_contains,
-            .open = _pak_mount_open
-        };
+    _pak_mount_ctor(mount, archive_path, entries, directory, flags);
+
+    return mount;
+}
+
+static void _pak_mount_ctor(File_System_Mount_t *mount, const char *archive_path, size_t entries, Pak_Entry_t *directory, uint8_t flags)
+{
+    Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
+
+    *pak_mount = (Pak_Mount_t){ 0 };
+    pak_mount->vtable = (Mount_VTable_t){
+        .delete = _pak_mount_delete,
+        .dtor = _pak_mount_dtor,
+        .contains = _pak_mount_contains,
+        .open = _pak_mount_open
+    };
 
     strcpy(pak_mount->archive_path, archive_path);
     pak_mount->entries = entries;
     pak_mount->directory = directory;
     pak_mount->flags = flags;
 
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "mount %p allocated and initialized", pak_mount);
-
-    return (File_System_Handle_t *)pak_mount;
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "mount %p initialized", mount);
 }
 
-static void _pak_mount_dtor(File_System_Handle_t *mount)
+static void _pak_mount_delete(File_System_Mount_t *mount)
+{
+    ((Mount_VTable_t *)mount)->dtor(mount);
+    free(mount);
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "mount %p freed", mount);
+}
+
+static void _pak_mount_dtor(File_System_Mount_t *mount)
 {
     Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
 
@@ -264,12 +274,10 @@ static void _pak_mount_dtor(File_System_Handle_t *mount)
     }
     free(pak_mount->directory);
 
-    free(pak_mount);
-
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "mount %p deinitialized and freed", mount);
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "mount %p deinitialized", mount);
 }
 
-static bool _pak_mount_contains(File_System_Handle_t *mount, const char *file)
+static bool _pak_mount_contains(File_System_Mount_t *mount, const char *file)
 {
     Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
 
@@ -281,7 +289,7 @@ static bool _pak_mount_contains(File_System_Handle_t *mount, const char *file)
     return exists;
 }
 
-static File_System_Handle_t *_pak_mount_open(File_System_Handle_t *mount, const char *file)
+static File_System_Handle_t *_pak_mount_open(File_System_Mount_t *mount, const char *file)
 {
     Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
 
@@ -301,7 +309,7 @@ static File_System_Handle_t *_pak_mount_open(File_System_Handle_t *mount, const 
     fseek(stream, entry->offset, SEEK_SET); // Move to the found entry position into the file.
     Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry `%s` found at offset %d in file `%s`", file, entry->offset, pak_mount->archive_path);
 
-    File_System_Handle_t *handle = _pak_handle_ctor(stream, entry->offset, entry->size, pak_mount->flags & PAK_FLAG_ENCRYPTED, entry->name);
+    File_System_Handle_t *handle = _pak_handle_new(stream, entry->offset, entry->size, pak_mount->flags & PAK_FLAG_ENCRYPTED, entry->name);
     if (!handle) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate handle for entry `%s`", file);
         fclose(stream);
@@ -313,20 +321,31 @@ static File_System_Handle_t *_pak_mount_open(File_System_Handle_t *mount, const 
     return handle;
 }
 
-static File_System_Handle_t *_pak_handle_ctor(FILE *stream, long offset, size_t size, bool encrypted, const char *name)
+static File_System_Handle_t *_pak_handle_new(FILE *stream, long offset, size_t size, bool encrypted, const char *name)
 {
-    Pak_Handle_t *pak_handle = malloc(sizeof(Pak_Handle_t));
-    if (!pak_handle) {
+    File_System_Handle_t *handle = malloc(sizeof(Pak_Handle_t));
+    if (!handle) {
         return NULL;
     }
 
-    *pak_handle = (Pak_Handle_t){
-            .dtor = _pak_handle_dtor,
-            .size = _pak_handle_size,
-            .read = _pak_handle_read,
-            .skip = _pak_handle_skip,
-            .eof = _pak_handle_eof
-        };
+    _pak_handle_ctor(handle, stream, offset, size, encrypted, name);
+
+    return handle;
+}
+
+static void _pak_handle_ctor(File_System_Handle_t *handle, FILE *stream, long offset, size_t size, bool encrypted, const char *name)
+{
+    Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
+
+    *pak_handle = (Pak_Handle_t){ 0 };
+    pak_handle->vtable = (Handle_VTable_t){
+        .delete = _pak_handle_delete,
+        .dtor = _pak_handle_dtor,
+        .size = _pak_handle_size,
+        .read = _pak_handle_read,
+        .skip = _pak_handle_skip,
+        .eof = _pak_handle_eof
+    };
 
     pak_handle->stream = stream;
     pak_handle->stream_size = size;
@@ -349,9 +368,14 @@ static File_System_Handle_t *_pak_handle_ctor(FILE *stream, long offset, size_t 
 #endif
     }
 
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry w/ handle %p allocated and initialized", pak_handle);
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry w/ handle %p initialized", handle);
+}
 
-    return (File_System_Handle_t *)pak_handle;
+static void _pak_handle_delete(File_System_Handle_t *handle)
+{
+    ((Handle_VTable_t *)handle)->dtor(handle);
+    free(handle);
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry w/ handle  %p freed", handle);
 }
 
 static void _pak_handle_dtor(File_System_Handle_t *handle)
@@ -360,9 +384,7 @@ static void _pak_handle_dtor(File_System_Handle_t *handle)
 
     fclose(pak_handle->stream);
 
-    free(pak_handle);
-
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry w/ handle %p deinitialized and freed", handle);
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry w/ handle %p deinitialized", handle);
 }
 
 static size_t _pak_handle_size(File_System_Handle_t *handle)

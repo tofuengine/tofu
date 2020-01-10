@@ -24,6 +24,7 @@
 
 #include "fs.h"
 
+#include "fsinternals.h"
 #include "pak.h"
 #include "std.h"
 
@@ -35,22 +36,6 @@
 #include <stdio.h>
 
 #define LOG_CONTEXT "fs"
-
-typedef struct _Mount_t {
-    // v-table
-    void                  (*dtor)    (File_System_Mount_t *mount);
-    bool                  (*contains)(File_System_Mount_t *mount, const char *file);
-    File_System_Handle_t *(*open)    (File_System_Mount_t *mount, const char *file);
-} Mount_t;
-
-typedef struct _Handle_t {
-    // v-table
-    void   (*dtor)(File_System_Handle_t *handle);
-    size_t (*size)(File_System_Handle_t *handle);
-    size_t (*read)(File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
-    void   (*skip)(File_System_Handle_t *handle, int offset);
-    bool   (*eof) (File_System_Handle_t *handle);
-} Handle_t;
 
 static bool _mount(File_System_t *file_system, const char *path)
 {
@@ -125,7 +110,7 @@ void FS_terminate(File_System_t *file_system)
     size_t count = arrlen(file_system->mounts);
     for (int i = count - 1; i >= 0; --i) {
         File_System_Mount_t *mount = file_system->mounts[i];
-        ((Mount_t *)mount)->dtor(mount);
+        ((Mount_VTable_t *)mount)->delete(mount);
     }
     arrfree(file_system->mounts);
 }
@@ -135,7 +120,7 @@ File_System_Mount_t *FS_locate(const File_System_t *file_system, const char *fil
     size_t count = arrlen(file_system->mounts);
     for (int i = count - 1; i >= 0; --i) {
         File_System_Mount_t *mount = file_system->mounts[i];
-        if (((Mount_t *)mount)->contains(mount, file)) {
+        if (((Mount_VTable_t *)mount)->contains(mount, file)) {
             return mount;
         }
     }
@@ -145,30 +130,30 @@ File_System_Mount_t *FS_locate(const File_System_t *file_system, const char *fil
 
 File_System_Handle_t *FS_open(File_System_Mount_t *mount, const char *file)
 {
-    return ((Mount_t *)mount)->open(mount, file);
+    return ((Mount_VTable_t *)mount)->open(mount, file);
 }
 
 void FS_close(File_System_Handle_t *handle)
 {
-    ((Handle_t *)handle)->dtor(handle);
+    ((Handle_VTable_t *)handle)->delete(handle);
 }
 
 size_t FS_size(File_System_Handle_t *handle)
 {
-    return ((Handle_t *)handle)->size(handle);
+    return ((Handle_VTable_t *)handle)->size(handle);
 }
 
 size_t FS_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested)
 {
-    return ((Handle_t *)handle)->read(handle, buffer, bytes_requested);
+    return ((Handle_VTable_t *)handle)->read(handle, buffer, bytes_requested);
 }
 
 void FS_skip(File_System_Handle_t *handle, int offset)
 {
-    ((Handle_t *)handle)->skip(handle, offset);
+    ((Handle_VTable_t *)handle)->skip(handle, offset);
 }
 
 bool FS_eof(File_System_Handle_t *handle)
 {
-    return ((Handle_t *)handle)->eof(handle);
+    return ((Handle_VTable_t *)handle)->eof(handle);
 }
