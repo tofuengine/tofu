@@ -74,12 +74,12 @@ int font_loader(lua_State *L)
     return luaX_newmodule(L, &_font_script, _font_functions, _font_constants, nup, FONT_MT);
 }
 
-static void align(const char *text, const char *alignment, int *x, int *y, int w, int h)
+static void _align(const char *text, const char *alignment, int *x, int *y, int w, int h)
 {
 #ifndef __NO_LINEFEEDS__
-    float width = 0.0f;
     size_t slen = strlen(text);
     size_t offset = 0;
+    int width = 0;
     while (offset < slen) {
         const char *start = text + offset;
         const char *end = strchr(start, '\n');
@@ -87,13 +87,13 @@ static void align(const char *text, const char *alignment, int *x, int *y, int w
             end = text + slen;
         }
         size_t length = end - start;
-        if (width < length * dw) {
-            width = length * dw;
+        if (width < length * w) {
+            width = length * w;
         }
         offset += length + 1;
     }
 #else
-    float width = strlen(text) * w;
+    int width = strlen(text) * w;
 #endif
     if (alignment[0] == 'c') {
         *x -= width / 2;
@@ -190,7 +190,7 @@ static int font_new5(lua_State *L)
             if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
                 return luaL_error(L, "can't load file `%s`", file);
             }
-            GL_sheet_fetch(&sheet, (GL_Image_t){ .width = chunk.var.image.width, .height = chunk.var.image.height, .data = chunk.var.image.pixels }, glyph_width, glyph_height, surface_callback_palette, (void *)indexes);
+            GL_sheet_fetch(&sheet, (GL_Image_t){ .width = chunk.var.image.width, .height = chunk.var.image.height, .data = chunk.var.image.pixels }, glyph_width, glyph_height, surface_callback_indexes, (void *)indexes);
             Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` loaded", file);
             FSaux_release(chunk);
         }
@@ -240,7 +240,7 @@ static int font_gc(lua_State *L)
     return 0;
 }
 
-static int font_width(lua_State *L) // TODO: add message size calculation
+static int font_width1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
@@ -252,7 +252,31 @@ static int font_width(lua_State *L) // TODO: add message size calculation
     return 1;
 }
 
-static int font_height(lua_State *L)
+static int font_width2(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 2)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
+    LUAX_SIGNATURE_END
+    Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
+    const char *text = lua_tostring(L, 2);
+
+    const size_t length = strlen(text);
+
+    lua_pushinteger(L, instance->sheet.size.width * length);
+
+    return 1;
+}
+
+static int font_width(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, font_width1)
+        LUAX_OVERLOAD_ARITY(2, font_width2)
+    LUAX_OVERLOAD_END
+}
+
+static int font_height1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
@@ -262,6 +286,39 @@ static int font_height(lua_State *L)
     lua_pushinteger(L, instance->sheet.size.height);
 
     return 1;
+}
+
+static int font_height2(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 2)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
+    LUAX_SIGNATURE_END
+    Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
+    const char *text = lua_tostring(L, 2);
+
+#ifndef __NO_LINEFEEDS__
+    size_t lines = 1;
+    for (const char *ptr = text; *ptr != '\0'; ++ptr) {
+        if (*ptr == '\n') {
+            lines += 1;
+        }
+    }
+#else
+    const size_t lines = strlen(text);
+#endif
+
+    lua_pushinteger(L, instance->sheet.size.height * lines);
+
+    return 1;
+}
+
+static int font_height(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, font_height1)
+        LUAX_OVERLOAD_ARITY(2, font_height2)
+    LUAX_OVERLOAD_END
 }
 
 static int font_write5(lua_State *L)
@@ -288,7 +345,7 @@ static int font_write5(lua_State *L)
     int dh = sheet->size.height;
 
     int ox = x, oy = y;
-    align(text, alignment, &ox, &oy, dw, dh);
+    _align(text, alignment, &ox, &oy, dw, dh);
 
     int dx = ox, dy = oy;
     for (const char *ptr = text; *ptr != '\0'; ++ptr) {
@@ -335,13 +392,13 @@ static int font_write6(lua_State *L)
     int dh = (int)(sheet->size.height * fabsf(scale));
 
     int ox = x, oy = y;
-    align(text, alignment, &ox, &oy, dw, dh);
+    _align(text, alignment, &ox, &oy, dw, dh);
 
     int dx = ox, dy = oy;
     for (const char *ptr = text; *ptr != '\0'; ++ptr) {
 #ifndef __NO_LINEFEEDS__
         if (*ptr == '\n') { // Handle carriage-return
-            dx = ow;
+            dx = ox;
             dy += dh;
             continue;
         } else
@@ -369,7 +426,7 @@ static int font_write7(lua_State *L)
     LUAX_SIGNATURE_END
     Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
     const char *text = lua_tostring(L, 2);
-    int x = lua_tointeger(L, 3);
+    int x = lua_tointeger(L, 3); // TODO: make all arguments const?
     int y = lua_tointeger(L, 4);
     float scale_x = lua_tonumber(L, 5);
     float scale_y = lua_tonumber(L, 6);
@@ -384,7 +441,7 @@ static int font_write7(lua_State *L)
     int dh = (int)(sheet->size.height * fabsf(scale_y));
 
     int ox = x, oy = y;
-    align(text, alignment, &ox, &oy, dw, dh);
+    _align(text, alignment, &ox, &oy, dw, dh);
 
     float dx = ox, dy = oy;
     for (const char *ptr = text; *ptr != '\0'; ++ptr) {
