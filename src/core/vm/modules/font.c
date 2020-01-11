@@ -74,12 +74,12 @@ int font_loader(lua_State *L)
     return luaX_newmodule(L, &_font_script, _font_functions, _font_constants, nup, FONT_MT);
 }
 
-static void align(const char *text, const char *alignment, int *x, int *y, int w, int h)
+static void _align(const char *text, const char *alignment, int *x, int *y, int w, int h)
 {
 #ifndef __NO_LINEFEEDS__
-    float width = 0.0f;
     size_t slen = strlen(text);
     size_t offset = 0;
+    int width = 0;
     while (offset < slen) {
         const char *start = text + offset;
         const char *end = strchr(start, '\n');
@@ -87,13 +87,13 @@ static void align(const char *text, const char *alignment, int *x, int *y, int w
             end = text + slen;
         }
         size_t length = end - start;
-        if (width < length * dw) {
-            width = length * dw;
+        if (width < length * w) {
+            width = length * w;
         }
         offset += length + 1;
     }
 #else
-    float width = strlen(text) * w;
+    int width = strlen(text) * w;
 #endif
     if (alignment[0] == 'c') {
         *x -= width / 2;
@@ -288,7 +288,7 @@ static int font_write5(lua_State *L)
     int dh = sheet->size.height;
 
     int ox = x, oy = y;
-    align(text, alignment, &ox, &oy, dw, dh);
+    _align(text, alignment, &ox, &oy, dw, dh);
 
     int dx = ox, dy = oy;
     for (const char *ptr = text; *ptr != '\0'; ++ptr) {
@@ -335,13 +335,13 @@ static int font_write6(lua_State *L)
     int dh = (int)(sheet->size.height * fabsf(scale));
 
     int ox = x, oy = y;
-    align(text, alignment, &ox, &oy, dw, dh);
+    _align(text, alignment, &ox, &oy, dw, dh);
 
     int dx = ox, dy = oy;
     for (const char *ptr = text; *ptr != '\0'; ++ptr) {
 #ifndef __NO_LINEFEEDS__
         if (*ptr == '\n') { // Handle carriage-return
-            dx = ow;
+            dx = ox;
             dy += dh;
             continue;
         } else
@@ -384,7 +384,7 @@ static int font_write7(lua_State *L)
     int dh = (int)(sheet->size.height * fabsf(scale_y));
 
     int ox = x, oy = y;
-    align(text, alignment, &ox, &oy, dw, dh);
+    _align(text, alignment, &ox, &oy, dw, dh);
 
     float dx = ox, dy = oy;
     for (const char *ptr = text; *ptr != '\0'; ++ptr) {
