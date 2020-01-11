@@ -68,7 +68,9 @@ typedef int luaX_Reference;
     #define LUAX_SIGNATURE_ARGUMENT(...) \
             luaX_checkargument(_L, _index++, __FILE__, __LINE__, __VA_ARGS__, LUA_TNONE);
     #define LUAX_SIGNATURE_END \
-            (void)_index; \
+            if (--_index != _n) { \
+                luaL_error(_L, "[%s:%d] some arguments weren't checked (decleared %d, done %d)", __FILE__, __LINE__, _n, _index); \
+            } \
         } while (0);
 #else
     #define LUAX_SIGNATURE_BEGIN(l, n)
@@ -84,7 +86,7 @@ typedef int luaX_Reference;
 #define LUAX_OVERLOAD_ARITY(n, f) \
             case (n): { return (f)(_L); }
 #define LUAX_OVERLOAD_END \
-            default: { return luaL_error(L, "[%s:%d] wrong number of arguments (got %d)", __FILE__, __LINE__, _argc); } \
+            default: { return luaL_error(L, "[%s:%d] overload for arity %d is issing", __FILE__, __LINE__, _argc); } \
         } \
     } while (0);
 
