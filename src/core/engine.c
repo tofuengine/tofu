@@ -44,7 +44,7 @@
 
 #define ENTRY_GAMECONTROLLER_DB "gamecontrollerdb.txt"
 
-#define _TOFU_CONCAT_VERSION(m, n, r) #m "." #n "." #r
+#define _TOFU_CONCAT_VERSION(m, n, r) #m "." #n "." #r "-dev"
 #define _TOFU_MAKE_VERSION(m, n, r) _TOFU_CONCAT_VERSION(m, n, r)
 #define TOFU_VERSION_NUMBER _TOFU_MAKE_VERSION(TOFU_VERSION_MAJOR, TOFU_VERSION_MINOR, TOFU_VERSION_REVISION)
 
