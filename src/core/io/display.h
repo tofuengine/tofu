@@ -76,12 +76,15 @@ typedef struct _Display_t {
 
     GL_Palette_t palette;
     GL_Context_t gl;
+    GL_Pixel_t background, color;
 } Display_t;
 
 extern bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration);
 extern void Display_terminate(Display_t *display);
 extern bool Display_should_close(const Display_t *display);
 extern void Display_update(Display_t *display, float delta_time);
+extern void Display_background(Display_t *display, GL_Pixel_t index);
+extern void Display_color(Display_t *display, GL_Pixel_t index);
 extern void Display_clear(const Display_t *display);
 extern void Display_offset(Display_t *display, GL_Point_t offset);
 extern void Display_present(const Display_t *display);
