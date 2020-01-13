@@ -44,7 +44,7 @@ function Main:update(_)
 end
 
 function Main:render(_)
-  Canvas.clear()
+  Canvas.clear(0)
 
   local font_height = self.font:height()
 
