@@ -25,15 +25,18 @@ SOFTWARE.
 local Canvas = require("tofu.graphics").Canvas
 local Font = require("tofu.graphics").Font
 local Class = require("tofu.util").Class
+local System = require("tofu.core").System
 
 local Main = Class.define()
 
 local MESSAGE = "Hello, Tofu!"
 
+local FADING = { 0, 1, 5, 13, 6, 13, 5, 1 }
+
 function Main:__ctor()
   Canvas.palette("pico-8")
 
-  self.font = Font.default(0, 15)
+  self.font = Font.new("assets/font-8x8.png", 8, 8, 0, 15)
 end
 
 function Main:input()
@@ -43,14 +46,31 @@ function Main:update(_)
 end
 
 function Main:render(_)
-  Canvas.clear(0)
+  local t = System.time()
 
-  local font_width = self.font:width(MESSAGE)
-  local font_height = self.font:height(MESSAGE)
+  Canvas.clear()
+  Canvas.push()
 
-  local x = (Canvas.width() - font_width) * 0.5
-  local y = (Canvas.height() - font_height) * 0.5
-  self.font:write(MESSAGE, x, y)
+  local to = math.tointeger(t * 5) % #FADING + 1
+
+  local font_width, font_height = self.font:width(), self.font:height()
+
+  local x, y = (Canvas.width() - #MESSAGE * font_width) * 0.5, (Canvas.height() - font_height) * 0.5
+
+  for c in MESSAGE:gmatch(".") do
+    local dy = math.sin(t * 2.5 + x * 0.75) * font_height * 1.5
+
+    Canvas.shift(15, FADING[to])
+    self.font:write(c, x, y + dy, "left")
+
+    to = to % #FADING + 1
+
+    x = x + font_width
+  end
+
+  Canvas.pop()
+
+  self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
 end
 
 return Main

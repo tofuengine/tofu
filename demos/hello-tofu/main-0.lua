@@ -25,7 +25,6 @@ SOFTWARE.
 local Canvas = require("tofu.graphics").Canvas
 local Font = require("tofu.graphics").Font
 local Class = require("tofu.util").Class
-local System = require("tofu.core").System
 
 local Main = Class.define()
 
@@ -51,8 +50,6 @@ function Main:render(_)
   local x = Canvas.width() * 0.5
   local y = (Canvas.height() - font_height) * 0.5
   self.font:write(MESSAGE, x, y, "center")
-
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
 end
 
 return Main
