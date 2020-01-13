@@ -322,6 +322,50 @@ static int font_height(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
+static int font_write4(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 4)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
+    const char *text = lua_tostring(L, 2);
+    int x = lua_tointeger(L, 3);
+    int y = lua_tointeger(L, 4);
+
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    const GL_Context_t *context = &display->gl;
+    const GL_Sheet_t *sheet = &instance->sheet;
+
+    int dw = sheet->size.width;
+#ifndef __NO_LINEFEEDS__
+    int dh = sheet->size.height;
+#endif
+
+    int ox = x, oy = y;
+
+    int dx = ox, dy = oy;
+    for (const char *ptr = text; *ptr != '\0'; ++ptr) {
+#ifndef __NO_LINEFEEDS__
+        if (*ptr == '\n') { // Handle carriage-return
+            dx = ox;
+            dy += dh;
+            continue;
+        } else
+#endif
+        if (*ptr < ' ') {
+            continue;
+        }
+        GL_context_blit(context, &sheet->atlas, sheet->cells[*ptr - ' '], (GL_Point_t){ .x = dx, .y = dy });
+        dx += dw;
+    }
+
+    return 0;
+}
+
 static int font_write5(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 5)
@@ -466,6 +510,7 @@ static int font_write7(lua_State *L)
 static int font_write(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(4, font_write4)
         LUAX_OVERLOAD_ARITY(5, font_write5)
         LUAX_OVERLOAD_ARITY(6, font_write6)
         LUAX_OVERLOAD_ARITY(7, font_write7)
