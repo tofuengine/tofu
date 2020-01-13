@@ -305,7 +305,8 @@ static int font_height2(lua_State *L)
         }
     }
 #else
-    const size_t lines = strlen(text);
+    (void)text;
+    size_t lines = 1;
 #endif
 
     lua_pushinteger(L, instance->sheet.size.height * lines);
