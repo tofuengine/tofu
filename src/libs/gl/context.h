@@ -45,9 +45,6 @@ typedef struct _GL_Mask_t {
 typedef struct _GL_State_t {
     GL_Surface_t *surface;
     GL_Quad_t clipping_region;
-    GL_Pixel_t background;
-    GL_Pixel_t color; // TODO: use it!
-    uint32_t pattern; // TODO: ditto
     GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
     GL_Bool_t transparent[GL_MAX_PALETTE_COLORS];
 #ifdef __GL_MASK_SUPPORT__
@@ -73,14 +70,11 @@ extern void GL_context_surface(GL_Context_t *context, GL_Surface_t *surface);
 extern void GL_context_shifting(GL_Context_t *context, const size_t *from, const size_t *to, size_t count);
 extern void GL_context_transparent(GL_Context_t *context, const GL_Pixel_t *indexes, const GL_Bool_t *transparent, size_t count);
 extern void GL_context_clipping(GL_Context_t *context, const GL_Rectangle_t *region);
-extern void GL_context_background(GL_Context_t *context, GL_Pixel_t index);
-extern void GL_context_color(GL_Context_t *context, GL_Pixel_t index);
-extern void GL_context_pattern(GL_Context_t *context, uint32_t pattern);
 #ifdef __GL_MASK_SUPPORT__
 extern void GL_context_mask(GL_Context_t *context, const GL_Mask_t *mask);
 #endif
 
-extern void GL_context_clear(const GL_Context_t *context);
+extern void GL_context_clear(const GL_Context_t *context, GL_Pixel_t index);
 extern void GL_context_to_surface(const GL_Context_t *context, const GL_Surface_t *to);
 
 #endif  /* __GL_CONTEXT_H__ */

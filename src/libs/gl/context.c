@@ -38,7 +38,8 @@ static inline void reset_state(GL_State_t *state, GL_Surface_t *surface)
     *state = (GL_State_t){
             .surface = surface,
             .clipping_region = (GL_Quad_t){ .x0 = 0, .y0 = 0, .x1 = surface->width - 1, .y1 = surface->height - 1 },
-            .background = 0,
+            .shifting = { 0 },
+            .transparent = { 0 }
 #ifdef __STENCIL_SUPPORT__
             .stencil = NULL,
             .threshold = 0
@@ -169,24 +170,6 @@ void GL_context_clipping(GL_Context_t *context, const GL_Rectangle_t *region)
     }
 }
 
-void GL_context_background(GL_Context_t *context, const GL_Pixel_t index)
-{
-    GL_State_t *state = &context->state;
-    state->background = index;
-}
-
-void GL_context_color(GL_Context_t *context, GL_Pixel_t index)
-{
-    GL_State_t *state = &context->state;
-    state->color = index;
-}
-
-void GL_context_pattern(GL_Context_t *context, uint32_t pattern)
-{
-    GL_State_t *state = &context->state;
-    state->pattern = pattern;
-}
-
 #ifdef __GL_MASK_SUPPORT__
 void GL_context_mask(GL_Context_t *context, const GL_Mask_t *mask)
 {
@@ -199,13 +182,12 @@ void GL_context_mask(GL_Context_t *context, const GL_Mask_t *mask)
 }
 #endif
 
-void GL_context_clear(const GL_Context_t *context)
+void GL_context_clear(const GL_Context_t *context, GL_Pixel_t index)
 {
     const GL_State_t *state = &context->state;
-    const GL_Pixel_t color = state->background;
     GL_Pixel_t *dst = state->surface->data;
     for (size_t i = state->surface->data_size; i; --i) {
-        *(dst++) = color;
+        *(dst++) = index;
     }
 }
 

@@ -320,7 +320,9 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     }
 
     GL_palette_greyscale(&display->palette, GL_MAX_PALETTE_COLORS);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "calculating greyscale palette of #%d entries", GL_MAX_PALETTE_COLORS);
+    display->background = 0; // Default background is `0`.
+    display->color = GL_MAX_PALETTE_COLORS - 1; // Ditto.
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded greyscale palette of #%d entries", GL_MAX_PALETTE_COLORS);
 
     display->vram_size = display->configuration.width * display->configuration.width * sizeof(GL_Color_t);
     display->vram = malloc(display->vram_size);
@@ -425,6 +427,16 @@ void Display_update(Display_t *display, float delta_time)
 #endif
 }
 
+void Display_background(Display_t *display, GL_Pixel_t index)
+{
+    display->background = index;
+}
+
+void Display_color(Display_t *display, GL_Pixel_t index)
+{
+    display->color = index;
+}
+
 void Display_clear(const Display_t *display)
 {
     // It is advisable to clear the color buffer even if the framebuffer will be
@@ -526,4 +538,7 @@ void Display_palette(Display_t *display, const GL_Palette_t *palette)
 {
     display->palette = *palette;
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette updated");
+
+    display->background = 0; // Default background is `0`.
+    display->color = palette->count - 1; // Default foreground is last color.
 }

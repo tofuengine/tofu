@@ -152,6 +152,11 @@ gamepad-pak: $(TARGET)
 	@lua ./extras/pakgen.lua ./demos/gamepad ./demos/gamepad.pak
 	@./$(TARGET) ./demos/gamepad.pak
 
+hello-tofu: $(TARGET)
+	@echo "Launching *hello-tofu* application!"
+	@$(ANALYZER) $(AFLAGS) ./demos/hello-tofu
+	@./$(TARGET) ./demos/hello-tofu
+
 valgrind: $(TARGET)
 	@echo "Valgrind *$(DEMO)* application!"
 	@valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes env LIBGL_ALWAYS_SOFTWARE=1 ./$(TARGET) ./demos/$(DEMO)
