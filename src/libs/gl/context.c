@@ -181,12 +181,6 @@ void GL_context_color(GL_Context_t *context, GL_Pixel_t index)
     state->color = index;
 }
 
-void GL_context_pattern(GL_Context_t *context, uint32_t pattern)
-{
-    GL_State_t *state = &context->state;
-    state->pattern = pattern;
-}
-
 #ifdef __GL_MASK_SUPPORT__
 void GL_context_mask(GL_Context_t *context, const GL_Mask_t *mask)
 {

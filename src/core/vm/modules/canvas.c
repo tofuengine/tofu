@@ -53,7 +53,6 @@ static int canvas_surface(lua_State *L);
 static int canvas_palette(lua_State *L);
 static int canvas_background(lua_State *L);
 static int canvas_color(lua_State *L);
-static int canvas_pattern(lua_State *L);
 static int canvas_shift(lua_State *L);
 static int canvas_transparent(lua_State *L);
 static int canvas_clipping(lua_State *L);
@@ -90,7 +89,6 @@ static const struct luaL_Reg _canvas_functions[] = {
     { "palette", canvas_palette },
     { "background", canvas_background },
     { "color", canvas_color },
-    { "pattern", canvas_pattern },
     { "shift", canvas_shift },
     { "transparent", canvas_transparent },
     { "clipping", canvas_clipping },
@@ -360,21 +358,6 @@ static int canvas_color(lua_State *L)
 
     GL_Context_t *context = &display->gl;
     GL_context_color(context, index);
-
-    return 0;
-}
-
-static int canvas_pattern(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    int mask = lua_tointeger(L, 1);
-
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
-
-    GL_Context_t *context = &display->gl;
-    GL_context_pattern(context, mask);
 
     return 0;
 }
