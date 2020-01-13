@@ -389,8 +389,8 @@ static int canvas_shift1(lua_State *L)
 
     lua_pushnil(L);
     while (lua_next(L, 1)) {
-        arrpush(from, lua_tointeger(L, -2));
-        arrpush(to, lua_tointeger(L, -1));
+        arrpush(from, lua_tointeger(L, -2) % display->palette.count);
+        arrpush(to, lua_tointeger(L, -1) % display->palette.count);
         ++count;
 
         lua_pop(L, 1);
@@ -415,6 +415,9 @@ static int canvas_shift2(lua_State *L)
     size_t to = (size_t)lua_tointeger(L, 2);
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    from  %= display->palette.count;
+    to  %= display->palette.count;
 
     GL_Context_t *context = &display->gl;
     GL_context_shifting(context, &from, &to, 1);
@@ -458,7 +461,7 @@ static int canvas_transparent1(lua_State *L)
 
     lua_pushnil(L);
     while (lua_next(L, 1)) {
-        arrpush(indexes, (GL_Pixel_t)lua_tointeger(L, -2));
+        arrpush(indexes, (GL_Pixel_t)lua_tointeger(L, -2) % display->palette.count);
         arrpush(transparent, lua_toboolean(L, -1) ? GL_BOOL_TRUE : GL_BOOL_FALSE);
         ++count;
 
