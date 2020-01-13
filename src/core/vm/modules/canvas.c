@@ -339,8 +339,7 @@ static int canvas_background(lua_State *L)
 
     index %= display->palette.count;
 
-    GL_Context_t *context = &display->gl;
-    GL_context_background(context, index);
+    Display_background(display, index);
 
     return 0;
 }
@@ -356,8 +355,7 @@ static int canvas_color(lua_State *L)
 
     index %= display->palette.count;
 
-    GL_Context_t *context = &display->gl;
-    GL_context_color(context, index);
+    Display_color(display, index);
 
     return 0;
 }
@@ -664,7 +662,7 @@ static int canvas_mask(lua_State *L)
 }
 #endif
 
-static int canvas_clear(lua_State *L)
+static int canvas_clear0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 0)
     LUAX_SIGNATURE_END
@@ -672,11 +670,38 @@ static int canvas_clear(lua_State *L)
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
-    GL_context_clear(context);
+    GL_context_clear(context, display->background);
 
     Display_clear(display);
 
     return 0;
+}
+
+static int canvas_clear1(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 1);
+
+    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    index %= display->palette.count;
+
+    GL_Context_t *context = &display->gl;
+    GL_context_clear(context, index);
+
+    Display_clear(display);
+
+    return 0;
+}
+
+static int canvas_clear(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(0, canvas_clear0)
+        LUAX_OVERLOAD_ARITY(1, canvas_clear1)
+    LUAX_OVERLOAD_END
 }
 
 static int canvas_point(lua_State *L)
