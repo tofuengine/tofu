@@ -67,8 +67,8 @@ SCRIPTS:= $(wildcard src/core/vm/*.lua src/core/vm/modules/*.lua)
 SDUMPS:= $(SCRIPTS:%.lua=%.inc)
 TEXTS:= $(wildcard src/core/io/*.txt)
 TDUMPS:= $(TEXTS:%.txt=%.inc)
-RGBA:= $(wildcard src/core/io/*.rgba)
-RDUMPS:= $(RGBA:%.rgba=%.inc)
+RGBAS:= $(wildcard src/core/io/*.rgba)
+RDUMPS:= $(RGBAS:%.rgba=%.inc)
 RM=rm -f
 
 default: $(TARGET)
@@ -83,18 +83,19 @@ $(OBJECTS): %.o : %.c $(SDUMPS) $(TDUMPS) $(RDUMPS) $(INCLUDES) Makefile
 	@$(COMPILER) $(CWARNINGS) $(CFLAGS) $(COPTS) -c $< -o $@
 	@echo "Compiled "$<" successfully!"
 
-# Define a rule to automatically convert `.lua` script into an embeddable-ready `.inc` file.
-# `.inc` files also depend upon `Makefile` to be rebuild in case of tweakings.
-$(SDUMPS): %.inc: %.lua
+# Define automatically rules to convert `.lua` script, `.txt` files, and `.rgba` images
+# into an embeddable-ready `.inc` file. `.inc` files also depend upon `Makefile` to be
+# rebuild in case of tweakings.
+$(SDUMPS): %.inc: %.lua Makefile
 	@$(ANALYZER) $(AFLAGS) $<
 	@$(DUMPER) $(DFLAGS) $< > $@
 	@echo "Generated "$@" from "$<" successfully!"
 
-$(TDUMPS): %.inc : %.txt
+$(TDUMPS): %.inc : %.txt Makefile
 	@$(DUMPER) $(DFLAGS) $< > $@
 	@echo "Generated "$@" from "$<" successfully!"
 
-$(RDUMPS): %.inc : %.rgba
+$(RDUMPS): %.inc : %.rgba Makefile
 	@$(DUMPER) $(DFLAGS) $< > $@
 	@echo "Generated "$@" from "$<" successfully!"
 
