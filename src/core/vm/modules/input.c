@@ -58,27 +58,27 @@ static const struct luaL_Reg _input_functions[] = {
 };
 
 static const luaX_Const _input_constants[] = {
-    { "UP", LUA_CT_INTEGER, { .i = INPUT_BUTTON_UP } },
-    { "DOWN", LUA_CT_INTEGER, { .i = INPUT_BUTTON_DOWN } },
-    { "LEFT", LUA_CT_INTEGER, { .i = INPUT_BUTTON_LEFT } },
-    { "RIGHT", LUA_CT_INTEGER, { .i = INPUT_BUTTON_RIGHT } },
-    { "LB", LUA_CT_INTEGER, { .i = INPUT_BUTTON_LB } },
-    { "RB", LUA_CT_INTEGER, { .i = INPUT_BUTTON_RB } },
-    { "LT", LUA_CT_INTEGER, { .i = INPUT_BUTTON_LT } },
-    { "RT", LUA_CT_INTEGER, { .i = INPUT_BUTTON_RT } },
-    { "Y", LUA_CT_INTEGER, { .i = INPUT_BUTTON_Y } },
-    { "X", LUA_CT_INTEGER, { .i = INPUT_BUTTON_X } },
-    { "B", LUA_CT_INTEGER, { .i = INPUT_BUTTON_B } },
-    { "A", LUA_CT_INTEGER, { .i = INPUT_BUTTON_A } },
-    { "SELECT", LUA_CT_INTEGER, { .i = INPUT_BUTTON_SELECT } },
-    { "START", LUA_CT_INTEGER, { .i = INPUT_BUTTON_START } },
-    { "MOUSE_LEFT", LUA_CT_INTEGER, { .i = INPUT_BUTTON_MOUSE_LEFT } },
-    { "MOUSE_MIDDLE", LUA_CT_INTEGER, { .i = INPUT_BUTTON_MOUSE_MIDDLE } },
-    { "MOUSE_RIGHT", LUA_CT_INTEGER, { .i = INPUT_BUTTON_MOUSE_RIGHT } },
-
+    // Buttons.
+    { "BUTTON_UP", LUA_CT_INTEGER, { .i = INPUT_BUTTON_UP } },
+    { "BUTTON_DOWN", LUA_CT_INTEGER, { .i = INPUT_BUTTON_DOWN } },
+    { "BUTTON_LEFT", LUA_CT_INTEGER, { .i = INPUT_BUTTON_LEFT } },
+    { "BUTTON_RIGHT", LUA_CT_INTEGER, { .i = INPUT_BUTTON_RIGHT } },
+    { "BUTTON_LB", LUA_CT_INTEGER, { .i = INPUT_BUTTON_LB } },
+    { "BUTTON_RB", LUA_CT_INTEGER, { .i = INPUT_BUTTON_RB } },
+    { "BUTTON_LT", LUA_CT_INTEGER, { .i = INPUT_BUTTON_LT } },
+    { "BUTTON_RT", LUA_CT_INTEGER, { .i = INPUT_BUTTON_RT } },
+    { "BUTTON_Y", LUA_CT_INTEGER, { .i = INPUT_BUTTON_Y } },
+    { "BUTTON_X", LUA_CT_INTEGER, { .i = INPUT_BUTTON_X } },
+    { "BUTTON_B", LUA_CT_INTEGER, { .i = INPUT_BUTTON_B } },
+    { "BUTTON_A", LUA_CT_INTEGER, { .i = INPUT_BUTTON_A } },
+    { "BUTTON_SELECT", LUA_CT_INTEGER, { .i = INPUT_BUTTON_SELECT } },
+    { "BUTTON_START", LUA_CT_INTEGER, { .i = INPUT_BUTTON_START } },
+    { "BUTTON_MOUSE_LEFT", LUA_CT_INTEGER, { .i = INPUT_BUTTON_MOUSE_LEFT } },
+    { "BUTTON_MOUSE_MIDDLE", LUA_CT_INTEGER, { .i = INPUT_BUTTON_MOUSE_MIDDLE } },
+    { "BUTTON_MOUSE_RIGHT", LUA_CT_INTEGER, { .i = INPUT_BUTTON_MOUSE_RIGHT } },
+    // Sticks.
     { "STICK_LEFT", LUA_CT_INTEGER, { .i = INPUT_STICK_LEFT } },
     { "STICK_RIGHT", LUA_CT_INTEGER, { .i = INPUT_STICK_RIGHT } },
-
     { NULL }
 };
 

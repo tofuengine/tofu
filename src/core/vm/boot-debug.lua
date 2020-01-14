@@ -75,8 +75,8 @@ function Tofu:__ctor()
           Canvas.clear()
           Canvas.push()
             Canvas.shift({ [255] = v })
-            me.font:write("made with", Canvas.width() * 0.5, y, Font.CENTER)
-            me.font:write("TOFU ENGINE", Canvas.width() * 0.5, y + fh, Font.CENTER)
+            me.font:write("made with", Canvas.width() * 0.5, y, Font.ALIGN_CENTER)
+            me.font:write("TOFU ENGINE", Canvas.width() * 0.5, y + fh, Font.ALIGN_CENTER)
           Canvas.pop()
         end
     },
@@ -123,8 +123,8 @@ function Tofu:__ctor()
           local on = (System.time() % 2) == 0
           Canvas.clear()
           Canvas.rectangle("line", 0, 0, w, fh * 2 + 8, on and 1 or 0)
-          me.font:write("Software Failure.", w * 0.5, 0 + 4, Font.CENTER)
-          me.font:write("Guru Meditation", w * 0.5, fh + 4, Font.CENTER)
+          me.font:write("Software Failure.", w * 0.5, 0 + 4, Font.ALIGN_CENTER)
+          me.font:write("Guru Meditation", w * 0.5, fh + 4, Font.ALIGN_CENTER)
         end
     }
   }

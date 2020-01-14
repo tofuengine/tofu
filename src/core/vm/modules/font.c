@@ -66,13 +66,13 @@ static const struct luaL_Reg _font_functions[] = {
 };
 
 static const luaX_Const _font_constants[] = {
-    { "DEFAULT", LUA_CT_INTEGER, { .i = FONT_ALIGN_LEFT | FONT_ALIGN_TOP } },
-    { "LEFT", LUA_CT_INTEGER, { .i = FONT_ALIGN_LEFT } },
-    { "CENTER", LUA_CT_INTEGER, { .i = FONT_ALIGN_CENTER } },
-    { "RIGHT", LUA_CT_INTEGER, { .i = FONT_ALIGN_RIGHT } },
-    { "TOP", LUA_CT_INTEGER, { .i = FONT_ALIGN_TOP } },
-    { "MIDDLE", LUA_CT_INTEGER, { .i = FONT_ALIGN_MIDDLE } },
-    { "BOTTOM", LUA_CT_INTEGER, { .i = FONT_ALIGN_BOTTOM } },
+    { "ALIGN_DEFAULT", LUA_CT_INTEGER, { .i = FONT_ALIGN_LEFT | FONT_ALIGN_TOP } },
+    { "ALIGN_LEFT", LUA_CT_INTEGER, { .i = FONT_ALIGN_LEFT } },
+    { "ALIGN_CENTER", LUA_CT_INTEGER, { .i = FONT_ALIGN_CENTER } },
+    { "ALIGN_RIGHT", LUA_CT_INTEGER, { .i = FONT_ALIGN_RIGHT } },
+    { "ALIGN_TOP", LUA_CT_INTEGER, { .i = FONT_ALIGN_TOP } },
+    { "ALIGN_MIDDLE", LUA_CT_INTEGER, { .i = FONT_ALIGN_MIDDLE } },
+    { "ALIGN_BOTTOM", LUA_CT_INTEGER, { .i = FONT_ALIGN_BOTTOM } },
     { NULL }
 };
 
@@ -88,6 +88,7 @@ int font_loader(lua_State *L)
     return luaX_newmodule(L, &_font_script, _font_functions, _font_constants, nup, FONT_MT);
 }
 
+// FIXME: horizontal align each line independently.
 static void _align(const char *text, int alignment, int *x, int *y, int w, int h)
 {
 #ifndef __NO_LINEFEEDS__
