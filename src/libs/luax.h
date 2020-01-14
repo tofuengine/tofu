@@ -78,6 +78,7 @@ typedef int luaX_Reference;
     #define LUAX_SIGNATURE_END
 #endif
 
+// TODO: support overloading on signature arity and types?
 #define LUAX_OVERLOAD_BEGIN(l) \
     do { \
         lua_State *_L = (l); \
