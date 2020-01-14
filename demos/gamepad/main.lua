@@ -132,8 +132,9 @@ function Main:render(_)
   Canvas.line(cx, cy - 3, cx, cy - 1, 2)
   Canvas.line(cx, cy + 1, cx, cy + 3, 2)
 
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
-  self.font:write(string.format("X:%.2f Y:%.2f A:%.2f M:%.2f", lx, ly, la, lm), Canvas.width(), 0, "right")
+  self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
+  self.font:write(string.format("X:%.2f Y:%.2f A:%.2f M:%.2f", lx, ly, la, lm),
+    Canvas.width(), Canvas.height(), Font.RIGHT | Font.BOTTOM)
 end
 
 return Main

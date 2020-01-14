@@ -39,6 +39,13 @@
 #include <math.h>
 #include <string.h>
 
+#define FONT_ALIGN_LEFT     0x00
+#define FONT_ALIGN_CENTER   0x01
+#define FONT_ALIGN_RIGHT    0x02
+#define FONT_ALIGN_TOP      0x00
+#define FONT_ALIGN_MIDDLE   0x10
+#define FONT_ALIGN_BOTTOM   0x20
+
 #define LOG_CONTEXT "font"
 
 #define FONT_MT        "Tofu_Font_mt"
@@ -59,6 +66,13 @@ static const struct luaL_Reg _font_functions[] = {
 };
 
 static const luaX_Const _font_constants[] = {
+    { "DEFAULT", LUA_CT_INTEGER, { .i = FONT_ALIGN_LEFT | FONT_ALIGN_TOP } },
+    { "LEFT", LUA_CT_INTEGER, { .i = FONT_ALIGN_LEFT } },
+    { "CENTER", LUA_CT_INTEGER, { .i = FONT_ALIGN_CENTER } },
+    { "RIGHT", LUA_CT_INTEGER, { .i = FONT_ALIGN_RIGHT } },
+    { "TOP", LUA_CT_INTEGER, { .i = FONT_ALIGN_TOP } },
+    { "MIDDLE", LUA_CT_INTEGER, { .i = FONT_ALIGN_MIDDLE } },
+    { "BOTTOM", LUA_CT_INTEGER, { .i = FONT_ALIGN_BOTTOM } },
     { NULL }
 };
 
@@ -74,32 +88,41 @@ int font_loader(lua_State *L)
     return luaX_newmodule(L, &_font_script, _font_functions, _font_constants, nup, FONT_MT);
 }
 
-static void _align(const char *text, const char *alignment, int *x, int *y, int w, int h)
+static void _align(const char *text, int alignment, int *x, int *y, int w, int h)
 {
 #ifndef __NO_LINEFEEDS__
     size_t slen = strlen(text);
     size_t offset = 0;
-    int width = 0;
+    size_t hspan = 0;
+    size_t vspan = 0;
     while (offset < slen) {
         const char *start = text + offset;
         const char *end = strchr(start, '\n');
         if (!end) {
             end = text + slen;
         }
-        size_t length = end - start;
-        if (width < length * w) {
-            width = length * w;
+        const size_t length = end - start;
+        if (hspan < length) {
+            hspan = length;
         }
+        vspan += 1;
         offset += length + 1;
     }
 #else
-    int width = strlen(text) * w;
+    size_t hspan = strlen(text);
+    size_t vspan = 1;
 #endif
-    if (alignment[0] == 'c') {
-        *x -= width / 2;
+    if (alignment & FONT_ALIGN_CENTER) {
+        *x -= (hspan * w) / 2;
     } else
-    if (alignment[0] == 'r') {
-        *x -= width;
+    if (alignment & FONT_ALIGN_RIGHT) {
+        *x -= hspan * w;
+    }
+    if (alignment & FONT_ALIGN_MIDDLE) {
+        *y -= (vspan * h) / 2;
+    } else
+    if (alignment & FONT_ALIGN_BOTTOM) {
+        *y -= vspan * h;
     }
 }
 
@@ -373,13 +396,13 @@ static int font_write5(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
     const char *text = lua_tostring(L, 2);
     int x = lua_tointeger(L, 3);
     int y = lua_tointeger(L, 4);
-    const char *alignment = lua_tostring(L, 5);
+    int alignment = lua_tointeger(L, 5);
 
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -419,14 +442,14 @@ static int font_write6(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
     const char *text = lua_tostring(L, 2);
     int x = lua_tointeger(L, 3);
     int y = lua_tointeger(L, 4);
     float scale = lua_tonumber(L, 5);
-    const char *alignment = lua_tostring(L, 6);
+    int alignment = lua_tonumber(L, 6);
 
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -467,7 +490,7 @@ static int font_write7(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
     const char *text = lua_tostring(L, 2);
@@ -475,7 +498,7 @@ static int font_write7(lua_State *L)
     int y = lua_tointeger(L, 4);
     float scale_x = lua_tonumber(L, 5);
     float scale_y = lua_tonumber(L, 6);
-    const char *alignment = lua_tostring(L, 7);
+    int alignment = lua_tonumber(L, 7);
 
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
