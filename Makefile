@@ -69,8 +69,8 @@ SCRIPTS:=$(wildcard src/core/vm/*.lua src/core/vm/modules/*.lua)
 SDUMPS:=$(SCRIPTS:%.lua=%.inc)
 TEXTS:=$(wildcard src/core/io/*.txt)
 TDUMPS:=$(TEXTS:%.txt=%.inc)
-RGBAS:=$(wildcard src/core/io/*.rgba)
-RDUMPS:=$(RGBAS:%.rgba=%.inc)
+PNGS:=$(wildcard src/core/io/*.png)
+PDUMPS:=$(PNGS:%.png=%.inc)
 
 default: $(TARGET)
 all: default
@@ -80,7 +80,7 @@ $(TARGET): $(OBJECTS)
 	@echo "Linking complete!"
 
 # The dependency upon `Makefile` is redundant, since scripts are bound to it.
-$(OBJECTS): %.o : %.c $(SDUMPS) $(TDUMPS) $(RDUMPS) $(INCLUDES) Makefile
+$(OBJECTS): %.o : %.c $(SDUMPS) $(TDUMPS) $(PDUMPS) $(INCLUDES) Makefile
 	@$(COMPILER) $(CWARNINGS) $(CFLAGS) $(COPTS) -c $< -o $@
 	@echo "Compiled "$<" successfully!"
 
@@ -96,8 +96,8 @@ $(TDUMPS): %.inc : %.txt Makefile
 	@$(DUMPER) $(DFLAGS) $< > $@
 	@echo "Generated "$@" from "$<" successfully!"
 
-$(RDUMPS): %.inc : %.rgba Makefile
-	@$(DUMPER) $(DFLAGS) $< > $@
+$(PDUMPS): %.inc : %.png Makefile
+	@convert $< RGBA:- | $(DUMPER) $(DFLAGS) > $@
 	@echo "Generated "$@" from "$<" successfully!"
 
 primitives: $(TARGET)
@@ -180,7 +180,7 @@ clean:
 	@$(RM) $(OBJECTS)
 	@$(RM) $(SDUMPS)
 	@$(RM) $(TDUMPS)
-	@$(RM) $(RDUMPS)
+	@$(RM) $(PDUMPS)
 	@echo "Cleanup complete!"
 
 .PHONY: remove
