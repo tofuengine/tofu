@@ -64,7 +64,11 @@ SOURCES:= $(wildcard src/*.c src/core/*.c src/core/io/*.c src/core/io/display/*.
 INCLUDES:= $(wildcard src/*.h src/core/*.h src/core/io/*.h src/core/io/display/*.h src/core/vm/*.h src/core/vm/modules/*.h src/core/vm/modules/resources/*.h src/libs/*.h src/libs/fs/*.h src/libs/gl/*.h external/glad/*.h external/GLFW/*.h external/lua/*.h external/miniaudio/*.h external/spleen/*.h external/stb/*.h)
 OBJECTS:= $(SOURCES:%.c=%.o)
 SCRIPTS:= $(wildcard src/core/vm/*.lua src/core/vm/modules/*.lua)
-BLOBS:= $(SCRIPTS:%.lua=%.inc)
+SDUMPS:= $(SCRIPTS:%.lua=%.inc)
+TEXTS:= $(wildcard src/core/io/*.txt)
+TDUMPS:= $(TEXTS:%.txt=%.inc)
+RGBA:= $(wildcard src/core/io/*.rgba)
+RDUMPS:= $(RAWS:%.raw=%.inc)
 RM=rm -f
 
 default: $(TARGET)
@@ -75,14 +79,22 @@ $(TARGET): $(OBJECTS)
 	@echo "Linking complete!"
 
 # The dependency upon `Makefile` is redundant, since scripts are bound to it.
-$(OBJECTS): %.o : %.c $(BLOBS) $(INCLUDES) Makefile
+$(OBJECTS): %.o : %.c $(SDUMPS) $(TDUMPS) $(RDUMPS) $(INCLUDES) Makefile
 	@$(COMPILER) $(CWARNINGS) $(CFLAGS) $(COPTS) -c $< -o $@
 	@echo "Compiled "$<" successfully!"
 
 # Define a rule to automatically convert `.lua` script into an embeddable-ready `.inc` file.
 # `.inc` files also depend upon `Makefile` to be rebuild in case of tweakings.
-$(BLOBS): %.inc: %.lua Makefile
+$(SDUMPS): %.inc: %.lua
 	@$(ANALYZER) $(AFLAGS) $<
+	@$(DUMPER) $(DFLAGS) $< > $@
+	@echo "Generated "$@" from "$<" successfully!"
+
+$(TDUMPS): %.inc : %.txt
+	@$(DUMPER) $(DFLAGS) $< > $@
+	@echo "Generated "$@" from "$<" successfully!"
+
+$(RDUMPS): %.inc : %.rgba
 	@$(DUMPER) $(DFLAGS) $< > $@
 	@echo "Generated "$@" from "$<" successfully!"
 
@@ -164,7 +176,9 @@ valgrind: $(TARGET)
 .PHONY: clean
 clean:
 	@$(RM) $(OBJECTS)
-	@$(RM) $(BLOBS)
+	@$(RM) $(SDUMPS)
+	@$(RM) $(TDUMPS)
+	@$(RM) $(RDUMPS)
 	@echo "Cleanup complete!"
 
 .PHONY: remove
