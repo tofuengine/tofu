@@ -119,7 +119,7 @@ static const unsigned char _window_icon_pixels[] = {
 #include "icon.inc"
 };
 
-static void set_icon(GLFWwindow *window, File_System_Chunk_t icon)
+static void _set_icon(GLFWwindow *window, File_System_Chunk_t icon)
 {
     if (icon.type == FILE_SYSTEM_CHUNK_NULL) {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "setting default icon");
@@ -132,7 +132,7 @@ static void set_icon(GLFWwindow *window, File_System_Chunk_t icon)
 }
 
 #ifdef DEBUG
-static bool has_errors(void)
+static bool _has_errors(void)
 {
     bool result = false;
     for (GLenum code = glGetError(); code != GL_NO_ERROR; code = glGetError()) {
@@ -154,7 +154,7 @@ static bool has_errors(void)
 }
 #endif
 
-static bool compute_size(Display_t *display, const Display_Configuration_t *configuration, GL_Point_t *position)
+static bool _compute_size(Display_t *display, const Display_Configuration_t *configuration, GL_Point_t *position)
 {
     int display_width, display_height;
     glfwGetMonitorWorkarea(glfwGetPrimaryMonitor(), NULL, NULL, &display_width, &display_height);
@@ -208,12 +208,12 @@ static bool compute_size(Display_t *display, const Display_Configuration_t *conf
     return true;
 }
 
-static void error_callback(int error, const char *description)
+static void _error_callback(int error, const char *description)
 {
     Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "%s", description);
 }
 
-static void size_callback(GLFWwindow* window, int width, int height)
+static void _size_callback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height); // Viewport matches window
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "viewport size set to %dx%d", width, height);
@@ -252,7 +252,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
 
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "GLFW: %s", glfwGetVersionString());
 
-    glfwSetErrorCallback(error_callback);
+    glfwSetErrorCallback(_error_callback);
 
     if (!glfwInit()) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize GLFW");
@@ -260,7 +260,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     }
 
     GL_Point_t position;
-    if (!compute_size(display, configuration, &position)) {
+    if (!_compute_size(display, configuration, &position)) {
         glfwTerminate();
         return false;
     }
@@ -297,9 +297,9 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         return false;
     }
 
-    set_icon(display->window, configuration->icon);
+    _set_icon(display->window, configuration->icon);
 
-    size_callback(display->window, display->physical_width, display->physical_height);
+    _size_callback(display->window, display->physical_width, display->physical_height);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%s mouse cursor", configuration->hide_cursor ? "hiding" : "showing");
     glfwSetInputMode(display->window, GLFW_CURSOR, configuration->hide_cursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
@@ -382,7 +382,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     Display_shader(display, NULL); // Use pass-thru at the beginning.
 
 #ifdef DEBUG
-    has_errors(); // Display pending OpenGL errors.
+    _has_errors(); // Display pending OpenGL errors.
 #endif
 
     return true;
@@ -423,7 +423,7 @@ void Display_update(Display_t *display, float delta_time)
     program_send(display->active_program, UNIFORM_TIME, PROGRAM_UNIFORM_FLOAT, 1, &display->time);
 
 #ifdef DEBUG
-    has_errors(); // Display pending OpenGL errors.
+    _has_errors(); // Display pending OpenGL errors.
 #endif
 }
 

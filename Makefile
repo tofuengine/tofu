@@ -17,6 +17,8 @@ endif
 ANALYZER=luacheck
 AFLAGS=--no-self --std lua53 -q
 
+RM=rm -f
+
 # In case we want to embed pre-compiled script, we need to disable the `LUA_32BITS` compile flag!
 #	@luac5.3 -o - $< | $(DUMPER) $(DFLAGS) > $@
 DUMPER=hexdump
@@ -60,16 +62,15 @@ else
 endif
 LWARNINGS=-Wall -Wextra -Werror
 
-SOURCES:= $(wildcard src/*.c src/core/*.c src/core/io/*.c src/core/io/display/*.c src/core/vm/*.c src/core/vm/modules/*.c src/core/vm/modules/resources/*.c src/libs/*.c src/libs/fs/*.c src/libs/gl/*.c external/glad/*.c external/GLFW/*.c external/lua/*.c external/miniaudio/*.c external/spleen/*.c external/stb/*.c)
-INCLUDES:= $(wildcard src/*.h src/core/*.h src/core/io/*.h src/core/io/display/*.h src/core/vm/*.h src/core/vm/modules/*.h src/core/vm/modules/resources/*.h src/libs/*.h src/libs/fs/*.h src/libs/gl/*.h external/glad/*.h external/GLFW/*.h external/lua/*.h external/miniaudio/*.h external/spleen/*.h external/stb/*.h)
-OBJECTS:= $(SOURCES:%.c=%.o)
-SCRIPTS:= $(wildcard src/core/vm/*.lua src/core/vm/modules/*.lua)
-SDUMPS:= $(SCRIPTS:%.lua=%.inc)
-TEXTS:= $(wildcard src/core/io/*.txt)
-TDUMPS:= $(TEXTS:%.txt=%.inc)
-RGBAS:= $(wildcard src/core/io/*.rgba)
-RDUMPS:= $(RGBAS:%.rgba=%.inc)
-RM=rm -f
+SOURCES:=$(wildcard src/*.c src/core/*.c src/core/io/*.c src/core/io/display/*.c src/core/vm/*.c src/core/vm/modules/*.c src/core/vm/modules/resources/*.c src/libs/*.c src/libs/fs/*.c src/libs/gl/*.c external/glad/*.c external/GLFW/*.c external/lua/*.c external/miniaudio/*.c external/spleen/*.c external/stb/*.c)
+INCLUDES:=$(wildcard src/*.h src/core/*.h src/core/io/*.h src/core/io/display/*.h src/core/vm/*.h src/core/vm/modules/*.h src/core/vm/modules/resources/*.h src/libs/*.h src/libs/fs/*.h src/libs/gl/*.h external/glad/*.h external/GLFW/*.h external/lua/*.h external/miniaudio/*.h external/spleen/*.h external/stb/*.h)
+OBJECTS:=$(SOURCES:%.c=%.o)
+SCRIPTS:=$(wildcard src/core/vm/*.lua src/core/vm/modules/*.lua)
+SDUMPS:=$(SCRIPTS:%.lua=%.inc)
+TEXTS:=$(wildcard src/core/io/*.txt)
+TDUMPS:=$(TEXTS:%.txt=%.inc)
+RGBAS:=$(wildcard src/core/io/*.rgba)
+RDUMPS:=$(RGBAS:%.rgba=%.inc)
 
 default: $(TARGET)
 all: default
