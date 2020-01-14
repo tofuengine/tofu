@@ -68,7 +68,7 @@ SDUMPS:= $(SCRIPTS:%.lua=%.inc)
 TEXTS:= $(wildcard src/core/io/*.txt)
 TDUMPS:= $(TEXTS:%.txt=%.inc)
 RGBA:= $(wildcard src/core/io/*.rgba)
-RDUMPS:= $(RAWS:%.raw=%.inc)
+RDUMPS:= $(RGBA:%.rgba=%.inc)
 RM=rm -f
 
 default: $(TARGET)
