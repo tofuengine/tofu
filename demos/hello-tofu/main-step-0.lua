@@ -23,7 +23,6 @@ SOFTWARE.
 ]]--
 
 -- Include the modules we'll be using.
-local System = require("tofu.core").System
 local Canvas = require("tofu.graphics").Canvas
 local Font = require("tofu.graphics").Font
 local Class = require("tofu.util").Class
@@ -53,18 +52,10 @@ function Main:update(_)
 end
 
 function Main:render(_)
-  -- Query current time since the start, expressed in seconds (as a floating point number).
-  local t = System.time()
-
-  -- Convert the time to an integer, then instruct the engine that color `15` need to be
-  -- remapped to color `index`.
-  local index = tonumber(t) % 16
-  Canvas.shift(15, index)
-
-  -- Clear the virtual-screen with default background color (i.e. palette color #0).
+  -- Clear the virtual-screen with palette color #0.
   Canvas.clear()
 
-  -- We need the message width and height to center it on screen.
+  -- We need the font (message) width and height to center it on screen.
   local font_width = self.font:width(MESSAGE)
   local font_height = self.font:height(MESSAGE)
 
