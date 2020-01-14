@@ -75,6 +75,10 @@ static const luaX_Const _input_constants[] = {
     { "MOUSE_LEFT", LUA_CT_INTEGER, { .i = INPUT_BUTTON_MOUSE_LEFT } },
     { "MOUSE_MIDDLE", LUA_CT_INTEGER, { .i = INPUT_BUTTON_MOUSE_MIDDLE } },
     { "MOUSE_RIGHT", LUA_CT_INTEGER, { .i = INPUT_BUTTON_MOUSE_RIGHT } },
+
+    { "STICK_LEFT", LUA_CT_INTEGER, { .i = INPUT_STICK_LEFT } },
+    { "STICK_RIGHT", LUA_CT_INTEGER, { .i = INPUT_STICK_RIGHT } },
+
     { NULL }
 };
 
@@ -258,14 +262,13 @@ static int input_cursor_area(lua_State *L) // TODO: rename to `region`?
 static int input_stick(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    const char *id = lua_tostring(L, 1);
+    int stick = lua_tointeger(L, 1);
 
     const Input_t *input = (const Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
     const Input_State_t *state = &input->state;
-    const Input_Sticks_t stick = id[0] == 'l' ? INPUT_STICK_LEFT : INPUT_STICK_RIGHT;
     lua_pushnumber(L, state->sticks[stick].x);
     lua_pushnumber(L, state->sticks[stick].y);
     lua_pushnumber(L, state->sticks[stick].angle);

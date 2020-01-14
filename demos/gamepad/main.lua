@@ -118,8 +118,8 @@ function Main:render(_)
   end
 
   local h = Canvas.height() * 0.5
-  local lx, ly, la, lm = Input.stick("left") -- TODO: use constants.
-  local rx, ry, ra, rm = Input.stick("right")
+  local lx, ly, la, lm = Input.stick(Input.STICK_LEFT) -- TODO: use constants.
+  local rx, ry, ra, rm = Input.stick(Input.STICK_RIGHT)
   draw_stick(24, h - 12, 8, lx, ly, la, lm, Input.is_down(Input.LT))
   draw_stick(232, h - 12, 8, rx, ry, ra, rm, Input.is_down(Input.RT))
   local tl, tr = Input.triggers()
