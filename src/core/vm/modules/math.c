@@ -43,13 +43,8 @@ static const struct luaL_Reg _math_functions[] = {
     { NULL, NULL }
 };
 
-static const luaX_Globs _math_constants[] = {
-    {
-        "sincos", (luaX_Const[]){
-            { "period", LUA_CT_INTEGER, { .i = SINCOS_PERIOD } },
-            { NULL }
-        }
-    },
+static const luaX_Const _math_constants[] = {
+    { "SINCOS_PERIOD", LUA_CT_INTEGER, { .i = SINCOS_PERIOD } },
     { NULL }
 };
 

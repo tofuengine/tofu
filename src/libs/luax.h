@@ -47,11 +47,6 @@ typedef struct _luaX_Const {
     } value;
 } luaX_Const;
 
-typedef struct _luaX_Globs {
-    const char *name;
-    luaX_Const *constants;
-} luaX_Globs;
-
 typedef struct _luaX_Script {
     const char *buffer;
     size_t size;
@@ -103,7 +98,7 @@ typedef int luaX_Reference;
 extern void luaX_stackdump(lua_State *L, const char *file, int line);
 extern void luaX_overridesearchers(lua_State *L, lua_CFunction searcher, int nup);
 extern int luaX_insisttable(lua_State *L, const char *name);
-extern int luaX_newmodule(lua_State *L, const luaX_Script *script, const luaL_Reg *f, const luaX_Globs *g, int nup, const char *name);
+extern int luaX_newmodule(lua_State *L, const luaX_Script *script, const luaL_Reg *f, const luaX_Const *c, int nup, const char *name);
 extern void luaX_openlibs(lua_State *L);
 extern void luaX_preload(lua_State *L, const char *modname, lua_CFunction openf, int nup);
 extern void luaX_requiref(lua_State *L, const char *modname, lua_CFunction openf, int nup, int glb);
