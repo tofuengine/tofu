@@ -57,14 +57,10 @@ static const struct luaL_Reg _bank_functions[] = {
     { NULL, NULL }
 };
 
-static const luaX_Globs _bank_constants[] = {
-    { NULL }
-};
-
 int bank_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, NULL, _bank_functions, _bank_constants, nup, BANK_MT);
+    return luaX_newmodule(L, NULL, _bank_functions, NULL, nup, BANK_MT);
 }
 
 static int bank_new(lua_State *L)

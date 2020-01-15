@@ -56,21 +56,21 @@ function Main:__ctor()
 end
 
 function Main:input()
-  if Input.is_pressed(Input.buttons.DOWN) then
+  if Input.is_pressed("DOWN") then
     self.scale_y = 1.0
     self.y = self.y + 1
-  elseif Input.is_pressed(Input.buttons.UP) then
+  elseif Input.is_pressed("UP") then
     self.scale_y = -1.0
     self.y = self.y - 1
-  elseif Input.is_pressed(Input.buttons.RIGHT) then
+  elseif Input.is_pressed("RIGHT") then
     self.scale_x = 1.0
     self.x = self.x + 1
-  elseif Input.is_pressed(Input.buttons.LEFT) then
+  elseif Input.is_pressed("LEFT") then
     self.scale_x = -1.0
     self.x = self.x - 1
-  elseif Input.is_pressed(Input.buttons.Y) then
+  elseif Input.is_pressed("Y") then
     self.mode = (self.mode + 1) % 10
-  elseif Input.is_pressed(Input.buttons.X) then
+  elseif Input.is_pressed("X") then
     self.clipping = not self.clipping
     if self.clipping then
       Canvas.clipping(32, 32, 64, 64)

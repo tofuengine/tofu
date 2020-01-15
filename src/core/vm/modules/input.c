@@ -27,9 +27,11 @@
 #include <config.h>
 #include <core/environment.h>
 #include <core/io/input.h>
+#include <libs/map.h>
 
 #include "udt.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 #define INPUT_MT        "Tofu_Input_mt"
@@ -57,57 +59,46 @@ static const struct luaL_Reg _input_functions[] = {
     { NULL, NULL }
 };
 
-static const luaX_Globs _input_constants[] = {
-    {
-        "buttons", (luaX_Const[]){
-            { "up", LUA_CT_INTEGER, { .i = INPUT_BUTTON_UP } },
-            { "down", LUA_CT_INTEGER, { .i = INPUT_BUTTON_DOWN } },
-            { "left", LUA_CT_INTEGER, { .i = INPUT_BUTTON_LEFT } },
-            { "right", LUA_CT_INTEGER, { .i = INPUT_BUTTON_RIGHT } },
-            { "lb", LUA_CT_INTEGER, { .i = INPUT_BUTTON_LB } },
-            { "rb", LUA_CT_INTEGER, { .i = INPUT_BUTTON_RB } },
-            { "lt", LUA_CT_INTEGER, { .i = INPUT_BUTTON_LT } },
-            { "rt", LUA_CT_INTEGER, { .i = INPUT_BUTTON_RT } },
-            { "y", LUA_CT_INTEGER, { .i = INPUT_BUTTON_Y } },
-            { "x", LUA_CT_INTEGER, { .i = INPUT_BUTTON_X } },
-            { "b", LUA_CT_INTEGER, { .i = INPUT_BUTTON_B } },
-            { "a", LUA_CT_INTEGER, { .i = INPUT_BUTTON_A } },
-            { "select", LUA_CT_INTEGER, { .i = INPUT_BUTTON_SELECT } },
-            { "start", LUA_CT_INTEGER, { .i = INPUT_BUTTON_START } },
-            { NULL }
-        }
-    },
-    {
-        "sticks", (luaX_Const[]){
-            { "left", LUA_CT_INTEGER, { .i = INPUT_STICK_LEFT } },
-            { "right", LUA_CT_INTEGER, { .i = INPUT_STICK_RIGHT } },
-            { NULL }
-        }
-    },
-    { NULL }
-};
-
 int input_loader(lua_State *L)
 {
-    int *_sticks;
-    shput(_sticks, "left", INPUT_STICK_LEFT);
-    shput(_sticks, "right", INPUT_STICK_RIGHT);
-
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, NULL, _input_functions, _input_constants, nup, INPUT_MT);
+    return luaX_newmodule(L, NULL, _input_functions, NULL, nup, INPUT_MT);
 }
+
+static const Map_Entry_t _buttons[Input_Buttons_t_CountOf] = { // Need to be sorted for `bsearch()`
+    { "a", INPUT_BUTTON_A },
+    { "b", INPUT_BUTTON_B },
+    { "down", INPUT_BUTTON_DOWN },
+    { "lb", INPUT_BUTTON_LB },
+    { "left", INPUT_BUTTON_LEFT },
+    { "lt", INPUT_BUTTON_LT },
+    { "rb", INPUT_BUTTON_RB },
+    { "right", INPUT_BUTTON_RIGHT },
+    { "rt", INPUT_BUTTON_RT },
+    { "select", INPUT_BUTTON_SELECT },
+    { "start", INPUT_BUTTON_START },
+    { "up", INPUT_BUTTON_UP },
+    { "x", INPUT_BUTTON_X },
+    { "y", INPUT_BUTTON_Y }
+};
+
+static const Map_Entry_t _sticks[Input_Sticks_t_CountOf] = { // Ditto.
+    { "left", INPUT_STICK_LEFT },
+    { "right", INPUT_STICK_RIGHT }
+};
 
 static int input_is_down(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    int button = lua_tointeger(L, 1);
+    const char *id = lua_tostring(L, 1);
 
     const Input_t *input = (const Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
-    const Input_State_t *state = &input->state;
-    bool is_down = (button >= Input_Buttons_t_First && button <= Input_Buttons_t_Last) ? state->buttons[button].state.down : false;
+    const Map_Entry_t *entry = map_find(L, id, _buttons, Input_Buttons_t_CountOf);
+    Input_Buttons_t button = entry->value;
+    bool is_down = input->state.buttons[button].state.down;
 
     lua_pushboolean(L, is_down);
     return 1;
@@ -116,14 +107,15 @@ static int input_is_down(lua_State *L)
 static int input_is_up(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    int button = lua_tointeger(L, 1);
+    const char *id = lua_tostring(L, 1);
 
     const Input_t *input = (const Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
-    const Input_State_t *state = &input->state;
-    bool is_down = (button >= Input_Buttons_t_First && button <= Input_Buttons_t_Last) ? state->buttons[button].state.down : false;
+    const Map_Entry_t *entry = map_find(L, id, _buttons, Input_Buttons_t_CountOf);
+    Input_Buttons_t button = entry->value;
+    bool is_down = input->state.buttons[button].state.down;
 
     lua_pushboolean(L, !is_down);
     return 1;
@@ -132,14 +124,15 @@ static int input_is_up(lua_State *L)
 static int input_is_pressed(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    int button = lua_tointeger(L, 1);
+    const char *id = lua_tostring(L, 1);
 
     const Input_t *input = (const Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
-    const Input_State_t *state = &input->state;
-    bool is_pressed = (button >= Input_Buttons_t_First && button <= Input_Buttons_t_Last) ? state->buttons[button].state.pressed : false;
+    const Map_Entry_t *entry = map_find(L, id, _buttons, Input_Buttons_t_CountOf);
+    Input_Buttons_t button = entry->value;
+    bool is_pressed = input->state.buttons[button].state.pressed;
 
     lua_pushboolean(L, is_pressed);
     return 1;
@@ -148,14 +141,15 @@ static int input_is_pressed(lua_State *L)
 static int input_is_released(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    int button = lua_tointeger(L, 1);
+    const char *id = lua_tostring(L, 1);
 
     const Input_t *input = (const Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
-    const Input_State_t *state = &input->state;
-    bool is_released = (button >= Input_Buttons_t_First && button <= Input_Buttons_t_Last) ? state->buttons[button].state.released : false;
+    const Map_Entry_t *entry = map_find(L, id, _buttons, Input_Buttons_t_CountOf);
+    Input_Buttons_t button = entry->value;
+    bool is_released = input->state.buttons[button].state.released;
 
     lua_pushboolean(L, is_released);
     return 1;
@@ -164,15 +158,15 @@ static int input_is_released(lua_State *L)
 static int input_auto_repeat1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    int button = lua_tointeger(L, 1);
+    const char *id = lua_tostring(L, 1);
 
     Input_t *input = (Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
-    if (button >= Input_Buttons_t_First && button <= Input_Buttons_t_Last) {
-        Input_auto_repeat(input, button, 0.0f);
-    }
+    const Map_Entry_t *entry = map_find(L, id, _buttons, Input_Buttons_t_CountOf);
+    Input_Buttons_t button = entry->value;
+    Input_auto_repeat(input, button, 0.0f);
 
     return 0;
 }
@@ -180,17 +174,17 @@ static int input_auto_repeat1(lua_State *L)
 static int input_auto_repeat2(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 2)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    int button = lua_tointeger(L, 1);
+    const char *id = lua_tostring(L, 1);
     float period = lua_tonumber(L, 2);
 
     Input_t *input = (Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
-    if (button >= Input_Buttons_t_First && button <= Input_Buttons_t_Last) {
-        Input_auto_repeat(input, button, period);
-    }
+    const Map_Entry_t *entry = map_find(L, id, _buttons, Input_Buttons_t_CountOf);
+    Input_Buttons_t button = entry->value;
+    Input_auto_repeat(input, button, period);
 
     return 0;
 }
@@ -271,12 +265,15 @@ static int input_cursor_area(lua_State *L) // TODO: rename to `region`?
 static int input_stick(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    int stick = lua_tointeger(L, 1);
+    const char *id = lua_tostring(L, 1);
 
     const Input_t *input = (const Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
+    const Map_Entry_t *entry = map_find(L, id, _sticks, Input_Sticks_t_CountOf);
+
+    Input_Sticks_t stick = entry->value;
     const Input_State_t *state = &input->state;
     lua_pushnumber(L, state->sticks[stick].x);
     lua_pushnumber(L, state->sticks[stick].y);

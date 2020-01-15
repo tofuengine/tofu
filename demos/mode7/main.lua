@@ -90,32 +90,32 @@ end
 function Main:input()
   local recompute = false
 
-  if Input.is_pressed(Input.buttons.SELECT) then
+  if Input.is_pressed("SELECT") then
     self.speed = 1.0
-  elseif Input.is_pressed(Input.buttons.START) then
+  elseif Input.is_pressed("START") then
     self.running = not self.running
-  elseif Input.is_pressed(Input.buttons.Y) then
+  elseif Input.is_pressed("Y") then
     self.elevation = self.elevation + 8.0
     recompute = true
-  elseif Input.is_pressed(Input.buttons.X) then
+  elseif Input.is_pressed("X") then
     self.elevation = self.elevation - 8.0
     recompute = true
-  elseif Input.is_pressed(Input.buttons.A) then -- STRAFE
+  elseif Input.is_pressed("A") then -- STRAFE
     local a = self.angle + math.pi * 0.5
     self.x = self.x + math.cos(a) * 8
     self.y = self.y + math.sin(a) * 8
-  elseif Input.is_pressed(Input.buttons.B) then -- STRAFE
+  elseif Input.is_pressed("B") then -- STRAFE
     local a = self.angle + math.pi * 0.5
     self.x = self.x - math.cos(a) * 8
     self.y = self.y - math.sin(a) * 8
-  elseif Input.is_pressed(Input.buttons.UP) then
+  elseif Input.is_pressed("UP") then
     self.speed = self.speed + 16.0
-  elseif Input.is_pressed(Input.buttons.DOWN) then
+  elseif Input.is_pressed("DOWN") then
     self.speed = self.speed - 16.0
-  elseif Input.is_pressed(Input.buttons.LEFT) then
+  elseif Input.is_pressed("LEFT") then
     self.angle = self.angle - math.pi * 0.05
     recompute = true
-  elseif Input.is_pressed(Input.buttons.RIGHT) then
+  elseif Input.is_pressed("RIGHT") then
     self.angle = self.angle + math.pi * 0.05
     recompute = true
   end

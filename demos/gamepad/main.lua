@@ -32,10 +32,10 @@ local System = require("tofu.core").System
 local Main = Class.define()
 
 local IDS = {
-    Input.buttons.a, Input.buttons.b, Input.buttons.x, Input.buttons.y,
-    Input.buttons.lb, Input.buttons.rb,
-    Input.buttons.up, Input.buttons.down, Input.buttons.left, Input.buttons.right,
-    Input.buttons.select, Input.buttons.start
+    "a", "b", "x", "y",
+    "lb", "rb",
+    "up", "down", "left", "right",
+    "select", "start"
   }
 
 local INDICES = {
@@ -48,8 +48,8 @@ local INDICES = {
 function Main:__ctor()
   Canvas.palette("pico-8")
 
-  Input.auto_repeat(Input.buttons.x, 0.25)
-  Input.auto_repeat(Input.buttons.y, 0.5)
+  Input.auto_repeat("x", 0.25)
+  Input.auto_repeat("y", 0.5)
   Input.cursor_area(0, 0, Canvas.width(), Canvas.height())
 
   self.bank = Bank.new("assets/sheet.png", 12, 12)
@@ -118,10 +118,10 @@ function Main:render(_)
   end
 
   local h = Canvas.height() * 0.5
-  local lx, ly, la, lm = Input.stick(Input.sticks.left) -- TODO: use constants.
-  local rx, ry, ra, rm = Input.stick(Input.sticks.right)
-  draw_stick(24, h - 12, 8, lx, ly, la, lm, Input.is_down(Input.buttons.lt))
-  draw_stick(232, h - 12, 8, rx, ry, ra, rm, Input.is_down(Input.buttons.rt))
+  local lx, ly, la, lm = Input.stick("left")
+  local rx, ry, ra, rm = Input.stick("right")
+  draw_stick(24, h - 12, 8, lx, ly, la, lm, Input.is_down("lt"))
+  draw_stick(232, h - 12, 8, rx, ry, ra, rm, Input.is_down("rt"))
   local tl, tr = Input.triggers()
   draw_trigger(24, h + 12, 8, tl)
   draw_trigger(232, h + 12, 8, tr)
