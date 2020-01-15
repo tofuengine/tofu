@@ -64,10 +64,11 @@ function Main:render(_)
   -- Clear the virtual-screen with default background color (i.e. palette color #0).
   Canvas.clear()
 
-  -- Ask for the center postion, which is already provided.
+  -- Ask for the center position, which the canvas can provide ready-to-be-used.
   local x, y = Canvas.center()
 
-  -- Finally, draw the message on-screen at the given position.
+  -- Finally, draw the message on-screen at the given position, centering both
+  -- vertically and horizontally.
   self.font:write(self.font:align(MESSAGE, x, y, "center", "middle"))
 end
 
