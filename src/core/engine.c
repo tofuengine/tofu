@@ -231,7 +231,7 @@ void Engine_run(Engine_t *engine)
 {
     const float delta_time = 1.0f / (float)engine->configuration.fps;
     const size_t skippable_frames = engine->configuration.skippable_frames;
-    const float reference_time = 1.0f / engine->configuration.fps_cap;
+    const float reference_time = engine->configuration.fps_cap == 0 ? 0.0f : 1.0f / engine->configuration.fps_cap;
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "now running, update-time is %.6fs w/ %d skippable frames, reference-time is %.6fs", delta_time, skippable_frames, reference_time);
 
     // Track time using double to keep the min resolution consistent over time!
@@ -274,10 +274,12 @@ void Engine_run(Engine_t *engine)
 
         Display_present(&engine->display);
 
-        const float frame_time = (float)(glfwGetTime() - current);
-        const float leftover = reference_time - frame_time;
-        if (leftover > 0.0f) {
-            _wait_for(leftover);
+        if (reference_time != 0.0f) {
+            const float frame_time = (float)(glfwGetTime() - current);
+            const float leftover = reference_time - frame_time;
+            if (leftover > 0.0f) {
+                _wait_for(leftover * 0.95f); // Add minor compensation to reach cap value.
+            }
         }
     }
 }
