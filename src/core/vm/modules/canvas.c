@@ -46,6 +46,8 @@
 static int canvas_color_to_index(lua_State *L);
 static int canvas_width(lua_State *L);
 static int canvas_height(lua_State *L);
+static int canvas_size(lua_State *L);
+static int canvas_center(lua_State *L);
 static int canvas_push(lua_State *L);
 static int canvas_pop(lua_State *L);
 static int canvas_reset(lua_State *L);
@@ -82,6 +84,8 @@ static const struct luaL_Reg _canvas_functions[] = {
     { "color_to_index", canvas_color_to_index },
     { "width", canvas_width },
     { "height", canvas_height },
+    { "size", canvas_size },
+    { "center", canvas_center },
     { "push", canvas_push },
     { "pop", canvas_pop },
     { "reset", canvas_reset },
@@ -169,6 +173,36 @@ static int canvas_height(lua_State *L)
     lua_pushinteger(L, context->state.surface->height);
 
     return 1;
+}
+
+static int canvas_size(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 0)
+    LUAX_SIGNATURE_END
+
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    const GL_Context_t *context = &display->gl;
+
+    lua_pushinteger(L, context->state.surface->width);
+    lua_pushinteger(L, context->state.surface->height);
+
+    return 2;
+}
+
+static int canvas_center(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 0)
+    LUAX_SIGNATURE_END
+
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    const GL_Context_t *context = &display->gl;
+
+    lua_pushinteger(L, context->state.surface->width / 2);
+    lua_pushinteger(L, context->state.surface->height / 2);
+
+    return 2;
 }
 
 static int canvas_push(lua_State *L)
