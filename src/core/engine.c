@@ -278,7 +278,7 @@ void Engine_run(Engine_t *engine)
             const float frame_time = (float)(glfwGetTime() - current);
             const float leftover = reference_time - frame_time;
             if (leftover > 0.0f) {
-                _wait_for(leftover * 0.95f); // Add minor compensation to reach cap value.
+                _wait_for(leftover); // FIXME: Add minor compensation to reach cap value?
             }
         }
     }
