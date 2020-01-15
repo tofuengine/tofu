@@ -42,6 +42,7 @@ static int grid_new(lua_State *L);
 static int grid_gc(lua_State *L);
 static int grid_width(lua_State *L);
 static int grid_height(lua_State *L);
+static int grid_size(lua_State *L);
 static int grid_fill(lua_State *L);
 static int grid_stride(lua_State *L);
 static int grid_peek(lua_State *L);
@@ -54,6 +55,7 @@ static const struct luaL_Reg _grid_functions[] = {
     {"__gc", grid_gc },
     {"width", grid_width },
     {"height", grid_height },
+    {"size", grid_size },
     {"fill", grid_fill },
     {"stride", grid_stride },
     {"peek", grid_peek },
@@ -171,6 +173,19 @@ static int grid_height(lua_State *L)
     lua_pushinteger(L, instance->height);
 
     return 1;
+}
+
+static int grid_size(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
+
+    lua_pushinteger(L, instance->width);
+    lua_pushinteger(L, instance->height);
+
+    return 2;
 }
 
 static int grid_fill(lua_State *L)

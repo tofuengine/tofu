@@ -32,9 +32,13 @@ function Font.default(background_color, foreground_color, id)
 end
 
 -- Only `text`, `x`, and `y` are required. All the other arguments are optional.
+--
+-- From the [reference manual](https://www.lua.org/pil/5.1.html)
+-- << [...] A function call that is not the last element in the list always produces one
+-- result [...] When a function call is the last (or the only) argument to another call,
+-- all results from the first call go as arguments. >>
 function Font:align(text, x, y, h_align, v_align, scale_x, scale_y)
-  local width = self:width(text, scale_x or 1.0)
-  local height = self:height(text, scale_y or scale_x or 1.0)
+  local width, height = self:size(text, scale_x or 1.0, scale_y or scale_x or 1.0)
 
   local dx, dy
   if h_align == "center" then

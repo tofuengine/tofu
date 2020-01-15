@@ -47,6 +47,7 @@ static int font_new(lua_State *L);
 static int font_gc(lua_State *L);
 static int font_width(lua_State *L);
 static int font_height(lua_State *L);
+static int font_size(lua_State *L);
 static int font_write(lua_State *L);
 
 static const struct luaL_Reg _font_functions[] = {
@@ -54,6 +55,7 @@ static const struct luaL_Reg _font_functions[] = {
     {"__gc", font_gc },
     { "width", font_width },
     { "height", font_height },
+    { "size", font_size },
     { "write", font_write },
     { NULL, NULL }
 };
@@ -207,6 +209,38 @@ static int font_gc(lua_State *L)
     return 0;
 }
 
+static void _size(const char *text, int dw, int dh, int *w, int *h)
+{
+    if (text[0] == '\0') {
+        *w = *h = 0;
+        return;
+    }
+
+    *h  = dh;
+    int max_length =0, length = 0;
+    for (const char *ptr = text; *ptr != '\0'; ++ptr) {
+        char c = *ptr;
+#ifndef __NO_LINEFEEDS__
+        if (c == '\n') {
+            *h += dh;
+            if (max_length < length) {
+                max_length = length;
+            }
+            length = 0;
+            continue;
+        } else
+#endif
+        if (c < ' ') {
+            continue;
+        }
+        length += 1;
+    }
+    if (max_length < length) {
+        max_length = length;
+    }
+    *w = max_length * dw;
+}
+
 static int font_width1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
@@ -229,9 +263,11 @@ static int font_width2(lua_State *L)
     const char *text = lua_tostring(L, 2);
 
     int dw = instance->sheet.size.width;
-    int hspan = strlen(text);
 
-    lua_pushinteger(L, dw * hspan);
+    int width, height;
+    _size(text, dw, 0, &width, &height);
+
+    lua_pushinteger(L, width);
 
     return 1;
 }
@@ -248,9 +284,11 @@ static int font_width3(lua_State *L)
     float scale = lua_tonumber(L, 3);
 
     int dw = (int)(instance->sheet.size.width * fabsf(scale));
-    int hspan = strlen(text) * dw;
 
-    lua_pushinteger(L, hspan);
+    int width, height;
+    _size(text, dw, 0, &width, &height);
+
+    lua_pushinteger(L, width);
 
     return 1;
 }
@@ -286,19 +324,11 @@ static int font_height2(lua_State *L)
     const char *text = lua_tostring(L, 2);
 
     int dh = instance->sheet.size.height;
-#ifndef __NO_LINEFEEDS__
-    int vspan = 1;
-    for (const char *ptr = text; *ptr != '\0'; ++ptr) {
-        if (*ptr == '\n') {
-            vspan += dh;
-        }
-    }
-#else
-    (void)text;
-    int vspan = dh;
-#endif
 
-    lua_pushinteger(L, vspan);
+    int width, height;
+    _size(text, 0, dh, &width, &height);
+
+    lua_pushinteger(L, height);
 
     return 1;
 }
@@ -315,19 +345,11 @@ static int font_height3(lua_State *L)
     float scale = lua_tonumber(L, 3);
 
     int dh = (int)(instance->sheet.size.height * fabsf(scale));
-#ifndef __NO_LINEFEEDS__
-    int vspan = dh;
-    for (const char *ptr = text; *ptr != '\0'; ++ptr) {
-        if (*ptr == '\n') {
-            vspan += dh;
-        }
-    }
-#else
-    (void)text;
-    int vspan = dh;
-#endif
 
-    lua_pushinteger(L, vspan);
+    int width, height;
+    _size(text, 0, dh, &width, &height);
+
+    lua_pushinteger(L, height);
 
     return 1;
 }
@@ -338,6 +360,98 @@ static int font_height(lua_State *L)
         LUAX_OVERLOAD_ARITY(1, font_height1)
         LUAX_OVERLOAD_ARITY(2, font_height2)
         LUAX_OVERLOAD_ARITY(3, font_height3)
+    LUAX_OVERLOAD_END
+}
+
+static int font_size1(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
+
+    lua_pushinteger(L, instance->sheet.size.width);
+    lua_pushinteger(L, instance->sheet.size.height);
+
+    return 2;
+}
+
+static int font_size2(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 2)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
+    LUAX_SIGNATURE_END
+    Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
+    const char *text = lua_tostring(L, 2);
+
+    int dw = instance->sheet.size.width;
+    int dh = instance->sheet.size.height;
+
+    int width, height;
+    _size(text, dw, dh, &width, &height);
+
+    lua_pushinteger(L, width);
+    lua_pushinteger(L, height);
+
+    return 2;
+}
+
+static int font_size3(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 3)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
+    const char *text = lua_tostring(L, 2);
+    float scale = lua_tonumber(L, 3);
+
+    int dw = (int)(instance->sheet.size.width * fabsf(scale));
+    int dh = (int)(instance->sheet.size.height * fabsf(scale));
+
+    int width, height;
+    _size(text, dw, dh, &width, &height);
+
+    lua_pushinteger(L, width);
+    lua_pushinteger(L, height);
+
+    return 2;
+}
+
+static int font_size4(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 4)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
+    const char *text = lua_tostring(L, 2);
+    float scale_x = lua_tonumber(L, 3);
+    float scale_y = lua_tonumber(L, 4);
+
+    int dw = (int)(instance->sheet.size.width * fabsf(scale_x));
+    int dh = (int)(instance->sheet.size.height * fabsf(scale_y));
+
+    int width, height;
+    _size(text, dw, dh, &width, &height);
+
+    lua_pushinteger(L, width);
+    lua_pushinteger(L, height);
+
+    return 2;
+}
+
+static int font_size(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, font_size1)
+        LUAX_OVERLOAD_ARITY(2, font_size2)
+        LUAX_OVERLOAD_ARITY(3, font_size3)
+        LUAX_OVERLOAD_ARITY(4, font_size4)
     LUAX_OVERLOAD_END
 }
 
@@ -376,7 +490,7 @@ static int font_write4(lua_State *L)
 #endif
         if (c < ' ') {
             continue;
-         }
+        }
         GL_context_blit(context, &sheet->atlas, sheet->cells[c - ' '], (GL_Point_t){ .x = dx, .y = dy });
         dx += dw;
     }

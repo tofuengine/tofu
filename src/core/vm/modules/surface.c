@@ -45,6 +45,7 @@ static int surface_new(lua_State *L);
 static int surface_gc(lua_State *L);
 static int surface_width(lua_State *L);
 static int surface_height(lua_State *L);
+static int surface_size(lua_State *L);
 static int surface_grab(lua_State *L);
 static int surface_blit(lua_State *L);
 static int surface_xform(lua_State *L);
@@ -58,6 +59,7 @@ static const struct luaL_Reg _surface_functions[] = {
     {"__gc", surface_gc },
     { "width", surface_width },
     { "height", surface_height },
+    { "size", surface_size },
     { "grab", surface_grab },
     { "blit", surface_blit },
     { "xform", surface_xform },
@@ -230,6 +232,19 @@ static int surface_height(lua_State *L)
     lua_pushinteger(L, instance->surface.height);
 
     return 1;
+}
+
+static int surface_size(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
+
+    lua_pushinteger(L, instance->surface.width);
+    lua_pushinteger(L, instance->surface.height);
+
+    return 2;
 }
 
 static int surface_grab(lua_State *L)
