@@ -24,11 +24,43 @@ SOFTWARE.
 
 local Font = {}
 
---Font.__index = Font
+-- Note: the `__index` metatable reference is set by the module loader.
+-- Font.__index = Font
 
--- ! can't declare as `Font.default = function(...)`
 function Font.default(background_color, foreground_color, id)
   return Font.new(id or "5x8", 0, 0, background_color, foreground_color)
+end
+
+-- Only `text`, `x`, and `y` are required. All the other arguments are optional.
+function Font:align(text, x, y, h_align, v_align, scale_x, scale_y)
+  local width = self:width(text, scale_x or 1.0)
+  local height = self:height(text, scale_y or scale_x or 1.0)
+
+  local dx, dy
+  if h_align == "center" then
+    dx = tonumber(width * 0.5)
+  elseif h_align == "right" then
+    dx = width
+  else
+    dx = 0
+  end
+  if v_align == "middle" then
+    dy = tonumber(height * 0.5)
+  elseif v_align == "bottom" then
+    dy = height
+  else
+    dy = 0
+  end
+
+  -- Return the proper amount of values in order to trigger the correct
+  -- `Font.write()` overloaded method.
+  if scale_y then
+    return text, x - dx, y - dy, scale_x, scale_y
+  elseif scale_x then
+    return text, x - dx, y - dy, scale_x
+  else
+    return text, x - dx, y - dy
+  end
 end
 
 return Font
