@@ -92,10 +92,11 @@ dump(self)
 end
 
 function Main:draw_map(map)
+  local gw = self.grid:width()
   for i = 1, map:len() do
     local c = map:byte(i)
-    local column = (i - 1) % self.grid:width()
-    local row = (i - 1) / self.grid:width()
+    local column = (i - 1) % gw
+    local row = (i - 1) / gw
     local value = 0
     if c == 42 then
       value = -1
@@ -187,8 +188,9 @@ function Main:update(delta_time)
 
     self.accumulator = self.accumulator - LIFE
 
-    self.position.x = (self.position.x + DELTA_X[self.direction]) % self.grid:width()
-    self.position.y = (self.position.y + DELTA_Y[self.direction]) % self.grid:height()
+    local gw, gh = self.grid:size()
+    self.position.x = (self.position.x + DELTA_X[self.direction]) % gw
+    self.position.y = (self.position.y + DELTA_Y[self.direction]) % gh
 
     local value = self.grid:peek(self.position.x, self.position.y)
 

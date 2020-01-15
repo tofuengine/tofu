@@ -98,7 +98,7 @@ function Main:render(_)
 
   Canvas.clear()
 
-  local cw, ch = self.bank:cell_width(), self.bank:cell_height()
+  local cw, ch = self.bank:size()
 
   local x, y = (Canvas.width() - #IDS * cw) * 0.5, (Canvas.height() - ch) * 0.5
   for index, id in ipairs(IDS) do

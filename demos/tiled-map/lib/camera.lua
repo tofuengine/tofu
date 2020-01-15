@@ -40,8 +40,7 @@ function Camera:__ctor(id, bank, grid, columns, rows, screen_x, screen_y, anchor
   self.screen_y = screen_y or 0
   self.columns = columns
   self.rows = rows
-  self.map_width = columns * self.bank:cell_width()
-  self.map_height = rows * self.bank:cell_height()
+  self.map_width, self.map_height = self.bank:size(columns, rows)
 
   self:scale_by(scale or 1.0)
   self:center_at(anchor_x or 0.5, anchor_y or 0.5)
@@ -54,6 +53,9 @@ function Camera:scale_by(scale)
 end
 
 function Camera:center_at(anchor_x, anchor_y)
+  local cw, ch = self.bank:size()
+  local gw, gh = self.grid:size()
+
   self.anchor_x = anchor_x
   self.anchor_y = anchor_y
   self.center_x = math.tointeger(anchor_x * self.map_width) -- Always an integer offset
@@ -61,8 +63,8 @@ function Camera:center_at(anchor_x, anchor_y)
   self.aabb = {
       x0 = self.center_x,
       y0 = self.center_y,
-      x1 = self.grid:width() * self.bank:cell_width() - (self.map_width - self.center_x) - 1,
-      y1 = self.grid:height() * self.bank:cell_height() - (self.map_height - self.center_y) - 1
+      x1 = gw * cw - (self.map_width - self.center_x) - 1,
+      y1 = gh * ch - (self.map_height - self.center_y) - 1
     }
   self:move_to(self.x or 0, self.y or 0)
 end
@@ -79,7 +81,7 @@ function Camera:move_to(x, y)
   self.map_x, self.map_y = map_x, map_y -- Track offsetted map position to track *real* changes.
 
   local scale = self.scale
-  local cw, ch = self.bank:cell_width(), self.bank:cell_height()
+  local cw, ch = self.bank:size()
   local start_column = math.tointeger(map_x / cw)
   local start_row = math.tointeger(map_y / ch)
   local column_offset = -math.tointeger((map_x % cw) * scale)
@@ -129,11 +131,14 @@ function Camera:post_draw()
 end
 
 function Camera:prepare_()
-  local scale = self.scale
-  local cw, ch = self.bank:cell_width() * scale, self.bank:cell_height() * scale
+  local cw, ch = self.bank:size()
+  local gw, gh = self.grid:size()
 
-  local rows = math.min(self.grid:width() - self.start_row, self.rows + 1) -- We handle an additional row/column
-  local columns = math.min(self.grid:height() - self.start_column, self.columns + 1) -- for sub-tile scrolling
+  local scale = self.scale
+  local dx, dy = cw * scale, ch * scale
+
+  local rows = math.min(gw - self.start_row, self.rows + 1) -- We handle an additional row/column
+  local columns = math.min(gh - self.start_column, self.columns + 1) -- for sub-tile scrolling
 
   local batch = {}
   local y = 0
@@ -144,10 +149,10 @@ function Camera:prepare_()
     for _ = 1, columns do
       local cell_id = self.grid:peek(c, r)
       table.insert(batch, { math.tointeger(cell_id), x, y })
-      x = x + cw
+      x = x + dx
       c = c + 1
     end
-    y = y + ch
+    y = y + dy
     r = r + 1
   end
   self.batch = batch

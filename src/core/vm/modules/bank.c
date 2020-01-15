@@ -44,18 +44,14 @@
 
 static int bank_new(lua_State *L);
 static int bank_gc(lua_State *L);
-static int bank_cell_width(lua_State *L);
-static int bank_cell_height(lua_State *L);
-static int bank_cell_size(lua_State *L);
+static int bank_size(lua_State *L);
 static int bank_cells(lua_State *L);
 static int bank_blit(lua_State *L);
 
 static const struct luaL_Reg _bank_functions[] = {
     { "new", bank_new },
     {"__gc", bank_gc },
-    { "cell_width", bank_cell_width },
-    { "cell_height", bank_cell_height },
-    { "cell_size", bank_cell_size },
+    { "size", bank_size },
     { "cells", bank_cells },
     { "blit", bank_blit },
     { NULL, NULL }
@@ -130,31 +126,7 @@ static int bank_gc(lua_State *L)
     return 0;
 }
 
-static int bank_cell_width(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
-    LUAX_SIGNATURE_END
-    Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
-
-    lua_pushinteger(L, instance->sheet.size.width);
-
-    return 1;
-}
-
-static int bank_cell_height(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
-    LUAX_SIGNATURE_END
-    Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
-
-    lua_pushinteger(L, instance->sheet.size.height);
-
-    return 1;
-}
-
-static int bank_cell_size(lua_State *L)
+static int bank_size1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
@@ -166,6 +138,32 @@ static int bank_cell_size(lua_State *L)
     lua_pushinteger(L, sheet->size.height);
 
     return 2;
+}
+
+static int bank_size3(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 3)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
+    size_t columns = lua_tonumber(L, 2);
+    size_t rows = lua_tonumber(L, 3);
+
+    const GL_Sheet_t *sheet = &instance->sheet;
+    lua_pushinteger(L, columns * sheet->size.width);
+    lua_pushinteger(L, rows * sheet->size.height);
+
+    return 2;
+}
+
+static int bank_size(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, bank_size1)
+        LUAX_OVERLOAD_ARITY(3, bank_size3)
+    LUAX_OVERLOAD_END
 }
 
 static int bank_cells(lua_State *L)

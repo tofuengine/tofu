@@ -116,7 +116,7 @@ function Main:__ctor()
     camera.post_draw = function(me)
         local x, y = me:to_screen(me.x, me.y)
         Canvas.rectangle("fill", x - 2, y - 2, 4, 4, 2)
-        self.font:write(tostring(me), me.screen_x + me.screen_width, me.screen_y, "right")
+        self.font:write(self.font:align(tostring(me), me.screen_x + me.screen_width, me.screen_y, "right"))
       end
   end
 end
@@ -124,16 +124,16 @@ end
 function Main:input()
   self.dx = 0
   self.dy = 0
-  if Input.is_down(Input.buttons.LEFT) then
+  if Input.is_down("left") then
     self.dx = self.dx - 1
   end
-  if Input.is_down(Input.buttons.RIGHT) then
+  if Input.is_down("right") then
     self.dx = self.dx + 1
   end
-  if Input.is_down(Input.buttons.UP) then
+  if Input.is_down("up") then
     self.dy = self.dy - 1
   end
-  if Input.is_down(Input.buttons.DOWN) then
+  if Input.is_down("down") then
     self.dy = self.dy + 1
   end
 end
