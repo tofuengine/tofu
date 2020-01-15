@@ -120,8 +120,8 @@ function Main:render(_)
     self.bank:blit(1, self.x - 32, self.y - 32, self.scale_x * 8.0, self.scale_y * 8.0)
   end
 
-  self.font:write(string.format("FPS: %.1f", System.fps()), 0, 0, "left")
-  self.font:write(string.format("mode: %d", self.mode), Canvas.width(), 0, "right")
+  self.font:write(string.format("FPS: %.1f", System.fps()), 0, 0)
+  self.font:write(self.font:align(string.format("mode: %d", self.mode), Canvas.width(), 0, "right"))
 end
 
 return Main

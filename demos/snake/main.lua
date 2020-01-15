@@ -218,7 +218,7 @@ function Main:render(_)
       end
     end)
 
-    self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
+    self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
 end
 
 return Main

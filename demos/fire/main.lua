@@ -110,8 +110,8 @@ function Main:render(_)
       end
     end)
 
-    self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
-    self.font:write(string.format("D: %.2f", self.damping), Canvas.width(), 0, "right")
+    self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
+    self.font:write(self.font:align(string.format("D: %.2f", self.damping), Canvas.width(), 0, "right"))
 end
 
 return Main

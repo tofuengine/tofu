@@ -97,8 +97,8 @@ function Main:render(_)
     bunny:render()
   end
 
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
-  self.font:write(string.format("#%d bunnies", #self.bunnies), Canvas.width(), 0, "right")
+  self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
+  self.font:write(self.font:align(string.format("#%d bunnies", #self.bunnies), Canvas.width(), 0, "right"))
 end
 
 return Main

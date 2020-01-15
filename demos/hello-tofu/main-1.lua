@@ -55,12 +55,12 @@ function Main:render(_)
   for c in MESSAGE:gmatch(".") do
     local dy = math.sin(t * 2.5 + x * 0.75) * font_height * 1.5
 
-    self.font:write(c, x, y + dy, "left")
+    self.font:write(c, x, y + dy)
 
     x = x + font_width
   end
 
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
+  self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
 end
 
 return Main

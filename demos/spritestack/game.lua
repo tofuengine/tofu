@@ -111,7 +111,7 @@ class Game {
         for (sprite in _sprites) {
             sprite.render()
         }
-        _font.write("FPS: %(Environment.fps.round)", 0, 0, 63, 1.0, "left")
+        _font.write("FPS: %(Environment.fps.round)", 0, 0)
         _font.write("#%(_sprites.count) sprites", Canvas.width, 0, 63, 1.0, "right")
     }
 

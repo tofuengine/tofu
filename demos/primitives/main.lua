@@ -134,8 +134,8 @@ function Main:render(_) -- ratio
     Canvas.rectangle("fill", 4, 12, 8, 8, 3)
   end
 
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
-  self.font:write(string.format("mode: %d", self.mode), Canvas.width(), 0, "right")
+  self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
+  self.font:write(self.font:align(string.format("mode: %d", self.mode), Canvas.width(), 0, "right"))
 end
 
 return Main

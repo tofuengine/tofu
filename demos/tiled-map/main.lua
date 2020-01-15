@@ -172,7 +172,7 @@ function Main:render(_)
   local x, y = camera:to_screen(self.player.x, self.player.y)
   Canvas.rectangle("fill", x - 2, y - 2, 4, 4, 1)
 
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
+  self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
 end
 
 return Main

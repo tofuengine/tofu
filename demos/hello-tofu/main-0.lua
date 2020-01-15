@@ -49,7 +49,7 @@ function Main:render(_)
 
   local x = Canvas.width() * 0.5
   local y = (Canvas.height() - font_height) * 0.5
-  self.font:write(MESSAGE, x, y, "center")
+  self.font:write(self.font:align(MESSAGE, x, y, "center"))
 end
 
 return Main

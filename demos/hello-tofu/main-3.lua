@@ -61,7 +61,7 @@ function Main:render(_)
     local dy = math.sin(t * 2.5 + x * 0.75) * font_height * 1.5
 
     Canvas.shift(15, FADING[to])
-    self.font:write(c, x, y + dy, "left")
+    self.font:write(c, x, y + dy)
 
     to = to % #FADING + 1
 
@@ -70,7 +70,7 @@ function Main:render(_)
 
   Canvas.pop()
 
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
+  self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
 end
 
 return Main

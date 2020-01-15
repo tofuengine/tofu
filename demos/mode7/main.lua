@@ -148,7 +148,7 @@ function Main:render(_)
   Canvas.line(cx, cy, cx + math.cos(math.pi * 0.5 - self.angle) * 10,
               cy + math.sin(math.pi * 0.5 - self.angle) * 10, 47)
 
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
+  self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
 end
 
 return Main
