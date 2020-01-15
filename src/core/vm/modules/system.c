@@ -55,14 +55,10 @@ static const struct luaL_Reg _system_functions[] = {
     { NULL, NULL }
 };
 
-static const luaX_Const _system_constants[] = {
-    { NULL }
-};
-
 int system_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, NULL, _system_functions, _system_constants, nup, SYSTEM_MT);
+    return luaX_newmodule(L, NULL, _system_functions, NULL, nup, SYSTEM_MT);
 }
 
 static int system_time(lua_State *L)

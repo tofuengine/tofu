@@ -94,7 +94,7 @@ function Main:__ctor()
 end
 
 function Main:input()
-  if Input.is_pressed(Input.Y) then
+  if Input.is_pressed(Input.buttons.Y) then
     self.mode = (self.mode + 1) % 10
   end
 end

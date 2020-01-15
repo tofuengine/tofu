@@ -68,14 +68,10 @@ static const struct luaL_Reg _surface_functions[] = {
     { NULL, NULL }
 };
 
-static const luaX_Const _surface_constants[] = {
-    { NULL }
-};
-
 int surface_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, NULL, _surface_functions, _surface_constants, nup, SURFACE_MT);
+    return luaX_newmodule(L, NULL, _surface_functions, NULL, nup, SURFACE_MT);
 }
 
 static GL_XForm_Registers_t string_to_register(const char *id)

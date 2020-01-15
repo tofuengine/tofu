@@ -124,16 +124,16 @@ end
 function Main:input()
   self.dx = 0
   self.dy = 0
-  if Input.is_down(Input.LEFT) then
+  if Input.is_down(Input.buttons.LEFT) then
     self.dx = self.dx - 1
   end
-  if Input.is_down(Input.RIGHT) then
+  if Input.is_down(Input.buttons.RIGHT) then
     self.dx = self.dx + 1
   end
-  if Input.is_down(Input.UP) then
+  if Input.is_down(Input.buttons.UP) then
     self.dy = self.dy - 1
   end
-  if Input.is_down(Input.DOWN) then
+  if Input.is_down(Input.buttons.DOWN) then
     self.dy = self.dy + 1
   end
 end

@@ -28,6 +28,7 @@
 
 #include <inttypes.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -130,7 +131,7 @@ int luaX_insisttable(lua_State *L, const char *name)
     return 1;
 }
 
-int luaX_newmodule(lua_State *L, const luaX_Script *script, const luaL_Reg *f, const luaX_Const *c, int nup, const char *name)
+int luaX_newmodule(lua_State *L, const luaX_Script *script, const luaL_Reg *f, const luaX_Globs *g, int nup, const char *name)
 {
     if (script && script->buffer && script->size > 0) {
         luaL_loadbuffer(L, script->buffer, script->size, script->name);
@@ -161,15 +162,24 @@ int luaX_newmodule(lua_State *L, const luaX_Script *script, const luaL_Reg *f, c
         lua_pop(L, nup); // Consume the upvalues.
     }
 
-    if (c) {
-        for (; c->name; c++) {
-            switch (c->type) {
-                case LUA_CT_BOOLEAN: { lua_pushboolean(L, c->value.b); } break;
-                case LUA_CT_INTEGER: { lua_pushinteger(L, c->value.i); } break;
-                case LUA_CT_NUMBER: { lua_pushnumber(L, c->value.n); } break;
-                case LUA_CT_STRING: { lua_pushstring(L, c->value.sz); } break;
+    if (g) {
+        for (; g->name; g++) {
+            bool subtable = g->name[0] != '\0';
+            if (subtable) {
+                lua_newtable(L);
             }
-            lua_setfield(L, -2, c->name);
+            for (const luaX_Const *c = g->constants; c->name; c++) {
+                switch (c->type) {
+                    case LUA_CT_BOOLEAN: { lua_pushboolean(L, c->value.b); } break;
+                    case LUA_CT_INTEGER: { lua_pushinteger(L, c->value.i); } break;
+                    case LUA_CT_NUMBER: { lua_pushnumber(L, c->value.n); } break;
+                    case LUA_CT_STRING: { lua_pushstring(L, c->value.sz); } break;
+                }
+                lua_setfield(L, -2, c->name);
+            }
+            if (subtable) {
+                lua_setfield(L, -2, g->name);
+            }
         }
     }
 

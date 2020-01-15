@@ -47,10 +47,7 @@ typedef enum _Input_Buttons_t {
     INPUT_BUTTON_A,
     INPUT_BUTTON_SELECT,
     INPUT_BUTTON_START,
-    INPUT_BUTTON_MOUSE_LEFT,
-    INPUT_BUTTON_MOUSE_MIDDLE,
-    INPUT_BUTTON_MOUSE_RIGHT,
-    Input_Buttons_t_Last = INPUT_BUTTON_MOUSE_RIGHT,
+    Input_Buttons_t_Last = INPUT_BUTTON_START,
     Input_Buttons_t_CountOf
 } Input_Buttons_t;
 

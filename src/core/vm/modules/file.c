@@ -45,14 +45,10 @@ static const struct luaL_Reg _file_functions[] = {
     { NULL, NULL }
 };
 
-static const luaX_Const _file_constants[] = {
-    { NULL }
-};
-
 int file_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, NULL, _file_functions, _file_constants, nup, FILE_MT);
+    return luaX_newmodule(L, NULL, _file_functions, NULL, nup, FILE_MT);
 }
 
 static int file_as_string(lua_State *L)

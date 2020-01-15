@@ -57,7 +57,7 @@ static const struct luaL_Reg _bank_functions[] = {
     { NULL, NULL }
 };
 
-static const luaX_Const _bank_constants[] = {
+static const luaX_Globs _bank_constants[] = {
     { NULL }
 };
 

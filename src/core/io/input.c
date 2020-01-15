@@ -105,20 +105,20 @@ static void _keyboard_handler(GLFWwindow *window, Input_State_t *state, const In
 
 static void _mouse_handler(GLFWwindow *window, Input_State_t *state, const Input_Configuration_t *configuration)
 {
-    static const int mouse_buttons[Input_Buttons_t_CountOf] = {
-        GLFW_MOUSE_BUTTON_LEFT,
+    static const int mouse_buttons[] = {
         GLFW_MOUSE_BUTTON_MIDDLE,
-        GLFW_MOUSE_BUTTON_RIGHT
+        GLFW_MOUSE_BUTTON_RIGHT,
+        GLFW_MOUSE_BUTTON_LEFT
     };
 
     Input_Button_t *buttons = state->buttons;
     Input_Cursor_t *cursor = &state->cursor;
 
-    for (int i = INPUT_BUTTON_MOUSE_LEFT; i <= INPUT_BUTTON_MOUSE_RIGHT; ++i) {
+    for (int i = INPUT_BUTTON_X; i <= INPUT_BUTTON_A; ++i) { // Mouse buttons are mapped to `a`, `b`, and `x`
         Input_Button_t *button = &buttons[i];
 
         bool was_down = button->state.down;
-        bool is_down = glfwGetMouseButton(window, mouse_buttons[i]) == GLFW_PRESS;
+        bool is_down = glfwGetMouseButton(window, mouse_buttons[i - INPUT_BUTTON_X]) == GLFW_PRESS;
 
         button->state.down = is_down;
         button->state.pressed = !was_down && is_down;

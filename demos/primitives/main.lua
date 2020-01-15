@@ -46,11 +46,11 @@ function Main:__ctor()
 end
 
 function Main:input()
-  if Input.is_pressed(Input.START) then
+  if Input.is_pressed(Input.buttons.START) then
     System.quit()
-  elseif Input.is_pressed(Input.RIGHT) then
+  elseif Input.is_pressed(Input.buttons.RIGHT) then
     self.mode = (self.mode % 10) + 1
-  elseif Input.is_pressed(Input.LEFT) then
+  elseif Input.is_pressed(Input.buttons.LEFT) then
     self.mode = ((self.mode + 8) % 10) + 1
   end
 end

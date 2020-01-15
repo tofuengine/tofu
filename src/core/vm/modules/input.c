@@ -57,33 +57,42 @@ static const struct luaL_Reg _input_functions[] = {
     { NULL, NULL }
 };
 
-static const luaX_Const _input_constants[] = {
-    // Buttons.
-    { "BUTTON_UP", LUA_CT_INTEGER, { .i = INPUT_BUTTON_UP } },
-    { "BUTTON_DOWN", LUA_CT_INTEGER, { .i = INPUT_BUTTON_DOWN } },
-    { "BUTTON_LEFT", LUA_CT_INTEGER, { .i = INPUT_BUTTON_LEFT } },
-    { "BUTTON_RIGHT", LUA_CT_INTEGER, { .i = INPUT_BUTTON_RIGHT } },
-    { "BUTTON_LB", LUA_CT_INTEGER, { .i = INPUT_BUTTON_LB } },
-    { "BUTTON_RB", LUA_CT_INTEGER, { .i = INPUT_BUTTON_RB } },
-    { "BUTTON_LT", LUA_CT_INTEGER, { .i = INPUT_BUTTON_LT } },
-    { "BUTTON_RT", LUA_CT_INTEGER, { .i = INPUT_BUTTON_RT } },
-    { "BUTTON_Y", LUA_CT_INTEGER, { .i = INPUT_BUTTON_Y } },
-    { "BUTTON_X", LUA_CT_INTEGER, { .i = INPUT_BUTTON_X } },
-    { "BUTTON_B", LUA_CT_INTEGER, { .i = INPUT_BUTTON_B } },
-    { "BUTTON_A", LUA_CT_INTEGER, { .i = INPUT_BUTTON_A } },
-    { "BUTTON_SELECT", LUA_CT_INTEGER, { .i = INPUT_BUTTON_SELECT } },
-    { "BUTTON_START", LUA_CT_INTEGER, { .i = INPUT_BUTTON_START } },
-    { "BUTTON_MOUSE_LEFT", LUA_CT_INTEGER, { .i = INPUT_BUTTON_MOUSE_LEFT } },
-    { "BUTTON_MOUSE_MIDDLE", LUA_CT_INTEGER, { .i = INPUT_BUTTON_MOUSE_MIDDLE } },
-    { "BUTTON_MOUSE_RIGHT", LUA_CT_INTEGER, { .i = INPUT_BUTTON_MOUSE_RIGHT } },
-    // Sticks.
-    { "STICK_LEFT", LUA_CT_INTEGER, { .i = INPUT_STICK_LEFT } },
-    { "STICK_RIGHT", LUA_CT_INTEGER, { .i = INPUT_STICK_RIGHT } },
+static const luaX_Globs _input_constants[] = {
+    {
+        "buttons", (luaX_Const[]){
+            { "up", LUA_CT_INTEGER, { .i = INPUT_BUTTON_UP } },
+            { "down", LUA_CT_INTEGER, { .i = INPUT_BUTTON_DOWN } },
+            { "left", LUA_CT_INTEGER, { .i = INPUT_BUTTON_LEFT } },
+            { "right", LUA_CT_INTEGER, { .i = INPUT_BUTTON_RIGHT } },
+            { "lb", LUA_CT_INTEGER, { .i = INPUT_BUTTON_LB } },
+            { "rb", LUA_CT_INTEGER, { .i = INPUT_BUTTON_RB } },
+            { "lt", LUA_CT_INTEGER, { .i = INPUT_BUTTON_LT } },
+            { "rt", LUA_CT_INTEGER, { .i = INPUT_BUTTON_RT } },
+            { "y", LUA_CT_INTEGER, { .i = INPUT_BUTTON_Y } },
+            { "x", LUA_CT_INTEGER, { .i = INPUT_BUTTON_X } },
+            { "b", LUA_CT_INTEGER, { .i = INPUT_BUTTON_B } },
+            { "a", LUA_CT_INTEGER, { .i = INPUT_BUTTON_A } },
+            { "select", LUA_CT_INTEGER, { .i = INPUT_BUTTON_SELECT } },
+            { "start", LUA_CT_INTEGER, { .i = INPUT_BUTTON_START } },
+            { NULL }
+        }
+    },
+    {
+        "sticks", (luaX_Const[]){
+            { "left", LUA_CT_INTEGER, { .i = INPUT_STICK_LEFT } },
+            { "right", LUA_CT_INTEGER, { .i = INPUT_STICK_RIGHT } },
+            { NULL }
+        }
+    },
     { NULL }
 };
 
 int input_loader(lua_State *L)
 {
+    int *_sticks;
+    shput(_sticks, "left", INPUT_STICK_LEFT);
+    shput(_sticks, "right", INPUT_STICK_RIGHT);
+
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, NULL, _input_functions, _input_constants, nup, INPUT_MT);
 }
