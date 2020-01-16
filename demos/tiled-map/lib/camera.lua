@@ -33,6 +33,8 @@ local Camera = Class.define()
 
 -- TODO: add camera scaling, useful to draw minimap.
 function Camera:__ctor(id, bank, grid, columns, rows, screen_x, screen_y, anchor_x, anchor_y, scale)
+  local cw, ch = bank:size()
+
   self.id = id
   self.bank = bank
   self.grid = grid
@@ -40,7 +42,7 @@ function Camera:__ctor(id, bank, grid, columns, rows, screen_x, screen_y, anchor
   self.screen_y = screen_y or 0
   self.columns = columns
   self.rows = rows
-  self.map_width, self.map_height = self.bank:size(columns, rows)
+  self.map_width, self.map_height = cw * columns, ch * rows
 
   self:scale_by(scale or 1.0)
   self:center_at(anchor_x or 0.5, anchor_y or 0.5)
@@ -48,8 +50,8 @@ end
 
 function Camera:scale_by(scale)
   self.scale = scale
-  self.screen_width = self.map_width * scale
-  self.screen_height = self.map_height * scale
+  self.screen_width = math.tointeger(self.map_width * scale)
+  self.screen_height = math.tointeger(self.map_height * scale)
 end
 
 function Camera:center_at(anchor_x, anchor_y)
@@ -84,7 +86,7 @@ function Camera:move_to(x, y)
   local cw, ch = self.bank:size()
   local start_column = math.tointeger(map_x / cw)
   local start_row = math.tointeger(map_y / ch)
-  local column_offset = -math.tointeger((map_x % cw) * scale)
+  local column_offset = -math.tointeger((map_x % cw) * scale) -- In screen coordinates.
   local row_offset = -math.tointeger((map_y % ch) * scale)
 
   if self.start_column ~= start_column or self.start_row ~= start_row then
@@ -131,11 +133,8 @@ function Camera:post_draw()
 end
 
 function Camera:prepare_()
-  local cw, ch = self.bank:size()
   local gw, gh = self.grid:size()
-
-  local scale = self.scale
-  local dx, dy = cw * scale, ch * scale
+  local cw, ch = self.bank:size(self.scale)
 
   local rows = math.min(gw - self.start_row, self.rows + 1) -- We handle an additional row/column
   local columns = math.min(gh - self.start_column, self.columns + 1) -- for sub-tile scrolling
@@ -149,10 +148,10 @@ function Camera:prepare_()
     for _ = 1, columns do
       local cell_id = self.grid:peek(c, r)
       table.insert(batch, { math.tointeger(cell_id), x, y })
-      x = x + dx
+      x = x + cw
       c = c + 1
     end
-    y = y + dy
+    y = y + ch
     r = r + 1
   end
   self.batch = batch

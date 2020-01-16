@@ -138,6 +138,22 @@ static int bank_size1(lua_State *L)
     return 2;
 }
 
+static int bank_size2(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 2)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
+    float scale = lua_tonumber(L, 2);
+
+    const GL_Sheet_t *sheet = &instance->sheet;
+    lua_pushinteger(L, (int)(sheet->size.width * fabsf(scale)));
+    lua_pushinteger(L, (int)(sheet->size.height * fabsf(scale)));
+
+    return 2;
+}
+
 static int bank_size3(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 3)
@@ -146,12 +162,12 @@ static int bank_size3(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
-    size_t columns = lua_tonumber(L, 2);
-    size_t rows = lua_tonumber(L, 3);
+    float scale_x = lua_tonumber(L, 2);
+    float scale_y = lua_tonumber(L, 3);
 
     const GL_Sheet_t *sheet = &instance->sheet;
-    lua_pushinteger(L, columns * sheet->size.width);
-    lua_pushinteger(L, rows * sheet->size.height);
+    lua_pushinteger(L, (int)(sheet->size.width * fabsf(scale_x)));
+    lua_pushinteger(L, (int)(sheet->size.height * fabsf(scale_y)));
 
     return 2;
 }
@@ -160,6 +176,7 @@ static int bank_size(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(1, bank_size1)
+        LUAX_OVERLOAD_ARITY(2, bank_size2)
         LUAX_OVERLOAD_ARITY(3, bank_size3)
     LUAX_OVERLOAD_END
 }
