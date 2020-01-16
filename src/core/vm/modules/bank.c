@@ -45,14 +45,12 @@
 static int bank_new(lua_State *L);
 static int bank_gc(lua_State *L);
 static int bank_size(lua_State *L);
-static int bank_cells(lua_State *L);
 static int bank_blit(lua_State *L);
 
 static const struct luaL_Reg _bank_functions[] = {
     { "new", bank_new },
     {"__gc", bank_gc },
     { "size", bank_size },
-    { "cells", bank_cells },
     { "blit", bank_blit },
     { NULL, NULL }
 };
@@ -164,23 +162,6 @@ static int bank_size(lua_State *L)
         LUAX_OVERLOAD_ARITY(1, bank_size1)
         LUAX_OVERLOAD_ARITY(3, bank_size3)
     LUAX_OVERLOAD_END
-}
-
-static int bank_cells(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
-    LUAX_SIGNATURE_END
-    Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
-
-    const GL_Sheet_t *sheet = &instance->sheet;
-    size_t columns = sheet->atlas.width / sheet->size.width;
-    size_t rows = sheet->atlas.height / sheet->size.height;
-    size_t amount = columns * rows;
-
-    lua_pushinteger(L, amount);
-
-    return 2;
 }
 
 static int bank_blit4(lua_State *L)
