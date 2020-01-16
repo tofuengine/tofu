@@ -33,9 +33,7 @@ function Sprite:render()
   local y = CENTER_Y + math.sin(self.angle * self.frequency_y) * Y_AMPLITUDE
 
   local s = ((math.sin(self.angle * self.frequency_s) + 1.0) / 2.0) * 1.5 + 0.5
-  --local o = self.bank:cell_width() * s * 0.5
-  --self.bank:blit(self.id, x - o, y - o, s, s)
-  self.bank:blit(self.id, x, y, s, s, 0.0, 0.5, 0.5)
+  self.bank:blit(self.id, x, y, s)
 end
 
 return Sprite

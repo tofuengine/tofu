@@ -216,13 +216,13 @@ static int bank_blit5(lua_State *L)
     int cell_id = lua_tointeger(L, 2);
     int x = lua_tointeger(L, 3);
     int y = lua_tointeger(L, 4);
-    int rotation = lua_tointeger(L, 5);
+    float scale = lua_tonumber(L, 5);
 
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
-    GL_context_blit_sr(context, &sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, 1.0f, 1.0f, rotation, 0.5f, 0.5f);
+    GL_context_blit_s(context, &sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, scale, scale);
 
     return 0;
 }
@@ -241,14 +241,14 @@ static int bank_blit6(lua_State *L)
     int cell_id = lua_tointeger(L, 2);
     int x = lua_tointeger(L, 3);
     int y = lua_tointeger(L, 4);
-    float scale_x = lua_tonumber(L, 5);
-    float scale_y = lua_tonumber(L, 6);
+    float scale = lua_tonumber(L, 5);
+    int rotation = lua_tointeger(L, 6);
 
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->gl;
     const GL_Sheet_t *sheet = &instance->sheet;
-    GL_context_blit_s(context, &sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, scale_x, scale_y);
+    GL_context_blit_sr(context, &sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, scale, scale, rotation, 0.5f, 0.5f);
 
     return 0;
 }

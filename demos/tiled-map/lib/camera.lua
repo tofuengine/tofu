@@ -124,7 +124,7 @@ function Camera:draw()
   local ox, oy = self.screen_x + self.column_offset, self.screen_y + self.row_offset
   for _, v in ipairs(self.batch) do
     local cell_id, cell_x, cell_y = table.unpack(v)
-    self.bank:blit(cell_id, cell_x + ox, cell_y + oy, scale, scale)
+    self.bank:blit(cell_id, cell_x + ox, cell_y + oy, scale)
   end
 end
 

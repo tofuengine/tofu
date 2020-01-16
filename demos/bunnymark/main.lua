@@ -49,12 +49,12 @@ end
 function Main:__ctor()
 dump(Canvas)
   Canvas.palette("pico-8")
-  Canvas.transparent({ ["0"] = false, ["15"] = true })
+  Canvas.transparent({ ["0"] = false, ["11"] = true })
   Canvas.background(0)
 
   self.bunnies = {}
   self.bank = Bank.new("assets/sheet.png", 26, 37)
-  self.font = Font.default(15, 3)
+  self.font = Font.default(11, 6)
   self.speed = 1.0
   self.running = true
 end

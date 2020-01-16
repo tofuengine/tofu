@@ -113,7 +113,7 @@ function Main:render(_)
       ox = (cw * s - cw) * 0.5
       oy = (ch * s - ch) * 0.5
     end
-    self.bank:blit(INDICES[index], x - ox, y - oy + dy, s, s)
+    self.bank:blit(INDICES[index], x - ox, y - oy + dy, s)
     x = x + cw
   end
 

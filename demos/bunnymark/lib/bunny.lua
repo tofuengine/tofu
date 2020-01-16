@@ -47,11 +47,6 @@ function Bunny:update(delta_time)
 end
 
 function Bunny:render()
-  --var angle = (((_vx.abs > MAX_SPEED) ? MAX_SPEED : _vx.abs) / MAX_SPEED) * 60.0
-  --var rotation = _vx.sign * angle
-  --_bank.blit(0, _x, _y, rotation)
-  --_bank.blit(0, _x, _y, -1.0, -1.0)
-  --_bank.blit(0, _x, _y, _vx.sign, _vy.sign)
   self.bank:blit(0, self.x, self.y)
 end
 
