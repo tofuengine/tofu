@@ -40,7 +40,7 @@ typedef struct _Bank_Class_t {
     const void *bogus;
     // char full_path[PATH_FILE_MAX];
     GL_Sheet_t sheet;
-    bool owned;
+    luaX_Reference surface;
 } Bank_Class_t;
 
 typedef struct _Canvas_Class_t {

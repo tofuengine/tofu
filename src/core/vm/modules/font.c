@@ -108,6 +108,7 @@ static int font_new3(lua_State *L)
     } else
     if (type == LUA_TUSERDATA) {
         const Surface_Class_t *instance = (const Surface_Class_t *)lua_touserdata(L, 1);
+    
         GL_sheet_attach(&sheet, &instance->surface, glyph_width, glyph_height);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p attached", instance);
         surface = luaX_ref(L, 1); // Track the attached surface as a reference to prevent garbage collection.

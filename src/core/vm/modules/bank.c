@@ -76,6 +76,7 @@ static int bank_new(lua_State *L)
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     GL_Sheet_t sheet;
+    luaX_Reference surface = LUAX_REFERENCE_NIL;
 
     if (type == LUA_TSTRING) {
         const char *file = lua_tostring(L, 1);
@@ -93,12 +94,13 @@ static int bank_new(lua_State *L)
 
         GL_sheet_attach(&sheet, &instance->surface, cell_width, cell_height);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p attached", instance);
+        surface = luaX_ref(L, 1); // Track the attached surface as a reference to prevent garbage collection.
     }
 
     Bank_Class_t *instance = (Bank_Class_t *)lua_newuserdata(L, sizeof(Bank_Class_t));
     *instance = (Bank_Class_t){
             .sheet = sheet,
-            .owned = type == LUA_TSTRING ? true : false
+            .surface = surface
         };
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank allocated as %p", instance);
 
@@ -114,9 +116,10 @@ static int bank_gc(lua_State *L)
     LUAX_SIGNATURE_END
     Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
 
-    if (instance->owned) {
+    if (instance->surface == LUAX_REFERENCE_NIL) {
         GL_sheet_delete(&instance->sheet);
     } else {
+        luaX_unref(L, instance->surface);
         GL_sheet_detach(&instance->sheet);
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p finalized", instance);
