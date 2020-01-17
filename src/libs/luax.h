@@ -55,6 +55,8 @@ typedef struct _luaX_Script {
 
 typedef int luaX_Reference;
 
+#define LUAX_REFERENCE_NIL  -1
+
 #if DEBUG
     #define LUAX_SIGNATURE_BEGIN(l, n) \
         do { \

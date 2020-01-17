@@ -37,28 +37,17 @@ typedef enum _UserData_t { // TODO: move to a suitable space.
 } UserData_t;
 
 typedef struct _Bank_Class_t {
-    const void *bogus;
     // char full_path[PATH_FILE_MAX];
     GL_Sheet_t sheet;
     luaX_Reference surface;
 } Bank_Class_t;
 
-typedef struct _Canvas_Class_t {
-    const void *bogus;
-} Canvas_Class_t;
-
-typedef struct _File_Class_t {
-    const void *bogus;
-} File_Class_t;
-
 typedef struct _Font_Class_t {
-    const void *bogus;
     // char full_path[PATH_FILE_MAX];
     GL_Sheet_t sheet;
     luaX_Reference surface;
 } Font_Class_t;
 
-#define LUAX_REFERENCE_NIL  -1
 
 #ifdef __GRID_INTEGER_CELL__
 typedef int Cell_t;
@@ -67,29 +56,15 @@ typedef float Cell_t;
 #endif
 
 typedef struct _Grid_Class_t {
-    const void *bogus;
     size_t width, height;
     Cell_t *data;
     size_t data_size;
 } Grid_Class_t;
 
-typedef struct _Input_Class_t {
-    const void *bogus;
-} Input_Class_t;
-
-typedef struct _Math_Class_t {
-    const void *bogus;
-} Math_Class_t;
-
 typedef struct _Surface_Class_t {
-    const void *bogus;
     // char full_path[PATH_FILE_MAX];
     GL_Surface_t surface;
     GL_XForm_t xform;
 } Surface_Class_t;
-
-typedef struct _System_Class_t {
-    const void *bogus;
-} System_Class_t;
 
 #endif  /* __MODULES_UDT_H__ */
