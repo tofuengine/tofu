@@ -326,6 +326,9 @@ bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
         return false;
     }
 
+#ifdef __INCREMENTAL_GARBAGE_COLLECTOR__
+    lua_gc(interpreter->state, LUA_GCSTEP, 0);
+#else
     interpreter->gc_age += delta_time;
     while (interpreter->gc_age >= GARBAGE_COLLECTION_PERIOD) { // Periodically collect GC.
         interpreter->gc_age -= GARBAGE_COLLECTION_PERIOD;
@@ -335,13 +338,14 @@ bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
         int pre = lua_gc(interpreter->state, LUA_GCCOUNT, 0);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "performing periodical garbage collection (%dKb of memory in use)", pre);
 #endif
-        lua_gc(interpreter->state, LUA_GCCOLLECT, 0); // TODO: should we disable incremental GC and perform steps here?
+        lua_gc(interpreter->state, LUA_GCCOLLECT, 0);
 #ifdef __DEBUG_GARBAGE_COLLECTOR__
         int post = lua_gc(interpreter->state, LUA_GCCOUNT, 0);
         float elapsed = ((float)clock() / CLOCKS_PER_SEC) - start_time;
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "garbage collection took %.3fs (memory used %dKb, %dKb freed)", elapsed, post, pre - post);
 #endif
     }
+#endif
 
     return true;
 }
