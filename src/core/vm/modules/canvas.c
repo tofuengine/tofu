@@ -226,6 +226,12 @@ static int canvas_pop(lua_State *L)
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     GL_Context_t *context = &display->gl;
+    GL_Surface_t *surface = context->state.surface;
+    ptrdiff_t index = hmgeti(display->refs, surface);
+    if (index != -1) {
+        luaX_unref(L, display->refs[index].value);
+        hmdel(display->refs, surface);
+    }
     GL_context_pop(context);
 
     return 0;
@@ -239,6 +245,10 @@ static int canvas_reset(lua_State *L)
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     GL_Context_t *context = &display->gl;
+    for (ptrdiff_t index = 0; index < hmlen(display->refs); ++index) {
+        luaX_unref(L, display->refs[index].value);
+    }
+    hmfree(display->refs);
     GL_context_reset(context);
 
     return 0;
@@ -252,6 +262,12 @@ static int canvas_surface0(lua_State *L)
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     GL_Context_t *context = &display->gl;
+    GL_Surface_t *surface = context->state.surface;
+    ptrdiff_t index = hmgeti(display->refs, surface);
+    if (index != -1) {
+        luaX_unref(L, display->refs[index].value);
+        hmdel(display->refs, surface);
+    }
     GL_context_surface(context, NULL);
 
     return 0;
@@ -266,8 +282,12 @@ static int canvas_surface1(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    // TODO: we should track the surface to prevent GC.
     GL_Context_t *context = &display->gl;
+    ptrdiff_t index = hmgeti(display->refs, surface);
+    if (index == -1) {
+        int ref = luaX_ref(L, 1);
+        hmput(display->refs, surface, ref);
+    }
     GL_context_surface(context, &surface->surface);
 
     return 0;

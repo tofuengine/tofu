@@ -57,6 +57,12 @@ typedef struct _Display_Configuration_t {
     bool hide_cursor;
 } Display_Configuration_t;
 
+typedef struct _Surface_Reference_t {
+    GL_Surface_t *key;
+    int value;
+//    luaX_Reference value;
+} Surface_Reference_t;
+
 typedef struct _Display_t {
     Display_Configuration_t configuration;
 
@@ -77,6 +83,7 @@ typedef struct _Display_t {
     GL_Palette_t palette;
     GL_Context_t gl;
     GL_Pixel_t background, color;
+    Surface_Reference_t *refs;
 } Display_t;
 
 extern bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration);
