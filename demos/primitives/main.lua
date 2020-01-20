@@ -40,17 +40,18 @@ local PALETTE = {
 function Main:__ctor()
   Canvas.palette(PALETTE) -- "arne-16")
   Canvas.palette("arne-16")
+  Canvas.color(3)
 
   self.font = Font.default(0, 1)
   self.mode = 0
 end
 
 function Main:input()
-  if Input.is_pressed("START") then
+  if Input.is_pressed("start") then
     System.quit()
-  elseif Input.is_pressed("RIGHT") then
+  elseif Input.is_pressed("right") then
     self.mode = (self.mode % 10) + 1
-  elseif Input.is_pressed("LEFT") then
+  elseif Input.is_pressed("left") then
     self.mode = ((self.mode + 8) % 10) + 1
   end
 end
@@ -64,18 +65,18 @@ function Main:render(_) -- ratio
   if self.mode == 0 then
     local cx, cy = 8, 32
     for r = 0, 12 do
-      Canvas.circle("fill", cx, cy, r, 1)
-      Canvas.circle("line", cx, cy + 64, r, 1)
+      Canvas.circle("fill", cx, cy, r)
+      Canvas.circle("line", cx, cy + 64, r)
       cx = cx + 2 * r + 8
     end
 
-    Canvas.polyline({ 64, 64, 64, 128, 128, 128 }, 2)
+    Canvas.polyline({ 64, 64, 64, 128, 128, 128 })
 
     local x0 = (math.random() * Canvas.width() * 2) - Canvas.width() * 0.5
     local y0 = (math.random() * Canvas.width() * 2) - Canvas.width() * 0.5
     local x1 = (math.random() * Canvas.width() * 2) - Canvas.width() * 0.5
     local y1 = (math.random() * Canvas.width() * 2) - Canvas.width() * 0.5
-    Canvas.line(x0, y0, x1, y1, 3)
+    Canvas.line(x0, y0, x1, y1)
   elseif self.mode == 1 then
     local dx = math.cos(System.time()) * 32
     local dy = math.sin(System.time()) * 32

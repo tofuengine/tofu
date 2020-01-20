@@ -123,7 +123,7 @@ end
 
 function Main:input()
   if self.state == "game-over" then
-    if Input.is_pressed("START") then
+    if Input.is_pressed("start") then
       self:reset()
     end
     return
@@ -132,22 +132,22 @@ function Main:input()
   if not self.can_move then
     return
   end
-  if Input.is_pressed("UP") then
+  if Input.is_pressed("up") then
     if self.direction ~= "down" then
       self.direction = "up"
       self.can_move = false
     end
-  elseif Input.is_pressed("DOWN") then
+  elseif Input.is_pressed("down") then
     if self.direction ~= "up" then
       self.direction = "down"
       self.can_move = false
     end
-  elseif Input.is_pressed("LEFT") then
+  elseif Input.is_pressed("left") then
     if self.direction ~= "right" then
       self.direction = "left"
       self.can_move = false
     end
-  elseif Input.is_pressed("RIGHT") then
+  elseif Input.is_pressed("right") then
     if self.direction ~= "left" then
       self.direction = "right"
       self.can_move = false

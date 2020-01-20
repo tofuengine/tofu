@@ -60,7 +60,7 @@ dump(Canvas)
 end
 
 function Main:input()
-  if Input.is_pressed("START") then
+  if Input.is_pressed("start") then
     local Bunny = require("lib.bunny") -- Lazily require the module only in this scope.
     for _ = 1, LITTER_SIZE do
       table.insert(self.bunnies, Bunny.new(self.bank))
@@ -68,15 +68,15 @@ function Main:input()
     if #self.bunnies >= MAX_BUNNIES then
       System.quit()
     end
-  elseif Input.is_pressed("LEFT") then
+  elseif Input.is_pressed("left") then
     self.speed = self.speed * 0.5
-  elseif Input.is_pressed("RIGHT") then
+  elseif Input.is_pressed("right") then
     self.speed = self.speed * 2.0
-  elseif Input.is_pressed("DOWN") then
+  elseif Input.is_pressed("down") then
     self.speed = 1.0
-  elseif Input.is_pressed("SELECT") then
+  elseif Input.is_pressed("select") then
     self.bunnies = {}
-  elseif Input.is_pressed("Y") then
+  elseif Input.is_pressed("y") then
     self.running = not self.running
   end
 end

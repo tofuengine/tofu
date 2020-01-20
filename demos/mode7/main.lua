@@ -90,32 +90,32 @@ end
 function Main:input()
   local recompute = false
 
-  if Input.is_pressed("SELECT") then
+  if Input.is_pressed("select") then
     self.speed = 1.0
-  elseif Input.is_pressed("START") then
+  elseif Input.is_pressed("start") then
     self.running = not self.running
-  elseif Input.is_pressed("Y") then
+  elseif Input.is_pressed("y") then
     self.elevation = self.elevation + 8.0
     recompute = true
-  elseif Input.is_pressed("X") then
+  elseif Input.is_pressed("x") then
     self.elevation = self.elevation - 8.0
     recompute = true
-  elseif Input.is_pressed("A") then -- STRAFE
+  elseif Input.is_pressed("a") then -- STRAFE
     local a = self.angle + math.pi * 0.5
     self.x = self.x + math.cos(a) * 8
     self.y = self.y + math.sin(a) * 8
-  elseif Input.is_pressed("B") then -- STRAFE
+  elseif Input.is_pressed("b") then -- STRAFE
     local a = self.angle + math.pi * 0.5
     self.x = self.x - math.cos(a) * 8
     self.y = self.y - math.sin(a) * 8
-  elseif Input.is_pressed("UP") then
+  elseif Input.is_pressed("up") then
     self.speed = self.speed + 16.0
-  elseif Input.is_pressed("DOWN") then
+  elseif Input.is_pressed("down") then
     self.speed = self.speed - 16.0
-  elseif Input.is_pressed("LEFT") then
+  elseif Input.is_pressed("left") then
     self.angle = self.angle - math.pi * 0.05
     recompute = true
-  elseif Input.is_pressed("RIGHT") then
+  elseif Input.is_pressed("right") then
     self.angle = self.angle + math.pi * 0.05
     recompute = true
   end
