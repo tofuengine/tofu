@@ -77,7 +77,6 @@ static int canvas_peek(lua_State *L);
 static int canvas_poke(lua_State *L);
 static int canvas_process(lua_State *L);
 
-// TODO: color index is optional, if not present use the current (drawstate) pen color
 // TODO: rename `Canvas` to `Context`?
 
 static const struct luaL_Reg _canvas_functions[] = {
@@ -734,7 +733,24 @@ static int canvas_clear(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
-static int canvas_point(lua_State *L)
+static int canvas_point2(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 2)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    int x = lua_tointeger(L, 1);
+    int y = lua_tointeger(L, 2);
+
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    const GL_Context_t *context = &display->gl;
+    GL_primitive_point(context, (GL_Point_t){ .x = x, .y = y }, display->color);
+
+    return 0;
+}
+
+static int canvas_point3(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 3)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
@@ -755,7 +771,34 @@ static int canvas_point(lua_State *L)
     return 0;
 }
 
-static int canvas_hline(lua_State *L)
+static int canvas_point(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(2, canvas_point2)
+        LUAX_OVERLOAD_ARITY(3, canvas_point3)
+    LUAX_OVERLOAD_END
+}
+
+static int canvas_hline3(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 4)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    int x = lua_tointeger(L, 1);
+    int y = lua_tointeger(L, 2);
+    size_t width = (size_t)lua_tointeger(L, 3);
+
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    const GL_Context_t *context = &display->gl;
+    GL_primitive_hline(context, (GL_Point_t){ .x = x, .y = y }, width, display->color);
+
+    return 0;
+}
+
+static int canvas_hline4(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 4)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
@@ -778,7 +821,34 @@ static int canvas_hline(lua_State *L)
     return 0;
 }
 
-static int canvas_vline(lua_State *L)
+static int canvas_hline(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(3, canvas_hline3)
+        LUAX_OVERLOAD_ARITY(4, canvas_hline4)
+    LUAX_OVERLOAD_END
+}
+
+static int canvas_vline3(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 4)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    int x = lua_tointeger(L, 1);
+    int y = lua_tointeger(L, 2);
+    size_t height = (size_t)lua_tointeger(L, 3);
+
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    const GL_Context_t *context = &display->gl;
+    GL_primitive_vline(context, (GL_Point_t){ .x = x, .y = y }, height, display->color);
+
+    return 0;
+}
+
+static int canvas_vline4(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 4)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
@@ -801,7 +871,41 @@ static int canvas_vline(lua_State *L)
     return 0;
 }
 
-static int canvas_line(lua_State *L)
+static int canvas_vline(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(3, canvas_vline3)
+        LUAX_OVERLOAD_ARITY(4, canvas_vline4)
+    LUAX_OVERLOAD_END
+}
+
+static int canvas_line4(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 4)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    int x0 = lua_tointeger(L, 1);
+    int y0 = lua_tointeger(L, 2);
+    int x1 = lua_tointeger(L, 3);
+    int y1 = lua_tointeger(L, 4);
+
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    GL_Point_t vertices[2] = {
+            (GL_Point_t){ .x = x0, .y = y0 },
+            (GL_Point_t){ .x = x1, .y = y1 }
+        };
+
+    const GL_Context_t *context = &display->gl;
+    GL_primitive_polyline(context, vertices, 2, display->color);
+
+    return 0;
+}
+
+static int canvas_line5(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 5)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
@@ -820,17 +924,73 @@ static int canvas_line(lua_State *L)
 
     index %= display->palette.count;
 
-    const GL_Context_t *context = &display->gl;
     GL_Point_t vertices[2] = {
             (GL_Point_t){ .x = x0, .y = y0 },
             (GL_Point_t){ .x = x1, .y = y1 }
         };
+
+    const GL_Context_t *context = &display->gl;
     GL_primitive_polyline(context, vertices, 2, index);
 
     return 0;
 }
 
-static int canvas_polyline(lua_State *L)
+static int canvas_line(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(4, canvas_line4)
+        LUAX_OVERLOAD_ARITY(5, canvas_line5)
+    LUAX_OVERLOAD_END
+}
+
+static GL_Point_t *_fetch(lua_State *L, int idx, size_t *count)
+{
+    GL_Point_t *vertices = NULL;
+    size_t index = 0;
+    int aux = 0;
+
+    lua_pushnil(L);
+    while (lua_next(L, idx)) {
+        int value = lua_tointeger(L, -1);
+        ++index;
+        if (index > 0 && (index % 2) == 0) {
+            GL_Point_t point = (GL_Point_t){ .x = aux, .y = value }; // Can't pass compound-literal to macro. :(
+            arrpush(vertices, point);
+        } else {
+            aux = value;
+        }
+        lua_pop(L, 1);
+    }
+
+    *count = index / 2;
+
+    return vertices;
+}
+
+static int canvas_polyline1(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TTABLE)
+    LUAX_SIGNATURE_END
+
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    size_t count;
+    GL_Point_t *vertices = _fetch(L, 1, &count);
+
+    if (count > 1) {
+        const GL_Context_t *context = &display->gl;
+        GL_primitive_polyline(context, vertices, count, display->color);
+    } else {
+        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "no enough points for polyline (%d)", count);
+    }
+
+    arrfree(vertices);
+
+    return 0;
+}
+
+static int canvas_polyline2(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 2)
         LUAX_SIGNATURE_ARGUMENT(LUA_TTABLE)
@@ -842,26 +1002,12 @@ static int canvas_polyline(lua_State *L)
 
     index %= display->palette.count;
 
-    GL_Point_t *vertices = NULL;
-    size_t count = 0;
-    int aux = 0;
-
-    lua_pushnil(L);
-    while (lua_next(L, 1)) {
-        int value = lua_tointeger(L, -1);
-        ++count;
-        if (count > 0 && (count % 2) == 0) {
-            GL_Point_t point = (GL_Point_t){ .x = aux, .y = value }; // Can't pass compound-literal to macro. :(
-            arrpush(vertices, point);
-        } else {
-            aux = value;
-        }
-        lua_pop(L, 1);
-    }
+    size_t count;
+    GL_Point_t *vertices = _fetch(L, 1, &count);
 
     if (count > 1) {
         const GL_Context_t *context = &display->gl;
-        GL_primitive_polyline(context, vertices, count / 2, index);
+        GL_primitive_polyline(context, vertices, count, index);
     } else {
         Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "no enough points for polyline (%d)", count);
     }
@@ -871,7 +1017,32 @@ static int canvas_polyline(lua_State *L)
     return 0;
 }
 
-static int canvas_fill(lua_State *L)
+static int canvas_polyline(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, canvas_polyline1)
+        LUAX_OVERLOAD_ARITY(2, canvas_polyline2)
+    LUAX_OVERLOAD_END
+}
+
+static int canvas_fill2(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 2)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    int x = lua_tointeger(L, 1);
+    int y = lua_tointeger(L, 2);
+
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    const GL_Context_t *context = &display->gl;
+    GL_context_fill(context, (GL_Point_t){ .x = x, .y = y }, display->color);
+
+    return 0;
+}
+
+static int canvas_fill3(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 3)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
@@ -892,7 +1063,52 @@ static int canvas_fill(lua_State *L)
     return 0;
 }
 
-static int canvas_triangle(lua_State *L)
+static int canvas_fill(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(2, canvas_fill2)
+        LUAX_OVERLOAD_ARITY(3, canvas_fill3)
+    LUAX_OVERLOAD_END
+}
+
+static int canvas_triangle7(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 7)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    const char *mode = lua_tostring(L, 1);
+    int x0 = lua_tointeger(L, 2);
+    int y0 = lua_tointeger(L, 3);
+    int x1 = lua_tointeger(L, 4);
+    int y1 = lua_tointeger(L, 5);
+    int x2 = lua_tointeger(L, 6);
+    int y2 = lua_tointeger(L, 7);
+
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    const GL_Context_t *context = &display->gl;
+    if (mode[0] == 'f') {
+        GL_primitive_filled_triangle(context, (GL_Point_t){ .x = x0, y0 }, (GL_Point_t){ .x = x1, .y = y1 }, (GL_Point_t){ .x = x2, .y = y2 }, display->color);
+    } else {
+        GL_Point_t vertices[4] = {
+                (GL_Point_t){ .x = x0, .y = y0 },
+                (GL_Point_t){ .x = x1, .y = y1 },
+                (GL_Point_t){ .x = x2, .y = y2 },
+                (GL_Point_t){ .x = x0, .y = y0 }
+            };
+        GL_primitive_polyline(context, vertices, 4, display->color);
+    }
+
+    return 0;
+}
+
+static int canvas_triangle8(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 8)
         LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
@@ -933,7 +1149,61 @@ static int canvas_triangle(lua_State *L)
     return 0;
 }
 
-static int canvas_rectangle(lua_State *L)
+static int canvas_triangle(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(7, canvas_triangle7)
+        LUAX_OVERLOAD_ARITY(8, canvas_triangle8)
+    LUAX_OVERLOAD_END
+}
+
+static int canvas_rectangle5(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 5)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    const char *mode = lua_tostring(L, 1);
+    int x = lua_tointeger(L, 2);
+    int y = lua_tointeger(L, 3);
+    size_t width = (size_t)lua_tointeger(L, 4);
+    size_t height = (size_t)lua_tointeger(L, 5);
+
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    const GL_Context_t *context = &display->gl;
+    if (mode[0] == 'f') {
+        // TODO: move to pointers for compound literals, too.
+        GL_primitive_filled_rectangle(context, (GL_Rectangle_t){ .x = x, .y = y, .width = width, .height = height }, display->color);
+    } else {
+        int x0 = x;
+        int y0 = y;
+        int x1 = x0 + width - 1;
+        int y1 = y0 + height - 1;
+
+        GL_Point_t vertices[5] = {
+                (GL_Point_t){ .x = x0, .y = y0 },
+                (GL_Point_t){ .x = x0, .y = y1 },
+                (GL_Point_t){ .x = x1, .y = y1 },
+                (GL_Point_t){ .x = x1, .y = y0 },
+                (GL_Point_t){ .x = x0, .y = y0 }
+            };
+        GL_primitive_polyline(context, vertices, 5, display->color);
+/*
+        GL_primitive_hline(context, (GL_Point_t){ .x = x0, .y = y0 }, width, index);
+        GL_primitive_vline(context, (GL_Point_t){ .x = x0, .y = y0 }, height, index);
+        GL_primitive_hline(context, (GL_Point_t){ .x = x0, .y = y1 }, width, index);
+        GL_primitive_vline(context, (GL_Point_t){ .x = x1, .y = y0 }, height, index);
+*/
+    }
+
+    return 0;
+}
+
+static int canvas_rectangle6(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 6)
         LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
@@ -956,7 +1226,6 @@ static int canvas_rectangle(lua_State *L)
 
     const GL_Context_t *context = &display->gl;
     if (mode[0] == 'f') {
-        // TODO: move to pointers for compound literals, too.
         GL_primitive_filled_rectangle(context, (GL_Rectangle_t){ .x = x, .y = y, .width = width, .height = height }, index);
     } else {
         int x0 = x;
@@ -982,8 +1251,43 @@ static int canvas_rectangle(lua_State *L)
 
     return 0;
 }
+static int canvas_rectangle(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(5, canvas_rectangle5)
+        LUAX_OVERLOAD_ARITY(6, canvas_rectangle6)
+    LUAX_OVERLOAD_END
+}
 
-static int canvas_circle(lua_State *L)
+static int canvas_circle4(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 4)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    const char *mode = lua_tostring(L, 1);
+    int cx = lua_tointeger(L, 2);
+    int cy = lua_tointeger(L, 3);
+    int radius = lua_tointeger(L, 4);
+
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    const GL_Context_t *context = &display->gl;
+    if (radius < 1.0f) { // Null radius, just a point regardless mode!
+        GL_primitive_point(context, (GL_Point_t){ .x = cx, .y = cy }, display->color);
+    } else
+    if (mode[0] == 'f') {
+        GL_primitive_filled_circle(context, (GL_Point_t){ .x = cx, .y = cy }, radius, display->color);
+    } else {
+        GL_primitive_circle(context, (GL_Point_t){ .x = cx, .y = cy }, radius, display->color);
+    }
+
+    return 0;
+}
+
+static int canvas_circle5(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 5)
         LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
@@ -1003,7 +1307,6 @@ static int canvas_circle(lua_State *L)
     index %= display->palette.count;
 
     const GL_Context_t *context = &display->gl;
-
     if (radius < 1.0f) { // Null radius, just a point regardless mode!
         GL_primitive_point(context, (GL_Point_t){ .x = cx, .y = cy }, index);
     } else
@@ -1014,6 +1317,14 @@ static int canvas_circle(lua_State *L)
     }
 
     return 0;
+}
+
+static int canvas_circle(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(4, canvas_circle4)
+        LUAX_OVERLOAD_ARITY(5, canvas_circle5)
+    LUAX_OVERLOAD_END
 }
 
 static int canvas_peek(lua_State *L)
