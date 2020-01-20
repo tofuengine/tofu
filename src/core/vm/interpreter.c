@@ -310,7 +310,7 @@ void Interpreter_terminate(Interpreter_t *interpreter)
 {
     lua_settop(interpreter->state, 0);      // T O F1 ... Fn -> <empty>
 
-    lua_gc(interpreter->state, LUA_GCCOLLECT, 0);
+    lua_gc(interpreter->state, LUA_GCCOLLECT, 0); // Full GC cycle to trigger resource release.
     lua_close(interpreter->state);
 }
 
@@ -326,9 +326,7 @@ bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
         return false;
     }
 
-#ifdef __INCREMENTAL_GARBAGE_COLLECTOR__
-    lua_gc(interpreter->state, LUA_GCSTEP, 0);
-#else
+#ifdef __VM_FULL_GARBAGE_COLLECTOR__
     interpreter->gc_age += delta_time;
     while (interpreter->gc_age >= GARBAGE_COLLECTION_PERIOD) { // Periodically collect GC.
         interpreter->gc_age -= GARBAGE_COLLECTION_PERIOD;
@@ -345,6 +343,17 @@ bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "garbage collection took %.3fs (memory used %dKb, %dKb freed)", elapsed, post, pre - post);
 #endif
     }
+#else
+    lua_gc(interpreter->state, LUA_GCSTEP, 0);
+#ifdef __DEBUG_GARBAGE_COLLECTOR__
+    interpreter->gc_age += delta_time;
+    while (interpreter->gc_age >= GARBAGE_COLLECTION_PERIOD) {
+        interpreter->gc_age -= GARBAGE_COLLECTION_PERIOD;
+
+        int count = lua_gc(interpreter->state, LUA_GCCOUNT, 0);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "memory usage is %dKb", count);
+    }
+#endif
 #endif
 
     return true;
