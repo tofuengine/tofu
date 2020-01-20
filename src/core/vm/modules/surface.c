@@ -195,14 +195,6 @@ static int surface_gc(lua_State *L)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
 
-    Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INTERPRETER));
-
-#ifdef DEBUG
-    void *key = &instance->surface;
-    ptrdiff_t index = hmgeti(interpreter->refs, key);
-    Log_assert(index != -1, LOG_LEVELS_ERROR, LOG_CONTEXT, "surface %p garbage-collected while still locked :(", instance);
-#endif
-
     if (instance->xform.table) {
         arrfree(instance->xform.table);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "scan-line table %p deallocated", instance->xform.table);

@@ -225,17 +225,9 @@ static int canvas_pop(lua_State *L)
     LUAX_SIGNATURE_END
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
-    Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INTERPRETER));
 
     GL_Context_t *context = &display->gl;
     GL_context_pop(context);
-
-    void *key = context->state.surface;
-    ptrdiff_t index = hmgeti(interpreter->refs, key);
-    if (index != -1) {
-        luaX_unref(L, interpreter->refs[index].value);
-        (void)hmdel(interpreter->refs, key);
-    }
 
     return 0;
 }
@@ -246,15 +238,9 @@ static int canvas_reset(lua_State *L)
     LUAX_SIGNATURE_END
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
-    Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INTERPRETER));
 
     GL_Context_t *context = &display->gl;
     GL_context_reset(context);
-
-    for (ptrdiff_t index = 0; index < hmlen(interpreter->refs); ++index) {
-        luaX_unref(L, interpreter->refs[index].value);
-    }
-    hmfree(interpreter->refs);
 
     return 0;
 }
@@ -265,17 +251,9 @@ static int canvas_surface0(lua_State *L)
     LUAX_SIGNATURE_END
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
-    Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INTERPRETER));
 
     GL_Context_t *context = &display->gl;
     GL_context_surface(context, NULL);
-
-    void *key = context->state.surface;
-    ptrdiff_t index = hmgeti(interpreter->refs, key);
-    if (index != -1) {
-        luaX_unref(L, interpreter->refs[index].value);
-        (void)hmdel(interpreter->refs, key);
-    }
 
     return 0;
 }
@@ -288,17 +266,9 @@ static int canvas_surface1(lua_State *L)
     Surface_Class_t *surface = (Surface_Class_t *)lua_touserdata(L, 1);
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
-    Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INTERPRETER));
 
     GL_Context_t *context = &display->gl;
     GL_context_surface(context, &surface->surface);
-
-    void *key = &surface->surface;
-    ptrdiff_t index = hmgeti(interpreter->refs, key);
-    if (index == -1) {
-        int value = luaX_ref(L, 1);
-        hmput(interpreter->refs, key, value);
-    }
 
     return 0;
 }
