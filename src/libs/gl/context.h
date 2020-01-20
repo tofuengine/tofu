@@ -43,7 +43,6 @@ typedef struct _GL_Mask_t {
 #endif
 
 typedef struct _GL_State_t {
-    GL_Surface_t *surface;
     GL_Quad_t clipping_region;
     GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
     GL_Bool_t transparent[GL_MAX_PALETTE_COLORS];
@@ -53,7 +52,7 @@ typedef struct _GL_State_t {
 } GL_State_t;
 
 typedef struct _GL_Context_t {
-    GL_Surface_t buffer;
+    GL_Surface_t surface;
     GL_State_t state;
     GL_State_t *stack;
 } GL_Context_t;
@@ -65,7 +64,6 @@ extern void GL_context_push(GL_Context_t *context);
 extern void GL_context_pop(GL_Context_t *context);
 extern void GL_context_reset(GL_Context_t *context);
 
-extern void GL_context_surface(GL_Context_t *context, GL_Surface_t *surface);
 extern void GL_context_shifting(GL_Context_t *context, const size_t *from, const size_t *to, size_t count);
 extern void GL_context_transparent(GL_Context_t *context, const GL_Pixel_t *indexes, const GL_Bool_t *transparent, size_t count);
 extern void GL_context_clipping(GL_Context_t *context, const GL_Rectangle_t *region);

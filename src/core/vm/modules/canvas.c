@@ -44,6 +44,8 @@
 
 #define CANVAS_MT        "Tofu_Canvas_mt"
 
+static int canvas_new(lua_State *L);
+static int canvas_gc(lua_State *L);
 static int canvas_color_to_index(lua_State *L);
 static int canvas_width(lua_State *L);
 static int canvas_height(lua_State *L);
@@ -52,7 +54,6 @@ static int canvas_center(lua_State *L);
 static int canvas_push(lua_State *L);
 static int canvas_pop(lua_State *L);
 static int canvas_reset(lua_State *L);
-static int canvas_surface(lua_State *L);
 static int canvas_palette(lua_State *L);
 static int canvas_background(lua_State *L);
 static int canvas_color(lua_State *L);
@@ -82,6 +83,8 @@ static int canvas_process(lua_State *L);
 // TODO: rename `Canvas` to `Context`?
 
 static const struct luaL_Reg _canvas_functions[] = {
+    { "new", canvas_new },
+    {"__gc", canvas_gc },
     { "color_to_index", canvas_color_to_index },
     { "width", canvas_width },
     { "height", canvas_height },
@@ -90,7 +93,6 @@ static const struct luaL_Reg _canvas_functions[] = {
     { "push", canvas_push },
     { "pop", canvas_pop },
     { "reset", canvas_reset },
-    { "surface", canvas_surface },
     { "palette", canvas_palette },
     { "background", canvas_background },
     { "color", canvas_color },
@@ -130,18 +132,98 @@ int canvas_loader(lua_State *L)
     return luaX_newmodule(L, &_canvas_script, _canvas_functions, NULL, nup, CANVAS_MT);
 }
 
-// TODO: add a canvas constructor with overload (from file, from WxH, default one). Surface will become Canvas, in the end.
-static int canvas_color_to_index(lua_State *L)
+static int canvas_new0(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+    LUAX_SIGNATURE_BEGIN(L, 0)
     LUAX_SIGNATURE_END
-    uint32_t argb = (uint32_t)lua_tointeger(L, 1);
 
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
+    Canvas_Class_t *instance = (Canvas_Class_t *)lua_newuserdata(L, sizeof(Canvas_Class_t));
+    *instance = (Canvas_Class_t){
+            .surface = &display->gl.surface
+        };
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas allocated as %p", instance);
+
+    luaL_setmetatable(L, CANVAS_MT);
+
+    return 1;
+}
+
+static int canvas_new1(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
+    LUAX_SIGNATURE_END
+    const char *file = lua_tostring(L, 1);
+
+    const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    File_System_Chunk_t chunk = FSaux_load(file_system, file, FILE_SYSTEM_CHUNK_IMAGE);
+    if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
+        return luaL_error(L, "can't load file `%s`", file);
+    }
+    GL_Surface_t surface;
+    GL_surface_fetch(&surface, (GL_Image_t){ .width = chunk.var.image.width, .height = chunk.var.image.height, .data = chunk.var.image.pixels }, surface_callback_palette, (void *)&display->palette);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface `%s` loaded", file);
+    FSaux_release(chunk);
+
+    Canvas_Class_t *instance = (Canvas_Class_t *)lua_newuserdata(L, sizeof(Canvas_Class_t));
+    *instance = (Canvas_Class_t){
+            .surface = surface
+        };
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas allocated as %p", instance);
+
+    luaL_setmetatable(L, CANVAS_MT);
+
+    return 1;
+}
+
+static int canvas_new2(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 2)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    size_t width = lua_tointeger(L, 1);
+    size_t height = lua_tointeger(L, 2);
+
+    GL_Surface_t surface;
+    GL_surface_create(&surface, width, height);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface %dx%d created", width, height);
+
+    Canvas_Class_t *instance = (Canvas_Class_t *)lua_newuserdata(L, sizeof(Canvas_Class_t));
+    *instance = (Canvas_Class_t){
+            .surface = surface
+        };
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas allocated as %p", instance);
+
+    luaL_setmetatable(L, CANVAS_MT);
+
+    return 1;
+}
+
+static int canvas_new(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(0, canvas_new0) // default
+        LUAX_OVERLOAD_ARITY(1, canvas_new1) // file
+        LUAX_OVERLOAD_ARITY(2, canvas_new2) // width, height
+    LUAX_OVERLOAD_END
+}
+
+static int canvas_color_to_index(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 2)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    Canvas_Class_t *instance = (Canvas_Class_t *)lua_touserdata(L, 1);
+    uint32_t argb = (uint32_t)lua_tointeger(L, 2);
+
     GL_Color_t color = GL_palette_unpack_color(argb);
-    const GL_Pixel_t index = GL_palette_find_nearest_color(&display->palette, color);
+    const GL_Pixel_t index = GL_palette_find_nearest_color(&instance->palette, color);
 
     lua_pushinteger(L, index);
 
@@ -150,14 +232,12 @@ static int canvas_color_to_index(lua_State *L)
 
 static int canvas_width(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 0)
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
+    Canvas_Class_t *instance = (Canvas_Class_t *)lua_touserdata(L, 1);
 
-    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
-
-    const GL_Context_t *context = &display->gl;
-
-    lua_pushinteger(L, context->state.surface->width);
+    lua_pushinteger(L, instance->context.surface.width);
 
     return 1;
 }
@@ -257,58 +337,6 @@ static int canvas_reset(lua_State *L)
     hmfree(interpreter->refs);
 
     return 0;
-}
-
-static int canvas_surface0(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L, 0)
-    LUAX_SIGNATURE_END
-
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
-    Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INTERPRETER));
-
-    GL_Context_t *context = &display->gl;
-    GL_context_surface(context, NULL);
-
-    void *key = context->state.surface;
-    ptrdiff_t index = hmgeti(interpreter->refs, key);
-    if (index != -1) {
-        luaX_unref(L, interpreter->refs[index].value);
-        (void)hmdel(interpreter->refs, key);
-    }
-
-    return 0;
-}
-
-static int canvas_surface1(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
-    LUAX_SIGNATURE_END
-    Surface_Class_t *surface = (Surface_Class_t *)lua_touserdata(L, 1);
-
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
-    Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INTERPRETER));
-
-    GL_Context_t *context = &display->gl;
-    GL_context_surface(context, &surface->surface);
-
-    void *key = &surface->surface;
-    ptrdiff_t index = hmgeti(interpreter->refs, key);
-    if (index == -1) {
-        int value = luaX_ref(L, 1);
-        hmput(interpreter->refs, key, value);
-    }
-
-    return 0;
-}
-
-static int canvas_surface(lua_State *L)
-{
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(0, canvas_surface0)
-        LUAX_OVERLOAD_ARITY(1, canvas_surface1)
-    LUAX_OVERLOAD_END
 }
 
 static int canvas_palette0(lua_State *L)

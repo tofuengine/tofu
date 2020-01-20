@@ -37,13 +37,11 @@ typedef enum _UserData_t { // TODO: move to a suitable space.
 } UserData_t;
 
 typedef struct _Bank_Class_t {
-    // char full_path[PATH_FILE_MAX];
     GL_Sheet_t sheet;
     luaX_Reference surface;
 } Bank_Class_t;
 
 typedef struct _Font_Class_t {
-    // char full_path[PATH_FILE_MAX];
     GL_Sheet_t sheet;
     luaX_Reference surface;
 } Font_Class_t;
@@ -61,8 +59,12 @@ typedef struct _Grid_Class_t {
     size_t data_size;
 } Grid_Class_t;
 
+typedef struct _Canvas_Class_t {
+    GL_Context_t context;
+    GL_Surface_t surface;
+} Canvas_Class_t;
+
 typedef struct _Surface_Class_t {
-    // char full_path[PATH_FILE_MAX];
     GL_Surface_t surface;
     GL_XForm_t xform;
 } Surface_Class_t;
