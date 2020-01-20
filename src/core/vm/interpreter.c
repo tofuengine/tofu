@@ -308,7 +308,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const File_System_t *fil
 
 void Interpreter_terminate(Interpreter_t *interpreter)
 {
-    lua_settop(interpreter->state, 0);      // T O F1 ... Fn -> <empty>
+    lua_settop(interpreter->state, 0); // T O F1 ... Fn -> <empty>
 
     lua_gc(interpreter->state, LUA_GCCOLLECT, 0);
     lua_close(interpreter->state);

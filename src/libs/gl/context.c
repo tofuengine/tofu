@@ -98,20 +98,6 @@ void GL_context_reset(GL_Context_t *context)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context reset");
 }
 
-void GL_context_sanitize(GL_Context_t *context, const GL_Surface_t *surface)
-{
-    for (int i = arrlen(context->stack) - 1; i >= 0; --i) {
-#ifdef __GL_MASK_SUPPORT__
-        if (context->stack[i].surface == surface || context->stack[i].mask.stencil == surface) {
-#else
-        if (context->stack[i].surface == surface) {
-#endif
-            arrdel(context->stack, i);
-            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "state #%d sanitized from context", i);
-        }
-    }
-}
-
 void GL_context_surface(GL_Context_t *context, GL_Surface_t *surface)
 {
     GL_Surface_t *buffer = !surface ? &context->buffer : surface;

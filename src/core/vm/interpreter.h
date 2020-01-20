@@ -32,12 +32,17 @@
 #include <limits.h>
 #include <stdbool.h>
 
+typedef struct _Interpreter_Reference_t {
+    void *key;
+    luaX_Reference value;
+} Interpreter_Reference_t;
+
 typedef struct _Interpreter_t {
+    lua_State *state;
 #ifndef __INCREMENTAL_GARBAGE_COLLECTOR__
     float gc_age;
 #endif
-
-    lua_State *state; // TODO: rename to `L`?
+    Interpreter_Reference_t *refs;
 } Interpreter_t;
 
 extern bool Interpreter_initialize(Interpreter_t *interpreter, const File_System_t *file_system, const void *userdatas[]);

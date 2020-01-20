@@ -195,11 +195,13 @@ static int surface_gc(lua_State *L)
     LUAX_SIGNATURE_END
     Surface_Class_t *instance = (Surface_Class_t *)lua_touserdata(L, 1);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    Interpreter_t *interpreter = (Interpreter_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INTERPRETER));
 
-    GL_Context_t *context = &display->gl;
-    GL_context_sanitize(context, &instance->surface);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface %p sanitized from context", instance);
+#ifdef DEBUG
+    void *key = &instance->surface;
+    ptrdiff_t index = hmgeti(interpreter->refs, key);
+    Log_assert(index != -1, LOG_LEVELS_ERROR, LOG_CONTEXT, "surface %p garbage-collected while still locked :(", instance);
+#endif
 
     if (instance->xform.table) {
         arrfree(instance->xform.table);
