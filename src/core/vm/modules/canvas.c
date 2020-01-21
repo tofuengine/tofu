@@ -155,7 +155,7 @@ static int canvas_width(lua_State *L)
 
     const GL_Context_t *context = &display->context;
 
-    lua_pushinteger(L, context->state.surface->width);
+    lua_pushinteger(L, context->surface.width);
 
     return 1;
 }
@@ -169,7 +169,7 @@ static int canvas_height(lua_State *L)
 
     const GL_Context_t *context = &display->context;
 
-    lua_pushinteger(L, context->state.surface->height);
+    lua_pushinteger(L, context->surface.height);
 
     return 1;
 }
@@ -183,8 +183,8 @@ static int canvas_size(lua_State *L)
 
     const GL_Context_t *context = &display->context;
 
-    lua_pushinteger(L, context->state.surface->width);
-    lua_pushinteger(L, context->state.surface->height);
+    lua_pushinteger(L, context->surface.width);
+    lua_pushinteger(L, context->surface.height);
 
     return 2;
 }
@@ -198,8 +198,8 @@ static int canvas_center(lua_State *L)
 
     const GL_Context_t *context = &display->context;
 
-    lua_pushinteger(L, context->state.surface->width / 2);
-    lua_pushinteger(L, context->state.surface->height / 2);
+    lua_pushinteger(L, context->surface.width / 2);
+    lua_pushinteger(L, context->surface.height / 2);
 
     return 2;
 }
@@ -990,7 +990,7 @@ static int canvas_peek(lua_State *L)
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Context_t *context = &display->context;
-    const GL_Surface_t *surface = context->state.surface;
+    const GL_Surface_t *surface = &context->surface;
     GL_Pixel_t index = surface->data[y * surface->width + x];
 
     lua_pushinteger(L, index);
@@ -1014,7 +1014,7 @@ static int canvas_poke(lua_State *L)
     index %= display->palette.count;
 
     const GL_Context_t *context = &display->context;
-    GL_Surface_t *surface = context->state.surface;
+    const GL_Surface_t *surface = &context->surface;
     surface->data[y * surface->width + x] = index;
 
     return 0;
