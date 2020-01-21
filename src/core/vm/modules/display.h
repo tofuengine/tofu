@@ -22,50 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_UDT_H__
-#define __MODULES_UDT_H__
+#ifndef __MODULES_DISPLAY_H__
+#define __MODULES_DISPLAY_H__
 
-#include <libs/luax.h>
-#include <libs/gl/gl.h>
+#include <lua/lua.h>
 
-typedef enum _UserData_t { // TODO: move to a suitable space.
-    USERDATA_INTERPRETER = 1,
-    USERDATA_FILE_SYSTEM,
-    USERDATA_ENVIRONMENT,
-    USERDATA_DISPLAY,
-    USERDATA_INPUT
-} UserData_t;
+extern int display_loader(lua_State *L);
 
-typedef struct _Canvas_Class_t {
-    GL_Context_t context;
-} Canvas_Class_t;
-
-typedef struct _Bank_Class_t {
-    GL_Context_t context;
-    GL_Sheet_t sheet;
-} Bank_Class_t;
-
-typedef struct _Font_Class_t {
-    GL_Context_t context;
-    GL_Sheet_t sheet;
-} Font_Class_t;
-
-typedef struct _Surface_Class_t {
-    GL_Context_t context;
-    GL_Surface_t surface;
-    GL_XForm_t xform;
-} Surface_Class_t;
-
-#ifdef __GRID_INTEGER_CELL__
-typedef int Cell_t;
-#else
-typedef float Cell_t;
-#endif
-
-typedef struct _Grid_Class_t {
-    size_t width, height;
-    Cell_t *data;
-    size_t data_size;
-} Grid_Class_t;
-
-#endif  /* __MODULES_UDT_H__ */
+#endif  /* __MODULES_DISPLAY_H__ */
