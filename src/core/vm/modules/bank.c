@@ -191,7 +191,7 @@ static int bank_blit4(lua_State *L)
 
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    const GL_Context_t *context = &display->gl;
+    const GL_Context_t *context = &display->context;
     const GL_Sheet_t *sheet = &instance->sheet;
     GL_context_blit(context, &sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y });
 
@@ -215,7 +215,7 @@ static int bank_blit5(lua_State *L)
 
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    const GL_Context_t *context = &display->gl;
+    const GL_Context_t *context = &display->context;
     const GL_Sheet_t *sheet = &instance->sheet;
     GL_context_blit_s(context, &sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, scale, scale);
 
@@ -241,7 +241,7 @@ static int bank_blit6(lua_State *L)
 
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    const GL_Context_t *context = &display->gl;
+    const GL_Context_t *context = &display->context;
     const GL_Sheet_t *sheet = &instance->sheet;
     GL_context_blit_sr(context, &sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, scale, scale, rotation, 0.5f, 0.5f);
 
@@ -269,7 +269,7 @@ static int bank_blit7(lua_State *L)
 
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    const GL_Context_t *context = &display->gl;
+    const GL_Context_t *context = &display->context;
     const GL_Sheet_t *sheet = &instance->sheet;
     GL_context_blit_sr(context, &sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, scale_x, scale_y, rotation, 0.5f, 0.5f);
 
@@ -301,7 +301,7 @@ static int bank_blit9(lua_State *L)
 
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    const GL_Context_t *context = &display->gl;
+    const GL_Context_t *context = &display->context;
     const GL_Sheet_t *sheet = &instance->sheet;
     GL_context_blit_sr(context, &sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, scale_x, scale_y, rotation, anchor_x, anchor_y);
 
