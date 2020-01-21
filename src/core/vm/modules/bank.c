@@ -26,9 +26,6 @@
 
 #include <config.h>
 #include <core/io/display.h>
-#include <core/vm/interpreter.h>
-#include <libs/fs/fsaux.h>
-#include <libs/gl/gl.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 
@@ -36,11 +33,9 @@
 #include "udt.h"
 
 #include <math.h>
-#include <string.h>
 
 #define LOG_CONTEXT "bank"
-
-#define BANK_MT     "Tofu_Bank_mt"
+#define META_TABLE  "Tofu_Graphics_Bank_mt"
 
 static int bank_new(lua_State *L);
 static int bank_gc(lua_State *L);
@@ -58,7 +53,7 @@ static const struct luaL_Reg _bank_functions[] = {
 int bank_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, NULL, _bank_functions, NULL, nup, BANK_MT);
+    return luaX_newmodule(L, NULL, _bank_functions, NULL, nup, META_TABLE);
 }
 
 static int bank_new3(lua_State *L)
@@ -84,18 +79,19 @@ static int bank_new3(lua_State *L)
             return luaL_error(L, "can't load file `%s`", file);
         }
         sheet = GL_sheet_decode(chunk.var.blob.ptr, chunk.var.blob.size, cell_width, cell_height, surface_callback_palette, (void *)&display->palette);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` loaded", file);
         FSaux_release(chunk);
+        if (!sheet) {
+            return luaL_error(L, "can't decode %d bytes sheet", chunk.var.blob.size);
+        }
     } else
     if (type == LUA_TUSERDATA) {
         const Canvas_Class_t *canvas = (const Canvas_Class_t *)lua_touserdata(L, 1);
 
         sheet = GL_sheet_fetch(canvas->context->surface, cell_width, cell_height);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p grabbed", canvas);
-    }
-
-    if (!sheet) {
-        luaL_error(L, "can't create sheet");
+        if (!sheet) {
+            return luaL_error(L, "can't fetch sheet");
+        }
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p fetched from canvas %p", sheet, canvas);
     }
 
     Bank_Class_t *instance = (Bank_Class_t *)lua_newuserdata(L, sizeof(Bank_Class_t));
@@ -103,9 +99,9 @@ static int bank_new3(lua_State *L)
             .context = display->context,
             .sheet = sheet
         };
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank allocated as %p", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p allocated w/ sheet %p for default context", instance, sheet);
 
-    luaL_setmetatable(L, BANK_MT);
+    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }
@@ -127,7 +123,6 @@ static int bank_new4(lua_State *L)
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     GL_Sheet_t *sheet = NULL;
-
     if (type == LUA_TSTRING) {
         const char *file = lua_tostring(L, 2);
 
@@ -136,18 +131,20 @@ static int bank_new4(lua_State *L)
             return luaL_error(L, "can't load file `%s`", file);
         }
         sheet = GL_sheet_decode(chunk.var.blob.ptr, chunk.var.blob.size, cell_width, cell_height, surface_callback_palette, (void *)&display->palette);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` loaded", file);
         FSaux_release(chunk);
+        if (!sheet) {
+            return luaL_error(L, "can't decode %d bytes sheet", chunk.var.blob.size);
+        }
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p loaded from file `%s`", sheet, file);
     } else
     if (type == LUA_TUSERDATA) {
         const Canvas_Class_t *canvas = (const Canvas_Class_t *)lua_touserdata(L, 2);
 
         sheet = GL_sheet_fetch(canvas->context->surface, cell_width, cell_height);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p grabbed", canvas);
-    }
-
-    if (!sheet) {
-        luaL_error(L, "can't create sheet");
+        if (!sheet) {
+            return luaL_error(L, "can't fetch sheet");
+        }
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p fetched from canvas %p", sheet, canvas);
     }
 
     Bank_Class_t *instance = (Bank_Class_t *)lua_newuserdata(L, sizeof(Bank_Class_t));
@@ -155,9 +152,9 @@ static int bank_new4(lua_State *L)
             .context = canvas->context,
             .sheet = sheet
         };
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank allocated as %p", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p allocated w/ sheet %p for context %p", instance, sheet, canvas->context);
 
-    luaL_setmetatable(L, BANK_MT);
+    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }
@@ -178,6 +175,8 @@ static int bank_gc(lua_State *L)
     Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
 
     GL_sheet_destroy(instance->sheet);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p destroyed", instance->sheet);
+
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p finalized", instance);
 
     return 0;

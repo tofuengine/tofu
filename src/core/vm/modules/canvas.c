@@ -42,8 +42,7 @@
 #include <time.h>
 
 #define LOG_CONTEXT "canvas"
-
-#define CANVAS_MT        "Tofu_Canvas_mt"
+#define META_TABLE  "Tofu_Graphics_Canvas_mt"
 
 static int canvas_new(lua_State *L);
 static int canvas_gc(lua_State *L);
@@ -123,7 +122,7 @@ static luaX_Script _canvas_script = { (const char *)_canvas_lua, sizeof(_canvas_
 int canvas_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, &_canvas_script, _canvas_functions, NULL, nup, CANVAS_MT);
+    return luaX_newmodule(L, &_canvas_script, _canvas_functions, NULL, nup, META_TABLE);
 }
 
 static int canvas_new0(lua_State *L)
@@ -138,9 +137,9 @@ static int canvas_new0(lua_State *L)
             .context = display->context,
             .allocated = false
         };
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas allocated as %p", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas %p allocated w/ default context", instance);
 
-    luaL_setmetatable(L, CANVAS_MT);
+    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }
@@ -160,22 +159,21 @@ static int canvas_new1(lua_State *L)
         return luaL_error(L, "can't load file `%s`", file);
     }
     GL_Context_t *context = GL_context_decode(chunk.var.blob.ptr, chunk.var.blob.size, surface_callback_palette, (void *)&display->palette);
+    FSaux_release(chunk);
     if (!context) {
-        FSaux_release(chunk);
-        return luaL_error(L, "can't create %dx%d canvas", chunk.var.image.width, chunk.var.image.height);
+        return luaL_error(L, "can't decode %d bytes context", chunk.var.blob.size);
     }
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` loaded into canvas", file);
-    FSaux_release(chunk);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context %p loaded from file `%s`", context, file);
 
     Canvas_Class_t *instance = (Canvas_Class_t *)lua_newuserdata(L, sizeof(Canvas_Class_t));
     *instance = (Canvas_Class_t){
             .context = context,
             .allocated = true
         };
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas allocated as %p", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas %p allocated w/ context", instance, context);
 
-    luaL_setmetatable(L, CANVAS_MT);
+    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }
@@ -191,7 +189,7 @@ static int canvas_new2(lua_State *L)
 
     GL_Context_t *context = GL_context_create(width, height);
     if (!context) {
-        return luaL_error(L, "can't create %dx%d canvas", width, height);
+        return luaL_error(L, "can't create %dx%d context", width, height);
     }
 
     Canvas_Class_t *instance = (Canvas_Class_t *)lua_newuserdata(L, sizeof(Canvas_Class_t));
@@ -199,9 +197,9 @@ static int canvas_new2(lua_State *L)
             .context = context,
             .allocated = true
         };
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas allocated as %p", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas %p allocated w/ context", instance, context);
 
-    luaL_setmetatable(L, CANVAS_MT);
+    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }
@@ -224,7 +222,7 @@ static int canvas_gc(lua_State *L)
 
     if (instance->allocated) {
         GL_context_destroy(instance->context);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context %p deleted", instance->context);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context %p destroyed", instance->context);
     }
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas %p finalized", instance);

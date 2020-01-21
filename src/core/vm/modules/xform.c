@@ -38,8 +38,7 @@
 #include <string.h>
 
 #define LOG_CONTEXT "xform"
-
-#define XFORM_MT      "Tofu_XForm_mt"
+#define META_TABLE  "Tofu_Graphics_XForm_mt"
 
 static int xform_new(lua_State *L);
 static int xform_gc(lua_State *L);
@@ -63,7 +62,7 @@ static const struct luaL_Reg _xform_functions[] = {
 int xform_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, NULL, _xform_functions, NULL, nup, XFORM_MT);
+    return luaX_newmodule(L, NULL, _xform_functions, NULL, nup, META_TABLE);
 }
 
 static int xform_new0(lua_State *L)
@@ -86,9 +85,9 @@ static int xform_new0(lua_State *L)
                     .table = NULL
                 }
         };
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform allocated as %p", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform %p allocated for default canvas", instance);
 
-    luaL_setmetatable(L, XFORM_MT);
+    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }
@@ -113,9 +112,9 @@ static int xform_new1(lua_State *L)
                     .table = NULL
                 }
         };
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform allocated as %p (bound to %p)", instance, canvas);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform %p allocated for canvas %p", instance, canvas);
 
-    luaL_setmetatable(L, XFORM_MT);
+    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }
@@ -137,8 +136,10 @@ static int xform_gc(lua_State *L)
 
     if (instance->xform.table) {
         arrfree(instance->xform.table);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "scan-line table %p deallocated", instance->xform.table);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform scan-line table %p released", instance->xform.table);
     }
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform %p finalized", instance);
 
     return 0;
 }

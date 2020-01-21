@@ -38,8 +38,7 @@
 #include <time.h>
 
 #define LOG_CONTEXT "graphics"
-
-#define DISPLAY_MT        "Tofu_Display_mt"
+#define META_TABLE  "Tofu_Graphics_Display_mt"
 
 static int display_offset(lua_State *L);
 static int display_palette(lua_State *L);
@@ -57,7 +56,7 @@ static const struct luaL_Reg _display_functions[] = {
 int display_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, NULL, _display_functions, NULL, nup, DISPLAY_MT);
+    return luaX_newmodule(L, NULL, _display_functions, NULL, nup, META_TABLE);
 }
 
 static int display_palette0(lua_State *L)
