@@ -33,6 +33,8 @@ function Font.default(...)
     return Font.new(args[1], 0, 0, args[2], args[3])
   elseif #args == 4 then -- canvas, id, background_color, foreground_color
     return Font.new(args[1], args[2], 0, 0, args[3], args[4])
+  else
+    error("invalid arguments for default font")
   end
 end
 

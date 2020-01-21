@@ -120,6 +120,7 @@ static int display_palette1(lua_State *L)
     }
 
     if (palette.count == 0) {
+        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "palette has no colors - skipping");
         return 0;
     }
 

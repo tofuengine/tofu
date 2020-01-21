@@ -49,15 +49,15 @@ local INDICES = {
 function Main:__ctor()
   Display.palette("pico-8")
 
-  self.canvas = Canvas.new()
   self.bank = Bank.new("assets/sheet.png", 12, 12)
-  self.font = Font.default(0, 15)
+  self.font = Font.default("5x8", 0, 15)
   self.down = {}
   self.scale = {}
 
+  local canvas = Canvas.default()
   Input.auto_repeat("x", 0.25)
   Input.auto_repeat("y", 0.5)
-  Input.cursor_area(0, 0, self.canvas:width(), self.canvas:height())
+  Input.cursor_area(0, 0, canvas:width(), canvas:height()) -- FIXME: painful!
 end
 
 function Main:input()
@@ -98,7 +98,7 @@ end
 function Main:render(_)
   local t = System.time()
 
-  local canvas = self.canvas
+  local canvas = Canvas.default()
   canvas:clear()
 
   local cw, ch = self.bank:size()
