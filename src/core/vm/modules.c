@@ -34,8 +34,8 @@
 #include <core/vm/modules/file.h>
 #include <core/vm/modules/math.h>
 #include <core/vm/modules/system.h>
-#include <core/vm/modules/surface.h>
 #include <core/vm/modules/timer.h>
+#include <core/vm/modules/xform.h>
 #include <libs/log.h>
 #include <libs/luax.h>
 
@@ -91,7 +91,7 @@ static int graphics_loader(lua_State *L)
         { "Canvas", canvas_loader },
         { "Display", display_loader },
         { "Font", font_loader },
-        { "Surface", surface_loader },
+        { "XForm", xform_loader },
         { NULL, NULL }
     };
     return create_module(L, classes);

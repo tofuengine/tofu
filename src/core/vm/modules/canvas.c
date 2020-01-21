@@ -33,6 +33,7 @@
 #include <libs/gl/gl.h>
 #include <libs/stb.h>
 
+#include "callbacks.h"
 #include "udt.h"
 #include "resources/palettes.h"
 
@@ -74,6 +75,7 @@ static int canvas_circle(lua_State *L);
 static int canvas_peek(lua_State *L);
 static int canvas_poke(lua_State *L);
 static int canvas_process(lua_State *L);
+//static int canvas_grab(lua_State *L);
 
 // TODO: rename `Canvas` to `Context`?
 
@@ -108,6 +110,7 @@ static const struct luaL_Reg _canvas_functions[] = {
     { "peek", canvas_peek },
     { "poke", canvas_poke },
     { "process", canvas_process },
+//    { "grab", canvas_grab },
     { NULL, NULL }
 };
 
@@ -123,8 +126,7 @@ int canvas_loader(lua_State *L)
     return luaX_newmodule(L, &_canvas_script, _canvas_functions, NULL, nup, CANVAS_MT);
 }
 
-// TODO: add a canvas constructor with overload (from file, from WxH, default one). Surface will become Canvas, in the end.
-static int canvas_new(lua_State *L)
+static int canvas_new0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 0)
     LUAX_SIGNATURE_END
@@ -133,7 +135,8 @@ static int canvas_new(lua_State *L)
 
     Canvas_Class_t *instance = (Canvas_Class_t *)lua_newuserdata(L, sizeof(Canvas_Class_t));
     *instance = (Canvas_Class_t){
-            .context = display->context
+            .context = display->context,
+            .allocated = false
         };
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas allocated as %p", instance);
 
@@ -142,12 +145,88 @@ static int canvas_new(lua_State *L)
     return 1;
 }
 
+static int canvas_new1(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
+    LUAX_SIGNATURE_END
+    const char *file = lua_tostring(L, 1);
+
+    const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    File_System_Chunk_t chunk = FSaux_load(file_system, file, FILE_SYSTEM_CHUNK_IMAGE);
+    if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
+        return luaL_error(L, "can't load file `%s`", file);
+    }
+    GL_Context_t context;
+    bool result = GL_context_create(&context, chunk.var.image.width, chunk.var.image.height);
+    if (!result) {
+        return luaL_error(L, "can't create %dx%d canvas", chunk.var.image.width, chunk.var.image.height);
+    }
+    GL_surface_fetch(&context.surface, (GL_Image_t){ .width = chunk.var.image.width, .height = chunk.var.image.height, .data = chunk.var.image.pixels }, surface_callback_palette, (void *)&display->palette);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` loaded into canvas", file);
+    FSaux_release(chunk);
+
+    Canvas_Class_t *instance = (Canvas_Class_t *)lua_newuserdata(L, sizeof(Canvas_Class_t));
+    *instance = (Canvas_Class_t){
+            .context = context,
+            .allocated = true
+        };
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas allocated as %p", instance);
+
+    luaL_setmetatable(L, CANVAS_MT);
+
+    return 1;
+}
+
+static int canvas_new2(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 2)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    size_t width = (size_t)lua_tonumber(L, 1);
+    size_t height = (size_t)lua_tonumber(L, 2);
+
+    GL_Context_t context;
+    bool result = GL_context_create(&context, width, height);
+    if (!result) {
+        return luaL_error(L, "can't create %dx%d canvas", width, height);
+    }
+
+    Canvas_Class_t *instance = (Canvas_Class_t *)lua_newuserdata(L, sizeof(Canvas_Class_t));
+    *instance = (Canvas_Class_t){
+            .context = context,
+            .allocated = true
+        };
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas allocated as %p", instance);
+
+    luaL_setmetatable(L, CANVAS_MT);
+
+    return 1;
+}
+
+static int canvas_new(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(0, canvas_new0)
+        LUAX_OVERLOAD_ARITY(1, canvas_new1)
+        LUAX_OVERLOAD_ARITY(2, canvas_new2)
+    LUAX_OVERLOAD_END
+}
+
 static int canvas_gc(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 1)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     Canvas_Class_t *instance = (Canvas_Class_t *)lua_touserdata(L, 1);
+
+    if (instance->allocated) {
+        GL_context_delete(&instance->context);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context %p deleted", &instance->context);
+    }
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas %p finalized", instance);
 

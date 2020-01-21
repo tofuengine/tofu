@@ -38,6 +38,7 @@ typedef enum _UserData_t { // TODO: move to a suitable space.
 
 typedef struct _Canvas_Class_t {
     GL_Context_t context;
+    bool allocated;
 } Canvas_Class_t;
 
 typedef struct _Bank_Class_t {
@@ -50,11 +51,10 @@ typedef struct _Font_Class_t {
     GL_Sheet_t sheet;
 } Font_Class_t;
 
-typedef struct _Surface_Class_t {
+typedef struct _XForm_Class_t {
     GL_Context_t context;
-    GL_Surface_t surface;
     GL_XForm_t xform;
-} Surface_Class_t;
+} XForm_Class_t;
 
 #ifdef __GRID_INTEGER_CELL__
 typedef int Cell_t;

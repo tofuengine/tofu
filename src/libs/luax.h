@@ -89,7 +89,7 @@ typedef int luaX_Reference;
 #define LUAX_OVERLOAD_ARITY(n, f) \
             case (n): { return (f)(_L); }
 #define LUAX_OVERLOAD_END \
-            default: { return luaL_error(L, "[%s:%d] overload for arity %d is issing", __FILE__, __LINE__, _argc); } \
+            default: { return luaL_error(L, "[%s:%d] overload for arity %d is missing", __FILE__, __LINE__, _argc); } \
         } \
     } while (0);
 

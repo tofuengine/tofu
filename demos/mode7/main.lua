@@ -23,8 +23,9 @@ SOFTWARE.
 ]]--
 
 local System = require("tofu.core").System
-local Surface = require("tofu.graphics").Surface
 local Canvas = require("tofu.graphics").Canvas
+local Display = require("tofu.graphics").Display
+local XForm = require("tofu.graphics").XForm
 local Font = require("tofu.graphics").Font
 local Input = require("tofu.events").Input
 local Class = require("tofu.util").Class
@@ -47,14 +48,14 @@ local function build_table(factor) -- 0.4
 end
 ]]--
 
-local function build_table(angle, elevation)
+local function build_table(canvas, angle, elevation)
   local cos, sin = math.cos(angle), math.sin(angle)
   local a, b = cos, sin
   local c, d = -sin, cos
 
   local entries = {}
 
-  for scan_line = 1, Canvas.height() do
+  for scan_line = 1, canvas:height() do
     local yc = scan_line
     local p = elevation / yc
     entries[scan_line] = {
@@ -69,12 +70,12 @@ local function build_table(angle, elevation)
 end
 
 function Main:__ctor()
-  Canvas.palette("6-bit-rgb")
-  Canvas.background(0)
+  Display.palette("6-bit-rgb")
 
 --  self.surface = Surface.new("assets/world.png")
-  self.surface = Surface.new("assets/road.png")
   self.font = Font.default(0, 63)
+  self.xform = XForm.new()
+  self.surface = Canvas.new("assets/road.png")
   self.running = true
 
   self.x = 0
@@ -83,8 +84,9 @@ function Main:__ctor()
   self.speed = 0.0
   self.elevation = 48
 
-  self.surface:matrix(1, 0, 0, 1, Canvas.width() * 0.5, Canvas.height() * 0.5)
-  self.surface:table(build_table(math.pi * 0.5 - self.angle, self.elevation))
+  local canvas = Canvas.default()
+  self.xform:matrix(1, 0, 0, 1, canvas:width() * 0.5, canvas:height() * 0.5)
+  self.xform:table(build_table(canvas, math.pi * 0.5 - self.angle, self.elevation))
 end
 
 function Main:input()
@@ -121,7 +123,8 @@ function Main:input()
   end
 
   if recompute then
-    self.surface:table(build_table(math.pi * 0.5 - self.angle, self.elevation))
+    local canvas = Canvas.default()
+    self.xform:table(build_table(canvas, math.pi * 0.5 - self.angle, self.elevation))
 end
 end
 
@@ -133,19 +136,21 @@ function Main:update(delta_time)
   local cos, sin = math.cos(self.angle), math.sin(self.angle)
   self.x = self.x + (cos * self.speed * delta_time)
   self.y = self.y + (sin * self.speed * delta_time)
-  self.surface:offset(-self.x, -self.y)
+  self.xform:offset(-self.x, -self.y)
 end
 
 function Main:render(_)
-  Canvas.clear()
+  local canvas = Canvas.default()
 
-  Canvas.rectangle("fill", 0, 0, Canvas.width(), Canvas.height() * 0.25, 21)
-  self.surface:xform(0, Canvas.height() * 0.25)
+  canvas:clear()
 
-  local cx, cy = Canvas.width() * 0.5, Canvas.height() * 0.5
-  Canvas.line(cx, cy, cx + math.cos(self.angle) * 10, cy + math.sin(self.angle) * 10, 31)
+  canvas:rectangle("fill", 0, 0, canvas:width(), canvas:height() * 0.25, 21)
+  self.xform:blit(self.surface, 0, canvas:height() * 0.25)
 
-  Canvas.line(cx, cy, cx + math.cos(math.pi * 0.5 - self.angle) * 10,
+  local cx, cy = canvas:width() * 0.5, canvas:height() * 0.5
+  canvas:line(cx, cy, cx + math.cos(self.angle) * 10, cy + math.sin(self.angle) * 10, 31)
+
+  canvas:line(cx, cy, cx + math.cos(math.pi * 0.5 - self.angle) * 10,
               cy + math.sin(math.pi * 0.5 - self.angle) * 10, 47)
 
   self.font:write(string.format("FPS: %d", System.fps()), 0, 0)

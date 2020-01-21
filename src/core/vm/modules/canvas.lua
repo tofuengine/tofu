@@ -24,6 +24,15 @@ SOFTWARE.
 
 local Canvas = {}
 
+local _default = nil
+
+function Canvas.default()
+  if not _default then
+    _default = Canvas.new()
+  end
+  return _default
+end
+
 function Canvas:square(mode, x, y, size, index)
   self:rectangle(mode, x, y, size, size, index)
 end
