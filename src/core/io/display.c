@@ -312,7 +312,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "version: %s", glGetString(GL_VERSION));
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "GLSL: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
-    if (!GL_context_create(&display->gl, configuration->width, configuration->height)) {
+    if (!GL_context_create(&display->context, configuration->width, configuration->height)) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize GL");
         glfwDestroyWindow(display->window);
         glfwTerminate();
@@ -328,7 +328,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     display->vram = malloc(display->vram_size);
     if (!display->vram) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't allocate VRAM buffer");
-        GL_context_delete(&display->gl);
+        GL_context_delete(&display->context);
         glfwDestroyWindow(display->window);
         glfwTerminate();
     }
@@ -338,7 +338,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     if (display->vram_texture == 0) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't allocate VRAM texture");
         free(display->vram);
-        GL_context_delete(&display->gl);
+        GL_context_delete(&display->context);
         glfwDestroyWindow(display->window);
         glfwTerminate();
         return false;
@@ -369,7 +369,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
             }
             glDeleteBuffers(1, &display->vram_texture);
             free(display->vram);
-            GL_context_delete(&display->gl);
+            GL_context_delete(&display->context);
             glfwDestroyWindow(display->window);
             glfwTerminate();
             return false;
@@ -403,7 +403,7 @@ void Display_terminate(Display_t *display)
     free(display->vram);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "VRAM buffer %p deallocated", display->vram);
 
-    GL_context_delete(&display->gl);
+    GL_context_delete(&display->context);
 
     glfwDestroyWindow(display->window);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window %p destroyed", display->window);
@@ -451,12 +451,12 @@ void Display_offset(Display_t *display, GL_Point_t offset)
 
 void Display_present(const Display_t *display)
 {
-    const GL_Surface_t *buffer = &display->gl.buffer;
+    const GL_Surface_t *surface = &display->context.surface;
     GL_Color_t *vram = display->vram;
 
-    GL_surface_to_rgba(buffer, &display->palette, vram);
+    GL_surface_to_rgba(surface, &display->palette, vram);
 
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, buffer->width, buffer->height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, vram);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, surface->width, surface->height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, vram);
 
     // Add an offset x/y to implement shaking and similar effects.
     const GL_Quad_t *vram_destination = &display->vram_destination;

@@ -52,7 +52,6 @@ static int canvas_center(lua_State *L);
 static int canvas_push(lua_State *L);
 static int canvas_pop(lua_State *L);
 static int canvas_reset(lua_State *L);
-static int canvas_surface(lua_State *L);
 static int canvas_palette(lua_State *L);
 static int canvas_background(lua_State *L);
 static int canvas_color(lua_State *L);
@@ -90,7 +89,6 @@ static const struct luaL_Reg _canvas_functions[] = {
     { "push", canvas_push },
     { "pop", canvas_pop },
     { "reset", canvas_reset },
-    { "surface", canvas_surface },
     { "palette", canvas_palette },
     { "background", canvas_background },
     { "color", canvas_color },
@@ -155,7 +153,7 @@ static int canvas_width(lua_State *L)
 
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    const GL_Context_t *context = &display->gl;
+    const GL_Context_t *context = &display->context;
 
     lua_pushinteger(L, context->state.surface->width);
 
@@ -169,7 +167,7 @@ static int canvas_height(lua_State *L)
 
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    const GL_Context_t *context = &display->gl;
+    const GL_Context_t *context = &display->context;
 
     lua_pushinteger(L, context->state.surface->height);
 
@@ -183,7 +181,7 @@ static int canvas_size(lua_State *L)
 
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    const GL_Context_t *context = &display->gl;
+    const GL_Context_t *context = &display->context;
 
     lua_pushinteger(L, context->state.surface->width);
     lua_pushinteger(L, context->state.surface->height);
@@ -198,7 +196,7 @@ static int canvas_center(lua_State *L)
 
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    const GL_Context_t *context = &display->gl;
+    const GL_Context_t *context = &display->context;
 
     lua_pushinteger(L, context->state.surface->width / 2);
     lua_pushinteger(L, context->state.surface->height / 2);
@@ -213,7 +211,7 @@ static int canvas_push(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    GL_Context_t *context = &display->gl;
+    GL_Context_t *context = &display->context;
     GL_context_push(context);
 
     return 0;
@@ -226,7 +224,7 @@ static int canvas_pop(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    GL_Context_t *context = &display->gl;
+    GL_Context_t *context = &display->context;
     GL_context_pop(context);
 
     return 0;
@@ -239,46 +237,10 @@ static int canvas_reset(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    GL_Context_t *context = &display->gl;
+    GL_Context_t *context = &display->context;
     GL_context_reset(context);
 
     return 0;
-}
-
-static int canvas_surface0(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L, 0)
-    LUAX_SIGNATURE_END
-
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
-
-    GL_Context_t *context = &display->gl;
-    GL_context_surface(context, NULL);
-
-    return 0;
-}
-
-static int canvas_surface1(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
-    LUAX_SIGNATURE_END
-    Surface_Class_t *surface = (Surface_Class_t *)lua_touserdata(L, 1);
-
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
-
-    GL_Context_t *context = &display->gl;
-    GL_context_surface(context, &surface->surface);
-
-    return 0;
-}
-
-static int canvas_surface(lua_State *L)
-{
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(0, canvas_surface0)
-        LUAX_OVERLOAD_ARITY(1, canvas_surface1)
-    LUAX_OVERLOAD_END
 }
 
 static int canvas_palette0(lua_State *L)
@@ -397,7 +359,7 @@ static int canvas_shift0(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    GL_Context_t *context = &display->gl;
+    GL_Context_t *context = &display->context;
     GL_context_shifting(context, NULL, NULL, 0);
 
     return 0;
@@ -424,7 +386,7 @@ static int canvas_shift1(lua_State *L)
         lua_pop(L, 1);
     }
 
-    GL_Context_t *context = &display->gl;
+    GL_Context_t *context = &display->context;
     GL_context_shifting(context, from, to, count);
 
     arrfree(from);
@@ -447,7 +409,7 @@ static int canvas_shift2(lua_State *L)
     from  %= display->palette.count;
     to  %= display->palette.count;
 
-    GL_Context_t *context = &display->gl;
+    GL_Context_t *context = &display->context;
     GL_context_shifting(context, &from, &to, 1);
 
     return 0;
@@ -469,7 +431,7 @@ static int canvas_transparent0(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    GL_Context_t *context = &display->gl;
+    GL_Context_t *context = &display->context;
     GL_context_transparent(context, NULL, NULL, 0);
 
     return 0;
@@ -496,7 +458,7 @@ static int canvas_transparent1(lua_State *L)
         lua_pop(L, 1);
     }
 
-    GL_Context_t *context = &display->gl;
+    GL_Context_t *context = &display->context;
     GL_context_transparent(context, indexes, transparent, count);
 
     arrfree(indexes);
@@ -518,7 +480,7 @@ static int canvas_transparent2(lua_State *L)
 
     index %= display->palette.count;
 
-    GL_Context_t *context = &display->gl;
+    GL_Context_t *context = &display->context;
     GL_context_transparent(context, &index, &transparent, 1);
 
     return 0;
@@ -540,7 +502,7 @@ static int canvas_clipping0(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    GL_Context_t *context = &display->gl;
+    GL_Context_t *context = &display->context;
     GL_context_clipping(context, NULL);
 
     return 0;
@@ -561,7 +523,7 @@ static int canvas_clipping4(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    GL_Context_t *context = &display->gl; // TODO: pass context and palette directly?
+    GL_Context_t *context = &display->context; // TODO: pass context and palette directly?
     GL_context_clipping(context, &(GL_Rectangle_t){ .x = x, .y = y, .width = width, .height = height });
 
     return 0;
@@ -633,7 +595,7 @@ static int canvas_mask0(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    GL_Context_t *context = &display->gl;
+    GL_Context_t *context = &display->context;
     GL_context_mask(context, NULL);
 
     return 0;
@@ -648,7 +610,7 @@ static int canvas_mask1(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    GL_Context_t *context = &display->gl;
+    GL_Context_t *context = &display->context;
     GL_Mask_t mask = context->state.mask;
     if (type == LUA_TUSERDATA) {
         const Surface_Class_t *instance = (const Surface_Class_t *)lua_touserdata(L, 1);
@@ -676,7 +638,7 @@ static int canvas_mask2(lua_State *L)
 
     Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    GL_Context_t *context = &display->gl;
+    GL_Context_t *context = &display->context;
     GL_context_mask(context, &(GL_Mask_t){ &instance->surface, index });
 
     return 0;
@@ -699,7 +661,7 @@ static int canvas_clear0(lua_State *L)
 
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    const GL_Context_t *context = &display->gl;
+    const GL_Context_t *context = &display->context;
     GL_context_clear(context, display->background);
 
     Display_clear(display);
@@ -718,7 +680,7 @@ static int canvas_clear1(lua_State *L)
 
     index %= display->palette.count;
 
-    GL_Context_t *context = &display->gl;
+    GL_Context_t *context = &display->context;
     GL_context_clear(context, index);
 
     Display_clear(display);
@@ -749,7 +711,7 @@ static int canvas_point(lua_State *L)
 
     index %= display->palette.count;
 
-    const GL_Context_t *context = &display->gl;
+    const GL_Context_t *context = &display->context;
     GL_primitive_point(context, (GL_Point_t){ .x = x, .y = y }, index);
 
     return 0;
@@ -772,7 +734,7 @@ static int canvas_hline(lua_State *L)
 
     index %= display->palette.count;
 
-    const GL_Context_t *context = &display->gl;
+    const GL_Context_t *context = &display->context;
     GL_primitive_hline(context, (GL_Point_t){ .x = x, .y = y }, width, index);
 
     return 0;
@@ -795,7 +757,7 @@ static int canvas_vline(lua_State *L)
 
     index %= display->palette.count;
 
-    const GL_Context_t *context = &display->gl;
+    const GL_Context_t *context = &display->context;
     GL_primitive_vline(context, (GL_Point_t){ .x = x, .y = y }, height, index);
 
     return 0;
@@ -820,7 +782,7 @@ static int canvas_line(lua_State *L)
 
     index %= display->palette.count;
 
-    const GL_Context_t *context = &display->gl;
+    const GL_Context_t *context = &display->context;
     GL_Point_t vertices[2] = {
             (GL_Point_t){ .x = x0, .y = y0 },
             (GL_Point_t){ .x = x1, .y = y1 }
@@ -860,7 +822,7 @@ static int canvas_polyline(lua_State *L)
     }
 
     if (count > 1) {
-        const GL_Context_t *context = &display->gl;
+        const GL_Context_t *context = &display->context;
         GL_primitive_polyline(context, vertices, count / 2, index);
     } else {
         Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "no enough points for polyline (%d)", count);
@@ -886,7 +848,7 @@ static int canvas_fill(lua_State *L)
 
     index %= display->palette.count;
 
-    const GL_Context_t *context = &display->gl;
+    const GL_Context_t *context = &display->context;
     GL_context_fill(context, (GL_Point_t){ .x = x, .y = y }, index);
 
     return 0;
@@ -917,7 +879,7 @@ static int canvas_triangle(lua_State *L)
 
     index %= display->palette.count;
 
-    const GL_Context_t *context = &display->gl;
+    const GL_Context_t *context = &display->context;
     if (mode[0] == 'f') {
         GL_primitive_filled_triangle(context, (GL_Point_t){ .x = x0, y0 }, (GL_Point_t){ .x = x1, .y = y1 }, (GL_Point_t){ .x = x2, .y = y2 }, index);
     } else {
@@ -954,7 +916,7 @@ static int canvas_rectangle(lua_State *L)
 
     index %= display->palette.count;
 
-    const GL_Context_t *context = &display->gl;
+    const GL_Context_t *context = &display->context;
     if (mode[0] == 'f') {
         // TODO: move to pointers for compound literals, too.
         GL_primitive_filled_rectangle(context, (GL_Rectangle_t){ .x = x, .y = y, .width = width, .height = height }, index);
@@ -1002,7 +964,7 @@ static int canvas_circle(lua_State *L)
 
     index %= display->palette.count;
 
-    const GL_Context_t *context = &display->gl;
+    const GL_Context_t *context = &display->context;
 
     if (radius < 1.0f) { // Null radius, just a point regardless mode!
         GL_primitive_point(context, (GL_Point_t){ .x = cx, .y = cy }, index);
@@ -1027,7 +989,7 @@ static int canvas_peek(lua_State *L)
 
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    const GL_Context_t *context = &display->gl;
+    const GL_Context_t *context = &display->context;
     const GL_Surface_t *surface = context->state.surface;
     GL_Pixel_t index = surface->data[y * surface->width + x];
 
@@ -1051,7 +1013,7 @@ static int canvas_poke(lua_State *L)
 
     index %= display->palette.count;
 
-    const GL_Context_t *context = &display->gl;
+    const GL_Context_t *context = &display->context;
     GL_Surface_t *surface = context->state.surface;
     surface->data[y * surface->width + x] = index;
 
@@ -1073,7 +1035,7 @@ static int canvas_process(lua_State *L)
 
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    const GL_Context_t *context = &display->gl;
+    const GL_Context_t *context = &display->context;
 
     // TODO: pass pointers!!!
     GL_context_process(context, (GL_Rectangle_t){ .x = x, .y = y, .width = width, .height = height });

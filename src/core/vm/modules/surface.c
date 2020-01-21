@@ -265,7 +265,7 @@ static int surface_grab(lua_State *L)
 
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    const GL_Context_t *context = &display->gl;
+    const GL_Context_t *context = &display->context;
     GL_context_to_surface(context, &instance->surface);
 
     return 0;
@@ -280,7 +280,7 @@ static int surface_blit1(lua_State *L)
 
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    const GL_Context_t *context = &display->gl;
+    const GL_Context_t *context = &display->context;
     const GL_Surface_t *surface = &instance->surface;
     GL_context_blit(context, surface, (GL_Rectangle_t){ 0, 0, surface->width, surface->height }, (GL_Point_t){ .x = 0, .y = 0 });
 
@@ -300,7 +300,7 @@ static int surface_blit3(lua_State *L)
 
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    const GL_Context_t *context = &display->gl;
+    const GL_Context_t *context = &display->context;
     const GL_Surface_t *surface = &instance->surface;
     GL_context_blit(context, surface, (GL_Rectangle_t){ 0, 0, surface->width, surface->height }, (GL_Point_t){ .x = x, .y = y });
 
@@ -322,7 +322,7 @@ static int surface_blit4(lua_State *L)
 
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    const GL_Context_t *context = &display->gl;
+    const GL_Context_t *context = &display->context;
     const GL_Surface_t *surface = &instance->surface; // TODO: fix explicit struct elements
     GL_context_blit_sr(context, surface, (GL_Rectangle_t){ 0, 0, surface->width, surface->height }, (GL_Point_t){ .x = x, .y = y }, 0.0f, 0.0f, rotation, 0.5, 0.5f);
 
@@ -346,7 +346,7 @@ static int surface_blit5(lua_State *L)
 
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    const GL_Context_t *context = &display->gl;
+    const GL_Context_t *context = &display->context;
     const GL_Surface_t *surface = &instance->surface;
     GL_context_blit_s(context, surface, (GL_Rectangle_t){ 0, 0, surface->width, surface->height }, (GL_Point_t){ x, y }, scale_x, scale_y);
 
@@ -372,7 +372,7 @@ static int surface_blit6(lua_State *L)
 
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    const GL_Context_t *context = &display->gl;
+    const GL_Context_t *context = &display->context;
     const GL_Surface_t *surface = &instance->surface;
     GL_context_blit_sr(context, surface, (GL_Rectangle_t){ 0, 0, surface->width, surface->height }, (GL_Point_t){ x, y }, scale_x, scale_y, rotation, 0.5, 0.5f);
 
@@ -400,7 +400,7 @@ static int surface_blit7(lua_State *L)
 
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    const GL_Context_t *context = &display->gl;
+    const GL_Context_t *context = &display->context;
     const GL_Surface_t *surface = &instance->surface;
     GL_context_blit(context, surface, (GL_Rectangle_t){ ox, oy, width, height }, (GL_Point_t){ x, y });
 
@@ -432,7 +432,7 @@ static int surface_blit9(lua_State *L)
 
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    const GL_Context_t *context = &display->gl;
+    const GL_Context_t *context = &display->context;
     const GL_Surface_t *surface = &instance->surface;
     GL_context_blit_s(context, surface, (GL_Rectangle_t){ ox, oy, width, height }, (GL_Point_t){ x, y }, scale_x, scale_y);
 
@@ -466,7 +466,7 @@ static int surface_blit10(lua_State *L)
 
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    const GL_Context_t *context = &display->gl;
+    const GL_Context_t *context = &display->context;
     const GL_Surface_t *surface = &instance->surface;
     GL_context_blit_sr(context, surface, (GL_Rectangle_t){ ox, oy, width, height }, (GL_Point_t){ .x = x, .y = y }, scale_x, scale_y, rotation, 0.5f, 0.5f);
 
@@ -504,7 +504,7 @@ static int surface_xform1(lua_State *L)
 
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    const GL_Context_t *context = &display->gl;
+    const GL_Context_t *context = &display->context;
     const GL_Surface_t *surface = &instance->surface;
     GL_context_blit_x(context, surface, (GL_Point_t){ .x = 0, .y = 0 }, &instance->xform);
 
@@ -524,7 +524,7 @@ static int surface_xform3(lua_State *L)
 
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    const GL_Context_t *context = &display->gl;
+    const GL_Context_t *context = &display->context;
     const GL_Surface_t *surface = &instance->surface;
     GL_context_blit_x(context, surface, (GL_Point_t){ .x = x, .y = y }, &instance->xform);
 

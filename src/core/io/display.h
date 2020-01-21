@@ -75,7 +75,7 @@ typedef struct _Display_t {
     GLfloat time;
 
     GL_Palette_t palette;
-    GL_Context_t gl;
+    GL_Context_t context;
     GL_Pixel_t background, color;
 } Display_t;
 

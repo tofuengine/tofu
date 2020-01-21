@@ -461,7 +461,7 @@ static int font_write4(lua_State *L)
 
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    const GL_Context_t *context = &display->gl;
+    const GL_Context_t *context = &display->context;
     const GL_Sheet_t *sheet = &instance->sheet;
 
     int dw = sheet->size.width;
@@ -506,7 +506,7 @@ static int font_write5(lua_State *L)
 
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    const GL_Context_t *context = &display->gl;
+    const GL_Context_t *context = &display->context;
     const GL_Sheet_t *sheet = &instance->sheet;
 
     int dw = (int)(sheet->size.width * fabsf(scale));
@@ -553,7 +553,7 @@ static int font_write6(lua_State *L)
 
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    const GL_Context_t *context = &display->gl;
+    const GL_Context_t *context = &display->context;
     const GL_Sheet_t *sheet = &instance->sheet;
 
     int dw = (int)(sheet->size.width * fabsf(scale_x));
