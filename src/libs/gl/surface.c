@@ -53,19 +53,6 @@ GL_Surface_t *GL_surface_decode(const void *buffer, size_t buffer_size, const GL
     return surface;
 }
 
-GL_Surface_t *GL_surface_clone(const GL_Surface_t *original)
-{
-    GL_Surface_t *surface = GL_surface_create(original->width, original->height);
-    if (!surface) {
-        return NULL;
-    }
-
-    memcpy(surface->data, original->data, surface->data_size);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface %p clone at %p (%dx%d)", original, surface, original->width, original->height);
-
-    return surface;
-}
-
 GL_Surface_t *GL_surface_create(size_t width, size_t height)
 {
     GL_Pixel_t *data = malloc(width * height * sizeof(GL_Pixel_t));

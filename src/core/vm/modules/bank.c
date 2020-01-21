@@ -97,7 +97,7 @@ static int bank_new3(lua_State *L)
     Bank_Class_t *instance = (Bank_Class_t *)lua_newuserdata(L, sizeof(Bank_Class_t));
     *instance = (Bank_Class_t){
             .context = display->context,
-            .sheet = sheet
+            .sheet = sheet,
         };
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p allocated w/ sheet %p for default context", instance, sheet);
 

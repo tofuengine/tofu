@@ -39,7 +39,6 @@ typedef struct _GL_Surface_t {
 typedef void (*GL_Surface_Callback_t)(void *user_data, GL_Surface_t *surface, const void *data);
 
 extern GL_Surface_t *GL_surface_decode(const void *buffer, size_t buffer_size, const GL_Surface_Callback_t callback, void *user_data);
-extern GL_Surface_t *GL_surface_clone(const GL_Surface_t *original);
 extern GL_Surface_t *GL_surface_create(size_t width, size_t height);
 extern void GL_surface_destroy(GL_Surface_t *surface);
 
