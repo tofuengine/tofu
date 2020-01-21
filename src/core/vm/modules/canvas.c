@@ -680,7 +680,7 @@ static int canvas_clear1(lua_State *L)
 
     index %= display->palette.count;
 
-    GL_Context_t *context = &display->context;
+    const GL_Context_t *context = &display->context;
     GL_context_clear(context, index);
 
     Display_clear(display);

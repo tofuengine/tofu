@@ -97,6 +97,7 @@ static int bank_new(lua_State *L)
 
     Bank_Class_t *instance = (Bank_Class_t *)lua_newuserdata(L, sizeof(Bank_Class_t));
     *instance = (Bank_Class_t){
+            .context = display->context,
             .sheet = sheet
         };
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank allocated as %p", instance);
@@ -189,9 +190,7 @@ static int bank_blit4(lua_State *L)
     int x = lua_tointeger(L, 3);
     int y = lua_tointeger(L, 4);
 
-    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
-
-    const GL_Context_t *context = &display->context;
+    const GL_Context_t *context = &instance->context;
     const GL_Sheet_t *sheet = &instance->sheet;
     GL_context_blit(context, &sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y });
 
@@ -213,9 +212,7 @@ static int bank_blit5(lua_State *L)
     int y = lua_tointeger(L, 4);
     float scale = lua_tonumber(L, 5);
 
-    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
-
-    const GL_Context_t *context = &display->context;
+    const GL_Context_t *context = &instance->context;
     const GL_Sheet_t *sheet = &instance->sheet;
     GL_context_blit_s(context, &sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, scale, scale);
 
@@ -239,9 +236,7 @@ static int bank_blit6(lua_State *L)
     float scale = lua_tonumber(L, 5);
     int rotation = lua_tointeger(L, 6);
 
-    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
-
-    const GL_Context_t *context = &display->context;
+    const GL_Context_t *context = &instance->context;
     const GL_Sheet_t *sheet = &instance->sheet;
     GL_context_blit_sr(context, &sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, scale, scale, rotation, 0.5f, 0.5f);
 
@@ -267,9 +262,7 @@ static int bank_blit7(lua_State *L)
     float scale_y = lua_tonumber(L, 6);
     int rotation = lua_tointeger(L, 7);
 
-    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
-
-    const GL_Context_t *context = &display->context;
+    const GL_Context_t *context = &instance->context;
     const GL_Sheet_t *sheet = &instance->sheet;
     GL_context_blit_sr(context, &sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, scale_x, scale_y, rotation, 0.5f, 0.5f);
 
@@ -299,9 +292,7 @@ static int bank_blit9(lua_State *L)
     float anchor_x = lua_tonumber(L, 8);
     float anchor_y = lua_tonumber(L, 9);
 
-    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
-
-    const GL_Context_t *context = &display->context;
+    const GL_Context_t *context = &instance->context;
     const GL_Sheet_t *sheet = &instance->sheet;
     GL_context_blit_sr(context, &sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, scale_x, scale_y, rotation, anchor_x, anchor_y);
 

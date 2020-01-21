@@ -1,18 +1,18 @@
 /*
  * MIT License
- * 
+ *
  * Copyright (c) 2019-2020 Marco Lizza
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -107,13 +107,14 @@ static int font_new3(lua_State *L)
     } else
     if (type == LUA_TUSERDATA) {
         const Surface_Class_t *instance = (const Surface_Class_t *)lua_touserdata(L, 1);
-    
+
         GL_sheet_fetch(&sheet, (GL_Image_t){ .width = instance->surface.width, .height = instance->surface.height, .data = instance->surface.data }, glyph_width, glyph_height, surface_callback_pixels, NULL);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p grabbed", instance);
     }
 
     Font_Class_t *instance = (Font_Class_t *)lua_newuserdata(L, sizeof(Font_Class_t));
     *instance = (Font_Class_t){
+            .context = display->context,
             .sheet = sheet
         };
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font allocated as %p", instance);
@@ -139,6 +140,7 @@ static int font_new5(lua_State *L)
     GL_Pixel_t foreground_index = (GL_Pixel_t)lua_tointeger(L, 5);
 
     const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     GL_Sheet_t sheet;
 
@@ -170,6 +172,7 @@ static int font_new5(lua_State *L)
 
     Font_Class_t *instance = (Font_Class_t *)lua_newuserdata(L, sizeof(Font_Class_t));
     *instance = (Font_Class_t){
+            .context = display->context,
             .sheet = sheet
         };
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font allocated as %p", instance);
@@ -459,9 +462,7 @@ static int font_write4(lua_State *L)
     int x = lua_tointeger(L, 3);
     int y = lua_tointeger(L, 4);
 
-    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
-
-    const GL_Context_t *context = &display->context;
+    const GL_Context_t *context = &instance->context;
     const GL_Sheet_t *sheet = &instance->sheet;
 
     int dw = sheet->size.width;
@@ -504,9 +505,7 @@ static int font_write5(lua_State *L)
     int y = lua_tointeger(L, 4);
     float scale = lua_tonumber(L, 5);
 
-    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
-
-    const GL_Context_t *context = &display->context;
+    const GL_Context_t *context = &instance->context;
     const GL_Sheet_t *sheet = &instance->sheet;
 
     int dw = (int)(sheet->size.width * fabsf(scale));
@@ -551,9 +550,7 @@ static int font_write6(lua_State *L)
     float scale_x = lua_tonumber(L, 5);
     float scale_y = lua_tonumber(L, 6);
 
-    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
-
-    const GL_Context_t *context = &display->context;
+    const GL_Context_t *context = &instance->context;
     const GL_Sheet_t *sheet = &instance->sheet;
 
     int dw = (int)(sheet->size.width * fabsf(scale_x));
