@@ -149,7 +149,7 @@ static int bank_new4(lua_State *L)
 
     Bank_Class_t *instance = (Bank_Class_t *)lua_newuserdata(L, sizeof(Bank_Class_t));
     *instance = (Bank_Class_t){
-            .context = canvas->context,
+            .context = canvas->context, // TODO: should lock reference to canvas?
             .sheet = sheet
         };
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p allocated w/ sheet %p for context %p", instance, sheet, canvas->context);
