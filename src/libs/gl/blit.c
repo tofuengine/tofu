@@ -85,10 +85,10 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
     }
 
     const GL_Pixel_t *sdata = surface->data;
-    GL_Pixel_t *ddata = context->surface.data;
+    GL_Pixel_t *ddata = context->surface->data;
 
     const int swidth = surface->width;
-    const int dwidth = context->surface.width;
+    const int dwidth = context->surface->width;
 
     const GL_Pixel_t *sptr = sdata + (area.y + skip_y) * swidth + (area.x + skip_x);
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
@@ -191,10 +191,10 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
     }
 
     const GL_Pixel_t *sdata = surface->data;
-    GL_Pixel_t *ddata = context->surface.data;
+    GL_Pixel_t *ddata = context->surface->data;
 
     const int swidth = surface->width;
-    const int dwidth = context->surface.width;
+    const int dwidth = context->surface->width;
 
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
@@ -376,10 +376,10 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     float ov = (tlx * M21 + tly * M22) + say + sy;
 
     const GL_Pixel_t *sdata = surface->data;
-    GL_Pixel_t *ddata = context->surface.data;
+    GL_Pixel_t *ddata = context->surface->data;
 
     const int swidth = surface->width;
-    const int dwidth = context->surface.width;
+    const int dwidth = context->surface->width;
 
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
@@ -519,10 +519,10 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
     const int smaxy = sh - 1;
 
     const GL_Pixel_t *sdata = surface->data;
-    GL_Pixel_t *ddata = context->surface.data;
+    GL_Pixel_t *ddata = context->surface->data;
 
     const int swidth = surface->width;
-    const int dwidth = context->surface.width;
+    const int dwidth = context->surface->width;
 
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 

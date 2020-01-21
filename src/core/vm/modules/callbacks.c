@@ -62,14 +62,3 @@ void surface_callback_indexes(void *user_data, GL_Surface_t *surface, const void
         *(dst++) = rgba == background ? bg_index : fg_index;
     }
 }
-
-void surface_callback_pixels(void *user_data, GL_Surface_t *surface, const void *data)
-{
-    const GL_Pixel_t *src = (const GL_Pixel_t *)data;
-    GL_Pixel_t *dst = surface->data;
-
-    for (size_t i = surface->data_size; i; --i) {
-        *(dst++) = *(src++);
-    }
-}
-

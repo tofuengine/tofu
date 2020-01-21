@@ -58,7 +58,7 @@ function Tofu:__ctor()
       enter = function(me)
           Display.palette({ 0xFF000000, 0xFFFF0000 })
           me.canvas = Canvas.new()
-          me.font = Font.default(0, 1)
+          me.font = Font.default("5x8", 0, 1)
         end,
       leave = function(me)
           me.font = nil

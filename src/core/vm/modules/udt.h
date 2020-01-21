@@ -37,22 +37,22 @@ typedef enum _UserData_t { // TODO: move to a suitable space.
 } UserData_t;
 
 typedef struct _Canvas_Class_t {
-    GL_Context_t context;
+    GL_Context_t *context;
     bool allocated;
 } Canvas_Class_t;
 
 typedef struct _Bank_Class_t {
-    GL_Context_t context;
-    GL_Sheet_t sheet;
+    GL_Context_t *context;
+    GL_Sheet_t *sheet;
 } Bank_Class_t;
 
 typedef struct _Font_Class_t {
-    GL_Context_t context;
-    GL_Sheet_t sheet;
+    GL_Context_t *context;
+    GL_Sheet_t *sheet;
 } Font_Class_t;
 
 typedef struct _XForm_Class_t {
-    GL_Context_t context;
+    GL_Context_t *context;
     GL_XForm_t xform;
 } XForm_Class_t;
 

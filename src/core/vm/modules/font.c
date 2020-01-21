@@ -86,21 +86,21 @@ static int font_new3(lua_State *L)
     const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    GL_Sheet_t sheet;
+    GL_Sheet_t *sheet = NULL;
 
     if (type == LUA_TSTRING) {
         const char *file = lua_tostring(L, 1);
 
         const Sheet_Data_t *data = resources_sheets_find(file);
         if (data) {
-            GL_sheet_decode(&sheet, data->data, data->size, data->cell_width, data->cell_height, surface_callback_palette, (void *)&display->palette);
-            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` decoded", file);
+            sheet = GL_sheet_decode(data->data, data->size, data->cell_width, data->cell_height, surface_callback_palette, (void *)&display->palette);
+            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` decoded", file); // TODO: revise logs.
         } else {
-            File_System_Chunk_t chunk = FSaux_load(file_system, file, FILE_SYSTEM_CHUNK_IMAGE);
+            File_System_Chunk_t chunk = FSaux_load(file_system, file, FILE_SYSTEM_CHUNK_BLOB);
             if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
                 return luaL_error(L, "can't load file `%s`", file);
             }
-            GL_sheet_fetch(&sheet, (GL_Image_t){ .width = chunk.var.image.width, .height = chunk.var.image.height, .data = chunk.var.image.pixels }, glyph_width, glyph_height, surface_callback_palette, (void *)&display->palette);
+            sheet = GL_sheet_decode(chunk.var.blob.ptr, chunk.var.blob.size, data->cell_width, data->cell_height, surface_callback_palette, (void *)&display->palette);
             Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` loaded", file);
             FSaux_release(chunk);
         }
@@ -108,9 +108,12 @@ static int font_new3(lua_State *L)
     if (type == LUA_TUSERDATA) {
         const Canvas_Class_t *canvas = (const Canvas_Class_t *)lua_touserdata(L, 1);
 
-        const GL_Surface_t *surface = &canvas->context.surface;
-        GL_sheet_fetch(&sheet, (GL_Image_t){ .width = surface->width, .height = surface->height, .data = surface->data }, glyph_width, glyph_height, surface_callback_pixels, NULL);
+        sheet = GL_sheet_fetch(canvas->context->surface, glyph_width, glyph_height);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p grabbed", canvas);
+    }
+
+    if (!sheet) {
+        luaL_error(L, "can't create sheet");
     }
 
     Font_Class_t *instance = (Font_Class_t *)lua_newuserdata(L, sizeof(Font_Class_t));
@@ -141,21 +144,21 @@ static int font_new4(lua_State *L)
     const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    GL_Sheet_t sheet;
+    GL_Sheet_t *sheet;
 
     if (type == LUA_TSTRING) {
         const char *file = lua_tostring(L, 2);
 
         const Sheet_Data_t *data = resources_sheets_find(file);
         if (data) {
-            GL_sheet_decode(&sheet, data->data, data->size, data->cell_width, data->cell_height, surface_callback_palette, (void *)&display->palette);
+            sheet = GL_sheet_decode(data->data, data->size, data->cell_width, data->cell_height, surface_callback_palette, (void *)&display->palette);
             Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` decoded", file);
         } else {
-            File_System_Chunk_t chunk = FSaux_load(file_system, file, FILE_SYSTEM_CHUNK_IMAGE);
+            File_System_Chunk_t chunk = FSaux_load(file_system, file, FILE_SYSTEM_CHUNK_BLOB);
             if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
                 return luaL_error(L, "can't load file `%s`", file);
             }
-            GL_sheet_fetch(&sheet, (GL_Image_t){ .width = chunk.var.image.width, .height = chunk.var.image.height, .data = chunk.var.image.pixels }, glyph_width, glyph_height, surface_callback_palette, (void *)&display->palette);
+            sheet = GL_sheet_decode(chunk.var.blob.ptr, chunk.var.blob.size, glyph_width, glyph_height, surface_callback_palette, (void *)&display->palette);
             Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` loaded", file);
             FSaux_release(chunk);
         }
@@ -163,9 +166,12 @@ static int font_new4(lua_State *L)
     if (type == LUA_TUSERDATA) {
         const Canvas_Class_t *canvas = (const Canvas_Class_t *)lua_touserdata(L, 2);
 
-        const GL_Surface_t *surface = &canvas->context.surface;
-        GL_sheet_fetch(&sheet, (GL_Image_t){ .width = surface->width, .height = surface->height, .data = surface->data }, glyph_width, glyph_height, surface_callback_pixels, NULL);
+        sheet = GL_sheet_fetch(canvas->context->surface, glyph_width, glyph_height);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p grabbed", canvas);
+    }
+
+    if (!sheet) {
+        luaL_error(L, "can't create sheet");
     }
 
     Font_Class_t *instance = (Font_Class_t *)lua_newuserdata(L, sizeof(Font_Class_t));
@@ -198,7 +204,7 @@ static int font_new5(lua_State *L)
     const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    GL_Sheet_t sheet;
+    GL_Sheet_t *sheet;
 
     if (type == LUA_TSTRING) {
         const char *file = lua_tostring(L, 1);
@@ -207,14 +213,14 @@ static int font_new5(lua_State *L)
 
         const Sheet_Data_t *data = resources_sheets_find(file);
         if (data) {
-            GL_sheet_decode(&sheet, data->data, data->size, data->cell_width, data->cell_height, surface_callback_indexes, (void *)indexes);
+            sheet = GL_sheet_decode(data->data, data->size, data->cell_width, data->cell_height, surface_callback_indexes, (void *)indexes);
             Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` decoded", file);
         } else {
-            File_System_Chunk_t chunk = FSaux_load(file_system, file, FILE_SYSTEM_CHUNK_IMAGE);
+            File_System_Chunk_t chunk = FSaux_load(file_system, file, FILE_SYSTEM_CHUNK_BLOB);
             if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
                 return luaL_error(L, "can't load file `%s`", file);
             }
-            GL_sheet_fetch(&sheet, (GL_Image_t){ .width = chunk.var.image.width, .height = chunk.var.image.height, .data = chunk.var.image.pixels }, glyph_width, glyph_height, surface_callback_indexes, (void *)indexes);
+            sheet = GL_sheet_decode(chunk.var.blob.ptr, chunk.var.blob.size, glyph_width, glyph_height, surface_callback_indexes, (void *)indexes);
             Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` loaded", file);
             FSaux_release(chunk);
         }
@@ -222,9 +228,12 @@ static int font_new5(lua_State *L)
     if (type == LUA_TUSERDATA) {
         const Canvas_Class_t *canvas = (const Canvas_Class_t *)lua_touserdata(L, 1);
 
-        const GL_Surface_t *surface = &canvas->context.surface;
-        GL_sheet_fetch(&sheet, (GL_Image_t){ .width = surface->width, .height = surface->height, .data = surface->data }, glyph_width, glyph_height, surface_callback_pixels, NULL);
+        sheet = GL_sheet_fetch(canvas->context->surface, glyph_width, glyph_height);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p grabbed", canvas);
+    }
+
+    if (!sheet) {
+        luaL_error(L, "can't create sheet");
     }
 
     Font_Class_t *instance = (Font_Class_t *)lua_newuserdata(L, sizeof(Font_Class_t));
@@ -258,7 +267,7 @@ static int font_new6(lua_State *L)
 
     const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
 
-    GL_Sheet_t sheet;
+    GL_Sheet_t *sheet;
 
     if (type == LUA_TSTRING) {
         const char *file = lua_tostring(L, 2);
@@ -267,14 +276,14 @@ static int font_new6(lua_State *L)
 
         const Sheet_Data_t *data = resources_sheets_find(file);
         if (data) {
-            GL_sheet_decode(&sheet, data->data, data->size, data->cell_width, data->cell_height, surface_callback_indexes, (void *)indexes);
+            sheet = GL_sheet_decode(data->data, data->size, data->cell_width, data->cell_height, surface_callback_indexes, (void *)indexes);
             Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` decoded", file);
         } else {
-            File_System_Chunk_t chunk = FSaux_load(file_system, file, FILE_SYSTEM_CHUNK_IMAGE);
+            File_System_Chunk_t chunk = FSaux_load(file_system, file, FILE_SYSTEM_CHUNK_BLOB);
             if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
                 return luaL_error(L, "can't load file `%s`", file);
             }
-            GL_sheet_fetch(&sheet, (GL_Image_t){ .width = chunk.var.image.width, .height = chunk.var.image.height, .data = chunk.var.image.pixels }, glyph_width, glyph_height, surface_callback_indexes, (void *)indexes);
+            sheet = GL_sheet_decode(chunk.var.blob.ptr, chunk.var.blob.size, glyph_width, glyph_height, surface_callback_indexes, (void *)indexes);
             Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` loaded", file);
             FSaux_release(chunk);
         }
@@ -282,9 +291,12 @@ static int font_new6(lua_State *L)
     if (type == LUA_TUSERDATA) {
         const Canvas_Class_t *canvas = (const Canvas_Class_t *)lua_touserdata(L, 2);
 
-        const GL_Surface_t *surface = &canvas->context.surface;
-        GL_sheet_fetch(&sheet, (GL_Image_t){ .width = surface->width, .height = surface->height, .data = surface->data }, glyph_width, glyph_height, surface_callback_pixels, NULL);
+        sheet = GL_sheet_fetch(canvas->context->surface, glyph_width, glyph_height);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p grabbed", canvas);
+    }
+
+    if (!sheet) {
+        luaL_error(L, "can't create sheet");
     }
 
     Font_Class_t *instance = (Font_Class_t *)lua_newuserdata(L, sizeof(Font_Class_t));
@@ -316,7 +328,7 @@ static int font_gc(lua_State *L)
     LUAX_SIGNATURE_END
     Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
 
-    GL_sheet_delete(&instance->sheet);
+    GL_sheet_destroy(instance->sheet);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font %p finalized", instance);
 
     return 0;
@@ -361,7 +373,7 @@ static int font_width1(lua_State *L)
     LUAX_SIGNATURE_END
     Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
 
-    lua_pushinteger(L, instance->sheet.size.width);
+    lua_pushinteger(L, instance->sheet->size.width);
 
     return 1;
 }
@@ -375,7 +387,7 @@ static int font_width2(lua_State *L)
     Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
     const char *text = lua_tostring(L, 2);
 
-    int dw = instance->sheet.size.width;
+    int dw = instance->sheet->size.width;
 
     int width, height;
     _size(text, dw, 0, &width, &height);
@@ -396,7 +408,7 @@ static int font_width3(lua_State *L)
     const char *text = lua_tostring(L, 2);
     float scale = lua_tonumber(L, 3);
 
-    int dw = (int)(instance->sheet.size.width * fabsf(scale));
+    int dw = (int)(instance->sheet->size.width * fabsf(scale));
 
     int width, height;
     _size(text, dw, 0, &width, &height);
@@ -422,7 +434,7 @@ static int font_height1(lua_State *L)
     LUAX_SIGNATURE_END
     Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
 
-    lua_pushinteger(L, instance->sheet.size.height);
+    lua_pushinteger(L, instance->sheet->size.height);
 
     return 1;
 }
@@ -436,7 +448,7 @@ static int font_height2(lua_State *L)
     Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
     const char *text = lua_tostring(L, 2);
 
-    int dh = instance->sheet.size.height;
+    int dh = instance->sheet->size.height;
 
     int width, height;
     _size(text, 0, dh, &width, &height);
@@ -457,7 +469,7 @@ static int font_height3(lua_State *L)
     const char *text = lua_tostring(L, 2);
     float scale = lua_tonumber(L, 3);
 
-    int dh = (int)(instance->sheet.size.height * fabsf(scale));
+    int dh = (int)(instance->sheet->size.height * fabsf(scale));
 
     int width, height;
     _size(text, 0, dh, &width, &height);
@@ -483,8 +495,8 @@ static int font_size1(lua_State *L)
     LUAX_SIGNATURE_END
     Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
 
-    lua_pushinteger(L, instance->sheet.size.width);
-    lua_pushinteger(L, instance->sheet.size.height);
+    lua_pushinteger(L, instance->sheet->size.width);
+    lua_pushinteger(L, instance->sheet->size.height);
 
     return 2;
 }
@@ -498,8 +510,8 @@ static int font_size2(lua_State *L)
     Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
     const char *text = lua_tostring(L, 2);
 
-    int dw = instance->sheet.size.width;
-    int dh = instance->sheet.size.height;
+    int dw = instance->sheet->size.width;
+    int dh = instance->sheet->size.height;
 
     int width, height;
     _size(text, dw, dh, &width, &height);
@@ -521,8 +533,8 @@ static int font_size3(lua_State *L)
     const char *text = lua_tostring(L, 2);
     float scale = lua_tonumber(L, 3);
 
-    int dw = (int)(instance->sheet.size.width * fabsf(scale));
-    int dh = (int)(instance->sheet.size.height * fabsf(scale));
+    int dw = (int)(instance->sheet->size.width * fabsf(scale));
+    int dh = (int)(instance->sheet->size.height * fabsf(scale));
 
     int width, height;
     _size(text, dw, dh, &width, &height);
@@ -546,8 +558,8 @@ static int font_size4(lua_State *L)
     float scale_x = lua_tonumber(L, 3);
     float scale_y = lua_tonumber(L, 4);
 
-    int dw = (int)(instance->sheet.size.width * fabsf(scale_x));
-    int dh = (int)(instance->sheet.size.height * fabsf(scale_y));
+    int dw = (int)(instance->sheet->size.width * fabsf(scale_x));
+    int dh = (int)(instance->sheet->size.height * fabsf(scale_y));
 
     int width, height;
     _size(text, dw, dh, &width, &height);
@@ -581,8 +593,8 @@ static int font_write4(lua_State *L)
     int x = lua_tointeger(L, 3);
     int y = lua_tointeger(L, 4);
 
-    const GL_Context_t *context = &instance->context;
-    const GL_Sheet_t *sheet = &instance->sheet;
+    const GL_Context_t *context = instance->context;
+    const GL_Sheet_t *sheet = instance->sheet;
 
     int dw = sheet->size.width;
 #ifndef __NO_LINEFEEDS__
@@ -602,7 +614,7 @@ static int font_write4(lua_State *L)
         if (c < ' ') {
             continue;
         }
-        GL_context_blit(context, &sheet->atlas, sheet->cells[c - ' '], (GL_Point_t){ .x = dx, .y = dy });
+        GL_context_blit(context, sheet->atlas, sheet->cells[c - ' '], (GL_Point_t){ .x = dx, .y = dy });
         dx += dw;
     }
 
@@ -624,8 +636,8 @@ static int font_write5(lua_State *L)
     int y = lua_tointeger(L, 4);
     float scale = lua_tonumber(L, 5);
 
-    const GL_Context_t *context = &instance->context;
-    const GL_Sheet_t *sheet = &instance->sheet;
+    const GL_Context_t *context = instance->context;
+    const GL_Sheet_t *sheet = instance->sheet;
 
     int dw = (int)(sheet->size.width * fabsf(scale));
 #ifndef __NO_LINEFEEDS__
@@ -645,7 +657,7 @@ static int font_write5(lua_State *L)
         if (c < ' ') {
             continue;
         }
-        GL_context_blit_s(context, &sheet->atlas, sheet->cells[c - ' '], (GL_Point_t){ .x = dx, .y = dy }, scale, scale);
+        GL_context_blit_s(context, sheet->atlas, sheet->cells[c - ' '], (GL_Point_t){ .x = dx, .y = dy }, scale, scale);
         dx += dw;
     }
 
@@ -669,8 +681,8 @@ static int font_write6(lua_State *L)
     float scale_x = lua_tonumber(L, 5);
     float scale_y = lua_tonumber(L, 6);
 
-    const GL_Context_t *context = &instance->context;
-    const GL_Sheet_t *sheet = &instance->sheet;
+    const GL_Context_t *context = instance->context;
+    const GL_Sheet_t *sheet = instance->sheet;
 
     int dw = (int)(sheet->size.width * fabsf(scale_x));
 #ifndef __NO_LINEFEEDS__
@@ -690,7 +702,7 @@ static int font_write6(lua_State *L)
         if (c < ' ') {
             continue;
         }
-        GL_context_blit_s(context, &sheet->atlas, sheet->cells[c - ' '], (GL_Point_t){ .x = dx, .y = dy }, scale_x, scale_y);
+        GL_context_blit_s(context, sheet->atlas, sheet->cells[c - ' '], (GL_Point_t){ .x = dx, .y = dy }, scale_x, scale_y);
         dx += dw;
     }
 

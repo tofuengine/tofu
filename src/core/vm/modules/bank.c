@@ -75,25 +75,27 @@ static int bank_new3(lua_State *L)
     const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    GL_Sheet_t sheet;
-
+    GL_Sheet_t *sheet = NULL;
     if (type == LUA_TSTRING) {
         const char *file = lua_tostring(L, 1);
 
-        File_System_Chunk_t chunk = FSaux_load(file_system, file, FILE_SYSTEM_CHUNK_IMAGE);
+        File_System_Chunk_t chunk = FSaux_load(file_system, file, FILE_SYSTEM_CHUNK_BLOB);
         if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
             return luaL_error(L, "can't load file `%s`", file);
         }
-        GL_sheet_fetch(&sheet, (GL_Image_t){ .width = chunk.var.image.width, .height = chunk.var.image.height, .data = chunk.var.image.pixels }, cell_width, cell_height, surface_callback_palette, (void *)&display->palette);
+        sheet = GL_sheet_decode(chunk.var.blob.ptr, chunk.var.blob.size, cell_width, cell_height, surface_callback_palette, (void *)&display->palette);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` loaded", file);
         FSaux_release(chunk);
     } else
     if (type == LUA_TUSERDATA) {
         const Canvas_Class_t *canvas = (const Canvas_Class_t *)lua_touserdata(L, 1);
 
-        const GL_Surface_t *surface = &canvas->context.surface;
-        GL_sheet_fetch(&sheet, (GL_Image_t){ .width = surface->width, .height = surface->height, .data = surface->data }, cell_width, cell_height, surface_callback_pixels, NULL);
+        sheet = GL_sheet_fetch(canvas->context->surface, cell_width, cell_height);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p grabbed", canvas);
+    }
+
+    if (!sheet) {
+        luaL_error(L, "can't create sheet");
     }
 
     Bank_Class_t *instance = (Bank_Class_t *)lua_newuserdata(L, sizeof(Bank_Class_t));
@@ -124,25 +126,28 @@ static int bank_new4(lua_State *L)
     const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    GL_Sheet_t sheet;
+    GL_Sheet_t *sheet = NULL;
 
     if (type == LUA_TSTRING) {
         const char *file = lua_tostring(L, 2);
 
-        File_System_Chunk_t chunk = FSaux_load(file_system, file, FILE_SYSTEM_CHUNK_IMAGE);
+        File_System_Chunk_t chunk = FSaux_load(file_system, file, FILE_SYSTEM_CHUNK_BLOB);
         if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
             return luaL_error(L, "can't load file `%s`", file);
         }
-        GL_sheet_fetch(&sheet, (GL_Image_t){ .width = chunk.var.image.width, .height = chunk.var.image.height, .data = chunk.var.image.pixels }, cell_width, cell_height, surface_callback_palette, (void *)&display->palette);
+        sheet = GL_sheet_decode(chunk.var.blob.ptr, chunk.var.blob.size, cell_width, cell_height, surface_callback_palette, (void *)&display->palette);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` loaded", file);
         FSaux_release(chunk);
     } else
     if (type == LUA_TUSERDATA) {
         const Canvas_Class_t *canvas = (const Canvas_Class_t *)lua_touserdata(L, 2);
 
-        const GL_Surface_t *surface = &canvas->context.surface;
-        GL_sheet_fetch(&sheet, (GL_Image_t){ .width = surface->width, .height = surface->height, .data = surface->data }, cell_width, cell_height, surface_callback_pixels, NULL);
+        sheet = GL_sheet_fetch(canvas->context->surface, cell_width, cell_height);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p grabbed", canvas);
+    }
+
+    if (!sheet) {
+        luaL_error(L, "can't create sheet");
     }
 
     Bank_Class_t *instance = (Bank_Class_t *)lua_newuserdata(L, sizeof(Bank_Class_t));
@@ -172,7 +177,7 @@ static int bank_gc(lua_State *L)
     LUAX_SIGNATURE_END
     Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
 
-    GL_sheet_delete(&instance->sheet);
+    GL_sheet_destroy(instance->sheet);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p finalized", instance);
 
     return 0;
@@ -185,7 +190,7 @@ static int bank_size1(lua_State *L)
     LUAX_SIGNATURE_END
     Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
 
-    const GL_Sheet_t *sheet = &instance->sheet;
+    const GL_Sheet_t *sheet = instance->sheet;
     lua_pushinteger(L, sheet->size.width);
     lua_pushinteger(L, sheet->size.height);
 
@@ -201,7 +206,7 @@ static int bank_size2(lua_State *L)
     Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
     float scale = lua_tonumber(L, 2);
 
-    const GL_Sheet_t *sheet = &instance->sheet;
+    const GL_Sheet_t *sheet = instance->sheet;
     lua_pushinteger(L, (int)(sheet->size.width * fabsf(scale)));
     lua_pushinteger(L, (int)(sheet->size.height * fabsf(scale)));
 
@@ -219,7 +224,7 @@ static int bank_size3(lua_State *L)
     float scale_x = lua_tonumber(L, 2);
     float scale_y = lua_tonumber(L, 3);
 
-    const GL_Sheet_t *sheet = &instance->sheet;
+    const GL_Sheet_t *sheet = instance->sheet;
     lua_pushinteger(L, (int)(sheet->size.width * fabsf(scale_x)));
     lua_pushinteger(L, (int)(sheet->size.height * fabsf(scale_y)));
 
@@ -248,9 +253,9 @@ static int bank_blit4(lua_State *L)
     int x = lua_tointeger(L, 3);
     int y = lua_tointeger(L, 4);
 
-    const GL_Context_t *context = &instance->context;
-    const GL_Sheet_t *sheet = &instance->sheet;
-    GL_context_blit(context, &sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y });
+    const GL_Context_t *context = instance->context;
+    const GL_Sheet_t *sheet = instance->sheet;
+    GL_context_blit(context, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y });
 
     return 0;
 }
@@ -270,9 +275,9 @@ static int bank_blit5(lua_State *L)
     int y = lua_tointeger(L, 4);
     float scale = lua_tonumber(L, 5);
 
-    const GL_Context_t *context = &instance->context;
-    const GL_Sheet_t *sheet = &instance->sheet;
-    GL_context_blit_s(context, &sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, scale, scale);
+    const GL_Context_t *context = instance->context;
+    const GL_Sheet_t *sheet = instance->sheet;
+    GL_context_blit_s(context, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, scale, scale);
 
     return 0;
 }
@@ -294,9 +299,9 @@ static int bank_blit6(lua_State *L)
     float scale = lua_tonumber(L, 5);
     int rotation = lua_tointeger(L, 6);
 
-    const GL_Context_t *context = &instance->context;
-    const GL_Sheet_t *sheet = &instance->sheet;
-    GL_context_blit_sr(context, &sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, scale, scale, rotation, 0.5f, 0.5f);
+    const GL_Context_t *context = instance->context;
+    const GL_Sheet_t *sheet = instance->sheet;
+    GL_context_blit_sr(context, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, scale, scale, rotation, 0.5f, 0.5f);
 
     return 0;
 }
@@ -320,9 +325,9 @@ static int bank_blit7(lua_State *L)
     float scale_y = lua_tonumber(L, 6);
     int rotation = lua_tointeger(L, 7);
 
-    const GL_Context_t *context = &instance->context;
-    const GL_Sheet_t *sheet = &instance->sheet;
-    GL_context_blit_sr(context, &sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, scale_x, scale_y, rotation, 0.5f, 0.5f);
+    const GL_Context_t *context = instance->context;
+    const GL_Sheet_t *sheet = instance->sheet;
+    GL_context_blit_sr(context, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, scale_x, scale_y, rotation, 0.5f, 0.5f);
 
     return 0;
 }
@@ -350,9 +355,9 @@ static int bank_blit9(lua_State *L)
     float anchor_x = lua_tonumber(L, 8);
     float anchor_y = lua_tonumber(L, 9);
 
-    const GL_Context_t *context = &instance->context;
-    const GL_Sheet_t *sheet = &instance->sheet;
-    GL_context_blit_sr(context, &sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, scale_x, scale_y, rotation, anchor_x, anchor_y);
+    const GL_Context_t *context = instance->context;
+    const GL_Sheet_t *sheet = instance->sheet;
+    GL_context_blit_sr(context, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, scale_x, scale_y, rotation, anchor_x, anchor_y);
 
     return 0;
 }

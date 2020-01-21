@@ -277,7 +277,7 @@ void GL_primitive_point(const GL_Context_t *context, GL_Point_t position, GL_Pix
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
-    const GL_Surface_t *surface = &context->surface;
+    const GL_Surface_t *surface = context->surface;
 
     index = shifting[index];
 
@@ -294,7 +294,7 @@ void GL_primitive_hline(const GL_Context_t *context, GL_Point_t origin, size_t w
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
-    const GL_Surface_t *surface = &context->surface;
+    const GL_Surface_t *surface = context->surface;
 
     index = shifting[index];
 
@@ -311,7 +311,7 @@ void GL_primitive_vline(const GL_Context_t *context, GL_Point_t origin, size_t h
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
-    const GL_Surface_t *surface = &context->surface;
+    const GL_Surface_t *surface = context->surface;
 
     index = shifting[index];
 
@@ -328,7 +328,7 @@ void GL_primitive_polyline(const GL_Context_t *context, const GL_Point_t *vertic
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
-    const GL_Surface_t *surface = &context->surface;
+    const GL_Surface_t *surface = context->surface;
 
     index = shifting[index];
 
@@ -354,7 +354,7 @@ void GL_context_process(const GL_Context_t *context, GL_Rectangle_t rectangle)
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
-    const GL_Surface_t *surface = &context->surface;
+    const GL_Surface_t *surface = context->surface;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = rectangle.x,
@@ -409,7 +409,7 @@ void GL_primitive_filled_rectangle(const GL_Context_t *context, GL_Rectangle_t r
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
-    const GL_Surface_t *surface = &context->surface;
+    const GL_Surface_t *surface = context->surface;
 
     index = shifting[index];
 
@@ -469,7 +469,7 @@ void GL_primitive_filled_triangle(const GL_Context_t *context, GL_Point_t a, GL_
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
-    const GL_Surface_t *surface = &context->surface;
+    const GL_Surface_t *surface = context->surface;
 
     index = shifting[index];
 
@@ -571,7 +571,7 @@ void GL_primitive_filled_circle(const GL_Context_t *context, GL_Point_t center, 
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
-    const GL_Surface_t *surface = &context->surface;
+    const GL_Surface_t *surface = context->surface;
 
     index = shifting[index];
 
@@ -611,7 +611,7 @@ void GL_primitive_circle(const GL_Context_t *context, GL_Point_t center, int rad
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
-    const GL_Surface_t *surface = &context->surface;
+    const GL_Surface_t *surface = context->surface;
 
     index = shifting[index];
 
@@ -653,7 +653,7 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
     const GL_State_t *state = &context->state;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
-    const GL_Surface_t *surface = &context->surface;
+    const GL_Surface_t *surface = context->surface;
 
     if (seed.x < clipping_region->x0 || seed.x > clipping_region->x1
         || seed.y < clipping_region->y0 || seed.y > clipping_region->y1) {
@@ -670,7 +670,7 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
     GL_Point_t *stack = NULL;
     arrpush(stack, seed);
 
-    const int dskip = context->surface.width;
+    const int dskip = context->surface->width;
 
     while (arrlen(stack) > 0) {
         const GL_Point_t position = arrpop(stack);

@@ -312,7 +312,8 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "version: %s", glGetString(GL_VERSION));
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "GLSL: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
-    if (!GL_context_create(&display->context, configuration->width, configuration->height)) {
+    display->context = GL_context_create(configuration->width, configuration->height);
+    if (!display->context) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize GL");
         glfwDestroyWindow(display->window);
         glfwTerminate();
@@ -326,7 +327,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     display->vram = malloc(display->vram_size);
     if (!display->vram) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't allocate VRAM buffer");
-        GL_context_delete(&display->context);
+        GL_context_destroy(display->context);
         glfwDestroyWindow(display->window);
         glfwTerminate();
     }
@@ -336,7 +337,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     if (display->vram_texture == 0) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't allocate VRAM texture");
         free(display->vram);
-        GL_context_delete(&display->context);
+        GL_context_destroy(display->context);
         glfwDestroyWindow(display->window);
         glfwTerminate();
         return false;
@@ -367,7 +368,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
             }
             glDeleteBuffers(1, &display->vram_texture);
             free(display->vram);
-            GL_context_delete(&display->context);
+            GL_context_destroy(display->context);
             glfwDestroyWindow(display->window);
             glfwTerminate();
             return false;
@@ -401,7 +402,7 @@ void Display_terminate(Display_t *display)
     free(display->vram);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "VRAM buffer %p deallocated", display->vram);
 
-    GL_context_delete(&display->context);
+    GL_context_destroy(display->context);
 
     glfwDestroyWindow(display->window);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window %p destroyed", display->window);
@@ -432,7 +433,7 @@ void Display_present(const Display_t *display)
     glClear(GL_COLOR_BUFFER_BIT);
 
     // Convert the offscreen surface to a texture.
-    const GL_Surface_t *surface = &display->context.surface;
+    const GL_Surface_t *surface = display->context->surface;
     GL_Color_t *vram = display->vram;
 
     GL_surface_to_rgba(surface, &display->palette, vram);

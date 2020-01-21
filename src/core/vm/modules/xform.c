@@ -152,8 +152,8 @@ static int xform_blit2(lua_State *L)
     XForm_Class_t *instance = (XForm_Class_t *)lua_touserdata(L, 1); // TODO: rename `instance` to `self`.
     Canvas_Class_t *canvas = (Canvas_Class_t *)lua_touserdata(L, 2);
 
-    const GL_Context_t *context = &instance->context;
-    const GL_Surface_t *surface = &canvas->context.surface;
+    const GL_Context_t *context = instance->context;
+    const GL_Surface_t *surface = canvas->context->surface;
     GL_context_blit_x(context, surface, (GL_Point_t){ .x = 0, .y = 0 }, &instance->xform);
 
     return 0;
@@ -172,8 +172,8 @@ static int xform_blit4(lua_State *L)
     int x = lua_tointeger(L, 3);
     int y = lua_tointeger(L, 4);
 
-    const GL_Context_t *context = &instance->context;
-    const GL_Surface_t *surface = &canvas->context.surface;
+    const GL_Context_t *context = instance->context;
+    const GL_Surface_t *surface = canvas->context->surface;
     GL_context_blit_x(context, surface, (GL_Point_t){ .x = x, .y = y }, &instance->xform);
 
     return 0;

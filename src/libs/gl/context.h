@@ -53,13 +53,14 @@ typedef struct _GL_State_t {
 } GL_State_t;
 
 typedef struct _GL_Context_t {
-    GL_Surface_t surface;
+    GL_Surface_t *surface;
     GL_State_t state;
     GL_State_t *stack;
 } GL_Context_t;
 
-extern bool GL_context_create(GL_Context_t *context, size_t width, size_t height);
-extern void GL_context_delete(GL_Context_t *context); // TODO: rename to `*_destroy()`?
+extern GL_Context_t *GL_context_decode(const void *buffer, size_t buffer_size, const GL_Surface_Callback_t callback, void *user_data);
+extern GL_Context_t *GL_context_create(size_t width, size_t height);
+extern void GL_context_destroy(GL_Context_t *context);
 
 extern void GL_context_push(GL_Context_t *context);
 extern void GL_context_pop(GL_Context_t *context);

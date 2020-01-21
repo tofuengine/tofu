@@ -33,12 +33,12 @@
 
 #define LOG_CONTEXT "gl"
 
-static inline void _reset_state(GL_State_t *state, size_t width, size_t height)
+static inline void _reset_state(GL_State_t *state, const GL_Surface_t *surface)
 {
     *state = (GL_State_t){
             .background = 0,
             .color = 1,
-            .clipping_region = (GL_Quad_t){ .x0 = 0, .y0 = 0, .x1 = width - 1, .y1 = height - 1 },
+            .clipping_region = (GL_Quad_t){ .x0 = 0, .y0 = 0, .x1 = surface->width - 1, .y1 = surface->height - 1 },
             .shifting = { 0 },
             .transparent = { 0 }
 #ifdef __STENCIL_SUPPORT__
@@ -53,26 +53,60 @@ static inline void _reset_state(GL_State_t *state, size_t width, size_t height)
     state->transparent[0] = GL_BOOL_TRUE;
 }
 
-bool GL_context_create(GL_Context_t *context, size_t width, size_t height)
+GL_Context_t *GL_context_decode(const void *buffer, size_t buffer_size, const GL_Surface_Callback_t callback, void *user_data)
 {
-    *context = (GL_Context_t){ 0 };
+    GL_Surface_t *surface = GL_surface_decode(buffer, buffer_size, callback, user_data);
+    if (!surface) {
+        return NULL;
+    }
 
-    GL_surface_create(&context->surface, width, height);
+    GL_Context_t *context = malloc(sizeof(GL_Context_t));
+    if (!context) {
+        return NULL;
+    }
 
-    _reset_state(&context->state, width, height);
+    *context = (GL_Context_t){
+            .surface = surface
+        };
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context created");
-    return true;
+    _reset_state(&context->state, surface);
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context decoded");
+    return context;
 }
 
-void GL_context_delete(GL_Context_t *context)
+GL_Context_t *GL_context_create(size_t width, size_t height)
+{
+    GL_Surface_t *surface = GL_surface_create(width, height);
+    if (!surface) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "context create %dx%d surface", width, height);
+        return NULL;
+    }
+
+    GL_Context_t *context = malloc(sizeof(GL_Context_t));
+    if (!context) {
+        return NULL;
+    }
+
+    *context = (GL_Context_t){
+            .surface = surface
+        };
+
+    _reset_state(&context->state, surface);
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context created");
+    return context;
+}
+
+void GL_context_destroy(GL_Context_t *context)
 {
     arrfree(context->stack);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context stack deallocated");
 
-    GL_surface_delete(&context->surface);
+    GL_surface_destroy(context->surface);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context surface deleted");
 
+    free(context);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context deleted");
 }
 
@@ -95,7 +129,7 @@ void GL_context_reset(GL_Context_t *context)
     arrfree(context->stack);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context stack deallocated");
 
-    _reset_state(&context->state, context->surface.width, context->surface.height);
+    _reset_state(&context->state, context->surface);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context reset");
 }
 
@@ -118,15 +152,15 @@ void GL_context_clipping(GL_Context_t *context, const GL_Rectangle_t *region)
         state->clipping_region = (GL_Quad_t){
                 .x0 = 0,
                 .y0 = 0,
-                .x1 = context->surface.width - 1,
-                .y1 = context->surface.height - 1
+                .x1 = context->surface->width - 1,
+                .y1 = context->surface->height - 1
             };
     } else {
         state->clipping_region = (GL_Quad_t){
                 .x0 = imax(0, region->x),
                 .y0 = imax(0, region->y),
-                .x1 = imin(context->surface.width, region->x + region->width) - 1,
-                .y1 = imin(context->surface.height, region->y + region->height) - 1
+                .x1 = imin(context->surface->width, region->x + region->width) - 1,
+                .y1 = imin(context->surface->height, region->y + region->height) - 1
             };
     }
 }
@@ -174,15 +208,15 @@ void GL_context_mask(GL_Context_t *context, const GL_Mask_t *mask)
 
 void GL_context_clear(const GL_Context_t *context, GL_Pixel_t index)
 {
-    GL_Pixel_t *dst = context->surface.data;
-    for (size_t i = context->surface.data_size; i; --i) {
+    GL_Pixel_t *dst = context->surface->data;
+    for (size_t i = context->surface->data_size; i; --i) {
         *(dst++) = index;
     }
 }
 
 void GL_context_to_surface(const GL_Context_t *context, const GL_Surface_t *to)
 {
-    const GL_Surface_t *from = &context->surface;
+    const GL_Surface_t *from = context->surface;
 
     size_t width = imin(from->width, to->width);
     size_t height = imin(from->height, to->height);

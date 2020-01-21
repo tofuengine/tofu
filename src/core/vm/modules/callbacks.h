@@ -29,6 +29,5 @@
 
 extern void surface_callback_palette(void *user_data, GL_Surface_t *surface, const void *data);
 extern void surface_callback_indexes(void *user_data, GL_Surface_t *surface, const void *data);
-extern void surface_callback_pixels(void *user_data, GL_Surface_t *surface, const void *data);
 
 #endif  /* __MODULES_CALLBACKS_H__ */
