@@ -312,7 +312,8 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "version: %s", glGetString(GL_VERSION));
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "GLSL: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
-    if (!GL_context_create(&display->gl, configuration->width, configuration->height)) {
+    display->context = GL_context_create(configuration->width, configuration->height);
+    if (!display->context) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize GL");
         glfwDestroyWindow(display->window);
         glfwTerminate();
@@ -320,15 +321,13 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     }
 
     GL_palette_greyscale(&display->palette, GL_MAX_PALETTE_COLORS);
-    display->background = 0; // Default background is `0`.
-    display->color = GL_MAX_PALETTE_COLORS - 1; // Ditto.
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded greyscale palette of #%d entries", GL_MAX_PALETTE_COLORS);
 
     display->vram_size = display->configuration.width * display->configuration.width * sizeof(GL_Color_t);
     display->vram = malloc(display->vram_size);
     if (!display->vram) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't allocate VRAM buffer");
-        GL_context_delete(&display->gl);
+        GL_context_destroy(display->context);
         glfwDestroyWindow(display->window);
         glfwTerminate();
     }
@@ -338,7 +337,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     if (display->vram_texture == 0) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't allocate VRAM texture");
         free(display->vram);
-        GL_context_delete(&display->gl);
+        GL_context_destroy(display->context);
         glfwDestroyWindow(display->window);
         glfwTerminate();
         return false;
@@ -369,7 +368,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
             }
             glDeleteBuffers(1, &display->vram_texture);
             free(display->vram);
-            GL_context_delete(&display->gl);
+            GL_context_destroy(display->context);
             glfwDestroyWindow(display->window);
             glfwTerminate();
             return false;
@@ -401,9 +400,9 @@ void Display_terminate(Display_t *display)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "texture w/ id #%d deleted", display->vram_texture);
 
     free(display->vram);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "VRAM buffer %p deallocated", display->vram);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "VRAM buffer %p freed", display->vram);
 
-    GL_context_delete(&display->gl);
+    GL_context_destroy(display->context);
 
     glfwDestroyWindow(display->window);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window %p destroyed", display->window);
@@ -427,36 +426,19 @@ void Display_update(Display_t *display, float delta_time)
 #endif
 }
 
-void Display_background(Display_t *display, GL_Pixel_t index)
-{
-    display->background = index;
-}
-
-void Display_color(Display_t *display, GL_Pixel_t index)
-{
-    display->color = index;
-}
-
-void Display_clear(const Display_t *display)
+void Display_present(const Display_t *display)
 {
     // It is advisable to clear the color buffer even if the framebuffer will be
     // fully written (see `glTexSubImage2D()` below)
     glClear(GL_COLOR_BUFFER_BIT);
-}
 
-void Display_offset(Display_t *display, GL_Point_t offset)
-{
-    display->vram_offset = offset;
-}
-
-void Display_present(const Display_t *display)
-{
-    const GL_Surface_t *buffer = &display->gl.buffer;
+    // Convert the offscreen surface to a texture.
+    const GL_Surface_t *surface = display->context->surface;
     GL_Color_t *vram = display->vram;
 
-    GL_surface_to_rgba(buffer, &display->palette, vram);
+    GL_surface_to_rgba(surface, &display->palette, vram);
 
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, buffer->width, buffer->height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, vram);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, surface->width, surface->height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, vram);
 
     // Add an offset x/y to implement shaking and similar effects.
     const GL_Quad_t *vram_destination = &display->vram_destination;
@@ -481,6 +463,17 @@ void Display_present(const Display_t *display)
     glEnd();
 
     glfwSwapBuffers(display->window);
+}
+
+void Display_palette(Display_t *display, const GL_Palette_t *palette)
+{
+    display->palette = *palette;
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette updated");
+}
+
+void Display_offset(Display_t *display, GL_Point_t offset)
+{
+    display->vram_offset = offset;
 }
 
 void Display_shader(Display_t *display, const char *effect)
@@ -532,13 +525,4 @@ void Display_shader(Display_t *display, const char *effect)
     GLfloat resolution[] = { (GLfloat)display->window_width, (GLfloat)display->window_height };
     program_send(display->active_program, UNIFORM_RESOLUTION, PROGRAM_UNIFORM_VEC2, 1, resolution);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p initialized", display->active_program);
-}
-
-void Display_palette(Display_t *display, const GL_Palette_t *palette)
-{
-    display->palette = *palette;
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette updated");
-
-    display->background = 0; // Default background is `0`.
-    display->color = palette->count - 1; // Default foreground is last color.
 }

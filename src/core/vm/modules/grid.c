@@ -35,8 +35,7 @@
 #include <stdlib.h>
 
 #define LOG_CONTEXT "grid"
-
-#define GRID_MT        "Tofu_Grid_mt"
+#define META_TABLE  "Tofu_Collections_Grid_mt"
 
 static int grid_new(lua_State *L);
 static int grid_gc(lua_State *L);
@@ -75,7 +74,7 @@ static luaX_Script _grid_script = { (const char *)_grid_lua, sizeof(_grid_lua), 
 int grid_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, &_grid_script, _grid_functions, NULL, nup, GRID_MT);
+    return luaX_newmodule(L, &_grid_script, _grid_functions, NULL, nup, META_TABLE);
 }
 
 static int grid_new(lua_State *L)
@@ -89,18 +88,14 @@ static int grid_new(lua_State *L)
     size_t height = (size_t)lua_tointeger(L, 2);
     int type = lua_type(L, 3);
 
-    Grid_Class_t *instance = (Grid_Class_t *)lua_newuserdata(L, sizeof(Grid_Class_t));
-
     size_t data_size = width * height;
     Cell_t *data = malloc(data_size * sizeof(Cell_t));
-
     if (!data) {
-        return luaL_error(L, "can't allocate memory");
+        return luaL_error(L, "can't allocate %dx%d grid", width, height);
     }
 
     Cell_t *ptr = data;
     Cell_t *eod = ptr + data_size;
-
     if (type == LUA_TTABLE) {
         lua_pushnil(L);
         while (lua_next(L, 3)) {
@@ -123,6 +118,7 @@ static int grid_new(lua_State *L)
         }
     }
 
+    Grid_Class_t *instance = (Grid_Class_t *)lua_newuserdata(L, sizeof(Grid_Class_t));
     *instance = (Grid_Class_t){
             .width = width,
             .height = height,
@@ -130,9 +126,9 @@ static int grid_new(lua_State *L)
             .data_size = data_size
         };
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "grid %p allocated", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "grid %p allocated w/ data %p", instance, data);
 
-    luaL_setmetatable(L, GRID_MT);
+    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }
@@ -144,9 +140,10 @@ static int grid_gc(lua_State *L)
     LUAX_SIGNATURE_END
     Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "finalizing grid %p", instance);
-
     free(instance->data);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "data %p freed", instance->data);
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "grid %p finalized", instance);
 
     return 0;
 }

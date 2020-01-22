@@ -25,6 +25,7 @@ SOFTWARE.
 local System = require("tofu.core").System
 local Bank = require("tofu.graphics").Bank
 local Canvas = require("tofu.graphics").Canvas
+local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
 local Input = require("tofu.events").Input
 local Class = require("tofu.util").Class
@@ -34,27 +35,16 @@ local MAX_BUNNIES = 32768
 
 local Main = Class.define()
 
-local function dump(t, spaces)
-  spaces = spaces or ""
-  for k, v in pairs(t) do
-    print(spaces .. k .. " " .. type(v) .. " " .. tostring(v))
-    if type(v) == "table" then
-      if (k ~= "__index") then
-        dump(v, spaces .. " ")
-      end
-    end
-  end
-end
-
 function Main:__ctor()
-dump(Canvas)
-  Canvas.palette("pico-8")
-  Canvas.transparent({ ["0"] = false, ["11"] = true })
-  Canvas.background(0)
+  Display.palette("pico-8")
+
+  local canvas = Canvas.default()
+  canvas:transparent({ ["0"] = false, ["11"] = true })
+  canvas:background(0)
 
   self.bunnies = {}
   self.bank = Bank.new("assets/sheet.png", 26, 37)
-  self.font = Font.default(11, 6)
+  self.font = Font.default("5x8", 11, 6)
   self.speed = 1.0
   self.running = true
 end
@@ -91,14 +81,15 @@ function Main:update(delta_time)
 end
 
 function Main:render(_)
-  Canvas.clear()
+  local canvas = Canvas.default()
+  canvas:clear()
 
   for _, bunny in pairs(self.bunnies) do
     bunny:render()
   end
 
   self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
-  self.font:write(self.font:align(string.format("#%d bunnies", #self.bunnies), Canvas.width(), 0, "right"))
+  self.font:write(self.font:align(string.format("#%d bunnies", #self.bunnies), canvas:width(), 0, "right"))
 end
 
 return Main

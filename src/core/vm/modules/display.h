@@ -22,24 +22,11 @@
  * SOFTWARE.
  */
 
-#include "map.h"
+#ifndef __MODULES_DISPLAY_H__
+#define __MODULES_DISPLAY_H__
 
-#include <stdlib.h>
-#include <string.h>
+#include <lua/lua.h>
 
-static int _entry_compare(const void *lhs, const void *rhs)
-{
-    const Map_Entry_t *l = (const Map_Entry_t *)lhs;
-    const Map_Entry_t *r = (const Map_Entry_t *)rhs;
-    return strcasecmp(l->key, r->key);
-}
+extern int display_loader(lua_State *L);
 
-const Map_Entry_t *map_find(lua_State *L, const char *id, const Map_Entry_t *table, size_t size)
-{
-    const Map_Entry_t key = { .key = id };
-    const Map_Entry_t *entry = bsearch((const void *)&key, table, size, sizeof(Map_Entry_t), _entry_compare);
-    if (!entry) {
-        luaL_error(L, "unknown value for key `%s`", id);
-    }
-    return entry;
-}
+#endif  /* __MODULES_DISPLAY_H__ */

@@ -198,7 +198,7 @@ File_System_Mount_t *pak_mount(const char *path)
             free(directory[i].name);
         }
         free(directory);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "directory w/ #%d entries deallocated", entries);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "directory w/ #%d entries freed", entries);
         return NULL;
     }
 
@@ -212,7 +212,7 @@ File_System_Mount_t *pak_mount(const char *path)
             free(directory[i].name);
         }
         free(directory);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "directory w/ #%d entries deallocated", entries);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "directory w/ #%d entries freed", entries);
         return NULL;
     }
 

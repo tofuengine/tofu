@@ -52,11 +52,6 @@ typedef struct _GL_Quad_t {
     int x1, y1;
 } GL_Quad_t;
 
-typedef struct _GL_Image_t {
-    size_t width, height;
-    const void *data;
-} GL_Image_t;
-
 #pragma pack(push, 1)
 typedef struct _GL_Color_t {
 #if PLATFORM_ID == PLATFORM_WINDOWS

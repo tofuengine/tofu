@@ -24,6 +24,7 @@ SOFTWARE.
 
 local Bank = require("tofu.graphics").Bank
 local Canvas = require("tofu.graphics").Canvas
+local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
 local Input = require("tofu.events").Input
 local Class = require("tofu.util").Class
@@ -46,16 +47,17 @@ local INDICES = {
   }
 
 function Main:__ctor()
-  Canvas.palette("pico-8")
-
-  Input.auto_repeat("x", 0.25)
-  Input.auto_repeat("y", 0.5)
-  Input.cursor_area(0, 0, Canvas.width(), Canvas.height())
+  Display.palette("pico-8")
 
   self.bank = Bank.new("assets/sheet.png", 12, 12)
   self.font = Font.default(0, 15)
   self.down = {}
   self.scale = {}
+
+  local canvas = Canvas.default()
+  Input.auto_repeat("x", 0.25)
+  Input.auto_repeat("y", 0.5)
+  Input.cursor_area(0, 0, canvas:width(), canvas:height()) -- FIXME: painful!
 end
 
 function Main:input()
@@ -75,32 +77,33 @@ function Main:update(delta_time)
   end
 end
 
-local function draw_stick(cx, cy, radius, _, _, angle, magnitude, pressed)
+local function draw_stick(canvas, cx, cy, radius, _, _, angle, magnitude, pressed)
   local dx, dy = math.floor(math.cos(angle) * magnitude * radius + 0.5),
                  math.floor(math.sin(angle) * magnitude * radius + 0.5)
 --  local dx, dy = x * radius, y * radius
   if pressed then
-    Canvas.circle("fill", cx, cy, radius, 2)
+    canvas:circle("fill", cx, cy, radius, 2)
   end
-  Canvas.circle("line", cx, cy, radius, 1)
-  Canvas.line(cx, cy, cx + dx, cy + dy, 3)
+  canvas:circle("line", cx, cy, radius, 1)
+  canvas:line(cx, cy, cx + dx, cy + dy, 3)
 end
 
-local function draw_trigger(cx, cy, radius, magnitude)
+local function draw_trigger(canvas, cx, cy, radius, magnitude)
   if magnitude > 0.0 then
-    Canvas.circle("fill", cx, cy, magnitude * radius, 2)
+    canvas:circle("fill", cx, cy, magnitude * radius, 2)
   end
-  Canvas.circle("line", cx, cy, radius, 1)
+  canvas:circle("line", cx, cy, radius, 1)
 end
 
 function Main:render(_)
   local t = System.time()
 
-  Canvas.clear()
+  local canvas = Canvas.default()
+  canvas:clear()
 
   local cw, ch = self.bank:size()
 
-  local x, y = (Canvas.width() - #IDS * cw) * 0.5, (Canvas.height() - ch) * 0.5
+  local x, y = (canvas:width() - #IDS * cw) * 0.5, (canvas:height() - ch) * 0.5
   for index, id in ipairs(IDS) do
     local dy = math.sin(t * 2.5 + x * 0.5) * ch
     if self.down[id] then
@@ -117,24 +120,24 @@ function Main:render(_)
     x = x + cw
   end
 
-  local h = Canvas.height() * 0.5
+  local h = canvas:height() * 0.5
   local lx, ly, la, lm = Input.stick("left")
   local rx, ry, ra, rm = Input.stick("right")
-  draw_stick(24, h - 12, 8, lx, ly, la, lm, Input.is_down("lt"))
-  draw_stick(232, h - 12, 8, rx, ry, ra, rm, Input.is_down("rt"))
+  draw_stick(canvas, 24, h - 12, 8, lx, ly, la, lm, Input.is_down("lt"))
+  draw_stick(canvas, 232, h - 12, 8, rx, ry, ra, rm, Input.is_down("rt"))
   local tl, tr = Input.triggers()
-  draw_trigger(24, h + 12, 8, tl)
-  draw_trigger(232, h + 12, 8, tr)
+  draw_trigger(canvas, 24, h + 12, 8, tl)
+  draw_trigger(canvas, 232, h + 12, 8, tr)
 
   local cx, cy = Input.cursor()
-  Canvas.line(cx - 3, cy, cx - 1, cy, 2)
-  Canvas.line(cx + 1, cy, cx + 3, cy, 2)
-  Canvas.line(cx, cy - 3, cx, cy - 1, 2)
-  Canvas.line(cx, cy + 1, cx, cy + 3, 2)
+  canvas:line(cx - 3, cy, cx - 1, cy, 2)
+  canvas:line(cx + 1, cy, cx + 3, cy, 2)
+  canvas:line(cx, cy - 3, cx, cy - 1, 2)
+  canvas:line(cx, cy + 1, cx, cy + 3, 2)
 
   self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
   self.font:write(self.font:align(string.format("X:%.2f Y:%.2f A:%.2f M:%.2f", lx, ly, la, lm),
-    Canvas.width(), Canvas.height(), "right", "bottom"))
+    canvas:width(), canvas:height(), "right", "bottom"))
 end
 
 return Main

@@ -250,7 +250,7 @@ luaX_Reference luaX_ref(lua_State *L, int idx)
 
 void luaX_unref(lua_State *L, luaX_Reference ref)
 {
-    luaL_unref(L, ref, LUA_REGISTRYINDEX);
+    luaL_unref(L, LUA_REGISTRYINDEX, ref);
 }
 
 void luaX_checkargument(lua_State *L, int idx, const char *file, int line, ...)

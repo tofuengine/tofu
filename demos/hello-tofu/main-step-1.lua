@@ -25,6 +25,7 @@ SOFTWARE.
 -- Include the modules we'll be using.
 local System = require("tofu.core").System
 local Canvas = require("tofu.graphics").Canvas
+local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
 local Class = require("tofu.util").Class
 
@@ -36,7 +37,7 @@ local MESSAGE = "Hello, Tofu!"
 
 function Main:__ctor()
   -- Load a predefined palette, we choose Pico-8's one.
-  Canvas.palette("pico-8")
+  Display.palette("pico-8")
 
   -- Create a default font, palette color `0` as background and `15` as foreground.
   -- Please note that, as default, palette color `0` is set as transparent. This
@@ -53,24 +54,27 @@ function Main:update(_)
 end
 
 function Main:render(_)
+  -- Get a reference to the default canvas (i.e. the the virtual-screen).
+  local canvas = Canvas.default()
+
   -- Query current time since the start, expressed in seconds (as a floating point number).
   local t = System.time()
 
   -- Convert the time to an integer, then instruct the engine that color `15` need to be
   -- remapped to color `index`.
   local index = tonumber(t) % 16
-  Canvas.shift(15, index)
+  canvas:shift(15, index)
 
   -- Clear the virtual-screen with default background color (i.e. palette color #0).
-  Canvas.clear()
+  canvas:clear()
 
   -- We need the message width and height to center it on screen.
   local font_width = self.font:width(MESSAGE)
   local font_height = self.font:height(MESSAGE)
 
   -- Compute vertical and horizontal position for the text.
-  local x = (Canvas.width() - font_width) * 0.5
-  local y = (Canvas.height() - font_height) * 0.5
+  local x = (canvas:width() - font_width) * 0.5
+  local y = (canvas:height() - font_height) * 0.5
 
   -- Finally, draw the message on-screen at the given position.
   self.font:write(MESSAGE, x, y)

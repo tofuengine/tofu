@@ -43,7 +43,7 @@ typedef struct _GL_Mask_t {
 #endif
 
 typedef struct _GL_State_t {
-    GL_Surface_t *surface;
+    GL_Pixel_t background, color;
     GL_Quad_t clipping_region;
     GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
     GL_Bool_t transparent[GL_MAX_PALETTE_COLORS];
@@ -53,23 +53,24 @@ typedef struct _GL_State_t {
 } GL_State_t;
 
 typedef struct _GL_Context_t {
-    GL_Surface_t buffer;
+    GL_Surface_t *surface;
     GL_State_t state;
     GL_State_t *stack;
 } GL_Context_t;
 
-extern bool GL_context_create(GL_Context_t *context, size_t width, size_t height);
-extern void GL_context_delete(GL_Context_t *context); // TODO: rename to `*_destroy()`?
+extern GL_Context_t *GL_context_decode(const void *buffer, size_t buffer_size, const GL_Surface_Callback_t callback, void *user_data);
+extern GL_Context_t *GL_context_create(size_t width, size_t height);
+extern void GL_context_destroy(GL_Context_t *context);
 
 extern void GL_context_push(GL_Context_t *context);
 extern void GL_context_pop(GL_Context_t *context);
 extern void GL_context_reset(GL_Context_t *context);
-extern void GL_context_sanitize(GL_Context_t *context, const GL_Surface_t *surface);
 
-extern void GL_context_surface(GL_Context_t *context, GL_Surface_t *surface);
+extern void GL_context_background(GL_Context_t *context, GL_Pixel_t index);
+extern void GL_context_color(GL_Context_t *context, GL_Pixel_t index);
+extern void GL_context_clipping(GL_Context_t *context, const GL_Rectangle_t *region);
 extern void GL_context_shifting(GL_Context_t *context, const size_t *from, const size_t *to, size_t count);
 extern void GL_context_transparent(GL_Context_t *context, const GL_Pixel_t *indexes, const GL_Bool_t *transparent, size_t count);
-extern void GL_context_clipping(GL_Context_t *context, const GL_Rectangle_t *region);
 #ifdef __GL_MASK_SUPPORT__
 extern void GL_context_mask(GL_Context_t *context, const GL_Mask_t *mask);
 #endif

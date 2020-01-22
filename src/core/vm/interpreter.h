@@ -33,9 +33,10 @@
 #include <stdbool.h>
 
 typedef struct _Interpreter_t {
+    lua_State *state;
+#ifndef __INCREMENTAL_GARBAGE_COLLECTOR__
     float gc_age;
-
-    lua_State *state; // TODO: rename to `L`?
+#endif
 } Interpreter_t;
 
 extern bool Interpreter_initialize(Interpreter_t *interpreter, const File_System_t *file_system, const void *userdatas[]);

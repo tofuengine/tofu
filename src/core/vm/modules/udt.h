@@ -36,18 +36,44 @@ typedef enum _UserData_t { // TODO: move to a suitable space.
     USERDATA_INPUT
 } UserData_t;
 
+#if 0
+// TODO: add type as first field of a `Class_t` type to track proper type and avoid errors.
+typedef enum _Classes_t {
+    CLASS_CANVAS,
+    CLASS_BANK,
+    CLASS_FONT,
+    CLASS_XFORM
+} Classes_t;
+
+typedef struct _Class_t {
+    Classes_t type;
+} Class_t;
+#endif
+
+typedef struct _Canvas_Class_t {
+    GL_Context_t *context;
+    bool allocated;
+} Canvas_Class_t;
+
 typedef struct _Bank_Class_t {
-    // char full_path[PATH_FILE_MAX];
-    GL_Sheet_t sheet;
-    luaX_Reference surface;
+    GL_Context_t *context;
+    luaX_Reference context_reference;
+    GL_Sheet_t *sheet;
+    luaX_Reference sheet_reference;
 } Bank_Class_t;
 
 typedef struct _Font_Class_t {
-    // char full_path[PATH_FILE_MAX];
-    GL_Sheet_t sheet;
-    luaX_Reference surface;
+    GL_Context_t *context;
+    luaX_Reference context_reference;
+    GL_Sheet_t *sheet;
+    luaX_Reference sheet_reference;
 } Font_Class_t;
 
+typedef struct _XForm_Class_t {
+    GL_Context_t *context;
+    luaX_Reference context_reference;
+    GL_XForm_t xform;
+} XForm_Class_t;
 
 #ifdef __GRID_INTEGER_CELL__
 typedef int Cell_t;
@@ -60,11 +86,5 @@ typedef struct _Grid_Class_t {
     Cell_t *data;
     size_t data_size;
 } Grid_Class_t;
-
-typedef struct _Surface_Class_t {
-    // char full_path[PATH_FILE_MAX];
-    GL_Surface_t surface;
-    GL_XForm_t xform;
-} Surface_Class_t;
 
 #endif  /* __MODULES_UDT_H__ */

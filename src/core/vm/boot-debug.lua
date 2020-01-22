@@ -22,67 +22,20 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Math = require("tofu.core").Math
 local System = require("tofu.core").System
 local Input = require("tofu.events").Input
 local Canvas = require("tofu.graphics").Canvas
+local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
 local Class = require("tofu.util").Class
 local Timer = require("tofu.util").Timer
 
 local Tofu = Class.define() -- To be precise, the class name is irrelevant since it's locally used.
 
-local function get_font_name(width, ratio)
-  local t = {
-      { id = "32x64", width = 352 },
-      { id = "16x32", width = 176 },
-      { id = "12x24", width = 132 },
-      { id = "8x16", width = 88 },
-      { id = "5x8", width = 55 },
-    }
-  for _, font in ipairs(t) do
-    if width >= font.width * ratio then
-      return font.id
-    end
-  end
-end
-
 function Tofu:__ctor()
   self.states = {
-    ["splash"] = {
+    ["normal"] = {
       enter = function(me)
-          Canvas.reset()
-          me.font = Font.new(get_font_name(Canvas.width(), 1.5), 0, 255)
-          me.duration = 5.0
-          me.age = 0.0
-        end,
-      leave = function(me)
-          me.font = nil
-        end,
-      process = function(_)
-        end,
-      update = function(me, delta_time)
-          me.age = me.age + delta_time
-          if me.age >= me.duration then
-            self:switch_to("running")
-          end
-        end,
-      render = function(me, _)
-          local fh = me.font:height()
-          local y = (Canvas.height() - fh * 2) * 0.5
---          local v = math.tointeger(((Math.triangle_wave(me.duration, me.age) + 1) * 0.5) * 255.0)
-          local v = math.min(math.tointeger(((Math.triangle_wave(me.duration, me.age) + 1) * 255.0)), 255)
-          Canvas.clear()
-          Canvas.push()
-            Canvas.shift({ [255] = v })
-            me.font:write(me.font:align("made with", Canvas.width() * 0.5, y, "center"))
-            me.font:write(me.font:align("TOFU ENGINE", Canvas.width() * 0.5, y + fh, "center"))
-          Canvas.pop()
-        end
-    },
-    ["running"] = {
-      enter = function(me)
-          Canvas.reset()
           local Main = require("main") -- Lazily require, to permit a `Tofu:setup()` call prior main script loading.
           me.main = Main.new()
         end,
@@ -103,9 +56,9 @@ function Tofu:__ctor()
     },
     ["error"] = {
       enter = function(me)
-          Canvas.reset()
-          Canvas.palette({ 0xFF000000, 0xFFFF0000 })
-          me.font = Font.default(0, 1)
+          Display.palette({ 0xFF000000, 0xFFFF0000 })
+          me.canvas = Canvas.new()
+          me.font = Font.default("5x8", 0, 1)
         end,
       leave = function(me)
           me.font = nil
@@ -118,18 +71,18 @@ function Tofu:__ctor()
       update = function(_, _)
         end,
       render = function(me, _)
-          local w = Canvas.width() -- TODO: could precalculate these values.
+          local w = me.canvas:width() -- TODO: could precalculate these values.
           local fh = me.font:height()
           local on = (System.time() % 2) == 0
-          Canvas.clear()
-          Canvas.rectangle("line", 0, 0, w, fh * 2 + 8, on and 1 or 0)
+          me.canvas:clear()
+          me.canvas:rectangle("line", 0, 0, w, fh * 2 + 8, on and 1 or 0)
           me.font:write(me.font:align("Software Failure.", w * 0.5, 0 + 4, "center"))
           me.font:write(me.font:align("Guru Meditation", w * 0.5, fh + 4, "center"))
         end
     }
   }
   self.queue = {}
-  self:switch_to("running") -- "splash")
+  self:switch_to("normal")
 end
 
 function Tofu:process()

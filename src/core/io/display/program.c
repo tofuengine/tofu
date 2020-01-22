@@ -66,7 +66,7 @@ void program_delete(Program_t *program)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shader program #%d deleted", program->id);
 
     free(program->locations); // Safe when passing NULL.
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shader uniforms LUT for program #%d deleted", program->id);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shader uniforms LUT for program #%d freed", program->id);
 }
 
 bool program_attach(Program_t *program, const char *shader_code, Program_Shaders_t shader_type)
@@ -131,7 +131,7 @@ void program_prepare(Program_t *program, const char *ids[], size_t count)
     if (program->locations) {
         free(program->locations);
         program->locations = NULL;
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shader uniforms LUT for program #%d deleted", program->id);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shader uniforms LUT for program #%d freed", program->id);
     }
     if (count == 0) {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "no uniforms to prepare for program #%d", program->id);

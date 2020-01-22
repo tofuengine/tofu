@@ -27,8 +27,17 @@ local Font = {}
 -- Note: the `__index` metatable reference is set by the module loader.
 -- Font.__index = Font
 
-function Font.default(background_color, foreground_color, id)
-  return Font.new(id or "5x8", 0, 0, background_color, foreground_color)
+function Font.default(...)
+  local args = { ... }
+  if #args == 2 then -- background_color, foreground_color
+    return Font.new("5x8", 0, 0, args[1], args[2])
+  elseif #args == 3 then -- id, background_color, foreground_color
+    return Font.new(args[1], 0, 0, args[2], args[3])
+  elseif #args == 4 then -- canvas, id, background_color, foreground_color
+    return Font.new(args[1], args[2], 0, 0, args[3], args[4])
+  else
+    error("invalid arguments for default font")
+  end
 end
 
 -- Only `text`, `x`, and `y` are required. All the other arguments are optional.

@@ -27,14 +27,15 @@
 #include <core/vm/modules/bank.h>
 #include <core/vm/modules/canvas.h>
 #include <core/vm/modules/class.h>
+#include <core/vm/modules/display.h>
 #include <core/vm/modules/grid.h>
 #include <core/vm/modules/font.h>
 #include <core/vm/modules/input.h>
 #include <core/vm/modules/file.h>
 #include <core/vm/modules/math.h>
 #include <core/vm/modules/system.h>
-#include <core/vm/modules/surface.h>
 #include <core/vm/modules/timer.h>
+#include <core/vm/modules/xform.h>
 #include <libs/log.h>
 #include <libs/luax.h>
 
@@ -88,8 +89,9 @@ static int graphics_loader(lua_State *L)
     static const luaL_Reg classes[] = {
         { "Bank", bank_loader },
         { "Canvas", canvas_loader },
+        { "Display", display_loader },
         { "Font", font_loader },
-        { "Surface", surface_loader },
+        { "XForm", xform_loader },
         { NULL, NULL }
     };
     return create_module(L, classes);
@@ -99,6 +101,7 @@ static int audio_loader(lua_State *L)
 {
     static const luaL_Reg classes[] = {
         { "Sound", sound_loader },
+        { "Speakers", speakers_loader },
         { "Wave", wave_loader },
         { NULL, NULL }
     };

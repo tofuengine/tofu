@@ -34,7 +34,7 @@
 
 #include <string.h>
 
-#define FILE_MT        "Tofu_File_mt"
+#define META_TABLE  "Tofu_IO_File_mt"
 
 static int file_as_string(lua_State *L);
 static int file_as_binary(lua_State *L);
@@ -48,7 +48,7 @@ static const struct luaL_Reg _file_functions[] = {
 int file_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, NULL, _file_functions, NULL, nup, FILE_MT);
+    return luaX_newmodule(L, NULL, _file_functions, NULL, nup, META_TABLE);
 }
 
 static int file_as_string(lua_State *L)
@@ -62,7 +62,7 @@ static int file_as_string(lua_State *L)
 
     File_System_Chunk_t chunk = FSaux_load(file_system, file, FILE_SYSTEM_CHUNK_BLOB);
     if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
-        luaL_error(L, "can't load file `%s`", file);
+        return luaL_error(L, "can't load file `%s`", file);
     }
     lua_pushlstring(L, chunk.var.blob.ptr, chunk.var.blob.size);
     FSaux_release(chunk);
@@ -81,7 +81,7 @@ static int file_as_binary(lua_State *L)
 
     File_System_Chunk_t chunk = FSaux_load(file_system, file, FILE_SYSTEM_CHUNK_BLOB);
     if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
-        luaL_error(L, "can't load file `%s`", file);
+        return luaL_error(L, "can't load file `%s`", file);
     }
 //    lua_pushlstring(L, buffer, size);
     lua_pushnil(L); // TODO: read the file as a Base64 or similar encoded string.
