@@ -62,7 +62,7 @@ int system_loader(lua_State *L)
 
 static int system_time(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 0)
+    LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
 
     const Environment_t *environment = (const Environment_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
@@ -74,7 +74,7 @@ static int system_time(lua_State *L)
 
 static int system_fps(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 0)
+    LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
 
     const Environment_t *environment = (const Environment_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
@@ -86,7 +86,7 @@ static int system_fps(lua_State *L)
 
 static int system_quit(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 0)
+    LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
 
     Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_ENVIRONMENT));

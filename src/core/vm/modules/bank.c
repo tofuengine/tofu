@@ -60,7 +60,7 @@ int bank_loader(lua_State *L)
 
 static int bank_new(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 3)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING, LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
@@ -112,7 +112,7 @@ static int bank_new(lua_State *L)
 
 static int bank_gc(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 1)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
@@ -139,7 +139,7 @@ static int bank_gc(lua_State *L)
 
 static int bank_size1(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 1)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
@@ -153,7 +153,7 @@ static int bank_size1(lua_State *L)
 
 static int bank_size2(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 2)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
@@ -169,7 +169,7 @@ static int bank_size2(lua_State *L)
 
 static int bank_size3(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 3)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
@@ -196,7 +196,7 @@ static int bank_size(lua_State *L)
 
 static int bank_canvas1(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 1)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
@@ -217,7 +217,7 @@ static int bank_canvas1(lua_State *L)
 
 static int bank_canvas2(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 2)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
@@ -246,7 +246,7 @@ static int bank_canvas(lua_State *L)
 
 static int bank_blit4(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 4)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
@@ -266,7 +266,7 @@ static int bank_blit4(lua_State *L)
 
 static int bank_blit5(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 5)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
@@ -288,7 +288,7 @@ static int bank_blit5(lua_State *L)
 
 static int bank_blit6(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 6)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
@@ -312,7 +312,7 @@ static int bank_blit6(lua_State *L)
 
 static int bank_blit7(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 7)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
@@ -338,7 +338,7 @@ static int bank_blit7(lua_State *L)
 
 static int bank_blit9(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 9)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)

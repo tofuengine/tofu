@@ -79,7 +79,7 @@ int grid_loader(lua_State *L)
 
 static int grid_new(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 3)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TTABLE, LUA_TNUMBER)
@@ -135,7 +135,7 @@ static int grid_new(lua_State *L)
 
 static int grid_gc(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 1)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
@@ -150,7 +150,7 @@ static int grid_gc(lua_State *L)
 
 static int grid_width(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 1)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
@@ -162,7 +162,7 @@ static int grid_width(lua_State *L)
 
 static int grid_height(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 1)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
@@ -174,7 +174,7 @@ static int grid_height(lua_State *L)
 
 static int grid_size(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 1)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
@@ -187,7 +187,7 @@ static int grid_size(lua_State *L)
 
 static int grid_fill(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 2)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TTABLE, LUA_TNUMBER)
     LUAX_SIGNATURE_END
@@ -224,7 +224,7 @@ static int grid_fill(lua_State *L)
 
 static int grid_stride(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 5)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
@@ -275,7 +275,7 @@ static int grid_stride(lua_State *L)
 
 static int grid_peek(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 3)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
@@ -301,7 +301,7 @@ static int grid_peek(lua_State *L)
 
 static int grid_poke(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 4)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
@@ -327,7 +327,7 @@ static int grid_poke(lua_State *L)
 
 static int grid_scan(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 2)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TFUNCTION)
     LUAX_SIGNATURE_END
@@ -353,7 +353,7 @@ static int grid_scan(lua_State *L)
 
 static int grid_process(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 2)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TFUNCTION)
     LUAX_SIGNATURE_END

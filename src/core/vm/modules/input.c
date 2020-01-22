@@ -89,7 +89,7 @@ static const Map_Entry_t _sticks[Input_Sticks_t_CountOf] = { // Ditto.
 
 static int input_is_down(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 1)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
     LUAX_SIGNATURE_END
     const char *id = lua_tostring(L, 1);
@@ -106,7 +106,7 @@ static int input_is_down(lua_State *L)
 
 static int input_is_up(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 1)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
     LUAX_SIGNATURE_END
     const char *id = lua_tostring(L, 1);
@@ -123,7 +123,7 @@ static int input_is_up(lua_State *L)
 
 static int input_is_pressed(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 1)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
     LUAX_SIGNATURE_END
     const char *id = lua_tostring(L, 1);
@@ -140,7 +140,7 @@ static int input_is_pressed(lua_State *L)
 
 static int input_is_released(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 1)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
     LUAX_SIGNATURE_END
     const char *id = lua_tostring(L, 1);
@@ -157,7 +157,7 @@ static int input_is_released(lua_State *L)
 
 static int input_auto_repeat1(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 1)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
     LUAX_SIGNATURE_END
     const char *id = lua_tostring(L, 1);
@@ -173,7 +173,7 @@ static int input_auto_repeat1(lua_State *L)
 
 static int input_auto_repeat2(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 2)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
@@ -199,7 +199,7 @@ static int input_auto_repeat(lua_State *L)
 
 static int input_cursor0(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 0)
+    LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
 
     const Input_t *input = (const Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
@@ -213,7 +213,7 @@ static int input_cursor0(lua_State *L)
 
 static int input_cursor2(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 2)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
@@ -239,7 +239,7 @@ static int input_cursor(lua_State *L)
 
 static int input_cursor_area(lua_State *L) // TODO: rename to `region`?
 {
-    LUAX_SIGNATURE_BEGIN(L, 4)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
@@ -264,7 +264,7 @@ static int input_cursor_area(lua_State *L) // TODO: rename to `region`?
 
 static int input_stick(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 1)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
     LUAX_SIGNATURE_END
     const char *id = lua_tostring(L, 1);
@@ -285,7 +285,7 @@ static int input_stick(lua_State *L)
 
 static int input_triggers(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 0)
+    LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
 
     const Input_t *input = (const Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));

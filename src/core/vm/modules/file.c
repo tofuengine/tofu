@@ -53,7 +53,7 @@ int file_loader(lua_State *L)
 
 static int file_as_string(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 1)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
     LUAX_SIGNATURE_END
     const char *file = lua_tostring(L, 1);
@@ -72,7 +72,7 @@ static int file_as_string(lua_State *L)
 
 static int file_as_binary(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 1)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
     LUAX_SIGNATURE_END
     const char *file = lua_tostring(L, 1);

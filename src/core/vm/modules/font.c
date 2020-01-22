@@ -75,7 +75,7 @@ int font_loader(lua_State *L)
 
 static int font_new3(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 3)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING, LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
@@ -137,7 +137,7 @@ static int font_new3(lua_State *L)
 
 static int font_new5(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 5)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING, LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
@@ -213,7 +213,7 @@ static int font_new(lua_State *L)
 
 static int font_gc(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 1)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
@@ -272,7 +272,7 @@ static void _size(const char *text, int dw, int dh, int *w, int *h)
 
 static int font_width1(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 1)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
@@ -284,7 +284,7 @@ static int font_width1(lua_State *L)
 
 static int font_width2(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 2)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
     LUAX_SIGNATURE_END
@@ -303,7 +303,7 @@ static int font_width2(lua_State *L)
 
 static int font_width3(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 3)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
@@ -333,7 +333,7 @@ static int font_width(lua_State *L)
 
 static int font_height1(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 1)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
@@ -345,7 +345,7 @@ static int font_height1(lua_State *L)
 
 static int font_height2(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 2)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
     LUAX_SIGNATURE_END
@@ -364,7 +364,7 @@ static int font_height2(lua_State *L)
 
 static int font_height3(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 3)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
@@ -394,7 +394,7 @@ static int font_height(lua_State *L)
 
 static int font_size1(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 1)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
@@ -407,7 +407,7 @@ static int font_size1(lua_State *L)
 
 static int font_size2(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 2)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
     LUAX_SIGNATURE_END
@@ -428,7 +428,7 @@ static int font_size2(lua_State *L)
 
 static int font_size3(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 3)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
@@ -451,7 +451,7 @@ static int font_size3(lua_State *L)
 
 static int font_size4(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 4)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
@@ -486,7 +486,7 @@ static int font_size(lua_State *L)
 
 static int font_canvas1(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 1)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
@@ -507,7 +507,7 @@ static int font_canvas1(lua_State *L)
 
 static int font_canvas2(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 2)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
@@ -536,7 +536,7 @@ static int font_canvas(lua_State *L)
 
 static int font_write4(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 4)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
@@ -577,7 +577,7 @@ static int font_write4(lua_State *L)
 
 static int font_write5(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 5)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
@@ -620,7 +620,7 @@ static int font_write5(lua_State *L)
 
 static int font_write6(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 6)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)

@@ -62,7 +62,7 @@ int math_loader(lua_State *L)
 
 static int math_sincos(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 1)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     int rotation = lua_tointeger(L, 1);
@@ -78,7 +78,7 @@ static int math_sincos(lua_State *L)
 
 static int math_angle_to_rotation(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 1)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     float angle = lua_tonumber(L, 1);
@@ -92,7 +92,7 @@ static int math_angle_to_rotation(lua_State *L)
 
 static int math_rotation_to_angle(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 1)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     int rotation = lua_tointeger(L, 1);

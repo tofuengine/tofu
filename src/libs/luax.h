@@ -56,42 +56,26 @@ typedef struct _luaX_Script {
 typedef int luaX_Reference;
 
 #define LUAX_REFERENCE_NIL  -1
-#define LUAX_EOD            -99
+#define LUAX_EOD            -2
 
 #if DEBUG
-    #define LUAX_SIGNATURE_BEGIN(l, n) \
+    #define LUAX_SIGNATURE_BEGIN(l) \
         do { \
             lua_State *_L = (l); \
-            int _n = (n); \
-            int _argc = lua_gettop(L); \
-            if (_argc != _n) { \
-                luaL_error(_L, "[%s:%d] wrong number of arguments (need %d, got %d)", __FILE__, __LINE__, _n, _argc); \
-            } \
-            int _index = 1;
-    #define LUAX_SIGNATURE_BEGIN_OPT(l, n1, n2) \
-        do { \
-            lua_State *_L = (l); \
-            int _n1 = (n1); \
-            int _n2 = (n2); \
-            int _argc = lua_gettop(L); \
-            if (_argc < _n1) { \
-                luaL_error(_L, "[%s:%d] wrong number of arguments (need %d, got %d)", __FILE__, __LINE__, _n1, _argc); \
-            } \
-            if (_argc > _n2) { \
-                luaL_error(_L, "[%s:%d] wrong number of arguments (need %d, got %d)", __FILE__, __LINE__, _n2, _argc); \
-            } \
-            int _n = _n2; \
+            int _argc = lua_gettop(_L); \
             int _index = 1;
     #define LUAX_SIGNATURE_ARGUMENT(...) \
-            luaX_checkargument(_L, _index++, __FILE__, __LINE__, __VA_ARGS__, LUAX_EOD);
+            luaX_checkargument(_L, _index, __FILE__, __LINE__, __VA_ARGS__, LUAX_EOD); \
+            if (lua_isnone(_L, _index++)) { \
+                ++_argc; \
+            }
     #define LUAX_SIGNATURE_END \
-            if (--_index != _n) { \
-                luaL_error(_L, "[%s:%d] some arguments weren't checked (checked %d  out of %d)", __FILE__, __LINE__, _index, _n); \
+            if (--_index != _argc) { \
+                luaL_error(_L, "[%s:%d] arguments number mismatch (checked %d  out of %d)", __FILE__, __LINE__, _index, _argc); \
             } \
         } while (0);
 #else
-    #define LUAX_SIGNATURE_BEGIN(l, n)
-    #define LUAX_SIGNATURE_BEGIN_OPT(l, n1, n2)
+    #define LUAX_SIGNATURE_BEGIN(l)
     #define LUAX_SIGNATURE_ARGUMENT(...)
     #define LUAX_SIGNATURE_END
 #endif

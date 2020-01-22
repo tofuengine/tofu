@@ -69,7 +69,7 @@ int xform_loader(lua_State *L)
 
 static int xform_new(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 0)
+    LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
 
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
@@ -97,7 +97,7 @@ static int xform_new(lua_State *L)
 
 static int xform_gc(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 1)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     XForm_Class_t *instance = (XForm_Class_t *)lua_touserdata(L, 1);
@@ -119,7 +119,7 @@ static int xform_gc(lua_State *L)
 
 static int xform_canvas1(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 1)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     XForm_Class_t *instance = (XForm_Class_t *)lua_touserdata(L, 1);
@@ -140,7 +140,7 @@ static int xform_canvas1(lua_State *L)
 
 static int xform_canvas2(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 2)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
@@ -169,7 +169,7 @@ static int xform_canvas(lua_State *L)
 
 static int xform_blit2(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 2)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
@@ -185,7 +185,7 @@ static int xform_blit2(lua_State *L)
 
 static int xform_blit4(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 4)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
@@ -213,7 +213,7 @@ static int xform_blit(lua_State *L)
 
 static int xform_offset(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 3)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
@@ -230,7 +230,7 @@ static int xform_offset(lua_State *L)
 
 static int xform_matrix3(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 3)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
@@ -247,7 +247,7 @@ static int xform_matrix3(lua_State *L)
 
 static int xform_matrix5(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 5)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
@@ -270,7 +270,7 @@ static int xform_matrix5(lua_State *L)
 
 static int xform_matrix7(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 7)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
@@ -308,7 +308,7 @@ static int xform_matrix(lua_State *L)
 
 static int xform_clamp(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 2)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
     LUAX_SIGNATURE_END
@@ -330,7 +330,7 @@ static int xform_clamp(lua_State *L)
 
 static int xform_table1(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 1)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     XForm_Class_t *instance = (XForm_Class_t *)lua_touserdata(L, 1);
@@ -376,7 +376,7 @@ static GL_XForm_Registers_t _string_to_register(const char *id) // TODO: move to
 
 static int xform_table2(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 2)
+    LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TTABLE)
     LUAX_SIGNATURE_END
