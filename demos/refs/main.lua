@@ -44,6 +44,8 @@ function Main:input()
   if Input.is_pressed("select") then
     if self.canvas then
       self.canvas = nil -- It shouldn't be GC-ed as long as bank/font reference it.
+      self.bank:canvas()
+      self.font:canvas()
     elseif self.bank then
       self.bank = nil
     elseif self.font then
