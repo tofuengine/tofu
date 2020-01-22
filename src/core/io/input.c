@@ -54,7 +54,7 @@ static const uint8_t _mappings[] = {
     0x00
 };
 
-static void _keyboard_handler(GLFWwindow *window, Input_State_t *state, const Input_Configuration_t *configuration)
+static void _keyboard_handler(GLFWwindow *window, Input_State_t *state, const Input_Configuration_t *configuration) // TODO: rename to buttons?
 {
     static const int keys[] = {
         GLFW_KEY_UP,
@@ -72,14 +72,31 @@ static void _keyboard_handler(GLFWwindow *window, Input_State_t *state, const In
         GLFW_KEY_ENTER,
         GLFW_KEY_SPACE
     };
+    static const int mouse_buttons[] = {
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        GLFW_MOUSE_BUTTON_MIDDLE,
+        GLFW_MOUSE_BUTTON_RIGHT,
+        GLFW_MOUSE_BUTTON_LEFT,
+        -1,
+        -1
+    };
 
     Input_Button_t *buttons = state->buttons;
 
-    for (int i = Input_Buttons_t_First; i <= INPUT_BUTTON_START; ++i) {
+    for (int i = Input_Buttons_t_First; i <= Input_Buttons_t_Last; ++i) {
         Input_Button_t *button = &buttons[i];
 
         bool was_down = button->state.down;
-        bool is_down = glfwGetKey(window, keys[i]) == GLFW_PRESS;
+        bool is_down = (glfwGetKey(window, keys[i]) == GLFW_PRESS)
+            || (mouse_buttons[i] != -1 && glfwGetMouseButton(window, mouse_buttons[i]) == GLFW_PRESS);
 
         if (!button->state.triggered) { // If not triggered use the current physical status.
             button->state.down = is_down;
@@ -103,27 +120,9 @@ static void _keyboard_handler(GLFWwindow *window, Input_State_t *state, const In
     }
 }
 
-static void _mouse_handler(GLFWwindow *window, Input_State_t *state, const Input_Configuration_t *configuration)
+static void _mouse_handler(GLFWwindow *window, Input_State_t *state, const Input_Configuration_t *configuration) // TODO: rename to cursor?
 {
-    static const int mouse_buttons[] = {
-        GLFW_MOUSE_BUTTON_MIDDLE,
-        GLFW_MOUSE_BUTTON_RIGHT,
-        GLFW_MOUSE_BUTTON_LEFT
-    };
-
-    Input_Button_t *buttons = state->buttons;
     Input_Cursor_t *cursor = &state->cursor;
-
-    for (int i = INPUT_BUTTON_X; i <= INPUT_BUTTON_A; ++i) { // Mouse buttons are mapped to `a`, `b`, and `x`
-        Input_Button_t *button = &buttons[i];
-
-        bool was_down = button->state.down;
-        bool is_down = glfwGetMouseButton(window, mouse_buttons[i - INPUT_BUTTON_X]) == GLFW_PRESS;
-
-        button->state.down = is_down;
-        button->state.pressed = !was_down && is_down;
-        button->state.released = was_down && !is_down;
-    }
 
     double x, y;
     glfwGetCursorPos(window, &x, &y);
