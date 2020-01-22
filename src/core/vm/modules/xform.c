@@ -75,6 +75,7 @@ static int xform_new0(lua_State *L)
     XForm_Class_t *instance = (XForm_Class_t *)lua_newuserdata(L, sizeof(XForm_Class_t));
     *instance = (XForm_Class_t){
             .context = display->context,
+            .context_reference = LUAX_REFERENCE_NIL,
             .xform = (GL_XForm_t){
                     .registers = {
                         0.0f, 0.0f, // No offset
@@ -102,6 +103,7 @@ static int xform_new1(lua_State *L)
     XForm_Class_t *instance = (XForm_Class_t *)lua_newuserdata(L, sizeof(XForm_Class_t));
     *instance = (XForm_Class_t){
             .context = canvas->context,
+            .context_reference = luaX_ref(L, 1),
             .xform = (GL_XForm_t){
                     .registers = {
                         0.0f, 0.0f, // No offset
@@ -137,6 +139,11 @@ static int xform_gc(lua_State *L)
     if (instance->xform.table) {
         arrfree(instance->xform.table);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform scan-line table %p freed", instance->xform.table);
+    }
+
+    if (instance->context_reference != LUAX_REFERENCE_NIL) {
+        luaX_unref(L, instance->context_reference);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context reference #%d released", instance->context_reference);
     }
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform %p finalized", instance);

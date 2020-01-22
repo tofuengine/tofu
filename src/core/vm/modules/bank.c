@@ -70,7 +70,6 @@ static int bank_new3(lua_State *L)
     const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    luaX_Reference reference = LUAX_REFERENCE_NIL;
     GL_Sheet_t *sheet;
     if (type == LUA_TSTRING) {
         const char *file = lua_tostring(L, 1);
@@ -87,7 +86,6 @@ static int bank_new3(lua_State *L)
     } else
     if (type == LUA_TUSERDATA) {
         const Canvas_Class_t *canvas = (const Canvas_Class_t *)lua_touserdata(L, 1);
-        reference = luaX_ref(L, 2);
 
         sheet = GL_sheet_attach(canvas->context->surface, cell_width, cell_height);
         if (!sheet) {
@@ -99,8 +97,9 @@ static int bank_new3(lua_State *L)
     Bank_Class_t *instance = (Bank_Class_t *)lua_newuserdata(L, sizeof(Bank_Class_t));
     *instance = (Bank_Class_t){
             .context = display->context,
+            .context_reference = LUAX_REFERENCE_NIL,
             .sheet = sheet,
-            .reference = reference
+            .sheet_reference = type == LUA_TUSERDATA ? luaX_ref(L, 2) : LUAX_REFERENCE_NIL
         };
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p allocated w/ sheet %p for default context", instance, sheet);
 
@@ -125,7 +124,6 @@ static int bank_new4(lua_State *L)
     const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    luaX_Reference reference = LUAX_REFERENCE_NIL;
     GL_Sheet_t *sheet;
     if (type == LUA_TSTRING) {
         const char *file = lua_tostring(L, 2);
@@ -143,7 +141,6 @@ static int bank_new4(lua_State *L)
     } else
     if (type == LUA_TUSERDATA) {
         const Canvas_Class_t *canvas = (const Canvas_Class_t *)lua_touserdata(L, 2);
-        reference = luaX_ref(L, 2);
 
         sheet = GL_sheet_attach(canvas->context->surface, cell_width, cell_height);
         if (!sheet) {
@@ -154,9 +151,10 @@ static int bank_new4(lua_State *L)
 
     Bank_Class_t *instance = (Bank_Class_t *)lua_newuserdata(L, sizeof(Bank_Class_t));
     *instance = (Bank_Class_t){
-            .context = canvas->context, // TODO: should lock reference to canvas?
+            .context = canvas->context,
+            .context_reference = luaX_ref(L, 1),
             .sheet = sheet,
-            .reference = reference
+            .sheet_reference = type == LUA_TUSERDATA ? luaX_ref(L, 2) : LUAX_REFERENCE_NIL
         };
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p allocated w/ sheet %p for context %p", instance, sheet, canvas->context);
 
@@ -180,13 +178,19 @@ static int bank_gc(lua_State *L)
     LUAX_SIGNATURE_END
     Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
 
-    if (instance->reference != LUAX_REFERENCE_NIL) {
-        luaX_unref(L, instance->reference);
+    if (instance->sheet_reference != LUAX_REFERENCE_NIL) {
+        luaX_unref(L, instance->sheet_reference);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet reference #%d released", instance->sheet_reference);
         GL_sheet_detach(instance->sheet);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p detached", instance->sheet);
     } else {
         GL_sheet_destroy(instance->sheet);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p destroyed", instance->sheet);
+    }
+
+    if (instance->context_reference != LUAX_REFERENCE_NIL) {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context reference #%d released", instance->context_reference);
+        luaX_unref(L, instance->context_reference);
     }
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p finalized", instance);
