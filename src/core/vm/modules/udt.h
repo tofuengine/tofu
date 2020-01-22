@@ -36,6 +36,20 @@ typedef enum _UserData_t { // TODO: move to a suitable space.
     USERDATA_INPUT
 } UserData_t;
 
+#if 0
+// TODO: add type as first field of a `Class_t` type to track proper type and avoid errors.
+typedef enum _Classes_t {
+    CLASS_CANVAS,
+    CLASS_BANK,
+    CLASS_FONT,
+    CLASS_XFORM
+} Classes_t;
+
+typedef struct _Class_t {
+    Classes_t type;
+} Class_t;
+#endif
+
 typedef struct _Canvas_Class_t {
     GL_Context_t *context;
     bool allocated;

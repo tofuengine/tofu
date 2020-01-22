@@ -42,6 +42,7 @@
 
 static int xform_new(lua_State *L);
 static int xform_gc(lua_State *L);
+static int xform_canvas(lua_State *L);
 static int xform_blit(lua_State *L);
 static int xform_offset(lua_State *L);
 static int xform_matrix(lua_State *L);
@@ -51,6 +52,7 @@ static int xform_table(lua_State *L);
 static const struct luaL_Reg _xform_functions[] = {
     { "new", xform_new },
     {"__gc", xform_gc },
+    { "canvas", xform_canvas },
     { "blit", xform_blit },
     { "offset", xform_offset },
     { "matrix", xform_matrix },
@@ -149,6 +151,56 @@ static int xform_gc(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform %p finalized", instance);
 
     return 0;
+}
+
+static int xform_canvas1(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    XForm_Class_t *instance = (XForm_Class_t *)lua_touserdata(L, 1);
+
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    if (instance->context_reference != LUAX_REFERENCE_NIL) {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context reference #%d released", instance->context_reference);
+        luaX_unref(L, instance->context_reference);
+    }
+
+    instance->context = display->context;
+    instance->context_reference = LUAX_REFERENCE_NIL;
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "default context attached");
+
+    return 0;
+}
+
+static int xform_canvas2(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 2)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    XForm_Class_t *instance = (XForm_Class_t *)lua_touserdata(L, 1);
+    const Canvas_Class_t *canvas = (Canvas_Class_t *)lua_touserdata(L, 2);
+
+    if (instance->context_reference != LUAX_REFERENCE_NIL) {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context reference #%d released", instance->context_reference);
+        luaX_unref(L, instance->context_reference);
+    }
+
+    instance->context = canvas->context;
+    instance->context_reference = luaX_ref(L, 2);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context %p attached w/ reference #%d", instance->context, instance->context_reference);
+
+    return 0;
+}
+
+static int xform_canvas(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, xform_canvas1)
+        LUAX_OVERLOAD_ARITY(2, xform_canvas2)
+    LUAX_OVERLOAD_END
 }
 
 static int xform_blit2(lua_State *L)

@@ -40,12 +40,14 @@
 static int bank_new(lua_State *L);
 static int bank_gc(lua_State *L);
 static int bank_size(lua_State *L);
+static int bank_canvas(lua_State *L);
 static int bank_blit(lua_State *L);
 
 static const struct luaL_Reg _bank_functions[] = {
     { "new", bank_new },
     {"__gc", bank_gc },
     { "size", bank_size },
+    { "canvas", bank_canvas },
     { "blit", bank_blit },
     { NULL, NULL }
 };
@@ -252,6 +254,56 @@ static int bank_size(lua_State *L)
         LUAX_OVERLOAD_ARITY(1, bank_size1)
         LUAX_OVERLOAD_ARITY(2, bank_size2)
         LUAX_OVERLOAD_ARITY(3, bank_size3)
+    LUAX_OVERLOAD_END
+}
+
+static int bank_canvas1(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 1)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
+
+    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    if (instance->context_reference != LUAX_REFERENCE_NIL) {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context reference #%d released", instance->context_reference);
+        luaX_unref(L, instance->context_reference);
+    }
+
+    instance->context = display->context;
+    instance->context_reference = LUAX_REFERENCE_NIL;
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "default context attached");
+
+    return 0;
+}
+
+static int bank_canvas2(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L, 2)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    Bank_Class_t *instance = (Bank_Class_t *)lua_touserdata(L, 1);
+    const Canvas_Class_t *canvas = (Canvas_Class_t *)lua_touserdata(L, 2);
+
+    if (instance->context_reference != LUAX_REFERENCE_NIL) {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context reference #%d released", instance->context_reference);
+        luaX_unref(L, instance->context_reference);
+    }
+
+    instance->context = canvas->context;
+    instance->context_reference = luaX_ref(L, 2);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context %p attached w/ reference #%d", instance->context, instance->context_reference);
+
+    return 0;
+}
+
+static int bank_canvas(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, bank_canvas1)
+        LUAX_OVERLOAD_ARITY(2, bank_canvas2)
     LUAX_OVERLOAD_END
 }
 
