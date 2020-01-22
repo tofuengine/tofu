@@ -94,9 +94,15 @@ GL_Sheet_t *GL_sheet_decode(const void *buffer, size_t size, size_t cell_width, 
     return sheet;
 }
 
+void GL_sheet_destroy(GL_Sheet_t *sheet)
+{
+    GL_surface_destroy(sheet->atlas); // Delete prior detach or the atlas will be cleared!
+    GL_sheet_detach(sheet);
+}
+
 GL_Sheet_t *GL_sheet_attach(const GL_Surface_t *surface, size_t cell_width, size_t cell_height)
 {
-    GL_Sheet_t *sheet = _attach(surface, cell_width, cell_height);
+    GL_Sheet_t *sheet = _attach((GL_Surface_t *)surface, cell_width, cell_height);
     if (!sheet) {
         return NULL;
     }
@@ -110,10 +116,4 @@ void GL_sheet_detach(GL_Sheet_t *sheet)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet cells deallocated");
     free(sheet);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p deleted", sheet);
-}
-
-void GL_sheet_destroy(GL_Sheet_t *sheet)
-{
-    GL_surface_destroy(sheet->atlas); // Delete prior detach or the atlas will be cleared!
-    GL_sheet_detach(sheet);
 }

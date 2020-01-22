@@ -40,9 +40,9 @@ typedef struct _GL_Sheet_t {
 // TODO: is the GL_Sheet_t really needed?
 
 extern GL_Sheet_t *GL_sheet_decode(const void *buffer, size_t size, size_t cell_width, size_t cell_height, GL_Surface_Callback_t callback, void *user_data);
-extern GL_Sheet_t *GL_sheet_fetch(const GL_Surface_t *surface, size_t cell_width, size_t cell_height);
+extern void GL_sheet_destroy(GL_Sheet_t *sheet);
+
 extern GL_Sheet_t *GL_sheet_attach(const GL_Surface_t *surface, size_t cell_width, size_t cell_height);
 extern void GL_sheet_detach(GL_Sheet_t *sheet);
-extern void GL_sheet_destroy(GL_Sheet_t *sheet);
 
 #endif  /* __GL_SHEET_H__ */

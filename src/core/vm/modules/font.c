@@ -85,7 +85,8 @@ static int font_new3(lua_State *L)
     const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    GL_Sheet_t *sheet = NULL;
+    luaX_Reference reference = LUAX_REFERENCE_NIL;
+    GL_Sheet_t *sheet;
     if (type == LUA_TSTRING) {
         const char *file = lua_tostring(L, 1);
 
@@ -111,18 +112,20 @@ static int font_new3(lua_State *L)
     } else
     if (type == LUA_TUSERDATA) {
         const Canvas_Class_t *canvas = (const Canvas_Class_t *)lua_touserdata(L, 1);
+        reference = luaX_ref(L, 2);
 
-        sheet = GL_sheet_fetch(canvas->context->surface, glyph_width, glyph_height);
+        sheet = GL_sheet_attach(canvas->context->surface, glyph_width, glyph_height);
         if (!sheet) {
-            return luaL_error(L, "can't fetch sheet");
+            return luaL_error(L, "can't attach sheet");
         }
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p fetched from canvas %p", sheet, canvas);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p attached to canvas %p", sheet, canvas);
     }
 
     Font_Class_t *instance = (Font_Class_t *)lua_newuserdata(L, sizeof(Font_Class_t));
     *instance = (Font_Class_t){
             .context = display->context,
-            .sheet = sheet
+            .sheet = sheet,
+            .reference = reference
         };
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font %p allocated w/ sheet %p for default context", instance, sheet);
 
@@ -147,6 +150,7 @@ static int font_new4(lua_State *L)
     const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
+    luaX_Reference reference = LUAX_REFERENCE_NIL;
     GL_Sheet_t *sheet;
     if (type == LUA_TSTRING) {
         const char *file = lua_tostring(L, 2);
@@ -173,18 +177,20 @@ static int font_new4(lua_State *L)
     } else
     if (type == LUA_TUSERDATA) {
         const Canvas_Class_t *canvas = (const Canvas_Class_t *)lua_touserdata(L, 2);
+        reference = luaX_ref(L, 2);
 
-        sheet = GL_sheet_fetch(canvas->context->surface, glyph_width, glyph_height);
+        sheet = GL_sheet_attach(canvas->context->surface, glyph_width, glyph_height);
         if (!sheet) {
-            return luaL_error(L, "can't fetch sheet");
+            return luaL_error(L, "can't attach sheet");
         }
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p fetched from canvas %p", sheet, canvas);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p attached to canvas %p", sheet, canvas);
     }
 
     Font_Class_t *instance = (Font_Class_t *)lua_newuserdata(L, sizeof(Font_Class_t));
     *instance = (Font_Class_t){
             .context = canvas->context,
-            .sheet = sheet
+            .sheet = sheet,
+            .reference = reference
         };
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font %p allocated w/ sheet %p for context %p", instance, sheet, canvas->context);
 
@@ -211,6 +217,7 @@ static int font_new5(lua_State *L)
     const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
+    luaX_Reference reference = LUAX_REFERENCE_NIL;
     GL_Sheet_t *sheet;
     if (type == LUA_TSTRING) {
         const char *file = lua_tostring(L, 1);
@@ -239,18 +246,20 @@ static int font_new5(lua_State *L)
     } else
     if (type == LUA_TUSERDATA) {
         const Canvas_Class_t *canvas = (const Canvas_Class_t *)lua_touserdata(L, 1);
+        reference = luaX_ref(L, 2);
 
-        sheet = GL_sheet_fetch(canvas->context->surface, glyph_width, glyph_height);
+        sheet = GL_sheet_attach(canvas->context->surface, glyph_width, glyph_height);
         if (!sheet) {
-            return luaL_error(L, "can't fetch sheet");
+            return luaL_error(L, "can't attach sheet");
         }
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p fetched from canvas %p", sheet, canvas);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p attached to canvas %p", sheet, canvas);
     }
 
     Font_Class_t *instance = (Font_Class_t *)lua_newuserdata(L, sizeof(Font_Class_t));
     *instance = (Font_Class_t){
             .context = display->context,
-            .sheet = sheet
+            .sheet = sheet,
+            .reference = reference
         };
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font %p allocated w/ sheet %p for default context", instance, sheet);
 
@@ -278,8 +287,8 @@ static int font_new6(lua_State *L)
 
     const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
 
+    luaX_Reference reference = LUAX_REFERENCE_NIL;
     GL_Sheet_t *sheet;
-
     if (type == LUA_TSTRING) {
         const char *file = lua_tostring(L, 2);
 
@@ -307,18 +316,20 @@ static int font_new6(lua_State *L)
     } else
     if (type == LUA_TUSERDATA) {
         const Canvas_Class_t *canvas = (const Canvas_Class_t *)lua_touserdata(L, 2);
+        reference = luaX_ref(L, 2);
 
-        sheet = GL_sheet_fetch(canvas->context->surface, glyph_width, glyph_height);
+        sheet = GL_sheet_attach(canvas->context->surface, glyph_width, glyph_height);
         if (!sheet) {
-            return luaL_error(L, "can't fetch sheet");
+            return luaL_error(L, "can't attach sheet");
         }
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p fetched from canvas %p", sheet, canvas);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p attached to canvas %p", sheet, canvas);
     }
 
     Font_Class_t *instance = (Font_Class_t *)lua_newuserdata(L, sizeof(Font_Class_t));
     *instance = (Font_Class_t){
             .context = canvas->context,
-            .sheet = sheet
+            .sheet = sheet,
+            .reference = reference
         };
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font %p allocated w/ sheet %p for context %p", instance, sheet, canvas->context);
 
@@ -344,8 +355,14 @@ static int font_gc(lua_State *L)
     LUAX_SIGNATURE_END
     Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
 
-    GL_sheet_destroy(instance->sheet);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p destroyed", instance->sheet);
+    if (instance->reference != LUAX_REFERENCE_NIL) {
+        luaX_unref(L, instance->reference);
+        GL_sheet_detach(instance->sheet);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p detached", instance->sheet);
+    } else {
+        GL_sheet_destroy(instance->sheet);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p destroyed", instance->sheet);
+    }
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font %p finalized", instance);
 

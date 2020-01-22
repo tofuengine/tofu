@@ -44,11 +44,13 @@ typedef struct _Canvas_Class_t {
 typedef struct _Bank_Class_t {
     GL_Context_t *context;
     GL_Sheet_t *sheet;
+    luaX_Reference reference;
 } Bank_Class_t;
 
 typedef struct _Font_Class_t {
     GL_Context_t *context;
     GL_Sheet_t *sheet;
+    luaX_Reference reference;
 } Font_Class_t;
 
 typedef struct _XForm_Class_t {
