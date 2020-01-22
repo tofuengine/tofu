@@ -23,6 +23,7 @@ SOFTWARE.
 ]]--
 
 -- Include the modules we'll be using.
+local System = require("tofu.core").System
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
@@ -53,22 +54,34 @@ function Main:update(_)
 end
 
 function Main:render(_)
-  -- Get a reference to the default canvas (i.e. the the virtual-screen)...
+  -- Get a reference to the default canvas (i.e. the the virtual-screen).
   local canvas = Canvas.default()
 
-  -- ... and clear it w/ default background palette color (i.e. palette index #0).
+  -- Query current time since the start, expressed in seconds (as a floating point number).
+  local t = System.time()
+
+  -- Clear the virtual-screen with default background color (i.e. palette color #0).
   canvas:clear()
 
-  -- We need the font (message) width and height to center it on screen.
-  local font_width = self.font:width(MESSAGE)
-  local font_height = self.font:height(MESSAGE)
+  -- Query for text width/height and calculate the (screen-centered) origin
+  -- x/y position.
+  local text_width, text_height = self.font:size(MESSAGE)
+  local x, y = (canvas:width() - text_width) * 0.5, (canvas:height() - text_height) * 0.5
 
-  -- Compute vertical and horizontal position for the text.
-  local x = (canvas:width() - font_width) * 0.5
-  local y = (canvas:height() - font_height) * 0.5
+  -- Query for font char width/height, we'll use it for offseting the characters.
+  local char_width, char_height = self.font:size()
 
-  -- Finally, draw the message on-screen at the given position.
-  self.font:write(MESSAGE, x, y)
+  -- Scan the message text one char at time.
+  for c in MESSAGE:gmatch(".") do
+    -- Compute the verical offset using a sine wave, each chacter with a different value.
+    local dy = math.sin(t * 2.5 + x * 0.05) * char_height
+
+    -- Draw the character, accounting for vertical offset.
+    self.font:write(c, x, y + dy)
+
+    -- Move to the right the drawing position by the character width amount.
+    x = x + char_width
+  end
 end
 
 return Main
