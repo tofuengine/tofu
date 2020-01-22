@@ -126,7 +126,7 @@ static int font_new3(lua_State *L)
             .context = display->context,
             .context_reference = LUAX_REFERENCE_NIL,
             .sheet = sheet,
-            .sheet_reference = type == LUA_TUSERDATA ? luaX_ref(L, 2) : LUAX_REFERENCE_NIL
+            .sheet_reference = type == LUA_TUSERDATA ? luaX_ref(L, 1) : LUAX_REFERENCE_NIL
         };
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font %p allocated w/ sheet %p for default context", instance, sheet);
 
@@ -194,7 +194,7 @@ static int font_new5(lua_State *L)
             .context = display->context,
             .context_reference = LUAX_REFERENCE_NIL,
             .sheet = sheet,
-            .sheet_reference = type == LUA_TUSERDATA ? luaX_ref(L, 2) : LUAX_REFERENCE_NIL
+            .sheet_reference = type == LUA_TUSERDATA ? luaX_ref(L, 1) : LUAX_REFERENCE_NIL
         };
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font %p allocated w/ sheet %p for default context", instance, sheet);
 
