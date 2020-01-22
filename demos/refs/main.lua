@@ -22,34 +22,46 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
+-- Include the modules we'll be using.
+local Input = require("tofu.events").Input
 local Canvas = require("tofu.graphics").Canvas
+local Display = require("tofu.graphics").Display
+local Bank = require("tofu.graphics").Bank
 local Font = require("tofu.graphics").Font
 local Class = require("tofu.util").Class
 
 local Main = Class.define()
 
-local MESSAGE = "Hello, Tofu!"
-
 function Main:__ctor()
-  Canvas.palette("pico-8")
+  Display.palette("pico-8")
 
-  self.font = Font.default(0, 15)
+  self.canvas = Canvas.new(Canvas.default():size())
+  self.bank = Bank.new(self.canvas, "assets/font-8x8.png", 8, 8)
+  self.font = Font.new(self.canvas, "assets/font-8x8.png", 8, 8, 0, 15)
 end
 
 function Main:input()
+  if Input.is_pressed("select") then
+    if self.canvas then
+      self.canvas = nil -- It shouldn't be GC-ed as long as bank/font reference it.
+    elseif self.bank then
+      self.bank = nil
+    elseif self.font then
+      self.font = nil
+    end
+  end
 end
 
 function Main:update(_)
 end
 
 function Main:render(_)
-  Canvas.clear(0)
-
-  local font_height = self.font:height()
-
-  local x = Canvas.width() * 0.5
-  local y = (Canvas.height() - font_height) * 0.5
-  self.font:write(self.font:align(MESSAGE, x, y, "center"))
+  local canvas = Canvas.default()
+  canvas:clear()
+  local x, y = canvas:center()
+  if self.font then
+    self.font:write(self.font:align("Hello, Tofu!", x, y, "center", "middle"))
+  end
 end
 
 return Main
