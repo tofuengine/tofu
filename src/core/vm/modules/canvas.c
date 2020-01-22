@@ -684,39 +684,20 @@ static int canvas_point(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
-static int canvas_hline4(lua_State *L)
+static int canvas_hline(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 4)
+    LUAX_SIGNATURE_BEGIN_OPT(L, 4, 5)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER, LUA_TNONE)
     LUAX_SIGNATURE_END
     Canvas_Class_t *instance = (Canvas_Class_t *)lua_touserdata(L, 1);
     int x = lua_tointeger(L, 2);
     int y = lua_tointeger(L, 3);
     size_t width = (size_t)lua_tointeger(L, 4);
-
-    const GL_Context_t *context = instance->context;
-    GL_primitive_hline(context, (GL_Point_t){ .x = x, .y = y }, width, context->state.color);
-
-    return 0;
-}
-
-static int canvas_hline5(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L, 5)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    Canvas_Class_t *instance = (Canvas_Class_t *)lua_touserdata(L, 1);
-    int x = lua_tointeger(L, 2);
-    int y = lua_tointeger(L, 3);
-    size_t width = (size_t)lua_tointeger(L, 4);
-    GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 5);
+    GL_Pixel_t index = lua_isnone(L, 5) ? instance->context->state.color : (GL_Pixel_t)lua_tointeger(L, 5); // TODO: is state stack useful?
 
     const GL_Context_t *context = instance->context;
     GL_primitive_hline(context, (GL_Point_t){ .x = x, .y = y }, width, index);
@@ -724,46 +705,20 @@ static int canvas_hline5(lua_State *L)
     return 0;
 }
 
-static int canvas_hline(lua_State *L)
+static int canvas_vline(lua_State *L)
 {
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(4, canvas_hline4)
-        LUAX_OVERLOAD_ARITY(5, canvas_hline5)
-    LUAX_OVERLOAD_END
-}
-
-static int canvas_vline4(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L, 4)
+    LUAX_SIGNATURE_BEGIN_OPT(L, 4, 5)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER, LUA_TNONE)
     LUAX_SIGNATURE_END
     Canvas_Class_t *instance = (Canvas_Class_t *)lua_touserdata(L, 1);
     int x = lua_tointeger(L, 2);
     int y = lua_tointeger(L, 3);
     size_t height = (size_t)lua_tointeger(L, 4);
-
-    const GL_Context_t *context = instance->context;
-    GL_primitive_vline(context, (GL_Point_t){ .x = x, .y = y }, height, context->state.color);
-
-    return 0;
-}
-
-static int canvas_vline5(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L, 4)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    Canvas_Class_t *instance = (Canvas_Class_t *)lua_touserdata(L, 1);
-    int x = lua_tointeger(L, 2);
-    int y = lua_tointeger(L, 3);
-    size_t height = (size_t)lua_tointeger(L, 4);
-    GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 5);
+    GL_Pixel_t index = lua_isnone(L, 5) ? instance->context->state.color : (GL_Pixel_t)lua_tointeger(L, 5);
 
     const GL_Context_t *context = instance->context;
     GL_primitive_vline(context, (GL_Point_t){ .x = x, .y = y }, height, index);
@@ -771,55 +726,22 @@ static int canvas_vline5(lua_State *L)
     return 0;
 }
 
-static int canvas_vline(lua_State *L)
+static int canvas_line(lua_State *L)
 {
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(4, canvas_vline4)
-        LUAX_OVERLOAD_ARITY(5, canvas_vline5)
-    LUAX_OVERLOAD_END
-}
-
-static int canvas_line5(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L, 5)
+    LUAX_SIGNATURE_BEGIN_OPT(L, 5, 6)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER, LUA_TNONE)
     LUAX_SIGNATURE_END
     Canvas_Class_t *instance = (Canvas_Class_t *)lua_touserdata(L, 1);
     int x0 = lua_tointeger(L, 2);
     int y0 = lua_tointeger(L, 3);
     int x1 = lua_tointeger(L, 4);
     int y1 = lua_tointeger(L, 5);
-
-    const GL_Context_t *context = instance->context;
-    GL_Point_t vertices[2] = {
-            (GL_Point_t){ .x = x0, .y = y0 },
-            (GL_Point_t){ .x = x1, .y = y1 }
-        };
-    GL_primitive_polyline(context, vertices, 2, context->state.color);
-
-    return 0;
-}
-
-static int canvas_line6(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L, 6)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    Canvas_Class_t *instance = (Canvas_Class_t *)lua_touserdata(L, 1);
-    int x0 = lua_tointeger(L, 2);
-    int y0 = lua_tointeger(L, 3);
-    int x1 = lua_tointeger(L, 4);
-    int y1 = lua_tointeger(L, 5);
-    GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 6);
+    GL_Pixel_t index = lua_isnone(L, 6) ? instance->context->state.color : (GL_Pixel_t)lua_tointeger(L, 6);
 
     const GL_Context_t *context = instance->context;
     GL_Point_t vertices[2] = {
@@ -829,14 +751,6 @@ static int canvas_line6(lua_State *L)
     GL_primitive_polyline(context, vertices, 2, index);
 
     return 0;
-}
-
-static int canvas_line(lua_State *L)
-{
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(5, canvas_line5)
-        LUAX_OVERLOAD_ARITY(6, canvas_line6)
-    LUAX_OVERLOAD_END
 }
 
 static GL_Point_t *_fetch(lua_State *L, int idx, size_t *count)
@@ -863,38 +777,15 @@ static GL_Point_t *_fetch(lua_State *L, int idx, size_t *count)
     return vertices;
 }
 
-static int canvas_polyline2(lua_State *L)
+static int canvas_polyline(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 2)
+    LUAX_SIGNATURE_BEGIN_OPT(L, 2, 3)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TTABLE)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER, LUA_TNONE)
     LUAX_SIGNATURE_END
     Canvas_Class_t *instance = (Canvas_Class_t *)lua_touserdata(L, 1);
-
-    size_t count;
-    GL_Point_t *vertices = _fetch(L, 2, &count);
-
-    if (count > 1) {
-        const GL_Context_t *context = instance->context;
-        GL_primitive_polyline(context, vertices, count, context->state.color);
-    } else {
-        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "no enough points for polyline (%d)", count);
-    }
-
-    arrfree(vertices);
-
-    return 0;
-}
-
-static int canvas_polyline3(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L, 3)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TTABLE)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    Canvas_Class_t *instance = (Canvas_Class_t *)lua_touserdata(L, 1);
-    GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 3);
+    GL_Pixel_t index = lua_isnone(L, 3) ? instance->context->state.color : (GL_Pixel_t)lua_tointeger(L, 3);
 
     size_t count;
     GL_Point_t *vertices = _fetch(L, 2, &count);
@@ -911,98 +802,28 @@ static int canvas_polyline3(lua_State *L)
     return 0;
 }
 
-static int canvas_polyline(lua_State *L)
-{
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(2, canvas_polyline2)
-        LUAX_OVERLOAD_ARITY(3, canvas_polyline3)
-    LUAX_OVERLOAD_END
-}
-
-static int canvas_fill3(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L, 3)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    Canvas_Class_t *instance = (Canvas_Class_t *)lua_touserdata(L, 1);
-    int x = lua_tointeger(L, 2);
-    int y = lua_tointeger(L, 3);
-
-    const GL_Context_t *context = instance->context;
-    GL_context_fill(context, (GL_Point_t){ .x = x, .y = y }, context->state.color);
-
-    return 0;
-}
-
-static int canvas_fill4(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L, 4)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    Canvas_Class_t *instance = (Canvas_Class_t *)lua_touserdata(L, 1);
-    int x = lua_tointeger(L, 2);
-    int y = lua_tointeger(L, 3);
-    GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 4);
-
-    const GL_Context_t *context = instance->context;
-    GL_context_fill(context, (GL_Point_t){ .x = x, .y = y }, index);
-
-    return 0;
-}
-
 static int canvas_fill(lua_State *L)
 {
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(3, canvas_fill3)
-        LUAX_OVERLOAD_ARITY(4, canvas_fill4)
-    LUAX_OVERLOAD_END
-}
-
-static int canvas_triangle8(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L, 8)
+    LUAX_SIGNATURE_BEGIN_OPT(L, 3, 4)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER, LUA_TNONE)
     LUAX_SIGNATURE_END
     Canvas_Class_t *instance = (Canvas_Class_t *)lua_touserdata(L, 1);
-    const char *mode = lua_tostring(L, 2);
-    int x0 = lua_tointeger(L, 3);
-    int y0 = lua_tointeger(L, 4);
-    int x1 = lua_tointeger(L, 5);
-    int y1 = lua_tointeger(L, 6);
-    int x2 = lua_tointeger(L, 7);
-    int y2 = lua_tointeger(L, 8);
+    int x = lua_tointeger(L, 2);
+    int y = lua_tointeger(L, 3);
+    GL_Pixel_t index = lua_isnone(L, 4) ? instance->context->state.color : (GL_Pixel_t)lua_tointeger(L, 4);
 
     const GL_Context_t *context = instance->context;
-    if (mode[0] == 'f') {
-        GL_primitive_filled_triangle(context, (GL_Point_t){ .x = x0, .y = y0 }, (GL_Point_t){ .x = x1, .y = y1 }, (GL_Point_t){ .x = x2, .y = y2 }, context->state.color);
-    } else {
-        GL_Point_t vertices[4] = {
-                (GL_Point_t){ .x = x0, .y = y0 },
-                (GL_Point_t){ .x = x1, .y = y1 },
-                (GL_Point_t){ .x = x2, .y = y2 },
-                (GL_Point_t){ .x = x0, .y = y0 }
-            };
-        GL_primitive_polyline(context, vertices, 4, context->state.color);
-    }
+    GL_context_fill(context, (GL_Point_t){ .x = x, .y = y }, index); // TODO: pass `GL_INDEX_COLOR` fake?
 
     return 0;
 }
 
-static int canvas_triangle9(lua_State *L)
+static int canvas_triangle(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 9)
+    LUAX_SIGNATURE_BEGIN_OPT(L, 8, 9)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
@@ -1011,7 +832,7 @@ static int canvas_triangle9(lua_State *L)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER, LUA_TNIL)
     LUAX_SIGNATURE_END
     Canvas_Class_t *instance = (Canvas_Class_t *)lua_touserdata(L, 1);
     const char *mode = lua_tostring(L, 2);
@@ -1021,7 +842,7 @@ static int canvas_triangle9(lua_State *L)
     int y1 = lua_tointeger(L, 6);
     int x2 = lua_tointeger(L, 7);
     int y2 = lua_tointeger(L, 8);
-    GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 9);
+    GL_Pixel_t index = lua_isnone(L, 9) ? instance->context->state.color : (GL_Pixel_t)lua_tointeger(L, 9);
 
     const GL_Context_t *context = instance->context;
     if (mode[0] == 'f') {
@@ -1039,23 +860,16 @@ static int canvas_triangle9(lua_State *L)
     return 0;
 }
 
-static int canvas_triangle(lua_State *L)
+static int canvas_rectangle(lua_State *L)
 {
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(8, canvas_triangle8)
-        LUAX_OVERLOAD_ARITY(9, canvas_triangle9)
-    LUAX_OVERLOAD_END
-}
-
-static int canvas_rectangle6(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L, 6)
+    LUAX_SIGNATURE_BEGIN_OPT(L, 6, 7)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER, LUA_TNIL)
     LUAX_SIGNATURE_END
     Canvas_Class_t *instance = (Canvas_Class_t *)lua_touserdata(L, 1);
     const char *mode = lua_tostring(L, 2);
@@ -1063,47 +877,7 @@ static int canvas_rectangle6(lua_State *L)
     int y = lua_tointeger(L, 4);
     size_t width = (size_t)lua_tointeger(L, 5);
     size_t height = (size_t)lua_tointeger(L, 6);
-
-    const GL_Context_t *context = instance->context;
-    if (mode[0] == 'f') {
-        GL_primitive_filled_rectangle(context, (GL_Rectangle_t){ .x = x, .y = y, .width = width, .height = height }, context->state.color);
-    } else {
-        int x0 = x;
-        int y0 = y;
-        int x1 = x0 + width - 1;
-        int y1 = y0 + height - 1;
-
-        GL_Point_t vertices[5] = {
-                (GL_Point_t){ .x = x0, .y = y0 },
-                (GL_Point_t){ .x = x0, .y = y1 },
-                (GL_Point_t){ .x = x1, .y = y1 },
-                (GL_Point_t){ .x = x1, .y = y0 },
-                (GL_Point_t){ .x = x0, .y = y0 }
-            };
-        GL_primitive_polyline(context, vertices, 5, context->state.color);
-    }
-
-    return 0;
-}
-
-static int canvas_rectangle7(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L, 7)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    Canvas_Class_t *instance = (Canvas_Class_t *)lua_touserdata(L, 1);
-    const char *mode = lua_tostring(L, 2);
-    int x = lua_tointeger(L, 3);
-    int y = lua_tointeger(L, 4);
-    size_t width = (size_t)lua_tointeger(L, 5);
-    size_t height = (size_t)lua_tointeger(L, 6);
-    GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 7);
+    GL_Pixel_t index = lua_isnone(L, 7) ? instance->context->state.color : (GL_Pixel_t)lua_tointeger(L, 7);
 
     const GL_Context_t *context = instance->context;
     if (mode[0] == 'f') {
@@ -1127,58 +901,23 @@ static int canvas_rectangle7(lua_State *L)
     return 0;
 }
 
-static int canvas_rectangle(lua_State *L)
+static int canvas_circle(lua_State *L)
 {
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(6, canvas_rectangle6)
-        LUAX_OVERLOAD_ARITY(7, canvas_rectangle7)
-    LUAX_OVERLOAD_END
-}
-
-static int canvas_circle5(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L, 5)
+    LUAX_SIGNATURE_BEGIN_OPT(L, 5, 6)
         LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
         LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
         LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER, LUA_TNONE)
     LUAX_SIGNATURE_END
     Canvas_Class_t *instance = (Canvas_Class_t *)lua_touserdata(L, 1);
     const char *mode = lua_tostring(L, 2);
     int cx = lua_tointeger(L, 3);
     int cy = lua_tointeger(L, 4);
     int radius = lua_tointeger(L, 5);
-
-    const GL_Context_t *context = instance->context;
-    if (radius < 1.0f) { // Null radius, just a point regardless mode!
-        GL_primitive_point(context, (GL_Point_t){ .x = cx, .y = cy }, context->state.color);
-    } else
-    if (mode[0] == 'f') {
-        GL_primitive_filled_circle(context, (GL_Point_t){ .x = cx, .y = cy }, radius, context->state.color);
-    } else {
-        GL_primitive_circle(context, (GL_Point_t){ .x = cx, .y = cy }, radius, context->state.color);
-    }
-
-    return 0;
-}
-
-static int canvas_circle6(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L, 6)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    Canvas_Class_t *instance = (Canvas_Class_t *)lua_touserdata(L, 1);
-    const char *mode = lua_tostring(L, 2);
-    int cx = lua_tointeger(L, 3);
-    int cy = lua_tointeger(L, 4);
-    int radius = lua_tointeger(L, 5);
-    GL_Pixel_t index = (GL_Pixel_t)lua_tointeger(L, 6);
+    GL_Pixel_t index = lua_isnone(L, 6) ? instance->context->state.color : (GL_Pixel_t)lua_tointeger(L, 6);
+//    GL_Pixel_t index = (GL_Pixel_t)LUAX_OPT_INTEGER(L, 6, instance->context->state.color);
 
     const GL_Context_t *context = instance->context;
     if (radius < 1.0f) { // Null radius, just a point regardless mode!
@@ -1191,14 +930,6 @@ static int canvas_circle6(lua_State *L)
     }
 
     return 0;
-}
-
-static int canvas_circle(lua_State *L)
-{
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(5, canvas_circle5)
-        LUAX_OVERLOAD_ARITY(6, canvas_circle6)
-    LUAX_OVERLOAD_END
 }
 
 static int canvas_peek(lua_State *L)

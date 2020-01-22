@@ -56,6 +56,7 @@ typedef struct _luaX_Script {
 typedef int luaX_Reference;
 
 #define LUAX_REFERENCE_NIL  -1
+#define LUAX_EOD            -99
 
 #if DEBUG
     #define LUAX_SIGNATURE_BEGIN(l, n) \
@@ -67,15 +68,30 @@ typedef int luaX_Reference;
                 luaL_error(_L, "[%s:%d] wrong number of arguments (need %d, got %d)", __FILE__, __LINE__, _n, _argc); \
             } \
             int _index = 1;
+    #define LUAX_SIGNATURE_BEGIN_OPT(l, n1, n2) \
+        do { \
+            lua_State *_L = (l); \
+            int _n1 = (n1); \
+            int _n2 = (n2); \
+            int _argc = lua_gettop(L); \
+            if (_argc < _n1) { \
+                luaL_error(_L, "[%s:%d] wrong number of arguments (need %d, got %d)", __FILE__, __LINE__, _n1, _argc); \
+            } \
+            if (_argc > _n2) { \
+                luaL_error(_L, "[%s:%d] wrong number of arguments (need %d, got %d)", __FILE__, __LINE__, _n2, _argc); \
+            } \
+            int _n = _n2; \
+            int _index = 1;
     #define LUAX_SIGNATURE_ARGUMENT(...) \
-            luaX_checkargument(_L, _index++, __FILE__, __LINE__, __VA_ARGS__, LUA_TNONE);
+            luaX_checkargument(_L, _index++, __FILE__, __LINE__, __VA_ARGS__, LUAX_EOD);
     #define LUAX_SIGNATURE_END \
             if (--_index != _n) { \
-                luaL_error(_L, "[%s:%d] some arguments weren't checked (decleared %d, done %d)", __FILE__, __LINE__, _n, _index); \
+                luaL_error(_L, "[%s:%d] some arguments weren't checked (checked %d  out of %d)", __FILE__, __LINE__, _index, _n); \
             } \
         } while (0);
 #else
     #define LUAX_SIGNATURE_BEGIN(l, n)
+    #define LUAX_SIGNATURE_BEGIN_OPT(l, n1, n2)
     #define LUAX_SIGNATURE_ARGUMENT(...)
     #define LUAX_SIGNATURE_END
 #endif
@@ -93,9 +109,12 @@ typedef int luaX_Reference;
         } \
     } while (0);
 
-#define luaX_dump(L)                luaX_stackdump(L, __FILE__, __LINE__)
+#define LUAX_TO_INTEGER(L, idx)         lua_tointeger((L), (idx))
+#define LUAX_OPT_INTEGER(L, idx, def)   (lua_isnone((L), (idx)) ? (def) : lua_tointeger((L), (idx)))
 
-#define luaX_tofunction(L, arg)     luaX_ref(L, arg)
+#define luaX_dump(L)                luaX_stackdump((L), __FILE__, __LINE__)
+
+#define luaX_tofunction(L, idx)     luaX_ref((L), (idx))
 
 extern void luaX_stackdump(lua_State *L, const char *file, int line);
 extern void luaX_overridesearchers(lua_State *L, lua_CFunction searcher, int nup);

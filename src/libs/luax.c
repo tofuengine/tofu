@@ -261,7 +261,7 @@ void luaX_checkargument(lua_State *L, int idx, const char *file, int line, ...)
     va_start(args, line);
     for (;;) {
         int type = va_arg(args, int);
-        if (type == LUA_TNONE) {
+        if (type == LUAX_EOD) {
             success = 0;
             break;
         }
