@@ -36,7 +36,7 @@ static int _entry_compare(const void *lhs, const void *rhs)
 
 const Map_Entry_t *map_find(lua_State *L, const char *id, const Map_Entry_t *table, size_t size)
 {
-    const Map_Entry_t key = { .key = (char *)id };
+    const Map_Entry_t key = { .key = id };
     const Map_Entry_t *entry = bsearch((const void *)&key, table, size, sizeof(Map_Entry_t), _entry_compare);
     if (!entry) {
         luaL_error(L, "unknown value for key `%s`", id);
