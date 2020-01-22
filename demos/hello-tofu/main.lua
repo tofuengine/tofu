@@ -58,7 +58,8 @@ function Main:__ctor()
   -- Please note that, as default, palette color `0` is set as transparent. This
   -- means that the font background color won't be drawn.
   self.canvas = Canvas.new(Canvas.default():size())
-  self.font = Font.new(self.canvas, "assets/font-8x8.png", 8, 8, 0, 15)
+  self.font = Font.new("assets/font-8x8.png", 8, 8, 0, 15)
+  self.font:canvas(self.canvas)
 
   self.xform = XForm.new() -- TODO: pass clamp mode?
   self.xform:clamp("border")

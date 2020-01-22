@@ -67,7 +67,7 @@ int xform_loader(lua_State *L)
     return luaX_newmodule(L, NULL, _xform_functions, NULL, nup, META_TABLE);
 }
 
-static int xform_new0(lua_State *L)
+static int xform_new(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 0)
     LUAX_SIGNATURE_END
@@ -93,42 +93,6 @@ static int xform_new0(lua_State *L)
     luaL_setmetatable(L, META_TABLE);
 
     return 1;
-}
-
-static int xform_new1(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
-    LUAX_SIGNATURE_END
-    Canvas_Class_t *canvas = (Canvas_Class_t *)lua_touserdata(L, 1);
-
-    XForm_Class_t *instance = (XForm_Class_t *)lua_newuserdata(L, sizeof(XForm_Class_t));
-    *instance = (XForm_Class_t){
-            .context = canvas->context,
-            .context_reference = luaX_ref(L, 1),
-            .xform = (GL_XForm_t){
-                    .registers = {
-                        0.0f, 0.0f, // No offset
-                        1.0f, 0.0f, 1.0f, 0.0f, // Identity matrix.
-                        0.0f, 0.0f, // No offset
-                    },
-                    .clamp = GL_XFORM_CLAMP_REPEAT,
-                    .table = NULL
-                }
-        };
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform %p allocated for canvas %p", instance, canvas);
-
-    luaL_setmetatable(L, META_TABLE);
-
-    return 1;
-}
-
-static int xform_new(lua_State *L)
-{
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(0, xform_new0)
-        LUAX_OVERLOAD_ARITY(1, xform_new1)
-    LUAX_OVERLOAD_END
 }
 
 static int xform_gc(lua_State *L)

@@ -135,70 +135,6 @@ static int font_new3(lua_State *L)
     return 1;
 }
 
-static int font_new4(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L, 4)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING, LUA_TUSERDATA)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    const Canvas_Class_t *canvas = (const Canvas_Class_t *)lua_touserdata(L, 1);
-    int type = lua_type(L, 2);
-    size_t glyph_width = (size_t)lua_tointeger(L, 3);
-    size_t glyph_height = (size_t)lua_tointeger(L, 4);
-
-    const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
-    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
-
-    GL_Sheet_t *sheet;
-    if (type == LUA_TSTRING) {
-        const char *file = lua_tostring(L, 2);
-
-        const Sheet_Data_t *data = resources_sheets_find(file);
-        if (data) {
-            sheet = GL_sheet_decode(data->data, data->size, data->cell_width, data->cell_height, surface_callback_palette, (void *)&display->palette);
-            if (!sheet) {
-                return luaL_error(L, "can't decode sheet `%s`", file);
-            }
-            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` decoded", file);
-        } else {
-            File_System_Chunk_t chunk = FSaux_load(file_system, file, FILE_SYSTEM_CHUNK_BLOB);
-            if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
-                return luaL_error(L, "can't load file `%s`", file);
-            }
-            sheet = GL_sheet_decode(chunk.var.blob.ptr, chunk.var.blob.size, glyph_width, glyph_height, surface_callback_palette, (void *)&display->palette);
-            FSaux_release(chunk);
-            if (!sheet) {
-                return luaL_error(L, "can't decode %d bytes sheet", chunk.var.blob.size);
-            }
-            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p loaded from file `%s`", sheet, file);
-        }
-    } else
-    if (type == LUA_TUSERDATA) {
-        const Canvas_Class_t *canvas = (const Canvas_Class_t *)lua_touserdata(L, 2);
-
-        sheet = GL_sheet_attach(canvas->context->surface, glyph_width, glyph_height);
-        if (!sheet) {
-            return luaL_error(L, "can't attach sheet");
-        }
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p attached to canvas %p", sheet, canvas);
-    }
-
-    Font_Class_t *instance = (Font_Class_t *)lua_newuserdata(L, sizeof(Font_Class_t));
-    *instance = (Font_Class_t){
-            .context = canvas->context,
-            .context_reference = luaX_ref(L, 1),
-            .sheet = sheet,
-            .sheet_reference = type == LUA_TUSERDATA ? luaX_ref(L, 2) : LUAX_REFERENCE_NIL
-        };
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font %p allocated w/ sheet %p for context %p", instance, sheet, canvas->context);
-
-    luaL_setmetatable(L, META_TABLE);
-
-    return 1;
-}
-
 static int font_new5(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L, 5)
@@ -267,82 +203,11 @@ static int font_new5(lua_State *L)
     return 1;
 }
 
-static int font_new6(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L, 6)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING, LUA_TUSERDATA)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    const Canvas_Class_t *canvas = (const Canvas_Class_t *)lua_touserdata(L, 1);
-    int type = lua_type(L, 2);
-    size_t glyph_width = (size_t)lua_tointeger(L, 3);
-    size_t glyph_height = (size_t)lua_tointeger(L, 4);
-    GL_Pixel_t background_index = (GL_Pixel_t)lua_tointeger(L, 5);
-    GL_Pixel_t foreground_index = (GL_Pixel_t)lua_tointeger(L, 6);
-
-    const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
-
-    GL_Sheet_t *sheet;
-    if (type == LUA_TSTRING) {
-        const char *file = lua_tostring(L, 2);
-
-        const GL_Pixel_t indexes[] = { background_index, foreground_index };
-
-        const Sheet_Data_t *data = resources_sheets_find(file);
-        if (data) {
-            sheet = GL_sheet_decode(data->data, data->size, data->cell_width, data->cell_height, surface_callback_indexes, (void *)indexes);
-            if (!sheet) {
-                return luaL_error(L, "can't decode sheet `%s`", file);
-            }
-            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` decoded", file);
-        } else {
-            File_System_Chunk_t chunk = FSaux_load(file_system, file, FILE_SYSTEM_CHUNK_BLOB);
-            if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
-                return luaL_error(L, "can't load file `%s`", file);
-            }
-            sheet = GL_sheet_decode(chunk.var.blob.ptr, chunk.var.blob.size, glyph_width, glyph_height, surface_callback_indexes, (void *)indexes);
-            FSaux_release(chunk);
-            if (!sheet) {
-                return luaL_error(L, "can't decode %d bytes sheet", chunk.var.blob.size);
-            }
-            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p loaded from file `%s`", sheet, file);
-        }
-    } else
-    if (type == LUA_TUSERDATA) {
-        const Canvas_Class_t *canvas = (const Canvas_Class_t *)lua_touserdata(L, 2);
-
-        sheet = GL_sheet_attach(canvas->context->surface, glyph_width, glyph_height);
-        if (!sheet) {
-            return luaL_error(L, "can't attach sheet");
-        }
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p attached to canvas %p", sheet, canvas);
-    }
-
-    Font_Class_t *instance = (Font_Class_t *)lua_newuserdata(L, sizeof(Font_Class_t));
-    *instance = (Font_Class_t){
-            .context = canvas->context,
-            .context_reference = luaX_ref(L, 1),
-            .sheet = sheet,
-            .sheet_reference = type == LUA_TUSERDATA ? luaX_ref(L, 2) : LUAX_REFERENCE_NIL
-        };
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font %p allocated w/ sheet %p for context %p", instance, sheet, canvas->context);
-
-    luaL_setmetatable(L, META_TABLE);
-
-    return 1;
-}
-
 static int font_new(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(3, font_new3)
-        LUAX_OVERLOAD_ARITY(4, font_new4)
         LUAX_OVERLOAD_ARITY(5, font_new5)
-        LUAX_OVERLOAD_ARITY(6, font_new6)
     LUAX_OVERLOAD_END
 }
 
