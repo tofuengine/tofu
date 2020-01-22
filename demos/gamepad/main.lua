@@ -50,7 +50,7 @@ function Main:__ctor()
   Display.palette("pico-8")
 
   self.bank = Bank.new("assets/sheet.png", 12, 12)
-  self.font = Font.default("5x8", 0, 15)
+  self.font = Font.default(0, 15)
   self.down = {}
   self.scale = {}
 

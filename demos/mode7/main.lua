@@ -23,11 +23,11 @@ SOFTWARE.
 ]]--
 
 local System = require("tofu.core").System
+local Input = require("tofu.events").Input
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local XForm = require("tofu.graphics").XForm
 local Font = require("tofu.graphics").Font
-local Input = require("tofu.events").Input
 local Class = require("tofu.util").Class
 
 local Main = Class.define()
@@ -125,7 +125,7 @@ function Main:input()
   if recompute then
     local canvas = Canvas.default()
     self.xform:table(build_table(canvas, math.pi * 0.5 - self.angle, self.elevation))
-end
+  end
 end
 
 function Main:update(delta_time)
