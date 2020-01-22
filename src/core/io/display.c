@@ -400,7 +400,7 @@ void Display_terminate(Display_t *display)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "texture w/ id #%d deleted", display->vram_texture);
 
     free(display->vram);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "VRAM buffer %p deallocated", display->vram);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "VRAM buffer %p freed", display->vram);
 
     GL_context_destroy(display->context);
 

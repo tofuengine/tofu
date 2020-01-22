@@ -82,9 +82,9 @@ GL_Surface_t *GL_surface_create(size_t width, size_t height)
 void GL_surface_destroy(GL_Surface_t *surface)
 {
     free(surface->data);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface-data at %p deleted", surface->data);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface-data at %p freed", surface->data);
     free(surface);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface %p deleted", surface);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface %p freed", surface);
 }
 
 void GL_surface_to_rgba(const GL_Surface_t *surface, const GL_Palette_t *palette, GL_Color_t *vram)

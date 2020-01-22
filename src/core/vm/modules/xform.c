@@ -136,7 +136,7 @@ static int xform_gc(lua_State *L)
 
     if (instance->xform.table) {
         arrfree(instance->xform.table);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform scan-line table %p released", instance->xform.table);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform scan-line table %p freed", instance->xform.table);
     }
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform %p finalized", instance);
@@ -314,7 +314,7 @@ static int xform_table1(lua_State *L)
 
     if (instance->xform.table) {
         arrfree(instance->xform.table);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "scan-line table %p deallocated", instance->xform.table);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "scan-line table %p freed", instance->xform.table);
     }
     instance->xform.table = NULL;
 

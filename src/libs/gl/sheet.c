@@ -113,7 +113,7 @@ GL_Sheet_t *GL_sheet_attach(const GL_Surface_t *surface, size_t cell_width, size
 void GL_sheet_detach(GL_Sheet_t *sheet)
 {
     free(sheet->cells);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet cells deallocated");
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet cells freed");
     free(sheet);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p deleted", sheet);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p freed", sheet);
 }

@@ -141,7 +141,7 @@ static int grid_gc(lua_State *L)
     Grid_Class_t *instance = (Grid_Class_t *)lua_touserdata(L, 1);
 
     free(instance->data);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "data %p released", instance->data);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "data %p freed", instance->data);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "grid %p finalized", instance);
 

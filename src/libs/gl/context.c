@@ -101,13 +101,13 @@ GL_Context_t *GL_context_create(size_t width, size_t height)
 void GL_context_destroy(GL_Context_t *context)
 {
     arrfree(context->stack);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context stack deallocated");
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context stack freed");
 
     GL_surface_destroy(context->surface);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context surface deleted");
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context surface destroyed");
 
     free(context);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context deleted");
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context freed");
 }
 
 void GL_context_push(GL_Context_t *context)
@@ -127,7 +127,7 @@ void GL_context_pop(GL_Context_t *context)
 void GL_context_reset(GL_Context_t *context)
 {
     arrfree(context->stack);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context stack deallocated");
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context stack freed");
 
     _reset_state(&context->state, context->surface);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context reset");
