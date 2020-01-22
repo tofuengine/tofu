@@ -98,7 +98,7 @@ function Main:render(_)
   canvas:clear()
 
   --
-  canvas:rectangle("fill", 8, 8, canvas:width() - 16, canvas:height() - 16, 7)
+  canvas:rectangle("fill", 2, 2, canvas:width() - 4, canvas:height() - 4, 3)
 
   -- Query for text width/height and calculate the (screen-centered) origin
   -- x/y position.
@@ -112,8 +112,8 @@ function Main:render(_)
   -- to change color for each character.
   for i = 1, #MESSAGE do
     -- Compute the verical offset using a sine wave, each chacter with a different value.
-    local dx = (i - 1) * char_width
-    local dy = math.sin(t * 2.5 + dx * 0.05) * char_height
+    local dx = math.cos(t * 1.5           ) * 2 * char_width + (i - 1) * char_width
+    local dy = math.sin(t * 2.5 + i * 0.25) * 2 * char_height
 
     -- Convert the time to an integer (speeding it up a bit) and get a different
     -- color for each character. Then instruct the engine that color `15` need to be
