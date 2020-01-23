@@ -39,8 +39,9 @@ local MESSAGE = "Hello, Tofu!"
 
 local function build_table(canvas, factor) -- 0.4
   local entries = {}
-  for scan_line = 1, canvas:height() do
-    local angle = (scan_line / canvas:height()) * math.pi
+  local _, height = canvas:size()
+  for scan_line = 1, height do
+    local angle = (scan_line / height) * math.pi
     local sx = (1.0 - math.sin(angle)) * factor + 1.0
     entries[scan_line] = { y = scan_line - 1, a = sx, b = 0.0, c = 0.0, d = sx }
   end
@@ -61,9 +62,10 @@ function Main:__ctor()
   self.font = Font.new("assets/font-8x8.png", 8, 8, 0, 15)
   self.font:canvas(self.canvas)
 
+  local width, height = self.canvas:size()
   self.xform = XForm.new() -- TODO: pass clamp mode?
   self.xform:clamp("border")
-  self.xform:matrix(1, 0, 0, 1, self.canvas:width() * 0.5, self.canvas:height() * 0.5)
+  self.xform:matrix(1, 0, 0, 1, width * 0.5, height * 0.5)
   self.xform:table(build_table(self.canvas, self.factor))
 end
 
@@ -98,16 +100,17 @@ function Main:render(_)
   -- Clear the virtual-screen with default background color (i.e. palette color #0).
   canvas:clear()
 
-  --
-  canvas:rectangle("fill", 2, 2, canvas:width() - 4, canvas:height() - 4, 3)
-
   -- Query for text width/height and calculate the (screen-centered) origin
   -- x/y position.
+  local canvas_width, canvas_height = self.canvas:size()
   local text_width, text_height = self.font:size(MESSAGE)
-  local x, y = (canvas:width() - text_width) * 0.5, (canvas:height() - text_height) * 0.5
+  local x, y = (canvas_width - text_width) * 0.5, (canvas_height - text_height) * 0.5
 
   -- Query for font char width/height, we'll use it for offseting the characters.
   local char_width, char_height = self.font:size()
+
+  --
+  canvas:rectangle("fill", 2, 2, canvas_width - 4, canvas_height - 4, 3)
 
   -- Scan the message text one char at time. We need the current char index in order
   -- to change color for each character.

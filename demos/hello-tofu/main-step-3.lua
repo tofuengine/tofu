@@ -65,8 +65,9 @@ function Main:render(_)
 
   -- Query for text width/height and calculate the (screen-centered) origin
   -- x/y position.
+  local canvas_width, canvas_height = self.canvas:size()
   local text_width, text_height = self.font:size(MESSAGE)
-  local x, y = (canvas:width() - text_width) * 0.5, (canvas:height() - text_height) * 0.5
+  local x, y = (canvas_width - text_width) * 0.5, (canvas_height - text_height) * 0.5
 
   -- Query for font char width/height, we'll use it for offseting the characters.
   local char_width, char_height = self.font:size()

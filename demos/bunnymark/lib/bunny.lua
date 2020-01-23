@@ -5,16 +5,22 @@ local Bunny = Class.define()
 
 local MAX_SPEED = 500
 local GRAVITY = 981
-local DAMPENING = 0.9
-local MIN_X = 0
-local MAX_X = Canvas.default():width() - 26
-local MIN_Y = 0
-local MAX_Y = Canvas.default():height() - 37
+local X_DAMPENING = 0.95
+local Y_DAMPENING = 0.85
+local MIN_X, MIN_Y = 0, 0
+local MAX_X, MAX_Y = Canvas.default():size()
 
 function Bunny:__ctor(bank)
+  local cw, ch = bank:size()
+
+  self.min_x = MIN_X
+  self.min_y = MIN_Y
+  self.max_x = MAX_X - cw
+  self.max_y = MAX_Y - ch
+
   self.bank = bank
-  self.x = (MAX_X - MIN_X) / 2 -- Spawn in the top-center part of the screen.
-  self.y = (MAX_Y - MIN_Y) / 8
+  self.x = (self.max_x - self.min_x) / 2 -- Spawn in the top-center part of the screen.
+  self.y = (self.max_y - self.min_y) / 8
   self.vx = (math.random() * MAX_SPEED) - (MAX_SPEED / 2.0)
   self.vy = (math.random() * MAX_SPEED) - (MAX_SPEED / 2.0)
 end
@@ -25,24 +31,25 @@ function Bunny:update(delta_time)
 
   self.vy = self.vy + GRAVITY * delta_time
 
-  if self.x > MAX_X then
-    self.vx = self.vx * DAMPENING * -1.0
-    self.x = MAX_X
-  elseif self.x < MIN_X then
-    self.vx = self.vx * DAMPENING * -1.0
-    self.x = MIN_X
+  if self.x > self.max_x then
+    self.vx = self.vx * X_DAMPENING * -1.0
+    self.x = self.max_x
+  elseif self.x < self.min_x then
+    self.vx = self.vx * X_DAMPENING * -1.0
+    self.x = self.min_x
   end
 
-  if self.y > MAX_Y then
-    self.vy = self.vy * DAMPENING * -1.0
-    self.y = MAX_Y
+  if self.y > self.max_y then
+    self.vy = self.vy * Y_DAMPENING * -1.0
+    self.y = self.max_y
 
-    if math.abs(self.vy) <= 400.0 and math.random() <= 0.10 then  -- Higher bounce occasionally.
-      self.vy = self.vy - ((math.random() * 150.0) + 100.0)
+    if math.abs(self.vy) <= 400.0 and math.random() <= 0.10 then  -- Jump, occasionally!
+      self.vx = self.vx - ((math.random() * 100.0) - 50.0)
+      self.vy = self.vy - ((math.random() * 500.0) + 250.0)
     end
-  elseif self.y < MIN_Y then
-    self.vy = self.vy * DAMPENING * -1.0
-    self.y = MIN_Y
+  elseif self.y < self.min_y then
+    self.vy = 0.0 -- Bump on the ceiling!
+    self.y = self.min_y
   end
 end
 

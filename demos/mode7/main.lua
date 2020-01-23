@@ -55,7 +55,8 @@ local function build_table(canvas, angle, elevation)
 
   local entries = {}
 
-  for scan_line = 1, canvas:height() do
+  local _, height = canvas:size()
+  for scan_line = 1, height do
     local yc = scan_line
     local p = elevation / yc
     entries[scan_line] = {
@@ -85,7 +86,8 @@ function Main:__ctor()
   self.elevation = 48
 
   local canvas = Canvas.default()
-  self.xform:matrix(1, 0, 0, 1, canvas:width() * 0.5, canvas:height() * 0.5)
+  local width, height = canvas:size()
+  self.xform:matrix(1, 0, 0, 1, width * 0.5, height * 0.5)
   self.xform:table(build_table(canvas, math.pi * 0.5 - self.angle, self.elevation))
 end
 
@@ -141,13 +143,14 @@ end
 
 function Main:render(_)
   local canvas = Canvas.default()
+  local width, height = canvas:size()
 
   canvas:clear()
 
-  canvas:rectangle("fill", 0, 0, canvas:width(), canvas:height() * 0.25, 21)
-  self.xform:blit(self.surface, 0, canvas:height() * 0.25)
+  canvas:rectangle("fill", 0, 0, width, height * 0.25, 21)
+  self.xform:blit(self.surface, 0, height * 0.25)
 
-  local cx, cy = canvas:width() * 0.5, canvas:height() * 0.5
+  local cx, cy = width * 0.5, height * 0.5
   canvas:line(cx, cy, cx + math.cos(self.angle) * 10, cy + math.sin(self.angle) * 10, 31)
 
   canvas:line(cx, cy, cx + math.cos(math.pi * 0.5 - self.angle) * 10,

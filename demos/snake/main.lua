@@ -92,7 +92,7 @@ dump(self)
 end
 
 function Main:draw_map(map)
-  local gw = self.grid:width()
+  local gw, _ = self.grid:size()
   for i = 1, map:len() do
     local c = map:byte(i)
     local column = (i - 1) % gw
@@ -111,7 +111,8 @@ function Main:reset()
 
   self:draw_map(MAP)
 
-  self.position = { x = self.grid:width() / 2, y = self.grid:height() / 2 }
+  local gw, gh = self.grid:size()
+  self.position = { x = gw / 2, y = gh / 2 }
   self.accumulator = 0.0
   for i = 1, self.length do
     self.grid:poke(self.position.x - self.length + i, self.position.y, i * LIFE)
@@ -156,9 +157,10 @@ function Main:input()
 end
 
 function Main:generate_food()
+  local gw, gh = self.grid:size()
   while true do
-    local column = math.random(0, self.grid:width() - 1)
-    local row = math.random(0, self.grid:height() - 1)
+    local column = math.random(0, gw - 1)
+    local row = math.random(0, gh - 1)
     local value = self.grid:peek(column, row)
     if value == 0 then
       self.grid:poke(column, row, -2)

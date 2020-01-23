@@ -57,7 +57,7 @@ function Main:__ctor()
   local canvas = Canvas.default()
   Input.auto_repeat("x", 0.25)
   Input.auto_repeat("y", 0.5)
-  Input.cursor_area(0, 0, canvas:width(), canvas:height()) -- FIXME: painful!
+  Input.cursor_area(0, 0, canvas:size()) -- FIXME: painful!
 end
 
 function Main:input()
@@ -102,8 +102,9 @@ function Main:render(_)
   canvas:clear()
 
   local cw, ch = self.bank:size()
+  local width, height = canvas:size()
 
-  local x, y = (canvas:width() - #IDS * cw) * 0.5, (canvas:height() - ch) * 0.5
+  local x, y = (width - #IDS * cw) * 0.5, (height - ch) * 0.5
   for index, id in ipairs(IDS) do
     local dy = math.sin(t * 2.5 + x * 0.5) * ch
     if self.down[id] then
@@ -120,24 +121,24 @@ function Main:render(_)
     x = x + cw
   end
 
-  local h = canvas:height() * 0.5
+  local cy = height * 0.5
   local lx, ly, la, lm = Input.stick("left")
   local rx, ry, ra, rm = Input.stick("right")
-  draw_stick(canvas, 24, h - 12, 8, lx, ly, la, lm, Input.is_down("lt"))
-  draw_stick(canvas, 232, h - 12, 8, rx, ry, ra, rm, Input.is_down("rt"))
+  draw_stick(canvas, 24, cy - 12, 8, lx, ly, la, lm, Input.is_down("lt"))
+  draw_stick(canvas, 232, cy - 12, 8, rx, ry, ra, rm, Input.is_down("rt"))
   local tl, tr = Input.triggers()
-  draw_trigger(canvas, 24, h + 12, 8, tl)
-  draw_trigger(canvas, 232, h + 12, 8, tr)
+  draw_trigger(canvas, 24, cy + 12, 8, tl)
+  draw_trigger(canvas, 232, cy + 12, 8, tr)
 
-  local cx, cy = Input.cursor()
-  canvas:line(cx - 3, cy, cx - 1, cy, 2)
-  canvas:line(cx + 1, cy, cx + 3, cy, 2)
-  canvas:line(cx, cy - 3, cx, cy - 1, 2)
-  canvas:line(cx, cy + 1, cx, cy + 3, 2)
+  local mx, my = Input.cursor()
+  canvas:line(mx - 3, my, mx - 1, my, 2)
+  canvas:line(mx + 1, my, mx + 3, my, 2)
+  canvas:line(mx, my - 3, mx, my - 1, 2)
+  canvas:line(mx, my + 1, mx, my + 3, 2)
 
   self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
   self.font:write(self.font:align(string.format("X:%.2f Y:%.2f A:%.2f M:%.2f", lx, ly, la, lm),
-    canvas:width(), canvas:height(), "right", "bottom"))
+    width, height, "right", "bottom"))
 end
 
 return Main
