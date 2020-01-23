@@ -63,7 +63,7 @@ function Main:__ctor()
   self.font:canvas(self.canvas)
 
   local width, height = self.canvas:size()
-  self.xform = XForm.new() -- TODO: pass clamp mode?
+  self.xform = XForm.new(self.canvas) -- TODO: pass clamp mode?
   self.xform:clamp("border")
   self.xform:matrix(1, 0, 0, 1, width * 0.5, height * 0.5)
   self.xform:table(build_table(self.canvas, self.factor))
@@ -131,7 +131,7 @@ function Main:render(_)
 
   -- Transfer to the virtual-screen canvas through transformation.
   Canvas.default():clear()
-  self.xform:blit(self.canvas, 0, 0)
+  self.xform:blit()
 end
 
 return Main

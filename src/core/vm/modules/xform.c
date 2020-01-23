@@ -70,7 +70,9 @@ int xform_loader(lua_State *L)
 static int xform_new(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
+    Canvas_Class_t *canvas = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
 
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -78,6 +80,8 @@ static int xform_new(lua_State *L)
     *instance = (XForm_Class_t){
             .context = display->context,
             .context_reference = LUAX_REFERENCE_NIL,
+            .surface = canvas->context->surface,
+            .surface_reference = luaX_ref(L, 1),
             .xform = (GL_XForm_t){
                     .registers = {
                         0.0f, 0.0f, // No offset
@@ -110,6 +114,11 @@ static int xform_gc(lua_State *L)
     if (instance->context_reference != LUAX_REFERENCE_NIL) {
         luaX_unref(L, instance->context_reference);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context reference #%d released", instance->context_reference);
+    }
+
+    if (instance->surface_reference != LUAX_REFERENCE_NIL) {
+        luaX_unref(L, instance->surface_reference);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface reference #%d released", instance->surface_reference);
     }
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform %p finalized", instance);
@@ -146,21 +155,19 @@ static int xform_canvas(lua_State *L)
     return 0;
 }
 
-static int xform_blit2_4(lua_State *L)
+static int xform_blit1_3(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     XForm_Class_t *instance = (XForm_Class_t *)LUAX_USERDATA(L, 1); // TODO: rename `instance` to `self`.
-    Canvas_Class_t *canvas = (Canvas_Class_t *)LUAX_USERDATA(L, 2);
-    int x = LUAX_OPTIONAL_INTEGER(L, 3, 0);
-    int y = LUAX_OPTIONAL_INTEGER(L, 4, 0);
+    int x = LUAX_OPTIONAL_INTEGER(L, 2, 0);
+    int y = LUAX_OPTIONAL_INTEGER(L, 3, 0);
 
     const GL_Context_t *context = instance->context;
-    const GL_Surface_t *surface = canvas->context->surface;
+    const GL_Surface_t *surface = instance->surface;
     GL_context_blit_x(context, surface, (GL_Point_t){ .x = x, .y = y }, &instance->xform);
 
     return 0;
@@ -169,8 +176,8 @@ static int xform_blit2_4(lua_State *L)
 static int xform_blit(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(2, xform_blit2_4)
-        LUAX_OVERLOAD_ARITY(4, xform_blit2_4) // Nonsense to call it w/ 3 arguments!
+        LUAX_OVERLOAD_ARITY(1, xform_blit1_3)
+        LUAX_OVERLOAD_ARITY(3, xform_blit1_3) // Nonsense to call it w/ 3 arguments!
     LUAX_OVERLOAD_END
 }
 
