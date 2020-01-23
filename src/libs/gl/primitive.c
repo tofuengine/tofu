@@ -565,7 +565,7 @@ void GL_primitive_filled_triangle(const GL_Context_t *context, GL_Point_t a, GL_
 }
 
 // https://www.javatpoint.com/computer-graphics-bresenhams-circle-algorithm
-void GL_primitive_filled_circle(const GL_Context_t *context, GL_Point_t center, int radius, GL_Pixel_t index)
+void GL_primitive_filled_circle(const GL_Context_t *context, GL_Point_t center, size_t radius, GL_Pixel_t index)
 {
     const GL_State_t *state = &context->state;
     const GL_Quad_t *clipping_region = &state->clipping_region;
@@ -605,7 +605,7 @@ void GL_primitive_filled_circle(const GL_Context_t *context, GL_Point_t center, 
     }
 }
 
-void GL_primitive_circle(const GL_Context_t *context, GL_Point_t center, int radius, GL_Pixel_t index)
+void GL_primitive_circle(const GL_Context_t *context, GL_Point_t center, size_t radius, GL_Pixel_t index)
 {
     const GL_State_t *state = &context->state;
     const GL_Quad_t *clipping_region = &state->clipping_region;

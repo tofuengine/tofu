@@ -64,8 +64,10 @@ typedef int luaX_Reference;
             lua_State *_L = (l); \
             int _argc = lua_gettop(_L); \
             int _index = 1;
-    #define LUAX_SIGNATURE_ARGUMENT(...) \
-            luaX_checkargument(_L, _index, __FILE__, __LINE__, __VA_ARGS__, LUAX_EOD); \
+    #define LUAX_SIGNATURE_REQUIRED(...) \
+            luaX_checkargument(_L, _index++, __FILE__, __LINE__, __VA_ARGS__, LUAX_EOD);
+    #define LUAX_SIGNATURE_OPTIONAL(...) \
+            luaX_checkargument(_L, _index, __FILE__, __LINE__, __VA_ARGS__, LUA_TNONE, LUAX_EOD); \
             if (lua_isnone(_L, _index++)) { \
                 ++_argc; \
             }
@@ -76,7 +78,8 @@ typedef int luaX_Reference;
         } while (0);
 #else
     #define LUAX_SIGNATURE_BEGIN(l)
-    #define LUAX_SIGNATURE_ARGUMENT(...)
+    #define LUAX_SIGNATURE_REQUIRED(...)
+    #define LUAX_SIGNATURE_OPTIONAL(...)
     #define LUAX_SIGNATURE_END
 #endif
 
@@ -89,12 +92,29 @@ typedef int luaX_Reference;
 #define LUAX_OVERLOAD_ARITY(n, f) \
             case (n): { return (f)(_L); }
 #define LUAX_OVERLOAD_END \
-            default: { return luaL_error(L, "[%s:%d] overload for arity %d is missing", __FILE__, __LINE__, _argc); } \
+            default: { return luaL_error(L, "[%s:%d] overload for arity #%d is missing", __FILE__, __LINE__, _argc); } \
         } \
     } while (0);
 
-#define LUAX_TO_INTEGER(L, idx)         lua_tointeger((L), (idx))
-#define LUAX_OPT_INTEGER(L, idx, def)   (lua_isnone((L), (idx)) ? (def) : lua_tointeger((L), (idx)))
+#ifdef DEBUG
+    #define LUAX_REQUIRED_USERDATA(L, idx)       (!lua_isuserdata((L), (idx)) ? luaL_error((L), "argument #%d is required", (idx)), NULL : lua_touserdata((L), (idx)))
+    #define LUAX_OPTIONAL_USERDATA(L, idx, def)  (lua_isnone((L), (idx)) ? (def) : lua_touserdata((L), (idx)))
+    #define LUAX_REQUIRED_INTEGER(L, idx)        (!lua_isnumber((L), (idx)) ? luaL_error((L), "argument #%d is required", (idx)), 0 : lua_tointeger((L), (idx)))
+    #define LUAX_OPTIONAL_INTEGER(L, idx, def)   (lua_isnone((L), (idx)) ? (def) : lua_tointeger((L), (idx)))
+    #define LUAX_REQUIRED_NUMBER(L, idx)         (!lua_isnumber((L), (idx)) ? luaL_error((L), "argument #%d is required", (idx)), 0.0f : lua_tonumber((L), (idx)))
+    #define LUAX_OPTIONAL_NUMBER(L, idx, def)    (lua_isnone((L), (idx)) ? (def) : lua_tonumber((L), (idx)))
+    #define LUAX_REQUIRED_STRING(L, idx)         (!lua_isstring((L), (idx)) ? luaL_error((L), "argument #%d is required", (idx)), NULL : lua_tostring((L), (idx)))
+    #define LUAX_OPTIONAL_STRING(L, idx, def)    (lua_isnone((L), (idx)) ? (def) : lua_tostring((L), (idx)))
+#else
+    #define LUAX_REQUIRED_USERDATA(L, idx)       (lua_touserdata((L), (idx)))
+    #define LUAX_OPTIONAL_USERDATA(L, idx, def)  (lua_isnone((L), (idx)) ? (def) : lua_touserdata((L), (idx)))
+    #define LUAX_REQUIRED_INTEGER(L, idx)        (lua_tointeger((L), (idx)))
+    #define LUAX_OPTIONAL_INTEGER(L, idx, def)   (lua_isnone((L), (idx)) ? (def) : lua_tointeger((L), (idx)))
+    #define LUAX_REQUIRED_NUMBER(L, idx)         (lua_tonumber((L), (idx)))
+    #define LUAX_OPTIONAL_NUMBER(L, idx, def)    (lua_isnone((L), (idx)) ? (def) : lua_tonumber((L), (idx)))
+    #define LUAX_REQUIRED_STRING(L, idx)         (lua_tostring((L), (idx)))
+    #define LUAX_OPTIONAL_STRING(L, idx, def)    (lua_isnone((L), (idx)) ? (def) : lua_tostring((L), (idx)))
+#endif
 
 #define luaX_dump(L)                luaX_stackdump((L), __FILE__, __LINE__)
 

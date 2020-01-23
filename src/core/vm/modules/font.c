@@ -76,20 +76,20 @@ int font_loader(lua_State *L)
 static int font_new3(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING, LUA_TUSERDATA)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING, LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     int type = lua_type(L, 1);
-    size_t glyph_width = (size_t)lua_tointeger(L, 2);
-    size_t glyph_height = (size_t)lua_tointeger(L, 3);
+    size_t glyph_width = (size_t)LUAX_REQUIRED_INTEGER(L, 2);
+    size_t glyph_height = (size_t)LUAX_REQUIRED_INTEGER(L, 3);
 
     const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     GL_Sheet_t *sheet;
     if (type == LUA_TSTRING) {
-        const char *file = lua_tostring(L, 1);
+        const char *file = LUAX_REQUIRED_STRING(L, 1);
 
         const Sheet_Data_t *data = resources_sheets_find(file);
         if (data) {
@@ -112,7 +112,7 @@ static int font_new3(lua_State *L)
         }
     } else
     if (type == LUA_TUSERDATA) {
-        const Canvas_Class_t *canvas = (const Canvas_Class_t *)lua_touserdata(L, 1);
+        const Canvas_Class_t *canvas = (const Canvas_Class_t *)LUAX_REQUIRED_USERDATA(L, 1);
 
         sheet = GL_sheet_attach(canvas->context->surface, glyph_width, glyph_height);
         if (!sheet) {
@@ -138,24 +138,24 @@ static int font_new3(lua_State *L)
 static int font_new5(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING, LUA_TUSERDATA)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING, LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     int type = lua_type(L, 1);
-    size_t glyph_width = (size_t)lua_tointeger(L, 2);
-    size_t glyph_height = (size_t)lua_tointeger(L, 3);
-    GL_Pixel_t background_index = (GL_Pixel_t)lua_tointeger(L, 4);
-    GL_Pixel_t foreground_index = (GL_Pixel_t)lua_tointeger(L, 5);
+    size_t glyph_width = (size_t)LUAX_REQUIRED_INTEGER(L, 2);
+    size_t glyph_height = (size_t)LUAX_REQUIRED_INTEGER(L, 3);
+    GL_Pixel_t background_index = (GL_Pixel_t)LUAX_REQUIRED_INTEGER(L, 4);
+    GL_Pixel_t foreground_index = (GL_Pixel_t)LUAX_REQUIRED_INTEGER(L, 5);
 
     const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     GL_Sheet_t *sheet;
     if (type == LUA_TSTRING) {
-        const char *file = lua_tostring(L, 1);
+        const char *file = LUAX_REQUIRED_STRING(L, 1);
 
         const GL_Pixel_t indexes[] = { background_index, foreground_index };
 
@@ -180,7 +180,7 @@ static int font_new5(lua_State *L)
         }
     } else
     if (type == LUA_TUSERDATA) {
-        const Canvas_Class_t *canvas = (const Canvas_Class_t *)lua_touserdata(L, 1);
+        const Canvas_Class_t *canvas = (const Canvas_Class_t *)LUAX_REQUIRED_USERDATA(L, 1);
 
         sheet = GL_sheet_attach(canvas->context->surface, glyph_width, glyph_height);
         if (!sheet) {
@@ -214,9 +214,9 @@ static int font_new(lua_State *L)
 static int font_gc(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
+    Font_Class_t *instance = (Font_Class_t *)LUAX_REQUIRED_USERDATA(L, 1);
 
     if (instance->sheet_reference != LUAX_REFERENCE_NIL) {
         luaX_unref(L, instance->sheet_reference);
@@ -273,9 +273,9 @@ static void _size(const char *text, int dw, int dh, int *w, int *h)
 static int font_width1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
+    Font_Class_t *instance = (Font_Class_t *)LUAX_REQUIRED_USERDATA(L, 1);
 
     lua_pushinteger(L, instance->sheet->size.width);
 
@@ -285,11 +285,11 @@ static int font_width1(lua_State *L)
 static int font_width2(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
-    const char *text = lua_tostring(L, 2);
+    Font_Class_t *instance = (Font_Class_t *)LUAX_REQUIRED_USERDATA(L, 1);
+    const char *text = LUAX_REQUIRED_STRING(L, 2);
 
     int dw = instance->sheet->size.width;
 
@@ -304,13 +304,13 @@ static int font_width2(lua_State *L)
 static int font_width3(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
-    const char *text = lua_tostring(L, 2);
-    float scale = lua_tonumber(L, 3);
+    Font_Class_t *instance = (Font_Class_t *)LUAX_REQUIRED_USERDATA(L, 1);
+    const char *text = LUAX_REQUIRED_STRING(L, 2);
+    float scale = LUAX_REQUIRED_NUMBER(L, 3);
 
     int dw = (int)(instance->sheet->size.width * fabsf(scale));
 
@@ -334,9 +334,9 @@ static int font_width(lua_State *L)
 static int font_height1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
+    Font_Class_t *instance = (Font_Class_t *)LUAX_REQUIRED_USERDATA(L, 1);
 
     lua_pushinteger(L, instance->sheet->size.height);
 
@@ -346,11 +346,11 @@ static int font_height1(lua_State *L)
 static int font_height2(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
-    const char *text = lua_tostring(L, 2);
+    Font_Class_t *instance = (Font_Class_t *)LUAX_REQUIRED_USERDATA(L, 1);
+    const char *text = LUAX_REQUIRED_STRING(L, 2);
 
     int dh = instance->sheet->size.height;
 
@@ -365,13 +365,13 @@ static int font_height2(lua_State *L)
 static int font_height3(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
-    const char *text = lua_tostring(L, 2);
-    float scale = lua_tonumber(L, 3);
+    Font_Class_t *instance = (Font_Class_t *)LUAX_REQUIRED_USERDATA(L, 1);
+    const char *text = LUAX_REQUIRED_STRING(L, 2);
+    float scale = LUAX_REQUIRED_NUMBER(L, 3);
 
     int dh = (int)(instance->sheet->size.height * fabsf(scale));
 
@@ -395,9 +395,9 @@ static int font_height(lua_State *L)
 static int font_size1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
+    Font_Class_t *instance = (Font_Class_t *)LUAX_REQUIRED_USERDATA(L, 1);
 
     lua_pushinteger(L, instance->sheet->size.width);
     lua_pushinteger(L, instance->sheet->size.height);
@@ -408,11 +408,11 @@ static int font_size1(lua_State *L)
 static int font_size2(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
-    const char *text = lua_tostring(L, 2);
+    Font_Class_t *instance = (Font_Class_t *)LUAX_REQUIRED_USERDATA(L, 1);
+    const char *text = LUAX_REQUIRED_STRING(L, 2);
 
     int dw = instance->sheet->size.width;
     int dh = instance->sheet->size.height;
@@ -426,41 +426,18 @@ static int font_size2(lua_State *L)
     return 2;
 }
 
-static int font_size3(lua_State *L)
+static int font_size3_4(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
-    const char *text = lua_tostring(L, 2);
-    float scale = lua_tonumber(L, 3);
-
-    int dw = (int)(instance->sheet->size.width * fabsf(scale));
-    int dh = (int)(instance->sheet->size.height * fabsf(scale));
-
-    int width, height;
-    _size(text, dw, dh, &width, &height);
-
-    lua_pushinteger(L, width);
-    lua_pushinteger(L, height);
-
-    return 2;
-}
-
-static int font_size4(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
-    const char *text = lua_tostring(L, 2);
-    float scale_x = lua_tonumber(L, 3);
-    float scale_y = lua_tonumber(L, 4);
+    Font_Class_t *instance = (Font_Class_t *)LUAX_REQUIRED_USERDATA(L, 1);
+    const char *text = LUAX_REQUIRED_STRING(L, 2);
+    float scale_x = LUAX_REQUIRED_NUMBER(L, 3);
+    float scale_y = LUAX_OPTIONAL_NUMBER(L, 4, scale_x);
 
     int dw = (int)(instance->sheet->size.width * fabsf(scale_x));
     int dh = (int)(instance->sheet->size.height * fabsf(scale_y));
@@ -479,17 +456,17 @@ static int font_size(lua_State *L)
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(1, font_size1)
         LUAX_OVERLOAD_ARITY(2, font_size2)
-        LUAX_OVERLOAD_ARITY(3, font_size3)
-        LUAX_OVERLOAD_ARITY(4, font_size4)
+        LUAX_OVERLOAD_ARITY(3, font_size3_4)
+        LUAX_OVERLOAD_ARITY(4, font_size3_4)
     LUAX_OVERLOAD_END
 }
 
 static int font_canvas1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
+    Font_Class_t *instance = (Font_Class_t *)LUAX_REQUIRED_USERDATA(L, 1);
 
     const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -508,11 +485,11 @@ static int font_canvas1(lua_State *L)
 static int font_canvas2(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
-    const Canvas_Class_t *canvas = (Canvas_Class_t *)lua_touserdata(L, 2);
+    Font_Class_t *instance = (Font_Class_t *)LUAX_REQUIRED_USERDATA(L, 1);
+    const Canvas_Class_t *canvas = (Canvas_Class_t *)LUAX_REQUIRED_USERDATA(L, 2);
 
     if (instance->context_reference != LUAX_REFERENCE_NIL) {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context reference #%d released", instance->context_reference);
@@ -537,15 +514,15 @@ static int font_canvas(lua_State *L)
 static int font_write4(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
-    const char *text = lua_tostring(L, 2);
-    int x = lua_tointeger(L, 3);
-    int y = lua_tointeger(L, 4);
+    Font_Class_t *instance = (Font_Class_t *)LUAX_REQUIRED_USERDATA(L, 1);
+    const char *text = LUAX_REQUIRED_STRING(L, 2);
+    int x = LUAX_REQUIRED_INTEGER(L, 3);
+    int y = LUAX_REQUIRED_INTEGER(L, 4);
 
     const GL_Context_t *context = instance->context;
     const GL_Sheet_t *sheet = instance->sheet;
@@ -575,65 +552,22 @@ static int font_write4(lua_State *L)
     return 0;
 }
 
-static int font_write5(lua_State *L)
+static int font_write5_6(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
-    const char *text = lua_tostring(L, 2);
-    int x = lua_tointeger(L, 3);
-    int y = lua_tointeger(L, 4);
-    float scale = lua_tonumber(L, 5);
-
-    const GL_Context_t *context = instance->context;
-    const GL_Sheet_t *sheet = instance->sheet;
-
-    int dw = (int)(sheet->size.width * fabsf(scale));
-#ifndef __NO_LINEFEEDS__
-    int dh = (int)(sheet->size.height * fabsf(scale));
-#endif
-
-    int dx = x, dy = y;
-    for (const char *ptr = text; *ptr != '\0'; ++ptr) {
-        char c = *ptr;
-#ifndef __NO_LINEFEEDS__
-        if (c == '\n') { // Handle carriage-return
-            dx = x;
-            dy += dh;
-            continue;
-        } else
-#endif
-        if (c < ' ') {
-            continue;
-        }
-        GL_context_blit_s(context, sheet->atlas, sheet->cells[c - ' '], (GL_Point_t){ .x = dx, .y = dy }, scale, scale);
-        dx += dw;
-    }
-
-    return 0;
-}
-
-static int font_write6(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TUSERDATA)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    Font_Class_t *instance = (Font_Class_t *)lua_touserdata(L, 1);
-    const char *text = lua_tostring(L, 2);
-    int x = lua_tointeger(L, 3); // TODO: make all arguments const?
-    int y = lua_tointeger(L, 4);
-    float scale_x = lua_tonumber(L, 5);
-    float scale_y = lua_tonumber(L, 6);
+    Font_Class_t *instance = (Font_Class_t *)LUAX_REQUIRED_USERDATA(L, 1);
+    const char *text = LUAX_REQUIRED_STRING(L, 2);
+    int x = LUAX_REQUIRED_INTEGER(L, 3); // TODO: make all arguments const?
+    int y = LUAX_REQUIRED_INTEGER(L, 4);
+    float scale_x = LUAX_REQUIRED_NUMBER(L, 5);
+    float scale_y = LUAX_OPTIONAL_NUMBER(L, 6, scale_x);
 
     const GL_Context_t *context = instance->context;
     const GL_Sheet_t *sheet = instance->sheet;
@@ -667,7 +601,7 @@ static int font_write(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(4, font_write4)
-        LUAX_OVERLOAD_ARITY(5, font_write5)
-        LUAX_OVERLOAD_ARITY(6, font_write6)
+        LUAX_OVERLOAD_ARITY(5, font_write5_6)
+        LUAX_OVERLOAD_ARITY(6, font_write5_6)
     LUAX_OVERLOAD_END
 }

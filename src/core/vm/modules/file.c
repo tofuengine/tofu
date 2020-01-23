@@ -54,9 +54,9 @@ int file_loader(lua_State *L)
 static int file_as_string(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    const char *file = lua_tostring(L, 1);
+    const char *file = LUAX_REQUIRED_STRING(L, 1);
 
     const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
 
@@ -73,9 +73,9 @@ static int file_as_string(lua_State *L)
 static int file_as_binary(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    const char *file = lua_tostring(L, 1);
+    const char *file = LUAX_REQUIRED_STRING(L, 1);
 
     const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
 

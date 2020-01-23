@@ -37,8 +37,8 @@ extern void GL_context_process(const GL_Context_t *context, GL_Rectangle_t recta
 
 extern void GL_primitive_filled_rectangle(const GL_Context_t *context, GL_Rectangle_t rectangle, GL_Pixel_t index);
 extern void GL_primitive_filled_triangle(const GL_Context_t *context, GL_Point_t a, GL_Point_t b, GL_Point_t c, GL_Pixel_t index);
-extern void GL_primitive_filled_circle(const GL_Context_t *context, GL_Point_t center, int radius, GL_Pixel_t index);
-extern void GL_primitive_circle(const GL_Context_t *context, GL_Point_t center, int radius, GL_Pixel_t index);
+extern void GL_primitive_filled_circle(const GL_Context_t *context, GL_Point_t center, size_t radius, GL_Pixel_t index);
+extern void GL_primitive_circle(const GL_Context_t *context, GL_Point_t center, size_t radius, GL_Pixel_t index);
 
 extern void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t index);
 
