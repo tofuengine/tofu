@@ -94,6 +94,8 @@ static int bank_new(lua_State *L)
             return luaL_error(L, "can't attach sheet");
         }
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p attached to canvas %p", sheet, canvas);
+    } else {
+        return luaL_error(L, "invalid argument");
     }
 
     Bank_Class_t *instance = (Bank_Class_t *)lua_newuserdata(L, sizeof(Bank_Class_t));

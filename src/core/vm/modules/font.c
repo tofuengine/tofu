@@ -115,6 +115,8 @@ static int font_new3(lua_State *L)
             return luaL_error(L, "can't attach sheet");
         }
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p attached to canvas %p", sheet, canvas);
+    } else {
+        return luaL_error(L, "invalid argument");
     }
 
     Font_Class_t *instance = (Font_Class_t *)lua_newuserdata(L, sizeof(Font_Class_t));
@@ -183,6 +185,8 @@ static int font_new5(lua_State *L)
             return luaL_error(L, "can't attach sheet");
         }
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p attached to canvas %p", sheet, canvas);
+    } else {
+        return luaL_error(L, "invalid argument");
     }
 
     Font_Class_t *instance = (Font_Class_t *)lua_newuserdata(L, sizeof(Font_Class_t));
