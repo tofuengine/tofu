@@ -24,6 +24,7 @@ SOFTWARE.
 
 local Grid = require("tofu.collections").Grid
 local Canvas = require("tofu.graphics").Canvas
+local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
 local Input = require("tofu.events").Input
 local Class = require("tofu.util").Class
@@ -40,11 +41,14 @@ local PALETTE = {
 local Main = Class.define()
 
 function Main:__ctor()
-  Canvas.palette(PALETTE)
+  Display.palette(PALETTE)
+
+  local canvas = Canvas.default()
+  local width, height = canvas:size()
 
   self.font = Font.default(0, 15)
-  self.x_size = Canvas.width() / STEPS
-  self.y_size = Canvas.height() / STEPS
+  self.x_size = width / STEPS
+  self.y_size = height / STEPS
   self.windy = false
   self.damping = 1.0
   self.grid = Grid.new(STEPS, STEPS, 0)
@@ -98,7 +102,9 @@ function Main:update(_)
 end
 
 function Main:render(_)
-  Canvas.clear()
+  local canvas = Canvas.default()
+  canvas:clear()
+  local width, _ = canvas:size()
 
   local w = self.x_size
   local h = self.y_size
@@ -106,12 +112,12 @@ function Main:render(_)
       local x = column * w
       local y = row * h
       if value > 0 then
-        Canvas.rectangle("fill", x, y, w, h, math.tointeger(value))
+        canvas:rectangle("fill", x, y, w, h, value)
       end
     end)
 
     self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
-    self.font:write(self.font:align(string.format("D: %.2f", self.damping), Canvas.width(), 0, "right"))
+    self.font:write(self.font:align(string.format("D: %.2f", self.damping), width, 0, "right"))
 end
 
 return Main
