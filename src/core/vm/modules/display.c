@@ -64,7 +64,7 @@ static int display_palette0(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
 
-    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     const GL_Palette_t *palette = &display->palette;
 
@@ -86,7 +86,7 @@ static int display_palette1(lua_State *L)
     LUAX_SIGNATURE_END
     int type = lua_type(L, 1);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     GL_Palette_t palette;
     if (type == LUA_TSTRING) { // Predefined palette!
@@ -111,7 +111,7 @@ static int display_palette1(lua_State *L)
 
         lua_pushnil(L);
         for (size_t i = 0; lua_next(L, 1); ++i) {
-            uint32_t argb = (uint32_t)lua_tointeger(L, -1);
+            uint32_t argb = (uint32_t)LUAX_INTEGER(L, -1);
             GL_Color_t color = GL_palette_unpack_color(argb);
             palette.colors[i] = color;
 
@@ -142,9 +142,9 @@ static int display_color_to_index(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    uint32_t argb = (uint32_t)lua_tointeger(L, 1);
+    uint32_t argb = (uint32_t)LUAX_INTEGER(L, 1);
 
-    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     GL_Color_t color = GL_palette_unpack_color(argb);
     const GL_Pixel_t index = GL_palette_find_nearest_color(&display->palette, color);
@@ -154,28 +154,16 @@ static int display_color_to_index(lua_State *L)
     return 1;
 }
 
-static int display_offset0(lua_State *L)
+static int display_offset0_2(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
+    int x = LUAX_OPTIONAL_INTEGER(L, 1, 0);
+    int y = LUAX_OPTIONAL_INTEGER(L, 2, 0);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
-
-    Display_offset(display, (GL_Point_t){ .x = 0, .y = 0 });
-
-    return 0;
-}
-
-static int display_offset2(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    int x = lua_tointeger(L, 1);
-    int y = lua_tointeger(L, 2);
-
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     Display_offset(display, (GL_Point_t){ .x = x, .y = y });
 
@@ -185,8 +173,8 @@ static int display_offset2(lua_State *L)
 static int display_offset(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(0, display_offset0)
-        LUAX_OVERLOAD_ARITY(2, display_offset2)
+        LUAX_OVERLOAD_ARITY(0, display_offset0_2)
+        LUAX_OVERLOAD_ARITY(2, display_offset0_2)
     LUAX_OVERLOAD_END
 }
 
@@ -195,9 +183,9 @@ static int display_shader(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    const char *code = lua_tostring(L, 1);
+    const char *code = LUAX_STRING(L, 1);
 
-    Display_t *display = (Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     Display_shader(display, code);
 

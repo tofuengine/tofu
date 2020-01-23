@@ -92,7 +92,7 @@ static int input_is_down(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    const char *id = LUAX_REQUIRED_STRING(L, 1);
+    const char *id = LUAX_STRING(L, 1);
 
     const Input_t *input = (const Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
@@ -109,7 +109,7 @@ static int input_is_up(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    const char *id = LUAX_REQUIRED_STRING(L, 1);
+    const char *id = LUAX_STRING(L, 1);
 
     const Input_t *input = (const Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
@@ -126,7 +126,7 @@ static int input_is_pressed(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    const char *id = LUAX_REQUIRED_STRING(L, 1);
+    const char *id = LUAX_STRING(L, 1);
 
     const Input_t *input = (const Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
@@ -143,7 +143,7 @@ static int input_is_released(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    const char *id = LUAX_REQUIRED_STRING(L, 1);
+    const char *id = LUAX_STRING(L, 1);
 
     const Input_t *input = (const Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
@@ -160,7 +160,7 @@ static int input_auto_repeat1(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    const char *id = LUAX_REQUIRED_STRING(L, 1);
+    const char *id = LUAX_STRING(L, 1);
 
     Input_t *input = (Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
@@ -177,8 +177,8 @@ static int input_auto_repeat2(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    const char *id = LUAX_REQUIRED_STRING(L, 1);
-    float period = LUAX_REQUIRED_NUMBER(L, 2);
+    const char *id = LUAX_STRING(L, 1);
+    float period = LUAX_NUMBER(L, 2);
 
     Input_t *input = (Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
@@ -217,8 +217,8 @@ static int input_cursor2(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    float x = LUAX_REQUIRED_NUMBER(L, 1);
-    float y = LUAX_REQUIRED_NUMBER(L, 2);
+    float x = LUAX_NUMBER(L, 1);
+    float y = LUAX_NUMBER(L, 2);
 
     Input_t *input = (Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
@@ -245,10 +245,10 @@ static int input_cursor_area(lua_State *L) // TODO: rename to `region`?
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    int x = LUAX_REQUIRED_INTEGER(L, 1);
-    int y = LUAX_REQUIRED_INTEGER(L, 2);
-    size_t width = (size_t)LUAX_REQUIRED_INTEGER(L, 3);
-    size_t height = (size_t)LUAX_REQUIRED_INTEGER(L, 4);
+    int x = LUAX_INTEGER(L, 1);
+    int y = LUAX_INTEGER(L, 2);
+    size_t width = (size_t)LUAX_INTEGER(L, 3);
+    size_t height = (size_t)LUAX_INTEGER(L, 4);
 
     Input_t *input = (Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 
@@ -267,7 +267,7 @@ static int input_stick(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    const char *id = LUAX_REQUIRED_STRING(L, 1);
+    const char *id = LUAX_STRING(L, 1);
 
     const Input_t *input = (const Input_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INPUT));
 

@@ -56,9 +56,9 @@ static int file_as_string(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    const char *file = LUAX_REQUIRED_STRING(L, 1);
+    const char *file = LUAX_STRING(L, 1);
 
-    const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
+    const File_System_t *file_system = (const File_System_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
 
     File_System_Chunk_t chunk = FSaux_load(file_system, file, FILE_SYSTEM_CHUNK_BLOB);
     if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
@@ -75,9 +75,9 @@ static int file_as_binary(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    const char *file = LUAX_REQUIRED_STRING(L, 1);
+    const char *file = LUAX_STRING(L, 1);
 
-    const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
+    const File_System_t *file_system = (const File_System_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
 
     File_System_Chunk_t chunk = FSaux_load(file_system, file, FILE_SYSTEM_CHUNK_BLOB);
     if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {

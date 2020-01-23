@@ -71,8 +71,8 @@ function Tofu:__ctor()
       update = function(_, _)
         end,
       render = function(me, _)
-          local w = me.canvas:width() -- TODO: could precalculate these values.
-          local fh = me.font:height()
+          local w, _ = me.canvas:size() -- TODO: could precalculate these values.
+          local _, fh = me.font:size()
           local on = (System.time() % 2) == 0
           me.canvas:clear()
           me.canvas:rectangle("line", 0, 0, w, fh * 2 + 8, on and 1 or 0)
