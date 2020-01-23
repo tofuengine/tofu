@@ -72,7 +72,7 @@ static int xform_new(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
 
-    const Display_t *display = (const Display_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     XForm_Class_t *instance = (XForm_Class_t *)lua_newuserdata(L, sizeof(XForm_Class_t));
     *instance = (XForm_Class_t){
@@ -276,7 +276,7 @@ static int xform_clamp(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
     XForm_Class_t *instance = (XForm_Class_t *)LUAX_USERDATA(L, 1);
-    const char *clamp = lua_tostring(L, 2);
+    const char *clamp = LUAX_STRING(L, 2);
 
     if (clamp[0] == 'e') {
         instance->xform.clamp = GL_XFORM_CLAMP_EDGE;
@@ -349,9 +349,8 @@ static int xform_table2(lua_State *L)
 
     lua_pushnil(L);
     while (lua_next(L, 2)) {
-        int index = lua_tointeger(L, -2);
-        GL_XForm_Table_Entry_t entry = { 0 };
-        entry.scan_line = index - 1; // The scan-line indicator is the array index (minus one).
+        int index = LUAX_INTEGER(L, -2);
+        GL_XForm_Table_Entry_t entry = { .scan_line = index - 1 }; // The scan-line indicator is the array index (minus one).
 
         lua_pushnil(L);
         for (size_t i = 0; lua_next(L, -2); ++i) { // Scan the value, which is an array.
@@ -361,8 +360,8 @@ static int xform_table2(lua_State *L)
                 break;
             }
             entry.count = i + 1;
-            entry.operations[i].id = lua_isstring(L, -2) ? _string_to_register(lua_tostring(L, -2)) : (GL_XForm_Registers_t)lua_tointeger(L, -2);
-            entry.operations[i].value = (float)lua_tonumber(L, -1);
+            entry.operations[i].id = _string_to_register(LUAX_STRING(L, -2));
+            entry.operations[i].value = (float)LUAX_NUMBER(L, -1);
 
             lua_pop(L, 1);
         }

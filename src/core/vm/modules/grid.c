@@ -100,7 +100,7 @@ static int grid_new(lua_State *L)
                 break;
             }
 
-            Cell_t value = (Cell_t)lua_tonumber(L, -1);
+            Cell_t value = (Cell_t)LUAX_NUMBER(L, -1);
             *(ptr++) = value;
 
             lua_pop(L, 1);
@@ -177,7 +177,7 @@ static int grid_fill(lua_State *L)
                 break;
             }
 
-            Cell_t value = (Cell_t)lua_tonumber(L, -1);
+            Cell_t value = (Cell_t)LUAX_NUMBER(L, -1);
             *(ptr++) = value;
 
             lua_pop(L, 1);
@@ -228,7 +228,7 @@ static int grid_stride(lua_State *L)
                 break;
             }
 
-            Cell_t value = (Cell_t)lua_tonumber(L, -1);
+            Cell_t value = (Cell_t)LUAX_NUMBER(L, -1);
             *(ptr++) = value;
 
             lua_pop(L, 1);
@@ -306,7 +306,7 @@ static int grid_scan(lua_State *L)
     Grid_Class_t *instance = (Grid_Class_t *)LUAX_USERDATA(L, 1);
 //    luaX_Reference callback = luaX_tofunction(L, 2);
 
-    const Interpreter_t *interpreter = (const Interpreter_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INTERPRETER));
+    const Interpreter_t *interpreter = (const Interpreter_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INTERPRETER));
 
     const Cell_t *data = instance->data;
 
@@ -332,7 +332,7 @@ static int grid_process(lua_State *L)
     Grid_Class_t *instance = (Grid_Class_t *)LUAX_USERDATA(L, 1);
 //    luaX_Reference callback = luaX_tofunction(L, 2);
 
-    const Interpreter_t *interpreter = (const Interpreter_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_INTERPRETER));
+    const Interpreter_t *interpreter = (const Interpreter_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INTERPRETER));
 
     Cell_t *data = instance->data;
 
@@ -349,9 +349,9 @@ static int grid_process(lua_State *L)
             lua_pushnumber(L, *(ptr++));
             Interpreter_call(interpreter, 3, 3);
 
-            size_t dcolumn = lua_tointeger(L, -3);
-            size_t drow = lua_tointeger(L, -2);
-            Cell_t dvalue = lua_tonumber(L, -1);
+            size_t dcolumn = LUAX_INTEGER(L, -3);
+            size_t drow = LUAX_INTEGER(L, -2);
+            Cell_t dvalue = LUAX_NUMBER(L, -1);
             data[drow * width + dcolumn] = dvalue;
 
             lua_pop(L, 3);
