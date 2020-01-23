@@ -167,8 +167,8 @@ static int bank_canvas(lua_State *L)
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     if (instance->context_reference != LUAX_REFERENCE_NIL) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context reference #%d released", instance->context_reference);
         luaX_unref(L, instance->context_reference);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context reference #%d released", instance->context_reference);
     }
 
     if (canvas) {
