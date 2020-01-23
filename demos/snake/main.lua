@@ -24,6 +24,7 @@ SOFTWARE.
 
 local Grid = require("tofu.collections").Grid
 local Canvas = require("tofu.graphics").Canvas
+local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
 local Input = require("tofu.events").Input
 local Class = require("tofu.util").Class
@@ -82,10 +83,13 @@ local function dump(t, spaces) -- TODO: add dump function to core? util?
 end
 
 function Main:__ctor()
-  Canvas.palette("gameboy")
+  Display.palette("gameboy")
+
+  local canvas = Canvas.default()
+  local width, height = canvas:size()
 
   self.font = Font.default(0, 3)
-  self.grid = Grid.new(math.tointeger(Canvas.width() / CELL_SIZE), math.tointeger(Canvas.height() / CELL_SIZE), 0)
+  self.grid = Grid.new(math.tointeger(width / CELL_SIZE), math.tointeger(height / CELL_SIZE), 0)
 dump(self)
 
   self:reset()
@@ -208,17 +212,18 @@ function Main:update(delta_time)
 end
 
 function Main:render(_)
-  Canvas.clear()
+  local canvas = Canvas.default()
+  canvas:clear()
 
   self.grid:scan(function(column, row, value)
       local x = column * CELL_SIZE
       local y = row * CELL_SIZE
       if value == -2 then
-        Canvas.rectangle("fill", x, y, CELL_SIZE, CELL_SIZE, 3)
+        canvas:rectangle("fill", x, y, CELL_SIZE, CELL_SIZE, 3)
       elseif value == -1 then
-        Canvas.rectangle("fill", x, y, CELL_SIZE, CELL_SIZE, 1)
+        canvas:rectangle("fill", x, y, CELL_SIZE, CELL_SIZE, 1)
       elseif value ~= 0 then
-        Canvas.rectangle("fill", x, y, CELL_SIZE, CELL_SIZE, 2)
+        canvas:rectangle("fill", x, y, CELL_SIZE, CELL_SIZE, 2)
       end
     end)
 
