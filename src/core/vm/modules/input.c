@@ -72,11 +72,13 @@ static const Map_Entry_t _buttons[Input_Buttons_t_CountOf] = { // Need to be sor
     { "lb", INPUT_BUTTON_LB },
     { "left", INPUT_BUTTON_LEFT },
     { "lt", INPUT_BUTTON_LT },
+    { "quit", INPUT_BUTTON_QUIT },
     { "rb", INPUT_BUTTON_RB },
     { "right", INPUT_BUTTON_RIGHT },
     { "rt", INPUT_BUTTON_RT },
     { "select", INPUT_BUTTON_SELECT },
     { "start", INPUT_BUTTON_START },
+    { "switch", INPUT_BUTTON_SWITCH },
     { "up", INPUT_BUTTON_UP },
     { "x", INPUT_BUTTON_X },
     { "y", INPUT_BUTTON_Y }

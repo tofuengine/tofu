@@ -47,7 +47,9 @@ typedef enum _Input_Buttons_t {
     INPUT_BUTTON_A,
     INPUT_BUTTON_SELECT,
     INPUT_BUTTON_START,
-    Input_Buttons_t_Last = INPUT_BUTTON_START,
+    INPUT_BUTTON_QUIT,
+    INPUT_BUTTON_SWITCH,
+    Input_Buttons_t_Last = INPUT_BUTTON_SWITCH,
     Input_Buttons_t_CountOf
 } Input_Buttons_t;
 
@@ -104,7 +106,8 @@ typedef struct _Input_State_t {
 
 typedef enum _Input_Handlers_t {
     Input_Handlers_t_First = 0,
-    INPUT_HANDLER_KEYBOARD = Input_Handlers_t_First,
+    INPUT_HANDLE_DEFAULT = Input_Handlers_t_First,
+    INPUT_HANDLER_KEYBOARD,
     INPUT_HANDLER_MOUSE,
     INPUT_HANDLER_GAMEPAD,
     Input_Handlers_t_Last = INPUT_HANDLER_GAMEPAD,

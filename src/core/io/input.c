@@ -31,32 +31,24 @@
 
 #define LOG_CONTEXT "input"
 
-typedef enum _System_Keys_t {
-    SYSTEM_KEY_QUIT,
-    SYSTEM_KEY_SWITCH,
-    System_Keys_t_CountOf
-} System_Keys_t;
-
-typedef struct _Key_State_t {
-    bool was, is;
-    bool pressed, released;
-} Key_State_t;
-
-static int _system_key_ids[System_Keys_t_CountOf] = {
-    GLFW_KEY_ESCAPE,
-    GLFW_KEY_F1
-};
-
-static Key_State_t _system_keys[System_Keys_t_CountOf] = { 0 }; // TODO: move to the input structure.
-
 static const uint8_t _mappings[] = {
 #include "gamecontrollerdb.inc"
     0x00
 };
 
+static void _default_handler(Input_State_t *state, GLFWwindow *window, const Input_Configuration_t *configuration)
+{
+    Input_Button_t *buttons = state->buttons;
+    for (int i = Input_Buttons_t_First; i <= Input_Buttons_t_Last; ++i) { // Store current state and clear it.
+        Input_Button_t *button = &buttons[i];
+        button->state.was = button->state.is;
+        button->state.is = false;
+    }
+}
+
 static void _keyboard_handler(Input_State_t *state, GLFWwindow *window, const Input_Configuration_t *configuration)
 {
-    static const int keys[] = {
+    static const int keys[Input_Buttons_t_CountOf] = {
         GLFW_KEY_UP,
         GLFW_KEY_DOWN,
         GLFW_KEY_LEFT,
@@ -70,7 +62,9 @@ static void _keyboard_handler(Input_State_t *state, GLFWwindow *window, const In
         GLFW_KEY_X,
         GLFW_KEY_D,
         GLFW_KEY_ENTER,
-        GLFW_KEY_SPACE
+        GLFW_KEY_SPACE,
+        GLFW_KEY_ESCAPE,
+        GLFW_KEY_F1
     };
 
     Input_Button_t *buttons = state->buttons;
@@ -82,7 +76,7 @@ static void _keyboard_handler(Input_State_t *state, GLFWwindow *window, const In
 
 static void _mouse_handler(Input_State_t *state, GLFWwindow *window, const Input_Configuration_t *configuration)
 {
-    static const int mouse_buttons[] = {
+    static const int mouse_buttons[Input_Buttons_t_CountOf] = {
         -1,
         -1,
         -1,
@@ -96,15 +90,17 @@ static void _mouse_handler(Input_State_t *state, GLFWwindow *window, const Input
         GLFW_MOUSE_BUTTON_RIGHT,
         GLFW_MOUSE_BUTTON_LEFT,
         -1,
+        -1,
+        -1,
         -1
     };
 
     Input_Button_t *buttons = state->buttons;
     for (int i = Input_Buttons_t_First; i <= Input_Buttons_t_Last; ++i) {
-        Input_Button_t *button = &buttons[i];
         if (mouse_buttons[i] == -1) {
             continue;
         }
+        Input_Button_t *button = &buttons[i];
         button->state.is |= glfwGetMouseButton(window, mouse_buttons[i]) == GLFW_PRESS;
     }
 
@@ -140,7 +136,7 @@ static inline float _gamepad_trigger(float magnitude, float deadzone, float rang
 
 static void _gamepad_handler(Input_State_t *state, GLFWwindow *window, const Input_Configuration_t *configuration)
 {
-    static const int gamepad_buttons[] = {
+    static const int gamepad_buttons[Input_Buttons_t_CountOf] = {
         GLFW_GAMEPAD_BUTTON_DPAD_UP,
         GLFW_GAMEPAD_BUTTON_DPAD_DOWN,
         GLFW_GAMEPAD_BUTTON_DPAD_LEFT,
@@ -154,7 +150,9 @@ static void _gamepad_handler(Input_State_t *state, GLFWwindow *window, const Inp
         GLFW_GAMEPAD_BUTTON_B,
         GLFW_GAMEPAD_BUTTON_A,
         GLFW_GAMEPAD_BUTTON_BACK,
-        GLFW_GAMEPAD_BUTTON_START
+        GLFW_GAMEPAD_BUTTON_START,
+        -1,
+        -1
     };
 
     Input_Button_t *buttons = state->buttons;
@@ -180,6 +178,9 @@ static void _gamepad_handler(Input_State_t *state, GLFWwindow *window, const Inp
         }
 
         for (int i = Input_Buttons_t_First; i <= Input_Buttons_t_Last; ++i) {
+            if (gamepad_buttons[i] == -1) {
+                continue;
+            }
             Input_Button_t *button = &buttons[i];
             button->state.is |= gamepad.buttons[gamepad_buttons[i]] == GLFW_PRESS;
         }
@@ -240,15 +241,16 @@ bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration
             .state = (Input_State_t){
                     .gamepad_id = -1
                 },
-#ifdef __INPUT_SELECTION__
             .handlers = {
+#ifdef __INPUT_SELECTION__
+                    _default_handler,
                     configuration->keyboard_enabled ? _keyboard_handler : NULL,
                     configuration->mouse_enabled ? _mouse_handler : NULL,
                     configuration->gamepad_enabled ? _gamepad_handler : NULL
-                }
 #else
-            .handlers = { 0 }
+                    _default_handler
 #endif
+                }
         };
 
     size_t gamepads_count = 0U;
@@ -336,13 +338,6 @@ void Input_process(Input_t *input)
     GLFWwindow *window = input->window;
     Input_Configuration_t *configuration = &input->configuration;
 
-    Input_Button_t *buttons = state->buttons;
-    for (int i = Input_Buttons_t_First; i <= Input_Buttons_t_Last; ++i) { // Store current state and clear it.
-        Input_Button_t *button = &buttons[i];
-        button->state.was = button->state.is;
-        button->state.is = false;
-    }
-
     for (int i = Input_Handlers_t_First; i <= Input_Handlers_t_Last; ++i) {
         if (!input->handlers[i]) {
             continue;
@@ -350,6 +345,7 @@ void Input_process(Input_t *input)
         input->handlers[i](state, window, configuration);
     }
 
+    Input_Button_t *buttons = state->buttons;
     for (int i = Input_Buttons_t_First; i <= Input_Buttons_t_Last; ++i) {
         Input_Button_t *button = &buttons[i];
 
@@ -377,22 +373,14 @@ void Input_process(Input_t *input)
         }
     }
 
-    for (int i = 0; i < System_Keys_t_CountOf; ++i) {
-        Key_State_t *state = &_system_keys[i];
-        state->was = state->is;
-        state->is = glfwGetKey(input->window, _system_key_ids[i]) == GLFW_PRESS;
-        state->pressed = !state->was && state->is;
-        state->released = state->was && !state->is;
-    }
-
     if (input->configuration.exit_key_enabled) {
-        if (_system_keys[SYSTEM_KEY_QUIT].pressed) {
+        if (buttons[INPUT_BUTTON_QUIT].state.pressed) {
             Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "exit key pressed");
             glfwSetWindowShouldClose(input->window, true);
         }
     }
 
-    if (_system_keys[SYSTEM_KEY_SWITCH].pressed) {
+    if (buttons[INPUT_BUTTON_SWITCH].state.pressed) {
         Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "input switch key pressed");
         _switch(input);
     }
