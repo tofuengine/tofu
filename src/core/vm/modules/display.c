@@ -44,12 +44,14 @@ static int display_offset(lua_State *L);
 static int display_palette(lua_State *L);
 static int display_color_to_index(lua_State *L);
 static int display_shader(lua_State *L);
+static int display_send(lua_State *L);
 
 static const struct luaL_Reg _display_functions[] = {
     { "palette", display_palette },
     { "color_to_index", display_color_to_index },
     { "offset", display_offset },
     { "shader", display_shader },
+    { "send", display_send },
     { NULL, NULL }
 };
 
@@ -189,5 +191,29 @@ static int display_shader(lua_State *L)
 
     Display_shader(display, code);
 
+    return 0;
+}
+
+static int display_send(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER, LUA_TTABLE)
+    LUAX_SIGNATURE_END
+    const char *uniform = LUAX_STRING(L, 1);
+    int type = lua_type(L, 2);
+/*
+    Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    if (lua_isinteger(L, 2)) {
+        Display_send(display, uniform, PROGRAM_UNIFORM_INT, 1, &value);
+    } else
+    if (lua_isnumber(L, 2)) {
+        Display_send(display, uniform, PROGRAM_UNIFORM_FLOAT, 1, &value);
+    } else
+    if (lua_istable(L, 2)) {
+        Display_send(display, uniform, PROGRAM_UNIFORM_FLOAT, 1, &value);
+    }
+*/
     return 0;
 }
