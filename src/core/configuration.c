@@ -165,7 +165,11 @@ void Configuration_load(Configuration_t *configuration, const char *data)
             .vertical_sync = false,
             .fps = 60,
             .skippable_frames = 3, // About 20% of the FPS amount.
+#ifdef __CAP_TO_60__
             .fps_cap = 60, // 60 FPS capping as a default. TODO: make it run-time configurable?
+#else
+            .fps_cap = 0,
+#endif
             .hide_cursor = true,
             .exit_key_enabled = true,
 #ifdef __INPUT_SELECTION__
