@@ -168,7 +168,8 @@ static int xform_blit1_3(lua_State *L)
 
     const GL_Context_t *context = self->context;
     const GL_Surface_t *surface = self->surface;
-    GL_context_blit_x(context, surface, (GL_Point_t){ .x = x, .y = y }, &self->xform);
+    const GL_XForm_t *xform = &self->xform;
+    GL_context_blit_x(context, surface, (GL_Point_t){ .x = x, .y = y }, xform);
 
     return 0;
 }
@@ -192,8 +193,9 @@ static int xform_offset(lua_State *L)
     float h = LUAX_NUMBER(L, 2);
     float v = LUAX_NUMBER(L, 3);
 
-    self->xform.registers[GL_XFORM_REGISTER_H] = h;
-    self->xform.registers[GL_XFORM_REGISTER_V] = v;
+    GL_XForm_t *xform = &self->xform;
+    xform->registers[GL_XFORM_REGISTER_H] = h;
+    xform->registers[GL_XFORM_REGISTER_V] = v;
 
     return 0;
 }
@@ -209,8 +211,9 @@ static int xform_matrix3(lua_State *L)
     float x0 = LUAX_NUMBER(L, 2);
     float y0 = LUAX_NUMBER(L, 3);
 
-    self->xform.registers[GL_XFORM_REGISTER_X] = x0;
-    self->xform.registers[GL_XFORM_REGISTER_Y] = y0;
+    GL_XForm_t *xform = &self->xform;
+    xform->registers[GL_XFORM_REGISTER_X] = x0;
+    xform->registers[GL_XFORM_REGISTER_Y] = y0;
 
     return 0;
 }
@@ -230,10 +233,11 @@ static int xform_matrix5(lua_State *L)
     float c = LUAX_NUMBER(L, 4);
     float d = LUAX_NUMBER(L, 5);
 
-    self->xform.registers[GL_XFORM_REGISTER_A] = a;
-    self->xform.registers[GL_XFORM_REGISTER_B] = b;
-    self->xform.registers[GL_XFORM_REGISTER_C] = c;
-    self->xform.registers[GL_XFORM_REGISTER_D] = d;
+    GL_XForm_t *xform = &self->xform;
+    xform->registers[GL_XFORM_REGISTER_A] = a;
+    xform->registers[GL_XFORM_REGISTER_B] = b;
+    xform->registers[GL_XFORM_REGISTER_C] = c;
+    xform->registers[GL_XFORM_REGISTER_D] = d;
 
     return 0;
 }
@@ -257,12 +261,13 @@ static int xform_matrix7(lua_State *L)
     float x0 = LUAX_NUMBER(L, 6);
     float y0 = LUAX_NUMBER(L, 7);
 
-    self->xform.registers[GL_XFORM_REGISTER_A] = a;
-    self->xform.registers[GL_XFORM_REGISTER_B] = b;
-    self->xform.registers[GL_XFORM_REGISTER_C] = c;
-    self->xform.registers[GL_XFORM_REGISTER_D] = d;
-    self->xform.registers[GL_XFORM_REGISTER_X] = x0;
-    self->xform.registers[GL_XFORM_REGISTER_Y] = y0;
+    GL_XForm_t *xform = &self->xform;
+    xform->registers[GL_XFORM_REGISTER_A] = a;
+    xform->registers[GL_XFORM_REGISTER_B] = b;
+    xform->registers[GL_XFORM_REGISTER_C] = c;
+    xform->registers[GL_XFORM_REGISTER_D] = d;
+    xform->registers[GL_XFORM_REGISTER_X] = x0;
+    xform->registers[GL_XFORM_REGISTER_Y] = y0;
 
     return 0;
 }
@@ -285,14 +290,15 @@ static int xform_clamp(lua_State *L)
     XForm_Class_t *self = (XForm_Class_t *)LUAX_USERDATA(L, 1);
     const char *clamp = LUAX_STRING(L, 2);
 
+    GL_XForm_t *xform = &self->xform;
     if (clamp[0] == 'e') {
-        self->xform.clamp = GL_XFORM_CLAMP_EDGE;
+        xform->clamp = GL_XFORM_CLAMP_EDGE;
     } else
     if (clamp[0] == 'b') {
-        self->xform.clamp = GL_XFORM_CLAMP_BORDER;
+        xform->clamp = GL_XFORM_CLAMP_BORDER;
     } else
     if (clamp[0] == 'r') {
-        self->xform.clamp = GL_XFORM_CLAMP_REPEAT;
+        xform->clamp = GL_XFORM_CLAMP_REPEAT;
     }
 
     return 0;
@@ -379,11 +385,12 @@ static int xform_table2(lua_State *L)
     }
     arrpush(table, (GL_XForm_Table_Entry_t){ .scan_line = -1 }); // Set the end-of-data (safety) marker
 
-    if (self->xform.table) {
-        arrfree(self->xform.table);
-//        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "scan-line table %p reallocated as %p", self->xform.table, table);
+    GL_XForm_t *xform = &self->xform;
+    if (xform->table) {
+        arrfree(xform->table);
+//        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "scan-line table %p reallocated as %p", xform->table, table);
     }
-    self->xform.table = table;
+    xform->table = table;
 
     return 0;
 }
