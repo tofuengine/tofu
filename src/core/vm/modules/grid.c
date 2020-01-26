@@ -114,15 +114,15 @@ static int grid_new(lua_State *L)
         }
     }
 
-    Grid_Class_t *instance = (Grid_Class_t *)lua_newuserdata(L, sizeof(Grid_Class_t));
-    *instance = (Grid_Class_t){
+    Grid_Class_t *self = (Grid_Class_t *)lua_newuserdata(L, sizeof(Grid_Class_t));
+    *self = (Grid_Class_t){
             .width = width,
             .height = height,
             .data = data,
             .data_size = data_size
         };
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "grid %p allocated w/ data %p", instance, data);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "grid %p allocated w/ data %p", self, data);
 
     luaL_setmetatable(L, META_TABLE);
 
@@ -134,12 +134,12 @@ static int grid_gc(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Grid_Class_t *instance = (Grid_Class_t *)LUAX_USERDATA(L, 1);
+    Grid_Class_t *self = (Grid_Class_t *)LUAX_USERDATA(L, 1);
 
-    free(instance->data);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "data %p freed", instance->data);
+    free(self->data);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "data %p freed", self->data);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "grid %p finalized", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "grid %p finalized", self);
 
     return 0;
 }
@@ -149,10 +149,10 @@ static int grid_size(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Grid_Class_t *instance = (Grid_Class_t *)LUAX_USERDATA(L, 1);
+    Grid_Class_t *self = (Grid_Class_t *)LUAX_USERDATA(L, 1);
 
-    lua_pushinteger(L, instance->width);
-    lua_pushinteger(L, instance->height);
+    lua_pushinteger(L, self->width);
+    lua_pushinteger(L, self->height);
 
     return 2;
 }
@@ -163,11 +163,11 @@ static int grid_fill(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TTABLE, LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Grid_Class_t *instance = (Grid_Class_t *)LUAX_USERDATA(L, 1);
+    Grid_Class_t *self = (Grid_Class_t *)LUAX_USERDATA(L, 1);
     int type = lua_type(L, 2);
 
-    Cell_t *ptr = instance->data;
-    Cell_t *eod = ptr + instance->data_size;
+    Cell_t *ptr = self->data;
+    Cell_t *eod = ptr + self->data_size;
 
     if (type == LUA_TTABLE) {
         lua_pushnil(L);
@@ -203,22 +203,22 @@ static int grid_stride(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TTABLE, LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Grid_Class_t *instance = (Grid_Class_t *)LUAX_USERDATA(L, 1);
+    Grid_Class_t *self = (Grid_Class_t *)LUAX_USERDATA(L, 1);
     size_t column = (size_t)LUAX_INTEGER(L, 2);
     size_t row = (size_t)LUAX_INTEGER(L, 3);
     int type = lua_type(L, 4);
     size_t amount = (size_t)LUAX_INTEGER(L, 5);
 #ifdef DEBUG
-    if (column >= instance->width) {
-        return luaL_error(L, "column %d is out of range (0, %d)", column, instance->width);
+    if (column >= self->width) {
+        return luaL_error(L, "column %d is out of range (0, %d)", column, self->width);
     } else
-    if (row >= instance->height) {
-        return luaL_error(L, "row %d is out of range (0, %d)", row, instance->height);
+    if (row >= self->height) {
+        return luaL_error(L, "row %d is out of range (0, %d)", row, self->height);
     }
 #endif
 
-    Cell_t *ptr = instance->data + row * instance->width + column;
-    Cell_t *eod = ptr + (instance->data_size < amount ? instance->data_size : amount);
+    Cell_t *ptr = self->data + row * self->width + column;
+    Cell_t *eod = ptr + (self->data_size < amount ? self->data_size : amount);
 
     if (type == LUA_TTABLE) {
         lua_pushnil(L);
@@ -252,19 +252,19 @@ static int grid_peek(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Grid_Class_t *instance = (Grid_Class_t *)LUAX_USERDATA(L, 1);
+    Grid_Class_t *self = (Grid_Class_t *)LUAX_USERDATA(L, 1);
     size_t column = (size_t)LUAX_INTEGER(L, 2);
     size_t row = (size_t)LUAX_INTEGER(L, 3);
 #ifdef DEBUG
-    if (column >= instance->width) {
-        return luaL_error(L, "column %d is out of range (0, %d)", column, instance->width);
+    if (column >= self->width) {
+        return luaL_error(L, "column %d is out of range (0, %d)", column, self->width);
     } else
-    if (row >= instance->height) {
-        return luaL_error(L, "row %d is out of range (0, %d)", row, instance->height);
+    if (row >= self->height) {
+        return luaL_error(L, "row %d is out of range (0, %d)", row, self->height);
     }
 #endif
 
-    Cell_t value = instance->data[row * instance->width + column];
+    Cell_t value = self->data[row * self->width + column];
 
     lua_pushnumber(L, (lua_Number)value);
 
@@ -279,20 +279,20 @@ static int grid_poke(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Grid_Class_t *instance = (Grid_Class_t *)LUAX_USERDATA(L, 1);
+    Grid_Class_t *self = (Grid_Class_t *)LUAX_USERDATA(L, 1);
     size_t column = (size_t)LUAX_INTEGER(L, 2);
     size_t row = (size_t)LUAX_INTEGER(L, 3);
     Cell_t value = (Cell_t)LUAX_NUMBER(L, 4);
 #ifdef DEBUG
-    if (column >= instance->width) {
-        return luaL_error(L, "column %d is out of range (0, %d)", column, instance->width);
+    if (column >= self->width) {
+        return luaL_error(L, "column %d is out of range (0, %d)", column, self->width);
     } else
-    if (row >= instance->height) {
-        return luaL_error(L, "row %d is out of range (0, %d)", row, instance->height);
+    if (row >= self->height) {
+        return luaL_error(L, "row %d is out of range (0, %d)", row, self->height);
     }
 #endif
 
-    instance->data[row * instance->width + column] = value;
+    self->data[row * self->width + column] = value;
 
     return 0;
 }
@@ -303,15 +303,15 @@ static int grid_scan(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TFUNCTION)
     LUAX_SIGNATURE_END
-    Grid_Class_t *instance = (Grid_Class_t *)LUAX_USERDATA(L, 1);
+    Grid_Class_t *self = (Grid_Class_t *)LUAX_USERDATA(L, 1);
 //    luaX_Reference callback = luaX_tofunction(L, 2);
 
     const Interpreter_t *interpreter = (const Interpreter_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INTERPRETER));
 
-    const Cell_t *data = instance->data;
+    const Cell_t *data = self->data;
 
-    for (size_t row = 0; row < instance->height; ++row) {
-        for (size_t column = 0; column < instance->width; ++column) {
+    for (size_t row = 0; row < self->height; ++row) {
+        for (size_t column = 0; column < self->width; ++column) {
             lua_pushvalue(L, 2); // Copy directly from stack argument, don't need to ref/unref (won't be GC-ed meanwhile)
             lua_pushinteger(L, column);
             lua_pushinteger(L, row);
@@ -329,15 +329,15 @@ static int grid_process(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TFUNCTION)
     LUAX_SIGNATURE_END
-    Grid_Class_t *instance = (Grid_Class_t *)LUAX_USERDATA(L, 1);
+    Grid_Class_t *self = (Grid_Class_t *)LUAX_USERDATA(L, 1);
 //    luaX_Reference callback = luaX_tofunction(L, 2);
 
     const Interpreter_t *interpreter = (const Interpreter_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INTERPRETER));
 
-    Cell_t *data = instance->data;
+    Cell_t *data = self->data;
 
-    const size_t width = instance->width;
-    const size_t height = instance->height;
+    const size_t width = self->width;
+    const size_t height = self->height;
 
     const Cell_t *ptr = data;
 

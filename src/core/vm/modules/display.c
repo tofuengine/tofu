@@ -196,13 +196,14 @@ static int display_shader(lua_State *L)
 
 static int display_send(lua_State *L)
 {
+/*
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER, LUA_TTABLE)
     LUAX_SIGNATURE_END
     const char *uniform = LUAX_STRING(L, 1);
     int type = lua_type(L, 2);
-/*
+
     Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     if (lua_isinteger(L, 2)) {

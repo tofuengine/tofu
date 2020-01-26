@@ -98,14 +98,14 @@ static int bank_new(lua_State *L)
         return luaL_error(L, "invalid argument");
     }
 
-    Bank_Class_t *instance = (Bank_Class_t *)lua_newuserdata(L, sizeof(Bank_Class_t));
-    *instance = (Bank_Class_t){
+    Bank_Class_t *self = (Bank_Class_t *)lua_newuserdata(L, sizeof(Bank_Class_t));
+    *self = (Bank_Class_t){
             .context = display->context,
             .context_reference = LUAX_REFERENCE_NIL,
             .sheet = sheet,
             .sheet_reference = type == LUA_TUSERDATA ? luaX_ref(L, 1) : LUAX_REFERENCE_NIL
         };
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p allocated w/ sheet %p for default context", instance, sheet);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p allocated w/ sheet %p for default context", self, sheet);
 
     luaL_setmetatable(L, META_TABLE);
 
@@ -117,24 +117,24 @@ static int bank_gc(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Bank_Class_t *instance = (Bank_Class_t *)LUAX_USERDATA(L, 1);
+    Bank_Class_t *self = (Bank_Class_t *)LUAX_USERDATA(L, 1);
 
-    if (instance->sheet_reference != LUAX_REFERENCE_NIL) {
-        luaX_unref(L, instance->sheet_reference);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet reference #%d released", instance->sheet_reference);
-        GL_sheet_detach(instance->sheet);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p detached", instance->sheet);
+    if (self->sheet_reference != LUAX_REFERENCE_NIL) {
+        luaX_unref(L, self->sheet_reference);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet reference #%d released", self->sheet_reference);
+        GL_sheet_detach(self->sheet);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p detached", self->sheet);
     } else {
-        GL_sheet_destroy(instance->sheet);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p destroyed", instance->sheet);
+        GL_sheet_destroy(self->sheet);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p destroyed", self->sheet);
     }
 
-    if (instance->context_reference != LUAX_REFERENCE_NIL) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context reference #%d released", instance->context_reference);
-        luaX_unref(L, instance->context_reference);
+    if (self->context_reference != LUAX_REFERENCE_NIL) {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context reference #%d released", self->context_reference);
+        luaX_unref(L, self->context_reference);
     }
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p finalized", instance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p finalized", self);
 
     return 0;
 }
@@ -146,11 +146,11 @@ static int bank_size(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Bank_Class_t *instance = (Bank_Class_t *)LUAX_USERDATA(L, 1);
+    Bank_Class_t *self = (Bank_Class_t *)LUAX_USERDATA(L, 1);
     float scale_x = LUAX_OPTIONAL_NUMBER(L, 2, 1.0f);
     float scale_y = LUAX_OPTIONAL_NUMBER(L, 3, scale_x);
 
-    const GL_Sheet_t *sheet = instance->sheet;
+    const GL_Sheet_t *sheet = self->sheet;
     lua_pushinteger(L, (int)(sheet->size.width * fabsf(scale_x)));
     lua_pushinteger(L, (int)(sheet->size.height * fabsf(scale_y)));
 
@@ -163,23 +163,23 @@ static int bank_canvas(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Bank_Class_t *instance = (Bank_Class_t *)LUAX_USERDATA(L, 1);
+    Bank_Class_t *self = (Bank_Class_t *)LUAX_USERDATA(L, 1);
     const Canvas_Class_t *canvas = (Canvas_Class_t *)LUAX_OPTIONAL_USERDATA(L, 2, NULL);
 
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    if (instance->context_reference != LUAX_REFERENCE_NIL) {
-        luaX_unref(L, instance->context_reference);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context reference #%d released", instance->context_reference);
+    if (self->context_reference != LUAX_REFERENCE_NIL) {
+        luaX_unref(L, self->context_reference);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context reference #%d released", self->context_reference);
     }
 
     if (canvas) {
-        instance->context = canvas->context;
-        instance->context_reference = luaX_ref(L, 2);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context %p attached w/ reference #%d", instance->context, instance->context_reference);
+        self->context = canvas->context;
+        self->context_reference = luaX_ref(L, 2);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context %p attached w/ reference #%d", self->context, self->context_reference);
     } else {
-        instance->context = display->context;
-        instance->context_reference = LUAX_REFERENCE_NIL;
+        self->context = display->context;
+        self->context_reference = LUAX_REFERENCE_NIL;
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "default context attached");
     }
 
@@ -194,13 +194,13 @@ static int bank_blit4(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Bank_Class_t *instance = (Bank_Class_t *)LUAX_USERDATA(L, 1);
+    Bank_Class_t *self = (Bank_Class_t *)LUAX_USERDATA(L, 1);
     int cell_id = LUAX_INTEGER(L, 2);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
 
-    const GL_Context_t *context = instance->context;
-    const GL_Sheet_t *sheet = instance->sheet;
+    const GL_Context_t *context = self->context;
+    const GL_Sheet_t *sheet = self->sheet;
     GL_context_blit(context, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y });
 
     return 0;
@@ -215,14 +215,14 @@ static int bank_blit5(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Bank_Class_t *instance = (Bank_Class_t *)LUAX_USERDATA(L, 1);
+    Bank_Class_t *self = (Bank_Class_t *)LUAX_USERDATA(L, 1);
     int cell_id = LUAX_INTEGER(L, 2);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
     float scale = LUAX_NUMBER(L, 5);
 
-    const GL_Context_t *context = instance->context;
-    const GL_Sheet_t *sheet = instance->sheet;
+    const GL_Context_t *context = self->context;
+    const GL_Sheet_t *sheet = self->sheet;
     GL_context_blit_s(context, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, scale, scale);
 
     return 0;
@@ -241,7 +241,7 @@ static int bank_blit6_7_8_9(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Bank_Class_t *instance = (Bank_Class_t *)LUAX_USERDATA(L, 1);
+    Bank_Class_t *self = (Bank_Class_t *)LUAX_USERDATA(L, 1);
     int cell_id = LUAX_INTEGER(L, 2);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
@@ -251,8 +251,8 @@ static int bank_blit6_7_8_9(lua_State *L)
     float anchor_x = LUAX_OPTIONAL_NUMBER(L, 8, 0.5f);
     float anchor_y = LUAX_OPTIONAL_NUMBER(L, 9, anchor_x);
 
-    const GL_Context_t *context = instance->context;
-    const GL_Sheet_t *sheet = instance->sheet;
+    const GL_Context_t *context = self->context;
+    const GL_Sheet_t *sheet = self->sheet;
     GL_context_blit_sr(context, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, scale_x, scale_y, rotation, anchor_x, anchor_y);
 
     return 0;
