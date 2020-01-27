@@ -139,7 +139,7 @@ static int display_palette(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
-static int display_color_to_index(lua_State *L)
+static int display_color_to_index1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -154,6 +154,36 @@ static int display_color_to_index(lua_State *L)
     lua_pushinteger(L, index);
 
     return 1;
+}
+
+static int display_color_to_index3(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    uint8_t r = (uint8_t)LUAX_INTEGER(L, 1);
+    uint8_t g = (uint8_t)LUAX_INTEGER(L, 2);
+    uint8_t b = (uint8_t)LUAX_INTEGER(L, 3);
+
+    const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    uint32_t argb = GL_palette_pack_color((GL_Color_t){  .a = 255, .r = r, .g = g, .b = b });
+    GL_Color_t color = GL_palette_unpack_color(argb);
+    const GL_Pixel_t index = GL_palette_find_nearest_color(&display->palette, color);
+
+    lua_pushinteger(L, index);
+
+    return 1;
+}
+
+static int display_color_to_index(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, display_color_to_index1)
+        LUAX_OVERLOAD_ARITY(3, display_color_to_index3)
+    LUAX_OVERLOAD_END
 }
 
 static int display_offset0_2(lua_State *L)
