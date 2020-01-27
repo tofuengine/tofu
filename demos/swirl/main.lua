@@ -28,10 +28,8 @@ local Font = require("tofu.graphics").Font
 local Class = require("tofu.util").Class
 local System = require("tofu.core").System
 
-local function distance(x0, y0, x1, y1)
-  local dx = x0 - x1
-  local dy = y0 - y1
-  return math.sqrt((dx * dx) + (dy * dy))
+local function length(x, y)
+  return math.sqrt((x * x) + (y * y))
 end
 
 local function square(canvas, x, y, s, r, g, b)
@@ -51,9 +49,6 @@ function Main:__ctor()
   local width, height = canvas:size()
   self.max_x = width - 1
   self.max_y = height - 1
-  self.center_x = width / 2
-  self.center_y = height / 2
-  self.max_distance = distance(0, 0, self.center_x, self.center_y)
 
   self.font = Font.default(0, 15)
 end
@@ -69,33 +64,31 @@ function Main:render(_)
   canvas:clear()
 
   local mx, my = self.max_x, self.max_y
-  local md = self.max_distance
-  local cx, cy = self.center_x, self.center_y
-
-  local factor = 0.50
-  local mxf, myf = mx * factor, my * factor
-  local mdf = md * factor
 
   local t = System.time()
 
-  for y = 0, my, 5 do
-    for x = 0, mx, 5 do
-      local d = distance(x, y, cx, cy)
-      local r = 1.0 - d / md
+  for y = 0, my, 7 do
+    local oy = (y / my) * 2 - 1
+    for x = 0, mx, 7 do
+      local ox = (x / mx) * 2 - 1
+
+      local d = length(ox, oy)
+      local r = 1.0 - d
 
       local angle = t + r * math.pi -- Angle increase as we reach the center.
       local c, s = math.cos(angle), math.sin(angle)
-      local rx = x - cx
-      local ry = y - cy
-      rx, ry = c * rx - s * ry, s * rx + c * ry
-      rx = rx + cx
-      ry = ry + cy
-
-      local d2 = distance(rx, ry, cx, cy) -- Compute color according to the position in the original.
-      local r2 = 1.0 - d2 / mdf -- We should normalized differently, however.
-      square(canvas, x, y, 5, rx / mxf, ry / myf, r2)
+      local rx, ry = c * ox - s * oy, s * ox + c * oy
+--[[
+      local angle = math.atan(oy, ox)
+      angle = angle + t + r * math.pi
+      local rx, ry = math.cos(angle), math.sin(angle)
+]]
+      local d2 = length(rx, ry)
+      local r2 = 1.0 - d2
+      square(canvas, x, y, 5, math.min(math.abs(rx), 1.0), math.min(math.abs(ry), 1.0), math.min(r2, 1.0))
     end
   end
+
 
   self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
 end
