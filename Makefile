@@ -171,6 +171,11 @@ hello-tofu: $(TARGET)
 	@$(ANALYZER) $(AFLAGS) ./demos/hello-tofu
 	@./$(TARGET) ./demos/hello-tofu
 
+swirl: $(TARGET)
+	@echo "Launching *swirl* application!"
+	@$(ANALYZER) $(AFLAGS) ./demos/swirl
+	@./$(TARGET) ./demos/swirl
+
 valgrind: $(TARGET)
 	@echo "Valgrind *$(DEMO)* application!"
 	@valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes env LIBGL_ALWAYS_SOFTWARE=1 ./$(TARGET) ./demos/$(DEMO)
