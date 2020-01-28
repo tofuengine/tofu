@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
+local Input = require("tofu.events").Input
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
@@ -49,11 +50,15 @@ function Main:__ctor()
   local width, height = canvas:size()
   self.max_x = width - 1
   self.max_y = height - 1
+  self.fan = false
 
   self.font = Font.default(0, 15)
 end
 
 function Main:input()
+  if Input.is_pressed("start") then
+    self.fan = not self.fan
+  end
 end
 
 function Main:update(_)
@@ -78,17 +83,25 @@ function Main:render(_)
       local angle = t + r * math.pi -- Angle increase as we reach the center.
       local c, s = math.cos(angle), math.sin(angle)
       local rx, ry = c * ox - s * oy, s * ox + c * oy
---[[
-      local angle = math.atan(oy, ox)
-      angle = angle + t + r * math.pi
-      local rx, ry = math.cos(angle), math.sin(angle)
-]]
-      local d2 = length(rx, ry)
-      local r2 = 1.0 - d2
-      square(canvas, x, y, 5, math.min(math.abs(rx), 1.0), math.min(math.abs(ry), 1.0), math.min(r2, 1.0))
+
+      local v = math.min(1.0, length(rx, ry))
+      v = 1.0 - v * v -- Tweak to smooth the color change differently.
+
+      if self.fan then
+        local rad = math.atan(ry, rx) + math.pi -- Find the octanct of the rotated point to pick the color.
+        local deg = math.floor(rad * (180.0 / math.pi)) % 180
+        if deg > 3 and deg < 87 then
+          square(canvas, x, y, 5, 0.0, 0.5, 1.0)
+        elseif deg > 93 and deg < 177 then
+          square(canvas, x, y, 5, 0.0, 1.0, 0.0)
+        else
+          square(canvas, x, y, 5, 0.0, 0.0, 0.0)
+        end
+      else
+        square(canvas, x, y, 5, rx, ry, v)
+      end
     end
   end
-
 
   self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
 end
