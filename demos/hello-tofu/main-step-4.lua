@@ -72,21 +72,16 @@ function Main:render(_)
   -- Query for font char width/height, we'll use it for offseting the characters.
   local char_width, char_height = self.font:size()
 
-  -- Scan the message text one char at time. We need the current char index in order
-  -- to change color for each character.
-  for i = 1, #MESSAGE do
+  -- Scan the message text one char at time.
+  for c in MESSAGE:gmatch(".") do
     -- Compute the verical offset using a sine wave, each chacter with a different value.
-    local dx = (i - 1) * char_width
-    local dy = math.sin(t * 2.5 + dx * 0.05) * char_height
+    local dy = math.sin(t * 2.5 + x * 0.05) * char_height
 
-    -- Convert the time to an integer (speeding it up a bit) and get a different
-    -- color for each character. Then instruct the engine that color `15` need to be
-    -- remapped to color `index`.
-    local index = (tonumber(t * 5) + i) % 16
-    canvas:shift(15, index)
+    -- Draw the character, accounting for vertical offset.
+    self.font:write(c, x, y + dy)
 
-    -- Draw the i-th character, accounting for vertical offset.
-    self.font:write(MESSAGE:sub(i, i), x + dx, y + dy)
+    -- Move to the right the drawing position by the character width amount.
+    x = x + char_width
   end
 end
 

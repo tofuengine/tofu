@@ -39,11 +39,10 @@ function Main:__ctor()
   -- Load a predefined palette, we choose Pico-8's one.
   Display.palette("pico-8")
 
-  -- Load a custom 8x8 font from file, setting palette color `0` as background
-  -- and `15` as foreground.
+  -- Create a default font, palette color `0` as background and `15` as foreground.
   -- Please note that, as default, palette color `0` is set as transparent. This
   -- means that the font background color won't be drawn.
-  self.font = Font.new("assets/font-8x8.png", 8, 8, 0, 15)
+  self.font = Font.default(0, 15)
 end
 
 function Main:input()
