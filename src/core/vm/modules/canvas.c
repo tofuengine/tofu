@@ -53,6 +53,7 @@ static int canvas_pop(lua_State *L);
 static int canvas_reset(lua_State *L);
 static int canvas_background(lua_State *L);
 static int canvas_color(lua_State *L);
+static int canvas_pattern(lua_State *L);
 static int canvas_shift(lua_State *L);
 static int canvas_transparent(lua_State *L);
 static int canvas_clipping(lua_State *L);
@@ -86,6 +87,7 @@ static const struct luaL_Reg _canvas_functions[] = {
     { "reset", canvas_reset },
     { "background", canvas_background },
     { "color", canvas_color },
+    { "pattern", canvas_pattern },
     { "shift", canvas_shift },
     { "transparent", canvas_transparent },
     { "clipping", canvas_clipping },
@@ -105,7 +107,6 @@ static const struct luaL_Reg _canvas_functions[] = {
     { "peek", canvas_peek },
     { "poke", canvas_poke },
     { "process", canvas_process },
-//    { "grab", canvas_grab },
     { NULL, NULL }
 };
 
@@ -321,6 +322,21 @@ static int canvas_color(lua_State *L)
 
     GL_Context_t *context = self->context;
     GL_context_color(context, index);
+
+    return 0;
+}
+
+static int canvas_pattern(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    Canvas_Class_t *self = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
+    uint32_t pattern = (uint32_t)LUAX_INTEGER(L, UINT32_MAX);
+
+    GL_Context_t *context = self->context;
+    GL_context_pattern(context, pattern);
 
     return 0;
 }

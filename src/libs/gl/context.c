@@ -38,6 +38,7 @@ static inline void _reset_state(GL_State_t *state, const GL_Surface_t *surface)
     *state = (GL_State_t){
             .background = 0,
             .color = 1,
+            .pattern = UINT32_MAX,
             .clipping_region = (GL_Quad_t){ .x0 = 0, .y0 = 0, .x1 = surface->width - 1, .y1 = surface->height - 1 },
             .shifting = { 0 },
             .transparent = { 0 }
@@ -143,6 +144,12 @@ void GL_context_color(GL_Context_t *context, GL_Pixel_t index)
 {
     GL_State_t *state = &context->state;
     state->color = index;
+}
+
+void GL_context_pattern(GL_Context_t *context, uint32_t pattern)
+{
+    GL_State_t *state = &context->state;
+    state->pattern = pattern;
 }
 
 void GL_context_clipping(GL_Context_t *context, const GL_Rectangle_t *region)
