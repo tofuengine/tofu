@@ -267,7 +267,6 @@ void _fill_line_h(int y, int xa, int xb){
     }
   }
 }
-#endif
 static void hline_pattern(GL_Pixel_t *destination, int width, const GL_Quad_t *drawing_region, GL_Pixel_t a, GL_Pixel_t b, uint32_t pattern)
 {
     GL_Pixel_t *ptr = destination + drawing_region->y0 * width + drawing_region->x0;
@@ -277,9 +276,10 @@ static void hline_pattern(GL_Pixel_t *destination, int width, const GL_Quad_t *d
     int j = drawing_region->x0 % 8;
     for (int i = drawing_region->x0; i <= drawing_region->x1; ++i) {
         *(ptr++) = (mask & (1 << (7 - j))) ? a : b;
-        j = (j + 1) % 8
+        j = (j + 1) % 8;
     }
 }
+#endif
 
 static void vline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x, int y, int length, GL_Pixel_t index)
 {
