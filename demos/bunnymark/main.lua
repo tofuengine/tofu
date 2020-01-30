@@ -30,6 +30,9 @@ local Font = require("tofu.graphics").Font
 local Input = require("tofu.events").Input
 local Class = require("tofu.util").Class
 
+local Bunny = require("lib.bunny")
+
+local INITIAL_BUNNIES = 5000
 local LITTER_SIZE = 250
 local MAX_BUNNIES = 32768
 
@@ -47,11 +50,13 @@ function Main:__ctor()
   self.font = Font.default("5x8", 11, 6)
   self.speed = 1.0
   self.running = true
+  for _ = 1, INITIAL_BUNNIES do
+    table.insert(self.bunnies, Bunny.new(self.bank))
+  end
 end
 
 function Main:input()
   if Input.is_pressed("start") then
-    local Bunny = require("lib.bunny") -- Lazily require the module only in this scope.
     for _ = 1, LITTER_SIZE do
       table.insert(self.bunnies, Bunny.new(self.bank))
     end
