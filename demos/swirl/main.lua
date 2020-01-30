@@ -35,8 +35,8 @@ end
 
 local function square(canvas, x, y, s, r, g, b)
   local index = Display.color_to_index(r * 255.0, g * 255.0, b * 255.0)
+--  local index = math.floor(math.min(1.0, r * g + b) * 15)
   canvas:square("fill", x, y, s, index)
-  --canvas:square("line", x, y, s, 0)
 end
 
 local Main = Class.define()
@@ -66,40 +66,37 @@ end
 
 function Main:render(_)
   local canvas = Canvas:default()
-  canvas:clear()
+  -- Note that we *don't* clear the canvas on purpose!!!
 
   local mx, my = self.max_x, self.max_y
 
   local t = System.time()
 
-  for y = 0, my, 7 do
-    local oy = (y / my) * 2 - 1
-    for x = 0, mx, 7 do
-      local ox = (x / mx) * 2 - 1
+  for _ = 1, 1000 do
+    local x, y = math.random(0, mx), math.random(0, my)
+    local ox, oy = (x / mx) * 2 - 1, (y / my) * 2 - 1
+    local d = length(ox, oy)
+    local r = 1.0 - d
 
-      local d = length(ox, oy)
-      local r = 1.0 - d
+    local angle = t * 3 + r * math.pi -- Angle increase as we reach the center.
+    local c, s = math.cos(angle), math.sin(angle)
+    local rx, ry = c * ox - s * oy, s * ox + c * oy
 
-      local angle = t + r * math.pi -- Angle increase as we reach the center.
-      local c, s = math.cos(angle), math.sin(angle)
-      local rx, ry = c * ox - s * oy, s * ox + c * oy
-
+    if self.fan then
+      local rad = math.atan(ry, rx) + math.pi -- Find the octanct of the rotated point to pick the color.
+      local deg = math.floor(rad * (180.0 / math.pi)) % 180
+      if deg > 3 and deg < 87 then
+        square(canvas, x, y, 5, 0.0, 0.5, 1.0)
+      elseif deg > 93 and deg < 177 then
+        square(canvas, x, y, 5, 0.0, 1.0, 0.0)
+      else
+        square(canvas, x, y, 5, 0.0, 0.0, 0.0)
+      end
+    else
       local v = math.min(1.0, length(rx, ry))
       v = 1.0 - v * v -- Tweak to smooth the color change differently.
 
-      if self.fan then
-        local rad = math.atan(ry, rx) + math.pi -- Find the octanct of the rotated point to pick the color.
-        local deg = math.floor(rad * (180.0 / math.pi)) % 180
-        if deg > 3 and deg < 87 then
-          square(canvas, x, y, 5, 0.0, 0.5, 1.0)
-        elseif deg > 93 and deg < 177 then
-          square(canvas, x, y, 5, 0.0, 1.0, 0.0)
-        else
-          square(canvas, x, y, 5, 0.0, 0.0, 0.0)
-        end
-      else
-        square(canvas, x, y, 5, rx, ry, v)
-      end
+      square(canvas, x, y, 5, rx, ry, v)
     end
   end
 
