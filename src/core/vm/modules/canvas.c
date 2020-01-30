@@ -333,7 +333,7 @@ static int canvas_pattern(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Canvas_Class_t *self = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
-    uint32_t pattern = (uint32_t)LUAX_INTEGER(L, UINT32_MAX);
+    GL_Pattern_t pattern = (GL_Pattern_t)LUAX_INTEGER(L, 0);
 
     GL_Context_t *context = self->context;
     GL_context_pattern(context, pattern);

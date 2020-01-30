@@ -44,7 +44,7 @@ typedef struct _GL_Mask_t {
 
 typedef struct _GL_State_t {
     GL_Pixel_t background, color;
-    uint32_t pattern;
+    GL_Pattern_t pattern;
     GL_Quad_t clipping_region;
     GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
     GL_Bool_t transparent[GL_MAX_PALETTE_COLORS];
@@ -69,7 +69,7 @@ extern void GL_context_reset(GL_Context_t *context);
 
 extern void GL_context_background(GL_Context_t *context, GL_Pixel_t index);
 extern void GL_context_color(GL_Context_t *context, GL_Pixel_t index);
-extern void GL_context_pattern(GL_Context_t *context, uint32_t pattern);
+extern void GL_context_pattern(GL_Context_t *context, GL_Pattern_t pattern);
 extern void GL_context_clipping(GL_Context_t *context, const GL_Rectangle_t *region);
 extern void GL_context_shifting(GL_Context_t *context, const size_t *from, const size_t *to, size_t count);
 extern void GL_context_transparent(GL_Context_t *context, const GL_Pixel_t *indexes, const GL_Bool_t *transparent, size_t count);
