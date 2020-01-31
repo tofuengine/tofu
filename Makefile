@@ -41,7 +41,7 @@ ifeq ($(BUILD),release)
 # -Os => -O2, favouring size
 	COPTS=-O3 -DRELEASE
 else ifeq ($(BUILD),profile)
-	COPTS=-O0 -g -DDEBUG -pg
+	COPTS=-O0 -g -DDEBUG -DPROFILE -pg
 else
 #	COPTS=-Og -g -DDEBUG
 	COPTS=-O0 -g -DDEBUG

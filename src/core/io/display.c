@@ -426,6 +426,33 @@ void Display_update(Display_t *display, float delta_time)
 #endif
 }
 
+#ifdef PROFILING
+static inline void _to_display(GLFWwindow *window, const GL_Surface_t *surface, GL_Color_t *vram, const GL_Quad_t *vram_destination, const GL_Point_t *vram_offset)
+{
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, surface->width, surface->height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, vram);
+
+    const int x0 = vram_destination->x0 + vram_offset->x;
+    const int y0 = vram_destination->y0 + vram_offset->y;
+    const int x1 = vram_destination->x1 + vram_offset->x;
+    const int y1 = vram_destination->y1 + vram_offset->y;
+
+    glBegin(GL_TRIANGLE_STRIP);
+//        glColor4ub(255, 255, 255, 255); // Change this color to "tint".
+
+        glTexCoord2f(0.0f, 0.0f); // CCW strip, top-left is <0,0> (the face direction of the strip is determined by the winding of the first triangle)
+        glVertex2f(x0, y0);
+        glTexCoord2f(0.0f, 1.0f);
+        glVertex2f(x0, y1);
+        glTexCoord2f(1.0f, 0.0f);
+        glVertex2f(x1, y0);
+        glTexCoord2f(1.0f, 1.0f);
+        glVertex2f(x1, y1);
+    glEnd();
+
+    glfwSwapBuffers(window);
+}
+#endif
+
 void Display_present(const Display_t *display)
 {
     // It is advisable to clear the color buffer even if the framebuffer will be
@@ -438,6 +465,9 @@ void Display_present(const Display_t *display)
 
     GL_surface_to_rgba(surface, &display->palette, vram);
 
+#ifdef PROFILE
+    _to_display(display->window, surface, vram, &display->vram_destination, &display->vram_offset);
+#else
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, surface->width, surface->height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, vram);
 
     // Add an offset x/y to implement shaking and similar effects.
@@ -463,6 +493,7 @@ void Display_present(const Display_t *display)
     glEnd();
 
     glfwSwapBuffers(display->window);
+#endif
 }
 
 void Display_palette(Display_t *display, const GL_Palette_t *palette)
