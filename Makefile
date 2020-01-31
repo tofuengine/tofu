@@ -37,13 +37,15 @@ CWARNINGS=-std=c99 -Wall -Wextra -Werror -Wno-unused-parameter -Wpedantic -Wstri
 #CWARNINGS=-std=c99 -Wall -Wextra -Werror -Wno-unused-parameter -Wpedantic -Wstrict-prototypes -Wshadow -Wunreachable-code -Wlogical-op -Wfloat-equal
 CFLAGS=-D_DEFAULT_SOURCE -DLUA_32BITS -DLUA_FLOORN2I=1 -DSTBI_ONLY_PNG -DSTBI_NO_STDIO -Isrc -Iexternal
 ifeq ($(BUILD),release)
+# -Ofast => -O3 -ffast-math
+# -Os => -O2, favouring size
 	COPTS=-O3 -DRELEASE
+else ifeq ($(BUILD),profile)
+	COPTS=-O0 -g -DDEBUG -pg
 else
 #	COPTS=-Og -g -DDEBUG
 	COPTS=-O0 -g -DDEBUG
 endif
-# -Ofast => -O3 -ffast-math
-# -Os => -O2, favouring size
 
 ifeq ($(PLATFORM),windows)
 	ifeq ($(VARIANT),x64)
@@ -61,6 +63,12 @@ else
 	LFLAGS=-Lexternal/GLFW/linux/x64 -lglfw3 -lm -lpthread -lX11 -ldl
 endif
 LWARNINGS=-Wall -Wextra -Werror
+ifeq ($(BUILD),profile)
+	LOPTS=-pg
+else
+	LOPTS=
+endif
+
 
 SOURCES:=$(wildcard src/*.c src/core/*.c src/core/io/*.c src/core/io/display/*.c src/core/vm/*.c src/core/vm/modules/*.c src/core/vm/modules/resources/*.c src/libs/*.c src/libs/fs/*.c src/libs/gl/*.c external/glad/*.c external/GLFW/*.c external/lua/*.c external/miniaudio/*.c external/spleen/*.c external/stb/*.c)
 INCLUDES:=$(wildcard src/*.h src/core/*.h src/core/io/*.h src/core/io/display/*.h src/core/vm/*.h src/core/vm/modules/*.h src/core/vm/modules/resources/*.h src/libs/*.h src/libs/fs/*.h src/libs/gl/*.h external/glad/*.h external/GLFW/*.h external/lua/*.h external/miniaudio/*.h external/spleen/*.h external/stb/*.h)
@@ -76,7 +84,7 @@ default: $(TARGET)
 all: default
 
 $(TARGET): $(OBJECTS)
-	@$(LINKER) $(OBJECTS) $(LWARNINGS) $(LFLAGS) -o $@
+	@$(LINKER) $(OBJECTS) $(LWARNINGS) $(LFLAGS) $(LOPTS) -o $@
 	@echo "Linking complete!"
 
 # The dependency upon `Makefile` is redundant, since scripts are bound to it.

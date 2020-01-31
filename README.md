@@ -61,3 +61,11 @@ Guess what? Yup, that's yet another game engine/framework.
 * [picolove](https://github.com/picolove/picolove/)
 * [raylib](https://www.raylib.com/)
 * [DOME Engine](https://github.com/avivbeeri/dome/)
+
+# Profiling
+
+```bash
+make bunnymark BUILD=profile
+prof ./tofu  gmon.out > analysys.txt
+prof ./tofu  gmon.out | ./extras/gprof2dot.py | dot -Tpng -o analysys.png
+```
