@@ -326,7 +326,7 @@ bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
         return false;
     }
 
-#ifdef __VM_FULL_GARBAGE_COLLECTOR__
+#ifndef __VM_INCREMENTAL_GARBAGE_COLLECTOR__
     interpreter->gc_age += delta_time;
     while (interpreter->gc_age >= GARBAGE_COLLECTION_PERIOD) { // Periodically collect GC.
         interpreter->gc_age -= GARBAGE_COLLECTION_PERIOD;
