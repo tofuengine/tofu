@@ -602,7 +602,7 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
             int sy = (int)(yp + 0.5f);
 
             if (clamp == GL_XFORM_CLAMP_REPEAT) {
-                sx = imod(sx, sw);
+                sx = imod(sx, sw); // TODO: optimize the amount of calls.
                 sy = imod(sy, sh);
             } else
             if (clamp == GL_XFORM_CLAMP_EDGE) {
