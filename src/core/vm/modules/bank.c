@@ -58,7 +58,7 @@ int bank_loader(lua_State *L)
     return luaX_newmodule(L, NULL, _bank_functions, NULL, nup, META_TABLE);
 }
 
-static int bank_new(lua_State *L)
+static int bank_new3(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING, LUA_TUSERDATA)
@@ -90,6 +90,64 @@ static int bank_new(lua_State *L)
         const Canvas_Class_t *canvas = (const Canvas_Class_t *)LUAX_USERDATA(L, 1);
 
         sheet = GL_sheet_attach_rect(canvas->context->surface, cell_width, cell_height);
+        if (!sheet) {
+            return luaL_error(L, "can't attach sheet");
+        }
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p attached to canvas %p", sheet, canvas);
+    } else {
+        return luaL_error(L, "invalid argument");
+    }
+
+    Bank_Class_t *self = (Bank_Class_t *)lua_newuserdata(L, sizeof(Bank_Class_t));
+    *self = (Bank_Class_t){
+            .context = display->context,
+            .context_reference = LUAX_REFERENCE_NIL,
+            .sheet = sheet,
+            .sheet_reference = type == LUA_TUSERDATA ? luaX_ref(L, 1) : LUAX_REFERENCE_NIL
+        };
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p allocated w/ sheet %p for default context", self, sheet);
+
+    luaL_setmetatable(L, META_TABLE);
+
+    return 1;
+}
+
+static int bank_new2(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING, LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TTLUA_TSTRINGABLE)
+    LUAX_SIGNATURE_END
+    int type = lua_type(L, 1);
+    const char *cells = LUAX_STRING(L, 2);
+
+    const File_System_t *file_system = (const File_System_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
+    const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    // TODO: implement `Sheet` in pure Lua?
+    File_System_Chunk_t chunk = FSaux_load(file_system, cells, FILE_SYSTEM_CHUNK_STRING);
+    size_t count = 0;
+    GL_Rectangle_t *cells = _parse_cells();
+    FSaux_release(chunk);
+
+    GL_Sheet_t *sheet;
+    if (type == LUA_TSTRING) {
+        const char *file = LUAX_STRING(L, 1);
+
+        File_System_Chunk_t chunk = FSaux_load(file_system, file, FILE_SYSTEM_CHUNK_BLOB);
+        if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
+            return luaL_error(L, "can't load file `%s`", file);
+        }
+        sheet = GL_sheet_decode(chunk.var.blob.ptr, chunk.var.blob.size, cells, count, surface_callback_palette, (void *)&display->palette);
+        FSaux_release(chunk);
+        if (!sheet) {
+            return luaL_error(L, "can't decode %d bytes sheet", chunk.var.blob.size);
+        }
+    } else
+    if (type == LUA_TUSERDATA) {
+        const Canvas_Class_t *canvas = (const Canvas_Class_t *)LUAX_USERDATA(L, 1);
+
+        sheet = GL_sheet_attach(canvas->context->surface, cells, count);
         if (!sheet) {
             return luaL_error(L, "can't attach sheet");
         }
