@@ -34,7 +34,6 @@ typedef struct _GL_Sheet_t {
     GL_Surface_t *atlas;
     bool owned;
     GL_Rectangle_t *cells;
-    GL_Size_t size;
 } GL_Sheet_t;
 
 // TODO: is the GL_Sheet_t really needed?

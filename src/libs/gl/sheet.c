@@ -72,8 +72,7 @@ static GL_Sheet_t *_attach(GL_Surface_t *atlas, size_t cell_width, size_t cell_h
     }
     *sheet = (GL_Sheet_t){
             .atlas = atlas,
-            .cells = cells,
-            .size = (GL_Size_t){ cell_width, cell_height }
+            .cells = cells
         };
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p attached", sheet);
     return sheet;

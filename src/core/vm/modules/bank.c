@@ -143,16 +143,19 @@ static int bank_size(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Bank_Class_t *self = (Bank_Class_t *)LUAX_USERDATA(L, 1);
-    float scale_x = LUAX_OPTIONAL_NUMBER(L, 2, 1.0f);
-    float scale_y = LUAX_OPTIONAL_NUMBER(L, 3, scale_x);
+    int cell_id = LUAX_INTEGER(L, 2);
+    float scale_x = LUAX_OPTIONAL_NUMBER(L, 3, 1.0f);
+    float scale_y = LUAX_OPTIONAL_NUMBER(L, 4, scale_x);
 
     const GL_Sheet_t *sheet = self->sheet;
-    lua_pushinteger(L, (int)(sheet->size.width * fabsf(scale_x)));
-    lua_pushinteger(L, (int)(sheet->size.height * fabsf(scale_y)));
+    const GL_Rectangle_t *cell = cell_id == -1 ? sheet->cells : &sheet->cells[cell_id]; // If `-1` pick the first one.
+    lua_pushinteger(L, (int)(cell->width * fabsf(scale_x)));
+    lua_pushinteger(L, (int)(cell->height * fabsf(scale_y)));
 
     return 2;
 }
