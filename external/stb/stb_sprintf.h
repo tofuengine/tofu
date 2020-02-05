@@ -1,4 +1,4 @@
-// stb_sprintf - v1.07 - public domain snprintf() implementation
+// stb_sprintf - v1.08 - public domain snprintf() implementation
 // originally by Jeff Roberts / RAD Game Tools, 2015/10/20
 // http://github.com/nothings/stb
 //
@@ -182,7 +182,7 @@ PERFORMANCE vs MSVC 2008 32-/64-bit (GCC is even slower than MSVC):
 #ifndef STB_SPRINTF_MIN
 #define STB_SPRINTF_MIN 512 // how many characters per callback
 #endif
-typedef char *STBSP_SPRINTFCB(char *buf, void *user, int len);
+typedef char *STBSP_SPRINTFCB(const char *buf, void *user, int len);
 
 #ifndef STB_SPRINTF_DECORATE
 #define STB_SPRINTF_DECORATE(name) stbsp_##name // define this before including if you want to change the names
@@ -1363,7 +1363,7 @@ typedef struct stbsp__context {
    char tmp[STB_SPRINTF_MIN];
 } stbsp__context;
 
-static char *stbsp__clamp_callback(char *buf, void *user, int len)
+static char *stbsp__clamp_callback(const char *buf, void *user, int len)
 {
    stbsp__context *c = (stbsp__context *)user;
    c->length += len;
@@ -1373,7 +1373,8 @@ static char *stbsp__clamp_callback(char *buf, void *user, int len)
 
    if (len) {
       if (buf != c->buf) {
-         char *s, *d, *se;
+         const char *s, *se;
+         char *d;
          d = c->buf;
          s = buf;
          se = buf + len;
@@ -1390,9 +1391,10 @@ static char *stbsp__clamp_callback(char *buf, void *user, int len)
    return (c->count >= STB_SPRINTF_MIN) ? c->buf : c->tmp; // go direct into buffer if you can
 }
 
-static char * stbsp__count_clamp_callback( char * buf, void * user, int len )
+static char * stbsp__count_clamp_callback( const char * buf, void * user, int len )
 {
    stbsp__context * c = (stbsp__context*)user;
+   (void) sizeof(buf);
 
    c->length += len;
    return c->tmp; // go direct into buffer if you can
@@ -1696,7 +1698,7 @@ static stbsp__int32 stbsp__real_to_str(char const **start, stbsp__uint32 *len, c
 
    if (expo == 0) // is zero or denormal
    {
-      if ((bits << 1) == 0) // do zero
+      if (((stbsp__uint64) bits << 1) == 0) // do zero
       {
          *decimal_pos = 1;
          *start = out;
