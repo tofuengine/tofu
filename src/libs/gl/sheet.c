@@ -33,7 +33,23 @@
 
 #define LOG_CONTEXT "sheet"
 
-static GL_Rectangle_t *_precompute_cells(size_t width, size_t height, size_t cell_width, size_t cell_height)
+static GL_Rectangle_t *_clone(const GL_Rectangle_t *cells, size_t count)
+{
+    GL_Rectangle_t *clone = malloc(sizeof(GL_Rectangle_t) * count);
+    if (!clone) {
+        return NULL;
+    }
+#ifdef __NO_MEMSET_MEMCPY__
+    for (size_t i = 0; i < count; ++i) {
+        clone[i] = cells[i];
+    }
+#else
+    memcpy(clone, cells, sizeof(GL_Rectangle_t) * count);
+#endif
+    return clone;
+}
+
+static GL_Rectangle_t *_precompute_cells(size_t width, size_t height, size_t cell_width, size_t cell_height, size_t *count)
 {
     size_t columns = width / cell_width;
     size_t rows = height / cell_height;
@@ -56,13 +72,13 @@ static GL_Rectangle_t *_precompute_cells(size_t width, size_t height, size_t cel
                 };
         }
     }
+    *count = amount;
     return cells;
 }
 
-static GL_Sheet_t *_attach(GL_Surface_t *atlas, size_t cell_width, size_t cell_height)
+static GL_Sheet_t *_attach(GL_Surface_t *atlas, GL_Rectangle_t *cells, size_t count)
 {
-    GL_Rectangle_t *cells = _precompute_cells(atlas->width, atlas->height, cell_width, cell_height);
-    if (!cells) {
+    if (!cells || count == 0) {
         return NULL;
     }
     GL_Sheet_t *sheet = malloc(sizeof(GL_Sheet_t));
@@ -72,19 +88,42 @@ static GL_Sheet_t *_attach(GL_Surface_t *atlas, size_t cell_width, size_t cell_h
     }
     *sheet = (GL_Sheet_t){
             .atlas = atlas,
-            .cells = cells
+            .cells = cells,
+            .count = count
         };
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p attached", sheet);
     return sheet;
 }
 
-GL_Sheet_t *GL_sheet_decode(const void *buffer, size_t size, size_t cell_width, size_t cell_height, GL_Surface_Callback_t callback, void *user_data)
+GL_Sheet_t *GL_sheet_decode_rect(const void *buffer, size_t size, size_t cell_width, size_t cell_height, GL_Surface_Callback_t callback, void *user_data)
 {
     GL_Surface_t *atlas = GL_surface_decode(buffer, size, callback, user_data);
     if (!atlas) {
         return NULL;
     }
-    GL_Sheet_t *sheet = _attach(atlas, cell_width, cell_height);
+    size_t count;
+    GL_Rectangle_t *cells = _precompute_cells(atlas->width, atlas->height, cell_width, cell_height, &count);
+    if (!cells) {
+        GL_surface_destroy(atlas);
+        return NULL;
+    }
+    GL_Sheet_t *sheet = _attach(atlas, cells, count);
+    if (!sheet) {
+        GL_surface_destroy(atlas);
+        free(cells);
+        return NULL;
+    }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p decoded", sheet);
+    return sheet;
+}
+
+GL_Sheet_t *GL_sheet_decode(const void *buffer, size_t size, const GL_Rectangle_t *cells, size_t count, GL_Surface_Callback_t callback, void *user_data)
+{
+    GL_Surface_t *atlas = GL_surface_decode(buffer, size, callback, user_data);
+    if (!atlas) {
+        return NULL;
+    }
+    GL_Sheet_t *sheet = _attach(atlas, _clone(cells, count), count);
     if (!sheet) {
         GL_surface_destroy(atlas);
         return NULL;
@@ -95,13 +134,29 @@ GL_Sheet_t *GL_sheet_decode(const void *buffer, size_t size, size_t cell_width, 
 
 void GL_sheet_destroy(GL_Sheet_t *sheet)
 {
-    GL_surface_destroy(sheet->atlas); // Delete prior detach or the atlas will be cleared!
+    GL_surface_destroy(sheet->atlas); // Delete prior detach or the atlas will be lost!
     GL_sheet_detach(sheet);
 }
 
-GL_Sheet_t *GL_sheet_attach(const GL_Surface_t *surface, size_t cell_width, size_t cell_height)
+GL_Sheet_t *GL_sheet_attach_rect(const GL_Surface_t *atlas, size_t cell_width, size_t cell_height)
 {
-    GL_Sheet_t *sheet = _attach((GL_Surface_t *)surface, cell_width, cell_height);
+    size_t count;
+    GL_Rectangle_t *cells = _precompute_cells(atlas->width, atlas->height, cell_width, cell_height, &count);
+    if (!cells) {
+        return NULL;
+    }
+    GL_Sheet_t *sheet = _attach((GL_Surface_t *)atlas, cells, count);
+    if (!sheet) {
+        free(cells);
+        return NULL;
+    }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p attached", sheet);
+    return sheet;
+}
+
+GL_Sheet_t *GL_sheet_attach(const GL_Surface_t *atlas, const GL_Rectangle_t *cells, size_t count)
+{
+    GL_Sheet_t *sheet = _attach((GL_Surface_t *)atlas, _clone(cells, count), count);
     if (!sheet) {
         return NULL;
     }

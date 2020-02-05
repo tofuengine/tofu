@@ -89,7 +89,7 @@ static int font_new3(lua_State *L)
 
         const Sheet_Data_t *data = resources_sheets_find(file);
         if (data) {
-            sheet = GL_sheet_decode(data->data, data->size, data->cell_width, data->cell_height, surface_callback_palette, (void *)&display->palette);
+            sheet = GL_sheet_decode_rect(data->data, data->size, data->cell_width, data->cell_height, surface_callback_palette, (void *)&display->palette);
             if (!sheet) {
                 return luaL_error(L, "can't decode sheet `%s`", file);
             }
@@ -99,7 +99,7 @@ static int font_new3(lua_State *L)
             if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
                 return luaL_error(L, "can't load file `%s`", file);
             }
-            sheet = GL_sheet_decode(chunk.var.blob.ptr, chunk.var.blob.size, data->cell_width, data->cell_height, surface_callback_palette, (void *)&display->palette);
+            sheet = GL_sheet_decode_rect(chunk.var.blob.ptr, chunk.var.blob.size, data->cell_width, data->cell_height, surface_callback_palette, (void *)&display->palette);
             FSaux_release(chunk);
             if (!sheet) {
                 return luaL_error(L, "can't decode %d bytes sheet", chunk.var.blob.size);
@@ -110,7 +110,7 @@ static int font_new3(lua_State *L)
     if (type == LUA_TUSERDATA) {
         const Canvas_Class_t *canvas = (const Canvas_Class_t *)LUAX_USERDATA(L, 1);
 
-        sheet = GL_sheet_attach(canvas->context->surface, glyph_width, glyph_height);
+        sheet = GL_sheet_attach_rect(canvas->context->surface, glyph_width, glyph_height);
         if (!sheet) {
             return luaL_error(L, "can't attach sheet");
         }
@@ -159,7 +159,7 @@ static int font_new5(lua_State *L)
 
         const Sheet_Data_t *data = resources_sheets_find(file);
         if (data) {
-            sheet = GL_sheet_decode(data->data, data->size, data->cell_width, data->cell_height, surface_callback_indexes, (void *)indexes);
+            sheet = GL_sheet_decode_rect(data->data, data->size, data->cell_width, data->cell_height, surface_callback_indexes, (void *)indexes);
             if (!sheet) {
                 return luaL_error(L, "can't decode sheet `%s`", file);
             }
@@ -169,7 +169,7 @@ static int font_new5(lua_State *L)
             if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
                 return luaL_error(L, "can't load file `%s`", file);
             }
-            sheet = GL_sheet_decode(chunk.var.blob.ptr, chunk.var.blob.size, glyph_width, glyph_height, surface_callback_indexes, (void *)indexes);
+            sheet = GL_sheet_decode_rect(chunk.var.blob.ptr, chunk.var.blob.size, glyph_width, glyph_height, surface_callback_indexes, (void *)indexes);
             FSaux_release(chunk);
             if (!sheet) {
                 return luaL_error(L, "can't decode %d bytes sheet", chunk.var.blob.size);
@@ -180,7 +180,7 @@ static int font_new5(lua_State *L)
     if (type == LUA_TUSERDATA) {
         const Canvas_Class_t *canvas = (const Canvas_Class_t *)LUAX_USERDATA(L, 1);
 
-        sheet = GL_sheet_attach(canvas->context->surface, glyph_width, glyph_height);
+        sheet = GL_sheet_attach_rect(canvas->context->surface, glyph_width, glyph_height);
         if (!sheet) {
             return luaL_error(L, "can't attach sheet");
         }

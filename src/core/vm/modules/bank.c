@@ -80,7 +80,7 @@ static int bank_new(lua_State *L)
         if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
             return luaL_error(L, "can't load file `%s`", file);
         }
-        sheet = GL_sheet_decode(chunk.var.blob.ptr, chunk.var.blob.size, cell_width, cell_height, surface_callback_palette, (void *)&display->palette);
+        sheet = GL_sheet_decode_rect(chunk.var.blob.ptr, chunk.var.blob.size, cell_width, cell_height, surface_callback_palette, (void *)&display->palette);
         FSaux_release(chunk);
         if (!sheet) {
             return luaL_error(L, "can't decode %d bytes sheet", chunk.var.blob.size);
@@ -89,7 +89,7 @@ static int bank_new(lua_State *L)
     if (type == LUA_TUSERDATA) {
         const Canvas_Class_t *canvas = (const Canvas_Class_t *)LUAX_USERDATA(L, 1);
 
-        sheet = GL_sheet_attach(canvas->context->surface, cell_width, cell_height);
+        sheet = GL_sheet_attach_rect(canvas->context->surface, cell_width, cell_height);
         if (!sheet) {
             return luaL_error(L, "can't attach sheet");
         }
