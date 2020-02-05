@@ -215,10 +215,15 @@ void GL_context_mask(GL_Context_t *context, const GL_Mask_t *mask)
 
 void GL_context_clear(const GL_Context_t *context, GL_Pixel_t index)
 {
+#ifdef __NO_MEMSET_MEMCPY__
     GL_Pixel_t *dst = context->surface->data;
     for (size_t i = context->surface->data_size; i; --i) {
         *(dst++) = index;
     }
+#else
+    const GL_Surface_t *surface = context->surface;
+    memset(surface->data, index, surface->data_size);
+#endif
 }
 
 void GL_context_to_surface(const GL_Context_t *context, const GL_Surface_t *to)
