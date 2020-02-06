@@ -58,19 +58,65 @@ int bank_loader(lua_State *L)
     return luaX_newmodule(L, NULL, _bank_functions, NULL, nup, META_TABLE);
 }
 
-static int bank_new3(lua_State *L)
+static GL_Rectangle_t *_load_cells(const File_System_t *file_system, const char *file, size_t *count)
+{
+    File_System_Mount_t *mount = FS_locate(file_system, file);
+    if (!mount) {
+        return NULL;
+    }
+
+    File_System_Handle_t *handle = FS_open(mount, file);
+    if (!handle) {
+        return NULL;
+    }
+
+    uint32_t entries;
+    size_t bytes_to_read = sizeof(uint32_t);
+    size_t bytes_read = FS_read(handle, &entries, sizeof(uint32_t));
+    if (bytes_read != bytes_to_read) {
+        FS_close(handle);
+        return NULL;
+    }
+
+    GL_Rectangle_t *cells = malloc(sizeof(GL_Rectangle_t) * entries);
+    if (!cells) {
+        FS_close(handle);
+        return NULL;
+    }
+
+    bytes_to_read = sizeof(GL_Rectangle_t) * entries;
+    bytes_read = FS_read(handle, cells, bytes_to_read);
+    if (bytes_read != bytes_to_read) {
+        free(cells);
+        FS_close(handle);
+        return NULL;
+    }
+
+    FS_close(handle);
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "#%d cells loaded from file `%s`", entries, file);
+
+    *count = entries;
+    return cells;
+}
+
+static int bank_new2(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING, LUA_TUSERDATA)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
     int type = lua_type(L, 1);
-    size_t cell_width = (size_t)LUAX_INTEGER(L, 2);
-    size_t cell_height = (size_t)LUAX_INTEGER(L, 3);
+    const char *file = LUAX_STRING(L, 2);
 
     const File_System_t *file_system = (const File_System_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    size_t count;
+    GL_Rectangle_t *cells = _load_cells(file_system, file, &count); // TODO: implement `Sheet` in pure Lua?
+    if (!cells) {
+        return luaL_error(L, "can't load file `%s`", file);
+    }
 
     GL_Sheet_t *sheet;
     if (type == LUA_TSTRING) {
@@ -112,23 +158,19 @@ static int bank_new3(lua_State *L)
     return 1;
 }
 
-static int bank_new2(lua_State *L)
+static int bank_new3(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING, LUA_TUSERDATA)
-        LUAX_SIGNATURE_REQUIRED(LUA_TTLUA_TSTRINGABLE)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     int type = lua_type(L, 1);
-    const char *cells = LUAX_STRING(L, 2);
+    size_t cell_width = (size_t)LUAX_INTEGER(L, 2);
+    size_t cell_height = (size_t)LUAX_INTEGER(L, 3);
 
     const File_System_t *file_system = (const File_System_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
-
-    // TODO: implement `Sheet` in pure Lua?
-    File_System_Chunk_t chunk = FSaux_load(file_system, cells, FILE_SYSTEM_CHUNK_STRING);
-    size_t count = 0;
-    GL_Rectangle_t *cells = _parse_cells();
-    FSaux_release(chunk);
 
     GL_Sheet_t *sheet;
     if (type == LUA_TSTRING) {
@@ -168,6 +210,14 @@ static int bank_new2(lua_State *L)
     luaL_setmetatable(L, META_TABLE);
 
     return 1;
+}
+
+static int bank_new(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(2, bank_new2)
+        LUAX_OVERLOAD_ARITY(3, bank_new3)
+    LUAX_OVERLOAD_END
 }
 
 static int bank_gc(lua_State *L)
