@@ -28,8 +28,8 @@
 #include <stddef.h>
 
 typedef struct _Sheet_Data_t {
-    const void *data;
-    size_t size;
+    size_t width, height;
+    const unsigned char *pixels;
     int cell_width, cell_height;
 } Sheet_Data_t;
 
