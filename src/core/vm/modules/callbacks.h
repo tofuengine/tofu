@@ -27,7 +27,7 @@
 
 #include <libs/gl/gl.h>
 
-extern void surface_callback_palette(void *user_data, GL_Surface_t *surface, const void *data);
-extern void surface_callback_indexes(void *user_data, GL_Surface_t *surface, const void *data);
+extern void surface_callback_palette(void *user_data, GL_Surface_t *surface, const void *pixels);
+extern void surface_callback_indexes(void *user_data, GL_Surface_t *surface, const void *pixels);
 
 #endif  /* __MODULES_CALLBACKS_H__ */

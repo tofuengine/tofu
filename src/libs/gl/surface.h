@@ -36,9 +36,9 @@ typedef struct _GL_Surface_t {
     size_t data_size;
 } GL_Surface_t;
 
-typedef void (*GL_Surface_Callback_t)(void *user_data, GL_Surface_t *surface, const void *data);
+typedef void (*GL_Surface_Callback_t)(void *user_data, GL_Surface_t *surface, const void *pixels); // RGBA888 format.
 
-extern GL_Surface_t *GL_surface_decode(const void *buffer, size_t buffer_size, const GL_Surface_Callback_t callback, void *user_data);
+extern GL_Surface_t *GL_surface_decode(size_t width, size_t height, const void *pixels, const GL_Surface_Callback_t callback, void *user_data);
 extern GL_Surface_t *GL_surface_create(size_t width, size_t height);
 extern void GL_surface_destroy(GL_Surface_t *surface);
 

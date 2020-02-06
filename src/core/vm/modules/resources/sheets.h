@@ -29,7 +29,7 @@
 
 typedef struct _Sheet_Data_t {
     size_t width, height;
-    const unsigned char *pixels;
+    const void *pixels;
     int cell_width, cell_height;
 } Sheet_Data_t;
 

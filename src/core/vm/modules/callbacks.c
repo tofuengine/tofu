@@ -32,11 +32,11 @@ typedef struct rgba_t {
 } rgba_t;
 #pragma pack(pop)
 
-void surface_callback_palette(void *user_data, GL_Surface_t *surface, const void *data)
+void surface_callback_palette(void *user_data, GL_Surface_t *surface, const void *pixels)
 {
     const GL_Palette_t *palette = (const GL_Palette_t *)user_data;
 
-    const rgba_t *src = (const rgba_t *)data;
+    const rgba_t *src = (const rgba_t *)pixels;
     GL_Pixel_t *dst = surface->data;
 
     for (size_t i = surface->data_size; i; --i) {
@@ -46,13 +46,13 @@ void surface_callback_palette(void *user_data, GL_Surface_t *surface, const void
     }
 }
 
-void surface_callback_indexes(void *user_data, GL_Surface_t *surface, const void *data)
+void surface_callback_indexes(void *user_data, GL_Surface_t *surface, const void *pixels)
 {
     const GL_Pixel_t *indexes = (const GL_Pixel_t *)user_data;
     const GL_Pixel_t bg_index = indexes[0];
     const GL_Pixel_t fg_index = indexes[1];
 
-    const uint32_t *src = (const uint32_t *)data; // Faster than the `rgba_t` struct, we don't need to unpack components.
+    const uint32_t *src = (const uint32_t *)pixels; // Faster than the `rgba_t` struct, we don't need to unpack components.
     GL_Pixel_t *dst = surface->data;
 
     const uint32_t background = *src; // The top-left pixel color defines the background.
