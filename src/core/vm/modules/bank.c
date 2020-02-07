@@ -128,6 +128,7 @@ static int bank_new2(lua_State *L)
         }
         sheet = GL_sheet_decode(chunk.var.image.width, chunk.var.image.height, chunk.var.image.pixels, cells, count, surface_callback_palette, (void *)&display->palette);
         FSaux_release(chunk);
+        free(cells);
         if (!sheet) {
             return luaL_error(L, "can't decode %d bytes sheet", chunk.var.blob.size);
         }
@@ -136,11 +137,13 @@ static int bank_new2(lua_State *L)
         const Canvas_Class_t *canvas = (const Canvas_Class_t *)LUAX_USERDATA(L, 1);
 
         sheet = GL_sheet_attach(canvas->context->surface, cells, count);
+        free(cells);
         if (!sheet) {
             return luaL_error(L, "can't attach sheet");
         }
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p attached to canvas %p", sheet, canvas);
     } else {
+        free(cells);
         return luaL_error(L, "invalid argument");
     }
 
