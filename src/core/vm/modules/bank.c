@@ -78,13 +78,14 @@ static GL_Rectangle_t *_load_cells(const File_System_t *file_system, const char 
         return NULL;
     }
 
-    GL_Rectangle_t *cells = malloc(sizeof(GL_Rectangle_t) * entries);
+    size_t size = sizeof(GL_Rectangle_t) * entries;
+    GL_Rectangle_t *cells = malloc(size);
     if (!cells) {
         FS_close(handle);
         return NULL;
     }
 
-    bytes_to_read = sizeof(GL_Rectangle_t) * entries;
+    bytes_to_read = size;
     bytes_read = FS_read(handle, cells, bytes_to_read);
     if (bytes_read != bytes_to_read) {
         free(cells);
