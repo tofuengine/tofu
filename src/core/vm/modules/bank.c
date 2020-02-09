@@ -72,7 +72,7 @@ static GL_Rectangle_t *_load_cells(const File_System_t *file_system, const char 
 
     uint32_t entries;
     size_t bytes_to_read = sizeof(uint32_t);
-    size_t bytes_read = FS_read(handle, &entries, sizeof(uint32_t));
+    size_t bytes_read = FS_read(handle, &entries, bytes_to_read);
     if (bytes_read != bytes_to_read) {
         FS_close(handle);
         return NULL;
