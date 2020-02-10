@@ -58,6 +58,11 @@ int bank_loader(lua_State *L)
     return luaX_newmodule(L, NULL, _bank_functions, NULL, nup, META_TABLE);
 }
 
+typedef struct _Sheet_Rectangle_t { // TODO: move i/o structures into a separate file.
+    uint32_t x, y;
+    uint32_t width, height;
+} Sheet_Rectangle_t;
+
 static GL_Rectangle_t *_load_cells(const File_System_t *file_system, const char *file, size_t *count)
 {
     File_System_Mount_t *mount = FS_locate(file_system, file);
@@ -78,19 +83,28 @@ static GL_Rectangle_t *_load_cells(const File_System_t *file_system, const char 
         return NULL;
     }
 
-    size_t size = sizeof(GL_Rectangle_t) * entries;
-    GL_Rectangle_t *cells = malloc(size);
+    GL_Rectangle_t *cells = malloc(sizeof(GL_Rectangle_t) * entries);
     if (!cells) {
         FS_close(handle);
         return NULL;
     }
 
-    bytes_to_read = size;
-    bytes_read = FS_read(handle, cells, bytes_to_read);
-    if (bytes_read != bytes_to_read) {
-        free(cells);
-        FS_close(handle);
-        return NULL;
+    for (uint32_t i = 0; i < entries; ++i) {
+        Sheet_Rectangle_t rectangle = (Sheet_Rectangle_t){ 0 };
+        bytes_to_read = sizeof(Sheet_Rectangle_t);
+        bytes_read = FS_read(handle, &rectangle, bytes_to_read);
+        if (bytes_read != bytes_to_read) {
+            free(cells);
+            FS_close(handle);
+            return NULL;
+        }
+
+        cells[i] = (GL_Rectangle_t){
+                .x = rectangle.x,
+                .y = rectangle.y,
+                .width = rectangle.width,
+                .height = rectangle.height
+            };
     }
 
     FS_close(handle);
@@ -133,6 +147,7 @@ static int bank_new2(lua_State *L)
         if (!sheet) {
             return luaL_error(L, "can't decode %d bytes sheet", chunk.var.blob.size);
         }
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p decoded from file `%s`", sheet, file);
     } else
     if (type == LUA_TUSERDATA) {
         const Canvas_Class_t *canvas = (const Canvas_Class_t *)LUAX_USERDATA(L, 1);
@@ -147,7 +162,13 @@ static int bank_new2(lua_State *L)
         free(cells);
         return luaL_error(L, "invalid argument");
     }
-
+    // TODO: better error handling.
+/*
+    if (!sheet) {
+        free(cells);
+        return luaL_error(L, "can't attach sheet");
+    }
+*/
     Bank_Class_t *self = (Bank_Class_t *)lua_newuserdata(L, sizeof(Bank_Class_t));
     *self = (Bank_Class_t){
             .context = display->context,
@@ -189,6 +210,7 @@ static int bank_new3(lua_State *L)
         if (!sheet) {
             return luaL_error(L, "can't decode %d bytes sheet", chunk.var.blob.size);
         }
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p decoded from file `%s`", sheet, file);
     } else
     if (type == LUA_TUSERDATA) {
         const Canvas_Class_t *canvas = (const Canvas_Class_t *)LUAX_USERDATA(L, 1);

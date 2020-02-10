@@ -46,7 +46,7 @@ function Main:__ctor()
   canvas:background(0)
 
   self.bunnies = {}
-  self.bank = Bank.new("assets/sheet.png", 26, 37)
+  self.bank = Bank.new("assets/bunnies.png", "assets/bunnies.sheet")
   self.font = Font.default("5x8", 11, 6)
   self.speed = 1.0
   self.running = true
