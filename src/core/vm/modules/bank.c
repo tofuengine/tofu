@@ -162,13 +162,7 @@ static int bank_new2(lua_State *L)
         free(cells);
         return luaL_error(L, "invalid argument");
     }
-    // TODO: better error handling.
-/*
-    if (!sheet) {
-        free(cells);
-        return luaL_error(L, "can't attach sheet");
-    }
-*/
+
     Bank_Class_t *self = (Bank_Class_t *)lua_newuserdata(L, sizeof(Bank_Class_t));
     *self = (Bank_Class_t){
             .context = display->context,
