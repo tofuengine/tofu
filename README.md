@@ -13,7 +13,7 @@ Guess what? Yup, that's yet another game engine/framework.
 ## Dependecies
 
 * [Glad](https://glad.dav1d.de/)
-* [GLFW](https://www.glfw.org/) v3.3.1
+* [GLFW](https://www.glfw.org/) v3.3.2
 * [Lua](https://lua.org/) v5.3.5
 * [miniaudio](https://github.com/dr-soft/miniaudio) v0.9.10
 * [spleen](https://github.com/fcambus/spleen) fonts
