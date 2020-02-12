@@ -53,25 +53,30 @@
 static inline void _wait_for(float seconds)
 {
 #if PLATFORM_ID == PLATFORM_LINUX
-    int nanos = (int)(seconds * 1000000.0f);
-    if (nanos == 0) {
+    long millis = (long)(seconds * 1000.0f); // Can use `floorf()`, too.
+    if (millis == 0L) {
         sched_yield();
     } else {
-        usleep(nanos); // usleep takes sleep time in us (1 millionth of a second)
+        struct timespec ts = (struct timespec){
+                .tv_sec = millis / 1000L,
+                .tv_nsec = (millis % 1000L) * 1000000L
+            };
+        nanosleep(&ts, NULL);
     }
 #elif PLATFORM_ID == PLATFORM_WINDOWS
-    int millis = (int)(seconds * 1000.0f);
-    if (millis == 0) {
+    long millis = (long)(seconds * 1000.0f);
+    if (millis == 0L) {
         YieldProcessor();
      } else {
         Sleep(millis);
     }
 #else
-    int nanos = (int)(seconds * 1000000.0f);
-    struct timespec ts;
-    ts.tv_sec = nanos / 1000000;
-    ts.tv_nsec = nanos;
-    nanosleep(&ts, NULL);
+    int micro = (int)(seconds * 1000000.0f);
+    if (micro == 0) {
+        sched_yield();
+    } else {
+        usleep(micro); // usleep takes sleep time in us (1 millionth of a second)
+    }
 #endif
 }
 
