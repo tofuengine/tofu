@@ -67,7 +67,7 @@ static inline void _wait_for(float seconds)
     long millis = (long)(seconds * 1000.0f);
     if (millis == 0L) {
         YieldProcessor();
-     } else {
+    } else {
         Sleep(millis);
     }
 #else
