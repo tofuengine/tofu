@@ -25,10 +25,11 @@ SOFTWARE.
 local Class = require("tofu.util").Class
 local Timer = require("tofu.util").Timer
 
+local Main = require("main")
+
 local Tofu = Class.define() -- To be precise, the class name is irrelevant since it's locally used.
 
 function Tofu:__ctor()
-  local Main = require("main") -- Lazily require.
   self.main = Main.new()
 end
 
