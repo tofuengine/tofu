@@ -30,6 +30,7 @@
 #include <libs/stb.h>
 
 #include "callbacks.h"
+#include "structs.h"
 #include "udt.h"
 
 #include <math.h>
@@ -58,11 +59,6 @@ int bank_loader(lua_State *L)
     return luaX_newmodule(L, NULL, _bank_functions, NULL, nup, META_TABLE);
 }
 
-typedef struct _Sheet_Rectangle_t { // TODO: move i/o structures into a separate file.
-    uint32_t x, y;
-    uint32_t width, height;
-} Sheet_Rectangle_t;
-
 static GL_Rectangle_t *_load_cells(const File_System_t *file_system, const char *file, size_t *count)
 {
     File_System_Mount_t *mount = FS_locate(file_system, file);
@@ -90,8 +86,8 @@ static GL_Rectangle_t *_load_cells(const File_System_t *file_system, const char 
     }
 
     for (uint32_t i = 0; i < entries; ++i) {
-        Sheet_Rectangle_t rectangle = (Sheet_Rectangle_t){ 0 };
-        bytes_to_read = sizeof(Sheet_Rectangle_t);
+        Rectangle_u32_t rectangle = (Rectangle_u32_t){ 0 };
+        bytes_to_read = sizeof(Rectangle_u32_t);
         bytes_read = FS_read(handle, &rectangle, bytes_to_read);
         if (bytes_read != bytes_to_read) {
             free(cells);
