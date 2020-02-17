@@ -77,7 +77,7 @@ SCRIPTS:=$(wildcard src/core/vm/*.lua src/core/vm/modules/*.lua)
 SDUMPS:=$(SCRIPTS:%.lua=%.inc)
 TEXTS:=$(wildcard src/core/io/*.txt)
 TDUMPS:=$(TEXTS:%.txt=%.inc)
-PNGS:=$(wildcard src/core/io/*.png)
+PNGS:=$(wildcard src/core/io/*.png external/spleen/*.png)
 PDUMPS:=$(PNGS:%.png=%.inc)
 
 default: $(TARGET)
@@ -183,6 +183,11 @@ swirl: $(TARGET)
 	@echo "Launching *swirl* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/swirl
 	@./$(TARGET) ./demos/swirl
+
+twist: $(TARGET)
+	@echo "Launching *twist* application!"
+	@$(ANALYZER) $(AFLAGS) ./demos/twist
+	@./$(TARGET) ./demos/twist
 
 valgrind: $(TARGET)
 	@echo "Valgrind *$(DEMO)* application!"

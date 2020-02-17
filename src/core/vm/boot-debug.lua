@@ -30,13 +30,14 @@ local Font = require("tofu.graphics").Font
 local Class = require("tofu.util").Class
 local Timer = require("tofu.util").Timer
 
+local Main = require("main")
+
 local Tofu = Class.define() -- To be precise, the class name is irrelevant since it's locally used.
 
 function Tofu:__ctor()
   self.states = {
     ["normal"] = {
       enter = function(me)
-          local Main = require("main") -- Lazily require, to permit a `Tofu:setup()` call prior main script loading.
           me.main = Main.new()
         end,
       leave = function(me)

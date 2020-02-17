@@ -43,20 +43,20 @@ static void *_load(File_System_Handle_t *handle, bool null_terminate, size_t *si
         FS_close(handle);
         return NULL;
     }
-    size_t read_bytes = FS_read(handle, data, bytes_to_read);
-    if (read_bytes < bytes_to_read) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d bytes of data (%d available)", bytes_to_read, read_bytes);
+    size_t bytes_read = FS_read(handle, data, bytes_to_read);
+    if (bytes_read < bytes_to_read) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d bytes of data (%d available)", bytes_to_read, bytes_read);
         free(data);
         return NULL;
     }
     if (null_terminate) {
-        ((char *)data)[read_bytes] = '\0';
+        ((char *)data)[bytes_read] = '\0';
     }
-    *size = read_bytes;
+    *size = bytes_read;
     return data;
 }
 
-static File_System_Chunk_t load_as_string(File_System_Handle_t *handle)
+static File_System_Chunk_t _load_as_string(File_System_Handle_t *handle)
 {
     size_t length;
     void *chars = _load(handle, true, &length);
@@ -74,7 +74,7 @@ static File_System_Chunk_t load_as_string(File_System_Handle_t *handle)
         };
 }
 
-static File_System_Chunk_t load_as_binary(File_System_Handle_t *handle)
+static File_System_Chunk_t _load_as_binary(File_System_Handle_t *handle)
 {
     size_t size;
     void *ptr = _load(handle, false, &size);
@@ -116,7 +116,7 @@ static const stbi_io_callbacks _stbi_io_callbacks = {
     _stbi_io_eof,
 };
 
-static File_System_Chunk_t load_as_image(File_System_Handle_t *handle)
+static File_System_Chunk_t _load_as_image(File_System_Handle_t *handle)
 {
     int width, height, components;
     void *pixels = stbi_load_from_callbacks(&_stbi_io_callbacks, handle, &width, &height, &components, STBI_rgb_alpha);
@@ -157,13 +157,13 @@ File_System_Chunk_t FSaux_load(const File_System_t *file_system, const char *fil
 
     File_System_Chunk_t chunk = (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
     if (type == FILE_SYSTEM_CHUNK_STRING) {
-        chunk = load_as_string(handle);
+        chunk = _load_as_string(handle);
     } else
     if (type == FILE_SYSTEM_CHUNK_BLOB) {
-        chunk = load_as_binary(handle);
+        chunk = _load_as_binary(handle);
     } else
     if (type == FILE_SYSTEM_CHUNK_IMAGE) {
-        chunk = load_as_image(handle);
+        chunk = _load_as_image(handle);
     }
 
     FS_close(handle);

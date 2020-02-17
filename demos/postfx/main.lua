@@ -25,21 +25,26 @@ SOFTWARE.
 local System = require("tofu.core").System
 local Bank = require("tofu.graphics").Bank
 local Canvas = require("tofu.graphics").Canvas
+local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
 local Input = require("tofu.events").Input
 local File = require("tofu.io").File
 local Class = require("tofu.util").Class
+
+local Sprite = require("lib.sprite")
 
 local LITTER_SIZE = 64
 
 local Main = Class.define()
 
 function Main:__ctor()
-  Canvas.palette("nes")
-  Canvas.transparent({ [0] = false, [13] = true })
-  Canvas.background(63)
-  Canvas.shader(File.as_string("assets/shaders/water.glsl"))
---Canvas.send("u_strength", 100)
+  Display.palette("nes")
+  Display.shader(File.as_string("assets/shaders/water.glsl"))
+--Display.send("u_strength", 100)
+
+  local canvas = Canvas.default()
+  canvas:transparent({ [0] = false, [13] = true })
+  canvas:background(63)
 
   self.sprites = {}
   self.bank = Bank.new("assets/images/diamonds.png", 16, 16)
@@ -50,7 +55,6 @@ end
 
 function Main:input()
   if Input.is_pressed("start") then
-    local Sprite = require("lib.sprite") -- Lazily require the module only in this scope.
     for _ = 1, LITTER_SIZE do
       table.insert(self.sprites, Sprite.new(self.bank, #self.sprites))
     end
@@ -77,12 +81,14 @@ function Main:update(delta_time)
 end
 
 function Main:render(_)
-  Canvas.clear()
+  local canvas = Canvas.default()
+  local width, _ = canvas:size()
+  canvas:clear()
   for _, sprite in pairs(self.sprites) do
     sprite:render()
   end
   self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
-  self.font:write(self.font:align(string.format("#%d sprites", #self.sprites), Canvas.width(), 0, "right"))
+  self.font:write(self.font:align(string.format("#%d sprites", #self.sprites), width, 0, "right"))
 end
 
 return Main

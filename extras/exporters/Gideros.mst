@@ -1,0 +1,3 @@
+{{#rects}}
+{{{name}}}, {{frame.x}}, {{frame.y}}, {{frame.w}}, {{frame.h}}, {{frame.hw}}, {{frame.hh}}
+{{/rects}}

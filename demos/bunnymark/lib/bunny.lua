@@ -3,6 +3,7 @@ local Class = require("tofu.util").Class
 
 local Bunny = Class.define()
 
+local CELL_ID = 0
 local MAX_SPEED = 500
 local GRAVITY = 981
 local X_DAMPENING = 0.95
@@ -11,7 +12,7 @@ local MIN_X, MIN_Y = 0, 0
 local MAX_X, MAX_Y = Canvas.default():size()
 
 function Bunny:__ctor(bank)
-  local cw, ch = bank:size()
+  local cw, ch = bank:size(CELL_ID)
 
   self.min_x = MIN_X
   self.min_y = MIN_Y
@@ -54,7 +55,7 @@ function Bunny:update(delta_time)
 end
 
 function Bunny:render()
-  self.bank:blit(0, self.x, self.y)
+  self.bank:blit(CELL_ID, self.x, self.y)
 end
 
 return Bunny

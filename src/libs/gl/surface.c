@@ -31,24 +31,15 @@
 
 #define LOG_CONTEXT "gl"
 
-GL_Surface_t *GL_surface_decode(const void *buffer, size_t buffer_size, const GL_Surface_Callback_t callback, void *user_data)
+GL_Surface_t *GL_surface_decode(size_t width, size_t height, const void *pixels, const GL_Surface_Callback_t callback, void *user_data)
 {
-    int width, height, components;
-    void *data = stbi_load_from_memory(buffer, buffer_size, &width, &height, &components, STBI_rgb_alpha); //STBI_default);
-    if (!data) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't decode surface from %p: %s", data, stbi_failure_reason());
-        return false;
-    }
-
     GL_Surface_t *surface = GL_surface_create(width, height);
     if (!surface) {
-        stbi_image_free(data);
         return NULL;
     }
 
-    callback(user_data, surface, data);
-    stbi_image_free(data);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface decoded at %p (%dx%d w/ %d bpp)", surface->data, width, height, components);
+    callback(user_data, surface, pixels);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface decoded at %p (%dx%d)", surface->data, width, height);
 
     return surface;
 }

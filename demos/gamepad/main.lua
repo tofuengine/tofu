@@ -101,7 +101,7 @@ function Main:render(_)
   local canvas = Canvas.default()
   canvas:clear()
 
-  local cw, ch = self.bank:size()
+  local cw, ch = self.bank:size(-1)
   local width, height = canvas:size()
 
   local x, y = (width - #IDS * cw) * 0.5, (height - ch) * 0.5

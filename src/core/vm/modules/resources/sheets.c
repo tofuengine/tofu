@@ -24,8 +24,6 @@
 
 #include "sheets.h"
 
-#include <spleen/spleen.h>
-
 #include <strings.h>
 
 typedef struct _Resource_Sheet_t {
@@ -33,12 +31,28 @@ typedef struct _Resource_Sheet_t {
     Sheet_Data_t data;
 } Resource_Sheet_t;
 
+static const unsigned char _spleen_5x8_pixels[] = {
+#include <spleen/spleen-5x8.inc>
+};
+static const unsigned char _spleen_8x16_pixels[] = {
+#include <spleen/spleen-8x16.inc>
+};
+static const unsigned char _spleen_12x24_pixels[] = {
+#include <spleen/spleen-12x24.inc>
+};
+static const unsigned char _spleen_16x32_pixels[] = {
+#include <spleen/spleen-16x32.inc>
+};
+static const unsigned char _spleen_32x64_pixels[] = {
+#include <spleen/spleen-32x64.inc>
+};
+
 static const Resource_Sheet_t _sheets[] = {
-    { "5x8", { spleen_5x8_png, spleen_5x8_png_len, 5, 8 } },
-    { "8x16", { spleen_8x16_png, spleen_8x16_png_len, 8, 16 } },
-    { "12x24", { spleen_12x24_png, spleen_12x24_png_len, 12,24 } },
-    { "16x32", { spleen_16x32_png, spleen_16x32_png_len, 16, 32 } },
-    { "32x64", { spleen_32x64_png, spleen_32x64_png_len, 32, 64 } },
+    { "5x8", { 475, 8, _spleen_5x8_pixels, 5, 8 } },
+    { "8x16", { 760, 16, _spleen_8x16_pixels, 8, 16 } },
+    { "12x24", { 1140, 24, _spleen_12x24_pixels, 12,24 } },
+    { "16x32", { 1520, 32, _spleen_16x32_pixels, 16, 32 } },
+    { "32x64", { 3040, 64, _spleen_32x64_pixels, 32, 64 } },
     { NULL, { 0 } }
 };
 

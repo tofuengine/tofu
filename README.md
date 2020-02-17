@@ -13,7 +13,7 @@ Guess what? Yup, that's yet another game engine/framework.
 ## Dependecies
 
 * [Glad](https://glad.dav1d.de/)
-* [GLFW](https://www.glfw.org/) v3.3.1
+* [GLFW](https://www.glfw.org/) v3.3.2
 * [Lua](https://lua.org/) v5.3.5
 * [miniaudio](https://github.com/dr-soft/miniaudio) v0.9.10
 * [spleen](https://github.com/fcambus/spleen) fonts
@@ -25,6 +25,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Straight multimedia support, no intermediate third-party libraries (OpenGL 2.1 required).
 * [x] Windowed/fullscreen display with automatic scaling.
 * [x] Internal software renderer.
+* [x] Fixed- and variable-size *BOBs*' blitting with rotation/scaling/flipping.
 * [x] Palette based graphics with up to 256 colors.
 * [x] Predefined library of 8/16/32/64 colors palettes.
 * [x] Automatic nearest-color palette indexing of images.

@@ -22,28 +22,52 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
+local Bank = require("tofu.graphics").Bank
+local Canvas = require("tofu.graphics").Canvas
+local Font = require("tofu.graphics").Font
 local Class = require("tofu.util").Class
-local Timer = require("tofu.util").Timer
+local System = require("tofu.core").System
 
-local Main = require("main")
+local Main = Class.define()
 
-local Tofu = Class.define() -- To be precise, the class name is irrelevant since it's locally used.
+function Main:__ctor()
+  --Display.palette("pico-8")
 
-function Tofu:__ctor()
-  self.main = Main.new()
+  local canvas = Canvas.default()
+  local width, height = canvas:size()
+
+  self.bank = Bank.new("assets/sheet.png", 8, 8)
+  self.font = Font.default(0, 255)
+
+  local cw, ch = self.bank:size(-1)
+  self.columns = width / cw
+  self.rows = height / ch
 end
 
-function Tofu:process()
-  self.main:input()
+function Main:input()
 end
 
-function Tofu:update(delta_time)
-  Timer.pool:update(delta_time)
-  self.main:update(delta_time)
+function Main:update(_)
 end
 
-function Tofu:render(ratio)
-  self.main:render(ratio)
+function Main:render(_)
+  local canvas = Canvas.default()
+  local width, _ = canvas:size()
+  canvas:clear()
+
+  local time = System.time() * 7.5
+
+  local cw, ch = self.bank:size(-1)
+  local x, y = (width - cw) * 0.5, 0
+
+  for row = 1, self.rows do
+--    local cell_id = math.tointeger((math.sin(time + row * 0.5) + 1) * 0.5 * 9)
+    local cell_id = math.tointeger(time + row * 0.25) % 9
+    self.bank:blit(cell_id, x, y)
+    y = y + ch
+  end
+
+  self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
 end
 
-return Tofu.new()
+return Main

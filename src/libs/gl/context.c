@@ -54,9 +54,9 @@ static inline void _reset_state(GL_State_t *state, const GL_Surface_t *surface)
     state->transparent[0] = GL_BOOL_TRUE;
 }
 
-GL_Context_t *GL_context_decode(const void *buffer, size_t buffer_size, const GL_Surface_Callback_t callback, void *user_data)
+GL_Context_t *GL_context_decode(size_t width, size_t height, const void *pixels, const GL_Surface_Callback_t callback, void *user_data)
 {
-    GL_Surface_t *surface = GL_surface_decode(buffer, buffer_size, callback, user_data);
+    GL_Surface_t *surface = GL_surface_decode(width, height, pixels, callback, user_data);
     if (!surface) {
         return NULL;
     }
@@ -215,10 +215,15 @@ void GL_context_mask(GL_Context_t *context, const GL_Mask_t *mask)
 
 void GL_context_clear(const GL_Context_t *context, GL_Pixel_t index)
 {
+#ifdef __NO_MEMSET_MEMCPY__
     GL_Pixel_t *dst = context->surface->data;
     for (size_t i = context->surface->data_size; i; --i) {
         *(dst++) = index;
     }
+#else
+    const GL_Surface_t *surface = context->surface;
+    memset(surface->data, index, surface->data_size);
+#endif
 }
 
 void GL_context_to_surface(const GL_Context_t *context, const GL_Surface_t *to)
