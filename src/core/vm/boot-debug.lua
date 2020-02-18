@@ -73,7 +73,7 @@ function Tofu:__ctor()
         end,
       render = function(me, _)
           local w, _ = me.canvas:size() -- TODO: could precalculate these values.
-          local _, fh = me.font:size()
+          local _, fh = me.font:size("W") -- FIXME: calculate rectangle w/ API.
           local on = (System.time() % 2) == 0
           me.canvas:clear()
           me.canvas:rectangle("line", 0, 0, w, fh * 2 + 8, on and 1 or 0)
