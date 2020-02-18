@@ -189,6 +189,11 @@ twist: $(TARGET)
 	@$(ANALYZER) $(AFLAGS) ./demos/twist
 	@./$(TARGET) ./demos/twist
 
+tween: $(TARGET)
+	@echo "Launching *tween* application!"
+	@$(ANALYZER) $(AFLAGS) ./demos/tween
+	@./$(TARGET) ./demos/tween
+
 valgrind: $(TARGET)
 	@echo "Valgrind *$(DEMO)* application!"
 	@valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes env LIBGL_ALWAYS_SOFTWARE=1 ./$(TARGET) ./demos/$(DEMO)
