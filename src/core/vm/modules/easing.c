@@ -102,7 +102,121 @@ int easing_loader(lua_State *L)
     return luaX_newmodule(L, &_easing_script, _easing_functions, NULL, nup, NULL);
 }
 
-// https://github.com/warrenm/AHEasing/blob/master/AHEasing/easing.c
+static int easing_tweener1(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+    LUAX_SIGNATURE_END
+    const char *name = LUAX_STRING(L, 1);
+
+    lua_pushlightuserdata(L, easings_find(name));
+    lua_pushcclosure(L, _ratio, 1);
+
+    return 1;
+}
+
+static int easing_tweener2(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    const char *name = LUAX_STRING(L, 1);
+    float duration = LUAX_NUMBER(L, 2);
+
+    lua_pushlightuserdata(L, easings_find(name));
+    lua_pushnumber(L, duration);
+    lua_pushcclosure(L, _time_duration, 2);
+
+    return 1;
+}
+
+static int easing_tweener4(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    const char *name = LUAX_STRING(L, 1);
+    float duration = LUAX_NUMBER(L, 2);
+    float from = LUAX_NUMBER(L, 3);
+    float to = LUAX_NUMBER(L, 4);
+
+    lua_pushlightuserdata(L, easings_find(name));
+    lua_pushnumber(L, duration);
+    lua_pushnumber(L, from);
+    lua_pushnumber(L, to);
+    lua_pushcclosure(L, _time_duration_from_to, 4);
+
+    return 1;
+}
+
+static int easing_tweener(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, easing_tweener1)
+        LUAX_OVERLOAD_ARITY(2, easing_tweener2)
+        LUAX_OVERLOAD_ARITY(4, easing_tweener4)
+    LUAX_OVERLOAD_END
+}
+
+typedef float (*Easing_Function_t)(float ratio); // No need to expose the easings!!!
+
+static int _ratio(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    float ratio = LUAX_NUMBER(L, 1);
+
+    Easing_Function_t function = (Easing_Function_t)LUAX_USERDATA(L, lua_upvalueindex(1));
+
+    float value = function(ratio);
+
+    lua_pushnumber(L, value);
+
+    return 1;
+}
+
+static int _time_duration(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    float time = LUAX_NUMBER(L, 1);
+
+    Easing_Function_t function = (Easing_Function_t)LUAX_USERDATA(L, lua_upvalueindex(1));
+    float duration = (const File_System_t *)LUAX_USERDATA(L, lua_upvalueindex(2));
+
+    float ratio = time / duration;
+    float value = function(ratio);
+
+    lua_pushnumber(L, value);
+
+    return 1;
+}
+
+static int _time_duration_from_to(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    float time = LUAX_NUMBER(L, 1);
+
+    Easing_Function_t function = (Easing_Function_t)LUAX_USERDATA(L, lua_upvalueindex(1));
+    float duration = LUAX_NUMBER(L, lua_upvalueindex(2));
+    float from = LUAX_NUMBER(L, lua_upvalueindex(3));
+    float to = LUAX_NUMBER(L, lua_upvalueindex(4));
+
+    float ratio = time / duration;
+    float value = function(ratio);
+
+    lua_pushnumber(L, (1.0f - value) * from + value * to); // Precise method, which guarantees correct result `r = 1`.
+
+    return 1;
+}
 
 static int easing_linear(lua_State *L)
 {

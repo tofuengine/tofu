@@ -31,6 +31,7 @@
 //  http://sam.zoy.org/wtfpl/COPYING for more details.
 //
 
+// http://robertpenner.com/easing/
 // https://github.com/warrenm/AHEasing/blob/master/AHEasing/easing.c
 
 #include <math.h>
