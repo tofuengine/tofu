@@ -32,9 +32,11 @@ local Class = require("tofu.util").Class
 local Easing = require("tofu.util").Easing
 
 local EASINGS = {
-    "linear", "linear", "linear",
+    "linear",
     "quadratic_in", "quadratic_out", "quadratic_in_out",
     "cubic_in", "cubic_out", "cubic_in_out",
+    "quartic_in", "quartic_out", "quartic_in_out",
+    "quintic_in", "quintic_out", "quintic_in_out",
     "sine_in", "sine_out", "sine_in_out",
     "circular_in", "circular_out", "circular_in_out",
     "exponential_in", "exponential_out", "exponential_in_out",
@@ -57,6 +59,11 @@ function Main:__ctor()
 
   self.bank = Bank.new("assets/sheet.png", 8, 8)
   self.font = Font.default(0, 15)
+
+  local canvas = Canvas.default()
+  local width, height = canvas:size()
+  local x0, y0 = width * 0.25, height * 0
+  self.area = { x = x0, y = y0, width = width * 0.50, height = height * 1 }
 end
 
 function Main:input()
@@ -65,18 +72,24 @@ end
 function Main:update(_)
 end
 
+local function wave(t)
+  local y = Math.triangle_wave(PERIOD, t)
+  y = (y + 0.75) / 1.5
+  return math.min(math.max(y, 0.0), 1.0)
+end
+
 function Main:render(_)
   local canvas = Canvas.default()
   canvas:clear()
 
-  local ratio = (Math.triangle_wave(PERIOD, System.time()) + 1.0) * 0.5 -- The waves have values in the range [-1, +1].
+  local ratio = wave(System.time()) -- The waves have values in the range [-1, +1].
 
-  local width, _ = canvas:size()
+  local area = self.area
   local _, ch = self.bank:size(-1)
 
-  local y = 0
+  local y = area.y
   for index, tweener in ipairs(self.tweeners) do
-    local x = width * tweener(ratio)
+    local x = area.x + area.width * tweener(ratio)
     canvas:shift(5, 1 + (index % 15))
     self.bank:blit(index % 7, x, y)
     y = y + ch
