@@ -46,7 +46,7 @@ int easing_loader(lua_State *L)
     return luaX_newmodule(L, NULL, _easing_functions, NULL, nup, META_TABLE);
 }
 
-static int _ratio(lua_State *L)
+static int _vanilla(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -62,7 +62,7 @@ static int _ratio(lua_State *L)
     return 1;
 }
 
-static int _time_duration(lua_State *L)
+static int _normalize(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -80,7 +80,12 @@ static int _time_duration(lua_State *L)
     return 1;
 }
 
-static int _time_duration_from_to(lua_State *L)
+static inline float _lerpf(float a, float b, float r)
+{
+    return a * (1.0f - r) + b * r; // Precise method, which guarantees correct result `r = 1`.
+}
+
+static int _normalize_lerp(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -93,9 +98,9 @@ static int _time_duration_from_to(lua_State *L)
     float to = LUAX_NUMBER(L, lua_upvalueindex(4));
 
     float ratio = time / duration;
-    float value = easing->function(ratio);
+    float value = _lerpf(from, to, easing->function(ratio));
 
-    lua_pushnumber(L, from * (1.0f - value) + to * value); // Precise method, which guarantees correct result `r = 1`.
+    lua_pushnumber(L, value);
 
     return 1;
 }
@@ -113,7 +118,7 @@ static int easing_tweener1(lua_State *L)
     }
 
     lua_pushlightuserdata(L, (void *)easing);
-    lua_pushcclosure(L, _ratio, 1);
+    lua_pushcclosure(L, _vanilla, 1);
 
     return 1;
 }
@@ -134,7 +139,7 @@ static int easing_tweener2(lua_State *L)
 
     lua_pushlightuserdata(L, (void *)easing);
     lua_pushnumber(L, duration);
-    lua_pushcclosure(L, _time_duration, 2);
+    lua_pushcclosure(L, _normalize, 2);
 
     return 1;
 }
@@ -161,7 +166,7 @@ static int easing_tweener4(lua_State *L)
     lua_pushnumber(L, duration);
     lua_pushnumber(L, from);
     lua_pushnumber(L, to);
-    lua_pushcclosure(L, _time_duration_from_to, 4);
+    lua_pushcclosure(L, _normalize_lerp, 4);
 
     return 1;
 }
