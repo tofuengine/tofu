@@ -28,10 +28,11 @@
 #include <core/vm/modules/canvas.h>
 #include <core/vm/modules/class.h>
 #include <core/vm/modules/display.h>
-#include <core/vm/modules/grid.h>
-#include <core/vm/modules/font.h>
-#include <core/vm/modules/input.h>
+#include <core/vm/modules/easing.h>
 #include <core/vm/modules/file.h>
+#include <core/vm/modules/font.h>
+#include <core/vm/modules/grid.h>
+#include <core/vm/modules/input.h>
 #include <core/vm/modules/math.h>
 #include <core/vm/modules/system.h>
 #include <core/vm/modules/timer.h>
@@ -121,6 +122,7 @@ static int util_loader(lua_State *L)
 {
     static const luaL_Reg classes[] = {
         { "Class", class_loader },
+        { "Easing", easing_loader },
         { "Timer", timer_loader },
         { NULL, NULL }
     };
