@@ -90,6 +90,7 @@ static int math_lerp(lua_State *L)
     return 1;
 }
 
+// TODO: make as functions like easings? One creates a wave funtion with a period..
 static int math_sine_wave(lua_State *L) // TODO: add overload with two args.
 {
     LUAX_SIGNATURE_BEGIN(L)
