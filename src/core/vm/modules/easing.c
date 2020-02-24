@@ -25,7 +25,6 @@
 #include "easing.h"
 
 #include <config.h>
-#include <core/vm/interpreter.h>
 #include <libs/log.h>
 #include <libs/easing.h>
 
@@ -114,7 +113,7 @@ static int easing_tweener1(lua_State *L)
 
     const Easing_t *easing  = easing_from_id(name);
     if (!easing) {
-        luaL_error(L, "unknown easing `%s`", name);
+        return luaL_error(L, "unknown easing `%s`", name);
     }
 
     lua_pushlightuserdata(L, (void *)easing);
@@ -134,7 +133,7 @@ static int easing_tweener2(lua_State *L)
 
     const Easing_t *easing  = easing_from_id(name);
     if (!easing) {
-        luaL_error(L, "unknown easing `%s`", name);
+        return luaL_error(L, "unknown easing `%s`", name);
     }
 
     lua_pushlightuserdata(L, (void *)easing);
@@ -159,7 +158,7 @@ static int easing_tweener4(lua_State *L)
 
     const Easing_t *easing  = easing_from_id(name);
     if (!easing) {
-        luaL_error(L, "unknown easing `%s`", name);
+        return luaL_error(L, "unknown easing `%s`", name);
     }
 
     lua_pushlightuserdata(L, (void *)easing);

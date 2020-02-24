@@ -30,11 +30,11 @@
 typedef float (*Easing_Function_t)(float ratio);
 
 typedef struct _Easing_t {
-    const char *name;
+    const char *id;
     Easing_Function_t function;
 } Easing_t;
 
-extern const Easing_t *easing_from_id(const char *name);
+extern const Easing_t *easing_from_id(const char *id);
 
 extern float easing_linear(float p);
 extern float easing_quadratic_in(float p);
