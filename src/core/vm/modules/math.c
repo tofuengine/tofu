@@ -27,6 +27,7 @@
 #include <config.h>
 #include <libs/sincos.h>
 #include <libs/log.h>
+#include <libs/wave.h>
 
 #include <math.h>
 
@@ -35,20 +36,14 @@
 #define META_TABLE  "Tofu_Core_Math_mt"
 
 static int math_lerp(lua_State *L);
-static int math_sine_wave(lua_State *L);
-static int math_square_wave(lua_State *L);
-static int math_triangle_wave(lua_State *L);
-static int math_sawtooth_wave(lua_State *L);
+static int math_wave(lua_State *L);
 static int math_sincos(lua_State *L);
 static int math_angle_to_rotation(lua_State *L);
 static int math_rotation_to_angle(lua_State *L);
 
 static const struct luaL_Reg _math_functions[] = {
     { "lerp", math_lerp },
-    { "sine_wave", math_sine_wave },
-    { "square_wave", math_square_wave },
-    { "triangle_wave", math_triangle_wave },
-    { "sawtooth_wave", math_sawtooth_wave },
+    { "wave", math_wave },
     { "sincos", math_sincos },
     { "angle_to_rotation", math_angle_to_rotation },
     { "rotation_to_angle", math_rotation_to_angle },
@@ -90,59 +85,39 @@ static int math_lerp(lua_State *L)
     return 1;
 }
 
-// TODO: make as functions like easings? One creates a wave funtion with a period..
-static int math_sine_wave(lua_State *L) // TODO: add overload with two args.
+static int _vanilla(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    float r = LUAX_NUMBER(L, 1);
+    float t = LUAX_NUMBER(L, 1);
 
-    float value = sinf(r * 2.0f * (float)M_PI); // TODO: move to library for reuse in audio?
+    const Wave_t *wave = (const Wave_t *)LUAX_USERDATA(L, lua_upvalueindex(1));
+
+    float value = wave->function(t);
 
     lua_pushnumber(L, value);
 
     return 1;
 }
 
-static int math_square_wave(lua_State *L)
+static int math_wave(lua_State *L) // TODO: add overload with two args.
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    float r = LUAX_NUMBER(L, 1);
+    const char *name = LUAX_STRING(L, 1);
 
-    float value = 2.0f * (2.0f * floorf(r) - floorf(2.0f * r)) + 1.0f;
+    const Wave_t *wave = wave_from_name(name);
+    if (!wave) {
+        return luaL_error(L, "unknown wave `%s`", name);
+    }
 
-    lua_pushnumber(L, value);
-
-    return 1;
-}
-
-static int math_triangle_wave(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    float r = LUAX_NUMBER(L, 1);
-
-    float value = 2.0f * fabsf(2.0f * (r + 0.25f - floorf(r + 0.75f))) - 1.0f;
-
-    lua_pushnumber(L, value);
-
-    return 1;
-}
-
-static int math_sawtooth_wave(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    float r = LUAX_NUMBER(L, 1);
-
-    float value = 2.0f * (r - floorf(0.5f + r));
-
-    lua_pushnumber(L, value);
+    lua_pushlightuserdata(L, (void *)wave);
+    //lua_pushnumber(L, period);
+    //lua_pushnumber(L, min);
+    //lua_pushnumber(L, max);
+    lua_pushcclosure(L, _vanilla, 1);
 
     return 1;
 }
