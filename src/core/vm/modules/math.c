@@ -101,7 +101,26 @@ static int _vanilla(lua_State *L)
     return 1;
 }
 
-static int math_wave(lua_State *L) // TODO: add overload with two args.
+static int _normalize(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    float time = LUAX_NUMBER(L, 1);
+
+    const Wave_t *wave = (const Wave_t *)LUAX_USERDATA(L, lua_upvalueindex(1));
+    float period = LUAX_NUMBER(L, lua_upvalueindex(2));
+    float amplitude = LUAX_NUMBER(L, lua_upvalueindex(3));
+
+    float t = time / period;
+    float value = wave->function(t) * amplitude;
+
+    lua_pushnumber(L, value);
+
+    return 1;
+}
+
+static int math_wave1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
@@ -114,12 +133,42 @@ static int math_wave(lua_State *L) // TODO: add overload with two args.
     }
 
     lua_pushlightuserdata(L, (void *)wave);
-    //lua_pushnumber(L, period);
-    //lua_pushnumber(L, min);
-    //lua_pushnumber(L, max);
     lua_pushcclosure(L, _vanilla, 1);
 
     return 1;
+}
+
+static int math_wave2_3(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    const char *name = LUAX_STRING(L, 1);
+    float period = LUAX_NUMBER(L, 2);
+    float amplitude = LUAX_OPTIONAL_NUMBER(L, 3, 1.0f);
+
+    const Wave_t *wave = wave_from_name(name);
+    if (!wave) {
+        return luaL_error(L, "unknown wave `%s`", name);
+    }
+
+    lua_pushlightuserdata(L, (void *)wave);
+    lua_pushnumber(L, period);
+    lua_pushnumber(L, amplitude);
+    lua_pushcclosure(L, _normalize, 3);
+
+    return 1;
+}
+
+static int math_wave(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, math_wave1)
+        LUAX_OVERLOAD_ARITY(2, math_wave2_3)
+        LUAX_OVERLOAD_ARITY(3, math_wave2_3)
+    LUAX_OVERLOAD_END
 }
 
 static int math_sincos(lua_State *L)

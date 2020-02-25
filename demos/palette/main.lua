@@ -22,14 +22,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
+local Math = require("tofu.core").Math
+local System = require("tofu.core").System
 local Input = require("tofu.events").Input
 local Bank = require("tofu.graphics").Bank
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
 local Class = require("tofu.util").Class
-local Math = require("tofu.core").Math
-local System = require("tofu.core").System
 
 local Main = Class.define()
 
@@ -41,13 +41,14 @@ local PALETTES = { "pico-8", "arne-16", "dawnbringer-16", "c64", "cga" }
 function Main:__ctor()
   Display.palette("pico-8")
 
-  Input.auto_repeat("Y", 0.5)
+  Input.auto_repeat("y", 0.5)
 
   local canvas = Canvas.default()
   local width, height = canvas:size()
 
   self.bank = Bank.new("assets/sheet.png", 8, 8)
   self.font = Font.default(0, 15)
+  self.wave = Math.wave("triangle", 10.0, 128.0)
   self.x_size = width / AMOUNT
   self.y_size = height / AMOUNT
   self.palette = 1
@@ -113,7 +114,7 @@ function Main:render(_)
   elseif self.mode == 1 then
     local scale = (math.cos(time) + 1) * 3 * 0 + 5
 --    local rotation = math.sin(time * 0.5) * 512
-    local rotation = Math.triangle_wave(10.0, time) * 128
+    local rotation = self.wave(time)
     self.bank:blit(0, width / 2, height / 2, rotation, scale)
   elseif self.mode == 2 then
     self.bank:blit(0, width / 2, height / 2, 256 * 1, 10)
