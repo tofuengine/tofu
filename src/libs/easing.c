@@ -63,10 +63,10 @@ static const Easing_t _entries[] = {
     { NULL, NULL }
 };
 
-const Easing_t *easing_from_id(const char *name)
+const Easing_t *easing_from_id(const char *id)
 {
-    for (const Easing_t *entry = _entries; entry->name; ++entry) {
-        if (strcasecmp(entry->name, name) == 0) {
+    for (const Easing_t *entry = _entries; entry->id; ++entry) {
+        if (strcasecmp(entry->id, id) == 0) {
             return entry;
         }
     }
