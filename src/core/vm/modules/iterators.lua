@@ -43,55 +43,55 @@ local function reverse(t, looped)
   return function()
       i = i - 1
       if i < 1 then
-          if looped and looped(t) then
+        if looped and looped(t) then
           return nil
-          end
-          i = n
+        end
+        i = n
       end
-      return t[i]
-      end
-  end
-  
-  local function circular(t, looped)
+    return t[i]
+    end
+end
+
+local function circular(t, looped)
   local n = #t
   local i = 0
   return function()
       i = i + 1
       if i > n then
-          if looped and looped(t) then
+        if looped and looped(t) then
           return nil
-          end
-          i = 1
+        end
+        i = 1
       end
       return t[i]
-      end
-  end
-  
-  local function bounce(t, bounced)
+    end
+end
+
+local function bounce(t, bounced)
   local n = #t
   local d = 1
   local i = 0
   return function()
       i = i + d
       if d > 0 and i >= n then
-          if bounced and bounced(t) then
+        if bounced and bounced(t) then
           return nil
-          end
-          i = n
-          d = -1
+        end
+        i = n
+        d = -1
       elseif d < 0 and i <= 1 then
-          if bounced and bounced(t) then
+        if bounced and bounced(t) then
           return nil
-          end
-          i = 1
-          d = 1
+        end
+        i = 1
+        d = 1
       end
       return t[i]
-      end
-  end
-  
-  -- Safe iterators that exclude the `nil` entries and additional check.
-  local function ipairs(table, check)
+    end
+end
+
+-- Safe iterators that exclude the `nil` entries and additional check.
+local function ipairs(table, check)
   return function(a, i)
       while true do
           i = i + 1
@@ -103,10 +103,10 @@ local function reverse(t, looped)
           return i, v
           end
       end
-      end, table, 0
-  end
-  
-  local function pairs(table, check)
+    end, table, 0
+end
+
+local function pairs(table, check)
   return function(t, k)
       while true do
           local v = next(t, k)
@@ -117,9 +117,9 @@ local function reverse(t, looped)
           return k, v
           end
       end
-      end, table, nil
-  end
-  
+    end, table, nil
+end
+
 return {
   forward = forward,
   reverse = reverse,

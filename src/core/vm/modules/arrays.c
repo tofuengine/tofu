@@ -22,18 +22,18 @@
  * SOFTWARE.
  */
 
-#include "class.h"
+#include "arrays.h"
 
 #include <libs/luax.h>
 
-static const uint8_t _class_lua[] = {
-#include "class.inc"
+static const uint8_t _arrays_lua[] = {
+#include "arrays.inc"
 };
 
-static luaX_Script _class_script = { (const char *)_class_lua, sizeof(_class_lua), "@class.lua" }; // Trace as filename internally.
+static luaX_Script _arrays_script = { (const char *)_arrays_lua, sizeof(_arrays_lua), "@arrays.lua" }; // Trace as filename internally.
 
-int class_loader(lua_State *L)
+int arrays_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, &_class_script, NULL, NULL, nup, NULL);
+    return luaX_newmodule(L, &_arrays_script, NULL, NULL, nup, NULL);
 }

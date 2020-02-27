@@ -22,18 +22,11 @@
  * SOFTWARE.
  */
 
-#include "class.h"
+#ifndef __MODULES_ARRAYS_H__
+#define __MODULES_ARRAYS_H__
 
-#include <libs/luax.h>
+#include <lua/lua.h>
 
-static const uint8_t _class_lua[] = {
-#include "class.inc"
-};
+extern int arrays_loader(lua_State *L);
 
-static luaX_Script _class_script = { (const char *)_class_lua, sizeof(_class_lua), "@class.lua" }; // Trace as filename internally.
-
-int class_loader(lua_State *L)
-{
-    int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, &_class_script, NULL, NULL, nup, NULL);
-}
+#endif  /* __MODULES_ARRAYS_H__ */

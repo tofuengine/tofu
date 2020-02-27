@@ -24,6 +24,7 @@
 
 #include "modules.h"
 
+#include <core/vm/modules/arrays.h>
 #include <core/vm/modules/bank.h>
 #include <core/vm/modules/canvas.h>
 #include <core/vm/modules/class.h>
@@ -33,6 +34,7 @@
 #include <core/vm/modules/font.h>
 #include <core/vm/modules/grid.h>
 #include <core/vm/modules/input.h>
+#include <core/vm/modules/iterators.h>
 #include <core/vm/modules/math.h>
 #include <core/vm/modules/system.h>
 #include <core/vm/modules/timer.h>
@@ -60,7 +62,9 @@ static int create_module(lua_State *L, const luaL_Reg *entries)
 static int collections_loader(lua_State *L)
 {
     static const luaL_Reg classes[] = {
+        { "Arrays", arrays_loader },
         { "Grid", grid_loader },
+        { "Iterators", iterators_loader },
         { NULL, NULL }
     };
     return create_module(L, classes);
