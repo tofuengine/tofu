@@ -241,9 +241,31 @@ local function shuffle(array)
   end
 end
 
+local function uniqued(array)
+  local result = {}
+  local n = 0
+  local length = #array
+  local previous = nil
+  for index = 1, length do
+    local current = array[index]
+    if not previous or previous ~= current then
+      n = n + 1
+      result[n] = current;
+    end
+    previous = current
+  end
+  return result
+end
+
 local function unique(array)
-  -- TODO: implement a duplicate removal.
-  return array
+  local previous = nil
+  for index = #array, 1, -1 do
+    local current = array[index]
+    if previous and previous == current then
+      table.remove(array, index)
+    end
+    previous = current
+  end
 end
 
 local function new(length, value)
@@ -322,6 +344,7 @@ return {
   rotate = rotate,
   shuffled = shuffled,
   shuffle = shuffle,
+  uniqued = uniqued,
   unique = unique,
   new = new,
   equals = equals,

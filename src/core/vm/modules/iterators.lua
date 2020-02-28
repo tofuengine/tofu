@@ -26,15 +26,15 @@ local function forward(t, looped)
   local n = #t
   local i = 0
   return function()
-    i = i + 1
-    if i > n then
-      if looped and looped(t) then
-        return nil
+      i = i + 1
+      if i > n then
+        if looped and looped(t) then
+          return nil
+        end
+        i = 0
       end
-      i = 0
+      return t[i]
     end
-    return t[i]
-  end
 end
 
 local function reverse(t, looped)
@@ -48,7 +48,7 @@ local function reverse(t, looped)
         end
         i = n
       end
-    return t[i]
+      return t[i]
     end
 end
 
@@ -97,10 +97,10 @@ local function ipairs(table, check)
           i = i + 1
           local v = a[i]
           if not v then
-          return nil, nil
+            return nil, nil
           end
           if not check or check(v) then
-          return i, v
+            return i, v
           end
       end
     end, table, 0
@@ -111,10 +111,10 @@ local function pairs(table, check)
       while true do
           local v = next(t, k)
           if not v then
-          return nil, nil
+            return nil, nil
           end
           if not check or check(v) then
-          return k, v
+            return k, v
           end
       end
     end, table, nil
