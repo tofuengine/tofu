@@ -27,4 +27,18 @@ local Math = {}
 -- TODO: add these? https://github.com/MarcoLizza/love-workouts/tree/master/boids/lib/math
 -- https://github.com/MarcoLizza/love-workouts/tree/master/anaglyph-3d/lib/math
 
+function Math.lerp(a, b, r)
+ if type(a) == 'table' then
+    local v = {}
+    for i = 1, #a do
+      table.insert(v, Math.lerp(a[i], b[i], r))
+    end
+    return v
+  else
+    return a * (1 - r) + b * r
+    -- More numerical stable than the following one.
+    -- return (b - a) * ratio + a
+  end
+end
+
 return Math
