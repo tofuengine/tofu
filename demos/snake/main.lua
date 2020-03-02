@@ -23,12 +23,12 @@ SOFTWARE.
 ]]--
 
 local Grid = require("tofu.collections").Grid
+local Class = require("tofu.core").Class
+local System = require("tofu.core").System
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
 local Input = require("tofu.events").Input
-local Class = require("tofu.util").Class
-local System = require("tofu.core").System
 
 local INITIAL_LENGHT = 5
 local SPEED_RATIO = 5

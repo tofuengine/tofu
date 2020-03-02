@@ -23,12 +23,12 @@ SOFTWARE.
 ]]--
 
 -- Include the modules we'll be using.
+local Class = require("tofu.core").Class
 local Input = require("tofu.events").Input
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Bank = require("tofu.graphics").Bank
 local Font = require("tofu.graphics").Font
-local Class = require("tofu.util").Class
 
 local Main = Class.define()
 

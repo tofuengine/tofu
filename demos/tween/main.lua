@@ -22,14 +22,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Math = require("tofu.core").Math
+local Class = require("tofu.core").Class
 local System = require("tofu.core").System
 local Bank = require("tofu.graphics").Bank
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
-local Class = require("tofu.util").Class
-local Easing = require("tofu.util").Easing
+local Easing = require("tofu.math").Easing
+local Wave = require("tofu.math").Wave
 
 local EASINGS = {
     "linear",
@@ -59,6 +59,7 @@ function Main:__ctor()
 
   self.bank = Bank.new("assets/sheet.png", 8, 8)
   self.font = Font.default(0, 15)
+  self.wave = Wave.new("triangle", PERIOD)
 
   local canvas = Canvas.default()
   local width, height = canvas:size()
@@ -72,8 +73,8 @@ end
 function Main:update(_)
 end
 
-local function wave(t)
-  local y = Math.triangle_wave(PERIOD, t)
+function Main:evaluate(t)
+  local y = self.wave(t)
   y = (y + 0.75) / 1.5
   return math.min(math.max(y, 0.0), 1.0)
 end
@@ -82,7 +83,7 @@ function Main:render(_)
   local canvas = Canvas.default()
   canvas:clear()
 
-  local ratio = wave(System.time()) -- The waves have values in the range [-1, +1].
+  local ratio = self:evaluate(System.time()) -- The waves have values in the range [-1, +1].
 
   local area = self.area
   local _, ch = self.bank:size(-1)

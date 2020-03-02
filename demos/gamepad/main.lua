@@ -22,13 +22,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
+local Class = require("tofu.core").Class
+local System = require("tofu.core").System
+local Input = require("tofu.events").Input
 local Bank = require("tofu.graphics").Bank
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
-local Input = require("tofu.events").Input
-local Class = require("tofu.util").Class
-local System = require("tofu.core").System
 
 local Main = Class.define()
 

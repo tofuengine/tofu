@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_MATH_H__
-#define __MODULES_MATH_H__
+#ifndef __MODULES_VECTOR_H__
+#define __MODULES_VECTOR_H__
 
 #include <lua/lua.h>
 
-extern int math_loader(lua_State *L);
+extern int vector_loader(lua_State *L);
 
-#endif  /* __MODULES_MATH_H__ */
+#endif  /* __MODULES_VECTOR_H__ */

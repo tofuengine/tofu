@@ -31,13 +31,16 @@
 #include <core/vm/modules/display.h>
 #include <core/vm/modules/easing.h>
 #include <core/vm/modules/file.h>
+#include <core/vm/modules/fitting.h>
 #include <core/vm/modules/font.h>
 #include <core/vm/modules/grid.h>
 #include <core/vm/modules/input.h>
 #include <core/vm/modules/iterators.h>
-#include <core/vm/modules/math.h>
+#include <core/vm/modules/polar.h>
 #include <core/vm/modules/system.h>
 #include <core/vm/modules/timer.h>
+#include <core/vm/modules/vector.h>
+#include <core/vm/modules/wave.h>
 #include <core/vm/modules/xform.h>
 #include <libs/log.h>
 #include <libs/luax.h>
@@ -73,7 +76,7 @@ static int collections_loader(lua_State *L)
 static int core_loader(lua_State *L)
 {
     static const luaL_Reg classes[] = {
-        { "Math", math_loader },
+        { "Class", class_loader },
         { "System", system_loader },
         { NULL, NULL }
     };
@@ -101,6 +104,7 @@ static int graphics_loader(lua_State *L)
     };
     return create_module(L, classes);
 }
+
 /*
 static int audio_loader(lua_State *L)
 {
@@ -122,11 +126,22 @@ static int io_loader(lua_State *L)
     return create_module(L, classes);
 }
 
+static int math_loader(lua_State *L)
+{
+    static const luaL_Reg classes[] = {
+        { "Easing", easing_loader },
+        { "Fitting", fitting_loader },
+        { "Polar", polar_loader },
+        { "Vector", vector_loader },
+        { "Wave", wave_loader },
+        { NULL, NULL }
+    };
+    return create_module(L, classes);
+}
+
 static int util_loader(lua_State *L)
 {
     static const luaL_Reg classes[] = {
-        { "Class", class_loader },
-        { "Easing", easing_loader },
         { "Timer", timer_loader },
         { NULL, NULL }
     };
@@ -140,6 +155,7 @@ void modules_initialize(lua_State *L, int nup)
         { "tofu.core", core_loader },
         { "tofu.events", events_loader },
         { "tofu.graphics", graphics_loader },
+        { "tofu.math", math_loader },
 /*
         { "tofu.audio", audio_loader },
 */
