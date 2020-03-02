@@ -28,7 +28,7 @@ local Fitting = {}
 -- https://github.com/MarcoLizza/love-workouts/tree/master/anaglyph-3d/lib/math
 
 function Fitting.lerp(a, b, r)
- if type(a) == 'table' then
+  if type(a) == 'table' then
     local v = {}
     for i = 1, #a do
       table.insert(v, Fitting.lerp(a[i], b[i], r))
@@ -38,7 +38,16 @@ function Fitting.lerp(a, b, r)
     return a * (1 - r) + b * r
     -- More numerical stable than the following one.
     -- return (b - a) * ratio + a
+    -- see: https://en.wikipedia.org/wiki/Linear_interpolation
   end
+end
+
+function Fitting.linear()
+  return nil
+end
+
+function Fitting.spline()
+  return nil
 end
 
 return Fitting
