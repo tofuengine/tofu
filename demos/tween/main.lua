@@ -23,7 +23,6 @@ SOFTWARE.
 ]]--
 
 local Class = require("tofu.core").Class
-local Easing = require("tofu.core").Easing
 local Math = require("tofu.core").Math
 local System = require("tofu.core").System
 local Bank = require("tofu.graphics").Bank
@@ -54,7 +53,7 @@ function Main:__ctor()
 
   self.tweeners = {}
   for _, easing in ipairs(EASINGS) do
-    table.insert(self.tweeners, Easing.tweener(easing))
+    table.insert(self.tweeners, Math.tweener(easing))
   end
 
   self.bank = Bank.new("assets/sheet.png", 8, 8)

@@ -29,7 +29,6 @@
 #include <core/vm/modules/canvas.h>
 #include <core/vm/modules/class.h>
 #include <core/vm/modules/display.h>
-#include <core/vm/modules/easing.h>
 #include <core/vm/modules/file.h>
 #include <core/vm/modules/font.h>
 #include <core/vm/modules/grid.h>
@@ -75,7 +74,6 @@ static int core_loader(lua_State *L)
 {
     static const luaL_Reg classes[] = {
         { "Class", class_loader },
-        { "Easing", easing_loader }, // TODO: move inside `Math`?
         { "Math", math_loader },
         { "System", system_loader },
         { "Timer", timer_loader },
@@ -139,7 +137,6 @@ void modules_initialize(lua_State *L, int nup)
         { "tofu.audio", audio_loader },
 */
         { "tofu.io", io_loader },
-        { "tofu.system", system_loader },
         { NULL, NULL }
     };
 
