@@ -27,7 +27,7 @@ local Vector = {}
 -- Note: the `__index` metatable reference is set by the module loader.
 -- Font.__index = Font
 
-function Vector:clone()
+function Vector:clone()  -- !!!
   return Vector.new(self.x, self.y)
 end
 
@@ -35,7 +35,7 @@ function Vector.from_polar(a, l, ox, oy)
   return Vector.new(math.cos(a) * l + (ox and ox or 0), math.sin(a) * l + (oy and oy or 0))
 end
 
-function Vector:to_polar()
+function Vector:to_polar()  -- !!!
   return math.atan(self.y, self.x), self:magnitude()
 end
 
@@ -60,37 +60,37 @@ function Vector.intersect(p0, v0, p1, v1)
   return t0, t1
 end
 
-function Vector:unpack()
+function Vector:unpack() -- !!!
   return self.x, self.y
 end
 
-function Vector:is_zero()
+function Vector:is_zero() -- !!!
   return self.x == 0 and self.y == 0
 end
 
-function Vector:is_equal(v)
+function Vector:is_equal(v) -- !!!
   return self.x == v.x and self.y == v.y
 end
 
-function Vector:assign(v)
+function Vector:assign(v) -- !!!
   self.x = v.x
   self.y = v.y
   return self
 end
 
-function Vector:add(v)
+function Vector:add(v) -- !!!
   self.x = self.x + v.x
   self.y = self.y + v.y
   return self
 end
 
-function Vector:sub(v)
+function Vector:sub(v) -- !!!
   self.x = self.x - v.x
   self.y = self.y - v.y
   return self
 end
 
-function Vector:scale(s)
+function Vector:scale(s) -- !!!
   self.x = self.x * s
   self.y = self.y * s
   return self
@@ -99,20 +99,20 @@ end
 -- | cos(a)  -sin(a) | | x |   | x' |
 -- |                 | |   | = |    |
 -- | sin(a)   cos(a) | | y |   | y' |
-function Vector:rotate(a)
+function Vector:rotate(a) -- !!!
   local cos = math.cos(a)
   local sin = math.sin(a)
   self.x, self.y = cos * self.x - sin * self.y, sin * self.x + cos * self.y
   return self
 end
 
-function Vector:negate()
+function Vector:negate() -- !!!
   self.x, self.y = -self.x, -self.y
   return self
 end
 
 -- COUNTER-CLOCKWISE perpendicular vector (`perp` operator).
-function Vector:perpendiculal()
+function Vector:perpendiculal() -- !!!
   self.x, self.y = -self.y, self.x
   return self
 end
@@ -124,8 +124,7 @@ end
 -- https://en.wikipedia.org/wiki/Vector_projection
 function Vector:project(v)
   local s = self:dot(v) / v:dot(v)
-  self.x, self.y = s * v.x, s * v.y
-  return self
+  return self:scale(s)
 end
 
 --       a dot b
@@ -133,13 +132,13 @@ end
 --       b dot b
 --
 -- https://math.stackexchange.com/questions/2239169/reflecting-a-vector-over-another-line
-function Vector:mirror(v)
+function Vector:mirror(v) -- !!!
   local s = 2 * self:dot(v) / v:dot(v)
   self.x, self.y = self.x - s * v.x, self.y - s * v.y
   return self
 end
 
-function Vector:dot(v)
+function Vector:dot(v) -- !!!
   return (self.x * v.x) + (self.y * v.y)
 end
 
@@ -162,7 +161,7 @@ function Vector:perp_dot(v)
   return (self.x * v.y) - (self.y * v.x)
 end
 
-function Vector:magnitude_squared()
+function Vector:magnitude_squared() -- !!!
   return self:dot(self)
 end
 

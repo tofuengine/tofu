@@ -24,6 +24,7 @@
 
 #include "vector.h"
 
+#include <libs/logs.h>
 #include <libs/luax.h>
 
 #include "udt.h"
@@ -63,7 +64,6 @@ static int vector_new(lua_State *L)
             .x = x,
             .y = y
         };
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font %p allocated w/ sheet %p for default context", self);
 
     luaL_setmetatable(L, META_TABLE);
 
