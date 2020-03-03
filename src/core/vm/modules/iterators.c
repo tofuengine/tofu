@@ -26,6 +26,8 @@
 
 #include <libs/luax.h>
 
+#define META_TABLE  "Tofu_Collections_Iterators_mt"
+
 static const uint8_t _iterators_lua[] = {
 #include "iterators.inc"
 };
@@ -35,5 +37,5 @@ static luaX_Script _iterators_script = { (const char *)_iterators_lua, sizeof(_i
 int iterators_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, &_iterators_script, NULL, NULL, nup, NULL);
+    return luaX_newmodule(L, &_iterators_script, NULL, NULL, nup, META_TABLE);
 }

@@ -34,7 +34,7 @@
 
 #include <string.h>
 
-#define META_TABLE  "Tofu_IO_File_mt"
+#define META_TABLE  "Tofu_Io_File_mt"
 
 static int file_as_string(lua_State *L);
 static int file_as_binary(lua_State *L);

@@ -26,7 +26,7 @@
 
 #include <libs/luax.h>
 
-#define META_TABLE  "Tofu_Collections_Array_mt"
+#define META_TABLE  "Tofu_Collections_Arrays_mt"
 
 static const uint8_t _arrays_lua[] = {
 #include "arrays.inc"
