@@ -24,9 +24,7 @@
 
 #include "class.h"
 
-#include <libs/log.h>
-
-#include "udt.h"
+#include <libs/luax.h>
 
 static const uint8_t _class_lua[] = {
 #include "class.inc"

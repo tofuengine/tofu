@@ -23,13 +23,13 @@ SOFTWARE.
 ]]--
 
 -- Include the modules we'll be using.
+local Class = require("tofu.core").Class
 local System = require("tofu.core").System
 local Input = require("tofu.events").Input
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local XForm = require("tofu.graphics").XForm
 local Font = require("tofu.graphics").Font
-local Class = require("tofu.util").Class
 
 -- The entry point is a class, we are creating with a helper function.
 local Main = Class.define()

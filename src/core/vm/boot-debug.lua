@@ -22,13 +22,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
+local Class = require("tofu.core").Class
 local System = require("tofu.core").System
+local Timer = require("tofu.core").Timer
 local Input = require("tofu.events").Input
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
-local Class = require("tofu.util").Class
-local Timer = require("tofu.util").Timer
 
 local Main = require("main")
 
@@ -73,7 +73,7 @@ function Tofu:__ctor()
         end,
       render = function(me, _)
           local w, _ = me.canvas:size() -- TODO: could precalculate these values.
-          local _, fh = me.font:size()
+          local _, fh = me.font:size("W") -- FIXME: calculate rectangle w/ API.
           local on = (System.time() % 2) == 0
           me.canvas:clear()
           me.canvas:rectangle("line", 0, 0, w, fh * 2 + 8, on and 1 or 0)

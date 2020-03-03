@@ -22,27 +22,27 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
+local Class = require("tofu.core").Class
+local Easing = require("tofu.core").Easing
+local System = require("tofu.core").System
 local Input = require("tofu.events").Input
 local Bank = require("tofu.graphics").Bank
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
-local Class = require("tofu.util").Class
-local System = require("tofu.core").System
 
-import "./lib/algorithms" for Algorithms
-import "./lib/easing" for Easing
-import "./lib/sprite" for Sprite
+local Algorithms = require("lib.algorithms")
+local Sprite = require("lib.sprite")
 
-var CHUNK_SIZE = 1
+local CHUNK_SIZE = 1
 
-var TORQUE = 0.25
-var THROTTLE = 50.0
-var BRAKE = -25.0
+local TORQUE = 0.25
+local THROTTLE = 50.0
+local BRAKE = -25.0
 
-class Game {
+local Game = Class.define()
 
-    test() {
+local function Game:test()
         var L = []
         var f = Fn.new {|a, b|
                 if(a == b) return 0
@@ -59,9 +59,9 @@ class Game {
         Algorithms.qsort(L, 0, L.count - 1)
         System.write(L)
         System.write(Algorithms.sorted(L, f))
-    }
+      end
 
-    construct new() {
+local function Game:_ctor()
         _random = Random.new()
 
         test()
@@ -81,12 +81,12 @@ class Game {
         _forceLife = 0
         _torqueLife = 0
 
-        _tweener = Easing.tweener(Easing.sineOut)
-    }
+        _tweener = Easing.tweener("sine_out")
+end
 
-    // http://www.iforce2d.net/b2dtut/top-down-car
-    // file:///C:/Users/mlizza/Downloads/[Andrew_Kirmse]_Game_Programming_Gems_4(z-lib.org).pdf
-    input() {
+    -- http://www.iforce2d.net/b2dtut/top-down-car
+    -- file:///C:/Users/mlizza/Downloads/[Andrew_Kirmse]_Game_Programming_Gems_4(z-lib.org).pdf
+    local function Game:input()
         if (Input.isKeyPressed(Input.start)) {
             for (i in 1 .. CHUNK_SIZE) {
                 var sprite = Sprite.new(_bank, 0, 13, 1)
@@ -111,9 +111,9 @@ class Game {
         if (Input.isKeyPressed(Input.y)) {
             _running = !_running
         }
-    }
+      end
 
-    update(deltaTime) {
+local function Game:update(delta_time)
         if (_force != 0) {
             _forceLife = Math.min(_forceLife + deltaTime, 1)
         } else {
@@ -131,14 +131,15 @@ class Game {
         }
         _force = 0
         _torque = 0
-    }
+      end
 
-    render(ratio) {
+
+local function Game:render(ratio)
         for (sprite in _sprites) {
             sprite.render()
         }
         _font.write("FPS: %(Environment.fps.round)", 0, 0)
         _font.write("#%(_sprites.count) sprites", Canvas.width, 0, 63, 1.0, "right")
-    }
+      end
 
-}
+return Game

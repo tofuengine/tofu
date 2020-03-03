@@ -24,17 +24,20 @@
 
 #include "modules.h"
 
+#include <core/vm/modules/arrays.h>
 #include <core/vm/modules/bank.h>
 #include <core/vm/modules/canvas.h>
 #include <core/vm/modules/class.h>
 #include <core/vm/modules/display.h>
-#include <core/vm/modules/grid.h>
-#include <core/vm/modules/font.h>
-#include <core/vm/modules/input.h>
 #include <core/vm/modules/file.h>
+#include <core/vm/modules/font.h>
+#include <core/vm/modules/grid.h>
+#include <core/vm/modules/input.h>
+#include <core/vm/modules/iterators.h>
 #include <core/vm/modules/math.h>
 #include <core/vm/modules/system.h>
 #include <core/vm/modules/timer.h>
+#include <core/vm/modules/vector.h>
 #include <core/vm/modules/xform.h>
 #include <libs/log.h>
 #include <libs/luax.h>
@@ -59,7 +62,9 @@ static int create_module(lua_State *L, const luaL_Reg *entries)
 static int collections_loader(lua_State *L)
 {
     static const luaL_Reg classes[] = {
+        { "Arrays", arrays_loader },
         { "Grid", grid_loader },
+        { "Iterators", iterators_loader },
         { NULL, NULL }
     };
     return create_module(L, classes);
@@ -68,8 +73,11 @@ static int collections_loader(lua_State *L)
 static int core_loader(lua_State *L)
 {
     static const luaL_Reg classes[] = {
+        { "Class", class_loader },
         { "Math", math_loader },
         { "System", system_loader },
+        { "Timer", timer_loader },
+        { "Vector", vector_loader },
         { NULL, NULL }
     };
     return create_module(L, classes);
@@ -96,6 +104,7 @@ static int graphics_loader(lua_State *L)
     };
     return create_module(L, classes);
 }
+
 /*
 static int audio_loader(lua_State *L)
 {
@@ -117,16 +126,6 @@ static int io_loader(lua_State *L)
     return create_module(L, classes);
 }
 
-static int util_loader(lua_State *L)
-{
-    static const luaL_Reg classes[] = {
-        { "Class", class_loader },
-        { "Timer", timer_loader },
-        { NULL, NULL }
-    };
-    return create_module(L, classes);
-}
-
 void modules_initialize(lua_State *L, int nup)
 {
     static const luaL_Reg modules[] = {
@@ -138,7 +137,6 @@ void modules_initialize(lua_State *L, int nup)
         { "tofu.audio", audio_loader },
 */
         { "tofu.io", io_loader },
-        { "tofu.util", util_loader },
         { NULL, NULL }
     };
 

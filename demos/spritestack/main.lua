@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.util").Class
+local Class = require("tofu.core").Class
 
 local Game = require("game")
 

@@ -22,38 +22,20 @@
  * SOFTWARE.
  */
 
-#ifndef __FS_AUX_H__
-#define __FS_AUX_H__
+#include "arrays.h"
 
-#include "fs.h"
+#include <libs/luax.h>
 
-typedef enum _File_System_Chunk_Types_t {
-    FILE_SYSTEM_CHUNK_NULL,
-    FILE_SYSTEM_CHUNK_STRING,
-    FILE_SYSTEM_CHUNK_BLOB,
-    FILE_SYSTEM_CHUNK_IMAGE,
-} File_System_Chunk_Types_t;
+#define META_TABLE  "Tofu_Collections_Array_mt"
 
-typedef struct _File_System_Chunk_t { // TODO: rename to `_File_System_Resource_t` and add caching.
-    File_System_Chunk_Types_t type;
-    union {
-      struct {
-        char *chars;
-        size_t length;
-      } string;
-      struct {
-        void *ptr;
-        size_t size;
-      } blob;
-      struct {
-        size_t width, height;
-        void *pixels;
-      } image;
-    } var;
-} File_System_Chunk_t;
+static const uint8_t _arrays_lua[] = {
+#include "arrays.inc"
+};
 
-extern bool FSaux_exists(const File_System_t *file_system, const char *file);
-extern File_System_Chunk_t FSaux_load(const File_System_t *file_system, const char *file, File_System_Chunk_Types_t type);
-extern void FSaux_release(File_System_Chunk_t chunk);
+static luaX_Script _arrays_script = { (const char *)_arrays_lua, sizeof(_arrays_lua), "@arrays.lua" }; // Trace as filename internally.
 
-#endif /* __FS_AUX_H__ */
+int arrays_loader(lua_State *L)
+{
+    int nup = luaX_pushupvalues(L);
+    return luaX_newmodule(L, &_arrays_script, NULL, NULL, nup, META_TABLE);
+}

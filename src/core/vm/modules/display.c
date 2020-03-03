@@ -90,7 +90,7 @@ static int display_palette1(lua_State *L)
 
     Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    GL_Palette_t palette;
+    GL_Palette_t palette = { 0 };
     if (type == LUA_TSTRING) { // Predefined palette!
         const char *id = luaL_checkstring(L, 1);
         const GL_Palette_t *predefined_palette = resources_palettes_find(id);

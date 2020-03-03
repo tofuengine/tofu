@@ -30,6 +30,8 @@
 
 #include "udt.h"
 
+#define META_TABLE  "Tofu_Core_Timer_mt"
+
 static const uint8_t _timer_lua[] = {
 #include "timer.inc"
 };
@@ -39,5 +41,5 @@ static luaX_Script _timer_script = { (const char *)_timer_lua, sizeof(_timer_lua
 int timer_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, &_timer_script, NULL, NULL, nup, NULL);
+    return luaX_newmodule(L, &_timer_script, NULL, NULL, nup, META_TABLE);
 }

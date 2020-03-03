@@ -23,72 +23,79 @@ SOFTWARE.
 ]]--
 
 local Class = require("tofu.core").Class
+local Math = require("tofu.core").Math
 local System = require("tofu.core").System
-local Input = require("tofu.events").Input
 local Bank = require("tofu.graphics").Bank
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
-local File = require("tofu.io").File
 
-local Sprite = require("lib.sprite")
+local EASINGS = {
+    "linear",
+    "quadratic_in", "quadratic_out", "quadratic_in_out",
+    "cubic_in", "cubic_out", "cubic_in_out",
+    "quartic_in", "quartic_out", "quartic_in_out",
+    "quintic_in", "quintic_out", "quintic_in_out",
+    "sine_in", "sine_out", "sine_in_out",
+    "circular_in", "circular_out", "circular_in_out",
+    "exponential_in", "exponential_out", "exponential_in_out",
+    "elastic_in", "elastic_out", "elastic_in_out",
+    "back_in", "back_out", "back_in_out",
+    "bounce_in", "bounce_out", "bounce_in_out",
+  }
 
-local LITTER_SIZE = 64
+local PERIOD = 5.0
 
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette("nes")
-  Display.shader(File.as_string("assets/shaders/water.glsl"))
---Display.send("u_strength", 100)
+  Display.palette("pico-8")
+
+  self.tweeners = {}
+  for _, easing in ipairs(EASINGS) do
+    table.insert(self.tweeners, Math.tweener(easing))
+  end
+
+  self.bank = Bank.new("assets/sheet.png", 8, 8)
+  self.font = Font.default(0, 15)
+  self.wave = Math.wave("triangle", PERIOD)
 
   local canvas = Canvas.default()
-  canvas:transparent({ [0] = false, [13] = true })
-  canvas:background(63)
-
-  self.sprites = {}
-  self.bank = Bank.new("assets/images/diamonds.png", 16, 16)
-  self.font = Font.default(13, 0)
-  self.speed = 1.0
-  self.running = true
+  local width, height = canvas:size()
+  local x0, y0 = width * 0.25, height * 0
+  self.area = { x = x0, y = y0, width = width * 0.50, height = height * 1 }
 end
 
 function Main:input()
-  if Input.is_pressed("start") then
-    for _ = 1, LITTER_SIZE do
-      table.insert(self.sprites, Sprite.new(self.bank, #self.sprites))
-    end
-  elseif Input.is_pressed("left") then
-    self.speed = self.speed * 0.5
-  elseif Input.is_pressed("right") then
-    self.speed = self.speed * 2.0
-  elseif Input.is_pressed("down") then
-    self.speed = 1.0
-  elseif Input.is_pressed("select") then
-    self.sprites = {}
-  elseif Input.is_pressed("y") then
-    self.running = not self.running
-  end
 end
 
-function Main:update(delta_time)
-  if not self.running then
-    return
-  end
-  for _, sprite in pairs(self.sprites) do
-    sprite:update(delta_time * self.speed)
-  end
+function Main:update(_)
+end
+
+function Main:evaluate(t)
+  local y = self.wave(t)
+  y = (y + 0.75) / 1.5
+  return math.min(math.max(y, 0.0), 1.0)
 end
 
 function Main:render(_)
   local canvas = Canvas.default()
-  local width, _ = canvas:size()
   canvas:clear()
-  for _, sprite in pairs(self.sprites) do
-    sprite:render()
+
+  local ratio = self:evaluate(System.time()) -- The waves have values in the range [-1, +1].
+
+  local area = self.area
+  local _, ch = self.bank:size(-1)
+
+  local y = area.y
+  for index, tweener in ipairs(self.tweeners) do
+    local x = area.x + area.width * tweener(ratio)
+    canvas:shift(5, 1 + (index % 15))
+    self.bank:blit(index % 7, x, y)
+    y = y + ch
   end
+
   self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
-  self.font:write(self.font:align(string.format("#%d sprites", #self.sprites), width, 0, "right"))
 end
 
 return Main

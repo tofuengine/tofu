@@ -22,9 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
+local Class = require("tofu.core").Class
+local Timer = require("tofu.core").Timer
 local Canvas = require("tofu.graphics").Canvas
-local Class = require("tofu.util").Class
-local Timer = require("tofu.util").Timer
 
 local Main = Class.define()
 
