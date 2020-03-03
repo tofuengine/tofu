@@ -23,7 +23,7 @@ SOFTWARE.
 ]]--
 
 local Class = require("tofu.core").Class
-local Timer = require("tofu.util").Timer
+local Timer = require("tofu.core").Timer
 
 local Main = require("main")
 

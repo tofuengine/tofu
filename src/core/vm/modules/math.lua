@@ -22,16 +22,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Fitting = {}
+local Math = {}
 
 -- TODO: add these? https://github.com/MarcoLizza/love-workouts/tree/master/boids/lib/math
 -- https://github.com/MarcoLizza/love-workouts/tree/master/anaglyph-3d/lib/math
 
-function Fitting.lerp(a, b, r)
+function Math.lerp(a, b, r)
   if type(a) == 'table' then
     local v = {}
     for i = 1, #a do
-      table.insert(v, Fitting.lerp(a[i], b[i], r))
+      table.insert(v, Math.lerp(a[i], b[i], r))
     end
     return v
   else
@@ -42,12 +42,8 @@ function Fitting.lerp(a, b, r)
   end
 end
 
-function Fitting.linear()
+function Math.fitting()
   return nil
 end
 
-function Fitting.spline()
-  return nil
-end
-
-return Fitting
+return Math

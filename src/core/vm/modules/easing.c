@@ -30,7 +30,7 @@
 
 #include "udt.h"
 
-#define META_TABLE  "Tofu_Util_Easing_mt"
+#define META_TABLE  "Tofu_Core_Easing_mt"
 
 static int easing_tweener(lua_State *L);
 

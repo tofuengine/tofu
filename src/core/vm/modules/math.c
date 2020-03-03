@@ -22,29 +22,91 @@
  * SOFTWARE.
  */
 
-#include "wave.h"
+#include "math.h"
 
 #include <config.h>
 #include <libs/log.h>
+#include <libs/sincos.h>
 #include <libs/wave.h>
 
 #include <math.h>
 
 #include "udt.h"
 
-#define META_TABLE  "Tofu_Math_Wave_mt"
+#define META_TABLE  "Tofu_Core_Math_mt"
 
-static int wave_new(lua_State *L);
+static int math_sincos(lua_State *L);
+static int math_angle_to_rotation(lua_State *L);
+static int math_rotation_to_angle(lua_State *L);
+static int math_wave(lua_State *L);
 
-static const struct luaL_Reg _wave_functions[] = {
-    { "new", wave_new },
+static const struct luaL_Reg _math_functions[] = {
+    { "sincos", math_sincos },
+    { "angle_to_rotation", math_angle_to_rotation },
+    { "rotation_to_angle", math_rotation_to_angle },
+    { "wave", math_wave },
     { NULL, NULL }
 };
 
-int wave_loader(lua_State *L)
+static const luaX_Const _math_constants[] = {
+    { "SINCOS_PERIOD", LUA_CT_INTEGER, { .i = SINCOS_PERIOD } },
+    { NULL }
+};
+
+static const uint8_t _math_lua[] = {
+#include "math.inc"
+};
+
+static luaX_Script _math_script = { (const char *)_math_lua, sizeof(_math_lua), "@math.lua" }; // Trace as filename internally.
+
+int math_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, NULL, _wave_functions, NULL, nup, META_TABLE);
+    return luaX_newmodule(L, &_math_script, _math_functions, _math_constants, nup, META_TABLE); // FIXME: metatable should be NULL it not a class?
+}
+
+static int math_sincos(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    int rotation = LUAX_INTEGER(L, 1);
+
+    float s, c;
+    fsincos(rotation, &s, &c);
+
+    lua_pushnumber(L, s);
+    lua_pushnumber(L, c);
+
+    return 2;
+}
+
+static int math_angle_to_rotation(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    float angle = LUAX_NUMBER(L, 1);
+
+    int rotation = fator(angle);
+
+    lua_pushinteger(L, rotation);
+
+    return 1;
+}
+
+static int math_rotation_to_angle(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    int rotation = LUAX_INTEGER(L, 1);
+
+    float angle = frtoa(rotation);
+
+    lua_pushnumber(L, angle);
+
+    return 1;
 }
 
 static int _vanilla(lua_State *L)
@@ -82,7 +144,7 @@ static int _normalize(lua_State *L)
     return 1;
 }
 
-static int wave_new1(lua_State *L)
+static int math_wave1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
@@ -100,7 +162,7 @@ static int wave_new1(lua_State *L)
     return 1;
 }
 
-static int wave_new2_3(lua_State *L)
+static int math_wave2_3(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
@@ -124,11 +186,11 @@ static int wave_new2_3(lua_State *L)
     return 1;
 }
 
-static int wave_new(lua_State *L)
+static int math_wave(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, wave_new1)
-        LUAX_OVERLOAD_ARITY(2, wave_new2_3)
-        LUAX_OVERLOAD_ARITY(3, wave_new2_3)
+        LUAX_OVERLOAD_ARITY(1, math_wave1)
+        LUAX_OVERLOAD_ARITY(2, math_wave2_3)
+        LUAX_OVERLOAD_ARITY(3, math_wave2_3)
     LUAX_OVERLOAD_END
 }

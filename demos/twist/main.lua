@@ -62,7 +62,7 @@ function Main:render(_)
 
   for row = 1, self.rows do
 --    local cell_id = math.tointeger((math.sin(time + row * 0.5) + 1) * 0.5 * 9)
-    local cell_id = math.tointeger(time + row * 0.25) % 9
+    local cell_id = ((math.sin(time * 0.5 + row * 0.75) + 1) * 0.5) * 9
     self.bank:blit(cell_id, x, y)
     y = y + ch
   end

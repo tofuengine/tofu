@@ -23,13 +23,13 @@ SOFTWARE.
 ]]--
 
 local Class = require("tofu.core").Class
+local Math = require("tofu.core").Math
 local System = require("tofu.core").System
 local Input = require("tofu.events").Input
 local Bank = require("tofu.graphics").Bank
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
-local Wave = require("tofu.math").Wave
 
 local Main = Class.define()
 
@@ -48,7 +48,7 @@ function Main:__ctor()
 
   self.bank = Bank.new("assets/sheet.png", 8, 8)
   self.font = Font.default(0, 15)
-  self.wave = Wave.new("triangle", 10.0, 128.0)
+  self.wave = Math.wave("triangle", 10.0, 128.0)
   self.x_size = width / AMOUNT
   self.y_size = height / AMOUNT
   self.palette = 1

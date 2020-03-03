@@ -23,8 +23,8 @@ SOFTWARE.
 ]]--
 
 local Class = require("tofu.core").Class
+local Timer = require("tofu.core").Timer
 local Canvas = require("tofu.graphics").Canvas
-local Timer = require("tofu.util").Timer
 
 local Main = Class.define()
 

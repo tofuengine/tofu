@@ -23,12 +23,12 @@ SOFTWARE.
 ]]--
 
 local Class = require("tofu.core").Class
+local Math = require("tofu.core").Math
 local System = require("tofu.core").System
 local Input = require("tofu.events").Input
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
-local Fitting = require("tofu.math").Fitting
 
 local SIZE = 4
 local RADIUS = SIZE * 0.5
@@ -74,7 +74,7 @@ function Main:render(_)
     local delta_x = coords[1].x < coords[2].x and 1 or -1
     for px = coords[1].x, coords[2].x, delta_x do
       local r = (px - coords[1].x) / (coords[2].x - coords[1].x)
-      local v = Fitting.lerp(coords[1].v, coords[2].v, r)
+      local v = Math.lerp(coords[1].v, coords[2].v, r)
       local index = Display.color_to_index(v, v, v)
       canvas:point(px, py, index)
     end

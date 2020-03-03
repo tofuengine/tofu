@@ -23,13 +23,13 @@ SOFTWARE.
 ]]--
 
 local Class = require("tofu.core").Class
+local Easing = require("tofu.core").Easing
+local Math = require("tofu.core").Math
 local System = require("tofu.core").System
 local Bank = require("tofu.graphics").Bank
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
-local Easing = require("tofu.math").Easing
-local Wave = require("tofu.math").Wave
 
 local EASINGS = {
     "linear",
@@ -59,7 +59,7 @@ function Main:__ctor()
 
   self.bank = Bank.new("assets/sheet.png", 8, 8)
   self.font = Font.default(0, 15)
-  self.wave = Wave.new("triangle", PERIOD)
+  self.wave = Math.wave("triangle", PERIOD)
 
   local canvas = Canvas.default()
   local width, height = canvas:size()

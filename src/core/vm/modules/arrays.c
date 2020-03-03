@@ -26,6 +26,8 @@
 
 #include <libs/luax.h>
 
+#define META_TABLE  "Tofu_Collections_Array_mt"
+
 static const uint8_t _arrays_lua[] = {
 #include "arrays.inc"
 };
@@ -35,5 +37,5 @@ static luaX_Script _arrays_script = { (const char *)_arrays_lua, sizeof(_arrays_
 int arrays_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, &_arrays_script, NULL, NULL, nup, NULL);
+    return luaX_newmodule(L, &_arrays_script, NULL, NULL, nup, META_TABLE);
 }
