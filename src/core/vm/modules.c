@@ -36,9 +36,9 @@
 #include <core/vm/modules/grid.h>
 #include <core/vm/modules/input.h>
 #include <core/vm/modules/iterators.h>
-#include <core/vm/modules/polar.h>
 #include <core/vm/modules/system.h>
 #include <core/vm/modules/timer.h>
+#include <core/vm/modules/trig.h>
 #include <core/vm/modules/vector.h>
 #include <core/vm/modules/wave.h>
 #include <core/vm/modules/xform.h>
@@ -131,7 +131,7 @@ static int math_loader(lua_State *L)
     static const luaL_Reg classes[] = {
         { "Easing", easing_loader },
         { "Fitting", fitting_loader },
-        { "Polar", polar_loader },
+        { "Trig", trig_loader },
         { "Vector", vector_loader },
         { "Wave", wave_loader },
         { NULL, NULL }

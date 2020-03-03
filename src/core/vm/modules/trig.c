@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-#include "polar.h"
+#include "trig.h"
 
 #include <config.h>
 #include <libs/sincos.h>
@@ -32,31 +32,31 @@
 
 #include "udt.h"
 
-#define META_TABLE  "Tofu_Math_Polar_mt"
+#define META_TABLE  "Tofu_Math_Trig_mt"
 
-static int polar_sincos(lua_State *L);
-static int polar_angle_to_rotation(lua_State *L);
-static int polar_rotation_to_angle(lua_State *L);
+static int trig_sincos(lua_State *L);
+static int trig_angle_to_rotation(lua_State *L);
+static int trig_rotation_to_angle(lua_State *L);
 
-static const struct luaL_Reg _polar_functions[] = {
-    { "sincos", polar_sincos },
-    { "angle_to_rotation", polar_angle_to_rotation },
-    { "rotation_to_angle", polar_rotation_to_angle },
+static const struct luaL_Reg _trig_functions[] = {
+    { "sincos", trig_sincos },
+    { "angle_to_rotation", trig_angle_to_rotation },
+    { "rotation_to_angle", trig_rotation_to_angle },
     { NULL, NULL }
 };
 
-static const luaX_Const _polar_constants[] = {
+static const luaX_Const _trig_constants[] = {
     { "SINCOS_PERIOD", LUA_CT_INTEGER, { .i = SINCOS_PERIOD } },
     { NULL }
 };
 
-int polar_loader(lua_State *L)
+int trig_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, NULL, _polar_functions, _polar_constants, nup, META_TABLE);
+    return luaX_newmodule(L, NULL, _trig_functions, _trig_constants, nup, META_TABLE);
 }
 
-static int polar_sincos(lua_State *L)
+static int trig_sincos(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -72,7 +72,7 @@ static int polar_sincos(lua_State *L)
     return 2;
 }
 
-static int polar_angle_to_rotation(lua_State *L)
+static int trig_angle_to_rotation(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -86,7 +86,7 @@ static int polar_angle_to_rotation(lua_State *L)
     return 1;
 }
 
-static int polar_rotation_to_angle(lua_State *L)
+static int trig_rotation_to_angle(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)

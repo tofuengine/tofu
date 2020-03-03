@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_POLAR_H__
-#define __MODULES_POLAR_H__
+#ifndef __MODULES_TRIG_H__
+#define __MODULES_TRIG_H__
 
 #include <lua/lua.h>
 
-extern int polar_loader(lua_State *L);
+extern int trig_loader(lua_State *L);
 
-#endif  /* __MODULES_POLAR_H__ */
+#endif  /* __MODULES_TRIG_H__ */
