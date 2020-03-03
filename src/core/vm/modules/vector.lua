@@ -22,14 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core").Class
+local Vector = {}
 
-local Vector = Class.define()
-
-function Vector:__ctor(x, y)
-  self.x = x or 0
-  self.y = y or 0
-end
+-- Note: the `__index` metatable reference is set by the module loader.
+-- Font.__index = Font
 
 function Vector:clone()
   return Vector.new(self.x, self.y)
