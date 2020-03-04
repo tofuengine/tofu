@@ -24,11 +24,11 @@ SOFTWARE.
 
 local Class = require("tofu.core").Class
 local System = require("tofu.core").System
-local Timer = require("tofu.core").Timer
 local Input = require("tofu.events").Input
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
+local Timer = require("tofu.util").Timer
 
 local Main = require("main")
 

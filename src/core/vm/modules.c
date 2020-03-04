@@ -49,12 +49,13 @@
 static int create_module(lua_State *L, const luaL_Reg *entries)
 {
     lua_newtable(L);
-    for (int i = 0; entries[i].func; ++i) {
-        if (entries[i].func(L) != 1) {
-            Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize class `%s`", entries[i].name);
+    for (const luaL_Reg *entry = entries; entry->func; ++entry) {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "initializing class `%s`", entry->name);
+        if (entry->func(L) != 1) {
+            Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize class `%s`", entry->name);
             return 0;
         }
-        lua_setfield(L, -2, entries[i].name);
+        lua_setfield(L, -2, entry->name);
     }
     return 1;
 }
@@ -159,6 +160,7 @@ void modules_initialize(lua_State *L, int nup)
     lua_pop(L, nup);
 #else
     for (const luaL_Reg *module = modules; module->func; ++module) {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "preloading module `%s`", module->name);
         luaX_pushvalues(L, nup);
         luaX_preload(L, module->name, module->func, nup);
     }
