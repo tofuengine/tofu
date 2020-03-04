@@ -24,6 +24,8 @@ SOFTWARE.
 
 local Pool = {}
 
+-- TODO: rewrite, the pool is the one to be returned, not to Timer!
+
 Pool.__index = Pool
 
 function Pool.new()
