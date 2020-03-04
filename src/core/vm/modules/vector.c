@@ -24,8 +24,8 @@
 
 #include "vector.h"
 
-#include <libs/logs.h>
-#include <libs/luax.h>
+#include <libs/log.h>
+#include <libs/luax.h> // FIXME: remove everywhere in modules!
 
 #include "udt.h"
 
