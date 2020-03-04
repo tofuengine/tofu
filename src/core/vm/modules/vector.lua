@@ -22,10 +22,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Vector = {}
+local Class = require("tofu.core").Class
 
--- Note: the `__index` metatable reference is set by the module loader.
--- Font.__index = Font
+local Vector = Class.define() -- FIXME: add this inner dependecy? I don like to depend on the order of init of the modules.
+
+function Vector:__ctor(x, y)  -- !!!
+  self.x = x or 0
+  self.y = y or 0
+end
 
 function Vector:clone()  -- !!!
   return Vector.new(self.x, self.y)

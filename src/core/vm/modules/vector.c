@@ -29,15 +29,6 @@
 
 #include "udt.h"
 
-#define META_TABLE  "Tofu_Core_Vector_mt"
-
-static int vector_new(lua_State *L);
-
-static const struct luaL_Reg _vector_functions[] = {
-    { "new", vector_new },
-    { NULL, NULL }
-};
-
 static const uint8_t _vector_lua[] = {
 #include "vector.inc"
 };
@@ -47,25 +38,5 @@ static luaX_Script _vector_script = { (const char *)_vector_lua, sizeof(_vector_
 int vector_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, &_vector_script, _vector_functions, NULL, nup, META_TABLE);
-}
-
-static int vector_new(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    float x = = (float)LUAX_OPTIONAL_NUMBER(L, 1, 0.0f);
-    float y = = (float)LUAX_OPTIONAL_NUMBER(L, 2, 0.0f);
-
-    Vector_Class_t *self = (Vector_Class_t *)lua_newuserdata(L, sizeof(Vector_Class_t));
-    *self = (Vector_Class_t){
-            .x = x,
-            .y = y
-        };
-
-    luaL_setmetatable(L, META_TABLE);
-
-    return 1;
+    return luaX_newmodule(L, &_vector_script, NULL, NULL, nup, NULL);
 }
