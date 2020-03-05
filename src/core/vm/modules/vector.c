@@ -24,10 +24,7 @@
 
 #include "vector.h"
 
-#include <libs/log.h>
-#include <libs/luax.h> // FIXME: remove everywhere in modules!
-
-#include "udt.h"
+#include <libs/luax.h>
 
 static const uint8_t _vector_lua[] = {
 #include "vector.inc"

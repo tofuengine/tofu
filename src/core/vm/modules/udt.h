@@ -89,8 +89,4 @@ typedef struct _Grid_Class_t {
     size_t data_size;
 } Grid_Class_t;
 
-typedef struct _Vector_Class_t {
-    float x, y;
-} Vector_Class_t;
-
 #endif  /* __MODULES_UDT_H__ */

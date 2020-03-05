@@ -34,8 +34,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define META_TABLE  "Tofu_Events_Input_mt"
-
 static int input_is_down(lua_State *L);
 static int input_is_up(lua_State *L);
 static int input_is_pressed(lua_State *L);
@@ -62,7 +60,7 @@ static const struct luaL_Reg _input_functions[] = {
 int input_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, NULL, _input_functions, NULL, nup, META_TABLE);
+    return luaX_newmodule(L, NULL, _input_functions, NULL, nup, NULL);
 }
 
 static const Map_Entry_t _buttons[Input_Buttons_t_CountOf] = { // Need to be sorted for `bsearch()`

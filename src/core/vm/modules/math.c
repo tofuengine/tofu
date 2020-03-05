@@ -34,8 +34,6 @@
 
 #include "udt.h"
 
-#define META_TABLE  "Tofu_Core_Math_mt"
-
 static int math_sincos(lua_State *L);
 static int math_angle_to_rotation(lua_State *L);
 static int math_rotation_to_angle(lua_State *L);
@@ -65,7 +63,7 @@ static luaX_Script _math_script = { (const char *)_math_lua, sizeof(_math_lua), 
 int math_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, &_math_script, _math_functions, _math_constants, nup, META_TABLE); // FIXME: metatable should be NULL it not a class?
+    return luaX_newmodule(L, &_math_script, _math_functions, _math_constants, nup, NULL);
 }
 
 static int math_sincos(lua_State *L)

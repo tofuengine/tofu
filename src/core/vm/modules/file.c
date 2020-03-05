@@ -34,8 +34,6 @@
 
 #include <string.h>
 
-#define META_TABLE  "Tofu_Io_File_mt"
-
 static int file_as_string(lua_State *L);
 static int file_as_binary(lua_State *L);
 
@@ -48,7 +46,7 @@ static const struct luaL_Reg _file_functions[] = {
 int file_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, NULL, _file_functions, NULL, nup, META_TABLE);
+    return luaX_newmodule(L, NULL, _file_functions, NULL, nup, NULL);
 }
 
 static int file_as_string(lua_State *L)
