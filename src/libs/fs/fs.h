@@ -55,55 +55,25 @@
 #define FILE_SYSTEM_PATH_SEPARATOR    '/'
 #define FILE_SYSTEM_PATH_SEPARATOR_SZ "/"
 
-typedef struct _File_System_Callbacks_t {
-   void * (*init)  (const char *path);
-   void   (*deinit)(void *context);
-   bool   (*exists)  (const void *context, const char *file);
-   void * (*open) (const void *context, const char *file, size_t *size_in_bytes);
-   size_t (*read) (void *handle, void *buffer, size_t bytes_requested);
-   void   (*skip) (void *handle, int offset);
-   bool   (*eof)  (void *handle);
-   void   (*close)(void *handle);
-} File_System_Callbacks_t;
-
-typedef struct _File_System_Mount_t {
-    const File_System_Callbacks_t *callbacks;
-    void *context;
-} File_System_Mount_t;
+typedef void File_System_Mount_t;
+typedef void File_System_Handle_t;
 
 typedef struct _File_System_t {
-    File_System_Mount_t *mount_points;
+    File_System_Mount_t **mounts;
 } File_System_t;
-
-typedef enum _File_System_Chunk_Types_t {
-    FILE_SYSTEM_CHUNK_NULL,
-    FILE_SYSTEM_CHUNK_STRING,
-    FILE_SYSTEM_CHUNK_BLOB,
-    FILE_SYSTEM_CHUNK_IMAGE,
-} File_System_Chunk_Types_t;
-
-typedef struct _File_System_Chunk_t {
-    File_System_Chunk_Types_t type;
-    union {
-      struct {
-        char *chars;
-        size_t length;
-      } string;
-      struct {
-        void *ptr;
-        size_t size;
-      } blob;
-      struct {
-        size_t width, height;
-        void *pixels;
-      } image;
-    } var;
-} File_System_Chunk_t;
 
 extern bool FS_initialize(File_System_t *file_system, const char *base_path);
 extern void FS_terminate(File_System_t *file_system);
 
-extern File_System_Chunk_t FS_load(const File_System_t *file_system, const char *file, File_System_Chunk_Types_t type);
-extern void FS_release(File_System_Chunk_t chunk);
+extern bool FS_attach(File_System_t *file_system, const char *path);
+extern File_System_Mount_t *FS_locate(const File_System_t *file_system, const char *file);
+
+extern File_System_Handle_t *FS_open(File_System_Mount_t *mount, const char *file);
+
+extern void FS_close(File_System_Handle_t *handle); // TODO: convert these to macros?
+extern size_t FS_size(File_System_Handle_t *handle);
+extern size_t FS_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
+extern void FS_skip(File_System_Handle_t *handle, int offset);
+extern bool FS_eof(File_System_Handle_t *handle);
 
 #endif /* __FS_H__ */

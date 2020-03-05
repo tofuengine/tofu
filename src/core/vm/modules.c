@@ -24,17 +24,21 @@
 
 #include "modules.h"
 
+#include <core/vm/modules/arrays.h>
 #include <core/vm/modules/bank.h>
 #include <core/vm/modules/canvas.h>
 #include <core/vm/modules/class.h>
-#include <core/vm/modules/grid.h>
-#include <core/vm/modules/font.h>
-#include <core/vm/modules/input.h>
+#include <core/vm/modules/display.h>
 #include <core/vm/modules/file.h>
+#include <core/vm/modules/font.h>
+#include <core/vm/modules/grid.h>
+#include <core/vm/modules/input.h>
+#include <core/vm/modules/iterators.h>
 #include <core/vm/modules/math.h>
 #include <core/vm/modules/system.h>
-#include <core/vm/modules/surface.h>
-#include <core/vm/modules/timer.h>
+#include <core/vm/modules/timers.h>
+#include <core/vm/modules/vector.h>
+#include <core/vm/modules/xform.h>
 #include <libs/log.h>
 #include <libs/luax.h>
 
@@ -45,28 +49,21 @@
 static int create_module(lua_State *L, const luaL_Reg *entries)
 {
     lua_newtable(L);
-    for (int i = 0; entries[i].func; ++i) {
-        if (entries[i].func(L) != 1) {
-            Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize class `%s`", entries[i].name);
+    for (const luaL_Reg *entry = entries; entry->func; ++entry) {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "initializing class `%s`", entry->name);
+        if (entry->func(L) != 1) {
+            Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize class `%s`", entry->name);
             return 0;
         }
-        lua_setfield(L, -2, entries[i].name);
+        lua_setfield(L, -2, entry->name);
     }
     return 1;
 }
 
-static int collections_loader(lua_State *L)
+static int core_loader(lua_State *L) // java.lang
 {
     static const luaL_Reg classes[] = {
-        { "Grid", grid_loader },
-        { NULL, NULL }
-    };
-    return create_module(L, classes);
-}
-
-static int core_loader(lua_State *L)
-{
-    static const luaL_Reg classes[] = {
+        { "Class", class_loader },
         { "Math", math_loader },
         { "System", system_loader },
         { NULL, NULL }
@@ -88,17 +85,20 @@ static int graphics_loader(lua_State *L)
     static const luaL_Reg classes[] = {
         { "Bank", bank_loader },
         { "Canvas", canvas_loader },
+        { "Display", display_loader },
         { "Font", font_loader },
-        { "Surface", surface_loader },
+        { "XForm", xform_loader },
         { NULL, NULL }
     };
     return create_module(L, classes);
 }
+
 /*
 static int audio_loader(lua_State *L)
 {
     static const luaL_Reg classes[] = {
         { "Sound", sound_loader },
+        { "Speakers", speakers_loader },
         { "Wave", wave_loader },
         { NULL, NULL }
     };
@@ -117,8 +117,10 @@ static int io_loader(lua_State *L)
 static int util_loader(lua_State *L)
 {
     static const luaL_Reg classes[] = {
-        { "Class", class_loader },
-        { "Timer", timer_loader },
+        { "Arrays", arrays_loader },
+        { "Grid", grid_loader },
+        { "Iterators", iterators_loader },
+        { "Vector", vector_loader },
         { NULL, NULL }
     };
     return create_module(L, classes);
@@ -127,7 +129,6 @@ static int util_loader(lua_State *L)
 void modules_initialize(lua_State *L, int nup)
 {
     static const luaL_Reg modules[] = {
-        { "tofu.collections", collections_loader },
         { "tofu.core", core_loader },
         { "tofu.events", events_loader },
         { "tofu.graphics", graphics_loader },
@@ -135,6 +136,7 @@ void modules_initialize(lua_State *L, int nup)
         { "tofu.audio", audio_loader },
 */
         { "tofu.io", io_loader },
+        { "tofu.timers", timers_loader },
         { "tofu.util", util_loader },
         { NULL, NULL }
     };
@@ -149,6 +151,7 @@ void modules_initialize(lua_State *L, int nup)
     lua_pop(L, nup);
 #else
     for (const luaL_Reg *module = modules; module->func; ++module) {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "preloading module `%s`", module->name);
         luaX_pushvalues(L, nup);
         luaX_preload(L, module->name, module->func, nup);
     }

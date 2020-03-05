@@ -22,12 +22,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
+local Class = require("tofu.core").Class
+local System = require("tofu.core").System
 local Input = require("tofu.events").Input
 local Bank = require("tofu.graphics").Bank
 local Canvas = require("tofu.graphics").Canvas
+local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
-local Class = require("tofu.util").Class
-local System = require("tofu.core").System
 
 local PALETTE
 local STEPS
@@ -78,23 +79,25 @@ end
 local Main = Class.define()
 
 function Main:__ctor()
-  Canvas.palette("pico-8")
+  Display.palette("pico-8")
 
-  PALETTE = Canvas.palette()
+  PALETTE = Display.palette()
   STEPS = #PALETTE
   LEVELS = STEPS
 
+  local canvas = Canvas.default()
+  local width, height = canvas:size()
   self.lut = build_table(PALETTE, LEVELS, TARGET)
 
   self.bank = Bank.new("assets/sheet.png", 8, 8)
   self.font = Font.default(0, 15)
-  self.width = Canvas.width() / STEPS
-  self.height = Canvas.height() / STEPS
+  self.width = width / STEPS
+  self.height = height / STEPS
   self.mode = 0
 end
 
 function Main:input()
-  if Input.is_pressed(Input.Y) then
+  if Input.is_pressed("y") then
     self.mode = (self.mode + 1) % 10
   end
 end
@@ -103,39 +106,41 @@ function Main:update(_)
 end
 
 function Main:render(_)
-  Canvas.clear()
+  local canvas = Canvas.default()
+  local width, height = canvas:size()
+  canvas:clear()
 
   for i = 0, STEPS - 1 do
     local y = self.height * i
     for j = 0, STEPS - 1 do
       local x = self.width * j
-      Canvas.rectangle("fill", x, y, self.width, self.height, i + j)
+      canvas:rectangle("fill", x, y, self.width, self.height, (i + j) % STEPS)
     end
   end
 
-  Canvas.push()
-  Canvas.transparent({ [0] = false })
+  canvas:push()
+  canvas:transparent({ [0] = false })
   if self.mode == 0 then
     for i = 0, STEPS - 1 do
       local y = self.height * i
-      Canvas.shift(self.lut[i])
-      Canvas.process(0, y, Canvas.width(), self.height)
+      canvas:shift(self.lut[i])
+      canvas:process(0, y, width, self.height)
     end
   elseif self.mode == 1 then
     for i = 0, STEPS - 1 do
-      Canvas.shift(self.lut[i])
-      Canvas.process(i, 0, 1, Canvas.height())
-      Canvas.process(Canvas.width() - 1 - i, 0, 1, Canvas.height())
+      canvas:shift(self.lut[i])
+      canvas:process(i, 0, 1, height)
+      canvas:process(width - 1 - i, 0, 1, height)
     end
   else
     local t = System.time()
     local index = math.tointeger((math.sin(t * 2.5) + 1) * 0.5 * (STEPS - 1))
-    Canvas.shift(self.lut[index])
-    Canvas.process(0, 0, Canvas.width(), Canvas.height() / 2)
+    canvas:shift(self.lut[index])
+    canvas:process(0, 0, width, height / 2)
   end
-  Canvas.pop()
+  canvas:pop()
 
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
+  self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
 end
 
 return Main

@@ -34,8 +34,6 @@
 
 #define LOG_CONTEXT "system"
 
-#define SYSTEM_MT       "Tofu_System_mt"
-
 static int system_time(lua_State *L);
 static int system_fps(lua_State *L);
 static int system_quit(lua_State *L);
@@ -55,22 +53,18 @@ static const struct luaL_Reg _system_functions[] = {
     { NULL, NULL }
 };
 
-static const luaX_Const _system_constants[] = {
-    { NULL }
-};
-
 int system_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, NULL, _system_functions, _system_constants, nup, SYSTEM_MT);
+    return luaX_newmodule(L, NULL, _system_functions, NULL, nup, NULL);
 }
 
 static int system_time(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 0)
+    LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
 
-    const Environment_t *environment = (const Environment_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
+    const Environment_t *environment = (const Environment_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
 
     lua_pushnumber(L, environment->time);
 
@@ -79,10 +73,10 @@ static int system_time(lua_State *L)
 
 static int system_fps(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 0)
+    LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
 
-    const Environment_t *environment = (const Environment_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
+    const Environment_t *environment = (const Environment_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
 
     lua_pushnumber(L, environment->fps);
 
@@ -91,10 +85,10 @@ static int system_fps(lua_State *L)
 
 static int system_quit(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 0)
+    LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
 
-    Environment_t *environment = (Environment_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
+    Environment_t *environment = (Environment_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
 
     environment->quit = true;
 

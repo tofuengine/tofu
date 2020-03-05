@@ -22,12 +22,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Grid = require("tofu.collections").Grid
+local Class = require("tofu.core").Class
+local System = require("tofu.core").System
 local Canvas = require("tofu.graphics").Canvas
+local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
 local Input = require("tofu.events").Input
-local Class = require("tofu.util").Class
-local System = require("tofu.core").System
+local Grid = require("tofu.util").Grid
 
 local INITIAL_LENGHT = 5
 local SPEED_RATIO = 5
@@ -69,33 +70,25 @@ local MAP =  "************************************************"
 
 local Main = Class.define()
 
-local function dump(t, spaces) -- TODO: add dump function to core? util?
-  spaces = spaces or ""
-  for k, v in pairs(t) do
-    print(spaces .. k .. " " .. type(v) .. " " .. tostring(v))
-    if type(v) == "table" then
-      if (k ~= "__index") then
-        dump(v, spaces .. " ")
-      end
-    end
-  end
-end
-
 function Main:__ctor()
-  Canvas.palette("gameboy")
+  Display.palette("gameboy")
+
+  local canvas = Canvas.default()
+  local width, height = canvas:size()
 
   self.font = Font.default(0, 3)
-  self.grid = Grid.new(math.tointeger(Canvas.width() / CELL_SIZE), math.tointeger(Canvas.height() / CELL_SIZE), 0)
-dump(self)
+  self.grid = Grid.new(math.tointeger(width / CELL_SIZE), math.tointeger(height / CELL_SIZE), 0)
+  Class.dump(self)
 
   self:reset()
 end
 
 function Main:draw_map(map)
+  local gw, _ = self.grid:size()
   for i = 1, map:len() do
     local c = map:byte(i)
-    local column = (i - 1) % self.grid:width()
-    local row = (i - 1) / self.grid:width()
+    local column = (i - 1) % gw
+    local row = (i - 1) / gw
     local value = 0
     if c == 42 then
       value = -1
@@ -110,7 +103,8 @@ function Main:reset()
 
   self:draw_map(MAP)
 
-  self.position = { x = self.grid:width() / 2, y = self.grid:height() / 2 }
+  local gw, gh = self.grid:size()
+  self.position = { x = gw / 2, y = gh / 2 }
   self.accumulator = 0.0
   for i = 1, self.length do
     self.grid:poke(self.position.x - self.length + i, self.position.y, i * LIFE)
@@ -122,7 +116,7 @@ end
 
 function Main:input()
   if self.state == "game-over" then
-    if Input.is_pressed(Input.START) then
+    if Input.is_pressed("start") then
       self:reset()
     end
     return
@@ -131,22 +125,22 @@ function Main:input()
   if not self.can_move then
     return
   end
-  if Input.is_pressed(Input.UP) then
+  if Input.is_pressed("up") then
     if self.direction ~= "down" then
       self.direction = "up"
       self.can_move = false
     end
-  elseif Input.is_pressed(Input.DOWN) then
+  elseif Input.is_pressed("down") then
     if self.direction ~= "up" then
       self.direction = "down"
       self.can_move = false
     end
-  elseif Input.is_pressed(Input.LEFT) then
+  elseif Input.is_pressed("left") then
     if self.direction ~= "right" then
       self.direction = "left"
       self.can_move = false
     end
-  elseif Input.is_pressed(Input.RIGHT) then
+  elseif Input.is_pressed("right") then
     if self.direction ~= "left" then
       self.direction = "right"
       self.can_move = false
@@ -155,9 +149,10 @@ function Main:input()
 end
 
 function Main:generate_food()
+  local gw, gh = self.grid:size()
   while true do
-    local column = math.random(0, self.grid:width() - 1)
-    local row = math.random(0, self.grid:height() - 1)
+    local column = math.random(0, gw - 1)
+    local row = math.random(0, gh - 1)
     local value = self.grid:peek(column, row)
     if value == 0 then
       self.grid:poke(column, row, -2)
@@ -187,8 +182,9 @@ function Main:update(delta_time)
 
     self.accumulator = self.accumulator - LIFE
 
-    self.position.x = (self.position.x + DELTA_X[self.direction]) % self.grid:width()
-    self.position.y = (self.position.y + DELTA_Y[self.direction]) % self.grid:height()
+    local gw, gh = self.grid:size()
+    self.position.x = (self.position.x + DELTA_X[self.direction]) % gw
+    self.position.y = (self.position.y + DELTA_Y[self.direction]) % gh
 
     local value = self.grid:peek(self.position.x, self.position.y)
 
@@ -204,21 +200,22 @@ function Main:update(delta_time)
 end
 
 function Main:render(_)
-  Canvas.clear()
+  local canvas = Canvas.default()
+  canvas:clear()
 
   self.grid:scan(function(column, row, value)
       local x = column * CELL_SIZE
       local y = row * CELL_SIZE
       if value == -2 then
-        Canvas.rectangle("fill", x, y, CELL_SIZE, CELL_SIZE, 3)
+        canvas:rectangle("fill", x, y, CELL_SIZE, CELL_SIZE, 3)
       elseif value == -1 then
-        Canvas.rectangle("fill", x, y, CELL_SIZE, CELL_SIZE, 1)
+        canvas:rectangle("fill", x, y, CELL_SIZE, CELL_SIZE, 1)
       elseif value ~= 0 then
-        Canvas.rectangle("fill", x, y, CELL_SIZE, CELL_SIZE, 2)
+        canvas:rectangle("fill", x, y, CELL_SIZE, CELL_SIZE, 2)
       end
     end)
 
-    self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
+    self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
 end
 
 return Main

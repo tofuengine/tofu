@@ -53,4 +53,16 @@ function Class.implement(proto, model)
   end
 end
 
+function Class.dump(t, spaces)
+  spaces = spaces or ""
+  for k, v in pairs(t) do
+    print(spaces .. k .. " " .. type(v) .. " " .. tostring(v))
+    if type(v) == "table" then
+      if k ~= "__index" and k ~= "__newindex" then
+        Class.dump(v, spaces .. " ")
+      end
+    end
+  end
+end
+
 return Class

@@ -13,8 +13,9 @@ Guess what? Yup, that's yet another game engine/framework.
 ## Dependecies
 
 * [Glad](https://glad.dav1d.de/)
-* [GLFW](https://www.glfw.org/) v3.4
+* [GLFW](https://www.glfw.org/) v3.3.2
 * [Lua](https://lua.org/) v5.3.5
+* [miniaudio](https://github.com/dr-soft/miniaudio) v0.9.10
 * [spleen](https://github.com/fcambus/spleen) fonts
 * [stb](https://github.com/nothings/stb) libraries
 
@@ -24,6 +25,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Straight multimedia support, no intermediate third-party libraries (OpenGL 2.1 required).
 * [x] Windowed/fullscreen display with automatic scaling.
 * [x] Internal software renderer.
+* [x] Fixed- and variable-size *BOBs*' blitting with rotation/scaling/flipping.
 * [x] Palette based graphics with up to 256 colors.
 * [x] Predefined library of 8/16/32/64 colors palettes.
 * [x] Automatic nearest-color palette indexing of images.
@@ -34,6 +36,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Game-controller support (w/ D-PAD and mouse emulation) w/ keyboard/mouse fallback if not available.
 * [x] Tiled-map support w/ camera support (zoom and scrolling).
 * [x] Screen shaking.
+* [x] Out-of-the-box 'tweening functions support (optimized [Penner's](http://robertpenner.com/easing/) set).
 * [x] Detailed logging facility (w/ logging level throttle).
 * [x] Crash screen (debug build).
 
@@ -42,7 +45,6 @@ Guess what? Yup, that's yet another game engine/framework.
 * [ ] **Bit** **Bl**ock **T**ransfer operations when drawing (also, [stencil](https://learnopengl.com/Advanced-OpenGL/Stencil-testing) support, see [this](https://open.gl/depthstencils)).
 * [ ] Animation support w/ frameset DSL (i.e. compiling a string where each token can be a single frame, a range or a "keep-current-frame for some time" command). Each frameset can have its one update period, and will be most likely based upon a timer.
 * [ ] Audio support (based upon [dr-soft/miniaudio](https://github.com/dr-soft/miniaudio)) w/ run-time multi-voice synth (a-la [Bfxr](https://www.bfxr.net)).
-* [ ] Out-of-the-box easing functions (see [this](https://github.com/kikito/tween.lua/blob/master/tween.lua) and [this](https://github.com/rxi/flux/blob/master/flux.lua)).
 * [ ] Out-of-the-box palette switching (with tweening) features.
 * [ ] Game state and display transitions (at which level? Engine or script?).
 * [ ] Library of noise functions ([cellular](https://thebookofshaders.com/12/), Perlin, etc...).
@@ -50,6 +52,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [ ] Multiple players support.
 * [ ] Define some fixed resolutions (see [this](https://pacoup.com/2011/06/12/list-of-true-169-resolutions/))?
 * [ ] Use a custom memory-management allocator.
+* [ ] Memory usage profiling.
 * [ ] Switch to [Vulkan API](https://www.khronos.org/vulkan/) (through [GLFW](https://www.glfw.org/)).
 
 ## Inspirations
@@ -60,3 +63,11 @@ Guess what? Yup, that's yet another game engine/framework.
 * [picolove](https://github.com/picolove/picolove/)
 * [raylib](https://www.raylib.com/)
 * [DOME Engine](https://github.com/avivbeeri/dome/)
+
+# Profiling
+
+```bash
+make bunnymark BUILD=profile
+prof ./tofu  gmon.out > analysys.txt
+prof ./tofu  gmon.out | ./extras/gprof2dot.py | dot -Tpng -o analysys.png
+```

@@ -33,12 +33,32 @@
 
 #define LOG_CONTEXT "sheet"
 
-GL_Rectangle_t *precompute_cells(size_t width, size_t height, size_t cell_width, size_t cell_height)
+static GL_Rectangle_t *_clone(const GL_Rectangle_t *cells, size_t count)
+{
+    GL_Rectangle_t *clone = malloc(sizeof(GL_Rectangle_t) * count);
+    if (!clone) {
+        return NULL;
+    }
+#ifdef __NO_MEMSET_MEMCPY__
+    for (size_t i = 0; i < count; ++i) {
+        clone[i] = cells[i];
+    }
+#else
+    memcpy(clone, cells, sizeof(GL_Rectangle_t) * count);
+#endif
+    return clone;
+}
+
+static GL_Rectangle_t *_precompute_cells(size_t width, size_t height, size_t cell_width, size_t cell_height, size_t *count)
 {
     size_t columns = width / cell_width;
     size_t rows = height / cell_height;
     size_t amount = columns * rows;
     GL_Rectangle_t *cells = malloc(amount * sizeof(GL_Rectangle_t));
+    if (!cells) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d cells", amount);
+        return NULL;
+    }
     size_t k = 0;
     for (size_t i = 0; i < rows; ++i) {
         int y = i * cell_height;
@@ -52,50 +72,102 @@ GL_Rectangle_t *precompute_cells(size_t width, size_t height, size_t cell_width,
                 };
         }
     }
+    *count = amount;
     return cells;
 }
 
-bool GL_sheet_decode(GL_Sheet_t *sheet, const void *buffer, size_t size, size_t cell_width, size_t cell_height, GL_Surface_Callback_t callback, void *user_data)
+static GL_Sheet_t *_attach(GL_Surface_t *atlas, GL_Rectangle_t *cells, size_t count)
 {
-    GL_Surface_t atlas;
-    if (!GL_surface_decode(&atlas, buffer, size, callback, user_data)) {
-        return false;
+    if (!cells || count == 0) {
+        return NULL;
     }
-    GL_sheet_attach(sheet, &atlas, cell_width, cell_height);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p decoded", sheet);
-    return true;
-}
-
-bool GL_sheet_fetch(GL_Sheet_t *sheet, GL_Image_t image, size_t cell_width, size_t cell_height, const GL_Surface_Callback_t callback, void *user_data)
-{
-    GL_Surface_t atlas;
-    if (!GL_surface_fetch(&atlas, image, callback, user_data)) {
-        return false;
+    GL_Sheet_t *sheet = malloc(sizeof(GL_Sheet_t));
+    if (!sheet) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate sheet");
+        return NULL;
     }
-    GL_sheet_attach(sheet, &atlas, cell_width, cell_height);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p decoded", sheet);
-    return true;
-}
-
-void GL_sheet_delete(GL_Sheet_t *sheet)
-{
-    GL_surface_delete(&sheet->atlas); // Delete prior detach or the atlas will be cleared!
-    GL_sheet_detach(sheet);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p deleted", sheet);
-}
-
-void GL_sheet_attach(GL_Sheet_t *sheet, const GL_Surface_t *atlas, size_t cell_width, size_t cell_height)
-{
     *sheet = (GL_Sheet_t){
-            .atlas = *atlas,
-            .cells = precompute_cells(atlas->width, atlas->height, cell_width, cell_height),
-            .size = (GL_Size_t){ cell_width, cell_height }
+            .atlas = atlas,
+            .cells = cells,
+            .count = count
         };
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p attached", sheet);
+    return sheet;
+}
+
+GL_Sheet_t *GL_sheet_decode_rect(size_t width, size_t height, const void *pixels, size_t cell_width, size_t cell_height, GL_Surface_Callback_t callback, void *user_data)
+{
+    GL_Surface_t *atlas = GL_surface_decode(width, height, pixels, callback, user_data);
+    if (!atlas) {
+        return NULL;
+    }
+    size_t count;
+    GL_Rectangle_t *cells = _precompute_cells(atlas->width, atlas->height, cell_width, cell_height, &count);
+    if (!cells) {
+        GL_surface_destroy(atlas);
+        return NULL;
+    }
+    GL_Sheet_t *sheet = _attach(atlas, cells, count);
+    if (!sheet) {
+        GL_surface_destroy(atlas);
+        free(cells);
+        return NULL;
+    }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p decoded", sheet);
+    return sheet;
+}
+
+GL_Sheet_t *GL_sheet_decode(size_t width, size_t height, const void *pixels, const GL_Rectangle_t *cells, size_t count, GL_Surface_Callback_t callback, void *user_data)
+{
+    GL_Surface_t *atlas = GL_surface_decode(width, height, pixels, callback, user_data);
+    if (!atlas) {
+        return NULL;
+    }
+    GL_Sheet_t *sheet = _attach(atlas, _clone(cells, count), count);
+    if (!sheet) {
+        GL_surface_destroy(atlas);
+        return NULL;
+    }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p decoded", sheet);
+    return sheet;
+}
+
+void GL_sheet_destroy(GL_Sheet_t *sheet)
+{
+    GL_surface_destroy(sheet->atlas); // Delete prior detach or the atlas will be lost!
+    GL_sheet_detach(sheet);
+}
+
+GL_Sheet_t *GL_sheet_attach_rect(const GL_Surface_t *atlas, size_t cell_width, size_t cell_height)
+{
+    size_t count;
+    GL_Rectangle_t *cells = _precompute_cells(atlas->width, atlas->height, cell_width, cell_height, &count);
+    if (!cells) {
+        return NULL;
+    }
+    GL_Sheet_t *sheet = _attach((GL_Surface_t *)atlas, cells, count);
+    if (!sheet) {
+        free(cells);
+        return NULL;
+    }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p attached", sheet);
+    return sheet;
+}
+
+GL_Sheet_t *GL_sheet_attach(const GL_Surface_t *atlas, const GL_Rectangle_t *cells, size_t count)
+{
+    GL_Sheet_t *sheet = _attach((GL_Surface_t *)atlas, _clone(cells, count), count);
+    if (!sheet) {
+        return NULL;
+    }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p attached", sheet);
+    return sheet;
 }
 
 void GL_sheet_detach(GL_Sheet_t *sheet)
 {
     free(sheet->cells);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p detached", sheet);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet cells freed");
+    free(sheet);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p freed", sheet);
 }

@@ -22,8 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
+local Class = require("tofu.core").Class
 local Canvas = require("tofu.graphics").Canvas
-local Class = require("tofu.util").Class
 
 local function bound(x, y, aabb)
   return math.min(math.max(x, aabb.x0), aabb.x1), math.min(math.max(y, aabb.y0), aabb.y1)
@@ -33,6 +33,8 @@ local Camera = Class.define()
 
 -- TODO: add camera scaling, useful to draw minimap.
 function Camera:__ctor(id, bank, grid, columns, rows, screen_x, screen_y, anchor_x, anchor_y, scale)
+  local cw, ch = bank:size(-1)
+
   self.id = id
   self.bank = bank
   self.grid = grid
@@ -40,8 +42,7 @@ function Camera:__ctor(id, bank, grid, columns, rows, screen_x, screen_y, anchor
   self.screen_y = screen_y or 0
   self.columns = columns
   self.rows = rows
-  self.map_width = columns * self.bank:cell_width()
-  self.map_height = rows * self.bank:cell_height()
+  self.map_width, self.map_height = cw * columns, ch * rows
 
   self:scale_by(scale or 1.0)
   self:center_at(anchor_x or 0.5, anchor_y or 0.5)
@@ -49,11 +50,14 @@ end
 
 function Camera:scale_by(scale)
   self.scale = scale
-  self.screen_width = self.map_width * scale
-  self.screen_height = self.map_height * scale
+  self.screen_width = math.tointeger(self.map_width * scale)
+  self.screen_height = math.tointeger(self.map_height * scale)
 end
 
 function Camera:center_at(anchor_x, anchor_y)
+  local cw, ch = self.bank:size(-1)
+  local gw, gh = self.grid:size()
+
   self.anchor_x = anchor_x
   self.anchor_y = anchor_y
   self.center_x = math.tointeger(anchor_x * self.map_width) -- Always an integer offset
@@ -61,8 +65,8 @@ function Camera:center_at(anchor_x, anchor_y)
   self.aabb = {
       x0 = self.center_x,
       y0 = self.center_y,
-      x1 = self.grid:width() * self.bank:cell_width() - (self.map_width - self.center_x) - 1,
-      y1 = self.grid:height() * self.bank:cell_height() - (self.map_height - self.center_y) - 1
+      x1 = gw * cw - (self.map_width - self.center_x) - 1,
+      y1 = gh * ch - (self.map_height - self.center_y) - 1
     }
   self:move_to(self.x or 0, self.y or 0)
 end
@@ -79,10 +83,10 @@ function Camera:move_to(x, y)
   self.map_x, self.map_y = map_x, map_y -- Track offsetted map position to track *real* changes.
 
   local scale = self.scale
-  local cw, ch = self.bank:cell_width(), self.bank:cell_height()
+  local cw, ch = self.bank:size(-1)
   local start_column = math.tointeger(map_x / cw)
   local start_row = math.tointeger(map_y / ch)
-  local column_offset = -math.tointeger((map_x % cw) * scale)
+  local column_offset = -math.tointeger((map_x % cw) * scale) -- In screen coordinates.
   local row_offset = -math.tointeger((map_y % ch) * scale)
 
   if self.start_column ~= start_column or self.start_row ~= start_row then
@@ -120,7 +124,7 @@ function Camera:draw()
   local ox, oy = self.screen_x + self.column_offset, self.screen_y + self.row_offset
   for _, v in ipairs(self.batch) do
     local cell_id, cell_x, cell_y = table.unpack(v)
-    self.bank:blit(cell_id, cell_x + ox, cell_y + oy, scale, scale)
+    self.bank:blit(cell_id, cell_x + ox, cell_y + oy, scale)
   end
 end
 
@@ -129,11 +133,11 @@ function Camera:post_draw()
 end
 
 function Camera:prepare_()
-  local scale = self.scale
-  local cw, ch = self.bank:cell_width() * scale, self.bank:cell_height() * scale
+  local gw, gh = self.grid:size()
+  local cw, ch = self.bank:size(-1, self.scale)
 
-  local rows = math.min(self.grid:width() - self.start_row, self.rows + 1) -- We handle an additional row/column
-  local columns = math.min(self.grid:height() - self.start_column, self.columns + 1) -- for sub-tile scrolling
+  local rows = math.min(gw - self.start_row, self.rows + 1) -- We handle an additional row/column
+  local columns = math.min(gh - self.start_column, self.columns + 1) -- for sub-tile scrolling
 
   local batch = {}
   local y = 0

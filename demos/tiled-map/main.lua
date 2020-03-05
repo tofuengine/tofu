@@ -22,11 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
+local Class = require("tofu.core").Class
 local System = require("tofu.core").System
+local Input = require("tofu.events").Input
 local Canvas = require("tofu.graphics").Canvas
 local Font = require("tofu.graphics").Font
-local Input = require("tofu.events").Input
-local Class = require("tofu.util").Class
 
 local Map = require("lib.map")
 
@@ -116,7 +116,7 @@ function Main:__ctor()
     camera.post_draw = function(me)
         local x, y = me:to_screen(me.x, me.y)
         Canvas.rectangle("fill", x - 2, y - 2, 4, 4, 2)
-        self.font:write(tostring(me), me.screen_x + me.screen_width, me.screen_y, "right")
+        self.font:write(self.font:align(tostring(me), me.screen_x + me.screen_width, me.screen_y, "right"))
       end
   end
 end
@@ -124,16 +124,16 @@ end
 function Main:input()
   self.dx = 0
   self.dy = 0
-  if Input.is_down(Input.LEFT) then
+  if Input.is_down("left") then
     self.dx = self.dx - 1
   end
-  if Input.is_down(Input.RIGHT) then
+  if Input.is_down("right") then
     self.dx = self.dx + 1
   end
-  if Input.is_down(Input.UP) then
+  if Input.is_down("up") then
     self.dy = self.dy - 1
   end
-  if Input.is_down(Input.DOWN) then
+  if Input.is_down("down") then
     self.dy = self.dy + 1
   end
 end
@@ -172,7 +172,7 @@ function Main:render(_)
   local x, y = camera:to_screen(self.player.x, self.player.y)
   Canvas.rectangle("fill", x - 2, y - 2, 4, 4, 1)
 
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
+  self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
 end
 
 return Main

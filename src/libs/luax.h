@@ -55,27 +55,35 @@ typedef struct _luaX_Script {
 
 typedef int luaX_Reference;
 
+#define LUAX_REFERENCE_NIL  -1
+#define LUAX_EOD            -2
+
 #if DEBUG
-    #define LUAX_SIGNATURE_BEGIN(l, n) \
+    #define LUAX_SIGNATURE_BEGIN(l) \
         do { \
             lua_State *_L = (l); \
-            int _n = (n); \
-            int _argc = lua_gettop(L); \
-            if (_argc != _n) { \
-                luaL_error(_L, "[%s:%d] wrong number of arguments (need %d, got %d)", __FILE__, __LINE__, _n, _argc); \
-            } \
+            int _argc = lua_gettop(_L); \
             int _index = 1;
-    #define LUAX_SIGNATURE_ARGUMENT(...) \
-            luaX_checkargument(_L, _index++, __FILE__, __LINE__, __VA_ARGS__, LUA_TNONE);
+    #define LUAX_SIGNATURE_REQUIRED(...) \
+            luaX_checkargument(_L, _index++, __FILE__, __LINE__, __VA_ARGS__, LUAX_EOD);
+    #define LUAX_SIGNATURE_OPTIONAL(...) \
+            luaX_checkargument(_L, _index, __FILE__, __LINE__, __VA_ARGS__, LUA_TNONE, LUAX_EOD); \
+            if (lua_isnone(_L, _index++)) { \
+                ++_argc; \
+            }
     #define LUAX_SIGNATURE_END \
-            (void)_index; \
+            if (--_index != _argc) { \
+                luaL_error(_L, "[%s:%d] arguments number mismatch (checked %d  out of %d)", __FILE__, __LINE__, _index, _argc); \
+            } \
         } while (0);
 #else
-    #define LUAX_SIGNATURE_BEGIN(l, n)
-    #define LUAX_SIGNATURE_ARGUMENT(...)
+    #define LUAX_SIGNATURE_BEGIN(l)
+    #define LUAX_SIGNATURE_REQUIRED(...)
+    #define LUAX_SIGNATURE_OPTIONAL(...)
     #define LUAX_SIGNATURE_END
 #endif
 
+// TODO: support overloading on signature arity and types?
 #define LUAX_OVERLOAD_BEGIN(l) \
     do { \
         lua_State *_L = (l); \
@@ -84,13 +92,37 @@ typedef int luaX_Reference;
 #define LUAX_OVERLOAD_ARITY(n, f) \
             case (n): { return (f)(_L); }
 #define LUAX_OVERLOAD_END \
-            default: { return luaL_error(L, "[%s:%d] wrong number of arguments (got %d)", __FILE__, __LINE__, _argc); } \
+            default: { return luaL_error(L, "[%s:%d] overload for arity #%d is missing", __FILE__, __LINE__, _argc); } \
         } \
     } while (0);
 
-#define luaX_dump(L)                luaX_stackdump(L, __FILE__, __LINE__)
+#ifdef DEBUG
+    #define LUAX_BOOLEAN(L, idx)                (!lua_isboolean((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), 0 : lua_toboolean((L), (idx)))
+    #define LUAX_OPTIONAL_BOOLEAN(L, idx, def)  (lua_isnone((L), (idx)) ? (def) : lua_toboolean((L), (idx)))
+    #define LUAX_INTEGER(L, idx)                (!lua_isnumber((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), 0 : lua_tointeger((L), (idx)))
+    #define LUAX_OPTIONAL_INTEGER(L, idx, def)  (lua_isnone((L), (idx)) ? (def) : lua_tointeger((L), (idx)))
+    #define LUAX_NUMBER(L, idx)                 (!lua_isnumber((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), 0.0f : lua_tonumber((L), (idx)))
+    #define LUAX_OPTIONAL_NUMBER(L, idx, def)   (lua_isnone((L), (idx)) ? (def) : lua_tonumber((L), (idx)))
+    #define LUAX_STRING(L, idx)                 (!lua_isstring((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), NULL : lua_tostring((L), (idx)))
+    #define LUAX_OPTIONAL_STRING(L, idx, def)   (lua_isnone((L), (idx)) ? (def) : lua_tostring((L), (idx)))
+    #define LUAX_USERDATA(L, idx)               (!lua_isuserdata((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), NULL : lua_touserdata((L), (idx)))
+    #define LUAX_OPTIONAL_USERDATA(L, idx, def) (lua_isnone((L), (idx)) ? (def) : lua_touserdata((L), (idx)))
+#else
+    #define LUAX_BOOLEAN(L, idx)                (lua_toboolean((L), (idx)))
+    #define LUAX_OPTIONAL_BOOLEAN(L, idx, def)  (lua_isnone((L), (idx)) ? (def) : lua_toboolean((L), (idx)))
+    #define LUAX_INTEGER(L, idx)                (lua_tointeger((L), (idx)))
+    #define LUAX_OPTIONAL_INTEGER(L, idx, def)  (lua_isnone((L), (idx)) ? (def) : lua_tointeger((L), (idx)))
+    #define LUAX_NUMBER(L, idx)                 (lua_tonumber((L), (idx)))
+    #define LUAX_OPTIONAL_NUMBER(L, idx, def)   (lua_isnone((L), (idx)) ? (def) : lua_tonumber((L), (idx)))
+    #define LUAX_STRING(L, idx)                 (lua_tostring((L), (idx)))
+    #define LUAX_OPTIONAL_STRING(L, idx, def)   (lua_isnone((L), (idx)) ? (def) : lua_tostring((L), (idx)))
+    #define LUAX_USERDATA(L, idx)               (lua_touserdata((L), (idx)))
+    #define LUAX_OPTIONAL_USERDATA(L, idx, def) (lua_isnone((L), (idx)) ? (def) : lua_touserdata((L), (idx)))
+#endif
 
-#define luaX_tofunction(L, arg)     luaX_ref(L, arg)
+#define luaX_dump(L)                luaX_stackdump((L), __FILE__, __LINE__)
+
+#define luaX_tofunction(L, idx)     luaX_ref((L), (idx))
 
 extern void luaX_stackdump(lua_State *L, const char *file, int line);
 extern void luaX_overridesearchers(lua_State *L, lua_CFunction searcher, int nup);

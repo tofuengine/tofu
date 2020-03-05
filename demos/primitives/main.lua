@@ -22,11 +22,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
+local Class = require("tofu.core").Class
 local System = require("tofu.core").System
-local Canvas = require("tofu.graphics").Canvas
-local Font = require("tofu.graphics").Font
 local Input = require("tofu.events").Input
-local Class = require("tofu.util").Class
+local Canvas = require("tofu.graphics").Canvas
+local Display = require("tofu.graphics").Display
+local Font = require("tofu.graphics").Font
 
 local Main = Class.define()
 
@@ -38,19 +39,22 @@ local PALETTE = {
   }
 
 function Main:__ctor()
-  Canvas.palette(PALETTE) -- "arne-16")
-  Canvas.palette("arne-16")
+  Display.palette(PALETTE) -- "arne-16")
+  Display.palette("arne-16")
+
+  local canvas = Canvas.default()
+  canvas:color(3)
 
   self.font = Font.default(0, 1)
   self.mode = 0
 end
 
 function Main:input()
-  if Input.is_pressed(Input.START) then
+  if Input.is_pressed("start") then
     System.quit()
-  elseif Input.is_pressed(Input.RIGHT) then
+  elseif Input.is_pressed("right") then
     self.mode = (self.mode % 10) + 1
-  elseif Input.is_pressed(Input.LEFT) then
+  elseif Input.is_pressed("left") then
     self.mode = ((self.mode + 8) % 10) + 1
   end
 end
@@ -59,83 +63,86 @@ function Main:update(_) -- delta_time
 end
 
 function Main:render(_) -- ratio
-  Canvas.clear()
+  local canvas = Canvas.default()
+  canvas:clear()
+
+  local width, height = canvas:size()
 
   if self.mode == 0 then
     local cx, cy = 8, 32
     for r = 0, 12 do
-      Canvas.circle("fill", cx, cy, r, 1)
-      Canvas.circle("line", cx, cy + 64, r, 1)
+      canvas:circle("fill", cx, cy, r)
+      canvas:circle("line", cx, cy + 64, r)
       cx = cx + 2 * r + 8
     end
 
-    Canvas.polyline({ 64, 64, 64, 128, 128, 128 }, 2)
+    canvas:polyline({ 64, 64, 64, 128, 128, 128 })
 
-    local x0 = (math.random() * Canvas.width() * 2) - Canvas.width() * 0.5
-    local y0 = (math.random() * Canvas.width() * 2) - Canvas.width() * 0.5
-    local x1 = (math.random() * Canvas.width() * 2) - Canvas.width() * 0.5
-    local y1 = (math.random() * Canvas.width() * 2) - Canvas.width() * 0.5
-    Canvas.line(x0, y0, x1, y1, 3)
+    local x0 = (math.random() * width * 2) - width * 0.5
+    local y0 = (math.random() * width * 2) - width * 0.5
+    local x1 = (math.random() * width * 2) - width * 0.5
+    local y1 = (math.random() * width * 2) - width * 0.5
+    canvas:line(x0, y0, x1, y1)
   elseif self.mode == 1 then
     local dx = math.cos(System.time()) * 32
     local dy = math.sin(System.time()) * 32
-    Canvas.circle("fill", 128, 64, 32, 1)
-    Canvas.line(128, 64, 128 + dx, 64 + dy, 2)
+    canvas:circle("fill", 128, 64, 32, 1)
+    canvas:line(128, 64, 128 + dx, 64 + dy, 2)
   elseif self.mode == 2 then
-    Canvas.triangle("fill", 5, 50, 5, 150, 150, 150, 1)
-    Canvas.triangle("fill", 5, 50, 150, 50, 150, 150, 3)
+    canvas:triangle("fill", 5, 50, 5, 150, 150, 150, 1)
+    canvas:triangle("fill", 5, 50, 150, 50, 150, 150, 3)
   elseif self.mode == 3 then
-    local x0 = ((math.cos(System.time() * 0.125) + 1.0) * 0.5) * Canvas.width()
-    local y0 = ((math.cos(System.time() * 0.342) + 1.0) * 0.5) * Canvas.height()
-    local x1 = ((math.sin(System.time() * 0.184) + 1.0) * 0.5) * Canvas.width()
-    local y1 = ((math.sin(System.time() * 0.223) + 1.0) * 0.5) * Canvas.height()
-    local x2 = ((math.cos(System.time() * 0.832) + 1.0) * 0.5) * Canvas.width()
-    local y2 = ((math.sin(System.time() * 0.123) + 1.0) * 0.5) * Canvas.height()
-    Canvas.triangle("fill", x0, y0, x1, y1, x2, y2, 2)
-    Canvas.triangle("line", x0, y0, x1, y1, x2, y2, 7)
+    local x0 = ((math.cos(System.time() * 0.125) + 1.0) * 0.5) * width
+    local y0 = ((math.cos(System.time() * 0.342) + 1.0) * 0.5) * height
+    local x1 = ((math.sin(System.time() * 0.184) + 1.0) * 0.5) * width
+    local y1 = ((math.sin(System.time() * 0.223) + 1.0) * 0.5) * height
+    local x2 = ((math.cos(System.time() * 0.832) + 1.0) * 0.5) * width
+    local y2 = ((math.sin(System.time() * 0.123) + 1.0) * 0.5) * height
+    canvas:triangle("fill", x0, y0, x1, y1, x2, y2, 2)
+    canvas:triangle("line", x0, y0, x1, y1, x2, y2, 7)
   elseif self.mode == 4 then
-    local x = ((math.cos(System.time() * 0.125) + 1.0) * 0.5) * Canvas.width()
-    local y = ((math.cos(System.time() * 0.342) + 1.0) * 0.5) * Canvas.height()
-    Canvas.square("fill", x, y, 75, 2)
-    Canvas.square("line", 96, 96, 64, 2)
+    local x = ((math.cos(System.time() * 0.125) + 1.0) * 0.5) * width
+    local y = ((math.cos(System.time() * 0.342) + 1.0) * 0.5) * height
+    canvas:square("fill", x, y, 75, 2)
+    canvas:square("line", 96, 96, 64, 2)
   elseif self.mode == 5 then
-    local cx = Canvas.width() * 0.5
-    local cy = Canvas.height() * 0.5
-    Canvas.circle("fill", cx, cy, 50, 3)
-    Canvas.circle("line", cx, cy, 50, 4)
+    local cx = width * 0.5
+    local cy = height * 0.5
+    canvas:circle("fill", cx, cy, 50, 3)
+    canvas:circle("line", cx, cy, 50, 4)
   elseif self.mode == 6 then
-    local cx = Canvas.width() * 0.5
-    local cy = Canvas.height() * 0.5
-    Canvas.circle("line", cx, cy, 50, 4)
-    Canvas.circle("fill", cx, cy, 50, 3)
+    local cx = width * 0.5
+    local cy = height * 0.5
+    canvas:circle("line", cx, cy, 50, 4)
+    canvas:circle("fill", cx, cy, 50, 3)
   elseif self.mode == 7 then
-    local cx = ((math.cos(System.time() * 0.125) + 1.0) * 0.5) * Canvas.width()
-    local cy = ((math.cos(System.time() * 0.342) + 1.0) * 0.5) * Canvas.height()
+    local cx = ((math.cos(System.time() * 0.125) + 1.0) * 0.5) * width
+    local cy = ((math.cos(System.time() * 0.342) + 1.0) * 0.5) * height
     local r = ((math.sin(System.time() * 0.184) + 1.0) * 0.5) * 63 + 1
-    Canvas.circle("fill", cx, cy, r, 6)
+    canvas:circle("fill", cx, cy, r, 6)
   elseif self.mode == 8 then
-    local cx = ((math.cos(System.time() * 0.125) + 1.0) * 0.5) * Canvas.width()
-    local cy = ((math.cos(System.time() * 0.342) + 1.0) * 0.5) * Canvas.height()
+    local cx = ((math.cos(System.time() * 0.125) + 1.0) * 0.5) * width
+    local cy = ((math.cos(System.time() * 0.342) + 1.0) * 0.5) * height
     local r = ((math.sin(System.time() * 0.184) + 1.0) * 0.5) * 63 + 1
-    Canvas.circle("line", cx, cy, r, 7)
+    canvas:circle("line", cx, cy, r, 7)
   elseif self.mode == 9 then
     local colors = { 13, 11, 9, 7, 5, 3, 1 }
-    local y = (math.sin(System.time()) + 1.0) * 0.5 * Canvas.height()
-    Canvas.hline(0, y, Canvas.width() - 1, 15)
+    local y = (math.sin(System.time()) + 1.0) * 0.5 * height
+    canvas:hline(0, y, canvas:width() - 1, 15)
     for i, c in ipairs(colors) do
-      Canvas.hline(0, y - i, Canvas.width() - 1, c)
-      Canvas.hline(0, y + i, Canvas.width() - 1, c)
+      canvas:hline(0, y - i, width - 1, c)
+      canvas:hline(0, y + i, width - 1, c)
     end
   elseif self.mode == 10 then
-    Canvas.point(4, 4, 1)
-    Canvas.line(8, 8, 32, 32, 2)
-    Canvas.rectangle("line", 4, 23, 8, 8, 3)
-    Canvas.triangle("line", 150, 150, 50, 250, 250, 250, 3)
-    Canvas.rectangle("fill", 4, 12, 8, 8, 3)
+    canvas:point(4, 4, 1)
+    canvas:line(8, 8, 32, 32, 2)
+    canvas:rectangle("line", 4, 23, 8, 8, 3)
+    canvas:triangle("line", 150, 150, 50, 250, 250, 250, 3)
+    canvas:rectangle("fill", 4, 12, 8, 8, 3)
   end
 
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0, "left")
-  self.font:write(string.format("mode: %d", self.mode), Canvas.width(), 0, "right")
+  self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
+  self.font:write(self.font:align(string.format("mode: %d", self.mode), width, 0, "right"))
 end
 
 return Main

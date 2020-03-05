@@ -34,6 +34,8 @@ typedef uint8_t GL_Pixel_t;
 
 typedef int8_t GL_Bool_t;
 
+typedef uint16_t GL_Pattern_t;
+
 typedef struct _GL_Point_t {
     int x, y;
 } GL_Point_t;
@@ -51,11 +53,6 @@ typedef struct _GL_Quad_t {
     int x0, y0;
     int x1, y1;
 } GL_Quad_t;
-
-typedef struct _GL_Image_t {
-    size_t width, height;
-    const void *data;
-} GL_Image_t;
 
 #pragma pack(push, 1)
 typedef struct _GL_Color_t {

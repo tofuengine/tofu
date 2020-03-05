@@ -22,11 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Grid = require("tofu.collections").Grid
+local Class = require("tofu.core").Class
 local Bank = require("tofu.graphics").Bank
 local Canvas = require("tofu.graphics").Canvas
 local File = require("tofu.io").File
-local Class = require("tofu.util").Class
+local Grid = require("tofu.util").Grid
 
 local Camera = require("lib.camera")
 
@@ -42,11 +42,13 @@ function Map:__ctor(bank, grid)
   self.bank = bank
   self.grid = grid
 
+  local cw, ch = self.bank:size(-1)
+  local gw, gh = self.grid:size()
   self.aabb = {
       x0 = 0,
       y0 = 0,
-      x1 = self.grid:width() * self.bank:cell_width() - 1,
-      y1 = self.grid:height() * self.bank:cell_height() - 1
+      x1 = gw * cw - 1,
+      y1 = gh * ch - 1
     }
 
   self.cameras = {}

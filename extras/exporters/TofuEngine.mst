@@ -1,0 +1,22 @@
+{{#rects}}
+{{{name}}}|{{frame.x}}|{{frame.y}}|{{frame.w}}|{{frame.h}}
+{{/rects}}
+
+
+-- Created with TexturePacker (http://www.codeandweb.com/texturepacker)
+--
+-- Sprite sheet: {{ texture.fullName }} ({{ texture.size.width }} x {{ texture.size.height }})
+--
+-- {{ smartUpdateKey }}
+
+local sheet = {
+  atlas = "{{ config.imageFile }}",
+  cells = {{% for sprite in allSprites %}
+    ["{{ sprite.trimmedName }}"] = {
+      rectangle = { x = {{ sprite.frameRect.x }}, y = {{ sprite.frameRect.y }}, w = {{ sprite.frameRect.width }}, h = {{ sprite.frameRect.height }} },
+      anchor = { x = {{ sprite.pivotPointNorm.x }}, y = {{ sprite.pivotPointNorm.y }} }
+    }{% if not forloop.last %},{% endif %}{% endfor %}
+  }
+}
+
+return sheet

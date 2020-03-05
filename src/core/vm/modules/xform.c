@@ -1,0 +1,404 @@
+/*
+ * MIT License
+ * 
+ * Copyright (c) 2019-2020 Marco Lizza
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+#include "xform.h"
+
+#include <config.h>
+#include <core/io/display.h>
+#include <core/vm/interpreter.h>
+#include <libs/fs/fsaux.h>
+#include <libs/log.h>
+#include <libs/stb.h>
+
+#include "udt.h"
+#include "callbacks.h"
+
+#include <math.h>
+#include <string.h>
+
+#define LOG_CONTEXT "xform"
+#define META_TABLE  "Tofu_Graphics_XForm_mt"
+
+static int xform_new(lua_State *L);
+static int xform_gc(lua_State *L);
+static int xform_canvas(lua_State *L);
+static int xform_blit(lua_State *L);
+static int xform_offset(lua_State *L);
+static int xform_matrix(lua_State *L);
+static int xform_clamp(lua_State *L);
+static int xform_table(lua_State *L);
+
+static const struct luaL_Reg _xform_functions[] = {
+    { "new", xform_new },
+    {"__gc", xform_gc },
+    { "canvas", xform_canvas },
+    { "blit", xform_blit },
+    { "offset", xform_offset },
+    { "matrix", xform_matrix },
+    { "clamp", xform_clamp },
+    { "table", xform_table },
+    { NULL, NULL }
+};
+
+int xform_loader(lua_State *L)
+{
+    int nup = luaX_pushupvalues(L);
+    return luaX_newmodule(L, NULL, _xform_functions, NULL, nup, META_TABLE);
+}
+
+static int xform_new(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    Canvas_Class_t *canvas = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
+
+    const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    XForm_Class_t *self = (XForm_Class_t *)lua_newuserdata(L, sizeof(XForm_Class_t));
+    *self = (XForm_Class_t){
+            .context = display->context,
+            .context_reference = LUAX_REFERENCE_NIL,
+            .surface = canvas->context->surface,
+            .surface_reference = luaX_ref(L, 1),
+            .xform = (GL_XForm_t){
+                    .registers = {
+                        0.0f, 0.0f, // No offset
+                        1.0f, 0.0f, 1.0f, 0.0f, // Identity matrix.
+                        0.0f, 0.0f, // No offset
+                    },
+                    .clamp = GL_XFORM_CLAMP_REPEAT,
+                    .table = NULL
+                }
+        };
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform %p allocated for default canvas", self);
+
+    luaL_setmetatable(L, META_TABLE);
+
+    return 1;
+}
+
+static int xform_gc(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    XForm_Class_t *self = (XForm_Class_t *)LUAX_USERDATA(L, 1);
+
+    if (self->xform.table) {
+        arrfree(self->xform.table);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform scan-line table %p freed", self->xform.table);
+    }
+
+    if (self->context_reference != LUAX_REFERENCE_NIL) {
+        luaX_unref(L, self->context_reference);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context reference #%d released", self->context_reference);
+    }
+
+    if (self->surface_reference != LUAX_REFERENCE_NIL) {
+        luaX_unref(L, self->surface_reference);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface reference #%d released", self->surface_reference);
+    }
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform %p finalized", self);
+
+    return 0;
+}
+
+static int xform_canvas(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    XForm_Class_t *self = (XForm_Class_t *)LUAX_USERDATA(L, 1);
+    const Canvas_Class_t *canvas = (Canvas_Class_t *)LUAX_OPTIONAL_USERDATA(L, 2, NULL);
+
+    const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    if (self->context_reference != LUAX_REFERENCE_NIL) {
+        luaX_unref(L, self->context_reference);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context reference #%d released", self->context_reference);
+    }
+
+    if (canvas) {
+        self->context = canvas->context;
+        self->context_reference = luaX_ref(L, 2);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context %p attached w/ reference #%d", self->context, self->context_reference);
+    } else {
+        self->context = display->context;
+        self->context_reference = LUAX_REFERENCE_NIL;
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "default context attached");
+    }
+
+    return 0;
+}
+
+static int xform_blit1_3(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    XForm_Class_t *self = (XForm_Class_t *)LUAX_USERDATA(L, 1);
+    int x = LUAX_OPTIONAL_INTEGER(L, 2, 0);
+    int y = LUAX_OPTIONAL_INTEGER(L, 3, 0);
+
+    const GL_Context_t *context = self->context;
+    const GL_Surface_t *surface = self->surface;
+    const GL_XForm_t *xform = &self->xform;
+    GL_context_blit_x(context, surface, (GL_Point_t){ .x = x, .y = y }, xform);
+
+    return 0;
+}
+
+static int xform_blit(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, xform_blit1_3)
+        LUAX_OVERLOAD_ARITY(3, xform_blit1_3) // Nonsense to call it w/ 3 arguments!
+    LUAX_OVERLOAD_END
+}
+
+static int xform_offset(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    XForm_Class_t *self = (XForm_Class_t *)LUAX_USERDATA(L, 1);
+    float h = LUAX_NUMBER(L, 2);
+    float v = LUAX_NUMBER(L, 3);
+
+    GL_XForm_t *xform = &self->xform;
+    xform->registers[GL_XFORM_REGISTER_H] = h;
+    xform->registers[GL_XFORM_REGISTER_V] = v;
+
+    return 0;
+}
+
+static int xform_matrix3(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    XForm_Class_t *self = (XForm_Class_t *)LUAX_USERDATA(L, 1);
+    float x0 = LUAX_NUMBER(L, 2);
+    float y0 = LUAX_NUMBER(L, 3);
+
+    GL_XForm_t *xform = &self->xform;
+    xform->registers[GL_XFORM_REGISTER_X] = x0;
+    xform->registers[GL_XFORM_REGISTER_Y] = y0;
+
+    return 0;
+}
+
+static int xform_matrix5(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    XForm_Class_t *self = (XForm_Class_t *)LUAX_USERDATA(L, 1);
+    float a = LUAX_NUMBER(L, 2);
+    float b = LUAX_NUMBER(L, 3);
+    float c = LUAX_NUMBER(L, 4);
+    float d = LUAX_NUMBER(L, 5);
+
+    GL_XForm_t *xform = &self->xform;
+    xform->registers[GL_XFORM_REGISTER_A] = a;
+    xform->registers[GL_XFORM_REGISTER_B] = b;
+    xform->registers[GL_XFORM_REGISTER_C] = c;
+    xform->registers[GL_XFORM_REGISTER_D] = d;
+
+    return 0;
+}
+
+static int xform_matrix7(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    XForm_Class_t *self = (XForm_Class_t *)LUAX_USERDATA(L, 1);
+    float a = LUAX_NUMBER(L, 2);
+    float b = LUAX_NUMBER(L, 3);
+    float c = LUAX_NUMBER(L, 4);
+    float d = LUAX_NUMBER(L, 5);
+    float x0 = LUAX_NUMBER(L, 6);
+    float y0 = LUAX_NUMBER(L, 7);
+
+    GL_XForm_t *xform = &self->xform;
+    xform->registers[GL_XFORM_REGISTER_A] = a;
+    xform->registers[GL_XFORM_REGISTER_B] = b;
+    xform->registers[GL_XFORM_REGISTER_C] = c;
+    xform->registers[GL_XFORM_REGISTER_D] = d;
+    xform->registers[GL_XFORM_REGISTER_X] = x0;
+    xform->registers[GL_XFORM_REGISTER_Y] = y0;
+
+    return 0;
+}
+
+static int xform_matrix(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(3, xform_matrix3)
+        LUAX_OVERLOAD_ARITY(5, xform_matrix5)
+        LUAX_OVERLOAD_ARITY(7, xform_matrix7)
+    LUAX_OVERLOAD_END
+}
+
+static int xform_clamp(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+    LUAX_SIGNATURE_END
+    XForm_Class_t *self = (XForm_Class_t *)LUAX_USERDATA(L, 1);
+    const char *clamp = LUAX_STRING(L, 2);
+
+    GL_XForm_t *xform = &self->xform;
+    if (clamp[0] == 'e') {
+        xform->clamp = GL_XFORM_CLAMP_EDGE;
+    } else
+    if (clamp[0] == 'b') {
+        xform->clamp = GL_XFORM_CLAMP_BORDER;
+    } else
+    if (clamp[0] == 'r') {
+        xform->clamp = GL_XFORM_CLAMP_REPEAT;
+    }
+
+    return 0;
+}
+
+static int xform_table1(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    XForm_Class_t *self = (XForm_Class_t *)LUAX_USERDATA(L, 1);
+
+    if (self->xform.table) {
+        arrfree(self->xform.table);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "scan-line table %p freed", self->xform.table);
+    }
+    self->xform.table = NULL;
+
+    return 0;
+}
+
+static GL_XForm_Registers_t _string_to_register(const char *id) // TODO: move to a bsearched table.
+{
+    if (id[0] == 'h') {
+        return GL_XFORM_REGISTER_H;
+    } else
+    if (id[0] == 'v') {
+        return GL_XFORM_REGISTER_V;
+    } else
+    if (id[0] == 'a') {
+        return GL_XFORM_REGISTER_A;
+    } else
+    if (id[0] == 'b') {
+        return GL_XFORM_REGISTER_B;
+    } else
+    if (id[0] == 'c') {
+        return GL_XFORM_REGISTER_C;
+    } else
+    if (id[0] == 'd') {
+        return GL_XFORM_REGISTER_D;
+    } else
+    if (id[0] == 'x') {
+        return GL_XFORM_REGISTER_X;
+    } else
+    if (id[0] == 'y') {
+        return GL_XFORM_REGISTER_Y;
+    }
+    Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "unknown register w/ id `%s`", id);
+    return GL_XFORM_REGISTER_A;
+}
+
+static int xform_table2(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
+    LUAX_SIGNATURE_END
+    XForm_Class_t *self = (XForm_Class_t *)LUAX_USERDATA(L, 1);
+
+    GL_XForm_Table_Entry_t *table = NULL;
+
+    lua_pushnil(L);
+    while (lua_next(L, 2)) {
+        int index = LUAX_INTEGER(L, -2);
+        GL_XForm_Table_Entry_t entry = { .scan_line = index - 1 }; // The scan-line indicator is the array index (minus one).
+
+        lua_pushnil(L);
+        for (size_t i = 0; lua_next(L, -2); ++i) { // Scan the value, which is an array.
+            if (i == GL_XForm_Registers_t_CountOf) {
+                Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "too many operation for table entry w/ id #%d", index);
+                lua_pop(L, 2);
+                break;
+            }
+            entry.count = i + 1;
+            entry.operations[i].id = _string_to_register(LUAX_STRING(L, -2));
+            entry.operations[i].value = (float)LUAX_NUMBER(L, -1);
+
+            lua_pop(L, 1);
+        }
+
+        arrpush(table, entry);
+
+        lua_pop(L, 1);
+    }
+    arrpush(table, (GL_XForm_Table_Entry_t){ .scan_line = -1 }); // Set the end-of-data (safety) marker
+
+    GL_XForm_t *xform = &self->xform;
+    if (xform->table) {
+        arrfree(xform->table);
+//        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "scan-line table %p reallocated as %p", xform->table, table);
+    }
+    xform->table = table;
+
+    return 0;
+}
+
+static int xform_table(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, xform_table1)
+        LUAX_OVERLOAD_ARITY(2, xform_table2)
+    LUAX_OVERLOAD_END
+}

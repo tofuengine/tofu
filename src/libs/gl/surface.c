@@ -31,49 +31,34 @@
 
 #define LOG_CONTEXT "gl"
 
-bool GL_surface_decode(GL_Surface_t *surface, const void *buffer, size_t buffer_size, const GL_Surface_Callback_t callback, void *user_data)
+GL_Surface_t *GL_surface_decode(size_t width, size_t height, const void *pixels, const GL_Surface_Callback_t callback, void *user_data)
 {
-    int width, height, components;
-    void *data = stbi_load_from_memory(buffer, buffer_size, &width, &height, &components, STBI_rgb_alpha); //STBI_default);
-    if (!data) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't decode surface from %p: %s", data, stbi_failure_reason());
-        return false;
+    GL_Surface_t *surface = GL_surface_create(width, height);
+    if (!surface) {
+        return NULL;
     }
-    GL_surface_create(surface, width, height);
-    if (callback != NULL) {
-        callback(user_data, surface, data);
-    }
-    stbi_image_free(data);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface decoded at %p (%dx%d w/ %d bpp)", surface->data, width, height, components);
+    callback(user_data, surface, pixels);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface decoded at %p (%dx%d)", surface->data, width, height);
 
-    return true;
+    return surface;
 }
 
-bool GL_surface_fetch(GL_Surface_t *surface, GL_Image_t image, const GL_Surface_Callback_t callback, void *user_data)
-{
-    bool result = GL_surface_create(surface, image.width, image.height);
-    if (!result) {
-        return false;
-    }
-
-    if (callback != NULL) {
-        callback(user_data, surface, image.data);
-    }
-
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface fetched at %p (%dx%d)", surface->data, image.width, image.height);
-
-    return true;
-}
-
-bool GL_surface_create(GL_Surface_t *surface, size_t width, size_t height)
+GL_Surface_t *GL_surface_create(size_t width, size_t height)
 {
     GL_Pixel_t *data = malloc(width * height * sizeof(GL_Pixel_t));
     if (!data) {
-        return false;
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "cant' allocate (%dx%d) pixel-data", width, height);
+        return NULL;
     }
-
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface created at %p (%dx%d)", data, width, height);
+
+    GL_Surface_t *surface = malloc(sizeof(GL_Surface_t));
+    if (!surface) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "cant' allocate surface");
+        free(data);
+        return NULL;
+    }
 
     *surface = (GL_Surface_t){
             .width = width,
@@ -82,13 +67,15 @@ bool GL_surface_create(GL_Surface_t *surface, size_t width, size_t height)
             .data_size = width * height
         };
 
-    return true;
+    return surface;
 }
 
-void GL_surface_delete(GL_Surface_t *surface)
+void GL_surface_destroy(GL_Surface_t *surface)
 {
     free(surface->data);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface at %p deleted", surface->data);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface-data at %p freed", surface->data);
+    free(surface);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface %p freed", surface);
 }
 
 void GL_surface_to_rgba(const GL_Surface_t *surface, const GL_Palette_t *palette, GL_Color_t *vram)

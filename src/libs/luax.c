@@ -28,6 +28,7 @@
 
 #include <inttypes.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -141,8 +142,11 @@ int luaX_newmodule(lua_State *L, const luaX_Script *script, const luaL_Reg *f, c
             lua_pushvalue(L, -1);
             lua_setfield(L, LUA_REGISTRYINDEX, name);  /* registry.name = metatable */
         }
+    } else
+    if (name) {
+        luaL_newmetatable(L, name); // create metatable
     } else {
-        luaL_newmetatable(L, name); /* create metatable */
+        lua_newtable(L); // create nameless metatable, in case of a non-class.
     }
 
     // Duplicate the metatable, since it will be popped by the 'lua_setfield()' call.
@@ -249,7 +253,7 @@ luaX_Reference luaX_ref(lua_State *L, int idx)
 
 void luaX_unref(lua_State *L, luaX_Reference ref)
 {
-    luaL_unref(L, ref, LUA_REGISTRYINDEX);
+    luaL_unref(L, LUA_REGISTRYINDEX, ref);
 }
 
 void luaX_checkargument(lua_State *L, int idx, const char *file, int line, ...)
@@ -260,7 +264,7 @@ void luaX_checkargument(lua_State *L, int idx, const char *file, int line, ...)
     va_start(args, line);
     for (;;) {
         int type = va_arg(args, int);
-        if (type == LUA_TNONE) {
+        if (type == LUAX_EOD) {
             success = 0;
             break;
         }

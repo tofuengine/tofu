@@ -24,11 +24,56 @@ SOFTWARE.
 
 local Font = {}
 
---Font.__index = Font
+-- Note: the `__index` metatable reference is set by the module loader.
+-- Font.__index = Font
 
--- ! can't declare as `Font.default = function(...)`
-function Font.default(background_color, foreground_color)
-  return Font.new("5x8", 0, 0, background_color, foreground_color)
+function Font.default(...)
+  local args = { ... }
+  if #args == 2 then -- background_color, foreground_color
+    return Font.new("5x8", 0, 0, args[1], args[2])
+  elseif #args == 3 then -- id, background_color, foreground_color
+    return Font.new(args[1], 0, 0, args[2], args[3])
+  elseif #args == 4 then -- canvas, id, background_color, foreground_color
+    return Font.new(args[1], args[2], 0, 0, args[3], args[4])
+  else
+    error("invalid arguments for default font")
+  end
+end
+
+-- Only `text`, `x`, and `y` are required. All the other arguments are optional.
+--
+-- From the [reference manual](https://www.lua.org/pil/5.1.html)
+-- << [...] A function call that is not the last element in the list always produces one
+-- result [...] When a function call is the last (or the only) argument to another call,
+-- all results from the first call go as arguments. >>
+function Font:align(text, x, y, h_align, v_align, scale_x, scale_y)
+  local width, height = self:size(text, scale_x or 1.0, scale_y or scale_x or 1.0)
+
+  local dx, dy
+  if h_align == "center" then
+    dx = tonumber(width * 0.5)
+  elseif h_align == "right" then
+    dx = width
+  else
+    dx = 0
+  end
+  if v_align == "middle" then
+    dy = tonumber(height * 0.5)
+  elseif v_align == "bottom" then
+    dy = height
+  else
+    dy = 0
+  end
+
+  -- Return the proper amount of values in order to trigger the correct
+  -- `Font.write()` overloaded method.
+  if scale_y then
+    return text, x - dx, y - dy, scale_x, scale_y
+  elseif scale_x then
+    return text, x - dx, y - dy, scale_x
+  else
+    return text, x - dx, y - dy
+  end
 end
 
 return Font

@@ -24,29 +24,26 @@ SOFTWARE.
 
 local Math = {}
 
+-- TODO: add these? https://github.com/MarcoLizza/love-workouts/tree/master/boids/lib/math
+-- https://github.com/MarcoLizza/love-workouts/tree/master/anaglyph-3d/lib/math
+
 function Math.lerp(a, b, r)
-  -- More precise than `a + (b - a) * r`.
-  return a * (1.0 - r) + b * r
+  if type(a) == 'table' then
+    local v = {}
+    for i = 1, #a do
+      table.insert(v, Math.lerp(a[i], b[i], r))
+    end
+    return v
+  else
+    return a * (1 - r) + b * r
+    -- More numerical stable than the following one.
+    -- return (b - a) * ratio + a
+    -- see: https://en.wikipedia.org/wiki/Linear_interpolation
+  end
 end
 
-function Math.sine_wave(period, t)
-  local t_over_p = t / period
-  return math.sin(t_over_p * 2 * math.pi)
-end
-
-function Math.square_wave(period, t)
-  local t_over_p = t / period
-  return 2.0 * (2.0 * math.floor(t_over_p) - math.floor(2 * t_over_p)) + 1.0
-end
-
-function Math.triangle_wave(period, t)
-  local t_over_p = t / period
-  return 2.0 * math.abs(2.0 * (t_over_p - math.floor(t_over_p + 0.5))) - 1.0
-end
-
-function Math.sawtooth_wave(period, t)
-  local t_over_p = t / period
-  return 2.0 * (t_over_p - math.floor(0.5 + t_over_p))
+function Math.fitting()
+  return nil
 end
 
 return Math

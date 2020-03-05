@@ -26,14 +26,13 @@
 
 #include <config.h>
 #include <core/vm/interpreter.h>
+#include <libs/fs/fsaux.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 
 #include "udt.h"
 
 #include <string.h>
-
-#define FILE_MT        "Tofu_File_mt"
 
 static int file_as_string(lua_State *L);
 static int file_as_binary(lua_State *L);
@@ -44,51 +43,47 @@ static const struct luaL_Reg _file_functions[] = {
     { NULL, NULL }
 };
 
-static const luaX_Const _file_constants[] = {
-    { NULL }
-};
-
 int file_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, NULL, _file_functions, _file_constants, nup, FILE_MT);
+    return luaX_newmodule(L, NULL, _file_functions, NULL, nup, NULL);
 }
 
 static int file_as_string(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    const char *file = lua_tostring(L, 1);
+    const char *file = LUAX_STRING(L, 1);
 
-    const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
+    const File_System_t *file_system = (const File_System_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
 
-    File_System_Chunk_t chunk = FS_load(file_system, file, FILE_SYSTEM_CHUNK_BLOB);
+    File_System_Chunk_t chunk = FSaux_load(file_system, file, FILE_SYSTEM_CHUNK_BLOB);
     if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
-        luaL_error(L, "can't load file `%s`", file);
+        return luaL_error(L, "can't load file `%s`", file);
     }
     lua_pushlstring(L, chunk.var.blob.ptr, chunk.var.blob.size);
-    FS_release(chunk);
+    FSaux_release(chunk);
 
     return 1;
 }
 
 static int file_as_binary(lua_State *L)
 {
-    LUAX_SIGNATURE_BEGIN(L, 1)
-        LUAX_SIGNATURE_ARGUMENT(LUA_TSTRING)
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    const char *file = lua_tostring(L, 1);
+    const char *file = LUAX_STRING(L, 1);
 
-    const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
+    const File_System_t *file_system = (const File_System_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
 
-    File_System_Chunk_t chunk = FS_load(file_system, file, FILE_SYSTEM_CHUNK_BLOB);
+    File_System_Chunk_t chunk = FSaux_load(file_system, file, FILE_SYSTEM_CHUNK_BLOB);
     if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
-        luaL_error(L, "can't load file `%s`", file);
+        return luaL_error(L, "can't load file `%s`", file);
     }
 //    lua_pushlstring(L, buffer, size);
     lua_pushnil(L); // TODO: read the file as a Base64 or similar encoded string.
-    FS_release(chunk); // FIME: useless, Lua's strings can contain bytes.
+    FSaux_release(chunk); // FIME: useless, Lua's strings can contain bytes.
 
     return 1;
 }

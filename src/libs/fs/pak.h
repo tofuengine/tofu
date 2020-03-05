@@ -27,8 +27,7 @@
 
 #include "fs.h"
 
-extern const File_System_Callbacks_t *pakio_callbacks;
-
-extern bool pakio_is_archive(const char *path);
+extern bool pak_is_valid(const char *path);
+extern File_System_Mount_t *pak_mount(const char *path);
 
 #endif /* __FS_PAK_H__ */

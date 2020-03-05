@@ -27,6 +27,7 @@
 #include <config.h>
 #include <core/configuration.h>
 #include <core/platform.h>
+#include <libs/fs/fsaux.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 
@@ -41,7 +42,9 @@
   #include <windows.h>
 #endif
 
-#define _TOFU_CONCAT_VERSION(m, n, r) #m "." #n "." #r
+#define ENTRY_GAMECONTROLLER_DB "gamecontrollerdb.txt"
+
+#define _TOFU_CONCAT_VERSION(m, n, r) #m "." #n "." #r "-dev"
 #define _TOFU_MAKE_VERSION(m, n, r) _TOFU_CONCAT_VERSION(m, n, r)
 #define TOFU_VERSION_NUMBER _TOFU_MAKE_VERSION(TOFU_VERSION_MAJOR, TOFU_VERSION_MINOR, TOFU_VERSION_REVISION)
 
@@ -50,25 +53,30 @@
 static inline void _wait_for(float seconds)
 {
 #if PLATFORM_ID == PLATFORM_LINUX
-    int nanos = (int)(seconds * 1000000.0f);
-    if (nanos == 0) {
+    long millis = (long)(seconds * 1000.0f); // Can use `floorf()`, too.
+    if (millis == 0L) {
         sched_yield();
     } else {
-        usleep(nanos); // usleep takes sleep time in us (1 millionth of a second)
+        struct timespec ts = (struct timespec){
+                .tv_sec = millis / 1000L,
+                .tv_nsec = (millis % 1000L) * 1000000L
+            };
+        nanosleep(&ts, NULL);
     }
 #elif PLATFORM_ID == PLATFORM_WINDOWS
-    int millis = (int)(seconds * 1000.0f);
-    if (millis == 0) {
+    long millis = (long)(seconds * 1000.0f);
+    if (millis == 0L) {
         YieldProcessor();
-     } else {
+    } else {
         Sleep(millis);
     }
 #else
-    int nanos = (int)(seconds * 1000000.0f);
-    struct timespec ts;
-    ts.tv_sec = nanos / 1000000;
-    ts.tv_nsec = nanos;
-    nanosleep(&ts, NULL);
+    int micro = (int)(seconds * 1000000.0f);
+    if (micro == 0) {
+        sched_yield();
+    } else {
+        usleep(micro); // usleep takes sleep time in us (1 millionth of a second)
+    }
 #endif
 }
 
@@ -86,14 +94,15 @@ static inline float _calculate_fps(float elapsed)
     return (float)FPS_AVERAGE_SAMPLES / sum;
 }
 
-static void _configure(const File_System_t *file_system, Configuration_t *configuration)
+static bool _configure(const File_System_t *file_system, Configuration_t *configuration)
 {
-    File_System_Chunk_t chunk = FS_load(file_system, "tofu.config", FILE_SYSTEM_CHUNK_STRING);
+    File_System_Chunk_t chunk = FSaux_load(file_system, "tofu.config", FILE_SYSTEM_CHUNK_STRING);
     if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
-        return;
+        return false;
     }
     Configuration_load(configuration, chunk.var.string.chars);
-    FS_release(chunk);
+    FSaux_release(chunk);
+    return true;
 }
 
 static File_System_Chunk_t _load_icon(const File_System_t *file_system, const char *file)
@@ -102,7 +111,7 @@ static File_System_Chunk_t _load_icon(const File_System_t *file_system, const ch
         return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
     }
 
-    return FS_load(file_system, file, FILE_SYSTEM_CHUNK_IMAGE);
+    return FSaux_load(file_system, file, FILE_SYSTEM_CHUNK_IMAGE);
 }
 
 bool Engine_initialize(Engine_t *engine, const char *base_path)
@@ -116,7 +125,11 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
         return false;
     }
 
-    _configure(&engine->file_system, &engine->configuration);
+    result = _configure(&engine->file_system, &engine->configuration);
+    if (!result) {
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "configuration file is missing");
+        return false;
+    }
 
     Log_configure(engine->configuration.debug, NULL);
     Environment_initialize(&engine->environment);
@@ -155,9 +168,14 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             .gamepad_range = 1.0f - engine->configuration.gamepad_inner_deadzone - engine->configuration.gamepad_outer_deadzone,
             .scale = 1.0f / (float)engine->display.configuration.scale
         };
-    File_System_Chunk_t mappings = FS_load(&engine->file_system, "gamecontrollerdb.txt", FILE_SYSTEM_CHUNK_STRING);
-    result = Input_initialize(&engine->input, &input_configuration, engine->display.window, mappings.var.string.chars);
-    FS_release(mappings);
+    if (FSaux_exists(&engine->file_system, ENTRY_GAMECONTROLLER_DB)) {
+        File_System_Chunk_t mappings = FSaux_load(&engine->file_system, ENTRY_GAMECONTROLLER_DB, FILE_SYSTEM_CHUNK_STRING);
+        Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined controller mappings loaded");
+        result = Input_initialize(&engine->input, &input_configuration, engine->display.window, mappings.var.string.chars);
+        FSaux_release(mappings);
+    } else {
+        result = Input_initialize(&engine->input, &input_configuration, engine->display.window, NULL);
+    }
     if (!result) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize input");
         Display_terminate(&engine->display);
@@ -206,7 +224,7 @@ void Engine_terminate(Engine_t *engine)
 
     Environment_terminate(&engine->environment);
 
-    FS_release(engine->display.configuration.icon);
+    FSaux_release(engine->display.configuration.icon);
 
     FS_terminate(&engine->file_system);
 #if DEBUG
@@ -218,7 +236,7 @@ void Engine_run(Engine_t *engine)
 {
     const float delta_time = 1.0f / (float)engine->configuration.fps;
     const size_t skippable_frames = engine->configuration.skippable_frames;
-    const float reference_time = 1.0f / engine->configuration.fps_cap;
+    const float reference_time = engine->configuration.fps_cap == 0 ? 0.0f : 1.0f / engine->configuration.fps_cap;
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "now running, update-time is %.6fs w/ %d skippable frames, reference-time is %.6fs", delta_time, skippable_frames, reference_time);
 
     // Track time using double to keep the min resolution consistent over time!
@@ -261,10 +279,12 @@ void Engine_run(Engine_t *engine)
 
         Display_present(&engine->display);
 
-        const float frame_time = (float)(glfwGetTime() - current);
-        const float leftover = reference_time - frame_time;
-        if (leftover > 0.0f) {
-            _wait_for(leftover);
+        if (reference_time != 0.0f) {
+            const float frame_time = (float)(glfwGetTime() - current);
+            const float leftover = reference_time - frame_time;
+            if (leftover > 0.0f) {
+                _wait_for(leftover); // FIXME: Add minor compensation to reach cap value?
+            }
         }
     }
 }

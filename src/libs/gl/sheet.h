@@ -31,18 +31,19 @@
 #include "surface.h"
 
 typedef struct _GL_Sheet_t {
-    GL_Surface_t atlas;
+    GL_Surface_t *atlas;
     GL_Rectangle_t *cells;
-    GL_Size_t size;
+    size_t count;
 } GL_Sheet_t;
 
 // TODO: is the GL_Sheet_t really needed?
 
-extern bool GL_sheet_decode(GL_Sheet_t *sheet, const void *buffer, size_t size, size_t cell_width, size_t cell_height, GL_Surface_Callback_t callback, void *user_data);
-extern bool GL_sheet_fetch(GL_Sheet_t *sheet, GL_Image_t image, size_t cell_width, size_t cell_height, const GL_Surface_Callback_t callback, void *user_data);
-extern void GL_sheet_delete(GL_Sheet_t *sheet);
-extern void GL_sheet_attach(GL_Sheet_t *sheet, const GL_Surface_t *atlas, size_t cell_width, size_t cell_height);
-extern void GL_sheet_detach(GL_Sheet_t *sheet);
+extern GL_Sheet_t *GL_sheet_decode_rect(size_t width, size_t height, const void *pixels, size_t cell_width, size_t cell_height, GL_Surface_Callback_t callback, void *user_data);
+extern GL_Sheet_t *GL_sheet_decode(size_t width, size_t height, const void *pixels, const GL_Rectangle_t *cells, size_t count, GL_Surface_Callback_t callback, void *user_data);
+extern void GL_sheet_destroy(GL_Sheet_t *sheet);
 
+extern GL_Sheet_t *GL_sheet_attach_rect(const GL_Surface_t *atlas, size_t cell_width, size_t cell_height);
+extern GL_Sheet_t *GL_sheet_attach(const GL_Surface_t *atlas, const GL_Rectangle_t *cells, size_t count);
+extern void GL_sheet_detach(GL_Sheet_t *sheet);
 
 #endif  /* __GL_SHEET_H__ */

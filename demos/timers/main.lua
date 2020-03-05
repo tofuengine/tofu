@@ -22,29 +22,33 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
+local Class = require("tofu.core").Class
 local Canvas = require("tofu.graphics").Canvas
-local Class = require("tofu.util").Class
-local Timer = require("tofu.util").Timer
+local Display = require("tofu.graphics").Display
+local Timer = require("tofu.timers").Timer
 
 local Main = Class.define()
 
 function Main:__ctor()
-  Canvas.palette("pico-8")
+  Display.palette("pico-8")
+
+  local canvas = Canvas.default()
+  local width, height = canvas:size()
 
   self.timerA = Timer.new(0.5, 50, function()
       --local o = Object.new()
-      self.x = math.random() * Canvas.width()
+      self.x = math.random() * width
     end)
   self.timerB = Timer.new(0.25, -1, function()
-      self.y = math.random() * Canvas.height()
+      self.y = math.random() * height
     end)
   self.timerC = Timer.new(15, 0, function()
       self.timerA:cancel()
       self.timerB = nil
     end)
 
-    self.x = math.random() * Canvas.width()
-    self.y = math.random() * Canvas.height()
+    self.x = math.random() * width
+    self.y = math.random() * height
 end
 
 function Main:input()
@@ -55,8 +59,9 @@ end
 
 function Main:render(_)
   --local x = X.new()
-  Canvas.clear()
-  Canvas.circle("fill", self.x, self.y, 5, 15)
+  local canvas = Canvas.default()
+  canvas:clear()
+  canvas:circle("fill", self.x, self.y, 5, 15)
 end
 
 return Main

@@ -1,5 +1,6 @@
 .vscode/
+external/**/*.inc
 external/**/*.o
 src/**/*.inc
 src/**/*.o
-tofu*
+tofu

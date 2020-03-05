@@ -22,13 +22,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.util").Class
-local Timer = require("tofu.util").Timer
+local Class = require("tofu.core").Class
+local Pool = require("tofu.timers").Pool
+
+local Main = require("main")
 
 local Tofu = Class.define() -- To be precise, the class name is irrelevant since it's locally used.
 
 function Tofu:__ctor()
-  local Main = require("main") -- Lazily require.
   self.main = Main.new()
 end
 
@@ -37,7 +38,7 @@ function Tofu:process()
 end
 
 function Tofu:update(delta_time)
-  Timer.pool:update(delta_time)
+  Pool.default():update(delta_time)
   self.main:update(delta_time)
 end
 

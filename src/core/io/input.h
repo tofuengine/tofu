@@ -47,19 +47,20 @@ typedef enum _Input_Buttons_t {
     INPUT_BUTTON_A,
     INPUT_BUTTON_SELECT,
     INPUT_BUTTON_START,
-    INPUT_BUTTON_MOUSE_LEFT,
-    INPUT_BUTTON_MOUSE_MIDDLE,
-    INPUT_BUTTON_MOUSE_RIGHT,
-    Input_Buttons_t_Last = INPUT_BUTTON_MOUSE_RIGHT,
+    INPUT_BUTTON_QUIT,
+    INPUT_BUTTON_SWITCH,
+    Input_Buttons_t_Last = INPUT_BUTTON_SWITCH,
     Input_Buttons_t_CountOf
 } Input_Buttons_t;
 
 typedef struct _Input_Button_State_t {
+    uint8_t was : 1; // Transient buffer.
+    uint8_t is : 1; // Ditto.
     uint8_t down : 1;
     uint8_t pressed : 1;
     uint8_t released : 1;
     uint8_t triggered : 1;
-    uint8_t : 4;
+    uint8_t : 2;
 } Input_Button_State_t;
 
 typedef struct _Input_Button_t {
@@ -71,7 +72,8 @@ typedef struct _Input_Button_t {
 typedef struct _Input_Cursor_t {
     float x, y;
     struct {
-        int x0, y0, x1, y1;
+        float x0, y0;
+        float x1, y1;
     } area;
 } Input_Cursor_t;
 
@@ -104,7 +106,8 @@ typedef struct _Input_State_t {
 
 typedef enum _Input_Handlers_t {
     Input_Handlers_t_First = 0,
-    INPUT_HANDLER_KEYBOARD = Input_Handlers_t_First,
+    INPUT_HANDLE_DEFAULT = Input_Handlers_t_First,
+    INPUT_HANDLER_KEYBOARD,
     INPUT_HANDLER_MOUSE,
     INPUT_HANDLER_GAMEPAD,
     Input_Handlers_t_Last = INPUT_HANDLER_GAMEPAD,
@@ -128,7 +131,7 @@ typedef struct _Input_Configuration_t {
     float scale; // Refers to the screen-to-canvas scaling factor.
 } Input_Configuration_t;
 
-typedef void (*Input_Handler_t)(GLFWwindow *window, Input_State_t *state, const Input_Configuration_t *configuration);
+typedef void (*Input_Handler_t)(Input_State_t *state, GLFWwindow *window, const Input_Configuration_t *configuration);
 
 typedef struct _Input_t {
     Input_Configuration_t configuration;

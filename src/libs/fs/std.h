@@ -27,6 +27,7 @@
 
 #include "fs.h"
 
-extern const File_System_Callbacks_t *stdio_callbacks;
+extern bool std_is_valid(const char *path);
+extern File_System_Mount_t *std_mount(const char *path);
 
 #endif /* __FS_STD_H__ */
