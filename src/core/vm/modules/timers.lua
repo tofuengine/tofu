@@ -24,9 +24,16 @@ SOFTWARE.
 
 local Pool = {}
 
--- TODO: rewrite, the pool is the one to be returned, not to Timer!
-
 Pool.__index = Pool
+
+local _default = nil
+
+function Pool.default()
+  if not _default then
+    _default = Pool.new()
+  end
+  return _default
+end
 
 function Pool.new()
   return setmetatable({ timers = {} }, Pool)
@@ -47,7 +54,7 @@ function Pool:update(delta_time)
     if timer.cancelled then
       table.insert(zombies, index)
     else
-      timer.age = timer.age + delta_time
+      timer.age = timer.age + timer.rate * delta_time
       while timer.age >= timer.period do
         timer.callback()
 
@@ -73,19 +80,23 @@ local Timer = {}
 
 Timer.__index = Timer
 
-Timer.pool = Pool.new() -- this is a "static" member.
-
-function Timer.new(period, repeats, callback)
+function Timer.new(period, repeats, callback, pool)
   local instance = setmetatable({
       period = period,
       repeats = repeats,
       callback = callback,
+      rate = 1.0,
       age = 0.0,
       loops = repeats,
       cancelled = false
     }, Timer)
-  Timer.pool:append(instance)
+  local p = pool or Pool.default()
+  p:append(instance)
   return instance
+end
+
+function Timer:rate(rate)
+  self.rate = rate or 1.0
 end
 
 function Timer:reset()
@@ -98,4 +109,7 @@ function Timer:cancel()
   self.cancelled = true
 end
 
-return Timer
+return {
+    Pool = Pool,
+    Timer = Timer
+  }

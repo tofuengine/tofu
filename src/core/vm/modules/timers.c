@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-#include "timer.h"
+#include "timers.h"
 
 #include <config.h>
 #include <core/vm/interpreter.h>
@@ -30,14 +30,14 @@
 
 #include "udt.h"
 
-static const uint8_t _timer_lua[] = {
-#include "timer.inc"
+static const uint8_t _timers_lua[] = {
+#include "timers.inc"
 };
 
-static luaX_Script _timer_script = { (const char *)_timer_lua, sizeof(_timer_lua), "@timer.lua" }; // Trace as filename internally.
+static luaX_Script _timers_script = { (const char *)_timers_lua, sizeof(_timers_lua), "@timers.lua" }; // Trace as filename internally.
 
-int timer_loader(lua_State *L)
+int timers_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, &_timer_script, NULL, NULL, nup, NULL);
+    return luaX_newmodule(L, &_timers_script, NULL, NULL, nup, NULL);
 }

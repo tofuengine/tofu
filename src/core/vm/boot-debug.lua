@@ -28,7 +28,7 @@ local Input = require("tofu.events").Input
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
-local Timer = require("tofu.util").Timer
+local Pool = require("tofu.timers").Pool
 
 local Main = require("main")
 
@@ -41,14 +41,14 @@ function Tofu:__ctor()
           me.main = Main.new()
         end,
       leave = function(me)
-          Timer.pool:clear()
+          Pool.default():clear()
           me.main = nil
         end,
       process = function(me)
           me.main:input()
         end,
       update = function(me, delta_time)
-          Timer.pool:update(delta_time)
+          Pool.default():update(delta_time)
           me.main:update(delta_time)
         end,
       render = function(me, ratio)

@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_TIMER_H__
-#define __MODULES_TIMER_H__
+#ifndef __MODULES_TIMERS_H__
+#define __MODULES_TIMERS_H__
 
 #include <lua/lua.h>
 
-extern int timer_loader(lua_State *L);
+extern int timers_loader(lua_State *L);
 
-#endif  /* __MODULES_TIMER_H__ */
+#endif  /* __MODULES_TIMERS_H__ */

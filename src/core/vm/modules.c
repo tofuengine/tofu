@@ -36,7 +36,7 @@
 #include <core/vm/modules/iterators.h>
 #include <core/vm/modules/math.h>
 #include <core/vm/modules/system.h>
-#include <core/vm/modules/timer.h>
+#include <core/vm/modules/timers.h>
 #include <core/vm/modules/vector.h>
 #include <core/vm/modules/xform.h>
 #include <libs/log.h>
@@ -128,7 +128,6 @@ static int io_loader(lua_State *L)
 static int util_loader(lua_State *L)
 {
     static const luaL_Reg classes[] = {
-        { "Timer", timer_loader },
         { "Vector", vector_loader },
         { NULL, NULL }
     };
@@ -146,6 +145,7 @@ void modules_initialize(lua_State *L, int nup)
         { "tofu.audio", audio_loader },
 */
         { "tofu.io", io_loader },
+        { "tofu.timers", timers_loader },
         { "tofu.util", util_loader },
         { NULL, NULL }
     };
