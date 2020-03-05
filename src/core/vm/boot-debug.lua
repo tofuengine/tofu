@@ -59,6 +59,7 @@ function Tofu:__ctor()
       enter = function(me)
           Display.palette({ 0xFF000000, 0xFFFF0000 })
           local canvas = Canvas.default()
+          local width, _ = canvas:size()
           canvas:reset() -- Reset default canvas from the game state.
 
           me.font = Font.default("5x8", 0, 1)
@@ -67,17 +68,16 @@ function Tofu:__ctor()
               { text = "Guru Meditation" }
             }
 
-          local width, _ = canvas:size() -- Precalculate lines position and rectangle area.
-          local margin = 4
-          local h = margin
+          local margin = 4 -- Precalculate lines position and rectangle area.
+          local y = margin
           for _, line in ipairs(me.lines) do
             local lw, lh = me.font:size(line.text)
             line.x = (width - lw) * 0.5
-            line.y = h
-            h = h + lh
+            line.y = y
+            y = y + lh
           end
           me.width = width
-          me.height = h + margin
+          me.height = y + margin
         end,
       leave = function(me)
           me.font = nil
