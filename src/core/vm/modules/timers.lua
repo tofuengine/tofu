@@ -39,10 +39,6 @@ function Pool.new()
   return setmetatable({ timers = {} }, Pool)
 end
 
-function Pool:append(timer)
-  table.insert(self.timers, timer)
-end
-
 function Pool:clear()
   self.timers = {}
 end
@@ -90,8 +86,7 @@ function Timer.new(period, repeats, callback, pool)
       loops = repeats,
       cancelled = false
     }, Timer)
-  local p = pool or Pool.default()
-  p:append(instance)
+  table.insert((pool or Pool.default()).timers, instance) -- Access inner field to avoid exposing an API method.
   return instance
 end
 
