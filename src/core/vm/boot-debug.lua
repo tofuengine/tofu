@@ -58,8 +58,26 @@ function Tofu:__ctor()
     ["error"] = {
       enter = function(me)
           Display.palette({ 0xFF000000, 0xFFFF0000 })
-          me.canvas = Canvas.new()
+          local canvas = Canvas.default()
+          canvas:reset() -- Reset default canvas from the game state.
+
           me.font = Font.default("5x8", 0, 1)
+          me.lines = {
+              { text = "Software Failure." },
+              { text = "Guru Meditation" }
+            }
+
+          local width, _ = canvas:size() -- Precalculate lines position and rectangle area.
+          local margin = 4
+          local h = margin
+          for _, line in ipairs(me.lines) do
+            local lw, lh = me.font:size(line.text)
+            line.x = (width - lw) * 0.5
+            line.y = h
+            h = h + lh
+          end
+          me.width = width
+          me.height = h + margin
         end,
       leave = function(me)
           me.font = nil
@@ -72,13 +90,13 @@ function Tofu:__ctor()
       update = function(_, _)
         end,
       render = function(me, _)
-          local w, _ = me.canvas:size() -- TODO: could precalculate these values.
-          local _, fh = me.font:size("W") -- FIXME: calculate rectangle w/ API.
           local on = (System.time() % 2) == 0
-          me.canvas:clear()
-          me.canvas:rectangle("line", 0, 0, w, fh * 2 + 8, on and 1 or 0)
-          me.font:write(me.font:align("Software Failure.", w * 0.5, 0 + 4, "center"))
-          me.font:write(me.font:align("Guru Meditation", w * 0.5, fh + 4, "center"))
+          local canvas = Canvas.default()
+          canvas:clear()
+          canvas:rectangle("line", 0, 0, me.width, me.height, on and 1 or 0)
+          for _, line in ipairs(me.lines) do
+            me.font:write(line.text, line.x, line.y)
+          end
         end
     }
   }
