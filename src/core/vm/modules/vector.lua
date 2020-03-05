@@ -22,13 +22,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = require("tofu.core").Class
+-- No dependency from `tofu.core.Class` module.
 
-local Vector = Class.define()
+local Vector = { }
 
-function Vector:__ctor(x, y)
-  self.x = x or 0
-  self.y = y or 0
+Vector.__index = Vector
+
+function Vector.new(x, y)
+  return setmetatable({ x = x or 0, y = y or 0 }, Vector)
 end
 
 function Vector:clone()
@@ -77,26 +78,22 @@ function Vector:is_equal(v)
 end
 
 function Vector:assign(v)
-  self.x = v.x
-  self.y = v.y
+  self.x, self.y = v.x, v.y
   return self
 end
 
 function Vector:add(v)
-  self.x = self.x + v.x
-  self.y = self.y + v.y
+  self.x, self.y = self.x + v.x, self.y + v.y
   return self
 end
 
 function Vector:sub(v)
-  self.x = self.x - v.x
-  self.y = self.y - v.y
+  self.x, self.y = self.x - v.x, self.y - v.y
   return self
 end
 
 function Vector:scale(s)
-  self.x = self.x * s
-  self.y = self.y * s
+  self.x, self.y = self.x * s, self.y * s
   return self
 end
 
@@ -104,8 +101,7 @@ end
 -- |                 | |   | = |    |
 -- | sin(a)   cos(a) | | y |   | y' |
 function Vector:rotate(a)
-  local cos = math.cos(a)
-  local sin = math.sin(a)
+  local cos, sin = math.cos(a), math.sin(a)
   self.x, self.y = cos * self.x - sin * self.y, sin * self.x + cos * self.y
   return self
 end
@@ -128,8 +124,7 @@ end
 -- https://en.wikipedia.org/wiki/Vector_projection
 function Vector:project(v)
   local s = self:dot(v) / v:dot(v)
-  self.x, self.y = s * v.x, s * v.y
-  return self
+  return self:scale(s)
 end
 
 --       a dot b
@@ -175,8 +170,7 @@ function Vector:magnitude()
 end
 
 function Vector:distance_from_squared(v)
-  local dx = self.x - v.x
-  local dy = self.y - v.y
+  local dx, dy = self.x - v.x, self.y - v.y
   return (dx * dx) + (dy * dy)
 end
 
@@ -195,7 +189,7 @@ function Vector:normalize_if_not_zero(l)
   return self:normalize(l)
 end
 
--- Normalize to the give `l` length only when greater than it.
+-- Normalize to the given `l` length only when greater than it.
 function Vector:trim(l)
   local s = l * l / self:magnitude_squared()
   if s >= 1 then

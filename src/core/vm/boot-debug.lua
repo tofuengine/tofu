@@ -24,11 +24,11 @@ SOFTWARE.
 
 local Class = require("tofu.core").Class
 local System = require("tofu.core").System
-local Timer = require("tofu.core").Timer
 local Input = require("tofu.events").Input
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
+local Pool = require("tofu.timers").Pool
 
 local Main = require("main")
 
@@ -41,14 +41,14 @@ function Tofu:__ctor()
           me.main = Main.new()
         end,
       leave = function(me)
-          Timer.pool:clear()
+          Pool.default():clear()
           me.main = nil
         end,
       process = function(me)
           me.main:input()
         end,
       update = function(me, delta_time)
-          Timer.pool:update(delta_time)
+          Pool.default():update(delta_time)
           me.main:update(delta_time)
         end,
       render = function(me, ratio)
@@ -58,8 +58,26 @@ function Tofu:__ctor()
     ["error"] = {
       enter = function(me)
           Display.palette({ 0xFF000000, 0xFFFF0000 })
-          me.canvas = Canvas.new()
+          local canvas = Canvas.default()
+          local width, _ = canvas:size()
+          canvas:reset() -- Reset default canvas from the game state.
+
           me.font = Font.default("5x8", 0, 1)
+          me.lines = {
+              { text = "Software Failure." },
+              { text = "Guru Meditation" }
+            }
+
+          local margin = 4 -- Precalculate lines position and rectangle area.
+          local y = margin
+          for _, line in ipairs(me.lines) do
+            local lw, lh = me.font:size(line.text)
+            line.x = (width - lw) * 0.5
+            line.y = y
+            y = y + lh
+          end
+          me.width = width
+          me.height = y + margin
         end,
       leave = function(me)
           me.font = nil
@@ -72,13 +90,13 @@ function Tofu:__ctor()
       update = function(_, _)
         end,
       render = function(me, _)
-          local w, _ = me.canvas:size() -- TODO: could precalculate these values.
-          local _, fh = me.font:size("W") -- FIXME: calculate rectangle w/ API.
           local on = (System.time() % 2) == 0
-          me.canvas:clear()
-          me.canvas:rectangle("line", 0, 0, w, fh * 2 + 8, on and 1 or 0)
-          me.font:write(me.font:align("Software Failure.", w * 0.5, 0 + 4, "center"))
-          me.font:write(me.font:align("Guru Meditation", w * 0.5, fh + 4, "center"))
+          local canvas = Canvas.default()
+          canvas:clear()
+          canvas:rectangle("line", 0, 0, me.width, me.height, on and 1 or 0)
+          for _, line in ipairs(me.lines) do
+            me.font:write(line.text, line.x, line.y)
+          end
         end
     }
   }

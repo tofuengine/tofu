@@ -22,13 +22,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Grid = require("tofu.collections").Grid
 local Class = require("tofu.core").Class
 local System = require("tofu.core").System
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
 local Input = require("tofu.events").Input
+local Grid = require("tofu.util").Grid
 
 local INITIAL_LENGHT = 5
 local SPEED_RATIO = 5
@@ -70,18 +70,6 @@ local MAP =  "************************************************"
 
 local Main = Class.define()
 
-local function dump(t, spaces) -- TODO: add dump function to core? util?
-  spaces = spaces or ""
-  for k, v in pairs(t) do
-    print(spaces .. k .. " " .. type(v) .. " " .. tostring(v))
-    if type(v) == "table" then
-      if (k ~= "__index") then
-        dump(v, spaces .. " ")
-      end
-    end
-  end
-end
-
 function Main:__ctor()
   Display.palette("gameboy")
 
@@ -90,7 +78,7 @@ function Main:__ctor()
 
   self.font = Font.default(0, 3)
   self.grid = Grid.new(math.tointeger(width / CELL_SIZE), math.tointeger(height / CELL_SIZE), 0)
-dump(self)
+  Class.dump(self)
 
   self:reset()
 end

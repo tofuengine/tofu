@@ -22,11 +22,22 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_FITTING_H__
-#define __MODULES_FITTING_H__
+#include "timers.h"
 
-#include <lua/lua.h>
+#include <config.h>
+#include <core/vm/interpreter.h>
+#include <libs/log.h>
 
-extern int fitting_loader(lua_State *L);
+#include "udt.h"
 
-#endif  /* __MODULES_FITTING_H__ */
+static const uint8_t _timers_lua[] = {
+#include "timers.inc"
+};
+
+static luaX_Script _timers_script = { (const char *)_timers_lua, sizeof(_timers_lua), "@timers.lua" }; // Trace as filename internally.
+
+int timers_loader(lua_State *L)
+{
+    int nup = luaX_pushupvalues(L);
+    return luaX_newmodule(L, &_timers_script, NULL, NULL, nup, NULL);
+}

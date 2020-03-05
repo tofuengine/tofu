@@ -23,7 +23,7 @@ SOFTWARE.
 ]]--
 
 local Class = require("tofu.core").Class
-local Timer = require("tofu.core").Timer
+local Pool = require("tofu.timers").Pool
 
 local Main = require("main")
 
@@ -38,7 +38,7 @@ function Tofu:process()
 end
 
 function Tofu:update(delta_time)
-  Timer.pool:update(delta_time)
+  Pool.default():update(delta_time)
   self.main:update(delta_time)
 end
 

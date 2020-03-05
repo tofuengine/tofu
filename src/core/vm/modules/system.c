@@ -33,7 +33,6 @@
 #include <string.h>
 
 #define LOG_CONTEXT "system"
-#define META_TABLE  "Tofu_Core_System_mt"
 
 static int system_time(lua_State *L);
 static int system_fps(lua_State *L);
@@ -57,7 +56,7 @@ static const struct luaL_Reg _system_functions[] = {
 int system_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, NULL, _system_functions, NULL, nup, META_TABLE);
+    return luaX_newmodule(L, NULL, _system_functions, NULL, nup, NULL);
 }
 
 static int system_time(lua_State *L)

@@ -26,8 +26,6 @@
 
 #include <libs/luax.h>
 
-#define META_TABLE  "Tofu_Core_Vector_mt"
-
 static const uint8_t _vector_lua[] = {
 #include "vector.inc"
 };
@@ -37,5 +35,5 @@ static luaX_Script _vector_script = { (const char *)_vector_lua, sizeof(_vector_
 int vector_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, &_vector_script, NULL, NULL, nup, META_TABLE);
+    return luaX_newmodule(L, &_vector_script, NULL, NULL, nup, NULL);
 }
