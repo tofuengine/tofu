@@ -25,6 +25,7 @@ SOFTWARE.
 local Class = require("tofu.core").Class
 local System = require("tofu.core").System
 local Input = require("tofu.events").Input
+local Display = require("tofu.graphics").Display
 local Canvas = require("tofu.graphics").Canvas
 local Font = require("tofu.graphics").Font
 
@@ -99,7 +100,7 @@ end
 ]]--
 
 function Main:__ctor()
-  Canvas.palette("gameboy")
+  Display.palette("gameboy")
 
   self.font = Font.default(3, 1)
   self.map = Map.from_file("assets/world.map")
@@ -115,7 +116,7 @@ function Main:__ctor()
   for _, camera in pairs(self.map:get_cameras()) do
     camera.post_draw = function(me)
         local x, y = me:to_screen(me.x, me.y)
-        Canvas.rectangle("fill", x - 2, y - 2, 4, 4, 2)
+        me.canvas:rectangle("fill", x - 2, y - 2, 4, 4, 2)
         self.font:write(self.font:align(tostring(me), me.screen_x + me.screen_width, me.screen_y, "right"))
       end
   end
@@ -165,12 +166,13 @@ function Main:update(delta_time)
 end
 
 function Main:render(_)
-  Canvas.clear()
+  local canvas = Canvas.default()
+  canvas:clear()
   self.map:draw()
 
   local camera = self.map:camera_from_id("right")
   local x, y = camera:to_screen(self.player.x, self.player.y)
-  Canvas.rectangle("fill", x - 2, y - 2, 4, 4, 1)
+  canvas:rectangle("fill", x - 2, y - 2, 4, 4, 1)
 
   self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
 end

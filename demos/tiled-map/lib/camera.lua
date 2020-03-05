@@ -23,7 +23,6 @@ SOFTWARE.
 ]]--
 
 local Class = require("tofu.core").Class
-local Canvas = require("tofu.graphics").Canvas
 
 local function bound(x, y, aabb)
   return math.min(math.max(x, aabb.x0), aabb.x1), math.min(math.max(y, aabb.y0), aabb.y1)
@@ -32,12 +31,13 @@ end
 local Camera = Class.define()
 
 -- TODO: add camera scaling, useful to draw minimap.
-function Camera:__ctor(id, bank, grid, columns, rows, screen_x, screen_y, anchor_x, anchor_y, scale)
+function Camera:__ctor(id, bank, grid, canvas, columns, rows, screen_x, screen_y, anchor_x, anchor_y, scale)
   local cw, ch = bank:size(-1)
 
   self.id = id
   self.bank = bank
   self.grid = grid
+  self.canvas = canvas
   self.screen_x = screen_x or 0
   self.screen_y = screen_y or 0
   self.columns = columns
@@ -119,7 +119,7 @@ end
 function Camera:draw()
   local scale = self.scale
 
-  Canvas.clipping(self.screen_x, self.screen_y, self.screen_width, self.screen_height)
+  self.canvas:clipping(self.screen_x, self.screen_y, self.screen_width, self.screen_height)
 
   local ox, oy = self.screen_x + self.column_offset, self.screen_y + self.row_offset
   for _, v in ipairs(self.batch) do

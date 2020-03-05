@@ -38,9 +38,10 @@ end
 
 local Map = Class.define()
 
-function Map:__ctor(bank, grid)
+function Map:__ctor(bank, grid, canvas)
   self.bank = bank
   self.grid = grid
+  self.canvas = canvas or Canvas.default()
 
   local cw, ch = self.bank:size(-1)
   local gw, gh = self.grid:size()
@@ -83,7 +84,8 @@ function Map:get_cameras()
 end
 
 function Map:add_camera(id, columns, rows, screen_x, screen_y, anchor_x, anchor_y, scale) -- last 3 arguments optional
-  self.cameras[id] = Camera.new(id, self.bank, self.grid, columns, rows, screen_x, screen_y, anchor_x, anchor_y, scale)
+  self.cameras[id] = Camera.new(id, self.bank, self.grid, self.canvas,
+    columns, rows, screen_x, screen_y, anchor_x, anchor_y, scale)
 end
 
 function Map:remove_camera(id)
@@ -101,13 +103,13 @@ function Map:update(delta_time)
 end
 
 function Map:draw()
-  Canvas.push()
+  self.canvas:push()
   for _, camera in pairs(self.cameras) do
     camera:pre_draw()
     camera:draw()
     camera:post_draw()
   end
-  Canvas.pop()
+  self.canvas:pop()
 end
 
 function Map:__tostring()
