@@ -142,8 +142,11 @@ int luaX_newmodule(lua_State *L, const luaX_Script *script, const luaL_Reg *f, c
             lua_pushvalue(L, -1);
             lua_setfield(L, LUA_REGISTRYINDEX, name);  /* registry.name = metatable */
         }
+    } else
+    if (name) {
+        luaL_newmetatable(L, name); // create metatable
     } else {
-        luaL_newmetatable(L, name); /* create metatable */
+        lua_newtable(L); // create nameless metatable, in case of a non-class.
     }
 
     // Duplicate the metatable, since it will be popped by the 'lua_setfield()' call.
