@@ -60,17 +60,6 @@ static int create_module(lua_State *L, const luaL_Reg *entries)
     return 1;
 }
 
-static int collections_loader(lua_State *L) // TODO: move to tofu.util?
-{
-    static const luaL_Reg classes[] = {
-        { "Arrays", arrays_loader },
-        { "Grid", grid_loader },
-        { "Iterators", iterators_loader },
-        { NULL, NULL }
-    };
-    return create_module(L, classes);
-}
-
 static int core_loader(lua_State *L) // java.lang
 {
     static const luaL_Reg classes[] = {
@@ -128,6 +117,9 @@ static int io_loader(lua_State *L)
 static int util_loader(lua_State *L)
 {
     static const luaL_Reg classes[] = {
+        { "Arrays", arrays_loader },
+        { "Grid", grid_loader },
+        { "Iterators", iterators_loader },
         { "Vector", vector_loader },
         { NULL, NULL }
     };
@@ -137,7 +129,6 @@ static int util_loader(lua_State *L)
 void modules_initialize(lua_State *L, int nup)
 {
     static const luaL_Reg modules[] = {
-        { "tofu.collections", collections_loader },
         { "tofu.core", core_loader },
         { "tofu.events", events_loader },
         { "tofu.graphics", graphics_loader },

@@ -22,11 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Grid = require("tofu.collections").Grid
 local Class = require("tofu.core").Class
 local Bank = require("tofu.graphics").Bank
 local Canvas = require("tofu.graphics").Canvas
 local File = require("tofu.io").File
+local Grid = require("tofu.util").Grid
 
 local Camera = require("lib.camera")
 
