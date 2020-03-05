@@ -77,7 +77,7 @@ local Timer = {}
 Timer.__index = Timer
 
 function Timer.new(period, repeats, callback, pool)
-  local instance = setmetatable({
+  local self = setmetatable({
       period = period,
       repeats = repeats,
       callback = callback,
@@ -86,8 +86,8 @@ function Timer.new(period, repeats, callback, pool)
       loops = repeats,
       cancelled = false
     }, Timer)
-  table.insert((pool or Pool.default()).timers, instance) -- Access inner field to avoid exposing an API method.
-  return instance
+  table.insert((pool or Pool.default()).timers, self) -- Access inner field to avoid exposing an API method.
+  return self
 end
 
 function Timer:rate(rate)
