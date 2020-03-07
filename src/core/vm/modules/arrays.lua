@@ -24,6 +24,8 @@ SOFTWARE.
 
 -- http://developer.classpath.org/doc/java/util/Collections-source.html
 
+-- FIXME: adopt build pattern and remove copies?
+
 local function map(array, callback) -- mapper(value, index, length, array)
   local result = {}
   local length = #array
