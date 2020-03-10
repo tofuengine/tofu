@@ -46,4 +46,8 @@ function Math.fitting()
   return nil
 end
 
+function Math.path()
+  return nil
+end
+
 return Math
