@@ -37,7 +37,7 @@ local CHUNK_SIZE = 1
 
 local TORQUE = 0.25
 local THROTTLE = 50.0
-local BRAKE = -25.0
+local BRAKE = 25.0
 
 local Game = Class.define()
 
