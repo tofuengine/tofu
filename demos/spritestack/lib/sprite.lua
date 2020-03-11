@@ -53,7 +53,9 @@ end
 function Sprite:rotate(torque)
   -- When updating the angular velocity we should also take into account
   -- that steering is easier at higher speeds.
-  self.angular_velocity = self.angular_velocity + torque / self.inertia
+--  local dampening = self.velocity:clone():trim_if_not_zero(1):magnitude()
+  local dampening = 1.0
+  self.angular_velocity = self.angular_velocity + dampening * torque / self.inertia
 end
 
 function Sprite:accelerate(force)
@@ -67,7 +69,7 @@ function Sprite:update(delta_time)
   self.velocity:add(Vector.from_polar(self.angle, self.acceleration * delta_time))
   self.acceleration = self.acceleration * 0.90
 
-  self.position:add(self.velocity:scale(delta_time))
+  self.position:add(self.velocity:clone():scale(delta_time))
   self.velocity:scale(0.95)
 end
 
@@ -81,11 +83,10 @@ function Sprite:render()
     end
   end
 
---  var direction = Vector2D.fromPolar(_angle, 48)
---  Canvas.line(x, y, x + direction.x, y + direction.y, 32)
   local canvas = Canvas.default()
-  local color = Display.color_to_index(0xFFFF4444)
-  canvas:line(x, y, x + self.velocity.x, y + self.velocity.y, color)
+  canvas:line(x, y, x + self.velocity.x, y + self.velocity.y, Display.color_to_index(0xFF8888FF))
+  local direction = Vector.from_polar(self.angle, 48)
+  canvas:line(x, y, x + direction.x, y + direction.y, Display.color_to_index(0xFF88FF88))
 end
 
 return Sprite
