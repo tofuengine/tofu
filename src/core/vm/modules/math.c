@@ -34,6 +34,8 @@
 
 #include "udt.h"
 
+static int math_sign(lua_State *L);
+static int math_signum(lua_State *L);
 static int math_sincos(lua_State *L);
 static int math_angle_to_rotation(lua_State *L);
 static int math_rotation_to_angle(lua_State *L);
@@ -41,6 +43,8 @@ static int math_wave(lua_State *L);
 static int math_tweener(lua_State *L);
 
 static const struct luaL_Reg _math_functions[] = {
+    { "sign", math_sign },
+    { "signum", math_signum },
     { "sincos", math_sincos },
     { "angle_to_rotation", math_angle_to_rotation },
     { "rotation_to_angle", math_rotation_to_angle },
@@ -65,6 +69,32 @@ int math_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, &_math_script, _math_functions, _math_constants, nup, NULL);
+}
+
+static int math_sign(lua_State *L) // This never returns 0.
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    float x = LUAX_NUMBER(L, 1);
+
+    lua_pushnumber(L, copysignf(1.0f, x)); // absolute value of the 1st, sign of the 2nd.
+
+    return 1;
+}
+
+static int math_signum(lua_State *L) // Returns -1, 0, 1
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    float x = LUAX_NUMBER(L, 1);
+
+//    int sign = x > 0.0f ? 1 : (x < 0.0f ? -1 : 0);
+//    lua_pushinteger(L, sign);
+    lua_pushinteger(L, (x > 0.0f) - (x < 0.0f));
+
+    return 1;
 }
 
 static int math_sincos(lua_State *L)
