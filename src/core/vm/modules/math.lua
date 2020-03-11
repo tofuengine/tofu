@@ -27,6 +27,19 @@ local Math = {}
 -- TODO: add these? https://github.com/MarcoLizza/love-workouts/tree/master/boids/lib/math
 -- https://github.com/MarcoLizza/love-workouts/tree/master/anaglyph-3d/lib/math
 
+function Math.clamp(value, min, max)
+  if type(value) == 'table' then
+    local v = {}
+    for i = 1, #value do
+      table.insert(v, Math.clamp(value[i], min, max))
+    end
+    return v
+  else
+    local res = value < min and min or value
+    return res > max and max or res
+  end
+end
+
 function Math.lerp(a, b, r)
   if type(a) == 'table' then
     local v = {}
