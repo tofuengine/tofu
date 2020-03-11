@@ -72,17 +72,17 @@ function Game:input()
       table.insert(self.sprites, sprite)
     end
   end
-  if Input.is_down("left") then
-    self.torque = self.torque - TORQUE
-  end
-  if Input.is_down("right") then
-    self.torque = self.torque + TORQUE
-  end
   if Input.is_down("up") then
     self.force = self.force + THROTTLE
   end
   if Input.is_down("down") then
     self.force = self.force - BRAKE
+  end
+  if Input.is_down("left") then
+    self.torque = self.torque - TORQUE * Math.sign(self.force)
+  end
+  if Input.is_down("right") then
+    self.torque = self.torque + TORQUE * Math.sign(self.force)
   end
   if Input.is_pressed("select") then
     self.sprites = {}
