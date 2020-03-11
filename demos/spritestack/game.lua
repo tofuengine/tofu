@@ -93,8 +93,8 @@ function Game:input()
 end
 
 function Game:update(delta_time)
-  self.force_life = math.abs(self.force) > 0.0001 and math.min(self.force_life + delta_time, 1) or 0
-  self.torque_life = math.abs(self.torque) > 0.001 and math.min(self.torque_life + delta_time, 1) or 0
+  self.force_life = math.abs(self.force) > Math.EPSILON and math.min(self.force_life + delta_time, 1) or 0
+  self.torque_life = math.abs(self.torque) > Math.EPSILON and math.min(self.torque_life + delta_time, 1) or 0
   for _, sprite in ipairs(self.sprites) do
       sprite:accelerate(self.tweener(self.force_life) * self.force)
       sprite:rotate(self.tweener(self.torque_life) * self.torque)

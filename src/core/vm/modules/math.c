@@ -51,6 +51,7 @@ static const struct luaL_Reg _math_functions[] = {
 
 static const luaX_Const _math_constants[] = {
     { "SINCOS_PERIOD", LUA_CT_INTEGER, { .i = SINCOS_PERIOD } },
+    { "EPSILON", LUA_CT_NUMBER, { .n = __FLT_EPSILON__ } },
     { NULL }
 };
 
