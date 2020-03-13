@@ -34,6 +34,11 @@
 
 #include "udt.h"
 
+static int math_lerp(lua_State *L);
+static int math_clamp(lua_State *L);
+static int math_step(lua_State *L);
+static int math_smoothstep(lua_State *L);
+static int math_smootherstep(lua_State *L);
 static int math_sign(lua_State *L);
 static int math_signum(lua_State *L);
 static int math_sincos(lua_State *L);
@@ -43,6 +48,11 @@ static int math_wave(lua_State *L);
 static int math_tweener(lua_State *L);
 
 static const struct luaL_Reg _math_functions[] = {
+    { "lerp", math_lerp },
+    { "clamp", math_clamp },
+    { "step", math_step },
+    { "smoothstep", math_smoothstep },
+    { "smootherstep", math_smootherstep },
     { "sign", math_sign },
     { "signum", math_signum },
     { "sincos", math_sincos },
@@ -69,6 +79,109 @@ int math_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, &_math_script, _math_functions, _math_constants, nup, NULL);
+}
+
+static inline float _lerpf(float v0, float v1, float t)
+{
+    // More numerical stable than the following one.
+    // return (v1 - v0) * t + v0
+    // see: https://en.wikipedia.org/wiki/Linear_interpolation
+    return v0 * (1.0f - t) + v1 * t;
+}
+
+static int math_lerp(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    float v0 = LUAX_NUMBER(L, 1);
+    float v1 = LUAX_NUMBER(L, 2);
+    float t = LUAX_NUMBER(L, 3);
+
+    float v = _lerpf(v0, v1, t);
+
+    lua_pushnumber(L, v);
+
+    return 1;
+}
+
+static inline float _clampf(float x, float lower, float upper)
+{
+    return x < lower ? lower : (x > upper ? upper : x);
+}
+
+static int math_clamp(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    float x = LUAX_NUMBER(L, 1);
+    float lower = LUAX_NUMBER(L, 2);
+    float upper = LUAX_NUMBER(L, 3);
+
+    float v = _clampf(x, lower, upper);
+
+    lua_pushnumber(L, v);
+
+    return 1;
+}
+
+static int math_step(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    float edge = LUAX_NUMBER(L, 1);
+    float x = LUAX_NUMBER(L, 2);
+
+    float v = x < edge ? 0.0f : 1.0f;
+
+    lua_pushnumber(L, v);
+
+    return 1;
+}
+
+static int math_smoothstep(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    float edge0 = LUAX_NUMBER(L, 1);
+    float edge1 = LUAX_NUMBER(L, 2);
+    float x = LUAX_NUMBER(L, 3);
+
+    float v = _clampf((x - edge0) / (edge1 - edge0), 0.0, 1.0);
+    v = x * x * (3.0 - 2.0 * x);
+
+    lua_pushnumber(L, v);
+
+    return 1;
+}
+
+static int math_smootherstep(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    float edge0 = LUAX_NUMBER(L, 1);
+    float edge1 = LUAX_NUMBER(L, 2);
+    float x = LUAX_NUMBER(L, 3);
+
+    float v = _clampf((x - edge0) / (edge1 - edge0), 0.0, 1.0);
+    v = x * x * x * (x * (x * 6.0 - 15.0) + 10.0);
+
+    lua_pushnumber(L, v);
+
+    return 1;
 }
 
 static int math_sign(lua_State *L) // This never returns 0.
@@ -259,11 +372,6 @@ static int _normalize_tweener(lua_State *L)
     lua_pushnumber(L, value);
 
     return 1;
-}
-
-static inline float _lerpf(float a, float b, float r)
-{
-    return a * (1.0f - r) + b * r; // Precise method, which guarantees correct result `r = 1`.
 }
 
 static int _normalize_lerp_tweener(lua_State *L)
