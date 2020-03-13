@@ -5205,13 +5205,13 @@ void ma_sleep__posix(ma_uint32 milliseconds)
 #else
     #if _POSIX_C_SOURCE >= 199309L
         struct timespec ts;
-        ts.tv_sec  = milliseconds / 1000000;
-        ts.tv_nsec = milliseconds % 1000000 * 1000000;
+        ts.tv_sec  = milliseconds / 1000;
+        ts.tv_nsec = (milliseconds % 1000) * 1000000;
         nanosleep(&ts, NULL);
     #else
         struct timeval tv;
         tv.tv_sec  = milliseconds / 1000;
-        tv.tv_usec = milliseconds % 1000 * 1000;
+        tv.tv_usec = (milliseconds % 1000) * 1000;
         select(0, NULL, NULL, NULL, &tv);
     #endif
 #endif
