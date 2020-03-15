@@ -107,7 +107,7 @@ static int math_lerp(lua_State *L)
     return 1;
 }
 
-static inline float _clampf(float x, float lower, float upper)
+static inline float _clampf(float x, float lower, float upper) // TODO: move to a separate lib file?
 {
     return x < lower ? lower : (x > upper ? upper : x);
 }

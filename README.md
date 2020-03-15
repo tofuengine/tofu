@@ -54,6 +54,16 @@ Guess what? Yup, that's yet another game engine/framework.
 * [ ] Use a custom memory-management allocator.
 * [ ] Memory usage profiling.
 * [ ] Switch to [Vulkan API](https://www.khronos.org/vulkan/) (through [GLFW](https://www.glfw.org/)).
+* [ ] game time management, in system class (speed, up down pause)
+* [ ] resource manager, with single object loading
+* [ ] async load with callback
+* [ ] memory usage info in system class
+* [ ] both shoulder and trigger axes are analogue?
+* [ ] rumble?
+* [ ] analogues low pass filter (page 591) or moving average?
+* [ ] buttons states with XOR (page 594)
+* [ ] chords and gestures detection
+* [ ] collisions
 
 ## Inspirations
 

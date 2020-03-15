@@ -24,8 +24,7 @@ SOFTWARE.
 
 local Math = {}
 
--- TODO: add these? https://github.com/MarcoLizza/love-workouts/tree/master/boids/lib/math
--- https://github.com/MarcoLizza/love-workouts/tree/master/anaglyph-3d/lib/math
+-- TODO: https://github.com/MarcoLizza/love-workouts/tree/master/anaglyph-3d/lib/math
 
 function Math.fitting()
   return nil
