@@ -67,6 +67,8 @@ Guess what? Yup, that's yet another game engine/framework.
 
 ## Inspirations
 
+**#tofuengine** is an original software, born from a ~30 years long experience of game programming. However, it has been influenced during its development by similar/other game-engines in one way or another. Here's a brief list.
+
 * [Love2D](https://love2d.org/)
 * [Pico-8](https://www.lexaloffle.com/pico-8.php)
 * [tac08](https://github.com/0xcafed00d/tac08/)
