@@ -58,12 +58,12 @@ static int file_as_string(lua_State *L)
 
     const File_System_t *file_system = (const File_System_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
 
-    File_System_Chunk_t chunk = FSaux_load(file_system, file, FILE_SYSTEM_CHUNK_BLOB);
-    if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
+    File_System_Resource_t resource = FSaux_load(file_system, file, FILE_SYSTEM_RESOURCE_BLOB);
+    if (resource.type == FILE_SYSTEM_RESOURCE_NULL) {
         return luaL_error(L, "can't load file `%s`", file);
     }
-    lua_pushlstring(L, chunk.var.blob.ptr, chunk.var.blob.size);
-    FSaux_release(chunk);
+    lua_pushlstring(L, resource.var.blob.ptr, resource.var.blob.size);
+    FSaux_release(resource);
 
     return 1;
 }
@@ -77,13 +77,13 @@ static int file_as_binary(lua_State *L)
 
     const File_System_t *file_system = (const File_System_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
 
-    File_System_Chunk_t chunk = FSaux_load(file_system, file, FILE_SYSTEM_CHUNK_BLOB);
-    if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
+    File_System_Resource_t resource = FSaux_load(file_system, file, FILE_SYSTEM_RESOURCE_BLOB);
+    if (resource.type == FILE_SYSTEM_RESOURCE_NULL) {
         return luaL_error(L, "can't load file `%s`", file);
     }
 //    lua_pushlstring(L, buffer, size);
     lua_pushnil(L); // TODO: read the file as a Base64 or similar encoded string.
-    FSaux_release(chunk); // FIME: useless, Lua's strings can contain bytes.
+    FSaux_release(resource); // FIXME: useless, Lua's strings can contain bytes.
 
     return 1;
 }

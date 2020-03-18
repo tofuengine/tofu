@@ -151,14 +151,14 @@ static int canvas_new1(lua_State *L)
     const File_System_t *file_system = (const File_System_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    File_System_Chunk_t chunk = FSaux_load(file_system, file, FILE_SYSTEM_CHUNK_IMAGE);
-    if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
+    File_System_Resource_t resource = FSaux_load(file_system, file, FILE_SYSTEM_RESOURCE_IMAGE);
+    if (resource.type == FILE_SYSTEM_RESOURCE_NULL) {
         return luaL_error(L, "can't load file `%s`", file);
     }
-    GL_Context_t *context = GL_context_decode(chunk.var.image.width, chunk.var.image.height, chunk.var.image.pixels, surface_callback_palette, (void *)&display->palette);
-    FSaux_release(chunk);
+    GL_Context_t *context = GL_context_decode(resource.var.image.width, resource.var.image.height, resource.var.image.pixels, surface_callback_palette, (void *)&display->palette);
+    FSaux_release(resource);
     if (!context) {
-        return luaL_error(L, "can't decode %d bytes context", chunk.var.blob.size);
+        return luaL_error(L, "can't decode %dx%d image", resource.var.image.width, resource.var.image.height);
     }
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context %p loaded from file `%s`", context, file);

@@ -56,15 +56,15 @@ static void *_load(File_System_Handle_t *handle, bool null_terminate, size_t *si
     return data;
 }
 
-static File_System_Chunk_t _load_as_string(File_System_Handle_t *handle)
+static File_System_Resource_t _load_as_string(File_System_Handle_t *handle)
 {
     size_t length;
     void *chars = _load(handle, true, &length);
     if (!chars) {
-        return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
+        return (File_System_Resource_t){ .type = FILE_SYSTEM_RESOURCE_NULL };
     }
-    return (File_System_Chunk_t){
-            .type = FILE_SYSTEM_CHUNK_STRING,
+    return (File_System_Resource_t){
+            .type = FILE_SYSTEM_RESOURCE_STRING,
             .var = {
                 .string = {
                         .chars = (char *)chars,
@@ -74,15 +74,15 @@ static File_System_Chunk_t _load_as_string(File_System_Handle_t *handle)
         };
 }
 
-static File_System_Chunk_t _load_as_binary(File_System_Handle_t *handle)
+static File_System_Resource_t _load_as_binary(File_System_Handle_t *handle)
 {
     size_t size;
     void *ptr = _load(handle, false, &size);
     if (!ptr) {
-        return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
+        return (File_System_Resource_t){ .type = FILE_SYSTEM_RESOURCE_NULL };
     }
-    return (File_System_Chunk_t){
-            .type = FILE_SYSTEM_CHUNK_BLOB,
+    return (File_System_Resource_t){
+            .type = FILE_SYSTEM_RESOURCE_BLOB,
             .var = {
                 .blob = {
                         .ptr = ptr,
@@ -116,17 +116,17 @@ static const stbi_io_callbacks _stbi_io_callbacks = {
     _stbi_io_eof,
 };
 
-static File_System_Chunk_t _load_as_image(File_System_Handle_t *handle)
+static File_System_Resource_t _load_as_image(File_System_Handle_t *handle)
 {
     int width, height, components;
     void *pixels = stbi_load_from_callbacks(&_stbi_io_callbacks, handle, &width, &height, &components, STBI_rgb_alpha);
     if (!pixels) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't decode surface from handle `%p` (%s)", handle, stbi_failure_reason());
-        return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
+        return (File_System_Resource_t){ .type = FILE_SYSTEM_RESOURCE_NULL };
     }
 
-    return (File_System_Chunk_t){
-            .type = FILE_SYSTEM_CHUNK_IMAGE,
+    return (File_System_Resource_t){
+            .type = FILE_SYSTEM_RESOURCE_IMAGE,
             .var = {
                 .image = {
                         .width = width,
@@ -143,43 +143,43 @@ bool FSaux_exists(const File_System_t *file_system, const char *file)
     return mount ? true : false;
 }
 
-File_System_Chunk_t FSaux_load(const File_System_t *file_system, const char *file, File_System_Chunk_Types_t type)
+File_System_Resource_t FSaux_load(const File_System_t *file_system, const char *file, File_System_Resource_Types_t type)
 {
     File_System_Mount_t *mount = FS_locate(file_system, file);
     if (!mount) {
-        return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
+        return (File_System_Resource_t){ .type = FILE_SYSTEM_RESOURCE_NULL };
     }
 
     File_System_Handle_t *handle = FS_open(mount, file);
     if (!handle) {
-        return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
+        return (File_System_Resource_t){ .type = FILE_SYSTEM_RESOURCE_NULL };
     }
 
-    File_System_Chunk_t chunk = (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
-    if (type == FILE_SYSTEM_CHUNK_STRING) {
-        chunk = _load_as_string(handle);
+    File_System_Resource_t resource = (File_System_Resource_t){ .type = FILE_SYSTEM_RESOURCE_NULL };
+    if (type == FILE_SYSTEM_RESOURCE_STRING) {
+        resource = _load_as_string(handle);
     } else
-    if (type == FILE_SYSTEM_CHUNK_BLOB) {
-        chunk = _load_as_binary(handle);
+    if (type == FILE_SYSTEM_RESOURCE_BLOB) {
+        resource = _load_as_binary(handle);
     } else
-    if (type == FILE_SYSTEM_CHUNK_IMAGE) {
-        chunk = _load_as_image(handle);
+    if (type == FILE_SYSTEM_RESOURCE_IMAGE) {
+        resource = _load_as_image(handle);
     }
 
     FS_close(handle);
 
-    return chunk;
+    return resource;
 }
 
-void FSaux_release(File_System_Chunk_t chunk)
+void FSaux_release(File_System_Resource_t resource)
 {
-    if (chunk.type == FILE_SYSTEM_CHUNK_STRING) {
-        free(chunk.var.string.chars);
+    if (resource.type == FILE_SYSTEM_RESOURCE_STRING) {
+        free(resource.var.string.chars);
     } else
-    if (chunk.type == FILE_SYSTEM_CHUNK_BLOB) {
-        free(chunk.var.blob.ptr);
+    if (resource.type == FILE_SYSTEM_RESOURCE_BLOB) {
+        free(resource.var.blob.ptr);
     } else
-    if (chunk.type == FILE_SYSTEM_CHUNK_IMAGE) {
-        stbi_image_free(chunk.var.image.pixels);
+    if (resource.type == FILE_SYSTEM_RESOURCE_IMAGE) {
+        stbi_image_free(resource.var.image.pixels);
     }
 }

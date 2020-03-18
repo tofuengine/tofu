@@ -27,33 +27,33 @@
 
 #include "fs.h"
 
-typedef enum _File_System_Chunk_Types_t {
-    FILE_SYSTEM_CHUNK_NULL,
-    FILE_SYSTEM_CHUNK_STRING,
-    FILE_SYSTEM_CHUNK_BLOB,
-    FILE_SYSTEM_CHUNK_IMAGE,
-} File_System_Chunk_Types_t;
+typedef enum _File_System_Resource_Types_t {
+    FILE_SYSTEM_RESOURCE_NULL,
+    FILE_SYSTEM_RESOURCE_STRING,
+    FILE_SYSTEM_RESOURCE_BLOB,
+    FILE_SYSTEM_RESOURCE_IMAGE,
+} File_System_Resource_Types_t;
 
-typedef struct _File_System_Chunk_t { // TODO: rename to `_File_System_Resource_t` and add caching.
-    File_System_Chunk_Types_t type;
+typedef struct _File_System_Resource_t { // TODO: add caching.
+    File_System_Resource_Types_t type;
     union {
-      struct {
-        char *chars;
-        size_t length;
-      } string;
-      struct {
-        void *ptr;
-        size_t size;
-      } blob;
-      struct {
-        size_t width, height;
-        void *pixels;
-      } image;
+        struct {
+            char *chars;
+            size_t length;
+        } string;
+        struct {
+            void *ptr;
+            size_t size;
+        } blob;
+        struct {
+            size_t width, height;
+            void *pixels;
+        } image;
     } var;
-} File_System_Chunk_t;
+} File_System_Resource_t;
 
 extern bool FSaux_exists(const File_System_t *file_system, const char *file);
-extern File_System_Chunk_t FSaux_load(const File_System_t *file_system, const char *file, File_System_Chunk_Types_t type);
-extern void FSaux_release(File_System_Chunk_t chunk);
+extern File_System_Resource_t FSaux_load(const File_System_t *file_system, const char *file, File_System_Resource_Types_t type);
+extern void FSaux_release(File_System_Resource_t resource);
 
 #endif /* __FS_AUX_H__ */

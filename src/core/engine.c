@@ -96,22 +96,22 @@ static inline float _calculate_fps(float elapsed)
 
 static bool _configure(const File_System_t *file_system, Configuration_t *configuration)
 {
-    File_System_Chunk_t chunk = FSaux_load(file_system, "tofu.config", FILE_SYSTEM_CHUNK_STRING);
-    if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
+    File_System_Resource_t resource = FSaux_load(file_system, "tofu.config", FILE_SYSTEM_RESOURCE_STRING);
+    if (resource.type == FILE_SYSTEM_RESOURCE_NULL) {
         return false;
     }
-    Configuration_load(configuration, chunk.var.string.chars);
-    FSaux_release(chunk);
+    Configuration_load(configuration, resource.var.string.chars);
+    FSaux_release(resource);
     return true;
 }
 
-static File_System_Chunk_t _load_icon(const File_System_t *file_system, const char *file)
+static File_System_Resource_t _load_icon(const File_System_t *file_system, const char *file)
 {
     if (!file || file[0] == '\0') {
-        return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
+        return (File_System_Resource_t){ .type = FILE_SYSTEM_RESOURCE_NULL };
     }
 
-    return FSaux_load(file_system, file, FILE_SYSTEM_CHUNK_IMAGE);
+    return FSaux_load(file_system, file, FILE_SYSTEM_RESOURCE_IMAGE);
 }
 
 bool Engine_initialize(Engine_t *engine, const char *base_path)
@@ -169,7 +169,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             .scale = 1.0f / (float)engine->display.configuration.scale
         };
     if (FSaux_exists(&engine->file_system, ENTRY_GAMECONTROLLER_DB)) {
-        File_System_Chunk_t mappings = FSaux_load(&engine->file_system, ENTRY_GAMECONTROLLER_DB, FILE_SYSTEM_CHUNK_STRING);
+        File_System_Resource_t mappings = FSaux_load(&engine->file_system, ENTRY_GAMECONTROLLER_DB, FILE_SYSTEM_RESOURCE_STRING);
         Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined controller mappings loaded");
         result = Input_initialize(&engine->input, &input_configuration, engine->display.window, mappings.var.string.chars);
         FSaux_release(mappings);

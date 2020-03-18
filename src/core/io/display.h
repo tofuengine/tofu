@@ -49,7 +49,7 @@ typedef enum _Display_Programs_t {
 
 typedef struct _Display_Configuration_t {
     const char *title;
-    File_System_Chunk_t icon;
+    File_System_Resource_t icon;
     size_t icon_size;
     size_t width, height, scale;
     bool fullscreen;

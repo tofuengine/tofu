@@ -119,9 +119,9 @@ static const unsigned char _window_icon_pixels[] = {
 #include "icon.inc"
 };
 
-static void _set_icon(GLFWwindow *window, File_System_Chunk_t icon)
+static void _set_icon(GLFWwindow *window, File_System_Resource_t icon)
 {
-    if (icon.type == FILE_SYSTEM_CHUNK_NULL) {
+    if (icon.type == FILE_SYSTEM_RESOURCE_NULL) {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "setting default icon");
         glfwSetWindowIcon(window, 1, &(GLFWimage){ 64, 64, (unsigned char *)_window_icon_pixels });
         return;
