@@ -87,8 +87,8 @@ static inline float _calculate_fps(float elapsed)
     static float sum = 0.0f; // We are storing just a small time interval, float is enough...
 
     sum -= samples[index];
-    sum += elapsed;
     samples[index] = elapsed;
+    sum += elapsed;
     index = (index + 1) % FPS_AVERAGE_SAMPLES;
 
     return (float)FPS_AVERAGE_SAMPLES / sum;
