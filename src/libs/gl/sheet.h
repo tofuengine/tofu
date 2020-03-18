@@ -36,7 +36,7 @@ typedef struct _GL_Sheet_t {
     size_t count;
 } GL_Sheet_t;
 
-// TODO: is the GL_Sheet_t really needed?
+// TODO: pass a ready to use surface to the sheet?
 
 extern GL_Sheet_t *GL_sheet_decode_rect(size_t width, size_t height, const void *pixels, size_t cell_width, size_t cell_height, GL_Surface_Callback_t callback, void *user_data);
 extern GL_Sheet_t *GL_sheet_decode(size_t width, size_t height, const void *pixels, const GL_Rectangle_t *cells, size_t count, GL_Surface_Callback_t callback, void *user_data);
