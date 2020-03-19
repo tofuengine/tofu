@@ -96,19 +96,19 @@ static inline float _calculate_fps(float elapsed)
 
 static bool _configure(const File_System_t *file_system, Configuration_t *configuration)
 {
-    File_System_Resource_t resource = FSaux_load(file_system, "tofu.config", FILE_SYSTEM_RESOURCE_STRING);
-    if (resource.type == FILE_SYSTEM_RESOURCE_NULL) {
+    File_System_Resource_t *resource = FSaux_load(file_system, "tofu.config", FILE_SYSTEM_RESOURCE_STRING);
+    if (!resource) {
         return false;
     }
-    Configuration_load(configuration, resource.var.string.chars);
+    Configuration_load(configuration, resource->var.string.chars);
     FSaux_release(resource);
     return true;
 }
 
-static File_System_Resource_t _load_icon(const File_System_t *file_system, const char *file)
+static File_System_Resource_t *_load_icon(const File_System_t *file_system, const char *file)
 {
     if (!file || file[0] == '\0') {
-        return (File_System_Resource_t){ .type = FILE_SYSTEM_RESOURCE_NULL };
+        return NULL;
     }
 
     return FSaux_load(file_system, file, FILE_SYSTEM_RESOURCE_IMAGE);
@@ -146,6 +146,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             .scale = engine->configuration.scale,
             .hide_cursor = engine->configuration.hide_cursor
         };
+    // TODO: load and release the icon here, like the mappings for input.
     result = Display_initialize(&engine->display, &display_configuration);
     if (!result) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize display");
@@ -168,10 +169,11 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             .gamepad_range = 1.0f - engine->configuration.gamepad_inner_deadzone - engine->configuration.gamepad_outer_deadzone,
             .scale = 1.0f / (float)engine->display.configuration.scale
         };
+    // TODO: create a `_load_mapping()` function.
     if (FSaux_exists(&engine->file_system, ENTRY_GAMECONTROLLER_DB)) {
-        File_System_Resource_t mappings = FSaux_load(&engine->file_system, ENTRY_GAMECONTROLLER_DB, FILE_SYSTEM_RESOURCE_STRING);
+        File_System_Resource_t *mappings = FSaux_load(&engine->file_system, ENTRY_GAMECONTROLLER_DB, FILE_SYSTEM_RESOURCE_STRING);
         Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined controller mappings loaded");
-        result = Input_initialize(&engine->input, &input_configuration, engine->display.window, mappings.var.string.chars);
+        result = Input_initialize(&engine->input, &input_configuration, engine->display.window, mappings->var.string.chars);
         FSaux_release(mappings);
     } else {
         result = Input_initialize(&engine->input, &input_configuration, engine->display.window, NULL);
@@ -224,7 +226,9 @@ void Engine_terminate(Engine_t *engine)
 
     Environment_terminate(&engine->environment);
 
-    FSaux_release(engine->display.configuration.icon);
+    if (engine->display.configuration.icon) {
+        FSaux_release(engine->display.configuration.icon);
+    }
 
     FS_terminate(&engine->file_system);
 #if DEBUG

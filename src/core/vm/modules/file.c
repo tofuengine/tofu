@@ -58,11 +58,11 @@ static int file_as_string(lua_State *L)
 
     const File_System_t *file_system = (const File_System_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
 
-    File_System_Resource_t resource = FSaux_load(file_system, file, FILE_SYSTEM_RESOURCE_BLOB);
-    if (resource.type == FILE_SYSTEM_RESOURCE_NULL) {
+    File_System_Resource_t *resource = FSaux_load(file_system, file, FILE_SYSTEM_RESOURCE_BLOB);
+    if (!resource) {
         return luaL_error(L, "can't load file `%s`", file);
     }
-    lua_pushlstring(L, resource.var.blob.ptr, resource.var.blob.size);
+    lua_pushlstring(L, resource->var.blob.ptr, resource->var.blob.size);
     FSaux_release(resource);
 
     return 1;
@@ -77,8 +77,8 @@ static int file_as_binary(lua_State *L)
 
     const File_System_t *file_system = (const File_System_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
 
-    File_System_Resource_t resource = FSaux_load(file_system, file, FILE_SYSTEM_RESOURCE_BLOB);
-    if (resource.type == FILE_SYSTEM_RESOURCE_NULL) {
+    File_System_Resource_t *resource = FSaux_load(file_system, file, FILE_SYSTEM_RESOURCE_BLOB);
+    if (!resource) {
         return luaL_error(L, "can't load file `%s`", file);
     }
 //    lua_pushlstring(L, buffer, size);

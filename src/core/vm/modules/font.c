@@ -95,14 +95,14 @@ static int font_new3(lua_State *L)
             }
             Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` decoded", file);
         } else {
-            File_System_Resource_t resource = FSaux_load(file_system, file, FILE_SYSTEM_RESOURCE_IMAGE);
-            if (resource.type == FILE_SYSTEM_RESOURCE_NULL) {
+            File_System_Resource_t *resource = FSaux_load(file_system, file, FILE_SYSTEM_RESOURCE_IMAGE);
+            if (!resource) {
                 return luaL_error(L, "can't load file `%s`", file);
             }
-            sheet = GL_sheet_decode_rect(resource.var.image.width, resource.var.image.height, resource.var.image.pixels, data->cell_width, data->cell_height, surface_callback_palette, (void *)&display->palette);
+            sheet = GL_sheet_decode_rect(resource->var.image.width, resource->var.image.height, resource->var.image.pixels, data->cell_width, data->cell_height, surface_callback_palette, (void *)&display->palette);
             FSaux_release(resource);
             if (!sheet) {
-                return luaL_error(L, "can't decode %dx%d image", resource.var.image.width, resource.var.image.height);
+                return luaL_error(L, "can't decode %dx%d image", resource->var.image.width, resource->var.image.height);
             }
             Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p loaded from file `%s`", sheet, file);
         }
@@ -165,14 +165,14 @@ static int font_new5(lua_State *L)
             }
             Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet `%s` decoded", file);
         } else {
-            File_System_Resource_t resource = FSaux_load(file_system, file, FILE_SYSTEM_RESOURCE_IMAGE);
-            if (resource.type == FILE_SYSTEM_RESOURCE_NULL) {
+            File_System_Resource_t *resource = FSaux_load(file_system, file, FILE_SYSTEM_RESOURCE_IMAGE);
+            if (!resource) {
                 return luaL_error(L, "can't load file `%s`", file);
             }
-            sheet = GL_sheet_decode_rect(resource.var.image.width, resource.var.image.height, resource.var.image.pixels, glyph_width, glyph_height, surface_callback_indexes, (void *)indexes);
+            sheet = GL_sheet_decode_rect(resource->var.image.width, resource->var.image.height, resource->var.image.pixels, glyph_width, glyph_height, surface_callback_indexes, (void *)indexes);
             FSaux_release(resource);
             if (!sheet) {
-                return luaL_error(L, "can't decode %dx%d image", resource.var.image.width, resource.var.image.height);
+                return luaL_error(L, "can't decode %dx%d image", resource->var.image.width, resource->var.image.height);
             }
             Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p loaded from file `%s`", sheet, file);
         }
