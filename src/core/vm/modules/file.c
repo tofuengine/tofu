@@ -62,7 +62,7 @@ static int file_as_string(lua_State *L)
     if (!resource) {
         return luaL_error(L, "can't load file `%s`", file);
     }
-    lua_pushlstring(L, resource->var.blob.ptr, resource->var.blob.size);
+    lua_pushlstring(L, FSAUX_RB_PTR(resource), FSAUX_RB_SIZE(resource));
     FSaux_release(resource);
 
     return 1;

@@ -155,10 +155,10 @@ static int canvas_new1(lua_State *L)
     if (!resource) {
         return luaL_error(L, "can't load file `%s`", file);
     }
-    GL_Context_t *context = GL_context_decode(resource->var.image.width, resource->var.image.height, resource->var.image.pixels, surface_callback_palette, (void *)&display->palette);
+    GL_Context_t *context = GL_context_decode(FSAUX_RI_WIDTH(resource), FSAUX_RI_HEIGHT(resource), resource->var.image.pixels, surface_callback_palette, (void *)&display->palette);
     FSaux_release(resource);
     if (!context) {
-        return luaL_error(L, "can't decode %dx%d image", resource->var.image.width, resource->var.image.height);
+        return luaL_error(L, "can't decode %dx%d image", FSAUX_RI_WIDTH(resource), FSAUX_RI_HEIGHT(resource));
     }
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context %p loaded from file `%s`", context, file);

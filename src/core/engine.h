@@ -38,7 +38,7 @@
 #include <limits.h>
 
 #define TOFU_VERSION_MAJOR          0
-#define TOFU_VERSION_MINOR          7
+#define TOFU_VERSION_MINOR          8
 #define TOFU_VERSION_REVISION       0
 
 typedef struct _Engine_t {

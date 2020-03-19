@@ -100,7 +100,7 @@ static bool _configure(const File_System_t *file_system, Configuration_t *config
     if (!resource) {
         return false;
     }
-    Configuration_load(configuration, resource->var.string.chars);
+    Configuration_load(configuration, FSAUX_RS_CHARS(resource));
     FSaux_release(resource);
     return true;
 }
@@ -169,11 +169,11 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             .gamepad_range = 1.0f - engine->configuration.gamepad_inner_deadzone - engine->configuration.gamepad_outer_deadzone,
             .scale = 1.0f / (float)engine->display.configuration.scale
         };
-    // TODO: create a `_load_mapping()` function.
+    // TODO: create a `_load_mapping()` function and pass the mapping in the configuration structure.
     if (FSaux_exists(&engine->file_system, ENTRY_GAMECONTROLLER_DB)) {
         File_System_Resource_t *mappings = FSaux_load(&engine->file_system, ENTRY_GAMECONTROLLER_DB, FILE_SYSTEM_RESOURCE_STRING);
         Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined controller mappings loaded");
-        result = Input_initialize(&engine->input, &input_configuration, engine->display.window, mappings->var.string.chars);
+        result = Input_initialize(&engine->input, &input_configuration, engine->display.window, FSAUX_RS_CHARS(mappings));
         FSaux_release(mappings);
     } else {
         result = Input_initialize(&engine->input, &input_configuration, engine->display.window, NULL);
