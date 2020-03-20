@@ -96,12 +96,12 @@ static inline float _calculate_fps(float elapsed)
 
 static bool _configure(const File_System_t *file_system, Configuration_t *configuration)
 {
-    File_System_Resource_t *resource = FSaux_load(file_system, "tofu.config", FILE_SYSTEM_RESOURCE_STRING);
-    if (!resource) {
+    File_System_Resource_t *content = FSaux_load(file_system, "tofu.config", FILE_SYSTEM_RESOURCE_STRING);
+    if (!content) {
         return false;
     }
-    Configuration_load(configuration, FSAUX_RS_CHARS(resource));
-    FSaux_release(resource);
+    Configuration_load(configuration, FSAUX_SCHARS(content));
+    FSaux_release(content);
     return true;
 }
 
@@ -173,7 +173,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
     if (FSaux_exists(&engine->file_system, ENTRY_GAMECONTROLLER_DB)) {
         File_System_Resource_t *mappings = FSaux_load(&engine->file_system, ENTRY_GAMECONTROLLER_DB, FILE_SYSTEM_RESOURCE_STRING);
         Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined controller mappings loaded");
-        result = Input_initialize(&engine->input, &input_configuration, engine->display.window, FSAUX_RS_CHARS(mappings));
+        result = Input_initialize(&engine->input, &input_configuration, engine->display.window, FSAUX_SCHARS(mappings));
         FSaux_release(mappings);
     } else {
         result = Input_initialize(&engine->input, &input_configuration, engine->display.window, NULL);

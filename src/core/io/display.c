@@ -127,8 +127,8 @@ static void _set_icon(GLFWwindow *window, File_System_Resource_t *icon)
         return;
     }
 
-    glfwSetWindowIcon(window, 1, &(GLFWimage){ .width = FSAUX_RI_WIDTH(icon), .height = FSAUX_RI_HEIGHT(icon), .pixels = FSAUX_RI_PIXELS(icon) });
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "setting custom %dx%d icon", FSAUX_RI_WIDTH(icon), FSAUX_RI_HEIGHT(icon));
+    glfwSetWindowIcon(window, 1, &(GLFWimage){ .width = FSAUX_IWIDTH(icon), .height = FSAUX_IHEIGHT(icon), .pixels = FSAUX_IPIXELS(icon) });
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "setting custom %dx%d icon", FSAUX_IWIDTH(icon), FSAUX_IHEIGHT(icon));
 }
 
 #ifdef DEBUG

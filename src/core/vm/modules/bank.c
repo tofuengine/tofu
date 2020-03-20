@@ -133,15 +133,15 @@ static int bank_new2(lua_State *L)
     if (type == LUA_TSTRING) {
         const char *file = LUAX_STRING(L, 1);
 
-        File_System_Resource_t *resource = FSaux_load(file_system, file, FILE_SYSTEM_RESOURCE_IMAGE);
-        if (!resource) {
+        File_System_Resource_t *image = FSaux_load(file_system, file, FILE_SYSTEM_RESOURCE_IMAGE);
+        if (!image) {
             return luaL_error(L, "can't load file `%s`", file);
         }
-        sheet = GL_sheet_decode(FSAUX_RI_WIDTH(resource), FSAUX_RI_HEIGHT(resource), resource->var.image.pixels, cells, count, surface_callback_palette, (void *)&display->palette);
-        FSaux_release(resource);
+        sheet = GL_sheet_decode(FSAUX_IWIDTH(image), FSAUX_IHEIGHT(image), FSAUX_IPIXELS(image), cells, count, surface_callback_palette, (void *)&display->palette);
+        FSaux_release(image);
         free(cells);
         if (!sheet) {
-            return luaL_error(L, "can't decode %dx%d image", FSAUX_RI_WIDTH(resource), FSAUX_RI_HEIGHT(resource));
+            return luaL_error(L, "can't decode %dx%d image", FSAUX_IWIDTH(image), FSAUX_IHEIGHT(image));
         }
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p decoded from file `%s`", sheet, file);
     } else
@@ -191,14 +191,14 @@ static int bank_new3(lua_State *L)
     if (type == LUA_TSTRING) {
         const char *file = LUAX_STRING(L, 1);
 
-        File_System_Resource_t *resource = FSaux_load(file_system, file, FILE_SYSTEM_RESOURCE_IMAGE); // TODO: rename the `resource` to  `image`.
-        if (!resource) {
+        File_System_Resource_t *image = FSaux_load(file_system, file, FILE_SYSTEM_RESOURCE_IMAGE);
+        if (!image) {
             return luaL_error(L, "can't load file `%s`", file);
         }
-        sheet = GL_sheet_decode_rect(FSAUX_RI_WIDTH(resource), FSAUX_RI_HEIGHT(resource) resource->var.image.pixels, cell_width, cell_height, surface_callback_palette, (void *)&display->palette);
-        FSaux_release(resource);
+        sheet = GL_sheet_decode_rect(FSAUX_IWIDTH(image), FSAUX_IHEIGHT(image), FSAUX_IPIXELS(image), cell_width, cell_height, surface_callback_palette, (void *)&display->palette);
+        FSaux_release(image);
         if (!sheet) {
-            return luaL_error(L, "can't decode %dx%d image", FSAUX_RI_WIDTH(resource), FSAUX_RI_HEIGHT(resource));
+            return luaL_error(L, "can't decode %dx%d image", FSAUX_IWIDTH(image), FSAUX_IHEIGHT(image));
         }
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p decoded from file `%s`", sheet, file);
     } else
