@@ -115,22 +115,6 @@ static const char *_uniforms[Uniforms_t_CountOf] = {
     "u_time",
 };
 
-static const unsigned char _window_icon_pixels[] = {
-#include "icon.inc"
-};
-
-static void _set_icon(GLFWwindow *window, File_System_Resource_t *icon)
-{
-    if (!icon) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "setting default icon");
-        glfwSetWindowIcon(window, 1, &(GLFWimage){ 64, 64, (unsigned char *)_window_icon_pixels });
-        return;
-    }
-
-    glfwSetWindowIcon(window, 1, &(GLFWimage){ .width = FSAUX_IWIDTH(icon), .height = FSAUX_IHEIGHT(icon), .pixels = FSAUX_IPIXELS(icon) });
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "setting custom %dx%d icon", FSAUX_IWIDTH(icon), FSAUX_IHEIGHT(icon));
-}
-
 #ifdef DEBUG
 static bool _has_errors(void)
 {
@@ -297,7 +281,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         return false;
     }
 
-    _set_icon(display->window, configuration->icon);
+    glfwSetWindowIcon(display->window, 1, &configuration->icon);
 
     _size_callback(display->window, display->physical_width, display->physical_height);
 

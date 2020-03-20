@@ -150,7 +150,7 @@ static bool parse(char *line, const char **key, const char **value)
     return true;
 }
 
-void Configuration_load(Configuration_t *configuration, const char *data)
+void Configuration_parse(Configuration_t *configuration, const char *data)
 {
     *configuration = (Configuration_t){
             .title = ".: Tofu Engine :.",

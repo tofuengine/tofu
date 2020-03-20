@@ -31,11 +31,6 @@
 
 #define LOG_CONTEXT "input"
 
-static const uint8_t _mappings[] = {
-#include "gamecontrollerdb.inc"
-    0x00
-};
-
 static void _default_handler(Input_State_t *state, GLFWwindow *window, const Input_Configuration_t *configuration)
 {
     Input_Button_t *buttons = state->buttons;
@@ -227,7 +222,7 @@ static void _switch(Input_t *input)
 
 bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration, GLFWwindow *window)
 {
-    int result = glfwUpdateGamepadMappings(configuration->mappings ? configuration->mappings : (const char *)_mappings);
+    int result = glfwUpdateGamepadMappings(configuration->mappings);
     if (result == GLFW_FALSE) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't update gamepad mappings");
         return false;

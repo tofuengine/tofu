@@ -48,7 +48,7 @@ typedef enum _Display_Programs_t {
 } Display_Programs_t;
 
 typedef struct _Display_Configuration_t {
-    File_System_Resource_t *icon;
+    GLFWimage icon;
     const char *title;
     size_t icon_size;
     size_t width, height, scale;

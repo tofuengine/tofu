@@ -51,6 +51,15 @@
 
 #define LOG_CONTEXT "engine"
 
+static const unsigned char _default_icon_pixels[] = {
+#include "icon.inc"
+};
+
+static const uint8_t _default_mappings[] = {
+#include "gamecontrollerdb.inc"
+    0x00
+};
+
 static inline void _wait_for(float seconds)
 {
 #if PLATFORM_ID == PLATFORM_LINUX
@@ -101,7 +110,7 @@ static bool _configure(const File_System_t *file_system, Configuration_t *config
     if (!content) {
         return false;
     }
-    Configuration_load(configuration, FSAUX_SCHARS(content));
+    Configuration_parse(configuration, FSAUX_SCHARS(content));
     FSaux_release(content);
     return true;
 }
@@ -160,9 +169,10 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
     Log_assert(!engine->icon, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined icon loaded");
     engine->mappings = _load_mappings(&engine->file_system, ENTRY_GAMECONTROLLER_DB);
     Log_assert(!engine->mappings, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined controller mappings loaded");
+    // TODO: should release those two before the end of the function? They aren't required in the long term...
 
     Display_Configuration_t display_configuration = { // TODO: reorganize configuration.
-            .icon = engine->icon,
+            .icon = engine->icon ? (GLFWimage){ .width = FSAUX_IWIDTH(engine->icon), .height = FSAUX_IHEIGHT(engine->icon), .pixels = FSAUX_IPIXELS(engine->icon) } : (GLFWimage){ 64, 64, (unsigned char *)_default_icon_pixels },
             .title = engine->configuration.title,
             .width = engine->configuration.width,
             .height = engine->configuration.height,
@@ -179,7 +189,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
     }
 
     Input_Configuration_t input_configuration = {
-            .mappings = engine->mappings ? FSAUX_SCHARS(engine->mappings) : NULL,
+            .mappings = engine->mappings ? FSAUX_SCHARS(engine->mappings) : (const char *)_default_mappings,
             .exit_key_enabled = engine->configuration.exit_key_enabled,
 #ifdef __INPUT_SELECTION__
             .keyboard_enabled = engine->configuration.keyboard_enabled,

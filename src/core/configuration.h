@@ -55,6 +55,6 @@ typedef struct _Configuration {
     bool debug;
 } Configuration_t;
 
-extern void Configuration_load(Configuration_t *configuration, const char *data);
+extern void Configuration_parse(Configuration_t *configuration, const char *data);
 
 #endif  /* __CONFIGURATION_H__ */
