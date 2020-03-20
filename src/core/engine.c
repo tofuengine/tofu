@@ -52,11 +52,11 @@
 #define LOG_CONTEXT "engine"
 
 static const unsigned char _default_icon_pixels[] = {
-#include "assets/icon.inc"
+#include <assets/icon.inc>
 };
 
 static const uint8_t _default_mappings[] = {
-#include "assets/gamecontrollerdb.inc"
+#include <assets/gamecontrollerdb.inc>
     0x00
 };
 

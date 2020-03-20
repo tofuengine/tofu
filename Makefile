@@ -75,9 +75,9 @@ INCLUDES:=$(wildcard src/*.h src/core/*.h src/core/io/*.h src/core/io/display/*.
 OBJECTS:=$(SOURCES:%.c=%.o)
 SCRIPTS:=$(wildcard src/core/vm/*.lua src/core/vm/modules/*.lua)
 SDUMPS:=$(SCRIPTS:%.lua=%.inc)
-TEXTS:=$(wildcard src/core/assets/*.txt)
+TEXTS:=$(wildcard src/assets/*.txt)
 TDUMPS:=$(TEXTS:%.txt=%.inc)
-PNGS:=$(wildcard src/core/assets/*.png external/spleen/*.png)
+PNGS:=$(wildcard src/assets/*.png external/spleen/*.png)
 PDUMPS:=$(PNGS:%.png=%.inc)
 
 default: $(TARGET)
