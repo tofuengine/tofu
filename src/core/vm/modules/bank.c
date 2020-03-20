@@ -141,7 +141,7 @@ static int bank_new2(lua_State *L)
         FSaux_release(image);
         free(cells);
         if (!sheet) {
-            return luaL_error(L, "can't decode %dx%d image", FSAUX_IWIDTH(image), FSAUX_IHEIGHT(image));
+            return luaL_error(L, "can't decode file `%s`", file);
         }
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p decoded from file `%s`", sheet, file);
     } else
@@ -198,7 +198,7 @@ static int bank_new3(lua_State *L)
         sheet = GL_sheet_decode_rect(FSAUX_IWIDTH(image), FSAUX_IHEIGHT(image), FSAUX_IPIXELS(image), cell_width, cell_height, surface_callback_palette, (void *)&display->palette);
         FSaux_release(image);
         if (!sheet) {
-            return luaL_error(L, "can't decode %dx%d image", FSAUX_IWIDTH(image), FSAUX_IHEIGHT(image));
+            return luaL_error(L, "can't decode file `%s`", file);
         }
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p decoded from file `%s`", sheet, file);
     } else

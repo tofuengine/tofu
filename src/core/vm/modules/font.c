@@ -102,7 +102,7 @@ static int font_new3(lua_State *L)
             sheet = GL_sheet_decode_rect(FSAUX_IWIDTH(image), FSAUX_IHEIGHT(image), FSAUX_IPIXELS(image), data->cell_width, data->cell_height, surface_callback_palette, (void *)&display->palette);
             FSaux_release(image);
             if (!sheet) {
-                return luaL_error(L, "can't decode %dx%d image", FSAUX_IWIDTH(image), FSAUX_IHEIGHT(image));
+                return luaL_error(L, "can't decode file `%s`", file);
             }
             Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p loaded from file `%s`", sheet, file);
         }
@@ -172,7 +172,7 @@ static int font_new5(lua_State *L)
             sheet = GL_sheet_decode_rect(FSAUX_IWIDTH(image), FSAUX_IHEIGHT(image), FSAUX_IPIXELS(image), glyph_width, glyph_height, surface_callback_indexes, (void *)indexes);
             FSaux_release(image);
             if (!sheet) {
-                return luaL_error(L, "can't decode %dx%d image", FSAUX_IWIDTH(image), FSAUX_IHEIGHT(image));
+                return luaL_error(L, "can't decode file `%s`", file);
             }
             Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p loaded from file `%s`", sheet, file);
         }
