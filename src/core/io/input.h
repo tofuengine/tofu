@@ -115,6 +115,7 @@ typedef enum _Input_Handlers_t {
 } Input_Handlers_t;
 
 typedef struct _Input_Configuration_t {
+    const char *mappings;
     bool exit_key_enabled;
 #ifdef __INPUT_SELECTION__
     bool keyboard_enabled;
@@ -145,7 +146,7 @@ typedef struct _Input_t {
     Input_Handler_t handlers[Input_Handlers_t_CountOf];
 } Input_t;
 
-extern bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration, GLFWwindow *window, const char *mappings);
+extern bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration, GLFWwindow *window);
 extern void Input_terminate(Input_t *input);
 
 extern void Input_update(Input_t *input, float delta_time);

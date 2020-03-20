@@ -45,6 +45,8 @@ typedef struct _Engine_t {
     File_System_t file_system;
 
     Configuration_t configuration;
+    File_System_Resource_t *icon;
+    File_System_Resource_t *mappings;
 
     Interpreter_t interpreter;
     Audio_t audio;

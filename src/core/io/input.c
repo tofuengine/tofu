@@ -225,9 +225,9 @@ static void _switch(Input_t *input)
 #endif
 }
 
-bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration, GLFWwindow *window, const char *mappings)
+bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration, GLFWwindow *window)
 {
-    int result = glfwUpdateGamepadMappings(mappings ? mappings : (const char *)_mappings);
+    int result = glfwUpdateGamepadMappings(configuration->mappings ? configuration->mappings : (const char *)_mappings);
     if (result == GLFW_FALSE) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't update gamepad mappings");
         return false;

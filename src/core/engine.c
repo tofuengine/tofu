@@ -42,6 +42,7 @@
   #include <windows.h>
 #endif
 
+#define ENTRY_ICON "icon.png"
 #define ENTRY_GAMECONTROLLER_DB "gamecontrollerdb.txt"
 
 #define _TOFU_CONCAT_VERSION(m, n, r) #m "." #n "." #r "-dev"
@@ -111,7 +112,26 @@ static File_System_Resource_t *_load_icon(const File_System_t *file_system, cons
         return NULL;
     }
 
+    if (!FSaux_exists(file_system, file)) {
+        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "file `%s` doesn't exist", file);
+        return NULL;
+    }
+
     return FSaux_load(file_system, file, FILE_SYSTEM_RESOURCE_IMAGE);
+}
+
+static File_System_Resource_t *_load_mappings(const File_System_t *file_system, const char *file)
+{
+    if (!file || file[0] == '\0') {
+        return NULL;
+    }
+
+    if (!FSaux_exists(file_system, file)) {
+        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "file `%s` doesn't exist", file);
+        return NULL;
+    }
+
+    return FSaux_load(file_system, file, FILE_SYSTEM_RESOURCE_STRING);
 }
 
 bool Engine_initialize(Engine_t *engine, const char *base_path)
@@ -136,9 +156,14 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "version %s", TOFU_VERSION_NUMBER);
 
+    engine->icon = _load_icon(&engine->file_system, ENTRY_ICON);
+    Log_assert(!engine->icon, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined icon loaded");
+    engine->mappings = _load_mappings(&engine->file_system, ENTRY_GAMECONTROLLER_DB);
+    Log_assert(!engine->mappings, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined controller mappings loaded");
+
     Display_Configuration_t display_configuration = { // TODO: reorganize configuration.
+            .icon = engine->icon,
             .title = engine->configuration.title,
-            .icon = _load_icon(&engine->file_system, engine->configuration.icon),
             .width = engine->configuration.width,
             .height = engine->configuration.height,
             .fullscreen = engine->configuration.fullscreen,
@@ -146,7 +171,6 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             .scale = engine->configuration.scale,
             .hide_cursor = engine->configuration.hide_cursor
         };
-    // TODO: load and release the icon here, like the mappings for input.
     result = Display_initialize(&engine->display, &display_configuration);
     if (!result) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize display");
@@ -155,6 +179,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
     }
 
     Input_Configuration_t input_configuration = {
+            .mappings = engine->mappings ? FSAUX_SCHARS(engine->mappings) : NULL,
             .exit_key_enabled = engine->configuration.exit_key_enabled,
 #ifdef __INPUT_SELECTION__
             .keyboard_enabled = engine->configuration.keyboard_enabled,
@@ -169,15 +194,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             .gamepad_range = 1.0f - engine->configuration.gamepad_inner_deadzone - engine->configuration.gamepad_outer_deadzone,
             .scale = 1.0f / (float)engine->display.configuration.scale
         };
-    // TODO: create a `_load_mapping()` function and pass the mapping in the configuration structure.
-    if (FSaux_exists(&engine->file_system, ENTRY_GAMECONTROLLER_DB)) {
-        File_System_Resource_t *mappings = FSaux_load(&engine->file_system, ENTRY_GAMECONTROLLER_DB, FILE_SYSTEM_RESOURCE_STRING);
-        Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined controller mappings loaded");
-        result = Input_initialize(&engine->input, &input_configuration, engine->display.window, FSAUX_SCHARS(mappings));
-        FSaux_release(mappings);
-    } else {
-        result = Input_initialize(&engine->input, &input_configuration, engine->display.window, NULL);
-    }
+    result = Input_initialize(&engine->input, &input_configuration, engine->display.window);
     if (!result) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize input");
         Display_terminate(&engine->display);
@@ -226,8 +243,11 @@ void Engine_terminate(Engine_t *engine)
 
     Environment_terminate(&engine->environment);
 
-    if (engine->display.configuration.icon) {
-        FSaux_release(engine->display.configuration.icon);
+    if (engine->icon) {
+        FSaux_release(engine->icon);
+    }
+    if (engine->mappings) {
+        FSaux_release(engine->mappings);
     }
 
     FS_terminate(&engine->file_system);
