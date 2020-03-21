@@ -143,6 +143,14 @@ static File_System_Resource_t *_load_mappings(const File_System_t *file_system, 
     return FSaux_load(file_system, file, FILE_SYSTEM_RESOURCE_STRING);
 }
 
+static void _free_resource(File_System_Resource_t *resource)
+{
+    if (!resource) {
+        return;
+    }
+    FSaux_release(resource); // FIXME: should this be (and other similar deallocators) be safe by design (like `free()`)?
+}
+
 bool Engine_initialize(Engine_t *engine, const char *base_path)
 {
     *engine = (Engine_t){ 0 }; // Ensure is cleared at first.
@@ -165,14 +173,10 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "version %s", TOFU_VERSION_NUMBER);
 
-    engine->icon = _load_icon(&engine->file_system, ENTRY_ICON);
-    Log_assert(!engine->icon, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined icon loaded");
-    engine->mappings = _load_mappings(&engine->file_system, ENTRY_GAMECONTROLLER_DB);
-    Log_assert(!engine->mappings, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined controller mappings loaded");
-    // TODO: should release those two before the end of the function? They aren't required in the long term...
-
+    File_System_Resource_t *icon = _load_icon(&engine->file_system, ENTRY_ICON);
+    Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined icon loaded");
     Display_Configuration_t display_configuration = { // TODO: reorganize configuration.
-            .icon = engine->icon ? (GLFWimage){ .width = FSAUX_IWIDTH(engine->icon), .height = FSAUX_IHEIGHT(engine->icon), .pixels = FSAUX_IPIXELS(engine->icon) } : (GLFWimage){ 64, 64, (unsigned char *)_default_icon_pixels },
+            .icon = icon ? (GLFWimage){ .width = FSAUX_IWIDTH(icon), .height = FSAUX_IHEIGHT(icon), .pixels = FSAUX_IPIXELS(icon) } : (GLFWimage){ 64, 64, (unsigned char *)_default_icon_pixels },
             .title = engine->configuration.title,
             .width = engine->configuration.width,
             .height = engine->configuration.height,
@@ -182,14 +186,17 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             .hide_cursor = engine->configuration.hide_cursor
         };
     result = Display_initialize(&engine->display, &display_configuration);
+    _free_resource(icon);
     if (!result) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize display");
         FS_terminate(&engine->file_system);
         return false;
     }
 
+    File_System_Resource_t *mappings = _load_mappings(&engine->file_system, ENTRY_GAMECONTROLLER_DB);
+    Log_assert(!mappings, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined controller mappings loaded");
     Input_Configuration_t input_configuration = {
-            .mappings = engine->mappings ? FSAUX_SCHARS(engine->mappings) : (const char *)_default_mappings,
+            .mappings = mappings ? FSAUX_SCHARS(mappings) : (const char *)_default_mappings,
             .exit_key_enabled = engine->configuration.exit_key_enabled,
 #ifdef __INPUT_SELECTION__
             .keyboard_enabled = engine->configuration.keyboard_enabled,
@@ -205,6 +212,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             .scale = 1.0f / (float)engine->display.configuration.scale
         };
     result = Input_initialize(&engine->input, &input_configuration, engine->display.window);
+    _free_resource(mappings);
     if (!result) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize input");
         Display_terminate(&engine->display);
@@ -252,13 +260,6 @@ void Engine_terminate(Engine_t *engine)
     Input_terminate(&engine->input);
 
     Environment_terminate(&engine->environment);
-
-    if (engine->icon) {
-        FSaux_release(engine->icon);
-    }
-    if (engine->mappings) {
-        FSaux_release(engine->mappings);
-    }
 
     FS_terminate(&engine->file_system);
 #if DEBUG
