@@ -95,6 +95,15 @@ static GL_Sheet_t *_attach(GL_Surface_t *atlas, GL_Rectangle_t *cells, size_t co
     return sheet;
 }
 
+static void _detach(GL_Sheet_t *sheet)
+{
+    free(sheet->cells);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet cells freed");
+
+    free(sheet);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p freed", sheet);
+}
+
 GL_Sheet_t *GL_sheet_decode_rect(size_t width, size_t height, const void *pixels, size_t cell_width, size_t cell_height, GL_Surface_Callback_t callback, void *user_data)
 {
     GL_Surface_t *atlas = GL_surface_decode(width, height, pixels, callback, user_data);
@@ -134,8 +143,11 @@ GL_Sheet_t *GL_sheet_decode(size_t width, size_t height, const void *pixels, con
 
 void GL_sheet_destroy(GL_Sheet_t *sheet)
 {
+    if (!sheet) {
+        return;
+    }
     GL_surface_destroy(sheet->atlas); // Delete prior detach or the atlas will be lost!
-    GL_sheet_detach(sheet);
+    _detach(sheet);
 }
 
 GL_Sheet_t *GL_sheet_attach_rect(const GL_Surface_t *atlas, size_t cell_width, size_t cell_height)
@@ -166,8 +178,8 @@ GL_Sheet_t *GL_sheet_attach(const GL_Surface_t *atlas, const GL_Rectangle_t *cel
 
 void GL_sheet_detach(GL_Sheet_t *sheet)
 {
-    free(sheet->cells);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet cells freed");
-    free(sheet);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p freed", sheet);
+    if (!sheet) {
+        return;
+    }
+    _detach(sheet);
 }

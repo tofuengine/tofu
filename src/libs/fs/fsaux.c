@@ -205,6 +205,9 @@ File_System_Resource_t *FSaux_load(const File_System_t *file_system, const char 
 
 void FSaux_release(File_System_Resource_t *resource)
 {
+    if (!resource) {
+        return;
+    }
     if (resource->type == FILE_SYSTEM_RESOURCE_STRING) {
         free(resource->var.string.chars);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource-data at %p freed (string)", resource->var.string.chars);

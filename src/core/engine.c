@@ -143,14 +143,6 @@ static File_System_Resource_t *_load_mappings(const File_System_t *file_system, 
     return FSaux_load(file_system, file, FILE_SYSTEM_RESOURCE_STRING);
 }
 
-static void _free_resource(File_System_Resource_t *resource)
-{
-    if (!resource) {
-        return;
-    }
-    FSaux_release(resource); // FIXME: should this be (and other similar deallocators) be safe by design (like `free()`)?
-}
-
 bool Engine_initialize(Engine_t *engine, const char *base_path)
 {
     *engine = (Engine_t){ 0 }; // Ensure is cleared at first.
@@ -186,7 +178,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             .hide_cursor = engine->configuration.hide_cursor
         };
     result = Display_initialize(&engine->display, &display_configuration);
-    _free_resource(icon);
+    FSaux_release(icon);
     if (!result) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize display");
         FS_terminate(&engine->file_system);
@@ -212,7 +204,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             .scale = 1.0f / (float)engine->display.configuration.scale
         };
     result = Input_initialize(&engine->input, &input_configuration, engine->display.window);
-    _free_resource(mappings);
+    FSaux_release(mappings);
     if (!result) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize input");
         Display_terminate(&engine->display);
