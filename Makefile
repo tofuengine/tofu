@@ -90,7 +90,7 @@ $(TARGET): $(OBJECTS)
 # The dependency upon `Makefile` is redundant, since scripts are bound to it.
 $(OBJECTS): %.o : %.c $(SDUMPS) $(TDUMPS) $(PDUMPS) $(INCLUDES) Makefile
 	@$(COMPILER) $(CWARNINGS) $(CFLAGS) $(COPTS) -c $< -o $@
-	@echo "Compiled "$<" successfully!"
+	@echo "Compiled '"$<"' successfully!"
 
 # Define automatically rules to convert `.lua` script, `.txt` files, and `.rgba` images
 # into an embeddable-ready `.inc` file. `.inc` files also depend upon `Makefile` to be
@@ -98,15 +98,15 @@ $(OBJECTS): %.o : %.c $(SDUMPS) $(TDUMPS) $(PDUMPS) $(INCLUDES) Makefile
 $(SDUMPS): %.inc: %.lua Makefile
 	@$(ANALYZER) $(AFLAGS) $<
 	@$(DUMPER) $(DFLAGS) $< > $@
-	@echo "Generated "$@" from "$<" successfully!"
+	@echo "Generated '"$@"' from '"$<"' successfully!"
 
 $(TDUMPS): %.inc : %.txt Makefile
 	@$(DUMPER) $(DFLAGS) $< > $@
-	@echo "Generated "$@" from "$<" successfully!"
+	@echo "Generated '"$@"' from '"$<"' successfully!"
 
 $(PDUMPS): %.inc : %.png Makefile
 	@convert $< RGBA:- | $(DUMPER) $(DFLAGS) > $@
-	@echo "Generated "$@" from "$<" successfully!"
+	@echo "Generated '"$@"' from '"$<"' successfully!"
 
 primitives: $(TARGET)
 	@echo "Launching *primitives* application!"
@@ -198,6 +198,11 @@ helix: $(TARGET)
 	@echo "Launching *helix* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/helix
 	@./$(TARGET) ./demos/helix
+
+demo: $(TARGET)
+	@echo "Launching *$(DEMO)* application!"
+	@$(ANALYZER) $(AFLAGS) ./demos/$(DEMO)
+	@./$(TARGET) ./demos/$(DEMO)
 
 valgrind: $(TARGET)
 	@echo "Valgrind *$(DEMO)* application!"
