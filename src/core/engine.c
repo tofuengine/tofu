@@ -106,12 +106,12 @@ static inline float _calculate_fps(float elapsed)
 
 static bool _configure(const File_System_t *file_system, Configuration_t *configuration)
 {
-    File_System_Resource_t *content = FSaux_load(file_system, "tofu.config", FILE_SYSTEM_RESOURCE_STRING);
+    File_System_Resource_t *content = FSX_load(file_system, "tofu.config", FILE_SYSTEM_RESOURCE_STRING);
     if (!content) {
         return false;
     }
-    Configuration_parse(configuration, FSAUX_SCHARS(content));
-    FSaux_release(content);
+    Configuration_parse(configuration, FSX_SCHARS(content));
+    FSX_release(content);
     return true;
 }
 
@@ -121,12 +121,12 @@ static File_System_Resource_t *_load_icon(const File_System_t *file_system, cons
         return NULL;
     }
 
-    if (!FSaux_exists(file_system, file)) {
+    if (!FSX_exists(file_system, file)) {
         Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "file `%s` doesn't exist", file);
         return NULL;
     }
 
-    return FSaux_load(file_system, file, FILE_SYSTEM_RESOURCE_IMAGE);
+    return FSX_load(file_system, file, FILE_SYSTEM_RESOURCE_IMAGE);
 }
 
 static File_System_Resource_t *_load_mappings(const File_System_t *file_system, const char *file)
@@ -135,12 +135,12 @@ static File_System_Resource_t *_load_mappings(const File_System_t *file_system, 
         return NULL;
     }
 
-    if (!FSaux_exists(file_system, file)) {
+    if (!FSX_exists(file_system, file)) {
         Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "file `%s` doesn't exist", file);
         return NULL;
     }
 
-    return FSaux_load(file_system, file, FILE_SYSTEM_RESOURCE_STRING);
+    return FSX_load(file_system, file, FILE_SYSTEM_RESOURCE_STRING);
 }
 
 bool Engine_initialize(Engine_t *engine, const char *base_path)
@@ -168,7 +168,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
     File_System_Resource_t *icon = _load_icon(&engine->file_system, ENTRY_ICON);
     Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined icon loaded");
     Display_Configuration_t display_configuration = { // TODO: reorganize configuration.
-            .icon = icon ? (GLFWimage){ .width = FSAUX_IWIDTH(icon), .height = FSAUX_IHEIGHT(icon), .pixels = FSAUX_IPIXELS(icon) } : (GLFWimage){ 64, 64, (unsigned char *)_default_icon_pixels },
+            .icon = icon ? (GLFWimage){ .width = FSX_IWIDTH(icon), .height = FSX_IHEIGHT(icon), .pixels = FSX_IPIXELS(icon) } : (GLFWimage){ 64, 64, (unsigned char *)_default_icon_pixels },
             .title = engine->configuration.title,
             .width = engine->configuration.width,
             .height = engine->configuration.height,
@@ -178,7 +178,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             .hide_cursor = engine->configuration.hide_cursor
         };
     result = Display_initialize(&engine->display, &display_configuration);
-    FSaux_release(icon);
+    FSX_release(icon);
     if (!result) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize display");
         FS_terminate(&engine->file_system);
@@ -188,7 +188,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
     File_System_Resource_t *mappings = _load_mappings(&engine->file_system, ENTRY_GAMECONTROLLER_DB);
     Log_assert(!mappings, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined controller mappings loaded");
     Input_Configuration_t input_configuration = {
-            .mappings = mappings ? FSAUX_SCHARS(mappings) : (const char *)_default_mappings,
+            .mappings = mappings ? FSX_SCHARS(mappings) : (const char *)_default_mappings,
             .exit_key_enabled = engine->configuration.exit_key_enabled,
 #ifdef __INPUT_SELECTION__
             .keyboard_enabled = engine->configuration.keyboard_enabled,
@@ -204,7 +204,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             .scale = 1.0f / (float)engine->display.configuration.scale
         };
     result = Input_initialize(&engine->input, &input_configuration, engine->display.window);
-    FSaux_release(mappings);
+    FSX_release(mappings);
     if (!result) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize input");
         Display_terminate(&engine->display);

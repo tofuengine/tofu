@@ -151,12 +151,12 @@ static int canvas_new1(lua_State *L)
     const File_System_t *file_system = (const File_System_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    File_System_Resource_t *image = FSaux_load(file_system, file, FILE_SYSTEM_RESOURCE_IMAGE);
+    File_System_Resource_t *image = FSX_load(file_system, file, FILE_SYSTEM_RESOURCE_IMAGE);
     if (!image) {
         return luaL_error(L, "can't load file `%s`", file);
     }
-    GL_Context_t *context = GL_context_decode(FSAUX_IWIDTH(image), FSAUX_IHEIGHT(image), FSAUX_IPIXELS(image), surface_callback_palette, (void *)&display->palette);
-    FSaux_release(image);
+    GL_Context_t *context = GL_context_decode(FSX_IWIDTH(image), FSX_IHEIGHT(image), FSX_IPIXELS(image), surface_callback_palette, (void *)&display->palette);
+    FSX_release(image);
     if (!context) {
         return luaL_error(L, "can't decode file `%s`", file);
     }

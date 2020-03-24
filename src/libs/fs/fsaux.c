@@ -169,13 +169,13 @@ static File_System_Resource_t* _load_as_image(File_System_Handle_t *handle)
     return resource;
 }
 
-bool FSaux_exists(const File_System_t *file_system, const char *file)
+bool FSX_exists(const File_System_t *file_system, const char *file)
 {
     File_System_Mount_t *mount = FS_locate(file_system, file);
     return mount ? true : false;
 }
 
-File_System_Resource_t *FSaux_load(const File_System_t *file_system, const char *file, File_System_Resource_Types_t type)
+File_System_Resource_t *FSX_load(const File_System_t *file_system, const char *file, File_System_Resource_Types_t type)
 {
     File_System_Mount_t *mount = FS_locate(file_system, file);
     if (!mount) {
@@ -203,7 +203,7 @@ File_System_Resource_t *FSaux_load(const File_System_t *file_system, const char 
     return resource;
 }
 
-void FSaux_release(File_System_Resource_t *resource)
+void FSX_release(File_System_Resource_t *resource)
 {
     if (!resource) {
         return;

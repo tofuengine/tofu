@@ -51,16 +51,16 @@ typedef struct _File_System_Resource_t { // TODO: add caching.
     } var;
 } File_System_Resource_t;
 
-#define FSAUX_SCHARS(r)       (r)->var.string.chars
-#define FSAUX_SLENTGH(r)      (r)->var.string.length
-#define FSAUX_BPTR(r)         (r)->var.blob.ptr
-#define FSAUX_BSIZE(r)        (r)->var.blob.size
-#define FSAUX_IWIDTH(r)       (r)->var.image.width
-#define FSAUX_IHEIGHT(r)      (r)->var.image.height
-#define FSAUX_IPIXELS(r)      (r)->var.image.pixels
+#define FSX_SCHARS(r)       (r)->var.string.chars
+#define FSX_SLENTGH(r)      (r)->var.string.length
+#define FSX_BPTR(r)         (r)->var.blob.ptr
+#define FSX_BSIZE(r)        (r)->var.blob.size
+#define FSX_IWIDTH(r)       (r)->var.image.width
+#define FSX_IHEIGHT(r)      (r)->var.image.height
+#define FSX_IPIXELS(r)      (r)->var.image.pixels
 
-extern bool FSaux_exists(const File_System_t *file_system, const char *file);
-extern File_System_Resource_t *FSaux_load(const File_System_t *file_system, const char *file, File_System_Resource_Types_t type);
-extern void FSaux_release(File_System_Resource_t *resource);
+extern bool FSX_exists(const File_System_t *file_system, const char *file);
+extern File_System_Resource_t *FSX_load(const File_System_t *file_system, const char *file, File_System_Resource_Types_t type);
+extern void FSX_release(File_System_Resource_t *resource);
 
 #endif /* __FS_AUX_H__ */
