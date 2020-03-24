@@ -177,7 +177,7 @@ int luaX_newmodule(lua_State *L, const luaX_Script *script, const luaL_Reg *f, c
         }
     }
 
-    // Upvalues have already been consume. No need to clear the stack.
+    // Upvalues have already been consumed. No need to clear the stack.
 
     return 1;
 }
