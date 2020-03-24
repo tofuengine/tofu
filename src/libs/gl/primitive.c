@@ -37,7 +37,7 @@
 #define REGION_RIGHT    4
 #define REGION_BELOW    8
 
-static void point(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x, int y, GL_Pixel_t index)
+static void _point(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x, int y, GL_Pixel_t index)
 {
     if (x < clipping_region->x0) {
         return;
@@ -56,7 +56,7 @@ static void point(const GL_Surface_t *surface, const GL_Quad_t *clipping_region,
 }
 
 // https://sighack.com/post/cohen-sutherland-line-clipping-algorithm
-static inline int compute_code(const GL_Quad_t *clipping_region, int x, int y)
+static inline int _compute_code(const GL_Quad_t *clipping_region, int x, int y)
 {
     int code = REGION_INSIDE;
     if (x < clipping_region->x0) {
@@ -75,10 +75,10 @@ static inline int compute_code(const GL_Quad_t *clipping_region, int x, int y)
 }
 
 // DDA algorithm, no branches in the inner-loop.
-static void line(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x0, int y0, int x1, int y1, GL_Pixel_t index)
+static void _line(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x0, int y0, int x1, int y1, GL_Pixel_t index)
 {
-    int code0 = compute_code(clipping_region, x0, y0);
-    int code1 = compute_code(clipping_region, x1, y1);
+    int code0 = _compute_code(clipping_region, x0, y0);
+    int code1 = _compute_code(clipping_region, x1, y1);
 
     for (;;) {
         if (!(code0 | code1)) { // bitwise OR is 0: both points inside window; trivially accept and exit loop
@@ -123,11 +123,11 @@ static void line(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, 
 
             // Now we move outside point to intersection point to clip and get ready for next pass.
             if (code == code0) {
-                code0 = compute_code(clipping_region, x, y);
+                code0 = _compute_code(clipping_region, x, y);
                 x0 = x;
                 y0 = y;
             } else {
-                code1 = compute_code(clipping_region, x, y);
+                code1 = _compute_code(clipping_region, x, y);
                 x1 = x;
                 y1 = y;
             }
@@ -190,7 +190,7 @@ static void line(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, 
 #endif
 }
 
-static void hline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x, int y, int length, GL_Pixel_t index)
+static void _hline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x, int y, int length, GL_Pixel_t index)
 {
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = x,
@@ -281,7 +281,7 @@ static void hline_pattern(GL_Pixel_t *destination, int width, const GL_Quad_t *d
 }
 #endif
 
-static void vline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x, int y, int length, GL_Pixel_t index)
+static void _vline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x, int y, int length, GL_Pixel_t index)
 {
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = x,
@@ -337,7 +337,7 @@ void GL_primitive_point(const GL_Context_t *context, GL_Point_t position, GL_Pix
         return;
     }
 
-    point(surface, clipping_region, position.x, position.y, index);
+    _point(surface, clipping_region, position.x, position.y, index);
 }
 
 void GL_primitive_hline(const GL_Context_t *context, GL_Point_t origin, size_t w, GL_Pixel_t index)
@@ -354,7 +354,7 @@ void GL_primitive_hline(const GL_Context_t *context, GL_Point_t origin, size_t w
         return;
     }
 
-    hline(surface, clipping_region, origin.x, origin.y, w, index);
+    _hline(surface, clipping_region, origin.x, origin.y, w, index);
 }
 
 void GL_primitive_vline(const GL_Context_t *context, GL_Point_t origin, size_t h, GL_Pixel_t index)
@@ -371,7 +371,7 @@ void GL_primitive_vline(const GL_Context_t *context, GL_Point_t origin, size_t h
         return;
     }
 
-    vline(surface, clipping_region, origin.x, origin.y, h, index);
+    _vline(surface, clipping_region, origin.x, origin.y, h, index);
 }
 
 void GL_primitive_polyline(const GL_Context_t *context, const GL_Point_t *vertices, size_t count, GL_Pixel_t index)
@@ -395,7 +395,7 @@ void GL_primitive_polyline(const GL_Context_t *context, const GL_Point_t *vertic
     const GL_Point_t *from = vertices;
     for (size_t i = 1; i < count; ++i) {
         const GL_Point_t *to = vertices + i;
-        line(surface, clipping_region, from->x, from->y, to->x, to->y, index);
+        _line(surface, clipping_region, from->x, from->y, to->x, to->y, index);
         from = to;
     }
 }
@@ -641,10 +641,10 @@ void GL_primitive_filled_circle(const GL_Context_t *context, GL_Point_t center, 
     while (x <= y) {
         const int length_x = iabs(2 * x) + 1;
         const int length_y = iabs(2 * y) + 1;
-        hline(surface, clipping_region, cx - x, cy - y, length_x, index);
-        hline(surface, clipping_region, cx - y, cy - x, length_y, index);
-        hline(surface, clipping_region, cx - y, cy + x, length_y, index);
-        hline(surface, clipping_region, cx - x, cy + y, length_x, index);
+        _hline(surface, clipping_region, cx - x, cy - y, length_x, index);
+        _hline(surface, clipping_region, cx - y, cy - x, length_y, index);
+        _hline(surface, clipping_region, cx - y, cy + x, length_y, index);
+        _hline(surface, clipping_region, cx - x, cy + y, length_x, index);
 
         if (d < 0) {
             d += 4 * x + 6;
@@ -679,14 +679,14 @@ void GL_primitive_circle(const GL_Context_t *context, GL_Point_t center, size_t 
     int d = 3 - 2 * radius;
 
     while (x <= y) {
-        point(surface, clipping_region, cx + x, cy + y, index);
-        point(surface, clipping_region, cx + y, cy + x, index);
-        point(surface, clipping_region, cx - y, cy + x, index);
-        point(surface, clipping_region, cx - x, cy + y, index);
-        point(surface, clipping_region, cx - x, cy - y, index);
-        point(surface, clipping_region, cx - y, cy - x, index);
-        point(surface, clipping_region, cx + y, cy - x, index);
-        point(surface, clipping_region, cx + x, cy - y, index);
+        _point(surface, clipping_region, cx + x, cy + y, index);
+        _point(surface, clipping_region, cx + y, cy + x, index);
+        _point(surface, clipping_region, cx - y, cy + x, index);
+        _point(surface, clipping_region, cx - x, cy + y, index);
+        _point(surface, clipping_region, cx - x, cy - y, index);
+        _point(surface, clipping_region, cx - y, cy - x, index);
+        _point(surface, clipping_region, cx + y, cy - x, index);
+        _point(surface, clipping_region, cx + x, cy - y, index);
 
         if (d < 0) {
             d += 4 * x + 6;
