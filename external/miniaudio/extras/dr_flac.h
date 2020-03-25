@@ -1,6 +1,6 @@
 /*
 FLAC audio decoder. Choice of public domain or MIT-0. See license statements at the end of this file.
-dr_flac - v0.12.2 - 2019-10-07
+dr_flac - v0.12.7 - 2020-03-14
 
 David Reid - mackron@gmail.com
 */
@@ -555,11 +555,14 @@ typedef struct
 {
     /*
     If the stream uses variable block sizes, this will be set to the index of the first PCM frame. If fixed block sizes are used, this will
-    always be set to 0.
+    always be set to 0. This is 64-bit because the decoded PCM frame number will be 36 bits.
     */
     drflac_uint64 pcmFrameNumber;
 
-    /* If the stream uses fixed block sizes, this will be set to the frame number. If variable block sizes are used, this will always be 0. */
+    /*
+    If the stream uses fixed block sizes, this will be set to the frame number. If variable block sizes are used, this will always be 0. This
+    is 32-bit because in fixed block sizes, the maximum frame number will be 31 bits.
+    */
     drflac_uint32 flacFrameNumber;
 
     /* The sample rate of this frame. */
@@ -1121,7 +1124,7 @@ drflac_bool32 drflac_next_cuesheet_track(drflac_cuesheet_track_iterator* pIter, 
     #define DRFLAC_NO_CPUID
 #endif
 
-static DRFLAC_INLINE drflac_bool32 drflac_has_sse2()
+static DRFLAC_INLINE drflac_bool32 drflac_has_sse2(void)
 {
 #if defined(DRFLAC_SUPPORT_SSE2)
     #if (defined(DRFLAC_X64) || defined(DRFLAC_X86)) && !defined(DRFLAC_NO_SSE2)
@@ -1146,7 +1149,7 @@ static DRFLAC_INLINE drflac_bool32 drflac_has_sse2()
 #endif
 }
 
-static DRFLAC_INLINE drflac_bool32 drflac_has_sse41()
+static DRFLAC_INLINE drflac_bool32 drflac_has_sse41(void)
 {
 #if defined(DRFLAC_SUPPORT_SSE41)
     #if (defined(DRFLAC_X64) || defined(DRFLAC_X86)) && !defined(DRFLAC_NO_SSE41)
@@ -1184,7 +1187,7 @@ static DRFLAC_INLINE drflac_bool32 drflac_has_sse41()
     #endif
 #endif
 
-#if defined(_MSC_VER) && _MSC_VER >= 1300
+#if defined(_MSC_VER) && _MSC_VER >= 1400
     #define DRFLAC_HAS_BYTESWAP16_INTRINSIC
     #define DRFLAC_HAS_BYTESWAP32_INTRINSIC
     #define DRFLAC_HAS_BYTESWAP64_INTRINSIC
@@ -1283,7 +1286,7 @@ actually make sense. However, since CPU caps should never differ for a running p
 complicating internal API's by passing around CPU caps versus just disabling the warnings is worthwhile. I'm therefore
 just going to disable these warnings. This is disabled via the DRFLAC_NO_THREAD_SANITIZE attribute.
 */
-DRFLAC_NO_THREAD_SANITIZE static void drflac__init_cpu_caps()
+DRFLAC_NO_THREAD_SANITIZE static void drflac__init_cpu_caps(void)
 {
     static drflac_bool32 isCPUCapsInitialized = DRFLAC_FALSE;
 
@@ -1309,7 +1312,7 @@ DRFLAC_NO_THREAD_SANITIZE static void drflac__init_cpu_caps()
 #else
 static drflac_bool32 drflac__gIsNEONSupported  = DRFLAC_FALSE;
 
-static DRFLAC_INLINE drflac_bool32 drflac__has_neon()
+static DRFLAC_INLINE drflac_bool32 drflac__has_neon(void)
 {
 #if defined(DRFLAC_SUPPORT_NEON)
     #if defined(DRFLAC_ARM) && !defined(DRFLAC_NO_NEON)
@@ -1327,7 +1330,7 @@ static DRFLAC_INLINE drflac_bool32 drflac__has_neon()
 #endif
 }
 
-DRFLAC_NO_THREAD_SANITIZE static void drflac__init_cpu_caps()
+DRFLAC_NO_THREAD_SANITIZE static void drflac__init_cpu_caps(void)
 {
     drflac__gIsNEONSupported = drflac__has_neon();
 
@@ -1339,7 +1342,7 @@ DRFLAC_NO_THREAD_SANITIZE static void drflac__init_cpu_caps()
 
 
 /* Endian Management */
-static DRFLAC_INLINE drflac_bool32 drflac__is_little_endian()
+static DRFLAC_INLINE drflac_bool32 drflac__is_little_endian(void)
 {
 #if defined(DRFLAC_X86) || defined(DRFLAC_X64)
     return DRFLAC_TRUE;
@@ -2239,7 +2242,7 @@ static DRFLAC_INLINE drflac_uint32 drflac__clz_software(drflac_cache_t x)
 }
 
 #ifdef DRFLAC_IMPLEMENT_CLZ_LZCNT
-static DRFLAC_INLINE drflac_bool32 drflac__is_lzcnt_supported()
+static DRFLAC_INLINE drflac_bool32 drflac__is_lzcnt_supported(void)
 {
     /* Fast compile time check for ARM. */
 #if defined(DRFLAC_HAS_LZCNT_INTRINSIC) && defined(DRFLAC_ARM) && (defined(__ARM_ARCH) && __ARM_ARCH >= 5)
@@ -3141,14 +3144,14 @@ static drflac_bool32 drflac__decode_samples_with_residual__rice__scalar_zeroorde
 static drflac_bool32 drflac__decode_samples_with_residual__rice__scalar(drflac_bs* bs, drflac_uint32 bitsPerSample, drflac_uint32 count, drflac_uint8 riceParam, drflac_uint32 order, drflac_int32 shift, const drflac_int32* coefficients, drflac_int32* pSamplesOut)
 {
     drflac_uint32 t[2] = {0x00000000, 0xFFFFFFFF};
-    drflac_uint32 zeroCountPart0;
-    drflac_uint32 zeroCountPart1;
-    drflac_uint32 zeroCountPart2;
-    drflac_uint32 zeroCountPart3;
-    drflac_uint32 riceParamPart0;
-    drflac_uint32 riceParamPart1;
-    drflac_uint32 riceParamPart2;
-    drflac_uint32 riceParamPart3;
+    drflac_uint32 zeroCountPart0 = 0;
+    drflac_uint32 zeroCountPart1 = 0;
+    drflac_uint32 zeroCountPart2 = 0;
+    drflac_uint32 zeroCountPart3 = 0;
+    drflac_uint32 riceParamPart0 = 0;
+    drflac_uint32 riceParamPart1 = 0;
+    drflac_uint32 riceParamPart2 = 0;
+    drflac_uint32 riceParamPart3 = 0;
     drflac_uint32 riceParamMask;
     const drflac_int32* pSamplesOutEnd;
     drflac_uint32 i;
@@ -3316,14 +3319,14 @@ static drflac_bool32 drflac__decode_samples_with_residual__rice__sse41_32(drflac
     drflac_uint32 riceParamMask;
     drflac_int32* pDecodedSamples    = pSamplesOut;
     drflac_int32* pDecodedSamplesEnd = pSamplesOut + (count & ~3);
-    drflac_uint32 zeroCountParts0;
-    drflac_uint32 zeroCountParts1;
-    drflac_uint32 zeroCountParts2;
-    drflac_uint32 zeroCountParts3;
-    drflac_uint32 riceParamParts0;
-    drflac_uint32 riceParamParts1;
-    drflac_uint32 riceParamParts2;
-    drflac_uint32 riceParamParts3;
+    drflac_uint32 zeroCountParts0 = 0;
+    drflac_uint32 zeroCountParts1 = 0;
+    drflac_uint32 zeroCountParts2 = 0;
+    drflac_uint32 zeroCountParts3 = 0;
+    drflac_uint32 riceParamParts0 = 0;
+    drflac_uint32 riceParamParts1 = 0;
+    drflac_uint32 riceParamParts2 = 0;
+    drflac_uint32 riceParamParts3 = 0;
     __m128i coefficients128_0;
     __m128i coefficients128_4;
     __m128i coefficients128_8;
@@ -3521,14 +3524,14 @@ static drflac_bool32 drflac__decode_samples_with_residual__rice__sse41_64(drflac
     drflac_uint32 riceParamMask;
     drflac_int32* pDecodedSamples    = pSamplesOut;
     drflac_int32* pDecodedSamplesEnd = pSamplesOut + (count & ~3);
-    drflac_uint32 zeroCountParts0;
-    drflac_uint32 zeroCountParts1;
-    drflac_uint32 zeroCountParts2;
-    drflac_uint32 zeroCountParts3;
-    drflac_uint32 riceParamParts0;
-    drflac_uint32 riceParamParts1;
-    drflac_uint32 riceParamParts2;
-    drflac_uint32 riceParamParts3;
+    drflac_uint32 zeroCountParts0 = 0;
+    drflac_uint32 zeroCountParts1 = 0;
+    drflac_uint32 zeroCountParts2 = 0;
+    drflac_uint32 zeroCountParts3 = 0;
+    drflac_uint32 riceParamParts0 = 0;
+    drflac_uint32 riceParamParts1 = 0;
+    drflac_uint32 riceParamParts2 = 0;
+    drflac_uint32 riceParamParts3 = 0;
     __m128i coefficients128_0;
     __m128i coefficients128_4;
     __m128i coefficients128_8;
@@ -4676,6 +4679,7 @@ static drflac_bool32 drflac__read_next_flac_frame_header(drflac_bs* bs, drflac_u
         }
 
 
+        DRFLAC_ASSERT(blockSize > 0);
         if (blockSize == 1) {
             header->blockSizeInPCMFrames = 192;
         } else if (blockSize >= 2 && blockSize <= 5) {
@@ -4693,6 +4697,7 @@ static drflac_bool32 drflac__read_next_flac_frame_header(drflac_bs* bs, drflac_u
             crc8 = drflac_crc8(crc8, header->blockSizeInPCMFrames, 16);
             header->blockSizeInPCMFrames += 1;
         } else {
+            DRFLAC_ASSERT(blockSize >= 8);
             header->blockSizeInPCMFrames = 256 * (1 << (blockSize - 8));
         }
 
@@ -5078,10 +5083,10 @@ static void drflac__get_pcm_frame_range_of_current_flac_frame(drflac* pFlac, drf
 
     firstPCMFrame = pFlac->currentFLACFrame.header.pcmFrameNumber;
     if (firstPCMFrame == 0) {
-        firstPCMFrame = pFlac->currentFLACFrame.header.flacFrameNumber * pFlac->maxBlockSizeInPCMFrames;
+        firstPCMFrame = ((drflac_uint64)pFlac->currentFLACFrame.header.flacFrameNumber) * pFlac->maxBlockSizeInPCMFrames;
     }
 
-    lastPCMFrame = firstPCMFrame + (pFlac->currentFLACFrame.header.blockSizeInPCMFrames);
+    lastPCMFrame = firstPCMFrame + pFlac->currentFLACFrame.header.blockSizeInPCMFrames;
     if (lastPCMFrame > 0) {
         lastPCMFrame -= 1; /* Needs to be zero based. */
     }
@@ -5349,7 +5354,7 @@ static drflac_bool32 drflac__seek_to_pcm_frame__binary_search_internal(drflac* p
     drflac_uint64 closestSeekOffsetBeforeTargetPCMFrame = byteRangeLo;
     drflac_uint32 seekForwardThreshold = (pFlac->maxBlockSizeInPCMFrames != 0) ? pFlac->maxBlockSizeInPCMFrames*2 : 4096;
 
-    targetByte = byteRangeLo + (drflac_uint64)((pcmFrameIndex - pFlac->currentPCMFrame) * pFlac->channels * pFlac->bitsPerSample/8 * DRFLAC_BINARY_SEARCH_APPROX_COMPRESSION_RATIO);
+    targetByte = byteRangeLo + (drflac_uint64)(((drflac_int64)((pcmFrameIndex - pFlac->currentPCMFrame) * pFlac->channels * pFlac->bitsPerSample)/8.0f) * DRFLAC_BINARY_SEARCH_APPROX_COMPRESSION_RATIO);
     if (targetByte > byteRangeHi) {
         targetByte = byteRangeHi;
     }
@@ -5385,7 +5390,7 @@ static drflac_bool32 drflac__seek_to_pcm_frame__binary_search_internal(drflac* p
                     break;  /* Failed to seek to FLAC frame. */
                 }
             } else {
-                const float approxCompressionRatio = (lastSuccessfulSeekOffset - pFlac->firstFLACFramePosInBytes) / (pcmRangeLo * pFlac->channels * pFlac->bitsPerSample/8.0f);
+                const float approxCompressionRatio = (drflac_int64)(lastSuccessfulSeekOffset - pFlac->firstFLACFramePosInBytes) / ((drflac_int64)(pcmRangeLo * pFlac->channels * pFlac->bitsPerSample)/8.0f);
 
                 if (pcmRangeLo > pcmFrameIndex) {
                     /* We seeked too far forward. We need to move our target byte backward and try again. */
@@ -5394,7 +5399,6 @@ static drflac_bool32 drflac__seek_to_pcm_frame__binary_search_internal(drflac* p
                         byteRangeLo = byteRangeHi;
                     }
 
-                    /*targetByte = lastSuccessfulSeekOffset - (drflac_uint64)((pcmRangeLo-pcmFrameIndex) * pFlac->channels * pFlac->bitsPerSample/8 * approxCompressionRatio);*/
                     targetByte = byteRangeLo + ((byteRangeHi - byteRangeLo) / 2);
                     if (targetByte < byteRangeLo) {
                         targetByte = byteRangeLo;
@@ -5415,10 +5419,7 @@ static drflac_bool32 drflac__seek_to_pcm_frame__binary_search_internal(drflac* p
                             byteRangeHi = byteRangeLo;
                         }
 
-                        /*targetByte = byteRangeLo + (drflac_uint64)((pcmFrameIndex-pcmRangeLo) * pFlac->channels * pFlac->bitsPerSample/8 * approxCompressionRatio);*/
-                        targetByte = lastSuccessfulSeekOffset + (drflac_uint64)((pcmFrameIndex-pcmRangeLo) * pFlac->channels * pFlac->bitsPerSample/8 * approxCompressionRatio);
-                        /*targetByte = byteRangeLo + ((byteRangeHi - byteRangeLo) / 2);*/
-
+                        targetByte = lastSuccessfulSeekOffset + (drflac_uint64)(((drflac_int64)((pcmFrameIndex-pcmRangeLo) * pFlac->channels * pFlac->bitsPerSample)/8.0f) * approxCompressionRatio);
                         if (targetByte > byteRangeHi) {
                             targetByte = byteRangeHi;
                         }
@@ -5460,7 +5461,7 @@ static drflac_bool32 drflac__seek_to_pcm_frame__binary_search(drflac* pFlac, drf
     the entire file is included, even though most of the time it'll exceed the end of the actual stream. This is OK as the frame searching logic will handle it.
     */
     byteRangeLo = pFlac->firstFLACFramePosInBytes;
-    byteRangeHi = pFlac->firstFLACFramePosInBytes + (drflac_uint64)(pFlac->totalPCMFrameCount * pFlac->channels * pFlac->bitsPerSample/8);
+    byteRangeHi = pFlac->firstFLACFramePosInBytes + (drflac_uint64)((drflac_int64)(pFlac->totalPCMFrameCount * pFlac->channels * pFlac->bitsPerSample)/8.0f);
 
     return drflac__seek_to_pcm_frame__binary_search_internal(pFlac, pcmFrameIndex, byteRangeLo, byteRangeHi);
 }
@@ -5494,7 +5495,7 @@ static drflac_bool32 drflac__seek_to_pcm_frame__seek_table(drflac* pFlac, drflac
         drflac_uint64 byteRangeLo;
         drflac_uint64 byteRangeHi;
 
-        byteRangeHi = pFlac->firstFLACFramePosInBytes + (drflac_uint64)(pFlac->totalPCMFrameCount * pFlac->channels * pFlac->bitsPerSample/8);
+        byteRangeHi = pFlac->firstFLACFramePosInBytes + (drflac_uint64)((drflac_int64)(pFlac->totalPCMFrameCount * pFlac->channels * pFlac->bitsPerSample)/8.0f);
         byteRangeLo = pFlac->firstFLACFramePosInBytes + pFlac->pSeekpoints[iClosestSeekpoint].flacFrameOffset;
 
         if (iClosestSeekpoint < pFlac->seekpointCount-1) {
@@ -5671,6 +5672,8 @@ static DRFLAC_INLINE void drflac__decode_block_header(drflac_uint32 blockHeader,
 static DRFLAC_INLINE drflac_bool32 drflac__read_and_decode_block_header(drflac_read_proc onRead, void* pUserData, drflac_uint8* isLastBlock, drflac_uint8* blockType, drflac_uint32* blockSize)
 {
     drflac_uint32 blockHeader;
+
+    *blockSize = 0;
     if (onRead(pUserData, &blockHeader, 4) != 4) {
         return DRFLAC_FALSE;
     }
@@ -5780,8 +5783,10 @@ static void* drflac__realloc_from_callbacks(void* p, size_t szNew, size_t szOld,
             return NULL;
         }
 
-        DRFLAC_COPY_MEMORY(p2, p, szOld);
-        pAllocationCallbacks->onFree(p, pAllocationCallbacks->pUserData);
+        if (p != NULL) {
+            DRFLAC_COPY_MEMORY(p2, p, szOld);
+            pAllocationCallbacks->onFree(p, pAllocationCallbacks->pUserData);
+        }
 
         return p2;
     }
@@ -5816,7 +5821,7 @@ drflac_bool32 drflac__read_and_decode_metadata(drflac_read_proc onRead, drflac_s
         drflac_uint8 isLastBlock = 0;
         drflac_uint8 blockType;
         drflac_uint32 blockSize;
-        if (!drflac__read_and_decode_block_header(onRead, pUserData, &isLastBlock, &blockType, &blockSize)) {
+        if (drflac__read_and_decode_block_header(onRead, pUserData, &isLastBlock, &blockType, &blockSize) == DRFLAC_FALSE) {
             return DRFLAC_FALSE;
         }
         runningFilePos += 4;
@@ -6383,6 +6388,16 @@ drflac_result drflac_ogg__read_page_header_after_capture_pattern(drflac_read_pro
         return DRFLAC_END_OF_STREAM;
     }
     *pBytesRead += 23;
+
+    /*
+    It's not actually used, but set the capture pattern to 'OggS' for completeness. Not doing this will cause static analysers to complain about
+    us trying to access uninitialized data. We could alternatively just comment out this member of the drflac_ogg_page_header structure, but I
+    like to have it map to the structure of the underlying data.
+    */
+    pHeader->capturePattern[0] = 'O';
+    pHeader->capturePattern[1] = 'g';
+    pHeader->capturePattern[2] = 'g';
+    pHeader->capturePattern[3] = 'S';
 
     pHeader->structureVersion = data[0];
     pHeader->headerType       = data[1];
@@ -7152,7 +7167,7 @@ drflac_bool32 drflac__init_private(drflac_init_info* pInit, drflac_read_proc onR
     return DRFLAC_FALSE;
 }
 
-void drflac__init_from_info(drflac* pFlac, drflac_init_info* pInit)
+void drflac__init_from_info(drflac* pFlac, const drflac_init_info* pInit)
 {
     DRFLAC_ASSERT(pFlac != NULL);
     DRFLAC_ASSERT(pInit != NULL);
@@ -7280,6 +7295,10 @@ drflac* drflac_open_with_metadata_private(drflac_read_proc onRead, drflac_seek_p
 
 
     pFlac = (drflac*)drflac__malloc_from_callbacks(allocationSize, &allocationCallbacks);
+    if (pFlac == NULL) {
+        return NULL;
+    }
+
     drflac__init_from_info(pFlac, &init);
     pFlac->allocationCallbacks = allocationCallbacks;
     pFlac->pDecodedSamples = (drflac_int32*)drflac_align((size_t)pFlac->pExtraData, DRFLAC_MAX_SIMD_VECTOR_SIZE);
@@ -7313,6 +7332,9 @@ drflac* drflac_open_with_metadata_private(drflac_read_proc onRead, drflac_seek_p
         if (seektablePos != 0) {
             pFlac->seekpointCount = seektableSize / sizeof(*pFlac->pSeekpoints);
             pFlac->pSeekpoints = (drflac_seekpoint*)((drflac_uint8*)pFlac->pDecodedSamples + decodedSamplesAllocationSize);
+
+            DRFLAC_ASSERT(pFlac->bs.onSeek != NULL);
+            DRFLAC_ASSERT(pFlac->bs.onRead != NULL);
 
             /* Seek to the seektable, then just read directly into our seektable buffer. */
             if (pFlac->bs.onSeek(pFlac->bs.pUserData, (int)seektablePos, drflac_seek_origin_start)) {
@@ -10219,7 +10241,7 @@ drflac_uint64 drflac_read_pcm_frames_f32(drflac* pFlac, drflac_uint64 framesToRe
                 for (i = 0; i < frameCountThisIteration; ++i) {
                     unsigned int j;
                     for (j = 0; j < channelCount; ++j) {
-                        pBufferOut[(i*channelCount)+j] = (float)(((pFlac->currentFLACFrame.subframes[j].pSamplesS32[iFirstPCMFrame + i]) << (unusedBitsPerSample + pFlac->currentFLACFrame.subframes[j].wastedBitsPerSample)) / 2147483648.0);
+                        pBufferOut[(i*channelCount)+j] = (float)((drflac_int64)((pFlac->currentFLACFrame.subframes[j].pSamplesS32[iFirstPCMFrame + i]) << (unusedBitsPerSample + pFlac->currentFLACFrame.subframes[j].wastedBitsPerSample)) / 2147483648.0);
                     }
                 }
             }
@@ -10300,7 +10322,7 @@ drflac_bool32 drflac_seek_to_pcm_frame(drflac* pFlac, drflac_uint64 pcmFrameInde
 #endif
         {
             /* First try seeking via the seek table. If this fails, fall back to a brute force seek which is much slower. */
-            if (!wasSuccessful && !pFlac->_noSeekTableSeek) {
+            if (/*!wasSuccessful && */!pFlac->_noSeekTableSeek) {
                 wasSuccessful = drflac__seek_to_pcm_frame__seek_table(pFlac, pcmFrameIndex);
             }
 
@@ -10717,6 +10739,26 @@ drflac_bool32 drflac_next_cuesheet_track(drflac_cuesheet_track_iterator* pIter, 
 /*
 REVISION HISTORY
 ================
+v0.12.7 - 2020-03-14
+  - Fix compilation errors with VC6.
+
+v0.12.6 - 2020-03-07
+  - Fix compilation error with Visual Studio .NET 2003.
+
+v0.12.5 - 2020-01-30
+  - Silence some static analysis warnings.
+
+v0.12.4 - 2020-01-29
+  - Silence some static analysis warnings.
+
+v0.12.3 - 2019-12-02
+  - Fix some warnings when compiling with GCC and the -Og flag.
+  - Fix a crash in out-of-memory situations.
+  - Fix potential integer overflow bug.
+  - Fix some static analysis warnings.
+  - Fix a possible crash when using custom memory allocators without a custom realloc() implementation.
+  - Fix a bug with binary search seeking where the bits per sample is not a multiple of 8.
+
 v0.12.2 - 2019-10-07
   - Internal code clean up.
 
@@ -11013,7 +11055,7 @@ For more information, please refer to <http://unlicense.org/>
 ===============================================================================
 ALTERNATIVE 2 - MIT No Attribution
 ===============================================================================
-Copyright 2018 David Reid
+Copyright 2020 David Reid
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in

@@ -1,6 +1,6 @@
 /*
 MP3 audio decoder. Choice of public domain or MIT-0. See license statements at the end of this file.
-dr_mp3 - v0.5.0 - 2019-10-07
+dr_mp3 - v0.5.6 - 2020-02-12
 
 David Reid - mackron@gmail.com
 
@@ -41,11 +41,11 @@ To use the new system, you pass in a pointer to a drmp3_allocation_callbacks obj
     allocationCallbacks.onMalloc  = my_malloc;
     allocationCallbacks.onRealloc = my_realloc;
     allocationCallbacks.onFree    = my_free;
-    drmp3_init_file(&mp3, "my_file.wav", NULL, &allocationCallbacks);
+    drmp3_init_file(&mp3, "my_file.mp3", NULL, &allocationCallbacks);
 
 The advantage of this new system is that it allows you to specify user data which will be passed in to the allocation routines.
 
-Passing in null for the allocation callbacks object will cause dr_wav to use defaults which is the same as DRMP3_MALLOC,
+Passing in null for the allocation callbacks object will cause dr_mp3 to use defaults which is the same as DRMP3_MALLOC,
 DRMP3_REALLOC and DRMP3_FREE and the equivalent of how it worked in previous versions.
 
 Every API that opens a drmp3 object now takes this extra parameter. These include the following:
@@ -591,7 +591,7 @@ static __inline__ __attribute__((always_inline)) void drmp3_cpuid(int CPUInfo[],
 #endif
 }
 #endif
-static int drmp3_have_simd()
+static int drmp3_have_simd(void)
 {
 #ifdef DR_MP3_ONLY_SIMD
     return 1;
@@ -619,6 +619,7 @@ end:
 }
 #elif defined(__ARM_NEON) || defined(__aarch64__)
 #include <arm_neon.h>
+#define DRMP3_HAVE_SSE 0
 #define DRMP3_HAVE_SIMD 1
 #define DRMP3_VSTORE vst1q_f32
 #define DRMP3_VLD vld1q_f32
@@ -631,11 +632,12 @@ end:
 #define DRMP3_VMUL_S(x, s)  vmulq_f32(x, vmovq_n_f32(s))
 #define DRMP3_VREV(x) vcombine_f32(vget_high_f32(vrev64q_f32(x)), vget_low_f32(vrev64q_f32(x)))
 typedef float32x4_t drmp3_f4;
-static int drmp3_have_simd()
+static int drmp3_have_simd(void)
 {   /* TODO: detect neon for !DR_MP3_ONLY_SIMD */
     return 1;
 }
 #else
+#define DRMP3_HAVE_SSE 0
 #define DRMP3_HAVE_SIMD 0
 #ifdef DR_MP3_ONLY_SIMD
 #error DR_MP3_ONLY_SIMD used, but SSE/NEON not enabled
@@ -821,7 +823,7 @@ static void drmp3_L12_read_scalefactors(drmp3_bs *bs, drmp3_uint8 *pba, drmp3_ui
             if (mask & m)
             {
                 int b = drmp3_bs_get_bits(bs, 6);
-                s = g_deq_L12[ba*3 - 6 + b % 3]*(1 << 21 >> b/3);
+                s = g_deq_L12[ba*3 - 6 + b % 3]*(int)(1 << 21 >> b/3);
             }
             *scf++ = s;
         }
@@ -2135,7 +2137,7 @@ static int drmp3d_find_frame(const drmp3_uint8 *mp3, int mp3_bytes, int *free_fo
         }
     }
     *ptr_frame_bytes = 0;
-    return i;
+    return mp3_bytes;
 }
 
 void drmp3dec_init(drmp3dec *dec)
@@ -2240,59 +2242,56 @@ int drmp3dec_decode_frame(drmp3dec *dec, const unsigned char *mp3, int mp3_bytes
 
 void drmp3dec_f32_to_s16(const float *in, drmp3_int16 *out, int num_samples)
 {
-    if(num_samples > 0)
-    {
-        int i = 0;
+    int i = 0;
 #if DRMP3_HAVE_SIMD
-        int aligned_count = num_samples & ~7;
-        for(; i < aligned_count; i+=8)
-        {
-            drmp3_f4 scale = DRMP3_VSET(32768.0f);
-            drmp3_f4 a = DRMP3_VMUL(DRMP3_VLD(&in[i  ]), scale);
-            drmp3_f4 b = DRMP3_VMUL(DRMP3_VLD(&in[i+4]), scale);
+    int aligned_count = num_samples & ~7;
+    for(; i < aligned_count; i+=8)
+    {
+        drmp3_f4 scale = DRMP3_VSET(32768.0f);
+        drmp3_f4 a = DRMP3_VMUL(DRMP3_VLD(&in[i  ]), scale);
+        drmp3_f4 b = DRMP3_VMUL(DRMP3_VLD(&in[i+4]), scale);
 #if DRMP3_HAVE_SSE
-            drmp3_f4 s16max = DRMP3_VSET( 32767.0f);
-            drmp3_f4 s16min = DRMP3_VSET(-32768.0f);
-            __m128i pcm8 = _mm_packs_epi32(_mm_cvtps_epi32(_mm_max_ps(_mm_min_ps(a, s16max), s16min)),
-                                           _mm_cvtps_epi32(_mm_max_ps(_mm_min_ps(b, s16max), s16min)));
-            out[i  ] = (drmp3_int16)_mm_extract_epi16(pcm8, 0);
-            out[i+1] = (drmp3_int16)_mm_extract_epi16(pcm8, 1);
-            out[i+2] = (drmp3_int16)_mm_extract_epi16(pcm8, 2);
-            out[i+3] = (drmp3_int16)_mm_extract_epi16(pcm8, 3);
-            out[i+4] = (drmp3_int16)_mm_extract_epi16(pcm8, 4);
-            out[i+5] = (drmp3_int16)_mm_extract_epi16(pcm8, 5);
-            out[i+6] = (drmp3_int16)_mm_extract_epi16(pcm8, 6);
-            out[i+7] = (drmp3_int16)_mm_extract_epi16(pcm8, 7);
+        drmp3_f4 s16max = DRMP3_VSET( 32767.0f);
+        drmp3_f4 s16min = DRMP3_VSET(-32768.0f);
+        __m128i pcm8 = _mm_packs_epi32(_mm_cvtps_epi32(_mm_max_ps(_mm_min_ps(a, s16max), s16min)),
+                                        _mm_cvtps_epi32(_mm_max_ps(_mm_min_ps(b, s16max), s16min)));
+        out[i  ] = (drmp3_int16)_mm_extract_epi16(pcm8, 0);
+        out[i+1] = (drmp3_int16)_mm_extract_epi16(pcm8, 1);
+        out[i+2] = (drmp3_int16)_mm_extract_epi16(pcm8, 2);
+        out[i+3] = (drmp3_int16)_mm_extract_epi16(pcm8, 3);
+        out[i+4] = (drmp3_int16)_mm_extract_epi16(pcm8, 4);
+        out[i+5] = (drmp3_int16)_mm_extract_epi16(pcm8, 5);
+        out[i+6] = (drmp3_int16)_mm_extract_epi16(pcm8, 6);
+        out[i+7] = (drmp3_int16)_mm_extract_epi16(pcm8, 7);
 #else
-            int16x4_t pcma, pcmb;
-            a = DRMP3_VADD(a, DRMP3_VSET(0.5f));
-            b = DRMP3_VADD(b, DRMP3_VSET(0.5f));
-            pcma = vqmovn_s32(vqaddq_s32(vcvtq_s32_f32(a), vreinterpretq_s32_u32(vcltq_f32(a, DRMP3_VSET(0)))));
-            pcmb = vqmovn_s32(vqaddq_s32(vcvtq_s32_f32(b), vreinterpretq_s32_u32(vcltq_f32(b, DRMP3_VSET(0)))));
-            vst1_lane_s16(out+i  , pcma, 0);
-            vst1_lane_s16(out+i+1, pcma, 1);
-            vst1_lane_s16(out+i+2, pcma, 2);
-            vst1_lane_s16(out+i+3, pcma, 3);
-            vst1_lane_s16(out+i+4, pcmb, 0);
-            vst1_lane_s16(out+i+5, pcmb, 1);
-            vst1_lane_s16(out+i+6, pcmb, 2);
-            vst1_lane_s16(out+i+7, pcmb, 3);
+        int16x4_t pcma, pcmb;
+        a = DRMP3_VADD(a, DRMP3_VSET(0.5f));
+        b = DRMP3_VADD(b, DRMP3_VSET(0.5f));
+        pcma = vqmovn_s32(vqaddq_s32(vcvtq_s32_f32(a), vreinterpretq_s32_u32(vcltq_f32(a, DRMP3_VSET(0)))));
+        pcmb = vqmovn_s32(vqaddq_s32(vcvtq_s32_f32(b), vreinterpretq_s32_u32(vcltq_f32(b, DRMP3_VSET(0)))));
+        vst1_lane_s16(out+i  , pcma, 0);
+        vst1_lane_s16(out+i+1, pcma, 1);
+        vst1_lane_s16(out+i+2, pcma, 2);
+        vst1_lane_s16(out+i+3, pcma, 3);
+        vst1_lane_s16(out+i+4, pcmb, 0);
+        vst1_lane_s16(out+i+5, pcmb, 1);
+        vst1_lane_s16(out+i+6, pcmb, 2);
+        vst1_lane_s16(out+i+7, pcmb, 3);
 #endif
-        }
+    }
 #endif
-        for(; i < num_samples; i++)
+    for(; i < num_samples; i++)
+    {
+        float sample = in[i] * 32768.0f;
+        if (sample >=  32766.5)
+            out[i] = (drmp3_int16) 32767;
+        else if (sample <= -32767.5)
+            out[i] = (drmp3_int16)-32768;
+        else
         {
-            float sample = in[i] * 32768.0f;
-            if (sample >=  32766.5)
-                out[i] = (drmp3_int16) 32767;
-            else if (sample <= -32767.5)
-                out[i] = (drmp3_int16)-32768;
-            else
-            {
-                short s = (drmp3_int16)(sample + .5f);
-                s -= (s < 0);   /* away from zero, to be compliant */
-                out[i] = s;
-            }
+            short s = (drmp3_int16)(sample + .5f);
+            s -= (s < 0);   /* away from zero, to be compliant */
+            out[i] = s;
         }
     }
 }
@@ -2382,6 +2381,7 @@ static void drmp3__free_default(void* p, void* pUserData)
 }
 
 
+#if 0   /* Unused, but leaving here in case I need to add it again later. */
 static void* drmp3__malloc_from_callbacks(size_t sz, const drmp3_allocation_callbacks* pAllocationCallbacks)
 {
     if (pAllocationCallbacks == NULL) {
@@ -2399,6 +2399,7 @@ static void* drmp3__malloc_from_callbacks(size_t sz, const drmp3_allocation_call
 
     return NULL;
 }
+#endif
 
 static void* drmp3__realloc_from_callbacks(void* p, size_t szNew, size_t szOld, const drmp3_allocation_callbacks* pAllocationCallbacks)
 {
@@ -2419,8 +2420,10 @@ static void* drmp3__realloc_from_callbacks(void* p, size_t szNew, size_t szOld, 
             return NULL;
         }
 
-        DRMP3_COPY_MEMORY(p2, p, szOld);
-        pAllocationCallbacks->onFree(p, pAllocationCallbacks->pUserData);
+        if (p != NULL) {
+            DRMP3_COPY_MEMORY(p2, p, szOld);
+            pAllocationCallbacks->onFree(p, pAllocationCallbacks->pUserData);
+        }
 
         return p2;
     }
@@ -3866,7 +3869,7 @@ drmp3_int16* drmp3__full_read_and_close_s16(drmp3* pMP3, drmp3_config* pConfig, 
             drmp3_uint64 newFramesCap;
             drmp3_int16* pNewFrames;
 
-           newFramesCap = framesCapacity * 2;
+            newFramesCap = framesCapacity * 2;
             if (newFramesCap < totalFramesRead + framesJustRead) {
                 newFramesCap = totalFramesRead + framesJustRead;
             }
@@ -3884,6 +3887,7 @@ drmp3_int16* drmp3__full_read_and_close_s16(drmp3* pMP3, drmp3_config* pConfig, 
             }
 
             pFrames = pNewFrames;
+            framesCapacity = newFramesCap;
         }
 
         DRMP3_COPY_MEMORY(pFrames + totalFramesRead*pMP3->channels, temp, (size_t)(framesJustRead*pMP3->channels*sizeof(drmp3_int16)));
@@ -4003,6 +4007,24 @@ DIFFERENCES BETWEEN minimp3 AND dr_mp3
 /*
 REVISION HISTORY
 ================
+v0.5.6 - 2020-02-12
+  - Bring up to date with minimp3.
+
+v0.5.5 - 2020-01-29
+  - Fix a memory allocation bug in high level s16 decoding APIs.
+
+v0.5.4 - 2019-12-02
+  - Fix a possible null pointer dereference when using custom memory allocators for realloc().
+
+v0.5.3 - 2019-11-14
+  - Fix typos in documentation.
+
+v0.5.2 - 2019-11-02
+  - Bring up to date with minimp3.
+
+v0.5.1 - 2019-10-08
+  - Fix a warning with GCC.
+
 v0.5.0 - 2019-10-07
   - API CHANGE: Add support for user defined memory allocation routines. This system allows the program to specify their own memory allocation
     routines with a user data pointer for client-specific contextual data. This adds an extra parameter to the end of the following APIs:
@@ -4164,7 +4186,7 @@ For more information, please refer to <http://unlicense.org/>
 ===============================================================================
 ALTERNATIVE 2 - MIT No Attribution
 ===============================================================================
-Copyright 2018 David Reid
+Copyright 2020 David Reid
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
