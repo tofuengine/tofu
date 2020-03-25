@@ -35,7 +35,7 @@ else
 endif
 CWARNINGS=-std=c99 -Wall -Wextra -Werror -Wno-unused-parameter -Wpedantic -Wstrict-prototypes -Wunreachable-code -Wlogical-op
 #CWARNINGS=-std=c99 -Wall -Wextra -Werror -Wno-unused-parameter -Wpedantic -Wstrict-prototypes -Wshadow -Wunreachable-code -Wlogical-op -Wfloat-equal
-CFLAGS=-D_DEFAULT_SOURCE -DLUA_32BITS -DLUA_FLOORN2I=1 -DSTBI_ONLY_PNG -DSTBI_NO_STDIO -DMA_NO_STDIO -Isrc -Iexternal
+CFLAGS=-D_DEFAULT_SOURCE -DLUA_32BITS -DLUA_FLOORN2I=1 -DSTBI_ONLY_PNG -DSTBI_NO_STDIO -DSTB_VORBIS_NO_STDIO -DMA_NO_STDIO -Isrc -Iexternal
 ifeq ($(BUILD),release)
 # -Ofast => -O3 -ffast-math
 # -Os => -O2, favouring size
@@ -70,8 +70,8 @@ else
 endif
 
 
-SOURCES:=$(wildcard src/*.c src/core/*.c src/core/io/*.c src/core/io/display/*.c src/core/vm/*.c src/core/vm/modules/*.c src/core/vm/modules/resources/*.c src/libs/*.c src/libs/fs/*.c src/libs/gl/*.c external/glad/*.c external/GLFW/*.c external/lua/*.c external/miniaudio/*.c external/spleen/*.c external/stb/*.c)
-INCLUDES:=$(wildcard src/*.h src/core/*.h src/core/io/*.h src/core/io/display/*.h src/core/vm/*.h src/core/vm/modules/*.h src/core/vm/modules/resources/*.h src/libs/*.h src/libs/fs/*.h src/libs/gl/*.h external/glad/*.h external/GLFW/*.h external/lua/*.h external/miniaudio/*.h external/spleen/*.h external/stb/*.h)
+SOURCES:=$(wildcard src/*.c src/core/*.c src/core/io/*.c src/core/io/display/*.c src/core/vm/*.c src/core/vm/modules/*.c src/core/vm/modules/resources/*.c src/libs/*.c src/libs/fs/*.c src/libs/gl/*.c external/glad/*.c external/GLFW/*.c external/lua/*.c external/miniaudio/*.c external/spleen/*.c)
+INCLUDES:=$(wildcard src/*.h src/core/*.h src/core/io/*.h src/core/io/display/*.h src/core/vm/*.h src/core/vm/modules/*.h src/core/vm/modules/resources/*.h src/libs/*.h src/libs/fs/*.h src/libs/gl/*.h external/glad/*.h external/GLFW/*.h external/lua/*.h external/miniaudio/*.h external/spleen/*.h external/stb/*.c external/stb/*.h)
 OBJECTS:=$(SOURCES:%.c=%.o)
 SCRIPTS:=$(wildcard src/core/vm/*.lua src/core/vm/modules/*.lua)
 SDUMPS:=$(SCRIPTS:%.lua=%.inc)
