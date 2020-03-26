@@ -24,7 +24,6 @@
 
 #include "audio.h"
 
-#include <core/platform.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 
@@ -42,36 +41,19 @@
 
 #define LOG_CONTEXT "audio"
 
-static const char *_backends[] = {
-    "wasapi",
-    "dsound",
-    "winmm",
-    "coreaudio",
-    "sndio",
-    "audio4",
-    "oss",
-    "pulseaudio",
-    "alsa",
-    "jack",
-    "aaudio",
-    "opensl",
-    "webaudio",
-    "null"
-};
+static void _log_callback(ma_context *context, ma_device *device, ma_uint32 log_level, const char *message)
+{
+    Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "[%p:%p] %d %s", context, device, log_level, message);
+}
 
-static const char *_formats[] = {
-    "unknown",
-    "u8",
-    "s16",
-    "s24",
-    "s32",
-    "f32"
-};
-
-static void device_callback(ma_device *device, void *output, const void *input, ma_uint32 frame_count)
+static void _device_callback(ma_device *device, void *output, const void *input, ma_uint32 frame_count)
 {
     Audio_t *audio = (Audio_t *)device->pUserData;
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d frames requested for instance %p", frame_count, audio);
+
+//    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d frames requested for instance %p", frame_count, audio);
+
+    ma_mutex_lock(&audio->lock);
+    ma_mutex_unlock(&audio->lock);
 }
 
 bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration)
@@ -80,32 +62,63 @@ bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration
 
     audio->configuration = *configuration;
 
-    audio->device_config = ma_device_config_init(ma_device_type_playback);
+    audio->master_volume = 1.0f; // Full audio on start.
 
-    audio->device_config.playback.format    = ma_format_u8;
-    audio->device_config.playback.channels  = configuration->channels ? configuration->channels : audio->device_config.playback.channels;
-    audio->device_config.sampleRate         = configuration->sample_rate ? configuration->sample_rate : audio->device_config.sampleRate;
-    audio->device_config.dataCallback       = device_callback;
-    audio->device_config.pUserData          = (void *)audio;
+    audio->context_config = ma_context_config_init();
+    audio->context_config.pUserData = (void *)audio;
+    audio->context_config.logCallback = _log_callback;
 
-    ma_result result = ma_device_init(NULL, &audio->device_config, &audio->device);
+    ma_result result = ma_context_init(NULL, 0, &audio->context_config, &audio->context);
     if (result != MA_SUCCESS) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize device");
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize the context");
         return false;
     }
 
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "backend: %s", _backends[audio->device.pContext->backend]);
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "format: %s/%d", _formats[audio->device.playback.format], audio->device.playback.channels);
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "internal-format: %s/%d", _formats[audio->device.playback.internalFormat], audio->device.playback.internalChannels);
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "sample-rate: %d", audio->device.sampleRate);
+    audio->device_config = ma_device_config_init(ma_device_type_playback);
+    audio->device_config.playback.format    = ma_format_f32; // Using floating point format for simpler mixing?.
+    audio->device_config.playback.channels  = configuration->channels ? configuration->channels : audio->device_config.playback.channels;
+    audio->device_config.sampleRate         = configuration->sample_rate ? configuration->sample_rate : audio->device_config.sampleRate;
+    audio->device_config.dataCallback       = _device_callback;
+    audio->device_config.pUserData          = (void *)audio;
+
+    result = ma_device_init(&audio->context, &audio->device_config, &audio->device);
+    if (result != MA_SUCCESS) {
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize then device");
+        ma_context_uninit(&audio->context);
+        return false;
+    }
+
+    result = ma_device_start(&audio->device);
+    if (result != MA_SUCCESS) {
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't start then device");
+        ma_device_uninit(&audio->device);
+        ma_context_uninit(&audio->context);
+        return false;
+    }
+
+    result = ma_mutex_init(&audio->context, &audio->lock);
+    if (result != MA_SUCCESS) {
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create mutext for mixing");
+        ma_device_uninit(&audio->device);
+        ma_context_uninit(&audio->context);
+        return false;
+    }
+
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "device-name: %s", audio->device.playback.name);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "backend: miniaudio / %s", ma_get_backend_name(audio->context.backend));
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "format: %s / %s", ma_get_format_name(audio->device.playback.format), ma_get_format_name(audio->device.playback.internalFormat));
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "channels: %d / %d", audio->device.playback.channels, audio->device.playback.internalChannels);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "sample-rate: %d / %d", audio->device.sampleRate, audio->device.playback.internalSampleRate);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "period-in-frames: %d", audio->device.playback.internalPeriodSizeInFrames);
 
     return true;
 }
 
 void Audio_terminate(Audio_t *audio)
 {
+    ma_mutex_uninit(&audio->lock);
     ma_device_uninit(&audio->device);
+    ma_context_uninit(&audio->context);
 }
 
 void Audio_update(Audio_t *audio, float delta_time)

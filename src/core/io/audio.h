@@ -37,20 +37,26 @@ typedef struct _Audio_Configuration_t {
     size_t voices;
 } Audio_Configuration_t;
 
-typedef struct _Audio_Voice_t {
-    uint8_t *buffer;
-    size_t buffer_size;
-} Audio_Voice_t;
+typedef struct _Audio_Stream_t {
+    void *data;
+    size_t data_size;
+    size_t index;
+} Audio_Stream_t;
 
 typedef struct _Audio_t {
     Audio_Configuration_t configuration;
 
+    ma_context_config context_config;
+    ma_context context;
     ma_device_config device_config;
     ma_device device;
+    ma_decoder decoder;
+    ma_mutex lock;
 
     double time;
 
-    Audio_Voice_t *voices;
+    float master_volume;
+    Audio_Stream_t *streams;
 } Audio_t;
 
 extern bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration);
