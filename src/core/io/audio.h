@@ -32,15 +32,29 @@
 #include <stdbool.h>
 
 typedef struct _Audio_Configuration_t {
-    size_t channels;
-    size_t sample_rate;
-    size_t voices;
+    float master_volume;
 } Audio_Configuration_t;
 
+typedef enum _Audio_Stream_States_t {
+    AUDIO_STREAM_STATE_STOPPED,
+    AUDIO_STREAM_STATE_PLAYING,
+    AUDIO_STREAM_STATE_COMPLETED,
+} Audio_Stream_States_t;
+
 typedef struct _Audio_Stream_t {
+    ma_data_converter converter;
+//    ma_decoder decoder;
+
     void *data;
     size_t data_size;
     size_t index;
+
+    Audio_Stream_States_t state;
+
+    float volume;
+    float panning;
+//    float pitch;
+//  int repeats;
 } Audio_Stream_t;
 
 typedef struct _Audio_t {
@@ -50,17 +64,26 @@ typedef struct _Audio_t {
     ma_context context;
     ma_device_config device_config;
     ma_device device;
-    ma_decoder decoder;
     ma_mutex lock;
 
     double time;
 
-    float master_volume;
-    Audio_Stream_t *streams;
+    void *mixing_buffer;
+    Audio_Stream_t **streams;
 } Audio_t;
 
 extern bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration);
 extern void Audio_terminate(Audio_t *audio);
+extern void Audio_set_master_volume(Audio_t *audio, float volume);
+extern float Audio_get_master_volume(Audio_t *audio);
+
+extern Audio_Stream_t *Audio_stream_create(Audio_t *audio, void *data, size_t data_size);
+extern void Audio_stream_destroy(Audio_t *audio, Audio_Stream_t *stream);
+extern void Audio_stream_pause(Audio_Stream_t *stream);
+extern void Audio_stream_resume(Audio_Stream_t *stream);
+extern void Audio_stream_stop(Audio_Stream_t *stream);
+//extern void Audio_stream_set_volume(Audio_Stream_t *stream);
+//extern void Audio_stream_set_panning(Audio_Stream_t *stream);
 
 extern void Audio_update(Audio_t *audio, float delta_time);
 

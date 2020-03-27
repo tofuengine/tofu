@@ -212,7 +212,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
         return false;
     }
 
-    result = Audio_initialize(&engine->audio, &(Audio_Configuration_t){ .channels = 2, .sample_rate = 44100, .voices = 8 });
+    result = Audio_initialize(&engine->audio, &(Audio_Configuration_t){ .master_volume = 1.0f });
     if (!result) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize audio");
         Input_terminate(&engine->input);
