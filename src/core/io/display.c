@@ -120,7 +120,7 @@ static bool _has_errors(void)
 {
     bool result = false;
     for (GLenum code = glGetError(); code != GL_NO_ERROR; code = glGetError()) {
-        const char *message = "UKNOWN";
+        const char *message = "UNKNOWN";
         switch (code) {
             case GL_INVALID_ENUM: { message = "INVALID_ENUM"; } break;
             case GL_INVALID_VALUE: { message = "INVALID_VALUE"; } break;
@@ -362,7 +362,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p prepared w/ id #%d", program, program->id);
     }
 
-    Display_shader(display, NULL); // Use pass-thru at the beginning.
+    Display_shader(display, NULL); // Use pass-through shader at the beginning.
 
 #ifdef DEBUG
     _has_errors(); // Display pending OpenGL errors.
@@ -402,8 +402,10 @@ bool Display_should_close(const Display_t *display)
 
 void Display_update(Display_t *display, float delta_time)
 {
-    display->time += (GLfloat)delta_time;
-    program_send(display->active_program, UNIFORM_TIME, PROGRAM_UNIFORM_FLOAT, 1, &display->time);
+    display->time += delta_time;
+
+    GLfloat time = (GLfloat)display->time;
+    program_send(display->active_program, UNIFORM_TIME, PROGRAM_UNIFORM_FLOAT, 1, &time);
 
 #ifdef DEBUG
     _has_errors(); // Display pending OpenGL errors.
@@ -439,7 +441,7 @@ static inline void _to_display(GLFWwindow *window, const GL_Surface_t *surface, 
 
 void Display_present(const Display_t *display)
 {
-    // It is advisable to clear the color buffer even if the framebuffer will be
+    // It is advisable to clear the colour buffer even if the framebuffer will be
     // fully written (see `glTexSubImage2D()` below)
     glClear(GL_COLOR_BUFFER_BIT);
 

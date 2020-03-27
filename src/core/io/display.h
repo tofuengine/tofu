@@ -72,7 +72,7 @@ typedef struct _Display_t {
 
     Program_t programs[Display_Programs_t_CountOf];
     Program_t *active_program;
-    GLfloat time;
+    float time;
 
     GL_Context_t *context;
     GL_Palette_t palette;
