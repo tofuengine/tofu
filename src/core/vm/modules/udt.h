@@ -33,7 +33,8 @@ typedef enum _UserData_t { // TODO: move to a suitable space.
     USERDATA_FILE_SYSTEM,
     USERDATA_ENVIRONMENT,
     USERDATA_DISPLAY,
-    USERDATA_INPUT
+    USERDATA_INPUT,
+    UserData_t_CountOf
 } UserData_t;
 
 #if 0
