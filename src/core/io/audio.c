@@ -62,7 +62,7 @@ static void _device_callback(ma_device *device, void *output, const void *input,
     ma_mutex_unlock(&audio->lock);
 }
 
-static Audio_Stream_t *_stream_create(void *data, size_t data_size, ma_format format, ma_uint32 channels, ma_uint32 sample_rate)
+static Audio_Source_t *_source_create(void *data, size_t data_size, ma_format format, ma_uint32 channels, ma_uint32 sample_rate)
 {
     ma_data_converter_config config = ma_data_converter_config_init(format, DEVICE_FORMAT, channels, DEVICE_CHANNELS, sample_rate, DEVICE_SAMPLE_RATE);
 
@@ -73,40 +73,40 @@ static Audio_Stream_t *_stream_create(void *data, size_t data_size, ma_format fo
         return NULL;
     }
 
-    Audio_Stream_t *stream = malloc(sizeof(Audio_Stream_t));
-    if (!stream) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate audio stream");
+    Audio_Source_t *source = malloc(sizeof(Audio_Source_t));
+    if (!source) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate audio source");
         ma_data_converter_uninit(&converter);
         return NULL;
     }
 
-    *stream = (Audio_Stream_t){
+    *source = (Audio_Source_t){
             .converter = converter,
             .data = data,
             .data_size = data_size,
             .index = 0,
-            .state = AUDIO_STREAM_STATE_STOPPED,
+            .state = AUDIO_SOURCE_STATE_STOPPED,
             .volume = 1.0f,
             .panning = 0.0f
         };
 
-    return stream;
+    return source;
 }
 
-static void _stream_destroy(Audio_Stream_t *stream)
+static void _source_destroy(Audio_Source_t *source)
 {
-    if (!stream) {
+    if (!source) {
         return;
     }
 
-    ma_data_converter_uninit(&stream->converter);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio-stream converter uninitialized");
+    ma_data_converter_uninit(&source->converter);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio-source converter uninitialized");
 
-    free(stream->data);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio-stream data freed");
+    free(source->data);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio-source data freed");
 
-    free(stream);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio-stream freed");
+    free(source);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio-source freed");
 }
 
 bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration)
@@ -174,11 +174,11 @@ bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration
 
 void Audio_terminate(Audio_t *audio)
 {
-    size_t count = arrlen(audio->streams);
+    size_t count = arrlen(audio->sources);
     for (int i = count - 1; i >= 0; --i) {
-        _stream_destroy(audio->streams[i]);
+        _source_destroy(audio->sources[i]);
     }
-    arrfree(audio->streams);
+    arrfree(audio->sources);
 
     ma_mutex_uninit(&audio->lock);
     ma_device_uninit(&audio->device);
@@ -197,63 +197,63 @@ float Audio_get_master_volume(Audio_t *audio)
     return volume;
 }
 
-Audio_Stream_t *Audio_stream_create(Audio_t *audio, void *data, size_t data_size)
+Audio_Source_t *Audio_source_create(Audio_t *audio, void *data, size_t data_size)
 {
-    Audio_Stream_t *stream = _stream_create(data, data_size, 0, 0, 0);
-    if (!stream) {
+    Audio_Source_t *source = _source_create(data, data_size, 0, 0, 0);
+    if (!source) {
         return NULL;
     }
 
-    arrpush(audio->streams, stream);
+    arrpush(audio->sources, source);
 
-    return stream;
+    return source;
 }
 
-void Audio_stream_destroy(Audio_t *audio, Audio_Stream_t *stream)
+void Audio_source_destroy(Audio_t *audio, Audio_Source_t *source)
 {
-    _stream_destroy(stream);
+    _source_destroy(source);
 
-    size_t count = arrlen(audio->streams);
+    size_t count = arrlen(audio->sources);
     for (int i = count - 1; i >= 0; --i) {
-        if (audio->streams[i] == stream) {
-            arrdel(audio->streams, i);
+        if (audio->sources[i] == source) {
+            arrdel(audio->sources, i);
             break;
         }
     }
 }
 
-void Audio_stream_play(Audio_Stream_t *stream)
+void Audio_source_play(Audio_Source_t *source)
 {
-    if (stream->state != AUDIO_STREAM_STATE_STOPPED) {
+    if (source->state != AUDIO_SOURCE_STATE_STOPPED) {
         return;
     }
-    stream->state = AUDIO_STREAM_STATE_PLAYING;
-    stream->index = 0;
+    source->state = AUDIO_SOURCE_STATE_PLAYING;
+    source->index = 0;
 }
 
-void Audio_stream_pause(Audio_Stream_t *stream)
+void Audio_source_pause(Audio_Source_t *source)
 {
-    if (stream->state != AUDIO_STREAM_STATE_PLAYING) {
+    if (source->state != AUDIO_SOURCE_STATE_PLAYING) {
         return;
     }
-    stream->state = AUDIO_STREAM_STATE_STOPPED;
+    source->state = AUDIO_SOURCE_STATE_STOPPED;
 }
 
-void Audio_stream_resume(Audio_Stream_t *stream)
+void Audio_source_resume(Audio_Source_t *source)
 {
-    if (stream->state != AUDIO_STREAM_STATE_STOPPED) {
+    if (source->state != AUDIO_SOURCE_STATE_STOPPED) {
         return;
     }
-    stream->state = AUDIO_STREAM_STATE_PLAYING;
+    source->state = AUDIO_SOURCE_STATE_PLAYING;
 }
 
-void Audio_stream_stop(Audio_Stream_t *stream)
+void Audio_source_stop(Audio_Source_t *source)
 {
-    if (stream->state != AUDIO_STREAM_STATE_PLAYING) {
+    if (source->state != AUDIO_SOURCE_STATE_PLAYING) {
         return;
     }
-    stream->state = AUDIO_STREAM_STATE_STOPPED;
-    stream->index = 0;
+    source->state = AUDIO_SOURCE_STATE_STOPPED;
+    source->index = 0;
 }
 
 void Audio_update(Audio_t *audio, float delta_time)
