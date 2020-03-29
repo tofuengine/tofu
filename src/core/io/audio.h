@@ -31,6 +31,14 @@
 
 #include <stdbool.h>
 
+// https://www.cs.cmu.edu/~music/icm-online/readings/panlaws/
+typedef enum _Audio_Panning_Laws_t {
+    AUDIO_PANNING_LAW_LINEAR,
+    AUDIO_PANNING_LAW_CONSTANT_POWER,
+    AUDIO_PANNING_LAW_45_DB,
+    Audio_Panning_Laws_t_CountOf
+} Audio_Panning_Laws_t;
+
 typedef struct _Audio_Configuration_t {
     float master_volume;
 } Audio_Configuration_t;
@@ -70,6 +78,7 @@ typedef struct _Audio_t {
 
     void *mixing_buffer;
     Audio_Stream_t **streams;
+    Audio_Panning_Laws_t panning_law;
 } Audio_t;
 
 extern bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration);
