@@ -147,6 +147,7 @@ bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration
         return false;
     }
 
+    // FIXME: start only on incoming data and pause (in the update function) when no more data is present.
     result = ma_device_start(&audio->device); // The audio device will be always running, waiting to process data.
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't start then device");

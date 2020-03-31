@@ -15,6 +15,7 @@
 
 -3dB constant power sin/cos
 
+with these two the automated panning of a mono tracks is weird, as the power changes and is too high at the center.
 -0dB balance sin/cos
 -0dB balance sqrt
 */
@@ -37,6 +38,9 @@ https://forum.cockos.com/showthread.php?t=49809
 https://www.cs.cmu.edu/~music/icm-online/readings/panlaws/panlaws.pdf
 http://rs-met.com/documents/tutorials/PanRules.pdf
 */
+
+// Helps to understant the various pan levels.
+// http://prorec.com/2013/05/the-pan-law-of-the-land/
 
 // http://fooplot.com/#W3sidHlwZSI6MCwiZXEiOiIxLSgoeCsxKS8yKSIsImNvbG9yIjoiI0ZGMDAwMCJ9LHsidHlwZSI6MCwiZXEiOiIoKHgrMSkvMikiLCJjb2xvciI6IiMwMDAwRkYifSx7InR5cGUiOjEwMDAsIndpbmRvdyI6WyItMSIsIjEiLCIwIiwiMSJdfV0-
 Gain_t _power_6db_linear_pan(float value) // AKA linear pan
@@ -92,4 +96,40 @@ Gain_t _power_15db_sincos_pan(float value)
 {
     const float theta = (value + 1.0f) * 0.5f * M_PI_2; // [-1, 1] -> [0 , 1] -> [0, pi/2]
     return (Gain_t){ .left = powf(cosf(theta), 0.5f), .right = powf(sinf(theta), 0.5f) };
+}
+
+Gain_t _0db_linear_balance(float value)
+{
+    if (value < 0.0f) {
+        return (Gain_t){ .left = 1.0, .right = 1.0f + value };
+    } else
+    if (value > 0.0f) {
+        return (Gain_t){ .left = 1.0f - value, .right = 1.0f };
+    } else {
+        return (Gain_t){ .left = 1.0, .right = 1.0f };
+    }
+}
+
+Gain_t _0db_sqrt_balance(float value)
+{
+    if (value < 0.0f) {
+        return (Gain_t){ .left = 1.0, .right = sqrt(1.0f + value) };
+    } else
+    if (value > 0.0f) {
+        return (Gain_t){ .left = sqrt(1.0f - value), .right = 1.0f };
+    } else {
+        return (Gain_t){ .left = 1.0, .right = 1.0f };
+    }
+}
+
+Gain_t _0db_sincos_balance(float value)
+{
+    if (value < 0.0f) {
+        return (Gain_t){ .left = 1.0, .right = sinf((1.0f + value) * M_PI_2) };
+    } else
+    if (value > 0.0f) {
+        return (Gain_t){ .left = sinf((1.0f - value) * M_PI_2), .right = 1.0f }; // equal to negative
+    } else {
+        return (Gain_t){ .left = 1.0, .right = 1.0f };
+    }
 }
