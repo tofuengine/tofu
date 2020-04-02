@@ -73,12 +73,12 @@ typedef struct _Audio_Source_t {
     Audio_Source_States_t state;
 
     float volume;
-    float gain; /// ???
     float panning;
     float balance; // TODO: use only panning an MONO sources are converted to STEREO on the fly?
 //    bool looped;
 //    float pitch;
 //    int repeats;
+    float channel_mix[2][2]; // 0 = left, 1 = right
 } Audio_Source_t;
 
 typedef struct _Audio_t {
@@ -91,6 +91,9 @@ typedef struct _Audio_t {
     ma_mutex lock;
 
     double time;
+
+    float volume;
+    float balance;
 
     Audio_Source_t **sources;
     Audio_Panning_Laws_t panning_law;

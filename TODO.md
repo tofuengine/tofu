@@ -23,4 +23,5 @@
     * given this, what if we split a stereo track into two mono tracks, then we apply panning individually? cool! (http://www.cloneensemble.com/sb_main.htm)
     * can we automate the stereo track split and independent panning? A panning matrix can do this...
       * always use -3dB for mono and 0dB for stereo?
-
+    * we could also support *dual-pan* mode, i.e. we are using a pair of pan pots (one per channel). The single pot case can
+      be reduced to it (the pots are synched and only the corresponding gain is used)
