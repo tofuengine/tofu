@@ -51,34 +51,36 @@ typedef enum _Audio_Source_States_t {
     Audio_Source_States_t_CountOf
 } Audio_Source_States_t;
 
-typedef enum _Audio_Source_Types_t {
-    AUDIO_SOURCE_TYPE_IMMEDIATE,
-    AUDIO_SOURCE_TYPE_STREAMED,
-    Audio_Source_Types_t_CountOf
-} Audio_Source_Types_t;
-
-// TODO: using this, the source-type would be useless!!! Cool!
-typedef void (*Audio_Source_On_Data_Callback_y)(void *data, size_t data_size, void *user_data);
+typedef void (*Audio_Source_Read_Callback_t)(void *data, size_t data_size, void *user_data);
+typedef void (*Audio_Source_Seek_Callback_t)(void *data, size_t data_size, void *user_data);
 
 // TODO: the source should be mono?
+typedef union _Audio_Gain_t {
+    float left, right;
+} Audio_Gain_t;
+
+typedef union _Audio_Mix_t {
+    float left_to_left, left_to_right;
+    float right_to_left, right_to_right;
+} Audio_Mix_t;
+
 typedef struct _Audio_Source_t {
+//    int channels;
     ma_data_converter converter;
 //    ma_decoder decoder;
 
-    void *data;
-    size_t data_size;
-    size_t index;
+    Audio_Source_Read_Callback_t reader;
 
-    Audio_Source_Types_t type;
     Audio_Source_States_t state;
 
     float volume;
     float panning;
-    float balance; // TODO: use only panning an MONO sources are converted to STEREO on the fly?
+//    float balance; // TODO: use only panning an MONO sources are converted to STEREO on the fly?
 //    bool looped;
 //    float pitch;
 //    int repeats;
-    float channel_mix[2][2]; // 0 = left, 1 = right
+    Audio_Gain_t gain;
+    Audio_Mix_t mix; // TODO: use either one of these. Mix is a more general case.
 } Audio_Source_t;
 
 typedef struct _Audio_t {
@@ -94,6 +96,8 @@ typedef struct _Audio_t {
 
     float volume;
     float balance;
+    Audio_Gain_t gain;
+    Audio_Mix_t mix; // TODO: use either one of these. Mix is a more general case.
 
     Audio_Source_t **sources;
     Audio_Panning_Laws_t panning_law;
@@ -103,15 +107,17 @@ extern bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *config
 extern void Audio_terminate(Audio_t *audio);
 extern void Audio_set_master_volume(Audio_t *audio, float volume);
 extern float Audio_get_master_volume(Audio_t *audio);
+extern float Audio_get_balance(Audio_Source_t *source);
+extern void Audio_set_balance(Audio_Source_t *source, float balance);
 
 extern Audio_Source_t *Audio_source_create(Audio_t *audio, void *data, size_t data_size);
 extern void Audio_source_destroy(Audio_t *audio, Audio_Source_t *source);
 extern void Audio_source_pause(Audio_Source_t *source);
 extern void Audio_source_resume(Audio_Source_t *source);
 extern void Audio_source_stop(Audio_Source_t *source);
-//extern void Audio_source_set_volume(Audio_Source_t *source);
-//extern void Audio_source_set_panning(Audio_Source_t *source);
-//extern void Audio_source_set_balance(Audio_Source_t *source);
+//extern void Audio_source_set_volume(Audio_Source_t *source, float volume);
+//extern void Audio_source_set_panning(Audio_Source_t *source, float panning);
+//extern void Audio_source_set_dual_panning(Audio_Source_t *source, float left, float right);
 
 extern void Audio_update(Audio_t *audio, float delta_time);
 
