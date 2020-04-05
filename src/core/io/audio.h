@@ -51,17 +51,19 @@ typedef enum _Audio_Source_States_t {
     Audio_Source_States_t_CountOf
 } Audio_Source_States_t;
 
+// Don't distinguish between music and sounds.
+
+// TODO: implement both from memory and from file.
 typedef void (*Audio_Source_Read_Callback_t)(void *data, size_t data_size, void *user_data);
 typedef void (*Audio_Source_Seek_Callback_t)(void *data, size_t data_size, void *user_data);
 
-// TODO: the source should be mono?
-typedef union _Audio_Gain_t {
-    float left, right;
-} Audio_Gain_t;
-
 typedef union _Audio_Mix_t {
+#ifdef __AUDIO_FULL_MIX__
     float left_to_left, left_to_right;
     float right_to_left, right_to_right;
+#else
+    float left, right;
+#endif
 } Audio_Mix_t;
 
 typedef struct _Audio_Source_t {
@@ -73,14 +75,13 @@ typedef struct _Audio_Source_t {
 
     Audio_Source_States_t state;
 
+    bool looping;
     float volume;
     float panning;
 //    float balance; // TODO: use only panning an MONO sources are converted to STEREO on the fly?
-//    bool looped;
-//    float pitch;
-//    int repeats;
-    Audio_Gain_t gain;
-    Audio_Mix_t mix; // TODO: use either one of these. Mix is a more general case.
+    float pitch;
+
+    Audio_Mix_t mix;
 } Audio_Source_t;
 
 typedef struct _Audio_t {
@@ -95,12 +96,13 @@ typedef struct _Audio_t {
     double time;
 
     float volume;
-    float balance;
-    Audio_Gain_t gain;
-    Audio_Mix_t mix; // TODO: use either one of these. Mix is a more general case.
+    float panning;
+//    float balance; // TODO: use only panning an MONO sources are converted to STEREO on the fly?
+    float pitch;
 
     Audio_Source_t **sources;
     Audio_Panning_Laws_t panning_law;
+    Audio_Mix_t mix;
 } Audio_t;
 
 extern bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration);

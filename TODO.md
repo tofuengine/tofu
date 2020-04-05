@@ -25,3 +25,18 @@
       * always use -3dB for mono and 0dB for stereo?
     * we could also support *dual-pan* mode, i.e. we are using a pair of pan pots (one per channel). The single pot case can
       be reduced to it (the pots are synched and only the corresponding gain is used)
+
+```java
+  //do panning
+  double pan = music.getPan();
+  if (pan != 0.0) {
+    double ll = (pan <= 0.0) ? 1.0 : (1.0 - pan);
+    double lr = (pan <= 0.0) ? Math.abs(pan) : 0.0;
+    double rl = (pan >= 0.0) ? pan : 0.0;
+    double rr = (pan >= 0.0) ? 1.0 : (1.0 - Math.abs(pan));
+    double tmpL = (ll * leftCurr) + (lr * rightCurr);
+    double tmpR = (rl * leftCurr) + (rr * rightCurr);
+    leftCurr = tmpL;
+    rightCurr = tmpR;
+  }
+```
