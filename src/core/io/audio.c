@@ -62,7 +62,7 @@ static void _device_callback(ma_device *device, void *output, const void *input,
     ma_mutex_unlock(&audio->lock);
 }
 
-static Audio_Source_t *_source_create(void *data, size_t data_size, ma_format format, ma_uint32 channels, ma_uint32 sample_rate)
+static Audio_Source_t *_source_create(Audio_Source_Read_Callback_t reader, Audio_Source_Seek_Callback_t seeker, void *user_data, ma_format format, ma_uint32 channels, ma_uint32 sample_rate)
 {
     ma_data_converter_config config = ma_data_converter_config_init(format, DEVICE_FORMAT, channels, DEVICE_CHANNELS, sample_rate, DEVICE_SAMPLE_RATE);
 
@@ -82,13 +82,17 @@ static Audio_Source_t *_source_create(void *data, size_t data_size, ma_format fo
 
     *source = (Audio_Source_t){
             .converter = converter,
-            .data = data,
-            .data_size = data_size,
-            .index = 0,
+            .reader = reader,
+            .seeker = seeker,
+            .user_data = user_data,
             .state = AUDIO_SOURCE_STATE_STOPPED,
+            .looping = false,
             .volume = 1.0f,
-            .panning = 0.0f
+            .panning = 0.0f,
+            .pitch = 1.0f
         };
+
+    // TPDP: call audio mix compiler.
 
     return source;
 }
@@ -101,9 +105,6 @@ static void _source_destroy(Audio_Source_t *source)
 
     ma_data_converter_uninit(&source->converter);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio-source converter uninitialized");
-
-    free(source->data);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio-source data freed");
 
     free(source);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio-source freed");
@@ -198,9 +199,9 @@ float Audio_get_master_volume(Audio_t *audio)
     return volume;
 }
 
-Audio_Source_t *Audio_source_create(Audio_t *audio, void *data, size_t data_size)
+Audio_Source_t *Audio_source_create(Audio_t *audio, Audio_Source_Read_Callback_t reader, Audio_Source_Seek_Callback_t seeker, void *user_data)
 {
-    Audio_Source_t *source = _source_create(data, data_size, 0, 0, 0);
+    Audio_Source_t *source = _source_create(reader, seeker, user_data, 0, 0, 0);
     if (!source) {
         return NULL;
     }
@@ -229,7 +230,7 @@ void Audio_source_play(Audio_Source_t *source)
         return;
     }
     source->state = AUDIO_SOURCE_STATE_PLAYING;
-    source->index = 0;
+    source->seeker(0, 0, source->user_data);
 }
 
 void Audio_source_pause(Audio_Source_t *source)
@@ -254,7 +255,7 @@ void Audio_source_stop(Audio_Source_t *source)
         return;
     }
     source->state = AUDIO_SOURCE_STATE_STOPPED;
-    source->index = 0;
+    source->seeker(0, 0, source->user_data);
 }
 
 void Audio_update(Audio_t *audio, float delta_time)
