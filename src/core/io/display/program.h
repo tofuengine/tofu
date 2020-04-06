@@ -45,8 +45,7 @@ typedef enum _Program_Uniforms_t {
     PROGRAM_UNIFORM_VEC2I,
     PROGRAM_UNIFORM_VEC3I,
     PROGRAM_UNIFORM_VEC4I,
-    PROGRAM_UNIFORM_TEXTURE,
-    Program_Uniforms_t_CountOf
+    PROGRAM_UNIFORM_TEXTURE
 } Program_Uniforms_t;
 
 typedef enum _Program_Shaders_t {
