@@ -54,9 +54,8 @@ typedef enum _Audio_Source_States_t {
 // Don't distinguish between music and sounds.
 
 // TODO: implement both from memory and from file.
-// FIXME: invert userdata as 1st arg, everwhere!
-typedef void (*Audio_Source_Read_Callback_t)(void *data, size_t data_size, void *user_data);
-typedef void (*Audio_Source_Seek_Callback_t)(long position, int whence, void *user_data);
+typedef size_t (*Audio_Source_Read_Callback_t)(void *user_data, void *data, size_t data_size);
+typedef void (*Audio_Source_Seek_Callback_t)(void *user_data, long position, int whence);
 
 typedef union _Audio_Mix_t {
 #ifdef __AUDIO_FULL_MIX__
@@ -72,9 +71,9 @@ typedef struct _Audio_Source_t {
     ma_data_converter converter;
 //    ma_decoder decoder;
 
+    void *user_data;
     Audio_Source_Read_Callback_t reader;
     Audio_Source_Seek_Callback_t seeker;
-    void *user_data;
 
     Audio_Source_States_t state;
 
@@ -115,7 +114,7 @@ extern float Audio_get_master_volume(Audio_t *audio);
 extern float Audio_get_balance(Audio_Source_t *source);
 extern void Audio_set_balance(Audio_Source_t *source, float balance);
 
-extern Audio_Source_t *Audio_source_create(Audio_t *audio, Audio_Source_Read_Callback_t reader, Audio_Source_Seek_Callback_t seeker,  void *user_data);
+extern Audio_Source_t *Audio_source_create(Audio_t *audio, Audio_Source_Read_Callback_t reader, Audio_Source_Seek_Callback_t seeker, void *user_data);
 extern void Audio_source_destroy(Audio_t *audio, Audio_Source_t *source);
 extern void Audio_source_pause(Audio_Source_t *source);
 extern void Audio_source_resume(Audio_Source_t *source);

@@ -52,17 +52,32 @@ static void _log_callback(ma_context *context, ma_device *device, ma_uint32 log_
 
 static void _device_callback(ma_device *device, void *output, const void *input, ma_uint32 frame_count)
 {
+//    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d frames requested for instance %p", frame_count, audio);
     Audio_t *audio = (Audio_t *)device->pUserData;
 
     memset(output, 0, frame_count * device->playback.channels * ma_get_bytes_per_sample(device->playback.format));
 
-//    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d frames requested for instance %p", frame_count, audio);
-
     ma_mutex_lock(&audio->lock);
+
+//    float buffer[frame_count];
+
+    size_t count = arrlen(audio->sources);
+    for (int i = count - 1; i >= 0; --i) {
+        Audio_Source_t *source = audio->sources[i];
+
+        if (source->state != AUDIO_SOURCE_STATE_PLAYING) {
+            continue;
+        }
+
+//        size_t read_frames = source->reader(source->user_data, buffer, frame_count);
+
+        // TODO: mix the read buffer into the output one.
+    }
+
     ma_mutex_unlock(&audio->lock);
 }
 
-static Audio_Source_t *_source_create(Audio_Source_Read_Callback_t reader, Audio_Source_Seek_Callback_t seeker, void *user_data, ma_format format, ma_uint32 channels, ma_uint32 sample_rate)
+static Audio_Source_t *_source_create(const Audio_t *audio, Audio_Source_Read_Callback_t reader, Audio_Source_Seek_Callback_t seeker, void *user_data, ma_format format, ma_uint32 channels, ma_uint32 sample_rate)
 {
     ma_data_converter_config config = ma_data_converter_config_init(format, DEVICE_FORMAT, channels, DEVICE_CHANNELS, sample_rate, DEVICE_SAMPLE_RATE);
 
@@ -82,17 +97,16 @@ static Audio_Source_t *_source_create(Audio_Source_Read_Callback_t reader, Audio
 
     *source = (Audio_Source_t){
             .converter = converter,
+            .user_data = user_data,
             .reader = reader,
             .seeker = seeker,
-            .user_data = user_data,
             .state = AUDIO_SOURCE_STATE_STOPPED,
             .looping = false,
             .volume = 1.0f,
             .panning = 0.0f,
             .pitch = 1.0f
+//            .mix = audio->panning_law(0.0f)
         };
-
-    // TPDP: call audio mix compiler.
 
     return source;
 }
@@ -201,7 +215,7 @@ float Audio_get_master_volume(Audio_t *audio)
 
 Audio_Source_t *Audio_source_create(Audio_t *audio, Audio_Source_Read_Callback_t reader, Audio_Source_Seek_Callback_t seeker, void *user_data)
 {
-    Audio_Source_t *source = _source_create(reader, seeker, user_data, 0, 0, 0);
+    Audio_Source_t *source = _source_create(audio, reader, seeker, user_data, 0, 0, 0); // TODO: pass the correct audio format.
     if (!source) {
         return NULL;
     }
@@ -230,7 +244,7 @@ void Audio_source_play(Audio_Source_t *source)
         return;
     }
     source->state = AUDIO_SOURCE_STATE_PLAYING;
-    source->seeker(0, 0, source->user_data);
+    source->seeker(source->user_data, 0, 0);
 }
 
 void Audio_source_pause(Audio_Source_t *source)
@@ -255,7 +269,7 @@ void Audio_source_stop(Audio_Source_t *source)
         return;
     }
     source->state = AUDIO_SOURCE_STATE_STOPPED;
-    source->seeker(0, 0, source->user_data);
+    source->seeker(source->user_data, 0, 0);
 }
 
 void Audio_update(Audio_t *audio, float delta_time)
