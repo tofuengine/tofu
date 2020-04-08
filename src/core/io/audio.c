@@ -102,10 +102,7 @@ static Audio_Source_t *_source_create(const Audio_t *audio, Audio_Source_Read_Ca
             .seeker = seeker,
             .state = AUDIO_SOURCE_STATE_STOPPED,
             .looping = false,
-            .volume = 1.0f,
-            .panning = 0.0f,
-            .pitch = 1.0f
-//            .mix = audio->panning_law(0.0f)
+            .mix = (Audio_Mix_t){ .left = 1.0f, .right = 1.0f }
         };
 
     return source;
@@ -129,6 +126,8 @@ bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration
     *audio = (Audio_t){ 0 };
 
     audio->configuration = *configuration;
+
+    audio->mix = (Audio_Mix_t){ .left = 1.0f, .right = 1.0f }; // TODO: call panning law?
 
     audio->context_config = ma_context_config_init();
     audio->context_config.pUserData = (void *)audio;
@@ -181,10 +180,6 @@ bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "sample-rate: %d / %d", audio->device.sampleRate, audio->device.playback.internalSampleRate);
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "period-in-frames: %d", audio->device.playback.internalPeriodSizeInFrames);
 
-//    for (size_t i = 0; i < audio->configuration.voices; ++i) {
-//        audio->voices[i] = _audio_buffer_create(DEVICE_FORMAT, DEVICE_CHANNELS, DEVICE_SAMPLE_RATE, 0);
-//    }
-
     return true;
 }
 
@@ -201,16 +196,9 @@ void Audio_terminate(Audio_t *audio)
     ma_context_uninit(&audio->context);
 }
 
-void Audio_set_master_volume(Audio_t *audio, float volume)
+void Audio_mix(Audio_t *audio, Audio_Mix_t mix)
 {
-    ma_device_set_master_volume(&audio->device, volume);
-}
-
-float Audio_get_master_volume(Audio_t *audio)
-{
-    float volume;
-    ma_device_get_master_volume(&audio->device, &volume);
-    return volume;
+    audio->mix = mix;
 }
 
 Audio_Source_t *Audio_source_create(Audio_t *audio, Audio_Source_Read_Callback_t reader, Audio_Source_Seek_Callback_t seeker, void *user_data)
@@ -236,6 +224,11 @@ void Audio_source_destroy(Audio_t *audio, Audio_Source_t *source)
             break;
         }
     }
+}
+
+void Audio_source_mix(Audio_Source_t *source, Audio_Mix_t mix)
+{
+    source->mix = mix;
 }
 
 void Audio_source_play(Audio_Source_t *source)

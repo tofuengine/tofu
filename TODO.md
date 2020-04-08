@@ -25,6 +25,8 @@
       * always use -3dB for mono and 0dB for stereo?
     * we could also support *dual-pan* mode, i.e. we are using a pair of pan pots (one per channel). The single pot case can
       be reduced to it (the pots are synched and only the corresponding gain is used)
+  * [2020-04-08] decided for a minimal approach. The audio system expose a generic "mix" structure than can implement
+    almost every type of pan/dual-pan/balance. The actual values will be fed from the Lua API.
 
 ```java
   //do panning

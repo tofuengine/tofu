@@ -31,6 +31,7 @@
 
 #include <stdbool.h>
 
+#if 0
 // https://www.cs.cmu.edu/~music/icm-online/readings/panlaws/
 typedef enum _Audio_Panning_Laws_t {
     AUDIO_PANNING_LAW_LINEAR, // L(p) + R(p) = 1
@@ -38,10 +39,10 @@ typedef enum _Audio_Panning_Laws_t {
     AUDIO_PANNING_LAW_45_DB, // 
     Audio_Panning_Laws_t_CountOf
 } Audio_Panning_Laws_t;
+#endif
 
 typedef struct _Audio_Configuration_t {
     float master_volume;
-    Audio_Panning_Laws_t panning_law;
 } Audio_Configuration_t;
 
 typedef enum _Audio_Source_States_t {
@@ -76,13 +77,7 @@ typedef struct _Audio_Source_t {
     Audio_Source_Seek_Callback_t seeker;
 
     Audio_Source_States_t state;
-
     bool looping;
-    float volume;
-    float panning;
-//    float balance; // TODO: use only panning an MONO sources are converted to STEREO on the fly?
-    float pitch;
-
     Audio_Mix_t mix;
 } Audio_Source_t;
 
@@ -97,31 +92,21 @@ typedef struct _Audio_t {
 
     double time;
 
-    float volume;
-    float panning;
-//    float balance; // TODO: use only panning an MONO sources are converted to STEREO on the fly?
-    float pitch;
-
     Audio_Source_t **sources;
-    Audio_Panning_Laws_t panning_law;
     Audio_Mix_t mix;
 } Audio_t;
 
 extern bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration);
 extern void Audio_terminate(Audio_t *audio);
-extern void Audio_set_master_volume(Audio_t *audio, float volume);
-extern float Audio_get_master_volume(Audio_t *audio);
-extern float Audio_get_balance(Audio_Source_t *source);
-extern void Audio_set_balance(Audio_Source_t *source, float balance);
+extern void Audio_mix(Audio_t *audio, Audio_Mix_t mix);
 
 extern Audio_Source_t *Audio_source_create(Audio_t *audio, Audio_Source_Read_Callback_t reader, Audio_Source_Seek_Callback_t seeker, void *user_data);
 extern void Audio_source_destroy(Audio_t *audio, Audio_Source_t *source);
+extern void Audio_source_looping(Audio_Source_t *source, bool looping);
+extern void Audio_source_mix(Audio_Source_t *source, Audio_Mix_t mix);
 extern void Audio_source_pause(Audio_Source_t *source);
 extern void Audio_source_resume(Audio_Source_t *source);
 extern void Audio_source_stop(Audio_Source_t *source);
-//extern void Audio_source_set_volume(Audio_Source_t *source, float volume);
-//extern void Audio_source_set_panning(Audio_Source_t *source, float panning);
-//extern void Audio_source_set_dual_panning(Audio_Source_t *source, float left, float right);
 
 extern void Audio_update(Audio_t *audio, float delta_time);
 
