@@ -58,7 +58,7 @@ typedef enum _Audio_Source_States_t {
 typedef size_t (*Audio_Source_Read_Callback_t)(void *user_data, void *data, size_t data_size);
 typedef void (*Audio_Source_Seek_Callback_t)(void *user_data, long position, int whence);
 
-typedef union _Audio_Mix_t {
+typedef struct _Audio_Mix_t {
 #ifdef __AUDIO_FULL_MIX__
     float left_to_left, left_to_right;
     float right_to_left, right_to_right;
@@ -99,15 +99,16 @@ typedef struct _Audio_t {
 extern bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration);
 extern void Audio_terminate(Audio_t *audio);
 extern void Audio_mix(Audio_t *audio, Audio_Mix_t mix);
+extern void Audio_track(Audio_t *audio, Audio_Source_t *source);
+extern void Audio_untrack(Audio_t *audio, Audio_Source_t *source);
+extern void Audio_update(Audio_t *audio, float delta_time);
 
-extern Audio_Source_t *Audio_source_create(Audio_t *audio, Audio_Source_Read_Callback_t reader, Audio_Source_Seek_Callback_t seeker, void *user_data);
-extern void Audio_source_destroy(Audio_t *audio, Audio_Source_t *source);
+extern Audio_Source_t *Audio_source_create(Audio_Source_Read_Callback_t reader, Audio_Source_Seek_Callback_t seeker, void *user_data);
+extern void Audio_source_destroy(Audio_Source_t *source);
 extern void Audio_source_looping(Audio_Source_t *source, bool looping);
 extern void Audio_source_mix(Audio_Source_t *source, Audio_Mix_t mix);
 extern void Audio_source_pause(Audio_Source_t *source);
 extern void Audio_source_resume(Audio_Source_t *source);
 extern void Audio_source_stop(Audio_Source_t *source);
-
-extern void Audio_update(Audio_t *audio, float delta_time);
 
 #endif  /* __AUDIO_H__ */

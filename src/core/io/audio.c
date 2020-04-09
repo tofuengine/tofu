@@ -55,11 +55,14 @@ static void _device_callback(ma_device *device, void *output, const void *input,
 //    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d frames requested for instance %p", frame_count, audio);
     Audio_t *audio = (Audio_t *)device->pUserData;
 
-    memset(output, 0, frame_count * device->playback.channels * ma_get_bytes_per_sample(device->playback.format));
+    float *to_device = (float *)output;
+//    memset(to_device, 0, frame_count * device->playback.channels * ma_get_bytes_per_sample(device->playback.format));
+    memset(to_device, 0x00, frame_count * 2 * sizeof(float));
 
     ma_mutex_lock(&audio->lock);
 
-//    float buffer[frame_count];
+    float from_source[frame_count * 2];
+    memset(to_device, 0x00, sizeof(from_source));
 
     size_t count = arrlen(audio->sources);
     for (int i = count - 1; i >= 0; --i) {
@@ -69,56 +72,24 @@ static void _device_callback(ma_device *device, void *output, const void *input,
             continue;
         }
 
-//        size_t read_frames = source->reader(source->user_data, buffer, frame_count);
+        size_t read_frames = frame_count; //source->reader(source->user_data, buffer, frame_count);
 
         // TODO: mix the read buffer into the output one.
+        for (size_t i = 0; i < read_frames; ++i) {
+            size_t index = i * 2;
+
+            float left = from_source[index];
+            float right = from_source[index + 1];
+
+            left *= source->mix.left;
+            right *= source->mix.right;
+
+            to_device[index] += left;
+            to_device[index + 1] += right;
+        }
     }
 
     ma_mutex_unlock(&audio->lock);
-}
-
-static Audio_Source_t *_source_create(const Audio_t *audio, Audio_Source_Read_Callback_t reader, Audio_Source_Seek_Callback_t seeker, void *user_data, ma_format format, ma_uint32 channels, ma_uint32 sample_rate)
-{
-    ma_data_converter_config config = ma_data_converter_config_init(format, DEVICE_FORMAT, channels, DEVICE_CHANNELS, sample_rate, DEVICE_SAMPLE_RATE);
-
-    ma_data_converter converter;
-    ma_result result = ma_data_converter_init(&config, &converter);
-    if (result != MA_SUCCESS) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialized data converter");
-        return NULL;
-    }
-
-    Audio_Source_t *source = malloc(sizeof(Audio_Source_t));
-    if (!source) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate audio source");
-        ma_data_converter_uninit(&converter);
-        return NULL;
-    }
-
-    *source = (Audio_Source_t){
-            .converter = converter,
-            .user_data = user_data,
-            .reader = reader,
-            .seeker = seeker,
-            .state = AUDIO_SOURCE_STATE_STOPPED,
-            .looping = false,
-            .mix = (Audio_Mix_t){ .left = 1.0f, .right = 1.0f }
-        };
-
-    return source;
-}
-
-static void _source_destroy(Audio_Source_t *source)
-{
-    if (!source) {
-        return;
-    }
-
-    ma_data_converter_uninit(&source->converter);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio-source converter uninitialized");
-
-    free(source);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio-source freed");
 }
 
 bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration)
@@ -187,7 +158,7 @@ void Audio_terminate(Audio_t *audio)
 {
     size_t count = arrlen(audio->sources);
     for (int i = count - 1; i >= 0; --i) {
-        _source_destroy(audio->sources[i]);
+        Audio_source_destroy(audio->sources[i]);
     }
     arrfree(audio->sources);
 
@@ -196,27 +167,16 @@ void Audio_terminate(Audio_t *audio)
     ma_context_uninit(&audio->context);
 }
 
-void Audio_mix(Audio_t *audio, Audio_Mix_t mix)
+void Audio_track(Audio_t *audio, Audio_Source_t *source)
 {
-    audio->mix = mix;
-}
-
-Audio_Source_t *Audio_source_create(Audio_t *audio, Audio_Source_Read_Callback_t reader, Audio_Source_Seek_Callback_t seeker, void *user_data)
-{
-    Audio_Source_t *source = _source_create(audio, reader, seeker, user_data, 0, 0, 0); // TODO: pass the correct audio format.
-    if (!source) {
-        return NULL;
-    }
-
+    ma_mutex_lock(&audio->lock);
     arrpush(audio->sources, source);
-
-    return source;
+    ma_mutex_unlock(&audio->lock);
 }
 
-void Audio_source_destroy(Audio_t *audio, Audio_Source_t *source)
+void Audio_untrack(Audio_t *audio, Audio_Source_t *source)
 {
-    _source_destroy(source);
-
+    ma_mutex_lock(&audio->lock);
     size_t count = arrlen(audio->sources);
     for (int i = count - 1; i >= 0; --i) {
         if (audio->sources[i] == source) {
@@ -224,6 +184,60 @@ void Audio_source_destroy(Audio_t *audio, Audio_Source_t *source)
             break;
         }
     }
+    ma_mutex_unlock(&audio->lock);
+}
+
+void Audio_mix(Audio_t *audio, Audio_Mix_t mix)
+{
+    audio->mix = mix;
+}
+
+Audio_Source_t *Audio_source_create(Audio_Source_Read_Callback_t reader, Audio_Source_Seek_Callback_t seeker, void *user_data)
+{
+    ma_format format = ma_format_s16;
+    ma_uint32 channels = 0;
+    ma_uint32 sample_rate = 0;
+
+    ma_data_converter_config config = ma_data_converter_config_init(format, DEVICE_FORMAT, channels, DEVICE_CHANNELS, sample_rate, DEVICE_SAMPLE_RATE);
+
+    ma_data_converter converter;
+    ma_result result = ma_data_converter_init(&config, &converter);
+    if (result != MA_SUCCESS) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialized data converter");
+        return NULL;
+    }
+
+    Audio_Source_t *source = malloc(sizeof(Audio_Source_t));
+    if (!source) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate audio source");
+        ma_data_converter_uninit(&converter);
+        return NULL;
+    }
+
+    *source = (Audio_Source_t){
+            .converter = converter,
+            .user_data = user_data,
+            .reader = reader,
+            .seeker = seeker,
+            .state = AUDIO_SOURCE_STATE_STOPPED,
+            .looping = false,
+            .mix = (Audio_Mix_t){ .left = 1.0f, .right = 1.0f }
+        };
+
+    return source;
+}
+
+void Audio_source_destroy(Audio_Source_t *source)
+{
+    if (!source) {
+        return;
+    }
+
+    ma_data_converter_uninit(&source->converter);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio-source converter uninitialized");
+
+    free(source);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio-source freed");
 }
 
 void Audio_source_mix(Audio_Source_t *source, Audio_Mix_t mix)
