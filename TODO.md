@@ -27,6 +27,10 @@
       be reduced to it (the pots are synched and only the corresponding gain is used)
   * [2020-04-08] decided for a minimal approach. The audio system expose a generic "mix" structure than can implement
     almost every type of pan/dual-pan/balance. The actual values will be fed from the Lua API.
+  * [2020-04-10] it works! initially not working, apparently because on my office PC the audio card has an internal sample-rate of 48KHz that
+    makes the audio stutter. decided to detect and use the card internal sample rate (TBD) to avoid confusion. tried waveform synthesis, using the
+    already written wave functions... and decided that they are simpler (faster?) than miniaudio's due to less overhead. should I opt for audio
+    synthesis only? should also enumerate device and let the user pick the wanted one (in case multiple outputs are available).
 
 ```java
   //do panning
