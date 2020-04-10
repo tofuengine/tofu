@@ -1,18 +1,18 @@
 /*
  * MIT License
- * 
+ *
  * Copyright (c) 2019-2020 Marco Lizza
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,6 +26,7 @@
 
 #include <libs/log.h>
 #include <libs/stb.h>
+#include <libs/wave.h>
 
 #include <stdbool.h>
 #if 0
@@ -45,6 +46,8 @@
 #define DEVICE_CHANNELS         2
 #define DEVICE_SAMPLE_RATE      44100
 
+static float seconds_offset = 0.0f;
+
 static void _log_callback(ma_context *context, ma_device *device, ma_uint32 log_level, const char *message)
 {
     Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "[%p:%p] %d %s", context, device, log_level, message);
@@ -57,11 +60,11 @@ static void _device_callback(ma_device *device, void *output, const void *input,
 
     float *to_device = (float *)output;
 //    memset(to_device, 0, frame_count * device->playback.channels * ma_get_bytes_per_sample(device->playback.format));
-    memset(to_device, 0x00, frame_count * 2 * sizeof(float));
+    memset(to_device, 0x00, frame_count * DEVICE_CHANNELS * sizeof(float));
 
     ma_mutex_lock(&audio->lock);
 
-    float from_source[frame_count * 2];
+    float from_source[frame_count * DEVICE_CHANNELS];
     memset(to_device, 0x00, sizeof(from_source));
 
     size_t count = arrlen(audio->sources);
@@ -88,6 +91,21 @@ static void _device_callback(ma_device *device, void *output, const void *input,
             to_device[index + 1] += right;
         }
     }
+
+    float seconds_per_frame = 1.0f / DEVICE_SAMPLE_RATE;
+    float pitch = 440.0f;
+    float radians_per_second = pitch * 2.0f * M_PI;
+
+    float *ptr = to_device;
+    for (ma_uint32 frame = 0; frame < frame_count; ++frame) {
+        float sample = sinf(seconds_offset * radians_per_second);
+//        float sample = wave_sine(seconds_offset * radians_per_second);
+        for (int channel = 0; channel < DEVICE_CHANNELS; channel += 1) {
+            *(ptr++) = sample;
+        }
+        seconds_offset += seconds_per_frame;
+    }
+//Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "sample=%.3f offset=%.3f (%d)", sample, seconds_offset, frame_count);
 
     ma_mutex_unlock(&audio->lock);
 }
