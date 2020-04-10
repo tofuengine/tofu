@@ -37,23 +37,25 @@
 #define DR_WAV_IMPLEMENTATION
 #include <miniaudio/extras/dr_wav.h>     // Enables WAV decoding.
 #endif
+#define MA_DEBUG_OUTPUT
 #define MINIAUDIO_IMPLEMENTATION
 #include <miniaudio/miniaudio.h>
 
 #define LOG_CONTEXT "audio"
 
+static float seconds_offset = 0.0f;
+
+// Using floating point format for simpler mixing.
 #define DEVICE_FORMAT           ma_format_f32
 #define DEVICE_CHANNELS         2
-#define DEVICE_SAMPLE_RATE      44100
-
-static float seconds_offset = 0.0f;
+#define DEVICE_SAMPLE_RATE      MA_DEFAULT_SAMPLE_RATE
 
 static void _log_callback(ma_context *context, ma_device *device, ma_uint32 log_level, const char *message)
 {
     Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "[%p:%p] %d %s", context, device, log_level, message);
 }
 
-static void _device_callback(ma_device *device, void *output, const void *input, ma_uint32 frame_count)
+static void _data_callback(ma_device *device, void *output, const void *input, ma_uint32 frame_count)
 {
 //    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d frames requested for instance %p", frame_count, audio);
     Audio_t *audio = (Audio_t *)device->pUserData;
@@ -94,18 +96,15 @@ static void _device_callback(ma_device *device, void *output, const void *input,
 
     float seconds_per_frame = 1.0f / DEVICE_SAMPLE_RATE;
     float pitch = 440.0f;
-    float radians_per_second = pitch * 2.0f * M_PI;
 
     float *ptr = to_device;
     for (ma_uint32 frame = 0; frame < frame_count; ++frame) {
-        float sample = sinf(seconds_offset * radians_per_second);
-//        float sample = wave_sine(seconds_offset * radians_per_second);
+        float sample = wave_sine(seconds_offset * pitch);
         for (int channel = 0; channel < DEVICE_CHANNELS; channel += 1) {
             *(ptr++) = sample;
         }
         seconds_offset += seconds_per_frame;
     }
-//Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "sample=%.3f offset=%.3f (%d)", sample, seconds_offset, frame_count);
 
     ma_mutex_unlock(&audio->lock);
 }
@@ -129,10 +128,13 @@ bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration
     }
 
     audio->device_config = ma_device_config_init(ma_device_type_playback);
-    audio->device_config.playback.format    = DEVICE_FORMAT; // Using floating point format for simpler mixing.
+    // TODO: loop over available devices and use the one specified in the configuration. Useful when more than one device is available.
+    //    config.playback.pDeviceID = &pPlaybackDeviceInfos[chosenPlaybackDeviceIndex].id; 
+    audio->device_config.playback.format    = DEVICE_FORMAT;
     audio->device_config.playback.channels  = DEVICE_CHANNELS;
-    audio->device_config.sampleRate         = DEVICE_SAMPLE_RATE;
-    audio->device_config.dataCallback       = _device_callback;
+    audio->device_config.sampleRate         = DEVICE_SAMPLE_RATE; // TODO: detect and pass internal sample rate.
+    audio->device_config.dataCallback       = _data_callback;
+//    audio->device_config.stopCallback       = _stop_callback;
     audio->device_config.pUserData          = (void *)audio;
 
     result = ma_device_init(&audio->context, &audio->device_config, &audio->device);
