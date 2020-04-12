@@ -1,6 +1,6 @@
 /*
 Audio playback and capture library. Choice of public domain or MIT-0. See license statements at the end of this file.
-miniaudio - v0.10.3 - TBD
+miniaudio - v0.10.4 - 2020-04-12
 
 David Reid - davidreidsoftware@gmail.com
 
@@ -1099,7 +1099,7 @@ Low-pass filtering is achieved with the following APIs:
 
 Low-pass filter example:
 
-     ```c
+    ```c
     ma_lpf_config config = ma_lpf_config_init(ma_format_f32, channels, sampleRate, cutoffFrequency, order);
     ma_result result = ma_lpf_init(&config, &lpf);
     if (result != MA_SUCCESS) {
@@ -3744,7 +3744,6 @@ struct ma_device
             /*HANDLE*/ ma_handle hEventPlayback;
             /*HANDLE*/ ma_handle hEventCapture;
             ma_uint32 fragmentSizeInFrames;
-            ma_uint32 fragmentSizeInBytes;
             ma_uint32 iNextHeaderPlayback;             /* [0,periods). Used as an index into pWAVEHDRPlayback. */
             ma_uint32 iNextHeaderCapture;              /* [0,periods). Used as an index into pWAVEHDRCapture. */
             ma_uint32 headerFramesConsumedPlayback;    /* The number of PCM frames consumed in the buffer in pWAVEHEADER[iNextHeader]. */
@@ -8381,8 +8380,8 @@ static void ma_sleep__posix(ma_uint32 milliseconds)
 #else
     #if _POSIX_C_SOURCE >= 199309L
         struct timespec ts;
-        ts.tv_sec  = milliseconds / 1000;
-        ts.tv_nsec = milliseconds % 1000 * 1000000;
+        ts.tv_sec  = milliseconds / 1000000;
+        ts.tv_nsec = milliseconds % 1000000 * 1000000;
         nanosleep(&ts, NULL);
     #else
         struct timeval tv;
@@ -9053,7 +9052,7 @@ static void ma_device__read_frames_from_client(ma_device* pDevice, ma_uint32 fra
                 framesToReadThisIterationIn = intermediaryBufferCap;
             }
 
-            requiredInputFrameCount = ma_data_converter_get_required_input_frame_count(&pDevice->playback.converter, frameCount);
+            requiredInputFrameCount = ma_data_converter_get_required_input_frame_count(&pDevice->playback.converter, framesToReadThisIterationOut);
             if (framesToReadThisIterationIn > requiredInputFrameCount) {
                 framesToReadThisIterationIn = requiredInputFrameCount;
             }
@@ -42411,9 +42410,13 @@ The following miscellaneous changes have also been made.
 /*
 REVISION HISTORY
 ================
-v0.10.3 - TBD
+v0.10.4 - 2020-04-12
+  - Fix a data conversion bug when converting from the client format to the native device format.
+
+v0.10.3 - 2020-04-07
   - Bring up to date with breaking changes to dr_mp3.
   - Remove MA_NO_STDIO. This was causing compilation errors and the maintenance cost versus practical benefit is no longer worthwhile.
+  - Fix a bug with data conversion where it was unnecessarily converting to s16 or f32 and then straight back to the original format.
   - Fix compilation errors and warnings with Visual Studio 2005.
   - ALSA: Disable ALSA's automatic data conversion by default and add configuration options to the device config:
     - alsa.noAutoFormat
