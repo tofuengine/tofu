@@ -1,6 +1,6 @@
 /*
 MP3 audio decoder. Choice of public domain or MIT-0. See license statements at the end of this file.
-dr_mp3 - v0.6.1 - 2020-04-05
+dr_mp3 - v0.6.2 - 2020-04-10
 
 David Reid - mackron@gmail.com
 
@@ -610,7 +610,7 @@ static __inline__ __attribute__((always_inline)) void drmp3_cpuid(int CPUInfo[],
 #endif
 }
 #endif
-static int drmp3_have_simd()
+static int drmp3_have_simd(void)
 {
 #ifdef DR_MP3_ONLY_SIMD
     return 1;
@@ -651,7 +651,7 @@ end:
 #define DRMP3_VMUL_S(x, s)  vmulq_f32(x, vmovq_n_f32(s))
 #define DRMP3_VREV(x) vcombine_f32(vget_high_f32(vrev64q_f32(x)), vget_low_f32(vrev64q_f32(x)))
 typedef float32x4_t drmp3_f4;
-static int drmp3_have_simd()
+static int drmp3_have_simd(void)
 {   /* TODO: detect neon for !DR_MP3_ONLY_SIMD */
     return 1;
 }
@@ -4050,9 +4050,6 @@ static float* drmp3__full_read_and_close_f32(drmp3* pMP3, drmp3_config* pConfig,
 
     DRMP3_ASSERT(pMP3 != NULL);
 
-    pConfig->channels   = pMP3->channels;
-    pConfig->sampleRate = pMP3->sampleRate;
-
     for (;;) {
         drmp3_uint64 framesToReadRightNow = DRMP3_COUNTOF(temp) / pMP3->channels;
         drmp3_uint64 framesJustRead = drmp3_read_pcm_frames_f32(pMP3, framesToReadRightNow, temp);
@@ -4098,7 +4095,7 @@ static float* drmp3__full_read_and_close_f32(drmp3* pMP3, drmp3_config* pConfig,
     }
 
     if (pConfig != NULL) {
-        pConfig->channels = pMP3->channels;
+        pConfig->channels   = pMP3->channels;
         pConfig->sampleRate = pMP3->sampleRate;
     }
 
@@ -4119,9 +4116,6 @@ static drmp3_int16* drmp3__full_read_and_close_s16(drmp3* pMP3, drmp3_config* pC
     drmp3_int16 temp[4096];
 
     DRMP3_ASSERT(pMP3 != NULL);
-
-    pConfig->channels   = pMP3->channels;
-    pConfig->sampleRate = pMP3->sampleRate;
 
     for (;;) {
         drmp3_uint64 framesToReadRightNow = DRMP3_COUNTOF(temp) / pMP3->channels;
@@ -4168,7 +4162,7 @@ static drmp3_int16* drmp3__full_read_and_close_s16(drmp3* pMP3, drmp3_config* pC
     }
 
     if (pConfig != NULL) {
-        pConfig->channels = pMP3->channels;
+        pConfig->channels   = pMP3->channels;
         pConfig->sampleRate = pMP3->sampleRate;
     }
 
@@ -4349,6 +4343,9 @@ counts rather than sample counts.
 /*
 REVISION HISTORY
 ================
+v0.6.2 - 2020-04-10
+  - Fix a crash in drmp3_open_*_and_read_pcm_frames_*() if the output config object is NULL.
+
 v0.6.1 - 2020-04-05
   - Fix warnings.
 
