@@ -31,6 +31,7 @@
     makes the audio stutter. decided to detect and use the card internal sample rate (TBD) to avoid confusion. tried waveform synthesis, using the
     already written wave functions... and decided that they are simpler (faster?) than miniaudio's due to less overhead. should I opt for audio
     synthesis only? should also enumerate device and let the user pick the wanted one (in case multiple outputs are available).
+  * filed a possible bug found on a Linux Mint 19.3 VM. I should try on more machines.
 
 ```java
   //do panning
