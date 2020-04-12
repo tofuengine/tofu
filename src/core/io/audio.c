@@ -48,7 +48,7 @@ static float seconds_offset = 0.0f;
 // Using floating point format for simpler mixing.
 #define DEVICE_FORMAT           ma_format_f32
 #define DEVICE_CHANNELS         2
-#define DEVICE_SAMPLE_RATE      MA_DEFAULT_SAMPLE_RATE
+#define DEVICE_SAMPLE_RATE      44100
 
 static void _log_callback(ma_context *context, ma_device *device, ma_uint32 log_level, const char *message)
 {
