@@ -227,6 +227,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             &engine->interpreter,
             &engine->file_system,
             &engine->environment,
+            &engine->audio,
             &engine->display,
             &engine->input,
             NULL

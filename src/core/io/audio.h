@@ -78,6 +78,10 @@ typedef struct _Audio_Source_t {
 
     Audio_Source_States_t state;
     bool looping;
+//    float gain;
+//    float pan;
+//    float speed;
+//    int group_id;
     Audio_Mix_t mix;
 } Audio_Source_t;
 
@@ -93,12 +97,18 @@ typedef struct _Audio_t {
     double time;
 
     Audio_Source_t **sources;
+    float volume;
+    float balance;
     Audio_Mix_t mix;
 } Audio_t;
 
 extern bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration);
 extern void Audio_terminate(Audio_t *audio);
-extern void Audio_mix(Audio_t *audio, Audio_Mix_t mix);
+extern void Audio_halt(Audio_t *audio); // TODO: call on software failer.
+extern void Audio_reset(Audio_t *audio);
+extern void Audio_volume(Audio_t *audio, float volume);
+extern void Audio_balance(Audio_t *audio, float balance);
+extern void Audio_mix(Audio_t *audio, Audio_Mix_t mix); // TODO: remove?
 extern void Audio_track(Audio_t *audio, Audio_Source_t *source);
 extern void Audio_untrack(Audio_t *audio, Audio_Source_t *source);
 extern void Audio_update(Audio_t *audio, float delta_time);

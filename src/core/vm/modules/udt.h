@@ -32,6 +32,7 @@ typedef enum _UserData_t { // TODO: move to a suitable space.
     USERDATA_INTERPRETER = 1,
     USERDATA_FILE_SYSTEM,
     USERDATA_ENVIRONMENT,
+    USERDATA_AUDIO,
     USERDATA_DISPLAY,
     USERDATA_INPUT,
     UserData_t_CountOf

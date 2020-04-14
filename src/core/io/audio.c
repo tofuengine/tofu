@@ -45,10 +45,27 @@
 
 static float seconds_offset = 0.0f;
 
-// Using floating point format for simpler mixing.
+// Using floating point format for simpler and more consistent mixing.
 #define DEVICE_FORMAT           ma_format_f32
 #define DEVICE_CHANNELS         2
 #define DEVICE_SAMPLE_RATE      44100
+
+Audio_Mix_t _0db_linear_mix(float balance, float gain)
+{
+#if 1
+    if (balance < 0.0f) {
+        return (Audio_Mix_t){ .left = gain, .right = (1.0f + balance) * gain };
+    } else
+    if (balance > 0.0f) {
+        return (Audio_Mix_t){ .left = (1.0f - balance) * gain, .right = gain };
+    } else {
+        return (Audio_Mix_t){ .left = gain, .right = gain };
+    }
+#else
+    const float theta = (balance + 1.0f) * 0.5f * M_PI_2; // [-1, 1] -> [0 , 1] -> [0, pi/2]
+    return (Audio_Mix_t){ .left = powf(cosf(theta), 1.5f) * gain, .right = powf(sinf(theta), 1.5f) * gain };
+#endif
+}
 
 static void _log_callback(ma_context *context, ma_device *device, ma_uint32 log_level, const char *message)
 {
@@ -97,11 +114,13 @@ static void _data_callback(ma_device *device, void *output, const void *input, m
     float seconds_per_frame = 1.0f / DEVICE_SAMPLE_RATE;
     float pitch = 440.0f;
 
+    float mix[DEVICE_CHANNELS] = { audio->mix.left, audio->mix.right };
+
     float *ptr = to_device;
     for (ma_uint32 frame = 0; frame < frame_count; ++frame) {
         float sample = wave_sine(seconds_offset * pitch);
-        for (int channel = 0; channel < DEVICE_CHANNELS; channel += 1) {
-            *(ptr++) = sample;
+        for (int channel = 0; channel < DEVICE_CHANNELS; ++channel) {
+            *(ptr++) = sample * mix[channel];
         }
         seconds_offset += seconds_per_frame;
     }
@@ -115,7 +134,9 @@ bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration
 
     audio->configuration = *configuration;
 
-    audio->mix = (Audio_Mix_t){ .left = 1.0f, .right = 1.0f }; // TODO: call panning law?
+    audio->volume = 1.0f;
+    audio->balance = 0.0f;
+    audio->mix = _0db_linear_mix(0.0f, 1.0f);
 
     audio->context_config = ma_context_config_init();
     audio->context_config.pUserData = (void *)audio;
@@ -182,9 +203,28 @@ void Audio_terminate(Audio_t *audio)
     }
     arrfree(audio->sources);
 
+    ma_device_stop(&audio->device);
     ma_mutex_uninit(&audio->lock);
     ma_device_uninit(&audio->device);
     ma_context_uninit(&audio->context);
+}
+
+void Audio_volume(Audio_t *audio, float volume)
+{
+    audio->volume = volume;
+    audio->mix = _0db_linear_mix(audio->balance, volume);
+}
+
+void Audio_balance(Audio_t *audio, float balance)
+{
+    // TODO: add mutex? no...
+    audio->balance = balance;
+    audio->mix = _0db_linear_mix(balance, audio->volume);
+}
+
+void Audio_mix(Audio_t *audio, Audio_Mix_t mix)
+{
+    audio->mix = mix;
 }
 
 void Audio_track(Audio_t *audio, Audio_Source_t *source)
@@ -205,11 +245,6 @@ void Audio_untrack(Audio_t *audio, Audio_Source_t *source)
         }
     }
     ma_mutex_unlock(&audio->lock);
-}
-
-void Audio_mix(Audio_t *audio, Audio_Mix_t mix)
-{
-    audio->mix = mix;
 }
 
 Audio_Source_t *Audio_source_create(Audio_Source_Read_Callback_t reader, Audio_Source_Seek_Callback_t seeker, void *user_data)

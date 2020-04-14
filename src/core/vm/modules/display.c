@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-#include "canvas.h"
+#include "display.h"
 
 #include <config.h>
 #include <core/io/display.h>
