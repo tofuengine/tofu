@@ -211,15 +211,18 @@ void Audio_terminate(Audio_t *audio)
 
 void Audio_volume(Audio_t *audio, float volume)
 {
+    ma_mutex_lock(&audio->lock);
     audio->volume = volume;
     audio->mix = _0db_linear_mix(audio->balance, volume);
+    ma_mutex_unlock(&audio->lock);
 }
 
 void Audio_balance(Audio_t *audio, float balance)
 {
-    // TODO: add mutex? no...
+    ma_mutex_lock(&audio->lock);
     audio->balance = balance;
     audio->mix = _0db_linear_mix(balance, audio->volume);
+    ma_mutex_unlock(&audio->lock);
 }
 
 void Audio_mix(Audio_t *audio, Audio_Mix_t mix)
