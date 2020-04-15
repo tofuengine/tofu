@@ -52,7 +52,7 @@ static float seconds_offset = 0.0f;
 
 Audio_Mix_t _0db_linear_mix(float balance, float gain)
 {
-#if 1
+#if 0
     if (balance < 0.0f) {
         return (Audio_Mix_t){ .left = gain, .right = (1.0f + balance) * gain };
     } else
