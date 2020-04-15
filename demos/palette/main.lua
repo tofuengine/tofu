@@ -94,7 +94,7 @@ function Main:update(_)
   end
 
   Speakers.balance(math.sin(System.time() * 0.25))
-  Speakers.volume((math.sin(System.time() * 0.5) + 1.0) * 0.5)
+--  Speakers.volume((math.sin(System.time() * 0.5) + 1.0) * 0.5)
 end
 
 function Main:render(_)
