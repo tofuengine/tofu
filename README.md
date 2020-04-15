@@ -7,15 +7,15 @@ Guess what? Yup, that's yet another game engine/framework.
 ## Pros
 
 * Carefully crafted C99 code.
-* Self-contained, no external modules/libraries required (system-wide libraries excluded).
-* Multi-platform through coss-compilation (Windows, Linux and Raspberry-Pi... no MacOS won't be supported, ever).
+* Self-contained, no additional runtime modules/libraries required (system-wide libraries excluded).
+* Multi-platform through cross-compilation (Windows, Linux and Raspberry-Pi... no MacOS won't be supported, ever).
 
 ## Dependecies
 
 * [Glad](https://glad.dav1d.de/)
 * [GLFW](https://www.glfw.org/) v3.3.2
 * [Lua](https://lua.org/) v5.3.5
-* [miniaudio](https://github.com/dr-soft/miniaudio) v0.9.10
+* [miniaudio](https://github.com/dr-soft/miniaudio) v0.10.4
 * [spleen](https://github.com/fcambus/spleen) fonts
 * [stb](https://github.com/nothings/stb) libraries
 
@@ -42,9 +42,9 @@ Guess what? Yup, that's yet another game engine/framework.
 
 ## Desiderata
 
+* [ ] Audio support (based upon [dr-soft/miniaudio](https://github.com/dr-soft/miniaudio)) w/ run-time multi-voice synth (a-la [Bfxr](https://www.bfxr.net)).
 * [ ] **Bit** **Bl**ock **T**ransfer operations when drawing (also, [stencil](https://learnopengl.com/Advanced-OpenGL/Stencil-testing) support, see [this](https://open.gl/depthstencils)).
 * [ ] Animation support w/ frameset DSL (i.e. compiling a string where each token can be a single frame, a range or a "keep-current-frame for some time" command). Each frameset can have its one update period, and will be most likely based upon a timer.
-* [ ] Audio support (based upon [dr-soft/miniaudio](https://github.com/dr-soft/miniaudio)) w/ run-time multi-voice synth (a-la [Bfxr](https://www.bfxr.net)).
 * [ ] Out-of-the-box palette switching (with tweening) features.
 * [ ] Game state and display transitions (at which level? Engine or script?).
 * [ ] Library of noise functions ([cellular](https://thebookofshaders.com/12/), Perlin, etc...).

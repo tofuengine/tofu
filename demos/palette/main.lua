@@ -22,7 +22,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Speakers = require("tofu.audio").Speakers
 local Class = require("tofu.core").Class
 local Math = require("tofu.core").Math
 local System = require("tofu.core").System
@@ -31,6 +30,7 @@ local Bank = require("tofu.graphics").Bank
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
+local Speakers = require("tofu.sound").Speakers
 
 local Main = Class.define()
 
@@ -93,7 +93,8 @@ function Main:update(_)
     Display.palette(PALETTES[index])
   end
 
-  Speakers.balance(math.sin(System.time() * 0.5))
+  Speakers.balance(math.sin(System.time() * 0.25))
+  Speakers.volume((math.sin(System.time() * 0.5) + 1.0) * 0.5)
 end
 
 function Main:render(_)

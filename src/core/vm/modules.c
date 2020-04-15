@@ -62,7 +62,7 @@ static int create_module(lua_State *L, const luaL_Reg *entries)
     return 1;
 }
 
-static int audio_loader(lua_State *L)
+static int sound_loader(lua_State *L)
 {
     static const luaL_Reg classes[] = {
         { "Speakers", speakers_loader }, // FIXME: find a better name.
@@ -130,7 +130,7 @@ static int util_loader(lua_State *L)
 void modules_initialize(lua_State *L, int nup)
 {
     static const luaL_Reg modules[] = {
-        { "tofu.audio", audio_loader },
+        { "tofu.sound", sound_loader },
         { "tofu.core", core_loader }, // TODO: core should be loaded for first?
         { "tofu.events", events_loader },
         { "tofu.graphics", graphics_loader },
