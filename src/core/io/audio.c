@@ -41,6 +41,13 @@
 #define MINIAUDIO_IMPLEMENTATION
 #include <miniaudio/miniaudio.h>
 
+#ifndef M_PI
+  #define M_PI      3.14159265358979323846f
+#endif
+#ifndef M_PI_2
+  #define M_PI_2    1.57079632679489661923f
+#endif
+
 #define LOG_CONTEXT "audio"
 
 static float seconds_offset = 0.0f;
@@ -50,9 +57,15 @@ static float seconds_offset = 0.0f;
 #define DEVICE_CHANNELS         2
 #define DEVICE_SAMPLE_RATE      44100
 
-Audio_Mix_t _0db_linear_mix(float balance, float gain)
+static inline float _pulse(float t, float dc)
 {
-#if 1
+    float f = t - floorf(t);
+    return f < dc ? 1.0f : -1.0f;
+}
+
+static Audio_Mix_t _0db_linear_mix(float balance, float gain)
+{
+#if 0
     if (balance < 0.0f) {
         return (Audio_Mix_t){ .left = gain, .right = (1.0f + balance) * gain };
     } else
@@ -63,7 +76,7 @@ Audio_Mix_t _0db_linear_mix(float balance, float gain)
     }
 #else
     const float theta = (balance + 1.0f) * 0.5f * M_PI_2; // [-1, 1] -> [0 , 1] -> [0, pi/2]
-    return (Audio_Mix_t){ .left = powf(cosf(theta), 1.5f) * gain, .right = powf(sinf(theta), 1.5f) * gain };
+    return (Audio_Mix_t){ .left = cosf(theta) * gain, .right = sinf(theta) * gain };
 #endif
 }
 
@@ -118,6 +131,7 @@ static void _data_callback(ma_device *device, void *output, const void *input, m
 
     float *ptr = to_device;
     for (ma_uint32 frame = 0; frame < frame_count; ++frame) {
+        //float sample = _pulse(seconds_offset * pitch, 0.125f);
         float sample = wave_sine(seconds_offset * pitch);
         for (int channel = 0; channel < DEVICE_CHANNELS; ++channel) {
             *(ptr++) = sample * mix[channel];

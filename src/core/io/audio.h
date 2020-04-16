@@ -84,6 +84,26 @@ typedef struct _Audio_Source_t {
 //    int group_id;
     Audio_Mix_t mix;
 } Audio_Source_t;
+/*
+typedef enum _Audio_Wave_Types_t {
+    AUDIO_WAVE_TYPE_PULSE, // 0.1 duty cycle
+    AUDIO_WAVE_TYPE_SQUARE, // 0.5 duty cycle
+    AUDIO_WAVE_TYPE_SINE,
+    AUDIO_WAVE_TYPE_TRIANGLE,
+    AUDIO_WAVE_TYPE_SAWTOOTH,
+} Audio_Wave_Types_t;
+
+typedef struct _Audio_Wave_t {
+    Audio_Wave_Types_t type;
+    float duration;
+    float pitch;
+    float amplitude;
+    float envelope[4]; // A D S R
+} Audio_Wave_t;
+*/
+typedef struct _Audio_Sample_t {
+    float duration;
+} Audio_Sample_t;
 
 typedef struct _Audio_t {
     Audio_Configuration_t configuration;
@@ -97,6 +117,7 @@ typedef struct _Audio_t {
     double time;
 
     Audio_Source_t **sources;
+//    Audio_Wave_t **waves;
     float volume;
     float balance;
     Audio_Mix_t mix;

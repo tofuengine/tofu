@@ -32,6 +32,11 @@
     already written wave functions... and decided that they are simpler (faster?) than miniaudio's due to less overhead. should I opt for audio
     synthesis only? should also enumerate device and let the user pick the wanted one (in case multiple outputs are available).
   * filed a possible bug found on a Linux Mint 19.3 VM. I should try on more machines.
+    * it turned out as a bug, fixed! cool!
+  * can't decide sample frequence, 44100 probably.
+  * did some study on FM synthesis. interesting stuff! way too complex to handle for the final product, I don't want to
+    waste a lot of time in writing music (cool part is the near to zero memory usage). maybe on a second step.
+  * panning laws. are they worth? doesn't linear panning suit (or at most constant power sincos)?
 
 ```java
   //do panning
