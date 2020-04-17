@@ -36,7 +36,13 @@
   * can't decide sample frequence, 44100 probably.
   * did some study on FM synthesis. interesting stuff! way too complex to handle for the final product, I don't want to
     waste a lot of time in writing music (cool part is the near to zero memory usage). maybe on a second step.
-  * panning laws. are they worth? doesn't linear panning suit (or at most constant power sincos)?
+  * panning laws. are they worth? doesn't linear panning (i.e. constant-gain) suit (or at most constant power sincos)?
+    * found a very strange sincos constant power formula, basically a rotation scaled by sqrt(2)/2... which is the same a using plain sin/cos! WTF!
+  * can be worth using wavetables and pantables? I don't think so...
+  * creating sound groups can be crucial to handle them collectively, e.g. lower the volume of the group to leave room for other sounds
+    * in this sense, the "group" is the audio equivalent of the "canvas"
+    * "Bus" can be a valid name, too.
+
 
 ```java
   //do panning
