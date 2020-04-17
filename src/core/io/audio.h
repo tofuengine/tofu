@@ -86,7 +86,7 @@ typedef struct _Audio_Source_t {
 } Audio_Source_t;
 /*
 typedef enum _Audio_Wave_Types_t {
-    AUDIO_WAVE_TYPE_PULSE, // 0.1 duty cycle
+    AUDIO_WAVE_TYPE_PULSE, // 0.25 duty cycle
     AUDIO_WAVE_TYPE_SQUARE, // 0.5 duty cycle
     AUDIO_WAVE_TYPE_SINE,
     AUDIO_WAVE_TYPE_TRIANGLE,
