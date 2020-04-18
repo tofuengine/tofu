@@ -25,9 +25,13 @@
 #ifndef __AL_GROUP_H__
 #define __AL_GROUP_H__
 
+#include "source.h"
+
 typedef struct _AL_Group_t {
     float gain;
     float pan;
+
+    AL_Source_t *sources;
 
     float mix[2];
 } AL_Group_t;
@@ -35,9 +39,14 @@ typedef struct _AL_Group_t {
 extern AL_Group_t *AL_group_create();
 extern void AL_group_destroy(AL_Group_t *group);
 
+extern void AL_group_reset(AL_Group_t *group); // TODO: call on software failure.
+
 extern void AL_group_gain(AL_Group_t *group, float gain);
 extern void AL_group_pan(AL_Group_t *group, float pan);
 
-extern void AL_group_halt(AL_Group_t *group);
+extern void AL_group_track(AL_Group_t *group, AL_Source_t *source);
+extern void AL_group_untrack(AL_Group_t *group, AL_Source_t *source);
+
+extern void AL_group_update(AL_Group_t *group, float delta_time);
 
 #endif  /* __AL_GROUP_H__ */

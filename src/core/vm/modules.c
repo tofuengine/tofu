@@ -108,7 +108,8 @@ static int sound_loader(lua_State *L)
 {
     static const luaL_Reg classes[] = {
         { "Speakers", speakers_loader }, // FIXME: find a better name.
-//        { "Stream", stream_loader },
+//        { "Group", group_loader },
+//        { "Source", stream_loader },
 //        { "Wave", wave_loader },
         { NULL, NULL }
     };
