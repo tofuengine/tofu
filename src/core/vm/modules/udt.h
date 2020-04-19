@@ -27,6 +27,7 @@
 
 #include <libs/luax.h>
 #include <libs/gl/gl.h>
+#include <libs/sl/sl.h>
 
 typedef enum _UserData_t { // TODO: move to a suitable space.
     USERDATA_INTERPRETER = 1,
@@ -44,7 +45,9 @@ typedef enum _Classes_t {
     CLASS_CANVAS,
     CLASS_BANK,
     CLASS_FONT,
-    CLASS_XFORM
+    CLASS_XFORM,
+    CLASS_GRID,
+    CLASS_GROUP
 } Classes_t;
 
 typedef struct _Class_t {
@@ -90,5 +93,15 @@ typedef struct _Grid_Class_t {
     Cell_t *data;
     size_t data_size;
 } Grid_Class_t;
+
+typedef struct _Group_Class_t {
+    SL_Group_t *group;
+} Group_Class_t;
+
+typedef struct _Sound_Class_t {
+    SL_Group_t *group; // i.e. the owner (to be notified when a sound is GCed)
+    luaX_Reference group_reference;
+    SL_Sound_t *sound;
+} Sound_Class_t;
 
 #endif  /* __MODULES_UDT_H__ */

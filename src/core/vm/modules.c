@@ -33,6 +33,7 @@
 #include <core/vm/modules/file.h>
 #include <core/vm/modules/font.h>
 #include <core/vm/modules/grid.h>
+#include <core/vm/modules/group.h>
 #include <core/vm/modules/input.h>
 #include <core/vm/modules/iterators.h>
 #include <core/vm/modules/math.h>
@@ -108,7 +109,7 @@ static int sound_loader(lua_State *L)
 {
     static const luaL_Reg classes[] = {
         { "Speakers", speakers_loader }, // FIXME: find a better name.
-//        { "Group", group_loader },
+        { "Group", group_loader },
 //        { "Source", stream_loader },
 //        { "Wave", wave_loader },
         { NULL, NULL }

@@ -28,6 +28,7 @@
 #include "config.h"
 
 #include <miniaudio/miniaudio.h>
+#include <libs/sl/sl.h>
 
 #include <stdbool.h>
 
