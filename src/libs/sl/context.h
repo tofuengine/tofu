@@ -28,7 +28,7 @@
 #include "group.h"
 
 typedef struct _SL_Context_t {
-    SL_Group_t *groups;
+    SL_Group_t **groups;
 } SL_Context_t;
 
 extern SL_Context_t *SL_context_create();
