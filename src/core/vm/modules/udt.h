@@ -98,10 +98,10 @@ typedef struct _Group_Class_t {
     SL_Group_t *group;
 } Group_Class_t;
 
-typedef struct _Sound_Class_t {
+typedef struct _Source_Class_t {
     SL_Group_t *group; // i.e. the owner (to be notified when a sound is GCed)
     luaX_Reference group_reference;
-    SL_Sound_t *sound;
-} Sound_Class_t;
+    SL_Source_t *source;
+} Source_Class_t;
 
 #endif  /* __MODULES_UDT_H__ */

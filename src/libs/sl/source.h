@@ -25,6 +25,7 @@
 #ifndef __SL_SOURCE_H__
 #define __SL_SOURCE_H__
 
+#include <stdbool.h>
 #include <stddef.h>
 
 // TODO: implement both from memory and from file.
