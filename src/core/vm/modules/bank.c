@@ -26,6 +26,7 @@
 
 #include <config.h>
 #include <core/io/display.h>
+#include <libs/fs/fsaux.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 

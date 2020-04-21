@@ -28,9 +28,10 @@
 #include <core/environment.h>
 #include <core/io/display.h>
 #include <core/vm/interpreter.h>
+#include <libs/fs/fsaux.h>
+#include <libs/gl/gl.h>
 #include <libs/imath.h>
 #include <libs/log.h>
-#include <libs/gl/gl.h>
 #include <libs/stb.h>
 
 #include "callbacks.h"
