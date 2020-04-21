@@ -31,7 +31,7 @@ typedef struct _SL_Context_t {
     SL_Group_t **groups;
 } SL_Context_t;
 
-extern SL_Context_t *SL_context_create();
+extern SL_Context_t *SL_context_create(void);
 extern void SL_context_destroy(SL_Context_t *context);
 
 extern void SL_context_update(SL_Context_t *context, float delta_time);

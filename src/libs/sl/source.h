@@ -25,6 +25,8 @@
 #ifndef __SL_SOURCE_H__
 #define __SL_SOURCE_H__
 
+#include "common.h"
+
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -46,24 +48,25 @@ typedef struct _SL_Source_t {
     float pan;
     float speed;
 
-    float time; // ???
+    double time; // ???
     SL_Source_States_t state;
-    float mix[2];
+    SL_Mix_t mix;
 } SL_Source_t;
 
 extern SL_Source_t *SL_source_create(SL_Source_Read_Callback_t reader, SL_Source_Seek_Callback_t seeker, void *user_data);
 extern void SL_source_destroy(SL_Source_t *source);
 
 extern void SL_source_looped(SL_Source_t *source, bool looped);
-extern void SL_source_delay(SL_Source_t *source, bool delay);
-extern void SL_source_gain(SL_Source_t *source, bool gain);
-extern void SL_source_pan(SL_Source_t *source, bool pan);
-extern void SL_source_speed(SL_Source_t *source, bool speed);
+extern void SL_source_delay(SL_Source_t *source, float delay);
+extern void SL_source_gain(SL_Source_t *source, float gain);
+extern void SL_source_pan(SL_Source_t *source, float pan);
+extern void SL_source_speed(SL_Source_t *source, float speed);
 
 extern void SL_source_pause(SL_Source_t *source);
 extern void SL_source_resume(SL_Source_t *source);
 extern void SL_source_stop(SL_Source_t *source);
 
 extern void SL_source_update(SL_Source_t *source, float delta_time);
+extern size_t SL_source_process(SL_Source_t *source, float *output, size_t requested_frames);
 
 #endif  /* __SL_SOURCE_H__ */

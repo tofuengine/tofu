@@ -22,12 +22,16 @@
  * SOFTWARE.
  */
 
-#ifndef __SL_H__
-#define __SL_H__
+#ifndef __SL_COMMON_H__
+#define __SL_COMMON_H__
 
-#include "common.h"
-#include "context.h"
-#include "group.h"
-#include "source.h"
+typedef struct _SL_Mix_t {
+#ifdef __AUDIO_FULL_MIX__
+    float left_to_left, left_to_right;
+    float right_to_left, right_to_right;
+#else
+    float left, right;
+#endif
+} SL_Mix_t;
 
-#endif  /* __SL_H__ */
+#endif  /* __SL_COMMON_H__ */

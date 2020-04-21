@@ -38,11 +38,9 @@
 #define LOG_CONTEXT "speakers"
 
 static int speakers_volume(lua_State *L);
-static int speakers_balance(lua_State *L);
 
 static const struct luaL_Reg _speakers_functions[] = {
     { "volume", speakers_volume },
-    { "balance", speakers_balance },
     { NULL, NULL }
 };
 
@@ -83,39 +81,5 @@ static int speakers_volume(lua_State *L)
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(0, speakers_volume0)
         LUAX_OVERLOAD_ARITY(1, speakers_volume1)
-    LUAX_OVERLOAD_END
-}
-
-static int speakers_balance0(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-    LUAX_SIGNATURE_END
-
-    Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
-
-    lua_pushnumber(L, audio->balance);
-
-    return 1;
-}
-
-static int speakers_balance1(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    float volume = LUAX_NUMBER(L, 1);
-
-    Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
-
-    Audio_balance(audio, volume);
-
-    return 0;
-}
-
-static int speakers_balance(lua_State *L)
-{
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(0, speakers_balance0)
-        LUAX_OVERLOAD_ARITY(1, speakers_balance1)
     LUAX_OVERLOAD_END
 }

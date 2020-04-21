@@ -30,7 +30,7 @@
 
 #define LOG_CONTEXT "sl"
 
-SL_Context_t *SL_context_create()
+SL_Context_t *SL_context_create(void)
 {
     SL_Context_t *context = malloc(sizeof(SL_Context_t));
     if (!context) {
@@ -56,7 +56,6 @@ void SL_context_destroy(SL_Context_t *context)
 
     free(context);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context freed");
-
 }
 
 void SL_context_update(SL_Context_t *context, float delta_time)

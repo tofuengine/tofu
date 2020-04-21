@@ -25,18 +25,19 @@
 #ifndef __SL_GROUP_H__
 #define __SL_GROUP_H__
 
+#include "common.h"
 #include "source.h"
 
 typedef struct _SL_Group_t {
     float gain;
     float pan;
 
-    SL_Source_t *sources;
+    SL_Source_t **sources;
 
-    float mix[2];
+    SL_Mix_t mix;
 } SL_Group_t;
 
-extern SL_Group_t *SL_group_create();
+extern SL_Group_t *SL_group_create(void);
 extern void SL_group_destroy(SL_Group_t *group);
 
 extern void SL_group_update(SL_Group_t *group, float delta_time);
