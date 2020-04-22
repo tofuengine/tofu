@@ -72,8 +72,10 @@ static int group_new(lua_State *L)
         return luaL_error(L, "can't create group");
     }
 
-    SL_context_track(audio->sl, group);
+    SL_Context_t *context = Audio_lock(audio);
+    SL_context_track(context, group);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "group %p tracked for context %p", group, audio->context);
+    Audio_unlock(audio, context);
 
     Group_Class_t *self = (Group_Class_t *)lua_newuserdata(L, sizeof(Group_Class_t));
     *self = (Group_Class_t){
@@ -96,8 +98,10 @@ static int group_gc(lua_State *L)
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
-    SL_context_untrack(audio->sl, self->group);
+    SL_Context_t *context = Audio_lock(audio);
+    SL_context_untrack(context, self->group);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "group %p untracked", self->group);
+    Audio_unlock(audio, context);
 
     SL_group_destroy(self->group);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "group %p freed", self->group);

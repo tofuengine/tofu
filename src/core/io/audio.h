@@ -57,4 +57,7 @@ extern void Audio_terminate(Audio_t *audio);
 extern void Audio_volume(Audio_t *audio, float volume);
 extern void Audio_update(Audio_t *audio, float delta_time);
 
+extern SL_Context_t *Audio_lock(Audio_t *audio);
+extern void Audio_unlock(Audio_t *audio, SL_Context_t *context);
+
 #endif  /* __AUDIO_H__ */

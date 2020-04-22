@@ -25,18 +25,7 @@
 #include "audio.h"
 
 #include <libs/log.h>
-#include <libs/stb.h>
-#include <libs/wave.h>
 
-#include <stdbool.h>
-#if 0
-#define DR_FLAC_IMPLEMENTATION
-#include <miniaudio/extras/dr_flac.h>    // Enables FLAC decoding.
-#define DR_MP3_IMPLEMENTATION
-#include <miniaudio/extras/dr_mp3.h>     // Enables MP3 decoding.
-#define DR_WAV_IMPLEMENTATION
-#include <miniaudio/extras/dr_wav.h>     // Enables WAV decoding.
-#endif
 #define MA_DEBUG_OUTPUT
 #define MINIAUDIO_IMPLEMENTATION
 #include <miniaudio/miniaudio.h>
@@ -162,4 +151,23 @@ void Audio_volume(Audio_t *audio, float volume)
 
 void Audio_update(Audio_t *audio, float delta_time)
 {
+    SL_context_update(audio->sl, delta_time);
+}
+
+SL_Context_t *Audio_lock(Audio_t *audio)
+{
+    ma_mutex_lock(&audio->lock);
+    SL_Context_t *context = audio->sl;
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "audio context %p locked", context);
+    return context;
+}
+
+void Audio_unlock(Audio_t *audio, SL_Context_t *context)
+{
+    if (context != audio->sl) {
+        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "mismatched context %p", context);
+        return;
+    }
+    ma_mutex_unlock(&audio->lock);
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "audio context %p unlocked", context);
 }
