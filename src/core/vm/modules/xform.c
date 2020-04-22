@@ -72,12 +72,12 @@ static int xform_new(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Canvas_Class_t *canvas = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
 
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    XForm_Class_t *self = (XForm_Class_t *)lua_newuserdata(L, sizeof(XForm_Class_t));
-    *self = (XForm_Class_t){
+    XForm_Object_t *self = (XForm_Object_t *)lua_newuserdata(L, sizeof(XForm_Object_t));
+    *self = (XForm_Object_t){
             .context = display->context,
             .context_reference = LUAX_REFERENCE_NIL,
             .surface = canvas->context->surface,
@@ -104,7 +104,7 @@ static int xform_gc(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    XForm_Class_t *self = (XForm_Class_t *)LUAX_USERDATA(L, 1);
+    XForm_Object_t *self = (XForm_Object_t *)LUAX_USERDATA(L, 1);
 
     if (self->xform.table) {
         arrfree(self->xform.table);
@@ -132,8 +132,8 @@ static int xform_canvas(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    XForm_Class_t *self = (XForm_Class_t *)LUAX_USERDATA(L, 1);
-    const Canvas_Class_t *canvas = (Canvas_Class_t *)LUAX_OPTIONAL_USERDATA(L, 2, NULL);
+    XForm_Object_t *self = (XForm_Object_t *)LUAX_USERDATA(L, 1);
+    const Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 2, NULL);
 
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -162,7 +162,7 @@ static int xform_blit1_3(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    XForm_Class_t *self = (XForm_Class_t *)LUAX_USERDATA(L, 1);
+    XForm_Object_t *self = (XForm_Object_t *)LUAX_USERDATA(L, 1);
     int x = LUAX_OPTIONAL_INTEGER(L, 2, 0);
     int y = LUAX_OPTIONAL_INTEGER(L, 3, 0);
 
@@ -189,7 +189,7 @@ static int xform_offset(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    XForm_Class_t *self = (XForm_Class_t *)LUAX_USERDATA(L, 1);
+    XForm_Object_t *self = (XForm_Object_t *)LUAX_USERDATA(L, 1);
     float h = LUAX_NUMBER(L, 2);
     float v = LUAX_NUMBER(L, 3);
 
@@ -207,7 +207,7 @@ static int xform_matrix3(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    XForm_Class_t *self = (XForm_Class_t *)LUAX_USERDATA(L, 1);
+    XForm_Object_t *self = (XForm_Object_t *)LUAX_USERDATA(L, 1);
     float x0 = LUAX_NUMBER(L, 2);
     float y0 = LUAX_NUMBER(L, 3);
 
@@ -227,7 +227,7 @@ static int xform_matrix5(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    XForm_Class_t *self = (XForm_Class_t *)LUAX_USERDATA(L, 1);
+    XForm_Object_t *self = (XForm_Object_t *)LUAX_USERDATA(L, 1);
     float a = LUAX_NUMBER(L, 2);
     float b = LUAX_NUMBER(L, 3);
     float c = LUAX_NUMBER(L, 4);
@@ -253,7 +253,7 @@ static int xform_matrix7(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    XForm_Class_t *self = (XForm_Class_t *)LUAX_USERDATA(L, 1);
+    XForm_Object_t *self = (XForm_Object_t *)LUAX_USERDATA(L, 1);
     float a = LUAX_NUMBER(L, 2);
     float b = LUAX_NUMBER(L, 3);
     float c = LUAX_NUMBER(L, 4);
@@ -287,7 +287,7 @@ static int xform_clamp(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    XForm_Class_t *self = (XForm_Class_t *)LUAX_USERDATA(L, 1);
+    XForm_Object_t *self = (XForm_Object_t *)LUAX_USERDATA(L, 1);
     const char *clamp = LUAX_STRING(L, 2);
 
     GL_XForm_t *xform = &self->xform;
@@ -309,7 +309,7 @@ static int xform_table1(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    XForm_Class_t *self = (XForm_Class_t *)LUAX_USERDATA(L, 1);
+    XForm_Object_t *self = (XForm_Object_t *)LUAX_USERDATA(L, 1);
 
     if (self->xform.table) {
         arrfree(self->xform.table);
@@ -356,7 +356,7 @@ static int xform_table2(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
     LUAX_SIGNATURE_END
-    XForm_Class_t *self = (XForm_Class_t *)LUAX_USERDATA(L, 1);
+    XForm_Object_t *self = (XForm_Object_t *)LUAX_USERDATA(L, 1);
 
     GL_XForm_Table_Entry_t *table = NULL;
 

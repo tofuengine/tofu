@@ -77,8 +77,8 @@ static int group_new(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "group %p tracked for context %p", group, audio->context);
     Audio_unlock(audio, context);
 
-    Group_Class_t *self = (Group_Class_t *)lua_newuserdata(L, sizeof(Group_Class_t));
-    *self = (Group_Class_t){
+    Group_Object_t *self = (Group_Object_t *)lua_newuserdata(L, sizeof(Group_Object_t));
+    *self = (Group_Object_t){
             .group = group
         };
 
@@ -94,7 +94,7 @@ static int group_gc(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Group_Class_t *self = (Group_Class_t *)LUAX_USERDATA(L, 1);
+    Group_Object_t *self = (Group_Object_t *)LUAX_USERDATA(L, 1);
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
@@ -117,7 +117,7 @@ static int group_gain(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Group_Class_t *self = (Group_Class_t *)LUAX_USERDATA(L, 1);
+    Group_Object_t *self = (Group_Object_t *)LUAX_USERDATA(L, 1);
     float gain = LUAX_NUMBER(L, 2);
 
     SL_group_gain(self->group, gain);
@@ -131,7 +131,7 @@ static int group_pan(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Group_Class_t *self = (Group_Class_t *)LUAX_USERDATA(L, 1);
+    Group_Object_t *self = (Group_Object_t *)LUAX_USERDATA(L, 1);
     float pan = LUAX_NUMBER(L, 2);
 
     SL_group_pan(self->group, pan);
@@ -144,7 +144,7 @@ static int group_reset(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Group_Class_t *self = (Group_Class_t *)LUAX_USERDATA(L, 1);
+    Group_Object_t *self = (Group_Object_t *)LUAX_USERDATA(L, 1);
 
     SL_group_reset(self->group);
 
