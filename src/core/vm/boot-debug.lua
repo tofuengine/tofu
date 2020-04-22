@@ -28,6 +28,7 @@ local Input = require("tofu.events").Input
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
+local Group = require("tofu.sound").Group
 local Pool = require("tofu.timers").Pool
 
 local Main = require("main")
@@ -61,6 +62,9 @@ function Tofu:__ctor()
           local canvas = Canvas.default()
           local width, _ = canvas:size()
           canvas:reset() -- Reset default canvas from the game state.
+
+          local group = Group.default()
+          group:reset() -- Reset sound group, also.
 
           me.font = Font.default("5x8", 0, 1)
           me.lines = {

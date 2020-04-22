@@ -37,6 +37,7 @@
 #include <core/vm/modules/input.h>
 #include <core/vm/modules/iterators.h>
 #include <core/vm/modules/math.h>
+#include <core/vm/modules/source.h>
 #include <core/vm/modules/speakers.h>
 #include <core/vm/modules/system.h>
 #include <core/vm/modules/timers.h>
@@ -110,7 +111,7 @@ static int sound_loader(lua_State *L)
     static const luaL_Reg classes[] = {
         { "Speakers", speakers_loader }, // FIXME: find a better name.
         { "Group", group_loader },
-//        { "Source", stream_loader },
+        { "Source", source_loader },
 //        { "Wave", wave_loader },
         { NULL, NULL }
     };

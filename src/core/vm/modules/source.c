@@ -1,0 +1,149 @@
+/*
+ * MIT License
+ * 
+ * Copyright (c) 2019-2020 Marco Lizza
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+#include "source.h"
+
+#include <config.h>
+#include <core/io/audio.h>
+#include <libs/log.h>
+
+#include "udt.h"
+
+#define LOG_CONTEXT "source"
+#define META_TABLE  "Tofu_Sound_Source_mt"
+
+static int source_new(lua_State *L);
+static int source_gc(lua_State *L);
+static int source_gain(lua_State *L);
+static int source_pan(lua_State *L);
+static int source_reset(lua_State *L);
+
+static const struct luaL_Reg _source_functions[] = {
+    { "new", source_new },
+    { "__gc", source_gc },
+    { "gain", source_gain },
+    { "pan", source_pan },
+    { "reset", source_reset },
+    { NULL, NULL }
+};
+
+int source_loader(lua_State *L)
+{
+    int nup = luaX_pushupvalues(L);
+    return luaX_newmodule(L, NULL, _source_functions, NULL, nup, NULL);
+}
+
+static int source_new(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    const char *name = LUAX_STRING(L, 1);
+
+    Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
+
+    SL_Source_t *source = SL_source_create();
+    if (!source) {
+        return luaL_error(L, "can't source group");
+    }
+
+    SL_Context_t *context = Audio_lock(audio);
+    SL_context_track(context, source);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "group %p tracked for context %p", group, audio->context);
+    Audio_unlock(audio, context);
+
+    Group_Object_t *self = (Group_Object_t *)lua_newuserdata(L, sizeof(Group_Object_t));
+    *self = (Group_Object_t){
+            .group = group
+        };
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "group %p allocated w/ group %p", self, group);
+
+    luaL_setmetatable(L, META_TABLE);
+
+    return 1;
+}
+
+static int group_gc(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    Group_Object_t *self = (Group_Object_t *)LUAX_USERDATA(L, 1);
+
+    Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
+
+    SL_Context_t *context = Audio_lock(audio);
+    SL_context_untrack(context, self->group);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "group %p untracked", self->group);
+    Audio_unlock(audio, context);
+
+    SL_group_destroy(self->group);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "group %p freed", self->group);
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "group %p finalized", self);
+
+    return 0;
+}
+
+static int group_gain(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    Group_Object_t *self = (Group_Object_t *)LUAX_USERDATA(L, 1);
+    float gain = LUAX_NUMBER(L, 2);
+
+    SL_group_gain(self->group, gain);
+
+    return 0;
+}
+
+static int group_pan(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    Group_Object_t *self = (Group_Object_t *)LUAX_USERDATA(L, 1);
+    float pan = LUAX_NUMBER(L, 2);
+
+    SL_group_pan(self->group, pan);
+
+    return 0;
+}
+
+static int group_reset(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    Group_Object_t *self = (Group_Object_t *)LUAX_USERDATA(L, 1);
+
+    SL_group_reset(self->group);
+
+    return 0;
+}
