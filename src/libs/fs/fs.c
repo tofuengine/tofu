@@ -128,6 +128,16 @@ bool FS_attach(File_System_t *file_system, const char *path)
     return _attach(file_system, resolved);
 }
 
+File_System_Handle_t *FS_locate_and_open(const File_System_t *file_system, const char *file)
+{
+    File_System_Mount_t *mount = FS_locate(file_system, file);
+    if (!mount) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't locale file `%s`", file);
+        return NULL;
+    }
+    return FS_open(mount, file);;
+}
+
 File_System_Mount_t *FS_locate(const File_System_t *file_system, const char *file)
 {
     size_t count = arrlen(file_system->mounts);
