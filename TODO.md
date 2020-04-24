@@ -33,7 +33,7 @@
     synthesis only? should also enumerate device and let the user pick the wanted one (in case multiple outputs are available).
   * filed a possible bug found on a Linux Mint 19.3 VM. I should try on more machines.
     * it turned out as a bug, fixed! cool!
-  * can't decide sample frequence, 44100 probably.
+  * can't decide sample frequence, 44100 probably (no more than 48000, anyway).
   * did some study on FM synthesis. interesting stuff! way too complex to handle for the final product, I don't want to
     waste a lot of time in writing music (cool part is the near to zero memory usage). maybe on a second step.
   * panning laws. are they worth? doesn't linear panning (i.e. constant-gain) suit (or at most constant power sincos)?
@@ -42,6 +42,12 @@
   * creating sound groups can be crucial to handle them collectively, e.g. lower the volume of the group to leave room for other sounds
     * in this sense, the "group" is the audio equivalent of the "canvas"
     * "Bus" can be a valid name, too.
+  * the more I work on it, the more I want to simplify
+    * I'm using miniaudio only to access the device, somehow like I do with GLFW to access OpenGL
+    * mixing and streaming is done by native engine code
+    * I can luckily exploit the sound loaders that converts to float during the processing
+    * WAV will be the format of choice, for the moment, since the `dr_wav` library integrates well with my FS abstraction (`std_vorbis` will
+      require some adaptation)
 
 
 ```java
