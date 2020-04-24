@@ -31,8 +31,8 @@
 #include <stddef.h>
 
 // TODO: implement both from memory and from file.
-typedef size_t (*SL_Source_Read_Callback_t)(void *user_data, void *output, size_t bytes_requested);
-typedef void (*SL_Source_Seek_Callback_t)(void *user_data, long position, int whence);
+typedef size_t (*SL_Source_Read_Callback_t)(void *user_data, float *output, size_t frames_requested);
+typedef void (*SL_Source_Seek_Callback_t)(void *user_data, size_t frame_offset);
 
 typedef enum _SL_Source_States_t {
     SL_SOURCE_STATE_STOPPED,
@@ -42,6 +42,10 @@ typedef enum _SL_Source_States_t {
 } SL_Source_States_t;
 
 typedef struct _SL_Source_t {
+    SL_Source_Read_Callback_t on_read;
+    SL_Source_Seek_Callback_t on_seek;
+    void *user_data;
+
     bool looped;
     float delay; // ???
     float gain;
@@ -53,7 +57,7 @@ typedef struct _SL_Source_t {
     SL_Mix_t mix;
 } SL_Source_t;
 
-extern SL_Source_t *SL_source_create(SL_Source_Read_Callback_t reader, SL_Source_Seek_Callback_t seeker, void *user_data);
+extern SL_Source_t *SL_source_create(SL_Source_Read_Callback_t on_read, SL_Source_Seek_Callback_t on_seek, void *user_data);
 extern void SL_source_destroy(SL_Source_t *source);
 
 extern void SL_source_looped(SL_Source_t *source, bool looped);

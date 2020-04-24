@@ -30,6 +30,8 @@
 #include <libs/gl/gl.h>
 #include <libs/sl/sl.h>
 
+#include <miniaudio/extras/dr_wav.h>
+
 typedef enum _UserData_t { // TODO: move to a suitable space.
     USERDATA_INTERPRETER = 1,
     USERDATA_FILE_SYSTEM,
@@ -103,6 +105,7 @@ typedef struct _Source_Object_t {
     SL_Group_t *group; // i.e. the owner (to be notified when a sound is GCed)
     luaX_Reference group_reference;
     File_System_Handle_t *handle;
+    drwav *wav;
     SL_Source_t *source;
 } Source_Object_t;
 

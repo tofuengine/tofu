@@ -67,18 +67,33 @@ int source_loader(lua_State *L)
     return luaX_newmodule(L, NULL, _source_functions, NULL, nup, NULL);
 }
 
-static size_t _source_read(void *user_data, void *output, size_t bytes_requested)
+size_t _drwav_read(void *user_data, void *buffer, size_t bytes_to_read)
 {
     File_System_Handle_t *handle = (File_System_Handle_t *)user_data;
 
-    return FS_read(handle, output, bytes_requested);
+    return FS_read(handle, buffer, bytes_to_read);
 }
 
-static void _source_seek(void *user_data, long position, int whence)
+drwav_bool32 _drwav_seek(void *user_data, int offset, drwav_seek_origin origin)
 {
     File_System_Handle_t *handle = (File_System_Handle_t *)user_data;
 
-    FS_skip(handle, position);
+    FS_skip(handle, offset); // TODO: rework as FS_seek()
+    return true;
+}
+
+static size_t _source_read(void *user_data, float *output, size_t frames_requested)
+{
+    drwav *wav = (drwav *)user_data;
+
+    return drwav_read_pcm_frames_f32(wav, frames_requested, output);
+}
+
+static void _source_seek(void *user_data, size_t frame_offset)
+{
+    drwav *wav = (drwav *)user_data;
+
+    drwav_seek_to_pcm_frame(wav, frame_offset);
 }
 
 static int source_new(lua_State *L)
@@ -99,8 +114,17 @@ static int source_new(lua_State *L)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p opened for file `%s`", handle, file);
 
-    SL_Source_t *source = SL_source_create(_source_read, _source_seek, (void *)handle);
+    drwav *wav = malloc(sizeof(wav));
+    if (!wav) {
+        FS_close(handle);
+        return luaL_error(L, "can't allocate `wav` structure");
+    }
+    drwav_init(wav, _drwav_read, _drwav_seek, (void *)handle, NULL);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "`wav` structure %p allocated ad initialized", wav);
+
+    SL_Source_t *source = SL_source_create(_source_read, _source_seek, (void *)wav);
     if (!source) {
+        free(wav);
         FS_close(handle);
         return luaL_error(L, "can't create source");
     }
@@ -115,6 +139,7 @@ static int source_new(lua_State *L)
             .group = group->group,
             .group_reference = luaX_ref(L, 2),
             .handle = handle,
+            .wav = wav,
             .source = source
         };
 
@@ -149,6 +174,11 @@ static int source_gc(lua_State *L)
 
     FS_close(self->handle);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p closed", self->handle);
+
+    drwav_uninit(self->wav);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "`wav` structure deinitialized", self->wav);
+    free(self->wav);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "`wav` structure freed", self->wav);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p finalized", self);
 

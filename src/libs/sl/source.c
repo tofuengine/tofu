@@ -56,7 +56,7 @@ static inline SL_Mix_t _0db_linear_mix(float balance, float gain)
 #endif
 }
 
-SL_Source_t *SL_source_create(SL_Source_Read_Callback_t reader, SL_Source_Seek_Callback_t seeker, void *user_data)
+SL_Source_t *SL_source_create(SL_Source_Read_Callback_t on_read, SL_Source_Seek_Callback_t on_seek, void *user_data)
 {
     SL_Source_t *source = malloc(sizeof(SL_Source_t));
     if (!source) {
@@ -64,6 +64,9 @@ SL_Source_t *SL_source_create(SL_Source_Read_Callback_t reader, SL_Source_Seek_C
     }
 
     *source = (SL_Source_t){
+            .on_read = on_read,
+            .on_seek = on_seek,
+            .user_data = user_data,
             .looped = false,
             .delay = 0.0f,
             .gain = 1.0,
@@ -115,6 +118,8 @@ void SL_source_speed(SL_Source_t *source, float speed)
     source->speed = speed;
 }
 
+// TODO: implement I/O
+
 void SL_source_pause(SL_Source_t *source)
 {
     source->state = SL_SOURCE_STATE_STOPPED;
@@ -137,5 +142,6 @@ void SL_source_update(SL_Source_t *source, float delta_time)
 
 size_t SL_source_process(SL_Source_t *source, float *output, size_t frames_requested)
 {
-    return frames_requested;
+    // FIXME: fill the output as much as possible, eventually looping
+    return source->on_read(source->user_data, output, frames_requested);
 }
