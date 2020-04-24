@@ -41,7 +41,7 @@ extern SL_Group_t *SL_group_create(void);
 extern void SL_group_destroy(SL_Group_t *group);
 
 extern void SL_group_update(SL_Group_t *group, float delta_time);
-extern void SL_group_process(SL_Group_t *group, float *output, size_t requested_frames);
+extern void SL_group_process(SL_Group_t *group, float *output, size_t frames_requested);
 extern void SL_group_reset(SL_Group_t *group);
 
 extern void SL_group_gain(SL_Group_t *group, float gain);

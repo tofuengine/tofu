@@ -31,7 +31,7 @@
 #include <stddef.h>
 
 // TODO: implement both from memory and from file.
-typedef size_t (*SL_Source_Read_Callback_t)(void *user_data, void *data, size_t data_size);
+typedef size_t (*SL_Source_Read_Callback_t)(void *user_data, void *output, size_t bytes_requested);
 typedef void (*SL_Source_Seek_Callback_t)(void *user_data, long position, int whence);
 
 typedef enum _SL_Source_States_t {
@@ -67,6 +67,6 @@ extern void SL_source_resume(SL_Source_t *source);
 extern void SL_source_stop(SL_Source_t *source);
 
 extern void SL_source_update(SL_Source_t *source, float delta_time);
-extern size_t SL_source_process(SL_Source_t *source, float *output, size_t requested_frames);
+extern size_t SL_source_process(SL_Source_t *source, float *output, size_t frames_requested);
 
 #endif  /* __SL_SOURCE_H__ */

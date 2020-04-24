@@ -135,7 +135,7 @@ void SL_source_update(SL_Source_t *source, float delta_time)
     source->time = delta_time;
 }
 
-size_t SL_source_process(SL_Source_t *source, float *output, size_t requested_frames)
+size_t SL_source_process(SL_Source_t *source, float *output, size_t frames_requested)
 {
-    return requested_frames;
+    return frames_requested;
 }

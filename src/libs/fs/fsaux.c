@@ -34,18 +34,18 @@
 // FIXME: convert bool argument to flags.
 static void *_load(File_System_Handle_t *handle, bool null_terminate, size_t *size)
 {
-    size_t bytes_to_read = FS_size(handle);
+    size_t bytes_requested = FS_size(handle);
 
-    size_t bytes_to_allocate = bytes_to_read + (null_terminate ? 1 : 0);
+    size_t bytes_to_allocate = bytes_requested + (null_terminate ? 1 : 0);
     void *data = malloc(bytes_to_allocate * sizeof(uint8_t)); // Add null terminator for the string.
     if (!data) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d bytes of memory", bytes_to_allocate);
         FS_close(handle);
         return NULL;
     }
-    size_t bytes_read = FS_read(handle, data, bytes_to_read);
-    if (bytes_read < bytes_to_read) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d bytes of data (%d available)", bytes_to_read, bytes_read);
+    size_t bytes_read = FS_read(handle, data, bytes_requested);
+    if (bytes_read < bytes_requested) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d bytes of data (%d available)", bytes_requested, bytes_read);
         free(data);
         return NULL;
     }

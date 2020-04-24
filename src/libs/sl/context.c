@@ -66,11 +66,11 @@ void SL_context_update(SL_Context_t *context, float delta_time)
     }
 }
 
-void SL_context_process(SL_Context_t *context, float *output, size_t requested_frames)
+void SL_context_process(SL_Context_t *context, float *output, size_t frames_requested)
 {
     size_t count = arrlen(context->groups);
     for (int i = count - 1; i >= 0; --i) {
-        SL_group_process(context->groups[i], output, requested_frames);
+        SL_group_process(context->groups[i], output, frames_requested);
     }
 }
 

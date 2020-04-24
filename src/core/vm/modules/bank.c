@@ -73,9 +73,9 @@ static GL_Rectangle_t *_load_cells(const File_System_t *file_system, const char 
     }
 
     uint32_t entries;
-    size_t bytes_to_read = sizeof(uint32_t);
-    size_t bytes_read = FS_read(handle, &entries, bytes_to_read);
-    if (bytes_read != bytes_to_read) {
+    size_t bytes_requested = sizeof(uint32_t);
+    size_t bytes_read = FS_read(handle, &entries, bytes_requested);
+    if (bytes_read != bytes_requested) {
         FS_close(handle);
         return NULL;
     }
@@ -88,9 +88,9 @@ static GL_Rectangle_t *_load_cells(const File_System_t *file_system, const char 
 
     for (uint32_t i = 0; i < entries; ++i) {
         Rectangle_u32_t rectangle = (Rectangle_u32_t){ 0 };
-        bytes_to_read = sizeof(Rectangle_u32_t);
-        bytes_read = FS_read(handle, &rectangle, bytes_to_read);
-        if (bytes_read != bytes_to_read) {
+        bytes_requested = sizeof(Rectangle_u32_t);
+        bytes_read = FS_read(handle, &rectangle, bytes_requested);
+        if (bytes_read != bytes_requested) {
             free(cells);
             FS_close(handle);
             return NULL;

@@ -69,7 +69,6 @@ extern bool FS_attach(File_System_t *file_system, const char *path);
 extern File_System_Mount_t *FS_locate(const File_System_t *file_system, const char *file);
 
 extern File_System_Handle_t *FS_open(File_System_Mount_t *mount, const char *file);
-
 extern void FS_close(File_System_Handle_t *handle); // TODO: convert these to macros?
 extern size_t FS_size(File_System_Handle_t *handle);
 extern size_t FS_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested);

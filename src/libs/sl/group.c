@@ -95,15 +95,15 @@ void SL_group_update(SL_Group_t *group, float delta_time)
     }
 }
 
-void SL_group_process(SL_Group_t *group, float *output, size_t requested_frames)
+void SL_group_process(SL_Group_t *group, float *output, size_t frames_requested)
 {
 #define SL_DEVICE_CHANNELS  2
-    float buffer[requested_frames * SL_DEVICE_CHANNELS];
+    float buffer[frames_requested * SL_DEVICE_CHANNELS];
 
     size_t count = arrlen(group->sources);
     for (int i = count - 1; i >= 0; --i) {
-        size_t processed_frames = SL_source_process(group->sources[i], buffer, requested_frames);
-        for (size_t j = 0; j < processed_frames; ++j) {
+        size_t frames_processed = SL_source_process(group->sources[i], buffer, frames_requested);
+        for (size_t j = 0; j < frames_processed; ++j) {
             output[j] += buffer[j];
         }
     }
