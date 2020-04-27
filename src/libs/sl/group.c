@@ -103,8 +103,12 @@ void SL_group_process(SL_Group_t *group, float *output, size_t frames_requested)
     size_t count = arrlen(group->sources);
     for (int i = count - 1; i >= 0; --i) {
         size_t frames_processed = SL_source_process(group->sources[i], buffer, frames_requested);
-        for (size_t j = 0; j < frames_processed; ++j) {
-            output[j] += buffer[j];
+
+        float *sptr = buffer;
+        float *dprt = output;
+        for (size_t i = frames_processed; i; --i) {
+            *(dprt++) += *(sptr++) * group->mix.left;
+            *(dprt++) += *(sptr++) * group->mix.right;
         }
     }
 }
@@ -122,13 +126,13 @@ void SL_group_reset(SL_Group_t *group)
 void SL_group_gain(SL_Group_t *group, float gain)
 {
     group->gain = gain;
-    group->mix = _0db_linear_mix(group->gain, group->pan);
+    group->mix = _0db_linear_mix(group->pan, group->gain);
 }
 
 void SL_group_pan(SL_Group_t *group, float pan)
 {
     group->pan = pan;
-    group->mix = _0db_linear_mix(group->gain, group->pan);
+    group->mix = _0db_linear_mix(group->pan, group->gain);
 }
 
 void SL_group_track(SL_Group_t *group, SL_Source_t *source)

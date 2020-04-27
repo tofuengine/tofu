@@ -43,9 +43,9 @@ static int source_gain(lua_State *L);
 static int source_pan(lua_State *L);
 static int source_speed(lua_State *L);
 static int source_delay(lua_State *L);
-static int source_pause(lua_State *L);
-static int source_resume(lua_State *L);
+static int source_play(lua_State *L);
 static int source_stop(lua_State *L);
+static int source_rewind(lua_State *L);
 
 static const struct luaL_Reg _source_functions[] = {
     { "new", source_new },
@@ -55,9 +55,9 @@ static const struct luaL_Reg _source_functions[] = {
     { "pan", source_pan },
     { "speed", source_speed },
     { "delay", source_delay },
-    { "pause", source_pause },
-    { "resume", source_resume },
+    { "play", source_play },
     { "stop", source_stop },
+    { "rewind", source_rewind },
     { NULL, NULL }
 };
 
@@ -67,32 +67,33 @@ int source_loader(lua_State *L)
     return luaX_newmodule(L, NULL, _source_functions, NULL, nup, NULL);
 }
 
-size_t _drwav_read(void *user_data, void *buffer, size_t bytes_to_read)
+static size_t _drwav_read(void *user_data, void *buffer, size_t bytes_to_read)
 {
     File_System_Handle_t *handle = (File_System_Handle_t *)user_data;
-
     return FS_read(handle, buffer, bytes_to_read);
 }
 
-drwav_bool32 _drwav_seek(void *user_data, int offset, drwav_seek_origin origin)
+static drwav_bool32 _drwav_seek(void *user_data, int offset, drwav_seek_origin origin)
 {
     File_System_Handle_t *handle = (File_System_Handle_t *)user_data;
-
-    FS_skip(handle, offset); // TODO: rework as FS_seek()
+    if (origin == drwav_seek_origin_start) {
+        FS_seek(handle, offset, SEEK_SET);
+    } else
+    if (origin == drwav_seek_origin_current) {
+        FS_seek(handle, offset, SEEK_CUR);
+    }
     return true;
 }
 
 static size_t _source_read(void *user_data, float *output, size_t frames_requested)
 {
     drwav *wav = (drwav *)user_data;
-
-    return drwav_read_pcm_frames_f32(wav, frames_requested, output);
+    return drwav_read_pcm_frames_f32(wav, frames_requested, output); // TODO: convert frame rate and channels.
 }
 
 static void _source_seek(void *user_data, size_t frame_offset)
 {
     drwav *wav = (drwav *)user_data;
-
     drwav_seek_to_pcm_frame(wav, frame_offset);
 }
 
@@ -255,26 +256,14 @@ static int source_delay(lua_State *L)
     return 0;
 }
 
-static int source_pause(lua_State *L)
+static int source_play(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
 
-    SL_source_pause(self->source);
-
-    return 0;
-}
-
-static int source_resume(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-    LUAX_SIGNATURE_END
-    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
-
-    SL_source_resume(self->source);
+    SL_source_play(self->source);
 
     return 0;
 }
@@ -287,6 +276,18 @@ static int source_stop(lua_State *L)
     Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
 
     SL_source_stop(self->source);
+
+    return 0;
+}
+
+static int source_rewind(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
+
+    SL_source_rewind(self->source);
 
     return 0;
 }

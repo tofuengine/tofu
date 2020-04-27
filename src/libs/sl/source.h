@@ -66,9 +66,9 @@ extern void SL_source_gain(SL_Source_t *source, float gain);
 extern void SL_source_pan(SL_Source_t *source, float pan);
 extern void SL_source_speed(SL_Source_t *source, float speed);
 
-extern void SL_source_pause(SL_Source_t *source);
-extern void SL_source_resume(SL_Source_t *source);
+extern void SL_source_play(SL_Source_t *source);
 extern void SL_source_stop(SL_Source_t *source);
+extern void SL_source_rewind(SL_Source_t *source);
 
 extern void SL_source_update(SL_Source_t *source, float delta_time);
 extern size_t SL_source_process(SL_Source_t *source, float *output, size_t frames_requested);

@@ -104,13 +104,13 @@ void SL_source_delay(SL_Source_t *source, float delay)
 void SL_source_gain(SL_Source_t *source, float gain)
 {
     source->gain = gain;
-    source->mix = _0db_linear_mix(source->gain, source->pan);
+    source->mix = _0db_linear_mix(source->pan, source->gain);
 }
 
 void SL_source_pan(SL_Source_t *source, float pan)
 {
     source->pan = pan;
-    source->mix = _0db_linear_mix(source->gain, source->pan);
+    source->mix = _0db_linear_mix(source->pan, source->gain);
 }
 
 void SL_source_speed(SL_Source_t *source, float speed)
@@ -118,14 +118,7 @@ void SL_source_speed(SL_Source_t *source, float speed)
     source->speed = speed;
 }
 
-// TODO: implement I/O
-
-void SL_source_pause(SL_Source_t *source)
-{
-    source->state = SL_SOURCE_STATE_STOPPED;
-}
-
-void SL_source_resume(SL_Source_t *source)
+void SL_source_play(SL_Source_t *source)
 {
     source->state = SL_SOURCE_STATE_PLAYING;
 }
@@ -135,13 +128,49 @@ void SL_source_stop(SL_Source_t *source)
     source->state = SL_SOURCE_STATE_STOPPED;
 }
 
-void SL_source_update(SL_Source_t *source, float delta_time)
+void SL_source_rewind(SL_Source_t *source)
+{
+    if (source->state != SL_SOURCE_STATE_STOPPED) {
+        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "can't rewind while playing");
+        return;
+    }
+    source->on_seek(source->user_data, 0);
+}
+
+void SL_source_update(SL_Source_t *source, float delta_time) // FIXME: useless?
 {
     source->time = delta_time;
 }
 
 size_t SL_source_process(SL_Source_t *source, float *output, size_t frames_requested)
 {
-    // FIXME: fill the output as much as possible, eventually looping
-    return source->on_read(source->user_data, output, frames_requested);
+    if (source->state == SL_SOURCE_STATE_PLAYING) {
+        return 0;
+    }
+
+#define SL_DEVICE_CHANNELS  2
+    float buffer[frames_requested * SL_DEVICE_CHANNELS];
+
+    size_t frames_remaining = frames_requested;
+    size_t frames_so_far = 0;
+    while (frames_remaining > 0) { // Read as much data as possible, filling the buffer and eventually looping!
+        size_t frames_read = source->on_read(source->user_data, buffer, frames_remaining);
+
+        float *sptr = buffer;
+        float *dptr = output;
+        for (size_t i = 0; i < frames_read; ++i) { // Apply panning and gain to the data.
+            *(dptr++) = *(sptr++) * source->mix.left;
+            *(dptr++) = *(sptr++) * source->mix.right;
+        }
+
+        frames_so_far += frames_read;
+        if (frames_read < frames_remaining) { // Less than requested, we reached end-of-data!
+            if (!source->looped) {
+                break;
+            }
+            source->on_seek(source->user_data, 0);
+        }
+        frames_remaining -= frames_read;
+    }
+    return frames_so_far;
 }
