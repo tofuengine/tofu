@@ -172,9 +172,9 @@ size_t FS_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requeste
     return ((Handle_t *)handle)->vtable.read(handle, buffer, bytes_requested);
 }
 
-void FS_skip(File_System_Handle_t *handle, int offset)
+void FS_seek(File_System_Handle_t *handle, long offset, int whence)
 {
-    ((Handle_t *)handle)->vtable.skip(handle, offset);
+    ((Handle_t *)handle)->vtable.seek(handle, offset, whence);
 }
 
 bool FS_eof(File_System_Handle_t *handle)

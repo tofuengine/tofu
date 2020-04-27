@@ -114,21 +114,21 @@ static File_System_Resource_t *_load_as_binary(File_System_Handle_t *handle)
     return resource;
 }
 
-static int _stbi_io_read(void *user, char *data, int size)
+static int _stbi_io_read(void *user_data, char *data, int size)
 {
-    File_System_Handle_t *handle = (File_System_Handle_t *)user;
+    File_System_Handle_t *handle = (File_System_Handle_t *)user_data;
     return (int)FS_read(handle, data, (size_t)size);
 }
 
-static void _stbi_io_skip(void *user, int n)
+static void _stbi_io_skip(void *user_data, int n)
 {
-    File_System_Handle_t *handle = (File_System_Handle_t *)user;
-    FS_skip(handle, n);
+    File_System_Handle_t *handle = (File_System_Handle_t *)user_data;
+    FS_seek(handle, n, SEEK_CUR);
 }
 
-static int _stbi_io_eof(void *user)
+static int _stbi_io_eof(void *user_data)
 {
-    File_System_Handle_t *handle = (File_System_Handle_t *)user;
+    File_System_Handle_t *handle = (File_System_Handle_t *)user_data;
     return FS_eof(handle) ? -1 : 0;
 }
 

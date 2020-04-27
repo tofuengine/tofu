@@ -74,7 +74,7 @@ extern File_System_Handle_t *FS_open(File_System_Mount_t *mount, const char *fil
 extern void FS_close(File_System_Handle_t *handle); // TODO: convert these to macros?
 extern size_t FS_size(File_System_Handle_t *handle);
 extern size_t FS_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
-extern void FS_skip(File_System_Handle_t *handle, int offset);
+extern void FS_seek(File_System_Handle_t *handle, long offset, int whence);
 extern bool FS_eof(File_System_Handle_t *handle);
 
 #endif /* __FS_H__ */
