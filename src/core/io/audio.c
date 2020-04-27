@@ -32,10 +32,12 @@
 
 #define LOG_CONTEXT "audio"
 
-// Using floating point format for simpler and more consistent mixing.
+// We are using floating point format for simpler and more consistent mixing. Two channels are enough to have some
+// panning effects. A sample rate of 48kHz is the optimal choice since it's the internal default for many soundcards
+// and converting from lower sample rates is simpler.
 #define DEVICE_FORMAT           ma_format_f32
 #define DEVICE_CHANNELS         2
-#define DEVICE_SAMPLE_RATE      44100
+#define DEVICE_SAMPLE_RATE      48000
 
 static void _log_callback(ma_context *context, ma_device *device, ma_uint32 log_level, const char *message)
 {
@@ -86,7 +88,7 @@ bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration
     //    config.playback.pDeviceID = &pPlaybackDeviceInfos[chosenPlaybackDeviceIndex].id; 
     audio->device_config.playback.format    = DEVICE_FORMAT;
     audio->device_config.playback.channels  = DEVICE_CHANNELS;
-    audio->device_config.sampleRate         = DEVICE_SAMPLE_RATE; // TODO: detect and pass internal sample rate.
+    audio->device_config.sampleRate         = DEVICE_SAMPLE_RATE;
     audio->device_config.dataCallback       = _data_callback;
 //    audio->device_config.stopCallback       = _stop_callback;
     audio->device_config.pUserData          = (void *)audio;
