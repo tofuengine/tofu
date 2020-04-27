@@ -170,7 +170,7 @@ gamepad: $(TARGET)
 gamepad-pak: $(TARGET)
 	@echo "Launching *gamepad (PAK)* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/gamepad
-	@lua ./extras/pakgen.lua ./demos/gamepad ./demos/gamepad.pak
+	@lua5.3 ./extras/pakgen.lua --input=./demos/gamepad --output=./demos/gamepad.pak
 	@./$(TARGET) ./demos/gamepad.pak
 
 hello-tofu: $(TARGET)

@@ -22,19 +22,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
--- Depends upon
---  0 bit32
+-- Depends upon the following Lua "rocks".
 --  1 luafilesystem
 --  2 luazen
 --  3 struct
 
-local bit32 = require("bit32")
 local lfs = require("lfs")
 local luazen = require("luazen")
 local struct = require("struct")
 
-local VERSION = 0x0000
-local RESERVED = 0xFFFF
+local VERSION = 0x00
+local RESERVED_8b = 0xFF
+local RESERVED_16b = 0xFFFF
 
 function string:at(index)
   return self:sub(index, index)
@@ -79,10 +78,10 @@ local function emit_header(output, config, files)
   local flags = bit32.lshift(config.encrypted and 1 or 0, 0)
 
   output:write(struct.pack("c8", "TOFUPAK!"))
-  output:write(struct.pack("I1", VERSION))
-  output:write(struct.pack("I1", flags))
-  output:write(struct.pack("I2", RESERVED))
-  output:write(struct.pack("I4", #files))
+  output:write(struct.pack("B", VERSION))
+  output:write(struct.pack("B", flags))
+  output:write(struct.pack("H", RESERVED_8b))
+  output:write(struct.pack("I", #files))
 end
 
 local function emit_entry(output, file, config)
@@ -94,10 +93,10 @@ local function emit_entry(output, file, config)
     content = luazen.rc4raw(content, luazen.md5(file.name))
   end
 
-  output:write(struct.pack("I2", RESERVED))
-  output:write(struct.pack("I2", #file.name))
-  output:write(struct.pack("I4", file.size))
-  output:write(struct.pack("c0", file.name))
+  output:write(struct.pack("H", RESERVED_16b))
+  output:write(struct.pack("H", #file.name))
+  output:write(struct.pack("I", file.size))
+  output:write(struct.pack("c" .. #file.name, file.name))
   output:write(content)
 
   input:close()
