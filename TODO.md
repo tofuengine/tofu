@@ -48,6 +48,7 @@
     * I can luckily exploit the sound loaders that converts to float during the processing
     * WAV will be the format of choice, for the moment, since the `dr_wav` library integrates well with my FS abstraction (`std_vorbis` will
       require some adaptation)
+  * trying always-streaming data. will some buffering be needed? new data could be pulled in the update call.
 
 
 ```java

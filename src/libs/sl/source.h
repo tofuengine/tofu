@@ -71,6 +71,6 @@ extern void SL_source_stop(SL_Source_t *source);
 extern void SL_source_rewind(SL_Source_t *source);
 
 extern void SL_source_update(SL_Source_t *source, float delta_time);
-extern size_t SL_source_process(SL_Source_t *source, float *output, size_t frames_requested);
+extern size_t SL_source_process(SL_Source_t *source, float *output, size_t frames_requested, SL_Mix_t mix);
 
 #endif  /* __SL_SOURCE_H__ */
