@@ -97,19 +97,20 @@ void SL_group_update(SL_Group_t *group, float delta_time)
 
 void SL_group_process(SL_Group_t *group, float *output, size_t frames_requested)
 {
-#define SL_DEVICE_CHANNELS  2
-    float buffer[frames_requested * SL_DEVICE_CHANNELS];
+    float buffer[frames_requested * SL_CHANNELS_PER_FRAME];
 
     size_t count = arrlen(group->sources);
     for (int i = count - 1; i >= 0; --i) {
+        // TODO: accumulate into an intermediate buffer, then mix at the end.
         size_t frames_processed = SL_source_process(group->sources[i], buffer, frames_requested);
 
-        float *sptr = buffer;
-        float *dprt = output;
-        for (size_t i = frames_processed; i; --i) {
-            *(dprt++) += *(sptr++) * group->mix.left;
-            *(dprt++) += *(sptr++) * group->mix.right;
-        }
+    }
+
+    float *sptr = buffer;
+    float *dprt = output;
+    for (size_t i = frames_requested; i; --i) { // Eventually, part of the buffer will be zero.
+        *(dprt++) += *(sptr++) * group->mix.left;
+        *(dprt++) += *(sptr++) * group->mix.right;
     }
 }
 

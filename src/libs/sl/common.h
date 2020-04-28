@@ -25,6 +25,10 @@
 #ifndef __SL_COMMON_H__
 #define __SL_COMMON_H__
 
+#define SL_BYTES_PER_FRAME      sizeof(float)
+#define SL_FRAMES_PER_SECOND    48000
+#define SL_CHANNELS_PER_FRAME   2
+
 typedef struct _SL_Mix_t {
 #ifdef __AUDIO_FULL_MIX__
     float left_to_left, left_to_right;
