@@ -198,7 +198,7 @@ static ma_uint32 ReadAudioBufferFramesInMixingFormat(AudioBuffer *audioBuffer, f
 #endif
 void SL_source_process(SL_Source_t *source, float *output, size_t frames_requested, SL_Mix_t mix)
 {
-    if (source->state == SL_SOURCE_STATE_PLAYING) {
+    if (source->state != SL_SOURCE_STATE_PLAYING) {
         return;
     }
 
@@ -228,6 +228,7 @@ void SL_source_process(SL_Source_t *source, float *output, size_t frames_request
         frames_processed += frames_converted;
         if (frames_read < frames_to_read) { // Less than requested, we reached end-of-data!
             if (!source->looped) {
+                source->state = SL_SOURCE_STATE_COMPLETED;
                 break;
             }
             source->on_seek(source->user_data, 0);
