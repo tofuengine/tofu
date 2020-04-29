@@ -24,7 +24,7 @@ SOFTWARE.
 
 local Class = require("tofu.core").Class
 local System = require("tofu.core").System
---local Input = require("tofu.events").Input
+local Input = require("tofu.events").Input
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
@@ -43,17 +43,29 @@ function Main:__ctor()
 --      Source.new("assets/44100_mono.wav", group),
       Source.new("assets/48000_2ch.wav", group),
     }
+  self.current = 1
 end
 
 function Main:input()
---[[
-  for _, id in ipairs(IDS) do
-    self.down[id] = Input.is_down(id)
-    if Input.is_pressed(id) then
-      self.scale[id] = 3.0
-    end
+  if Input.is_pressed("a") then
+    self.sources[self.current]:play()
+  elseif Input.is_pressed("b") then
+    self.sources[self.current]:stop()
+  elseif Input.is_pressed("x") then
+    self.sources[self.current]:rewind()
+  elseif Input.is_pressed("up") then
+    local gain = self.sources[self.current]:gain()
+    self.sources[self.current]:gain(gain + 0.05)
+  elseif Input.is_pressed("down") then
+    local gain = self.sources[self.current]:gain()
+    self.sources[self.current]:gain(gain - 0.05)
+  elseif Input.is_pressed("left") then
+    local pan = self.sources[self.current]:pan()
+    self.sources[self.current]:pan(pan - 0.05)
+  elseif Input.is_pressed("right") then
+    local pan = self.sources[self.current]:pan()
+    self.sources[self.current]:pan(pan + 0.05)
   end
-]]--
 end
 
 function Main:update(_)
@@ -67,7 +79,7 @@ function Main:render(_)
 
   local x, y = 0, 0
   for index, source in ipairs(self.sources) do
-    local text = string.format("[%d] %.3f .3f", index, source:pan(), source:gain())
+    local text = string.format("[%d] %.3f %.3f", index, source:pan(), source:gain())
     local _, th = self.font:size(text)
     self.font:write(text, x, y)
     y = y + th
