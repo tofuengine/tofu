@@ -51,6 +51,10 @@
   * trying always-streaming data. will some buffering be needed? new data could be pulled in the update call.
   * don't need to write a custom SRC, miniaudio has it all.
     * definitely buffering will be needed.
+  * hail to valgrind, was about to rewrite everything but thanks to it (once) again I found a very small distraction that caused the engine to go crazy.
+  * OMG!!! it works!!!
+    * need to cap the gain/pan values, however
+    * also, it seems really heavy on the performances, should the device be started only when required?
 
 
 ```java
