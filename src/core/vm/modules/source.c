@@ -127,7 +127,7 @@ static int source_new(lua_State *L)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p opened for file `%s`", handle, file);
 
-    drwav *wav = malloc(sizeof(wav));
+    drwav *wav = malloc(sizeof(drwav));
     if (!wav) {
         FS_close(handle);
         return luaL_error(L, "can't allocate `wav` structure");
@@ -136,7 +136,7 @@ static int source_new(lua_State *L)
     if (!result) {
         free(wav);
         FS_close(handle);
-        return luaL_error(L, "can't initialize `wav` file `%s`", file);
+        return luaL_error(L, "can't initialize `wav` structure for file `%s`", file);
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "`wav` structure %p allocated ad initialized", wav);
 
