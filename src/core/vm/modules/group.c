@@ -57,13 +57,15 @@ static luaX_Script _group_script = { (const char *)_group_lua, sizeof(_group_lua
 int group_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, &_group_script, _group_functions, NULL, nup, NULL);
+    return luaX_newmodule(L, &_group_script, _group_functions, NULL, nup, META_TABLE);
 }
 
 static int group_new(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
+
+    // TODO: should the default group be tagged in a particular way? Should it be pre-created?
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
@@ -111,7 +113,19 @@ static int group_gc(lua_State *L)
     return 0;
 }
 
-static int group_gain(lua_State *L)
+static int group_gain1(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    Group_Object_t *self = (Group_Object_t *)LUAX_USERDATA(L, 1);
+
+    lua_pushnumber(L, self->group->gain);
+
+    return 1;
+}
+
+static int group_gain2(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -125,7 +139,27 @@ static int group_gain(lua_State *L)
     return 0;
 }
 
-static int group_pan(lua_State *L)
+static int group_gain(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, group_gain1)
+        LUAX_OVERLOAD_ARITY(2, group_gain2)
+    LUAX_OVERLOAD_END
+}
+
+static int group_pan1(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    Group_Object_t *self = (Group_Object_t *)LUAX_USERDATA(L, 1);
+
+    lua_pushnumber(L, self->group->pan);
+
+    return 1;
+}
+
+static int group_pan2(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -137,6 +171,14 @@ static int group_pan(lua_State *L)
     SL_group_pan(self->group, pan);
 
     return 0;
+}
+
+static int group_pan(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, group_pan1)
+        LUAX_OVERLOAD_ARITY(2, group_pan2)
+    LUAX_OVERLOAD_END
 }
 
 static int group_reset(lua_State *L)

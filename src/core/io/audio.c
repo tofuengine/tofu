@@ -46,7 +46,8 @@ static void _log_callback(ma_context *context, ma_device *device, ma_uint32 log_
 
 static void _data_callback(ma_device *device, void *output, const void *input, ma_uint32 frame_count)
 {
-//    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d frames requested for instance %p", frame_count, audio);
+//    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d frames requested for device %p", frame_count, device);
+
     Audio_t *audio = (Audio_t *)device->pUserData;
 
     float *to_device = (float *)output;

@@ -25,13 +25,15 @@
 #ifndef __SL_SOURCE_H__
 #define __SL_SOURCE_H__
 
+#include <miniaudio/miniaudio.h>
+
 #include "common.h"
 
 #include <stdbool.h>
 #include <stddef.h>
 
 // TODO: implement both from memory and from file.
-typedef size_t (*SL_Source_Read_Callback_t)(void *user_data, float *output, size_t frames_requested);
+typedef size_t (*SL_Source_Read_Callback_t)(void *user_data, void *output, size_t frames_requested);
 typedef void (*SL_Source_Seek_Callback_t)(void *user_data, size_t frame_offset);
 
 typedef enum _SL_Source_States_t {
@@ -46,6 +48,8 @@ typedef struct _SL_Source_t {
     SL_Source_Seek_Callback_t on_seek;
     void *user_data;
 
+    ma_data_converter converter;
+
     bool looped;
     float delay; // ???
     float gain;
@@ -57,7 +61,7 @@ typedef struct _SL_Source_t {
     SL_Mix_t mix;
 } SL_Source_t;
 
-extern SL_Source_t *SL_source_create(SL_Source_Read_Callback_t on_read, SL_Source_Seek_Callback_t on_seek, void *user_data);
+extern SL_Source_t *SL_source_create(SL_Source_Read_Callback_t on_read, SL_Source_Seek_Callback_t on_seek, void *user_data, ma_format format, ma_uint32 sample_rate, ma_uint32 channels);
 extern void SL_source_destroy(SL_Source_t *source);
 
 extern void SL_source_looped(SL_Source_t *source, bool looped);
@@ -71,6 +75,6 @@ extern void SL_source_stop(SL_Source_t *source);
 extern void SL_source_rewind(SL_Source_t *source);
 
 extern void SL_source_update(SL_Source_t *source, float delta_time);
-extern size_t SL_source_process(SL_Source_t *source, float *output, size_t frames_requested, SL_Mix_t mix);
+extern void SL_source_process(SL_Source_t *source, float *output, size_t frames_requested, SL_Mix_t mix);
 
 #endif  /* __SL_SOURCE_H__ */

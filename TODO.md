@@ -49,6 +49,8 @@
     * WAV will be the format of choice, for the moment, since the `dr_wav` library integrates well with my FS abstraction (`std_vorbis` will
       require some adaptation)
   * trying always-streaming data. will some buffering be needed? new data could be pulled in the update call.
+  * don't need to write a custom SRC, miniaudio has it all.
+    * definitely buffering will be needed.
 
 
 ```java

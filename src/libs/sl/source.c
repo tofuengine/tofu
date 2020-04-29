@@ -56,7 +56,7 @@ static inline SL_Mix_t _0db_linear_mix(float balance, float gain)
 #endif
 }
 
-SL_Source_t *SL_source_create(SL_Source_Read_Callback_t on_read, SL_Source_Seek_Callback_t on_seek, void *user_data)
+SL_Source_t *SL_source_create(SL_Source_Read_Callback_t on_read, SL_Source_Seek_Callback_t on_seek, void *user_data, ma_format format, ma_uint32 sample_rate, ma_uint32 channels)
 {
     SL_Source_t *source = malloc(sizeof(SL_Source_t));
     if (!source) {
@@ -76,6 +76,15 @@ SL_Source_t *SL_source_create(SL_Source_Read_Callback_t on_read, SL_Source_Seek_
             .state = SL_SOURCE_STATE_STOPPED,
             .mix = _0db_linear_mix(1.0f, 0.0f)
         };
+
+    ma_data_converter_config config = ma_data_converter_config_init(format, ma_format_f32, channels, SL_CHANNELS_PER_FRAME, sample_rate, SL_FRAMES_PER_SECOND);
+//    config.resampling.allowDynamicSampleRate = true;        // Required for pitch shifting
+    ma_result result = ma_data_converter_init(&config, &source->converter);
+    if (result != MA_SUCCESS) {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "failed to create source data conversion");
+        free(source);
+        return NULL;
+    }
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source created");
     return source;
@@ -141,36 +150,101 @@ void SL_source_update(SL_Source_t *source, float delta_time) // FIXME: useless?
 {
     source->time = delta_time;
 }
-
-size_t SL_source_process(SL_Source_t *source, float *output, size_t frames_requested)
+#if 0
+// Reads audio data from an AudioBuffer object in device format. Returned data will be in a format appropriate for mixing.
+static ma_uint32 ReadAudioBufferFramesInMixingFormat(AudioBuffer *audioBuffer, float *framesOut, ma_uint32 frameCount)
 {
-    if (source->state == SL_SOURCE_STATE_PLAYING) {
-        return 0;
-    }
+    // What's going on here is that we're continuously converting data from the AudioBuffer's internal format to the mixing format, which 
+    // should be defined by the output format of the data converter. We do this until frameCount frames have been output. The important
+    // detail to remember here is that we never, ever attempt to read more input data than is required for the specified number of output
+    // frames. This can be achieved with ma_data_converter_get_required_input_frame_count().
+    ma_uint8 inputBuffer[4096];
+    ma_uint32 inputBufferFrameCap = sizeof(inputBuffer) / ma_get_bytes_per_frame(audioBuffer->converter.config.formatIn, audioBuffer->converter.config.channelsIn);
 
-#define SL_DEVICE_CHANNELS  2
-    float buffer[frames_requested * SL_DEVICE_CHANNELS];
+    ma_uint32 totalOutputFramesProcessed = 0;
+    while (totalOutputFramesProcessed < frameCount)
+    {
+        ma_uint64 outputFramesToProcessThisIteration = frameCount - totalOutputFramesProcessed;
 
-    size_t frames_remaining = frames_requested;
-    size_t frames_so_far = 0;
-    while (frames_remaining > 0) { // Read as much data as possible, filling the buffer and eventually looping!
-        size_t frames_read = source->on_read(source->user_data, buffer, frames_remaining);
-
-        float *sptr = buffer;
-        float *dptr = output;
-        for (size_t i = 0; i < frames_read; ++i) { // Apply panning and gain to the data.
-            *(dptr++) = *(sptr++) * source->mix.left;
-            *(dptr++) = *(sptr++) * source->mix.right;
+        ma_uint64 inputFramesToProcessThisIteration = ma_data_converter_get_required_input_frame_count(&audioBuffer->converter, outputFramesToProcessThisIteration);
+        if (inputFramesToProcessThisIteration > inputBufferFrameCap)
+        {
+            inputFramesToProcessThisIteration = inputBufferFrameCap;
         }
 
-        frames_so_far += frames_read;
+        float *runningFramesOut = framesOut + (totalOutputFramesProcessed * audioBuffer->converter.config.channelsOut);
+
+        /* At this point we can convert the data to our mixing format. */
+        ma_uint64 inputFramesProcessedThisIteration = ReadAudioBufferFramesInInternalFormat(audioBuffer, inputBuffer, (ma_uint32)inputFramesToProcessThisIteration);    /* Safe cast. */
+        ma_uint64 outputFramesProcessedThisIteration = outputFramesToProcessThisIteration;
+        ma_data_converter_process_pcm_frames(&audioBuffer->converter, inputBuffer, &inputFramesProcessedThisIteration, runningFramesOut, &outputFramesProcessedThisIteration);
+        
+        totalOutputFramesProcessed += (ma_uint32)outputFramesProcessedThisIteration; /* Safe cast. */
+
+        if (inputFramesProcessedThisIteration < inputFramesToProcessThisIteration)
+        {
+            break;  /* Ran out of input data. */
+        }
+
+        /* This should never be hit, but will add it here for safety. Ensures we get out of the loop when no input nor output frames are processed. */
+        if (inputFramesProcessedThisIteration == 0 && outputFramesProcessedThisIteration == 0)
+        {
+            break;
+        }
+    }
+
+    return totalOutputFramesProcessed;
+}
+#endif
+void SL_source_process(SL_Source_t *source, float *output, size_t frames_requested, SL_Mix_t mix)
+{
+    if (source->state == SL_SOURCE_STATE_PLAYING) {
+        return;
+    }
+
+    size_t frames_processed = 0;
+
+    ma_uint8 input[1024];
+    ma_uint32 input_frame_cap = sizeof(input) / ma_get_bytes_per_frame(source->converter.config.formatIn, source->converter.config.channelsIn);
+
+    float buffer[frames_requested * SL_CHANNELS_PER_FRAME];
+    float *cursor = buffer;
+
+    size_t frames_remaining = frames_requested;
+    while (frames_remaining > 0) { // Read as much data as possible, filling the buffer and eventually looping!
+        ma_uint64 frames_to_read = ma_data_converter_get_required_input_frame_count(&source->converter, frames_remaining);
+        if (frames_to_read > input_frame_cap) {
+            frames_to_read = input_frame_cap;
+        }
+
+        size_t frames_read = source->on_read(source->user_data, input, frames_to_read);
+
+        ma_uint64 frames_input = frames_read;
+        ma_uint64 frames_output = frames_remaining;
+        ma_data_converter_process_pcm_frames(&source->converter, input, &frames_input, cursor, &frames_output);
+
+        size_t frames_converted = (size_t)frames_output;
+
+        frames_processed += frames_converted;
         if (frames_read < frames_remaining) { // Less than requested, we reached end-of-data!
             if (!source->looped) {
                 break;
             }
             source->on_seek(source->user_data, 0);
         }
-        frames_remaining -= frames_read;
+        frames_remaining -= frames_converted;
+
+        cursor += frames_converted * SL_CHANNELS_PER_FRAME;
     }
-    return frames_so_far;
+
+    float *sptr = buffer; // Apply panning and gain to the data.
+    float *dptr = output;
+
+    const float left = source->mix.left * mix.left;
+    const float right = source->mix.right * mix.right;
+
+    for (size_t i = 0; i < frames_processed; ++i) {
+        *(dptr++) = *(sptr++) * left;
+        *(dptr++) = *(sptr++) * right;
+    }
 }

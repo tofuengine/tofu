@@ -99,7 +99,7 @@ void SL_group_process(SL_Group_t *group, float *output, size_t frames_requested)
 {
     size_t count = arrlen(group->sources);
     for (int i = count - 1; i >= 0; --i) {
-        size_t frames_processed = SL_source_process(group->sources[i], output, frames_requested, group->mix);
+        SL_source_process(group->sources[i], output, frames_requested, group->mix);
     }
 }
 

@@ -152,6 +152,8 @@ function Tofu:call(func, ...)
   local success, message = pcall(func, ...)
   if not success then
     System.error(message)
+    -- TODO: should print also a traceback.
+--    System.error(debug.traceback())
     self:switch_to("error")
   end
 end

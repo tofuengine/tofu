@@ -64,7 +64,7 @@ static const struct luaL_Reg _source_functions[] = {
 int source_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, NULL, _source_functions, NULL, nup, NULL);
+    return luaX_newmodule(L, NULL, _source_functions, NULL, nup, META_TABLE);
 }
 
 static size_t _drwav_read(void *user_data, void *buffer, size_t bytes_to_read)
@@ -85,16 +85,28 @@ static drwav_bool32 _drwav_seek(void *user_data, int offset, drwav_seek_origin o
     return true;
 }
 
-static size_t _source_read(void *user_data, float *output, size_t frames_requested)
+static size_t _source_read(void *user_data, void *output, size_t frames_requested)
 {
     drwav *wav = (drwav *)user_data;
-    return drwav_read_pcm_frames_f32(wav, frames_requested, output); // TODO: convert frame rate and channels.
+    return drwav_read_pcm_frames(wav, frames_requested, output); // Read from the internal format w/o conversion.
 }
 
 static void _source_seek(void *user_data, size_t frame_offset)
 {
     drwav *wav = (drwav *)user_data;
     drwav_seek_to_pcm_frame(wav, frame_offset);
+}
+
+static inline ma_format _to_format(drwav_uint16 bits_per_sample)
+{
+    if (bits_per_sample == 8) {
+        return ma_format_u8;
+    } else
+    if (bits_per_sample == 16) {
+        return ma_format_s16;
+    } else {
+        return ma_format_unknown;
+    }
 }
 
 static int source_new(lua_State *L)
@@ -120,10 +132,15 @@ static int source_new(lua_State *L)
         FS_close(handle);
         return luaL_error(L, "can't allocate `wav` structure");
     }
-    drwav_init(wav, _drwav_read, _drwav_seek, (void *)handle, NULL);
+    drwav_bool32 result = drwav_init(wav, _drwav_read, _drwav_seek, (void *)handle, NULL);
+    if (!result) {
+        free(wav);
+        FS_close(handle);
+        return luaL_error(L, "can't initialize `wav` file `%s`", file);
+    }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "`wav` structure %p allocated ad initialized", wav);
 
-    SL_Source_t *source = SL_source_create(_source_read, _source_seek, (void *)wav);
+    SL_Source_t *source = SL_source_create(_source_read, _source_seek, (void *)wav, _to_format(wav->bitsPerSample), wav->sampleRate, wav->channels);
     if (!source) {
         free(wav);
         FS_close(handle);
@@ -186,7 +203,19 @@ static int source_gc(lua_State *L)
     return 0;
 }
 
-static int source_looped(lua_State *L)
+static int source_looped1(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
+
+    lua_pushboolean(L, self->source->looped);
+
+    return 1;
+}
+
+static int source_looped2(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -200,7 +229,27 @@ static int source_looped(lua_State *L)
     return 0;
 }
 
-static int source_gain(lua_State *L)
+static int source_looped(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, source_looped1)
+        LUAX_OVERLOAD_ARITY(2, source_looped2)
+    LUAX_OVERLOAD_END
+}
+
+static int source_gain1(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
+
+    lua_pushnumber(L, self->source->gain);
+
+    return 1;
+}
+
+static int source_gain2(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -214,7 +263,27 @@ static int source_gain(lua_State *L)
     return 0;
 }
 
-static int source_pan(lua_State *L)
+static int source_gain(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, source_gain1)
+        LUAX_OVERLOAD_ARITY(2, source_gain2)
+    LUAX_OVERLOAD_END
+}
+
+static int source_pan1(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
+
+    lua_pushnumber(L, self->source->pan);
+
+    return 1;
+}
+
+static int source_pan2(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -228,7 +297,27 @@ static int source_pan(lua_State *L)
     return 0;
 }
 
-static int source_speed(lua_State *L)
+static int source_pan(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, source_pan1)
+        LUAX_OVERLOAD_ARITY(2, source_pan2)
+    LUAX_OVERLOAD_END
+}
+
+static int source_speed1(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
+
+    lua_pushnumber(L, self->source->speed);
+
+    return 1;
+}
+
+static int source_speed2(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -242,7 +331,27 @@ static int source_speed(lua_State *L)
     return 0;
 }
 
-static int source_delay(lua_State *L)
+static int source_speed(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, source_speed1)
+        LUAX_OVERLOAD_ARITY(2, source_speed2)
+    LUAX_OVERLOAD_END
+}
+
+static int source_delay1(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
+
+    lua_pushnumber(L, self->source->delay);
+
+    return 1;
+}
+
+static int source_delay2(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -255,6 +364,16 @@ static int source_delay(lua_State *L)
 
     return 0;
 }
+
+static int source_delay(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, source_delay1)
+        LUAX_OVERLOAD_ARITY(2, source_delay2)
+    LUAX_OVERLOAD_END
+}
+
+// TODO: add `is-playing()` or `state()` observer.
 
 static int source_play(lua_State *L)
 {
