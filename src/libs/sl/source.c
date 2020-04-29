@@ -74,7 +74,7 @@ SL_Source_t *SL_source_create(SL_Source_Read_Callback_t on_read, SL_Source_Seek_
             .speed = 1.0f,
             .time = 0.0f,
             .state = SL_SOURCE_STATE_STOPPED,
-            .mix = _0db_linear_mix(1.0f, 0.0f)
+            .mix = _0db_linear_mix(0.0f, 1.0f)
         };
 
     ma_data_converter_config config = ma_data_converter_config_init(format, ma_format_f32, channels, SL_CHANNELS_PER_FRAME, sample_rate, SL_FRAMES_PER_SECOND);
@@ -226,7 +226,7 @@ void SL_source_process(SL_Source_t *source, float *output, size_t frames_request
         size_t frames_converted = (size_t)frames_output;
 
         frames_processed += frames_converted;
-        if (frames_read < frames_remaining) { // Less than requested, we reached end-of-data!
+        if (frames_read < frames_to_read) { // Less than requested, we reached end-of-data!
             if (!source->looped) {
                 break;
             }

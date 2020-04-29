@@ -67,7 +67,7 @@ SL_Group_t *SL_group_create(void)
             .gain = 1.0f,
             .pan = 0.0f,
             .sources = NULL,
-            .mix = _0db_linear_mix(1.0f, 0.0f)
+            .mix = _0db_linear_mix(0.0f, 1.0f)
         };
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "group created");
