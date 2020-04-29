@@ -198,6 +198,11 @@ helix: $(TARGET)
 	@$(ANALYZER) $(AFLAGS) ./demos/helix
 	@./$(TARGET) ./demos/helix
 
+mixer: $(TARGET)
+	@echo "Launching *mixer* application!"
+	@$(ANALYZER) $(AFLAGS) ./demos/mixer
+	@./$(TARGET) ./demos/mixer
+
 demo: $(TARGET)
 	@echo "Launching *$(DEMO)* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/$(DEMO)
