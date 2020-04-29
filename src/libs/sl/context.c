@@ -60,7 +60,7 @@ void SL_context_destroy(SL_Context_t *context)
 
 void SL_context_update(SL_Context_t *context, float delta_time)
 {
-    size_t count = arrlen(context->groups); // TODO: iterate diffrently with forward direction?
+    size_t count = arrlen(context->groups); // TODO: iterate differently with forward direction?
     for (int i = count - 1; i >= 0; --i) {
         SL_group_update(context->groups[i], delta_time);
     }

@@ -107,24 +107,24 @@ void SL_source_looped(SL_Source_t *source, bool looped)
 
 void SL_source_delay(SL_Source_t *source, float delay)
 {
-    source->delay = delay;
+    source->delay = fmaxf(0.0f, delay);
 }
 
 void SL_source_gain(SL_Source_t *source, float gain)
 {
-    source->gain = gain;
+    source->gain = fmaxf(0.0f, gain);
     source->mix = _0db_linear_mix(source->pan, source->gain);
 }
 
 void SL_source_pan(SL_Source_t *source, float pan)
 {
-    source->pan = pan;
+    source->pan = fmaxf(-1.0f, fminf(pan, 1.0f));
     source->mix = _0db_linear_mix(source->pan, source->gain);
 }
 
 void SL_source_speed(SL_Source_t *source, float speed)
 {
-    source->speed = speed;
+    source->speed = fmaxf(0.0f, speed);
 }
 
 void SL_source_play(SL_Source_t *source)

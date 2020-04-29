@@ -115,13 +115,13 @@ void SL_group_reset(SL_Group_t *group)
 
 void SL_group_gain(SL_Group_t *group, float gain)
 {
-    group->gain = gain;
+    group->gain = fmaxf(0.0f, gain);
     group->mix = _0db_linear_mix(group->pan, group->gain);
 }
 
 void SL_group_pan(SL_Group_t *group, float pan)
 {
-    group->pan = pan;
+    group->pan = fmaxf(-1.0f, fminf(pan, 1.0f));
     group->mix = _0db_linear_mix(group->pan, group->gain);
 }
 
