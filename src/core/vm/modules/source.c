@@ -46,6 +46,7 @@ static int source_delay(lua_State *L);
 static int source_play(lua_State *L);
 static int source_stop(lua_State *L);
 static int source_rewind(lua_State *L);
+static int source_is_playing(lua_State *L);
 
 static const struct luaL_Reg _source_functions[] = {
     { "new", source_new },
@@ -58,6 +59,7 @@ static const struct luaL_Reg _source_functions[] = {
     { "play", source_play },
     { "stop", source_stop },
     { "rewind", source_rewind },
+    { "is_playing", source_is_playing },
     { NULL, NULL }
 };
 
@@ -400,4 +402,16 @@ static int source_rewind(lua_State *L)
     SL_source_rewind(self->source);
 
     return 0;
+}
+
+static int source_is_playing(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
+
+    lua_pushboolean(L, self->source->state == SL_SOURCE_STATE_PLAYING);
+
+    return 1;
 }
