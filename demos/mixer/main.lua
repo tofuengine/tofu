@@ -42,6 +42,8 @@ function Main:__ctor()
       Source.new("assets/48000_2ch.wav"),
     }
   self.sources[1]:looped(true)
+
+  self.current = 1
 end
 
 function Main:input()
