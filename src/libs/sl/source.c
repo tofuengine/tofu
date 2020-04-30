@@ -68,7 +68,6 @@ SL_Source_t *SL_source_create(SL_Source_Read_Callback_t on_read, SL_Source_Seek_
             .on_seek = on_seek,
             .user_data = user_data,
             .looped = false,
-            .delay = 0.0f,
             .gain = 1.0,
             .pan = 0.0f,
             .speed = 1.0f,
@@ -78,7 +77,8 @@ SL_Source_t *SL_source_create(SL_Source_Read_Callback_t on_read, SL_Source_Seek_
         };
 
     ma_data_converter_config config = ma_data_converter_config_init(format, ma_format_f32, channels, SL_CHANNELS_PER_FRAME, sample_rate, SL_FRAMES_PER_SECOND);
-//    config.resampling.allowDynamicSampleRate = true;        // Required for pitch shifting
+    config.resampling.allowDynamicSampleRate = true; // required for speed throttling
+
     ma_result result = ma_data_converter_init(&config, &source->converter);
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "failed to create source data conversion");
@@ -117,9 +117,30 @@ void SL_source_pan(SL_Source_t *source, float pan)
     source->mix = _0db_linear_mix(source->pan, source->gain);
 }
 
+#if 0
+// Set pitch for an audio buffer
+void SetAudioBufferPitch(AudioBuffer *buffer, float pitch)
+{
+    if (buffer != NULL)
+    {
+        float pitchMul = pitch/buffer->pitch;
+
+        // Pitching is just an adjustment of the sample rate.
+        // Note that this changes the duration of the sound:
+        //  - higher pitches will make the sound faster
+        //  - lower pitches make it slower
+        ma_uint32 newOutputSampleRate = (ma_uint32)((float)buffer->converter.config.sampleRateOut/pitchMul);
+        buffer->pitch *= (float)buffer->converter.config.sampleRateOut/newOutputSampleRate;
+
+        ma_data_converter_set_rate(&buffer->converter, buffer->converter.config.sampleRateIn, newOutputSampleRate);
+    }
+}
+#endif
 void SL_source_speed(SL_Source_t *source, float speed)
 {
     source->speed = fmaxf(0.0f, speed);
+    ma_uint32 sample_rate = (ma_uint32)((float)source->converter.config.sampleRateOut * source->speed);
+    ma_data_converter_set_rate(&source->converter, source->converter.config.sampleRateIn, sample_rate);
 }
 
 void SL_source_play(SL_Source_t *source)
@@ -141,9 +162,10 @@ void SL_source_rewind(SL_Source_t *source)
     source->on_seek(source->user_data, 0);
 }
 
-void SL_source_update(SL_Source_t *source, float delta_time) // FIXME: useless?
+void SL_source_update(SL_Source_t *source, float delta_time)
 {
-    source->time = delta_time;
+    // FIXME: useless? perhaps useful in the future for some kind of time-related effect?
+    source->time += delta_time;
 }
 #if 0
 // Reads audio data from an AudioBuffer object in device format. Returned data will be in a format appropriate for mixing.
