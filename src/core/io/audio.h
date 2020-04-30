@@ -52,10 +52,9 @@ typedef struct _Audio_t {
 
 extern bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration);
 extern void Audio_terminate(Audio_t *audio);
-//extern void Audio_halt(Audio_t *audio);
-//extern void Audio_reset(Audio_t *audio);
 extern void Audio_volume(Audio_t *audio, float volume);
 extern void Audio_update(Audio_t *audio, float delta_time);
+extern void Audio_stop(Audio_t *audio);
 
 extern SL_Context_t *Audio_lock(Audio_t *audio);
 extern void Audio_unlock(Audio_t *audio, SL_Context_t *context);

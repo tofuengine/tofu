@@ -157,6 +157,11 @@ void Audio_update(Audio_t *audio, float delta_time)
     SL_context_update(audio->sl, delta_time);
 }
 
+void Audio_stop(Audio_t *audio)
+{
+    SL_context_stop(audio->sl);
+}
+
 SL_Context_t *Audio_lock(Audio_t *audio)
 {
     ma_mutex_lock(&audio->lock);
