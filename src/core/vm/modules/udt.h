@@ -97,15 +97,9 @@ typedef struct _Grid_Object_t {
     size_t data_size;
 } Grid_Object_t;
 
-typedef struct _Group_Object_t {
-    SL_Group_t *group;
-} Group_Object_t;
-
 typedef struct _Source_Object_t {
-    SL_Group_t *group; // i.e. the owner (to be notified when a sound is GCed)
-    luaX_Reference group_reference;
     File_System_Handle_t *handle;
-    drwav *wav;
+    drwav *wav; // TODO: create a union of handles.
     SL_Source_t *source;
 } Source_Object_t;
 

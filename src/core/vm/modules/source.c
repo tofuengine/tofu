@@ -113,10 +113,8 @@ static int source_new(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     const char *file = LUAX_STRING(L, 1);
-    Group_Object_t *group = (Group_Object_t *)LUAX_USERDATA(L, 2);
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
     File_System_t *file_system = (File_System_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
@@ -148,20 +146,18 @@ static int source_new(lua_State *L)
     }
 
     SL_Context_t *context = Audio_lock(audio);
-    SL_group_track(group->group, source);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p tracked for group %p (context %p)", source, group->group, context);
+    SL_context_track(context, source);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p tracked for context %p", source, context);
     Audio_unlock(audio, context);
 
     Source_Object_t *self = (Source_Object_t *)lua_newuserdata(L, sizeof(Source_Object_t));
     *self = (Source_Object_t){
-            .group = group->group,
-            .group_reference = luaX_ref(L, 2),
             .handle = handle,
             .wav = wav,
             .source = source
         };
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p allocated w/ group %p", self, group);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p allocated", self);
 
     luaL_setmetatable(L, META_TABLE);
 
@@ -178,14 +174,9 @@ static int source_gc(lua_State *L)
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
     SL_Context_t *context = Audio_lock(audio);
-    SL_group_untrack(self->group, self->source);
+    SL_context_untrack(context, self->source);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p untracked", self->source);
     Audio_unlock(audio, context);
-
-    if (self->group_reference != LUAX_REFERENCE_NIL) { // TODO: handle default group case?
-        luaX_unref(L, self->group_reference);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "group reference #%d released", self->group_reference);
-    }
 
     SL_source_destroy(self->source);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p destroyed", self->source);

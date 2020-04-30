@@ -27,7 +27,6 @@
 
 #include "common.h"
 #include "context.h"
-#include "group.h"
 #include "source.h"
 
 #endif  /* __SL_H__ */

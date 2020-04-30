@@ -196,7 +196,7 @@ static ma_uint32 ReadAudioBufferFramesInMixingFormat(AudioBuffer *audioBuffer, f
     return totalOutputFramesProcessed;
 }
 #endif
-void SL_source_process(SL_Source_t *source, float *output, size_t frames_requested, SL_Mix_t mix)
+void SL_source_process(SL_Source_t *source, float *output, size_t frames_requested)
 {
     if (source->state != SL_SOURCE_STATE_PLAYING) {
         return;
@@ -241,8 +241,8 @@ void SL_source_process(SL_Source_t *source, float *output, size_t frames_request
     float *sptr = buffer; // Apply panning and gain to the data.
     float *dptr = output;
 
-    const float left = source->mix.left * mix.left;
-    const float right = source->mix.right * mix.right;
+    const float left = source->mix.left;
+    const float right = source->mix.right;
 
     for (size_t i = 0; i < frames_processed; ++i) {
         *(dptr++) = *(sptr++) * left;
