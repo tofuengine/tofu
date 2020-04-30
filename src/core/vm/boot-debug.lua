@@ -149,11 +149,9 @@ function Tofu:call(func, ...)
   if next(self.queue) then
     return
   end
-  local success, message = pcall(func, ...)
+  local success, message = xpcall(func, debug.traceback, ...)
   if not success then
     System.error(message)
-    -- TODO: should print also a traceback.
---    System.error(debug.traceback())
     self:switch_to("error")
   end
 end
