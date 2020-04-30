@@ -37,6 +37,10 @@
   #define M_PI_2    1.57079632679489661923f
 #endif
 
+// Being the speed implemented by dynamic resampling, there's an intrinsic theoretical limit given by the ratio
+// between the minimum (8KHz) and the maximum (384KHz) supported sample rates.
+#define MIN_SPEED_VALUE ((float)MA_MIN_SAMPLE_RATE / (float)MA_MAX_SAMPLE_RATE)
+
 #define LOG_CONTEXT "sl"
 
 static inline SL_Mix_t _0db_linear_mix(float balance, float gain)
@@ -138,8 +142,9 @@ void SetAudioBufferPitch(AudioBuffer *buffer, float pitch)
 #endif
 void SL_source_speed(SL_Source_t *source, float speed)
 {
-    source->speed = fmaxf(0.0f, speed);
-    ma_uint32 sample_rate = (ma_uint32)((float)source->converter.config.sampleRateOut * source->speed);
+    source->speed = fmaxf(MIN_SPEED_VALUE, speed);
+    const float factor = 1.0f / source->speed; // invert the speed into a factor, lower sample rate for faster/higher samples.
+    ma_uint32 sample_rate = (ma_uint32)((float)source->converter.config.sampleRateOut * factor);
     ma_data_converter_set_rate(&source->converter, source->converter.config.sampleRateIn, sample_rate);
 }
 
