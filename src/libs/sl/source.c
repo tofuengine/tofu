@@ -105,11 +105,6 @@ void SL_source_looped(SL_Source_t *source, bool looped)
     source->looped = looped;
 }
 
-void SL_source_delay(SL_Source_t *source, float delay)
-{
-    source->delay = fmaxf(0.0f, delay);
-}
-
 void SL_source_gain(SL_Source_t *source, float gain)
 {
     source->gain = fmaxf(0.0f, gain);

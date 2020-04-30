@@ -42,7 +42,6 @@ static int source_looped(lua_State *L);
 static int source_gain(lua_State *L);
 static int source_pan(lua_State *L);
 static int source_speed(lua_State *L);
-static int source_delay(lua_State *L);
 static int source_play(lua_State *L);
 static int source_stop(lua_State *L);
 static int source_rewind(lua_State *L);
@@ -55,7 +54,6 @@ static const struct luaL_Reg _source_functions[] = {
     { "gain", source_gain },
     { "pan", source_pan },
     { "speed", source_speed },
-    { "delay", source_delay },
     { "play", source_play },
     { "stop", source_stop },
     { "rewind", source_rewind },
@@ -331,42 +329,6 @@ static int source_speed(lua_State *L)
         LUAX_OVERLOAD_ARITY(2, source_speed2)
     LUAX_OVERLOAD_END
 }
-
-static int source_delay1(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-    LUAX_SIGNATURE_END
-    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
-
-    lua_pushnumber(L, self->source->delay);
-
-    return 1;
-}
-
-static int source_delay2(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
-    float delay = LUAX_NUMBER(L, 2);
-
-    SL_source_delay(self->source, delay);
-
-    return 0;
-}
-
-static int source_delay(lua_State *L)
-{
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, source_delay1)
-        LUAX_OVERLOAD_ARITY(2, source_delay2)
-    LUAX_OVERLOAD_END
-}
-
-// TODO: add `is-playing()` or `state()` observer.
 
 static int source_play(lua_State *L)
 {

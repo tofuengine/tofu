@@ -51,7 +51,6 @@ typedef struct _SL_Source_t {
     ma_data_converter converter;
 
     bool looped;
-    float delay; // ???
     float gain;
     float pan;
     float speed;
@@ -65,7 +64,6 @@ extern SL_Source_t *SL_source_create(SL_Source_Read_Callback_t on_read, SL_Sourc
 extern void SL_source_destroy(SL_Source_t *source);
 
 extern void SL_source_looped(SL_Source_t *source, bool looped);
-extern void SL_source_delay(SL_Source_t *source, float delay);
 extern void SL_source_gain(SL_Source_t *source, float gain);
 extern void SL_source_pan(SL_Source_t *source, float pan);
 extern void SL_source_speed(SL_Source_t *source, float speed);
