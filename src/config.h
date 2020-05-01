@@ -54,6 +54,7 @@
 #undef  __DEBUG_SHADER_CALLS__
 #define __DEBUG_GARBAGE_COLLECTOR__
 #define __VM_USE_CUSTOM_TRACEBACK__
+#define __FS_SUPPORT_MOUNT_OVERRIDE__
 #undef  __GL_MASK_SUPPORT__
 
 // In release build, disable VM calls debug for faster execution.

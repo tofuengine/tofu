@@ -25,7 +25,7 @@
 #ifndef __FS_H__
 #define __FS_H__
 
-#include <core/platform.h>
+#include <platform.h>
 
 #include <stdbool.h>
 #include <stddef.h>

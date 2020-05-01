@@ -24,12 +24,13 @@
 
 #include "fs.h"
 
+#include <config.h>
+#include <libs/log.h>
+#include <libs/stb.h>
+
 #include "internals.h"
 #include "pak.h"
 #include "std.h"
-
-#include <libs/log.h>
-#include <libs/stb.h>
 
 #include <dirent.h>
 #include <stdint.h>
@@ -41,7 +42,7 @@
   #define realpath(N,R) _fullpath((R),(N),PATH_MAX)
 #endif
 
-static File_System_Mount_t *_mount(const char *path)
+static inline File_System_Mount_t *_mount(const char *path)
 {
     if (std_is_valid(path)) {
         return std_mount(path);
@@ -53,7 +54,7 @@ static File_System_Mount_t *_mount(const char *path)
     }
 }
 
-static void _unmount(File_System_Mount_t *mount)
+static inline void _unmount(File_System_Mount_t *mount)
 {
     ((Mount_t *)mount)->vtable.dtor(mount);
     free(mount);
@@ -67,12 +68,16 @@ static bool _attach(File_System_t *file_system, const char *path)
         return false;
     }
 
+#ifdef __FS_SUPPORT_MOUNT_OVERRIDE__
+    arrins(file_system->mounts, 0, mount); // Mount point pushed as head, to gain priority over existing ones.
+#else
     arrpush(file_system->mounts, mount);
+#endif
 
     return true;
 }
 
-bool FS_initialize(File_System_t *file_system, const char *base_path)
+bool FS_initialize(File_System_t *file_system, const char *base_path) // TODO: should the FS struct be allocated? Or no struct?
 {
     *file_system = (File_System_t){ 0 };
 
@@ -108,9 +113,9 @@ bool FS_initialize(File_System_t *file_system, const char *base_path)
 
 void FS_terminate(File_System_t *file_system)
 {
-    size_t count = arrlen(file_system->mounts);
-    for (int i = count - 1; i >= 0; --i) {
-        File_System_Mount_t *mount = file_system->mounts[i];
+    File_System_Mount_t **current = file_system->mounts;
+    for (int count = arrlen(file_system->mounts); count; --count) {
+        File_System_Mount_t *mount = *(current++);
         _unmount(mount);
     }
 
@@ -142,9 +147,9 @@ File_System_Handle_t *FS_locate_and_open(const File_System_t *file_system, const
 
 File_System_Mount_t *FS_locate(const File_System_t *file_system, const char *file)
 {
-    size_t count = arrlen(file_system->mounts);
-    for (int i = count - 1; i >= 0; --i) {
-        File_System_Mount_t *mount = file_system->mounts[i];
+    File_System_Mount_t **current = file_system->mounts;
+    for (int count = arrlen(file_system->mounts); count; --count) {
+        File_System_Mount_t *mount = *(current++);
         if (((Mount_t *)mount)->vtable.contains(mount, file)) {
             return mount;
         }
