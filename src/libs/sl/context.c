@@ -60,24 +60,26 @@ void SL_context_destroy(SL_Context_t *context)
 
 void SL_context_update(SL_Context_t *context, float delta_time)
 {
-    size_t count = arrlen(context->sources); // TODO: iterate differently with forward direction?
-    for (int i = count - 1; i >= 0; --i) {
-        SL_source_update(context->sources[i], delta_time);
+    SL_Source_t **current = context->sources;
+    for (int count = arrlen(context->sources); count; --count) {
+        SL_Source_t *source = *(current++);
+        SL_source_update(source, delta_time);
     }
 }
 
 void SL_context_process(SL_Context_t *context, float *output, size_t frames_requested)
 {
-    size_t count = arrlen(context->sources);
-    for (int i = count - 1; i >= 0; --i) {
-        SL_source_process(context->sources[i], output, frames_requested);
+    SL_Source_t **current = context->sources;
+    for (int count = arrlen(context->sources); count; --count) {
+        SL_Source_t *source = *(current++);
+        SL_source_process(source, output, frames_requested);
     }
 }
 
 void SL_context_track(SL_Context_t *context, SL_Source_t *source)
 {
     size_t count = arrlen(context->sources);
-    for (int i = count - 1; i >= 0; --i) {
+    for (size_t i = 0; i < count; ++i) {
         if (context->sources[i] == source) {
             return;
         }
@@ -88,7 +90,7 @@ void SL_context_track(SL_Context_t *context, SL_Source_t *source)
 void SL_context_untrack(SL_Context_t *context, SL_Source_t *source)
 {
     size_t count = arrlen(context->sources);
-    for (int i = count - 1; i >= 0; --i) {
+    for (size_t i = 0; i < count; ++i) {
         if (context->sources[i] == source) {
             arrdel(context->sources, i);
             break;
@@ -98,8 +100,9 @@ void SL_context_untrack(SL_Context_t *context, SL_Source_t *source)
 
 void SL_context_stop(SL_Context_t *context)
 {
-    size_t count = arrlen(context->sources);
-    for (int i = count - 1; i >= 0; --i) {
-        SL_source_stop(context->sources[i]);
+    SL_Source_t **current = context->sources;
+    for (int count = arrlen(context->sources); count; --count) {
+        SL_Source_t *source = *(current++);
+        SL_source_stop(source);
     }
 }
