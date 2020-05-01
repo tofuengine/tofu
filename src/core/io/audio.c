@@ -24,6 +24,7 @@
 
 #include "audio.h"
 
+#include <config.h>
 #include <libs/log.h>
 
 #define MA_DEBUG_OUTPUT

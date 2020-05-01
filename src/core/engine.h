@@ -25,7 +25,6 @@
 #ifndef __ENGINE_H__
 #define __ENGINE_H__
 
-#include <config.h>
 #include <core/configuration.h>
 #include <core/environment.h>
 #include <core/io/audio.h>

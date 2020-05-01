@@ -27,7 +27,6 @@
 
 // TODO: rename Display to Video?
 
-#include <config.h>
 #include <libs/gl/gl.h>
 
 #include <glad/glad.h>

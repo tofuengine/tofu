@@ -25,8 +25,8 @@
 #include "engine.h"
 
 #include <config.h>
+#include <platform.h>
 #include <core/configuration.h>
-#include <core/platform.h>
 #include <libs/fs/fsaux.h>
 #include <libs/log.h>
 #include <libs/stb.h>

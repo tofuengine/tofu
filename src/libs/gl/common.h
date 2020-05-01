@@ -28,7 +28,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <core/platform.h>
+#include <platform.h>
 
 typedef uint8_t GL_Pixel_t;
 

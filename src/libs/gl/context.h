@@ -25,8 +25,6 @@
 #ifndef __GL_CONTEXT_H__
 #define __GL_CONTEXT_H__
 
-#include <config.h>
-
 #include "common.h"
 #include "palette.h"
 #include "surface.h"

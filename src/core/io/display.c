@@ -25,8 +25,8 @@
 #include "display.h"
 
 #include <config.h>
+#include <platform.h>
 #include <core/engine.h>
-#include <core/platform.h>
 #include <libs/log.h>
 #include <libs/imath.h>
 #include <libs/stb.h>

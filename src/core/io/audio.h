@@ -25,8 +25,6 @@
 #ifndef __AUDIO_H__
 #define __AUDIO_H__
 
-#include "config.h"
-
 #include <miniaudio/miniaudio.h>
 #include <libs/sl/sl.h>
 
