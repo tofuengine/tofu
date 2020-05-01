@@ -32,7 +32,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-// TODO: implement both from memory and from file.
 typedef size_t (*SL_Source_Read_Callback_t)(void *user_data, void *output, size_t frames_requested);
 typedef void (*SL_Source_Seek_Callback_t)(void *user_data, size_t frame_offset);
 

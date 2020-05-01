@@ -113,6 +113,7 @@ void FS_terminate(File_System_t *file_system)
         File_System_Mount_t *mount = file_system->mounts[i];
         _unmount(mount);
     }
+
     arrfree(file_system->mounts);
 }
 
@@ -135,6 +136,7 @@ File_System_Handle_t *FS_locate_and_open(const File_System_t *file_system, const
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't locale file `%s`", file);
         return NULL;
     }
+
     return FS_open(mount, file);;
 }
 
