@@ -68,11 +68,7 @@ static bool _attach(File_System_t *file_system, const char *path)
         return false;
     }
 
-#ifdef __FS_SUPPORT_MOUNT_OVERRIDE__
-    arrins(file_system->mounts, 0, mount); // Mount point pushed as head, to gain priority over existing ones.
-#else
     arrpush(file_system->mounts, mount);
-#endif
 
     return true;
 }
@@ -147,9 +143,15 @@ File_System_Handle_t *FS_locate_and_open(const File_System_t *file_system, const
 
 File_System_Mount_t *FS_locate(const File_System_t *file_system, const char *file)
 {
+#ifdef __FS_SUPPORT_MOUNT_OVERRIDE__
+    // Backward scan, later mounts gain priority over existing ones.
+    for (int i = arrlen(file_system->mounts) - 1; i >= 0; --i) {
+        File_System_Mount_t *mount = file_system->mounts[i];
+#else
     File_System_Mount_t **current = file_system->mounts;
     for (int count = arrlen(file_system->mounts); count; --count) {
         File_System_Mount_t *mount = *(current++);
+#endif
         if (((Mount_t *)mount)->vtable.contains(mount, file)) {
             return mount;
         }
