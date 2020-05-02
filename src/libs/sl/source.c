@@ -43,19 +43,13 @@
 
 #define LOG_CONTEXT "sl"
 
-static inline SL_Mix_t _0db_linear_mix(float balance, float gain)
+static inline SL_Mix_t _precompute_mix(float pan, float gain)
 {
-#if 0
-    if (balance < 0.0f) {
-        return (SL_Mix_t){ .left = gain, .right = (1.0f + balance) * gain };
-    } else
-    if (balance > 0.0f) {
-        return (SL_Mix_t){ .left = (1.0f - balance) * gain, .right = gain };
-    } else {
-        return (SL_Mix_t){ .left = gain, .right = gain };
-    }
-#else
-    const float theta = (balance + 1.0f) * 0.5f * M_PI_2; // [-1, 1] -> [0 , 1] -> [0, pi/2]
+#if __SL_PANNING_LAW__ == PANNING_LAW_CONSTANT_GAIN
+    const float theta = (pan + 1.0f) * 0.5f; // [-1, 1] -> [0 , 1]
+    return (SL_Mix_t){ .left = (1.0f - theta) * gain, .right = theta * gain }; // powf(theta, 1)
+#elif __SL_PANNING_LAW__ == PANNING_LAW_CONSTANT_POWER
+    const float theta = (pan + 1.0f) * 0.5f * M_PI_2; // [-1, 1] -> [0 , 1] -> [0, pi/2]
     return (SL_Mix_t){ .left = cosf(theta) * gain, .right = sinf(theta) * gain };
 #endif
 }
@@ -77,12 +71,11 @@ SL_Source_t *SL_source_create(SL_Source_Read_Callback_t on_read, SL_Source_Seek_
             .speed = 1.0f,
             .time = 0.0f,
             .state = SL_SOURCE_STATE_STOPPED,
-            .mix = _0db_linear_mix(0.0f, 1.0f)
+            .mix = _precompute_mix(0.0f, 1.0f)
         };
 
     ma_data_converter_config config = ma_data_converter_config_init(format, ma_format_f32, channels, SL_CHANNELS_PER_FRAME, sample_rate, SL_FRAMES_PER_SECOND);
-    config.resampling.allowDynamicSampleRate = true; // required for speed throttling
-
+    config.resampling.allowDynamicSampleRate = MA_TRUE; // required for speed throttling
     ma_result result = ma_data_converter_init(&config, &source->converter);
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "failed to create source data conversion");
@@ -112,13 +105,13 @@ void SL_source_looped(SL_Source_t *source, bool looped)
 void SL_source_gain(SL_Source_t *source, float gain)
 {
     source->gain = fmaxf(0.0f, gain);
-    source->mix = _0db_linear_mix(source->pan, source->gain);
+    source->mix = _precompute_mix(source->pan, source->gain);
 }
 
 void SL_source_pan(SL_Source_t *source, float pan)
 {
     source->pan = fmaxf(-1.0f, fminf(pan, 1.0f));
-    source->mix = _0db_linear_mix(source->pan, source->gain);
+    source->mix = _precompute_mix(source->pan, source->gain);
 }
 
 #if 0

@@ -30,6 +30,9 @@
 
 #define GARBAGE_COLLECTION_PERIOD   60.0
 
+#define PANNING_LAW_CONSTANT_GAIN   0
+#define PANNING_LAW_CONSTANT_POWER  1
+
 // Behavioural MACROs use the `__` prefix/suffix.
 #define __GL_VERSION__                      0x0201
 #define __GSLS_VERSION__                    0x0114
@@ -55,6 +58,7 @@
 #define __DEBUG_GARBAGE_COLLECTOR__
 #define __VM_USE_CUSTOM_TRACEBACK__
 #define __FS_SUPPORT_MOUNT_OVERRIDE__
+#define __SL_PANNING_LAW__ PANNING_LAW_CONSTANT_POWER
 #undef  __GL_MASK_SUPPORT__
 
 // In release build, disable VM calls debug for faster execution.

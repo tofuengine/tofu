@@ -39,7 +39,7 @@ https://www.cs.cmu.edu/~music/icm-online/readings/panlaws/panlaws.pdf
 http://rs-met.com/documents/tutorials/PanRules.pdf
 */
 
-// Helps to understant the various pan levels.
+// Helps to understand the various pan levels.
 // http://prorec.com/2013/05/the-pan-law-of-the-land/
 
 // http://fooplot.com/#W3sidHlwZSI6MCwiZXEiOiIxLSgoeCsxKS8yKSIsImNvbG9yIjoiI0ZGMDAwMCJ9LHsidHlwZSI6MCwiZXEiOiIoKHgrMSkvMikiLCJjb2xvciI6IiMwMDAwRkYifSx7InR5cGUiOjEwMDAsIndpbmRvdyI6WyItMSIsIjEiLCIwIiwiMSJdfV0-
