@@ -143,9 +143,7 @@ void SetAudioBufferPitch(AudioBuffer *buffer, float pitch)
 void SL_source_speed(SL_Source_t *source, float speed)
 {
     source->speed = fmaxf(MIN_SPEED_VALUE, speed);
-    const float factor = 1.0f / source->speed; // invert the speed into a factor, lower sample rate for faster/higher samples.
-    ma_uint32 sample_rate = (ma_uint32)((float)source->converter.config.sampleRateOut * factor);
-    ma_data_converter_set_rate(&source->converter, source->converter.config.sampleRateIn, sample_rate);
+    ma_data_converter_set_rate_ratio(&source->converter, source->speed); // The ratio is `in` over `out`, i.e. actual speed-up factor.
 }
 
 void SL_source_play(SL_Source_t *source)
