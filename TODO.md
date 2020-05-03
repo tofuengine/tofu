@@ -50,6 +50,7 @@
       require some adaptation)
   * trying always-streaming data. will some buffering be needed? new data could be pulled in the update call.
   * don't need to write a custom SRC, miniaudio has it all.
+    * it also support sample-rate throttling passing a "ratio" value
     * definitely buffering will be needed.
   * hail to valgrind, was about to rewrite everything but thanks to it (once) again I found a very small distraction that caused the engine to go crazy.
   * OMG!!! it works!!!
@@ -57,6 +58,7 @@
     * also, it seems really heavy on the performances, should the device be started only when required?
   * remove the group idea from the sound API. Not needed, since if we want to handle group of sound we can just make a Lua table of them.
   * (BUG) fixed the pcall stack dump not working, being relative to the caller not the called function.
+  * re-adding group support, but this time in form of a table of "mix values" (with balance a gain control)
 
 
 ```java

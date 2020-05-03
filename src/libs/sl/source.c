@@ -65,6 +65,7 @@ SL_Source_t *SL_source_create(SL_Source_Read_Callback_t on_read, SL_Source_Seek_
             .on_read = on_read,
             .on_seek = on_seek,
             .user_data = user_data,
+            .group = SL_DEFAULT_GROUP,
             .looped = false,
             .gain = 1.0,
             .pan = 0.0f,
@@ -95,6 +96,11 @@ void SL_source_destroy(SL_Source_t *source)
 
     free(source);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source freed");
+}
+
+void SL_source_group(SL_Source_t *source, size_t group)
+{
+    source->group = group;
 }
 
 void SL_source_looped(SL_Source_t *source, bool looped)
@@ -209,7 +215,7 @@ static ma_uint32 ReadAudioBufferFramesInMixingFormat(AudioBuffer *audioBuffer, f
     return totalOutputFramesProcessed;
 }
 #endif
-void SL_source_process(SL_Source_t *source, float *output, size_t frames_requested)
+void SL_source_process(SL_Source_t *source, float *output, size_t frames_requested, const SL_Mix_t *groups)
 {
     if (source->state != SL_SOURCE_STATE_PLAYING) {
         return;
@@ -254,8 +260,8 @@ void SL_source_process(SL_Source_t *source, float *output, size_t frames_request
     float *sptr = buffer; // Apply panning and gain to the data.
     float *dptr = output;
 
-    const float left = source->mix.left;
-    const float right = source->mix.right;
+    const float left = source->mix.left * groups[source->group].left;
+    const float right = source->mix.right * groups[source->group].right;
 
     for (size_t i = 0; i < frames_processed; ++i) {
         *(dptr++) = *(sptr++) * left;

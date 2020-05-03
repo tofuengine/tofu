@@ -28,6 +28,7 @@
 #include "source.h"
 
 typedef struct _SL_Context_t {
+    SL_Mix_t groups[SL_GROUPS_AMOUNT];
     SL_Source_t **sources;
 } SL_Context_t;
 
@@ -36,6 +37,8 @@ extern void SL_context_destroy(SL_Context_t *context);
 
 extern void SL_context_update(SL_Context_t *context, float delta_time);
 extern void SL_context_process(SL_Context_t *context, float *output, size_t frames_requested);
+
+extern void SL_context_tweak(SL_Context_t *context, size_t group_index, float balance, float gain);
 
 extern void SL_context_track(SL_Context_t *context, SL_Source_t *source);
 extern void SL_context_untrack(SL_Context_t *context, SL_Source_t *source);

@@ -49,6 +49,7 @@ typedef struct _SL_Source_t {
 
     ma_data_converter converter;
 
+    size_t group;
     bool looped;
     float gain;
     float pan;
@@ -62,6 +63,7 @@ typedef struct _SL_Source_t {
 extern SL_Source_t *SL_source_create(SL_Source_Read_Callback_t on_read, SL_Source_Seek_Callback_t on_seek, void *user_data, ma_format format, ma_uint32 sample_rate, ma_uint32 channels);
 extern void SL_source_destroy(SL_Source_t *source);
 
+extern void SL_source_group(SL_Source_t *source, size_t group);
 extern void SL_source_looped(SL_Source_t *source, bool looped);
 extern void SL_source_gain(SL_Source_t *source, float gain);
 extern void SL_source_pan(SL_Source_t *source, float pan);
@@ -72,6 +74,6 @@ extern void SL_source_stop(SL_Source_t *source);
 extern void SL_source_rewind(SL_Source_t *source);
 
 extern void SL_source_update(SL_Source_t *source, float delta_time);
-extern void SL_source_process(SL_Source_t *source, float *output, size_t frames_requested);
+extern void SL_source_process(SL_Source_t *source, float *output, size_t frames_requested, const SL_Mix_t *groups);
 
 #endif  /* __SL_SOURCE_H__ */

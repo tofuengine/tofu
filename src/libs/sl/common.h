@@ -29,6 +29,11 @@
 #define SL_FRAMES_PER_SECOND    48000
 #define SL_CHANNELS_PER_FRAME   2
 
+#define SL_GROUPS_AMOUNT        256
+#define SL_FIRST_GROUP          0
+#define SL_LAST_GROUP           (SL_GROUPS_AMOUNT - 1)
+#define SL_DEFAULT_GROUP        SL_FIRST_GROUP
+
 typedef struct _SL_Mix_t {
 #ifdef __AUDIO_FULL_MIX__
     float left_to_left, left_to_right;

@@ -30,6 +30,19 @@
 
 #define LOG_CONTEXT "sl"
 
+static inline SL_Mix_t _precompute_mix(float balance, float gain)
+{
+    // TODO: add also sqrt and sincos balance.
+    if (balance < 0.0f) {
+        return (SL_Mix_t){ .left = gain, .right = (1.0f + balance) * gain };
+    } else
+    if (balance > 0.0f) {
+        return (SL_Mix_t){ .left = (1.0f - balance) * gain, .right = gain };
+    } else {
+        return (SL_Mix_t){ .left = gain, .right = gain };
+    }
+}
+
 SL_Context_t *SL_context_create(void)
 {
     SL_Context_t *context = malloc(sizeof(SL_Context_t));
@@ -40,6 +53,10 @@ SL_Context_t *SL_context_create(void)
     *context = (SL_Context_t){
             .sources = NULL
         };
+
+    for (size_t i = 0; i < SL_GROUPS_AMOUNT; ++i) {
+        context->groups[i] = _precompute_mix(0.0f, 1.0f);
+    }
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context created");
     return context;
@@ -72,8 +89,13 @@ void SL_context_process(SL_Context_t *context, float *output, size_t frames_requ
     SL_Source_t **current = context->sources;
     for (int count = arrlen(context->sources); count; --count) {
         SL_Source_t *source = *(current++);
-        SL_source_process(source, output, frames_requested);
+        SL_source_process(source, output, frames_requested, context->groups); // FIXME: pass the dereferences mix? API violation?
     }
+}
+
+void SL_context_tweak(SL_Context_t *context, size_t group_index, float balance, float gain)
+{
+    context->groups[group_index] = _precompute_mix(balance, gain);
 }
 
 void SL_context_track(SL_Context_t *context, SL_Source_t *source)
