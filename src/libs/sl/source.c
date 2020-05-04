@@ -48,9 +48,12 @@ static inline SL_Mix_t _precompute_mix(float pan, float gain)
 #if __SL_PANNING_LAW__ == PANNING_LAW_CONSTANT_GAIN
     const float theta = (pan + 1.0f) * 0.5f; // [-1, 1] -> [0 , 1]
     return (SL_Mix_t){ .left = (1.0f - theta) * gain, .right = theta * gain }; // powf(theta, 1)
-#elif __SL_PANNING_LAW__ == PANNING_LAW_CONSTANT_POWER
+#elif __SL_PANNING_LAW__ == PANNING_LAW_CONSTANT_POWER_SINCOS
     const float theta = (pan + 1.0f) * 0.5f * M_PI_2; // [-1, 1] -> [0 , 1] -> [0, pi/2]
     return (SL_Mix_t){ .left = cosf(theta) * gain, .right = sinf(theta) * gain };
+#elif __SL_PANNING_LAW__ == PANNING_LAW_CONSTANT_POWER_SQRT
+    const float theta = (pan + 1.0f) * 0.5f; // [-1, 1] -> [0 , 1]
+    return (SL_Mix_t){ .left = sqrtf(1.0f - theta) * gain, .right = sqrtf(theta) * gain }; // powf(theta, 0.5)
 #endif
 }
 
@@ -120,25 +123,6 @@ void SL_source_pan(SL_Source_t *source, float pan)
     source->mix = _precompute_mix(source->pan, source->gain);
 }
 
-#if 0
-// Set pitch for an audio buffer
-void SetAudioBufferPitch(AudioBuffer *buffer, float pitch)
-{
-    if (buffer != NULL)
-    {
-        float pitchMul = pitch/buffer->pitch;
-
-        // Pitching is just an adjustment of the sample rate.
-        // Note that this changes the duration of the sound:
-        //  - higher pitches will make the sound faster
-        //  - lower pitches make it slower
-        ma_uint32 newOutputSampleRate = (ma_uint32)((float)buffer->converter.config.sampleRateOut/pitchMul);
-        buffer->pitch *= (float)buffer->converter.config.sampleRateOut/newOutputSampleRate;
-
-        ma_data_converter_set_rate(&buffer->converter, buffer->converter.config.sampleRateIn, newOutputSampleRate);
-    }
-}
-#endif
 void SL_source_speed(SL_Source_t *source, float speed)
 {
     source->speed = fmaxf(MIN_SPEED_VALUE, speed);
@@ -169,52 +153,7 @@ void SL_source_update(SL_Source_t *source, float delta_time)
     // FIXME: useless? perhaps useful in the future for some kind of time-related effect?
     source->time += delta_time;
 }
-#if 0
-// Reads audio data from an AudioBuffer object in device format. Returned data will be in a format appropriate for mixing.
-static ma_uint32 ReadAudioBufferFramesInMixingFormat(AudioBuffer *audioBuffer, float *framesOut, ma_uint32 frameCount)
-{
-    // What's going on here is that we're continuously converting data from the AudioBuffer's internal format to the mixing format, which 
-    // should be defined by the output format of the data converter. We do this until frameCount frames have been output. The important
-    // detail to remember here is that we never, ever attempt to read more input data than is required for the specified number of output
-    // frames. This can be achieved with ma_data_converter_get_required_input_frame_count().
-    ma_uint8 inputBuffer[4096];
-    ma_uint32 inputBufferFrameCap = sizeof(inputBuffer) / ma_get_bytes_per_frame(audioBuffer->converter.config.formatIn, audioBuffer->converter.config.channelsIn);
 
-    ma_uint32 totalOutputFramesProcessed = 0;
-    while (totalOutputFramesProcessed < frameCount)
-    {
-        ma_uint64 outputFramesToProcessThisIteration = frameCount - totalOutputFramesProcessed;
-
-        ma_uint64 inputFramesToProcessThisIteration = ma_data_converter_get_required_input_frame_count(&audioBuffer->converter, outputFramesToProcessThisIteration);
-        if (inputFramesToProcessThisIteration > inputBufferFrameCap)
-        {
-            inputFramesToProcessThisIteration = inputBufferFrameCap;
-        }
-
-        float *runningFramesOut = framesOut + (totalOutputFramesProcessed * audioBuffer->converter.config.channelsOut);
-
-        /* At this point we can convert the data to our mixing format. */
-        ma_uint64 inputFramesProcessedThisIteration = ReadAudioBufferFramesInInternalFormat(audioBuffer, inputBuffer, (ma_uint32)inputFramesToProcessThisIteration);    /* Safe cast. */
-        ma_uint64 outputFramesProcessedThisIteration = outputFramesToProcessThisIteration;
-        ma_data_converter_process_pcm_frames(&audioBuffer->converter, inputBuffer, &inputFramesProcessedThisIteration, runningFramesOut, &outputFramesProcessedThisIteration);
-        
-        totalOutputFramesProcessed += (ma_uint32)outputFramesProcessedThisIteration; /* Safe cast. */
-
-        if (inputFramesProcessedThisIteration < inputFramesToProcessThisIteration)
-        {
-            break;  /* Ran out of input data. */
-        }
-
-        /* This should never be hit, but will add it here for safety. Ensures we get out of the loop when no input nor output frames are processed. */
-        if (inputFramesProcessedThisIteration == 0 && outputFramesProcessedThisIteration == 0)
-        {
-            break;
-        }
-    }
-
-    return totalOutputFramesProcessed;
-}
-#endif
 void SL_source_process(SL_Source_t *source, float *output, size_t frames_requested, const SL_Mix_t *groups)
 {
     if (source->state != SL_SOURCE_STATE_PLAYING) {

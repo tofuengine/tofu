@@ -28,11 +28,21 @@
 #include <libs/log.h>
 #include <libs/stb.h>
 
+#include <math.h>
+
+#ifndef M_PI
+  #define M_PI      3.14159265358979323846f
+#endif
+#ifndef M_PI_2
+  #define M_PI_2    1.57079632679489661923f
+#endif
+
 #define LOG_CONTEXT "sl"
 
+// The balance law differs from the panning law in the fact that when on center the channels are 0dB.
 static inline SL_Mix_t _precompute_mix(float balance, float gain)
 {
-    // TODO: add also sqrt and sincos balance.
+#if __SL_BALANCE_LAW__ == BALANCE_LAW_LINEAR
     if (balance < 0.0f) {
         return (SL_Mix_t){ .left = gain, .right = (1.0f + balance) * gain };
     } else
@@ -41,6 +51,25 @@ static inline SL_Mix_t _precompute_mix(float balance, float gain)
     } else {
         return (SL_Mix_t){ .left = gain, .right = gain };
     }
+#elif __SL_BALANCE_LAW__ == BALANCE_LAW_SINCOS
+    if (balance < 0.0f) {
+        return (SL_Mix_t){ .left = gain, .right = sinf((1.0f + balance) * M_PI_2) * gain };
+    } else
+    if (balance > 0.0f) {
+        return (SL_Mix_t){ .left = sinf((1.0f - balance) * M_PI_2) * gain, .right = gain };
+    } else {
+        return (SL_Mix_t){ .left = gain, .right = gain };
+    }
+#elif __SL_BALANCE_LAW__ == BALANCE_LAW_SQRT
+    if (balance < 0.0f) {
+        return (SL_Mix_t){ .left = gain, .right = sqrtf(1.0f + balance) * gain };
+    } else
+    if (balance > 0.0f) {
+        return (SL_Mix_t){ .left = sqrtf(1.0f - balance) * gain, .right = gain };
+    } else {
+        return (SL_Mix_t){ .left = gain, .right = gain };
+    }
+#endif
 }
 
 SL_Context_t *SL_context_create(void)
