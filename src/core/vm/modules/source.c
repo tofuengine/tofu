@@ -38,6 +38,7 @@
 
 static int source_new(lua_State *L);
 static int source_gc(lua_State *L);
+static int source_group(lua_State *L);
 static int source_looped(lua_State *L);
 static int source_gain(lua_State *L);
 static int source_pan(lua_State *L);
@@ -50,6 +51,7 @@ static int source_is_playing(lua_State *L);
 static const struct luaL_Reg _source_functions[] = {
     { "new", source_new },
     { "__gc", source_gc },
+    { "group", source_group },
     { "looped", source_looped },
     { "gain", source_gain },
     { "pan", source_pan },
@@ -225,6 +227,40 @@ static int source_looped(lua_State *L)
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(1, source_looped1)
         LUAX_OVERLOAD_ARITY(2, source_looped2)
+    LUAX_OVERLOAD_END
+}
+
+static int source_group1(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
+
+    lua_pushinteger(L, self->source->group);
+
+    return 1;
+}
+
+static int source_group2(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
+    size_t group = LUAX_INTEGER(L, 2);
+
+    SL_source_group(self->source, group);
+
+    return 0;
+}
+
+static int source_group(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, source_group1)
+        LUAX_OVERLOAD_ARITY(2, source_group2)
     LUAX_OVERLOAD_END
 }
 

@@ -93,9 +93,9 @@ void SL_context_process(SL_Context_t *context, float *output, size_t frames_requ
     }
 }
 
-void SL_context_tweak(SL_Context_t *context, size_t group_index, float balance, float gain)
+void SL_context_tweak(SL_Context_t *context, size_t group, float balance, float gain)
 {
-    context->groups[group_index] = _precompute_mix(balance, gain);
+    context->groups[group] = _precompute_mix(balance, gain);
 }
 
 void SL_context_track(SL_Context_t *context, SL_Source_t *source)
