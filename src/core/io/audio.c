@@ -45,19 +45,15 @@ static void _log_callback(ma_context *context, ma_device *device, ma_uint32 log_
     Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "[%p:%p] %d %s", context, device, log_level, message);
 }
 
+// Note that output buffer is already pre-zeroed upon call.
 static void _data_callback(ma_device *device, void *output, const void *input, ma_uint32 frame_count)
 {
-//    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d frames requested for device %p", frame_count, device);
-
     Audio_t *audio = (Audio_t *)device->pUserData;
-
-    float *to_device = (float *)output;
-//    memset(to_device, 0, frame_count * device->playback.channels * ma_get_bytes_per_sample(device->playback.format));
-    memset(to_device, 0x00, frame_count * DEVICE_CHANNELS * sizeof(float));
 
     ma_mutex_lock(&audio->lock);
 
-    SL_context_process(audio->sl, to_device, frame_count);
+//    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d frames requested for device %p", frame_count, device);
+    SL_context_process(audio->sl, (float *)output, frame_count);
 
     ma_mutex_unlock(&audio->lock);
 }
@@ -88,12 +84,13 @@ bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration
     audio->device_config = ma_device_config_init(ma_device_type_playback);
     // TODO: loop over available devices and use the one specified in the configuration. Useful when more than one device is available.
     //    config.playback.pDeviceID = &pPlaybackDeviceInfos[chosenPlaybackDeviceIndex].id; 
-    audio->device_config.playback.format    = DEVICE_FORMAT;
-    audio->device_config.playback.channels  = DEVICE_CHANNELS;
-    audio->device_config.sampleRate         = DEVICE_SAMPLE_RATE;
-    audio->device_config.dataCallback       = _data_callback;
-//    audio->device_config.stopCallback       = _stop_callback;
-    audio->device_config.pUserData          = (void *)audio;
+    audio->device_config.playback.format         = DEVICE_FORMAT;
+    audio->device_config.playback.channels       = DEVICE_CHANNELS;
+    audio->device_config.sampleRate              = DEVICE_SAMPLE_RATE;
+    audio->device_config.dataCallback            = _data_callback;
+//    audio->device_config.stopCallback            = _stop_callback;
+    audio->device_config.pUserData               = (void *)audio;
+    audio->device_config.noPreZeroedOutputBuffer = MA_FALSE;
 
     result = ma_device_init(&audio->context, &audio->device_config, &audio->device);
     if (result != MA_SUCCESS) {
