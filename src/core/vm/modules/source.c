@@ -27,11 +27,12 @@
 #include <config.h>
 #include <core/io/audio.h>
 #include <libs/log.h>
+#include <libs/stb.h>
 
 #include "udt.h"
 
-#define DR_WAV_IMPLEMENTATION
-#include <miniaudio/extras/dr_wav.h>
+#define DR_FLAC_IMPLEMENTATION
+#include <miniaudio/extras/dr_flac.h>
 
 #define LOG_CONTEXT "source"
 #define META_TABLE  "Tofu_Sound_Source_mt"
@@ -69,46 +70,34 @@ int source_loader(lua_State *L)
     return luaX_newmodule(L, NULL, _source_functions, NULL, nup, META_TABLE);
 }
 
-static size_t _drwav_read(void *user_data, void *buffer, size_t bytes_to_read)
+static size_t _handle_read(void *user_data, void *buffer, size_t bytes_to_read)
 {
     File_System_Handle_t *handle = (File_System_Handle_t *)user_data;
     return FS_read(handle, buffer, bytes_to_read);
 }
 
-static drwav_bool32 _drwav_seek(void *user_data, int offset, drwav_seek_origin origin)
+static drflac_bool32 _handle_seek(void *user_data, int offset, drflac_seek_origin origin)
 {
     File_System_Handle_t *handle = (File_System_Handle_t *)user_data;
-    if (origin == drwav_seek_origin_start) {
+    if (origin == drflac_seek_origin_start) {
         FS_seek(handle, offset, SEEK_SET);
     } else
-    if (origin == drwav_seek_origin_current) {
+    if (origin == drflac_seek_origin_current) {
         FS_seek(handle, offset, SEEK_CUR);
     }
     return true;
 }
 
-static size_t _source_read(void *user_data, void *output, size_t frames_requested)
+static size_t _decoder_read(void *user_data, void *output, size_t frames_requested)
 {
-    drwav *wav = (drwav *)user_data;
-    return drwav_read_pcm_frames(wav, frames_requested, output); // Read from the internal format w/o conversion.
+    drflac *decoder = (drflac *)user_data;
+    return drflac_read_pcm_frames_s16(decoder, frames_requested, output); // Read from the internal format to s16, forced.
 }
 
-static void _source_seek(void *user_data, size_t frame_offset)
+static void _decoder_seek(void *user_data, size_t frame_offset)
 {
-    drwav *wav = (drwav *)user_data;
-    drwav_seek_to_pcm_frame(wav, frame_offset);
-}
-
-static inline ma_format _to_format(drwav_uint16 bits_per_sample)
-{
-    if (bits_per_sample == 8) {
-        return ma_format_u8;
-    } else
-    if (bits_per_sample == 16) {
-        return ma_format_s16;
-    } else {
-        return ma_format_unknown;
-    }
+    drflac *decoder = (drflac *)user_data;
+    drflac_seek_to_pcm_frame(decoder, frame_offset);
 }
 
 static int source_new(lua_State *L)
@@ -127,22 +116,16 @@ static int source_new(lua_State *L)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p opened for file `%s`", handle, file);
 
-    drwav *wav = malloc(sizeof(drwav));
-    if (!wav) {
+    drflac *decoder = drflac_open(_handle_read, _handle_seek, (void *)handle, NULL);
+    if (!decoder) {
         FS_close(handle);
-        return luaL_error(L, "can't allocate `wav` structure");
+        return luaL_error(L, "can't open decoder for file `%s`", file);
     }
-    drwav_bool32 result = drwav_init(wav, _drwav_read, _drwav_seek, (void *)handle, NULL);
-    if (!result) {
-        free(wav);
-        FS_close(handle);
-        return luaL_error(L, "can't initialize `wav` structure for file `%s`", file);
-    }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "`wav` structure %p allocated ad initialized", wav);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "decoder %p opened", decoder);
 
-    SL_Source_t *source = SL_source_create(_source_read, _source_seek, (void *)wav, _to_format(wav->bitsPerSample), wav->sampleRate, wav->channels);
-    if (!source) {
-        free(wav);
+    SL_Source_t *source = SL_source_create(_decoder_read, _decoder_seek, (void *)decoder, ma_format_s16, decoder->sampleRate, decoder->channels);
+    if (!source) { // We are forcing 16 bits-per-sample.
+        free(decoder);
         FS_close(handle);
         return luaL_error(L, "can't create source");
     }
@@ -155,7 +138,7 @@ static int source_new(lua_State *L)
     Source_Object_t *self = (Source_Object_t *)lua_newuserdata(L, sizeof(Source_Object_t));
     *self = (Source_Object_t){
             .handle = handle,
-            .wav = wav,
+            .decoder = decoder,
             .source = source
         };
 
@@ -186,10 +169,8 @@ static int source_gc(lua_State *L)
     FS_close(self->handle);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p closed", self->handle);
 
-    drwav_uninit(self->wav);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "`wav` structure deinitialized", self->wav);
-    free(self->wav);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "`wav` structure freed", self->wav);
+    drflac_close(self->decoder);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "decoder closed", self->decoder);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p finalized", self);
 

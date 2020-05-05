@@ -30,7 +30,7 @@
 #include <libs/gl/gl.h>
 #include <libs/sl/sl.h>
 
-#include <miniaudio/extras/dr_wav.h>
+#include <miniaudio/extras/dr_flac.h>
 
 typedef enum _UserData_t { // TODO: move to a suitable space.
     USERDATA_INTERPRETER = 1,
@@ -99,7 +99,7 @@ typedef struct _Grid_Object_t {
 
 typedef struct _Source_Object_t {
     File_System_Handle_t *handle;
-    drwav *wav; // TODO: create a union of handles.
+    drflac *decoder;
     SL_Source_t *source;
 } Source_Object_t;
 
