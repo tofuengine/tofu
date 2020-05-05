@@ -58,8 +58,8 @@
     * also, it seems really heavy on the performances, should the device be started only when required?
   * remove the group idea from the sound API. Not needed, since if we want to handle group of sound we can just make a Lua table of them.
   * (BUG) fixed the pcall stack dump not working, being relative to the caller not the called function.
-  * re-adding group support, but this time in form of a table of "mix values" (with balance a gain control)
-
+  * re-adding group support, but this time in form of a table of "mix values" (with balance a gain control).
+  * switching to FLAC format, compressed lossless anolgue of the PNG format.
 
 ```java
   //do panning
