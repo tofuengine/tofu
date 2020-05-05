@@ -32,7 +32,7 @@
 #include "udt.h"
 
 #define DR_FLAC_IMPLEMENTATION
-#include <miniaudio/extras/dr_flac.h>
+#include <dr_libs/dr_flac.h>
 
 #define LOG_CONTEXT "source"
 #define META_TABLE  "Tofu_Sound_Source_mt"
