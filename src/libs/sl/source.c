@@ -200,8 +200,8 @@ void SL_source_mix(SL_Source_t *source, float *output, size_t frames_requested, 
     const float left = source->mix.left * groups[source->group].left;
     const float right = source->mix.right * groups[source->group].right;
 
-    for (size_t i = 0; i < frames_processed; ++i) {
-        *(dptr++) = *(sptr++) * left;
-        *(dptr++) = *(sptr++) * right;
+    for (size_t i = 0; i < frames_processed; ++i) { // Each source adds up in the output buffer.
+        *(dptr++) += *(sptr++) * left;
+        *(dptr++) += *(sptr++) * right;
     }
 }
