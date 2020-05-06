@@ -178,10 +178,8 @@ void SL_source_mix(SL_Source_t *source, float *output, size_t frames_requested, 
         size_t frames_read = source->on_read(source->user_data, input, frames_to_read);
 
         ma_uint64 frames_input = frames_read;
-        ma_uint64 frames_output = frames_remaining;
-        ma_data_converter_process_pcm_frames(&source->converter, input, &frames_input, cursor, &frames_output);
-
-        size_t frames_converted = (size_t)frames_output;
+        ma_uint64 frames_converted = frames_remaining;
+        ma_data_converter_process_pcm_frames(&source->converter, input, &frames_input, cursor, &frames_converted);
 
         frames_processed += frames_converted;
         if (frames_read < frames_to_read) { // Less than requested, we reached end-of-data!

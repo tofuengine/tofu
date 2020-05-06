@@ -35,12 +35,7 @@
 #define SL_DEFAULT_GROUP        SL_FIRST_GROUP
 
 typedef struct _SL_Mix_t {
-#ifdef __AUDIO_FULL_MIX__
-    float left_to_left, left_to_right;
-    float right_to_left, right_to_right;
-#else
     float left, right;
-#endif
 } SL_Mix_t;
 
 #endif  /* __SL_COMMON_H__ */
