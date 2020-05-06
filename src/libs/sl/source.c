@@ -154,7 +154,7 @@ void SL_source_update(SL_Source_t *source, float delta_time)
     source->time += delta_time;
 }
 
-void SL_source_process(SL_Source_t *source, float *output, size_t frames_requested, const SL_Mix_t *groups)
+void SL_source_mix(SL_Source_t *source, float *output, size_t frames_requested, const SL_Mix_t *groups)
 {
     if (source->state != SL_SOURCE_STATE_PLAYING) {
         return;

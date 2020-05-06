@@ -55,7 +55,7 @@ static void _data_callback(ma_device *device, void *output, const void *input, m
     ma_mutex_lock(&audio->lock);
 
 //    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d frames requested for device %p", frame_count, device);
-    SL_context_process(audio->sl, (float *)output, frame_count);
+    SL_context_mix(audio->sl, (float *)output, frame_count);
 
     ma_mutex_unlock(&audio->lock);
 }

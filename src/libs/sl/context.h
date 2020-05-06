@@ -37,7 +37,7 @@ extern SL_Context_t *SL_context_create(void);
 extern void SL_context_destroy(SL_Context_t *context);
 
 extern void SL_context_update(SL_Context_t *context, float delta_time);
-extern void SL_context_process(SL_Context_t *context, float *output, size_t frames_requested);
+extern void SL_context_mix(SL_Context_t *context, float *output, size_t frames_requested);
 
 extern void SL_context_tweak(SL_Context_t *context, size_t group, float balance, float gain);
 

@@ -113,12 +113,14 @@ void SL_context_update(SL_Context_t *context, float delta_time)
     }
 }
 
-void SL_context_process(SL_Context_t *context, float *output, size_t frames_requested)
+void SL_context_mix(SL_Context_t *context, float *output, size_t frames_requested)
 {
+    const SL_Mix_t *groups = context->groups;
+
     SL_Source_t **current = context->sources;
     for (int count = arrlen(context->sources); count; --count) {
         SL_Source_t *source = *(current++);
-        SL_source_process(source, output, frames_requested, context->groups); // FIXME: pass the dereferences mix? API violation?
+        SL_source_mix(source, output, frames_requested, groups); // FIXME: pass the dereferences mix? API violation?
     }
 }
 
