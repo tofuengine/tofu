@@ -60,6 +60,9 @@
   * (BUG) fixed the pcall stack dump not working, being relative to the caller not the called function.
   * re-adding group support, but this time in form of a table of "mix values" (with balance a gain control).
   * switching to FLAC format, compressed lossless anolgue of the PNG format.
+  * fixed bug that cause individual sources not to add-up values in the final mix.
+  * definitely ditched cross-mixing... or not?
+  * fixed warning in Windows build for miniaudio.
 
 ```java
   //do panning
