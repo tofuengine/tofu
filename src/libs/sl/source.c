@@ -64,10 +64,15 @@ SL_Source_t *SL_source_create(SL_Source_Read_Callback_t on_read, SL_Source_Seek_
         return NULL;
     }
 
+    ma_uint8 input[1024];
+    ma_uint32 input_frame_cap = sizeof(input) / ma_get_bytes_per_frame(source->converter.config.formatIn, source->converter.config.channelsIn);
+
     *source = (SL_Source_t){
             .on_read = on_read,
             .on_seek = on_seek,
             .user_data = user_data,
+            .buffer = buffer,
+            .buffer_available = 0,
             .group = SL_DEFAULT_GROUP,
             .looped = false,
             .gain = 1.0,
@@ -162,27 +167,28 @@ void SL_source_mix(SL_Source_t *source, float *output, size_t frames_requested, 
 
     size_t frames_processed = 0;
 
-    ma_uint8 input[1024];
-    ma_uint32 input_frame_cap = sizeof(input) / ma_get_bytes_per_frame(source->converter.config.formatIn, source->converter.config.channelsIn);
-
     float buffer[frames_requested * SL_CHANNELS_PER_FRAME];
     float *cursor = buffer;
 
     size_t frames_remaining = frames_requested;
     while (frames_remaining > 0) { // Read as much data as possible, filling the buffer and eventually looping!
-        ma_uint64 frames_to_read = ma_data_converter_get_required_input_frame_count(&source->converter, frames_remaining);
-        if (frames_to_read > input_frame_cap) {
-            frames_to_read = input_frame_cap;
+        if (buffer_available < BUFFER_UNDERRUN_LIMIT) {
+            buffer_available += source->on_read(source->user_data, buffer + buffer_available, BUFFER_SIZE - buffer_available);
         }
 
-        size_t frames_read = source->on_read(source->user_data, input, frames_to_read);
+        ma_uint64 frames_to_convert = ma_data_converter_get_required_input_frame_count(&source->converter, frames_remaining);
+        if (frames_to_convert > buffer_available) {
+            frames_to_convert = buffer_available;
+        }
 
-        ma_uint64 frames_input = frames_read;
+        ma_uint64 frames_buffer = frames_to_convert;
         ma_uint64 frames_converted = frames_remaining;
-        ma_data_converter_process_pcm_frames(&source->converter, input, &frames_input, cursor, &frames_converted);
+        ma_data_converter_process_pcm_frames(&source->converter, buffer, &frames_buffer, cursor, &frames_converted);
 
         frames_processed += frames_converted;
-        if (frames_read < frames_to_read) { // Less than requested, we reached end-of-data!
+
+        buffer_available -= frames_converted;
+        if (buffer_available == 0) {
             if (!source->looped) {
                 source->state = SL_SOURCE_STATE_COMPLETED;
                 break;
