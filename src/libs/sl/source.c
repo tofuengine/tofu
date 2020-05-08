@@ -43,6 +43,44 @@
 
 #define LOG_CONTEXT "sl"
 
+// https://embedjournal.com/implementing-circular-buffer-embedded-c
+static inline SL_Source_Buffer_t *_alloc_buffer(size_t bytes_per_slot)
+{
+    SL_Source_Buffer_t *buffer = malloc(sizeof(SL_Source_Buffer_t));
+    if (!buffer) {
+        return NULL;
+    }
+
+    uint8_t *heap = malloc(SL_SOURCE_BUFFER_SLOTS * bytes_per_slot * sizeof(uint8_t));
+    if (!heap) {
+        free(buffer);
+        return NULL;
+    }
+
+    *buffer = (SL_Source_Buffer_t){
+            .heap = heap,
+            .slots = { 0 },
+            .size = bytes_per_slot,
+            .used = 0,
+            .read = 0, .write = 0
+        };
+
+    for (size_t i = 0; i < SL_SOURCE_BUFFER_SLOTS; ++i) {
+        buffer->slots[i] = heap + (i * bytes_per_slot);
+    }
+
+    return buffer;
+}
+
+static inline void _free_buffer(SL_Source_Buffer_t *buffer)
+{
+    if (!buffer) {
+        return;
+    }
+    free(buffer->heap);
+    free(buffer);
+}
+
 static inline SL_Mix_t _precompute_mix(float pan, float gain)
 {
 #if __SL_PANNING_LAW__ == PANNING_LAW_CONSTANT_GAIN
@@ -64,15 +102,17 @@ SL_Source_t *SL_source_create(SL_Source_Read_Callback_t on_read, SL_Source_Seek_
         return NULL;
     }
 
-    ma_uint8 input[1024];
-    ma_uint32 input_frame_cap = sizeof(input) / ma_get_bytes_per_frame(source->converter.config.formatIn, source->converter.config.channelsIn);
+    SL_Source_Buffer_t *buffer = _alloc_buffer(1024);
+    if (!buffer) {
+        free(source);
+        return NULL;
+    }
 
     *source = (SL_Source_t){
             .on_read = on_read,
             .on_seek = on_seek,
             .user_data = user_data,
             .buffer = buffer,
-            .buffer_available = 0,
             .group = SL_DEFAULT_GROUP,
             .looped = false,
             .gain = 1.0,
@@ -157,6 +197,12 @@ void SL_source_update(SL_Source_t *source, float delta_time)
 {
     // FIXME: useless? perhaps useful in the future for some kind of time-related effect?
     source->time += delta_time;
+
+    if (source->buffers_used == SL_SOURCE_BUFFERS_AMOUNT) {
+        return;
+    }
+
+    source->buffers_used += 1;
 }
 
 void SL_source_mix(SL_Source_t *source, float *output, size_t frames_requested, const SL_Mix_t *groups)
@@ -164,6 +210,14 @@ void SL_source_mix(SL_Source_t *source, float *output, size_t frames_requested, 
     if (source->state != SL_SOURCE_STATE_PLAYING) {
         return;
     }
+
+    if (source->buffers_used == 0) { // Buffer underrun, stalling...
+        return;
+    }
+
+    source->buffers_used -= 1;
+
+
 
     size_t frames_processed = 0;
 
