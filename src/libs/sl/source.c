@@ -41,45 +41,9 @@
 // between the minimum (8KHz) and the maximum (384KHz) supported sample rates.
 #define MIN_SPEED_VALUE ((float)MA_MIN_SAMPLE_RATE / (float)MA_MAX_SAMPLE_RATE)
 
+#define PCM_FRAME_CHUNK_SIZE        8192
+
 #define LOG_CONTEXT "sl"
-
-// https://embedjournal.com/implementing-circular-buffer-embedded-c
-static inline SL_Source_Buffer_t *_alloc_buffer(size_t bytes_per_slot)
-{
-    SL_Source_Buffer_t *buffer = malloc(sizeof(SL_Source_Buffer_t));
-    if (!buffer) {
-        return NULL;
-    }
-
-    uint8_t *heap = malloc(SL_SOURCE_BUFFER_SLOTS * bytes_per_slot * sizeof(uint8_t));
-    if (!heap) {
-        free(buffer);
-        return NULL;
-    }
-
-    *buffer = (SL_Source_Buffer_t){
-            .heap = heap,
-            .slots = { 0 },
-            .size = bytes_per_slot,
-            .used = 0,
-            .read = 0, .write = 0
-        };
-
-    for (size_t i = 0; i < SL_SOURCE_BUFFER_SLOTS; ++i) {
-        buffer->slots[i] = heap + (i * bytes_per_slot);
-    }
-
-    return buffer;
-}
-
-static inline void _free_buffer(SL_Source_Buffer_t *buffer)
-{
-    if (!buffer) {
-        return;
-    }
-    free(buffer->heap);
-    free(buffer);
-}
 
 static inline SL_Mix_t _precompute_mix(float pan, float gain)
 {
@@ -102,17 +66,10 @@ SL_Source_t *SL_source_create(SL_Source_Read_Callback_t on_read, SL_Source_Seek_
         return NULL;
     }
 
-    SL_Source_Buffer_t *buffer = _alloc_buffer(1024);
-    if (!buffer) {
-        free(source);
-        return NULL;
-    }
-
     *source = (SL_Source_t){
             .on_read = on_read,
             .on_seek = on_seek,
             .user_data = user_data,
-            .buffer = buffer,
             .group = SL_DEFAULT_GROUP,
             .looped = false,
             .gain = 1.0,
@@ -123,11 +80,14 @@ SL_Source_t *SL_source_create(SL_Source_Read_Callback_t on_read, SL_Source_Seek_
             .mix = _precompute_mix(0.0f, 1.0f)
         };
 
+    ma_pcm_rb_init(ma_format_f32, channels, PCM_FRAME_CHUNK_SIZE, NULL, NULL, &source->buffer);
+
     ma_data_converter_config config = ma_data_converter_config_init(format, ma_format_f32, channels, SL_CHANNELS_PER_FRAME, sample_rate, SL_FRAMES_PER_SECOND);
     config.resampling.allowDynamicSampleRate = MA_TRUE; // required for speed throttling
     ma_result result = ma_data_converter_init(&config, &source->converter);
     if (result != MA_SUCCESS) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "failed to create source data conversion");
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "failed to create source data converter");
+        ma_pcm_rb_uninit(&source->buffer);
         free(source);
         return NULL;
     }
@@ -141,6 +101,12 @@ void SL_source_destroy(SL_Source_t *source)
     if (!source) {
         return;
     }
+
+    ma_data_converter_uninit(&source->converter);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source data converted uninitialized");
+
+    ma_pcm_rb_uninit(&source->buffer);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source ring buffer uninitialized");
 
     free(source);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source freed");
@@ -197,28 +163,10 @@ void SL_source_update(SL_Source_t *source, float delta_time)
 {
     // FIXME: useless? perhaps useful in the future for some kind of time-related effect?
     source->time += delta_time;
-
-    if (source->buffers_used == SL_SOURCE_BUFFERS_AMOUNT) {
-        return;
-    }
-
-    source->buffers_used += 1;
 }
 
 void SL_source_mix(SL_Source_t *source, float *output, size_t frames_requested, const SL_Mix_t *groups)
 {
-    if (source->state != SL_SOURCE_STATE_PLAYING) {
-        return;
-    }
-
-    if (source->buffers_used == 0) { // Buffer underrun, stalling...
-        return;
-    }
-
-    source->buffers_used -= 1;
-
-
-
     size_t frames_processed = 0;
 
     float buffer[frames_requested * SL_CHANNELS_PER_FRAME];
@@ -226,32 +174,54 @@ void SL_source_mix(SL_Source_t *source, float *output, size_t frames_requested, 
 
     size_t frames_remaining = frames_requested;
     while (frames_remaining > 0) { // Read as much data as possible, filling the buffer and eventually looping!
-        if (buffer_available < BUFFER_UNDERRUN_LIMIT) {
-            buffer_available += source->on_read(source->user_data, buffer + buffer_available, BUFFER_SIZE - buffer_available);
-        }
+        ma_uint32 frames_available = ma_pcm_rb_available_read(&source->buffer);
+        if (frames_available > 0) {
+            void *read_buffer;
+            ma_pcm_rb_acquire_read(&source->buffer, &frames_available, &read_buffer);
 
-        ma_uint64 frames_to_convert = ma_data_converter_get_required_input_frame_count(&source->converter, frames_remaining);
-        if (frames_to_convert > buffer_available) {
-            frames_to_convert = buffer_available;
-        }
+            ma_uint64 frames_to_convert = ma_data_converter_get_required_input_frame_count(&source->converter, frames_remaining);
 
-        ma_uint64 frames_buffer = frames_to_convert;
-        ma_uint64 frames_converted = frames_remaining;
-        ma_data_converter_process_pcm_frames(&source->converter, buffer, &frames_buffer, cursor, &frames_converted);
+            ma_uint64 frames_to_read = (frames_to_convert > frames_available) ? frames_available : frames_to_convert;
+            ma_uint64 frames_converted = frames_remaining;
+            ma_data_converter_process_pcm_frames(&source->converter, read_buffer, &frames_to_read, cursor, &frames_converted);
 
-        frames_processed += frames_converted;
+            ma_pcm_rb_commit_read(&source->buffer, frames_to_read, read_buffer);
 
-        buffer_available -= frames_converted;
-        if (buffer_available == 0) {
-            if (!source->looped) {
+            cursor += frames_converted * SL_CHANNELS_PER_FRAME;
+
+            frames_processed += frames_converted;
+            frames_remaining -= frames_converted;
+        } else {
+            if (source->state == SL_SOURCE_STATE_FINISHING) {
                 source->state = SL_SOURCE_STATE_COMPLETED;
                 break;
             }
-            source->on_seek(source->user_data, 0);
-        }
-        frames_remaining -= frames_converted;
+            
+            /*
+            There's nothing in the buffer. Fill it with more data from the callback. We reset the buffer first so that the read and write pointers
+            are reset back to the start so we can fill the ring buffer in chunks of PCM_FRAME_CHUNK_SIZE which is what we initialized it with. Note
+            that this is not how you would want to do it in a multi-threaded environment. In this case you would want to seek the write pointer
+            forward via the producer thread and the read pointer forward via the consumer thread (this thread).
+            */
+            ma_pcm_rb_reset(&source->buffer);
 
-        cursor += frames_converted * SL_CHANNELS_PER_FRAME;
+            ma_uint32 frames_to_write = PCM_FRAME_CHUNK_SIZE;
+            void *write_buffer;
+            ma_pcm_rb_acquire_write(&source->buffer, &frames_to_write, &write_buffer);
+//                MA_ASSERT(framesToWrite == PCM_FRAME_CHUNK_SIZE);   /* <-- This should always work in this example because we just reset the ring buffer. */
+
+            size_t frames_written = source->on_read(source->user_data, write_buffer, frames_to_write);
+
+            ma_pcm_rb_commit_write(&source->buffer, frames_written, write_buffer);
+
+            if (frames_written < frames_to_write) {
+                if (!source->looped) {
+                    source->state = SL_SOURCE_STATE_FINISHING;
+                } else {
+                    source->on_seek(source->user_data, 0);
+                }
+            }
+        }
     }
 
     float *sptr = buffer; // Apply panning and gain to the data.

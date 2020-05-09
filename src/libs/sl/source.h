@@ -32,22 +32,13 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#define SL_SOURCE_BUFFER_SLOTS      8
-
 typedef size_t (*SL_Source_Read_Callback_t)(void *user_data, void *output, size_t frames_requested);
 typedef void (*SL_Source_Seek_Callback_t)(void *user_data, size_t frame_offset);
-
-typedef struct _SL_Source_Buffer_t {
-    uint8_t *heap; // That's the single heap block we are separating in slots.
-    uint8_t *slots[SL_SOURCE_BUFFER_SLOTS];
-    size_t size;
-    size_t used;
-    size_t read, write;
-} SL_Source_Buffer_t;
 
 typedef enum _SL_Source_States_t {
     SL_SOURCE_STATE_STOPPED,
     SL_SOURCE_STATE_PLAYING,
+    SL_SOURCE_STATE_FINISHING,
     SL_SOURCE_STATE_COMPLETED,
     SL_Source_States_t_CountOf
 } SL_Source_States_t;
@@ -57,9 +48,8 @@ typedef struct _SL_Source_t {
     SL_Source_Seek_Callback_t on_seek;
     void *user_data;
 
+    ma_pcm_rb buffer;
     ma_data_converter converter;
-
-    SL_Source_Buffer_t *buffer;
 
     size_t group;
     bool looped;
