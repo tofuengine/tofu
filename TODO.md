@@ -64,6 +64,7 @@
   * definitely ditched cross-mixing... or not?
   * fixed warning in Windows build for miniaudio.
   * definitely I need to use a ring-buffer to stream audio. We could be tempted to always stream w/o buffers, having SDD and such... but that's not the case in general. Miniaudio has a ring-buffer API.
+    * tried miniaudio ringbuffer, but it's easier to buffer myself.
 
 ```java
   //do panning

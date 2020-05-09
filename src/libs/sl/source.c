@@ -41,7 +41,7 @@
 // between the minimum (8KHz) and the maximum (384KHz) supported sample rates.
 #define MIN_SPEED_VALUE ((float)MA_MIN_SAMPLE_RATE / (float)MA_MAX_SAMPLE_RATE)
 
-#define PCM_FRAME_CHUNK_SIZE        8192
+#define PCM_FRAME_CHUNK_SIZE    131072
 
 #define LOG_CONTEXT "sl"
 
@@ -80,14 +80,14 @@ SL_Source_t *SL_source_create(SL_Source_Read_Callback_t on_read, SL_Source_Seek_
             .mix = _precompute_mix(0.0f, 1.0f)
         };
 
-    ma_pcm_rb_init(ma_format_f32, channels, PCM_FRAME_CHUNK_SIZE, NULL, NULL, &source->buffer);
+    source->buffer = malloc(PCM_FRAME_CHUNK_SIZE * ma_get_bytes_per_frame(format, channels));
 
     ma_data_converter_config config = ma_data_converter_config_init(format, ma_format_f32, channels, SL_CHANNELS_PER_FRAME, sample_rate, SL_FRAMES_PER_SECOND);
     config.resampling.allowDynamicSampleRate = MA_TRUE; // required for speed throttling
     ma_result result = ma_data_converter_init(&config, &source->converter);
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "failed to create source data converter");
-        ma_pcm_rb_uninit(&source->buffer);
+        free(source->buffer);
         free(source);
         return NULL;
     }
@@ -105,8 +105,8 @@ void SL_source_destroy(SL_Source_t *source)
     ma_data_converter_uninit(&source->converter);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source data converted uninitialized");
 
-    ma_pcm_rb_uninit(&source->buffer);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source ring buffer uninitialized");
+    free(source->buffer);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source buffer freed");
 
     free(source);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source freed");
@@ -174,18 +174,17 @@ void SL_source_mix(SL_Source_t *source, float *output, size_t frames_requested, 
 
     size_t frames_remaining = frames_requested;
     while (frames_remaining > 0) { // Read as much data as possible, filling the buffer and eventually looping!
-        ma_uint32 frames_available = ma_pcm_rb_available_read(&source->buffer);
-        if (frames_available > 0) {
-            void *read_buffer;
-            ma_pcm_rb_acquire_read(&source->buffer, &frames_available, &read_buffer);
+        if (source->buffer_left > 0) {
+            ma_uint32 bpf = ma_get_bytes_per_frame(source->converter.config.formatIn, source->converter.config.channelsIn);
+            void *read_buffer = (char *)source->buffer + (PCM_FRAME_CHUNK_SIZE - source->buffer_left) * bpf; // FIXME: optimized and fix this!
 
             ma_uint64 frames_to_convert = ma_data_converter_get_required_input_frame_count(&source->converter, frames_remaining);
 
-            ma_uint64 frames_to_read = (frames_to_convert > frames_available) ? frames_available : frames_to_convert;
+            ma_uint64 frames_to_read = (frames_to_convert > source->buffer_left) ? source->buffer_left : frames_to_convert;
             ma_uint64 frames_converted = frames_remaining;
             ma_data_converter_process_pcm_frames(&source->converter, read_buffer, &frames_to_read, cursor, &frames_converted);
 
-            ma_pcm_rb_commit_read(&source->buffer, frames_to_read, read_buffer);
+            source->buffer_left -= frames_to_read;
 
             cursor += frames_converted * SL_CHANNELS_PER_FRAME;
 
@@ -196,25 +195,12 @@ void SL_source_mix(SL_Source_t *source, float *output, size_t frames_requested, 
                 source->state = SL_SOURCE_STATE_COMPLETED;
                 break;
             }
-            
-            /*
-            There's nothing in the buffer. Fill it with more data from the callback. We reset the buffer first so that the read and write pointers
-            are reset back to the start so we can fill the ring buffer in chunks of PCM_FRAME_CHUNK_SIZE which is what we initialized it with. Note
-            that this is not how you would want to do it in a multi-threaded environment. In this case you would want to seek the write pointer
-            forward via the producer thread and the read pointer forward via the consumer thread (this thread).
-            */
-            ma_pcm_rb_reset(&source->buffer);
 
-            ma_uint32 frames_to_write = PCM_FRAME_CHUNK_SIZE;
-            void *write_buffer;
-            ma_pcm_rb_acquire_write(&source->buffer, &frames_to_write, &write_buffer);
-//                MA_ASSERT(framesToWrite == PCM_FRAME_CHUNK_SIZE);   /* <-- This should always work in this example because we just reset the ring buffer. */
+            source->buffer_left = source->on_read(source->user_data, source->buffer, PCM_FRAME_CHUNK_SIZE);
 
-            size_t frames_written = source->on_read(source->user_data, write_buffer, frames_to_write);
+            // FIXME: loop and fill in case of not enough data.
 
-            ma_pcm_rb_commit_write(&source->buffer, frames_written, write_buffer);
-
-            if (frames_written < frames_to_write) {
+            if (source->buffer_left < PCM_FRAME_CHUNK_SIZE) {
                 if (!source->looped) {
                     source->state = SL_SOURCE_STATE_FINISHING;
                 } else {
