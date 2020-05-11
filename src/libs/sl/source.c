@@ -80,16 +80,14 @@ SL_Source_t *SL_source_create(SL_Source_Read_Callback_t on_read, SL_Source_Seek_
             .mix = _precompute_mix(0.0f, 1.0f)
         };
 
-    source->buffer = malloc(PCM_FRAME_CHUNK_SIZE * ma_get_bytes_per_frame(format, channels)); // FIXME: refactor, it's so ugly!
-    source->buffer_used = 0;
-    source->buffer_index = 0;
+    ma_pcm_rb_init(format, channels, PCM_FRAME_CHUNK_SIZE, NULL, NULL, &source->buffer);
 
     ma_data_converter_config config = ma_data_converter_config_init(format, ma_format_f32, channels, SL_CHANNELS_PER_FRAME, sample_rate, SL_FRAMES_PER_SECOND);
     config.resampling.allowDynamicSampleRate = MA_TRUE; // required for speed throttling
     ma_result result = ma_data_converter_init(&config, &source->converter);
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "failed to create source data converter");
-        free(source->buffer);
+        ma_rb_uninit(&source->buffer);
         free(source);
         return NULL;
     }
@@ -107,8 +105,8 @@ void SL_source_destroy(SL_Source_t *source)
     ma_data_converter_uninit(&source->converter);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source data converted uninitialized");
 
-    free(source->buffer);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source buffer freed");
+    ma_rb_uninit(&source->buffer);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source ring-buffer uninitialized");
 
     free(source);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source freed");
@@ -180,19 +178,19 @@ void SL_source_mix(SL_Source_t *source, float *output, size_t frames_requested, 
 
     size_t frames_remaining = frames_requested;
     while (frames_remaining > 0) { // Read as much data as possible, filling the buffer and eventually looping!
-        if (source->buffer_index < source->buffer_used) {
-            size_t buffer_available = source->buffer_used - source->buffer_index;
-
-            ma_uint32 bpf = ma_get_bytes_per_frame(source->converter.config.formatIn, source->converter.config.channelsIn);
-            void *read_buffer = (char *)source->buffer + source->buffer_index * bpf; // FIXME: optimized and fix this!
-
+        ma_uint32 frames_available = ma_pcm_rb_available_read(&source->buffer);
+        if (frames_available > 0) {
             ma_uint64 frames_to_convert = ma_data_converter_get_required_input_frame_count(&source->converter, frames_remaining);
 
-            ma_uint64 frames_to_read = (frames_to_convert > buffer_available) ? buffer_available : frames_to_convert;
-            ma_uint64 frames_converted = frames_remaining;
-            ma_data_converter_process_pcm_frames(&source->converter, read_buffer, &frames_to_read, cursor, &frames_converted);
+            ma_uint32 frames_to_read = (frames_to_convert > frames_available) ? frames_available : frames_to_convert;
+            void *read_buffer;
+            ma_pcm_rb_acquire_read(&source->buffer, &frames_to_read, &read_buffer);
 
-            source->buffer_index += frames_to_read;
+            ma_uint64 frames_read = frames_to_read;
+            ma_uint64 frames_converted = frames_remaining;
+            ma_data_converter_process_pcm_frames(&source->converter, read_buffer, &frames_read, cursor, &frames_converted);
+
+            ma_pcm_rb_commit_read(&source->buffer, frames_read, read_buffer);
 
             cursor += frames_converted * SL_CHANNELS_PER_FRAME;
 
@@ -204,19 +202,18 @@ void SL_source_mix(SL_Source_t *source, float *output, size_t frames_requested, 
                 break;
             }
 
-            source->buffer_used = 0;
-            source->buffer_index = 0;
+            ma_pcm_rb_reset(&source->buffer);
 
-            size_t frames_to_read = PCM_FRAME_CHUNK_SIZE;
-            while (frames_to_read > 0) {
-                ma_uint32 bpf = ma_get_bytes_per_frame(source->converter.config.formatIn, source->converter.config.channelsIn);
-                void *write_buffer = (char *)source->buffer + source->buffer_used * bpf; // FIXME: optimized and fix this!
+            ma_uint32 frames_to_write = PCM_FRAME_CHUNK_SIZE; // FIXME: move to update thread, with smaller size.
+            while (frames_to_write > 0) {
+                void *write_buffer;
+                ma_pcm_rb_acquire_write(&source->buffer, &frames_to_write, &write_buffer);
 
-                size_t frames_read = source->on_read(source->user_data, write_buffer, frames_to_read);
+                size_t frames_written = source->on_read(source->user_data, write_buffer, frames_to_write);
 
-                source->buffer_used += frames_read;
+                ma_pcm_rb_commit_write(&source->buffer, frames_written, write_buffer);
 
-                if (frames_read < frames_to_read) {
+                if (frames_written < frames_to_write) {
                     if (!source->looped) {
                         source->state = SL_SOURCE_STATE_COMPLETED;
                         break;
@@ -224,7 +221,7 @@ void SL_source_mix(SL_Source_t *source, float *output, size_t frames_requested, 
                     source->on_seek(source->user_data, 0);
                 }
 
-                frames_to_read -= frames_read;
+                frames_to_write -= frames_written;
             }
         }
     }
