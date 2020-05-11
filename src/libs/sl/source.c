@@ -80,7 +80,9 @@ SL_Source_t *SL_source_create(SL_Source_Read_Callback_t on_read, SL_Source_Seek_
             .mix = _precompute_mix(0.0f, 1.0f)
         };
 
-    source->buffer = malloc(PCM_FRAME_CHUNK_SIZE * ma_get_bytes_per_frame(format, channels));
+    source->buffer = malloc(PCM_FRAME_CHUNK_SIZE * ma_get_bytes_per_frame(format, channels)); // FIXME: refactor, it's so ugly!
+    source->buffer_used = 0;
+    source->buffer_index = 0;
 
     ma_data_converter_config config = ma_data_converter_config_init(format, ma_format_f32, channels, SL_CHANNELS_PER_FRAME, sample_rate, SL_FRAMES_PER_SECOND);
     config.resampling.allowDynamicSampleRate = MA_TRUE; // required for speed throttling
@@ -167,6 +169,10 @@ void SL_source_update(SL_Source_t *source, float delta_time)
 
 void SL_source_mix(SL_Source_t *source, float *output, size_t frames_requested, const SL_Mix_t *groups)
 {
+    if (source->state == SL_SOURCE_STATE_STOPPED) {
+        return;
+    }
+
     size_t frames_processed = 0;
 
     float buffer[frames_requested * SL_CHANNELS_PER_FRAME];
@@ -174,38 +180,51 @@ void SL_source_mix(SL_Source_t *source, float *output, size_t frames_requested, 
 
     size_t frames_remaining = frames_requested;
     while (frames_remaining > 0) { // Read as much data as possible, filling the buffer and eventually looping!
-        if (source->buffer_left > 0) {
+        if (source->buffer_index < source->buffer_used) {
+            size_t buffer_available = source->buffer_used - source->buffer_index;
+
             ma_uint32 bpf = ma_get_bytes_per_frame(source->converter.config.formatIn, source->converter.config.channelsIn);
-            void *read_buffer = (char *)source->buffer + (PCM_FRAME_CHUNK_SIZE - source->buffer_left) * bpf; // FIXME: optimized and fix this!
+            void *read_buffer = (char *)source->buffer + source->buffer_index * bpf; // FIXME: optimized and fix this!
 
             ma_uint64 frames_to_convert = ma_data_converter_get_required_input_frame_count(&source->converter, frames_remaining);
 
-            ma_uint64 frames_to_read = (frames_to_convert > source->buffer_left) ? source->buffer_left : frames_to_convert;
+            ma_uint64 frames_to_read = (frames_to_convert > buffer_available) ? buffer_available : frames_to_convert;
             ma_uint64 frames_converted = frames_remaining;
             ma_data_converter_process_pcm_frames(&source->converter, read_buffer, &frames_to_read, cursor, &frames_converted);
 
-            source->buffer_left -= frames_to_read;
+            source->buffer_index += frames_to_read;
 
             cursor += frames_converted * SL_CHANNELS_PER_FRAME;
 
             frames_processed += frames_converted;
             frames_remaining -= frames_converted;
         } else {
-            if (source->state == SL_SOURCE_STATE_FINISHING) {
-                source->state = SL_SOURCE_STATE_COMPLETED;
+            if (source->state == SL_SOURCE_STATE_COMPLETED) {
+                source->state = SL_SOURCE_STATE_STOPPED;
                 break;
             }
 
-            source->buffer_left = source->on_read(source->user_data, source->buffer, PCM_FRAME_CHUNK_SIZE);
+            source->buffer_used = 0;
+            source->buffer_index = 0;
 
-            // FIXME: loop and fill in case of not enough data.
+            size_t frames_to_read = PCM_FRAME_CHUNK_SIZE;
+            while (frames_to_read > 0) {
+                ma_uint32 bpf = ma_get_bytes_per_frame(source->converter.config.formatIn, source->converter.config.channelsIn);
+                void *write_buffer = (char *)source->buffer + source->buffer_used * bpf; // FIXME: optimized and fix this!
 
-            if (source->buffer_left < PCM_FRAME_CHUNK_SIZE) {
-                if (!source->looped) {
-                    source->state = SL_SOURCE_STATE_FINISHING;
-                } else {
+                size_t frames_read = source->on_read(source->user_data, write_buffer, frames_to_read);
+
+                source->buffer_used += frames_read;
+
+                if (frames_read < frames_to_read) {
+                    if (!source->looped) {
+                        source->state = SL_SOURCE_STATE_COMPLETED;
+                        break;
+                    }
                     source->on_seek(source->user_data, 0);
                 }
+
+                frames_to_read -= frames_read;
             }
         }
     }

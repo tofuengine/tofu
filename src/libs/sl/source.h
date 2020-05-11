@@ -49,7 +49,8 @@ typedef struct _SL_Source_t {
     void *user_data;
 
     void *buffer;
-    size_t buffer_left;
+    size_t buffer_used;
+    size_t buffer_index;
 
     ma_data_converter converter;
 
