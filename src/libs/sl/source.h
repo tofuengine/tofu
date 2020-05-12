@@ -48,7 +48,7 @@ typedef struct _SL_Source_t {
     SL_Source_Seek_Callback_t on_seek;
     void *user_data;
 
-    ma_pcm_rb  buffer;
+    ma_pcm_rb buffer;
 
     ma_data_converter converter;
 
