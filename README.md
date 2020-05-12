@@ -8,7 +8,7 @@ Guess what? Yup, that's yet another game engine/framework.
 
 * Carefully crafted C99 code.
 * Self-contained, no additional runtime modules/libraries required (system-wide libraries excluded).
-* Multi-platform through cross-compilation (Windows, Linux and Raspberry-Pi... no MacOS won't be supported, ever).
+* Multi-platform through cross-compilation (Windows, Linux and Raspberry-Pi... no MacOS won't be supported, for the moment).
 
 ## Dependecies
 
