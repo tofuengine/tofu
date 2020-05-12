@@ -43,7 +43,9 @@
 
 // We are going to buffer 1 second of non-converted data. As long as the `SL_source_update()` function is called
 // once half a second we are good. Since it's very unlikely we will run at less than 2 FPS... well, we can sleep well. :)
-#define BUFFER_SIZE_IN_FRAMES   (SL_FRAMES_PER_SECOND * SL_CHANNELS_PER_FRAME)
+#define STREAMING_BUFFER_SIZE_IN_FRAMES     (SL_FRAMES_PER_SECOND * SL_CHANNELS_PER_FRAME)
+
+#define MIXING_BUFFER_SIZE_IN_FRAMES        512
 
 // We are using `miniaudio`'s ring-buffer, but we could also go for an in-house implementation
 // https://embedjournal.com/implementing-circular-buffer-embedded-c/
@@ -79,13 +81,13 @@ static inline void _produce(SL_Source_t *source, bool reset)
     }
 }
 
-static inline size_t _consume(SL_Source_t *source, size_t frames_requested, float *buffer)
+static inline size_t _consume(SL_Source_t *source, size_t frames_requested, void *buffer, size_t buffer_size_in_frames)
 {
     size_t frames_processed = 0;
 
-    float *cursor = buffer;
+    uint8_t *cursor = buffer;
 
-    size_t frames_remaining = frames_requested;
+    size_t frames_remaining = (frames_requested > buffer_size_in_frames) ? buffer_size_in_frames : frames_requested;
     while (frames_remaining > 0) { // Read as much data as possible, filling the buffer and eventually looping!
         ma_uint32 frames_available = ma_pcm_rb_available_read(&source->buffer);
         if (frames_available == 0) {
@@ -105,7 +107,7 @@ static inline size_t _consume(SL_Source_t *source, size_t frames_requested, floa
 
         ma_pcm_rb_commit_read(&source->buffer, frames_read, read_buffer);
 
-        cursor += frames_converted * SL_CHANNELS_PER_FRAME;
+        cursor += frames_converted * SL_CHANNELS_PER_FRAME * SL_BYTES_PER_FRAME;
 
         frames_processed += frames_converted;
         frames_remaining -= frames_converted;
@@ -114,7 +116,7 @@ static inline size_t _consume(SL_Source_t *source, size_t frames_requested, floa
     return frames_processed;
 }
 
-static inline void _additive_mix(SL_Source_t *source, float *output, float *input, size_t frames, const SL_Mix_t *groups)
+static inline void _additive_mix(SL_Source_t *source, void *output, void *input, size_t frames, const SL_Mix_t *groups)
 {
     const float left = source->mix.left * groups[source->group].left; // Apply panning and gain to the data.
     const float right = source->mix.right * groups[source->group].right;
@@ -163,7 +165,7 @@ SL_Source_t *SL_source_create(SL_Source_Read_Callback_t on_read, SL_Source_Seek_
             .mix = _precompute_mix(0.0f, 1.0f)
         };
 
-    ma_pcm_rb_init(format, channels, BUFFER_SIZE_IN_FRAMES, NULL, NULL, &source->buffer);
+    ma_pcm_rb_init(format, channels, STREAMING_BUFFER_SIZE_IN_FRAMES, NULL, NULL, &source->buffer);
 
     ma_data_converter_config config = ma_data_converter_config_init(format, ma_format_f32, channels, SL_CHANNELS_PER_FRAME, sample_rate, SL_FRAMES_PER_SECOND);
     config.resampling.allowDynamicSampleRate = MA_TRUE; // required for speed throttling
@@ -257,15 +259,18 @@ void SL_source_update(SL_Source_t *source, float delta_time)
     _produce(source, false);
 }
 
-void SL_source_mix(SL_Source_t *source, float *output, size_t frames_requested, const SL_Mix_t *groups)
+void SL_source_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups)
 {
     if (source->state == SL_SOURCE_STATE_STOPPED) {
         return;
     }
 
-    // FIXME: we could also use a fixed preallocated buffer and call the consume and mix functions in a loop.
-    float buffer[frames_requested * SL_CHANNELS_PER_FRAME];
-    size_t frames_processed = _consume(source, frames_requested, buffer);
+    uint8_t buffer[MIXING_BUFFER_SIZE_IN_FRAMES * SL_CHANNELS_PER_FRAME * SL_BYTES_PER_FRAME];
 
-    _additive_mix(source, output, buffer, frames_processed, groups);
+    size_t frames_remaining = frames_requested;
+    while (frames_remaining > 0) {
+        size_t frames_processed = _consume(source, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES);
+        _additive_mix(source, output, buffer, frames_processed, groups);
+        frames_remaining -= frames_processed;
+    }
 }
