@@ -26,11 +26,11 @@
 #define __SL_CONTEXT_H__
 
 #include "common.h"
-#include "source.h"
+#include "stream.h"
 
 typedef struct _SL_Context_t {
     SL_Mix_t groups[SL_GROUPS_AMOUNT];
-    SL_Source_t **sources;
+    SL_Stream_t **streams;
 } SL_Context_t;
 
 extern SL_Context_t *SL_context_create(void);
@@ -41,8 +41,8 @@ extern void SL_context_mix(SL_Context_t *context, float *output, size_t frames_r
 
 extern void SL_context_tweak(SL_Context_t *context, size_t group, float balance, float gain);
 
-extern void SL_context_track(SL_Context_t *context, SL_Source_t *source);
-extern void SL_context_untrack(SL_Context_t *context, SL_Source_t *source);
+extern void SL_context_track(SL_Context_t *context, SL_Stream_t *stream);
+extern void SL_context_untrack(SL_Context_t *context, SL_Stream_t *stream);
 
 extern void SL_context_stop(SL_Context_t *context);
 

@@ -178,7 +178,7 @@ static unsigned char stb__perlin_randtab_grad_idx[512] =
 
 static float stb__perlin_lerp(float a, float b, float t)
 {
-   return a * (1.0f - t) + b * t;
+   return a + (b-a) * t;
 }
 
 static int stb__perlin_fastfloor(float a)

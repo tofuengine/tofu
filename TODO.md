@@ -59,10 +59,12 @@
   * remove the group idea from the sound API. Not needed, since if we want to handle group of sound we can just make a Lua table of them.
   * (BUG) fixed the pcall stack dump not working, being relative to the caller not the called function.
   * re-adding group support, but this time in form of a table of "mix values" (with balance a gain control).
-  * switching to FLAC format, compressed lossless anolgue of the PNG format.
+  * switching to FLAC format, compressed lossless analogue of the PNG format.
   * fixed bug that cause individual sources not to add-up values in the final mix.
   * definitely ditched cross-mixing... or not?
   * fixed warning in Windows build for miniaudio.
+  * definitely I need to use a ring-buffer to stream audio. We could be tempted to always stream w/o buffers, having SDD and such... but that's not the case in general. Miniaudio has a ring-buffer API.
+    * tried miniaudio ringbuffer, but it's easier to buffer myself.
 
 ```java
   //do panning

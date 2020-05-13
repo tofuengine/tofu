@@ -80,7 +80,7 @@ SL_Context_t *SL_context_create(void)
     }
 
     *context = (SL_Context_t){
-            .sources = NULL
+            .streams = NULL
         };
 
     for (size_t i = 0; i < SL_GROUPS_AMOUNT; ++i) {
@@ -97,7 +97,7 @@ void SL_context_destroy(SL_Context_t *context)
         return;
     }
 
-    arrfree(context->sources);
+    arrfree(context->streams);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context groups freed");
 
     free(context);
@@ -106,10 +106,10 @@ void SL_context_destroy(SL_Context_t *context)
 
 void SL_context_update(SL_Context_t *context, float delta_time)
 {
-    SL_Source_t **current = context->sources;
-    for (int count = arrlen(context->sources); count; --count) {
-        SL_Source_t *source = *(current++);
-        SL_source_update(source, delta_time);
+    SL_Stream_t **current = context->streams;
+    for (int count = arrlen(context->streams); count; --count) {
+        SL_Stream_t *stream = *(current++);
+        SL_stream_update(stream, delta_time);
     }
 }
 
@@ -117,10 +117,10 @@ void SL_context_mix(SL_Context_t *context, float *output, size_t frames_requeste
 {
     const SL_Mix_t *groups = context->groups;
 
-    SL_Source_t **current = context->sources;
-    for (int count = arrlen(context->sources); count; --count) {
-        SL_Source_t *source = *(current++);
-        SL_source_mix(source, output, frames_requested, groups); // FIXME: pass the dereferences mix? API violation?
+    SL_Stream_t **current = context->streams;
+    for (int count = arrlen(context->streams); count; --count) {
+        SL_Stream_t *stream = *(current++);
+        SL_stream_mix(stream, output, frames_requested, groups); // FIXME: pass the dereferences mix? API violation?
     }
 }
 
@@ -129,23 +129,23 @@ void SL_context_tweak(SL_Context_t *context, size_t group, float balance, float 
     context->groups[group] = _precompute_mix(balance, gain);
 }
 
-void SL_context_track(SL_Context_t *context, SL_Source_t *source)
+void SL_context_track(SL_Context_t *context, SL_Stream_t *stream)
 {
-    size_t count = arrlen(context->sources);
+    size_t count = arrlen(context->streams);
     for (size_t i = 0; i < count; ++i) {
-        if (context->sources[i] == source) {
+        if (context->streams[i] == stream) {
             return;
         }
     }
-    arrpush(context->sources, source);
+    arrpush(context->streams, stream);
 }
 
-void SL_context_untrack(SL_Context_t *context, SL_Source_t *source)
+void SL_context_untrack(SL_Context_t *context, SL_Stream_t *stream)
 {
-    size_t count = arrlen(context->sources);
+    size_t count = arrlen(context->streams);
     for (size_t i = 0; i < count; ++i) {
-        if (context->sources[i] == source) {
-            arrdel(context->sources, i);
+        if (context->streams[i] == stream) {
+            arrdel(context->streams, i);
             break;
         }
     }
@@ -153,9 +153,9 @@ void SL_context_untrack(SL_Context_t *context, SL_Source_t *source)
 
 void SL_context_stop(SL_Context_t *context)
 {
-    SL_Source_t **current = context->sources;
-    for (int count = arrlen(context->sources); count; --count) {
-        SL_Source_t *source = *(current++);
-        SL_source_stop(source);
+    SL_Stream_t **current = context->streams;
+    for (int count = arrlen(context->streams); count; --count) {
+        SL_Stream_t *stream = *(current++);
+        SL_stream_stop(stream);
     }
 }
