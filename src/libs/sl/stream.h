@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __SL_stream_H__
-#define __SL_stream_H__
+#ifndef __SL_STREAM_H__
+#define __SL_STREAM_H__
 
 #include <miniaudio/miniaudio.h>
 
@@ -43,7 +43,7 @@ typedef enum _SL_Stream_States_t {
     SL_Stream_States_t_CountOf
 } SL_Stream_States_t;
 
-typedef struct _SL_stream_t {
+typedef struct _SL_Stream_t {
     SL_Stream_Read_Callback_t on_read;
     SL_Stream_Seek_Callback_t on_seek;
     void *user_data;
@@ -79,4 +79,4 @@ extern void SL_stream_rewind(SL_Stream_t *stream);
 extern void SL_stream_update(SL_Stream_t *stream, float delta_time);
 extern void SL_stream_mix(SL_Stream_t *stream, void *output, size_t frames_requested, const SL_Mix_t *groups);
 
-#endif  /* __SL_stream_H__ */
+#endif  /* __SL_STREAM_H__ */

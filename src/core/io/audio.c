@@ -35,13 +35,6 @@
 
 #define LOG_CONTEXT "audio"
 
-// We are using floating point format for simpler and more consistent mixing. Two channels are enough to have some
-// panning effects. A sample rate of 48kHz is the optimal choice since it's the internal default for many soundcards
-// and converting from lower sample rates is simpler.
-#define DEVICE_FORMAT           ma_format_f32
-#define DEVICE_CHANNELS         2
-#define DEVICE_SAMPLE_RATE      48000
-
 static void _log_callback(ma_context *context, ma_device *device, ma_uint32 log_level, const char *message)
 {
     Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "[%p:%p] %d %s", context, device, log_level, message);
@@ -55,7 +48,7 @@ static void _data_callback(ma_device *device, void *output, const void *input, m
     ma_mutex_lock(&audio->lock);
 
 //    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d frames requested for device %p", frame_count, device);
-    SL_context_mix(audio->sl, (float *)output, frame_count);
+    SL_context_mix(audio->sl, output, frame_count);
 
     ma_mutex_unlock(&audio->lock);
 }
@@ -86,9 +79,13 @@ bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration
     audio->device_config = ma_device_config_init(ma_device_type_playback);
     // TODO: loop over available devices and use the one specified in the configuration. Useful when more than one device is available.
     //    config.playback.pDeviceID = &pPlaybackDeviceInfos[chosenPlaybackDeviceIndex].id; 
-    audio->device_config.playback.format         = DEVICE_FORMAT;
-    audio->device_config.playback.channels       = DEVICE_CHANNELS;
-    audio->device_config.sampleRate              = DEVICE_SAMPLE_RATE;
+#if SL_BYTES_PER_FRAME == 2
+    audio->device_config.playback.format         = ma_format_s16;
+#elif SL_BYTES_PER_FRAME == 4
+    audio->device_config.playback.format         = ma_format_f32;
+#endif
+    audio->device_config.playback.channels       = SL_CHANNELS_PER_FRAME;
+    audio->device_config.sampleRate              = SL_FRAMES_PER_SECOND;
     audio->device_config.dataCallback            = _data_callback;
 //    audio->device_config.stopCallback            = _stop_callback;
     audio->device_config.pUserData               = (void *)audio;

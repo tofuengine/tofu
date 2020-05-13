@@ -25,8 +25,11 @@
 #ifndef __SL_COMMON_H__
 #define __SL_COMMON_H__
 
-#define SL_BYTES_PER_FRAME      sizeof(float)
-#define SL_FRAMES_PER_SECOND    48000
+// We could use floating point format for simpler and more consistent mixing. Two channels are enough to have some
+// panning effects. A sample rate of 48kHz is the optimal choice since it's the internal default for many soundcards
+// and converting from lower sample rates is simpler.
+#define SL_BYTES_PER_FRAME      2
+#define SL_FRAMES_PER_SECOND    22050
 #define SL_CHANNELS_PER_FRAME   2
 
 #define SL_GROUPS_AMOUNT        256

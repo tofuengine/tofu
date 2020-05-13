@@ -116,18 +116,30 @@ static inline size_t _consume(SL_Stream_t *stream, size_t frames_requested, void
     return frames_processed;
 }
 
+// Each stream adds up in the output buffer, that's why we call it "additive mix".
+// TODO: reuse this with the sample object.
 static inline void _additive_mix(SL_Stream_t *stream, void *output, void *input, size_t frames, const SL_Mix_t *groups)
 {
     const float left = stream->mix.left * groups[stream->group].left; // Apply panning and gain to the data.
     const float right = stream->mix.right * groups[stream->group].right;
 
+#if SL_BYTES_PER_FRAME == 2
+    int16_t *sptr = input;
+    int16_t *dptr = output;
+
+    for (size_t i = 0; i < frames; ++i) {
+        *(dptr++) += (int16_t)((float)*(sptr++) * left);
+        *(dptr++) += (int16_t)((float)*(sptr++) * right);
+    }
+#elif SL_BYTES_PER_FRAME == 4
     float *sptr = input;
     float *dptr = output;
 
-    for (size_t i = 0; i < frames; ++i) { // Each stream adds up in the output buffer, that's why we call it "additive mix".
+    for (size_t i = 0; i < frames; ++i) {
         *(dptr++) += *(sptr++) * left;
         *(dptr++) += *(sptr++) * right;
     }
+#endif
 }
 
 static inline SL_Mix_t _precompute_mix(float pan, float gain)
@@ -167,7 +179,11 @@ SL_Stream_t *SL_stream_create(SL_Stream_Read_Callback_t on_read, SL_Stream_Seek_
 
     ma_pcm_rb_init(format, channels, STREAMING_BUFFER_SIZE_IN_FRAMES, NULL, NULL, &stream->buffer);
 
+#if SL_BYTES_PER_FRAME == 2
+    ma_data_converter_config config = ma_data_converter_config_init(format, ma_format_s16, channels, SL_CHANNELS_PER_FRAME, sample_rate, SL_FRAMES_PER_SECOND);
+#elif SL_BYTES_PER_FRAME == 4
     ma_data_converter_config config = ma_data_converter_config_init(format, ma_format_f32, channels, SL_CHANNELS_PER_FRAME, sample_rate, SL_FRAMES_PER_SECOND);
+#endif
     config.resampling.allowDynamicSampleRate = MA_TRUE; // required for speed throttling
     ma_result result = ma_data_converter_init(&config, &stream->converter);
     if (result != MA_SUCCESS) {
