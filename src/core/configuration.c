@@ -94,9 +94,6 @@ static void on_parameter(Configuration_t *configuration, const char *key, const 
     } else
     if (strcmp(key, "gamepad-outer-deadzone") == 0) {
         configuration->gamepad_outer_deadzone = (float)strtod(value, NULL);
-    } else
-    if (strcmp(key, "debug") == 0) {
-        configuration->debug = strcmp(value, "true") == 0;
     }
 }
 
@@ -178,8 +175,7 @@ void Configuration_parse(Configuration_t *configuration, const char *data)
             .cursor_speed = 128.0f,
             .gamepad_sensitivity = 0.5f,
             .gamepad_inner_deadzone = 0.25f,
-            .gamepad_outer_deadzone = 0.0f,
-            .debug = true
+            .gamepad_outer_deadzone = 0.0f
         };
 
     if (!data) {
