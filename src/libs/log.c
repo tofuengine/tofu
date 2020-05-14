@@ -57,58 +57,31 @@
 #endif
 
 #ifdef USE_COLORS
-static const char *_colors[Log_Levels_t_CountOf] = {
-    COLOR_WHITE, COLOR_BLUE_HC, COLOR_CYAN, COLOR_GREEN, COLOR_YELLOW, COLOR_RED, COLOR_MAGENTA, COLOR_WHITE
+static const char *_colors[] = {
+    COLOR_MAGENTA, COLOR_RED, COLOR_YELLOW, COLOR_GREEN, COLOR_CYAN, COLOR_BLUE_HC
 };
 #endif
 
-static const char *_prefixes[Log_Levels_t_CountOf] = {
-    "ALL", "TRACE", "DEBUG", "INFO", "WARNING", "ERROR", "FATAL", "NONE"
+static const char *_prefixes[] = {
+    "FATAL", "ERROR", "WARNING", "INFO", "DEBUG", "TRACE"
 };
 
-static Log_Levels_t _level;
-static FILE *_stream;
-
-static void write(Log_Levels_t level, const char *context, const char *text, va_list args)
+static void write(int level, const char *context, const char *text, va_list args)
 {
-    if (level < _level) {
-        return;
-    }
-
-    if (!_stream) {
-        return;
-    }
-
 #ifdef USE_COLORS
-    fputs(_colors[level], _stream);
+    fputs(_colors[level], stderr);
 #endif
-    fprintf(_stream, "[%s:%s] ", _prefixes[level], context);
-    vfprintf(_stream, text, args);
+    fprintf(stderr, "[%s:%s] ", _prefixes[level], context);
+    vfprintf(stderr, text, args);
 #ifdef USE_COLORS
-    fputs(COLOR_OFF, _stream);
+    fputs(COLOR_OFF, stderr);
 #endif
     if (text[strlen(text) - 1] != '\n') {
-        fputs("\n", _stream);
+        fputs("\n", stderr);
     }
 }
 
-extern void Log_initialize(void)
-{
-#ifdef DEBUG
-    _level = LOG_LEVELS_ALL;
-#else
-    _level = LOG_LEVELS_ERROR;
-#endif
-    _stream = stderr;
-}
-
-extern void Log_configure(bool enabled, FILE *stream)
-{
-    _level = enabled ? LOG_LEVELS_ALL : LOG_LEVELS_NONE;
-    _stream = stream ? _stream : stderr;
-}
-
-void Log_write(Log_Levels_t level, const char *context, const char *text, ...)
+void Log_write(int level, const char *context, const char *text, ...)
 {
     va_list args;
     va_start(args, text);
@@ -116,7 +89,7 @@ void Log_write(Log_Levels_t level, const char *context, const char *text, ...)
     va_end(args);
 }
 
-void Log_assert(bool condition, Log_Levels_t level, const char *context, const char *text, ...)
+void Log_assert(bool condition, int level, const char *context, const char *text, ...)
 {
     if (condition) {
         return;
