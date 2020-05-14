@@ -92,7 +92,7 @@ static int xform_new(lua_State *L)
                     .table = NULL
                 }
         };
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform %p allocated for default canvas", self);
+    _LW_D(LOG_CONTEXT, "xform %p allocated for default canvas", self);
 
     luaL_setmetatable(L, META_TABLE);
 
@@ -108,20 +108,20 @@ static int xform_gc(lua_State *L)
 
     if (self->xform.table) {
         arrfree(self->xform.table);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform scan-line table %p freed", self->xform.table);
+        _LW_D(LOG_CONTEXT, "xform scan-line table %p freed", self->xform.table);
     }
 
     if (self->context_reference != LUAX_REFERENCE_NIL) {
         luaX_unref(L, self->context_reference);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context reference #%d released", self->context_reference);
+        _LW_D(LOG_CONTEXT, "context reference #%d released", self->context_reference);
     }
 
     if (self->surface_reference != LUAX_REFERENCE_NIL) {
         luaX_unref(L, self->surface_reference);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface reference #%d released", self->surface_reference);
+        _LW_D(LOG_CONTEXT, "surface reference #%d released", self->surface_reference);
     }
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform %p finalized", self);
+    _LW_D(LOG_CONTEXT, "xform %p finalized", self);
 
     return 0;
 }
@@ -139,17 +139,17 @@ static int xform_canvas(lua_State *L)
 
     if (self->context_reference != LUAX_REFERENCE_NIL) {
         luaX_unref(L, self->context_reference);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context reference #%d released", self->context_reference);
+        _LW_D(LOG_CONTEXT, "context reference #%d released", self->context_reference);
     }
 
     if (canvas) {
         self->context = canvas->context;
         self->context_reference = luaX_ref(L, 2);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context %p attached w/ reference #%d", self->context, self->context_reference);
+        _LW_D(LOG_CONTEXT, "context %p attached w/ reference #%d", self->context, self->context_reference);
     } else {
         self->context = display->context;
         self->context_reference = LUAX_REFERENCE_NIL;
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "default context attached");
+        _LW_D(LOG_CONTEXT, "default context attached");
     }
 
     return 0;
@@ -313,7 +313,7 @@ static int xform_table1(lua_State *L)
 
     if (self->xform.table) {
         arrfree(self->xform.table);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "scan-line table %p freed", self->xform.table);
+        _LW_D(LOG_CONTEXT, "scan-line table %p freed", self->xform.table);
     }
     self->xform.table = NULL;
 
@@ -346,7 +346,7 @@ static GL_XForm_Registers_t _string_to_register(const char *id) // TODO: move to
     if (id[0] == 'y') {
         return GL_XFORM_REGISTER_Y;
     }
-    Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "unknown register w/ id `%s`", id);
+    _LW_W(LOG_CONTEXT, "unknown register w/ id `%s`", id);
     return GL_XFORM_REGISTER_A;
 }
 
@@ -368,7 +368,7 @@ static int xform_table2(lua_State *L)
         lua_pushnil(L);
         for (size_t i = 0; lua_next(L, -2); ++i) { // Scan the value, which is an array.
             if (i == GL_XForm_Registers_t_CountOf) {
-                Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "too many operation for table entry w/ id #%d", index);
+                _LW_W(LOG_CONTEXT, "too many operation for table entry w/ id #%d", index);
                 lua_pop(L, 2);
                 break;
             }
@@ -388,7 +388,7 @@ static int xform_table2(lua_State *L)
     GL_XForm_t *xform = &self->xform;
     if (xform->table) {
         arrfree(xform->table);
-//        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "scan-line table %p reallocated as %p", xform->table, table);
+//        _LW_T(LOG_CONTEXT, "scan-line table %p reallocated as %p", xform->table, table);
     }
     xform->table = table;
 

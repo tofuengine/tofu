@@ -208,9 +208,9 @@ static void _switch(Input_t *input)
 
     state->gamepad_id = gamepad_id;
     if (gamepad_id == -1) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "keyboard/mouse input active");
+        _LW_D(LOG_CONTEXT, "keyboard/mouse input active");
     } else {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "gamepad #%d input active (`%s`)", gamepad_id, glfwGetGamepadName(gamepad_id));
+        _LW_D(LOG_CONTEXT, "gamepad #%d input active (`%s`)", gamepad_id, glfwGetGamepadName(gamepad_id));
     }
 
 #ifndef __INPUT_SELECTION__
@@ -224,7 +224,7 @@ bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration
 {
     int result = glfwUpdateGamepadMappings(configuration->mappings);
     if (result == GLFW_FALSE) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't update gamepad mappings");
+        _LW_E(LOG_CONTEXT, "can't update gamepad mappings");
         return false;
     }
 
@@ -252,14 +252,14 @@ bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration
     for (int i = 0; i < INPUT_GAMEPADS_COUNT; ++i) { // Detect the available gamepads.
         input->gamepads[i] = glfwJoystickIsGamepad(i) == GLFW_TRUE;
         if (input->gamepads[i]) {
-            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "gamepad #%d found (GUID `%s`, name `%s`)", i, glfwGetJoystickGUID(i), glfwGetGamepadName(i));
+            _LW_D(LOG_CONTEXT, "gamepad #%d found (GUID `%s`, name `%s`)", i, glfwGetJoystickGUID(i), glfwGetGamepadName(i));
             ++gamepads_count;
         }
     }
     if (gamepads_count == 0) {
-        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "no gamepads detected");
+        _LW_W(LOG_CONTEXT, "no gamepads detected");
     } else {
-        Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "%d gamepads detected", gamepads_count);
+        _LW_I(LOG_CONTEXT, "%d gamepads detected", gamepads_count);
     }
 
     _switch(input);
@@ -291,13 +291,13 @@ void Input_update(Input_t *input, float delta_time)
         button->time += delta_time;
 
         while (button->time >= button->period) {
-            Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "#%d %.3fs", i, button->time);
+            _LW_T(LOG_CONTEXT, "#%d %.3fs", i, button->time);
             button->time -= button->period;
 
             button->state.down = !button->state.down;
             button->state.pressed = button->state.down;
             button->state.released = !button->state.down;
-            Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "#%d %.3fs %d %d %d", i, button->time, button->state.down, button->state.pressed, button->state.released);
+            _LW_T(LOG_CONTEXT, "#%d %.3fs %d %d %d", i, button->time, button->state.down, button->state.pressed, button->state.released);
         }
     }
 
@@ -355,7 +355,7 @@ void Input_process(Input_t *input)
             if (button->state.pressed && button->period > 0.0f) { // On press, track the trigger state and reset counter.
                 button->state.triggered = true;
                 button->time = 0.0f;
-                Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "button #%d triggered, %.3fs %d %d %d", i, button->time, button->state.down, button->state.pressed, button->state.released);
+                _LW_T(LOG_CONTEXT, "button #%d triggered, %.3fs %d %d %d", i, button->time, button->state.down, button->state.pressed, button->state.released);
             }
         } else
         if (!is_down) {
@@ -364,19 +364,19 @@ void Input_process(Input_t *input)
             button->state.released = was_down; // Track release is was previously down.
 
             button->state.triggered = false;
-            Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "button #%d held for %.3fs %d %d %d", i, button->time, button->state.down, button->state.pressed, button->state.released);
+            _LW_T(LOG_CONTEXT, "button #%d held for %.3fs %d %d %d", i, button->time, button->state.down, button->state.pressed, button->state.released);
         }
     }
 
     if (input->configuration.exit_key_enabled) {
         if (buttons[INPUT_BUTTON_QUIT].state.pressed) {
-            Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "exit key pressed");
+            _LW_I(LOG_CONTEXT, "exit key pressed");
             glfwSetWindowShouldClose(input->window, true);
         }
     }
 
     if (buttons[INPUT_BUTTON_SWITCH].state.pressed) {
-        Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "input switch key pressed");
+        _LW_I(LOG_CONTEXT, "input switch key pressed");
         _switch(input);
     }
 }
@@ -387,5 +387,5 @@ void Input_auto_repeat(Input_t *input, Input_Buttons_t id, float period)
             .period = period,
             .time = 0.0f
         };
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "auto-repeat set to %.3fs for button #%d", period, id);
+    _LW_D(LOG_CONTEXT, "auto-repeat set to %.3fs for button #%d", period, id);
 }

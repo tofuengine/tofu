@@ -135,7 +135,7 @@ static int canvas_new0(lua_State *L)
             .context = display->context,
             .allocated = false
         };
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas %p allocated w/ default context", self);
+    _LW_D(LOG_CONTEXT, "canvas %p allocated w/ default context", self);
 
     luaL_setmetatable(L, META_TABLE);
 
@@ -162,14 +162,14 @@ static int canvas_new1(lua_State *L)
         return luaL_error(L, "can't decode file `%s`", file);
     }
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context %p loaded from file `%s`", context, file);
+    _LW_D(LOG_CONTEXT, "context %p loaded from file `%s`", context, file);
 
     Canvas_Object_t *self = (Canvas_Object_t *)lua_newuserdata(L, sizeof(Canvas_Object_t));
     *self = (Canvas_Object_t){
             .context = context,
             .allocated = true
         };
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas %p allocated w/ context", self, context);
+    _LW_D(LOG_CONTEXT, "canvas %p allocated w/ context", self, context);
 
     luaL_setmetatable(L, META_TABLE);
 
@@ -195,7 +195,7 @@ static int canvas_new2(lua_State *L)
             .context = context,
             .allocated = true
         };
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas %p allocated w/ context", self, context);
+    _LW_D(LOG_CONTEXT, "canvas %p allocated w/ context", self, context);
 
     luaL_setmetatable(L, META_TABLE);
 
@@ -220,10 +220,10 @@ static int canvas_gc(lua_State *L)
 
     if (self->allocated) {
         GL_context_destroy(self->context);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context %p destroyed", self->context);
+        _LW_D(LOG_CONTEXT, "context %p destroyed", self->context);
     }
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas %p finalized", self);
+    _LW_D(LOG_CONTEXT, "canvas %p finalized", self);
 
     return 0;
 }
@@ -727,7 +727,7 @@ static int canvas_polyline(lua_State *L)
         const GL_Context_t *context = self->context;
         GL_primitive_polyline(context, vertices, count, index);
     } else {
-        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "polyline requires al least 2 points (provided %d)", count);
+        _LW_W(LOG_CONTEXT, "polyline requires al least 2 points (provided %d)", count);
     }
 
     arrfree(vertices);

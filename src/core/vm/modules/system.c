@@ -95,7 +95,7 @@ static int system_quit(lua_State *L)
     return 0;
 }
 
-static int log_write(lua_State *L, Log_Levels_t level)
+static int _log_write(lua_State *L, int level)
 {
     int argc = lua_gettop(L);
     lua_getglobal(L, "tostring"); // F
@@ -117,20 +117,20 @@ static int log_write(lua_State *L, Log_Levels_t level)
 
 static int system_info(lua_State *L)
 {
-    return log_write(L, LOG_LEVELS_INFO);
+    return _log_write(L, LOG_LEVEL_INFO);
 }
 
 static int system_warning(lua_State *L)
 {
-    return log_write(L, LOG_LEVELS_WARNING);
+    return _log_write(L, LOG_LEVEL_WARNING);
 }
 
 static int system_error(lua_State *L)
 {
-    return log_write(L, LOG_LEVELS_ERROR);
+    return _log_write(L, LOG_LEVEL_ERROR);
 }
 
 static int system_fatal(lua_State *L)
 {
-    return log_write(L, LOG_LEVELS_FATAL);
+    return _log_write(L, LOG_LEVEL_FATAL);
 }

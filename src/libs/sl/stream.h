@@ -35,6 +35,12 @@
 typedef size_t (*SL_Stream_Read_Callback_t)(void *user_data, void *output, size_t frames_requested);
 typedef void (*SL_Stream_Seek_Callback_t)(void *user_data, size_t frame_offset);
 
+typedef enum _SL_Stream_Types_t {
+    SL_STREAM_TYPE_STATIC,
+    SL_STREAM_TYPE_STREAMED,
+    SL_Stream_Types_t_CountOf
+} SL_Stream_Types_t;
+
 typedef enum _SL_Stream_States_t {
     SL_STREAM_STATE_STOPPED,
     SL_STREAM_STATE_PLAYING,

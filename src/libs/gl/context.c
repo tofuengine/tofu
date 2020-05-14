@@ -72,7 +72,7 @@ GL_Context_t *GL_context_decode(size_t width, size_t height, const void *pixels,
 
     _reset_state(&context->state, surface);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context decoded");
+    _LW_D(LOG_CONTEXT, "context decoded");
     return context;
 }
 
@@ -80,7 +80,7 @@ GL_Context_t *GL_context_create(size_t width, size_t height)
 {
     GL_Surface_t *surface = GL_surface_create(width, height);
     if (!surface) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "context create %dx%d surface", width, height);
+        _LW_E(LOG_CONTEXT, "context create %dx%d surface", width, height);
         return NULL;
     }
 
@@ -95,7 +95,7 @@ GL_Context_t *GL_context_create(size_t width, size_t height)
 
     _reset_state(&context->state, surface);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context created");
+    _LW_D(LOG_CONTEXT, "context created");
     return context;
 }
 
@@ -106,13 +106,13 @@ void GL_context_destroy(GL_Context_t *context)
     }
 
     arrfree(context->stack);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context stack freed");
+    _LW_D(LOG_CONTEXT, "context stack freed");
 
     GL_surface_destroy(context->surface);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context surface destroyed");
+    _LW_D(LOG_CONTEXT, "context surface destroyed");
 
     free(context);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context freed");
+    _LW_D(LOG_CONTEXT, "context freed");
 }
 
 void GL_context_push(GL_Context_t *context)
@@ -123,7 +123,7 @@ void GL_context_push(GL_Context_t *context)
 void GL_context_pop(GL_Context_t *context)
 {
     if (arrlen(context->stack) < 1) {
-        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "no states to pop from context");
+        _LW_W(LOG_CONTEXT, "no states to pop from context");
         return;
     }
     context->state = arrpop(context->stack);
@@ -132,10 +132,10 @@ void GL_context_pop(GL_Context_t *context)
 void GL_context_reset(GL_Context_t *context)
 {
     arrfree(context->stack);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context stack freed");
+    _LW_D(LOG_CONTEXT, "context stack freed");
 
     _reset_state(&context->state, context->surface);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context reset");
+    _LW_D(LOG_CONTEXT, "context reset");
 }
 
 void GL_context_background(GL_Context_t *context, GL_Pixel_t index)

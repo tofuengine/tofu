@@ -91,7 +91,7 @@ static inline size_t _consume(SL_Stream_t *stream, size_t frames_requested, void
     while (frames_remaining > 0) { // Read as much data as possible, filling the buffer and eventually looping!
         ma_uint32 frames_available = ma_pcm_rb_available_read(&stream->buffer);
         if (frames_available == 0) {
-            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "buffer underrun, %d bytes missing", frames_remaining);
+            _LW_W(LOG_CONTEXT, "buffer underrun, %d bytes missing", frames_remaining);
             break;
         }
 
@@ -187,7 +187,7 @@ SL_Stream_t *SL_stream_create(SL_Stream_Read_Callback_t on_read, SL_Stream_Seek_
     config.resampling.allowDynamicSampleRate = MA_TRUE; // required for speed throttling
     ma_result result = ma_data_converter_init(&config, &stream->converter);
     if (result != MA_SUCCESS) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "failed to create stream data converter");
+        _LW_D(LOG_CONTEXT, "failed to create stream data converter");
         ma_pcm_rb_uninit(&stream->buffer);
         free(stream);
         return NULL;
@@ -195,7 +195,7 @@ SL_Stream_t *SL_stream_create(SL_Stream_Read_Callback_t on_read, SL_Stream_Seek_
 
     _produce(stream, true);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "stream created");
+    _LW_D(LOG_CONTEXT, "stream created");
     return stream;
 }
 
@@ -206,13 +206,13 @@ void SL_stream_destroy(SL_Stream_t *stream)
     }
 
     ma_data_converter_uninit(&stream->converter);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "stream data converted uninitialized");
+    _LW_D(LOG_CONTEXT, "stream data converted uninitialized");
 
     ma_pcm_rb_uninit(&stream->buffer);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "stream ring-buffer uninitialized");
+    _LW_D(LOG_CONTEXT, "stream ring-buffer uninitialized");
 
     free(stream);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "stream freed");
+    _LW_D(LOG_CONTEXT, "stream freed");
 }
 
 void SL_stream_group(SL_Stream_t *stream, size_t group)
@@ -256,7 +256,7 @@ void SL_stream_stop(SL_Stream_t *stream)
 void SL_stream_rewind(SL_Stream_t *stream)
 {
     if (stream->state != SL_STREAM_STATE_STOPPED) {
-        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "can't rewind while playing");
+        _LW_W(LOG_CONTEXT, "can't rewind while playing");
         return;
     }
 
