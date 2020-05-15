@@ -122,7 +122,7 @@ static int grid_new(lua_State *L)
             .data_size = data_size
         };
 
-    _LW_D(LOG_CONTEXT, "grid %p allocated w/ data %p", self, data);
+    TOFU_LOG_D(LOG_CONTEXT, "grid %p allocated w/ data %p", self, data);
 
     luaL_setmetatable(L, META_TABLE);
 
@@ -137,9 +137,9 @@ static int grid_gc(lua_State *L)
     Grid_Object_t *self = (Grid_Object_t *)LUAX_USERDATA(L, 1);
 
     free(self->data);
-    _LW_D(LOG_CONTEXT, "data %p freed", self->data);
+    TOFU_LOG_D(LOG_CONTEXT, "data %p freed", self->data);
 
-    _LW_D(LOG_CONTEXT, "grid %p finalized", self);
+    TOFU_LOG_D(LOG_CONTEXT, "grid %p finalized", self);
 
     return 0;
 }

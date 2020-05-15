@@ -64,7 +64,7 @@ static bool _attach(File_System_t *file_system, const char *path)
 {
     File_System_Mount_t *mount = _mount(path); // Path need to be already resolved.
     if (!mount) {
-        _LW_E(LOG_CONTEXT, "can't attach mount-point `%s`", path);
+        TOFU_LOG_E(LOG_CONTEXT, "can't attach mount-point `%s`", path);
         return false;
     }
 
@@ -80,7 +80,7 @@ bool FS_initialize(File_System_t *file_system, const char *base_path) // TODO: s
     char resolved[FILE_PATH_MAX]; // Using local buffer to avoid un-tracked `malloc()` for the syscall.
     char *ptr = realpath(base_path ? base_path : FILE_PATH_CURRENT_SZ, resolved);
     if (!ptr) {
-        _LW_E(LOG_CONTEXT, "can't resolve `%s`", base_path);
+        TOFU_LOG_E(LOG_CONTEXT, "can't resolve `%s`", base_path);
         return false;
     }
 
@@ -123,7 +123,7 @@ bool FS_attach(File_System_t *file_system, const char *path)
     char resolved[FILE_PATH_MAX]; // Using local buffer to avoid un-tracked `malloc()` for the syscall.
     char *ptr = realpath(path ? path : FILE_PATH_CURRENT_SZ, resolved);
     if (!ptr) {
-        _LW_E(LOG_CONTEXT, "can't resolve `%s`", path);
+        TOFU_LOG_E(LOG_CONTEXT, "can't resolve `%s`", path);
         return false;
     }
 
@@ -134,7 +134,7 @@ File_System_Handle_t *FS_locate_and_open(const File_System_t *file_system, const
 {
     File_System_Mount_t *mount = FS_locate(file_system, file);
     if (!mount) {
-        _LW_E(LOG_CONTEXT, "can't locale file `%s`", file);
+        TOFU_LOG_E(LOG_CONTEXT, "can't locale file `%s`", file);
         return NULL;
     }
 

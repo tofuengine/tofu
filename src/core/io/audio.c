@@ -37,7 +37,7 @@
 
 static void _log_callback(ma_context *context, ma_device *device, ma_uint32 log_level, const char *message)
 {
-    _LW_E(LOG_CONTEXT, "[%p:%p] %d %s", context, device, log_level, message);
+    TOFU_LOG_E(LOG_CONTEXT, "[%p:%p] %d %s", context, device, log_level, message);
 }
 
 // Note that output buffer is already pre-zeroed upon call.
@@ -47,7 +47,7 @@ static void _data_callback(ma_device *device, void *output, const void *input, m
 
     ma_mutex_lock(&audio->lock);
 
-//    _LW_T(LOG_CONTEXT, "%d frames requested for device %p", frame_count, device);
+//    TOFU_LOG_T(LOG_CONTEXT, "%d frames requested for device %p", frame_count, device);
     SL_context_mix(audio->sl, output, frame_count);
 
     ma_mutex_unlock(&audio->lock);
@@ -65,13 +65,13 @@ bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration
 
     audio->sl = SL_context_create();
     if (!audio->sl) {
-        _LW_F(LOG_CONTEXT, "can't create the sound context");
+        TOFU_LOG_F(LOG_CONTEXT, "can't create the sound context");
         return false;
     }
 
     ma_result result = ma_context_init(NULL, 0, &audio->context_config, &audio->context);
     if (result != MA_SUCCESS) {
-        _LW_F(LOG_CONTEXT, "can't initialize the audio context");
+        TOFU_LOG_F(LOG_CONTEXT, "can't initialize the audio context");
         SL_context_destroy(audio->sl);
         return false;
     }
@@ -93,7 +93,7 @@ bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration
 
     result = ma_device_init(&audio->context, &audio->device_config, &audio->device);
     if (result != MA_SUCCESS) {
-        _LW_F(LOG_CONTEXT, "can't initialize the audio device");
+        TOFU_LOG_F(LOG_CONTEXT, "can't initialize the audio device");
         ma_context_uninit(&audio->context);
         SL_context_destroy(audio->sl);
         return false;
@@ -101,7 +101,7 @@ bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration
 
     result = ma_mutex_init(&audio->context, &audio->lock);
     if (result != MA_SUCCESS) {
-        _LW_F(LOG_CONTEXT, "can't create the synchronization object");
+        TOFU_LOG_F(LOG_CONTEXT, "can't create the synchronization object");
         ma_device_uninit(&audio->device);
         ma_context_uninit(&audio->context);
         SL_context_destroy(audio->sl);
@@ -111,7 +111,7 @@ bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration
     // FIXME: start only on incoming data and pause (in the update function) when no more data is present.
     result = ma_device_start(&audio->device); // The audio device will be always running, waiting to process data.
     if (result != MA_SUCCESS) {
-        _LW_F(LOG_CONTEXT, "can't start the audio device");
+        TOFU_LOG_F(LOG_CONTEXT, "can't start the audio device");
         ma_mutex_uninit(&audio->lock);
         ma_device_uninit(&audio->device);
         ma_context_uninit(&audio->context);
@@ -122,12 +122,12 @@ bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration
     audio->volume = configuration->master_volume;
     ma_device_set_master_volume(&audio->device, configuration->master_volume); // Set the initial volume.
 
-    _LW_I(LOG_CONTEXT, "device-name: %s", audio->device.playback.name);
-    _LW_I(LOG_CONTEXT, "back-end: miniaudio / %s", ma_get_backend_name(audio->context.backend));
-    _LW_I(LOG_CONTEXT, "format: %s / %s", ma_get_format_name(audio->device.playback.format), ma_get_format_name(audio->device.playback.internalFormat));
-    _LW_I(LOG_CONTEXT, "channels: %d / %d", audio->device.playback.channels, audio->device.playback.internalChannels);
-    _LW_I(LOG_CONTEXT, "sample-rate: %d / %d", audio->device.sampleRate, audio->device.playback.internalSampleRate);
-    _LW_I(LOG_CONTEXT, "period-in-frames: %d", audio->device.playback.internalPeriodSizeInFrames);
+    TOFU_LOG_I(LOG_CONTEXT, "device-name: %s", audio->device.playback.name);
+    TOFU_LOG_I(LOG_CONTEXT, "back-end: miniaudio / %s", ma_get_backend_name(audio->context.backend));
+    TOFU_LOG_I(LOG_CONTEXT, "format: %s / %s", ma_get_format_name(audio->device.playback.format), ma_get_format_name(audio->device.playback.internalFormat));
+    TOFU_LOG_I(LOG_CONTEXT, "channels: %d / %d", audio->device.playback.channels, audio->device.playback.internalChannels);
+    TOFU_LOG_I(LOG_CONTEXT, "sample-rate: %d / %d", audio->device.sampleRate, audio->device.playback.internalSampleRate);
+    TOFU_LOG_I(LOG_CONTEXT, "period-in-frames: %d", audio->device.playback.internalPeriodSizeInFrames);
 
     return true;
 }
@@ -163,16 +163,16 @@ SL_Context_t *Audio_lock(Audio_t *audio)
 {
     ma_mutex_lock(&audio->lock);
     SL_Context_t *context = audio->sl;
-    _LW_T(LOG_CONTEXT, "audio context %p locked", context);
+    TOFU_LOG_T(LOG_CONTEXT, "audio context %p locked", context);
     return context;
 }
 
 void Audio_unlock(Audio_t *audio, SL_Context_t *context)
 {
     if (context != audio->sl) {
-        _LW_W(LOG_CONTEXT, "mismatched context %p", context);
+        TOFU_LOG_W(LOG_CONTEXT, "mismatched context %p", context);
         return;
     }
     ma_mutex_unlock(&audio->lock);
-    _LW_T(LOG_CONTEXT, "audio context %p unlocked", context);
+    TOFU_LOG_T(LOG_CONTEXT, "audio context %p unlocked", context);
 }

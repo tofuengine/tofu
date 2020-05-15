@@ -96,17 +96,17 @@ static int display_palette1(lua_State *L)
         if (predefined_palette != NULL) {
             palette = *predefined_palette;
 
-            _LW_D(LOG_CONTEXT, "setting predefined palette `%s` w/ %d color(s)", id, predefined_palette->count);
+            TOFU_LOG_D(LOG_CONTEXT, "setting predefined palette `%s` w/ %d color(s)", id, predefined_palette->count);
         } else {
-            _LW_W(LOG_CONTEXT, "unknown predefined palette w/ id `%s`", id);
+            TOFU_LOG_W(LOG_CONTEXT, "unknown predefined palette w/ id `%s`", id);
         }
     } else
     if (type == LUA_TTABLE) { // User supplied palette.
         palette.count = lua_rawlen(L, 1);
-        _LW_D(LOG_CONTEXT, "setting custom palette of #%d color(s)", palette.count);
+        TOFU_LOG_D(LOG_CONTEXT, "setting custom palette of #%d color(s)", palette.count);
 
         if (palette.count > GL_MAX_PALETTE_COLORS) {
-            _LW_W(LOG_CONTEXT, "palette has too many colors (%d) - clamping", palette.count);
+            TOFU_LOG_W(LOG_CONTEXT, "palette has too many colors (%d) - clamping", palette.count);
             palette.count = GL_MAX_PALETTE_COLORS;
         }
 
@@ -121,7 +121,7 @@ static int display_palette1(lua_State *L)
     }
 
     if (palette.count == 0) {
-        _LW_W(LOG_CONTEXT, "palette has no colors - skipping");
+        TOFU_LOG_W(LOG_CONTEXT, "palette has no colors - skipping");
         return 0;
     }
 

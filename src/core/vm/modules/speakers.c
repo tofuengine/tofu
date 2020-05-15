@@ -108,7 +108,7 @@ static int speakers_tweak(lua_State *L)
 
     SL_Context_t *context = Audio_lock(audio);
     SL_context_tweak(context, group, balance, gain);
-    _LW_D(LOG_CONTEXT, "group #%d tweaked for context %p (balance %.f, gain %.f)", group, context, balance, gain);
+    TOFU_LOG_D(LOG_CONTEXT, "group #%d tweaked for context %p (balance %.f, gain %.f)", group, context, balance, gain);
     Audio_unlock(audio, context);
 
     return 0;

@@ -101,7 +101,7 @@ bool pak_is_valid(const char *path)
     struct stat path_stat;
     int result = stat(path, &path_stat);
     if (result != 0) {
-        _LW_E(LOG_CONTEXT, "can't get stats for file `%s`", path);
+        TOFU_LOG_E(LOG_CONTEXT, "can't get stats for file `%s`", path);
         return false;
     }
 
@@ -111,7 +111,7 @@ bool pak_is_valid(const char *path)
 
     FILE *stream = fopen(path, "rb");
     if (!stream) {
-        _LW_E(LOG_CONTEXT, "can't access file `%s`", path);
+        TOFU_LOG_E(LOG_CONTEXT, "can't access file `%s`", path);
         return false;
     }
 
@@ -135,26 +135,26 @@ File_System_Mount_t *pak_mount(const char *path)
 {
     FILE *stream = fopen(path, "rb");
     if (!stream) {
-        _LW_E(LOG_CONTEXT, "can't access file `%s`", path);
+        TOFU_LOG_E(LOG_CONTEXT, "can't access file `%s`", path);
         return NULL;
     }
 
     Pak_Header_t header;
     int headers_read = fread(&header, sizeof(Pak_Header_t), 1, stream);
     if (headers_read != 1) {
-        _LW_E(LOG_CONTEXT, "can't read file `%s` header", path);
+        TOFU_LOG_E(LOG_CONTEXT, "can't read file `%s` header", path);
         fclose(stream);
         return NULL;
     }
     if (strncmp(header.signature, PAK_SIGNATURE, PAK_SIGNATURE_LENGTH) != 0) {
-        _LW_E(LOG_CONTEXT, "file `%s` is not a valid archive", path);
+        TOFU_LOG_E(LOG_CONTEXT, "file `%s` is not a valid archive", path);
         fclose(stream);
         return NULL;
     }
 
     Pak_Entry_t *directory = malloc(sizeof(Pak_Entry_t) * header.entries);
     if (!directory) {
-        _LW_E(LOG_CONTEXT, "can't allocate #%d directory entries", header.entries);
+        TOFU_LOG_E(LOG_CONTEXT, "can't allocate #%d directory entries", header.entries);
         fclose(stream);
         return NULL;
     }
@@ -165,18 +165,18 @@ File_System_Mount_t *pak_mount(const char *path)
         Pak_Entry_Header_t entry_header;
         size_t entries_read = fread(&entry_header, sizeof(Pak_Entry_Header_t), 1, stream);
         if (entries_read != 1) {
-            _LW_E(LOG_CONTEXT, "can't read header for entry #%d", i);
+            TOFU_LOG_E(LOG_CONTEXT, "can't read header for entry #%d", i);
             break;
         }
 
         char *entry_name = malloc((entry_header.name + 1) * sizeof(char));
         if (!entry_name) {
-            _LW_E(LOG_CONTEXT, "can't allocate memory for entry #%d", i);
+            TOFU_LOG_E(LOG_CONTEXT, "can't allocate memory for entry #%d", i);
             break;
         }
         size_t chars_read = fread(entry_name, sizeof(char), entry_header.name, stream);
         if (chars_read != entry_header.name) {
-            _LW_E(LOG_CONTEXT, "can't read name for entry #%d", i);
+            TOFU_LOG_E(LOG_CONTEXT, "can't read name for entry #%d", i);
             break;
         }
         entry_name[entry_header.name] = '\0';
@@ -199,27 +199,27 @@ File_System_Mount_t *pak_mount(const char *path)
             free(directory[i].name);
         }
         free(directory);
-        _LW_D(LOG_CONTEXT, "directory w/ #%d entries freed", entries);
+        TOFU_LOG_D(LOG_CONTEXT, "directory w/ #%d entries freed", entries);
         return NULL;
     }
 
     qsort(directory, header.entries, sizeof(Pak_Entry_t), _pak_entry_compare); // Keep sorted to use binary-search.
-    _LW_T(LOG_CONTEXT, "directory w/ #%d entries sorted", entries);
+    TOFU_LOG_T(LOG_CONTEXT, "directory w/ #%d entries sorted", entries);
 
     File_System_Mount_t *mount = malloc(sizeof(Pak_Mount_t));
     if (!mount) {
-        _LW_E(LOG_CONTEXT, "can't allocate mount for path `%s`", path);
+        TOFU_LOG_E(LOG_CONTEXT, "can't allocate mount for path `%s`", path);
         for (size_t i = 0; i < entries; ++i) {
             free(directory[i].name);
         }
         free(directory);
-        _LW_D(LOG_CONTEXT, "directory w/ #%d entries freed", entries);
+        TOFU_LOG_D(LOG_CONTEXT, "directory w/ #%d entries freed", entries);
         return NULL;
     }
 
     _pak_mount_ctor(mount, path, entries, directory, header.flags);
 
-    _LW_D(LOG_CONTEXT, "mount initialized for archive `%s` w/ %d entries (flags 0x%02x)",
+    TOFU_LOG_D(LOG_CONTEXT, "mount initialized for archive `%s` w/ %d entries (flags 0x%02x)",
         path, entries, header.flags);
 
     return mount;
@@ -260,7 +260,7 @@ static bool _pak_mount_contains(File_System_Mount_t *mount, const char *file)
     const Pak_Entry_t *entry = bsearch((const void *)&key, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
 
     bool exists = entry;
-    _LA_D(!exists, LOG_CONTEXT, "entry `%s` found in mount %p", file, pak_mount);
+    TOFU_ASSERT_D(!exists, LOG_CONTEXT, "entry `%s` found in mount %p", file, pak_mount);
     return exists;
 }
 
@@ -271,29 +271,29 @@ static File_System_Handle_t *_pak_mount_open(File_System_Mount_t *mount, const c
     const Pak_Entry_t key = { .name = (char *)file };
     const Pak_Entry_t *entry = bsearch((const void *)&key, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
     if (!entry) {
-        _LW_E(LOG_CONTEXT, "can't find entry `%s`", file);
+        TOFU_LOG_E(LOG_CONTEXT, "can't find entry `%s`", file);
         return NULL;
     }
 
     FILE *stream = fopen(pak_mount->archive_path, "rb"); // Always in binary mode, line-terminators aren't an issue.
     if (!stream) {
-        _LW_E(LOG_CONTEXT, "can't access file `%s`", pak_mount->archive_path);
+        TOFU_LOG_E(LOG_CONTEXT, "can't access file `%s`", pak_mount->archive_path);
         return NULL;
     }
 
     fseek(stream, entry->offset, SEEK_SET); // Move to the found entry position into the file.
-    _LW_T(LOG_CONTEXT, "entry `%s` found at offset %d in file `%s`", file, entry->offset, pak_mount->archive_path);
+    TOFU_LOG_T(LOG_CONTEXT, "entry `%s` found at offset %d in file `%s`", file, entry->offset, pak_mount->archive_path);
 
     File_System_Handle_t *handle = malloc(sizeof(Pak_Handle_t));
     if (!handle) {
-        _LW_E(LOG_CONTEXT, "can't allocate handle for entry `%s`", file);
+        TOFU_LOG_E(LOG_CONTEXT, "can't allocate handle for entry `%s`", file);
         fclose(stream);
         return NULL;
     }
 
     _pak_handle_ctor(handle, stream, entry->offset, entry->size, pak_mount->flags & PAK_FLAG_ENCRYPTED, entry->name);
 
-    _LW_D(LOG_CONTEXT, "entry `%s` opened w/ handle %p (%d bytes)", file, handle, entry->size);
+    TOFU_LOG_D(LOG_CONTEXT, "entry `%s` opened w/ handle %p (%d bytes)", file, handle, entry->size);
 
     return handle;
 }
@@ -345,7 +345,7 @@ static size_t _pak_handle_size(File_System_Handle_t *handle)
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
-//    _LW_D(LOG_CONTEXT, "handle %p is", std_handle);
+//    TOFU_LOG_D(LOG_CONTEXT, "handle %p is", std_handle);
 
     return pak_handle->stream_size;
 }
@@ -356,7 +356,7 @@ static size_t _pak_handle_read(File_System_Handle_t *handle, void *buffer, size_
 
     long position = ftell(pak_handle->stream);
     if (position == -1) {
-        _LW_E(LOG_CONTEXT, "can't get current position for handle %p", handle);
+        TOFU_LOG_E(LOG_CONTEXT, "can't get current position for handle %p", handle);
         return 0;
     }
 
@@ -368,14 +368,14 @@ static size_t _pak_handle_read(File_System_Handle_t *handle, void *buffer, size_
     }
 
     size_t bytes_read = fread(buffer, sizeof(uint8_t), bytes_to_read, pak_handle->stream);
-    _LW_T(LOG_CONTEXT, "%d bytes read out of %d (%d requested)", bytes_read, bytes_to_read, bytes_requested);
+    TOFU_LOG_T(LOG_CONTEXT, "%d bytes read out of %d (%d requested)", bytes_read, bytes_to_read, bytes_requested);
 
     if (pak_handle->encrypted) {
         rc4_process(&pak_handle->cipher_context, buffer, bytes_read);
-        _LW_T(LOG_CONTEXT, "%d bytes decrypted", bytes_read);
+        TOFU_LOG_T(LOG_CONTEXT, "%d bytes decrypted", bytes_read);
     }
 
-    _LW_D(LOG_CONTEXT, "%d bytes read for handle %p", bytes_read, handle);
+    TOFU_LOG_D(LOG_CONTEXT, "%d bytes read for handle %p", bytes_read, handle);
     return bytes_read;
 }
 
@@ -395,7 +395,7 @@ static void _pak_handle_seek(File_System_Handle_t *handle, long offset, int when
     }
 
     fseek(pak_handle->stream, offset_from_beginning + offset, SEEK_SET);
-    _LW_D(LOG_CONTEXT, "%d bytes seeked w/ mode %d for handle %p", offset, whence, handle);
+    TOFU_LOG_D(LOG_CONTEXT, "%d bytes seeked w/ mode %d for handle %p", offset, whence, handle);
 }
 
 static bool _pak_handle_eof(File_System_Handle_t *handle)
@@ -404,11 +404,11 @@ static bool _pak_handle_eof(File_System_Handle_t *handle)
 
     long position = ftell(pak_handle->stream);
     if (position == -1) {
-        _LW_E(LOG_CONTEXT, "can't get current position for handle %p", handle);
+        TOFU_LOG_E(LOG_CONTEXT, "can't get current position for handle %p", handle);
         return true;
     }
 
     bool end_of_file = position > pak_handle->end_of_stream;
-    _LA_D(!end_of_file, LOG_CONTEXT, "end-of-file reached for handle %p", handle);
+    TOFU_ASSERT_D(!end_of_file, LOG_CONTEXT, "end-of-file reached for handle %p", handle);
     return end_of_file;
 }

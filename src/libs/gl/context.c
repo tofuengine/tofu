@@ -72,7 +72,7 @@ GL_Context_t *GL_context_decode(size_t width, size_t height, const void *pixels,
 
     _reset_state(&context->state, surface);
 
-    _LW_D(LOG_CONTEXT, "context decoded");
+    TOFU_LOG_D(LOG_CONTEXT, "context decoded");
     return context;
 }
 
@@ -80,7 +80,7 @@ GL_Context_t *GL_context_create(size_t width, size_t height)
 {
     GL_Surface_t *surface = GL_surface_create(width, height);
     if (!surface) {
-        _LW_E(LOG_CONTEXT, "context create %dx%d surface", width, height);
+        TOFU_LOG_E(LOG_CONTEXT, "context create %dx%d surface", width, height);
         return NULL;
     }
 
@@ -95,7 +95,7 @@ GL_Context_t *GL_context_create(size_t width, size_t height)
 
     _reset_state(&context->state, surface);
 
-    _LW_D(LOG_CONTEXT, "context created");
+    TOFU_LOG_D(LOG_CONTEXT, "context created");
     return context;
 }
 
@@ -106,13 +106,13 @@ void GL_context_destroy(GL_Context_t *context)
     }
 
     arrfree(context->stack);
-    _LW_D(LOG_CONTEXT, "context stack freed");
+    TOFU_LOG_D(LOG_CONTEXT, "context stack freed");
 
     GL_surface_destroy(context->surface);
-    _LW_D(LOG_CONTEXT, "context surface destroyed");
+    TOFU_LOG_D(LOG_CONTEXT, "context surface destroyed");
 
     free(context);
-    _LW_D(LOG_CONTEXT, "context freed");
+    TOFU_LOG_D(LOG_CONTEXT, "context freed");
 }
 
 void GL_context_push(GL_Context_t *context)
@@ -123,7 +123,7 @@ void GL_context_push(GL_Context_t *context)
 void GL_context_pop(GL_Context_t *context)
 {
     if (arrlen(context->stack) < 1) {
-        _LW_W(LOG_CONTEXT, "no states to pop from context");
+        TOFU_LOG_W(LOG_CONTEXT, "no states to pop from context");
         return;
     }
     context->state = arrpop(context->stack);
@@ -132,10 +132,10 @@ void GL_context_pop(GL_Context_t *context)
 void GL_context_reset(GL_Context_t *context)
 {
     arrfree(context->stack);
-    _LW_D(LOG_CONTEXT, "context stack freed");
+    TOFU_LOG_D(LOG_CONTEXT, "context stack freed");
 
     _reset_state(&context->state, context->surface);
-    _LW_D(LOG_CONTEXT, "context reset");
+    TOFU_LOG_D(LOG_CONTEXT, "context reset");
 }
 
 void GL_context_background(GL_Context_t *context, GL_Pixel_t index)
