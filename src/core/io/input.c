@@ -208,9 +208,9 @@ static void _switch(Input_t *input)
 
     state->gamepad_id = gamepad_id;
     if (gamepad_id == -1) {
-        TOFU_LOG_D(LOG_CONTEXT, "keyboard/mouse input active");
+        LOG_D(LOG_CONTEXT, "keyboard/mouse input active");
     } else {
-        TOFU_LOG_D(LOG_CONTEXT, "gamepad #%d input active (`%s`)", gamepad_id, glfwGetGamepadName(gamepad_id));
+        LOG_D(LOG_CONTEXT, "gamepad #%d input active (`%s`)", gamepad_id, glfwGetGamepadName(gamepad_id));
     }
 
 #ifndef __INPUT_SELECTION__
@@ -224,7 +224,7 @@ bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration
 {
     int result = glfwUpdateGamepadMappings(configuration->mappings);
     if (result == GLFW_FALSE) {
-        TOFU_LOG_E(LOG_CONTEXT, "can't update gamepad mappings");
+        LOG_E(LOG_CONTEXT, "can't update gamepad mappings");
         return false;
     }
 
@@ -252,14 +252,14 @@ bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration
     for (int i = 0; i < INPUT_GAMEPADS_COUNT; ++i) { // Detect the available gamepads.
         input->gamepads[i] = glfwJoystickIsGamepad(i) == GLFW_TRUE;
         if (input->gamepads[i]) {
-            TOFU_LOG_D(LOG_CONTEXT, "gamepad #%d found (GUID `%s`, name `%s`)", i, glfwGetJoystickGUID(i), glfwGetGamepadName(i));
+            LOG_D(LOG_CONTEXT, "gamepad #%d found (GUID `%s`, name `%s`)", i, glfwGetJoystickGUID(i), glfwGetGamepadName(i));
             ++gamepads_count;
         }
     }
     if (gamepads_count == 0) {
-        TOFU_LOG_W(LOG_CONTEXT, "no gamepads detected");
+        LOG_W(LOG_CONTEXT, "no gamepads detected");
     } else {
-        TOFU_LOG_I(LOG_CONTEXT, "%d gamepads detected", gamepads_count);
+        LOG_I(LOG_CONTEXT, "%d gamepads detected", gamepads_count);
     }
 
     _switch(input);
@@ -291,13 +291,13 @@ void Input_update(Input_t *input, float delta_time)
         button->time += delta_time;
 
         while (button->time >= button->period) {
-            TOFU_LOG_T(LOG_CONTEXT, "#%d %.3fs", i, button->time);
+            LOG_T(LOG_CONTEXT, "#%d %.3fs", i, button->time);
             button->time -= button->period;
 
             button->state.down = !button->state.down;
             button->state.pressed = button->state.down;
             button->state.released = !button->state.down;
-            TOFU_LOG_T(LOG_CONTEXT, "#%d %.3fs %d %d %d", i, button->time, button->state.down, button->state.pressed, button->state.released);
+            LOG_T(LOG_CONTEXT, "#%d %.3fs %d %d %d", i, button->time, button->state.down, button->state.pressed, button->state.released);
         }
     }
 
@@ -355,7 +355,7 @@ void Input_process(Input_t *input)
             if (button->state.pressed && button->period > 0.0f) { // On press, track the trigger state and reset counter.
                 button->state.triggered = true;
                 button->time = 0.0f;
-                TOFU_LOG_T(LOG_CONTEXT, "button #%d triggered, %.3fs %d %d %d", i, button->time, button->state.down, button->state.pressed, button->state.released);
+                LOG_T(LOG_CONTEXT, "button #%d triggered, %.3fs %d %d %d", i, button->time, button->state.down, button->state.pressed, button->state.released);
             }
         } else
         if (!is_down) {
@@ -364,19 +364,19 @@ void Input_process(Input_t *input)
             button->state.released = was_down; // Track release is was previously down.
 
             button->state.triggered = false;
-            TOFU_LOG_T(LOG_CONTEXT, "button #%d held for %.3fs %d %d %d", i, button->time, button->state.down, button->state.pressed, button->state.released);
+            LOG_T(LOG_CONTEXT, "button #%d held for %.3fs %d %d %d", i, button->time, button->state.down, button->state.pressed, button->state.released);
         }
     }
 
     if (input->configuration.exit_key_enabled) {
         if (buttons[INPUT_BUTTON_QUIT].state.pressed) {
-            TOFU_LOG_I(LOG_CONTEXT, "exit key pressed");
+            LOG_I(LOG_CONTEXT, "exit key pressed");
             glfwSetWindowShouldClose(input->window, true);
         }
     }
 
     if (buttons[INPUT_BUTTON_SWITCH].state.pressed) {
-        TOFU_LOG_I(LOG_CONTEXT, "input switch key pressed");
+        LOG_I(LOG_CONTEXT, "input switch key pressed");
         _switch(input);
     }
 }
@@ -387,5 +387,5 @@ void Input_auto_repeat(Input_t *input, Input_Buttons_t id, float period)
             .period = period,
             .time = 0.0f
         };
-    TOFU_LOG_D(LOG_CONTEXT, "auto-repeat set to %.3fs for button #%d", period, id);
+    LOG_D(LOG_CONTEXT, "auto-repeat set to %.3fs for button #%d", period, id);
 }

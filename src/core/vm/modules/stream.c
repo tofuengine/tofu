@@ -114,14 +114,14 @@ static int stream_new(lua_State *L)
     if (!handle) {
         return luaL_error(L, "can't access file `%s`", file);
     }
-    TOFU_LOG_D(LOG_CONTEXT, "handle %p opened for file `%s`", handle, file);
+    LOG_D(LOG_CONTEXT, "handle %p opened for file `%s`", handle, file);
 
     drflac *decoder = drflac_open(_handle_read, _handle_seek, (void *)handle, NULL);
     if (!decoder) {
         FS_close(handle);
         return luaL_error(L, "can't open decoder for file `%s`", file);
     }
-    TOFU_LOG_D(LOG_CONTEXT, "decoder %p opened", decoder);
+    LOG_D(LOG_CONTEXT, "decoder %p opened", decoder);
 
     SL_Stream_t *stream = SL_stream_create(_decoder_read, _decoder_seek, (void *)decoder, ma_format_s16, decoder->sampleRate, decoder->channels);
     if (!stream) { // We are forcing 16 bits-per-sample.
@@ -132,7 +132,7 @@ static int stream_new(lua_State *L)
 
     SL_Context_t *context = Audio_lock(audio);
     SL_context_track(context, stream);
-    TOFU_LOG_D(LOG_CONTEXT, "stream %p tracked for context %p", stream, context);
+    LOG_D(LOG_CONTEXT, "stream %p tracked for context %p", stream, context);
     Audio_unlock(audio, context);
 
     Stream_Object_t *self = (Stream_Object_t *)lua_newuserdata(L, sizeof(Stream_Object_t));
@@ -142,7 +142,7 @@ static int stream_new(lua_State *L)
             .stream = stream
         };
 
-    TOFU_LOG_D(LOG_CONTEXT, "source %p allocated", self);
+    LOG_D(LOG_CONTEXT, "source %p allocated", self);
 
     luaL_setmetatable(L, META_TABLE);
 
@@ -160,19 +160,19 @@ static int stream_gc(lua_State *L)
 
     SL_Context_t *context = Audio_lock(audio);
     SL_context_untrack(context, self->stream);
-    TOFU_LOG_D(LOG_CONTEXT, "stream %p untracked", self->stream);
+    LOG_D(LOG_CONTEXT, "stream %p untracked", self->stream);
     Audio_unlock(audio, context);
 
     SL_stream_destroy(self->stream);
-    TOFU_LOG_D(LOG_CONTEXT, "stream %p destroyed", self->stream);
+    LOG_D(LOG_CONTEXT, "stream %p destroyed", self->stream);
 
     FS_close(self->handle);
-    TOFU_LOG_D(LOG_CONTEXT, "handle %p closed", self->handle);
+    LOG_D(LOG_CONTEXT, "handle %p closed", self->handle);
 
     drflac_close(self->decoder);
-    TOFU_LOG_D(LOG_CONTEXT, "decoder closed", self->decoder);
+    LOG_D(LOG_CONTEXT, "decoder closed", self->decoder);
 
-    TOFU_LOG_D(LOG_CONTEXT, "stream %p finalized", self);
+    LOG_D(LOG_CONTEXT, "stream %p finalized", self);
 
     return 0;
 }

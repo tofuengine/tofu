@@ -97,7 +97,7 @@ static void *_allocate(void *ud, void *ptr, size_t osize, size_t nsize)
 
 static int _panic(lua_State *L)
 {
-    TOFU_LOG_F(LOG_CONTEXT, "%s", lua_tostring(L, -1));
+    LOG_F(LOG_CONTEXT, "%s", lua_tostring(L, -1));
     lua_pop(L, 1);
     return 0; // return to Lua to abort
 }
@@ -190,7 +190,7 @@ static int _searcher(lua_State *L)
 static bool _detect(lua_State *L, int index, const char *methods[])
 {
     if (lua_isnil(L, index)) {
-        TOFU_LOG_F(LOG_CONTEXT, "can't find root instance");
+        LOG_F(LOG_CONTEXT, "can't find root instance");
         lua_pop(L, 1);
         return false;
     }
@@ -198,9 +198,9 @@ static bool _detect(lua_State *L, int index, const char *methods[])
     for (int i = 0; methods[i]; ++i) { // Push the methods on stack
         lua_getfield(L, -(i + 1), methods[i]); // The table become farer and farer along the loop.
         if (!lua_isnil(L, -1)) {
-            TOFU_LOG_D(LOG_CONTEXT, "method `%s` found", methods[i]);
+            LOG_D(LOG_CONTEXT, "method `%s` found", methods[i]);
         } else {
-            TOFU_LOG_W(LOG_CONTEXT, "method `%s` is missing", methods[i]);
+            LOG_W(LOG_CONTEXT, "method `%s` is missing", methods[i]);
         }
     }
 
@@ -211,14 +211,14 @@ static int _execute(lua_State *L, const char *script, size_t size, const char *n
 {
     int loaded = luaL_loadbuffer(L, script, size, name);
     if (loaded != LUA_OK) {
-        TOFU_LOG_E(LOG_CONTEXT, "%s", lua_tostring(L, -1));
+        LOG_E(LOG_CONTEXT, "%s", lua_tostring(L, -1));
         lua_pop(L, 1);
         return loaded;
     }
 #ifdef __DEBUG_VM_CALLS__
     int called = lua_pcall(L, nargs, nresults, TRACEBACK_STACK_INDEX);
     if (called != LUA_OK) {
-        TOFU_LOG_E(LOG_CONTEXT, "%s", lua_tostring(L, -1));
+        LOG_E(LOG_CONTEXT, "%s", lua_tostring(L, -1));
         lua_pop(L, 1);
     }
     return called;
@@ -245,7 +245,7 @@ static int _call(lua_State *L, Methods_t method, int nargs, int nresults)
 #ifdef __DEBUG_VM_CALLS__
     int called = lua_pcall(L, nargs + 1, nresults, TRACEBACK_STACK_INDEX);
     if (called != LUA_OK) {
-        TOFU_LOG_E(LOG_CONTEXT, "%s", lua_tostring(L, -1));
+        LOG_E(LOG_CONTEXT, "%s", lua_tostring(L, -1));
         lua_pop(L, 1);
     }
     return called;
@@ -261,7 +261,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const File_System_t *fil
 
     interpreter->state = lua_newstate(_allocate, NULL); // No user-data is passed.
     if (!interpreter->state) {
-        TOFU_LOG_F(LOG_CONTEXT, "can't initialize interpreter");
+        LOG_F(LOG_CONTEXT, "can't initialize interpreter");
         return false;
     }
     lua_atpanic(interpreter->state, _panic); // Set a custom panic-handler, just like `luaL_newstate()`.
@@ -289,11 +289,11 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const File_System_t *fil
 #endif
 
     size_t version = (size_t)*lua_version(interpreter->state);
-    TOFU_LOG_I(LOG_CONTEXT, "Lua: %d.%d", version / 100, version % 100);
+    LOG_I(LOG_CONTEXT, "Lua: %d.%d", version / 100, version % 100);
 
     int result = _execute(interpreter->state, (const char *)_boot_lua, sizeof(_boot_lua) / sizeof(char), "@boot.lua", 0, 1); // Prefix '@' to trace as filename internally in Lua.
     if (result != 0) {
-        TOFU_LOG_F(LOG_CONTEXT, "can't interpret boot script");
+        LOG_F(LOG_CONTEXT, "can't interpret boot script");
         lua_close(interpreter->state);
         return false;
     }
@@ -334,13 +334,13 @@ bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
 #ifdef __DEBUG_GARBAGE_COLLECTOR__
         float start_time = (float)clock() / CLOCKS_PER_SEC;
         int pre = lua_gc(interpreter->state, LUA_GCCOUNT, 0);
-        TOFU_LOG_D(LOG_CONTEXT, "performing periodical garbage collection (%dKb of memory in use)", pre);
+        LOG_D(LOG_CONTEXT, "performing periodical garbage collection (%dKb of memory in use)", pre);
 #endif
         lua_gc(interpreter->state, LUA_GCCOLLECT, 0);
 #ifdef __DEBUG_GARBAGE_COLLECTOR__
         int post = lua_gc(interpreter->state, LUA_GCCOUNT, 0);
         float elapsed = ((float)clock() / CLOCKS_PER_SEC) - start_time;
-        TOFU_LOG_D(LOG_CONTEXT, "garbage collection took %.3fs (memory used %dKb, %dKb freed)", elapsed, post, pre - post);
+        LOG_D(LOG_CONTEXT, "garbage collection took %.3fs (memory used %dKb, %dKb freed)", elapsed, post, pre - post);
 #endif
     }
 #else
@@ -351,7 +351,7 @@ bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
         interpreter->gc_age -= GARBAGE_COLLECTION_PERIOD;
 
         int count = lua_gc(interpreter->state, LUA_GCCOUNT, 0);
-        TOFU_LOG_D(LOG_CONTEXT, "memory usage is %dKb", count);
+        LOG_D(LOG_CONTEXT, "memory usage is %dKb", count);
     }
 #endif
 #endif
@@ -371,7 +371,7 @@ bool Interpreter_call(const Interpreter_t *interpreter, int nargs, int nresults)
 #ifdef __DEBUG_VM_CALLS__
     int called = lua_pcall(L, nargs, nresults, TRACEBACK_STACK_INDEX);
     if (called != LUA_OK) {
-        TOFU_LOG_E(LOG_CONTEXT, "error in execute: %s", lua_tostring(L, -1));
+        LOG_E(LOG_CONTEXT, "error in execute: %s", lua_tostring(L, -1));
         lua_pop(L, 1);
     }
     return called == LUA_OK ? true : false;

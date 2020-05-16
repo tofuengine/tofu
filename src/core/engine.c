@@ -122,7 +122,7 @@ static File_System_Resource_t *_load_icon(const File_System_t *file_system, cons
     }
 
     if (!FSX_exists(file_system, file)) {
-        TOFU_LOG_W(LOG_CONTEXT, "file `%s` doesn't exist", file);
+        LOG_W(LOG_CONTEXT, "file `%s` doesn't exist", file);
         return NULL;
     }
 
@@ -136,7 +136,7 @@ static File_System_Resource_t *_load_mappings(const File_System_t *file_system, 
     }
 
     if (!FSX_exists(file_system, file)) {
-        TOFU_LOG_W(LOG_CONTEXT, "file `%s` doesn't exist", file);
+        LOG_W(LOG_CONTEXT, "file `%s` doesn't exist", file);
         return NULL;
     }
 
@@ -149,22 +149,22 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 
     bool result = FS_initialize(&engine->file_system, base_path);
     if (!result) {
-        TOFU_LOG_F(LOG_CONTEXT, "can't initialize I/O at path `%s`", base_path);
+        LOG_F(LOG_CONTEXT, "can't initialize I/O at path `%s`", base_path);
         return false;
     }
 
     result = _configure(&engine->file_system, &engine->configuration);
     if (!result) {
-        TOFU_LOG_F(LOG_CONTEXT, "configuration file is missing");
+        LOG_F(LOG_CONTEXT, "configuration file is missing");
         return false;
     }
 
     Environment_initialize(&engine->environment);
 
-    TOFU_LOG_I(LOG_CONTEXT, "version %s", TOFU_VERSION_NUMBER);
+    LOG_I(LOG_CONTEXT, "version %s", TOFU_VERSION_NUMBER);
 
     File_System_Resource_t *icon = _load_icon(&engine->file_system, ENTRY_ICON);
-    TOFU_ASSERT_T(!icon, LOG_CONTEXT, "user-defined icon loaded");
+    ASSERT_T(!icon, LOG_CONTEXT, "user-defined icon loaded");
     Display_Configuration_t display_configuration = { // TODO: reorganize configuration.
             .icon = icon ? (GLFWimage){ .width = FSX_IWIDTH(icon), .height = FSX_IHEIGHT(icon), .pixels = FSX_IPIXELS(icon) } : (GLFWimage){ 64, 64, (unsigned char *)_default_icon_pixels },
             .title = engine->configuration.title,
@@ -178,13 +178,13 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
     result = Display_initialize(&engine->display, &display_configuration);
     FSX_release(icon);
     if (!result) {
-        TOFU_LOG_F(LOG_CONTEXT, "can't initialize display");
+        LOG_F(LOG_CONTEXT, "can't initialize display");
         FS_terminate(&engine->file_system);
         return false;
     }
 
     File_System_Resource_t *mappings = _load_mappings(&engine->file_system, ENTRY_GAMECONTROLLER_DB);
-    TOFU_ASSERT_I(!mappings, LOG_CONTEXT, "user-defined controller mappings loaded");
+    ASSERT_I(!mappings, LOG_CONTEXT, "user-defined controller mappings loaded");
     Input_Configuration_t input_configuration = {
             .mappings = mappings ? FSX_SCHARS(mappings) : (const char *)_default_mappings,
             .exit_key_enabled = engine->configuration.exit_key_enabled,
@@ -204,7 +204,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
     result = Input_initialize(&engine->input, &input_configuration, engine->display.window);
     FSX_release(mappings);
     if (!result) {
-        TOFU_LOG_F(LOG_CONTEXT, "can't initialize input");
+        LOG_F(LOG_CONTEXT, "can't initialize input");
         Display_terminate(&engine->display);
         FS_terminate(&engine->file_system);
         return false;
@@ -212,7 +212,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 
     result = Audio_initialize(&engine->audio, &(Audio_Configuration_t){ .master_volume = 1.0f });
     if (!result) {
-        TOFU_LOG_F(LOG_CONTEXT, "can't initialize audio");
+        LOG_F(LOG_CONTEXT, "can't initialize audio");
         Input_terminate(&engine->input);
         Display_terminate(&engine->display);
         FS_terminate(&engine->file_system);
@@ -232,7 +232,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
         };
     result = Interpreter_initialize(&engine->interpreter, &engine->file_system, userdatas);
     if (!result) {
-        TOFU_LOG_F(LOG_CONTEXT, "can't initialize interpreter");
+        LOG_F(LOG_CONTEXT, "can't initialize interpreter");
         Audio_terminate(&engine->audio);
         Input_terminate(&engine->input);
         Display_terminate(&engine->display);
@@ -263,7 +263,7 @@ void Engine_run(Engine_t *engine)
     const float delta_time = 1.0f / (float)engine->configuration.fps;
     const size_t skippable_frames = engine->configuration.skippable_frames;
     const float reference_time = engine->configuration.fps_cap == 0 ? 0.0f : 1.0f / engine->configuration.fps_cap;
-    TOFU_LOG_I(LOG_CONTEXT, "now running, update-time is %.6fs w/ %d skippable frames, reference-time is %.6fs", delta_time, skippable_frames, reference_time);
+    LOG_I(LOG_CONTEXT, "now running, update-time is %.6fs w/ %d skippable frames, reference-time is %.6fs", delta_time, skippable_frames, reference_time);
 
     // Track time using double to keep the min resolution consistent over time!
     // https://randomascii.wordpress.com/2012/02/13/dont-store-that-in-a-float/
@@ -280,7 +280,7 @@ void Engine_run(Engine_t *engine)
 #ifdef __DEBUG_ENGINE_FPS__
         static size_t count = 0;
         if (++count == 250) {
-            TOFU_LOG_I(LOG_CONTEXT, "currently running at %.0f FPS", engine->environment.fps);
+            LOG_I(LOG_CONTEXT, "currently running at %.0f FPS", engine->environment.fps);
             count = 0;
         }
 #endif

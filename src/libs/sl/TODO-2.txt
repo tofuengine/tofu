@@ -82,12 +82,12 @@ static Audio_Mix_t _0db_linear_mix(float balance, float gain)
 
 static void _log_callback(ma_context *context, ma_device *device, ma_uint32 log_level, const char *message)
 {
-    TOFU_LOG_E(LOG_CONTEXT, "[%p:%p] %d %s", context, device, log_level, message);
+    LOG_E(LOG_CONTEXT, "[%p:%p] %d %s", context, device, log_level, message);
 }
 
 static void _data_callback(ma_device *device, void *output, const void *input, ma_uint32 frame_count)
 {
-//    TOFU_LOG_T(LOG_CONTEXT, "%d frames requested for instance %p", frame_count, audio);
+//    LOG_T(LOG_CONTEXT, "%d frames requested for instance %p", frame_count, audio);
     Audio_t *audio = (Audio_t *)device->pUserData;
 
     float *to_device = (float *)output;
@@ -160,7 +160,7 @@ bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration
 
     ma_result result = ma_context_init(NULL, 0, &audio->context_config, &audio->context);
     if (result != MA_SUCCESS) {
-        TOFU_LOG_F(LOG_CONTEXT, "can't initialize the context");
+        LOG_F(LOG_CONTEXT, "can't initialize the context");
         return false;
     }
 
@@ -176,14 +176,14 @@ bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration
 
     result = ma_device_init(&audio->context, &audio->device_config, &audio->device);
     if (result != MA_SUCCESS) {
-        TOFU_LOG_F(LOG_CONTEXT, "can't initialize then device");
+        LOG_F(LOG_CONTEXT, "can't initialize then device");
         ma_context_uninit(&audio->context);
         return false;
     }
 
     result = ma_mutex_init(&audio->context, &audio->lock);
     if (result != MA_SUCCESS) {
-        TOFU_LOG_F(LOG_CONTEXT, "can't create synchronization object");
+        LOG_F(LOG_CONTEXT, "can't create synchronization object");
         ma_device_uninit(&audio->device);
         ma_context_uninit(&audio->context);
         return false;
@@ -192,7 +192,7 @@ bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration
     // FIXME: start only on incoming data and pause (in the update function) when no more data is present.
     result = ma_device_start(&audio->device); // The audio device will be always running, waiting to process data.
     if (result != MA_SUCCESS) {
-        TOFU_LOG_F(LOG_CONTEXT, "can't start then device");
+        LOG_F(LOG_CONTEXT, "can't start then device");
         ma_mutex_uninit(&audio->lock);
         ma_device_uninit(&audio->device);
         ma_context_uninit(&audio->context);
@@ -201,12 +201,12 @@ bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration
 
     ma_device_set_master_volume(&audio->device, configuration->master_volume); // Set the initial volume.
 
-    TOFU_LOG_I(LOG_CONTEXT, "device-name: %s", audio->device.playback.name);
-    TOFU_LOG_I(LOG_CONTEXT, "back-end: miniaudio / %s", ma_get_backend_name(audio->context.backend));
-    TOFU_LOG_I(LOG_CONTEXT, "format: %s / %s", ma_get_format_name(audio->device.playback.format), ma_get_format_name(audio->device.playback.internalFormat));
-    TOFU_LOG_I(LOG_CONTEXT, "channels: %d / %d", audio->device.playback.channels, audio->device.playback.internalChannels);
-    TOFU_LOG_I(LOG_CONTEXT, "sample-rate: %d / %d", audio->device.sampleRate, audio->device.playback.internalSampleRate);
-    TOFU_LOG_I(LOG_CONTEXT, "period-in-frames: %d", audio->device.playback.internalPeriodSizeInFrames);
+    LOG_I(LOG_CONTEXT, "device-name: %s", audio->device.playback.name);
+    LOG_I(LOG_CONTEXT, "back-end: miniaudio / %s", ma_get_backend_name(audio->context.backend));
+    LOG_I(LOG_CONTEXT, "format: %s / %s", ma_get_format_name(audio->device.playback.format), ma_get_format_name(audio->device.playback.internalFormat));
+    LOG_I(LOG_CONTEXT, "channels: %d / %d", audio->device.playback.channels, audio->device.playback.internalChannels);
+    LOG_I(LOG_CONTEXT, "sample-rate: %d / %d", audio->device.sampleRate, audio->device.playback.internalSampleRate);
+    LOG_I(LOG_CONTEXT, "period-in-frames: %d", audio->device.playback.internalPeriodSizeInFrames);
 
     return true;
 }
@@ -277,13 +277,13 @@ Audio_Source_t *Audio_source_create(Audio_Source_Read_Callback_t reader, Audio_S
     ma_data_converter converter;
     ma_result result = ma_data_converter_init(&config, &converter);
     if (result != MA_SUCCESS) {
-        TOFU_LOG_E(LOG_CONTEXT, "can't initialized data converter");
+        LOG_E(LOG_CONTEXT, "can't initialized data converter");
         return NULL;
     }
 
     Audio_Source_t *source = malloc(sizeof(Audio_Source_t));
     if (!source) {
-        TOFU_LOG_E(LOG_CONTEXT, "can't allocate audio source");
+        LOG_E(LOG_CONTEXT, "can't allocate audio source");
         ma_data_converter_uninit(&converter);
         return NULL;
     }
@@ -308,10 +308,10 @@ void Audio_source_destroy(Audio_Source_t *source)
     }
 
     ma_data_converter_uninit(&source->converter);
-    TOFU_LOG_D(LOG_CONTEXT, "audio-source converter uninitialized");
+    LOG_D(LOG_CONTEXT, "audio-source converter uninitialized");
 
     free(source);
-    TOFU_LOG_D(LOG_CONTEXT, "audio-source freed");
+    LOG_D(LOG_CONTEXT, "audio-source freed");
 }
 
 void Audio_source_mix(Audio_Source_t *source, Audio_Mix_t mix)

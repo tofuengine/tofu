@@ -39,7 +39,7 @@ GL_Surface_t *GL_surface_decode(size_t width, size_t height, const void *pixels,
     }
 
     callback(user_data, surface, pixels);
-    TOFU_LOG_D(LOG_CONTEXT, "surface decoded at %p (%dx%d)", surface->data, width, height);
+    LOG_D(LOG_CONTEXT, "surface decoded at %p (%dx%d)", surface->data, width, height);
 
     return surface;
 }
@@ -48,14 +48,14 @@ GL_Surface_t *GL_surface_create(size_t width, size_t height)
 {
     GL_Pixel_t *data = malloc(width * height * sizeof(GL_Pixel_t));
     if (!data) {
-        TOFU_LOG_E(LOG_CONTEXT, "cant' allocate (%dx%d) pixel-data", width, height);
+        LOG_E(LOG_CONTEXT, "cant' allocate (%dx%d) pixel-data", width, height);
         return NULL;
     }
-    TOFU_LOG_D(LOG_CONTEXT, "surface created at %p (%dx%d)", data, width, height);
+    LOG_D(LOG_CONTEXT, "surface created at %p (%dx%d)", data, width, height);
 
     GL_Surface_t *surface = malloc(sizeof(GL_Surface_t));
     if (!surface) {
-        TOFU_LOG_E(LOG_CONTEXT, "cant' allocate surface");
+        LOG_E(LOG_CONTEXT, "cant' allocate surface");
         free(data);
         return NULL;
     }
@@ -77,10 +77,10 @@ void GL_surface_destroy(GL_Surface_t *surface)
     }
 
     free(surface->data);
-    TOFU_LOG_D(LOG_CONTEXT, "surface-data at %p freed", surface->data);
+    LOG_D(LOG_CONTEXT, "surface-data at %p freed", surface->data);
 
     free(surface);
-    TOFU_LOG_D(LOG_CONTEXT, "surface %p freed", surface);
+    LOG_D(LOG_CONTEXT, "surface %p freed", surface);
 }
 
 void GL_surface_to_rgba(const GL_Surface_t *surface, const GL_Palette_t *palette, GL_Color_t *vram)

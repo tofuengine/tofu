@@ -26,7 +26,6 @@
 #define __LIBS_LOG_H__
 
 #include <stdbool.h>
-#include <stdio.h>
 
 #define LOG_LEVEL_FATAL        0
 #define LOG_LEVEL_ERROR        1
@@ -43,54 +42,54 @@
   #endif
 #endif
 
-// TODO: rename `TOFU_LOG_x` to `TOFU_LOGx` and `TOFU_ASSERT_x` to `TOFU_ASSERTx`
+// TODO: rename `LOG_x` to `TE_LOG_x` and `ASSERT_x` to `TE_ASSERT_x` to convey some kind of "namespace"?
 
 #if LOG_LEVEL_CURRENT >= LOG_LEVEL_TRACE
-  #define TOFU_LOG_T(context, ...)                Log_write(LOG_LEVEL_TRACE, (context), __VA_ARGS__)
-  #define TOFU_ASSERT_T(condition, context, ...)  Log_assert((condition), LOG_LEVEL_TRACE, (context), __VA_ARGS__)
+  #define LOG_T(context, ...)                 Log_write(LOG_LEVEL_TRACE, (context), __VA_ARGS__)
+  #define ASSERT_T(condition, context, ...)   Log_assert((condition), LOG_LEVEL_TRACE, (context), __VA_ARGS__)
 #else
-  #define TOFU_LOG_T(context, ...)
-  #define TOFU_ASSERT_T(condition, context, ...)
+  #define LOG_T(context, ...)
+  #define ASSERT_T(condition, context, ...)
 #endif
 
 #if LOG_LEVEL_CURRENT >= LOG_LEVEL_DEBUG
-  #define TOFU_LOG_D(context, ...)                Log_write(LOG_LEVEL_DEBUG, (context), __VA_ARGS__)
-  #define TOFU_ASSERT_D(condition, context, ...)  Log_assert((condition), LOG_LEVEL_DEBUG, (context), __VA_ARGS__)
+  #define LOG_D(context, ...)                 Log_write(LOG_LEVEL_DEBUG, (context), __VA_ARGS__)
+  #define ASSERT_D(condition, context, ...)   Log_assert((condition), LOG_LEVEL_DEBUG, (context), __VA_ARGS__)
 #else
-  #define TOFU_LOG_D(context, ...)
-  #define TOFU_ASSERT_D(condition, context, ...)
+  #define LOG_D(context, ...)
+  #define ASSERT_D(condition, context, ...)
 #endif
 
 #if LOG_LEVEL_CURRENT >= LOG_LEVEL_INFO
-  #define TOFU_LOG_I(context, ...)                Log_write(LOG_LEVEL_INFO, (context), __VA_ARGS__)
-  #define TOFU_ASSERT_I(condition, context, ...)  Log_assert((condition), LOG_LEVEL_INFO, (context), __VA_ARGS__)
+  #define LOG_I(context, ...)                 Log_write(LOG_LEVEL_INFO, (context), __VA_ARGS__)
+  #define ASSERT_I(condition, context, ...)   Log_assert((condition), LOG_LEVEL_INFO, (context), __VA_ARGS__)
 #else
-  #define TOFU_LOG_I(context, ...)
-  #define TOFU_ASSERT_I(condition, context, ...)
+  #define LOG_I(context, ...)
+  #define ASSERT_I(condition, context, ...)
 #endif
 
 #if LOG_LEVEL_CURRENT >= LOG_LEVEL_WARNING
-  #define TOFU_LOG_W(context, ...)                Log_write(LOG_LEVEL_WARNING, (context), __VA_ARGS__)
-  #define TOFU_ASSERT_W(condition, context, ...)  Log_assert((condition), LOG_LEVEL_WARNING, (context), __VA_ARGS__)
+  #define LOG_W(context, ...)                 Log_write(LOG_LEVEL_WARNING, (context), __VA_ARGS__)
+  #define ASSERT_W(condition, context, ...)   Log_assert((condition), LOG_LEVEL_WARNING, (context), __VA_ARGS__)
 #else
-  #define TOFU_LOG_W(context, ...)
-  #define TOFU_ASSERT_W(condition, context, ...)
+  #define LOG_W(context, ...)
+  #define ASSERT_W(condition, context, ...)
 #endif
 
 #if LOG_LEVEL_CURRENT >= LOG_LEVEL_ERROR
-  #define TOFU_LOG_E(context, ...)                Log_write(LOG_LEVEL_ERROR, (context), __VA_ARGS__)
-  #define TOFU_ASSERT_E(condition, context, ...)  Log_assert((condition), LOG_LEVEL_ERROR, (context), __VA_ARGS__)
+  #define LOG_E(context, ...)                 Log_write(LOG_LEVEL_ERROR, (context), __VA_ARGS__)
+  #define ASSERT_E(condition, context, ...)   Log_assert((condition), LOG_LEVEL_ERROR, (context), __VA_ARGS__)
 #else
-  #define TOFU_LOG_E(context, ...)
-  #define TOFU_ASSERT_E(condition, context, ...)
+  #define LOG_E(context, ...)
+  #define ASSERT_E(condition, context, ...)
 #endif
 
 #if LOG_LEVEL_CURRENT >= LOG_LEVEL_FATAL
-  #define TOFU_LOG_F(context, ...)                Log_write(LOG_LEVEL_FATAL, (context), __VA_ARGS__)
-  #define TOFU_ASSERT_F(condition, context, ...)  Log_assert((condition), LOG_LEVEL_FATAL, (context), __VA_ARGS__)
+  #define LOG_F(context, ...)                 Log_write(LOG_LEVEL_FATAL, (context), __VA_ARGS__)
+  #define ASSERT_F(condition, context, ...)   Log_assert((condition), LOG_LEVEL_FATAL, (context), __VA_ARGS__)
 #else
-  #define TOFU_LOG_F(context, ...)
-  #define TOFU_ASSERT_F(condition, context, ...)
+  #define LOG_F(context, ...)
+  #define ASSERT_F(condition, context, ...)
 #endif
 
 extern void Log_write(int level, const char *context, const char *text, ...);

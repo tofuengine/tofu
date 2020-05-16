@@ -106,7 +106,7 @@ static GL_Rectangle_t *_load_cells(const File_System_t *file_system, const char 
 
     FS_close(handle);
 
-    TOFU_LOG_D(LOG_CONTEXT, "#%d cells loaded from file `%s`", entries, file);
+    LOG_D(LOG_CONTEXT, "#%d cells loaded from file `%s`", entries, file);
 
     *count = entries;
     return cells;
@@ -144,7 +144,7 @@ static int bank_new2(lua_State *L)
         if (!sheet) {
             return luaL_error(L, "can't decode file `%s`", file);
         }
-        TOFU_LOG_D(LOG_CONTEXT, "sheet %p decoded from file `%s`", sheet, file);
+        LOG_D(LOG_CONTEXT, "sheet %p decoded from file `%s`", sheet, file);
     } else
     if (type == LUA_TUSERDATA) {
         const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_USERDATA(L, 1);
@@ -154,7 +154,7 @@ static int bank_new2(lua_State *L)
         if (!sheet) {
             return luaL_error(L, "can't attach sheet");
         }
-        TOFU_LOG_D(LOG_CONTEXT, "sheet %p attached to canvas %p", sheet, canvas);
+        LOG_D(LOG_CONTEXT, "sheet %p attached to canvas %p", sheet, canvas);
     } else {
         free(cells);
         return luaL_error(L, "invalid argument");
@@ -167,7 +167,7 @@ static int bank_new2(lua_State *L)
             .sheet = sheet,
             .sheet_reference = type == LUA_TUSERDATA ? luaX_ref(L, 1) : LUAX_REFERENCE_NIL
         };
-    TOFU_LOG_D(LOG_CONTEXT, "bank %p allocated w/ sheet %p for default context", self, sheet);
+    LOG_D(LOG_CONTEXT, "bank %p allocated w/ sheet %p for default context", self, sheet);
 
     luaL_setmetatable(L, META_TABLE);
 
@@ -201,7 +201,7 @@ static int bank_new3(lua_State *L)
         if (!sheet) {
             return luaL_error(L, "can't decode file `%s`", file);
         }
-        TOFU_LOG_D(LOG_CONTEXT, "sheet %p decoded from file `%s`", sheet, file);
+        LOG_D(LOG_CONTEXT, "sheet %p decoded from file `%s`", sheet, file);
     } else
     if (type == LUA_TUSERDATA) {
         const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_USERDATA(L, 1);
@@ -210,7 +210,7 @@ static int bank_new3(lua_State *L)
         if (!sheet) {
             return luaL_error(L, "can't attach sheet");
         }
-        TOFU_LOG_D(LOG_CONTEXT, "sheet %p attached to canvas %p", sheet, canvas);
+        LOG_D(LOG_CONTEXT, "sheet %p attached to canvas %p", sheet, canvas);
     } else {
         return luaL_error(L, "invalid argument");
     }
@@ -222,7 +222,7 @@ static int bank_new3(lua_State *L)
             .sheet = sheet,
             .sheet_reference = type == LUA_TUSERDATA ? luaX_ref(L, 1) : LUAX_REFERENCE_NIL
         };
-    TOFU_LOG_D(LOG_CONTEXT, "bank %p allocated w/ sheet %p for default context", self, sheet);
+    LOG_D(LOG_CONTEXT, "bank %p allocated w/ sheet %p for default context", self, sheet);
 
     luaL_setmetatable(L, META_TABLE);
 
@@ -246,20 +246,20 @@ static int bank_gc(lua_State *L)
 
     if (self->sheet_reference != LUAX_REFERENCE_NIL) {
         luaX_unref(L, self->sheet_reference);
-        TOFU_LOG_D(LOG_CONTEXT, "sheet reference #%d released", self->sheet_reference);
+        LOG_D(LOG_CONTEXT, "sheet reference #%d released", self->sheet_reference);
         GL_sheet_detach(self->sheet);
-        TOFU_LOG_D(LOG_CONTEXT, "sheet %p detached", self->sheet);
+        LOG_D(LOG_CONTEXT, "sheet %p detached", self->sheet);
     } else {
         GL_sheet_destroy(self->sheet);
-        TOFU_LOG_D(LOG_CONTEXT, "sheet %p destroyed", self->sheet);
+        LOG_D(LOG_CONTEXT, "sheet %p destroyed", self->sheet);
     }
 
     if (self->context_reference != LUAX_REFERENCE_NIL) {
-        TOFU_LOG_D(LOG_CONTEXT, "context reference #%d released", self->context_reference);
+        LOG_D(LOG_CONTEXT, "context reference #%d released", self->context_reference);
         luaX_unref(L, self->context_reference);
     }
 
-    TOFU_LOG_D(LOG_CONTEXT, "bank %p finalized", self);
+    LOG_D(LOG_CONTEXT, "bank %p finalized", self);
 
     return 0;
 }
@@ -298,17 +298,17 @@ static int bank_canvas(lua_State *L)
 
     if (self->context_reference != LUAX_REFERENCE_NIL) {
         luaX_unref(L, self->context_reference);
-        TOFU_LOG_D(LOG_CONTEXT, "context reference #%d released", self->context_reference);
+        LOG_D(LOG_CONTEXT, "context reference #%d released", self->context_reference);
     }
 
     if (canvas) {
         self->context = canvas->context;
         self->context_reference = luaX_ref(L, 2);
-        TOFU_LOG_D(LOG_CONTEXT, "context %p attached w/ reference #%d", self->context, self->context_reference);
+        LOG_D(LOG_CONTEXT, "context %p attached w/ reference #%d", self->context, self->context_reference);
     } else {
         self->context = display->context;
         self->context_reference = LUAX_REFERENCE_NIL;
-        TOFU_LOG_D(LOG_CONTEXT, "default context attached");
+        LOG_D(LOG_CONTEXT, "default context attached");
     }
 
     return 0;
