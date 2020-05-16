@@ -56,7 +56,7 @@ static GL_Rectangle_t *_precompute_cells(size_t width, size_t height, size_t cel
     size_t amount = columns * rows;
     GL_Rectangle_t *cells = malloc(amount * sizeof(GL_Rectangle_t));
     if (!cells) {
-        LOG_E(LOG_CONTEXT, "can't allocate %d cells", amount);
+        LOG_ERROR(LOG_CONTEXT, "can't allocate %d cells", amount);
         return NULL;
     }
     size_t k = 0;
@@ -83,7 +83,7 @@ static GL_Sheet_t *_attach(GL_Surface_t *atlas, GL_Rectangle_t *cells, size_t co
     }
     GL_Sheet_t *sheet = malloc(sizeof(GL_Sheet_t));
     if (!sheet) {
-        LOG_E(LOG_CONTEXT, "can't allocate sheet");
+        LOG_ERROR(LOG_CONTEXT, "can't allocate sheet");
         return NULL;
     }
     *sheet = (GL_Sheet_t){
@@ -91,17 +91,17 @@ static GL_Sheet_t *_attach(GL_Surface_t *atlas, GL_Rectangle_t *cells, size_t co
             .cells = cells,
             .count = count
         };
-    LOG_D(LOG_CONTEXT, "sheet %p attached", sheet);
+    LOG_DEBUG(LOG_CONTEXT, "sheet %p attached", sheet);
     return sheet;
 }
 
 static void _detach(GL_Sheet_t *sheet)
 {
     free(sheet->cells);
-    LOG_D(LOG_CONTEXT, "sheet cells freed");
+    LOG_DEBUG(LOG_CONTEXT, "sheet cells freed");
 
     free(sheet);
-    LOG_D(LOG_CONTEXT, "sheet %p freed", sheet);
+    LOG_DEBUG(LOG_CONTEXT, "sheet %p freed", sheet);
 }
 
 GL_Sheet_t *GL_sheet_decode_rect(size_t width, size_t height, const void *pixels, size_t cell_width, size_t cell_height, GL_Surface_Callback_t callback, void *user_data)
@@ -122,7 +122,7 @@ GL_Sheet_t *GL_sheet_decode_rect(size_t width, size_t height, const void *pixels
         free(cells);
         return NULL;
     }
-    LOG_D(LOG_CONTEXT, "sheet %p decoded", sheet);
+    LOG_DEBUG(LOG_CONTEXT, "sheet %p decoded", sheet);
     return sheet;
 }
 
@@ -137,7 +137,7 @@ GL_Sheet_t *GL_sheet_decode(size_t width, size_t height, const void *pixels, con
         GL_surface_destroy(atlas);
         return NULL;
     }
-    LOG_D(LOG_CONTEXT, "sheet %p decoded", sheet);
+    LOG_DEBUG(LOG_CONTEXT, "sheet %p decoded", sheet);
     return sheet;
 }
 
@@ -162,7 +162,7 @@ GL_Sheet_t *GL_sheet_attach_rect(const GL_Surface_t *atlas, size_t cell_width, s
         free(cells);
         return NULL;
     }
-    LOG_D(LOG_CONTEXT, "sheet %p attached", sheet);
+    LOG_DEBUG(LOG_CONTEXT, "sheet %p attached", sheet);
     return sheet;
 }
 
@@ -172,7 +172,7 @@ GL_Sheet_t *GL_sheet_attach(const GL_Surface_t *atlas, const GL_Rectangle_t *cel
     if (!sheet) {
         return NULL;
     }
-    LOG_D(LOG_CONTEXT, "sheet %p attached", sheet);
+    LOG_DEBUG(LOG_CONTEXT, "sheet %p attached", sheet);
     return sheet;
 }
 

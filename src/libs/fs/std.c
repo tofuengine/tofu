@@ -63,7 +63,7 @@ bool std_is_valid(const char *path)
     struct stat path_stat;
     int result = stat(path, &path_stat);
     if (result != 0) {
-        LOG_E(LOG_CONTEXT, "can't get stats for `%s`", path);
+        LOG_ERROR(LOG_CONTEXT, "can't get stats for `%s`", path);
         return false;
     }
 
@@ -74,13 +74,13 @@ File_System_Mount_t *std_mount(const char *path)
 {
     File_System_Mount_t *mount = malloc(sizeof(Std_Mount_t));
     if (!mount) {
-        LOG_E(LOG_CONTEXT, "can't allocate mount for folder `%s`", path);
+        LOG_ERROR(LOG_CONTEXT, "can't allocate mount for folder `%s`", path);
         return NULL;
     }
 
     _std_mount_ctor(mount, path);
 
-    LOG_D(LOG_CONTEXT, "mount %p initialized at folder `%s`", mount, path);
+    LOG_DEBUG(LOG_CONTEXT, "mount %p initialized at folder `%s`", mount, path);
 
     return mount;
 }
@@ -116,7 +116,7 @@ static bool _std_mount_contains(File_System_Mount_t *mount, const char *file)
     strcat(full_path, file);
 
     bool exists = access(full_path, R_OK) != -1;
-    ASSERT_D(!exists, LOG_CONTEXT, "file `%s` found in mount %p", file, mount);
+    LOG_DEBUG_IF(exists, LOG_CONTEXT, "file `%s` found in mount %p", file, mount);
     return exists;
 }
 
@@ -131,20 +131,20 @@ static File_System_Handle_t *_std_mount_open(File_System_Mount_t *mount, const c
 
     FILE *stream = fopen(full_path, "rb");
     if (!stream) {
-        LOG_E(LOG_CONTEXT, "can't access file `%s`", full_path);
+        LOG_ERROR(LOG_CONTEXT, "can't access file `%s`", full_path);
         return NULL;
     }
 
     File_System_Handle_t *handle = malloc(sizeof(Std_Handle_t));
     if (!handle) {
-        LOG_E(LOG_CONTEXT, "can't allocate handle for file `%s`", file);
+        LOG_ERROR(LOG_CONTEXT, "can't allocate handle for file `%s`", file);
         fclose(stream);
         return NULL;
     }
 
     _std_handle_ctor(handle, stream);
 
-    LOG_D(LOG_CONTEXT, "file `%s` opened w/ handle %p", file, handle);
+    LOG_DEBUG(LOG_CONTEXT, "file `%s` opened w/ handle %p", file, handle);
 
     return handle;
 }
@@ -179,11 +179,11 @@ static size_t _std_handle_size(File_System_Handle_t *handle)
     struct stat stat;
     int result = fstat(fileno(std_handle->stream), &stat);
     if (result != 0) {
-        LOG_E(LOG_CONTEXT, "can't get stats for handle %p", handle);
+        LOG_ERROR(LOG_CONTEXT, "can't get stats for handle %p", handle);
         return 0;
     }
 
-//    LOG_D(LOG_CONTEXT, "handle %p is", std_handle);
+//    LOG_DEBUG(LOG_CONTEXT, "handle %p is", std_handle);
 
     return (size_t)stat.st_size;
 }
@@ -194,7 +194,7 @@ static size_t _std_handle_read(File_System_Handle_t *handle, void *buffer, size_
 
     size_t bytes_read = fread(buffer, sizeof(char), bytes_requested, std_handle->stream);
 
-    LOG_D(LOG_CONTEXT, "%d bytes read for handle %p", bytes_read, handle);
+    LOG_DEBUG(LOG_CONTEXT, "%d bytes read for handle %p", bytes_read, handle);
     return bytes_read;
 }
 
@@ -203,7 +203,7 @@ static void _std_handle_seek(File_System_Handle_t *handle, long offset, int when
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
     fseek(std_handle->stream, offset, whence);
-    LOG_D(LOG_CONTEXT, "%d bytes seeked w/ mode %d for handle %p", offset, whence, handle);
+    LOG_DEBUG(LOG_CONTEXT, "%d bytes seeked w/ mode %d for handle %p", offset, whence, handle);
 }
 
 static bool _std_handle_eof(File_System_Handle_t *handle)
@@ -211,6 +211,6 @@ static bool _std_handle_eof(File_System_Handle_t *handle)
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
     bool end_of_file = feof(std_handle->stream) != 0;
-    ASSERT_D(!end_of_file, LOG_CONTEXT, "end-of-file reached for handle %p", handle);
+    LOG_DEBUG_IF(end_of_file, LOG_CONTEXT, "end-of-file reached for handle %p", handle);
     return end_of_file;
 }

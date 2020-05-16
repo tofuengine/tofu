@@ -45,54 +45,54 @@
 // TODO: rename `LOG_x` to `TE_LOG_x` and `ASSERT_x` to `TE_ASSERT_x` to convey some kind of "namespace"?
 
 #if LOG_LEVEL_CURRENT >= LOG_LEVEL_TRACE
-  #define LOG_T(context, ...)                 Log_write(LOG_LEVEL_TRACE, (context), __VA_ARGS__)
-  #define ASSERT_T(condition, context, ...)   Log_assert((condition), LOG_LEVEL_TRACE, (context), __VA_ARGS__)
+  #define LOG_TRACE(context, ...)                 Log_write(LOG_LEVEL_TRACE, (context), __VA_ARGS__)
+  #define LOG_TRACE_IF(condition, context, ...)   Log_write_if((condition), LOG_LEVEL_TRACE, (context), __VA_ARGS__)
 #else
-  #define LOG_T(context, ...)
-  #define ASSERT_T(condition, context, ...)
+  #define LOG_TRACE(context, ...)
+  #define LOG_TRACE_IF(condition, context, ...)
 #endif
 
 #if LOG_LEVEL_CURRENT >= LOG_LEVEL_DEBUG
-  #define LOG_D(context, ...)                 Log_write(LOG_LEVEL_DEBUG, (context), __VA_ARGS__)
-  #define ASSERT_D(condition, context, ...)   Log_assert((condition), LOG_LEVEL_DEBUG, (context), __VA_ARGS__)
+  #define LOG_DEBUG(context, ...)                 Log_write(LOG_LEVEL_DEBUG, (context), __VA_ARGS__)
+  #define LOG_DEBUG_IF(condition, context, ...)   Log_write_if((condition), LOG_LEVEL_DEBUG, (context), __VA_ARGS__)
 #else
-  #define LOG_D(context, ...)
-  #define ASSERT_D(condition, context, ...)
+  #define LOG_DEBUG(context, ...)
+  #define LOG_DEBUG_IF(condition, context, ...)
 #endif
 
 #if LOG_LEVEL_CURRENT >= LOG_LEVEL_INFO
-  #define LOG_I(context, ...)                 Log_write(LOG_LEVEL_INFO, (context), __VA_ARGS__)
-  #define ASSERT_I(condition, context, ...)   Log_assert((condition), LOG_LEVEL_INFO, (context), __VA_ARGS__)
+  #define LOG_INFO(context, ...)                  Log_write(LOG_LEVEL_INFO, (context), __VA_ARGS__)
+  #define LOG_INFO_IF(condition, context, ...)    Log_write_if((condition), LOG_LEVEL_INFO, (context), __VA_ARGS__)
 #else
-  #define LOG_I(context, ...)
-  #define ASSERT_I(condition, context, ...)
+  #define LOG_INFO(context, ...)
+  #define LOG_INFO_IF(condition, context, ...)
 #endif
 
 #if LOG_LEVEL_CURRENT >= LOG_LEVEL_WARNING
-  #define LOG_W(context, ...)                 Log_write(LOG_LEVEL_WARNING, (context), __VA_ARGS__)
-  #define ASSERT_W(condition, context, ...)   Log_assert((condition), LOG_LEVEL_WARNING, (context), __VA_ARGS__)
+  #define LOG_WARNING(context, ...)               Log_write(LOG_LEVEL_WARNING, (context), __VA_ARGS__)
+  #define LOG_WARNING_IF(condition, context, ...) Log_write_if((condition), LOG_LEVEL_WARNING, (context), __VA_ARGS__)
 #else
-  #define LOG_W(context, ...)
-  #define ASSERT_W(condition, context, ...)
+  #define LOG_WARNING(context, ...)
+  #define LOG_WARNING_IF(condition, context, ...)
 #endif
 
 #if LOG_LEVEL_CURRENT >= LOG_LEVEL_ERROR
-  #define LOG_E(context, ...)                 Log_write(LOG_LEVEL_ERROR, (context), __VA_ARGS__)
-  #define ASSERT_E(condition, context, ...)   Log_assert((condition), LOG_LEVEL_ERROR, (context), __VA_ARGS__)
+  #define LOG_ERROR(context, ...)                 Log_write(LOG_LEVEL_ERROR, (context), __VA_ARGS__)
+  #define LOG_ERROR_IF(condition, context, ...)   Log_write_if((condition), LOG_LEVEL_ERROR, (context), __VA_ARGS__)
 #else
-  #define LOG_E(context, ...)
-  #define ASSERT_E(condition, context, ...)
+  #define LOG_ERROR(context, ...)
+  #define LOG_ERROR_IF(condition, context, ...)
 #endif
 
 #if LOG_LEVEL_CURRENT >= LOG_LEVEL_FATAL
-  #define LOG_F(context, ...)                 Log_write(LOG_LEVEL_FATAL, (context), __VA_ARGS__)
-  #define ASSERT_F(condition, context, ...)   Log_assert((condition), LOG_LEVEL_FATAL, (context), __VA_ARGS__)
+  #define LOG_FATAL(context, ...)                 Log_write(LOG_LEVEL_FATAL, (context), __VA_ARGS__)
+  #define LOG_FATAL_IF(condition, context, ...)   Log_write_if((condition), LOG_LEVEL_FATAL, (context), __VA_ARGS__)
 #else
-  #define LOG_F(context, ...)
-  #define ASSERT_F(condition, context, ...)
+  #define LOG_FATAL(context, ...)
+  #define LOG_FATAL_IF(condition, context, ...)
 #endif
 
 extern void Log_write(int level, const char *context, const char *text, ...);
-extern void Log_assert(bool condition, int level, const char *context, const char *text, ...);
+extern void Log_write_if(bool condition, int level, const char *context, const char *text, ...);
 
 #endif  /* __LIBS_LOG_H__ */

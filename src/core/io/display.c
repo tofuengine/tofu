@@ -130,7 +130,7 @@ static bool _has_errors(void)
             case GL_STACK_UNDERFLOW: { message = "STACK_UNDERFLOW"; } break;
             case GL_STACK_OVERFLOW: { message = "STACK_OVERFLOW"; } break;
         }
-        LOG_E(LOG_CONTEXT, "OpenGL error #%04x: `GL_%s`", code, message);
+        LOG_ERROR(LOG_CONTEXT, "OpenGL error #%04x: `GL_%s`", code, message);
 
         result = true;
     }
@@ -142,7 +142,7 @@ static bool _compute_size(Display_t *display, const Display_Configuration_t *con
 {
     int display_width, display_height;
     glfwGetMonitorWorkarea(glfwGetPrimaryMonitor(), NULL, NULL, &display_width, &display_height);
-    LOG_D(LOG_CONTEXT, "display size is %dx%d", display_width, display_height);
+    LOG_DEBUG(LOG_CONTEXT, "display size is %dx%d", display_width, display_height);
 
     display->window_width = configuration->width; // TODO: width/height set to `0` means fit the display?
     display->window_height = configuration->height;
@@ -152,11 +152,11 @@ static bool _compute_size(Display_t *display, const Display_Configuration_t *con
     size_t scale = configuration->scale != 0 ? configuration->scale : max_scale;
 
     if (max_scale == 0) {
-        LOG_F(LOG_CONTEXT, "requested display size can't fit display!");
+        LOG_FATAL(LOG_CONTEXT, "requested display size can't fit display!");
         return false;
     } else
     if (scale > max_scale) {
-        LOG_W(LOG_CONTEXT, "requested scaling x%d too big, forcing to x%d", scale, max_scale);
+        LOG_WARNING(LOG_CONTEXT, "requested scaling x%d too big, forcing to x%d", scale, max_scale);
         scale = max_scale;
     }
 
@@ -164,7 +164,7 @@ static bool _compute_size(Display_t *display, const Display_Configuration_t *con
     display->window_height = configuration->height * scale;
     display->window_scale = scale;
 
-    LOG_D(LOG_CONTEXT, "window size is %dx%d (%dx)", display->window_width, display->window_height,
+    LOG_DEBUG(LOG_CONTEXT, "window size is %dx%d (%dx)", display->window_width, display->window_height,
         display->window_scale);
 
     int x = (display_width - display->window_width) / 2;
@@ -194,37 +194,37 @@ static bool _compute_size(Display_t *display, const Display_Configuration_t *con
 
 static void _error_callback(int error, const char *description)
 {
-    LOG_E(LOG_CONTEXT, "%s", description);
+    LOG_ERROR(LOG_CONTEXT, "%s", description);
 }
 
 static void _size_callback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height); // Viewport matches window
-    LOG_D(LOG_CONTEXT, "viewport size set to %dx%d", width, height);
+    LOG_DEBUG(LOG_CONTEXT, "viewport size set to %dx%d", width, height);
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(0.0, (GLdouble)width, (GLdouble)height, 0.0, 0.0, 1.0); // Configure top-left corner at <0, 0>
     glMatrixMode(GL_MODELVIEW); // Reset the model-view matrix.
     glLoadIdentity();
-    LOG_D(LOG_CONTEXT, "projection/model matrix reset, going otho-2D");
+    LOG_DEBUG(LOG_CONTEXT, "projection/model matrix reset, going otho-2D");
 
     glEnable(GL_TEXTURE_2D); // Default, always enabled.
     glDisable(GL_DEPTH_TEST); // We just don't need it!
     glDisable(GL_STENCIL_TEST); // Ditto.
     glDisable(GL_BLEND); // Blending is disabled.
     glDisable(GL_ALPHA_TEST);
-    LOG_D(LOG_CONTEXT, "optimizing OpenGL features");
+    LOG_DEBUG(LOG_CONTEXT, "optimizing OpenGL features");
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // TODO: configurable?
-    LOG_D(LOG_CONTEXT, "setting OpenGL clear-color");
+    LOG_DEBUG(LOG_CONTEXT, "setting OpenGL clear-color");
 
 #ifdef __DEBUG_TRIANGLES_WINDING__
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    LOG_D(LOG_CONTEXT, "enabling OpenGL debug");
+    LOG_DEBUG(LOG_CONTEXT, "enabling OpenGL debug");
 #endif
 }
 
@@ -234,12 +234,12 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
 
     display->configuration = *configuration;
 
-    LOG_I(LOG_CONTEXT, "GLFW: %s", glfwGetVersionString());
+    LOG_INFO(LOG_CONTEXT, "GLFW: %s", glfwGetVersionString());
 
     glfwSetErrorCallback(_error_callback);
 
     if (!glfwInit()) {
-        LOG_F(LOG_CONTEXT, "can't initialize GLFW");
+        LOG_FATAL(LOG_CONTEXT, "can't initialize GLFW");
         return false;
     }
 
@@ -268,14 +268,14 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     display->window = glfwCreateWindow(display->physical_width, display->physical_height, configuration->title,
             configuration->fullscreen ? glfwGetPrimaryMonitor() : NULL, NULL);
     if (display->window == NULL) {
-        LOG_F(LOG_CONTEXT, "can't create window");
+        LOG_FATAL(LOG_CONTEXT, "can't create window");
         glfwTerminate();
         return false;
     }
     glfwMakeContextCurrent(display->window);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        LOG_F(LOG_CONTEXT, "can't initialize GLAD");
+        LOG_FATAL(LOG_CONTEXT, "can't initialize GLAD");
         glfwDestroyWindow(display->window);
         glfwTerminate();
         return false;
@@ -285,41 +285,41 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
 
     _size_callback(display->window, display->physical_width, display->physical_height);
 
-    LOG_D(LOG_CONTEXT, "%s mouse cursor", configuration->hide_cursor ? "hiding" : "showing");
+    LOG_DEBUG(LOG_CONTEXT, "%s mouse cursor", configuration->hide_cursor ? "hiding" : "showing");
     glfwSetInputMode(display->window, GLFW_CURSOR, configuration->hide_cursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
 
-    LOG_D(LOG_CONTEXT, "%sabling vertical synchronization", configuration->vertical_sync ? "en" : "dis");
+    LOG_DEBUG(LOG_CONTEXT, "%sabling vertical synchronization", configuration->vertical_sync ? "en" : "dis");
     glfwSwapInterval(configuration->vertical_sync ? 1 : 0); // Set vertical sync, if required.
 
-    LOG_I(LOG_CONTEXT, "vendor: %s", glGetString(GL_VENDOR));
-    LOG_I(LOG_CONTEXT, "renderer: %s", glGetString(GL_RENDERER));
-    LOG_I(LOG_CONTEXT, "version: %s", glGetString(GL_VERSION));
-    LOG_I(LOG_CONTEXT, "GLSL: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
+    LOG_INFO(LOG_CONTEXT, "vendor: %s", glGetString(GL_VENDOR));
+    LOG_INFO(LOG_CONTEXT, "renderer: %s", glGetString(GL_RENDERER));
+    LOG_INFO(LOG_CONTEXT, "version: %s", glGetString(GL_VERSION));
+    LOG_INFO(LOG_CONTEXT, "GLSL: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
     display->context = GL_context_create(configuration->width, configuration->height);
     if (!display->context) {
-        LOG_F(LOG_CONTEXT, "can't initialize GL");
+        LOG_FATAL(LOG_CONTEXT, "can't initialize GL");
         glfwDestroyWindow(display->window);
         glfwTerminate();
         return false;
     }
 
     GL_palette_greyscale(&display->palette, GL_MAX_PALETTE_COLORS);
-    LOG_D(LOG_CONTEXT, "loaded greyscale palette of #%d entries", GL_MAX_PALETTE_COLORS);
+    LOG_DEBUG(LOG_CONTEXT, "loaded greyscale palette of #%d entries", GL_MAX_PALETTE_COLORS);
 
     display->vram_size = display->configuration.width * display->configuration.width * sizeof(GL_Color_t);
     display->vram = malloc(display->vram_size);
     if (!display->vram) {
-        LOG_F(LOG_CONTEXT, "can't allocate VRAM buffer");
+        LOG_FATAL(LOG_CONTEXT, "can't allocate VRAM buffer");
         GL_context_destroy(display->context);
         glfwDestroyWindow(display->window);
         glfwTerminate();
     }
-    LOG_D(LOG_CONTEXT, "%d bytes VRAM allocated at %p (%dx%d)", display->vram_size, display->vram, display->configuration.width, display->configuration.height);
+    LOG_DEBUG(LOG_CONTEXT, "%d bytes VRAM allocated at %p (%dx%d)", display->vram_size, display->vram, display->configuration.width, display->configuration.height);
 
     glGenTextures(1, &display->vram_texture); //allocate the memory for texture
     if (display->vram_texture == 0) {
-        LOG_F(LOG_CONTEXT, "can't allocate VRAM texture");
+        LOG_FATAL(LOG_CONTEXT, "can't allocate VRAM texture");
         free(display->vram);
         GL_context_destroy(display->context);
         glfwDestroyWindow(display->window);
@@ -335,7 +335,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
     glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, display->configuration.width, display->configuration.height, 0, PIXEL_FORMAT, GL_UNSIGNED_BYTE, NULL);
-    LOG_D(LOG_CONTEXT, "texture created w/ id #%d (%dx%d)", display->vram_texture, display->configuration.width, display->configuration.height);
+    LOG_DEBUG(LOG_CONTEXT, "texture created w/ id #%d (%dx%d)", display->vram_texture, display->configuration.width, display->configuration.height);
 
     for (size_t i = 0; i < Display_Programs_t_CountOf; ++i) {
         const Program_Data_t *data = &_programs_data[i];
@@ -346,7 +346,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         if (!program_create(program) ||
             !program_attach(program, data->vertex_shader, PROGRAM_SHADER_VERTEX) ||
             !program_attach(program, data->fragment_shader, PROGRAM_SHADER_FRAGMENT)) {
-            LOG_F(LOG_CONTEXT, "can't initialize shaders");
+            LOG_FATAL(LOG_CONTEXT, "can't initialize shaders");
             for (size_t j = 0; j < i; ++j) {
                 program_delete(&display->programs[j]);
             }
@@ -359,7 +359,7 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         }
 
         program_prepare(program, _uniforms, Uniforms_t_CountOf);
-        LOG_D(LOG_CONTEXT, "program %p prepared w/ id #%d", program, program->id);
+        LOG_DEBUG(LOG_CONTEXT, "program %p prepared w/ id #%d", program, program->id);
     }
 
     Display_shader(display, NULL); // Use pass-through shader at the beginning.
@@ -381,18 +381,18 @@ void Display_terminate(Display_t *display)
     }
 
     glDeleteBuffers(1, &display->vram_texture);
-    LOG_D(LOG_CONTEXT, "texture w/ id #%d deleted", display->vram_texture);
+    LOG_DEBUG(LOG_CONTEXT, "texture w/ id #%d deleted", display->vram_texture);
 
     free(display->vram);
-    LOG_D(LOG_CONTEXT, "VRAM buffer %p freed", display->vram);
+    LOG_DEBUG(LOG_CONTEXT, "VRAM buffer %p freed", display->vram);
 
     GL_context_destroy(display->context);
 
     glfwDestroyWindow(display->window);
-    LOG_D(LOG_CONTEXT, "window %p destroyed", display->window);
+    LOG_DEBUG(LOG_CONTEXT, "window %p destroyed", display->window);
 
     glfwTerminate();
-    LOG_D(LOG_CONTEXT, "terminated");
+    LOG_DEBUG(LOG_CONTEXT, "terminated");
 }
 
 bool Display_should_close(const Display_t *display)
@@ -485,7 +485,7 @@ void Display_present(const Display_t *display)
 void Display_palette(Display_t *display, const GL_Palette_t *palette)
 {
     display->palette = *palette;
-    LOG_D(LOG_CONTEXT, "palette updated");
+    LOG_DEBUG(LOG_CONTEXT, "palette updated");
 }
 
 void Display_offset(Display_t *display, GL_Point_t offset)
@@ -503,16 +503,16 @@ void Display_shader(Display_t *display, const char *effect)
         }
     } else
     if (!effect) {
-        LOG_I(LOG_CONTEXT, "pass-thru shader already active, bailing out");
+        LOG_INFO(LOG_CONTEXT, "pass-thru shader already active, bailing out");
         return;
     }
 
     if (!effect) {
-        LOG_D(LOG_CONTEXT, "loading pass-thru shader");
+        LOG_DEBUG(LOG_CONTEXT, "loading pass-thru shader");
         program_delete(&display->programs[DISPLAY_PROGRAM_CUSTOM]);
         display->active_program = &display->programs[DISPLAY_PROGRAM_PASSTHRU];
     } else {
-        LOG_D(LOG_CONTEXT, "loading custom shader");
+        LOG_DEBUG(LOG_CONTEXT, "loading custom shader");
         const size_t length = strlen(FRAGMENT_SHADER_CUSTOM) + strlen(effect);
         char *code = malloc((length + 1) * sizeof(char)); // Add null terminator for the string.
         strcpy(code, FRAGMENT_SHADER_CUSTOM);
@@ -527,19 +527,19 @@ void Display_shader(Display_t *display, const char *effect)
             display->active_program = program;
         } else {
             program_delete(program);
-            LOG_W(LOG_CONTEXT, "can't load custom shader");
+            LOG_WARNING(LOG_CONTEXT, "can't load custom shader");
         }
 
         free(code);
     }
 
-    LOG_D(LOG_CONTEXT, "switched to program %p", display->active_program);
+    LOG_DEBUG(LOG_CONTEXT, "switched to program %p", display->active_program);
 
     program_use(display->active_program);
-    LOG_D(LOG_CONTEXT, "program %p active", display->active_program);
+    LOG_DEBUG(LOG_CONTEXT, "program %p active", display->active_program);
 
     program_send(display->active_program, UNIFORM_TEXTURE, PROGRAM_UNIFORM_TEXTURE, 1, &_texture_id_0); // Redundant
     GLfloat resolution[] = { (GLfloat)display->window_width, (GLfloat)display->window_height };
     program_send(display->active_program, UNIFORM_RESOLUTION, PROGRAM_UNIFORM_VEC2, 1, resolution);
-    LOG_D(LOG_CONTEXT, "program %p initialized", display->active_program);
+    LOG_DEBUG(LOG_CONTEXT, "program %p initialized", display->active_program);
 }

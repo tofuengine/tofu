@@ -90,7 +90,7 @@ void Log_write(int level, const char *context, const char *text, ...)
     va_end(args);
 }
 
-void Log_assert(bool condition, int level, const char *context, const char *text, ...)
+void Log_write_if(bool condition, int level, const char *context, const char *text, ...)
 {
     if (condition) {
         return;

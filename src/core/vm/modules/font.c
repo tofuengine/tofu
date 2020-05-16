@@ -93,7 +93,7 @@ static int font_new3(lua_State *L)
             if (!sheet) {
                 return luaL_error(L, "can't decode sheet `%s`", file);
             }
-            LOG_D(LOG_CONTEXT, "sheet `%s` decoded", file);
+            LOG_DEBUG(LOG_CONTEXT, "sheet `%s` decoded", file);
         } else {
             File_System_Resource_t *image = FSX_load(file_system, file, FILE_SYSTEM_RESOURCE_IMAGE);
             if (!image) {
@@ -104,7 +104,7 @@ static int font_new3(lua_State *L)
             if (!sheet) {
                 return luaL_error(L, "can't decode file `%s`", file);
             }
-            LOG_D(LOG_CONTEXT, "sheet %p loaded from file `%s`", sheet, file);
+            LOG_DEBUG(LOG_CONTEXT, "sheet %p loaded from file `%s`", sheet, file);
         }
     } else
     if (type == LUA_TUSERDATA) {
@@ -114,7 +114,7 @@ static int font_new3(lua_State *L)
         if (!sheet) {
             return luaL_error(L, "can't attach sheet");
         }
-        LOG_D(LOG_CONTEXT, "sheet %p attached to canvas %p", sheet, canvas);
+        LOG_DEBUG(LOG_CONTEXT, "sheet %p attached to canvas %p", sheet, canvas);
     } else {
         return luaL_error(L, "invalid argument");
     }
@@ -126,7 +126,7 @@ static int font_new3(lua_State *L)
             .sheet = sheet,
             .sheet_reference = type == LUA_TUSERDATA ? luaX_ref(L, 1) : LUAX_REFERENCE_NIL
         };
-    LOG_D(LOG_CONTEXT, "font %p allocated w/ sheet %p for default context", self, sheet);
+    LOG_DEBUG(LOG_CONTEXT, "font %p allocated w/ sheet %p for default context", self, sheet);
 
     luaL_setmetatable(L, META_TABLE);
 
@@ -163,7 +163,7 @@ static int font_new5(lua_State *L)
             if (!sheet) {
                 return luaL_error(L, "can't decode sheet `%s`", file);
             }
-            LOG_D(LOG_CONTEXT, "sheet `%s` decoded", file);
+            LOG_DEBUG(LOG_CONTEXT, "sheet `%s` decoded", file);
         } else {
             File_System_Resource_t *image = FSX_load(file_system, file, FILE_SYSTEM_RESOURCE_IMAGE);
             if (!image) {
@@ -174,7 +174,7 @@ static int font_new5(lua_State *L)
             if (!sheet) {
                 return luaL_error(L, "can't decode file `%s`", file);
             }
-            LOG_D(LOG_CONTEXT, "sheet %p loaded from file `%s`", sheet, file);
+            LOG_DEBUG(LOG_CONTEXT, "sheet %p loaded from file `%s`", sheet, file);
         }
     } else
     if (type == LUA_TUSERDATA) {
@@ -184,7 +184,7 @@ static int font_new5(lua_State *L)
         if (!sheet) {
             return luaL_error(L, "can't attach sheet");
         }
-        LOG_D(LOG_CONTEXT, "sheet %p attached to canvas %p", sheet, canvas);
+        LOG_DEBUG(LOG_CONTEXT, "sheet %p attached to canvas %p", sheet, canvas);
     } else {
         return luaL_error(L, "invalid argument");
     }
@@ -196,7 +196,7 @@ static int font_new5(lua_State *L)
             .sheet = sheet,
             .sheet_reference = type == LUA_TUSERDATA ? luaX_ref(L, 1) : LUAX_REFERENCE_NIL
         };
-    LOG_D(LOG_CONTEXT, "font %p allocated w/ sheet %p for default context", self, sheet);
+    LOG_DEBUG(LOG_CONTEXT, "font %p allocated w/ sheet %p for default context", self, sheet);
 
     luaL_setmetatable(L, META_TABLE);
 
@@ -220,20 +220,20 @@ static int font_gc(lua_State *L)
 
     if (self->sheet_reference != LUAX_REFERENCE_NIL) {
         luaX_unref(L, self->sheet_reference);
-        LOG_D(LOG_CONTEXT, "sheet reference #%d released", self->sheet_reference);
+        LOG_DEBUG(LOG_CONTEXT, "sheet reference #%d released", self->sheet_reference);
         GL_sheet_detach(self->sheet);
-        LOG_D(LOG_CONTEXT, "sheet %p detached", self->sheet);
+        LOG_DEBUG(LOG_CONTEXT, "sheet %p detached", self->sheet);
     } else {
         GL_sheet_destroy(self->sheet);
-        LOG_D(LOG_CONTEXT, "sheet %p destroyed", self->sheet);
+        LOG_DEBUG(LOG_CONTEXT, "sheet %p destroyed", self->sheet);
     }
 
     if (self->context_reference != LUAX_REFERENCE_NIL) {
         luaX_unref(L, self->context_reference);
-        LOG_D(LOG_CONTEXT, "context reference #%d released", self->context_reference);
+        LOG_DEBUG(LOG_CONTEXT, "context reference #%d released", self->context_reference);
     }
 
-    LOG_D(LOG_CONTEXT, "font %p finalized", self);
+    LOG_DEBUG(LOG_CONTEXT, "font %p finalized", self);
 
     return 0;
 }
@@ -317,17 +317,17 @@ static int font_canvas(lua_State *L)
 
     if (self->context_reference != LUAX_REFERENCE_NIL) {
         luaX_unref(L, self->context_reference);
-        LOG_D(LOG_CONTEXT, "context reference #%d released", self->context_reference);
+        LOG_DEBUG(LOG_CONTEXT, "context reference #%d released", self->context_reference);
     }
 
     if (canvas) {
         self->context = canvas->context;
         self->context_reference = luaX_ref(L, 2);
-        LOG_D(LOG_CONTEXT, "context %p attached w/ reference #%d", self->context, self->context_reference);
+        LOG_DEBUG(LOG_CONTEXT, "context %p attached w/ reference #%d", self->context, self->context_reference);
     } else {
         self->context = display->context;
         self->context_reference = LUAX_REFERENCE_NIL;
-        LOG_D(LOG_CONTEXT, "default context attached");
+        LOG_DEBUG(LOG_CONTEXT, "default context attached");
     }
 
     return 0;

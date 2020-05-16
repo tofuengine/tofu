@@ -28,6 +28,7 @@
 #include <libs/stb.h>
 
 #include <stdint.h>
+#include <stdio.h>
 
 #define LOG_CONTEXT "fs-aux"
 
@@ -39,13 +40,13 @@ static void *_load(File_System_Handle_t *handle, bool null_terminate, size_t *si
     size_t bytes_to_allocate = bytes_requested + (null_terminate ? 1 : 0);
     void *data = malloc(bytes_to_allocate * sizeof(uint8_t)); // Add null terminator for the string.
     if (!data) {
-        LOG_E(LOG_CONTEXT, "can't allocate %d bytes of memory", bytes_to_allocate);
+        LOG_ERROR(LOG_CONTEXT, "can't allocate %d bytes of memory", bytes_to_allocate);
         FS_close(handle);
         return NULL;
     }
     size_t bytes_read = FS_read(handle, data, bytes_requested);
     if (bytes_read < bytes_requested) {
-        LOG_E(LOG_CONTEXT, "can't read %d bytes of data (%d available)", bytes_requested, bytes_read);
+        LOG_ERROR(LOG_CONTEXT, "can't read %d bytes of data (%d available)", bytes_requested, bytes_read);
         free(data);
         return NULL;
     }
@@ -63,11 +64,11 @@ static File_System_Resource_t *_load_as_string(File_System_Handle_t *handle)
     if (!chars) {
         return NULL;
     }
-    LOG_D(LOG_CONTEXT, "loaded a %d long string", length);
+    LOG_DEBUG(LOG_CONTEXT, "loaded a %d long string", length);
 
     File_System_Resource_t *resource = malloc(sizeof(File_System_Resource_t));
     if (!resource) {
-        LOG_E(LOG_CONTEXT, "cant' allocate resource");
+        LOG_ERROR(LOG_CONTEXT, "cant' allocate resource");
         free(chars);
         return NULL;
     }
@@ -92,11 +93,11 @@ static File_System_Resource_t *_load_as_binary(File_System_Handle_t *handle)
     if (!ptr) {
         return NULL;
     }
-    LOG_D(LOG_CONTEXT, "loaded %d bytes blob", size);
+    LOG_DEBUG(LOG_CONTEXT, "loaded %d bytes blob", size);
 
     File_System_Resource_t *resource = malloc(sizeof(File_System_Resource_t));
     if (!resource) {
-        LOG_E(LOG_CONTEXT, "cant' allocate resource");
+        LOG_ERROR(LOG_CONTEXT, "cant' allocate resource");
         free(ptr);
         return NULL;
     }
@@ -143,14 +144,14 @@ static File_System_Resource_t* _load_as_image(File_System_Handle_t *handle)
     int width, height, components;
     void *pixels = stbi_load_from_callbacks(&_stbi_io_callbacks, handle, &width, &height, &components, STBI_rgb_alpha);
     if (!pixels) {
-        LOG_E(LOG_CONTEXT, "can't decode surface from handle `%p` (%s)", handle, stbi_failure_reason());
+        LOG_ERROR(LOG_CONTEXT, "can't decode surface from handle `%p` (%s)", handle, stbi_failure_reason());
         return NULL;
     }
-    LOG_D(LOG_CONTEXT, "loaded %dx%d image", width, height);
+    LOG_DEBUG(LOG_CONTEXT, "loaded %dx%d image", width, height);
 
     File_System_Resource_t *resource = malloc(sizeof(File_System_Resource_t));
     if (!resource) {
-        LOG_E(LOG_CONTEXT, "cant' allocate resource");
+        LOG_ERROR(LOG_CONTEXT, "cant' allocate resource");
         stbi_image_free(pixels);
         return NULL;
     }
@@ -210,16 +211,16 @@ void FSX_release(File_System_Resource_t *resource)
     }
     if (resource->type == FILE_SYSTEM_RESOURCE_STRING) {
         free(resource->var.string.chars);
-        LOG_D(LOG_CONTEXT, "resource-data at %p freed (string)", resource->var.string.chars);
+        LOG_DEBUG(LOG_CONTEXT, "resource-data at %p freed (string)", resource->var.string.chars);
     } else
     if (resource->type == FILE_SYSTEM_RESOURCE_BLOB) {
         free(resource->var.blob.ptr);
-        LOG_D(LOG_CONTEXT, "resource-data at %p freed (blob)", resource->var.blob.ptr);
+        LOG_DEBUG(LOG_CONTEXT, "resource-data at %p freed (blob)", resource->var.blob.ptr);
     } else
     if (resource->type == FILE_SYSTEM_RESOURCE_IMAGE) {
         stbi_image_free(resource->var.image.pixels);
-        LOG_D(LOG_CONTEXT, "resource-data at %p freed (image)", resource->var.image.pixels);
+        LOG_DEBUG(LOG_CONTEXT, "resource-data at %p freed (image)", resource->var.image.pixels);
     }
     free(resource);
-    LOG_D(LOG_CONTEXT, "resource %p freed", resource);
+    LOG_DEBUG(LOG_CONTEXT, "resource %p freed", resource);
 }

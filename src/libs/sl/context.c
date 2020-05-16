@@ -87,7 +87,7 @@ SL_Context_t *SL_context_create(void)
         context->groups[i] = _precompute_mix(0.0f, 1.0f);
     }
 
-    LOG_D(LOG_CONTEXT, "context created");
+    LOG_DEBUG(LOG_CONTEXT, "context created");
     return context;
 }
 
@@ -98,10 +98,10 @@ void SL_context_destroy(SL_Context_t *context)
     }
 
     arrfree(context->streams);
-    LOG_D(LOG_CONTEXT, "context groups freed");
+    LOG_DEBUG(LOG_CONTEXT, "context groups freed");
 
     free(context);
-    LOG_D(LOG_CONTEXT, "context freed");
+    LOG_DEBUG(LOG_CONTEXT, "context freed");
 }
 
 void SL_context_update(SL_Context_t *context, float delta_time)
