@@ -26,11 +26,20 @@
 #define __SL_CONTEXT_H__
 
 #include "common.h"
-#include "stream.h"
+#include "sample.h"
+#include "music.h"
+
+typedef struct _SL_Source_t {
+    int type;
+    union {
+        SL_Music_t *music;
+        SL_Sample_t *sample;
+    } instance;
+} SL_Source_t;
 
 typedef struct _SL_Context_t {
     SL_Mix_t groups[SL_GROUPS_AMOUNT];
-    SL_Stream_t **streams;
+    SL_Music_t **streams;
 } SL_Context_t;
 
 extern SL_Context_t *SL_context_create(void);
@@ -41,8 +50,8 @@ extern void SL_context_mix(SL_Context_t *context, void *output, size_t frames_re
 
 extern void SL_context_tweak(SL_Context_t *context, size_t group, float balance, float gain);
 
-extern void SL_context_track(SL_Context_t *context, SL_Stream_t *stream);
-extern void SL_context_untrack(SL_Context_t *context, SL_Stream_t *stream);
+extern void SL_context_track(SL_Context_t *context, SL_Music_t *stream);
+extern void SL_context_untrack(SL_Context_t *context, SL_Music_t *stream);
 
 extern void SL_context_stop(SL_Context_t *context);
 

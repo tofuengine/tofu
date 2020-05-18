@@ -106,10 +106,10 @@ void SL_context_destroy(SL_Context_t *context)
 
 void SL_context_update(SL_Context_t *context, float delta_time)
 {
-    SL_Stream_t **current = context->streams;
+    SL_Music_t **current = context->streams;
     for (int count = arrlen(context->streams); count; --count) {
-        SL_Stream_t *stream = *(current++);
-        SL_stream_update(stream, delta_time);
+        SL_Music_t *stream = *(current++);
+        SL_music_update(stream, delta_time);
     }
 }
 
@@ -117,10 +117,10 @@ void SL_context_mix(SL_Context_t *context, void *output, size_t frames_requested
 {
     const SL_Mix_t *groups = context->groups;
 
-    SL_Stream_t **current = context->streams;
+    SL_Music_t **current = context->streams;
     for (int count = arrlen(context->streams); count; --count) {
-        SL_Stream_t *stream = *(current++);
-        SL_stream_mix(stream, output, frames_requested, groups); // FIXME: pass the dereferences mix? API violation?
+        SL_Music_t *stream = *(current++);
+        SL_music_mix(stream, output, frames_requested, groups); // FIXME: pass the dereferences mix? API violation?
     }
 }
 
@@ -129,7 +129,7 @@ void SL_context_tweak(SL_Context_t *context, size_t group, float balance, float 
     context->groups[group] = _precompute_mix(balance, gain);
 }
 
-void SL_context_track(SL_Context_t *context, SL_Stream_t *stream)
+void SL_context_track(SL_Context_t *context, SL_Music_t *stream)
 {
     size_t count = arrlen(context->streams);
     for (size_t i = 0; i < count; ++i) {
@@ -140,7 +140,7 @@ void SL_context_track(SL_Context_t *context, SL_Stream_t *stream)
     arrpush(context->streams, stream);
 }
 
-void SL_context_untrack(SL_Context_t *context, SL_Stream_t *stream)
+void SL_context_untrack(SL_Context_t *context, SL_Music_t *stream)
 {
     size_t count = arrlen(context->streams);
     for (size_t i = 0; i < count; ++i) {
@@ -153,9 +153,9 @@ void SL_context_untrack(SL_Context_t *context, SL_Stream_t *stream)
 
 void SL_context_stop(SL_Context_t *context)
 {
-    SL_Stream_t **current = context->streams;
+    SL_Music_t **current = context->streams;
     for (int count = arrlen(context->streams); count; --count) {
-        SL_Stream_t *stream = *(current++);
-        SL_stream_stop(stream);
+        SL_Music_t *stream = *(current++);
+        SL_music_stop(stream);
     }
 }

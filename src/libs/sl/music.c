@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-#include "stream.h"
+#include "music.h"
 
 #include <config.h>
 #include <libs/log.h>
@@ -41,7 +41,7 @@
 // between the minimum (8KHz) and the maximum (384KHz) supported sample rates.
 #define MIN_SPEED_VALUE ((float)MA_MIN_SAMPLE_RATE / (float)MA_MAX_SAMPLE_RATE)
 
-// We are going to buffer 1 second of non-converted data. As long as the `SL_stream_update()` function is called
+// We are going to buffer 1 second of non-converted data. As long as the `SL_music_update()` function is called
 // once half a second we are good. Since it's very unlikely we will run at less than 2 FPS... well, we can sleep well. :)
 #define STREAMING_BUFFER_SIZE_IN_FRAMES     (SL_FRAMES_PER_SECOND * SL_CHANNELS_PER_FRAME)
 
@@ -53,35 +53,35 @@
 
 #define LOG_CONTEXT "sl"
 
-static inline void _produce(SL_Stream_t *stream, bool reset)
+static inline void _produce(SL_Music_t *music, bool reset)
 {
     if (reset) {
-        ma_pcm_rb_reset(&stream->buffer);
+        ma_pcm_rb_reset(&music->buffer);
     }
 
-    ma_uint32 frames_to_write = ma_pcm_rb_available_write(&stream->buffer);
+    ma_uint32 frames_to_write = ma_pcm_rb_available_write(&music->buffer);
 //    ma_uint32 frames_to_write = BUFFER_SIZE_IN_FRAMES; // FIXME: move to update thread, with smaller size.
     while (frames_to_write > 0) {
         void *write_buffer;
-        ma_pcm_rb_acquire_write(&stream->buffer, &frames_to_write, &write_buffer);
+        ma_pcm_rb_acquire_write(&music->buffer, &frames_to_write, &write_buffer);
 
-        size_t frames_written = stream->on_read(stream->user_data, write_buffer, frames_to_write);
+        size_t frames_written = music->on_read(music->user_data, write_buffer, frames_to_write);
 
-        ma_pcm_rb_commit_write(&stream->buffer, frames_written, write_buffer);
+        ma_pcm_rb_commit_write(&music->buffer, frames_written, write_buffer);
 
         if (frames_written < frames_to_write) {
-            if (!stream->looped) {
-                stream->state = SL_STREAM_STATE_COMPLETED;
+            if (!music->looped) {
+                music->state = SL_MUSIC_STATE_COMPLETED;
                 break;
             }
-            stream->on_seek(stream->user_data, 0);
+            music->on_seek(music->user_data, 0);
         }
 
         frames_to_write -= frames_written;
     }
 }
 
-static inline size_t _consume(SL_Stream_t *stream, size_t frames_requested, void *buffer, size_t buffer_size_in_frames)
+static inline size_t _consume(SL_Music_t *music, size_t frames_requested, void *buffer, size_t buffer_size_in_frames)
 {
     size_t frames_processed = 0;
 
@@ -89,23 +89,23 @@ static inline size_t _consume(SL_Stream_t *stream, size_t frames_requested, void
 
     size_t frames_remaining = (frames_requested > buffer_size_in_frames) ? buffer_size_in_frames : frames_requested;
     while (frames_remaining > 0) { // Read as much data as possible, filling the buffer and eventually looping!
-        ma_uint32 frames_available = ma_pcm_rb_available_read(&stream->buffer);
+        ma_uint32 frames_available = ma_pcm_rb_available_read(&music->buffer);
         if (frames_available == 0) {
             Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "buffer underrun, %d bytes missing", frames_remaining);
             break;
         }
 
-        ma_uint64 frames_to_convert = ma_data_converter_get_required_input_frame_count(&stream->converter, frames_remaining);
+        ma_uint64 frames_to_convert = ma_data_converter_get_required_input_frame_count(&music->converter, frames_remaining);
 
         ma_uint32 frames_to_consume = (frames_to_convert > frames_available) ? frames_available : frames_to_convert;
         void *read_buffer;
-        ma_pcm_rb_acquire_read(&stream->buffer, &frames_to_consume, &read_buffer);
+        ma_pcm_rb_acquire_read(&music->buffer, &frames_to_consume, &read_buffer);
 
         ma_uint64 frames_consumed = frames_to_consume;
         ma_uint64 frames_generated = frames_remaining;
-        ma_data_converter_process_pcm_frames(&stream->converter, read_buffer, &frames_consumed, cursor, &frames_generated);
+        ma_data_converter_process_pcm_frames(&music->converter, read_buffer, &frames_consumed, cursor, &frames_generated);
 
-        ma_pcm_rb_commit_read(&stream->buffer, frames_consumed, read_buffer);
+        ma_pcm_rb_commit_read(&music->buffer, frames_consumed, read_buffer);
 
         cursor += frames_generated * SL_CHANNELS_PER_FRAME * SL_BYTES_PER_FRAME;
 
@@ -116,12 +116,12 @@ static inline size_t _consume(SL_Stream_t *stream, size_t frames_requested, void
     return frames_processed;
 }
 
-// Each stream adds up in the output buffer, that's why we call it "additive mix".
+// Each portion adds up in the output buffer, that's why we call it "additive mix".
 // TODO: reuse this with the sample object.
-static inline void *_additive_mix(SL_Stream_t *stream, void *output, void *input, size_t frames, const SL_Mix_t *groups)
+static inline void *_additive_mix(SL_Music_t *music, void *output, void *input, size_t frames, const SL_Mix_t *groups)
 {
-    const float left = stream->mix.left * groups[stream->group].left; // Apply panning and gain to the data.
-    const float right = stream->mix.right * groups[stream->group].right;
+    const float left = music->mix.left * groups[music->group].left; // Apply panning and gain to the data.
+    const float right = music->mix.right * groups[music->group].right;
 
 #if SL_BYTES_PER_FRAME == 2
     int16_t *sptr = input;
@@ -157,14 +157,14 @@ static inline SL_Mix_t _precompute_mix(float pan, float gain)
 #endif
 }
 
-SL_Stream_t *SL_stream_create(SL_Stream_Read_Callback_t on_read, SL_Stream_Seek_Callback_t on_seek, void *user_data, ma_format format, ma_uint32 sample_rate, ma_uint32 channels)
+SL_Music_t *SL_music_create(SL_Music_Read_Callback_t on_read, SL_Music_Seek_Callback_t on_seek, void *user_data, ma_format format, ma_uint32 sample_rate, ma_uint32 channels)
 {
-    SL_Stream_t *stream = malloc(sizeof(SL_Stream_t));
-    if (!stream) {
+    SL_Music_t *music = malloc(sizeof(SL_Music_t));
+    if (!music) {
         return NULL;
     }
 
-    *stream = (SL_Stream_t){
+    *music = (SL_Music_t){
             .on_read = on_read,
             .on_seek = on_seek,
             .user_data = user_data,
@@ -174,11 +174,11 @@ SL_Stream_t *SL_stream_create(SL_Stream_Read_Callback_t on_read, SL_Stream_Seek_
             .pan = 0.0f,
             .speed = 1.0f,
             .time = 0.0f,
-            .state = SL_STREAM_STATE_STOPPED,
+            .state = SL_MUSIC_STATE_STOPPED,
             .mix = _precompute_mix(0.0f, 1.0f)
         };
 
-    ma_pcm_rb_init(format, channels, STREAMING_BUFFER_SIZE_IN_FRAMES, NULL, NULL, &stream->buffer);
+    ma_pcm_rb_init(format, channels, STREAMING_BUFFER_SIZE_IN_FRAMES, NULL, NULL, &music->buffer);
 
 #if SL_BYTES_PER_FRAME == 2
     ma_data_converter_config config = ma_data_converter_config_init(format, ma_format_s16, channels, SL_CHANNELS_PER_FRAME, sample_rate, SL_FRAMES_PER_SECOND);
@@ -186,99 +186,99 @@ SL_Stream_t *SL_stream_create(SL_Stream_Read_Callback_t on_read, SL_Stream_Seek_
     ma_data_converter_config config = ma_data_converter_config_init(format, ma_format_f32, channels, SL_CHANNELS_PER_FRAME, sample_rate, SL_FRAMES_PER_SECOND);
 #endif
     config.resampling.allowDynamicSampleRate = MA_TRUE; // required for speed throttling
-    ma_result result = ma_data_converter_init(&config, &stream->converter);
+    ma_result result = ma_data_converter_init(&config, &music->converter);
     if (result != MA_SUCCESS) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "failed to create stream data converter");
-        ma_pcm_rb_uninit(&stream->buffer);
-        free(stream);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "failed to create music data converter");
+        ma_pcm_rb_uninit(&music->buffer);
+        free(music);
         return NULL;
     }
 
-    _produce(stream, true);
+    _produce(music, true);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "stream created");
-    return stream;
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music created");
+    return music;
 }
 
-void SL_stream_destroy(SL_Stream_t *stream)
+void SL_music_destroy(SL_Music_t *music)
 {
-    if (!stream) {
+    if (!music) {
         return;
     }
 
-    ma_data_converter_uninit(&stream->converter);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "stream data converted uninitialized");
+    ma_data_converter_uninit(&music->converter);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music data converted uninitialized");
 
-    ma_pcm_rb_uninit(&stream->buffer);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "stream ring-buffer uninitialized");
+    ma_pcm_rb_uninit(&music->buffer);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music ring-buffer uninitialized");
 
-    free(stream);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "stream freed");
+    free(music);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music freed");
 }
 
-void SL_stream_group(SL_Stream_t *stream, size_t group)
+void SL_music_group(SL_Music_t *music, size_t group)
 {
-    stream->group = group;
+    music->group = group;
 }
 
-void SL_stream_looped(SL_Stream_t *stream, bool looped)
+void SL_music_looped(SL_Music_t *music, bool looped)
 {
-    stream->looped = looped;
+    music->looped = looped;
 }
 
-void SL_stream_gain(SL_Stream_t *stream, float gain)
+void SL_music_gain(SL_Music_t *music, float gain)
 {
-    stream->gain = fmaxf(0.0f, gain);
-    stream->mix = _precompute_mix(stream->pan, stream->gain);
+    music->gain = fmaxf(0.0f, gain);
+    music->mix = _precompute_mix(music->pan, music->gain);
 }
 
-void SL_stream_pan(SL_Stream_t *stream, float pan)
+void SL_music_pan(SL_Music_t *music, float pan)
 {
-    stream->pan = fmaxf(-1.0f, fminf(pan, 1.0f));
-    stream->mix = _precompute_mix(stream->pan, stream->gain);
+    music->pan = fmaxf(-1.0f, fminf(pan, 1.0f));
+    music->mix = _precompute_mix(music->pan, music->gain);
 }
 
-void SL_stream_speed(SL_Stream_t *stream, float speed)
+void SL_music_speed(SL_Music_t *music, float speed)
 {
-    stream->speed = fmaxf(MIN_SPEED_VALUE, speed);
-    ma_data_converter_set_rate_ratio(&stream->converter, stream->speed); // The ratio is `in` over `out`, i.e. actual speed-up factor.
+    music->speed = fmaxf(MIN_SPEED_VALUE, speed);
+    ma_data_converter_set_rate_ratio(&music->converter, music->speed); // The ratio is `in` over `out`, i.e. actual speed-up factor.
 }
 
-void SL_stream_play(SL_Stream_t *stream)
+void SL_music_play(SL_Music_t *music)
 {
-    stream->state = SL_STREAM_STATE_PLAYING;
+    music->state = SL_MUSIC_STATE_PLAYING;
 }
 
-void SL_stream_stop(SL_Stream_t *stream)
+void SL_music_stop(SL_Music_t *music)
 {
-    stream->state = SL_STREAM_STATE_STOPPED;
+    music->state = SL_MUSIC_STATE_STOPPED;
 }
 
-void SL_stream_rewind(SL_Stream_t *stream)
+void SL_music_rewind(SL_Music_t *music)
 {
-    if (stream->state != SL_STREAM_STATE_STOPPED) {
+    if (music->state != SL_MUSIC_STATE_STOPPED) {
         Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "can't rewind while playing");
         return;
     }
 
-    stream->on_seek(stream->user_data, 0);
-    _produce(stream, true);
+    music->on_seek(music->user_data, 0);
+    _produce(music, true);
 }
 
-void SL_stream_update(SL_Stream_t *stream, float delta_time)
+void SL_music_update(SL_Music_t *music, float delta_time)
 {
-    stream->time += delta_time;
+    music->time += delta_time;
 
-    if (stream->state != SL_STREAM_STATE_PLAYING) {
+    if (music->state != SL_MUSIC_STATE_PLAYING) {
         return;
     }
 
-    _produce(stream, false);
+    _produce(music, false);
 }
 
-void SL_stream_mix(SL_Stream_t *stream, void *output, size_t frames_requested, const SL_Mix_t *groups)
+void SL_music_mix(SL_Music_t *music, void *output, size_t frames_requested, const SL_Mix_t *groups)
 {
-    if (stream->state == SL_STREAM_STATE_STOPPED) {
+    if (music->state == SL_MUSIC_STATE_STOPPED) {
         return;
     }
 
@@ -288,8 +288,8 @@ void SL_stream_mix(SL_Stream_t *stream, void *output, size_t frames_requested, c
 
     size_t frames_remaining = frames_requested;
     while (frames_remaining > 0) {
-        size_t frames_processed = _consume(stream, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES);
-        cursor = _additive_mix(stream, cursor, buffer, frames_processed, groups);
+        size_t frames_processed = _consume(music, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES);
+        cursor = _additive_mix(music, cursor, buffer, frames_processed, groups);
         frames_remaining -= frames_processed;
     }
 }

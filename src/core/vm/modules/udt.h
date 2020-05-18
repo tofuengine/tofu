@@ -97,10 +97,10 @@ typedef struct _Grid_Object_t {
     size_t data_size;
 } Grid_Object_t;
 
-typedef struct _Stream_Object_t {
+typedef struct _Music_Object_t {
     File_System_Handle_t *handle;
     drflac *decoder;
-    SL_Stream_t *stream;
-} Stream_Object_t;
+    SL_Music_t *music;
+} Music_Object_t;
 
 #endif  /* __MODULES_UDT_H__ */

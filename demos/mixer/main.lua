@@ -28,7 +28,7 @@ local Input = require("tofu.events").Input
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
-local Stream = require("tofu.sound").Stream
+local Music = require("tofu.sound").Music
 
 local Main = Class.define()
 
@@ -37,35 +37,35 @@ function Main:__ctor()
 
   self.font = Font.default(0, 15)
 
-  self.streams = {
---      Stream.new("assets/44100_mono.wav"),
-      -- Stream.new("assets/48000_2ch.wav"),
-      Stream.new("assets/48000_2ch.flac"),
+  self.sources = {
+--      Music.new("assets/44100_mono.wav"),
+      -- Music.new("assets/48000_2ch.wav"),
+      Music.new("assets/48000_2ch.flac"),
     }
-  self.streams[1]:looped(true)
+  self.sources[1]:looped(true)
 
   self.current = 1
 end
 
 function Main:input()
   if Input.is_pressed("a") then
-    self.streams[self.current]:play()
+    self.sources[self.current]:play()
   elseif Input.is_pressed("b") then
-    self.streams[self.current]:stop()
+    self.sources[self.current]:stop()
   elseif Input.is_pressed("x") then
-    self.streams[self.current]:rewind()
+    self.sources[self.current]:rewind()
   elseif Input.is_pressed("up") then
-    local gain = self.streams[self.current]:gain()
-    self.streams[self.current]:gain(gain + 0.05)
+    local gain = self.sources[self.current]:gain()
+    self.sources[self.current]:gain(gain + 0.05)
   elseif Input.is_pressed("down") then
-    local gain = self.streams[self.current]:gain()
-    self.streams[self.current]:gain(gain - 0.05)
+    local gain = self.sources[self.current]:gain()
+    self.sources[self.current]:gain(gain - 0.05)
   elseif Input.is_pressed("left") then
-    local pan = self.streams[self.current]:pan()
-    self.streams[self.current]:pan(pan - 0.05)
+    local pan = self.sources[self.current]:pan()
+    self.sources[self.current]:pan(pan - 0.05)
   elseif Input.is_pressed("right") then
-    local pan = self.streams[self.current]:pan()
-    self.streams[self.current]:pan(pan + 0.05)
+    local pan = self.sources[self.current]:pan()
+    self.sources[self.current]:pan(pan + 0.05)
   end
 end
 
@@ -79,7 +79,7 @@ function Main:render(_)
   local width, height = canvas:size()
 
   local x, y = 0, 0
-  for index, stream in ipairs(self.streams) do
+  for index, stream in ipairs(self.sources) do
     local text = string.format("[%d] %.3f %.3f", index, stream:pan(), stream:gain())
     local _, th = self.font:size(text)
     self.font:write(text, x, y)

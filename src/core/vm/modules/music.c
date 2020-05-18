@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-#include "stream.h"
+#include "music.h"
 
 #include <config.h>
 #include <core/io/audio.h>
@@ -35,39 +35,39 @@
 #include <dr_libs/dr_flac.h>
 
 #define LOG_CONTEXT "source"
-#define META_TABLE  "Tofu_Sound_Stream_mt"
+#define META_TABLE  "Tofu_Sound_Music_mt"
 
-static int stream_new(lua_State *L);
-static int stream_gc(lua_State *L);
-static int stream_group(lua_State *L);
-static int stream_looped(lua_State *L);
-static int stream_gain(lua_State *L);
-static int stream_pan(lua_State *L);
-static int stream_speed(lua_State *L);
-static int stream_play(lua_State *L);
-static int stream_stop(lua_State *L);
-static int stream_rewind(lua_State *L);
-static int stream_is_playing(lua_State *L);
+static int music_new(lua_State *L);
+static int music_gc(lua_State *L);
+static int music_group(lua_State *L);
+static int music_looped(lua_State *L);
+static int music_gain(lua_State *L);
+static int music_pan(lua_State *L);
+static int music_speed(lua_State *L);
+static int music_play(lua_State *L);
+static int music_stop(lua_State *L);
+static int music_rewind(lua_State *L);
+static int music_is_playing(lua_State *L);
 
-static const struct luaL_Reg _stream_functions[] = {
-    { "new", stream_new },
-    { "__gc", stream_gc },
-    { "group", stream_group },
-    { "looped", stream_looped },
-    { "gain", stream_gain },
-    { "pan", stream_pan },
-    { "speed", stream_speed },
-    { "play", stream_play },
-    { "stop", stream_stop },
-    { "rewind", stream_rewind },
-    { "is_playing", stream_is_playing },
+static const struct luaL_Reg _music_functions[] = {
+    { "new", music_new },
+    { "__gc", music_gc },
+    { "group", music_group },
+    { "looped", music_looped },
+    { "gain", music_gain },
+    { "pan", music_pan },
+    { "speed", music_speed },
+    { "play", music_play },
+    { "stop", music_stop },
+    { "rewind", music_rewind },
+    { "is_playing", music_is_playing },
     { NULL, NULL }
 };
 
-int stream_loader(lua_State *L)
+int music_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, NULL, _stream_functions, NULL, nup, META_TABLE);
+    return luaX_newmodule(L, NULL, _music_functions, NULL, nup, META_TABLE);
 }
 
 static size_t _handle_read(void *user_data, void *buffer, size_t bytes_to_read)
@@ -100,7 +100,7 @@ static void _decoder_seek(void *user_data, size_t frame_offset)
     drflac_seek_to_pcm_frame(decoder, frame_offset);
 }
 
-static int stream_new(lua_State *L)
+static int music_new(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
@@ -123,23 +123,23 @@ static int stream_new(lua_State *L)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "decoder %p opened", decoder);
 
-    SL_Stream_t *stream = SL_stream_create(_decoder_read, _decoder_seek, (void *)decoder, ma_format_s16, decoder->sampleRate, decoder->channels);
-    if (!stream) { // We are forcing 16 bits-per-sample.
+    SL_Music_t *music = SL_music_create(_decoder_read, _decoder_seek, (void *)decoder, ma_format_s16, decoder->sampleRate, decoder->channels);
+    if (!music) { // We are forcing 16 bits-per-sample.
         free(decoder);
         FS_close(handle);
-        return luaL_error(L, "can't create stream");
+        return luaL_error(L, "can't create music");
     }
 
     SL_Context_t *context = Audio_lock(audio);
-    SL_context_track(context, stream);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "stream %p tracked for context %p", stream, context);
+    SL_context_track(context, music);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music %p tracked for context %p", music, context);
     Audio_unlock(audio, context);
 
-    Stream_Object_t *self = (Stream_Object_t *)lua_newuserdata(L, sizeof(Stream_Object_t));
-    *self = (Stream_Object_t){
+    Music_Object_t *self = (Music_Object_t *)lua_newuserdata(L, sizeof(Music_Object_t));
+    *self = (Music_Object_t){
             .handle = handle,
             .decoder = decoder,
-            .stream = stream
+            .music = music
         };
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p allocated", self);
@@ -149,22 +149,22 @@ static int stream_new(lua_State *L)
     return 1;
 }
 
-static int stream_gc(lua_State *L)
+static int music_gc(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Stream_Object_t *self = (Stream_Object_t *)LUAX_USERDATA(L, 1);
+    Music_Object_t *self = (Music_Object_t *)LUAX_USERDATA(L, 1);
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
     SL_Context_t *context = Audio_lock(audio);
-    SL_context_untrack(context, self->stream);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "stream %p untracked", self->stream);
+    SL_context_untrack(context, self->music);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music %p untracked", self->music);
     Audio_unlock(audio, context);
 
-    SL_stream_destroy(self->stream);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "stream %p destroyed", self->stream);
+    SL_music_destroy(self->music);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music %p destroyed", self->music);
 
     FS_close(self->handle);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p closed", self->handle);
@@ -172,225 +172,225 @@ static int stream_gc(lua_State *L)
     drflac_close(self->decoder);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "decoder closed", self->decoder);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "stream %p finalized", self);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music %p finalized", self);
 
     return 0;
 }
 
-static int stream_looped1(lua_State *L)
+static int music_looped1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Stream_Object_t *self = (Stream_Object_t *)LUAX_USERDATA(L, 1);
+    Music_Object_t *self = (Music_Object_t *)LUAX_USERDATA(L, 1);
 
-    lua_pushboolean(L, self->stream->looped);
+    lua_pushboolean(L, self->music->looped);
 
     return 1;
 }
 
-static int stream_looped2(lua_State *L)
+static int music_looped2(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TBOOLEAN)
     LUAX_SIGNATURE_END
-    Stream_Object_t *self = (Stream_Object_t *)LUAX_USERDATA(L, 1);
+    Music_Object_t *self = (Music_Object_t *)LUAX_USERDATA(L, 1);
     bool looped = LUAX_BOOLEAN(L, 2);
 
-    SL_stream_looped(self->stream, looped);
+    SL_music_looped(self->music, looped);
 
     return 0;
 }
 
-static int stream_looped(lua_State *L)
+static int music_looped(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, stream_looped1)
-        LUAX_OVERLOAD_ARITY(2, stream_looped2)
+        LUAX_OVERLOAD_ARITY(1, music_looped1)
+        LUAX_OVERLOAD_ARITY(2, music_looped2)
     LUAX_OVERLOAD_END
 }
 
-static int stream_group1(lua_State *L)
+static int music_group1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Stream_Object_t *self = (Stream_Object_t *)LUAX_USERDATA(L, 1);
+    Music_Object_t *self = (Music_Object_t *)LUAX_USERDATA(L, 1);
 
-    lua_pushinteger(L, self->stream->group);
+    lua_pushinteger(L, self->music->group);
 
     return 1;
 }
 
-static int stream_group2(lua_State *L)
+static int music_group2(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Stream_Object_t *self = (Stream_Object_t *)LUAX_USERDATA(L, 1);
+    Music_Object_t *self = (Music_Object_t *)LUAX_USERDATA(L, 1);
     size_t group = LUAX_INTEGER(L, 2);
 
-    SL_stream_group(self->stream, group);
+    SL_music_group(self->music, group);
 
     return 0;
 }
 
-static int stream_group(lua_State *L)
+static int music_group(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, stream_group1)
-        LUAX_OVERLOAD_ARITY(2, stream_group2)
+        LUAX_OVERLOAD_ARITY(1, music_group1)
+        LUAX_OVERLOAD_ARITY(2, music_group2)
     LUAX_OVERLOAD_END
 }
 
-static int stream_gain1(lua_State *L)
+static int music_gain1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Stream_Object_t *self = (Stream_Object_t *)LUAX_USERDATA(L, 1);
+    Music_Object_t *self = (Music_Object_t *)LUAX_USERDATA(L, 1);
 
-    lua_pushnumber(L, self->stream->gain);
+    lua_pushnumber(L, self->music->gain);
 
     return 1;
 }
 
-static int stream_gain2(lua_State *L)
+static int music_gain2(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Stream_Object_t *self = (Stream_Object_t *)LUAX_USERDATA(L, 1);
+    Music_Object_t *self = (Music_Object_t *)LUAX_USERDATA(L, 1);
     float gain = LUAX_NUMBER(L, 2);
 
-    SL_stream_gain(self->stream, gain);
+    SL_music_gain(self->music, gain);
 
     return 0;
 }
 
-static int stream_gain(lua_State *L)
+static int music_gain(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, stream_gain1)
-        LUAX_OVERLOAD_ARITY(2, stream_gain2)
+        LUAX_OVERLOAD_ARITY(1, music_gain1)
+        LUAX_OVERLOAD_ARITY(2, music_gain2)
     LUAX_OVERLOAD_END
 }
 
-static int stream_pan1(lua_State *L)
+static int music_pan1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Stream_Object_t *self = (Stream_Object_t *)LUAX_USERDATA(L, 1);
+    Music_Object_t *self = (Music_Object_t *)LUAX_USERDATA(L, 1);
 
-    lua_pushnumber(L, self->stream->pan);
+    lua_pushnumber(L, self->music->pan);
 
     return 1;
 }
 
-static int stream_pan2(lua_State *L)
+static int music_pan2(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Stream_Object_t *self = (Stream_Object_t *)LUAX_USERDATA(L, 1);
+    Music_Object_t *self = (Music_Object_t *)LUAX_USERDATA(L, 1);
     float pan = LUAX_NUMBER(L, 2);
 
-    SL_stream_pan(self->stream, pan);
+    SL_music_pan(self->music, pan);
 
     return 0;
 }
 
-static int stream_pan(lua_State *L)
+static int music_pan(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, stream_pan1)
-        LUAX_OVERLOAD_ARITY(2, stream_pan2)
+        LUAX_OVERLOAD_ARITY(1, music_pan1)
+        LUAX_OVERLOAD_ARITY(2, music_pan2)
     LUAX_OVERLOAD_END
 }
 
-static int stream_speed1(lua_State *L)
+static int music_speed1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Stream_Object_t *self = (Stream_Object_t *)LUAX_USERDATA(L, 1);
+    Music_Object_t *self = (Music_Object_t *)LUAX_USERDATA(L, 1);
 
-    lua_pushnumber(L, self->stream->speed);
+    lua_pushnumber(L, self->music->speed);
 
     return 1;
 }
 
-static int stream_speed2(lua_State *L)
+static int music_speed2(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Stream_Object_t *self = (Stream_Object_t *)LUAX_USERDATA(L, 1);
+    Music_Object_t *self = (Music_Object_t *)LUAX_USERDATA(L, 1);
     float speed = LUAX_NUMBER(L, 2);
 
-    SL_stream_speed(self->stream, speed);
+    SL_music_speed(self->music, speed);
 
     return 0;
 }
 
-static int stream_speed(lua_State *L)
+static int music_speed(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, stream_speed1)
-        LUAX_OVERLOAD_ARITY(2, stream_speed2)
+        LUAX_OVERLOAD_ARITY(1, music_speed1)
+        LUAX_OVERLOAD_ARITY(2, music_speed2)
     LUAX_OVERLOAD_END
 }
 
-static int stream_play(lua_State *L)
+static int music_play(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Stream_Object_t *self = (Stream_Object_t *)LUAX_USERDATA(L, 1);
+    Music_Object_t *self = (Music_Object_t *)LUAX_USERDATA(L, 1);
 
-    SL_stream_play(self->stream);
+    SL_music_play(self->music);
 
     return 0;
 }
 
-static int stream_stop(lua_State *L)
+static int music_stop(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Stream_Object_t *self = (Stream_Object_t *)LUAX_USERDATA(L, 1);
+    Music_Object_t *self = (Music_Object_t *)LUAX_USERDATA(L, 1);
 
-    SL_stream_stop(self->stream);
+    SL_music_stop(self->music);
 
     return 0;
 }
 
-static int stream_rewind(lua_State *L)
+static int music_rewind(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Stream_Object_t *self = (Stream_Object_t *)LUAX_USERDATA(L, 1);
+    Music_Object_t *self = (Music_Object_t *)LUAX_USERDATA(L, 1);
 
-    SL_stream_rewind(self->stream);
+    SL_music_rewind(self->music);
 
     return 0;
 }
 
-static int stream_is_playing(lua_State *L)
+static int music_is_playing(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Stream_Object_t *self = (Stream_Object_t *)LUAX_USERDATA(L, 1);
+    Music_Object_t *self = (Music_Object_t *)LUAX_USERDATA(L, 1);
 
-    lua_pushboolean(L, self->stream->state == SL_STREAM_STATE_PLAYING);
+    lua_pushboolean(L, self->music->state == SL_MUSIC_STATE_PLAYING);
 
     return 1;
 }
