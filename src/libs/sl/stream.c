@@ -45,7 +45,7 @@
 // once half a second we are good. Since it's very unlikely we will run at less than 2 FPS... well, we can sleep well. :)
 #define STREAMING_BUFFER_SIZE_IN_FRAMES     (SL_FRAMES_PER_SECOND * SL_CHANNELS_PER_FRAME)
 
-#define MIXING_BUFFER_SIZE_IN_FRAMES        512
+#define MIXING_BUFFER_SIZE_IN_FRAMES        128
 
 // We are using `miniaudio`'s ring-buffer, but we could also go for an in-house implementation
 // https://embedjournal.com/implementing-circular-buffer-embedded-c/
@@ -97,20 +97,20 @@ static inline size_t _consume(SL_Stream_t *stream, size_t frames_requested, void
 
         ma_uint64 frames_to_convert = ma_data_converter_get_required_input_frame_count(&stream->converter, frames_remaining);
 
-        ma_uint32 frames_to_read = (frames_to_convert > frames_available) ? frames_available : frames_to_convert;
+        ma_uint32 frames_to_consume = (frames_to_convert > frames_available) ? frames_available : frames_to_convert;
         void *read_buffer;
-        ma_pcm_rb_acquire_read(&stream->buffer, &frames_to_read, &read_buffer);
+        ma_pcm_rb_acquire_read(&stream->buffer, &frames_to_consume, &read_buffer);
 
-        ma_uint64 frames_read = frames_to_read;
-        ma_uint64 frames_converted = frames_remaining;
-        ma_data_converter_process_pcm_frames(&stream->converter, read_buffer, &frames_read, cursor, &frames_converted);
+        ma_uint64 frames_consumed = frames_to_consume;
+        ma_uint64 frames_generated = frames_remaining;
+        ma_data_converter_process_pcm_frames(&stream->converter, read_buffer, &frames_consumed, cursor, &frames_generated);
 
-        ma_pcm_rb_commit_read(&stream->buffer, frames_read, read_buffer);
+        ma_pcm_rb_commit_read(&stream->buffer, frames_consumed, read_buffer);
 
-        cursor += frames_converted * SL_CHANNELS_PER_FRAME * SL_BYTES_PER_FRAME;
+        cursor += frames_generated * SL_CHANNELS_PER_FRAME * SL_BYTES_PER_FRAME;
 
-        frames_processed += frames_converted;
-        frames_remaining -= frames_converted;
+        frames_processed += frames_generated;
+        frames_remaining -= frames_generated;
     }
 
     return frames_processed;
@@ -118,7 +118,7 @@ static inline size_t _consume(SL_Stream_t *stream, size_t frames_requested, void
 
 // Each stream adds up in the output buffer, that's why we call it "additive mix".
 // TODO: reuse this with the sample object.
-static inline void _additive_mix(SL_Stream_t *stream, void *output, void *input, size_t frames, const SL_Mix_t *groups)
+static inline void *_additive_mix(SL_Stream_t *stream, void *output, void *input, size_t frames, const SL_Mix_t *groups)
 {
     const float left = stream->mix.left * groups[stream->group].left; // Apply panning and gain to the data.
     const float right = stream->mix.right * groups[stream->group].right;
@@ -140,6 +140,7 @@ static inline void _additive_mix(SL_Stream_t *stream, void *output, void *input,
         *(dptr++) += *(sptr++) * right;
     }
 #endif
+    return dptr;
 }
 
 static inline SL_Mix_t _precompute_mix(float pan, float gain)
@@ -187,7 +188,7 @@ SL_Stream_t *SL_stream_create(SL_Stream_Read_Callback_t on_read, SL_Stream_Seek_
     config.resampling.allowDynamicSampleRate = MA_TRUE; // required for speed throttling
     ma_result result = ma_data_converter_init(&config, &stream->converter);
     if (result != MA_SUCCESS) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "failed to create stream data converter");
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "failed to create stream data converter");
         ma_pcm_rb_uninit(&stream->buffer);
         free(stream);
         return NULL;
@@ -283,10 +284,12 @@ void SL_stream_mix(SL_Stream_t *stream, void *output, size_t frames_requested, c
 
     uint8_t buffer[MIXING_BUFFER_SIZE_IN_FRAMES * SL_CHANNELS_PER_FRAME * SL_BYTES_PER_FRAME];
 
+    uint8_t *cursor = (uint8_t *)output;
+
     size_t frames_remaining = frames_requested;
     while (frames_remaining > 0) {
         size_t frames_processed = _consume(stream, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES);
-        _additive_mix(stream, output, buffer, frames_processed, groups);
+        cursor = _additive_mix(stream, cursor, buffer, frames_processed, groups);
         frames_remaining -= frames_processed;
     }
 }

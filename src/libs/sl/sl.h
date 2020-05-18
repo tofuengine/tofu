@@ -27,6 +27,7 @@
 
 #include "common.h"
 #include "context.h"
+#include "sample.h"
 #include "stream.h"
 
 #endif  /* __SL_H__ */
