@@ -42,8 +42,6 @@
   #endif
 #endif
 
-// TODO: rename `LOG_x` to `TE_LOG_x` and `ASSERT_x` to `TE_ASSERT_x` to convey some kind of "namespace"?
-
 #if LOG_LEVEL_CURRENT >= LOG_LEVEL_TRACE
   #define LOG_TRACE(context, ...)                 Log_write(LOG_LEVEL_TRACE, (context), __VA_ARGS__)
   #define LOG_TRACE_IF(condition, context, ...)   Log_write_if((condition), LOG_LEVEL_TRACE, (context), __VA_ARGS__)
