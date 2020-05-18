@@ -45,7 +45,7 @@
 // once half a second we are good. Since it's very unlikely we will run at less than 2 FPS... well, we can sleep well. :)
 #define STREAMING_BUFFER_SIZE_IN_FRAMES     (SL_FRAMES_PER_SECOND * SL_CHANNELS_PER_FRAME)
 
-#define MIXING_BUFFER_SIZE_IN_FRAMES        512
+#define MIXING_BUFFER_SIZE_IN_FRAMES        128
 
 // We are using `miniaudio`'s ring-buffer, but we could also go for an in-house implementation
 // https://embedjournal.com/implementing-circular-buffer-embedded-c/
@@ -118,7 +118,7 @@ static inline size_t _consume(SL_Stream_t *stream, size_t frames_requested, void
 
 // Each stream adds up in the output buffer, that's why we call it "additive mix".
 // TODO: reuse this with the sample object.
-static inline void _additive_mix(SL_Stream_t *stream, void *output, void *input, size_t frames, const SL_Mix_t *groups)
+static inline void *_additive_mix(SL_Stream_t *stream, void *output, void *input, size_t frames, const SL_Mix_t *groups)
 {
     const float left = stream->mix.left * groups[stream->group].left; // Apply panning and gain to the data.
     const float right = stream->mix.right * groups[stream->group].right;
@@ -140,6 +140,7 @@ static inline void _additive_mix(SL_Stream_t *stream, void *output, void *input,
         *(dptr++) += *(sptr++) * right;
     }
 #endif
+    return dptr;
 }
 
 static inline SL_Mix_t _precompute_mix(float pan, float gain)
@@ -283,10 +284,12 @@ void SL_stream_mix(SL_Stream_t *stream, void *output, size_t frames_requested, c
 
     uint8_t buffer[MIXING_BUFFER_SIZE_IN_FRAMES * SL_CHANNELS_PER_FRAME * SL_BYTES_PER_FRAME];
 
+    uint8_t *cursor = (uint8_t *)output;
+
     size_t frames_remaining = frames_requested;
     while (frames_remaining > 0) {
         size_t frames_processed = _consume(stream, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES);
-        _additive_mix(stream, output, buffer, frames_processed, groups);
+        cursor = _additive_mix(stream, cursor, buffer, frames_processed, groups);
         frames_remaining -= frames_processed;
     }
 }
