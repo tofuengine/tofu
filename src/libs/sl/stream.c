@@ -97,20 +97,20 @@ static inline size_t _consume(SL_Stream_t *stream, size_t frames_requested, void
 
         ma_uint64 frames_to_convert = ma_data_converter_get_required_input_frame_count(&stream->converter, frames_remaining);
 
-        ma_uint32 frames_to_read = (frames_to_convert > frames_available) ? frames_available : frames_to_convert;
+        ma_uint32 frames_to_consume = (frames_to_convert > frames_available) ? frames_available : frames_to_convert;
         void *read_buffer;
-        ma_pcm_rb_acquire_read(&stream->buffer, &frames_to_read, &read_buffer);
+        ma_pcm_rb_acquire_read(&stream->buffer, &frames_to_consume, &read_buffer);
 
-        ma_uint64 frames_read = frames_to_read;
-        ma_uint64 frames_converted = frames_remaining;
-        ma_data_converter_process_pcm_frames(&stream->converter, read_buffer, &frames_read, cursor, &frames_converted);
+        ma_uint64 frames_consumed = frames_to_consume;
+        ma_uint64 frames_generated = frames_remaining;
+        ma_data_converter_process_pcm_frames(&stream->converter, read_buffer, &frames_consumed, cursor, &frames_generated);
 
-        ma_pcm_rb_commit_read(&stream->buffer, frames_read, read_buffer);
+        ma_pcm_rb_commit_read(&stream->buffer, frames_consumed, read_buffer);
 
-        cursor += frames_converted * SL_CHANNELS_PER_FRAME * SL_BYTES_PER_FRAME;
+        cursor += frames_generated * SL_CHANNELS_PER_FRAME * SL_BYTES_PER_FRAME;
 
-        frames_processed += frames_converted;
-        frames_remaining -= frames_converted;
+        frames_processed += frames_generated;
+        frames_remaining -= frames_generated;
     }
 
     return frames_processed;
@@ -188,7 +188,7 @@ SL_Stream_t *SL_stream_create(SL_Stream_Read_Callback_t on_read, SL_Stream_Seek_
     config.resampling.allowDynamicSampleRate = MA_TRUE; // required for speed throttling
     ma_result result = ma_data_converter_init(&config, &stream->converter);
     if (result != MA_SUCCESS) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "failed to create stream data converter");
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "failed to create stream data converter");
         ma_pcm_rb_uninit(&stream->buffer);
         free(stream);
         return NULL;

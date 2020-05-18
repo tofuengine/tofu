@@ -41,10 +41,24 @@ typedef enum _SL_Sample_States_t {
     SL_Sample_States_t_CountOf
 } SL_Sample_States_t;
 
+/*
+typedef struct _SL_Mixxx_t {
+    ma_data_converter converter;
+
+    size_t group;
+    bool looped;
+    float gain;
+    float pan;
+    float speed;
+
+    SL_Mix_t mix;
+} SL_Mixxx_t;
+*/
+
 typedef struct _SL_Sample_t {
     void *frames;
     size_t frames_count;
-    size_t bytes_per_frames;
+    size_t bytes_per_frame;
     size_t current_frame;
 
     ma_data_converter converter;
