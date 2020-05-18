@@ -60,9 +60,11 @@ static inline size_t _consume(SL_Sample_t *sample, size_t frames_requested, void
 
         ma_uint64 frames_to_convert = ma_data_converter_get_required_input_frame_count(&sample->converter, frames_remaining);
 
+        void *read_buffer = (uint8_t *)sample->frames + sample->current_frame * sample->bytes_per_frame;
+
         ma_uint64 frames_consumed = (frames_to_convert > frames_available) ? frames_available : frames_to_convert;
         ma_uint64 frames_generated = frames_remaining;
-        ma_data_converter_process_pcm_frames(&sample->converter, sample->frames + sample->current_frame, &frames_consumed, cursor, &frames_generated);
+        ma_data_converter_process_pcm_frames(&sample->converter, read_buffer, &frames_consumed, cursor, &frames_generated);
 
         cursor += frames_generated * SL_CHANNELS_PER_FRAME * SL_BYTES_PER_FRAME;
 
