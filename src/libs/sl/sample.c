@@ -261,7 +261,7 @@ void SL_sample_mix(SL_Sample_t *sample, void *output, size_t frames_requested, c
     uint8_t *cursor = (uint8_t *)output;
 
     size_t frames_remaining = frames_requested;
-    while (frames_remaining > 0) {
+    while (frames_remaining > 0 && sample->state != SL_SAMPLE_STATE_STOPPED) { // State can change during the loop.
         size_t frames_processed = _consume(sample, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES);
         cursor = _additive_mix(sample, cursor, buffer, frames_processed, groups);
         frames_remaining -= frames_processed;

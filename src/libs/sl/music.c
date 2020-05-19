@@ -47,10 +47,6 @@
 
 #define MIXING_BUFFER_SIZE_IN_FRAMES        128
 
-// We are using `miniaudio`'s ring-buffer, but we could also go for an in-house implementation
-// https://embedjournal.com/implementing-circular-buffer-embedded-c/
-// https://embeddedartistry.com/blog/2017/05/17/creating-a-circular-buffer-in-c-and-c/
-
 #define LOG_CONTEXT "sl"
 
 static inline void _produce(SL_Music_t *music, bool reset)
@@ -94,7 +90,7 @@ static inline size_t _consume(SL_Music_t *music, size_t frames_requested, void *
             if (music->state == SL_MUSIC_STATE_FINISHING) {
                 music->state = SL_MUSIC_STATE_STOPPED;
             } else {
-                Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "buffer underrun, %d bytes missing", frames_remaining);
+                Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "buffer underrun, %d bytes missing (state #%d)", frames_remaining, music->state);
             }
             break;
         }
@@ -291,7 +287,7 @@ void SL_music_mix(SL_Music_t *music, void *output, size_t frames_requested, cons
     uint8_t *cursor = (uint8_t *)output;
 
     size_t frames_remaining = frames_requested;
-    while (frames_remaining > 0) {
+    while (frames_remaining > 0 && music->state != SL_MUSIC_STATE_STOPPED) { // State can change during the loop.
         size_t frames_processed = _consume(music, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES);
         cursor = _additive_mix(music, cursor, buffer, frames_processed, groups);
         frames_remaining -= frames_processed;
