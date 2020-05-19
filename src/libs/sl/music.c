@@ -43,7 +43,7 @@
 
 // We are going to buffer 1 second of non-converted data. As long as the `SL_music_update()` function is called
 // once half a second we are good. Since it's very unlikely we will run at less than 2 FPS... well, we can sleep well. :)
-#define STREAMING_BUFFER_SIZE_IN_FRAMES     (SL_FRAMES_PER_SECOND * SL_CHANNELS_PER_FRAME)
+#define STREAMING_BUFFER_SIZE_IN_FRAMES     SL_FRAMES_PER_SECOND
 
 #define MIXING_BUFFER_SIZE_IN_FRAMES        128
 
