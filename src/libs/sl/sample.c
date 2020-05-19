@@ -52,31 +52,28 @@ static inline size_t _consume(SL_Sample_t *sample, size_t frames_requested, void
 
     size_t frames_remaining = (frames_requested > buffer_size_in_frames) ? buffer_size_in_frames : frames_requested;
     while (frames_remaining > 0) { // Read as much data as possible, filling the buffer and eventually looping!
-        ma_uint32 frames_available = sample->frames_count - sample->current_frame;
-        if (frames_available == 0) {
-//            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "buffer underrun, %d bytes missing", frames_remaining);
-            break;
-        }
-
         ma_uint64 frames_to_convert = ma_data_converter_get_required_input_frame_count(&sample->converter, frames_remaining);
 
-        void *read_buffer = (uint8_t *)sample->frames + sample->current_frame * sample->bytes_per_frame;
+        size_t frames_available = frames_to_convert;
+        void *read_buffer = buffer_lock(&sample->buffer, &frames_available);
 
-        ma_uint64 frames_consumed = (frames_to_convert > frames_available) ? frames_available : frames_to_convert;
+        ma_uint64 frames_consumed = frames_available;
         ma_uint64 frames_generated = frames_remaining;
         ma_data_converter_process_pcm_frames(&sample->converter, read_buffer, &frames_consumed, cursor, &frames_generated);
+
+        buffer_unlock(&sample->buffer, read_buffer, frames_consumed);
 
         cursor += frames_generated * SL_CHANNELS_PER_FRAME * SL_BYTES_PER_FRAME;
 
         frames_processed += frames_generated;
         frames_remaining -= frames_generated;
 
-        sample->current_frame += frames_consumed;
-        if (sample->current_frame == sample->frames_count) {
+        if (frames_available == 0) {
             if (sample->looped) {
-                sample->current_frame = 0;
+                buffer_reset(&sample->buffer);
             } else {
                 sample->state = SL_SAMPLE_STATE_COMPLETED;
+                break;
             }
         }
     }
@@ -134,21 +131,7 @@ SL_Sample_t *SL_sample_create(SL_Sample_Read_Callback_t on_read, void *user_data
         return NULL;
     }
 
-    size_t bytes_per_frame = ma_get_bytes_per_frame(format, channels);
-
-    size_t size_in_bytes = length_in_frames * sample_rate * bytes_per_frame;
-    void *frames = malloc(size_in_bytes);
-    if (!frames) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d bytes for sample", size_in_bytes);
-        free(sample);
-        return NULL;
-    }
-
     *sample = (SL_Sample_t){
-            .frames = frames,
-            .frames_count = length_in_frames,
-            .bytes_per_frame = bytes_per_frame,
-            .current_frame = 0,
             .group = SL_DEFAULT_GROUP,
             .looped = false,
             .gain = 1.0,
@@ -159,10 +142,19 @@ SL_Sample_t *SL_sample_create(SL_Sample_Read_Callback_t on_read, void *user_data
             .mix = _precompute_mix(0.0f, 1.0f)
         };
 
-    size_t frames_read = on_read(user_data, frames, length_in_frames);
+    size_t bytes_per_frame = ma_get_bytes_per_frame(format, channels);
+
+    bool initialized = buffer_init(&sample->buffer, length_in_frames, bytes_per_frame);
+    if (!initialized) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d bytes for buffer", length_in_frames * bytes_per_frame);
+        free(sample);
+        return NULL;
+    }
+
+    size_t frames_read = on_read(user_data, sample->buffer.frames, length_in_frames);
     if (frames_read != length_in_frames) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d bytes for sample (%d available)", size_in_bytes, frames_read);
-        free(frames);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d frames for sample (%d available)", length_in_frames, frames_read);
+        buffer_uninit(&sample->buffer);
         free(sample);
         return NULL;
     }
@@ -176,7 +168,7 @@ SL_Sample_t *SL_sample_create(SL_Sample_Read_Callback_t on_read, void *user_data
     ma_result result = ma_data_converter_init(&config, &sample->converter);
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "failed to create sample data converter");
-        free(frames);
+        buffer_uninit(&sample->buffer);
         free(sample);
         return NULL;
     }
@@ -243,7 +235,7 @@ void SL_sample_rewind(SL_Sample_t *sample)
         return;
     }
 
-    sample->current_frame = 0;
+    buffer_reset(&sample->buffer);
 }
 
 void SL_sample_update(SL_Sample_t *sample, float delta_time)

@@ -35,12 +35,13 @@
 // https://embeddedartistry.com/blog/2017/05/17/creating-a-circular-buffer-in-c-and-c/
 
 typedef struct _Buffer_t {
-    void *data;
+    void *frames;
+    size_t bytes_per_frame;
     size_t index;
-    size_t size;
+    size_t length;
 } Buffer_t;
 
-extern bool buffer_init(Buffer_t *buffer, size_t size);
+extern bool buffer_init(Buffer_t *buffer, size_t length, size_t bytes_per_frame);
 extern void buffer_uninit(Buffer_t *buffer);
 
 extern void buffer_reset(Buffer_t *buffer);

@@ -27,16 +27,17 @@
 
 #include <stdlib.h>
 
-bool buffer_init(Buffer_t *buffer, size_t size)
+bool buffer_init(Buffer_t *buffer, size_t length, size_t bytes_per_frame)
 {
-    void *data = malloc(size);
-    if (!data) {
+    void *frames = malloc(length * bytes_per_frame);
+    if (!frames) {
         return false;
     }
 
     *buffer = (Buffer_t){
-            .data = data,
-            .size = size,
+            .frames = frames,
+            .bytes_per_frame = bytes_per_frame,
+            .length = length,
             .index = 0
         };
 
@@ -45,7 +46,7 @@ bool buffer_init(Buffer_t *buffer, size_t size)
 
 void buffer_uninit(Buffer_t *buffer)
 {
-    free(buffer->data);
+    free(buffer->frames);
 }
 
 void buffer_reset(Buffer_t *buffer)
@@ -55,24 +56,24 @@ void buffer_reset(Buffer_t *buffer)
 
 size_t buffer_available(const Buffer_t *buffer)
 {
-    return buffer->size - buffer->index;
+    return (buffer->length - buffer->index) / buffer->bytes_per_frame;
 }
 
 void *buffer_lock(Buffer_t *buffer, size_t *requested)
 {
-    size_t available = buffer->size - buffer->index;
+    size_t available = (buffer->length - buffer->index) / buffer->bytes_per_frame;
     if (*requested > available) {
         *requested = available;
     }
-    return (uint8_t *)buffer->data + buffer->index;
+    return (uint8_t *)buffer->frames + buffer->index;
 }
 
 void buffer_unlock(Buffer_t *buffer, void *ptr, size_t used)
 {
-    void *cursor = (uint8_t *)buffer->data + buffer->index;
+    void *cursor = (uint8_t *)buffer->frames + buffer->index;
     if (ptr != cursor) {
         return;
     }
-    buffer->index += used;
+    buffer->index += used * buffer->bytes_per_frame;
 //    ASSERT(buffer->index <= buffer->size);
 }
