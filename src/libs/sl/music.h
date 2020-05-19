@@ -39,7 +39,6 @@ typedef enum _SL_Music_States_t {
     SL_MUSIC_STATE_STOPPED,
     SL_MUSIC_STATE_PLAYING,
     SL_MUSIC_STATE_FINISHING,
-    SL_MUSIC_STATE_COMPLETED,
     SL_Music_States_t_CountOf
 } SL_Music_States_t;
 
@@ -59,7 +58,7 @@ typedef struct _SL_Music_t {
     float speed;
 
     double time; // ???
-    SL_Music_States_t state;
+    volatile SL_Music_States_t state;
     SL_Mix_t mix;
 } SL_Music_t;
 

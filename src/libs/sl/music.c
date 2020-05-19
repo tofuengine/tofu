@@ -71,7 +71,7 @@ static inline void _produce(SL_Music_t *music, bool reset)
 
         if (frames_written < frames_to_write) {
             if (!music->looped) {
-                music->state = SL_MUSIC_STATE_COMPLETED;
+                music->state = SL_MUSIC_STATE_FINISHING;
                 break;
             }
             music->on_seek(music->user_data, 0);
@@ -91,7 +91,11 @@ static inline size_t _consume(SL_Music_t *music, size_t frames_requested, void *
     while (frames_remaining > 0) { // Read as much data as possible, filling the buffer and eventually looping!
         ma_uint32 frames_available = ma_pcm_rb_available_read(&music->buffer);
         if (frames_available == 0) {
-            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "buffer underrun, %d bytes missing", frames_remaining);
+            if (music->state == SL_MUSIC_STATE_FINISHING) {
+                music->state = SL_MUSIC_STATE_STOPPED;
+            } else {
+                Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "buffer underrun, %d bytes missing", frames_remaining);
+            }
             break;
         }
 
@@ -117,7 +121,7 @@ static inline size_t _consume(SL_Music_t *music, size_t frames_requested, void *
 }
 
 // Each portion adds up in the output buffer, that's why we call it "additive mix".
-// TODO: reuse this with the sample object.
+// TODO: reuse this with the sample object by moving to a common file!
 static inline void *_additive_mix(SL_Music_t *music, void *output, void *input, size_t frames, const SL_Mix_t *groups)
 {
     const float left = music->mix.left * groups[music->group].left; // Apply panning and gain to the data.
