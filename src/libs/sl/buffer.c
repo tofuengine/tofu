@@ -25,6 +25,8 @@
 
 #include "buffer.h"
 
+#include <libs/stb.h>
+
 #include <stdlib.h>
 
 bool buffer_init(Buffer_t *buffer, size_t length, size_t bytes_per_frame)

@@ -24,25 +24,20 @@
 
 #include "sample.h"
 
+#include "mix.h"
+
 #include <libs/log.h>
+#include <libs/stb.h>
 
-#include <stdlib.h>
 #include <math.h>
-
-#ifndef M_PI
-  #define M_PI      3.14159265358979323846f
-#endif
-#ifndef M_PI_2
-  #define M_PI_2    1.57079632679489661923f
-#endif
 
 // Being the speed implemented by dynamic resampling, there's an intrinsic theoretical limit given by the ratio
 // between the minimum (8KHz) and the maximum (384KHz) supported sample rates.
 #define MIN_SPEED_VALUE ((float)MA_MIN_SAMPLE_RATE / (float)MA_MAX_SAMPLE_RATE)
 
-#define MIXING_BUFFER_SIZE_IN_FRAMES        128
+#define MIXING_BUFFER_SIZE_IN_FRAMES    128
 
-#define LOG_CONTEXT "sl"
+#define LOG_CONTEXT "sl-sample"
 
 static inline size_t _consume(SL_Sample_t *sample, size_t frames_requested, void *buffer, size_t buffer_size_in_frames)
 {
@@ -72,54 +67,13 @@ static inline size_t _consume(SL_Sample_t *sample, size_t frames_requested, void
             if (sample->looped) {
                 buffer_reset(&sample->buffer);
             } else {
-                sample->state = SL_SAMPLE_STATE_COMPLETED;
+                sample->state = SL_SAMPLE_STATE_STOPPED;
                 break;
             }
         }
     }
 
     return frames_processed;
-}
-
-// Each stream adds up in the output buffer, that's why we call it "additive mix".
-// TODO: reuse this with the sample object.
-static inline void *_additive_mix(SL_Sample_t *sample, void *output, void *input, size_t frames, const SL_Mix_t *groups)
-{
-    const float left = sample->mix.left * groups[sample->group].left; // Apply panning and gain to the data.
-    const float right = sample->mix.right * groups[sample->group].right;
-
-#if SL_BYTES_PER_FRAME == 2
-    int16_t *sptr = input;
-    int16_t *dptr = output;
-
-    for (size_t i = 0; i < frames; ++i) {
-        *(dptr++) += (int16_t)((float)*(sptr++) * left);
-        *(dptr++) += (int16_t)((float)*(sptr++) * right);
-    }
-#elif SL_BYTES_PER_FRAME == 4
-    float *sptr = input;
-    float *dptr = output;
-
-    for (size_t i = 0; i < frames; ++i) {
-        *(dptr++) += *(sptr++) * left;
-        *(dptr++) += *(sptr++) * right;
-    }
-#endif
-    return dptr;
-}
-
-static inline SL_Mix_t _precompute_mix(float pan, float gain)
-{
-#if __SL_PANNING_LAW__ == PANNING_LAW_CONSTANT_GAIN
-    const float theta = (pan + 1.0f) * 0.5f; // [-1, 1] -> [0 , 1]
-    return (SL_Mix_t){ .left = (1.0f - theta) * gain, .right = theta * gain }; // powf(theta, 1)
-#elif __SL_PANNING_LAW__ == PANNING_LAW_CONSTANT_POWER_SINCOS
-    const float theta = (pan + 1.0f) * 0.5f * M_PI_2; // [-1, 1] -> [0 , 1] -> [0, pi/2]
-    return (SL_Mix_t){ .left = cosf(theta) * gain, .right = sinf(theta) * gain };
-#elif __SL_PANNING_LAW__ == PANNING_LAW_CONSTANT_POWER_SQRT
-    const float theta = (pan + 1.0f) * 0.5f; // [-1, 1] -> [0 , 1]
-    return (SL_Mix_t){ .left = sqrtf(1.0f - theta) * gain, .right = sqrtf(theta) * gain }; // powf(theta, 0.5)
-#endif
 }
 
 SL_Sample_t *SL_sample_create(SL_Sample_Read_Callback_t on_read, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels)
@@ -139,7 +93,7 @@ SL_Sample_t *SL_sample_create(SL_Sample_Read_Callback_t on_read, void *user_data
             .speed = 1.0f,
             .time = 0.0f,
             .state = SL_SAMPLE_STATE_STOPPED,
-            .mix = _precompute_mix(0.0f, 1.0f)
+            .mix = mix_precompute(0.0f, 1.0f)
         };
 
     size_t bytes_per_frame = ma_get_bytes_per_frame(format, channels);
@@ -203,13 +157,13 @@ void SL_sample_looped(SL_Sample_t *sample, bool looped)
 void SL_sample_gain(SL_Sample_t *sample, float gain)
 {
     sample->gain = fmaxf(0.0f, gain);
-    sample->mix = _precompute_mix(sample->pan, sample->gain);
+    sample->mix = mix_precompute(sample->pan, sample->gain);
 }
 
 void SL_sample_pan(SL_Sample_t *sample, float pan)
 {
     sample->pan = fmaxf(-1.0f, fminf(pan, 1.0f));
-    sample->mix = _precompute_mix(sample->pan, sample->gain);
+    sample->mix = mix_precompute(sample->pan, sample->gain);
 }
 
 void SL_sample_speed(SL_Sample_t *sample, float speed)
@@ -240,6 +194,7 @@ void SL_sample_rewind(SL_Sample_t *sample)
 
 void SL_sample_update(SL_Sample_t *sample, float delta_time)
 {
+    sample->time += delta_time;
 }
 
 void SL_sample_mix(SL_Sample_t *sample, void *output, size_t frames_requested, const SL_Mix_t *groups)
@@ -250,12 +205,17 @@ void SL_sample_mix(SL_Sample_t *sample, void *output, size_t frames_requested, c
 
     uint8_t buffer[MIXING_BUFFER_SIZE_IN_FRAMES * SL_CHANNELS_PER_FRAME * SL_BYTES_PER_FRAME];
 
+    const SL_Mix_t mix = (SL_Mix_t){
+            .left = sample->mix.left * groups[sample->group].left,
+            .right = sample->mix.right * groups[sample->group].right
+        };
+
     uint8_t *cursor = (uint8_t *)output;
 
     size_t frames_remaining = frames_requested;
     while (frames_remaining > 0 && sample->state != SL_SAMPLE_STATE_STOPPED) { // State can change during the loop.
         size_t frames_processed = _consume(sample, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES);
-        cursor = _additive_mix(sample, cursor, buffer, frames_processed, groups);
+        cursor = mix_additive(cursor, buffer, frames_processed, mix);
         frames_remaining -= frames_processed;
     }
 }

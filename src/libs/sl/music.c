@@ -24,18 +24,13 @@
 
 #include "music.h"
 
+#include "mix.h"
+
 #include <config.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 
 #include <math.h>
-
-#ifndef M_PI
-  #define M_PI      3.14159265358979323846f
-#endif
-#ifndef M_PI_2
-  #define M_PI_2    1.57079632679489661923f
-#endif
 
 // Being the speed implemented by dynamic resampling, there's an intrinsic theoretical limit given by the ratio
 // between the minimum (8KHz) and the maximum (384KHz) supported sample rates.
@@ -45,18 +40,26 @@
 // once half a second we are good. Since it's very unlikely we will run at less than 2 FPS... well, we can sleep well. :)
 #define STREAMING_BUFFER_SIZE_IN_FRAMES     SL_FRAMES_PER_SECOND
 
-#define MIXING_BUFFER_SIZE_IN_FRAMES        128
+// That's the size of a single chunk read in each `produce()` call. Can't be larger than the buffer size.
+#define STREAMING_BUFFER_CHUNK_IN_FRAMES    (SL_FRAMES_PER_SECOND / 4)
 
-#define LOG_CONTEXT "sl"
+#define MIXING_BUFFER_SIZE_IN_FRAMES    128
+
+#define LOG_CONTEXT "sl-music"
 
 static inline void _produce(SL_Music_t *music, bool reset)
 {
     if (reset) {
         ma_pcm_rb_reset(&music->buffer);
+        music->on_seek(music->user_data, 0);
     }
 
     ma_uint32 frames_to_write = ma_pcm_rb_available_write(&music->buffer);
-//    ma_uint32 frames_to_write = BUFFER_SIZE_IN_FRAMES; // FIXME: move to update thread, with smaller size.
+#ifdef STREAMING_BUFFER_CHUNK_IN_FRAMES
+    if (frames_to_write > STREAMING_BUFFER_CHUNK_IN_FRAMES) {
+        frames_to_write = STREAMING_BUFFER_CHUNK_IN_FRAMES;
+    }
+#endif
     while (frames_to_write > 0) {
         void *write_buffer;
         ma_pcm_rb_acquire_write(&music->buffer, &frames_to_write, &write_buffer);
@@ -116,47 +119,6 @@ static inline size_t _consume(SL_Music_t *music, size_t frames_requested, void *
     return frames_processed;
 }
 
-// Each portion adds up in the output buffer, that's why we call it "additive mix".
-// TODO: reuse this with the sample object by moving to a common file!
-static inline void *_additive_mix(SL_Music_t *music, void *output, void *input, size_t frames, const SL_Mix_t *groups)
-{
-    const float left = music->mix.left * groups[music->group].left; // Apply panning and gain to the data.
-    const float right = music->mix.right * groups[music->group].right;
-
-#if SL_BYTES_PER_FRAME == 2
-    int16_t *sptr = input;
-    int16_t *dptr = output;
-
-    for (size_t i = 0; i < frames; ++i) {
-        *(dptr++) += (int16_t)((float)*(sptr++) * left);
-        *(dptr++) += (int16_t)((float)*(sptr++) * right);
-    }
-#elif SL_BYTES_PER_FRAME == 4
-    float *sptr = input;
-    float *dptr = output;
-
-    for (size_t i = 0; i < frames; ++i) {
-        *(dptr++) += *(sptr++) * left;
-        *(dptr++) += *(sptr++) * right;
-    }
-#endif
-    return dptr;
-}
-
-static inline SL_Mix_t _precompute_mix(float pan, float gain)
-{
-#if __SL_PANNING_LAW__ == PANNING_LAW_CONSTANT_GAIN
-    const float theta = (pan + 1.0f) * 0.5f; // [-1, 1] -> [0 , 1]
-    return (SL_Mix_t){ .left = (1.0f - theta) * gain, .right = theta * gain }; // powf(theta, 1)
-#elif __SL_PANNING_LAW__ == PANNING_LAW_CONSTANT_POWER_SINCOS
-    const float theta = (pan + 1.0f) * 0.5f * M_PI_2; // [-1, 1] -> [0 , 1] -> [0, pi/2]
-    return (SL_Mix_t){ .left = cosf(theta) * gain, .right = sinf(theta) * gain };
-#elif __SL_PANNING_LAW__ == PANNING_LAW_CONSTANT_POWER_SQRT
-    const float theta = (pan + 1.0f) * 0.5f; // [-1, 1] -> [0 , 1]
-    return (SL_Mix_t){ .left = sqrtf(1.0f - theta) * gain, .right = sqrtf(theta) * gain }; // powf(theta, 0.5)
-#endif
-}
-
 SL_Music_t *SL_music_create(SL_Music_Read_Callback_t on_read, SL_Music_Seek_Callback_t on_seek, void *user_data, ma_format format, ma_uint32 sample_rate, ma_uint32 channels)
 {
     SL_Music_t *music = malloc(sizeof(SL_Music_t));
@@ -175,7 +137,7 @@ SL_Music_t *SL_music_create(SL_Music_Read_Callback_t on_read, SL_Music_Seek_Call
             .speed = 1.0f,
             .time = 0.0f,
             .state = SL_MUSIC_STATE_STOPPED,
-            .mix = _precompute_mix(0.0f, 1.0f)
+            .mix = mix_precompute(0.0f, 1.0f)
         };
 
     ma_pcm_rb_init(format, channels, STREAMING_BUFFER_SIZE_IN_FRAMES, NULL, NULL, &music->buffer);
@@ -194,7 +156,9 @@ SL_Music_t *SL_music_create(SL_Music_Read_Callback_t on_read, SL_Music_Seek_Call
         return NULL;
     }
 
+#ifdef __SL_MUSIC_PRELOAD_ON_CREATION__
     _produce(music, true);
+#endif
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music created");
     return music;
@@ -229,13 +193,13 @@ void SL_music_looped(SL_Music_t *music, bool looped)
 void SL_music_gain(SL_Music_t *music, float gain)
 {
     music->gain = fmaxf(0.0f, gain);
-    music->mix = _precompute_mix(music->pan, music->gain);
+    music->mix = mix_precompute(music->pan, music->gain);
 }
 
 void SL_music_pan(SL_Music_t *music, float pan)
 {
     music->pan = fmaxf(-1.0f, fminf(pan, 1.0f));
-    music->mix = _precompute_mix(music->pan, music->gain);
+    music->mix = mix_precompute(music->pan, music->gain);
 }
 
 void SL_music_speed(SL_Music_t *music, float speed)
@@ -261,7 +225,6 @@ void SL_music_rewind(SL_Music_t *music)
         return;
     }
 
-    music->on_seek(music->user_data, 0);
     _produce(music, true);
 }
 
@@ -284,12 +247,17 @@ void SL_music_mix(SL_Music_t *music, void *output, size_t frames_requested, cons
 
     uint8_t buffer[MIXING_BUFFER_SIZE_IN_FRAMES * SL_CHANNELS_PER_FRAME * SL_BYTES_PER_FRAME];
 
+    const SL_Mix_t mix = (SL_Mix_t){
+            .left = music->mix.left * groups[music->group].left,
+            .right = music->mix.right * groups[music->group].right
+        };
+
     uint8_t *cursor = (uint8_t *)output;
 
     size_t frames_remaining = frames_requested;
     while (frames_remaining > 0 && music->state != SL_MUSIC_STATE_STOPPED) { // State can change during the loop.
         size_t frames_processed = _consume(music, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES);
-        cursor = _additive_mix(music, cursor, buffer, frames_processed, groups);
+        cursor = mix_additive(cursor, buffer, frames_processed, mix);
         frames_remaining -= frames_processed;
     }
 }

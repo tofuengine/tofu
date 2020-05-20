@@ -42,7 +42,7 @@ function Main:__ctor()
       -- Music.new("assets/48000_2ch.wav"),
       Music.new("assets/48000_2ch.flac"),
     }
-  self.sources[1]:looped(true)
+  self.sources[1]:looped(false)
 
   self.current = 1
 end

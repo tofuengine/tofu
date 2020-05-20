@@ -390,7 +390,7 @@ static int music_is_playing(lua_State *L)
     LUAX_SIGNATURE_END
     Music_Object_t *self = (Music_Object_t *)LUAX_USERDATA(L, 1);
 
-    lua_pushboolean(L, self->music->state == SL_MUSIC_STATE_PLAYING);
+    lua_pushboolean(L, self->music->state != SL_MUSIC_STATE_STOPPED);
 
     return 1;
 }

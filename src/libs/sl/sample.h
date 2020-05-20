@@ -38,7 +38,6 @@ typedef size_t (*SL_Sample_Read_Callback_t)(void *user_data, void *output, size_
 typedef enum _SL_Sample_States_t {
     SL_SAMPLE_STATE_STOPPED,
     SL_SAMPLE_STATE_PLAYING,
-    SL_SAMPLE_STATE_COMPLETED,
     SL_Sample_States_t_CountOf
 } SL_Sample_States_t;
 
@@ -54,7 +53,7 @@ typedef struct _SL_Sample_t {
     float speed;
 
     double time; // ???
-    SL_Sample_States_t state;
+    volatile SL_Sample_States_t state;
     SL_Mix_t mix;
 } SL_Sample_t;
 
