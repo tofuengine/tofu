@@ -49,7 +49,7 @@ typedef struct _Audio_t {
 } Audio_t;
 
 extern bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration);
-extern void Audio_terminate(Audio_t *audio);
+extern void Audio_terminate(Audio_t *audio); // TODO: rename to `deinitialize()` (every one).
 extern void Audio_volume(Audio_t *audio, float volume);
 extern void Audio_update(Audio_t *audio, float delta_time);
 extern void Audio_stop(Audio_t *audio);

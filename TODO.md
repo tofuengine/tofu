@@ -65,6 +65,8 @@
   * fixed warning in Windows build for miniaudio.
   * definitely I need to use a ring-buffer to stream audio. We could be tempted to always stream w/o buffers, having SDD and such... but that's not the case in general. Miniaudio has a ring-buffer API.
     * tried miniaudio ringbuffer, but it's easier to buffer myself.
+  * no OOP, just grouping the shared properties.
+  * naming: create/destroy, register/deregister, init(ialize)/deinit(ialize). "un-" prefix for the adjetives, "de-" for verbs.
 
 ```java
   //do panning

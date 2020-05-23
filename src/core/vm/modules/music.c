@@ -184,7 +184,7 @@ static int music_looped1(lua_State *L)
     LUAX_SIGNATURE_END
     Music_Object_t *self = (Music_Object_t *)LUAX_USERDATA(L, 1);
 
-    lua_pushboolean(L, self->music->looped);
+    lua_pushboolean(L, self->music->props.looped);
 
     return 1;
 }
@@ -218,7 +218,7 @@ static int music_group1(lua_State *L)
     LUAX_SIGNATURE_END
     Music_Object_t *self = (Music_Object_t *)LUAX_USERDATA(L, 1);
 
-    lua_pushinteger(L, self->music->group);
+    lua_pushinteger(L, self->music->props.group);
 
     return 1;
 }
@@ -252,7 +252,7 @@ static int music_gain1(lua_State *L)
     LUAX_SIGNATURE_END
     Music_Object_t *self = (Music_Object_t *)LUAX_USERDATA(L, 1);
 
-    lua_pushnumber(L, self->music->gain);
+    lua_pushnumber(L, self->music->props.gain);
 
     return 1;
 }
@@ -286,7 +286,7 @@ static int music_pan1(lua_State *L)
     LUAX_SIGNATURE_END
     Music_Object_t *self = (Music_Object_t *)LUAX_USERDATA(L, 1);
 
-    lua_pushnumber(L, self->music->pan);
+    lua_pushnumber(L, self->music->props.pan);
 
     return 1;
 }
@@ -320,7 +320,7 @@ static int music_speed1(lua_State *L)
     LUAX_SIGNATURE_END
     Music_Object_t *self = (Music_Object_t *)LUAX_USERDATA(L, 1);
 
-    lua_pushnumber(L, self->music->speed);
+    lua_pushnumber(L, self->music->props.speed);
 
     return 1;
 }

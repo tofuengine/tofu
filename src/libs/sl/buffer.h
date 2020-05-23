@@ -41,8 +41,9 @@ typedef struct _Buffer_t {
     size_t length;
 } Buffer_t;
 
+// https://english.stackexchange.com/questions/25941/is-there-a-general-rule-for-the-prefixation-of-un-and-de-to-words
 extern bool buffer_init(Buffer_t *buffer, size_t length, size_t bytes_per_frame);
-extern void buffer_uninit(Buffer_t *buffer);
+extern void buffer_deinit(Buffer_t *buffer);
 
 extern void buffer_reset(Buffer_t *buffer);
 

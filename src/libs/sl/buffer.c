@@ -33,6 +33,7 @@ bool buffer_init(Buffer_t *buffer, size_t length, size_t bytes_per_frame)
 {
     void *frames = malloc(length * bytes_per_frame);
     if (!frames) {
+//        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d bytes for buffer", length_in_frames * bytes_per_frame);
         return false;
     }
 
@@ -46,7 +47,7 @@ bool buffer_init(Buffer_t *buffer, size_t length, size_t bytes_per_frame)
     return true;
 }
 
-void buffer_uninit(Buffer_t *buffer)
+void buffer_deinit(Buffer_t *buffer)
 {
     free(buffer->frames);
 }

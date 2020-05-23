@@ -30,12 +30,6 @@
 #include <libs/log.h>
 #include <libs/stb.h>
 
-#include <math.h>
-
-// Being the speed implemented by dynamic resampling, there's an intrinsic theoretical limit given by the ratio
-// between the minimum (8KHz) and the maximum (384KHz) supported sample rates.
-#define MIN_SPEED_VALUE ((float)MA_MIN_SAMPLE_RATE / (float)MA_MAX_SAMPLE_RATE)
-
 // We are going to buffer 1 second of non-converted data. As long as the `SL_music_update()` function is called
 // once half a second we are good. Since it's very unlikely we will run at less than 2 FPS... well, we can sleep well. :)
 #define STREAMING_BUFFER_SIZE_IN_FRAMES     SL_FRAMES_PER_SECOND
@@ -49,12 +43,14 @@
 
 static inline void _produce(SL_Music_t *music, bool reset)
 {
+    ma_pcm_rb *buffer = &music->buffer;
+
     if (reset) {
-        ma_pcm_rb_reset(&music->buffer);
+        ma_pcm_rb_reset(buffer);
         music->on_seek(music->user_data, 0);
     }
 
-    ma_uint32 frames_to_write = ma_pcm_rb_available_write(&music->buffer);
+    ma_uint32 frames_to_write = ma_pcm_rb_available_write(buffer);
 #ifdef STREAMING_BUFFER_CHUNK_IN_FRAMES
     if (frames_to_write > STREAMING_BUFFER_CHUNK_IN_FRAMES) {
         frames_to_write = STREAMING_BUFFER_CHUNK_IN_FRAMES;
@@ -62,14 +58,14 @@ static inline void _produce(SL_Music_t *music, bool reset)
 #endif
     while (frames_to_write > 0) {
         void *write_buffer;
-        ma_pcm_rb_acquire_write(&music->buffer, &frames_to_write, &write_buffer);
+        ma_pcm_rb_acquire_write(buffer, &frames_to_write, &write_buffer);
 
         size_t frames_written = music->on_read(music->user_data, write_buffer, frames_to_write);
 
-        ma_pcm_rb_commit_write(&music->buffer, frames_written, write_buffer);
+        ma_pcm_rb_commit_write(buffer, frames_written, write_buffer);
 
         if (frames_written < frames_to_write) {
-            if (!music->looped) {
+            if (!music->props.looped) {
                 music->state = SL_MUSIC_STATE_FINISHING;
                 break;
             }
@@ -80,13 +76,16 @@ static inline void _produce(SL_Music_t *music, bool reset)
     }
 }
 
-static inline size_t _consume(SL_Music_t *music, size_t frames_requested, void *buffer, size_t buffer_size_in_frames)
+static inline size_t _consume(SL_Music_t *music, size_t frames_requested, void *output, size_t size_in_frames)
 {
+    ma_data_converter *converter = &music->props.converter;
+    ma_pcm_rb *buffer = &music->buffer;
+
     size_t frames_processed = 0;
 
-    uint8_t *cursor = buffer;
+    uint8_t *cursor = output;
 
-    size_t frames_remaining = (frames_requested > buffer_size_in_frames) ? buffer_size_in_frames : frames_requested;
+    size_t frames_remaining = (frames_requested > size_in_frames) ? size_in_frames : frames_requested;
     while (frames_remaining > 0) { // Read as much data as possible, filling the buffer and eventually looping!
         ma_uint32 frames_available = ma_pcm_rb_available_read(&music->buffer);
         if (frames_available == 0) {
@@ -98,17 +97,17 @@ static inline size_t _consume(SL_Music_t *music, size_t frames_requested, void *
             break;
         }
 
-        ma_uint64 frames_to_convert = ma_data_converter_get_required_input_frame_count(&music->converter, frames_remaining);
+        ma_uint64 frames_to_convert = ma_data_converter_get_required_input_frame_count(converter, frames_remaining);
 
         ma_uint32 frames_to_consume = (frames_to_convert > frames_available) ? frames_available : frames_to_convert;
         void *read_buffer;
-        ma_pcm_rb_acquire_read(&music->buffer, &frames_to_consume, &read_buffer);
+        ma_pcm_rb_acquire_read(buffer, &frames_to_consume, &read_buffer);
 
         ma_uint64 frames_consumed = frames_to_consume;
         ma_uint64 frames_generated = frames_remaining;
-        ma_data_converter_process_pcm_frames(&music->converter, read_buffer, &frames_consumed, cursor, &frames_generated);
+        ma_data_converter_process_pcm_frames(converter, read_buffer, &frames_consumed, cursor, &frames_generated);
 
-        ma_pcm_rb_commit_read(&music->buffer, frames_consumed, read_buffer);
+        ma_pcm_rb_commit_read(buffer, frames_consumed, read_buffer);
 
         cursor += frames_generated * SL_CHANNELS_PER_FRAME * SL_BYTES_PER_FRAME;
 
@@ -123,6 +122,7 @@ SL_Music_t *SL_music_create(SL_Music_Read_Callback_t on_read, SL_Music_Seek_Call
 {
     SL_Music_t *music = malloc(sizeof(SL_Music_t));
     if (!music) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate music structure");
         return NULL;
     }
 
@@ -130,27 +130,20 @@ SL_Music_t *SL_music_create(SL_Music_Read_Callback_t on_read, SL_Music_Seek_Call
             .on_read = on_read,
             .on_seek = on_seek,
             .user_data = user_data,
-            .group = SL_DEFAULT_GROUP,
-            .looped = false,
-            .gain = 1.0,
-            .pan = 0.0f,
-            .speed = 1.0f,
             .time = 0.0f,
-            .state = SL_MUSIC_STATE_STOPPED,
-            .mix = mix_precompute(0.0f, 1.0f)
+            .state = SL_MUSIC_STATE_STOPPED
         };
 
-    ma_pcm_rb_init(format, channels, STREAMING_BUFFER_SIZE_IN_FRAMES, NULL, NULL, &music->buffer);
-
-#if SL_BYTES_PER_FRAME == 2
-    ma_data_converter_config config = ma_data_converter_config_init(format, ma_format_s16, channels, SL_CHANNELS_PER_FRAME, sample_rate, SL_FRAMES_PER_SECOND);
-#elif SL_BYTES_PER_FRAME == 4
-    ma_data_converter_config config = ma_data_converter_config_init(format, ma_format_f32, channels, SL_CHANNELS_PER_FRAME, sample_rate, SL_FRAMES_PER_SECOND);
-#endif
-    config.resampling.allowDynamicSampleRate = MA_TRUE; // required for speed throttling
-    ma_result result = ma_data_converter_init(&config, &music->converter);
+    ma_result result = ma_pcm_rb_init(format, channels, STREAMING_BUFFER_SIZE_IN_FRAMES, NULL, NULL, &music->buffer);
     if (result != MA_SUCCESS) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "failed to create music data converter");
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize music ring-buffer");
+        free(music);
+        return NULL;
+    }
+
+    bool initialized = SL_props_init(&music->props, format, sample_rate, channels);
+    if (!initialized) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize music properties");
         ma_pcm_rb_uninit(&music->buffer);
         free(music);
         return NULL;
@@ -170,42 +163,39 @@ void SL_music_destroy(SL_Music_t *music)
         return;
     }
 
-    ma_data_converter_uninit(&music->converter);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music data converted uninitialized");
+    SL_props_deinit(&music->props);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music properties deinitialized");
 
     ma_pcm_rb_uninit(&music->buffer);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music ring-buffer uninitialized");
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music ring-buffer deinitialized");
 
     free(music);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music freed");
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music structure freed");
 }
 
 void SL_music_group(SL_Music_t *music, size_t group)
 {
-    music->group = group;
+    SL_props_group(&music->props, group);
 }
 
 void SL_music_looped(SL_Music_t *music, bool looped)
 {
-    music->looped = looped;
+    SL_props_looped(&music->props, looped);
 }
 
 void SL_music_gain(SL_Music_t *music, float gain)
 {
-    music->gain = fmaxf(0.0f, gain);
-    music->mix = mix_precompute(music->pan, music->gain);
+    SL_props_gain(&music->props, gain);
 }
 
 void SL_music_pan(SL_Music_t *music, float pan)
 {
-    music->pan = fmaxf(-1.0f, fminf(pan, 1.0f));
-    music->mix = mix_precompute(music->pan, music->gain);
+    SL_props_pan(&music->props, pan);
 }
 
 void SL_music_speed(SL_Music_t *music, float speed)
 {
-    music->speed = fmaxf(MIN_SPEED_VALUE, speed);
-    ma_data_converter_set_rate_ratio(&music->converter, music->speed); // The ratio is `in` over `out`, i.e. actual speed-up factor.
+    SL_props_speed(&music->props, speed);
 }
 
 void SL_music_play(SL_Music_t *music)
@@ -247,10 +237,7 @@ void SL_music_mix(SL_Music_t *music, void *output, size_t frames_requested, cons
 
     uint8_t buffer[MIXING_BUFFER_SIZE_IN_FRAMES * SL_CHANNELS_PER_FRAME * SL_BYTES_PER_FRAME];
 
-    const SL_Mix_t mix = (SL_Mix_t){
-            .left = music->mix.left * groups[music->group].left,
-            .right = music->mix.right * groups[music->group].right
-        };
+    const SL_Mix_t mix = SL_props_precompute(&music->props, groups);
 
     uint8_t *cursor = (uint8_t *)output;
 

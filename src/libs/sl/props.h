@@ -43,13 +43,15 @@ typedef struct _SL_Props_t {
     ma_data_converter converter;
 } SL_Props_t;
 
-extern SL_Props_t *SL_props_init(ma_format format, ma_uint32 sample_rate, ma_uint32 channels);
-extern void SL_props_uninit(SL_Props_t *props);
+extern bool SL_props_init(SL_Props_t *props, ma_format format, ma_uint32 sample_rate, ma_uint32 channels);
+extern void SL_props_deinit(SL_Props_t *props);
 
 extern void SL_props_group(SL_Props_t *props, size_t group);
 extern void SL_props_looped(SL_Props_t *props, bool looped);
 extern void SL_props_gain(SL_Props_t *props, float gain);
 extern void SL_props_pan(SL_Props_t *props, float pan);
 extern void SL_props_speed(SL_Props_t *props, float speed);
+
+extern SL_Mix_t SL_props_precompute(SL_Props_t *props, const SL_Mix_t *groups);
 
 #endif  /* __SL_PROPS_H__ */

@@ -29,6 +29,7 @@
 
 #include "common.h"
 #include "buffer.h"
+#include "props.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -44,23 +45,16 @@ typedef enum _SL_Sample_States_t {
 typedef struct _SL_Sample_t {
     Buffer_t buffer;
 
-    ma_data_converter converter;
-
-    size_t group;
-    bool looped;
-    float gain;
-    float pan;
-    float speed;
+    SL_Props_t props;
 
     double time; // ???
     volatile SL_Sample_States_t state;
-    SL_Mix_t mix;
 } SL_Sample_t;
 
 extern SL_Sample_t *SL_sample_create(SL_Sample_Read_Callback_t on_read, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels);
 extern void SL_sample_destroy(SL_Sample_t *sample);
 
-extern void SL_sample_group(SL_Sample_t *sample, size_t group);
+extern void SL_sample_group(SL_Sample_t *sample, size_t group); // FIXME: are these redudants? Mostly...
 extern void SL_sample_looped(SL_Sample_t *sample, bool looped);
 extern void SL_sample_gain(SL_Sample_t *sample, float gain);
 extern void SL_sample_pan(SL_Sample_t *sample, float pan);

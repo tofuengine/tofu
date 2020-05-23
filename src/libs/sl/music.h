@@ -28,6 +28,7 @@
 #include <miniaudio/miniaudio.h>
 
 #include "common.h"
+#include "props.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -49,17 +50,10 @@ typedef struct _SL_Music_t {
 
     ma_pcm_rb buffer;
 
-    ma_data_converter converter;
-
-    size_t group;
-    bool looped;
-    float gain;
-    float pan;
-    float speed;
+    SL_Props_t props;
 
     double time; // ???
     volatile SL_Music_States_t state;
-    SL_Mix_t mix;
 } SL_Music_t;
 
 extern SL_Music_t *SL_music_create(SL_Music_Read_Callback_t on_read, SL_Music_Seek_Callback_t on_seek, void *user_data, ma_format format, ma_uint32 sample_rate, ma_uint32 channels);
