@@ -87,7 +87,7 @@ static inline size_t _consume(SL_Music_t *music, size_t frames_requested, void *
 
     size_t frames_remaining = (frames_requested > size_in_frames) ? size_in_frames : frames_requested;
     while (frames_remaining > 0) { // Read as much data as possible, filling the buffer and eventually looping!
-        ma_uint32 frames_available = ma_pcm_rb_available_read(&music->buffer);
+        ma_uint32 frames_available = ma_pcm_rb_available_read(buffer);
         if (frames_available == 0) {
             if (music->state == SL_MUSIC_STATE_FINISHING) {
                 music->state = SL_MUSIC_STATE_STOPPED;

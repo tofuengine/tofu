@@ -40,7 +40,13 @@
 
 bool SL_props_init(SL_Props_t *props, ma_format format, ma_uint32 sample_rate, ma_uint32 channels)
 {
-    *props = (SL_Props_t){ 0 };
+    *props = (SL_Props_t){
+            .looped = false,
+            .gain = 1.0,
+            .pan = 0.0f,
+            .speed = 1.0f,
+            .mix = mix_precompute(0.0f, 1.0f)
+        };
 
 #if SL_BYTES_PER_FRAME == 2
     ma_data_converter_config config = ma_data_converter_config_init(format, ma_format_s16, channels, SL_CHANNELS_PER_FRAME, sample_rate, SL_FRAMES_PER_SECOND);
