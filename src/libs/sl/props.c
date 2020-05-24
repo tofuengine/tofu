@@ -45,7 +45,7 @@ bool SL_props_init(SL_Props_t *props, ma_format format, ma_uint32 sample_rate, m
             .gain = 1.0,
             .pan = 0.0f,
             .speed = 1.0f,
-            .mix = mix_precompute(0.0f, 1.0f)
+            .mix = mix_precompute_pan(0.0f, 1.0f)
         };
 
 #if SL_BYTES_PER_FRAME == 2
@@ -82,13 +82,13 @@ void SL_props_looped(SL_Props_t *props, bool looped)
 void SL_props_gain(SL_Props_t *props, float gain)
 {
     props->gain = fmaxf(0.0f, gain);
-    props->mix = mix_precompute(props->pan, props->gain);
+    props->mix = mix_precompute_pan(props->pan, props->gain);
 }
 
 void SL_props_pan(SL_Props_t *props, float pan)
 {
     props->pan = fmaxf(-1.0f, fminf(pan, 1.0f));
-    props->mix = mix_precompute(props->pan, props->gain);
+    props->mix = mix_precompute_pan(props->pan, props->gain);
 }
 
 void SL_props_speed(SL_Props_t *props, float speed)
