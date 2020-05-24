@@ -44,6 +44,9 @@ typedef enum _SL_Music_States_t {
 } SL_Music_States_t;
 
 typedef struct _SL_Music_t {
+    // SL_Source_Type_t type;
+    // TODO: encode the type here?
+
     SL_Music_Read_Callback_t on_read;
     SL_Music_Seek_Callback_t on_seek;
     void *user_data;
