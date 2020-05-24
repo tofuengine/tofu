@@ -27,17 +27,7 @@
 
 #include "common.h"
 
-typedef void SL_Source_t;
-
-typedef enum _SL_Source_Types_t {
-    SL_SOURCE_TYPE_MUSIC,
-    SL_SOURCE_TYPE_SAMPLE,
-} SL_Source_Types_t;
-
-typedef struct _SL_Voice_t { // TODO: or name it channel?
-    SL_Source_Types_t type;
-    SL_Source_t *source;
-} SL_Voice_t;
+#include <stddef.h>
 
 typedef struct _SL_Context_t {
     SL_Mix_t groups[SL_GROUPS_AMOUNT];
@@ -49,7 +39,7 @@ extern void SL_context_destroy(SL_Context_t *context);
 
 extern void SL_context_tweak(SL_Context_t *context, size_t group, float balance, float gain);
 
-extern void SL_context_track(SL_Context_t *context, SL_Source_t *source, SL_Source_Types_t type);
+extern void SL_context_track(SL_Context_t *context, SL_Source_Types_t type, SL_Source_t *source);
 extern void SL_context_untrack(SL_Context_t *context, SL_Source_t *source);
 
 extern void SL_context_update(SL_Context_t *context, float delta_time);

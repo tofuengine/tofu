@@ -37,6 +37,18 @@
 #define SL_LAST_GROUP           (SL_GROUPS_AMOUNT - 1)
 #define SL_DEFAULT_GROUP        SL_FIRST_GROUP
 
+typedef void SL_Source_t;
+
+typedef enum _SL_Source_Types_t {
+    SL_SOURCE_TYPE_MUSIC,
+    SL_SOURCE_TYPE_SAMPLE,
+} SL_Source_Types_t;
+
+typedef struct _SL_Voice_t { // TODO: or name it channel?
+    SL_Source_Types_t type; // TODO: use update/mix/stop function pointers and get rid of the type?
+    SL_Source_t *source;
+} SL_Voice_t;
+
 typedef struct _SL_Mix_t {
     float left, right;
 } SL_Mix_t;

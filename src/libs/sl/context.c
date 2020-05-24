@@ -25,6 +25,9 @@
 #include "context.h"
 
 #include "mix.h"
+#include "music.h"
+#include "sample.h"
+
 #include <config.h>
 #include <libs/log.h>
 #include <libs/stb.h>
@@ -70,7 +73,7 @@ void SL_context_tweak(SL_Context_t *context, size_t group, float balance, float 
     context->groups[group] = mix_precompute_balance(balance, gain);
 }
 
-void SL_context_track(SL_Context_t *context, SL_Source_t *source, SL_Source_Types_t type)
+void SL_context_track(SL_Context_t *context, SL_Source_Types_t type, SL_Source_t *source)
 {
     size_t count = arrlen(context->voices);
     for (size_t i = 0; i < count; ++i) {
@@ -78,7 +81,8 @@ void SL_context_track(SL_Context_t *context, SL_Source_t *source, SL_Source_Type
             return;
         }
     }
-    arrpush(context->voices, (SL_Voice_t){ .type = type, .source = source });
+    SL_Voice_t voice = (SL_Voice_t){ .type = type, .source = source };
+    arrpush(context->voices, voice);
 }
 
 void SL_context_untrack(SL_Context_t *context, SL_Source_t *source)
@@ -94,10 +98,14 @@ void SL_context_untrack(SL_Context_t *context, SL_Source_t *source)
 
 void SL_context_update(SL_Context_t *context, float delta_time)
 {
-    SL_Voice_t **current = context->voices;
+    SL_Voice_t *current = context->voices;
     for (int count = arrlen(context->voices); count; --count) {
-        SL_Voice_t *voice = *(current++);
-        SL_music_update(stream, delta_time);
+        SL_Voice_t *voice = current++;
+        if (voice->type == SL_SOURCE_TYPE_MUSIC) {
+            SL_music_update((SL_Music_t *)voice->source, delta_time);
+        } else {
+            SL_sample_update((SL_Sample_t *)voice->source, delta_time);
+        }
     }
 }
 
@@ -105,18 +113,26 @@ void SL_context_mix(SL_Context_t *context, void *output, size_t frames_requested
 {
     const SL_Mix_t *groups = context->groups;
 
-    SL_Voice_t **current = context->voices;
+    SL_Voice_t *current = context->voices;
     for (int count = arrlen(context->voices); count; --count) {
-        SL_Voice_t *voice = *(current++);
-        SL_music_mix(stream, output, frames_requested, groups); // FIXME: pass the dereferences mix? API violation?
+        SL_Voice_t *voice = current++;
+        if (voice->type == SL_SOURCE_TYPE_MUSIC) {
+            SL_music_mix((SL_Music_t *)voice->source, output, frames_requested, groups); // FIXME: pass the dereferences mix? API violation?
+        } else {
+            SL_sample_mix((SL_Sample_t *)voice->source, output, frames_requested, groups); // FIXME: pass the dereferences mix? API violation?
+        }
     }
 }
 
 void SL_context_stop(SL_Context_t *context)
 {
-    SL_Voice_t **current = context->voices;
+    SL_Voice_t *current = context->voices;
     for (int count = arrlen(context->voices); count; --count) {
-        SL_Voice_t *voice = *(current++);
-        SL_music_stop(stream);
+        SL_Voice_t *voice = current++;
+        if (voice->type == SL_SOURCE_TYPE_MUSIC) {
+            SL_music_stop((SL_Music_t *)voice->source);
+        } else {
+            SL_sample_stop((SL_Sample_t *)voice->source);
+        }
     }
 }

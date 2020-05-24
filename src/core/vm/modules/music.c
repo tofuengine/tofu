@@ -131,7 +131,7 @@ static int music_new(lua_State *L)
     }
 
     SL_Context_t *context = Audio_lock(audio);
-    SL_context_track(context, music);
+    SL_context_track(context, SL_SOURCE_TYPE_MUSIC, music);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music %p tracked for context %p", music, context);
     Audio_unlock(audio, context);
 
