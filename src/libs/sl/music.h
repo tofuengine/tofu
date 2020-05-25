@@ -44,8 +44,7 @@ typedef enum _SL_Music_States_t {
 } SL_Music_States_t;
 
 typedef struct _SL_Music_t {
-    // SL_Source_Type_t type;
-    // TODO: encode the type here?
+    SL_Source_VTable_t vtable;
 
     SL_Music_Read_Callback_t on_read;
     SL_Music_Seek_Callback_t on_seek;
@@ -67,12 +66,5 @@ extern void SL_music_looped(SL_Music_t *music, bool looped);
 extern void SL_music_gain(SL_Music_t *music, float gain);
 extern void SL_music_pan(SL_Music_t *music, float pan);
 extern void SL_music_speed(SL_Music_t *music, float speed);
-
-extern void SL_music_play(SL_Music_t *music);
-extern void SL_music_stop(SL_Music_t *music);
-extern void SL_music_rewind(SL_Music_t *music);
-
-extern void SL_music_update(SL_Music_t *music, float delta_time);
-extern void SL_music_mix(SL_Music_t *music, void *output, size_t frames_requested, const SL_Mix_t *groups);
 
 #endif  /* __SL_MUSIC_H__ */

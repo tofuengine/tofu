@@ -24,9 +24,8 @@
 
 #include "context.h"
 
+#include "internals.h"
 #include "mix.h"
-#include "music.h"
-#include "sample.h"
 
 #include <config.h>
 #include <libs/log.h>
@@ -44,7 +43,7 @@ SL_Context_t *SL_context_create(void)
     }
 
     *context = (SL_Context_t){
-            .voices = NULL
+            .sources = NULL
         };
 
     for (size_t i = 0; i < SL_GROUPS_AMOUNT; ++i) {
@@ -61,8 +60,8 @@ void SL_context_destroy(SL_Context_t *context)
         return;
     }
 
-    arrfree(context->voices);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context voices freed");
+    arrfree(context->sources);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context sources freed");
 
     free(context);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context freed");
@@ -73,24 +72,23 @@ void SL_context_tweak(SL_Context_t *context, size_t group, float balance, float 
     context->groups[group] = mix_precompute_balance(balance, gain);
 }
 
-void SL_context_track(SL_Context_t *context, SL_Source_Types_t type, SL_Source_t *source)
+void SL_context_track(SL_Context_t *context, SL_Source_t *source)
 {
-    size_t count = arrlen(context->voices);
+    size_t count = arrlen(context->sources);
     for (size_t i = 0; i < count; ++i) {
-        if (context->voices[i].source == source) {
+        if (context->sources == source) {
             return;
         }
     }
-    SL_Voice_t voice = (SL_Voice_t){ .type = type, .source = source };
-    arrpush(context->voices, voice);
+    arrpush(context->sources, source);
 }
 
 void SL_context_untrack(SL_Context_t *context, SL_Source_t *source)
 {
-    size_t count = arrlen(context->voices);
+    size_t count = arrlen(context->sources);
     for (size_t i = 0; i < count; ++i) {
-        if (context->voices[i].source == source) {
-            arrdel(context->voices, i);
+        if (context->sources[i] == source) {
+            arrdel(context->sources, i);
             break;
         }
     }
@@ -98,14 +96,10 @@ void SL_context_untrack(SL_Context_t *context, SL_Source_t *source)
 
 void SL_context_update(SL_Context_t *context, float delta_time)
 {
-    SL_Voice_t *current = context->voices;
-    for (int count = arrlen(context->voices); count; --count) {
-        SL_Voice_t *voice = current++;
-        if (voice->type == SL_SOURCE_TYPE_MUSIC) {
-            SL_music_update((SL_Music_t *)voice->source, delta_time);
-        } else {
-            SL_sample_update((SL_Sample_t *)voice->source, delta_time);
-        }
+    SL_Source_t **current = context->sources;
+    for (int count = arrlen(context->sources); count; --count) {
+        SL_Source_t *source = *(current++);
+        ((Source_t *)source)->vtable.update(source, delta_time);
     }
 }
 
@@ -113,26 +107,18 @@ void SL_context_mix(SL_Context_t *context, void *output, size_t frames_requested
 {
     const SL_Mix_t *groups = context->groups;
 
-    SL_Voice_t *current = context->voices;
-    for (int count = arrlen(context->voices); count; --count) {
-        SL_Voice_t *voice = current++;
-        if (voice->type == SL_SOURCE_TYPE_MUSIC) {
-            SL_music_mix((SL_Music_t *)voice->source, output, frames_requested, groups); // FIXME: pass the dereferences mix? API violation?
-        } else {
-            SL_sample_mix((SL_Sample_t *)voice->source, output, frames_requested, groups); // FIXME: pass the dereferences mix? API violation?
-        }
+    SL_Source_t **current = context->sources;
+    for (int count = arrlen(context->sources); count; --count) {
+        SL_Source_t *source = *(current++);
+        ((Source_t *)source)->vtable.mix(source, output, frames_requested, groups); // FIXME: pass the dereferences mix? API violation?
     }
 }
 
 void SL_context_stop(SL_Context_t *context)
 {
-    SL_Voice_t *current = context->voices;
-    for (int count = arrlen(context->voices); count; --count) {
-        SL_Voice_t *voice = current++;
-        if (voice->type == SL_SOURCE_TYPE_MUSIC) {
-            SL_music_stop((SL_Music_t *)voice->source);
-        } else {
-            SL_sample_stop((SL_Sample_t *)voice->source);
-        }
+    SL_Source_t **current = context->sources;
+    for (int count = arrlen(context->sources); count; --count) {
+        SL_Source_t *source = *(current++);
+        ((Source_t *)source)->vtable.stop(source);
     }
 }

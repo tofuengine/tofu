@@ -22,28 +22,24 @@
  * SOFTWARE.
  */
 
-#ifndef __SL_CONTEXT_H__
-#define __SL_CONTEXT_H__
+#ifndef __SL_INTERNALS_H__
+#define __SL_INTERNALS_H__
 
 #include "common.h"
 
 #include <stddef.h>
 
-typedef struct _SL_Context_t {
-    SL_Mix_t groups[SL_GROUPS_AMOUNT];
-    SL_Source_t **sources;
-} SL_Context_t;
+typedef struct _Source_VTable_t {
+//    void (*dtor)(SL_Source_t *source);
+    void (*play)(SL_Source_t *source);    
+    void (*stop)(SL_Source_t *source);
+    void (*rewind)(SL_Source_t *source);
+    void (*update)(SL_Source_t *source, float delta_time);
+    void (*mix)(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups);
+} Source_VTable_t;
 
-extern SL_Context_t *SL_context_create(void);
-extern void SL_context_destroy(SL_Context_t *context);
+typedef struct _Source_t {
+    SL_Source_VTable_t vtable;
+} Source_t;
 
-extern void SL_context_tweak(SL_Context_t *context, size_t group, float balance, float gain);
-
-extern void SL_context_track(SL_Context_t *context, SL_Source_t *source);
-extern void SL_context_untrack(SL_Context_t *context, SL_Source_t *source);
-
-extern void SL_context_update(SL_Context_t *context, float delta_time);
-extern void SL_context_mix(SL_Context_t *context, void *output, size_t frames_requested);
-extern void SL_context_stop(SL_Context_t *context);
-
-#endif  /* __SL_CONTEXT_H__ */
+#endif  /* __SL_INTERNALS_H__ */

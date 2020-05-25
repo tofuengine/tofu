@@ -41,6 +41,12 @@
 
 #define LOG_CONTEXT "sl-music"
 
+static void _music_play(SL_Source_t *source);
+static void _music_stop(SL_Source_t *source);
+static void _music_rewind(SL_Source_t *source);
+static void _music_update(SL_Source_t *source, float delta_time);
+static void _music_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups);
+
 static inline void _produce(SL_Music_t *music, bool reset)
 {
     ma_pcm_rb *buffer = &music->buffer;
@@ -127,6 +133,13 @@ SL_Music_t *SL_music_create(SL_Music_Read_Callback_t on_read, SL_Music_Seek_Call
     }
 
     *music = (SL_Music_t){
+            .vtable = (SL_Source_VTable_t){
+                    .play = _music_play,
+                    .stop = _music_stop,
+                    .rewind = _music_rewind,
+                    .update = _music_update,
+                    .mix = _music_mix
+                },
             .on_read = on_read,
             .on_seek = on_seek,
             .user_data = user_data,
@@ -198,18 +211,24 @@ void SL_music_speed(SL_Music_t *music, float speed)
     SL_props_speed(&music->props, speed);
 }
 
-void SL_music_play(SL_Music_t *music)
+static void _music_play(SL_Source_t *source)
 {
+    SL_Music_t *music = (SL_Music_t *)source;
+
     music->state = SL_MUSIC_STATE_PLAYING;
 }
 
-void SL_music_stop(SL_Music_t *music)
+static void _music_stop(SL_Source_t *source)
 {
+    SL_Music_t *music = (SL_Music_t *)source;
+    
     music->state = SL_MUSIC_STATE_STOPPED;
 }
 
-void SL_music_rewind(SL_Music_t *music)
+static void _music_rewind(SL_Source_t *source)
 {
+    SL_Music_t *music = (SL_Music_t *)source;
+    
     if (music->state != SL_MUSIC_STATE_STOPPED) {
         Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "can't rewind while playing");
         return;
@@ -218,8 +237,10 @@ void SL_music_rewind(SL_Music_t *music)
     _produce(music, true);
 }
 
-void SL_music_update(SL_Music_t *music, float delta_time)
+static void _music_update(SL_Source_t *source, float delta_time)
 {
+    SL_Music_t *music = (SL_Music_t *)source;
+    
     music->time += delta_time;
 
     if (music->state != SL_MUSIC_STATE_PLAYING) {
@@ -229,8 +250,10 @@ void SL_music_update(SL_Music_t *music, float delta_time)
     _produce(music, false);
 }
 
-void SL_music_mix(SL_Music_t *music, void *output, size_t frames_requested, const SL_Mix_t *groups)
+static void _music_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups)
 {
+    SL_Music_t *music = (SL_Music_t *)source;
+    
     if (music->state == SL_MUSIC_STATE_STOPPED) {
         return;
     }
