@@ -211,6 +211,21 @@ void SL_music_speed(SL_Music_t *music, float speed)
     SL_props_speed(&music->props, speed);
 }
 
+void SL_music_play(SL_Music_t *music)
+{
+    music->vtable.play(music);
+}
+
+void SL_music_stop(SL_Music_t *music)
+{
+    music->vtable.stop(music);
+}
+
+void SL_music_rewind(SL_Music_t *music)
+{
+    music->vtable.rewind(music);
+}
+
 static void _music_play(SL_Source_t *source)
 {
     SL_Music_t *music = (SL_Music_t *)source;
@@ -221,14 +236,14 @@ static void _music_play(SL_Source_t *source)
 static void _music_stop(SL_Source_t *source)
 {
     SL_Music_t *music = (SL_Music_t *)source;
-    
+
     music->state = SL_MUSIC_STATE_STOPPED;
 }
 
 static void _music_rewind(SL_Source_t *source)
 {
     SL_Music_t *music = (SL_Music_t *)source;
-    
+
     if (music->state != SL_MUSIC_STATE_STOPPED) {
         Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "can't rewind while playing");
         return;
@@ -240,7 +255,7 @@ static void _music_rewind(SL_Source_t *source)
 static void _music_update(SL_Source_t *source, float delta_time)
 {
     SL_Music_t *music = (SL_Music_t *)source;
-    
+
     music->time += delta_time;
 
     if (music->state != SL_MUSIC_STATE_PLAYING) {
@@ -253,7 +268,7 @@ static void _music_update(SL_Source_t *source, float delta_time)
 static void _music_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups)
 {
     SL_Music_t *music = (SL_Music_t *)source;
-    
+
     if (music->state == SL_MUSIC_STATE_STOPPED) {
         return;
     }

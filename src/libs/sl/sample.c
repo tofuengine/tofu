@@ -33,6 +33,12 @@
 
 #define LOG_CONTEXT "sl-sample"
 
+static void _sample_play(SL_Source_t *source);
+static void _sample_stop(SL_Source_t *source);
+static void _sample_rewind(SL_Source_t *source);
+static void _sample_update(SL_Source_t *source, float delta_time);
+static void _sample_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups);
+
 static inline size_t _consume(SL_Sample_t *sample, size_t frames_requested, void *output, size_t size_in_frames)
 {
     ma_data_converter *converter = &sample->props.converter;
@@ -84,6 +90,13 @@ SL_Sample_t *SL_sample_create(SL_Sample_Read_Callback_t on_read, void *user_data
     }
 
     *sample = (SL_Sample_t){
+            .vtable = (SL_Source_VTable_t){
+                    .play = _sample_play,
+                    .stop = _sample_stop,
+                    .rewind = _sample_rewind,
+                    .update = _sample_update,
+                    .mix = _sample_mix
+                },
             .time = 0.0f,
             .state = SL_SAMPLE_STATE_STOPPED
         };
@@ -155,18 +168,24 @@ void SL_sample_speed(SL_Sample_t *sample, float speed)
     SL_props_speed(&sample->props, speed);
 }
 
-void SL_sample_play(SL_Sample_t *sample)
+static void _sample_play(SL_Source_t *source)
 {
+    SL_Sample_t *sample = (SL_Sample_t *)source;
+
     sample->state = SL_SAMPLE_STATE_PLAYING;
 }
 
-void SL_sample_stop(SL_Sample_t *sample)
+static void _sample_stop(SL_Source_t *source)
 {
+    SL_Sample_t *sample = (SL_Sample_t *)source;
+
     sample->state = SL_SAMPLE_STATE_STOPPED;
 }
 
-void SL_sample_rewind(SL_Sample_t *sample)
+static void _sample_rewind(SL_Source_t *source)
 {
+    SL_Sample_t *sample = (SL_Sample_t *)source;
+
     if (sample->state != SL_SAMPLE_STATE_STOPPED) {
         Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "can't rewind while playing");
         return;
@@ -175,13 +194,17 @@ void SL_sample_rewind(SL_Sample_t *sample)
     buffer_reset(&sample->buffer);
 }
 
-void SL_sample_update(SL_Sample_t *sample, float delta_time)
+static void _sample_update(SL_Source_t *source, float delta_time)
 {
+    SL_Sample_t *sample = (SL_Sample_t *)source;
+
     sample->time += delta_time;
 }
 
-void SL_sample_mix(SL_Sample_t *sample, void *output, size_t frames_requested, const SL_Mix_t *groups)
+static void _sample_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups)
 {
+    SL_Sample_t *sample = (SL_Sample_t *)source;
+
     if (sample->state == SL_SAMPLE_STATE_STOPPED) {
         return;
     }

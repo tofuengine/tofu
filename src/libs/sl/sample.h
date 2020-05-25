@@ -43,6 +43,8 @@ typedef enum _SL_Sample_States_t {
 } SL_Sample_States_t;
 
 typedef struct _SL_Sample_t {
+    SL_Source_VTable_t vtable;
+
     Buffer_t buffer;
 
     SL_Props_t props;
@@ -59,12 +61,5 @@ extern void SL_sample_looped(SL_Sample_t *sample, bool looped);
 extern void SL_sample_gain(SL_Sample_t *sample, float gain);
 extern void SL_sample_pan(SL_Sample_t *sample, float pan);
 extern void SL_sample_speed(SL_Sample_t *sample, float speed);
-
-extern void SL_sample_play(SL_Sample_t *sample);
-extern void SL_sample_stop(SL_Sample_t *sample);
-extern void SL_sample_rewind(SL_Sample_t *sample);
-
-extern void SL_sample_update(SL_Sample_t *sample, float delta_time);
-extern void SL_sample_mix(SL_Sample_t *sample, void *output, size_t frames_requested, const SL_Mix_t *groups);
 
 #endif  /* __SL_SAMPLE_H__ */

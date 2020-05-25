@@ -25,6 +25,8 @@
 #ifndef __SL_COMMON_H__
 #define __SL_COMMON_H__
 
+#include <stddef.h>
+
 // We could use floating point format for simpler and more consistent mixing. Two channels are enough to have some
 // panning effects. A sample rate of 48kHz is the optimal choice since it's the internal default for many soundcards
 // and converting from lower sample rates is simpler.

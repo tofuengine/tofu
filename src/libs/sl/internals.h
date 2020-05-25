@@ -25,21 +25,9 @@
 #ifndef __SL_INTERNALS_H__
 #define __SL_INTERNALS_H__
 
-#include "common.h"
-
-#include <stddef.h>
-
-typedef struct _Source_VTable_t {
-//    void (*dtor)(SL_Source_t *source);
-    void (*play)(SL_Source_t *source);    
-    void (*stop)(SL_Source_t *source);
-    void (*rewind)(SL_Source_t *source);
-    void (*update)(SL_Source_t *source, float delta_time);
-    void (*mix)(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups);
-} Source_VTable_t;
-
 typedef struct _Source_t {
     SL_Source_VTable_t vtable;
+//    SL_Props_t props;
 } Source_t;
 
 #endif  /* __SL_INTERNALS_H__ */
