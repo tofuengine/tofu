@@ -43,7 +43,7 @@ typedef enum _SL_Music_States_t {
     SL_Music_States_t_CountOf
 } SL_Music_States_t;
 
-typedef struct _SL_Music_t { // TDO: make the type fully opaque?
+typedef struct _SL_Music_t { // TODO: make the type fully opaque?
     SL_Source_VTable_t vtable;
 
     SL_Music_Read_Callback_t on_read;
