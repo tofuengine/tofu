@@ -22,26 +22,32 @@
  * SOFTWARE.
  */
 
-#ifndef __SL_INTERNALS_H__
-#define __SL_INTERNALS_H__
+#ifndef __SL_SOURCE_H__
+#define __SL_SOURCE_H__
 
-#include "source.h"
-#include "props.h"
+#include <stdbool.h>
+#include <stddef.h>
 
-typedef struct _Source_VTable_t {
-    void (*dtor)(SL_Source_t *source);
-    void (*play)(SL_Source_t *source);
-    void (*stop)(SL_Source_t *source);
-    void (*rewind)(SL_Source_t *source);
-    bool (*is_playing)(SL_Source_t *source);
-    void (*update)(SL_Source_t *source, float delta_time);
-    void (*mix)(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups);
-} Source_VTable_t;
+typedef void SL_Source_t;
 
-typedef struct _Source_t {
-    Source_VTable_t vtable;
-    SL_Props_t props;
-    // TODO: add the state, too?
-} Source_t;
+extern void SL_source_destroy(SL_Source_t *source);
 
-#endif  /* __SL_INTERNALS_H__ */
+extern size_t SL_source_get_group(SL_Source_t *source);
+extern bool SL_source_get_looped(SL_Source_t *source);
+extern float SL_source_get_gain(SL_Source_t *source);
+extern float SL_source_get_pan(SL_Source_t *source);
+extern float SL_source_get_speed(SL_Source_t *source);
+
+extern void SL_source_set_group(SL_Source_t *source, size_t group);
+extern void SL_source_set_looped(SL_Source_t *source, bool looped);
+extern void SL_source_set_gain(SL_Source_t *source, float gain);
+extern void SL_source_set_pan(SL_Source_t *source, float pan);
+extern void SL_source_set_speed(SL_Source_t *source, float speed);
+
+extern void SL_source_play(SL_Source_t *source);
+extern void SL_source_stop(SL_Source_t *source);
+extern void SL_source_rewind(SL_Source_t *source);
+
+extern bool SL_source_is_playing(SL_Source_t *source);
+
+#endif  /* __SL_SOURCE_H__ */

@@ -27,48 +27,13 @@
 
 #include <miniaudio/miniaudio.h>
 
-#include "common.h"
-#include "props.h"
+#include "source.h"
 
-#include <stdbool.h>
 #include <stddef.h>
 
 typedef size_t (*SL_Music_Read_Callback_t)(void *user_data, void *output, size_t frames_requested);
 typedef void (*SL_Music_Seek_Callback_t)(void *user_data, size_t frame_offset);
 
-typedef enum _SL_Music_States_t {
-    SL_MUSIC_STATE_STOPPED,
-    SL_MUSIC_STATE_PLAYING,
-    SL_MUSIC_STATE_FINISHING,
-    SL_Music_States_t_CountOf
-} SL_Music_States_t;
-
-typedef struct _SL_Music_t { // TODO: make the type fully opaque?
-    SL_Source_VTable_t vtable;
-
-    SL_Music_Read_Callback_t on_read;
-    SL_Music_Seek_Callback_t on_seek;
-    void *user_data;
-
-    ma_pcm_rb buffer;
-
-    SL_Props_t props;
-
-    double time; // ???
-    volatile SL_Music_States_t state;
-} SL_Music_t;
-
-extern SL_Music_t *SL_music_create(SL_Music_Read_Callback_t on_read, SL_Music_Seek_Callback_t on_seek, void *user_data, ma_format format, ma_uint32 sample_rate, ma_uint32 channels);
-extern void SL_music_destroy(SL_Music_t *music);
-
-extern void SL_music_group(SL_Music_t *music, size_t group);
-extern void SL_music_looped(SL_Music_t *music, bool looped);
-extern void SL_music_gain(SL_Music_t *music, float gain);
-extern void SL_music_pan(SL_Music_t *music, float pan);
-extern void SL_music_speed(SL_Music_t *music, float speed);
-
-extern void SL_music_play(SL_Music_t *music);
-extern void SL_music_stop(SL_Music_t *music);
-extern void SL_music_rewind(SL_Music_t *music);
+extern SL_Source_t *SL_music_create(SL_Music_Read_Callback_t on_read, SL_Music_Seek_Callback_t on_seek, void *user_data, ma_format format, ma_uint32 sample_rate, ma_uint32 channels);
 
 #endif  /* __SL_MUSIC_H__ */

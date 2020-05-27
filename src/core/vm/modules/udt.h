@@ -100,7 +100,7 @@ typedef struct _Grid_Object_t {
 typedef struct _Music_Object_t {
     File_System_Handle_t *handle;
     drflac *decoder;
-    SL_Music_t *music;
+    SL_Source_t *source;
 } Music_Object_t;
 
 #endif  /* __MODULES_UDT_H__ */

@@ -24,6 +24,7 @@
 
 #include "music.h"
 
+#include "internals.h"
 #include "mix.h"
 
 #include <config.h>
@@ -41,13 +42,36 @@
 
 #define LOG_CONTEXT "sl-music"
 
+typedef enum _Music_States_t {
+    MUSIC_STATE_STOPPED,
+    MUSIC_STATE_PLAYING,
+    MUSIC_STATE_FINISHING,
+    Music_States_t_CountOf
+} Music_States_t;
+
+typedef struct _Music_t {
+    Source_VTable_t vtable;
+    SL_Props_t props;
+
+    SL_Music_Read_Callback_t on_read;
+    SL_Music_Seek_Callback_t on_seek;
+    void *user_data;
+
+    ma_pcm_rb buffer;
+
+    double time; // ???
+    volatile Music_States_t state;
+} Music_t;
+
+static void _music_dtor(SL_Source_t *source);
 static void _music_play(SL_Source_t *source);
 static void _music_stop(SL_Source_t *source);
 static void _music_rewind(SL_Source_t *source);
+static bool _music_is_playing(SL_Source_t *source);
 static void _music_update(SL_Source_t *source, float delta_time);
 static void _music_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups);
 
-static inline void _produce(SL_Music_t *music, bool reset)
+static inline void _produce(Music_t *music, bool reset)
 {
     ma_pcm_rb *buffer = &music->buffer;
 
@@ -72,7 +96,7 @@ static inline void _produce(SL_Music_t *music, bool reset)
 
         if (frames_written < frames_to_write) {
             if (!music->props.looped) {
-                music->state = SL_MUSIC_STATE_FINISHING;
+                music->state = MUSIC_STATE_FINISHING;
                 break;
             }
             music->on_seek(music->user_data, 0);
@@ -82,7 +106,7 @@ static inline void _produce(SL_Music_t *music, bool reset)
     }
 }
 
-static inline size_t _consume(SL_Music_t *music, size_t frames_requested, void *output, size_t size_in_frames)
+static inline size_t _consume(Music_t *music, size_t frames_requested, void *output, size_t size_in_frames)
 {
     ma_data_converter *converter = &music->props.converter;
     ma_pcm_rb *buffer = &music->buffer;
@@ -95,8 +119,8 @@ static inline size_t _consume(SL_Music_t *music, size_t frames_requested, void *
     while (frames_remaining > 0) { // Read as much data as possible, filling the buffer and eventually looping!
         ma_uint32 frames_available = ma_pcm_rb_available_read(buffer);
         if (frames_available == 0) {
-            if (music->state == SL_MUSIC_STATE_FINISHING) {
-                music->state = SL_MUSIC_STATE_STOPPED;
+            if (music->state == MUSIC_STATE_FINISHING) {
+                music->state = MUSIC_STATE_STOPPED;
             } else {
                 Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "buffer underrun, %d bytes missing (state #%d)", frames_remaining, music->state);
             }
@@ -124,19 +148,21 @@ static inline size_t _consume(SL_Music_t *music, size_t frames_requested, void *
     return frames_processed;
 }
 
-SL_Music_t *SL_music_create(SL_Music_Read_Callback_t on_read, SL_Music_Seek_Callback_t on_seek, void *user_data, ma_format format, ma_uint32 sample_rate, ma_uint32 channels)
+SL_Source_t *SL_music_create(SL_Music_Read_Callback_t on_read, SL_Music_Seek_Callback_t on_seek, void *user_data, ma_format format, ma_uint32 sample_rate, ma_uint32 channels)
 {
-    SL_Music_t *music = malloc(sizeof(SL_Music_t));
+    Music_t *music = malloc(sizeof(Music_t));
     if (!music) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate music structure");
         return NULL;
     }
 
-    *music = (SL_Music_t){
-            .vtable = (SL_Source_VTable_t){
+    *music = (Music_t){
+            .vtable = (Source_VTable_t){
+                    .dtor = _music_dtor,
                     .play = _music_play,
                     .stop = _music_stop,
                     .rewind = _music_rewind,
+                    .is_playing = _music_is_playing,
                     .update = _music_update,
                     .mix = _music_mix
                 },
@@ -144,7 +170,7 @@ SL_Music_t *SL_music_create(SL_Music_Read_Callback_t on_read, SL_Music_Seek_Call
             .on_seek = on_seek,
             .user_data = user_data,
             .time = 0.0f,
-            .state = SL_MUSIC_STATE_STOPPED
+            .state = MUSIC_STATE_STOPPED
         };
 
     ma_result result = ma_pcm_rb_init(format, channels, STREAMING_BUFFER_SIZE_IN_FRAMES, NULL, NULL, &music->buffer);
@@ -170,8 +196,10 @@ SL_Music_t *SL_music_create(SL_Music_Read_Callback_t on_read, SL_Music_Seek_Call
     return music;
 }
 
-void SL_music_destroy(SL_Music_t *music)
+static void _music_dtor(SL_Source_t *source)
 {
+    Music_t *music = (Music_t *)source;
+
     if (!music) {
         return;
     }
@@ -186,65 +214,25 @@ void SL_music_destroy(SL_Music_t *music)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music structure freed");
 }
 
-void SL_music_group(SL_Music_t *music, size_t group)
-{
-    SL_props_group(&music->props, group);
-}
-
-void SL_music_looped(SL_Music_t *music, bool looped)
-{
-    SL_props_looped(&music->props, looped);
-}
-
-void SL_music_gain(SL_Music_t *music, float gain)
-{
-    SL_props_gain(&music->props, gain);
-}
-
-void SL_music_pan(SL_Music_t *music, float pan)
-{
-    SL_props_pan(&music->props, pan);
-}
-
-void SL_music_speed(SL_Music_t *music, float speed)
-{
-    SL_props_speed(&music->props, speed);
-}
-
-void SL_music_play(SL_Music_t *music)
-{
-    music->vtable.play(music);
-}
-
-void SL_music_stop(SL_Music_t *music)
-{
-    music->vtable.stop(music);
-}
-
-void SL_music_rewind(SL_Music_t *music)
-{
-    music->vtable.rewind(music);
-}
-
 static void _music_play(SL_Source_t *source)
 {
-    SL_Music_t *music = (SL_Music_t *)source;
+    Music_t *music = (Music_t *)source;
 
-    music->state = SL_MUSIC_STATE_PLAYING;
+    music->state = MUSIC_STATE_PLAYING;
 }
 
 static void _music_stop(SL_Source_t *source)
 {
-    SL_Music_t *music = (SL_Music_t *)source;
+    Music_t *music = (Music_t *)source;
 
-    music->state = SL_MUSIC_STATE_STOPPED;
+    music->state = MUSIC_STATE_STOPPED;
 }
 
 static void _music_rewind(SL_Source_t *source)
 {
-    SL_Music_t *music = (SL_Music_t *)source;
+    Music_t *music = (Music_t *)source;
 
-    if (music->state != SL_MUSIC_STATE_STOPPED) {
+    if (music->state != MUSIC_STATE_STOPPED) {
         Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "can't rewind while playing");
         return;
     }
@@ -252,13 +240,20 @@ static void _music_rewind(SL_Source_t *source)
     _produce(music, true);
 }
 
+static bool _music_is_playing(SL_Source_t *source)
+{
+    Music_t *music = (Music_t *)source;
+
+    return music->state != MUSIC_STATE_STOPPED;
+}
+
 static void _music_update(SL_Source_t *source, float delta_time)
 {
-    SL_Music_t *music = (SL_Music_t *)source;
+    Music_t *music = (Music_t *)source;
 
     music->time += delta_time;
 
-    if (music->state != SL_MUSIC_STATE_PLAYING) {
+    if (music->state != MUSIC_STATE_PLAYING) {
         return;
     }
 
@@ -267,9 +262,9 @@ static void _music_update(SL_Source_t *source, float delta_time)
 
 static void _music_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups)
 {
-    SL_Music_t *music = (SL_Music_t *)source;
+    Music_t *music = (Music_t *)source;
 
-    if (music->state == SL_MUSIC_STATE_STOPPED) {
+    if (music->state == MUSIC_STATE_STOPPED) {
         return;
     }
 
@@ -280,7 +275,7 @@ static void _music_mix(SL_Source_t *source, void *output, size_t frames_requeste
     uint8_t *cursor = (uint8_t *)output;
 
     size_t frames_remaining = frames_requested;
-    while (frames_remaining > 0 && music->state != SL_MUSIC_STATE_STOPPED) { // State can change during the loop.
+    while (frames_remaining > 0 && music->state != MUSIC_STATE_STOPPED) { // State can change during the loop.
         size_t frames_processed = _consume(music, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES);
         cursor = mix_additive(cursor, buffer, frames_processed, mix);
         frames_remaining -= frames_processed;

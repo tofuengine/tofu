@@ -123,23 +123,22 @@ static int music_new(lua_State *L)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "decoder %p opened", decoder);
 
-    SL_Music_t *music = SL_music_create(_decoder_read, _decoder_seek, (void *)decoder, ma_format_s16, decoder->sampleRate, decoder->channels);
-    if (!music) { // We are forcing 16 bits-per-sample.
+    SL_Source_t *source = SL_music_create(_decoder_read, _decoder_seek, (void *)decoder, ma_format_s16, decoder->sampleRate, decoder->channels);
+    if (!source) { // We are forcing 16 bits-per-sample.
         free(decoder);
         FS_close(handle);
-        return luaL_error(L, "can't create music");
+        return luaL_error(L, "can't create source");
     }
 
     SL_Context_t *context = Audio_lock(audio);
-    SL_context_track(context, music);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music %p tracked for context %p", music, context);
+    SL_context_track(context, source);
     Audio_unlock(audio, context);
 
     Music_Object_t *self = (Music_Object_t *)lua_newuserdata(L, sizeof(Music_Object_t));
     *self = (Music_Object_t){
             .handle = handle,
             .decoder = decoder,
-            .music = music
+            .source = source
         };
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p allocated", self);
@@ -159,12 +158,11 @@ static int music_gc(lua_State *L)
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
     SL_Context_t *context = Audio_lock(audio);
-    SL_context_untrack(context, self->music);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music %p untracked", self->music);
+    SL_context_untrack(context, self->source);
     Audio_unlock(audio, context);
 
-    SL_music_destroy(self->music);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music %p destroyed", self->music);
+    SL_source_destroy(self->source);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p destroyed", self->source);
 
     FS_close(self->handle);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p closed", self->handle);
@@ -184,7 +182,7 @@ static int music_looped1(lua_State *L)
     LUAX_SIGNATURE_END
     Music_Object_t *self = (Music_Object_t *)LUAX_USERDATA(L, 1);
 
-    lua_pushboolean(L, self->music->props.looped);
+    lua_pushboolean(L, SL_source_get_looped(self->source));
 
     return 1;
 }
@@ -198,7 +196,7 @@ static int music_looped2(lua_State *L)
     Music_Object_t *self = (Music_Object_t *)LUAX_USERDATA(L, 1);
     bool looped = LUAX_BOOLEAN(L, 2);
 
-    SL_music_looped(self->music, looped);
+    SL_source_set_looped(self->source, looped);
 
     return 0;
 }
@@ -218,7 +216,7 @@ static int music_group1(lua_State *L)
     LUAX_SIGNATURE_END
     Music_Object_t *self = (Music_Object_t *)LUAX_USERDATA(L, 1);
 
-    lua_pushinteger(L, self->music->props.group);
+    lua_pushinteger(L, SL_source_get_group(self->source));
 
     return 1;
 }
@@ -232,7 +230,7 @@ static int music_group2(lua_State *L)
     Music_Object_t *self = (Music_Object_t *)LUAX_USERDATA(L, 1);
     size_t group = LUAX_INTEGER(L, 2);
 
-    SL_music_group(self->music, group);
+    SL_source_set_group(self->source, group);
 
     return 0;
 }
@@ -252,7 +250,7 @@ static int music_gain1(lua_State *L)
     LUAX_SIGNATURE_END
     Music_Object_t *self = (Music_Object_t *)LUAX_USERDATA(L, 1);
 
-    lua_pushnumber(L, self->music->props.gain);
+    lua_pushnumber(L, SL_source_get_gain(self->source));
 
     return 1;
 }
@@ -266,7 +264,7 @@ static int music_gain2(lua_State *L)
     Music_Object_t *self = (Music_Object_t *)LUAX_USERDATA(L, 1);
     float gain = LUAX_NUMBER(L, 2);
 
-    SL_music_gain(self->music, gain);
+    SL_source_set_gain(self->source, gain);
 
     return 0;
 }
@@ -286,7 +284,7 @@ static int music_pan1(lua_State *L)
     LUAX_SIGNATURE_END
     Music_Object_t *self = (Music_Object_t *)LUAX_USERDATA(L, 1);
 
-    lua_pushnumber(L, self->music->props.pan);
+    lua_pushnumber(L, SL_source_get_pan(self->source));
 
     return 1;
 }
@@ -300,7 +298,7 @@ static int music_pan2(lua_State *L)
     Music_Object_t *self = (Music_Object_t *)LUAX_USERDATA(L, 1);
     float pan = LUAX_NUMBER(L, 2);
 
-    SL_music_pan(self->music, pan);
+    SL_source_set_pan(self->source, pan);
 
     return 0;
 }
@@ -320,7 +318,7 @@ static int music_speed1(lua_State *L)
     LUAX_SIGNATURE_END
     Music_Object_t *self = (Music_Object_t *)LUAX_USERDATA(L, 1);
 
-    lua_pushnumber(L, self->music->props.speed);
+    lua_pushnumber(L, SL_source_get_speed(self->music));
 
     return 1;
 }
@@ -334,7 +332,7 @@ static int music_speed2(lua_State *L)
     Music_Object_t *self = (Music_Object_t *)LUAX_USERDATA(L, 1);
     float speed = LUAX_NUMBER(L, 2);
 
-    SL_music_speed(self->music, speed);
+    SL_source_set_speed(self->source, speed);
 
     return 0;
 }
@@ -354,7 +352,7 @@ static int music_play(lua_State *L)
     LUAX_SIGNATURE_END
     Music_Object_t *self = (Music_Object_t *)LUAX_USERDATA(L, 1);
 
-    SL_music_play(self->music);
+    SL_source_play(self->source);
 
     return 0;
 }
@@ -366,7 +364,7 @@ static int music_stop(lua_State *L)
     LUAX_SIGNATURE_END
     Music_Object_t *self = (Music_Object_t *)LUAX_USERDATA(L, 1);
 
-    SL_music_stop(self->music);
+    SL_source_stop(self->source);
 
     return 0;
 }
@@ -378,7 +376,7 @@ static int music_rewind(lua_State *L)
     LUAX_SIGNATURE_END
     Music_Object_t *self = (Music_Object_t *)LUAX_USERDATA(L, 1);
 
-    SL_music_rewind(self->music);
+    SL_source_rewind(self->source);
 
     return 0;
 }
@@ -390,7 +388,7 @@ static int music_is_playing(lua_State *L)
     LUAX_SIGNATURE_END
     Music_Object_t *self = (Music_Object_t *)LUAX_USERDATA(L, 1);
 
-    lua_pushboolean(L, self->music->state != SL_MUSIC_STATE_STOPPED);
+    lua_pushboolean(L, SL_source_is_playing(self->source));
 
     return 1;
 }

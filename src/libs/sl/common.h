@@ -43,15 +43,4 @@ typedef struct _SL_Mix_t {
     float left, right;
 } SL_Mix_t;
 
-typedef void SL_Source_t;
-
-typedef struct _SL_Source_VTable_t {
-//    void (*dtor)(SL_Source_t *source);
-    void (*play)(SL_Source_t *source);
-    void (*stop)(SL_Source_t *source);
-    void (*rewind)(SL_Source_t *source);
-    void (*update)(SL_Source_t *source, float delta_time);
-    void (*mix)(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups);
-} SL_Source_VTable_t;
-
 #endif  /* __SL_COMMON_H__ */
