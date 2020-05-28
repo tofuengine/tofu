@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_MUSIC_H__
-#define __MODULES_MUSIC_H__
+#ifndef __MODULES_SOURCE_H__
+#define __MODULES_SOURCE_H__
 
 #include <lua/lua.h>
 
-extern int music_loader(lua_State *L);
+extern int source_loader(lua_State *L);
 
-#endif  /* __MODULES_MUSIC_H__ */
+#endif  /* __MODULES_SOURCE_H__ */

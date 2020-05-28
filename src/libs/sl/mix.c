@@ -57,6 +57,8 @@ extern void *mix_additive(void *output, void *input, size_t frames, const SL_Mix
         *(dptr++) += *(sptr++) * left;
         *(dptr++) += *(sptr++) * right;
     }
+#else
+  #error Wrong internal format.
 #endif
     return dptr;
 }

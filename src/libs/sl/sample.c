@@ -101,8 +101,6 @@ static inline size_t _consume(Sample_t *sample, size_t frames_requested, void *o
 
 SL_Source_t *SL_sample_create(SL_Sample_Read_Callback_t on_read, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels)
 {
-    // TODO: test if the length is zero?
-
     Sample_t *sample = malloc(sizeof(Sample_t));
     if (!sample) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate sample structure");
@@ -122,6 +120,8 @@ SL_Source_t *SL_sample_create(SL_Sample_Read_Callback_t on_read, void *user_data
             .time = 0.0f,
             .state = SAMPLE_STATE_STOPPED
         };
+
+    // TODO: test if the length is zero or too long an fail!
 
     size_t bytes_per_frame = ma_get_bytes_per_frame(format, channels); // TODO: see below!
     bool initialized = buffer_init(&sample->buffer, length_in_frames, bytes_per_frame); // TODO: prepernd SL_ prefix and pass format/channels.

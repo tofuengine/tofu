@@ -28,7 +28,7 @@ local Input = require("tofu.events").Input
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
-local Music = require("tofu.sound").Music
+local Source = require("tofu.sound").Source
 
 local Main = Class.define()
 
@@ -38,9 +38,9 @@ function Main:__ctor()
   self.font = Font.default(0, 15)
 
   self.sources = {
---      Music.new("assets/44100_mono.wav"),
-      -- Music.new("assets/48000_2ch.wav"),
-      Music.new("assets/48000_2ch.flac"),
+--      Source.new("assets/44100_mono.wav"),
+      -- Source.new("assets/48000_2ch.wav"),
+      Source.new("assets/48000_2ch.flac", "streamed"),
     }
   self.sources[1]:looped(false)
 
