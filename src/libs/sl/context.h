@@ -26,6 +26,7 @@
 #define __SL_CONTEXT_H__
 
 #include "common.h"
+#include "source.h"
 
 #include <stddef.h>
 

@@ -27,39 +27,12 @@
 
 #include <miniaudio/miniaudio.h>
 
-#include "common.h"
-#include "buffer.h"
-#include "props.h"
+#include "source.h"
 
-#include <stdbool.h>
 #include <stddef.h>
 
 typedef size_t (*SL_Sample_Read_Callback_t)(void *user_data, void *output, size_t frames_requested);
 
-typedef enum _SL_Sample_States_t {
-    SL_SAMPLE_STATE_STOPPED,
-    SL_SAMPLE_STATE_PLAYING,
-    SL_Sample_States_t_CountOf
-} SL_Sample_States_t;
-
-typedef struct _SL_Sample_t {
-    SL_Source_VTable_t vtable;
-
-    Buffer_t buffer;
-
-    SL_Props_t props;
-
-    double time; // ???
-    volatile SL_Sample_States_t state;
-} SL_Sample_t;
-
-extern SL_Sample_t *SL_sample_create(SL_Sample_Read_Callback_t on_read, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels);
-extern void SL_sample_destroy(SL_Sample_t *sample);
-
-extern void SL_sample_group(SL_Sample_t *sample, size_t group); // FIXME: are these redudants? Mostly...
-extern void SL_sample_looped(SL_Sample_t *sample, bool looped);
-extern void SL_sample_gain(SL_Sample_t *sample, float gain);
-extern void SL_sample_pan(SL_Sample_t *sample, float pan);
-extern void SL_sample_speed(SL_Sample_t *sample, float speed);
+extern SL_Source_t *SL_sample_create(SL_Sample_Read_Callback_t on_read, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels);
 
 #endif  /* __SL_SAMPLE_H__ */

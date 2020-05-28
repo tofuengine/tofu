@@ -318,7 +318,7 @@ static int music_speed1(lua_State *L)
     LUAX_SIGNATURE_END
     Music_Object_t *self = (Music_Object_t *)LUAX_USERDATA(L, 1);
 
-    lua_pushnumber(L, SL_source_get_speed(self->music));
+    lua_pushnumber(L, SL_source_get_speed(self->source));
 
     return 1;
 }
