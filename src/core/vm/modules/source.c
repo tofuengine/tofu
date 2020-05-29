@@ -147,7 +147,7 @@ static int source_new(lua_State *L)
     SL_Source_t *source = type == SOURCE_TYPE_MUSIC
         ? SL_music_create(_decoder_read, _decoder_seek, (void *)decoder, INTERNAL_FORMAT, decoder->sampleRate, decoder->channels)
         : SL_sample_create(_decoder_read, (void *)decoder, decoder->totalPCMFrameCount, INTERNAL_FORMAT, decoder->sampleRate, decoder->channels);
-    if (!source) { // We are forcing 16 bits-per-sample.
+    if (!source) {
         drflac_close(decoder);
         FS_close(handle);
         return luaL_error(L, "can't create source");

@@ -68,15 +68,15 @@ void *buffer_lock(Buffer_t *buffer, size_t *requested)
     if (*requested > available) {
         *requested = available;
     }
-    return (uint8_t *)buffer->frames + buffer->index;
+    return (uint8_t *)buffer->frames + (buffer->index * buffer->bytes_per_frame);
 }
 
 void buffer_unlock(Buffer_t *buffer, void *ptr, size_t used)
 {
-    void *cursor = (uint8_t *)buffer->frames + buffer->index;
+    void *cursor = (uint8_t *)buffer->frames + (buffer->index * buffer->bytes_per_frame);
     if (ptr != cursor) {
         return;
     }
-    buffer->index += used * buffer->bytes_per_frame;
+    buffer->index += used;
 //    ASSERT(buffer->index <= buffer->size);
 }
