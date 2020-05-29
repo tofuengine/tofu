@@ -31,6 +31,8 @@
 #include <libs/log.h>
 #include <libs/stb.h>
 
+#define SAMPLE_MAX_LENGTH_IN_SECONDS    10.0f
+
 #define MIXING_BUFFER_SIZE_IN_FRAMES    128
 
 #define LOG_CONTEXT "sl-sample"
@@ -123,7 +125,17 @@ SL_Source_t *SL_sample_create(SL_Read_Callback_t on_read, void *user_data, size_
             .state = SAMPLE_STATE_STOPPED
         };
 
-    // TODO: test if the length is zero or too long an fail!
+    if (length_in_frames == 0) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "sample length is zero");
+        free(sample);
+        return NULL;
+    }
+    float duration = (float)length_in_frames / (float)sample_rate;
+    if (duration > SAMPLE_MAX_LENGTH_IN_SECONDS) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "sample is too long (%.2f seconds)", duration);
+        free(sample);
+        return NULL;
+    }
 
     size_t bytes_per_frame = ma_get_bytes_per_frame(format, channels); // TODO: see below!
     bool initialized = buffer_init(&sample->buffer, length_in_frames, bytes_per_frame); // TODO: prepernd SL_ prefix and pass format/channels.
