@@ -40,7 +40,7 @@ function Main:__ctor()
   self.sources = {
 --      Source.new("assets/44100_mono.wav"),
       -- Source.new("assets/48000_2ch.wav"),
-      Source.new("assets/48000_2ch.flac", "streamed"),
+      Source.new("assets/48000_2ch.flac", Source.SAMPLE),
     }
   self.sources[1]:looped(false)
 

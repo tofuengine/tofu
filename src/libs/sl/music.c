@@ -24,6 +24,7 @@
 
 #include "music.h"
 
+#include "common.h"
 #include "internals.h"
 #include "mix.h"
 
@@ -53,8 +54,8 @@ typedef struct _Music_t {
     Source_VTable_t vtable;
     SL_Props_t props;
 
-    SL_Music_Read_Callback_t on_read;
-    SL_Music_Seek_Callback_t on_seek;
+    SL_Read_Callback_t on_read;
+    SL_Seek_Callback_t on_seek;
     void *user_data;
 
     ma_pcm_rb buffer;
@@ -148,7 +149,7 @@ static inline size_t _consume(Music_t *music, size_t frames_requested, void *out
     return frames_processed;
 }
 
-SL_Source_t *SL_music_create(SL_Music_Read_Callback_t on_read, SL_Music_Seek_Callback_t on_seek, void *user_data, ma_format format, ma_uint32 sample_rate, ma_uint32 channels)
+SL_Source_t *SL_music_create(SL_Read_Callback_t on_read, SL_Seek_Callback_t on_seek, void *user_data, ma_format format, ma_uint32 sample_rate, ma_uint32 channels)
 {
     Music_t *music = malloc(sizeof(Music_t));
     if (!music) {

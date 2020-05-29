@@ -27,13 +27,9 @@
 
 #include <miniaudio/miniaudio.h>
 
+#include "common.h"
 #include "source.h"
 
-#include <stddef.h>
-
-typedef size_t (*SL_Music_Read_Callback_t)(void *user_data, void *output, size_t frames_requested);
-typedef void (*SL_Music_Seek_Callback_t)(void *user_data, size_t frame_offset);
-
-extern SL_Source_t *SL_music_create(SL_Music_Read_Callback_t on_read, SL_Music_Seek_Callback_t on_seek, void *user_data, ma_format format, ma_uint32 sample_rate, ma_uint32 channels);
+extern SL_Source_t *SL_music_create(SL_Read_Callback_t on_read, SL_Seek_Callback_t on_seek, void *user_data, ma_format format, ma_uint32 sample_rate, ma_uint32 channels);
 
 #endif  /* __SL_MUSIC_H__ */

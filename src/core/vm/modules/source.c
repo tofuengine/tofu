@@ -34,6 +34,11 @@
 #define DR_FLAC_IMPLEMENTATION
 #include <dr_libs/dr_flac.h>
 
+typedef enum _Source_Types_t {
+    SOURCE_TYPE_MUSIC,
+    SOURCE_TYPE_SAMPLE,
+} Source_Type_t;
+
 #if SL_BYTES_PER_FRAME == 2
   #define INTERNAL_FORMAT   ma_format_s16
 #elif SL_BYTES_PER_FRAME == 4
@@ -72,10 +77,16 @@ static const struct luaL_Reg _source_functions[] = {
     { NULL, NULL }
 };
 
+static const luaX_Const _source_constants[] = {
+    { "MUSIC", LUA_CT_INTEGER, { .i = SOURCE_TYPE_MUSIC } },
+    { "SAMPLE", LUA_CT_INTEGER, { .i = SOURCE_TYPE_SAMPLE } },
+    { NULL }
+};
+
 int source_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, NULL, _source_functions, NULL, nup, META_TABLE);
+    return luaX_newmodule(L, NULL, _source_functions, _source_constants, nup, META_TABLE);
 }
 
 static size_t _handle_read(void *user_data, void *buffer, size_t bytes_to_read)
@@ -112,10 +123,10 @@ static int source_new(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const char *file = LUAX_STRING(L, 1);
-    const char *mode = LUAX_OPTIONAL_STRING(L, 2, "streamed");
+    Source_Type_t type = (Source_Type_t)LUAX_OPTIONAL_INTEGER(L, 2, SOURCE_TYPE_MUSIC);
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
     File_System_t *file_system = (File_System_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
@@ -133,14 +144,15 @@ static int source_new(lua_State *L)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "decoder %p opened", decoder);
 
-    SL_Source_t *source = strcasecmp(mode, "streamed") == 0
+    SL_Source_t *source = type == SOURCE_TYPE_MUSIC
         ? SL_music_create(_decoder_read, _decoder_seek, (void *)decoder, INTERNAL_FORMAT, decoder->sampleRate, decoder->channels)
         : SL_sample_create(_decoder_read, (void *)decoder, decoder->totalPCMFrameCount, INTERNAL_FORMAT, decoder->sampleRate, decoder->channels);
     if (!source) { // We are forcing 16 bits-per-sample.
-        free(decoder);
+        drflac_close(decoder);
         FS_close(handle);
         return luaL_error(L, "can't create source");
     }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p create, type #%d", source, type);
 
     SL_Context_t *context = Audio_lock(audio);
     SL_context_track(context, source);

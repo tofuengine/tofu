@@ -99,13 +99,15 @@ static inline size_t _consume(Sample_t *sample, size_t frames_requested, void *o
     return frames_processed;
 }
 
-SL_Source_t *SL_sample_create(SL_Sample_Read_Callback_t on_read, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels)
+SL_Source_t *SL_sample_create(SL_Read_Callback_t on_read, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels)
 {
     Sample_t *sample = malloc(sizeof(Sample_t));
     if (!sample) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate sample structure");
         return NULL;
     }
+
+    // TODO: sanity check if music is 2ch and sample 1ch?
 
     *sample = (Sample_t){
             .vtable = (Source_VTable_t){
@@ -161,6 +163,9 @@ static void _sample_dtor(SL_Source_t *source)
 
     SL_props_deinit(&sample->props);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sample properties deinitialized");
+
+    buffer_deinit(&sample->buffer);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sample buffer deinitialized");
 
     free(sample);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sample structure freed");

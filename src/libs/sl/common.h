@@ -39,6 +39,9 @@
 #define SL_LAST_GROUP           (SL_GROUPS_AMOUNT - 1)
 #define SL_DEFAULT_GROUP        SL_FIRST_GROUP
 
+typedef size_t (*SL_Read_Callback_t)(void *user_data, void *output, size_t frames_requested);
+typedef void (*SL_Seek_Callback_t)(void *user_data, size_t frame_offset);
+
 typedef struct _SL_Mix_t {
     float left, right;
 } SL_Mix_t;
