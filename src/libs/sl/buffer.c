@@ -59,12 +59,12 @@ void buffer_reset(Buffer_t *buffer)
 
 size_t buffer_available(const Buffer_t *buffer)
 {
-    return (buffer->length - buffer->index) / buffer->bytes_per_frame;
+    return buffer->length - buffer->index;
 }
 
 void *buffer_lock(Buffer_t *buffer, size_t *requested)
 {
-    size_t available = (buffer->length - buffer->index) / buffer->bytes_per_frame;
+    size_t available = buffer->length - buffer->index;
     if (*requested > available) {
         *requested = available;
     }
