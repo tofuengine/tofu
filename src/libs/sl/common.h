@@ -25,6 +25,8 @@
 #ifndef __SL_COMMON_H__
 #define __SL_COMMON_H__
 
+#include <stddef.h>
+
 // We could use floating point format for simpler and more consistent mixing. Two channels are enough to have some
 // panning effects. A sample rate of 48kHz is the optimal choice since it's the internal default for many soundcards
 // and converting from lower sample rates is simpler.
@@ -36,6 +38,9 @@
 #define SL_FIRST_GROUP          0
 #define SL_LAST_GROUP           (SL_GROUPS_AMOUNT - 1)
 #define SL_DEFAULT_GROUP        SL_FIRST_GROUP
+
+typedef size_t (*SL_Read_Callback_t)(void *user_data, void *output, size_t frames_requested);
+typedef void (*SL_Seek_Callback_t)(void *user_data, size_t frame_offset);
 
 typedef struct _SL_Mix_t {
     float left, right;

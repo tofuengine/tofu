@@ -26,33 +26,25 @@
 #define __SL_CONTEXT_H__
 
 #include "common.h"
-#include "sample.h"
-#include "music.h"
+#include "source.h"
 
-typedef struct _SL_Source_t {
-    int type;
-    union {
-        SL_Music_t *music;
-        SL_Sample_t *sample;
-    } instance;
-} SL_Source_t;
+#include <stddef.h>
 
 typedef struct _SL_Context_t {
     SL_Mix_t groups[SL_GROUPS_AMOUNT];
-    SL_Music_t **streams;
+    SL_Source_t **sources;
 } SL_Context_t;
 
 extern SL_Context_t *SL_context_create(void);
 extern void SL_context_destroy(SL_Context_t *context);
 
-extern void SL_context_update(SL_Context_t *context, float delta_time);
-extern void SL_context_mix(SL_Context_t *context, void *output, size_t frames_requested);
-
 extern void SL_context_tweak(SL_Context_t *context, size_t group, float balance, float gain);
 
-extern void SL_context_track(SL_Context_t *context, SL_Music_t *stream);
-extern void SL_context_untrack(SL_Context_t *context, SL_Music_t *stream);
+extern void SL_context_track(SL_Context_t *context, SL_Source_t *source);
+extern void SL_context_untrack(SL_Context_t *context, SL_Source_t *source);
 
+extern void SL_context_update(SL_Context_t *context, float delta_time);
+extern void SL_context_mix(SL_Context_t *context, void *output, size_t frames_requested);
 extern void SL_context_stop(SL_Context_t *context);
 
 #endif  /* __SL_CONTEXT_H__ */

@@ -1,4 +1,3 @@
-
 /*
  * MIT License
  *
@@ -23,32 +22,26 @@
  * SOFTWARE.
  */
 
-#ifndef __BUFFER_H__
-#define __BUFFER_H__
+#ifndef __SL_INTERNALS_H__
+#define __SL_INTERNALS_H__
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+#include "source.h"
+#include "props.h"
 
-// We are using `miniaudio`'s ring-buffer, but we could also go for an in-house implementation
-// https://embedjournal.com/implementing-circular-buffer-embedded-c/
-// https://embeddedartistry.com/blog/2017/05/17/creating-a-circular-buffer-in-c-and-c/
+typedef struct _Source_VTable_t {
+    void (*dtor)(SL_Source_t *source);
+    void (*play)(SL_Source_t *source);
+    void (*stop)(SL_Source_t *source);
+    void (*rewind)(SL_Source_t *source);
+    bool (*is_playing)(SL_Source_t *source);
+    void (*update)(SL_Source_t *source, float delta_time);
+    void (*mix)(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups);
+} Source_VTable_t;
 
-typedef struct _Buffer_t {
-    void *frames;
-    size_t bytes_per_frame;
-    size_t index;
-    size_t length;
-} Buffer_t;
+typedef struct _Source_t {
+    Source_VTable_t vtable;
+    SL_Props_t props;
+    // TODO: add the state, too?
+} Source_t;
 
-// https://english.stackexchange.com/questions/25941/is-there-a-general-rule-for-the-prefixation-of-un-and-de-to-words
-extern bool buffer_init(Buffer_t *buffer, size_t length, size_t bytes_per_frame);
-extern void buffer_deinit(Buffer_t *buffer);
-
-extern void buffer_reset(Buffer_t *buffer);
-
-extern size_t buffer_available(const Buffer_t *buffer);
-extern void *buffer_lock(Buffer_t *buffer, size_t *requested);
-extern void buffer_unlock(Buffer_t *buffer, void *ptr, size_t used);
-
-#endif  /* __BUFFER_H__ */
+#endif  /* __SL_INTERNALS_H__ */

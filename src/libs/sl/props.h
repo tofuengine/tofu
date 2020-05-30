@@ -34,7 +34,7 @@
 
 typedef struct _SL_Props_t {
     size_t group;
-    bool looped;
+    bool looping;
     float gain;
     float pan;
     float speed;
@@ -47,7 +47,7 @@ extern bool SL_props_init(SL_Props_t *props, ma_format format, ma_uint32 sample_
 extern void SL_props_deinit(SL_Props_t *props);
 
 extern void SL_props_group(SL_Props_t *props, size_t group);
-extern void SL_props_looped(SL_Props_t *props, bool looped);
+extern void SL_props_looping(SL_Props_t *props, bool looping);
 extern void SL_props_gain(SL_Props_t *props, float gain);
 extern void SL_props_pan(SL_Props_t *props, float pan);
 extern void SL_props_speed(SL_Props_t *props, float speed);

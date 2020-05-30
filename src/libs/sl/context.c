@@ -24,53 +24,15 @@
 
 #include "context.h"
 
-#include <config.h>
+#include "internals.h"
+#include "mix.h"
+
 #include <libs/log.h>
 #include <libs/stb.h>
 
 #include <math.h>
 
-#ifndef M_PI
-  #define M_PI      3.14159265358979323846f
-#endif
-#ifndef M_PI_2
-  #define M_PI_2    1.57079632679489661923f
-#endif
-
 #define LOG_CONTEXT "sl"
-
-// The balance law differs from the panning law in the fact that when on center the channels are 0dB.
-static inline SL_Mix_t _precompute_mix(float balance, float gain)
-{
-#if __SL_BALANCE_LAW__ == BALANCE_LAW_LINEAR
-    if (balance < 0.0f) {
-        return (SL_Mix_t){ .left = gain, .right = (1.0f + balance) * gain };
-    } else
-    if (balance > 0.0f) {
-        return (SL_Mix_t){ .left = (1.0f - balance) * gain, .right = gain };
-    } else {
-        return (SL_Mix_t){ .left = gain, .right = gain };
-    }
-#elif __SL_BALANCE_LAW__ == BALANCE_LAW_SINCOS
-    if (balance < 0.0f) {
-        return (SL_Mix_t){ .left = gain, .right = sinf((1.0f + balance) * M_PI_2) * gain };
-    } else
-    if (balance > 0.0f) {
-        return (SL_Mix_t){ .left = sinf((1.0f - balance) * M_PI_2) * gain, .right = gain };
-    } else {
-        return (SL_Mix_t){ .left = gain, .right = gain };
-    }
-#elif __SL_BALANCE_LAW__ == BALANCE_LAW_SQRT
-    if (balance < 0.0f) {
-        return (SL_Mix_t){ .left = gain, .right = sqrtf(1.0f + balance) * gain };
-    } else
-    if (balance > 0.0f) {
-        return (SL_Mix_t){ .left = sqrtf(1.0f - balance) * gain, .right = gain };
-    } else {
-        return (SL_Mix_t){ .left = gain, .right = gain };
-    }
-#endif
-}
 
 SL_Context_t *SL_context_create(void)
 {
@@ -80,11 +42,11 @@ SL_Context_t *SL_context_create(void)
     }
 
     *context = (SL_Context_t){
-            .streams = NULL
+            .sources = NULL
         };
 
     for (size_t i = 0; i < SL_GROUPS_AMOUNT; ++i) {
-        context->groups[i] = _precompute_mix(0.0f, 1.0f);
+        context->groups[i] = mix_precompute_balance(0.0f, 1.0f);
     }
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context created");
@@ -97,19 +59,49 @@ void SL_context_destroy(SL_Context_t *context)
         return;
     }
 
-    arrfree(context->streams);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context groups freed");
+    arrfree(context->sources);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context sources freed");
 
     free(context);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context freed");
 }
 
+void SL_context_tweak(SL_Context_t *context, size_t group, float balance, float gain)
+{
+    context->groups[group] = mix_precompute_balance(balance, gain);
+}
+
+void SL_context_track(SL_Context_t *context, SL_Source_t *source)
+{
+    size_t count = arrlen(context->sources);
+    for (size_t i = 0; i < count; ++i) {
+        if (context->sources == source) {
+            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "source %p already tracked for context %p", source, context);
+            return;
+        }
+    }
+    arrpush(context->sources, source);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p tracked for context %p", source, context);
+}
+
+void SL_context_untrack(SL_Context_t *context, SL_Source_t *source)
+{
+    size_t count = arrlen(context->sources);
+    for (size_t i = 0; i < count; ++i) {
+        if (context->sources[i] == source) {
+            arrdel(context->sources, i);
+            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p untracked for context %p", source, context);
+            break;
+        }
+    }
+}
+
 void SL_context_update(SL_Context_t *context, float delta_time)
 {
-    SL_Music_t **current = context->streams;
-    for (int count = arrlen(context->streams); count; --count) {
-        SL_Music_t *stream = *(current++);
-        SL_music_update(stream, delta_time);
+    SL_Source_t **current = context->sources;
+    for (int count = arrlen(context->sources); count; --count) {
+        SL_Source_t *source = *(current++);
+        ((Source_t *)source)->vtable.update(source, delta_time);
     }
 }
 
@@ -117,45 +109,18 @@ void SL_context_mix(SL_Context_t *context, void *output, size_t frames_requested
 {
     const SL_Mix_t *groups = context->groups;
 
-    SL_Music_t **current = context->streams;
-    for (int count = arrlen(context->streams); count; --count) {
-        SL_Music_t *stream = *(current++);
-        SL_music_mix(stream, output, frames_requested, groups); // FIXME: pass the dereferences mix? API violation?
-    }
-}
-
-void SL_context_tweak(SL_Context_t *context, size_t group, float balance, float gain)
-{
-    context->groups[group] = _precompute_mix(balance, gain);
-}
-
-void SL_context_track(SL_Context_t *context, SL_Music_t *stream)
-{
-    size_t count = arrlen(context->streams);
-    for (size_t i = 0; i < count; ++i) {
-        if (context->streams[i] == stream) {
-            return;
-        }
-    }
-    arrpush(context->streams, stream);
-}
-
-void SL_context_untrack(SL_Context_t *context, SL_Music_t *stream)
-{
-    size_t count = arrlen(context->streams);
-    for (size_t i = 0; i < count; ++i) {
-        if (context->streams[i] == stream) {
-            arrdel(context->streams, i);
-            break;
-        }
+    SL_Source_t **current = context->sources;
+    for (int count = arrlen(context->sources); count; --count) {
+        SL_Source_t *source = *(current++);
+        ((Source_t *)source)->vtable.mix(source, output, frames_requested, groups); // FIXME: pass the dereferences mix? API violation?
     }
 }
 
 void SL_context_stop(SL_Context_t *context)
 {
-    SL_Music_t **current = context->streams;
-    for (int count = arrlen(context->streams); count; --count) {
-        SL_Music_t *stream = *(current++);
-        SL_music_stop(stream);
+    SL_Source_t **current = context->sources;
+    for (int count = arrlen(context->sources); count; --count) {
+        SL_Source_t *source = *(current++);
+        ((Source_t *)source)->vtable.stop(source);
     }
 }

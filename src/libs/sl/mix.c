@@ -36,7 +36,7 @@
   #define M_PI_2    1.57079632679489661923f
 #endif
 
-extern void *mix_additive(void *output, void *input, size_t frames, const SL_Mix_t mix)
+extern void mix_additive(void *output, void *input, size_t frames, const SL_Mix_t mix)
 {
     const float left = mix.left; // Apply panning and gain to the data.
     const float right = mix.right;
@@ -57,11 +57,12 @@ extern void *mix_additive(void *output, void *input, size_t frames, const SL_Mix
         *(dptr++) += *(sptr++) * left;
         *(dptr++) += *(sptr++) * right;
     }
+#else
+  #error Wrong internal format.
 #endif
-    return dptr;
 }
 
-SL_Mix_t mix_precompute(float pan, float gain)
+SL_Mix_t mix_precompute_pan(float pan, float gain)
 {
 #if __SL_PANNING_LAW__ == PANNING_LAW_CONSTANT_GAIN
     const float theta = (pan + 1.0f) * 0.5f; // [-1, 1] -> [0 , 1]
@@ -74,3 +75,37 @@ SL_Mix_t mix_precompute(float pan, float gain)
     return (SL_Mix_t){ .left = sqrtf(1.0f - theta) * gain, .right = sqrtf(theta) * gain }; // powf(theta, 0.5)
 #endif
 }
+
+// The balance law differs from the panning law in the fact that when on center the channels are 0dB.
+SL_Mix_t mix_precompute_balance(float balance, float gain)
+{
+#if __SL_BALANCE_LAW__ == BALANCE_LAW_LINEAR
+    if (balance < 0.0f) {
+        return (SL_Mix_t){ .left = gain, .right = (1.0f + balance) * gain };
+    } else
+    if (balance > 0.0f) {
+        return (SL_Mix_t){ .left = (1.0f - balance) * gain, .right = gain };
+    } else {
+        return (SL_Mix_t){ .left = gain, .right = gain };
+    }
+#elif __SL_BALANCE_LAW__ == BALANCE_LAW_SINCOS
+    if (balance < 0.0f) {
+        return (SL_Mix_t){ .left = gain, .right = sinf((1.0f + balance) * M_PI_2) * gain };
+    } else
+    if (balance > 0.0f) {
+        return (SL_Mix_t){ .left = sinf((1.0f - balance) * M_PI_2) * gain, .right = gain };
+    } else {
+        return (SL_Mix_t){ .left = gain, .right = gain };
+    }
+#elif __SL_BALANCE_LAW__ == BALANCE_LAW_SQRT
+    if (balance < 0.0f) {
+        return (SL_Mix_t){ .left = gain, .right = sqrtf(1.0f + balance) * gain };
+    } else
+    if (balance > 0.0f) {
+        return (SL_Mix_t){ .left = sqrtf(1.0f - balance) * gain, .right = gain };
+    } else {
+        return (SL_Mix_t){ .left = gain, .right = gain };
+    }
+#endif
+}
+

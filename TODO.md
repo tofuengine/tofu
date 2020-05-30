@@ -67,6 +67,8 @@
     * tried miniaudio ringbuffer, but it's easier to buffer myself.
   * no OOP, just grouping the shared properties.
   * naming: create/destroy, register/deregister, init(ialize)/deinit(ialize). "un-" prefix for the adjetives, "de-" for verbs.
+  * at last I'm going for a full opaque approach, like for the file-system (somewhat hybrid)
+    * cool part is that I can have a single "Sound.Source" in Lua!
 
 ```java
   //do panning

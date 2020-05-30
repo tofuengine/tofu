@@ -24,19 +24,46 @@
 
 #include "sample.h"
 
+#include "internals.h"
 #include "mix.h"
 
 #include <libs/log.h>
 #include <libs/stb.h>
 
+#define SAMPLE_MAX_LENGTH_IN_SECONDS    10.0f
+
 #define MIXING_BUFFER_SIZE_IN_FRAMES    128
 
 #define LOG_CONTEXT "sl-sample"
 
-static inline size_t _consume(SL_Sample_t *sample, size_t frames_requested, void *output, size_t size_in_frames)
+typedef enum _Sample_States_t {
+    SAMPLE_STATE_STOPPED,
+    SAMPLE_STATE_PLAYING,
+    Sample_States_t_CountOf
+} Sample_States_t;
+
+typedef struct _Sample_t {
+    Source_VTable_t vtable;
+    SL_Props_t props;
+
+    ma_audio_buffer buffer;
+
+    double time; // ???
+    volatile Sample_States_t state;
+} Sample_t;
+
+static void _sample_dtor(SL_Source_t *source);
+static void _sample_play(SL_Source_t *source);
+static void _sample_stop(SL_Source_t *source);
+static void _sample_rewind(SL_Source_t *source);
+static bool _sample_is_playing(SL_Source_t *source);
+static void _sample_update(SL_Source_t *source, float delta_time);
+static void _sample_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups);
+
+static inline size_t _consume(Sample_t *sample, size_t frames_requested, void *output, size_t size_in_frames)
 {
     ma_data_converter *converter = &sample->props.converter;
-    Buffer_t *buffer = &sample->buffer;
+    ma_audio_buffer *buffer = &sample->buffer;
 
     size_t frames_processed = 0;
 
@@ -46,14 +73,15 @@ static inline size_t _consume(SL_Sample_t *sample, size_t frames_requested, void
     while (frames_remaining > 0) { // Read as much data as possible, filling the buffer and eventually looping!
         ma_uint64 frames_to_convert = ma_data_converter_get_required_input_frame_count(converter, frames_remaining);
 
-        size_t frames_available = frames_to_convert;
-        void *read_buffer = buffer_lock(buffer, &frames_available);
+        void* read_buffer;
+        ma_uint64 frames_available = frames_to_convert;
+        ma_audio_buffer_map(buffer, &read_buffer, &frames_available); // No need to check the result, can't fail.
 
         ma_uint64 frames_consumed = frames_available;
         ma_uint64 frames_generated = frames_remaining;
         ma_data_converter_process_pcm_frames(converter, read_buffer, &frames_consumed, cursor, &frames_generated);
 
-        buffer_unlock(buffer, read_buffer, frames_consumed);
+        ma_audio_buffer_unmap(buffer, frames_consumed); // Ditto.
 
         cursor += frames_generated * SL_CHANNELS_PER_FRAME * SL_BYTES_PER_FRAME;
 
@@ -61,10 +89,10 @@ static inline size_t _consume(SL_Sample_t *sample, size_t frames_requested, void
         frames_remaining -= frames_generated;
 
         if (frames_available == 0) {
-            if (sample->props.looped) {
-                buffer_reset(&sample->buffer);
+            if (sample->props.looping) {
+                ma_audio_buffer_seek_to_pcm_frame(buffer, 0);
             } else {
-                sample->state = SL_SAMPLE_STATE_STOPPED;
+                sample->state = SAMPLE_STATE_STOPPED;
                 break;
             }
         }
@@ -73,42 +101,62 @@ static inline size_t _consume(SL_Sample_t *sample, size_t frames_requested, void
     return frames_processed;
 }
 
-SL_Sample_t *SL_sample_create(SL_Sample_Read_Callback_t on_read, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels)
+SL_Source_t *SL_sample_create(SL_Read_Callback_t on_read, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels)
 {
-    // TODO: test if the length is zero?
-
-    SL_Sample_t *sample = malloc(sizeof(SL_Sample_t));
+    Sample_t *sample = malloc(sizeof(Sample_t));
     if (!sample) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate sample structure");
         return NULL;
     }
 
-    *sample = (SL_Sample_t){
+    // TODO: sanity check if music is 2ch and sample 1ch?
+
+    *sample = (Sample_t){
+            .vtable = (Source_VTable_t){
+                    .dtor = _sample_dtor,
+                    .play = _sample_play,
+                    .stop = _sample_stop,
+                    .rewind = _sample_rewind,
+                    .is_playing = _sample_is_playing,
+                    .update = _sample_update,
+                    .mix = _sample_mix
+                },
             .time = 0.0f,
-            .state = SL_SAMPLE_STATE_STOPPED
+            .state = SAMPLE_STATE_STOPPED
         };
 
-    size_t bytes_per_frame = ma_get_bytes_per_frame(format, channels); // TODO: see below!
-
-    bool initialized = buffer_init(&sample->buffer, length_in_frames, bytes_per_frame); // TODO: prepernd SL_ prefix and pass format/channels.
-    if (!initialized) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d bytes for buffer", length_in_frames * bytes_per_frame);
+    if (length_in_frames == 0) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "sample length is zero");
+        free(sample);
+        return NULL;
+    }
+    float duration = (float)length_in_frames / (float)sample_rate;
+    if (duration > SAMPLE_MAX_LENGTH_IN_SECONDS) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "sample is too long (%.2f seconds)", duration);
         free(sample);
         return NULL;
     }
 
-    size_t frames_read = on_read(user_data, sample->buffer.frames, length_in_frames);
+    ma_audio_buffer_config config = ma_audio_buffer_config_init(format, channels, length_in_frames, NULL, NULL);
+    ma_result result = ma_audio_buffer_init_copy(&config, &sample->buffer); // NOTE: It will allocate but won't copy.
+    if (result != MA_SUCCESS) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d frames for buffer", length_in_frames);
+        free(sample);
+        return NULL;
+    }
+
+    size_t frames_read = on_read(user_data, (void *)sample->buffer.pData, length_in_frames); // HACK: we access the audio-buffer memory straight!
     if (frames_read != length_in_frames) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d frames for sample (%d available)", length_in_frames, frames_read);
-        buffer_deinit(&sample->buffer);
+        ma_audio_buffer_uninit(&sample->buffer);
         free(sample);
         return NULL;
     }
 
-    initialized = SL_props_init(&sample->props, format, sample_rate, channels);
+    bool initialized = SL_props_init(&sample->props, format, sample_rate, channels);
     if (!initialized) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize sample properties");
-        buffer_deinit(&sample->buffer);
+        ma_audio_buffer_uninit(&sample->buffer);
         free(sample);
         return NULL;
     }
@@ -117,8 +165,10 @@ SL_Sample_t *SL_sample_create(SL_Sample_Read_Callback_t on_read, void *user_data
     return sample;
 }
 
-void SL_sample_destroy(SL_Sample_t *sample)
+static void _sample_dtor(SL_Source_t *source)
 {
+    Sample_t *sample = (Sample_t *)source;
+
     if (!sample) {
         return;
     }
@@ -126,63 +176,58 @@ void SL_sample_destroy(SL_Sample_t *sample)
     SL_props_deinit(&sample->props);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sample properties deinitialized");
 
+    ma_audio_buffer_uninit(&sample->buffer);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sample buffer deinitialized");
+
     free(sample);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sample structure freed");
 }
 
-void SL_sample_group(SL_Sample_t *sample, size_t group)
+static void _sample_play(SL_Source_t *source)
 {
-    SL_props_group(&sample->props, group);
+    Sample_t *sample = (Sample_t *)source;
+
+    sample->state = SAMPLE_STATE_PLAYING;
 }
 
-void SL_sample_looped(SL_Sample_t *sample, bool looped)
+static void _sample_stop(SL_Source_t *source)
 {
-    SL_props_looped(&sample->props, looped);
+    Sample_t *sample = (Sample_t *)source;
+
+    sample->state = SAMPLE_STATE_STOPPED;
 }
 
-void SL_sample_gain(SL_Sample_t *sample, float gain)
+static void _sample_rewind(SL_Source_t *source)
 {
-    SL_props_gain(&sample->props, gain);
-}
+    Sample_t *sample = (Sample_t *)source;
 
-void SL_sample_pan(SL_Sample_t *sample, float pan)
-{
-    SL_props_pan(&sample->props, pan);
-}
-
-void SL_sample_speed(SL_Sample_t *sample, float speed)
-{
-    SL_props_speed(&sample->props, speed);
-}
-
-void SL_sample_play(SL_Sample_t *sample)
-{
-    sample->state = SL_SAMPLE_STATE_PLAYING;
-}
-
-void SL_sample_stop(SL_Sample_t *sample)
-{
-    sample->state = SL_SAMPLE_STATE_STOPPED;
-}
-
-void SL_sample_rewind(SL_Sample_t *sample)
-{
-    if (sample->state != SL_SAMPLE_STATE_STOPPED) {
+    if (sample->state != SAMPLE_STATE_STOPPED) {
         Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "can't rewind while playing");
         return;
     }
 
-    buffer_reset(&sample->buffer);
+    ma_audio_buffer_seek_to_pcm_frame(&sample->buffer, 0);
 }
 
-void SL_sample_update(SL_Sample_t *sample, float delta_time)
+static bool _sample_is_playing(SL_Source_t *source)
 {
+    Sample_t *sample = (Sample_t *)source;
+
+    return sample->state != SAMPLE_STATE_STOPPED;
+}
+
+static void _sample_update(SL_Source_t *source, float delta_time)
+{
+    Sample_t *sample = (Sample_t *)source;
+
     sample->time += delta_time;
 }
 
-void SL_sample_mix(SL_Sample_t *sample, void *output, size_t frames_requested, const SL_Mix_t *groups)
+static void _sample_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups)
 {
-    if (sample->state == SL_SAMPLE_STATE_STOPPED) {
+    Sample_t *sample = (Sample_t *)source;
+
+    if (sample->state == SAMPLE_STATE_STOPPED) {
         return;
     }
 
@@ -193,9 +238,10 @@ void SL_sample_mix(SL_Sample_t *sample, void *output, size_t frames_requested, c
     uint8_t *cursor = (uint8_t *)output;
 
     size_t frames_remaining = frames_requested;
-    while (frames_remaining > 0 && sample->state != SL_SAMPLE_STATE_STOPPED) { // State can change during the loop.
+    while (frames_remaining > 0 && sample->state != SAMPLE_STATE_STOPPED) { // State can change during the loop.
         size_t frames_processed = _consume(sample, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES);
-        cursor = mix_additive(cursor, buffer, frames_processed, mix);
+        mix_additive(cursor, buffer, frames_processed, mix);
+        cursor += frames_processed * SL_CHANNELS_PER_FRAME * SL_BYTES_PER_FRAME;
         frames_remaining -= frames_processed;
     }
 }
