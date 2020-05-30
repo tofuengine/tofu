@@ -317,7 +317,7 @@ typedef drflac_uint32        drflac_bool32;
 #endif
 
 DRFLAC_API void drflac_version(drflac_uint32* pMajor, drflac_uint32* pMinor, drflac_uint32* pRevision);
-DRFLAC_API const char* drflac_version_string();
+DRFLAC_API const char* drflac_version_string(void);
 
 /*
 As data is read from the client it is placed into an internal buffer for fast access. This controls the size of that buffer. Larger values means more speed,
@@ -1671,7 +1671,7 @@ DRFLAC_API void drflac_version(drflac_uint32* pMajor, drflac_uint32* pMinor, drf
     }
 }
 
-DRFLAC_API const char* drflac_version_string()
+DRFLAC_API const char* drflac_version_string(void)
 {
     return DRFLAC_VERSION_STRING;
 }

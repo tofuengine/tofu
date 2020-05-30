@@ -246,7 +246,7 @@ typedef drmp3_int32 drmp3_result;
 
 
 DRMP3_API void drmp3_version(drmp3_uint32* pMajor, drmp3_uint32* pMinor, drmp3_uint32* pRevision);
-DRMP3_API const char* drmp3_version_string();
+DRMP3_API const char* drmp3_version_string(void);
 
 
 /*
@@ -542,7 +542,7 @@ DRMP3_API void drmp3_version(drmp3_uint32* pMajor, drmp3_uint32* pMinor, drmp3_u
     }
 }
 
-DRMP3_API const char* drmp3_version_string()
+DRMP3_API const char* drmp3_version_string(void)
 {
     return DRMP3_VERSION_STRING;
 }

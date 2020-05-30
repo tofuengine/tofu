@@ -288,7 +288,7 @@ typedef drwav_int32 drwav_result;
 #define DRWAV_SEQUENTIAL            0x00000001
 
 DRWAV_API void drwav_version(drwav_uint32* pMajor, drwav_uint32* pMinor, drwav_uint32* pRevision);
-DRWAV_API const char* drwav_version_string();
+DRWAV_API const char* drwav_version_string(void);
 
 typedef enum
 {
@@ -1063,7 +1063,7 @@ DRWAV_API void drwav_version(drwav_uint32* pMajor, drwav_uint32* pMinor, drwav_u
     }
 }
 
-DRWAV_API const char* drwav_version_string()
+DRWAV_API const char* drwav_version_string(void)
 {
     return DRWAV_VERSION_STRING;
 }
