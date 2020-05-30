@@ -240,7 +240,8 @@ static void _sample_mix(SL_Source_t *source, void *output, size_t frames_request
     size_t frames_remaining = frames_requested;
     while (frames_remaining > 0 && sample->state != SAMPLE_STATE_STOPPED) { // State can change during the loop.
         size_t frames_processed = _consume(sample, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES);
-        cursor = mix_additive(cursor, buffer, frames_processed, mix);
+        mix_additive(cursor, buffer, frames_processed, mix);
+        cursor += frames_processed * SL_CHANNELS_PER_FRAME * SL_BYTES_PER_FRAME;
         frames_remaining -= frames_processed;
     }
 }

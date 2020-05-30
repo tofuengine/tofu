@@ -36,7 +36,7 @@
   #define M_PI_2    1.57079632679489661923f
 #endif
 
-extern void *mix_additive(void *output, void *input, size_t frames, const SL_Mix_t mix)
+extern void mix_additive(void *output, void *input, size_t frames, const SL_Mix_t mix)
 {
     const float left = mix.left; // Apply panning and gain to the data.
     const float right = mix.right;
@@ -60,7 +60,6 @@ extern void *mix_additive(void *output, void *input, size_t frames, const SL_Mix
 #else
   #error Wrong internal format.
 #endif
-    return dptr;
 }
 
 SL_Mix_t mix_precompute_pan(float pan, float gain)
