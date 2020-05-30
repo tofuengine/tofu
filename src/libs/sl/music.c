@@ -96,7 +96,7 @@ static inline void _produce(Music_t *music, bool reset)
         ma_pcm_rb_commit_write(buffer, frames_written, write_buffer);
 
         if (frames_written < frames_to_write) {
-            if (!music->props.looped) {
+            if (!music->props.looping) {
                 music->state = MUSIC_STATE_FINISHING;
                 break;
             }

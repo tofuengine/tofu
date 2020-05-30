@@ -49,7 +49,7 @@
 bool SL_props_init(SL_Props_t *props, ma_format format, ma_uint32 sample_rate, ma_uint32 channels)
 {
     *props = (SL_Props_t){
-            .looped = false,
+            .looping = false,
             .gain = 1.0,
             .pan = 0.0f,
             .speed = 1.0f,
@@ -78,9 +78,9 @@ void SL_props_group(SL_Props_t *props, size_t group)
     props->group = group;
 }
 
-void SL_props_looped(SL_Props_t *props, bool looped)
+void SL_props_looping(SL_Props_t *props, bool looping)
 {
-    props->looped = looped;
+    props->looping = looping;
 }
 
 void SL_props_gain(SL_Props_t *props, float gain)

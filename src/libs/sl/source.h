@@ -33,13 +33,13 @@ typedef void SL_Source_t;
 extern void SL_source_destroy(SL_Source_t *source);
 
 extern size_t SL_source_get_group(SL_Source_t *source);
-extern bool SL_source_get_looped(SL_Source_t *source);
+extern bool SL_source_get_looping(SL_Source_t *source);
 extern float SL_source_get_gain(SL_Source_t *source);
 extern float SL_source_get_pan(SL_Source_t *source);
 extern float SL_source_get_speed(SL_Source_t *source);
 
 extern void SL_source_set_group(SL_Source_t *source, size_t group);
-extern void SL_source_set_looped(SL_Source_t *source, bool looped);
+extern void SL_source_set_looping(SL_Source_t *source, bool looping);
 extern void SL_source_set_gain(SL_Source_t *source, float gain);
 extern void SL_source_set_pan(SL_Source_t *source, float pan);
 extern void SL_source_set_speed(SL_Source_t *source, float speed);

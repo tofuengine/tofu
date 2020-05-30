@@ -53,7 +53,7 @@ typedef enum _Source_Types_t {
 static int source_new(lua_State *L);
 static int source_gc(lua_State *L);
 static int source_group(lua_State *L);
-static int source_looped(lua_State *L);
+static int source_looping(lua_State *L);
 static int source_gain(lua_State *L);
 static int source_pan(lua_State *L);
 static int source_speed(lua_State *L);
@@ -66,7 +66,7 @@ static const struct luaL_Reg _source_functions[] = {
     { "new", source_new },
     { "__gc", source_gc },
     { "group", source_group },
-    { "looped", source_looped },
+    { "looping", source_looping },
     { "gain", source_gain },
     { "pan", source_pan },
     { "speed", source_speed },
@@ -199,37 +199,37 @@ static int source_gc(lua_State *L)
     return 0;
 }
 
-static int source_looped1(lua_State *L)
+static int source_looping1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
 
-    lua_pushboolean(L, SL_source_get_looped(self->source));
+    lua_pushboolean(L, SL_source_get_looping(self->source));
 
     return 1;
 }
 
-static int source_looped2(lua_State *L)
+static int source_looping2(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TBOOLEAN)
     LUAX_SIGNATURE_END
     Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
-    bool looped = LUAX_BOOLEAN(L, 2);
+    bool looping = LUAX_BOOLEAN(L, 2);
 
-    SL_source_set_looped(self->source, looped);
+    SL_source_set_looping(self->source, looping);
 
     return 0;
 }
 
-static int source_looped(lua_State *L)
+static int source_looping(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, source_looped1)
-        LUAX_OVERLOAD_ARITY(2, source_looped2)
+        LUAX_OVERLOAD_ARITY(1, source_looping1)
+        LUAX_OVERLOAD_ARITY(2, source_looping2)
     LUAX_OVERLOAD_END
 }
 

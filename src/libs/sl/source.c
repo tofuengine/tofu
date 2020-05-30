@@ -37,9 +37,9 @@ size_t SL_source_get_group(SL_Source_t *source)
     return ((Source_t *)source)->props.group;
 }
 
-bool SL_source_get_looped(SL_Source_t *source)
+bool SL_source_get_looping(SL_Source_t *source)
 {
-    return ((Source_t *)source)->props.looped;
+    return ((Source_t *)source)->props.looping;
 }
 
 float SL_source_get_gain(SL_Source_t *source)
@@ -62,9 +62,9 @@ void SL_source_set_group(SL_Source_t *source, size_t group)
     SL_props_group(&((Source_t *)source)->props, group);
 }
 
-void SL_source_set_looped(SL_Source_t *source, bool looped)
+void SL_source_set_looping(SL_Source_t *source, bool looping)
 {
-    SL_props_looped(&((Source_t *)source)->props, looped);
+    SL_props_looping(&((Source_t *)source)->props, looping);
 }
 
 void SL_source_set_gain(SL_Source_t *source, float gain)

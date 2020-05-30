@@ -89,7 +89,7 @@ static inline size_t _consume(Sample_t *sample, size_t frames_requested, void *o
         frames_remaining -= frames_generated;
 
         if (frames_available == 0) {
-            if (sample->props.looped) {
+            if (sample->props.looping) {
                 ma_audio_buffer_seek_to_pcm_frame(buffer, 0);
             } else {
                 sample->state = SAMPLE_STATE_STOPPED;
