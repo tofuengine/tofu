@@ -75,13 +75,13 @@ static inline size_t _consume(Sample_t *sample, size_t frames_requested, void *o
 
         void* read_buffer;
         ma_uint64 frames_available = frames_to_convert;
-        ma_audio_buffer_map(buffer, &read_buffer, &frames_available); // FIXME: check result?
+        ma_audio_buffer_map(buffer, &read_buffer, &frames_available); // No need to check the result, can't fail.
 
         ma_uint64 frames_consumed = frames_available;
         ma_uint64 frames_generated = frames_remaining;
         ma_data_converter_process_pcm_frames(converter, read_buffer, &frames_consumed, cursor, &frames_generated);
 
-        ma_audio_buffer_unmap(buffer, frames_consumed);
+        ma_audio_buffer_unmap(buffer, frames_consumed); // Ditto.
 
         cursor += frames_generated * SL_CHANNELS_PER_FRAME * SL_BYTES_PER_FRAME;
 
