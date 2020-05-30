@@ -27,7 +27,6 @@
 #include "internals.h"
 #include "mix.h"
 
-#include <config.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 
