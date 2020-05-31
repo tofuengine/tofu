@@ -60,6 +60,23 @@ static bool _sample_is_playing(SL_Source_t *source);
 static void _sample_update(SL_Source_t *source, float delta_time);
 static void _sample_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups);
 
+static inline bool _produce(Sample_t *sample, SL_Read_Callback_t on_read, void *user_data, size_t length_in_frames)
+{
+    ma_audio_buffer *buffer = &sample->buffer;
+
+    void *write_buffer;
+    ma_uint64 frames_available = length_in_frames;
+    ma_audio_buffer_map(buffer, &write_buffer, &frames_available); // No need to check the result, can't fail.
+
+    size_t frames_produced = on_read(user_data, write_buffer, length_in_frames);
+
+    ma_audio_buffer_unmap(buffer, frames_produced); // Ditto.
+
+    ma_audio_buffer_seek_to_pcm_frame(buffer, 0);
+
+    return frames_produced == length_in_frames;
+}
+
 static inline size_t _consume(Sample_t *sample, size_t frames_requested, void *output, size_t size_in_frames)
 {
     ma_data_converter *converter = &sample->props.converter;
@@ -73,7 +90,7 @@ static inline size_t _consume(Sample_t *sample, size_t frames_requested, void *o
     while (frames_remaining > 0) { // Read as much data as possible, filling the buffer and eventually looping!
         ma_uint64 frames_to_convert = ma_data_converter_get_required_input_frame_count(converter, frames_remaining);
 
-        void* read_buffer;
+        void *read_buffer;
         ma_uint64 frames_available = frames_to_convert;
         ma_audio_buffer_map(buffer, &read_buffer, &frames_available); // No need to check the result, can't fail.
 
@@ -145,9 +162,9 @@ SL_Source_t *SL_sample_create(SL_Read_Callback_t on_read, void *user_data, size_
         return NULL;
     }
 
-    size_t frames_read = on_read(user_data, (void *)sample->buffer.pData, length_in_frames); // HACK: we access the audio-buffer memory straight!
-    if (frames_read != length_in_frames) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d frames for sample (%d available)", length_in_frames, frames_read);
+    bool produced = _produce(sample, on_read, user_data, length_in_frames);
+    if (!produced) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d frames for sample", length_in_frames);
         ma_audio_buffer_uninit(&sample->buffer);
         free(sample);
         return NULL;
