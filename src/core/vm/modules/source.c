@@ -110,7 +110,11 @@ static drflac_bool32 _handle_seek(void *user_data, int offset, drflac_seek_origi
 static size_t _decoder_read(void *user_data, void *output, size_t frames_requested)
 {
     drflac *decoder = (drflac *)user_data;
-    return drflac_read_pcm_frames_s16(decoder, frames_requested, output); // Read from the internal format to s16, forced.
+#if SL_BYTES_PER_FRAME == 2
+    return drflac_read_pcm_frames_s16(decoder, frames_requested, output);
+#elif SL_BYTES_PER_FRAME == 4
+    return drflac_read_pcm_frames_f32(decoder, frames_requested, output);
+#endif
 }
 
 static void _decoder_seek(void *user_data, size_t frame_offset)
