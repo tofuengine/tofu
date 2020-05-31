@@ -75,7 +75,7 @@ void SL_context_track(SL_Context_t *context, SL_Source_t *source)
 {
     size_t count = arrlen(context->sources);
     for (size_t i = 0; i < count; ++i) {
-        if (context->sources == source) {
+        if (context->sources[i] == source) {
             Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "source %p already tracked for context %p", source, context);
             return;
         }

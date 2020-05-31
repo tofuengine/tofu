@@ -45,7 +45,7 @@ extern void mix_additive(void *output, void *input, size_t frames, const SL_Mix_
     int16_t *sptr = input;
     int16_t *dptr = output;
 
-    for (size_t i = 0; i < frames; ++i) {
+    for (size_t i = frames; i; --i) {
         *(dptr++) += (int16_t)((float)*(sptr++) * left);
         *(dptr++) += (int16_t)((float)*(sptr++) * right);
     }
@@ -53,7 +53,7 @@ extern void mix_additive(void *output, void *input, size_t frames, const SL_Mix_
     float *sptr = input;
     float *dptr = output;
 
-    for (size_t i = 0; i < frames; ++i) {
+    for (size_t i = frames; i; --i) {
         *(dptr++) += *(sptr++) * left;
         *(dptr++) += *(sptr++) * right;
     }

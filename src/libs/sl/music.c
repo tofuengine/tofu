@@ -91,7 +91,7 @@ static inline void _produce(Music_t *music, bool reset)
         void *write_buffer;
         ma_pcm_rb_acquire_write(buffer, &frames_to_write, &write_buffer);
 
-        size_t frames_written = music->on_read(music->user_data, write_buffer, frames_to_write);
+        size_t frames_written = music->on_read(music->user_data, write_buffer, frames_to_write); // TODO: check for I/O errors!
 
         ma_pcm_rb_commit_write(buffer, frames_written, write_buffer);
 
