@@ -69,6 +69,8 @@
   * naming: create/destroy, register/deregister, init(ialize)/deinit(ialize). "un-" prefix for the adjetives, "de-" for verbs.
   * at last I'm going for a full opaque approach, like for the file-system (somewhat hybrid)
     * cool part is that I can have a single "Sound.Source" in Lua!
+  * updated the miniaudio library, only to find out that an audio-buffer has been implemented, pretty much identical to mine (which was already designed similar to the ring-buffer). Tiny hack to read the data, at first.
+  * little stuttering in the Linux audio, will check if it depends on eOS.
 
 ```java
   //do panning
