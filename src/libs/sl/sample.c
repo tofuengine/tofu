@@ -120,13 +120,21 @@ static inline size_t _consume(Sample_t *sample, size_t frames_requested, void *o
 
 SL_Source_t *SL_sample_create(SL_Read_Callback_t on_read, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels)
 {
+    if (channels != 1) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "samples need to be 1 channel");
+        return NULL;
+    }
+    float duration = (float)length_in_frames / (float)sample_rate;
+    if (duration > SAMPLE_MAX_LENGTH_IN_SECONDS) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "sample is too long (%.2f seconds)", duration);
+        return NULL;
+    }
+
     Sample_t *sample = malloc(sizeof(Sample_t));
     if (!sample) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate sample structure");
         return NULL;
     }
-
-    // TODO: sanity check if music is 2ch and sample 1ch?
 
     *sample = (Sample_t){
             .vtable = (Source_VTable_t){
@@ -141,18 +149,6 @@ SL_Source_t *SL_sample_create(SL_Read_Callback_t on_read, void *user_data, size_
             .time = 0.0f,
             .state = SAMPLE_STATE_STOPPED
         };
-
-    if (length_in_frames == 0) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "sample length is zero");
-        free(sample);
-        return NULL;
-    }
-    float duration = (float)length_in_frames / (float)sample_rate;
-    if (duration > SAMPLE_MAX_LENGTH_IN_SECONDS) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "sample is too long (%.2f seconds)", duration);
-        free(sample);
-        return NULL;
-    }
 
     ma_audio_buffer_config config = ma_audio_buffer_config_init(format, channels, length_in_frames, NULL, NULL);
     ma_result result = ma_audio_buffer_init_copy(&config, &sample->buffer); // NOTE: It will allocate but won't copy.
@@ -248,7 +244,7 @@ static void _sample_mix(SL_Source_t *source, void *output, size_t frames_request
         return;
     }
 
-    uint8_t buffer[MIXING_BUFFER_SIZE_IN_FRAMES * SL_CHANNELS_PER_FRAME * SL_BYTES_PER_FRAME];
+    uint8_t buffer[MIXING_BUFFER_SIZE_IN_FRAMES * SL_BYTES_PER_FRAME]; // Samples are 1 channel only.
 
     const SL_Mix_t mix = SL_props_precompute(&sample->props, groups);
 
@@ -257,7 +253,7 @@ static void _sample_mix(SL_Source_t *source, void *output, size_t frames_request
     size_t frames_remaining = frames_requested;
     while (frames_remaining > 0 && sample->state != SAMPLE_STATE_STOPPED) { // State can change during the loop.
         size_t frames_processed = _consume(sample, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES);
-        mix_additive(cursor, buffer, frames_processed, mix);
+        mix_1on2_additive(cursor, buffer, frames_processed, mix);
         cursor += frames_processed * SL_CHANNELS_PER_FRAME * SL_BYTES_PER_FRAME;
         frames_remaining -= frames_processed;
     }

@@ -148,9 +148,20 @@ static int source_new(lua_State *L)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "decoder %p opened", decoder);
 
+    size_t length_in_frames = decoder->totalPCMFrameCount;
+    if (length_in_frames == 0) {
+        drflac_close(decoder);
+        FS_close(handle);
+        return luaL_error(L, "source w/ zero length");
+    }
+    size_t channels = decoder->channels;
+    size_t sample_rate = decoder->sampleRate;
+    size_t bits_per_sample = decoder->bitsPerSample;
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source `%s` w/ %d frames, %d channels, %dHz, %d bits", file, length_in_frames, channels, sample_rate, bits_per_sample);
+
     SL_Source_t *source = type == SOURCE_TYPE_MUSIC
-        ? SL_music_create(_decoder_read, _decoder_seek, (void *)decoder, INTERNAL_FORMAT, decoder->sampleRate, decoder->channels)
-        : SL_sample_create(_decoder_read, (void *)decoder, decoder->totalPCMFrameCount, INTERNAL_FORMAT, decoder->sampleRate, decoder->channels);
+        ? SL_music_create(_decoder_read, _decoder_seek, (void *)decoder, length_in_frames, INTERNAL_FORMAT, sample_rate, channels)
+        : SL_sample_create(_decoder_read, (void *)decoder, length_in_frames, INTERNAL_FORMAT, sample_rate, channels);
     if (!source) {
         drflac_close(decoder);
         FS_close(handle);

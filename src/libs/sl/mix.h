@@ -29,7 +29,8 @@
 
 #include <stddef.h>
 
-extern void mix_additive(void *output, void *input, size_t frames, const SL_Mix_t mix);
+extern void mix_2on2_additive(void *output, void *input, size_t frames, const SL_Mix_t mix);
+extern void mix_1on2_additive(void *output, void *input, size_t frames, const SL_Mix_t mix);
 extern SL_Mix_t mix_precompute_pan(float pan, float gain);
 extern SL_Mix_t mix_precompute_balance(float balance, float gain);
 

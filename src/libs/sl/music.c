@@ -149,7 +149,7 @@ static inline size_t _consume(Music_t *music, size_t frames_requested, void *out
     return frames_processed;
 }
 
-SL_Source_t *SL_music_create(SL_Read_Callback_t on_read, SL_Seek_Callback_t on_seek, void *user_data, ma_format format, ma_uint32 sample_rate, ma_uint32 channels)
+SL_Source_t *SL_music_create(SL_Read_Callback_t on_read, SL_Seek_Callback_t on_seek, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels)
 {
     Music_t *music = malloc(sizeof(Music_t));
     if (!music) {
@@ -278,7 +278,7 @@ static void _music_mix(SL_Source_t *source, void *output, size_t frames_requeste
     size_t frames_remaining = frames_requested;
     while (frames_remaining > 0 && music->state != MUSIC_STATE_STOPPED) { // State can change during the loop.
         size_t frames_processed = _consume(music, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES);
-        mix_additive(cursor, buffer, frames_processed, mix);
+        mix_2on2_additive(cursor, buffer, frames_processed, mix);
         cursor += frames_processed * SL_CHANNELS_PER_FRAME * SL_BYTES_PER_FRAME;
         frames_remaining -= frames_processed;
     }

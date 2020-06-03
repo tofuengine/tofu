@@ -36,7 +36,7 @@
   #define M_PI_2    1.57079632679489661923f
 #endif
 
-extern void mix_additive(void *output, void *input, size_t frames, const SL_Mix_t mix)
+void mix_2on2_additive(void *output, void *input, size_t frames, const SL_Mix_t mix)
 {
     const float left = mix.left; // Apply panning and gain to the data.
     const float right = mix.right;
@@ -56,6 +56,34 @@ extern void mix_additive(void *output, void *input, size_t frames, const SL_Mix_
     for (size_t i = frames; i; --i) {
         *(dptr++) += *(sptr++) * left;
         *(dptr++) += *(sptr++) * right;
+    }
+#else
+  #error Wrong internal format.
+#endif
+}
+
+void mix_1on2_additive(void *output, void *input, size_t frames, const SL_Mix_t mix)
+{
+    const float left = mix.left; // Apply panning and gain to the data.
+    const float right = mix.right;
+
+#if SL_BYTES_PER_FRAME == 2
+    int16_t *sptr = input;
+    int16_t *dptr = output;
+
+    for (size_t i = frames; i; --i) {
+        const int16_t v = *(sptr++);
+        *(dptr++) += (int16_t)((float)v * left);
+        *(dptr++) += (int16_t)((float)v * right);
+    }
+#elif SL_BYTES_PER_FRAME == 4
+    float *sptr = input;
+    float *dptr = output;
+
+    for (size_t i = frames; i; --i) {
+        const float v = *(sptr++);
+        *(dptr++) += v * left;
+        *(dptr++) += v * right;
     }
 #else
   #error Wrong internal format.
