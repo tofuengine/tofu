@@ -71,6 +71,7 @@
     * cool part is that I can have a single "Sound.Source" in Lua!
   * updated the miniaudio library, only to find out that an audio-buffer has been implemented, pretty much identical to mine (which was already designed similar to the ring-buffer). Tiny hack to read the data, at first.
   * little stuttering in the Linux audio, will check if it depends on eOS.
+    * turned out it depended on the VM itself. Adding the line `sound.virtualDev = "hdaudio"` to the VMX file solved it.
 
 ```java
   //do panning
