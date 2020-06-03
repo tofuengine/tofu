@@ -58,6 +58,8 @@ typedef struct _Music_t {
     SL_Seek_Callback_t on_seek;
     void *user_data;
 
+    size_t length_in_frames;
+
     ma_pcm_rb buffer;
 
     double time; // ???
@@ -170,6 +172,7 @@ SL_Source_t *SL_music_create(SL_Read_Callback_t on_read, SL_Seek_Callback_t on_s
             .on_read = on_read,
             .on_seek = on_seek,
             .user_data = user_data,
+            .length_in_frames = length_in_frames,
             .time = 0.0f,
             .state = MUSIC_STATE_STOPPED
         };

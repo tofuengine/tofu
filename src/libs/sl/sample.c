@@ -46,6 +46,12 @@ typedef struct _Sample_t {
     Source_VTable_t vtable;
     SL_Props_t props;
 
+    SL_Read_Callback_t on_read;
+    SL_Seek_Callback_t on_seek;
+    void *user_data;
+
+    size_t length_in_frames;
+
     ma_audio_buffer buffer;
 
     double time; // ???
@@ -60,21 +66,21 @@ static bool _sample_is_playing(SL_Source_t *source);
 static void _sample_update(SL_Source_t *source, float delta_time);
 static void _sample_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups);
 
-static inline bool _produce(Sample_t *sample, SL_Read_Callback_t on_read, void *user_data, size_t length_in_frames)
+static inline bool _produce(Sample_t *sample)
 {
     ma_audio_buffer *buffer = &sample->buffer;
 
     void *write_buffer;
-    ma_uint64 frames_available = length_in_frames;
+    ma_uint64 frames_available = sample->length_in_frames;
     ma_audio_buffer_map(buffer, &write_buffer, &frames_available); // No need to check the result, can't fail.
 
-    size_t frames_produced = on_read(user_data, write_buffer, length_in_frames);
+    size_t frames_produced = sample->on_read(sample->user_data, write_buffer, frames_available);
 
     ma_audio_buffer_unmap(buffer, frames_produced); // Ditto.
 
     ma_audio_buffer_seek_to_pcm_frame(buffer, 0);
 
-    return frames_produced == length_in_frames;
+    return frames_produced == sample->length_in_frames;
 }
 
 static inline size_t _consume(Sample_t *sample, size_t frames_requested, void *output, size_t size_in_frames)
@@ -146,6 +152,10 @@ SL_Source_t *SL_sample_create(SL_Read_Callback_t on_read, void *user_data, size_
                     .update = _sample_update,
                     .mix = _sample_mix
                 },
+            .on_read = on_read,
+//            .on_seek = on_seek,
+            .user_data = user_data,
+            .length_in_frames = length_in_frames,
             .time = 0.0f,
             .state = SAMPLE_STATE_STOPPED
         };
@@ -158,7 +168,7 @@ SL_Source_t *SL_sample_create(SL_Read_Callback_t on_read, void *user_data, size_
         return NULL;
     }
 
-    bool produced = _produce(sample, on_read, user_data, length_in_frames);
+    bool produced = _produce(sample);
     if (!produced) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d frames for sample", length_in_frames);
         ma_audio_buffer_uninit(&sample->buffer);
