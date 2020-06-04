@@ -36,15 +36,10 @@
 
 #define LOG_CONTEXT "sl-sample"
 
-typedef enum _Sample_States_t {
-    SAMPLE_STATE_STOPPED,
-    SAMPLE_STATE_PLAYING,
-    Sample_States_t_CountOf
-} Sample_States_t;
-
 typedef struct _Sample_t {
     Source_VTable_t vtable;
     SL_Props_t props;
+    volatile Source_States_t state;
 
     SL_Read_Callback_t on_read;
     SL_Seek_Callback_t on_seek;
@@ -52,17 +47,15 @@ typedef struct _Sample_t {
 
     size_t length_in_frames;
 
-    ma_audio_buffer buffer;
+    ma_audio_buffer buffer; // FIXME: is the buffer type the only difference?
 
     double time; // ???
-    volatile Sample_States_t state;
 } Sample_t;
 
 static void _sample_dtor(SL_Source_t *source);
 static void _sample_play(SL_Source_t *source);
 static void _sample_stop(SL_Source_t *source);
 static void _sample_rewind(SL_Source_t *source);
-static bool _sample_is_playing(SL_Source_t *source);
 static void _sample_update(SL_Source_t *source, float delta_time);
 static void _sample_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups);
 
@@ -115,7 +108,7 @@ static inline size_t _consume(Sample_t *sample, size_t frames_requested, void *o
             if (sample->props.looping) {
                 ma_audio_buffer_seek_to_pcm_frame(buffer, 0);
             } else {
-                sample->state = SAMPLE_STATE_STOPPED;
+                sample->state = SOURCE_STATE_STOPPED;
                 break;
             }
         }
@@ -148,7 +141,6 @@ SL_Source_t *SL_sample_create(SL_Read_Callback_t on_read, void *user_data, size_
                     .play = _sample_play,
                     .stop = _sample_stop,
                     .rewind = _sample_rewind,
-                    .is_playing = _sample_is_playing,
                     .update = _sample_update,
                     .mix = _sample_mix
                 },
@@ -157,7 +149,7 @@ SL_Source_t *SL_sample_create(SL_Read_Callback_t on_read, void *user_data, size_
             .user_data = user_data,
             .length_in_frames = length_in_frames,
             .time = 0.0f,
-            .state = SAMPLE_STATE_STOPPED
+            .state = SOURCE_STATE_STOPPED
         };
 
     ma_audio_buffer_config config = ma_audio_buffer_config_init(format, channels, length_in_frames, NULL, NULL);
@@ -210,33 +202,26 @@ static void _sample_play(SL_Source_t *source)
 {
     Sample_t *sample = (Sample_t *)source;
 
-    sample->state = SAMPLE_STATE_PLAYING;
+    sample->state = SOURCE_STATE_PLAYING;
 }
 
 static void _sample_stop(SL_Source_t *source)
 {
     Sample_t *sample = (Sample_t *)source;
 
-    sample->state = SAMPLE_STATE_STOPPED;
+    sample->state = SOURCE_STATE_STOPPED;
 }
 
 static void _sample_rewind(SL_Source_t *source)
 {
     Sample_t *sample = (Sample_t *)source;
 
-    if (sample->state != SAMPLE_STATE_STOPPED) {
+    if (sample->state != SOURCE_STATE_STOPPED) {
         Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "can't rewind while playing");
         return;
     }
 
     ma_audio_buffer_seek_to_pcm_frame(&sample->buffer, 0);
-}
-
-static bool _sample_is_playing(SL_Source_t *source)
-{
-    Sample_t *sample = (Sample_t *)source;
-
-    return sample->state != SAMPLE_STATE_STOPPED;
 }
 
 static void _sample_update(SL_Source_t *source, float delta_time)
@@ -250,7 +235,7 @@ static void _sample_mix(SL_Source_t *source, void *output, size_t frames_request
 {
     Sample_t *sample = (Sample_t *)source;
 
-    if (sample->state == SAMPLE_STATE_STOPPED) {
+    if (sample->state == SOURCE_STATE_STOPPED) {
         return;
     }
 
@@ -261,7 +246,7 @@ static void _sample_mix(SL_Source_t *source, void *output, size_t frames_request
     uint8_t *cursor = (uint8_t *)output;
 
     size_t frames_remaining = frames_requested;
-    while (frames_remaining > 0 && sample->state != SAMPLE_STATE_STOPPED) { // State can change during the loop.
+    while (frames_remaining > 0 && sample->state != SOURCE_STATE_STOPPED) { // State can change during the loop.
         size_t frames_processed = _consume(sample, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES);
         mix_1on2_additive(cursor, buffer, frames_processed, mix);
         cursor += frames_processed * SL_CHANNELS_PER_FRAME * SL_BYTES_PER_FRAME;

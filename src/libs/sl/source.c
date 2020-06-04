@@ -99,5 +99,5 @@ void SL_source_rewind(SL_Source_t *source)
 
 bool SL_source_is_playing(SL_Source_t *source)
 {
-    return ((Source_t *)source)->vtable.is_playing(source);
+    return ((Source_t *)source)->state != SOURCE_STATE_STOPPED;
 }
