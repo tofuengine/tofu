@@ -71,29 +71,31 @@ void SL_context_tweak(SL_Context_t *context, size_t group, float balance, float 
     context->groups[group] = mix_precompute_balance(balance, gain);
 }
 
-void SL_context_track(SL_Context_t *context, SL_Source_t *source)
+int SL_context_track(SL_Context_t *context, SL_Source_t *source)
 {
     size_t count = arrlen(context->sources);
     for (size_t i = 0; i < count; ++i) {
         if (context->sources[i] == source) {
             Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "source %p already tracked for context %p", source, context);
-            return;
+            return -1;
         }
     }
     arrpush(context->sources, source);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p tracked for context %p", source, context);
+    return count + 1;
 }
 
-void SL_context_untrack(SL_Context_t *context, SL_Source_t *source)
+int SL_context_untrack(SL_Context_t *context, SL_Source_t *source)
 {
     size_t count = arrlen(context->sources);
     for (size_t i = 0; i < count; ++i) {
         if (context->sources[i] == source) {
             arrdel(context->sources, i);
             Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p untracked for context %p", source, context);
-            break;
+            return count - 1;
         }
     }
+    return -1;
 }
 
 void SL_context_update(SL_Context_t *context, float delta_time)

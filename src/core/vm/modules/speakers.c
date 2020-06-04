@@ -106,10 +106,8 @@ static int speakers_tweak(lua_State *L)
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
-    SL_Context_t *context = Audio_lock(audio);
-    SL_context_tweak(context, group, balance, gain);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "group #%d tweaked for context %p (balance %.f, gain %.f)", group, context, balance, gain);
-    Audio_unlock(audio, context);
+    SL_context_tweak(audio->sl, group, balance, gain);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "group #%d tweaked (balance %.f, gain %.f)", group, balance, gain);
 
     return 0;
 }

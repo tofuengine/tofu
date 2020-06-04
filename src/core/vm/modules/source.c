@@ -169,9 +169,7 @@ static int source_new(lua_State *L)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p create, type #%d", source, type);
 
-    SL_Context_t *context = Audio_lock(audio);
-    SL_context_track(context, source);
-    Audio_unlock(audio, context);
+    Audio_track(audio, source);
 
     Source_Object_t *self = (Source_Object_t *)lua_newuserdata(L, sizeof(Source_Object_t));
     *self = (Source_Object_t){
@@ -196,9 +194,7 @@ static int source_gc(lua_State *L)
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
-    SL_Context_t *context = Audio_lock(audio);
-    SL_context_untrack(context, self->source);
-    Audio_unlock(audio, context);
+    Audio_untrack(audio, self->source);
 
     SL_source_destroy(self->source);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p destroyed", self->source);
