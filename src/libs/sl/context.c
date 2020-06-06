@@ -98,6 +98,17 @@ int SL_context_untrack(SL_Context_t *context, SL_Source_t *source)
     return -1;
 }
 
+bool SL_context_is_tracking(SL_Context_t *context, SL_Source_t *source)
+{
+    size_t count = arrlen(context->sources);
+    for (size_t i = 0; i < count; ++i) {
+        if (context->sources[i] == source) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void SL_context_update(SL_Context_t *context, float delta_time)
 {
     SL_Source_t **current = context->sources;
