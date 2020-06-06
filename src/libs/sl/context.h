@@ -28,6 +28,7 @@
 #include "common.h"
 #include "source.h"
 
+#include <stdbool.h>
 #include <stddef.h>
 
 typedef struct _SL_Context_t {
@@ -42,6 +43,7 @@ extern void SL_context_tweak(SL_Context_t *context, size_t group, float balance,
 
 extern int SL_context_track(SL_Context_t *context, SL_Source_t *source);
 extern int SL_context_untrack(SL_Context_t *context, SL_Source_t *source);
+extern bool SL_context_is_tracking(SL_Context_t *context, SL_Source_t *source);
 
 extern void SL_context_update(SL_Context_t *context, float delta_time);
 extern void SL_context_mix(SL_Context_t *context, void *output, size_t frames_requested);

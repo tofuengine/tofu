@@ -38,13 +38,13 @@
 #define LOG_CONTEXT "speakers"
 
 static int speakers_volume(lua_State *L);
-static int speakers_stop(lua_State *L);
 static int speakers_tweak(lua_State *L);
+static int speakers_halt(lua_State *L);
 
 static const struct luaL_Reg _speakers_functions[] = {
     { "volume", speakers_volume },
     { "tweak", speakers_tweak },
-    { "stop", speakers_stop },
+    { "halt", speakers_halt },
     { NULL, NULL }
 };
 
@@ -112,14 +112,16 @@ static int speakers_tweak(lua_State *L)
     return 0;
 }
 
-static int speakers_stop(lua_State *L)
+static int speakers_halt(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TBOOLEAN)
     LUAX_SIGNATURE_END
+    bool untrack = LUAX_OPTIONAL_BOOLEAN(L, 1, true);
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
-    Audio_stop(audio);
+    Audio_halt(audio, untrack);
 
     return 0;
 }

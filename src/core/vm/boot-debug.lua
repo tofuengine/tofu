@@ -64,7 +64,7 @@ function Tofu:__ctor()
           local width, _ = canvas:size()
           canvas:reset() -- Reset default canvas from the game state.
 
-          Speakers.stop() -- Stop all sounds.
+          Speakers.halt() -- Stop all sounds sources.
 
           me.font = Font.default("5x8", 0, 1)
           me.lines = {

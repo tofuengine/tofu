@@ -118,11 +118,14 @@ void SL_context_mix(SL_Context_t *context, void *output, size_t frames_requested
     }
 }
 
-void SL_context_stop(SL_Context_t *context)
+void SL_context_halt(SL_Context_t *context, bool untrack)
 {
     SL_Source_t **current = context->sources;
     for (int count = arrlen(context->sources); count; --count) {
         SL_Source_t *source = *(current++);
         ((Source_t *)source)->vtable.stop(source);
+    }
+    if (untrack) {
+        arrfree(context->sources);
     }
 }
