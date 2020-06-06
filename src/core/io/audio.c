@@ -133,7 +133,9 @@ void Audio_terminate(Audio_t *audio)
 
 void Audio_halt(Audio_t *audio, bool untrack)
 {
+    ma_mutex_lock(&audio->lock);
     SL_context_halt(audio->sl, untrack);
+    ma_mutex_unlock(&audio->lock);
     // TODO: stop the device.
 }
 
@@ -147,7 +149,9 @@ void Audio_volume(Audio_t *audio, float volume)
 
 void Audio_update(Audio_t *audio, float delta_time)
 {
+    ma_mutex_lock(&audio->lock);
     SL_context_update(audio->sl, delta_time);
+    ma_mutex_unlock(&audio->lock);
     // TODO: check the amount of playing sources and stop when zero.
 }
 
