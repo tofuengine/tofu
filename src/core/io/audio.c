@@ -131,10 +131,10 @@ void Audio_terminate(Audio_t *audio)
     SL_context_destroy(audio->sl);
 }
 
-void Audio_halt(Audio_t *audio, bool untrack)
+void Audio_halt(Audio_t *audio)
 {
     ma_mutex_lock(&audio->lock);
-    SL_context_halt(audio->sl, untrack);
+    SL_context_halt(audio->sl);
     ma_mutex_unlock(&audio->lock);
     // TODO: stop the device.
 }

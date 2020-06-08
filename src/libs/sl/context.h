@@ -45,7 +45,7 @@ extern int SL_context_track(SL_Context_t *context, SL_Source_t *source);
 extern int SL_context_untrack(SL_Context_t *context, SL_Source_t *source);
 extern bool SL_context_is_tracking(SL_Context_t *context, SL_Source_t *source);
 
-extern void SL_context_halt(SL_Context_t *context, bool untrack);
+extern void SL_context_halt(SL_Context_t *context);
 
 extern void SL_context_update(SL_Context_t *context, float delta_time);
 extern void SL_context_mix(SL_Context_t *context, void *output, size_t frames_requested);
