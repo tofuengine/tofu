@@ -46,15 +46,8 @@ static void _data_callback(ma_device *device, void *output, const void *input, m
     Audio_t *audio = (Audio_t *)device->pUserData;
 
     ma_mutex_lock(&audio->lock);
-
 //    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d frames requested for device %p", frame_count, device);
-    size_t count = SL_context_mix(audio->sl, output, frame_count);
-    if (count == 0) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "no more sources while mixing, stopping device");
-        ma_result result = ma_device_stop(&audio->device);
-        Log_assert(result == MA_SUCCESS, LOG_LEVELS_FATAL, LOG_CONTEXT, "can't stop the audio device");
-    }
-
+    SL_context_mix(audio->sl, output, frame_count);
     ma_mutex_unlock(&audio->lock);
 }
 
@@ -159,7 +152,12 @@ void Audio_volume(Audio_t *audio, float volume)
 void Audio_update(Audio_t *audio, float delta_time)
 {
     ma_mutex_lock(&audio->lock);
-    SL_context_update(audio->sl, delta_time);
+    size_t count = SL_context_update(audio->sl, delta_time);
+    if (count == 0) {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "no more sources while mixing, stopping device");
+        ma_result result = ma_device_stop(&audio->device);
+        Log_assert(result == MA_SUCCESS, LOG_LEVELS_FATAL, LOG_CONTEXT, "can't stop the audio device");
+    }
     ma_mutex_unlock(&audio->lock);
 }
 
