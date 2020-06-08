@@ -44,10 +44,6 @@ extern void SL_source_set_gain(SL_Source_t *source, float gain);
 extern void SL_source_set_pan(SL_Source_t *source, float pan);
 extern void SL_source_set_speed(SL_Source_t *source, float speed);
 
-extern void SL_source_play(SL_Source_t *source);
-extern void SL_source_stop(SL_Source_t *source);
-extern void SL_source_rewind(SL_Source_t *source);
-
-extern bool SL_source_is_playing(SL_Source_t *source);
+extern void SL_source_reset(SL_Source_t *source);
 
 #endif  /* __SL_SOURCE_H__ */

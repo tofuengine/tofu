@@ -32,7 +32,7 @@ typedef struct _Source_VTable_t {
     void (*dtor)(SL_Source_t *source);
     void (*reset)(SL_Source_t *source);
     void (*update)(SL_Source_t *source, float delta_time);
-    void (*mix)(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups);
+    bool (*mix)(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups);
 } Source_VTable_t;
 
 typedef struct _Source_t {

@@ -39,7 +39,6 @@
 typedef struct _Sample_t {
     Source_VTable_t vtable;
     SL_Props_t props;
-    volatile Source_States_t state;
 
     SL_Read_Callback_t on_read;
     SL_Seek_Callback_t on_seek;
@@ -53,11 +52,9 @@ typedef struct _Sample_t {
 } Sample_t;
 
 static void _sample_dtor(SL_Source_t *source);
-static void _sample_play(SL_Source_t *source);
-static void _sample_stop(SL_Source_t *source);
-static void _sample_rewind(SL_Source_t *source);
+static void _sample_reset(SL_Source_t *source);
 static void _sample_update(SL_Source_t *source, float delta_time);
-static void _sample_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups);
+static bool _sample_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups);
 
 static inline bool _produce(Sample_t *sample)
 {
@@ -76,10 +73,12 @@ static inline bool _produce(Sample_t *sample)
     return frames_produced == sample->length_in_frames;
 }
 
-static inline size_t _consume(Sample_t *sample, size_t frames_requested, void *output, size_t size_in_frames)
+static inline size_t _consume(Sample_t *sample, size_t frames_requested, void *output, size_t size_in_frames, bool *end_of_data)
 {
     ma_data_converter *converter = &sample->props.converter;
     ma_audio_buffer *buffer = &sample->buffer;
+
+    *end_of_data = false;
 
     size_t frames_processed = 0;
 
@@ -108,7 +107,7 @@ static inline size_t _consume(Sample_t *sample, size_t frames_requested, void *o
             if (sample->props.looping) {
                 ma_audio_buffer_seek_to_pcm_frame(buffer, 0);
             } else {
-                sample->state = SOURCE_STATE_STOPPED;
+                *end_of_data = true;
                 break;
             }
         }
@@ -138,9 +137,7 @@ SL_Source_t *SL_sample_create(SL_Read_Callback_t on_read, void *user_data, size_
     *sample = (Sample_t){
             .vtable = (Source_VTable_t){
                     .dtor = _sample_dtor,
-                    .play = _sample_play,
-                    .stop = _sample_stop,
-                    .rewind = _sample_rewind,
+                    .reset = _sample_reset,
                     .update = _sample_update,
                     .mix = _sample_mix
                 },
@@ -148,8 +145,7 @@ SL_Source_t *SL_sample_create(SL_Read_Callback_t on_read, void *user_data, size_
 //            .on_seek = on_seek,
             .user_data = user_data,
             .length_in_frames = length_in_frames,
-            .time = 0.0f,
-            .state = SOURCE_STATE_STOPPED
+            .time = 0.0f
         };
 
     ma_audio_buffer_config config = ma_audio_buffer_config_init(format, channels, length_in_frames, NULL, NULL);
@@ -198,30 +194,12 @@ static void _sample_dtor(SL_Source_t *source)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sample structure freed");
 }
 
-static void _sample_play(SL_Source_t *source)
+static void _sample_reset(SL_Source_t *source)
 {
     Sample_t *sample = (Sample_t *)source;
-
-    sample->state = SOURCE_STATE_PLAYING;
-}
-
-static void _sample_stop(SL_Source_t *source)
-{
-    Sample_t *sample = (Sample_t *)source;
-
-    sample->state = SOURCE_STATE_STOPPED;
-}
-
-static void _sample_rewind(SL_Source_t *source)
-{
-    Sample_t *sample = (Sample_t *)source;
-
-    if (sample->state != SOURCE_STATE_STOPPED) {
-        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "can't rewind while playing");
-        return;
-    }
 
     ma_audio_buffer_seek_to_pcm_frame(&sample->buffer, 0);
+//    sample->time = 0;
 }
 
 static void _sample_update(SL_Source_t *source, float delta_time)
@@ -231,13 +209,9 @@ static void _sample_update(SL_Source_t *source, float delta_time)
     sample->time += delta_time;
 }
 
-static void _sample_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups)
+static bool _sample_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups)
 {
     Sample_t *sample = (Sample_t *)source;
-
-    if (sample->state == SOURCE_STATE_STOPPED) {
-        return;
-    }
 
     uint8_t buffer[MIXING_BUFFER_SIZE_IN_FRAMES * SL_BYTES_PER_FRAME]; // Samples are 1 channel only.
 
@@ -246,10 +220,15 @@ static void _sample_mix(SL_Source_t *source, void *output, size_t frames_request
     uint8_t *cursor = (uint8_t *)output;
 
     size_t frames_remaining = frames_requested;
-    while (frames_remaining > 0 && sample->state != SOURCE_STATE_STOPPED) { // State can change during the loop.
-        size_t frames_processed = _consume(sample, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES);
+    while (frames_remaining > 0) {
+        bool end_of_data = false;
+        size_t frames_processed = _consume(sample, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES, &end_of_data);
         mix_1on2_additive(cursor, buffer, frames_processed, mix);
+        if (end_of_data) {
+            return true;
+        }
         cursor += frames_processed * SL_CHANNELS_PER_FRAME * SL_BYTES_PER_FRAME;
         frames_remaining -= frames_processed;
     }
+    return false;
 }
