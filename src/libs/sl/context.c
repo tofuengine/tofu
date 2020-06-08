@@ -122,10 +122,13 @@ void SL_context_mix(SL_Context_t *context, void *output, size_t frames_requested
 {
     const SL_Mix_t *groups = context->groups;
 
-    SL_Source_t **current = context->sources;
-    for (int count = arrlen(context->sources); count; --count) {
-        SL_Source_t *source = *(current++);
-        ((Source_t *)source)->vtable.mix(source, output, frames_requested, groups); // FIXME: pass the dereferences mix? API violation?
+    // Backward scan, to remove to-be-untracked sources.
+    for (int i = arrlen(context->sources) - 1; i >= 0; --i) {
+        SL_Source_t *source = context->sources[i];
+        bool untrack = ((Source_t *)source)->vtable.mix(source, output, frames_requested, groups); // FIXME: pass the dereferences mix? API violation?
+        if (untrack) {
+            arrdel(context->sources, i);
+        }
     }
 }
 
