@@ -38,11 +38,10 @@ function Main:__ctor()
   self.font = Font.default(0, 15)
 
   self.sources = {
---      Source.new("assets/44100_mono.wav"),
-      -- Source.new("assets/48000_2ch.wav"),
-      Source.new("assets/48000_2ch.flac", Source.MUSIC),
+      Source.new("assets/1ch-22050-16.flac", Source.SAMPLE),
+      Source.new("assets/2ch-48000-16.flac", Source.MUSIC),
     }
-  self.sources[1]:looping(false)
+  --self.sources[1]:looping(false)
 
   self.current = 1
 end

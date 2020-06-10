@@ -64,7 +64,7 @@ static inline bool _produce(Sample_t *sample)
     ma_uint64 frames_available = sample->length_in_frames;
     ma_audio_buffer_map(buffer, &write_buffer, &frames_available); // No need to check the result, can't fail.
 
-    size_t frames_produced = sample->on_read(sample->user_data, write_buffer, frames_available);
+    size_t frames_produced = sample->on_read(sample->user_data, write_buffer, sample->length_in_frames);
 
     ma_audio_buffer_unmap(buffer, frames_produced); // Ditto.
 
@@ -222,7 +222,7 @@ static bool _sample_mix(SL_Source_t *source, void *output, size_t frames_request
     size_t frames_remaining = frames_requested;
     while (frames_remaining > 0) {
         bool end_of_data = false;
-        size_t frames_processed = _consume(sample, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES, &end_of_data);
+        size_t frames_processed = _consume(sample, frames_remaining, buffer, 67, &end_of_data);
         mix_1on2_additive(cursor, buffer, frames_processed, mix);
         if (end_of_data) {
             return true;

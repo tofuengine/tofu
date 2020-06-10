@@ -166,7 +166,7 @@ static int source_new(lua_State *L)
         FS_close(handle);
         return luaL_error(L, "can't create source");
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p create, type #%d", source, type);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p created, type #%d", source, type);
 
     Source_Object_t *self = (Source_Object_t *)lua_newuserdata(L, sizeof(Source_Object_t));
     *self = (Source_Object_t){
