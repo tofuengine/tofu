@@ -66,12 +66,13 @@
   * definitely I need to use a ring-buffer to stream audio. We could be tempted to always stream w/o buffers, having SDD and such... but that's not the case in general. Miniaudio has a ring-buffer API.
     * tried miniaudio ringbuffer, but it's easier to buffer myself.
   * no OOP, just grouping the shared properties.
-  * naming: create/destroy, register/deregister, init(ialize)/deinit(ialize). "un-" prefix for the adjetives, "de-" for verbs.
+  * naming: create/destroy, register/deregister, init(ialize)/deinit(ialize). "un-" prefix for the adjectives, "de-" for verbs.
   * at last I'm going for a full opaque approach, like for the file-system (somewhat hybrid)
     * cool part is that I can have a single "Sound.Source" in Lua!
   * updated the miniaudio library, only to find out that an audio-buffer has been implemented, pretty much identical to mine (which was already designed similar to the ring-buffer). Tiny hack to read the data, at first.
   * little stuttering in the Linux audio, will check if it depends on eOS.
     * turned out it depended on the VM itself. Adding the line `sound.virtualDev = "hdaudio"` to the VMX file solved it.
+    * VMWare fixed this bug (and an annoying CAPS lock issue) in the new release. that explains a lot.
 
 ```java
   //do panning
