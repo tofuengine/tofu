@@ -41,6 +41,7 @@ typedef struct _Audio_t {
     ma_context context;
     ma_device_config device_config;
     ma_device device;
+    bool is_running;
     ma_mutex lock;
 
     SL_Context_t *sl;

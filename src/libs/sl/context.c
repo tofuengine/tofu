@@ -109,13 +109,14 @@ bool SL_context_is_tracking(SL_Context_t *context, SL_Source_t *source)
     return false;
 }
 
-void SL_context_update(SL_Context_t *context, float delta_time)
+size_t SL_context_update(SL_Context_t *context, float delta_time)
 {
     SL_Source_t **current = context->sources;
     for (int count = arrlen(context->sources); count; --count) {
         SL_Source_t *source = *(current++);
         ((Source_t *)source)->vtable.update(source, delta_time);
     }
+    return arrlen(context->sources);
 }
 
 size_t SL_context_mix(SL_Context_t *context, void *output, size_t frames_requested)
@@ -136,5 +137,5 @@ size_t SL_context_mix(SL_Context_t *context, void *output, size_t frames_request
 size_t SL_context_halt(SL_Context_t *context)
 {
     arrfree(context->sources);
-    return 0;
+    return arrlen(context->sources);
 }
