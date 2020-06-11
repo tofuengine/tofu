@@ -39,6 +39,7 @@
 // That's the size of a single chunk read in each `produce()` call. Can't be larger than the buffer size.
 #define STREAMING_BUFFER_CHUNK_IN_FRAMES    (SL_FRAMES_PER_SECOND / 4)
 
+#define MIXING_BUFFER_CHANNELS          SL_CHANNELS_PER_FRAME
 #define MIXING_BUFFER_SIZE_IN_FRAMES    128
 
 #define LOG_CONTEXT "sl-music"
@@ -128,7 +129,7 @@ static inline size_t _consume(Music_t *music, size_t frames_requested, void *out
 
         ma_pcm_rb_commit_read(buffer, frames_consumed, read_buffer);
 
-        cursor += frames_generated * SL_CHANNELS_PER_FRAME * SL_BYTES_PER_FRAME;
+        cursor += frames_generated * MIXING_BUFFER_CHANNELS * SL_BYTES_PER_FRAME;
 
         frames_processed += frames_generated;
         frames_remaining -= frames_generated;
@@ -166,7 +167,7 @@ SL_Source_t *SL_music_create(SL_Read_Callback_t on_read, SL_Seek_Callback_t on_s
         return NULL;
     }
 
-    bool initialized = SL_props_init(&music->props, format, sample_rate, channels);
+    bool initialized = SL_props_init(&music->props, format, sample_rate, channels, MIXING_BUFFER_CHANNELS);
     if (!initialized) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize music properties");
         ma_pcm_rb_uninit(&music->buffer);
@@ -221,7 +222,7 @@ static bool _music_mix(SL_Source_t *source, void *output, size_t frames_requeste
 {
     Music_t *music = (Music_t *)source;
 
-    uint8_t buffer[MIXING_BUFFER_SIZE_IN_FRAMES * SL_CHANNELS_PER_FRAME * SL_BYTES_PER_FRAME];
+    uint8_t buffer[MIXING_BUFFER_SIZE_IN_FRAMES * MIXING_BUFFER_CHANNELS * SL_BYTES_PER_FRAME];
 
     const SL_Mix_t mix = SL_props_precompute(&music->props, groups);
 
@@ -235,7 +236,7 @@ static bool _music_mix(SL_Source_t *source, void *output, size_t frames_requeste
         if (end_of_data) {
             return true;
         }
-        cursor += frames_processed * SL_CHANNELS_PER_FRAME * SL_BYTES_PER_FRAME;
+        cursor += frames_processed * MIXING_BUFFER_CHANNELS * SL_BYTES_PER_FRAME;
         frames_remaining -= frames_processed;
     }
     return false;

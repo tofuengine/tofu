@@ -32,6 +32,7 @@
 
 #define SAMPLE_MAX_LENGTH_IN_SECONDS    10.0f
 
+#define MIXING_BUFFER_CHANNELS          1
 #define MIXING_BUFFER_SIZE_IN_FRAMES    128
 
 #define LOG_CONTEXT "sl-sample"
@@ -98,7 +99,7 @@ static inline size_t _consume(Sample_t *sample, size_t frames_requested, void *o
 
         ma_audio_buffer_unmap(buffer, frames_consumed); // Ditto.
 
-        cursor += frames_generated * SL_CHANNELS_PER_FRAME * SL_BYTES_PER_FRAME;
+        cursor += frames_generated * MIXING_BUFFER_CHANNELS * SL_BYTES_PER_FRAME;
 
         frames_processed += frames_generated;
         frames_remaining -= frames_generated;
@@ -164,7 +165,7 @@ SL_Source_t *SL_sample_create(SL_Read_Callback_t on_read, void *user_data, size_
         return NULL;
     }
 
-    bool initialized = SL_props_init(&sample->props, format, sample_rate, channels);
+    bool initialized = SL_props_init(&sample->props, format, sample_rate, channels, MIXING_BUFFER_CHANNELS);
     if (!initialized) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize sample properties");
         ma_audio_buffer_uninit(&sample->buffer);
@@ -213,7 +214,7 @@ static bool _sample_mix(SL_Source_t *source, void *output, size_t frames_request
 {
     Sample_t *sample = (Sample_t *)source;
 
-    uint8_t buffer[MIXING_BUFFER_SIZE_IN_FRAMES * SL_BYTES_PER_FRAME]; // Samples are 1 channel only.
+    uint8_t buffer[MIXING_BUFFER_SIZE_IN_FRAMES * MIXING_BUFFER_CHANNELS * SL_BYTES_PER_FRAME];
 
     const SL_Mix_t mix = SL_props_precompute(&sample->props, groups);
 
@@ -222,12 +223,12 @@ static bool _sample_mix(SL_Source_t *source, void *output, size_t frames_request
     size_t frames_remaining = frames_requested;
     while (frames_remaining > 0) {
         bool end_of_data = false;
-        size_t frames_processed = _consume(sample, frames_remaining, buffer, 67, &end_of_data);
+        size_t frames_processed = _consume(sample, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES, &end_of_data);
         mix_1on2_additive(cursor, buffer, frames_processed, mix);
         if (end_of_data) {
             return true;
         }
-        cursor += frames_processed * SL_CHANNELS_PER_FRAME * SL_BYTES_PER_FRAME;
+        cursor += frames_processed * SL_CHANNELS_PER_FRAME * MIXING_BUFFER_CHANNELS * SL_BYTES_PER_FRAME;
         frames_remaining -= frames_processed;
     }
     return false;
