@@ -386,6 +386,7 @@ static int source_play(lua_State *L)
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
+    // FIXME: untrack/reset/track
     Audio_track(audio, self->source);
 
     return 0;
