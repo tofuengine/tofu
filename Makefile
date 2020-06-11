@@ -42,6 +42,8 @@ ifeq ($(BUILD),release)
 	COPTS=-O3 -DRELEASE
 else ifeq ($(BUILD),profile)
 	COPTS=-O0 -g -DDEBUG -DPROFILE -pg
+else ifeq ($(BUILD),sanitize)
+	COPTS=-O0 -g -DDEBUG -fsanitize=address -fno-omit-frame-pointer
 else
 #	COPTS=-Og -g -DDEBUG
 	COPTS=-O0 -g -DDEBUG
@@ -65,6 +67,8 @@ endif
 LWARNINGS=-Wall -Wextra -Werror
 ifeq ($(BUILD),profile)
 	LOPTS=-pg
+else ifeq ($(BUILD),sanitize)
+	LOPTS=-fsanitize=address -fno-omit-frame-pointer
 else
 	LOPTS=
 endif
