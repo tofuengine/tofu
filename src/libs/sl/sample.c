@@ -173,7 +173,7 @@ SL_Source_t *SL_sample_create(SL_Read_Callback_t on_read, void *user_data, size_
         return NULL;
     }
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sample created");
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sample %p created", sample);
     return sample;
 }
 
@@ -190,9 +190,6 @@ static void _sample_dtor(SL_Source_t *source)
 
     ma_audio_buffer_uninit(&sample->buffer);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sample buffer deinitialized");
-
-    free(sample);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sample structure freed");
 }
 
 static void _sample_reset(SL_Source_t *source)

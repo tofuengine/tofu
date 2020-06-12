@@ -37,14 +37,14 @@
 #define STREAMING_BUFFER_SIZE_IN_FRAMES     SL_FRAMES_PER_SECOND
 
 // That's the size of a single chunk read in each `produce()` call. Can't be larger than the buffer size.
-#define STREAMING_BUFFER_CHUNK_IN_FRAMES    (SL_FRAMES_PER_SECOND / 4)
+#define STREAMING_BUFFER_CHUNK_IN_FRAMES    (STREAMING_BUFFER_SIZE_IN_FRAMES / 4)
 
 #define MIXING_BUFFER_CHANNELS          SL_CHANNELS_PER_FRAME
 #define MIXING_BUFFER_SIZE_IN_FRAMES    128
 
 #define LOG_CONTEXT "sl-music"
 
-typedef struct _Music_t {
+typedef struct _Music_t { // FIXME: rename to `_Music_Source_t`.
     Source_VTable_t vtable;
     SL_Props_t props;
 
@@ -179,7 +179,7 @@ SL_Source_t *SL_music_create(SL_Read_Callback_t on_read, SL_Seek_Callback_t on_s
     _produce(music, true);
 #endif
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music created");
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music %p created", music);
     return music;
 }
 
@@ -196,9 +196,6 @@ static void _music_dtor(SL_Source_t *source)
 
     ma_pcm_rb_uninit(&music->buffer);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music ring-buffer deinitialized");
-
-    free(music);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music structure freed");
 }
 
 static void _music_reset(SL_Source_t *source)

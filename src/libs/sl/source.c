@@ -27,9 +27,12 @@
 #include "internals.h"
 #include "props.h"
 
+#include <libs/stb.h>
+
 void SL_source_destroy(SL_Source_t *source)
 {
     ((Source_t *)source)->vtable.dtor(source);
+    free(source);
 }
 
 void SL_source_reset(SL_Source_t *source)
