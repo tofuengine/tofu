@@ -47,24 +47,29 @@ function Main:__ctor()
 end
 
 function Main:input()
+  local source = self.sources[self.current]
   if Input.is_pressed("a") then
-    self.sources[self.current]:play()
+    if not source:is_playing() then
+      source:play()
+    else
+      source:stop()
+    end
   elseif Input.is_pressed("b") then
-    self.sources[self.current]:stop()
+    self.current = (self.current % #self.sources) + 1
   elseif Input.is_pressed("x") then
-    self.sources[self.current]:rewind()
+    source:rewind()
   elseif Input.is_pressed("up") then
-    local gain = self.sources[self.current]:gain()
-    self.sources[self.current]:gain(gain + 0.05)
+    local gain = source:gain()
+    source:gain(gain + 0.05)
   elseif Input.is_pressed("down") then
-    local gain = self.sources[self.current]:gain()
-    self.sources[self.current]:gain(gain - 0.05)
+    local gain = source:gain()
+    source:gain(gain - 0.05)
   elseif Input.is_pressed("left") then
-    local pan = self.sources[self.current]:pan()
-    self.sources[self.current]:pan(pan - 0.05)
+    local pan = source:pan()
+    source:pan(pan - 0.05)
   elseif Input.is_pressed("right") then
-    local pan = self.sources[self.current]:pan()
-    self.sources[self.current]:pan(pan + 0.05)
+    local pan = source:pan()
+    source:pan(pan + 0.05)
   end
 end
 
@@ -79,7 +84,7 @@ function Main:render(_)
 
   local x, y = 0, 0
   for index, stream in ipairs(self.sources) do
-    local text = string.format("[%d] %.3f %.3f", index, stream:pan(), stream:gain())
+    local text = string.format("%s %.3f %.3f", self.current == index and "*" or " ", stream:pan(), stream:gain())
     local _, th = self.font:size(text)
     self.font:write(text, x, y)
     y = y + th

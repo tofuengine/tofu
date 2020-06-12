@@ -74,7 +74,7 @@
     * turned out it depended on the VM itself. Adding the line `sound.virtualDev = "hdaudio"` to the VMX file solved it.
     * VMWare fixed this bug (and an annoying CAPS lock issue) in the new release. that explains a lot.
   * sample mixing was bugged, due to an unnecessary channel expansion during mix (1->2, while buffer was for 1 ch only).
-    * addded `sanitize` build that uses AddressSanitizer to detect bug.
+    * added `sanitize` build that uses AddressSanitizer to detect bug.
 
 ```java
   //do panning
