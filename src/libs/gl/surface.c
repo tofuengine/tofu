@@ -72,7 +72,7 @@ GL_Surface_t *GL_surface_create(size_t width, size_t height)
 
 void GL_surface_destroy(GL_Surface_t *surface)
 {
-    if (!surface) {
+    if (!surface) { // FIXME: is this kind of defensive check required?
         return;
     }
 
