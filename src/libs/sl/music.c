@@ -55,8 +55,6 @@ typedef struct _Music_t { // FIXME: rename to `_Music_Source_t`.
     size_t length_in_frames;
 
     ma_pcm_rb buffer;
-
-    double time; // ???
 } Music_t;
 
 static bool _music_ctor(SL_Source_t *source, SL_Read_Callback_t on_read, SL_Seek_Callback_t on_seek, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels);
@@ -175,8 +173,7 @@ static bool _music_ctor(SL_Source_t *source, SL_Read_Callback_t on_read, SL_Seek
             .on_read = on_read,
             .on_seek = on_seek,
             .user_data = user_data,
-            .length_in_frames = length_in_frames,
-            .time = 0.0f
+            .length_in_frames = length_in_frames
         };
 
     ma_result result = ma_pcm_rb_init(format, channels, STREAMING_BUFFER_SIZE_IN_FRAMES, NULL, NULL, &music->buffer);
@@ -215,14 +212,11 @@ static void _music_reset(SL_Source_t *source)
     Music_t *music = (Music_t *)source;
 
     _produce(music, true);
-    //music->time = 0.0;
 }
 
 static void _music_update(SL_Source_t *source, float delta_time)
 {
     Music_t *music = (Music_t *)source;
-
-    music->time += delta_time;
 
     _produce(music, false);
 }

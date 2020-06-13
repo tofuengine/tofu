@@ -48,8 +48,6 @@ typedef struct _Sample_t {
     size_t length_in_frames;
 
     ma_audio_buffer buffer; // FIXME: is the buffer type the only difference?
-
-    double time; // ???
 } Sample_t;
 
 static bool _sample_ctor(SL_Source_t *source, SL_Read_Callback_t on_read, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels);
@@ -160,8 +158,7 @@ static bool _sample_ctor(SL_Source_t *source, SL_Read_Callback_t on_read, void *
             .on_read = on_read,
 //            .on_seek = on_seek,
             .user_data = user_data,
-            .length_in_frames = length_in_frames,
-            .time = 0.0f
+            .length_in_frames = length_in_frames
         };
 
     ma_audio_buffer_config config = ma_audio_buffer_config_init(format, channels, length_in_frames, NULL, NULL);
@@ -208,14 +205,11 @@ static void _sample_reset(SL_Source_t *source)
     Sample_t *sample = (Sample_t *)source;
 
     ma_audio_buffer_seek_to_pcm_frame(&sample->buffer, 0);
-//    sample->time = 0;
 }
 
 static void _sample_update(SL_Source_t *source, float delta_time)
 {
-    Sample_t *sample = (Sample_t *)source;
-
-    sample->time += delta_time;
+    // Empty.
 }
 
 static bool _sample_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups)
