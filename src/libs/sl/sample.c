@@ -52,6 +52,7 @@ typedef struct _Sample_t {
     double time; // ???
 } Sample_t;
 
+static bool _sample_ctor(SL_Source_t *source, SL_Read_Callback_t on_read, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels);
 static void _sample_dtor(SL_Source_t *source);
 static void _sample_reset(SL_Source_t *source);
 static void _sample_update(SL_Source_t *source, float delta_time);
@@ -135,6 +136,20 @@ SL_Source_t *SL_sample_create(SL_Read_Callback_t on_read, void *user_data, size_
         return NULL;
     }
 
+    bool cted = _sample_ctor(sample, on_read, user_data, length_in_frames, format, sample_rate, channels);
+    if (!cted) {
+        free(sample);
+        return NULL;
+    }
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sample %p created", sample);
+    return sample;
+}
+
+static bool _sample_ctor(SL_Source_t *source, SL_Read_Callback_t on_read, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels)
+{
+    Sample_t *sample = (Sample_t *)source;
+
     *sample = (Sample_t){
             .vtable = (Source_VTable_t){
                     .dtor = _sample_dtor,
@@ -153,28 +168,24 @@ SL_Source_t *SL_sample_create(SL_Read_Callback_t on_read, void *user_data, size_
     ma_result result = ma_audio_buffer_init_copy(&config, &sample->buffer); // NOTE: It will allocate but won't copy.
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d frames for buffer", length_in_frames);
-        free(sample);
-        return NULL;
+        return false;
     }
 
     bool produced = _produce(sample);
     if (!produced) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d frames for sample", length_in_frames);
         ma_audio_buffer_uninit(&sample->buffer);
-        free(sample);
-        return NULL;
+        return false;
     }
 
     bool initialized = SL_props_init(&sample->props, format, sample_rate, channels, MIXING_BUFFER_CHANNELS);
     if (!initialized) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize sample properties");
         ma_audio_buffer_uninit(&sample->buffer);
-        free(sample);
-        return NULL;
+        return false;
     }
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sample %p created", sample);
-    return sample;
+    return true;
 }
 
 static void _sample_dtor(SL_Source_t *source)

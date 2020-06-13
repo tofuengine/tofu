@@ -59,6 +59,7 @@ typedef struct _Music_t { // FIXME: rename to `_Music_Source_t`.
     double time; // ???
 } Music_t;
 
+static bool _music_ctor(SL_Source_t *source, SL_Read_Callback_t on_read, SL_Seek_Callback_t on_seek, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels);
 static void _music_dtor(SL_Source_t *source);
 static void _music_reset(SL_Source_t *source);
 static void _music_update(SL_Source_t *source, float delta_time);
@@ -146,6 +147,24 @@ SL_Source_t *SL_music_create(SL_Read_Callback_t on_read, SL_Seek_Callback_t on_s
         return NULL;
     }
 
+    bool cted = _music_ctor(music, on_read, on_seek, user_data, length_in_frames, format, sample_rate, channels);
+    if (!cted) {
+        free(music);
+        return NULL;
+    }
+
+#ifdef __SL_MUSIC_PRELOAD_ON_CREATION__
+    _produce(music, true);
+#endif
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music %p created", music);
+    return music;
+}
+
+static bool _music_ctor(SL_Source_t *source, SL_Read_Callback_t on_read, SL_Seek_Callback_t on_seek, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels)
+{
+    Music_t *music = (Music_t *)source;
+
     *music = (Music_t){
             .vtable = (Source_VTable_t){
                     .dtor = _music_dtor,
@@ -163,24 +182,17 @@ SL_Source_t *SL_music_create(SL_Read_Callback_t on_read, SL_Seek_Callback_t on_s
     ma_result result = ma_pcm_rb_init(format, channels, STREAMING_BUFFER_SIZE_IN_FRAMES, NULL, NULL, &music->buffer);
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize music ring-buffer");
-        free(music);
-        return NULL;
+        return false;
     }
 
     bool initialized = SL_props_init(&music->props, format, sample_rate, channels, MIXING_BUFFER_CHANNELS);
     if (!initialized) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize music properties");
         ma_pcm_rb_uninit(&music->buffer);
-        free(music);
-        return NULL;
+        return false;
     }
 
-#ifdef __SL_MUSIC_PRELOAD_ON_CREATION__
-    _produce(music, true);
-#endif
-
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music %p created", music);
-    return music;
+    return true;
 }
 
 static void _music_dtor(SL_Source_t *source)
