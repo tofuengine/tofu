@@ -184,3 +184,11 @@ void Audio_untrack(Audio_t *audio, SL_Source_t *source)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p untracked, #%d source(s) active", source, count);
     ma_mutex_unlock(&audio->lock);
 }
+
+bool Audio_is_tracking(Audio_t *audio, SL_Source_t *source)
+{
+    ma_mutex_lock(&audio->lock);
+    bool tracked = SL_context_is_tracking(audio->sl, source);
+    ma_mutex_unlock(&audio->lock);
+    return tracked;
+}
