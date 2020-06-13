@@ -169,9 +169,12 @@ void Audio_update(Audio_t *audio, float delta_time)
     }
 }
 
-void Audio_track(Audio_t *audio, SL_Source_t *source)
+void Audio_track(Audio_t *audio, SL_Source_t *source, bool reset)
 {
     ma_mutex_lock(&audio->lock);
+    if (reset) {
+        SL_source_reset(source);
+    }
     size_t count = SL_context_track(audio->sl, source);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p tracked, #%d source(s) active", source, count);
     ma_mutex_unlock(&audio->lock);

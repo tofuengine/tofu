@@ -65,7 +65,7 @@
 #define __FS_SUPPORT_MOUNT_OVERRIDE__
 #define __SL_BALANCE_LAW__ BALANCE_LAW_SINCOS
 #define __SL_PANNING_LAW__ PANNING_LAW_CONSTANT_POWER_SINCOS
-#define __SL_MUSIC_PRELOAD_ON_CREATION__
+#undef  __SL_MUSIC_PRELOAD_ON_CREATION__
 #undef  __GL_MASK_SUPPORT__
 
 // In release build, disable VM calls debug for faster execution.

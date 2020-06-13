@@ -57,7 +57,7 @@ extern void Audio_volume(Audio_t *audio, float volume);
 
 extern void Audio_update(Audio_t *audio, float delta_time);
 
-extern void Audio_track(Audio_t *audio, SL_Source_t *source);
+extern void Audio_track(Audio_t *audio, SL_Source_t *source, bool reset);
 extern void Audio_untrack(Audio_t *audio, SL_Source_t *source);
 extern bool Audio_is_tracking(Audio_t *audio, SL_Source_t *source);
 

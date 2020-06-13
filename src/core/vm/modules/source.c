@@ -58,8 +58,8 @@ static int source_gain(lua_State *L);
 static int source_pan(lua_State *L);
 static int source_speed(lua_State *L);
 static int source_play(lua_State *L);
+static int source_resume(lua_State *L);
 static int source_stop(lua_State *L);
-static int source_rewind(lua_State *L);
 static int source_is_playing(lua_State *L);
 
 static const struct luaL_Reg _source_functions[] = {
@@ -71,8 +71,8 @@ static const struct luaL_Reg _source_functions[] = {
     { "pan", source_pan },
     { "speed", source_speed },
     { "play", source_play },
+    { "resume", source_resume },
     { "stop", source_stop },
-    { "rewind", source_rewind },
     { "is_playing", source_is_playing },
     { NULL, NULL }
 };
@@ -386,8 +386,21 @@ static int source_play(lua_State *L)
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
-    // FIXME: untrack/reset/track
-    Audio_track(audio, self->source);
+    Audio_track(audio, self->source, true);
+
+    return 0;
+}
+
+static int source_resume(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
+
+    Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
+
+    Audio_track(audio, self->source, false);
 
     return 0;
 }
@@ -406,22 +419,6 @@ static int source_stop(lua_State *L)
     return 0;
 }
 
-static int source_rewind(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-    LUAX_SIGNATURE_END
-    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
-
-    Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
-
-    if (!SL_context_is_tracking(audio->sl, self->source)) {
-        SL_source_reset(self->source);
-    }
-
-    return 0;
-}
-
 static int source_is_playing(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -431,7 +428,7 @@ static int source_is_playing(lua_State *L)
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
-    lua_pushboolean(L, SL_context_is_tracking(audio->sl, self->source));
+    lua_pushboolean(L, Audio_is_tracking(audio, self->source));
 
     return 1;
 }

@@ -49,15 +49,11 @@ end
 function Main:input()
   local source = self.sources[self.current]
   if Input.is_pressed("a") then
-    if not source:is_playing() then
-      source:play()
-    else
-      source:stop()
-    end
+    source:play()
   elseif Input.is_pressed("b") then
-    self.current = (self.current % #self.sources) + 1
+    source:stop()
   elseif Input.is_pressed("x") then
-    source:rewind()
+    self.current = (self.current % #self.sources) + 1
   elseif Input.is_pressed("up") then
     local gain = source:gain()
     source:gain(gain + 0.05)
@@ -83,8 +79,11 @@ function Main:render(_)
   local width, height = canvas:size()
 
   local x, y = 0, 0
-  for index, stream in ipairs(self.sources) do
-    local text = string.format("%s %.3f %.3f", self.current == index and "*" or " ", stream:pan(), stream:gain())
+  for index, source in ipairs(self.sources) do
+    local text = string.format("%s%s %.3f %.3f",
+        self.current == index and "*" or " ",
+        source:is_playing() and "!" or " ",
+        source:pan(), source:gain())
     local _, th = self.font:size(text)
     self.font:write(text, x, y)
     y = y + th
