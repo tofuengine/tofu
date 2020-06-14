@@ -222,14 +222,14 @@ static void _music_reset(SL_Source_t *source)
 {
     Music_t *music = (Music_t *)source;
 
-    _produce(music, true);
+    (void)_produce(music, true);
 }
 
 static void _music_update(SL_Source_t *source, float delta_time)
 {
     Music_t *music = (Music_t *)source;
 
-    _produce(music, false);
+    (void)_produce(music, false);
 }
 
 static bool _music_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups)

@@ -298,6 +298,7 @@ void Engine_run(Engine_t *engine)
             lag -= delta_time;
         }
 
+        // FIXME: does audio need to be updated such requenty?
 //        running = running && Interpreter_update_variable(&engine->interpreter, elapsed); // Variable update.
         Audio_update(&engine->audio, elapsed); // Update the subsystems w/ regard to the variable time.
         Input_update(&engine->input, elapsed);
