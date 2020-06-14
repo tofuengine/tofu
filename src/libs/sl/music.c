@@ -73,23 +73,23 @@ static inline bool _produce(Music_t *music, bool reset)
         music->callbacks.seek(music->user_data, 0);
     }
 
-    ma_uint32 frames_to_write = ma_pcm_rb_available_write(buffer);
+    ma_uint32 frames_to_produce = ma_pcm_rb_available_write(buffer);
 #ifdef STREAMING_BUFFER_CHUNK_IN_FRAMES
-    if (frames_to_write > STREAMING_BUFFER_CHUNK_IN_FRAMES) {
-        frames_to_write = STREAMING_BUFFER_CHUNK_IN_FRAMES;
+    if (frames_to_produce > STREAMING_BUFFER_CHUNK_IN_FRAMES) {
+        frames_to_produce = STREAMING_BUFFER_CHUNK_IN_FRAMES;
     }
 #endif
-    while (frames_to_write > 0) {
+    while (frames_to_produce > 0) {
         void *write_buffer;
-        ma_pcm_rb_acquire_write(buffer, &frames_to_write, &write_buffer);
+        ma_pcm_rb_acquire_write(buffer, &frames_to_produce, &write_buffer);
 
-        size_t frames_written = callbacks->read(music->user_data, write_buffer, frames_to_write);
+        size_t frames_produced = callbacks->read(music->user_data, write_buffer, frames_to_produce);
 
-        ma_pcm_rb_commit_write(buffer, frames_written, write_buffer);
+        ma_pcm_rb_commit_write(buffer, frames_produced, write_buffer);
 
-        if (frames_written < frames_to_write) {
-            if (!callbacks->eof(music->user_data)) { // Check if an error occured (no more data w/ not EOF)
-                Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d bytes (%d read)", frames_to_write, frames_written);
+        if (frames_produced < frames_to_produce) {
+            if (!callbacks->eof(music->user_data)) { // Check if an error occurred (no more data w/ not EOF)
+                Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d bytes (%d read)", frames_to_produce, frames_produced);
                 return false;
             }
             if (!music->props.looping) {
@@ -98,7 +98,7 @@ static inline bool _produce(Music_t *music, bool reset)
             callbacks->seek(music->user_data, 0);
         }
 
-        frames_to_write -= frames_written;
+        frames_to_produce -= frames_produced;
     }
 
     return true;
