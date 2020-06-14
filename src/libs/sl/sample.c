@@ -65,7 +65,7 @@ static inline bool _produce(Sample_t *sample)
     ma_uint64 frames_available = sample->length_in_frames;
     ma_audio_buffer_map(buffer, &write_buffer, &frames_available); // No need to check the result, can't fail.
 
-    size_t frames_produced = callbacks->read(sample->user_data, write_buffer, sample->length_in_frames);
+    size_t frames_produced = callbacks->read(sample->user_data, write_buffer, frames_available);
 
     ma_audio_buffer_unmap(buffer, frames_produced); // Ditto.
 
