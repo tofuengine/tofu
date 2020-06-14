@@ -39,10 +39,10 @@
 
 typedef struct _Sample_t {
     Source_VTable_t vtable;
+
     SL_Props_t props;
 
-    SL_Read_Callback_t on_read;
-    SL_Seek_Callback_t on_seek;
+    SL_Callbacks_t callbacks;
     void *user_data;
 
     size_t length_in_frames;
@@ -50,7 +50,7 @@ typedef struct _Sample_t {
     ma_audio_buffer buffer; // FIXME: is the buffer type the only difference?
 } Sample_t;
 
-static bool _sample_ctor(SL_Source_t *source, SL_Read_Callback_t on_read, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels);
+static bool _sample_ctor(SL_Source_t *source, SL_Callbacks_t callbacks, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels);
 static void _sample_dtor(SL_Source_t *source);
 static void _sample_reset(SL_Source_t *source);
 static void _sample_update(SL_Source_t *source, float delta_time);
@@ -58,13 +58,14 @@ static bool _sample_mix(SL_Source_t *source, void *output, size_t frames_request
 
 static inline bool _produce(Sample_t *sample)
 {
+    const SL_Callbacks_t *callbacks = &sample->callbacks;
     ma_audio_buffer *buffer = &sample->buffer;
 
     void *write_buffer;
     ma_uint64 frames_available = sample->length_in_frames;
     ma_audio_buffer_map(buffer, &write_buffer, &frames_available); // No need to check the result, can't fail.
 
-    size_t frames_produced = sample->on_read(sample->user_data, write_buffer, sample->length_in_frames);
+    size_t frames_produced = callbacks->read(sample->user_data, write_buffer, sample->length_in_frames);
 
     ma_audio_buffer_unmap(buffer, frames_produced); // Ditto.
 
@@ -116,7 +117,7 @@ static inline size_t _consume(Sample_t *sample, size_t frames_requested, void *o
     return frames_processed;
 }
 
-SL_Source_t *SL_sample_create(SL_Read_Callback_t on_read, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels)
+SL_Source_t *SL_sample_create(SL_Callbacks_t callbacks, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels)
 {
     if (channels != 1) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "samples need to be 1 channel");
@@ -134,7 +135,7 @@ SL_Source_t *SL_sample_create(SL_Read_Callback_t on_read, void *user_data, size_
         return NULL;
     }
 
-    bool cted = _sample_ctor(sample, on_read, user_data, length_in_frames, format, sample_rate, channels);
+    bool cted = _sample_ctor(sample, callbacks, user_data, length_in_frames, format, sample_rate, channels);
     if (!cted) {
         free(sample);
         return NULL;
@@ -144,7 +145,7 @@ SL_Source_t *SL_sample_create(SL_Read_Callback_t on_read, void *user_data, size_
     return sample;
 }
 
-static bool _sample_ctor(SL_Source_t *source, SL_Read_Callback_t on_read, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels)
+static bool _sample_ctor(SL_Source_t *source, SL_Callbacks_t callbacks, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels)
 {
     Sample_t *sample = (Sample_t *)source;
 
@@ -155,8 +156,7 @@ static bool _sample_ctor(SL_Source_t *source, SL_Read_Callback_t on_read, void *
                     .update = _sample_update,
                     .mix = _sample_mix
                 },
-            .on_read = on_read,
-//            .on_seek = on_seek,
+            .callbacks = callbacks,
             .user_data = user_data,
             .length_in_frames = length_in_frames
         };

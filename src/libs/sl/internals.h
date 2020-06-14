@@ -37,7 +37,13 @@ typedef struct _Source_VTable_t {
 
 typedef struct _Source_t {
     Source_VTable_t vtable;
+
     SL_Props_t props;
+
+    SL_Callbacks_t callbacks;
+    void *user_data;
+
+    size_t length_in_frames;
 } Source_t;
 
 #endif  /* __SL_INTERNALS_H__ */

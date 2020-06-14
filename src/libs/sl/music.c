@@ -46,10 +46,10 @@
 
 typedef struct _Music_t { // FIXME: rename to `_Music_Source_t`.
     Source_VTable_t vtable;
+
     SL_Props_t props;
 
-    SL_Read_Callback_t on_read;
-    SL_Seek_Callback_t on_seek;
+    SL_Callbacks_t callbacks;
     void *user_data;
 
     size_t length_in_frames;
@@ -57,19 +57,20 @@ typedef struct _Music_t { // FIXME: rename to `_Music_Source_t`.
     ma_pcm_rb buffer;
 } Music_t;
 
-static bool _music_ctor(SL_Source_t *source, SL_Read_Callback_t on_read, SL_Seek_Callback_t on_seek, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels);
+static bool _music_ctor(SL_Source_t *source, SL_Callbacks_t callbacks, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels);
 static void _music_dtor(SL_Source_t *source);
 static void _music_reset(SL_Source_t *source);
 static void _music_update(SL_Source_t *source, float delta_time);
 static bool _music_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups);
 
-static inline void _produce(Music_t *music, bool reset)
+static inline bool _produce(Music_t *music, bool reset)
 {
+    const SL_Callbacks_t *callbacks = &music->callbacks;
     ma_pcm_rb *buffer = &music->buffer;
 
     if (reset) {
         ma_pcm_rb_reset(buffer);
-        music->on_seek(music->user_data, 0);
+        music->callbacks.seek(music->user_data, 0);
     }
 
     ma_uint32 frames_to_write = ma_pcm_rb_available_write(buffer);
@@ -82,19 +83,25 @@ static inline void _produce(Music_t *music, bool reset)
         void *write_buffer;
         ma_pcm_rb_acquire_write(buffer, &frames_to_write, &write_buffer);
 
-        size_t frames_written = music->on_read(music->user_data, write_buffer, frames_to_write); // TODO: check for I/O errors!
+        size_t frames_written = callbacks->read(music->user_data, write_buffer, frames_to_write);
 
         ma_pcm_rb_commit_write(buffer, frames_written, write_buffer);
 
         if (frames_written < frames_to_write) {
+            if (!callbacks->eof(music->user_data)) { // Check if an error occured (no more data w/ not EOF)
+                Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d bytes (%d read)", frames_to_write, frames_written);
+                return false;
+            }
             if (!music->props.looping) {
                 break;
             }
-            music->on_seek(music->user_data, 0);
+            callbacks->seek(music->user_data, 0);
         }
 
         frames_to_write -= frames_written;
     }
+
+    return true;
 }
 
 static inline size_t _consume(Music_t *music, size_t frames_requested, void *output, size_t size_in_frames, bool *end_of_data)
@@ -137,7 +144,7 @@ static inline size_t _consume(Music_t *music, size_t frames_requested, void *out
     return frames_processed;
 }
 
-SL_Source_t *SL_music_create(SL_Read_Callback_t on_read, SL_Seek_Callback_t on_seek, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels)
+SL_Source_t *SL_music_create(SL_Callbacks_t callbacks, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels)
 {
     Music_t *music = malloc(sizeof(Music_t));
     if (!music) {
@@ -145,21 +152,18 @@ SL_Source_t *SL_music_create(SL_Read_Callback_t on_read, SL_Seek_Callback_t on_s
         return NULL;
     }
 
-    bool cted = _music_ctor(music, on_read, on_seek, user_data, length_in_frames, format, sample_rate, channels);
+    bool cted = _music_ctor(music, callbacks, user_data, length_in_frames, format, sample_rate, channels);
     if (!cted) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize music structure");
         free(music);
         return NULL;
     }
-
-#ifdef __SL_MUSIC_PRELOAD_ON_CREATION__
-    _produce(music, true);
-#endif
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music %p created", music);
     return music;
 }
 
-static bool _music_ctor(SL_Source_t *source, SL_Read_Callback_t on_read, SL_Seek_Callback_t on_seek, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels)
+static bool _music_ctor(SL_Source_t *source, SL_Callbacks_t callbacks, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels)
 {
     Music_t *music = (Music_t *)source;
 
@@ -170,8 +174,7 @@ static bool _music_ctor(SL_Source_t *source, SL_Read_Callback_t on_read, SL_Seek
                     .update = _music_update,
                     .mix = _music_mix
                 },
-            .on_read = on_read,
-            .on_seek = on_seek,
+            .callbacks = callbacks,
             .user_data = user_data,
             .length_in_frames = length_in_frames
         };
@@ -181,6 +184,14 @@ static bool _music_ctor(SL_Source_t *source, SL_Read_Callback_t on_read, SL_Seek
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize music ring-buffer");
         return false;
     }
+
+#ifdef __SL_MUSIC_PRELOAD_ON_CREATION__
+    bool produces = _produce(music, true);
+    if (!produced) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't pre-load music data");
+        return false;
+    }
+#endif
 
     bool initialized = SL_props_init(&music->props, format, sample_rate, channels, MIXING_BUFFER_CHANNELS);
     if (!initialized) {

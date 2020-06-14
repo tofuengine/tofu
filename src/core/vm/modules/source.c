@@ -123,6 +123,18 @@ static void _decoder_seek(void *user_data, size_t frame_offset)
     drflac_seek_to_pcm_frame(decoder, frame_offset);
 }
 
+static bool _decoder_eof(void *user_data)
+{
+    drflac *decoder = (drflac *)user_data;
+    return decoder->currentPCMFrame == decoder->totalPCMFrameCount;
+}
+
+static SL_Callbacks_t _decoder_callbacks = {
+    .read = _decoder_read,
+    .seek = _decoder_seek,
+    .eof = _decoder_eof
+};
+
 static int source_new(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -159,8 +171,8 @@ static int source_new(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source `%s` w/ %d frames, %d channels, %dHz, %d bits", file, length_in_frames, channels, sample_rate, bits_per_sample);
 
     SL_Source_t *source = type == SOURCE_TYPE_MUSIC
-        ? SL_music_create(_decoder_read, _decoder_seek, (void *)decoder, length_in_frames, INTERNAL_FORMAT, sample_rate, channels)
-        : SL_sample_create(_decoder_read, (void *)decoder, length_in_frames, INTERNAL_FORMAT, sample_rate, channels);
+        ? SL_music_create(_decoder_callbacks, (void *)decoder, length_in_frames, INTERNAL_FORMAT, sample_rate, channels)
+        : SL_sample_create(_decoder_callbacks, (void *)decoder, length_in_frames, INTERNAL_FORMAT, sample_rate, channels);
     if (!source) {
         drflac_close(decoder);
         FS_close(handle);
