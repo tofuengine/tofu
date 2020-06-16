@@ -75,6 +75,8 @@
     * VMWare fixed this bug (and an annoying CAPS lock issue) in the new release. that explains a lot.
   * sample mixing was bugged, due to an unnecessary channel expansion during mix (1->2, while buffer was for 1 ch only).
     * added `sanitize` build that uses AddressSanitizer to detect bug.
+  * handling error codes when updating audio. Still missing when rewinding/resetting a source.
+  * updating the audio sub-system in the fixed steps loop, just as it was INT based.
 
 ```java
   //do panning
