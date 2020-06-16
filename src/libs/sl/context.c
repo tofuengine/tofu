@@ -71,34 +71,32 @@ void SL_context_tweak(SL_Context_t *context, size_t group, float balance, float 
     context->groups[group] = mix_precompute_balance(balance, gain);
 }
 
-size_t SL_context_track(SL_Context_t *context, SL_Source_t *source)
+void SL_context_track(SL_Context_t *context, SL_Source_t *source)
 {
     size_t count = arrlen(context->sources);
     for (size_t i = 0; i < count; ++i) {
         if (context->sources[i] == source) {
             Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "source %p already tracked for context %p", source, context);
-            return count;
+            return;
         }
     }
     arrpush(context->sources, source);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p tracked for context %p", source, context);
-    return count + 1;
 }
 
-size_t SL_context_untrack(SL_Context_t *context, SL_Source_t *source)
+void SL_context_untrack(SL_Context_t *context, SL_Source_t *source)
 {
     size_t count = arrlen(context->sources);
     for (size_t i = 0; i < count; ++i) {
         if (context->sources[i] == source) {
             arrdel(context->sources, i);
             Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p untracked for context %p", source, context);
-            return count - 1;
+            return;
         }
     }
-    return count;
 }
 
-bool SL_context_is_tracking(SL_Context_t *context, SL_Source_t *source)
+bool SL_context_is_tracked(SL_Context_t *context, SL_Source_t *source)
 {
     size_t count = arrlen(context->sources);
     for (size_t i = 0; i < count; ++i) {
@@ -109,17 +107,30 @@ bool SL_context_is_tracking(SL_Context_t *context, SL_Source_t *source)
     return false;
 }
 
-size_t SL_context_update(SL_Context_t *context, float delta_time)
+size_t SL_context_count(SL_Context_t *context)
 {
-    SL_Source_t **current = context->sources;
-    for (int count = arrlen(context->sources); count; --count) {
-        SL_Source_t *source = *(current++);
-        ((Source_t *)source)->vtable.update(source, delta_time);
-    }
     return arrlen(context->sources);
 }
 
-size_t SL_context_mix(SL_Context_t *context, void *output, size_t frames_requested)
+void SL_context_halt(SL_Context_t *context)
+{
+    arrfree(context->sources);
+}
+
+bool SL_context_update(SL_Context_t *context, float delta_time)
+{
+    SL_Source_t **current = context->sources;
+    for (int i = arrlen(context->sources); i; --i) {
+        SL_Source_t *source = *(current++);
+        bool result = ((Source_t *)source)->vtable.update(source, delta_time);
+        if (!result) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool SL_context_mix(SL_Context_t *context, void *output, size_t frames_requested)
 {
     const SL_Mix_t *groups = context->groups;
 
@@ -131,11 +142,5 @@ size_t SL_context_mix(SL_Context_t *context, void *output, size_t frames_request
             arrdel(context->sources, i);
         }
     }
-    return arrlen(context->sources);
-}
-
-size_t SL_context_halt(SL_Context_t *context)
-{
-    arrfree(context->sources);
-    return arrlen(context->sources);
+    return true;
 }

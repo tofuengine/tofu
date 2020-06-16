@@ -440,7 +440,7 @@ static int source_is_playing(lua_State *L)
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
-    lua_pushboolean(L, Audio_is_tracking(audio, self->source));
+    lua_pushboolean(L, Audio_is_tracked(audio, self->source));
 
     return 1;
 }

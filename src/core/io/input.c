@@ -160,7 +160,7 @@ static void _gamepad_handler(Input_State_t *state, GLFWwindow *window, const Inp
 
     GLFWgamepadstate gamepad;
     int result = glfwGetGamepadState(state->gamepad_id, &gamepad);
-    if (result == GLFW_TRUE) {
+    if (result == GLFW_TRUE) { // FIXME: add return value check!
         if (configuration->emulate_dpad) {
             const float x = gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_X];
             const float y = gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_Y];

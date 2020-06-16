@@ -59,8 +59,8 @@ typedef struct _Music_t { // FIXME: rename to `_Music_Source_t`.
 
 static bool _music_ctor(SL_Source_t *source, SL_Callbacks_t callbacks, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels);
 static void _music_dtor(SL_Source_t *source);
-static void _music_reset(SL_Source_t *source);
-static void _music_update(SL_Source_t *source, float delta_time);
+static bool _music_reset(SL_Source_t *source);
+static bool _music_update(SL_Source_t *source, float delta_time);
 static bool _music_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups);
 
 static inline bool _produce(Music_t *music, bool reset)
@@ -207,10 +207,6 @@ static void _music_dtor(SL_Source_t *source)
 {
     Music_t *music = (Music_t *)source;
 
-    if (!music) {
-        return;
-    }
-
     SL_props_deinit(&music->props);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music properties deinitialized");
 
@@ -218,18 +214,18 @@ static void _music_dtor(SL_Source_t *source)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music ring-buffer deinitialized");
 }
 
-static void _music_reset(SL_Source_t *source)
+static bool _music_reset(SL_Source_t *source)
 {
     Music_t *music = (Music_t *)source;
 
-    (void)_produce(music, true);
+    return _produce(music, true);
 }
 
-static void _music_update(SL_Source_t *source, float delta_time)
+static bool _music_update(SL_Source_t *source, float delta_time)
 {
     Music_t *music = (Music_t *)source;
 
-    (void)_produce(music, false);
+    return _produce(music, false);
 }
 
 static bool _music_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups)

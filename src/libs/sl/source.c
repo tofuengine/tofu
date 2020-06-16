@@ -35,9 +35,9 @@ void SL_source_destroy(SL_Source_t *source)
     free(source);
 }
 
-void SL_source_reset(SL_Source_t *source)
+bool SL_source_reset(SL_Source_t *source)
 {
-    ((Source_t *)source)->vtable.reset(source);
+    return ((Source_t *)source)->vtable.reset(source);
 }
 
 size_t SL_source_get_group(SL_Source_t *source)

@@ -52,8 +52,8 @@ typedef struct _Sample_t {
 
 static bool _sample_ctor(SL_Source_t *source, SL_Callbacks_t callbacks, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels);
 static void _sample_dtor(SL_Source_t *source);
-static void _sample_reset(SL_Source_t *source);
-static void _sample_update(SL_Source_t *source, float delta_time);
+static bool _sample_reset(SL_Source_t *source);
+static bool _sample_update(SL_Source_t *source, float delta_time);
 static bool _sample_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups);
 
 static inline bool _produce(Sample_t *sample)
@@ -189,10 +189,6 @@ static void _sample_dtor(SL_Source_t *source)
 {
     Sample_t *sample = (Sample_t *)source;
 
-    if (!sample) {
-        return;
-    }
-
     SL_props_deinit(&sample->props);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sample properties deinitialized");
 
@@ -200,16 +196,21 @@ static void _sample_dtor(SL_Source_t *source)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sample buffer deinitialized");
 }
 
-static void _sample_reset(SL_Source_t *source)
+static bool _sample_reset(SL_Source_t *source)
 {
     Sample_t *sample = (Sample_t *)source;
 
-    ma_audio_buffer_seek_to_pcm_frame(&sample->buffer, 0);
+    ma_result result = ma_audio_buffer_seek_to_pcm_frame(&sample->buffer, 0);
+    if (result != MA_SUCCESS) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't rewind audio-buffer");
+        return false;
+    }
+    return true;
 }
 
-static void _sample_update(SL_Source_t *source, float delta_time)
+static bool _sample_update(SL_Source_t *source, float delta_time)
 {
-    // Empty.
+    return true; // NO-OP
 }
 
 static bool _sample_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups)
