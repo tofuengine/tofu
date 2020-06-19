@@ -48,6 +48,6 @@ extern size_t SL_context_count(SL_Context_t *context);
 extern void SL_context_halt(SL_Context_t *context);
 
 extern bool SL_context_update(SL_Context_t *context, float delta_time);
-extern bool SL_context_mix(SL_Context_t *context, void *output, size_t frames_requested);
+extern void SL_context_mix(SL_Context_t *context, void *output, size_t frames_requested);
 
 #endif  /* __SL_CONTEXT_H__ */

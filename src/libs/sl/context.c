@@ -130,7 +130,7 @@ bool SL_context_update(SL_Context_t *context, float delta_time)
     return true;
 }
 
-bool SL_context_mix(SL_Context_t *context, void *output, size_t frames_requested)
+void SL_context_mix(SL_Context_t *context, void *output, size_t frames_requested)
 {
     const SL_Mix_t *groups = context->groups;
 
@@ -142,5 +142,4 @@ bool SL_context_mix(SL_Context_t *context, void *output, size_t frames_requested
             arrdel(context->sources, i);
         }
     }
-    return true;
 }
