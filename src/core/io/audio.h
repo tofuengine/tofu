@@ -41,6 +41,7 @@ typedef struct _Audio_t {
     ma_context context;
     ma_device_config device_config;
     ma_device device;
+    bool is_started;
     ma_mutex lock;
 
     SL_Context_t *sl;
@@ -50,13 +51,14 @@ typedef struct _Audio_t {
 
 extern bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration);
 extern void Audio_terminate(Audio_t *audio); // TODO: rename to `deinitialize()` (every one).
-extern void Audio_halt(Audio_t *audio, bool untrack);
+extern void Audio_halt(Audio_t *audio);
 
 extern void Audio_volume(Audio_t *audio, float volume);
 
-extern void Audio_update(Audio_t *audio, float delta_time);
+extern bool Audio_update(Audio_t *audio, float delta_time);
 
-extern void Audio_track(Audio_t *audio, SL_Source_t *source);
+extern void Audio_track(Audio_t *audio, SL_Source_t *source, bool reset);
 extern void Audio_untrack(Audio_t *audio, SL_Source_t *source);
+extern bool Audio_is_tracked(Audio_t *audio, SL_Source_t *source);
 
 #endif  /* __AUDIO_H__ */

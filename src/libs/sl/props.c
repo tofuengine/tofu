@@ -46,7 +46,7 @@
 
 #define LOG_CONTEXT "sl-props"
 
-bool SL_props_init(SL_Props_t *props, ma_format format, ma_uint32 sample_rate, ma_uint32 channels)
+bool SL_props_init(SL_Props_t *props, ma_format format, ma_uint32 sample_rate, ma_uint32 channels_in, ma_uint32 channels_out)
 {
     *props = (SL_Props_t){
             .looping = false,
@@ -56,7 +56,7 @@ bool SL_props_init(SL_Props_t *props, ma_format format, ma_uint32 sample_rate, m
             .mix = mix_precompute_pan(0.0f, 1.0f)
         };
 
-    ma_data_converter_config config = ma_data_converter_config_init(format, INTERNAL_FORMAT, channels, SL_CHANNELS_PER_FRAME, sample_rate, SL_FRAMES_PER_SECOND);
+    ma_data_converter_config config = ma_data_converter_config_init(format, INTERNAL_FORMAT, channels_in, channels_out, sample_rate, SL_FRAMES_PER_SECOND);
     config.resampling.allowDynamicSampleRate = MA_TRUE; // required for speed throttling
     ma_result result = ma_data_converter_init(&config, &props->converter);
     if (result != MA_SUCCESS) {

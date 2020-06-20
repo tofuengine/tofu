@@ -58,8 +58,8 @@ static int source_gain(lua_State *L);
 static int source_pan(lua_State *L);
 static int source_speed(lua_State *L);
 static int source_play(lua_State *L);
+static int source_resume(lua_State *L);
 static int source_stop(lua_State *L);
-static int source_rewind(lua_State *L);
 static int source_is_playing(lua_State *L);
 
 static const struct luaL_Reg _source_functions[] = {
@@ -71,8 +71,8 @@ static const struct luaL_Reg _source_functions[] = {
     { "pan", source_pan },
     { "speed", source_speed },
     { "play", source_play },
+    { "resume", source_resume },
     { "stop", source_stop },
-    { "rewind", source_rewind },
     { "is_playing", source_is_playing },
     { NULL, NULL }
 };
@@ -123,6 +123,18 @@ static void _decoder_seek(void *user_data, size_t frame_offset)
     drflac_seek_to_pcm_frame(decoder, frame_offset);
 }
 
+static bool _decoder_eof(void *user_data)
+{
+    drflac *decoder = (drflac *)user_data;
+    return decoder->currentPCMFrame == decoder->totalPCMFrameCount;
+}
+
+static SL_Callbacks_t _decoder_callbacks = {
+    .read = _decoder_read,
+    .seek = _decoder_seek,
+    .eof = _decoder_eof
+};
+
 static int source_new(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -132,7 +144,6 @@ static int source_new(lua_State *L)
     const char *file = LUAX_STRING(L, 1);
     Source_Type_t type = (Source_Type_t)LUAX_OPTIONAL_INTEGER(L, 2, SOURCE_TYPE_MUSIC);
 
-    Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
     File_System_t *file_system = (File_System_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
 
     File_System_Handle_t *handle = FS_locate_and_open(file_system, file);
@@ -160,16 +171,14 @@ static int source_new(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source `%s` w/ %d frames, %d channels, %dHz, %d bits", file, length_in_frames, channels, sample_rate, bits_per_sample);
 
     SL_Source_t *source = type == SOURCE_TYPE_MUSIC
-        ? SL_music_create(_decoder_read, _decoder_seek, (void *)decoder, length_in_frames, INTERNAL_FORMAT, sample_rate, channels)
-        : SL_sample_create(_decoder_read, (void *)decoder, length_in_frames, INTERNAL_FORMAT, sample_rate, channels);
+        ? SL_music_create(_decoder_callbacks, (void *)decoder, length_in_frames, INTERNAL_FORMAT, sample_rate, channels)
+        : SL_sample_create(_decoder_callbacks, (void *)decoder, length_in_frames, INTERNAL_FORMAT, sample_rate, channels);
     if (!source) {
         drflac_close(decoder);
         FS_close(handle);
         return luaL_error(L, "can't create source");
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p create, type #%d", source, type);
-
-    Audio_track(audio, source);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p created, type #%d", source, type);
 
     Source_Object_t *self = (Source_Object_t *)lua_newuserdata(L, sizeof(Source_Object_t));
     *self = (Source_Object_t){
@@ -194,7 +203,7 @@ static int source_gc(lua_State *L)
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
-    Audio_untrack(audio, self->source);
+    Audio_untrack(audio, self->source); // Make sure we aren't leaving dangling pointers...
 
     SL_source_destroy(self->source);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p destroyed", self->source);
@@ -387,7 +396,23 @@ static int source_play(lua_State *L)
     LUAX_SIGNATURE_END
     Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
 
-    SL_source_play(self->source);
+    Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
+
+    Audio_track(audio, self->source, true);
+
+    return 0;
+}
+
+static int source_resume(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
+
+    Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
+
+    Audio_track(audio, self->source, false);
 
     return 0;
 }
@@ -399,19 +424,9 @@ static int source_stop(lua_State *L)
     LUAX_SIGNATURE_END
     Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
 
-    SL_source_stop(self->source);
+    Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
-    return 0;
-}
-
-static int source_rewind(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-    LUAX_SIGNATURE_END
-    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
-
-    SL_source_rewind(self->source);
+    Audio_untrack(audio, self->source);
 
     return 0;
 }
@@ -423,7 +438,9 @@ static int source_is_playing(lua_State *L)
     LUAX_SIGNATURE_END
     Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
 
-    lua_pushboolean(L, SL_source_is_playing(self->source));
+    Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
+
+    lua_pushboolean(L, Audio_is_tracked(audio, self->source));
 
     return 1;
 }

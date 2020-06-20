@@ -37,74 +37,79 @@
 #define STREAMING_BUFFER_SIZE_IN_FRAMES     SL_FRAMES_PER_SECOND
 
 // That's the size of a single chunk read in each `produce()` call. Can't be larger than the buffer size.
-#define STREAMING_BUFFER_CHUNK_IN_FRAMES    (SL_FRAMES_PER_SECOND / 4)
+#define STREAMING_BUFFER_CHUNK_IN_FRAMES    (STREAMING_BUFFER_SIZE_IN_FRAMES / 4)
 
+#define MIXING_BUFFER_CHANNELS          SL_CHANNELS_PER_FRAME
 #define MIXING_BUFFER_SIZE_IN_FRAMES    128
 
 #define LOG_CONTEXT "sl-music"
 
-typedef struct _Music_t {
+typedef struct _Music_t { // FIXME: rename to `_Music_Source_t`.
     Source_VTable_t vtable;
-    SL_Props_t props;
-    volatile Source_States_t state;
 
-    SL_Read_Callback_t on_read;
-    SL_Seek_Callback_t on_seek;
+    SL_Props_t props;
+
+    SL_Callbacks_t callbacks;
     void *user_data;
 
     size_t length_in_frames;
 
     ma_pcm_rb buffer;
-
-    double time; // ???
 } Music_t;
 
+static bool _music_ctor(SL_Source_t *source, SL_Callbacks_t callbacks, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels);
 static void _music_dtor(SL_Source_t *source);
-static void _music_play(SL_Source_t *source);
-static void _music_stop(SL_Source_t *source);
-static void _music_rewind(SL_Source_t *source);
-static void _music_update(SL_Source_t *source, float delta_time);
-static void _music_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups);
+static bool _music_reset(SL_Source_t *source);
+static bool _music_update(SL_Source_t *source, float delta_time);
+static bool _music_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups);
 
-static inline void _produce(Music_t *music, bool reset)
+static inline bool _produce(Music_t *music, bool reset)
 {
+    const SL_Callbacks_t *callbacks = &music->callbacks;
     ma_pcm_rb *buffer = &music->buffer;
 
     if (reset) {
         ma_pcm_rb_reset(buffer);
-        music->on_seek(music->user_data, 0);
+        music->callbacks.seek(music->user_data, 0);
     }
 
-    ma_uint32 frames_to_write = ma_pcm_rb_available_write(buffer);
+    ma_uint32 frames_to_produce = ma_pcm_rb_available_write(buffer);
 #ifdef STREAMING_BUFFER_CHUNK_IN_FRAMES
-    if (frames_to_write > STREAMING_BUFFER_CHUNK_IN_FRAMES) {
-        frames_to_write = STREAMING_BUFFER_CHUNK_IN_FRAMES;
+    if (frames_to_produce > STREAMING_BUFFER_CHUNK_IN_FRAMES) {
+        frames_to_produce = STREAMING_BUFFER_CHUNK_IN_FRAMES;
     }
 #endif
-    while (frames_to_write > 0) {
+    while (frames_to_produce > 0) {
         void *write_buffer;
-        ma_pcm_rb_acquire_write(buffer, &frames_to_write, &write_buffer);
+        ma_pcm_rb_acquire_write(buffer, &frames_to_produce, &write_buffer);
 
-        size_t frames_written = music->on_read(music->user_data, write_buffer, frames_to_write); // TODO: check for I/O errors!
+        size_t frames_produced = callbacks->read(music->user_data, write_buffer, frames_to_produce);
 
-        ma_pcm_rb_commit_write(buffer, frames_written, write_buffer);
+        ma_pcm_rb_commit_write(buffer, frames_produced, write_buffer);
 
-        if (frames_written < frames_to_write) {
+        if (frames_produced < frames_to_produce) {
+            if (!callbacks->eof(music->user_data)) { // Check if an error occurred (no more data w/ no EOF)
+                Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d bytes (%d read)", frames_to_produce, frames_produced);
+                return false;
+            }
             if (!music->props.looping) {
-                music->state = SOURCE_STATE_FINISHING;
                 break;
             }
-            music->on_seek(music->user_data, 0);
+            callbacks->seek(music->user_data, 0);
         }
 
-        frames_to_write -= frames_written;
+        frames_to_produce -= frames_produced;
     }
+
+    return true;
 }
 
-static inline size_t _consume(Music_t *music, size_t frames_requested, void *output, size_t size_in_frames)
+static inline size_t _consume(Music_t *music, size_t frames_requested, void *output, size_t size_in_frames, bool *end_of_data)
 {
     ma_data_converter *converter = &music->props.converter;
     ma_pcm_rb *buffer = &music->buffer;
+
+    *end_of_data = false;
 
     size_t frames_processed = 0;
 
@@ -113,12 +118,8 @@ static inline size_t _consume(Music_t *music, size_t frames_requested, void *out
     size_t frames_remaining = (frames_requested > size_in_frames) ? size_in_frames : frames_requested;
     while (frames_remaining > 0) { // Read as much data as possible, filling the buffer and eventually looping!
         ma_uint32 frames_available = ma_pcm_rb_available_read(buffer);
-        if (frames_available == 0) {
-            if (music->state == SOURCE_STATE_FINISHING) {
-                music->state = SOURCE_STATE_STOPPED;
-            } else {
-                Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "buffer underrun, %d bytes missing (state #%d)", frames_remaining, music->state);
-            }
+        if (frames_available == 0) { // Could also be due to buffer underrun.
+            *end_of_data = true;
             break;
         }
 
@@ -134,7 +135,7 @@ static inline size_t _consume(Music_t *music, size_t frames_requested, void *out
 
         ma_pcm_rb_commit_read(buffer, frames_consumed, read_buffer);
 
-        cursor += frames_generated * SL_CHANNELS_PER_FRAME * SL_BYTES_PER_FRAME;
+        cursor += frames_generated * MIXING_BUFFER_CHANNELS * SL_BYTES_PER_FRAME;
 
         frames_processed += frames_generated;
         frames_remaining -= frames_generated;
@@ -143,7 +144,7 @@ static inline size_t _consume(Music_t *music, size_t frames_requested, void *out
     return frames_processed;
 }
 
-SL_Source_t *SL_music_create(SL_Read_Callback_t on_read, SL_Seek_Callback_t on_seek, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels)
+SL_Source_t *SL_music_create(SL_Callbacks_t callbacks, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels)
 {
     Music_t *music = malloc(sizeof(Music_t));
     if (!music) {
@@ -151,122 +152,102 @@ SL_Source_t *SL_music_create(SL_Read_Callback_t on_read, SL_Seek_Callback_t on_s
         return NULL;
     }
 
+    bool cted = _music_ctor(music, callbacks, user_data, length_in_frames, format, sample_rate, channels);
+    if (!cted) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize music structure");
+        free(music);
+        return NULL;
+    }
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music %p created", music);
+    return music;
+}
+
+static bool _music_ctor(SL_Source_t *source, SL_Callbacks_t callbacks, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels)
+{
+    Music_t *music = (Music_t *)source;
+
     *music = (Music_t){
             .vtable = (Source_VTable_t){
                     .dtor = _music_dtor,
-                    .play = _music_play,
-                    .stop = _music_stop,
-                    .rewind = _music_rewind,
+                    .reset = _music_reset,
                     .update = _music_update,
                     .mix = _music_mix
                 },
-            .on_read = on_read,
-            .on_seek = on_seek,
+            .callbacks = callbacks,
             .user_data = user_data,
-            .length_in_frames = length_in_frames,
-            .time = 0.0f,
-            .state = SOURCE_STATE_STOPPED
+            .length_in_frames = length_in_frames
         };
 
     ma_result result = ma_pcm_rb_init(format, channels, STREAMING_BUFFER_SIZE_IN_FRAMES, NULL, NULL, &music->buffer);
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize music ring-buffer");
-        free(music);
-        return NULL;
-    }
-
-    bool initialized = SL_props_init(&music->props, format, sample_rate, channels);
-    if (!initialized) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize music properties");
-        ma_pcm_rb_uninit(&music->buffer);
-        free(music);
-        return NULL;
+        return false;
     }
 
 #ifdef __SL_MUSIC_PRELOAD_ON_CREATION__
-    _produce(music, true);
+    bool produces = _produce(music, true);
+    if (!produced) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't pre-load music data");
+        return false;
+    }
 #endif
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music created");
-    return music;
+    bool initialized = SL_props_init(&music->props, format, sample_rate, channels, MIXING_BUFFER_CHANNELS);
+    if (!initialized) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize music properties");
+        ma_pcm_rb_uninit(&music->buffer);
+        return false;
+    }
+
+    return true;
 }
 
 static void _music_dtor(SL_Source_t *source)
 {
     Music_t *music = (Music_t *)source;
 
-    if (!music) {
-        return;
-    }
-
     SL_props_deinit(&music->props);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music properties deinitialized");
 
     ma_pcm_rb_uninit(&music->buffer);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music ring-buffer deinitialized");
-
-    free(music);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music structure freed");
 }
 
-static void _music_play(SL_Source_t *source)
+static bool _music_reset(SL_Source_t *source)
 {
     Music_t *music = (Music_t *)source;
 
-    music->state = SOURCE_STATE_PLAYING;
+    return _produce(music, true);
 }
 
-static void _music_stop(SL_Source_t *source)
+static bool _music_update(SL_Source_t *source, float delta_time)
 {
     Music_t *music = (Music_t *)source;
 
-    music->state = SOURCE_STATE_STOPPED;
+    return _produce(music, false);
 }
 
-static void _music_rewind(SL_Source_t *source)
+static bool _music_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups)
 {
     Music_t *music = (Music_t *)source;
 
-    if (music->state != SOURCE_STATE_STOPPED) {
-        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "can't rewind while playing");
-        return;
-    }
-
-    _produce(music, true);
-}
-
-static void _music_update(SL_Source_t *source, float delta_time)
-{
-    Music_t *music = (Music_t *)source;
-
-    music->time += delta_time;
-
-    if (music->state != SOURCE_STATE_PLAYING) {
-        return;
-    }
-
-    _produce(music, false);
-}
-
-static void _music_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups)
-{
-    Music_t *music = (Music_t *)source;
-
-    if (music->state == SOURCE_STATE_STOPPED) {
-        return;
-    }
-
-    uint8_t buffer[MIXING_BUFFER_SIZE_IN_FRAMES * SL_CHANNELS_PER_FRAME * SL_BYTES_PER_FRAME];
+    uint8_t buffer[MIXING_BUFFER_SIZE_IN_FRAMES * MIXING_BUFFER_CHANNELS * SL_BYTES_PER_FRAME];
 
     const SL_Mix_t mix = SL_props_precompute(&music->props, groups);
 
     uint8_t *cursor = (uint8_t *)output;
 
     size_t frames_remaining = frames_requested;
-    while (frames_remaining > 0 && music->state != SOURCE_STATE_STOPPED) { // State can change during the loop.
-        size_t frames_processed = _consume(music, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES);
+    while (frames_remaining > 0) {
+        bool end_of_data = false;
+        size_t frames_processed = _consume(music, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES, &end_of_data);
         mix_2on2_additive(cursor, buffer, frames_processed, mix);
-        cursor += frames_processed * SL_CHANNELS_PER_FRAME * SL_BYTES_PER_FRAME;
+        if (end_of_data) {
+            return true;
+        }
+        cursor += frames_processed * MIXING_BUFFER_CHANNELS * SL_BYTES_PER_FRAME;
         frames_remaining -= frames_processed;
     }
+    return false;
 }

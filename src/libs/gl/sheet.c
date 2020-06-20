@@ -31,7 +31,7 @@
 
 #include <stdlib.h>
 
-#define LOG_CONTEXT "sheet"
+#define LOG_CONTEXT "gl-sheet"
 
 static GL_Rectangle_t *_clone(const GL_Rectangle_t *cells, size_t count)
 {

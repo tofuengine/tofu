@@ -38,34 +38,34 @@ function Main:__ctor()
   self.font = Font.default(0, 15)
 
   self.sources = {
---      Source.new("assets/44100_mono.wav"),
-      -- Source.new("assets/48000_2ch.wav"),
-      Source.new("assets/48000_2ch.flac", Source.MUSIC),
+      Source.new("assets/1ch-22050-16.flac", Source.SAMPLE),
+      Source.new("assets/2ch-48000-16.flac", Source.MUSIC),
     }
-  self.sources[1]:looping(false)
+  --self.sources[1]:looping(false)
 
   self.current = 1
 end
 
 function Main:input()
+  local source = self.sources[self.current]
   if Input.is_pressed("a") then
-    self.sources[self.current]:play()
+    source:play()
   elseif Input.is_pressed("b") then
-    self.sources[self.current]:stop()
+    source:stop()
   elseif Input.is_pressed("x") then
-    self.sources[self.current]:rewind()
+    self.current = (self.current % #self.sources) + 1
   elseif Input.is_pressed("up") then
-    local gain = self.sources[self.current]:gain()
-    self.sources[self.current]:gain(gain + 0.05)
+    local gain = source:gain()
+    source:gain(gain + 0.05)
   elseif Input.is_pressed("down") then
-    local gain = self.sources[self.current]:gain()
-    self.sources[self.current]:gain(gain - 0.05)
+    local gain = source:gain()
+    source:gain(gain - 0.05)
   elseif Input.is_pressed("left") then
-    local pan = self.sources[self.current]:pan()
-    self.sources[self.current]:pan(pan - 0.05)
+    local pan = source:pan()
+    source:pan(pan - 0.05)
   elseif Input.is_pressed("right") then
-    local pan = self.sources[self.current]:pan()
-    self.sources[self.current]:pan(pan + 0.05)
+    local pan = source:pan()
+    source:pan(pan + 0.05)
   end
 end
 
@@ -79,8 +79,11 @@ function Main:render(_)
   local width, height = canvas:size()
 
   local x, y = 0, 0
-  for index, stream in ipairs(self.sources) do
-    local text = string.format("[%d] %.3f %.3f", index, stream:pan(), stream:gain())
+  for index, source in ipairs(self.sources) do
+    local text = string.format("%s%s %.3f %.3f",
+        self.current == index and "*" or " ",
+        source:is_playing() and "!" or " ",
+        source:pan(), source:gain())
     local _, th = self.font:size(text)
     self.font:write(text, x, y)
     y = y + th

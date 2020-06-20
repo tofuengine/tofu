@@ -115,13 +115,11 @@ static int speakers_tweak(lua_State *L)
 static int speakers_halt(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TBOOLEAN)
     LUAX_SIGNATURE_END
-    bool untrack = LUAX_OPTIONAL_BOOLEAN(L, 1, true);
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
-    Audio_halt(audio, untrack);
+    Audio_halt(audio);
 
     return 0;
 }

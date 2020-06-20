@@ -25,6 +25,7 @@
 #ifndef __SL_COMMON_H__
 #define __SL_COMMON_H__
 
+#include <stdbool.h>
 #include <stddef.h>
 
 // We could use floating point format for simpler and more consistent mixing. Two channels are enough to have some
@@ -41,6 +42,13 @@
 
 typedef size_t (*SL_Read_Callback_t)(void *user_data, void *output, size_t frames_requested);
 typedef void (*SL_Seek_Callback_t)(void *user_data, size_t frame_offset);
+typedef bool (*SL_Eof_Callback_t)(void *user_data);
+
+typedef struct _SL_Callbacks_t {
+    SL_Read_Callback_t read;
+    SL_Seek_Callback_t seek;
+    SL_Eof_Callback_t eof;
+} SL_Callbacks_t;
 
 typedef struct _SL_Mix_t {
     float left, right;

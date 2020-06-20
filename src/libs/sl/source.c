@@ -27,9 +27,17 @@
 #include "internals.h"
 #include "props.h"
 
+#include <libs/stb.h>
+
 void SL_source_destroy(SL_Source_t *source)
 {
     ((Source_t *)source)->vtable.dtor(source);
+    free(source);
+}
+
+bool SL_source_reset(SL_Source_t *source)
+{
+    return ((Source_t *)source)->vtable.reset(source);
 }
 
 size_t SL_source_get_group(SL_Source_t *source)
@@ -80,24 +88,4 @@ void SL_source_set_pan(SL_Source_t *source, float pan)
 void SL_source_set_speed(SL_Source_t *source, float speed)
 {
     SL_props_speed(&((Source_t *)source)->props, speed);
-}
-
-void SL_source_play(SL_Source_t *source)
-{
-    ((Source_t *)source)->vtable.play(source);
-}
-
-void SL_source_stop(SL_Source_t *source)
-{
-    ((Source_t *)source)->vtable.stop(source);
-}
-
-void SL_source_rewind(SL_Source_t *source)
-{
-    ((Source_t *)source)->vtable.rewind(source);
-}
-
-bool SL_source_is_playing(SL_Source_t *source)
-{
-    return ((Source_t *)source)->state != SOURCE_STATE_STOPPED;
 }
