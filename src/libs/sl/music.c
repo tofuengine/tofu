@@ -63,15 +63,25 @@ static bool _music_reset(SL_Source_t *source);
 static bool _music_update(SL_Source_t *source, float delta_time);
 static bool _music_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups);
 
-static inline bool _produce(Music_t *music, bool reset)
+static inline bool _reset(Music_t *music)
 {
     const SL_Callbacks_t *callbacks = &music->callbacks;
     ma_pcm_rb *buffer = &music->buffer;
 
-    if (reset) {
-        ma_pcm_rb_reset(buffer);
-        music->callbacks.seek(music->user_data, 0);
+    ma_pcm_rb_reset(buffer);
+
+    bool seeked = callbacks->seek(music->user_data, 0);
+    if (!seeked) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't rewind music stream");
+        return false;
     }
+    return true;
+}
+
+static inline bool _produce(Music_t *music)
+{
+    const SL_Callbacks_t *callbacks = &music->callbacks;
+    ma_pcm_rb *buffer = &music->buffer;
 
     ma_uint32 frames_to_produce = ma_pcm_rb_available_write(buffer);
 #ifdef STREAMING_BUFFER_CHUNK_IN_FRAMES
@@ -185,12 +195,12 @@ static bool _music_ctor(SL_Source_t *source, SL_Callbacks_t callbacks, void *use
 
     ma_result result = ma_pcm_rb_init(format, channels, STREAMING_BUFFER_SIZE_IN_FRAMES, NULL, NULL, &music->buffer);
     if (result != MA_SUCCESS) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize music ring-buffer");
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize music ring-buffer (%d frames)", STREAMING_BUFFER_SIZE_IN_FRAMES);
         return false;
     }
 
-#ifdef __SL_MUSIC_PRELOAD_ON_CREATION__
-    bool produces = _produce(music, true);
+#ifdef __SL_MUSIC_PRELOAD__
+    bool produces = _produce(music);
     if (!produced) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't pre-load music data");
         return false;
@@ -222,7 +232,16 @@ static bool _music_reset(SL_Source_t *source)
 {
     Music_t *music = (Music_t *)source;
 
-    return _produce(music, true);
+    _reset(music);
+#ifdef __SL_MUSIC_PRELOAD__
+    bool produces = _produce(music);
+    if (!produced) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't pre-load music data");
+        return false;
+    }
+#else
+    return true;
+#endif
 }
 
 static bool _music_update(SL_Source_t *source, float delta_time)
