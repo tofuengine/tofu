@@ -87,6 +87,8 @@ static inline bool _produce(Music_t *music, bool reset)
 
         ma_pcm_rb_commit_write(buffer, frames_produced, write_buffer);
 
+        frames_to_produce -= frames_produced;
+
         if (frames_produced < frames_to_produce) {
             if (!callbacks->eof(music->user_data)) { // Check if an error occurred (no more data w/ no EOF)
                 Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d bytes (%d read)", frames_to_produce, frames_produced);
@@ -97,8 +99,6 @@ static inline bool _produce(Music_t *music, bool reset)
             }
             callbacks->seek(music->user_data, 0);
         }
-
-        frames_to_produce -= frames_produced;
     }
 
     return true;
