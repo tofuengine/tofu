@@ -69,7 +69,7 @@ static inline bool _produce(Sample_t *sample)
 
     ma_audio_buffer_unmap(buffer, frames_produced); // Ditto.
 
-    ma_audio_buffer_seek_to_pcm_frame(buffer, 0);
+    ma_audio_buffer_seek_to_pcm_frame(buffer, 0); // Ditto.
 
     return frames_produced == sample->length_in_frames;
 }
@@ -106,7 +106,7 @@ static inline size_t _consume(Sample_t *sample, size_t frames_requested, void *o
 
         if (frames_available == 0) {
             if (sample->props.looping) {
-                ma_audio_buffer_seek_to_pcm_frame(buffer, 0);
+                ma_audio_buffer_seek_to_pcm_frame(buffer, 0); // Can't fail, we are rewind into memory (seeking frame is safe).
             } else {
                 *end_of_data = true;
                 break;
@@ -200,11 +200,8 @@ static bool _sample_reset(SL_Source_t *source)
 {
     Sample_t *sample = (Sample_t *)source;
 
-    ma_result result = ma_audio_buffer_seek_to_pcm_frame(&sample->buffer, 0);
-    if (result != MA_SUCCESS) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't rewind audio-buffer");
-        return false;
-    }
+    ma_audio_buffer_seek_to_pcm_frame(&sample->buffer, 0); // Can't fail, we are rewind into memory (seeking frame is safe).
+
     return true;
 }
 

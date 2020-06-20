@@ -41,7 +41,7 @@
 #define SL_DEFAULT_GROUP        SL_FIRST_GROUP
 
 typedef size_t (*SL_Read_Callback_t)(void *user_data, void *output, size_t frames_requested);
-typedef void (*SL_Seek_Callback_t)(void *user_data, size_t frame_offset);
+typedef bool (*SL_Seek_Callback_t)(void *user_data, size_t frame_offset);
 typedef bool (*SL_Eof_Callback_t)(void *user_data);
 
 typedef struct _SL_Callbacks_t {

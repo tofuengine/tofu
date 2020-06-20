@@ -97,7 +97,11 @@ static inline bool _produce(Music_t *music, bool reset)
             if (!music->props.looping) {
                 break;
             }
-            callbacks->seek(music->user_data, 0);
+            bool seeked = callbacks->seek(music->user_data, 0);
+            if (!seeked) {
+                Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't rewind music stream");
+                return false;
+            }
         }
     }
 
