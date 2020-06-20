@@ -117,10 +117,11 @@ static size_t _decoder_read(void *user_data, void *output, size_t frames_request
 #endif
 }
 
-static void _decoder_seek(void *user_data, size_t frame_offset)
+static bool _decoder_seek(void *user_data, size_t frame_offset)
 {
     drflac *decoder = (drflac *)user_data;
-    drflac_seek_to_pcm_frame(decoder, frame_offset);
+    drflac_bool32 seeked = drflac_seek_to_pcm_frame(decoder, frame_offset);
+    return seeked == DRFLAC_TRUE ? true : false;
 }
 
 static bool _decoder_eof(void *user_data)
