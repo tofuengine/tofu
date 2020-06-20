@@ -164,7 +164,7 @@ static bool _sample_ctor(SL_Source_t *source, SL_Callbacks_t callbacks, void *us
     ma_audio_buffer_config config = ma_audio_buffer_config_init(format, channels, length_in_frames, NULL, NULL);
     ma_result result = ma_audio_buffer_init_copy(&config, &sample->buffer); // NOTE: It will allocate but won't copy.
     if (result != MA_SUCCESS) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d frames for buffer", length_in_frames);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate buffer for %d frames", length_in_frames);
         return false;
     }
 
