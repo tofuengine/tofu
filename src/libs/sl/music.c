@@ -55,6 +55,8 @@ typedef struct _Music_t { // FIXME: rename to `_Music_Source_t`.
     size_t length_in_frames;
 
     ma_pcm_rb buffer;
+
+    bool end_of_stream; // FIXME: count the frames processed, also to detect proper EOF.
 } Music_t;
 
 static bool _music_ctor(SL_Source_t *source, SL_Callbacks_t callbacks, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels);
@@ -75,6 +77,9 @@ static inline bool _reset(Music_t *music)
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't rewind music stream");
         return false;
     }
+
+    music->end_of_stream = false;
+
     return true;
 }
 
@@ -105,6 +110,7 @@ static inline bool _produce(Music_t *music)
                 return false;
             }
             if (!music->props.looping) {
+                music->end_of_stream = true;
                 break;
             }
             bool seeked = callbacks->seek(music->user_data, 0);
@@ -118,12 +124,19 @@ static inline bool _produce(Music_t *music)
     return true;
 }
 
-static inline size_t _consume(Music_t *music, size_t frames_requested, void *output, size_t size_in_frames, bool *end_of_data)
+// https://english.stackexchange.com/questions/457305/the-difference-between-state-and-status
+typedef enum _States_t {
+    STATE_STREAMING,
+    STATE_UNDERRUN,
+    STATE_EOD,
+} States_t;
+
+static inline size_t _consume(Music_t *music, size_t frames_requested, void *output, size_t size_in_frames, States_t *state)
 {
     ma_data_converter *converter = &music->props.converter;
     ma_pcm_rb *buffer = &music->buffer;
 
-    *end_of_data = false;
+    *state = STATE_STREAMING;
 
     size_t frames_processed = 0;
 
@@ -132,8 +145,8 @@ static inline size_t _consume(Music_t *music, size_t frames_requested, void *out
     size_t frames_remaining = (frames_requested > size_in_frames) ? size_in_frames : frames_requested;
     while (frames_remaining > 0) { // Read as much data as possible, filling the buffer and eventually looping!
         ma_uint32 frames_available = ma_pcm_rb_available_read(buffer);
-        if (frames_available == 0) { // Could also be due to buffer underrun.
-            *end_of_data = true;
+        if (frames_available == 0) {
+            *state = music->end_of_stream ? STATE_EOD : STATE_UNDERRUN;
             break;
         }
 
@@ -190,7 +203,8 @@ static bool _music_ctor(SL_Source_t *source, SL_Callbacks_t callbacks, void *use
                 },
             .callbacks = callbacks,
             .user_data = user_data,
-            .length_in_frames = length_in_frames
+            .length_in_frames = length_in_frames,
+            .end_of_stream = false
         };
 
     ma_result result = ma_pcm_rb_init(format, channels, STREAMING_BUFFER_SIZE_IN_FRAMES, NULL, NULL, &music->buffer);
@@ -232,9 +246,14 @@ static bool _music_reset(SL_Source_t *source)
 {
     Music_t *music = (Music_t *)source;
 
-    _reset(music);
+    bool reset = _reset(music);
+    if (!reset) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't reset music stream");
+        return false;
+    }
+
 #ifdef __SL_MUSIC_PRELOAD__
-    bool produces = _produce(music);
+    bool produced = _produce(music);
     if (!produced) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't pre-load music data");
         return false;
@@ -248,7 +267,7 @@ static bool _music_update(SL_Source_t *source, float delta_time)
 {
     Music_t *music = (Music_t *)source;
 
-    return _produce(music, false);
+    return _produce(music);
 }
 
 static bool _music_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups)
@@ -263,10 +282,15 @@ static bool _music_mix(SL_Source_t *source, void *output, size_t frames_requeste
 
     size_t frames_remaining = frames_requested;
     while (frames_remaining > 0) {
-        bool end_of_data = false;
-        size_t frames_processed = _consume(music, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES, &end_of_data);
+        States_t state = STATE_STREAMING;
+        size_t frames_processed = _consume(music, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES, &state);
         mix_2on2_additive(cursor, buffer, frames_processed, mix);
-        if (end_of_data) {
+        if (state == STATE_UNDERRUN) { // TODO: detect buffer underrun and stall!
+            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "buffer underrun for source %p - stalling", source);
+            return false;
+        } else
+        if (state == STATE_EOD) {
+            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "end-of-data reached for source %p", source);
             return true;
         }
         cursor += frames_processed * MIXING_BUFFER_CHANNELS * SL_BYTES_PER_FRAME;
