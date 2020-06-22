@@ -56,7 +56,7 @@ typedef struct _Music_t { // FIXME: rename to `_Music_Source_t`.
 
     ma_pcm_rb buffer;
 
-    bool end_of_stream; // FIXME: count the frames processed, also to detect proper EOF.
+    size_t frames_so_far;
 } Music_t;
 
 static bool _music_ctor(SL_Source_t *source, SL_Callbacks_t callbacks, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels);
@@ -78,7 +78,7 @@ static inline bool _reset(Music_t *music)
         return false;
     }
 
-    music->end_of_stream = false;
+    music->frames_so_far = 0;
 
     return true;
 }
@@ -102,15 +102,16 @@ static inline bool _produce(Music_t *music)
 
         ma_pcm_rb_commit_write(buffer, frames_produced, write_buffer);
 
+        music->frames_so_far += frames_produced;
+
         frames_to_produce -= frames_produced;
 
         if (frames_produced < frames_to_produce) {
-            if (!callbacks->eof(music->user_data)) { // Check if an error occurred (no more data w/ no EOF)
+            if (music->frames_so_far < music->length_in_frames) { // Check if an error occurred (no more data w/ no EOF)
                 Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d bytes (%d read)", frames_to_produce, frames_produced);
                 return false;
             }
             if (!music->props.looping) {
-                music->end_of_stream = true;
                 break;
             }
             bool seeked = callbacks->seek(music->user_data, 0);
@@ -127,7 +128,7 @@ static inline bool _produce(Music_t *music)
 // https://english.stackexchange.com/questions/457305/the-difference-between-state-and-status
 typedef enum _States_t {
     STATE_STREAMING,
-    STATE_UNDERRUN,
+    STATE_STALLING,
     STATE_EOD,
 } States_t;
 
@@ -146,7 +147,7 @@ static inline size_t _consume(Music_t *music, size_t frames_requested, void *out
     while (frames_remaining > 0) { // Read as much data as possible, filling the buffer and eventually looping!
         ma_uint32 frames_available = ma_pcm_rb_available_read(buffer);
         if (frames_available == 0) {
-            *state = music->end_of_stream ? STATE_EOD : STATE_UNDERRUN;
+            *state = music->frames_so_far < music->length_in_frames ? STATE_STALLING : STATE_EOD;
             break;
         }
 
@@ -204,7 +205,7 @@ static bool _music_ctor(SL_Source_t *source, SL_Callbacks_t callbacks, void *use
             .callbacks = callbacks,
             .user_data = user_data,
             .length_in_frames = length_in_frames,
-            .end_of_stream = false
+            .frames_so_far = 0
         };
 
     ma_result result = ma_pcm_rb_init(format, channels, STREAMING_BUFFER_SIZE_IN_FRAMES, NULL, NULL, &music->buffer);
@@ -285,7 +286,7 @@ static bool _music_mix(SL_Source_t *source, void *output, size_t frames_requeste
         States_t state = STATE_STREAMING;
         size_t frames_processed = _consume(music, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES, &state);
         mix_2on2_additive(cursor, buffer, frames_processed, mix);
-        if (state == STATE_UNDERRUN) { // TODO: detect buffer underrun and stall!
+        if (state == STATE_STALLING) { // TODO: detect buffer underrun and stall!
             Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "buffer underrun for source %p - stalling", source);
             return false;
         } else
