@@ -48,6 +48,7 @@ typedef struct _Sample_t {
     size_t length_in_frames;
 
     ma_audio_buffer buffer; // FIXME: is the buffer type the only difference?
+    size_t frames_completed;
 } Sample_t;
 
 static bool _sample_ctor(SL_Source_t *source, SL_Callbacks_t callbacks, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels);
@@ -55,6 +56,22 @@ static void _sample_dtor(SL_Source_t *source);
 static bool _sample_reset(SL_Source_t *source);
 static bool _sample_update(SL_Source_t *source, float delta_time);
 static bool _sample_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups);
+
+static inline bool _rewind(Sample_t *sample)
+{
+    ma_audio_buffer *buffer = &sample->buffer;
+
+    ma_audio_buffer_seek_to_pcm_frame(buffer, 0); // Can't fail, we are rewind into memory (seeking frame is safe).
+
+    sample->frames_completed = 0;
+
+    return true;
+}
+
+static inline bool _reset(Sample_t *sample)
+{
+    return _rewind(sample);
+}
 
 static inline bool _produce(Sample_t *sample)
 {
@@ -74,12 +91,20 @@ static inline bool _produce(Sample_t *sample)
     return frames_produced == sample->length_in_frames;
 }
 
-static inline size_t _consume(Sample_t *sample, size_t frames_requested, void *output, size_t size_in_frames, bool *end_of_data)
+// https://english.stackexchange.com/questions/457305/the-difference-between-state-and-status
+typedef enum _States_t {
+    STATE_STREAMING,
+    STATE_STALLING,
+    STATE_PLAYING,
+    STATE_EOD,
+} States_t;
+
+static inline size_t _consume(Sample_t *sample, size_t frames_requested, void *output, size_t size_in_frames, States_t *state)
 {
     ma_data_converter *converter = &sample->props.converter;
     ma_audio_buffer *buffer = &sample->buffer;
 
-    *end_of_data = false;
+    *state = STATE_PLAYING;
 
     size_t frames_processed = 0;
 
@@ -99,16 +124,18 @@ static inline size_t _consume(Sample_t *sample, size_t frames_requested, void *o
 
         ma_audio_buffer_unmap(buffer, frames_consumed); // Ditto.
 
+        sample->frames_completed += frames_generated;
+
         cursor += frames_generated * MIXING_BUFFER_CHANNELS * SL_BYTES_PER_FRAME;
 
         frames_processed += frames_generated;
         frames_remaining -= frames_generated;
 
-        if (frames_available == 0) {
+        if (sample->frames_completed == sample->length_in_frames) {
             if (sample->props.looping) {
-                ma_audio_buffer_seek_to_pcm_frame(buffer, 0); // Can't fail, we are rewind into memory (seeking frame is safe).
+                _rewind(sample);
             } else {
-                *end_of_data = true;
+                *state = STATE_EOD;
                 break;
             }
         }
@@ -200,7 +227,11 @@ static bool _sample_reset(SL_Source_t *source)
 {
     Sample_t *sample = (Sample_t *)source;
 
-    ma_audio_buffer_seek_to_pcm_frame(&sample->buffer, 0); // Can't fail, we are rewind into memory (seeking frame is safe).
+    bool reset = _reset(sample);
+    if (!reset) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't reset sample data");
+        return false;
+    }
 
     return true;
 }
@@ -222,10 +253,11 @@ static bool _sample_mix(SL_Source_t *source, void *output, size_t frames_request
 
     size_t frames_remaining = frames_requested;
     while (frames_remaining > 0) {
-        bool end_of_data = false;
-        size_t frames_processed = _consume(sample, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES, &end_of_data);
+        States_t state = STATE_PLAYING;
+        size_t frames_processed = _consume(sample, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES, &state);
         mix_1on2_additive(cursor, buffer, frames_processed, mix);
-        if (end_of_data) {
+        if (state == STATE_EOD) {
+            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "end-of-data reached for source %p", source);
             return true;
         }
         cursor += frames_processed * SL_CHANNELS_PER_FRAME * MIXING_BUFFER_CHANNELS * SL_BYTES_PER_FRAME;

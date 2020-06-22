@@ -55,8 +55,7 @@ typedef struct _Music_t { // FIXME: rename to `_Music_Source_t`.
     size_t length_in_frames;
 
     ma_pcm_rb buffer;
-
-    size_t frames_so_far;
+    size_t frames_completed;
 } Music_t;
 
 static bool _music_ctor(SL_Source_t *source, SL_Callbacks_t callbacks, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels);
@@ -65,12 +64,9 @@ static bool _music_reset(SL_Source_t *source);
 static bool _music_update(SL_Source_t *source, float delta_time);
 static bool _music_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups);
 
-static inline bool _reset(Music_t *music)
+static inline bool _rewind(Music_t *music)
 {
     const SL_Callbacks_t *callbacks = &music->callbacks;
-    ma_pcm_rb *buffer = &music->buffer;
-
-    ma_pcm_rb_reset(buffer);
 
     bool seeked = callbacks->seek(music->user_data, 0);
     if (!seeked) {
@@ -78,9 +74,18 @@ static inline bool _reset(Music_t *music)
         return false;
     }
 
-    music->frames_so_far = 0;
+    music->frames_completed = 0;
 
     return true;
+}
+
+static inline bool _reset(Music_t *music)
+{
+    ma_pcm_rb *buffer = &music->buffer;
+
+    ma_pcm_rb_reset(buffer);
+
+    return _rewind(music);
 }
 
 static inline bool _produce(Music_t *music)
@@ -102,21 +107,20 @@ static inline bool _produce(Music_t *music)
 
         ma_pcm_rb_commit_write(buffer, frames_produced, write_buffer);
 
-        music->frames_so_far += frames_produced;
+        music->frames_completed += frames_produced;
 
         frames_to_produce -= frames_produced;
 
         if (frames_produced < frames_to_produce) {
-            if (music->frames_so_far < music->length_in_frames) { // Check if an error occurred (no more data w/ no EOF)
+            if (music->frames_completed < music->length_in_frames) { // Check if an error occurred (no more data w/ no EOF)
                 Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d bytes (%d read)", frames_to_produce, frames_produced);
                 return false;
             }
             if (!music->props.looping) {
                 break;
             }
-            bool seeked = callbacks->seek(music->user_data, 0);
-            if (!seeked) {
-                Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't rewind music stream");
+            bool rewound = _rewind(music);
+            if (!rewound) {
                 return false;
             }
         }
@@ -147,7 +151,7 @@ static inline size_t _consume(Music_t *music, size_t frames_requested, void *out
     while (frames_remaining > 0) { // Read as much data as possible, filling the buffer and eventually looping!
         ma_uint32 frames_available = ma_pcm_rb_available_read(buffer);
         if (frames_available == 0) {
-            *state = music->frames_so_far < music->length_in_frames ? STATE_STALLING : STATE_EOD;
+            *state = music->frames_completed < music->length_in_frames ? STATE_STALLING : STATE_EOD;
             break;
         }
 
@@ -205,7 +209,7 @@ static bool _music_ctor(SL_Source_t *source, SL_Callbacks_t callbacks, void *use
             .callbacks = callbacks,
             .user_data = user_data,
             .length_in_frames = length_in_frames,
-            .frames_so_far = 0
+            .frames_completed = 0
         };
 
     ma_result result = ma_pcm_rb_init(format, channels, STREAMING_BUFFER_SIZE_IN_FRAMES, NULL, NULL, &music->buffer);
