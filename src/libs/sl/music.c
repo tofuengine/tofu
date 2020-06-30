@@ -93,38 +93,39 @@ static inline bool _produce(Music_t *music)
     const SL_Callbacks_t *callbacks = &music->callbacks;
     ma_pcm_rb *buffer = &music->buffer;
 
+    if (music->frames_completed == music->length_in_frames) { // End-of-data, early exit.
+        if (!music->props.looping) { // FIXME: duplicated.
+            return true;
+        }
+        bool rewound = _rewind(music);
+        if (!rewound) {
+            return false;
+        }
+    }
+
     ma_uint32 frames_to_produce = ma_pcm_rb_available_write(buffer);
 #ifdef STREAMING_BUFFER_CHUNK_IN_FRAMES
     if (frames_to_produce > STREAMING_BUFFER_CHUNK_IN_FRAMES) {
         frames_to_produce = STREAMING_BUFFER_CHUNK_IN_FRAMES;
     }
 #endif
-    while (frames_to_produce > 0) {
-        void *write_buffer;
-        ma_pcm_rb_acquire_write(buffer, &frames_to_produce, &write_buffer);
 
-        size_t frames_produced = callbacks->read(music->user_data, write_buffer, frames_to_produce);
+    void *write_buffer;
+    ma_pcm_rb_acquire_write(buffer, &frames_to_produce, &write_buffer);
 
-        ma_pcm_rb_commit_write(buffer, frames_produced, write_buffer);
+    size_t frames_produced = callbacks->read(music->user_data, write_buffer, frames_to_produce);
 
-        music->frames_completed += frames_produced;
+    ma_pcm_rb_commit_write(buffer, frames_produced, write_buffer);
 
-        frames_to_produce -= frames_produced;
+    music->frames_completed += frames_produced;
 
-        if (frames_produced < frames_to_produce) {
-            if (music->frames_completed < music->length_in_frames) { // Check if an error occurred (no more data w/ no EOF)
-                Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d bytes (%d read)", frames_to_produce, frames_produced);
-                return false;
-            }
-            if (!music->props.looping) {
-                break;
-            }
-            bool rewound = _rewind(music);
-            if (!rewound) {
-                return false;
-            }
-        }
+    if (frames_produced < frames_to_produce && music->frames_completed < music->length_in_frames) { // Check if an error occurred (no more data w/ no EOF)
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d bytes (%d read)", frames_to_produce, frames_produced);
+        return false;
     }
+
+    // If only part of the `frames_to_produce` chunk has been fetched due to end-of-file we are ok; the
+    // stream will be looped (if needed) and the rest loaded on the next update call.
 
     return true;
 }
