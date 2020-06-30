@@ -97,7 +97,7 @@ bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration
         return false;
     }
 
-    result = ma_mutex_init(&audio->context, &audio->lock);
+    result = ma_mutex_init(&audio->lock);
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create the synchronization object");
         ma_device_uninit(&audio->device);
