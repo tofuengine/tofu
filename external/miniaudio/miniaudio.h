@@ -1894,7 +1894,7 @@ MA_API void ma_version(ma_uint32* pMajor, ma_uint32* pMinor, ma_uint32* pRevisio
 /*
 Retrieves the version of miniaudio as a string which can be useful for logging purposes.
 */
-MA_API const char* ma_version_string();
+MA_API const char* ma_version_string(void);
 
 
 /**************************************************************************************************************************************************************
@@ -6099,7 +6099,7 @@ static void ma_sleep(ma_uint32 milliseconds)
 #endif
 
 #if !defined(MA_EMSCRIPTEN)
-static MA_INLINE void ma_yield()
+static MA_INLINE void ma_yield(void)
 {
 #if defined(__i386) || defined(_M_IX86) || defined(__x86_64__) || defined(_M_X64)
     /* x86/x64 */
@@ -8285,17 +8285,17 @@ static MA_INLINE ma_result ma_spinlock_lock_ex(ma_spinlock* pSpinlock, ma_bool32
     return MA_SUCCESS;
 }
 
-static ma_result ma_spinlock_lock(ma_spinlock* pSpinlock)
+static MA_INLINE ma_result ma_spinlock_lock(ma_spinlock* pSpinlock)
 {
     return ma_spinlock_lock_ex(pSpinlock, MA_TRUE);
 }
 
-static ma_result ma_spinlock_lock_noyield(ma_spinlock* pSpinlock)
+static MA_INLINE ma_result ma_spinlock_lock_noyield(ma_spinlock* pSpinlock)
 {
     return ma_spinlock_lock_ex(pSpinlock, MA_FALSE);
 }
 
-static ma_result ma_spinlock_unlock(ma_spinlock* pSpinlock)
+static MA_INLINE ma_result ma_spinlock_unlock(ma_spinlock* pSpinlock)
 {
     if (pSpinlock == NULL) {
         return MA_INVALID_ARGS;
