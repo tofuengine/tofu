@@ -91,27 +91,23 @@ static inline bool _produce(Sample_t *sample)
     return frames_produced == sample->length_in_frames;
 }
 
-// https://english.stackexchange.com/questions/457305/the-difference-between-state-and-status
-typedef enum _States_t {
-    STATE_STREAMING,
-    STATE_STALLING,
-    STATE_PLAYING,
-    STATE_EOD,
-} States_t;
-
-static inline size_t _consume(Sample_t *sample, size_t frames_requested, void *output, size_t size_in_frames, States_t *state)
+static inline Source_States_t _consume(Sample_t *sample, size_t frames_requested, void *output, size_t size_in_frames, size_t *frames_processed)
 {
     ma_data_converter *converter = &sample->props.converter;
     ma_audio_buffer *buffer = &sample->buffer;
 
-    *state = STATE_PLAYING;
-
-    size_t frames_processed = 0;
+    *frames_processed = 0;
 
     uint8_t *cursor = output;
 
     size_t frames_remaining = (frames_requested > size_in_frames) ? size_in_frames : frames_requested;
     while (frames_remaining > 0) { // Read as much data as possible, filling the buffer and eventually looping!
+        if (sample->frames_completed == sample->length_in_frames) {
+            if (!sample->props.looping || !_rewind(sample)) {
+                return SOURCE_STATE_EOD;
+            }
+        }
+
         ma_uint64 frames_to_convert = ma_data_converter_get_required_input_frame_count(converter, frames_remaining);
 
         void *read_buffer;
@@ -128,20 +124,11 @@ static inline size_t _consume(Sample_t *sample, size_t frames_requested, void *o
 
         cursor += frames_generated * MIXING_BUFFER_CHANNELS * SL_BYTES_PER_FRAME;
 
-        frames_processed += frames_generated;
+        *frames_processed += frames_generated;
         frames_remaining -= frames_generated;
-
-        if (sample->frames_completed == sample->length_in_frames) {
-            if (sample->props.looping) {
-                _rewind(sample);
-            } else {
-                *state = STATE_EOD;
-                break;
-            }
-        }
     }
 
-    return frames_processed;
+    return SOURCE_STATE_PLAYING;
 }
 
 SL_Source_t *SL_sample_create(SL_Callbacks_t callbacks, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels)
@@ -253,15 +240,15 @@ static bool _sample_mix(SL_Source_t *source, void *output, size_t frames_request
 
     size_t frames_remaining = frames_requested;
     while (frames_remaining > 0) {
-        States_t state = STATE_PLAYING;
-        size_t frames_processed = _consume(sample, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES, &state);
+        size_t frames_processed;
+        Source_States_t state = _consume(sample, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES, &frames_processed);
         mix_1on2_additive(cursor, buffer, frames_processed, mix);
-        if (state == STATE_EOD) {
+        if (state == SOURCE_STATE_EOD) {
             Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "end-of-data reached for source %p", source);
-            return true;
+            return false;
         }
         cursor += frames_processed * SL_CHANNELS_PER_FRAME * MIXING_BUFFER_CHANNELS * SL_BYTES_PER_FRAME;
         frames_remaining -= frames_processed;
     }
-    return false;
+    return true;
 }

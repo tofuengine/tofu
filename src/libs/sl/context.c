@@ -137,8 +137,8 @@ void SL_context_mix(SL_Context_t *context, void *output, size_t frames_requested
     // Backward scan, to remove to-be-untracked sources.
     for (int i = arrlen(context->sources) - 1; i >= 0; --i) {
         SL_Source_t *source = context->sources[i];
-        bool untrack = ((Source_t *)source)->vtable.mix(source, output, frames_requested, groups); // FIXME: pass the dereferences mix? API violation?
-        if (untrack) {
+        bool still_running = ((Source_t *)source)->vtable.mix(source, output, frames_requested, groups); // FIXME: pass the dereferences mix? API violation?
+        if (!still_running) {
             arrdel(context->sources, i);
         }
     }

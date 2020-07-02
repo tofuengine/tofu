@@ -32,8 +32,15 @@ typedef struct _Source_VTable_t {
     void (*dtor)(SL_Source_t *source);
     bool (*reset)(SL_Source_t *source);
     bool (*update)(SL_Source_t *source, float delta_time);
-    bool (*mix)(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups);
+    bool (*mix)(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups); // Returns `false` when end-of-data.
 } Source_VTable_t;
+
+// https://english.stackexchange.com/questions/457305/the-difference-between-state-and-status
+typedef enum _Source_States_t {
+    SOURCE_STATE_PLAYING,
+    SOURCE_STATE_STALLING,
+    SOURCE_STATE_EOD,
+} Source_States_t;
 
 typedef struct _Source_t {
     Source_VTable_t vtable;
