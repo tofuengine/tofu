@@ -94,7 +94,7 @@ static inline bool _produce(Music_t *music)
     ma_pcm_rb *buffer = &music->buffer;
 
     if (music->frames_completed == music->length_in_frames) { // End-of-data, early exit.
-        return music->props.looping || _rewind(music);
+        return !music->props.looping || _rewind(music);
     }
 
     ma_uint32 frames_to_produce = ma_pcm_rb_available_write(buffer);
