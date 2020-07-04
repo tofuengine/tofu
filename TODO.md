@@ -77,6 +77,7 @@
     * added `sanitize` build that uses AddressSanitizer to detect bug.
   * handling error codes when updating audio. Still missing when rewinding/resetting a source.
   * updating the audio sub-system in the fixed steps loop, just as it was INT based.
+  * done for the moment. What is missing is a proper resource-manager that enables reuse of the memory/resources.
 
 ```java
   //do panning
