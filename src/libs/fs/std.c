@@ -55,7 +55,7 @@ static void _std_handle_ctor(File_System_Handle_t *handle, FILE *stream);
 static void _std_handle_dtor(File_System_Handle_t *handle);
 static size_t _std_handle_size(File_System_Handle_t *handle);
 static size_t _std_handle_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
-static void _std_handle_skip(File_System_Handle_t *handle, int offset);
+static void _std_handle_seek(File_System_Handle_t *handle, long offset, int whence);
 static bool _std_handle_eof(File_System_Handle_t *handle);
 
 bool std_is_valid(const char *path)
@@ -158,7 +158,7 @@ static void _std_handle_ctor(File_System_Handle_t *handle, FILE *stream)
             .dtor = _std_handle_dtor,
             .size = _std_handle_size,
             .read = _std_handle_read,
-            .skip = _std_handle_skip,
+            .seek = _std_handle_seek,
             .eof = _std_handle_eof
         };
 
@@ -198,12 +198,12 @@ static size_t _std_handle_read(File_System_Handle_t *handle, void *buffer, size_
     return bytes_read;
 }
 
-static void _std_handle_skip(File_System_Handle_t *handle, int offset)
+static void _std_handle_seek(File_System_Handle_t *handle, long offset, int whence)
 {
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
-    fseek(std_handle->stream, offset, SEEK_CUR);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes seeked for handle %p", offset, handle);
+    fseek(std_handle->stream, offset, whence);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes seeked w/ mode %d for handle %p", offset, whence, handle);
 }
 
 static bool _std_handle_eof(File_System_Handle_t *handle)

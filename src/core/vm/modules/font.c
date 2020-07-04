@@ -108,7 +108,7 @@ static int font_new3(lua_State *L)
         }
     } else
     if (type == LUA_TUSERDATA) {
-        const Canvas_Class_t *canvas = (const Canvas_Class_t *)LUAX_USERDATA(L, 1);
+        const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_USERDATA(L, 1);
 
         sheet = GL_sheet_attach_rect(canvas->context->surface, glyph_width, glyph_height);
         if (!sheet) {
@@ -119,8 +119,8 @@ static int font_new3(lua_State *L)
         return luaL_error(L, "invalid argument");
     }
 
-    Font_Class_t *self = (Font_Class_t *)lua_newuserdata(L, sizeof(Font_Class_t));
-    *self = (Font_Class_t){
+    Font_Object_t *self = (Font_Object_t *)lua_newuserdata(L, sizeof(Font_Object_t));
+    *self = (Font_Object_t){
             .context = display->context,
             .context_reference = LUAX_REFERENCE_NIL,
             .sheet = sheet,
@@ -178,7 +178,7 @@ static int font_new5(lua_State *L)
         }
     } else
     if (type == LUA_TUSERDATA) {
-        const Canvas_Class_t *canvas = (const Canvas_Class_t *)LUAX_USERDATA(L, 1);
+        const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_USERDATA(L, 1);
 
         sheet = GL_sheet_attach_rect(canvas->context->surface, glyph_width, glyph_height);
         if (!sheet) {
@@ -189,8 +189,8 @@ static int font_new5(lua_State *L)
         return luaL_error(L, "invalid argument");
     }
 
-    Font_Class_t *self = (Font_Class_t *)lua_newuserdata(L, sizeof(Font_Class_t));
-    *self = (Font_Class_t){
+    Font_Object_t *self = (Font_Object_t *)lua_newuserdata(L, sizeof(Font_Object_t));
+    *self = (Font_Object_t){
             .context = display->context,
             .context_reference = LUAX_REFERENCE_NIL,
             .sheet = sheet,
@@ -216,7 +216,7 @@ static int font_gc(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Font_Class_t *self = (Font_Class_t *)LUAX_USERDATA(L, 1);
+    Font_Object_t *self = (Font_Object_t *)LUAX_USERDATA(L, 1);
 
     if (self->sheet_reference != LUAX_REFERENCE_NIL) {
         luaX_unref(L, self->sheet_reference);
@@ -290,7 +290,7 @@ static int font_size(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Font_Class_t *self = (Font_Class_t *)LUAX_USERDATA(L, 1);
+    Font_Object_t *self = (Font_Object_t *)LUAX_USERDATA(L, 1);
     const char *text = LUAX_OPTIONAL_STRING(L, 2, NULL);
     float scale_x = LUAX_OPTIONAL_NUMBER(L, 3, 1.0f);
     float scale_y = LUAX_OPTIONAL_NUMBER(L, 4, scale_x);
@@ -310,8 +310,8 @@ static int font_canvas(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Font_Class_t *self = (Font_Class_t *)LUAX_USERDATA(L, 1);
-    const Canvas_Class_t *canvas = (Canvas_Class_t *)LUAX_OPTIONAL_USERDATA(L, 2, NULL);
+    Font_Object_t *self = (Font_Object_t *)LUAX_USERDATA(L, 1);
+    const Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 2, NULL);
 
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -341,7 +341,7 @@ static int font_write4(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Font_Class_t *self = (Font_Class_t *)LUAX_USERDATA(L, 1);
+    Font_Object_t *self = (Font_Object_t *)LUAX_USERDATA(L, 1);
     const char *text = LUAX_STRING(L, 2);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
@@ -385,7 +385,7 @@ static int font_write5_6(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Font_Class_t *self = (Font_Class_t *)LUAX_USERDATA(L, 1);
+    Font_Object_t *self = (Font_Object_t *)LUAX_USERDATA(L, 1);
     const char *text = LUAX_STRING(L, 2);
     int x = LUAX_INTEGER(L, 3); // TODO: make all arguments const?
     int y = LUAX_INTEGER(L, 4);

@@ -66,13 +66,13 @@ local function convert(output, input)
   end
 
   local out = io.open(output, "wb")
-  out:write(struct.pack("I4", #sheet))
+  out:write(struct.pack("I", #sheet))
   for index, entry in ipairs(sheet) do
     print(string.format("  entry #%d `%s` at <%d, %d> w/ size %dx%d", index, entry.id, entry.x, entry.y, entry.width, entry.height))
-    out:write(struct.pack("I4", entry.x))
-    out:write(struct.pack("I4", entry.y))
-    out:write(struct.pack("I4", entry.width))
-    out:write(struct.pack("I4", entry.height))
+    out:write(struct.pack("I", entry.x))
+    out:write(struct.pack("I", entry.y))
+    out:write(struct.pack("I", entry.width))
+    out:write(struct.pack("I", entry.height))
   end
   out:close()
 end

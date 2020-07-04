@@ -27,9 +27,7 @@
 
 // TODO: rename Display to Video?
 
-#include <config.h>
 #include <libs/gl/gl.h>
-#include <libs/fs/fsaux.h>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -72,13 +70,14 @@ typedef struct _Display_t {
 
     Program_t programs[Display_Programs_t_CountOf];
     Program_t *active_program;
-    GLfloat time;
+
+    double time;
 
     GL_Context_t *context;
     GL_Palette_t palette;
 } Display_t;
 
-extern bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration);
+extern bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration); // TODO: rename to `Graphics`?
 extern void Display_terminate(Display_t *display);
 extern bool Display_should_close(const Display_t *display);
 extern void Display_update(Display_t *display, float delta_time);

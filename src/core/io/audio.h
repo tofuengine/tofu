@@ -25,37 +25,40 @@
 #ifndef __AUDIO_H__
 #define __AUDIO_H__
 
-#include "config.h"
-
 #include <miniaudio/miniaudio.h>
+#include <libs/sl/sl.h>
 
 #include <stdbool.h>
 
 typedef struct _Audio_Configuration_t {
-    size_t channels;
-    size_t sample_rate;
-    size_t voices;
+    float master_volume;
 } Audio_Configuration_t;
-
-typedef struct _Audio_Voice_t {
-    uint8_t *buffer;
-    size_t buffer_size;
-} Audio_Voice_t;
 
 typedef struct _Audio_t {
     Audio_Configuration_t configuration;
 
+    ma_context_config context_config;
+    ma_context context;
     ma_device_config device_config;
     ma_device device;
+    bool is_started;
+    ma_mutex lock;
 
-    double time;
+    SL_Context_t *sl;
 
-    Audio_Voice_t *voices;
+    float volume;
 } Audio_t;
 
 extern bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration);
-extern void Audio_terminate(Audio_t *audio);
+extern void Audio_terminate(Audio_t *audio); // TODO: rename to `deinitialize()` (every one).
+extern void Audio_halt(Audio_t *audio);
 
-extern void Audio_update(Audio_t *audio, float delta_time);
+extern void Audio_volume(Audio_t *audio, float volume);
+
+extern bool Audio_update(Audio_t *audio, float delta_time);
+
+extern void Audio_track(Audio_t *audio, SL_Source_t *source, bool reset);
+extern void Audio_untrack(Audio_t *audio, SL_Source_t *source);
+extern bool Audio_is_tracked(Audio_t *audio, SL_Source_t *source);
 
 #endif  /* __AUDIO_H__ */

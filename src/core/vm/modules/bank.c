@@ -26,6 +26,7 @@
 
 #include <config.h>
 #include <core/io/display.h>
+#include <libs/fs/fsaux.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 
@@ -72,9 +73,9 @@ static GL_Rectangle_t *_load_cells(const File_System_t *file_system, const char 
     }
 
     uint32_t entries;
-    size_t bytes_to_read = sizeof(uint32_t);
-    size_t bytes_read = FS_read(handle, &entries, bytes_to_read);
-    if (bytes_read != bytes_to_read) {
+    size_t bytes_requested = sizeof(uint32_t);
+    size_t bytes_read = FS_read(handle, &entries, bytes_requested);
+    if (bytes_read != bytes_requested) {
         FS_close(handle);
         return NULL;
     }
@@ -87,9 +88,9 @@ static GL_Rectangle_t *_load_cells(const File_System_t *file_system, const char 
 
     for (uint32_t i = 0; i < entries; ++i) {
         Rectangle_u32_t rectangle = (Rectangle_u32_t){ 0 };
-        bytes_to_read = sizeof(Rectangle_u32_t);
-        bytes_read = FS_read(handle, &rectangle, bytes_to_read);
-        if (bytes_read != bytes_to_read) {
+        bytes_requested = sizeof(Rectangle_u32_t);
+        bytes_read = FS_read(handle, &rectangle, bytes_requested);
+        if (bytes_read != bytes_requested) {
             free(cells);
             FS_close(handle);
             return NULL;
@@ -146,7 +147,7 @@ static int bank_new2(lua_State *L)
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p decoded from file `%s`", sheet, file);
     } else
     if (type == LUA_TUSERDATA) {
-        const Canvas_Class_t *canvas = (const Canvas_Class_t *)LUAX_USERDATA(L, 1);
+        const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_USERDATA(L, 1);
 
         sheet = GL_sheet_attach(canvas->context->surface, cells, count);
         free(cells);
@@ -159,8 +160,8 @@ static int bank_new2(lua_State *L)
         return luaL_error(L, "invalid argument");
     }
 
-    Bank_Class_t *self = (Bank_Class_t *)lua_newuserdata(L, sizeof(Bank_Class_t));
-    *self = (Bank_Class_t){
+    Bank_Object_t *self = (Bank_Object_t *)lua_newuserdata(L, sizeof(Bank_Object_t));
+    *self = (Bank_Object_t){
             .context = display->context,
             .context_reference = LUAX_REFERENCE_NIL,
             .sheet = sheet,
@@ -203,7 +204,7 @@ static int bank_new3(lua_State *L)
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p decoded from file `%s`", sheet, file);
     } else
     if (type == LUA_TUSERDATA) {
-        const Canvas_Class_t *canvas = (const Canvas_Class_t *)LUAX_USERDATA(L, 1);
+        const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_USERDATA(L, 1);
 
         sheet = GL_sheet_attach_rect(canvas->context->surface, cell_width, cell_height);
         if (!sheet) {
@@ -214,8 +215,8 @@ static int bank_new3(lua_State *L)
         return luaL_error(L, "invalid argument");
     }
 
-    Bank_Class_t *self = (Bank_Class_t *)lua_newuserdata(L, sizeof(Bank_Class_t));
-    *self = (Bank_Class_t){
+    Bank_Object_t *self = (Bank_Object_t *)lua_newuserdata(L, sizeof(Bank_Object_t));
+    *self = (Bank_Object_t){
             .context = display->context,
             .context_reference = LUAX_REFERENCE_NIL,
             .sheet = sheet,
@@ -241,7 +242,7 @@ static int bank_gc(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Bank_Class_t *self = (Bank_Class_t *)LUAX_USERDATA(L, 1);
+    Bank_Object_t *self = (Bank_Object_t *)LUAX_USERDATA(L, 1);
 
     if (self->sheet_reference != LUAX_REFERENCE_NIL) {
         luaX_unref(L, self->sheet_reference);
@@ -271,7 +272,7 @@ static int bank_size(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Bank_Class_t *self = (Bank_Class_t *)LUAX_USERDATA(L, 1);
+    Bank_Object_t *self = (Bank_Object_t *)LUAX_USERDATA(L, 1);
     int cell_id = LUAX_INTEGER(L, 2);
     float scale_x = LUAX_OPTIONAL_NUMBER(L, 3, 1.0f);
     float scale_y = LUAX_OPTIONAL_NUMBER(L, 4, scale_x);
@@ -290,8 +291,8 @@ static int bank_canvas(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Bank_Class_t *self = (Bank_Class_t *)LUAX_USERDATA(L, 1);
-    const Canvas_Class_t *canvas = (Canvas_Class_t *)LUAX_OPTIONAL_USERDATA(L, 2, NULL);
+    Bank_Object_t *self = (Bank_Object_t *)LUAX_USERDATA(L, 1);
+    const Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 2, NULL);
 
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -321,7 +322,7 @@ static int bank_blit4(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Bank_Class_t *self = (Bank_Class_t *)LUAX_USERDATA(L, 1);
+    Bank_Object_t *self = (Bank_Object_t *)LUAX_USERDATA(L, 1);
     int cell_id = LUAX_INTEGER(L, 2);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
@@ -342,7 +343,7 @@ static int bank_blit5(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Bank_Class_t *self = (Bank_Class_t *)LUAX_USERDATA(L, 1);
+    Bank_Object_t *self = (Bank_Object_t *)LUAX_USERDATA(L, 1);
     int cell_id = LUAX_INTEGER(L, 2);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
@@ -368,7 +369,7 @@ static int bank_blit6_7_8_9(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Bank_Class_t *self = (Bank_Class_t *)LUAX_USERDATA(L, 1);
+    Bank_Object_t *self = (Bank_Object_t *)LUAX_USERDATA(L, 1);
     int cell_id = LUAX_INTEGER(L, 2);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);

@@ -4,3 +4,4 @@ external/**/*.o
 src/**/*.inc
 src/**/*.o
 tofu
+tofu*.exe

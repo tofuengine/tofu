@@ -24,12 +24,13 @@
 
 #include "fs.h"
 
+#include <config.h>
+#include <libs/log.h>
+#include <libs/stb.h>
+
 #include "internals.h"
 #include "pak.h"
 #include "std.h"
-
-#include <libs/log.h>
-#include <libs/stb.h>
 
 #include <dirent.h>
 #include <stdint.h>
@@ -41,7 +42,7 @@
   #define realpath(N,R) _fullpath((R),(N),PATH_MAX)
 #endif
 
-static File_System_Mount_t *_mount(const char *path)
+static inline File_System_Mount_t *_mount(const char *path)
 {
     if (std_is_valid(path)) {
         return std_mount(path);
@@ -53,7 +54,7 @@ static File_System_Mount_t *_mount(const char *path)
     }
 }
 
-static void _unmount(File_System_Mount_t *mount)
+static inline void _unmount(File_System_Mount_t *mount)
 {
     ((Mount_t *)mount)->vtable.dtor(mount);
     free(mount);
@@ -72,7 +73,7 @@ static bool _attach(File_System_t *file_system, const char *path)
     return true;
 }
 
-bool FS_initialize(File_System_t *file_system, const char *base_path)
+bool FS_initialize(File_System_t *file_system, const char *base_path) // TODO: should the FS struct be allocated? Or no struct?
 {
     *file_system = (File_System_t){ 0 };
 
@@ -108,11 +109,12 @@ bool FS_initialize(File_System_t *file_system, const char *base_path)
 
 void FS_terminate(File_System_t *file_system)
 {
-    size_t count = arrlen(file_system->mounts);
-    for (int i = count - 1; i >= 0; --i) {
-        File_System_Mount_t *mount = file_system->mounts[i];
+    File_System_Mount_t **current = file_system->mounts;
+    for (int count = arrlen(file_system->mounts); count; --count) {
+        File_System_Mount_t *mount = *(current++);
         _unmount(mount);
     }
+
     arrfree(file_system->mounts);
 }
 
@@ -128,11 +130,28 @@ bool FS_attach(File_System_t *file_system, const char *path)
     return _attach(file_system, resolved);
 }
 
+File_System_Handle_t *FS_locate_and_open(const File_System_t *file_system, const char *file)
+{
+    File_System_Mount_t *mount = FS_locate(file_system, file);
+    if (!mount) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't locale file `%s`", file);
+        return NULL;
+    }
+
+    return FS_open(mount, file);;
+}
+
 File_System_Mount_t *FS_locate(const File_System_t *file_system, const char *file)
 {
-    size_t count = arrlen(file_system->mounts);
-    for (int i = count - 1; i >= 0; --i) {
+#ifdef __FS_SUPPORT_MOUNT_OVERRIDE__
+    // Backward scan, later mounts gain priority over existing ones.
+    for (int i = arrlen(file_system->mounts) - 1; i >= 0; --i) {
         File_System_Mount_t *mount = file_system->mounts[i];
+#else
+    File_System_Mount_t **current = file_system->mounts;
+    for (int count = arrlen(file_system->mounts); count; --count) {
+        File_System_Mount_t *mount = *(current++);
+#endif
         if (((Mount_t *)mount)->vtable.contains(mount, file)) {
             return mount;
         }
@@ -162,9 +181,9 @@ size_t FS_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requeste
     return ((Handle_t *)handle)->vtable.read(handle, buffer, bytes_requested);
 }
 
-void FS_skip(File_System_Handle_t *handle, int offset)
+void FS_seek(File_System_Handle_t *handle, long offset, int whence)
 {
-    ((Handle_t *)handle)->vtable.skip(handle, offset);
+    ((Handle_t *)handle)->vtable.seek(handle, offset, whence);
 }
 
 bool FS_eof(File_System_Handle_t *handle)

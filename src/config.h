@@ -30,6 +30,14 @@
 
 #define GARBAGE_COLLECTION_PERIOD   60.0
 
+#define BALANCE_LAW_LINEAR    0
+#define BALANCE_LAW_SINCOS    1
+#define BALANCE_LAW_SQRT      2
+
+#define PANNING_LAW_CONSTANT_GAIN           0
+#define PANNING_LAW_CONSTANT_POWER_SINCOS   1
+#define PANNING_LAW_CONSTANT_POWER_SQRT     2
+
 // Behavioural MACROs use the `__` prefix/suffix.
 #define __GL_VERSION__                      0x0201
 #define __GSLS_VERSION__                    0x0114
@@ -43,6 +51,7 @@
 
 #define __NO_LINEFEEDS__
 
+// TODO: better naming for macros, including namespace.
 #undef  __IGNORE_ALPHA_ON_COLORS__
 #undef  __DEBUG_TRIANGLES_WINDING__
 #undef  __FIND_NEAREST_COLOR_EUCLIDIAN__
@@ -53,6 +62,10 @@
 #undef  __DEBUG_SHADER_CALLS__
 #define __DEBUG_GARBAGE_COLLECTOR__
 #define __VM_USE_CUSTOM_TRACEBACK__
+#define __FS_SUPPORT_MOUNT_OVERRIDE__
+#define __SL_BALANCE_LAW__ BALANCE_LAW_SINCOS
+#define __SL_PANNING_LAW__ PANNING_LAW_CONSTANT_POWER_SINCOS
+#undef  __SL_MUSIC_PRELOAD__
 #undef  __GL_MASK_SUPPORT__
 
 // In release build, disable VM calls debug for faster execution.

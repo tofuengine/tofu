@@ -25,8 +25,6 @@
 #ifndef __GL_CONTEXT_H__
 #define __GL_CONTEXT_H__
 
-#include <config.h>
-
 #include "common.h"
 #include "palette.h"
 #include "surface.h"
@@ -53,7 +51,7 @@ typedef struct _GL_State_t {
 #endif
 } GL_State_t;
 
-typedef struct _GL_Context_t {
+typedef struct _GL_Context_t { // TODO: rename context to canvas?
     GL_Surface_t *surface;
     GL_State_t state;
     GL_State_t *stack;

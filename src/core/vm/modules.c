@@ -24,6 +24,7 @@
 
 #include "modules.h"
 
+// FIXME: better namespace/naming usage for the modules? `arrays.h` -> `core_arrays.h`?
 #include <core/vm/modules/arrays.h>
 #include <core/vm/modules/bank.h>
 #include <core/vm/modules/canvas.h>
@@ -35,6 +36,8 @@
 #include <core/vm/modules/input.h>
 #include <core/vm/modules/iterators.h>
 #include <core/vm/modules/math.h>
+#include <core/vm/modules/source.h>
+#include <core/vm/modules/speakers.h>
 #include <core/vm/modules/system.h>
 #include <core/vm/modules/timers.h>
 #include <core/vm/modules/vector.h>
@@ -93,22 +96,20 @@ static int graphics_loader(lua_State *L)
     return create_module(L, classes);
 }
 
-/*
-static int audio_loader(lua_State *L)
-{
-    static const luaL_Reg classes[] = {
-        { "Sound", sound_loader },
-        { "Speakers", speakers_loader },
-        { "Wave", wave_loader },
-        { NULL, NULL }
-    };
-    return create_module(L, classes);
-}
-*/
 static int io_loader(lua_State *L)
 {
     static const luaL_Reg classes[] = {
         { "File", file_loader },
+        { NULL, NULL }
+    };
+    return create_module(L, classes);
+}
+
+static int sound_loader(lua_State *L)
+{
+    static const luaL_Reg classes[] = {
+        { "Speakers", speakers_loader }, // FIXME: find a better name.
+        { "Source", source_loader },
         { NULL, NULL }
     };
     return create_module(L, classes);
@@ -129,13 +130,11 @@ static int util_loader(lua_State *L)
 void modules_initialize(lua_State *L, int nup)
 {
     static const luaL_Reg modules[] = {
-        { "tofu.core", core_loader },
+        { "tofu.core", core_loader }, // TODO: core should be loaded for first?
         { "tofu.events", events_loader },
         { "tofu.graphics", graphics_loader },
-/*
-        { "tofu.audio", audio_loader },
-*/
         { "tofu.io", io_loader },
+        { "tofu.sound", sound_loader },
         { "tofu.timers", timers_loader },
         { "tofu.util", util_loader },
         { NULL, NULL }

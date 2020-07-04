@@ -25,8 +25,8 @@
 #include "engine.h"
 
 #include <config.h>
+#include <platform.h>
 #include <core/configuration.h>
-#include <core/platform.h>
 #include <libs/fs/fsaux.h>
 #include <libs/log.h>
 #include <libs/stb.h>
@@ -212,7 +212,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
         return false;
     }
 
-    result = Audio_initialize(&engine->audio, &(Audio_Configuration_t){ .channels = 2, .sample_rate = 44100, .voices = 8 });
+    result = Audio_initialize(&engine->audio, &(Audio_Configuration_t){ .master_volume = 1.0f });
     if (!result) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize audio");
         Input_terminate(&engine->input);
@@ -227,6 +227,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             &engine->interpreter,
             &engine->file_system,
             &engine->environment,
+            &engine->audio,
             &engine->display,
             &engine->input,
             NULL
@@ -294,11 +295,12 @@ void Engine_run(Engine_t *engine)
         for (size_t frames = skippable_frames; frames && (lag >= delta_time); --frames) {
             engine->environment.time += delta_time;
             running = running && Interpreter_update(&engine->interpreter, delta_time); // Fixed update.
+            running = running && Audio_update(&engine->audio, elapsed); // Update the subsystems w/ fixed steps (fake interrupt based).
             lag -= delta_time;
         }
 
 //        running = running && Interpreter_update_variable(&engine->interpreter, elapsed); // Variable update.
-        Audio_update(&engine->audio, elapsed); // Update the subsystems w/ regard to the variable time.
+//        running = running && Audio_update_variable(&engine->audio, elapsed);
         Input_update(&engine->input, elapsed);
         Display_update(&engine->display, elapsed);
 

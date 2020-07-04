@@ -30,7 +30,8 @@
 typedef enum _File_System_Resource_Types_t {
     FILE_SYSTEM_RESOURCE_STRING,
     FILE_SYSTEM_RESOURCE_BLOB,
-    FILE_SYSTEM_RESOURCE_IMAGE
+    FILE_SYSTEM_RESOURCE_IMAGE,
+    File_System_Resource_Types_t_CountOf
 } File_System_Resource_Types_t;
 
 typedef struct _File_System_Resource_t { // TODO: add caching.

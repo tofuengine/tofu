@@ -28,6 +28,7 @@ local Input = require("tofu.events").Input
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
+local Speakers = require("tofu.sound").Speakers
 local Pool = require("tofu.timers").Pool
 
 local Main = require("main")
@@ -57,10 +58,13 @@ function Tofu:__ctor()
     },
     ["error"] = {
       enter = function(me)
+          -- TODO: rename "Display" to "Video" e "Speakers" to "Audio"
           Display.palette({ 0xFF000000, 0xFFFF0000 })
           local canvas = Canvas.default()
           local width, _ = canvas:size()
           canvas:reset() -- Reset default canvas from the game state.
+
+          Speakers.halt() -- Stop all sounds sources.
 
           me.font = Font.default("5x8", 0, 1)
           me.lines = {
@@ -145,7 +149,7 @@ function Tofu:call(func, ...)
   if next(self.queue) then
     return
   end
-  local success, message = pcall(func, ...)
+  local success, message = xpcall(func, debug.traceback, ...)
   if not success then
     System.error(message)
     self:switch_to("error")

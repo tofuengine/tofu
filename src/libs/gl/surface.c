@@ -29,7 +29,7 @@
 #include <libs/gl/gl.h>
 #include <libs/stb.h>
 
-#define LOG_CONTEXT "gl"
+#define LOG_CONTEXT "gl-surface"
 
 GL_Surface_t *GL_surface_decode(size_t width, size_t height, const void *pixels, const GL_Surface_Callback_t callback, void *user_data)
 {
@@ -72,7 +72,7 @@ GL_Surface_t *GL_surface_create(size_t width, size_t height)
 
 void GL_surface_destroy(GL_Surface_t *surface)
 {
-    if (!surface) {
+    if (!surface) { // FIXME: is this kind of defensive check required?
         return;
     }
 

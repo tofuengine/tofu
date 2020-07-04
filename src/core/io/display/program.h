@@ -51,6 +51,7 @@ typedef enum _Program_Uniforms_t {
 typedef enum _Program_Shaders_t {
     PROGRAM_SHADER_VERTEX,
     PROGRAM_SHADER_FRAGMENT,
+    Program_Shaders_t_CountOf
 } Program_Shaders_t;
 
 extern bool program_create(Program_t *program);

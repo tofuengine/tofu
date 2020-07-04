@@ -7,15 +7,16 @@ Guess what? Yup, that's yet another game engine/framework.
 ## Pros
 
 * Carefully crafted C99 code.
-* Self-contained, no external modules/libraries required (system-wide libraries excluded).
-* Multi-platform through coss-compilation (Windows, Linux and Raspberry-Pi... no MacOS won't be supported, ever).
+* Self-contained, no additional runtime modules/libraries required (system-wide libraries excluded).
+* Multi-platform through cross-compilation (Windows, Linux and Raspberry-Pi... no MacOS won't be supported, for the moment).
 
 ## Dependecies
 
 * [Glad](https://glad.dav1d.de/)
 * [GLFW](https://www.glfw.org/) v3.3.2
 * [Lua](https://lua.org/) v5.3.5
-* [miniaudio](https://github.com/dr-soft/miniaudio) v0.9.10
+* [miniaudio](https://github.com/dr-soft/miniaudio) v0.10.7
+* [dr_libs](https://github.com/mackron/dr_libs) v0.12.13, v0.6.10, v0.12.4
 * [spleen](https://github.com/fcambus/spleen) fonts
 * [stb](https://github.com/nothings/stb) libraries
 
@@ -30,6 +31,8 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Predefined library of 8/16/32/64 colors palettes.
 * [x] Automatic nearest-color palette indexing of images.
 * [x] Per-color re-indexing (*shifting*) and transparency, affecting drawing operations (global, too?).
+* [x] Audio support w/ real time sound streaming on a separate thread.
+* [x] On-the-fly audio mixing w/ per voice looping/panning/gain/speed control.
 * [x] Out-of-the-box timers support.
 * [x] Customizable application icon.
 * [x] Support for *archived games*, via custom "packed" format (w/ optional encryption).
@@ -42,9 +45,10 @@ Guess what? Yup, that's yet another game engine/framework.
 
 ## Desiderata
 
+* [ ] Masking functions for both drawing primitives and blits.
+* [ ] Custom "raw" graphics and sound formats, with on-the-fly LZ4 (stream?) compression.
 * [ ] **Bit** **Bl**ock **T**ransfer operations when drawing (also, [stencil](https://learnopengl.com/Advanced-OpenGL/Stencil-testing) support, see [this](https://open.gl/depthstencils)).
 * [ ] Animation support w/ frameset DSL (i.e. compiling a string where each token can be a single frame, a range or a "keep-current-frame for some time" command). Each frameset can have its one update period, and will be most likely based upon a timer.
-* [ ] Audio support (based upon [dr-soft/miniaudio](https://github.com/dr-soft/miniaudio)) w/ run-time multi-voice synth (a-la [Bfxr](https://www.bfxr.net)).
 * [ ] Out-of-the-box palette switching (with tweening) features.
 * [ ] Game state and display transitions (at which level? Engine or script?).
 * [ ] Library of noise functions ([cellular](https://thebookofshaders.com/12/), Perlin, etc...).
@@ -67,14 +71,13 @@ Guess what? Yup, that's yet another game engine/framework.
 
 ## Inspirations
 
-**#tofuengine** is an original software, born from a ~30 years long experience of game programming. However, it has been influenced during its development by similar/other game-engines in one way or another. Here's a brief list.
+**#tofuengine** is an original software, born from a ~30 years long experience in programming. However, it has been influenced during its development by similar/other game-engines in one way or another. Here's a brief list.
 
 * [Love2D](https://love2d.org/)
 * [Pico-8](https://www.lexaloffle.com/pico-8.php)
-* [tac08](https://github.com/0xcafed00d/tac08/)
 * [picolove](https://github.com/picolove/picolove/)
+* [Defold](https://defold.com/)
 * [raylib](https://www.raylib.com/)
-* [DOME Engine](https://github.com/avivbeeri/dome/)
 
 # Profiling
 

@@ -28,9 +28,10 @@
 #include <core/environment.h>
 #include <core/io/display.h>
 #include <core/vm/interpreter.h>
+#include <libs/fs/fsaux.h>
+#include <libs/gl/gl.h>
 #include <libs/imath.h>
 #include <libs/log.h>
-#include <libs/gl/gl.h>
 #include <libs/stb.h>
 
 #include "callbacks.h"
@@ -129,8 +130,8 @@ static int canvas_new0(lua_State *L)
 
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    Canvas_Class_t *self = (Canvas_Class_t *)lua_newuserdata(L, sizeof(Canvas_Class_t));
-    *self = (Canvas_Class_t){
+    Canvas_Object_t *self = (Canvas_Object_t *)lua_newuserdata(L, sizeof(Canvas_Object_t));
+    *self = (Canvas_Object_t){
             .context = display->context,
             .allocated = false
         };
@@ -163,8 +164,8 @@ static int canvas_new1(lua_State *L)
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context %p loaded from file `%s`", context, file);
 
-    Canvas_Class_t *self = (Canvas_Class_t *)lua_newuserdata(L, sizeof(Canvas_Class_t));
-    *self = (Canvas_Class_t){
+    Canvas_Object_t *self = (Canvas_Object_t *)lua_newuserdata(L, sizeof(Canvas_Object_t));
+    *self = (Canvas_Object_t){
             .context = context,
             .allocated = true
         };
@@ -189,8 +190,8 @@ static int canvas_new2(lua_State *L)
         return luaL_error(L, "can't create %dx%d context", width, height);
     }
 
-    Canvas_Class_t *self = (Canvas_Class_t *)lua_newuserdata(L, sizeof(Canvas_Class_t));
-    *self = (Canvas_Class_t){
+    Canvas_Object_t *self = (Canvas_Object_t *)lua_newuserdata(L, sizeof(Canvas_Object_t));
+    *self = (Canvas_Object_t){
             .context = context,
             .allocated = true
         };
@@ -215,7 +216,7 @@ static int canvas_gc(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Canvas_Class_t *self = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
 
     if (self->allocated) {
         GL_context_destroy(self->context);
@@ -232,7 +233,7 @@ static int canvas_size(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Canvas_Class_t *self = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
 
     const GL_Context_t *context = self->context;
 
@@ -247,7 +248,7 @@ static int canvas_center(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Canvas_Class_t *self = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
 
     const GL_Context_t *context = self->context;
 
@@ -262,7 +263,7 @@ static int canvas_push(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Canvas_Class_t *self = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
 
     GL_Context_t *context = self->context;
     GL_context_push(context);
@@ -275,7 +276,7 @@ static int canvas_pop(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Canvas_Class_t *self = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
 
     GL_Context_t *context = self->context;
     GL_context_pop(context);
@@ -288,7 +289,7 @@ static int canvas_reset(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Canvas_Class_t *self = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
 
     GL_Context_t *context = self->context;
     GL_context_reset(context);
@@ -302,7 +303,7 @@ static int canvas_background(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Canvas_Class_t *self = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
     GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 2);
 
     GL_Context_t *context = self->context;
@@ -317,7 +318,7 @@ static int canvas_color(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Canvas_Class_t *self = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
     GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 2);
 
     GL_Context_t *context = self->context;
@@ -332,7 +333,7 @@ static int canvas_pattern(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Canvas_Class_t *self = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
     GL_Pattern_t pattern = (GL_Pattern_t)LUAX_INTEGER(L, 0);
 
     GL_Context_t *context = self->context;
@@ -346,7 +347,7 @@ static int canvas_shift1(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Canvas_Class_t *self = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
 
     GL_Context_t *context = self->context;
     GL_context_shifting(context, NULL, NULL, 0);
@@ -360,7 +361,7 @@ static int canvas_shift2(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
     LUAX_SIGNATURE_END
-    Canvas_Class_t *self = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
 
     size_t *from = NULL;
     size_t *to = NULL;
@@ -389,7 +390,7 @@ static int canvas_shift3(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Canvas_Class_t *self = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
     size_t from = (size_t)LUAX_INTEGER(L, 2);
     size_t to = (size_t)LUAX_INTEGER(L, 3);
 
@@ -413,7 +414,7 @@ static int canvas_transparent1(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Canvas_Class_t *self = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
 
     GL_Context_t *context = self->context;
     GL_context_transparent(context, NULL, NULL, 0);
@@ -427,7 +428,7 @@ static int canvas_transparent2(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
     LUAX_SIGNATURE_END
-    Canvas_Class_t *self = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
 
     GL_Pixel_t *indexes = NULL;
     GL_Bool_t *transparent = NULL;
@@ -456,7 +457,7 @@ static int canvas_transparent3(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TBOOLEAN)
     LUAX_SIGNATURE_END
-    Canvas_Class_t *self = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
     GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 2);
     GL_Bool_t transparent = LUAX_BOOLEAN(L, 3) ? GL_BOOL_TRUE : GL_BOOL_FALSE;
 
@@ -480,7 +481,7 @@ static int canvas_clipping1(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Canvas_Class_t *self = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
 
     GL_Context_t *context = self->context;
     GL_context_clipping(context, NULL);
@@ -497,7 +498,7 @@ static int canvas_clipping5(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Canvas_Class_t *self = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
     size_t width = (size_t)LUAX_INTEGER(L, 4);
@@ -523,7 +524,7 @@ static int canvas_mask1(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Canvas_Class_t *self = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
 
     GL_Context_t *context = self->context;
     GL_context_mask(context, NULL);
@@ -537,7 +538,7 @@ static int canvas_mask2(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA, LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Canvas_Class_t *self = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
     int type = lua_type(L, 2);
 
     GL_Context_t *context = self->context;
@@ -564,7 +565,7 @@ static int canvas_mask3(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Canvas_Class_t *self = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
     const Surface_Class_t *self = (const Surface_Class_t *)LUAX_USERDATA(L, 2);
     GL_Pixel_t index = LUAX_INTEGER(L, 3);
 
@@ -590,7 +591,7 @@ static int canvas_clear(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Canvas_Class_t *self = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
     GL_Pixel_t index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 2, self->context->state.background);
 
     const GL_Context_t *context = self->context;
@@ -607,7 +608,7 @@ static int canvas_point(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Canvas_Class_t *self = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
     GL_Pixel_t index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 4, self->context->state.color);
@@ -627,7 +628,7 @@ static int canvas_hline(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Canvas_Class_t *self = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
     size_t width = (size_t)LUAX_INTEGER(L, 4);
@@ -648,7 +649,7 @@ static int canvas_vline(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Canvas_Class_t *self = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
     size_t height = (size_t)LUAX_INTEGER(L, 4);
@@ -670,7 +671,7 @@ static int canvas_line(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Canvas_Class_t *self = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
     int x0 = LUAX_INTEGER(L, 2);
     int y0 = LUAX_INTEGER(L, 3);
     int x1 = LUAX_INTEGER(L, 4);
@@ -716,7 +717,7 @@ static int canvas_polyline(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Canvas_Class_t *self = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
     GL_Pixel_t index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 3, self->context->state.color);
 
     GL_Point_t *vertices = _fetch(L, 2);
@@ -742,7 +743,7 @@ static int canvas_fill(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Canvas_Class_t *self = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
     GL_Pixel_t index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 4, self->context->state.color);
@@ -766,7 +767,7 @@ static int canvas_triangle(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Canvas_Class_t *self = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
     const char *mode = LUAX_STRING(L, 2);
     int x0 = LUAX_INTEGER(L, 3);
     int y0 = LUAX_INTEGER(L, 4);
@@ -803,7 +804,7 @@ static int canvas_rectangle(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Canvas_Class_t *self = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
     const char *mode = LUAX_STRING(L, 2);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
@@ -843,7 +844,7 @@ static int canvas_circle(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Canvas_Class_t *self = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
     const char *mode = LUAX_STRING(L, 2);
     int cx = LUAX_INTEGER(L, 3);
     int cy = LUAX_INTEGER(L, 4);
@@ -870,7 +871,7 @@ static int canvas_peek(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Canvas_Class_t *self = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
 
@@ -891,7 +892,7 @@ static int canvas_poke(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Canvas_Class_t *self = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
     GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 4);
@@ -912,7 +913,7 @@ static int canvas_process(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Canvas_Class_t *self = (Canvas_Class_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
     size_t width = (size_t)LUAX_INTEGER(L, 4);
