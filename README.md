@@ -45,6 +45,8 @@ Guess what? Yup, that's yet another game engine/framework.
 
 ## Desiderata
 
+* [ ] Masking functions for both drawing primitives and blits.
+* [ ] Custom "raw" graphics and sound formats, with on-the-fly LZ4 (stream?) compression.
 * [ ] **Bit** **Bl**ock **T**ransfer operations when drawing (also, [stencil](https://learnopengl.com/Advanced-OpenGL/Stencil-testing) support, see [this](https://open.gl/depthstencils)).
 * [ ] Animation support w/ frameset DSL (i.e. compiling a string where each token can be a single frame, a range or a "keep-current-frame for some time" command). Each frameset can have its one update period, and will be most likely based upon a timer.
 * [ ] Out-of-the-box palette switching (with tweening) features.
