@@ -55,7 +55,7 @@ static bool _sample_ctor(SL_Source_t *source, SL_Callbacks_t callbacks, void *us
 static void _sample_dtor(SL_Source_t *source);
 static bool _sample_reset(SL_Source_t *source);
 static bool _sample_update(SL_Source_t *source, float delta_time);
-static bool _sample_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups);
+static bool _sample_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *mixes);
 
 static inline bool _rewind(Sample_t *sample)
 {
@@ -228,13 +228,13 @@ static bool _sample_update(SL_Source_t *source, float delta_time)
     return true; // NO-OP
 }
 
-static bool _sample_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *groups)
+static bool _sample_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *mixes)
 {
     Sample_t *sample = (Sample_t *)source;
 
     uint8_t buffer[MIXING_BUFFER_SIZE_IN_FRAMES * MIXING_BUFFER_CHANNELS * SL_BYTES_PER_FRAME];
 
-    const SL_Mix_t mix = SL_props_precompute(&sample->props, groups);
+    const SL_Mix_t mix = SL_props_precompute(&sample->props, mixes);
 
     uint8_t *cursor = (uint8_t *)output;
 

@@ -101,10 +101,10 @@ void SL_props_speed(SL_Props_t *props, float speed)
     ma_data_converter_set_rate_ratio(&props->converter, props->speed); // The ratio is `in` over `out`, i.e. actual speed-up factor.
 }
 
-SL_Mix_t SL_props_precompute(SL_Props_t *props, const SL_Mix_t *groups)
+SL_Mix_t SL_props_precompute(SL_Props_t *props, const SL_Mix_t *mixes)
 {
     return (SL_Mix_t){
-            .left = props->mix.left * groups[props->group].left,
-            .right = props->mix.right * groups[props->group].right
+            .left = props->mix.left * mixes[props->group].left,
+            .right = props->mix.right * mixes[props->group].right
         };
 }

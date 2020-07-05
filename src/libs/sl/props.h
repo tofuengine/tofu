@@ -52,6 +52,6 @@ extern void SL_props_gain(SL_Props_t *props, float gain);
 extern void SL_props_pan(SL_Props_t *props, float pan);
 extern void SL_props_speed(SL_Props_t *props, float speed);
 
-extern SL_Mix_t SL_props_precompute(SL_Props_t *props, const SL_Mix_t *groups);
+extern SL_Mix_t SL_props_precompute(SL_Props_t *props, const SL_Mix_t *mixes);
 
 #endif  /* __SL_PROPS_H__ */

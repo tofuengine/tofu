@@ -46,7 +46,7 @@ SL_Context_t *SL_context_create(void)
         };
 
     for (size_t i = 0; i < SL_GROUPS_AMOUNT; ++i) {
-        context->groups[i] = mix_precompute_balance(0.0f, 1.0f);
+        context->mixes[i] = mix_precompute_balance(0.0f, 1.0f);
     }
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context created");
@@ -68,7 +68,7 @@ void SL_context_destroy(SL_Context_t *context)
 
 void SL_context_tweak(SL_Context_t *context, size_t group, float balance, float gain)
 {
-    context->groups[group] = mix_precompute_balance(balance, gain);
+    context->mixes[group] = mix_precompute_balance(balance, gain);
 }
 
 void SL_context_track(SL_Context_t *context, SL_Source_t *source)
@@ -132,12 +132,12 @@ bool SL_context_update(SL_Context_t *context, float delta_time)
 
 void SL_context_mix(SL_Context_t *context, void *output, size_t frames_requested)
 {
-    const SL_Mix_t *groups = context->groups;
+    const SL_Mix_t *mixes = context->mixes;
 
     // Backward scan, to remove to-be-untracked sources.
     for (int i = arrlen(context->sources) - 1; i >= 0; --i) {
         SL_Source_t *source = context->sources[i];
-        bool still_running = ((Source_t *)source)->vtable.mix(source, output, frames_requested, groups); // FIXME: pass the dereferences mix? API violation?
+        bool still_running = ((Source_t *)source)->vtable.mix(source, output, frames_requested, mixes); // FIXME: pass the dereferences mix? API violation?
         if (!still_running) {
             arrdel(context->sources, i);
         }

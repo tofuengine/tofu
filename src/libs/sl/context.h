@@ -32,7 +32,7 @@
 #include <stddef.h>
 
 typedef struct _SL_Context_t {
-    SL_Mix_t groups[SL_GROUPS_AMOUNT];
+    SL_Mix_t mixes[SL_GROUPS_AMOUNT];
     SL_Source_t **sources;
 } SL_Context_t;
 
