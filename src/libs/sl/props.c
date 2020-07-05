@@ -49,6 +49,7 @@
 bool SL_props_init(SL_Props_t *props, ma_format format, ma_uint32 sample_rate, ma_uint32 channels_in, ma_uint32 channels_out)
 {
     *props = (SL_Props_t){
+            .group = 0,
             .looping = false,
             .gain = 1.0,
             .pan = 0.0f,
