@@ -46,7 +46,11 @@ SL_Context_t *SL_context_create(void)
         };
 
     for (size_t i = 0; i < SL_GROUPS_AMOUNT; ++i) {
-        context->mixes[i] = mix_precompute_balance(0.0f, 1.0f);
+        context->groups[i] = (SL_Group_t){
+                .balance = 0.0f,
+                .gain = 1.0f,
+                .mix = mix_precompute_balance(0.0f, 1.0f)
+            };
     }
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context created");
@@ -66,9 +70,20 @@ void SL_context_destroy(SL_Context_t *context)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context freed");
 }
 
-void SL_context_tweak(SL_Context_t *context, size_t group, float balance, float gain)
+void SL_context_balance(SL_Context_t *context, size_t group_id, float balance)
 {
-    context->mixes[group] = mix_precompute_balance(balance, gain);
+    SL_Group_t *group = &context->groups[group_id];
+
+    group->balance = fmaxf(-1.0f, fminf(balance, 1.0f));
+    group->mix = mix_precompute_balance(group->balance, group->gain);
+}
+
+void SL_context_gain(SL_Context_t *context, size_t group_id, float gain)
+{
+    SL_Group_t *group = &context->groups[group_id];
+
+    group->gain = fmaxf(0.0f, gain);
+    group->mix = mix_precompute_balance(group->balance, group->gain);
 }
 
 void SL_context_track(SL_Context_t *context, SL_Source_t *source)
@@ -132,12 +147,12 @@ bool SL_context_update(SL_Context_t *context, float delta_time)
 
 void SL_context_mix(SL_Context_t *context, void *output, size_t frames_requested)
 {
-    const SL_Mix_t *mixes = context->mixes;
+    const SL_Group_t *groups = context->groups;
 
     // Backward scan, to remove to-be-untracked sources.
     for (int i = arrlen(context->sources) - 1; i >= 0; --i) {
         SL_Source_t *source = context->sources[i];
-        bool still_running = ((Source_t *)source)->vtable.mix(source, output, frames_requested, mixes); // FIXME: pass the dereferences mix? API violation?
+        bool still_running = ((Source_t *)source)->vtable.mix(source, output, frames_requested, groups);
         if (!still_running) {
             arrdel(context->sources, i);
         }

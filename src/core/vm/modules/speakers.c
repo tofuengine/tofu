@@ -38,12 +38,14 @@
 #define LOG_CONTEXT "speakers"
 
 static int speakers_volume(lua_State *L);
-static int speakers_tweak(lua_State *L);
+static int speakers_balance(lua_State *L);
+static int speakers_gain(lua_State *L);
 static int speakers_halt(lua_State *L);
 
 static const struct luaL_Reg _speakers_functions[] = {
     { "volume", speakers_volume },
-    { "tweak", speakers_tweak },
+    { "balance", speakers_balance },
+    { "gain", speakers_gain },
     { "halt", speakers_halt },
     { NULL, NULL }
 };
@@ -93,21 +95,36 @@ static int speakers_volume(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
-static int speakers_tweak(lua_State *L)
+static int speakers_balance(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     size_t group = (size_t)LUAX_INTEGER(L, 1);
     float balance = LUAX_NUMBER(L, 2);
-    float gain = LUAX_NUMBER(L, 3);
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
-    SL_context_tweak(audio->sl, group, balance, gain);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "group #%d tweaked (balance %.f, gain %.f)", group, balance, gain);
+    SL_context_balance(audio->sl, group, balance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "group #%d balance is %.f)", group, balance);
+
+    return 0;
+}
+
+static int speakers_gain(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    size_t group = (size_t)LUAX_INTEGER(L, 1);
+    float gain = LUAX_NUMBER(L, 2);
+
+    Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
+
+    SL_context_gain(audio->sl, group, gain);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "group #%d gain is %.f", group, gain);
 
     return 0;
 }

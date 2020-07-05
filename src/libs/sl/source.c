@@ -50,14 +50,14 @@ bool SL_source_get_looping(SL_Source_t *source)
     return ((Source_t *)source)->props.looping;
 }
 
-float SL_source_get_gain(SL_Source_t *source)
-{
-    return ((Source_t *)source)->props.gain;
-}
-
 float SL_source_get_pan(SL_Source_t *source)
 {
     return ((Source_t *)source)->props.pan;
+}
+
+float SL_source_get_gain(SL_Source_t *source)
+{
+    return ((Source_t *)source)->props.gain;
 }
 
 float SL_source_get_speed(SL_Source_t *source)
@@ -75,14 +75,14 @@ void SL_source_set_looping(SL_Source_t *source, bool looping)
     SL_props_looping(&((Source_t *)source)->props, looping);
 }
 
-void SL_source_set_gain(SL_Source_t *source, float gain)
-{
-    SL_props_gain(&((Source_t *)source)->props, gain);
-}
-
 void SL_source_set_pan(SL_Source_t *source, float pan)
 {
     SL_props_pan(&((Source_t *)source)->props, pan);
+}
+
+void SL_source_set_gain(SL_Source_t *source, float gain)
+{
+    SL_props_gain(&((Source_t *)source)->props, gain);
 }
 
 void SL_source_set_speed(SL_Source_t *source, float speed)

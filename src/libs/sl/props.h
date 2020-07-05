@@ -35,8 +35,8 @@
 typedef struct _SL_Props_t {
     size_t group;
     bool looping;
-    float gain;
     float pan;
+    float gain;
     float speed;
 
     SL_Mix_t mix;
@@ -48,10 +48,10 @@ extern void SL_props_deinit(SL_Props_t *props);
 
 extern void SL_props_group(SL_Props_t *props, size_t group);
 extern void SL_props_looping(SL_Props_t *props, bool looping);
-extern void SL_props_gain(SL_Props_t *props, float gain);
 extern void SL_props_pan(SL_Props_t *props, float pan);
+extern void SL_props_gain(SL_Props_t *props, float gain);
 extern void SL_props_speed(SL_Props_t *props, float speed);
 
-extern SL_Mix_t SL_props_precompute(SL_Props_t *props, const SL_Mix_t *mixes);
+extern SL_Mix_t SL_props_precompute(SL_Props_t *props, const SL_Group_t *groups);
 
 #endif  /* __SL_PROPS_H__ */

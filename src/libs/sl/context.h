@@ -32,14 +32,15 @@
 #include <stddef.h>
 
 typedef struct _SL_Context_t {
-    SL_Mix_t mixes[SL_GROUPS_AMOUNT];
+    SL_Group_t groups[SL_GROUPS_AMOUNT];
     SL_Source_t **sources;
 } SL_Context_t;
 
 extern SL_Context_t *SL_context_create(void);
 extern void SL_context_destroy(SL_Context_t *context);
 
-extern void SL_context_tweak(SL_Context_t *context, size_t group, float balance, float gain);
+extern void SL_context_balance(SL_Context_t *context, size_t group_id, float balance);
+extern void SL_context_gain(SL_Context_t *context, size_t group_id, float gain);
 
 extern void SL_context_track(SL_Context_t *context, SL_Source_t *source);
 extern void SL_context_untrack(SL_Context_t *context, SL_Source_t *source);

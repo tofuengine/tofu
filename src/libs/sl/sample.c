@@ -55,13 +55,13 @@ static bool _sample_ctor(SL_Source_t *source, SL_Callbacks_t callbacks, void *us
 static void _sample_dtor(SL_Source_t *source);
 static bool _sample_reset(SL_Source_t *source);
 static bool _sample_update(SL_Source_t *source, float delta_time);
-static bool _sample_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *mixes);
+static bool _sample_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Group_t *groups);
 
 static inline bool _rewind(Sample_t *sample)
 {
     ma_audio_buffer *buffer = &sample->buffer;
 
-    ma_audio_buffer_seek_to_pcm_frame(buffer, 0); // Can't fail, we are rewind into memory (seeking frame is safe).
+    ma_audio_buffer_seek_to_pcm_frame(buffer, 0); // Can't fail, we are rewinding into memory (frame-seeking is safe).
 
     sample->frames_completed = 0;
 
@@ -228,13 +228,13 @@ static bool _sample_update(SL_Source_t *source, float delta_time)
     return true; // NO-OP
 }
 
-static bool _sample_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *mixes)
+static bool _sample_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Group_t *groups)
 {
     Sample_t *sample = (Sample_t *)source;
 
     uint8_t buffer[MIXING_BUFFER_SIZE_IN_FRAMES * MIXING_BUFFER_CHANNELS * SL_BYTES_PER_FRAME];
 
-    const SL_Mix_t mix = SL_props_precompute(&sample->props, mixes);
+    const SL_Mix_t mix = SL_props_precompute(&sample->props, groups);
 
     uint8_t *cursor = (uint8_t *)output;
 

@@ -54,4 +54,10 @@ typedef struct _SL_Mix_t {
     float left, right;
 } SL_Mix_t;
 
+typedef struct _SL_Group_t {
+    float balance;
+    float gain;
+    SL_Mix_t mix;
+} SL_Group_t;
+
 #endif  /* __SL_COMMON_H__ */

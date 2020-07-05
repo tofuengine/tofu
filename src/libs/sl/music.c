@@ -62,7 +62,7 @@ static bool _music_ctor(SL_Source_t *source, SL_Callbacks_t callbacks, void *use
 static void _music_dtor(SL_Source_t *source);
 static bool _music_reset(SL_Source_t *source);
 static bool _music_update(SL_Source_t *source, float delta_time);
-static bool _music_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *mixes);
+static bool _music_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Group_t *groups);
 
 static inline bool _rewind(Music_t *music)
 {
@@ -260,13 +260,13 @@ static bool _music_update(SL_Source_t *source, float delta_time)
     return _produce(music);
 }
 
-static bool _music_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Mix_t *mixes)
+static bool _music_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Group_t *groups)
 {
     Music_t *music = (Music_t *)source;
 
     uint8_t buffer[MIXING_BUFFER_SIZE_IN_FRAMES * MIXING_BUFFER_CHANNELS * SL_BYTES_PER_FRAME];
 
-    const SL_Mix_t mix = SL_props_precompute(&music->props, mixes);
+    const SL_Mix_t mix = SL_props_precompute(&music->props, groups);
 
     uint8_t *cursor = (uint8_t *)output;
 
