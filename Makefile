@@ -41,12 +41,12 @@ ifeq ($(BUILD),release)
 # -Os => -O2, favouring size
 	COPTS=-O3 -DRELEASE
 else ifeq ($(BUILD),profile)
-	COPTS=-O0 -g -DDEBUG -DPROFILE -pg
+	COPTS=-O0 -ggdb3 -DDEBUG -DPROFILE -pg
 else ifeq ($(BUILD),sanitize)
-	COPTS=-O0 -g -DDEBUG -fsanitize=address -fno-omit-frame-pointer
+	COPTS=-O0 -ggdb3 -DDEBUG -fsanitize=address -fno-omit-frame-pointer
 else
-#	COPTS=-Og -g -DDEBUG
-	COPTS=-O0 -g -DDEBUG
+#	COPTS=-Og -ggdb3 -DDEBUG
+	COPTS=-O0 -ggdb3 -DDEBUG
 endif
 
 ifeq ($(PLATFORM),windows)
