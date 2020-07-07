@@ -20759,7 +20759,7 @@ static ma_result ma_device_init__pulse(ma_context* pContext, const ma_device_con
         /* Name. */
         devCapture = ((ma_pa_stream_get_device_name_proc)pContext->pulse.pa_stream_get_device_name)((ma_pa_stream*)pDevice->pulse.pStreamCapture);
         if (devCapture != NULL) {
-            ma_pa_operation* pOP = ((ma_pa_context_get_source_info_by_name_proc)pContext->pulse.pa_context_get_source_info_by_name)((ma_pa_context*)pDevice->pulse.pPulseContext, devCapture, ma_device_source_name_callback, pDevice);
+            pOP = ((ma_pa_context_get_source_info_by_name_proc)pContext->pulse.pa_context_get_source_info_by_name)((ma_pa_context*)pDevice->pulse.pPulseContext, devCapture, ma_device_source_name_callback, pDevice);
             if (pOP != NULL) {
                 ma_device__wait_for_operation__pulse(pDevice, pOP);
                 ((ma_pa_operation_unref_proc)pContext->pulse.pa_operation_unref)(pOP);
@@ -20857,7 +20857,7 @@ static ma_result ma_device_init__pulse(ma_context* pContext, const ma_device_con
         /* Name. */
         devPlayback = ((ma_pa_stream_get_device_name_proc)pContext->pulse.pa_stream_get_device_name)((ma_pa_stream*)pDevice->pulse.pStreamPlayback);
         if (devPlayback != NULL) {
-            ma_pa_operation* pOP = ((ma_pa_context_get_sink_info_by_name_proc)pContext->pulse.pa_context_get_sink_info_by_name)((ma_pa_context*)pDevice->pulse.pPulseContext, devPlayback, ma_device_sink_name_callback, pDevice);
+            pOP = ((ma_pa_context_get_sink_info_by_name_proc)pContext->pulse.pa_context_get_sink_info_by_name)((ma_pa_context*)pDevice->pulse.pPulseContext, devPlayback, ma_device_sink_name_callback, pDevice);
             if (pOP != NULL) {
                 ma_device__wait_for_operation__pulse(pDevice, pOP);
                 ((ma_pa_operation_unref_proc)pContext->pulse.pa_operation_unref)(pOP);
