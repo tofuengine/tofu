@@ -288,7 +288,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const File_System_t *fil
 #endif
 #endif
 
-    size_t version = (size_t)*lua_version(interpreter->state);
+    size_t version = (size_t)lua_version(interpreter->state);
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "Lua: %d.%d", version / 100, version % 100);
 
     int result = _execute(interpreter->state, (const char *)_boot_lua, sizeof(_boot_lua) / sizeof(char), "@boot.lua", 0, 1); // Prefix '@' to trace as filename internally in Lua.

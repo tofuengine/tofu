@@ -152,11 +152,11 @@ void Audio_volume(Audio_t *audio, float volume)
 bool Audio_update(Audio_t *audio, float delta_time)
 {
     ma_mutex_lock(&audio->lock);
-    bool result = SL_context_update(audio->sl, delta_time);
+    bool updated = SL_context_update(audio->sl, delta_time);
     size_t count = SL_context_count(audio->sl);
     ma_mutex_unlock(&audio->lock);
 
-    if (!result) {
+    if (!updated) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't update context");
         return false;
     }
