@@ -38,7 +38,7 @@ extern float SL_source_get_pan(SL_Source_t *source);
 extern float SL_source_get_gain(SL_Source_t *source);
 extern float SL_source_get_speed(SL_Source_t *source);
 
-extern void SL_source_set_group(SL_Source_t *source, size_t group);
+extern void SL_source_set_group(SL_Source_t *source, size_t group_id);
 extern void SL_source_set_looping(SL_Source_t *source, bool looping);
 extern void SL_source_set_pan(SL_Source_t *source, float pan);
 extern void SL_source_set_gain(SL_Source_t *source, float gain);

@@ -42,7 +42,7 @@ bool SL_source_reset(SL_Source_t *source)
 
 size_t SL_source_get_group(SL_Source_t *source)
 {
-    return ((Source_t *)source)->props.group;
+    return ((Source_t *)source)->props.group_id;
 }
 
 bool SL_source_get_looping(SL_Source_t *source)
@@ -65,9 +65,9 @@ float SL_source_get_speed(SL_Source_t *source)
     return ((Source_t *)source)->props.speed;
 }
 
-void SL_source_set_group(SL_Source_t *source, size_t group)
+void SL_source_set_group(SL_Source_t *source, size_t group_id)
 {
-    SL_props_group(&((Source_t *)source)->props, group);
+    SL_props_group(&((Source_t *)source)->props, group_id);
 }
 
 void SL_source_set_looping(SL_Source_t *source, bool looping)

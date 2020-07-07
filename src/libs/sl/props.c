@@ -49,7 +49,7 @@
 bool SL_props_init(SL_Props_t *props, ma_format format, ma_uint32 sample_rate, ma_uint32 channels_in, ma_uint32 channels_out)
 {
     *props = (SL_Props_t){
-            .group = SL_DEFAULT_GROUP,
+            .group_id = SL_DEFAULT_GROUP,
             .looping = false,
             .pan = 0.0f,
             .gain = 1.0,
@@ -74,9 +74,9 @@ void SL_props_deinit(SL_Props_t *props)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "data converted deinitialized");
 }
 
-void SL_props_group(SL_Props_t *props, size_t group)
+void SL_props_group(SL_Props_t *props, size_t group_id)
 {
-    props->group = group;
+    props->group_id = group_id;
 }
 
 void SL_props_looping(SL_Props_t *props, bool looping)
@@ -105,7 +105,7 @@ void SL_props_speed(SL_Props_t *props, float speed)
 SL_Mix_t SL_props_precompute(SL_Props_t *props, const SL_Group_t *groups)
 {
     return (SL_Mix_t){
-            .left = props->mix.left * groups[props->group].mix.left,
-            .right = props->mix.right * groups[props->group].mix.right
+            .left = props->mix.left * groups[props->group_id].mix.left,
+            .right = props->mix.right * groups[props->group_id].mix.right
         };
 }

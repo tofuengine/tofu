@@ -33,7 +33,7 @@
 #include <stddef.h>
 
 typedef struct _SL_Props_t {
-    size_t group;
+    size_t group_id;
     bool looping;
     float pan;
     float gain;
@@ -46,7 +46,7 @@ typedef struct _SL_Props_t {
 extern bool SL_props_init(SL_Props_t *props, ma_format format, ma_uint32 sample_rate, ma_uint32 channels_in, ma_uint32 channels_out);
 extern void SL_props_deinit(SL_Props_t *props);
 
-extern void SL_props_group(SL_Props_t *props, size_t group);
+extern void SL_props_group(SL_Props_t *props, size_t group_id);
 extern void SL_props_looping(SL_Props_t *props, bool looping);
 extern void SL_props_pan(SL_Props_t *props, float pan);
 extern void SL_props_gain(SL_Props_t *props, float gain);

@@ -101,13 +101,13 @@ static int speakers_balance(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    size_t group = (size_t)LUAX_INTEGER(L, 1);
+    size_t group_id = (size_t)LUAX_INTEGER(L, 1);
     float balance = LUAX_NUMBER(L, 2);
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
-    SL_context_balance(audio->sl, group, balance);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "group #%d balance is %.f)", group, balance);
+    SL_context_balance(audio->sl, group_id, balance);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "group #%d balance is %.f)", group_id, balance);
 
     return 0;
 }
@@ -118,13 +118,13 @@ static int speakers_gain(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    size_t group = (size_t)LUAX_INTEGER(L, 1);
+    size_t group_id = (size_t)LUAX_INTEGER(L, 1);
     float gain = LUAX_NUMBER(L, 2);
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
-    SL_context_gain(audio->sl, group, gain);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "group #%d gain is %.f", group, gain);
+    SL_context_gain(audio->sl, group_id, gain);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "group #%d gain is %.f", group_id, gain);
 
     return 0;
 }
