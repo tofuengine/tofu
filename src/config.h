@@ -79,9 +79,11 @@
 #undef  __SL_MUSIC_PRELOAD__
 #undef  __GL_MASK_SUPPORT__
 
-// In release build, disable VM calls debug for faster execution.
+// In release build, disable VM calls debug and periodic collection for better performance.
 #ifdef RELEASE
   #undef __DEBUG_VM_CALLS__
+  #undef __DEBUG_GARBAGE_COLLECTOR__
+  #undef  __VM_GARBAGE_COLLECTOR_PERIODIC_COLLECT__
 #endif
 
 #endif  /* __TOFU_CONFIG_H__ */
