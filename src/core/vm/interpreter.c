@@ -266,6 +266,16 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const File_System_t *fil
     }
     lua_atpanic(interpreter->state, _panic); // Set a custom panic-handler, just like `luaL_newstate()`.
 
+#if __VM_GARBAGE_COLLECTOR_TYPE__ == GC_INCREMENTAL
+    lua_gc(interpreter->state, LUA_GCINC, 0, 0, 0);
+#elif __VM_GARBAGE_COLLECTOR_TYPE__ == GC_GENERATIONAL
+    lua_gc(interpreter->state, LUA_GCGEN, 0, 0);
+#endif
+
+#if __VM_GARBAGE_COLLECTOR_MODE__ != GC_AUTOMATIC
+    lua_gc(interpreter->state, LUA_GCSTOP); // Garbage collector is enabled, as a default.
+#endif
+
     luaX_openlibs(interpreter->state); // Custom loader, only selected libraries.
 
     int nup = 0;
@@ -310,7 +320,7 @@ void Interpreter_terminate(Interpreter_t *interpreter)
 {
     lua_settop(interpreter->state, 0); // T O F1 ... Fn -> <empty>
 
-    lua_gc(interpreter->state, LUA_GCCOLLECT, 0); // Full GC cycle to trigger resource release.
+    lua_gc(interpreter->state, LUA_GCCOLLECT); // Full GC cycle to trigger resource release.
     lua_close(interpreter->state);
 }
 
@@ -326,34 +336,40 @@ bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
         return false;
     }
 
-#ifndef __VM_INCREMENTAL_GARBAGE_COLLECTOR__
-    interpreter->gc_age += delta_time;
-    while (interpreter->gc_age >= GARBAGE_COLLECTION_PERIOD) { // Periodically collect GC.
-        interpreter->gc_age -= GARBAGE_COLLECTION_PERIOD;
+#if __VM_GARBAGE_COLLECTOR_MODE__ == GC_CONTINUOUS
+    interpreter->gc_step_age += delta_time;
+    while (interpreter->gc_step_age >= GC_CONTINUOUS_STEP_PERIOD) {
+        interpreter->gc_step_age -= GC_CONTINUOUS_STEP_PERIOD;
 
+        lua_gc(interpreter->state, LUA_GCSTEP, 0); // Basic step.
+    }
+#endif
+
+
+#ifdef GC_COLLECTION_PERIOD
+    interpreter->gc_age += delta_time;
+    while (interpreter->gc_age >= GC_COLLECTION_PERIOD) { // Periodically collect GC.
+        interpreter->gc_age -= GC_COLLECTION_PERIOD;
+
+#ifdef __VM_GARBAGE_COLLECTOR_PERIODIC_COLLECT__
 #ifdef __DEBUG_GARBAGE_COLLECTOR__
         float start_time = (float)clock() / CLOCKS_PER_SEC;
-        int pre = lua_gc(interpreter->state, LUA_GCCOUNT, 0);
+        int pre = lua_gc(interpreter->state, LUA_GCCOUNT);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "performing periodical garbage collection (%dKb of memory in use)", pre);
 #endif
-        lua_gc(interpreter->state, LUA_GCCOLLECT, 0);
+        lua_gc(interpreter->state, LUA_GCCOLLECT);
 #ifdef __DEBUG_GARBAGE_COLLECTOR__
-        int post = lua_gc(interpreter->state, LUA_GCCOUNT, 0);
+        int post = lua_gc(interpreter->state, LUA_GCCOUNT);
         float elapsed = ((float)clock() / CLOCKS_PER_SEC) - start_time;
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "garbage collection took %.3fs (memory used %dKb, %dKb freed)", elapsed, post, pre - post);
 #endif
-    }
 #else
-    lua_gc(interpreter->state, LUA_GCSTEP, 0);
 #ifdef __DEBUG_GARBAGE_COLLECTOR__
-    interpreter->gc_age += delta_time;
-    while (interpreter->gc_age >= GARBAGE_COLLECTION_PERIOD) {
-        interpreter->gc_age -= GARBAGE_COLLECTION_PERIOD;
-
-        int count = lua_gc(interpreter->state, LUA_GCCOUNT, 0);
+        int count = lua_gc(interpreter->state, LUA_GCCOUNT);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "memory usage is %dKb", count);
-    }
 #endif
+#endif
+    }
 #endif
 
     return true;

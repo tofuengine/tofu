@@ -25,6 +25,8 @@
 #ifndef __INTERPRETER_H__
 #define __INTERPRETER_H__
 
+#include <config.h>
+
 #include <core/environment.h>
 #include <libs/fs/fs.h>
 #include <libs/luax.h>
@@ -34,7 +36,10 @@
 
 typedef struct _Interpreter_t {
     lua_State *state;
-#ifndef __INCREMENTAL_GARBAGE_COLLECTOR__
+#ifdef GC_CONTINUOUS_STEP_PERIOD
+    float gc_step_age;
+#endif
+#ifdef GC_COLLECTION_PERIOD
     float gc_age;
 #endif
 } Interpreter_t;
