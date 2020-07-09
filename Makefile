@@ -35,7 +35,7 @@ else
 endif
 CWARNINGS=-std=c99 -Wall -Wextra -Werror -Winline -Wlogical-op -Wno-unused-parameter -Wpedantic -Wpointer-arith -Wstrict-prototypes -Wshadow -Wunreachable-code -Wwrite-strings
 #CWARNINGS+=-Wfloat-equal
-CFLAGS=-D_DEFAULT_SOURCE -DLUA_32BITS -DLUA_FLOORN2I=1 -DSTBI_ONLY_PNG -DSTBI_NO_STDIO -DDR_FLAC_NO_STDIO -DMA_NO_DECODING -DMA_NO_ENCODING -DMA_NO_GENERATION -Isrc -Iexternal
+CFLAGS=-D_DEFAULT_SOURCE -DLUA_32BITS -DLUA_FLOORN2I=F2Ifloor -DSTBI_ONLY_PNG -DSTBI_NO_STDIO -DDR_FLAC_NO_STDIO -DMA_NO_DECODING -DMA_NO_ENCODING -DMA_NO_GENERATION -Isrc -Iexternal
 ifeq ($(BUILD),release)
 # -Ofast => -O3 -ffast-math
 # -Os => -O2, favouring size
