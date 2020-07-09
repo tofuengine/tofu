@@ -346,7 +346,7 @@ bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
 #endif
 
 
-#ifdef GC_COLLECTION_PERIOD
+#if defined(__VM_GARBAGE_COLLECTOR_PERIODIC_COLLECT__) || defined(__DEBUG_GARBAGE_COLLECTOR__)
     interpreter->gc_age += delta_time;
     while (interpreter->gc_age >= GC_COLLECTION_PERIOD) { // Periodically collect GC.
         interpreter->gc_age -= GC_COLLECTION_PERIOD;

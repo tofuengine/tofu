@@ -28,7 +28,7 @@
 // Constant MACROs have no prefix.
 #define FPS_AVERAGE_SAMPLES         100
 
-#define GC_CONTINUOUS_STEP_PERIOD   0.5f
+#define GC_CONTINUOUS_STEP_PERIOD   0.1f
 #define GC_COLLECTION_PERIOD        15.0f
 
 #define GC_INCREMENTAL  0

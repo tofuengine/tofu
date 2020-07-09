@@ -36,10 +36,10 @@
 
 typedef struct _Interpreter_t {
     lua_State *state;
-#ifdef GC_CONTINUOUS_STEP_PERIOD
+#if __VM_GARBAGE_COLLECTOR_MODE__ == GC_CONTINUOUS
     float gc_step_age;
 #endif
-#ifdef GC_COLLECTION_PERIOD
+#if defined(__VM_GARBAGE_COLLECTOR_PERIODIC_COLLECT__) || defined(__DEBUG_GARBAGE_COLLECTOR__)
     float gc_age;
 #endif
 } Interpreter_t;
