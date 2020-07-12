@@ -33,7 +33,7 @@ function Tofu:__ctor()
   self.main = Main.new()
 end
 
-function Tofu:process()
+function Tofu:input()
   self.main:input()
 end
 

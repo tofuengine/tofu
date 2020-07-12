@@ -73,14 +73,14 @@ typedef struct _Reader_Context_t {
 } Reader_Context_t;
 
 typedef enum _Methods_t {
-    METHOD_PROCESS,
+    METHOD_INPUT,
     METHOD_UPDATE,
     METHOD_RENDER,
     Methods_t_CountOf
 } Methods_t;
 
 static const char *_methods[] = {
-    "process",
+    "input",
     "update",
     "render",
     NULL
@@ -324,9 +324,9 @@ void Interpreter_terminate(Interpreter_t *interpreter)
     lua_close(interpreter->state);
 }
 
-bool Interpreter_process(const Interpreter_t *interpreter)
+bool Interpreter_input(const Interpreter_t *interpreter)
 {
-    return _call(interpreter->state, METHOD_PROCESS, 0, 0) == LUA_OK;
+    return _call(interpreter->state, METHOD_INPUT, 0, 0) == LUA_OK;
 }
 
 bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
