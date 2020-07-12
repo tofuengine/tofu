@@ -107,30 +107,30 @@ static int _panic(lua_State *L)
 
 static void _warning(void *ud, const char *message, int tocont)
 {
-    Warning_t *warning = (Warning_t *)ud;
-    if (warning->state != WARNING_STATE_APPENDING && !tocont && *message == '@') {
+    Warning_States_t *warning_state = (Warning_States_t *)ud;
+    if (*warning_state != WARNING_STATE_APPENDING && !tocont && *message == '@') {
         if (strcmp(message, "@off") == 0) {
-            warning->state = WARNING_STATE_DISABLED;
+            *warning_state = WARNING_STATE_DISABLED;
         } else
         if (strcmp(message, "@on") == 0) {
-            warning->state = WARNING_STATE_READY;
+            *warning_state = WARNING_STATE_READY;
         }
         return;
     } else
-    if (warning->state == WARNING_STATE_DISABLED) {
+    if (*warning_state == WARNING_STATE_DISABLED) {
         return;
     }
 
-    if (warning->state == WARNING_STATE_READY) {
-        warning->message[0] = '\0';
+    if (*warning_state == WARNING_STATE_READY) {
+        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "%s", message);
+    } else {
+        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "\t%s", message);
     }
-    strcat(warning->message, message);
 
     if (tocont) {
-        warning->state = WARNING_STATE_APPENDING;
+        *warning_state = WARNING_STATE_APPENDING;
     } else {
-        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "%s", warning->message);
-        warning->state = WARNING_STATE_READY;
+        *warning_state = WARNING_STATE_READY;
     }
 }
 
@@ -297,7 +297,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const File_System_t *fil
         return false;
     }
     lua_atpanic(interpreter->state, _panic); // Set a custom panic-handler, just like `luaL_newstate()`.
-    lua_setwarnf(interpreter->state, _warning, &interpreter->warning); // (and a custom warning-handler, too).
+    lua_setwarnf(interpreter->state, _warning, &interpreter->warning_state); // (and a custom warning-handler, too).
 
 #if __VM_GARBAGE_COLLECTOR_TYPE__ == GC_INCREMENTAL
     lua_gc(interpreter->state, LUA_GCINC, 0, 0, 0);
