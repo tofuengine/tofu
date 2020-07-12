@@ -97,8 +97,11 @@ static void *_allocate(void *ud, void *ptr, size_t osize, size_t nsize)
 
 static int _panic(lua_State *L)
 {
-    Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "%s", lua_tostring(L, -1));
-    lua_pop(L, 1);
+    const char *message = lua_tostring(L, -1);
+    if (!message) {
+        message = "error object is not a string";
+    }
+    Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "%s", message);
     return 0; // return to Lua to abort
 }
 
