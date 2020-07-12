@@ -34,8 +34,20 @@
 #include <limits.h>
 #include <stdbool.h>
 
+typedef enum _Warning_States_t {
+    WARNING_STATE_DISABLED,
+    WARNING_STATE_READY,
+    WARNING_STATE_APPENDING
+} Warning_States_t;
+
+typedef struct _Warning_t {
+    Warning_States_t state;
+    char message[1024];
+} Warning_t;
+
 typedef struct _Interpreter_t {
     lua_State *state;
+    Warning_t warning;
 #if __VM_GARBAGE_COLLECTOR_MODE__ == GC_CONTINUOUS
     float gc_step_age;
 #endif
