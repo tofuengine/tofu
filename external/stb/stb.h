@@ -1,4 +1,4 @@
-/* stb.h - v2.35 - Sean's Tool Box -- public domain -- http://nothings.org/stb.h
+/* stb.h - v2.37 - Sean's Tool Box -- public domain -- http://nothings.org/stb.h
           no warranty is offered or implied; use this code at your own risk
 
    This is a single header file with a bunch of useful utilities
@@ -200,6 +200,7 @@ CREDITS
   Dave Butler (Croepha)
   Ethan Lee (flibitijibibo)
   Brian Collins
+  Kyle Langley
 */
 
 #include <stdarg.h>
@@ -1925,8 +1926,8 @@ size_t stb_strscpy(char *d, const char *s, size_t n)
       if (n) d[0] = 0;
       return 0;
    }
-   stb_p_strcpy_s(d,n+1,s);
-   return len + 1;
+   stb_p_strcpy_s(d,n,s);
+   return len;
 }
 
 const char *stb_plural(int n)
@@ -6150,7 +6151,6 @@ static char **readdir_raw(char *dir, int return_subdirs, char *mask)
    if (!n || n >= sizeof(buffer))
       return NULL;
    stb_fixpath(buffer);
-   n--;
 
    if (n > 0 && (buffer[n-1] != '/')) {
       buffer[n++] = '/';
@@ -6163,7 +6163,7 @@ static char **readdir_raw(char *dir, int return_subdirs, char *mask)
       if (!stb_strscpy(buffer+n,"*.*",sizeof(buffer)-n))
          return NULL;
       ws = stb__from_utf8(buffer);
-      z = _wfindfirst((const wchar_t *)ws, &data);
+      z = _wfindfirst((wchar_t *)ws, &data);
    #else
       z = opendir(dir);
    #endif
@@ -8429,10 +8429,9 @@ unsigned int stb__mt_buffer[STB__MT_LEN];
 void stb_srand(unsigned int seed)
 {
    int i;
-   unsigned int old = stb_srandLCG(seed);
-   for (i = 0; i < STB__MT_LEN; i++)
-      stb__mt_buffer[i] = stb_randLCG();
-   stb_srandLCG(old);
+   stb__mt_buffer[0]= seed & 0xffffffffUL;
+   for (i=1 ; i < STB__MT_LEN; ++i)
+      stb__mt_buffer[i] = (1812433253UL * (stb__mt_buffer[i-1] ^ (stb__mt_buffer[i-1] >> 30)) + i);
    stb__mt_index = STB__MT_LEN*sizeof(unsigned int);
 }
 
