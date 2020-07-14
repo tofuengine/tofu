@@ -94,7 +94,7 @@ function Tofu:__ctor()
       update = function(_, _)
         end,
       render = function(me, _)
-          local on = (System.time() % 2) == 0
+          local on = (math.floor(System.time()) % 2) == 0
           local canvas = Canvas.default()
           canvas:clear()
           canvas:rectangle("line", 0, 0, me.width, me.height, on and 1 or 0)
