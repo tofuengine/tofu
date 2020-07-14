@@ -167,7 +167,7 @@ static const char *_reader(lua_State *L, void *ud, size_t *size)
     return context->buffer;
 }
 
-static int _loader(const File_System_t *file_system, const char *file, lua_State *L)
+static int _load(const File_System_t *file_system, const char *file, lua_State *L)
 {
     File_System_Mount_t *mount = FS_locate(file_system, file);
     if (!mount) {
@@ -204,9 +204,9 @@ static int _searcher(lua_State *L)
     }
     strcat(path_file, ".lua");
 
-    int result = _loader(file_system, path_file, L);
+    int result = _load(file_system, path_file, L);
     if (result != LUA_OK) {
-        luaL_error(L, "can't load file `%s`", path_file);
+        luaL_error(L, "failed w/ error #%d while loading file `%s`", result, path_file);
     }
 
     return 1;
@@ -241,19 +241,19 @@ static bool _detect(lua_State *L, int index, const char *methods[])
 
 static int _execute(lua_State *L, const char *script, size_t size, const char *name, int nargs, int nresults)
 {
-    int loaded = luaL_loadbuffer(L, script, size, name);
-    if (loaded != LUA_OK) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "%s", lua_tostring(L, -1));
+    int result = luaL_loadbuffer(L, script, size, name);
+    if (result != LUA_OK) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "error #%d in load %s", result, lua_tostring(L, -1));
         lua_pop(L, 1);
-        return loaded;
+        return result;
     }
 #ifdef __DEBUG_VM_CALLS__
-    int called = lua_pcall(L, nargs, nresults, TRACEBACK_STACK_INDEX);
-    if (called != LUA_OK) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "%s", lua_tostring(L, -1));
+    result = lua_pcall(L, nargs, nresults, TRACEBACK_STACK_INDEX);
+    if (result != LUA_OK) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "error #%d in call: %s", result, lua_tostring(L, -1));
         lua_pop(L, 1);
     }
-    return called;
+    return result;
 #else
     lua_call(L, nargs, nresults);
     return LUA_OK;
@@ -275,12 +275,12 @@ static int _call(lua_State *L, Methods_t method, int nargs, int nresults)
     lua_rotate(L, -(nargs + 2), 2);         // T O F1 ... Fn A1 ... An F O -> T O F1 ... Fn F O A1 ... An
 
 #ifdef __DEBUG_VM_CALLS__
-    int called = lua_pcall(L, nargs + 1, nresults, TRACEBACK_STACK_INDEX);
-    if (called != LUA_OK) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "%s", lua_tostring(L, -1));
+    int result = lua_pcall(L, nargs + 1, nresults, TRACEBACK_STACK_INDEX);
+    if (result != LUA_OK) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "error #%d in call: %s", result, lua_tostring(L, -1));
         lua_pop(L, 1);
     }
-    return called;
+    return result;
 #else
     lua_call(L, nargs + 1, nresults);
     return LUA_OK;
@@ -418,12 +418,12 @@ bool Interpreter_call(const Interpreter_t *interpreter, int nargs, int nresults)
 {
     lua_State *L = interpreter->state;
 #ifdef __DEBUG_VM_CALLS__
-    int called = lua_pcall(L, nargs, nresults, TRACEBACK_STACK_INDEX);
-    if (called != LUA_OK) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "error in execute: %s", lua_tostring(L, -1));
+    int result = lua_pcall(L, nargs, nresults, TRACEBACK_STACK_INDEX);
+    if (result != LUA_OK) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "error #%d in execute: %s", result, lua_tostring(L, -1));
         lua_pop(L, 1);
     }
-    return called == LUA_OK ? true : false;
+    return result == LUA_OK ? true : false;
 #else
     lua_call(L, nargs, nresults);
     return true;
