@@ -26,6 +26,8 @@
 
 #include <libs/luax.h>
 
+#include <stdint.h>
+
 static const uint8_t _class_lua[] = {
 #include "class.inc"
 };

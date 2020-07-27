@@ -139,14 +139,14 @@ void stb_leakcheck_dumpmem(void)
 
 #include <stdlib.h> // we want to define the macros *after* stdlib to avoid a slew of errors
 
-#define malloc(sz)    stb_leakcheck_malloc(sz, __FILE__, __LINE__)
-#define free(p)       stb_leakcheck_free(p)
-#define realloc(p,sz) stb_leakcheck_realloc(p,sz, __FILE__, __LINE__)
-
 extern void * stb_leakcheck_malloc(size_t sz, const char *file, int line);
 extern void * stb_leakcheck_realloc(void *ptr, size_t sz, const char *file, int line);
 extern void   stb_leakcheck_free(void *ptr);
 extern void   stb_leakcheck_dumpmem(void);
+
+#define malloc(sz)    stb_leakcheck_malloc(sz, __FILE__, __LINE__)
+#define free(p)       stb_leakcheck_free(p)
+#define realloc(p,sz) stb_leakcheck_realloc(p,sz, __FILE__, __LINE__)
 
 #endif // INCLUDE_STB_LEAKCHECK_H
 

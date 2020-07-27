@@ -45,7 +45,7 @@ function Tofu:__ctor()
           Pool.default():clear()
           me.main = nil
         end,
-      process = function(me)
+      input = function(me)
           me.main:input()
         end,
       update = function(me, delta_time)
@@ -86,7 +86,7 @@ function Tofu:__ctor()
       leave = function(me)
           me.font = nil
         end,
-      process = function(_)
+      input = function(_)
           if Input.is_pressed("start") then
             System.quit()
           end
@@ -94,7 +94,7 @@ function Tofu:__ctor()
       update = function(_, _)
         end,
       render = function(me, _)
-          local on = (System.time() % 2) == 0
+          local on = (math.floor(System.time()) % 2) == 0
           local canvas = Canvas.default()
           canvas:clear()
           canvas:rectangle("line", 0, 0, me.width, me.height, on and 1 or 0)
@@ -108,11 +108,11 @@ function Tofu:__ctor()
   self:switch_to("normal")
 end
 
-function Tofu:process()
+function Tofu:input()
   self:switch_if_needed()
 
   local me = self.state
-  self:call(me.process, me)
+  self:call(me.input, me)
 end
 
 function Tofu:update(delta_time)

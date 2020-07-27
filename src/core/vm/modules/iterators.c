@@ -26,6 +26,8 @@
 
 #include <libs/luax.h>
 
+#include <stdint.h>
+
 static const uint8_t _iterators_lua[] = {
 #include "iterators.inc"
 };

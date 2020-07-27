@@ -73,14 +73,14 @@ typedef struct _Reader_Context_t {
 } Reader_Context_t;
 
 typedef enum _Methods_t {
-    METHOD_PROCESS,
+    METHOD_INPUT,
     METHOD_UPDATE,
     METHOD_RENDER,
     Methods_t_CountOf
 } Methods_t;
 
 static const char *_methods[] = {
-    "process",
+    "input",
     "update",
     "render",
     NULL
@@ -97,9 +97,41 @@ static void *_allocate(void *ud, void *ptr, size_t osize, size_t nsize)
 
 static int _panic(lua_State *L)
 {
-    Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "%s", lua_tostring(L, -1));
-    lua_pop(L, 1);
+    const char *message = lua_tostring(L, -1);
+    if (!message) {
+        message = "error object is not a string";
+    }
+    Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "%s", message);
     return 0; // return to Lua to abort
+}
+
+static void _warning(void *ud, const char *message, int tocont)
+{
+    Warning_States_t *warning_state = (Warning_States_t *)ud;
+    if (*warning_state != WARNING_STATE_APPENDING && !tocont && *message == '@') {
+        if (strcmp(message, "@off") == 0) {
+            *warning_state = WARNING_STATE_DISABLED;
+        } else
+        if (strcmp(message, "@on") == 0) {
+            *warning_state = WARNING_STATE_READY;
+        }
+        return;
+    } else
+    if (*warning_state == WARNING_STATE_DISABLED) {
+        return;
+    }
+
+    if (*warning_state == WARNING_STATE_READY) {
+        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "%s", message);
+    } else {
+        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "\t%s", message);
+    }
+
+    if (tocont) {
+        *warning_state = WARNING_STATE_APPENDING;
+    } else {
+        *warning_state = WARNING_STATE_READY;
+    }
 }
 
 #ifdef __DEBUG_VM_CALLS__
@@ -135,7 +167,7 @@ static const char *_reader(lua_State *L, void *ud, size_t *size)
     return context->buffer;
 }
 
-static int _loader(const File_System_t *file_system, const char *file, lua_State *L)
+static int _load(const File_System_t *file_system, const char *file, lua_State *L)
 {
     File_System_Mount_t *mount = FS_locate(file_system, file);
     if (!mount) {
@@ -172,9 +204,9 @@ static int _searcher(lua_State *L)
     }
     strcat(path_file, ".lua");
 
-    int result = _loader(file_system, path_file, L);
+    int result = _load(file_system, path_file, L);
     if (result != LUA_OK) {
-        luaL_error(L, "can't load file `%s`", path_file);
+        luaL_error(L, "failed w/ error #%d while loading file `%s`", result, path_file);
     }
 
     return 1;
@@ -209,19 +241,19 @@ static bool _detect(lua_State *L, int index, const char *methods[])
 
 static int _execute(lua_State *L, const char *script, size_t size, const char *name, int nargs, int nresults)
 {
-    int loaded = luaL_loadbuffer(L, script, size, name);
-    if (loaded != LUA_OK) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "%s", lua_tostring(L, -1));
+    int result = luaL_loadbuffer(L, script, size, name);
+    if (result != LUA_OK) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "error #%d in load %s", result, lua_tostring(L, -1));
         lua_pop(L, 1);
-        return loaded;
+        return result;
     }
 #ifdef __DEBUG_VM_CALLS__
-    int called = lua_pcall(L, nargs, nresults, TRACEBACK_STACK_INDEX);
-    if (called != LUA_OK) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "%s", lua_tostring(L, -1));
+    result = lua_pcall(L, nargs, nresults, TRACEBACK_STACK_INDEX);
+    if (result != LUA_OK) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "error #%d in call: %s", result, lua_tostring(L, -1));
         lua_pop(L, 1);
     }
-    return called;
+    return result;
 #else
     lua_call(L, nargs, nresults);
     return LUA_OK;
@@ -243,12 +275,12 @@ static int _call(lua_State *L, Methods_t method, int nargs, int nresults)
     lua_rotate(L, -(nargs + 2), 2);         // T O F1 ... Fn A1 ... An F O -> T O F1 ... Fn F O A1 ... An
 
 #ifdef __DEBUG_VM_CALLS__
-    int called = lua_pcall(L, nargs + 1, nresults, TRACEBACK_STACK_INDEX);
-    if (called != LUA_OK) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "%s", lua_tostring(L, -1));
+    int result = lua_pcall(L, nargs + 1, nresults, TRACEBACK_STACK_INDEX);
+    if (result != LUA_OK) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "error #%d in call: %s", result, lua_tostring(L, -1));
         lua_pop(L, 1);
     }
-    return called;
+    return result;
 #else
     lua_call(L, nargs + 1, nresults);
     return LUA_OK;
@@ -265,6 +297,17 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const File_System_t *fil
         return false;
     }
     lua_atpanic(interpreter->state, _panic); // Set a custom panic-handler, just like `luaL_newstate()`.
+    lua_setwarnf(interpreter->state, _warning, &interpreter->warning_state); // (and a custom warning-handler, too).
+
+#if __VM_GARBAGE_COLLECTOR_TYPE__ == GC_INCREMENTAL
+    lua_gc(interpreter->state, LUA_GCINC, 0, 0, 0);
+#elif __VM_GARBAGE_COLLECTOR_TYPE__ == GC_GENERATIONAL
+    lua_gc(interpreter->state, LUA_GCGEN, 0, 0);
+#endif
+
+#if __VM_GARBAGE_COLLECTOR_MODE__ != GC_AUTOMATIC
+    lua_gc(interpreter->state, LUA_GCSTOP); // Garbage collector is enabled, as a default.
+#endif
 
     luaX_openlibs(interpreter->state); // Custom loader, only selected libraries.
 
@@ -288,7 +331,7 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const File_System_t *fil
 #endif
 #endif
 
-    size_t version = (size_t)*lua_version(interpreter->state);
+    size_t version = (size_t)lua_version(interpreter->state);
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "Lua: %d.%d", version / 100, version % 100);
 
     int result = _execute(interpreter->state, (const char *)_boot_lua, sizeof(_boot_lua) / sizeof(char), "@boot.lua", 0, 1); // Prefix '@' to trace as filename internally in Lua.
@@ -310,13 +353,13 @@ void Interpreter_terminate(Interpreter_t *interpreter)
 {
     lua_settop(interpreter->state, 0); // T O F1 ... Fn -> <empty>
 
-    lua_gc(interpreter->state, LUA_GCCOLLECT, 0); // Full GC cycle to trigger resource release.
+    lua_gc(interpreter->state, LUA_GCCOLLECT); // Full GC cycle to trigger resource release.
     lua_close(interpreter->state);
 }
 
-bool Interpreter_process(const Interpreter_t *interpreter)
+bool Interpreter_input(const Interpreter_t *interpreter)
 {
-    return _call(interpreter->state, METHOD_PROCESS, 0, 0) == LUA_OK;
+    return _call(interpreter->state, METHOD_INPUT, 0, 0) == LUA_OK;
 }
 
 bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
@@ -326,34 +369,40 @@ bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
         return false;
     }
 
-#ifndef __VM_INCREMENTAL_GARBAGE_COLLECTOR__
-    interpreter->gc_age += delta_time;
-    while (interpreter->gc_age >= GARBAGE_COLLECTION_PERIOD) { // Periodically collect GC.
-        interpreter->gc_age -= GARBAGE_COLLECTION_PERIOD;
+#if __VM_GARBAGE_COLLECTOR_MODE__ == GC_CONTINUOUS
+    interpreter->gc_step_age += delta_time;
+    while (interpreter->gc_step_age >= GC_CONTINUOUS_STEP_PERIOD) {
+        interpreter->gc_step_age -= GC_CONTINUOUS_STEP_PERIOD;
 
+        lua_gc(interpreter->state, LUA_GCSTEP, 0); // Basic step.
+    }
+#endif
+
+
+#if defined(__VM_GARBAGE_COLLECTOR_PERIODIC_COLLECT__) || defined(__DEBUG_GARBAGE_COLLECTOR__)
+    interpreter->gc_age += delta_time;
+    while (interpreter->gc_age >= GC_COLLECTION_PERIOD) { // Periodically collect GC.
+        interpreter->gc_age -= GC_COLLECTION_PERIOD;
+
+#ifdef __VM_GARBAGE_COLLECTOR_PERIODIC_COLLECT__
 #ifdef __DEBUG_GARBAGE_COLLECTOR__
         float start_time = (float)clock() / CLOCKS_PER_SEC;
-        int pre = lua_gc(interpreter->state, LUA_GCCOUNT, 0);
+        int pre = lua_gc(interpreter->state, LUA_GCCOUNT);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "performing periodical garbage collection (%dKb of memory in use)", pre);
 #endif
-        lua_gc(interpreter->state, LUA_GCCOLLECT, 0);
+        lua_gc(interpreter->state, LUA_GCCOLLECT);
 #ifdef __DEBUG_GARBAGE_COLLECTOR__
-        int post = lua_gc(interpreter->state, LUA_GCCOUNT, 0);
+        int post = lua_gc(interpreter->state, LUA_GCCOUNT);
         float elapsed = ((float)clock() / CLOCKS_PER_SEC) - start_time;
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "garbage collection took %.3fs (memory used %dKb, %dKb freed)", elapsed, post, pre - post);
 #endif
-    }
 #else
-    lua_gc(interpreter->state, LUA_GCSTEP, 0);
 #ifdef __DEBUG_GARBAGE_COLLECTOR__
-    interpreter->gc_age += delta_time;
-    while (interpreter->gc_age >= GARBAGE_COLLECTION_PERIOD) {
-        interpreter->gc_age -= GARBAGE_COLLECTION_PERIOD;
-
-        int count = lua_gc(interpreter->state, LUA_GCCOUNT, 0);
+        int count = lua_gc(interpreter->state, LUA_GCCOUNT);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "memory usage is %dKb", count);
-    }
 #endif
+#endif
+    }
 #endif
 
     return true;
@@ -369,12 +418,12 @@ bool Interpreter_call(const Interpreter_t *interpreter, int nargs, int nresults)
 {
     lua_State *L = interpreter->state;
 #ifdef __DEBUG_VM_CALLS__
-    int called = lua_pcall(L, nargs, nresults, TRACEBACK_STACK_INDEX);
-    if (called != LUA_OK) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "error in execute: %s", lua_tostring(L, -1));
+    int result = lua_pcall(L, nargs, nresults, TRACEBACK_STACK_INDEX);
+    if (result != LUA_OK) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "error #%d in execute: %s", result, lua_tostring(L, -1));
         lua_pop(L, 1);
     }
-    return called == LUA_OK ? true : false;
+    return result == LUA_OK ? true : false;
 #else
     lua_call(L, nargs, nresults);
     return true;

@@ -119,32 +119,32 @@ static int bank_new2(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
     int type = lua_type(L, 1);
-    const char *file = LUAX_STRING(L, 2);
+    const char *cells_file = LUAX_STRING(L, 2);
 
     const File_System_t *file_system = (const File_System_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     size_t count;
-    GL_Rectangle_t *cells = _load_cells(file_system, file, &count); // TODO: implement `Sheet` in pure Lua?
+    GL_Rectangle_t *cells = _load_cells(file_system, cells_file, &count); // TODO: implement `Sheet` in pure Lua?
     if (!cells) {
-        return luaL_error(L, "can't load file `%s`", file);
+        return luaL_error(L, "can't load file `%s`", cells_file);
     }
 
     GL_Sheet_t *sheet;
     if (type == LUA_TSTRING) {
-        const char *file = LUAX_STRING(L, 1);
+        const char *image_file = LUAX_STRING(L, 1);
 
-        File_System_Resource_t *image = FSX_load(file_system, file, FILE_SYSTEM_RESOURCE_IMAGE);
+        File_System_Resource_t *image = FSX_load(file_system, image_file, FILE_SYSTEM_RESOURCE_IMAGE);
         if (!image) {
-            return luaL_error(L, "can't load file `%s`", file);
+            return luaL_error(L, "can't load file `%s`", image_file);
         }
         sheet = GL_sheet_decode(FSX_IWIDTH(image), FSX_IHEIGHT(image), FSX_IPIXELS(image), cells, count, surface_callback_palette, (void *)&display->palette);
         FSX_release(image);
         free(cells);
         if (!sheet) {
-            return luaL_error(L, "can't decode file `%s`", file);
+            return luaL_error(L, "can't decode file `%s`", image_file);
         }
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p decoded from file `%s`", sheet, file);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p decoded from file `%s`", sheet, image_file);
     } else
     if (type == LUA_TUSERDATA) {
         const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_USERDATA(L, 1);

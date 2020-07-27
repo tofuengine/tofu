@@ -185,7 +185,7 @@ int luaX_newmodule(lua_State *L, const luaX_Script *script, const luaL_Reg *f, c
 void luaX_openlibs(lua_State *L)
 {
     static const luaL_Reg libraries[] = {
-        { "_G", luaopen_base },
+        { LUA_GNAME, luaopen_base },
         { LUA_LOADLIBNAME, luaopen_package },
         { LUA_COLIBNAME, luaopen_coroutine },
         { LUA_TABLIBNAME, luaopen_table },
@@ -198,9 +198,6 @@ void luaX_openlibs(lua_State *L)
         { LUA_UTF8LIBNAME, luaopen_utf8 },
 #ifdef DEBUG
         { LUA_DBLIBNAME, luaopen_debug },
-#endif
-#ifdef LUA_COMPAT_BITLIB
-        { LUA_BITLIBNAME, luaopen_bit32 },
 #endif
         { NULL, NULL }
     };
