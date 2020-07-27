@@ -6131,7 +6131,7 @@ static void ma_sleep(ma_uint32 milliseconds)
 }
 #endif
 
-static MA_INLINE void ma_yield()
+static MA_INLINE void ma_yield(void)
 {
 #if defined(__i386) || defined(_M_IX86) || defined(__x86_64__) || defined(_M_X64)
     /* x86/x64 */
