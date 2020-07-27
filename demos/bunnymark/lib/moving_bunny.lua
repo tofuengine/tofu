@@ -3,7 +3,7 @@ local Canvas = require("tofu.graphics").Canvas
 
 local Bunny = Class.define()
 
-local CELL_ID = 0
+local CELL_ID = 1
 local MAX_SPEED = 500
 local GRAVITY = 981
 local X_DAMPENING = 0.95

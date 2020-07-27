@@ -30,7 +30,8 @@ local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
 
-local Bunny = require("lib.bunny")
+local MovingBunny = require("lib.moving_bunny")
+local StaticBunny = require("lib.static_bunny")
 
 local INITIAL_BUNNIES = 5000
 local LITTER_SIZE = 250
@@ -50,6 +51,9 @@ function Main:__ctor()
   self.font = Font.default("5x8", 11, 6)
   self.speed = 1.0
   self.running = true
+  self.static = false
+
+  local Bunny = self.static and StaticBunny or MovingBunny
   for _ = 1, INITIAL_BUNNIES do
     table.insert(self.bunnies, Bunny.new(self.bank))
   end
@@ -57,6 +61,7 @@ end
 
 function Main:input()
   if Input.is_pressed("start") then
+    local Bunny = self.static and StaticBunny or MovingBunny
     for _ = 1, LITTER_SIZE do
       table.insert(self.bunnies, Bunny.new(self.bank))
     end
@@ -71,6 +76,8 @@ function Main:input()
     self.speed = 1.0
   elseif Input.is_pressed("select") then
     self.bunnies = {}
+  elseif Input.is_pressed("x") then
+    self.static = not self.static
   elseif Input.is_pressed("y") then
     self.running = not self.running
   end
