@@ -1,6 +1,6 @@
 /*
 Audio playback and capture library. Choice of public domain or MIT-0. See license statements at the end of this file.
-miniaudio - v0.10.11 - 28-06-2020
+miniaudio - v0.10.15 - 2020-07-15
 
 David Reid - davidreidsoftware@gmail.com
 
@@ -18,7 +18,7 @@ miniaudio is a single file library for audio playback and capture. To use it, do
     #include "miniaudio.h"
     ```
 
-You can #include miniaudio.h in other parts of the program just like any other header.
+You can do `#include miniaudio.h` in other parts of the program just like any other header.
 
 miniaudio uses the concept of a "device" as the abstraction for physical devices. The idea is that you choose a physical device to emit or capture audio from,
 and then move data to/from the device when miniaudio tells you to. Data is delivered to and from devices asynchronously via a callback which you specify when
@@ -34,8 +34,9 @@ but you could allocate it on the heap if that suits your situation better.
     ```c
     void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
     {
-        // In playback mode copy data to pOutput. In capture mode read data from pInput. In full-duplex mode, both pOutput and pInput will be valid and you can
-        // move data from pInput into pOutput. Never process more than frameCount frames.
+        // In playback mode copy data to pOutput. In capture mode read data from pInput. In full-duplex mode, both
+        // pOutput and pInput will be valid and you can move data from pInput into pOutput. Never process more than
+        // frameCount frames.
     }
 
     ...
@@ -101,11 +102,13 @@ it, which is what the example above does, but you can also stop the device with 
 Note that it's important to never stop or start the device from inside the callback. This will result in a deadlock. Instead you set a variable or signal an
 event indicating that the device needs to stop and handle it in a different thread. The following APIs must never be called inside the callback:
 
+    ```c
     ma_device_init()
     ma_device_init_ex()
     ma_device_uninit()
     ma_device_start()
     ma_device_stop()
+    ```
 
 You must never try uninitializing and reinitializing a device inside the callback. You must also never try to stop and start it from inside the callback. There
 are a few other things you shouldn't do in the callback depending on your requirements, however this isn't so much a thread-safety thing, but rather a real-
@@ -217,140 +220,119 @@ allocate memory for the context.
 miniaudio should work cleanly out of the box without the need to download or install any dependencies. See below for platform-specific details.
 
 
-Windows
--------
+2.1. Windows
+------------
 The Windows build should compile cleanly on all popular compilers without the need to configure any include paths nor link to any libraries.
 
-macOS and iOS
--------------
+2.2. macOS and iOS
+------------------
 The macOS build should compile cleanly without the need to download any dependencies nor link to any libraries or frameworks. The iOS build needs to be
 compiled as Objective-C (sorry) and will need to link the relevant frameworks but should Just Work with Xcode. Compiling through the command line requires
-linking to -lpthread and -lm.
+linking to `-lpthread` and `-lm`.
 
-Linux
------
-The Linux build only requires linking to -ldl, -lpthread and -lm. You do not need any development packages.
+2.3. Linux
+----------
+The Linux build only requires linking to `-ldl`, `-lpthread` and `-lm`. You do not need any development packages.
 
-BSD
----
-The BSD build only requires linking to -lpthread and -lm. NetBSD uses audio(4), OpenBSD uses sndio and FreeBSD uses OSS.
+2.4. BSD
+--------
+The BSD build only requires linking to `-lpthread` and `-lm`. NetBSD uses audio(4), OpenBSD uses sndio and FreeBSD uses OSS.
 
-Android
--------
+2.5. Android
+------------
 AAudio is the highest priority backend on Android. This should work out of the box without needing any kind of compiler configuration. Support for AAudio
 starts with Android 8 which means older versions will fall back to OpenSL|ES which requires API level 16+.
 
-Emscripten
-----------
+2.6. Emscripten
+---------------
 The Emscripten build emits Web Audio JavaScript directly and should Just Work without any configuration. You cannot use -std=c* compiler flags, nor -ansi.
 
 
-Build Options
--------------
-#define these options before including miniaudio.h.
+2.7. Build Options
+------------------
+`#define` these options before including miniaudio.h.
 
-#define MA_NO_WASAPI
-  Disables the WASAPI backend.
-
-#define MA_NO_DSOUND
-  Disables the DirectSound backend.
-
-#define MA_NO_WINMM
-  Disables the WinMM backend.
-
-#define MA_NO_ALSA
-  Disables the ALSA backend.
-
-#define MA_NO_PULSEAUDIO
-  Disables the PulseAudio backend.
-
-#define MA_NO_JACK
-  Disables the JACK backend.
-
-#define MA_NO_COREAUDIO
-  Disables the Core Audio backend.
-
-#define MA_NO_SNDIO
-  Disables the sndio backend.
-
-#define MA_NO_AUDIO4
-  Disables the audio(4) backend.
-
-#define MA_NO_OSS
-  Disables the OSS backend.
-
-#define MA_NO_AAUDIO
-  Disables the AAudio backend.
-
-#define MA_NO_OPENSL
-  Disables the OpenSL|ES backend.
-
-#define MA_NO_WEBAUDIO
-  Disables the Web Audio backend.
-
-#define MA_NO_NULL
-  Disables the null backend.
-
-#define MA_NO_DECODING
-  Disables decoding APIs.
-
-#define MA_NO_ENCODING
-  Disables encoding APIs.
-
-#define MA_NO_WAV
-  Disables the built-in WAV decoder and encoder.
-
-#define MA_NO_FLAC
-  Disables the built-in FLAC decoder.
-
-#define MA_NO_MP3
-  Disables the built-in MP3 decoder.
-
-#define MA_NO_DEVICE_IO
-  Disables playback and recording. This will disable ma_context and ma_device APIs. This is useful if you only want to use miniaudio's data conversion and/or
-  decoding APIs.
-
-#define MA_NO_THREADING
-  Disables the ma_thread, ma_mutex, ma_semaphore and ma_event APIs. This option is useful if you only need to use miniaudio for data conversion, decoding
-  and/or encoding. Some families of APIs require threading which means the following options must also be set:
-    MA_NO_DEVICE_IO
-
-#define MA_NO_GENERATION
-  Disables generation APIs such a ma_waveform and ma_noise.
-
-#define MA_NO_SSE2
-  Disables SSE2 optimizations.
-
-#define MA_NO_AVX2
-  Disables AVX2 optimizations.
-
-#define MA_NO_AVX512
-  Disables AVX-512 optimizations.
-
-#define MA_NO_NEON
-  Disables NEON optimizations.
-
-#define MA_LOG_LEVEL <Level>
-  Sets the logging level. Set level to one of the following:
-    MA_LOG_LEVEL_VERBOSE
-    MA_LOG_LEVEL_INFO
-    MA_LOG_LEVEL_WARNING
-    MA_LOG_LEVEL_ERROR
-
-#define MA_DEBUG_OUTPUT
-  Enable printf() debug output.
-
-#define MA_COINIT_VALUE
-  Windows only. The value to pass to internal calls to CoInitializeEx(). Defaults to COINIT_MULTITHREADED.
-
-#define MA_API
-  Controls how public APIs should be decorated. Defaults to `extern`.
-
-#define MA_DLL
-  If set, configures MA_API to either import or export APIs depending on whether or not the implementation is being defined. If defining the implementation,
-  MA_API will be configured to export. Otherwise it will be configured to import. This has no effect if MA_API is defined externally.
-    
-
+    +----------------------+----------------------------------------------------------------------------------------------------------------------------------+
+    | Option               | Description                                                                                                                      |
+    +----------------------+----------------------------------------------------------------------------------------------------------------------------------+
+    | MA_NO_WASAPI         | Disables the WASAPI backend.                                                                                                     |
+    +----------------------+----------------------------------------------------------------------------------------------------------------------------------+
+    | MA_NO_DSOUND         | Disables the DirectSound backend.                                                                                                |
+    +----------------------+----------------------------------------------------------------------------------------------------------------------------------+
+    | MA_NO_WINMM          | Disables the WinMM backend.                                                                                                      |
+    +----------------------+----------------------------------------------------------------------------------------------------------------------------------+
+    | MA_NO_ALSA           | Disables the ALSA backend.                                                                                                       |
+    +----------------------+----------------------------------------------------------------------------------------------------------------------------------+
+    | MA_NO_PULSEAUDIO     | Disables the PulseAudio backend.                                                                                                 |
+    +----------------------+----------------------------------------------------------------------------------------------------------------------------------+
+    | MA_NO_JACK           | Disables the JACK backend.                                                                                                       |
+    +----------------------+----------------------------------------------------------------------------------------------------------------------------------+
+    | MA_NO_COREAUDIO      | Disables the Core Audio backend.                                                                                                 |
+    +----------------------+----------------------------------------------------------------------------------------------------------------------------------+
+    | MA_NO_SNDIO          | Disables the sndio backend.                                                                                                      |
+    +----------------------+----------------------------------------------------------------------------------------------------------------------------------+
+    | MA_NO_AUDIO4         | Disables the audio(4) backend.                                                                                                   |
+    +----------------------+----------------------------------------------------------------------------------------------------------------------------------+
+    | MA_NO_OSS            | Disables the OSS backend.                                                                                                        |
+    +----------------------+----------------------------------------------------------------------------------------------------------------------------------+
+    | MA_NO_AAUDIO         | Disables the AAudio backend.                                                                                                     |
+    +----------------------+----------------------------------------------------------------------------------------------------------------------------------+
+    | MA_NO_OPENSL         | Disables the OpenSL|ES backend.                                                                                                  |
+    +----------------------+----------------------------------------------------------------------------------------------------------------------------------+
+    | MA_NO_WEBAUDIO       | Disables the Web Audio backend.                                                                                                  |
+    +----------------------+----------------------------------------------------------------------------------------------------------------------------------+
+    | MA_NO_NULL           | Disables the null backend.                                                                                                       |
+    +----------------------+----------------------------------------------------------------------------------------------------------------------------------+
+    | MA_NO_DECODING       | Disables decoding APIs.                                                                                                          |
+    +----------------------+----------------------------------------------------------------------------------------------------------------------------------+
+    | MA_NO_ENCODING       | Disables encoding APIs.                                                                                                          |
+    +----------------------+----------------------------------------------------------------------------------------------------------------------------------+
+    | MA_NO_WAV            | Disables the built-in WAV decoder and encoder.                                                                                   |
+    +----------------------+----------------------------------------------------------------------------------------------------------------------------------+
+    | MA_NO_FLAC           | Disables the built-in FLAC decoder.                                                                                              |
+    +----------------------+----------------------------------------------------------------------------------------------------------------------------------+
+    | MA_NO_MP3            | Disables the built-in MP3 decoder.                                                                                               |
+    +----------------------+----------------------------------------------------------------------------------------------------------------------------------+
+    | MA_NO_DEVICE_IO      | Disables playback and recording. This will disable ma_context and ma_device APIs. This is useful if you only want to use         |
+    |                      | miniaudio's data conversion and/or decoding APIs.                                                                                |
+    +----------------------+----------------------------------------------------------------------------------------------------------------------------------+
+    | MA_NO_THREADING      | Disables the ma_thread, ma_mutex, ma_semaphore and ma_event APIs. This option is useful if you only need to use miniaudio for    |
+    |                      | data conversion, decoding and/or encoding. Some families of APIs require threading which means the following options must also   |
+    |                      | be set:                                                                                                                          |
+    |                      |                                                                                                                                  |
+    |                      |     ```                                                                                                                          |
+    |                      |     MA_NO_DEVICE_IO                                                                                                              |
+    |                      |     ```                                                                                                                          |
+    +----------------------+----------------------------------------------------------------------------------------------------------------------------------+
+    | MA_NO_GENERATION     | Disables generation APIs such a ma_waveform and ma_noise.                                                                        |
+    +----------------------+----------------------------------------------------------------------------------------------------------------------------------+
+    | MA_NO_SSE2           | Disables SSE2 optimizations.                                                                                                     |
+    +----------------------+----------------------------------------------------------------------------------------------------------------------------------+
+    | MA_NO_AVX2           | Disables AVX2 optimizations.                                                                                                     |
+    +----------------------+----------------------------------------------------------------------------------------------------------------------------------+
+    | MA_NO_AVX512         | Disables AVX-512 optimizations.                                                                                                  |
+    +----------------------+----------------------------------------------------------------------------------------------------------------------------------+
+    | MA_NO_NEON           | Disables NEON optimizations.                                                                                                     |
+    +----------------------+----------------------------------------------------------------------------------------------------------------------------------+
+    | MA_LOG_LEVEL [level] | Sets the logging level. Set level to one of the following:                                                                       |
+    |                      |                                                                                                                                  |
+    |                      |     ```                                                                                                                          |
+    |                      |     MA_LOG_LEVEL_VERBOSE                                                                                                         |
+    |                      |     MA_LOG_LEVEL_INFO                                                                                                            |
+    |                      |     MA_LOG_LEVEL_WARNING                                                                                                         |
+    |                      |     MA_LOG_LEVEL_ERROR                                                                                                           |
+    |                      |     ```                                                                                                                          |
+    +----------------------+----------------------------------------------------------------------------------------------------------------------------------+
+    | MA_DEBUG_OUTPUT      | Enable printf() debug output.                                                                                                    |
+    +----------------------+----------------------------------------------------------------------------------------------------------------------------------+
+    | MA_COINIT_VALUE      | Windows only. The value to pass to internal calls to `CoInitializeEx()`. Defaults to `COINIT_MULTITHREADED`.                     |
+    +----------------------+----------------------------------------------------------------------------------------------------------------------------------+
+    | MA_API               | Controls how public APIs should be decorated. Defaults to `extern`.                                                              |
+    +----------------------+----------------------------------------------------------------------------------------------------------------------------------+
+    | MA_DLL               | If set, configures MA_API to either import or export APIs depending on whether or not the implementation is being defined. If    |
+    |                      | defining the implementation, MA_API will be configured to export. Otherwise it will be configured to import. This has no effect  |
+    |                      | if MA_API is defined externally.                                                                                                 |
+    +----------------------+----------------------------------------------------------------------------------------------------------------------------------+
 
 
 3. Definitions
@@ -567,6 +549,7 @@ The different dithering modes include the following, in order of efficiency:
 Note that even if the dither mode is set to something other than `ma_dither_mode_none`, it will be ignored for conversions where dithering is not needed.
 Dithering is available for the following conversions:
 
+    ```
     s16 -> u8
     s24 -> u8
     s32 -> u8
@@ -574,6 +557,7 @@ Dithering is available for the following conversions:
     s24 -> s16
     s32 -> s16
     f32 -> s16
+    ```
 
 Note that it is not an error to pass something other than ma_dither_mode_none for conversions where dither is not used. It will just be ignored.
 
@@ -643,63 +627,63 @@ be one of the following:
     | ma_standard_channel_map_flac      | FLAC channel map.                                         |
     | ma_standard_channel_map_vorbis    | Vorbis channel map.                                       |
     | ma_standard_channel_map_sound4    | FreeBSD's sound(4).                                       |
-    | ma_standard_channel_map_sndio     | sndio channel map. www.sndio.org/tips.html                |
+    | ma_standard_channel_map_sndio     | sndio channel map. http://www.sndio.org/tips.html         |
     | ma_standard_channel_map_webaudio  | https://webaudio.github.io/web-audio-api/#ChannelOrdering | 
     +-----------------------------------+-----------------------------------------------------------+
 
 Below are the channel maps used by default in miniaudio (ma_standard_channel_map_default):
 
-    +---------------+------------------------------+
-    | Channel Count | Mapping                      |
-    +---------------+------------------------------+
-    | 1 (Mono)      | 0: MA_CHANNEL_MONO           |
-    +---------------+------------------------------+
-    | 2 (Stereo)    | 0: MA_CHANNEL_FRONT_LEFT     |
-    |               | 1: MA_CHANNEL_FRONT_RIGHT    |
-    +---------------+------------------------------+
-    | 3             | 0: MA_CHANNEL_FRONT_LEFT     |
-    |               | 1: MA_CHANNEL_FRONT_RIGHT    |
-    |               | 2: MA_CHANNEL_FRONT_CENTER   |
-    +---------------+------------------------------+
-    | 4 (Surround)  | 0: MA_CHANNEL_FRONT_LEFT     |
-    |               | 1: MA_CHANNEL_FRONT_RIGHT    |
-    |               | 2: MA_CHANNEL_FRONT_CENTER   |
-    |               | 3: MA_CHANNEL_BACK_CENTER    |
-    +---------------+------------------------------+
-    | 5             | 0: MA_CHANNEL_FRONT_LEFT     |
-    |               | 1: MA_CHANNEL_FRONT_RIGHT    |
-    |               | 2: MA_CHANNEL_FRONT_CENTER   |
-    |               | 3: MA_CHANNEL_BACK_LEFT      |
-    |               | 4: MA_CHANNEL_BACK_RIGHT     |
-    +---------------+------------------------------+
-    | 6 (5.1)       | 0: MA_CHANNEL_FRONT_LEFT     |
-    |               | 1: MA_CHANNEL_FRONT_RIGHT    |
-    |               | 2: MA_CHANNEL_FRONT_CENTER   |
-    |               | 3: MA_CHANNEL_LFE            |
-    |               | 4: MA_CHANNEL_SIDE_LEFT      |
-    |               | 5: MA_CHANNEL_SIDE_RIGHT     |
-    +---------------+------------------------------+
-    | 7             | 0: MA_CHANNEL_FRONT_LEFT     |
-    |               | 1: MA_CHANNEL_FRONT_RIGHT    |
-    |               | 2: MA_CHANNEL_FRONT_CENTER   |
-    |               | 3: MA_CHANNEL_LFE            |
-    |               | 4: MA_CHANNEL_BACK_CENTER    |
-    |               | 4: MA_CHANNEL_SIDE_LEFT      |
-    |               | 5: MA_CHANNEL_SIDE_RIGHT     |
-    +---------------+------------------------------+
-    | 8 (7.1)       | 0: MA_CHANNEL_FRONT_LEFT     |
-    |               | 1: MA_CHANNEL_FRONT_RIGHT    |
-    |               | 2: MA_CHANNEL_FRONT_CENTER   |
-    |               | 3: MA_CHANNEL_LFE            |
-    |               | 4: MA_CHANNEL_BACK_LEFT      |
-    |               | 5: MA_CHANNEL_BACK_RIGHT     |
-    |               | 6: MA_CHANNEL_SIDE_LEFT      |
-    |               | 7: MA_CHANNEL_SIDE_RIGHT     |
-    +---------------+------------------------------+
-    | Other         | All channels set to 0. This  |
-    |               | is equivalent to the same    |
-    |               | mapping as the device.       |
-    +---------------+------------------------------+
+    +---------------+---------------------------------+
+    | Channel Count | Mapping                         |
+    +---------------+---------------------------------+
+    | 1 (Mono)      | 0: MA_CHANNEL_MONO              |
+    +---------------+---------------------------------+
+    | 2 (Stereo)    | 0: MA_CHANNEL_FRONT_LEFT   <br> |
+    |               | 1: MA_CHANNEL_FRONT_RIGHT       |
+    +---------------+---------------------------------+
+    | 3             | 0: MA_CHANNEL_FRONT_LEFT   <br> |
+    |               | 1: MA_CHANNEL_FRONT_RIGHT  <br> |
+    |               | 2: MA_CHANNEL_FRONT_CENTER      |
+    +---------------+---------------------------------+
+    | 4 (Surround)  | 0: MA_CHANNEL_FRONT_LEFT   <br> |
+    |               | 1: MA_CHANNEL_FRONT_RIGHT  <br> |
+    |               | 2: MA_CHANNEL_FRONT_CENTER <br> |
+    |               | 3: MA_CHANNEL_BACK_CENTER       |
+    +---------------+---------------------------------+
+    | 5             | 0: MA_CHANNEL_FRONT_LEFT   <br> |
+    |               | 1: MA_CHANNEL_FRONT_RIGHT  <br> |
+    |               | 2: MA_CHANNEL_FRONT_CENTER <br> |
+    |               | 3: MA_CHANNEL_BACK_LEFT    <br> |
+    |               | 4: MA_CHANNEL_BACK_RIGHT        |
+    +---------------+---------------------------------+
+    | 6 (5.1)       | 0: MA_CHANNEL_FRONT_LEFT   <br> |
+    |               | 1: MA_CHANNEL_FRONT_RIGHT  <br> |
+    |               | 2: MA_CHANNEL_FRONT_CENTER <br> |
+    |               | 3: MA_CHANNEL_LFE          <br> |
+    |               | 4: MA_CHANNEL_SIDE_LEFT    <br> |
+    |               | 5: MA_CHANNEL_SIDE_RIGHT        |
+    +---------------+---------------------------------+
+    | 7             | 0: MA_CHANNEL_FRONT_LEFT   <br> |
+    |               | 1: MA_CHANNEL_FRONT_RIGHT  <br> |
+    |               | 2: MA_CHANNEL_FRONT_CENTER <br> |
+    |               | 3: MA_CHANNEL_LFE          <br> |
+    |               | 4: MA_CHANNEL_BACK_CENTER  <br> |
+    |               | 4: MA_CHANNEL_SIDE_LEFT    <br> |
+    |               | 5: MA_CHANNEL_SIDE_RIGHT        |
+    +---------------+---------------------------------+
+    | 8 (7.1)       | 0: MA_CHANNEL_FRONT_LEFT   <br> |
+    |               | 1: MA_CHANNEL_FRONT_RIGHT  <br> |
+    |               | 2: MA_CHANNEL_FRONT_CENTER <br> |
+    |               | 3: MA_CHANNEL_LFE          <br> |
+    |               | 4: MA_CHANNEL_BACK_LEFT    <br> |
+    |               | 5: MA_CHANNEL_BACK_RIGHT   <br> |
+    |               | 6: MA_CHANNEL_SIDE_LEFT    <br> |
+    |               | 7: MA_CHANNEL_SIDE_RIGHT        |
+    +---------------+---------------------------------+
+    | Other         | All channels set to 0. This     |
+    |               | is equivalent to the same       |
+    |               | mapping as the device.          |
+    +---------------+---------------------------------+
 
 
 
@@ -732,7 +716,8 @@ The following example shows how data can be processed
         // An error occurred...
     }
 
-    // At this point, frameCountIn contains the number of input frames that were consumed and frameCountOut contains the number of output frames written.
+    // At this point, frameCountIn contains the number of input frames that were consumed and frameCountOut contains the
+    // number of output frames written.
     ```
 
 To initialize the resampler you first need to set up a config (`ma_resampler_config`) with `ma_resampler_config_init()`. You need to specify the sample format
@@ -809,12 +794,16 @@ The Speex resampler is made up of third party code which is released under the B
 domain, it is strictly opt-in and all of it's code is stored in separate files. If you opt-in to the Speex resampler you must consider the license text in it's
 source files. To opt-in, you must first #include the following file before the implementation of miniaudio.h:
 
+    ```c
     #include "extras/speex_resampler/ma_speex_resampler.h"
+    ```
 
 Both the header and implementation is contained within the same file. The implementation can be included in your program like so:
 
+    ```c
     #define MINIAUDIO_SPEEX_RESAMPLER_IMPLEMENTATION
     #include "extras/speex_resampler/ma_speex_resampler.h"
+    ```
 
 Note that even if you opt-in to the Speex backend, miniaudio won't use it unless you explicitly ask for it in the respective config of the object you are
 initializing. If you try to use the Speex resampler without opting in, initialization of the `ma_resampler` object will fail with `MA_NO_BACKEND`.
@@ -831,7 +820,15 @@ internally to convert between the format requested when the device was initializ
 conversion is very similar to the resampling API. Create a `ma_data_converter` object like this:
 
     ```c
-    ma_data_converter_config config = ma_data_converter_config_init(inputFormat, outputFormat, inputChannels, outputChannels, inputSampleRate, outputSampleRate);
+    ma_data_converter_config config = ma_data_converter_config_init(
+        inputFormat,
+        outputFormat,
+        inputChannels,
+        outputChannels,
+        inputSampleRate,
+        outputSampleRate
+    );
+
     ma_data_converter converter;
     ma_result result = ma_data_converter_init(&config, &converter);
     if (result != MA_SUCCESS) {
@@ -870,7 +867,8 @@ The following example shows how data can be processed
         // An error occurred...
     }
 
-    // At this point, frameCountIn contains the number of input frames that were consumed and frameCountOut contains the number of output frames written.
+    // At this point, frameCountIn contains the number of input frames that were consumed and frameCountOut contains the number
+    // of output frames written.
     ```
 
 The data converter supports multiple channels and is always interleaved (both input and output). The channel count cannot be changed after initialization.
@@ -1178,6 +1176,7 @@ Sometimes it can be convenient to allocate the memory for the `ma_audio_buffer` 
 the raw audio data will be located immediately after the `ma_audio_buffer` structure. To do this, use `ma_audio_buffer_alloc_and_init()`:
 
     ```c
+    ma_audio_buffer_config config = ma_audio_buffer_config_init(format, channels, sizeInFrames, pExistingData, &allocationCallbacks);
     ma_audio_buffer* pBuffer
     result = ma_audio_buffer_alloc_and_init(&config, &pBuffer);
     if (result != MA_SUCCESS) {
@@ -1189,13 +1188,13 @@ the raw audio data will be located immediately after the `ma_audio_buffer` struc
     ma_audio_buffer_uninit_and_free(&buffer);
     ```
 
-If you initialize the buffer with `ma_audio_buffer_alloc_and_init()` you should uninitialize it with `ma_audio_buffer_uninit_and_free()`.
+If you initialize the buffer with `ma_audio_buffer_alloc_and_init()` you should uninitialize it with `ma_audio_buffer_uninit_and_free()`. In the example above,
+the memory pointed to by `pExistingData` will be copied into the buffer, which is contrary to the behavior of `ma_audio_buffer_init()`.
 
-An audio buffer has a playback cursor just like a decoder. As you read frames from the buffer, the cursor moves forward. It does not automatically loop back to
-the start. To do this, you should inspect the number of frames returned by `ma_audio_buffer_read_pcm_frames()` to determine if the end has been reached, which
-you can know by comparing it with the requested frame count you specified when you called the function. If the return value is less it means the end has been
-reached. In this case you can seem back to the start with `ma_audio_buffer_seek_to_pcm_frame(pAudioBuffer, 0)`. Below is an example for reading data from an
-audio buffer.
+An audio buffer has a playback cursor just like a decoder. As you read frames from the buffer, the cursor moves forward. The last parameter (`loop`) can be
+used to determine if the buffer should loop. The return value is the number of frames actually read. If this is less than the number of frames requested it
+means the end has been reached. This should never happen if the `loop` parameter is set to true. If you want to manually loop back to the start, you can do so
+with with `ma_audio_buffer_seek_to_pcm_frame(pAudioBuffer, 0)`. Below is an example for reading data from an audio buffer.
 
     ```c
     ma_uint64 framesRead = ma_audio_buffer_read_pcm_frames(pAudioBuffer, pFramesOut, desiredFrameCount, isLooping);
@@ -1204,15 +1203,16 @@ audio buffer.
     }
     ```
 
-Sometimes you may want to avoid the cost of data movement between the internal buffer and the output buffer as it's just a copy operation. Instead you can use
-memory mapping to retrieve a pointer to a segment of data:
+Sometimes you may want to avoid the cost of data movement between the internal buffer and the output buffer. Instead you can use memory mapping to retrieve a
+pointer to a segment of data:
 
     ```c
     void* pMappedFrames;
     ma_uint64 frameCount = frameCountToTryMapping;
     ma_result result = ma_audio_buffer_map(pAudioBuffer, &pMappedFrames, &frameCount);
     if (result == MA_SUCCESS) {
-        // Map was successful. The value in frameCount will be how many frames were _actually_ mapped, which may be less due to the end of the buffer being reached.
+        // Map was successful. The value in frameCount will be how many frames were _actually_ mapped, which may be
+        // less due to the end of the buffer being reached.
         ma_copy_pcm_frames(pFramesOut, pMappedFrames, frameCount, pAudioBuffer->format, pAudioBuffer->channels);
 
         // You must unmap the buffer.
@@ -1222,7 +1222,8 @@ memory mapping to retrieve a pointer to a segment of data:
 
 When you use memory mapping, the read cursor is increment by the frame count passed in to `ma_audio_buffer_unmap()`. If you decide not to process every frame
 you can pass in a value smaller than the value returned by `ma_audio_buffer_map()`. The disadvantage to using memory mapping is that it does not handle looping
-for you. You can determine if the buffer is at the end for the purpose of looping with `ma_audio_buffer_at_end()`.
+for you. You can determine if the buffer is at the end for the purpose of looping with `ma_audio_buffer_at_end()` or by inspecting the return value of
+`ma_audio_buffer_unmap()` and checking if it equals `MA_AT_END`. You should not treat `MA_AT_END` as an error when returned by `ma_audio_buffer_unmap()`.
 
 
 
@@ -1248,7 +1249,7 @@ something like the following:
 The `ma_pcm_rb_init()` function takes the sample format and channel count as parameters because it's the PCM varient of the ring buffer API. For the regular
 ring buffer that operates on bytes you would call `ma_rb_init()` which leaves these out and just takes the size of the buffer in bytes instead of frames. The
 fourth parameter is an optional pre-allocated buffer and the fifth parameter is a pointer to a `ma_allocation_callbacks` structure for custom memory allocation
-routines. Passing in NULL for this results in MA_MALLOC() and MA_FREE() being used.
+routines. Passing in `NULL` for this results in `MA_MALLOC()` and `MA_FREE()` being used.
 
 Use `ma_pcm_rb_init_ex()` if you need a deinterleaved buffer. The data for each sub-buffer is offset from each other based on the stride. To manage your sub-
 buffers you can use `ma_pcm_rb_get_subbuffer_stride()`, `ma_pcm_rb_get_subbuffer_offset()` and `ma_pcm_rb_get_subbuffer_ptr()`.
@@ -1268,9 +1269,9 @@ the consumer thread, and the write pointer forward by the producer thread. If th
 there is too little space between the pointers, move the write pointer forward.
 
 You can use a ring buffer at the byte level instead of the PCM frame level by using the `ma_rb` API. This is exactly the same, only you will use the `ma_rb`
-functions instead of `ma_pcm_rb` and instead of frame counts you'll pass around byte counts.
+functions instead of `ma_pcm_rb` and instead of frame counts pass around byte counts.
 
-The maximum size of the buffer in bytes is 0x7FFFFFFF-(MA_SIMD_ALIGNMENT-1) due to the most significant bit being used to encode a loop flag and the internally
+The maximum size of the buffer in bytes is `0x7FFFFFFF-(MA_SIMD_ALIGNMENT-1)` due to the most significant bit being used to encode a loop flag and the internally
 managed buffers always being aligned to MA_SIMD_ALIGNMENT.
 
 Note that the ring buffer is only thread safe when used by a single consumer thread and single producer thread.
@@ -1295,7 +1296,7 @@ The following backends are supported by miniaudio.
     | audio(4)    | ma_backend_audio4     | NetBSD, OpenBSD                                        |
     | OSS         | ma_backend_oss        | FreeBSD                                                |
     | AAudio      | ma_backend_aaudio     | Android 8+                                             |
-    | OpenSL|ES   | ma_backend_opensl     | Android (API level 16+)                                |
+    | OpenSL ES   | ma_backend_opensl     | Android (API level 16+)                                |
     | Web Audio   | ma_backend_webaudio   | Web (via Emscripten)                                   |
     | Null        | ma_backend_null       | Cross Platform (not used on Web)                       |
     +-------------+-----------------------+--------------------------------------------------------+
@@ -1305,20 +1306,18 @@ Some backends have some nuance details you may want to be aware of.
 11.1. WASAPI
 ------------
 - Low-latency shared mode will be disabled when using an application-defined sample rate which is different to the device's native sample rate. To work around
-  this, set wasapi.noAutoConvertSRC to true in the device config. This is due to IAudioClient3_InitializeSharedAudioStream() failing when the
-  AUDCLNT_STREAMFLAGS_AUTOCONVERTPCM flag is specified. Setting wasapi.noAutoConvertSRC will result in miniaudio's internal resampler being used instead which
-  will in turn enable the use of low-latency shared mode.
+  this, set `wasapi.noAutoConvertSRC` to true in the device config. This is due to IAudioClient3_InitializeSharedAudioStream() failing when the
+  `AUDCLNT_STREAMFLAGS_AUTOCONVERTPCM` flag is specified. Setting wasapi.noAutoConvertSRC will result in miniaudio's internal resampler being used instead
+  which will in turn enable the use of low-latency shared mode.
 
 11.2. PulseAudio
 ----------------
 - If you experience bad glitching/noise on Arch Linux, consider this fix from the Arch wiki:
-    https://wiki.archlinux.org/index.php/PulseAudio/Troubleshooting#Glitches,_skips_or_crackling
-  Alternatively, consider using a different backend such as ALSA.
+  https://wiki.archlinux.org/index.php/PulseAudio/Troubleshooting#Glitches,_skips_or_crackling. Alternatively, consider using a different backend such as ALSA.
 
 11.3. Android
 -------------
-- To capture audio on Android, remember to add the RECORD_AUDIO permission to your manifest:
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+- To capture audio on Android, remember to add the RECORD_AUDIO permission to your manifest: `<uses-permission android:name="android.permission.RECORD_AUDIO" />`
 - With OpenSL|ES, only a single ma_context can be active at any given time. This is due to a limitation with OpenSL|ES.
 - With AAudio, only default devices are enumerated. This is due to AAudio not having an enumeration API (devices are enumerated through Java). You can however
   perform your own device enumeration through Java and then set the ID in the ma_device_id structure (ma_device_id.aaudio) and pass it to ma_device_init().
@@ -1329,16 +1328,19 @@ Some backends have some nuance details you may want to be aware of.
 ---------
 - UWP only supports default playback and capture devices.
 - UWP requires the Microphone capability to be enabled in the application's manifest (Package.appxmanifest):
-      <Package ...>
-          ...
-          <Capabilities>
-              <DeviceCapability Name="microphone" />
-          </Capabilities>
-      </Package>
+
+    ```
+    <Package ...>
+        ...
+        <Capabilities>
+            <DeviceCapability Name="microphone" />
+        </Capabilities>
+    </Package>
+    ```
 
 11.5. Web Audio / Emscripten
-----------------------
-- You cannot use -std=c* compiler flags, nor -ansi. This only applies to the Emscripten build.
+----------------------------
+- You cannot use `-std=c*` compiler flags, nor `-ansi`. This only applies to the Emscripten build.
 - The first time a context is initialized it will create a global object called "miniaudio" whose primary purpose is to act as a factory for device objects.
 - Currently the Web Audio backend uses ScriptProcessorNode's, but this may need to change later as they've been deprecated.
 - Google has implemented a policy in their browsers that prevent automatic media output without first receiving some kind of user input. The following web page
@@ -1351,13 +1353,13 @@ Some backends have some nuance details you may want to be aware of.
 =======================
 - Automatic stream routing is enabled on a per-backend basis. Support is explicitly enabled for WASAPI and Core Audio, however other backends such as
   PulseAudio may naturally support it, though not all have been tested.
-- The contents of the output buffer passed into the data callback will always be pre-initialized to zero unless the noPreZeroedOutputBuffer config variable in
-  ma_device_config is set to true, in which case it'll be undefined which will require you to write something to the entire buffer.
-- By default miniaudio will automatically clip samples. This only applies when the playback sample format is configured as ma_format_f32. If you are doing
-  clipping yourself, you can disable this overhead by setting noClip to true in the device config.
+- The contents of the output buffer passed into the data callback will always be pre-initialized to zero unless the `noPreZeroedOutputBuffer` config variable
+  in `ma_device_config` is set to true, in which case it'll be undefined which will require you to write something to the entire buffer.
+- By default miniaudio will automatically clip samples. This only applies when the playback sample format is configured as `ma_format_f32`. If you are doing
+  clipping yourself, you can disable this overhead by setting `noClip` to true in the device config.
 - The sndio backend is currently only enabled on OpenBSD builds.
 - The audio(4) backend is supported on OpenBSD, but you may need to disable sndiod before you can use it.
-- Note that GCC and Clang requires "-msse2", "-mavx2", etc. for SIMD optimizations.
+- Note that GCC and Clang requires `-msse2`, `-mavx2`, etc. for SIMD optimizations.
 */
 
 #ifndef miniaudio_h
@@ -1372,7 +1374,7 @@ extern "C" {
 
 #define MA_VERSION_MAJOR    0
 #define MA_VERSION_MINOR    10
-#define MA_VERSION_REVISION 11
+#define MA_VERSION_REVISION 15
 #define MA_VERSION_STRING   MA_XSTRINGIFY(MA_VERSION_MAJOR) "." MA_XSTRINGIFY(MA_VERSION_MINOR) "." MA_XSTRINGIFY(MA_VERSION_REVISION)
 
 #if defined(_MSC_VER) && !defined(__clang__)
@@ -1840,6 +1842,8 @@ typedef enum
     ma_thread_priority_realtime =  1,
     ma_thread_priority_default  =  0
 } ma_thread_priority;
+
+typedef unsigned char ma_spinlock;
 
 #if defined(MA_WIN32)
 typedef ma_handle ma_thread;
@@ -2430,7 +2434,7 @@ typedef struct
     float weights[MA_MAX_CHANNELS][MA_MAX_CHANNELS];  /* [in][out]. Only used when mixingMode is set to ma_channel_mix_mode_custom_weights. */
 } ma_channel_converter_config;
 
-MA_API ma_channel_converter_config ma_channel_converter_config_init(ma_format format, ma_uint32 channelsIn, const ma_channel channelMapIn[MA_MAX_CHANNELS], ma_uint32 channelsOut, const ma_channel channelMapOut[MA_MAX_CHANNELS], ma_channel_mix_mode mixingMode);
+MA_API ma_channel_converter_config ma_channel_converter_config_init(ma_format format, ma_uint32 channelsIn, const ma_channel* pChannelMapIn, ma_uint32 channelsOut, const ma_channel* pChannelMapOut, ma_channel_mix_mode mixingMode);
 
 typedef struct
 {
@@ -2563,11 +2567,15 @@ Channel Maps
 
 /*
 Helper for retrieving a standard channel map.
+
+The output channel map buffer must have a capacity of at least `channels`.
 */
-MA_API void ma_get_standard_channel_map(ma_standard_channel_map standardChannelMap, ma_uint32 channels, ma_channel channelMap[MA_MAX_CHANNELS]);
+MA_API void ma_get_standard_channel_map(ma_standard_channel_map standardChannelMap, ma_uint32 channels, ma_channel* pChannelMap);
 
 /*
 Copies a channel map.
+
+Both input and output channel map buffers must have a capacity of at at least `channels`.
 */
 MA_API void ma_channel_map_copy(ma_channel* pOut, const ma_channel* pIn, ma_uint32 channels);
 
@@ -2581,25 +2589,33 @@ is usually treated as a passthrough.
 Invalid channel maps:
   - A channel map with no channels
   - A channel map with more than one channel and a mono channel
+
+The channel map buffer must have a capacity of at least `channels`.
 */
-MA_API ma_bool32 ma_channel_map_valid(ma_uint32 channels, const ma_channel channelMap[MA_MAX_CHANNELS]);
+MA_API ma_bool32 ma_channel_map_valid(ma_uint32 channels, const ma_channel* pChannelMap);
 
 /*
 Helper for comparing two channel maps for equality.
 
 This assumes the channel count is the same between the two.
+
+Both channels map buffers must have a capacity of at least `channels`.
 */
-MA_API ma_bool32 ma_channel_map_equal(ma_uint32 channels, const ma_channel channelMapA[MA_MAX_CHANNELS], const ma_channel channelMapB[MA_MAX_CHANNELS]);
+MA_API ma_bool32 ma_channel_map_equal(ma_uint32 channels, const ma_channel* pChannelMapA, const ma_channel* pChannelMapB);
 
 /*
 Helper for determining if a channel map is blank (all channels set to MA_CHANNEL_NONE).
+
+The channel map buffer must have a capacity of at least `channels`.
 */
-MA_API ma_bool32 ma_channel_map_blank(ma_uint32 channels, const ma_channel channelMap[MA_MAX_CHANNELS]);
+MA_API ma_bool32 ma_channel_map_blank(ma_uint32 channels, const ma_channel* pChannelMap);
 
 /*
 Helper for determining whether or not a channel is present in the given channel map.
+
+The channel map buffer must have a capacity of at least `channels`.
 */
-MA_API ma_bool32 ma_channel_map_contains_channel_position(ma_uint32 channels, const ma_channel channelMap[MA_MAX_CHANNELS], ma_channel channelPosition);
+MA_API ma_bool32 ma_channel_map_contains_channel_position(ma_uint32 channels, const ma_channel* pChannelMap, ma_channel channelPosition);
 
 
 /************************************************************************************************************************************************************
@@ -5021,6 +5037,23 @@ MA_API ma_bool32 ma_is_loopback_supported(ma_backend backend);
 
 
 #ifndef MA_NO_THREADING
+
+/*
+Locks a spinlock.
+*/
+MA_API ma_result ma_spinlock_lock(ma_spinlock* pSpinlock);
+
+/*
+Locks a spinlock, but does not yield() when looping.
+*/
+MA_API ma_result ma_spinlock_lock_noyield(ma_spinlock* pSpinlock);
+
+/*
+Unlocks a spinlock.
+*/
+MA_API ma_result ma_spinlock_unlock(ma_spinlock* pSpinlock);
+
+
 /*
 Creates a mutex.
 
@@ -6098,8 +6131,7 @@ static void ma_sleep(ma_uint32 milliseconds)
 }
 #endif
 
-#if !defined(MA_EMSCRIPTEN)
-static MA_INLINE void ma_yield(void)
+static MA_INLINE void ma_yield()
 {
 #if defined(__i386) || defined(_M_IX86) || defined(__x86_64__) || defined(_M_X64)
     /* x86/x64 */
@@ -6112,19 +6144,18 @@ static MA_INLINE void ma_yield(void)
     #else
         __asm__ __volatile__ ("pause");
     #endif
-#elif (defined(__arm__) && defined(__ARM_ARCH) && __ARM_ARCH >= 6) || (defined(_M_ARM) && _M_ARM >= 6)
+#elif (defined(__arm__) && defined(__ARM_ARCH) && __ARM_ARCH >= 7) || (defined(_M_ARM) && _M_ARM >= 7) || defined(__ARM_ARCH_6K__) || defined(__ARM_ARCH_6T2__)
     /* ARM */
     #if defined(_MSC_VER)
         /* Apparently there is a __yield() intrinsic that's compatible with ARM, but I cannot find documentation for it nor can I find where it's declared. */
         __yield();
     #else
-        __asm__ __volatile__ ("yield");
+        __asm__ __volatile__ ("yield"); /* ARMv6K/ARMv6T2 and above. */
     #endif
 #else
     /* Unknown or unsupported architecture. No-op. */
 #endif
 }
-#endif
 
 
 
@@ -8262,50 +8293,6 @@ c89atomic_bool c89atomic_compare_exchange_strong_explicit_64(volatile c89atomic_
 /* c89atomic.h end */
 
 
-typedef unsigned char ma_spinlock;
-
-static MA_INLINE ma_result ma_spinlock_lock_ex(ma_spinlock* pSpinlock, ma_bool32 yield)
-{
-    if (pSpinlock == NULL) {
-        return MA_INVALID_ARGS;
-    }
-
-    for (;;) {
-        if (c89atomic_flag_test_and_set_explicit(pSpinlock, c89atomic_memory_order_acquire) == 0) {
-            break;
-        }
-
-        while (c89atomic_load_explicit_8(pSpinlock, c89atomic_memory_order_relaxed) == 1) {
-            if (yield) {
-                ma_yield();
-            }
-        }
-    }
-
-    return MA_SUCCESS;
-}
-
-static MA_INLINE ma_result ma_spinlock_lock(ma_spinlock* pSpinlock)
-{
-    return ma_spinlock_lock_ex(pSpinlock, MA_TRUE);
-}
-
-static MA_INLINE ma_result ma_spinlock_lock_noyield(ma_spinlock* pSpinlock)
-{
-    return ma_spinlock_lock_ex(pSpinlock, MA_FALSE);
-}
-
-static MA_INLINE ma_result ma_spinlock_unlock(ma_spinlock* pSpinlock)
-{
-    if (pSpinlock == NULL) {
-        return MA_INVALID_ARGS;
-    }
-
-    c89atomic_flag_clear_explicit(pSpinlock, c89atomic_memory_order_release);
-    return MA_SUCCESS;
-}
-
-
 
 static void* ma__malloc_default(size_t sz, void* pUserData)
 {
@@ -8498,6 +8485,47 @@ Threading
     typedef void* ma_thread_result;
 #endif
 typedef ma_thread_result (MA_THREADCALL * ma_thread_entry_proc)(void* pData);
+
+static MA_INLINE ma_result ma_spinlock_lock_ex(ma_spinlock* pSpinlock, ma_bool32 yield)
+{
+    if (pSpinlock == NULL) {
+        return MA_INVALID_ARGS;
+    }
+
+    for (;;) {
+        if (c89atomic_flag_test_and_set_explicit(pSpinlock, c89atomic_memory_order_acquire) == 0) {
+            break;
+        }
+
+        while (c89atomic_load_explicit_8(pSpinlock, c89atomic_memory_order_relaxed) == 1) {
+            if (yield) {
+                ma_yield();
+            }
+        }
+    }
+
+    return MA_SUCCESS;
+}
+
+MA_API ma_result ma_spinlock_lock(ma_spinlock* pSpinlock)
+{
+    return ma_spinlock_lock_ex(pSpinlock, MA_TRUE);
+}
+
+MA_API ma_result ma_spinlock_lock_noyield(ma_spinlock* pSpinlock)
+{
+    return ma_spinlock_lock_ex(pSpinlock, MA_FALSE);
+}
+
+MA_API ma_result ma_spinlock_unlock(ma_spinlock* pSpinlock)
+{
+    if (pSpinlock == NULL) {
+        return MA_INVALID_ARGS;
+    }
+
+    c89atomic_flag_clear_explicit(pSpinlock, c89atomic_memory_order_release);
+    return MA_SUCCESS;
+}
 
 #ifdef MA_WIN32
 static int ma_thread_priority_to_win32(ma_thread_priority priority)
@@ -8701,6 +8729,10 @@ static ma_result ma_thread_create__posix(ma_thread* pThread, ma_thread_priority 
 
         pthread_attr_destroy(&attr);
     }
+#else
+    /* It's the emscripten build. We'll have a few unused parameters. */
+    (void)priority;
+    (void)stackSize;
 #endif
 
     result = pthread_create(pThread, pAttr, entryProc, pData);
@@ -10488,7 +10520,7 @@ static ma_result ma_device_init__null(ma_context* pContext, const ma_device_conf
         ma_strncpy_s(pDevice->capture.name,  sizeof(pDevice->capture.name),  "NULL Capture Device",  (size_t)-1);
         pDevice->capture.internalFormat             = pConfig->capture.format;
         pDevice->capture.internalChannels           = pConfig->capture.channels;
-        ma_channel_map_copy(pDevice->capture.internalChannelMap, pConfig->capture.channelMap, pConfig->capture.channels);
+        ma_channel_map_copy(pDevice->capture.internalChannelMap, pConfig->capture.channelMap, ma_min(pConfig->capture.channels, MA_MAX_CHANNELS));
         pDevice->capture.internalPeriodSizeInFrames = periodSizeInFrames;
         pDevice->capture.internalPeriods            = pConfig->periods;
     }
@@ -10496,7 +10528,7 @@ static ma_result ma_device_init__null(ma_context* pContext, const ma_device_conf
         ma_strncpy_s(pDevice->playback.name, sizeof(pDevice->playback.name), "NULL Playback Device", (size_t)-1);
         pDevice->playback.internalFormat             = pConfig->playback.format;
         pDevice->playback.internalChannels           = pConfig->playback.channels;
-        ma_channel_map_copy(pDevice->playback.internalChannelMap, pConfig->playback.channelMap, pConfig->playback.channels);
+        ma_channel_map_copy(pDevice->playback.internalChannelMap, pConfig->playback.channelMap, ma_min(pConfig->playback.channels, MA_MAX_CHANNELS));
         pDevice->playback.internalPeriodSizeInFrames = periodSizeInFrames;
         pDevice->playback.internalPeriods            = pConfig->periods;
     }
@@ -11045,39 +11077,39 @@ static DWORD ma_channel_id_to_win32(DWORD id)
 }
 
 /* Converts a channel mapping to a Win32-style channel mask. */
-static DWORD ma_channel_map_to_channel_mask__win32(const ma_channel channelMap[MA_MAX_CHANNELS], ma_uint32 channels)
+static DWORD ma_channel_map_to_channel_mask__win32(const ma_channel* pChannelMap, ma_uint32 channels)
 {
     DWORD dwChannelMask = 0;
     ma_uint32 iChannel;
 
     for (iChannel = 0; iChannel < channels; ++iChannel) {
-        dwChannelMask |= ma_channel_id_to_win32(channelMap[iChannel]);
+        dwChannelMask |= ma_channel_id_to_win32(pChannelMap[iChannel]);
     }
 
     return dwChannelMask;
 }
 
 /* Converts a Win32-style channel mask to a miniaudio channel map. */
-static void ma_channel_mask_to_channel_map__win32(DWORD dwChannelMask, ma_uint32 channels, ma_channel channelMap[MA_MAX_CHANNELS])
+static void ma_channel_mask_to_channel_map__win32(DWORD dwChannelMask, ma_uint32 channels, ma_channel* pChannelMap)
 {
     if (channels == 1 && dwChannelMask == 0) {
-        channelMap[0] = MA_CHANNEL_MONO;
+        pChannelMap[0] = MA_CHANNEL_MONO;
     } else if (channels == 2 && dwChannelMask == 0) {
-        channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-        channelMap[1] = MA_CHANNEL_FRONT_RIGHT;
+        pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+        pChannelMap[1] = MA_CHANNEL_FRONT_RIGHT;
     } else {
         if (channels == 1 && (dwChannelMask & SPEAKER_FRONT_CENTER) != 0) {
-            channelMap[0] = MA_CHANNEL_MONO;
+            pChannelMap[0] = MA_CHANNEL_MONO;
         } else {
             /* Just iterate over each bit. */
             ma_uint32 iChannel = 0;
             ma_uint32 iBit;
 
-            for (iBit = 0; iBit < 32; ++iBit) {
+            for (iBit = 0; iBit < 32 && iChannel < channels; ++iBit) {
                 DWORD bitValue = (dwChannelMask & (1UL << iBit));
                 if (bitValue != 0) {
                     /* The bit is set. */
-                    channelMap[iChannel] = ma_channel_id_to_ma__win32(bitValue);
+                    pChannelMap[iChannel] = ma_channel_id_to_ma__win32(bitValue);
                     iChannel += 1;
                 }
             }
@@ -12007,6 +12039,11 @@ static ma_result ma_context_get_device_info_from_IAudioClient__wasapi(ma_context
                     WAVEFORMATEXTENSIBLE wf;
                     ma_bool32 found;
                     ma_uint32 iFormat;
+
+                    /* Make sure we don't overflow the channel map. */
+                    if (channels > MA_MAX_CHANNELS) {
+                        channels = MA_MAX_CHANNELS;
+                    }
 
                     ma_get_standard_channel_map(ma_standard_channel_map_microsoft, channels, defaultChannelMap);
 
@@ -18752,7 +18789,7 @@ static ma_result ma_device_init_by_type__alsa(ma_context* pContext, const ma_dev
         pDevice->capture.internalFormat              = internalFormat;
         pDevice->capture.internalChannels            = internalChannels;
         pDevice->capture.internalSampleRate          = internalSampleRate;
-        ma_channel_map_copy(pDevice->capture.internalChannelMap, internalChannelMap, internalChannels);
+        ma_channel_map_copy(pDevice->capture.internalChannelMap, internalChannelMap, ma_min(internalChannels, MA_MAX_CHANNELS));
         pDevice->capture.internalPeriodSizeInFrames  = internalPeriodSizeInFrames;
         pDevice->capture.internalPeriods             = internalPeriods;
     } else {
@@ -18761,7 +18798,7 @@ static ma_result ma_device_init_by_type__alsa(ma_context* pContext, const ma_dev
         pDevice->playback.internalFormat             = internalFormat;
         pDevice->playback.internalChannels           = internalChannels;
         pDevice->playback.internalSampleRate         = internalSampleRate;
-        ma_channel_map_copy(pDevice->playback.internalChannelMap, internalChannelMap, internalChannels);
+        ma_channel_map_copy(pDevice->playback.internalChannelMap, internalChannelMap, ma_min(internalChannels, MA_MAX_CHANNELS));
         pDevice->playback.internalPeriodSizeInFrames = internalPeriodSizeInFrames;
         pDevice->playback.internalPeriods            = internalPeriods;
     }
@@ -22637,14 +22674,14 @@ static ma_channel ma_channel_from_AudioChannelLabel(AudioChannelLabel label)
     }
 }
 
-static ma_result ma_get_channel_map_from_AudioChannelLayout(AudioChannelLayout* pChannelLayout, ma_channel channelMap[MA_MAX_CHANNELS])
+static ma_result ma_get_channel_map_from_AudioChannelLayout(AudioChannelLayout* pChannelLayout, ma_channel* pChannelMap, size_t channelMapCap)
 {
     MA_ASSERT(pChannelLayout != NULL);
     
     if (pChannelLayout->mChannelLayoutTag == kAudioChannelLayoutTag_UseChannelDescriptions) {
         UInt32 iChannel;
-        for (iChannel = 0; iChannel < pChannelLayout->mNumberChannelDescriptions; ++iChannel) {
-            channelMap[iChannel] = ma_channel_from_AudioChannelLabel(pChannelLayout->mChannelDescriptions[iChannel].mChannelLabel);
+        for (iChannel = 0; iChannel < pChannelLayout->mNumberChannelDescriptions && iChannel < channelMapCap; ++iChannel) {
+            pChannelMap[iChannel] = ma_channel_from_AudioChannelLabel(pChannelLayout->mChannelDescriptions[iChannel].mChannelLabel);
         }
     } else
 #if 0
@@ -22653,10 +22690,10 @@ static ma_result ma_get_channel_map_from_AudioChannelLayout(AudioChannelLayout* 
         UInt32 iChannel = 0;
         UInt32 iBit;
         AudioChannelBitmap bitmap = pChannelLayout->mChannelBitmap;
-        for (iBit = 0; iBit < 32; ++iBit) {
+        for (iBit = 0; iBit < 32 && iChannel < channelMapCap; ++iBit) {
             AudioChannelBitmap bit = bitmap & (1 << iBit);
             if (bit != 0) {
-                channelMap[iChannel++] = ma_channel_from_AudioChannelBit(bit);
+                pChannelMap[iChannel++] = ma_channel_from_AudioChannelBit(bit);
             }
         }
     } else
@@ -22666,7 +22703,8 @@ static ma_result ma_get_channel_map_from_AudioChannelLayout(AudioChannelLayout* 
         Need to use the tag to determine the channel map. For now I'm just assuming a default channel map, but later on this should
         be updated to determine the mapping based on the tag.
         */
-        UInt32 channelCount = AudioChannelLayoutTag_GetNumberOfChannels(pChannelLayout->mChannelLayoutTag);
+        UInt32 channelCount = ma_min(AudioChannelLayoutTag_GetNumberOfChannels(pChannelLayout->mChannelLayoutTag), channelMapCap);
+
         switch (pChannelLayout->mChannelLayoutTag)
         {
             case kAudioChannelLayoutTag_Mono:
@@ -22678,35 +22716,35 @@ static ma_result ma_get_channel_map_from_AudioChannelLayout(AudioChannelLayout* 
             case kAudioChannelLayoutTag_Binaural:
             case kAudioChannelLayoutTag_Ambisonic_B_Format:
             {
-                ma_get_standard_channel_map(ma_standard_channel_map_default, channelCount, channelMap);
+                ma_get_standard_channel_map(ma_standard_channel_map_default, channelCount, pChannelMap);
             } break;
             
             case kAudioChannelLayoutTag_Octagonal:
             {
-                channelMap[7] = MA_CHANNEL_SIDE_RIGHT;
-                channelMap[6] = MA_CHANNEL_SIDE_LEFT;
+                pChannelMap[7] = MA_CHANNEL_SIDE_RIGHT;
+                pChannelMap[6] = MA_CHANNEL_SIDE_LEFT;
             } /* Intentional fallthrough. */
             case kAudioChannelLayoutTag_Hexagonal:
             {
-                channelMap[5] = MA_CHANNEL_BACK_CENTER;
+                pChannelMap[5] = MA_CHANNEL_BACK_CENTER;
             } /* Intentional fallthrough. */
             case kAudioChannelLayoutTag_Pentagonal:
             {
-                channelMap[4] = MA_CHANNEL_FRONT_CENTER;
+                pChannelMap[4] = MA_CHANNEL_FRONT_CENTER;
             } /* Intentional fallghrough. */
             case kAudioChannelLayoutTag_Quadraphonic:
             {
-                channelMap[3] = MA_CHANNEL_BACK_RIGHT;
-                channelMap[2] = MA_CHANNEL_BACK_LEFT;
-                channelMap[1] = MA_CHANNEL_RIGHT;
-                channelMap[0] = MA_CHANNEL_LEFT;
+                pChannelMap[3] = MA_CHANNEL_BACK_RIGHT;
+                pChannelMap[2] = MA_CHANNEL_BACK_LEFT;
+                pChannelMap[1] = MA_CHANNEL_RIGHT;
+                pChannelMap[0] = MA_CHANNEL_LEFT;
             } break;
             
             /* TODO: Add support for more tags here. */
         
             default:
             {
-                ma_get_standard_channel_map(ma_standard_channel_map_default, channelCount, channelMap);
+                ma_get_standard_channel_map(ma_standard_channel_map_default, channelCount, pChannelMap);
             } break;
         }
     }
@@ -22979,7 +23017,7 @@ static ma_result ma_get_AudioObject_channel_count(ma_context* pContext, AudioObj
 }
 
 #if 0
-static ma_result ma_get_AudioObject_channel_map(ma_context* pContext, AudioObjectID deviceObjectID, ma_device_type deviceType, ma_channel channelMap[MA_MAX_CHANNELS])
+static ma_result ma_get_AudioObject_channel_map(ma_context* pContext, AudioObjectID deviceObjectID, ma_device_type deviceType, ma_channel* pChannelMap, size_t channelMapCap)
 {
     AudioChannelLayout* pChannelLayout;
     ma_result result;
@@ -22991,7 +23029,7 @@ static ma_result ma_get_AudioObject_channel_map(ma_context* pContext, AudioObjec
         return result;  /* Rather than always failing here, would it be more robust to simply assume a default? */
     }
     
-    result = ma_get_channel_map_from_AudioChannelLayout(pChannelLayout, channelMap);
+    result = ma_get_channel_map_from_AudioChannelLayout(pChannelLayout, pChannelMap, channelMapCap);
     if (result != MA_SUCCESS) {
         ma_free(pChannelLayout, &pContext->allocationCallbacks);
         return result;
@@ -23471,7 +23509,7 @@ static ma_result ma_find_best_format__coreaudio(ma_context* pContext, AudioObjec
     return MA_SUCCESS;
 }
 
-static ma_result ma_get_AudioUnit_channel_map(ma_context* pContext, AudioUnit audioUnit, ma_device_type deviceType, ma_channel channelMap[MA_MAX_CHANNELS])
+static ma_result ma_get_AudioUnit_channel_map(ma_context* pContext, AudioUnit audioUnit, ma_device_type deviceType, ma_channel* pChannelMap, size_t channelMapCap)
 {
     AudioUnitScope deviceScope;
     AudioUnitElement deviceBus;
@@ -23506,7 +23544,7 @@ static ma_result ma_get_AudioUnit_channel_map(ma_context* pContext, AudioUnit au
         return ma_result_from_OSStatus(status);
     }
     
-    result = ma_get_channel_map_from_AudioChannelLayout(pChannelLayout, channelMap);
+    result = ma_get_channel_map_from_AudioChannelLayout(pChannelLayout, pChannelMap, channelMapCap);
     if (result != MA_SUCCESS) {
         ma__free_from_callbacks(pChannelLayout, &pContext->allocationCallbacks);
         return result;
@@ -23813,6 +23851,7 @@ static OSStatus ma_on_output__coreaudio(void* pUserData, AudioUnitRenderActionFl
         }
     } else {
         /* This is the deinterleaved case. We need to update each buffer in groups of internalChannels. This assumes each buffer is the same size. */
+        MA_ASSERT(pDevice->playback.internalChannels <= MA_MAX_CHANNELS);   /* This should heve been validated at initialization time. */
         
         /*
         For safety we'll check that the internal channels is a multiple of the buffer count. If it's not it means something
@@ -23935,6 +23974,7 @@ static OSStatus ma_on_input__coreaudio(void* pUserData, AudioUnitRenderActionFla
         }
     } else {
         /* This is the deinterleaved case. We need to interleave the audio data before sending it to the client. This assumes each buffer is the same size. */
+        MA_ASSERT(pDevice->capture.internalChannels <= MA_MAX_CHANNELS);    /* This should have been validated at initialization time. */
         
         /*
         For safety we'll check that the internal channels is a multiple of the buffer count. If it's not it means something
@@ -24601,6 +24641,11 @@ static ma_result ma_device_init_internal__coreaudio(ma_context* pContext, ma_dev
         pData->channelsOut = bestFormat.mChannelsPerFrame;
         pData->sampleRateOut = bestFormat.mSampleRate;
     }
+
+    /* Clamp the channel count for safety. */
+    if (pData->channelsOut > MA_MAX_CHANNELS) {
+        pData->channelsOut = MA_MAX_CHANNELS;
+    }
     
     /*
     Internal channel map. This is weird in my testing. If I use the AudioObject to get the
@@ -24610,11 +24655,11 @@ static ma_result ma_device_init_internal__coreaudio(ma_context* pContext, ma_dev
     I'm going to fall back to a default assumption in these cases.
     */
 #if defined(MA_APPLE_DESKTOP)
-    result = ma_get_AudioUnit_channel_map(pContext, pData->audioUnit, deviceType, pData->channelMapOut);
+    result = ma_get_AudioUnit_channel_map(pContext, pData->audioUnit, deviceType, pData->channelMapOut, pData->channelsOut);
     if (result != MA_SUCCESS) {
     #if 0
         /* Try falling back to the channel map from the AudioObject. */
-        result = ma_get_AudioObject_channel_map(pContext, deviceObjectID, deviceType, pData->channelMapOut);
+        result = ma_get_AudioObject_channel_map(pContext, deviceObjectID, deviceType, pData->channelMapOut, pData->channelsOut);
         if (result != MA_SUCCESS) {
             return result;
         }
@@ -25090,7 +25135,9 @@ static ma_result ma_context_uninit__coreaudio(ma_context* pContext)
     ma_dlclose(pContext, pContext->coreaudio.hCoreFoundation);
 #endif
 
-    ma_context__init_device_tracking__coreaudio(pContext);
+#if !defined(MA_APPLE_MOBILE)
+    ma_context__uninit_device_tracking__coreaudio(pContext);
+#endif
 
     (void)pContext;
     return MA_SUCCESS;
@@ -25276,6 +25323,7 @@ static ma_result ma_context_init__coreaudio(const ma_context_config* pConfig, ma
         }
     }
     
+#if !defined(MA_APPLE_MOBILE)
     result = ma_context__init_device_tracking__coreaudio(pContext);
     if (result != MA_SUCCESS) {
     #if !defined(MA_NO_RUNTIME_LINKING) && !defined(MA_APPLE_MOBILE)
@@ -25285,6 +25333,7 @@ static ma_result ma_context_init__coreaudio(const ma_context_config* pConfig, ma
     #endif
         return result;
     }
+#endif
 
     return MA_SUCCESS;
 }
@@ -28788,37 +28837,37 @@ static SLuint32 ma_channel_id_to_opensl(ma_uint8 id)
 }
 
 /* Converts a channel mapping to an OpenSL-style channel mask. */
-static SLuint32 ma_channel_map_to_channel_mask__opensl(const ma_channel channelMap[MA_MAX_CHANNELS], ma_uint32 channels)
+static SLuint32 ma_channel_map_to_channel_mask__opensl(const ma_channel* pChannelMap, ma_uint32 channels)
 {
     SLuint32 channelMask = 0;
     ma_uint32 iChannel;
     for (iChannel = 0; iChannel < channels; ++iChannel) {
-        channelMask |= ma_channel_id_to_opensl(channelMap[iChannel]);
+        channelMask |= ma_channel_id_to_opensl(pChannelMap[iChannel]);
     }
 
     return channelMask;
 }
 
 /* Converts an OpenSL-style channel mask to a miniaudio channel map. */
-static void ma_channel_mask_to_channel_map__opensl(SLuint32 channelMask, ma_uint32 channels, ma_channel channelMap[MA_MAX_CHANNELS])
+static void ma_channel_mask_to_channel_map__opensl(SLuint32 channelMask, ma_uint32 channels, ma_channel* pChannelMap)
 {
     if (channels == 1 && channelMask == 0) {
-        channelMap[0] = MA_CHANNEL_MONO;
+        pChannelMap[0] = MA_CHANNEL_MONO;
     } else if (channels == 2 && channelMask == 0) {
-        channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-        channelMap[1] = MA_CHANNEL_FRONT_RIGHT;
+        pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+        pChannelMap[1] = MA_CHANNEL_FRONT_RIGHT;
     } else {
         if (channels == 1 && (channelMask & SL_SPEAKER_FRONT_CENTER) != 0) {
-            channelMap[0] = MA_CHANNEL_MONO;
+            pChannelMap[0] = MA_CHANNEL_MONO;
         } else {
             /* Just iterate over each bit. */
             ma_uint32 iChannel = 0;
             ma_uint32 iBit;
-            for (iBit = 0; iBit < 32; ++iBit) {
+            for (iBit = 0; iBit < 32 && iChannel < channels; ++iBit) {
                 SLuint32 bitValue = (channelMask & (1UL << iBit));
                 if (bitValue != 0) {
                     /* The bit is set. */
-                    channelMap[iChannel] = ma_channel_id_to_ma__opensl(bitValue);
+                    pChannelMap[iChannel] = ma_channel_id_to_ma__opensl(bitValue);
                     iChannel += 1;
                 }
             }
@@ -29266,7 +29315,7 @@ static ma_result ma_SLDataFormat_PCM_init__opensl(ma_format format, ma_uint32 ch
     return MA_SUCCESS;
 }
 
-static ma_result ma_deconstruct_SLDataFormat_PCM__opensl(ma_SLDataFormat_PCM* pDataFormat, ma_format* pFormat, ma_uint32* pChannels, ma_uint32* pSampleRate, ma_channel* pChannelMap)
+static ma_result ma_deconstruct_SLDataFormat_PCM__opensl(ma_SLDataFormat_PCM* pDataFormat, ma_format* pFormat, ma_uint32* pChannels, ma_uint32* pSampleRate, ma_channel* pChannelMap, size_t channelMapCap)
 {
     ma_bool32 isFloatingPoint = MA_FALSE;
 #if defined(MA_ANDROID) && __ANDROID_API__ >= 21
@@ -29293,7 +29342,7 @@ static ma_result ma_deconstruct_SLDataFormat_PCM__opensl(ma_SLDataFormat_PCM* pD
 
     *pChannels   = pDataFormat->numChannels;
     *pSampleRate = ((SLDataFormat_PCM*)pDataFormat)->samplesPerSec / 1000;
-    ma_channel_mask_to_channel_map__opensl(pDataFormat->channelMask, pDataFormat->numChannels, pChannelMap);
+    ma_channel_mask_to_channel_map__opensl(pDataFormat->channelMask, ma_min(pDataFormat->numChannels, channelMapCap), pChannelMap);
 
     return MA_SUCCESS;
 }
@@ -29401,7 +29450,7 @@ static ma_result ma_device_init__opensl(ma_context* pContext, const ma_device_co
         }
 
         /* The internal format is determined by the "pcm" object. */
-        ma_deconstruct_SLDataFormat_PCM__opensl(&pcm, &pDevice->capture.internalFormat, &pDevice->capture.internalChannels, &pDevice->capture.internalSampleRate, pDevice->capture.internalChannelMap);
+        ma_deconstruct_SLDataFormat_PCM__opensl(&pcm, &pDevice->capture.internalFormat, &pDevice->capture.internalChannels, &pDevice->capture.internalSampleRate, pDevice->capture.internalChannelMap, ma_countof(pDevice->capture.internalChannelMap));
 
         /* Buffer. */
         periodSizeInFrames = pConfig->periodSizeInFrames;
@@ -29504,7 +29553,7 @@ static ma_result ma_device_init__opensl(ma_context* pContext, const ma_device_co
         }
 
         /* The internal format is determined by the "pcm" object. */
-        ma_deconstruct_SLDataFormat_PCM__opensl(&pcm, &pDevice->playback.internalFormat, &pDevice->playback.internalChannels, &pDevice->playback.internalSampleRate, pDevice->playback.internalChannelMap);
+        ma_deconstruct_SLDataFormat_PCM__opensl(&pcm, &pDevice->playback.internalFormat, &pDevice->playback.internalChannels, &pDevice->playback.internalSampleRate, pDevice->playback.internalChannelMap, ma_countof(pDevice->playback.internalChannelMap));
 
         /* Buffer. */
         periodSizeInFrames = pConfig->periodSizeInFrames;
@@ -29942,10 +29991,22 @@ static ma_result ma_device_init_by_type__webaudio(ma_context* pContext, const ma
         return MA_NO_DEVICE;
     }
 
-    /* Try calculating an appropriate buffer size. */
+    /*
+    Try calculating an appropriate buffer size. There have been reports of the default buffer size being too small on some browsers. If we're using default buffer size, we'll make sure
+    the period size is a big biffer than our standard defaults.
+    */
     internalPeriodSizeInFrames = pConfig->periodSizeInFrames;
     if (internalPeriodSizeInFrames == 0) {
-        internalPeriodSizeInFrames = ma_calculate_buffer_size_in_frames_from_milliseconds(pConfig->periodSizeInMilliseconds, pConfig->sampleRate);
+        ma_uint32 periodSizeInMilliseconds = pConfig->periodSizeInMilliseconds;
+        if (pDevice->usingDefaultBufferSize) {
+            if (pConfig->performanceProfile == ma_performance_profile_low_latency) {
+                periodSizeInMilliseconds = 33;  /* 1 frame @ 30 FPS */
+            } else {
+                periodSizeInMilliseconds = 333;
+            }
+        }
+
+        internalPeriodSizeInFrames = ma_calculate_buffer_size_in_frames_from_milliseconds(periodSizeInMilliseconds, pConfig->sampleRate);
     }
 
     /* The size of the buffer must be a power of 2 and between 256 and 16384. */
@@ -30353,8 +30414,8 @@ static ma_bool32 ma__is_channel_map_valid(const ma_channel* channelMap, ma_uint3
     if (channelMap[0] != MA_CHANNEL_NONE) {
         ma_uint32 iChannel;
 
-        if (channels == 0) {
-            return MA_FALSE;   /* No channels. */
+        if (channels == 0 || channels > MA_MAX_CHANNELS) {
+            return MA_FALSE;   /* Channel count out of range. */
         }
 
         /* A channel cannot be present in the channel map more than once. */
@@ -30386,6 +30447,7 @@ static ma_result ma_device__post_init_setup(ma_device* pDevice, ma_device_type d
             pDevice->capture.channels = pDevice->capture.internalChannels;
         }
         if (pDevice->capture.usingDefaultChannelMap) {
+            MA_ASSERT(pDevice->capture.channels <= MA_MAX_CHANNELS);
             if (pDevice->capture.internalChannels == pDevice->capture.channels) {
                 ma_channel_map_copy(pDevice->capture.channelMap, pDevice->capture.internalChannelMap, pDevice->capture.channels);
             } else {
@@ -30402,6 +30464,7 @@ static ma_result ma_device__post_init_setup(ma_device* pDevice, ma_device_type d
             pDevice->playback.channels = pDevice->playback.internalChannels;
         }
         if (pDevice->playback.usingDefaultChannelMap) {
+            MA_ASSERT(pDevice->playback.channels <= MA_MAX_CHANNELS);
             if (pDevice->playback.internalChannels == pDevice->playback.channels) {
                 ma_channel_map_copy(pDevice->playback.channelMap, pDevice->playback.internalChannelMap, pDevice->playback.channels);
             } else {
@@ -30418,18 +30481,18 @@ static ma_result ma_device__post_init_setup(ma_device* pDevice, ma_device_type d
         }
     }
 
-    /* PCM converters. */
+    /* Data converters. */
     if (deviceType == ma_device_type_capture || deviceType == ma_device_type_duplex || deviceType == ma_device_type_loopback) {
         /* Converting from internal device format to client format. */
         ma_data_converter_config converterConfig = ma_data_converter_config_init_default();
         converterConfig.formatIn                   = pDevice->capture.internalFormat;
         converterConfig.channelsIn                 = pDevice->capture.internalChannels;
         converterConfig.sampleRateIn               = pDevice->capture.internalSampleRate;
-        ma_channel_map_copy(converterConfig.channelMapIn, pDevice->capture.internalChannelMap, pDevice->capture.internalChannels);
+        ma_channel_map_copy(converterConfig.channelMapIn, pDevice->capture.internalChannelMap, ma_min(pDevice->capture.internalChannels, MA_MAX_CHANNELS));
         converterConfig.formatOut                  = pDevice->capture.format;
         converterConfig.channelsOut                = pDevice->capture.channels;
         converterConfig.sampleRateOut              = pDevice->sampleRate;
-        ma_channel_map_copy(converterConfig.channelMapOut, pDevice->capture.channelMap, pDevice->capture.channels);
+        ma_channel_map_copy(converterConfig.channelMapOut, pDevice->capture.channelMap, ma_min(pDevice->capture.channels, MA_MAX_CHANNELS));
         converterConfig.resampling.allowDynamicSampleRate = MA_FALSE;
         converterConfig.resampling.algorithm       = pDevice->resampling.algorithm;
         converterConfig.resampling.linear.lpfOrder = pDevice->resampling.linear.lpfOrder;
@@ -30447,11 +30510,11 @@ static ma_result ma_device__post_init_setup(ma_device* pDevice, ma_device_type d
         converterConfig.formatIn                   = pDevice->playback.format;
         converterConfig.channelsIn                 = pDevice->playback.channels;
         converterConfig.sampleRateIn               = pDevice->sampleRate;
-        ma_channel_map_copy(converterConfig.channelMapIn, pDevice->playback.channelMap, pDevice->playback.channels);
+        ma_channel_map_copy(converterConfig.channelMapIn, pDevice->playback.channelMap, ma_min(pDevice->playback.channels, MA_MAX_CHANNELS));
         converterConfig.formatOut                  = pDevice->playback.internalFormat;
         converterConfig.channelsOut                = pDevice->playback.internalChannels;
         converterConfig.sampleRateOut              = pDevice->playback.internalSampleRate;
-        ma_channel_map_copy(converterConfig.channelMapOut, pDevice->playback.internalChannelMap, pDevice->playback.internalChannels);
+        ma_channel_map_copy(converterConfig.channelMapOut, pDevice->playback.internalChannelMap, ma_min(pDevice->playback.internalChannels, MA_MAX_CHANNELS));
         converterConfig.resampling.allowDynamicSampleRate = MA_FALSE;
         converterConfig.resampling.algorithm       = pDevice->resampling.algorithm;
         converterConfig.resampling.linear.lpfOrder = pDevice->resampling.linear.lpfOrder;
@@ -31215,7 +31278,8 @@ MA_API ma_result ma_device_init(ma_context* pContext, const ma_device_config* pC
         pDevice->usingDefaultBufferSize = MA_TRUE;
     }
     
-
+    MA_ASSERT(config.capture.channels  <= MA_MAX_CHANNELS);
+    MA_ASSERT(config.playback.channels <= MA_MAX_CHANNELS);
 
     pDevice->type = config.deviceType;
     pDevice->sampleRate = config.sampleRate;
@@ -34311,6 +34375,10 @@ MA_API ma_result ma_biquad_init(const ma_biquad_config* pConfig, ma_biquad* pBQ)
         return MA_INVALID_ARGS;
     }
 
+    if (pConfig->channels < MA_MIN_CHANNELS || pConfig->channels > MA_MAX_CHANNELS) {
+        return MA_INVALID_ARGS;
+    }
+
     return ma_biquad_reinit(pConfig, pBQ);
 }
 
@@ -34515,6 +34583,10 @@ MA_API ma_result ma_lpf1_init(const ma_lpf1_config* pConfig, ma_lpf1* pLPF)
     MA_ZERO_OBJECT(pLPF);
 
     if (pConfig == NULL) {
+        return MA_INVALID_ARGS;
+    }
+
+    if (pConfig->channels < MA_MIN_CHANNELS || pConfig->channels > MA_MAX_CHANNELS) {
         return MA_INVALID_ARGS;
     }
 
@@ -35017,6 +35089,10 @@ MA_API ma_result ma_hpf1_init(const ma_hpf1_config* pConfig, ma_hpf1* pHPF)
     MA_ZERO_OBJECT(pHPF);
 
     if (pConfig == NULL) {
+        return MA_INVALID_ARGS;
+    }
+
+    if (pConfig->channels < MA_MIN_CHANNELS || pConfig->channels > MA_MAX_CHANNELS) {
         return MA_INVALID_ARGS;
     }
 
@@ -36375,6 +36451,10 @@ MA_API ma_result ma_linear_resampler_init(const ma_linear_resampler_config* pCon
         return MA_INVALID_ARGS;
     }
 
+    if (pConfig->channels < MA_MIN_CHANNELS || pConfig->channels > MA_MAX_CHANNELS) {
+        return MA_INVALID_ARGS;
+    }
+
     pResampler->config = *pConfig;
 
     /* Setting the rate will set up the filter and time advances for us. */
@@ -37559,15 +37639,20 @@ static float ma_calculate_channel_position_rectangular_weight(ma_channel channel
     return contribution;
 }
 
-MA_API ma_channel_converter_config ma_channel_converter_config_init(ma_format format, ma_uint32 channelsIn, const ma_channel channelMapIn[MA_MAX_CHANNELS], ma_uint32 channelsOut, const ma_channel channelMapOut[MA_MAX_CHANNELS], ma_channel_mix_mode mixingMode)
+MA_API ma_channel_converter_config ma_channel_converter_config_init(ma_format format, ma_uint32 channelsIn, const ma_channel* pChannelMapIn, ma_uint32 channelsOut, const ma_channel* pChannelMapOut, ma_channel_mix_mode mixingMode)
 {
     ma_channel_converter_config config;
+
+    /* Channel counts need to be clamped. */
+    channelsIn  = ma_min(channelsIn,  ma_countof(config.channelMapIn));
+    channelsOut = ma_min(channelsOut, ma_countof(config.channelMapOut));
+
     MA_ZERO_OBJECT(&config);
     config.format      = format;
     config.channelsIn  = channelsIn;
     config.channelsOut = channelsOut;
-    ma_channel_map_copy(config.channelMapIn,  channelMapIn,  channelsIn);
-    ma_channel_map_copy(config.channelMapOut, channelMapOut, channelsOut);
+    ma_channel_map_copy(config.channelMapIn,  pChannelMapIn,  channelsIn);
+    ma_channel_map_copy(config.channelMapOut, pChannelMapOut, channelsOut);
     config.mixingMode  = mixingMode;
 
     return config;
@@ -37607,6 +37692,12 @@ MA_API ma_result ma_channel_converter_init(const ma_channel_converter_config* pC
     MA_ZERO_OBJECT(pConverter);
 
     if (pConfig == NULL) {
+        return MA_INVALID_ARGS;
+    }
+
+    /* Basic validation for channel counts. */
+    if (pConfig->channelsIn  < MA_MIN_CHANNELS || pConfig->channelsIn  > MA_MAX_CHANNELS ||
+        pConfig->channelsOut < MA_MIN_CHANNELS || pConfig->channelsOut > MA_MAX_CHANNELS) {
         return MA_INVALID_ARGS;
     }
 
@@ -38327,11 +38418,11 @@ MA_API ma_data_converter_config ma_data_converter_config_init_default()
 MA_API ma_data_converter_config ma_data_converter_config_init(ma_format formatIn, ma_format formatOut, ma_uint32 channelsIn, ma_uint32 channelsOut, ma_uint32 sampleRateIn, ma_uint32 sampleRateOut)
 {
     ma_data_converter_config config = ma_data_converter_config_init_default();
-    config.formatIn = formatIn;
-    config.formatOut = formatOut;
-    config.channelsIn = channelsIn;
-    config.channelsOut = channelsOut;
-    config.sampleRateIn = sampleRateIn;
+    config.formatIn      = formatIn;
+    config.formatOut     = formatOut;
+    config.channelsIn    = ma_min(channelsIn,  MA_MAX_CHANNELS);
+    config.channelsOut   = ma_min(channelsOut, MA_MAX_CHANNELS);
+    config.sampleRateIn  = sampleRateIn;
     config.sampleRateOut = sampleRateOut;
     
     return config;
@@ -39231,396 +39322,499 @@ MA_API ma_uint64 ma_data_converter_get_output_latency(ma_data_converter* pConver
 Channel Maps
 
 **************************************************************************************************************************************************************/
-static void ma_get_standard_channel_map_microsoft(ma_uint32 channels, ma_channel channelMap[MA_MAX_CHANNELS])
+static void ma_get_standard_channel_map_microsoft(ma_uint32 channels, ma_channel* pChannelMap)
 {
     /* Based off the speaker configurations mentioned here: https://docs.microsoft.com/en-us/windows-hardware/drivers/ddi/content/ksmedia/ns-ksmedia-ksaudio_channel_config */
     switch (channels)
     {
         case 1:
         {
-            channelMap[0] = MA_CHANNEL_MONO;
+            pChannelMap[0] = MA_CHANNEL_MONO;
         } break;
 
         case 2:
         {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_RIGHT;
         } break;
 
         case 3: /* Not defined, but best guess. */
         {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[2] = MA_CHANNEL_FRONT_CENTER;
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[2] = MA_CHANNEL_FRONT_CENTER;
         } break;
 
         case 4:
         {
 #ifndef MA_USE_QUAD_MICROSOFT_CHANNEL_MAP
             /* Surround. Using the Surround profile has the advantage of the 3rd channel (MA_CHANNEL_FRONT_CENTER) mapping nicely with higher channel counts. */
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[2] = MA_CHANNEL_FRONT_CENTER;
-            channelMap[3] = MA_CHANNEL_BACK_CENTER;
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[2] = MA_CHANNEL_FRONT_CENTER;
+            pChannelMap[3] = MA_CHANNEL_BACK_CENTER;
 #else
             /* Quad. */
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[2] = MA_CHANNEL_BACK_LEFT;
-            channelMap[3] = MA_CHANNEL_BACK_RIGHT;
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[2] = MA_CHANNEL_BACK_LEFT;
+            pChannelMap[3] = MA_CHANNEL_BACK_RIGHT;
 #endif
         } break;
 
         case 5: /* Not defined, but best guess. */
         {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[2] = MA_CHANNEL_FRONT_CENTER;
-            channelMap[3] = MA_CHANNEL_BACK_LEFT;
-            channelMap[4] = MA_CHANNEL_BACK_RIGHT;
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[2] = MA_CHANNEL_FRONT_CENTER;
+            pChannelMap[3] = MA_CHANNEL_BACK_LEFT;
+            pChannelMap[4] = MA_CHANNEL_BACK_RIGHT;
         } break;
 
         case 6:
         {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[2] = MA_CHANNEL_FRONT_CENTER;
-            channelMap[3] = MA_CHANNEL_LFE;
-            channelMap[4] = MA_CHANNEL_SIDE_LEFT;
-            channelMap[5] = MA_CHANNEL_SIDE_RIGHT;
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[2] = MA_CHANNEL_FRONT_CENTER;
+            pChannelMap[3] = MA_CHANNEL_LFE;
+            pChannelMap[4] = MA_CHANNEL_SIDE_LEFT;
+            pChannelMap[5] = MA_CHANNEL_SIDE_RIGHT;
         } break;
 
         case 7: /* Not defined, but best guess. */
         {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[2] = MA_CHANNEL_FRONT_CENTER;
-            channelMap[3] = MA_CHANNEL_LFE;
-            channelMap[4] = MA_CHANNEL_BACK_CENTER;
-            channelMap[5] = MA_CHANNEL_SIDE_LEFT;
-            channelMap[6] = MA_CHANNEL_SIDE_RIGHT;
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[2] = MA_CHANNEL_FRONT_CENTER;
+            pChannelMap[3] = MA_CHANNEL_LFE;
+            pChannelMap[4] = MA_CHANNEL_BACK_CENTER;
+            pChannelMap[5] = MA_CHANNEL_SIDE_LEFT;
+            pChannelMap[6] = MA_CHANNEL_SIDE_RIGHT;
         } break;
 
         case 8:
         default:
         {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[2] = MA_CHANNEL_FRONT_CENTER;
-            channelMap[3] = MA_CHANNEL_LFE;
-            channelMap[4] = MA_CHANNEL_BACK_LEFT;
-            channelMap[5] = MA_CHANNEL_BACK_RIGHT;
-            channelMap[6] = MA_CHANNEL_SIDE_LEFT;
-            channelMap[7] = MA_CHANNEL_SIDE_RIGHT;
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[2] = MA_CHANNEL_FRONT_CENTER;
+            pChannelMap[3] = MA_CHANNEL_LFE;
+            pChannelMap[4] = MA_CHANNEL_BACK_LEFT;
+            pChannelMap[5] = MA_CHANNEL_BACK_RIGHT;
+            pChannelMap[6] = MA_CHANNEL_SIDE_LEFT;
+            pChannelMap[7] = MA_CHANNEL_SIDE_RIGHT;
         } break;
     }
 
     /* Remainder. */
     if (channels > 8) {
         ma_uint32 iChannel;
-        for (iChannel = 8; iChannel < MA_MAX_CHANNELS; ++iChannel) {
-            channelMap[iChannel] = (ma_channel)(MA_CHANNEL_AUX_0 + (iChannel-8));
+        for (iChannel = 8; iChannel < channels; ++iChannel) {
+            if (iChannel < MA_MAX_CHANNELS) {
+                pChannelMap[iChannel] = (ma_channel)(MA_CHANNEL_AUX_0 + (iChannel-8));
+            } else {
+                pChannelMap[iChannel] = MA_CHANNEL_NONE;
+            }
         }
     }
 }
 
-static void ma_get_standard_channel_map_alsa(ma_uint32 channels, ma_channel channelMap[MA_MAX_CHANNELS])
+static void ma_get_standard_channel_map_alsa(ma_uint32 channels, ma_channel* pChannelMap)
 {
     switch (channels)
     {
         case 1:
         {
-            channelMap[0] = MA_CHANNEL_MONO;
+            pChannelMap[0] = MA_CHANNEL_MONO;
         } break;
 
         case 2:
         {
-            channelMap[0] = MA_CHANNEL_LEFT;
-            channelMap[1] = MA_CHANNEL_RIGHT;
+            pChannelMap[0] = MA_CHANNEL_LEFT;
+            pChannelMap[1] = MA_CHANNEL_RIGHT;
         } break;
 
         case 3:
         {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[2] = MA_CHANNEL_FRONT_CENTER;
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[2] = MA_CHANNEL_FRONT_CENTER;
         } break;
 
         case 4:
         {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[2] = MA_CHANNEL_BACK_LEFT;
-            channelMap[3] = MA_CHANNEL_BACK_RIGHT;
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[2] = MA_CHANNEL_BACK_LEFT;
+            pChannelMap[3] = MA_CHANNEL_BACK_RIGHT;
         } break;
 
         case 5:
         {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[2] = MA_CHANNEL_BACK_LEFT;
-            channelMap[3] = MA_CHANNEL_BACK_RIGHT;
-            channelMap[4] = MA_CHANNEL_FRONT_CENTER;
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[2] = MA_CHANNEL_BACK_LEFT;
+            pChannelMap[3] = MA_CHANNEL_BACK_RIGHT;
+            pChannelMap[4] = MA_CHANNEL_FRONT_CENTER;
         } break;
 
         case 6:
         {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[2] = MA_CHANNEL_BACK_LEFT;
-            channelMap[3] = MA_CHANNEL_BACK_RIGHT;
-            channelMap[4] = MA_CHANNEL_FRONT_CENTER;
-            channelMap[5] = MA_CHANNEL_LFE;
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[2] = MA_CHANNEL_BACK_LEFT;
+            pChannelMap[3] = MA_CHANNEL_BACK_RIGHT;
+            pChannelMap[4] = MA_CHANNEL_FRONT_CENTER;
+            pChannelMap[5] = MA_CHANNEL_LFE;
         } break;
 
         case 7:
         {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[2] = MA_CHANNEL_BACK_LEFT;
-            channelMap[3] = MA_CHANNEL_BACK_RIGHT;
-            channelMap[4] = MA_CHANNEL_FRONT_CENTER;
-            channelMap[5] = MA_CHANNEL_LFE;
-            channelMap[6] = MA_CHANNEL_BACK_CENTER;
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[2] = MA_CHANNEL_BACK_LEFT;
+            pChannelMap[3] = MA_CHANNEL_BACK_RIGHT;
+            pChannelMap[4] = MA_CHANNEL_FRONT_CENTER;
+            pChannelMap[5] = MA_CHANNEL_LFE;
+            pChannelMap[6] = MA_CHANNEL_BACK_CENTER;
         } break;
 
         case 8:
         default:
         {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[2] = MA_CHANNEL_BACK_LEFT;
-            channelMap[3] = MA_CHANNEL_BACK_RIGHT;
-            channelMap[4] = MA_CHANNEL_FRONT_CENTER;
-            channelMap[5] = MA_CHANNEL_LFE;
-            channelMap[6] = MA_CHANNEL_SIDE_LEFT;
-            channelMap[7] = MA_CHANNEL_SIDE_RIGHT;
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[2] = MA_CHANNEL_BACK_LEFT;
+            pChannelMap[3] = MA_CHANNEL_BACK_RIGHT;
+            pChannelMap[4] = MA_CHANNEL_FRONT_CENTER;
+            pChannelMap[5] = MA_CHANNEL_LFE;
+            pChannelMap[6] = MA_CHANNEL_SIDE_LEFT;
+            pChannelMap[7] = MA_CHANNEL_SIDE_RIGHT;
         } break;
     }
 
     /* Remainder. */
     if (channels > 8) {
         ma_uint32 iChannel;
-        for (iChannel = 8; iChannel < MA_MAX_CHANNELS; ++iChannel) {
-            channelMap[iChannel] = (ma_channel)(MA_CHANNEL_AUX_0 + (iChannel-8));
+        for (iChannel = 8; iChannel < channels; ++iChannel) {
+            if (iChannel < MA_MAX_CHANNELS) {
+                pChannelMap[iChannel] = (ma_channel)(MA_CHANNEL_AUX_0 + (iChannel-8));
+            } else {
+                pChannelMap[iChannel] = MA_CHANNEL_NONE;
+            }
         }
     }
 }
 
-static void ma_get_standard_channel_map_rfc3551(ma_uint32 channels, ma_channel channelMap[MA_MAX_CHANNELS])
+static void ma_get_standard_channel_map_rfc3551(ma_uint32 channels, ma_channel* pChannelMap)
 {
     switch (channels)
     {
         case 1:
         {
-            channelMap[0] = MA_CHANNEL_MONO;
+            pChannelMap[0] = MA_CHANNEL_MONO;
         } break;
 
         case 2:
         {
-            channelMap[0] = MA_CHANNEL_LEFT;
-            channelMap[1] = MA_CHANNEL_RIGHT;
+            pChannelMap[0] = MA_CHANNEL_LEFT;
+            pChannelMap[1] = MA_CHANNEL_RIGHT;
         } break;
 
         case 3:
         {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[2] = MA_CHANNEL_FRONT_CENTER;
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[2] = MA_CHANNEL_FRONT_CENTER;
         } break;
 
         case 4:
         {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_CENTER;
-            channelMap[2] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[3] = MA_CHANNEL_BACK_CENTER;
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_CENTER;
+            pChannelMap[2] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[3] = MA_CHANNEL_BACK_CENTER;
         } break;
 
         case 5:
         {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[2] = MA_CHANNEL_FRONT_CENTER;
-            channelMap[3] = MA_CHANNEL_BACK_LEFT;
-            channelMap[4] = MA_CHANNEL_BACK_RIGHT;
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[2] = MA_CHANNEL_FRONT_CENTER;
+            pChannelMap[3] = MA_CHANNEL_BACK_LEFT;
+            pChannelMap[4] = MA_CHANNEL_BACK_RIGHT;
         } break;
 
         case 6:
         {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_SIDE_LEFT;
-            channelMap[2] = MA_CHANNEL_FRONT_CENTER;
-            channelMap[3] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[4] = MA_CHANNEL_SIDE_RIGHT;
-            channelMap[5] = MA_CHANNEL_BACK_CENTER;
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_SIDE_LEFT;
+            pChannelMap[2] = MA_CHANNEL_FRONT_CENTER;
+            pChannelMap[3] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[4] = MA_CHANNEL_SIDE_RIGHT;
+            pChannelMap[5] = MA_CHANNEL_BACK_CENTER;
         } break;
     }
 
     /* Remainder. */
     if (channels > 8) {
         ma_uint32 iChannel;
-        for (iChannel = 6; iChannel < MA_MAX_CHANNELS; ++iChannel) {
-            channelMap[iChannel] = (ma_channel)(MA_CHANNEL_AUX_0 + (iChannel-6));
+        for (iChannel = 6; iChannel < channels; ++iChannel) {
+            if (iChannel < MA_MAX_CHANNELS) {
+                pChannelMap[iChannel] = (ma_channel)(MA_CHANNEL_AUX_0 + (iChannel-6));
+            } else {
+                pChannelMap[iChannel] = MA_CHANNEL_NONE;
+            }
         }
     }
 }
 
-static void ma_get_standard_channel_map_flac(ma_uint32 channels, ma_channel channelMap[MA_MAX_CHANNELS])
+static void ma_get_standard_channel_map_flac(ma_uint32 channels, ma_channel* pChannelMap)
 {
     switch (channels)
     {
         case 1:
         {
-            channelMap[0] = MA_CHANNEL_MONO;
+            pChannelMap[0] = MA_CHANNEL_MONO;
         } break;
 
         case 2:
         {
-            channelMap[0] = MA_CHANNEL_LEFT;
-            channelMap[1] = MA_CHANNEL_RIGHT;
+            pChannelMap[0] = MA_CHANNEL_LEFT;
+            pChannelMap[1] = MA_CHANNEL_RIGHT;
         } break;
 
         case 3:
         {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[2] = MA_CHANNEL_FRONT_CENTER;
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[2] = MA_CHANNEL_FRONT_CENTER;
         } break;
 
         case 4:
         {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[2] = MA_CHANNEL_BACK_LEFT;
-            channelMap[3] = MA_CHANNEL_BACK_RIGHT;
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[2] = MA_CHANNEL_BACK_LEFT;
+            pChannelMap[3] = MA_CHANNEL_BACK_RIGHT;
         } break;
 
         case 5:
         {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[2] = MA_CHANNEL_FRONT_CENTER;
-            channelMap[3] = MA_CHANNEL_BACK_LEFT;
-            channelMap[4] = MA_CHANNEL_BACK_RIGHT;
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[2] = MA_CHANNEL_FRONT_CENTER;
+            pChannelMap[3] = MA_CHANNEL_BACK_LEFT;
+            pChannelMap[4] = MA_CHANNEL_BACK_RIGHT;
         } break;
 
         case 6:
         {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[2] = MA_CHANNEL_FRONT_CENTER;
-            channelMap[3] = MA_CHANNEL_LFE;
-            channelMap[4] = MA_CHANNEL_BACK_LEFT;
-            channelMap[5] = MA_CHANNEL_BACK_RIGHT;
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[2] = MA_CHANNEL_FRONT_CENTER;
+            pChannelMap[3] = MA_CHANNEL_LFE;
+            pChannelMap[4] = MA_CHANNEL_BACK_LEFT;
+            pChannelMap[5] = MA_CHANNEL_BACK_RIGHT;
         } break;
 
         case 7:
         {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[2] = MA_CHANNEL_FRONT_CENTER;
-            channelMap[3] = MA_CHANNEL_LFE;
-            channelMap[4] = MA_CHANNEL_BACK_CENTER;
-            channelMap[5] = MA_CHANNEL_SIDE_LEFT;
-            channelMap[6] = MA_CHANNEL_SIDE_RIGHT;
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[2] = MA_CHANNEL_FRONT_CENTER;
+            pChannelMap[3] = MA_CHANNEL_LFE;
+            pChannelMap[4] = MA_CHANNEL_BACK_CENTER;
+            pChannelMap[5] = MA_CHANNEL_SIDE_LEFT;
+            pChannelMap[6] = MA_CHANNEL_SIDE_RIGHT;
         } break;
 
         case 8:
         default:
         {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[2] = MA_CHANNEL_FRONT_CENTER;
-            channelMap[3] = MA_CHANNEL_LFE;
-            channelMap[4] = MA_CHANNEL_BACK_LEFT;
-            channelMap[5] = MA_CHANNEL_BACK_RIGHT;
-            channelMap[6] = MA_CHANNEL_SIDE_LEFT;
-            channelMap[7] = MA_CHANNEL_SIDE_RIGHT;
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[2] = MA_CHANNEL_FRONT_CENTER;
+            pChannelMap[3] = MA_CHANNEL_LFE;
+            pChannelMap[4] = MA_CHANNEL_BACK_LEFT;
+            pChannelMap[5] = MA_CHANNEL_BACK_RIGHT;
+            pChannelMap[6] = MA_CHANNEL_SIDE_LEFT;
+            pChannelMap[7] = MA_CHANNEL_SIDE_RIGHT;
         } break;
     }
 
     /* Remainder. */
     if (channels > 8) {
         ma_uint32 iChannel;
-        for (iChannel = 8; iChannel < MA_MAX_CHANNELS; ++iChannel) {
-            channelMap[iChannel] = (ma_channel)(MA_CHANNEL_AUX_0 + (iChannel-8));
+        for (iChannel = 8; iChannel < channels; ++iChannel) {
+            if (iChannel < MA_MAX_CHANNELS) {
+                pChannelMap[iChannel] = (ma_channel)(MA_CHANNEL_AUX_0 + (iChannel-8));
+            } else {
+                pChannelMap[iChannel] = MA_CHANNEL_NONE;
+            }
         }
     }
 }
 
-static void ma_get_standard_channel_map_vorbis(ma_uint32 channels, ma_channel channelMap[MA_MAX_CHANNELS])
+static void ma_get_standard_channel_map_vorbis(ma_uint32 channels, ma_channel* pChannelMap)
 {
     /* In Vorbis' type 0 channel mapping, the first two channels are not always the standard left/right - it will have the center speaker where the right usually goes. Why?! */
     switch (channels)
     {
         case 1:
         {
-            channelMap[0] = MA_CHANNEL_MONO;
+            pChannelMap[0] = MA_CHANNEL_MONO;
         } break;
 
         case 2:
         {
-            channelMap[0] = MA_CHANNEL_LEFT;
-            channelMap[1] = MA_CHANNEL_RIGHT;
+            pChannelMap[0] = MA_CHANNEL_LEFT;
+            pChannelMap[1] = MA_CHANNEL_RIGHT;
         } break;
 
         case 3:
         {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_CENTER;
-            channelMap[2] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_CENTER;
+            pChannelMap[2] = MA_CHANNEL_FRONT_RIGHT;
         } break;
 
         case 4:
         {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[2] = MA_CHANNEL_BACK_LEFT;
-            channelMap[3] = MA_CHANNEL_BACK_RIGHT;
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[2] = MA_CHANNEL_BACK_LEFT;
+            pChannelMap[3] = MA_CHANNEL_BACK_RIGHT;
         } break;
 
         case 5:
         {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_CENTER;
-            channelMap[2] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[3] = MA_CHANNEL_BACK_LEFT;
-            channelMap[4] = MA_CHANNEL_BACK_RIGHT;
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_CENTER;
+            pChannelMap[2] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[3] = MA_CHANNEL_BACK_LEFT;
+            pChannelMap[4] = MA_CHANNEL_BACK_RIGHT;
         } break;
 
         case 6:
         {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_CENTER;
-            channelMap[2] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[3] = MA_CHANNEL_BACK_LEFT;
-            channelMap[4] = MA_CHANNEL_BACK_RIGHT;
-            channelMap[5] = MA_CHANNEL_LFE;
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_CENTER;
+            pChannelMap[2] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[3] = MA_CHANNEL_BACK_LEFT;
+            pChannelMap[4] = MA_CHANNEL_BACK_RIGHT;
+            pChannelMap[5] = MA_CHANNEL_LFE;
         } break;
 
         case 7:
         {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_CENTER;
-            channelMap[2] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[3] = MA_CHANNEL_SIDE_LEFT;
-            channelMap[4] = MA_CHANNEL_SIDE_RIGHT;
-            channelMap[5] = MA_CHANNEL_BACK_CENTER;
-            channelMap[6] = MA_CHANNEL_LFE;
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_CENTER;
+            pChannelMap[2] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[3] = MA_CHANNEL_SIDE_LEFT;
+            pChannelMap[4] = MA_CHANNEL_SIDE_RIGHT;
+            pChannelMap[5] = MA_CHANNEL_BACK_CENTER;
+            pChannelMap[6] = MA_CHANNEL_LFE;
         } break;
 
         case 8:
         default:
         {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_CENTER;
-            channelMap[2] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[3] = MA_CHANNEL_SIDE_LEFT;
-            channelMap[4] = MA_CHANNEL_SIDE_RIGHT;
-            channelMap[5] = MA_CHANNEL_BACK_LEFT;
-            channelMap[6] = MA_CHANNEL_BACK_RIGHT;
-            channelMap[7] = MA_CHANNEL_LFE;
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_CENTER;
+            pChannelMap[2] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[3] = MA_CHANNEL_SIDE_LEFT;
+            pChannelMap[4] = MA_CHANNEL_SIDE_RIGHT;
+            pChannelMap[5] = MA_CHANNEL_BACK_LEFT;
+            pChannelMap[6] = MA_CHANNEL_BACK_RIGHT;
+            pChannelMap[7] = MA_CHANNEL_LFE;
+        } break;
+    }
+
+    /* Remainder. */
+    if (channels > 8) {
+        ma_uint32 iChannel;
+        for (iChannel = 8; iChannel < channels; ++iChannel) {
+            if (iChannel < MA_MAX_CHANNELS) {
+                pChannelMap[iChannel] = (ma_channel)(MA_CHANNEL_AUX_0 + (iChannel-8));
+            } else {
+                pChannelMap[iChannel] = MA_CHANNEL_NONE;
+            }
+        }
+    }
+}
+
+static void ma_get_standard_channel_map_sound4(ma_uint32 channels, ma_channel* pChannelMap)
+{
+    switch (channels)
+    {
+        case 1:
+        {
+            pChannelMap[0] = MA_CHANNEL_MONO;
+        } break;
+
+        case 2:
+        {
+            pChannelMap[0] = MA_CHANNEL_LEFT;
+            pChannelMap[1] = MA_CHANNEL_RIGHT;
+        } break;
+
+        case 3:
+        {
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[2] = MA_CHANNEL_BACK_CENTER;
+        } break;
+
+        case 4:
+        {
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[2] = MA_CHANNEL_BACK_LEFT;
+            pChannelMap[3] = MA_CHANNEL_BACK_RIGHT;
+        } break;
+
+        case 5:
+        {
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[2] = MA_CHANNEL_BACK_LEFT;
+            pChannelMap[3] = MA_CHANNEL_BACK_RIGHT;
+            pChannelMap[4] = MA_CHANNEL_FRONT_CENTER;
+        } break;
+
+        case 6:
+        {
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[2] = MA_CHANNEL_BACK_LEFT;
+            pChannelMap[3] = MA_CHANNEL_BACK_RIGHT;
+            pChannelMap[4] = MA_CHANNEL_FRONT_CENTER;
+            pChannelMap[5] = MA_CHANNEL_LFE;
+        } break;
+
+        case 7:
+        {
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[2] = MA_CHANNEL_BACK_LEFT;
+            pChannelMap[3] = MA_CHANNEL_BACK_RIGHT;
+            pChannelMap[4] = MA_CHANNEL_FRONT_CENTER;
+            pChannelMap[5] = MA_CHANNEL_BACK_CENTER;
+            pChannelMap[6] = MA_CHANNEL_LFE;
+        } break;
+
+        case 8:
+        default:
+        {
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[2] = MA_CHANNEL_BACK_LEFT;
+            pChannelMap[3] = MA_CHANNEL_BACK_RIGHT;
+            pChannelMap[4] = MA_CHANNEL_FRONT_CENTER;
+            pChannelMap[5] = MA_CHANNEL_LFE;
+            pChannelMap[6] = MA_CHANNEL_SIDE_LEFT;
+            pChannelMap[7] = MA_CHANNEL_SIDE_RIGHT;
         } break;
     }
 
@@ -39628,192 +39822,117 @@ static void ma_get_standard_channel_map_vorbis(ma_uint32 channels, ma_channel ch
     if (channels > 8) {
         ma_uint32 iChannel;
         for (iChannel = 8; iChannel < MA_MAX_CHANNELS; ++iChannel) {
-            channelMap[iChannel] = (ma_channel)(MA_CHANNEL_AUX_0 + (iChannel-8));
+            if (iChannel < MA_MAX_CHANNELS) {
+                pChannelMap[iChannel] = (ma_channel)(MA_CHANNEL_AUX_0 + (iChannel-8));
+            } else {
+                pChannelMap[iChannel] = MA_CHANNEL_NONE;
+            }
         }
     }
 }
 
-static void ma_get_standard_channel_map_sound4(ma_uint32 channels, ma_channel channelMap[MA_MAX_CHANNELS])
+static void ma_get_standard_channel_map_sndio(ma_uint32 channels, ma_channel* pChannelMap)
 {
     switch (channels)
     {
         case 1:
         {
-            channelMap[0] = MA_CHANNEL_MONO;
+            pChannelMap[0] = MA_CHANNEL_MONO;
         } break;
 
         case 2:
         {
-            channelMap[0] = MA_CHANNEL_LEFT;
-            channelMap[1] = MA_CHANNEL_RIGHT;
+            pChannelMap[0] = MA_CHANNEL_LEFT;
+            pChannelMap[1] = MA_CHANNEL_RIGHT;
         } break;
 
         case 3:
         {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[2] = MA_CHANNEL_BACK_CENTER;
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[2] = MA_CHANNEL_FRONT_CENTER;
         } break;
 
         case 4:
         {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[2] = MA_CHANNEL_BACK_LEFT;
-            channelMap[3] = MA_CHANNEL_BACK_RIGHT;
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[2] = MA_CHANNEL_BACK_LEFT;
+            pChannelMap[3] = MA_CHANNEL_BACK_RIGHT;
         } break;
 
         case 5:
         {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[2] = MA_CHANNEL_BACK_LEFT;
-            channelMap[3] = MA_CHANNEL_BACK_RIGHT;
-            channelMap[4] = MA_CHANNEL_FRONT_CENTER;
-        } break;
-
-        case 6:
-        {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[2] = MA_CHANNEL_BACK_LEFT;
-            channelMap[3] = MA_CHANNEL_BACK_RIGHT;
-            channelMap[4] = MA_CHANNEL_FRONT_CENTER;
-            channelMap[5] = MA_CHANNEL_LFE;
-        } break;
-
-        case 7:
-        {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[2] = MA_CHANNEL_BACK_LEFT;
-            channelMap[3] = MA_CHANNEL_BACK_RIGHT;
-            channelMap[4] = MA_CHANNEL_FRONT_CENTER;
-            channelMap[5] = MA_CHANNEL_BACK_CENTER;
-            channelMap[6] = MA_CHANNEL_LFE;
-        } break;
-
-        case 8:
-        default:
-        {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[2] = MA_CHANNEL_BACK_LEFT;
-            channelMap[3] = MA_CHANNEL_BACK_RIGHT;
-            channelMap[4] = MA_CHANNEL_FRONT_CENTER;
-            channelMap[5] = MA_CHANNEL_LFE;
-            channelMap[6] = MA_CHANNEL_SIDE_LEFT;
-            channelMap[7] = MA_CHANNEL_SIDE_RIGHT;
-        } break;
-    }
-
-    /* Remainder. */
-    if (channels > 8) {
-        ma_uint32 iChannel;
-        for (iChannel = 8; iChannel < MA_MAX_CHANNELS; ++iChannel) {
-            channelMap[iChannel] = (ma_channel)(MA_CHANNEL_AUX_0 + (iChannel-8));
-        }
-    }
-}
-
-static void ma_get_standard_channel_map_sndio(ma_uint32 channels, ma_channel channelMap[MA_MAX_CHANNELS])
-{
-    switch (channels)
-    {
-        case 1:
-        {
-            channelMap[0] = MA_CHANNEL_MONO;
-        } break;
-
-        case 2:
-        {
-            channelMap[0] = MA_CHANNEL_LEFT;
-            channelMap[1] = MA_CHANNEL_RIGHT;
-        } break;
-
-        case 3:
-        {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[2] = MA_CHANNEL_FRONT_CENTER;
-        } break;
-
-        case 4:
-        {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[2] = MA_CHANNEL_BACK_LEFT;
-            channelMap[3] = MA_CHANNEL_BACK_RIGHT;
-        } break;
-
-        case 5:
-        {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[2] = MA_CHANNEL_BACK_LEFT;
-            channelMap[3] = MA_CHANNEL_BACK_RIGHT;
-            channelMap[4] = MA_CHANNEL_FRONT_CENTER;
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[2] = MA_CHANNEL_BACK_LEFT;
+            pChannelMap[3] = MA_CHANNEL_BACK_RIGHT;
+            pChannelMap[4] = MA_CHANNEL_FRONT_CENTER;
         } break;
 
         case 6:
         default:
         {
-            channelMap[0] = MA_CHANNEL_FRONT_LEFT;
-            channelMap[1] = MA_CHANNEL_FRONT_RIGHT;
-            channelMap[2] = MA_CHANNEL_BACK_LEFT;
-            channelMap[3] = MA_CHANNEL_BACK_RIGHT;
-            channelMap[4] = MA_CHANNEL_FRONT_CENTER;
-            channelMap[5] = MA_CHANNEL_LFE;
+            pChannelMap[0] = MA_CHANNEL_FRONT_LEFT;
+            pChannelMap[1] = MA_CHANNEL_FRONT_RIGHT;
+            pChannelMap[2] = MA_CHANNEL_BACK_LEFT;
+            pChannelMap[3] = MA_CHANNEL_BACK_RIGHT;
+            pChannelMap[4] = MA_CHANNEL_FRONT_CENTER;
+            pChannelMap[5] = MA_CHANNEL_LFE;
         } break;
     }
 
     /* Remainder. */
     if (channels > 6) {
         ma_uint32 iChannel;
-        for (iChannel = 6; iChannel < MA_MAX_CHANNELS; ++iChannel) {
-            channelMap[iChannel] = (ma_channel)(MA_CHANNEL_AUX_0 + (iChannel-6));
+        for (iChannel = 6; iChannel < channels && iChannel < MA_MAX_CHANNELS; ++iChannel) {
+            if (iChannel < MA_MAX_CHANNELS) {
+                pChannelMap[iChannel] = (ma_channel)(MA_CHANNEL_AUX_0 + (iChannel-6));
+            } else {
+                pChannelMap[iChannel] = MA_CHANNEL_NONE;
+            }
         }
     }
 }
 
-MA_API void ma_get_standard_channel_map(ma_standard_channel_map standardChannelMap, ma_uint32 channels, ma_channel channelMap[MA_MAX_CHANNELS])
+MA_API void ma_get_standard_channel_map(ma_standard_channel_map standardChannelMap, ma_uint32 channels, ma_channel* pChannelMap)
 {
     switch (standardChannelMap)
     {
         case ma_standard_channel_map_alsa:
         {
-            ma_get_standard_channel_map_alsa(channels, channelMap);
+            ma_get_standard_channel_map_alsa(channels, pChannelMap);
         } break;
 
         case ma_standard_channel_map_rfc3551:
         {
-            ma_get_standard_channel_map_rfc3551(channels, channelMap);
+            ma_get_standard_channel_map_rfc3551(channels, pChannelMap);
         } break;
 
         case ma_standard_channel_map_flac:
         {
-            ma_get_standard_channel_map_flac(channels, channelMap);
+            ma_get_standard_channel_map_flac(channels, pChannelMap);
         } break;
 
         case ma_standard_channel_map_vorbis:
         {
-            ma_get_standard_channel_map_vorbis(channels, channelMap);
+            ma_get_standard_channel_map_vorbis(channels, pChannelMap);
         } break;
 
         case ma_standard_channel_map_sound4:
         {
-            ma_get_standard_channel_map_sound4(channels, channelMap);
+            ma_get_standard_channel_map_sound4(channels, pChannelMap);
         } break;
         
         case ma_standard_channel_map_sndio:
         {
-            ma_get_standard_channel_map_sndio(channels, channelMap);
+            ma_get_standard_channel_map_sndio(channels, pChannelMap);
         } break;
 
         case ma_standard_channel_map_microsoft:
         default:
         {
-            ma_get_standard_channel_map_microsoft(channels, channelMap);
+            ma_get_standard_channel_map_microsoft(channels, pChannelMap);
         } break;
     }
 }
@@ -39825,9 +39944,9 @@ MA_API void ma_channel_map_copy(ma_channel* pOut, const ma_channel* pIn, ma_uint
     }
 }
 
-MA_API ma_bool32 ma_channel_map_valid(ma_uint32 channels, const ma_channel channelMap[MA_MAX_CHANNELS])
+MA_API ma_bool32 ma_channel_map_valid(ma_uint32 channels, const ma_channel* pChannelMap)
 {
-    if (channelMap == NULL) {
+    if (pChannelMap == NULL) {
         return MA_FALSE;
     }
 
@@ -39840,7 +39959,7 @@ MA_API ma_bool32 ma_channel_map_valid(ma_uint32 channels, const ma_channel chann
     if (channels > 1) {
         ma_uint32 iChannel;
         for (iChannel = 0; iChannel < channels; ++iChannel) {
-            if (channelMap[iChannel] == MA_CHANNEL_MONO) {
+            if (pChannelMap[iChannel] == MA_CHANNEL_MONO) {
                 return MA_FALSE;
             }
         }
@@ -39849,20 +39968,16 @@ MA_API ma_bool32 ma_channel_map_valid(ma_uint32 channels, const ma_channel chann
     return MA_TRUE;
 }
 
-MA_API ma_bool32 ma_channel_map_equal(ma_uint32 channels, const ma_channel channelMapA[MA_MAX_CHANNELS], const ma_channel channelMapB[MA_MAX_CHANNELS])
+MA_API ma_bool32 ma_channel_map_equal(ma_uint32 channels, const ma_channel* pChannelMapA, const ma_channel* pChannelMapB)
 {
     ma_uint32 iChannel;
 
-    if (channelMapA == channelMapB) {
-        return MA_FALSE;
-    }
-
-    if (channels == 0 || channels > MA_MAX_CHANNELS) {
-        return MA_FALSE;
+    if (pChannelMapA == pChannelMapB) {
+        return MA_TRUE;
     }
 
     for (iChannel = 0; iChannel < channels; ++iChannel) {
-        if (channelMapA[iChannel] != channelMapB[iChannel]) {
+        if (pChannelMapA[iChannel] != pChannelMapB[iChannel]) {
             return MA_FALSE;
         }
     }
@@ -39870,12 +39985,12 @@ MA_API ma_bool32 ma_channel_map_equal(ma_uint32 channels, const ma_channel chann
     return MA_TRUE;
 }
 
-MA_API ma_bool32 ma_channel_map_blank(ma_uint32 channels, const ma_channel channelMap[MA_MAX_CHANNELS])
+MA_API ma_bool32 ma_channel_map_blank(ma_uint32 channels, const ma_channel* pChannelMap)
 {
     ma_uint32 iChannel;
 
     for (iChannel = 0; iChannel < channels; ++iChannel) {
-        if (channelMap[iChannel] != MA_CHANNEL_NONE) {
+        if (pChannelMap[iChannel] != MA_CHANNEL_NONE) {
             return MA_FALSE;
         }
     }
@@ -39883,11 +39998,12 @@ MA_API ma_bool32 ma_channel_map_blank(ma_uint32 channels, const ma_channel chann
     return MA_TRUE;
 }
 
-MA_API ma_bool32 ma_channel_map_contains_channel_position(ma_uint32 channels, const ma_channel channelMap[MA_MAX_CHANNELS], ma_channel channelPosition)
+MA_API ma_bool32 ma_channel_map_contains_channel_position(ma_uint32 channels, const ma_channel* pChannelMap, ma_channel channelPosition)
 {
     ma_uint32 iChannel;
+
     for (iChannel = 0; iChannel < channels; ++iChannel) {
-        if (channelMap[iChannel] == channelPosition) {
+        if (pChannelMap[iChannel] == channelPosition) {
             return MA_TRUE;
         }
     }
@@ -42051,7 +42167,7 @@ extern "C" {
 #define DRWAV_XSTRINGIFY(x)     DRWAV_STRINGIFY(x)
 #define DRWAV_VERSION_MAJOR     0
 #define DRWAV_VERSION_MINOR     12
-#define DRWAV_VERSION_REVISION  6
+#define DRWAV_VERSION_REVISION  7
 #define DRWAV_VERSION_STRING    DRWAV_XSTRINGIFY(DRWAV_VERSION_MAJOR) "." DRWAV_XSTRINGIFY(DRWAV_VERSION_MINOR) "." DRWAV_XSTRINGIFY(DRWAV_VERSION_REVISION)
 #include <stddef.h>
 #ifdef _MSC_VER
@@ -42424,7 +42540,7 @@ extern "C" {
 #define DRFLAC_XSTRINGIFY(x)     DRFLAC_STRINGIFY(x)
 #define DRFLAC_VERSION_MAJOR     0
 #define DRFLAC_VERSION_MINOR     12
-#define DRFLAC_VERSION_REVISION  14
+#define DRFLAC_VERSION_REVISION  15
 #define DRFLAC_VERSION_STRING    DRFLAC_XSTRINGIFY(DRFLAC_VERSION_MAJOR) "." DRFLAC_XSTRINGIFY(DRFLAC_VERSION_MINOR) "." DRFLAC_XSTRINGIFY(DRFLAC_VERSION_REVISION)
 #include <stddef.h>
 #ifdef _MSC_VER
@@ -42786,7 +42902,7 @@ extern "C" {
 #define DRMP3_XSTRINGIFY(x)     DRMP3_STRINGIFY(x)
 #define DRMP3_VERSION_MAJOR     0
 #define DRMP3_VERSION_MINOR     6
-#define DRMP3_VERSION_REVISION  12
+#define DRMP3_VERSION_REVISION  13
 #define DRMP3_VERSION_STRING    DRMP3_XSTRINGIFY(DRMP3_VERSION_MAJOR) "." DRMP3_XSTRINGIFY(DRMP3_VERSION_MINOR) "." DRMP3_XSTRINGIFY(DRMP3_VERSION_REVISION)
 #include <stddef.h>
 #ifdef _MSC_VER
@@ -43072,8 +43188,8 @@ MA_API ma_decoder_config ma_decoder_config_init(ma_format outputFormat, ma_uint3
 {
     ma_decoder_config config;
     MA_ZERO_OBJECT(&config);
-    config.format = outputFormat;
-    config.channels = outputChannels;
+    config.format     = outputFormat;
+    config.channels   = ma_min(outputChannels, ma_countof(config.channelMap));
     config.sampleRate = outputSampleRate;
     config.resampling.algorithm = ma_resample_algorithm_linear;
     config.resampling.linear.lpfOrder = ma_min(MA_DEFAULT_RESAMPLER_LPF_ORDER, MA_MAX_FILTER_ORDER);
@@ -43101,6 +43217,18 @@ static ma_result ma_decoder__init_data_converter(ma_decoder* pDecoder, const ma_
     ma_data_converter_config converterConfig;
 
     MA_ASSERT(pDecoder != NULL);
+    MA_ASSERT(pConfig  != NULL);
+
+    /* Make sure we're not asking for too many channels. */
+    if (pConfig->channels > MA_MAX_CHANNELS) {
+        return MA_INVALID_ARGS;
+    }
+
+    /* The internal channels should have already been validated at a higher level, but we'll do it again explicitly here for safety. */
+    if (pDecoder->internalChannels > MA_MAX_CHANNELS) {
+        return MA_INVALID_ARGS;
+    }
+
 
     /* Output format. */
     if (pConfig->format == ma_format_unknown) {
@@ -46130,6 +46258,10 @@ MA_API ma_result ma_noise_init(const ma_noise_config* pConfig, ma_noise* pNoise)
         return MA_INVALID_ARGS;
     }
 
+    if (pConfig->channels < MA_MIN_CHANNELS || pConfig->channels > MA_MAX_CHANNELS) {
+        return MA_INVALID_ARGS;
+    }
+
     pNoise->ds.onRead          = ma_noise__data_source_on_read;
     pNoise->ds.onSeek          = ma_noise__data_source_on_seek;  /* <-- No-op for noise. */
     pNoise->ds.onGetDataFormat = ma_noise__data_source_on_get_data_format;
@@ -47438,6 +47570,39 @@ static drwav_uint64 drwav__data_chunk_size_w64(drwav_uint64 dataChunkSize)
 {
     return 24 + dataChunkSize;
 }
+static size_t drwav__write(drwav* pWav, const void* pData, size_t dataSize)
+{
+    DRWAV_ASSERT(pWav          != NULL);
+    DRWAV_ASSERT(pWav->onWrite != NULL);
+    return pWav->onWrite(pWav->pUserData, pData, dataSize);
+}
+static size_t drwav__write_u16ne_to_le(drwav* pWav, drwav_uint16 value)
+{
+    DRWAV_ASSERT(pWav          != NULL);
+    DRWAV_ASSERT(pWav->onWrite != NULL);
+    if (!drwav__is_little_endian()) {
+        value = drwav__bswap16(value);
+    }
+    return drwav__write(pWav, &value, 2);
+}
+static size_t drwav__write_u32ne_to_le(drwav* pWav, drwav_uint32 value)
+{
+    DRWAV_ASSERT(pWav          != NULL);
+    DRWAV_ASSERT(pWav->onWrite != NULL);
+    if (!drwav__is_little_endian()) {
+        value = drwav__bswap32(value);
+    }
+    return drwav__write(pWav, &value, 4);
+}
+static size_t drwav__write_u64ne_to_le(drwav* pWav, drwav_uint64 value)
+{
+    DRWAV_ASSERT(pWav          != NULL);
+    DRWAV_ASSERT(pWav->onWrite != NULL);
+    if (!drwav__is_little_endian()) {
+        value = drwav__bswap64(value);
+    }
+    return drwav__write(pWav, &value, 8);
+}
 static drwav_bool32 drwav_preinit_write(drwav* pWav, const drwav_data_format* pFormat, drwav_bool32 isSequential, drwav_write_proc onWrite, drwav_seek_proc onSeek, void* pUserData, const drwav_allocation_callbacks* pAllocationCallbacks)
 {
     if (pWav == NULL || onWrite == NULL) {
@@ -47486,39 +47651,39 @@ static drwav_bool32 drwav_init_write__internal(drwav* pWav, const drwav_data_for
     pWav->dataChunkDataSizeTargetWrite = initialDataChunkSize;
     if (pFormat->container == drwav_container_riff) {
         drwav_uint32 chunkSizeRIFF = 36 + (drwav_uint32)initialDataChunkSize;
-        runningPos += pWav->onWrite(pWav->pUserData, "RIFF", 4);
-        runningPos += pWav->onWrite(pWav->pUserData, &chunkSizeRIFF, 4);
-        runningPos += pWav->onWrite(pWav->pUserData, "WAVE", 4);
+        runningPos += drwav__write(pWav, "RIFF", 4);
+        runningPos += drwav__write_u32ne_to_le(pWav, chunkSizeRIFF);
+        runningPos += drwav__write(pWav, "WAVE", 4);
     } else {
         drwav_uint64 chunkSizeRIFF = 80 + 24 + initialDataChunkSize;
-        runningPos += pWav->onWrite(pWav->pUserData, drwavGUID_W64_RIFF, 16);
-        runningPos += pWav->onWrite(pWav->pUserData, &chunkSizeRIFF, 8);
-        runningPos += pWav->onWrite(pWav->pUserData, drwavGUID_W64_WAVE, 16);
+        runningPos += drwav__write(pWav, drwavGUID_W64_RIFF, 16);
+        runningPos += drwav__write_u64ne_to_le(pWav, chunkSizeRIFF);
+        runningPos += drwav__write(pWav, drwavGUID_W64_WAVE, 16);
     }
     if (pFormat->container == drwav_container_riff) {
         chunkSizeFMT = 16;
-        runningPos += pWav->onWrite(pWav->pUserData, "fmt ", 4);
-        runningPos += pWav->onWrite(pWav->pUserData, &chunkSizeFMT, 4);
+        runningPos += drwav__write(pWav, "fmt ", 4);
+        runningPos += drwav__write_u32ne_to_le(pWav, (drwav_uint32)chunkSizeFMT);
     } else {
         chunkSizeFMT = 40;
-        runningPos += pWav->onWrite(pWav->pUserData, drwavGUID_W64_FMT, 16);
-        runningPos += pWav->onWrite(pWav->pUserData, &chunkSizeFMT, 8);
+        runningPos += drwav__write(pWav, drwavGUID_W64_FMT, 16);
+        runningPos += drwav__write_u64ne_to_le(pWav, chunkSizeFMT);
     }
-    runningPos += pWav->onWrite(pWav->pUserData, &pWav->fmt.formatTag,      2);
-    runningPos += pWav->onWrite(pWav->pUserData, &pWav->fmt.channels,       2);
-    runningPos += pWav->onWrite(pWav->pUserData, &pWav->fmt.sampleRate,     4);
-    runningPos += pWav->onWrite(pWav->pUserData, &pWav->fmt.avgBytesPerSec, 4);
-    runningPos += pWav->onWrite(pWav->pUserData, &pWav->fmt.blockAlign,     2);
-    runningPos += pWav->onWrite(pWav->pUserData, &pWav->fmt.bitsPerSample,  2);
+    runningPos += drwav__write_u16ne_to_le(pWav, pWav->fmt.formatTag);
+    runningPos += drwav__write_u16ne_to_le(pWav, pWav->fmt.channels);
+    runningPos += drwav__write_u32ne_to_le(pWav, pWav->fmt.sampleRate);
+    runningPos += drwav__write_u32ne_to_le(pWav, pWav->fmt.avgBytesPerSec);
+    runningPos += drwav__write_u16ne_to_le(pWav, pWav->fmt.blockAlign);
+    runningPos += drwav__write_u16ne_to_le(pWav, pWav->fmt.bitsPerSample);
     pWav->dataChunkDataPos = runningPos;
     if (pFormat->container == drwav_container_riff) {
         drwav_uint32 chunkSizeDATA = (drwav_uint32)initialDataChunkSize;
-        runningPos += pWav->onWrite(pWav->pUserData, "data", 4);
-        runningPos += pWav->onWrite(pWav->pUserData, &chunkSizeDATA, 4);
+        runningPos += drwav__write(pWav, "data", 4);
+        runningPos += drwav__write_u32ne_to_le(pWav, chunkSizeDATA);
     } else {
         drwav_uint64 chunkSizeDATA = 24 + initialDataChunkSize;
-        runningPos += pWav->onWrite(pWav->pUserData, drwavGUID_W64_DATA, 16);
-        runningPos += pWav->onWrite(pWav->pUserData, &chunkSizeDATA, 8);
+        runningPos += drwav__write(pWav, drwavGUID_W64_DATA, 16);
+        runningPos += drwav__write_u64ne_to_le(pWav, chunkSizeDATA);
     }
     if (pFormat->container == drwav_container_riff) {
         if (runningPos != 20 + chunkSizeFMT + 8) {
@@ -48346,26 +48511,26 @@ DRWAV_API drwav_result drwav_uninit(drwav* pWav)
         }
         if (paddingSize > 0) {
             drwav_uint64 paddingData = 0;
-            pWav->onWrite(pWav->pUserData, &paddingData, paddingSize);
+            drwav__write(pWav, &paddingData, paddingSize);
         }
         if (pWav->onSeek && !pWav->isSequentialWrite) {
             if (pWav->container == drwav_container_riff) {
                 if (pWav->onSeek(pWav->pUserData, 4, drwav_seek_origin_start)) {
                     drwav_uint32 riffChunkSize = drwav__riff_chunk_size_riff(pWav->dataChunkDataSize);
-                    pWav->onWrite(pWav->pUserData, &riffChunkSize, 4);
+                    drwav__write_u32ne_to_le(pWav, riffChunkSize);
                 }
                 if (pWav->onSeek(pWav->pUserData, (int)pWav->dataChunkDataPos + 4, drwav_seek_origin_start)) {
                     drwav_uint32 dataChunkSize = drwav__data_chunk_size_riff(pWav->dataChunkDataSize);
-                    pWav->onWrite(pWav->pUserData, &dataChunkSize, 4);
+                    drwav__write_u32ne_to_le(pWav, dataChunkSize);
                 }
             } else {
                 if (pWav->onSeek(pWav->pUserData, 16, drwav_seek_origin_start)) {
                     drwav_uint64 riffChunkSize = drwav__riff_chunk_size_w64(pWav->dataChunkDataSize);
-                    pWav->onWrite(pWav->pUserData, &riffChunkSize, 8);
+                    drwav__write_u64ne_to_le(pWav, riffChunkSize);
                 }
                 if (pWav->onSeek(pWav->pUserData, (int)pWav->dataChunkDataPos + 16, drwav_seek_origin_start)) {
                     drwav_uint64 dataChunkSize = drwav__data_chunk_size_w64(pWav->dataChunkDataSize);
-                    pWav->onWrite(pWav->pUserData, &dataChunkSize, 8);
+                    drwav__write_u64ne_to_le(pWav, dataChunkSize);
                 }
             }
         }
@@ -49446,7 +49611,11 @@ DRWAV_API void drwav_s24_to_f32(float* pOut, const drwav_uint8* pIn, size_t samp
         return;
     }
     for (i = 0; i < sampleCount; ++i) {
-        double x = (double)(((drwav_int32)(((drwav_uint32)(pIn[i*3+0]) << 8) | ((drwav_uint32)(pIn[i*3+1]) << 16) | ((drwav_uint32)(pIn[i*3+2])) << 24)) >> 8);
+        double x;
+        drwav_uint32 a = ((drwav_uint32)(pIn[i*3+0]) <<  8);
+        drwav_uint32 b = ((drwav_uint32)(pIn[i*3+1]) << 16);
+        drwav_uint32 c = ((drwav_uint32)(pIn[i*3+2]) << 24);
+        x = (double)((drwav_int32)(a | b | c) >> 8);
         *pOut++ = (float)(x * 0.00000011920928955078125);
     }
 }
@@ -52957,6 +53126,9 @@ static drflac_bool32 drflac__decode_samples__lpc(drflac_bs* bs, drflac_uint32 bl
     }
     lpcPrecision += 1;
     if (!drflac__read_int8(bs, 5, &lpcShift)) {
+        return DRFLAC_FALSE;
+    }
+    if (lpcShift < 0) {
         return DRFLAC_FALSE;
     }
     DRFLAC_ZERO_MEMORY(coefficients, sizeof(coefficients));
@@ -61018,7 +61190,7 @@ DRMP3_API drmp3_uint64 drmp3_read_pcm_frames_f32(drmp3* pMP3, drmp3_uint64 frame
             if (framesJustRead == 0) {
                 break;
             }
-            drmp3_s16_to_f32((float*)DRMP3_OFFSET_PTR(pBufferOut, sizeof(drmp3_int16) * totalPCMFramesRead * pMP3->channels), pTempS16, framesJustRead * pMP3->channels);
+            drmp3_s16_to_f32((float*)DRMP3_OFFSET_PTR(pBufferOut, sizeof(float) * totalPCMFramesRead * pMP3->channels), pTempS16, framesJustRead * pMP3->channels);
             totalPCMFramesRead += framesJustRead;
         }
         return totalPCMFramesRead;
@@ -61831,11 +62003,30 @@ The following miscellaneous changes have also been made.
 /*
 REVISION HISTORY
 ================
-v0.10.11 - 28-06-2020
+v0.10.15 - 2020-07-15
+  - Fix a bug when converting bit-masked channel maps to miniaudio channel maps. This affects the WASAPI and OpenSL backends.
+
+v0.10.14 - 2020-07-14
+  - Fix compilation errors on Android.
+  - Fix compilation errors with -march=armv6.
+  - Updates to the documentation.
+
+v0.10.13 - 2020-07-11
+  - Fix some potential buffer overflow errors with channel maps when channel counts are greater than MA_MAX_CHANNELS.
+  - Fix compilation error on Emscripten.
+  - Silence some unused function warnings.
+  - Increase the default buffer size on the Web Audio backend. This fixes glitching issues on some browsers.
+  - Bring FLAC decoder up-to-date with dr_flac.
+  - Bring MP3 decoder up-to-date with dr_mp3.
+
+v0.10.12 - 2020-07-04
+  - Fix compilation errors on the iOS build.
+
+v0.10.11 - 2020-06-28
   - Fix some bugs with device tracking on Core Audio.
   - Updates to documentation.
 
-v0.10.10 - 26-06-2020
+v0.10.10 - 2020-06-26
   - Add include guard for the implementation section.
   - Mark ma_device_sink_info_callback() as static.
   - Fix compilation errors with MA_NO_DECODING and MA_NO_ENCODING.
