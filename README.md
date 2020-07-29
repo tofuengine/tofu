@@ -14,10 +14,10 @@ Guess what? Yup, that's yet another game engine/framework.
 
 * [Glad](https://glad.dav1d.de/)
 * [GLFW](https://www.glfw.org/) v3.3.2
-* [Lua](https://lua.org/) v5.3.5
+* [Lua](https://lua.org/) v5.4
 * [miniaudio](https://github.com/dr-soft/miniaudio) v0.10.7
 * [dr_libs](https://github.com/mackron/dr_libs) v0.12.13, v0.6.10, v0.12.4
-* [spleen](https://github.com/fcambus/spleen) fonts
+* [spleen](https://github.com/fcambus/spleen) v1.8.1
 * [stb](https://github.com/nothings/stb) libraries
 
 ## Features
@@ -45,6 +45,7 @@ Guess what? Yup, that's yet another game engine/framework.
 
 ## Desiderata
 
+* [ ] Sprite batching for optimized (ehm) batch drawing.
 * [ ] Masking functions for both drawing primitives and blits.
 * [ ] Custom "raw" graphics and sound formats, with on-the-fly LZ4 (stream?) compression.
 * [ ] **Bit** **Bl**ock **T**ransfer operations when drawing (also, [stencil](https://learnopengl.com/Advanced-OpenGL/Stencil-testing) support, see [this](https://open.gl/depthstencils)).
