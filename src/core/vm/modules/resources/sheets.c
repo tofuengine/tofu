@@ -34,6 +34,9 @@ typedef struct _Resource_Sheet_t {
 static const unsigned char _spleen_5x8_pixels[] = {
 #include <spleen/spleen-5x8.inc>
 };
+static const unsigned char _spleen_6x12_pixels[] = {
+#include <spleen/spleen-6x12.inc>
+};
 static const unsigned char _spleen_8x16_pixels[] = {
 #include <spleen/spleen-8x16.inc>
 };
@@ -49,6 +52,7 @@ static const unsigned char _spleen_32x64_pixels[] = {
 
 static const Resource_Sheet_t _sheets[] = {
     { "5x8", { 475, 8, _spleen_5x8_pixels, 5, 8 } },
+    { "6x12", { 570, 12, _spleen_6x12_pixels, 6, 12 } },
     { "8x16", { 760, 16, _spleen_8x16_pixels, 8, 16 } },
     { "12x24", { 1140, 24, _spleen_12x24_pixels, 12,24 } },
     { "16x32", { 1520, 32, _spleen_16x32_pixels, 16, 32 } },
