@@ -348,6 +348,7 @@ static int font_write4(lua_State *L)
 
     const GL_Context_t *context = self->context;
     const GL_Sheet_t *sheet = self->sheet;
+    const GL_Rectangle_t *cells = sheet->cells;
 
     int dx = x, dy = y;
     size_t height = 0;
@@ -364,7 +365,7 @@ static int font_write4(lua_State *L)
         if (c < ' ') {
             continue;
         }
-        const GL_Rectangle_t *cell = &sheet->cells[c - ' '];
+        const GL_Rectangle_t *cell = &cells[c - ' '];
         GL_context_blit(context, sheet->atlas, *cell, (GL_Point_t){ .x = dx, .y = dy });
         dx += cell->width;
         if (height < cell->height) {
@@ -394,6 +395,7 @@ static int font_write5_6(lua_State *L)
 
     const GL_Context_t *context = self->context;
     const GL_Sheet_t *sheet = self->sheet;
+    const GL_Rectangle_t *cells = sheet->cells;
 
     int dx = x, dy = y;
     size_t height = 0;
@@ -410,7 +412,7 @@ static int font_write5_6(lua_State *L)
         if (c < ' ') {
             continue;
         }
-        const GL_Rectangle_t *cell = &sheet->cells[c - ' '];
+        const GL_Rectangle_t *cell = &cells[c - ' '];
         const size_t cw = (size_t)(cell->width * fabs(scale_x));
         const size_t ch = (size_t)(cell->height * fabs(scale_y));
         GL_context_blit_s(context, sheet->atlas, *cell, (GL_Point_t){ .x = dx, .y = dy }, scale_x, scale_y);
