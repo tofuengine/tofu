@@ -25,7 +25,7 @@ function Bunny:__ctor(bank, batch)
   self.vx = (math.random() * MAX_SPEED) - (MAX_SPEED / 2.0)
   self.vy = (math.random() * MAX_SPEED) - (MAX_SPEED / 2.0)
 
-  batch:add({ cell_id = CELL_ID, x = self.x, y = self.y })
+  self.batch:add(CELL_ID, self.x, self.y)
 end
 
 function Bunny:update(delta_time)
@@ -55,7 +55,7 @@ function Bunny:update(delta_time)
     self.y = self.min_y
   end
 
-  self.batch:add({ cell_id = CELL_ID, x = self.x, y = self.y })
+  self.batch:add(CELL_ID, self.x, self.y)
 end
 
 return Bunny
