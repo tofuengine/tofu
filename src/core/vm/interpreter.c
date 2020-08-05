@@ -179,8 +179,8 @@ static int _load(const File_System_t *file_system, const char *file, lua_State *
         return LUA_ERRFILE;
     }
 
-    char name[FILE_PATH_MAX];
-    sprintf(name, "@%s", file); // Prepend a `@`, required by Lua to track files.
+    char name[FILE_PATH_MAX] = "@"; // Prepend a `@`, required by Lua to track files.
+    strcat(name, file);
 
     int result = lua_load(L, _reader, &(Reader_Context_t){ .handle = handle }, name, NULL); // nor `text` nor `binary`, autodetect.
 

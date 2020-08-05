@@ -12175,7 +12175,7 @@ static LPWSTR ma_context_get_default_device_id_from_IMMDeviceEnumerator__wasapi(
 static LPWSTR ma_context_get_default_device_id__wasapi(ma_context* pContext, ma_device_type deviceType)    /* Free the returned pointer with ma_CoTaskMemFree() */
 {
     ma_result result;
-    ma_IMMDeviceEnumerator* pDeviceEnumerator;
+    ma_IMMDeviceEnumerator* pDeviceEnumerator = NULL;
     LPWSTR pDefaultDeviceID = NULL;
 
     MA_ASSERT(pContext != NULL);
@@ -12193,7 +12193,7 @@ static LPWSTR ma_context_get_default_device_id__wasapi(ma_context* pContext, ma_
 
 static ma_result ma_context_get_MMDevice__wasapi(ma_context* pContext, ma_device_type deviceType, const ma_device_id* pDeviceID, ma_IMMDevice** ppMMDevice)
 {
-    ma_IMMDeviceEnumerator* pDeviceEnumerator;
+    ma_IMMDeviceEnumerator* pDeviceEnumerator = NULL;
     HRESULT hr;
 
     MA_ASSERT(pContext != NULL);

@@ -32,7 +32,7 @@
 static void on_parameter(Configuration_t *configuration, const char *key, const char *value)
 {
     if (strcmp(key, "title") == 0) {
-        strncpy(configuration->title, value, MAX_CONFIGURATION_TITLE_LENGTH);
+        strcpy(configuration->title, value);
     } else
     if (strcmp(key, "width") == 0) {
         configuration->width = (size_t)strtoul(value, NULL, 0);
