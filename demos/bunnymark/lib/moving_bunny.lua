@@ -11,7 +11,7 @@ local Y_DAMPENING = 0.85
 local MIN_X, MIN_Y = 0, 0
 local MAX_X, MAX_Y = Canvas.default():size()
 
-function Bunny:__ctor(bank)
+function Bunny:__ctor(bank, batch)
   local cw, ch = bank:size(CELL_ID)
 
   self.min_x = MIN_X
@@ -19,11 +19,13 @@ function Bunny:__ctor(bank)
   self.max_x = MAX_X - cw
   self.max_y = MAX_Y - ch
 
-  self.bank = bank
+  self.batch = batch
   self.x = (self.max_x - self.min_x) / 2 -- Spawn in the top-center part of the screen.
   self.y = (self.max_y - self.min_y) / 8
   self.vx = (math.random() * MAX_SPEED) - (MAX_SPEED / 2.0)
   self.vy = (math.random() * MAX_SPEED) - (MAX_SPEED / 2.0)
+
+  batch:add({ cell_id = CELL_ID, x = self.x, y = self.y })
 end
 
 function Bunny:update(delta_time)
@@ -52,10 +54,8 @@ function Bunny:update(delta_time)
     self.vy = 0.0 -- Bump on the ceiling!
     self.y = self.min_y
   end
-end
 
-function Bunny:render()
-  self.bank:blit(CELL_ID, self.x, self.y)
+  self.batch:add({ cell_id = CELL_ID, x = self.x, y = self.y })
 end
 
 return Bunny

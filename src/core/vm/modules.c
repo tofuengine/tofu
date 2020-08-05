@@ -27,6 +27,7 @@
 // FIXME: better namespace/naming usage for the modules? `arrays.h` -> `core_arrays.h`?
 #include <core/vm/modules/arrays.h>
 #include <core/vm/modules/bank.h>
+#include <core/vm/modules/batch.h>
 #include <core/vm/modules/canvas.h>
 #include <core/vm/modules/class.h>
 #include <core/vm/modules/display.h>
@@ -87,6 +88,7 @@ static int graphics_loader(lua_State *L)
 {
     static const luaL_Reg classes[] = {
         { "Bank", bank_loader },
+        { "Batch", batch_loader },
         { "Canvas", canvas_loader },
         { "Display", display_loader },
         { "Font", font_loader },

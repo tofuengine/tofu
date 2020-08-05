@@ -32,18 +32,30 @@
 
 #define LOG_CONTEXT "gl-batch"
 
-GL_Batch_t *GL_batch_create(GL_Sheet_t *sheet, size_t count)
+GL_Batch_t *GL_batch_create(GL_Sheet_t *sheet, size_t slots)
 {
     GL_Batch_t *batch = malloc(sizeof(GL_Batch_t));
     if (!batch) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate batch");
         return NULL;
     }
+
+    GL_Batch_Sprite_t *sprites = NULL;
+    if (slots > 0) {
+        arrsetcap(sprites, slots);
+        if (!sprites) {
+            Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate batch sprites");
+            free(batch);
+            return NULL;
+        }
+    }
+
     *batch = (GL_Batch_t){
             .sheet = sheet,
-            .sprites = NULL
+            .sprites = sprites
         };
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "batch %p attached", batch);
+
     return batch;
 }
 
@@ -56,19 +68,22 @@ void GL_batch_destroy(GL_Batch_t *batch)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "batch %p freed", batch);
 }
 
-void GL_batch_grow(GL_Batch_t *batch, size_t count)
+bool GL_batch_grow(GL_Batch_t *batch, size_t amount)
 {
     size_t capacity = arrcap(batch->sprites);
-    capacity += count;
+    capacity += amount;
     arrsetcap(batch->sprites, capacity);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "batch %p capacity grown by %d to %d", count, capacity);
+    if (!batch->sprites) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't grow batch slots");
+        return false;
+    }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "batch %p capacity grown by %d slots to %d", amount, capacity);
+    return true;
 }
 
 void GL_batch_clear(GL_Batch_t *batch)
 {
-    arrfree(batch->sprites);
-    batch->sprites = NULL;
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "batch cleared");
+    arrsetlen(batch->sprites, 0);
 }
 
 void GL_batch_add(GL_Batch_t *batch, GL_Batch_Sprite_t sprite)
@@ -78,7 +93,7 @@ void GL_batch_add(GL_Batch_t *batch, GL_Batch_Sprite_t sprite)
 
 //extern GL_Batch_Sprite_t *GL_batch_get_sprite(GL_Batch_t *batch, size_t index);
 
-void GL_batch_blit(const GL_Batch_t *batch, GL_Context_t *context)
+void GL_batch_blit(const GL_Batch_t *batch, const GL_Context_t *context)
 {
     const GL_Sheet_t *sheet = batch->sheet;
     const GL_Rectangle_t *cells = sheet->cells;
@@ -86,11 +101,14 @@ void GL_batch_blit(const GL_Batch_t *batch, GL_Context_t *context)
     GL_Batch_Sprite_t *current = batch->sprites;
     for (int count = arrlen(batch->sprites); count; --count) {
         GL_Batch_Sprite_t *sprite = current++;
+        if (!sprite->used) {
+            continue;
+        }
         GL_context_blit(context, sheet->atlas, cells[sprite->cell_id], sprite->position);
     }
 }
 
-void GL_batch_blit_s(const GL_Batch_t *batch, GL_Context_t *context)
+void GL_batch_blit_s(const GL_Batch_t *batch, const GL_Context_t *context)
 {
     const GL_Sheet_t *sheet = batch->sheet;
     const GL_Rectangle_t *cells = sheet->cells;
@@ -98,11 +116,14 @@ void GL_batch_blit_s(const GL_Batch_t *batch, GL_Context_t *context)
     GL_Batch_Sprite_t *current = batch->sprites;
     for (int count = arrlen(batch->sprites); count; --count) {
         GL_Batch_Sprite_t *sprite = current++;
+        if (!sprite->used) {
+            continue;
+        }
         GL_context_blit_s(context, sheet->atlas, cells[sprite->cell_id], sprite->position, sprite->sx, sprite->sy);
     }
 }
 
-void GL_batch_blit_sr(const GL_Batch_t *batch, GL_Context_t *context)
+void GL_batch_blit_sr(const GL_Batch_t *batch, const GL_Context_t *context)
 {
     const GL_Sheet_t *sheet = batch->sheet;
     const GL_Rectangle_t *cells = sheet->cells;
@@ -110,6 +131,9 @@ void GL_batch_blit_sr(const GL_Batch_t *batch, GL_Context_t *context)
     GL_Batch_Sprite_t *current = batch->sprites;
     for (int count = arrlen(batch->sprites); count; --count) {
         GL_Batch_Sprite_t *sprite = current++;
+        if (!sprite->used) {
+            continue;
+        }
         GL_context_blit_sr(context, sheet->atlas, cells[sprite->cell_id], sprite->position, sprite->sx, sprite->sy, sprite->rotation, sprite->ax, sprite->ay);
     }
 }

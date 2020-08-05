@@ -22,16 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __GL_H__
-#define __GL_H__
+#ifndef __MODULES_BATCH_H__
+#define __MODULES_BATCH_H__
 
-#include "batch.h"
-#include "blit.h"
-#include "common.h"
-#include "context.h"
-#include "palette.h"
-#include "primitive.h"
-#include "sheet.h"
-#include "surface.h"
+#include <lua/lua.h>
 
-#endif  /* __GL_H__ */
+extern int batch_loader(lua_State *L);
+
+#endif  /* __MODULES_BATCH_H__ */
