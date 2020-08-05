@@ -85,6 +85,12 @@ typedef struct _XForm_Object_t {
     GL_XForm_t xform;
 } XForm_Object_t;
 
+typedef struct _Batch_Object_t {
+    const Bank_Object_t *bank;
+    luaX_Reference bank_reference;
+    GL_Batch_t *batch;
+} Batch_Object_t;
+
 #ifdef __GRID_INTEGER_CELL__
 typedef int Cell_t;
 #else

@@ -26,11 +26,13 @@ local Class = require("tofu.core").Class
 local System = require("tofu.core").System
 local Input = require("tofu.events").Input
 local Bank = require("tofu.graphics").Bank
+local Batch = require("tofu.graphics").Batch
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
 
-local Bunny = require("lib.bunny")
+local MovingBunny = require("lib.moving_bunny")
+local StaticBunny = require("lib.static_bunny")
 
 local INITIAL_BUNNIES = 5000
 local LITTER_SIZE = 250
@@ -47,18 +49,24 @@ function Main:__ctor()
 
   self.bunnies = {}
   self.bank = Bank.new("assets/bunnies.png", "assets/bunnies.sheet")
+  self.batch = Batch.new(self.bank, 5000)
   self.font = Font.default("5x8", 11, 6)
   self.speed = 1.0
   self.running = true
+  self.static = true
+  self.batched = false
+
+  local Bunny = self.static and StaticBunny or MovingBunny
   for _ = 1, INITIAL_BUNNIES do
-    table.insert(self.bunnies, Bunny.new(self.bank))
+    table.insert(self.bunnies, Bunny.new(self.bank, self.batch))
   end
 end
 
 function Main:input()
   if Input.is_pressed("start") then
+    local Bunny = self.static and StaticBunny or MovingBunny
     for _ = 1, LITTER_SIZE do
-      table.insert(self.bunnies, Bunny.new(self.bank))
+      table.insert(self.bunnies, Bunny.new(self.bank, self.batch))
     end
     if #self.bunnies >= MAX_BUNNIES then
       System.quit()
@@ -71,6 +79,8 @@ function Main:input()
     self.speed = 1.0
   elseif Input.is_pressed("select") then
     self.bunnies = {}
+  elseif Input.is_pressed("x") then
+    self.static = not self.static
   elseif Input.is_pressed("y") then
     self.running = not self.running
   end
@@ -80,6 +90,9 @@ function Main:update(delta_time)
   if not self.running then
     return
   end
+
+  self.batch:clear()
+
   for _, bunny in pairs(self.bunnies) do
     bunny:update(delta_time * self.speed)
   end
@@ -90,9 +103,7 @@ function Main:render(_)
   local width, _ = canvas:size()
   canvas:clear()
 
-  for _, bunny in pairs(self.bunnies) do
-    bunny:render()
-  end
+  self.batch:blit()
 
   self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
   self.font:write(self.font:align(string.format("#%d bunnies", #self.bunnies), width, 0, "right"))

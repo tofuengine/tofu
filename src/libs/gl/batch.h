@@ -22,16 +22,40 @@
  * SOFTWARE.
  */
 
-#ifndef __GL_H__
-#define __GL_H__
+#ifndef __GL_BATCH_H__
+#define __GL_BATCH_H__
 
-#include "batch.h"
-#include "blit.h"
 #include "common.h"
 #include "context.h"
-#include "palette.h"
-#include "primitive.h"
 #include "sheet.h"
-#include "surface.h"
+#include "xform.h"
 
-#endif  /* __GL_H__ */
+#include <stdbool.h>
+
+typedef struct _GL_Batch_Sprite_t {
+    int cell_id;
+    GL_Point_t position;
+    float sx, sy;
+    int rotation;
+    float ax, ay;
+} GL_Batch_Sprite_t;
+
+typedef struct _GL_Batch_t {
+    GL_Sheet_t *sheet;
+    GL_Batch_Sprite_t *sprites;
+} GL_Batch_t;
+
+extern GL_Batch_t *GL_batch_create(GL_Sheet_t *sheet, size_t slots);
+extern void GL_batch_destroy(GL_Batch_t *batch);
+
+extern bool GL_batch_grow(GL_Batch_t *batch, size_t amount); // Can't shrink or references would be lost.
+extern void GL_batch_clear(GL_Batch_t *batch);
+extern void GL_batch_add(GL_Batch_t *batch, GL_Batch_Sprite_t sprite);
+
+//extern GL_Batch_Sprite_t *GL_batch_get_sprite(const GL_Batch_t *batch, size_t index);
+
+void GL_batch_blit(const GL_Batch_t *batch, const GL_Context_t *context); // FIXME: rename to `flush()`
+void GL_batch_blit_s(const GL_Batch_t *batch, const GL_Context_t *context);
+void GL_batch_blit_sr(const GL_Batch_t *batch, const GL_Context_t *context);
+
+#endif  /* __GL_BATCH_H__ */
