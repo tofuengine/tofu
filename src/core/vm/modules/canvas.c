@@ -130,7 +130,7 @@ static int canvas_new0(lua_State *L)
 
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    Canvas_Object_t *self = (Canvas_Object_t *)lua_newuserdata(L, sizeof(Canvas_Object_t));
+    Canvas_Object_t *self = (Canvas_Object_t *)lua_newuserdatauv(L, sizeof(Canvas_Object_t), 1);
     *self = (Canvas_Object_t){
             .context = display->context,
             .allocated = false
@@ -164,7 +164,7 @@ static int canvas_new1(lua_State *L)
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context %p loaded from file `%s`", context, file);
 
-    Canvas_Object_t *self = (Canvas_Object_t *)lua_newuserdata(L, sizeof(Canvas_Object_t));
+    Canvas_Object_t *self = (Canvas_Object_t *)lua_newuserdatauv(L, sizeof(Canvas_Object_t), 1);
     *self = (Canvas_Object_t){
             .context = context,
             .allocated = true
@@ -190,7 +190,7 @@ static int canvas_new2(lua_State *L)
         return luaL_error(L, "can't create %dx%d context", width, height);
     }
 
-    Canvas_Object_t *self = (Canvas_Object_t *)lua_newuserdata(L, sizeof(Canvas_Object_t));
+    Canvas_Object_t *self = (Canvas_Object_t *)lua_newuserdatauv(L, sizeof(Canvas_Object_t), 1);
     *self = (Canvas_Object_t){
             .context = context,
             .allocated = true

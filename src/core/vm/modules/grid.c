@@ -114,7 +114,7 @@ static int grid_new(lua_State *L)
         }
     }
 
-    Grid_Object_t *self = (Grid_Object_t *)lua_newuserdata(L, sizeof(Grid_Object_t));
+    Grid_Object_t *self = (Grid_Object_t *)lua_newuserdatauv(L, sizeof(Grid_Object_t), 1);
     *self = (Grid_Object_t){
             .width = width,
             .height = height,

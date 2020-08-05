@@ -119,7 +119,7 @@ static int font_new3(lua_State *L)
         return luaL_error(L, "invalid argument");
     }
 
-    Font_Object_t *self = (Font_Object_t *)lua_newuserdata(L, sizeof(Font_Object_t));
+    Font_Object_t *self = (Font_Object_t *)lua_newuserdatauv(L, sizeof(Font_Object_t), 1);
     *self = (Font_Object_t){
             .context = display->context,
             .context_reference = LUAX_REFERENCE_NIL,
@@ -189,7 +189,7 @@ static int font_new5(lua_State *L)
         return luaL_error(L, "invalid argument");
     }
 
-    Font_Object_t *self = (Font_Object_t *)lua_newuserdata(L, sizeof(Font_Object_t));
+    Font_Object_t *self = (Font_Object_t *)lua_newuserdatauv(L, sizeof(Font_Object_t), 1);
     *self = (Font_Object_t){
             .context = display->context,
             .context_reference = LUAX_REFERENCE_NIL,

@@ -27,6 +27,6 @@
 
 #include <lua/lua.h>
 
-extern int bank_loader(lua_State *L);
+extern int bank_loader(lua_State *L); // TODO: rename `Bank` to `Sheet`?
 
 #endif  /* __MODULES_BANK_H__ */

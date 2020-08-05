@@ -76,7 +76,7 @@ static int xform_new(lua_State *L)
 
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    XForm_Object_t *self = (XForm_Object_t *)lua_newuserdata(L, sizeof(XForm_Object_t));
+    XForm_Object_t *self = (XForm_Object_t *)lua_newuserdatauv(L, sizeof(XForm_Object_t), 1);
     *self = (XForm_Object_t){
             .context = display->context,
             .context_reference = LUAX_REFERENCE_NIL,

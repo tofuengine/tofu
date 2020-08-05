@@ -160,7 +160,7 @@ static int bank_new2(lua_State *L)
         return luaL_error(L, "invalid argument");
     }
 
-    Bank_Object_t *self = (Bank_Object_t *)lua_newuserdata(L, sizeof(Bank_Object_t));
+    Bank_Object_t *self = (Bank_Object_t *)lua_newuserdatauv(L, sizeof(Bank_Object_t), 1);
     *self = (Bank_Object_t){
             .context = display->context,
             .context_reference = LUAX_REFERENCE_NIL,
@@ -215,7 +215,7 @@ static int bank_new3(lua_State *L)
         return luaL_error(L, "invalid argument");
     }
 
-    Bank_Object_t *self = (Bank_Object_t *)lua_newuserdata(L, sizeof(Bank_Object_t));
+    Bank_Object_t *self = (Bank_Object_t *)lua_newuserdatauv(L, sizeof(Bank_Object_t), 1);
     *self = (Bank_Object_t){
             .context = display->context,
             .context_reference = LUAX_REFERENCE_NIL,
@@ -255,8 +255,8 @@ static int bank_gc(lua_State *L)
     }
 
     if (self->context_reference != LUAX_REFERENCE_NIL) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context reference #%d released", self->context_reference);
         luaX_unref(L, self->context_reference);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context reference #%d released", self->context_reference);
     }
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p finalized", self);

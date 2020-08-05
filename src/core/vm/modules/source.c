@@ -181,7 +181,7 @@ static int source_new(lua_State *L)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p created, type #%d", source, type);
 
-    Source_Object_t *self = (Source_Object_t *)lua_newuserdata(L, sizeof(Source_Object_t));
+    Source_Object_t *self = (Source_Object_t *)lua_newuserdatauv(L, sizeof(Source_Object_t), 1);
     *self = (Source_Object_t){
             .handle = handle,
             .decoder = decoder,
