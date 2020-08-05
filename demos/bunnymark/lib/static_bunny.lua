@@ -19,11 +19,11 @@ function Bunny:__ctor(bank, batch)
   self.x = math.random() * (max_x - min_x) + cw
   self.y = math.random() * (max_y - min_y) + ch
 
-  batch:add({ cell_id = CELL_ID, x = self.x, y = self.y })
+  self.batch:add(CELL_ID, self.x, self.y)
 end
 
 function Bunny:update(_)
-  self.batch:add({ cell_id = CELL_ID, x = self.x, y = self.y })
+  self.batch:add(CELL_ID, self.x, self.y)
 end
 
 return Bunny

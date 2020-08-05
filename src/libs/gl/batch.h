@@ -34,13 +34,10 @@
 
 typedef struct _GL_Batch_Sprite_t {
     int cell_id;
-
     GL_Point_t position;
     float sx, sy;
     int rotation;
     float ax, ay;
-
-    bool used;
 } GL_Batch_Sprite_t;
 
 typedef struct _GL_Batch_t {

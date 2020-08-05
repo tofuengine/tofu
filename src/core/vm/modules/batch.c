@@ -146,53 +146,97 @@ static int batch_clear(lua_State *L)
     return 0;
 }
 
-static int batch_add(lua_State *L)
+static int batch_add4(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-        LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Batch_Object_t *self = (Batch_Object_t *)LUAX_USERDATA(L, 1);
+    int cell_id = LUAX_INTEGER(L, 2); // FIXME: make cell-id a `size_t' or a generic uint?
+    int x = LUAX_OPTIONAL_INTEGER(L, 3, 0);
+    int y = LUAX_OPTIONAL_INTEGER(L, 4, 0);
 
-    GL_Batch_Sprite_t sprite = (GL_Batch_Sprite_t){ .sx = 1.0f, .sy = 1.0f, .used = true };
-
-    lua_pushnil(L);
-    for (size_t i = 0; lua_next(L, 2); ++i) {
-        const char *key = LUAX_STRING(L, -2);
-        if (strcasecmp(key, "cell_id") == 0) {
-            sprite.cell_id = LUAX_INTEGER(L, -1);
-        } else
-        if (strcasecmp(key, "x") == 0) {
-            sprite.position.x = LUAX_INTEGER(L, -1);
-        } else
-        if (strcasecmp(key, "y") == 0) {
-            sprite.position.y = LUAX_INTEGER(L, -1);
-        } else
-        if (strcasecmp(key, "sx") == 0) {
-            sprite.sx = (float)LUAX_NUMBER(L, -1);
-        } else
-        if (strcasecmp(key, "sy") == 0) {
-            sprite.sy = (float)LUAX_NUMBER(L, -1);
-        } else
-        if (strcasecmp(key, "rotation") == 0) {
-            sprite.rotation = LUAX_INTEGER(L, -1);
-        } else
-        if (strcasecmp(key, "ax") == 0) {
-            sprite.ax = (float)LUAX_NUMBER(L, -1);
-        } else
-        if (strcasecmp(key, "ay") == 0) {
-            sprite.ay = (float)LUAX_NUMBER(L, -1);
-        } else
-        if (strcasecmp(key, "used") == 0) {
-            sprite.used = LUAX_BOOLEAN(L, -1);
-        }
-
-        lua_pop(L, 1);
-    }
-
-    GL_batch_add(self->batch, sprite);
+    GL_batch_add(self->batch, (GL_Batch_Sprite_t){
+            .cell_id = cell_id,
+            .position = (GL_Point_t){ .x = x, .y = y },
+            .sx = 1.0f, .sy = 1.0f
+        });
 
     return 0;
+}
+
+static int batch_add5(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    Batch_Object_t *self = (Batch_Object_t *)LUAX_USERDATA(L, 1);
+    int cell_id = LUAX_INTEGER(L, 2);
+    int x = LUAX_INTEGER(L, 3);
+    int y = LUAX_INTEGER(L, 4);
+    float scale = LUAX_NUMBER(L, 5);
+
+    GL_batch_add(self->batch, (GL_Batch_Sprite_t){
+            .cell_id = cell_id,
+            .position = (GL_Point_t){ .x = x, .y = y },
+            .sx = scale, .sy = scale
+        });
+
+    return 0;
+}
+
+static int batch_add6_7_8_9(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    Batch_Object_t *self = (Batch_Object_t *)LUAX_USERDATA(L, 1);
+    int cell_id = LUAX_INTEGER(L, 2);
+    int x = LUAX_INTEGER(L, 3);
+    int y = LUAX_INTEGER(L, 4);
+    int rotation = LUAX_INTEGER(L, 5);
+    float scale_x = LUAX_NUMBER(L, 6);
+    float scale_y = LUAX_OPTIONAL_NUMBER(L, 7, scale_x);
+    float anchor_x = LUAX_OPTIONAL_NUMBER(L, 8, 0.5f);
+    float anchor_y = LUAX_OPTIONAL_NUMBER(L, 9, anchor_x);
+
+    GL_batch_add(self->batch, (GL_Batch_Sprite_t){
+            .cell_id = cell_id,
+            .position = (GL_Point_t){ .x = x, .y = y },
+            .sx = scale_x, .sy = scale_y,
+            .rotation = rotation,
+            .ax = anchor_x,
+            .ay = anchor_y
+        });
+
+    return 0;
+}
+
+static int batch_add(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(4, batch_add4)
+        LUAX_OVERLOAD_ARITY(7, batch_add6_7_8_9)
+        LUAX_OVERLOAD_ARITY(8, batch_add6_7_8_9)
+        LUAX_OVERLOAD_ARITY(6, batch_add6_7_8_9)
+        LUAX_OVERLOAD_ARITY(9, batch_add6_7_8_9)
+        LUAX_OVERLOAD_ARITY(5, batch_add5)
+    LUAX_OVERLOAD_END
 }
 
 static int batch_blit(lua_State *L)
