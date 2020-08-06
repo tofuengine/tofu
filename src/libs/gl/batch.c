@@ -42,8 +42,8 @@ GL_Batch_t *GL_batch_create(GL_Sheet_t *sheet, size_t slots)
 
     GL_Batch_Sprite_t *sprites = NULL;
     if (slots > 0) {
-        arrsetcap(sprites, slots);
-        if (!sprites) {
+        bool allocated = arrsetcap(sprites, slots);
+        if (!allocated) {
             Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate batch sprites");
             free(batch);
             return NULL;
@@ -72,8 +72,8 @@ bool GL_batch_grow(GL_Batch_t *batch, size_t amount)
 {
     size_t capacity = arrcap(batch->sprites);
     capacity += amount;
-    arrsetcap(batch->sprites, capacity);
-    if (!batch->sprites) {
+    bool allocated = arrsetcap(batch->sprites, capacity);
+    if (!allocated) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't grow batch slots");
         return false;
     }
@@ -90,8 +90,6 @@ void GL_batch_add(GL_Batch_t *batch, GL_Batch_Sprite_t sprite)
 {
     arrpush(batch->sprites, sprite);
 }
-
-//extern GL_Batch_Sprite_t *GL_batch_get_sprite(GL_Batch_t *batch, size_t index);
 
 void GL_batch_blit(const GL_Batch_t *batch, const GL_Context_t *context)
 {

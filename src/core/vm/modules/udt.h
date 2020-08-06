@@ -48,9 +48,10 @@ typedef enum _Object_Types_t {
     OBJECT_TYPE_CANVAS,
     OBJECT_TYPE_BANK,
     OBJECT_TYPE_FONT,
+    OBJECT_TYPE_BATCH,
     OBJECT_TYPE_XFORM,
     OBJECT_TYPE_GRID,
-    OBJECT_TYPE_GROUP
+    OBJECT_TYPE_SOURCE
 } Object_Types_t;
 
 typedef struct _Object_t {
@@ -77,6 +78,12 @@ typedef struct _Font_Object_t {
     luaX_Reference sheet_reference;
 } Font_Object_t;
 
+typedef struct _Batch_Object_t {
+    const Bank_Object_t *bank;
+    luaX_Reference bank_reference;
+    GL_Batch_t *batch;
+} Batch_Object_t;
+
 typedef struct _XForm_Object_t {
     GL_Context_t *context;
     luaX_Reference context_reference;
@@ -84,12 +91,6 @@ typedef struct _XForm_Object_t {
     luaX_Reference surface_reference;
     GL_XForm_t xform;
 } XForm_Object_t;
-
-typedef struct _Batch_Object_t {
-    const Bank_Object_t *bank;
-    luaX_Reference bank_reference;
-    GL_Batch_t *batch;
-} Batch_Object_t;
 
 #ifdef __GRID_INTEGER_CELL__
 typedef int Cell_t;
