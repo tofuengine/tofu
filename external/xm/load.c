@@ -63,9 +63,9 @@ int xm_check_sanity_postload(xm_context_t* ctx) {
 			if(i+1 == ctx->module.length && ctx->module.length > 1) {
 				/* Cheap fix */
 				--ctx->module.length;
-				DEBUG("trimming invalid POT at pos %X", i);
+				XM_DEBUG_OUT("trimming invalid POT at pos %X", i);
 			} else {
-				DEBUG("module has invalid POT, pos %X references nonexistent pattern %X",
+				XM_DEBUG_OUT("module has invalid POT, pos %X references nonexistent pattern %X",
 				      i,
 				      ctx->module.pattern_table[i]);
 				return 1;
@@ -149,7 +149,7 @@ char* xm_load_module(xm_context_t* ctx, const char* moddata, size_t moddata_leng
 	xm_module_t* mod = &(ctx->module);
 
 	/* Read XM header */
-#if XM_STRINGS
+#ifdef XM_STRINGS
 	READ_MEMCPY(mod->name, offset + 17, MODULE_NAME_LENGTH);
 	READ_MEMCPY(mod->trackername, offset + 38, TRACKER_NAME_LENGTH);
 #endif
@@ -264,7 +264,7 @@ char* xm_load_module(xm_context_t* ctx, const char* moddata, size_t moddata_leng
 		uint32_t sample_header_size = 0;
 		xm_instrument_t* instr = mod->instruments + i;
 
-#if XM_STRINGS
+#ifdef XM_STRINGS
 		READ_MEMCPY(instr->name, offset + 4, INSTRUMENT_NAME_LENGTH);
 #endif
 	    instr->num_samples = READ_U16(offset + 27);
@@ -295,7 +295,7 @@ char* xm_load_module(xm_context_t* ctx, const char* moddata, size_t moddata_leng
 			instr->panning_envelope.loop_start_point = READ_U8(offset + 231);
 			instr->panning_envelope.loop_end_point = READ_U8(offset + 232);
 
-			uint8_t flags = READ_U8(offset + 233);
+			flags = READ_U8(offset + 233);
 			instr->volume_envelope.enabled = flags & (1 << 0);
 			instr->volume_envelope.sustain_enabled = flags & (1 << 1);
 			instr->volume_envelope.loop_enabled = flags & (1 << 2);
@@ -336,7 +336,7 @@ char* xm_load_module(xm_context_t* ctx, const char* moddata, size_t moddata_leng
 			sample->volume = (float)READ_U8(offset + 12) / (float)0x40;
 			sample->finetune = (int8_t)READ_U8(offset + 13);
 
-			uint8_t flags = READ_U8(offset + 14);
+			flags = READ_U8(offset + 14);
 			if((flags & 3) == 0) {
 				sample->loop_type = XM_NO_LOOP;
 			} else if((flags & 3) == 1) {
@@ -349,10 +349,10 @@ char* xm_load_module(xm_context_t* ctx, const char* moddata, size_t moddata_leng
 
 			sample->panning = (float)READ_U8(offset + 15) / (float)0xFF;
 			sample->relative_note = (int8_t)READ_U8(offset + 16);
-#if XM_STRINGS
+#ifdef XM_STRINGS
 			READ_MEMCPY(sample->name, 18, SAMPLE_NAME_LENGTH);
 #endif
-			sample->data8 = (int8_t*)mempool;
+			sample->data.data8 = (int8_t*)mempool;
 			mempool += sample->length;
 
 			if(sample->bits == 16) {
@@ -374,14 +374,14 @@ char* xm_load_module(xm_context_t* ctx, const char* moddata, size_t moddata_leng
 				int16_t v = 0;
 				for(uint32_t k = 0; k < length; ++k) {
 					v = v + (int16_t)READ_U16(offset + (k << 1));
-					sample->data16[k] = v;
+					sample->data.data16[k] = v;
 				}
 				offset += sample->length << 1;
 			} else {
 				int8_t v = 0;
 				for(uint32_t k = 0; k < length; ++k) {
 					v = v + (int8_t)READ_U8(offset + k);
-					sample->data8[k] = v;
+					sample->data.data8[k] = v;
 				}
 				offset += sample->length;
 			}

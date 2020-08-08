@@ -381,9 +381,11 @@ static float xm_frequency(xm_context_t* ctx, float period, float note_offset) {
 			}
 		}
 
-		if(XM_DEBUG && (p1 < period || p2 > period)) {
-			DEBUG("%i <= %f <= %i should hold but doesn't, this is a bug", p2, period, p1);
+#ifdef XM_DEBUG
+		if(p1 < period || p2 > period) {
+			XM_DEBUG_OUT("%i <= %f <= %i should hold but doesn't, this is a bug", p2, period, p1);
 		}
+#endif
 
 		note = 12.f * (octave + 2) + a + XM_INVERSE_LERP(p1, p2, period);
 
@@ -440,7 +442,7 @@ static void xm_handle_note_and_instrument(xm_context_t* ctx, xm_channel_context_
 			xm_cut_note(ch);
 		} else {
 			if(instr->sample_of_notes[s->note - 1] < instr->num_samples) {
-#if XM_RAMPING
+#ifdef XM_RAMPING
 				for(unsigned int z = 0; z < XM_SAMPLE_RAMPING_POINTS; ++z) {
 					ch->end_of_previous_sample[z] = xm_next_of_sample(ch);
 				}
@@ -469,6 +471,7 @@ static void xm_handle_note_and_instrument(xm_context_t* ctx, xm_channel_context_
 
 	case 0x5:
 		if(s->volume_column > 0x50) break;
+		// fall through
 	case 0x1:
 	case 0x2:
 	case 0x3:
@@ -956,16 +959,16 @@ static void xm_envelopes(xm_channel_context_t* ch) {
 			}
 
 			xm_envelope_tick(ch,
-							 &(ch->instrument->volume_envelope),
-							 &(ch->volume_envelope_frame_count),
-							 &(ch->volume_envelope_volume));
+				&(ch->instrument->volume_envelope),
+				&(ch->volume_envelope_frame_count),
+				&(ch->volume_envelope_volume));
 		}
 
 		if(ch->instrument->panning_envelope.enabled) {
 			xm_envelope_tick(ch,
-							 &(ch->instrument->panning_envelope),
-							 &(ch->panning_envelope_frame_count),
-							 &(ch->panning_envelope_panning));
+				&(ch->instrument->panning_envelope),
+				&(ch->panning_envelope_frame_count),
+				&(ch->panning_envelope_panning));
 		}
 	}
 }
@@ -1044,6 +1047,7 @@ static void xm_tick(xm_context_t* ctx) {
 						break;
 					}
 					/* No break here, this is intended */
+					// fall through
 				case 1: /* 0 -> 0 -> y -> x -> … */
 					if(ctx->current_tick == 0) {
 						ch->arp_in_progress = false;
@@ -1052,8 +1056,10 @@ static void xm_tick(xm_context_t* ctx) {
 						break;
 					}
 					/* No break here, this is intended */
+					// fall through
 				case 0: /* 0 -> y -> x -> … */
 					xm_arpeggio(ctx, ch, ch->current->effect_param, ctx->current_tick - arp_offset);
+					// fall through
 				default:
 					break;
 				}
@@ -1207,7 +1213,7 @@ static void xm_tick(xm_context_t* ctx) {
 			volume *= ch->fadeout_volume * ch->volume_envelope_volume;
 		}
 
-#if XM_RAMPING
+#ifdef XM_RAMPING
 		ch->target_panning = panning;
 		ch->target_volume = volume;
 #else
@@ -1227,15 +1233,15 @@ static void xm_tick(xm_context_t* ctx) {
 }
 
 static float xm_sample_at(xm_sample_t* sample, size_t k) {
-	return sample->bits == 8 ? (sample->data8[k] / 128.f) : (sample->data16[k] / 32768.f);
+	return sample->bits == 8 ? (sample->data.data8[k] / 128.f) : (sample->data.data16[k] / 32768.f);
 }
 
 static float xm_next_of_sample(xm_channel_context_t* ch) {
 	if(ch->instrument == NULL || ch->sample == NULL || ch->sample_position < 0) {
-#if XM_RAMPING
+#ifdef XM_RAMPING
 		if(ch->frame_count < XM_SAMPLE_RAMPING_POINTS) {
 			return XM_LERP(ch->end_of_previous_sample[ch->frame_count], .0f,
-			               (float)ch->frame_count / (float)XM_SAMPLE_RAMPING_POINTS);
+				(float)ch->frame_count / (float)XM_SAMPLE_RAMPING_POINTS);
 		}
 #endif
 		return .0f;
@@ -1244,24 +1250,29 @@ static float xm_next_of_sample(xm_channel_context_t* ch) {
 		return .0f;
 	}
 
+#ifdef XM_LINEAR_INTERPOLATION
 	float u, v, t;
 	uint32_t a, b;
+#else
+	float u;
+	uint32_t a;
+#endif
 	a = (uint32_t)ch->sample_position; /* This cast is fine,
 										* sample_position will not
 										* go above integer
 										* ranges */
-	if(XM_LINEAR_INTERPOLATION) {
-		b = a + 1;
-		t = ch->sample_position - a; /* Cheaper than fmodf(., 1.f) */
-	}
+#ifdef XM_LINEAR_INTERPOLATION
+	b = a + 1;
+	t = ch->sample_position - a; /* Cheaper than fmodf(., 1.f) */
+#endif
 	u = xm_sample_at(ch->sample, a);
 
 	switch(ch->sample->loop_type) {
 
 	case XM_NO_LOOP:
-		if(XM_LINEAR_INTERPOLATION) {
-			v = (b < ch->sample->length) ? xm_sample_at(ch->sample, b) : .0f;
-		}
+#ifdef XM_LINEAR_INTERPOLATION
+		v = (b < ch->sample->length) ? xm_sample_at(ch->sample, b) : .0f;
+#endif
 		ch->sample_position += ch->step;
 		if(ch->sample_position >= ch->sample->length) {
 			ch->sample_position = -1;
@@ -1269,12 +1280,12 @@ static float xm_next_of_sample(xm_channel_context_t* ch) {
 		break;
 
 	case XM_FORWARD_LOOP:
-		if(XM_LINEAR_INTERPOLATION) {
-			v = xm_sample_at(
-				ch->sample,
-				(b == ch->sample->loop_end) ? ch->sample->loop_start : b
-				);
-		}
+#ifdef XM_LINEAR_INTERPOLATION
+		v = xm_sample_at(
+			ch->sample,
+			(b == ch->sample->loop_end) ? ch->sample->loop_start : b
+			);
+#endif
 		ch->sample_position += ch->step;
 		while(ch->sample_position >= ch->sample->loop_end) {
 			ch->sample_position -= ch->sample->loop_length;
@@ -1290,9 +1301,9 @@ static float xm_next_of_sample(xm_channel_context_t* ch) {
 		/* XXX: this may not work for very tight ping-pong loops
 		 * (ie switches direction more than once per sample */
 		if(ch->ping) {
-			if(XM_LINEAR_INTERPOLATION) {
-				v = xm_sample_at(ch->sample, (b >= ch->sample->loop_end) ? a : b);
-			}
+#ifdef XM_LINEAR_INTERPOLATION
+			v = xm_sample_at(ch->sample, (b >= ch->sample->loop_end) ? a : b);
+#endif
 			if(ch->sample_position >= ch->sample->loop_end) {
 				ch->ping = false;
 				ch->sample_position = (ch->sample->loop_end << 1) - ch->sample_position;
@@ -1303,13 +1314,13 @@ static float xm_next_of_sample(xm_channel_context_t* ch) {
 				ch->sample_position -= ch->sample->length - 1;
 			}
 		} else {
-			if(XM_LINEAR_INTERPOLATION) {
-				v = u;
-				u = xm_sample_at(
-					ch->sample,
-					(b == 1 || b - 2 <= ch->sample->loop_start) ? a : (b - 2)
-					);
-			}
+#ifdef XM_LINEAR_INTERPOLATION
+			v = u;
+			u = xm_sample_at(
+				ch->sample,
+				(b == 1 || b - 2 <= ch->sample->loop_start) ? a : (b - 2)
+				);
+#endif
 			if(ch->sample_position <= ch->sample->loop_start) {
 				ch->ping = true;
 				ch->sample_position = (ch->sample->loop_start << 1) - ch->sample_position;
@@ -1323,17 +1334,23 @@ static float xm_next_of_sample(xm_channel_context_t* ch) {
 		break;
 
 	default:
+#ifdef XM_LINEAR_INTERPOLATION
 		v = .0f;
+#endif
 		break;
 	}
 
-	float endval = (XM_LINEAR_INTERPOLATION ? XM_LERP(u, v, t) : u);
+#ifdef XM_LINEAR_INTERPOLATION
+	float endval = XM_LERP(u, v, t);
+#else
+	float endval = u;
+#endif
 
-#if XM_RAMPING
+#ifdef XM_RAMPING
 	if(ch->frame_count < XM_SAMPLE_RAMPING_POINTS) {
 		/* Smoothly transition between old and new sample. */
 		return XM_LERP(ch->end_of_previous_sample[ch->frame_count], endval,
-		               (float)ch->frame_count / (float)XM_SAMPLE_RAMPING_POINTS);
+			(float)ch->frame_count / (float)XM_SAMPLE_RAMPING_POINTS);
 	}
 #endif
 
@@ -1367,7 +1384,7 @@ static void xm_sample(xm_context_t* ctx, float* left, float* right) {
 			*right += fval * ch->actual_volume * ch->actual_panning;
 		}
 
-#if XM_RAMPING
+#ifdef XM_RAMPING
 		ch->frame_count++;
 		XM_SLIDE_TOWARDS(ch->actual_volume, ch->target_volume, ctx->volume_ramp);
 		XM_SLIDE_TOWARDS(ch->actual_panning, ch->target_panning, ctx->panning_ramp);
@@ -1378,11 +1395,11 @@ static void xm_sample(xm_context_t* ctx, float* left, float* right) {
 	*left *= fgvol;
 	*right *= fgvol;
 
-	if(XM_DEBUG) {
-		if(fabs(*left) > 1 || fabs(*right) > 1) {
-			DEBUG("clipping frame: %f %f, this is a bad module or a libxm bug", *left, *right);
-		}
+#ifdef XM_DEBUG
+	if(fabs(*left) > 1 || fabs(*right) > 1) {
+		XM_DEBUG_OUT("clipping frame: %f %f, this is a bad module or a libxm bug", *left, *right);
 	}
+#endif
 }
 
 void xm_generate_samples(xm_context_t* ctx, float* output, size_t numsamples) {

@@ -23,19 +23,19 @@ int xm_create_context_safe(xm_context_t** ctxp, const char* moddata, size_t modd
 	char* mempool;
 	xm_context_t* ctx;
 
-	if(XM_DEFENSIVE) {
-		int ret;
-		if((ret = xm_check_sanity_preload(moddata, moddata_length))) {
-			DEBUG("xm_check_sanity_preload() returned %i, module is not safe to load", ret);
-			return 1;
-		}
+#ifdef XM_DEFENSIVE
+	int ret;
+	if((ret = xm_check_sanity_preload(moddata, moddata_length))) {
+		XM_DEBUG_OUT("xm_check_sanity_preload() returned %i, module is not safe to load", ret);
+		return 1;
 	}
+#endif
 
 	bytes_needed = xm_get_memory_needed_for_context(moddata, moddata_length);
 	mempool = malloc(bytes_needed);
 	if(mempool == NULL && bytes_needed > 0) {
 		/* malloc() failed, trouble ahead */
-		DEBUG("call to malloc() failed, returned %p", (void*)mempool);
+		XM_DEBUG_OUT("call to malloc() failed, returned %p", (void*)mempool);
 		return 2;
 	}
 
@@ -55,7 +55,7 @@ int xm_create_context_safe(xm_context_t** ctxp, const char* moddata, size_t modd
 	ctx->global_volume = 1.f;
 	ctx->amplification = .25f; /* XXX: some bad modules may still clip. Find out something better. */
 
-#if XM_RAMPING
+#ifdef XM_RAMPING
 	ctx->volume_ramp = (1.f / 128.f);
 	ctx->panning_ramp = (1.f / 128.f);
 #endif
@@ -78,14 +78,14 @@ int xm_create_context_safe(xm_context_t** ctxp, const char* moddata, size_t modd
 	ctx->row_loop_count = (uint8_t*)mempool;
 	mempool += ctx->module.length * MAX_NUM_ROWS * sizeof(uint8_t);
 
-	if(XM_DEFENSIVE) {
-		int ret;
-		if((ret = xm_check_sanity_postload(ctx))) {
-			DEBUG("xm_check_sanity_postload() returned %i, module is not safe to play", ret);
-			xm_free_context(ctx);
-			return 1;
-		}
+#ifdef XM_DEFENSIVE
+	int ret;
+	if((ret = xm_check_sanity_postload(ctx))) {
+		XM_DEBUG_OUT("xm_check_sanity_postload() returned %i, module is not safe to play", ret);
+		xm_free_context(ctx);
+		return 1;
 	}
+#endif
 
 	return 0;
 }
@@ -109,21 +109,21 @@ void xm_create_context_from_libxmize(xm_context_t** ctxp, char* libxmized, uint3
 		OFFSET((*ctxp)->module.instruments[i].samples);
 
 		for(j = 0; j < (*ctxp)->module.instruments[i].num_samples; ++j) {
-			OFFSET((*ctxp)->module.instruments[i].samples[j].data8);
+			OFFSET((*ctxp)->module.instruments[i].samples[j].data.data8);
 
-			if(XM_LIBXMIZE_DELTA_SAMPLES) {
-				if((*ctxp)->module.instruments[i].samples[j].length > 1) {
-					if((*ctxp)->module.instruments[i].samples[j].bits == 8) {
-						for(size_t k = 1; k < (*ctxp)->module.instruments[i].samples[j].length; ++k) {
-							(*ctxp)->module.instruments[i].samples[j].data8[k] += (*ctxp)->module.instruments[i].samples[j].data8[k-1];
-						}
-					} else {
-						for(size_t k = 1; k < (*ctxp)->module.instruments[i].samples[j].length; ++k) {
-							(*ctxp)->module.instruments[i].samples[j].data16[k] += (*ctxp)->module.instruments[i].samples[j].data16[k-1];
-						}
+#ifdef XM_LIBXMIZE_DELTA_SAMPLES
+			if((*ctxp)->module.instruments[i].samples[j].length > 1) {
+				if((*ctxp)->module.instruments[i].samples[j].bits == 8) {
+					for(size_t k = 1; k < (*ctxp)->module.instruments[i].samples[j].length; ++k) {
+						(*ctxp)->module.instruments[i].samples[j].data.data8[k] += (*ctxp)->module.instruments[i].samples[j].data.data8[k-1];
+					}
+				} else {
+					for(size_t k = 1; k < (*ctxp)->module.instruments[i].samples[j].length; ++k) {
+						(*ctxp)->module.instruments[i].samples[j].data.data16[k] += (*ctxp)->module.instruments[i].samples[j].data.data16[k-1];
 					}
 				}
 			}
+#endif
 		}
 	}
 }
@@ -165,7 +165,7 @@ bool xm_mute_instrument(xm_context_t* ctx, uint16_t instr, bool mute) {
 
 
 
-#if XM_STRINGS
+#ifdef XM_STRINGS
 const char* xm_get_module_name(xm_context_t* ctx) {
 	return ctx->module.name;
 }
@@ -212,7 +212,7 @@ uint16_t xm_get_number_of_samples(xm_context_t* ctx, uint16_t instrument) {
 void* xm_get_sample_waveform(xm_context_t* ctx, uint16_t i, uint16_t s, size_t* size, uint8_t* bits) {
 	*size = ctx->module.instruments[i - 1].samples[s].length;
 	*bits = ctx->module.instruments[i - 1].samples[s].bits;
-	return ctx->module.instruments[i - 1].samples[s].data8;
+	return ctx->module.instruments[i - 1].samples[s].data.data8;
 }
 
 

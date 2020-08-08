@@ -6,22 +6,23 @@
  * License, Version 2, as published by Sam Hocevar. See
  * http://sam.zoy.org/wtfpl/COPYING for more details. */
 
-#include <xm.h>
+#include "xm.h"
+#include "xm_config.h"
 #include <stdbool.h>
 #include <math.h>
 #include <string.h>
 
-#if XM_DEBUG
+#ifdef XM_DEBUG
 #include <stdio.h>
-#define DEBUG(fmt, ...) do {										\
+#define XM_DEBUG_OUT(fmt, ...) do {										\
 		fprintf(stderr, "%s(): " fmt "\n", __func__, __VA_ARGS__);	\
 		fflush(stderr);												\
 	} while(0)
 #else
-#define DEBUG(...)
+#define XM_DEBUG_OUT(...)
 #endif
 
-#if XM_BIG_ENDIAN
+#ifdef XM_BIG_ENDIAN
 #error "Big endian platforms are not yet supported, sorry"
 /* Make sure the compiler stops, even if #error is ignored */
 extern int __fail[-1];
@@ -38,7 +39,7 @@ extern int __fail[-1];
 #define NUM_ENVELOPE_POINTS 12
 #define MAX_NUM_ROWS 256
 
-#if XM_RAMPING
+#ifdef XM_RAMPING
 #define XM_SAMPLE_RAMPING_POINTS 0x20
 #endif
 
@@ -85,7 +86,7 @@ struct xm_envelope_s {
 typedef struct xm_envelope_s xm_envelope_t;
 
 struct xm_sample_s {
-#if XM_STRINGS
+#ifdef XM_STRINGS
 	char name[SAMPLE_NAME_LENGTH + 1];
 #endif
 	uint8_t bits; /* Either 8 or 16 */
@@ -104,12 +105,12 @@ struct xm_sample_s {
 	union {
 		int8_t* data8;
 		int16_t* data16;
-	};
+	} data;
 };
 typedef struct xm_sample_s xm_sample_t;
 
 struct xm_instrument_s {
-#if XM_STRINGS
+#ifdef XM_STRINGS
 	char name[INSTRUMENT_NAME_LENGTH + 1];
 #endif
 	uint16_t num_samples;
@@ -144,7 +145,7 @@ struct xm_pattern_s {
 typedef struct xm_pattern_s xm_pattern_t;
 
 struct xm_module_s {
-#if XM_STRINGS
+#ifdef XM_STRINGS
 	char name[MODULE_NAME_LENGTH + 1];
 	char trackername[TRACKER_NAME_LENGTH + 1];
 #endif
@@ -224,7 +225,7 @@ struct xm_channel_context_s {
 	uint64_t latest_trigger;
 	bool muted;
 
-#if XM_RAMPING
+#ifdef XM_RAMPING
 	/* These values are updated at the end of each tick, to save
 	 * a couple of float operations on every generated sample. */
 	float target_panning;
@@ -249,7 +250,7 @@ struct xm_context_s {
 	float global_volume;
 	float amplification;
 
-#if XM_RAMPING
+#ifdef XM_RAMPING
 	/* How much is a channel final volume allowed to change per
 	 * sample; this is used to avoid abrubt volume changes which
 	 * manifest as "clicks" in the generated sound. */
