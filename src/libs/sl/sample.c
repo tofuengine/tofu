@@ -162,7 +162,7 @@ SL_Source_t *SL_sample_create(SL_Read_Callback_t read_callback, SL_Seek_Callback
 static size_t _sample_read(void *user_data, void *buffer, size_t bytes_to_read)
 {
     Sample_t *sample = (Sample_t *)user_data;
-    SL_Callbacks_t *callbacks = &sample->callbacks;
+    const SL_Callbacks_t *callbacks = &sample->callbacks;
 
     return callbacks->read(callbacks->user_data, buffer, bytes_to_read);
 }
@@ -170,7 +170,7 @@ static size_t _sample_read(void *user_data, void *buffer, size_t bytes_to_read)
 static drflac_bool32 _sample_seek(void *user_data, int offset, drflac_seek_origin origin)
 {
     Sample_t *sample = (Sample_t *)user_data;
-    SL_Callbacks_t *callbacks = &sample->callbacks;
+    const SL_Callbacks_t *callbacks = &sample->callbacks;
 
     bool seeked = false;
     if (origin == drflac_seek_origin_start) {

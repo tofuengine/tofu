@@ -188,7 +188,7 @@ SL_Source_t *SL_music_create(SL_Read_Callback_t read_callback, SL_Seek_Callback_
 static size_t _music_read(void *user_data, void *buffer, size_t bytes_to_read)
 {
     Music_t *music = (Music_t *)user_data;
-    SL_Callbacks_t *callbacks = &music->callbacks;
+    const SL_Callbacks_t *callbacks = &music->callbacks;
 
     return callbacks->read(callbacks->user_data, buffer, bytes_to_read);
 }
@@ -196,7 +196,7 @@ static size_t _music_read(void *user_data, void *buffer, size_t bytes_to_read)
 static drflac_bool32 _music_seek(void *user_data, int offset, drflac_seek_origin origin)
 {
     Music_t *music = (Music_t *)user_data;
-    SL_Callbacks_t *callbacks = &music->callbacks;
+    const SL_Callbacks_t *callbacks = &music->callbacks;
 
     bool seeked = false;
     if (origin == drflac_seek_origin_start) {
