@@ -22,13 +22,12 @@
  * SOFTWARE.
  */
 
-#ifndef __SL_H__
-#define __SL_H__
+#ifndef __SL_MODULE_H__
+#define __SL_MODULE_H__
 
 #include "common.h"
-#include "context.h"
-#include "module.h"
-#include "music.h"
-#include "sample.h"
+#include "source.h"
 
-#endif  /* __SL_H__ */
+extern SL_Source_t *SL_module_create(SL_Read_Callback_t read_callback, SL_Seek_Callback_t seek_callback, void *user_data);
+
+#endif  /* __SL_MODULE_H__ */
