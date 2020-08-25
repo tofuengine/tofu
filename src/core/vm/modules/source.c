@@ -24,12 +24,12 @@
 
 #include "source.h"
 
+#include "udt.h"
+
 #include <config.h>
 #include <core/io/audio.h>
 #include <libs/log.h>
 #include <libs/stb.h>
-
-#include "udt.h"
 
 #define DR_FLAC_IMPLEMENTATION
 #include <dr_libs/dr_flac.h>
@@ -38,14 +38,6 @@ typedef enum _Source_Types_t {
     SOURCE_TYPE_MUSIC,
     SOURCE_TYPE_SAMPLE,
 } Source_Type_t;
-
-#if SL_BYTES_PER_FRAME == 2
-  #define INTERNAL_FORMAT   ma_format_s16
-#elif SL_BYTES_PER_FRAME == 4
-  #define INTERNAL_FORMAT   ma_format_f32
-#else
-  #error Wrong internal format.
-#endif
 
 #define LOG_CONTEXT "source"
 #define META_TABLE  "Tofu_Sound_Source_mt"
@@ -95,46 +87,12 @@ static size_t _handle_read(void *user_data, void *buffer, size_t bytes_to_read)
     return FS_read(handle, buffer, bytes_to_read);
 }
 
-static drflac_bool32 _handle_seek(void *user_data, int offset, drflac_seek_origin origin)
+static bool _handle_seek(void *user_data, int offset, int whence)
 {
     File_System_Handle_t *handle = (File_System_Handle_t *)user_data;
-    if (origin == drflac_seek_origin_start) {
-        FS_seek(handle, offset, SEEK_SET);
-    } else
-    if (origin == drflac_seek_origin_current) {
-        FS_seek(handle, offset, SEEK_CUR);
-    }
+    FS_seek(handle, offset, whence);
     return true;
 }
-
-static size_t _decoder_read(void *user_data, void *output, size_t frames_requested)
-{
-    drflac *decoder = (drflac *)user_data;
-#if SL_BYTES_PER_FRAME == 2
-    return drflac_read_pcm_frames_s16(decoder, frames_requested, output);
-#elif SL_BYTES_PER_FRAME == 4
-    return drflac_read_pcm_frames_f32(decoder, frames_requested, output);
-#endif
-}
-
-static bool _decoder_seek(void *user_data, size_t frame_offset)
-{
-    drflac *decoder = (drflac *)user_data;
-    drflac_bool32 seeked = drflac_seek_to_pcm_frame(decoder, frame_offset);
-    return seeked == DRFLAC_TRUE ? true : false;
-}
-
-static bool _decoder_eof(void *user_data)
-{
-    drflac *decoder = (drflac *)user_data;
-    return decoder->currentPCMFrame == decoder->totalPCMFrameCount;
-}
-
-static SL_Callbacks_t _decoder_callbacks = {
-    .read = _decoder_read,
-    .seek = _decoder_seek,
-    .eof = _decoder_eof
-};
 
 static int source_new(lua_State *L)
 {
@@ -153,29 +111,10 @@ static int source_new(lua_State *L)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p opened for file `%s`", handle, file);
 
-    drflac *decoder = drflac_open(_handle_read, _handle_seek, (void *)handle, NULL);
-    if (!decoder) {
-        FS_close(handle);
-        return luaL_error(L, "can't open decoder for file `%s`", file);
-    }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "decoder %p opened", decoder);
-
-    size_t length_in_frames = decoder->totalPCMFrameCount;
-    if (length_in_frames == 0) {
-        drflac_close(decoder);
-        FS_close(handle);
-        return luaL_error(L, "source w/ zero length");
-    }
-    size_t channels = decoder->channels;
-    size_t sample_rate = decoder->sampleRate;
-    size_t bits_per_sample = decoder->bitsPerSample;
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source `%s` w/ %d frames, %d channels, %dHz, %d bits", file, length_in_frames, channels, sample_rate, bits_per_sample);
-
     SL_Source_t *source = type == SOURCE_TYPE_MUSIC
-        ? SL_music_create(_decoder_callbacks, (void *)decoder, length_in_frames, INTERNAL_FORMAT, sample_rate, channels)
-        : SL_sample_create(_decoder_callbacks, (void *)decoder, length_in_frames, INTERNAL_FORMAT, sample_rate, channels);
+        ? SL_music_create(_handle_read, _handle_seek, (void *)handle)
+        : SL_sample_create(_handle_read, _handle_seek, (void *)handle);
     if (!source) {
-        drflac_close(decoder);
         FS_close(handle);
         return luaL_error(L, "can't create source");
     }
@@ -184,7 +123,6 @@ static int source_new(lua_State *L)
     Source_Object_t *self = (Source_Object_t *)lua_newuserdatauv(L, sizeof(Source_Object_t), 1);
     *self = (Source_Object_t){
             .handle = handle,
-            .decoder = decoder,
             .source = source
         };
 
@@ -211,9 +149,6 @@ static int source_gc(lua_State *L)
 
     FS_close(self->handle);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p closed", self->handle);
-
-    drflac_close(self->decoder);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "decoder closed", self->decoder);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p finalized", self);
 
