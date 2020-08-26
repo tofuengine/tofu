@@ -88,9 +88,9 @@ static inline Source_States_t _consume(Module_t *module, size_t frames_requested
 
         ma_uint32 frames_to_consume = (frames_to_convert > MIXING_BUFFER_SIZE_IN_FRAMES) ? MIXING_BUFFER_SIZE_IN_FRAMES : frames_to_convert;
 #if SL_BYTES_PER_FRAME == 2
-        size_t frames_read = xm_generate_frames_s16(context, read_buffer, frames_to_consume);
+        size_t frames_read = xm_generate_frames_s16(context, (void *)read_buffer, frames_to_consume);
 #elif SL_BYTES_PER_FRAME == 4
-        size_t frames_read = xm_generate_frames_f32(context, read_buffer, frames_to_consume);
+        size_t frames_read = xm_generate_frames_f32(context, (void *)read_buffer, frames_to_consume);
 #endif
 
         ma_uint64 frames_consumed = frames_read;
@@ -156,10 +156,11 @@ static bool _module_ctor(SL_Source_t *source, SL_Read_Callback_t read_callback, 
                     .read = read_callback,
                     .seek = seek_callback,
                     .user_data = user_data
-                }
+                },
+            .context = NULL
         };
 
-    int created = xm_create_context(&module->context, _module_read, _module_seek, module, SL_FRAMES_PER_SECOND);
+    int created = xm_create_context_cb(&module->context, _module_read, _module_seek, module, SL_FRAMES_PER_SECOND);
     if (created != 0) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create module context");
         return false;

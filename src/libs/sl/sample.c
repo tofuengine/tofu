@@ -81,7 +81,6 @@ static inline bool _reset(Sample_t *sample)
 
 static inline bool _produce(Sample_t *sample)
 {
-    const SL_Callbacks_t *callbacks = &sample->callbacks;
     ma_audio_buffer *buffer = &sample->buffer;
 
     void *write_buffer;
