@@ -18,6 +18,9 @@
 struct xm_context_s;
 typedef struct xm_context_s xm_context_t;
 
+typedef size_t (*xm_read_callback_t)(void*, void*, size_t);
+typedef bool (*xm_seek_callback_t)(void*, int, int);
+
 /** Create a XM context.
  *
  * @param moddata the contents of the module
@@ -31,6 +34,7 @@ typedef struct xm_context_s xm_context_t;
  * @see xm_create_context_safe()
  */
 int xm_create_context(xm_context_t**, const char* moddata, uint32_t rate);
+int xm_create_context_cb(xm_context_t**, xm_read_callback_t, xm_seek_callback_t, void*, uint32_t rate);
 
 /** Create a XM context.
  *
@@ -43,6 +47,7 @@ int xm_create_context(xm_context_t**, const char* moddata, uint32_t rate);
  * @returns 2 if memory allocation failed
  */
 int xm_create_context_safe(xm_context_t**, const char* moddata, size_t moddata_length, uint32_t rate);
+int xm_create_context_safe_cb(xm_context_t**, xm_read_callback_t, xm_seek_callback_t, void*, uint32_t rate);
 
 /** Create a XM context.
  *
@@ -70,7 +75,8 @@ void xm_free_context(xm_context_t*);
  */
 void xm_generate_samples(xm_context_t*, float* output, size_t numsamples);
 
-
+size_t xm_generate_frames_f32(xm_context_t*, float* output, size_t frames_to_generate);
+size_t xm_generate_frames_s16(xm_context_t*, int16_t* output, size_t frames_to_generate);
 
 /** Set the maximum number of times a module can loop. After the
  * specified number of loops, calls to xm_generate_samples will only

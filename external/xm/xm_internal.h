@@ -103,8 +103,8 @@ struct xm_sample_s {
 	uint64_t latest_trigger;
 
 	union {
-		int8_t* data8;
-		int16_t* data16;
+		int8_t* as8;
+		int16_t* as16;
 	} data;
 };
 typedef struct xm_sample_s xm_sample_t;
@@ -287,6 +287,7 @@ struct xm_context_s {
  * @returns 0 if everything looks OK. Module should be safe to load.
  */
 int xm_check_sanity_preload(const char*, size_t);
+int xm_check_sanity_preload_cb(xm_read_callback_t, xm_seek_callback_t, void*, size_t);
 
 /** Check a loaded module for errors/inconsistencies.
  *
@@ -310,9 +311,11 @@ int xm_check_sanity_postload(xm_context_t*);
  * @returns 0 if everything looks OK.
  */
 size_t xm_get_memory_needed_for_context(const char*, size_t);
+size_t xm_get_memory_needed_for_context_cb(xm_read_callback_t, xm_seek_callback_t, void*);
 
 /** Populate the context from module data.
  *
  * @returns pointer to the memory pool
  */
 char* xm_load_module(xm_context_t*, const char*, size_t, char*);
+char* xm_load_module_cb(xm_context_t*, xm_read_callback_t, xm_seek_callback_t, void*, char*);

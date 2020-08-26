@@ -1233,7 +1233,7 @@ static void xm_tick(xm_context_t* ctx) {
 }
 
 static float xm_sample_at(xm_sample_t* sample, size_t k) {
-	return sample->bits == 8 ? (sample->data.data8[k] / 128.f) : (sample->data.data16[k] / 32768.f);
+	return sample->bits == 8 ? (sample->data.as8[k] / 128.f) : (sample->data.as16[k] / 32768.f);
 }
 
 static float xm_next_of_sample(xm_channel_context_t* ch) {
@@ -1408,4 +1408,12 @@ void xm_generate_samples(xm_context_t* ctx, float* output, size_t numsamples) {
 	for(size_t i = 0; i < numsamples; i++) {
 		xm_sample(ctx, output + (2 * i), output + (2 * i + 1));
 	}
+}
+
+size_t xm_generate_frames_s16(xm_context_t* ctx, int16_t* output, size_t frames_to_generate) {
+	return frames_to_generate;
+}
+
+size_t xm_generate_frames_f32(xm_context_t* ctx, float* output, size_t frames_to_generate) {
+	return frames_to_generate;
 }

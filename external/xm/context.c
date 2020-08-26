@@ -18,6 +18,82 @@ int xm_create_context(xm_context_t** ctxp, const char* moddata, uint32_t rate) {
 	return xm_create_context_safe(ctxp, moddata, SIZE_MAX, rate);
 }
 
+int xm_create_context_cb(xm_context_t** ctxp, xm_read_callback_t read, xm_seek_callback_t seek, void* user_data, uint32_t rate) {
+	return xm_create_context_safe_cb(ctxp, read, seek, user_data, rate);
+}
+
+int xm_create_context_safe_cb(xm_context_t** ctxp, xm_read_callback_t read, xm_seek_callback_t seek, void* user_data, uint32_t rate) {
+	size_t bytes_needed;
+	char* mempool;
+	xm_context_t* ctx;
+
+#ifdef XM_DEFENSIVE
+	int ret;
+	if((ret = xm_check_sanity_preload_cb(read, seek, user_data))) {
+		XM_DEBUG_OUT("xm_check_sanity_preload() returned %i, module is not safe to load", ret);
+		return 1;
+	}
+#endif
+
+	bytes_needed = xm_get_memory_needed_for_context_cb(read, seek, user_data);
+	mempool = malloc(bytes_needed);
+	if(mempool == NULL && bytes_needed > 0) {
+		/* malloc() failed, trouble ahead */
+		XM_DEBUG_OUT("call to malloc() failed, returned %p", (void*)mempool);
+		return 2;
+	}
+
+	/* Initialize most of the fields to 0, 0.f, NULL or false depending on type */
+	memset(mempool, 0, bytes_needed);
+
+	ctx = (*ctxp = (xm_context_t*)mempool);
+	ctx->ctx_size = bytes_needed; /* Keep original requested size for xmconvert */
+	mempool += sizeof(xm_context_t);
+
+	ctx->rate = rate;
+	mempool = xm_load_module_cb(ctx, read, seek, user_data, mempool);
+
+	ctx->channels = (xm_channel_context_t*)mempool;
+	mempool += ctx->module.num_channels * sizeof(xm_channel_context_t);
+
+	ctx->global_volume = 1.f;
+	ctx->amplification = .25f; /* XXX: some bad modules may still clip. Find out something better. */
+
+#ifdef XM_RAMPING
+	ctx->volume_ramp = (1.f / 128.f);
+	ctx->panning_ramp = (1.f / 128.f);
+#endif
+
+	for(uint8_t i = 0; i < ctx->module.num_channels; ++i) {
+		xm_channel_context_t* ch = ctx->channels + i;
+
+		ch->ping = true;
+		ch->vibrato_waveform = XM_SINE_WAVEFORM;
+		ch->vibrato_waveform_retrigger = true;
+		ch->tremolo_waveform = XM_SINE_WAVEFORM;
+		ch->tremolo_waveform_retrigger = true;
+
+		ch->volume = ch->volume_envelope_volume = ch->fadeout_volume = 1.0f;
+		ch->panning = ch->panning_envelope_panning = .5f;
+		ch->actual_volume = .0f;
+		ch->actual_panning = .5f;
+	}
+
+	ctx->row_loop_count = (uint8_t*)mempool;
+	mempool += ctx->module.length * MAX_NUM_ROWS * sizeof(uint8_t);
+
+#ifdef XM_DEFENSIVE
+	int ret;
+	if((ret = xm_check_sanity_postload(ctx))) {
+		XM_DEBUG_OUT("xm_check_sanity_postload() returned %i, module is not safe to play", ret);
+		xm_free_context(ctx);
+		return 1;
+	}
+#endif
+
+	return 0;
+}
+
 int xm_create_context_safe(xm_context_t** ctxp, const char* moddata, size_t moddata_length, uint32_t rate) {
 	size_t bytes_needed;
 	char* mempool;
@@ -109,17 +185,17 @@ void xm_create_context_from_libxmize(xm_context_t** ctxp, char* libxmized, uint3
 		OFFSET((*ctxp)->module.instruments[i].samples);
 
 		for(j = 0; j < (*ctxp)->module.instruments[i].num_samples; ++j) {
-			OFFSET((*ctxp)->module.instruments[i].samples[j].data.data8);
+			OFFSET((*ctxp)->module.instruments[i].samples[j].data.as8);
 
 #ifdef XM_LIBXMIZE_DELTA_SAMPLES
 			if((*ctxp)->module.instruments[i].samples[j].length > 1) {
 				if((*ctxp)->module.instruments[i].samples[j].bits == 8) {
 					for(size_t k = 1; k < (*ctxp)->module.instruments[i].samples[j].length; ++k) {
-						(*ctxp)->module.instruments[i].samples[j].data.data8[k] += (*ctxp)->module.instruments[i].samples[j].data.data8[k-1];
+						(*ctxp)->module.instruments[i].samples[j].data.as8[k] += (*ctxp)->module.instruments[i].samples[j].data.as8[k-1];
 					}
 				} else {
 					for(size_t k = 1; k < (*ctxp)->module.instruments[i].samples[j].length; ++k) {
-						(*ctxp)->module.instruments[i].samples[j].data.data16[k] += (*ctxp)->module.instruments[i].samples[j].data.data16[k-1];
+						(*ctxp)->module.instruments[i].samples[j].data.as16[k] += (*ctxp)->module.instruments[i].samples[j].data.as16[k-1];
 					}
 				}
 			}
@@ -212,7 +288,7 @@ uint16_t xm_get_number_of_samples(xm_context_t* ctx, uint16_t instrument) {
 void* xm_get_sample_waveform(xm_context_t* ctx, uint16_t i, uint16_t s, size_t* size, uint8_t* bits) {
 	*size = ctx->module.instruments[i - 1].samples[s].length;
 	*bits = ctx->module.instruments[i - 1].samples[s].bits;
-	return ctx->module.instruments[i - 1].samples[s].data.data8;
+	return ctx->module.instruments[i - 1].samples[s].data.as8;
 }
 
 
