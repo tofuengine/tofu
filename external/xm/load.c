@@ -185,10 +185,10 @@ Offset|Length| Type   | Description
 typedef struct _xm_header_t {
 	char id[MODULE_ID_LENGTH];
 	char module_name[MODULE_NAME_LENGTH];
-	uint8_t __padding;
+	uint8_t __fixed;
 	char tracker_name[TRACKER_NAME_LENGTH];
 	uint16_t version_number;
-	uint32_t header_size;
+	uint32_t header_size; // FIXME: separate the structure in two, here!
 	uint16_t song_length;
 	uint16_t song_restart_position;
 	uint16_t channels;
@@ -334,8 +334,8 @@ typedef struct _xm_instrument_header_ex_t {
 	uint8_t vibrato_sweep;
 	uint8_t vibrato_depth;
 	uint8_t vibrato_rate;
-	uint16_t volume_fadeout[2];
-	uint16_t __reserved[2];
+	uint16_t volume_fadeout;
+	uint16_t __reserved;
 } xm_instrument_header_ex_t;
 #pragma pack(pop)
 
@@ -397,7 +397,9 @@ size_t xm_get_memory_needed_for_context_cb(xm_read_callback_t read, xm_seek_call
 	memory_needed += module_header.instruments * sizeof(xm_instrument_t);
 	memory_needed += MAX_NUM_ROWS * module_header.song_length * sizeof(uint8_t); /* Module length */
 
-	for(uint16_t i = 0; i < module_header.patterns; ++i) {
+	seek(user_data, (module_header.header_size + 60) - sizeof(xm_header_t), SEEK_CUR);
+
+	for (uint16_t i = 0; i < module_header.patterns; ++i) {
 		xm_pattern_header_t pattern_header;
 		read(user_data, &pattern_header, sizeof(xm_pattern_header_t));
 
@@ -407,16 +409,24 @@ size_t xm_get_memory_needed_for_context_cb(xm_read_callback_t read, xm_seek_call
 	}
 
 	/* Read instrument headers */
-	for(uint16_t i = 0; i < module_header.instruments; ++i) {
+	for (uint16_t i = 0; i < module_header.instruments; ++i) {
 		xm_instrument_header_t instrument_header;
 		read(user_data, &instrument_header, sizeof(xm_instrument_header_t));
 
-		if (instrument_header.samples == 0) {
-			continue;
+		size_t sample_header_size = 0;
+
+		if (instrument_header.samples > 0) {
+			xm_instrument_header_ex_t instrument_header_ex;
+			read(user_data, &instrument_header_ex, sizeof(xm_instrument_header_ex_t));
+
+			sample_header_size = instrument_header_ex.sample_header_size;
 		}
 
-		xm_instrument_header_ex_t instrument_header_ex;
-		read(user_data, &instrument_header_ex, sizeof(xm_instrument_header_ex_t));
+		int offset = instrument_header.header_size - sizeof(xm_instrument_header_t);
+		if (instrument_header.samples > 0) {
+			offset -= sizeof(xm_instrument_header_ex_t);
+		}
+		seek(user_data, offset, SEEK_CUR);
 
 		memory_needed += instrument_header.samples * sizeof(xm_sample_t);
 
@@ -425,6 +435,10 @@ size_t xm_get_memory_needed_for_context_cb(xm_read_callback_t read, xm_seek_call
 			read(user_data, &sample_header, sizeof(xm_sample_header_t));
 
 			memory_needed += sample_header.length;
+
+			seek(user_data, sample_header_size - sizeof(xm_sample_header_t), SEEK_CUR);
+
+			seek(user_data, sample_header.length, SEEK_CUR); // Skip sample data.
 		}
 	}
 
@@ -857,7 +871,7 @@ char* xm_load_module_cb(xm_context_t* ctx, xm_read_callback_t read, xm_seek_call
 			instr->vibrato_sweep = instrument_header_ex.vibrato_sweep;
 			instr->vibrato_depth = instrument_header_ex.vibrato_depth;
 			instr->vibrato_rate = instrument_header_ex.vibrato_rate;
-			instr->volume_fadeout = instrument_header_ex.volume_fadeout[0]; // FIXME: and the other one?
+			instr->volume_fadeout = instrument_header_ex.volume_fadeout;
 
 			instr->samples = (xm_sample_t*)mempool;
 			mempool += instr->num_samples * sizeof(xm_sample_t);
