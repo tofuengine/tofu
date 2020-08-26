@@ -35,11 +35,15 @@ local Main = Class.define()
 function Main:__ctor()
   Display.palette("pico-8")
 
+  warn("@on")
+  warn("Hello,", "Again")
+
   self.font = Font.default(0, 15)
 
   self.sources = {
       Source.new("assets/1ch-22050-16.flac", Source.SAMPLE),
       Source.new("assets/2ch-48000-16.flac", Source.MUSIC),
+      Source.new("assets/turrican_iii.xm", Source.MODULE),
     }
   --self.sources[1]:looping(false)
 
