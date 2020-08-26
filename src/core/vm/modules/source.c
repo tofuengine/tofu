@@ -38,7 +38,10 @@ typedef enum _Source_Types_t {
     SOURCE_TYPE_MUSIC,
     SOURCE_TYPE_SAMPLE,
     SOURCE_TYPE_MODULE,
+    Source_Type_t_CountOf
 } Source_Type_t;
+
+typedef SL_Source_t *(*Source_Create_Function_t)(SL_Read_Callback_t read_callback, SL_Seek_Callback_t seek_callback, void *user_data);
 
 #define LOG_CONTEXT "source"
 #define META_TABLE  "Tofu_Sound_Source_mt"
@@ -96,6 +99,12 @@ static bool _handle_seek(void *user_data, int offset, int whence)
     return true;
 }
 
+static const Source_Create_Function_t _create_functions[Source_Type_t_CountOf] = {
+    SL_music_create,
+    SL_sample_create,
+    SL_module_create
+};
+
 static int source_new(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -107,22 +116,13 @@ static int source_new(lua_State *L)
 
     File_System_t *file_system = (File_System_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
 
-    File_System_Handle_t *handle = FS_locate_and_open(file_system, file);
+    File_System_Handle_t *handle = FS_locate_and_open(file_system, file); // The handle is kept open, the source could require it.
     if (!handle) {
         return luaL_error(L, "can't access file `%s`", file);
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p opened for file `%s`", handle, file);
 
-    SL_Source_t *source = NULL;
-    if (type == SOURCE_TYPE_MUSIC) { // FIXME: create a table of function pointers.
-        source = SL_music_create(_handle_read, _handle_seek, (void *)handle)
-    } else
-    if (type == SOURCE_TYPE_SAMPLE) {
-        source = SL_sample_create(_handle_read, _handle_seek, (void *)handle);
-    } else
-    if (type == SOURCE_TYPE_MODULE) {
-        source = SL_module_create(_handle_read, _handle_seek, (void *)handle)
-    }
+    SL_Source_t *source = _create_functions[type](_handle_read, _handle_seek, (void *)handle);
     if (!source) {
         FS_close(handle);
         return luaL_error(L, "can't create source");

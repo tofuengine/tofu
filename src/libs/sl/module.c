@@ -35,14 +35,10 @@
 
 #include <stdint.h>
 
-// We are going to buffer 1 second of non-converted data. As long as the `SL_music_update()` function is called
-// once half a second we are good. Since it's very unlikely we will run at less than 2 FPS... well, we can sleep well. :)
-#define STREAMING_BUFFER_SIZE_IN_FRAMES     SL_FRAMES_PER_SECOND
+// An XM module is generated in stereo mode, which means that the need to handle a stereo source.
+#define SOURCE_CHANNELS                 2
 
-// That's the size of a single chunk read in each `produce()` call. Can't be larger than the buffer size.
-#define STREAMING_BUFFER_CHUNK_IN_FRAMES    (STREAMING_BUFFER_SIZE_IN_FRAMES / 4)
-
-#define MIXING_BUFFER_CHANNELS          SL_CHANNELS_PER_FRAME
+#define MIXING_BUFFER_CHANNELS          2
 #define MIXING_BUFFER_SIZE_IN_FRAMES    128
 
 #define LOG_CONTEXT "sl-module"
@@ -88,15 +84,16 @@ static inline Source_States_t _consume(Module_t *module, size_t frames_requested
 
     size_t frames_remaining = (frames_requested > size_in_frames) ? size_in_frames : frames_requested;
     while (frames_remaining > 0) { // Read as much data as possible, filling the buffer and eventually looping!
-        ma_uint64 frames_to_consume = ma_data_converter_get_required_input_frame_count(converter, frames_remaining);
+        ma_uint64 frames_to_convert = ma_data_converter_get_required_input_frame_count(converter, frames_remaining);
 
+        ma_uint32 frames_to_consume = (frames_to_convert > MIXING_BUFFER_SIZE_IN_FRAMES) ? MIXING_BUFFER_SIZE_IN_FRAMES : frames_to_convert;
 #if SL_BYTES_PER_FRAME == 2
-        size_t frames_generated = xm_generate_frames_s16(context, read_buffer, frames_to_consume);
+        size_t frames_read = xm_generate_frames_s16(context, read_buffer, frames_to_consume);
 #elif SL_BYTES_PER_FRAME == 4
-        size_t frames_generated = xm_generate_frames_f32(context, read_buffer, frames_to_consume);
+        size_t frames_read = xm_generate_frames_f32(context, read_buffer, frames_to_consume);
 #endif
 
-        ma_uint64 frames_consumed = frames_generated;
+        ma_uint64 frames_consumed = frames_read;
         ma_uint64 frames_generated = frames_remaining;
         ma_data_converter_process_pcm_frames(converter, read_buffer, &frames_consumed, cursor, &frames_generated);
 
@@ -162,13 +159,14 @@ static bool _module_ctor(SL_Source_t *source, SL_Read_Callback_t read_callback, 
                 }
         };
 
-    int created = xm_create_context(&module->context, _module_read, _module_seek, module);
+    int created = xm_create_context(&module->context, _module_read, _module_seek, module, SL_FRAMES_PER_SECOND);
     if (created != 0) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create module context");
         return false;
     }
 
-    bool initialized = SL_props_init(&module->props, INTERNAL_FORMAT, SL_FRAMES_PER_SECOND, SL_CHANNELS_PER_FRAME, MIXING_BUFFER_CHANNELS);
+//    bool initialized = SL_props_init(&module->props, INTERNAL_FORMAT, SL_FRAMES_PER_SECOND, SOURCE_CHANNELS, MIXING_BUFFER_CHANNELS);
+    bool initialized = SL_props_init(&module->props, ma_format_f32, SL_FRAMES_PER_SECOND, SOURCE_CHANNELS, MIXING_BUFFER_CHANNELS);
     if (!initialized) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize module properties");
         xm_free_context(module->context);
@@ -199,22 +197,12 @@ static bool _module_reset(SL_Source_t *source)
         return false;
     }
 
-#ifdef __SL_MUSIC_PRELOAD__
-    bool produced = _produce(module);
-    if (!produced) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't pre-load module data");
-        return false;
-    }
-#else
     return true;
-#endif
 }
 
 static bool _module_update(SL_Source_t *source, float delta_time)
 {
-    Module_t *module = (Module_t *)source;
-
-    return _produce(module);
+    return true; // NO-OP
 }
 
 static bool _module_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Group_t *groups)
@@ -229,16 +217,12 @@ static bool _module_mix(SL_Source_t *source, void *output, size_t frames_request
 
     size_t frames_remaining = frames_requested;
     while (frames_remaining > 0) {
-        size_t frames_processed;
+        size_t frames_processed; // FIXME: use this as the return value of the function below.
         Source_States_t state = _consume(module, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES, &frames_processed);
         mix_2on2_additive(cursor, buffer, frames_processed, mix);
-        if (state == SOURCE_STATE_STALLING) {
-            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "buffer underrun for source %p - stalling", source);
+        if (state != SOURCE_STATE_PLAYING) {
+            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "source %p state is inconsistent: %d", source, state);
             return true;
-        } else
-        if (state == SOURCE_STATE_EOD) {
-            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "end-of-data reached for source %p", source);
-            return false;
         }
         cursor += frames_processed * MIXING_BUFFER_CHANNELS * SL_BYTES_PER_FRAME;
         frames_remaining -= frames_processed;
