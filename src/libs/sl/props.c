@@ -36,9 +36,9 @@
 // between the minimum (8KHz) and the maximum (384KHz) supported sample rates.
 #define MIN_SPEED_VALUE ((float)MA_MIN_SAMPLE_RATE / (float)MA_MAX_SAMPLE_RATE)
 
-#if SL_BYTES_PER_FRAME == 2
+#if SL_BYTES_PER_SAMPLE == 2
   #define INTERNAL_FORMAT   ma_format_s16
-#elif SL_BYTES_PER_FRAME == 4
+#elif SL_BYTES_PER_SAMPLE == 4
   #define INTERNAL_FORMAT   ma_format_f32
 #else
   #error Wrong internal format.

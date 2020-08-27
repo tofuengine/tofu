@@ -43,8 +43,12 @@
 // That's the size of a single chunk read in each `produce()` call. Can't be larger than the buffer size.
 #define STREAMING_BUFFER_CHUNK_IN_FRAMES    (STREAMING_BUFFER_SIZE_IN_FRAMES / 4)
 
-#define MIXING_BUFFER_CHANNELS          SL_CHANNELS_PER_FRAME
-#define MIXING_BUFFER_SIZE_IN_FRAMES    128
+#define MIXING_BUFFER_SAMPLES_PER_CHANNEL   SL_SAMPLES_PER_CHANNEL
+#define MIXING_BUFFER_CHANNELS_PER_FRAME    SL_CHANNELS_PER_FRAME
+#define MIXING_BUFFER_SIZE_IN_FRAMES        128
+
+#define MIXING_BUFFER_BYTES_PER_FRAME       (MIXING_BUFFER_CHANNELS_PER_FRAME * MIXING_BUFFER_SAMPLES_PER_CHANNEL * SL_BYTES_PER_SAMPLE)
+#define MIXING_BUFFER_SIZE_IN_BYTES         (MIXING_BUFFER_SIZE_IN_FRAMES * MIXING_BUFFER_BYTES_PER_FRAME)
 
 #define LOG_CONTEXT "sl-music"
 
@@ -108,9 +112,9 @@ static inline bool _produce(Music_t *music)
     void *write_buffer;
     ma_pcm_rb_acquire_write(buffer, &frames_to_produce, &write_buffer);
 
-#if SL_BYTES_PER_FRAME == 2
+#if SL_BYTES_PER_SAMPLE == 2
     size_t frames_produced = drflac_read_pcm_frames_s16(music->decoder, frames_to_produce, write_buffer);
-#elif SL_BYTES_PER_FRAME == 4
+#elif SL_BYTES_PER_SAMPLE == 4
     size_t frames_produced = drflac_read_pcm_frames_f32(music->decoder, frames_to_produce, write_buffer);
 #endif
 
@@ -157,7 +161,7 @@ static inline Source_States_t _consume(Music_t *music, size_t frames_requested, 
 
         ma_pcm_rb_commit_read(buffer, frames_consumed, read_buffer);
 
-        cursor += frames_generated * MIXING_BUFFER_CHANNELS * SL_BYTES_PER_FRAME;
+        cursor += frames_generated * MIXING_BUFFER_BYTES_PER_FRAME;
 
         *frames_processed += frames_generated;
         frames_remaining -= frames_generated;
@@ -262,7 +266,7 @@ static bool _music_ctor(SL_Source_t *source, SL_Read_Callback_t read_callback, S
     }
 #endif
 
-    bool initialized = SL_props_init(&music->props, INTERNAL_FORMAT, sample_rate, channels, MIXING_BUFFER_CHANNELS);
+    bool initialized = SL_props_init(&music->props, INTERNAL_FORMAT, sample_rate, channels, MIXING_BUFFER_CHANNELS_PER_FRAME);
     if (!initialized) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize music properties");
         drflac_close(music->decoder);
@@ -319,7 +323,7 @@ static bool _music_mix(SL_Source_t *source, void *output, size_t frames_requeste
 {
     Music_t *music = (Music_t *)source;
 
-    uint8_t buffer[MIXING_BUFFER_SIZE_IN_FRAMES * MIXING_BUFFER_CHANNELS * SL_BYTES_PER_FRAME];
+    uint8_t buffer[MIXING_BUFFER_SIZE_IN_BYTES];
 
     const SL_Mix_t mix = SL_props_precompute(&music->props, groups);
 
@@ -338,7 +342,7 @@ static bool _music_mix(SL_Source_t *source, void *output, size_t frames_requeste
             Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "end-of-data reached for source %p", source);
             return false;
         }
-        cursor += frames_processed * MIXING_BUFFER_CHANNELS * SL_BYTES_PER_FRAME;
+        cursor += frames_processed * SL_BYTES_PER_FRAME;
         frames_remaining -= frames_processed;
     }
     return true;

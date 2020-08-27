@@ -38,8 +38,12 @@
 
 #define SAMPLE_MAX_LENGTH_IN_SECONDS    10.0f
 
-#define MIXING_BUFFER_CHANNELS          1
-#define MIXING_BUFFER_SIZE_IN_FRAMES    128
+#define MIXING_BUFFER_SAMPLES_PER_CHANNEL   SL_SAMPLES_PER_CHANNEL
+#define MIXING_BUFFER_CHANNELS_PER_FRAME    1
+#define MIXING_BUFFER_SIZE_IN_FRAMES        128
+
+#define MIXING_BUFFER_BYTES_PER_FRAME       (MIXING_BUFFER_CHANNELS_PER_FRAME * MIXING_BUFFER_SAMPLES_PER_CHANNEL * SL_BYTES_PER_SAMPLE)
+#define MIXING_BUFFER_SIZE_IN_BYTES         (MIXING_BUFFER_SIZE_IN_FRAMES * MIXING_BUFFER_BYTES_PER_FRAME)
 
 #define LOG_CONTEXT "sl-sample"
 
@@ -87,9 +91,9 @@ static inline bool _produce(Sample_t *sample)
     ma_uint64 frames_available = sample->length_in_frames;
     ma_audio_buffer_map(buffer, &write_buffer, &frames_available); // No need to check the result, can't fail.
 
-#if SL_BYTES_PER_FRAME == 2
+#if SL_BYTES_PER_SAMPLE == 2
     size_t frames_produced = drflac_read_pcm_frames_s16(sample->decoder, frames_available, write_buffer);
-#elif SL_BYTES_PER_FRAME == 4
+#elif SL_BYTES_PER_SAMPLE == 4
     size_t frames_produced = drflac_read_pcm_frames_f32(sample->decoder, frames_available, write_buffer);
 #endif
 
@@ -131,7 +135,7 @@ static inline Source_States_t _consume(Sample_t *sample, size_t frames_requested
 
         sample->frames_completed += frames_generated;
 
-        cursor += frames_generated * MIXING_BUFFER_CHANNELS * SL_BYTES_PER_FRAME;
+        cursor += frames_generated * MIXING_BUFFER_BYTES_PER_FRAME;
 
         *frames_processed += frames_generated;
         frames_remaining -= frames_generated;
@@ -242,7 +246,7 @@ static bool _sample_ctor(SL_Source_t *source, SL_Read_Callback_t read_callback, 
         return false;
     }
 
-    bool initialized = SL_props_init(&sample->props, INTERNAL_FORMAT, sample_rate, channels, MIXING_BUFFER_CHANNELS);
+    bool initialized = SL_props_init(&sample->props, INTERNAL_FORMAT, sample_rate, channels, MIXING_BUFFER_CHANNELS_PER_FRAME);
     if (!initialized) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize sample properties");
         ma_audio_buffer_uninit(&sample->buffer);
@@ -288,7 +292,7 @@ static bool _sample_mix(SL_Source_t *source, void *output, size_t frames_request
 {
     Sample_t *sample = (Sample_t *)source;
 
-    uint8_t buffer[MIXING_BUFFER_SIZE_IN_FRAMES * MIXING_BUFFER_CHANNELS * SL_BYTES_PER_FRAME];
+    uint8_t buffer[MIXING_BUFFER_SIZE_IN_BYTES];
 
     const SL_Mix_t mix = SL_props_precompute(&sample->props, groups);
 
@@ -303,7 +307,7 @@ static bool _sample_mix(SL_Source_t *source, void *output, size_t frames_request
             Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "end-of-data reached for source %p", source);
             return false;
         }
-        cursor += frames_processed * SL_CHANNELS_PER_FRAME * MIXING_BUFFER_CHANNELS * SL_BYTES_PER_FRAME;
+        cursor += frames_processed * SL_BYTES_PER_FRAME;
         frames_remaining -= frames_processed;
     }
     return true;

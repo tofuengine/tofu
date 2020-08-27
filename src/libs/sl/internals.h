@@ -32,9 +32,9 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#if SL_BYTES_PER_FRAME == 2
+#if SL_BYTES_PER_SAMPLE == 2
   #define INTERNAL_FORMAT   ma_format_s16
-#elif SL_BYTES_PER_FRAME == 4
+#elif SL_BYTES_PER_SAMPLE == 4
   #define INTERNAL_FORMAT   ma_format_f32
 #else
   #error Wrong internal format.

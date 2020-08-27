@@ -36,10 +36,14 @@
 #include <stdint.h>
 
 // An XM module is generated in stereo mode, which means that the need to handle a stereo source.
-#define SOURCE_CHANNELS                 2
+#define MODULE_OUTPUT_CHANNELS              2
 
-#define MIXING_BUFFER_CHANNELS          2
-#define MIXING_BUFFER_SIZE_IN_FRAMES    128
+#define MIXING_BUFFER_SAMPLES_PER_CHANNEL   1
+#define MIXING_BUFFER_CHANNELS_PER_FRAME    2
+#define MIXING_BUFFER_SIZE_IN_FRAMES        128
+
+#define MIXING_BUFFER_BYTES_PER_FRAME       (MIXING_BUFFER_CHANNELS_PER_FRAME * MIXING_BUFFER_SAMPLES_PER_CHANNEL * SL_BYTES_PER_SAMPLE)
+#define MIXING_BUFFER_SIZE_IN_BYTES         (MIXING_BUFFER_SIZE_IN_FRAMES * MIXING_BUFFER_BYTES_PER_FRAME)
 
 #define LOG_CONTEXT "sl-module"
 
@@ -78,7 +82,7 @@ static inline Source_States_t _consume(Module_t *module, size_t frames_requested
 
     *frames_processed = 0;
 
-    uint8_t read_buffer[MIXING_BUFFER_SIZE_IN_FRAMES * MIXING_BUFFER_CHANNELS * SL_BYTES_PER_FRAME];
+    uint8_t read_buffer[MIXING_BUFFER_SIZE_IN_BYTES];
 
     uint8_t *cursor = output;
 
@@ -87,9 +91,9 @@ static inline Source_States_t _consume(Module_t *module, size_t frames_requested
         ma_uint64 frames_to_convert = ma_data_converter_get_required_input_frame_count(converter, frames_remaining);
 
         ma_uint32 frames_to_consume = (frames_to_convert > MIXING_BUFFER_SIZE_IN_FRAMES) ? MIXING_BUFFER_SIZE_IN_FRAMES : frames_to_convert;
-#if SL_BYTES_PER_FRAME == 2
+#if SL_BYTES_PER_SAMPLE == 2
         size_t frames_read = xm_generate_frames_s16(context, (void *)read_buffer, frames_to_consume);
-#elif SL_BYTES_PER_FRAME == 4
+#elif SL_BYTES_PER_SAMPLE == 4
         size_t frames_read = xm_generate_frames_f32(context, (void *)read_buffer, frames_to_consume);
 #endif
 
@@ -97,7 +101,7 @@ static inline Source_States_t _consume(Module_t *module, size_t frames_requested
         ma_uint64 frames_generated = frames_remaining;
         ma_data_converter_process_pcm_frames(converter, read_buffer, &frames_consumed, cursor, &frames_generated);
 
-        cursor += frames_generated * MIXING_BUFFER_CHANNELS * SL_BYTES_PER_FRAME;
+        cursor += frames_generated * MIXING_BUFFER_BYTES_PER_FRAME;
 
         *frames_processed += frames_generated;
         frames_remaining -= frames_generated;
@@ -166,8 +170,7 @@ static bool _module_ctor(SL_Source_t *source, SL_Read_Callback_t read_callback, 
         return false;
     }
 
-//    bool initialized = SL_props_init(&module->props, INTERNAL_FORMAT, SL_FRAMES_PER_SECOND, SOURCE_CHANNELS, MIXING_BUFFER_CHANNELS);
-    bool initialized = SL_props_init(&module->props, ma_format_f32, SL_FRAMES_PER_SECOND, SOURCE_CHANNELS, MIXING_BUFFER_CHANNELS);
+    bool initialized = SL_props_init(&module->props, INTERNAL_FORMAT, SL_FRAMES_PER_SECOND, MODULE_OUTPUT_CHANNELS, MIXING_BUFFER_CHANNELS_PER_FRAME);
     if (!initialized) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize module properties");
         xm_free_context(module->context);
@@ -210,7 +213,7 @@ static bool _module_mix(SL_Source_t *source, void *output, size_t frames_request
 {
     Module_t *module = (Module_t *)source;
 
-    uint8_t buffer[MIXING_BUFFER_SIZE_IN_FRAMES * MIXING_BUFFER_CHANNELS * SL_BYTES_PER_FRAME];
+    uint8_t buffer[MIXING_BUFFER_SIZE_IN_BYTES];
 
     const SL_Mix_t mix = SL_props_precompute(&module->props, groups);
 
@@ -225,7 +228,7 @@ static bool _module_mix(SL_Source_t *source, void *output, size_t frames_request
             Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "source %p state is inconsistent: %d", source, state);
             return true;
         }
-        cursor += frames_processed * MIXING_BUFFER_CHANNELS * SL_BYTES_PER_FRAME;
+        cursor += frames_processed * SL_BYTES_PER_FRAME;
         frames_remaining -= frames_processed;
     }
     return true;
