@@ -261,6 +261,9 @@ static void _sample_dtor(SL_Source_t *source)
 
     ma_audio_buffer_uninit(&sample->buffer);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sample buffer deinitialized");
+
+    drflac_close(sample->decoder);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sample decoder deinitialized");
 }
 
 static bool _sample_reset(SL_Source_t *source)
