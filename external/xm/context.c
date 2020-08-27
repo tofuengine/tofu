@@ -160,7 +160,7 @@ uint16_t xm_get_number_of_samples(xm_context_t* ctx, uint16_t instrument) {
 void* xm_get_sample_waveform(xm_context_t* ctx, uint16_t i, uint16_t s, size_t* size, uint8_t* bits) {
 	*size = ctx->module.instruments[i - 1].samples[s].length;
 	*bits = ctx->module.instruments[i - 1].samples[s].bits;
-	return ctx->module.instruments[i - 1].samples[s].data.as8;
+	return ctx->module.instruments[i - 1].samples[s].data;
 }
 
 

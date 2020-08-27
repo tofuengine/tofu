@@ -85,6 +85,8 @@ struct xm_envelope_s {
 };
 typedef struct xm_envelope_s xm_envelope_t;
 
+typedef float (*xm_sample_at_function_t)(const void*, size_t);
+
 struct xm_sample_s {
 #ifdef XM_STRINGS
 	char name[SAMPLE_NAME_LENGTH + 1];
@@ -102,10 +104,8 @@ struct xm_sample_s {
 	int8_t relative_note;
 	uint64_t latest_trigger;
 
-	union {
-		int8_t* as8;
-		int16_t* as16;
-	} data;
+	void* data;
+	xm_sample_at_function_t at;
 };
 typedef struct xm_sample_s xm_sample_t;
 

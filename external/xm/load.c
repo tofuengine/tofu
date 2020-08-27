@@ -376,6 +376,14 @@ size_t xm_get_memory_needed_for_context(xm_read_callback_t read, xm_seek_callbac
 	return memory_needed;
 }
 
+static float xm_sample_at_8bit(const void *data, size_t k) {
+	return ((const int8_t *)data)[k] / 128.f;
+}
+
+static float xm_sample_at_16bit(const void *data, size_t k) {
+	return ((const int16_t *)data)[k] / 32768.f;
+}
+
 char* xm_load_module(xm_context_t* ctx, xm_read_callback_t read, xm_seek_callback_t seek, void* user_data, char* mempool) {
 	xm_module_t* mod = &(ctx->module);
 
@@ -591,8 +599,10 @@ char* xm_load_module(xm_context_t* ctx, xm_read_callback_t read, xm_seek_callbac
 #ifdef XM_STRINGS
 			memcpy(sample->name, sample_header.name, SAMPLE_NAME_LENGTH);
 #endif
-			sample->data.as8 = (int8_t*)mempool;
+			sample->data = (void*)mempool;
 			mempool += sample->length;
+
+			sample->at = sample->bits == 16 ? xm_sample_at_16bit : xm_sample_at_8bit;
 
 			if(sample->bits == 16) {
 				sample->loop_start >>= 1;
@@ -604,28 +614,29 @@ char* xm_load_module(xm_context_t* ctx, xm_read_callback_t read, xm_seek_callbac
 			seek(user_data, sample_header_size - sizeof(xm_sample_header_t), SEEK_CUR);
 		}
 
-		for(uint16_t j = 0; j < instr->num_samples; ++j) {
-			/* Read sample data */
+		for (uint16_t j = 0; j < instr->num_samples; ++j) { /* Read sample data */
 			xm_sample_t* sample = instr->samples + j;
 			uint32_t length = sample->length;
 
-			if(sample->bits == 16) {
+			if (sample->bits == 16) {
+				int16_t *data = (int16_t *)sample->data;
 				int16_t v = 0;
-				for(uint32_t k = 0; k < length; ++k) {
+				for (uint32_t k = length; k; --k) {
 					int16_t value;
 					read(user_data, &value, sizeof(int16_t));
 
 					v = v + value;
-					sample->data.as16[k] = v;
+					*(data++) = v;
 				}
 			} else {
+				int8_t *data = (int8_t *)sample->data;
 				int8_t v = 0;
-				for(uint32_t k = 0; k < length; ++k) {
+				for (uint32_t k = length; k; --k) {
 					int8_t value;
 					read(user_data, &value, sizeof(int8_t));
 
 					v = v + value;
-					sample->data.as8[k] = v;
+					*(data++) = v;
 				}
 			}
 		}
