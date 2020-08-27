@@ -164,7 +164,7 @@ static bool _module_ctor(SL_Source_t *source, SL_Read_Callback_t read_callback, 
             .context = NULL
         };
 
-    int created = xm_create_context_cb(&module->context, _module_read, _module_seek, module, SL_FRAMES_PER_SECOND);
+    int created = xm_create_context(&module->context, _module_read, _module_seek, module, SL_FRAMES_PER_SECOND);
     if (created != 0) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create module context");
         return false;
