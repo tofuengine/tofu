@@ -33,8 +33,7 @@ typedef bool (*xm_seek_callback_t)(void*, int, int);
  * @deprecated This function is unsafe!
  * @see xm_create_context_safe()
  */
-int xm_create_context(xm_context_t**, const char* moddata, uint32_t rate);
-int xm_create_context_cb(xm_context_t**, xm_read_callback_t, xm_seek_callback_t, void*, uint32_t rate);
+int xm_create_context(xm_context_t**, xm_read_callback_t, xm_seek_callback_t, void*, uint32_t rate);
 
 /** Create a XM context.
  *
@@ -46,24 +45,7 @@ int xm_create_context_cb(xm_context_t**, xm_read_callback_t, xm_seek_callback_t,
  * @returns 1 if module data is not sane
  * @returns 2 if memory allocation failed
  */
-int xm_create_context_safe(xm_context_t**, const char* moddata, size_t moddata_length, uint32_t rate);
-int xm_create_context_safe_cb(xm_context_t**, xm_read_callback_t, xm_seek_callback_t, void*, uint32_t rate);
-
-/** Create a XM context.
- *
- * This function will produce smaller code size compared to
- * xm_create_context(), but requires converting the .xm file to a
- * non-portable format beforehand.
- *
- * This function doesn't do any kind of error checking.
- *
- * @param libxmizeddata: pointer to module data, needs to point to a
- * writable area, freeing it is equivalent as calling
- * xm_free_context().
- *
- * @see xm_create_context()
- */
-void xm_create_context_from_libxmize(xm_context_t**, char* libxmizeddata, uint32_t rate);
+int xm_create_context_safe(xm_context_t**, xm_read_callback_t, xm_seek_callback_t, void*, uint32_t rate);
 
 /** Free a XM context created by xm_create_context(). */
 void xm_free_context(xm_context_t*);
