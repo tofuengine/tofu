@@ -44,7 +44,7 @@ static void xm_tick(xm_context_t*);
 
 static float xm_sample_at(xm_sample_t*, size_t);
 static float xm_next_of_sample(xm_channel_context_t*);
-static void xm_sample(xm_context_t*, float*, float*);
+static bool xm_sample(xm_context_t*, float*, float*);
 
 /* ----- Other oddities ----- */
 
@@ -1357,7 +1357,7 @@ static float xm_next_of_sample(xm_channel_context_t* ch) {
 	return endval;
 }
 
-static void xm_sample(xm_context_t* ctx, float* left, float* right) {
+static bool xm_sample(xm_context_t* ctx, float* left, float* right) {
 	if(ctx->remaining_samples_in_tick <= 0) {
 		xm_tick(ctx);
 	}
@@ -1367,7 +1367,7 @@ static void xm_sample(xm_context_t* ctx, float* left, float* right) {
 	*right = 0.f;
 
 	if(ctx->max_loop_count > 0 && ctx->loop_count >= ctx->max_loop_count) {
-		return;
+		return false;
 	}
 
 	for(uint8_t i = 0; i < ctx->module.num_channels; ++i) {
@@ -1400,6 +1400,8 @@ static void xm_sample(xm_context_t* ctx, float* left, float* right) {
 		XM_DEBUG_OUT("clipping frame: %f %f, this is a bad module or a libxm bug", *left, *right);
 	}
 #endif
+
+	return true;
 }
 
 void xm_generate_samples(xm_context_t* ctx, float* output, size_t numsamples) {
@@ -1410,7 +1412,24 @@ void xm_generate_samples(xm_context_t* ctx, float* output, size_t numsamples) {
 	}
 }
 
+// https://en.wikipedia.org/wiki/Audio_bit_depth
 size_t xm_generate_frames_s16(xm_context_t* ctx, int16_t* output, size_t frames_to_generate) {
+	ctx->generated_samples += frames_to_generate;
+
+	int16_t* cursor = output;
+	for(size_t i = 0; i < frames_to_generate; i++) {
+		float left, right;
+		bool generated = xm_sample(ctx, &left, &right);
+		if (!generated) {
+			return i;
+		}
+
+		cursor[0] = left * 32767.0f; // This is an approximation, -32768 is not reached.
+		cursor[1] = right * 32767.0f;
+
+		cursor += 2;
+	}
+
 	return frames_to_generate;
 }
 

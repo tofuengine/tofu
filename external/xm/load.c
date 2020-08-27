@@ -182,13 +182,18 @@ Offset|Length| Type   | Description
 #define MODULE_ID_LENGTH	17
 
 #pragma pack(push, 1)
-typedef struct _xm_header_t {
+typedef struct _xm_info_t {
 	char id[MODULE_ID_LENGTH];
 	char module_name[MODULE_NAME_LENGTH];
 	uint8_t __fixed;
 	char tracker_name[TRACKER_NAME_LENGTH];
 	uint16_t version_number;
-	uint32_t header_size; // FIXME: separate the structure in two, here!
+} xm_info_t;
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+typedef struct _xm_header_t {
+	uint32_t header_size;
 	uint16_t song_length;
 	uint16_t song_restart_position;
 	uint16_t channels;
@@ -390,6 +395,9 @@ size_t xm_get_memory_needed_for_context_cb(xm_read_callback_t read, xm_seek_call
 
 	seek(user_data, 0, SEEK_SET);
 
+	xm_info_t module_info;
+	read(user_data, &module_info, sizeof(xm_info_t));
+
 	xm_header_t module_header;
 	read(user_data, &module_header, sizeof(xm_header_t));
 
@@ -397,7 +405,7 @@ size_t xm_get_memory_needed_for_context_cb(xm_read_callback_t read, xm_seek_call
 	memory_needed += module_header.instruments * sizeof(xm_instrument_t);
 	memory_needed += MAX_NUM_ROWS * module_header.song_length * sizeof(uint8_t); /* Module length */
 
-	seek(user_data, (module_header.header_size + 60) - sizeof(xm_header_t), SEEK_CUR);
+	seek(user_data, module_header.header_size - sizeof(xm_header_t), SEEK_CUR);
 
 	for (uint16_t i = 0; i < module_header.patterns; ++i) {
 		xm_pattern_header_t pattern_header;
@@ -430,6 +438,8 @@ size_t xm_get_memory_needed_for_context_cb(xm_read_callback_t read, xm_seek_call
 
 		memory_needed += instrument_header.samples * sizeof(xm_sample_t);
 
+		uint32_t instrument_samples_data_size = 0;
+
 		for(uint16_t j = 0; j < instrument_header.samples; ++j) {
 			xm_sample_header_t sample_header;
 			read(user_data, &sample_header, sizeof(xm_sample_header_t));
@@ -438,8 +448,10 @@ size_t xm_get_memory_needed_for_context_cb(xm_read_callback_t read, xm_seek_call
 
 			seek(user_data, sample_header_size - sizeof(xm_sample_header_t), SEEK_CUR);
 
-			seek(user_data, sample_header.length, SEEK_CUR); // Skip sample data.
+			instrument_samples_data_size += sample_header.length;
 		}
+
+		seek(user_data, instrument_samples_data_size, SEEK_CUR); // Skip sample data, located after the samples headers.
 	}
 
 	memory_needed += module_header.channels * sizeof(xm_channel_context_t);
@@ -701,12 +713,15 @@ char* xm_load_module_cb(xm_context_t* ctx, xm_read_callback_t read, xm_seek_call
 	/* Read XM header */
 	seek(user_data, 0, SEEK_SET);
 
+	xm_info_t module_info;
+	read(user_data, &module_info, sizeof(xm_info_t));
+
 	xm_header_t module_header;
 	read(user_data, &module_header, sizeof(xm_header_t));
 
 #ifdef XM_STRINGS
-	memcpy(mod->name, module_header.module_name, MODULE_NAME_LENGTH);
-	memcpy(mod->trackername, module_header.tracker_name, TRACKER_NAME_LENGTH);
+	memcpy(mod->name, module_info.module_name, MODULE_NAME_LENGTH);
+	memcpy(mod->trackername, module_info.tracker_name, TRACKER_NAME_LENGTH);
 #endif
 
 	/* Read module header */
@@ -736,7 +751,7 @@ char* xm_load_module_cb(xm_context_t* ctx, xm_read_callback_t read, xm_seek_call
 		xm_pattern_header_t pattern_header;
 		read(user_data, &pattern_header, sizeof(xm_pattern_header_t));
 
-		uint16_t packed_patterndata_size = pattern_header.data_size;
+		uint16_t patterndata_size = pattern_header.data_size;
 		xm_pattern_t* pat = mod->patterns + i;
 
 		pat->num_rows = pattern_header.rows;
@@ -747,69 +762,57 @@ char* xm_load_module_cb(xm_context_t* ctx, xm_read_callback_t read, xm_seek_call
 		/* Pattern header length */
 		seek(user_data, pattern_header.header_size - sizeof(xm_pattern_header_t), SEEK_CUR);
 
-		if (packed_patterndata_size == 0) {
-			/* No pattern data is present */
-			memset(pat->slots, 0, sizeof(xm_pattern_slot_t) * pat->num_rows * mod->num_channels);
-		} else {
-			/* This isn't your typical for loop */
-			for (uint16_t j = 0, k = 0; j < packed_patterndata_size; ++k) {
-				uint8_t note;
-				read(user_data, &note, sizeof(uint8_t));
+		/* This isn't your typical for loop */
+		for (uint16_t j = 0; patterndata_size; ++j) {
+			uint8_t note;
+			read(user_data, &note, sizeof(uint8_t));
 
-				xm_pattern_slot_t* slot = pat->slots + k;
+			xm_pattern_slot_t* slot = pat->slots + j;
 
-				if(note & (1 << 7)) {
-					/* MSB is set, this is a compressed packet */
-					++j;
+			if(note & (1 << 7)) { /* MSB is set, this is a compressed packet */
+				patterndata_size--;
 
-					if(note & (1 << 0)) {
-						/* Note follows */
-						read(user_data, &slot->note, sizeof(uint8_t));
-						++j;
-					} else {
-						slot->note = 0;
-					}
-
-					if(note & (1 << 1)) {
-						/* Instrument follows */
-						read(user_data, &slot->instrument, sizeof(uint8_t));
-						++j;
-					} else {
-						slot->instrument = 0;
-					}
-
-					if(note & (1 << 2)) {
-						/* Volume column follows */
-						read(user_data, &slot->volume_column, sizeof(uint8_t));
-						++j;
-					} else {
-						slot->volume_column = 0;
-					}
-
-					if(note & (1 << 3)) {
-						/* Effect follows */
-						read(user_data, &slot->effect_type, sizeof(uint8_t));
-						++j;
-					} else {
-						slot->effect_type = 0;
-					}
-
-					if(note & (1 << 4)) {
-						/* Effect parameter follows */
-						read(user_data, &slot->effect_param, sizeof(uint8_t));
-						++j;
-					} else {
-						slot->effect_param = 0;
-					}
+				if(note & (1 << 0)) { /* Note follows */
+					read(user_data, &slot->note, sizeof(uint8_t));
+					patterndata_size--;
 				} else {
-					/* Uncompressed packet */
-					slot->note = note;
-					read(user_data, &slot->instrument, sizeof(uint8_t));
-					read(user_data, &slot->volume_column, sizeof(uint8_t));
-					read(user_data, &slot->effect_type, sizeof(uint8_t));
-					read(user_data, &slot->effect_param, sizeof(uint8_t));
-					j += 5;
+					slot->note = 0;
 				}
+
+				if(note & (1 << 1)) { /* Instrument follows */
+					read(user_data, &slot->instrument, sizeof(uint8_t));
+					patterndata_size--;
+				} else {
+					slot->instrument = 0;
+				}
+
+				if(note & (1 << 2)) { /* Volume column follows */
+					read(user_data, &slot->volume_column, sizeof(uint8_t));
+					patterndata_size--;
+				} else {
+					slot->volume_column = 0;
+				}
+
+				if(note & (1 << 3)) { /* Effect follows */
+					read(user_data, &slot->effect_type, sizeof(uint8_t));
+					patterndata_size--;
+				} else {
+					slot->effect_type = 0;
+				}
+
+				if(note & (1 << 4)) { /* Effect parameter follows */
+					read(user_data, &slot->effect_param, sizeof(uint8_t));
+					patterndata_size--;
+				} else {
+					slot->effect_param = 0;
+				}
+			} else { /* Uncompressed packet */
+				slot->note = note;
+				read(user_data, &slot->instrument, sizeof(uint8_t));
+				read(user_data, &slot->volume_column, sizeof(uint8_t));
+				read(user_data, &slot->effect_type, sizeof(uint8_t));
+				read(user_data, &slot->effect_param, sizeof(uint8_t));
+				patterndata_size -= 5;
 			}
 		}
 	}
@@ -826,10 +829,14 @@ char* xm_load_module_cb(xm_context_t* ctx, xm_read_callback_t read, xm_seek_call
 #endif
 		instr->num_samples = instrument_header.samples;
 
+		size_t sample_header_size = 0;
+
 		if(instr->num_samples > 0) {
 			/* Read extra header properties */
 			xm_instrument_header_ex_t instrument_header_ex;
 			read(user_data, &instrument_header_ex, sizeof(xm_instrument_header_ex_t));
+
+			sample_header_size = instrument_header_ex.sample_header_size;
 
 			memcpy(instr->sample_of_notes, instrument_header_ex.sample_number, NUM_NOTES);
 
@@ -880,7 +887,11 @@ char* xm_load_module_cb(xm_context_t* ctx, xm_read_callback_t read, xm_seek_call
 		}
 
 		/* Instrument header size */
-		seek(user_data, instrument_header.header_size - sizeof(xm_instrument_header_t), SEEK_CUR);
+		int offset = instrument_header.header_size - sizeof(xm_instrument_header_t);
+		if (instrument_header.samples > 0) {
+			offset -= sizeof(xm_instrument_header_ex_t);
+		}
+		seek(user_data, offset, SEEK_CUR);
 
 		for(uint16_t j = 0; j < instr->num_samples; ++j) {
 			/* Read sample header */
@@ -921,7 +932,7 @@ char* xm_load_module_cb(xm_context_t* ctx, xm_read_callback_t read, xm_seek_call
 				sample->length >>= 1;
 			}
 
-			seek(user_data, instrument_header.header_size - sizeof(xm_sample_header_t), SEEK_CUR);
+			seek(user_data, sample_header_size - sizeof(xm_sample_header_t), SEEK_CUR);
 		}
 
 		for(uint16_t j = 0; j < instr->num_samples; ++j) {
