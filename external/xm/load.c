@@ -376,6 +376,33 @@ size_t xm_get_memory_needed_for_context(xm_read_callback_t read, xm_seek_callbac
 	return memory_needed;
 }
 
+#define DELTA_BUFFER_SIZE	2048
+
+static void _delta_decode(xm_read_callback_t read, void *user_data, int16_t *output, size_t length, size_t bytes_per_value) {
+	uint8_t buffer[DELTA_BUFFER_SIZE];
+
+	int16_t value = 0;
+
+	size_t remaining = length * bytes_per_value;
+	while (remaining > 0) {
+		size_t bytes_to_read = remaining > DELTA_BUFFER_SIZE ? DELTA_BUFFER_SIZE : remaining;
+		size_t bytes_read = read(user_data, buffer, bytes_to_read);
+
+		for (size_t i = 0; i < bytes_read; i += bytes_per_value) {
+			int16_t v;
+			if (bytes_per_value == 1) {
+				v = *((int8_t *)(buffer + i)) << 8;
+			} else {
+				v = *((int16_t *)(buffer + i));
+			}
+			value += v;
+			*(output++) = value;
+		}
+
+		remaining -= bytes_read;
+	}
+}
+
 char* xm_load_module(xm_context_t* ctx, xm_read_callback_t read, xm_seek_callback_t seek, void* user_data, char* mempool) {
 	xm_module_t* mod = &(ctx->module);
 
@@ -607,22 +634,7 @@ char* xm_load_module(xm_context_t* ctx, xm_read_callback_t read, xm_seek_callbac
 		for (uint16_t j = 0; j < instr->num_samples; ++j) { /* Read sample data */
 			xm_sample_t* sample = instr->samples + j;
 
-			int16_t *data = (int16_t *)sample->data;
-
-			int16_t v = 0;
-			for (uint32_t length = sample->length; length; --length) {
-				if (sample->bits == 16) {
-					int16_t value;
-					read(user_data, &value, sizeof(int16_t));
-					v += value;
-				} else {
-					int8_t value;
-					read(user_data, &value, sizeof(int8_t));
-					v += value << 8;
-				}
-
-				*(data++) = v;
-			}
+			_delta_decode(read, user_data, sample->data, sample->length, sample->bits / 8);
 		}
 	}
 
