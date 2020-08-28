@@ -15,6 +15,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [dr_libs](https://github.com/mackron/dr_libs) v0.12.17, v0.6.16, v0.12.9
 * [Glad](https://glad.dav1d.de/)
 * [GLFW](https://www.glfw.org/) v3.3.2
+* [libxm](https://github.com/Artefact2/libxm) v0.3 (supposedly)
 * [Lua](https://lua.org/) v5.4
 * [miniaudio](https://github.com/dr-soft/miniaudio) v0.10.15
 * [spleen](https://github.com/fcambus/spleen) v1.8.1
@@ -34,6 +35,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Per-color re-indexing (*shifting*) and transparency, affecting drawing operations (global, too?).
 * [x] Audio support w/ real time sound streaming on a separate thread.
 * [x] On-the-fly audio mixing w/ per voice looping/panning/gain/speed control.
+* [ ] XM module format support.
 * [x] Out-of-the-box timers support.
 * [x] Customizable application icon.
 * [x] Support for *archived games*, via custom "packed" format (w/ optional encryption).
