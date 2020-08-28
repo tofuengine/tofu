@@ -578,11 +578,6 @@ char* xm_load_module(xm_context_t* ctx, xm_read_callback_t read, xm_seek_callbac
 			instr->panning_envelope.loop_enabled = instrument_header_ex.panning_type & (1 << 2);
 
 			instr->vibrato_type = instrument_header_ex.vibrato_type;
-			if(instr->vibrato_type == 2) {
-				instr->vibrato_type = 1;
-			} else if(instr->vibrato_type == 1) {
-				instr->vibrato_type = 2;
-			}
 			instr->vibrato_sweep = instrument_header_ex.vibrato_sweep;
 			instr->vibrato_depth = instrument_header_ex.vibrato_depth;
 			instr->vibrato_rate = instrument_header_ex.vibrato_rate;

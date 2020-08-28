@@ -47,10 +47,10 @@ extern int __fail[-1];
 
 enum xm_waveform_type_e {
 	XM_SINE_WAVEFORM = 0,
-	XM_RAMP_DOWN_WAVEFORM = 1,
-	XM_SQUARE_WAVEFORM = 2,
-	XM_RANDOM_WAVEFORM = 3,
-	XM_RAMP_UP_WAVEFORM = 4,
+	XM_SQUARE_WAVEFORM = 1,
+	XM_RAMP_DOWN_WAVEFORM = 2,
+	XM_RAMP_UP_WAVEFORM = 3,
+	XM_RANDOM_WAVEFORM = 4
 };
 typedef enum xm_waveform_type_e xm_waveform_type_t;
 

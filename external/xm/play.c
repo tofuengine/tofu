@@ -124,23 +124,23 @@ static float xm_waveform(xm_waveform_type_t waveform, uint8_t step) {
 		 * very very little actual performance gain. */
 		return -sinf(2.f * 3.141592f * (float)step / (float)0x40);
 
+	case XM_SQUARE_WAVEFORM:
+		/* Square with a 50% duty */
+		return (step >= 0x20) ? 1.f : -1.f;
+
 	case XM_RAMP_DOWN_WAVEFORM:
 		/* Ramp down: 1.0f when step = 0; -1.0f when step = 0x40 */
 		return (float)(0x20 - step) / 0x20;
 
-	case XM_SQUARE_WAVEFORM:
-		/* Square with a 50% duty */
-		return (step >= 0x20) ? 1.f : -1.f;
+	case XM_RAMP_UP_WAVEFORM:
+		/* Ramp up: -1.f when step = 0; 1.f when step = 0x40 */
+		return (float)(step - 0x20) / 0x20;
 
 	case XM_RANDOM_WAVEFORM:
 		/* Use the POSIX.1-2001 example, just to be deterministic
 		 * across different machines */
 		next_rand = next_rand * 1103515245 + 12345;
 		return (float)((next_rand >> 16) & 0x7FFF) / (float)0x4000 - 1.f;
-
-	case XM_RAMP_UP_WAVEFORM:
-		/* Ramp up: -1.f when step = 0; 1.f when step = 0x40 */
-		return (float)(step - 0x20) / 0x20;
 
 	default:
 		break;
