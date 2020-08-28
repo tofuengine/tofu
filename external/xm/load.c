@@ -463,10 +463,19 @@ static void _delta_decode(xm_read_callback_t read, void *user_data, int16_t *out
 	}
 }
 
+// https://github.com/kode54/dumb/blob/master/src/it/readxm.c
+
 #define XM_MODULE_FLAG_LINEAR_FREQUENCY	0x0001
 
-#define XM_SAMPLE_MASK_LOOPMODE	0x03
-#define XM_SAMPLE_FLAG_IS16BIT	0x10
+#define XM_SAMPLE_FLAG_NO_LOOP			0x00
+#define XM_SAMPLE_FLAG_FORWARD_LOOP		0x01
+#define XM_SAMPLE_FLAG_PINGPONG_LOOP	0x02
+#define XM_SAMPLE_FLAG_16BIT			0x10
+#define XM_SAMPLE_FLAG_STEREO			0x20	// Unused?
+
+#define XM_ENVELOPE_FLAG_ON			0x01
+#define XM_ENVELOPE_FLAG_SUSTAIN	0x02
+#define XM_ENVELOPE_FLAG_LOOP		0x04
 
 char* xm_load_module(xm_context_t* ctx, xm_read_callback_t read, xm_seek_callback_t seek, void* user_data, char* mempool) {
 	xm_module_t* mod = &(ctx->module);
@@ -569,13 +578,13 @@ char* xm_load_module(xm_context_t* ctx, xm_read_callback_t read, xm_seek_callbac
 			instr->panning_envelope.loop_start_point = instrument_header_ex.panning_loop_start_point;
 			instr->panning_envelope.loop_end_point = instrument_header_ex.panning_loop_end_point;
 
-			instr->volume_envelope.enabled = instrument_header_ex.volume_type & (1 << 0);
-			instr->volume_envelope.sustain_enabled = instrument_header_ex.volume_type & (1 << 1);
-			instr->volume_envelope.loop_enabled = instrument_header_ex.volume_type & (1 << 2);
+			instr->volume_envelope.enabled = instrument_header_ex.volume_type & XM_ENVELOPE_FLAG_ON;
+			instr->volume_envelope.sustain_enabled = instrument_header_ex.volume_type & XM_ENVELOPE_FLAG_SUSTAIN;
+			instr->volume_envelope.loop_enabled = instrument_header_ex.volume_type & XM_ENVELOPE_FLAG_LOOP;
 
-			instr->panning_envelope.enabled = instrument_header_ex.panning_type & (1 << 0);
-			instr->panning_envelope.sustain_enabled = instrument_header_ex.panning_type & (1 << 1);
-			instr->panning_envelope.loop_enabled = instrument_header_ex.panning_type & (1 << 2);
+			instr->panning_envelope.enabled = instrument_header_ex.panning_type & XM_ENVELOPE_FLAG_ON;
+			instr->panning_envelope.sustain_enabled = instrument_header_ex.panning_type & XM_ENVELOPE_FLAG_SUSTAIN;
+			instr->panning_envelope.loop_enabled = instrument_header_ex.panning_type & XM_ENVELOPE_FLAG_LOOP;
 
 			instr->vibrato_type = instrument_header_ex.vibrato_type;
 			instr->vibrato_sweep = instrument_header_ex.vibrato_sweep;
@@ -610,15 +619,15 @@ char* xm_load_module(xm_context_t* ctx, xm_read_callback_t read, xm_seek_callbac
 			sample->volume = (float)sample_header.volume / (float)0x40;
 			sample->finetune = sample_header.finetune;
 
-			if((sample_header.flags & 3) == 0) {
-				sample->loop_type = XM_NO_LOOP;
-			} else if((sample_header.flags & 3) == 1) {
+			if (sample_header.flags & XM_SAMPLE_FLAG_PINGPONG_LOOP) { // bit #2 is `1` only for ping-pong loop.
+				sample->loop_type = XM_PING_PONG_LOOP;
+			} else if (sample_header.flags & XM_SAMPLE_FLAG_FORWARD_LOOP) { // since bit #2 is `0` there's only that loop left.
 				sample->loop_type = XM_FORWARD_LOOP;
 			} else {
-				sample->loop_type = XM_PING_PONG_LOOP;
+				sample->loop_type = XM_NO_LOOP;
 			}
 
-			sample->bytes_per_sample = (sample_header.flags & XM_SAMPLE_FLAG_IS16BIT) ? 2 : 1;
+			sample->bytes_per_sample = (sample_header.flags & XM_SAMPLE_FLAG_16BIT) ? 2 : 1;
 
 			sample->panning = (float)sample_header.panning / (float)0xFF;
 			sample->relative_note = sample_header.relative_note;
