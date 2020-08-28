@@ -9,10 +9,6 @@
 #include "xm_internal.h"
 
 int xm_create_context(xm_context_t** ctxp, xm_read_callback_t read, xm_seek_callback_t seek, void* user_data, uint32_t rate) {
-	size_t bytes_needed;
-	char* mempool;
-	xm_context_t* ctx;
-
 #ifdef XM_DEFENSIVE
 	int ret = ret = xm_check_sanity_preload(read, seek, user_data);
 	if(ret != 0) {
@@ -21,9 +17,10 @@ int xm_create_context(xm_context_t** ctxp, xm_read_callback_t read, xm_seek_call
 	}
 #endif
 
-	bytes_needed = xm_get_memory_needed_for_context(read, seek, user_data);
-	mempool = malloc(bytes_needed);
-	if (mempool == NULL && bytes_needed > 0) {
+	size_t bytes_needed = xm_get_memory_needed_for_context(read, seek, user_data);
+	
+	char *mempool = malloc(bytes_needed);
+	if (!mempool && bytes_needed > 0) {
 		/* malloc() failed, trouble ahead */
 		XM_DEBUG_OUT("call to malloc() failed, returned %p", (void*)mempool);
 		return 2;
@@ -32,8 +29,7 @@ int xm_create_context(xm_context_t** ctxp, xm_read_callback_t read, xm_seek_call
 	/* Initialize most of the fields to 0, 0.f, NULL or false depending on type */
 	memset(mempool, 0, bytes_needed);
 
-	ctx = (*ctxp = (xm_context_t*)mempool);
-	ctx->ctx_size = bytes_needed; /* Keep original requested size for xmconvert */
+	xm_context_t *ctx = (xm_context_t*)mempool;
 	mempool += sizeof(xm_context_t);
 
 	ctx->rate = rate;
@@ -55,13 +51,13 @@ int xm_create_context(xm_context_t** ctxp, xm_read_callback_t read, xm_seek_call
 		ch->tremolo_waveform_retrigger = true;
 
 		ch->volume = ch->volume_envelope_volume = ch->fadeout_volume = 1.0f;
-		ch->panning = ch->panning_envelope_panning = .5f;
-		ch->actual_volume = .0f;
-		ch->actual_panning = .5f;
+		ch->panning = ch->panning_envelope_panning = 0.5f;
+		ch->actual_volume = 0.0f;
+		ch->actual_panning = 0.5f;
 	}
 
 	ctx->row_loop_count = (uint8_t*)mempool;
-	mempool += ctx->module.length * MAX_NUM_ROWS * sizeof(uint8_t);
+	mempool += ctx->module.length * XM_MAX_PATTERN_ROWS * sizeof(uint8_t);
 
 #ifdef XM_DEFENSIVE
 	int ret = xm_check_sanity_postload(ctx);
@@ -71,6 +67,8 @@ int xm_create_context(xm_context_t** ctxp, xm_read_callback_t read, xm_seek_call
 		return 1;
 	}
 #endif
+
+	*ctxp = ctx;
 
 	return 0;
 }
@@ -106,9 +104,6 @@ bool xm_mute_instrument(xm_context_t* ctx, uint16_t instr, bool mute) {
 	return old;
 }
 
-
-
-#ifdef XM_STRINGS
 const char* xm_get_module_name(xm_context_t* ctx) {
 	return ctx->module.name;
 }
@@ -116,17 +111,6 @@ const char* xm_get_module_name(xm_context_t* ctx) {
 const char* xm_get_tracker_name(xm_context_t* ctx) {
 	return ctx->module.trackername;
 }
-#else
-const char* xm_get_module_name(xm_context_t* ctx) {
-	return NULL;
-}
-
-const char* xm_get_tracker_name(xm_context_t* ctx) {
-	return NULL;
-}
-#endif
-
-
 
 uint16_t xm_get_number_of_channels(xm_context_t* ctx) {
 	return ctx->module.num_channels;

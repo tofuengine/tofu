@@ -5,6 +5,7 @@
  * modify it under the terms of the Do What The Fuck You Want To Public
  * License, Version 2, as published by Sam Hocevar. See
  * http://sam.zoy.org/wtfpl/COPYING for more details. */
+#pragma once
 
 #include "xm.h"
 #include "xm_config.h"
@@ -30,14 +31,17 @@ extern int __fail[-1];
 
 /* ----- XM constants ----- */
 
-#define SAMPLE_NAME_LENGTH 22
-#define INSTRUMENT_NAME_LENGTH 22
-#define MODULE_NAME_LENGTH 20
-#define TRACKER_NAME_LENGTH 20
+#define XM_MODULE_ID_LENGTH	17
+
+#define XM_SAMPLE_NAME_LENGTH 22
+#define XM_INSTRUMENT_NAME_LENGTH 22
+#define XM_MODULE_NAME_LENGTH 20
+#define XM_TRACKER_NAME_LENGTH 20
+
 #define PATTERN_ORDER_TABLE_LENGTH 256
-#define NUM_NOTES 96
-#define NUM_ENVELOPE_POINTS 12
-#define MAX_NUM_ROWS 256
+#define XM_NOTES_AMOUNT	96
+#define XM_MAX_ENVELOPE_POINTS 12
+#define XM_MAX_PATTERN_ROWS 256
 
 /* ----- Data types ----- */
 
@@ -70,7 +74,7 @@ struct xm_envelope_point_s {
 typedef struct xm_envelope_point_s xm_envelope_point_t;
 
 struct xm_envelope_s {
-	xm_envelope_point_t points[NUM_ENVELOPE_POINTS];
+	xm_envelope_point_t points[XM_MAX_ENVELOPE_POINTS];
 	uint8_t num_points;
 	uint8_t sustain_point;
 	uint8_t loop_start_point;
@@ -82,9 +86,8 @@ struct xm_envelope_s {
 typedef struct xm_envelope_s xm_envelope_t;
 
 struct xm_sample_s {
-#ifdef XM_STRINGS
-	char name[SAMPLE_NAME_LENGTH + 1];
-#endif
+	char name[XM_SAMPLE_NAME_LENGTH + 1];
+
 	uint8_t bytes_per_sample;
 
 	uint32_t length;
@@ -103,11 +106,10 @@ struct xm_sample_s {
 typedef struct xm_sample_s xm_sample_t;
 
 struct xm_instrument_s {
-#ifdef XM_STRINGS
-	char name[INSTRUMENT_NAME_LENGTH + 1];
-#endif
+	char name[XM_INSTRUMENT_NAME_LENGTH + 1];
+
 	uint16_t num_samples;
-	uint8_t sample_of_notes[NUM_NOTES];
+	uint8_t sample_of_notes[XM_NOTES_AMOUNT];
 	xm_envelope_t volume_envelope;
 	xm_envelope_t panning_envelope;
 	xm_waveform_type_t vibrato_type;
@@ -138,10 +140,9 @@ struct xm_pattern_s {
 typedef struct xm_pattern_s xm_pattern_t;
 
 struct xm_module_s {
-#ifdef XM_STRINGS
-	char name[MODULE_NAME_LENGTH + 1];
-	char trackername[TRACKER_NAME_LENGTH + 1];
-#endif
+	char name[XM_MODULE_NAME_LENGTH + 1];
+	char trackername[XM_TRACKER_NAME_LENGTH + 1];
+
 	uint16_t length;
 	uint16_t restart_position;
 	uint16_t num_channels;
@@ -224,14 +225,13 @@ struct xm_channel_context_s {
 typedef struct xm_channel_context_s xm_channel_context_t;
 
 struct xm_context_s {
-	size_t ctx_size; /* Must be first? */
 	xm_module_t module;
+
 	uint32_t rate;
 
 	uint16_t tempo;
 	uint16_t bpm;
 	float global_volume;
-	float amplification;
 
 	uint8_t current_table_index;
 	uint8_t current_row;
@@ -248,7 +248,7 @@ struct xm_context_s {
 	 * Used for EEy effect */
 	uint16_t extra_ticks;
 
-	uint8_t* row_loop_count; /* Array of size MAX_NUM_ROWS * module_length */
+	uint8_t* row_loop_count; /* Array of size XM_MAX_PATTERN_ROWS * module_length */
 	uint8_t loop_count;
 	uint8_t max_loop_count;
 

@@ -842,7 +842,7 @@ static void xm_row(xm_context_t* ctx) {
 
 	if(!in_a_loop) {
 		/* No E6y loop is in effect (or we are in the first pass) */
-		ctx->loop_count = (ctx->row_loop_count[MAX_NUM_ROWS * ctx->current_table_index + ctx->current_row]++);
+		ctx->loop_count = (ctx->row_loop_count[XM_MAX_PATTERN_ROWS * ctx->current_table_index + ctx->current_row]++);
 	}
 
 	ctx->current_row++; /* Since this is an uint8, this line can
