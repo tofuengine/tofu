@@ -34,39 +34,55 @@ static const float multi_retrig_multiply[] = {
 	1.f,   1.f,  1.5f,       2.f   /* C, D, E, F */
 };
 
-static inline float _clampf(float x, float lower, float upper) // FIXME: move to a separate lib file and use for SL lib mixing as well!
+static inline float _clampupf(float x, float limit) // FIXME: use for SL lib mixing as well!
+{
+    return x > limit ? limit : x;
+}
+
+static inline float _clampdownf(float x, float limit)
+{
+    return x < limit ? limit : x;
+}
+
+static inline float _clampf(float x, float lower, float upper)
 {
     return x < lower ? lower : (x > upper ? upper : x);
 }
 
-#define XM_CLAMP_UP1F(vol, limit) do {			\
-		if((vol) > (limit)) (vol) = (limit);	\
-	} while(0)
-#define XM_CLAMP_UP(vol) XM_CLAMP_UP1F((vol), 1.f)
+static inline float _slidef(float val, float goal, float step)
+{
+	if (val > goal) {
+		return _clampdownf(val - step, goal);
+	} else if (val < goal) {
+		return _clampupf(val + step, goal);
+	} else {
+		return val;
+	}
+}
 
-#define XM_CLAMP_DOWN1F(vol, limit) do {		\
-		if((vol) < (limit)) (vol) = (limit);	\
-	} while(0)
-#define XM_CLAMP_DOWN(vol) XM_CLAMP_DOWN1F((vol), .0f)
+static inline float _lerpf(float v0, float v1, float t)
+{
+    // More numerical stable than the following one.
+    // return (v1 - v0) * t + v0
+    // see: https://en.wikipedia.org/wiki/Linear_interpolation
+    return v0 * (1.0f - t) + v1 * t;
+}
 
-#define XM_CLAMP2F(vol, up, down) do {			\
-		if((vol) > (up)) (vol) = (up);			\
-		else if((vol) < (down)) (vol) = (down); \
-	} while(0)
-#define XM_CLAMP(vol) XM_CLAMP2F((vol), 1.f, .0f)
+static inline float _invlerpf(float v0, float v1, float v)
+{
+	return (v - v0) / (v1 - v0);
+}
 
-#define XM_SLIDE_TOWARDS(val, goal, incr) do {		\
-		if((val) > (goal)) {						\
-			(val) -= (incr);						\
-			XM_CLAMP_DOWN1F((val), (goal));			\
-		} else if((val) < (goal)) {					\
-			(val) += (incr);						\
-			XM_CLAMP_UP1F((val), (goal));			\
-		}											\
-	} while(0)
+#define XM_CLAMP_UP(val) _clampupf((val), 1.0f)
 
-#define XM_LERP(u, v, t) ((u) + (t) * ((v) - (u)))
-#define XM_INVERSE_LERP(u, v, lerp) (((lerp) - (u)) / ((v) - (u)))
+#define XM_CLAMP_DOWN(val) _clampdownf((val), 0.0f)
+
+#define XM_CLAMP(val) _clampf((val), 0.0f, 1.0f)
+
+#define XM_SLIDE_TOWARDS(val, goal, step) _slidef((val), (goal), (step))
+
+#define XM_LERP(u, v, t) _lerpf((u), (v), (t))
+#define XM_INVERSE_LERP(u, v, lerp) _invlerpf((u), (v), (lerp))
 
 #define HAS_TONE_PORTAMENTO(s) ((s)->effect_type == 3 \
 								 || (s)->effect_type == 5 \
@@ -278,11 +294,9 @@ static void xm_tone_portamento(xm_context_t* ctx, xm_channel_context_t* ch) {
 	if(ch->tone_portamento_target_period == 0.f) return;
 
 	if(ch->period != ch->tone_portamento_target_period) {
-		XM_SLIDE_TOWARDS(ch->period,
-		                 ch->tone_portamento_target_period,
-		                 (ctx->module.frequency_type == XM_LINEAR_FREQUENCIES ?
-		                  4.f : 1.f) * ch->tone_portamento_param
-		);
+		ch->period = XM_SLIDE_TOWARDS(ch->period,
+			ch->tone_portamento_target_period,
+			(ctx->module.frequency_type == XM_LINEAR_FREQUENCIES ? 4.f : 1.f) * ch->tone_portamento_param);
 		xm_update_frequency(ctx, ch);
 	}
 }
@@ -312,13 +326,11 @@ static void xm_panning_slide(xm_channel_context_t* ch, uint8_t rawval) {
 	if(rawval & 0xF0) {
 		/* Slide right */
 		f = (float)(rawval >> 4) / (float)0xFF;
-		ch->panning += f;
-		XM_CLAMP_UP(ch->panning);
+		ch->panning = XM_CLAMP_UP(ch->panning + f);
 	} else {
 		/* Slide left */
 		f = (float)(rawval & 0x0F) / (float)0xFF;
-		ch->panning -= f;
-		XM_CLAMP_DOWN(ch->panning);
+		ch->panning = XM_CLAMP_DOWN(ch->panning - f);
 	}
 }
 
@@ -333,13 +345,11 @@ static void xm_volume_slide(xm_channel_context_t* ch, uint8_t rawval) {
 	if(rawval & 0xF0) {
 		/* Slide up */
 		f = (float)(rawval >> 4) / (float)0x40;
-		ch->volume += f;
-		XM_CLAMP_UP(ch->volume);
+		ch->volume = XM_CLAMP_UP(ch->volume + f);
 	} else {
 		/* Slide down */
 		f = (float)(rawval & 0x0F) / (float)0x40;
-		ch->volume -= f;
-		XM_CLAMP_DOWN(ch->volume);
+		ch->volume = XM_CLAMP_DOWN(ch->volume - f);
 	}
 }
 
@@ -1135,9 +1145,8 @@ static void xm_tick(xm_context_t* ctx) {
 			if(ctx->current_tick == 0) break;
 			if(((ch->multi_retrig_param) & 0x0F) == 0) break;
 			if((ctx->current_tick % (ch->multi_retrig_param & 0x0F)) == 0) {
-				float v = ch->volume * multi_retrig_multiply[ch->multi_retrig_param >> 4]
-					+ multi_retrig_add[ch->multi_retrig_param >> 4];
-				XM_CLAMP(v);
+				float v = XM_CLAMP(ch->volume * multi_retrig_multiply[ch->multi_retrig_param >> 4]
+					+ multi_retrig_add[ch->multi_retrig_param >> 4]);
 				xm_trigger_note(ctx, ch, 0);
 				ch->volume = v;
 			}
@@ -1163,8 +1172,7 @@ static void xm_tick(xm_context_t* ctx) {
 		if(ch->tremor_on) {
 			ch->actual_volume = .0f;
 		} else {
-			ch->actual_volume = ch->volume + ch->tremolo_volume;
-			XM_CLAMP(ch->actual_volume);
+			ch->actual_volume = XM_CLAMP(ch->volume + ch->tremolo_volume);
 			ch->actual_volume *= ch->fadeout_volume * ch->volume_envelope_volume;
 		}
 	}
