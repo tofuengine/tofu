@@ -79,34 +79,32 @@ static float xm_waveform(xm_waveform_type_t waveform, uint8_t step) {
 	static unsigned int next_rand = 24492;
 	step %= 0x40;
 
-	switch(waveform) {
+	switch (waveform) {
+		case XM_SINE_WAVEFORM:
+			/* Why not use a table? For saving space, and because there's
+			* very very little actual performance gain. */
+			return -sinf(2.f * 3.141592f * (float)step / (float)0x40);
 
-	case XM_SINE_WAVEFORM:
-		/* Why not use a table? For saving space, and because there's
-		 * very very little actual performance gain. */
-		return -sinf(2.f * 3.141592f * (float)step / (float)0x40);
+		case XM_SQUARE_WAVEFORM:
+			/* Square with a 50% duty */
+			return (step >= 0x20) ? 1.f : -1.f;
 
-	case XM_SQUARE_WAVEFORM:
-		/* Square with a 50% duty */
-		return (step >= 0x20) ? 1.f : -1.f;
+		case XM_RAMP_DOWN_WAVEFORM:
+			/* Ramp down: 1.0f when step = 0; -1.0f when step = 0x40 */
+			return (float)(0x20 - step) / 0x20;
 
-	case XM_RAMP_DOWN_WAVEFORM:
-		/* Ramp down: 1.0f when step = 0; -1.0f when step = 0x40 */
-		return (float)(0x20 - step) / 0x20;
+		case XM_RAMP_UP_WAVEFORM:
+			/* Ramp up: -1.f when step = 0; 1.f when step = 0x40 */
+			return (float)(step - 0x20) / 0x20;
 
-	case XM_RAMP_UP_WAVEFORM:
-		/* Ramp up: -1.f when step = 0; 1.f when step = 0x40 */
-		return (float)(step - 0x20) / 0x20;
+		case XM_RANDOM_WAVEFORM:
+			/* Use the POSIX.1-2001 example, just to be deterministic
+			* across different machines */
+			next_rand = next_rand * 1103515245 + 12345;
+			return (float)((next_rand >> 16) & 0x7FFF) / (float)0x4000 - 1.f;
 
-	case XM_RANDOM_WAVEFORM:
-		/* Use the POSIX.1-2001 example, just to be deterministic
-		 * across different machines */
-		next_rand = next_rand * 1103515245 + 12345;
-		return (float)((next_rand >> 16) & 0x7FFF) / (float)0x4000 - 1.f;
-
-	default:
-		break;
-
+		default:
+			return .0f;
 	}
 
 	return .0f;
@@ -223,7 +221,7 @@ static void xm_autovibrato(xm_context_t* ctx, xm_channel_context_t* ch) {
 	float sweep = 1.f;
 
 	if(ch->autovibrato_ticks < instr->vibrato_sweep) {
-		/* No idea if this is correct, but it sounds close enough… */
+		/* No idea if this is correct, but it sounds close enough... */
 		sweep = XM_LERP(0.f, 1.f, (float)ch->autovibrato_ticks / (float)instr->vibrato_sweep);
 	}
 
@@ -1154,20 +1152,16 @@ static void xm_tick(xm_context_t* ctx) {
 
 		}
 
-		float panning = ch->panning +
+		ch->actual_panning = ch->panning +
 			(ch->panning_envelope_panning - .5f) * (.5f - fabsf(ch->panning - .5f)) * 2.0f;
 
-		float volume;
 		if(ch->tremor_on) {
-			volume = .0f;
+			ch->actual_volume = .0f;
 		} else {
-			volume = ch->volume + ch->tremolo_volume;
-			XM_CLAMP(volume);
-			volume *= ch->fadeout_volume * ch->volume_envelope_volume;
+			ch->actual_volume = ch->volume + ch->tremolo_volume;
+			XM_CLAMP(ch->actual_volume);
+			ch->actual_volume *= ch->fadeout_volume * ch->volume_envelope_volume;
 		}
-
-		ch->actual_panning = panning;
-		ch->actual_volume = volume;
 	}
 
 	ctx->current_tick++;
@@ -1180,139 +1174,93 @@ static void xm_tick(xm_context_t* ctx) {
 	ctx->remaining_samples_in_tick += (float)ctx->rate / ((float)ctx->bpm * 0.4f);
 }
 
-static inline float _sample_at(const int16_t *data, size_t k) {
-	return data[k] * (1.0f / 32768.0f);
-}
-
-static float xm_next_of_sample(xm_channel_context_t* ch) {
-	if(ch->sample->length == 0) {
-		return 0.0f;
+static int16_t xm_next_of_sample(xm_channel_context_t* ch) {
+	if (ch->sample->length == 0) {
+		return 0;
 	}
 
-#ifdef XM_LINEAR_INTERPOLATION
-	float u, v, t;
-	uint32_t a, b;
-#else
-	float u;
-	uint32_t a;
-#endif
-	a = (uint32_t)ch->sample_position; /* This cast is fine,
-										* sample_position will not
-										* go above integer
-										* ranges */
-#ifdef XM_LINEAR_INTERPOLATION
-	b = a + 1;
-	t = ch->sample_position - a; /* Cheaper than fmodf(., 1.f) */
-#endif
-	u = _sample_at(ch->sample->data, a);
+	int16_t u = ch->sample->data[(uint32_t)ch->sample_position]; // This cast is fine, sample_position will not go above integer ranges
 
 	switch(ch->sample->loop_type) {
-
-	case XM_NO_LOOP:
-#ifdef XM_LINEAR_INTERPOLATION
-		v = (b < ch->sample->length) ? _sample_at(ch->sample->data, b) : .0f;
-#endif
-		ch->sample_position += ch->step;
-		if(ch->sample_position >= ch->sample->length) {
-			ch->sample_position = -1;
-		}
-		break;
-
-	case XM_FORWARD_LOOP:
-#ifdef XM_LINEAR_INTERPOLATION
-		v = _sample_at(
-			ch->sample->data,
-			(b == ch->sample->loop_end) ? ch->sample->loop_start : b
-			);
-#endif
-		ch->sample_position += ch->step;
-		while(ch->sample_position >= ch->sample->loop_end) {
-			ch->sample_position -= ch->sample->loop_length;
-		}
-		break;
-
-	case XM_PING_PONG_LOOP:
-		if(ch->ping) {
+		case XM_NO_LOOP:
 			ch->sample_position += ch->step;
-		} else {
-			ch->sample_position -= ch->step;
-		}
-		/* XXX: this may not work for very tight ping-pong loops
-		 * (ie switches direction more than once per sample */
-		if(ch->ping) {
-#ifdef XM_LINEAR_INTERPOLATION
-			v = _sample_at(ch->sample->data, (b >= ch->sample->loop_end) ? a : b);
-#endif
-			if(ch->sample_position >= ch->sample->loop_end) {
-				ch->ping = false;
-				ch->sample_position = (ch->sample->loop_end << 1) - ch->sample_position;
+			if (ch->sample_position >= ch->sample->length) {
+				ch->sample_position = -1;
 			}
-			/* sanity checking */
-			if(ch->sample_position >= ch->sample->length) {
-				ch->ping = false;
-				ch->sample_position -= ch->sample->length - 1;
-			}
-		} else {
-#ifdef XM_LINEAR_INTERPOLATION
-			v = u;
-			u = _sample_at(
-				ch->sample->data,
-				(b == 1 || b - 2 <= ch->sample->loop_start) ? a : (b - 2)
-				);
-#endif
-			if(ch->sample_position <= ch->sample->loop_start) {
-				ch->ping = true;
-				ch->sample_position = (ch->sample->loop_start << 1) - ch->sample_position;
-			}
-			/* sanity checking */
-			if(ch->sample_position <= .0f) {
-				ch->ping = true;
-				ch->sample_position = .0f;
-			}
-		}
-		break;
+			break;
 
-	default:
-#ifdef XM_LINEAR_INTERPOLATION
-		v = .0f;
-#endif
-		break;
+		case XM_FORWARD_LOOP:
+			ch->sample_position += ch->step;
+			while (ch->sample_position >= ch->sample->loop_end) {
+				ch->sample_position -= ch->sample->loop_length;
+			}
+			break;
+
+		case XM_PING_PONG_LOOP:
+			if (ch->ping) {
+				ch->sample_position += ch->step;
+			} else {
+				ch->sample_position -= ch->step;
+			}
+			/* XXX: this may not work for very tight ping-pong loops
+			* (ie switches direction more than once per sample */
+			if (ch->ping) {
+				if (ch->sample_position >= ch->sample->loop_end) {
+					ch->ping = false;
+					ch->sample_position = (ch->sample->loop_end << 1) - ch->sample_position;
+				}
+				/* sanity checking */
+				if (ch->sample_position >= ch->sample->length) {
+					ch->ping = false;
+					ch->sample_position -= ch->sample->length - 1;
+				}
+			} else {
+				if (ch->sample_position <= ch->sample->loop_start) {
+					ch->ping = true;
+					ch->sample_position = (ch->sample->loop_start << 1) - ch->sample_position;
+				}
+				/* sanity checking */
+				if (ch->sample_position <= .0f) {
+					ch->ping = true;
+					ch->sample_position = .0f;
+				}
+			}
+			break;
+
+		default:
+			break;
 	}
 
-#ifdef XM_LINEAR_INTERPOLATION
-	float endval = XM_LERP(u, v, t);
-#else
-	float endval = u;
-#endif
-
-	return endval;
+	return u;
 }
 
 static bool xm_sample(xm_context_t* ctx, int16_t* left, int16_t* right) {
-	if(ctx->remaining_samples_in_tick <= 0) {
+	if (ctx->remaining_samples_in_tick <= 0) {
 		xm_tick(ctx);
 	}
-	ctx->remaining_samples_in_tick--;
+	ctx->remaining_samples_in_tick -= 1;
 
-	if(ctx->max_loop_count > 0 && ctx->loop_count >= ctx->max_loop_count) {
+	if (ctx->max_loop_count > 0 && ctx->loop_count >= ctx->max_loop_count) {
 		return false;
 	}
 
-	float l = 0.f, r = 0.f;
+	float l = 0.0f, r = 0.0f;
 
 	for(uint8_t i = 0; i < ctx->module.num_channels; ++i) {
-		xm_channel_context_t* ch = ctx->channels + i;
+		xm_channel_context_t* channel = ctx->channels + i;
 
-		if (ch->instrument == NULL || ch->sample == NULL || ch->sample_position < 0) {
+		if (!channel->instrument || !channel->sample || channel->sample_position < 0) {
 			continue;
 		}
 
-		float fval = xm_next_of_sample(ch); // FIXME: generate s16 samples?
+		const float fval = (float)xm_next_of_sample(channel); // Convert s16 data to float for simpler mixing.
 
-		if(!ch->muted && !ch->instrument->muted) {
-			l += fval * ch->actual_volume * (1.f - ch->actual_panning);
-			r += fval * ch->actual_volume * ch->actual_panning;
+		if (channel->muted || channel->instrument->muted) {
+			continue;
 		}
+
+		l += fval * channel->actual_volume * (1.0f - channel->actual_panning);
+		r += fval * channel->actual_volume * channel->actual_panning;
 	}
 
 	const float fgvol = ctx->global_volume * ctx->amplification;
@@ -1320,13 +1268,13 @@ static bool xm_sample(xm_context_t* ctx, int16_t* left, int16_t* right) {
 	r *= fgvol;
 
 #ifdef XM_DEBUG
-	if(fabs(*left) > 1 || fabs(*right) > 1) {
-		XM_DEBUG_OUT("clipping frame: %f %f, this is a bad module or a libxm bug", *left, *right);
+	if (l < -32768.0f || l > -32767.0f || r < -32768.0f || r > -32767.0f) {
+		XM_DEBUG_OUT("clipping frame: %f %f, this is a bad module or a libxm bug", l, r);
 	}
 #endif
 
-	*left = l * 32767.0f; // This is an approximation, -32768 is not reached.
-	*right = r * 32767.0f;
+	*left = (int16_t)l;
+	*right = (int16_t)r;
 
 	return true;
 }
