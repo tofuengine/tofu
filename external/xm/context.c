@@ -38,8 +38,7 @@ int xm_create_context(xm_context_t** ctxp, xm_read_callback_t read, xm_seek_call
 	ctx->channels = (xm_channel_context_t*)mempool;
 	mempool += ctx->module.num_channels * sizeof(xm_channel_context_t);
 
-	ctx->global_volume = 1.f;
-	ctx->amplification = .25f; /* XXX: some bad modules may still clip. Find out something better. */
+	ctx->global_volume = 1.0f;
 
 	for(uint8_t i = 0; i < ctx->module.num_channels; ++i) {
 		xm_channel_context_t* ch = ctx->channels + i;
