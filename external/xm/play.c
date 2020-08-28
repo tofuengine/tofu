@@ -569,9 +569,11 @@ static void xm_handle_note_and_instrument(xm_context_t* ctx, xm_channel_context_
 
 	case 9: /* 9xx: Sample offset */
 		if(ch->sample != NULL && NOTE_IS_VALID(s->note)) {
-			uint32_t final_offset = s->effect_param << (ch->sample->bits == 16 ? 7 : 8);
+			// Set sample offset to parameter * 256 units (aka bytes
+			// or 16-bit words, depending on the sample format).
+			uint32_t final_offset = s->effect_param * (256 / ch->sample->bytes_per_sample);
 			if(final_offset >= ch->sample->length) {
-				/* Pretend the sample dosen't loop and is done playing */
+				/* Pretend the sample doesn't loop and is done playing */
 				ch->sample_position = -1;
 				break;
 			}

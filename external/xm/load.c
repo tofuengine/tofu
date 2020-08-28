@@ -437,6 +437,7 @@ static void _read_pattern_data(xm_read_callback_t read, void *user_data, xm_patt
 
 #define DELTA_BUFFER_SIZE	2048
 
+// https://en.wikipedia.org/wiki/Delta_encoding
 static void _delta_decode(xm_read_callback_t read, void *user_data, int16_t *output, size_t length, size_t bytes_per_value) {
 	uint8_t buffer[DELTA_BUFFER_SIZE];
 
@@ -450,7 +451,7 @@ static void _delta_decode(xm_read_callback_t read, void *user_data, int16_t *out
 		for (size_t i = 0; i < bytes_read; i += bytes_per_value) {
 			int16_t v;
 			if (bytes_per_value == 1) {
-				v = *((int8_t *)(buffer + i)) << 8;
+				v = *((int8_t *)(buffer + i)) << 8; // Convert the 8 bit sample to 16 bit.
 			} else {
 				v = *((int16_t *)(buffer + i));
 			}
@@ -461,6 +462,11 @@ static void _delta_decode(xm_read_callback_t read, void *user_data, int16_t *out
 		remaining -= bytes_read;
 	}
 }
+
+#define XM_MODULE_FLAG_LINEAR_FREQUENCY	0x0001
+
+#define XM_SAMPLE_MASK_LOOPMODE	0x03
+#define XM_SAMPLE_FLAG_IS16BIT	0x10
 
 char* xm_load_module(xm_context_t* ctx, xm_read_callback_t read, xm_seek_callback_t seek, void* user_data, char* mempool) {
 	xm_module_t* mod = &(ctx->module);
@@ -492,7 +498,7 @@ char* xm_load_module(xm_context_t* ctx, xm_read_callback_t read, xm_seek_callbac
 	mod->instruments = (xm_instrument_t*)mempool;
 	mempool += mod->num_instruments * sizeof(xm_instrument_t);
 
-	mod->frequency_type = (module_header.flags & (1 << 0)) ? XM_LINEAR_FREQUENCIES : XM_AMIGA_FREQUENCIES;
+	mod->frequency_type = (module_header.flags & XM_MODULE_FLAG_LINEAR_FREQUENCY) ? XM_LINEAR_FREQUENCIES : XM_AMIGA_FREQUENCIES;
 
 	ctx->tempo = module_header.tempo;
 	ctx->bpm = module_header.bpm;
@@ -617,7 +623,7 @@ char* xm_load_module(xm_context_t* ctx, xm_read_callback_t read, xm_seek_callbac
 				sample->loop_type = XM_PING_PONG_LOOP;
 			}
 
-			sample->bits = (sample_header.flags & (1 << 4)) ? 16 : 8;
+			sample->bytes_per_sample = (sample_header.flags & XM_SAMPLE_FLAG_IS16BIT) ? 2 : 1;
 
 			sample->panning = (float)sample_header.panning / (float)0xFF;
 			sample->relative_note = sample_header.relative_note;
@@ -627,7 +633,7 @@ char* xm_load_module(xm_context_t* ctx, xm_read_callback_t read, xm_seek_callbac
 			sample->data = (void*)mempool;
 			mempool += sample->length << 1;
 
-			if(sample->bits == 16) {
+			if(sample->bytes_per_sample == 2) {
 				sample->loop_start >>= 1;
 				sample->loop_length >>= 1;
 				sample->loop_end >>= 1;
@@ -640,7 +646,7 @@ char* xm_load_module(xm_context_t* ctx, xm_read_callback_t read, xm_seek_callbac
 		for (uint16_t j = 0; j < instr->num_samples; ++j) { /* Read sample data */
 			xm_sample_t* sample = instr->samples + j;
 
-			_delta_decode(read, user_data, sample->data, sample->length, sample->bits / 8);
+			_delta_decode(read, user_data, sample->data, sample->length, sample->bytes_per_sample);
 		}
 	}
 

@@ -89,7 +89,7 @@ struct xm_sample_s {
 #ifdef XM_STRINGS
 	char name[SAMPLE_NAME_LENGTH + 1];
 #endif
-	uint8_t bits; /* Either 8 or 16 */
+	uint8_t bytes_per_sample;
 
 	uint32_t length;
 	uint32_t loop_start;
