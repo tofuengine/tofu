@@ -9,44 +9,6 @@
 
 #include "xm_internal.h"
 
-/* ----- Static functions ----- */
-
-static float xm_waveform(xm_waveform_type_t, uint8_t);
-static void xm_autovibrato(xm_context_t*, xm_channel_context_t*);
-static void xm_vibrato(xm_context_t*, xm_channel_context_t*, uint8_t, uint16_t);
-static void xm_tremolo(xm_context_t*, xm_channel_context_t*, uint8_t, uint16_t);
-static void xm_arpeggio(xm_context_t*, xm_channel_context_t*, uint8_t, uint16_t);
-static void xm_tone_portamento(xm_context_t*, xm_channel_context_t*);
-static void xm_pitch_slide(xm_context_t*, xm_channel_context_t*, float);
-static void xm_panning_slide(xm_channel_context_t*, uint8_t);
-static void xm_volume_slide(xm_channel_context_t*, uint8_t);
-
-static float xm_envelope_lerp(xm_envelope_point_t*, xm_envelope_point_t*, uint16_t);
-static void xm_envelope_tick(xm_channel_context_t*, xm_envelope_t*, uint16_t*, float*);
-static void xm_envelopes(xm_channel_context_t*);
-
-static float xm_linear_period(float);
-static float xm_linear_frequency(float);
-static float xm_amiga_period(float);
-static float xm_amiga_frequency(float);
-static float xm_period(xm_context_t*, float);
-static float xm_frequency(xm_context_t*, float, float);
-static void xm_update_frequency(xm_context_t*, xm_channel_context_t*);
-
-static void xm_handle_note_and_instrument(xm_context_t*, xm_channel_context_t*, xm_pattern_slot_t*);
-static void xm_trigger_note(xm_context_t*, xm_channel_context_t*, unsigned int flags);
-static void xm_cut_note(xm_channel_context_t*);
-static void xm_key_off(xm_channel_context_t*);
-
-static void xm_post_pattern_change(xm_context_t*);
-static void xm_row(xm_context_t*);
-static void xm_tick(xm_context_t*);
-
-static float xm_next_of_sample(xm_channel_context_t*);
-static bool xm_sample(xm_context_t*, float*, float*);
-
-/* ----- Other oddities ----- */
-
 #define XM_TRIGGER_KEEP_VOLUME (1 << 0)
 #define XM_TRIGGER_KEEP_PERIOD (1 << 1)
 #define XM_TRIGGER_KEEP_SAMPLE_POSITION (1 << 2)
@@ -148,6 +110,111 @@ static float xm_waveform(xm_waveform_type_t waveform, uint8_t step) {
 	}
 
 	return .0f;
+}
+
+static inline float xm_linear_period(float note) {
+	return 7680.f - note * 64.f;
+}
+
+static inline float xm_linear_frequency(float period) {
+	return 8363.f * powf(2.f, (4608.f - period) / 768.f);
+}
+
+static float xm_amiga_period(float note) {
+	unsigned int intnote = note;
+	uint8_t a = intnote % 12;
+	int8_t octave = note / 12.f - 2;
+	uint16_t p1 = amiga_frequencies[a], p2 = amiga_frequencies[a + 1];
+
+	if(octave > 0) {
+		p1 >>= octave;
+		p2 >>= octave;
+	} else if(octave < 0) {
+		p1 <<= (-octave);
+		p2 <<= (-octave);
+	}
+
+	return XM_LERP(p1, p2, note - intnote);
+}
+
+static float xm_amiga_frequency(float period) {
+	if(period == .0f) return .0f;
+
+	/* This is the PAL value. No reason to choose this one over the
+	 * NTSC value. */
+	return 7093789.2f / (period * 2.f);
+}
+
+static float xm_frequency(xm_context_t* ctx, float period, float note_offset) {
+	uint8_t a;
+	int8_t octave;
+	float note;
+	uint16_t p1, p2;
+
+	switch(ctx->module.frequency_type) {
+
+	case XM_LINEAR_FREQUENCIES:
+		return xm_linear_frequency(period - 64.f * note_offset);
+
+	case XM_AMIGA_FREQUENCIES:
+		if(note_offset == 0) {
+			/* A chance to escape from insanity */
+			return xm_amiga_frequency(period);
+		}
+
+		/* FIXME: this is very crappy at best */
+		a = octave = 0;
+
+		/* Find the octave of the current period */
+		if(period > amiga_frequencies[0]) {
+			--octave;
+			while(period > (amiga_frequencies[0] << (-octave))) --octave;
+		} else if(period < amiga_frequencies[12]) {
+			++octave;
+			while(period < (amiga_frequencies[12] >> octave)) ++octave;
+		}
+
+		/* Find the smallest note closest to the current period */
+		for(uint8_t i = 0; i < 12; ++i) {
+			p1 = amiga_frequencies[i], p2 = amiga_frequencies[i + 1];
+
+			if(octave > 0) {
+				p1 >>= octave;
+				p2 >>= octave;
+			} else if(octave < 0) {
+				p1 <<= (-octave);
+				p2 <<= (-octave);
+			}
+
+			if(p2 <= period && period <= p1) {
+				a = i;
+				break;
+			}
+		}
+
+#ifdef XM_DEBUG
+		if(p1 < period || p2 > period) {
+			XM_DEBUG_OUT("%i <= %f <= %i should hold but doesn't, this is a bug", p2, period, p1);
+		}
+#endif
+
+		note = 12.f * (octave + 2) + a + XM_INVERSE_LERP(p1, p2, period);
+
+		return xm_amiga_frequency(xm_amiga_period(note + note_offset));
+
+	}
+
+	return .0f;
+}
+
+static inline void xm_update_frequency(xm_context_t* ctx, xm_channel_context_t* ch) {
+	ch->frequency = xm_frequency(
+		ctx, ch->period,
+		(ch->arp_note_offset > 0 ? ch->arp_note_offset : (
+			ch->vibrato_note_offset + ch->autovibrato_note_offset
+		))
+	);
+	ch->step = ch->frequency / ctx->rate;
 }
 
 static void xm_autovibrato(xm_context_t* ctx, xm_channel_context_t* ch) {
@@ -273,7 +340,7 @@ static void xm_volume_slide(xm_channel_context_t* ch, uint8_t rawval) {
 	}
 }
 
-static float xm_envelope_lerp(xm_envelope_point_t* restrict a, xm_envelope_point_t* restrict b, uint16_t pos) {
+static inline float xm_envelope_lerp(xm_envelope_point_t* restrict a, xm_envelope_point_t* restrict b, uint16_t pos) {
 	/* Linear interpolation between two envelope points */
 	if(pos <= a->frame) return a->value;
 	else if(pos >= b->frame) return b->value;
@@ -283,47 +350,14 @@ static float xm_envelope_lerp(xm_envelope_point_t* restrict a, xm_envelope_point
 	}
 }
 
-static void xm_post_pattern_change(xm_context_t* ctx) {
+static inline void xm_post_pattern_change(xm_context_t* ctx) {
 	/* Loop if necessary */
 	if(ctx->current_table_index >= ctx->module.length) {
 		ctx->current_table_index = ctx->module.restart_position;
 	}
 }
 
-static float xm_linear_period(float note) {
-	return 7680.f - note * 64.f;
-}
-
-static float xm_linear_frequency(float period) {
-	return 8363.f * powf(2.f, (4608.f - period) / 768.f);
-}
-
-static float xm_amiga_period(float note) {
-	unsigned int intnote = note;
-	uint8_t a = intnote % 12;
-	int8_t octave = note / 12.f - 2;
-	uint16_t p1 = amiga_frequencies[a], p2 = amiga_frequencies[a + 1];
-
-	if(octave > 0) {
-		p1 >>= octave;
-		p2 >>= octave;
-	} else if(octave < 0) {
-		p1 <<= (-octave);
-		p2 <<= (-octave);
-	}
-
-	return XM_LERP(p1, p2, note - intnote);
-}
-
-static float xm_amiga_frequency(float period) {
-	if(period == .0f) return .0f;
-
-	/* This is the PAL value. No reason to choose this one over the
-	 * NTSC value. */
-	return 7093789.2f / (period * 2.f);
-}
-
-static float xm_period(xm_context_t* ctx, float note) {
+static inline float xm_period(xm_context_t* ctx, float note) {
 	switch(ctx->module.frequency_type) {
 	case XM_LINEAR_FREQUENCIES:
 		return xm_linear_period(note);
@@ -333,80 +367,68 @@ static float xm_period(xm_context_t* ctx, float note) {
 	return .0f;
 }
 
-static float xm_frequency(xm_context_t* ctx, float period, float note_offset) {
-	uint8_t a;
-	int8_t octave;
-	float note;
-	uint16_t p1, p2;
-
-	switch(ctx->module.frequency_type) {
-
-	case XM_LINEAR_FREQUENCIES:
-		return xm_linear_frequency(period - 64.f * note_offset);
-
-	case XM_AMIGA_FREQUENCIES:
-		if(note_offset == 0) {
-			/* A chance to escape from insanity */
-			return xm_amiga_frequency(period);
-		}
-
-		/* FIXME: this is very crappy at best */
-		a = octave = 0;
-
-		/* Find the octave of the current period */
-		if(period > amiga_frequencies[0]) {
-			--octave;
-			while(period > (amiga_frequencies[0] << (-octave))) --octave;
-		} else if(period < amiga_frequencies[12]) {
-			++octave;
-			while(period < (amiga_frequencies[12] >> octave)) ++octave;
-		}
-
-		/* Find the smallest note closest to the current period */
-		for(uint8_t i = 0; i < 12; ++i) {
-			p1 = amiga_frequencies[i], p2 = amiga_frequencies[i + 1];
-
-			if(octave > 0) {
-				p1 >>= octave;
-				p2 >>= octave;
-			} else if(octave < 0) {
-				p1 <<= (-octave);
-				p2 <<= (-octave);
-			}
-
-			if(p2 <= period && period <= p1) {
-				a = i;
-				break;
-			}
-		}
-
-#ifdef XM_DEBUG
-		if(p1 < period || p2 > period) {
-			XM_DEBUG_OUT("%i <= %f <= %i should hold but doesn't, this is a bug", p2, period, p1);
-		}
-#endif
-
-		note = 12.f * (octave + 2) + a + XM_INVERSE_LERP(p1, p2, period);
-
-		return xm_amiga_frequency(xm_amiga_period(note + note_offset));
-
+static void xm_trigger_note(xm_context_t* ctx, xm_channel_context_t* ch, unsigned int flags) {
+	if(!(flags & XM_TRIGGER_KEEP_SAMPLE_POSITION)) {
+		ch->sample_position = 0.f;
+		ch->ping = true;
 	}
 
-	return .0f;
+	if(ch->sample != NULL) {
+		if(!(flags & XM_TRIGGER_KEEP_VOLUME)) {
+			ch->volume = ch->sample->volume;
+		}
+
+		ch->panning = ch->sample->panning;
+	}
+
+	ch->sustained = true;
+	ch->fadeout_volume = ch->volume_envelope_volume = 1.0f;
+	ch->panning_envelope_panning = .5f;
+	ch->volume_envelope_frame_count = ch->panning_envelope_frame_count = 0;
+	ch->vibrato_note_offset = 0.f;
+	ch->tremolo_volume = 0.f;
+	ch->tremor_on = false;
+
+	ch->autovibrato_ticks = 0;
+
+	if(ch->vibrato_waveform_retrigger) {
+		ch->vibrato_ticks = 0; /* XXX: should the waveform itself also
+								* be reset to sine? */
+	}
+	if(ch->tremolo_waveform_retrigger) {
+		ch->tremolo_ticks = 0;
+	}
+
+	if(!(flags & XM_TRIGGER_KEEP_PERIOD)) {
+		ch->period = xm_period(ctx, ch->note);
+		xm_update_frequency(ctx, ch);
+	}
+
+	ch->latest_trigger = ctx->generated_samples;
+	if(ch->instrument != NULL) {
+		ch->instrument->latest_trigger = ctx->generated_samples;
+	}
+	if(ch->sample != NULL) {
+		ch->sample->latest_trigger = ctx->generated_samples;
+	}
 }
 
-static void xm_update_frequency(xm_context_t* ctx, xm_channel_context_t* ch) {
-	ch->frequency = xm_frequency(
-		ctx, ch->period,
-		(ch->arp_note_offset > 0 ? ch->arp_note_offset : (
-			ch->vibrato_note_offset + ch->autovibrato_note_offset
-		))
-	);
-	ch->step = ch->frequency / ctx->rate;
+static inline void xm_cut_note(xm_channel_context_t* ch) {
+	/* NB: this is not the same as Key Off */
+	ch->volume = .0f;
 }
 
-static void xm_handle_note_and_instrument(xm_context_t* ctx, xm_channel_context_t* ch,
-										  xm_pattern_slot_t* s) {
+static inline void xm_key_off(xm_channel_context_t* ch) {
+	/* Key Off */
+	ch->sustained = false;
+
+	/* If no volume envelope is used, also cut the note */
+	if(ch->instrument == NULL || !ch->instrument->volume_envelope.enabled) {
+		xm_cut_note(ch);
+	}
+}
+
+static void xm_handle_note_and_instrument(xm_context_t* ctx, xm_channel_context_t* ch, xm_pattern_slot_t* s) {
 	if(s->instrument > 0) {
 		if(HAS_TONE_PORTAMENTO(ch->current) && ch->instrument != NULL && ch->sample != NULL) {
 			/* Tone portamento in effect, unclear stuff happens */
@@ -596,7 +618,8 @@ static void xm_handle_note_and_instrument(xm_context_t* ctx, xm_channel_context_
 
 	case 0xC: /* Cxx: Set volume */
 		ch->volume = (float)((s->effect_param > 0x40)
-							 ? 0x40 : s->effect_param) / (float)0x40;
+			? 0x40
+			: s->effect_param) / (float)0x40;
 		break;
 
 	case 0xD: /* Dxx: Pattern break */
@@ -788,67 +811,6 @@ static void xm_handle_note_and_instrument(xm_context_t* ctx, xm_channel_context_
 	}
 }
 
-static void xm_trigger_note(xm_context_t* ctx, xm_channel_context_t* ch, unsigned int flags) {
-	if(!(flags & XM_TRIGGER_KEEP_SAMPLE_POSITION)) {
-		ch->sample_position = 0.f;
-		ch->ping = true;
-	}
-
-	if(ch->sample != NULL) {
-		if(!(flags & XM_TRIGGER_KEEP_VOLUME)) {
-			ch->volume = ch->sample->volume;
-		}
-
-		ch->panning = ch->sample->panning;
-	}
-
-	ch->sustained = true;
-	ch->fadeout_volume = ch->volume_envelope_volume = 1.0f;
-	ch->panning_envelope_panning = .5f;
-	ch->volume_envelope_frame_count = ch->panning_envelope_frame_count = 0;
-	ch->vibrato_note_offset = 0.f;
-	ch->tremolo_volume = 0.f;
-	ch->tremor_on = false;
-
-	ch->autovibrato_ticks = 0;
-
-	if(ch->vibrato_waveform_retrigger) {
-		ch->vibrato_ticks = 0; /* XXX: should the waveform itself also
-								* be reset to sine? */
-	}
-	if(ch->tremolo_waveform_retrigger) {
-		ch->tremolo_ticks = 0;
-	}
-
-	if(!(flags & XM_TRIGGER_KEEP_PERIOD)) {
-		ch->period = xm_period(ctx, ch->note);
-		xm_update_frequency(ctx, ch);
-	}
-
-	ch->latest_trigger = ctx->generated_samples;
-	if(ch->instrument != NULL) {
-		ch->instrument->latest_trigger = ctx->generated_samples;
-	}
-	if(ch->sample != NULL) {
-		ch->sample->latest_trigger = ctx->generated_samples;
-	}
-}
-
-static void xm_cut_note(xm_channel_context_t* ch) {
-	/* NB: this is not the same as Key Off */
-	ch->volume = .0f;
-}
-
-static void xm_key_off(xm_channel_context_t* ch) {
-	/* Key Off */
-	ch->sustained = false;
-
-	/* If no volume envelope is used, also cut the note */
-	if(ch->instrument == NULL || !ch->instrument->volume_envelope.enabled) {
-		xm_cut_note(ch);
-	}
-}
-
 static void xm_row(xm_context_t* ctx) {
 	if(ctx->position_jump) {
 		ctx->current_table_index = ctx->jump_dest;
@@ -906,10 +868,7 @@ static void xm_row(xm_context_t* ctx) {
 	}
 }
 
-static void xm_envelope_tick(xm_channel_context_t* ch,
-							 xm_envelope_t* env,
-							 uint16_t* counter,
-							 float* outval) {
+static void xm_envelope_tick(xm_channel_context_t* ch, xm_envelope_t* env, uint16_t* counter, float* outval) {
 	if(env->num_points < 2) {
 		/* Don't really know what to do… */
 		if(env->num_points == 1) {
@@ -1201,13 +1160,12 @@ static void xm_tick(xm_context_t* ctx) {
 
 		}
 
-		float panning, volume;
-
-		panning = ch->panning +
+		float panning = ch->panning +
 			(ch->panning_envelope_panning - .5f) * (.5f - fabsf(ch->panning - .5f)) * 2.0f;
 
+		float volume;
 		if(ch->tremor_on) {
-		        volume = .0f;
+			volume = .0f;
 		} else {
 			volume = ch->volume + ch->tremolo_volume;
 			XM_CLAMP(volume);
@@ -1238,20 +1196,15 @@ static inline float _sample_at(const int16_t *data, size_t k) {
 }
 
 static float xm_next_of_sample(xm_channel_context_t* ch) {
-	if(ch->instrument == NULL || ch->sample == NULL || ch->sample_position < 0) {
 #ifdef XM_RAMPING
-		if(ch->frame_count < XM_SAMPLE_RAMPING_POINTS) {
-			return XM_LERP(ch->end_of_previous_sample[ch->frame_count], .0f,
-				(float)ch->frame_count / (float)XM_SAMPLE_RAMPING_POINTS);
-		}
-#endif
-		return .0f;
+	if(ch->frame_count < XM_SAMPLE_RAMPING_POINTS) {
+		return XM_LERP(ch->end_of_previous_sample[ch->frame_count], .0f,
+			(float)ch->frame_count / (float)XM_SAMPLE_RAMPING_POINTS);
 	}
-
-//	const xm_sample_t *sample = ch->sample;
+#endif
 
 	if(ch->sample->length == 0) {
-		return .0f;
+		return 0.0f;
 	}
 
 #ifdef XM_LINEAR_INTERPOLATION
@@ -1361,31 +1314,30 @@ static float xm_next_of_sample(xm_channel_context_t* ch) {
 	return endval;
 }
 
-static bool xm_sample(xm_context_t* ctx, float* left, float* right) {
+static bool xm_sample(xm_context_t* ctx, int16_t* left, int16_t* right) {
 	if(ctx->remaining_samples_in_tick <= 0) {
 		xm_tick(ctx);
 	}
 	ctx->remaining_samples_in_tick--;
 
-	*left = 0.f;
-	*right = 0.f;
-
 	if(ctx->max_loop_count > 0 && ctx->loop_count >= ctx->max_loop_count) {
 		return false;
 	}
 
+	float l = 0.f, r = 0.f;
+
 	for(uint8_t i = 0; i < ctx->module.num_channels; ++i) {
 		xm_channel_context_t* ch = ctx->channels + i;
 
-		if(ch->instrument == NULL || ch->sample == NULL || ch->sample_position < 0) {
+		if (ch->instrument == NULL || ch->sample == NULL || ch->sample_position < 0) {
 			continue;
 		}
 
-		const float fval = xm_next_of_sample(ch);
+		float fval = xm_next_of_sample(ch); // FIXME: generate s16 samples?
 
 		if(!ch->muted && !ch->instrument->muted) {
-			*left += fval * ch->actual_volume * (1.f - ch->actual_panning);
-			*right += fval * ch->actual_volume * ch->actual_panning;
+			l += fval * ch->actual_volume * (1.f - ch->actual_panning);
+			r += fval * ch->actual_volume * ch->actual_panning;
 		}
 
 #ifdef XM_RAMPING
@@ -1396,8 +1348,8 @@ static bool xm_sample(xm_context_t* ctx, float* left, float* right) {
 	}
 
 	const float fgvol = ctx->global_volume * ctx->amplification;
-	*left *= fgvol;
-	*right *= fgvol;
+	l *= fgvol;
+	r *= fgvol;
 
 #ifdef XM_DEBUG
 	if(fabs(*left) > 1 || fabs(*right) > 1) {
@@ -1405,38 +1357,25 @@ static bool xm_sample(xm_context_t* ctx, float* left, float* right) {
 	}
 #endif
 
+	*left = l * 32767.0f; // This is an approximation, -32768 is not reached.
+	*right = r * 32767.0f;
+
 	return true;
 }
 
-void xm_generate_samples(xm_context_t* ctx, float* output, size_t numsamples) {
-	ctx->generated_samples += numsamples;
-
-	for(size_t i = 0; i < numsamples; i++) {
-		xm_sample(ctx, output + (2 * i), output + (2 * i + 1));
-	}
-}
-
 // https://en.wikipedia.org/wiki/Audio_bit_depth
-size_t xm_generate_frames_s16(xm_context_t* ctx, int16_t* output, size_t frames_to_generate) {
+size_t xm_generate_frames(xm_context_t* ctx, int16_t* output, size_t frames_to_generate) {
 	ctx->generated_samples += frames_to_generate;
 
 	int16_t* cursor = output;
 	for(size_t i = 0; i < frames_to_generate; i++) {
-		float left, right;
-		bool generated = xm_sample(ctx, &left, &right);
+		bool generated = xm_sample(ctx, cursor, cursor + 1);
 		if (!generated) {
 			return i;
 		}
 
-		cursor[0] = left * 32767.0f; // This is an approximation, -32768 is not reached.
-		cursor[1] = right * 32767.0f;
-
 		cursor += 2;
 	}
 
-	return frames_to_generate;
-}
-
-size_t xm_generate_frames_f32(xm_context_t* ctx, float* output, size_t frames_to_generate) {
 	return frames_to_generate;
 }

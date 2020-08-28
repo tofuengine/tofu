@@ -36,6 +36,7 @@
 #include <stdint.h>
 
 // An XM module is generated in stereo mode, which means that the need to handle a stereo source.
+#define MODULE_OUTPUT_FORMAT                ma_format_s16
 #define MODULE_OUTPUT_CHANNELS              2
 
 #define MIXING_BUFFER_SAMPLES_PER_CHANNEL   1
@@ -91,11 +92,7 @@ static inline Source_States_t _consume(Module_t *module, size_t frames_requested
         ma_uint64 frames_to_convert = ma_data_converter_get_required_input_frame_count(converter, frames_remaining);
 
         ma_uint32 frames_to_consume = (frames_to_convert > MIXING_BUFFER_SIZE_IN_FRAMES) ? MIXING_BUFFER_SIZE_IN_FRAMES : frames_to_convert;
-#if SL_BYTES_PER_SAMPLE == 2
-        size_t frames_read = xm_generate_frames_s16(context, (void *)read_buffer, frames_to_consume);
-#elif SL_BYTES_PER_SAMPLE == 4
-        size_t frames_read = xm_generate_frames_f32(context, (void *)read_buffer, frames_to_consume);
-#endif
+        size_t frames_read = xm_generate_frames(context, (void *)read_buffer, frames_to_consume);
 
         ma_uint64 frames_consumed = frames_read;
         ma_uint64 frames_generated = frames_remaining;
@@ -170,7 +167,7 @@ static bool _module_ctor(SL_Source_t *source, SL_Read_Callback_t read_callback, 
         return false;
     }
 
-    bool initialized = SL_props_init(&module->props, INTERNAL_FORMAT, SL_FRAMES_PER_SECOND, MODULE_OUTPUT_CHANNELS, MIXING_BUFFER_CHANNELS_PER_FRAME);
+    bool initialized = SL_props_init(&module->props, MODULE_OUTPUT_FORMAT, SL_FRAMES_PER_SECOND, MODULE_OUTPUT_CHANNELS, MIXING_BUFFER_CHANNELS_PER_FRAME);
     if (!initialized) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize module properties");
         xm_free_context(module->context);

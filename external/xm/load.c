@@ -246,9 +246,9 @@ NOTICE: Note! After the instrument header the file contains
 */
 #pragma pack(push, 1)
 typedef struct _xm_sample_header_t {
-	uint32_t length;
-	uint32_t loop_start;
-	uint32_t loop_end;
+	uint32_t length; // in bytes, not relative to samples.
+	uint32_t loop_start; // ditto.
+	uint32_t loop_end; // ditto.
 	uint8_t volume;
 	uint8_t finetune;
 	uint8_t flags;
@@ -376,7 +376,7 @@ size_t xm_get_memory_needed_for_context(xm_read_callback_t read, xm_seek_callbac
 	return memory_needed;
 }
 
-#define PATTERN_BYTES_PER_ROW		5
+#define XM_PATTERN_BYTES_PER_ROW	5
 
 #define XM_PATTERN_FLAG_COMPRESSED	0x80
 #define XM_PATTERN_FLAG_NOTE		0x01
@@ -386,7 +386,7 @@ size_t xm_get_memory_needed_for_context(xm_read_callback_t read, xm_seek_callbac
 #define XM_PATTERN_FLAG_PARAMETER	0x10
 
 static void _read_pattern_data(xm_read_callback_t read, void *user_data, xm_pattern_t *pattern, size_t pattern_data_size) {
-	uint8_t buffer[PATTERN_BYTES_PER_ROW * MAX_NUM_ROWS]; // Worst case, with unpacked data.
+	uint8_t buffer[XM_PATTERN_BYTES_PER_ROW * MAX_NUM_ROWS]; // Worst case, with unpacked data.
 	read(user_data, buffer, pattern_data_size);
 
 	uint8_t *cursor = buffer;
@@ -396,35 +396,11 @@ static void _read_pattern_data(xm_read_callback_t read, void *user_data, xm_patt
 		uint8_t note = *(cursor++);
 
 		if(note & XM_PATTERN_FLAG_COMPRESSED) {
-			if(note & XM_PATTERN_FLAG_NOTE) {
-				slot->note = *(cursor++);
-			} else {
-				slot->note = 0;
-			}
-
-			if(note & XM_PATTERN_FLAG_INSTRUMENT) {
-				slot->instrument = *(cursor++);
-			} else {
-				slot->instrument = 0;
-			}
-
-			if(note & XM_PATTERN_FLAG_VOLUME) {
-				slot->volume_column = *(cursor++);
-			} else {
-				slot->volume_column = 0;
-			}
-
-			if(note & XM_PATTERN_FLAG_EFFECT) {
-				slot->effect_type = *(cursor++);
-			} else {
-				slot->effect_type = 0;
-			}
-
-			if(note & XM_PATTERN_FLAG_PARAMETER) {
-				slot->effect_param = *(cursor++);
-			} else {
-				slot->effect_param = 0;
-			}
+			slot->note = note & XM_PATTERN_FLAG_NOTE ? *(cursor++) : 0;
+			slot->instrument = note & XM_PATTERN_FLAG_INSTRUMENT ? *(cursor++) : 0;
+			slot->volume_column = note & XM_PATTERN_FLAG_VOLUME ? *(cursor++) : 0;
+			slot->effect_type = note & XM_PATTERN_FLAG_EFFECT ? *(cursor++) : 0;
+			slot->effect_param = note & XM_PATTERN_FLAG_PARAMETER ? *(cursor++) : 0;
 		} else {
 			slot->note = note;
 			slot->instrument = *(cursor++);
@@ -612,9 +588,11 @@ char* xm_load_module(xm_context_t* ctx, xm_read_callback_t read, xm_seek_callbac
 
 			xm_sample_t* sample = instr->samples + j;
 
-			sample->length = sample_header.length;
-			sample->loop_start = sample_header.loop_start;
-			sample->loop_length = sample_header.loop_end;
+			sample->bytes_per_sample = (sample_header.flags & XM_SAMPLE_FLAG_16BIT) ? 2 : 1;
+
+			sample->length = sample_header.length / sample->bytes_per_sample; // Convert from bytes to samples.
+			sample->loop_start = sample_header.loop_start / sample->bytes_per_sample;
+			sample->loop_length = sample_header.loop_end / sample->bytes_per_sample;
 			sample->loop_end = sample->loop_start + sample->loop_length;
 			sample->volume = (float)sample_header.volume / (float)0x40;
 			sample->finetune = sample_header.finetune;
@@ -627,8 +605,6 @@ char* xm_load_module(xm_context_t* ctx, xm_read_callback_t read, xm_seek_callbac
 				sample->loop_type = XM_NO_LOOP;
 			}
 
-			sample->bytes_per_sample = (sample_header.flags & XM_SAMPLE_FLAG_16BIT) ? 2 : 1;
-
 			sample->panning = (float)sample_header.panning / (float)0xFF;
 			sample->relative_note = sample_header.relative_note;
 #ifdef XM_STRINGS
@@ -636,13 +612,6 @@ char* xm_load_module(xm_context_t* ctx, xm_read_callback_t read, xm_seek_callbac
 #endif
 			sample->data = (void*)mempool;
 			mempool += sample->length << 1;
-
-			if(sample->bytes_per_sample == 2) {
-				sample->loop_start >>= 1;
-				sample->loop_length >>= 1;
-				sample->loop_end >>= 1;
-				sample->length >>= 1;
-			}
 
 			seek(user_data, sample_header_size - sizeof(xm_sample_header_t), SEEK_CUR);
 		}

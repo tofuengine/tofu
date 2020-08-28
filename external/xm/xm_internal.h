@@ -283,13 +283,13 @@ struct xm_context_s {
  *
  * @returns 0 if everything looks OK. Module should be safe to load.
  */
-int xm_check_sanity_preload(xm_read_callback_t, xm_seek_callback_t, void*);
+extern int xm_check_sanity_preload(xm_read_callback_t, xm_seek_callback_t, void*);
 
 /** Check a loaded module for errors/inconsistencies.
  *
  * @returns 0 if everything looks OK.
  */
-int xm_check_sanity_postload(xm_context_t*);
+extern int xm_check_sanity_postload(xm_context_t*);
 
 /** Get the number of bytes needed to store the module data in a
  * dynamically allocated blank context.
@@ -306,10 +306,10 @@ int xm_check_sanity_postload(xm_context_t*);
 
  * @returns 0 if everything looks OK.
  */
-size_t xm_get_memory_needed_for_context(xm_read_callback_t, xm_seek_callback_t, void*);
+extern size_t xm_get_memory_needed_for_context(xm_read_callback_t, xm_seek_callback_t, void*);
 
 /** Populate the context from module data.
  *
  * @returns pointer to the memory pool
  */
-char* xm_load_module(xm_context_t*, xm_read_callback_t, xm_seek_callback_t, void*, char*);
+extern char* xm_load_module(xm_context_t*, xm_read_callback_t, xm_seek_callback_t, void*, char*);
