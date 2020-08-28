@@ -376,6 +376,65 @@ size_t xm_get_memory_needed_for_context(xm_read_callback_t read, xm_seek_callbac
 	return memory_needed;
 }
 
+#define PATTERN_BYTES_PER_ROW		5
+
+#define XM_PATTERN_FLAG_COMPRESSED	0x80
+#define XM_PATTERN_FLAG_NOTE		0x01
+#define XM_PATTERN_FLAG_INSTRUMENT	0x02
+#define XM_PATTERN_FLAG_VOLUME		0x04
+#define XM_PATTERN_FLAG_EFFECT		0x08
+#define XM_PATTERN_FLAG_PARAMETER	0x10
+
+static void _read_pattern_data(xm_read_callback_t read, void *user_data, xm_pattern_t *pattern, size_t pattern_data_size) {
+	uint8_t buffer[PATTERN_BYTES_PER_ROW * MAX_NUM_ROWS]; // Worst case, with unpacked data.
+	read(user_data, buffer, pattern_data_size);
+
+	uint8_t *cursor = buffer;
+	uint8_t *end_of_data = buffer + pattern_data_size;
+
+	for (xm_pattern_slot_t *slot = pattern->slots; cursor < end_of_data; ++slot) {
+		uint8_t note = *(cursor++);
+
+		if(note & XM_PATTERN_FLAG_COMPRESSED) {
+			if(note & XM_PATTERN_FLAG_NOTE) {
+				slot->note = *(cursor++);
+			} else {
+				slot->note = 0;
+			}
+
+			if(note & XM_PATTERN_FLAG_INSTRUMENT) {
+				slot->instrument = *(cursor++);
+			} else {
+				slot->instrument = 0;
+			}
+
+			if(note & XM_PATTERN_FLAG_VOLUME) {
+				slot->volume_column = *(cursor++);
+			} else {
+				slot->volume_column = 0;
+			}
+
+			if(note & XM_PATTERN_FLAG_EFFECT) {
+				slot->effect_type = *(cursor++);
+			} else {
+				slot->effect_type = 0;
+			}
+
+			if(note & XM_PATTERN_FLAG_PARAMETER) {
+				slot->effect_param = *(cursor++);
+			} else {
+				slot->effect_param = 0;
+			}
+		} else {
+			slot->note = note;
+			slot->instrument = *(cursor++);
+			slot->volume_column = *(cursor++);
+			slot->effect_type = *(cursor++);
+			slot->effect_param = *(cursor++);
+		}
+	}
+}
+
 #define DELTA_BUFFER_SIZE	2048
 
 static void _delta_decode(xm_read_callback_t read, void *user_data, int16_t *output, size_t length, size_t bytes_per_value) {
@@ -447,7 +506,6 @@ char* xm_load_module(xm_context_t* ctx, xm_read_callback_t read, xm_seek_callbac
 		xm_pattern_header_t pattern_header;
 		read(user_data, &pattern_header, sizeof(xm_pattern_header_t));
 
-		uint16_t patterndata_size = pattern_header.data_size;
 		xm_pattern_t* pat = mod->patterns + i;
 
 		pat->num_rows = pattern_header.rows;
@@ -458,59 +516,7 @@ char* xm_load_module(xm_context_t* ctx, xm_read_callback_t read, xm_seek_callbac
 		/* Pattern header length */
 		seek(user_data, pattern_header.header_size - sizeof(xm_pattern_header_t), SEEK_CUR);
 
-		/* This isn't your typical for loop */
-		for (uint16_t j = 0; patterndata_size; ++j) {
-			uint8_t note;
-			read(user_data, &note, sizeof(uint8_t));
-
-			xm_pattern_slot_t* slot = pat->slots + j;
-
-			if(note & (1 << 7)) { /* MSB is set, this is a compressed packet */
-				patterndata_size--;
-
-				if(note & (1 << 0)) { /* Note follows */
-					read(user_data, &slot->note, sizeof(uint8_t));
-					patterndata_size--;
-				} else {
-					slot->note = 0;
-				}
-
-				if(note & (1 << 1)) { /* Instrument follows */
-					read(user_data, &slot->instrument, sizeof(uint8_t));
-					patterndata_size--;
-				} else {
-					slot->instrument = 0;
-				}
-
-				if(note & (1 << 2)) { /* Volume column follows */
-					read(user_data, &slot->volume_column, sizeof(uint8_t));
-					patterndata_size--;
-				} else {
-					slot->volume_column = 0;
-				}
-
-				if(note & (1 << 3)) { /* Effect follows */
-					read(user_data, &slot->effect_type, sizeof(uint8_t));
-					patterndata_size--;
-				} else {
-					slot->effect_type = 0;
-				}
-
-				if(note & (1 << 4)) { /* Effect parameter follows */
-					read(user_data, &slot->effect_param, sizeof(uint8_t));
-					patterndata_size--;
-				} else {
-					slot->effect_param = 0;
-				}
-			} else { /* Uncompressed packet */
-				slot->note = note;
-				read(user_data, &slot->instrument, sizeof(uint8_t));
-				read(user_data, &slot->volume_column, sizeof(uint8_t));
-				read(user_data, &slot->effect_type, sizeof(uint8_t));
-				read(user_data, &slot->effect_param, sizeof(uint8_t));
-				patterndata_size -= 5;
-			}
-		}
+		_read_pattern_data(read, user_data, pat, pattern_header.data_size);
 	}
 
 	/* Read instruments */
