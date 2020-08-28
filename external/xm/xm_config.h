@@ -14,7 +14,6 @@
 #undef  XM_DEBUG
 #undef  XM_DEFENSIVE
 #undef  XM_STRINGS
-#undef  XM_RAMPING
 #undef  XM_LINEAR_INTERPOLATION
 #undef  XM_BIG_ENDIAN
 

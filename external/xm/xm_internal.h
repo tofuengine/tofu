@@ -39,10 +39,6 @@ extern int __fail[-1];
 #define NUM_ENVELOPE_POINTS 12
 #define MAX_NUM_ROWS 256
 
-#ifdef XM_RAMPING
-#define XM_SAMPLE_RAMPING_POINTS 0x20
-#endif
-
 /* ----- Data types ----- */
 
 enum xm_waveform_type_e {
@@ -222,16 +218,6 @@ struct xm_channel_context_s {
 	uint64_t latest_trigger;
 	bool muted;
 
-#ifdef XM_RAMPING
-	/* These values are updated at the end of each tick, to save
-	 * a couple of float operations on every generated sample. */
-	float target_panning;
-	float target_volume;
-
-	unsigned long frame_count;
-	float end_of_previous_sample[XM_SAMPLE_RAMPING_POINTS];
-#endif
-
 	float actual_panning;
 	float actual_volume;
 };
@@ -246,14 +232,6 @@ struct xm_context_s {
 	uint16_t bpm;
 	float global_volume;
 	float amplification;
-
-#ifdef XM_RAMPING
-	/* How much is a channel final volume allowed to change per
-	 * sample; this is used to avoid abrubt volume changes which
-	 * manifest as "clicks" in the generated sound. */
-	float volume_ramp;
-	float panning_ramp; /* Same for panning. */
-#endif
 
 	uint8_t current_table_index;
 	uint8_t current_row;

@@ -463,12 +463,6 @@ static void xm_handle_note_and_instrument(xm_context_t* ctx, xm_channel_context_
 			xm_cut_note(ch);
 		} else {
 			if(instr->sample_of_notes[s->note - 1] < instr->num_samples) {
-#ifdef XM_RAMPING
-				for(unsigned int z = 0; z < XM_SAMPLE_RAMPING_POINTS; ++z) {
-					ch->end_of_previous_sample[z] = xm_next_of_sample(ch);
-				}
-				ch->frame_count = 0;
-#endif
 				ch->sample = instr->samples + instr->sample_of_notes[s->note - 1];
 				ch->orig_note = ch->note = s->note + ch->sample->relative_note
 					+ ch->sample->finetune / 128.f - 1.f;
@@ -1172,13 +1166,8 @@ static void xm_tick(xm_context_t* ctx) {
 			volume *= ch->fadeout_volume * ch->volume_envelope_volume;
 		}
 
-#ifdef XM_RAMPING
-		ch->target_panning = panning;
-		ch->target_volume = volume;
-#else
 		ch->actual_panning = panning;
 		ch->actual_volume = volume;
-#endif
 	}
 
 	ctx->current_tick++;
@@ -1196,13 +1185,6 @@ static inline float _sample_at(const int16_t *data, size_t k) {
 }
 
 static float xm_next_of_sample(xm_channel_context_t* ch) {
-#ifdef XM_RAMPING
-	if(ch->frame_count < XM_SAMPLE_RAMPING_POINTS) {
-		return XM_LERP(ch->end_of_previous_sample[ch->frame_count], .0f,
-			(float)ch->frame_count / (float)XM_SAMPLE_RAMPING_POINTS);
-	}
-#endif
-
 	if(ch->sample->length == 0) {
 		return 0.0f;
 	}
@@ -1303,14 +1285,6 @@ static float xm_next_of_sample(xm_channel_context_t* ch) {
 	float endval = u;
 #endif
 
-#ifdef XM_RAMPING
-	if(ch->frame_count < XM_SAMPLE_RAMPING_POINTS) {
-		/* Smoothly transition between old and new sample. */
-		return XM_LERP(ch->end_of_previous_sample[ch->frame_count], endval,
-			(float)ch->frame_count / (float)XM_SAMPLE_RAMPING_POINTS);
-	}
-#endif
-
 	return endval;
 }
 
@@ -1339,12 +1313,6 @@ static bool xm_sample(xm_context_t* ctx, int16_t* left, int16_t* right) {
 			l += fval * ch->actual_volume * (1.f - ch->actual_panning);
 			r += fval * ch->actual_volume * ch->actual_panning;
 		}
-
-#ifdef XM_RAMPING
-		ch->frame_count++;
-		XM_SLIDE_TOWARDS(ch->actual_volume, ch->target_volume, ctx->volume_ramp);
-		XM_SLIDE_TOWARDS(ch->actual_panning, ch->target_panning, ctx->panning_ramp);
-#endif
 	}
 
 	const float fgvol = ctx->global_volume * ctx->amplification;
