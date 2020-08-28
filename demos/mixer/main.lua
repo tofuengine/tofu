@@ -35,8 +35,8 @@ local Main = Class.define()
 function Main:__ctor()
   Display.palette("pico-8")
 
-  warn("@on")
-  warn("Hello,", "Again")
+--  warn("@on")
+--  warn("Hello,", "Again")
 
   self.font = Font.default(0, 15)
 
@@ -46,6 +46,8 @@ function Main:__ctor()
       Source.new("assets/turrican_iii.xm", Source.MODULE),
     }
   --self.sources[1]:looping(false)
+  self.sources[3]:play()
+
 
   self.current = 1
 end
