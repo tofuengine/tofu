@@ -34,6 +34,11 @@ static const float multi_retrig_multiply[] = {
 	1.f,   1.f,  1.5f,       2.f   /* C, D, E, F */
 };
 
+static inline float _clampf(float x, float lower, float upper) // FIXME: move to a separate lib file and use for SL lib mixing as well!
+{
+    return x < lower ? lower : (x > upper ? upper : x);
+}
+
 #define XM_CLAMP_UP1F(vol, limit) do {			\
 		if((vol) > (limit)) (vol) = (limit);	\
 	} while(0)
@@ -1259,22 +1264,17 @@ static bool xm_sample(xm_context_t* ctx, int16_t* left, int16_t* right) {
 			continue;
 		}
 
-		l += fval * channel->actual_volume * (1.0f - channel->actual_panning);
-		r += fval * channel->actual_volume * channel->actual_panning;
+		const float fvol = channel->actual_volume;
+		const float fpan = channel->actual_panning;
+
+		l += fval * fvol * (1.0f - fpan);
+		r += fval * fvol * fpan;
 	}
 
-	const float fgvol = ctx->global_volume * ctx->amplification;
-	l *= fgvol;
-	r *= fgvol;
+	const float fgvol = ctx->global_volume;
 
-#ifdef XM_DEBUG
-	if (l < -32768.0f || l > -32767.0f || r < -32768.0f || r > -32767.0f) {
-		XM_DEBUG_OUT("clipping frame: %f %f, this is a bad module or a libxm bug", l, r);
-	}
-#endif
-
-	*left = (int16_t)l;
-	*right = (int16_t)r;
+	*left = (int16_t)_clampf(l * fgvol, -32768.0f, 32767.0f);
+	*right = (int16_t)_clampf(r * fgvol, -32768.0f, 32767.0f);
 
 	return true;
 }
