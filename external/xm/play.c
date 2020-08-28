@@ -1231,6 +1231,10 @@ static void xm_tick(xm_context_t* ctx) {
 	ctx->remaining_samples_in_tick += (float)ctx->rate / ((float)ctx->bpm * 0.4f);
 }
 
+static inline float _sample_at(const int16_t *data, size_t k) {
+	return data[k] * (1.0f / 32768.0f);
+}
+
 static float xm_next_of_sample(xm_channel_context_t* ch) {
 	if(ch->instrument == NULL || ch->sample == NULL || ch->sample_position < 0) {
 #ifdef XM_RAMPING
@@ -1263,13 +1267,13 @@ static float xm_next_of_sample(xm_channel_context_t* ch) {
 	b = a + 1;
 	t = ch->sample_position - a; /* Cheaper than fmodf(., 1.f) */
 #endif
-	u = ch->sample->at(ch->sample->data, a);
+	u = _sample_at(ch->sample->data, a);
 
 	switch(ch->sample->loop_type) {
 
 	case XM_NO_LOOP:
 #ifdef XM_LINEAR_INTERPOLATION
-		v = (b < ch->sample->length) ? ch->sample->at(ch->sample->data, b) : .0f;
+		v = (b < ch->sample->length) ? _sample_at(ch->sample->data, b) : .0f;
 #endif
 		ch->sample_position += ch->step;
 		if(ch->sample_position >= ch->sample->length) {
@@ -1279,7 +1283,7 @@ static float xm_next_of_sample(xm_channel_context_t* ch) {
 
 	case XM_FORWARD_LOOP:
 #ifdef XM_LINEAR_INTERPOLATION
-		v = ch->sample->at(
+		v = _sample_at(
 			ch->sample->data,
 			(b == ch->sample->loop_end) ? ch->sample->loop_start : b
 			);
@@ -1300,7 +1304,7 @@ static float xm_next_of_sample(xm_channel_context_t* ch) {
 		 * (ie switches direction more than once per sample */
 		if(ch->ping) {
 #ifdef XM_LINEAR_INTERPOLATION
-			v = ch->sample->at(ch->sample->data, (b >= ch->sample->loop_end) ? a : b);
+			v = _sample_at(ch->sample->data, (b >= ch->sample->loop_end) ? a : b);
 #endif
 			if(ch->sample_position >= ch->sample->loop_end) {
 				ch->ping = false;
@@ -1314,7 +1318,7 @@ static float xm_next_of_sample(xm_channel_context_t* ch) {
 		} else {
 #ifdef XM_LINEAR_INTERPOLATION
 			v = u;
-			u = ch->sample->at(
+			u = _sample_at(
 				ch->sample->data,
 				(b == 1 || b - 2 <= ch->sample->loop_start) ? a : (b - 2)
 				);
