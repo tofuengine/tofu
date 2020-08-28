@@ -308,8 +308,7 @@ static void xm_pitch_slide(xm_context_t* ctx, xm_channel_context_t* ch, float pe
 		period_offset *= 4.f;
 	}
 
-	ch->period += period_offset;
-	XM_CLAMP_DOWN(ch->period);
+	ch->period = XM_CLAMP_DOWN(ch->period + period_offset);
 	/* XXX: upper bound of period ? */
 
 	xm_update_frequency(ctx, ch);
@@ -1118,13 +1117,11 @@ static void xm_tick(xm_context_t* ctx) {
 			if(ch->global_volume_slide_param & 0xF0) {
 				/* Global slide up */
 				float f = (float)(ch->global_volume_slide_param >> 4) / (float)0x40;
-				ctx->global_volume += f;
-				XM_CLAMP_UP(ctx->global_volume);
+				ctx->global_volume = XM_CLAMP_UP(ctx->global_volume + f);
 			} else {
 				/* Global slide down */
 				float f = (float)(ch->global_volume_slide_param & 0x0F) / (float)0x40;
-				ctx->global_volume -= f;
-				XM_CLAMP_DOWN(ctx->global_volume);
+				ctx->global_volume = XM_CLAMP_DOWN(ctx->global_volume - f);
 			}
 			break;
 
