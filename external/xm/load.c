@@ -20,7 +20,7 @@ int xm_check_sanity_preload(xm_read_callback_t read, xm_seek_callback_t seek, vo
 	xm_info_t module_info;
 	size_t bytes_read = read(user_data, &module_info, sizeof(xm_info_t));
 
-	if (bytes_read < 60) {
+	if (bytes_read < sizeof(xm_info_t)) {
 		return 4;
 	}
 
