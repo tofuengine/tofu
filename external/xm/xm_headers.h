@@ -21,6 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+/*
+ * Based upon `libxm` by Romain "Artefact2" Dalmaso <artefact2@gmail.com>
+ * See: https://github.com/Artefact2/libxm
+ */
 
 #ifndef __XM_HEADERS_H__
 #define __XM_HEADERS_H__

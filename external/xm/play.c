@@ -49,17 +49,6 @@ static inline float _clampf(float x, float lower, float upper)
     return x < lower ? lower : (x > upper ? upper : x);
 }
 
-static inline float _slidef(float val, float goal, float step)
-{
-	if (val > goal) {
-		return _clampdownf(val - step, goal);
-	} else if (val < goal) {
-		return _clampupf(val + step, goal);
-	} else {
-		return val;
-	}
-}
-
 static inline float _lerpf(float v0, float v1, float t)
 {
     // More numerical stable than the following one.
@@ -78,8 +67,6 @@ static inline float _invlerpf(float v0, float v1, float v)
 #define XM_CLAMP_DOWN(val) _clampdownf((val), 0.0f)
 
 #define XM_CLAMP(val) _clampf((val), 0.0f, 1.0f)
-
-#define XM_SLIDE_TOWARDS(val, goal, step) _slidef((val), (goal), (step))
 
 #define XM_LERP(u, v, t) _lerpf((u), (v), (t))
 #define XM_INVERSE_LERP(u, v, lerp) _invlerpf((u), (v), (lerp))
@@ -291,14 +278,21 @@ static void xm_arpeggio(xm_context_t* ctx, xm_channel_context_t* ch, uint8_t par
 static void xm_tone_portamento(xm_context_t* ctx, xm_channel_context_t* ch) {
 	/* 3xx called without a note, wait until we get an actual
 	 * target note. */
-	if(ch->tone_portamento_target_period == 0.f) return;
-
-	if(ch->period != ch->tone_portamento_target_period) {
-		ch->period = XM_SLIDE_TOWARDS(ch->period,
-			ch->tone_portamento_target_period,
-			(ctx->module.frequency_type == XM_LINEAR_FREQUENCIES ? 4.f : 1.f) * ch->tone_portamento_param);
-		xm_update_frequency(ctx, ch);
+	if (ch->tone_portamento_target_period == 0.f) {
+		return;
 	}
+
+	if (ch->period == ch->tone_portamento_target_period) { // Target period reached, bail out.
+		return;
+	}
+
+	float step = (ctx->module.frequency_type == XM_LINEAR_FREQUENCIES ? 4.f : 1.f) * ch->tone_portamento_param; // FIXME: pre-calculate a frequency type multiplier?
+	if (ch->period > ch->tone_portamento_target_period) { // Slide toward target.
+		ch->period = _clampdownf(ch->period - step, ch->tone_portamento_target_period);
+	} else {
+		ch->period = _clampupf(ch->period + step, ch->tone_portamento_target_period);
+	}
+	xm_update_frequency(ctx, ch);
 }
 
 static void xm_pitch_slide(xm_context_t* ctx, xm_channel_context_t* ch, float period_offset) {
