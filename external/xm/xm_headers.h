@@ -264,10 +264,10 @@ typedef struct _xm_sample_header_t {
 	uint32_t loop_start; // ditto.
 	uint32_t loop_end; // ditto.
 	uint8_t volume;
-	uint8_t finetune;
+	int8_t finetune;
 	uint8_t flags;
 	uint8_t panning;
-	uint8_t relative_note;
+	int8_t relative_note;
 	uint8_t __reserved;
 	char name[XM_SAMPLE_NAME_LENGTH];
 } xm_sample_header_t;
