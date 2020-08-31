@@ -44,7 +44,7 @@ function Main:__ctor()
       Source.new("assets/1ch-22050-16.flac", Source.SAMPLE),
       Source.new("assets/2ch-48000-16.flac", Source.MUSIC),
       Source.new("assets/turrican_iii.xm", Source.MODULE),
---      Source.new("assets/tests/tone-portamento.xm", Source.MODULE),
+--      Source.new("assets/tests/tremolo.xm", Source.MODULE),
     }
   --self.sources[1]:looping(false)
   self.sources[3]:play()

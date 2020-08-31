@@ -170,7 +170,7 @@ static inline Source_States_t _consume(Music_t *music, size_t frames_requested, 
     return SOURCE_STATE_PLAYING;
 }
 
-SL_Source_t *SL_music_create(SL_Read_Callback_t read_callback, SL_Seek_Callback_t seek_callback, void *user_data)
+SL_Source_t *SL_music_create(SL_Read_Callback_t read_callback, SL_Seek_Callback_t seek_callback, void *user_data, size_t size)
 {
     Music_t *music = malloc(sizeof(Music_t));
     if (!music) {

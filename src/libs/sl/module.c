@@ -31,13 +31,16 @@
 #include <config.h>
 #include <libs/log.h>
 #include <libs/stb.h>
-#include <xm/xm.h>
+#include <xmp-lite/xmp.h>
 
 #include <stdint.h>
 
 // An XM module is generated in stereo mode, which means that the need to handle a stereo source.
 #define MODULE_OUTPUT_FORMAT                ma_format_s16
-#define MODULE_OUTPUT_CHANNELS              2
+#define MODULE_OUTPUT_BYTES_PER_SAMPLE      2
+#define MODULE_OUTPUT_SAMPLES_PER_CHANNEL   1
+#define MODULE_OUTPUT_CHANNELS_PER_FRAME    2
+#define MODULE_OUTPUT_BYTES_PER_FRAME       (MODULE_OUTPUT_CHANNELS_PER_FRAME * MODULE_OUTPUT_SAMPLES_PER_CHANNEL * MODULE_OUTPUT_BYTES_PER_SAMPLE)
 
 #define MIXING_BUFFER_SAMPLES_PER_CHANNEL   1
 #define MIXING_BUFFER_CHANNELS_PER_FRAME    2
@@ -53,12 +56,11 @@ typedef struct _Module_t {
 
     SL_Props_t props;
 
-    SL_Callbacks_t callbacks;
-
-    xm_context_t *context;
+    xmp_context context;
+    struct xmp_frame_info frame_info;
 } Module_t;
 
-static bool _module_ctor(SL_Source_t *source, SL_Read_Callback_t read_callback, SL_Seek_Callback_t seek_callback, void *user_data);
+static bool _module_ctor(SL_Source_t *source, SL_Read_Callback_t read, SL_Seek_Callback_t seek, void *user_data, size_t size);
 static void _module_dtor(SL_Source_t *source);
 static bool _module_reset(SL_Source_t *source);
 static bool _module_update(SL_Source_t *source, float delta_time);
@@ -66,7 +68,7 @@ static bool _module_mix(SL_Source_t *source, void *output, size_t frames_request
 
 static inline bool _rewind(Module_t *module)
 {
-    xm_seek(module->context, 0, 0, 0);
+    xmp_restart_module(module->context);
 
     return true;
 }
@@ -79,7 +81,7 @@ static inline bool _reset(Module_t *module)
 static inline Source_States_t _consume(Module_t *module, size_t frames_requested, void *output, size_t size_in_frames, size_t *frames_processed)
 {
     ma_data_converter *converter = &module->props.converter;
-    xm_context_t *context = module->context;
+    xmp_context context = module->context;
 
     *frames_processed = 0;
 
@@ -92,7 +94,9 @@ static inline Source_States_t _consume(Module_t *module, size_t frames_requested
         ma_uint64 frames_to_convert = ma_data_converter_get_required_input_frame_count(converter, frames_remaining);
 
         ma_uint32 frames_to_consume = (frames_to_convert > MIXING_BUFFER_SIZE_IN_FRAMES) ? MIXING_BUFFER_SIZE_IN_FRAMES : frames_to_convert;
-        size_t frames_read = xm_generate_frames(context, (void *)read_buffer, frames_to_consume);
+
+        int play_result = xmp_play_buffer(context, read_buffer, frames_to_consume * MODULE_OUTPUT_BYTES_PER_FRAME, 1); // Don't loop.
+        size_t frames_read = frames_to_consume;
 
         ma_uint64 frames_consumed = frames_read;
         ma_uint64 frames_generated = frames_remaining;
@@ -102,12 +106,17 @@ static inline Source_States_t _consume(Module_t *module, size_t frames_requested
 
         *frames_processed += frames_generated;
         frames_remaining -= frames_generated;
+
+        if (play_result != 0) { // Exit here, after the (possibly partially filled) buffer has been copied.
+            return SOURCE_STATE_EOD;
+        }
     }
 
     return SOURCE_STATE_PLAYING;
 }
 
-SL_Source_t *SL_module_create(SL_Read_Callback_t read_callback, SL_Seek_Callback_t seek_callback, void *user_data)
+// FIXME: don't pass th size but a "tell" or "size" callback.
+SL_Source_t *SL_module_create(SL_Read_Callback_t read, SL_Seek_Callback_t seek, void *user_data, size_t size)
 {
     Module_t *module = malloc(sizeof(Module_t));
     if (!module) {
@@ -115,7 +124,7 @@ SL_Source_t *SL_module_create(SL_Read_Callback_t read_callback, SL_Seek_Callback
         return NULL;
     }
 
-    bool cted = _module_ctor(module, read_callback, seek_callback, user_data);
+    bool cted = _module_ctor(module, read, seek, user_data, size);
     if (!cted) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize module structure");
         free(module);
@@ -126,23 +135,7 @@ SL_Source_t *SL_module_create(SL_Read_Callback_t read_callback, SL_Seek_Callback
     return module;
 }
 
-static size_t _module_read(void *user_data, void *output, size_t bytes_to_read)
-{
-    Module_t *module = (Module_t *)user_data;
-    const SL_Callbacks_t *callbacks = &module->callbacks;
-
-    return callbacks->read(callbacks->user_data, output, bytes_to_read);
-}
-
-static bool _module_seek(void *user_data, int offset, int whence)
-{
-    Module_t *module = (Module_t *)user_data;
-    const SL_Callbacks_t *callbacks = &module->callbacks;
-
-    return callbacks->seek(callbacks->user_data, offset, whence);
-}
-
-static bool _module_ctor(SL_Source_t *source, SL_Read_Callback_t read_callback, SL_Seek_Callback_t seek_callback, void *user_data)
+static bool _module_ctor(SL_Source_t *source, SL_Read_Callback_t read, SL_Seek_Callback_t seek, void *user_data, size_t size)
 {
     Module_t *module = (Module_t *)source;
 
@@ -153,24 +146,40 @@ static bool _module_ctor(SL_Source_t *source, SL_Read_Callback_t read_callback, 
                     .update = _module_update,
                     .mix = _module_mix
                 },
-            .callbacks = (SL_Callbacks_t){
-                    .read = read_callback,
-                    .seek = seek_callback,
-                    .user_data = user_data
-                },
-            .context = NULL
+            .props = { 0 }
         };
 
-    int created = xm_create_context(&module->context, _module_read, _module_seek, module, SL_FRAMES_PER_SECOND);
-    if (created != 0) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create module context");
+    void *buffer = malloc(size);
+    if (!buffer) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate temporary buffer");
         return false;
     }
 
-    bool initialized = SL_props_init(&module->props, MODULE_OUTPUT_FORMAT, SL_FRAMES_PER_SECOND, MODULE_OUTPUT_CHANNELS, MIXING_BUFFER_CHANNELS_PER_FRAME);
+    size_t bytes_read = read(user_data, buffer, size);
+    if (bytes_read != size) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't load module data");
+        free(buffer);
+        return false;
+    }
+
+    module->context  = xmp_create_context();
+
+    if (xmp_load_module_from_memory(module->context, buffer, size) != 0) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create module context");
+        free(buffer);
+        xmp_free_context(module->context);
+        return false;
+    }
+
+    free(buffer);
+
+    xmp_start_player(module->context, SL_FRAMES_PER_SECOND, 0);
+
+    bool initialized = SL_props_init(&module->props, MODULE_OUTPUT_FORMAT, SL_FRAMES_PER_SECOND, MODULE_OUTPUT_CHANNELS_PER_FRAME, MIXING_BUFFER_CHANNELS_PER_FRAME);
     if (!initialized) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize module properties");
-        xm_free_context(module->context);
+        xmp_release_module(module->context);
+        xmp_free_context(module->context);
         return false;
     }
 
@@ -184,7 +193,9 @@ static void _module_dtor(SL_Source_t *source)
     SL_props_deinit(&module->props);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "module properties deinitialized");
 
-    xm_free_context(module->context);
+    xmp_end_player(module->context);
+    xmp_release_module(module->context);
+    xmp_free_context(module->context);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "module context freed");
 }
 
@@ -221,9 +232,9 @@ static bool _module_mix(SL_Source_t *source, void *output, size_t frames_request
         size_t frames_processed; // FIXME: use this as the return value of the function below.
         Source_States_t state = _consume(module, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES, &frames_processed);
         mix_2on2_additive(cursor, buffer, frames_processed, mix);
-        if (state != SOURCE_STATE_PLAYING) {
-            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "source %p state is inconsistent: %d", source, state);
-            return true;
+        if (state == SOURCE_STATE_EOD) {
+            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "end-of-data reached for source %p", source);
+            return false;
         }
         cursor += frames_processed * SL_BYTES_PER_FRAME;
         frames_remaining -= frames_processed;

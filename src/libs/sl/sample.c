@@ -144,7 +144,7 @@ static inline Source_States_t _consume(Sample_t *sample, size_t frames_requested
     return SOURCE_STATE_PLAYING;
 }
 
-SL_Source_t *SL_sample_create(SL_Read_Callback_t read_callback, SL_Seek_Callback_t seek_callback, void *user_data)
+SL_Source_t *SL_sample_create(SL_Read_Callback_t read_callback, SL_Seek_Callback_t seek_callback, void *user_data, size_t size)
 {
     Sample_t *sample = malloc(sizeof(Sample_t));
     if (!sample) {
