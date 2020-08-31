@@ -19,6 +19,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-compare"
 
 #include <stdlib.h>
 #include <stddef.h>
@@ -134,3 +136,4 @@ int mstat(MFILE *m, struct stat *st)
 
 #endif
 
+#pragma GCC diagnostic pop

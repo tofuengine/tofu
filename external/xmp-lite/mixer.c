@@ -19,6 +19,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+#pragma GCC diagnostic ignored "-Wsign-compare"
 
 #include <stdlib.h>
 #include <string.h>
@@ -838,3 +841,5 @@ void libxmp_mixer_off(struct context_data *ctx)
 	s->buf32 = NULL;
 	s->buffer = NULL;
 }
+
+#pragma GCC diagnostic pop

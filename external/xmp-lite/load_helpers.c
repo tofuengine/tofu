@@ -19,13 +19,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-compare"
 
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
 #include "common.h"
-#include "loaders/loader.h"
+#include "loader.h"
 
 
 #ifndef LIBXMP_CORE_PLAYER
@@ -423,3 +425,4 @@ int libxmp_set_player_mode(struct context_data *ctx)
 	return 0;
 }
 
+#pragma GCC diagnostic pop

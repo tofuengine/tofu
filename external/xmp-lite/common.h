@@ -121,17 +121,20 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 
 #else
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wvariadic-macros"
 #ifdef DEBUG
 #define D_INFO "\x1b[33m"
 #define D_CRIT "\x1b[31m"
 #define D_WARN "\x1b[36m"
 #define D_(args...) do { \
-	printf("\x1b[33m%s \x1b[37m[%s:%d] " D_INFO, __FUNCTION__, \
+	printf("\x1b[37m[%s:%d] " D_INFO, \
 		__FILE__, __LINE__); printf (args); printf ("\x1b[0m\n"); \
 	} while (0)
 #else
 #define D_(args...) do {} while (0)
 #endif
+#pragma GCC diagnostic pop
 
 #endif	/* !_MSC_VER */
 

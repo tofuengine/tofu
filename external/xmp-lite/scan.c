@@ -36,6 +36,9 @@
  * scan.c was hanging when it jumps to an invalid restart value.
  * (Fixed by hipolito)
  */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-compare"
+#pragma GCC diagnostic ignored "-Wshadow"
 
 
 #include <stdlib.h>
@@ -547,3 +550,5 @@ int libxmp_scan_sequences(struct context_data *ctx)
 
 	return 0;
 }
+
+#pragma GCC diagnostic pop

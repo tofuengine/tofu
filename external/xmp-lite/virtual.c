@@ -19,6 +19,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-compare"
 
 #include <stdlib.h>
 #include <string.h>
@@ -606,3 +608,5 @@ int libxmp_virt_cstat(struct context_data *ctx, int chn)
 
 	return p->virt.voice_array[voc].act;
 }
+
+#pragma GCC diagnostic pop

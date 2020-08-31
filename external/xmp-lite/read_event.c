@@ -19,6 +19,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-compare"
+#pragma GCC diagnostic ignored "-Wshadow"
 
 #include <string.h>
 #include <stdlib.h>
@@ -1611,3 +1614,5 @@ int libxmp_read_event(struct context_data *ctx, struct xmp_event *e, int chn)
 		return read_event_mod(ctx, e, chn);
 	}
 }
+
+#pragma GCC diagnostic pop

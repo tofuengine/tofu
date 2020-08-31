@@ -1,5 +1,7 @@
 /* _[v]snprintf() from msvcrt.dll might not nul terminate */
 /* OpenWatcom-provided versions seem to behave the same... */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
 
 #if defined(_WIN32) || defined(__WATCOMC__)
 
@@ -32,3 +34,5 @@ int libxmp_snprintf (char *str, size_t sz, const char *fmt, ...)
 }
 
 #endif
+
+#pragma GCC diagnostic pop

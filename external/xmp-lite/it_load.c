@@ -19,6 +19,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
 
 #ifndef LIBXMP_CORE_DISABLE_IT
 
@@ -1397,3 +1399,5 @@ err:
 }
 
 #endif /* LIBXMP_CORE_DISABLE_IT */
+
+#pragma GCC diagnostic pop

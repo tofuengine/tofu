@@ -19,6 +19,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+#pragma GCC diagnostic ignored "-Wsign-compare"
 
 #include "common.h"
 #include "virtual.h"
@@ -437,3 +440,5 @@ MIXER(stereo_16bit_spline_filter)
 }
 
 #endif
+
+#pragma GCC diagnostic pop

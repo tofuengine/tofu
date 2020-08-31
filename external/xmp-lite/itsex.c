@@ -1,3 +1,6 @@
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-compare"
+
 #ifndef LIBXMP_CORE_DISABLE_IT
 
 /* Public domain IT sample decompressor by Olivier Lapicque */
@@ -230,3 +233,5 @@ int itsex_decompress16(HIO_HANDLE *src, int16 *dst, int len, int it215)
 }
 
 #endif /* LIBXMP_CORE_DISABLE_IT */
+
+#pragma GCC diagnostic pop

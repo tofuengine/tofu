@@ -70,6 +70,8 @@
  * in the module and instrument headers. I'm adding a simple workaround
  * to be able to load/play the module as is, see the fix87() macro below.
  */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-compare"
 
 #include "loader.h"
 #include "s3m.h"
@@ -658,3 +660,5 @@ err2:
 err:
 	return -1;
 }
+
+#pragma GCC diagnostic pop

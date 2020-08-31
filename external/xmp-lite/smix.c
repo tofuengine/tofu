@@ -19,6 +19,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-compare"
 
 #include <stdlib.h>
 #include "common.h"
@@ -328,3 +330,5 @@ void xmp_end_smix(xmp_context opaque)
 	free(smix->xxs);
 	free(smix->xxi);
 }
+
+#pragma GCC diagnostic pop
