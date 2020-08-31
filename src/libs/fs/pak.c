@@ -94,6 +94,7 @@ static void _pak_handle_dtor(File_System_Handle_t *handle);
 static size_t _pak_handle_size(File_System_Handle_t *handle);
 static size_t _pak_handle_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
 static void _pak_handle_seek(File_System_Handle_t *handle, long offset, int whence);
+static int _pak_handle_tell(File_System_Handle_t *handle);
 static bool _pak_handle_eof(File_System_Handle_t *handle);
 
 bool pak_is_valid(const char *path)
@@ -308,6 +309,7 @@ static void _pak_handle_ctor(File_System_Handle_t *handle, FILE *stream, long of
             .size = _pak_handle_size,
             .read = _pak_handle_read,
             .seek = _pak_handle_seek,
+            .tell = _pak_handle_tell,
             .eof = _pak_handle_eof
         };
 
@@ -396,6 +398,13 @@ static void _pak_handle_seek(File_System_Handle_t *handle, long offset, int when
 
     fseek(pak_handle->stream, offset_from_beginning + offset, SEEK_SET);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes seeked w/ mode %d for handle %p", offset, whence, handle);
+}
+
+static int _pak_handle_tell(File_System_Handle_t *handle)
+{
+    Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
+
+    return ftell(pak_handle->stream) - pak_handle->beginning_of_stream;
 }
 
 static bool _pak_handle_eof(File_System_Handle_t *handle)

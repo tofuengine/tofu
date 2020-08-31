@@ -28,6 +28,6 @@
 #include "common.h"
 #include "source.h"
 
-extern SL_Source_t *SL_module_create(SL_Read_Callback_t read_callback, SL_Seek_Callback_t seek_callback, void *user_data);
+extern SL_Source_t *SL_module_create(SL_Callbacks_t callbacks);
 
 #endif  /* __SL_MODULE_H__ */
