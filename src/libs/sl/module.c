@@ -95,8 +95,8 @@ static inline Source_States_t _consume(Module_t *module, size_t frames_requested
 
         ma_uint32 frames_to_consume = (frames_to_convert > MIXING_BUFFER_SIZE_IN_FRAMES) ? MIXING_BUFFER_SIZE_IN_FRAMES : frames_to_convert;
 
-        int play_result = xmp_play_buffer(context, read_buffer, frames_to_consume * MODULE_OUTPUT_BYTES_PER_FRAME, 1); // Don't loop.
-        size_t frames_read = frames_to_consume;
+        int play_result = xmp_play_buffer(context, read_buffer, frames_to_consume * MODULE_OUTPUT_BYTES_PER_FRAME, 1); // Don't loop automatically, but tell EOD.
+        size_t frames_read = frames_to_consume; // The requested buffer size (in bytes) is always filled, with trailing zeroes if needed.
 
         ma_uint64 frames_consumed = frames_read;
         ma_uint64 frames_generated = frames_remaining;
@@ -108,6 +108,11 @@ static inline Source_States_t _consume(Module_t *module, size_t frames_requested
         frames_remaining -= frames_generated;
 
         if (play_result != 0) { // Exit here, after the (possibly partially filled) buffer has been copied.
+//            if (play_result == -XMP_END && module->is_looped) {
+            if (play_result == -XMP_END) {
+                xmp_restart_module(context);
+                continue;
+            }
             return SOURCE_STATE_EOD;
         }
     }
