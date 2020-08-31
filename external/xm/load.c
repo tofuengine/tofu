@@ -209,7 +209,7 @@ static void _delta_decode(xm_read_callback_t read, void *user_data, int16_t *out
 #define XM_ENVELOPE_FLAG_LOOP		0x04
 
 char* xm_load_module(xm_context_t* ctx, xm_read_callback_t read, xm_seek_callback_t seek, void* user_data, char* mempool) {
-	xm_module_t* mod = &(ctx->module);
+	xm_module_t* mod = &(ctx->module); // *** MALLOC ***
 
 	/* Read XM header */
 	seek(user_data, 0, SEEK_SET);
@@ -230,10 +230,10 @@ char* xm_load_module(xm_context_t* ctx, xm_read_callback_t read, xm_seek_callbac
 	mod->num_patterns = module_header.patterns;
 	mod->num_instruments = module_header.instruments;
 
-	mod->patterns = (xm_pattern_t*)mempool;
+	mod->patterns = (xm_pattern_t*)mempool; // *** MALLOC ***
 	mempool += mod->num_patterns * sizeof(xm_pattern_t);
 
-	mod->instruments = (xm_instrument_t*)mempool;
+	mod->instruments = (xm_instrument_t*)mempool; // *** MALLOC ***
 	mempool += mod->num_instruments * sizeof(xm_instrument_t);
 
 	mod->frequency_type = (module_header.flags & XM_MODULE_FLAG_LINEAR_FREQUENCY) ? XM_LINEAR_FREQUENCIES : XM_AMIGA_FREQUENCIES;
@@ -254,7 +254,7 @@ char* xm_load_module(xm_context_t* ctx, xm_read_callback_t read, xm_seek_callbac
 
 		pat->num_rows = pattern_header.rows;
 
-		pat->slots = (xm_pattern_slot_t*)mempool;
+		pat->slots = (xm_pattern_slot_t*)mempool; // *** MALLOC ***
 		mempool += mod->num_channels * pat->num_rows * sizeof(xm_pattern_slot_t);
 
 		/* Pattern header length */
@@ -320,7 +320,7 @@ char* xm_load_module(xm_context_t* ctx, xm_read_callback_t read, xm_seek_callbac
 			instrument->vibrato_rate = instrument_header_ex.vibrato_rate;
 			instrument->volume_fadeout = instrument_header_ex.volume_fadeout;
 
-			instrument->samples = (xm_sample_t*)mempool;
+			instrument->samples = (xm_sample_t*)mempool; // *** MALLOC ***
 			mempool += instrument->num_samples * sizeof(xm_sample_t);
 		} else {
 			instrument->samples = NULL;
@@ -362,7 +362,7 @@ char* xm_load_module(xm_context_t* ctx, xm_read_callback_t read, xm_seek_callbac
 			sample->panning = (float)sample_header.panning / (float)0xFF;
 			sample->relative_note = sample_header.relative_note;
 
-			sample->data = (void*)mempool;
+			sample->data = (void*)mempool; // *** MALLOC ***
 			mempool += sample->length << 1;
 
 			seek(user_data, sample_header_size - sizeof(xm_sample_header_t), SEEK_CUR);

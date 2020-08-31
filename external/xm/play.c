@@ -83,6 +83,38 @@ static inline float _invlerpf(float v0, float v1, float v)
 
 /* ----- Function definitions ----- */
 
+#if 1
+static const uint8_t _xm_sine_table[] = {
+	  0,  24,  49,  74,  97, 120, 141, 161, 180, 197, 212, 224, 235, 244, 250, 253,
+	255, 253, 250, 244, 235, 224, 212, 197, 180, 161, 141, 120,  97,  74,  49,  24
+};
+
+static float xm_waveform(xm_waveform_type_t waveform, uint8_t step) {
+	static long random_seed = 0xABCDEF;
+
+	long amplitude = 0;
+	switch (step) {
+		case XM_SINE_WAVEFORM:
+			amplitude = _xm_sine_table[ step & 0x1F ];
+			if( ( step & 0x20 ) > 0 ) amplitude = -amplitude;
+			break;
+		case XM_SQUARE_WAVEFORM:
+			amplitude = 255 - ( ( step & 0x20 ) << 4 );
+			break;
+		case XM_RAMP_DOWN_WAVEFORM:
+			amplitude = 255 - ( ( ( step + 0x20 ) & 0x3F ) << 3 );
+			break;
+		case XM_RAMP_UP_WAVEFORM:
+			amplitude = ( ( ( step + 0x20 ) & 0x3F ) << 3 ) - 255;
+			break;
+		case XM_RANDOM_WAVEFORM:
+			amplitude = ( random_seed >> 20 ) - 255;
+			random_seed = ( random_seed * 65 + 17 ) & 0x1FFFFFFF;
+			break;
+	}
+	return (float)amplitude / 255.0f;
+}
+#else
 static float xm_waveform(xm_waveform_type_t waveform, uint8_t step) {
 	static unsigned int next_rand = 24492;
 	step %= 0x40;
@@ -117,6 +149,7 @@ static float xm_waveform(xm_waveform_type_t waveform, uint8_t step) {
 
 	return .0f;
 }
+#endif
 
 static inline float xm_linear_period(float note) {
 	return 7680.f - note * 64.f;

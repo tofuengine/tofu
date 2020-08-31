@@ -197,7 +197,7 @@ struct xm_channel_context_s {
 	uint8_t extra_fine_portamento_up_param;
 	uint8_t extra_fine_portamento_down_param;
 	uint8_t tone_portamento_param;
-	float tone_portamento_target_period;
+	float tone_portamento_target_period; // FIXME: use long-integer type?
 	uint8_t multi_retrig_param;
 	uint8_t note_delay_param;
 	uint8_t pattern_loop_origin; /* Where to restart a E6y loop */
