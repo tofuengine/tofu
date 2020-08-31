@@ -41,7 +41,7 @@ typedef enum _Source_Types_t {
     Source_Type_t_CountOf
 } Source_Type_t;
 
-typedef SL_Source_t *(*Source_Create_Function_t)(SL_Read_Callback_t read_callback, SL_Seek_Callback_t seek_callback, void *user_data, size_t size);
+typedef SL_Source_t *(*Source_Create_Function_t)(SL_Callbacks_t callbacks);
 
 #define LOG_CONTEXT "source"
 #define META_TABLE  "Tofu_Sound_Source_mt"
@@ -99,6 +99,12 @@ static bool _handle_seek(void *user_data, int offset, int whence)
     return true;
 }
 
+static int _handle_tell(void *user_data)
+{
+    File_System_Handle_t *handle = (File_System_Handle_t *)user_data;
+    return FS_tell(handle);
+}
+
 static const Source_Create_Function_t _create_functions[Source_Type_t_CountOf] = {
     SL_music_create,
     SL_sample_create,
@@ -122,9 +128,13 @@ static int source_new(lua_State *L)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p opened for file `%s`", handle, file);
 
-    size_t size = FS_size(handle);
-
-    SL_Source_t *source = _create_functions[type](_handle_read, _handle_seek, (void *)handle, size);
+    SL_Callbacks_t callbacks = (SL_Callbacks_t){
+            .read = _handle_read,
+            .seek = _handle_seek,
+            .tell = _handle_tell,
+            .user_data = (void *)handle
+        };
+    SL_Source_t *source = _create_functions[type](callbacks);
     if (!source) {
         FS_close(handle);
         return luaL_error(L, "can't create source");
