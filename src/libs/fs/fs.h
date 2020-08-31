@@ -75,7 +75,7 @@ extern void FS_close(File_System_Handle_t *handle); // TODO: convert these to ma
 extern size_t FS_size(File_System_Handle_t *handle);
 extern size_t FS_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
 extern void FS_seek(File_System_Handle_t *handle, long offset, int whence);
-extern int FS_tell(File_System_Handle_t *handle);
+extern long FS_tell(File_System_Handle_t *handle);
 extern bool FS_eof(File_System_Handle_t *handle);
 
 #endif /* __FS_H__ */

@@ -46,8 +46,8 @@
 
 typedef struct _SL_Callbacks_t {
     size_t (*read)(void *user_data, void *buffer, size_t bytes_to_read);
-    bool   (*seek)(void *user_data, int offset, int whence);
-    int    (*tell)(void *user_data);
+    bool   (*seek)(void *user_data, long offset, int whence);
+    long   (*tell)(void *user_data);
     void *user_data;
 } SL_Callbacks_t;
 

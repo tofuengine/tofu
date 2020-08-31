@@ -56,7 +56,7 @@ static void _std_handle_dtor(File_System_Handle_t *handle);
 static size_t _std_handle_size(File_System_Handle_t *handle);
 static size_t _std_handle_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
 static void _std_handle_seek(File_System_Handle_t *handle, long offset, int whence);
-static int _std_handle_tell(File_System_Handle_t *handle);
+static long _std_handle_tell(File_System_Handle_t *handle);
 static bool _std_handle_eof(File_System_Handle_t *handle);
 
 bool std_is_valid(const char *path)
@@ -208,7 +208,7 @@ static void _std_handle_seek(File_System_Handle_t *handle, long offset, int when
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes seeked w/ mode %d for handle %p", offset, whence, handle);
 }
 
-static int _std_handle_tell(File_System_Handle_t *handle)
+static long _std_handle_tell(File_System_Handle_t *handle)
 {
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
