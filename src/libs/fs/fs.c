@@ -186,6 +186,11 @@ void FS_seek(File_System_Handle_t *handle, long offset, int whence)
     ((Handle_t *)handle)->vtable.seek(handle, offset, whence);
 }
 
+int FS_tell(File_System_Handle_t *handle)
+{
+    return ((Handle_t *)handle)->vtable.tell(handle);
+}
+
 bool FS_eof(File_System_Handle_t *handle)
 {
     return ((Handle_t *)handle)->vtable.eof(handle);

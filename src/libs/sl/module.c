@@ -60,7 +60,7 @@ typedef struct _Module_t {
     struct xmp_frame_info frame_info;
 } Module_t;
 
-static bool _module_ctor(SL_Source_t *source, SL_Read_Callback_t read, SL_Seek_Callback_t seek, void *user_data, size_t size);
+static bool _module_ctor(SL_Source_t *source, SL_Callbacks_t callbacks);
 static void _module_dtor(SL_Source_t *source);
 static bool _module_reset(SL_Source_t *source);
 static bool _module_update(SL_Source_t *source, float delta_time);
@@ -115,8 +115,7 @@ static inline Source_States_t _consume(Module_t *module, size_t frames_requested
     return SOURCE_STATE_PLAYING;
 }
 
-// FIXME: don't pass th size but a "tell" or "size" callback.
-SL_Source_t *SL_module_create(SL_Read_Callback_t read, SL_Seek_Callback_t seek, void *user_data, size_t size)
+SL_Source_t *SL_module_create(SL_Callbacks_t callbacks)
 {
     Module_t *module = malloc(sizeof(Module_t));
     if (!module) {
@@ -124,7 +123,7 @@ SL_Source_t *SL_module_create(SL_Read_Callback_t read, SL_Seek_Callback_t seek, 
         return NULL;
     }
 
-    bool cted = _module_ctor(module, read, seek, user_data, size);
+    bool cted = _module_ctor(module, callbacks);
     if (!cted) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize module structure");
         free(module);
@@ -135,7 +134,7 @@ SL_Source_t *SL_module_create(SL_Read_Callback_t read, SL_Seek_Callback_t seek, 
     return module;
 }
 
-static bool _module_ctor(SL_Source_t *source, SL_Read_Callback_t read, SL_Seek_Callback_t seek, void *user_data, size_t size)
+static bool _module_ctor(SL_Source_t *source, SL_Callbacks_t callbacks)
 {
     Module_t *module = (Module_t *)source;
 
@@ -149,22 +148,31 @@ static bool _module_ctor(SL_Source_t *source, SL_Read_Callback_t read, SL_Seek_C
             .props = { 0 }
         };
 
-    void *buffer = malloc(size);
-    if (!buffer) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate temporary buffer");
+    callbacks.seek(callbacks.user_data, 0, SEEK_END);
+    int position = callbacks.tell(callbacks.user_data);
+    if (position <= 0) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get temporary buffer size");
         return false;
     }
 
-    size_t bytes_read = read(user_data, buffer, size);
-    if (bytes_read != size) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't load module data");
+    size_t bytes_to_read = position;
+    void *buffer = malloc(bytes_to_read);
+    if (!buffer) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate temporary buffer (%d byte(s) required)", bytes_to_read);
+        return false;
+    }
+
+    callbacks.seek(callbacks.user_data, 0, SEEK_SET);
+    size_t bytes_read = callbacks.read(callbacks.user_data, buffer, bytes_to_read);
+    if (bytes_read != bytes_to_read) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't load module data (%d out of %d byte(s) read)", bytes_read, bytes_to_read);
         free(buffer);
         return false;
     }
 
     module->context  = xmp_create_context();
 
-    if (xmp_load_module_from_memory(module->context, buffer, size) != 0) {
+    if (xmp_load_module_from_memory(module->context, buffer, bytes_to_read) != 0) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create module context");
         free(buffer);
         xmp_free_context(module->context);

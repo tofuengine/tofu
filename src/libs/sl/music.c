@@ -66,7 +66,7 @@ typedef struct _Music_t { // FIXME: rename to `_Music_Source_t`.
     size_t frames_completed;
 } Music_t;
 
-static bool _music_ctor(SL_Source_t *source, SL_Read_Callback_t read_callback, SL_Seek_Callback_t seek_callback, void *user_data);
+static bool _music_ctor(SL_Source_t *source, SL_Callbacks_t callbacks);
 static void _music_dtor(SL_Source_t *source);
 static bool _music_reset(SL_Source_t *source);
 static bool _music_update(SL_Source_t *source, float delta_time);
@@ -170,7 +170,7 @@ static inline Source_States_t _consume(Music_t *music, size_t frames_requested, 
     return SOURCE_STATE_PLAYING;
 }
 
-SL_Source_t *SL_music_create(SL_Read_Callback_t read_callback, SL_Seek_Callback_t seek_callback, void *user_data, size_t size)
+SL_Source_t *SL_music_create(SL_Callbacks_t callbacks)
 {
     Music_t *music = malloc(sizeof(Music_t));
     if (!music) {
@@ -178,7 +178,7 @@ SL_Source_t *SL_music_create(SL_Read_Callback_t read_callback, SL_Seek_Callback_
         return NULL;
     }
 
-    bool cted = _music_ctor(music, read_callback, seek_callback, user_data);
+    bool cted = _music_ctor(music, callbacks);
     if (!cted) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize music structure");
         free(music);
@@ -212,7 +212,7 @@ static drflac_bool32 _music_seek(void *user_data, int offset, drflac_seek_origin
     return seeked ? DRFLAC_TRUE : DRFLAC_FALSE;
 }
 
-static bool _music_ctor(SL_Source_t *source, SL_Read_Callback_t read_callback, SL_Seek_Callback_t seek_callback, void *user_data)
+static bool _music_ctor(SL_Source_t *source, SL_Callbacks_t callbacks)
 {
     Music_t *music = (Music_t *)source;
 
@@ -223,11 +223,7 @@ static bool _music_ctor(SL_Source_t *source, SL_Read_Callback_t read_callback, S
                     .update = _music_update,
                     .mix = _music_mix
                 },
-            .callbacks = (SL_Callbacks_t){
-                    .read = read_callback,
-                    .seek = seek_callback,
-                    .user_data = user_data
-                },
+            .callbacks = callbacks,
             .frames_completed = 0
         };
 

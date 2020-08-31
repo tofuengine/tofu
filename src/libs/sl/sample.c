@@ -61,7 +61,7 @@ typedef struct _Sample_t {
     size_t frames_completed;
 } Sample_t;
 
-static bool _sample_ctor(SL_Source_t *source, SL_Read_Callback_t read_callback, SL_Seek_Callback_t seek_callback, void *user_data);
+static bool _sample_ctor(SL_Source_t *source, SL_Callbacks_t callbacks);
 static void _sample_dtor(SL_Source_t *source);
 static bool _sample_reset(SL_Source_t *source);
 static bool _sample_update(SL_Source_t *source, float delta_time);
@@ -144,7 +144,7 @@ static inline Source_States_t _consume(Sample_t *sample, size_t frames_requested
     return SOURCE_STATE_PLAYING;
 }
 
-SL_Source_t *SL_sample_create(SL_Read_Callback_t read_callback, SL_Seek_Callback_t seek_callback, void *user_data, size_t size)
+SL_Source_t *SL_sample_create(SL_Callbacks_t callbacks)
 {
     Sample_t *sample = malloc(sizeof(Sample_t));
     if (!sample) {
@@ -152,7 +152,7 @@ SL_Source_t *SL_sample_create(SL_Read_Callback_t read_callback, SL_Seek_Callback
         return NULL;
     }
 
-    bool cted = _sample_ctor(sample, read_callback, seek_callback, user_data);
+    bool cted = _sample_ctor(sample, callbacks);
     if (!cted) {
         free(sample);
         return NULL;
@@ -185,7 +185,7 @@ static drflac_bool32 _sample_seek(void *user_data, int offset, drflac_seek_origi
     return seeked ? DRFLAC_TRUE : DRFLAC_FALSE;
 }
 
-static bool _sample_ctor(SL_Source_t *source, SL_Read_Callback_t read_callback, SL_Seek_Callback_t seek_callback, void *user_data)
+static bool _sample_ctor(SL_Source_t *source, SL_Callbacks_t callbacks)
 {
     Sample_t *sample = (Sample_t *)source;
 
@@ -196,11 +196,7 @@ static bool _sample_ctor(SL_Source_t *source, SL_Read_Callback_t read_callback, 
                     .update = _sample_update,
                     .mix = _sample_mix
                 },
-            .callbacks = (SL_Callbacks_t){
-                    .read = read_callback,
-                    .seek = seek_callback,
-                    .user_data = user_data
-                },
+            .callbacks = callbacks,
             .frames_completed = 0
         };
 
