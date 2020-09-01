@@ -544,6 +544,31 @@ int xmp_load_module(xmp_context opaque, char *path)
 #endif
 }
 
+int xmp_load_module_from_callbacks(xmp_context opaque, size_t (*read)(void *, void *, size_t), int (*seek)(void *, long, int), long (*tell)(void *), int (*eof)(void *), void *userdata)
+{
+	struct context_data *ctx = (struct context_data *)opaque;
+	struct module_data *m = &ctx->m;
+	HIO_HANDLE *h;
+	int ret;
+
+	if ((h = hio_open_callbacks((CBFUNC){ .read = read, .seek = seek, .tell = tell, .eof = eof }, userdata)) == NULL)
+		return -XMP_ERROR_SYSTEM;
+
+	if (ctx->state > XMP_STATE_UNLOADED)
+		xmp_release_module(opaque);
+
+	m->filename = NULL;
+	m->basename = NULL;
+	m->dirname = NULL;
+	m->size = hio_size(h);
+
+	ret = load_module(opaque, h);
+
+	hio_close(h);
+
+	return ret;
+}
+
 int xmp_load_module_from_memory(xmp_context opaque, void *mem, long size)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
