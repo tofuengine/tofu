@@ -105,6 +105,12 @@ static long _handle_tell(void *user_data)
     return FS_tell(handle);
 }
 
+static int _handle_eof(void *user_data)
+{
+    File_System_Handle_t *handle = (File_System_Handle_t *)user_data;
+    return FS_eof(handle) ? 1 : 0;
+}
+
 static const Source_Create_Function_t _create_functions[Source_Type_t_CountOf] = {
     SL_music_create,
     SL_sample_create,
@@ -132,6 +138,7 @@ static int source_new(lua_State *L)
             .read = _handle_read,
             .seek = _handle_seek,
             .tell = _handle_tell,
+            .eof = _handle_eof,
             .user_data = (void *)handle
         };
     SL_Source_t *source = _create_functions[type](callbacks);
