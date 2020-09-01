@@ -20,250 +20,150 @@
  * THE SOFTWARE.
  */
 
+#include <byteswap.h>
 #include <errno.h>
 #include "common.h"
 
-
-#define read_byte(x) do {		\
-	(x) = fgetc(f);			\
-	if ((x) < 0)  goto error;	\
-} while (0)
-
-#define set_error(x) do {		\
-	if (err != NULL) *err = (x);	\
-} while (0)
-
-
 uint8 read8(FILE *f, int *err)
 {
-	int a;
-
-	read_byte(a);
-	set_error(0);
-	return a;
-
-   error:
-	set_error(ferror(f) ? errno : EOF);
-	return 0xff;
+	uint8 b;
+	size_t read = fread(&b, sizeof(uint8), 1, f);
+	if (read != 1) {
+		*err = ferror(f) ? errno : EOF;
+		return 0xFF;
+	}
+	*err = 0;
+	return b;
 }
 
 int8 read8s(FILE *f, int *err)
 {
-	int a;
-
-	read_byte(a);
-	set_error(0);
-	return (int8)a;
-
-   error:
-	set_error(ferror(f) ? errno : EOF);
-	return 0;
+	int8 b;
+	size_t read = fread(&b, sizeof(int8), 1, f);
+	if (read != 1) {
+		*err = ferror(f) ? errno : EOF;
+		return 0;
+	}
+	*err = 0;
+	return b;
 }
 
 uint16 read16l(FILE *f, int *err)
 {
-	int a, b;
-
-	read_byte(a);
-	read_byte(b);
-
-	set_error(0);
-	return ((uint16)b << 8) | a;
-
-    error:
-	set_error(ferror(f) ? errno : EOF);
-	return 0xffff;
+	uint16 a;
+	size_t read = fread(&a, sizeof(uint16), 1, f);
+	if (read != 1) {
+		*err = ferror(f) ? errno : EOF;
+		return 0xffff;
+	}
+	*err = 0;
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    return a;
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+	return bswap_16(a);
+#else
+#    error unsupported endianness
+#endif
 }
 
 uint16 read16b(FILE *f, int *err)
 {
-	int a, b;
-
-	read_byte(a);
-	read_byte(b);
-
-	set_error(0);
-	return (a << 8) | b;
-
-    error:
-	set_error(ferror(f) ? errno : EOF);
-	return 0xffff;
-}
-
-uint32 read24l(FILE *f, int *err)
-{
-	int a, b, c;
-
-	read_byte(a);
-	read_byte(b);
-	read_byte(c);
-	
-	set_error(0);
-	return (c << 16) | (b << 8) | a;
-
-    error:
-	set_error(ferror(f) ? errno : EOF);
-	return 0xffffff;
-}
-
-uint32 read24b(FILE *f, int *err)
-{
-	int a, b, c;
-
-	read_byte(a);
-	read_byte(b);
-	read_byte(c);
-	
-	set_error(0);
-	return (a << 16) | (b << 8) | c;
-
-    error:
-	set_error(ferror(f) ? errno : EOF);
-	return 0xffffff;
+	uint16 a;
+	size_t read = fread(&a, sizeof(uint16), 1, f);
+	if (read != 1) {
+		*err = ferror(f) ? errno : EOF;
+		return 0xffff;
+	}
+	*err = 0;
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+	return bswap_16(a);
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+    return a;
+#else
+#    error unsupported endianness
+#endif
 }
 
 uint32 read32l(FILE *f, int *err)
 {
-	int a, b, c, d;
-
-	read_byte(a);
-	read_byte(b);
-	read_byte(c);
-	read_byte(d);
-
-	set_error(0);
-	return (d << 24) | (c << 16) | (b << 8) | a;
-
-    error:
-	set_error(ferror(f) ? errno : EOF);
-	return 0xffffffff;
+	uint32 a;
+	size_t read = fread(&a, sizeof(uint32), 1, f);
+	if (read != 1) {
+		*err = ferror(f) ? errno : EOF;
+		return 0xffffffff;
+	}
+	*err = 0;
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    return a;
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+	return bswap_32(a);
+#else
+#    error unsupported endianness
+#endif
 }
 
 uint32 read32b(FILE *f, int *err)
 {
-	int a, b, c, d;
-
-	read_byte(a);
-	read_byte(b);
-	read_byte(c);
-	read_byte(d);
-
-	set_error(0);
-	return (a << 24) | (b << 16) | (c << 8) | d;
-
-    error:
-	set_error(ferror(f) ? errno : EOF);
-	return 0xffffffff;
+	uint32 a;
+	size_t read = fread(&a, sizeof(uint32), 1, f);
+	if (read != 1) {
+		*err = ferror(f) ? errno : EOF;
+		return 0xffffffff;
+	}
+	*err = 0;
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+	return bswap_32(a);
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+    return a;
+#else
+#    error unsupported endianness
+#endif
 }
 
 uint16 readmem16l(const uint8 *m)
 {
-	uint32 a, b;
-
-	a = m[0];
-	b = m[1];
-
-	return (b << 8) | a;
+	uint16 a = *((uint16 *)m);
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    return a;
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+	return bswap_16(a);
+#else
+#    error unsupported endianness
+#endif
 }
 
 uint16 readmem16b(const uint8 *m)
 {
-	uint32 a, b;
-
-	a = m[0];
-	b = m[1];
-
-	return (a << 8) | b;
-}
-
-uint32 readmem24l(const uint8 *m)
-{
-	uint32 a, b, c;
-
-	a = m[0];
-	b = m[1];
-	c = m[2];
-
-	return (c << 16) | (b << 8) | a;
-}
-
-uint32 readmem24b(const uint8 *m)
-{
-	uint32 a, b, c;
-
-	a = m[0];
-	b = m[1];
-	c = m[2];
-
-	return (a << 16) | (b << 8) | c;
+	uint16 a = bswap_16(*((uint16 *)m));
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+	return bswap_16(a);
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+    return a;
+#else
+#    error unsupported endianness
+#endif
 }
 
 uint32 readmem32l(const uint8 *m)
 {
-	uint32 a, b, c, d;
-
-	a = m[0];
-	b = m[1];
-	c = m[2];
-	d = m[3];
-
-	return (d << 24) | (c << 16) | (b << 8) | a;
+	uint32 a = *((uint32 *)m);
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    return a;
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+	return bswap_32(a);
+#else
+#    error unsupported endianness
+#endif
 }
 
 uint32 readmem32b(const uint8 *m)
 {
-	uint32 a, b, c, d;
-
-	a = m[0];
-	b = m[1];
-	c = m[2];
-	d = m[3];
-
-	return (a << 24) | (b << 16) | (c << 8) | d;
-}
-
-#ifndef LIBXMP_CORE_PLAYER
-
-void write16l(FILE *f, uint16 w)
-{
-	write8(f, w & 0x00ff);
-	write8(f, (w & 0xff00) >> 8);
-}
-
-void write16b(FILE *f, uint16 w)
-{
-	write8(f, (w & 0xff00) >> 8);
-	write8(f, w & 0x00ff);
-}
-
-void write32l(FILE *f, uint32 w)
-{
-	write8(f, w & 0x000000ff);
-	write8(f, (w & 0x0000ff00) >> 8);
-	write8(f, (w & 0x00ff0000) >> 16);
-	write8(f, (w & 0xff000000) >> 24);
-}
-
-void write32b(FILE *f, uint32 w)
-{
-	write8(f, (w & 0xff000000) >> 24);
-	write8(f, (w & 0x00ff0000) >> 16);
-	write8(f, (w & 0x0000ff00) >> 8);
-	write8(f, w & 0x000000ff);
-}
-
-int move_data(FILE *out, FILE *in, int len)
-{
-	uint8 buf[1024];
-	int l;
-
-	do {
-		l = fread(buf, 1, len > 1024 ? 1024 : len, in);
-		fwrite(buf, 1, l, out);
-		len -= l;
-	} while (l > 0 && len > 0);
-
-	return 0;
-}
-
+	uint32 a = bswap_32(*((uint32 *)m));
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+	return bswap_32(a);
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+    return a;
+#else
+#    error unsupported endianness
 #endif
+}

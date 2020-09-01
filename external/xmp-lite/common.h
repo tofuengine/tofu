@@ -410,30 +410,6 @@ int	libxmp_scan_sequences	(struct context_data *);
 int	libxmp_get_sequence	(struct context_data *, int);
 int	libxmp_set_player_mode	(struct context_data *);
 
-int8	read8s			(FILE *, int *err);
-uint8	read8			(FILE *, int *err);
-uint16	read16l			(FILE *, int *err);
-uint16	read16b			(FILE *, int *err);
-uint32	read24l			(FILE *, int *err);
-uint32	read24b			(FILE *, int *err);
-uint32	read32l			(FILE *, int *err);
-uint32	read32b			(FILE *, int *err);
-static inline void write8	(FILE *f, uint8 b) {
-	fputc(b, f);
-}
-void	write16l		(FILE *, uint16);
-void	write16b		(FILE *, uint16);
-void	write32l		(FILE *, uint32);
-void	write32b		(FILE *, uint32);
-int	move_data		(FILE *, FILE *, int);
-
-uint16	readmem16l		(const uint8 *);
-uint16	readmem16b		(const uint8 *);
-uint32	readmem24l		(const uint8 *);
-uint32	readmem24b		(const uint8 *);
-uint32	readmem32l		(const uint8 *);
-uint32	readmem32b		(const uint8 *);
-
 struct xmp_instrument *libxmp_get_instrument(struct context_data *, int);
 struct xmp_sample *libxmp_get_sample(struct context_data *, int);
 

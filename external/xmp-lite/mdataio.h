@@ -50,32 +50,6 @@ static inline uint16 mread16b(MFILE *m)
 	}
 }
 
-static inline uint32 mread24l(MFILE *m)
-{
-	ptrdiff_t can_read = CAN_READ(m);
-	if (can_read >= 3) {
-		uint32 n = readmem24l(m->start + m->pos);
-		m->pos += 3;
-		return n;
-	} else {
-		m->pos += can_read;
-		return EOF;
-	}
-}
-
-static inline uint32 mread24b(MFILE *m)
-{
-	ptrdiff_t can_read = CAN_READ(m);
-	if (can_read >= 3) {
-		uint32 n = readmem24b(m->start + m->pos);
-		m->pos += 3;
-		return n;
-	} else {
-		m->pos += can_read;
-		return EOF;
-	}
-}
-
 static inline uint32 mread32l(MFILE *m)
 {
 	ptrdiff_t can_read = CAN_READ(m);

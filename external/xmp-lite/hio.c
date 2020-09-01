@@ -26,7 +26,28 @@
 #include <errno.h>
 #include "common.h"
 #include "hio.h"
+
 #include "mdataio.h"
+#include "cbdataio.h"
+
+static long get_size_cb(CBFUNC func, void *ud)
+{
+	long size, pos;
+
+	pos = func.tell(ud);
+	if (pos >= 0) {
+		if (func.seek(ud, 0, SEEK_END) < 0) {
+			return -1;
+		}
+		size = func.tell(ud);
+		if (func.seek(ud, pos, SEEK_SET) < 0) {
+			return -1;
+		}
+		return size;
+	} else {
+		return pos;
+	}
+}
 
 static long get_size(FILE *f)
 {
@@ -62,6 +83,11 @@ int8 hio_read8s(HIO_HANDLE *h)
 	case HIO_HANDLE_TYPE_MEMORY:
 		ret = mread8s(h->handle.mem);
 		break;
+	case HIO_HANDLE_TYPE_CALLBACKS:
+		ret = cbread8s(h->handle.cb, &err);
+		if (err != 0) {
+			h->error = err;
+		}
 	}
 
 	return ret;
@@ -82,6 +108,11 @@ uint8 hio_read8(HIO_HANDLE *h)
 	case HIO_HANDLE_TYPE_MEMORY:
 		ret = mread8(h->handle.mem);
 		break;
+	case HIO_HANDLE_TYPE_CALLBACKS:
+		ret = cbread8(h->handle.cb, &err);
+		if (err != 0) {
+			h->error = err;
+		}
 	}
 
 	return ret;
@@ -102,6 +133,11 @@ uint16 hio_read16l(HIO_HANDLE *h)
 	case HIO_HANDLE_TYPE_MEMORY:
 		ret = mread16l(h->handle.mem);
 		break;
+	case HIO_HANDLE_TYPE_CALLBACKS:
+		ret = cbread16l(h->handle.cb, &err);
+		if (err != 0) {
+			h->error = err;
+		}
 	}
 
 	return ret;
@@ -122,46 +158,11 @@ uint16 hio_read16b(HIO_HANDLE *h)
 	case HIO_HANDLE_TYPE_MEMORY:
 		ret = mread16b(h->handle.mem);
 		break;
-	}
-
-	return ret;
-}
-
-uint32 hio_read24l(HIO_HANDLE *h)
-{
-	int err;
-	uint32 ret = 0;
-
-	switch (HIO_HANDLE_TYPE(h)) {
-	case HIO_HANDLE_TYPE_FILE:
-		ret = read24l(h->handle.file, &err); 
+	case HIO_HANDLE_TYPE_CALLBACKS:
+		ret = cbread16b(h->handle.cb, &err);
 		if (err != 0) {
 			h->error = err;
 		}
-		break;
-	case HIO_HANDLE_TYPE_MEMORY:
-		ret = mread24l(h->handle.mem); 
-		break;
-	}
-
-	return ret;
-}
-
-uint32 hio_read24b(HIO_HANDLE *h)
-{
-	int err;
-	uint32 ret = 0;
-
-	switch (HIO_HANDLE_TYPE(h)) {
-	case HIO_HANDLE_TYPE_FILE:
-		ret = read24b(h->handle.file, &err);
-		if (err != 0) {
-			h->error = err;
-		}
-		break;
-	case HIO_HANDLE_TYPE_MEMORY:
-		ret = mread24b(h->handle.mem);
-		break;
 	}
 
 	return ret;
@@ -182,6 +183,11 @@ uint32 hio_read32l(HIO_HANDLE *h)
 	case HIO_HANDLE_TYPE_MEMORY:
 		ret = mread32l(h->handle.mem);
 		break;
+	case HIO_HANDLE_TYPE_CALLBACKS:
+		ret = cbread32l(h->handle.cb, &err);
+		if (err != 0) {
+			h->error = err;
+		}
 	}
 
 	return ret;
@@ -201,6 +207,12 @@ uint32 hio_read32b(HIO_HANDLE *h)
 		break;
 	case HIO_HANDLE_TYPE_MEMORY:
 		ret = mread32b(h->handle.mem);
+		break;
+	case HIO_HANDLE_TYPE_CALLBACKS:
+		ret = cbread32b(h->handle.cb, &err);
+		if (err != 0) {
+			h->error = err;
+		}
 	}
 
 	return ret;
@@ -227,6 +239,12 @@ size_t hio_read(void *buf, size_t size, size_t num, HIO_HANDLE *h)
 			h->error = errno;
 		}
 		break;
+	case HIO_HANDLE_TYPE_CALLBACKS:
+		ret = cbread(buf, size, num, h->handle.cb);
+		if (ret != num) {
+			h->error = errno;
+		}
+		break;
 	}
 
 	return ret;
@@ -245,6 +263,12 @@ int hio_seek(HIO_HANDLE *h, long offset, int whence)
 		break;
 	case HIO_HANDLE_TYPE_MEMORY:
 		ret = mseek(h->handle.mem, offset, whence);
+		if (ret < 0) {
+			h->error = errno;
+		}
+		break;
+	case HIO_HANDLE_TYPE_CALLBACKS:
+		ret = cbseek(h->handle.cb, offset, whence);
 		if (ret < 0) {
 			h->error = errno;
 		}
@@ -271,6 +295,12 @@ long hio_tell(HIO_HANDLE *h)
 			h->error = errno;
 		}
 		break;
+	case HIO_HANDLE_TYPE_CALLBACKS:
+		ret = cbtell(h->handle.cb);
+		if (ret < 0) {
+			h->error = errno;
+		}
+		break;
 	}
 
 	return ret;
@@ -283,6 +313,8 @@ int hio_eof(HIO_HANDLE *h)
 		return feof(h->handle.file);
 	case HIO_HANDLE_TYPE_MEMORY:
 		return meof(h->handle.mem);
+	case HIO_HANDLE_TYPE_CALLBACKS:
+		return cbeof(h->handle.cb);
 	default:
 		return EOF;
 	}
@@ -355,6 +387,22 @@ HIO_HANDLE *hio_open_file(FILE *f)
 	return h;
 }
 
+HIO_HANDLE *hio_open_callbacks(CBFUNC func, void *ud)
+{
+	HIO_HANDLE *h;
+
+	h = (HIO_HANDLE *)malloc(sizeof (HIO_HANDLE));
+	if (h == NULL)
+		return NULL;
+	
+	h->error = 0;
+	h->type = HIO_HANDLE_TYPE_CALLBACKS;
+	h->handle.cb = cbopen(func, ud);
+	h->size = get_size_cb(func, ud);
+
+	return h;
+}
+
 int hio_close(HIO_HANDLE *h)
 {
 	int ret;
@@ -365,6 +413,9 @@ int hio_close(HIO_HANDLE *h)
 		break;
 	case HIO_HANDLE_TYPE_MEMORY:
 		ret = mclose(h->handle.mem);
+		break;
+	case HIO_HANDLE_TYPE_CALLBACKS:
+		ret = cbclose(h->handle.cb);
 		break;
 	default:
 		ret = -1;
