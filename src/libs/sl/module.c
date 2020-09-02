@@ -139,6 +139,30 @@ SL_Source_t *SL_module_create(SL_Callbacks_t callbacks)
     return module;
 }
 
+static size_t _xmp_read(void *user_data, void *buffer, size_t bytes_to_read)
+{
+    SL_Callbacks_t *callbacks = (SL_Callbacks_t *)user_data;
+    return callbacks->read(callbacks->user_data, buffer, bytes_to_read);
+}
+
+static int _xmp_seek(void *user_data, long offset, int whence)
+{
+    SL_Callbacks_t *callbacks = (SL_Callbacks_t *)user_data;
+    return callbacks->seek(callbacks->user_data, offset, whence);
+}
+
+static long _xmp_tell(void *user_data)
+{
+    SL_Callbacks_t *callbacks = (SL_Callbacks_t *)user_data;
+    return callbacks->tell(callbacks->user_data);
+}
+
+static int _xmp_eof(void *user_data)
+{
+    SL_Callbacks_t *callbacks = (SL_Callbacks_t *)user_data;
+    return callbacks->eof(callbacks->user_data);
+}
+
 static bool _module_ctor(SL_Source_t *source, SL_Callbacks_t callbacks)
 {
     Module_t *module = (Module_t *)source;
@@ -153,38 +177,14 @@ static bool _module_ctor(SL_Source_t *source, SL_Callbacks_t callbacks)
             .props = { 0 }
         };
 
-    callbacks.seek(callbacks.user_data, 0, SEEK_END);
-    int position = callbacks.tell(callbacks.user_data);
-    if (position <= 0) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get temporary buffer size");
-        return false;
-    }
-
-    size_t bytes_to_read = position;
-    void *buffer = malloc(bytes_to_read);
-    if (!buffer) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate temporary buffer (%d byte(s) required)", bytes_to_read);
-        return false;
-    }
-
-    callbacks.seek(callbacks.user_data, 0, SEEK_SET);
-    size_t bytes_read = callbacks.read(callbacks.user_data, buffer, bytes_to_read);
-    if (bytes_read != bytes_to_read) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't load module data (%d out of %d byte(s) read)", bytes_read, bytes_to_read);
-        free(buffer);
-        return false;
-    }
-
     module->context  = xmp_create_context();
 
-    if (xmp_load_module_from_memory(module->context, buffer, bytes_to_read) != 0) {
+    int loaded = xmp_load_module_from_callbacks(module->context, _xmp_read, _xmp_seek, _xmp_tell, _xmp_eof, &callbacks);
+    if (loaded != 0) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create module context");
-        free(buffer);
         xmp_free_context(module->context);
         return false;
     }
-
-    free(buffer);
 
     xmp_start_player(module->context, SL_FRAMES_PER_SECOND, 0);
 
