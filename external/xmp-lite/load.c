@@ -36,7 +36,6 @@
 #include "format.h"
 #include "list.h"
 #include "hio/hio.h"
-#include "tempfile.h"
 
 #ifndef LIBXMP_CORE_PLAYER
 #if !defined(HAVE_POPEN) && defined(WIN32)
@@ -50,6 +49,7 @@
 #endif
 #include "md5.h"
 #include "extras.h"
+#include "tempfile.h"
 #endif
 
 
