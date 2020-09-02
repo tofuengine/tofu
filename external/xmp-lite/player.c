@@ -72,7 +72,7 @@ static const struct retrig_control rval[] = {
 
 static int check_envelope_end(struct xmp_envelope *env, int x)
 {
-	int16 *data = env->data;
+	int16_t *data = env->data;
 	int index;
 
 	if (~env->flg & XMP_ENVELOPE_ON || env->npt <= 0)
@@ -93,7 +93,7 @@ static int check_envelope_end(struct xmp_envelope *env, int x)
 static int get_envelope(struct xmp_envelope *env, int x, int def)
 {
 	int x1, x2, y1, y2;
-	int16 *data = env->data;
+	int16_t *data = env->data;
 	int index;
 
 	if (x < 0 || ~env->flg & XMP_ENVELOPE_ON || env->npt <= 0)
@@ -121,7 +121,7 @@ static int get_envelope(struct xmp_envelope *env, int x, int def)
 
 static int update_envelope_xm(struct xmp_envelope *env, int x, int release)
 {
-	int16 *data = env->data;
+	int16_t *data = env->data;
 	int has_loop, has_sus;
 	int lpe, lps, sus;
 
@@ -174,7 +174,7 @@ static int update_envelope_xm(struct xmp_envelope *env, int x, int release)
 
 static int update_envelope_it(struct xmp_envelope *env, int x, int release, int key_off)
 {
-	int16 *data = env->data;
+	int16_t *data = env->data;
 	int has_loop, has_sus;
 	int lpe, lps, sus, sue;
 
@@ -235,7 +235,7 @@ static int update_envelope(struct xmp_envelope *env, int x, int release, int key
 /* Returns: 0 if do nothing, <0 to reset channel, >0 if has fade */
 static int check_envelope_fade(struct xmp_envelope *env, int x)
 {
-	int16 *data = env->data;
+	int16_t *data = env->data;
 	int index;
 
 	if (~env->flg & XMP_ENVELOPE_ON)
@@ -615,7 +615,7 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 	struct channel_data *xc = &p->xc_data[chn];
 	struct xmp_instrument *instrument;
 	int finalvol;
-	uint16 vol_envelope;
+	uint16_t vol_envelope;
 	int fade = 0;
 
 	instrument = libxmp_get_instrument(ctx, xc->ins);
@@ -720,7 +720,7 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 
 	finalvol = (finalvol * xc->fadeout) >> 6;	/* 16 bit output */
 
-	finalvol = (uint32)(vol_envelope * p->gvol * xc->mastervol /
+	finalvol = (uint32_t)(vol_envelope * p->gvol * xc->mastervol /
 		m->gvolbase * ((int)finalvol * 0x40 / m->volbase)) >> 18;
 
 	/* Apply channel volume */

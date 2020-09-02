@@ -36,7 +36,7 @@
  * other machines, and it is unlikely that you'll ever encounter sound in
  * one of the Arc's own formats (there are several).
  */
-static const int8 vdic_table[128] = {
+static const int8_t vdic_table[128] = {
 	/*   0 */	  0,   0,   0,   0,   0,   0,   0,   0,
 	/*   8 */	  0,   0,   0,   0,   0,   0,   0,   0,
 	/*  16 */	  0,   0,   0,   0,   0,   0,   0,   0,
@@ -57,7 +57,7 @@ static const int8 vdic_table[128] = {
 
 
 /* Convert 7 bit samples to 8 bit */
-static void convert_7bit_to_8bit(uint8 *p, int l)
+static void convert_7bit_to_8bit(uint8_t *p, int l)
 {
 	for (; l--; p++) {
 		*p <<= 1;
@@ -65,10 +65,10 @@ static void convert_7bit_to_8bit(uint8 *p, int l)
 }
 
 /* Convert Archimedes VIDC samples to linear */
-static void convert_vidc_to_linear(uint8 *p, int l)
+static void convert_vidc_to_linear(uint8_t *p, int l)
 {
 	int i;
-	uint8 x;
+	uint8_t x;
 
 	for (i = 0; i < l; i++) {
 		x = p[i];
@@ -78,10 +78,10 @@ static void convert_vidc_to_linear(uint8 *p, int l)
 	}
 }
 
-static void adpcm4_decoder(uint8 *inp, uint8 *outp, char *tab, int len)
+static void adpcm4_decoder(uint8_t *inp, uint8_t *outp, char *tab, int len)
 {
 	char delta = 0;
-	uint8 b0, b1;
+	uint8_t b0, b1;
 	int i;
 
 	len = (len + 1) / 2;
@@ -99,10 +99,10 @@ static void adpcm4_decoder(uint8 *inp, uint8 *outp, char *tab, int len)
 #endif
 
 /* Convert differential to absolute sample data */
-static void convert_delta(uint8 *p, int l, int r)
+static void convert_delta(uint8_t *p, int l, int r)
 {
-	uint16 *w = (uint16 *)p;
-	uint16 abs = 0;
+	uint16_t *w = (uint16_t *)p;
+	uint16_t abs = 0;
 
 	if (r) {
 		for (; l--;) {
@@ -112,15 +112,15 @@ static void convert_delta(uint8 *p, int l, int r)
 	} else {
 		for (; l--;) {
 			abs = *p + abs;
-			*p++ = (uint8) abs;
+			*p++ = (uint8_t) abs;
 		}
 	}
 }
 
 /* Convert signed to unsigned sample data */
-static void convert_signal(uint8 *p, int l, int r)
+static void convert_signal(uint8_t *p, int l, int r)
 {
-	uint16 *w = (uint16 *)p;
+	uint16_t *w = (uint16_t *)p;
 
 	if (r) {
 		for (; l--; w++)
@@ -132,9 +132,9 @@ static void convert_signal(uint8 *p, int l, int r)
 }
 
 /* Convert little-endian 16 bit samples to big-endian */
-static void convert_endian(uint8 *p, int l)
+static void convert_endian(uint8_t *p, int l)
 {
-	uint8 b;
+	uint8_t b;
 	int i;
 
 	for (i = 0; i < l; i++) {
@@ -147,9 +147,9 @@ static void convert_endian(uint8 *p, int l)
 
 #if 0
 /* Downmix stereo samples to mono */
-static void convert_stereo_to_mono(uint8 *p, int l, int r)
+static void convert_stereo_to_mono(uint8_t *p, int l, int r)
 {
-	int16 *b = (int16 *)p;
+	int16_t *b = (int16_t *)p;
 	int i;
 
 	if (r) {
@@ -165,13 +165,13 @@ static void convert_stereo_to_mono(uint8 *p, int l, int r)
 
 static void unroll_loop(struct xmp_sample *xxs)
 {
-	int8 *s8;
-	int16 *s16;
+	int8_t *s8;
+	int16_t *s16;
 	int start, loop_size;
 	int i;
 
-	s16 = (int16 *)xxs->data;
-	s8 = (int8 *)xxs->data;
+	s16 = (int16_t *)xxs->data;
+	s8 = (int8_t *)xxs->data;
 
 	if (xxs->len > xxs->lpe) {
 		start = xxs->lpe;
@@ -274,7 +274,7 @@ int libxmp_load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct x
 		goto err;
 	}
 
-	*(uint32 *)xxs->data = 0;
+	*(uint32_t *)xxs->data = 0;
 	xxs->data += 4;
 
 	if (flags & SAMPLE_FLAG_NOLOAD) {
@@ -291,8 +291,8 @@ int libxmp_load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct x
 		if (hio_read(xxs->data + x2, 1, x2, f) != x2) {
 			goto err2;
 		}
-		adpcm4_decoder((uint8 *)xxs->data + x2,
-			       (uint8 *)xxs->data, table, bytelen);
+		adpcm4_decoder((uint8_t *)xxs->data + x2,
+			       (uint8_t *)xxs->data, table, bytelen);
 	} else
 #endif
 	{

@@ -80,7 +80,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	int i, j;
 	struct xmp_event *event;
 	struct mod_header mh;
-	uint8 mod_event[4];
+	uint8_t mod_event[4];
 	char magic[8];
 	int ptkloop = 0;	/* Protracker loop */
 
@@ -160,7 +160,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		}
 		xxs->flg = (mh.ins[i].loop_size > 1 && xxs->lpe >= 4) ?
 		    XMP_SAMPLE_LOOP : 0;
-		sub->fin = (int8) (mh.ins[i].finetune << 4);
+		sub->fin = (int8_t) (mh.ins[i].finetune << 4);
 		sub->vol = mh.ins[i].volume;
 		sub->pan = 0x80;
 		sub->sid = i;

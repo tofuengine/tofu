@@ -46,7 +46,7 @@
  */
 
 struct module_quirk {
-	uint8 md5[16];
+	uint8_t md5[16];
 	int flags;
 	int mode;
 };
@@ -170,7 +170,7 @@ char *libxmp_adjust_string(char *s)
 	int i;
 
 	for (i = 0; i < strlen(s); i++) {
-		if (!isprint((int)s[i]) || ((uint8) s[i] > 127))
+		if (!isprint((int)s[i]) || ((uint8_t) s[i] > 127))
 			s[i] = ' ';
 	}
 

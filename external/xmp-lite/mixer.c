@@ -50,7 +50,7 @@
 #define LIM16_HI	 32767
 #define LIM16_LO	-32768
 
-#define MIX_FN(x) void libxmp_mix_##x(struct mixer_voice *, int32 *, int, int, int, int, int, int, int)
+#define MIX_FN(x) void libxmp_mix_##x(struct mixer_voice *, int32_t *, int, int, int, int, int, int, int)
 
 MIX_FN(mono_8bit_nearest);
 MIX_FN(mono_8bit_linear);
@@ -90,7 +90,7 @@ MIX_FN(stereo_a500_filter);
  * bit 2: 0=unfiltered, 1=filtered
  */
 
-typedef void (*mixer_set[])(struct mixer_voice *, int32 *, int, int, int, int, int, int, int);
+typedef void (*mixer_set[])(struct mixer_voice *, int32_t *, int, int, int, int, int, int, int);
 
 static mixer_set nearest_mixers = {
 	libxmp_mix_mono_8bit_nearest,
@@ -161,7 +161,7 @@ static mixer_set a500led_mixers = {
 
 
 /* Downmix 32bit samples to 8bit, signed or unsigned, mono or stereo output */
-static void downmix_int_8bit(char *dest, int32 *src, int num, int amp, int offs)
+static void downmix_int_8bit(char *dest, int32_t *src, int num, int amp, int offs)
 {
 	int smp;
 	int shift = DOWNMIX_SHIFT + 8 - amp;
@@ -182,7 +182,7 @@ static void downmix_int_8bit(char *dest, int32 *src, int num, int amp, int offs)
 
 
 /* Downmix 32bit samples to 16bit, signed or unsigned, mono or stereo output */
-static void downmix_int_16bit(int16 *dest, int32 *src, int num, int amp, int offs)
+static void downmix_int_16bit(int16_t *dest, int32_t *src, int num, int amp, int offs)
 {
 	int smp;
 	int shift = DOWNMIX_SHIFT - amp;
@@ -209,7 +209,7 @@ static void anticlick(struct mixer_voice *vi)
 }
 
 /* Ok, it's messy, but it works :-) Hipolito */
-static void do_anticlick(struct context_data *ctx, int voc, int32 *buf, int count)
+static void do_anticlick(struct context_data *ctx, int voc, int32_t *buf, int count)
 {
 	struct player_data *p = &ctx->p;
 	struct mixer_data *s = &ctx->s;
@@ -254,7 +254,7 @@ static void set_sample_end(struct context_data *ctx, int voc, int end)
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
 	struct channel_data *xc;
 
-	if ((uint32)voc >= p->virt.maxvoc)
+	if ((uint32_t)voc >= p->virt.maxvoc)
 		return;
 
 	xc = &p->xc_data[vi->chn];
@@ -343,8 +343,8 @@ void libxmp_mixer_softmixer(struct context_data *ctx)
 	int vol_l, vol_r, voc, usmp;
 	int prev_l, prev_r = 0;
 	int lps, lpe;
-	int32 *buf_pos;
-	void (*mix_fn)(struct mixer_voice *, int32 *, int, int, int, int, int, int, int);
+	int32_t *buf_pos;
+	void (*mix_fn)(struct mixer_voice *, int32_t *, int, int, int, int, int, int, int);
 	mixer_set *mixers;
 
 	switch (s->interp) {
@@ -586,7 +586,7 @@ void libxmp_mixer_softmixer(struct context_data *ctx)
 		downmix_int_8bit(s->buffer, s->buf32, size, s->amplify,
 				s->format & XMP_FORMAT_UNSIGNED ? 0x80 : 0);
 	} else {
-		downmix_int_16bit((int16 *)s->buffer, s->buf32, size,s->amplify,
+		downmix_int_16bit((int16_t *)s->buffer, s->buf32, size,s->amplify,
 				s->format & XMP_FORMAT_UNSIGNED ? 0x8000 : 0);
 	}
 

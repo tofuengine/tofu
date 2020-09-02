@@ -68,8 +68,8 @@ struct retrig_control {
 #define NOTE_KEY_CUT	(1 << 8)	/* note cut with XMP_KEY_CUT event */
 #define NOTE_GLISSANDO	(1 << 9)
 
-#define IS_VALID_INSTRUMENT(x) ((uint32)(x) < mod->ins && mod->xxi[(x)].nsm > 0)
-#define IS_VALID_INSTRUMENT_OR_SFX(x) (((uint32)(x) < mod->ins && mod->xxi[(x)].nsm > 0) || (smix->ins > 0 && (uint32)(x) < mod->ins + smix->ins))
+#define IS_VALID_INSTRUMENT(x) ((uint32_t)(x) < mod->ins && mod->xxi[(x)].nsm > 0)
+#define IS_VALID_INSTRUMENT_OR_SFX(x) (((uint32_t)(x) < mod->ins && mod->xxi[(x)].nsm > 0) || (smix->ins > 0 && (uint32_t)(x) < mod->ins + smix->ins))
 
 struct instrument_vibrato {
 	int phase;
@@ -99,8 +99,8 @@ struct channel_data {
 	int rvv;		/* Random volume variation */
 	int rpv;		/* Random pan variation */
 
-	uint8 split;		/* Split channel */
-	uint8 pair;		/* Split channel pair */
+	uint8_t split;		/* Split channel */
+	uint8_t pair;		/* Split channel pair */
 
 	int v_idx;		/* Volume envelope index */
 	int p_idx;		/* Pan envelope index */
@@ -126,7 +126,7 @@ struct channel_data {
 #endif
 
 	struct {
-        	int8 val[16];	/* 16 for Smaksak MegaArps */
+        	int8_t val[16];	/* 16 for Smaksak MegaArps */
 		int size;
 		int count;
 		int memory;
@@ -150,9 +150,9 @@ struct channel_data {
 	} retrig;
 
 	struct {
-		uint8 up,down;	/* Tremor value */
-		uint8 count;	/* Tremor counter */
-		uint8 memory;	/* Tremor memory */
+		uint8_t up,down;	/* Tremor value */
+		uint8_t count;	/* Tremor counter */
+		uint8_t memory;	/* Tremor memory */
 	} tremor;
 
 	struct {

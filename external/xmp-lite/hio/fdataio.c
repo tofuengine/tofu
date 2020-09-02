@@ -21,14 +21,13 @@
  */
 
 #include "fdataio.h"
-#include <byteswap.h>
 #include <errno.h>
 #include "dataio.h"
 
-uint8 fread8(FILE *f, int *err)
+uint8_t fread8(FILE *f, int *err)
 {
-	uint8 b;
-	size_t read = fread(&b, sizeof(uint8), 1, f);
+	uint8_t b;
+	size_t read = fread(&b, sizeof(uint8_t), 1, f);
 	if (read != 1) {
 		*err = ferror(f) ? errno : EOF;
 		return 0xFF;
@@ -37,10 +36,10 @@ uint8 fread8(FILE *f, int *err)
 	return b;
 }
 
-int8 fread8s(FILE *f, int *err)
+int8_t fread8s(FILE *f, int *err)
 {
-	int8 b;
-	size_t read = fread(&b, sizeof(int8), 1, f);
+	int8_t b;
+	size_t read = fread(&b, sizeof(int8_t), 1, f);
 	if (read != 1) {
 		*err = ferror(f) ? errno : EOF;
 		return 0;
@@ -49,9 +48,9 @@ int8 fread8s(FILE *f, int *err)
 	return b;
 }
 
-uint16 fread16l(FILE *f, int *err)
+uint16_t fread16l(FILE *f, int *err)
 {
-	uint8 b[sizeof(uint16)];
+	uint8_t b[sizeof(uint16_t)];
 	size_t read = fread(&b, sizeof(b), 1, f);
 	if (read != 1) {
 		*err = ferror(f) ? errno : EOF;
@@ -61,9 +60,9 @@ uint16 fread16l(FILE *f, int *err)
 	return readmem16l(b);
 }
 
-uint16 fread16b(FILE *f, int *err)
+uint16_t fread16b(FILE *f, int *err)
 {
-	uint8 b[sizeof(uint16)];
+	uint8_t b[sizeof(uint16_t)];
 	size_t read = fread(&b, sizeof(b), 1, f);
 	if (read != 1) {
 		*err = ferror(f) ? errno : EOF;
@@ -73,9 +72,9 @@ uint16 fread16b(FILE *f, int *err)
 	return readmem16b(b);
 }
 
-uint32 fread32l(FILE *f, int *err)
+uint32_t fread32l(FILE *f, int *err)
 {
-	uint8 b[sizeof(uint32)];
+	uint8_t b[sizeof(uint32_t)];
 	size_t read = fread(&b, sizeof(b), 1, f);
 	if (read != 1) {
 		*err = ferror(f) ? errno : EOF;
@@ -85,9 +84,9 @@ uint32 fread32l(FILE *f, int *err)
 	return readmem32l(b);
 }
 
-uint32 fread32b(FILE *f, int *err)
+uint32_t fread32b(FILE *f, int *err)
 {
-	uint8 b[sizeof(uint32)];
+	uint8_t b[sizeof(uint32_t)];
 	size_t read = fread(&b, sizeof(b), 1, f);
 	if (read != 1) {
 		*err = ferror(f) ? errno : EOF;

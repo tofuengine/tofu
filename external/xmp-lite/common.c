@@ -165,14 +165,14 @@ struct xmp_sample *libxmp_realloc_samples(struct xmp_sample *buf, int *size, int
 	return buf;
 }
 
-char *libxmp_instrument_name(struct xmp_module *mod, int i, uint8 *r, int n)
+char *libxmp_instrument_name(struct xmp_module *mod, int i, uint8_t *r, int n)
 {
 	CLAMP(n, 0, 31);
 
 	return libxmp_copy_adjust(mod->xxi[i].name, r, n);
 }
 
-char *libxmp_copy_adjust(char *s, uint8 *r, int n)
+char *libxmp_copy_adjust(char *s, uint8_t *r, int n)
 {
 	int i;
 
@@ -180,7 +180,7 @@ char *libxmp_copy_adjust(char *s, uint8 *r, int n)
 	strncpy(s, (char *)r, n);
 
 	for (i = 0; s[i] && i < n; i++) {
-		if (!isprint((int)s[i]) || ((uint8)s[i] > 127))
+		if (!isprint((int)s[i]) || ((uint8_t)s[i] > 127))
 			s[i] = '.';
 	}
 
@@ -192,7 +192,7 @@ char *libxmp_copy_adjust(char *s, uint8 *r, int n)
 
 void libxmp_read_title(HIO_HANDLE *f, char *t, int s)
 {
-	uint8 buf[XMP_NAME_SIZE];
+	uint8_t buf[XMP_NAME_SIZE];
 
 	if (t == NULL)
 		return;
@@ -209,7 +209,7 @@ void libxmp_read_title(HIO_HANDLE *f, char *t, int s)
 
 #ifndef LIBXMP_CORE_PLAYER
 
-int libxmp_test_name(uint8 *s, int n)
+int libxmp_test_name(uint8_t *s, int n)
 {
 	int i;
 
@@ -247,7 +247,7 @@ int libxmp_test_name(uint8 *s, int n)
  * module players erroneously interpret as "newer-version-trackers commands".
  * Which they aren't.
  */
-void libxmp_decode_noisetracker_event(struct xmp_event *event, uint8 *mod_event)
+void libxmp_decode_noisetracker_event(struct xmp_event *event, uint8_t *mod_event)
 {
 	int fxt;
 
@@ -265,7 +265,7 @@ void libxmp_decode_noisetracker_event(struct xmp_event *event, uint8 *mod_event)
 }
 #endif
 
-void libxmp_decode_protracker_event(struct xmp_event *event, uint8 *mod_event)
+void libxmp_decode_protracker_event(struct xmp_event *event, uint8_t *mod_event)
 {
 	int fxt = LSN(mod_event[2]);
 

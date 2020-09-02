@@ -65,7 +65,7 @@ void libxmp_virt_resetvoice(struct context_data *ctx, int voc, int mute)
 	struct paula_state *paula;
 #endif
 
-	if ((uint32)voc >= p->virt.maxvoc) {
+	if ((uint32_t)voc >= p->virt.maxvoc) {
 		return;
 	}
 
@@ -276,12 +276,12 @@ static int map_virt_channel(struct player_data *p, int chn)
 {
 	int voc;
 
-	if ((uint32)chn >= p->virt.virt_channels)
+	if ((uint32_t)chn >= p->virt.virt_channels)
 		return -1;
 
 	voc = p->virt.virt_channel[chn].map;
 
-	if ((uint32)voc >= p->virt.maxvoc)
+	if ((uint32_t)voc >= p->virt.maxvoc)
 		return -1;
 
 	return voc;
@@ -485,7 +485,7 @@ int libxmp_virt_setpatch(struct context_data *ctx, int chn, int ins, int smp,
 	struct player_data *p = &ctx->p;
 	int voc, vfree;
 
-	if ((uint32)chn >= p->virt.virt_channels) {
+	if ((uint32_t)chn >= p->virt.virt_channels) {
 		return -1;
 	}
 

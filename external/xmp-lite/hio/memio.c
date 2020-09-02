@@ -28,13 +28,8 @@
 #include <memory.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <limits.h>
-#ifndef LIBXMP_CORE_PLAYER
-#include <sys/types.h>
-#include <sys/stat.h>
-#endif
-
-#include "types.h"
 
 static inline ptrdiff_t CAN_READ(MFILE *m)
 {
@@ -48,7 +43,7 @@ static inline ptrdiff_t CAN_READ(MFILE *m)
 int mgetc(MFILE *m)
 {
 	if (CAN_READ(m) >= 1)
-		return *(uint8 *)(m->start + m->pos++);
+		return *(uint8_t *)(m->start + m->pos++);
 	else
 		return EOF;
 }
@@ -127,16 +122,5 @@ int mclose(MFILE *m)
 	free(m);
 	return 0;
 }
-
-#ifndef LIBXMP_CORE_PLAYER
-
-int mstat(MFILE *m, struct stat *st)
-{
-	memset(st, 0, sizeof (struct stat));
-	st->st_size = m->size;
-	return 0;
-}
-
-#endif
 
 #pragma GCC diagnostic pop

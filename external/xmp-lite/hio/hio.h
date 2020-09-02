@@ -1,10 +1,9 @@
 #ifndef XMP_HIO_H
 #define XMP_HIO_H
 
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <stddef.h>
-#include "types.h"
+#include <stdint.h>
+#include <stdio.h>
 #include "dataio.h"
 #include "memio.h"
 #include "cbio.h"
@@ -25,22 +24,22 @@ typedef struct {
 	int error;
 } HIO_HANDLE;
 
-int8	hio_read8s	(HIO_HANDLE *);
-uint8	hio_read8	(HIO_HANDLE *);
-uint16	hio_read16l	(HIO_HANDLE *);
-uint16	hio_read16b	(HIO_HANDLE *);
-uint32	hio_read32l	(HIO_HANDLE *);
-uint32	hio_read32b	(HIO_HANDLE *);
-size_t	hio_read	(void *, size_t, size_t, HIO_HANDLE *);	
-int	hio_seek	(HIO_HANDLE *, long, int);
-long	hio_tell	(HIO_HANDLE *);
-int	hio_eof		(HIO_HANDLE *);
-int	hio_error	(HIO_HANDLE *);
-HIO_HANDLE *hio_open	(const void *, const char *);
-HIO_HANDLE *hio_open_mem  (const void *, long);
-HIO_HANDLE *hio_open_file (FILE *);
-HIO_HANDLE *hio_open_callbacks(CBFUNC, void *);
-int	hio_close	(HIO_HANDLE *);
-long	hio_size	(HIO_HANDLE *);
+extern int8_t	hio_read8s	(HIO_HANDLE *);
+extern uint8_t	hio_read8	(HIO_HANDLE *);
+extern uint16_t	hio_read16l	(HIO_HANDLE *);
+extern uint16_t	hio_read16b	(HIO_HANDLE *);
+extern uint32_t	hio_read32l	(HIO_HANDLE *);
+extern uint32_t	hio_read32b	(HIO_HANDLE *);
+extern size_t	hio_read	(void *, size_t, size_t, HIO_HANDLE *);	
+extern int	hio_seek	(HIO_HANDLE *, long, int);
+extern long	hio_tell	(HIO_HANDLE *);
+extern int	hio_eof		(HIO_HANDLE *);
+extern int	hio_error	(HIO_HANDLE *);
+extern HIO_HANDLE *hio_open	(const void *, const char *);
+extern HIO_HANDLE *hio_open_mem  (const void *, long);
+extern HIO_HANDLE *hio_open_file (FILE *);
+extern HIO_HANDLE *hio_open_callbacks(CBFUNC, void *);
+extern int	hio_close	(HIO_HANDLE *);
+extern long	hio_size	(HIO_HANDLE *);
 
 #endif

@@ -7,6 +7,7 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
 #include "xmp.h"
 
@@ -15,8 +16,6 @@
 #define USE_VERSIONED_SYMBOLS
 #endif
 #endif
-
-#include "hio/types.h"
 
 #ifndef LIBXMP_CORE_PLAYER
 #define LIBXMP_PAULA_SIMULATOR
@@ -239,7 +238,7 @@ struct module_data {
 	char *basename;			/* file basename */
 	char *filename;			/* Module file name */
 	char *comment;			/* Comments, if any */
-	uint8 md5[16];			/* MD5 message digest */
+	uint8_t md5[16];			/* MD5 message digest */
 	int size;			/* File size */
 	double rrate;			/* Replay rate */
 	double time_factor;		/* Time conversion constant */
@@ -363,7 +362,7 @@ struct mixer_data {
 	int interp;		/* interpolation type */
 	int dsp;		/* dsp effect flags */
 	char* buffer;		/* output buffer */
-	int32* buf32;		/* temporary buffer for 32 bit samples */
+	int32_t* buf32;		/* temporary buffer for 32 bit samples */
 	int numvoc;		/* default softmixer voices number */
 	int ticksize;
 	int dtright;		/* anticlick control, right channel */

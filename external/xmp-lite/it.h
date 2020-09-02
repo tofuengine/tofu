@@ -66,116 +66,116 @@
 
 
 struct it_file_header {
-	uint32 magic;		/* 'IMPM' */
-	uint8 name[26];		/* ASCIIZ Song name */
-	uint8 hilite_min;	/* Pattern editor highlight */
-	uint8 hilite_maj;	/* Pattern editor highlight */
-	uint16 ordnum;		/* Number of orders (must be even) */
-	uint16 insnum;		/* Number of instruments */
-	uint16 smpnum;		/* Number of samples */
-	uint16 patnum;		/* Number of patterns */
-	uint16 cwt;		/* Tracker ID and version */
-	uint16 cmwt;		/* Format version */
-	uint16 flags;		/* Flags */
-	uint16 special;		/* More flags */
-	uint8 gv;		/* Global volume */
-	uint8 mv;		/* Master volume */
-	uint8 is;		/* Initial speed */
-	uint8 it;		/* Initial tempo */
-	uint8 sep;		/* Panning separation */
-	uint8 pwd;		/* Pitch wheel depth */
-	uint16 msglen;		/* Message length */
-	uint32 msgofs;		/* Message offset */
-	uint32 rsvd;		/* Reserved */
-	uint8 chpan[64];	/* Channel pan settings */
-	uint8 chvol[64];	/* Channel volume settings */
+	uint32_t magic;		/* 'IMPM' */
+	uint8_t name[26];		/* ASCIIZ Song name */
+	uint8_t hilite_min;	/* Pattern editor highlight */
+	uint8_t hilite_maj;	/* Pattern editor highlight */
+	uint16_t ordnum;		/* Number of orders (must be even) */
+	uint16_t insnum;		/* Number of instruments */
+	uint16_t smpnum;		/* Number of samples */
+	uint16_t patnum;		/* Number of patterns */
+	uint16_t cwt;		/* Tracker ID and version */
+	uint16_t cmwt;		/* Format version */
+	uint16_t flags;		/* Flags */
+	uint16_t special;		/* More flags */
+	uint8_t gv;		/* Global volume */
+	uint8_t mv;		/* Master volume */
+	uint8_t is;		/* Initial speed */
+	uint8_t it;		/* Initial tempo */
+	uint8_t sep;		/* Panning separation */
+	uint8_t pwd;		/* Pitch wheel depth */
+	uint16_t msglen;		/* Message length */
+	uint32_t msgofs;		/* Message offset */
+	uint32_t rsvd;		/* Reserved */
+	uint8_t chpan[64];	/* Channel pan settings */
+	uint8_t chvol[64];	/* Channel volume settings */
 };
 
 struct it_instrument1_header {
-	uint32 magic;		/* 'IMPI' */
-	uint8 dosname[12];	/* DOS filename */
-	uint8 zero;		/* Always zero */
-	uint8 flags;		/* Instrument flags */
-	uint8 vls;		/* Volume loop start */
-	uint8 vle;		/* Volume loop end */
-	uint8 sls;		/* Sustain loop start */
-	uint8 sle;		/* Sustain loop end */
-	uint16 rsvd1;		/* Reserved */
-	uint16 fadeout;		/* Fadeout (release) */
-	uint8 nna;		/* New note action */
-	uint8 dnc;		/* Duplicate note check */
-	uint16 trkvers;		/* Tracker version */
-	uint8 nos;		/* Number of samples */
-	uint8 rsvd2;		/* Reserved */
-	uint8 name[26];		/* ASCIIZ Instrument name */
-	uint8 rsvd3[6];		/* Reserved */
-	uint8 keys[240];
-	uint8 epoint[200];
-	uint8 enode[50];
+	uint32_t magic;		/* 'IMPI' */
+	uint8_t dosname[12];	/* DOS filename */
+	uint8_t zero;		/* Always zero */
+	uint8_t flags;		/* Instrument flags */
+	uint8_t vls;		/* Volume loop start */
+	uint8_t vle;		/* Volume loop end */
+	uint8_t sls;		/* Sustain loop start */
+	uint8_t sle;		/* Sustain loop end */
+	uint16_t rsvd1;		/* Reserved */
+	uint16_t fadeout;		/* Fadeout (release) */
+	uint8_t nna;		/* New note action */
+	uint8_t dnc;		/* Duplicate note check */
+	uint16_t trkvers;		/* Tracker version */
+	uint8_t nos;		/* Number of samples */
+	uint8_t rsvd2;		/* Reserved */
+	uint8_t name[26];		/* ASCIIZ Instrument name */
+	uint8_t rsvd3[6];		/* Reserved */
+	uint8_t keys[240];
+	uint8_t epoint[200];
+	uint8_t enode[50];
 };
 
 struct it_instrument2_header {
-	uint32 magic;		/* 'IMPI' */
-	uint8 dosname[12];	/* DOS filename */
-	uint8 zero;		/* Always zero */
-	uint8 nna;		/* New Note Action */
-	uint8 dct;		/* Duplicate Check Type */
-	uint8 dca;		/* Duplicate Check Action */
-	uint16 fadeout;
-	uint8 pps;		/* Pitch-Pan Separation */
-	uint8 ppc;		/* Pitch-Pan Center */
-	uint8 gbv;		/* Global Volume */
-	uint8 dfp;		/* Default pan */
-	uint8 rv;		/* Random volume variation */
-	uint8 rp;		/* Random pan variation */
-	uint16 trkvers;		/* Not used: tracked version */
-	uint8 nos;		/* Not used: number of samples */
-	uint8 rsvd1;		/* Reserved */
-	uint8 name[26];		/* ASCIIZ Instrument name */
-	uint8 ifc;		/* Initial filter cutoff */
-	uint8 ifr;		/* Initial filter resonance */
-	uint8 mch;		/* MIDI channel */
-	uint8 mpr;		/* MIDI program */
-	uint16 mbnk;		/* MIDI bank */
-	uint8 keys[240];
+	uint32_t magic;		/* 'IMPI' */
+	uint8_t dosname[12];	/* DOS filename */
+	uint8_t zero;		/* Always zero */
+	uint8_t nna;		/* New Note Action */
+	uint8_t dct;		/* Duplicate Check Type */
+	uint8_t dca;		/* Duplicate Check Action */
+	uint16_t fadeout;
+	uint8_t pps;		/* Pitch-Pan Separation */
+	uint8_t ppc;		/* Pitch-Pan Center */
+	uint8_t gbv;		/* Global Volume */
+	uint8_t dfp;		/* Default pan */
+	uint8_t rv;		/* Random volume variation */
+	uint8_t rp;		/* Random pan variation */
+	uint16_t trkvers;		/* Not used: tracked version */
+	uint8_t nos;		/* Not used: number of samples */
+	uint8_t rsvd1;		/* Reserved */
+	uint8_t name[26];		/* ASCIIZ Instrument name */
+	uint8_t ifc;		/* Initial filter cutoff */
+	uint8_t ifr;		/* Initial filter resonance */
+	uint8_t mch;		/* MIDI channel */
+	uint8_t mpr;		/* MIDI program */
+	uint16_t mbnk;		/* MIDI bank */
+	uint8_t keys[240];
 };
 
 struct it_envelope_node {
-	int8 y;
-	uint16 x;
+	int8_t y;
+	uint16_t x;
 };
 
 struct it_envelope {
-	uint8 flg;		/* Flags */
-	uint8 num;		/* Number of node points */
-	uint8 lpb;		/* Loop beginning */
-	uint8 lpe;		/* Loop end */
-	uint8 slb;		/* Sustain loop beginning */
-	uint8 sle;		/* Sustain loop end */
+	uint8_t flg;		/* Flags */
+	uint8_t num;		/* Number of node points */
+	uint8_t lpb;		/* Loop beginning */
+	uint8_t lpe;		/* Loop end */
+	uint8_t slb;		/* Sustain loop beginning */
+	uint8_t sle;		/* Sustain loop end */
 	struct it_envelope_node node[25];
-	uint8 unused;
+	uint8_t unused;
 };
 
 struct it_sample_header {
-	uint32 magic;		/* 'IMPS' */
-	uint8 dosname[12];	/* DOS filename */
-	uint8 zero;		/* Always zero */
-	uint8 gvl;		/* Global volume for instrument */
-	uint8 flags;		/* Sample flags */
-	uint8 vol;		/* Volume */
-	uint8 name[26];		/* ASCIIZ sample name */
-	uint8 convert;		/* Sample flags */
-	uint8 dfp;		/* Default pan */
-	uint32 length;		/* Length */
-	uint32 loopbeg;		/* Loop begin */
-	uint32 loopend;		/* Loop end */
-	uint32 c5spd;		/* C 5 speed */
-	uint32 sloopbeg;	/* SusLoop begin */
-	uint32 sloopend;	/* SusLoop end */
-	uint32 sample_ptr;	/* Sample pointer */
-	uint8 vis;		/* Vibrato speed */
-	uint8 vid;		/* Vibrato depth */
-	uint8 vir;		/* Vibrato rate */
-	uint8 vit;		/* Vibrato waveform */
+	uint32_t magic;		/* 'IMPS' */
+	uint8_t dosname[12];	/* DOS filename */
+	uint8_t zero;		/* Always zero */
+	uint8_t gvl;		/* Global volume for instrument */
+	uint8_t flags;		/* Sample flags */
+	uint8_t vol;		/* Volume */
+	uint8_t name[26];		/* ASCIIZ sample name */
+	uint8_t convert;		/* Sample flags */
+	uint8_t dfp;		/* Default pan */
+	uint32_t length;		/* Length */
+	uint32_t loopbeg;		/* Loop begin */
+	uint32_t loopend;		/* Loop end */
+	uint32_t c5spd;		/* C 5 speed */
+	uint32_t sloopbeg;	/* SusLoop begin */
+	uint32_t sloopend;	/* SusLoop end */
+	uint32_t sample_ptr;	/* Sample pointer */
+	uint8_t vis;		/* Vibrato speed */
+	uint8_t vid;		/* Vibrato depth */
+	uint8_t vir;		/* Vibrato rate */
+	uint8_t vit;		/* Vibrato waveform */
 };
 

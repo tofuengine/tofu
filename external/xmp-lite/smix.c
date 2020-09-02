@@ -182,7 +182,7 @@ int xmp_smix_load_sample(xmp_context opaque, int num, char *path)
 	struct xmp_instrument *xxi;
 	struct xmp_sample *xxs;
 	HIO_HANDLE *h;
-	uint32 magic;
+	uint32_t magic;
 	int chn, rate, bits, size;
 	int retval = -XMP_ERROR_INTERNAL;
 

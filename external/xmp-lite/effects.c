@@ -83,7 +83,7 @@ static void do_toneporta(struct context_data *ctx,
 
 	sub = &instrument->sub[mapped];
 
-	if (note >= 1 && note <= 0x80 && (uint32)xc->ins < m->mod.ins) {
+	if (note >= 1 && note <= 0x80 && (uint32_t)xc->ins < m->mod.ins) {
 		note--;
 		xc->porta.target = libxmp_note_to_period(ctx, note + sub->xpo +
 			instrument->map[xc->key_porta].xpo, xc->finetune,
@@ -99,7 +99,7 @@ void libxmp_process_fx(struct context_data *ctx, struct channel_data *xc, int ch
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct flow_control *f = &p->flow;
-	uint8 note, fxp, fxt;
+	uint8_t note, fxp, fxt;
 	int h, l;
 
 	/* key_porta is IT only */
@@ -407,7 +407,7 @@ void libxmp_process_fx(struct context_data *ctx, struct channel_data *xc, int ch
 			break;
 		case EX_FINETUNE:	/* Set finetune */
 			if (!HAS_QUIRK(QUIRK_FT2BUGS) || note > 0) {
-				xc->finetune = (int8)(fxp << 4);
+				xc->finetune = (int8_t)(fxp << 4);
 			}
 			break;
 		case EX_PATTERN_LOOP:	/* Loop pattern */
@@ -482,7 +482,7 @@ void libxmp_process_fx(struct context_data *ctx, struct channel_data *xc, int ch
 		break;
 
 	case FX_FINETUNE:
-		xc->finetune = (int16) (fxp - 0x80);
+		xc->finetune = (int16_t) (fxp - 0x80);
 		break;
 
 	case FX_F_VSLIDE_UP:	/* Fine volume slide up */
@@ -898,7 +898,7 @@ void libxmp_process_fx(struct context_data *ctx, struct channel_data *xc, int ch
 		}
 		break;
 
-	case FX_VOLSLIDE_UP:	/* Vol slide with uint8 arg */
+	case FX_VOLSLIDE_UP:	/* Vol slide with uint8_t arg */
 		if (HAS_QUIRK(QUIRK_FINEFX)) {
 			h = MSN(fxp);
 			l = LSN(fxp);
@@ -912,7 +912,7 @@ void libxmp_process_fx(struct context_data *ctx, struct channel_data *xc, int ch
 			xc->vol.slide = fxp;
 		SET(VOL_SLIDE);
 		break;
-	case FX_VOLSLIDE_DN:	/* Vol slide with uint8 arg */
+	case FX_VOLSLIDE_DN:	/* Vol slide with uint8_t arg */
 		if (HAS_QUIRK(QUIRK_FINEFX)) {
 			h = MSN(fxp);
 			l = LSN(fxp);
@@ -1054,7 +1054,7 @@ void libxmp_process_fx(struct context_data *ctx, struct channel_data *xc, int ch
 			RESET_PER(TONEPORTA);
 		break;
 	case FX_669_FINETUNE:	/* 669 finetune */
-		xc->finetune = 80 * (int8)fxp;
+		xc->finetune = 80 * (int8_t)fxp;
 		break;
 	case FX_669_VIBRATO:	/* 669 vibrato */
 		if (LSN(fxp) != 0) {

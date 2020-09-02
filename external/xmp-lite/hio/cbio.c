@@ -21,12 +21,8 @@
  */
 #include <stdlib.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <limits.h>
-#ifndef LIBXMP_CORE_PLAYER
-#include <sys/types.h>
-#include <sys/stat.h>
-#endif
-#include "types.h"
 #include "cbio.h"
 
 CBFILE *cbopen(CBFUNC func, void *ud)
@@ -45,9 +41,9 @@ CBFILE *cbopen(CBFUNC func, void *ud)
 
 int cbgetc(CBFILE *cb)
 {
-	uint8 c;
-	size_t l = cb->func.read(cb->ud, &c, sizeof(uint8));
-	if (l == sizeof(uint8))
+	uint8_t c;
+	size_t l = cb->func.read(cb->ud, &c, sizeof(uint8_t));
+	if (l == sizeof(uint8_t))
 		return c;
 	else
 		return EOF;
@@ -79,14 +75,3 @@ int	cbeof(CBFILE *cb)
 {
 	return cb->func.eof(cb->ud);
 }
-
-#ifndef LIBXMP_CORE_PLAYER
-
-int	cbstat(CBFILE *cb, struct stat *st)
-{
-	memset(st, 0, sizeof (struct stat));
-	st->st_size = cb->func.size(cb->ud);
-	return 0;
-}
-
-#endif

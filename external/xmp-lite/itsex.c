@@ -7,9 +7,9 @@
 
 #include "loader.h"
 
-static inline uint32 read_bits(HIO_HANDLE *ibuf, uint32 *bitbuf, int *bitnum, int n)
+static inline uint32_t read_bits(HIO_HANDLE *ibuf, uint32_t *bitbuf, int *bitnum, int n)
 {
-	uint32 retval = 0;
+	uint32_t retval = 0;
 	int i = n;
 	int bnum = *bitnum, bbuf = *bitbuf;
 
@@ -36,14 +36,14 @@ static inline uint32 read_bits(HIO_HANDLE *ibuf, uint32 *bitbuf, int *bitnum, in
 }
 
 
-int itsex_decompress8(HIO_HANDLE *src, uint8 *dst, int len, int it215)
+int itsex_decompress8(HIO_HANDLE *src, uint8_t *dst, int len, int it215)
 {
-	/* uint32 size = 0; */
-	uint32 block_count = 0;
-	uint32 bitbuf = 0;
+	/* uint32_t size = 0; */
+	uint32_t block_count = 0;
+	uint32_t bitbuf = 0;
 	int bitnum = 0;
-	uint8 left = 0, temp = 0, temp2 = 0;
-	uint32 d, pos;
+	uint8_t left = 0, temp = 0, temp2 = 0;
+	uint32_t d, pos;
 
 	while (len) {
 		if (!block_count) {
@@ -61,13 +61,13 @@ int itsex_decompress8(HIO_HANDLE *src, uint8 *dst, int len, int it215)
 		/* Unpacking */
 		pos = 0;
 		do {
-			uint16 bits = read_bits(src, &bitbuf, &bitnum, left);
+			uint16_t bits = read_bits(src, &bitbuf, &bitnum, left);
 			if (hio_eof(src))
 				return -1;
 
 			if (left < 7) {
-				uint32 i = 1 << (left - 1);
-				uint32 j = bits & 0xffff;
+				uint32_t i = 1 << (left - 1);
+				uint32_t j = bits & 0xffff;
 				if (i != j)
 					goto unpack_byte;
 				bits = (read_bits(src, &bitbuf, &bitnum, 3)
@@ -75,22 +75,22 @@ int itsex_decompress8(HIO_HANDLE *src, uint8 *dst, int len, int it215)
 				if (hio_eof(src))
 					return -1;
 
-				left = ((uint8)bits < left) ?  (uint8)bits :
-						(uint8)((bits + 1) & 0xff);
+				left = ((uint8_t)bits < left) ?  (uint8_t)bits :
+						(uint8_t)((bits + 1) & 0xff);
 				goto next;
 			}
 
 			if (left < 9) {
-				uint16 i = (0xff >> (9 - left)) + 4;
-				uint16 j = i - 8;
+				uint16_t i = (0xff >> (9 - left)) + 4;
+				uint16_t j = i - 8;
 
 				if ((bits <= j) || (bits > i))
 					goto unpack_byte;
 
 				bits -= j;
-				left = ((uint8)(bits & 0xff) < left) ?
-						(uint8)(bits & 0xff) :
-						(uint8)((bits + 1) & 0xff);
+				left = ((uint8_t)(bits & 0xff) < left) ?
+						(uint8_t)(bits & 0xff) :
+						(uint8_t)((bits + 1) & 0xff);
 				goto next;
 			}
 
@@ -98,19 +98,19 @@ int itsex_decompress8(HIO_HANDLE *src, uint8 *dst, int len, int it215)
 				goto skip_byte;
 
 			if (bits >= 256) {
-				left = (uint8) (bits + 1) & 0xff;
+				left = (uint8_t) (bits + 1) & 0xff;
 				goto next;
 			}
 
 		    unpack_byte:
 			if (left < 8) {
-				uint8 shift = 8 - left;
+				uint8_t shift = 8 - left;
 				signed char c = (signed char)(bits << shift);
 				c >>= shift;
-				bits = (uint16) c;
+				bits = (uint16_t) c;
 			}
 			bits += temp;
-			temp = (uint8)bits;
+			temp = (uint8_t)bits;
 			temp2 += temp;
 			dst[pos] = it215 ? temp2 : temp;
 
@@ -131,15 +131,15 @@ int itsex_decompress8(HIO_HANDLE *src, uint8 *dst, int len, int it215)
 	return 0;
 }
 
-int itsex_decompress16(HIO_HANDLE *src, int16 *dst, int len, int it215)
+int itsex_decompress16(HIO_HANDLE *src, int16_t *dst, int len, int it215)
 {
-	/* uint32 size = 0; */
-	uint32 block_count = 0;
-	uint32 bitbuf = 0;
+	/* uint32_t size = 0; */
+	uint32_t block_count = 0;
+	uint32_t bitbuf = 0;
 	int bitnum = 0;
-	uint8 left = 0;
-	int16 temp = 0, temp2 = 0;
-	uint32 d, pos;
+	uint8_t left = 0;
+	int16_t temp = 0, temp2 = 0;
+	uint32_t d, pos;
 
 	while (len) {
 		if (!block_count) {
@@ -157,13 +157,13 @@ int itsex_decompress16(HIO_HANDLE *src, int16 *dst, int len, int it215)
 		/* Unpacking */
 		pos = 0;
 		do {
-			uint32 bits = read_bits(src, &bitbuf, &bitnum, left);
+			uint32_t bits = read_bits(src, &bitbuf, &bitnum, left);
 			if (hio_eof(src))
 				return -1;
 
 			if (left < 7) {
-				uint32 i = 1 << (left - 1);
-				uint32 j = bits;
+				uint32_t i = 1 << (left - 1);
+				uint32_t j = bits;
 
 				if (i != j)
 					goto unpack_byte;
@@ -173,23 +173,23 @@ int itsex_decompress16(HIO_HANDLE *src, int16 *dst, int len, int it215)
 				if (hio_eof(src))
 					return -1;
 
-				left = ((uint8)(bits & 0xff) < left) ?
-						(uint8)(bits & 0xff) :
-						(uint8)((bits + 1) & 0xff);
+				left = ((uint8_t)(bits & 0xff) < left) ?
+						(uint8_t)(bits & 0xff) :
+						(uint8_t)((bits + 1) & 0xff);
 				goto next;
 			}
 
 			if (left < 17) {
-				uint32 i = (0xffff >> (17 - left)) + 8;
-				uint32 j = (i - 16) & 0xffff;
+				uint32_t i = (0xffff >> (17 - left)) + 8;
+				uint32_t j = (i - 16) & 0xffff;
 
 				if ((bits <= j) || (bits > (i & 0xffff)))
 					goto unpack_byte;
 
 				bits -= j;
-				left = ((uint8)(bits & 0xff) < left) ?
-						(uint8)(bits & 0xff) :
-						(uint8)((bits + 1) & 0xff);
+				left = ((uint8_t)(bits & 0xff) < left) ?
+						(uint8_t)(bits & 0xff) :
+						(uint8_t)((bits + 1) & 0xff);
 				goto next;
 			}
 
@@ -197,19 +197,19 @@ int itsex_decompress16(HIO_HANDLE *src, int16 *dst, int len, int it215)
 				goto skip_byte;
 
 			if (bits >= 0x10000) {
-				left = (uint8)(bits + 1) & 0xff;
+				left = (uint8_t)(bits + 1) & 0xff;
 				goto next;
 			}
 
 		    unpack_byte:
 			if (left < 16) {
-				uint8 shift = 16 - left;
-				int16 c = (int16)(bits << shift);
+				uint8_t shift = 16 - left;
+				int16_t c = (int16_t)(bits << shift);
 				c >>= shift;
-				bits = (uint32) c;
+				bits = (uint32_t) c;
 			}
 			bits += temp;
-			temp = (int16)bits;
+			temp = (int16_t)bits;
 			temp2 += temp;
 			dst[pos] = (it215) ? temp2 : temp;
 

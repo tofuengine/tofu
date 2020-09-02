@@ -124,7 +124,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
     inside_loop = 0;
 
     while (42) {
-	if ((uint32)++ord >= mod->len) {
+	if ((uint32_t)++ord >= mod->len) {
 	    if (mod->rst > mod->len || mod->xxo[mod->rst] >= mod->pat) {
 		ord = ep;
 	    } else {

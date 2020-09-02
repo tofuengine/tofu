@@ -32,15 +32,15 @@ int	libxmp_alloc_pattern		(struct xmp_module *, int);
 int	libxmp_alloc_track		(struct xmp_module *, int, int);
 int	libxmp_alloc_tracks_in_pattern	(struct xmp_module *, int);
 int	libxmp_alloc_pattern_tracks	(struct xmp_module *, int, int);
-char	*libxmp_instrument_name		(struct xmp_module *, int, uint8 *, int);
+char	*libxmp_instrument_name		(struct xmp_module *, int, uint8_t *, int);
 struct xmp_sample* libxmp_realloc_samples(struct xmp_sample *, int *, int);
 
-char	*libxmp_copy_adjust		(char *, uint8 *, int);
-int	libxmp_test_name		(uint8 *, int);
+char	*libxmp_copy_adjust		(char *, uint8_t *, int);
+int	libxmp_test_name		(uint8_t *, int);
 void	libxmp_read_title		(HIO_HANDLE *, char *, int);
 void	libxmp_set_xxh_defaults		(struct xmp_module *);
-void	libxmp_decode_protracker_event	(struct xmp_event *, uint8 *);
-void	libxmp_decode_noisetracker_event(struct xmp_event *, uint8 *);
+void	libxmp_decode_protracker_event	(struct xmp_event *, uint8_t *);
+void	libxmp_decode_noisetracker_event(struct xmp_event *, uint8_t *);
 void	libxmp_disable_continue_fx	(struct xmp_event *);
 int	libxmp_check_filename_case	(char *, char *, char *, int);
 void	libxmp_get_instrument_path	(struct module_data *, char *, int);
@@ -48,11 +48,11 @@ void	libxmp_set_type			(struct module_data *, const char *, ...);
 int	libxmp_load_sample		(struct module_data *, HIO_HANDLE *, int,
 					 struct xmp_sample *, const void *);
 
-extern uint8		libxmp_ord_xlat[];
+extern uint8_t		libxmp_ord_xlat[];
 extern const int	libxmp_arch_vol_table[];
 
 #define MAGIC4(a,b,c,d) \
-    (((uint32)(a)<<24)|((uint32)(b)<<16)|((uint32)(c)<<8)|(d))
+    (((uint32_t)(a)<<24)|((uint32_t)(b)<<16)|((uint32_t)(c)<<8)|(d))
 
 #define LOAD_INIT()
 

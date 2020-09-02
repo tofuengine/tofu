@@ -24,13 +24,13 @@
 #include <byteswap.h>
 
 #if 0
-static inline uint16 _reverse16(uint16 value)
+static inline uint16_t _reverse16(uint16_t value)
 {
     return (((value & 0xFFFF) << 8) |
             ((value & 0xFF00) >> 8));
 }
 
-static inline uint32 _reverse32(uint32 value) 
+static inline uint32_t _reverse32(uint32_t value) 
 {
     return (((value & 0x000000FF) << 24) |
             ((value & 0x0000FF00) <<  8) |
@@ -39,9 +39,9 @@ static inline uint32 _reverse32(uint32 value)
 }
 #endif
 
-uint16 readmem16l(const uint8 *m)
+uint16_t readmem16l(const uint8_t *m)
 {
-	uint16 a = *((uint16 *)m);
+	uint16_t a = *((uint16_t *)m);
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
     return a;
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
@@ -51,9 +51,9 @@ uint16 readmem16l(const uint8 *m)
 #endif
 }
 
-uint16 readmem16b(const uint8 *m)
+uint16_t readmem16b(const uint8_t *m)
 {
-	uint16 a = bswap_16(*((uint16 *)m));
+	uint16_t a = bswap_16(*((uint16_t *)m));
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 	return bswap_16(a);
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
@@ -63,9 +63,9 @@ uint16 readmem16b(const uint8 *m)
 #endif
 }
 
-uint32 readmem32l(const uint8 *m)
+uint32_t readmem32l(const uint8_t *m)
 {
-	uint32 a = *((uint32 *)m);
+	uint32_t a = *((uint32_t *)m);
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
     return a;
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
@@ -75,9 +75,9 @@ uint32 readmem32l(const uint8 *m)
 #endif
 }
 
-uint32 readmem32b(const uint8 *m)
+uint32_t readmem32b(const uint8_t *m)
 {
-	uint32 a = bswap_32(*((uint32 *)m));
+	uint32_t a = bswap_32(*((uint32_t *)m));
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 	return bswap_32(a);
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__

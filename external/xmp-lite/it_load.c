@@ -76,7 +76,7 @@ static int it_test(HIO_HANDLE * f, char *t, const int start)
 #define L_CHANNELS 64
 
 
-static const uint8 fx[] = {
+static const uint8_t fx[] = {
 	/*   */ FX_NONE,
 	/* A */ FX_S3M_SPEED,
 	/* B */ FX_JUMP,
@@ -111,9 +111,9 @@ int itsex_decompress8 (HIO_HANDLE *, void *, int, int);
 int itsex_decompress16 (HIO_HANDLE *, void *, int, int);
 
 
-static void xlat_fx(int c, struct xmp_event *e, uint8 *last_fxp, int new_fx)
+static void xlat_fx(int c, struct xmp_event *e, uint8_t *last_fxp, int new_fx)
 {
-	uint8 h = MSN(e->fxp), l = LSN(e->fxp);
+	uint8_t h = MSN(e->fxp), l = LSN(e->fxp);
 
 	switch (e->fxt = fx[e->fxt]) {
 	case FX_XTND:		/* Extended effect */
@@ -244,7 +244,7 @@ static void xlat_volfx(struct xmp_event *event)
 		}
 		event->f2t = FX_SETPAN;
 	} else if (b >= 193 && b <= 202) {	/* G */
-		uint8 val[10] = {
+		uint8_t val[10] = {
 			0x00, 0x01, 0x04, 0x08, 0x10,
 			0x20, 0x40, 0x60, 0x80, 0xff
 		};
@@ -257,7 +257,7 @@ static void xlat_volfx(struct xmp_event *event)
 }
 
 
-static void fix_name(uint8 *s, int l)
+static void fix_name(uint8_t *s, int l)
 {
 	int i;
 
@@ -277,7 +277,7 @@ static int read_envelope(struct xmp_envelope *ei, struct it_envelope *env,
 			  HIO_HANDLE *f)
 {
 	int i;
-	uint8 buf[82];
+	uint8_t buf[82];
 
 	if (hio_read(buf, 1, 82, f) != 82) {
 		return -1;
@@ -376,7 +376,7 @@ static void identify_tracker(struct module_data *m, struct it_file_header *ifh)
 	default:
 		switch (ifh->cwt >> 12) {
 		case 0x1:{
-			uint16 cwtv = ifh->cwt & 0x0fff;
+			uint16_t cwtv = ifh->cwt & 0x0fff;
 			struct tm version;
 			time_t version_sec;
 
@@ -421,7 +421,7 @@ static int load_old_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
 	int inst_map[120], inst_rmap[XMP_MAX_KEYS];
 	struct it_instrument1_header i1h;
 	int c, k, j;
-	uint8 buf[64];
+	uint8_t buf[64];
 
 	if (hio_read(buf, 1, 64, f) != 64) {
 		return -1;
@@ -553,7 +553,7 @@ static int load_new_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
 	struct it_envelope env;
 	int dca2nna[] = { 0, 2, 3 };
 	int c, k, j;
-	uint8 buf[64];
+	uint8_t buf[64];
 
 	if (hio_read(buf, 1, 64, f) != 64) {
 		return -1;
@@ -708,7 +708,7 @@ static int load_it_sample(struct module_data *m, int i, int start,
 	struct xmp_module *mod = &m->mod;
 	struct xmp_sample *xxs, *xsmp;
 	int j, k;
-	uint8 buf[80];
+	uint8_t buf[80];
 
 	if (sample_mode) {
 		mod->xxi[i].sub = calloc(sizeof(struct xmp_subinstrument), 1);
@@ -849,7 +849,7 @@ static int load_it_sample(struct module_data *m, int i, int start,
 
 		/* compressed samples */
 		if (ish.flags & IT_SMP_COMP) {
-			uint8 *buf;
+			uint8_t *buf;
 			int ret;
 
 			buf = calloc(1, xxs->len * 2);
@@ -918,11 +918,11 @@ static int load_it_pattern(struct module_data *m, int i, int new_fx,
 {
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event, dummy, lastevent[L_CHANNELS];
-	uint8 mask[L_CHANNELS];
-	uint8 last_fxp[64];
+	uint8_t mask[L_CHANNELS];
+	uint8_t last_fxp[64];
 
 	int r, c, pat_len;
-	uint8 b;
+	uint8_t b;
 
 	r = 0;
 
@@ -1043,9 +1043,9 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	int c, i, j;
 	struct it_file_header ifh;
 	int max_ch;
-	uint32 *pp_ins;		/* Pointers to instruments */
-	uint32 *pp_smp;		/* Pointers to samples */
-	uint32 *pp_pat;		/* Pointers to patterns */
+	uint32_t *pp_ins;		/* Pointers to instruments */
+	uint32_t *pp_smp;		/* Pointers to samples */
+	uint32_t *pp_pat;		/* Pointers to patterns */
 	int new_fx, sample_mode;
 
 	LOAD_INIT();
@@ -1244,7 +1244,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	 */
 	max_ch = 0;
 	for (i = 0; i < mod->pat; i++) {
-		uint8 mask[L_CHANNELS];
+		uint8_t mask[L_CHANNELS];
 		int pat_len;
 
 		/* If the offset to a pattern is 0, the pattern is empty */

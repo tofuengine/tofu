@@ -1,11 +1,11 @@
 #include "cbdataio.h"
 #include "dataio.h"
 
-uint8 cbread8(CBFILE *cb, int *err)
+uint8_t cbread8(CBFILE *cb, int *err)
 {
-	uint8 b;
-	size_t read = cb->func.read(cb->ud, &b, sizeof(uint8));
-	if (read != sizeof(uint8)) {
+	uint8_t b;
+	size_t read = cb->func.read(cb->ud, &b, sizeof(uint8_t));
+	if (read != sizeof(uint8_t)) {
 		*err = EOF;
 		return 0xFF;
 	}
@@ -13,11 +13,11 @@ uint8 cbread8(CBFILE *cb, int *err)
 	return b;
 }
 
-int8 cbread8s(CBFILE *cb, int *err)
+int8_t cbread8s(CBFILE *cb, int *err)
 {
-	int8 b;
-	size_t read = cb->func.read(cb->ud, &b, sizeof(int8));
-	if (read != sizeof(int8)) {
+	int8_t b;
+	size_t read = cb->func.read(cb->ud, &b, sizeof(int8_t));
+	if (read != sizeof(int8_t)) {
 		*err = EOF;
 		return 0;
 	}
@@ -25,9 +25,9 @@ int8 cbread8s(CBFILE *cb, int *err)
 	return b;
 }
 
-uint16 cbread16l(CBFILE *cb, int *err)
+uint16_t cbread16l(CBFILE *cb, int *err)
 {
-	uint8 b[sizeof(uint16)];
+	uint8_t b[sizeof(uint16_t)];
 	size_t read = cb->func.read(cb->ud, b, sizeof(b));
 	if (read != sizeof(b)) {
 		*err = EOF;
@@ -37,9 +37,9 @@ uint16 cbread16l(CBFILE *cb, int *err)
 	return readmem16l(b);
 }
 
-uint16 cbread16b(CBFILE *cb, int *err)
+uint16_t cbread16b(CBFILE *cb, int *err)
 {
-	uint8 b[sizeof(uint16)];
+	uint8_t b[sizeof(uint16_t)];
 	size_t read = cb->func.read(cb->ud, b, sizeof(b));
 	if (read != sizeof(b)) {
 		*err = EOF;
@@ -49,9 +49,9 @@ uint16 cbread16b(CBFILE *cb, int *err)
 	return readmem16b(b);
 }
 
-uint32 cbread32l(CBFILE *cb, int *err)
+uint32_t cbread32l(CBFILE *cb, int *err)
 {
-	uint8 b[sizeof(uint32)];
+	uint8_t b[sizeof(uint32_t)];
 	size_t read = cb->func.read(cb->ud, b, sizeof(b));
 	if (read != sizeof(b)) {
 		*err = EOF;
@@ -61,9 +61,9 @@ uint32 cbread32l(CBFILE *cb, int *err)
 	return readmem32l(b);
 }
 
-uint32 cbread32b(CBFILE *cb, int *err)
+uint32_t cbread32b(CBFILE *cb, int *err)
 {
-	uint8 b[sizeof(uint32)];
+	uint8_t b[sizeof(uint32_t)];
 	size_t read = cb->func.read(cb->ud, b, sizeof(b));
 	if (read != sizeof(b)) {
 		*err = EOF;

@@ -35,7 +35,7 @@
  * and number of channels.
  */
 #define NEAREST_NEIGHBOR() do { \
-    smp_in = ((int16)sptr[pos] << 8); \
+    smp_in = ((int16_t)sptr[pos] << 8); \
 } while (0)
 
 #define NEAREST_NEIGHBOR_16BIT() do { \
@@ -43,8 +43,8 @@
 } while (0)
 
 #define LINEAR_INTERP() do { \
-    smp_l1 = ((int16)sptr[pos] << 8); \
-    smp_dt = ((int16)sptr[pos + 1] << 8) - smp_l1; \
+    smp_l1 = ((int16_t)sptr[pos] << 8); \
+    smp_dt = ((int16_t)sptr[pos + 1] << 8) - smp_l1; \
     smp_in = smp_l1 + (((frac >> 1) * smp_dt) >> (SMIX_SHIFT - 1)); \
 } while (0)
 
@@ -176,7 +176,7 @@
 
 #define VAR_FILTER_MONO \
     int fl1 = vi->filter.l1, fl2 = vi->filter.l2; \
-    int64 a0 = vi->filter.a0, b0 = vi->filter.b0, b1 = vi->filter.b1; \
+    int64_t a0 = vi->filter.a0, b0 = vi->filter.b0, b1 = vi->filter.b1; \
     int sl
 
 #define VAR_FILTER_STEREO \
@@ -206,7 +206,7 @@
  */
 MIXER(mono_8bit_nearest)
 {
-    VAR_NORM(int8);
+    VAR_NORM(int8_t);
 
     LOOP { NEAREST_NEIGHBOR(); MIX_MONO(); UPDATE_POS(); }
 }
@@ -216,7 +216,7 @@ MIXER(mono_8bit_nearest)
  */
 MIXER(mono_16bit_nearest)
 {
-    VAR_NORM(int16);
+    VAR_NORM(int16_t);
 
     LOOP { NEAREST_NEIGHBOR_16BIT(); MIX_MONO(); UPDATE_POS(); }
 }
@@ -225,7 +225,7 @@ MIXER(mono_16bit_nearest)
  */
 MIXER(stereo_8bit_nearest)
 {
-    VAR_NORM(int8);
+    VAR_NORM(int8_t);
 
     LOOP { NEAREST_NEIGHBOR(); MIX_STEREO(); UPDATE_POS(); }
 }
@@ -234,7 +234,7 @@ MIXER(stereo_8bit_nearest)
  */
 MIXER(stereo_16bit_nearest)
 {
-    VAR_NORM(int16);
+    VAR_NORM(int16_t);
 
     LOOP { NEAREST_NEIGHBOR_16BIT(); MIX_STEREO(); UPDATE_POS(); }
 }
@@ -248,7 +248,7 @@ MIXER(stereo_16bit_nearest)
  */
 MIXER(mono_8bit_linear)
 {
-    VAR_LINEAR_MONO(int8);
+    VAR_LINEAR_MONO(int8_t);
 
     LOOP_AC { LINEAR_INTERP(); MIX_MONO_AC(); UPDATE_POS(); }
     LOOP    { LINEAR_INTERP(); MIX_MONO(); UPDATE_POS(); }
@@ -258,7 +258,7 @@ MIXER(mono_8bit_linear)
  */
 MIXER(mono_16bit_linear)
 {
-    VAR_LINEAR_MONO(int16);
+    VAR_LINEAR_MONO(int16_t);
 
     LOOP_AC { LINEAR_INTERP_16BIT(); MIX_MONO_AC(); UPDATE_POS(); }
     LOOP    { LINEAR_INTERP_16BIT(); MIX_MONO(); UPDATE_POS(); }
@@ -268,7 +268,7 @@ MIXER(mono_16bit_linear)
  */
 MIXER(stereo_8bit_linear)
 {
-   VAR_LINEAR_STEREO(int8);
+   VAR_LINEAR_STEREO(int8_t);
 
     LOOP_AC { LINEAR_INTERP(); MIX_STEREO_AC(); UPDATE_POS(); }
     LOOP    { LINEAR_INTERP(); MIX_STEREO(); UPDATE_POS(); }
@@ -278,7 +278,7 @@ MIXER(stereo_8bit_linear)
  */
 MIXER(stereo_16bit_linear)
 {
-    VAR_LINEAR_STEREO(int16);
+    VAR_LINEAR_STEREO(int16_t);
 
     LOOP_AC { LINEAR_INTERP_16BIT(); MIX_STEREO_AC(); UPDATE_POS(); }
     LOOP    { LINEAR_INTERP_16BIT(); MIX_STEREO(); UPDATE_POS(); }
@@ -291,7 +291,7 @@ MIXER(stereo_16bit_linear)
  */
 MIXER(mono_8bit_linear_filter)
 {
-    VAR_LINEAR_MONO(int8);
+    VAR_LINEAR_MONO(int8_t);
     VAR_FILTER_MONO;
 
     LOOP_AC { LINEAR_INTERP(); MIX_MONO_FILTER_AC(); UPDATE_POS(); }
@@ -304,7 +304,7 @@ MIXER(mono_8bit_linear_filter)
  */
 MIXER(mono_16bit_linear_filter)
 {
-    VAR_LINEAR_MONO(int16);
+    VAR_LINEAR_MONO(int16_t);
     VAR_FILTER_MONO;
 
     LOOP_AC { LINEAR_INTERP_16BIT(); MIX_MONO_FILTER_AC(); UPDATE_POS(); }
@@ -317,7 +317,7 @@ MIXER(mono_16bit_linear_filter)
  */
 MIXER(stereo_8bit_linear_filter)
 {
-    VAR_LINEAR_STEREO(int8);
+    VAR_LINEAR_STEREO(int8_t);
     VAR_FILTER_STEREO;
 
     LOOP_AC { LINEAR_INTERP(); MIX_STEREO_FILTER_AC(); UPDATE_POS(); }
@@ -330,7 +330,7 @@ MIXER(stereo_8bit_linear_filter)
  */
 MIXER(stereo_16bit_linear_filter)
 {
-    VAR_LINEAR_STEREO(int16);
+    VAR_LINEAR_STEREO(int16_t);
     VAR_FILTER_STEREO;
 
     LOOP_AC { LINEAR_INTERP_16BIT(); MIX_STEREO_FILTER_AC(); UPDATE_POS(); }
@@ -349,7 +349,7 @@ MIXER(stereo_16bit_linear_filter)
  */
 MIXER(mono_8bit_spline)
 {
-    VAR_SPLINE_MONO(int8);
+    VAR_SPLINE_MONO(int8_t);
 
     LOOP_AC { SPLINE_INTERP(); MIX_MONO_AC(); UPDATE_POS(); }
     LOOP    { SPLINE_INTERP(); MIX_MONO(); UPDATE_POS(); }
@@ -359,7 +359,7 @@ MIXER(mono_8bit_spline)
  */
 MIXER(mono_16bit_spline)
 {
-    VAR_SPLINE_MONO(int16);
+    VAR_SPLINE_MONO(int16_t);
 
     LOOP_AC { SPLINE_INTERP_16BIT(); MIX_MONO_AC(); UPDATE_POS(); }
     LOOP    { SPLINE_INTERP_16BIT(); MIX_MONO(); UPDATE_POS(); }
@@ -369,7 +369,7 @@ MIXER(mono_16bit_spline)
  */
 MIXER(stereo_8bit_spline)
 {
-    VAR_SPLINE_STEREO(int8);
+    VAR_SPLINE_STEREO(int8_t);
 
     LOOP_AC { SPLINE_INTERP(); MIX_STEREO_AC(); UPDATE_POS(); }
     LOOP    { SPLINE_INTERP(); MIX_STEREO(); UPDATE_POS(); }
@@ -379,7 +379,7 @@ MIXER(stereo_8bit_spline)
  */
 MIXER(stereo_16bit_spline)
 {
-    VAR_SPLINE_STEREO(int16);
+    VAR_SPLINE_STEREO(int16_t);
 
     LOOP_AC { SPLINE_INTERP_16BIT(); MIX_STEREO_AC(); UPDATE_POS(); }
     LOOP    { SPLINE_INTERP_16BIT(); MIX_STEREO(); UPDATE_POS(); }
@@ -391,7 +391,7 @@ MIXER(stereo_16bit_spline)
  */
 MIXER(mono_8bit_spline_filter)
 {
-    VAR_SPLINE_MONO(int8);
+    VAR_SPLINE_MONO(int8_t);
     VAR_FILTER_MONO;
 
     LOOP_AC { SPLINE_INTERP(); MIX_MONO_FILTER_AC(); UPDATE_POS(); }
@@ -404,7 +404,7 @@ MIXER(mono_8bit_spline_filter)
  */
 MIXER(mono_16bit_spline_filter)
 {
-    VAR_SPLINE_MONO(int16);
+    VAR_SPLINE_MONO(int16_t);
     VAR_FILTER_MONO;
 
     LOOP_AC { SPLINE_INTERP_16BIT(); MIX_MONO_FILTER_AC(); UPDATE_POS(); }
@@ -417,7 +417,7 @@ MIXER(mono_16bit_spline_filter)
  */
 MIXER(stereo_8bit_spline_filter)
 {
-    VAR_SPLINE_STEREO(int8);
+    VAR_SPLINE_STEREO(int8_t);
     VAR_FILTER_STEREO;
 
     LOOP_AC { SPLINE_INTERP(); MIX_STEREO_FILTER_AC(); UPDATE_POS(); }
@@ -430,7 +430,7 @@ MIXER(stereo_8bit_spline_filter)
  */
 MIXER(stereo_16bit_spline_filter)
 {
-    VAR_SPLINE_STEREO(int16);
+    VAR_SPLINE_STEREO(int16_t);
     VAR_FILTER_STEREO;
 
     LOOP_AC { SPLINE_INTERP_16BIT(); MIX_STEREO_FILTER_AC(); UPDATE_POS(); }

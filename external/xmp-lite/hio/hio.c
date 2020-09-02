@@ -69,10 +69,10 @@ static long get_size(FILE *f)
 	}
 }
 
-int8 hio_read8s(HIO_HANDLE *h)
+int8_t hio_read8s(HIO_HANDLE *h)
 {
 	int err;
-	int8 ret = 0;
+	int8_t ret = 0;
 
 	switch (HIO_HANDLE_TYPE(h)) {
 	case HIO_HANDLE_TYPE_FILE:
@@ -97,10 +97,10 @@ int8 hio_read8s(HIO_HANDLE *h)
 	return ret;
 }
 
-uint8 hio_read8(HIO_HANDLE *h)
+uint8_t hio_read8(HIO_HANDLE *h)
 {
 	int err;
-	uint8 ret = 0;
+	uint8_t ret = 0;
 
 	switch (HIO_HANDLE_TYPE(h)) {
 	case HIO_HANDLE_TYPE_FILE:
@@ -125,10 +125,10 @@ uint8 hio_read8(HIO_HANDLE *h)
 	return ret;
 }
 
-uint16 hio_read16l(HIO_HANDLE *h)
+uint16_t hio_read16l(HIO_HANDLE *h)
 {
 	int err;
-	uint16 ret = 0;
+	uint16_t ret = 0;
 
 	switch (HIO_HANDLE_TYPE(h)) {
 	case HIO_HANDLE_TYPE_FILE:
@@ -153,10 +153,10 @@ uint16 hio_read16l(HIO_HANDLE *h)
 	return ret;
 }
 
-uint16 hio_read16b(HIO_HANDLE *h)
+uint16_t hio_read16b(HIO_HANDLE *h)
 {
 	int err;
-	uint16 ret = 0;
+	uint16_t ret = 0;
 
 	switch (HIO_HANDLE_TYPE(h)) {
 	case HIO_HANDLE_TYPE_FILE:
@@ -181,10 +181,10 @@ uint16 hio_read16b(HIO_HANDLE *h)
 	return ret;
 }
 
-uint32 hio_read32l(HIO_HANDLE *h)
+uint32_t hio_read32l(HIO_HANDLE *h)
 {
 	int err;
-	uint32 ret = 0;
+	uint32_t ret = 0;
 
 	switch (HIO_HANDLE_TYPE(h)) {
 	case HIO_HANDLE_TYPE_FILE:
@@ -209,10 +209,10 @@ uint32 hio_read32l(HIO_HANDLE *h)
 	return ret;
 }
 
-uint32 hio_read32b(HIO_HANDLE *h)
+uint32_t hio_read32b(HIO_HANDLE *h)
 {
 	int err;
-	uint32 ret = 0;
+	uint32_t ret = 0;
 
 	switch (HIO_HANDLE_TYPE(h)) {
 	case HIO_HANDLE_TYPE_FILE:

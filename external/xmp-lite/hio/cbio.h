@@ -19,16 +19,13 @@ typedef struct {
 extern "C" {
 #endif
 
-CBFILE  *cbopen(CBFUNC func, void *ud);
-int     cbgetc(CBFILE *stream);
-size_t  cbread(void *, size_t, size_t, CBFILE *);
-int     cbseek(CBFILE *, long, int);
-long    cbtell(CBFILE *);
-int     cbclose(CBFILE *);
-int	cbeof(CBFILE *);
-#ifndef LIBXMP_CORE_PLAYER
-int	cbstat(CBFILE *, struct stat *);
-#endif
+extern CBFILE *cbopen(CBFUNC func, void *ud);
+extern int     cbgetc(CBFILE *stream);
+extern size_t  cbread(void *, size_t, size_t, CBFILE *);
+extern int     cbseek(CBFILE *, long, int);
+extern long    cbtell(CBFILE *);
+extern int     cbclose(CBFILE *);
+extern int     cbeof(CBFILE *);
 
 #ifdef __cplusplus
 }

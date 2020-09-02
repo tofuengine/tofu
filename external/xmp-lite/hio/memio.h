@@ -1,6 +1,7 @@
 #ifndef LIBXMP_MEMIO_H
 #define LIBXMP_MEMIO_H
 
+#include <limits.h>
 #include <stddef.h>
 
 typedef struct {
@@ -13,16 +14,13 @@ typedef struct {
 extern "C" {
 #endif
 
-MFILE  *mopen(const void *, long);
-int     mgetc(MFILE *);
-size_t  mread(void *, size_t, size_t, MFILE *);
-int     mseek(MFILE *, long, int);
-long    mtell(MFILE *);
-int     mclose(MFILE *);
-int	meof(MFILE *);
-#ifndef LIBXMP_CORE_PLAYER
-int	mstat(MFILE *, struct stat *);
-#endif
+extern MFILE *mopen(const void *, long);
+extern int    mgetc(MFILE *);
+extern size_t mread(void *, size_t, size_t, MFILE *);
+extern int    mseek(MFILE *, long, int);
+extern long   mtell(MFILE *);
+extern int    mclose(MFILE *);
+extern int    meof(MFILE *);
 
 #ifdef __cplusplus
 }

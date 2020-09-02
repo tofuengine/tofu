@@ -111,11 +111,11 @@ static int s3m_test(HIO_HANDLE *f, char *t, const int start)
 
 #define fix87(x) do { \
 	int i; for (i = 0; i < sizeof(x); i++) { \
-		if (*((uint8 *)&x + i) == 0x87) *((uint8 *)&x + i) = 0; } \
+		if (*((uint8_t *)&x + i) == 0x87) *((uint8_t *)&x + i) = 0; } \
 	} while (0)
 
 /* Effect conversion table */
-static const uint8 fx[] = {
+static const uint8_t fx[] = {
 	NONE,
 	FX_S3M_SPEED,		/* Axx  Set speed to xx (the default is 06) */
 	FX_JUMP,		/* Bxx  Jump to order xx (hexadecimal) */
@@ -148,7 +148,7 @@ static const uint8 fx[] = {
 /* Effect translation */
 static void xlat_fx(int c, struct xmp_event *e)
 {
-	uint8 h = MSN(e->fxp), l = LSN(e->fxp);
+	uint8_t h = MSN(e->fxp), l = LSN(e->fxp);
 
 	if (e->fxt > 26) {
 		D_(D_WARN "invalid effect %02x", e->fxt);
@@ -237,11 +237,11 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	int quirk87 = 0;
 #endif
 	int pat_len;
-	uint8 n, b;
-	uint16 *pp_ins;			/* Parapointers to instruments */
-	uint16 *pp_pat;			/* Parapointers to patterns */
+	uint8_t n, b;
+	uint16_t *pp_ins;			/* Parapointers to instruments */
+	uint16_t *pp_pat;			/* Parapointers to patterns */
 	int ret;
-	uint8 buf[96]
+	uint8_t buf[96]
 
 	LOAD_INIT();
 
@@ -376,7 +376,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	/* Default pan positions */
 
 	for (i = 0, sfh.dp -= 0xfc; !sfh.dp /* && n */  && (i < 32); i++) {
-		uint8 x = hio_read8(f);
+		uint8_t x = hio_read8(f);
 		if (x & S3M_PAN_SET) {
 			mod->xxc[i].pan = (x << 4) & 0xff;
 		} else {
