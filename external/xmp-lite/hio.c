@@ -27,6 +27,7 @@
 #include "common.h"
 #include "hio.h"
 
+#include "fdataio.h"
 #include "mdataio.h"
 #include "cbdataio.h"
 
@@ -75,13 +76,16 @@ int8 hio_read8s(HIO_HANDLE *h)
 
 	switch (HIO_HANDLE_TYPE(h)) {
 	case HIO_HANDLE_TYPE_FILE:
-		ret = read8s(h->handle.file, &err);
+		ret = fread8s(h->handle.file, &err);
 		if (err != 0) {
 			h->error = err;
 		}
 		break;
 	case HIO_HANDLE_TYPE_MEMORY:
-		ret = mread8s(h->handle.mem);
+		ret = mread8s(h->handle.mem, &err);
+		if (err != 0) {
+			h->error = err;
+		}
 		break;
 	case HIO_HANDLE_TYPE_CALLBACKS:
 		ret = cbread8s(h->handle.cb, &err);
@@ -100,13 +104,16 @@ uint8 hio_read8(HIO_HANDLE *h)
 
 	switch (HIO_HANDLE_TYPE(h)) {
 	case HIO_HANDLE_TYPE_FILE:
-		ret = read8(h->handle.file, &err);
+		ret = fread8(h->handle.file, &err);
 		if (err != 0) {
 			h->error = err;
 		}
 		break;
 	case HIO_HANDLE_TYPE_MEMORY:
-		ret = mread8(h->handle.mem);
+		ret = mread8(h->handle.mem, &err);
+		if (err != 0) {
+			h->error = err;
+		}
 		break;
 	case HIO_HANDLE_TYPE_CALLBACKS:
 		ret = cbread8(h->handle.cb, &err);
@@ -125,13 +132,16 @@ uint16 hio_read16l(HIO_HANDLE *h)
 
 	switch (HIO_HANDLE_TYPE(h)) {
 	case HIO_HANDLE_TYPE_FILE:
-		ret = read16l(h->handle.file, &err);
+		ret = fread16l(h->handle.file, &err);
 		if (err != 0) {
 			h->error = err;
 		}
 		break;
 	case HIO_HANDLE_TYPE_MEMORY:
-		ret = mread16l(h->handle.mem);
+		ret = mread16l(h->handle.mem, &err);
+		if (err != 0) {
+			h->error = err;
+		}
 		break;
 	case HIO_HANDLE_TYPE_CALLBACKS:
 		ret = cbread16l(h->handle.cb, &err);
@@ -150,13 +160,16 @@ uint16 hio_read16b(HIO_HANDLE *h)
 
 	switch (HIO_HANDLE_TYPE(h)) {
 	case HIO_HANDLE_TYPE_FILE:
-		ret = read16b(h->handle.file, &err);
+		ret = fread16b(h->handle.file, &err);
 		if (err != 0) {
 			h->error = err;
 		}
 		break;
 	case HIO_HANDLE_TYPE_MEMORY:
-		ret = mread16b(h->handle.mem);
+		ret = mread16b(h->handle.mem, &err);
+		if (err != 0) {
+			h->error = err;
+		}
 		break;
 	case HIO_HANDLE_TYPE_CALLBACKS:
 		ret = cbread16b(h->handle.cb, &err);
@@ -175,13 +188,16 @@ uint32 hio_read32l(HIO_HANDLE *h)
 
 	switch (HIO_HANDLE_TYPE(h)) {
 	case HIO_HANDLE_TYPE_FILE:
-		ret = read32l(h->handle.file, &err);
+		ret = fread32l(h->handle.file, &err);
 		if (err != 0) {
 			h->error = err;
 		}
 		break;
 	case HIO_HANDLE_TYPE_MEMORY:
-		ret = mread32l(h->handle.mem);
+		ret = mread32l(h->handle.mem, &err);
+		if (err != 0) {
+			h->error = err;
+		}
 		break;
 	case HIO_HANDLE_TYPE_CALLBACKS:
 		ret = cbread32l(h->handle.cb, &err);
@@ -200,13 +216,16 @@ uint32 hio_read32b(HIO_HANDLE *h)
 
 	switch (HIO_HANDLE_TYPE(h)) {
 	case HIO_HANDLE_TYPE_FILE:
-		ret = read32b(h->handle.file, &err);
+		ret = fread32b(h->handle.file, &err);
 		if (err != 0) {
 			h->error = err;
 		}
 		break;
 	case HIO_HANDLE_TYPE_MEMORY:
-		ret = mread32b(h->handle.mem);
+		ret = mread32b(h->handle.mem, &err);
+		if (err != 0) {
+			h->error = err;
+		}
 		break;
 	case HIO_HANDLE_TYPE_CALLBACKS:
 		ret = cbread32b(h->handle.cb, &err);

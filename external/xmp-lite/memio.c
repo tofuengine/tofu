@@ -68,7 +68,6 @@ size_t mread(void *buf, size_t size, size_t num, MFILE *m)
 	return should_read / size;
 }
 
-
 int mseek(MFILE *m, long offset, int whence)
 {
 	switch (whence) {
