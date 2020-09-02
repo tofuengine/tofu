@@ -22,6 +22,10 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-compare"
 
+#include "memio.h"
+
+#include <stdio.h>
+#include <memory.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <limits.h>
@@ -29,8 +33,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #endif
-#include "common.h"
-#include "memio.h"
+
+#include "types.h"
 
 static inline ptrdiff_t CAN_READ(MFILE *m)
 {

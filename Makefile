@@ -77,9 +77,9 @@ else
 endif
 
 SOURCES:=$(wildcard src/*.c src/core/*.c src/core/io/*.c src/core/io/display/*.c src/core/vm/*.c src/core/vm/modules/*.c src/core/vm/modules/resources/*.c src/libs/*.c src/libs/fs/*.c src/libs/gl/*.c src/libs/sl/*.c)
-SOURCES+=$(wildcard external/glad/*.c external/GLFW/*.c external/lua/*.c external/miniaudio/*.c external/spleen/*.c external/xmp-lite/*.c)
+SOURCES+=$(wildcard external/glad/*.c external/GLFW/*.c external/lua/*.c external/miniaudio/*.c external/spleen/*.c external/xmp-lite/*.c external/xmp-lite/hio/*.c)
 INCLUDES:=$(wildcard src/*.h src/core/*.h src/core/io/*.h src/core/io/display/*.h src/core/vm/*.h src/core/vm/modules/*.h src/core/vm/modules/resources/*.h src/libs/*.h src/libs/fs/*.h src/libs/gl/*.h src/libs/sl/*.h)
-INCLUDES+=$(wildcard external/glad/*.h external/GLFW/*.h external/lua/*.h external/miniaudio/*.h external/dr_libs/*.h external/spleen/*.h external/stb/*.h external/xmp-lite/*.h)
+INCLUDES+=$(wildcard external/glad/*.h external/GLFW/*.h external/lua/*.h external/miniaudio/*.h external/dr_libs/*.h external/spleen/*.h external/stb/*.h external/xmp-lite/*.h external/xmp-lite/hio/*.h)
 OBJECTS:=$(SOURCES:%.c=%.o)
 SCRIPTS:=$(wildcard src/core/vm/*.lua src/core/vm/modules/*.lua)
 SDUMPS:=$(SCRIPTS:%.lua=%.inc)

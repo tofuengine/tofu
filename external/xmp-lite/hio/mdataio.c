@@ -2,6 +2,7 @@
 
 #include "dataio.h"
 
+#include <stdio.h>
 #include <limits.h>
 
 static inline ptrdiff_t CAN_READ(MFILE *m)

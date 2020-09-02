@@ -1,7 +1,7 @@
 #ifndef LIBXMP_MEMIO_H
 #define LIBXMP_MEMIO_H
 
-#include <stdio.h>
+#include <stddef.h>
 
 typedef struct {
 	const unsigned char *start;
@@ -14,7 +14,7 @@ extern "C" {
 #endif
 
 MFILE  *mopen(const void *, long);
-int     mgetc(MFILE *stream);
+int     mgetc(MFILE *);
 size_t  mread(void *, size_t, size_t, MFILE *);
 int     mseek(MFILE *, long, int);
 long    mtell(MFILE *);

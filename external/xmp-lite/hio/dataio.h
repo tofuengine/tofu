@@ -1,7 +1,7 @@
 #ifndef LIBXMP_DATAIO_H
 #define LIBXMP_DATAIO_H
 
-#include "common.h"
+#include "types.h"
 
 uint16	readmem16l		(const uint8 *);
 uint16	readmem16b		(const uint8 *);

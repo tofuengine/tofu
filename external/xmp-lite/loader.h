@@ -7,7 +7,7 @@
 #include "common.h"
 #include "effects.h"
 #include "format.h"
-#include "hio.h"
+#include "hio/hio.h"
 
 /* Sample flags */
 #define SAMPLE_FLAG_DIFF	0x0001	/* Differential */

@@ -26,7 +26,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #endif
-#include "common.h"
+#include "types.h"
 #include "cbio.h"
 
 CBFILE *cbopen(CBFUNC func, void *ud)

@@ -1,8 +1,8 @@
 #ifndef LIBXMP_CBDATAIO_H
 #define LIBXMP_CBDATAIO_H
 
-#include "common.h"
 #include "cbio.h"
+#include "types.h"
 
 uint8 cbread8(CBFILE *cb, int *err);
 int8 cbread8s(CBFILE *cb, int *err);

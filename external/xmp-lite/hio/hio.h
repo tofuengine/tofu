@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stddef.h>
+#include "types.h"
 #include "dataio.h"
 #include "memio.h"
 #include "cbio.h"

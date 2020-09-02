@@ -20,12 +20,12 @@
  * THE SOFTWARE.
  */
 
+#include "hio.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
 #include <errno.h>
-#include "common.h"
-#include "hio.h"
 
 #include "fdataio.h"
 #include "mdataio.h"

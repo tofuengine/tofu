@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include "common.h"
-#include "hio.h"
+#include "hio/hio.h"
 
 struct format_loader {
 	const char *name;

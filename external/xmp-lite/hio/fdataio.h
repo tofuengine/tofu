@@ -1,7 +1,8 @@
 #ifndef LIBXMP_FDATAIO_H
 #define LIBXMP_FDATAIO_H
 
-#include "common.h"
+#include "types.h"
+
 #include <stdio.h>
 
 int8	fread8s			(FILE *, int *err);

@@ -1,7 +1,7 @@
 #ifndef LIBXMP_MDATAIO_H
 #define LIBXMP_MDATAIO_H
 
-#include "common.h"
+#include "types.h"
 #include "memio.h"
 
 extern uint8 mread8(MFILE *m, int *err);

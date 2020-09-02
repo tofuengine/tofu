@@ -33,7 +33,7 @@
 
 #include "format.h"
 #include "list.h"
-#include "hio.h"
+#include "hio/hio.h"
 #include "tempfile.h"
 
 #ifndef LIBXMP_CORE_PLAYER
