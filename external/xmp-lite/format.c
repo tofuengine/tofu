@@ -22,9 +22,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#ifndef LIBXMP_CORE_PLAYER
-#include "loaders/prowizard/prowiz.h"
-#endif
 #include "format.h"
 
 extern const struct format_loader libxmp_loader_xm;

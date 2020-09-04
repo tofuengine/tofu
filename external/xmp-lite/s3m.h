@@ -97,20 +97,3 @@ struct s3m_instrument_header {
 	uint8_t name[28];		/* Instrument name */
 	uint32_t magic;		/* 'SCRS' */
 };
-
-#ifndef LIBXMP_CORE_PLAYER
-struct s3m_adlib_header {
-	uint8_t dosname[12];	/* DOS file name */
-	uint8_t rsvd1[3];		/* 0x00 0x00 0x00 */
-	uint8_t reg[12];		/* Adlib registers */
-	uint8_t vol;
-	uint8_t dsk;
-	uint8_t rsvd2[2];
-	uint16_t c2spd;		/* C 4 speed */
-	uint16_t rsvd3;		/* Reserved */
-	uint8_t rsvd4[12];	/* Reserved */
-	uint8_t name[28];		/* Instrument name */
-	uint32_t magic;		/* 'SCRI' */
-};
-#endif
-

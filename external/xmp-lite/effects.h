@@ -49,33 +49,6 @@
 #define EX_PATT_DELAY	0x0e
 #define EX_INVLOOP	0x0f
 
-#ifndef LIBXMP_CORE_PLAYER
-/* Oktalyzer effects */
-#define FX_OKT_ARP3	0x70
-#define FX_OKT_ARP4	0x71
-#define FX_OKT_ARP5	0x72
-#define FX_NSLIDE2_DN	0x73
-#define FX_NSLIDE2_UP	0x74
-#define FX_F_NSLIDE_DN	0x75
-#define FX_F_NSLIDE_UP	0x76
-
-/* Persistent effects -- for FNK and FAR */
-#define FX_PER_PORTA_DN	0x78
-#define FX_PER_PORTA_UP	0x79
-#define FX_PER_TPORTA	0x7a
-#define FX_PER_VIBRATO	0x7b
-#define FX_PER_VSLD_UP	0x7c
-#define FX_PER_VSLD_DN	0x7d
-#define FX_SPEED_CP	0x7e
-#define FX_PER_CANCEL	0x7f
-
-/* 669 frequency based effects */
-#define FX_669_PORTA_UP	0x60
-#define FX_669_PORTA_DN	0x61
-#define FX_669_TPORTA	0x62
-#define FX_669_FINETUNE	0x63
-#define FX_669_VIBRATO	0x64
-#endif
 
 #ifndef LIBXMP_CORE_DISABLE_IT
 /* IT effects */
@@ -92,33 +65,6 @@
 #define FX_PANBRELLO_WF	0x8b
 #define FX_HIOFFSET	0x8c
 #define FX_IT_BREAK	0x8e	/* like FX_BREAK with hex parameter */
-#endif
-
-#ifndef LIBXMP_CORE_PLAYER
-/* MED effects */
-#define FX_HOLD_DECAY	0x90
-#define FX_SETPITCH	0x91
-#define FX_VIBRATO2	0x92
-
-/* PTM effects */
-#define FX_NSLIDE_DN	0x9c	/* IMF/PTM note slide down */
-#define FX_NSLIDE_UP	0x9d	/* IMF/PTM note slide up */
-#define FX_NSLIDE_R_UP	0x9e	/* PTM note slide down with retrigger */
-#define FX_NSLIDE_R_DN	0x9f	/* PTM note slide up with retrigger */
-
-/* Extra effects */
-#define FX_VOLSLIDE_UP	0xa0	/* SFX, MDL */
-#define FX_VOLSLIDE_DN	0xa1
-#define FX_F_VSLIDE	0xa5	/* IMF/MDL */
-#define FX_CHORUS	0xa9	/* IMF */
-#define FX_ICE_SPEED	0xa2
-#define FX_REVERB	0xaa	/* IMF */
-#define FX_MED_HOLD	0xb1	/* MMD hold/decay */
-#define FX_MEGAARP	0xb2	/* Smaksak effect 7: MegaArp */
-#define FX_VOL_ADD	0xb6	/* SFX change volume up */
-#define FX_VOL_SUB	0xb7	/* SFX change volume down */
-#define FX_PITCH_ADD	0xb8	/* SFX add steps to current note */
-#define FX_PITCH_SUB	0xb9	/* SFX add steps to current note */
 #endif
 
 #define FX_SURROUND	0x8d	/* S3M/IT */

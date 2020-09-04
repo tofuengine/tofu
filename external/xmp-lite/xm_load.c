@@ -587,11 +587,6 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 			   sub->vol, sub->fin, sub->pan, sub->xpo);
 
 			flags = SAMPLE_FLAG_DIFF;
-#ifndef LIBXMP_CORE_PLAYER
-			if (xsh[j].reserved == 0xad) {
-				flags = SAMPLE_FLAG_ADPCM;
-			}
-#endif
 
 			if (version > 0x0103) {
 				if (libxmp_load_sample(m, f, flags, &mod->xxs[sub->sid], NULL) < 0) {
@@ -712,32 +707,8 @@ static int xm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	    !strncmp(tracker_name, "OpenMPT ", 8)) {
 		m->quirk |= QUIRK_FT2BUGS;
 	}
-#ifndef LIBXMP_CORE_PLAYER
-	if (xfh.headersz == 0x0113) {
-		strcpy(tracker_name, "unknown tracker");
-		m->quirk &= ~QUIRK_FT2BUGS;
-	} else if (*tracker_name == 0) {
-		strcpy(tracker_name, "Digitrakker");	/* best guess */
-		m->quirk &= ~QUIRK_FT2BUGS;
-	}
 
-	/* See MMD1 loader for explanation */
-	if (!strncmp(tracker_name, "MED2XM by J.Pynnone", 19)) {
-		if (mod->bpm <= 10) {
-			mod->bpm = 125 * (0x35 - mod->bpm * 2) / 33;
-		}
-		m->quirk &= ~QUIRK_FT2BUGS;
-	}
-
-	if (!strncmp(tracker_name, "FastTracker v 2.00", 18)) {
-		strcpy(tracker_name, "old ModPlug Tracker");
-		m->quirk &= ~QUIRK_FT2BUGS;
-	}
-
-	libxmp_set_type(m, "%s XM %d.%02d", tracker_name, xfh.version >> 8, xfh.version & 0xff);
-#else
 	libxmp_set_type(m, tracker_name);
-#endif
 
 	MODULE_INFO();
 

@@ -228,17 +228,6 @@ struct channel_data {
 
 #endif
 
-#ifndef LIBXMP_CORE_PLAYER
-	struct {
-		int slide;	/* PTM note slide amount */
-		int fslide;	/* OKT fine note slide amount */
-		int speed;	/* PTM note slide speed */
-		int count;	/* PTM note slide counter */
-	} noteslide;
-
-	void *extra;
-#endif
-
 	struct xmp_event delayed_event;
 	int delayed_ins;	/* IT save instrument emulation */
 

@@ -46,9 +46,6 @@
 #include "effects.h"
 #include "player.h"
 #include "mixer.h"
-#ifndef LIBXMP_CORE_PLAYER
-#include "extras.h"
-#endif
 
 /* Values for multi-retrig */
 static const struct retrig_control rval[] = {
@@ -252,49 +249,6 @@ static int check_envelope_fade(struct xmp_envelope *env, int x)
 	return 0;
 }
 
-
-#ifndef LIBXMP_CORE_PLAYER
-
-/* From http://www.un4seen.com/forum/?topic=7554.0
- *
- * "Invert loop" effect replaces (!) sample data bytes within loop with their
- * bitwise complement (NOT). The parameter sets speed of altering the samples.
- * This effectively trashes the sample data. Because of that this effect was
- * supposed to be removed in the very next ProTracker versions, but it was
- * never removed.
- *
- * Prior to [Protracker 1.1A] this effect is called "Funk Repeat" and it moves
- * loop of the instrument (just the loop information - sample data is not
- * altered). The parameter is the speed of moving the loop.
- */
-
-static const int invloop_table[] = {
-	0, 5, 6, 7, 8, 10, 11, 13, 16, 19, 22, 26, 32, 43, 64, 128
-};
-
-static void update_invloop(struct module_data *m, struct channel_data *xc)
-{
-	struct xmp_sample *xxs = &m->mod.xxs[xc->smp];
-	int len;
-
-	xc->invloop.count += invloop_table[xc->invloop.speed];
-
-	if ((xxs->flg & XMP_SAMPLE_LOOP) && xc->invloop.count >= 128) {
-		xc->invloop.count = 0;
-		len = xxs->lpe - xxs->lps;	
-
-		if (++xc->invloop.pos > len) {
-			xc->invloop.pos = 0;
-		}
-
-		if (~xxs->flg & XMP_SAMPLE_16BIT) {
-			xxs->data[xxs->lps + xc->invloop.pos] ^= 0xff;
-		}
-	}
-}
-
-#endif
-
 /*
  * From OpenMPT Arpeggio.xm test:
  *
@@ -364,21 +318,6 @@ static void reset_channels(struct context_data *ctx)
 	struct channel_data *xc;
 	int i;
 
-#ifndef LIBXMP_CORE_PLAYER
-	for (i = 0; i < p->virt.virt_channels; i++) {
-		void *extra;
-
-		xc = &p->xc_data[i];
-		extra = xc->extra;
-		memset(xc, 0, sizeof (struct channel_data));
-		xc->extra = extra;
-		libxmp_reset_channel_extras(ctx, xc);
-		xc->ins = -1;
-		xc->old_ins = 1;	/* raw value */
-		xc->key = -1;
-		xc->volume = m->volbase;
-	}
-#else
 	for (i = 0; i < p->virt.virt_channels; i++) {
 		xc = &p->xc_data[i];
 		memset(xc, 0, sizeof (struct channel_data));
@@ -387,7 +326,6 @@ static void reset_channels(struct context_data *ctx)
 		xc->key = -1;
 		xc->volume = m->volbase;
 	}
-#endif
 
 	for (i = 0; i < p->virt.num_tracks; i++) {
 		xc = &p->xc_data[i];
@@ -517,9 +455,6 @@ static inline void read_row(struct context_data *ctx, int pat, int row)
 		if (check_delay(ctx, &ev, chn) == 0) {
 			if (!f->rowdelay_set || f->rowdelay > 0) {
 				libxmp_read_event(ctx, &ev, chn);
-#ifndef LIBXMP_CORE_PLAYER
-				libxmp_med_hold_hack(ctx, pat, chn, row);
-#endif
 			}
 		} else {
 			if (IS_PLAYER_MODE_IT()) {
@@ -695,11 +630,7 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 		return;
 	}
 
-#ifndef LIBXMP_CORE_PLAYER
-	finalvol = libxmp_extras_get_volume(ctx, xc);
-#else
 	finalvol = xc->volume;
-#endif
 
 	if (IS_PLAYER_MODE_IT()) {
 		finalvol = xc->volume * (100 - xc->rvv) / 100;
@@ -725,15 +656,6 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 
 	/* Apply channel volume */
 	finalvol = finalvol * get_channel_vol(ctx, chn) / 100;
-
-#ifndef LIBXMP_CORE_PLAYER
-	/* Volume translation table (for PTM, ARCH, COCO) */
-	if (m->vol_table) {
-		finalvol = m->volbase == 0xff ?
-		    m->vol_table[finalvol >> 2] << 2 :
-		    m->vol_table[finalvol >> 4] << 4;
-	}
-#endif
 
 	if (HAS_QUIRK(QUIRK_INSVOL)) {
 		finalvol = (finalvol * instrument->vol * xc->gvl) >> 12;
@@ -786,22 +708,6 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 	}
 	frq_envelope = get_envelope(&instrument->fei, xc->f_idx, 0);
 
-#ifndef LIBXMP_CORE_PLAYER
-	/* Do note slide */
-
-	if (TEST(NOTE_SLIDE)) {
-		if (xc->noteslide.count == 0) {
-			xc->note += xc->noteslide.slide;
-			xc->period = libxmp_note_to_period(ctx, xc->note,
-					xc->finetune, xc->per_adj);
-			xc->noteslide.count = xc->noteslide.speed;
-		}
-		xc->noteslide.count--;
-
-		libxmp_virt_setnote(ctx, chn, xc->note);
-	}
-#endif
-
 	/* Instrument vibrato */
 	vibrato = 1.0 * libxmp_lfo_get(ctx, &xc->insvib.lfo, 1) /
 				(4096 * (1 + xc->insvib.sweep));
@@ -832,9 +738,6 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 	}
 
 	period = xc->period;
-#ifndef LIBXMP_CORE_PLAYER
-	period += libxmp_extras_get_period(ctx, xc);
-#endif
 
 	/* Sanity check */
 	if (period < 0.1) {
@@ -917,11 +820,6 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 		}
 	}
 
-
-#ifndef LIBXMP_CORE_PLAYER
-	linear_bend += libxmp_extras_get_linear_bend(ctx, xc);
-#endif
-
 	period = libxmp_note_to_period_mix(xc->note, linear_bend);
 	libxmp_virt_setperiod(ctx, chn, period);
 
@@ -1003,8 +901,8 @@ static void process_pan(struct context_data *ctx, int chn, int act)
 
 	channel_pan = xc->pan.val;
 
-#if 0
 #ifdef LIBXMP_PAULA_SIMULATOR
+#ifdef LIBXMP_PAULA_SIMULATOR_HARD_PAN
 	/* Always use 100% pan separation in Amiga mode */
 	if (p->flags & XMP_FLAGS_A500) {
 		if (IS_AMIGA_MOD()) {
@@ -1058,19 +956,6 @@ static void update_volume(struct context_data *ctx, int chn)
 		if (TEST(VOL_SLIDE) || TEST_PER(VOL_SLIDE)) {
 			xc->volume += xc->vol.slide;
 		}
-
-#ifndef LIBXMP_CORE_PLAYER
-		if (TEST_PER(VOL_SLIDE)) {
-			if (xc->vol.slide > 0 && xc->volume > m->volbase) {
-				xc->volume = m->volbase;
-				RESET_PER(VOL_SLIDE);
-			}
-			if (xc->vol.slide < 0 && xc->volume < 0) {
-				xc->volume = 0;
-				RESET_PER(VOL_SLIDE);
-			}
-		}
-#endif
 
 		if (TEST(VOL_SLIDE_2)) {
 			xc->volume += xc->vol.slide2;
@@ -1167,14 +1052,6 @@ static void update_frequency(struct context_data *ctx, int chn)
 		if (TEST(FINE_BEND)) {
 			xc->period += xc->freq.fslide;
 		}
-
-#ifndef LIBXMP_CORE_PLAYER
-		if (TEST(FINE_NSLIDE)) {
-			xc->note += xc->noteslide.fslide;
-			xc->period = libxmp_note_to_period(ctx, xc->note,
-				xc->finetune, xc->per_adj);
-		}
-#endif
 	}
 
 	switch (m->period_type) {
@@ -1263,10 +1140,6 @@ static void play_channel(struct context_data *ctx, int chn)
 	if (!IS_VALID_INSTRUMENT_OR_SFX(xc->ins))
 		return;
 
-#ifndef LIBXMP_CORE_PLAYER
-	libxmp_play_extras(ctx, xc, chn);
-#endif
-
 	/* Do cut/retrig */
 	if (TEST(RETRIG)) {
 		int cond = HAS_QUIRK(QUIRK_S3MRTG) ?
@@ -1302,12 +1175,6 @@ static void play_channel(struct context_data *ctx, int chn)
 	update_volume(ctx, chn);
 	update_frequency(ctx, chn);
 	update_pan(ctx, chn);
-
-#ifndef LIBXMP_CORE_PLAYER
-	if (HAS_QUIRK(QUIRK_PROTRACK) && xc->ins < mod->ins) {
-		update_invloop(m, xc);
-	}
-#endif
 
 	if (TEST_NOTE(NOTE_SUSEXIT)) {
 		SET_NOTE(NOTE_RELEASE);
@@ -1381,16 +1248,6 @@ static void next_order(struct context_data *ctx)
 
 	p->pos = p->ord;
 	p->frame = 0;
-
-#ifndef LIBXMP_CORE_PLAYER
-	/* Reset persistent effects at new pattern */
-	if (HAS_QUIRK(QUIRK_PERPAT)) {
-		int chn;
-		for (chn = 0; chn < mod->chn; chn++) {
-			p->xc_data[chn].per_flags = 0;
-		}
-	}
-#endif
 }
 
 static void next_row(struct context_data *ctx)
@@ -1465,10 +1322,6 @@ static void update_from_ord_info(struct context_data *ctx)
 	p->gvol = oinfo->gvl;
 	p->current_time = oinfo->time;
 	p->frame_time = m->time_factor * m->rrate / p->bpm;
-
-#ifndef LIBXMP_CORE_PLAYER
-	p->st26_speed = oinfo->st26_speed;
-#endif
 }
 
 int xmp_start_player(xmp_context opaque, int rate, int format)
@@ -1563,23 +1416,12 @@ int xmp_start_player(xmp_context opaque, int rate, int format)
 	/* Reset our buffer pointers */
 	xmp_play_buffer(opaque, NULL, 0, 0);
 
-#ifndef LIBXMP_CORE_PLAYER
-	for (i = 0; i < p->virt.virt_channels; i++) {
-		struct channel_data *xc = &p->xc_data[i];
-		if (libxmp_new_channel_extras(ctx, xc) < 0)
-			goto err2;
-	}
-#endif
 	reset_channels(ctx);
 
 	ctx->state = XMP_STATE_PLAYING;
 
 	return 0;
 
-#ifndef LIBXMP_CORE_PLAYER
-    err2:
-	free(p->xc_data);
-#endif
     err1:
 	free(f->loop);
     err:
@@ -1688,17 +1530,6 @@ int xmp_play_frame(xmp_context opaque)
 	if (p->frame == 0) {			/* first frame in row */
 		check_end_of_module(ctx);
 		read_row(ctx, mod->xxo[p->ord], p->row);
-
-#ifndef LIBXMP_CORE_PLAYER
-		if (p->st26_speed) {
-			if  (p->st26_speed & 0x10000) {
-				p->speed = (p->st26_speed & 0xff00) >> 8;
-			} else {
-				p->speed = p->st26_speed & 0xff;
-			}
-			p->st26_speed ^= 0x10000;
-		}
-#endif
 	}
 
 	inject_event(ctx);
@@ -1778,23 +1609,11 @@ void xmp_end_player(xmp_context opaque)
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
 	struct flow_control *f = &p->flow;
-#ifndef LIBXMP_CORE_PLAYER
-	struct channel_data *xc;
-	int i;
-#endif
 
 	if (ctx->state < XMP_STATE_PLAYING)
 		return;
 
 	ctx->state = XMP_STATE_LOADED;
-
-#ifndef LIBXMP_CORE_PLAYER
-	/* Free channel extras */
-	for (i = 0; i < p->virt.virt_channels; i++) {
-		xc = &p->xc_data[i];
-		libxmp_release_channel_extras(ctx, xc);
-	}
-#endif
 
 	libxmp_virt_off(ctx);
 

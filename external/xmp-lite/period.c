@@ -197,12 +197,6 @@ double libxmp_note_to_period(struct context_data *ctx, int n, int f, double adj)
 		per = PERIOD_BASE / pow(2, d / 12);	/* Amiga */
 	}
 
-#ifndef LIBXMP_CORE_PLAYER
-	if (adj > 0.1) {
-		per *= adj;
-	}
-#endif
-
 	return per;
 }
 

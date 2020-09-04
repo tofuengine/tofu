@@ -17,10 +17,6 @@
 #endif
 #endif
 
-#ifndef LIBXMP_CORE_PLAYER
-#define LIBXMP_PAULA_SIMULATOR
-#endif
-
 /* Constants */
 #define PAL_RATE	250.0		/* 1 / (50Hz * 80us)		  */
 #define NTSC_RATE	208.0		/* 1 / (60Hz * 80us)		  */
@@ -209,9 +205,6 @@ struct ord_data {
 	int gvl;
 	int time;
 	int start_row;
-#ifndef LIBXMP_CORE_PLAYER
-	int st26_speed;
-#endif
 };
 
 
@@ -348,9 +341,6 @@ struct player_data {
 		char *in_buffer;
 	} buffer_data;
 
-#ifndef LIBXMP_CORE_PLAYER
-	int st26_speed;			/* For IceTracker speed effect */
-#endif
 	int filter;			/* Amiga led filter */
 };
 
