@@ -36,6 +36,9 @@
  *
  * Claudio's fix: implementing effect K
  */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-compare"
+
 #include <stdlib.h>
 #include <string.h>
 #include "virtual.h"
@@ -1904,3 +1907,5 @@ void xmp_get_frame_info(xmp_context opaque, struct xmp_frame_info *info)
 		}
 	}
 }
+
+#pragma GCC diagnostic pop
