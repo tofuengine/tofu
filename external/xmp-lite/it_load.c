@@ -777,7 +777,7 @@ static int load_it_sample(struct module_data *m, int i, int start,
 					free(buf);
 					return -1;
 				}
-				ret = libxmp_load_sample(m, NULL, SAMPLE_FLAG_NOLOAD |
+				ret = libxmp_load_sample(m, f, SAMPLE_FLAG_NOLOAD |
 							cvt, &m->xsmp[i], buf);
 				if (ret < 0) {
 					free(buf);
@@ -786,7 +786,7 @@ static int load_it_sample(struct module_data *m, int i, int start,
 				hio_seek(f, pos, SEEK_SET);
 			}
 
-			ret = libxmp_load_sample(m, NULL, SAMPLE_FLAG_NOLOAD | cvt,
+			ret = libxmp_load_sample(m, f, SAMPLE_FLAG_NOLOAD | cvt,
 					  &mod->xxs[i], buf);
 			if (ret < 0) {
 				free(buf);
