@@ -53,7 +53,7 @@ uint16_t readmem16l(const uint8_t *m)
 
 uint16_t readmem16b(const uint8_t *m)
 {
-	uint16_t a = bswap_16(*((uint16_t *)m));
+	uint16_t a = *((uint16_t *)m);
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 	return bswap_16(a);
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
@@ -77,7 +77,7 @@ uint32_t readmem32l(const uint8_t *m)
 
 uint32_t readmem32b(const uint8_t *m)
 {
-	uint32_t a = bswap_32(*((uint32_t *)m));
+	uint32_t a = *((uint32_t *)m);
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 	return bswap_32(a);
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
