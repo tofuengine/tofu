@@ -7,6 +7,7 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
 #include "xmp.h"
 
@@ -14,33 +15,6 @@
 #if !defined(WIN32) && !defined(__ANDROID__) && !defined(__APPLE__) && !defined(__AMIGA__) && !defined(__MSDOS__) && !defined(B_BEOS_VERSION) && !defined(__ATHEOS__) && !defined(EMSCRIPTEN) && !defined(__MINT__)
 #define USE_VERSIONED_SYMBOLS
 #endif
-#endif
-
-/* AmigaOS fixes by Chris Young <cdyoung@ntlworld.com>, Nov 25, 2007
- */
-#if defined B_BEOS_VERSION
-#  include <SupportDefs.h>
-#elif defined __amigaos4__
-#  include <exec/types.h>
-#else
-typedef signed char int8;
-typedef signed short int int16;
-typedef signed int int32;
-typedef unsigned char uint8;
-typedef unsigned short int uint16;
-typedef unsigned int uint32;
-#endif
-
-#ifdef _MSC_VER				/* MSVC++6.0 has no long long */
-typedef signed __int64 int64;
-typedef unsigned __int64 uint64;
-#elif !defined B_BEOS_VERSION		/* BeOS has its own int64 definition */
-typedef unsigned long long uint64;
-typedef signed long long int64;
-#endif
-
-#ifndef LIBXMP_CORE_PLAYER
-#define LIBXMP_PAULA_SIMULATOR
 #endif
 
 /* Constants */
@@ -231,9 +205,6 @@ struct ord_data {
 	int gvl;
 	int time;
 	int start_row;
-#ifndef LIBXMP_CORE_PLAYER
-	int st26_speed;
-#endif
 };
 
 
@@ -260,7 +231,7 @@ struct module_data {
 	char *basename;			/* file basename */
 	char *filename;			/* Module file name */
 	char *comment;			/* Comments, if any */
-	uint8 md5[16];			/* MD5 message digest */
+	uint8_t md5[16];			/* MD5 message digest */
 	int size;			/* File size */
 	double rrate;			/* Replay rate */
 	double time_factor;		/* Time conversion constant */
@@ -370,9 +341,6 @@ struct player_data {
 		char *in_buffer;
 	} buffer_data;
 
-#ifndef LIBXMP_CORE_PLAYER
-	int st26_speed;			/* For IceTracker speed effect */
-#endif
 	int filter;			/* Amiga led filter */
 };
 
@@ -384,7 +352,7 @@ struct mixer_data {
 	int interp;		/* interpolation type */
 	int dsp;		/* dsp effect flags */
 	char* buffer;		/* output buffer */
-	int32* buf32;		/* temporary buffer for 32 bit samples */
+	int32_t* buf32;		/* temporary buffer for 32 bit samples */
 	int numvoc;		/* default softmixer voices number */
 	int ticksize;
 	int dtright;		/* anticlick control, right channel */
@@ -409,30 +377,6 @@ int	libxmp_prepare_scan	(struct context_data *);
 int	libxmp_scan_sequences	(struct context_data *);
 int	libxmp_get_sequence	(struct context_data *, int);
 int	libxmp_set_player_mode	(struct context_data *);
-
-int8	read8s			(FILE *, int *err);
-uint8	read8			(FILE *, int *err);
-uint16	read16l			(FILE *, int *err);
-uint16	read16b			(FILE *, int *err);
-uint32	read24l			(FILE *, int *err);
-uint32	read24b			(FILE *, int *err);
-uint32	read32l			(FILE *, int *err);
-uint32	read32b			(FILE *, int *err);
-static inline void write8	(FILE *f, uint8 b) {
-	fputc(b, f);
-}
-void	write16l		(FILE *, uint16);
-void	write16b		(FILE *, uint16);
-void	write32l		(FILE *, uint32);
-void	write32b		(FILE *, uint32);
-int	move_data		(FILE *, FILE *, int);
-
-uint16	readmem16l		(const uint8 *);
-uint16	readmem16b		(const uint8 *);
-uint32	readmem24l		(const uint8 *);
-uint32	readmem24b		(const uint8 *);
-uint32	readmem32l		(const uint8 *);
-uint32	readmem32b		(const uint8 *);
 
 struct xmp_instrument *libxmp_get_instrument(struct context_data *, int);
 struct xmp_sample *libxmp_get_sample(struct context_data *, int);

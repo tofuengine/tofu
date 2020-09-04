@@ -65,7 +65,7 @@ void libxmp_virt_resetvoice(struct context_data *ctx, int voc, int mute)
 	struct paula_state *paula;
 #endif
 
-	if ((uint32)voc >= p->virt.maxvoc) {
+	if ((uint32_t)voc >= p->virt.maxvoc) {
 		return;
 	}
 
@@ -143,7 +143,7 @@ int libxmp_virt_on(struct context_data *ctx, int num)
 
 	return 0;
 
-      err2:
+err2:
 #ifdef LIBXMP_PAULA_SIMULATOR
 	if (IS_AMIGA_MOD()) {
 		for (i = 0; i < p->virt.maxvoc; i++) {
@@ -152,7 +152,7 @@ int libxmp_virt_on(struct context_data *ctx, int num)
 	}
 #endif
 	free(p->virt.voice_array);
-      err:
+err:
 	return -1;
 }
 
@@ -276,12 +276,12 @@ static int map_virt_channel(struct player_data *p, int chn)
 {
 	int voc;
 
-	if ((uint32)chn >= p->virt.virt_channels)
+	if ((uint32_t)chn >= p->virt.virt_channels)
 		return -1;
 
 	voc = p->virt.virt_channel[chn].map;
 
-	if ((uint32)voc >= p->virt.maxvoc)
+	if ((uint32_t)voc >= p->virt.maxvoc)
 		return -1;
 
 	return voc;
@@ -390,31 +390,6 @@ double libxmp_virt_getvoicepos(struct context_data *ctx, int chn)
 	return libxmp_mixer_getvoicepos(ctx, voc);
 }
 
-#ifndef LIBXMP_CORE_PLAYER
-
-void libxmp_virt_setsmp(struct context_data *ctx, int chn, int smp)
-{
-	struct player_data *p = &ctx->p;
-	struct mixer_voice *vi;
-	double pos;
-	int voc;
-
-	if ((voc = map_virt_channel(p, chn)) < 0) {
-		return;
-	}
-
-	vi = &p->virt.voice_array[voc];
-	if (vi->smp == smp) {
-		return;
-	}
-
-	pos = libxmp_mixer_getvoicepos(ctx, voc);
-	libxmp_mixer_setpatch(ctx, voc, smp, 0);
-	libxmp_mixer_voicepos(ctx, voc, pos, 0);	/* Restore old position */
-}
-
-#endif
-
 #ifndef LIBXMP_CORE_DISABLE_IT
 
 void libxmp_virt_setnna(struct context_data *ctx, int chn, int nna)
@@ -485,7 +460,7 @@ int libxmp_virt_setpatch(struct context_data *ctx, int chn, int ins, int smp,
 	struct player_data *p = &ctx->p;
 	int voc, vfree;
 
-	if ((uint32)chn >= p->virt.virt_channels) {
+	if ((uint32_t)chn >= p->virt.virt_channels) {
 		return -1;
 	}
 

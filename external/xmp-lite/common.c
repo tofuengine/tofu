@@ -165,14 +165,14 @@ struct xmp_sample *libxmp_realloc_samples(struct xmp_sample *buf, int *size, int
 	return buf;
 }
 
-char *libxmp_instrument_name(struct xmp_module *mod, int i, uint8 *r, int n)
+char *libxmp_instrument_name(struct xmp_module *mod, int i, uint8_t *r, int n)
 {
 	CLAMP(n, 0, 31);
 
 	return libxmp_copy_adjust(mod->xxi[i].name, r, n);
 }
 
-char *libxmp_copy_adjust(char *s, uint8 *r, int n)
+char *libxmp_copy_adjust(char *s, uint8_t *r, int n)
 {
 	int i;
 
@@ -180,7 +180,7 @@ char *libxmp_copy_adjust(char *s, uint8 *r, int n)
 	strncpy(s, (char *)r, n);
 
 	for (i = 0; s[i] && i < n; i++) {
-		if (!isprint((int)s[i]) || ((uint8)s[i] > 127))
+		if (!isprint((int)s[i]) || ((uint8_t)s[i] > 127))
 			s[i] = '.';
 	}
 
@@ -192,7 +192,7 @@ char *libxmp_copy_adjust(char *s, uint8 *r, int n)
 
 void libxmp_read_title(HIO_HANDLE *f, char *t, int s)
 {
-	uint8 buf[XMP_NAME_SIZE];
+	uint8_t buf[XMP_NAME_SIZE];
 
 	if (t == NULL)
 		return;
@@ -207,65 +207,7 @@ void libxmp_read_title(HIO_HANDLE *f, char *t, int s)
 	libxmp_copy_adjust(t, buf, s);
 }
 
-#ifndef LIBXMP_CORE_PLAYER
-
-int libxmp_test_name(uint8 *s, int n)
-{
-	int i;
-
-	for (i = 0; i < n; i++) {
-		if (s[i] > 0x7f)
-			return -1;
-		/* ACS_Team2.mod has a backspace in instrument name */
-		if (s[i] > 0 && s[i] < 32 && s[i] != 0x08)
-			return -1;
-	}
-
-	return 0;
-}
-
-/*
- * Honor Noisetracker effects:
- *
- *  0 - arpeggio
- *  1 - portamento up
- *  2 - portamento down
- *  3 - Tone-portamento
- *  4 - Vibrato
- *  A - Slide volume
- *  B - Position jump
- *  C - Set volume
- *  D - Pattern break
- *  E - Set filter (keep the led off, please!)
- *  F - Set speed (now up to $1F)
- *
- * Pex Tufvesson's notes from http://www.livet.se/mahoney/:
- *
- * Note that some of the modules will have bugs in the playback with all
- * known PC module players. This is due to that in many demos where I synced
- * events in the demo with the music, I used commands that these newer PC
- * module players erroneously interpret as "newer-version-trackers commands".
- * Which they aren't.
- */
-void libxmp_decode_noisetracker_event(struct xmp_event *event, uint8 *mod_event)
-{
-	int fxt;
-
-	memset(event, 0, sizeof (struct xmp_event));
-	event->note = libxmp_period_to_note((LSN(mod_event[0]) << 8) + mod_event[1]);
-	event->ins = ((MSN(mod_event[0]) << 4) | MSN(mod_event[2]));
-	fxt = LSN(mod_event[2]);
-
-	if (fxt <= 0x06 || (fxt >= 0x0a && fxt != 0x0e)) {
-		event->fxt = fxt;
-		event->fxp = mod_event[3];
-	}
-
-	libxmp_disable_continue_fx(event);
-}
-#endif
-
-void libxmp_decode_protracker_event(struct xmp_event *event, uint8 *mod_event)
+void libxmp_decode_protracker_event(struct xmp_event *event, uint8_t *mod_event)
 {
 	int fxt = LSN(mod_event[2]);
 
@@ -302,59 +244,6 @@ void libxmp_disable_continue_fx(struct xmp_event *event)
 		}
 	}
 }
-
-#ifndef LIBXMP_CORE_PLAYER
-#ifndef WIN32
-
-/* Given a directory, see if file exists there, ignoring case */
-
-int libxmp_check_filename_case(char *dir, char *name, char *new_name, int size)
-{
-	int found = 0;
-	DIR *dirfd;
-	struct dirent *d;
-
-	dirfd = opendir(dir);
-	if (dirfd == NULL)
-		return 0;
- 
-	while ((d = readdir(dirfd))) {
-		if (!strcasecmp(d->d_name, name)) {
-			found = 1;
-			break;
-		}
-	}
-
-	if (found)
-		strncpy(new_name, d->d_name, size);
-
-	closedir(dirfd);
-
-	return found;
-}
-
-#else
-
-/* FIXME: implement functionality for Win32 */
-
-int libxmp_check_filename_case(char *dir, char *name, char *new_name, int size)
-{
-	return 0;
-}
-
-#endif
-
-void libxmp_get_instrument_path(struct module_data *m, char *path, int size)
-{
-	if (m->instrument_path) {
-		strncpy(path, m->instrument_path, size);
-	} else if (getenv("XMP_INSTRUMENT_PATH")) {
-		strncpy(path, getenv("XMP_INSTRUMENT_PATH"), size);
-	} else {
-		strncpy(path, ".", size);
-	}
-}
-#endif /* LIBXMP_CORE_PLAYER */
 
 void libxmp_set_type(struct module_data *m, const char *fmt, ...)
 {

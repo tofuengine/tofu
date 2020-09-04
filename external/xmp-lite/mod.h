@@ -21,35 +21,22 @@
  */
 
 struct mod_instrument {
-	uint8 name[22];		/* Instrument name */
-	uint16 size;		/* Sample length in 16-bit words */
-	int8 finetune;		/* Finetune (signed nibble) */
-	int8 volume;		/* Linear playback volume */
-	uint16 loop_start;	/* Loop start in 16-bit words */
-	uint16 loop_size;	/* Loop length in 16-bit words */
+	uint8_t name[22];		/* Instrument name */
+	uint16_t size;		/* Sample length in 16-bit words */
+	int8_t finetune;		/* Finetune (signed nibble) */
+	int8_t volume;		/* Linear playback volume */
+	uint16_t loop_start;	/* Loop start in 16-bit words */
+	uint16_t loop_size;	/* Loop length in 16-bit words */
 };
 
 struct mod_header {
-	uint8 name[20];
+	uint8_t name[20];
 	struct mod_instrument ins[31];
-	uint8 len;
-	uint8 restart;		/* Number of patterns in Soundtracker,
+	uint8_t len;
+	uint8_t restart;		/* Number of patterns in Soundtracker,
 				 * Restart in Noisetracker/Startrekker,
 				 * 0x7F in Protracker
 				 */
-	uint8 order[128];
-	uint8 magic[4];
+	uint8_t order[128];
+	uint8_t magic[4];
 };
-
-
-#ifndef LIBXMP_CORE_PLAYER
-/* Soundtracker 15-instrument module header */
-
-struct st_header {
-	uint8 name[20];
-	struct mod_instrument ins[15];
-	uint8 len;
-	uint8 restart;
-	uint8 order[128];
-};
-#endif

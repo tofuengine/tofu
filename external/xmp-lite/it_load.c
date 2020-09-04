@@ -43,23 +43,6 @@ const struct format_loader libxmp_loader_it = {
 	it_load
 };
 
-#ifndef LIBXMP_CORE_PLAYER /* */
-#if defined(__WATCOMC__)
-#undef localtime_r
-#define localtime_r _localtime
-
-#elif !defined(HAVE_LOCALTIME_R) || defined(_WIN32)
-#undef localtime_r
-#define localtime_r libxmp_localtime_r
-static struct tm *libxmp_localtime_r(const time_t * timep, struct tm *result)
-{
-	/* Note: Win32 localtime() is thread-safe */
-	memcpy(result, localtime(timep), sizeof(struct tm));
-	return result;
-}
-#endif
-#endif /* ! LIBXMP_CORE_PLAYER */
-
 static int it_test(HIO_HANDLE * f, char *t, const int start)
 {
 	if (hio_read32b(f) != MAGIC_IMPM)
@@ -76,7 +59,7 @@ static int it_test(HIO_HANDLE * f, char *t, const int start)
 #define L_CHANNELS 64
 
 
-static const uint8 fx[] = {
+static const uint8_t fx[] = {
 	/*   */ FX_NONE,
 	/* A */ FX_S3M_SPEED,
 	/* B */ FX_JUMP,
@@ -111,9 +94,9 @@ int itsex_decompress8 (HIO_HANDLE *, void *, int, int);
 int itsex_decompress16 (HIO_HANDLE *, void *, int, int);
 
 
-static void xlat_fx(int c, struct xmp_event *e, uint8 *last_fxp, int new_fx)
+static void xlat_fx(int c, struct xmp_event *e, uint8_t *last_fxp, int new_fx)
 {
-	uint8 h = MSN(e->fxp), l = LSN(e->fxp);
+	uint8_t h = MSN(e->fxp), l = LSN(e->fxp);
 
 	switch (e->fxt = fx[e->fxt]) {
 	case FX_XTND:		/* Extended effect */
@@ -244,7 +227,7 @@ static void xlat_volfx(struct xmp_event *event)
 		}
 		event->f2t = FX_SETPAN;
 	} else if (b >= 193 && b <= 202) {	/* G */
-		uint8 val[10] = {
+		uint8_t val[10] = {
 			0x00, 0x01, 0x04, 0x08, 0x10,
 			0x20, 0x40, 0x60, 0x80, 0xff
 		};
@@ -257,7 +240,7 @@ static void xlat_volfx(struct xmp_event *event)
 }
 
 
-static void fix_name(uint8 *s, int l)
+static void fix_name(uint8_t *s, int l)
 {
 	int i;
 
@@ -277,7 +260,7 @@ static int read_envelope(struct xmp_envelope *ei, struct it_envelope *env,
 			  HIO_HANDLE *f)
 {
 	int i;
-	uint8 buf[82];
+	uint8_t buf[82];
 
 	if (hio_read(buf, 1, 82, f) != 82) {
 		return -1;
@@ -330,90 +313,7 @@ static int read_envelope(struct xmp_envelope *ei, struct it_envelope *env,
 
 static void identify_tracker(struct module_data *m, struct it_file_header *ifh)
 {
-#ifndef LIBXMP_CORE_PLAYER
-	char tracker_name[40];
-	int sample_mode = ~ifh->flags & IT_USE_INST;
-
-	switch (ifh->cwt >> 8) {
-	case 0x00:
-		strcpy(tracker_name, "unmo3");
-		break;
-	case 0x01:
-	case 0x02:		/* test from Schism Tracker sources */
-		if (ifh->cmwt == 0x0200 && ifh->cwt == 0x0214
-		    && ifh->flags == 9 && ifh->special == 0
-		    && ifh->hilite_maj == 0 && ifh->hilite_min == 0
-		    && ifh->insnum == 0 && ifh->patnum + 1 == ifh->ordnum
-		    && ifh->gv == 128 && ifh->mv == 100 && ifh->is == 1
-		    && ifh->sep == 128 && ifh->pwd == 0
-		    && ifh->msglen == 0 && ifh->msgofs == 0 && ifh->rsvd == 0) {
-			strcpy(tracker_name, "OpenSPC conversion");
-		} else if (ifh->cmwt == 0x0200 && ifh->cwt == 0x0217) {
-			strcpy(tracker_name, "ModPlug Tracker 1.16");
-			/* ModPlug Tracker files aren't really IMPM 2.00 */
-			ifh->cmwt = sample_mode ? 0x100 : 0x214;
-		} else if (ifh->cwt == 0x0216) {
-			strcpy(tracker_name, "Impulse Tracker 2.14v3");
-		} else if (ifh->cwt == 0x0217) {
-			strcpy(tracker_name, "Impulse Tracker 2.14v5");
-		} else if (ifh->cwt == 0x0214 && !memcmp(&ifh->rsvd, "CHBI", 4)) {
-			strcpy(tracker_name, "Chibi Tracker");
-		} else {
-			snprintf(tracker_name, 40, "Impulse Tracker %d.%02x",
-				 (ifh->cwt & 0x0f00) >> 8, ifh->cwt & 0xff);
-		}
-		break;
-	case 0x08:
-	case 0x7f:
-		if (ifh->cwt == 0x0888) {
-			strcpy(tracker_name, "OpenMPT 1.17");
-		} else if (ifh->cwt == 0x7fff) {
-			strcpy(tracker_name, "munch.py");
-		} else {
-			snprintf(tracker_name, 40, "unknown (%04x)", ifh->cwt);
-		}
-		break;
-	default:
-		switch (ifh->cwt >> 12) {
-		case 0x1:{
-			uint16 cwtv = ifh->cwt & 0x0fff;
-			struct tm version;
-			time_t version_sec;
-
-			if (cwtv > 0x50) {
-				version_sec = ((cwtv - 0x050) * 86400) + 1254355200;
-				if (localtime_r(&version_sec, &version)) {
-					snprintf(tracker_name, 40,
-						 "Schism Tracker %04d-%02d-%02d",
-						 version.tm_year + 1900,
-						 version.tm_mon + 1,
-						 version.tm_mday);
-				}
-			} else {
-				snprintf(tracker_name, 40,
-					 "Schism Tracker 0.%x", cwtv);
-			}
-			break; }
-		case 0x5:
-			snprintf(tracker_name, 40, "OpenMPT %d.%02x",
-				 (ifh->cwt & 0x0f00) >> 8, ifh->cwt & 0xff);
-			if (memcmp(&ifh->rsvd, "OMPT", 4))
-				strncat(tracker_name, " (compat.)", 39);
-			break;
-		case 0x06:
-			snprintf(tracker_name, 40, "BeRoTracker %d.%02x",
-				 (ifh->cwt & 0x0f00) >> 8, ifh->cwt & 0xff);
-			break;
-		default:
-			snprintf(tracker_name, 40, "unknown (%04x)", ifh->cwt);
-		}
-	}
-
-	libxmp_set_type(m, "%s IT %d.%02x", tracker_name, ifh->cmwt >> 8,
-						ifh->cmwt & 0xff);
-#else
 	libxmp_set_type(m, "Impulse Tracker");
-#endif
 }
 
 static int load_old_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
@@ -421,7 +321,7 @@ static int load_old_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
 	int inst_map[120], inst_rmap[XMP_MAX_KEYS];
 	struct it_instrument1_header i1h;
 	int c, k, j;
-	uint8 buf[64];
+	uint8_t buf[64];
 
 	if (hio_read(buf, 1, 64, f) != 64) {
 		return -1;
@@ -553,7 +453,7 @@ static int load_new_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
 	struct it_envelope env;
 	int dca2nna[] = { 0, 2, 3 };
 	int c, k, j;
-	uint8 buf[64];
+	uint8_t buf[64];
 
 	if (hio_read(buf, 1, 64, f) != 64) {
 		return -1;
@@ -708,7 +608,7 @@ static int load_it_sample(struct module_data *m, int i, int start,
 	struct xmp_module *mod = &m->mod;
 	struct xmp_sample *xxs, *xsmp;
 	int j, k;
-	uint8 buf[80];
+	uint8_t buf[80];
 
 	if (sample_mode) {
 		mod->xxi[i].sub = calloc(sizeof(struct xmp_subinstrument), 1);
@@ -849,7 +749,7 @@ static int load_it_sample(struct module_data *m, int i, int start,
 
 		/* compressed samples */
 		if (ish.flags & IT_SMP_COMP) {
-			uint8 *buf;
+			uint8_t *buf;
 			int ret;
 
 			buf = calloc(1, xxs->len * 2);
@@ -918,11 +818,11 @@ static int load_it_pattern(struct module_data *m, int i, int new_fx,
 {
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event, dummy, lastevent[L_CHANNELS];
-	uint8 mask[L_CHANNELS];
-	uint8 last_fxp[64];
+	uint8_t mask[L_CHANNELS];
+	uint8_t last_fxp[64];
 
 	int r, c, pat_len;
-	uint8 b;
+	uint8_t b;
 
 	r = 0;
 
@@ -1043,9 +943,9 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	int c, i, j;
 	struct it_file_header ifh;
 	int max_ch;
-	uint32 *pp_ins;		/* Pointers to instruments */
-	uint32 *pp_smp;		/* Pointers to samples */
-	uint32 *pp_pat;		/* Pointers to patterns */
+	uint32_t *pp_ins;		/* Pointers to instruments */
+	uint32_t *pp_smp;		/* Pointers to samples */
+	uint32_t *pp_pat;		/* Pointers to patterns */
 	int new_fx, sample_mode;
 
 	LOAD_INIT();
@@ -1244,7 +1144,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	 */
 	max_ch = 0;
 	for (i = 0; i < mod->pat; i++) {
-		uint8 mask[L_CHANNELS];
+		uint8_t mask[L_CHANNELS];
 		int pat_len;
 
 		/* If the offset to a pattern is 0, the pattern is empty */

@@ -22,15 +22,14 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-compare"
 
+#include "memio.h"
+
+#include <stdio.h>
+#include <memory.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <limits.h>
-#ifndef LIBXMP_CORE_PLAYER
-#include <sys/types.h>
-#include <sys/stat.h>
-#endif
-#include "common.h"
-#include "memio.h"
 
 static inline ptrdiff_t CAN_READ(MFILE *m)
 {
@@ -40,11 +39,10 @@ static inline ptrdiff_t CAN_READ(MFILE *m)
 	return INT_MAX;
 }
 
-
 int mgetc(MFILE *m)
 {
 	if (CAN_READ(m) >= 1)
-		return *(uint8 *)(m->start + m->pos++);
+		return *(uint8_t *)(m->start + m->pos++);
 	else
 		return EOF;
 }
@@ -67,7 +65,6 @@ size_t mread(void *buf, size_t size, size_t num, MFILE *m)
 
 	return should_read / size;
 }
-
 
 int mseek(MFILE *m, long offset, int whence)
 {
@@ -124,16 +121,5 @@ int mclose(MFILE *m)
 	free(m);
 	return 0;
 }
-
-#ifndef LIBXMP_CORE_PLAYER
-
-int mstat(MFILE *m, struct stat *st)
-{
-	memset(st, 0, sizeof (struct stat));
-	st->st_size = m->size;
-	return 0;
-}
-
-#endif
 
 #pragma GCC diagnostic pop

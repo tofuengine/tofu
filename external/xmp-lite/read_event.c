@@ -31,11 +31,6 @@
 #include "virtual.h"
 #include "period.h"
 
-#ifndef LIBXMP_CORE_PLAYER
-#include "med_extras.h"
-#endif
-
-
 static inline int is_valid_note(int note)
 {
 	return (note >= 0 && note < XMP_MAX_KEYS);
@@ -213,14 +208,7 @@ static void set_period_ft2(struct context_data *ctx, int note,
 	}
 }
 
-
-#ifndef LIBXMP_CORE_PLAYER
-#define IS_SFX_PITCH(x) ((x) == FX_PITCH_ADD || (x) == FX_PITCH_SUB)
-#define IS_TONEPORTA(x) ((x) == FX_TONEPORTA || (x) == FX_TONE_VSLIDE \
-		|| (x) == FX_PER_TPORTA)
-#else
 #define IS_TONEPORTA(x) ((x) == FX_TONEPORTA || (x) == FX_TONE_VSLIDE)
-#endif
 
 #define set_patch(ctx,chn,ins,smp,note) \
 	libxmp_virt_setpatch(ctx, chn, ins, smp, note, 0, 0, 0)
@@ -340,15 +328,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 	libxmp_process_fx(ctx, xc, chn, e, 1);
 	libxmp_process_fx(ctx, xc, chn, e, 0);
 
-#ifndef LIBXMP_CORE_PLAYER
-	if (IS_SFX_PITCH(e->fxt)) {
- 		xc->period = libxmp_note_to_period(ctx, note, xc->finetune,
-                                			xc->per_adj);
-	} else
-#endif
-	{
-		set_period(ctx, note, sub, xc, is_toneporta);
-	}
+	set_period(ctx, note, sub, xc, is_toneporta);
 
 	if (sub == NULL) {
 		return 0;
@@ -1339,160 +1319,6 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 
 #endif
 
-#ifndef LIBXMP_CORE_PLAYER
-
-static int read_event_med(struct context_data *ctx, struct xmp_event *e, int chn)
-{
-	struct player_data *p = &ctx->p;
-	struct module_data *m = &ctx->m;
-	struct xmp_module *mod = &m->mod;
-	struct channel_data *xc = &p->xc_data[chn];
-	int note;
-	struct xmp_subinstrument *sub;
-	int new_invalid_ins = 0;
-	int is_toneporta;
-	int use_ins_vol;
-	int finetune;
-
-	xc->flags = 0;
-	note = -1;
-	is_toneporta = 0;
-	use_ins_vol = 0;
-
-	if (e->fxt == FX_TONEPORTA || e->fxt == FX_TONE_VSLIDE) {
-		is_toneporta = 1;
-	}
-
-	/* Check instrument */
-
-	if (e->ins && e->note) {
-		int ins = e->ins - 1;
-		use_ins_vol = 1;
-		SET(NEW_INS);
-		xc->fadeout = 0x10000;
-		xc->offset.val = 0;
-		RESET_NOTE(NOTE_RELEASE|NOTE_FADEOUT);
-
-		if (IS_VALID_INSTRUMENT(ins)) {
-			if (is_toneporta) {
-				/* Get new instrument volume */
-				sub = get_subinstrument(ctx, ins, e->note - 1);
-				if (sub != NULL) {
-					xc->volume = sub->vol;
-					use_ins_vol = 0;
-				}
-			} else {
-				xc->ins = ins;
-				xc->ins_fade = mod->xxi[ins].rls;
-			}
-		} else {
-			new_invalid_ins = 1;
-			libxmp_virt_resetchannel(ctx, chn);
-		}
-
-		MED_CHANNEL_EXTRAS(*xc)->arp = 0;
-		MED_CHANNEL_EXTRAS(*xc)->aidx = 0;
-	} else {
-		/* Hold */
-		if (e->ins && !e->note) {
-			use_ins_vol = 1;
-		}
-	}
-
-	/* Check note */
-
-	if (e->note) {
-		SET(NEW_NOTE);
-
-		if (e->note == XMP_KEY_OFF) {
-			SET_NOTE(NOTE_RELEASE);
-			use_ins_vol = 0;
-		} else if (e->note == XMP_KEY_CUT) {
-			SET_NOTE(NOTE_END);
-			xc->period = 0;
-			libxmp_virt_resetchannel(ctx, chn);
-		} else if (!is_toneporta && IS_VALID_INSTRUMENT(xc->ins)) {
-			struct xmp_instrument *xxi = &mod->xxi[xc->ins];
-
-			xc->key = e->note - 1;
-			RESET_NOTE(NOTE_END);
-		
-			xc->per_adj = 0.0;
-			if (xxi->nsm > 1 && HAS_MED_INSTRUMENT_EXTRAS(*xxi)) {
-				/* synth or iffoct */
-				if (MED_INSTRUMENT_EXTRAS(*xxi)->vts == 0 &&
-				    MED_INSTRUMENT_EXTRAS(*xxi)->wts == 0) {
-					/* iffoct */
-					xc->per_adj = 2.0;
-				}
-			}
-	
-			sub = get_subinstrument(ctx, xc->ins, xc->key);
-	
-			if (!new_invalid_ins && sub != NULL) {
-				int transp = xxi->map[xc->key].xpo;
-				int smp;
-	
-				note = xc->key + sub->xpo + transp;
-				smp = sub->sid;
-	
-				if (mod->xxs[smp].len == 0) {
-					smp = -1;
-				}
-	
-				if (smp >= 0 && smp < mod->smp) {
-					set_patch(ctx, chn, xc->ins, smp, note);
-					xc->smp = smp;
-				}
-			} else {
-				xc->flags = 0;
-				use_ins_vol = 0;
-			}
-		}
-	}
-
-	sub = get_subinstrument(ctx, xc->ins, xc->key);
-
-	/* Keep effect-set finetune if no instrument set */
-	finetune = xc->finetune;
-	set_effect_defaults(ctx, note, sub, xc, is_toneporta);
-	if (!e->ins) {
-		xc->finetune = finetune;
-	}
-
-	if (e->ins && sub != NULL) {
-		reset_envelopes(ctx, xc);
-	}
-
-	/* Process new volume */
-	if (e->vol) {
-		xc->volume = e->vol - 1;
-		SET(NEW_VOL);
-	}
-
-	/* Secondary effect handled first */
-	libxmp_process_fx(ctx, xc, chn, e, 1);
-	libxmp_process_fx(ctx, xc, chn, e, 0);
-	set_period(ctx, note, sub, xc, is_toneporta);
-
-	if (sub == NULL) {
-		return 0;
-	}
-
-	if (note >= 0) {
-		xc->note = note;
-		libxmp_virt_voicepos(ctx, chn, xc->offset.val);
-	}
-
-	if (use_ins_vol && !TEST(NEW_VOL)) {
-		xc->volume = sub->vol;
-	}
-
-	return 0;
-}
-
-#endif
-
 static int read_event_smix(struct context_data *ctx, struct xmp_event *e, int chn)
 {
 	struct player_data *p = &ctx->p;
@@ -1605,10 +1431,6 @@ int libxmp_read_event(struct context_data *ctx, struct xmp_event *e, int chn)
 #ifndef LIBXMP_CORE_DISABLE_IT
 	case READ_EVENT_IT:
 		return read_event_it(ctx, e, chn);
-#endif
-#ifndef LIBXMP_CORE_PLAYER
-	case READ_EVENT_MED:
-		return read_event_med(ctx, e, chn);
 #endif
 	default:
 		return read_event_mod(ctx, e, chn);

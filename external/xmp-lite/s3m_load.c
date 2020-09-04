@@ -111,11 +111,11 @@ static int s3m_test(HIO_HANDLE *f, char *t, const int start)
 
 #define fix87(x) do { \
 	int i; for (i = 0; i < sizeof(x); i++) { \
-		if (*((uint8 *)&x + i) == 0x87) *((uint8 *)&x + i) = 0; } \
+		if (*((uint8_t *)&x + i) == 0x87) *((uint8_t *)&x + i) = 0; } \
 	} while (0)
 
 /* Effect conversion table */
-static const uint8 fx[] = {
+static const uint8_t fx[] = {
 	NONE,
 	FX_S3M_SPEED,		/* Axx  Set speed to xx (the default is 06) */
 	FX_JUMP,		/* Bxx  Jump to order xx (hexadecimal) */
@@ -148,7 +148,7 @@ static const uint8 fx[] = {
 /* Effect translation */
 static void xlat_fx(int c, struct xmp_event *e)
 {
-	uint8 h = MSN(e->fxp), l = LSN(e->fxp);
+	uint8_t h = MSN(e->fxp), l = LSN(e->fxp);
 
 	if (e->fxt > 26) {
 		D_(D_WARN "invalid effect %02x", e->fxt);
@@ -231,17 +231,12 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	struct xmp_event *event = 0, dummy;
 	struct s3m_file_header sfh;
 	struct s3m_instrument_header sih;
-#ifndef LIBXMP_CORE_PLAYER
-	struct s3m_adlib_header sah;
-	char tracker_name[40];
-	int quirk87 = 0;
-#endif
 	int pat_len;
-	uint8 n, b;
-	uint16 *pp_ins;			/* Parapointers to instruments */
-	uint16 *pp_pat;			/* Parapointers to patterns */
+	uint8_t n, b;
+	uint16_t *pp_ins;			/* Parapointers to instruments */
+	uint16_t *pp_pat;			/* Parapointers to patterns */
 	int ret;
-	uint8 buf[96]
+	uint8_t buf[96]
 
 	LOAD_INIT();
 
@@ -280,18 +275,6 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	if (sfh.magic != MAGIC_SCRM) {
 		goto err;
 	}
-
-#ifndef LIBXMP_CORE_PLAYER
-	/* S3M anomaly in return_of_litmus.s3m */
-	if (sfh.version == 0x1301 && sfh.name[27] == 0x87)
-		quirk87 = 1;
-
-	if (quirk87) {
-		fix87(sfh.name);
-		fix87(sfh.patnum);
-		fix87(sfh.flags);
-	}
-#endif
 
 	libxmp_copy_adjust(mod->name, sfh.name, 28);
 
@@ -376,7 +359,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	/* Default pan positions */
 
 	for (i = 0, sfh.dp -= 0xfc; !sfh.dp /* && n */  && (i < 32); i++) {
-		uint8 x = hio_read8(f);
+		uint8_t x = hio_read8(f);
 		if (x & S3M_PAN_SET) {
 			mod->xxc[i].pan = (x << 4) & 0xff;
 		} else {
@@ -391,54 +374,8 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		m->quirk |= QUIRK_VSALL;
 	}
 
-#ifndef LIBXMP_CORE_PLAYER
-	switch (sfh.version >> 12) {
-	case 1:
-		snprintf(tracker_name, 40, "Scream Tracker %d.%02x",
-			 (sfh.version & 0x0f00) >> 8, sfh.version & 0xff);
-		m->quirk |= QUIRK_ST3BUGS;
-		break;
-	case 2:
-		snprintf(tracker_name, 40, "Imago Orpheus %d.%02x",
-			 (sfh.version & 0x0f00) >> 8, sfh.version & 0xff);
-		break;
-	case 3:
-		if (sfh.version == 0x3216) {
-			strcpy(tracker_name, "Impulse Tracker 2.14v3");
-		} else if (sfh.version == 0x3217) {
-			strcpy(tracker_name, "Impulse Tracker 2.14v5");
-		} else {
-			snprintf(tracker_name, 40, "Impulse Tracker %d.%02x",
-				 (sfh.version & 0x0f00) >> 8,
-				 sfh.version & 0xff);
-		}
-		break;
-	case 5:
-		snprintf(tracker_name, 40, "OpenMPT %d.%02x",
-			 (sfh.version & 0x0f00) >> 8, sfh.version & 0xff);
-		m->quirk |= QUIRK_ST3BUGS;
-		break;
-	case 4:
-		if (sfh.version != 0x4100) {
-			snprintf(tracker_name, 40, "Schism Tracker %d.%02x",
-				 (sfh.version & 0x0f00) >> 8,
-				 sfh.version & 0xff);
-			break;
-		}
-		/* fall through */
-	case 6:
-		snprintf(tracker_name, 40, "BeRoTracker %d.%02x",
-			 (sfh.version & 0x0f00) >> 8, sfh.version & 0xff);
-		break;
-	default:
-		snprintf(tracker_name, 40, "unknown (%04x)", sfh.version);
-	}
-
-	libxmp_set_type(m, "%s S3M", tracker_name);
-#else
 	libxmp_set_type(m, "Scream Tracker 3");
 	m->quirk |= QUIRK_ST3BUGS;
-#endif
 
 	MODULE_INFO();
 
@@ -537,41 +474,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		}
 
 		if (buf[0] >= 2) {
-#ifndef LIBXMP_CORE_PLAYER
-			/* OPL2 FM instrument */
-
-			memcpy(sah.dosname, buf + 1, 12);	/* DOS file name */
-			memcpy(sah.reg, buf + 16, 12);		/* Adlib registers */
-			sah.vol = buf[28];
-			sah.dsk = buf[29];
-			sah.c2spd = readmem16l(buf + 32);	/* C4 speed */
-			memcpy(sah.name, buf + 48, 28);		/* Instrument name */
-			sah.magic = readmem32b(buf + 76);		/* 'SCRI' */
-
-			if (sah.magic != MAGIC_SCRI) {
-				D_(D_CRIT "error: FM instrument magic");
-				goto err3;
-			}
-			sah.magic = 0;
-
-			libxmp_instrument_name(mod, i, sah.name, 28);
-
-			xxi->nsm = 1;
-			sub->vol = sah.vol;
-			libxmp_c2spd_to_note(sah.c2spd, &sub->xpo, &sub->fin);
-			sub->xpo += 12;
-			ret =
-			    libxmp_load_sample(m, f, SAMPLE_FLAG_ADLIB, xxs,
-					(char *)&sah.reg);
-			if (ret < 0)
-				goto err3;
-
-			D_(D_INFO "[%2X] %-28.28s", i, xxi->name);
-
-			continue;
-#else
 			goto err3;
-#endif
 		}
 
 		memcpy(sih.dosname, buf + 1, 13);	/* DOS file name */
@@ -601,14 +504,6 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 			D_(D_CRIT "error: instrument magic");
 			goto err3;
 		}
-#ifndef LIBXMP_CORE_PLAYER
-		if (quirk87) {
-			fix87(sih.length);
-			fix87(sih.loopbeg);
-			fix87(sih.loopend);
-			fix87(sih.flags);
-		}
-#endif
 
 		xxs->len = sih.length;
 		xxi->nsm = sih.length > 0 ? 1 : 0;

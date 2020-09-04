@@ -29,148 +29,12 @@
 #include "common.h"
 #include "loader.h"
 
-
-#ifndef LIBXMP_CORE_PLAYER
-
-#ifdef __ANDROID__
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#endif
-
-#include <fnmatch.h>
-
-/*
- * Handle special "module quirks" that can't be detected automatically
- * such as Protracker 2.x compatibility, vblank timing, etc.
- */
-
-struct module_quirk {
-	uint8 md5[16];
-	int flags;
-	int mode;
-};
-
-const struct module_quirk mq[] = {
-	/* "No Mercy" by Alf/VTL (added by Martin Willers) */
-	{
-		{ 0x36, 0x6e, 0xc0, 0xfa, 0x96, 0x2a, 0xeb, 0xee,
-	  	  0x03, 0x4a, 0xa2, 0xdb, 0xaa, 0x49, 0xaa, 0xea },
-		0, XMP_MODE_PROTRACKER
-	},
-
-	/* mod.souvenir of china */
-	{
-		{ 0x93, 0xf1, 0x46, 0xae, 0xb7, 0x58, 0xc3, 0x9d,
-		  0x8b, 0x5f, 0xbc, 0x98, 0xbf, 0x23, 0x7a, 0x43 },
-		XMP_FLAGS_FIXLOOP, XMP_MODE_AUTO
-	},
-
-	/* "siedler ii" (added by Daniel Åkerud) */
-	{
-		{ 0x70, 0xaa, 0x03, 0x4d, 0xfb, 0x2f, 0x1f, 0x73,
-		  0xd9, 0xfd, 0xba, 0xfe, 0x13, 0x1b, 0xb7, 0x01 },
-		XMP_FLAGS_VBLANK, XMP_MODE_AUTO
-	},
-
-	/* "Klisje paa klisje" (added by Kjetil Torgrim Homme) */
-	{
-		{ 0xe9, 0x98, 0x01, 0x2c, 0x70, 0x0e, 0xb4, 0x3a,
-		  0xf0, 0x32, 0x17, 0x11, 0x30, 0x58, 0x29, 0xb2 },
-		0, XMP_MODE_NOISETRACKER
-	},
-
-#if 0
-	/* -- Already covered by Noisetracker fingerprinting -- */
-
-	/* Another version of Klisje paa klisje sent by Steve Fernandez */
-	{
-		{ 0x12, 0x19, 0x1c, 0x90, 0x41, 0xe3, 0xfd, 0x70,
-		  0xb7, 0xe6, 0xb3, 0x94, 0x8b, 0x21, 0x07, 0x63 },
-		XMP_FLAGS_VBLANK
-	},
-#endif
-
-	/* "((((( nebulos )))))" sent by Tero Auvinen (AMP version) */
-	{
-		{ 0x51, 0x6e, 0x8d, 0xcc, 0x35, 0x7d, 0x50, 0xde,
-		  0xa9, 0x85, 0xbe, 0xbf, 0x90, 0x2e, 0x42, 0xdc },
-		0, XMP_MODE_NOISETRACKER
-	},
-
-	/* Purple Motion's Sundance.mod, Music Channel BBS edit */
-	{
-		{ 0x5d, 0x3e, 0x1e, 0x08, 0x28, 0x52, 0x12, 0xc7,
-		  0x17, 0x64, 0x95, 0x75, 0x98, 0xe6, 0x95, 0xc1 },
-		0, XMP_MODE_ST3
-	},
-
-	/* Asle's Ode to Protracker */
-	{
-		{ 0x97, 0xa3, 0x7d, 0x30, 0xd7, 0xae, 0x6d, 0x50,
-		  0xc9, 0x62, 0xe9, 0xd8, 0x87, 0x1b, 0x7e, 0x8a },
-		0, XMP_MODE_PROTRACKER
-	},
-
-	{
-		{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-		0, 0
-	}
-};
-
-static void module_quirks(struct context_data *ctx)
-{
-	struct player_data *p = &ctx->p;
-	struct module_data *m = &ctx->m;
-	int i;
-
-	for (i = 0; mq[i].flags != 0 || mq[i].mode != 0; i++) {
-		if (!memcmp(m->md5, mq[i].md5, 16)) {
-			p->flags |= mq[i].flags;
-			p->mode = mq[i].mode;
-		}
-	}
-}
-
-/* 
- * Check whether the given string matches one of the blacklisted glob
- * patterns. Used to filter file names stored in archive files.
- */
-int libxmp_exclude_match(const char *name)
-{
-	int i;
-
-	static const char *const exclude[] = {
-		"README", "readme",
-		"*.DIZ", "*.diz",
-		"*.NFO", "*.nfo",
-		"*.DOC", "*.Doc", "*.doc",
-		"*.INFO", "*.info", "*.Info",
-		"*.TXT", "*.txt",
-		"*.EXE", "*.exe",
-		"*.COM", "*.com",
-		"*.README", "*.readme", "*.Readme", "*.ReadMe",
-		NULL
-	};
-
-	for (i = 0; exclude[i] != NULL; i++) {
-		if (fnmatch(exclude[i], name, 0) == 0) {
-			return 1;
-		}
-	}
-
-	return 0;
-}
-
-#endif /* LIBXMP_CORE_PLAYER */
-
 char *libxmp_adjust_string(char *s)
 {
 	int i;
 
 	for (i = 0; i < strlen(s); i++) {
-		if (!isprint((int)s[i]) || ((uint8) s[i] > 127))
+		if (!isprint((int)s[i]) || ((uint8_t) s[i] > 127))
 			s[i] = ' ';
 	}
 
@@ -218,19 +82,16 @@ void libxmp_load_prologue(struct context_data *ctx)
 	m->scan_cnt = NULL;
 
 	/* Set defaults */
-    	m->mod.pat = 0;
-    	m->mod.trk = 0;
-    	m->mod.chn = 4;
-    	m->mod.ins = 0;
-    	m->mod.smp = 0;
-    	m->mod.spd = 6;
-    	m->mod.bpm = 125;
-    	m->mod.len = 0;
-    	m->mod.rst = 0;
+	m->mod.pat = 0;
+	m->mod.trk = 0;
+	m->mod.chn = 4;
+	m->mod.ins = 0;
+	m->mod.smp = 0;
+	m->mod.spd = 6;
+	m->mod.bpm = 125;
+	m->mod.len = 0;
+	m->mod.rst = 0;
 
-#ifndef LIBXMP_CORE_PLAYER
-	m->extra = NULL;
-#endif
 #ifndef LIBXMP_CORE_DISABLE_IT
 	m->xsmp = NULL;
 #endif
@@ -302,9 +163,6 @@ void libxmp_load_epilogue(struct context_data *ctx)
 	p->filter = 0;
 	p->mode = XMP_MODE_AUTO;
 	p->flags = p->player_flags;
-#ifndef LIBXMP_CORE_PLAYER
-	module_quirks(ctx);
-#endif
 	libxmp_set_player_mode(ctx);
 }
 

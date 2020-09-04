@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2018 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -19,41 +19,59 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
 #include <stdlib.h>
-#include <string.h>
-#include "format.h"
+#include <stddef.h>
+#include <stdint.h>
+#include <limits.h>
+#include "cbio.h"
 
-extern const struct format_loader libxmp_loader_xm;
-extern const struct format_loader libxmp_loader_mod;
-extern const struct format_loader libxmp_loader_it;
-extern const struct format_loader libxmp_loader_s3m;
-
-extern const struct pw_format *const pw_format[];
-
-const struct format_loader *const format_loader[5] = {
-	&libxmp_loader_xm,
-	&libxmp_loader_mod,
-#ifndef LIBXMP_CORE_DISABLE_IT
-	&libxmp_loader_it,
-#endif
-	&libxmp_loader_s3m,
-	NULL
-};
-
-static const char *_farray[5] = { NULL };
-
-char **format_list()
+CBFILE *cbopen(CBFUNC func, void *ud)
 {
-	int count, i;
+	CBFILE *cb;
 
-	if (_farray[0] == NULL) {
-		for (count = i = 0; format_loader[i] != NULL; i++) {
-			_farray[count++] = format_loader[i]->name;
-		}
+	cb = (CBFILE *)malloc(sizeof (CBFILE));
+	if (cb == NULL)
+		return NULL;
+	
+	cb->func = func;
+	cb->ud = ud;
 
-		_farray[count] = NULL;
-	}
+	return cb;
+}
 
-	return (char **)_farray;
+int cbgetc(CBFILE *cb)
+{
+	uint8_t c;
+	size_t l = cb->func.read(cb->ud, &c, sizeof(uint8_t));
+	if (l == sizeof(uint8_t))
+		return c;
+	else
+		return EOF;
+}
+
+size_t cbread(void *buf, size_t size, size_t num, CBFILE *cb)
+{
+	size_t l = cb->func.read(cb->ud, buf, size * num);
+	return l / size;
+}
+
+int cbseek(CBFILE *cb, long offset, int whence)
+{
+	return cb->func.seek(cb->ud, offset, whence);
+}
+
+long cbtell(CBFILE *cb)
+{
+	return cb->func.tell(cb->ud);
+}
+
+int cbclose(CBFILE *cb)
+{
+	free(cb);
+	return 0;
+}
+
+int	cbeof(CBFILE *cb)
+{
+	return cb->func.eof(cb->ud);
 }

@@ -26,7 +26,7 @@
 #include "common.h"
 #include "period.h"
 #include "player.h"
-#include "hio.h"
+#include "hio/hio.h"
 
 
 struct xmp_instrument *libxmp_get_instrument(struct context_data *ctx, int ins)
@@ -182,7 +182,7 @@ int xmp_smix_load_sample(xmp_context opaque, int num, char *path)
 	struct xmp_instrument *xxi;
 	struct xmp_sample *xxs;
 	HIO_HANDLE *h;
-	uint32 magic;
+	uint32_t magic;
 	int chn, rate, bits, size;
 	int retval = -XMP_ERROR_INTERNAL;
 

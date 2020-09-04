@@ -66,7 +66,7 @@ static int load_xm_pattern(struct module_data *m, int num, int version, HIO_HAND
 	struct xmp_module *mod = &m->mod;
 	struct xm_pattern_header xph;
 	struct xmp_event *event;
-	uint8 *patbuf, *pat, b;
+	uint8_t *patbuf, *pat, b;
 	int j, r;
 	int size;
 
@@ -352,7 +352,7 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 	int sample_num = 0;
 	long total_sample_size;
 	int i, j;
-	uint8 buf[208];
+	uint8_t buf[208];
 
 	D_(D_INFO "Instruments: %d", mod->ins);
 
@@ -433,7 +433,7 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 			memset(&xi, 0, sizeof(struct xm_instrument));
 			hio_seek(f, xih.size - XM_INST_HEADER_SIZE, SEEK_CUR);
 		} else {
-			uint8 *b = buf;
+			uint8_t *b = buf;
 
 			if (hio_read(buf, 208, 1, f) != 1) {
 				D_(D_CRIT "short read in instrument data");
@@ -509,7 +509,7 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 		for (j = 0; j < xxi->nsm; j++, sample_num++) {
 			struct xmp_subinstrument *sub = &xxi->sub[j];
 			struct xmp_sample *xxs;
-			uint8 *b = buf;
+			uint8_t *b = buf;
 
 			if (sample_num >= mod->smp) {
 				mod->xxs = libxmp_realloc_samples(mod->xxs, &mod->smp, mod->smp * 3 / 2);
@@ -540,7 +540,7 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 			xsh[j].finetune = *b++;	/* Finetune (-128..+127) */
 			xsh[j].type = *b++;	/* Flags */
 			xsh[j].pan = *b++;	/* Panning (0-255) */
-			xsh[j].relnote = *(int8 *) b++;	/* Relative note number */
+			xsh[j].relnote = *(int8_t *) b++;	/* Relative note number */
 			xsh[j].reserved = *b++;
 			memcpy(xsh[j].name, b, 22);
 
@@ -587,11 +587,6 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 			   sub->vol, sub->fin, sub->pan, sub->xpo);
 
 			flags = SAMPLE_FLAG_DIFF;
-#ifndef LIBXMP_CORE_PLAYER
-			if (xsh[j].reserved == 0xad) {
-				flags = SAMPLE_FLAG_ADPCM;
-			}
-#endif
 
 			if (version > 0x0103) {
 				if (libxmp_load_sample(m, f, flags, &mod->xxs[sub->sid], NULL) < 0) {
@@ -629,7 +624,7 @@ static int xm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	struct xm_file_header xfh;
 	char tracker_name[21];
 	int len;
-	uint8 buf[80];
+	uint8_t buf[80];
 
 	LOAD_INIT();
 
@@ -712,32 +707,8 @@ static int xm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	    !strncmp(tracker_name, "OpenMPT ", 8)) {
 		m->quirk |= QUIRK_FT2BUGS;
 	}
-#ifndef LIBXMP_CORE_PLAYER
-	if (xfh.headersz == 0x0113) {
-		strcpy(tracker_name, "unknown tracker");
-		m->quirk &= ~QUIRK_FT2BUGS;
-	} else if (*tracker_name == 0) {
-		strcpy(tracker_name, "Digitrakker");	/* best guess */
-		m->quirk &= ~QUIRK_FT2BUGS;
-	}
 
-	/* See MMD1 loader for explanation */
-	if (!strncmp(tracker_name, "MED2XM by J.Pynnone", 19)) {
-		if (mod->bpm <= 10) {
-			mod->bpm = 125 * (0x35 - mod->bpm * 2) / 33;
-		}
-		m->quirk &= ~QUIRK_FT2BUGS;
-	}
-
-	if (!strncmp(tracker_name, "FastTracker v 2.00", 18)) {
-		strcpy(tracker_name, "old ModPlug Tracker");
-		m->quirk &= ~QUIRK_FT2BUGS;
-	}
-
-	libxmp_set_type(m, "%s XM %d.%02d", tracker_name, xfh.version >> 8, xfh.version & 0xff);
-#else
 	libxmp_set_type(m, tracker_name);
-#endif
 
 	MODULE_INFO();
 
