@@ -37,7 +37,7 @@ typedef struct _Handle_VTable_t {
     void   (*dtor)(File_System_Handle_t *handle);
     size_t (*size)(File_System_Handle_t *handle);
     size_t (*read)(File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
-    void   (*seek)(File_System_Handle_t *handle, long offset, int whence);
+    bool   (*seek)(File_System_Handle_t *handle, long offset, int whence);
     long   (*tell)(File_System_Handle_t *handle);
     bool   (*eof) (File_System_Handle_t *handle);
 } Handle_VTable_t;
