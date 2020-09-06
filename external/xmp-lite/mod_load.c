@@ -178,7 +178,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	MODULE_INFO();
 
 	for (i = 0; i < mod->ins; i++) {
-		D_(D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %+d %c\n",
+		D_(D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %+d %c",
 		   i, mod->xxi[i].name,
 		   mod->xxs[i].len, mod->xxs[i].lps, mod->xxs[i].lpe,
 		   (mh.ins[i].loop_size > 1 && mod->xxs[i].lpe > 8) ?
