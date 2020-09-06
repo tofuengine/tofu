@@ -123,7 +123,7 @@ static int _stbi_io_read(void *user_data, char *data, int size)
 static void _stbi_io_skip(void *user_data, int n)
 {
     File_System_Handle_t *handle = (File_System_Handle_t *)user_data;
-    FS_seek(handle, n, SEEK_CUR);
+    FS_seek(handle, n, SEEK_CUR); // We are discaring the return value, yep. :\
 }
 
 static int _stbi_io_eof(void *user_data)
