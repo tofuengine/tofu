@@ -148,7 +148,7 @@ static size_t _xmp_read(void *user_data, void *buffer, size_t bytes_to_read)
 static int _xmp_seek(void *user_data, long offset, int whence)
 {
     SL_Callbacks_t *callbacks = (SL_Callbacks_t *)user_data;
-    return callbacks->seek(callbacks->user_data, offset, whence);
+    return callbacks->seek(callbacks->user_data, offset, whence) ? 0 : -1; // Convert to `fseek()` return values.
 }
 
 static long _xmp_tell(void *user_data)
