@@ -95,8 +95,7 @@ static size_t _handle_read(void *user_data, void *buffer, size_t bytes_to_read)
 static bool _handle_seek(void *user_data, long offset, int whence)
 {
     File_System_Handle_t *handle = (File_System_Handle_t *)user_data;
-    FS_seek(handle, offset, whence);
-    return true;
+    return FS_seek(handle, offset, whence);
 }
 
 static long _handle_tell(void *user_data)
