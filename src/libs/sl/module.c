@@ -95,7 +95,9 @@ static inline Source_States_t _consume(Module_t *module, size_t frames_requested
 
         ma_uint32 frames_to_consume = (frames_to_convert > MIXING_BUFFER_SIZE_IN_FRAMES) ? MIXING_BUFFER_SIZE_IN_FRAMES : frames_to_convert;
 
-        int play_result = xmp_play_buffer(context, read_buffer, frames_to_consume * MODULE_OUTPUT_BYTES_PER_FRAME, 1); // Just a single run, but tell EOD.
+        int loops = module->props.looping ? 0 : 1; // Automatically loop (properly filling the internal buffer), or tell EOD when looping.
+
+        int play_result = xmp_play_buffer(context, read_buffer, frames_to_consume * MODULE_OUTPUT_BYTES_PER_FRAME, loops);
         size_t frames_read = frames_to_consume; // The requested buffer size (in bytes) is always filled, with trailing zeroes if needed.
 
         ma_uint64 frames_consumed = frames_read;
@@ -107,15 +109,8 @@ static inline Source_States_t _consume(Module_t *module, size_t frames_requested
         *frames_processed += frames_generated;
         frames_remaining -= frames_generated;
 
-        if (play_result == -XMP_END) { // Handle the result here, after the (possibly partially filled) buffer has been copied.
-            if (!module->props.looping) {
-                return SOURCE_STATE_EOD;
-            } else {
-                _rewind(module);
-            }
-        } else
-        if (play_result == -XMP_ERROR_STATE) {
-            Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "module %p in error state", module);
+        Log_assert(play_result == -XMP_ERROR_STATE, LOG_LEVELS_ERROR, LOG_CONTEXT, "module %p in error state", module);
+        if (play_result != 0) { // Mark the end-of-data for both "end" and "error state" cases.
             return SOURCE_STATE_EOD;
         }
     }
