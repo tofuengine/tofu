@@ -306,7 +306,7 @@ static int load_patterns(struct module_data *m, int version, HIO_HANDLE *f)
 		return -1;
 	}
 
-	D_(D_INFO "Stored patterns: %d", mod->pat - 1);
+	D_(D_INFO "# of patterns: %d", mod->pat - 1);
 
 	for (i = 0; i < mod->pat - 1; i++) {
 		if (load_xm_pattern(m, i, version, f) < 0) {
@@ -354,7 +354,7 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 	int i, j;
 	uint8_t buf[208];
 
-	D_(D_INFO "Instruments: %d", mod->ins);
+	D_(D_INFO "# of instruments: %d", mod->ins);
 
 	/* ESTIMATED value! We don't know the actual value at this point */
 	mod->smp = MAX_SAMPLES;
@@ -384,7 +384,7 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 
 		/* Sanity check */
 		if (xih.samples > 0x10 || (xih.samples > 0 && xih.sh_size > 0x100)) {
-			D_(D_CRIT "Sanity check: %d %d", xih.samples, xih.sh_size);
+			D_(D_CRIT "sanity check: %d %d", xih.samples, xih.sh_size);
 			return -1;
 		}
 
@@ -650,18 +650,18 @@ static int xm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 	/* Sanity checks */
 	if (xfh.songlen > 256 || xfh.patterns > 256 || xfh.instruments > 255) {
-		D_(D_CRIT "Sanity check: %d %d %d", xfh.songlen, xfh.patterns, xfh.instruments);
+		D_(D_CRIT "sanity check: %d %d %d", xfh.songlen, xfh.patterns, xfh.instruments);
 		return -1;
 	}
 
 	if (xfh.restart > 255 || xfh.channels > XMP_MAX_CHANNELS) {
-		D_(D_CRIT "Sanity check: %d %d", xfh.restart, xfh.channels);
+		D_(D_CRIT "sanity check: %d %d", xfh.restart, xfh.channels);
 		return -1;
 	}
 
 	if (xfh.tempo >= 32 || xfh.bpm < 32 || xfh.bpm > 255) {
 		if (memcmp("MED2XM", xfh.tracker, 6)) {
-			D_(D_CRIT "Sanity check: %d %d", xfh.tempo, xfh.bpm);
+			D_(D_CRIT "sanity check: %d %d", xfh.tempo, xfh.bpm);
 			return -1;
 		}
 	}
@@ -669,7 +669,7 @@ static int xm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	/* Honor header size -- needed by BoobieSqueezer XMs */
 	len = xfh.headersz - 0x14;
 	if (len < 0 || len > 256) {
-		D_(D_CRIT "Sanity check: %d", len);
+		D_(D_CRIT "sanity check: %d", len);
 		return -1;
 	}
 
@@ -734,7 +734,7 @@ static int xm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		}
 	}
 
-	D_(D_INFO "Stored samples: %d", mod->smp);
+	D_(D_INFO "# of stored samples: %d", mod->smp);
 
 	/* XM 1.02 stores all samples after the patterns */
 	if (xfh.version <= 0x0103) {

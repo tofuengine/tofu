@@ -99,7 +99,7 @@ static int load_module(xmp_context opaque, HIO_HANDLE *h)
 
 	libxmp_load_prologue(ctx);
 
-	D_(D_WARN "load");
+	D_(D_WARN "loading");
 	test_result = load_result = -1;
 	for (i = 0; format_loader[i] != NULL; i++) {
 		hio_seek(h, 0, SEEK_SET);
@@ -108,11 +108,11 @@ static int load_module(xmp_context opaque, HIO_HANDLE *h)
 			/* reset error flag */
 		}
 
-		D_(D_WARN "test %s", format_loader[i]->name);
+		D_(D_WARN "testing format: %s", format_loader[i]->name);
 		test_result = format_loader[i]->test(h, NULL, 0);
 		if (test_result == 0) {
 			hio_seek(h, 0, SEEK_SET);
-			D_(D_WARN "load format: %s", format_loader[i]->name);
+			D_(D_WARN "loading w/ format: %s", format_loader[i]->name);
 			load_result = format_loader[i]->loader(m, h, 0);
 			break;
 		}
@@ -193,7 +193,7 @@ int xmp_load_module(xmp_context opaque, char *path)
 	struct stat st;
 	int ret;
 
-	D_(D_WARN "path = %s", path);
+	D_(D_WARN "path: %s", path);
 
 	if (stat(path, &st) < 0) {
 		return -XMP_ERROR_SYSTEM;
@@ -317,7 +317,7 @@ void xmp_release_module(xmp_context opaque)
 
 	ctx->state = XMP_STATE_UNLOADED;
 
-	D_(D_INFO "Freeing memory");
+	D_(D_INFO "freeing memory");
 
 	if (mod->xxt != NULL) {
 		for (i = 0; i < mod->trk; i++) {

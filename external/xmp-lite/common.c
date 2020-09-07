@@ -121,7 +121,7 @@ int libxmp_alloc_tracks_in_pattern(struct xmp_module *mod, int num)
 {
 	int i;
 
-	D_(D_INFO "Alloc %d tracks of %d rows", mod->chn, mod->xxp[num]->rows);
+	D_(D_INFO "allocating %d tracks w/ %d rows", mod->chn, mod->xxp[num]->rows);
 	for (i = 0; i < mod->chn; i++) {
 		int t = num * mod->chn + i;
 		int rows = mod->xxp[num]->rows;

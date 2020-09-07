@@ -384,7 +384,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 	/* Read patterns */
 
-	D_(D_INFO "Stored patterns: %d", mod->pat);
+	D_(D_INFO "# of patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
 		if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0)
@@ -443,15 +443,15 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		}
 	}
 
-	D_(D_INFO "Stereo enabled: %s", sfh.mv & 0x80 ? "yes" : "no");
-	D_(D_INFO "Pan settings: %s", sfh.dp ? "no" : "yes");
+	D_(D_INFO "stereo enabled: %s", sfh.mv & 0x80 ? "yes" : "no");
+	D_(D_INFO "pan settings: %s", sfh.dp ? "no" : "yes");
 
 	if (libxmp_init_instrument(m) < 0)
 		goto err3;
 
 	/* Read and convert instruments and samples */
 
-	D_(D_INFO "Instruments: %d", mod->ins);
+	D_(D_INFO "# of instruments: %d", mod->ins);
 
 	for (i = 0; i < mod->ins; i++) {
 		struct xmp_instrument *xxi = &mod->xxi[i];
@@ -501,7 +501,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		sih.magic = readmem32b(buf + 76);	/* 'SCRS' */
 
 		if (buf[0] == 1 && sih.magic != MAGIC_SCRS) {
-			D_(D_CRIT "error: instrument magic");
+			D_(D_CRIT "bad instrument magic");
 			goto err3;
 		}
 

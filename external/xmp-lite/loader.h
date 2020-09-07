@@ -57,8 +57,8 @@ extern const int	libxmp_arch_vol_table[];
 #define LOAD_INIT()
 
 #define MODULE_INFO() do { \
-    D_(D_WARN "Module title: \"%s\"", m->mod.name); \
-    D_(D_WARN "Module type: %s", m->mod.type); \
+    D_(D_WARN "module title: \"%s\"", m->mod.name); \
+    D_(D_WARN "module type: %s", m->mod.type); \
 } while (0)
 
 #endif

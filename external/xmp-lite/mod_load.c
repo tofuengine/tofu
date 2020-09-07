@@ -192,7 +192,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		return -1;
 
 	/* Load and convert patterns */
-	D_(D_INFO "Stored patterns: %d", mod->pat);
+	D_(D_INFO "# of patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
 		if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0)
@@ -207,7 +207,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	/* Load samples */
 
-	D_(D_INFO "Stored samples: %d", mod->smp);
+	D_(D_INFO "# of samples: %d", mod->smp);
 
 	for (i = 0; i < mod->smp; i++) {
 		int flags;

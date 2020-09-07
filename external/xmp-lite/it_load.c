@@ -1091,7 +1091,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		}
 	}
 
-	D_(D_INFO "Instruments: %d", mod->ins);
+	D_(D_INFO "# of instruments: %d", mod->ins);
 
 	for (i = 0; i < mod->ins; i++) {
 		/*
@@ -1124,7 +1124,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		}
 	}
 
-	D_(D_INFO "Stored Samples: %d", mod->smp);
+	D_(D_INFO "# of samples: %d", mod->smp);
 
 	for (i = 0; i < mod->smp; i++) {
 
@@ -1137,7 +1137,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		}
 	}
 
-	D_(D_INFO "Stored patterns: %d", mod->pat);
+	D_(D_INFO "# of patterns: %d", mod->pat);
 
 	/* Effects in muted channels are processed, so scan patterns first to
 	 * see the real number of channels
@@ -1242,7 +1242,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		if ((m->comment = malloc(ifh.msglen)) != NULL) {
 			hio_seek(f, start + ifh.msgofs, SEEK_SET);
 
-			D_(D_INFO "Message length : %d", ifh.msglen);
+			D_(D_INFO "message length : %d", ifh.msglen);
 
 			for (j = 0; j + 1 < ifh.msglen; j++) {
 				int b = hio_read8(f);
