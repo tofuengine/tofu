@@ -109,7 +109,7 @@ static inline Source_States_t _consume(Module_t *module, size_t frames_requested
         *frames_processed += frames_generated;
         frames_remaining -= frames_generated;
 
-        Log_assert(play_result == -XMP_ERROR_STATE, LOG_LEVELS_ERROR, LOG_CONTEXT, "module %p in error state", module);
+        Log_assert(play_result != -XMP_ERROR_STATE, LOG_LEVELS_ERROR, LOG_CONTEXT, "module %p in error state", module);
         if (play_result != 0) { // Mark the end-of-data for both "end" and "error state" cases.
             return SOURCE_STATE_EOD;
         }
