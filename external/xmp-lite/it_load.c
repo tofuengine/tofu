@@ -1073,7 +1073,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	MODULE_INFO();
 
-	D_(D_INFO "Instrument/FX mode: %s/%s",
+	D_(D_INFO "instrument/FX mode: %s/%s",
 	   sample_mode ? "sample" : ifh.cmwt >= 0x200 ?
 	   "new" : "old", ifh.flags & IT_OLD_FX ? "old" : "IT");
 
