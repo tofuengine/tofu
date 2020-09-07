@@ -34,7 +34,7 @@
 
 typedef struct _SL_Props_t {
     size_t group_id;
-    bool looping;
+    bool looping; // TODO: rename to looped?
     float pan;
     float gain;
     float speed;
