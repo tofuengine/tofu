@@ -28,6 +28,7 @@
 #include "loader.h"
 #include "it.h"
 #include "period.h"
+#include "dataio.h"
 
 #define MAGIC_IMPM	MAGIC4('I','M','P','M')
 #define MAGIC_IMPI	MAGIC4('I','M','P','I')

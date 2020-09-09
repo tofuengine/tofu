@@ -35,6 +35,7 @@
 
 #include "loader.h"
 #include "xm.h"
+#include "dataio.h"
 
 static int xm_test(HIO_HANDLE *, char *, const int);
 static int xm_load(struct module_data *, HIO_HANDLE *, const int);

@@ -4,25 +4,15 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
-#include "dataio.h"
-#include "memio.h"
-#include "cbio.h"
 
-#define HIO_HANDLE_TYPE(x) ((x)->type)
+typedef struct HIO_FUNCS {
+	size_t (*read)(void *, size_t, size_t, void *);
+	int (*seek)(void *, long, int);
+	long (*tell)(void *);
+	int (*eof)(void *);
+} HIO_FUNCS;
 
-typedef struct {
-#define HIO_HANDLE_TYPE_FILE		0
-#define HIO_HANDLE_TYPE_MEMORY		1
-#define HIO_HANDLE_TYPE_CALLBACKS	2
-	int type;
-	long size;
-	union {
-		FILE *file;
-		MFILE *mem;
-		CBFILE *cb;
-	} handle;
-	int error;
-} HIO_HANDLE;
+typedef struct HIO_HANDLE HIO_HANDLE;
 
 extern int8_t	hio_read8s	(HIO_HANDLE *);
 extern uint8_t	hio_read8	(HIO_HANDLE *);
@@ -38,7 +28,7 @@ extern int	hio_error	(HIO_HANDLE *);
 extern HIO_HANDLE *hio_open	(const void *, const char *);
 extern HIO_HANDLE *hio_open_mem  (const void *, long);
 extern HIO_HANDLE *hio_open_file (FILE *);
-extern HIO_HANDLE *hio_open_callbacks(CBFUNC, void *);
+extern HIO_HANDLE *hio_open_callbacks(HIO_FUNCS, void *);
 extern int	hio_close	(HIO_HANDLE *);
 extern long	hio_size	(HIO_HANDLE *);
 

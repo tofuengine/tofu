@@ -35,7 +35,7 @@
 
 #include "format.h"
 #include "list.h"
-#include "hio/hio.h"
+#include "hio.h"
 
 extern struct format_loader *format_loader[];
 
@@ -74,7 +74,7 @@ int xmp_test_module(char *path, struct xmp_test_info *info)
 		if (format_loader[i]->test(h, buf, 0) == 0) {
 			int is_prowizard = 0;
 
-			fclose(h->handle.file);
+			hio_close(h);
 
 			if (info != NULL && !is_prowizard) {
 				strcpy(info->name, buf);
@@ -219,14 +219,14 @@ int xmp_load_module(xmp_context opaque, char *path)
 	return ret;
 }
 
-int xmp_load_module_from_callbacks(xmp_context opaque, size_t (*read)(void *, void *, size_t), int (*seek)(void *, long, int), long (*tell)(void *), int (*eof)(void *), void *userdata)
+int xmp_load_module_from_callbacks(xmp_context opaque, size_t (*read)(void *, size_t, size_t, void *), int (*seek)(void *, long, int), long (*tell)(void *), int (*eof)(void *), void *userdata)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct module_data *m = &ctx->m;
 	HIO_HANDLE *h;
 	int ret;
 
-	if ((h = hio_open_callbacks((CBFUNC){ .read = read, .seek = seek, .tell = tell, .eof = eof }, userdata)) == NULL)
+	if ((h = hio_open_callbacks((HIO_FUNCS){ .read = read, .seek = seek, .tell = tell, .eof = eof }, userdata)) == NULL)
 		return -XMP_ERROR_SYSTEM;
 
 	if (ctx->state > XMP_STATE_UNLOADED)

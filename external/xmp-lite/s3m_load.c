@@ -76,6 +76,7 @@
 #include "loader.h"
 #include "s3m.h"
 #include "period.h"
+#include "dataio.h"
 
 #define MAGIC_SCRM	MAGIC4('S','C','R','M')
 #define MAGIC_SCRI	MAGIC4('S','C','R','I')

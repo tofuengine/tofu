@@ -95,7 +95,7 @@ static inline Source_States_t _consume(Module_t *module, size_t frames_requested
 
         ma_uint32 frames_to_consume = (frames_to_convert > MIXING_BUFFER_SIZE_IN_FRAMES) ? MIXING_BUFFER_SIZE_IN_FRAMES : frames_to_convert;
 
-        int loops = module->props.looping ? 0 : 1; // Automatically loop (properly filling the internal buffer), or tell EOD when looping.
+        int loops = module->props.looping ? 0 : 1; // Automatically loop (properly filling the internal buffer), or tell EOD when not looping.
 
         int play_result = xmp_play_buffer(context, read_buffer, frames_to_consume * MODULE_OUTPUT_BYTES_PER_FRAME, loops);
         size_t frames_read = frames_to_consume; // The requested buffer size (in bytes) is always filled, with trailing zeroes if needed.
@@ -137,10 +137,10 @@ SL_Source_t *SL_module_create(SL_Callbacks_t callbacks)
     return module;
 }
 
-static size_t _xmp_read(void *user_data, void *buffer, size_t bytes_to_read)
+static size_t _xmp_read(void *buffer, size_t size, size_t amount, void *user_data)
 {
     SL_Callbacks_t *callbacks = (SL_Callbacks_t *)user_data;
-    return callbacks->read(callbacks->user_data, buffer, bytes_to_read);
+    return callbacks->read(callbacks->user_data, buffer, size * amount) / size;
 }
 
 static int _xmp_seek(void *user_data, long offset, int whence)
