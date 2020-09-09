@@ -140,7 +140,7 @@ SL_Source_t *SL_module_create(SL_Callbacks_t callbacks)
 static size_t _xmp_read(void *buffer, size_t size, size_t amount, void *user_data)
 {
     SL_Callbacks_t *callbacks = (SL_Callbacks_t *)user_data;
-    return callbacks->read(callbacks->user_data, buffer, size * amount) / size;
+    return callbacks->read(callbacks->user_data, buffer, size * amount) / size; // Convert from and to `fread()` values.
 }
 
 static int _xmp_seek(void *user_data, long offset, int whence)

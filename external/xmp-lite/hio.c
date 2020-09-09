@@ -75,53 +75,6 @@ static int fio_eof(void *user_data)
 }
 
 typedef struct {
-	HIO_FUNCS funcs;
-	void *user_data;
-} CBFILE;
-
-static void *cbio_open(HIO_FUNCS funcs, void *user_data)
-{
-	CBFILE *cb = (CBFILE *)malloc(sizeof(CBFILE));
-	if (!cb)
-		return NULL;
-	
-	cb->funcs = funcs;
-	cb->user_data = user_data;
-
-	return cb;
-}
-
-static int cbio_close(void *cb)
-{
-	free(cb);
-	return 0;
-}
-
-static size_t cbio_read(void *buf, size_t size, size_t num, void *handle)
-{
-	CBFILE *cb = (CBFILE *)handle;
-	return cb->funcs.read(buf, size, num, cb->user_data);
-}
-
-static int cbio_seek(void *handle, long offset, int whence)
-{
-	CBFILE *cb = (CBFILE *)handle;
-	return cb->funcs.seek(cb->user_data, offset, whence);
-}
-
-static long cbio_tell(void *handle)
-{
-	CBFILE *cb = (CBFILE *)handle;
-	return cb->funcs.tell(cb->user_data);
-}
-
-static int cbio_eof(void *handle)
-{
-	CBFILE *cb = (CBFILE *)handle;
-	return cb->funcs.eof(cb->user_data);
-}
-
-typedef struct {
 	const unsigned char *start;
 	ptrdiff_t pos;
 	ptrdiff_t size;
@@ -213,6 +166,53 @@ static int mio_eof(void *handle)
 		return 0;
 	else
 		return CAN_READ(m) <= 0;
+}
+
+typedef struct {
+	HIO_FUNCS funcs;
+	void *user_data;
+} CBFILE;
+
+static void *cbio_open(HIO_FUNCS funcs, void *user_data)
+{
+	CBFILE *cb = (CBFILE *)malloc(sizeof(CBFILE));
+	if (!cb)
+		return NULL;
+	
+	cb->funcs = funcs;
+	cb->user_data = user_data;
+
+	return cb;
+}
+
+static int cbio_close(void *cb)
+{
+	free(cb);
+	return 0;
+}
+
+static size_t cbio_read(void *buf, size_t size, size_t num, void *handle)
+{
+	CBFILE *cb = (CBFILE *)handle;
+	return cb->funcs.read(buf, size, num, cb->user_data);
+}
+
+static int cbio_seek(void *handle, long offset, int whence)
+{
+	CBFILE *cb = (CBFILE *)handle;
+	return cb->funcs.seek(cb->user_data, offset, whence);
+}
+
+static long cbio_tell(void *handle)
+{
+	CBFILE *cb = (CBFILE *)handle;
+	return cb->funcs.tell(cb->user_data);
+}
+
+static int cbio_eof(void *handle)
+{
+	CBFILE *cb = (CBFILE *)handle;
+	return cb->funcs.eof(cb->user_data);
 }
 
 HIO_HANDLE *hio_open(const void *path, const char *mode)
@@ -347,6 +347,36 @@ long hio_size(HIO_HANDLE *h)
 	}
 }
 
+int hio_seek(HIO_HANDLE *h, long offset, int whence)
+{
+	int result = h->vtable.seek(h->user_data, offset, whence);
+	if (result < 0) {
+		h->error = EOF;
+	}
+	return result;
+}
+
+long hio_tell(HIO_HANDLE *h)
+{
+	long result = h->vtable.tell(h->user_data);
+	if (result < 0) {
+		h->error = EOF;
+	}
+	return result;
+}
+
+int hio_eof(HIO_HANDLE *h)
+{
+	return h->vtable.eof(h->user_data);
+}
+
+int hio_error(HIO_HANDLE *h)
+{
+	int error = h->error;
+	h->error = 0;
+	return error;
+}
+
 int8_t hio_read8s(HIO_HANDLE *h)
 {
 	int8_t value;
@@ -420,34 +450,4 @@ size_t hio_read(void *buf, size_t size, size_t num, HIO_HANDLE *h)
 		h->error = EOF;
 	}
 	return result;
-}
-
-int hio_seek(HIO_HANDLE *h, long offset, int whence)
-{
-	int result = h->vtable.seek(h->user_data, offset, whence);
-	if (result < 0) {
-		h->error = EOF;
-	}
-	return result;
-}
-
-long hio_tell(HIO_HANDLE *h)
-{
-	long result = h->vtable.tell(h->user_data);
-	if (result < 0) {
-		h->error = EOF;
-	}
-	return result;
-}
-
-int hio_eof(HIO_HANDLE *h)
-{
-	return h->vtable.eof(h->user_data);
-}
-
-int hio_error(HIO_HANDLE *h)
-{
-	int error = h->error;
-	h->error = 0;
-	return error;
 }
