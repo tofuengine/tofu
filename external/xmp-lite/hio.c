@@ -76,17 +76,9 @@ static int fio_eof(void *user_data)
 
 typedef struct {
 	const unsigned char *start;
-	ptrdiff_t pos;
-	ptrdiff_t size;
+	size_t pos;
+	size_t size;
 } MFILE;
-
-static inline ptrdiff_t CAN_READ(MFILE *m)
-{
-	if (m->size >= 0)
-		return m->pos >= 0 ? m->size - m->pos : 0;
-
-	return INT_MAX;
-}
 
 static void *mio_open(const void *ptr, long size)
 {
@@ -112,14 +104,14 @@ static size_t mio_read(void *buf, size_t size, size_t num, void *handle)
 	MFILE *m = (MFILE *)handle;
 
 	size_t should_read = size * num;
-	ptrdiff_t can_read = CAN_READ(m);
+	size_t can_read = m->size - m->pos;
 
-	if (!size || !num || can_read <= 0) {
+	if (!size || !num || can_read == 0) {
 		return 0;
 	}
 
-	if (should_read > (size_t)can_read) {
-		should_read = (size_t)can_read;
+	if (should_read > can_read) {
+		should_read = can_read;
 	}
 
 	memcpy(buf, m->start + m->pos, should_read);
@@ -132,24 +124,26 @@ static int mio_seek(void *handle, long offset, int whence)
 {
 	MFILE *m = (MFILE *)handle;
 
+	long position;
+
 	switch (whence) {
 		default:
 		case SEEK_SET:
-			if (m->size >= 0 && (offset > m->size || offset < 0))
-				return -1;
-			m->pos = offset;
+			position = offset;
 			break;
 		case SEEK_CUR:
-			if (m->size >= 0 && (offset > CAN_READ(m) || offset < -m->pos))
-				return -1;
-			m->pos += offset;
+			position = (long)m->pos + offset;
 			break;
 		case SEEK_END:
-			if (m->size < 0)
-				return -1;
-			m->pos = m->size + offset;
+			position = (long)m->size + offset;
 			break;
 	}
+
+	if (position < 0 || position >= (long)m->size)
+		return -1;
+
+	m->pos = position;
+
 	return 0;
 }
 
@@ -162,10 +156,7 @@ static long mio_tell(void *handle)
 static int mio_eof(void *handle)
 {
 	MFILE *m = (MFILE *)handle;
-	if (m->size <= 0)
-		return 0;
-	else
-		return CAN_READ(m) <= 0;
+	return m->pos >= m->size ? 1 : 0;
 }
 
 typedef struct {
