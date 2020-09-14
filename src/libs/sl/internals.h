@@ -32,6 +32,14 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#if SL_BYTES_PER_SAMPLE == 2
+  #define INTERNAL_FORMAT   ma_format_s16
+#elif SL_BYTES_PER_SAMPLE == 4
+  #define INTERNAL_FORMAT   ma_format_f32
+#else
+  #error Wrong internal format.
+#endif
+
 typedef struct _Source_VTable_t {
     void (*dtor)(SL_Source_t *source);
     bool (*reset)(SL_Source_t *source);
@@ -43,9 +51,6 @@ typedef struct _Source_t {
     Source_VTable_t vtable;
 
     SL_Props_t props;
-
-    SL_Callbacks_t callbacks;
-    void *user_data;
 
     size_t length_in_frames;
 } Source_t;

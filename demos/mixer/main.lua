@@ -35,37 +35,65 @@ local Main = Class.define()
 function Main:__ctor()
   Display.palette("pico-8")
 
+--  warn("@on")
+--  warn("Hello,", "Again")
+
   self.font = Font.default(0, 15)
 
   self.sources = {
       Source.new("assets/1ch-22050-16.flac", Source.SAMPLE),
       Source.new("assets/2ch-48000-16.flac", Source.MUSIC),
+      Source.new("assets/last_ninja_3.it", Source.MODULE),
+      Source.new("assets/c64_operationwolf.mod", Source.MODULE),
+      Source.new("assets/nightbeat-turrican_ii_theme.s3m", Source.MODULE),
+      --Source.new("assets/db_ab.xm", Source.MODULE),
+      Source.new("assets/turrican_iii.xm", Source.MODULE),
     }
-  --self.sources[1]:looping(false)
+  self.sources[3]:looping(true)
+  self.sources[3]:play()
 
+  self.property = 1
   self.current = 1
 end
 
+local PROPERTIES = { 'play', 'stop', 'resume', 'gain', 'pan' }
+
 function Main:input()
-  local source = self.sources[self.current]
   if Input.is_pressed("a") then
-    source:play()
-  elseif Input.is_pressed("b") then
-    source:stop()
+    local source = self.sources[self.current]
+    if self.property == 1 then
+      source:play()
+    elseif self.property == 2 then
+      source:stop()
+    elseif self.property == 3 then
+      source:resume()
+    end
   elseif Input.is_pressed("x") then
-    self.current = (self.current % #self.sources) + 1
+    local source = self.sources[self.current]
+    if self.property == 4 then
+      local gain = source:gain()
+      source:gain(gain - 0.05)
+    elseif self.property == 5 then
+      local pan = source:pan()
+      source:pan(pan - 0.05)
+    end
+  elseif Input.is_pressed("y") then
+    local source = self.sources[self.current]
+    if self.property == 4 then
+      local gain = source:gain()
+      source:gain(gain + 0.05)
+    elseif self.property == 5 then
+      local pan = source:pan()
+      source:pan(pan + 0.05)
+    end
   elseif Input.is_pressed("up") then
-    local gain = source:gain()
-    source:gain(gain + 0.05)
+    self.current = math.max(self.current - 1, 1)
   elseif Input.is_pressed("down") then
-    local gain = source:gain()
-    source:gain(gain - 0.05)
+    self.current = math.min(self.current + 1, #self.sources)
   elseif Input.is_pressed("left") then
-    local pan = source:pan()
-    source:pan(pan - 0.05)
+    self.property = math.max(self.property - 1, 1)
   elseif Input.is_pressed("right") then
-    local pan = source:pan()
-    source:pan(pan + 0.05)
+    self.property = math.min(self.property + 1, #PROPERTIES)
   end
 end
 
@@ -80,7 +108,7 @@ function Main:render(_)
 
   local x, y = 0, 0
   for index, source in ipairs(self.sources) do
-    local text = string.format("%s%s %.3f %.3f",
+      local text = string.format("%s%s %.3f %.3f",
         self.current == index and "*" or " ",
         source:is_playing() and "!" or " ",
         source:pan(), source:gain())
@@ -88,6 +116,7 @@ function Main:render(_)
     self.font:write(text, x, y)
     y = y + th
   end
+  self.font:write(PROPERTIES[self.property], x, y)
 
   self.font:write(self.font:align(string.format("FPS: %d", System.fps()), width, height, "right", "bottom"))
 end

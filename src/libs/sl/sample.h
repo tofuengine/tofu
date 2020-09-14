@@ -25,13 +25,9 @@
 #ifndef __SL_SAMPLE_H__
 #define __SL_SAMPLE_H__
 
-#include <miniaudio/miniaudio.h>
-
 #include "common.h"
 #include "source.h"
 
-#include <stddef.h>
-
-extern SL_Source_t *SL_sample_create(SL_Callbacks_t callbacks, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels);
+extern SL_Source_t *SL_sample_create(SL_Callbacks_t callbacks);
 
 #endif  /* __SL_SAMPLE_H__ */

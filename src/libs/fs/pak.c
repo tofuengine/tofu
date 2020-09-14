@@ -93,7 +93,8 @@ static void _pak_handle_ctor(File_System_Handle_t *handle, FILE *stream, long of
 static void _pak_handle_dtor(File_System_Handle_t *handle);
 static size_t _pak_handle_size(File_System_Handle_t *handle);
 static size_t _pak_handle_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
-static void _pak_handle_seek(File_System_Handle_t *handle, long offset, int whence);
+static bool _pak_handle_seek(File_System_Handle_t *handle, long offset, int whence);
+static long _pak_handle_tell(File_System_Handle_t *handle);
 static bool _pak_handle_eof(File_System_Handle_t *handle);
 
 bool pak_is_valid(const char *path)
@@ -308,6 +309,7 @@ static void _pak_handle_ctor(File_System_Handle_t *handle, FILE *stream, long of
             .size = _pak_handle_size,
             .read = _pak_handle_read,
             .seek = _pak_handle_seek,
+            .tell = _pak_handle_tell,
             .eof = _pak_handle_eof
         };
 
@@ -368,18 +370,24 @@ static size_t _pak_handle_read(File_System_Handle_t *handle, void *buffer, size_
     }
 
     size_t bytes_read = fread(buffer, sizeof(uint8_t), bytes_to_read, pak_handle->stream);
+#ifdef __DEBUG_FS_CALLS__
     Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d bytes read out of %d (%d requested)", bytes_read, bytes_to_read, bytes_requested);
+#endif
 
     if (pak_handle->encrypted) {
         rc4_process(&pak_handle->cipher_context, buffer, bytes_read);
+#ifdef __DEBUG_FS_CALLS__
         Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d bytes decrypted", bytes_read);
+#endif
     }
 
+#ifdef __DEBUG_FS_CALLS__
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes read for handle %p", bytes_read, handle);
+#endif
     return bytes_read;
 }
 
-static void _pak_handle_seek(File_System_Handle_t *handle, long offset, int whence)
+static bool _pak_handle_seek(File_System_Handle_t *handle, long offset, int whence)
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
@@ -394,8 +402,18 @@ static void _pak_handle_seek(File_System_Handle_t *handle, long offset, int when
         offset_from_beginning = pak_handle->end_of_stream;
     }
 
-    fseek(pak_handle->stream, offset_from_beginning + offset, SEEK_SET);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes seeked w/ mode %d for handle %p", offset, whence, handle);
+    bool seeked = fseek(pak_handle->stream, offset_from_beginning + offset, SEEK_SET) == 0;
+#ifdef __DEBUG_FS_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes seeked w/ mode %d for handle %p w/ result %d", offset, whence, handle, seeked);
+#endif
+    return seeked;
+}
+
+static long _pak_handle_tell(File_System_Handle_t *handle)
+{
+    Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
+
+    return ftell(pak_handle->stream) - pak_handle->beginning_of_stream;
 }
 
 static bool _pak_handle_eof(File_System_Handle_t *handle)
@@ -409,6 +427,8 @@ static bool _pak_handle_eof(File_System_Handle_t *handle)
     }
 
     bool end_of_file = position > pak_handle->end_of_stream;
+#ifdef __DEBUG_FS_CALLS__
     Log_assert(!end_of_file, LOG_LEVELS_DEBUG, LOG_CONTEXT, "end-of-file reached for handle %p", handle);
+#endif
     return end_of_file;
 }

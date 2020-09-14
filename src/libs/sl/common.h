@@ -27,27 +27,29 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdio.h>
 
 // We could use floating point format for simpler and more consistent mixing. Two channels are enough to have some
 // panning effects. A sample rate of 48kHz is the optimal choice since it's the internal default for many soundcards
 // and converting from lower sample rates is simpler.
-#define SL_BYTES_PER_FRAME      2
-#define SL_FRAMES_PER_SECOND    22050
+#define SL_BYTES_PER_SAMPLE     2
+#define SL_SAMPLES_PER_CHANNEL  1
 #define SL_CHANNELS_PER_FRAME   2
+#define SL_FRAMES_PER_SECOND    22050
+
+#define SL_BYTES_PER_FRAME      (SL_CHANNELS_PER_FRAME * SL_SAMPLES_PER_CHANNEL * SL_BYTES_PER_SAMPLE)
 
 #define SL_GROUPS_AMOUNT        256
 #define SL_FIRST_GROUP          0
 #define SL_LAST_GROUP           (SL_GROUPS_AMOUNT - 1)
 #define SL_DEFAULT_GROUP        SL_FIRST_GROUP
 
-typedef size_t (*SL_Read_Callback_t)(void *user_data, void *output, size_t frames_requested);
-typedef bool (*SL_Seek_Callback_t)(void *user_data, size_t frame_offset);
-typedef bool (*SL_Eof_Callback_t)(void *user_data);
-
 typedef struct _SL_Callbacks_t {
-    SL_Read_Callback_t read;
-    SL_Seek_Callback_t seek;
-    SL_Eof_Callback_t eof;
+    size_t (*read)(void *user_data, void *buffer, size_t bytes_to_read);
+    bool   (*seek)(void *user_data, long offset, int whence);
+    long   (*tell)(void *user_data);
+    int    (*eof)(void *user_data);
+    void *user_data;
 } SL_Callbacks_t;
 
 typedef struct _SL_Mix_t {

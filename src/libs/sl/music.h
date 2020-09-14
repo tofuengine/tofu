@@ -25,11 +25,9 @@
 #ifndef __SL_MUSIC_H__
 #define __SL_MUSIC_H__
 
-#include <miniaudio/miniaudio.h>
-
 #include "common.h"
 #include "source.h"
 
-extern SL_Source_t *SL_music_create(SL_Callbacks_t callbacks, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels);
+extern SL_Source_t *SL_music_create(SL_Callbacks_t callbacks);
 
 #endif  /* __SL_MUSIC_H__ */

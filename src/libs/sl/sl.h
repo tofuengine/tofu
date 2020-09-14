@@ -27,6 +27,7 @@
 
 #include "common.h"
 #include "context.h"
+#include "module.h"
 #include "music.h"
 #include "sample.h"
 

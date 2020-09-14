@@ -29,8 +29,12 @@
 #include "mix.h"
 
 #include <config.h>
+#include <dr_libs/dr_flac.h>
 #include <libs/log.h>
 #include <libs/stb.h>
+#include <miniaudio/miniaudio.h>
+
+#include <stdint.h>
 
 // We are going to buffer 1 second of non-converted data. As long as the `SL_music_update()` function is called
 // once half a second we are good. Since it's very unlikely we will run at less than 2 FPS... well, we can sleep well. :)
@@ -39,8 +43,12 @@
 // That's the size of a single chunk read in each `produce()` call. Can't be larger than the buffer size.
 #define STREAMING_BUFFER_CHUNK_IN_FRAMES    (STREAMING_BUFFER_SIZE_IN_FRAMES / 4)
 
-#define MIXING_BUFFER_CHANNELS          SL_CHANNELS_PER_FRAME
-#define MIXING_BUFFER_SIZE_IN_FRAMES    128
+#define MIXING_BUFFER_SAMPLES_PER_CHANNEL   SL_SAMPLES_PER_CHANNEL
+#define MIXING_BUFFER_CHANNELS_PER_FRAME    SL_CHANNELS_PER_FRAME
+#define MIXING_BUFFER_SIZE_IN_FRAMES        128
+
+#define MIXING_BUFFER_BYTES_PER_FRAME       (MIXING_BUFFER_CHANNELS_PER_FRAME * MIXING_BUFFER_SAMPLES_PER_CHANNEL * SL_BYTES_PER_SAMPLE)
+#define MIXING_BUFFER_SIZE_IN_BYTES         (MIXING_BUFFER_SIZE_IN_FRAMES * MIXING_BUFFER_BYTES_PER_FRAME)
 
 #define LOG_CONTEXT "sl-music"
 
@@ -50,15 +58,15 @@ typedef struct _Music_t { // FIXME: rename to `_Music_Source_t`.
     SL_Props_t props;
 
     SL_Callbacks_t callbacks;
-    void *user_data;
 
+    drflac *decoder;
     size_t length_in_frames;
 
     ma_pcm_rb buffer;
     size_t frames_completed;
 } Music_t;
 
-static bool _music_ctor(SL_Source_t *source, SL_Callbacks_t callbacks, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels);
+static bool _music_ctor(SL_Source_t *source, SL_Callbacks_t callbacks);
 static void _music_dtor(SL_Source_t *source);
 static bool _music_reset(SL_Source_t *source);
 static bool _music_update(SL_Source_t *source, float delta_time);
@@ -66,9 +74,7 @@ static bool _music_mix(SL_Source_t *source, void *output, size_t frames_requeste
 
 static inline bool _rewind(Music_t *music)
 {
-    const SL_Callbacks_t *callbacks = &music->callbacks;
-
-    bool seeked = callbacks->seek(music->user_data, 0);
+    drflac_bool32 seeked = drflac_seek_to_pcm_frame(music->decoder, 0);
     if (!seeked) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't rewind music stream");
         return false;
@@ -90,7 +96,6 @@ static inline bool _reset(Music_t *music)
 
 static inline bool _produce(Music_t *music)
 {
-    const SL_Callbacks_t *callbacks = &music->callbacks;
     ma_pcm_rb *buffer = &music->buffer;
 
     if (music->frames_completed == music->length_in_frames) { // End-of-data, early exit.
@@ -107,7 +112,11 @@ static inline bool _produce(Music_t *music)
     void *write_buffer;
     ma_pcm_rb_acquire_write(buffer, &frames_to_produce, &write_buffer);
 
-    size_t frames_produced = callbacks->read(music->user_data, write_buffer, frames_to_produce);
+#if SL_BYTES_PER_SAMPLE == 2
+    size_t frames_produced = drflac_read_pcm_frames_s16(music->decoder, frames_to_produce, write_buffer);
+#elif SL_BYTES_PER_SAMPLE == 4
+    size_t frames_produced = drflac_read_pcm_frames_f32(music->decoder, frames_to_produce, write_buffer);
+#endif
 
     ma_pcm_rb_commit_write(buffer, frames_produced, write_buffer);
 
@@ -152,7 +161,7 @@ static inline Source_States_t _consume(Music_t *music, size_t frames_requested, 
 
         ma_pcm_rb_commit_read(buffer, frames_consumed, read_buffer);
 
-        cursor += frames_generated * MIXING_BUFFER_CHANNELS * SL_BYTES_PER_FRAME;
+        cursor += frames_generated * MIXING_BUFFER_BYTES_PER_FRAME;
 
         *frames_processed += frames_generated;
         frames_remaining -= frames_generated;
@@ -161,7 +170,7 @@ static inline Source_States_t _consume(Music_t *music, size_t frames_requested, 
     return SOURCE_STATE_PLAYING;
 }
 
-SL_Source_t *SL_music_create(SL_Callbacks_t callbacks, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels)
+SL_Source_t *SL_music_create(SL_Callbacks_t callbacks)
 {
     Music_t *music = malloc(sizeof(Music_t));
     if (!music) {
@@ -169,7 +178,7 @@ SL_Source_t *SL_music_create(SL_Callbacks_t callbacks, void *user_data, size_t l
         return NULL;
     }
 
-    bool cted = _music_ctor(music, callbacks, user_data, length_in_frames, format, sample_rate, channels);
+    bool cted = _music_ctor(music, callbacks);
     if (!cted) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize music structure");
         free(music);
@@ -180,7 +189,30 @@ SL_Source_t *SL_music_create(SL_Callbacks_t callbacks, void *user_data, size_t l
     return music;
 }
 
-static bool _music_ctor(SL_Source_t *source, SL_Callbacks_t callbacks, void *user_data, size_t length_in_frames, ma_format format, ma_uint32 sample_rate, ma_uint32 channels)
+static size_t _music_read(void *user_data, void *buffer, size_t bytes_to_read)
+{
+    Music_t *music = (Music_t *)user_data;
+    const SL_Callbacks_t *callbacks = &music->callbacks;
+
+    return callbacks->read(callbacks->user_data, buffer, bytes_to_read);
+}
+
+static drflac_bool32 _music_seek(void *user_data, int offset, drflac_seek_origin origin)
+{
+    Music_t *music = (Music_t *)user_data;
+    const SL_Callbacks_t *callbacks = &music->callbacks;
+
+    bool seeked = false;
+    if (origin == drflac_seek_origin_start) {
+        seeked = callbacks->seek(callbacks->user_data, offset, SEEK_SET);
+    } else
+    if (origin == drflac_seek_origin_current) {
+        seeked = callbacks->seek(callbacks->user_data, offset, SEEK_CUR);
+    }
+    return seeked ? DRFLAC_TRUE : DRFLAC_FALSE;
+}
+
+static bool _music_ctor(SL_Source_t *source, SL_Callbacks_t callbacks)
 {
     Music_t *music = (Music_t *)source;
 
@@ -192,28 +224,48 @@ static bool _music_ctor(SL_Source_t *source, SL_Callbacks_t callbacks, void *use
                     .mix = _music_mix
                 },
             .callbacks = callbacks,
-            .user_data = user_data,
-            .length_in_frames = length_in_frames,
             .frames_completed = 0
         };
 
-    ma_result result = ma_pcm_rb_init(format, channels, STREAMING_BUFFER_SIZE_IN_FRAMES, NULL, NULL, &music->buffer);
+    music->decoder = drflac_open(_music_read, _music_seek, music, NULL);
+    if (!music->decoder) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create music decoder");
+        return false;
+    }
+
+    music->length_in_frames = music->decoder->totalPCMFrameCount;
+    if (music->length_in_frames == 0) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create music w/ zero length");
+        drflac_close(music->decoder);
+        return false;
+    }
+
+    size_t channels = music->decoder->channels;
+    size_t sample_rate = music->decoder->sampleRate;
+    size_t bits_per_sample = music->decoder->bitsPerSample;
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music decoder %p initialized w/ %d frames, %d channels, %dHz, %d bits", music->decoder, music->length_in_frames, channels, sample_rate, bits_per_sample);
+
+    ma_result result = ma_pcm_rb_init(INTERNAL_FORMAT, channels, STREAMING_BUFFER_SIZE_IN_FRAMES, NULL, NULL, &music->buffer);
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize music ring-buffer (%d frames)", STREAMING_BUFFER_SIZE_IN_FRAMES);
+        drflac_close(music->decoder);
         return false;
     }
 
 #ifdef __SL_MUSIC_PRELOAD__
-    bool produces = _produce(music);
+    bool produced = _produce(music);
     if (!produced) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't pre-load music data");
+        drflac_close(music->decoder);
+        ma_pcm_rb_uninit(&music->buffer);
         return false;
     }
 #endif
 
-    bool initialized = SL_props_init(&music->props, format, sample_rate, channels, MIXING_BUFFER_CHANNELS);
+    bool initialized = SL_props_init(&music->props, INTERNAL_FORMAT, sample_rate, channels, MIXING_BUFFER_CHANNELS_PER_FRAME);
     if (!initialized) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize music properties");
+        drflac_close(music->decoder);
         ma_pcm_rb_uninit(&music->buffer);
         return false;
     }
@@ -230,6 +282,9 @@ static void _music_dtor(SL_Source_t *source)
 
     ma_pcm_rb_uninit(&music->buffer);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music ring-buffer deinitialized");
+
+    drflac_close(music->decoder);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music decoder deinitialized");
 }
 
 static bool _music_reset(SL_Source_t *source)
@@ -264,7 +319,7 @@ static bool _music_mix(SL_Source_t *source, void *output, size_t frames_requeste
 {
     Music_t *music = (Music_t *)source;
 
-    uint8_t buffer[MIXING_BUFFER_SIZE_IN_FRAMES * MIXING_BUFFER_CHANNELS * SL_BYTES_PER_FRAME];
+    uint8_t buffer[MIXING_BUFFER_SIZE_IN_BYTES];
 
     const SL_Mix_t mix = SL_props_precompute(&music->props, groups);
 
@@ -283,7 +338,7 @@ static bool _music_mix(SL_Source_t *source, void *output, size_t frames_requeste
             Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "end-of-data reached for source %p", source);
             return false;
         }
-        cursor += frames_processed * MIXING_BUFFER_CHANNELS * SL_BYTES_PER_FRAME;
+        cursor += frames_processed * SL_BYTES_PER_FRAME;
         frames_remaining -= frames_processed;
     }
     return true;

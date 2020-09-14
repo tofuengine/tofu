@@ -77,9 +77,9 @@ bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration
     audio->device_config = ma_device_config_init(ma_device_type_playback);
     // TODO: loop over available devices and use the one specified in the configuration. Useful when more than one device is available.
     //    config.playback.pDeviceID = &pPlaybackDeviceInfos[chosenPlaybackDeviceIndex].id; 
-#if SL_BYTES_PER_FRAME == 2
+#if SL_BYTES_PER_SAMPLE == 2
     audio->device_config.playback.format         = ma_format_s16;
-#elif SL_BYTES_PER_FRAME == 4
+#elif SL_BYTES_PER_SAMPLE == 4
     audio->device_config.playback.format         = ma_format_f32;
 #endif
     audio->device_config.playback.channels       = SL_CHANNELS_PER_FRAME;

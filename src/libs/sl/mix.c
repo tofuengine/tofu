@@ -41,7 +41,7 @@ void mix_2on2_additive(void *output, void *input, size_t frames, const SL_Mix_t 
     const float left = mix.left; // Apply panning and gain to the data.
     const float right = mix.right;
 
-#if SL_BYTES_PER_FRAME == 2
+#if SL_BYTES_PER_SAMPLE == 2
     int16_t *sptr = input;
     int16_t *dptr = output;
 
@@ -49,7 +49,7 @@ void mix_2on2_additive(void *output, void *input, size_t frames, const SL_Mix_t 
         *(dptr++) += (int16_t)((float)*(sptr++) * left);
         *(dptr++) += (int16_t)((float)*(sptr++) * right);
     }
-#elif SL_BYTES_PER_FRAME == 4
+#elif SL_BYTES_PER_SAMPLE == 4
     float *sptr = input;
     float *dptr = output;
 
@@ -67,7 +67,7 @@ void mix_1on2_additive(void *output, void *input, size_t frames, const SL_Mix_t 
     const float left = mix.left; // Apply panning and gain to the data.
     const float right = mix.right;
 
-#if SL_BYTES_PER_FRAME == 2
+#if SL_BYTES_PER_SAMPLE == 2
     int16_t *sptr = input;
     int16_t *dptr = output;
 
@@ -76,7 +76,7 @@ void mix_1on2_additive(void *output, void *input, size_t frames, const SL_Mix_t 
         *(dptr++) += (int16_t)((float)v * left);
         *(dptr++) += (int16_t)((float)v * right);
     }
-#elif SL_BYTES_PER_FRAME == 4
+#elif SL_BYTES_PER_SAMPLE == 4
     float *sptr = input;
     float *dptr = output;
 
