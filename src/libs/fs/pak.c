@@ -391,18 +391,27 @@ static bool _pak_handle_seek(File_System_Handle_t *handle, long offset, int when
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
-    long offset_from_beginning = 0;
+    long origin;
     if (whence == SEEK_SET) {
-        offset_from_beginning = pak_handle->beginning_of_stream;
+        origin = pak_handle->beginning_of_stream;
     } else
     if (whence == SEEK_CUR) {
-        offset_from_beginning = ftell(pak_handle->stream);
+        origin = ftell(pak_handle->stream);
     } else
     if (whence == SEEK_END) {
-        offset_from_beginning = pak_handle->end_of_stream;
+        origin = pak_handle->end_of_stream;
+    } else {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "wrong seek mode %d for handle %p", whence, handle);
+        return false;
     }
 
-    bool seeked = fseek(pak_handle->stream, offset_from_beginning + offset, SEEK_SET) == 0;
+    long position = origin + offset;
+    if (position < pak_handle->beginning_of_stream || position > pak_handle->end_of_stream) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "position %d is outside valid range for handle %p", position, handle);
+        return false;
+    }
+
+    bool seeked = fseek(pak_handle->stream, position, SEEK_SET) == 0;
 #ifdef __DEBUG_FS_CALLS__
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes seeked w/ mode %d for handle %p w/ result %d", offset, whence, handle, seeked);
 #endif
