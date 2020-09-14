@@ -135,7 +135,7 @@ static int mio_seek(void *handle, long offset, int whence)
 			position = (long)m->pos + offset;
 			break;
 		case SEEK_END:
-			position = (long)m->size + offset;
+			position = (long)(m->size - 1) + offset;
 			break;
 	}
 
