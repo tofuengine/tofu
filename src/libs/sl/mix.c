@@ -36,6 +36,33 @@
   #define M_PI_2    1.57079632679489661923f
 #endif
 
+// FIXME: fix clipping when lot of sources are played! Add clamping!
+#if SL_BYTES_PER_SAMPLE == 2
+static inline int16_t _add_clip_s16(int16_t a, int16_t b)
+{
+    const int32_t c = a + b;
+    if (c > INT16_MAX) {
+        return INT16_MAX;
+    }
+    if (c < INT16_MIN) {
+        return INT16_MIN;
+    }
+    return (int16_t)c;
+}
+#elif SL_BYTES_PER_SAMPLE == 4
+static inline float _add_clip_f32(float a, float b)
+{
+    const float c = a + b;
+    if (c > 1.0f) {
+        return 1.0f;
+    }
+    if (c < -1.0f) {
+        return -1.0f;
+    }
+    return c;
+}
+#endif
+
 void mix_2on2_additive(void *output, void *input, size_t frames, const SL_Mix_t mix)
 {
     const float left = mix.left; // Apply panning and gain to the data.
@@ -46,16 +73,16 @@ void mix_2on2_additive(void *output, void *input, size_t frames, const SL_Mix_t 
     int16_t *dptr = output;
 
     for (size_t i = frames; i; --i) {
-        *(dptr++) += (int16_t)((float)*(sptr++) * left);
-        *(dptr++) += (int16_t)((float)*(sptr++) * right);
+        *dptr = _add_clip_s16(*dptr, (int16_t)((float)*(sptr++) * left)); ++dptr; // Avoid sequence-point "undefined-behaviour" error.
+        *dptr = _add_clip_s16(*dptr, (int16_t)((float)*(sptr++) * right)); ++dptr;
     }
 #elif SL_BYTES_PER_SAMPLE == 4
     float *sptr = input;
     float *dptr = output;
 
     for (size_t i = frames; i; --i) {
-        *(dptr++) += *(sptr++) * left;
-        *(dptr++) += *(sptr++) * right;
+        *dptr = _add_clip_f32(*dptr, *(sptr++) * left)); ++dptr;
+        *dptr = _add_clip_f32(*dptr, *(sptr++) * right)); ++dptr;
     }
 #else
   #error Wrong internal format.
@@ -73,8 +100,8 @@ void mix_1on2_additive(void *output, void *input, size_t frames, const SL_Mix_t 
 
     for (size_t i = frames; i; --i) {
         const int16_t v = *(sptr++);
-        *(dptr++) += (int16_t)((float)v * left);
-        *(dptr++) += (int16_t)((float)v * right);
+        *dptr = _add_clip_s16(*dptr, (int16_t)((float)v * left)); ++dptr;
+        *dptr = _add_clip_s16(*dptr, (int16_t)((float)v * right)); ++dptr;
     }
 #elif SL_BYTES_PER_SAMPLE == 4
     float *sptr = input;
@@ -82,8 +109,8 @@ void mix_1on2_additive(void *output, void *input, size_t frames, const SL_Mix_t 
 
     for (size_t i = frames; i; --i) {
         const float v = *(sptr++);
-        *(dptr++) += v * left;
-        *(dptr++) += v * right;
+        *dptr = _add_clip_f32(*dptr, v * left)); ++dptr;
+        *dptr = _add_clip_f32(*dptr, v * right)); ++dptr;
     }
 #else
   #error Wrong internal format.
