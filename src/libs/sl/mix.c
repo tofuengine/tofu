@@ -36,30 +36,36 @@
   #define M_PI_2    1.57079632679489661923f
 #endif
 
-// FIXME: fix clipping when lot of sources are played! Add clamping!
+// Add to the `accumulator` the `sample` scaled by `gain`.
+//
+// Note that, due to scaling, the intermediate `sample * gain` value can exceed the sample maximum/minimum value.
+// We are clamping after the accumulation to save one operation.
+//
+// Also note that we are safe using a `float`, over a (for example) fixed-point 24:8 value. We are not going to
+// loose resolution during the computation.
 #if SL_BYTES_PER_SAMPLE == 2
-static inline int16_t _add_clip_s16(int16_t a, int16_t b)
+static inline int16_t _accumulate_s16(int16_t accumulator, int16_t sample, float gain)
 {
-    const int32_t c = a + b;
-    if (c > INT16_MAX) {
+    const int32_t result = (int32_t)((float)accumulator + (float)sample * gain);
+    if (result >= INT16_MAX) {
         return INT16_MAX;
     }
-    if (c < INT16_MIN) {
+    if (result <= INT16_MIN) {
         return INT16_MIN;
     }
-    return (int16_t)c;
+    return (int16_t)result;
 }
 #elif SL_BYTES_PER_SAMPLE == 4
-static inline float _add_clip_f32(float a, float b)
+static inline float _accumulate_f32(float accumulator, float sample, float gain)
 {
-    const float c = a + b;
-    if (c > 1.0f) {
+    const float result = accumulator + sample * gain;
+    if (result >= 1.0f) {
         return 1.0f;
     }
-    if (c < -1.0f) {
+    if (result <= -1.0f) {
         return -1.0f;
     }
-    return c;
+    return result;
 }
 #endif
 
@@ -69,20 +75,14 @@ void mix_2on2_additive(void *output, void *input, size_t frames, const SL_Mix_t 
     const float right = mix.right;
 
 #if SL_BYTES_PER_SAMPLE == 2
-    int16_t *sptr = input;
-    int16_t *dptr = output;
-
-    for (size_t i = frames; i; --i) {
-        *dptr = _add_clip_s16(*dptr, (int16_t)((float)*(sptr++) * left)); ++dptr; // Avoid sequence-point "undefined-behaviour" error.
-        *dptr = _add_clip_s16(*dptr, (int16_t)((float)*(sptr++) * right)); ++dptr;
+    for (int16_t *sptr = input, *dptr = output; frames--; dptr += 2, sptr += 2) {
+        dptr[0] = _accumulate_s16(dptr[0], sptr[0], left);
+        dptr[1] = _accumulate_s16(dptr[1], sptr[1], right);
     }
 #elif SL_BYTES_PER_SAMPLE == 4
-    float *sptr = input;
-    float *dptr = output;
-
-    for (size_t i = frames; i; --i) {
-        *dptr = _add_clip_f32(*dptr, *(sptr++) * left)); ++dptr;
-        *dptr = _add_clip_f32(*dptr, *(sptr++) * right)); ++dptr;
+    for (float *sptr = input, *dptr = output; frames--; dptr += 2, sptr += 2) {
+        dptr[0] = _accumulate_f32(dptr[0], sptr[0], left);
+        dptr[1] = _accumulate_f32(dptr[1], sptr[1], right);
     }
 #else
   #error Wrong internal format.
@@ -95,22 +95,14 @@ void mix_1on2_additive(void *output, void *input, size_t frames, const SL_Mix_t 
     const float right = mix.right;
 
 #if SL_BYTES_PER_SAMPLE == 2
-    int16_t *sptr = input;
-    int16_t *dptr = output;
-
-    for (size_t i = frames; i; --i) {
-        const int16_t v = *(sptr++);
-        *dptr = _add_clip_s16(*dptr, (int16_t)((float)v * left)); ++dptr;
-        *dptr = _add_clip_s16(*dptr, (int16_t)((float)v * right)); ++dptr;
+    for (int16_t *sptr = input, *dptr = output; frames--; dptr += 2, sptr += 1) {
+        dptr[0] = _accumulate_s16(dptr[0], sptr[0], left);
+        dptr[1] = _accumulate_s16(dptr[1], sptr[0], right);
     }
 #elif SL_BYTES_PER_SAMPLE == 4
-    float *sptr = input;
-    float *dptr = output;
-
-    for (size_t i = frames; i; --i) {
-        const float v = *(sptr++);
-        *dptr = _add_clip_f32(*dptr, v * left)); ++dptr;
-        *dptr = _add_clip_f32(*dptr, v * right)); ++dptr;
+    for (float *sptr = input, *dptr = output; frames--; dptr += 2, sptr += 2) {
+        dptr[0] = _accumulate_f32(dptr[0], sptr[0], left);
+        dptr[1] = _accumulate_f32(dptr[1], sptr[0], right);
     }
 #else
   #error Wrong internal format.
