@@ -60,11 +60,11 @@
 static const char *_colors[Log_Levels_t_CountOf] = {
     COLOR_WHITE, COLOR_BLUE_HC, COLOR_CYAN, COLOR_GREEN, COLOR_YELLOW, COLOR_RED, COLOR_MAGENTA, COLOR_WHITE
 };
-#endif
-
+#else
 static const char *_prefixes[Log_Levels_t_CountOf] = {
-    "ALL", "TRACE", "DEBUG", "INFO", "WARNING", "ERROR", "FATAL", "NONE"
+    "A", "T", "D", "I", "W", "E", "F", "N"
 };
+#endif
 
 static Log_Levels_t _level;
 static FILE *_stream;
@@ -80,9 +80,10 @@ static void write(Log_Levels_t level, const char *context, const char *text, va_
     }
 
 #ifdef USE_COLORS
-    fputs(_colors[level], _stream);
+    fprintf(_stream, "%s[%s]%s %s", COLOR_WHITE, context, COLOR_OFF, _colors[level]);
+#else
+    fprintf(_stream, "[%s/%s] ", _prefixes[level], context);
 #endif
-    fprintf(_stream, "[%s:%s] ", _prefixes[level], context);
     vfprintf(_stream, text, args);
 #ifdef USE_COLORS
     fputs(COLOR_OFF, _stream);
