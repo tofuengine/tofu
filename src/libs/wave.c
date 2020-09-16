@@ -28,12 +28,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifndef M_PI
-  #define M_PI      3.14159265358979323846f
-#endif
-#ifndef M_PI_2
-  #define M_PI_2    1.57079632679489661923f
-#endif
+// TODO: we should also add oscillators.
+// https://blog.demofox.org/2012/05/19/diy-synthesizer-chapter-2-common-wave-forms/
 
 static const Wave_t _entries[] = {
     { "sine", wave_sine },

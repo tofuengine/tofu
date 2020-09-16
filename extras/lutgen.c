@@ -33,10 +33,6 @@
 
 // http://www.ilikebigbits.com/2017_06_01_float_or_double.html
 
-#ifndef M_PI
-  #define M_PI  3.14159265358979323846f
-#endif
-
 void fsincos(const float lut[], size_t lut_size, float angle, float *sin, float *cos)
 {
     const size_t lut_size_4th = lut_size / 4;
