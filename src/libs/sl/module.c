@@ -78,12 +78,14 @@ static inline bool _reset(Module_t *module)
     return _rewind(module);
 }
 
-static inline Source_States_t _consume(Module_t *module, size_t frames_requested, void *output, size_t size_in_frames, size_t *frames_processed)
+static inline size_t _consume(Module_t *module, size_t frames_requested, void *output, size_t size_in_frames, Source_States_t *state)
 {
     ma_data_converter *converter = &module->props.converter;
     xmp_context context = module->context;
 
-    *frames_processed = 0;
+    *state = SOURCE_STATE_PLAYING;
+
+    size_t frames_processed = 0;
 
     uint8_t read_buffer[MIXING_BUFFER_SIZE_IN_BYTES];
 
@@ -106,16 +108,17 @@ static inline Source_States_t _consume(Module_t *module, size_t frames_requested
 
         cursor += frames_generated * MIXING_BUFFER_BYTES_PER_FRAME;
 
-        *frames_processed += frames_generated;
+        frames_processed += frames_generated;
         frames_remaining -= frames_generated;
 
         Log_assert(play_result != -XMP_ERROR_STATE, LOG_LEVELS_ERROR, LOG_CONTEXT, "module %p in error state", module);
         if (play_result != 0) { // Mark the end-of-data for both "end" and "error state" cases.
-            return SOURCE_STATE_EOD;
+            *state = SOURCE_STATE_EOD;
+            break;
         }
     }
 
-    return SOURCE_STATE_PLAYING;
+    return frames_processed;
 }
 
 SL_Source_t *SL_module_create(SL_Callbacks_t callbacks)
@@ -240,8 +243,8 @@ static bool _module_mix(SL_Source_t *source, void *output, size_t frames_request
 
     size_t frames_remaining = frames_requested;
     while (frames_remaining > 0) {
-        size_t frames_processed; // FIXME: use this as the return value of the function below.
-        Source_States_t state = _consume(module, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES, &frames_processed);
+        Source_States_t state = SOURCE_STATE_PLAYING;
+        size_t frames_processed = _consume(module, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES, &state);
         mix_2on2_additive(cursor, buffer, frames_processed, mix);
         if (state == SOURCE_STATE_EOD) {
             Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "end-of-data reached for source %p", source);

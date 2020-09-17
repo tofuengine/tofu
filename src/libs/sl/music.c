@@ -133,12 +133,14 @@ static inline bool _produce(Music_t *music)
     return true;
 }
 
-static inline Source_States_t _consume(Music_t *music, size_t frames_requested, void *output, size_t size_in_frames, size_t *frames_processed)
+static inline size_t _consume(Music_t *music, size_t frames_requested, void *output, size_t size_in_frames, Source_States_t *state)
 {
     ma_data_converter *converter = &music->props.converter;
     ma_pcm_rb *buffer = &music->buffer;
 
-    *frames_processed = 0;
+    *state = SOURCE_STATE_PLAYING;
+
+    size_t frames_processed = 0;
 
     uint8_t *cursor = output;
 
@@ -146,7 +148,8 @@ static inline Source_States_t _consume(Music_t *music, size_t frames_requested, 
     while (frames_remaining > 0) { // Read as much data as possible, filling the buffer and eventually looping!
         ma_uint32 frames_available = ma_pcm_rb_available_read(buffer);
         if (frames_available == 0) {
-            return music->frames_completed < music->length_in_frames ? SOURCE_STATE_STALLING : SOURCE_STATE_EOD;
+            *state = music->frames_completed < music->length_in_frames ? SOURCE_STATE_STALLING : SOURCE_STATE_EOD;
+            break;
         }
 
         ma_uint64 frames_to_convert = ma_data_converter_get_required_input_frame_count(converter, frames_remaining);
@@ -163,11 +166,11 @@ static inline Source_States_t _consume(Music_t *music, size_t frames_requested, 
 
         cursor += frames_generated * MIXING_BUFFER_BYTES_PER_FRAME;
 
-        *frames_processed += frames_generated;
+        frames_processed += frames_generated;
         frames_remaining -= frames_generated;
     }
 
-    return SOURCE_STATE_PLAYING;
+    return frames_processed;
 }
 
 SL_Source_t *SL_music_create(SL_Callbacks_t callbacks)
@@ -327,11 +330,12 @@ static bool _music_mix(SL_Source_t *source, void *output, size_t frames_requeste
 
     size_t frames_remaining = frames_requested;
     while (frames_remaining > 0) {
-        size_t frames_processed;
-        Source_States_t state = _consume(music, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES, &frames_processed);
+        Source_States_t state = SOURCE_STATE_PLAYING;
+        // FIXME: pass only the buffer and requested frames, ensuring it fits!!!
+        size_t frames_processed = _consume(music, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES, &state);
         mix_2on2_additive(cursor, buffer, frames_processed, mix);
         if (state == SOURCE_STATE_STALLING) {
-            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "buffer underrun for source %p - stalling", source);
+            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "buffer underrun for source %p - stalling (waiting for data)", source);
             return true;
         } else
         if (state == SOURCE_STATE_EOD) {

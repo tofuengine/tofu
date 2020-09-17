@@ -104,12 +104,14 @@ static inline bool _produce(Sample_t *sample)
     return frames_produced == sample->length_in_frames;
 }
 
-static inline Source_States_t _consume(Sample_t *sample, size_t frames_requested, void *output, size_t size_in_frames, size_t *frames_processed)
+static inline size_t _consume(Sample_t *sample, size_t frames_requested, void *output, size_t size_in_frames, Source_States_t *state)
 {
     ma_data_converter *converter = &sample->props.converter;
     ma_audio_buffer *buffer = &sample->buffer;
 
-    *frames_processed = 0;
+    *state = SOURCE_STATE_PLAYING;
+
+    size_t frames_processed = 0;
 
     uint8_t *cursor = output;
 
@@ -117,7 +119,8 @@ static inline Source_States_t _consume(Sample_t *sample, size_t frames_requested
     while (frames_remaining > 0) { // Read as much data as possible, filling the buffer and eventually looping!
         if (sample->frames_completed == sample->length_in_frames) {
             if (!sample->props.looping || !_rewind(sample)) {
-                return SOURCE_STATE_EOD;
+                *state = SOURCE_STATE_EOD;
+                break;
             }
         }
 
@@ -137,11 +140,11 @@ static inline Source_States_t _consume(Sample_t *sample, size_t frames_requested
 
         cursor += frames_generated * MIXING_BUFFER_BYTES_PER_FRAME;
 
-        *frames_processed += frames_generated;
+        frames_processed += frames_generated;
         frames_remaining -= frames_generated;
     }
 
-    return SOURCE_STATE_PLAYING;
+    return frames_processed;
 }
 
 SL_Source_t *SL_sample_create(SL_Callbacks_t callbacks)
@@ -296,8 +299,8 @@ static bool _sample_mix(SL_Source_t *source, void *output, size_t frames_request
 
     size_t frames_remaining = frames_requested;
     while (frames_remaining > 0) {
-        size_t frames_processed;
-        Source_States_t state = _consume(sample, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES, &frames_processed);
+        Source_States_t state = SOURCE_STATE_PLAYING;
+        size_t frames_processed = _consume(sample, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES, &state);
         mix_1on2_additive(cursor, buffer, frames_processed, mix);
         if (state == SOURCE_STATE_EOD) {
             Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "end-of-data reached for source %p", source);
