@@ -128,7 +128,7 @@ function Main:render(_) -- ratio
   elseif self.mode == 9 then
     local colors = { 13, 11, 9, 7, 5, 3, 1 }
     local y = (math.sin(System.time()) + 1.0) * 0.5 * height
-    canvas:hline(0, y, canvas:width() - 1, 15)
+    canvas:hline(0, y, width - 1, 15)
     for i, c in ipairs(colors) do
       canvas:hline(0, y - i, width - 1, c)
       canvas:hline(0, y + i, width - 1, c)

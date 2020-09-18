@@ -279,8 +279,8 @@ static int bank_size(lua_State *L)
 
     const GL_Sheet_t *sheet = self->sheet;
     const GL_Rectangle_t *cell = cell_id == -1 ? sheet->cells : &sheet->cells[cell_id]; // If `-1` pick the first one.
-    lua_pushinteger(L, (int)(cell->width * fabsf(scale_x)));
-    lua_pushinteger(L, (int)(cell->height * fabsf(scale_y)));
+    lua_pushinteger(L, (int)((float)cell->width * fabsf(scale_x)));
+    lua_pushinteger(L, (int)((float)cell->height * fabsf(scale_y)));
 
     return 2;
 }

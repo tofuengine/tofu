@@ -119,7 +119,7 @@ function Main:render(_)
   end
 
   canvas:push()
-  canvas:transparent({ [0] = false })
+  canvas:transparent(0, false)
   if self.mode == 0 then
     for i = 0, STEPS - 1 do
       local y = self.height * i

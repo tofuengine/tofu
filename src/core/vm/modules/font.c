@@ -240,13 +240,16 @@ static int font_gc(lua_State *L)
 
 static void _size(const char *text, const GL_Rectangle_t *cells, float scale_x, float scale_y, int *w, int *h)
 {
-    *w = *h = 0;
-
     if (!text || text[0] == '\0') {
+        const GL_Rectangle_t *cell = &cells[0]; // Font is non-proportional, use the first glyph.
+        *w = cell->width;
+        *h = cell->height;
         return;
     }
 
-    int max_width =0, width = 0;
+    *w = *h = 0;
+
+    int max_width = 0, width = 0;
     size_t height = 0;
     for (const char *ptr = text; *ptr != '\0'; ++ptr) {
         char c = *ptr;
@@ -267,8 +270,8 @@ static void _size(const char *text, const GL_Rectangle_t *cells, float scale_x, 
 
         const GL_Rectangle_t *cell = &cells[c - ' '];
 
-        const size_t cw = (int)(cell->width * fabs(scale_x));
-        const size_t ch = (int)(cell->height * fabs(scale_y));
+        const size_t cw = (int)((float)cell->width * fabs(scale_x));
+        const size_t ch = (int)((float)cell->height * fabs(scale_y));
 
         width += cw;
         if (height < ch) {
