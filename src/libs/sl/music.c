@@ -133,46 +133,6 @@ static inline bool _produce(Music_t *music)
     return true;
 }
 
-static inline size_t _consume(Music_t *music, size_t frames_requested, void *output, size_t size_in_frames, Source_States_t *state)
-{
-    ma_data_converter *converter = &music->props.converter;
-    ma_pcm_rb *buffer = &music->buffer;
-
-    *state = SOURCE_STATE_PLAYING;
-
-    size_t frames_processed = 0;
-
-    uint8_t *cursor = output;
-
-    size_t frames_remaining = (frames_requested > size_in_frames) ? size_in_frames : frames_requested;
-    while (frames_remaining > 0) { // Read as much data as possible, filling the buffer and eventually looping!
-        ma_uint32 frames_available = ma_pcm_rb_available_read(buffer);
-        if (frames_available == 0) {
-            *state = music->frames_completed < music->length_in_frames ? SOURCE_STATE_STALLING : SOURCE_STATE_EOD;
-            break;
-        }
-
-        ma_uint64 frames_to_convert = ma_data_converter_get_required_input_frame_count(converter, frames_remaining);
-
-        ma_uint32 frames_to_consume = (frames_to_convert > frames_available) ? frames_available : frames_to_convert;
-        void *read_buffer;
-        ma_pcm_rb_acquire_read(buffer, &frames_to_consume, &read_buffer);
-
-        ma_uint64 frames_consumed = frames_to_consume;
-        ma_uint64 frames_generated = frames_remaining;
-        ma_data_converter_process_pcm_frames(converter, read_buffer, &frames_consumed, cursor, &frames_generated);
-
-        ma_pcm_rb_commit_read(buffer, frames_consumed, read_buffer);
-
-        cursor += frames_generated * MIXING_BUFFER_BYTES_PER_FRAME;
-
-        frames_processed += frames_generated;
-        frames_remaining -= frames_generated;
-    }
-
-    return frames_processed;
-}
-
 SL_Source_t *SL_music_create(SL_Callbacks_t callbacks)
 {
     Music_t *music = malloc(sizeof(Music_t));
@@ -322,7 +282,10 @@ static bool _music_mix(SL_Source_t *source, void *output, size_t frames_requeste
 {
     Music_t *music = (Music_t *)source;
 
-    uint8_t buffer[MIXING_BUFFER_SIZE_IN_BYTES];
+    ma_data_converter *converter = &music->props.converter;
+    ma_pcm_rb *buffer = &music->buffer;
+
+    uint8_t converted_buffer[MIXING_BUFFER_SIZE_IN_BYTES];
 
     const SL_Mix_t mix = SL_props_precompute(&music->props, groups);
 
@@ -330,20 +293,36 @@ static bool _music_mix(SL_Source_t *source, void *output, size_t frames_requeste
 
     size_t frames_remaining = frames_requested;
     while (frames_remaining > 0) {
-        Source_States_t state = SOURCE_STATE_PLAYING;
-        // FIXME: pass only the buffer and requested frames, ensuring it fits!!!
-        size_t frames_processed = _consume(music, frames_remaining, buffer, MIXING_BUFFER_SIZE_IN_FRAMES, &state);
-        mix_2on2_additive(cursor, buffer, frames_processed, mix);
-        if (state == SOURCE_STATE_STALLING) {
-            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "buffer underrun for source %p - stalling (waiting for data)", source);
-            return true;
-        } else
-        if (state == SOURCE_STATE_EOD) {
-            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "end-of-data reached for source %p", source);
-            return false;
+        ma_uint32 frames_available = ma_pcm_rb_available_read(buffer);
+        if (frames_available == 0) {
+            if (music->frames_completed < music->length_in_frames) {
+                Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "buffer underrun for source %p - stalling (waiting for data)", source);
+                return true;
+            } else {
+                Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "end-of-data reached for source %p", source);
+                return false;
+            }
         }
-        cursor += frames_processed * SL_BYTES_PER_FRAME;
-        frames_remaining -= frames_processed;
+
+        size_t frames_to_generate = frames_remaining > MIXING_BUFFER_SIZE_IN_FRAMES ? MIXING_BUFFER_SIZE_IN_FRAMES : frames_remaining;
+
+        ma_uint32 frames_to_consume = ma_data_converter_get_required_input_frame_count(converter, frames_to_generate);
+        if (frames_to_consume > frames_available) {
+            frames_to_consume = frames_available;
+        }
+
+        void *consumed_buffer;
+        ma_pcm_rb_acquire_read(buffer, &frames_to_consume, &consumed_buffer);
+
+        ma_uint64 frames_consumed = frames_to_consume;
+        ma_uint64 frames_generated = frames_to_generate;
+        ma_data_converter_process_pcm_frames(converter, consumed_buffer, &frames_consumed, converted_buffer, &frames_generated);
+
+        ma_pcm_rb_commit_read(buffer, frames_consumed, consumed_buffer);
+
+        mix_2on2_additive(cursor, converted_buffer, frames_generated, mix);
+        cursor += frames_generated * SL_BYTES_PER_FRAME;
+        frames_remaining -= frames_generated;
     }
     return true;
 }

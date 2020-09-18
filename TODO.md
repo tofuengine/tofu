@@ -78,7 +78,9 @@
   * handling error codes when updating audio. Still missing when rewinding/resetting a source.
   * updating the audio sub-system in the fixed steps loop, just as it was INT based.
   * done for the moment. What is missing is a proper resource-manager that enables reuse of the memory/resources.
-  * *severe bug* in mixing, due to sample overflow during accumulation. Clamping was necessary. 
+  * *severe bug* in mixing, due to sample overflow during accumulation. Clamping was necessary.
+  * simplified the mixing loop, modules could be "streamed".
+  * the current mixing technique, which doesn't cross-mix, gives bad results with separate channels mods. Fix this?
 
 ```java
   //do panning

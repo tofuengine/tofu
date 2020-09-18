@@ -55,11 +55,4 @@ typedef struct _Source_t {
     size_t length_in_frames;
 } Source_t;
 
-// https://english.stackexchange.com/questions/457305/the-difference-between-state-and-status
-typedef enum _Source_States_t {
-    SOURCE_STATE_PLAYING,
-    SOURCE_STATE_STALLING,
-    SOURCE_STATE_EOD,
-} Source_States_t;
-
 #endif  /* __SL_INTERNALS_H__ */
