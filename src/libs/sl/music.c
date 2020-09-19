@@ -38,6 +38,7 @@
 
 // We are going to buffer 1 second of non-converted data. As long as the `SL_music_update()` function is called
 // once half a second we are good. Since it's very unlikely we will run at less than 2 FPS... well, we can sleep well. :)
+// FIXME: greater value to reduce the I/O? Guess this would be require...
 #define STREAMING_BUFFER_SIZE_IN_FRAMES     SL_FRAMES_PER_SECOND
 
 // That's the size of a single chunk read in each `produce()` call. Can't be larger than the buffer size.
@@ -96,12 +97,11 @@ static inline bool _reset(Music_t *music)
 
 static inline bool _produce(Music_t *music)
 {
-    ma_pcm_rb *buffer = &music->buffer;
-
     if (music->frames_completed == music->length_in_frames) { // End-of-data, early exit.
         return !music->props.looping || _rewind(music);
     }
 
+    ma_pcm_rb *buffer = &music->buffer;
     ma_uint32 frames_to_produce = ma_pcm_rb_available_write(buffer);
 #ifdef STREAMING_BUFFER_CHUNK_IN_FRAMES
     if (frames_to_produce > STREAMING_BUFFER_CHUNK_IN_FRAMES) {
