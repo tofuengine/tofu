@@ -438,7 +438,7 @@ static inline void read_row(struct context_data *ctx, int pat, int row)
 			int ins = ev.ins - 1;
 
 			if (IS_VALID_INSTRUMENT(ins) &&
-			    (mod->xxi[ins].aei.flg & XMP_ENVELOPE_ON)) {
+				(mod->xxi[ins].aei.flg & XMP_ENVELOPE_ON)) {
 				env_on = 1;
 			}
 
@@ -567,7 +567,7 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 		 */
 		if (TEST_NOTE(NOTE_RELEASE) || act == VIRT_ACTION_OFF) {
 			if ((~instrument->aei.flg & XMP_ENVELOPE_ON) ||
-			    (instrument->aei.flg & XMP_ENVELOPE_LOOP)) {
+				(instrument->aei.flg & XMP_ENVELOPE_LOOP)) {
 				fade = 1;
 			}
 		}
@@ -754,7 +754,7 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 
 	/* Pitch bend */
 
- 	/* From OpenMPT PeriodLimit.s3m:
+	/* From OpenMPT PeriodLimit.s3m:
 	 * "ScreamTracker 3 limits the final output period to be at least 64,
 	 *  i.e. when playing a note that is too high or when sliding the
 	 *  period lower than 64, the output period will simply be clamped to
