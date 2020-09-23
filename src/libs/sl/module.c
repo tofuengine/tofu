@@ -35,15 +35,22 @@
 
 #include <stdint.h>
 
-// An XM module is generated in stereo mode, which means that the need to handle a stereo source.
+// We are going to buffer 1 second of non-converted data. As long as the `SL_music_update()` function is called
+// once half a second we are good. Since it's very unlikely we will run at less than 2 FPS... well, we can sleep well. :)
+#define STREAMING_BUFFER_SIZE_IN_FRAMES     SL_FRAMES_PER_SECOND
+
+// That's the size of a single chunk read in each `produce()` call. Can't be larger than the buffer size.
+#define STREAMING_BUFFER_CHUNK_IN_FRAMES    (STREAMING_BUFFER_SIZE_IN_FRAMES / 4)
+
+// An XM module is generated in stereo mode, which means that we need to handle a stereo source.
 #define MODULE_OUTPUT_FORMAT                ma_format_s16
 #define MODULE_OUTPUT_BYTES_PER_SAMPLE      2
 #define MODULE_OUTPUT_SAMPLES_PER_CHANNEL   1
 #define MODULE_OUTPUT_CHANNELS_PER_FRAME    2
 #define MODULE_OUTPUT_BYTES_PER_FRAME       (MODULE_OUTPUT_CHANNELS_PER_FRAME * MODULE_OUTPUT_SAMPLES_PER_CHANNEL * MODULE_OUTPUT_BYTES_PER_SAMPLE)
 
-#define MIXING_BUFFER_SAMPLES_PER_CHANNEL   1
-#define MIXING_BUFFER_CHANNELS_PER_FRAME    2
+#define MIXING_BUFFER_SAMPLES_PER_CHANNEL   SL_SAMPLES_PER_CHANNEL
+#define MIXING_BUFFER_CHANNELS_PER_FRAME    SL_CHANNELS_PER_FRAME
 #define MIXING_BUFFER_SIZE_IN_FRAMES        128
 
 #define MIXING_BUFFER_BYTES_PER_FRAME       (MIXING_BUFFER_CHANNELS_PER_FRAME * MIXING_BUFFER_SAMPLES_PER_CHANNEL * SL_BYTES_PER_SAMPLE)
@@ -58,6 +65,9 @@ typedef struct _Module_t {
 
     xmp_context context;
     struct xmp_frame_info frame_info;
+
+    ma_pcm_rb buffer;
+    bool completed;
 } Module_t;
 
 static bool _module_ctor(SL_Source_t *source, SL_Callbacks_t callbacks);
@@ -70,12 +80,53 @@ static inline bool _rewind(Module_t *module)
 {
     xmp_restart_module(module->context);
 
+    module->completed = false;
+
     return true;
 }
 
 static inline bool _reset(Module_t *module)
 {
+    ma_pcm_rb *buffer = &module->buffer;
+
+    ma_pcm_rb_reset(buffer);
+
     return _rewind(module);
+}
+
+static inline bool _produce(Module_t *module)
+{
+    if (module->completed) { // End-of-data, early exit.
+        return true;
+    }
+
+    ma_pcm_rb *buffer = &module->buffer;
+    ma_uint32 frames_to_produce = ma_pcm_rb_available_write(buffer);
+#ifdef STREAMING_BUFFER_CHUNK_IN_FRAMES
+    if (frames_to_produce > STREAMING_BUFFER_CHUNK_IN_FRAMES) {
+        frames_to_produce = STREAMING_BUFFER_CHUNK_IN_FRAMES;
+    }
+#endif
+
+    void *write_buffer;
+    ma_pcm_rb_acquire_write(buffer, &frames_to_produce, &write_buffer);
+
+    // The requested buffer size (in bytes) is always filled, with trailing zeroes if needed.
+    xmp_context context = module->context;
+    const int loops = module->props.looping ? 0 : 1; // Automatically loop (properly filling the internal buffer), or tell EOD when not looping.
+    int play_result = xmp_play_buffer(context, write_buffer, frames_to_produce * MODULE_OUTPUT_BYTES_PER_FRAME, loops);
+
+    ma_pcm_rb_commit_write(buffer, frames_to_produce, write_buffer);
+
+    if (play_result == -XMP_END) {
+        module->completed = true;
+    } else
+    if (play_result != 0) { // Mark the end-of-data for both "end" and "error state" cases.
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "module %p in error state %d, forcing end-of-data", module, play_result);
+        return false;
+    }
+
+    return true;
 }
 
 SL_Source_t *SL_module_create(SL_Callbacks_t callbacks)
@@ -132,7 +183,7 @@ static bool _module_ctor(SL_Source_t *source, SL_Callbacks_t callbacks)
                     .update = _module_update,
                     .mix = _module_mix
                 },
-            .props = { 0 }
+            .completed = false
         };
 
     module->context  = xmp_create_context();
@@ -144,7 +195,13 @@ static bool _module_ctor(SL_Source_t *source, SL_Callbacks_t callbacks)
         return false;
     }
 
-    xmp_start_player(module->context, SL_FRAMES_PER_SECOND, 0);
+    ma_result result = ma_pcm_rb_init(INTERNAL_FORMAT, MODULE_OUTPUT_CHANNELS_PER_FRAME, STREAMING_BUFFER_SIZE_IN_FRAMES, NULL, NULL, &module->buffer);
+    if (result != MA_SUCCESS) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize music ring-buffer (%d frames)", STREAMING_BUFFER_SIZE_IN_FRAMES);
+        xmp_release_module(module->context);
+        xmp_free_context(module->context);
+        return false;
+    }
 
     bool initialized = SL_props_init(&module->props, MODULE_OUTPUT_FORMAT, SL_FRAMES_PER_SECOND, MODULE_OUTPUT_CHANNELS_PER_FRAME, MIXING_BUFFER_CHANNELS_PER_FRAME);
     if (!initialized) {
@@ -153,6 +210,8 @@ static bool _module_ctor(SL_Source_t *source, SL_Callbacks_t callbacks)
         xmp_free_context(module->context);
         return false;
     }
+
+    xmp_start_player(module->context, SL_FRAMES_PER_SECOND, 0);
 
     return true;
 }
@@ -185,20 +244,19 @@ static bool _module_reset(SL_Source_t *source)
 
 static bool _module_update(SL_Source_t *source, float delta_time)
 {
-    return true; // NO-OP
+    Module_t *module = (Module_t *)source;
+
+    return _produce(module);
 }
 
 static bool _module_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Group_t *groups)
 {
     Module_t *module = (Module_t *)source;
 
-    xmp_context context = module->context;
     ma_data_converter *converter = &module->props.converter;
-    const int loops = module->props.looping ? 0 : 1; // Automatically loop (properly filling the internal buffer), or tell EOD when not looping.
-    int play_result = 0;
+    ma_pcm_rb *buffer = &module->buffer;
 
-    uint8_t consumed_buffer[MIXING_BUFFER_SIZE_IN_BYTES]; // From the module, in the tracker output format.
-    uint8_t converted_buffer[MIXING_BUFFER_SIZE_IN_BYTES]; // In the internal format, ready to be mixed.
+    uint8_t converted_buffer[MIXING_BUFFER_SIZE_IN_BYTES];
 
     const SL_Mix_t mix = SL_props_precompute(&module->props, groups);
 
@@ -206,26 +264,32 @@ static bool _module_mix(SL_Source_t *source, void *output, size_t frames_request
 
     size_t frames_remaining = frames_requested;
     while (frames_remaining > 0) {
-        if (play_result != 0) { // Mark the end-of-data for both "end" and "error state" cases.
-            Log_assert(play_result != -XMP_ERROR_STATE, LOG_LEVELS_ERROR, LOG_CONTEXT, "module %p in error state, forcing end-of-data", module);
-            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "end-of-data reached for source %p", source);
-            return false;
+        ma_uint32 frames_available = ma_pcm_rb_available_read(buffer);
+        if (frames_available == 0) {
+            if (!module->completed) {
+                Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "buffer underrun for source %p - stalling (waiting for data)", source);
+                return true;
+            } else {
+                Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "end-of-data reached for source %p", source);
+                return false;
+            }
         }
 
         size_t frames_to_generate = frames_remaining > MIXING_BUFFER_SIZE_IN_FRAMES ? MIXING_BUFFER_SIZE_IN_FRAMES : frames_remaining;
 
-        ma_uint64 frames_to_consume = ma_data_converter_get_required_input_frame_count(converter, frames_to_generate);
+        ma_uint32 frames_to_consume = ma_data_converter_get_required_input_frame_count(converter, frames_to_generate);
         if (frames_to_consume > MIXING_BUFFER_SIZE_IN_FRAMES) {
             frames_to_consume = MIXING_BUFFER_SIZE_IN_FRAMES;
         }
 
-        // The requested buffer size (in bytes) is always filled, with trailing zeroes if needed.
-        play_result = xmp_play_buffer(context, consumed_buffer, frames_to_consume * MODULE_OUTPUT_BYTES_PER_FRAME, loops);
-        // TODO: we could use the same approach using a ring-buffer, like the music.
+        void *consumed_buffer;
+        ma_pcm_rb_acquire_read(buffer, &frames_to_consume, &consumed_buffer);
 
         ma_uint64 frames_consumed = frames_to_consume;
         ma_uint64 frames_generated = frames_to_generate;
         ma_data_converter_process_pcm_frames(converter, consumed_buffer, &frames_consumed, converted_buffer, &frames_generated);
+
+        ma_pcm_rb_commit_read(buffer, frames_consumed, consumed_buffer);
 
         mix_2on2_additive(cursor, converted_buffer, frames_generated, mix);
         // FIXME: with MOD tracks with separated channels, the current mix technique is wrong as it doesn't cross-mix.
