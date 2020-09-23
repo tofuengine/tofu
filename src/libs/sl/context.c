@@ -47,9 +47,8 @@ SL_Context_t *SL_context_create(void)
 
     for (size_t i = 0; i < SL_GROUPS_AMOUNT; ++i) {
         context->groups[i] = (SL_Group_t){
-                .balance = 0.0f,
-                .gain = 1.0f,
-                .mix = mix_precompute_balance(0.0f, 1.0f)
+                .mix = mix_null(),
+                .gain = 1.0f
             };
     }
 
@@ -70,12 +69,30 @@ void SL_context_destroy(SL_Context_t *context)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context freed");
 }
 
+void SL_context_mix(SL_Context_t *context, size_t group_id, float left_to_left, float left_to_right, float right_to_left, float right_to_right)
+{
+    SL_Group_t *group = &context->groups[group_id];
+
+    group->mix = (SL_Mix_t){
+            .left_to_left = left_to_left,
+            .left_to_right = left_to_right,
+            .right_to_left = right_to_left,
+            .right_to_right = right_to_right
+        };
+}
+
+void SL_context_pan(SL_Context_t *context, size_t group_id, float pan)
+{
+    SL_Group_t *group = &context->groups[group_id];
+
+    group->mix = mix_pan(fmaxf(-1.0f, fminf(pan, 1.0f)));
+}
+
 void SL_context_balance(SL_Context_t *context, size_t group_id, float balance)
 {
     SL_Group_t *group = &context->groups[group_id];
 
-    group->balance = fmaxf(-1.0f, fminf(balance, 1.0f));
-    group->mix = mix_precompute_balance(group->balance, group->gain);
+    group->mix = mix_balance(fmaxf(-1.0f, fminf(balance, 1.0f)));
 }
 
 void SL_context_gain(SL_Context_t *context, size_t group_id, float gain)
@@ -83,7 +100,6 @@ void SL_context_gain(SL_Context_t *context, size_t group_id, float gain)
     SL_Group_t *group = &context->groups[group_id];
 
     group->gain = fmaxf(0.0f, gain);
-    group->mix = mix_precompute_balance(group->balance, group->gain);
 }
 
 void SL_context_track(SL_Context_t *context, SL_Source_t *source)
@@ -145,7 +161,7 @@ bool SL_context_update(SL_Context_t *context, float delta_time)
     return true;
 }
 
-void SL_context_mix(SL_Context_t *context, void *output, size_t frames_requested)
+void SL_context_generate(SL_Context_t *context, void *output, size_t frames_requested)
 {
     const SL_Group_t *groups = context->groups;
 

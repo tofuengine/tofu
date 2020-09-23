@@ -81,6 +81,24 @@
   * *severe bug* in mixing, due to sample overflow during accumulation. Clamping was necessary.
   * simplified the mixing loop, modules could be "streamed".
   * the current mixing technique, which doesn't cross-mix, gives bad results with separate channels mods. Fix this?
+    * added a 2x2 mixing matrix support, pan and balance are special case
+    * source gain is combined to group gain
+    
+
+```java
+  //do panning
+  double pan = music.getPan();
+  if (pan != 0.0) {
+    double ll = (pan <= 0.0) ? 1.0 : (1.0 - pan);
+    double lr = (pan >= 0.0) ? pan : 0.0;
+    double rl = (pan <= 0.0) ? Math.abs(pan) : 0.0;
+    double rr = (pan >= 0.0) ? 1.0 : (1.0 - Math.abs(pan));
+    double tmpL = (ll * leftCurr) + (lr * rightCurr);
+    double tmpR = (rl * leftCurr) + (rr * rightCurr);
+    leftCurr = tmpL;
+    rightCurr = tmpR;
+  }
+```
 
 ```java
   //do panning

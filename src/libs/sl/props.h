@@ -35,11 +35,11 @@
 typedef struct _SL_Props_t {
     size_t group_id;
     bool looping; // TODO: rename to looped?
-    float pan;
+    SL_Mix_t mix;
     float gain;
     float speed;
 
-    SL_Mix_t mix;
+    // TODO: Add M/S processing: https://github.com/dfilaretti/stereowidth-demo
     ma_data_converter converter;
 } SL_Props_t;
 
@@ -48,7 +48,9 @@ extern void SL_props_deinit(SL_Props_t *props);
 
 extern void SL_props_group(SL_Props_t *props, size_t group_id);
 extern void SL_props_looping(SL_Props_t *props, bool looping);
+extern void SL_props_mix(SL_Props_t *props, SL_Mix_t mix);
 extern void SL_props_pan(SL_Props_t *props, float pan);
+extern void SL_props_balance(SL_Props_t *props, float pan);
 extern void SL_props_gain(SL_Props_t *props, float gain);
 extern void SL_props_speed(SL_Props_t *props, float speed);
 

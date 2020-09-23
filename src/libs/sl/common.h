@@ -53,13 +53,13 @@ typedef struct _SL_Callbacks_t {
 } SL_Callbacks_t;
 
 typedef struct _SL_Mix_t {
-    float left, right;
+    float left_to_left, left_to_right;
+    float right_to_left, right_to_right;
 } SL_Mix_t;
 
 typedef struct _SL_Group_t {
-    float balance;
-    float gain;
     SL_Mix_t mix;
+    float gain;
 } SL_Group_t;
 
 #endif  /* __SL_COMMON_H__ */

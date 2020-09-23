@@ -50,7 +50,9 @@ static int source_new(lua_State *L);
 static int source_gc(lua_State *L);
 static int source_group(lua_State *L);
 static int source_looping(lua_State *L);
+static int source_mix(lua_State *L);
 static int source_pan(lua_State *L);
+static int source_balance(lua_State *L);
 static int source_gain(lua_State *L);
 static int source_speed(lua_State *L);
 static int source_play(lua_State *L);
@@ -63,7 +65,9 @@ static const struct luaL_Reg _source_functions[] = {
     { "__gc", source_gc },
     { "group", source_group },
     { "looping", source_looping },
+    { "mix", source_mix },
     { "pan", source_pan },
+    { "balance", source_balance },
     { "gain", source_gain },
     { "speed", source_speed },
     { "play", source_play },
@@ -250,19 +254,57 @@ static int source_group(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
-static int source_pan1(lua_State *L)
+static int source_mix1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
 
-    lua_pushnumber(L, SL_source_get_pan(self->source));
+    SL_Mix_t mix = SL_source_get_mix(self->source);
 
-    return 1;
+    lua_pushnumber(L, mix.left_to_left);
+    lua_pushnumber(L, mix.left_to_right);
+    lua_pushnumber(L, mix.right_to_left);
+    lua_pushnumber(L, mix.right_to_right);
+
+    return 4;
 }
 
-static int source_pan2(lua_State *L)
+static int source_mix5(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
+    float left_to_left = LUAX_NUMBER(L, 2);
+    float left_to_right = LUAX_NUMBER(L, 3);
+    float right_to_left = LUAX_NUMBER(L, 4);
+    float right_to_right = LUAX_NUMBER(L, 5);
+
+    SL_source_set_mix(self->source, (SL_Mix_t){
+            .left_to_left = left_to_left,
+            .left_to_right = left_to_right,
+            .right_to_left = right_to_left,
+            .right_to_right = right_to_right
+        });
+
+    return 0;
+}
+
+static int source_mix(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, source_mix1)
+        LUAX_OVERLOAD_ARITY(5, source_mix5)
+    LUAX_OVERLOAD_END
+}
+
+static int source_pan(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -276,12 +318,18 @@ static int source_pan2(lua_State *L)
     return 0;
 }
 
-static int source_pan(lua_State *L)
+static int source_balance(lua_State *L)
 {
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, source_pan1)
-        LUAX_OVERLOAD_ARITY(2, source_pan2)
-    LUAX_OVERLOAD_END
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
+    float balance = LUAX_NUMBER(L, 2);
+
+    SL_source_set_balance(self->source, balance);
+
+    return 0;
 }
 
 static int source_gain1(lua_State *L)

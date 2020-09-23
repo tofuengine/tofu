@@ -51,10 +51,9 @@ bool SL_props_init(SL_Props_t *props, ma_format format, ma_uint32 sample_rate, m
     *props = (SL_Props_t){
             .group_id = SL_DEFAULT_GROUP,
             .looping = false,
-            .pan = 0.0f,
+            .mix = mix_null(),
             .gain = 1.0,
-            .speed = 1.0f,
-            .mix = mix_precompute_pan(0.0f, 1.0f)
+            .speed = 1.0f
         };
 
     ma_data_converter_config config = ma_data_converter_config_init(format, INTERNAL_FORMAT, channels_in, channels_out, sample_rate, SL_FRAMES_PER_SECOND);
@@ -84,16 +83,25 @@ void SL_props_looping(SL_Props_t *props, bool looping)
     props->looping = looping;
 }
 
+// mix, pan, and balance are mutually exclusive, that is pan is a special case of mix.
+void SL_props_mix(SL_Props_t *props, SL_Mix_t mix)
+{
+    props->mix = mix;
+}
+
 void SL_props_pan(SL_Props_t *props, float pan)
 {
-    props->pan = fmaxf(-1.0f, fminf(pan, 1.0f));
-    props->mix = mix_precompute_pan(props->pan, props->gain);
+    props->mix = mix_pan(fmaxf(-1.0f, fminf(pan, 1.0f)));
+}
+
+void SL_props_balance(SL_Props_t *props, float balance)
+{
+    props->mix = mix_balance(fmaxf(-1.0f, fminf(balance, 1.0f)));
 }
 
 void SL_props_gain(SL_Props_t *props, float gain)
 {
     props->gain = fmaxf(0.0f, gain);
-    props->mix = mix_precompute_pan(props->pan, props->gain);
 }
 
 void SL_props_speed(SL_Props_t *props, float speed)
@@ -102,10 +110,31 @@ void SL_props_speed(SL_Props_t *props, float speed)
     ma_data_converter_set_rate_ratio(&props->converter, props->speed); // The ratio is `in` over `out`, i.e. actual speed-up factor.
 }
 
+//
+// Sm * v = u -> Gm * u'
+//
+//   or
+//
+// Gm * Sm * v = (Gm * Sm) * v = GSm * v
+//
 SL_Mix_t SL_props_precompute(SL_Props_t *props, const SL_Group_t *groups)
 {
+    const SL_Mix_t S = props->mix;
+    const SL_Mix_t G = groups[props->group_id].mix;
+
+    const float left_to_left = S.left_to_left * G.left_to_left + S.right_to_left * G.left_to_right;
+    const float left_to_right = S.left_to_right * G.left_to_left + S.right_to_right * G.left_to_right;
+    const float right_to_left = S.left_to_left * G.right_to_left + S.right_to_left * G.right_to_right;
+    const float right_to_right = S.left_to_right * G.right_to_left + S.right_to_right * G.right_to_right;
+
+    const float S_gain = props->gain;
+    const float G_gain = groups[props->group_id].gain;
+    const float gain = S_gain * G_gain;
+
     return (SL_Mix_t){
-            .left = props->mix.left * groups[props->group_id].mix.left,
-            .right = props->mix.right * groups[props->group_id].mix.right
+            .left_to_left = left_to_left * gain,
+            .left_to_right = left_to_right * gain,
+            .right_to_left = right_to_left * gain,
+            .right_to_right = right_to_right * gain
         };
 }
