@@ -112,7 +112,23 @@ static int speakers_balance(lua_State *L)
     return 0;
 }
 
-static int speakers_gain(lua_State *L)
+static int speakers_gain1(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    size_t group_id = (size_t)LUAX_INTEGER(L, 1);
+
+    Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
+
+    const SL_Group_t *group = &audio->sl->groups[group_id];
+
+    lua_pushnumber(L, group->gain);
+
+    return 1;
+}
+
+static int speakers_gain2(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -127,6 +143,14 @@ static int speakers_gain(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "group #%d gain is %.f", group_id, gain);
 
     return 0;
+}
+
+static int speakers_gain(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, speakers_gain1)
+        LUAX_OVERLOAD_ARITY(2, speakers_gain2)
+    LUAX_OVERLOAD_END
 }
 
 static int speakers_halt(lua_State *L)
