@@ -121,13 +121,13 @@ void SL_context_untrack(SL_Context_t *context, SL_Source_t *source)
     for (size_t i = 0; i < count; ++i) {
         if (context->sources[i] == source) {
             arrdel(context->sources, i);
-            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p untracked for context %p", source, context);
+            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p untracked from context %p", source, context);
             return;
         }
     }
 }
 
-bool SL_context_is_tracked(SL_Context_t *context, SL_Source_t *source)
+bool SL_context_is_tracked(const SL_Context_t *context, SL_Source_t *source)
 {
     size_t count = arrlen(context->sources);
     for (size_t i = 0; i < count; ++i) {
@@ -138,7 +138,7 @@ bool SL_context_is_tracked(SL_Context_t *context, SL_Source_t *source)
     return false;
 }
 
-size_t SL_context_count(SL_Context_t *context)
+size_t SL_context_count(const SL_Context_t *context)
 {
     return arrlen(context->sources);
 }

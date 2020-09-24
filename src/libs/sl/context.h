@@ -46,8 +46,8 @@ extern void SL_context_gain(SL_Context_t *context, size_t group_id, float gain);
 
 extern void SL_context_track(SL_Context_t *context, SL_Source_t *source);
 extern void SL_context_untrack(SL_Context_t *context, SL_Source_t *source);
-extern bool SL_context_is_tracked(SL_Context_t *context, SL_Source_t *source);
-extern size_t SL_context_count(SL_Context_t *context);
+extern bool SL_context_is_tracked(const SL_Context_t *context, SL_Source_t *source);
+extern size_t SL_context_count(const SL_Context_t *context);
 extern void SL_context_halt(SL_Context_t *context);
 
 extern bool SL_context_update(SL_Context_t *context, float delta_time);
