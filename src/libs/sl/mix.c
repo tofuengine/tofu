@@ -67,7 +67,7 @@ static inline float _accumulate_f32(float accumulator, float left_sample, float 
 // |         | * |   | = | L/L * L + R/L * R, L/R * L + R/R * R |
 // | L/R R/R |   | R |
 //
-void mix_2on2_additive(void *output, void *input, size_t frames, const SL_Mix_t mix)
+void mix_2on2_additive(void *output, const void *input, size_t frames, const SL_Mix_t mix)
 {
     const float left_to_left = mix.left_to_left;
     const float left_to_right = mix.left_to_right;
@@ -75,14 +75,18 @@ void mix_2on2_additive(void *output, void *input, size_t frames, const SL_Mix_t 
     const float right_to_right = mix.right_to_right;
 
 #if SL_BYTES_PER_SAMPLE == 2
-    for (int16_t *sptr = input, *dptr = output; frames--; dptr += 2, sptr += 2) {
+    const int16_t *sptr = input;
+    int16_t *dptr = output;
+    for (size_t i = frames; i--; dptr += 2, sptr += 2) {
         const int16_t left = sptr[0];
         const int16_t right = sptr[1];
         dptr[0] = _accumulate_s16(dptr[0], left, left_to_left, right, right_to_left);
         dptr[1] = _accumulate_s16(dptr[1], left, left_to_right, right, right_to_right);
     }
 #elif SL_BYTES_PER_SAMPLE == 4
-    for (float *sptr = input, *dptr = output; frames--; dptr += 2, sptr += 2) {
+    const float *sptr = input;
+    float *dptr = output;
+    for (size_t i = frames; i--; dptr += 2, sptr += 2) {
         const float left = sptr[0];
         const float right = sptr[1];
         dptr[0] = _accumulate_f32(dptr[0], left, left_to_left, right, right_to_left);
@@ -93,7 +97,7 @@ void mix_2on2_additive(void *output, void *input, size_t frames, const SL_Mix_t 
 #endif
 }
 
-void mix_1on2_additive(void *output, void *input, size_t frames, const SL_Mix_t mix)
+void mix_1on2_additive(void *output, const void *input, size_t frames, const SL_Mix_t mix)
 {
     const float left_to_left = mix.left_to_left;
     const float left_to_right = mix.left_to_right;
@@ -101,14 +105,18 @@ void mix_1on2_additive(void *output, void *input, size_t frames, const SL_Mix_t 
     const float right_to_right = mix.right_to_right;
 
 #if SL_BYTES_PER_SAMPLE == 2
-    for (int16_t *sptr = input, *dptr = output; frames--; dptr += 2, sptr += 1) {
+    const int16_t *sptr = input;
+    int16_t *dptr = output;
+    for (size_t i = frames; i--; dptr += 2, sptr += 1) {
         const int16_t left = sptr[0];
         const int16_t right = sptr[0];
         dptr[0] = _accumulate_s16(dptr[0], left, left_to_left, right, right_to_left);
         dptr[1] = _accumulate_s16(dptr[1], left, left_to_right, right, right_to_right);
     }
 #elif SL_BYTES_PER_SAMPLE == 4
-    for (float *sptr = input, *dptr = output; frames--; dptr += 2, sptr += 2) {
+    const float *sptr = input;
+    float *dptr = output;
+    for (size_t i = frames; i--; dptr += 2, sptr += 1) {
         const float left = sptr[0];
         const float right = sptr[0];
         dptr[0] = _accumulate_f32(dptr[0], left, left_to_left, right, right_to_left);

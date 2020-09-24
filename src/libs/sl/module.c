@@ -292,7 +292,6 @@ static bool _module_mix(SL_Source_t *source, void *output, size_t frames_request
         ma_pcm_rb_commit_read(buffer, frames_consumed, consumed_buffer);
 
         mix_2on2_additive(cursor, converted_buffer, frames_generated, mix);
-        // FIXME: with MOD tracks with separated channels, the current mix technique is wrong as it doesn't cross-mix.
         cursor += frames_generated * SL_BYTES_PER_FRAME;
         frames_remaining -= frames_generated;
     }

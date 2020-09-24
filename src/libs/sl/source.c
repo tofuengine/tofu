@@ -37,32 +37,32 @@ void SL_source_destroy(SL_Source_t *source)
 
 bool SL_source_reset(SL_Source_t *source)
 {
-    return ((Source_t *)source)->vtable.reset(source);
+    return ((const Source_t *)source)->vtable.reset(source);
 }
 
-size_t SL_source_get_group(SL_Source_t *source)
+size_t SL_source_get_group(const SL_Source_t *source)
 {
-    return ((Source_t *)source)->props.group_id;
+    return ((const Source_t *)source)->props.group_id;
 }
 
-bool SL_source_get_looping(SL_Source_t *source)
+bool SL_source_get_looping(const SL_Source_t *source)
 {
-    return ((Source_t *)source)->props.looping;
+    return ((const Source_t *)source)->props.looping;
 }
 
-SL_Mix_t SL_source_get_mix(SL_Source_t *source)
+SL_Mix_t SL_source_get_mix(const SL_Source_t *source)
 {
-    return ((Source_t *)source)->props.mix;
+    return ((const Source_t *)source)->props.mix;
 }
 
-float SL_source_get_gain(SL_Source_t *source)
+float SL_source_get_gain(const SL_Source_t *source)
 {
-    return ((Source_t *)source)->props.gain;
+    return ((const Source_t *)source)->props.gain;
 }
 
-float SL_source_get_speed(SL_Source_t *source)
+float SL_source_get_speed(const SL_Source_t *source)
 {
-    return ((Source_t *)source)->props.speed;
+    return ((const Source_t *)source)->props.speed;
 }
 
 void SL_source_set_group(SL_Source_t *source, size_t group_id)

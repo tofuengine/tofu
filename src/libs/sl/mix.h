@@ -33,7 +33,7 @@ extern SL_Mix_t mix_null(void);
 extern SL_Mix_t mix_pan(float pan);
 extern SL_Mix_t mix_balance(float balance);
 
-extern void mix_2on2_additive(void *output, void *input, size_t frames, const SL_Mix_t mix);
-extern void mix_1on2_additive(void *output, void *input, size_t frames, const SL_Mix_t mix);
+extern void mix_2on2_additive(void *output, const void *input, size_t frames, const SL_Mix_t mix);
+extern void mix_1on2_additive(void *output, const void *input, size_t frames, const SL_Mix_t mix);
 
 #endif  /* __SL_MIX_H__ */
