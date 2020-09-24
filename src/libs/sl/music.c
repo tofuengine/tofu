@@ -219,17 +219,17 @@ static bool _music_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Cal
     bool produced = _produce(music);
     if (!produced) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't pre-load music data");
-        drflac_close(music->decoder);
         ma_pcm_rb_uninit(&music->buffer);
+        drflac_close(music->decoder);
         return false;
     }
 #endif
 
-    bool initialized = SL_props_init(&music->props, INTERNAL_FORMAT, sample_rate, channels, MIXING_BUFFER_CHANNELS_PER_FRAME);
+    bool initialized = SL_props_init(&music->props, context, INTERNAL_FORMAT, sample_rate, channels, MIXING_BUFFER_CHANNELS_PER_FRAME);
     if (!initialized) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize music properties");
-        drflac_close(music->decoder);
         ma_pcm_rb_uninit(&music->buffer);
+        drflac_close(music->decoder);
         return false;
     }
 

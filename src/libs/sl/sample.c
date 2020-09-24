@@ -180,11 +180,13 @@ static bool _sample_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Ca
 
     if (channels != 1) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "samples need to be 1 channel");
+        drflac_close(sample->decoder);
         return NULL;
     }
     float duration = (float)sample->length_in_frames / (float)sample_rate;
     if (duration > SAMPLE_MAX_LENGTH_IN_SECONDS) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "sample is too long (%.2f seconds)", duration);
+        drflac_close(sample->decoder);
         return NULL;
     }
 
@@ -192,6 +194,7 @@ static bool _sample_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Ca
     ma_result result = ma_audio_buffer_init_copy(&config, &sample->buffer); // NOTE: It will allocate but won't copy.
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate buffer for %d frames", sample->length_in_frames);
+        drflac_close(sample->decoder);
         return false;
     }
 
@@ -199,6 +202,7 @@ static bool _sample_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Ca
     if (!produced) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d frames for sample", sample->length_in_frames);
         ma_audio_buffer_uninit(&sample->buffer);
+        drflac_close(sample->decoder);
         return false;
     }
 
@@ -206,6 +210,7 @@ static bool _sample_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Ca
     if (!initialized) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize sample properties");
         ma_audio_buffer_uninit(&sample->buffer);
+        drflac_close(sample->decoder);
         return false;
     }
 
