@@ -71,7 +71,7 @@ static bool _music_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Cal
 static void _music_dtor(SL_Source_t *source);
 static bool _music_reset(SL_Source_t *source);
 static bool _music_update(SL_Source_t *source, float delta_time);
-static bool _music_mix(SL_Source_t *source, void *output, size_t frames_requested);
+static bool _music_generate(SL_Source_t *source, void *output, size_t frames_requested);
 
 static inline bool _rewind(Music_t *music)
 {
@@ -184,7 +184,7 @@ static bool _music_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Cal
                     .dtor = _music_dtor,
                     .reset = _music_reset,
                     .update = _music_update,
-                    .mix = _music_mix
+                    .generate = _music_generate
                 },
             .callbacks = callbacks,
             .frames_completed = 0
@@ -278,7 +278,7 @@ static bool _music_update(SL_Source_t *source, float delta_time)
     return _produce(music);
 }
 
-static bool _music_mix(SL_Source_t *source, void *output, size_t frames_requested)
+static bool _music_generate(SL_Source_t *source, void *output, size_t frames_requested)
 {
     Music_t *music = (Music_t *)source;
 

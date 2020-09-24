@@ -74,7 +74,7 @@ static bool _module_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Ca
 static void _module_dtor(SL_Source_t *source);
 static bool _module_reset(SL_Source_t *source);
 static bool _module_update(SL_Source_t *source, float delta_time);
-static bool _module_mix(SL_Source_t *source, void *output, size_t frames_requested);
+static bool _module_generate(SL_Source_t *source, void *output, size_t frames_requested);
 
 static inline bool _rewind(Module_t *module)
 {
@@ -181,7 +181,7 @@ static bool _module_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Ca
                     .dtor = _module_dtor,
                     .reset = _module_reset,
                     .update = _module_update,
-                    .mix = _module_mix
+                    .generate = _module_generate
                 },
             .completed = false
         };
@@ -249,7 +249,7 @@ static bool _module_update(SL_Source_t *source, float delta_time)
     return _produce(module);
 }
 
-static bool _module_mix(SL_Source_t *source, void *output, size_t frames_requested)
+static bool _module_generate(SL_Source_t *source, void *output, size_t frames_requested)
 {
     Module_t *module = (Module_t *)source;
 

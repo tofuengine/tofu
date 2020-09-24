@@ -65,7 +65,7 @@ static bool _sample_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Ca
 static void _sample_dtor(SL_Source_t *source);
 static bool _sample_reset(SL_Source_t *source);
 static bool _sample_update(SL_Source_t *source, float delta_time);
-static bool _sample_mix(SL_Source_t *source, void *output, size_t frames_requested);
+static bool _sample_generate(SL_Source_t *source, void *output, size_t frames_requested);
 
 static inline bool _rewind(Sample_t *sample)
 {
@@ -154,7 +154,7 @@ static bool _sample_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Ca
                     .dtor = _sample_dtor,
                     .reset = _sample_reset,
                     .update = _sample_update,
-                    .mix = _sample_mix
+                    .generate = _sample_generate
                 },
             .callbacks = callbacks,
             .frames_completed = 0
@@ -249,7 +249,7 @@ static bool _sample_update(SL_Source_t *source, float delta_time)
     return true; // NO-OP
 }
 
-static bool _sample_mix(SL_Source_t *source, void *output, size_t frames_requested)
+static bool _sample_generate(SL_Source_t *source, void *output, size_t frames_requested)
 {
     Sample_t *sample = (Sample_t *)source;
 

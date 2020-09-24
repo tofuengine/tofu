@@ -183,7 +183,7 @@ void SL_context_generate(SL_Context_t *context, void *output, size_t frames_requ
     // Backward scan, to remove to-be-untracked sources.
     for (int i = arrlen(context->sources) - 1; i >= 0; --i) {
         SL_Source_t *source = context->sources[i];
-        bool still_running = ((Source_t *)source)->vtable.mix(source, output, frames_requested);
+        bool still_running = ((Source_t *)source)->vtable.generate(source, output, frames_requested);
         if (!still_running) {
             arrdel(context->sources, i);
         }
