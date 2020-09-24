@@ -136,7 +136,12 @@ static int speakers_mix5(lua_State *L)
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
-    SL_context_mix(audio->sl, group_id, left_to_left, left_to_right, right_to_left, right_to_right);
+    Audio_mix(audio, group_id, (SL_Mix_t){
+            .left_to_left = left_to_left,
+            .left_to_right = left_to_right,
+            .right_to_left = right_to_left,
+            .right_to_right = right_to_right
+        });
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "group #%d mix is [%.f, %.f, %.f, %.f]", group_id, left_to_left, left_to_right, right_to_left, right_to_right);
 
     return 0;
@@ -161,7 +166,7 @@ static int speakers_pan(lua_State *L)
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
-    SL_context_pan(audio->sl, group_id, pan);
+    Audio_pan(audio, group_id, pan);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "group #%d pan is %.f", group_id, pan);
 
     return 0;
@@ -178,7 +183,7 @@ static int speakers_balance(lua_State *L)
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
-    SL_context_balance(audio->sl, group_id, balance);
+    Audio_balance(audio, group_id, balance);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "group #%d balance is %.f", group_id, balance);
 
     return 0;
@@ -193,7 +198,7 @@ static int speakers_gain1(lua_State *L)
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
-    const SL_Group_t *group = &audio->sl->groups[group_id];
+    const SL_Group_t *group = &audio->sl->groups[group_id]; // TODO: add `Audio_XXX` observers.
 
     lua_pushnumber(L, group->gain);
 
@@ -211,7 +216,7 @@ static int speakers_gain2(lua_State *L)
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
-    SL_context_gain(audio->sl, group_id, gain);
+    Audio_gain(audio, group_id, gain);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "group #%d gain is %.f", group_id, gain);
 
     return 0;
