@@ -41,7 +41,7 @@ typedef enum _Source_Types_t {
     Source_Type_t_CountOf
 } Source_Type_t;
 
-typedef SL_Source_t *(*Source_Create_Function_t)(SL_Callbacks_t callbacks);
+typedef SL_Source_t *(*Source_Create_Function_t)(const SL_Context_t *context, SL_Callbacks_t callbacks);
 
 #define LOG_CONTEXT "source"
 #define META_TABLE  "Tofu_Sound_Source_mt"
@@ -130,6 +130,7 @@ static int source_new(lua_State *L)
     Source_Type_t type = (Source_Type_t)LUAX_OPTIONAL_INTEGER(L, 2, SOURCE_TYPE_MUSIC);
 
     File_System_t *file_system = (File_System_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
+    Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
     File_System_Handle_t *handle = FS_locate_and_open(file_system, file); // The handle is kept open, the source could require it.
     if (!handle) {
@@ -144,7 +145,7 @@ static int source_new(lua_State *L)
             .eof = _handle_eof,
             .user_data = (void *)handle
         };
-    SL_Source_t *source = _create_functions[type](callbacks);
+    SL_Source_t *source = _create_functions[type](audio->sl, callbacks);
     if (!source) {
         FS_close(handle);
         return luaL_error(L, "can't create source");

@@ -46,9 +46,12 @@
 
 #define LOG_CONTEXT "sl-props"
 
-bool SL_props_init(SL_Props_t *props, ma_format format, ma_uint32 sample_rate, ma_uint32 channels_in, ma_uint32 channels_out)
+static void _precompute(SL_Props_t *props);
+
+bool SL_props_init(SL_Props_t *props, const SL_Context_t *context, ma_format format, ma_uint32 sample_rate, ma_uint32 channels_in, ma_uint32 channels_out)
 {
     *props = (SL_Props_t){
+            .context = context,
             .group_id = SL_DEFAULT_GROUP,
             .looping = false,
             .mix = mix_null(),
@@ -87,27 +90,39 @@ void SL_props_looping(SL_Props_t *props, bool looping)
 void SL_props_mix(SL_Props_t *props, SL_Mix_t mix)
 {
     props->mix = mix;
+    _precompute(props);
 }
 
 void SL_props_pan(SL_Props_t *props, float pan)
 {
     props->mix = mix_pan(fmaxf(-1.0f, fminf(pan, 1.0f)));
+    _precompute(props);
 }
 
 void SL_props_balance(SL_Props_t *props, float balance)
 {
     props->mix = mix_balance(fmaxf(-1.0f, fminf(balance, 1.0f)));
+    _precompute(props);
 }
 
 void SL_props_gain(SL_Props_t *props, float gain)
 {
     props->gain = fmaxf(0.0f, gain);
+    _precompute(props);
 }
 
 void SL_props_speed(SL_Props_t *props, float speed)
 {
     props->speed = fmaxf(MIN_SPEED_VALUE, speed);
     ma_data_converter_set_rate_ratio(&props->converter, props->speed); // The ratio is `in` over `out`, i.e. actual speed-up factor.
+}
+
+void SL_props_on_group_changed(SL_Props_t *props, size_t group_id)
+{
+    if (props->group_id != group_id && group_id != SL_ANY_GROUP) {
+        return;
+    }
+    _precompute(props);
 }
 
 //
@@ -117,10 +132,12 @@ void SL_props_speed(SL_Props_t *props, float speed)
 //
 // Gm * Sm * v = (Gm * Sm) * v = GSm * v
 //
-SL_Mix_t SL_props_precompute(SL_Props_t *props, const SL_Group_t *groups)
+static void _precompute(SL_Props_t *props)
 {
+    const SL_Group_t *group = SL_context_get_group(props->context, props->group_id);
+
     const SL_Mix_t S = props->mix;
-    const SL_Mix_t G = groups[props->group_id].mix;
+    const SL_Mix_t G = group->mix;
 
     const float left_to_left = S.left_to_left * G.left_to_left + S.right_to_left * G.left_to_right;
     const float left_to_right = S.left_to_right * G.left_to_left + S.right_to_right * G.left_to_right;
@@ -128,13 +145,14 @@ SL_Mix_t SL_props_precompute(SL_Props_t *props, const SL_Group_t *groups)
     const float right_to_right = S.left_to_right * G.right_to_left + S.right_to_right * G.right_to_right;
 
     const float S_gain = props->gain;
-    const float G_gain = groups[props->group_id].gain;
+    const float G_gain = group->gain;
     const float gain = S_gain * G_gain;
 
-    return (SL_Mix_t){
+    props->precomputed_mix = (SL_Mix_t){
             .left_to_left = left_to_left * gain,
             .left_to_right = left_to_right * gain,
             .right_to_left = right_to_left * gain,
             .right_to_right = right_to_right * gain
         };
 }
+

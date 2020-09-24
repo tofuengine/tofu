@@ -43,6 +43,7 @@
 #define SL_FIRST_GROUP          0
 #define SL_LAST_GROUP           (SL_GROUPS_AMOUNT - 1)
 #define SL_DEFAULT_GROUP        SL_FIRST_GROUP
+#define SL_ANY_GROUP            (SL_LAST_GROUP + 1)
 
 typedef struct _SL_Callbacks_t {
     size_t (*read)(void *user_data, void *buffer, size_t bytes_to_read);

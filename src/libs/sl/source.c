@@ -99,3 +99,8 @@ void SL_source_set_speed(SL_Source_t *source, float speed)
 {
     SL_props_speed(&((Source_t *)source)->props, speed);
 }
+
+void SL_source_on_group_changed(SL_Source_t *source, size_t group_id)
+{
+    SL_props_on_group_changed(&((Source_t *)source)->props, group_id);
+}

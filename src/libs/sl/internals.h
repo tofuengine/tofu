@@ -44,7 +44,7 @@ typedef struct _Source_VTable_t {
     void (*dtor)(SL_Source_t *source);
     bool (*reset)(SL_Source_t *source);
     bool (*update)(SL_Source_t *source, float delta_time);
-    bool (*mix)(SL_Source_t *source, void *output, size_t frames_requested, const SL_Group_t *groups); // Returns `false` when end-of-data.
+    bool (*mix)(SL_Source_t *source, void *output, size_t frames_requested); // Returns `false` when end-of-data.
 } Source_VTable_t;
 
 typedef struct _Source_t {

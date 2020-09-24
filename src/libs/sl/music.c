@@ -67,11 +67,11 @@ typedef struct _Music_t { // FIXME: rename to `_Music_Source_t`.
     size_t frames_completed;
 } Music_t;
 
-static bool _music_ctor(SL_Source_t *source, SL_Callbacks_t callbacks);
+static bool _music_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Callbacks_t callbacks);
 static void _music_dtor(SL_Source_t *source);
 static bool _music_reset(SL_Source_t *source);
 static bool _music_update(SL_Source_t *source, float delta_time);
-static bool _music_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Group_t *groups);
+static bool _music_mix(SL_Source_t *source, void *output, size_t frames_requested);
 
 static inline bool _rewind(Music_t *music)
 {
@@ -133,7 +133,7 @@ static inline bool _produce(Music_t *music)
     return true;
 }
 
-SL_Source_t *SL_music_create(SL_Callbacks_t callbacks)
+SL_Source_t *SL_music_create(const SL_Context_t *context, SL_Callbacks_t callbacks)
 {
     Music_t *music = malloc(sizeof(Music_t));
     if (!music) {
@@ -141,7 +141,7 @@ SL_Source_t *SL_music_create(SL_Callbacks_t callbacks)
         return NULL;
     }
 
-    bool cted = _music_ctor(music, callbacks);
+    bool cted = _music_ctor(music, context, callbacks);
     if (!cted) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize music structure");
         free(music);
@@ -175,7 +175,7 @@ static drflac_bool32 _music_seek(void *user_data, int offset, drflac_seek_origin
     return seeked ? DRFLAC_TRUE : DRFLAC_FALSE;
 }
 
-static bool _music_ctor(SL_Source_t *source, SL_Callbacks_t callbacks)
+static bool _music_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Callbacks_t callbacks)
 {
     Music_t *music = (Music_t *)source;
 
@@ -278,7 +278,7 @@ static bool _music_update(SL_Source_t *source, float delta_time)
     return _produce(music);
 }
 
-static bool _music_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Group_t *groups)
+static bool _music_mix(SL_Source_t *source, void *output, size_t frames_requested)
 {
     Music_t *music = (Music_t *)source;
 
@@ -287,7 +287,7 @@ static bool _music_mix(SL_Source_t *source, void *output, size_t frames_requeste
 
     uint8_t converted_buffer[MIXING_BUFFER_SIZE_IN_BYTES];
 
-    const SL_Mix_t mix = SL_props_precompute(&music->props, groups);
+    const SL_Mix_t mix = music->props.precomputed_mix;
 
     uint8_t *cursor = (uint8_t *)output;
 

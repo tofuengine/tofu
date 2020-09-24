@@ -50,4 +50,6 @@ extern void SL_source_set_speed(SL_Source_t *source, float speed);
 
 extern bool SL_source_reset(SL_Source_t *source);
 
+extern void SL_source_on_group_changed(SL_Source_t *source, size_t group_id);
+
 #endif  /* __SL_SOURCE_H__ */

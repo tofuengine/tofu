@@ -70,11 +70,11 @@ typedef struct _Module_t {
     bool completed;
 } Module_t;
 
-static bool _module_ctor(SL_Source_t *source, SL_Callbacks_t callbacks);
+static bool _module_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Callbacks_t callbacks);
 static void _module_dtor(SL_Source_t *source);
 static bool _module_reset(SL_Source_t *source);
 static bool _module_update(SL_Source_t *source, float delta_time);
-static bool _module_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Group_t *groups);
+static bool _module_mix(SL_Source_t *source, void *output, size_t frames_requested);
 
 static inline bool _rewind(Module_t *module)
 {
@@ -129,7 +129,7 @@ static inline bool _produce(Module_t *module)
     return true;
 }
 
-SL_Source_t *SL_module_create(SL_Callbacks_t callbacks)
+SL_Source_t *SL_module_create(const SL_Context_t *context, SL_Callbacks_t callbacks)
 {
     Module_t *module = malloc(sizeof(Module_t));
     if (!module) {
@@ -137,7 +137,7 @@ SL_Source_t *SL_module_create(SL_Callbacks_t callbacks)
         return NULL;
     }
 
-    bool cted = _module_ctor(module, callbacks);
+    bool cted = _module_ctor(module, context, callbacks);
     if (!cted) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize module structure");
         free(module);
@@ -172,7 +172,7 @@ static int _xmp_eof(void *user_data)
     return callbacks->eof(callbacks->user_data);
 }
 
-static bool _module_ctor(SL_Source_t *source, SL_Callbacks_t callbacks)
+static bool _module_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Callbacks_t callbacks)
 {
     Module_t *module = (Module_t *)source;
 
@@ -203,7 +203,7 @@ static bool _module_ctor(SL_Source_t *source, SL_Callbacks_t callbacks)
         return false;
     }
 
-    bool initialized = SL_props_init(&module->props, MODULE_OUTPUT_FORMAT, SL_FRAMES_PER_SECOND, MODULE_OUTPUT_CHANNELS_PER_FRAME, MIXING_BUFFER_CHANNELS_PER_FRAME);
+    bool initialized = SL_props_init(&module->props, context, MODULE_OUTPUT_FORMAT, SL_FRAMES_PER_SECOND, MODULE_OUTPUT_CHANNELS_PER_FRAME, MIXING_BUFFER_CHANNELS_PER_FRAME);
     if (!initialized) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize module properties");
         xmp_release_module(module->context);
@@ -249,7 +249,7 @@ static bool _module_update(SL_Source_t *source, float delta_time)
     return _produce(module);
 }
 
-static bool _module_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Group_t *groups)
+static bool _module_mix(SL_Source_t *source, void *output, size_t frames_requested)
 {
     Module_t *module = (Module_t *)source;
 
@@ -258,7 +258,7 @@ static bool _module_mix(SL_Source_t *source, void *output, size_t frames_request
 
     uint8_t converted_buffer[MIXING_BUFFER_SIZE_IN_BYTES];
 
-    const SL_Mix_t mix = SL_props_precompute(&module->props, groups);
+    const SL_Mix_t mix = module->props.precomputed_mix;
 
     uint8_t *cursor = (uint8_t *)output;
 
