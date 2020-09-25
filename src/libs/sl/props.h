@@ -35,6 +35,7 @@
 
 typedef struct _SL_Props_t {
     const SL_Context_t *context;
+    size_t channels;
 
     size_t group_id;
     bool looping; // TODO: rename to looped?

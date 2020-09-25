@@ -52,6 +52,7 @@ bool SL_props_init(SL_Props_t *props, const SL_Context_t *context, ma_format for
 {
     *props = (SL_Props_t){
             .context = context,
+            .channels = channels_in,
             .group_id = SL_DEFAULT_GROUP,
             .looping = false,
             .mix = channels_in == 1 ? mix_pan(0.0f) : mix_balance(0.0f), // mono -> center panned, stereo -> separated
@@ -95,7 +96,9 @@ void SL_props_mix(SL_Props_t *props, SL_Mix_t mix)
 
 void SL_props_pan(SL_Props_t *props, float pan)
 {
-    props->mix = mix_pan(fmaxf(-1.0f, fminf(pan, 1.0f)));
+    props->mix = props->channels == 1
+        ? mix_pan(fmaxf(-1.0f, fminf(pan, 1.0f)))
+        : mix_twin_pan(fmaxf(-1.0f, fminf(pan, 1.0f)), fmaxf(-1.0f, fminf(pan, 1.0f)));
     _precompute(props);
 }
 
