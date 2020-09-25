@@ -54,7 +54,7 @@ bool SL_props_init(SL_Props_t *props, const SL_Context_t *context, ma_format for
             .context = context,
             .group_id = SL_DEFAULT_GROUP,
             .looping = false,
-            .mix = mix_null(), // FIXME: this should default differently for mono and stereo source.
+            .mix = channels_in == 1 ? mix_pan(0.0f) : mix_balance(0.0f), // mono -> center panned, stereo -> separated
             .gain = 1.0,
             .speed = 1.0f
         };
