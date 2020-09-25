@@ -29,6 +29,10 @@
 #include <math.h>
 #include <stdint.h>
 
+#ifndef M_PI_2
+  #define M_PI_2    1.57079632679489661923
+#endif
+
 // Add to the `accumulator` the `sample` scaled by `gain`.
 //
 // Note that, due to scaling, the intermediate `sample * gain` value can exceed the sample maximum/minimum value.

@@ -63,7 +63,7 @@ static File_System_Resource_t *_load_as_string(File_System_Handle_t *handle)
     if (!chars) {
         return NULL;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded a %d long string", length);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded a %d characters long string", length);
 
     File_System_Resource_t *resource = malloc(sizeof(File_System_Resource_t));
     if (!resource) {
