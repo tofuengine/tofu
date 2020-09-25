@@ -35,6 +35,7 @@
 #include "udt.h"
 
 static int math_lerp(lua_State *L);
+static int math_invlerp(lua_State *L);
 static int math_clamp(lua_State *L);
 static int math_step(lua_State *L);
 static int math_smoothstep(lua_State *L);
@@ -49,6 +50,7 @@ static int math_tweener(lua_State *L);
 
 static const struct luaL_Reg _math_functions[] = {
     { "lerp", math_lerp },
+    { "invlerp", math_invlerp },
     { "clamp", math_clamp },
     { "step", math_step },
     { "smoothstep", math_smoothstep },
@@ -103,6 +105,29 @@ static int math_lerp(lua_State *L)
     float v = _lerpf(v0, v1, t);
 
     lua_pushnumber(L, v);
+
+    return 1;
+}
+
+static inline float _invlerpf(float v0, float v1, float v)
+{
+	return (v - v0) / (v1 - v0);
+}
+
+static int math_invlerp(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    float v0 = LUAX_NUMBER(L, 1);
+    float v1 = LUAX_NUMBER(L, 2);
+    float v = LUAX_NUMBER(L, 3);
+
+    float t = _invlerpf(v0, v1, v);
+
+    lua_pushnumber(L, t);
 
     return 1;
 }
