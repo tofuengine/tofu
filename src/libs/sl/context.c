@@ -69,16 +69,24 @@ void SL_context_destroy(SL_Context_t *context)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context freed");
 }
 
-void SL_context_mix(SL_Context_t *context, size_t group_id, float left_to_left, float left_to_right, float right_to_left, float right_to_right)
+static void _fire_on_group_changed(const SL_Context_t *context, size_t group_id)
+{
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "context group #%d changed, firing event", group_id);
+
+    SL_Source_t **current = context->sources;
+    for (int i = arrlen(context->sources); i; --i) {
+        SL_Source_t *source = *(current++);
+
+        SL_source_on_group_changed(source, group_id);
+    }
+}
+
+void SL_context_mix(SL_Context_t *context, size_t group_id, SL_Mix_t mix)
 {
     SL_Group_t *group = &context->groups[group_id];
 
-    group->mix = (SL_Mix_t){
-            .left_to_left = left_to_left,
-            .left_to_right = left_to_right,
-            .right_to_left = right_to_left,
-            .right_to_right = right_to_right
-        };
+    group->mix = mix;
+    _fire_on_group_changed(context, group_id);
 }
 
 void SL_context_pan(SL_Context_t *context, size_t group_id, float pan)
@@ -86,6 +94,7 @@ void SL_context_pan(SL_Context_t *context, size_t group_id, float pan)
     SL_Group_t *group = &context->groups[group_id];
 
     group->mix = mix_pan(fmaxf(-1.0f, fminf(pan, 1.0f)));
+    _fire_on_group_changed(context, group_id);
 }
 
 void SL_context_balance(SL_Context_t *context, size_t group_id, float balance)
@@ -93,6 +102,7 @@ void SL_context_balance(SL_Context_t *context, size_t group_id, float balance)
     SL_Group_t *group = &context->groups[group_id];
 
     group->mix = mix_balance(fmaxf(-1.0f, fminf(balance, 1.0f)));
+    _fire_on_group_changed(context, group_id);
 }
 
 void SL_context_gain(SL_Context_t *context, size_t group_id, float gain)
@@ -100,6 +110,12 @@ void SL_context_gain(SL_Context_t *context, size_t group_id, float gain)
     SL_Group_t *group = &context->groups[group_id];
 
     group->gain = fmaxf(0.0f, gain);
+    _fire_on_group_changed(context, group_id);
+}
+
+const SL_Group_t *SL_context_get_group(const SL_Context_t *context, size_t group_id)
+{
+    return &context->groups[group_id];
 }
 
 void SL_context_track(SL_Context_t *context, SL_Source_t *source)
@@ -113,6 +129,7 @@ void SL_context_track(SL_Context_t *context, SL_Source_t *source)
     }
     arrpush(context->sources, source);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p tracked for context %p", source, context);
+    SL_source_on_group_changed(source, SL_ANY_GROUP); // Propagate, to the attached source, to precompute the mix matrix.
 }
 
 void SL_context_untrack(SL_Context_t *context, SL_Source_t *source)
@@ -121,13 +138,13 @@ void SL_context_untrack(SL_Context_t *context, SL_Source_t *source)
     for (size_t i = 0; i < count; ++i) {
         if (context->sources[i] == source) {
             arrdel(context->sources, i);
-            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p untracked for context %p", source, context);
+            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p untracked from context %p", source, context);
             return;
         }
     }
 }
 
-bool SL_context_is_tracked(SL_Context_t *context, SL_Source_t *source)
+bool SL_context_is_tracked(const SL_Context_t *context, SL_Source_t *source)
 {
     size_t count = arrlen(context->sources);
     for (size_t i = 0; i < count; ++i) {
@@ -138,7 +155,7 @@ bool SL_context_is_tracked(SL_Context_t *context, SL_Source_t *source)
     return false;
 }
 
-size_t SL_context_count(SL_Context_t *context)
+size_t SL_context_count(const SL_Context_t *context)
 {
     return arrlen(context->sources);
 }
@@ -163,12 +180,10 @@ bool SL_context_update(SL_Context_t *context, float delta_time)
 
 void SL_context_generate(SL_Context_t *context, void *output, size_t frames_requested)
 {
-    const SL_Group_t *groups = context->groups;
-
     // Backward scan, to remove to-be-untracked sources.
     for (int i = arrlen(context->sources) - 1; i >= 0; --i) {
         SL_Source_t *source = context->sources[i];
-        bool still_running = ((Source_t *)source)->vtable.mix(source, output, frames_requested, groups);
+        bool still_running = ((Source_t *)source)->vtable.generate(source, output, frames_requested);
         if (!still_running) {
             arrdel(context->sources, i);
         }

@@ -28,11 +28,14 @@
 #include <miniaudio/miniaudio.h>
 
 #include "common.h"
+#include "context.h"
 
 #include <stdbool.h>
 #include <stddef.h>
 
 typedef struct _SL_Props_t {
+    const SL_Context_t *context;
+
     size_t group_id;
     bool looping; // TODO: rename to looped?
     SL_Mix_t mix;
@@ -41,9 +44,10 @@ typedef struct _SL_Props_t {
 
     // TODO: Add M/S processing: https://github.com/dfilaretti/stereowidth-demo
     ma_data_converter converter;
+    SL_Mix_t precomputed_mix;
 } SL_Props_t;
 
-extern bool SL_props_init(SL_Props_t *props, ma_format format, ma_uint32 sample_rate, ma_uint32 channels_in, ma_uint32 channels_out);
+extern bool SL_props_init(SL_Props_t *props, const SL_Context_t *context, ma_format format, ma_uint32 sample_rate, ma_uint32 channels_in, ma_uint32 channels_out);
 extern void SL_props_deinit(SL_Props_t *props);
 
 extern void SL_props_group(SL_Props_t *props, size_t group_id);
@@ -54,6 +58,6 @@ extern void SL_props_balance(SL_Props_t *props, float pan);
 extern void SL_props_gain(SL_Props_t *props, float gain);
 extern void SL_props_speed(SL_Props_t *props, float speed);
 
-extern SL_Mix_t SL_props_precompute(SL_Props_t *props, const SL_Group_t *groups);
+extern void SL_props_on_group_changed(SL_Props_t *props, size_t group_id);
 
 #endif  /* __SL_PROPS_H__ */

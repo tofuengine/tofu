@@ -39,15 +39,16 @@ typedef struct _SL_Context_t {
 extern SL_Context_t *SL_context_create(void);
 extern void SL_context_destroy(SL_Context_t *context);
 
-extern void SL_context_mix(SL_Context_t *context, size_t group_id, float left_to_left, float left_to_right, float right_to_left, float right_to_right);
+extern void SL_context_mix(SL_Context_t *context, size_t group_id, SL_Mix_t mix);
 extern void SL_context_pan(SL_Context_t *context, size_t group_id, float pan);
 extern void SL_context_balance(SL_Context_t *context, size_t group_id, float balance);
 extern void SL_context_gain(SL_Context_t *context, size_t group_id, float gain);
+extern const SL_Group_t *SL_context_get_group(const SL_Context_t *context, size_t group_id);
 
 extern void SL_context_track(SL_Context_t *context, SL_Source_t *source);
 extern void SL_context_untrack(SL_Context_t *context, SL_Source_t *source);
-extern bool SL_context_is_tracked(SL_Context_t *context, SL_Source_t *source);
-extern size_t SL_context_count(SL_Context_t *context);
+extern bool SL_context_is_tracked(const SL_Context_t *context, SL_Source_t *source);
+extern size_t SL_context_count(const SL_Context_t *context);
 extern void SL_context_halt(SL_Context_t *context);
 
 extern bool SL_context_update(SL_Context_t *context, float delta_time);

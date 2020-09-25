@@ -149,6 +149,34 @@ void Audio_volume(Audio_t *audio, float volume)
 //    ma_mutex_unlock(&audio->lock);
 }
 
+void Audio_mix(Audio_t *audio, size_t group_id, SL_Mix_t mix)
+{
+    ma_mutex_lock(&audio->lock);
+    SL_context_mix(audio->sl, group_id, mix);
+    ma_mutex_unlock(&audio->lock);
+}
+
+void Audio_pan(Audio_t *audio, size_t group_id, float pan)
+{
+    ma_mutex_lock(&audio->lock);
+    SL_context_pan(audio->sl, group_id, pan);
+    ma_mutex_unlock(&audio->lock);
+}
+
+void Audio_balance(Audio_t *audio, size_t group_id, float balance)
+{
+    ma_mutex_lock(&audio->lock);
+    SL_context_balance(audio->sl, group_id, balance);
+    ma_mutex_unlock(&audio->lock);
+}
+
+void Audio_gain(Audio_t *audio, size_t group_id, float gain)
+{
+    ma_mutex_lock(&audio->lock);
+    SL_context_gain(audio->sl, group_id, gain);
+    ma_mutex_unlock(&audio->lock);
+}
+
 bool Audio_update(Audio_t *audio, float delta_time)
 {
     ma_mutex_lock(&audio->lock);

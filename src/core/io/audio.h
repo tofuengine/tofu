@@ -54,6 +54,10 @@ extern void Audio_terminate(Audio_t *audio); // TODO: rename to `deinitialize()`
 extern void Audio_halt(Audio_t *audio);
 
 extern void Audio_volume(Audio_t *audio, float volume);
+extern void Audio_mix(Audio_t *audio, size_t group_id, SL_Mix_t mix);
+extern void Audio_pan(Audio_t *audio, size_t group_id, float pan);
+extern void Audio_balance(Audio_t *audio, size_t group_id, float balance);
+extern void Audio_gain(Audio_t *audio, size_t group_id, float gain);
 
 extern bool Audio_update(Audio_t *audio, float delta_time);
 

@@ -61,11 +61,11 @@ typedef struct _Sample_t {
     size_t frames_completed;
 } Sample_t;
 
-static bool _sample_ctor(SL_Source_t *source, SL_Callbacks_t callbacks);
+static bool _sample_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Callbacks_t callbacks);
 static void _sample_dtor(SL_Source_t *source);
 static bool _sample_reset(SL_Source_t *source);
 static bool _sample_update(SL_Source_t *source, float delta_time);
-static bool _sample_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Group_t *groups);
+static bool _sample_generate(SL_Source_t *source, void *output, size_t frames_requested);
 
 static inline bool _rewind(Sample_t *sample)
 {
@@ -104,7 +104,7 @@ static inline bool _produce(Sample_t *sample)
     return frames_produced == sample->length_in_frames;
 }
 
-SL_Source_t *SL_sample_create(SL_Callbacks_t callbacks)
+SL_Source_t *SL_sample_create(const SL_Context_t *context, SL_Callbacks_t callbacks)
 {
     Sample_t *sample = malloc(sizeof(Sample_t));
     if (!sample) {
@@ -112,7 +112,7 @@ SL_Source_t *SL_sample_create(SL_Callbacks_t callbacks)
         return NULL;
     }
 
-    bool cted = _sample_ctor(sample, callbacks);
+    bool cted = _sample_ctor(sample, context, callbacks);
     if (!cted) {
         free(sample);
         return NULL;
@@ -145,7 +145,7 @@ static drflac_bool32 _sample_seek(void *user_data, int offset, drflac_seek_origi
     return seeked ? DRFLAC_TRUE : DRFLAC_FALSE;
 }
 
-static bool _sample_ctor(SL_Source_t *source, SL_Callbacks_t callbacks)
+static bool _sample_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Callbacks_t callbacks)
 {
     Sample_t *sample = (Sample_t *)source;
 
@@ -154,7 +154,7 @@ static bool _sample_ctor(SL_Source_t *source, SL_Callbacks_t callbacks)
                     .dtor = _sample_dtor,
                     .reset = _sample_reset,
                     .update = _sample_update,
-                    .mix = _sample_mix
+                    .generate = _sample_generate
                 },
             .callbacks = callbacks,
             .frames_completed = 0
@@ -180,11 +180,13 @@ static bool _sample_ctor(SL_Source_t *source, SL_Callbacks_t callbacks)
 
     if (channels != 1) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "samples need to be 1 channel");
+        drflac_close(sample->decoder);
         return NULL;
     }
     float duration = (float)sample->length_in_frames / (float)sample_rate;
     if (duration > SAMPLE_MAX_LENGTH_IN_SECONDS) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "sample is too long (%.2f seconds)", duration);
+        drflac_close(sample->decoder);
         return NULL;
     }
 
@@ -192,6 +194,7 @@ static bool _sample_ctor(SL_Source_t *source, SL_Callbacks_t callbacks)
     ma_result result = ma_audio_buffer_init_copy(&config, &sample->buffer); // NOTE: It will allocate but won't copy.
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate buffer for %d frames", sample->length_in_frames);
+        drflac_close(sample->decoder);
         return false;
     }
 
@@ -199,13 +202,15 @@ static bool _sample_ctor(SL_Source_t *source, SL_Callbacks_t callbacks)
     if (!produced) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d frames for sample", sample->length_in_frames);
         ma_audio_buffer_uninit(&sample->buffer);
+        drflac_close(sample->decoder);
         return false;
     }
 
-    bool initialized = SL_props_init(&sample->props, INTERNAL_FORMAT, sample_rate, channels, MIXING_BUFFER_CHANNELS_PER_FRAME);
+    bool initialized = SL_props_init(&sample->props, context, INTERNAL_FORMAT, sample_rate, channels, MIXING_BUFFER_CHANNELS_PER_FRAME);
     if (!initialized) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize sample properties");
         ma_audio_buffer_uninit(&sample->buffer);
+        drflac_close(sample->decoder);
         return false;
     }
 
@@ -244,7 +249,7 @@ static bool _sample_update(SL_Source_t *source, float delta_time)
     return true; // NO-OP
 }
 
-static bool _sample_mix(SL_Source_t *source, void *output, size_t frames_requested, const SL_Group_t *groups)
+static bool _sample_generate(SL_Source_t *source, void *output, size_t frames_requested)
 {
     Sample_t *sample = (Sample_t *)source;
 
@@ -254,7 +259,7 @@ static bool _sample_mix(SL_Source_t *source, void *output, size_t frames_request
 
     uint8_t converted_buffer[MIXING_BUFFER_SIZE_IN_BYTES];
 
-    const SL_Mix_t mix = SL_props_precompute(&sample->props, groups);
+    const SL_Mix_t mix = sample->props.precomputed_mix;
 
     uint8_t *cursor = (uint8_t *)output;
 
