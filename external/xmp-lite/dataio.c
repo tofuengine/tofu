@@ -21,23 +21,21 @@
  */
 
 #include "dataio.h"
-#include <byteswap.h>
 
-#if 0
-static inline uint16_t _reverse16(uint16_t value)
+// Can't use `byteswap.h` because it's not available on Windows.
+static inline uint16_t _bswap_16(uint16_t value)
 {
     return (((value & 0xFFFF) << 8) |
             ((value & 0xFF00) >> 8));
 }
 
-static inline uint32_t _reverse32(uint32_t value) 
+static inline uint32_t _bswap_32(uint32_t value) 
 {
     return (((value & 0x000000FF) << 24) |
             ((value & 0x0000FF00) <<  8) |
             ((value & 0x00FF0000) >>  8) |
             ((value & 0xFF000000) >> 24));
 }
-#endif
 
 uint16_t readmem16l(const uint8_t *m)
 {
@@ -45,7 +43,7 @@ uint16_t readmem16l(const uint8_t *m)
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
     return a;
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-	return bswap_16(a);
+	return _bswap_16(a);
 #else
 #    error unsupported endianness
 #endif
@@ -55,7 +53,7 @@ uint16_t readmem16b(const uint8_t *m)
 {
 	uint16_t a = *((uint16_t *)m);
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-	return bswap_16(a);
+	return _bswap_16(a);
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
     return a;
 #else
@@ -69,7 +67,7 @@ uint32_t readmem32l(const uint8_t *m)
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
     return a;
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-	return bswap_32(a);
+	return _bswap_32(a);
 #else
 #    error unsupported endianness
 #endif
@@ -79,7 +77,7 @@ uint32_t readmem32b(const uint8_t *m)
 {
 	uint32_t a = *((uint32_t *)m);
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-	return bswap_32(a);
+	return _bswap_32(a);
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
     return a;
 #else

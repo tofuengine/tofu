@@ -30,10 +30,7 @@
 #include "virtual.h"
 #include "mixer.h"
 
-const char *xmp_version = XMP_VERSION;
-const unsigned int xmp_vercode = XMP_VERCODE;
-
-xmp_context xmp_create_context()
+LIBXMP_EXPORT xmp_context xmp_create_context()
 {
 	struct context_data *ctx;
 
@@ -49,7 +46,7 @@ xmp_context xmp_create_context()
 	return (xmp_context)ctx;
 }
 
-void xmp_free_context(xmp_context opaque)
+LIBXMP_EXPORT void xmp_free_context(xmp_context opaque)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 
@@ -125,7 +122,7 @@ static void set_position(struct context_data *ctx, int pos, int dir)
 	}
 }
 
-int xmp_next_position(xmp_context opaque)
+LIBXMP_EXPORT int xmp_next_position(xmp_context opaque)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -140,7 +137,7 @@ int xmp_next_position(xmp_context opaque)
 	return p->pos;
 }
 
-int xmp_prev_position(xmp_context opaque)
+LIBXMP_EXPORT int xmp_prev_position(xmp_context opaque)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -157,7 +154,7 @@ int xmp_prev_position(xmp_context opaque)
 	return p->pos < 0 ? 0 : p->pos;
 }
 
-int xmp_set_position(xmp_context opaque, int pos)
+LIBXMP_EXPORT int xmp_set_position(xmp_context opaque, int pos)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -174,7 +171,7 @@ int xmp_set_position(xmp_context opaque, int pos)
 	return p->pos;
 }
 
-int xmp_set_row(xmp_context opaque, int row)
+LIBXMP_EXPORT int xmp_set_row(xmp_context opaque, int row)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -205,7 +202,7 @@ int xmp_set_row(xmp_context opaque, int row)
 	return row;
 }
 
-void xmp_stop_module(xmp_context opaque)
+LIBXMP_EXPORT void xmp_stop_module(xmp_context opaque)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -216,7 +213,7 @@ void xmp_stop_module(xmp_context opaque)
 	p->pos = -2;
 }
 
-void xmp_restart_module(xmp_context opaque)
+LIBXMP_EXPORT void xmp_restart_module(xmp_context opaque)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -228,7 +225,7 @@ void xmp_restart_module(xmp_context opaque)
 	p->pos = -1;
 }
 
-int xmp_seek_time(xmp_context opaque, int time)
+LIBXMP_EXPORT int xmp_seek_time(xmp_context opaque, int time)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -259,7 +256,7 @@ int xmp_seek_time(xmp_context opaque, int time)
 	return p->pos < 0 ? 0 : p->pos;
 }
 
-int xmp_channel_mute(xmp_context opaque, int chn, int status)
+LIBXMP_EXPORT int xmp_channel_mute(xmp_context opaque, int chn, int status)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -283,7 +280,7 @@ int xmp_channel_mute(xmp_context opaque, int chn, int status)
 	return ret;
 }
 
-int xmp_channel_vol(xmp_context opaque, int chn, int vol)
+LIBXMP_EXPORT int xmp_channel_vol(xmp_context opaque, int chn, int vol)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -324,7 +321,7 @@ asm(".symver xmp_set_player_v44__, xmp_set_player@@XMP_4.4");
 #define xmp_set_player__ xmp_set_player
 #endif
 
-int xmp_set_player__(xmp_context opaque, int parm, int val)
+LIBXMP_EXPORT int xmp_set_player__(xmp_context opaque, int parm, int val)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -445,7 +442,7 @@ asm(".symver xmp_get_player_v44__, xmp_get_player@@XMP_4.4");
 #define xmp_get_player__ xmp_get_player
 #endif
 
-int xmp_get_player__(xmp_context opaque, int parm)
+LIBXMP_EXPORT int xmp_get_player__(xmp_context opaque, int parm)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -526,12 +523,12 @@ int xmp_get_player__(xmp_context opaque, int parm)
 	return ret;
 }
 
-char **xmp_get_format_list()
+LIBXMP_EXPORT char **xmp_get_format_list()
 {
 	return format_list();
 }
 
-void xmp_inject_event(xmp_context opaque, int channel, struct xmp_event *e)
+LIBXMP_EXPORT void xmp_inject_event(xmp_context opaque, int channel, struct xmp_event *e)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -543,7 +540,7 @@ void xmp_inject_event(xmp_context opaque, int channel, struct xmp_event *e)
 	p->inject_event[channel]._flag = 1;
 }
 
-int xmp_set_instrument_path(xmp_context opaque, char *path)
+LIBXMP_EXPORT int xmp_set_instrument_path(xmp_context opaque, char *path)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct module_data *m = &ctx->m;
@@ -559,7 +556,7 @@ int xmp_set_instrument_path(xmp_context opaque, char *path)
 	return 0;
 }
 
-int xmp_set_tempo_factor(xmp_context opaque, double val)
+LIBXMP_EXPORT int xmp_set_tempo_factor(xmp_context opaque, double val)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;

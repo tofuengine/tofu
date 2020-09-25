@@ -65,7 +65,7 @@ struct xmp_sample *libxmp_get_sample(struct context_data *ctx, int smp)
 	return xxs;
 }
 
-int xmp_start_smix(xmp_context opaque, int chn, int smp)
+LIBXMP_EXPORT int xmp_start_smix(xmp_context opaque, int chn, int smp)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct smix_data *smix = &ctx->smix;
@@ -94,7 +94,7 @@ int xmp_start_smix(xmp_context opaque, int chn, int smp)
 	return -XMP_ERROR_INTERNAL;
 }
 
-int xmp_smix_play_instrument(xmp_context opaque, int ins, int note, int vol, int chn)
+LIBXMP_EXPORT int xmp_smix_play_instrument(xmp_context opaque, int ins, int note, int vol, int chn)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -125,7 +125,7 @@ int xmp_smix_play_instrument(xmp_context opaque, int ins, int note, int vol, int
 	return 0;
 }
 
-int xmp_smix_play_sample(xmp_context opaque, int ins, int note, int vol, int chn)
+LIBXMP_EXPORT int xmp_smix_play_sample(xmp_context opaque, int ins, int note, int vol, int chn)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -156,7 +156,7 @@ int xmp_smix_play_sample(xmp_context opaque, int ins, int note, int vol, int chn
 	return 0;
 }
 
-int xmp_smix_channel_pan(xmp_context opaque, int chn, int pan)
+LIBXMP_EXPORT int xmp_smix_channel_pan(xmp_context opaque, int chn, int pan)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -174,7 +174,7 @@ int xmp_smix_channel_pan(xmp_context opaque, int chn, int pan)
 	return 0;
 }
 
-int xmp_smix_load_sample(xmp_context opaque, int num, char *path)
+LIBXMP_EXPORT int xmp_smix_load_sample(xmp_context opaque, int num, char *path)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct smix_data *smix = &ctx->smix;
@@ -297,7 +297,7 @@ int xmp_smix_load_sample(xmp_context opaque, int num, char *path)
 	return retval;
 }
 
-int xmp_smix_release_sample(xmp_context opaque, int num)
+LIBXMP_EXPORT int xmp_smix_release_sample(xmp_context opaque, int num)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct smix_data *smix = &ctx->smix;
@@ -317,7 +317,7 @@ int xmp_smix_release_sample(xmp_context opaque, int num)
 	return 0;
 }
 
-void xmp_end_smix(xmp_context opaque)
+LIBXMP_EXPORT void xmp_end_smix(xmp_context opaque)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct smix_data *smix = &ctx->smix;

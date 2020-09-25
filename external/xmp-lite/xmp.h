@@ -14,12 +14,12 @@ extern "C" {
 #define XMP_VER_RELEASE 0
 
 #if defined(_WIN32) && !defined(__CYGWIN__)
-# if defined(BUILDING_STATIC)
-#  define LIBXMP_EXPORT
-# elif defined(BUILDING_DLL)
+# if defined(BUILDING_DLL)
 #  define LIBXMP_EXPORT __declspec(dllexport)
-# else
+# elif defined(BUILDING_DLL_IMPORT)
 #  define LIBXMP_EXPORT __declspec(dllimport)
+# else
+#  define LIBXMP_EXPORT
 # endif
 #elif defined(__OS2__) && defined(__WATCOMC__) && defined(__SW_BD)
 #  define LIBXMP_EXPORT __declspec(dllexport)
@@ -314,9 +314,6 @@ struct xmp_frame_info {			/* Current frame information */
 
 
 typedef char *xmp_context;
-
-LIBXMP_EXPORT extern const char *xmp_version;
-LIBXMP_EXPORT extern const unsigned int xmp_vercode;
 
 LIBXMP_EXPORT xmp_context xmp_create_context  (void);
 LIBXMP_EXPORT void        xmp_free_context    (xmp_context);

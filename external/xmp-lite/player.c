@@ -1324,7 +1324,7 @@ static void update_from_ord_info(struct context_data *ctx)
 	p->frame_time = m->time_factor * m->rrate / p->bpm;
 }
 
-int xmp_start_player(xmp_context opaque, int rate, int format)
+LIBXMP_EXPORT int xmp_start_player(xmp_context opaque, int rate, int format)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -1445,7 +1445,7 @@ static void check_end_of_module(struct context_data *ctx)
 	}
 }
 
-int xmp_play_frame(xmp_context opaque)
+LIBXMP_EXPORT int xmp_play_frame(xmp_context opaque)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -1547,7 +1547,7 @@ int xmp_play_frame(xmp_context opaque)
 	return 0;
 }
 
-int xmp_play_buffer(xmp_context opaque, void *out_buffer, int size, int loop)
+LIBXMP_EXPORT int xmp_play_buffer(xmp_context opaque, void *out_buffer, int size, int loop)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -1603,8 +1603,8 @@ int xmp_play_buffer(xmp_context opaque, void *out_buffer, int size, int loop)
 
 	return ret;
 }
-    
-void xmp_end_player(xmp_context opaque)
+
+LIBXMP_EXPORT void xmp_end_player(xmp_context opaque)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -1626,7 +1626,7 @@ void xmp_end_player(xmp_context opaque)
 	libxmp_mixer_off(ctx);
 }
 
-void xmp_get_module_info(xmp_context opaque, struct xmp_module_info *info)
+LIBXMP_EXPORT void xmp_get_module_info(xmp_context opaque, struct xmp_module_info *info)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct module_data *m = &ctx->m;
@@ -1643,7 +1643,7 @@ void xmp_get_module_info(xmp_context opaque, struct xmp_module_info *info)
 	info->vol_base = m->volbase;
 }
 
-void xmp_get_frame_info(xmp_context opaque, struct xmp_frame_info *info)
+LIBXMP_EXPORT void xmp_get_frame_info(xmp_context opaque, struct xmp_frame_info *info)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
