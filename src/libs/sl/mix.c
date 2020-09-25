@@ -136,6 +136,33 @@ SL_Mix_t mix_null(void)
     return (SL_Mix_t){ .left_to_left = 1.0f, .left_to_right = 0.0f, .right_to_left = 0.0f, .right_to_right = 1.0f };
 }
 
+// Thread the stereo source as two seperate mono channels and pan the individually.
+SL_Mix_t mix_twin_pan(float left_pan, float right_pan)
+{
+#if __SL_PANNING_LAW__ == PANNING_LAW_CONSTANT_GAIN
+    const float left_theta = (left_pan + 1.0f) * 0.5f; // [-1, 1] -> [0 , 1]
+    const float right_theta = (right_pan + 1.0f) * 0.5f;
+    return (SL_Mix_t){ // powf(theta, 1)
+            .left_to_left = 1.0f - left_theta, .left_to_right = left_theta
+            .right_to_left = 1.0f - right_theta, .right_to_right = right_theta
+        };
+#elif __SL_PANNING_LAW__ == PANNING_LAW_CONSTANT_POWER_SINCOS
+    const float left_theta = (left_pan + 1.0f) * 0.5f * M_PI_2; // [-1, 1] -> [0 , 1] -> [0, pi/2]
+    const float right_theta = (right_pan + 1.0f) * 0.5f * M_PI_2;
+    return (SL_Mix_t){
+            .left_to_left = cosf(left_theta), .left_to_right = sinf(left_theta),
+            .right_to_left = cosf(right_theta), .right_to_right = sinf(right_theta),
+        };
+#elif __SL_PANNING_LAW__ == PANNING_LAW_CONSTANT_POWER_SQRT
+    const float left_theta = (left_pan + 1.0f) * 0.5f; // [-1, 1] -> [0 , 1]
+    const float right_theta = (right_pan + 1.0f) * 0.5f;
+    return (SL_Mix_t){ // powf(theta, 0.5)
+            .left_to_left = sqrtf(1.0f - left_theta), .left_to_right = sqrtf(left_theta)
+            .right_to_left = sqrtf(1.0f - right_theta), .right_to_right = sqrtf(right_theta)
+        };
+#endif
+}
+
 SL_Mix_t mix_pan(float pan)
 {
 #if __SL_PANNING_LAW__ == PANNING_LAW_CONSTANT_GAIN

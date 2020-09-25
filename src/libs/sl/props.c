@@ -54,7 +54,7 @@ bool SL_props_init(SL_Props_t *props, const SL_Context_t *context, ma_format for
             .context = context,
             .group_id = SL_DEFAULT_GROUP,
             .looping = false,
-            .mix = mix_null(),
+            .mix = mix_null(), // FIXME: this should default differently for mono and stereo source.
             .gain = 1.0,
             .speed = 1.0f
         };
@@ -96,6 +96,12 @@ void SL_props_mix(SL_Props_t *props, SL_Mix_t mix)
 void SL_props_pan(SL_Props_t *props, float pan)
 {
     props->mix = mix_pan(fmaxf(-1.0f, fminf(pan, 1.0f)));
+    _precompute(props);
+}
+
+void SL_props_twin_pan(SL_Props_t *props, float left_pan, float right_pan)
+{
+    props->mix = mix_twin_pan(fmaxf(-1.0f, fminf(left_pan, 1.0f)), fmaxf(-1.0f, fminf(right_pan, 1.0f)));
     _precompute(props);
 }
 

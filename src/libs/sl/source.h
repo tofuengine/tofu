@@ -44,6 +44,7 @@ extern void SL_source_set_group(SL_Source_t *source, size_t group_id);
 extern void SL_source_set_looping(SL_Source_t *source, bool looping);
 extern void SL_source_set_mix(SL_Source_t *source, SL_Mix_t mix);
 extern void SL_source_set_pan(SL_Source_t *source, float pan);
+extern void SL_source_set_twin_pan(SL_Source_t *source, float left_pan, float right_pan);
 extern void SL_source_set_balance(SL_Source_t *source, float balance);
 extern void SL_source_set_gain(SL_Source_t *source, float gain);
 extern void SL_source_set_speed(SL_Source_t *source, float speed);

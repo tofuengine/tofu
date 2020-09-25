@@ -30,6 +30,7 @@
 #include <stddef.h>
 
 extern SL_Mix_t mix_null(void);
+extern SL_Mix_t mix_twin_pan(float left_pan, float right_pan);
 extern SL_Mix_t mix_pan(float pan);
 extern SL_Mix_t mix_balance(float balance);
 

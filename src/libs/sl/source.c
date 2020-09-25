@@ -85,6 +85,11 @@ void SL_source_set_pan(SL_Source_t *source, float pan)
     SL_props_pan(&((Source_t *)source)->props, pan);
 }
 
+void SL_source_set_twin_pan(SL_Source_t *source, float left_pan, float right_pan)
+{
+    SL_props_twin_pan(&((Source_t *)source)->props, left_pan, right_pan);
+}
+
 void SL_source_set_balance(SL_Source_t *source, float balance)
 {
     SL_props_balance(&((Source_t *)source)->props, balance);

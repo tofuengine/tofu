@@ -305,7 +305,7 @@ static int source_mix(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
-static int source_pan(lua_State *L)
+static int source_pan2(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -317,6 +317,30 @@ static int source_pan(lua_State *L)
     SL_source_set_pan(self->source, pan);
 
     return 0;
+}
+
+static int source_pan3(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
+    float left_pan = LUAX_NUMBER(L, 2);
+    float right_pan = LUAX_NUMBER(L, 3);
+
+    SL_source_set_twin_pan(self->source, left_pan, right_pan);
+
+    return 0;
+}
+
+static int source_pan(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(2, source_pan2)
+        LUAX_OVERLOAD_ARITY(3, source_pan3)
+    LUAX_OVERLOAD_END
 }
 
 static int source_balance(lua_State *L)

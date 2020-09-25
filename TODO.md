@@ -83,7 +83,8 @@
   * the current mixing technique, which doesn't cross-mix, gives bad results with separate channels mods. Fix this?
     * added a 2x2 mixing matrix support, pan and balance are special case
     * source gain is combined to group gain
-    
+    * optimizing mixing matrix calculation (to be combined with group's one)
+    * adding twin-pan feature, to pan L/R channels separately.
 
 ```java
   //do panning

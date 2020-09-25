@@ -54,6 +54,7 @@ extern void SL_props_group(SL_Props_t *props, size_t group_id);
 extern void SL_props_looping(SL_Props_t *props, bool looping);
 extern void SL_props_mix(SL_Props_t *props, SL_Mix_t mix);
 extern void SL_props_pan(SL_Props_t *props, float pan);
+extern void SL_props_twin_pan(SL_Props_t *props, float left_pan, float right_pan);
 extern void SL_props_balance(SL_Props_t *props, float pan);
 extern void SL_props_gain(SL_Props_t *props, float gain);
 extern void SL_props_speed(SL_Props_t *props, float speed);
