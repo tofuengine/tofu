@@ -318,12 +318,12 @@ Interpreter_t *Interpreter_create(const File_System_t *file_system, const void *
 
     luaX_openlibs(interpreter->state); // Custom loader, only selected libraries.
 
-    lua_pushlightuserdata(interpreter->state, interpreter); // Push the interpreter itself as first upvalue.
     int nup = 0;
     for (int i = 0; userdatas[i]; ++i) {
         lua_pushlightuserdata(interpreter->state, (void *)userdatas[i]); // Discard `const` qualifier.
         nup += 1;
     }
+    lua_pushlightuserdata(interpreter->state, interpreter); // Push the interpreter itself as first upvalue.
     modules_initialize(interpreter->state, nup + 1); // Take into account the self-pushed interpreter pointer.
 
     lua_pushlightuserdata(interpreter->state, (void *)file_system);

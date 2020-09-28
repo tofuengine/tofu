@@ -161,7 +161,6 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
     }
 
     Log_configure(engine->configuration.debug, NULL);
-    Environment_initialize(&engine->environment);
 
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "version %s", TOFU_VERSION_NUMBER);
 
@@ -221,14 +220,16 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
         return false;
     }
 
+    Environment_initialize(&engine->environment);
+
     // The interpreter is the first to be loaded, since it also manages the configuration. Later on, we will call to
     // initialization function once the sub-systems are ready.
     const void *userdatas[] = {
             engine->file_system,
-            &engine->environment,
-            &engine->audio,
             &engine->display,
             &engine->input,
+            &engine->audio,
+            &engine->environment,
             NULL
         };
     engine->interpreter = Interpreter_create(engine->file_system, userdatas);
