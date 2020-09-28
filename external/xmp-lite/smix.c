@@ -19,9 +19,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wsign-compare"
-
 #include <stdlib.h>
 #include "common.h"
 #include "period.h"
@@ -280,7 +277,7 @@ LIBXMP_EXPORT int xmp_smix_load_sample(xmp_context opaque, int num, char *path)
 		retval = -XMP_ERROR_SYSTEM;
 		goto err2;
 	}
-	if (hio_read(xxs->data, 1, size, h) != size) {
+	if (hio_read(xxs->data, 1, size, h) != (size_t)size) {
 		retval = -XMP_ERROR_SYSTEM;
 		goto err2;
 	}
@@ -330,5 +327,3 @@ LIBXMP_EXPORT void xmp_end_smix(xmp_context opaque)
 	free(smix->xxs);
 	free(smix->xxi);
 }
-
-#pragma GCC diagnostic pop

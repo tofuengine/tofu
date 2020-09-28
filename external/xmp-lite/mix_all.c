@@ -21,7 +21,6 @@
  */
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wshadow"
-#pragma GCC diagnostic ignored "-Wsign-compare"
 
 #include "common.h"
 #include "virtual.h"

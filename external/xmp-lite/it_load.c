@@ -27,6 +27,7 @@
 #include <time.h>
 #include "loader.h"
 #include "it.h"
+#include "itsex.h"
 #include "period.h"
 #include "dataio.h"
 
@@ -89,11 +90,6 @@ static const uint8_t fx[] = {
 	/* Y */ FX_PANBRELLO,
 	/* Z */ FX_FLT_CUTOFF
 };
-
-
-int itsex_decompress8 (HIO_HANDLE *, void *, int, int);
-int itsex_decompress16 (HIO_HANDLE *, void *, int, int);
-
 
 static void xlat_fx(int c, struct xmp_event *e, uint8_t *last_fxp, int new_fx)
 {
@@ -750,7 +746,7 @@ static int load_it_sample(struct module_data *m, int i, int start,
 
 		/* compressed samples */
 		if (ish.flags & IT_SMP_COMP) {
-			uint8_t *buf;
+			void *buf;
 			int ret;
 
 			buf = calloc(1, xxs->len * 2);

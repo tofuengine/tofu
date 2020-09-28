@@ -70,9 +70,6 @@
  * in the module and instrument headers. I'm adding a simple workaround
  * to be able to load/play the module as is, see the fix87() macro below.
  */
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wsign-compare"
-
 #include "loader.h"
 #include "s3m.h"
 #include "period.h"
@@ -316,12 +313,12 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 	if (sfh.ordnum <= XMP_MAX_MOD_LENGTH) {
 		mod->len = sfh.ordnum;
-		if (hio_read(mod->xxo, 1, mod->len, f) != mod->len) {
+		if (hio_read(mod->xxo, 1, mod->len, f) != (size_t)mod->len) {
 			goto err3;
 		}
 	} else {
 		mod->len = XMP_MAX_MOD_LENGTH;
-		if (hio_read(mod->xxo, 1, mod->len, f) != mod->len) {
+		if (hio_read(mod->xxo, 1, mod->len, f) != (size_t)mod->len) {
 			goto err3;
 		}
 		if (hio_seek(f, sfh.ordnum - XMP_MAX_MOD_LENGTH, SEEK_CUR) < 0) {
@@ -556,5 +553,3 @@ err2:
 err:
 	return -1;
 }
-
-#pragma GCC diagnostic pop

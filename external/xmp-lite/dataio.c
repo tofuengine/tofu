@@ -25,7 +25,7 @@
 // Can't use `byteswap.h` because it's not available on Windows.
 static inline uint16_t _bswap_16(uint16_t value)
 {
-    return (((value & 0xFFFF) << 8) |
+    return (((value & 0x00FF) << 8) |
             ((value & 0xFF00) >> 8));
 }
 
@@ -37,7 +37,7 @@ static inline uint32_t _bswap_32(uint32_t value)
             ((value & 0xFF000000) >> 24));
 }
 
-uint16_t readmem16l(const uint8_t *m)
+uint16_t readmem16l(const void *m)
 {
 	uint16_t a = *((uint16_t *)m);
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
@@ -49,7 +49,7 @@ uint16_t readmem16l(const uint8_t *m)
 #endif
 }
 
-uint16_t readmem16b(const uint8_t *m)
+uint16_t readmem16b(const void *m)
 {
 	uint16_t a = *((uint16_t *)m);
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
@@ -61,7 +61,7 @@ uint16_t readmem16b(const uint8_t *m)
 #endif
 }
 
-uint32_t readmem32l(const uint8_t *m)
+uint32_t readmem32l(const void *m)
 {
 	uint32_t a = *((uint32_t *)m);
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
@@ -73,7 +73,7 @@ uint32_t readmem32l(const uint8_t *m)
 #endif
 }
 
-uint32_t readmem32b(const uint8_t *m)
+uint32_t readmem32b(const void *m)
 {
 	uint32_t a = *((uint32_t *)m);
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__

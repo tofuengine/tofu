@@ -19,9 +19,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wsign-compare"
-
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
@@ -31,7 +28,7 @@
 
 char *libxmp_adjust_string(char *s)
 {
-	int i;
+	size_t i;
 
 	for (i = 0; i < strlen(s); i++) {
 		if (!isprint((int)s[i]) || ((uint8_t) s[i] > 127))
@@ -282,5 +279,3 @@ int libxmp_set_player_mode(struct context_data *ctx)
 
 	return 0;
 }
-
-#pragma GCC diagnostic pop

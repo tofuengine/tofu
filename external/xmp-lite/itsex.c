@@ -1,11 +1,8 @@
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wsign-compare"
-
 #ifndef LIBXMP_CORE_DISABLE_IT
 
 /* Public domain IT sample decompressor by Olivier Lapicque */
 
-#include "loader.h"
+#include "itsex.h"
 
 static inline uint32_t read_bits(HIO_HANDLE *ibuf, uint32_t *bitbuf, int *bitnum, int n)
 {
@@ -36,7 +33,7 @@ static inline uint32_t read_bits(HIO_HANDLE *ibuf, uint32_t *bitbuf, int *bitnum
 }
 
 
-int itsex_decompress8(HIO_HANDLE *src, uint8_t *dst, int len, int it215)
+int itsex_decompress8(HIO_HANDLE *src, uint8_t *dst, uint32_t len, int it215)
 {
 	/* uint32_t size = 0; */
 	uint32_t block_count = 0;
@@ -131,7 +128,7 @@ int itsex_decompress8(HIO_HANDLE *src, uint8_t *dst, int len, int it215)
 	return 0;
 }
 
-int itsex_decompress16(HIO_HANDLE *src, int16_t *dst, int len, int it215)
+int itsex_decompress16(HIO_HANDLE *src, int16_t *dst, uint32_t len, int it215)
 {
 	/* uint32_t size = 0; */
 	uint32_t block_count = 0;
@@ -233,5 +230,3 @@ int itsex_decompress16(HIO_HANDLE *src, int16_t *dst, int len, int it215)
 }
 
 #endif /* LIBXMP_CORE_DISABLE_IT */
-
-#pragma GCC diagnostic pop
