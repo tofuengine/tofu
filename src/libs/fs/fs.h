@@ -58,9 +58,7 @@
 typedef void File_System_Mount_t;
 typedef void File_System_Handle_t;
 
-typedef struct _File_System_t {
-    File_System_Mount_t **mounts;
-} File_System_t;
+typedef struct _File_System_t File_System_t;
 
 extern bool FS_initialize(File_System_t *file_system, const char *base_path);
 extern void FS_terminate(File_System_t *file_system);
