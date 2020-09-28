@@ -81,7 +81,7 @@ File_System_t *FS_create(const char *base_path)
 {
     File_System_t *file_system = malloc(sizeof(File_System_t));
     if (!file_system) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate file-system structure");
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate file-system");
         return NULL;
     }
 
@@ -91,7 +91,8 @@ File_System_t *FS_create(const char *base_path)
     char *ptr = realpath(base_path ? base_path : FILE_PATH_CURRENT_SZ, resolved);
     if (!ptr) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't resolve `%s`", base_path);
-        return false;
+        free(file_system);
+        return NULL;
     }
 
     DIR *dp = opendir(resolved);
