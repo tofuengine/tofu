@@ -48,8 +48,8 @@ typedef struct _Std_Handle_t {
 
 static void _std_mount_ctor(File_System_Mount_t *mount, const char *base_path);
 static void _std_mount_dtor(File_System_Mount_t *mount);
-static bool _std_mount_contains(File_System_Mount_t *mount, const char *file);
-static File_System_Handle_t *_std_mount_open(File_System_Mount_t *mount, const char *file);
+static bool _std_mount_contains(const File_System_Mount_t *mount, const char *file);
+static File_System_Handle_t *_std_mount_open(const File_System_Mount_t *mount, const char *file);
 
 static void _std_handle_ctor(File_System_Handle_t *handle, FILE *stream);
 static void _std_handle_dtor(File_System_Handle_t *handle);
@@ -107,9 +107,9 @@ static void _std_mount_dtor(File_System_Mount_t *mount)
     *std_mount = (Std_Mount_t){ 0 };
 }
 
-static bool _std_mount_contains(File_System_Mount_t *mount, const char *file)
+static bool _std_mount_contains(const File_System_Mount_t *mount, const char *file)
 {
-    Std_Mount_t *std_mount = (Std_Mount_t *)mount;
+    const Std_Mount_t *std_mount = (const Std_Mount_t *)mount;
 
     char full_path[FILE_PATH_MAX];
     strcpy(full_path, std_mount->base_path);
@@ -121,9 +121,9 @@ static bool _std_mount_contains(File_System_Mount_t *mount, const char *file)
     return exists;
 }
 
-static File_System_Handle_t *_std_mount_open(File_System_Mount_t *mount, const char *file)
+static File_System_Handle_t *_std_mount_open(const File_System_Mount_t *mount, const char *file)
 {
-    Std_Mount_t *std_mount = (Std_Mount_t *)mount;
+    const Std_Mount_t *std_mount = (const Std_Mount_t *)mount;
 
     char full_path[FILE_PATH_MAX];
     strcpy(full_path, std_mount->base_path);

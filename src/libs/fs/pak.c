@@ -86,8 +86,8 @@ typedef struct _Pak_Handle_t {
 
 static void _pak_mount_ctor(File_System_Mount_t *mount, const char *archive_path, size_t entries, Pak_Entry_t *directory, uint8_t flags);
 static void _pak_mount_dtor(File_System_Mount_t *mount);
-static bool _pak_mount_contains(File_System_Mount_t *mount, const char *file);
-static File_System_Handle_t *_pak_mount_open(File_System_Mount_t *mount, const char *file);
+static bool _pak_mount_contains(const File_System_Mount_t *mount, const char *file);
+static File_System_Handle_t *_pak_mount_open(const File_System_Mount_t *mount, const char *file);
 
 static void _pak_handle_ctor(File_System_Handle_t *handle, FILE *stream, long offset, size_t size, bool encrypted, const char *name);
 static void _pak_handle_dtor(File_System_Handle_t *handle);
@@ -253,9 +253,9 @@ static void _pak_mount_dtor(File_System_Mount_t *mount)
     free(pak_mount->directory);
 }
 
-static bool _pak_mount_contains(File_System_Mount_t *mount, const char *file)
+static bool _pak_mount_contains(const File_System_Mount_t *mount, const char *file)
 {
-    Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
+    const Pak_Mount_t *pak_mount = (const Pak_Mount_t *)mount;
 
     const Pak_Entry_t key = { .name = (char *)file };
     const Pak_Entry_t *entry = bsearch((const void *)&key, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
@@ -265,9 +265,9 @@ static bool _pak_mount_contains(File_System_Mount_t *mount, const char *file)
     return exists;
 }
 
-static File_System_Handle_t *_pak_mount_open(File_System_Mount_t *mount, const char *file)
+static File_System_Handle_t *_pak_mount_open(const File_System_Mount_t *mount, const char *file)
 {
-    Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
+    const Pak_Mount_t *pak_mount = (const Pak_Mount_t *)mount;
 
     const Pak_Entry_t key = { .name = (char *)file };
     const Pak_Entry_t *entry = bsearch((const void *)&key, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);

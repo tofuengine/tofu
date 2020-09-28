@@ -152,7 +152,7 @@ File_System_Mount_t *FS_locate(const File_System_t *file_system, const char *fil
     for (int count = arrlen(file_system->mounts); count; --count) {
         File_System_Mount_t *mount = *(current++);
 #endif
-        if (((Mount_t *)mount)->vtable.contains(mount, file)) {
+        if (((const Mount_t *)mount)->vtable.contains(mount, file)) {
             return mount;
         }
     }
@@ -160,9 +160,9 @@ File_System_Mount_t *FS_locate(const File_System_t *file_system, const char *fil
     return NULL;
 }
 
-File_System_Handle_t *FS_open(File_System_Mount_t *mount, const char *file)
+File_System_Handle_t *FS_open(const File_System_Mount_t *mount, const char *file)
 {
-    return ((Mount_t *)mount)->vtable.open(mount, file);
+    return ((const Mount_t *)mount)->vtable.open(mount, file);
 }
 
 void FS_close(File_System_Handle_t *handle)
