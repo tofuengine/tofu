@@ -41,11 +41,10 @@
 #define TOFU_VERSION_REVISION       0
 
 typedef struct _Engine_t {
-    File_System_t *file_system;
-
     Configuration_t configuration;
 
-    Interpreter_t interpreter;
+    File_System_t *file_system;
+    Interpreter_t *interpreter;
     Audio_t audio;
     Display_t display;
     Input_t input;

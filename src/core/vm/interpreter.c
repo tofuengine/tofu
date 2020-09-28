@@ -287,14 +287,21 @@ static int _call(lua_State *L, Methods_t method, int nargs, int nresults)
 #endif
 }
 
-bool Interpreter_initialize(Interpreter_t *interpreter, const File_System_t *file_system, const void *userdatas[])
+Interpreter_t *Interpreter_create(const File_System_t *file_system, const void *userdatas[])
 {
+    Interpreter_t *interpreter = malloc(sizeof(Interpreter_t));
+    if (!interpreter) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate interpreter");
+        return NULL;
+    }
+
     *interpreter = (Interpreter_t){ 0 };
 
     interpreter->state = lua_newstate(_allocate, NULL); // No user-data is passed.
     if (!interpreter->state) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize interpreter");
-        return false;
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create interpreter VM");
+        free(interpreter);
+        return NULL;
     }
     lua_atpanic(interpreter->state, _panic); // Set a custom panic-handler, just like `luaL_newstate()`.
     lua_setwarnf(interpreter->state, _warning, &interpreter->warning_state); // (and a custom warning-handler, too).
@@ -311,12 +318,13 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const File_System_t *fil
 
     luaX_openlibs(interpreter->state); // Custom loader, only selected libraries.
 
+    lua_pushlightuserdata(interpreter->state, interpreter); // Push the interpreter itself as first upvalue.
     int nup = 0;
     for (int i = 0; userdatas[i]; ++i) {
         lua_pushlightuserdata(interpreter->state, (void *)userdatas[i]); // Discard `const` qualifier.
         nup += 1;
     }
-    modules_initialize(interpreter->state, nup);
+    modules_initialize(interpreter->state, nup + 1); // Take into account the self-pushed interpreter pointer.
 
     lua_pushlightuserdata(interpreter->state, (void *)file_system);
     luaX_overridesearchers(interpreter->state, _searcher, 1);
@@ -338,23 +346,28 @@ bool Interpreter_initialize(Interpreter_t *interpreter, const File_System_t *fil
     if (result != 0) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't interpret boot script");
         lua_close(interpreter->state);
-        return false;
+        free(interpreter);
+        return NULL;
     }
 
     if (!_detect(interpreter->state, -1, _methods)) {
         lua_close(interpreter->state);
-        return false;
+        free(interpreter);
+        return NULL;
     }
 
-    return true;
+    return interpreter;
 }
 
-void Interpreter_terminate(Interpreter_t *interpreter)
+void Interpreter_destroy(Interpreter_t *interpreter)
 {
+    // TODO: add proper deallocation logs, also to FS.
     lua_settop(interpreter->state, 0); // T O F1 ... Fn -> <empty>
 
     lua_gc(interpreter->state, LUA_GCCOLLECT); // Full GC cycle to trigger resource release.
     lua_close(interpreter->state);
+
+    free(interpreter);
 }
 
 bool Interpreter_input(const Interpreter_t *interpreter)

@@ -224,7 +224,6 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
     // The interpreter is the first to be loaded, since it also manages the configuration. Later on, we will call to
     // initialization function once the sub-systems are ready.
     const void *userdatas[] = {
-            &engine->interpreter,
             engine->file_system,
             &engine->environment,
             &engine->audio,
@@ -232,8 +231,8 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             &engine->input,
             NULL
         };
-    initialized = Interpreter_initialize(&engine->interpreter, engine->file_system, userdatas);
-    if (!initialized) {
+    engine->interpreter = Interpreter_create(engine->file_system, userdatas);
+    if (!engine->interpreter) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize interpreter");
         Audio_terminate(&engine->audio);
         Input_terminate(&engine->input);
@@ -247,14 +246,13 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 
 void Engine_terminate(Engine_t *engine)
 {
-    Interpreter_terminate(&engine->interpreter); // Terminate the interpreter to unlock all resources.
+    Interpreter_destroy(engine->interpreter); // Terminate the interpreter to unlock all resources.
     Audio_terminate(&engine->audio);
-    Display_terminate(&engine->display);
     Input_terminate(&engine->input);
+    Display_terminate(&engine->display);
+    FS_destroy(engine->file_system);
 
     Environment_terminate(&engine->environment);
-
-    FS_destroy(engine->file_system);
 #if DEBUG
     stb_leakcheck_dumpmem();
 #endif
@@ -289,22 +287,22 @@ void Engine_run(Engine_t *engine)
 
         Input_process(&engine->input);
 
-        running = running && Interpreter_input(&engine->interpreter); // Lazy evaluate `running`, will avoid calls when error.
+        running = running && Interpreter_input(engine->interpreter); // Lazy evaluate `running`, will avoid calls when error.
 
         lag += elapsed; // Count a maximum amount of skippable frames in order no to stall on slower machines.
         for (size_t frames = skippable_frames; frames && (lag >= delta_time); --frames) {
             engine->environment.time += delta_time;
-            running = running && Interpreter_update(&engine->interpreter, delta_time); // Fixed update.
+            running = running && Interpreter_update(engine->interpreter, delta_time); // Fixed update.
             running = running && Audio_update(&engine->audio, elapsed); // Update the subsystems w/ fixed steps (fake interrupt based).
             lag -= delta_time;
         }
 
-//        running = running && Interpreter_update_variable(&engine->interpreter, elapsed); // Variable update.
+//        running = running && Interpreter_update_variable(engine->interpreter, elapsed); // Variable update.
 //        running = running && Audio_update_variable(&engine->audio, elapsed);
         Input_update(&engine->input, elapsed);
         Display_update(&engine->display, elapsed);
 
-        running = running && Interpreter_render(&engine->interpreter, lag / delta_time);
+        running = running && Interpreter_render(engine->interpreter, lag / delta_time);
 
         Display_present(&engine->display);
 
