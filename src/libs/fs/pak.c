@@ -159,7 +159,6 @@ File_System_Mount_t *pak_mount(const char *path)
         fclose(stream);
         return NULL;
     }
-    memset(directory, 0x00, sizeof(Pak_Entry_t) * header.entries);
 
     size_t entries = 0;
     for (size_t i = 0; i < header.entries; ++i) {

@@ -148,14 +148,14 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
     *engine = (Engine_t){ 0 }; // Ensure is cleared at first.
 
     Log_initialize();
-    bool result = FS_initialize(&engine->file_system, base_path);
-    if (!result) {
+    engine->file_system = FS_create(base_path);
+    if (!engine->file_system) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize I/O at path `%s`", base_path);
         return false;
     }
 
-    result = _configure(&engine->file_system, &engine->configuration);
-    if (!result) {
+    bool configured = _configure(engine->file_system, &engine->configuration);
+    if (!configured) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "configuration file is missing");
         return false;
     }
@@ -165,7 +165,7 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
 
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "version %s", TOFU_VERSION_NUMBER);
 
-    File_System_Resource_t *icon = _load_icon(&engine->file_system, ENTRY_ICON);
+    File_System_Resource_t *icon = _load_icon(engine->file_system, ENTRY_ICON);
     Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined icon loaded");
     Display_Configuration_t display_configuration = { // TODO: reorganize configuration.
             .icon = icon ? (GLFWimage){ .width = FSX_IWIDTH(icon), .height = FSX_IHEIGHT(icon), .pixels = FSX_IPIXELS(icon) } : (GLFWimage){ 64, 64, (unsigned char *)_default_icon_pixels },
@@ -177,15 +177,15 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             .scale = engine->configuration.scale,
             .hide_cursor = engine->configuration.hide_cursor
         };
-    result = Display_initialize(&engine->display, &display_configuration);
+    bool initialized = Display_initialize(&engine->display, &display_configuration);
     FSX_release(icon);
-    if (!result) {
+    if (!initialized) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize display");
-        FS_terminate(&engine->file_system);
+        FS_destroy(engine->file_system);
         return false;
     }
 
-    File_System_Resource_t *mappings = _load_mappings(&engine->file_system, ENTRY_GAMECONTROLLER_DB);
+    File_System_Resource_t *mappings = _load_mappings(engine->file_system, ENTRY_GAMECONTROLLER_DB);
     Log_assert(!mappings, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined controller mappings loaded");
     Input_Configuration_t input_configuration = {
             .mappings = mappings ? FSX_SCHARS(mappings) : (const char *)_default_mappings,
@@ -203,21 +203,21 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             .gamepad_range = 1.0f - engine->configuration.gamepad_inner_deadzone - engine->configuration.gamepad_outer_deadzone,
             .scale = 1.0f / (float)engine->display.configuration.scale
         };
-    result = Input_initialize(&engine->input, &input_configuration, engine->display.window);
+    initialized = Input_initialize(&engine->input, &input_configuration, engine->display.window);
     FSX_release(mappings);
-    if (!result) {
+    if (!initialized) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize input");
         Display_terminate(&engine->display);
-        FS_terminate(&engine->file_system);
+        FS_destroy(engine->file_system);
         return false;
     }
 
-    result = Audio_initialize(&engine->audio, &(Audio_Configuration_t){ .master_volume = 1.0f });
-    if (!result) {
+    initialized = Audio_initialize(&engine->audio, &(Audio_Configuration_t){ .master_volume = 1.0f });
+    if (!initialized) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize audio");
         Input_terminate(&engine->input);
         Display_terminate(&engine->display);
-        FS_terminate(&engine->file_system);
+        FS_destroy(engine->file_system);
         return false;
     }
 
@@ -225,20 +225,20 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
     // initialization function once the sub-systems are ready.
     const void *userdatas[] = {
             &engine->interpreter,
-            &engine->file_system,
+            engine->file_system,
             &engine->environment,
             &engine->audio,
             &engine->display,
             &engine->input,
             NULL
         };
-    result = Interpreter_initialize(&engine->interpreter, &engine->file_system, userdatas);
-    if (!result) {
+    initialized = Interpreter_initialize(&engine->interpreter, engine->file_system, userdatas);
+    if (!initialized) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize interpreter");
         Audio_terminate(&engine->audio);
         Input_terminate(&engine->input);
         Display_terminate(&engine->display);
-        FS_terminate(&engine->file_system);
+        FS_destroy(engine->file_system);
         return false;
     }
 
@@ -254,7 +254,7 @@ void Engine_terminate(Engine_t *engine)
 
     Environment_terminate(&engine->environment);
 
-    FS_terminate(&engine->file_system);
+    FS_destroy(engine->file_system);
 #if DEBUG
     stb_leakcheck_dumpmem();
 #endif

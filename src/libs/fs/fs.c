@@ -77,8 +77,14 @@ static bool _attach(File_System_t *file_system, const char *path)
     return true;
 }
 
-bool FS_initialize(File_System_t *file_system, const char *base_path) // TODO: should the FS struct be allocated? Or no struct?
+File_System_t *FS_create(const char *base_path)
 {
+    File_System_t *file_system = malloc(sizeof(File_System_t));
+    if (!file_system) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate file-system structure");
+        return NULL;
+    }
+
     *file_system = (File_System_t){ 0 };
 
     char resolved[FILE_PATH_MAX]; // Using local buffer to avoid un-tracked `malloc()` for the syscall.
@@ -108,10 +114,10 @@ bool FS_initialize(File_System_t *file_system, const char *base_path) // TODO: s
 
     _attach(file_system, resolved);
 
-    return true;
+    return file_system;
 }
 
-void FS_terminate(File_System_t *file_system)
+void FS_destroy(File_System_t *file_system)
 {
     File_System_Mount_t **current = file_system->mounts;
     for (int count = arrlen(file_system->mounts); count; --count) {
@@ -120,6 +126,10 @@ void FS_terminate(File_System_t *file_system)
     }
 
     arrfree(file_system->mounts);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file-system mount(s) freed");
+
+    free(file_system);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file-system freed");
 }
 
 bool FS_attach(File_System_t *file_system, const char *path)
