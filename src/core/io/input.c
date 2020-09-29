@@ -220,15 +220,21 @@ static void _switch(Input_t *input)
 #endif
 }
 
-bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration, GLFWwindow *window)
+Input_t *Input_create(const Input_Configuration_t *configuration, GLFWwindow *window)
 {
     int result = glfwUpdateGamepadMappings(configuration->mappings);
     if (result == GLFW_FALSE) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't update gamepad mappings");
         return false;
     }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "input gamepad mappings updated");
 
-    // TODO: should perform a single "zeroing" call and the set the single fields?
+    Input_t *input = malloc(sizeof(Input_t));
+    if (!input) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate input");
+        return NULL;
+    }
+
     *input = (Input_t){
             .configuration = *configuration,
             .window = window,
@@ -264,11 +270,13 @@ bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration
 
     _switch(input);
 
-    return true;
+    return input;
 }
 
-void Input_terminate(Input_t *input)
+void Input_destroy(Input_t *input)
 {
+    free(input);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "input freed");
 }
 
 void Input_update(Input_t *input, float delta_time)

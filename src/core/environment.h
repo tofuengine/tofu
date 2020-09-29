@@ -34,7 +34,7 @@ typedef struct _Environment_t {
     double time;
 } Environment_t;
 
-extern void Environment_initialize(Environment_t *environment);
-extern void Environment_terminate(Environment_t *environment);
+extern Environment_t *Environment_create(void);
+extern void Environment_destroy(Environment_t *environment);
 
 #endif  /* __ENVIRONMENT_H__ */

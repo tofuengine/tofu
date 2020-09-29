@@ -30,15 +30,13 @@
 #include <libs/gl/gl.h>
 #include <libs/sl/sl.h>
 
-#include <dr_libs/dr_flac.h>
-
 typedef enum _UserData_t { // TODO: move to a suitable space.
-    USERDATA_INTERPRETER = 1,
-    USERDATA_FILE_SYSTEM,
-    USERDATA_ENVIRONMENT,
-    USERDATA_AUDIO,
+    USERDATA_FILE_SYSTEM = 1,
     USERDATA_DISPLAY,
     USERDATA_INPUT,
+    USERDATA_AUDIO,
+    USERDATA_ENVIRONMENT,
+    USERDATA_INTERPRETER,
     UserData_t_CountOf
 } UserData_t;
 
