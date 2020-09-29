@@ -47,7 +47,7 @@ SL_Context_t *SL_context_create(void)
 
     for (size_t i = 0; i < SL_GROUPS_AMOUNT; ++i) {
         context->groups[i] = (SL_Group_t){
-                .mix = mix_null(),
+                .mix = mix_balance(0.0f), // Groups are stereo by definition, so we are balancing as a default.
                 .gain = 1.0f
             };
     }
@@ -81,7 +81,7 @@ static void _fire_on_group_changed(const SL_Context_t *context, size_t group_id)
     }
 }
 
-void SL_context_mix(SL_Context_t *context, size_t group_id, SL_Mix_t mix)
+void SL_context_set_mix(SL_Context_t *context, size_t group_id, SL_Mix_t mix)
 {
     SL_Group_t *group = &context->groups[group_id];
 
@@ -89,7 +89,7 @@ void SL_context_mix(SL_Context_t *context, size_t group_id, SL_Mix_t mix)
     _fire_on_group_changed(context, group_id);
 }
 
-void SL_context_pan(SL_Context_t *context, size_t group_id, float pan)
+void SL_context_set_pan(SL_Context_t *context, size_t group_id, float pan)
 {
     SL_Group_t *group = &context->groups[group_id];
 
@@ -97,7 +97,7 @@ void SL_context_pan(SL_Context_t *context, size_t group_id, float pan)
     _fire_on_group_changed(context, group_id);
 }
 
-void SL_context_balance(SL_Context_t *context, size_t group_id, float balance)
+void SL_context_set_balance(SL_Context_t *context, size_t group_id, float balance)
 {
     SL_Group_t *group = &context->groups[group_id];
 
@@ -105,7 +105,7 @@ void SL_context_balance(SL_Context_t *context, size_t group_id, float balance)
     _fire_on_group_changed(context, group_id);
 }
 
-void SL_context_gain(SL_Context_t *context, size_t group_id, float gain)
+void SL_context_set_gain(SL_Context_t *context, size_t group_id, float gain)
 {
     SL_Group_t *group = &context->groups[group_id];
 
@@ -155,7 +155,7 @@ bool SL_context_is_tracked(const SL_Context_t *context, SL_Source_t *source)
     return false;
 }
 
-size_t SL_context_count(const SL_Context_t *context)
+size_t SL_context_count_tracked(const SL_Context_t *context)
 {
     return arrlen(context->sources);
 }

@@ -152,6 +152,6 @@ extern void Input_destroy(Input_t *input);
 extern void Input_update(Input_t *input, float delta_time);
 extern void Input_process(Input_t *input);
 
-extern void Input_auto_repeat(Input_t *input, Input_Buttons_t id, float period);
+extern void Input_set_auto_repeat(Input_t *input, Input_Buttons_t id, float period);
 
 #endif  /* __INPUT_H__ */

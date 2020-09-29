@@ -166,7 +166,7 @@ static int input_auto_repeat1(lua_State *L)
 
     const Map_Entry_t *entry = map_find(L, id, _buttons, Input_Buttons_t_CountOf);
     Input_Buttons_t button = entry->value;
-    Input_auto_repeat(input, button, 0.0f);
+    Input_set_auto_repeat(input, button, 0.0f);
 
     return 0;
 }
@@ -184,7 +184,7 @@ static int input_auto_repeat2(lua_State *L)
 
     const Map_Entry_t *entry = map_find(L, id, _buttons, Input_Buttons_t_CountOf);
     Input_Buttons_t button = entry->value;
-    Input_auto_repeat(input, button, period);
+    Input_set_auto_repeat(input, button, period);
 
     return 0;
 }

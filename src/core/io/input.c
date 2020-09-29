@@ -389,7 +389,7 @@ void Input_process(Input_t *input)
     }
 }
 
-void Input_auto_repeat(Input_t *input, Input_Buttons_t id, float period)
+void Input_set_auto_repeat(Input_t *input, Input_Buttons_t id, float period)
 {
     input->state.buttons[id] = (Input_Button_t){
             .period = period,

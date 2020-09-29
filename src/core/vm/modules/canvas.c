@@ -307,7 +307,7 @@ static int canvas_background(lua_State *L)
     GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 2);
 
     GL_Context_t *context = self->context;
-    GL_context_background(context, index);
+    GL_context_set_background(context, index);
 
     return 0;
 }
@@ -322,7 +322,7 @@ static int canvas_color(lua_State *L)
     GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 2);
 
     GL_Context_t *context = self->context;
-    GL_context_color(context, index);
+    GL_context_set_color(context, index);
 
     return 0;
 }
@@ -337,7 +337,7 @@ static int canvas_pattern(lua_State *L)
     GL_Pattern_t pattern = (GL_Pattern_t)LUAX_INTEGER(L, 0);
 
     GL_Context_t *context = self->context;
-    GL_context_pattern(context, pattern);
+    GL_context_set_pattern(context, pattern);
 
     return 0;
 }
@@ -350,7 +350,7 @@ static int canvas_shift1(lua_State *L)
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
 
     GL_Context_t *context = self->context;
-    GL_context_shifting(context, NULL, NULL, 0);
+    GL_context_set_shifting(context, NULL, NULL, 0);
 
     return 0;
 }
@@ -375,7 +375,7 @@ static int canvas_shift2(lua_State *L)
     }
 
     GL_Context_t *context = self->context;
-    GL_context_shifting(context, from, to, arrlen(from));
+    GL_context_set_shifting(context, from, to, arrlen(from));
 
     arrfree(from);
     arrfree(to);
@@ -395,7 +395,7 @@ static int canvas_shift3(lua_State *L)
     size_t to = (size_t)LUAX_INTEGER(L, 3);
 
     GL_Context_t *context = self->context;
-    GL_context_shifting(context, &from, &to, 1);
+    GL_context_set_shifting(context, &from, &to, 1);
 
     return 0;
 }
@@ -417,7 +417,7 @@ static int canvas_transparent1(lua_State *L)
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
 
     GL_Context_t *context = self->context;
-    GL_context_transparent(context, NULL, NULL, 0);
+    GL_context_set_transparent(context, NULL, NULL, 0);
 
     return 0;
 }
@@ -442,7 +442,7 @@ static int canvas_transparent2(lua_State *L)
     }
 
     GL_Context_t *context = self->context;
-    GL_context_transparent(context, indexes, transparent, arrlen(indexes));
+    GL_context_set_transparent(context, indexes, transparent, arrlen(indexes));
 
     arrfree(indexes);
     arrfree(transparent);
@@ -462,7 +462,7 @@ static int canvas_transparent3(lua_State *L)
     GL_Bool_t transparent = LUAX_BOOLEAN(L, 3) ? GL_BOOL_TRUE : GL_BOOL_FALSE;
 
     GL_Context_t *context = self->context;
-    GL_context_transparent(context, &index, &transparent, 1);
+    GL_context_set_transparent(context, &index, &transparent, 1);
 
     return 0;
 }
@@ -484,7 +484,7 @@ static int canvas_clipping1(lua_State *L)
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
 
     GL_Context_t *context = self->context;
-    GL_context_clipping(context, NULL);
+    GL_context_set_clipping(context, NULL);
 
     return 0;
 }
@@ -505,7 +505,7 @@ static int canvas_clipping5(lua_State *L)
     size_t height = (size_t)LUAX_INTEGER(L, 5);
 
     GL_Context_t *context = self->context;
-    GL_context_clipping(context, &(GL_Rectangle_t){ .x = x, .y = y, .width = width, .height = height });
+    GL_context_set_clipping(context, &(GL_Rectangle_t){ .x = x, .y = y, .width = width, .height = height });
 
     return 0;
 }

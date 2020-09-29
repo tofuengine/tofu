@@ -138,25 +138,25 @@ void GL_context_reset(GL_Context_t *context)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context reset");
 }
 
-void GL_context_background(GL_Context_t *context, GL_Pixel_t index)
+void GL_context_set_background(GL_Context_t *context, GL_Pixel_t index)
 {
     GL_State_t *state = &context->state;
     state->background = index;
 }
 
-void GL_context_color(GL_Context_t *context, GL_Pixel_t index)
+void GL_context_set_color(GL_Context_t *context, GL_Pixel_t index)
 {
     GL_State_t *state = &context->state;
     state->color = index;
 }
 
-void GL_context_pattern(GL_Context_t *context, GL_Pattern_t pattern)
+void GL_context_set_pattern(GL_Context_t *context, GL_Pattern_t pattern)
 {
     GL_State_t *state = &context->state;
     state->pattern = pattern;
 }
 
-void GL_context_clipping(GL_Context_t *context, const GL_Rectangle_t *region)
+void GL_context_set_clipping(GL_Context_t *context, const GL_Rectangle_t *region)
 {
     GL_State_t *state = &context->state;
     if (!region) {
@@ -176,7 +176,7 @@ void GL_context_clipping(GL_Context_t *context, const GL_Rectangle_t *region)
     }
 }
 
-void GL_context_shifting(GL_Context_t *context, const size_t *from, const size_t *to, size_t count)
+void GL_context_set_shifting(GL_Context_t *context, const size_t *from, const size_t *to, size_t count)
 {
     GL_State_t *state = &context->state;
     if (!from) {
@@ -190,7 +190,7 @@ void GL_context_shifting(GL_Context_t *context, const size_t *from, const size_t
     }
 }
 
-void GL_context_transparent(GL_Context_t *context, const GL_Pixel_t *indexes, const GL_Bool_t *transparent, size_t count)
+void GL_context_set_transparent(GL_Context_t *context, const GL_Pixel_t *indexes, const GL_Bool_t *transparent, size_t count)
 {
     GL_State_t *state = &context->state;
     if (!indexes) {
