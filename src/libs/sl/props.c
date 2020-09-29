@@ -48,8 +48,14 @@
 
 static void _precompute(SL_Props_t *props);
 
-bool SL_props_init(SL_Props_t *props, const SL_Context_t *context, ma_format format, ma_uint32 sample_rate, ma_uint32 channels_in, ma_uint32 channels_out)
+SL_Props_t *SL_props_create(const SL_Context_t *context, ma_format format, ma_uint32 sample_rate, ma_uint32 channels_in, ma_uint32 channels_out)
 {
+    SL_Props_t *props = malloc(sizeof(SL_Props_t));
+    if (!props) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate properties");
+        return NULL;
+    }
+
     *props = (SL_Props_t){
             .context = context,
             .channels = channels_in,
@@ -65,36 +71,40 @@ bool SL_props_init(SL_Props_t *props, const SL_Context_t *context, ma_format for
     ma_result result = ma_data_converter_init(&config, &props->converter);
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "failed to create data converter");
-        return false;
+        free(props);
+        return NULL;
     }
 
-    return true;
+    return props;
 }
 
-void SL_props_deinit(SL_Props_t *props)
+void SL_props_destroy(SL_Props_t *props)
 {
     ma_data_converter_uninit(&props->converter);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "data converted deinitialized");
+
+    free(props);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "properties freed");
 }
 
-void SL_props_group(SL_Props_t *props, size_t group_id)
+void SL_props_set_group(SL_Props_t *props, size_t group_id)
 {
     props->group_id = group_id;
 }
 
-void SL_props_looping(SL_Props_t *props, bool looping)
+void SL_props_set_looping(SL_Props_t *props, bool looping)
 {
     props->looping = looping;
 }
 
 // mix, pan, and balance are mutually exclusive, that is pan is a special case of mix.
-void SL_props_mix(SL_Props_t *props, SL_Mix_t mix)
+void SL_props_set_mix(SL_Props_t *props, SL_Mix_t mix)
 {
     props->mix = mix;
     _precompute(props);
 }
 
-void SL_props_pan(SL_Props_t *props, float pan)
+void SL_props_set_pan(SL_Props_t *props, float pan)
 {
     props->mix = props->channels == 1
         ? mix_pan(fmaxf(-1.0f, fminf(pan, 1.0f)))
@@ -102,25 +112,25 @@ void SL_props_pan(SL_Props_t *props, float pan)
     _precompute(props);
 }
 
-void SL_props_twin_pan(SL_Props_t *props, float left_pan, float right_pan)
+void SL_props_set_twin_pan(SL_Props_t *props, float left_pan, float right_pan)
 {
     props->mix = mix_twin_pan(fmaxf(-1.0f, fminf(left_pan, 1.0f)), fmaxf(-1.0f, fminf(right_pan, 1.0f)));
     _precompute(props);
 }
 
-void SL_props_balance(SL_Props_t *props, float balance)
+void SL_props_set_balance(SL_Props_t *props, float balance)
 {
     props->mix = mix_balance(fmaxf(-1.0f, fminf(balance, 1.0f)));
     _precompute(props);
 }
 
-void SL_props_gain(SL_Props_t *props, float gain)
+void SL_props_set_gain(SL_Props_t *props, float gain)
 {
     props->gain = fmaxf(0.0f, gain);
     _precompute(props);
 }
 
-void SL_props_speed(SL_Props_t *props, float speed)
+void SL_props_set_speed(SL_Props_t *props, float speed)
 {
     props->speed = fmaxf(MIN_SPEED_VALUE, speed);
     ma_data_converter_set_rate_ratio(&props->converter, props->speed); // The ratio is `in` over `out`, i.e. actual speed-up factor.

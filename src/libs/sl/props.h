@@ -48,17 +48,17 @@ typedef struct _SL_Props_t {
     SL_Mix_t precomputed_mix;
 } SL_Props_t;
 
-extern bool SL_props_init(SL_Props_t *props, const SL_Context_t *context, ma_format format, ma_uint32 sample_rate, ma_uint32 channels_in, ma_uint32 channels_out);
-extern void SL_props_deinit(SL_Props_t *props);
+extern SL_Props_t *SL_props_create(const SL_Context_t *context, ma_format format, ma_uint32 sample_rate, ma_uint32 channels_in, ma_uint32 channels_out);
+extern void SL_props_destroy(SL_Props_t *props);
 
-extern void SL_props_group(SL_Props_t *props, size_t group_id);
-extern void SL_props_looping(SL_Props_t *props, bool looping);
-extern void SL_props_mix(SL_Props_t *props, SL_Mix_t mix);
-extern void SL_props_pan(SL_Props_t *props, float pan);
-extern void SL_props_twin_pan(SL_Props_t *props, float left_pan, float right_pan);
-extern void SL_props_balance(SL_Props_t *props, float pan);
-extern void SL_props_gain(SL_Props_t *props, float gain);
-extern void SL_props_speed(SL_Props_t *props, float speed);
+extern void SL_props_set_group(SL_Props_t *props, size_t group_id);
+extern void SL_props_set_looping(SL_Props_t *props, bool looping);
+extern void SL_props_set_mix(SL_Props_t *props, SL_Mix_t mix);
+extern void SL_props_set_pan(SL_Props_t *props, float pan);
+extern void SL_props_set_twin_pan(SL_Props_t *props, float left_pan, float right_pan);
+extern void SL_props_set_balance(SL_Props_t *props, float pan);
+extern void SL_props_set_gain(SL_Props_t *props, float gain);
+extern void SL_props_set_speed(SL_Props_t *props, float speed);
 
 extern void SL_props_on_group_changed(SL_Props_t *props, size_t group_id);
 

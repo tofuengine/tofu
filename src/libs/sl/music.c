@@ -56,7 +56,7 @@
 typedef struct _Music_t { // FIXME: rename to `_Music_Source_t`.
     Source_VTable_t vtable;
 
-    SL_Props_t props;
+    SL_Props_t *props;
 
     SL_Callbacks_t callbacks;
 
@@ -98,7 +98,7 @@ static inline bool _reset(Music_t *music)
 static inline bool _produce(Music_t *music)
 {
     if (music->frames_completed == music->length_in_frames) { // End-of-data, early exit.
-        return !music->props.looping || _rewind(music);
+        return !music->props->looping || _rewind(music);
     }
 
     ma_pcm_rb *buffer = &music->buffer;
@@ -225,8 +225,8 @@ static bool _music_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Cal
     }
 #endif
 
-    bool initialized = SL_props_init(&music->props, context, INTERNAL_FORMAT, sample_rate, channels, MIXING_BUFFER_CHANNELS_PER_FRAME);
-    if (!initialized) {
+    music->props = SL_props_create(context, INTERNAL_FORMAT, sample_rate, channels, MIXING_BUFFER_CHANNELS_PER_FRAME);
+    if (!music->props) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize music properties");
         ma_pcm_rb_uninit(&music->buffer);
         drflac_close(music->decoder);
@@ -240,7 +240,7 @@ static void _music_dtor(SL_Source_t *source)
 {
     Music_t *music = (Music_t *)source;
 
-    SL_props_deinit(&music->props);
+    SL_props_destroy(music->props);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "music properties deinitialized");
 
     ma_pcm_rb_uninit(&music->buffer);
@@ -282,12 +282,12 @@ static bool _music_generate(SL_Source_t *source, void *output, size_t frames_req
 {
     Music_t *music = (Music_t *)source;
 
-    ma_data_converter *converter = &music->props.converter;
+    ma_data_converter *converter = &music->props->converter;
     ma_pcm_rb *buffer = &music->buffer;
 
     uint8_t converted_buffer[MIXING_BUFFER_SIZE_IN_BYTES];
 
-    const SL_Mix_t mix = music->props.precomputed_mix;
+    const SL_Mix_t mix = music->props->precomputed_mix;
 
     uint8_t *cursor = (uint8_t *)output;
 
