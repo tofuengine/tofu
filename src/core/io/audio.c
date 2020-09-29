@@ -51,11 +51,13 @@ static void _data_callback(ma_device *device, void *output, const void *input, m
     ma_mutex_unlock(&audio->lock);
 }
 
-bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration)
+Audio_t *Audio_create(const Audio_Configuration_t *configuration)
 {
-    *audio = (Audio_t){ 0 };
+    Audio_t *audio = malloc(sizeof(Audio_t));
 
-    audio->configuration = *configuration;
+    *audio = (Audio_t){
+            .configuration = *configuration
+        };
 
     audio->context_config = ma_context_config_init();
     audio->context_config.pUserData = (void *)audio;
@@ -64,15 +66,19 @@ bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration
     audio->sl = SL_context_create();
     if (!audio->sl) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create the sound context");
-        return false;
+        free(audio);
+        return NULL;
     }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio context created at %p", audio->sl);
 
     ma_result result = ma_context_init(NULL, 0, &audio->context_config, &audio->context);
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize the audio context");
         SL_context_destroy(audio->sl);
-        return false;
+        free(audio);
+        return NULL;
     }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio driver context created");
 
     audio->device_config = ma_device_config_init(ma_device_type_playback);
     // TODO: loop over available devices and use the one specified in the configuration. Useful when more than one device is available.
@@ -88,14 +94,17 @@ bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration
 //    audio->device_config.stopCallback            = _stop_callback;
     audio->device_config.pUserData               = (void *)audio;
     audio->device_config.noPreZeroedOutputBuffer = MA_FALSE;
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio device configured w/ %dHz, %d channel(s), %d byte(s) per sample", SL_FRAMES_PER_SECOND, SL_CHANNELS_PER_FRAME, SL_BYTES_PER_SAMPLE);
 
     result = ma_device_init(&audio->context, &audio->device_config, &audio->device);
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize the audio device");
         ma_context_uninit(&audio->context);
         SL_context_destroy(audio->sl);
-        return false;
+        free(audio);
+        return NULL;
     }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio device initialized");
 
     result = ma_mutex_init(&audio->lock);
     if (result != MA_SUCCESS) {
@@ -103,13 +112,16 @@ bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration
         ma_device_uninit(&audio->device);
         ma_context_uninit(&audio->context);
         SL_context_destroy(audio->sl);
-        return false;
+        free(audio);
+        return NULL;
     }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio device mutex initialized");
 
     audio->is_started = false;
 
     audio->volume = configuration->master_volume;
     ma_device_set_master_volume(&audio->device, configuration->master_volume); // Set the initial volume.
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio master-volume set to %.2f", configuration->master_volume);
 
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "miniaudio: v%s", ma_version_string());
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "device-name: %s", audio->device.playback.name);
@@ -119,18 +131,25 @@ bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "sample-rate: %d / %d", audio->device.sampleRate, audio->device.playback.internalSampleRate);
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "period-in-frames: %d", audio->device.playback.internalPeriodSizeInFrames);
 
-    return true;
+    return audio;
 }
 
-void Audio_terminate(Audio_t *audio)
+void Audio_destroy(Audio_t *audio)
 {
     if (audio->is_started) {
         ma_device_stop(&audio->device);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio device stopped");
     }
     ma_mutex_uninit(&audio->lock);
     ma_device_uninit(&audio->device);
     ma_context_uninit(&audio->context);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio deinitialized");
+
     SL_context_destroy(audio->sl);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio context destroyed");
+
+    free(audio);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio freed");
 }
 
 void Audio_halt(Audio_t *audio)

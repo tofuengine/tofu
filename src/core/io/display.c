@@ -228,11 +228,17 @@ static void _size_callback(GLFWwindow* window, int width, int height)
 #endif
 }
 
-bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration)
+Display_t *Display_create(const Display_Configuration_t *configuration)
 {
-    *display = (Display_t){ 0 };
+    Display_t *display = malloc(sizeof(Display_t));
+    if (!display) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate display");
+        return NULL;
+    }
 
-    display->configuration = *configuration;
+    *display = (Display_t){
+            .configuration = *configuration
+        };
 
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "GLFW: %s", glfwGetVersionString());
 
@@ -240,13 +246,15 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
 
     if (!glfwInit()) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize GLFW");
-        return false;
+        free(display);
+        return NULL;
     }
 
     GL_Point_t position;
     if (!_compute_size(display, configuration, &position)) {
         glfwTerminate();
-        return false;
+        free(display);
+        return NULL;
     }
 
 #if __GL_VERSION__ >= 0x0303
@@ -270,7 +278,8 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     if (display->window == NULL) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create window");
         glfwTerminate();
-        return false;
+        free(display);
+        return NULL;
     }
     glfwMakeContextCurrent(display->window);
 
@@ -278,7 +287,8 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize GLAD");
         glfwDestroyWindow(display->window);
         glfwTerminate();
-        return false;
+        free(display);
+        return NULL;
     }
 
     glfwSetWindowIcon(display->window, 1, &configuration->icon);
@@ -301,7 +311,8 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize GL");
         glfwDestroyWindow(display->window);
         glfwTerminate();
-        return false;
+        free(display);
+        return NULL;
     }
 
     GL_palette_greyscale(&display->palette, GL_MAX_PALETTE_COLORS);
@@ -314,6 +325,8 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         GL_context_destroy(display->context);
         glfwDestroyWindow(display->window);
         glfwTerminate();
+        free(display);
+        return NULL;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes VRAM allocated at %p (%dx%d)", display->vram_size, display->vram, display->configuration.width, display->configuration.height);
 
@@ -324,7 +337,8 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         GL_context_destroy(display->context);
         glfwDestroyWindow(display->window);
         glfwTerminate();
-        return false;
+        free(display);
+        return NULL;
     }
     glBindTexture(GL_TEXTURE_2D, display->vram_texture); // The VRAM texture is always the active and bound one.
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -355,7 +369,8 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
             GL_context_destroy(display->context);
             glfwDestroyWindow(display->window);
             glfwTerminate();
-            return false;
+            free(display);
+            return NULL;
         }
 
         program_prepare(program, _uniforms, Uniforms_t_CountOf);
@@ -368,10 +383,10 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     _has_errors(); // Display pending OpenGL errors.
 #endif
 
-    return true;
+    return display;
 }
 
-void Display_terminate(Display_t *display)
+void Display_destroy(Display_t *display)
 {
     for (size_t i = 0; i < Display_Programs_t_CountOf; ++i) {
         if (display->programs[i].id == 0) {
@@ -393,6 +408,9 @@ void Display_terminate(Display_t *display)
 
     glfwTerminate();
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "terminated");
+
+    free(display);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "display freed");
 }
 
 bool Display_should_close(const Display_t *display)

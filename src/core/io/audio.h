@@ -49,8 +49,9 @@ typedef struct _Audio_t {
     float volume;
 } Audio_t;
 
-extern bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration);
-extern void Audio_terminate(Audio_t *audio); // TODO: rename to `deinitialize()` (every one).
+extern Audio_t *Audio_create(const Audio_Configuration_t *configuration);
+extern void Audio_destroy(Audio_t *audio);
+
 extern void Audio_halt(Audio_t *audio);
 
 extern void Audio_volume(Audio_t *audio, float volume);

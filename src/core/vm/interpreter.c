@@ -303,6 +303,8 @@ Interpreter_t *Interpreter_create(const File_System_t *file_system, const void *
         free(interpreter);
         return NULL;
     }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "interpreter VM %p created", interpreter->state);
+
     lua_atpanic(interpreter->state, _panic); // Set a custom panic-handler, just like `luaL_newstate()`.
     lua_setwarnf(interpreter->state, _warning, &interpreter->warning_state); // (and a custom warning-handler, too).
 
@@ -349,25 +351,30 @@ Interpreter_t *Interpreter_create(const File_System_t *file_system, const void *
         free(interpreter);
         return NULL;
     }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "boot script executed");
 
     if (!_detect(interpreter->state, -1, _methods)) {
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't detect entry-points");
         lua_close(interpreter->state);
         free(interpreter);
         return NULL;
     }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry-points detected");
 
     return interpreter;
 }
 
 void Interpreter_destroy(Interpreter_t *interpreter)
 {
-    // TODO: add proper deallocation logs, also to FS.
     lua_settop(interpreter->state, 0); // T O F1 ... Fn -> <empty>
-
     lua_gc(interpreter->state, LUA_GCCOLLECT); // Full GC cycle to trigger resource release.
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "interpreter VM %p garbage-collected", interpreter->state);
+
     lua_close(interpreter->state);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "interpreter VM %p destroyed", interpreter->state);
 
     free(interpreter);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "interpreter freed");
 }
 
 bool Interpreter_input(const Interpreter_t *interpreter)

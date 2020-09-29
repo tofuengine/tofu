@@ -146,8 +146,8 @@ typedef struct _Input_t {
     Input_Handler_t handlers[Input_Handlers_t_CountOf];
 } Input_t;
 
-extern bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration, GLFWwindow *window);
-extern void Input_terminate(Input_t *input);
+extern Input_t *Input_create(const Input_Configuration_t *configuration, GLFWwindow *window);
+extern void Input_destroy(Input_t *input);
 
 extern void Input_update(Input_t *input, float delta_time);
 extern void Input_process(Input_t *input);

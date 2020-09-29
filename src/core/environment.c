@@ -24,22 +24,36 @@
 
 #include "environment.h"
 
+#include <libs/log.h>
 #include <libs/stb.h>
 
 #include <stdlib.h>
 #include <string.h>
 
+#define LOG_CONTEXT "environment"
+
 // TODO: http://www.ilikebigbits.com/2017_06_01_float_or_double.html
 
-void Environment_initialize(Environment_t *environment)
+Environment_t *Environment_create(void)
 {
+    Environment_t *environment = malloc(sizeof(Environment_t));
+    if (!environment) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate environment");
+        return NULL;
+    }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "environment allocated");
+
     *environment = (Environment_t){
         .quit = false,
         .fps = 0.0f,
         .time = 0.0
     };
+
+    return environment;
 }
 
-void Environment_terminate(Environment_t *environment)
+void Environment_destroy(Environment_t *environment)
 {
+    free(environment);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "environment freed");
 }
