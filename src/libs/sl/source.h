@@ -34,12 +34,6 @@ typedef void SL_Source_t;
 
 extern void SL_source_destroy(SL_Source_t *source);
 
-extern size_t SL_source_get_group(const SL_Source_t *source);
-extern bool SL_source_get_looping(const SL_Source_t *source);
-extern SL_Mix_t SL_source_get_mix(const SL_Source_t *source);
-extern float SL_source_get_gain(const SL_Source_t *source);
-extern float SL_source_get_speed(const SL_Source_t *source);
-
 extern void SL_source_set_group(SL_Source_t *source, size_t group_id);
 extern void SL_source_set_looping(SL_Source_t *source, bool looping);
 extern void SL_source_set_mix(SL_Source_t *source, SL_Mix_t mix);
@@ -48,6 +42,12 @@ extern void SL_source_set_twin_pan(SL_Source_t *source, float left_pan, float ri
 extern void SL_source_set_balance(SL_Source_t *source, float balance);
 extern void SL_source_set_gain(SL_Source_t *source, float gain);
 extern void SL_source_set_speed(SL_Source_t *source, float speed);
+
+extern size_t SL_source_get_group(const SL_Source_t *source);
+extern bool SL_source_get_looping(const SL_Source_t *source);
+extern SL_Mix_t SL_source_get_mix(const SL_Source_t *source);
+extern float SL_source_get_gain(const SL_Source_t *source);
+extern float SL_source_get_speed(const SL_Source_t *source);
 
 extern bool SL_source_reset(SL_Source_t *source);
 

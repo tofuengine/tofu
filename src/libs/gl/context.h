@@ -73,7 +73,7 @@ extern void GL_context_set_clipping(GL_Context_t *context, const GL_Rectangle_t 
 extern void GL_context_set_shifting(GL_Context_t *context, const size_t *from, const size_t *to, size_t count);
 extern void GL_context_set_transparent(GL_Context_t *context, const GL_Pixel_t *indexes, const GL_Bool_t *transparent, size_t count);
 #ifdef __GL_MASK_SUPPORT__
-extern void GL_context_mask(GL_Context_t *context, const GL_Mask_t *mask);
+extern void GL_context_set_mask(GL_Context_t *context, const GL_Mask_t *mask);
 #endif
 
 extern void GL_context_clear(const GL_Context_t *context, GL_Pixel_t index);

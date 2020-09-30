@@ -206,7 +206,7 @@ void GL_context_set_transparent(GL_Context_t *context, const GL_Pixel_t *indexes
 }
 
 #ifdef __GL_MASK_SUPPORT__
-void GL_context_mask(GL_Context_t *context, const GL_Mask_t *mask)
+void GL_context_set_mask(GL_Context_t *context, const GL_Mask_t *mask)
 {
     GL_State_t *state = &context->state;
     if (!mask) {

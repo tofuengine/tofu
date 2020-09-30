@@ -97,10 +97,8 @@ static int input_is_down(lua_State *L)
     const Input_t *input = (const Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
 
     const Map_Entry_t *entry = map_find(L, id, _buttons, Input_Buttons_t_CountOf);
-    Input_Buttons_t button = entry->value;
-    bool is_down = input->state.buttons[button].state.down;
+    lua_pushboolean(L, Input_get_button(input, entry->value)->down);
 
-    lua_pushboolean(L, is_down);
     return 1;
 }
 
@@ -114,10 +112,8 @@ static int input_is_up(lua_State *L)
     const Input_t *input = (const Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
 
     const Map_Entry_t *entry = map_find(L, id, _buttons, Input_Buttons_t_CountOf);
-    Input_Buttons_t button = entry->value;
-    bool is_down = input->state.buttons[button].state.down;
+    lua_pushboolean(L, !Input_get_button(input, entry->value)->down);
 
-    lua_pushboolean(L, !is_down);
     return 1;
 }
 
@@ -131,10 +127,8 @@ static int input_is_pressed(lua_State *L)
     const Input_t *input = (const Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
 
     const Map_Entry_t *entry = map_find(L, id, _buttons, Input_Buttons_t_CountOf);
-    Input_Buttons_t button = entry->value;
-    bool is_pressed = input->state.buttons[button].state.pressed;
+    lua_pushboolean(L, !Input_get_button(input, entry->value)->pressed);
 
-    lua_pushboolean(L, is_pressed);
     return 1;
 }
 
@@ -148,10 +142,8 @@ static int input_is_released(lua_State *L)
     const Input_t *input = (const Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
 
     const Map_Entry_t *entry = map_find(L, id, _buttons, Input_Buttons_t_CountOf);
-    Input_Buttons_t button = entry->value;
-    bool is_released = input->state.buttons[button].state.released;
+    lua_pushboolean(L, !Input_get_button(input, entry->value)->released);
 
-    lua_pushboolean(L, is_released);
     return 1;
 }
 
@@ -165,8 +157,7 @@ static int input_auto_repeat1(lua_State *L)
     Input_t *input = (Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
 
     const Map_Entry_t *entry = map_find(L, id, _buttons, Input_Buttons_t_CountOf);
-    Input_Buttons_t button = entry->value;
-    Input_set_auto_repeat(input, button, 0.0f);
+    Input_set_auto_repeat(input, entry->value, 0.0f); // TODO: add a `clear_auto_repeat()` method and use this overload to return the current value.
 
     return 0;
 }
@@ -183,8 +174,7 @@ static int input_auto_repeat2(lua_State *L)
     Input_t *input = (Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
 
     const Map_Entry_t *entry = map_find(L, id, _buttons, Input_Buttons_t_CountOf);
-    Input_Buttons_t button = entry->value;
-    Input_set_auto_repeat(input, button, period);
+    Input_set_auto_repeat(input, entry->value, period);
 
     return 0;
 }
@@ -204,9 +194,9 @@ static int input_cursor0(lua_State *L)
 
     const Input_t *input = (const Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
 
-    const Input_State_t *state = &input->state;
-    lua_pushnumber(L, state->cursor.x);
-    lua_pushnumber(L, state->cursor.y);
+    const Input_Cursor_t *cursor = Input_get_cursor(input);
+    lua_pushnumber(L, cursor->x);
+    lua_pushnumber(L, cursor->y);
 
     return 2;
 }
@@ -222,9 +212,7 @@ static int input_cursor2(lua_State *L)
 
     Input_t *input = (Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
 
-    Input_State_t *state = &input->state;
-    state->cursor.x = x;
-    state->cursor.y = y;
+    Input_set_cursor_position(input, x, y);
 
     return 0;
 }
@@ -252,12 +240,7 @@ static int input_cursor_area(lua_State *L) // TODO: rename to `region`?
 
     Input_t *input = (Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
 
-    Input_State_t *state = &input->state;
-    state->cursor.area.x0 = x;
-    state->cursor.area.y0 = y;
-    state->cursor.area.x1 = x + width - 1;
-    state->cursor.area.y1 = y + height - 1;
-//     = (GL_Rectangle_t){ .x = x, .y = y, .width = width, .height = height };
+    Input_set_cursor_area(input, x, y, x + width - 1, y + height - 1);
 
     return 0;
 }
@@ -272,13 +255,11 @@ static int input_stick(lua_State *L)
     const Input_t *input = (const Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
 
     const Map_Entry_t *entry = map_find(L, id, _sticks, Input_Sticks_t_CountOf);
-
-    Input_Sticks_t stick = entry->value;
-    const Input_State_t *state = &input->state;
-    lua_pushnumber(L, state->sticks[stick].x);
-    lua_pushnumber(L, state->sticks[stick].y);
-    lua_pushnumber(L, state->sticks[stick].angle);
-    lua_pushnumber(L, state->sticks[stick].magnitude);
+    const Input_Stick_t *stick = Input_get_stick(input, entry->value);
+    lua_pushnumber(L, stick->x);
+    lua_pushnumber(L, stick->y);
+    lua_pushnumber(L, stick->angle);
+    lua_pushnumber(L, stick->magnitude);
 
     return 4;
 }
@@ -290,9 +271,9 @@ static int input_triggers(lua_State *L)
 
     const Input_t *input = (const Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
 
-    const Input_State_t *state = &input->state;
-    lua_pushnumber(L, state->triggers.left);
-    lua_pushnumber(L, state->triggers.right);
+    const Input_Triggers_t *triggers = Input_get_triggers(input);
+    lua_pushnumber(L, triggers->left);
+    lua_pushnumber(L, triggers->right);
 
     return 2;
 }

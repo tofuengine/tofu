@@ -119,7 +119,6 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
 
     audio->is_started = false;
 
-    audio->volume = configuration->master_volume;
     ma_device_set_master_volume(&audio->device, configuration->master_volume); // Set the initial volume.
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio master-volume set to %.2f", configuration->master_volume);
 
@@ -163,7 +162,6 @@ void Audio_halt(Audio_t *audio)
 void Audio_set_volume(Audio_t *audio, float volume)
 {
 //    ma_mutex_lock(&audio->lock);
-    audio->volume = volume;
     ma_device_set_master_volume(&audio->device, volume);
 //    ma_mutex_unlock(&audio->lock);
 }
@@ -194,6 +192,63 @@ void Audio_set_gain(Audio_t *audio, size_t group_id, float gain)
     ma_mutex_lock(&audio->lock);
     SL_context_set_gain(audio->sl, group_id, gain);
     ma_mutex_unlock(&audio->lock);
+}
+
+float Audio_get_volume(const Audio_t *audio)
+{
+//    ma_mutex_lock(&audio->lock);
+    float volume;
+    ma_result result = ma_device_get_master_volume((ma_device *)&audio->device, &volume);
+    if (result != MA_SUCCESS) {
+        return 0.0f;
+    }
+    return volume;
+//    ma_mutex_unlock(&audio->lock);
+}
+
+SL_Mix_t Audio_get_mix(const Audio_t *audio, size_t group_id)
+{
+    ma_mutex_lock((ma_mutex *)&audio->lock);
+    SL_Mix_t mix = SL_context_get_group(audio->sl, group_id)->mix;
+    ma_mutex_unlock((ma_mutex *)&audio->lock);
+    return mix;
+}
+
+float Audio_get_gain(const Audio_t *audio, size_t group_id)
+{
+    ma_mutex_lock((ma_mutex *)&audio->lock);
+    float gain = SL_context_get_group(audio->sl, group_id)->gain;
+    ma_mutex_unlock((ma_mutex *)&audio->lock);
+    return gain;
+}
+
+void Audio_track(Audio_t *audio, SL_Source_t *source, bool reset)
+{
+    ma_mutex_lock(&audio->lock);
+    if (reset) {
+        SL_source_reset(source); // FIXME: use return value!!!
+    }
+    SL_context_track(audio->sl, source);
+    size_t count = SL_context_count_tracked(audio->sl);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p tracked, #%d source(s) active", source, count);
+    ma_mutex_unlock(&audio->lock);
+}
+
+void Audio_untrack(Audio_t *audio, SL_Source_t *source)
+{
+    ma_mutex_lock(&audio->lock);
+    SL_context_untrack(audio->sl, source);
+    size_t count = SL_context_count_tracked(audio->sl);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p untracked, #%d source(s) active", source, count);
+    ma_mutex_unlock(&audio->lock);
+}
+
+bool Audio_is_tracked(const Audio_t *audio, SL_Source_t *source)
+{
+    ma_mutex_lock((ma_mutex *)&audio->lock);
+    bool is_tracked = SL_context_is_tracked(audio->sl, source);
+    ma_mutex_unlock((ma_mutex *)&audio->lock);
+    return is_tracked;
 }
 
 bool Audio_update(Audio_t *audio, float delta_time)
@@ -228,33 +283,4 @@ bool Audio_update(Audio_t *audio, float delta_time)
     }
 
     return true;
-}
-
-void Audio_track(Audio_t *audio, SL_Source_t *source, bool reset)
-{
-    ma_mutex_lock(&audio->lock);
-    if (reset) {
-        SL_source_reset(source); // FIXME: use return value!!!
-    }
-    SL_context_track(audio->sl, source);
-    size_t count = SL_context_count_tracked(audio->sl);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p tracked, #%d source(s) active", source, count);
-    ma_mutex_unlock(&audio->lock);
-}
-
-void Audio_untrack(Audio_t *audio, SL_Source_t *source)
-{
-    ma_mutex_lock(&audio->lock);
-    SL_context_untrack(audio->sl, source);
-    size_t count = SL_context_count_tracked(audio->sl);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p untracked, #%d source(s) active", source, count);
-    ma_mutex_unlock(&audio->lock);
-}
-
-bool Audio_is_tracked(Audio_t *audio, SL_Source_t *source)
-{
-    ma_mutex_lock(&audio->lock);
-    bool is_tracked = SL_context_is_tracked(audio->sl, source);
-    ma_mutex_unlock(&audio->lock);
-    return is_tracked;
 }

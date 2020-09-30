@@ -43,6 +43,7 @@ extern void SL_context_set_mix(SL_Context_t *context, size_t group_id, SL_Mix_t 
 extern void SL_context_set_pan(SL_Context_t *context, size_t group_id, float pan);
 extern void SL_context_set_balance(SL_Context_t *context, size_t group_id, float balance);
 extern void SL_context_set_gain(SL_Context_t *context, size_t group_id, float gain);
+
 extern const SL_Group_t *SL_context_get_group(const SL_Context_t *context, size_t group_id);
 
 extern void SL_context_track(SL_Context_t *context, SL_Source_t *source);

@@ -40,31 +40,6 @@ bool SL_source_reset(SL_Source_t *source)
     return ((const Source_t *)source)->vtable.reset(source);
 }
 
-size_t SL_source_get_group(const SL_Source_t *source)
-{
-    return ((const Source_t *)source)->props->group_id;
-}
-
-bool SL_source_get_looping(const SL_Source_t *source)
-{
-    return ((const Source_t *)source)->props->looping;
-}
-
-SL_Mix_t SL_source_get_mix(const SL_Source_t *source)
-{
-    return ((const Source_t *)source)->props->mix;
-}
-
-float SL_source_get_gain(const SL_Source_t *source)
-{
-    return ((const Source_t *)source)->props->gain;
-}
-
-float SL_source_get_speed(const SL_Source_t *source)
-{
-    return ((const Source_t *)source)->props->speed;
-}
-
 void SL_source_set_group(SL_Source_t *source, size_t group_id)
 {
     SL_props_set_group(((Source_t *)source)->props, group_id);
@@ -103,6 +78,31 @@ void SL_source_set_gain(SL_Source_t *source, float gain)
 void SL_source_set_speed(SL_Source_t *source, float speed)
 {
     SL_props_set_speed(((Source_t *)source)->props, speed);
+}
+
+size_t SL_source_get_group(const SL_Source_t *source)
+{
+    return ((const Source_t *)source)->props->group_id;
+}
+
+bool SL_source_get_looping(const SL_Source_t *source)
+{
+    return ((const Source_t *)source)->props->looping;
+}
+
+SL_Mix_t SL_source_get_mix(const SL_Source_t *source)
+{
+    return ((const Source_t *)source)->props->mix;
+}
+
+float SL_source_get_gain(const SL_Source_t *source)
+{
+    return ((const Source_t *)source)->props->gain;
+}
+
+float SL_source_get_speed(const SL_Source_t *source)
+{
+    return ((const Source_t *)source)->props->speed;
 }
 
 void SL_source_on_group_changed(SL_Source_t *source, size_t group_id)

@@ -55,6 +55,6 @@ typedef struct _Configuration {
     bool debug;
 } Configuration_t;
 
-extern void Configuration_parse(Configuration_t *configuration, const char *data);
+extern void Configuration_parse(Configuration_t *configuration, const char *data); // TODO: allocate this, too?
 
 #endif  /* __CONFIGURATION_H__ */

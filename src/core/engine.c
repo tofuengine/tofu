@@ -90,20 +90,6 @@ static inline void _wait_for(float seconds)
 #endif
 }
 
-static inline float _calculate_fps(float elapsed)
-{
-    static float samples[FPS_AVERAGE_SAMPLES] = { 0 };
-    static size_t index = 0;
-    static float sum = 0.0f; // We are storing just a small time interval, float is enough...
-
-    sum -= samples[index];
-    samples[index] = elapsed;
-    sum += elapsed;
-    index = (index + 1) % FPS_AVERAGE_SAMPLES;
-
-    return (float)FPS_AVERAGE_SAMPLES / sum;
-}
-
 static bool _configure(const File_System_t *file_system, Configuration_t *configuration)
 {
     File_System_Resource_t *content = FSX_load(file_system, "tofu.config", FILE_SYSTEM_RESOURCE_STRING);
@@ -301,14 +287,7 @@ void Engine_run(Engine_t *engine)
         const float elapsed = (float)(current - previous);
         previous = current;
 
-        engine->environment->fps = _calculate_fps(elapsed);
-#ifdef __DEBUG_ENGINE_FPS__
-        static size_t count = 0;
-        if (++count == 250) {
-            Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "currently running at %.0f FPS", engine->environment->fps);
-            count = 0;
-        }
-#endif
+        Environment_add_frame(engine->environment, elapsed);
 
         Input_process(engine->input);
 
@@ -316,7 +295,7 @@ void Engine_run(Engine_t *engine)
 
         lag += elapsed; // Count a maximum amount of skippable frames in order no to stall on slower machines.
         for (size_t frames = skippable_frames; frames && (lag >= delta_time); --frames) {
-            engine->environment->time += delta_time;
+            Environment_update(engine->environment, delta_time);
             running = running && Interpreter_update(engine->interpreter, delta_time); // Fixed update.
             running = running && Audio_update(engine->audio, elapsed); // Update the subsystems w/ fixed steps (fake interrupt based).
             lag -= delta_time;

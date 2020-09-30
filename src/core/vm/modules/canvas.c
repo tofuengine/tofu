@@ -527,7 +527,7 @@ static int canvas_mask1(lua_State *L)
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
 
     GL_Context_t *context = self->context;
-    GL_context_mask(context, NULL);
+    GL_context_set_mask(context, NULL);
 
     return 0;
 }
@@ -553,7 +553,7 @@ static int canvas_mask2(lua_State *L)
 
         mask.threshold = index;
     }
-    GL_context_mask(context, &mask);
+    GL_context_set_mask(context, &mask);
 
     return 0;
 }
@@ -570,7 +570,7 @@ static int canvas_mask3(lua_State *L)
     GL_Pixel_t index = LUAX_INTEGER(L, 3);
 
     GL_Context_t *context = self->context;
-    GL_context_mask(context, &(GL_Mask_t){ self->surface, index });
+    GL_context_set_mask(context, &(GL_Mask_t){ self->surface, index });
 
     return 0;
 }

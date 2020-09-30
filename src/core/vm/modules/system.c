@@ -66,7 +66,7 @@ static int system_time(lua_State *L)
 
     const Environment_t *environment = (const Environment_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
 
-    lua_pushnumber(L, environment->time);
+    lua_pushnumber(L, Environment_get_time(environment));
 
     return 1;
 }
@@ -78,7 +78,7 @@ static int system_fps(lua_State *L)
 
     const Environment_t *environment = (const Environment_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
 
-    lua_pushnumber(L, environment->fps);
+    lua_pushnumber(L, Environment_get_fps(environment));
 
     return 1;
 }
@@ -90,7 +90,7 @@ static int system_quit(lua_State *L)
 
     Environment_t *environment = (Environment_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
 
-    environment->quit = true;
+    Environment_quit(environment);
 
     return 0;
 }

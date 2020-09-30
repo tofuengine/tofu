@@ -389,11 +389,51 @@ void Input_process(Input_t *input)
     }
 }
 
-void Input_set_auto_repeat(Input_t *input, Input_Buttons_t id, float period)
+void Input_set_cursor_position(Input_t *input, float x, float y)
 {
-    input->state.buttons[id] = (Input_Button_t){
+    input->state.cursor.x = x;
+    input->state.cursor.y = y;
+}
+
+void Input_set_cursor_area(Input_t *input, float x0, float y0, float x1, float y1)
+{
+    input->state.cursor.area.x0 = x0;
+    input->state.cursor.area.y0 = y0;
+    input->state.cursor.area.x1 = x1;
+    input->state.cursor.area.y1 = y1;
+}
+
+void Input_set_auto_repeat(Input_t *input, Input_Buttons_t button, float period)
+{
+    input->state.buttons[button] = (Input_Button_t){
             .period = period,
             .time = 0.0f
         };
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "auto-repeat set to %.3fs for button #%d", period, id);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "auto-repeat set to %.3fs for button #%d", period, button);
+}
+
+const Input_Button_State_t *Input_get_button(const Input_t *input, Input_Buttons_t button)
+{
+    return &input->state.buttons[button].state;
+}
+
+const Input_Cursor_t *Input_get_cursor(const Input_t *input)
+{
+    return &input->state.cursor;
+}
+
+const Input_Triggers_t *Input_get_triggers(const Input_t *input)
+{
+    return &input->state.triggers;
+}
+
+const Input_Stick_t *Input_get_stick(const Input_t *input, Input_Sticks_t stick)
+{
+    return &input->state.sticks[stick];
+}
+
+
+float Input_get_auto_repeat(const Input_t *input, Input_Buttons_t button)
+{
+    return input->state.buttons[button].period;
 }

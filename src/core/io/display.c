@@ -561,3 +561,13 @@ void Display_set_shader(Display_t *display, const char *effect)
     program_send(display->active_program, UNIFORM_RESOLUTION, PROGRAM_UNIFORM_VEC2, 1, resolution);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p initialized", display->active_program);
 }
+
+const GL_Palette_t *Display_get_palette(const Display_t *display)
+{
+    return &display->palette;
+}
+
+GL_Point_t Display_get_offset(const Display_t *display)
+{
+    return display->vram_offset;
+}
