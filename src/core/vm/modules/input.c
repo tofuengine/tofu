@@ -127,7 +127,7 @@ static int input_is_pressed(lua_State *L)
     const Input_t *input = (const Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
 
     const Map_Entry_t *entry = map_find(L, id, _buttons, Input_Buttons_t_CountOf);
-    lua_pushboolean(L, !Input_get_button(input, entry->value)->pressed);
+    lua_pushboolean(L, Input_get_button(input, entry->value)->pressed);
 
     return 1;
 }
@@ -142,7 +142,7 @@ static int input_is_released(lua_State *L)
     const Input_t *input = (const Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
 
     const Map_Entry_t *entry = map_find(L, id, _buttons, Input_Buttons_t_CountOf);
-    lua_pushboolean(L, !Input_get_button(input, entry->value)->released);
+    lua_pushboolean(L, Input_get_button(input, entry->value)->released);
 
     return 1;
 }
