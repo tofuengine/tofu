@@ -72,7 +72,7 @@ static int xform_new(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
+    const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_USERDATA(L, 1);
 
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -133,7 +133,7 @@ static int xform_canvas(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     XForm_Object_t *self = (XForm_Object_t *)LUAX_USERDATA(L, 1);
-    const Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 2, NULL);
+    const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 2, NULL);
 
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
@@ -162,7 +162,7 @@ static int xform_blit1_3(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    XForm_Object_t *self = (XForm_Object_t *)LUAX_USERDATA(L, 1);
+    const XForm_Object_t *self = (const XForm_Object_t *)LUAX_USERDATA(L, 1);
     int x = LUAX_OPTIONAL_INTEGER(L, 2, 0);
     int y = LUAX_OPTIONAL_INTEGER(L, 3, 0);
 

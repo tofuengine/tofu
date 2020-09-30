@@ -192,7 +192,7 @@ static int source_looping1(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
+    const Source_Object_t *self = (const Source_Object_t *)LUAX_USERDATA(L, 1);
 
     lua_pushboolean(L, SL_source_get_looping(self->source));
 
@@ -226,7 +226,7 @@ static int source_group1(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
+    const Source_Object_t *self = (const Source_Object_t *)LUAX_USERDATA(L, 1);
 
     lua_pushinteger(L, SL_source_get_group(self->source));
 
@@ -260,7 +260,7 @@ static int source_mix1(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
+    const Source_Object_t *self = (const Source_Object_t *)LUAX_USERDATA(L, 1);
 
     SL_Mix_t mix = SL_source_get_mix(self->source);
 
@@ -362,7 +362,7 @@ static int source_gain1(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
+    const Source_Object_t *self = (const Source_Object_t *)LUAX_USERDATA(L, 1);
 
     lua_pushnumber(L, SL_source_get_gain(self->source));
 
@@ -396,7 +396,7 @@ static int source_speed1(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
+    const Source_Object_t *self = (const Source_Object_t *)LUAX_USERDATA(L, 1);
 
     lua_pushnumber(L, SL_source_get_speed(self->source));
 

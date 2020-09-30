@@ -32,7 +32,7 @@
 
 #define LOG_CONTEXT "gl-batch"
 
-GL_Batch_t *GL_batch_create(GL_Sheet_t *sheet, size_t slots)
+GL_Batch_t *GL_batch_create(const GL_Sheet_t *sheet, size_t slots)
 {
     GL_Batch_t *batch = malloc(sizeof(GL_Batch_t));
     if (!batch) {

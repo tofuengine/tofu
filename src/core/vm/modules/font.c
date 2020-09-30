@@ -293,7 +293,7 @@ static int font_size(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Font_Object_t *self = (Font_Object_t *)LUAX_USERDATA(L, 1);
+    const Font_Object_t *self = (const Font_Object_t *)LUAX_USERDATA(L, 1);
     const char *text = LUAX_OPTIONAL_STRING(L, 2, NULL);
     float scale_x = LUAX_OPTIONAL_NUMBER(L, 3, 1.0f);
     float scale_y = LUAX_OPTIONAL_NUMBER(L, 4, scale_x);
@@ -344,7 +344,7 @@ static int font_write4(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Font_Object_t *self = (Font_Object_t *)LUAX_USERDATA(L, 1);
+    const Font_Object_t *self = (const Font_Object_t *)LUAX_USERDATA(L, 1);
     const char *text = LUAX_STRING(L, 2);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
@@ -389,7 +389,7 @@ static int font_write5_6(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Font_Object_t *self = (Font_Object_t *)LUAX_USERDATA(L, 1);
+    const Font_Object_t *self = (const Font_Object_t *)LUAX_USERDATA(L, 1);
     const char *text = LUAX_STRING(L, 2);
     int x = LUAX_INTEGER(L, 3); // TODO: make all arguments const?
     int y = LUAX_INTEGER(L, 4);

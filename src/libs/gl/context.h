@@ -76,6 +76,11 @@ extern void GL_context_set_transparent(GL_Context_t *context, const GL_Pixel_t *
 extern void GL_context_set_mask(GL_Context_t *context, const GL_Mask_t *mask);
 #endif
 
+extern void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t index);
+extern void GL_context_process(const GL_Context_t *context, GL_Rectangle_t rectangle);
+extern GL_Pixel_t GL_context_peek(const GL_Context_t *context, int x, int y);
+extern void GL_context_poke(GL_Context_t *context, int x, int y, GL_Pixel_t index);
+
 extern void GL_context_clear(const GL_Context_t *context, GL_Pixel_t index);
 extern void GL_context_to_surface(const GL_Context_t *context, const GL_Surface_t *to);
 

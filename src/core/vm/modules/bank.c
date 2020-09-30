@@ -272,7 +272,7 @@ static int bank_size(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Bank_Object_t *self = (Bank_Object_t *)LUAX_USERDATA(L, 1);
+    const Bank_Object_t *self = (const Bank_Object_t *)LUAX_USERDATA(L, 1);
     int cell_id = LUAX_INTEGER(L, 2);
     float scale_x = LUAX_OPTIONAL_NUMBER(L, 3, 1.0f);
     float scale_y = LUAX_OPTIONAL_NUMBER(L, 4, scale_x);
@@ -322,7 +322,7 @@ static int bank_blit4(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Bank_Object_t *self = (Bank_Object_t *)LUAX_USERDATA(L, 1);
+    const Bank_Object_t *self = (const Bank_Object_t *)LUAX_USERDATA(L, 1);
     int cell_id = LUAX_INTEGER(L, 2); // FIXME: make cell-id a `size_t' or a generic uint?
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
@@ -343,7 +343,7 @@ static int bank_blit5(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Bank_Object_t *self = (Bank_Object_t *)LUAX_USERDATA(L, 1);
+    const Bank_Object_t *self = (const Bank_Object_t *)LUAX_USERDATA(L, 1);
     int cell_id = LUAX_INTEGER(L, 2);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
@@ -369,7 +369,7 @@ static int bank_blit6_7_8_9(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Bank_Object_t *self = (Bank_Object_t *)LUAX_USERDATA(L, 1);
+    const Bank_Object_t *self = (const Bank_Object_t *)LUAX_USERDATA(L, 1);
     int cell_id = LUAX_INTEGER(L, 2);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);

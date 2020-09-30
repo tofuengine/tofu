@@ -233,7 +233,7 @@ static int canvas_size(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
+    const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_USERDATA(L, 1);
 
     const GL_Context_t *context = self->context;
 
@@ -248,7 +248,7 @@ static int canvas_center(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
+    const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_USERDATA(L, 1);
 
     const GL_Context_t *context = self->context;
 
@@ -871,15 +871,12 @@ static int canvas_peek(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
+    const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_USERDATA(L, 1);
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
 
     const GL_Context_t *context = self->context;
-    const GL_Surface_t *surface = context->surface;
-    GL_Pixel_t index = surface->data[y * surface->width + x];
-
-    lua_pushinteger(L, index);
+    lua_pushinteger(L, GL_context_peek(context, x, y));
 
     return 1;
 }
@@ -897,9 +894,8 @@ static int canvas_poke(lua_State *L)
     int y = LUAX_INTEGER(L, 3);
     GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 4);
 
-    const GL_Context_t *context = self->context;
-    const GL_Surface_t *surface = context->surface;
-    surface->data[y * surface->width + x] = index;
+    GL_Context_t *context = self->context;
+    GL_context_poke(context, x, y, index);
 
     return 0;
 }

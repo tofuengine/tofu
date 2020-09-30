@@ -85,7 +85,7 @@ typedef struct _Batch_Object_t {
 typedef struct _XForm_Object_t {
     GL_Context_t *context;
     luaX_Reference context_reference;
-    GL_Surface_t *surface;
+    const GL_Surface_t *surface;
     luaX_Reference surface_reference;
     GL_XForm_t xform;
 } XForm_Object_t;

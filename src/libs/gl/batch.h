@@ -41,11 +41,11 @@ typedef struct _GL_Batch_Sprite_t {
 } GL_Batch_Sprite_t;
 
 typedef struct _GL_Batch_t {
-    GL_Sheet_t *sheet;
+    const GL_Sheet_t *sheet;
     GL_Batch_Sprite_t *sprites;
 } GL_Batch_t;
 
-extern GL_Batch_t *GL_batch_create(GL_Sheet_t *sheet, size_t slots);
+extern GL_Batch_t *GL_batch_create(const GL_Sheet_t *sheet, size_t slots);
 extern void GL_batch_destroy(GL_Batch_t *batch);
 
 extern bool GL_batch_grow(GL_Batch_t *batch, size_t amount); // Can't shrink or references would be lost.
