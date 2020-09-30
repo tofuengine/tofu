@@ -29,6 +29,7 @@
 #include <core/vm/interpreter.h>
 #include <libs/fs/fsaux.h>
 #include <libs/log.h>
+#include <libs/map.h>
 #include <libs/stb.h>
 
 #include "udt.h"
@@ -320,35 +321,16 @@ static int xform_table1(lua_State *L)
     return 0;
 }
 
-static GL_XForm_Registers_t _string_to_register(const char *id) // TODO: move to a bsearched table.
-{
-    if (id[0] == 'h') {
-        return GL_XFORM_REGISTER_H;
-    } else
-    if (id[0] == 'v') {
-        return GL_XFORM_REGISTER_V;
-    } else
-    if (id[0] == 'a') {
-        return GL_XFORM_REGISTER_A;
-    } else
-    if (id[0] == 'b') {
-        return GL_XFORM_REGISTER_B;
-    } else
-    if (id[0] == 'c') {
-        return GL_XFORM_REGISTER_C;
-    } else
-    if (id[0] == 'd') {
-        return GL_XFORM_REGISTER_D;
-    } else
-    if (id[0] == 'x') {
-        return GL_XFORM_REGISTER_X;
-    } else
-    if (id[0] == 'y') {
-        return GL_XFORM_REGISTER_Y;
-    }
-    Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "unknown register w/ id `%s`", id);
-    return GL_XFORM_REGISTER_A;
-}
+static const Map_Entry_t _registers[GL_XForm_Registers_t_CountOf] = { // Need to be sorted for `bsearch()`
+    { "a", GL_XFORM_REGISTER_A },
+    { "b", GL_XFORM_REGISTER_B },
+    { "c", GL_XFORM_REGISTER_C },
+    { "d", GL_XFORM_REGISTER_D },
+    { "h", GL_XFORM_REGISTER_H },
+    { "v", GL_XFORM_REGISTER_V },
+    { "x", GL_XFORM_REGISTER_X },
+    { "y", GL_XFORM_REGISTER_Y }
+};
 
 static int xform_table2(lua_State *L)
 {
@@ -368,12 +350,12 @@ static int xform_table2(lua_State *L)
         lua_pushnil(L);
         for (size_t i = 0; lua_next(L, -2); ++i) { // Scan the value, which is an array.
             if (i == GL_XForm_Registers_t_CountOf) {
-                Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "too many operation for table entry w/ id #%d", index);
+                Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "too many operations for table entry w/ id #%d", index);
                 lua_pop(L, 2);
                 break;
             }
             entry.count = i + 1;
-            entry.operations[i].id = _string_to_register(LUAX_STRING(L, -2));
+            entry.operations[i].id = map_find(L, LUAX_STRING(L, -2), _registers, GL_XForm_Registers_t_CountOf)->value;
             entry.operations[i].value = (float)LUAX_NUMBER(L, -1);
 
             lua_pop(L, 1);
