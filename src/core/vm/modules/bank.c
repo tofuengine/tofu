@@ -124,13 +124,7 @@ static int bank_new2(lua_State *L)
     const File_System_t *file_system = (const File_System_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    size_t count;
-    GL_Rectangle_t *cells = _load_cells(file_system, cells_file, &count); // TODO: implement `Sheet` in pure Lua?
-    if (!cells) {
-        return luaL_error(L, "can't load file `%s`", cells_file);
-    }
-
-    GL_Sheet_t *sheet;
+    GL_Surface_t *surface;
     if (type == LUA_TSTRING) {
         const char *image_file = LUAX_STRING(L, 1);
 
@@ -138,34 +132,45 @@ static int bank_new2(lua_State *L)
         if (!image) {
             return luaL_error(L, "can't load file `%s`", image_file);
         }
-        sheet = GL_sheet_decode(FSX_IWIDTH(image), FSX_IHEIGHT(image), FSX_IPIXELS(image), cells, count, surface_callback_palette, (void *)&display->palette);
+        surface = GL_surface_decode(FSX_IWIDTH(image), FSX_IHEIGHT(image), FSX_IPIXELS(image), surface_callback_palette, (void *)&display->palette);
         FSX_release(image);
-        free(cells);
-        if (!sheet) {
+        if (!surface) {
             return luaL_error(L, "can't decode file `%s`", image_file);
         }
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p decoded from file `%s`", sheet, image_file);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface %p loaded from file `%s`", surface, image_file);
     } else
     if (type == LUA_TUSERDATA) {
         const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_USERDATA(L, 1);
 
-        sheet = GL_sheet_attach(canvas->context->surface, cells, count);
-        free(cells);
-        if (!sheet) {
-            return luaL_error(L, "can't attach sheet");
-        }
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p attached to canvas %p", sheet, canvas);
+        surface = canvas->context->surface;
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface %p belongs to canvas %p", surface, canvas);
     } else {
-        free(cells);
         return luaL_error(L, "invalid argument");
+    }
+
+    size_t cells_count;
+    GL_Rectangle_t *cells = _load_cells(file_system, cells_file, &cells_count); // TODO: implement `Sheet` in pure Lua?
+    if (!cells) {
+        GL_surface_destroy(surface);
+        return luaL_error(L, "can't load file `%s`", cells_file);
+    }
+
+    GL_Sheet_t *sheet = GL_sheet_create(surface, cells, cells_count);
+    free(cells);
+    if (!sheet) {
+        if (type != LUA_TUSERDATA) {
+            GL_surface_destroy(surface);
+        }
+        return luaL_error(L, "can't create sheet w/ #%d cell(s)", cells_count);
     }
 
     Bank_Object_t *self = (Bank_Object_t *)lua_newuserdatauv(L, sizeof(Bank_Object_t), 1);
     *self = (Bank_Object_t){
             .context = display->context,
             .context_reference = LUAX_REFERENCE_NIL,
-            .sheet = sheet,
-            .sheet_reference = type == LUA_TUSERDATA ? luaX_ref(L, 1) : LUAX_REFERENCE_NIL
+            .surface = surface,
+            .surface_reference = type == LUA_TUSERDATA ? luaX_ref(L, 1) : LUAX_REFERENCE_NIL,
+            .sheet = sheet
         };
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p allocated w/ sheet %p for default context", self, sheet);
 
@@ -188,7 +193,7 @@ static int bank_new3(lua_State *L)
     const File_System_t *file_system = (const File_System_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    GL_Sheet_t *sheet;
+    GL_Surface_t *surface;
     if (type == LUA_TSTRING) {
         const char *file = LUAX_STRING(L, 1);
 
@@ -196,31 +201,37 @@ static int bank_new3(lua_State *L)
         if (!image) {
             return luaL_error(L, "can't load file `%s`", file);
         }
-        sheet = GL_sheet_decode_rect(FSX_IWIDTH(image), FSX_IHEIGHT(image), FSX_IPIXELS(image), cell_width, cell_height, surface_callback_palette, (void *)&display->palette);
+        surface = GL_surface_decode(FSX_IWIDTH(image), FSX_IHEIGHT(image), FSX_IPIXELS(image), surface_callback_palette, (void *)&display->palette);
         FSX_release(image);
-        if (!sheet) {
+        if (!surface) {
             return luaL_error(L, "can't decode file `%s`", file);
         }
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p decoded from file `%s`", sheet, file);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface %p loaded from file `%s`", surface, file);
     } else
     if (type == LUA_TUSERDATA) {
         const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_USERDATA(L, 1);
 
-        sheet = GL_sheet_attach_rect(canvas->context->surface, cell_width, cell_height);
-        if (!sheet) {
-            return luaL_error(L, "can't attach sheet");
-        }
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p attached to canvas %p", sheet, canvas);
+        surface = canvas->context->surface;
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface %p belongs to canvas %p", surface, canvas);
     } else {
         return luaL_error(L, "invalid argument");
+    }
+
+    GL_Sheet_t *sheet = GL_sheet_create_rect(surface, cell_width, cell_height);
+    if (!sheet) {
+        if (type != LUA_TUSERDATA) {
+            GL_surface_destroy(surface);
+        }
+        return luaL_error(L, "can't create sheet");
     }
 
     Bank_Object_t *self = (Bank_Object_t *)lua_newuserdatauv(L, sizeof(Bank_Object_t), 1);
     *self = (Bank_Object_t){
             .context = display->context,
             .context_reference = LUAX_REFERENCE_NIL,
-            .sheet = sheet,
-            .sheet_reference = type == LUA_TUSERDATA ? luaX_ref(L, 1) : LUAX_REFERENCE_NIL
+            .surface = surface,
+            .surface_reference = type == LUA_TUSERDATA ? luaX_ref(L, 1) : LUAX_REFERENCE_NIL,
+            .sheet = sheet
         };
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p allocated w/ sheet %p for default context", self, sheet);
 
@@ -244,14 +255,15 @@ static int bank_gc(lua_State *L)
     LUAX_SIGNATURE_END
     Bank_Object_t *self = (Bank_Object_t *)LUAX_USERDATA(L, 1);
 
-    if (self->sheet_reference != LUAX_REFERENCE_NIL) {
-        luaX_unref(L, self->sheet_reference);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet reference #%d released", self->sheet_reference);
-        GL_sheet_detach(self->sheet);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p detached", self->sheet);
+    GL_sheet_destroy(self->sheet);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p destroyed", self->sheet);
+
+    if (self->surface_reference != LUAX_REFERENCE_NIL) {
+        luaX_unref(L, self->surface_reference);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface reference #%d released", self->surface_reference);
     } else {
-        GL_sheet_destroy(self->sheet);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p destroyed", self->sheet);
+        GL_surface_destroy(self->surface);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface %p destroyed", self->surface);
     }
 
     if (self->context_reference != LUAX_REFERENCE_NIL) {

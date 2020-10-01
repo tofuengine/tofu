@@ -65,15 +65,17 @@ typedef struct _Canvas_Object_t {
 typedef struct _Bank_Object_t {
     GL_Context_t *context;
     luaX_Reference context_reference;
+    GL_Surface_t *surface;
+    luaX_Reference surface_reference;
     GL_Sheet_t *sheet;
-    luaX_Reference sheet_reference;
 } Bank_Object_t;
 
 typedef struct _Font_Object_t {
     GL_Context_t *context;
     luaX_Reference context_reference;
+    GL_Surface_t *surface;
+    luaX_Reference surface_reference;
     GL_Sheet_t *sheet;
-    luaX_Reference sheet_reference;
 } Font_Object_t;
 
 typedef struct _Batch_Object_t {
