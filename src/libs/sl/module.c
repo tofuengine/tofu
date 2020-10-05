@@ -113,7 +113,7 @@ static inline bool _produce(Module_t *module)
 
     // The requested buffer size (in bytes) is always filled, with trailing zeroes if needed.
     xmp_context context = module->context;
-    const int loops = module->props->looping ? 0 : 1; // Automatically loop (properly filling the internal buffer), or tell EOD when not looping.
+    const int loops = module->props->looped ? 0 : 1; // Automatically loop (properly filling the internal buffer), or tell EOD when not looped.
     int play_result = xmp_play_buffer(context, write_buffer, frames_to_produce * MODULE_OUTPUT_BYTES_PER_FRAME, loops);
 
     ma_pcm_rb_commit_write(buffer, frames_to_produce, write_buffer);

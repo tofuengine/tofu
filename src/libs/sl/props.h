@@ -38,7 +38,7 @@ typedef struct _SL_Props_t {
     size_t channels;
 
     size_t group_id;
-    bool looping; // TODO: rename to looped?
+    bool looped;
     SL_Mix_t mix;
     float gain;
     float speed;
@@ -52,7 +52,7 @@ extern SL_Props_t *SL_props_create(const SL_Context_t *context, ma_format format
 extern void SL_props_destroy(SL_Props_t *props);
 
 extern void SL_props_set_group(SL_Props_t *props, size_t group_id);
-extern void SL_props_set_looping(SL_Props_t *props, bool looping);
+extern void SL_props_set_looped(SL_Props_t *props, bool looped);
 extern void SL_props_set_mix(SL_Props_t *props, SL_Mix_t mix);
 extern void SL_props_set_pan(SL_Props_t *props, float pan);
 extern void SL_props_set_twin_pan(SL_Props_t *props, float left_pan, float right_pan);

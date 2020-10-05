@@ -45,9 +45,9 @@ void SL_source_set_group(SL_Source_t *source, size_t group_id)
     SL_props_set_group(((Source_t *)source)->props, group_id);
 }
 
-void SL_source_set_looping(SL_Source_t *source, bool looping)
+void SL_source_set_looped(SL_Source_t *source, bool looped)
 {
-    SL_props_set_looping(((Source_t *)source)->props, looping);
+    SL_props_set_looped(((Source_t *)source)->props, looped);
 }
 
 void SL_source_set_mix(SL_Source_t *source, SL_Mix_t mix)
@@ -85,9 +85,9 @@ size_t SL_source_get_group(const SL_Source_t *source)
     return ((const Source_t *)source)->props->group_id;
 }
 
-bool SL_source_get_looping(const SL_Source_t *source)
+bool SL_source_get_looped(const SL_Source_t *source)
 {
-    return ((const Source_t *)source)->props->looping;
+    return ((const Source_t *)source)->props->looped;
 }
 
 SL_Mix_t SL_source_get_mix(const SL_Source_t *source)

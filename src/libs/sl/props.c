@@ -60,7 +60,7 @@ SL_Props_t *SL_props_create(const SL_Context_t *context, ma_format format, ma_ui
             .context = context,
             .channels = channels_in,
             .group_id = SL_DEFAULT_GROUP,
-            .looping = false,
+            .looped = false,
             .mix = channels_in == 1 ? mix_pan(0.0f) : mix_balance(0.0f), // mono -> center panned, stereo -> separated
             .gain = 1.0,
             .speed = 1.0f
@@ -92,9 +92,9 @@ void SL_props_set_group(SL_Props_t *props, size_t group_id)
     props->group_id = group_id;
 }
 
-void SL_props_set_looping(SL_Props_t *props, bool looping)
+void SL_props_set_looped(SL_Props_t *props, bool looped)
 {
-    props->looping = looping;
+    props->looped = looped;
 }
 
 // mix, pan, and balance are mutually exclusive, that is pan is a special case of mix.

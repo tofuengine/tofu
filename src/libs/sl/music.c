@@ -98,7 +98,7 @@ static inline bool _reset(Music_t *music)
 static inline bool _produce(Music_t *music)
 {
     if (music->frames_completed == music->length_in_frames) { // End-of-data, early exit.
-        return !music->props->looping || _rewind(music);
+        return !music->props->looped || _rewind(music);
     }
 
     ma_pcm_rb *buffer = &music->buffer;

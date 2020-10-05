@@ -31,7 +31,6 @@
 
 #define LOG_CONTEXT "fs-aux"
 
-// FIXME: convert bool argument to flags.
 static void *_load(File_System_Handle_t *handle, bool null_terminate, size_t *size)
 {
     size_t bytes_requested = FS_size(handle);

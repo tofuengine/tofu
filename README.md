@@ -8,7 +8,7 @@ Guess what? Yup, that's yet another game engine/framework.
 
 * Carefully crafted C99 code.
 * Self-contained, no additional runtime modules/libraries required (system-wide libraries excluded).
-* Multi-platform through cross-compilation (Windows, Linux and Raspberry-Pi... no MacOS won't be supported, for the moment).
+* Multi-platform through cross-compilation (Windows, Linux and Raspberry-Pi. MacOS isn't be supported, for the moment).
 
 ## Dependecies
 
@@ -34,7 +34,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Automatic nearest-color palette indexing of images.
 * [x] Per-color re-indexing (*shifting*) and transparency, affecting drawing operations (global, too?).
 * [x] Audio support w/ real time sound streaming on a separate thread.
-* [x] On-the-fly audio mixing w/ per voice looping/panning/gain/speed control.
+* [x] On-the-fly audio mixing w/ per voice looping/panning/balance/gain/speed control.
 * [x] Static and streamed audio data playback (FLAC format).
 * [x] Module playback support (MOD, S3M, XM, and IT).
 * [x] Out-of-the-box timers support.

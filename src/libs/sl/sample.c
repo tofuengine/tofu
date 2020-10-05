@@ -255,7 +255,7 @@ static bool _sample_generate(SL_Source_t *source, void *output, size_t frames_re
 
     ma_data_converter *converter = &sample->props->converter;
     ma_audio_buffer *buffer = &sample->buffer;
-    const bool looping = sample->props->looping;
+    const bool looped = sample->props->looped;
 
     uint8_t converted_buffer[MIXING_BUFFER_SIZE_IN_BYTES];
 
@@ -266,7 +266,7 @@ static bool _sample_generate(SL_Source_t *source, void *output, size_t frames_re
     size_t frames_remaining = frames_requested;
     while (frames_remaining > 0) {
         if (sample->frames_completed == sample->length_in_frames) {
-            if (!looping || !_rewind(sample)) {
+            if (!looped || !_rewind(sample)) {
                 Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "end-of-data reached for source %p", source);
                 return false;
             }
