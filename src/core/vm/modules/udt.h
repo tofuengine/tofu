@@ -26,56 +26,71 @@
 #define __MODULES_UDT_H__
 
 #include <libs/luax.h>
+#include <libs/fs/fs.h>
 #include <libs/gl/gl.h>
+#include <libs/sl/sl.h>
 
 typedef enum _UserData_t { // TODO: move to a suitable space.
-    USERDATA_INTERPRETER = 1,
-    USERDATA_FILE_SYSTEM,
-    USERDATA_ENVIRONMENT,
+    USERDATA_FILE_SYSTEM = 1,
     USERDATA_DISPLAY,
-    USERDATA_INPUT
+    USERDATA_INPUT,
+    USERDATA_AUDIO,
+    USERDATA_ENVIRONMENT,
+    USERDATA_INTERPRETER,
+    UserData_t_CountOf
 } UserData_t;
 
 #if 0
-// TODO: add type as first field of a `Class_t` type to track proper type and avoid errors.
-typedef enum _Classes_t {
-    CLASS_CANVAS,
-    CLASS_BANK,
-    CLASS_FONT,
-    CLASS_XFORM
-} Classes_t;
+// TODO: add type as first field of a `Object_t` type to track proper type and avoid errors.
+typedef enum _Object_Types_t {
+    OBJECT_TYPE_CANVAS,
+    OBJECT_TYPE_BANK,
+    OBJECT_TYPE_FONT,
+    OBJECT_TYPE_BATCH,
+    OBJECT_TYPE_XFORM,
+    OBJECT_TYPE_GRID,
+    OBJECT_TYPE_SOURCE
+} Object_Types_t;
 
-typedef struct _Class_t {
-    Classes_t type;
-} Class_t;
+typedef struct _Object_t {
+    Object_Types_t type;
+} Object_t;
 #endif
 
-typedef struct _Canvas_Class_t {
+typedef struct _Canvas_Object_t {
     GL_Context_t *context;
     bool allocated;
-} Canvas_Class_t;
+} Canvas_Object_t;
 
-typedef struct _Bank_Class_t {
-    GL_Context_t *context;
-    luaX_Reference context_reference;
-    GL_Sheet_t *sheet;
-    luaX_Reference sheet_reference;
-} Bank_Class_t;
-
-typedef struct _Font_Class_t {
-    GL_Context_t *context;
-    luaX_Reference context_reference;
-    GL_Sheet_t *sheet;
-    luaX_Reference sheet_reference;
-} Font_Class_t;
-
-typedef struct _XForm_Class_t {
+typedef struct _Bank_Object_t {
     GL_Context_t *context;
     luaX_Reference context_reference;
     GL_Surface_t *surface;
     luaX_Reference surface_reference;
+    GL_Sheet_t *sheet;
+} Bank_Object_t;
+
+typedef struct _Font_Object_t {
+    GL_Context_t *context;
+    luaX_Reference context_reference;
+    GL_Surface_t *surface;
+    luaX_Reference surface_reference;
+    GL_Sheet_t *sheet;
+} Font_Object_t;
+
+typedef struct _Batch_Object_t {
+    const Bank_Object_t *bank;
+    luaX_Reference bank_reference;
+    GL_Batch_t *batch;
+} Batch_Object_t;
+
+typedef struct _XForm_Object_t {
+    GL_Context_t *context;
+    luaX_Reference context_reference;
+    const GL_Surface_t *surface;
+    luaX_Reference surface_reference;
     GL_XForm_t xform;
-} XForm_Class_t;
+} XForm_Object_t;
 
 #ifdef __GRID_INTEGER_CELL__
 typedef int Cell_t;
@@ -83,10 +98,15 @@ typedef int Cell_t;
 typedef float Cell_t;
 #endif
 
-typedef struct _Grid_Class_t {
+typedef struct _Grid_Object_t {
     size_t width, height;
     Cell_t *data;
     size_t data_size;
-} Grid_Class_t;
+} Grid_Object_t;
+
+typedef struct _Source_Object_t {
+    File_System_Handle_t *handle;
+    SL_Source_t *source;
+} Source_Object_t;
 
 #endif  /* __MODULES_UDT_H__ */

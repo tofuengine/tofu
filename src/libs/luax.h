@@ -33,7 +33,7 @@ typedef enum _luaX_Const_Type {
     LUA_CT_BOOLEAN,
     LUA_CT_INTEGER,
     LUA_CT_NUMBER,
-    LUA_CT_STRING,
+    LUA_CT_STRING
 } luaX_Const_Type;
 
 typedef struct _luaX_Const {
@@ -63,17 +63,19 @@ typedef int luaX_Reference;
         do { \
             lua_State *_L = (l); \
             int _argc = lua_gettop(_L); \
+            int _matched = 0; \
             int _index = 1;
     #define LUAX_SIGNATURE_REQUIRED(...) \
-            luaX_checkargument(_L, _index++, __FILE__, __LINE__, __VA_ARGS__, LUAX_EOD);
+            luaX_checkargument(_L, _index++, __FILE__, __LINE__, __VA_ARGS__, LUAX_EOD); \
+            ++_matched;
     #define LUAX_SIGNATURE_OPTIONAL(...) \
             luaX_checkargument(_L, _index, __FILE__, __LINE__, __VA_ARGS__, LUA_TNONE, LUAX_EOD); \
-            if (lua_isnone(_L, _index++)) { \
-                ++_argc; \
+            if (!lua_isnone(_L, _index++)) { \
+                ++_matched; \
             }
     #define LUAX_SIGNATURE_END \
-            if (--_index != _argc) { \
-                luaL_error(_L, "[%s:%d] arguments number mismatch (checked %d  out of %d)", __FILE__, __LINE__, _index, _argc); \
+            if (_matched != _argc) { \
+                luaL_error(_L, "[%s:%d] arguments number mismatch (checked %d, matched %d out of %d)", __FILE__, __LINE__, _index, _matched, _argc); \
             } \
         } while (0);
 #else

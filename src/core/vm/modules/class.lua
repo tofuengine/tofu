@@ -47,7 +47,7 @@ end
 
 function Class.implement(proto, model)
   for key, value in pairs(model) do
-    if type(value) == 'function' then
+    if type(value) == "function" then
       proto[key] = value
     end
   end

@@ -29,15 +29,16 @@
 
 typedef struct _Mount_VTable_t {
     void                  (*dtor)    (File_System_Mount_t *mount);
-    bool                  (*contains)(File_System_Mount_t *mount, const char *file);
-    File_System_Handle_t *(*open)    (File_System_Mount_t *mount, const char *file);
+    bool                  (*contains)(const File_System_Mount_t *mount, const char *file);
+    File_System_Handle_t *(*open)    (const File_System_Mount_t *mount, const char *file);
 } Mount_VTable_t;
 
 typedef struct _Handle_VTable_t {
     void   (*dtor)(File_System_Handle_t *handle);
     size_t (*size)(File_System_Handle_t *handle);
     size_t (*read)(File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
-    void   (*skip)(File_System_Handle_t *handle, int offset);
+    bool   (*seek)(File_System_Handle_t *handle, long offset, int whence);
+    long   (*tell)(File_System_Handle_t *handle);
     bool   (*eof) (File_System_Handle_t *handle);
 } Handle_VTable_t;
 

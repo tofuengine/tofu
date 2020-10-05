@@ -55,7 +55,8 @@ typedef struct _GL_XForm_Table_Entry_t {
 typedef enum _GL_XForm_Clamps_t {
     GL_XFORM_CLAMP_EDGE,
     GL_XFORM_CLAMP_BORDER,
-    GL_XFORM_CLAMP_REPEAT
+    GL_XFORM_CLAMP_REPEAT,
+    GL_XForm_Clamps_t_CountOf
 } GL_XForm_Clamps_t;
 
 typedef struct _GL_XForm_t {

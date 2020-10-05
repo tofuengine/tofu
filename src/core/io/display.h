@@ -27,9 +27,7 @@
 
 // TODO: rename Display to Video?
 
-#include <config.h>
 #include <libs/gl/gl.h>
-#include <libs/fs/fsaux.h>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -48,8 +46,8 @@ typedef enum _Display_Programs_t {
 } Display_Programs_t;
 
 typedef struct _Display_Configuration_t {
+    GLFWimage icon;
     const char *title;
-    File_System_Chunk_t icon;
     size_t icon_size;
     size_t width, height, scale;
     bool fullscreen;
@@ -72,20 +70,25 @@ typedef struct _Display_t {
 
     Program_t programs[Display_Programs_t_CountOf];
     Program_t *active_program;
-    GLfloat time;
+
+    double time;
 
     GL_Context_t *context;
     GL_Palette_t palette;
 } Display_t;
 
-extern bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration);
-extern void Display_terminate(Display_t *display);
+extern Display_t *Display_create(const Display_Configuration_t *configuration); // TODO: rename to `Graphics`?
+extern void Display_destroy(Display_t *display);
+
 extern bool Display_should_close(const Display_t *display);
 extern void Display_update(Display_t *display, float delta_time);
 extern void Display_present(const Display_t *display);
 
-extern void Display_palette(Display_t *display, const GL_Palette_t *palette);
-extern void Display_offset(Display_t *display, GL_Point_t offset);
-extern void Display_shader(Display_t *display, const char *code);
+extern void Display_set_palette(Display_t *display, const GL_Palette_t *palette);
+extern void Display_set_offset(Display_t *display, GL_Point_t offset);
+extern void Display_set_shader(Display_t *display, const char *code);
+
+extern const GL_Palette_t *Display_get_palette(const Display_t *display);
+extern GL_Point_t Display_get_offset(const Display_t *display);
 
 #endif  /* __DISPLAY_H__ */

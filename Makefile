@@ -33,18 +33,23 @@ ifeq ($(PLATFORM),windows)
 else
 	COMPILER=gcc
 endif
-CWARNINGS=-std=c99 -Wall -Wextra -Werror -Wno-unused-parameter -Wpedantic -Wstrict-prototypes -Wunreachable-code -Wlogical-op
-#CWARNINGS=-std=c99 -Wall -Wextra -Werror -Wno-unused-parameter -Wpedantic -Wstrict-prototypes -Wshadow -Wunreachable-code -Wlogical-op -Wfloat-equal
-CFLAGS=-D_DEFAULT_SOURCE -DLUA_32BITS -DLUA_FLOORN2I=1 -DSTBI_ONLY_PNG -DSTBI_NO_STDIO -Isrc -Iexternal
+CWARNINGS=-std=c99 -Wall -Wextra -Werror -Winline -Wlogical-op -Wno-unused-parameter -Wpedantic -Wpointer-arith -Wstrict-prototypes -Wshadow -Wunreachable-code -Wwrite-strings
+#CWARNINGS+=-Wfloat-equal
+CFLAGS=-D_DEFAULT_SOURCE -DLUA_32BITS -DLUA_FLOORN2I=F2Ifloor -DSTBI_ONLY_PNG -DSTBI_NO_STDIO -DDR_FLAC_NO_STDIO -DMA_NO_DECODING -DMA_NO_ENCODING -DMA_NO_GENERATION -Isrc -Iexternal
+ifneq ($(PLATFORM),windows)
+	CFLAGS+=-DLUA_USE_LINUX
+endif
 ifeq ($(BUILD),release)
 # -Ofast => -O3 -ffast-math
 # -Os => -O2, favouring size
 	COPTS=-O3 -DRELEASE
 else ifeq ($(BUILD),profile)
-	COPTS=-O0 -g -DDEBUG -DPROFILE -pg
+	COPTS=-O0 -ggdb3 -DDEBUG -DPROFILE -pg
+else ifeq ($(BUILD),sanitize)
+	COPTS=-O0 -ggdb3 -DDEBUG -fsanitize=address -fno-omit-frame-pointer
 else
-#	COPTS=-Og -g -DDEBUG
-	COPTS=-O0 -g -DDEBUG
+#	COPTS=-Og -ggdb3 -DDEBUG
+	COPTS=-O0 -ggdb3 -DDEBUG
 endif
 
 ifeq ($(PLATFORM),windows)
@@ -65,19 +70,22 @@ endif
 LWARNINGS=-Wall -Wextra -Werror
 ifeq ($(BUILD),profile)
 	LOPTS=-pg
+else ifeq ($(BUILD),sanitize)
+	LOPTS=-fsanitize=address -fno-omit-frame-pointer
 else
 	LOPTS=
 endif
 
-
-SOURCES:=$(wildcard src/*.c src/core/*.c src/core/io/*.c src/core/io/display/*.c src/core/vm/*.c src/core/vm/modules/*.c src/core/vm/modules/resources/*.c src/libs/*.c src/libs/fs/*.c src/libs/gl/*.c external/glad/*.c external/GLFW/*.c external/lua/*.c external/miniaudio/*.c external/spleen/*.c external/stb/*.c)
-INCLUDES:=$(wildcard src/*.h src/core/*.h src/core/io/*.h src/core/io/display/*.h src/core/vm/*.h src/core/vm/modules/*.h src/core/vm/modules/resources/*.h src/libs/*.h src/libs/fs/*.h src/libs/gl/*.h external/glad/*.h external/GLFW/*.h external/lua/*.h external/miniaudio/*.h external/spleen/*.h external/stb/*.h)
+SOURCES:=$(wildcard src/*.c src/core/*.c src/core/io/*.c src/core/io/display/*.c src/core/vm/*.c src/core/vm/modules/*.c src/core/vm/modules/resources/*.c src/libs/*.c src/libs/fs/*.c src/libs/gl/*.c src/libs/sl/*.c)
+SOURCES+=$(wildcard external/glad/*.c external/GLFW/*.c external/lua/*.c external/miniaudio/*.c external/spleen/*.c external/xmp-lite/*.c external/xmp-lite/hio/*.c)
+INCLUDES:=$(wildcard src/*.h src/core/*.h src/core/io/*.h src/core/io/display/*.h src/core/vm/*.h src/core/vm/modules/*.h src/core/vm/modules/resources/*.h src/libs/*.h src/libs/fs/*.h src/libs/gl/*.h src/libs/sl/*.h)
+INCLUDES+=$(wildcard external/glad/*.h external/GLFW/*.h external/lua/*.h external/miniaudio/*.h external/dr_libs/*.h external/spleen/*.h external/stb/*.h external/xmp-lite/*.h external/xmp-lite/hio/*.h)
 OBJECTS:=$(SOURCES:%.c=%.o)
 SCRIPTS:=$(wildcard src/core/vm/*.lua src/core/vm/modules/*.lua)
 SDUMPS:=$(SCRIPTS:%.lua=%.inc)
-TEXTS:=$(wildcard src/core/io/*.txt)
+TEXTS:=$(wildcard src/assets/*.txt)
 TDUMPS:=$(TEXTS:%.txt=%.inc)
-PNGS:=$(wildcard src/core/io/*.png external/spleen/*.png)
+PNGS:=$(wildcard src/assets/*.png external/spleen/*.png)
 PDUMPS:=$(PNGS:%.png=%.inc)
 
 default: $(TARGET)
@@ -90,7 +98,7 @@ $(TARGET): $(OBJECTS)
 # The dependency upon `Makefile` is redundant, since scripts are bound to it.
 $(OBJECTS): %.o : %.c $(SDUMPS) $(TDUMPS) $(PDUMPS) $(INCLUDES) Makefile
 	@$(COMPILER) $(CWARNINGS) $(CFLAGS) $(COPTS) -c $< -o $@
-	@echo "Compiled "$<" successfully!"
+	@echo "Compiled '"$<"' successfully!"
 
 # Define automatically rules to convert `.lua` script, `.txt` files, and `.rgba` images
 # into an embeddable-ready `.inc` file. `.inc` files also depend upon `Makefile` to be
@@ -98,15 +106,15 @@ $(OBJECTS): %.o : %.c $(SDUMPS) $(TDUMPS) $(PDUMPS) $(INCLUDES) Makefile
 $(SDUMPS): %.inc: %.lua Makefile
 	@$(ANALYZER) $(AFLAGS) $<
 	@$(DUMPER) $(DFLAGS) $< > $@
-	@echo "Generated "$@" from "$<" successfully!"
+	@echo "Generated '"$@"' from '"$<"' successfully!"
 
 $(TDUMPS): %.inc : %.txt Makefile
 	@$(DUMPER) $(DFLAGS) $< > $@
-	@echo "Generated "$@" from "$<" successfully!"
+	@echo "Generated '"$@"' from '"$<"' successfully!"
 
 $(PDUMPS): %.inc : %.png Makefile
 	@convert $< RGBA:- | $(DUMPER) $(DFLAGS) > $@
-	@echo "Generated "$@" from "$<" successfully!"
+	@echo "Generated '"$@"' from '"$<"' successfully!"
 
 primitives: $(TARGET)
 	@echo "Launching *primitives* application!"
@@ -171,7 +179,7 @@ gamepad: $(TARGET)
 gamepad-pak: $(TARGET)
 	@echo "Launching *gamepad (PAK)* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/gamepad
-	@lua ./extras/pakgen.lua ./demos/gamepad ./demos/gamepad.pak
+	@lua5.3 ./extras/pakgen.lua --input=./demos/gamepad --output=./demos/gamepad.pak
 	@./$(TARGET) ./demos/gamepad.pak
 
 hello-tofu: $(TARGET)
@@ -198,6 +206,16 @@ helix: $(TARGET)
 	@echo "Launching *helix* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/helix
 	@./$(TARGET) ./demos/helix
+
+mixer: $(TARGET)
+	@echo "Launching *mixer* application!"
+	@$(ANALYZER) $(AFLAGS) ./demos/mixer
+	@./$(TARGET) ./demos/mixer
+
+demo: $(TARGET)
+	@echo "Launching *$(DEMO)* application!"
+	@$(ANALYZER) $(AFLAGS) ./demos/$(DEMO)
+	@./$(TARGET) ./demos/$(DEMO)
 
 valgrind: $(TARGET)
 	@echo "Valgrind *$(DEMO)* application!"

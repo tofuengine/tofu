@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-#include "canvas.h"
+#include "display.h"
 
 #include <config.h>
 #include <core/io/display.h>
@@ -125,7 +125,7 @@ static int display_palette1(lua_State *L)
         return 0;
     }
 
-    Display_palette(display, &palette);
+    Display_set_palette(display, &palette);
 
     return 0;
 }
@@ -196,7 +196,7 @@ static int display_offset0_2(lua_State *L)
 
     Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    Display_offset(display, (GL_Point_t){ .x = x, .y = y });
+    Display_set_offset(display, (GL_Point_t){ .x = x, .y = y });
 
     return 0;
 }
@@ -218,7 +218,7 @@ static int display_shader(lua_State *L)
 
     Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    Display_shader(display, code);
+    Display_set_shader(display, code);
 
     return 0;
 }

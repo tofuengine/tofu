@@ -23,7 +23,7 @@ SOFTWARE.
 ]]--
 
 local Class = require("tofu.core").Class
-local Easing = require("tofu.core").Easing
+local Math = require("tofu.core").Math
 local System = require("tofu.core").System
 local Input = require("tofu.events").Input
 local Bank = require("tofu.graphics").Bank
@@ -31,115 +31,88 @@ local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
 
-local Algorithms = require("lib.algorithms")
 local Sprite = require("lib.sprite")
 
 local CHUNK_SIZE = 1
 
 local TORQUE = 0.25
 local THROTTLE = 50.0
-local BRAKE = -25.0
+local BRAKE = 25.0
 
 local Game = Class.define()
 
-local function Game:test()
-        var L = []
-        var f = Fn.new {|a, b|
-                if(a == b) return 0
-                if(a < b) return -1
-                return 1
-            }
-        for (i in 0 ... 64) {
-            L.insert(-1, _random.int(0, 16))
-        }
-        System.write(L)
-        System.write(Algorithms.sorted(L, f))
-//        Algorithms.sort(L, f)
-//        Algorithms.msort(L, 0, L.count - 1)
-        Algorithms.qsort(L, 0, L.count - 1)
-        System.write(L)
-        System.write(Algorithms.sorted(L, f))
-      end
+function Game:__ctor()
+  Display.palette("pico-8-ext")
 
-local function Game:_ctor()
-        _random = Random.new()
+  self.bank = Bank.new("assets/images/slices.png", 15, 32)
+  self.font = Font.default(0, 31)
+  self.tweener = Math.tweener("sine_out")
 
-        test()
+  self.sprites = {}
 
-        _sprites = []
+  self.angle = 0
 
-        Canvas.palette = "6-bit-rgb"
-        Canvas.background = 0
-
-        _bank = Bank.new("./assets/images/slices.png", 15, 32)
-        _font = Font.default
-
-        _angle = 0
-
-        _force = 0
-        _torque = 0
-        _forceLife = 0
-        _torqueLife = 0
-
-        _tweener = Easing.tweener("sine_out")
+  self.force = 0
+  self.torque = 0
+  self.force_life = 0
+  self.torque_life = 0
 end
 
-    -- http://www.iforce2d.net/b2dtut/top-down-car
-    -- file:///C:/Users/mlizza/Downloads/[Andrew_Kirmse]_Game_Programming_Gems_4(z-lib.org).pdf
-    local function Game:input()
-        if (Input.isKeyPressed(Input.start)) {
-            for (i in 1 .. CHUNK_SIZE) {
-                var sprite = Sprite.new(_bank, 0, 13, 1)
-                sprite.move(Canvas.width / 2, Canvas.height / 2)
-                _sprites.insert(-1, sprite)
-            }
-        }
-        if (Input.isKeyDown(Input.left)) {
-            _torque = -TORQUE
-        }
-        if (Input.isKeyDown(Input.right)) {
-            _torque = TORQUE
-        }
-        if (Input.isKeyDown(Input.up)) {
-            _force = THROTTLE
-        }
-        if (Input.isKeyDown(Input.down)) {
-            _force = BRAKE
-        }
-        if (Input.isKeyPressed(Input.select)) {
-        }
-        if (Input.isKeyPressed(Input.y)) {
-            _running = !_running
-        }
-      end
+-- http://www.iforce2d.net/b2dtut/top-down-car
+-- file:///C:/Users/mlizza/Downloads/[Andrew_Kirmse]_Game_Programming_Gems_4(z-lib.org).pdf
+function Game:input()
+  self.force = 0
+  self.torque = 0
 
-local function Game:update(delta_time)
-        if (_force != 0) {
-            _forceLife = Math.min(_forceLife + deltaTime, 1)
-        } else {
-            _forceLife = 0
-        }
-        if (_torque != 0) {
-            _torqueLife = Math.min(_torqueLife + deltaTime, 1)
-        } else {
-            _torqueLife = 0
-        }
-        for (sprite in _sprites) {
-            sprite.accelerate(_tweener.call(_forceLife) * _force)
-            sprite.rotate(_tweener.call(_torqueLife) * _torque)
-            sprite.update(deltaTime)
-        }
-        _force = 0
-        _torque = 0
-      end
+  if Input.is_pressed("start") then
+    local cx, cy = Canvas.default():center()
+    for _ = 1, CHUNK_SIZE do
+      local sprite = Sprite.new(self.bank, 0, 13, 1)
+      sprite:move(cx, cy)
+      table.insert(self.sprites, sprite)
+    end
+  end
+  if Input.is_down("up") then
+    self.force = self.force + THROTTLE
+  end
+  if Input.is_down("down") then
+    self.force = self.force - BRAKE
+  end
+  if Input.is_down("left") then
+    self.torque = self.torque - TORQUE * Math.sign(self.force)
+  end
+  if Input.is_down("right") then
+    self.torque = self.torque + TORQUE * Math.sign(self.force)
+  end
+  if Input.is_pressed("select") then
+    self.sprites = {}
+  end
+  if Input.is_pressed("y") then
+    self.running = not self.running
+  end
+end
 
+function Game:update(delta_time)
+  self.force_life = math.abs(self.force) > Math.EPSILON and math.min(self.force_life + delta_time, 1) or 0
+  self.torque_life = math.abs(self.torque) > Math.EPSILON and math.min(self.torque_life + delta_time, 1) or 0
+  for _, sprite in ipairs(self.sprites) do
+      sprite:accelerate(self.tweener(self.force_life) * self.force)
+      sprite:rotate(self.tweener(self.torque_life) * self.torque)
+      sprite:update(delta_time)
+  end
+end
 
-local function Game:render(ratio)
-        for (sprite in _sprites) {
-            sprite.render()
-        }
-        _font.write("FPS: %(Environment.fps.round)", 0, 0)
-        _font.write("#%(_sprites.count) sprites", Canvas.width, 0, 63, 1.0, "right")
-      end
+function Game:render(_)
+  local canvas = Canvas.default()
+  local width, _ = canvas:size()
+  canvas:clear()
+
+  for _, sprite in ipairs(self.sprites) do
+    sprite:render()
+  end
+
+  self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
+  self.font:write(self.font:align(string.format("#%d sprites", #self.sprites), width, 0, "right"))
+end
 
 return Game

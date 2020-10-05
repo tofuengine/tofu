@@ -25,37 +25,48 @@
 #ifndef __AUDIO_H__
 #define __AUDIO_H__
 
-#include "config.h"
-
 #include <miniaudio/miniaudio.h>
+#include <libs/sl/sl.h>
 
 #include <stdbool.h>
 
 typedef struct _Audio_Configuration_t {
-    size_t channels;
-    size_t sample_rate;
-    size_t voices;
+    float master_volume;
 } Audio_Configuration_t;
-
-typedef struct _Audio_Voice_t {
-    uint8_t *buffer;
-    size_t buffer_size;
-} Audio_Voice_t;
 
 typedef struct _Audio_t {
     Audio_Configuration_t configuration;
 
+    ma_context_config context_config;
+    ma_context context;
     ma_device_config device_config;
     ma_device device;
+    bool is_started;
+    ma_mutex lock;
 
-    double time;
-
-    Audio_Voice_t *voices;
+    SL_Context_t *sl;
 } Audio_t;
 
-extern bool Audio_initialize(Audio_t *audio, const Audio_Configuration_t *configuration);
-extern void Audio_terminate(Audio_t *audio);
+// TODO: rename as lowercase!!!
+extern Audio_t *Audio_create(const Audio_Configuration_t *configuration);
+extern void Audio_destroy(Audio_t *audio);
 
-extern void Audio_update(Audio_t *audio, float delta_time);
+extern void Audio_halt(Audio_t *audio);
+
+extern void Audio_set_volume(Audio_t *audio, float volume);
+extern void Audio_set_mix(Audio_t *audio, size_t group_id, SL_Mix_t mix);
+extern void Audio_set_pan(Audio_t *audio, size_t group_id, float pan);
+extern void Audio_set_balance(Audio_t *audio, size_t group_id, float balance);
+extern void Audio_set_gain(Audio_t *audio, size_t group_id, float gain);
+
+extern float Audio_get_volume(const Audio_t *audio);
+extern SL_Mix_t Audio_get_mix(const Audio_t *audio, size_t group_id);
+extern float Audio_get_gain(const Audio_t *audio, size_t group_id);
+
+extern void Audio_track(Audio_t *audio, SL_Source_t *source, bool reset);
+extern void Audio_untrack(Audio_t *audio, SL_Source_t *source);
+extern bool Audio_is_tracked(const Audio_t *audio, SL_Source_t *source);
+
+extern bool Audio_update(Audio_t *audio, float delta_time);
 
 #endif  /* __AUDIO_H__ */

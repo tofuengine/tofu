@@ -37,7 +37,7 @@
 #define REGION_RIGHT    4
 #define REGION_BELOW    8
 
-static void point(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x, int y, GL_Pixel_t index)
+static void _point(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x, int y, GL_Pixel_t index)
 {
     if (x < clipping_region->x0) {
         return;
@@ -56,7 +56,7 @@ static void point(const GL_Surface_t *surface, const GL_Quad_t *clipping_region,
 }
 
 // https://sighack.com/post/cohen-sutherland-line-clipping-algorithm
-static inline int compute_code(const GL_Quad_t *clipping_region, int x, int y)
+static inline int _compute_code(const GL_Quad_t *clipping_region, int x, int y)
 {
     int code = REGION_INSIDE;
     if (x < clipping_region->x0) {
@@ -75,10 +75,10 @@ static inline int compute_code(const GL_Quad_t *clipping_region, int x, int y)
 }
 
 // DDA algorithm, no branches in the inner-loop.
-static void line(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x0, int y0, int x1, int y1, GL_Pixel_t index)
+static void _line(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x0, int y0, int x1, int y1, GL_Pixel_t index)
 {
-    int code0 = compute_code(clipping_region, x0, y0);
-    int code1 = compute_code(clipping_region, x1, y1);
+    int code0 = _compute_code(clipping_region, x0, y0);
+    int code1 = _compute_code(clipping_region, x1, y1);
 
     for (;;) {
         if (!(code0 | code1)) { // bitwise OR is 0: both points inside window; trivially accept and exit loop
@@ -123,11 +123,11 @@ static void line(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, 
 
             // Now we move outside point to intersection point to clip and get ready for next pass.
             if (code == code0) {
-                code0 = compute_code(clipping_region, x, y);
+                code0 = _compute_code(clipping_region, x, y);
                 x0 = x;
                 y0 = y;
             } else {
-                code1 = compute_code(clipping_region, x, y);
+                code1 = _compute_code(clipping_region, x, y);
                 x1 = x;
                 y1 = y;
             }
@@ -190,7 +190,7 @@ static void line(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, 
 #endif
 }
 
-static void hline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x, int y, int length, GL_Pixel_t index)
+static void _hline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x, int y, int length, GL_Pixel_t index)
 {
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = x,
@@ -281,7 +281,7 @@ static void hline_pattern(GL_Pixel_t *destination, int width, const GL_Quad_t *d
 }
 #endif
 
-static void vline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x, int y, int length, GL_Pixel_t index)
+static void _vline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x, int y, int length, GL_Pixel_t index)
 {
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = x,
@@ -337,7 +337,7 @@ void GL_primitive_point(const GL_Context_t *context, GL_Point_t position, GL_Pix
         return;
     }
 
-    point(surface, clipping_region, position.x, position.y, index);
+    _point(surface, clipping_region, position.x, position.y, index);
 }
 
 void GL_primitive_hline(const GL_Context_t *context, GL_Point_t origin, size_t w, GL_Pixel_t index)
@@ -354,7 +354,7 @@ void GL_primitive_hline(const GL_Context_t *context, GL_Point_t origin, size_t w
         return;
     }
 
-    hline(surface, clipping_region, origin.x, origin.y, w, index);
+    _hline(surface, clipping_region, origin.x, origin.y, w, index);
 }
 
 void GL_primitive_vline(const GL_Context_t *context, GL_Point_t origin, size_t h, GL_Pixel_t index)
@@ -371,7 +371,7 @@ void GL_primitive_vline(const GL_Context_t *context, GL_Point_t origin, size_t h
         return;
     }
 
-    vline(surface, clipping_region, origin.x, origin.y, h, index);
+    _vline(surface, clipping_region, origin.x, origin.y, h, index);
 }
 
 void GL_primitive_polyline(const GL_Context_t *context, const GL_Point_t *vertices, size_t count, GL_Pixel_t index)
@@ -395,63 +395,8 @@ void GL_primitive_polyline(const GL_Context_t *context, const GL_Point_t *vertic
     const GL_Point_t *from = vertices;
     for (size_t i = 1; i < count; ++i) {
         const GL_Point_t *to = vertices + i;
-        line(surface, clipping_region, from->x, from->y, to->x, to->y, index);
+        _line(surface, clipping_region, from->x, from->y, to->x, to->y, index);
         from = to;
-    }
-}
-
-void GL_context_process(const GL_Context_t *context, GL_Rectangle_t rectangle)
-{
-    const GL_State_t *state = &context->state;
-    const GL_Quad_t *clipping_region = &state->clipping_region;
-    const GL_Pixel_t *shifting = state->shifting;
-    const GL_Bool_t *transparent = state->transparent;
-    const GL_Surface_t *surface = context->surface;
-
-    GL_Quad_t drawing_region = (GL_Quad_t){
-            .x0 = rectangle.x,
-            .y0 = rectangle.y,
-            .x1 = rectangle.x + rectangle.width - 1,
-            .y1 = rectangle.y + rectangle.height - 1
-        };
-
-    if (drawing_region.x0 < clipping_region->x0) {
-        drawing_region.x0 = clipping_region->x0;
-    }
-    if (drawing_region.y0 < clipping_region->y0) {
-        drawing_region.y0 = clipping_region->y0;
-    }
-    if (drawing_region.x1 > clipping_region->x1) {
-        drawing_region.x1 = clipping_region->x1;
-    }
-    if (drawing_region.y1 > clipping_region->y1) {
-        drawing_region.y1 = clipping_region->y1;
-    }
-
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
-    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!
-        return;
-    }
-
-    GL_Pixel_t *sddata = surface->data;
-
-    const int sdwidth = surface->width;
-
-    GL_Pixel_t *sdptr = sddata + drawing_region.y0 * sdwidth + drawing_region.x0;
-
-    const int sdskip = sdwidth - width;
-
-    for (int i = height; i; --i) {
-        for (int j = width; j; --j) {
-            GL_Pixel_t index = shifting[*sdptr];
-            if (transparent[index]) {
-                sdptr++;
-            } else {
-                *(sdptr++) = index;
-            }
-        }
-        sdptr += sdskip;
     }
 }
 
@@ -641,10 +586,10 @@ void GL_primitive_filled_circle(const GL_Context_t *context, GL_Point_t center, 
     while (x <= y) {
         const int length_x = iabs(2 * x) + 1;
         const int length_y = iabs(2 * y) + 1;
-        hline(surface, clipping_region, cx - x, cy - y, length_x, index);
-        hline(surface, clipping_region, cx - y, cy - x, length_y, index);
-        hline(surface, clipping_region, cx - y, cy + x, length_y, index);
-        hline(surface, clipping_region, cx - x, cy + y, length_x, index);
+        _hline(surface, clipping_region, cx - x, cy - y, length_x, index);
+        _hline(surface, clipping_region, cx - y, cy - x, length_y, index);
+        _hline(surface, clipping_region, cx - y, cy + x, length_y, index);
+        _hline(surface, clipping_region, cx - x, cy + y, length_x, index);
 
         if (d < 0) {
             d += 4 * x + 6;
@@ -679,14 +624,14 @@ void GL_primitive_circle(const GL_Context_t *context, GL_Point_t center, size_t 
     int d = 3 - 2 * radius;
 
     while (x <= y) {
-        point(surface, clipping_region, cx + x, cy + y, index);
-        point(surface, clipping_region, cx + y, cy + x, index);
-        point(surface, clipping_region, cx - y, cy + x, index);
-        point(surface, clipping_region, cx - x, cy + y, index);
-        point(surface, clipping_region, cx - x, cy - y, index);
-        point(surface, clipping_region, cx - y, cy - x, index);
-        point(surface, clipping_region, cx + y, cy - x, index);
-        point(surface, clipping_region, cx + x, cy - y, index);
+        _point(surface, clipping_region, cx + x, cy + y, index);
+        _point(surface, clipping_region, cx + y, cy + x, index);
+        _point(surface, clipping_region, cx - y, cy + x, index);
+        _point(surface, clipping_region, cx - x, cy + y, index);
+        _point(surface, clipping_region, cx - x, cy - y, index);
+        _point(surface, clipping_region, cx - y, cy - x, index);
+        _point(surface, clipping_region, cx + y, cy - x, index);
+        _point(surface, clipping_region, cx + x, cy - y, index);
 
         if (d < 0) {
             d += 4 * x + 6;
@@ -697,77 +642,4 @@ void GL_primitive_circle(const GL_Context_t *context, GL_Point_t center, size_t 
             y -= 1;
         }
     }
-}
-
-// https://lodev.org/cgtutor/floodfill.html
-void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t index)
-{
-    const GL_State_t *state = &context->state;
-    const GL_Quad_t *clipping_region = &state->clipping_region;
-    const GL_Pixel_t *shifting = state->shifting;
-    const GL_Surface_t *surface = context->surface;
-
-    if (seed.x < clipping_region->x0 || seed.x > clipping_region->x1
-        || seed.y < clipping_region->y0 || seed.y > clipping_region->y1) {
-        return;
-    }
-
-    GL_Pixel_t *ddata = surface->data;
-
-    const int dwidth = surface->width;
-
-    const GL_Pixel_t match = ddata[seed.y * dwidth + seed.x];
-    const GL_Pixel_t replacement = shifting[index];
-
-    GL_Point_t *stack = NULL;
-    arrpush(stack, seed);
-
-    const int dskip = context->surface->width;
-
-    while (arrlen(stack) > 0) {
-        const GL_Point_t position = arrpop(stack);
-
-        int x = position.x;
-        int y = position.y;
-
-        GL_Pixel_t *dptr = ddata + y * dwidth + x;
-        while (x >= clipping_region->x0 && *dptr == match) {
-            --x;
-            --dptr;
-        }
-        ++x;
-        ++dptr;
-
-        bool above = false;
-        bool below = false;
-
-        while (x <= clipping_region->x1 && *dptr == match) {
-            *dptr = replacement;
-
-            const GL_Pixel_t pixel_above = *(dptr - dskip);
-            if (!above && y >= clipping_region->y0 && pixel_above == match) {
-                const GL_Point_t p = (GL_Point_t){ .x = x, .y = y - 1 };
-                arrpush(stack, p);
-                above = true;
-            } else
-            if (above && y >= clipping_region->y0 && pixel_above != match) {
-                above = false;
-            }
-
-            const GL_Pixel_t pixel_below = *(dptr + dskip);
-            if (!below && y < clipping_region->y1 && pixel_below == match) {
-                const GL_Point_t p = (GL_Point_t){ .x = x, .y = y + 1 };
-                arrpush(stack, p);
-                below = true;
-            } else
-            if (below && y < clipping_region->y1 && pixel_below != match) {
-                above = false;
-            }
-
-            ++x;
-            ++dptr;
-        }
-    }
-
-    arrfree(stack);
 }

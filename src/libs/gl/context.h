@@ -25,8 +25,6 @@
 #ifndef __GL_CONTEXT_H__
 #define __GL_CONTEXT_H__
 
-#include <config.h>
-
 #include "common.h"
 #include "palette.h"
 #include "surface.h"
@@ -53,12 +51,13 @@ typedef struct _GL_State_t {
 #endif
 } GL_State_t;
 
-typedef struct _GL_Context_t {
+typedef struct _GL_Context_t { // TODO: rename context to canvas?
     GL_Surface_t *surface;
     GL_State_t state;
     GL_State_t *stack;
 } GL_Context_t;
 
+// TODO: rename decode to convert/grab.
 extern GL_Context_t *GL_context_decode(size_t width, size_t height, const void *pixels, const GL_Surface_Callback_t callback, void *user_data);
 extern GL_Context_t *GL_context_create(size_t width, size_t height);
 extern void GL_context_destroy(GL_Context_t *context);
@@ -67,15 +66,20 @@ extern void GL_context_push(GL_Context_t *context);
 extern void GL_context_pop(GL_Context_t *context);
 extern void GL_context_reset(GL_Context_t *context);
 
-extern void GL_context_background(GL_Context_t *context, GL_Pixel_t index);
-extern void GL_context_color(GL_Context_t *context, GL_Pixel_t index);
-extern void GL_context_pattern(GL_Context_t *context, GL_Pattern_t pattern);
-extern void GL_context_clipping(GL_Context_t *context, const GL_Rectangle_t *region);
-extern void GL_context_shifting(GL_Context_t *context, const size_t *from, const size_t *to, size_t count);
-extern void GL_context_transparent(GL_Context_t *context, const GL_Pixel_t *indexes, const GL_Bool_t *transparent, size_t count);
+extern void GL_context_set_background(GL_Context_t *context, GL_Pixel_t index);
+extern void GL_context_set_color(GL_Context_t *context, GL_Pixel_t index);
+extern void GL_context_set_pattern(GL_Context_t *context, GL_Pattern_t pattern);
+extern void GL_context_set_clipping(GL_Context_t *context, const GL_Rectangle_t *region);
+extern void GL_context_set_shifting(GL_Context_t *context, const size_t *from, const size_t *to, size_t count);
+extern void GL_context_set_transparent(GL_Context_t *context, const GL_Pixel_t *indexes, const GL_Bool_t *transparent, size_t count);
 #ifdef __GL_MASK_SUPPORT__
-extern void GL_context_mask(GL_Context_t *context, const GL_Mask_t *mask);
+extern void GL_context_set_mask(GL_Context_t *context, const GL_Mask_t *mask);
 #endif
+
+extern void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t index);
+extern void GL_context_process(const GL_Context_t *context, GL_Rectangle_t rectangle);
+extern GL_Pixel_t GL_context_peek(const GL_Context_t *context, int x, int y);
+extern void GL_context_poke(GL_Context_t *context, int x, int y, GL_Pixel_t index);
 
 extern void GL_context_clear(const GL_Context_t *context, GL_Pixel_t index);
 extern void GL_context_to_surface(const GL_Context_t *context, const GL_Surface_t *to);

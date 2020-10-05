@@ -31,11 +31,6 @@
 
 #define LOG_CONTEXT "input"
 
-static const uint8_t _mappings[] = {
-#include "gamecontrollerdb.inc"
-    0x00
-};
-
 static void _default_handler(Input_State_t *state, GLFWwindow *window, const Input_Configuration_t *configuration)
 {
     Input_Button_t *buttons = state->buttons;
@@ -165,7 +160,7 @@ static void _gamepad_handler(Input_State_t *state, GLFWwindow *window, const Inp
 
     GLFWgamepadstate gamepad;
     int result = glfwGetGamepadState(state->gamepad_id, &gamepad);
-    if (result == GLFW_TRUE) {
+    if (result == GLFW_TRUE) { // FIXME: add return value check!
         if (configuration->emulate_dpad) {
             const float x = gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_X];
             const float y = gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_Y];
@@ -225,15 +220,21 @@ static void _switch(Input_t *input)
 #endif
 }
 
-bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration, GLFWwindow *window, const char *mappings)
+Input_t *Input_create(const Input_Configuration_t *configuration, GLFWwindow *window)
 {
-    int result = glfwUpdateGamepadMappings(mappings ? mappings : (const char *)_mappings);
+    int result = glfwUpdateGamepadMappings(configuration->mappings);
     if (result == GLFW_FALSE) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't update gamepad mappings");
         return false;
     }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "input gamepad mappings updated");
 
-    // TODO: should perform a single "zeroing" call and the set the single fields?
+    Input_t *input = malloc(sizeof(Input_t));
+    if (!input) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate input");
+        return NULL;
+    }
+
     *input = (Input_t){
             .configuration = *configuration,
             .window = window,
@@ -269,11 +270,13 @@ bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration
 
     _switch(input);
 
-    return true;
+    return input;
 }
 
-void Input_terminate(Input_t *input)
+void Input_destroy(Input_t *input)
 {
+    free(input);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "input freed");
 }
 
 void Input_update(Input_t *input, float delta_time)
@@ -386,11 +389,51 @@ void Input_process(Input_t *input)
     }
 }
 
-void Input_auto_repeat(Input_t *input, Input_Buttons_t id, float period)
+void Input_set_cursor_position(Input_t *input, float x, float y)
 {
-    input->state.buttons[id] = (Input_Button_t){
+    input->state.cursor.x = x;
+    input->state.cursor.y = y;
+}
+
+void Input_set_cursor_area(Input_t *input, float x0, float y0, float x1, float y1)
+{
+    input->state.cursor.area.x0 = x0;
+    input->state.cursor.area.y0 = y0;
+    input->state.cursor.area.x1 = x1;
+    input->state.cursor.area.y1 = y1;
+}
+
+void Input_set_auto_repeat(Input_t *input, Input_Buttons_t button, float period)
+{
+    input->state.buttons[button] = (Input_Button_t){
             .period = period,
             .time = 0.0f
         };
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "auto-repeat set to %.3fs for button #%d", period, id);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "auto-repeat set to %.3fs for button #%d", period, button);
+}
+
+const Input_Button_State_t *Input_get_button(const Input_t *input, Input_Buttons_t button)
+{
+    return &input->state.buttons[button].state;
+}
+
+const Input_Cursor_t *Input_get_cursor(const Input_t *input)
+{
+    return &input->state.cursor;
+}
+
+const Input_Triggers_t *Input_get_triggers(const Input_t *input)
+{
+    return &input->state.triggers;
+}
+
+const Input_Stick_t *Input_get_stick(const Input_t *input, Input_Sticks_t stick)
+{
+    return &input->state.sticks[stick];
+}
+
+
+float Input_get_auto_repeat(const Input_t *input, Input_Buttons_t button)
+{
+    return input->state.buttons[button].period;
 }

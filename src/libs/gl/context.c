@@ -101,6 +101,10 @@ GL_Context_t *GL_context_create(size_t width, size_t height)
 
 void GL_context_destroy(GL_Context_t *context)
 {
+    if (!context) {
+        return;
+    }
+
     arrfree(context->stack);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context stack freed");
 
@@ -134,25 +138,25 @@ void GL_context_reset(GL_Context_t *context)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context reset");
 }
 
-void GL_context_background(GL_Context_t *context, GL_Pixel_t index)
+void GL_context_set_background(GL_Context_t *context, GL_Pixel_t index)
 {
     GL_State_t *state = &context->state;
     state->background = index;
 }
 
-void GL_context_color(GL_Context_t *context, GL_Pixel_t index)
+void GL_context_set_color(GL_Context_t *context, GL_Pixel_t index)
 {
     GL_State_t *state = &context->state;
     state->color = index;
 }
 
-void GL_context_pattern(GL_Context_t *context, GL_Pattern_t pattern)
+void GL_context_set_pattern(GL_Context_t *context, GL_Pattern_t pattern)
 {
     GL_State_t *state = &context->state;
     state->pattern = pattern;
 }
 
-void GL_context_clipping(GL_Context_t *context, const GL_Rectangle_t *region)
+void GL_context_set_clipping(GL_Context_t *context, const GL_Rectangle_t *region)
 {
     GL_State_t *state = &context->state;
     if (!region) {
@@ -172,7 +176,7 @@ void GL_context_clipping(GL_Context_t *context, const GL_Rectangle_t *region)
     }
 }
 
-void GL_context_shifting(GL_Context_t *context, const size_t *from, const size_t *to, size_t count)
+void GL_context_set_shifting(GL_Context_t *context, const size_t *from, const size_t *to, size_t count)
 {
     GL_State_t *state = &context->state;
     if (!from) {
@@ -186,7 +190,7 @@ void GL_context_shifting(GL_Context_t *context, const size_t *from, const size_t
     }
 }
 
-void GL_context_transparent(GL_Context_t *context, const GL_Pixel_t *indexes, const GL_Bool_t *transparent, size_t count)
+void GL_context_set_transparent(GL_Context_t *context, const GL_Pixel_t *indexes, const GL_Bool_t *transparent, size_t count)
 {
     GL_State_t *state = &context->state;
     if (!indexes) {
@@ -202,7 +206,7 @@ void GL_context_transparent(GL_Context_t *context, const GL_Pixel_t *indexes, co
 }
 
 #ifdef __GL_MASK_SUPPORT__
-void GL_context_mask(GL_Context_t *context, const GL_Mask_t *mask)
+void GL_context_set_mask(GL_Context_t *context, const GL_Mask_t *mask)
 {
     GL_State_t *state = &context->state;
     if (!mask) {
@@ -212,6 +216,146 @@ void GL_context_mask(GL_Context_t *context, const GL_Mask_t *mask)
     }
 }
 #endif
+
+// https://lodev.org/cgtutor/floodfill.html
+void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t index)
+{
+    const GL_State_t *state = &context->state;
+    const GL_Quad_t *clipping_region = &state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Surface_t *surface = context->surface;
+
+    if (seed.x < clipping_region->x0 || seed.x > clipping_region->x1
+        || seed.y < clipping_region->y0 || seed.y > clipping_region->y1) {
+        return;
+    }
+
+    GL_Pixel_t *ddata = surface->data;
+
+    const int dwidth = surface->width;
+
+    const GL_Pixel_t match = ddata[seed.y * dwidth + seed.x];
+    const GL_Pixel_t replacement = shifting[index];
+
+    GL_Point_t *stack = NULL;
+    arrpush(stack, seed);
+
+    const int dskip = context->surface->width;
+
+    while (arrlen(stack) > 0) {
+        const GL_Point_t position = arrpop(stack);
+
+        int x = position.x;
+        int y = position.y;
+
+        GL_Pixel_t *dptr = ddata + y * dwidth + x;
+        while (x >= clipping_region->x0 && *dptr == match) {
+            --x;
+            --dptr;
+        }
+        ++x;
+        ++dptr;
+
+        bool above = false;
+        bool below = false;
+
+        while (x <= clipping_region->x1 && *dptr == match) {
+            *dptr = replacement;
+
+            const GL_Pixel_t pixel_above = *(dptr - dskip);
+            if (!above && y >= clipping_region->y0 && pixel_above == match) {
+                const GL_Point_t p = (GL_Point_t){ .x = x, .y = y - 1 };
+                arrpush(stack, p);
+                above = true;
+            } else
+            if (above && y >= clipping_region->y0 && pixel_above != match) {
+                above = false;
+            }
+
+            const GL_Pixel_t pixel_below = *(dptr + dskip);
+            if (!below && y < clipping_region->y1 && pixel_below == match) {
+                const GL_Point_t p = (GL_Point_t){ .x = x, .y = y + 1 };
+                arrpush(stack, p);
+                below = true;
+            } else
+            if (below && y < clipping_region->y1 && pixel_below != match) {
+                above = false;
+            }
+
+            ++x;
+            ++dptr;
+        }
+    }
+
+    arrfree(stack);
+}
+
+void GL_context_process(const GL_Context_t *context, GL_Rectangle_t rectangle)
+{
+    const GL_State_t *state = &context->state;
+    const GL_Quad_t *clipping_region = &state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
+    const GL_Surface_t *surface = context->surface;
+
+    GL_Quad_t drawing_region = (GL_Quad_t){
+            .x0 = rectangle.x,
+            .y0 = rectangle.y,
+            .x1 = rectangle.x + rectangle.width - 1,
+            .y1 = rectangle.y + rectangle.height - 1
+        };
+
+    if (drawing_region.x0 < clipping_region->x0) {
+        drawing_region.x0 = clipping_region->x0;
+    }
+    if (drawing_region.y0 < clipping_region->y0) {
+        drawing_region.y0 = clipping_region->y0;
+    }
+    if (drawing_region.x1 > clipping_region->x1) {
+        drawing_region.x1 = clipping_region->x1;
+    }
+    if (drawing_region.y1 > clipping_region->y1) {
+        drawing_region.y1 = clipping_region->y1;
+    }
+
+    const int width = drawing_region.x1 - drawing_region.x0 + 1;
+    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!
+        return;
+    }
+
+    GL_Pixel_t *sddata = surface->data;
+
+    const int sdwidth = surface->width;
+
+    GL_Pixel_t *sdptr = sddata + drawing_region.y0 * sdwidth + drawing_region.x0;
+
+    const int sdskip = sdwidth - width;
+
+    for (int i = height; i; --i) {
+        for (int j = width; j; --j) {
+            GL_Pixel_t index = shifting[*sdptr];
+            if (transparent[index]) {
+                sdptr++;
+            } else {
+                *(sdptr++) = index;
+            }
+        }
+        sdptr += sdskip;
+    }
+}
+
+GL_Pixel_t GL_context_peek(const GL_Context_t *context, int x, int y)
+{
+    const GL_Surface_t *surface = context->surface;
+    return surface->data[y * surface->width + x];
+}
+
+void GL_context_poke(GL_Context_t *context, int x, int y, GL_Pixel_t index)
+{
+    GL_Surface_t *surface = context->surface;
+    surface->data[y * surface->width + x] = index;
+}
 
 void GL_context_clear(const GL_Context_t *context, GL_Pixel_t index)
 {

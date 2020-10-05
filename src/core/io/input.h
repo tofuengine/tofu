@@ -115,6 +115,7 @@ typedef enum _Input_Handlers_t {
 } Input_Handlers_t;
 
 typedef struct _Input_Configuration_t {
+    const char *mappings;
     bool exit_key_enabled;
 #ifdef __INPUT_SELECTION__
     bool keyboard_enabled;
@@ -145,12 +146,20 @@ typedef struct _Input_t {
     Input_Handler_t handlers[Input_Handlers_t_CountOf];
 } Input_t;
 
-extern bool Input_initialize(Input_t *input, const Input_Configuration_t *configuration, GLFWwindow *window, const char *mappings);
-extern void Input_terminate(Input_t *input);
+extern Input_t *Input_create(const Input_Configuration_t *configuration, GLFWwindow *window);
+extern void Input_destroy(Input_t *input);
 
 extern void Input_update(Input_t *input, float delta_time);
 extern void Input_process(Input_t *input);
 
-extern void Input_auto_repeat(Input_t *input, Input_Buttons_t id, float period);
+extern void Input_set_cursor_position(Input_t *input, float x, float y);
+extern void Input_set_cursor_area(Input_t *input, float x0, float y0, float x1, float y1);
+extern void Input_set_auto_repeat(Input_t *input, Input_Buttons_t button, float period);
+
+extern const Input_Button_State_t *Input_get_button(const Input_t *input, Input_Buttons_t button);
+extern const Input_Cursor_t *Input_get_cursor(const Input_t *input);
+extern const Input_Triggers_t *Input_get_triggers(const Input_t *input);
+extern const Input_Stick_t *Input_get_stick(const Input_t *input, Input_Sticks_t stick);
+extern float Input_get_auto_repeat(const Input_t *input, Input_Buttons_t button);
 
 #endif  /* __INPUT_H__ */

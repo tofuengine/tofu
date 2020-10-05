@@ -29,7 +29,7 @@ int iabs(int v)
     return v > 0 ? v : -v;
 }
 
-int imod(int a, int b)
+int imod(int a, int b) // This is also called "wrapping" since it handles negatives, as well.
 {
     return ((a % b) + b) % b; // Solves the `-b` case.
 }

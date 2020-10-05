@@ -28,7 +28,23 @@
 // Constant MACROs have no prefix.
 #define FPS_AVERAGE_SAMPLES         100
 
-#define GARBAGE_COLLECTION_PERIOD   60.0
+#define GC_CONTINUOUS_STEP_PERIOD   0.1f
+#define GC_COLLECTION_PERIOD        15.0f
+
+#define GC_INCREMENTAL  0
+#define GC_GENERATIONAL 1
+
+#define GC_AUTOMATIC  0
+#define GC_CONTINUOUS 1
+#define GC_MANUAL     2
+
+#define BALANCE_LAW_LINEAR    0
+#define BALANCE_LAW_SINCOS    1
+#define BALANCE_LAW_SQRT      2
+
+#define PANNING_LAW_CONSTANT_GAIN           0
+#define PANNING_LAW_CONSTANT_POWER_SINCOS   1
+#define PANNING_LAW_CONSTANT_POWER_SQRT     2
 
 // Behavioural MACROs use the `__` prefix/suffix.
 #define __GL_VERSION__                      0x0201
@@ -43,21 +59,32 @@
 
 #define __NO_LINEFEEDS__
 
+// TODO: better naming for macros, including namespace.
 #undef  __IGNORE_ALPHA_ON_COLORS__
 #undef  __DEBUG_TRIANGLES_WINDING__
 #undef  __FIND_NEAREST_COLOR_EUCLIDIAN__
 #undef  __GRID_INTEGER_CELL__
 #undef  __DEBUG_ENGINE_FPS__
+#undef  __DEBUG_FS_CALLS__
 #define __DEBUG_VM_CALLS__
 #undef  __DEBUG_GRAPHICS__
 #undef  __DEBUG_SHADER_CALLS__
 #define __DEBUG_GARBAGE_COLLECTOR__
 #define __VM_USE_CUSTOM_TRACEBACK__
+#define __VM_GARBAGE_COLLECTOR_TYPE__ GC_INCREMENTAL
+#define __VM_GARBAGE_COLLECTOR_MODE__ GC_CONTINUOUS
+#undef  __VM_GARBAGE_COLLECTOR_PERIODIC_COLLECT__
+#define __FS_SUPPORT_MOUNT_OVERRIDE__
+#define __SL_BALANCE_LAW__  BALANCE_LAW_SINCOS
+#define __SL_PANNING_LAW__  PANNING_LAW_CONSTANT_POWER_SINCOS
+#undef  __SL_MUSIC_PRELOAD__
 #undef  __GL_MASK_SUPPORT__
 
-// In release build, disable VM calls debug for faster execution.
+// In release build, disable VM calls debug and periodic collection for better performance.
 #ifdef RELEASE
   #undef __DEBUG_VM_CALLS__
+  #undef __DEBUG_GARBAGE_COLLECTOR__
+  #undef  __VM_GARBAGE_COLLECTOR_PERIODIC_COLLECT__
 #endif
 
 #endif  /* __TOFU_CONFIG_H__ */

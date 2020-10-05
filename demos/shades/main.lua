@@ -68,7 +68,7 @@ local function build_table(palette, levels, target)
       local r = math.tointeger((get_r(color) - get_r(target)) * ratio + get_r(target))
       local g = math.tointeger((get_g(color) - get_g(target)) * ratio + get_g(target))
       local b = math.tointeger((get_b(color) - get_b(target)) * ratio + get_b(target))
-      local k = find_best_match(palette, r * 65536 + g * 256 + b)
+      local k = find_best_match(palette, r * 65536 + g * 256 + b) -- TODO: use internal function?
       shifting[j - 1] = k - 1
     end
     lut[i] = shifting
@@ -119,7 +119,7 @@ function Main:render(_)
   end
 
   canvas:push()
-  canvas:transparent({ [0] = false })
+  canvas:transparent(0, false)
   if self.mode == 0 then
     for i = 0, STEPS - 1 do
       local y = self.height * i

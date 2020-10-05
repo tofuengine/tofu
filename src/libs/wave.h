@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef __WAVE_H__
-#define __WAVE_H__
+#ifndef __LIBS_WAVE_H__
+#define __LIBS_WAVE_H__
 
 typedef float (*Wave_Function_t)(float ratio);
 
@@ -39,4 +39,4 @@ extern float wave_square(float t);
 extern float wave_triangle(float t);
 extern float wave_sawtooth(float t);
 
-#endif  /* __WAVE_H__ */
+#endif  /* __LIBS_WAVE_H__ */

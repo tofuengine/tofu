@@ -25,6 +25,7 @@
 #ifndef __GL_H__
 #define __GL_H__
 
+#include "batch.h"
 #include "blit.h"
 #include "common.h"
 #include "context.h"

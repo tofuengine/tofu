@@ -48,14 +48,15 @@ typedef struct _Std_Handle_t {
 
 static void _std_mount_ctor(File_System_Mount_t *mount, const char *base_path);
 static void _std_mount_dtor(File_System_Mount_t *mount);
-static bool _std_mount_contains(File_System_Mount_t *mount, const char *file);
-static File_System_Handle_t *_std_mount_open(File_System_Mount_t *mount, const char *file);
+static bool _std_mount_contains(const File_System_Mount_t *mount, const char *file);
+static File_System_Handle_t *_std_mount_open(const File_System_Mount_t *mount, const char *file);
 
 static void _std_handle_ctor(File_System_Handle_t *handle, FILE *stream);
 static void _std_handle_dtor(File_System_Handle_t *handle);
 static size_t _std_handle_size(File_System_Handle_t *handle);
 static size_t _std_handle_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
-static void _std_handle_skip(File_System_Handle_t *handle, int offset);
+static bool _std_handle_seek(File_System_Handle_t *handle, long offset, int whence);
+static long _std_handle_tell(File_System_Handle_t *handle);
 static bool _std_handle_eof(File_System_Handle_t *handle);
 
 bool std_is_valid(const char *path)
@@ -106,9 +107,9 @@ static void _std_mount_dtor(File_System_Mount_t *mount)
     *std_mount = (Std_Mount_t){ 0 };
 }
 
-static bool _std_mount_contains(File_System_Mount_t *mount, const char *file)
+static bool _std_mount_contains(const File_System_Mount_t *mount, const char *file)
 {
-    Std_Mount_t *std_mount = (Std_Mount_t *)mount;
+    const Std_Mount_t *std_mount = (const Std_Mount_t *)mount;
 
     char full_path[FILE_PATH_MAX];
     strcpy(full_path, std_mount->base_path);
@@ -120,9 +121,9 @@ static bool _std_mount_contains(File_System_Mount_t *mount, const char *file)
     return exists;
 }
 
-static File_System_Handle_t *_std_mount_open(File_System_Mount_t *mount, const char *file)
+static File_System_Handle_t *_std_mount_open(const File_System_Mount_t *mount, const char *file)
 {
-    Std_Mount_t *std_mount = (Std_Mount_t *)mount;
+    const Std_Mount_t *std_mount = (const Std_Mount_t *)mount;
 
     char full_path[FILE_PATH_MAX];
     strcpy(full_path, std_mount->base_path);
@@ -158,7 +159,8 @@ static void _std_handle_ctor(File_System_Handle_t *handle, FILE *stream)
             .dtor = _std_handle_dtor,
             .size = _std_handle_size,
             .read = _std_handle_read,
-            .skip = _std_handle_skip,
+            .seek = _std_handle_seek,
+            .tell = _std_handle_tell,
             .eof = _std_handle_eof
         };
 
@@ -194,16 +196,28 @@ static size_t _std_handle_read(File_System_Handle_t *handle, void *buffer, size_
 
     size_t bytes_read = fread(buffer, sizeof(char), bytes_requested, std_handle->stream);
 
+#ifdef __DEBUG_FS_CALLS__
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes read for handle %p", bytes_read, handle);
+#endif
     return bytes_read;
 }
 
-static void _std_handle_skip(File_System_Handle_t *handle, int offset)
+static bool _std_handle_seek(File_System_Handle_t *handle, long offset, int whence)
 {
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
-    fseek(std_handle->stream, offset, SEEK_CUR);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes seeked for handle %p", offset, handle);
+    bool seeked = fseek(std_handle->stream, offset, whence) == 0;
+#ifdef __DEBUG_FS_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes seeked w/ mode %d for handle %p w/ result %d", offset, whence, handle, seeked);
+#endif
+    return seeked;
+}
+
+static long _std_handle_tell(File_System_Handle_t *handle)
+{
+    Std_Handle_t *std_handle = (Std_Handle_t *)handle;
+
+    return ftell(std_handle->stream);
 }
 
 static bool _std_handle_eof(File_System_Handle_t *handle)
@@ -211,6 +225,8 @@ static bool _std_handle_eof(File_System_Handle_t *handle)
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
     bool end_of_file = feof(std_handle->stream) != 0;
+#ifdef __DEBUG_FS_CALLS__
     Log_assert(!end_of_file, LOG_LEVELS_DEBUG, LOG_CONTEXT, "end-of-file reached for handle %p", handle);
+#endif
     return end_of_file;
 }

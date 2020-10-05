@@ -25,7 +25,7 @@
 #ifndef __FS_H__
 #define __FS_H__
 
-#include <core/platform.h>
+#include <platform.h>
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -58,22 +58,22 @@
 typedef void File_System_Mount_t;
 typedef void File_System_Handle_t;
 
-typedef struct _File_System_t {
-    File_System_Mount_t **mounts;
-} File_System_t;
+typedef struct _File_System_t File_System_t;
 
-extern bool FS_initialize(File_System_t *file_system, const char *base_path);
-extern void FS_terminate(File_System_t *file_system);
+extern File_System_t *FS_create(const char *base_path);
+extern void FS_destroy(File_System_t *file_system);
 
 extern bool FS_attach(File_System_t *file_system, const char *path);
 extern File_System_Mount_t *FS_locate(const File_System_t *file_system, const char *file);
 
-extern File_System_Handle_t *FS_open(File_System_Mount_t *mount, const char *file);
+extern File_System_Handle_t *FS_locate_and_open(const File_System_t *file_system, const char *file);
 
-extern void FS_close(File_System_Handle_t *handle); // TODO: convert these to macros?
+extern File_System_Handle_t *FS_open(const File_System_Mount_t *mount, const char *file);
+extern void FS_close(File_System_Handle_t *handle);
 extern size_t FS_size(File_System_Handle_t *handle);
 extern size_t FS_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
-extern void FS_skip(File_System_Handle_t *handle, int offset);
+extern bool FS_seek(File_System_Handle_t *handle, long offset, int whence);
+extern long FS_tell(File_System_Handle_t *handle);
 extern bool FS_eof(File_System_Handle_t *handle);
 
 #endif /* __FS_H__ */

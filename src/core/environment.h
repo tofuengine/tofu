@@ -34,7 +34,18 @@ typedef struct _Environment_t {
     double time;
 } Environment_t;
 
-extern void Environment_initialize(Environment_t *environment);
-extern void Environment_terminate(Environment_t *environment);
+extern Environment_t *Environment_create(void);
+extern void Environment_destroy(Environment_t *environment);
+
+extern void Environment_quit(Environment_t *environment);
+
+extern bool Environment_should_quit(const Environment_t *environment);
+
+extern double Environment_get_time(const Environment_t *environment);
+extern float Environment_get_fps(const Environment_t *environment);
+
+extern void Environment_add_frame(Environment_t *environment, float frame_time);
+
+extern void Environment_update(Environment_t *environment, float delta_time);
 
 #endif  /* __ENVIRONMENT_H__ */

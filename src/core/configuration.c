@@ -32,10 +32,7 @@
 static void on_parameter(Configuration_t *configuration, const char *key, const char *value)
 {
     if (strcmp(key, "title") == 0) {
-        strncpy(configuration->title, value, MAX_CONFIGURATION_TITLE_LENGTH);
-    } else
-    if (strcmp(key, "icon") == 0) {
-        strncpy(configuration->icon, value, MAX_CONFIGURATION_ICON_LENGTH);
+        strcpy(configuration->title, value);
     } else
     if (strcmp(key, "width") == 0) {
         configuration->width = (size_t)strtoul(value, NULL, 0);
@@ -153,11 +150,10 @@ static bool parse(char *line, const char **key, const char **value)
     return true;
 }
 
-void Configuration_load(Configuration_t *configuration, const char *data)
+void Configuration_parse(Configuration_t *configuration, const char *data)
 {
     *configuration = (Configuration_t){
             .title = ".: Tofu Engine :.",
-            .icon = { 0 },
             .width = 320,
             .height = 240,
             .scale = 0,

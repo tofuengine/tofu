@@ -31,21 +31,20 @@
 
 #define LOG_CONTEXT "fs-aux"
 
-// FIXME: convert bool argument to flags.
 static void *_load(File_System_Handle_t *handle, bool null_terminate, size_t *size)
 {
-    size_t bytes_to_read = FS_size(handle);
+    size_t bytes_requested = FS_size(handle);
 
-    size_t bytes_to_allocate = bytes_to_read + (null_terminate ? 1 : 0);
+    size_t bytes_to_allocate = bytes_requested + (null_terminate ? 1 : 0);
     void *data = malloc(bytes_to_allocate * sizeof(uint8_t)); // Add null terminator for the string.
     if (!data) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d bytes of memory", bytes_to_allocate);
         FS_close(handle);
         return NULL;
     }
-    size_t bytes_read = FS_read(handle, data, bytes_to_read);
-    if (bytes_read < bytes_to_read) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d bytes of data (%d available)", bytes_to_read, bytes_read);
+    size_t bytes_read = FS_read(handle, data, bytes_requested);
+    if (bytes_read < bytes_requested) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d bytes of data (%d available)", bytes_requested, bytes_read);
         free(data);
         return NULL;
     }
@@ -56,15 +55,24 @@ static void *_load(File_System_Handle_t *handle, bool null_terminate, size_t *si
     return data;
 }
 
-static File_System_Chunk_t _load_as_string(File_System_Handle_t *handle)
+static File_System_Resource_t *_load_as_string(File_System_Handle_t *handle)
 {
     size_t length;
     void *chars = _load(handle, true, &length);
     if (!chars) {
-        return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
+        return NULL;
     }
-    return (File_System_Chunk_t){
-            .type = FILE_SYSTEM_CHUNK_STRING,
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded a %d characters long string", length);
+
+    File_System_Resource_t *resource = malloc(sizeof(File_System_Resource_t));
+    if (!resource) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "cant' allocate resource");
+        free(chars);
+        return NULL;
+    }
+
+    *resource = (File_System_Resource_t){
+            .type = FILE_SYSTEM_RESOURCE_STRING,
             .var = {
                 .string = {
                         .chars = (char *)chars,
@@ -72,17 +80,28 @@ static File_System_Chunk_t _load_as_string(File_System_Handle_t *handle)
                     }
             }
         };
+
+    return resource;
 }
 
-static File_System_Chunk_t _load_as_binary(File_System_Handle_t *handle)
+static File_System_Resource_t *_load_as_binary(File_System_Handle_t *handle)
 {
     size_t size;
     void *ptr = _load(handle, false, &size);
     if (!ptr) {
-        return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
+        return NULL;
     }
-    return (File_System_Chunk_t){
-            .type = FILE_SYSTEM_CHUNK_BLOB,
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded %d bytes blob", size);
+
+    File_System_Resource_t *resource = malloc(sizeof(File_System_Resource_t));
+    if (!resource) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "cant' allocate resource");
+        free(ptr);
+        return NULL;
+    }
+
+    *resource = (File_System_Resource_t){
+            .type = FILE_SYSTEM_RESOURCE_BLOB,
             .var = {
                 .blob = {
                         .ptr = ptr,
@@ -90,23 +109,25 @@ static File_System_Chunk_t _load_as_binary(File_System_Handle_t *handle)
                     }
             }
         };
+
+    return resource;
 }
 
-static int _stbi_io_read(void *user, char *data, int size)
+static int _stbi_io_read(void *user_data, char *data, int size)
 {
-    File_System_Handle_t *handle = (File_System_Handle_t *)user;
+    File_System_Handle_t *handle = (File_System_Handle_t *)user_data;
     return (int)FS_read(handle, data, (size_t)size);
 }
 
-static void _stbi_io_skip(void *user, int n)
+static void _stbi_io_skip(void *user_data, int n)
 {
-    File_System_Handle_t *handle = (File_System_Handle_t *)user;
-    FS_skip(handle, n);
+    File_System_Handle_t *handle = (File_System_Handle_t *)user_data;
+    FS_seek(handle, n, SEEK_CUR); // We are discaring the return value, yep. :|
 }
 
-static int _stbi_io_eof(void *user)
+static int _stbi_io_eof(void *user_data)
 {
-    File_System_Handle_t *handle = (File_System_Handle_t *)user;
+    File_System_Handle_t *handle = (File_System_Handle_t *)user_data;
     return FS_eof(handle) ? -1 : 0;
 }
 
@@ -116,17 +137,25 @@ static const stbi_io_callbacks _stbi_io_callbacks = {
     _stbi_io_eof,
 };
 
-static File_System_Chunk_t _load_as_image(File_System_Handle_t *handle)
+static File_System_Resource_t* _load_as_image(File_System_Handle_t *handle)
 {
     int width, height, components;
     void *pixels = stbi_load_from_callbacks(&_stbi_io_callbacks, handle, &width, &height, &components, STBI_rgb_alpha);
     if (!pixels) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't decode surface from handle `%p` (%s)", handle, stbi_failure_reason());
-        return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
+        return NULL;
+    }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded %dx%d image", width, height);
+
+    File_System_Resource_t *resource = malloc(sizeof(File_System_Resource_t));
+    if (!resource) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "cant' allocate resource");
+        stbi_image_free(pixels);
+        return NULL;
     }
 
-    return (File_System_Chunk_t){
-            .type = FILE_SYSTEM_CHUNK_IMAGE,
+    *resource = (File_System_Resource_t){
+            .type = FILE_SYSTEM_RESOURCE_IMAGE,
             .var = {
                 .image = {
                         .width = width,
@@ -135,51 +164,61 @@ static File_System_Chunk_t _load_as_image(File_System_Handle_t *handle)
                     }
                 }
         };
+
+    return resource;
 }
 
-bool FSaux_exists(const File_System_t *file_system, const char *file)
+bool FSX_exists(const File_System_t *file_system, const char *file)
 {
     File_System_Mount_t *mount = FS_locate(file_system, file);
     return mount ? true : false;
 }
 
-File_System_Chunk_t FSaux_load(const File_System_t *file_system, const char *file, File_System_Chunk_Types_t type)
+File_System_Resource_t *FSX_load(const File_System_t *file_system, const char *file, File_System_Resource_Types_t type)
 {
     File_System_Mount_t *mount = FS_locate(file_system, file);
     if (!mount) {
-        return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
+        return NULL;
     }
 
     File_System_Handle_t *handle = FS_open(mount, file);
     if (!handle) {
-        return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
+        return NULL;
     }
 
-    File_System_Chunk_t chunk = (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
-    if (type == FILE_SYSTEM_CHUNK_STRING) {
-        chunk = _load_as_string(handle);
+    File_System_Resource_t *resource = NULL;
+    if (type == FILE_SYSTEM_RESOURCE_STRING) {
+        resource = _load_as_string(handle);
     } else
-    if (type == FILE_SYSTEM_CHUNK_BLOB) {
-        chunk = _load_as_binary(handle);
+    if (type == FILE_SYSTEM_RESOURCE_BLOB) {
+        resource = _load_as_binary(handle);
     } else
-    if (type == FILE_SYSTEM_CHUNK_IMAGE) {
-        chunk = _load_as_image(handle);
+    if (type == FILE_SYSTEM_RESOURCE_IMAGE) {
+        resource = _load_as_image(handle);
     }
 
     FS_close(handle);
 
-    return chunk;
+    return resource;
 }
 
-void FSaux_release(File_System_Chunk_t chunk)
+void FSX_release(File_System_Resource_t *resource)
 {
-    if (chunk.type == FILE_SYSTEM_CHUNK_STRING) {
-        free(chunk.var.string.chars);
-    } else
-    if (chunk.type == FILE_SYSTEM_CHUNK_BLOB) {
-        free(chunk.var.blob.ptr);
-    } else
-    if (chunk.type == FILE_SYSTEM_CHUNK_IMAGE) {
-        stbi_image_free(chunk.var.image.pixels);
+    if (!resource) {
+        return;
     }
+    if (resource->type == FILE_SYSTEM_RESOURCE_STRING) {
+        free(resource->var.string.chars);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource-data at %p freed (string)", resource->var.string.chars);
+    } else
+    if (resource->type == FILE_SYSTEM_RESOURCE_BLOB) {
+        free(resource->var.blob.ptr);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource-data at %p freed (blob)", resource->var.blob.ptr);
+    } else
+    if (resource->type == FILE_SYSTEM_RESOURCE_IMAGE) {
+        stbi_image_free(resource->var.image.pixels);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource-data at %p freed (image)", resource->var.image.pixels);
+    }
+    free(resource);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource %p freed", resource);
 }

@@ -29,11 +29,9 @@
 #include <stddef.h>
 
 #define MAX_CONFIGURATION_TITLE_LENGTH      128
-#define MAX_CONFIGURATION_ICON_LENGTH       128
 
 typedef struct _Configuration {
     char title[MAX_CONFIGURATION_TITLE_LENGTH];
-    char icon[MAX_CONFIGURATION_ICON_LENGTH];
     size_t width, height, scale;
     bool fullscreen;  // TODO: rename to "windowed"?
     bool vertical_sync;
@@ -53,10 +51,9 @@ typedef struct _Configuration {
     float gamepad_sensitivity;
     float gamepad_inner_deadzone;
     float gamepad_outer_deadzone;
-    // TODO: key-remapping?
     bool debug;
 } Configuration_t;
 
-extern void Configuration_load(Configuration_t *configuration, const char *data);
+extern void Configuration_parse(Configuration_t *configuration, const char *data); // TODO: allocate this, too?
 
 #endif  /* __CONFIGURATION_H__ */

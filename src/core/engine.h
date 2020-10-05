@@ -25,7 +25,6 @@
 #ifndef __ENGINE_H__
 #define __ENGINE_H__
 
-#include <config.h>
 #include <core/configuration.h>
 #include <core/environment.h>
 #include <core/io/audio.h>
@@ -38,24 +37,23 @@
 #include <limits.h>
 
 #define TOFU_VERSION_MAJOR          0
-#define TOFU_VERSION_MINOR          7
+#define TOFU_VERSION_MINOR          8
 #define TOFU_VERSION_REVISION       0
 
 typedef struct _Engine_t {
-    File_System_t file_system;
-
     Configuration_t configuration;
 
-    Interpreter_t interpreter;
-    Audio_t audio;
-    Display_t display;
-    Input_t input;
-
-    Environment_t environment;
+    File_System_t *file_system;
+    Display_t *display;
+    Input_t *input;
+    Audio_t *audio;
+    Environment_t *environment;
+    Interpreter_t *interpreter;
 } Engine_t;
 
-extern bool Engine_initialize(Engine_t *engine, const char *base_path);
-extern void Engine_terminate(Engine_t *engine);
+extern Engine_t *Engine_create(const char *base_path);
+extern void Engine_destroy(Engine_t *engine);
+
 extern void Engine_run(Engine_t *engine);
 
 #endif  /* __ENGINE_H__ */

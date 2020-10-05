@@ -24,7 +24,7 @@
 
 #include "log.h"
 
-#include <core/platform.h>
+#include <platform.h>
 
 #include <stdarg.h>
 #include <string.h>
@@ -63,7 +63,7 @@ static const char *_colors[Log_Levels_t_CountOf] = {
 #endif
 
 static const char *_prefixes[Log_Levels_t_CountOf] = {
-    "ALL", "TRACE", "DEBUG", "INFO", "WARNING", "ERROR", "FATAL", "NONE"
+    "A", "T", "D", "I", "W", "E", "F", "N"
 };
 
 static Log_Levels_t _level;
@@ -80,9 +80,10 @@ static void write(Log_Levels_t level, const char *context, const char *text, va_
     }
 
 #ifdef USE_COLORS
-    fputs(_colors[level], _stream);
+    fprintf(_stream, "%s[%s/%s]%s %s", COLOR_WHITE, _prefixes[level], context, COLOR_OFF, _colors[level]);
+#else
+    fprintf(_stream, "[%s/%s] ", _prefixes[level], context);
 #endif
-    fprintf(_stream, "[%s:%s] ", _prefixes[level], context);
     vfprintf(_stream, text, args);
 #ifdef USE_COLORS
     fputs(COLOR_OFF, _stream);

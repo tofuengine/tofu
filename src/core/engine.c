@@ -25,8 +25,8 @@
 #include "engine.h"
 
 #include <config.h>
+#include <platform.h>
 #include <core/configuration.h>
-#include <core/platform.h>
 #include <libs/fs/fsaux.h>
 #include <libs/log.h>
 #include <libs/stb.h>
@@ -42,6 +42,7 @@
   #include <windows.h>
 #endif
 
+#define ENTRY_ICON "icon.png"
 #define ENTRY_GAMECONTROLLER_DB "gamecontrollerdb.txt"
 
 #define _TOFU_CONCAT_VERSION(m, n, r) #m "." #n "." #r "-dev"
@@ -49,6 +50,15 @@
 #define TOFU_VERSION_NUMBER _TOFU_MAKE_VERSION(TOFU_VERSION_MAJOR, TOFU_VERSION_MINOR, TOFU_VERSION_REVISION)
 
 #define LOG_CONTEXT "engine"
+
+static const unsigned char _default_icon_pixels[] = {
+#include <assets/icon.inc>
+};
+
+static const uint8_t _default_mappings[] = {
+#include <assets/gamecontrollerdb.inc>
+    0x00
+};
 
 static inline void _wait_for(float seconds)
 {
@@ -80,65 +90,79 @@ static inline void _wait_for(float seconds)
 #endif
 }
 
-static inline float _calculate_fps(float elapsed)
-{
-    static float samples[FPS_AVERAGE_SAMPLES] = { 0 };
-    static size_t index = 0;
-    static float sum = 0.0f; // We are storing just a small time interval, float is enough...
-
-    sum -= samples[index];
-    sum += elapsed;
-    samples[index] = elapsed;
-    index = (index + 1) % FPS_AVERAGE_SAMPLES;
-
-    return (float)FPS_AVERAGE_SAMPLES / sum;
-}
-
 static bool _configure(const File_System_t *file_system, Configuration_t *configuration)
 {
-    File_System_Chunk_t chunk = FSaux_load(file_system, "tofu.config", FILE_SYSTEM_CHUNK_STRING);
-    if (chunk.type == FILE_SYSTEM_CHUNK_NULL) {
+    File_System_Resource_t *content = FSX_load(file_system, "tofu.config", FILE_SYSTEM_RESOURCE_STRING);
+    if (!content) {
         return false;
     }
-    Configuration_load(configuration, chunk.var.string.chars);
-    FSaux_release(chunk);
+    Configuration_parse(configuration, FSX_SCHARS(content));
+    FSX_release(content);
     return true;
 }
 
-static File_System_Chunk_t _load_icon(const File_System_t *file_system, const char *file)
+static File_System_Resource_t *_load_icon(const File_System_t *file_system, const char *file)
 {
     if (!file || file[0] == '\0') {
-        return (File_System_Chunk_t){ .type = FILE_SYSTEM_CHUNK_NULL };
+        return NULL;
     }
 
-    return FSaux_load(file_system, file, FILE_SYSTEM_CHUNK_IMAGE);
+    if (!FSX_exists(file_system, file)) {
+        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "file `%s` doesn't exist", file);
+        return NULL;
+    }
+
+    return FSX_load(file_system, file, FILE_SYSTEM_RESOURCE_IMAGE);
 }
 
-bool Engine_initialize(Engine_t *engine, const char *base_path)
+static File_System_Resource_t *_load_mappings(const File_System_t *file_system, const char *file)
 {
+    if (!file || file[0] == '\0') {
+        return NULL;
+    }
+
+    if (!FSX_exists(file_system, file)) {
+        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "file `%s` doesn't exist", file);
+        return NULL;
+    }
+
+    return FSX_load(file_system, file, FILE_SYSTEM_RESOURCE_STRING);
+}
+
+Engine_t *Engine_create(const char *base_path)
+{
+    Engine_t *engine = malloc(sizeof(Engine_t));
+    if (!engine) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate engine");
+        return NULL;
+    }
+
     *engine = (Engine_t){ 0 }; // Ensure is cleared at first.
 
     Log_initialize();
-    bool result = FS_initialize(&engine->file_system, base_path);
-    if (!result) {
+    engine->file_system = FS_create(base_path);
+    if (!engine->file_system) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize I/O at path `%s`", base_path);
-        return false;
+        free(engine);
+        return NULL;
     }
 
-    result = _configure(&engine->file_system, &engine->configuration);
-    if (!result) {
+    bool configured = _configure(engine->file_system, &engine->configuration);
+    if (!configured) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "configuration file is missing");
-        return false;
+        free(engine);
+        return NULL;
     }
 
     Log_configure(engine->configuration.debug, NULL);
-    Environment_initialize(&engine->environment);
 
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "version %s", TOFU_VERSION_NUMBER);
 
+    File_System_Resource_t *icon = _load_icon(engine->file_system, ENTRY_ICON);
+    Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined icon loaded");
     Display_Configuration_t display_configuration = { // TODO: reorganize configuration.
+            .icon = icon ? (GLFWimage){ .width = FSX_IWIDTH(icon), .height = FSX_IHEIGHT(icon), .pixels = FSX_IPIXELS(icon) } : (GLFWimage){ 64, 64, (unsigned char *)_default_icon_pixels },
             .title = engine->configuration.title,
-            .icon = _load_icon(&engine->file_system, engine->configuration.icon),
             .width = engine->configuration.width,
             .height = engine->configuration.height,
             .fullscreen = engine->configuration.fullscreen,
@@ -146,14 +170,19 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             .scale = engine->configuration.scale,
             .hide_cursor = engine->configuration.hide_cursor
         };
-    result = Display_initialize(&engine->display, &display_configuration);
-    if (!result) {
+    engine->display = Display_create(&display_configuration);
+    FSX_release(icon);
+    if (!engine->display) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize display");
-        FS_terminate(&engine->file_system);
-        return false;
+        FS_destroy(engine->file_system);
+        free(engine);
+        return NULL;
     }
 
+    File_System_Resource_t *mappings = _load_mappings(engine->file_system, ENTRY_GAMECONTROLLER_DB);
+    Log_assert(!mappings, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined controller mappings loaded");
     Input_Configuration_t input_configuration = {
+            .mappings = mappings ? FSX_SCHARS(mappings) : (const char *)_default_mappings,
             .exit_key_enabled = engine->configuration.exit_key_enabled,
 #ifdef __INPUT_SELECTION__
             .keyboard_enabled = engine->configuration.keyboard_enabled,
@@ -166,67 +195,75 @@ bool Engine_initialize(Engine_t *engine, const char *base_path)
             .gamepad_sensitivity = engine->configuration.gamepad_sensitivity,
             .gamepad_deadzone = engine->configuration.gamepad_inner_deadzone,
             .gamepad_range = 1.0f - engine->configuration.gamepad_inner_deadzone - engine->configuration.gamepad_outer_deadzone,
-            .scale = 1.0f / (float)engine->display.configuration.scale
+            .scale = 1.0f / (float)engine->display->configuration.scale
         };
-    if (FSaux_exists(&engine->file_system, ENTRY_GAMECONTROLLER_DB)) {
-        File_System_Chunk_t mappings = FSaux_load(&engine->file_system, ENTRY_GAMECONTROLLER_DB, FILE_SYSTEM_CHUNK_STRING);
-        Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined controller mappings loaded");
-        result = Input_initialize(&engine->input, &input_configuration, engine->display.window, mappings.var.string.chars);
-        FSaux_release(mappings);
-    } else {
-        result = Input_initialize(&engine->input, &input_configuration, engine->display.window, NULL);
-    }
-    if (!result) {
+    engine->input = Input_create(&input_configuration, engine->display->window);
+    FSX_release(mappings);
+    if (!engine->input) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize input");
-        Display_terminate(&engine->display);
-        FS_terminate(&engine->file_system);
-        return false;
+        Display_destroy(engine->display);
+        FS_destroy(engine->file_system);
+        free(engine);
+        return NULL;
     }
 
-    result = Audio_initialize(&engine->audio, &(Audio_Configuration_t){ .channels = 2, .sample_rate = 44100, .voices = 8 });
-    if (!result) {
+    engine->audio = Audio_create(&(Audio_Configuration_t){ .master_volume = 1.0f });
+    if (!engine->audio) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize audio");
-        Input_terminate(&engine->input);
-        Display_terminate(&engine->display);
-        FS_terminate(&engine->file_system);
-        return false;
+        Input_destroy(engine->input);
+        Display_destroy(engine->display);
+        FS_destroy(engine->file_system);
+        free(engine);
+        return NULL;
+    }
+
+    engine->environment = Environment_create();
+    if (!engine->environment) {
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize environment");
+        Audio_destroy(engine->audio);
+        Input_destroy(engine->input);
+        Display_destroy(engine->display);
+        FS_destroy(engine->file_system);
+        free(engine);
+        return NULL;
     }
 
     // The interpreter is the first to be loaded, since it also manages the configuration. Later on, we will call to
     // initialization function once the sub-systems are ready.
     const void *userdatas[] = {
-            &engine->interpreter,
-            &engine->file_system,
-            &engine->environment,
-            &engine->display,
-            &engine->input,
+            engine->file_system,
+            engine->display,
+            engine->input,
+            engine->audio,
+            engine->environment,
             NULL
         };
-    result = Interpreter_initialize(&engine->interpreter, &engine->file_system, userdatas);
-    if (!result) {
+    engine->interpreter = Interpreter_create(engine->file_system, userdatas);
+    if (!engine->interpreter) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize interpreter");
-        Audio_terminate(&engine->audio);
-        Input_terminate(&engine->input);
-        Display_terminate(&engine->display);
-        FS_terminate(&engine->file_system);
-        return false;
+        Environment_destroy(engine->environment);
+        Audio_destroy(engine->audio);
+        Input_destroy(engine->input);
+        Display_destroy(engine->display);
+        FS_destroy(engine->file_system);
+        free(engine);
+        return NULL;
     }
 
-    return true;
+    return engine;
 }
 
-void Engine_terminate(Engine_t *engine)
+void Engine_destroy(Engine_t *engine)
 {
-    Interpreter_terminate(&engine->interpreter); // Terminate the interpreter to unlock all resources.
-    Audio_terminate(&engine->audio);
-    Display_terminate(&engine->display);
-    Input_terminate(&engine->input);
+    Interpreter_destroy(engine->interpreter); // Terminate the interpreter to unlock all resources.
+    Environment_destroy(engine->environment);
+    Audio_destroy(engine->audio);
+    Input_destroy(engine->input);
+    Display_destroy(engine->display);
+    FS_destroy(engine->file_system);
 
-    Environment_terminate(&engine->environment);
+    free(engine);
 
-    FSaux_release(engine->display.configuration.icon);
-
-    FS_terminate(&engine->file_system);
 #if DEBUG
     stb_leakcheck_dumpmem();
 #endif
@@ -245,39 +282,33 @@ void Engine_run(Engine_t *engine)
     float lag = 0.0f;
 
     // https://nkga.github.io/post/frame-pacing-analysis-of-the-game-loop/
-    for (bool running = true; running && !engine->environment.quit && !Display_should_close(&engine->display); ) {
+    for (bool running = true; running && !engine->environment->quit && !Display_should_close(engine->display); ) {
         const double current = glfwGetTime();
         const float elapsed = (float)(current - previous);
         previous = current;
 
-        engine->environment.fps = _calculate_fps(elapsed);
-#ifdef __DEBUG_ENGINE_FPS__
-        static size_t count = 0;
-        if (++count == 250) {
-            Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "currently running at %.0f FPS", engine->environment.fps);
-            count = 0;
-        }
-#endif
+        Environment_add_frame(engine->environment, elapsed);
 
-        Input_process(&engine->input);
+        Input_process(engine->input);
 
-        running = running && Interpreter_process(&engine->interpreter); // Lazy evaluate `running`, will avoid calls when error.
+        running = running && Interpreter_input(engine->interpreter); // Lazy evaluate `running`, will avoid calls when error.
 
         lag += elapsed; // Count a maximum amount of skippable frames in order no to stall on slower machines.
         for (size_t frames = skippable_frames; frames && (lag >= delta_time); --frames) {
-            engine->environment.time += delta_time;
-            running = running && Interpreter_update(&engine->interpreter, delta_time); // Fixed update.
+            Environment_update(engine->environment, delta_time);
+            running = running && Interpreter_update(engine->interpreter, delta_time); // Fixed update.
+            running = running && Audio_update(engine->audio, elapsed); // Update the subsystems w/ fixed steps (fake interrupt based).
             lag -= delta_time;
         }
 
-//        running = running && Interpreter_update_variable(&engine->interpreter, elapsed); // Variable update.
-        Audio_update(&engine->audio, elapsed); // Update the subsystems w/ regard to the variable time.
-        Input_update(&engine->input, elapsed);
-        Display_update(&engine->display, elapsed);
+//        running = running && Interpreter_update_variable(engine->interpreter, elapsed); // Variable update.
+//        running = running && Audio_update_variable(&engine->audio, elapsed);
+        Input_update(engine->input, elapsed);
+        Display_update(engine->display, elapsed);
 
-        running = running && Interpreter_render(&engine->interpreter, lag / delta_time);
+        running = running && Interpreter_render(engine->interpreter, lag / delta_time);
 
-        Display_present(&engine->display);
+        Display_present(engine->display);
 
         if (reference_time != 0.0f) {
             const float frame_time = (float)(glfwGetTime() - current);

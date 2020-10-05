@@ -25,8 +25,8 @@
 #include "display.h"
 
 #include <config.h>
+#include <platform.h>
 #include <core/engine.h>
-#include <core/platform.h>
 #include <libs/log.h>
 #include <libs/imath.h>
 #include <libs/stb.h>
@@ -115,28 +115,12 @@ static const char *_uniforms[Uniforms_t_CountOf] = {
     "u_time",
 };
 
-static const unsigned char _window_icon_pixels[] = {
-#include "icon.inc"
-};
-
-static void _set_icon(GLFWwindow *window, File_System_Chunk_t icon)
-{
-    if (icon.type == FILE_SYSTEM_CHUNK_NULL) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "setting default icon");
-        glfwSetWindowIcon(window, 1, &(GLFWimage){ 64, 64, (unsigned char *)_window_icon_pixels });
-        return;
-    }
-
-    glfwSetWindowIcon(window, 1, &(GLFWimage){ .width = icon.var.image.width, .height = icon.var.image.height, .pixels = icon.var.image.pixels });
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "setting custom %dx%d icon", icon.var.image.width, icon.var.image.height);
-}
-
 #ifdef DEBUG
 static bool _has_errors(void)
 {
     bool result = false;
     for (GLenum code = glGetError(); code != GL_NO_ERROR; code = glGetError()) {
-        const char *message = "UKNOWN";
+        const char *message = "UNKNOWN";
         switch (code) {
             case GL_INVALID_ENUM: { message = "INVALID_ENUM"; } break;
             case GL_INVALID_VALUE: { message = "INVALID_VALUE"; } break;
@@ -244,11 +228,17 @@ static void _size_callback(GLFWwindow* window, int width, int height)
 #endif
 }
 
-bool Display_initialize(Display_t *display, const Display_Configuration_t *configuration)
+Display_t *Display_create(const Display_Configuration_t *configuration)
 {
-    *display = (Display_t){ 0 };
+    Display_t *display = malloc(sizeof(Display_t));
+    if (!display) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate display");
+        return NULL;
+    }
 
-    display->configuration = *configuration;
+    *display = (Display_t){
+            .configuration = *configuration
+        };
 
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "GLFW: %s", glfwGetVersionString());
 
@@ -256,13 +246,15 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
 
     if (!glfwInit()) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize GLFW");
-        return false;
+        free(display);
+        return NULL;
     }
 
     GL_Point_t position;
     if (!_compute_size(display, configuration, &position)) {
         glfwTerminate();
-        return false;
+        free(display);
+        return NULL;
     }
 
 #if __GL_VERSION__ >= 0x0303
@@ -286,7 +278,8 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
     if (display->window == NULL) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create window");
         glfwTerminate();
-        return false;
+        free(display);
+        return NULL;
     }
     glfwMakeContextCurrent(display->window);
 
@@ -294,10 +287,11 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize GLAD");
         glfwDestroyWindow(display->window);
         glfwTerminate();
-        return false;
+        free(display);
+        return NULL;
     }
 
-    _set_icon(display->window, configuration->icon);
+    glfwSetWindowIcon(display->window, 1, &configuration->icon);
 
     _size_callback(display->window, display->physical_width, display->physical_height);
 
@@ -317,10 +311,11 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize GL");
         glfwDestroyWindow(display->window);
         glfwTerminate();
-        return false;
+        free(display);
+        return NULL;
     }
 
-    GL_palette_greyscale(&display->palette, GL_MAX_PALETTE_COLORS);
+    GL_palette_generate_greyscale(&display->palette, GL_MAX_PALETTE_COLORS);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded greyscale palette of #%d entries", GL_MAX_PALETTE_COLORS);
 
     display->vram_size = display->configuration.width * display->configuration.width * sizeof(GL_Color_t);
@@ -330,6 +325,8 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         GL_context_destroy(display->context);
         glfwDestroyWindow(display->window);
         glfwTerminate();
+        free(display);
+        return NULL;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes VRAM allocated at %p (%dx%d)", display->vram_size, display->vram, display->configuration.width, display->configuration.height);
 
@@ -340,7 +337,8 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
         GL_context_destroy(display->context);
         glfwDestroyWindow(display->window);
         glfwTerminate();
-        return false;
+        free(display);
+        return NULL;
     }
     glBindTexture(GL_TEXTURE_2D, display->vram_texture); // The VRAM texture is always the active and bound one.
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -371,23 +369,24 @@ bool Display_initialize(Display_t *display, const Display_Configuration_t *confi
             GL_context_destroy(display->context);
             glfwDestroyWindow(display->window);
             glfwTerminate();
-            return false;
+            free(display);
+            return NULL;
         }
 
         program_prepare(program, _uniforms, Uniforms_t_CountOf);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p prepared w/ id #%d", program, program->id);
     }
 
-    Display_shader(display, NULL); // Use pass-thru at the beginning.
+    Display_set_shader(display, NULL); // Use pass-through shader at the beginning.
 
 #ifdef DEBUG
     _has_errors(); // Display pending OpenGL errors.
 #endif
 
-    return true;
+    return display;
 }
 
-void Display_terminate(Display_t *display)
+void Display_destroy(Display_t *display)
 {
     for (size_t i = 0; i < Display_Programs_t_CountOf; ++i) {
         if (display->programs[i].id == 0) {
@@ -409,6 +408,9 @@ void Display_terminate(Display_t *display)
 
     glfwTerminate();
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "terminated");
+
+    free(display);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "display freed");
 }
 
 bool Display_should_close(const Display_t *display)
@@ -418,8 +420,10 @@ bool Display_should_close(const Display_t *display)
 
 void Display_update(Display_t *display, float delta_time)
 {
-    display->time += (GLfloat)delta_time;
-    program_send(display->active_program, UNIFORM_TIME, PROGRAM_UNIFORM_FLOAT, 1, &display->time);
+    display->time += delta_time;
+
+    GLfloat time = (GLfloat)display->time;
+    program_send(display->active_program, UNIFORM_TIME, PROGRAM_UNIFORM_FLOAT, 1, &time);
 
 #ifdef DEBUG
     _has_errors(); // Display pending OpenGL errors.
@@ -455,7 +459,7 @@ static inline void _to_display(GLFWwindow *window, const GL_Surface_t *surface, 
 
 void Display_present(const Display_t *display)
 {
-    // It is advisable to clear the color buffer even if the framebuffer will be
+    // It is advisable to clear the colour buffer even if the framebuffer will be
     // fully written (see `glTexSubImage2D()` below)
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -496,18 +500,18 @@ void Display_present(const Display_t *display)
 #endif
 }
 
-void Display_palette(Display_t *display, const GL_Palette_t *palette)
+void Display_set_palette(Display_t *display, const GL_Palette_t *palette)
 {
     display->palette = *palette;
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette updated");
 }
 
-void Display_offset(Display_t *display, GL_Point_t offset)
+void Display_set_offset(Display_t *display, GL_Point_t offset)
 {
     display->vram_offset = offset;
 }
 
-void Display_shader(Display_t *display, const char *effect)
+void Display_set_shader(Display_t *display, const char *effect)
 {
     bool is_passthru = display->active_program == &display->programs[DISPLAY_PROGRAM_PASSTHRU];
 
@@ -556,4 +560,14 @@ void Display_shader(Display_t *display, const char *effect)
     GLfloat resolution[] = { (GLfloat)display->window_width, (GLfloat)display->window_height };
     program_send(display->active_program, UNIFORM_RESOLUTION, PROGRAM_UNIFORM_VEC2, 1, resolution);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p initialized", display->active_program);
+}
+
+const GL_Palette_t *Display_get_palette(const Display_t *display)
+{
+    return &display->palette;
+}
+
+GL_Point_t Display_get_offset(const Display_t *display)
+{
+    return display->vram_offset;
 }
