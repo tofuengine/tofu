@@ -229,17 +229,19 @@ static void _pak_mount_ctor(File_System_Mount_t *mount, const char *archive_path
 {
     Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
 
-    *pak_mount = (Pak_Mount_t){ 0 };
-    pak_mount->vtable = (Mount_VTable_t){
-            .dtor = _pak_mount_dtor,
-            .contains = _pak_mount_contains,
-            .open = _pak_mount_open
+    *pak_mount = (Pak_Mount_t){
+            .vtable = (Mount_VTable_t){
+                .dtor = _pak_mount_dtor,
+                .contains = _pak_mount_contains,
+                .open = _pak_mount_open
+            },
+            .archive_path = { 0 },
+            .entries = entries,
+            .directory = directory,
+            .flags = flags
         };
 
     strcpy(pak_mount->archive_path, archive_path);
-    pak_mount->entries = entries;
-    pak_mount->directory = directory;
-    pak_mount->flags = flags;
 }
 
 static void _pak_mount_dtor(File_System_Mount_t *mount)
@@ -302,21 +304,23 @@ static void _pak_handle_ctor(File_System_Handle_t *handle, FILE *stream, long of
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
-    *pak_handle = (Pak_Handle_t){ 0 };
-    pak_handle->vtable = (Handle_VTable_t){
-            .dtor = _pak_handle_dtor,
-            .size = _pak_handle_size,
-            .read = _pak_handle_read,
-            .seek = _pak_handle_seek,
-            .tell = _pak_handle_tell,
-            .eof = _pak_handle_eof
+    *pak_handle = (Pak_Handle_t){
+            .vtable = (Handle_VTable_t){
+                .dtor = _pak_handle_dtor,
+                .size = _pak_handle_size,
+                .read = _pak_handle_read,
+                .seek = _pak_handle_seek,
+                .tell = _pak_handle_tell,
+                .eof = _pak_handle_eof
+            },
+            .stream = stream,
+            .stream_size = size,
+            .beginning_of_stream = offset,
+            .end_of_stream = offset + size - 1,
+            .encrypted = encrypted,
+            .cipher_context = { 0 }
         };
 
-    pak_handle->stream = stream;
-    pak_handle->stream_size = size;
-    pak_handle->beginning_of_stream = offset;
-    pak_handle->end_of_stream = offset + size - 1;
-    pak_handle->encrypted = encrypted;
     if (encrypted) {
         // Encryption is implemented throught a RC4 stream cipher.
         // The key is the MD5 digest of the entry name (w/ relative path).

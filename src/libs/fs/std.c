@@ -90,11 +90,13 @@ static void _std_mount_ctor(File_System_Mount_t *mount, const char *base_path)
 {
     Std_Mount_t *std_mount = (Std_Mount_t *)mount;
 
-    *std_mount = (Std_Mount_t){ 0 };
-    std_mount->vtable = (Mount_VTable_t){
-            .dtor = _std_mount_dtor,
-            .contains = _std_mount_contains,
-            .open = _std_mount_open
+    *std_mount = (Std_Mount_t){
+            .vtable = (Mount_VTable_t){
+                .dtor = _std_mount_dtor,
+                .contains = _std_mount_contains,
+                .open = _std_mount_open
+            },
+            .base_path = { 0 }
         };
 
     strcpy(std_mount->base_path, base_path);
@@ -154,17 +156,17 @@ static void _std_handle_ctor(File_System_Handle_t *handle, FILE *stream)
 {
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
-    *std_handle = (Std_Handle_t){ 0 };
-    std_handle->vtable = (Handle_VTable_t){
-            .dtor = _std_handle_dtor,
-            .size = _std_handle_size,
-            .read = _std_handle_read,
-            .seek = _std_handle_seek,
-            .tell = _std_handle_tell,
-            .eof = _std_handle_eof
+    *std_handle = (Std_Handle_t){
+            .vtable = (Handle_VTable_t){
+                .dtor = _std_handle_dtor,
+                .size = _std_handle_size,
+                .read = _std_handle_read,
+                .seek = _std_handle_seek,
+                .tell = _std_handle_tell,
+                .eof = _std_handle_eof
+            },
+            .stream = stream
         };
-
-    std_handle->stream = stream;
 }
 
 static void _std_handle_dtor(File_System_Handle_t *handle)
