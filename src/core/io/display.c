@@ -315,7 +315,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
         return NULL;
     }
 
-    GL_palette_greyscale(&display->palette, GL_MAX_PALETTE_COLORS);
+    GL_palette_generate_greyscale(&display->palette, GL_MAX_PALETTE_COLORS);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded greyscale palette of #%d entries", GL_MAX_PALETTE_COLORS);
 
     display->vram_size = display->configuration.width * display->configuration.width * sizeof(GL_Color_t);
@@ -377,7 +377,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p prepared w/ id #%d", program, program->id);
     }
 
-    Display_shader(display, NULL); // Use pass-through shader at the beginning.
+    Display_set_shader(display, NULL); // Use pass-through shader at the beginning.
 
 #ifdef DEBUG
     _has_errors(); // Display pending OpenGL errors.
@@ -500,18 +500,18 @@ void Display_present(const Display_t *display)
 #endif
 }
 
-void Display_palette(Display_t *display, const GL_Palette_t *palette)
+void Display_set_palette(Display_t *display, const GL_Palette_t *palette)
 {
     display->palette = *palette;
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette updated");
 }
 
-void Display_offset(Display_t *display, GL_Point_t offset)
+void Display_set_offset(Display_t *display, GL_Point_t offset)
 {
     display->vram_offset = offset;
 }
 
-void Display_shader(Display_t *display, const char *effect)
+void Display_set_shader(Display_t *display, const char *effect)
 {
     bool is_passthru = display->active_program == &display->programs[DISPLAY_PROGRAM_PASSTHRU];
 
@@ -560,4 +560,14 @@ void Display_shader(Display_t *display, const char *effect)
     GLfloat resolution[] = { (GLfloat)display->window_width, (GLfloat)display->window_height };
     program_send(display->active_program, UNIFORM_RESOLUTION, PROGRAM_UNIFORM_VEC2, 1, resolution);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p initialized", display->active_program);
+}
+
+const GL_Palette_t *Display_get_palette(const Display_t *display)
+{
+    return &display->palette;
+}
+
+GL_Point_t Display_get_offset(const Display_t *display)
+{
+    return display->vram_offset;
 }

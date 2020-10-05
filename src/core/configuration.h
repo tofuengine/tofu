@@ -51,10 +51,9 @@ typedef struct _Configuration {
     float gamepad_sensitivity;
     float gamepad_inner_deadzone;
     float gamepad_outer_deadzone;
-    // TODO: key-remapping?
     bool debug;
 } Configuration_t;
 
-extern void Configuration_parse(Configuration_t *configuration, const char *data);
+extern void Configuration_parse(Configuration_t *configuration, const char *data); // TODO: allocate this, too?
 
 #endif  /* __CONFIGURATION_H__ */

@@ -84,8 +84,11 @@ extern bool Display_should_close(const Display_t *display);
 extern void Display_update(Display_t *display, float delta_time);
 extern void Display_present(const Display_t *display);
 
-extern void Display_palette(Display_t *display, const GL_Palette_t *palette);
-extern void Display_offset(Display_t *display, GL_Point_t offset);
-extern void Display_shader(Display_t *display, const char *code);
+extern void Display_set_palette(Display_t *display, const GL_Palette_t *palette);
+extern void Display_set_offset(Display_t *display, GL_Point_t offset);
+extern void Display_set_shader(Display_t *display, const char *code);
+
+extern const GL_Palette_t *Display_get_palette(const Display_t *display);
+extern GL_Point_t Display_get_offset(const Display_t *display);
 
 #endif  /* __DISPLAY_H__ */

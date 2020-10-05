@@ -32,7 +32,7 @@
 #define GREEN_WEIGHT    4.0f
 #define BLUE_WEIGHT     3.0f
 
-void GL_palette_greyscale(GL_Palette_t *palette, const size_t count)
+void GL_palette_generate_greyscale(GL_Palette_t *palette, const size_t count)
 {
     for (size_t i = 0; i < count; ++i) {
         unsigned char y = (unsigned char)(((float)i / (float)(count - 1)) * 255.0f);

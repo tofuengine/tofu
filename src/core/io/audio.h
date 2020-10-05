@@ -45,25 +45,28 @@ typedef struct _Audio_t {
     ma_mutex lock;
 
     SL_Context_t *sl;
-
-    float volume;
 } Audio_t;
 
+// TODO: rename as lowercase!!!
 extern Audio_t *Audio_create(const Audio_Configuration_t *configuration);
 extern void Audio_destroy(Audio_t *audio);
 
 extern void Audio_halt(Audio_t *audio);
 
-extern void Audio_volume(Audio_t *audio, float volume);
-extern void Audio_mix(Audio_t *audio, size_t group_id, SL_Mix_t mix);
-extern void Audio_pan(Audio_t *audio, size_t group_id, float pan);
-extern void Audio_balance(Audio_t *audio, size_t group_id, float balance);
-extern void Audio_gain(Audio_t *audio, size_t group_id, float gain);
+extern void Audio_set_volume(Audio_t *audio, float volume);
+extern void Audio_set_mix(Audio_t *audio, size_t group_id, SL_Mix_t mix);
+extern void Audio_set_pan(Audio_t *audio, size_t group_id, float pan);
+extern void Audio_set_balance(Audio_t *audio, size_t group_id, float balance);
+extern void Audio_set_gain(Audio_t *audio, size_t group_id, float gain);
 
-extern bool Audio_update(Audio_t *audio, float delta_time);
+extern float Audio_get_volume(const Audio_t *audio);
+extern SL_Mix_t Audio_get_mix(const Audio_t *audio, size_t group_id);
+extern float Audio_get_gain(const Audio_t *audio, size_t group_id);
 
 extern void Audio_track(Audio_t *audio, SL_Source_t *source, bool reset);
 extern void Audio_untrack(Audio_t *audio, SL_Source_t *source);
-extern bool Audio_is_tracked(Audio_t *audio, SL_Source_t *source);
+extern bool Audio_is_tracked(const Audio_t *audio, SL_Source_t *source);
+
+extern bool Audio_update(Audio_t *audio, float delta_time);
 
 #endif  /* __AUDIO_H__ */

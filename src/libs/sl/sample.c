@@ -50,7 +50,7 @@
 typedef struct _Sample_t {
     Source_VTable_t vtable;
 
-    SL_Props_t props;
+    SL_Props_t *props;
 
     SL_Callbacks_t callbacks;
 
@@ -206,8 +206,8 @@ static bool _sample_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Ca
         return false;
     }
 
-    bool initialized = SL_props_init(&sample->props, context, INTERNAL_FORMAT, sample_rate, channels, MIXING_BUFFER_CHANNELS_PER_FRAME);
-    if (!initialized) {
+    sample->props = SL_props_create(context, INTERNAL_FORMAT, sample_rate, channels, MIXING_BUFFER_CHANNELS_PER_FRAME);
+    if (!sample->props) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize sample properties");
         ma_audio_buffer_uninit(&sample->buffer);
         drflac_close(sample->decoder);
@@ -221,7 +221,7 @@ static void _sample_dtor(SL_Source_t *source)
 {
     Sample_t *sample = (Sample_t *)source;
 
-    SL_props_deinit(&sample->props);
+    SL_props_destroy(sample->props);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sample properties deinitialized");
 
     ma_audio_buffer_uninit(&sample->buffer);
@@ -253,20 +253,20 @@ static bool _sample_generate(SL_Source_t *source, void *output, size_t frames_re
 {
     Sample_t *sample = (Sample_t *)source;
 
-    ma_data_converter *converter = &sample->props.converter;
+    ma_data_converter *converter = &sample->props->converter;
     ma_audio_buffer *buffer = &sample->buffer;
-    const bool looping = sample->props.looping;
+    const bool looped = sample->props->looped;
 
     uint8_t converted_buffer[MIXING_BUFFER_SIZE_IN_BYTES];
 
-    const SL_Mix_t mix = sample->props.precomputed_mix;
+    const SL_Mix_t mix = sample->props->precomputed_mix;
 
     uint8_t *cursor = (uint8_t *)output;
 
     size_t frames_remaining = frames_requested;
     while (frames_remaining > 0) {
         if (sample->frames_completed == sample->length_in_frames) {
-            if (!looping || !_rewind(sample)) {
+            if (!looped || !_rewind(sample)) {
                 Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "end-of-data reached for source %p", source);
                 return false;
             }

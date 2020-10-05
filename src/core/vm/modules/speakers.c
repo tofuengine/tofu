@@ -70,9 +70,9 @@ static int speakers_volume0(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
 
-    Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
+    const Audio_t *audio = (const Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
-    lua_pushnumber(L, audio->volume);
+    lua_pushnumber(L, Audio_get_volume(audio));
 
     return 1;
 }
@@ -86,7 +86,7 @@ static int speakers_volume1(lua_State *L)
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
-    Audio_volume(audio, volume);
+    Audio_set_volume(audio, volume);
 
     return 0;
 }
@@ -106,15 +106,14 @@ static int speakers_mix1(lua_State *L)
     LUAX_SIGNATURE_END
     size_t group_id = (size_t)LUAX_INTEGER(L, 1);
 
-    Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
+    const Audio_t *audio = (const Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
-    const SL_Group_t *group = &audio->sl->groups[group_id];
-    const SL_Mix_t *mix = &group->mix;
+    SL_Mix_t mix = Audio_get_mix(audio, group_id);
 
-    lua_pushnumber(L, mix->left_to_left);
-    lua_pushnumber(L, mix->left_to_right);
-    lua_pushnumber(L, mix->right_to_left);
-    lua_pushnumber(L, mix->right_to_right);
+    lua_pushnumber(L, mix.left_to_left);
+    lua_pushnumber(L, mix.left_to_right);
+    lua_pushnumber(L, mix.right_to_left);
+    lua_pushnumber(L, mix.right_to_right);
 
     return 4;
 }
@@ -136,7 +135,7 @@ static int speakers_mix5(lua_State *L)
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
-    Audio_mix(audio, group_id, (SL_Mix_t){
+    Audio_set_mix(audio, group_id, (SL_Mix_t){
             .left_to_left = left_to_left,
             .left_to_right = left_to_right,
             .right_to_left = right_to_left,
@@ -166,7 +165,7 @@ static int speakers_pan(lua_State *L)
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
-    Audio_pan(audio, group_id, pan);
+    Audio_set_pan(audio, group_id, pan);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "group #%d pan is %.f", group_id, pan);
 
     return 0;
@@ -183,7 +182,7 @@ static int speakers_balance(lua_State *L)
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
-    Audio_balance(audio, group_id, balance);
+    Audio_set_balance(audio, group_id, balance);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "group #%d balance is %.f", group_id, balance);
 
     return 0;
@@ -196,11 +195,9 @@ static int speakers_gain1(lua_State *L)
     LUAX_SIGNATURE_END
     size_t group_id = (size_t)LUAX_INTEGER(L, 1);
 
-    Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
+    const Audio_t *audio = (const Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
-    const SL_Group_t *group = &audio->sl->groups[group_id]; // TODO: add `Audio_XXX` observers.
-
-    lua_pushnumber(L, group->gain);
+    lua_pushnumber(L, Audio_get_gain(audio, group_id));
 
     return 1;
 }
@@ -216,7 +213,7 @@ static int speakers_gain2(lua_State *L)
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
-    Audio_gain(audio, group_id, gain);
+    Audio_set_gain(audio, group_id, gain);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "group #%d gain is %.f", group_id, gain);
 
     return 0;

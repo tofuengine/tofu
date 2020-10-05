@@ -61,7 +61,7 @@
 typedef struct _Module_t {
     Source_VTable_t vtable;
 
-    SL_Props_t props;
+    SL_Props_t *props;
 
     xmp_context context;
     struct xmp_frame_info frame_info;
@@ -113,7 +113,7 @@ static inline bool _produce(Module_t *module)
 
     // The requested buffer size (in bytes) is always filled, with trailing zeroes if needed.
     xmp_context context = module->context;
-    const int loops = module->props.looping ? 0 : 1; // Automatically loop (properly filling the internal buffer), or tell EOD when not looping.
+    const int loops = module->props->looped ? 0 : 1; // Automatically loop (properly filling the internal buffer), or tell EOD when not looped.
     int play_result = xmp_play_buffer(context, write_buffer, frames_to_produce * MODULE_OUTPUT_BYTES_PER_FRAME, loops);
 
     ma_pcm_rb_commit_write(buffer, frames_to_produce, write_buffer);
@@ -203,8 +203,8 @@ static bool _module_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Ca
         return false;
     }
 
-    bool initialized = SL_props_init(&module->props, context, MODULE_OUTPUT_FORMAT, SL_FRAMES_PER_SECOND, MODULE_OUTPUT_CHANNELS_PER_FRAME, MIXING_BUFFER_CHANNELS_PER_FRAME);
-    if (!initialized) {
+    module->props = SL_props_create(context, MODULE_OUTPUT_FORMAT, SL_FRAMES_PER_SECOND, MODULE_OUTPUT_CHANNELS_PER_FRAME, MIXING_BUFFER_CHANNELS_PER_FRAME);
+    if (!module->props) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize module properties");
         xmp_release_module(module->context);
         xmp_free_context(module->context);
@@ -220,7 +220,7 @@ static void _module_dtor(SL_Source_t *source)
 {
     Module_t *module = (Module_t *)source;
 
-    SL_props_deinit(&module->props);
+    SL_props_destroy(module->props);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "module properties deinitialized");
 
     xmp_end_player(module->context);
@@ -253,12 +253,12 @@ static bool _module_generate(SL_Source_t *source, void *output, size_t frames_re
 {
     Module_t *module = (Module_t *)source;
 
-    ma_data_converter *converter = &module->props.converter;
+    ma_data_converter *converter = &module->props->converter;
     ma_pcm_rb *buffer = &module->buffer;
 
     uint8_t converted_buffer[MIXING_BUFFER_SIZE_IN_BYTES];
 
-    const SL_Mix_t mix = module->props.precomputed_mix;
+    const SL_Mix_t mix = module->props->precomputed_mix;
 
     uint8_t *cursor = (uint8_t *)output;
 

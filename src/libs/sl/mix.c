@@ -131,11 +131,6 @@ void mix_1on2_additive(void *output, const void *input, size_t frames, const SL_
 #endif
 }
 
-SL_Mix_t mix_null(void)
-{
-    return (SL_Mix_t){ .left_to_left = 1.0f, .left_to_right = 0.0f, .right_to_left = 0.0f, .right_to_right = 1.0f };
-}
-
 // Thread the stereo source as two seperate mono channels and pan the individually.
 SL_Mix_t mix_twin_pan(float left_pan, float right_pan)
 {

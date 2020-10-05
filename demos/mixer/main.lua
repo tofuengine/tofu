@@ -49,14 +49,17 @@ function Main:__ctor()
       --Source.new("assets/db_ab.xm", Source.MODULE),
       Source.new("assets/turrican_iii.xm", Source.MODULE),
     }
-  self.sources[3]:looping(true)
-  self.sources[3]:play()
+    self.sources[2]:looped(true)
+    self.sources[3]:looped(true)
+    self.sources[3]:play()
 
   self.property = 1
   self.current = 1
 end
 
-local PROPERTIES = { 'play', 'stop', 'resume', 'gain', 'pan' }
+local PROPERTIES = { 'play', 'stop', 'resume', 'gain', 'pan', 'balance', 'mix' }
+
+local _pan = 0.0
 
 function Main:input()
   if Input.is_pressed("a") then
@@ -67,6 +70,9 @@ function Main:input()
       source:stop()
     elseif self.property == 3 then
       source:resume()
+    elseif self.property == 7 then
+      local ll, lr, rl, rr = source:mix()
+      source:mix(lr, ll, rr, rl)
     end
   elseif Input.is_pressed("x") then
     local source = self.sources[self.current]
@@ -74,8 +80,11 @@ function Main:input()
       local gain = source:gain()
       source:gain(gain - 0.05)
     elseif self.property == 5 then
-      local pan = source:pan()
-      source:pan(pan - 0.05)
+      _pan = _pan - 0.05
+      source:pan(_pan)
+    elseif self.property == 6 then
+      local balance = source:balance()
+      source:balance(balance - 0.05)
     end
   elseif Input.is_pressed("y") then
     local source = self.sources[self.current]
@@ -83,8 +92,11 @@ function Main:input()
       local gain = source:gain()
       source:gain(gain + 0.05)
     elseif self.property == 5 then
-      local pan = source:pan()
-      source:pan(pan + 0.05)
+      _pan = _pan + 0.05
+      source:pan(_pan)
+    elseif self.property == 6 then
+      local balance = source:balance()
+      source:balance(balance + 0.05)
     end
   elseif Input.is_pressed("up") then
     self.current = math.max(self.current - 1, 1)
@@ -111,7 +123,7 @@ function Main:render(_)
       local text = string.format("%s%s %.3f %.3f",
         self.current == index and "*" or " ",
         source:is_playing() and "!" or " ",
-        source:pan(), source:gain())
+        _pan, source:gain())
     local _, th = self.font:size(text)
     self.font:write(text, x, y)
     y = y + th
