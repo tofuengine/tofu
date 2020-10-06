@@ -196,11 +196,11 @@ static bool _compute_size(size_t width, size_t height, size_t scale, bool fullsc
     int x = (display_width - window_width) / 2;
     int y = (display_height - window_height) / 2;
     if (!fullscreen) {
-        *virtual = (GL_Rectangle_t){
+        *virtual = (GL_Rectangle_t){ // This is the vram rectangle, where the screen blit is done.
                 .x = 0, .y = 0,
                 .width = window_width, .height = window_height
             };
-        *physical = (GL_Rectangle_t){
+        *physical = (GL_Rectangle_t){ // This is the windows rectangle, that is the size and position of the window.
                 .x = x, .y = y,
                 .width = window_width, .height = window_height
             };
@@ -218,7 +218,7 @@ static bool _compute_size(size_t width, size_t height, size_t scale, bool fullsc
     return true;
 }
 
-static GLFWwindow *_window_initialize(const Display_Configuration_t *configuration, GL_Rectangle_t *virtual)
+static GLFWwindow *_window_initialize(const Display_Configuration_t *configuration, GL_Rectangle_t *vram_area)
 {
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "GLFW: %s", glfwGetVersionString());
 
@@ -229,8 +229,8 @@ static GLFWwindow *_window_initialize(const Display_Configuration_t *configurati
         return NULL;
     }
 
-    GL_Rectangle_t physical;
-    if (!_compute_size(configuration->width, configuration->height, configuration->scale, configuration->fullscreen, virtual, &physical)) {
+    GL_Rectangle_t window_area;
+    if (!_compute_size(configuration->width, configuration->height, configuration->scale, configuration->fullscreen, vram_area, &window_area)) {
         glfwTerminate();
         return NULL;
     }
@@ -271,16 +271,16 @@ static GLFWwindow *_window_initialize(const Display_Configuration_t *configurati
 
     glfwSetWindowIcon(window, 1, &configuration->icon);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%s mouse cursor", __DISPLAY_CURSOR_HIDDEN__ ? "hiding" : "showing");
-    glfwSetInputMode(window, GLFW_CURSOR, __DISPLAY_CURSOR_HIDDEN__ ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%s mouse cursor", configuration->hide_cursor ? "hiding" : "showing");
+    glfwSetInputMode(window, GLFW_CURSOR, configuration->hide_cursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%sabling vertical synchronization", __DISPLAY_VERTICAL_SYNC__ ? "en" : "dis");
-    glfwSwapInterval(__DISPLAY_VERTICAL_SYNC__ ? 1 : 0); // Set vertical sync, if required.
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%sabling vertical synchronization", configuration->vertical_sync ? "en" : "dis");
+    glfwSwapInterval(configuration->vertical_sync ? 1 : 0); // Set vertical sync, if required.
 
-    glfwSetWindowSize(window, physical.width, physical.height);
+    glfwSetWindowSize(window, window_area.width, window_area.height);
     if (!configuration->fullscreen) {
-        glfwSetWindowPos(window, physical.x, physical.y);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window position is <%d, %d>", physical.x, physical.y);
+        glfwSetWindowPos(window, window_area.x, window_area.y);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window position is <%d, %d>", window_area.x, window_area.y);
     }
     glfwShowWindow(window); // This is not required for fullscreen window, but it makes sense anyway.
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window shown");
@@ -305,7 +305,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
             .configuration = *configuration
         };
 
-    display->window = _window_initialize(configuration, &display->window_area);
+    display->window = _window_initialize(configuration, &display->vram_area);
     if (!display->window) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize window");
         free(display);
@@ -313,8 +313,8 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     }
 
     display->vram_destination = (GL_Quad_t){
-            display->window_area.x, display->window_area.y,
-            display->window_area.x + display->window_area.width, display->window_area.y + display->window_area.height
+            display->vram_area.x, display->vram_area.y,
+            display->vram_area.x + display->vram_area.width, display->vram_area.y + display->vram_area.height
         };
 
     display->context = GL_context_create(configuration->width, configuration->height);
@@ -568,7 +568,7 @@ void Display_set_shader(Display_t *display, const char *effect)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p active", display->active_program);
 
     program_send(display->active_program, UNIFORM_TEXTURE, PROGRAM_UNIFORM_TEXTURE, 1, &_texture_id_0); // Redundant
-    GLfloat resolution[] = { (GLfloat)display->window_area.width, (GLfloat)display->window_area.height };
+    GLfloat resolution[] = { (GLfloat)display->vram_area.width, (GLfloat)display->vram_area.height };
     program_send(display->active_program, UNIFORM_RESOLUTION, PROGRAM_UNIFORM_VEC2, 1, resolution);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p initialized", display->active_program);
 }
