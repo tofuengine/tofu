@@ -138,60 +138,6 @@ static bool _has_errors(void)
 }
 #endif
 
-static bool _compute_size(Display_t *display, const Display_Configuration_t *configuration, GL_Point_t *position)
-{
-    int display_width, display_height;
-    glfwGetMonitorWorkarea(glfwGetPrimaryMonitor(), NULL, NULL, &display_width, &display_height);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "display size is %dx%d", display_width, display_height);
-
-    display->window_width = configuration->width; // TODO: width/height set to `0` means fit the display?
-    display->window_height = configuration->height;
-    display->window_scale = 1;
-
-    size_t max_scale = (size_t)imin(display_width / configuration->width, display_height / configuration->height);
-    size_t scale = configuration->scale != 0 ? configuration->scale : max_scale;
-
-    if (max_scale == 0) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "requested display size can't fit display!");
-        return false;
-    } else
-    if (scale > max_scale) {
-        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "requested scaling x%d too big, forcing to x%d", scale, max_scale);
-        scale = max_scale;
-    }
-
-    display->window_width = configuration->width * scale;
-    display->window_height = configuration->height * scale;
-    display->window_scale = scale;
-
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window size is %dx%d (%dx)", display->window_width, display->window_height,
-        display->window_scale);
-
-    int x = (display_width - display->window_width) / 2;
-    int y = (display_height - display->window_height) / 2;
-    if (!configuration->fullscreen) {
-        display->vram_destination = (GL_Quad_t){
-                0, 0, display->window_width, display->window_height
-            };
-        display->physical_width = display->window_width;
-        display->physical_height = display->window_height;
-
-        position->x = x;
-        position->y = y;
-    } else { // Toggle fullscreen by passing primary monitor!
-        display->vram_destination = (GL_Quad_t){
-                x, y, x + display->window_width, y + display->window_height
-            };
-        display->physical_width = display_width;
-        display->physical_height = display_height;
-
-        position->x = 0;
-        position->y = 0;
-    }
-
-    return true;
-}
-
 static void _error_callback(int error, const char *description)
 {
     Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "%s", description);
@@ -228,32 +174,64 @@ static void _size_callback(GLFWwindow* window, int width, int height)
 #endif
 }
 
-Display_t *Display_create(const Display_Configuration_t *configuration)
+static bool _compute_size(size_t width, size_t height, size_t scale, bool fullscreen, GL_Rectangle_t *virtual, GL_Rectangle_t *physical)
 {
-    Display_t *display = malloc(sizeof(Display_t));
-    if (!display) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate display");
-        return NULL;
+    int display_width, display_height;
+    glfwGetMonitorWorkarea(glfwGetPrimaryMonitor(), NULL, NULL, &display_width, &display_height);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "display size is %dx%d", display_width, display_height);
+
+    // TODO: width/height set to `0` means fit the display?
+    size_t max_scale = (size_t)imin(display_width / width, display_height / height);
+    if (max_scale == 0) {
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "requested display size can't fit display!");
+        return false;
     }
 
-    *display = (Display_t){
-            .configuration = *configuration
-        };
+    size_t window_scale = scale > max_scale ? max_scale : (scale != 0 ? scale : max_scale);
+    size_t window_width = width * scale;
+    size_t window_height = height * scale;
 
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window size is %dx%d (%dx)", window_width, window_height, window_scale);
+
+    int x = (display_width - window_width) / 2;
+    int y = (display_height - window_height) / 2;
+    if (!fullscreen) {
+        *virtual = (GL_Rectangle_t){
+                .x = 0, .y = 0,
+                .width = window_width, .height = window_height
+            };
+        *physical = (GL_Rectangle_t){
+                .x = x, .y = y,
+                .width = window_width, .height = window_height
+            };
+    } else {
+        *virtual = (GL_Rectangle_t){
+                .x = x, .y = y,
+                .width = window_width, .height = window_height
+            };
+        *physical = (GL_Rectangle_t){
+                .x = 0, .y = 0,
+                .width = display_width, .height = display_height
+            };
+    }
+
+    return true;
+}
+
+static GLFWwindow *_window_initialize(const Display_Configuration_t *configuration, GL_Rectangle_t *virtual)
+{
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "GLFW: %s", glfwGetVersionString());
 
     glfwSetErrorCallback(_error_callback);
 
     if (!glfwInit()) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize GLFW");
-        free(display);
         return NULL;
     }
 
-    GL_Point_t position;
-    if (!_compute_size(display, configuration, &position)) {
+    GL_Rectangle_t physical;
+    if (!_compute_size(configuration->width, configuration->height, configuration->scale, configuration->fullscreen, virtual, &physical)) {
         glfwTerminate();
-        free(display);
         return NULL;
     }
 
@@ -272,47 +250,72 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
     glfwWindowHint(GLFW_FOCUSED, GLFW_TRUE);
-    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // Initially not visible, we will be repositioning it.
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // Initially 1x1 invisible, we will be resizing and repositioning it.
 
-    display->window = glfwCreateWindow(display->physical_width, display->physical_height, configuration->title,
-            configuration->fullscreen ? glfwGetPrimaryMonitor() : NULL, NULL);
-    if (display->window == NULL) {
+    GLFWwindow *window = glfwCreateWindow(1, 1, configuration->title, configuration->fullscreen ? glfwGetPrimaryMonitor() : NULL, NULL);
+    if (window == NULL) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create window");
         glfwTerminate();
-        free(display);
         return NULL;
     }
-    glfwMakeContextCurrent(display->window);
+    glfwMakeContextCurrent(window);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize GLAD");
-        glfwDestroyWindow(display->window);
+        glfwDestroyWindow(window);
         glfwTerminate();
-        free(display);
         return NULL;
     }
 
-    glfwSetWindowIcon(display->window, 1, &configuration->icon);
+    glfwSetWindowSizeCallback(window, _size_callback); // When resized we recalculate the projection properties.
 
-    _size_callback(display->window, display->physical_width, display->physical_height);
+    glfwSetWindowIcon(window, 1, &configuration->icon);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%s mouse cursor", configuration->hide_cursor ? "hiding" : "showing");
-    glfwSetInputMode(display->window, GLFW_CURSOR, configuration->hide_cursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%s mouse cursor", __DISPLAY_CURSOR_HIDDEN__ ? "hiding" : "showing");
+    glfwSetInputMode(window, GLFW_CURSOR, __DISPLAY_CURSOR_HIDDEN__ ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%sabling vertical synchronization", configuration->vertical_sync ? "en" : "dis");
-    glfwSwapInterval(configuration->vertical_sync ? 1 : 0); // Set vertical sync, if required.
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%sabling vertical synchronization", __DISPLAY_VERTICAL_SYNC__ ? "en" : "dis");
+    glfwSwapInterval(__DISPLAY_VERTICAL_SYNC__ ? 1 : 0); // Set vertical sync, if required.
 
+    glfwSetWindowSize(window, physical.width, physical.height);
     if (!configuration->fullscreen) {
-        glfwSetWindowPos(display->window, position.x, position.y);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window position is <%d, %d>", position.x, position.y);
+        glfwSetWindowPos(window, physical.x, physical.y);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window position is <%d, %d>", physical.x, physical.y);
     }
-    glfwShowWindow(display->window); // This is not required for fullscreen window, but it makes sense anyway.
+    glfwShowWindow(window); // This is not required for fullscreen window, but it makes sense anyway.
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window shown");
 
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "vendor: %s", glGetString(GL_VENDOR));
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "renderer: %s", glGetString(GL_RENDERER));
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "version: %s", glGetString(GL_VERSION));
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "GLSL: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
+
+    return window;
+}
+
+Display_t *Display_create(const Display_Configuration_t *configuration)
+{
+    Display_t *display = malloc(sizeof(Display_t));
+    if (!display) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate display");
+        return NULL;
+    }
+
+    *display = (Display_t){
+            .configuration = *configuration
+        };
+
+    display->window = _window_initialize(configuration, &display->window_area);
+    if (!display->window) {
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize window");
+        free(display);
+        return NULL;
+    }
+
+    display->vram_destination = (GL_Quad_t){
+            display->window_area.x, display->window_area.y,
+            display->window_area.x + display->window_area.width, display->window_area.y + display->window_area.height
+        };
 
     display->context = GL_context_create(configuration->width, configuration->height);
     if (!display->context) {
@@ -565,7 +568,7 @@ void Display_set_shader(Display_t *display, const char *effect)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p active", display->active_program);
 
     program_send(display->active_program, UNIFORM_TEXTURE, PROGRAM_UNIFORM_TEXTURE, 1, &_texture_id_0); // Redundant
-    GLfloat resolution[] = { (GLfloat)display->window_width, (GLfloat)display->window_height };
+    GLfloat resolution[] = { (GLfloat)display->window_area.width, (GLfloat)display->window_area.height };
     program_send(display->active_program, UNIFORM_RESOLUTION, PROGRAM_UNIFORM_VEC2, 1, resolution);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p initialized", display->active_program);
 }
