@@ -60,6 +60,8 @@
 #define __NO_LINEFEEDS__
 
 // TODO: better naming for macros, including namespace.
+#define __DISPLAY_CURSOR_HIDDEN__ true
+#define __DISPLAY_VERTICAL_SYNC__ false
 #undef  __IGNORE_ALPHA_ON_COLORS__
 #undef  __DEBUG_TRIANGLES_WINDING__
 #undef  __FIND_NEAREST_COLOR_EUCLIDIAN__
