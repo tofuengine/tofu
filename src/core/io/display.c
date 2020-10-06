@@ -272,6 +272,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
     glfwWindowHint(GLFW_FOCUSED, GLFW_TRUE);
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // Initially not visible, we will be repositioning it.
 
     display->window = glfwCreateWindow(display->physical_width, display->physical_height, configuration->title,
             configuration->fullscreen ? glfwGetPrimaryMonitor() : NULL, NULL);
@@ -300,6 +301,13 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%sabling vertical synchronization", configuration->vertical_sync ? "en" : "dis");
     glfwSwapInterval(configuration->vertical_sync ? 1 : 0); // Set vertical sync, if required.
+
+    if (!configuration->fullscreen) {
+        glfwSetWindowPos(display->window, position.x, position.y);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window position is <%d, %d>", position.x, position.y);
+    }
+    glfwShowWindow(display->window); // This is not required for fullscreen window, but it makes sense anyway.
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window shown");
 
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "vendor: %s", glGetString(GL_VENDOR));
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "renderer: %s", glGetString(GL_RENDERER));
