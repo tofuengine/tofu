@@ -120,7 +120,7 @@ static bool _has_errors(void)
 {
     bool result = false;
     for (GLenum code = glGetError(); code != GL_NO_ERROR; code = glGetError()) {
-        const char *message = "UNKNOWN";
+        const char *message;
         switch (code) {
             case GL_INVALID_ENUM: { message = "INVALID_ENUM"; } break;
             case GL_INVALID_VALUE: { message = "INVALID_VALUE"; } break;
@@ -129,6 +129,7 @@ static bool _has_errors(void)
             case GL_OUT_OF_MEMORY: { message = "OUT_OF_MEMORY"; } break;
             case GL_STACK_UNDERFLOW: { message = "STACK_UNDERFLOW"; } break;
             case GL_STACK_OVERFLOW: { message = "STACK_OVERFLOW"; } break;
+            default: { message = "UNKNOWN"; } break;
         }
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "OpenGL error #%04x: `GL_%s`", code, message);
 

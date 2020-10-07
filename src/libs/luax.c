@@ -94,6 +94,9 @@ void luaX_stackdump(lua_State *L, const char* func, int line)
             case LUA_TTHREAD:
                 printf("\t%p", lua_topointer(L, positive));
                 break;
+            default:
+                printf("\t<skipped>");
+                break;
         }
         printf("\n");
     }
