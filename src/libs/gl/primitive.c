@@ -26,10 +26,6 @@
 
 #include <config.h>
 #include <libs/imath.h>
-#include <libs/gl/gl.h>
-#include <libs/stb.h>
-
-#include <math.h>
 
 #define REGION_INSIDE   0
 #define REGION_LEFT     1
@@ -157,7 +153,7 @@ static void _line(const GL_Surface_t *surface, const GL_Quad_t *clipping_region,
         y += yin;
     }
 #else
-    const int dwidth = surface->width;
+    const int dwidth = (int)surface->width;
 
     const int dx = iabs(x1 - x0);
     const int dy = -iabs(y1 - y0);
@@ -190,12 +186,12 @@ static void _line(const GL_Surface_t *surface, const GL_Quad_t *clipping_region,
 #endif
 }
 
-static void _hline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x, int y, int length, GL_Pixel_t index)
+static void _hline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x, int y, size_t length, GL_Pixel_t index)
 {
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = x,
             .y0 = y,
-            .x1 = x + length - 1,
+            .x1 = x + (int)length - 1,
             .y1 = y
         };
 
@@ -220,11 +216,11 @@ static void _hline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region
 
     GL_Pixel_t *ddata = surface->data;
 
-    const int dwidth = surface->width;
+    const int dwidth = (int)surface->width;
 
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
-    for (int i = width; i; --i) {
+    for (size_t i = width; i; --i) {
         *(dptr++) = index;
     }
 }
@@ -281,13 +277,13 @@ static void hline_pattern(GL_Pixel_t *destination, int width, const GL_Quad_t *d
 }
 #endif
 
-static void _vline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x, int y, int length, GL_Pixel_t index)
+static void _vline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region, int x, int y, size_t length, GL_Pixel_t index)
 {
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = x,
             .y0 = y,
             .x1 = x,
-            .y1 = y + length - 1
+            .y1 = y + (int)length - 1
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
@@ -311,13 +307,13 @@ static void _vline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region
 
     GL_Pixel_t *ddata = surface->data;
 
-    const int dwidth = surface->width;
+    const int dwidth = (int)surface->width;
 
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
     const int dskip = dwidth;
 
-    for (int i = height; i; --i) {
+    for (size_t i = height; i; --i) {
         *dptr = index;
         dptr += dskip;
     }
@@ -417,8 +413,8 @@ void GL_primitive_filled_rectangle(const GL_Context_t *context, GL_Rectangle_t r
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = rectangle.x,
             .y0 = rectangle.y,
-            .x1 = rectangle.x + rectangle.width - 1,
-            .y1 = rectangle.y + rectangle.height - 1
+            .x1 = rectangle.x + (int)rectangle.width - 1,
+            .y1 = rectangle.y + (int)rectangle.height - 1
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
@@ -442,7 +438,7 @@ void GL_primitive_filled_rectangle(const GL_Context_t *context, GL_Rectangle_t r
 
     GL_Pixel_t *ddata = surface->data;
 
-    const int dwidth = surface->width;
+    const int dwidth = (int)surface->width;
 
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
@@ -527,7 +523,7 @@ void GL_primitive_filled_triangle(const GL_Context_t *context, GL_Point_t a, GL_
 
     GL_Pixel_t *ddata = surface->data;
 
-    const int dwidth = surface->width;
+    const int dwidth = (int)surface->width;
 
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
@@ -580,8 +576,8 @@ void GL_primitive_filled_circle(const GL_Context_t *context, GL_Point_t center, 
     const int cy = center.y;
 
     int x = 0;
-    int y = radius;
-    int d = 3 - 2 * radius;
+    int y = (int)radius;
+    int d = 3 - 2 * (int)radius;
 
     while (x <= y) {
         const int length_x = iabs(2 * x) + 1;
@@ -620,8 +616,8 @@ void GL_primitive_circle(const GL_Context_t *context, GL_Point_t center, size_t 
     const int cy = center.y;
 
     int x = 0;
-    int y = radius;
-    int d = 3 - 2 * radius;
+    int y = (int)radius;
+    int d = 3 - 2 * (int)radius;
 
     while (x <= y) {
         _point(surface, clipping_region, cx + x, cy + y, index);

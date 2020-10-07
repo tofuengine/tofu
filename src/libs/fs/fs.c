@@ -33,18 +33,16 @@
 #include "std.h"
 
 #include <dirent.h>
-#include <stdint.h>
-#include <stdio.h>
 
-#define LOG_CONTEXT "fs"
+struct _File_System_t {
+    File_System_Mount_t **mounts;
+};
 
 #if PLATFORM_ID == PLATFORM_WINDOWS
   #define realpath(N,R) _fullpath((R),(N),PATH_MAX)
 #endif
 
-struct _File_System_t {
-    File_System_Mount_t **mounts;
-};
+#define LOG_CONTEXT "fs"
 
 static inline File_System_Mount_t *_mount(const char *path)
 {
@@ -113,7 +111,7 @@ File_System_t *FS_create(const char *base_path)
         closedir(dp);
     }
 
-    _attach(file_system, resolved);
+    _attach(file_system, resolved); // Mount the resolved folder, as well (overriding archives).
 
     return file_system;
 }
@@ -121,7 +119,7 @@ File_System_t *FS_create(const char *base_path)
 void FS_destroy(File_System_t *file_system)
 {
     File_System_Mount_t **current = file_system->mounts;
-    for (int count = arrlen(file_system->mounts); count; --count) {
+    for (size_t count = arrlen(file_system->mounts); count; --count) {
         File_System_Mount_t *mount = *(current++);
         _unmount(mount);
     }
@@ -153,18 +151,18 @@ File_System_Handle_t *FS_locate_and_open(const File_System_t *file_system, const
         return NULL;
     }
 
-    return FS_open(mount, file);;
+    return FS_open(mount, file);
 }
 
 File_System_Mount_t *FS_locate(const File_System_t *file_system, const char *file)
 {
 #ifdef __FS_SUPPORT_MOUNT_OVERRIDE__
     // Backward scan, later mounts gain priority over existing ones.
-    for (int i = arrlen(file_system->mounts) - 1; i >= 0; --i) {
-        File_System_Mount_t *mount = file_system->mounts[i];
+    for (int index = (int)arrlen(file_system->mounts) - 1; index >= 0; --index) {
+        File_System_Mount_t *mount = file_system->mounts[index];
 #else
     File_System_Mount_t **current = file_system->mounts;
-    for (int count = arrlen(file_system->mounts); count; --count) {
+    for (size_t count = arrlen(file_system->mounts); count; --count) {
         File_System_Mount_t *mount = *(current++);
 #endif
         if (((const Mount_t *)mount)->vtable.contains(mount, file)) {

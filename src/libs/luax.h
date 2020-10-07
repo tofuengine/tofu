@@ -30,6 +30,7 @@
 #include <lua/lauxlib.h>
 
 typedef enum _luaX_Const_Type {
+    LUA_CT_NIL,
     LUA_CT_BOOLEAN,
     LUA_CT_INTEGER,
     LUA_CT_NUMBER,

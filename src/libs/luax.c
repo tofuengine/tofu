@@ -24,14 +24,6 @@
 
 #include "luax.h"
 
-#include <libs/stb.h>
-
-#include <inttypes.h>
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <string.h>
-
 /*
 http://webcache.googleusercontent.com/search?q=cache:RLoR9dkMeowJ:howtomakeanrpg.com/a/classes-in-lua.html+&cd=4&hl=en&ct=clnk&gl=it
 https://hisham.hm/2014/01/02/how-to-write-lua-modules-in-a-post-module-world/
@@ -93,6 +85,9 @@ void luaX_stackdump(lua_State *L, const char* func, int line)
                 break;
             case LUA_TTHREAD:
                 printf("\t%p", lua_topointer(L, positive));
+                break;
+            default:
+                printf("\t<skipped>");
                 break;
         }
         printf("\n");
@@ -168,6 +163,7 @@ int luaX_newmodule(lua_State *L, const luaX_Script *script, const luaL_Reg *f, c
     if (c) {
         for (; c->name; c++) {
             switch (c->type) {
+                case LUA_CT_NIL: { lua_pushnil(L); } break;
                 case LUA_CT_BOOLEAN: { lua_pushboolean(L, c->value.b); } break;
                 case LUA_CT_INTEGER: { lua_pushinteger(L, c->value.i); } break;
                 case LUA_CT_NUMBER: { lua_pushnumber(L, c->value.n); } break;

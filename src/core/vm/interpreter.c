@@ -33,15 +33,11 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 #include "interpreter.h"
 
 #include <config.h>
-#include <core/io/display.h>
 #include <core/vm/modules.h>
-#include <libs/fs/fs.h>
-#include <libs/imath.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 
-#include <limits.h>
-#include <string.h>
+#include <stdint.h>
 #ifdef __DEBUG_GARBAGE_COLLECTOR__
   #include <time.h>
 #endif

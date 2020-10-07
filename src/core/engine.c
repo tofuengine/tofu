@@ -26,19 +26,11 @@
 
 #include <config.h>
 #include <platform.h>
-#include <core/configuration.h>
 #include <libs/fs/fsaux.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 
-#include <limits.h>
-#include <math.h>
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
-#if PLATFORM_ID == PLATFORM_LINUX
-  #include <unistd.h>
-#elif PLATFORM_ID == PLATFORM_WINDOWS
+#if PLATFORM_ID == PLATFORM_WINDOWS
   #include <windows.h>
 #endif
 
@@ -161,7 +153,7 @@ Engine_t *Engine_create(const char *base_path)
     File_System_Resource_t *icon = _load_icon(engine->file_system, ENTRY_ICON);
     Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined icon loaded");
     Display_Configuration_t display_configuration = { // TODO: reorganize configuration.
-            .icon = icon ? (GLFWimage){ .width = FSX_IWIDTH(icon), .height = FSX_IHEIGHT(icon), .pixels = FSX_IPIXELS(icon) } : (GLFWimage){ 64, 64, (unsigned char *)_default_icon_pixels },
+            .icon = icon ? (GLFWimage){ .width = (int)FSX_IWIDTH(icon), .height = (int)FSX_IHEIGHT(icon), .pixels = FSX_IPIXELS(icon) } : (GLFWimage){ 64, 64, (unsigned char *)_default_icon_pixels },
             .title = engine->configuration.title,
             .width = engine->configuration.width,
             .height = engine->configuration.height,
@@ -282,7 +274,7 @@ void Engine_run(Engine_t *engine)
     float lag = 0.0f;
 
     // https://nkga.github.io/post/frame-pacing-analysis-of-the-game-loop/
-    for (bool running = true; running && !engine->environment->quit && !Display_should_close(engine->display); ) {
+    for (bool running = true; running && !Environment_should_quit(engine->environment) && !Display_should_close(engine->display); ) {
         const double current = glfwGetTime();
         const float elapsed = (float)(current - previous);
         previous = current;

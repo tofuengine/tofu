@@ -29,9 +29,6 @@
 #include <libs/log.h>
 #include <libs/stb.h>
 
-#include <stdlib.h>
-#include <string.h>
-
 #define LOG_CONTEXT "environment"
 
 // TODO: http://www.ilikebigbits.com/2017_06_01_float_or_double.html

@@ -26,18 +26,16 @@
 
 #include <config.h>
 #include <core/io/display.h>
-#include <core/vm/interpreter.h>
 #include <libs/fs/fsaux.h>
 #include <libs/gl/gl.h>
 #include <libs/log.h>
-#include <libs/stb.h>
+#include <libs/luax.h>
 
 #include "callbacks.h"
 #include "udt.h"
 #include "resources/sheets.h"
 
 #include <math.h>
-#include <string.h>
 
 #define LOG_CONTEXT "font"
 #define META_TABLE  "Tofu_Graphics_Font_mt"
@@ -50,7 +48,7 @@ static int font_write(lua_State *L);
 
 static const struct luaL_Reg _font_functions[] = {
     { "new", font_new },
-    {"__gc", font_gc },
+    { "__gc", font_gc },
     { "size", font_size },
     { "canvas", font_canvas },
     { "write", font_write },
@@ -261,7 +259,7 @@ static int font_gc(lua_State *L)
     return 0;
 }
 
-static void _size(const char *text, const GL_Rectangle_t *cells, float scale_x, float scale_y, int *w, int *h)
+static void _size(const char *text, const GL_Rectangle_t *cells, float scale_x, float scale_y, size_t *w, size_t *h)
 {
     if (!text || text[0] == '\0') {
         const GL_Rectangle_t *cell = &cells[0]; // Font is non-proportional, use the first glyph.
@@ -272,7 +270,7 @@ static void _size(const char *text, const GL_Rectangle_t *cells, float scale_x, 
 
     *w = *h = 0;
 
-    int max_width = 0, width = 0;
+    size_t max_width = 0, width = 0;
     size_t height = 0;
     for (const char *ptr = text; *ptr != '\0'; ++ptr) {
         char c = *ptr;
@@ -293,8 +291,8 @@ static void _size(const char *text, const GL_Rectangle_t *cells, float scale_x, 
 
         const GL_Rectangle_t *cell = &cells[c - ' '];
 
-        const size_t cw = (int)((float)cell->width * fabs(scale_x));
-        const size_t ch = (int)((float)cell->height * fabs(scale_y));
+        const size_t cw = (size_t)((float)cell->width * fabs(scale_x));
+        const size_t ch = (size_t)((float)cell->height * fabs(scale_y));
 
         width += cw;
         if (height < ch) {
@@ -321,7 +319,7 @@ static int font_size(lua_State *L)
     float scale_x = LUAX_OPTIONAL_NUMBER(L, 3, 1.0f);
     float scale_y = LUAX_OPTIONAL_NUMBER(L, 4, scale_x);
 
-    int width, height;
+    size_t width, height;
     _size(text, self->sheet->cells, scale_x, scale_y, &width, &height);
 
     lua_pushinteger(L, width);

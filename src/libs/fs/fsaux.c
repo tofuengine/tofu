@@ -76,7 +76,7 @@ static File_System_Resource_t *_load_as_string(File_System_Handle_t *handle)
             .var = {
                 .string = {
                         .chars = (char *)chars,
-                        .length = chars ? length : 0
+                        .length = length
                     }
             }
         };
@@ -105,7 +105,7 @@ static File_System_Resource_t *_load_as_binary(File_System_Handle_t *handle)
             .var = {
                 .blob = {
                         .ptr = ptr,
-                        .size = ptr ? size : 0
+                        .size = size
                     }
             }
         };
@@ -158,8 +158,8 @@ static File_System_Resource_t* _load_as_image(File_System_Handle_t *handle)
             .type = FILE_SYSTEM_RESOURCE_IMAGE,
             .var = {
                 .image = {
-                        .width = width,
-                        .height = height,
+                        .width = (size_t)width,
+                        .height = (size_t)height,
                         .pixels = pixels
                     }
                 }

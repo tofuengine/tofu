@@ -25,7 +25,6 @@
 #include "easing.h"
 
 #include <math.h>
-#include <stdlib.h>
 #include <string.h>
 
 #ifndef M_PI
@@ -102,7 +101,7 @@ float easing_quadratic_in_out(float p)
         return 0.5f * p * p;
     } else {
         p -= 1.0f;
-        return -0.5 * (p * (p - 2.0f) - 1.0f);
+        return -0.5f * (p * (p - 2.0f) - 1.0f);
     }
 }
 
@@ -298,7 +297,7 @@ float easing_back_in_out(float p)
     static const float s = 1.70158f * 1.525f;
     p *= 2.0f;
     if (p < 1.0f) {
-        return 0.5 * (p * p * ((s + 1) * p - s));
+        return 0.5f * (p * p * ((s + 1) * p - s));
     } else {
         p -= 2.0f;
         return 0.5f * (p * p * ((s + 1.0f) * p + s) + 2.0f);

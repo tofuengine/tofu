@@ -21,7 +21,6 @@
  */
 
 #include <ctype.h>
-#include <sys/types.h>
 #include <stdarg.h>
 #ifdef __WATCOMC__
 #include <direct.h>

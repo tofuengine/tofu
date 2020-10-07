@@ -26,17 +26,12 @@
 
 #include <config.h>
 #include <core/io/display.h>
-#include <core/vm/interpreter.h>
-#include <libs/fs/fsaux.h>
 #include <libs/log.h>
+#include <libs/luax.h>
 #include <libs/map.h>
 #include <libs/stb.h>
 
 #include "udt.h"
-#include "callbacks.h"
-
-#include <math.h>
-#include <string.h>
 
 #define LOG_CONTEXT "xform"
 #define META_TABLE  "Tofu_Graphics_XForm_mt"
@@ -52,7 +47,7 @@ static int xform_table(lua_State *L);
 
 static const struct luaL_Reg _xform_functions[] = {
     { "new", xform_new },
-    {"__gc", xform_gc },
+    { "__gc", xform_gc },
     { "canvas", xform_canvas },
     { "blit", xform_blit },
     { "offset", xform_offset },
@@ -355,7 +350,7 @@ static int xform_table2(lua_State *L)
                 break;
             }
             entry.count = i + 1;
-            entry.operations[i].id = map_find(L, LUAX_STRING(L, -2), _registers, GL_XForm_Registers_t_CountOf)->value;
+            entry.operations[i].id = (GL_XForm_Registers_t)map_find(L, LUAX_STRING(L, -2), _registers, GL_XForm_Registers_t_CountOf)->value;
             entry.operations[i].value = (float)LUAX_NUMBER(L, -1);
 
             lua_pop(L, 1);

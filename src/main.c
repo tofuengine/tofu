@@ -22,8 +22,6 @@
  * SOFTWARE.
  */
 
-#include "main.h"
-
 #include <core/engine.h>
 #include <libs/log.h>
 

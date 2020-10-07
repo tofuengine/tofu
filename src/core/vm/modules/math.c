@@ -27,12 +27,12 @@
 #include <config.h>
 #include <libs/easing.h>
 #include <libs/log.h>
+#include <libs/luax.h>
 #include <libs/sincos.h>
 #include <libs/wave.h>
 
+#include <stdint.h>
 #include <math.h>
-
-#include "udt.h"
 
 static int math_lerp(lua_State *L);
 static int math_invlerp(lua_State *L);
@@ -68,7 +68,7 @@ static const struct luaL_Reg _math_functions[] = {
 static const luaX_Const _math_constants[] = {
     { "SINCOS_PERIOD", LUA_CT_INTEGER, { .i = SINCOS_PERIOD } },
     { "EPSILON", LUA_CT_NUMBER, { .n = __FLT_EPSILON__ } },
-    { NULL }
+    { NULL, LUA_CT_NIL, { 0 } }
 };
 
 static const uint8_t _math_lua[] = {
@@ -182,8 +182,8 @@ static int math_smoothstep(lua_State *L)
     float edge1 = LUAX_NUMBER(L, 2);
     float x = LUAX_NUMBER(L, 3);
 
-    float v = _clampf((x - edge0) / (edge1 - edge0), 0.0, 1.0);
-    v = x * x * (3.0 - 2.0 * x);
+    x = _clampf((x - edge0) / (edge1 - edge0), 0.0f, 1.0f); // Scale, bias and saturate x to [0, 1] range.
+    float v = x * x * (3.0f - 2.0f * x); // Evaluate polynomial.
 
     lua_pushnumber(L, v);
 
@@ -201,8 +201,8 @@ static int math_smootherstep(lua_State *L)
     float edge1 = LUAX_NUMBER(L, 2);
     float x = LUAX_NUMBER(L, 3);
 
-    float v = _clampf((x - edge0) / (edge1 - edge0), 0.0, 1.0);
-    v = x * x * x * (x * (x * 6.0 - 15.0) + 10.0);
+    x = _clampf((x - edge0) / (edge1 - edge0), 0.0f, 1.0f);
+    float v = x * x * x * (x * (x * 6.0f - 15.0f) + 10.0f);
 
     lua_pushnumber(L, v);
 

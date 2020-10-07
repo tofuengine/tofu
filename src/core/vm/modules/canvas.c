@@ -27,20 +27,12 @@
 #include <config.h>
 #include <core/environment.h>
 #include <core/io/display.h>
-#include <core/vm/interpreter.h>
 #include <libs/fs/fsaux.h>
-#include <libs/gl/gl.h>
-#include <libs/imath.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 
 #include "callbacks.h"
 #include "udt.h"
-#include "resources/palettes.h"
-
-#include <math.h>
-#include <string.h>
-#include <time.h>
 
 #define LOG_CONTEXT "canvas"
 #define META_TABLE  "Tofu_Graphics_Canvas_mt"
@@ -363,8 +355,8 @@ static int canvas_shift2(lua_State *L)
     LUAX_SIGNATURE_END
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
 
-    size_t *from = NULL;
-    size_t *to = NULL;
+    GL_Pixel_t *from = NULL;
+    GL_Pixel_t *to = NULL;
 
     lua_pushnil(L);
     while (lua_next(L, 2)) {
@@ -391,8 +383,8 @@ static int canvas_shift3(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
-    size_t from = (size_t)LUAX_INTEGER(L, 2);
-    size_t to = (size_t)LUAX_INTEGER(L, 3);
+    GL_Pixel_t from = (GL_Pixel_t)LUAX_INTEGER(L, 2);
+    GL_Pixel_t to = (GL_Pixel_t)LUAX_INTEGER(L, 3);
 
     GL_Context_t *context = self->context;
     GL_context_set_shifting(context, &from, &to, 1);
@@ -818,8 +810,8 @@ static int canvas_rectangle(lua_State *L)
     } else {
         int x0 = x;
         int y0 = y;
-        int x1 = x0 + width - 1;
-        int y1 = y0 + height - 1;
+        int x1 = x0 + (int)width - 1;
+        int y1 = y0 + (int)height - 1;
 
         GL_Point_t vertices[5] = {
                 (GL_Point_t){ .x = x0, .y = y0 },
@@ -848,7 +840,7 @@ static int canvas_circle(lua_State *L)
     const char *mode = LUAX_STRING(L, 2);
     int cx = LUAX_INTEGER(L, 3);
     int cy = LUAX_INTEGER(L, 4);
-    size_t radius = LUAX_INTEGER(L, 5);
+    size_t radius = (size_t)LUAX_INTEGER(L, 5);
     GL_Pixel_t index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 6, self->context->state.color);
 
     const GL_Context_t *context = self->context;

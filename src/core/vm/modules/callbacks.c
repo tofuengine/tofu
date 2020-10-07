@@ -24,8 +24,6 @@
 
 #include "callbacks.h"
 
-#include <memory.h>
-
 #pragma pack(push, 1)
 typedef struct rgba_t {
     uint8_t r, g, b, a;

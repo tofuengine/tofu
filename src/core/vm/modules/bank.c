@@ -47,7 +47,7 @@ static int bank_blit(lua_State *L);
 
 static const struct luaL_Reg _bank_functions[] = {
     { "new", bank_new },
-    {"__gc", bank_gc },
+    { "__gc", bank_gc },
     { "size", bank_size },
     { "canvas", bank_canvas },
     { "blit", bank_blit },

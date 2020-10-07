@@ -27,11 +27,6 @@
 #include <libs/log.h>
 #include <libs/stb.h>
 
-#include <GLFW/glfw3.h>
-#include <glad/glad.h>
-
-#include <stdlib.h>
-
 #define LOG_CONTEXT "program"
 
 bool program_create(Program_t *program)
@@ -139,7 +134,7 @@ void program_prepare(Program_t *program, const char *ids[], size_t count)
     }
     program->locations = malloc(count * sizeof(GLuint));
     for (size_t i = 0; i < count; ++i) {
-        int location = glGetUniformLocation(program->id, ids[i]);
+        GLint location = glGetUniformLocation(program->id, ids[i]);
         Log_assert(location != -1, LOG_LEVELS_WARNING, LOG_CONTEXT, "uniform `%s' not found for program #%d", ids[i], program->id);
         program->locations[i] = location;
     }
@@ -162,16 +157,17 @@ void program_send(const Program_t *program, size_t index, Program_Uniforms_t typ
         return;
     }
     switch (type) {
-        case PROGRAM_UNIFORM_BOOL: { glUniform1iv(location, count, value); } break;
-        case PROGRAM_UNIFORM_INT: { glUniform1iv(location, count, value); } break;
-        case PROGRAM_UNIFORM_FLOAT: { glUniform1fv(location, count, value); } break;
-        case PROGRAM_UNIFORM_VEC2: { glUniform2fv(location, count, value); } break;
-        case PROGRAM_UNIFORM_VEC3: { glUniform3fv(location, count, value); } break;
-        case PROGRAM_UNIFORM_VEC4: { glUniform4fv(location, count, value); } break;
-        case PROGRAM_UNIFORM_VEC2I: { glUniform2iv(location, count, value); } break;
-        case PROGRAM_UNIFORM_VEC3I: { glUniform3iv(location, count, value); } break;
-        case PROGRAM_UNIFORM_VEC4I: { glUniform4iv(location, count, value); } break;
-        case PROGRAM_UNIFORM_TEXTURE: { glUniform1iv(location, count, value); } break;
+        case PROGRAM_UNIFORM_BOOL: { glUniform1iv(location, (GLsizei)count, value); } break;
+        case PROGRAM_UNIFORM_INT: { glUniform1iv(location, (GLsizei)count, value); } break;
+        case PROGRAM_UNIFORM_FLOAT: { glUniform1fv(location, (GLsizei)count, value); } break;
+        case PROGRAM_UNIFORM_VEC2: { glUniform2fv(location, (GLsizei)count, value); } break;
+        case PROGRAM_UNIFORM_VEC3: { glUniform3fv(location, (GLsizei)count, value); } break;
+        case PROGRAM_UNIFORM_VEC4: { glUniform4fv(location, (GLsizei)count, value); } break;
+        case PROGRAM_UNIFORM_VEC2I: { glUniform2iv(location, (GLsizei)count, value); } break;
+        case PROGRAM_UNIFORM_VEC3I: { glUniform3iv(location, (GLsizei)count, value); } break;
+        case PROGRAM_UNIFORM_VEC4I: { glUniform4iv(location, (GLsizei)count, value); } break;
+        case PROGRAM_UNIFORM_TEXTURE: { glUniform1iv(location, (GLsizei)count, value); } break;
+        default: { } break;
     }
 }
 

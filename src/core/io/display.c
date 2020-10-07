@@ -26,13 +26,9 @@
 
 #include <config.h>
 #include <platform.h>
-#include <core/engine.h>
 #include <libs/log.h>
 #include <libs/imath.h>
 #include <libs/stb.h>
-
-#include <memory.h>
-#include <stdlib.h>
 
 #define LOG_CONTEXT "display"
 
@@ -120,7 +116,7 @@ static bool _has_errors(void)
 {
     bool result = false;
     for (GLenum code = glGetError(); code != GL_NO_ERROR; code = glGetError()) {
-        const char *message = "UNKNOWN";
+        const char *message;
         switch (code) {
             case GL_INVALID_ENUM: { message = "INVALID_ENUM"; } break;
             case GL_INVALID_VALUE: { message = "INVALID_VALUE"; } break;
@@ -129,6 +125,7 @@ static bool _has_errors(void)
             case GL_OUT_OF_MEMORY: { message = "OUT_OF_MEMORY"; } break;
             case GL_STACK_UNDERFLOW: { message = "STACK_UNDERFLOW"; } break;
             case GL_STACK_OVERFLOW: { message = "STACK_OVERFLOW"; } break;
+            default: { message = "UNKNOWN"; } break;
         }
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "OpenGL error #%04x: `GL_%s`", code, message);
 
@@ -181,7 +178,7 @@ static bool _compute_size(size_t width, size_t height, size_t scale, bool fullsc
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "display size is %dx%d", display_width, display_height);
 
     // TODO: width/height set to `0` means fit the display?
-    size_t max_scale = (size_t)imin(display_width / width, display_height / height);
+    size_t max_scale = (size_t)imin(display_width / (int)width, display_height / (int)height);
     if (max_scale == 0) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "requested display size can't fit display!");
         return false;
@@ -193,8 +190,8 @@ static bool _compute_size(size_t width, size_t height, size_t scale, bool fullsc
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window size is %dx%d (%dx)", window_width, window_height, window_scale);
 
-    int x = (display_width - window_width) / 2;
-    int y = (display_height - window_height) / 2;
+    int x = (display_width - (int)window_width) / 2;
+    int y = (display_height - (int)window_height) / 2;
     if (!fullscreen) {
         *virtual = (GL_Rectangle_t){ // This is the vram rectangle, where the screen blit is done.
                 .x = 0, .y = 0,
@@ -211,7 +208,7 @@ static bool _compute_size(size_t width, size_t height, size_t scale, bool fullsc
             };
         *physical = (GL_Rectangle_t){
                 .x = 0, .y = 0,
-                .width = display_width, .height = display_height
+                .width = (size_t)display_width, .height = (size_t)display_height
             };
     }
 
@@ -313,8 +310,8 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     }
 
     display->vram_destination = (GL_Quad_t){
-            display->vram_area.x, display->vram_area.y,
-            display->vram_area.x + display->vram_area.width, display->vram_area.y + display->vram_area.height
+            .x0 = display->vram_area.x, .y0 = display->vram_area.y,
+            .x1 = display->vram_area.x + (int)display->vram_area.width, .y1 = display->vram_area.y + (int)display->vram_area.height
         };
 
     display->context = GL_context_create(configuration->width, configuration->height);
@@ -359,7 +356,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0); // Disable mip-mapping
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
     glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, display->configuration.width, display->configuration.height, 0, PIXEL_FORMAT, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)display->configuration.width, (GLsizei)display->configuration.height, 0, PIXEL_FORMAT, GL_UNSIGNED_BYTE, NULL);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "texture created w/ id #%d (%dx%d)", display->vram_texture, display->configuration.width, display->configuration.height);
 
     for (size_t i = 0; i < Display_Programs_t_CountOf; ++i) {
@@ -444,7 +441,7 @@ void Display_update(Display_t *display, float delta_time)
 #ifdef PROFILING
 static inline void _to_display(GLFWwindow *window, const GL_Surface_t *surface, GL_Color_t *vram, const GL_Quad_t *vram_destination, const GL_Point_t *vram_offset)
 {
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, surface->width, surface->height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, vram);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)surface->width, (GLsizei)surface->height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, vram);
 
     const int x0 = vram_destination->x0 + vram_offset->x;
     const int y0 = vram_destination->y0 + vram_offset->y;
@@ -483,7 +480,7 @@ void Display_present(const Display_t *display)
 #ifdef PROFILE
     _to_display(display->window, surface, vram, &display->vram_destination, &display->vram_offset);
 #else
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, surface->width, surface->height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, vram);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)surface->width, (GLsizei)surface->height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, vram);
 
     // Add an offset x/y to implement shaking and similar effects.
     const GL_Quad_t *vram_destination = &display->vram_destination;

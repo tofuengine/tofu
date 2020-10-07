@@ -31,10 +31,6 @@
 #include <libs/rc4.h>
 #include <libs/stb.h>
 
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
 #include <sys/stat.h>
 
 #define LOG_CONTEXT "fs-pak"
@@ -141,7 +137,7 @@ File_System_Mount_t *pak_mount(const char *path)
     }
 
     Pak_Header_t header;
-    int headers_read = fread(&header, sizeof(Pak_Header_t), 1, stream);
+    size_t headers_read = fread(&header, sizeof(Pak_Header_t), 1, stream);
     if (headers_read != 1) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read file `%s` header", path);
         fclose(stream);
@@ -261,7 +257,7 @@ static bool _pak_mount_contains(const File_System_Mount_t *mount, const char *fi
     const Pak_Entry_t key = { .name = (char *)file };
     const Pak_Entry_t *entry = bsearch((const void *)&key, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
 
-    bool exists = entry;
+    bool exists = entry; // FIXME: should be `!!`?
     Log_assert(!exists, LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry `%s` found in mount %p", file, pak_mount);
     return exists;
 }
@@ -365,7 +361,7 @@ static size_t _pak_handle_read(File_System_Handle_t *handle, void *buffer, size_
         return 0;
     }
 
-    size_t bytes_available = pak_handle->end_of_stream - position + 1;
+    size_t bytes_available = (size_t)(pak_handle->end_of_stream - position + 1);
 
     size_t bytes_to_read = bytes_requested;
     if (bytes_to_read > bytes_available) {

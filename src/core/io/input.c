@@ -432,7 +432,6 @@ const Input_Stick_t *Input_get_stick(const Input_t *input, Input_Sticks_t stick)
     return &input->state.sticks[stick];
 }
 
-
 float Input_get_auto_repeat(const Input_t *input, Input_Buttons_t button)
 {
     return input->state.buttons[button].period;

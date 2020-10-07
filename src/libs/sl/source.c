@@ -25,7 +25,6 @@
 #include "source.h"
 
 #include "internals.h"
-#include "props.h"
 
 #include <libs/stb.h>
 

@@ -25,16 +25,11 @@
 #include "batch.h"
 
 #include <config.h>
-#include <core/io/display.h>
 #include <libs/fs/fsaux.h>
 #include <libs/log.h>
-#include <libs/stb.h>
 
 #include "callbacks.h"
-#include "structs.h"
 #include "udt.h"
-
-#include <math.h>
 
 #define LOG_CONTEXT "batch"
 #define META_TABLE  "Tofu_Graphics_Batch_mt"
@@ -48,7 +43,7 @@ static int batch_blit(lua_State *L);
 
 static const struct luaL_Reg _batch_functions[] = {
     { "new", batch_new },
-    {"__gc", batch_gc },
+    { "__gc", batch_gc },
     { "grow", batch_grow },
     { "clear", batch_clear },
     { "add", batch_add },
@@ -60,7 +55,7 @@ static const luaX_Const _batch_constants[] = {
     // { "FAST", LUA_CT_INTEGER, { .i = MODE_FAST } },
     // { "SIMPLE", LUA_CT_INTEGER, { .i = MODE_SIMPLE } },
     // { "COMPLETE", LUA_CT_INTEGER, { .i = MODE_COMPLETE } },
-    { NULL }
+    { NULL, LUA_CT_NIL, { 0 } }
 };
 
 int batch_loader(lua_State *L)
@@ -76,7 +71,7 @@ static int batch_new(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const Bank_Object_t *bank = (const Bank_Object_t *)LUAX_USERDATA(L, 1);
-    size_t slots = LUAX_INTEGER(L, 2);
+    size_t slots = (size_t)LUAX_INTEGER(L, 2);
 
     GL_Batch_t *batch = GL_batch_create(bank->sheet, slots);
     if (!batch) {
@@ -124,7 +119,7 @@ static int batch_grow(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Batch_Object_t *self = (Batch_Object_t *)LUAX_USERDATA(L, 1);
-    size_t amount = LUAX_INTEGER(L, 2);
+    size_t amount = (size_t)LUAX_INTEGER(L, 2);
 
     bool grown = GL_batch_grow(self->batch, amount);
     if (!grown) {

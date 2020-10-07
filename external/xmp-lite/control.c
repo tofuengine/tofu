@@ -20,14 +20,10 @@
  * THE SOFTWARE.
  */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
-#include <stdarg.h>
 
 #include "format.h"
-#include "virtual.h"
 #include "mixer.h"
 
 LIBXMP_EXPORT xmp_context xmp_create_context()
@@ -181,7 +177,7 @@ LIBXMP_EXPORT int xmp_set_row(xmp_context opaque, int row)
 	int pos = p->pos;
 	int pattern = mod->xxo[pos];
 
-	if (pos < 0 || pos >= mod->len) {
+	if (pos < 0 || pos >= mod->len) { // FIXME: should this be checked before indexing with this?
 		pos = 0;
 	}
 

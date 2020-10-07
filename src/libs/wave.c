@@ -25,7 +25,6 @@
 #include "wave.h"
 
 #include <math.h>
-#include <stdlib.h>
 #include <string.h>
 
 #ifndef M_PI

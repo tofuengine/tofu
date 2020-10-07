@@ -22,39 +22,9 @@
  * SOFTWARE.
  */
 
-#ifndef __INTERPRETER_H__
-#define __INTERPRETER_H__
+#ifndef __LIBS_DR_LIBS_H__
+#define __LIBS_DR_LIBS_H__
 
-#include <config.h>
+#include <dr_libs/dr_flac.h>
 
-#include <libs/fs/fs.h>
-#include <libs/luax.h>
-
-#include <stdbool.h>
-
-typedef enum _Warning_States_t {
-    WARNING_STATE_DISABLED,
-    WARNING_STATE_READY,
-    WARNING_STATE_APPENDING
-} Warning_States_t;
-
-typedef struct _Interpreter_t {
-    lua_State *state;
-    Warning_States_t warning_state;
-#if __VM_GARBAGE_COLLECTOR_MODE__ == GC_CONTINUOUS
-    float gc_step_age;
-#endif
-#if defined(__VM_GARBAGE_COLLECTOR_PERIODIC_COLLECT__) || defined(__DEBUG_GARBAGE_COLLECTOR__)
-    float gc_age;
-#endif
-} Interpreter_t;
-
-extern Interpreter_t *Interpreter_create(const File_System_t *file_system, const void *userdatas[]);
-extern void Interpreter_destroy(Interpreter_t *interpreter);
-
-extern bool Interpreter_input(const Interpreter_t *interpreter);
-extern bool Interpreter_update(Interpreter_t *interpreter, float delta_time);
-extern bool Interpreter_render(const Interpreter_t *interpreter, float ratio);
-extern bool Interpreter_call(const Interpreter_t *interpreter, int nargs, int nresults);
-
-#endif  /* __INTERPRETER_H__ */
+#endif  /* __LIBS_DR_LIBS_H__ */

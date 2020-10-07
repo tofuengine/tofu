@@ -22,9 +22,6 @@
  * SOFTWARE.
  */
 
-#include <linux/limits.h>
-#include <limits.h>
-#include <float.h>
 #include <math.h>
 #include <stddef.h>
 #include <stdio.h>

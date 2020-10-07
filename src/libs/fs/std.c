@@ -29,8 +29,6 @@
 #include <libs/log.h>
 #include <libs/stb.h>
 
-#include <stdarg.h>
-#include <stdio.h>
 #include <sys/stat.h>
 #include <unistd.h>
 

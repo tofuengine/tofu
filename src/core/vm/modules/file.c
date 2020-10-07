@@ -25,14 +25,10 @@
 #include "file.h"
 
 #include <config.h>
-#include <core/vm/interpreter.h>
 #include <libs/fs/fsaux.h>
-#include <libs/log.h>
-#include <libs/stb.h>
+#include <libs/luax.h>
 
 #include "udt.h"
-
-#include <string.h>
 
 static int file_as_string(lua_State *L);
 static int file_as_binary(lua_State *L);

@@ -30,7 +30,7 @@
 typedef struct _Sheet_Data_t {
     size_t width, height;
     const void *pixels;
-    int cell_width, cell_height;
+    size_t cell_width, cell_height;
 } Sheet_Data_t;
 
 extern const Sheet_Data_t *resources_sheets_find(const char *id);

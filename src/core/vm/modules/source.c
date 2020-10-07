@@ -24,15 +24,12 @@
 
 #include "source.h"
 
-#include "udt.h"
-
 #include <config.h>
 #include <core/io/audio.h>
+#include <libs/luax.h>
 #include <libs/log.h>
-#include <libs/stb.h>
 
-#define DR_FLAC_IMPLEMENTATION
-#include <dr_libs/dr_flac.h>
+#include "udt.h"
 
 typedef enum _Source_Types_t {
     SOURCE_TYPE_MUSIC,
@@ -81,7 +78,7 @@ static const luaX_Const _source_constants[] = {
     { "MUSIC", LUA_CT_INTEGER, { .i = SOURCE_TYPE_MUSIC } },
     { "SAMPLE", LUA_CT_INTEGER, { .i = SOURCE_TYPE_SAMPLE } },
     { "MODULE", LUA_CT_INTEGER, { .i = SOURCE_TYPE_MODULE } },
-    { NULL }
+    { NULL, LUA_CT_NIL, { 0 } }
 };
 
 int source_loader(lua_State *L)
@@ -240,7 +237,7 @@ static int source_group2(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
-    size_t group_id = LUAX_INTEGER(L, 2);
+    size_t group_id = (size_t)LUAX_INTEGER(L, 2);
 
     SL_source_set_group(self->source, group_id);
 

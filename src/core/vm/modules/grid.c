@@ -26,13 +26,11 @@
 
 #include <config.h>
 #include <core/vm/interpreter.h>
-#include <libs/imath.h>
 #include <libs/log.h>
+#include <libs/luax.h>
 #include <libs/stb.h>
 
 #include "udt.h"
-
-#include <stdlib.h>
 
 #define LOG_CONTEXT "grid"
 #define META_TABLE  "Tofu_Collections_Grid_mt"
@@ -49,7 +47,7 @@ static int grid_process(lua_State *L);
 
 static const struct luaL_Reg _grid_functions[] = {
     { "new", grid_new },
-    {"__gc", grid_gc },
+    { "__gc", grid_gc },
     {"size", grid_size },
     {"fill", grid_fill },
     {"stride", grid_stride },
@@ -349,9 +347,9 @@ static int grid_process(lua_State *L)
             lua_pushnumber(L, *(ptr++));
             Interpreter_call(interpreter, 3, 3);
 
-            size_t dcolumn = LUAX_INTEGER(L, -3);
-            size_t drow = LUAX_INTEGER(L, -2);
-            Cell_t dvalue = LUAX_NUMBER(L, -1);
+            size_t dcolumn = (size_t)LUAX_INTEGER(L, -3);
+            size_t drow = (size_t)LUAX_INTEGER(L, -2);
+            Cell_t dvalue = (Cell_t)LUAX_NUMBER(L, -1);
             data[drow * width + dcolumn] = dvalue;
 
             lua_pop(L, 3);

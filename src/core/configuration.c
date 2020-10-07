@@ -55,7 +55,7 @@ static void on_parameter(Configuration_t *configuration, const char *key, const 
     } else
     if (strcmp(key, "skippable-frames") == 0) {
         size_t suggested = configuration->fps / 5;
-        configuration->skippable_frames = (size_t)imin(strtol(value, NULL, 0), suggested); // TODO: not sure if `imin` or `imax`. :P
+        configuration->skippable_frames = (size_t)imin((int)strtol(value, NULL, 0), (int)suggested); // TODO: not sure if `imin` or `imax`. :P
     } else
     if (strcmp(key, "fps-cap") == 0) {
         configuration->fps_cap = (size_t)strtoul(value, NULL, 0);

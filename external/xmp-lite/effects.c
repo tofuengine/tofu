@@ -27,9 +27,7 @@
 #include "effects.h"
 #include "period.h"
 #include "virtual.h"
-#include "mixer.h"
 
-#define NOT_IMPLEMENTED
 #define HAS_QUIRK(x) (m->quirk & (x))
 
 #define SET_LFO_NOTZERO(lfo, depth, rate) do { \

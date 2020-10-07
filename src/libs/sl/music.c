@@ -24,12 +24,11 @@
 
 #include "music.h"
 
-#include "common.h"
 #include "internals.h"
 #include "mix.h"
 
 #include <config.h>
-#include <dr_libs/dr_flac.h>
+#include <libs/dr_libs.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 #include <miniaudio/miniaudio.h>
