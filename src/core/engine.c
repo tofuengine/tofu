@@ -282,7 +282,7 @@ void Engine_run(Engine_t *engine)
     float lag = 0.0f;
 
     // https://nkga.github.io/post/frame-pacing-analysis-of-the-game-loop/
-    for (bool running = true; running && !engine->environment->quit && !Display_should_close(engine->display); ) {
+    for (bool running = true; running && !Environment_should_quit(engine->environment) && !Display_should_close(engine->display); ) {
         const double current = glfwGetTime();
         const float elapsed = (float)(current - previous);
         previous = current;
