@@ -48,7 +48,7 @@ static int font_write(lua_State *L);
 
 static const struct luaL_Reg _font_functions[] = {
     { "new", font_new },
-    {"__gc", font_gc },
+    { "__gc", font_gc },
     { "size", font_size },
     { "canvas", font_canvas },
     { "write", font_write },

@@ -78,7 +78,7 @@ static const luaX_Const _source_constants[] = {
     { "MUSIC", LUA_CT_INTEGER, { .i = SOURCE_TYPE_MUSIC } },
     { "SAMPLE", LUA_CT_INTEGER, { .i = SOURCE_TYPE_SAMPLE } },
     { "MODULE", LUA_CT_INTEGER, { .i = SOURCE_TYPE_MODULE } },
-    { NULL }
+    { NULL, LUA_CT_NIL, { 0 } }
 };
 
 int source_loader(lua_State *L)

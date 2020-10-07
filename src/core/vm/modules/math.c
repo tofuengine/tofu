@@ -31,6 +31,7 @@
 #include <libs/sincos.h>
 #include <libs/wave.h>
 
+#include <stdint.h>
 #include <math.h>
 
 static int math_lerp(lua_State *L);
@@ -67,7 +68,7 @@ static const struct luaL_Reg _math_functions[] = {
 static const luaX_Const _math_constants[] = {
     { "SINCOS_PERIOD", LUA_CT_INTEGER, { .i = SINCOS_PERIOD } },
     { "EPSILON", LUA_CT_NUMBER, { .n = __FLT_EPSILON__ } },
-    { NULL }
+    { NULL, LUA_CT_NIL, { 0 } }
 };
 
 static const uint8_t _math_lua[] = {

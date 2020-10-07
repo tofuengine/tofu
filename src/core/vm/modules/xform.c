@@ -47,7 +47,7 @@ static int xform_table(lua_State *L);
 
 static const struct luaL_Reg _xform_functions[] = {
     { "new", xform_new },
-    {"__gc", xform_gc },
+    { "__gc", xform_gc },
     { "canvas", xform_canvas },
     { "blit", xform_blit },
     { "offset", xform_offset },

@@ -34,15 +34,15 @@
 
 #include <dirent.h>
 
-#define LOG_CONTEXT "fs"
+struct _File_System_t {
+    File_System_Mount_t **mounts;
+};
 
 #if PLATFORM_ID == PLATFORM_WINDOWS
   #define realpath(N,R) _fullpath((R),(N),PATH_MAX)
 #endif
 
-struct _File_System_t {
-    File_System_Mount_t **mounts;
-};
+#define LOG_CONTEXT "fs"
 
 static inline File_System_Mount_t *_mount(const char *path)
 {
@@ -111,7 +111,7 @@ File_System_t *FS_create(const char *base_path)
         closedir(dp);
     }
 
-    _attach(file_system, resolved);
+    _attach(file_system, resolved); // Mount the resolved folder, as well (overriding archives).
 
     return file_system;
 }

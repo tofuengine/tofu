@@ -47,7 +47,7 @@ static int grid_process(lua_State *L);
 
 static const struct luaL_Reg _grid_functions[] = {
     { "new", grid_new },
-    {"__gc", grid_gc },
+    { "__gc", grid_gc },
     {"size", grid_size },
     {"fill", grid_fill },
     {"stride", grid_stride },

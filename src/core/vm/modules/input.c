@@ -25,7 +25,6 @@
 #include "input.h"
 
 #include <config.h>
-#include <core/environment.h>
 #include <core/io/input.h>
 #include <libs/map.h>
 

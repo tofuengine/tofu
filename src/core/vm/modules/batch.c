@@ -43,7 +43,7 @@ static int batch_blit(lua_State *L);
 
 static const struct luaL_Reg _batch_functions[] = {
     { "new", batch_new },
-    {"__gc", batch_gc },
+    { "__gc", batch_gc },
     { "grow", batch_grow },
     { "clear", batch_clear },
     { "add", batch_add },
@@ -55,7 +55,7 @@ static const luaX_Const _batch_constants[] = {
     // { "FAST", LUA_CT_INTEGER, { .i = MODE_FAST } },
     // { "SIMPLE", LUA_CT_INTEGER, { .i = MODE_SIMPLE } },
     // { "COMPLETE", LUA_CT_INTEGER, { .i = MODE_COMPLETE } },
-    { NULL }
+    { NULL, LUA_CT_NIL, { 0 } }
 };
 
 int batch_loader(lua_State *L)

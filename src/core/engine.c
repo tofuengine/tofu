@@ -30,9 +30,7 @@
 #include <libs/log.h>
 #include <libs/stb.h>
 
-#if PLATFORM_ID == PLATFORM_LINUX
-  #include <unistd.h>
-#elif PLATFORM_ID == PLATFORM_WINDOWS
+#if PLATFORM_ID == PLATFORM_WINDOWS
   #include <windows.h>
 #endif
 

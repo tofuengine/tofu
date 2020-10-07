@@ -63,7 +63,6 @@ typedef struct _Module_t {
     SL_Props_t *props;
 
     xmp_context context;
-    struct xmp_frame_info frame_info;
 
     ma_pcm_rb buffer;
     bool completed;

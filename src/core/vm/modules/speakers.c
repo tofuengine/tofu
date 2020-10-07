@@ -52,7 +52,7 @@ static const struct luaL_Reg _speakers_functions[] = {
 
 static const luaX_Const _speaker_constants[] = {
     { "DEFAULT_GROUP", LUA_CT_INTEGER, { .i = SL_DEFAULT_GROUP } },
-    { NULL }
+    { NULL, LUA_CT_NIL, { 0 } }
 };
 
 int speakers_loader(lua_State *L)
