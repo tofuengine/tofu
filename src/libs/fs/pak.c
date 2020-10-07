@@ -31,10 +31,6 @@
 #include <libs/rc4.h>
 #include <libs/stb.h>
 
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
 #include <sys/stat.h>
 
 #define LOG_CONTEXT "fs-pak"

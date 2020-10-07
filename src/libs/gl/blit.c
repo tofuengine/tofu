@@ -26,10 +26,8 @@
 
 #include <config.h>
 #include <libs/imath.h>
-#include <libs/log.h>
 #include <libs/sincos.h>
 
-#include <memory.h>
 #include <math.h>
 
 #ifdef __DEBUG_GRAPHICS__

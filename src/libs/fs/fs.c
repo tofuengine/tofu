@@ -33,8 +33,6 @@
 #include "std.h"
 
 #include <dirent.h>
-#include <stdint.h>
-#include <stdio.h>
 
 #define LOG_CONTEXT "fs"
 

@@ -20,12 +20,10 @@
  * THE SOFTWARE.
  */
 
-#include <sys/types.h>
 #include <sys/stat.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 #include <errno.h>
 #ifdef __native_client__
 #include <sys/syslimits.h>

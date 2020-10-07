@@ -26,7 +26,6 @@
 
 #include <config.h>
 #include <libs/log.h>
-#include <libs/gl/gl.h>
 #include <libs/stb.h>
 
 #define LOG_CONTEXT "gl-surface"

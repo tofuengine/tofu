@@ -27,13 +27,9 @@
 #include <config.h>
 #include <core/io/audio.h>
 #include <libs/log.h>
-#include <libs/stb.h>
+#include <libs/luax.h>
 
 #include "udt.h"
-
-#include <math.h>
-#include <string.h>
-#include <time.h>
 
 #define LOG_CONTEXT "speakers"
 

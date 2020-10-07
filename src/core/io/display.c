@@ -26,13 +26,9 @@
 
 #include <config.h>
 #include <platform.h>
-#include <core/engine.h>
 #include <libs/log.h>
 #include <libs/imath.h>
 #include <libs/stb.h>
-
-#include <memory.h>
-#include <stdlib.h>
 
 #define LOG_CONTEXT "display"
 

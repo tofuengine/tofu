@@ -24,9 +24,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <limits.h>
 #include <memory.h>
-#include <errno.h>
 
 #include "dataio.h"
 

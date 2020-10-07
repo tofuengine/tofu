@@ -26,17 +26,12 @@
 
 #include <config.h>
 #include <core/io/display.h>
-#include <core/vm/interpreter.h>
-#include <libs/fs/fsaux.h>
 #include <libs/log.h>
+#include <libs/luax.h>
 #include <libs/map.h>
 #include <libs/stb.h>
 
 #include "udt.h"
-#include "callbacks.h"
-
-#include <math.h>
-#include <string.h>
 
 #define LOG_CONTEXT "xform"
 #define META_TABLE  "Tofu_Graphics_XForm_mt"

@@ -23,7 +23,6 @@
 #pragma GCC diagnostic ignored "-Wshadow"
 
 #include "common.h"
-#include "virtual.h"
 #include "mixer.h"
 #include "precomp_lut.h"
 

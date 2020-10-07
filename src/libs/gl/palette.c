@@ -24,8 +24,6 @@
 
 #include "palette.h"
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #define RED_WEIGHT      2.0f

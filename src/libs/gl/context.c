@@ -29,8 +29,6 @@
 #include <libs/log.h>
 #include <libs/stb.h>
 
-#include "surface.h"
-
 #define LOG_CONTEXT "gl"
 
 static inline void _reset_state(GL_State_t *state, const GL_Surface_t *surface)

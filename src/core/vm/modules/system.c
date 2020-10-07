@@ -27,10 +27,9 @@
 #include <config.h>
 #include <core/environment.h>
 #include <libs/log.h>
+#include <libs/luax.h>
 
 #include "udt.h"
-
-#include <string.h>
 
 #define LOG_CONTEXT "system"
 

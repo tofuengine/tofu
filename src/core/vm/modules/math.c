@@ -27,12 +27,11 @@
 #include <config.h>
 #include <libs/easing.h>
 #include <libs/log.h>
+#include <libs/luax.h>
 #include <libs/sincos.h>
 #include <libs/wave.h>
 
 #include <math.h>
-
-#include "udt.h"
 
 static int math_lerp(lua_State *L);
 static int math_invlerp(lua_State *L);

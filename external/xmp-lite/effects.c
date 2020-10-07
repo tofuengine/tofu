@@ -27,7 +27,6 @@
 #include "effects.h"
 #include "period.h"
 #include "virtual.h"
-#include "mixer.h"
 
 #define HAS_QUIRK(x) (m->quirk & (x))
 

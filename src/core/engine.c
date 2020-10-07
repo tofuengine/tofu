@@ -26,16 +26,10 @@
 
 #include <config.h>
 #include <platform.h>
-#include <core/configuration.h>
 #include <libs/fs/fsaux.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 
-#include <limits.h>
-#include <math.h>
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
 #if PLATFORM_ID == PLATFORM_LINUX
   #include <unistd.h>
 #elif PLATFORM_ID == PLATFORM_WINDOWS

@@ -24,15 +24,12 @@
 
 #include "source.h"
 
-#include "udt.h"
-
 #include <config.h>
 #include <core/io/audio.h>
+#include <libs/luax.h>
 #include <libs/log.h>
-#include <libs/stb.h>
 
-#define DR_FLAC_IMPLEMENTATION
-#include <dr_libs/dr_flac.h>
+#include "udt.h"
 
 typedef enum _Source_Types_t {
     SOURCE_TYPE_MUSIC,

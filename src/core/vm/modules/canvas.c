@@ -27,20 +27,12 @@
 #include <config.h>
 #include <core/environment.h>
 #include <core/io/display.h>
-#include <core/vm/interpreter.h>
 #include <libs/fs/fsaux.h>
-#include <libs/gl/gl.h>
-#include <libs/imath.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 
 #include "callbacks.h"
 #include "udt.h"
-#include "resources/palettes.h"
-
-#include <math.h>
-#include <string.h>
-#include <time.h>
 
 #define LOG_CONTEXT "canvas"
 #define META_TABLE  "Tofu_Graphics_Canvas_mt"

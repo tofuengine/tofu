@@ -27,11 +27,6 @@
 #include <libs/log.h>
 #include <libs/stb.h>
 
-#include <GLFW/glfw3.h>
-#include <glad/glad.h>
-
-#include <stdlib.h>
-
 #define LOG_CONTEXT "program"
 
 bool program_create(Program_t *program)

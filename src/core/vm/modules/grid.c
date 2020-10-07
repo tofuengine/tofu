@@ -26,13 +26,11 @@
 
 #include <config.h>
 #include <core/vm/interpreter.h>
-#include <libs/imath.h>
 #include <libs/log.h>
+#include <libs/luax.h>
 #include <libs/stb.h>
 
 #include "udt.h"
-
-#include <stdlib.h>
 
 #define LOG_CONTEXT "grid"
 #define META_TABLE  "Tofu_Collections_Grid_mt"

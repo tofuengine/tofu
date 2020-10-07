@@ -26,18 +26,16 @@
 
 #include <config.h>
 #include <core/io/display.h>
-#include <core/vm/interpreter.h>
 #include <libs/fs/fsaux.h>
 #include <libs/gl/gl.h>
 #include <libs/log.h>
-#include <libs/stb.h>
+#include <libs/luax.h>
 
 #include "callbacks.h"
 #include "udt.h"
 #include "resources/sheets.h"
 
 #include <math.h>
-#include <string.h>
 
 #define LOG_CONTEXT "font"
 #define META_TABLE  "Tofu_Graphics_Font_mt"

@@ -31,9 +31,6 @@
 
 #include "udt.h"
 
-#include <stdlib.h>
-#include <string.h>
-
 static int input_is_down(lua_State *L);
 static int input_is_up(lua_State *L);
 static int input_is_pressed(lua_State *L);

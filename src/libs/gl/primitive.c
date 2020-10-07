@@ -26,10 +26,6 @@
 
 #include <config.h>
 #include <libs/imath.h>
-#include <libs/gl/gl.h>
-#include <libs/stb.h>
-
-#include <math.h>
 
 #define REGION_INSIDE   0
 #define REGION_LEFT     1

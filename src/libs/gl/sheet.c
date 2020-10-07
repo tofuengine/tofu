@@ -26,10 +26,7 @@
 
 #include <config.h>
 #include <libs/log.h>
-#include <libs/gl/gl.h>
 #include <libs/stb.h>
-
-#include <stdlib.h>
 
 #define LOG_CONTEXT "gl-sheet"
 

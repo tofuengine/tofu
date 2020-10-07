@@ -24,7 +24,6 @@
 
 #include "music.h"
 
-#include "common.h"
 #include "internals.h"
 #include "mix.h"
 
