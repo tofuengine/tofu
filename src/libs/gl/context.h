@@ -31,8 +31,6 @@
 
 #include <stdbool.h>
 
-#define GL_XFORM_TABLE_MAX_OPERATIONS       16
-
 #ifdef __GL_MASK_SUPPORT__
 typedef struct _GL_Mask_t {
     const GL_Surface_t *stencil;
@@ -40,7 +38,7 @@ typedef struct _GL_Mask_t {
 } GL_Mask_t;
 #endif
 
-typedef struct _GL_State_t {
+typedef struct _GL_State_t { // FIXME: rename to `GL_State_s`
     GL_Pixel_t background, color;
     GL_Pattern_t pattern;
     GL_Quad_t clipping_region;
@@ -70,7 +68,7 @@ extern void GL_context_set_background(GL_Context_t *context, GL_Pixel_t index);
 extern void GL_context_set_color(GL_Context_t *context, GL_Pixel_t index);
 extern void GL_context_set_pattern(GL_Context_t *context, GL_Pattern_t pattern);
 extern void GL_context_set_clipping(GL_Context_t *context, const GL_Rectangle_t *region);
-extern void GL_context_set_shifting(GL_Context_t *context, const size_t *from, const size_t *to, size_t count);
+extern void GL_context_set_shifting(GL_Context_t *context, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count);
 extern void GL_context_set_transparent(GL_Context_t *context, const GL_Pixel_t *indexes, const GL_Bool_t *transparent, size_t count);
 #ifdef __GL_MASK_SUPPORT__
 extern void GL_context_set_mask(GL_Context_t *context, const GL_Mask_t *mask);

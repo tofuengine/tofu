@@ -125,7 +125,7 @@ void md5_init(md5_context_t *context)
     context->state[3] = 0x10325476;
 }
 
-void md5_update(md5_context_t *context, const uint8_t *msg, int len)
+void md5_update(md5_context_t *context, const uint8_t *msg, size_t len)
 {
     uint32_t x = (uint32_t)((context->count[0] >> 3) & 0x3F); // Compute number of bytes mod 64
 
@@ -134,9 +134,9 @@ void md5_update(md5_context_t *context, const uint8_t *msg, int len)
     }
     context->count[1] += ((uint32_t)len >> 29);
 
-    int partLen = 64 - x;
+    size_t partLen = 64 - x;
 
-    int i = 0;
+    size_t i = 0;
     if (len >= partLen) { // Transform as many times as possible.
         memcpy(&context->buffer[x], msg, partLen);
         _transform(context->state, context->buffer);

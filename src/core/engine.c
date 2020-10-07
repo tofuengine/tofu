@@ -161,7 +161,7 @@ Engine_t *Engine_create(const char *base_path)
     File_System_Resource_t *icon = _load_icon(engine->file_system, ENTRY_ICON);
     Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined icon loaded");
     Display_Configuration_t display_configuration = { // TODO: reorganize configuration.
-            .icon = icon ? (GLFWimage){ .width = FSX_IWIDTH(icon), .height = FSX_IHEIGHT(icon), .pixels = FSX_IPIXELS(icon) } : (GLFWimage){ 64, 64, (unsigned char *)_default_icon_pixels },
+            .icon = icon ? (GLFWimage){ .width = (int)FSX_IWIDTH(icon), .height = (int)FSX_IHEIGHT(icon), .pixels = FSX_IPIXELS(icon) } : (GLFWimage){ 64, 64, (unsigned char *)_default_icon_pixels },
             .title = engine->configuration.title,
             .width = engine->configuration.width,
             .height = engine->configuration.height,

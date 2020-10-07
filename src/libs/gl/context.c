@@ -39,7 +39,7 @@ static inline void _reset_state(GL_State_t *state, const GL_Surface_t *surface)
             .background = 0,
             .color = 1,
             .pattern = 0,
-            .clipping_region = (GL_Quad_t){ .x0 = 0, .y0 = 0, .x1 = surface->width - 1, .y1 = surface->height - 1 },
+            .clipping_region = (GL_Quad_t){ .x0 = 0, .y0 = 0, .x1 = (int)surface->width - 1, .y1 = (int)surface->height - 1 },
             .shifting = { 0 },
             .transparent = { 0 }
 #ifdef __STENCIL_SUPPORT__
@@ -48,7 +48,7 @@ static inline void _reset_state(GL_State_t *state, const GL_Surface_t *surface)
 #endif
         };
     for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
-        state->shifting[i] = i;
+        state->shifting[i] = (GL_Pixel_t)i;
         state->transparent[i] = GL_BOOL_FALSE;
     }
     state->transparent[0] = GL_BOOL_TRUE;
@@ -163,25 +163,25 @@ void GL_context_set_clipping(GL_Context_t *context, const GL_Rectangle_t *region
         state->clipping_region = (GL_Quad_t){
                 .x0 = 0,
                 .y0 = 0,
-                .x1 = context->surface->width - 1,
-                .y1 = context->surface->height - 1
+                .x1 = (int)context->surface->width - 1,
+                .y1 = (int)context->surface->height - 1
             };
     } else {
         state->clipping_region = (GL_Quad_t){
                 .x0 = imax(0, region->x),
                 .y0 = imax(0, region->y),
-                .x1 = imin(context->surface->width, region->x + region->width) - 1,
-                .y1 = imin(context->surface->height, region->y + region->height) - 1
+                .x1 = imin((int)context->surface->width, region->x + (int)region->width) - 1,
+                .y1 = imin((int)context->surface->height, region->y + (int)region->height) - 1
             };
     }
 }
 
-void GL_context_set_shifting(GL_Context_t *context, const size_t *from, const size_t *to, size_t count)
+void GL_context_set_shifting(GL_Context_t *context, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count)
 {
     GL_State_t *state = &context->state;
     if (!from) {
         for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
-            state->shifting[i] = i;
+            state->shifting[i] = (GL_Pixel_t)i;
         }
     } else {
         for (size_t i = 0; i < count; ++i) {
@@ -232,7 +232,7 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
 
     GL_Pixel_t *ddata = surface->data;
 
-    const int dwidth = surface->width;
+    const int dwidth = (int)surface->width;
 
     const GL_Pixel_t match = ddata[seed.y * dwidth + seed.x];
     const GL_Pixel_t replacement = shifting[index];
@@ -240,7 +240,7 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
     GL_Point_t *stack = NULL;
     arrpush(stack, seed);
 
-    const int dskip = context->surface->width;
+    const int dskip = (int)context->surface->width;
 
     while (arrlen(stack) > 0) {
         const GL_Point_t position = arrpop(stack);
@@ -301,8 +301,8 @@ void GL_context_process(const GL_Context_t *context, GL_Rectangle_t rectangle)
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = rectangle.x,
             .y0 = rectangle.y,
-            .x1 = rectangle.x + rectangle.width - 1,
-            .y1 = rectangle.y + rectangle.height - 1
+            .x1 = rectangle.x + (int)rectangle.width - 1,
+            .y1 = rectangle.y + (int)rectangle.height - 1
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
@@ -326,7 +326,7 @@ void GL_context_process(const GL_Context_t *context, GL_Rectangle_t rectangle)
 
     GL_Pixel_t *sddata = surface->data;
 
-    const int sdwidth = surface->width;
+    const int sdwidth = (int)surface->width;
 
     GL_Pixel_t *sdptr = sddata + drawing_region.y0 * sdwidth + drawing_region.x0;
 
@@ -374,14 +374,14 @@ void GL_context_to_surface(const GL_Context_t *context, const GL_Surface_t *to)
 {
     const GL_Surface_t *from = context->surface;
 
-    size_t width = imin(from->width, to->width);
-    size_t height = imin(from->height, to->height);
+    size_t width = (size_t)imin((int)from->width, (int)to->width);
+    size_t height = (size_t)imin((int)from->height, (int)to->height);
 
     const GL_Pixel_t *src = from->data;
     GL_Pixel_t *dst = to->data;
 
-    const int src_skip = from->width - width;
-    const int dst_skip = to->width - width;
+    const int src_skip = (int)from->width - (int)width;
+    const int dst_skip = (int)to->width - (int)width;
 
     for (int i = height; i; --i) {
         for (int j = width; j; --j) {

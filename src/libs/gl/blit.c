@@ -56,8 +56,8 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
             .y0 = position.y,
-            .x1 = position.x + area.width - 1,
-            .y1 = position.y + area.height - 1
+            .x1 = position.x + (int)area.width - 1,
+            .y1 = position.y + (int)area.height - 1
         };
 
     int skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
@@ -87,8 +87,8 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
     const GL_Pixel_t *sdata = surface->data;
     GL_Pixel_t *ddata = context->surface->data;
 
-    const int swidth = surface->width;
-    const int dwidth = context->surface->width;
+    const int swidth = (int)surface->width;
+    const int dwidth = (int)context->surface->width;
 
     const GL_Pixel_t *sptr = sdata + (area.y + skip_y) * swidth + (area.x + skip_x);
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
@@ -156,8 +156,8 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
     const GL_Mask_t *mask = &state->mask;
 #endif
 
-    const int drawing_width = (int)((float)(area.width * fabsf(scale_x)) + 0.5f);
-    const int drawing_height = (int)((float)(area.height * fabsf(scale_y)) + 0.5f);
+    const int drawing_width = (int)(area.width * fabsf(scale_x) + 0.5f);
+    const int drawing_height = (int)(area.height * fabsf(scale_y) + 0.5f);
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
@@ -193,12 +193,12 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
     const GL_Pixel_t *sdata = surface->data;
     GL_Pixel_t *ddata = context->surface->data;
 
-    const int swidth = surface->width;
-    const int dwidth = context->surface->width;
+    const int swidth = (int)surface->width;
+    const int dwidth = (int)context->surface->width;
 
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
-    const size_t dskip = dwidth - width;
+    const int dskip = dwidth - width;
 
     const float du = 1.0f / scale_x; // Texture coordinates deltas (signed).
     const float dv = 1.0f / scale_y;
@@ -362,8 +362,8 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
 
     const int sminx = area.x;
     const int sminy = area.y;
-    const int smaxx = area.x + area.width - 1;
-    const int smaxy = area.y + area.height - 1;
+    const int smaxx = area.x + (int)area.width - 1;
+    const int smaxy = area.y + (int)area.height - 1;
 
     const float M11 = c / scale_x;  // Since we are doing an *inverse* transformation, we combine rotation and *then* scaling (TRS -> SRT).
     const float M12 = s / scale_x;  // | 1/sx    0 | |  c s |
@@ -378,8 +378,8 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const GL_Pixel_t *sdata = surface->data;
     GL_Pixel_t *ddata = context->surface->data;
 
-    const int swidth = surface->width;
-    const int dwidth = context->surface->width;
+    const int swidth = (int)surface->width;
+    const int dwidth = (int)context->surface->width;
 
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
@@ -511,8 +511,8 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
         return;
     }
 
-    const int sw = surface->width;
-    const int sh = surface->height;
+    const int sw = (int)surface->width;
+    const int sh = (int)surface->height;
     const int sminx = 0;
     const int sminy = 0;
     const int smaxx = sw - 1;
@@ -521,8 +521,8 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
     const GL_Pixel_t *sdata = surface->data;
     GL_Pixel_t *ddata = context->surface->data;
 
-    const int swidth = surface->width;
-    const int dwidth = context->surface->width;
+    const int swidth = (int)surface->width;
+    const int dwidth = (int)context->surface->width;
 
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 

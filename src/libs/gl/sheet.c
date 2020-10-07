@@ -61,14 +61,14 @@ static GL_Rectangle_t *_precompute_cells(size_t width, size_t height, size_t cel
     }
     size_t k = 0;
     for (size_t i = 0; i < rows; ++i) {
-        int y = i * cell_height;
+        size_t y = i * cell_height;
         for (size_t j = 0; j < columns; ++j) {
-            int x = j * cell_width;
+            size_t x = j * cell_width;
             cells[k++] = (GL_Rectangle_t){
-                    .x = x,
-                    .y = y,
+                    .x = (int)x,
+                    .y = (int)y,
                     .width = cell_width,
-                    .height =cell_height
+                    .height = cell_height
                 };
         }
     }

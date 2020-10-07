@@ -349,9 +349,9 @@ static int grid_process(lua_State *L)
             lua_pushnumber(L, *(ptr++));
             Interpreter_call(interpreter, 3, 3);
 
-            size_t dcolumn = LUAX_INTEGER(L, -3);
-            size_t drow = LUAX_INTEGER(L, -2);
-            Cell_t dvalue = LUAX_NUMBER(L, -1);
+            size_t dcolumn = (size_t)LUAX_INTEGER(L, -3);
+            size_t drow = (size_t)LUAX_INTEGER(L, -2);
+            Cell_t dvalue = (Cell_t)LUAX_NUMBER(L, -1);
             data[drow * width + dcolumn] = dvalue;
 
             lua_pop(L, 3);

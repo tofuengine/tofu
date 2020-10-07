@@ -142,8 +142,8 @@ SL_Mix_t mix_twin_pan(float left_pan, float right_pan)
             .right_to_left = 1.0f - right_theta, .right_to_right = right_theta
         };
 #elif __SL_PANNING_LAW__ == PANNING_LAW_CONSTANT_POWER_SINCOS
-    const float left_theta = (left_pan + 1.0f) * 0.5f * M_PI_2; // [-1, 1] -> [0 , 1] -> [0, pi/2]
-    const float right_theta = (right_pan + 1.0f) * 0.5f * M_PI_2;
+    const float left_theta = (left_pan + 1.0f) * 0.5f * (float)M_PI_2; // [-1, 1] -> [0 , 1] -> [0, pi/2]
+    const float right_theta = (right_pan + 1.0f) * 0.5f * (float)M_PI_2;
     return (SL_Mix_t){
             .left_to_left = cosf(left_theta), .left_to_right = sinf(left_theta),
             .right_to_left = cosf(right_theta), .right_to_right = sinf(right_theta),
@@ -164,7 +164,7 @@ SL_Mix_t mix_pan(float pan)
     const float theta = (pan + 1.0f) * 0.5f; // [-1, 1] -> [0 , 1]
     return (SL_Mix_t){ .left_to_left = 1.0f - theta, .right_to_right = theta }; // powf(theta, 1)
 #elif __SL_PANNING_LAW__ == PANNING_LAW_CONSTANT_POWER_SINCOS
-    const float theta = (pan + 1.0f) * 0.5f * M_PI_2; // [-1, 1] -> [0 , 1] -> [0, pi/2]
+    const float theta = (pan + 1.0f) * 0.5f * (float)M_PI_2; // [-1, 1] -> [0 , 1] -> [0, pi/2]
     return (SL_Mix_t){ .left_to_left = cosf(theta), .right_to_right = sinf(theta) };
 #elif __SL_PANNING_LAW__ == PANNING_LAW_CONSTANT_POWER_SQRT
     const float theta = (pan + 1.0f) * 0.5f; // [-1, 1] -> [0 , 1]
@@ -186,10 +186,10 @@ SL_Mix_t mix_balance(float balance)
     }
 #elif __SL_BALANCE_LAW__ == BALANCE_LAW_SINCOS
     if (balance < 0.0f) {
-        return (SL_Mix_t){ .left_to_left = 1.0f, .right_to_right = sinf((1.0f + balance) * M_PI_2) };
+        return (SL_Mix_t){ .left_to_left = 1.0f, .right_to_right = sinf((1.0f + balance) * (float)M_PI_2) };
     } else
     if (balance > 0.0f) {
-        return (SL_Mix_t){ .left_to_left = sinf((1.0f - balance) * M_PI_2), .right_to_right = 1.0f };
+        return (SL_Mix_t){ .left_to_left = sinf((1.0f - balance) * (float)M_PI_2), .right_to_right = 1.0f };
     } else {
         return (SL_Mix_t){ .left_to_left = 1.0f, .right_to_right = 1.0f };
     }

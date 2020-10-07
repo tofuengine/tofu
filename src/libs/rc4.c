@@ -28,7 +28,7 @@ void rc4_schedule(rc4_context_t *context, const uint8_t *key, size_t key_size)
 {
     uint8_t *S = context->S;
     for (size_t k = 0; k < 256; ++k) {
-        S[k] = k;
+        S[k] = (uint8_t)k;
     }
     uint8_t i = 0, j = 0;
     for (size_t k = 0; k < 256; ++k) {

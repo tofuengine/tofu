@@ -85,14 +85,14 @@ void GL_surface_destroy(GL_Surface_t *surface)
 
 void GL_surface_to_rgba(const GL_Surface_t *surface, const GL_Palette_t *palette, GL_Color_t *vram)
 {
-    const int data_size = surface->data_size;
+    const size_t data_size = surface->data_size;
     const GL_Color_t *colors = palette->colors;
 #ifdef __DEBUG_GRAPHICS__
     int count = palette->count;
 #endif
     const GL_Pixel_t *src = surface->data;
     GL_Color_t *dst = vram;
-    for (int i = data_size; i; --i) {
+    for (size_t i = data_size; i; --i) {
         GL_Pixel_t index = *src++;
 #ifdef __DEBUG_GRAPHICS__
         GL_Color_t color;

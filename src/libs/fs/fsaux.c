@@ -158,8 +158,8 @@ static File_System_Resource_t* _load_as_image(File_System_Handle_t *handle)
             .type = FILE_SYSTEM_RESOURCE_IMAGE,
             .var = {
                 .image = {
-                        .width = width,
-                        .height = height,
+                        .width = (size_t)width,
+                        .height = (size_t)height,
                         .pixels = pixels
                     }
                 }

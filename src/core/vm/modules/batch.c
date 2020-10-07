@@ -76,7 +76,7 @@ static int batch_new(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const Bank_Object_t *bank = (const Bank_Object_t *)LUAX_USERDATA(L, 1);
-    size_t slots = LUAX_INTEGER(L, 2);
+    size_t slots = (size_t)LUAX_INTEGER(L, 2);
 
     GL_Batch_t *batch = GL_batch_create(bank->sheet, slots);
     if (!batch) {
@@ -124,7 +124,7 @@ static int batch_grow(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Batch_Object_t *self = (Batch_Object_t *)LUAX_USERDATA(L, 1);
-    size_t amount = LUAX_INTEGER(L, 2);
+    size_t amount = (size_t)LUAX_INTEGER(L, 2);
 
     bool grown = GL_batch_grow(self->batch, amount);
     if (!grown) {
