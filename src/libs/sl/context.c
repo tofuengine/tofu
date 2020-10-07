@@ -74,7 +74,7 @@ static void _fire_on_group_changed(const SL_Context_t *context, size_t group_id)
     Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "context group #%d changed, firing event", group_id);
 
     SL_Source_t **current = context->sources;
-    for (size_t i = arrlen(context->sources); i; --i) {
+    for (size_t count = arrlen(context->sources); count; --count) {
         SL_Source_t *source = *(current++);
 
         SL_source_on_group_changed(source, group_id);
@@ -168,7 +168,7 @@ void SL_context_halt(SL_Context_t *context)
 bool SL_context_update(SL_Context_t *context, float delta_time)
 {
     SL_Source_t **current = context->sources;
-    for (size_t i = arrlen(context->sources); i; --i) {
+    for (size_t count = arrlen(context->sources); count; --count) {
         SL_Source_t *source = *(current++);
         bool result = ((Source_t *)source)->vtable.update(source, delta_time);
         if (!result) {
@@ -181,11 +181,11 @@ bool SL_context_update(SL_Context_t *context, float delta_time)
 void SL_context_generate(SL_Context_t *context, void *output, size_t frames_requested)
 {
     // Backward scan, to remove to-be-untracked sources.
-    for (int i = (int)arrlen(context->sources) - 1; i >= 0; --i) {
-        SL_Source_t *source = context->sources[i];
+    for (int index = (int)arrlen(context->sources) - 1; index >= 0; --index) {
+        SL_Source_t *source = context->sources[index];
         bool still_running = ((Source_t *)source)->vtable.generate(source, output, frames_requested);
         if (!still_running) {
-            arrdel(context->sources, i);
+            arrdel(context->sources, index);
         }
     }
 }

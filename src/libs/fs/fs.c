@@ -160,8 +160,8 @@ File_System_Mount_t *FS_locate(const File_System_t *file_system, const char *fil
 {
 #ifdef __FS_SUPPORT_MOUNT_OVERRIDE__
     // Backward scan, later mounts gain priority over existing ones.
-    for (int i = (int)arrlen(file_system->mounts) - 1; i >= 0; --i) {
-        File_System_Mount_t *mount = file_system->mounts[i];
+    for (int index = (int)arrlen(file_system->mounts) - 1; index >= 0; --index) {
+        File_System_Mount_t *mount = file_system->mounts[index];
 #else
     File_System_Mount_t **current = file_system->mounts;
     for (size_t count = arrlen(file_system->mounts); count; --count) {
