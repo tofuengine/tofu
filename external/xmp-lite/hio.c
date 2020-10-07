@@ -80,7 +80,7 @@ typedef struct {
 	size_t size;
 } MFILE;
 
-static void *mio_open(const void *ptr, long size)
+static void *mio_open(const void *ptr, size_t size)
 {
 	MFILE *m = (MFILE *)malloc(sizeof(MFILE));
 	if (!m)
@@ -139,10 +139,10 @@ static int mio_seek(void *handle, long offset, int whence)
 			break;
 	}
 
-	if (position < 0 || position >= (long)m->size)
+	if (position < 0 || (size_t)position >= m->size)
 		return -1;
 
-	m->pos = position;
+	m->pos = (size_t)position;
 
 	return 0;
 }

@@ -181,7 +181,7 @@ LIBXMP_EXPORT int xmp_set_row(xmp_context opaque, int row)
 	int pos = p->pos;
 	int pattern = mod->xxo[pos];
 
-	if (pos < 0 || pos >= mod->len) {
+	if (pos < 0 || pos >= mod->len) { // FIXME: should this be checked before indexing with this?
 		pos = 0;
 	}
 
