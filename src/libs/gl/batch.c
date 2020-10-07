@@ -97,7 +97,7 @@ void GL_batch_blit(const GL_Batch_t *batch, const GL_Context_t *context)
     const GL_Rectangle_t *cells = sheet->cells;
 
     GL_Batch_Sprite_t *current = batch->sprites;
-    for (int count = arrlen(batch->sprites); count; --count) {
+    for (size_t count = arrlen(batch->sprites); count; --count) {
         GL_Batch_Sprite_t *sprite = current++;
         GL_context_blit(context, sheet->atlas, cells[sprite->cell_id], sprite->position);
     }
@@ -109,7 +109,7 @@ void GL_batch_blit_s(const GL_Batch_t *batch, const GL_Context_t *context)
     const GL_Rectangle_t *cells = sheet->cells;
 
     GL_Batch_Sprite_t *current = batch->sprites;
-    for (int count = arrlen(batch->sprites); count; --count) {
+    for (size_t count = arrlen(batch->sprites); count; --count) {
         GL_Batch_Sprite_t *sprite = current++;
         GL_context_blit_s(context, sheet->atlas, cells[sprite->cell_id], sprite->position, sprite->sx, sprite->sy);
     }
@@ -121,7 +121,7 @@ void GL_batch_blit_sr(const GL_Batch_t *batch, const GL_Context_t *context)
     const GL_Rectangle_t *cells = sheet->cells;
 
     GL_Batch_Sprite_t *current = batch->sprites;
-    for (int count = arrlen(batch->sprites); count; --count) {
+    for (size_t count = arrlen(batch->sprites); count; --count) {
         GL_Batch_Sprite_t *sprite = current++;
         GL_context_blit_sr(context, sheet->atlas, cells[sprite->cell_id], sprite->position, sprite->sx, sprite->sy, sprite->rotation, sprite->ax, sprite->ay);
     }

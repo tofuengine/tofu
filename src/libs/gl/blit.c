@@ -572,7 +572,7 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
                     case GL_XFORM_REGISTER_D: { d = value; } break;
                     case GL_XFORM_REGISTER_X: { x0 = value; } break;
                     case GL_XFORM_REGISTER_Y: { y0 = value; } break;
-                    default: { ; } break;
+                    default: { } break;
                 }
             }
             ++table;

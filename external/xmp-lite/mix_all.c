@@ -140,14 +140,6 @@
     old_vl += delta_l; \
 } while (0)
 
-#define MIX_STEREO_FILTER_AC() do { \
-    int vr = old_vr >> 8; \
-    int vl = old_vl >> 8; \
-    MIX_STEREO_FILTER(); \
-    old_vr += delta_r; \
-    old_vl += delta_l; \
-} while (0)
-
 #define VAR_NORM(x) \
     register int smp_in; \
     x *sptr = vi->sptr; \

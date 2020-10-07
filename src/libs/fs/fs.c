@@ -121,7 +121,7 @@ File_System_t *FS_create(const char *base_path)
 void FS_destroy(File_System_t *file_system)
 {
     File_System_Mount_t **current = file_system->mounts;
-    for (int count = arrlen(file_system->mounts); count; --count) {
+    for (size_t count = arrlen(file_system->mounts); count; --count) {
         File_System_Mount_t *mount = *(current++);
         _unmount(mount);
     }
@@ -153,18 +153,18 @@ File_System_Handle_t *FS_locate_and_open(const File_System_t *file_system, const
         return NULL;
     }
 
-    return FS_open(mount, file);;
+    return FS_open(mount, file);
 }
 
 File_System_Mount_t *FS_locate(const File_System_t *file_system, const char *file)
 {
 #ifdef __FS_SUPPORT_MOUNT_OVERRIDE__
     // Backward scan, later mounts gain priority over existing ones.
-    for (int i = arrlen(file_system->mounts) - 1; i >= 0; --i) {
+    for (int i = (int)arrlen(file_system->mounts) - 1; i >= 0; --i) {
         File_System_Mount_t *mount = file_system->mounts[i];
 #else
     File_System_Mount_t **current = file_system->mounts;
-    for (int count = arrlen(file_system->mounts); count; --count) {
+    for (size_t count = arrlen(file_system->mounts); count; --count) {
         File_System_Mount_t *mount = *(current++);
 #endif
         if (((const Mount_t *)mount)->vtable.contains(mount, file)) {
