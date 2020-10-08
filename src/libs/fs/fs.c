@@ -147,7 +147,7 @@ File_System_Handle_t *FS_locate_and_open(const File_System_t *file_system, const
 {
     const File_System_Mount_t *mount = FS_locate(file_system, file);
     if (!mount) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't locale file `%s`", file);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't locate file `%s`", file);
         return NULL;
     }
 

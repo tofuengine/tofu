@@ -200,12 +200,6 @@ static Storage_Resource_t* _load_as_image(File_System_Handle_t *handle)
     return resource;
 }
 
-bool Storage_exists(const Storage_t *storage, const char *file)
-{
-    const File_System_Mount_t *mount = FS_locate(storage->context, file);
-    return mount ? true : false;
-}
-
 Storage_Resource_t *Storage_load(const Storage_t *storage, const char *file, Storage_Resource_Types_t type)
 {
     File_System_Handle_t *handle = FS_locate_and_open(storage->context, file);

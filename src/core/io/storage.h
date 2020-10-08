@@ -72,7 +72,6 @@ extern void Storage_destroy(Storage_t *storage);
 
 extern File_System_Handle_t *Storage_open(const Storage_t *storage, const char *file);
 
-extern bool Storage_exists(const Storage_t *storage, const char *file);
 extern Storage_Resource_t *Storage_load(const Storage_t *storage, const char *file, Storage_Resource_Types_t type);
 extern void Storage_release(Storage_Resource_t *resource);
 

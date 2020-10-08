@@ -92,34 +92,6 @@ static bool _configure(const Storage_t *storage, Configuration_t *configuration)
     return true;
 }
 
-static Storage_Resource_t *_load_icon(const Storage_t *storage, const char *file)
-{
-    if (!file || file[0] == '\0') {
-        return NULL;
-    }
-
-    if (!Storage_exists(storage, file)) {
-        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "file `%s` doesn't exist", file);
-        return NULL;
-    }
-
-    return Storage_load(storage, file, STORAGE_RESOURCE_IMAGE);
-}
-
-static Storage_Resource_t *_load_mappings(const Storage_t *storage, const char *file)
-{
-    if (!file || file[0] == '\0') {
-        return NULL;
-    }
-
-    if (!Storage_exists(storage, file)) {
-        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "file `%s` doesn't exist", file);
-        return NULL;
-    }
-
-    return Storage_load(storage, file, STORAGE_RESOURCE_STRING);
-}
-
 Engine_t *Engine_create(const char *base_path)
 {
     Engine_t *engine = malloc(sizeof(Engine_t));
@@ -149,7 +121,7 @@ Engine_t *Engine_create(const char *base_path)
 
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "version %s", TOFU_VERSION_NUMBER);
 
-    Storage_Resource_t *icon = _load_icon(engine->storage, ENTRY_ICON);
+    Storage_Resource_t *icon = Storage_load(engine->storage, ENTRY_ICON, STORAGE_RESOURCE_IMAGE);
     Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined icon loaded");
     Display_Configuration_t display_configuration = { // TODO: reorganize configuration.
             .icon = icon ? (GLFWimage){ .width = (int)S_IWIDTH(icon), .height = (int)S_IHEIGHT(icon), .pixels = S_IPIXELS(icon) } : (GLFWimage){ 64, 64, (unsigned char *)_default_icon_pixels },
@@ -170,7 +142,7 @@ Engine_t *Engine_create(const char *base_path)
         return NULL;
     }
 
-    Storage_Resource_t *mappings = _load_mappings(engine->storage, ENTRY_GAMECONTROLLER_DB);
+    Storage_Resource_t *mappings = Storage_load(engine->storage, ENTRY_GAMECONTROLLER_DB, STORAGE_RESOURCE_STRING);
     Log_assert(!mappings, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined controller mappings loaded");
     Input_Configuration_t input_configuration = {
             .mappings = mappings ? S_SCHARS(mappings) : (const char *)_default_mappings,

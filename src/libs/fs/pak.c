@@ -165,7 +165,7 @@ File_System_Mount_t *pak_mount(const char *path)
             break;
         }
 
-        char *entry_name = malloc((entry_header.name + 1) * sizeof(char));
+        char *entry_name = malloc(sizeof(char) * (entry_header.name + 1));
         if (!entry_name) {
             Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate memory for entry #%d", i);
             break;
