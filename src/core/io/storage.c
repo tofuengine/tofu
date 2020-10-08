@@ -22,14 +22,43 @@
  * SOFTWARE.
  */
 
-#include "fsaux.h"
+#include "storage.h"
 
 #include <libs/log.h>
 #include <libs/stb.h>
 
 #include <stdint.h>
 
-#define LOG_CONTEXT "fs-aux"
+#define LOG_CONTEXT "storage"
+
+Storage_t *Storage_create(const char *base_path)
+{
+    Storage_t *storage = malloc(sizeof(Storage_t));
+    if (!storage) {
+        return NULL;
+    }
+
+    *storage = (Storage_t){ 0 };
+
+    storage->context = FS_create(base_path);
+    if (!storage->context) {
+        free(storage);
+        return NULL;
+    }
+
+    return storage;
+}
+
+void Storage_destroy(Storage_t *storage)
+{
+    FS_destroy(storage->context);
+    free(storage);
+}
+
+File_System_Handle_t *Storage_open(const Storage_t *storage, const char *file)
+{
+    return FS_locate_and_open(storage->context, file);
+}
 
 static void *_load(File_System_Handle_t *handle, bool null_terminate, size_t *size)
 {
@@ -42,20 +71,23 @@ static void *_load(File_System_Handle_t *handle, bool null_terminate, size_t *si
         FS_close(handle);
         return NULL;
     }
+
     size_t bytes_read = FS_read(handle, data, bytes_requested);
     if (bytes_read < bytes_requested) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d bytes of data (%d available)", bytes_requested, bytes_read);
         free(data);
         return NULL;
     }
+
     if (null_terminate) {
         ((char *)data)[bytes_read] = '\0';
     }
+
     *size = bytes_read;
     return data;
 }
 
-static File_System_Resource_t *_load_as_string(File_System_Handle_t *handle)
+static Storage_Resource_t *_load_as_string(File_System_Handle_t *handle)
 {
     size_t length;
     void *chars = _load(handle, true, &length);
@@ -64,15 +96,15 @@ static File_System_Resource_t *_load_as_string(File_System_Handle_t *handle)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded a %d characters long string", length);
 
-    File_System_Resource_t *resource = malloc(sizeof(File_System_Resource_t));
+    Storage_Resource_t *resource = malloc(sizeof(Storage_Resource_t));
     if (!resource) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "cant' allocate resource");
         free(chars);
         return NULL;
     }
 
-    *resource = (File_System_Resource_t){
-            .type = FILE_SYSTEM_RESOURCE_STRING,
+    *resource = (Storage_Resource_t){
+            .type = STORAGE_RESOURCE_STRING,
             .var = {
                 .string = {
                         .chars = (char *)chars,
@@ -84,7 +116,7 @@ static File_System_Resource_t *_load_as_string(File_System_Handle_t *handle)
     return resource;
 }
 
-static File_System_Resource_t *_load_as_binary(File_System_Handle_t *handle)
+static Storage_Resource_t *_load_as_binary(File_System_Handle_t *handle)
 {
     size_t size;
     void *ptr = _load(handle, false, &size);
@@ -93,15 +125,15 @@ static File_System_Resource_t *_load_as_binary(File_System_Handle_t *handle)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded %d bytes blob", size);
 
-    File_System_Resource_t *resource = malloc(sizeof(File_System_Resource_t));
+    Storage_Resource_t *resource = malloc(sizeof(Storage_Resource_t));
     if (!resource) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "cant' allocate resource");
         free(ptr);
         return NULL;
     }
 
-    *resource = (File_System_Resource_t){
-            .type = FILE_SYSTEM_RESOURCE_BLOB,
+    *resource = (Storage_Resource_t){
+            .type = STORAGE_RESOURCE_BLOB,
             .var = {
                 .blob = {
                         .ptr = ptr,
@@ -137,7 +169,7 @@ static const stbi_io_callbacks _stbi_io_callbacks = {
     _stbi_io_eof,
 };
 
-static File_System_Resource_t* _load_as_image(File_System_Handle_t *handle)
+static Storage_Resource_t* _load_as_image(File_System_Handle_t *handle)
 {
     int width, height, components;
     void *pixels = stbi_load_from_callbacks(&_stbi_io_callbacks, handle, &width, &height, &components, STBI_rgb_alpha);
@@ -147,15 +179,15 @@ static File_System_Resource_t* _load_as_image(File_System_Handle_t *handle)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded %dx%d image", width, height);
 
-    File_System_Resource_t *resource = malloc(sizeof(File_System_Resource_t));
+    Storage_Resource_t *resource = malloc(sizeof(Storage_Resource_t));
     if (!resource) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "cant' allocate resource");
         stbi_image_free(pixels);
         return NULL;
     }
 
-    *resource = (File_System_Resource_t){
-            .type = FILE_SYSTEM_RESOURCE_IMAGE,
+    *resource = (Storage_Resource_t){
+            .type = STORAGE_RESOURCE_IMAGE,
             .var = {
                 .image = {
                         .width = (size_t)width,
@@ -168,32 +200,27 @@ static File_System_Resource_t* _load_as_image(File_System_Handle_t *handle)
     return resource;
 }
 
-bool FSX_exists(const File_System_t *file_system, const char *file)
+bool Storage_exists(const Storage_t *storage, const char *file)
 {
-    File_System_Mount_t *mount = FS_locate(file_system, file);
+    const File_System_Mount_t *mount = FS_locate(storage->context, file);
     return mount ? true : false;
 }
 
-File_System_Resource_t *FSX_load(const File_System_t *file_system, const char *file, File_System_Resource_Types_t type)
+Storage_Resource_t *Storage_load(const Storage_t *storage, const char *file, Storage_Resource_Types_t type)
 {
-    File_System_Mount_t *mount = FS_locate(file_system, file);
-    if (!mount) {
-        return NULL;
-    }
-
-    File_System_Handle_t *handle = FS_open(mount, file);
+    File_System_Handle_t *handle = FS_locate_and_open(storage->context, file);
     if (!handle) {
         return NULL;
     }
 
-    File_System_Resource_t *resource = NULL;
-    if (type == FILE_SYSTEM_RESOURCE_STRING) {
+    Storage_Resource_t *resource = NULL;
+    if (type == STORAGE_RESOURCE_STRING) { // FIXME: use array of functions.
         resource = _load_as_string(handle);
     } else
-    if (type == FILE_SYSTEM_RESOURCE_BLOB) {
+    if (type == STORAGE_RESOURCE_BLOB) {
         resource = _load_as_binary(handle);
     } else
-    if (type == FILE_SYSTEM_RESOURCE_IMAGE) {
+    if (type == STORAGE_RESOURCE_IMAGE) {
         resource = _load_as_image(handle);
     }
 
@@ -202,20 +229,20 @@ File_System_Resource_t *FSX_load(const File_System_t *file_system, const char *f
     return resource;
 }
 
-void FSX_release(File_System_Resource_t *resource)
+void Storage_release(Storage_Resource_t *resource)
 {
     if (!resource) {
         return;
     }
-    if (resource->type == FILE_SYSTEM_RESOURCE_STRING) {
+    if (resource->type == STORAGE_RESOURCE_STRING) {
         free(resource->var.string.chars);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource-data at %p freed (string)", resource->var.string.chars);
     } else
-    if (resource->type == FILE_SYSTEM_RESOURCE_BLOB) {
+    if (resource->type == STORAGE_RESOURCE_BLOB) {
         free(resource->var.blob.ptr);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource-data at %p freed (blob)", resource->var.blob.ptr);
     } else
-    if (resource->type == FILE_SYSTEM_RESOURCE_IMAGE) {
+    if (resource->type == STORAGE_RESOURCE_IMAGE) {
         stbi_image_free(resource->var.image.pixels);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource-data at %p freed (image)", resource->var.image.pixels);
     }
