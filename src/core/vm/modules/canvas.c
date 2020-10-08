@@ -27,7 +27,7 @@
 #include <config.h>
 #include <core/environment.h>
 #include <core/io/display.h>
-#include <libs/fs/fsaux.h>
+#include <core/io/storage.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 
@@ -141,15 +141,15 @@ static int canvas_new1(lua_State *L)
     LUAX_SIGNATURE_END
     const char *file = LUAX_STRING(L, 1);
 
-    const File_System_t *file_system = (const File_System_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
+    const Storage_t *storage = (const Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    File_System_Resource_t *image = FSX_load(file_system, file, FILE_SYSTEM_RESOURCE_IMAGE);
+    Storage_Resource_t *image = Storage_load(storage, file, STORAGE_RESOURCE_IMAGE);
     if (!image) {
         return luaL_error(L, "can't load file `%s`", file);
     }
-    GL_Context_t *context = GL_context_decode(FSX_IWIDTH(image), FSX_IHEIGHT(image), FSX_IPIXELS(image), surface_callback_palette, (void *)&display->palette);
-    FSX_release(image);
+    GL_Context_t *context = GL_context_decode(S_IWIDTH(image), S_IHEIGHT(image), S_IPIXELS(image), surface_callback_palette, (void *)&display->palette);
+    Storage_release(image);
     if (!context) {
         return luaL_error(L, "can't decode file `%s`", file);
     }

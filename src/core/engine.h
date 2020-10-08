@@ -30,8 +30,8 @@
 #include <core/io/audio.h>
 #include <core/io/display.h>
 #include <core/io/input.h>
+#include <core/io/storage.h>
 #include <core/vm/interpreter.h>
-#include <libs/fs/fs.h>
 
 #include <stdbool.h>
 #include <limits.h>
@@ -43,7 +43,7 @@
 typedef struct _Engine_t {
     Configuration_t configuration;
 
-    File_System_t *file_system;
+    Storage_t *storage;
     Display_t *display;
     Input_t *input;
     Audio_t *audio;

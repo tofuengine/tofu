@@ -26,7 +26,7 @@
 
 #include <config.h>
 #include <core/io/display.h>
-#include <libs/fs/fsaux.h>
+#include <core/io/storage.h>
 #include <libs/gl/gl.h>
 #include <libs/log.h>
 #include <libs/luax.h>
@@ -80,7 +80,7 @@ static int font_new3(lua_State *L)
     size_t glyph_width = (size_t)LUAX_INTEGER(L, 2);
     size_t glyph_height = (size_t)LUAX_INTEGER(L, 3);
 
-    const File_System_t *file_system = (const File_System_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
+    const Storage_t *storage = (const Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     GL_Surface_t *surface;
@@ -99,12 +99,12 @@ static int font_new3(lua_State *L)
             glyph_height = data->cell_height;
             Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "default font `%s` size is %dx%d", file, glyph_width, glyph_height);
         } else {
-            File_System_Resource_t *image = FSX_load(file_system, file, FILE_SYSTEM_RESOURCE_IMAGE);
+            Storage_Resource_t *image = Storage_load(storage, file, STORAGE_RESOURCE_IMAGE);
             if (!image) {
                 return luaL_error(L, "can't load file `%s`", file);
             }
-            surface = GL_surface_decode(FSX_IWIDTH(image), FSX_IHEIGHT(image), FSX_IPIXELS(image), surface_callback_palette, (void *)&display->palette);
-            FSX_release(image);
+            surface = GL_surface_decode(S_IWIDTH(image), S_IHEIGHT(image), S_IPIXELS(image), surface_callback_palette, (void *)&display->palette);
+            Storage_release(image);
             if (!surface) {
                 return luaL_error(L, "can't decode file `%s`", file);
             }
@@ -158,7 +158,7 @@ static int font_new5(lua_State *L)
     GL_Pixel_t background_index = (GL_Pixel_t)LUAX_INTEGER(L, 4);
     GL_Pixel_t foreground_index = (GL_Pixel_t)LUAX_INTEGER(L, 5);
 
-    const File_System_t *file_system = (const File_System_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
+    const Storage_t *storage = (const Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     GL_Surface_t *surface;
@@ -179,12 +179,12 @@ static int font_new5(lua_State *L)
             glyph_height = data->cell_height;
             Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "default font `%s` size is %dx%d", file, glyph_width, glyph_height);
         } else {
-            File_System_Resource_t *image = FSX_load(file_system, file, FILE_SYSTEM_RESOURCE_IMAGE);
+            Storage_Resource_t *image = Storage_load(storage, file, STORAGE_RESOURCE_IMAGE);
             if (!image) {
                 return luaL_error(L, "can't load file `%s`", file);
             }
-            surface = GL_surface_decode(FSX_IWIDTH(image), FSX_IHEIGHT(image), FSX_IPIXELS(image), surface_callback_indexes, (void *)indexes);
-            FSX_release(image);
+            surface = GL_surface_decode(S_IWIDTH(image), S_IHEIGHT(image), S_IPIXELS(image), surface_callback_indexes, (void *)indexes);
+            Storage_release(image);
             if (!surface) {
                 return luaL_error(L, "can't decode file `%s`", file);
             }

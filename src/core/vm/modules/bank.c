@@ -26,7 +26,7 @@
 
 #include <config.h>
 #include <core/io/display.h>
-#include <libs/fs/fsaux.h>
+#include <core/io/storage.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 
@@ -60,14 +60,9 @@ int bank_loader(lua_State *L)
     return luaX_newmodule(L, NULL, _bank_functions, NULL, nup, META_TABLE);
 }
 
-static GL_Rectangle_t *_load_cells(const File_System_t *file_system, const char *file, size_t *count)
+static GL_Rectangle_t *_load_cells(const Storage_t *storage, const char *file, size_t *count)
 {
-    File_System_Mount_t *mount = FS_locate(file_system, file);
-    if (!mount) {
-        return NULL;
-    }
-
-    File_System_Handle_t *handle = FS_open(mount, file);
+    File_System_Handle_t *handle = Storage_open(storage, file);
     if (!handle) {
         return NULL;
     }
@@ -121,19 +116,19 @@ static int bank_new2(lua_State *L)
     int type = lua_type(L, 1);
     const char *cells_file = LUAX_STRING(L, 2);
 
-    const File_System_t *file_system = (const File_System_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
+    const Storage_t *storage = (const Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     GL_Surface_t *surface;
     if (type == LUA_TSTRING) {
         const char *image_file = LUAX_STRING(L, 1);
 
-        File_System_Resource_t *image = FSX_load(file_system, image_file, FILE_SYSTEM_RESOURCE_IMAGE);
+        Storage_Resource_t *image = Storage_load(storage, image_file, STORAGE_RESOURCE_IMAGE);
         if (!image) {
             return luaL_error(L, "can't load file `%s`", image_file);
         }
-        surface = GL_surface_decode(FSX_IWIDTH(image), FSX_IHEIGHT(image), FSX_IPIXELS(image), surface_callback_palette, (void *)&display->palette);
-        FSX_release(image);
+        surface = GL_surface_decode(S_IWIDTH(image), S_IHEIGHT(image), S_IPIXELS(image), surface_callback_palette, (void *)&display->palette);
+        Storage_release(image);
         if (!surface) {
             return luaL_error(L, "can't decode file `%s`", image_file);
         }
@@ -149,7 +144,7 @@ static int bank_new2(lua_State *L)
     }
 
     size_t cells_count;
-    GL_Rectangle_t *cells = _load_cells(file_system, cells_file, &cells_count); // TODO: implement `Sheet` in pure Lua?
+    GL_Rectangle_t *cells = _load_cells(storage, cells_file, &cells_count); // TODO: implement `Sheet` in pure Lua?
     if (!cells) {
         GL_surface_destroy(surface);
         return luaL_error(L, "can't load file `%s`", cells_file);
@@ -190,19 +185,19 @@ static int bank_new3(lua_State *L)
     size_t cell_width = (size_t)LUAX_INTEGER(L, 2);
     size_t cell_height = (size_t)LUAX_INTEGER(L, 3);
 
-    const File_System_t *file_system = (const File_System_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
+    const Storage_t *storage = (const Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     GL_Surface_t *surface;
     if (type == LUA_TSTRING) {
         const char *file = LUAX_STRING(L, 1);
 
-        File_System_Resource_t *image = FSX_load(file_system, file, FILE_SYSTEM_RESOURCE_IMAGE);
+        Storage_Resource_t *image = Storage_load(storage, file, STORAGE_RESOURCE_IMAGE);
         if (!image) {
             return luaL_error(L, "can't load file `%s`", file);
         }
-        surface = GL_surface_decode(FSX_IWIDTH(image), FSX_IHEIGHT(image), FSX_IPIXELS(image), surface_callback_palette, (void *)&display->palette);
-        FSX_release(image);
+        surface = GL_surface_decode(S_IWIDTH(image), S_IHEIGHT(image), S_IPIXELS(image), surface_callback_palette, (void *)&display->palette);
+        Storage_release(image);
         if (!surface) {
             return luaL_error(L, "can't decode file `%s`", file);
         }

@@ -25,7 +25,6 @@
 #include "batch.h"
 
 #include <config.h>
-#include <libs/fs/fsaux.h>
 #include <libs/log.h>
 
 #include "callbacks.h"

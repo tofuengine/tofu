@@ -163,14 +163,9 @@ static const char *_reader(lua_State *L, void *ud, size_t *size)
     return context->buffer;
 }
 
-static int _load(const File_System_t *file_system, const char *file, lua_State *L)
+static int _load(const Storage_t *storage, const char *file, lua_State *L)
 {
-    File_System_Mount_t *mount = FS_locate(file_system, file);
-    if (!mount) {
-        return LUA_ERRFILE;
-    }
-
-    File_System_Handle_t *handle = FS_open(mount, file);
+    File_System_Handle_t *handle = Storage_open(storage, file); // FIXME: move everything in `_reader`.
     if (!handle) {
         return LUA_ERRFILE;
     }
@@ -187,7 +182,7 @@ static int _load(const File_System_t *file_system, const char *file, lua_State *
 
 static int _searcher(lua_State *L)
 {
-    const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(1));
+    const Storage_t *storage = (const Storage_t *)lua_touserdata(L, lua_upvalueindex(1));
 
     const char *file = lua_tostring(L, 1);
 
@@ -200,7 +195,7 @@ static int _searcher(lua_State *L)
     }
     strcat(path_file, ".lua");
 
-    int result = _load(file_system, path_file, L);
+    int result = _load(storage, path_file, L);
     if (result != LUA_OK) {
         luaL_error(L, "failed w/ error #%d while loading file `%s`", result, path_file);
     }
@@ -283,7 +278,7 @@ static int _call(lua_State *L, Methods_t method, int nargs, int nresults)
 #endif
 }
 
-Interpreter_t *Interpreter_create(const File_System_t *file_system, const void *userdatas[])
+Interpreter_t *Interpreter_create(const Storage_t *storage, const void *userdatas[])
 {
     Interpreter_t *interpreter = malloc(sizeof(Interpreter_t));
     if (!interpreter) {
@@ -324,7 +319,7 @@ Interpreter_t *Interpreter_create(const File_System_t *file_system, const void *
     lua_pushlightuserdata(interpreter->state, interpreter); // Push the interpreter itself as first upvalue.
     modules_initialize(interpreter->state, nup + 1); // Take into account the self-pushed interpreter pointer.
 
-    lua_pushlightuserdata(interpreter->state, (void *)file_system);
+    lua_pushlightuserdata(interpreter->state, (void *)storage);
     luaX_overridesearchers(interpreter->state, _searcher, 1);
 
 #ifdef __DEBUG_VM_CALLS__
