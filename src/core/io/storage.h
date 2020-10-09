@@ -37,7 +37,8 @@ typedef enum _Storage_Resource_Types_t {
     Storage_Resource_Types_t_CountOf
 } Storage_Resource_Types_t;
 
-typedef struct _Storage_Resource_t { // TODO: add caching.
+typedef struct _Storage_Resource_t {
+    char *file;
     Storage_Resource_Types_t type;
     union {
         struct {
@@ -53,10 +54,13 @@ typedef struct _Storage_Resource_t { // TODO: add caching.
             void *pixels;
         } image;
     } var;
+    double age;
+//    size_t references;
 } Storage_Resource_t;
 
 typedef struct _Storage_t {
     File_System_t *context;
+    Storage_Resource_t **resources;
 } Storage_t;
 
 #define S_SCHARS(r)         (r)->var.string.chars
@@ -72,9 +76,8 @@ extern void Storage_destroy(Storage_t *storage);
 
 extern File_System_Handle_t *Storage_open(const Storage_t *storage, const char *file);
 
-extern Storage_Resource_t *Storage_load(const Storage_t *storage, const char *file, Storage_Resource_Types_t type);
-extern void Storage_release(Storage_Resource_t *resource);
+extern Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Storage_Resource_Types_t type);
 
-// extern void Storage_update(const Storage_t *storage, float delta_time);
+extern bool Storage_update(Storage_t *storage, float delta_time);
 
 #endif  /* __STORAGE_H__ */

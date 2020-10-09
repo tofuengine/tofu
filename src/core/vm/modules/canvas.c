@@ -141,7 +141,7 @@ static int canvas_new1(lua_State *L)
     LUAX_SIGNATURE_END
     const char *file = LUAX_STRING(L, 1);
 
-    const Storage_t *storage = (const Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
+    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     Storage_Resource_t *image = Storage_load(storage, file, STORAGE_RESOURCE_IMAGE);
@@ -149,7 +149,6 @@ static int canvas_new1(lua_State *L)
         return luaL_error(L, "can't load file `%s`", file);
     }
     GL_Context_t *context = GL_context_decode(S_IWIDTH(image), S_IHEIGHT(image), S_IPIXELS(image), surface_callback_palette, (void *)&display->palette);
-    Storage_release(image);
     if (!context) {
         return luaL_error(L, "can't decode file `%s`", file);
     }

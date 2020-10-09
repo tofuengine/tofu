@@ -116,7 +116,7 @@ static int bank_new2(lua_State *L)
     int type = lua_type(L, 1);
     const char *cells_file = LUAX_STRING(L, 2);
 
-    const Storage_t *storage = (const Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
+    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     GL_Surface_t *surface;
@@ -128,7 +128,6 @@ static int bank_new2(lua_State *L)
             return luaL_error(L, "can't load file `%s`", image_file);
         }
         surface = GL_surface_decode(S_IWIDTH(image), S_IHEIGHT(image), S_IPIXELS(image), surface_callback_palette, (void *)&display->palette);
-        Storage_release(image);
         if (!surface) {
             return luaL_error(L, "can't decode file `%s`", image_file);
         }
@@ -185,7 +184,7 @@ static int bank_new3(lua_State *L)
     size_t cell_width = (size_t)LUAX_INTEGER(L, 2);
     size_t cell_height = (size_t)LUAX_INTEGER(L, 3);
 
-    const Storage_t *storage = (const Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
+    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     GL_Surface_t *surface;
@@ -197,7 +196,6 @@ static int bank_new3(lua_State *L)
             return luaL_error(L, "can't load file `%s`", file);
         }
         surface = GL_surface_decode(S_IWIDTH(image), S_IHEIGHT(image), S_IPIXELS(image), surface_callback_palette, (void *)&display->palette);
-        Storage_release(image);
         if (!surface) {
             return luaL_error(L, "can't decode file `%s`", file);
         }

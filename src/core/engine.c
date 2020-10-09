@@ -81,14 +81,13 @@ static inline void _wait_for(float seconds)
 #endif
 }
 
-static bool _configure(const Storage_t *storage, Configuration_t *configuration)
+static bool _configure(Storage_t *storage, Configuration_t *configuration)
 {
     Storage_Resource_t *resource = Storage_load(storage, "tofu.config", STORAGE_RESOURCE_STRING);
     if (!resource) {
         return false;
     }
     Configuration_parse(configuration, S_SCHARS(resource));
-    Storage_release(resource);
     return true;
 }
 
@@ -134,7 +133,6 @@ Engine_t *Engine_create(const char *base_path)
             .hide_cursor = engine->configuration.hide_cursor
         };
     engine->display = Display_create(&display_configuration);
-    Storage_release(icon);
     if (!engine->display) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize display");
         Storage_destroy(engine->storage);
@@ -161,7 +159,6 @@ Engine_t *Engine_create(const char *base_path)
             .scale = 1.0f / (float)engine->display->configuration.scale
         };
     engine->input = Input_create(&input_configuration, engine->display->window);
-    Storage_release(mappings);
     if (!engine->input) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize input");
         Display_destroy(engine->display);
@@ -261,11 +258,13 @@ void Engine_run(Engine_t *engine)
             Environment_update(engine->environment, delta_time);
             running = running && Interpreter_update(engine->interpreter, delta_time); // Fixed update.
             running = running && Audio_update(engine->audio, elapsed); // Update the subsystems w/ fixed steps (fake interrupt based).
+            running = running && Storage_update(engine->storage, elapsed);
             lag -= delta_time;
         }
 
 //        running = running && Interpreter_update_variable(engine->interpreter, elapsed); // Variable update.
 //        running = running && Audio_update_variable(&engine->audio, elapsed);
+//        running = running && Storage_update_variable(engine->storage, elapsed);
         Input_update(engine->input, elapsed);
         Display_update(engine->display, elapsed);
 
