@@ -61,11 +61,10 @@ static const uint8_t _boot_lua[] = {
 #endif
 };
 
-#define READER_BUFFER_SIZE  2048
-
 typedef struct _Reader_Context_t {
-    File_System_Handle_t *handle;
-    char buffer[READER_BUFFER_SIZE];
+    char *ptr;
+    size_t size;
+    size_t index;
 } Reader_Context_t;
 
 typedef enum _Methods_t {
@@ -152,20 +151,22 @@ static int _error_handler(lua_State *L)
 static const char *_reader(lua_State *L, void *ud, size_t *size)
 {
     Reader_Context_t *context = (Reader_Context_t *)ud;
-    File_System_Handle_t *handle = context->handle;
 
-    if (FS_eof(handle)) {
+    const size_t available = context->size - context->index;
+    if (available == 0) {
+        *size = 0;
         return NULL;
     }
 
-    *size = FS_read(handle, context->buffer, READER_BUFFER_SIZE);
+    context->index += context->size; // Advance to end, we return the whole chunk at once.
 
-    return context->buffer;
+    *size = context->size;
+    return context->ptr;
 }
 
 static int _searcher(lua_State *L)
 {
-    const Storage_t *storage = (const Storage_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Storage_t *storage = (Storage_t *)lua_touserdata(L, lua_upvalueindex(1));
 
     const char *file = lua_tostring(L, 1);
 
@@ -178,15 +179,12 @@ static int _searcher(lua_State *L)
     }
     strcat(path_file, ".lua");
 
-    File_System_Handle_t *handle = Storage_open(storage, path_file + 1);
-    if (!handle) {
+    Storage_Resource_t *resource = Storage_load(storage, path_file + 1, STORAGE_RESOURCE_BLOB);
+    if (!resource) {
         return LUA_ERRFILE;
     }
 
-    int result = lua_load(L, _reader, &(Reader_Context_t){ .handle = handle }, path_file, NULL); // Neither `text` nor `binary`: autodetect.
-
-    FS_close(handle);
-
+    int result = lua_load(L, _reader, &(Reader_Context_t){ .ptr = S_BPTR(resource), .size = S_BSIZE(resource) }, path_file, NULL); // Neither `text` nor `binary`: autodetect.
     if (result != LUA_OK) {
         luaL_error(L, "failed w/ error #%d while loading file `%s`", result, path_file + 1); // Skip the `@` character.
     }
