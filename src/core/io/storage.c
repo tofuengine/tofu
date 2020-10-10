@@ -246,7 +246,7 @@ static int _resource_compare(const void *lhs, const void *rhs)
     return strcasecmp((*l)->file, (*r)->file);
 }
 
-Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Storage_Resource_Types_t type)
+const Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Storage_Resource_Types_t type)
 {
     const Storage_Resource_t *key = &(Storage_Resource_t){ .file = (char *)file };
     Storage_Resource_t *resource = bsearch((const void *)&key, storage->resources, arrlen(storage->resources), sizeof(Storage_Resource_t *), _resource_compare);
@@ -283,7 +283,7 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Storage_R
 
 bool Storage_update(Storage_t *storage, float delta_time)
 {
-    // Backward scan, to remove to-be-untracked sources.
+    // Backward scan, to remove to-be-released resources.
     for (int index = (int)arrlen(storage->resources) - 1; index >= 0; --index) {
         Storage_Resource_t *resource = storage->resources[index];
         resource->age += delta_time;

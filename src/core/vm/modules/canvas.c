@@ -144,7 +144,7 @@ static int canvas_new1(lua_State *L)
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    Storage_Resource_t *image = Storage_load(storage, file, STORAGE_RESOURCE_IMAGE);
+    const Storage_Resource_t *image = Storage_load(storage, file, STORAGE_RESOURCE_IMAGE);
     if (!image) {
         return luaL_error(L, "can't load file `%s`", file);
     }

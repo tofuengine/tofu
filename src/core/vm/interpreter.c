@@ -148,6 +148,10 @@ static int _error_handler(lua_State *L)
 #endif
 #endif
 
+// [...] Every time lua_load needs another piece of the chunk, it calls the reader, passing along its data parameter.
+// The reader must return a pointer to a block of memory with a new piece of the chunk and set size to the block size.
+// The block must exist until the reader function is called again. To signal the end of the chunk, the reader must
+// return NULL or set size to zero. The reader function may return pieces of any size greater than zero. [...]
 static const char *_reader(lua_State *L, void *ud, size_t *size)
 {
     Reader_Context_t *context = (Reader_Context_t *)ud;
@@ -179,7 +183,7 @@ static int _searcher(lua_State *L)
     }
     strcat(path_file, ".lua");
 
-    Storage_Resource_t *resource = Storage_load(storage, path_file + 1, STORAGE_RESOURCE_BLOB);
+    const Storage_Resource_t *resource = Storage_load(storage, path_file + 1, STORAGE_RESOURCE_BLOB);
     if (!resource) {
         return LUA_ERRFILE;
     }

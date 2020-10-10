@@ -99,7 +99,7 @@ static int font_new3(lua_State *L)
             glyph_height = data->cell_height;
             Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "default font `%s` size is %dx%d", file, glyph_width, glyph_height);
         } else {
-            Storage_Resource_t *image = Storage_load(storage, file, STORAGE_RESOURCE_IMAGE);
+            const Storage_Resource_t *image = Storage_load(storage, file, STORAGE_RESOURCE_IMAGE);
             if (!image) {
                 return luaL_error(L, "can't load file `%s`", file);
             }
@@ -178,7 +178,7 @@ static int font_new5(lua_State *L)
             glyph_height = data->cell_height;
             Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "default font `%s` size is %dx%d", file, glyph_width, glyph_height);
         } else {
-            Storage_Resource_t *image = Storage_load(storage, file, STORAGE_RESOURCE_IMAGE);
+            const Storage_Resource_t *image = Storage_load(storage, file, STORAGE_RESOURCE_IMAGE);
             if (!image) {
                 return luaL_error(L, "can't load file `%s`", file);
             }

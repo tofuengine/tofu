@@ -76,7 +76,7 @@ extern void Storage_destroy(Storage_t *storage);
 
 extern File_System_Handle_t *Storage_open(const Storage_t *storage, const char *file);
 
-extern Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Storage_Resource_Types_t type);
+extern const Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Storage_Resource_Types_t type);
 
 extern bool Storage_update(Storage_t *storage, float delta_time);
 

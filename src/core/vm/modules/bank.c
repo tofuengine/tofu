@@ -107,7 +107,7 @@ static int bank_new2(lua_State *L)
     if (type == LUA_TSTRING) {
         const char *image_file = LUAX_STRING(L, 1);
 
-        Storage_Resource_t *image = Storage_load(storage, image_file, STORAGE_RESOURCE_IMAGE);
+        const Storage_Resource_t *image = Storage_load(storage, image_file, STORAGE_RESOURCE_IMAGE);
         if (!image) {
             return luaL_error(L, "can't load file `%s`", image_file);
         }
@@ -175,7 +175,7 @@ static int bank_new3(lua_State *L)
     if (type == LUA_TSTRING) {
         const char *file = LUAX_STRING(L, 1);
 
-        Storage_Resource_t *image = Storage_load(storage, file, STORAGE_RESOURCE_IMAGE);
+        const Storage_Resource_t *image = Storage_load(storage, file, STORAGE_RESOURCE_IMAGE);
         if (!image) {
             return luaL_error(L, "can't load file `%s`", file);
         }
