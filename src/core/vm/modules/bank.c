@@ -60,46 +60,30 @@ int bank_loader(lua_State *L)
     return luaX_newmodule(L, NULL, _bank_functions, NULL, nup, META_TABLE);
 }
 
-static GL_Rectangle_t *_load_cells(const Storage_t *storage, const char *file, size_t *count)
+static GL_Rectangle_t *_load_cells(Storage_t *storage, const char *file, size_t *count)
 {
-    File_System_Handle_t *handle = Storage_open(storage, file);
-    if (!handle) {
+    const Storage_Resource_t *resource = Storage_load(storage, file, STORAGE_RESOURCE_BLOB);
+    if (!resource) {
         return NULL;
     }
 
-    uint32_t entries;
-    size_t bytes_requested = sizeof(uint32_t);
-    size_t bytes_read = FS_read(handle, &entries, bytes_requested);
-    if (bytes_read != bytes_requested) {
-        FS_close(handle);
-        return NULL;
-    }
+    uint32_t entries = S_BSIZE(resource) / sizeof(Rectangle_u32_t);
 
     GL_Rectangle_t *cells = malloc(sizeof(GL_Rectangle_t) * entries);
     if (!cells) {
-        FS_close(handle);
         return NULL;
     }
 
-    for (uint32_t i = 0; i < entries; ++i) {
-        Rectangle_u32_t rectangle = (Rectangle_u32_t){ 0 };
-        bytes_requested = sizeof(Rectangle_u32_t);
-        bytes_read = FS_read(handle, &rectangle, bytes_requested);
-        if (bytes_read != bytes_requested) {
-            free(cells);
-            FS_close(handle);
-            return NULL;
-        }
+    const Rectangle_u32_t *rectangles = (const Rectangle_u32_t *)S_BPTR(resource);
 
+    for (uint32_t i = 0; i < entries; ++i) {
         cells[i] = (GL_Rectangle_t){
-                .x = rectangle.x,
-                .y = rectangle.y,
-                .width = rectangle.width,
-                .height = rectangle.height
+                .x = rectangles[i].x,
+                .y = rectangles[i].y,
+                .width = rectangles[i].width,
+                .height = rectangles[i].height
             };
     }
-
-    FS_close(handle);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "#%d cells loaded from file `%s`", entries, file);
 
