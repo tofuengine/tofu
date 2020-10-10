@@ -65,8 +65,9 @@ local function convert(output, input)
       })
   end
 
+  print(string.format("  generating %d entries", #sheet))
+
   local out = io.open(output, "wb")
-  out:write(struct.pack("I", #sheet))
   for index, entry in ipairs(sheet) do
     print(string.format("  entry #%d `%s` at <%d, %d> w/ size %dx%d", index, entry.id, entry.x, entry.y, entry.width, entry.height))
     out:write(struct.pack("I", entry.x))
