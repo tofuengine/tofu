@@ -64,6 +64,13 @@ typedef struct _GL_Color_t {
 } GL_Color_t;
 #pragma pack(pop)
 
+#pragma pack(push, 1)
+typedef struct _GL_Rectangle_u32_t {
+    uint32_t x, y;
+    uint32_t width, height;
+} GL_Rectangle_u32_t;
+#pragma pack(pop)
+
 #define GL_DEGREES_OVER_RADIANS 57.295779513082320876798154814105
 
 #define GL_BOOL_FALSE   ((GL_Bool_t)0)

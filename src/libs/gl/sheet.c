@@ -30,26 +30,29 @@
 
 #define LOG_CONTEXT "gl-sheet"
 
-static GL_Rectangle_t *_clone(const GL_Rectangle_t *cells, size_t count)
+static GL_Rectangle_t *_parse_cells(const GL_Rectangle_u32_t *rectangles, size_t count)
 {
-    GL_Rectangle_t *clone = malloc(sizeof(GL_Rectangle_t) * count);
-    if (!clone) {
+    GL_Rectangle_t *cells = malloc(sizeof(GL_Rectangle_t) * count);
+    if (!cells) {
         return NULL;
     }
-#ifdef __NO_MEMSET_MEMCPY__
+
     for (size_t i = 0; i < count; ++i) {
-        clone[i] = cells[i];
+        cells[i] = (GL_Rectangle_t){
+                .x = rectangles[i].x,
+                .y = rectangles[i].y,
+                .width = rectangles[i].width,
+                .height = rectangles[i].height
+        };
     }
-#else
-    memcpy(clone, cells, sizeof(GL_Rectangle_t) * count);
-#endif
-    return clone;
+
+    return cells;
 }
 
-static GL_Rectangle_t *_precompute_cells(size_t width, size_t height, size_t cell_width, size_t cell_height, size_t *count)
+static GL_Rectangle_t *_generate_cells(GL_Size_t atlas_size, GL_Size_t cell_size, size_t *count)
 {
-    size_t columns = width / cell_width;
-    size_t rows = height / cell_height;
+    size_t columns = atlas_size.width / cell_size.width;
+    size_t rows = atlas_size.height / cell_size.height;
     size_t amount = columns * rows;
     GL_Rectangle_t *cells = malloc(amount * sizeof(GL_Rectangle_t));
     if (!cells) {
@@ -58,14 +61,14 @@ static GL_Rectangle_t *_precompute_cells(size_t width, size_t height, size_t cel
     }
     size_t k = 0;
     for (size_t i = 0; i < rows; ++i) {
-        size_t y = i * cell_height;
+        size_t y = i * cell_size.height;
         for (size_t j = 0; j < columns; ++j) {
-            size_t x = j * cell_width;
+            size_t x = j * cell_size.width;
             cells[k++] = (GL_Rectangle_t){
                     .x = (int)x,
                     .y = (int)y,
-                    .width = cell_width,
-                    .height = cell_height
+                    .width = cell_size.width,
+                    .height = cell_size.height
                 };
         }
     }
@@ -75,9 +78,6 @@ static GL_Rectangle_t *_precompute_cells(size_t width, size_t height, size_t cel
 
 static GL_Sheet_t *_attach(GL_Surface_t *atlas, GL_Rectangle_t *cells, size_t count)
 {
-    if (!cells || count == 0) {
-        return NULL;
-    }
     GL_Sheet_t *sheet = malloc(sizeof(GL_Sheet_t));
     if (!sheet) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate sheet");
@@ -101,10 +101,10 @@ static void _detach(GL_Sheet_t *sheet)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p freed", sheet);
 }
 
-GL_Sheet_t *GL_sheet_create_rect(const GL_Surface_t *atlas, size_t cell_width, size_t cell_height)
+GL_Sheet_t *GL_sheet_create_fixed(const GL_Surface_t *atlas, GL_Size_t cell_size)
 {
     size_t count;
-    GL_Rectangle_t *cells = _precompute_cells(atlas->width, atlas->height, cell_width, cell_height, &count);
+    GL_Rectangle_t *cells = _generate_cells((GL_Size_t ){ .width = atlas->width, .height = atlas->height }, cell_size, &count);
     if (!cells) {
         return NULL;
     }
@@ -117,10 +117,15 @@ GL_Sheet_t *GL_sheet_create_rect(const GL_Surface_t *atlas, size_t cell_width, s
     return sheet;
 }
 
-GL_Sheet_t *GL_sheet_create(const GL_Surface_t *atlas, const GL_Rectangle_t *cells, size_t count)
+GL_Sheet_t *GL_sheet_create(const GL_Surface_t *atlas, const GL_Rectangle_u32_t *rectangles, size_t count)
 {
-    GL_Sheet_t *sheet = _attach((GL_Surface_t *)atlas, _clone(cells, count), count);
+    GL_Rectangle_t *cells = _parse_cells(rectangles, count);
+    if (!cells) {
+        return NULL;
+    }
+    GL_Sheet_t *sheet = _attach((GL_Surface_t *)atlas, cells, count);
     if (!sheet) {
+        free(cells);
         return NULL;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p attached", sheet);
@@ -129,7 +134,7 @@ GL_Sheet_t *GL_sheet_create(const GL_Surface_t *atlas, const GL_Rectangle_t *cel
 
 void GL_sheet_destroy(GL_Sheet_t *sheet)
 {
-    if (!sheet) {
+    if (!sheet) { // FIXME: useless?
         return;
     }
     _detach(sheet);

@@ -31,7 +31,6 @@
 #include <libs/stb.h>
 
 #include "callbacks.h"
-#include "structs.h"
 #include "udt.h"
 
 #include <math.h>
@@ -58,37 +57,6 @@ int bank_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, NULL, _bank_functions, NULL, nup, META_TABLE);
-}
-
-static GL_Rectangle_t *_load_cells(Storage_t *storage, const char *file, size_t *count)
-{
-    const Storage_Resource_t *resource = Storage_load(storage, file, STORAGE_RESOURCE_BLOB);
-    if (!resource) {
-        return NULL;
-    }
-
-    uint32_t entries = S_BSIZE(resource) / sizeof(Rectangle_u32_t);
-
-    GL_Rectangle_t *cells = malloc(sizeof(GL_Rectangle_t) * entries);
-    if (!cells) {
-        return NULL;
-    }
-
-    const Rectangle_u32_t *rectangles = (const Rectangle_u32_t *)S_BPTR(resource);
-
-    for (uint32_t i = 0; i < entries; ++i) {
-        cells[i] = (GL_Rectangle_t){
-                .x = rectangles[i].x,
-                .y = rectangles[i].y,
-                .width = rectangles[i].width,
-                .height = rectangles[i].height
-            };
-    }
-
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "#%d cells loaded from file `%s`", entries, file);
-
-    *count = entries;
-    return cells;
 }
 
 static int bank_new2(lua_State *L)
@@ -126,20 +94,20 @@ static int bank_new2(lua_State *L)
         return luaL_error(L, "invalid argument");
     }
 
-    size_t cells_count;
-    GL_Rectangle_t *cells = _load_cells(storage, cells_file, &cells_count); // TODO: implement `Sheet` in pure Lua?
+    const Storage_Resource_t *cells = Storage_load(storage, cells_file, STORAGE_RESOURCE_BLOB);
     if (!cells) {
-        GL_surface_destroy(surface);
+        if (type != LUA_TUSERDATA) {
+            GL_surface_destroy(surface);
+        }
         return luaL_error(L, "can't load file `%s`", cells_file);
     }
 
-    GL_Sheet_t *sheet = GL_sheet_create(surface, cells, cells_count);
-    free(cells);
+    GL_Sheet_t *sheet = GL_sheet_create(surface, S_BPTR(cells), S_BSIZE(cells) / sizeof(GL_Rectangle_u32_t)); // Calculate the amount of entries on the fly.
     if (!sheet) {
         if (type != LUA_TUSERDATA) {
             GL_surface_destroy(surface);
         }
-        return luaL_error(L, "can't create sheet w/ #%d cell(s)", cells_count);
+        return luaL_error(L, "can't create sheet");
     }
 
     Bank_Object_t *self = (Bank_Object_t *)lua_newuserdatauv(L, sizeof(Bank_Object_t), 1);
@@ -194,7 +162,7 @@ static int bank_new3(lua_State *L)
         return luaL_error(L, "invalid argument");
     }
 
-    GL_Sheet_t *sheet = GL_sheet_create_rect(surface, cell_width, cell_height);
+    GL_Sheet_t *sheet = GL_sheet_create_fixed(surface, (GL_Size_t ){ .width = cell_width, .height = cell_height });
     if (!sheet) {
         if (type != LUA_TUSERDATA) {
             GL_surface_destroy(surface);

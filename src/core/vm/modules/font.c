@@ -119,7 +119,7 @@ static int font_new3(lua_State *L)
         return luaL_error(L, "invalid argument");
     }
 
-    GL_Sheet_t *sheet = GL_sheet_create_rect(surface, glyph_width, glyph_height);
+    GL_Sheet_t *sheet = GL_sheet_create_fixed(surface, (GL_Size_t ){ .width = glyph_width, .height = glyph_height });
     if (!sheet) {
         if (type != LUA_TUSERDATA) {
             GL_surface_destroy(surface);
@@ -198,7 +198,7 @@ static int font_new5(lua_State *L)
         return luaL_error(L, "invalid argument");
     }
 
-    GL_Sheet_t *sheet = GL_sheet_create_rect(surface, glyph_width, glyph_height);
+    GL_Sheet_t *sheet = GL_sheet_create_fixed(surface, (GL_Size_t ){ .width = glyph_width, .height = glyph_height });
     if (!sheet) {
         if (type != LUA_TUSERDATA) {
             GL_surface_destroy(surface);
