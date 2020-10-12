@@ -234,7 +234,7 @@ void Audio_track(Audio_t *audio, SL_Source_t *source, bool reset)
     }
     SL_context_track(audio->sl, source);
     size_t count = SL_context_count_tracked(audio->sl);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p tracked, #%d source(s) active", source, count);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p tracked, %d source(s) active", source, count);
     ma_mutex_unlock(&audio->lock);
 }
 
@@ -243,7 +243,7 @@ void Audio_untrack(Audio_t *audio, SL_Source_t *source)
     ma_mutex_lock(&audio->lock);
     SL_context_untrack(audio->sl, source);
     size_t count = SL_context_count_tracked(audio->sl);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p untracked, #%d source(s) active", source, count);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p untracked, %d source(s) active", source, count);
     ma_mutex_unlock(&audio->lock);
 }
 

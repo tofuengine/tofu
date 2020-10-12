@@ -76,7 +76,7 @@ static int batch_new(lua_State *L)
     if (!batch) {
         return luaL_error(L, "can't create batch");
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "batch %p created for bank %p w/ #%d slots", batch, bank, slots);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "batch %p created for bank %p w/ %d slots", batch, bank, slots);
 
     Batch_Object_t *self = (Batch_Object_t *)lua_newuserdatauv(L, sizeof(Batch_Object_t), 1);
     *self = (Batch_Object_t){

@@ -151,7 +151,7 @@ File_System_Mount_t *pak_mount(const char *path)
 
     Pak_Entry_t *directory = malloc(sizeof(Pak_Entry_t) * header.entries);
     if (!directory) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate #%d directory entries", header.entries);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d directory entries", header.entries);
         fclose(stream);
         return NULL;
     }
@@ -195,12 +195,12 @@ File_System_Mount_t *pak_mount(const char *path)
             free(directory[i].name);
         }
         free(directory);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "directory w/ #%d entries freed", entries);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "directory w/ %d entries freed", entries);
         return NULL;
     }
 
     qsort(directory, header.entries, sizeof(Pak_Entry_t), _pak_entry_compare); // Keep sorted to use binary-search.
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "directory w/ #%d entries sorted", entries);
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "directory w/ %d entries sorted", entries);
 
     File_System_Mount_t *mount = malloc(sizeof(Pak_Mount_t));
     if (!mount) {
@@ -209,7 +209,7 @@ File_System_Mount_t *pak_mount(const char *path)
             free(directory[i].name);
         }
         free(directory);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "directory w/ #%d entries freed", entries);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "directory w/ %d entries freed", entries);
         return NULL;
     }
 

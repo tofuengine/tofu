@@ -59,15 +59,15 @@ static void _release(Storage_Resource_t *resource)
 {
     if (resource->type == STORAGE_RESOURCE_STRING) {
         free(resource->var.string.chars);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource-data at %p freed (string)", resource->var.string.chars);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource-data at %p freed (%d characters string)", resource->var.string.chars, resource->var.string.length);
     } else
     if (resource->type == STORAGE_RESOURCE_BLOB) {
         free(resource->var.blob.ptr);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource-data at %p freed (blob)", resource->var.blob.ptr);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource-data at %p freed (%d bytes blob)", resource->var.blob.ptr, resource->var.blob.size);
     } else
     if (resource->type == STORAGE_RESOURCE_IMAGE) {
         stbi_image_free(resource->var.image.pixels);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource-data at %p freed (image)", resource->var.image.pixels);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource-data at %p freed (%dx%d image)", resource->var.image.pixels, resource->var.image.width, resource->var.image.height);
     }
     free(resource->file);
     free(resource);
