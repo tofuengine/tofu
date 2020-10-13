@@ -27,7 +27,7 @@
 
 #include <config.h>
 
-#include <libs/fs/fs.h>
+#include <core/io/storage.h>
 #include <libs/luax.h>
 
 #include <stdbool.h>
@@ -49,7 +49,7 @@ typedef struct _Interpreter_t {
 #endif
 } Interpreter_t;
 
-extern Interpreter_t *Interpreter_create(const File_System_t *file_system, const void *userdatas[]);
+extern Interpreter_t *Interpreter_create(const Storage_t *storage, const void *userdatas[]);
 extern void Interpreter_destroy(Interpreter_t *interpreter);
 
 extern bool Interpreter_input(const Interpreter_t *interpreter);

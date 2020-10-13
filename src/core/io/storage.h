@@ -22,20 +22,24 @@
  * SOFTWARE.
  */
 
-#ifndef __FS_AUX_H__
-#define __FS_AUX_H__
+#ifndef __STORAGE_H__
+#define __STORAGE_H__
 
-#include "fs.h"
+#include <libs/fs/fs.h>
 
-typedef enum _File_System_Resource_Types_t {
-    FILE_SYSTEM_RESOURCE_STRING,
-    FILE_SYSTEM_RESOURCE_BLOB,
-    FILE_SYSTEM_RESOURCE_IMAGE,
-    File_System_Resource_Types_t_CountOf
-} File_System_Resource_Types_t;
+#include <stdbool.h>
+#include <stddef.h>
 
-typedef struct _File_System_Resource_t { // TODO: add caching.
-    File_System_Resource_Types_t type;
+typedef enum _Storage_Resource_Types_t {
+    STORAGE_RESOURCE_STRING,
+    STORAGE_RESOURCE_BLOB,
+    STORAGE_RESOURCE_IMAGE,
+    Storage_Resource_Types_t_CountOf
+} Storage_Resource_Types_t;
+
+typedef struct _Storage_Resource_t {
+    char *file;
+    Storage_Resource_Types_t type;
     union {
         struct {
             char *chars;
@@ -50,18 +54,30 @@ typedef struct _File_System_Resource_t { // TODO: add caching.
             void *pixels;
         } image;
     } var;
-} File_System_Resource_t;
+    double age;
+//    size_t references;
+} Storage_Resource_t;
 
-#define FSX_SCHARS(r)       (r)->var.string.chars
-#define FSX_SLENTGH(r)      (r)->var.string.length
-#define FSX_BPTR(r)         (r)->var.blob.ptr
-#define FSX_BSIZE(r)        (r)->var.blob.size
-#define FSX_IWIDTH(r)       (r)->var.image.width
-#define FSX_IHEIGHT(r)      (r)->var.image.height
-#define FSX_IPIXELS(r)      (r)->var.image.pixels
+typedef struct _Storage_t {
+    File_System_t *context;
+    Storage_Resource_t **resources;
+} Storage_t;
 
-extern bool FSX_exists(const File_System_t *file_system, const char *file);
-extern File_System_Resource_t *FSX_load(const File_System_t *file_system, const char *file, File_System_Resource_Types_t type);
-extern void FSX_release(File_System_Resource_t *resource);
+#define S_SCHARS(r)         (r)->var.string.chars
+#define S_SLENTGH(r)        (r)->var.string.length
+#define S_BPTR(r)           (r)->var.blob.ptr
+#define S_BSIZE(r)          (r)->var.blob.size
+#define S_IWIDTH(r)         (r)->var.image.width
+#define S_IHEIGHT(r)        (r)->var.image.height
+#define S_IPIXELS(r)        (r)->var.image.pixels
 
-#endif /* __FS_AUX_H__ */
+extern Storage_t *Storage_create(const char *base_path);
+extern void Storage_destroy(Storage_t *storage);
+
+extern File_System_Handle_t *Storage_open(const Storage_t *storage, const char *file);
+
+extern const Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Storage_Resource_Types_t type);
+
+extern bool Storage_update(Storage_t *storage, float delta_time);
+
+#endif  /* __STORAGE_H__ */

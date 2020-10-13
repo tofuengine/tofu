@@ -31,7 +31,7 @@
 #include <libs/sl/sl.h>
 
 typedef enum _UserData_t { // TODO: move to a suitable space.
-    USERDATA_FILE_SYSTEM = 1,
+    USERDATA_STORAGE = 1,
     USERDATA_DISPLAY,
     USERDATA_INPUT,
     USERDATA_AUDIO,

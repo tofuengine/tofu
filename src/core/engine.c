@@ -26,7 +26,6 @@
 
 #include <config.h>
 #include <platform.h>
-#include <libs/fs/fsaux.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 
@@ -82,43 +81,14 @@ static inline void _wait_for(float seconds)
 #endif
 }
 
-static bool _configure(const File_System_t *file_system, Configuration_t *configuration)
+static bool _configure(Storage_t *storage, Configuration_t *configuration)
 {
-    File_System_Resource_t *content = FSX_load(file_system, "tofu.config", FILE_SYSTEM_RESOURCE_STRING);
-    if (!content) {
+    const Storage_Resource_t *resource = Storage_load(storage, "tofu.config", STORAGE_RESOURCE_STRING);
+    if (!resource) {
         return false;
     }
-    Configuration_parse(configuration, FSX_SCHARS(content));
-    FSX_release(content);
+    Configuration_parse(configuration, S_SCHARS(resource));
     return true;
-}
-
-static File_System_Resource_t *_load_icon(const File_System_t *file_system, const char *file)
-{
-    if (!file || file[0] == '\0') {
-        return NULL;
-    }
-
-    if (!FSX_exists(file_system, file)) {
-        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "file `%s` doesn't exist", file);
-        return NULL;
-    }
-
-    return FSX_load(file_system, file, FILE_SYSTEM_RESOURCE_IMAGE);
-}
-
-static File_System_Resource_t *_load_mappings(const File_System_t *file_system, const char *file)
-{
-    if (!file || file[0] == '\0') {
-        return NULL;
-    }
-
-    if (!FSX_exists(file_system, file)) {
-        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "file `%s` doesn't exist", file);
-        return NULL;
-    }
-
-    return FSX_load(file_system, file, FILE_SYSTEM_RESOURCE_STRING);
 }
 
 Engine_t *Engine_create(const char *base_path)
@@ -132,14 +102,14 @@ Engine_t *Engine_create(const char *base_path)
     *engine = (Engine_t){ 0 }; // Ensure is cleared at first.
 
     Log_initialize();
-    engine->file_system = FS_create(base_path);
-    if (!engine->file_system) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize I/O at path `%s`", base_path);
+    engine->storage = Storage_create(base_path);
+    if (!engine->storage) {
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize storage at path `%s`", base_path);
         free(engine);
         return NULL;
     }
 
-    bool configured = _configure(engine->file_system, &engine->configuration);
+    bool configured = _configure(engine->storage, &engine->configuration);
     if (!configured) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "configuration file is missing");
         free(engine);
@@ -150,10 +120,10 @@ Engine_t *Engine_create(const char *base_path)
 
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "version %s", TOFU_VERSION_NUMBER);
 
-    File_System_Resource_t *icon = _load_icon(engine->file_system, ENTRY_ICON);
+    const Storage_Resource_t *icon = Storage_load(engine->storage, ENTRY_ICON, STORAGE_RESOURCE_IMAGE);
     Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined icon loaded");
     Display_Configuration_t display_configuration = { // TODO: reorganize configuration.
-            .icon = icon ? (GLFWimage){ .width = (int)FSX_IWIDTH(icon), .height = (int)FSX_IHEIGHT(icon), .pixels = FSX_IPIXELS(icon) } : (GLFWimage){ 64, 64, (unsigned char *)_default_icon_pixels },
+            .icon = icon ? (GLFWimage){ .width = (int)S_IWIDTH(icon), .height = (int)S_IHEIGHT(icon), .pixels = S_IPIXELS(icon) } : (GLFWimage){ 64, 64, (unsigned char *)_default_icon_pixels },
             .title = engine->configuration.title,
             .width = engine->configuration.width,
             .height = engine->configuration.height,
@@ -163,18 +133,17 @@ Engine_t *Engine_create(const char *base_path)
             .hide_cursor = engine->configuration.hide_cursor
         };
     engine->display = Display_create(&display_configuration);
-    FSX_release(icon);
     if (!engine->display) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize display");
-        FS_destroy(engine->file_system);
+        Storage_destroy(engine->storage);
         free(engine);
         return NULL;
     }
 
-    File_System_Resource_t *mappings = _load_mappings(engine->file_system, ENTRY_GAMECONTROLLER_DB);
+    const Storage_Resource_t *mappings = Storage_load(engine->storage, ENTRY_GAMECONTROLLER_DB, STORAGE_RESOURCE_STRING);
     Log_assert(!mappings, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined controller mappings loaded");
     Input_Configuration_t input_configuration = {
-            .mappings = mappings ? FSX_SCHARS(mappings) : (const char *)_default_mappings,
+            .mappings = mappings ? S_SCHARS(mappings) : (const char *)_default_mappings,
             .exit_key_enabled = engine->configuration.exit_key_enabled,
 #ifdef __INPUT_SELECTION__
             .keyboard_enabled = engine->configuration.keyboard_enabled,
@@ -190,11 +159,10 @@ Engine_t *Engine_create(const char *base_path)
             .scale = 1.0f / (float)engine->display->configuration.scale
         };
     engine->input = Input_create(&input_configuration, engine->display->window);
-    FSX_release(mappings);
     if (!engine->input) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize input");
         Display_destroy(engine->display);
-        FS_destroy(engine->file_system);
+        Storage_destroy(engine->storage);
         free(engine);
         return NULL;
     }
@@ -204,7 +172,7 @@ Engine_t *Engine_create(const char *base_path)
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize audio");
         Input_destroy(engine->input);
         Display_destroy(engine->display);
-        FS_destroy(engine->file_system);
+        Storage_destroy(engine->storage);
         free(engine);
         return NULL;
     }
@@ -215,7 +183,7 @@ Engine_t *Engine_create(const char *base_path)
         Audio_destroy(engine->audio);
         Input_destroy(engine->input);
         Display_destroy(engine->display);
-        FS_destroy(engine->file_system);
+        Storage_destroy(engine->storage);
         free(engine);
         return NULL;
     }
@@ -223,21 +191,21 @@ Engine_t *Engine_create(const char *base_path)
     // The interpreter is the first to be loaded, since it also manages the configuration. Later on, we will call to
     // initialization function once the sub-systems are ready.
     const void *userdatas[] = {
-            engine->file_system,
+            engine->storage,
             engine->display,
             engine->input,
             engine->audio,
             engine->environment,
             NULL
         };
-    engine->interpreter = Interpreter_create(engine->file_system, userdatas);
+    engine->interpreter = Interpreter_create(engine->storage, userdatas);
     if (!engine->interpreter) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize interpreter");
         Environment_destroy(engine->environment);
         Audio_destroy(engine->audio);
         Input_destroy(engine->input);
         Display_destroy(engine->display);
-        FS_destroy(engine->file_system);
+        Storage_destroy(engine->storage);
         free(engine);
         return NULL;
     }
@@ -252,7 +220,7 @@ void Engine_destroy(Engine_t *engine)
     Audio_destroy(engine->audio);
     Input_destroy(engine->input);
     Display_destroy(engine->display);
-    FS_destroy(engine->file_system);
+    Storage_destroy(engine->storage);
 
     free(engine);
 
@@ -290,11 +258,13 @@ void Engine_run(Engine_t *engine)
             Environment_update(engine->environment, delta_time);
             running = running && Interpreter_update(engine->interpreter, delta_time); // Fixed update.
             running = running && Audio_update(engine->audio, elapsed); // Update the subsystems w/ fixed steps (fake interrupt based).
+            running = running && Storage_update(engine->storage, elapsed);
             lag -= delta_time;
         }
 
 //        running = running && Interpreter_update_variable(engine->interpreter, elapsed); // Variable update.
 //        running = running && Audio_update_variable(&engine->audio, elapsed);
+//        running = running && Storage_update_variable(engine->storage, elapsed);
         Input_update(engine->input, elapsed);
         Display_update(engine->display, elapsed);
 

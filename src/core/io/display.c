@@ -324,7 +324,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     }
 
     GL_palette_generate_greyscale(&display->palette, GL_MAX_PALETTE_COLORS);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded greyscale palette of #%d entries", GL_MAX_PALETTE_COLORS);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded greyscale palette of %d entries", GL_MAX_PALETTE_COLORS);
 
     display->vram_size = display->configuration.width * display->configuration.width * sizeof(GL_Color_t);
     display->vram = malloc(display->vram_size);

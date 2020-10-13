@@ -54,6 +54,10 @@ static void _data_callback(ma_device *device, void *output, const void *input, m
 Audio_t *Audio_create(const Audio_Configuration_t *configuration)
 {
     Audio_t *audio = malloc(sizeof(Audio_t));
+    if (!audio) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate audio");
+        return NULL;
+    }
 
     *audio = (Audio_t){
             .configuration = *configuration
@@ -69,7 +73,7 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
         free(audio);
         return NULL;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio context created at %p", audio->sl);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sound context created at %p", audio->sl);
 
     ma_result result = ma_context_init(NULL, 0, &audio->context_config, &audio->context);
     if (result != MA_SUCCESS) {
@@ -145,7 +149,7 @@ void Audio_destroy(Audio_t *audio)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio deinitialized");
 
     SL_context_destroy(audio->sl);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio context destroyed");
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sound context destroyed");
 
     free(audio);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio freed");
@@ -230,7 +234,7 @@ void Audio_track(Audio_t *audio, SL_Source_t *source, bool reset)
     }
     SL_context_track(audio->sl, source);
     size_t count = SL_context_count_tracked(audio->sl);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p tracked, #%d source(s) active", source, count);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p tracked, %d source(s) active", source, count);
     ma_mutex_unlock(&audio->lock);
 }
 
@@ -239,7 +243,7 @@ void Audio_untrack(Audio_t *audio, SL_Source_t *source)
     ma_mutex_lock(&audio->lock);
     SL_context_untrack(audio->sl, source);
     size_t count = SL_context_count_tracked(audio->sl);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p untracked, #%d source(s) active", source, count);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p untracked, %d source(s) active", source, count);
     ma_mutex_unlock(&audio->lock);
 }
 

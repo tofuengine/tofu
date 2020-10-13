@@ -31,4 +31,6 @@
 #include <stb/stb_ds.h>
 #include <stb/stb_image.h>
 
+extern void *memdup(const void *ptr, size_t size);
+
 #endif  /* __LIBS_STB_H__ */

@@ -37,8 +37,8 @@ typedef struct _GL_Sheet_t {
     size_t count;
 } GL_Sheet_t;
 
-extern GL_Sheet_t *GL_sheet_create_rect(const GL_Surface_t *atlas, size_t cell_width, size_t cell_height);
-extern GL_Sheet_t *GL_sheet_create(const GL_Surface_t *atlas, const GL_Rectangle_t *cells, size_t count);
+extern GL_Sheet_t *GL_sheet_create_fixed(const GL_Surface_t *atlas, GL_Size_t cell_size);
+extern GL_Sheet_t *GL_sheet_create(const GL_Surface_t *atlas, const GL_Rectangle_u32_t *cells, size_t count);
 extern void GL_sheet_destroy(GL_Sheet_t *sheet);
 
 #endif  /* __GL_SHEET_H__ */

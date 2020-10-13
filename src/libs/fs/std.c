@@ -115,6 +115,11 @@ static bool _std_mount_contains(const File_System_Mount_t *mount, const char *fi
     strcpy(full_path, std_mount->base_path);
     strcat(full_path, FILE_PATH_SEPARATOR_SZ);
     strcat(full_path, file);
+    for (size_t i = 0; full_path[i] != '\0'; ++i) { // Replace virtual file-system separtor `/` with the actual one.
+        if (full_path[i] == FILE_SYSTEM_PATH_SEPARATOR) {
+            full_path[i] = FILE_PATH_SEPARATOR;
+        }
+    } // FIXME: better organize name normalization.
 
     bool exists = access(full_path, R_OK) != -1;
     Log_assert(!exists, LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` found in mount %p", file, mount);
@@ -129,6 +134,11 @@ static File_System_Handle_t *_std_mount_open(const File_System_Mount_t *mount, c
     strcpy(full_path, std_mount->base_path);
     strcat(full_path, FILE_PATH_SEPARATOR_SZ);
     strcat(full_path, file);
+    for (size_t i = 0; full_path[i] != '\0'; ++i) { // Replace virtual file-system separtor `/` with the actual one.
+        if (full_path[i] == FILE_SYSTEM_PATH_SEPARATOR) {
+            full_path[i] = FILE_PATH_SEPARATOR;
+        }
+    }
 
     FILE *stream = fopen(full_path, "rb");
     if (!stream) {

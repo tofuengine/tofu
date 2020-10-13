@@ -26,12 +26,11 @@
 
 #include <config.h>
 #include <core/io/display.h>
-#include <libs/fs/fsaux.h>
+#include <core/io/storage.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 
 #include "callbacks.h"
-#include "structs.h"
 #include "udt.h"
 
 #include <math.h>
@@ -60,58 +59,6 @@ int bank_loader(lua_State *L)
     return luaX_newmodule(L, NULL, _bank_functions, NULL, nup, META_TABLE);
 }
 
-static GL_Rectangle_t *_load_cells(const File_System_t *file_system, const char *file, size_t *count)
-{
-    File_System_Mount_t *mount = FS_locate(file_system, file);
-    if (!mount) {
-        return NULL;
-    }
-
-    File_System_Handle_t *handle = FS_open(mount, file);
-    if (!handle) {
-        return NULL;
-    }
-
-    uint32_t entries;
-    size_t bytes_requested = sizeof(uint32_t);
-    size_t bytes_read = FS_read(handle, &entries, bytes_requested);
-    if (bytes_read != bytes_requested) {
-        FS_close(handle);
-        return NULL;
-    }
-
-    GL_Rectangle_t *cells = malloc(sizeof(GL_Rectangle_t) * entries);
-    if (!cells) {
-        FS_close(handle);
-        return NULL;
-    }
-
-    for (uint32_t i = 0; i < entries; ++i) {
-        Rectangle_u32_t rectangle = (Rectangle_u32_t){ 0 };
-        bytes_requested = sizeof(Rectangle_u32_t);
-        bytes_read = FS_read(handle, &rectangle, bytes_requested);
-        if (bytes_read != bytes_requested) {
-            free(cells);
-            FS_close(handle);
-            return NULL;
-        }
-
-        cells[i] = (GL_Rectangle_t){
-                .x = rectangle.x,
-                .y = rectangle.y,
-                .width = rectangle.width,
-                .height = rectangle.height
-            };
-    }
-
-    FS_close(handle);
-
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "#%d cells loaded from file `%s`", entries, file);
-
-    *count = entries;
-    return cells;
-}
-
 static int bank_new2(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -121,19 +68,18 @@ static int bank_new2(lua_State *L)
     int type = lua_type(L, 1);
     const char *cells_file = LUAX_STRING(L, 2);
 
-    const File_System_t *file_system = (const File_System_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
+    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     GL_Surface_t *surface;
     if (type == LUA_TSTRING) {
         const char *image_file = LUAX_STRING(L, 1);
 
-        File_System_Resource_t *image = FSX_load(file_system, image_file, FILE_SYSTEM_RESOURCE_IMAGE);
+        const Storage_Resource_t *image = Storage_load(storage, image_file, STORAGE_RESOURCE_IMAGE);
         if (!image) {
             return luaL_error(L, "can't load file `%s`", image_file);
         }
-        surface = GL_surface_decode(FSX_IWIDTH(image), FSX_IHEIGHT(image), FSX_IPIXELS(image), surface_callback_palette, (void *)&display->palette);
-        FSX_release(image);
+        surface = GL_surface_decode(S_IWIDTH(image), S_IHEIGHT(image), S_IPIXELS(image), surface_callback_palette, (void *)&display->palette);
         if (!surface) {
             return luaL_error(L, "can't decode file `%s`", image_file);
         }
@@ -148,20 +94,20 @@ static int bank_new2(lua_State *L)
         return luaL_error(L, "invalid argument");
     }
 
-    size_t cells_count;
-    GL_Rectangle_t *cells = _load_cells(file_system, cells_file, &cells_count); // TODO: implement `Sheet` in pure Lua?
+    const Storage_Resource_t *cells = Storage_load(storage, cells_file, STORAGE_RESOURCE_BLOB);
     if (!cells) {
-        GL_surface_destroy(surface);
+        if (type != LUA_TUSERDATA) {
+            GL_surface_destroy(surface);
+        }
         return luaL_error(L, "can't load file `%s`", cells_file);
     }
 
-    GL_Sheet_t *sheet = GL_sheet_create(surface, cells, cells_count);
-    free(cells);
+    GL_Sheet_t *sheet = GL_sheet_create(surface, S_BPTR(cells), S_BSIZE(cells) / sizeof(GL_Rectangle_u32_t)); // Calculate the amount of entries on the fly.
     if (!sheet) {
         if (type != LUA_TUSERDATA) {
             GL_surface_destroy(surface);
         }
-        return luaL_error(L, "can't create sheet w/ #%d cell(s)", cells_count);
+        return luaL_error(L, "can't create sheet");
     }
 
     Bank_Object_t *self = (Bank_Object_t *)lua_newuserdatauv(L, sizeof(Bank_Object_t), 1);
@@ -190,19 +136,18 @@ static int bank_new3(lua_State *L)
     size_t cell_width = (size_t)LUAX_INTEGER(L, 2);
     size_t cell_height = (size_t)LUAX_INTEGER(L, 3);
 
-    const File_System_t *file_system = (const File_System_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
+    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     GL_Surface_t *surface;
     if (type == LUA_TSTRING) {
         const char *file = LUAX_STRING(L, 1);
 
-        File_System_Resource_t *image = FSX_load(file_system, file, FILE_SYSTEM_RESOURCE_IMAGE);
+        const Storage_Resource_t *image = Storage_load(storage, file, STORAGE_RESOURCE_IMAGE);
         if (!image) {
             return luaL_error(L, "can't load file `%s`", file);
         }
-        surface = GL_surface_decode(FSX_IWIDTH(image), FSX_IHEIGHT(image), FSX_IPIXELS(image), surface_callback_palette, (void *)&display->palette);
-        FSX_release(image);
+        surface = GL_surface_decode(S_IWIDTH(image), S_IHEIGHT(image), S_IPIXELS(image), surface_callback_palette, (void *)&display->palette);
         if (!surface) {
             return luaL_error(L, "can't decode file `%s`", file);
         }
@@ -217,7 +162,7 @@ static int bank_new3(lua_State *L)
         return luaL_error(L, "invalid argument");
     }
 
-    GL_Sheet_t *sheet = GL_sheet_create_rect(surface, cell_width, cell_height);
+    GL_Sheet_t *sheet = GL_sheet_create_fixed(surface, (GL_Size_t ){ .width = cell_width, .height = cell_height });
     if (!sheet) {
         if (type != LUA_TUSERDATA) {
             GL_surface_destroy(surface);

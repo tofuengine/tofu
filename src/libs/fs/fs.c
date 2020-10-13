@@ -145,25 +145,25 @@ bool FS_attach(File_System_t *file_system, const char *path)
 
 File_System_Handle_t *FS_locate_and_open(const File_System_t *file_system, const char *file)
 {
-    File_System_Mount_t *mount = FS_locate(file_system, file);
+    const File_System_Mount_t *mount = FS_locate(file_system, file);
     if (!mount) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't locale file `%s`", file);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't locate file `%s`", file);
         return NULL;
     }
 
     return FS_open(mount, file);
 }
 
-File_System_Mount_t *FS_locate(const File_System_t *file_system, const char *file)
+const File_System_Mount_t *FS_locate(const File_System_t *file_system, const char *file)
 {
 #ifdef __FS_SUPPORT_MOUNT_OVERRIDE__
     // Backward scan, later mounts gain priority over existing ones.
     for (int index = (int)arrlen(file_system->mounts) - 1; index >= 0; --index) {
-        File_System_Mount_t *mount = file_system->mounts[index];
+        const File_System_Mount_t *mount = file_system->mounts[index];
 #else
     File_System_Mount_t **current = file_system->mounts;
     for (size_t count = arrlen(file_system->mounts); count; --count) {
-        File_System_Mount_t *mount = *(current++);
+        const File_System_Mount_t *mount = *(current++);
 #endif
         if (((const Mount_t *)mount)->vtable.contains(mount, file)) {
             return mount;

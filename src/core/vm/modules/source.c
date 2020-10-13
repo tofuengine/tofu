@@ -26,6 +26,7 @@
 
 #include <config.h>
 #include <core/io/audio.h>
+#include <core/io/storage.h>
 #include <libs/luax.h>
 #include <libs/log.h>
 
@@ -126,10 +127,10 @@ static int source_new(lua_State *L)
     const char *file = LUAX_STRING(L, 1);
     Source_Type_t type = (Source_Type_t)LUAX_OPTIONAL_INTEGER(L, 2, SOURCE_TYPE_MUSIC);
 
-    File_System_t *file_system = (File_System_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
+    const Storage_t *storage = (const Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
-    File_System_Handle_t *handle = FS_locate_and_open(file_system, file); // The handle is kept open, the source could require it.
+    File_System_Handle_t *handle = Storage_open(storage, file); // The handle is kept open, the source could require it.
     if (!handle) {
         return luaL_error(L, "can't access file `%s`", file);
     }
