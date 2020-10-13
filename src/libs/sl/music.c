@@ -37,7 +37,7 @@
 
 // We are going to buffer 1 second of non-converted data. As long as the `SL_music_update()` function is called
 // once half a second we are good. Since it's very unlikely we will run at less than 2 FPS... well, we can sleep well. :)
-// FIXME: greater value to reduce the I/O? Guess this would be require...
+// FIXME: greater value to reduce the I/O? Guess this would be required...
 #define STREAMING_BUFFER_SIZE_IN_FRAMES     SL_FRAMES_PER_SECOND
 
 // That's the size of a single chunk read in each `produce()` call. Can't be larger than the buffer size.

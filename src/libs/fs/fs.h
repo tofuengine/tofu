@@ -52,28 +52,28 @@
   #define FILE_PATH_MAX           1024
 #endif
 
-#define FILE_SYSTEM_PATH_SEPARATOR    '/'
-#define FILE_SYSTEM_PATH_SEPARATOR_SZ "/"
+#define FS_PATH_SEPARATOR       '/'
+#define FS_PATH_SEPARATOR_SZ    "/"
 
-typedef void File_System_Mount_t;
-typedef void File_System_Handle_t;
+typedef void FS_Mount_t;
+typedef void FS_Handle_t;
 
-typedef struct _File_System_t File_System_t;
+typedef struct _FS_Context_t FS_Context_t;
 
-extern File_System_t *FS_create(const char *base_path);
-extern void FS_destroy(File_System_t *file_system);
+extern FS_Context_t *FS_create(const char *base_path);
+extern void FS_destroy(FS_Context_t *context);
 
-extern bool FS_attach(File_System_t *file_system, const char *path);
-extern const File_System_Mount_t *FS_locate(const File_System_t *file_system, const char *file);
+extern bool FS_attach(FS_Context_t *context, const char *path);
+extern const FS_Mount_t *FS_locate(const FS_Context_t *context, const char *file);
 
-extern File_System_Handle_t *FS_locate_and_open(const File_System_t *file_system, const char *file);
+extern FS_Handle_t *FS_locate_and_open(const FS_Context_t *context, const char *file);
 
-extern File_System_Handle_t *FS_open(const File_System_Mount_t *mount, const char *file);
-extern void FS_close(File_System_Handle_t *handle);
-extern size_t FS_size(File_System_Handle_t *handle);
-extern size_t FS_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
-extern bool FS_seek(File_System_Handle_t *handle, long offset, int whence);
-extern long FS_tell(File_System_Handle_t *handle);
-extern bool FS_eof(File_System_Handle_t *handle);
+extern FS_Handle_t *FS_open(const FS_Mount_t *mount, const char *file);
+extern void FS_close(FS_Handle_t *handle);
+extern size_t FS_size(FS_Handle_t *handle);
+extern size_t FS_read(FS_Handle_t *handle, void *buffer, size_t bytes_requested);
+extern bool FS_seek(FS_Handle_t *handle, long offset, int whence);
+extern long FS_tell(FS_Handle_t *handle);
+extern bool FS_eof(FS_Handle_t *handle);
 
 #endif /* __FS_H__ */

@@ -27,7 +27,7 @@
 
 #include "fs.h"
 
-extern bool pak_is_valid(const char *path);
-extern File_System_Mount_t *pak_mount(const char *path);
+extern bool FS_pak_is_valid(const char *path);
+extern FS_Mount_t *FS_pak_mount(const char *path);
 
 #endif /* __FS_PAK_H__ */

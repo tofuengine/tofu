@@ -178,7 +178,7 @@ static int _searcher(lua_State *L)
     strcat(path_file, file);
     for (size_t i = 1; path_file[i] != '\0'; ++i) { // Replace `.` with `/` to map (virtual) file system entry.
         if (path_file[i] == '.') {
-            path_file[i] = FILE_SYSTEM_PATH_SEPARATOR;
+            path_file[i] = FS_PATH_SEPARATOR;
         }
     }
     strcat(path_file, ".lua");

@@ -105,7 +105,7 @@ typedef struct _Grid_Object_t {
 } Grid_Object_t;
 
 typedef struct _Source_Object_t {
-    File_System_Handle_t *handle;
+    FS_Handle_t *handle;
     SL_Source_t *source;
 } Source_Object_t;
 

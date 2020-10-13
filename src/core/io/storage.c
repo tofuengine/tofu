@@ -91,12 +91,12 @@ void Storage_destroy(Storage_t *storage)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "storage freed");
 }
 
-File_System_Handle_t *Storage_open(const Storage_t *storage, const char *file)
+FS_Handle_t *Storage_open(const Storage_t *storage, const char *file)
 {
     return FS_locate_and_open(storage->context, file);
 }
 
-static void *_load(File_System_Handle_t *handle, bool null_terminate, size_t *size)
+static void *_load(FS_Handle_t *handle, bool null_terminate, size_t *size)
 {
     size_t bytes_requested = FS_size(handle);
 
@@ -123,7 +123,7 @@ static void *_load(File_System_Handle_t *handle, bool null_terminate, size_t *si
     return data;
 }
 
-static Storage_Resource_t *_load_as_string(File_System_Handle_t *handle)
+static Storage_Resource_t *_load_as_string(FS_Handle_t *handle)
 {
     size_t length;
     void *chars = _load(handle, true, &length);
@@ -153,7 +153,7 @@ static Storage_Resource_t *_load_as_string(File_System_Handle_t *handle)
     return resource;
 }
 
-static Storage_Resource_t *_load_as_binary(File_System_Handle_t *handle)
+static Storage_Resource_t *_load_as_binary(FS_Handle_t *handle)
 {
     size_t size;
     void *ptr = _load(handle, false, &size);
@@ -185,19 +185,19 @@ static Storage_Resource_t *_load_as_binary(File_System_Handle_t *handle)
 
 static int _stbi_io_read(void *user_data, char *data, int size)
 {
-    File_System_Handle_t *handle = (File_System_Handle_t *)user_data;
+    FS_Handle_t *handle = (FS_Handle_t *)user_data;
     return (int)FS_read(handle, data, (size_t)size);
 }
 
 static void _stbi_io_skip(void *user_data, int n)
 {
-    File_System_Handle_t *handle = (File_System_Handle_t *)user_data;
+    FS_Handle_t *handle = (FS_Handle_t *)user_data;
     FS_seek(handle, n, SEEK_CUR); // We are discaring the return value, yep. :|
 }
 
 static int _stbi_io_eof(void *user_data)
 {
-    File_System_Handle_t *handle = (File_System_Handle_t *)user_data;
+    FS_Handle_t *handle = (FS_Handle_t *)user_data;
     return FS_eof(handle) ? -1 : 0;
 }
 
@@ -207,7 +207,7 @@ static const stbi_io_callbacks _stbi_io_callbacks = {
     _stbi_io_eof,
 };
 
-static Storage_Resource_t* _load_as_image(File_System_Handle_t *handle)
+static Storage_Resource_t* _load_as_image(FS_Handle_t *handle)
 {
     int width, height, components;
     void *pixels = stbi_load_from_callbacks(&_stbi_io_callbacks, handle, &width, &height, &components, STBI_rgb_alpha);
@@ -256,7 +256,7 @@ const Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Sto
         return resource;
     }
 
-    File_System_Handle_t *handle = FS_locate_and_open(storage->context, file);
+    FS_Handle_t *handle = FS_locate_and_open(storage->context, file);
     if (!handle) {
         return NULL;
     }

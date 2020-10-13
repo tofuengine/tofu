@@ -49,7 +49,7 @@ typedef struct _GL_State_t { // FIXME: rename to `GL_State_s`
 #endif
 } GL_State_t;
 
-typedef struct _GL_Context_t { // TODO: rename context to canvas?
+typedef struct _GL_Context_t {
     GL_Surface_t *surface;
     GL_State_t state;
     GL_State_t *stack;

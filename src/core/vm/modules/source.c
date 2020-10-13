@@ -90,25 +90,25 @@ int source_loader(lua_State *L)
 
 static size_t _handle_read(void *user_data, void *buffer, size_t bytes_to_read)
 {
-    File_System_Handle_t *handle = (File_System_Handle_t *)user_data;
+    FS_Handle_t *handle = (FS_Handle_t *)user_data;
     return FS_read(handle, buffer, bytes_to_read);
 }
 
 static bool _handle_seek(void *user_data, long offset, int whence)
 {
-    File_System_Handle_t *handle = (File_System_Handle_t *)user_data;
+    FS_Handle_t *handle = (FS_Handle_t *)user_data;
     return FS_seek(handle, offset, whence);
 }
 
 static long _handle_tell(void *user_data)
 {
-    File_System_Handle_t *handle = (File_System_Handle_t *)user_data;
+    FS_Handle_t *handle = (FS_Handle_t *)user_data;
     return FS_tell(handle);
 }
 
 static int _handle_eof(void *user_data)
 {
-    File_System_Handle_t *handle = (File_System_Handle_t *)user_data;
+    FS_Handle_t *handle = (FS_Handle_t *)user_data;
     return FS_eof(handle) ? 1 : 0;
 }
 
@@ -130,7 +130,7 @@ static int source_new(lua_State *L)
     const Storage_t *storage = (const Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
-    File_System_Handle_t *handle = Storage_open(storage, file); // The handle is kept open, the source could require it.
+    FS_Handle_t *handle = Storage_open(storage, file); // The handle is kept open, the source could require it.
     if (!handle) {
         return luaL_error(L, "can't access file `%s`", file);
     }
