@@ -99,10 +99,6 @@ GL_Context_t *GL_context_create(size_t width, size_t height)
 
 void GL_context_destroy(GL_Context_t *context)
 {
-    if (!context) {
-        return;
-    }
-
     arrfree(context->stack);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context stack freed");
 

@@ -134,8 +134,5 @@ GL_Sheet_t *GL_sheet_create(const GL_Surface_t *atlas, const GL_Rectangle_u32_t 
 
 void GL_sheet_destroy(GL_Sheet_t *sheet)
 {
-    if (!sheet) { // FIXME: useless?
-        return;
-    }
     _detach(sheet);
 }

@@ -58,10 +58,6 @@ SL_Context_t *SL_context_create(void)
 
 void SL_context_destroy(SL_Context_t *context)
 {
-    if (!context) {
-        return;
-    }
-
     arrfree(context->sources);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context sources freed");
 

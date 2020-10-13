@@ -71,10 +71,6 @@ GL_Surface_t *GL_surface_create(size_t width, size_t height)
 
 void GL_surface_destroy(GL_Surface_t *surface)
 {
-    if (!surface) { // FIXME: is this kind of defensive check required?
-        return;
-    }
-
     free(surface->data);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface-data at %p freed", surface->data);
 
