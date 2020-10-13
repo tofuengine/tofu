@@ -43,7 +43,7 @@
   #define FILE_PATH_SEPARATOR_SZ  "\\"
   #define FILE_PATH_CURRENT_SZ    ".\\"
   #define FILE_PATH_PARENT_SZ     "..\\"
-  #define FILE_PATH_MAX           256
+  #define FILE_PATH_MAX           260
 #elif PLATFORM_ID == PLATFORM_OSX
   #define FILE_PATH_SEPARATOR     '/'
   #define FILE_PATH_SEPARATOR_SZ  "/"
