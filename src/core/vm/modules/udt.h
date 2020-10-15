@@ -57,6 +57,8 @@ typedef struct _Object_t {
 } Object_t;
 #endif
 
+// TODO: use nested structures!
+
 typedef struct _Canvas_Object_t {
     GL_Context_t *context;
     bool allocated;

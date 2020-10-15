@@ -156,9 +156,9 @@ Engine_t *Engine_create(const char *base_path)
             .gamepad_sensitivity = engine->configuration.gamepad_sensitivity,
             .gamepad_deadzone = engine->configuration.gamepad_inner_deadzone,
             .gamepad_range = 1.0f - engine->configuration.gamepad_inner_deadzone - engine->configuration.gamepad_outer_deadzone,
-            .scale = (float)engine->display->canvas_size.width / (float)engine->display->vram_rectangle.width // FIXME: pass the sizes?
+            .scale = 1.0f / Display_get_scale(engine->display) // FIXME: pass the sizes?
         };
-    engine->input = Input_create(&input_configuration, engine->display->window);
+    engine->input = Input_create(&input_configuration, Display_get_window(engine->display));
     if (!engine->input) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize input");
         Display_destroy(engine->display);

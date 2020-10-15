@@ -124,7 +124,7 @@ static int canvas_new0(lua_State *L)
 
     Canvas_Object_t *self = (Canvas_Object_t *)lua_newuserdatauv(L, sizeof(Canvas_Object_t), 1);
     *self = (Canvas_Object_t){
-            .context = display->context,
+            .context = Display_get_context(display),
             .allocated = false
         };
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas %p allocated w/ default context", self);
@@ -148,7 +148,7 @@ static int canvas_new1(lua_State *L)
     if (!image) {
         return luaL_error(L, "can't load file `%s`", file);
     }
-    GL_Context_t *context = GL_context_decode(S_IWIDTH(image), S_IHEIGHT(image), S_IPIXELS(image), surface_callback_palette, (void *)&display->palette);
+    GL_Context_t *context = GL_context_decode(S_IWIDTH(image), S_IHEIGHT(image), S_IPIXELS(image), surface_callback_palette, (void *)Display_get_palette(display));
     if (!context) {
         return luaL_error(L, "can't decode file `%s`", file);
     }

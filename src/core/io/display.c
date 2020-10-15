@@ -306,49 +306,49 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
             .configuration = *configuration
         };
 
-    display->window = _window_initialize(configuration, &display->vram_rectangle, &display->canvas_size);
+    display->window = _window_initialize(configuration, &display->vram.rectangle, &display->canvas.size);
     if (!display->window) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize window");
         free(display);
         return NULL;
     }
 
-    display->context = GL_context_create(display->canvas_size.width, display->canvas_size.height);
-    if (!display->context) {
+    display->canvas.context = GL_context_create(display->canvas.size.width, display->canvas.size.height);
+    if (!display->canvas.context) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create graphics context");
         glfwDestroyWindow(display->window);
         glfwTerminate();
         free(display);
         return NULL;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "graphics context %p created", display->context);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "graphics context %p created", display->canvas.context);
 
-    GL_palette_generate_greyscale(&display->palette, GL_MAX_PALETTE_COLORS);
+    GL_palette_generate_greyscale(&display->canvas.palette, GL_MAX_PALETTE_COLORS);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded greyscale palette of %d entries", GL_MAX_PALETTE_COLORS);
 
-    display->vram_size = display->canvas_size.width * display->canvas_size.width * sizeof(GL_Color_t);
-    display->vram = malloc(display->vram_size);
-    if (!display->vram) {
+    display->vram.size = display->canvas.size.width * display->canvas.size.width * sizeof(GL_Color_t);
+    display->vram.pixels = malloc(display->vram.size);
+    if (!display->vram.pixels) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't allocate VRAM buffer");
-        GL_context_destroy(display->context);
+        GL_context_destroy(display->canvas.context);
         glfwDestroyWindow(display->window);
         glfwTerminate();
         free(display);
         return NULL;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes VRAM allocated at %p (%dx%d)", display->vram_size, display->vram, display->canvas_size.width, display->canvas_size.height);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes VRAM allocated at %p (%dx%d)", display->vram.size, display->vram, display->canvas.size.width, display->canvas.size.height);
 
-    glGenTextures(1, &display->vram_texture); //allocate the memory for texture
-    if (display->vram_texture == 0) {
+    glGenTextures(1, &display->vram.texture); //allocate the memory for texture
+    if (display->vram.texture == 0) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't allocate VRAM texture");
-        free(display->vram);
-        GL_context_destroy(display->context);
+        free(display->vram.pixels);
+        GL_context_destroy(display->canvas.context);
         glfwDestroyWindow(display->window);
         glfwTerminate();
         free(display);
         return NULL;
     }
-    glBindTexture(GL_TEXTURE_2D, display->vram_texture); // The VRAM texture is always the active and bound one.
+    glBindTexture(GL_TEXTURE_2D, display->vram.texture); // The VRAM texture is always the active and bound one.
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -356,25 +356,25 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0); // Disable mip-mapping
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
     glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)display->canvas_size.width, (GLsizei)display->canvas_size.height, 0, PIXEL_FORMAT, GL_UNSIGNED_BYTE, NULL);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "texture created w/ id #%d (%dx%d)", display->vram_texture, display->canvas_size.width, display->canvas_size.height);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)display->canvas.size.width, (GLsizei)display->canvas.size.height, 0, PIXEL_FORMAT, GL_UNSIGNED_BYTE, NULL);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "texture created w/ id #%d (%dx%d)", display->vram.texture, display->canvas.size.width, display->canvas.size.height);
 
     for (size_t i = 0; i < Display_Programs_t_CountOf; ++i) {
         const Program_Data_t *data = &_programs_data[i];
         if (!data->vertex_shader || !data->fragment_shader) {
             continue;
         }
-        Program_t *program= &display->programs[i];
+        Program_t *program= &display->program.array[i];
         if (!program_create(program) ||
             !program_attach(program, data->vertex_shader, PROGRAM_SHADER_VERTEX) ||
             !program_attach(program, data->fragment_shader, PROGRAM_SHADER_FRAGMENT)) {
             Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize shaders");
             for (size_t j = 0; j < i; ++j) {
-                program_delete(&display->programs[j]);
+                program_delete(&display->program.array[j]);
             }
-            glDeleteBuffers(1, &display->vram_texture);
-            free(display->vram);
-            GL_context_destroy(display->context);
+            glDeleteBuffers(1, &display->vram.texture);
+            free(display->vram.pixels);
+            GL_context_destroy(display->canvas.context);
             glfwDestroyWindow(display->window);
             glfwTerminate();
             free(display);
@@ -397,20 +397,20 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
 void Display_destroy(Display_t *display)
 {
     for (size_t i = 0; i < Display_Programs_t_CountOf; ++i) {
-        if (display->programs[i].id == 0) {
+        if (display->program.array[i].id == 0) {
             continue;
         }
-        program_delete(&display->programs[i]);
+        program_delete(&display->program.array[i]);
     }
 
-    glDeleteBuffers(1, &display->vram_texture);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "texture w/ id #%d deleted", display->vram_texture);
+    glDeleteBuffers(1, &display->vram.texture);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "texture w/ id #%d deleted", display->vram.texture);
 
-    free(display->vram);
+    free(display->vram.pixels);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "VRAM buffer %p freed", display->vram);
 
-    GL_context_destroy(display->context);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "graphics context %p destroyed", display->context);
+    GL_context_destroy(display->canvas.context);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "graphics context %p destroyed", display->canvas.context);
 
     glfwDestroyWindow(display->window);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window %p destroyed", display->window);
@@ -432,7 +432,7 @@ void Display_update(Display_t *display, float delta_time)
     display->time += delta_time;
 
     GLfloat time = (GLfloat)display->time;
-    program_send(display->active_program, UNIFORM_TIME, PROGRAM_UNIFORM_FLOAT, 1, &time);
+    program_send(display->program.active, UNIFORM_TIME, PROGRAM_UNIFORM_FLOAT, 1, &time);
 
 #ifdef DEBUG
     _has_errors(); // Display pending OpenGL errors.
@@ -440,14 +440,14 @@ void Display_update(Display_t *display, float delta_time)
 }
 
 #ifdef PROFILE
-static inline void _to_display(GLFWwindow *window, const GL_Surface_t *surface, GL_Color_t *vram, const GL_Rectangle_t *vram_rectangle, const GL_Point_t *vram_offset)
+static inline void _to_display(GLFWwindow *window, const GL_Surface_t *surface, GL_Color_t *pixels, const GL_Rectangle_t *rectangle, const GL_Point_t *offset)
 {
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)surface->width, (GLsizei)surface->height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, vram);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)surface->width, (GLsizei)surface->height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, pixels);
 
-    const int x0 = vram_rectangle->x + vram_offset->x;
-    const int y0 = vram_rectangle->y + vram_offset->y;
-    const int x1 = x0 + vram_rectangle->width;
-    const int y1 = y0 + vram_rectangle->height;
+    const int x0 = rectangle->x + offset->x;
+    const int y0 = rectangle->y + offset->y;
+    const int x1 = x0 + rectangle->width;
+    const int y1 = y0 + rectangle->height;
 
     glBegin(GL_TRIANGLE_STRIP);
 //        glColor4ub(255, 255, 255, 255); // Change this color to "tint".
@@ -473,18 +473,18 @@ void Display_present(const Display_t *display)
     glClear(GL_COLOR_BUFFER_BIT);
 
     // Convert the offscreen surface to a texture.
-    const GL_Surface_t *surface = display->context->surface;
-    GL_Color_t *vram = display->vram;
+    const GL_Surface_t *surface = display->canvas.context->surface;
+    GL_Color_t *pixels = display->vram.pixels;
 
-    GL_surface_to_rgba(surface, &display->palette, vram);
+    GL_surface_to_rgba(surface, &display->canvas.palette, pixels);
 
 #ifdef PROFILE
-    _to_display(display->window, surface, vram, &display->vram_rectangle, &display->vram_offset);
+    _to_display(display->window, surface, vram, &display->vram.rectangle, &display->vram_offset);
 #else
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)surface->width, (GLsizei)surface->height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, vram);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)surface->width, (GLsizei)surface->height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, pixels);
 
-    const GL_Rectangle_t *vram_rectangle = &display->vram_rectangle;
-    const GL_Point_t *vram_offset = &display->vram_offset;
+    const GL_Rectangle_t *vram_rectangle = &display->vram.rectangle;
+    const GL_Point_t *vram_offset = &display->vram.offset;
 
     // Add x/y offset to implement screen-shaking or similar effects.
     const int x0 = vram_rectangle->x + vram_offset->x;
@@ -511,22 +511,22 @@ void Display_present(const Display_t *display)
 
 void Display_set_palette(Display_t *display, const GL_Palette_t *palette)
 {
-    display->palette = *palette;
+    display->canvas.palette = *palette;
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette updated");
 }
 
 void Display_set_offset(Display_t *display, GL_Point_t offset)
 {
-    display->vram_offset = offset;
+    display->vram.offset = offset;
 }
 
 void Display_set_shader(Display_t *display, const char *effect)
 {
-    bool is_passthru = display->active_program == &display->programs[DISPLAY_PROGRAM_PASSTHRU];
+    bool is_passthru = display->program.active == &display->program.array[DISPLAY_PROGRAM_PASSTHRU];
 
     if (!is_passthru) {
-        if (display->active_program) {
-            program_delete(display->active_program);
+        if (display->program.active) {
+            program_delete(display->program.active);
         }
     } else
     if (!effect) {
@@ -536,8 +536,8 @@ void Display_set_shader(Display_t *display, const char *effect)
 
     if (!effect) {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loading pass-thru shader");
-        program_delete(&display->programs[DISPLAY_PROGRAM_CUSTOM]);
-        display->active_program = &display->programs[DISPLAY_PROGRAM_PASSTHRU];
+        program_delete(&display->program.array[DISPLAY_PROGRAM_CUSTOM]);
+        display->program.active = &display->program.array[DISPLAY_PROGRAM_PASSTHRU];
     } else {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loading custom shader");
         const size_t length = strlen(FRAGMENT_SHADER_CUSTOM) + strlen(effect);
@@ -545,13 +545,13 @@ void Display_set_shader(Display_t *display, const char *effect)
         strcpy(code, FRAGMENT_SHADER_CUSTOM);
         strcat(code, effect);
 
-        Program_t *program = &display->programs[DISPLAY_PROGRAM_CUSTOM];
+        Program_t *program = &display->program.array[DISPLAY_PROGRAM_CUSTOM];
 
         if (program_create(program) &&
             program_attach(program, VERTEX_SHADER, PROGRAM_SHADER_VERTEX) &&
             program_attach(program, code, PROGRAM_SHADER_FRAGMENT)) {
             program_prepare(program, _uniforms, Uniforms_t_CountOf);
-            display->active_program = program;
+            display->program.active = program;
         } else {
             program_delete(program);
             Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "can't load custom shader");
@@ -560,23 +560,38 @@ void Display_set_shader(Display_t *display, const char *effect)
         free(code);
     }
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "switched to program %p", display->active_program);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "switched to program %p", display->program.active);
 
-    program_use(display->active_program);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p active", display->active_program);
+    program_use(display->program.active);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p active", display->program.active);
 
-    program_send(display->active_program, UNIFORM_TEXTURE, PROGRAM_UNIFORM_TEXTURE, 1, &_texture_id_0); // Redundant
-    GLfloat resolution[] = {(GLfloat)display->vram_rectangle.width, (GLfloat)display->vram_rectangle.height };
-    program_send(display->active_program, UNIFORM_RESOLUTION, PROGRAM_UNIFORM_VEC2, 1, resolution);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p initialized", display->active_program);
+    program_send(display->program.active, UNIFORM_TEXTURE, PROGRAM_UNIFORM_TEXTURE, 1, &_texture_id_0); // Redundant
+    GLfloat resolution[] = {(GLfloat)display->vram.rectangle.width, (GLfloat)display->vram.rectangle.height };
+    program_send(display->program.active, UNIFORM_RESOLUTION, PROGRAM_UNIFORM_VEC2, 1, resolution);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p initialized", display->program.active);
+}
+
+GLFWwindow *Display_get_window(const Display_t *display)
+{
+    return display->window;
+}
+
+float Display_get_scale(const Display_t *display)
+{
+    return (float)display->vram.rectangle.width / (float)display->canvas.size.width;
+}
+
+GL_Context_t *Display_get_context(const Display_t *display)
+{
+    return display->canvas.context;
 }
 
 const GL_Palette_t *Display_get_palette(const Display_t *display)
 {
-    return &display->palette;
+    return &display->canvas.palette;
 }
 
 GL_Point_t Display_get_offset(const Display_t *display)
 {
-    return display->vram_offset;
+    return display->vram.offset;
 }
