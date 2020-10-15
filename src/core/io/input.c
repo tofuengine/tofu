@@ -313,10 +313,10 @@ void Input_update(Input_t *input, float delta_time)
         Input_Cursor_t *cursor = &state->cursor;
         const Input_Stick_t *stick = &state->sticks[INPUT_STICK_RIGHT];
 
-        const float speed = input->configuration.cursor_speed * delta_time;
+        const float delta = input->configuration.cursor_speed * delta_time;
 
-        cursor->x += stick->x * speed;
-        cursor->y += stick->y * speed;
+        cursor->x += stick->x * delta;
+        cursor->y += stick->y * delta;
 
         if (cursor->x < cursor->area.x0) {
             cursor->x = cursor->area.x0;
