@@ -60,20 +60,20 @@ typedef struct _Display_t {
 
     GLFWwindow *window;
 
-    GL_Rectangle_t vram_area;
+    GL_Size_t canvas_size;
+    GL_Context_t *context;
+    GL_Palette_t palette;
+
     GL_Color_t *vram; // Temporary buffer to create the OpenGL texture from `GL_Pixel_t` array.
     size_t vram_size;
     GLuint vram_texture;
-    GL_Quad_t vram_destination;
+    GL_Rectangle_t vram_rectangle;
     GL_Point_t vram_offset;
 
     Program_t programs[Display_Programs_t_CountOf];
     Program_t *active_program;
 
     double time;
-
-    GL_Context_t *context;
-    GL_Palette_t palette;
 } Display_t;
 
 extern Display_t *Display_create(const Display_Configuration_t *configuration); // TODO: rename to `Graphics`?

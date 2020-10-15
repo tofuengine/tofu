@@ -171,42 +171,46 @@ static void _size_callback(GLFWwindow* window, int width, int height)
 #endif
 }
 
-static bool _compute_size(size_t width, size_t height, size_t scale, bool fullscreen, GL_Rectangle_t *virtual, GL_Rectangle_t *physical)
+static bool _compute_size(size_t width, size_t height, size_t scale, bool fullscreen, GL_Rectangle_t *present_area, GL_Rectangle_t *window_area, GL_Size_t *canvas_size)
 {
     int display_width, display_height;
     glfwGetMonitorWorkarea(glfwGetPrimaryMonitor(), NULL, NULL, &display_width, &display_height);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "display size is %dx%d", display_width, display_height);
 
-    // TODO: width/height set to `0` means fit the display?
-    size_t max_scale = (size_t)imin(display_width / (int)width, display_height / (int)height);
+    canvas_size->width = width > 0 ? width : (size_t)display_width; // width/height set to `0` means fit the display
+    canvas_size->height = height > 0 ? height : (size_t)display_height;
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas size is %dx%d", canvas_size->width, canvas_size->height);
+
+    const size_t max_scale = (size_t)imin(display_width / (int)canvas_size->width, display_height / (int)canvas_size->height);
     if (max_scale == 0) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "requested display size can't fit display!");
         return false;
     }
 
-    size_t window_scale = scale > max_scale ? max_scale : (scale != 0 ? scale : max_scale);
-    size_t window_width = width * scale;
-    size_t window_height = height * scale;
+    const size_t window_scale = scale > max_scale ? max_scale : (scale > 0 ? scale : max_scale);
+    const size_t window_width = canvas_size->width * window_scale;
+    const size_t window_height = canvas_size->height * window_scale;
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window size is %dx%d (%dx)", window_width, window_height, window_scale);
 
-    int x = (display_width - (int)window_width) / 2;
-    int y = (display_height - (int)window_height) / 2;
+    const int x = (display_width - (int)window_width) / 2;
+    const int y = (display_height - (int)window_height) / 2;
     if (!fullscreen) {
-        *virtual = (GL_Rectangle_t){ // This is the vram rectangle, where the screen blit is done.
+        *present_area = (GL_Rectangle_t){ // This is the vram rectangle, where the screen blit is done.
                 .x = 0, .y = 0,
                 .width = window_width, .height = window_height
             };
-        *physical = (GL_Rectangle_t){ // This is the windows rectangle, that is the size and position of the window.
+        *window_area = (GL_Rectangle_t){ // This is the windows rectangle, that is the size and position of the window.
                 .x = x, .y = y,
                 .width = window_width, .height = window_height
             };
     } else {
-        *virtual = (GL_Rectangle_t){
+        *present_area = (GL_Rectangle_t){
                 .x = x, .y = y,
                 .width = window_width, .height = window_height
             };
-        *physical = (GL_Rectangle_t){
+        *window_area = (GL_Rectangle_t){
                 .x = 0, .y = 0,
                 .width = (size_t)display_width, .height = (size_t)display_height
             };
@@ -215,7 +219,7 @@ static bool _compute_size(size_t width, size_t height, size_t scale, bool fullsc
     return true;
 }
 
-static GLFWwindow *_window_initialize(const Display_Configuration_t *configuration, GL_Rectangle_t *vram_area)
+static GLFWwindow *_window_initialize(const Display_Configuration_t *configuration, GL_Rectangle_t *present_area, GL_Size_t *canvas_size)
 {
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "GLFW: %s", glfwGetVersionString());
 
@@ -226,8 +230,8 @@ static GLFWwindow *_window_initialize(const Display_Configuration_t *configurati
         return NULL;
     }
 
-    GL_Rectangle_t window_area;
-    if (!_compute_size(configuration->width, configuration->height, configuration->scale, configuration->fullscreen, vram_area, &window_area)) {
+    GL_Rectangle_t window_rectangle;
+    if (!_compute_size(configuration->width, configuration->height, configuration->scale, configuration->fullscreen, present_area, &window_rectangle, canvas_size)) {
         glfwTerminate();
         return NULL;
     }
@@ -274,10 +278,10 @@ static GLFWwindow *_window_initialize(const Display_Configuration_t *configurati
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%sabling vertical synchronization", configuration->vertical_sync ? "en" : "dis");
     glfwSwapInterval(configuration->vertical_sync ? 1 : 0); // Set vertical sync, if required.
 
-    glfwSetWindowSize(window, window_area.width, window_area.height);
+    glfwSetWindowSize(window, window_rectangle.width, window_rectangle.height);
     if (!configuration->fullscreen) {
-        glfwSetWindowPos(window, window_area.x, window_area.y);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window position is <%d, %d>", window_area.x, window_area.y);
+        glfwSetWindowPos(window, window_rectangle.x, window_rectangle.y);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window position is <%d, %d>", window_rectangle.x, window_rectangle.y);
     }
     glfwShowWindow(window); // This is not required for fullscreen window, but it makes sense anyway.
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window shown");
@@ -302,31 +306,27 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
             .configuration = *configuration
         };
 
-    display->window = _window_initialize(configuration, &display->vram_area);
+    display->window = _window_initialize(configuration, &display->vram_rectangle, &display->canvas_size);
     if (!display->window) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize window");
         free(display);
         return NULL;
     }
 
-    display->vram_destination = (GL_Quad_t){
-            .x0 = display->vram_area.x, .y0 = display->vram_area.y,
-            .x1 = display->vram_area.x + (int)display->vram_area.width, .y1 = display->vram_area.y + (int)display->vram_area.height
-        };
-
-    display->context = GL_context_create(configuration->width, configuration->height);
+    display->context = GL_context_create(display->canvas_size.width, display->canvas_size.height);
     if (!display->context) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize GL");
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create graphics context");
         glfwDestroyWindow(display->window);
         glfwTerminate();
         free(display);
         return NULL;
     }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "graphics context %p created", display->context);
 
     GL_palette_generate_greyscale(&display->palette, GL_MAX_PALETTE_COLORS);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded greyscale palette of %d entries", GL_MAX_PALETTE_COLORS);
 
-    display->vram_size = display->configuration.width * display->configuration.width * sizeof(GL_Color_t);
+    display->vram_size = display->canvas_size.width * display->canvas_size.width * sizeof(GL_Color_t);
     display->vram = malloc(display->vram_size);
     if (!display->vram) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't allocate VRAM buffer");
@@ -336,7 +336,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
         free(display);
         return NULL;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes VRAM allocated at %p (%dx%d)", display->vram_size, display->vram, display->configuration.width, display->configuration.height);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes VRAM allocated at %p (%dx%d)", display->vram_size, display->vram, display->canvas_size.width, display->canvas_size.height);
 
     glGenTextures(1, &display->vram_texture); //allocate the memory for texture
     if (display->vram_texture == 0) {
@@ -356,8 +356,8 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0); // Disable mip-mapping
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
     glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)display->configuration.width, (GLsizei)display->configuration.height, 0, PIXEL_FORMAT, GL_UNSIGNED_BYTE, NULL);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "texture created w/ id #%d (%dx%d)", display->vram_texture, display->configuration.width, display->configuration.height);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)display->canvas_size.width, (GLsizei)display->canvas_size.height, 0, PIXEL_FORMAT, GL_UNSIGNED_BYTE, NULL);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "texture created w/ id #%d (%dx%d)", display->vram_texture, display->canvas_size.width, display->canvas_size.height);
 
     for (size_t i = 0; i < Display_Programs_t_CountOf; ++i) {
         const Program_Data_t *data = &_programs_data[i];
@@ -410,6 +410,7 @@ void Display_destroy(Display_t *display)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "VRAM buffer %p freed", display->vram);
 
     GL_context_destroy(display->context);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "graphics context %p destroyed", display->context);
 
     glfwDestroyWindow(display->window);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window %p destroyed", display->window);
@@ -438,15 +439,15 @@ void Display_update(Display_t *display, float delta_time)
 #endif
 }
 
-#ifdef PROFILING
-static inline void _to_display(GLFWwindow *window, const GL_Surface_t *surface, GL_Color_t *vram, const GL_Quad_t *vram_destination, const GL_Point_t *vram_offset)
+#ifdef PROFILE
+static inline void _to_display(GLFWwindow *window, const GL_Surface_t *surface, GL_Color_t *vram, const GL_Rectangle_t *vram_rectangle, const GL_Point_t *vram_offset)
 {
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)surface->width, (GLsizei)surface->height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, vram);
 
-    const int x0 = vram_destination->x0 + vram_offset->x;
-    const int y0 = vram_destination->y0 + vram_offset->y;
-    const int x1 = vram_destination->x1 + vram_offset->x;
-    const int y1 = vram_destination->y1 + vram_offset->y;
+    const int x0 = vram_rectangle->x + vram_offset->x;
+    const int y0 = vram_rectangle->y + vram_offset->y;
+    const int x1 = x0 + vram_rectangle->width;
+    const int y1 = y0 + vram_rectangle->height;
 
     glBegin(GL_TRIANGLE_STRIP);
 //        glColor4ub(255, 255, 255, 255); // Change this color to "tint".
@@ -478,18 +479,18 @@ void Display_present(const Display_t *display)
     GL_surface_to_rgba(surface, &display->palette, vram);
 
 #ifdef PROFILE
-    _to_display(display->window, surface, vram, &display->vram_destination, &display->vram_offset);
+    _to_display(display->window, surface, vram, &display->vram_rectangle, &display->vram_offset);
 #else
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)surface->width, (GLsizei)surface->height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, vram);
 
-    // Add an offset x/y to implement shaking and similar effects.
-    const GL_Quad_t *vram_destination = &display->vram_destination;
+    const GL_Rectangle_t *vram_rectangle = &display->vram_rectangle;
     const GL_Point_t *vram_offset = &display->vram_offset;
 
-    const int x0 = vram_destination->x0 + vram_offset->x;
-    const int y0 = vram_destination->y0 + vram_offset->y;
-    const int x1 = vram_destination->x1 + vram_offset->x;
-    const int y1 = vram_destination->y1 + vram_offset->y;
+    // Add x/y offset to implement screen-shaking or similar effects.
+    const int x0 = vram_rectangle->x + vram_offset->x;
+    const int y0 = vram_rectangle->y + vram_offset->y;
+    const int x1 = x0 + vram_rectangle->width;
+    const int y1 = y0 + vram_rectangle->height;
 
     glBegin(GL_TRIANGLE_STRIP);
 //        glColor4ub(255, 255, 255, 255); // Change this color to "tint".
@@ -565,7 +566,7 @@ void Display_set_shader(Display_t *display, const char *effect)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p active", display->active_program);
 
     program_send(display->active_program, UNIFORM_TEXTURE, PROGRAM_UNIFORM_TEXTURE, 1, &_texture_id_0); // Redundant
-    GLfloat resolution[] = { (GLfloat)display->vram_area.width, (GLfloat)display->vram_area.height };
+    GLfloat resolution[] = {(GLfloat)display->vram_rectangle.width, (GLfloat)display->vram_rectangle.height };
     program_send(display->active_program, UNIFORM_RESOLUTION, PROGRAM_UNIFORM_VEC2, 1, resolution);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p initialized", display->active_program);
 }
