@@ -124,12 +124,14 @@ Engine_t *Engine_create(const char *base_path)
     Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined icon loaded");
     Display_Configuration_t display_configuration = { // TODO: reorganize configuration.
             .icon = icon ? (GLFWimage){ .width = (int)S_IWIDTH(icon), .height = (int)S_IHEIGHT(icon), .pixels = S_IPIXELS(icon) } : (GLFWimage){ 64, 64, (unsigned char *)_default_icon_pixels },
-            .title = engine->configuration.title,
-            .width = engine->configuration.width,
-            .height = engine->configuration.height,
+            .window = {
+                .title = engine->configuration.title,
+                .width = engine->configuration.width,
+                .height = engine->configuration.height,
+                .scale = engine->configuration.scale
+            },
             .fullscreen = engine->configuration.fullscreen,
             .vertical_sync = engine->configuration.vertical_sync,
-            .scale = engine->configuration.scale,
             .hide_cursor = engine->configuration.hide_cursor
         };
     engine->display = Display_create(&display_configuration);

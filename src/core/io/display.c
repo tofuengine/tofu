@@ -231,7 +231,7 @@ static GLFWwindow *_window_initialize(const Display_Configuration_t *configurati
     }
 
     GL_Rectangle_t window_rectangle;
-    if (!_compute_size(configuration->width, configuration->height, configuration->scale, configuration->fullscreen, present_area, &window_rectangle, canvas_size)) {
+    if (!_compute_size(configuration->window.width, configuration->window.height, configuration->window.scale, configuration->fullscreen, present_area, &window_rectangle, canvas_size)) {
         glfwTerminate();
         return NULL;
     }
@@ -253,7 +253,7 @@ static GLFWwindow *_window_initialize(const Display_Configuration_t *configurati
     glfwWindowHint(GLFW_FOCUSED, GLFW_TRUE);
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // Initially 1x1 invisible, we will be resizing and repositioning it.
 
-    GLFWwindow *window = glfwCreateWindow(1, 1, configuration->title, configuration->fullscreen ? glfwGetPrimaryMonitor() : NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(1, 1, configuration->window.title, configuration->fullscreen ? glfwGetPrimaryMonitor() : NULL, NULL);
     if (window == NULL) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create window");
         glfwTerminate();
