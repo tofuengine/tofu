@@ -146,19 +146,27 @@ Engine_t *Engine_create(const char *base_path)
     Log_assert(!mappings, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined controller mappings loaded");
     Input_Configuration_t input_configuration = {
             .mappings = mappings ? S_SCHARS(mappings) : (const char *)_default_mappings,
-            .exit_key_enabled = engine->configuration.exit_key_enabled,
+            .options = {
+                .exit_key = engine->configuration.exit_key_enabled,
 #ifdef __INPUT_SELECTION__
-            .keyboard_enabled = engine->configuration.keyboard_enabled,
-            .gamepad_enabled = engine->configuration.gamepad_enabled,
-            .mouse_enabled = engine->configuration.mouse_enabled,
+                .keyboard = engine->configuration.keyboard_enabled,
+                .gamepad = engine->configuration.gamepad_enabled,
+                .mouse = engine->configuration.mouse_enabled
 #endif
-            .emulate_dpad = engine->configuration.emulate_dpad,
-            .emulate_mouse = engine->configuration.emulate_mouse,
-            .cursor_speed = engine->configuration.cursor_speed,
-            .gamepad_sensitivity = engine->configuration.gamepad_sensitivity,
-            .gamepad_deadzone = engine->configuration.gamepad_inner_deadzone,
-            .gamepad_range = 1.0f - engine->configuration.gamepad_inner_deadzone - engine->configuration.gamepad_outer_deadzone,
-            .scale = 1.0f / Display_get_scale(engine->display) // FIXME: pass the sizes?
+            },
+            .emulation = {
+                .dpad = engine->configuration.emulate_dpad,
+                .mouse = engine->configuration.emulate_mouse,
+            },
+            .cursor = {
+                .speed = engine->configuration.cursor_speed,
+                .scale = 1.0f / Display_get_scale(engine->display) // FIXME: pass the sizes?
+            },
+            .gamepad = {
+                .sensitivity = engine->configuration.gamepad_sensitivity,
+                .deadzone = engine->configuration.gamepad_inner_deadzone,
+                .range = 1.0f - engine->configuration.gamepad_inner_deadzone - engine->configuration.gamepad_outer_deadzone
+            }
         };
     engine->input = Input_create(&input_configuration, Display_get_window(engine->display));
     if (!engine->input) {

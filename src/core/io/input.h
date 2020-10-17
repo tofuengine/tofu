@@ -79,7 +79,7 @@ typedef struct _Input_Cursor_t {
 
 typedef enum _Input_Sticks_t {
     Input_Sticks_t_First = 0,
-    INPUT_STICK_LEFT,
+    INPUT_STICK_LEFT = Input_Sticks_t_First,
     INPUT_STICK_RIGHT,
     Input_Sticks_t_Last = INPUT_STICK_RIGHT,
     Input_Sticks_t_CountOf
@@ -116,20 +116,27 @@ typedef enum _Input_Handlers_t {
 
 typedef struct _Input_Configuration_t {
     const char *mappings;
-    bool exit_key_enabled;
+    struct {
+        bool exit_key;
 #ifdef __INPUT_SELECTION__
-    bool keyboard_enabled;
-    bool gamepad_enabled;
-    bool mouse_enabled;
+        bool keyboard;
+        bool gamepad;
+        bool mouse;
 #endif
-    bool emulate_dpad;
-    bool emulate_mouse;
-    float cursor_speed;
-    float gamepad_sensitivity;
-    float gamepad_deadzone; // TODO: what is anti-deadzone?
-    float gamepad_range;
-    // TODO: key-remapping?
-    float scale; // Refers to the screen-to-canvas scaling factor.
+    } options;
+    struct {
+        bool dpad;
+        bool mouse;
+    } emulation;
+    struct {
+        float speed;
+        float scale; // Refers to the screen-to-canvas scaling factor.
+    } cursor;
+    struct {
+        float sensitivity;
+        float deadzone; // TODO: what is anti-deadzone?
+        float range;
+    } gamepad;
 } Input_Configuration_t;
 
 typedef void (*Input_Handler_t)(Input_State_t *state, GLFWwindow *window, const Input_Configuration_t *configuration);
@@ -139,11 +146,11 @@ typedef struct _Input_t {
 
     GLFWwindow *window;
 
-    double time;
-
     bool gamepads[INPUT_GAMEPADS_COUNT];
     Input_State_t state;
     Input_Handler_t handlers[Input_Handlers_t_CountOf];
+
+    double time;
 } Input_t;
 
 extern Input_t *Input_create(const Input_Configuration_t *configuration, GLFWwindow *window);
