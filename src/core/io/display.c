@@ -336,7 +336,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
         free(display);
         return NULL;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes VRAM allocated at %p (%dx%d)", display->vram.size, display->vram, display->canvas.size.width, display->canvas.size.height);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes VRAM allocated at %p (%dx%d)", display->vram.size, display->vram.pixels, display->canvas.size.width, display->canvas.size.height);
 
     glGenTextures(1, &display->vram.texture); //allocate the memory for texture
     if (display->vram.texture == 0) {
