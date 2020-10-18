@@ -116,6 +116,9 @@ $(PDUMPS): %.inc : %.png Makefile
 	@convert $< RGBA:- | $(DUMPER) $(DFLAGS) > $@
 	@echo "Generated '"$@"' from '"$<"' successfully!"
 
+stats:
+	@cloc ./src > stats.txt
+
 primitives: $(TARGET)
 	@echo "Launching *primitives* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/primitives
