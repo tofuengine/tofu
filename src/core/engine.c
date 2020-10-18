@@ -156,7 +156,7 @@ Engine_t *Engine_create(const char *base_path)
             },
             .emulation = {
                 .dpad = engine->configuration.emulate_dpad,
-                .mouse = engine->configuration.emulate_mouse,
+                .mouse = engine->configuration.emulate_mouse
             },
             .cursor = {
                 .speed = engine->configuration.cursor_speed,
@@ -164,7 +164,7 @@ Engine_t *Engine_create(const char *base_path)
             },
             .gamepad = {
                 .sensitivity = engine->configuration.gamepad_sensitivity,
-                .deadzone = engine->configuration.gamepad_inner_deadzone,
+                .deadzone = engine->configuration.gamepad_inner_deadzone, // FIXME: pass inner/outer and let the input code do the math?
                 .range = 1.0f - engine->configuration.gamepad_inner_deadzone - engine->configuration.gamepad_outer_deadzone
             }
         };
