@@ -47,9 +47,10 @@ typedef enum _Display_Programs_t {
 
 typedef struct _Display_Configuration_t {
     GLFWimage icon;
-    const char *title;
-    size_t icon_size;
-    size_t width, height, scale;
+    struct {
+        const char *title;
+        size_t width, height, scale;
+    } window;
     bool fullscreen;
     bool vertical_sync;
     bool hide_cursor;
@@ -60,18 +61,24 @@ typedef struct _Display_t {
 
     GLFWwindow *window;
 
-    GL_Size_t canvas_size;
-    GL_Context_t *context;
-    GL_Palette_t palette;
+    struct {
+        GL_Size_t size;
+        GL_Context_t *context;
+        GL_Palette_t palette;
+    } canvas;
 
-    GL_Color_t *vram; // Temporary buffer to create the OpenGL texture from `GL_Pixel_t` array.
-    size_t vram_size;
-    GLuint vram_texture;
-    GL_Rectangle_t vram_rectangle;
-    GL_Point_t vram_offset;
+    struct {
+        GL_Color_t *pixels; // Temporary buffer to create the OpenGL texture from `GL_Pixel_t` array.
+        size_t size;
+        GLuint texture;
+        GL_Rectangle_t rectangle;
+        GL_Point_t offset;
+    } vram;
 
-    Program_t programs[Display_Programs_t_CountOf];
-    Program_t *active_program;
+    struct {
+        Program_t array[Display_Programs_t_CountOf];
+        Program_t *active;
+    } program;
 
     double time;
 } Display_t;
@@ -87,6 +94,9 @@ extern void Display_set_palette(Display_t *display, const GL_Palette_t *palette)
 extern void Display_set_offset(Display_t *display, GL_Point_t offset);
 extern void Display_set_shader(Display_t *display, const char *code);
 
+extern GLFWwindow *Display_get_window(const Display_t *display);
+extern float Display_get_scale(const Display_t *display);
+extern GL_Context_t *Display_get_context(const Display_t *display);
 extern const GL_Palette_t *Display_get_palette(const Display_t *display);
 extern GL_Point_t Display_get_offset(const Display_t *display);
 

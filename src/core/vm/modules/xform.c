@@ -74,7 +74,7 @@ static int xform_new(lua_State *L)
 
     XForm_Object_t *self = (XForm_Object_t *)lua_newuserdatauv(L, sizeof(XForm_Object_t), 1);
     *self = (XForm_Object_t){
-            .context = display->context,
+            .context = Display_get_context(display),
             .context_reference = LUAX_REFERENCE_NIL,
             .surface = canvas->context->surface,
             .surface_reference = luaX_ref(L, 1),
@@ -143,7 +143,7 @@ static int xform_canvas(lua_State *L)
         self->context_reference = luaX_ref(L, 2);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context %p attached w/ reference #%d", self->context, self->context_reference);
     } else {
-        self->context = display->context;
+        self->context = Display_get_context(display);
         self->context_reference = LUAX_REFERENCE_NIL;
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "default context attached");
     }

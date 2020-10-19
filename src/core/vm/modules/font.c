@@ -89,7 +89,7 @@ static int font_new3(lua_State *L)
 
         const Sheet_Data_t *data = resources_sheets_find(file);
         if (data) {
-            surface = GL_surface_decode(data->width, data->height, data->pixels, surface_callback_palette, (void *)&display->palette);
+            surface = GL_surface_decode(data->width, data->height, data->pixels, surface_callback_palette, (void *)Display_get_palette(display));
             if (!surface) {
                 return luaL_error(L, "can't decode file `%s`", file);
             }
@@ -103,7 +103,7 @@ static int font_new3(lua_State *L)
             if (!image) {
                 return luaL_error(L, "can't load file `%s`", file);
             }
-            surface = GL_surface_decode(S_IWIDTH(image), S_IHEIGHT(image), S_IPIXELS(image), surface_callback_palette, (void *)&display->palette);
+            surface = GL_surface_decode(S_IWIDTH(image), S_IHEIGHT(image), S_IPIXELS(image), surface_callback_palette, (void *)Display_get_palette(display));
             if (!surface) {
                 return luaL_error(L, "can't decode file `%s`", file);
             }
@@ -129,7 +129,7 @@ static int font_new3(lua_State *L)
 
     Font_Object_t *self = (Font_Object_t *)lua_newuserdatauv(L, sizeof(Font_Object_t), 1);
     *self = (Font_Object_t){
-            .context = display->context,
+            .context = Display_get_context(display),
             .context_reference = LUAX_REFERENCE_NIL,
             .surface = surface,
             .surface_reference = type == LUA_TUSERDATA ? luaX_ref(L, 1) : LUAX_REFERENCE_NIL,
@@ -168,7 +168,7 @@ static int font_new5(lua_State *L)
 
         const Sheet_Data_t *data = resources_sheets_find(file);
         if (data) {
-            surface = GL_surface_decode(data->width, data->height, data->pixels, surface_callback_palette, (void *)&display->palette);
+            surface = GL_surface_decode(data->width, data->height, data->pixels, surface_callback_palette, (void *)Display_get_palette(display));
             if (!surface) {
                 return luaL_error(L, "can't decode file `%s`", file);
             }
@@ -208,7 +208,7 @@ static int font_new5(lua_State *L)
 
     Font_Object_t *self = (Font_Object_t *)lua_newuserdatauv(L, sizeof(Font_Object_t), 1);
     *self = (Font_Object_t){
-            .context = display->context,
+            .context = Display_get_context(display),
             .context_reference = LUAX_REFERENCE_NIL,
             .surface = surface,
             .surface_reference = type == LUA_TUSERDATA ? luaX_ref(L, 1) : LUAX_REFERENCE_NIL,
@@ -347,7 +347,7 @@ static int font_canvas(lua_State *L)
         self->context_reference = luaX_ref(L, 2);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context %p attached w/ reference #%d", self->context, self->context_reference);
     } else {
-        self->context = display->context;
+        self->context = Display_get_context(display);
         self->context_reference = LUAX_REFERENCE_NIL;
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "default context attached");
     }

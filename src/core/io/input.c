@@ -101,8 +101,8 @@ static void _mouse_handler(Input_State_t *state, GLFWwindow *window, const Input
 
     double x, y;
     glfwGetCursorPos(window, &x, &y);
-    state->cursor.x = (float)x * configuration->scale;
-    state->cursor.y = (float)y * configuration->scale;
+    state->cursor.x = (float)x * configuration->cursor.scale;
+    state->cursor.y = (float)y * configuration->cursor.scale;
 }
 
 // http://www.third-helix.com/2013/04/12/doing-thumbstick-dead-zones-right.html
@@ -161,13 +161,13 @@ static void _gamepad_handler(Input_State_t *state, GLFWwindow *window, const Inp
     GLFWgamepadstate gamepad;
     int result = glfwGetGamepadState(state->gamepad_id, &gamepad);
     if (result == GLFW_TRUE) { // FIXME: add return value check!
-        if (configuration->emulate_dpad) {
+        if (configuration->emulation.dpad) {
             const float x = gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_X];
             const float y = gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_Y];
-            if (fabsf(x) > configuration->gamepad_sensitivity) {
+            if (fabsf(x) > configuration->gamepad.sensitivity) {
                 buttons[x < 0.0f ? INPUT_BUTTON_LEFT : INPUT_BUTTON_RIGHT].state.is = true;
             }
-            if (fabsf(y) > configuration->gamepad_sensitivity) {
+            if (fabsf(y) > configuration->gamepad.sensitivity) {
                 buttons[y < 0.0f ? INPUT_BUTTON_DOWN : INPUT_BUTTON_UP].state.is = true;
             }
         }
@@ -180,8 +180,8 @@ static void _gamepad_handler(Input_State_t *state, GLFWwindow *window, const Inp
             button->state.is |= gamepad.buttons[gamepad_buttons[i]] == GLFW_PRESS;
         }
 
-        const float deadzone = configuration->gamepad_deadzone;
-        const float range = configuration->gamepad_range;
+        const float deadzone = configuration->gamepad.deadzone;
+        const float range = configuration->gamepad.range;
 
         sticks[INPUT_STICK_LEFT] = _gamepad_stick(gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_X], gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_Y], deadzone, range);
         sticks[INPUT_STICK_RIGHT] = _gamepad_stick(gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_X], gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y], deadzone, range);
@@ -240,18 +240,18 @@ Input_t *Input_create(const Input_Configuration_t *configuration, GLFWwindow *wi
             .window = window,
             .time = 0.0,
             .state = (Input_State_t){
-                    .gamepad_id = -1
-                },
+                .gamepad_id = -1
+            },
             .handlers = {
 #ifdef __INPUT_SELECTION__
-                    _default_handler,
-                    configuration->keyboard_enabled ? _keyboard_handler : NULL,
-                    configuration->mouse_enabled ? _mouse_handler : NULL,
-                    configuration->gamepad_enabled ? _gamepad_handler : NULL
+                _default_handler,
+                configuration->options.keyboard ? _keyboard_handler : NULL,
+                configuration->options.mouse ? _mouse_handler : NULL,
+                configuration->options.gamepad ? _gamepad_handler : NULL
 #else
-                    _default_handler
+                _default_handler
 #endif
-                }
+            }
         };
 
     size_t gamepads_count = 0U;
@@ -281,6 +281,8 @@ void Input_destroy(Input_t *input)
 
 void Input_update(Input_t *input, float delta_time)
 {
+    // TODO: check if new gamepad is added/removed!
+
     input->time += delta_time;
 
     Input_State_t *state = &input->state;
@@ -309,11 +311,11 @@ void Input_update(Input_t *input, float delta_time)
         }
     }
 
-    if (input->configuration.emulate_mouse) {
+    if (input->configuration.emulation.mouse) {
         Input_Cursor_t *cursor = &state->cursor;
         const Input_Stick_t *stick = &state->sticks[INPUT_STICK_RIGHT];
 
-        const float delta = input->configuration.cursor_speed * delta_time;
+        const float delta = input->configuration.cursor.speed * delta_time;
 
         cursor->x += stick->x * delta;
         cursor->y += stick->y * delta;
@@ -376,7 +378,7 @@ void Input_process(Input_t *input)
         }
     }
 
-    if (input->configuration.exit_key_enabled) {
+    if (input->configuration.options.exit_key) {
         if (buttons[INPUT_BUTTON_QUIT].state.pressed) {
             Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "exit key pressed");
             glfwSetWindowShouldClose(input->window, true);

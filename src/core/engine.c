@@ -124,12 +124,14 @@ Engine_t *Engine_create(const char *base_path)
     Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined icon loaded");
     Display_Configuration_t display_configuration = { // TODO: reorganize configuration.
             .icon = icon ? (GLFWimage){ .width = (int)S_IWIDTH(icon), .height = (int)S_IHEIGHT(icon), .pixels = S_IPIXELS(icon) } : (GLFWimage){ 64, 64, (unsigned char *)_default_icon_pixels },
-            .title = engine->configuration.title,
-            .width = engine->configuration.width,
-            .height = engine->configuration.height,
+            .window = {
+                .title = engine->configuration.title,
+                .width = engine->configuration.width,
+                .height = engine->configuration.height,
+                .scale = engine->configuration.scale
+            },
             .fullscreen = engine->configuration.fullscreen,
             .vertical_sync = engine->configuration.vertical_sync,
-            .scale = engine->configuration.scale,
             .hide_cursor = engine->configuration.hide_cursor
         };
     engine->display = Display_create(&display_configuration);
@@ -144,21 +146,29 @@ Engine_t *Engine_create(const char *base_path)
     Log_assert(!mappings, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined controller mappings loaded");
     Input_Configuration_t input_configuration = {
             .mappings = mappings ? S_SCHARS(mappings) : (const char *)_default_mappings,
-            .exit_key_enabled = engine->configuration.exit_key_enabled,
+            .options = {
+                .exit_key = engine->configuration.exit_key_enabled,
 #ifdef __INPUT_SELECTION__
-            .keyboard_enabled = engine->configuration.keyboard_enabled,
-            .gamepad_enabled = engine->configuration.gamepad_enabled,
-            .mouse_enabled = engine->configuration.mouse_enabled,
+                .keyboard = engine->configuration.keyboard_enabled,
+                .gamepad = engine->configuration.gamepad_enabled,
+                .mouse = engine->configuration.mouse_enabled
 #endif
-            .emulate_dpad = engine->configuration.emulate_dpad,
-            .emulate_mouse = engine->configuration.emulate_mouse,
-            .cursor_speed = engine->configuration.cursor_speed,
-            .gamepad_sensitivity = engine->configuration.gamepad_sensitivity,
-            .gamepad_deadzone = engine->configuration.gamepad_inner_deadzone,
-            .gamepad_range = 1.0f - engine->configuration.gamepad_inner_deadzone - engine->configuration.gamepad_outer_deadzone,
-            .scale = (float)engine->display->canvas_size.width / (float)engine->display->vram_rectangle.width // FIXME: pass the sizes?
+            },
+            .emulation = {
+                .dpad = engine->configuration.emulate_dpad,
+                .mouse = engine->configuration.emulate_mouse
+            },
+            .cursor = {
+                .speed = engine->configuration.cursor_speed,
+                .scale = 1.0f / Display_get_scale(engine->display) // FIXME: pass the sizes?
+            },
+            .gamepad = {
+                .sensitivity = engine->configuration.gamepad_sensitivity,
+                .deadzone = engine->configuration.gamepad_inner_deadzone, // FIXME: pass inner/outer and let the input code do the math?
+                .range = 1.0f - engine->configuration.gamepad_inner_deadzone - engine->configuration.gamepad_outer_deadzone
+            }
         };
-    engine->input = Input_create(&input_configuration, engine->display->window);
+    engine->input = Input_create(&input_configuration, Display_get_window(engine->display));
     if (!engine->input) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize input");
         Display_destroy(engine->display);

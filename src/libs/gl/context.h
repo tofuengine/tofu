@@ -38,6 +38,13 @@ typedef struct _GL_Mask_t {
 } GL_Mask_t;
 #endif
 
+typedef enum _GL_Modes_t {
+    GL_MODE_SET,
+    GL_MODE_ADD,
+    GL_MODE_SUB,
+    GL_MODE_MULT,
+} GL_Modes_t;
+
 typedef struct _GL_State_t { // FIXME: rename to `GL_State_s`
     GL_Pixel_t background, color;
     GL_Pattern_t pattern;
@@ -47,6 +54,7 @@ typedef struct _GL_State_t { // FIXME: rename to `GL_State_s`
 #ifdef __GL_MASK_SUPPORT__
     GL_Mask_t mask;
 #endif
+    GL_Modes_t mode;
 } GL_State_t;
 
 typedef struct _GL_Context_t {
