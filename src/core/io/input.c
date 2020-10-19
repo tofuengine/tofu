@@ -220,6 +220,58 @@ static void _switch(Input_t *input)
 #endif
 }
 
+static size_t _gamepad_detect(Input_t *input)
+{
+    Input_State_t *state = &input->state;
+#ifndef __INPUT_SELECTION__
+    Input_Handler_t *handlers = input->handlers;
+#endif
+
+    bool changed = false;
+
+    size_t gamepads_count = 0U;
+    for (int i = 0; i < INPUT_GAMEPADS_COUNT; ++i) { // Detect the available gamepads.
+        bool available = glfwJoystickIsGamepad(i) == GLFW_TRUE;
+        if (input->gamepads[i] != available) {
+            input->gamepads[i] = available;
+            if (available) {
+                Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "gamepad #%d found (GUID `%s`, name `%s`)", i, glfwGetJoystickGUID(i), glfwGetGamepadName(i));
+                ++gamepads_count;
+            } else {
+                Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "gamepad #%d detached", i);
+            }
+
+            changed = i == state->gamepad_id;
+        }
+    }
+
+    if (changed) {
+        int gamepad_id = -1;
+        for (int i = 0; i < INPUT_GAMEPADS_COUNT; ++i) { // Find and use the first available gamepad (no multiple input).
+            if (input->gamepads[i]) {
+                gamepad_id = i;
+                break;
+            }
+        }
+
+        if (gamepad_id == -1) {
+            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "keyboard/mouse input active");
+        } else {
+            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "gamepad #%d input active (`%s`)", gamepad_id, glfwGetGamepadName(gamepad_id));
+        }
+
+        state->gamepad_id = gamepad_id;
+    }
+
+#ifndef __INPUT_SELECTION__
+    handlers[INPUT_HANDLER_KEYBOARD] = state->gamepad_id == -1 ? _keyboard_handler : NULL;
+    handlers[INPUT_HANDLER_MOUSE] = state->gamepad_id == -1 ? _mouse_handler : NULL;
+    handlers[INPUT_HANDLER_GAMEPAD] = state->gamepad_id != -1 ? _gamepad_handler : NULL;
+#endif
+
+    return gamepads_count;
+}
+
 Input_t *Input_create(const Input_Configuration_t *configuration, GLFWwindow *window)
 {
     int result = glfwUpdateGamepadMappings(configuration->mappings);
@@ -254,21 +306,12 @@ Input_t *Input_create(const Input_Configuration_t *configuration, GLFWwindow *wi
             }
         };
 
-    size_t gamepads_count = 0U;
-    for (int i = 0; i < INPUT_GAMEPADS_COUNT; ++i) { // Detect the available gamepads.
-        input->gamepads[i] = glfwJoystickIsGamepad(i) == GLFW_TRUE;
-        if (input->gamepads[i]) {
-            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "gamepad #%d found (GUID `%s`, name `%s`)", i, glfwGetJoystickGUID(i), glfwGetGamepadName(i));
-            ++gamepads_count;
-        }
-    }
+    size_t gamepads_count = _gamepad_detect(input);
     if (gamepads_count == 0) {
         Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "no gamepads detected");
     } else {
         Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "%d gamepads detected", gamepads_count);
     }
-
-    _switch(input);
 
     return input;
 }
@@ -279,12 +322,8 @@ void Input_destroy(Input_t *input)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "input freed");
 }
 
-void Input_update(Input_t *input, float delta_time)
+static void _buttons_update(Input_t *input, float delta_time)
 {
-    // TODO: check if new gamepad is added/removed!
-
-    input->time += delta_time;
-
     Input_State_t *state = &input->state;
     Input_Button_t *buttons = state->buttons;
 
@@ -310,6 +349,11 @@ void Input_update(Input_t *input, float delta_time)
             Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "#%d %.3fs %d %d %d", i, button->time, button->state.down, button->state.pressed, button->state.released);
         }
     }
+}
+
+static void _cursor_update(Input_t *input, float delta_time)
+{
+    Input_State_t *state = &input->state;
 
     if (input->configuration.emulation.mouse) {
         Input_Cursor_t *cursor = &state->cursor;
@@ -333,6 +377,15 @@ void Input_update(Input_t *input, float delta_time)
             cursor->y = cursor->area.y1;
         }
     }
+}
+
+void Input_update(Input_t *input, float delta_time)
+{
+    input->time += delta_time;
+
+    _gamepad_detect(input); // Check if new gamepad is added/removed!
+    _buttons_update(input, delta_time);
+    _cursor_update(input, delta_time);
 }
 
 void Input_process(Input_t *input)

@@ -114,6 +114,14 @@ typedef enum _Input_Handlers_t {
     Input_Handlers_t_CountOf
 } Input_Handlers_t;
 
+typedef enum _Input_Modes_t {
+    Input_Modes_t_First = 0,
+    INPUT_MODE_KEYMOUSE = Input_Modes_t_First,
+    INPUT_MODE_GAMEPAD,
+    Input_Modes_t_Last = INPUT_MODE_GAMEPAD,
+    Input_Modes_t_CountOf
+} Input_Modes_t;
+
 typedef struct _Input_Configuration_t {
     const char *mappings;
     struct {
@@ -162,11 +170,13 @@ extern void Input_process(Input_t *input);
 extern void Input_set_cursor_position(Input_t *input, float x, float y);
 extern void Input_set_cursor_area(Input_t *input, float x0, float y0, float x1, float y1);
 extern void Input_set_auto_repeat(Input_t *input, Input_Buttons_t button, float period);
+extern void Input_set_mode(Input_t *input, Input_Modes_t mode);
 
 extern const Input_Button_State_t *Input_get_button(const Input_t *input, Input_Buttons_t button);
 extern const Input_Cursor_t *Input_get_cursor(const Input_t *input);
 extern const Input_Triggers_t *Input_get_triggers(const Input_t *input);
 extern const Input_Stick_t *Input_get_stick(const Input_t *input, Input_Sticks_t stick);
 extern float Input_get_auto_repeat(const Input_t *input, Input_Buttons_t button);
+extern Input_Modes_t Input_get_mode(Input_t *input);
 
 #endif  /* __INPUT_H__ */
