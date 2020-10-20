@@ -167,6 +167,6 @@ extern const Input_Cursor_t *Input_get_cursor(const Input_t *input);
 extern const Input_Triggers_t *Input_get_triggers(const Input_t *input);
 extern const Input_Stick_t *Input_get_stick(const Input_t *input, Input_Sticks_t stick);
 extern float Input_get_auto_repeat(const Input_t *input, Input_Buttons_t button);
-extern int Input_get_mode(Input_t *input);
+extern int Input_get_mode(const Input_t *input);
 
 #endif  /* __INPUT_H__ */

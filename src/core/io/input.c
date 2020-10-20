@@ -443,6 +443,12 @@ void Input_set_auto_repeat(Input_t *input, Input_Buttons_t button, float period)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "auto-repeat set to %.3fs for button #%d", period, button);
 }
 
+void Input_set_mode(Input_t *input, int mode)
+{
+    input->mode = mode;
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "mode set to 0x%04x", mode);
+}
+
 const Input_Button_State_t *Input_get_button(const Input_t *input, Input_Buttons_t button)
 {
     return &input->buttons[button].state;
@@ -466,4 +472,9 @@ const Input_Stick_t *Input_get_stick(const Input_t *input, Input_Sticks_t stick)
 float Input_get_auto_repeat(const Input_t *input, Input_Buttons_t button)
 {
     return input->buttons[button].period;
+}
+
+int Input_get_mode(const Input_t *input)
+{
+    return input->mode;
 }
