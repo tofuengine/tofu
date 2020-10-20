@@ -39,6 +39,7 @@ static int input_cursor(lua_State *L);
 static int input_cursor_area(lua_State *L);
 static int input_stick(lua_State *L);
 static int input_triggers(lua_State *L);
+static int input_mode(lua_State *L);
 
 static const struct luaL_Reg _input_functions[] = {
     { "is_down", input_is_down },
@@ -50,6 +51,7 @@ static const struct luaL_Reg _input_functions[] = {
     { "cursor_area", input_cursor_area },
     { "stick", input_stick },
     { "triggers", input_triggers },
+    { "mode", input_mode },
     { NULL, NULL }
 };
 
@@ -72,7 +74,6 @@ static const Map_Entry_t _buttons[Input_Buttons_t_CountOf] = { // Need to be sor
     { "rt", INPUT_BUTTON_RT },
     { "select", INPUT_BUTTON_SELECT },
     { "start", INPUT_BUTTON_START },
-    { "switch", INPUT_BUTTON_SWITCH },
     { "up", INPUT_BUTTON_UP },
     { "x", INPUT_BUTTON_X },
     { "y", INPUT_BUTTON_Y }
@@ -261,6 +262,20 @@ static int input_stick(lua_State *L)
 }
 
 static int input_triggers(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+    LUAX_SIGNATURE_END
+
+    const Input_t *input = (const Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
+
+    const Input_Triggers_t *triggers = Input_get_triggers(input);
+    lua_pushnumber(L, triggers->left);
+    lua_pushnumber(L, triggers->right);
+
+    return 2;
+}
+
+static int input_mode(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END

@@ -148,11 +148,9 @@ Engine_t *Engine_create(const char *base_path)
             .mappings = mappings ? S_SCHARS(mappings) : (const char *)_default_mappings,
             .options = {
                 .exit_key = engine->configuration.exit_key_enabled,
-#ifdef __INPUT_SELECTION__
                 .keyboard = engine->configuration.keyboard_enabled,
                 .gamepad = engine->configuration.gamepad_enabled,
                 .mouse = engine->configuration.mouse_enabled
-#endif
             },
             .emulation = {
                 .dpad = engine->configuration.emulate_dpad,
