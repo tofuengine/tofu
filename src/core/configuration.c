@@ -66,7 +66,6 @@ static void on_parameter(Configuration_t *configuration, const char *key, const 
     if (strcmp(key, "exit-key-enabled") == 0) {
         configuration->exit_key_enabled = strcmp(value, "true") == 0;
     } else
-#ifdef __INPUT_SELECTION__
     if (strcmp(key, "keyboard-enabled") == 0) {
         configuration->keyboard_enabled = strcmp(value, "true") == 0;
     } else
@@ -76,7 +75,6 @@ static void on_parameter(Configuration_t *configuration, const char *key, const 
     if (strcmp(key, "mouse-enabled") == 0) {
         configuration->mouse_enabled = strcmp(value, "true") == 0;
     } else
-#endif
     if (strcmp(key, "emulate-dpad") == 0) {
         configuration->emulate_dpad = strcmp(value, "true") == 0;
     } else
@@ -168,11 +166,9 @@ void Configuration_parse(Configuration_t *configuration, const char *data)
 #endif
             .hide_cursor = true,
             .exit_key_enabled = true,
-#ifdef __INPUT_SELECTION__
             .keyboard_enabled = true,
             .gamepad_enabled = true,
             .mouse_enabled = true,
-#endif
             .emulate_dpad = true,
             .emulate_mouse = true,
             .cursor_speed = 128.0f,

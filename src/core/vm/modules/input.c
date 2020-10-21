@@ -30,6 +30,10 @@
 
 #include "udt.h"
 
+#ifndef countof
+  #define countof(a)  (sizeof((a)) / sizeof((a)[0]))
+#endif
+
 static int input_is_down(lua_State *L);
 static int input_is_up(lua_State *L);
 static int input_is_pressed(lua_State *L);
@@ -39,6 +43,7 @@ static int input_cursor(lua_State *L);
 static int input_cursor_area(lua_State *L);
 static int input_stick(lua_State *L);
 static int input_triggers(lua_State *L);
+static int input_mode(lua_State *L);
 
 static const struct luaL_Reg _input_functions[] = {
     { "is_down", input_is_down },
@@ -50,6 +55,7 @@ static const struct luaL_Reg _input_functions[] = {
     { "cursor_area", input_cursor_area },
     { "stick", input_stick },
     { "triggers", input_triggers },
+    { "mode", input_mode },
     { NULL, NULL }
 };
 
@@ -72,7 +78,6 @@ static const Map_Entry_t _buttons[Input_Buttons_t_CountOf] = { // Need to be sor
     { "rt", INPUT_BUTTON_RT },
     { "select", INPUT_BUTTON_SELECT },
     { "start", INPUT_BUTTON_START },
-    { "switch", INPUT_BUTTON_SWITCH },
     { "up", INPUT_BUTTON_UP },
     { "x", INPUT_BUTTON_X },
     { "y", INPUT_BUTTON_Y }
@@ -81,6 +86,12 @@ static const Map_Entry_t _buttons[Input_Buttons_t_CountOf] = { // Need to be sor
 static const Map_Entry_t _sticks[Input_Sticks_t_CountOf] = { // Ditto.
     { "left", INPUT_STICK_LEFT },
     { "right", INPUT_STICK_RIGHT }
+};
+
+static const Map_Entry_t _modes[] = { // Ditto.
+    { "gamepad", INPUT_MODE_GAMEPAD },
+    { "keyboard", INPUT_MODE_KEYBOARD },
+    { "mouse", INPUT_MODE_MOUSE }
 };
 
 static int input_is_down(lua_State *L)
@@ -272,4 +283,58 @@ static int input_triggers(lua_State *L)
     lua_pushnumber(L, triggers->right);
 
     return 2;
+}
+
+static int input_mode0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+    LUAX_SIGNATURE_END
+
+    const Input_t *input = (const Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
+
+    int mode = Input_get_mode(input);
+
+    lua_createtable(L, 0, 0); // Initially empty.
+    for (size_t i = 0; i < countof(_modes); ++i) {
+        if (mode & _modes[i].value) {
+            lua_pushstring(L, _modes[i].key);
+            lua_rawseti(L, -2, i + 1);
+        }
+    }
+
+    return 1;
+}
+
+static int input_mode1(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
+    LUAX_SIGNATURE_END
+
+    Input_t *input = (Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
+
+    int mode = INPUT_MODE_NONE;
+
+    lua_pushnil(L);
+    while (lua_next(L, 1)) {
+//        int index = LUAX_INTEGER(L, -2);
+        const char *id = LUAX_STRING(L, -1);
+
+        const Map_Entry_t *entry = map_find(L, id, _modes, countof(_modes));
+        mode |= entry->value;
+
+        lua_pop(L, 1);
+    }
+
+    Input_set_mode(input, mode);
+
+    return 0;
+}
+
+static int input_mode(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(0, input_mode0)
+        LUAX_OVERLOAD_ARITY(1, input_mode1)
+    LUAX_OVERLOAD_END
 }

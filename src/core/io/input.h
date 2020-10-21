@@ -48,8 +48,7 @@ typedef enum _Input_Buttons_t {
     INPUT_BUTTON_SELECT,
     INPUT_BUTTON_START,
     INPUT_BUTTON_QUIT,
-    INPUT_BUTTON_SWITCH,
-    Input_Buttons_t_Last = INPUT_BUTTON_SWITCH,
+    Input_Buttons_t_Last = INPUT_BUTTON_QUIT,
     Input_Buttons_t_CountOf
 } Input_Buttons_t;
 
@@ -96,14 +95,6 @@ typedef struct _Input_Triggers_t {
 
 #define INPUT_GAMEPADS_COUNT    (GLFW_JOYSTICK_LAST + 1)
 
-typedef struct _Input_State_t {
-    int gamepad_id;
-    Input_Button_t buttons[Input_Buttons_t_CountOf];
-    Input_Cursor_t cursor;
-    Input_Stick_t sticks[Input_Sticks_t_CountOf];
-    Input_Triggers_t triggers;
-} Input_State_t;
-
 typedef enum _Input_Handlers_t {
     Input_Handlers_t_First = 0,
     INPUT_HANDLE_DEFAULT = Input_Handlers_t_First,
@@ -118,11 +109,9 @@ typedef struct _Input_Configuration_t {
     const char *mappings;
     struct {
         bool exit_key;
-#ifdef __INPUT_SELECTION__
         bool keyboard;
         bool gamepad;
         bool mouse;
-#endif
     } options;
     struct {
         bool dpad;
@@ -139,16 +128,25 @@ typedef struct _Input_Configuration_t {
     } gamepad;
 } Input_Configuration_t;
 
-typedef void (*Input_Handler_t)(Input_State_t *state, GLFWwindow *window, const Input_Configuration_t *configuration);
+#define INPUT_MODE_NONE     0
+#define INPUT_MODE_KEYBOARD 1
+#define INPUT_MODE_MOUSE    2
+#define INPUT_MODE_GAMEPAD  4
+#define INPUT_MODE_KEYMOUSE (INPUT_MODE_KEYBOARD | INPUT_MODE_MOUSE)
+#define INPUT_MODE_ALL      (INPUT_MODE_KEYBOARD | INPUT_MODE_MOUSE | INPUT_MODE_GAMEPAD)
 
 typedef struct _Input_t {
     Input_Configuration_t configuration;
 
     GLFWwindow *window;
 
+    int mode;
     bool gamepads[INPUT_GAMEPADS_COUNT];
-    Input_State_t state;
-    Input_Handler_t handlers[Input_Handlers_t_CountOf];
+    int gamepad_id;
+    Input_Button_t buttons[Input_Buttons_t_CountOf];
+    Input_Cursor_t cursor;
+    Input_Stick_t sticks[Input_Sticks_t_CountOf];
+    Input_Triggers_t triggers;
 
     double time;
 } Input_t;
@@ -162,11 +160,13 @@ extern void Input_process(Input_t *input);
 extern void Input_set_cursor_position(Input_t *input, float x, float y);
 extern void Input_set_cursor_area(Input_t *input, float x0, float y0, float x1, float y1);
 extern void Input_set_auto_repeat(Input_t *input, Input_Buttons_t button, float period);
+extern void Input_set_mode(Input_t *input, int mode);
 
 extern const Input_Button_State_t *Input_get_button(const Input_t *input, Input_Buttons_t button);
 extern const Input_Cursor_t *Input_get_cursor(const Input_t *input);
 extern const Input_Triggers_t *Input_get_triggers(const Input_t *input);
 extern const Input_Stick_t *Input_get_stick(const Input_t *input, Input_Sticks_t stick);
 extern float Input_get_auto_repeat(const Input_t *input, Input_Buttons_t button);
+extern int Input_get_mode(const Input_t *input);
 
 #endif  /* __INPUT_H__ */
