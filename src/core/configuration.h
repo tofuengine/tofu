@@ -28,27 +28,42 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#define MAX_CONFIGURATION_IDENTITY_LENGTH   128
 #define MAX_CONFIGURATION_TITLE_LENGTH      128
 
 typedef struct _Configuration {
+    char identity[MAX_CONFIGURATION_IDENTITY_LENGTH];
     char title[MAX_CONFIGURATION_TITLE_LENGTH];
-    size_t width, height, scale;
-    bool fullscreen;  // TODO: rename to "windowed"?
-    bool vertical_sync;
-    size_t fps; // TODO: rename to "frequency"?
-    size_t skippable_frames;
-    size_t fps_cap;
-    bool hide_cursor;
-    bool exit_key_enabled;
-    bool keyboard_enabled;
-    bool gamepad_enabled;
-    bool mouse_enabled;
-    bool emulate_dpad;
-    bool emulate_mouse;
-    float cursor_speed;
-    float gamepad_sensitivity;
-    float gamepad_inner_deadzone;
-    float gamepad_outer_deadzone;
+    struct {
+        size_t width, height, scale;
+        bool fullscreen;
+        bool vertical_sync;
+    } display;
+    struct {
+        float master_volume;
+    } audio;
+    struct {
+        bool enabled;
+        bool exit_key;
+    } keyboard;
+    struct {
+        bool enabled;
+        bool hide;
+        float speed;
+    } cursor;
+    struct {
+        bool enabled;
+        float sensitivity;
+        float inner_deadzone;
+        float outer_deadzone;
+        bool emulate_dpad;
+        bool emulate_cursor;
+    } gamepad;
+    struct {
+        size_t frames_per_seconds;
+        size_t skippable_frames;
+        size_t frames_limit;
+    } engine;
     bool debug;
 } Configuration_t;
 

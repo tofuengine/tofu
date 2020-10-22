@@ -108,23 +108,22 @@ typedef enum _Input_Handlers_t {
 typedef struct _Input_Configuration_t {
     const char *mappings;
     struct {
+        bool enabled;
         bool exit_key;
-        bool keyboard;
-        bool gamepad;
-        bool mouse;
-    } options;
+    } keyboard;
     struct {
-        bool dpad;
-        bool mouse;
-    } emulation;
-    struct {
+        bool enabled;
+        bool hide;
         float speed;
-        float scale; // Refers to the screen-to-canvas scaling factor.
+        float scale;
     } cursor;
     struct {
+        bool enabled;
         float sensitivity;
         float deadzone; // TODO: what is anti-deadzone?
         float range;
+        bool emulate_dpad;
+        bool emulate_cursor;
     } gamepad;
 } Input_Configuration_t;
 

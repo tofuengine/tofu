@@ -177,7 +177,7 @@ static void _gamepad_handler(Input_t *input)
     GLFWgamepadstate gamepad;
     int result = glfwGetGamepadState(input->gamepad_id, &gamepad);
     if (result == GLFW_TRUE) { // FIXME: add return value check!
-        if (configuration->emulation.dpad) {
+        if (configuration->gamepad.emulate_dpad) {
             const float x = gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_X];
             const float y = gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_Y];
             if (fabsf(x) > configuration->gamepad.sensitivity) {
@@ -251,14 +251,14 @@ static size_t _gamepad_detect(Input_t *input)
 static inline int _compile_mode(const Input_Configuration_t *configuration)
 {
     int mode = INPUT_MODE_NONE;
-    if (configuration->options.keyboard) {
+    if (configuration->keyboard.enabled) {
         mode |= INPUT_MODE_KEYBOARD;
     }
-    if (configuration->options.mouse) {
+    if (configuration->cursor.enabled) {
         mode |= INPUT_MODE_MOUSE;
     }
-    if (configuration->options.keyboard) {
-        mode |= INPUT_MODE_KEYBOARD;
+    if (configuration->gamepad.emulate_cursor) {
+        mode |= INPUT_MODE_GAMEPAD;
     }
     return mode;
 }
@@ -332,7 +332,7 @@ static void _buttons_update(Input_t *input, float delta_time)
 
 static void _cursor_update(Input_t *input, float delta_time)
 {
-    if (input->configuration.emulation.mouse) {
+    if (input->configuration.gamepad.emulate_cursor) {
         Input_Cursor_t *cursor = &input->cursor;
         const Input_Stick_t *stick = &input->sticks[INPUT_STICK_RIGHT];
 
@@ -412,7 +412,7 @@ void Input_process(Input_t *input)
     }
 
     const Input_Configuration_t *configuration = &input->configuration;
-    if (configuration->options.exit_key) {
+    if (configuration->keyboard.exit_key) {
         if (buttons[INPUT_BUTTON_QUIT].state.pressed) {
             Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "exit key pressed");
             glfwSetWindowShouldClose(input->window, true);

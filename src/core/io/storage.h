@@ -58,7 +58,14 @@ typedef struct _Storage_Resource_t {
 //    size_t references;
 } Storage_Resource_t;
 
+typedef struct _Storage_Configuration_t {
+    const char *base_path;
+} Storage_Configuration_t;
+
+
 typedef struct _Storage_t {
+    Storage_Configuration_t configuration;
+
     FS_Context_t *context;
     Storage_Resource_t **resources;
 } Storage_t;
@@ -71,7 +78,7 @@ typedef struct _Storage_t {
 #define S_IHEIGHT(r)        (r)->var.image.height
 #define S_IPIXELS(r)        (r)->var.image.pixels
 
-extern Storage_t *Storage_create(const char *base_path);
+extern Storage_t *Storage_create(const Storage_Configuration_t *configuration);
 extern void Storage_destroy(Storage_t *storage);
 
 extern FS_Handle_t *Storage_open(const Storage_t *storage, const char *file);

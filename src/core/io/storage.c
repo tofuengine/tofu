@@ -34,7 +34,7 @@
 
 #define LOG_CONTEXT "storage"
 
-Storage_t *Storage_create(const char *base_path)
+Storage_t *Storage_create(const Storage_Configuration_t *configuration)
 {
     Storage_t *storage = malloc(sizeof(Storage_t));
     if (!storage) {
@@ -42,9 +42,11 @@ Storage_t *Storage_create(const char *base_path)
         return NULL;
     }
 
-    *storage = (Storage_t){ 0 };
+    *storage = (Storage_t){
+            .configuration = *configuration
+        };
 
-    storage->context = FS_create(base_path);
+    storage->context = FS_create(configuration->base_path);
     if (!storage->context) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create file-system context");
         free(storage);

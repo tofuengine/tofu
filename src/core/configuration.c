@@ -31,67 +31,67 @@
 
 static void on_parameter(Configuration_t *configuration, const char *key, const char *value)
 {
-    if (strcmp(key, "title") == 0) {
-        strcpy(configuration->title, value);
+    if (strcmp(key, "identity") == 0) {
+        strcpy(configuration->identity, value);
     } else
-    if (strcmp(key, "width") == 0) {
-        configuration->width = (size_t)strtoul(value, NULL, 0);
+    if (strcmp(key, "display.width") == 0) {
+        configuration->display.width = (size_t)strtoul(value, NULL, 0);
     } else
-    if (strcmp(key, "height") == 0) {
-        configuration->height = (size_t)strtoul(value, NULL, 0);
+    if (strcmp(key, "display.height") == 0) {
+        configuration->display.height = (size_t)strtoul(value, NULL, 0);
     } else
-    if (strcmp(key, "scale") == 0) {
-        configuration->scale = (size_t)strtoul(value, NULL, 0);
+    if (strcmp(key, "display.scale") == 0) {
+        configuration->display.scale = (size_t)strtoul(value, NULL, 0);
     } else
-    if (strcmp(key, "fullscreen") == 0) {
-        configuration->fullscreen = strcmp(value, "true") == 0;
+    if (strcmp(key, "display.fullscreen") == 0) {
+        configuration->display.fullscreen = strcmp(value, "true") == 0;
     } else
-    if (strcmp(key, "vertical-sync") == 0) {
-        configuration->vertical_sync = strcmp(value, "true") == 0;
+    if (strcmp(key, "display.vertical-sync") == 0) {
+        configuration->display.vertical_sync = strcmp(value, "true") == 0;
     } else
-    if (strcmp(key, "fps") == 0) {
-        configuration->fps = (size_t)strtoul(value, NULL, 0);
-        configuration->skippable_frames = configuration->fps / 5; // Keep synched. About 20% of the FPS amount.
+    if (strcmp(key, "keyboard.enabled") == 0) {
+        configuration->keyboard.enabled = strcmp(value, "true") == 0;
     } else
-    if (strcmp(key, "skippable-frames") == 0) {
-        size_t suggested = configuration->fps / 5;
-        configuration->skippable_frames = (size_t)imin((int)strtol(value, NULL, 0), (int)suggested); // TODO: not sure if `imin` or `imax`. :P
+    if (strcmp(key, "keyboard.exit-key") == 0) {
+        configuration->keyboard.exit_key = strcmp(value, "true") == 0;
     } else
-    if (strcmp(key, "fps-cap") == 0) {
-        configuration->fps_cap = (size_t)strtoul(value, NULL, 0);
+    if (strcmp(key, "cursor.enabled") == 0) {
+        configuration->cursor.enabled = strcmp(value, "true") == 0;
     } else
-    if (strcmp(key, "hide-cursor") == 0) {
-        configuration->hide_cursor = strcmp(value, "true") == 0;
+    if (strcmp(key, "cursor.hide") == 0) {
+        configuration->cursor.hide = strcmp(value, "true") == 0;
     } else
-    if (strcmp(key, "exit-key-enabled") == 0) {
-        configuration->exit_key_enabled = strcmp(value, "true") == 0;
+    if (strcmp(key, "cursor.speed") == 0) {
+        configuration->cursor.speed = (float)strtod(value, NULL);
     } else
-    if (strcmp(key, "keyboard-enabled") == 0) {
-        configuration->keyboard_enabled = strcmp(value, "true") == 0;
+    if (strcmp(key, "gamepad.enabled") == 0) {
+        configuration->gamepad.enabled = strcmp(value, "true") == 0;
     } else
-    if (strcmp(key, "gamepad-enabled") == 0) {
-        configuration->gamepad_enabled = strcmp(value, "true") == 0;
+    if (strcmp(key, "gamepad.sensitivity") == 0) {
+        configuration->gamepad.sensitivity = (float)strtod(value, NULL);
     } else
-    if (strcmp(key, "mouse-enabled") == 0) {
-        configuration->mouse_enabled = strcmp(value, "true") == 0;
+    if (strcmp(key, "gamepad.inner-deadzone") == 0) {
+        configuration->gamepad.inner_deadzone = (float)strtod(value, NULL);
     } else
-    if (strcmp(key, "emulate-dpad") == 0) {
-        configuration->emulate_dpad = strcmp(value, "true") == 0;
+    if (strcmp(key, "gamepad.outer-deadzone") == 0) {
+        configuration->gamepad.outer_deadzone = (float)strtod(value, NULL);
     } else
-    if (strcmp(key, "emulate-mouse") == 0) {
-        configuration->emulate_mouse = strcmp(value, "true") == 0;
+    if (strcmp(key, "gamepad.emulate-dpad") == 0) {
+        configuration->gamepad.emulate_dpad = strcmp(value, "true") == 0;
     } else
-    if (strcmp(key, "cursor-speed") == 0) {
-        configuration->cursor_speed = (float)strtod(value, NULL);
+    if (strcmp(key, "gamepad.emulate-mouse") == 0) {
+        configuration->gamepad.emulate_cursor = strcmp(value, "true") == 0;
     } else
-    if (strcmp(key, "gamepad-sensitivity") == 0) {
-        configuration->gamepad_sensitivity = (float)strtod(value, NULL);
+    if (strcmp(key, "engine.frames_per_seconds") == 0) {
+        configuration->engine.frames_per_seconds = (size_t)strtoul(value, NULL, 0);
+        configuration->engine.skippable_frames = configuration->engine.frames_per_seconds / 5; // Keep synched. About 20% of the frequency (FPS).
     } else
-    if (strcmp(key, "gamepad-inner-deadzone") == 0) {
-        configuration->gamepad_inner_deadzone = (float)strtod(value, NULL);
+    if (strcmp(key, "engine.skippable-frames") == 0) {
+        size_t suggested = configuration->engine.frames_per_seconds / 5;
+        configuration->engine.skippable_frames = (size_t)imin((int)strtol(value, NULL, 0), (int)suggested); // TODO: not sure if `imin` or `imax`. :P
     } else
-    if (strcmp(key, "gamepad-outer-deadzone") == 0) {
-        configuration->gamepad_outer_deadzone = (float)strtod(value, NULL);
+    if (strcmp(key, "engine.frames_limit") == 0) {
+        configuration->engine.frames_limit = (size_t)strtoul(value, NULL, 0);
     } else
     if (strcmp(key, "debug") == 0) {
         configuration->debug = strcmp(value, "true") == 0;
@@ -151,33 +151,46 @@ static bool parse(char *line, const char **key, const char **value)
 void Configuration_parse(Configuration_t *configuration, const char *data)
 {
     *configuration = (Configuration_t){
+            .identity = "tofu_engine",
             .title = ".: Tofu Engine :.",
-            .width = 320,
-            .height = 240,
-            .scale = 0,
-            .fullscreen = false,
-            .vertical_sync = false,
-            .fps = 60,
-            .skippable_frames = 3, // About 20% of the FPS amount.
+            .display = {
+                .width = 320,
+                .height = 240,
+                .scale = 0,
+                .fullscreen = false,
+                .vertical_sync = false
+            },
+            .audio = {
+                .master_volume = 1.0f
+            },
+            .keyboard = {
+                .enabled = true,
+                .exit_key = true
+            },
+            .cursor = {
+                .enabled = true,
+                .hide = true,
+                .speed = 128.0f
+            },
+            .gamepad = {
+                .enabled = true,
+                .sensitivity = 0.5f,
+                .inner_deadzone = 0.25f,
+                .outer_deadzone = 0.0f,
+                .emulate_dpad = true,
+                .emulate_cursor = true
+            },
+            .engine = {
+                .frames_per_seconds = 60,
+                .skippable_frames = 3, // About 20% of the FPS amount.
 #ifdef __CAP_TO_60__
-            .fps_cap = 60, // 60 FPS capping as a default. TODO: make it run-time configurable?
+                .frames_limit = 60, // 60 FPS capping as a default. TODO: make it run-time configurable?
 #else
-            .fps_cap = 0,
+                .frames_limit = 0,
 #endif
-            .hide_cursor = true,
-            .exit_key_enabled = true,
-            .keyboard_enabled = true,
-            .gamepad_enabled = true,
-            .mouse_enabled = true,
-            .emulate_dpad = true,
-            .emulate_mouse = true,
-            .cursor_speed = 128.0f,
-            .gamepad_sensitivity = 0.5f,
-            .gamepad_inner_deadzone = 0.25f,
-            .gamepad_outer_deadzone = 0.0f,
+            },
             .debug = true
         };
-
     if (!data) {
         return;
     }

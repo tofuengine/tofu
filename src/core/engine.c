@@ -102,7 +102,11 @@ Engine_t *Engine_create(const char *base_path)
     *engine = (Engine_t){ 0 }; // Ensure is cleared at first.
 
     Log_initialize();
-    engine->storage = Storage_create(base_path);
+
+    const Storage_Configuration_t storage_configuration = {
+            .base_path = base_path
+        };
+    engine->storage = Storage_create(&storage_configuration);
     if (!engine->storage) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize storage at path `%s`", base_path);
         free(engine);
@@ -122,17 +126,17 @@ Engine_t *Engine_create(const char *base_path)
 
     const Storage_Resource_t *icon = Storage_load(engine->storage, ENTRY_ICON, STORAGE_RESOURCE_IMAGE);
     Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined icon loaded");
-    Display_Configuration_t display_configuration = { // TODO: reorganize configuration.
+    Display_Configuration_t display_configuration = { // TODO: use compound-literals.
             .icon = icon ? (GLFWimage){ .width = (int)S_IWIDTH(icon), .height = (int)S_IHEIGHT(icon), .pixels = S_IPIXELS(icon) } : (GLFWimage){ 64, 64, (unsigned char *)_default_icon_pixels },
             .window = {
                 .title = engine->configuration.title,
-                .width = engine->configuration.width,
-                .height = engine->configuration.height,
-                .scale = engine->configuration.scale
+                .width = engine->configuration.display.width,
+                .height = engine->configuration.display.height,
+                .scale = engine->configuration.display.scale
             },
-            .fullscreen = engine->configuration.fullscreen,
-            .vertical_sync = engine->configuration.vertical_sync,
-            .hide_cursor = engine->configuration.hide_cursor
+            .fullscreen = engine->configuration.display.fullscreen,
+            .vertical_sync = engine->configuration.display.vertical_sync,
+            .hide_cursor = engine->configuration.cursor.hide
         };
     engine->display = Display_create(&display_configuration);
     if (!engine->display) {
@@ -146,24 +150,22 @@ Engine_t *Engine_create(const char *base_path)
     Log_assert(!mappings, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined controller mappings loaded");
     Input_Configuration_t input_configuration = {
             .mappings = mappings ? S_SCHARS(mappings) : (const char *)_default_mappings,
-            .options = {
-                .exit_key = engine->configuration.exit_key_enabled,
-                .keyboard = engine->configuration.keyboard_enabled,
-                .gamepad = engine->configuration.gamepad_enabled,
-                .mouse = engine->configuration.mouse_enabled
-            },
-            .emulation = {
-                .dpad = engine->configuration.emulate_dpad,
-                .mouse = engine->configuration.emulate_mouse
+            .keyboard = {
+                .enabled = engine->configuration.keyboard.enabled,
+                .exit_key = engine->configuration.keyboard.exit_key,
             },
             .cursor = {
-                .speed = engine->configuration.cursor_speed,
+                .enabled = engine->configuration.cursor.enabled,
+                .speed = engine->configuration.cursor.speed,
                 .scale = 1.0f / Display_get_scale(engine->display) // FIXME: pass the sizes?
             },
             .gamepad = {
-                .sensitivity = engine->configuration.gamepad_sensitivity,
-                .deadzone = engine->configuration.gamepad_inner_deadzone, // FIXME: pass inner/outer and let the input code do the math?
-                .range = 1.0f - engine->configuration.gamepad_inner_deadzone - engine->configuration.gamepad_outer_deadzone
+                .enabled = engine->configuration.gamepad.enabled,
+                .sensitivity = engine->configuration.gamepad.sensitivity,
+                .deadzone = engine->configuration.gamepad.inner_deadzone, // FIXME: pass inner/outer and let the input code do the math?
+                .range = 1.0f - engine->configuration.gamepad.inner_deadzone - engine->configuration.gamepad.outer_deadzone,
+                .emulate_dpad = engine->configuration.gamepad.emulate_dpad,
+                .emulate_cursor = engine->configuration.gamepad.emulate_cursor
             }
         };
     engine->input = Input_create(&input_configuration, Display_get_window(engine->display));
@@ -175,7 +177,9 @@ Engine_t *Engine_create(const char *base_path)
         return NULL;
     }
 
-    engine->audio = Audio_create(&(Audio_Configuration_t){ .master_volume = 1.0f });
+    engine->audio = Audio_create(&(Audio_Configuration_t){
+            .master_volume = engine->configuration.audio.master_volume
+        });
     if (!engine->audio) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize audio");
         Input_destroy(engine->input);
@@ -239,9 +243,9 @@ void Engine_destroy(Engine_t *engine)
 
 void Engine_run(Engine_t *engine)
 {
-    const float delta_time = 1.0f / (float)engine->configuration.fps;
-    const size_t skippable_frames = engine->configuration.skippable_frames;
-    const float reference_time = engine->configuration.fps_cap == 0 ? 0.0f : 1.0f / engine->configuration.fps_cap;
+    const float delta_time = 1.0f / (float)engine->configuration.engine.frames_per_seconds;
+    const size_t skippable_frames = engine->configuration.engine.skippable_frames;
+    const float reference_time = engine->configuration.engine.frames_limit == 0 ? 0.0f : 1.0f / engine->configuration.engine.frames_limit;
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "now running, update-time is %.6fs w/ %d skippable frames, reference-time is %.6fs", delta_time, skippable_frames, reference_time);
 
     // Track time using double to keep the min resolution consistent over time!
