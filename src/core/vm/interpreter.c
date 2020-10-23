@@ -281,6 +281,8 @@ Interpreter_t *Interpreter_create(const Storage_t *storage, const void *userdata
 
     *interpreter = (Interpreter_t){ 0 };
 
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "Lua: %s.%s.%s", LUA_VERSION_MAJOR, LUA_VERSION_MINOR, LUA_VERSION_RELEASE);
+
     interpreter->state = lua_newstate(_allocate, NULL); // No user-data is passed.
     if (!interpreter->state) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create interpreter VM");
@@ -324,9 +326,6 @@ Interpreter_t *Interpreter_create(const Storage_t *storage, const void *userdata
     lua_pushcfunction(interpreter->state, _error_handler);
 #endif
 #endif
-
-    size_t version = (size_t)lua_version(interpreter->state);
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "Lua: %d.%d", version / 100, version % 100);
 
     int result = _execute(interpreter->state, (const char *)_boot_lua, sizeof(_boot_lua) / sizeof(char), "@boot.lua", 0, 1); // Prefix '@' to trace as filename internally in Lua.
     if (result != 0) {
