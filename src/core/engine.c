@@ -33,12 +33,10 @@
   #include <windows.h>
 #endif
 
+#include "version.h"
+
 #define ENTRY_ICON "icon.png"
 #define ENTRY_GAMECONTROLLER_DB "gamecontrollerdb.txt"
-
-#define _TOFU_CONCAT_VERSION(m, n, r) #m "." #n "." #r "-dev"
-#define _TOFU_MAKE_VERSION(m, n, r) _TOFU_CONCAT_VERSION(m, n, r)
-#define TOFU_VERSION_NUMBER _TOFU_MAKE_VERSION(TOFU_VERSION_MAJOR, TOFU_VERSION_MINOR, TOFU_VERSION_REVISION)
 
 #define LOG_CONTEXT "engine"
 
@@ -85,9 +83,22 @@ static bool _configure(Storage_t *storage, Configuration_t *configuration)
 {
     const Storage_Resource_t *resource = Storage_load(storage, "tofu.config", STORAGE_RESOURCE_STRING);
     if (!resource) {
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "configuration file is missing");
         return false;
     }
+
     Configuration_parse(configuration, S_SCHARS(resource));
+
+    Log_configure(configuration->system.debug, NULL);
+
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "game identity is `%s`", configuration->system.identity);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "running engine version %s (0x%08x)", TOFU_VERSION_STRING, TOFU_VERSION_NUMBER);
+
+    if (configuration->system.version > TOFU_VERSION_NUMBER) {
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "engine version mismatch (required 0x%08x, current 0x%08x)", configuration->system.version, TOFU_VERSION_NUMBER);
+        return false;
+    }
+
     return true;
 }
 
@@ -115,21 +126,17 @@ Engine_t *Engine_create(const char *base_path)
 
     bool configured = _configure(engine->storage, &engine->configuration);
     if (!configured) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "configuration file is missing");
+        Storage_destroy(engine->storage);
         free(engine);
         return NULL;
     }
-
-    Log_configure(engine->configuration.debug, NULL);
-
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "version %s", TOFU_VERSION_NUMBER);
 
     const Storage_Resource_t *icon = Storage_load(engine->storage, ENTRY_ICON, STORAGE_RESOURCE_IMAGE);
     Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined icon loaded");
     Display_Configuration_t display_configuration = { // TODO: use compound-literals.
             .icon = icon ? (GLFWimage){ .width = (int)S_IWIDTH(icon), .height = (int)S_IHEIGHT(icon), .pixels = S_IPIXELS(icon) } : (GLFWimage){ 64, 64, (unsigned char *)_default_icon_pixels },
             .window = {
-                .title = engine->configuration.title,
+                .title = engine->configuration.display.title,
                 .width = engine->configuration.display.width,
                 .height = engine->configuration.display.height,
                 .scale = engine->configuration.display.scale

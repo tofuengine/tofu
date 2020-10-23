@@ -24,8 +24,7 @@
 
 #include "environment.h"
 
-#include "config.h"
-
+#include <config.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 

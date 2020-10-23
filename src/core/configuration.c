@@ -26,75 +26,89 @@
 
 #include <libs/imath.h>
 
+#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 
-static void on_parameter(Configuration_t *configuration, const char *key, const char *value)
+#include "version.h"
+
+static void on_parameter(Configuration_t *configuration, const char *context, const char *key, const char *value)
 {
-    if (strcmp(key, "identity") == 0) {
-        strcpy(configuration->identity, value);
+    char fqn[128] = { 0 };
+    strcpy(fqn, context);
+    strcat(fqn, ".");
+    strcat(fqn, key);
+    
+    if (strcmp(fqn, "system.identity") == 0) {
+        strcpy(configuration->system.identity, value);
     } else
-    if (strcmp(key, "display.width") == 0) {
+    if (strcmp(fqn, "system.version") == 0) {
+        configuration->system.version = (int)strtol(value, NULL, 0);
+    } else
+    if (strcmp(fqn, "system.debug") == 0) {
+        configuration->system.debug = strcmp(value, "true") == 0;
+    } else
+    if (strcmp(fqn, "display.title") == 0) {
+        strcpy(configuration->display.title, value);
+    } else
+    if (strcmp(fqn, "display.width") == 0) {
         configuration->display.width = (size_t)strtoul(value, NULL, 0);
     } else
-    if (strcmp(key, "display.height") == 0) {
+    if (strcmp(fqn, "display.height") == 0) {
         configuration->display.height = (size_t)strtoul(value, NULL, 0);
     } else
-    if (strcmp(key, "display.scale") == 0) {
+    if (strcmp(fqn, "display.scale") == 0) {
         configuration->display.scale = (size_t)strtoul(value, NULL, 0);
     } else
-    if (strcmp(key, "display.fullscreen") == 0) {
+    if (strcmp(fqn, "display.fullscreen") == 0) {
         configuration->display.fullscreen = strcmp(value, "true") == 0;
     } else
-    if (strcmp(key, "display.vertical-sync") == 0) {
+    if (strcmp(fqn, "display.vertical-sync") == 0) {
         configuration->display.vertical_sync = strcmp(value, "true") == 0;
     } else
-    if (strcmp(key, "keyboard.enabled") == 0) {
+    if (strcmp(fqn, "keyboard.enabled") == 0) {
         configuration->keyboard.enabled = strcmp(value, "true") == 0;
     } else
-    if (strcmp(key, "keyboard.exit-key") == 0) {
+    if (strcmp(fqn, "keyboard.exit-key") == 0) {
         configuration->keyboard.exit_key = strcmp(value, "true") == 0;
     } else
-    if (strcmp(key, "cursor.enabled") == 0) {
+    if (strcmp(fqn, "cursor.enabled") == 0) {
         configuration->cursor.enabled = strcmp(value, "true") == 0;
     } else
-    if (strcmp(key, "cursor.hide") == 0) {
+    if (strcmp(fqn, "cursor.hide") == 0) {
         configuration->cursor.hide = strcmp(value, "true") == 0;
     } else
-    if (strcmp(key, "cursor.speed") == 0) {
+    if (strcmp(fqn, "cursor.speed") == 0) {
         configuration->cursor.speed = (float)strtod(value, NULL);
     } else
-    if (strcmp(key, "gamepad.enabled") == 0) {
+    if (strcmp(fqn, "gamepad.enabled") == 0) {
         configuration->gamepad.enabled = strcmp(value, "true") == 0;
     } else
-    if (strcmp(key, "gamepad.sensitivity") == 0) {
+    if (strcmp(fqn, "gamepad.sensitivity") == 0) {
         configuration->gamepad.sensitivity = (float)strtod(value, NULL);
     } else
-    if (strcmp(key, "gamepad.inner-deadzone") == 0) {
+    if (strcmp(fqn, "gamepad.inner-deadzone") == 0) {
         configuration->gamepad.inner_deadzone = (float)strtod(value, NULL);
     } else
-    if (strcmp(key, "gamepad.outer-deadzone") == 0) {
+    if (strcmp(fqn, "gamepad.outer-deadzone") == 0) {
         configuration->gamepad.outer_deadzone = (float)strtod(value, NULL);
     } else
-    if (strcmp(key, "gamepad.emulate-dpad") == 0) {
+    if (strcmp(fqn, "gamepad.emulate-dpad") == 0) {
         configuration->gamepad.emulate_dpad = strcmp(value, "true") == 0;
     } else
-    if (strcmp(key, "gamepad.emulate-mouse") == 0) {
+    if (strcmp(fqn, "gamepad.emulate-mouse") == 0) {
         configuration->gamepad.emulate_cursor = strcmp(value, "true") == 0;
     } else
-    if (strcmp(key, "engine.frames_per_seconds") == 0) {
+    if (strcmp(fqn, "engine.frames_per_seconds") == 0) {
         configuration->engine.frames_per_seconds = (size_t)strtoul(value, NULL, 0);
         configuration->engine.skippable_frames = configuration->engine.frames_per_seconds / 5; // Keep synched. About 20% of the frequency (FPS).
     } else
-    if (strcmp(key, "engine.skippable-frames") == 0) {
+    if (strcmp(fqn, "engine.skippable-frames") == 0) {
         size_t suggested = configuration->engine.frames_per_seconds / 5;
         configuration->engine.skippable_frames = (size_t)imin((int)strtol(value, NULL, 0), (int)suggested); // TODO: not sure if `imin` or `imax`. :P
     } else
-    if (strcmp(key, "engine.frames_limit") == 0) {
+    if (strcmp(fqn, "engine.frames_limit") == 0) {
         configuration->engine.frames_limit = (size_t)strtoul(value, NULL, 0);
-    } else
-    if (strcmp(key, "debug") == 0) {
-        configuration->debug = strcmp(value, "true") == 0;
     }
 }
 
@@ -130,7 +144,17 @@ static const char *next(const char *ptr, char *line)
     return ptr;
 }
 
-static bool parse(char *line, const char **key, const char **value)
+static bool parse_context(char *line, char *context)
+{
+    size_t length = strlen(line);
+    if (line[0] != '[' || line[length - 1] != ']') { // Contexts are declared with square brackets.
+        return false;
+    }
+    strncpy(context, line + 1, length - 2);
+    return true;
+}
+
+static bool parse_pair(char *line, const char **key, const char **value)
 {
     *key = line;
 
@@ -148,12 +172,31 @@ static bool parse(char *line, const char **key, const char **value)
     return true;
 }
 
+static void normalize_identity(Configuration_t *configuration)
+{
+    if (configuration->system.identity[0] != '\0') {
+        return;
+    }
+    size_t length = strlen(configuration->display.title);
+    for (size_t i = 0, j = 0; i < length; ++i) {
+        int c = configuration->display.title[i];
+        if (!isalnum(c)) {
+            continue;
+        }
+        configuration->system.identity[j++] = tolower(c); // Game identity is lowercase.
+    }
+}
+
 void Configuration_parse(Configuration_t *configuration, const char *data)
 {
     *configuration = (Configuration_t){
-            .identity = "tofu_engine",
-            .title = ".: Tofu Engine :.",
+            .system = {
+                .identity = { 0 },
+                .version = TOFU_VERSION_NUMBER,
+                .debug = true
+            },
             .display = {
+                .title = ".: Tofu Engine :.",
                 .width = 320,
                 .height = 240,
                 .scale = 0,
@@ -188,20 +231,25 @@ void Configuration_parse(Configuration_t *configuration, const char *data)
 #else
                 .frames_limit = 0,
 #endif
-            },
-            .debug = true
+            }
         };
     if (!data) {
         return;
     }
 
+    char context[128] = { 0 };
     char line[256];
     for (const char *ptr = data; ptr;) {
         ptr = next(ptr, line);
-        const char *key, *value;
-        if (!parse(line, &key, &value)) {
-            break;
+        if (parse_context(line, context)) {
+            continue;
         }
-        on_parameter(configuration, key, value);
+        const char *key, *value;
+        if (!parse_pair(line, &key, &value)) {
+            continue;
+        }
+        on_parameter(configuration, context, key, value);
     }
+
+    normalize_identity(configuration);
 }

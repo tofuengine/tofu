@@ -27,14 +27,19 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #define MAX_CONFIGURATION_IDENTITY_LENGTH   128
 #define MAX_CONFIGURATION_TITLE_LENGTH      128
 
 typedef struct _Configuration {
-    char identity[MAX_CONFIGURATION_IDENTITY_LENGTH];
-    char title[MAX_CONFIGURATION_TITLE_LENGTH];
     struct {
+        char identity[MAX_CONFIGURATION_IDENTITY_LENGTH];
+        uint32_t version;
+        bool debug;
+    } system;
+    struct {
+        char title[MAX_CONFIGURATION_TITLE_LENGTH];
         size_t width, height, scale;
         bool fullscreen;
         bool vertical_sync;
@@ -64,7 +69,6 @@ typedef struct _Configuration {
         size_t skippable_frames;
         size_t frames_limit;
     } engine;
-    bool debug;
 } Configuration_t;
 
 extern void Configuration_parse(Configuration_t *configuration, const char *data); // TODO: allocate this, too?
