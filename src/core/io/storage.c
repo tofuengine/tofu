@@ -32,6 +32,8 @@
 // This defines how many seconds a resource persists in the cache after the initial load (or a reuse).
 #define STORAGE_RESOURCE_AGE_LIMIT  30.0
 
+typedef Storage_Resource_t *(*Storage_Load_Function_t)(FS_Handle_t *handle);
+
 #define LOG_CONTEXT "storage"
 
 Storage_t *Storage_create(const Storage_Configuration_t *configuration)
@@ -155,7 +157,7 @@ static Storage_Resource_t *_load_as_string(FS_Handle_t *handle)
     return resource;
 }
 
-static Storage_Resource_t *_load_as_binary(FS_Handle_t *handle)
+static Storage_Resource_t *_load_as_blob(FS_Handle_t *handle)
 {
     size_t size;
     void *ptr = _load(handle, false, &size);
@@ -248,6 +250,12 @@ static int _resource_compare(const void *lhs, const void *rhs)
     return strcasecmp((*l)->file, (*r)->file);
 }
 
+static const Storage_Load_Function_t _load_functions[Storage_Resource_Types_t_CountOf] = {
+    _load_as_string,
+    _load_as_blob,
+    _load_as_image
+};
+
 const Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Storage_Resource_Types_t type)
 {
     const Storage_Resource_t *key = &(Storage_Resource_t){ .file = (char *)file };
@@ -263,18 +271,14 @@ const Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Sto
         return NULL;
     }
 
-    if (type == STORAGE_RESOURCE_STRING) { // FIXME: use array of functions.
-        resource = _load_as_string(handle);
-    } else
-    if (type == STORAGE_RESOURCE_BLOB) {
-        resource = _load_as_binary(handle);
-    } else
-    if (type == STORAGE_RESOURCE_IMAGE) {
-        resource = _load_as_image(handle);
-    }
-    resource->file = memdup(file, strlen(file) + 1);
+    resource = _load_functions[type](handle);
 
     FS_close(handle);
+
+    if (!resource) {
+        return NULL;
+    }
+    resource->file = memdup(file, strlen(file) + 1);
 
     arrpush(storage->resources, resource);
     qsort(storage->resources, arrlen(storage->resources), sizeof(Storage_Resource_t *), _resource_compare); // Keep sorted to use binary-search.
