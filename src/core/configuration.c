@@ -109,7 +109,7 @@ static void _on_parameter(Configuration_t *configuration, const char *context, c
     if (strcmp(fqn, "gamepad.emulate-mouse") == 0) {
         configuration->gamepad.emulate_cursor = strcmp(value, "true") == 0;
     } else
-    if (strcmp(fqn, "engine.frames_per_seconds") == 0) {
+    if (strcmp(fqn, "engine.frames-per-seconds") == 0) {
         configuration->engine.frames_per_seconds = (size_t)strtoul(value, NULL, 0);
         configuration->engine.skippable_frames = configuration->engine.frames_per_seconds / 5; // Keep synched. About 20% of the frequency (FPS).
     } else
@@ -117,7 +117,7 @@ static void _on_parameter(Configuration_t *configuration, const char *context, c
         size_t suggested = configuration->engine.frames_per_seconds / 5;
         configuration->engine.skippable_frames = (size_t)imin((int)strtol(value, NULL, 0), (int)suggested); // TODO: not sure if `imin` or `imax`. :P
     } else
-    if (strcmp(fqn, "engine.frames_limit") == 0) {
+    if (strcmp(fqn, "engine.frames-limit") == 0) {
         configuration->engine.frames_limit = (size_t)strtoul(value, NULL, 0);
     }
 }
@@ -160,7 +160,10 @@ static bool _parse_context(char *line, char *context)
     if (line[0] != '[' || line[length - 1] != ']') { // Contexts are declared with square brackets.
         return false;
     }
-    strncpy(context, line + 1, length - 2);
+
+    context[0] = '\0'; // Avoid `strncpy()` to handle null-terminator with more sense.
+    strncat(context, line + 1, length - 2);
+
     return true;
 }
 
