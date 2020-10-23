@@ -32,7 +32,7 @@
 
 #include "version.h"
 
-static void on_parameter(Configuration_t *configuration, const char *context, const char *key, const char *value)
+static void _on_parameter(Configuration_t *configuration, const char *context, const char *key, const char *value)
 {
     char fqn[128] = { 0 };
     strcpy(fqn, context);
@@ -112,7 +112,7 @@ static void on_parameter(Configuration_t *configuration, const char *context, co
     }
 }
 
-static const char *next(const char *ptr, char *line)
+static const char *_next(const char *ptr, char *line)
 {
     bool comment = false;
     for (;;) {
@@ -144,7 +144,7 @@ static const char *next(const char *ptr, char *line)
     return ptr;
 }
 
-static bool parse_context(char *line, char *context)
+static bool _parse_context(char *line, char *context)
 {
     size_t length = strlen(line);
     if (line[0] != '[' || line[length - 1] != ']') { // Contexts are declared with square brackets.
@@ -154,7 +154,7 @@ static bool parse_context(char *line, char *context)
     return true;
 }
 
-static bool parse_pair(char *line, const char **key, const char **value)
+static bool _parse_pair(char *line, const char **key, const char **value)
 {
     *key = line;
 
@@ -172,18 +172,23 @@ static bool parse_pair(char *line, const char **key, const char **value)
     return true;
 }
 
-static void normalize_identity(Configuration_t *configuration)
+static void _normalize_identity(Configuration_t *configuration)
 {
-    if (configuration->system.identity[0] != '\0') {
-        return;
-    }
-    size_t length = strlen(configuration->display.title);
-    for (size_t i = 0, j = 0; i < length; ++i) {
-        int c = configuration->display.title[i];
-        if (!isalnum(c)) {
-            continue;
+    if (configuration->system.identity[0] == '\0') {
+        size_t length = strlen(configuration->display.title);
+        for (size_t i = 0, j = 0; i < length; ++i) {
+            int c = configuration->display.title[i];
+            if (!isalnum(c)) {
+                continue;
+            }
+            configuration->system.identity[j++] = c;
         }
-        configuration->system.identity[j++] = tolower(c); // Game identity is lowercase.
+    }
+
+    size_t length = strlen(configuration->system.identity);
+    for (size_t i = 0; i < length; ++i) {
+        int c = configuration->system.identity[i];
+        configuration->system.identity[i] = tolower(c); // Game identity is lowercase.
     }
 }
 
@@ -241,15 +246,15 @@ void Configuration_parse(Configuration_t *configuration, const char *data)
     char line[256];
     for (const char *ptr = data; ptr;) {
         ptr = next(ptr, line);
-        if (parse_context(line, context)) {
+        if (_parse_context(line, context)) {
             continue;
         }
         const char *key, *value;
-        if (!parse_pair(line, &key, &value)) {
+        if (!_parse_pair(line, &key, &value)) {
             continue;
         }
-        on_parameter(configuration, context, key, value);
+        _on_parameter(configuration, context, key, value);
     }
 
-    normalize_identity(configuration);
+    _normalize_identity(configuration);
 }
