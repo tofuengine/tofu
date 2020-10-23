@@ -93,9 +93,9 @@ void Storage_destroy(Storage_t *storage)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "storage freed");
 }
 
-FS_Handle_t *Storage_open(const Storage_t *storage, const char *file)
+bool Storage_exists(const Storage_t *storage, const char *file)
 {
-    return FS_locate_and_open(storage->context, file);
+    return FS_locate(storage->context, file);
 }
 
 static void *_load(FS_Handle_t *handle, bool null_terminate, size_t *size)
@@ -281,6 +281,11 @@ const Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Sto
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource `%s` stored as %p, cache optimized", file, resource);
 
     return resource;
+}
+
+FS_Handle_t *Storage_open(const Storage_t *storage, const char *file)
+{
+    return FS_locate_and_open(storage->context, file);
 }
 
 bool Storage_update(Storage_t *storage, float delta_time)
