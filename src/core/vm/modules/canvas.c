@@ -907,7 +907,7 @@ static int canvas_process(lua_State *L)
     size_t height = (size_t)LUAX_INTEGER(L, 5);
 
     const GL_Context_t *context = self->context;
-    GL_context_process(context, (GL_Rectangle_t){ .x = x, .y = y, .width = width, .height = height }); // TODO: pass pointers!!!
+    GL_context_process(context, (GL_Rectangle_t){ .x = x, .y = y, .width = width, .height = height });
 
     return 0;
 }
