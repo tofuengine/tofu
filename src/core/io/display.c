@@ -407,7 +407,7 @@ void Display_destroy(Display_t *display)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "texture w/ id #%d deleted", display->vram.texture);
 
     free(display->vram.pixels);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "VRAM buffer %p freed", display->vram);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "VRAM buffer %p freed", display->vram.pixels);
 
     GL_context_destroy(display->canvas.context);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "graphics context %p destroyed", display->canvas.context);
