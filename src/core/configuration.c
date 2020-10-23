@@ -25,12 +25,18 @@
 #include "configuration.h"
 
 #include <libs/imath.h>
+#include <version.h>
 
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
-#include "version.h"
+static inline void _parse_version(const char *version_string, int *major, int *minor, int *revision)
+{
+    *major = *minor = *revision = 0; // Set to zero, minimun enforced value in case some parts are missing.
+    sscanf(version_string, "%d.%d.%d", major, minor, revision);
+}
 
 static void _on_parameter(Configuration_t *configuration, const char *context, const char *key, const char *value)
 {
@@ -43,7 +49,11 @@ static void _on_parameter(Configuration_t *configuration, const char *context, c
         strcpy(configuration->system.identity, value);
     } else
     if (strcmp(fqn, "system.version") == 0) {
-        configuration->system.version = (int)strtol(value, NULL, 0);
+        int major, minor, revision;
+        _parse_version(value, &major, &minor, &revision);
+        configuration->system.version.major = major;
+        configuration->system.version.minor = minor;
+        configuration->system.version.revision = revision;
     } else
     if (strcmp(fqn, "system.debug") == 0) {
         configuration->system.debug = strcmp(value, "true") == 0;
@@ -197,7 +207,7 @@ void Configuration_parse(Configuration_t *configuration, const char *data)
     *configuration = (Configuration_t){
             .system = {
                 .identity = { 0 },
-                .version = TOFU_VERSION_NUMBER,
+                .version = { TOFU_VERSION_MAJOR, TOFU_VERSION_MINOR, TOFU_VERSION_REVISION },
                 .debug = true
             },
             .display = {
@@ -245,7 +255,7 @@ void Configuration_parse(Configuration_t *configuration, const char *data)
     char context[128] = { 0 };
     char line[256];
     for (const char *ptr = data; ptr;) {
-        ptr = next(ptr, line);
+        ptr = _next(ptr, line);
         if (_parse_context(line, context)) {
             continue;
         }

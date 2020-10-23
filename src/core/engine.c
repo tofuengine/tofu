@@ -28,12 +28,11 @@
 #include <platform.h>
 #include <libs/log.h>
 #include <libs/stb.h>
+#include <version.h>
 
 #if PLATFORM_ID == PLATFORM_WINDOWS
   #include <windows.h>
 #endif
-
-#include "version.h"
 
 #define ENTRY_ICON "icon.png"
 #define ENTRY_GAMECONTROLLER_DB "gamecontrollerdb.txt"
@@ -92,10 +91,14 @@ static bool _configure(Storage_t *storage, Configuration_t *configuration)
     Log_configure(configuration->system.debug, NULL);
 
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "game identity is `%s`", configuration->system.identity);
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "running engine version %s (0x%08x)", TOFU_VERSION_STRING, TOFU_VERSION_NUMBER);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "running engine version %s", TOFU_VERSION_STRING);
 
-    if (configuration->system.version > TOFU_VERSION_NUMBER) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "engine version mismatch (required 0x%08x, current 0x%08x)", configuration->system.version, TOFU_VERSION_NUMBER);
+    if (configuration->system.version.major > TOFU_VERSION_MAJOR
+        || configuration->system.version.minor > TOFU_VERSION_MINOR
+        || configuration->system.version.revision > TOFU_VERSION_REVISION) {
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "engine version mismatch (required %d.%d.%d, current %d.%d.%d)",
+            configuration->system.version.major, configuration->system.version.minor, configuration->system.version.revision,
+            TOFU_VERSION_MAJOR, TOFU_VERSION_MINOR, TOFU_VERSION_REVISION);
         return false;
     }
 

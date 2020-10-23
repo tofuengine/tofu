@@ -35,7 +35,9 @@
 typedef struct _Configuration {
     struct {
         char identity[MAX_CONFIGURATION_IDENTITY_LENGTH];
-        uint32_t version;
+        struct {
+            int major, minor, revision;
+        } version;
         bool debug;
     } system;
     struct {
