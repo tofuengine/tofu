@@ -259,9 +259,10 @@ static const Storage_Load_Function_t _load_functions[Storage_Resource_Types_t_Co
 const Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Storage_Resource_Types_t type)
 {
     const Storage_Resource_t *key = &(Storage_Resource_t){ .file = (char *)file };
-    Storage_Resource_t *resource = bsearch((const void *)&key, storage->resources, arrlen(storage->resources), sizeof(Storage_Resource_t *), _resource_compare);
-    if (resource) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource `%s` in cache, resetting age and returning", file);
+    Storage_Resource_t **entry = bsearch((const void *)&key, storage->resources, arrlen(storage->resources), sizeof(Storage_Resource_t *), _resource_compare);
+    if (entry) {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "cache hit for resource `%s`, resetting age and returning", file);
+        Storage_Resource_t *resource = *entry;
         resource->age = 0.0;
         return resource;
     }
@@ -271,7 +272,7 @@ const Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Sto
         return NULL;
     }
 
-    resource = _load_functions[type](handle);
+    Storage_Resource_t *resource = _load_functions[type](handle);
 
     FS_close(handle);
 
