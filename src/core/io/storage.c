@@ -24,6 +24,7 @@
 
 #include "storage.h"
 
+#include <config.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 
@@ -63,15 +64,18 @@ static void _release(Storage_Resource_t *resource)
 {
     if (resource->type == STORAGE_RESOURCE_STRING) {
         free(resource->var.string.chars);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource-data at %p freed (%d characters string)", resource->var.string.chars, resource->var.string.length);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource-data `%s` at %p freed (%d characters string)",
+            resource->file, resource->var.string.chars, resource->var.string.length);
     } else
     if (resource->type == STORAGE_RESOURCE_BLOB) {
         free(resource->var.blob.ptr);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource-data at %p freed (%d bytes blob)", resource->var.blob.ptr, resource->var.blob.size);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource-data `%s` at %p freed (%d bytes blob)",
+            resource->file, resource->var.blob.ptr, resource->var.blob.size);
     } else
     if (resource->type == STORAGE_RESOURCE_IMAGE) {
         stbi_image_free(resource->var.image.pixels);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource-data at %p freed (%dx%d image)", resource->var.image.pixels, resource->var.image.width, resource->var.image.height);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource-data `%s` at %p freed (%dx%d image)",
+            resource->file, resource->var.image.pixels, resource->var.image.width, resource->var.image.height);
     }
     free(resource->file);
     free(resource);
@@ -243,12 +247,29 @@ static Storage_Resource_t* _load_as_image(FS_Handle_t *handle)
     return resource;
 }
 
-static int _resource_compare(const void *lhs, const void *rhs)
+static int _resource_compare_by_name(const void *lhs, const void *rhs)
 {
     const Storage_Resource_t **l = (const Storage_Resource_t **)lhs;
     const Storage_Resource_t **r = (const Storage_Resource_t **)rhs;
     return strcasecmp((*l)->file, (*r)->file);
 }
+
+#ifdef __STORAGE_CACHE_ENTRIES_LIMIT__
+static int _resource_compare_by_age(const void *lhs, const void *rhs)
+{
+    const Storage_Resource_t **l = (const Storage_Resource_t **)lhs;
+    const Storage_Resource_t **r = (const Storage_Resource_t **)rhs;
+    const float delta = (*l)->age - (*r)->age;
+    if (delta < 0.0f) {
+        return -1;
+    } else
+    if (delta > 0.0f) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+#endif
 
 static const Storage_Load_Function_t _load_functions[Storage_Resource_Types_t_CountOf] = {
     _load_as_string,
@@ -259,9 +280,9 @@ static const Storage_Load_Function_t _load_functions[Storage_Resource_Types_t_Co
 const Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Storage_Resource_Types_t type)
 {
     const Storage_Resource_t *key = &(Storage_Resource_t){ .file = (char *)file };
-    Storage_Resource_t **entry = bsearch((const void *)&key, storage->resources, arrlen(storage->resources), sizeof(Storage_Resource_t *), _resource_compare);
+    Storage_Resource_t **entry = bsearch((const void *)&key, storage->resources, arrlen(storage->resources), sizeof(Storage_Resource_t *), _resource_compare_by_name);
     if (entry) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "cache hit for resource `%s`, resetting age and returning", file);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "cache-hit for resource `%s`, resetting age and returning", file);
         Storage_Resource_t *resource = *entry;
         resource->age = 0.0;
         return resource;
@@ -282,7 +303,15 @@ const Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Sto
     resource->file = memdup(file, strlen(file) + 1);
 
     arrpush(storage->resources, resource);
-    qsort(storage->resources, arrlen(storage->resources), sizeof(Storage_Resource_t *), _resource_compare); // Keep sorted to use binary-search.
+#ifdef __STORAGE_CACHE_ENTRIES_LIMIT__
+    if (arrlen(storage->resources) > __STORAGE_CACHE_ENTRIES_LIMIT__) {
+        qsort(storage->resources, arrlen(storage->resources), sizeof(Storage_Resource_t *), _resource_compare_by_age);
+        arrlast(storage->resources)->age = STORAGE_RESOURCE_AGE_LIMIT; // Mark the oldest for release in the next cycle.
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource `%s` marked for release", storage->resources[0]->file);
+    }
+#endif
+
+    qsort(storage->resources, arrlen(storage->resources), sizeof(Storage_Resource_t *), _resource_compare_by_name); // Keep sorted to use binary-search.
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource `%s` stored as %p, cache optimized", file, resource);
 
     return resource;
@@ -301,7 +330,7 @@ bool Storage_update(Storage_t *storage, float delta_time)
         resource->age += delta_time;
         if (resource->age >= STORAGE_RESOURCE_AGE_LIMIT) {
             _release(resource);
-            arrdel(storage->resources, index);
+            arrdel(storage->resources, index); // No need to resort, removing preserve ordering.
         }
     }
     return true;
