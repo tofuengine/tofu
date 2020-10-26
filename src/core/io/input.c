@@ -176,35 +176,38 @@ static void _gamepad_handler(Input_t *input)
 
     GLFWgamepadstate gamepad;
     int result = glfwGetGamepadState(input->gamepad_id, &gamepad);
-    if (result == GLFW_TRUE) { // FIXME: add return value check!
-        if (configuration->gamepad.emulate_dpad) {
-            const float x = gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_X];
-            const float y = gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_Y];
-            if (fabsf(x) > configuration->gamepad.sensitivity) {
-                buttons[x < 0.0f ? INPUT_BUTTON_LEFT : INPUT_BUTTON_RIGHT].state.is = true;
-            }
-            if (fabsf(y) > configuration->gamepad.sensitivity) {
-                buttons[y < 0.0f ? INPUT_BUTTON_DOWN : INPUT_BUTTON_UP].state.is = true;
-            }
-        }
-
-        for (int i = Input_Buttons_t_First; i <= Input_Buttons_t_Last; ++i) {
-            if (gamepad_buttons[i] == -1) {
-                continue;
-            }
-            Input_Button_t *button = &buttons[i];
-            button->state.is |= gamepad.buttons[gamepad_buttons[i]] == GLFW_PRESS;
-        }
-
-        const float deadzone = configuration->gamepad.deadzone;
-        const float range = configuration->gamepad.range;
-
-        sticks[INPUT_STICK_LEFT] = _gamepad_stick(gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_X], gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_Y], deadzone, range);
-        sticks[INPUT_STICK_RIGHT] = _gamepad_stick(gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_X], gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y], deadzone, range);
-
-        triggers->left = _gamepad_trigger(gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER], deadzone, range);
-        triggers->right = _gamepad_trigger(gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER], deadzone, range);
+    if (result == GLFW_FALSE) {
+        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "can't get gamepad #%d state", input->gamepad_id);
+        return;
     }
+
+    if (configuration->gamepad.emulate_dpad) {
+        const float x = gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_X];
+        const float y = gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_Y];
+        if (fabsf(x) > configuration->gamepad.sensitivity) {
+            buttons[x < 0.0f ? INPUT_BUTTON_LEFT : INPUT_BUTTON_RIGHT].state.is = true;
+        }
+        if (fabsf(y) > configuration->gamepad.sensitivity) {
+            buttons[y < 0.0f ? INPUT_BUTTON_DOWN : INPUT_BUTTON_UP].state.is = true;
+        }
+    }
+
+    for (int i = Input_Buttons_t_First; i <= Input_Buttons_t_Last; ++i) {
+        if (gamepad_buttons[i] == -1) {
+            continue;
+        }
+        Input_Button_t *button = &buttons[i];
+        button->state.is |= gamepad.buttons[gamepad_buttons[i]] == GLFW_PRESS;
+    }
+
+    const float deadzone = configuration->gamepad.deadzone;
+    const float range = configuration->gamepad.range;
+
+    sticks[INPUT_STICK_LEFT] = _gamepad_stick(gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_X], gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_Y], deadzone, range);
+    sticks[INPUT_STICK_RIGHT] = _gamepad_stick(gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_X], gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y], deadzone, range);
+
+    triggers->left = _gamepad_trigger(gamepad.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER], deadzone, range);
+    triggers->right = _gamepad_trigger(gamepad.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER], deadzone, range);
 }
 
 static size_t _gamepad_detect(Input_t *input)
