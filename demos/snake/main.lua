@@ -76,7 +76,7 @@ function Main:__ctor()
   local canvas = Canvas.default()
   local width, height = canvas:size()
 
-  self.font = Font.default(0, 3)
+  self.font = Font.default(canvas, 0, 3)
   self.grid = Grid.new(math.tointeger(width / CELL_SIZE), math.tointeger(height / CELL_SIZE), 0)
   Class.dump(self)
 

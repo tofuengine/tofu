@@ -49,12 +49,13 @@ local INDICES = {
 function Main:__ctor()
   Display.palette("pico-8")
 
-  self.bank = Bank.new("assets/sheet.png", 12, 12)
-  self.font = Font.default(0, 15)
+  local canvas = Canvas.default()
+
+  self.bank = Bank.new(canvas, Canvas.new("assets/sheet.png"), 12, 12)
+  self.font = Font.default(canvas, 0, 15)
   self.down = {}
   self.scale = {}
 
-  local canvas = Canvas.default()
   Input.auto_repeat("x", 0.25)
   Input.auto_repeat("y", 0.5)
   Input.cursor_area(0, 0, canvas:size()) -- FIXME: painful!

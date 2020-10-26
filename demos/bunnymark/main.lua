@@ -48,9 +48,9 @@ function Main:__ctor()
   canvas:background(0)
 
   self.bunnies = {}
-  self.bank = Bank.new("assets/bunnies.png", "assets/bunnies.sheet")
+  self.bank = Bank.new(canvas, Canvas.new("assets/bunnies.png"), "assets/bunnies.sheet")
   self.batch = Batch.new(self.bank, 5000)
-  self.font = Font.default("5x8", 11, 6)
+  self.font = Font.default(canvas, 11, 6)
   self.speed = 1.0
   self.running = true
   self.static = true

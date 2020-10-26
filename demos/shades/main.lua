@@ -89,8 +89,8 @@ function Main:__ctor()
   local width, height = canvas:size()
   self.lut = build_table(PALETTE, LEVELS, TARGET)
 
-  self.bank = Bank.new("assets/sheet.png", 8, 8)
-  self.font = Font.default(0, 15)
+  self.bank = Bank.new(canvas, Canvas.new("assets/sheet.png"), 8, 8)
+  self.font = Font.default(canvas, 0, 15)
   self.width = width / STEPS
   self.height = height / STEPS
   self.mode = 0

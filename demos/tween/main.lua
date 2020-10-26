@@ -56,14 +56,14 @@ function Main:__ctor()
     table.insert(self.tweeners, Math.tweener(easing))
   end
 
-  self.bank = Bank.new("assets/sheet.png", 8, 8)
-  self.font = Font.default(0, 15)
-  self.wave = Math.wave("triangle", PERIOD)
-
   local canvas = Canvas.default()
   local width, height = canvas:size()
   local x0, y0 = width * 0.25, height * 0
   self.area = { x = x0, y = y0, width = width * 0.50, height = height * 1 }
+
+  self.bank = Bank.new(canvas, Canvas.new("assets/sheet.png"), 8, 8)
+  self.font = Font.default(canvas, 0, 15)
+  self.wave = Math.wave("triangle", PERIOD)
 end
 
 function Main:input()

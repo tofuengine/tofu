@@ -73,10 +73,11 @@ end
 function Main:__ctor()
   Display.palette("6-bit-rgb")
 
---  self.surface = Surface.new("assets/world.png")
-  self.font = Font.default("5x8", 0, 63)
+  local canvas = Canvas.default()
+
+  self.font = Font.default(canvas, "5x8", 0, 63)
   self.surface = Canvas.new("assets/road.png")
-  self.xform = XForm.new(self.surface)
+  self.xform = XForm.new(canvas, self.surface)
   self.running = true
 
   self.x = 0
@@ -85,7 +86,6 @@ function Main:__ctor()
   self.speed = 0.0
   self.elevation = 48
 
-  local canvas = Canvas.default()
   local width, height = canvas:size()
   self.xform:matrix(1, 0, 0, 1, width * 0.5, height * 0.5)
   self.xform:table(build_table(canvas, math.pi * 0.5 - self.angle, self.elevation))

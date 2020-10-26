@@ -47,8 +47,8 @@ function Main:__ctor()
   canvas:background(63)
 
   self.sprites = {}
-  self.bank = Bank.new("assets/images/diamonds.png", 16, 16)
-  self.font = Font.default(13, 0)
+  self.bank = Bank.new(canvas, Canvas.new("assets/images/diamonds.png"), 16, 16)
+  self.font = Font.default(canvas, 13, 0)
   self.speed = 1.0
   self.running = true
 end

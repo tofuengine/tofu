@@ -52,7 +52,7 @@ function Main:__ctor()
   self.max_y = height - 1
   self.fan = false
 
-  self.font = Font.default(0, 15)
+  self.font = Font.default(canvas, 0, 15)
 end
 
 function Main:input()
