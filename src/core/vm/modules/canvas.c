@@ -33,6 +33,7 @@
 
 #include "callbacks.h"
 #include "udt.h"
+#include "resources/images.h"
 
 #define LOG_CONTEXT "canvas"
 #define META_TABLE  "Tofu_Graphics_Canvas_mt"
@@ -134,25 +135,57 @@ static int canvas_new0(lua_State *L)
     return 1;
 }
 
-static int canvas_new1(lua_State *L)
+static int canvas_new1_3(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const char *file = LUAX_STRING(L, 1);
+    GL_Pixel_t background_index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 2, 0);
+    GL_Pixel_t foreground_index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 3, background_index);
 
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    const Storage_Resource_t *image = Storage_load(storage, file, STORAGE_RESOURCE_IMAGE);
-    if (!image) {
-        return luaL_error(L, "can't load file `%s`", file);
-    }
-    GL_Context_t *context = GL_context_decode(S_IWIDTH(image), S_IHEIGHT(image), S_IPIXELS(image), surface_callback_palette, (void *)Display_get_palette(display));
-    if (!context) {
-        return luaL_error(L, "can't decode file `%s`", file);
+    const GL_Pixel_t indexes[] = { background_index, foreground_index };
+
+    GL_Surface_Callback_t callback;
+    void *user_data;
+    if (background_index == foreground_index) {
+        callback = surface_callback_indexes;
+        user_data = (void *)indexes;
+    } else {
+        callback = surface_callback_palette;
+        user_data = (void *)Display_get_palette(display);
     }
 
+    GL_Context_t *context;
+    if (resources_images_exists(file)) {
+        const Image_t *image = resources_images_find(file);
+        if (!image) {
+            return luaL_error(L, "can't find resource `%s`", file);
+        }
+
+        context = GL_context_decode(image->width, image->height, image->pixels, callback, user_data);
+        if (!context) {
+            return luaL_error(L, "can't decode resource `%s`", file);
+        }
+    } else
+    if (Storage_exists(storage, file)) {
+        const Storage_Resource_t *image = Storage_load(storage, file, STORAGE_RESOURCE_IMAGE);
+        if (!image) {
+            return luaL_error(L, "can't load file `%s`", file);
+        }
+
+        context = GL_context_decode(S_IWIDTH(image), S_IHEIGHT(image), S_IPIXELS(image), callback, user_data);
+        if (!context) {
+            return luaL_error(L, "can't decode file `%s`", file);
+        }
+    } else {
+        return luaL_error(L, "uknown file `%s`", file);
+    }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context %p loaded from file `%s`", context, file);
 
     Canvas_Object_t *self = (Canvas_Object_t *)lua_newuserdatauv(L, sizeof(Canvas_Object_t), 1);
@@ -197,8 +230,9 @@ static int canvas_new(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(0, canvas_new0)
-        LUAX_OVERLOAD_ARITY(1, canvas_new1)
+        LUAX_OVERLOAD_ARITY(1, canvas_new1_3)
         LUAX_OVERLOAD_ARITY(2, canvas_new2)
+        LUAX_OVERLOAD_ARITY(3, canvas_new1_3)
     LUAX_OVERLOAD_END
 }
 

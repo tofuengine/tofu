@@ -65,18 +65,18 @@ typedef struct _Canvas_Object_t {
 } Canvas_Object_t;
 
 typedef struct _Bank_Object_t {
-    GL_Context_t *context;
-    luaX_Reference context_reference;
-    GL_Surface_t *surface;
-    luaX_Reference surface_reference;
+    const Canvas_Object_t *canvas;
+    luaX_Reference canvas_reference;
+    const Canvas_Object_t *atlas;
+    luaX_Reference atlas_reference;
     GL_Sheet_t *sheet;
 } Bank_Object_t;
 
 typedef struct _Font_Object_t {
-    GL_Context_t *context;
-    luaX_Reference context_reference;
-    GL_Surface_t *surface;
-    luaX_Reference surface_reference;
+    const Canvas_Object_t *canvas;
+    luaX_Reference canvas_reference;
+    const Canvas_Object_t *atlas;
+    luaX_Reference atlas_reference;
     GL_Sheet_t *sheet;
 } Font_Object_t;
 
@@ -87,10 +87,10 @@ typedef struct _Batch_Object_t {
 } Batch_Object_t;
 
 typedef struct _XForm_Object_t {
-    GL_Context_t *context;
-    luaX_Reference context_reference;
-    const GL_Surface_t *surface;
-    luaX_Reference surface_reference;
+    const Canvas_Object_t *canvas;
+    luaX_Reference canvas_reference;
+    const Canvas_Object_t *source;
+    luaX_Reference source_reference;
     GL_XForm_t xform;
 } XForm_Object_t;
 

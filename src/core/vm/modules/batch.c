@@ -243,7 +243,7 @@ static int batch_blit(lua_State *L)
     const char *mode = LUAX_OPTIONAL_STRING(L, 2, "fast");
 
     const GL_Batch_t *batch = self->batch;
-    const GL_Context_t *context = self->bank->context;
+    const GL_Context_t *context = self->bank->canvas->context;
     if (mode[0] == 'f') {
         GL_batch_blit(batch, context);
     } else

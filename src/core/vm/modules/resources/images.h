@@ -22,17 +22,18 @@
  * SOFTWARE.
  */
 
-#ifndef __RESOURCES_SHEETS_H__
-#define __RESOURCES_SHEETS_H__
+#ifndef __RESOURCES_IMAGES_H__
+#define __RESOURCES_IMAGES_H__
 
+#include <stdbool.h>
 #include <stddef.h>
 
-typedef struct _Sheet_Data_t {
+typedef struct _Image_t {
     size_t width, height;
     const void *pixels;
-    size_t cell_width, cell_height;
-} Sheet_Data_t;
+} Image_t;
 
-extern const Sheet_Data_t *resources_sheets_find(const char *id);
+extern const Image_t *resources_images_find(const char *id);
+extern bool resources_images_exists(const char *id);
 
-#endif  /* __RESOURCES_SHEETS_H__ */
+#endif  /* __RESOURCES_IMAGES_H__ */
