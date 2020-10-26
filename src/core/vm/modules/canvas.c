@@ -154,11 +154,11 @@ static int canvas_new1_3(lua_State *L)
     GL_Surface_Callback_t callback;
     void *user_data;
     if (background_index == foreground_index) {
-        callback = surface_callback_indexes;
-        user_data = (void *)indexes;
-    } else {
-        callback = surface_callback_palette;
+        callback = surface_callback_palette; // Back- and fore-ground equals, convert to palette.
         user_data = (void *)Display_get_palette(display);
+    } else {
+        callback = surface_callback_indexes; // Otherwise, convert to the specified indexes.
+        user_data = (void *)indexes;
     }
 
     GL_Context_t *context;
