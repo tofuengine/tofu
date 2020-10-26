@@ -184,7 +184,7 @@ static int canvas_new1_3(lua_State *L)
             return luaL_error(L, "can't decode file `%s`", file);
         }
     } else {
-        return luaL_error(L, "uknown file `%s`", file);
+        return luaL_error(L, "unknown file `%s`", file);
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context %p loaded from file `%s`", context, file);
 
