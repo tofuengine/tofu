@@ -229,12 +229,14 @@ float Audio_get_gain(const Audio_t *audio, size_t group_id)
 void Audio_track(Audio_t *audio, SL_Source_t *source, bool reset)
 {
     ma_mutex_lock(&audio->lock);
-    if (reset) {
-        SL_source_reset(source); // FIXME: use return value!!!
+    bool success = reset ? SL_source_reset(source) : true; // If the source can't be reset, it won't be tracked.
+    if (success) {
+        SL_context_track(audio->sl, source);
+        size_t count = SL_context_count_tracked(audio->sl);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p tracked, %d source(s) active", source, count);
+    } else {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't reset source %p, won't track", source);
     }
-    SL_context_track(audio->sl, source);
-    size_t count = SL_context_count_tracked(audio->sl);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p tracked, %d source(s) active", source, count);
     ma_mutex_unlock(&audio->lock);
 }
 
