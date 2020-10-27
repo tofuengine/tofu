@@ -165,8 +165,8 @@ int luaX_newmodule(lua_State *L, const luaX_Script *script, const luaL_Reg *f, c
             switch (c->type) {
                 case LUA_CT_NIL: { lua_pushnil(L); } break;
                 case LUA_CT_BOOLEAN: { lua_pushboolean(L, c->value.b); } break;
-                case LUA_CT_INTEGER: { lua_pushinteger(L, c->value.i); } break;
-                case LUA_CT_NUMBER: { lua_pushnumber(L, c->value.n); } break;
+                case LUA_CT_INTEGER: { lua_pushinteger(L, (lua_Integer)c->value.i); } break;
+                case LUA_CT_NUMBER: { lua_pushnumber(L, (lua_Number)c->value.n); } break;
                 case LUA_CT_STRING: { lua_pushstring(L, c->value.sz); } break;
             }
             lua_setfield(L, -2, c->name);

@@ -63,12 +63,12 @@ static int display_palette0(lua_State *L)
 
     const GL_Palette_t *palette = Display_get_palette(display);
 
-    lua_createtable(L, palette->count, 0);
+    lua_createtable(L, (int)palette->count, 0);
     for (size_t i = 0; i < palette->count; ++i) {
         unsigned int argb = GL_palette_pack_color(palette->colors[i]);
 
-        lua_pushinteger(L, argb);
-        lua_rawseti(L, -2, i + 1);
+        lua_pushinteger(L, (lua_Integer)argb);
+        lua_rawseti(L, -2, (lua_Integer)(i + 1));
     }
 
     return 1;
@@ -144,7 +144,7 @@ static int display_color_to_index1(lua_State *L)
     GL_Color_t color = GL_palette_unpack_color(argb);
     const GL_Pixel_t index = GL_palette_find_nearest_color(Display_get_palette(display), color);
 
-    lua_pushinteger(L, index);
+    lua_pushinteger(L, (lua_Integer)index);
 
     return 1;
 }
@@ -166,7 +166,7 @@ static int display_color_to_index3(lua_State *L)
     GL_Color_t color = GL_palette_unpack_color(argb);
     const GL_Pixel_t index = GL_palette_find_nearest_color(Display_get_palette(display), color);
 
-    lua_pushinteger(L, index);
+    lua_pushinteger(L, (lua_Integer)index);
 
     return 1;
 }

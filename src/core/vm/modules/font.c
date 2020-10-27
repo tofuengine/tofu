@@ -186,8 +186,8 @@ static int font_size(lua_State *L)
     size_t width, height;
     _size(text, self->sheet->cells, scale_x, scale_y, &width, &height);
 
-    lua_pushinteger(L, width);
-    lua_pushinteger(L, height);
+    lua_pushinteger(L, (lua_Integer)width);
+    lua_pushinteger(L, (lua_Integer)height);
 
     return 2;
 }

@@ -68,7 +68,7 @@ static int speakers_volume0(lua_State *L)
 
     const Audio_t *audio = (const Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
-    lua_pushnumber(L, Audio_get_volume(audio));
+    lua_pushnumber(L, (lua_Number)Audio_get_volume(audio));
 
     return 1;
 }
@@ -106,10 +106,10 @@ static int speakers_mix1(lua_State *L)
 
     SL_Mix_t mix = Audio_get_mix(audio, group_id);
 
-    lua_pushnumber(L, mix.left_to_left);
-    lua_pushnumber(L, mix.left_to_right);
-    lua_pushnumber(L, mix.right_to_left);
-    lua_pushnumber(L, mix.right_to_right);
+    lua_pushnumber(L, (lua_Number)mix.left_to_left);
+    lua_pushnumber(L, (lua_Number)mix.left_to_right);
+    lua_pushnumber(L, (lua_Number)mix.right_to_left);
+    lua_pushnumber(L, (lua_Number)mix.right_to_right);
 
     return 4;
 }
@@ -193,7 +193,7 @@ static int speakers_gain1(lua_State *L)
 
     const Audio_t *audio = (const Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
-    lua_pushnumber(L, Audio_get_gain(audio, group_id));
+    lua_pushnumber(L, (lua_Number)Audio_get_gain(audio, group_id));
 
     return 1;
 }

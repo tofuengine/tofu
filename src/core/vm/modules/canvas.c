@@ -262,8 +262,8 @@ static int canvas_size(lua_State *L)
 
     const GL_Context_t *context = self->context;
 
-    lua_pushinteger(L, context->surface->width);
-    lua_pushinteger(L, context->surface->height);
+    lua_pushinteger(L, (lua_Integer)context->surface->width);
+    lua_pushinteger(L, (lua_Integer)context->surface->height);
 
     return 2;
 }
@@ -277,8 +277,8 @@ static int canvas_center(lua_State *L)
 
     const GL_Context_t *context = self->context;
 
-    lua_pushinteger(L, context->surface->width / 2);
-    lua_pushinteger(L, context->surface->height / 2);
+    lua_pushinteger(L, (lua_Integer)(context->surface->width / 2));
+    lua_pushinteger(L, (lua_Integer)(context->surface->height / 2));
 
     return 2;
 }
@@ -901,7 +901,7 @@ static int canvas_peek(lua_State *L)
     int y = LUAX_INTEGER(L, 3);
 
     const GL_Context_t *context = self->context;
-    lua_pushinteger(L, GL_context_peek(context, x, y));
+    lua_pushinteger(L, (lua_Integer)GL_context_peek(context, x, y));
 
     return 1;
 }

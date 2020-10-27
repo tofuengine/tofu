@@ -104,7 +104,7 @@ static int math_lerp(lua_State *L)
 
     float v = _lerpf(v0, v1, t);
 
-    lua_pushnumber(L, v);
+    lua_pushnumber(L, (lua_Number)v);
 
     return 1;
 }
@@ -127,10 +127,13 @@ static int math_invlerp(lua_State *L)
 
     float t = _invlerpf(v0, v1, v);
 
-    lua_pushnumber(L, t);
+    lua_pushnumber(L, (lua_Number)t);
 
     return 1;
 }
+
+// Arguments order matches Khronos' one.
+// https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/clamp.xhtml
 
 static inline float _clampf(float x, float lower, float upper) // TODO: move to a separate lib file?
 {
@@ -150,9 +153,14 @@ static int math_clamp(lua_State *L)
 
     float v = _clampf(x, lower, upper);
 
-    lua_pushnumber(L, v);
+    lua_pushnumber(L, (lua_Number)v);
 
     return 1;
+}
+
+static inline float _stepf(float edge, float x) // TODO: move to a separate lib file?
+{
+    return x < edge ? 0.0f : 1.0f;
 }
 
 static int math_step(lua_State *L)
@@ -164,11 +172,17 @@ static int math_step(lua_State *L)
     float edge = LUAX_NUMBER(L, 1);
     float x = LUAX_NUMBER(L, 2);
 
-    float v = x < edge ? 0.0f : 1.0f;
+    float v = _stepf(edge, x);
 
-    lua_pushnumber(L, v);
+    lua_pushnumber(L, (lua_Number)v);
 
     return 1;
+}
+
+static inline float _smoothstepf(float edge0, float edge1, float x) // TODO: move to a separate lib file?
+{
+    x = _clampf((x - edge0) / (edge1 - edge0), 0.0f, 1.0f); // Scale, bias and saturate x to [0, 1] range.
+    return x * x * (3.0f - 2.0f * x); // Evaluate polynomial.
 }
 
 static int math_smoothstep(lua_State *L)
@@ -182,12 +196,17 @@ static int math_smoothstep(lua_State *L)
     float edge1 = LUAX_NUMBER(L, 2);
     float x = LUAX_NUMBER(L, 3);
 
-    x = _clampf((x - edge0) / (edge1 - edge0), 0.0f, 1.0f); // Scale, bias and saturate x to [0, 1] range.
-    float v = x * x * (3.0f - 2.0f * x); // Evaluate polynomial.
+    float v = _smoothstepf(edge0, edge1, x);
 
-    lua_pushnumber(L, v);
+    lua_pushnumber(L, (lua_Number)v);
 
     return 1;
+}
+
+static inline float _smootherstepf(float edge0, float edge1, float x) // TODO: move to a separate lib file?
+{
+    x = _clampf((x - edge0) / (edge1 - edge0), 0.0f, 1.0f);
+    return x * x * x * (x * (x * 6.0f - 15.0f) + 10.0f);
 }
 
 static int math_smootherstep(lua_State *L)
@@ -201,10 +220,9 @@ static int math_smootherstep(lua_State *L)
     float edge1 = LUAX_NUMBER(L, 2);
     float x = LUAX_NUMBER(L, 3);
 
-    x = _clampf((x - edge0) / (edge1 - edge0), 0.0f, 1.0f);
-    float v = x * x * x * (x * (x * 6.0f - 15.0f) + 10.0f);
+    float v = _smootherstepf(edge0, edge1, x);
 
-    lua_pushnumber(L, v);
+    lua_pushnumber(L, (lua_Number)v);
 
     return 1;
 }
@@ -221,6 +239,12 @@ static int math_sign(lua_State *L) // This never returns 0.
     return 1;
 }
 
+static inline int _signun(float x)
+{
+//    return x > 0.0f ? 1 : (x < 0.0f ? -1 : 0);
+    return (x > 0.0f) - (x < 0.0f);
+}
+
 static int math_signum(lua_State *L) // Returns -1, 0, 1
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -228,9 +252,7 @@ static int math_signum(lua_State *L) // Returns -1, 0, 1
     LUAX_SIGNATURE_END
     float x = LUAX_NUMBER(L, 1);
 
-//    int sign = x > 0.0f ? 1 : (x < 0.0f ? -1 : 0);
-//    lua_pushinteger(L, sign);
-    lua_pushinteger(L, (x > 0.0f) - (x < 0.0f));
+    lua_pushinteger(L, _signun(x));
 
     return 1;
 }
@@ -245,8 +267,8 @@ static int math_sincos(lua_State *L)
     float s, c;
     fsincos(rotation, &s, &c);
 
-    lua_pushnumber(L, s);
-    lua_pushnumber(L, c);
+    lua_pushnumber(L, (lua_Number)s);
+    lua_pushnumber(L, (lua_Number)c);
 
     return 2;
 }
@@ -274,7 +296,7 @@ static int math_rotation_to_angle(lua_State *L)
 
     float angle = frtoa(rotation);
 
-    lua_pushnumber(L, angle);
+    lua_pushnumber(L, (lua_Number)angle);
 
     return 1;
 }
@@ -290,7 +312,7 @@ static int _vanilla_wave(lua_State *L)
 
     float value = wave->function(t);
 
-    lua_pushnumber(L, value);
+    lua_pushnumber(L, (lua_Number)value);
 
     return 1;
 }
@@ -306,10 +328,10 @@ static int _normalize_wave(lua_State *L)
     float period = LUAX_NUMBER(L, lua_upvalueindex(2));
     float amplitude = LUAX_NUMBER(L, lua_upvalueindex(3));
 
-    float t = time / period;
-    float value = wave->function(t) * amplitude;
+    float ratio = time / period;
+    float value = wave->function(ratio) * amplitude;
 
-    lua_pushnumber(L, value);
+    lua_pushnumber(L, (lua_Number)value);
 
     return 1;
 }
@@ -349,8 +371,8 @@ static int math_wave2_3(lua_State *L)
     }
 
     lua_pushlightuserdata(L, (void *)wave);
-    lua_pushnumber(L, period);
-    lua_pushnumber(L, amplitude);
+    lua_pushnumber(L, (lua_Number)period);
+    lua_pushnumber(L, (lua_Number)amplitude);
     lua_pushcclosure(L, _normalize_wave, 3);
 
     return 1;
@@ -376,7 +398,7 @@ static int _vanilla_tweener(lua_State *L)
 
     float value = easing->function(ratio);
 
-    lua_pushnumber(L, value);
+    lua_pushnumber(L, (lua_Number)value);
 
     return 1;
 }
@@ -394,7 +416,7 @@ static int _normalize_tweener(lua_State *L)
     float ratio = time / duration;
     float value = easing->function(ratio);
 
-    lua_pushnumber(L, value);
+    lua_pushnumber(L, (lua_Number)value);
 
     return 1;
 }
@@ -414,7 +436,7 @@ static int _normalize_lerp_tweener(lua_State *L)
     float ratio = time / duration;
     float value = _lerpf(from, to, easing->function(ratio));
 
-    lua_pushnumber(L, value);
+    lua_pushnumber(L, (lua_Number)value);
 
     return 1;
 }
@@ -452,7 +474,7 @@ static int math_tweener2(lua_State *L)
     }
 
     lua_pushlightuserdata(L, (void *)easing);
-    lua_pushnumber(L, duration);
+    lua_pushnumber(L, (lua_Number)duration);
     lua_pushcclosure(L, _normalize_tweener, 2);
 
     return 1;
@@ -477,9 +499,9 @@ static int math_tweener4(lua_State *L)
     }
 
     lua_pushlightuserdata(L, (void *)easing);
-    lua_pushnumber(L, duration);
-    lua_pushnumber(L, from);
-    lua_pushnumber(L, to);
+    lua_pushnumber(L, (lua_Number)duration);
+    lua_pushnumber(L, (lua_Number)from);
+    lua_pushnumber(L, (lua_Number)to);
     lua_pushcclosure(L, _normalize_lerp_tweener, 4);
 
     return 1;

@@ -202,8 +202,8 @@ static int input_cursor0(lua_State *L)
     const Input_t *input = (const Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
 
     const Input_Cursor_t *cursor = Input_get_cursor(input);
-    lua_pushnumber(L, cursor->x);
-    lua_pushnumber(L, cursor->y);
+    lua_pushnumber(L, (lua_Number)cursor->x);
+    lua_pushnumber(L, (lua_Number)cursor->y);
 
     return 2;
 }
@@ -263,10 +263,10 @@ static int input_stick(lua_State *L)
 
     const Map_Entry_t *entry = map_find(L, id, _sticks, Input_Sticks_t_CountOf);
     const Input_Stick_t *stick = Input_get_stick(input, (Input_Sticks_t)entry->value);
-    lua_pushnumber(L, stick->x);
-    lua_pushnumber(L, stick->y);
-    lua_pushnumber(L, stick->angle);
-    lua_pushnumber(L, stick->magnitude);
+    lua_pushnumber(L, (lua_Number)stick->x);
+    lua_pushnumber(L, (lua_Number)stick->y);
+    lua_pushnumber(L, (lua_Number)stick->angle);
+    lua_pushnumber(L, (lua_Number)stick->magnitude);
 
     return 4;
 }
@@ -279,8 +279,8 @@ static int input_triggers(lua_State *L)
     const Input_t *input = (const Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
 
     const Input_Triggers_t *triggers = Input_get_triggers(input);
-    lua_pushnumber(L, triggers->left);
-    lua_pushnumber(L, triggers->right);
+    lua_pushnumber(L, (lua_Number)triggers->left);
+    lua_pushnumber(L, (lua_Number)triggers->right);
 
     return 2;
 }
@@ -298,7 +298,7 @@ static int input_mode0(lua_State *L)
     for (size_t i = 0; i < countof(_modes); ++i) {
         if (mode & _modes[i].value) {
             lua_pushstring(L, _modes[i].key);
-            lua_rawseti(L, -2, i + 1);
+            lua_rawseti(L, -2, (lua_Integer)(i + 1));
         }
     }
 

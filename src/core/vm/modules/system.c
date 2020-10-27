@@ -66,9 +66,9 @@ static int system_version(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
 
-    lua_pushinteger(L, TOFU_VERSION_MAJOR);
-    lua_pushinteger(L, TOFU_VERSION_MINOR);
-    lua_pushinteger(L, TOFU_VERSION_REVISION);
+    lua_pushinteger(L, (lua_Integer)TOFU_VERSION_MAJOR);
+    lua_pushinteger(L, (lua_Integer)TOFU_VERSION_MINOR);
+    lua_pushinteger(L, (lua_Integer)TOFU_VERSION_REVISION);
 
     return 3;
 }
@@ -80,7 +80,7 @@ static int system_time(lua_State *L)
 
     const Environment_t *environment = (const Environment_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
 
-    lua_pushnumber(L, Environment_get_time(environment));
+    lua_pushnumber(L, (lua_Number)Environment_get_time(environment));
 
     return 1;
 }
