@@ -74,10 +74,14 @@ static int xform_new(lua_State *L)
 
     XForm_Object_t *self = (XForm_Object_t *)lua_newuserdatauv(L, sizeof(XForm_Object_t), 1);
     *self = (XForm_Object_t){
-            .canvas = canvas,
-            .canvas_reference = luaX_ref(L, 1),
-            .source = source,
-            .source_reference = luaX_ref(L, 2),
+            .canvas = {
+                .instance = canvas,
+                .reference = luaX_ref(L, 1)
+            },
+            .source = {
+                .instance = source,
+                .reference = luaX_ref(L, 2),
+            },
             .xform = (GL_XForm_t){
                     .registers = {
                         0.0f, 0.0f, // No offset
@@ -107,11 +111,11 @@ static int xform_gc(lua_State *L)
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform scan-line table %p freed", self->xform.table);
     }
 
-    luaX_unref(L, self->canvas_reference);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas reference #%d released", self->canvas_reference);
+    luaX_unref(L, self->canvas.reference);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas reference #%d released", self->canvas.reference);
 
-    luaX_unref(L, self->source_reference);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source reference #%d released", self->source_reference);
+    luaX_unref(L, self->source.reference);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source reference #%d released", self->source.reference);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform %p finalized", self);
 
@@ -127,12 +131,12 @@ static int xform_canvas(lua_State *L)
     XForm_Object_t *self = (XForm_Object_t *)LUAX_USERDATA(L, 1);
     const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_USERDATA(L, 2);
 
-    luaX_unref(L, self->canvas_reference);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas reference #%d released", self->canvas_reference);
+    luaX_unref(L, self->canvas.reference);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas reference #%d released", self->canvas.reference);
 
-    self->canvas = canvas;
-    self->canvas_reference = luaX_ref(L, 2);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas %p attached w/ reference #%d", self->canvas, self->canvas_reference);
+    self->canvas.instance = canvas;
+    self->canvas.reference = luaX_ref(L, 2);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas %p attached w/ reference #%d", canvas, self->canvas.reference);
 
     return 0;
 }
@@ -148,8 +152,8 @@ static int xform_blit1_3(lua_State *L)
     int x = LUAX_OPTIONAL_INTEGER(L, 2, 0);
     int y = LUAX_OPTIONAL_INTEGER(L, 3, 0);
 
-    const GL_Context_t *context = self->canvas->context;
-    const GL_Surface_t *surface = self->source->context->surface;
+    const GL_Context_t *context = self->canvas.instance->context;
+    const GL_Surface_t *surface = self->source.instance->context->surface;
     const GL_XForm_t *xform = &self->xform;
     GL_context_blit_x(context, surface, (GL_Point_t){ .x = x, .y = y }, xform);
 

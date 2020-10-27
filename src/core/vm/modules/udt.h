@@ -57,40 +57,52 @@ typedef struct _Object_t {
 } Object_t;
 #endif
 
-// TODO: use nested structures!
-
 typedef struct _Canvas_Object_t {
     GL_Context_t *context;
     bool allocated;
 } Canvas_Object_t;
 
 typedef struct _Bank_Object_t {
-    const Canvas_Object_t *canvas;
-    luaX_Reference canvas_reference;
-    const Canvas_Object_t *atlas;
-    luaX_Reference atlas_reference;
+    struct {
+        const Canvas_Object_t *instance;
+        luaX_Reference reference;
+    } canvas;
+    struct {
+        const Canvas_Object_t *instance;
+        luaX_Reference reference;
+    } atlas;
     GL_Sheet_t *sheet;
 } Bank_Object_t;
 
 typedef struct _Font_Object_t {
-    const Canvas_Object_t *canvas;
-    luaX_Reference canvas_reference;
-    const Canvas_Object_t *atlas;
-    luaX_Reference atlas_reference;
+    struct {
+        const Canvas_Object_t *instance;
+        luaX_Reference reference;
+    } canvas;
+    struct {
+        const Canvas_Object_t *instance;
+        luaX_Reference reference;
+    } atlas;
     GL_Sheet_t *sheet;
 } Font_Object_t;
 
 typedef struct _Batch_Object_t {
-    const Bank_Object_t *bank;
-    luaX_Reference bank_reference;
+    struct {
+        const Bank_Object_t *instance;
+        luaX_Reference reference;
+    } bank;
     GL_Batch_t *batch;
 } Batch_Object_t;
 
 typedef struct _XForm_Object_t {
-    const Canvas_Object_t *canvas;
-    luaX_Reference canvas_reference;
-    const Canvas_Object_t *source;
-    luaX_Reference source_reference;
+    struct {
+        const Canvas_Object_t *instance;
+        luaX_Reference reference;
+    } canvas;
+    struct {
+        const Canvas_Object_t *instance;
+        luaX_Reference reference;
+    } source;
     GL_XForm_t xform;
 } XForm_Object_t;
 

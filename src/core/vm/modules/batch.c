@@ -80,8 +80,10 @@ static int batch_new(lua_State *L)
 
     Batch_Object_t *self = (Batch_Object_t *)lua_newuserdatauv(L, sizeof(Batch_Object_t), 1);
     *self = (Batch_Object_t){
-            .bank = bank,
-            .bank_reference = luaX_ref(L, 1),
+            .bank = {
+                .instance = bank,
+                .reference = luaX_ref(L, 1)
+            },
             .batch = batch
         };
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "batch %p created w/ bank %p", self, bank);
@@ -98,10 +100,8 @@ static int batch_gc(lua_State *L)
     LUAX_SIGNATURE_END
     Batch_Object_t *self = (Batch_Object_t *)LUAX_USERDATA(L, 1);
 
-    if (self->bank_reference != LUAX_REFERENCE_NIL) {
-        luaX_unref(L, self->bank_reference);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank reference #%d released", self->bank_reference);
-    }
+    luaX_unref(L, self->bank.reference);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank reference #%d released", self->bank.reference);
 
     GL_batch_destroy(self->batch);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "batch %p destroyed", self->batch);
@@ -243,7 +243,7 @@ static int batch_blit(lua_State *L)
     const char *mode = LUAX_OPTIONAL_STRING(L, 2, "fast");
 
     const GL_Batch_t *batch = self->batch;
-    const GL_Context_t *context = self->bank->canvas->context;
+    const GL_Context_t *context = self->bank.instance->canvas.instance->context;
     if (mode[0] == 'f') {
         GL_batch_blit(batch, context);
     } else

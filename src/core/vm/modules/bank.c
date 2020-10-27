@@ -84,14 +84,18 @@ static int bank_new3(lua_State *L)
 
     Bank_Object_t *self = (Bank_Object_t *)lua_newuserdatauv(L, sizeof(Bank_Object_t), 1);
     *self = (Bank_Object_t){
-            .canvas = canvas,
-            .canvas_reference = luaX_ref(L, 1),
-            .atlas = atlas,
-            .atlas_reference = luaX_ref(L, 2),
+            .canvas = {
+                .instance = canvas,
+                .reference = luaX_ref(L, 1)
+            },
+            .atlas = {
+                .instance = atlas,
+                .reference = luaX_ref(L, 2),
+            },
             .sheet = sheet
         };
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p allocated w/ sheet %p for canvas %p w/ reference #%d and atlas %p w/ reference #%d",
-        self, sheet, canvas, self->canvas_reference, atlas, self->atlas_reference);
+        self, sheet, canvas, self->canvas.reference, atlas, self->atlas.reference);
 
     luaL_setmetatable(L, META_TABLE);
 
@@ -118,14 +122,18 @@ static int bank_new4(lua_State *L)
 
     Bank_Object_t *self = (Bank_Object_t *)lua_newuserdatauv(L, sizeof(Bank_Object_t), 1);
     *self = (Bank_Object_t){
-            .canvas = canvas,
-            .canvas_reference = luaX_ref(L, 1),
-            .atlas = atlas,
-            .atlas_reference = luaX_ref(L, 2),
+            .canvas = {
+                .instance = canvas,
+                .reference = luaX_ref(L, 1)
+            },
+            .atlas = {
+                .instance = atlas,
+                .reference = luaX_ref(L, 2),
+            },
             .sheet = sheet
         };
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p allocated w/ sheet %p for canvas %p w/ reference #%d and atlas %p w/ reference #%d",
-        self, sheet, canvas, self->canvas_reference, atlas, self->atlas_reference);
+        self, sheet, canvas, self->canvas.reference, atlas, self->atlas.reference);
 
     luaL_setmetatable(L, META_TABLE);
 
@@ -150,11 +158,11 @@ static int bank_gc(lua_State *L)
     GL_sheet_destroy(self->sheet);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p destroyed", self->sheet);
 
-    luaX_unref(L, self->atlas_reference);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "atlas reference #%d released", self->atlas_reference);
+    luaX_unref(L, self->atlas.reference);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "atlas reference #%d released", self->atlas.reference);
 
-    luaX_unref(L, self->canvas_reference);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas reference #%d released", self->canvas_reference);
+    luaX_unref(L, self->canvas.reference);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas reference #%d released", self->canvas.reference);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p finalized", self);
 
@@ -176,8 +184,8 @@ static int bank_size(lua_State *L)
 
     const GL_Sheet_t *sheet = self->sheet;
     const GL_Rectangle_t *cell = cell_id == -1 ? sheet->cells : &sheet->cells[cell_id]; // If `-1` pick the first one.
-    lua_pushinteger(L, (int)((float)cell->width * fabsf(scale_x)));
-    lua_pushinteger(L, (int)((float)cell->height * fabsf(scale_y)));
+    lua_pushinteger(L, (lua_Integer)((float)cell->width * fabsf(scale_x)));
+    lua_pushinteger(L, (lua_Integer)((float)cell->height * fabsf(scale_y)));
 
     return 2;
 }
@@ -191,12 +199,12 @@ static int bank_canvas(lua_State *L)
     Bank_Object_t *self = (Bank_Object_t *)LUAX_USERDATA(L, 1);
     const Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_USERDATA(L, 2);
 
-    luaX_unref(L, self->canvas_reference);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas reference #%d released", self->canvas_reference);
+    luaX_unref(L, self->canvas.reference);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas reference #%d released", self->canvas.reference);
 
-    self->canvas = canvas;
-    self->canvas_reference = luaX_ref(L, 2);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas %p attached w/ reference #%d", self->canvas, self->canvas_reference);
+    self->canvas.instance = canvas;
+    self->canvas.reference = luaX_ref(L, 2);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas %p attached w/ reference #%d", canvas, self->canvas.reference);
 
     return 0;
 }
@@ -214,7 +222,7 @@ static int bank_blit4(lua_State *L)
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
 
-    const GL_Context_t *context = self->canvas->context;
+    const GL_Context_t *context = self->canvas.instance->context;
     const GL_Sheet_t *sheet = self->sheet;
     GL_context_blit(context, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y });
 
@@ -236,7 +244,7 @@ static int bank_blit5(lua_State *L)
     int y = LUAX_INTEGER(L, 4);
     float scale = LUAX_NUMBER(L, 5);
 
-    const GL_Context_t *context = self->canvas->context;
+    const GL_Context_t *context = self->canvas.instance->context;
     const GL_Sheet_t *sheet = self->sheet;
     GL_context_blit_s(context, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, scale, scale);
 
@@ -266,7 +274,7 @@ static int bank_blit6_7_8_9(lua_State *L)
     float anchor_x = LUAX_OPTIONAL_NUMBER(L, 8, 0.5f);
     float anchor_y = LUAX_OPTIONAL_NUMBER(L, 9, anchor_x);
 
-    const GL_Context_t *context = self->canvas->context;
+    const GL_Context_t *context = self->canvas.instance->context;
     const GL_Sheet_t *sheet = self->sheet;
     GL_context_blit_sr(context, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, scale_x, scale_y, rotation, anchor_x, anchor_y);
 
