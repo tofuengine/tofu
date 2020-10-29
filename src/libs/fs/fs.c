@@ -58,7 +58,7 @@ static inline FS_Mount_t *_mount(const char *path)
 
 static inline void _unmount(FS_Mount_t *mount)
 {
-    ((Mount_t *)mount)->vtable.dtor(mount);
+    mount->vtable.dtor(mount);
     free(mount);
 }
 
@@ -165,7 +165,7 @@ const FS_Mount_t *FS_locate(const FS_Context_t *context, const char *file)
     for (size_t count = arrlen(context->mounts); count; --count) {
         const FS_Mount_t *mount = *(current++);
 #endif
-        if (((const Mount_t *)mount)->vtable.contains(mount, file)) {
+        if (mount->vtable.contains(mount, file)) {
             return mount;
         }
     }
@@ -175,36 +175,36 @@ const FS_Mount_t *FS_locate(const FS_Context_t *context, const char *file)
 
 FS_Handle_t *FS_open(const FS_Mount_t *mount, const char *file)
 {
-    return ((const Mount_t *)mount)->vtable.open(mount, file);
+    return mount->vtable.open(mount, file);
 }
 
 void FS_close(FS_Handle_t *handle)
 {
-    ((Handle_t *)handle)->vtable.dtor(handle);
+    handle->vtable.dtor(handle);
     free(handle);
 }
 
 size_t FS_size(FS_Handle_t *handle)
 {
-    return ((Handle_t *)handle)->vtable.size(handle);
+    return handle->vtable.size(handle);
 }
 
 size_t FS_read(FS_Handle_t *handle, void *buffer, size_t bytes_requested)
 {
-    return ((Handle_t *)handle)->vtable.read(handle, buffer, bytes_requested);
+    return handle->vtable.read(handle, buffer, bytes_requested);
 }
 
 bool FS_seek(FS_Handle_t *handle, long offset, int whence)
 {
-    return ((Handle_t *)handle)->vtable.seek(handle, offset, whence);
+    return handle->vtable.seek(handle, offset, whence);
 }
 
 long FS_tell(FS_Handle_t *handle)
 {
-    return ((Handle_t *)handle)->vtable.tell(handle);
+    return handle->vtable.tell(handle);
 }
 
 bool FS_eof(FS_Handle_t *handle)
 {
-    return ((Handle_t *)handle)->vtable.eof(handle);
+    return handle->vtable.eof(handle);
 }

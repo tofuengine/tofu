@@ -35,12 +35,12 @@
 #define LOG_CONTEXT "fs-std"
 
 typedef struct _Std_Mount_t {
-    Mount_VTable_t vtable;
+    Mount_VTable_t vtable; // Matches `_FS_Mount_t` structure.
     char base_path[FILE_PATH_MAX];
 } Std_Mount_t;
 
 typedef struct _Std_Handle_t {
-    Handle_VTable_t vtable;
+    Handle_VTable_t vtable; // Matches `_FS_Handle_t` structure.
     FILE *stream;
 } Std_Handle_t;
 

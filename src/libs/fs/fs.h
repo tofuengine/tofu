@@ -55,8 +55,8 @@
 #define FS_PATH_SEPARATOR       '/'
 #define FS_PATH_SEPARATOR_SZ    "/"
 
-typedef void FS_Mount_t;
-typedef void FS_Handle_t;
+typedef struct _FS_Mount_t FS_Mount_t;
+typedef struct _FS_Handle_t FS_Handle_t;
 
 typedef struct _FS_Context_t FS_Context_t;
 

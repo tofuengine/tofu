@@ -42,12 +42,12 @@ typedef struct _Handle_VTable_t {
     bool   (*eof) (FS_Handle_t *handle);
 } Handle_VTable_t;
 
-typedef struct _Mount_t {
+struct _FS_Mount_t {
     Mount_VTable_t vtable;
-} Mount_t;
+};
 
-typedef struct _Handle_t {
+struct _FS_Handle_t {
     Handle_VTable_t vtable;
-} Handle_t;
+};
 
 #endif /* __FS_INTERNALS_H__ */

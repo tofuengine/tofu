@@ -63,7 +63,7 @@ typedef struct _Pak_Entry_t {
 } Pak_Entry_t;
 
 typedef struct _Pak_Mount_t {
-    Mount_VTable_t vtable;
+    Mount_VTable_t vtable; // Matches `_FS_Mount_t` structure.
     char archive_path[FILE_PATH_MAX];
     size_t entries;
     Pak_Entry_t *directory;
@@ -71,7 +71,7 @@ typedef struct _Pak_Mount_t {
 } Pak_Mount_t;
 
 typedef struct _Pak_Handle_t {
-    Handle_VTable_t vtable;
+    Handle_VTable_t vtable; // Matches `_FS_Handle_t` structure.
     FILE *stream;
     size_t stream_size;
     long beginning_of_stream;
