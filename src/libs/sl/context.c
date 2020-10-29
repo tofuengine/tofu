@@ -161,12 +161,13 @@ void SL_context_halt(SL_Context_t *context)
     arrfree(context->sources);
 }
 
+// TODO: should we constantly generate into a buffer during the `update()` call and pull data later?
 bool SL_context_update(SL_Context_t *context, float delta_time)
 {
     SL_Source_t **current = context->sources;
     for (size_t count = arrlen(context->sources); count; --count) {
         SL_Source_t *source = *(current++);
-        bool result = ((Source_t *)source)->vtable.update(source, delta_time);
+        bool result = source->vtable.update(source, delta_time);
         if (!result) {
             return false;
         }
@@ -179,7 +180,7 @@ void SL_context_generate(SL_Context_t *context, void *output, size_t frames_requ
     // Backward scan, to remove to-be-untracked sources.
     for (int index = (int)arrlen(context->sources) - 1; index >= 0; --index) {
         SL_Source_t *source = context->sources[index];
-        bool still_running = ((Source_t *)source)->vtable.generate(source, output, frames_requested);
+        bool still_running = source->vtable.generate(source, output, frames_requested);
         if (!still_running) {
             arrdel(context->sources, index);
         }

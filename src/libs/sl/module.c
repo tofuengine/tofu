@@ -129,7 +129,7 @@ static inline bool _produce(Module_t *module)
 
 SL_Source_t *SL_module_create(const SL_Context_t *context, SL_Callbacks_t callbacks)
 {
-    Module_t *module = malloc(sizeof(Module_t));
+    SL_Source_t *module = malloc(sizeof(Module_t));
     if (!module) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate module structure");
         return NULL;

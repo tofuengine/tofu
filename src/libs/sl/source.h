@@ -30,7 +30,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-typedef void SL_Source_t;
+typedef struct _SL_Source_t SL_Source_t;
 
 extern void SL_source_destroy(SL_Source_t *source);
 

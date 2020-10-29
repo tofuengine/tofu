@@ -134,7 +134,7 @@ static inline bool _produce(Music_t *music)
 
 SL_Source_t *SL_music_create(const SL_Context_t *context, SL_Callbacks_t callbacks)
 {
-    Music_t *music = malloc(sizeof(Music_t));
+    SL_Source_t *music = malloc(sizeof(Music_t));
     if (!music) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate music structure");
         return NULL;

@@ -30,81 +30,81 @@
 
 void SL_source_destroy(SL_Source_t *source)
 {
-    ((Source_t *)source)->vtable.dtor(source);
+    source->vtable.dtor(source);
     free(source);
 }
 
 bool SL_source_reset(SL_Source_t *source)
 {
-    return ((const Source_t *)source)->vtable.reset(source);
+    return source->vtable.reset(source);
 }
 
 void SL_source_set_group(SL_Source_t *source, size_t group_id)
 {
-    SL_props_set_group(((Source_t *)source)->props, group_id);
+    SL_props_set_group(source->props, group_id);
 }
 
 void SL_source_set_looped(SL_Source_t *source, bool looped)
 {
-    SL_props_set_looped(((Source_t *)source)->props, looped);
+    SL_props_set_looped(source->props, looped);
 }
 
 void SL_source_set_mix(SL_Source_t *source, SL_Mix_t mix)
 {
-    SL_props_set_mix(((Source_t *)source)->props, mix);
+    SL_props_set_mix(source->props, mix);
 }
 
 void SL_source_set_pan(SL_Source_t *source, float pan)
 {
-    SL_props_set_pan(((Source_t *)source)->props, pan);
+    SL_props_set_pan(source->props, pan);
 }
 
 void SL_source_set_twin_pan(SL_Source_t *source, float left_pan, float right_pan)
 {
-    SL_props_set_twin_pan(((Source_t *)source)->props, left_pan, right_pan);
+    SL_props_set_twin_pan(source->props, left_pan, right_pan);
 }
 
 void SL_source_set_balance(SL_Source_t *source, float balance)
 {
-    SL_props_set_balance(((Source_t *)source)->props, balance);
+    SL_props_set_balance(source->props, balance);
 }
 
 void SL_source_set_gain(SL_Source_t *source, float gain)
 {
-    SL_props_set_gain(((Source_t *)source)->props, gain);
+    SL_props_set_gain(source->props, gain);
 }
 
 void SL_source_set_speed(SL_Source_t *source, float speed)
 {
-    SL_props_set_speed(((Source_t *)source)->props, speed);
+    SL_props_set_speed(source->props, speed);
 }
 
 size_t SL_source_get_group(const SL_Source_t *source)
 {
-    return ((const Source_t *)source)->props->group_id;
+    return source->props->group_id;
 }
 
 bool SL_source_get_looped(const SL_Source_t *source)
 {
-    return ((const Source_t *)source)->props->looped;
+    return source->props->looped;
 }
 
 SL_Mix_t SL_source_get_mix(const SL_Source_t *source)
 {
-    return ((const Source_t *)source)->props->mix;
+    return source->props->mix;
 }
 
 float SL_source_get_gain(const SL_Source_t *source)
 {
-    return ((const Source_t *)source)->props->gain;
+    return source->props->gain;
 }
 
 float SL_source_get_speed(const SL_Source_t *source)
 {
-    return ((const Source_t *)source)->props->speed;
+    return source->props->speed;
 }
 
 void SL_source_on_group_changed(SL_Source_t *source, size_t group_id)
 {
-    SL_props_on_group_changed(((Source_t *)source)->props, group_id);
+    SL_props_on_group_changed(source->props, group_id);
 }
