@@ -209,6 +209,10 @@ static int bank_canvas(lua_State *L)
     return 0;
 }
 
+// Bank.blit(self, cell_id, x, y)
+// Bank.blit(self, cell_id, x, y, r)
+// Bank.blit(self, cell_id, x, y, sx, sy)
+// Bank.blit(self, cell_id, x, y, sx, sy, r)
 static int bank_blit4(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -242,16 +246,16 @@ static int bank_blit5(lua_State *L)
     int cell_id = LUAX_INTEGER(L, 2);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
-    float scale = LUAX_NUMBER(L, 5);
+    int rotation = LUAX_INTEGER(L, 5);
 
     const GL_Context_t *context = self->canvas.instance->context;
     const GL_Sheet_t *sheet = self->sheet;
-    GL_context_blit_s(context, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, scale, scale);
+    GL_context_blit_sr(context, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, 1.0f, 1.0f, rotation, 0.5f, 0.5f);
 
     return 0;
 }
 
-static int bank_blit6_7_8_9(lua_State *L)
+static int bank_blit6(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -260,7 +264,31 @@ static int bank_blit6_7_8_9(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    const Bank_Object_t *self = (const Bank_Object_t *)LUAX_USERDATA(L, 1);
+    int cell_id = LUAX_INTEGER(L, 2);
+    int x = LUAX_INTEGER(L, 3);
+    int y = LUAX_INTEGER(L, 4);
+    float scale_x = LUAX_NUMBER(L, 5);
+    float scale_y = LUAX_NUMBER(L, 6);
+
+    const GL_Context_t *context = self->canvas.instance->context;
+    const GL_Sheet_t *sheet = self->sheet;
+    GL_context_blit_s(context, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, scale_x, scale_y);
+
+    return 0;
+}
+
+static int bank_blit7_8_9(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
@@ -268,9 +296,9 @@ static int bank_blit6_7_8_9(lua_State *L)
     int cell_id = LUAX_INTEGER(L, 2);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
-    int rotation = LUAX_INTEGER(L, 5);
-    float scale_x = LUAX_NUMBER(L, 6);
-    float scale_y = LUAX_OPTIONAL_NUMBER(L, 7, scale_x);
+    float scale_x = LUAX_NUMBER(L, 5);
+    float scale_y = LUAX_NUMBER(L, 6);
+    int rotation = LUAX_INTEGER(L, 7);
     float anchor_x = LUAX_OPTIONAL_NUMBER(L, 8, 0.5f);
     float anchor_y = LUAX_OPTIONAL_NUMBER(L, 9, anchor_x);
 
@@ -286,9 +314,9 @@ static int bank_blit(lua_State *L)
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(4, bank_blit4)
         LUAX_OVERLOAD_ARITY(5, bank_blit5)
-        LUAX_OVERLOAD_ARITY(6, bank_blit6_7_8_9)
-        LUAX_OVERLOAD_ARITY(7, bank_blit6_7_8_9)
-        LUAX_OVERLOAD_ARITY(8, bank_blit6_7_8_9)
-        LUAX_OVERLOAD_ARITY(9, bank_blit6_7_8_9)
+        LUAX_OVERLOAD_ARITY(6, bank_blit6)
+        LUAX_OVERLOAD_ARITY(7, bank_blit7_8_9)
+        LUAX_OVERLOAD_ARITY(8, bank_blit7_8_9)
+        LUAX_OVERLOAD_ARITY(9, bank_blit7_8_9)
     LUAX_OVERLOAD_END
 }
