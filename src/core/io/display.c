@@ -259,7 +259,7 @@ static GLFWwindow *_window_initialize(const Display_Configuration_t *configurati
         glfwTerminate();
         return NULL;
     }
-    glfwMakeContextCurrent(window);
+    glfwMakeContextCurrent(window); // We are running on a single thread, no need to calling this in the `present()` function.
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize GLAD");
@@ -349,15 +349,22 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
         return NULL;
     }
     glBindTexture(GL_TEXTURE_2D, display->vram.texture); // The VRAM texture is always the active and bound one.
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // Faster when not-power-of-two, which is the common case.
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0); // Disable mip-mapping
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
     glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)display->canvas.size.width, (GLsizei)display->canvas.size.height, 0, PIXEL_FORMAT, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)display->canvas.size.width, (GLsizei)display->canvas.size.height, 0, PIXEL_FORMAT, GL_UNSIGNED_BYTE, NULL); // Create the storage
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "texture created w/ id #%d (%dx%d)", display->vram.texture, display->canvas.size.width, display->canvas.size.height);
+
+#ifdef __OPENGL_STATE_CLEANUP__
+    glBindTexture(GL_TEXTURE_2D, 0);
+#else
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+#endif
 
     for (size_t i = 0; i < Display_Programs_t_CountOf; ++i) {
         const Program_Data_t *data = &_programs_data[i];
@@ -442,6 +449,9 @@ void Display_update(Display_t *display, float delta_time)
 #ifdef PROFILE
 static inline void _to_display(GLFWwindow *window, const GL_Surface_t *surface, GL_Color_t *pixels, const GL_Rectangle_t *rectangle, const GL_Point_t *offset)
 {
+#ifdef __OPENGL_STATE_CLEANUP__
+    glBindTexture(GL_TEXTURE_2D, display->vram.texture);
+#endif
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)surface->width, (GLsizei)surface->height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, pixels);
 
     const int x0 = rectangle->x + offset->x;
@@ -449,18 +459,30 @@ static inline void _to_display(GLFWwindow *window, const GL_Surface_t *surface, 
     const int x1 = x0 + rectangle->width;
     const int y1 = y0 + rectangle->height;
 
-    glBegin(GL_TRIANGLE_STRIP);
-//        glColor4ub(255, 255, 255, 255); // Change this color to "tint".
+    const float vertices[] = {
+        0.0f, 0.0f, // CCW strip, top-left is <0,0> (the face direction of the strip is determined by the winding of the first triangle)
+        x0, y0,
+        0.0f, 1.0f,
+        x0, y1,
+        1.0f, 0.0f,
+        x1, y0,
+        1.0f, 1.0f,
+        x1, y1
+    };
 
-        glTexCoord2f(0.0f, 0.0f); // CCW strip, top-left is <0,0> (the face direction of the strip is determined by the winding of the first triangle)
-        glVertex2f(x0, y0);
-        glTexCoord2f(0.0f, 1.0f);
-        glVertex2f(x0, y1);
-        glTexCoord2f(1.0f, 0.0f);
-        glVertex2f(x1, y0);
-        glTexCoord2f(1.0f, 1.0f);
-        glVertex2f(x1, y1);
-    glEnd();
+#ifdef __OPENGL_STATE_CLEANUP__
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+#endif
+    glTexCoordPointer(2, GL_FLOAT, 4 * sizeof(float), vertices);
+    glVertexPointer(2, GL_FLOAT, 4 * sizeof(float), vertices + 2);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+#ifdef __OPENGL_STATE_CLEANUP__
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    glBindTexture(GL_TEXTURE_2D, 0);
+#endif
 
     glfwSwapBuffers(window);
 }
@@ -481,6 +503,9 @@ void Display_present(const Display_t *display)
 #ifdef PROFILE
     _to_display(display->window, surface, vram, &display->vram.rectangle, &display->vram_offset);
 #else
+#ifdef __OPENGL_STATE_CLEANUP__
+    glBindTexture(GL_TEXTURE_2D, display->vram.texture);
+#endif
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)surface->width, (GLsizei)surface->height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, pixels);
 
     const GL_Rectangle_t *vram_rectangle = &display->vram.rectangle;
@@ -492,18 +517,30 @@ void Display_present(const Display_t *display)
     const int x1 = x0 + vram_rectangle->width;
     const int y1 = y0 + vram_rectangle->height;
 
-    glBegin(GL_TRIANGLE_STRIP);
-//        glColor4ub(255, 255, 255, 255); // Change this color to "tint".
+    const float vertices[] = { // Inspired to https://github.com/emoon/minifb
+        0.0f, 0.0f, // CCW strip, top-left is <0,0> (the face direction of the strip is determined by the winding of the first triangle)
+        x0, y0,
+        0.0f, 1.0f,
+        x0, y1,
+        1.0f, 0.0f,
+        x1, y0,
+        1.0f, 1.0f,
+        x1, y1
+    };
 
-        glTexCoord2f(0.0f, 0.0f); // CCW strip, top-left is <0,0> (the face direction of the strip is determined by the winding of the first triangle)
-        glVertex2f(x0, y0);
-        glTexCoord2f(0.0f, 1.0f);
-        glVertex2f(x0, y1);
-        glTexCoord2f(1.0f, 0.0f);
-        glVertex2f(x1, y0);
-        glTexCoord2f(1.0f, 1.0f);
-        glVertex2f(x1, y1);
-    glEnd();
+#ifdef __OPENGL_STATE_CLEANUP__
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+#endif
+    glTexCoordPointer(2, GL_FLOAT, 4 * sizeof(float), vertices);
+    glVertexPointer(2, GL_FLOAT, 4 * sizeof(float), vertices + 2);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+#ifdef __OPENGL_STATE_CLEANUP__
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    glBindTexture(GL_TEXTURE_2D, 0);
+#endif
 
     glfwSwapBuffers(display->window);
 #endif
