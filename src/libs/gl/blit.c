@@ -51,7 +51,7 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
     const GL_Mask_t *mask = &state->mask;
 #endif
 
-    GL_Quad_t drawing_region = (GL_Quad_t){
+    GL_Quad_t drawing_region = (GL_Quad_t){ // FIXME: remove `GL_Quad_t` usage!
             .x0 = position.x,
             .y0 = position.y,
             .x1 = position.x + (int)area.width - 1,
@@ -141,6 +141,11 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
 #endif
 }
 
+static inline int _iroundf(float x)
+{
+    return (int)floorf(x + 0.5f);
+}
+
 // Simple implementation of nearest-neighbour scaling, with x/y flipping according to scaling-factor sign.
 // See `http://tech-algorithm.com/articles/nearest-neighbor-image-scaling/` for a reference code.
 // To avoid empty pixels we scan the destination area and calculate the source pixel.
@@ -154,8 +159,8 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
     const GL_Mask_t *mask = &state->mask;
 #endif
 
-    const int drawing_width = (int)(area.width * fabsf(scale_x) + 0.5f);
-    const int drawing_height = (int)(area.height * fabsf(scale_y) + 0.5f);
+    const int drawing_width = _iroundf(area.width * fabsf(scale_x));
+    const int drawing_height = _iroundf(area.height * fabsf(scale_y));
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
@@ -281,13 +286,13 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
 
     const float w = (float)area.width;
     const float h = (float)area.height;
-    const float sw = w * scale_x;
-    const float sh = h * scale_y;
+    const float sw = w * fabs(scale_x);
+    const float sh = h * fabs(scale_y);
 
-    const float sax = w * anchor_x; // Anchor points, relative to the source and destination areas.
-    const float say = h * anchor_y;
-    const float dax = sw * anchor_x;
-    const float day = sh * anchor_y;
+    const float sax = (w - 1.0f) * anchor_x; // Anchor points, relative to the source and destination areas.
+    const float say = (h - 1.0f) * anchor_y;
+    const float dax = (sw - 1.0f) * anchor_x;
+    const float day = (sh - 1.0f) * anchor_y;
 
     const float sx = area.x;
     const float sy = area.y;
@@ -315,8 +320,8 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     // Note that we aren *not* adding `dst/dty` on purpose to rotate around the anchor point.
     const float aabb_x0 = -dax;
     const float aabb_y0 = -day;
-    const float aabb_x1 = sw - dax;
-    const float aabb_y1 = sh - day;
+    const float aabb_x1 = sw - 1.0f - dax;
+    const float aabb_y1 = sh - 1.0f - day;
 
     const float x0 = c * aabb_x0 - s * aabb_y0;
     const float y0 = s * aabb_x0 + c * aabb_y0;
@@ -330,30 +335,27 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const float x3 = c * aabb_x0 - s * aabb_y1;
     const float y3 = s * aabb_x0 + c * aabb_y1;
 
-    // Clip both destination and target rectangles.
-    // Note, `floorf()` is not needed here, since we have always a positive-valued clipping region.
-    GL_Quad_t drawing_region = (GL_Quad_t){
-            .x0 = (int)(fmin(fmin(fmin(x0, x1), x2), x3) + dx),
-            .y0 = (int)(fmin(fmin(fmin(y0, y1), y2), y3) + dy),
-            .x1 = (int)(fmax(fmax(fmax(x0, x1), x2), x3) + dx),
-            .y1 = (int)(fmax(fmax(fmax(y0, y1), y2), y3) + dy)
-        };
+    // We are keeping floating values, here, to have "perfect" origin computation.
+    float drawing_region_x0 = fmin(fmin(fmin(x0, x1), x2), x3) + dx;
+    float drawing_region_y0 = fmin(fmin(fmin(y0, y1), y2), y3) + dy;
+    float drawing_region_x1 = fmax(fmax(fmax(x0, x1), x2), x3) + dx;
+    float drawing_region_y1 = fmax(fmax(fmax(y0, y1), y2), y3) + dy;
 
-    if (drawing_region.x0 < clipping_region->x0) {
-        drawing_region.x0 = clipping_region->x0;
+    if (drawing_region_x0 < clipping_region->x0) {
+        drawing_region_x0 = clipping_region->x0;
     }
-    if (drawing_region.y0 < clipping_region->y0) {
-        drawing_region.y0 = clipping_region->y0;
+    if (drawing_region_y0 < clipping_region->y0) {
+        drawing_region_y0 = clipping_region->y0;
     }
-    if (drawing_region.x1 > clipping_region->x1) {
-        drawing_region.x1 = clipping_region->x1;
+    if (drawing_region_x1 > clipping_region->x1) {
+        drawing_region_x1 = clipping_region->x1;
     }
-    if (drawing_region.y1 > clipping_region->y1) {
-        drawing_region.y1 = clipping_region->y1;
+    if (drawing_region_y1 > clipping_region->y1) {
+        drawing_region_y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    const int width = _iroundf(drawing_region_x1 - drawing_region_x0 + 1.0f);
+    const int height = _iroundf(drawing_region_y1 - drawing_region_y0 + 1.0f);
     if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!
         return;
     }
@@ -368,8 +370,8 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const float M21 = -s / scale_y; // |           | |      |
     const float M22 = c / scale_y;  // |    0 1/sy | | -s c |
 
-    const float tlx = (float)drawing_region.x0 - dx; // Transform the top-left corner of the to-be-drawn rectangle to texture space.
-    const float tly = (float)drawing_region.y0 - dy; // (could differ from AABB x0 due to clipping, we need to compute it again)
+    const float tlx = drawing_region_x0 - dx; // Transform the top-left corner of the to-be-drawn rectangle to texture space.
+    const float tly = drawing_region_y0 - dy; // (could differ from AABB x0 due to clipping, we need to compute it again)
     float ou = (tlx * M11 + tly * M12) + sax + sx; // Offset to the source texture quad.
     float ov = (tlx * M21 + tly * M22) + say + sy;
 
@@ -379,7 +381,7 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const int swidth = (int)surface->width;
     const int dwidth = (int)context->surface->width;
 
-    GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
+    GL_Pixel_t *dptr = ddata + (int)drawing_region_y0 * dwidth + (int)drawing_region_x0;
 
     const int dskip = dwidth - width;
 
@@ -433,8 +435,8 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
 #ifdef __DEBUG_GRAPHICS__
                 pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, 15);
 #endif
-                int x = (int)floorf(u); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`) and avoid mirror effect.
-                int y = (int)floorf(v);
+                int x = _iroundf(u); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`) and avoid mirror effect.
+                int y = _iroundf(v);
 
                 if (x >= sminx && x <= smaxx && y >= sminy && y <= smaxy) {
 #ifdef __DEBUG_GRAPHICS__
@@ -483,12 +485,12 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
     const int clamp = xform->clamp;
     const GL_XForm_Table_Entry_t *table = xform->table;
 
-    GL_Quad_t drawing_region = (GL_Quad_t) {
-        .x0 = position.x,
-        .y0 = position.y,
-        .x1 = position.x + (clipping_region->x1 - clipping_region->x0),
-        .y1 = position.y + (clipping_region->y1 - clipping_region->y0)
-    };
+    GL_Quad_t drawing_region = (GL_Quad_t){
+            .x0 = position.x,
+            .y0 = position.y,
+            .x1 = position.x + (clipping_region->x1 - clipping_region->x0),
+            .y1 = position.y + (clipping_region->y1 - clipping_region->y0)
+        };
 
     if (drawing_region.x0 < clipping_region->x0) {
         drawing_region.x0 = clipping_region->x0;
@@ -596,8 +598,8 @@ void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface,
 #ifdef __DEBUG_GRAPHICS__
             pixel(context, drawing_region.x0 + j, drawing_region.y0 + i, i + j);
 #endif
-            int sx = (int)(xp + 0.5f); // Round to avoid artifacts.
-            int sy = (int)(yp + 0.5f);
+            int sx = _iroundf(xp); // Round to avoid artifacts.
+            int sy = _iroundf(yp);
 
             if (clamp == GL_XFORM_CLAMP_REPEAT) {
                 sx = imod(sx, sw); // TODO: optimize the amount of calls.
