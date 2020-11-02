@@ -159,6 +159,9 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
     const GL_Mask_t *mask = &state->mask;
 #endif
 
+    const bool flip_x = scale_x < 0.0f;
+    const bool flip_y = scale_y < 0.0f;
+
     const int drawing_width = _iroundf(area.width * fabsf(scale_x));
     const int drawing_height = _iroundf(area.height * fabsf(scale_y));
 
@@ -206,14 +209,13 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
     const float du = 1.0f / scale_x; // Texture coordinates deltas (signed).
     const float dv = 1.0f / scale_y;
 
-    float ou = (float)area.x + skip_x; // Correct to rightmost/bottom margin when flipping.
-    if (scale_x < 0.0f) {
-        ou += (float)area.width - skip_x - fabs(du); // `width - 1 - skip_x + (1 - fabs(du))`
-    }
-    float ov = (float)area.y + skip_y;
-    if (scale_y < 0.0f) {
-        ov += (float)area.height - skip_y - fabs(dv); // Ditto.
-    }
+    float ou = flip_x // Compute origin, correcting to rightmost/bottom margin when flipping.
+        ? (float)area.x + (float)area.width - fabs(du)
+        : (float)area.x + skip_x;
+    float ov = flip_y
+        ? (float)area.y + (float)area.height - fabs(dv)
+        : (float)area.y + skip_y;
+
     // NOTE: we can also apply an integer-based DDA method, using remainders.
 
 #ifdef __GL_MASK_SUPPORT__
