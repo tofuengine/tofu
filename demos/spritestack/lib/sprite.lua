@@ -79,7 +79,7 @@ function Sprite:render()
     local i = (id - self.from) * self.scale
     for j = i, i + self.scale - 1 do
       local rotation = Math.angle_to_rotation(self.angle - math.pi * 0.5)
-      self.bank:blit(id, x, y - j, rotation, self.scale)
+      self.bank:blit(id, x, y - j, self.scale, self.scale, rotation)
     end
   end
 
