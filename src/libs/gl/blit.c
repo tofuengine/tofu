@@ -173,11 +173,11 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
     float skip_y = 0.0f;
 
     if (drawing_region.x0 < clipping_region->x0) {
-        skip_x = (float)(clipping_region->x0 - drawing_region.x0) / scale_x;
+        skip_x = (float)(clipping_region->x0 - drawing_region.x0) / fabs(scale_x);
         drawing_region.x0 = clipping_region->x0;
     }
     if (drawing_region.y0 < clipping_region->y0) {
-        skip_y = (float)(clipping_region->y0 - drawing_region.y0) / scale_y;
+        skip_y = (float)(clipping_region->y0 - drawing_region.y0) / fabs(scale_y);
         drawing_region.y0 = clipping_region->y0;
     }
     if (drawing_region.x1 > clipping_region->x1) {
@@ -206,13 +206,13 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
     const float du = 1.0f / scale_x; // Texture coordinates deltas (signed).
     const float dv = 1.0f / scale_y;
 
-    float ou = (float)area.x + skip_x;
+    float ou = (float)area.x + skip_x; // Correct to rightmost/bottom margin when flipping.
     if (scale_x < 0.0f) {
-        ou += (float)area.width + du; // Move to last pixel, scaled, into the texture.
+        ou += (float)area.width - skip_x - fabs(du); // `width - 1 - skip_x + (1 - fabs(du))`
     }
     float ov = (float)area.y + skip_y;
     if (scale_y < 0.0f) {
-        ov += (float)area.height + dv;
+        ov += (float)area.height - skip_y - fabs(dv); // Ditto.
     }
     // NOTE: we can also apply an integer-based DDA method, using remainders.
 
