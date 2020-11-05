@@ -146,6 +146,13 @@ static inline int _iroundf(float x)
     return (int)floorf(x + 0.5f);
 }
 
+#if 0
+static inline int _ifloorf(float x)
+{
+    return (int)floorf(x);
+}
+#endif
+
 // Simple implementation of nearest-neighbour scaling, with x/y flipping according to scaling-factor sign.
 // See `http://tech-algorithm.com/articles/nearest-neighbor-image-scaling/` for a reference code.
 // To avoid empty pixels we scan the destination area and calculate the source pixel.
@@ -276,6 +283,8 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
 
 // https://web.archive.org/web/20190305223938/http://www.drdobbs.com/architecture-and-design/fast-bitmap-rotation-and-scaling/184416337
 // https://www.flipcode.com/archives/The_Art_of_Demomaking-Issue_10_Roto-Zooming.shtml
+//
+// FIXME: one row/column is lost due to rounding errors when angle is multiple of 128.
 void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y)
 {
     const GL_State_t *state = &context->state;
@@ -394,6 +403,10 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
 
     const int dskip = dwidth - width;
 
+#if 0
+    int (* const round)(float) = (rotation % 512 == 0) ? _ifloorf : _iroundf; // No rounding when no rotation is specified.
+#endif
+
 #ifdef __GL_MASK_SUPPORT__
     if (mask->stencil) {
         const GL_Surface_t *stencil = mask->stencil;
@@ -444,8 +457,13 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
 #ifdef __DEBUG_GRAPHICS__
                 pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, 15);
 #endif
+#if 0
+                int x = round(u); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`) and avoid mirror effect.
+                int y = round(v);
+#else
                 int x = _iroundf(u); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`) and avoid mirror effect.
                 int y = _iroundf(v);
+#endif
 
                 if (x >= sminx && x <= smaxx && y >= sminy && y <= smaxy) {
 #ifdef __DEBUG_GRAPHICS__
