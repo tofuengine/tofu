@@ -379,8 +379,8 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const float M21 = -s / asy; // |           | |      |
     const float M22 = c / asy;  // |    0 1/sy | | -s c |
 
-    const float tlx = drawing_region.x0 - dx; // Transform the top-left corner of the to-be-drawn rectangle to texture space.
-    const float tly = drawing_region.y0 - dy; // (could differ from AABB x0 due to clipping, we need to compute it again)
+    const float tlx = (float)drawing_region.x0 - dx; // Transform the top-left corner of the to-be-drawn rectangle to texture space.
+    const float tly = (float)drawing_region.y0 - dy; // (could differ from AABB x0 due to clipping, we need to compute it again)
     float ou = (tlx * M11 + tly * M12) + sax + sx; // Offset to the source texture quad.
     float ov = (tlx * M21 + tly * M22) + say + sy;
 
