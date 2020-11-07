@@ -67,6 +67,7 @@ static int canvas_circle(lua_State *L);
 static int canvas_peek(lua_State *L);
 static int canvas_poke(lua_State *L);
 static int canvas_process(lua_State *L);
+static int canvas_copy(lua_State *L);
 //static int canvas_grab(lua_State *L);
 
 // TODO: rename `Canvas` to `Context`?
@@ -101,6 +102,7 @@ static const struct luaL_Reg _canvas_functions[] = {
     { "peek", canvas_peek },
     { "poke", canvas_poke },
     { "process", canvas_process },
+    { "copy", canvas_copy },
     { NULL, NULL }
 };
 
@@ -942,6 +944,31 @@ static int canvas_process(lua_State *L)
 
     const GL_Context_t *context = self->context;
     GL_context_process(context, (GL_Rectangle_t){ .x = x, .y = y, .width = width, .height = height });
+
+    return 0;
+}
+
+static int canvas_copy(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
+    int x = LUAX_INTEGER(L, 2);
+    int y = LUAX_INTEGER(L, 3);
+    int ox = LUAX_INTEGER(L, 4);
+    int oy = LUAX_INTEGER(L, 5);
+    size_t width = (size_t)LUAX_INTEGER(L, 6);
+    size_t height = (size_t)LUAX_INTEGER(L, 7);
+
+    const GL_Context_t *context = self->context;
+    GL_context_copy(context, (GL_Point_t){ .x = x, .y = y }, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height });
 
     return 0;
 }

@@ -339,6 +339,68 @@ void GL_context_process(const GL_Context_t *context, GL_Rectangle_t rectangle)
     }
 }
 
+void GL_context_copy(const GL_Context_t *context, GL_Point_t position, GL_Rectangle_t area)
+{
+    const GL_State_t *state = &context->state;
+    const GL_Quad_t *clipping_region = &state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
+    const GL_Surface_t *surface = context->surface;
+
+    GL_Quad_t drawing_region = (GL_Quad_t){
+            .x0 = position.x,
+            .y0 = position.y,
+            .x1 = position.x + (int)area.width - 1,
+            .y1 = position.y + (int)area.height - 1
+        };
+
+    int skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
+    int skip_y = 0;
+
+    if (drawing_region.x0 < clipping_region->x0) {
+        skip_x = clipping_region->x0 - drawing_region.x0;
+        drawing_region.x0 = clipping_region->x0;
+    }
+    if (drawing_region.y0 < clipping_region->y0) {
+        skip_y = clipping_region->y0 - drawing_region.y0;
+        drawing_region.y0 = clipping_region->y0;
+    }
+    if (drawing_region.x1 > clipping_region->x1) {
+        drawing_region.x1 = clipping_region->x1;
+    }
+    if (drawing_region.y1 > clipping_region->y1) {
+        drawing_region.y1 = clipping_region->y1;
+    }
+
+    const int width = drawing_region.x1 - drawing_region.x0 + 1;
+    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!
+        return;
+    }
+
+    GL_Pixel_t *sddata = surface->data;
+
+    const int sdwidth = (int)surface->width;
+
+    const int sdskip = sdwidth - width;
+
+    const GL_Pixel_t *sptr = sddata + (position.y + skip_y) * sdwidth + (position.x + skip_x);
+    GL_Pixel_t *dptr = sddata + drawing_region.y0 * sdwidth + drawing_region.x0;
+
+    for (int i = height; i; --i) {
+        for (int j = width; j; --j) {
+            GL_Pixel_t index = shifting[*(sptr++)];
+            if (transparent[index]) {
+                dptr++;
+            } else {
+                *(dptr++) = index;
+            }
+        }
+        sptr += sdskip;
+        dptr += sdskip;
+    }
+}
+
 GL_Pixel_t GL_context_peek(const GL_Context_t *context, int x, int y)
 {
     const GL_Surface_t *surface = context->surface;
