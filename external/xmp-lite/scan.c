@@ -270,7 +270,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 			if (HAS_QUIRK(QUIRK_NOBPM) || p->flags & XMP_FLAGS_VBLANK || parm < 0x20) {
 			    if (parm > 0) {
 			        speed = parm;
-				}
+			    }
 			} else {
 			    time += m->time_factor * frame_count * base_time / bpm;
 			    frame_count = 0;

@@ -1,5 +1,6 @@
 /* _[v]snprintf() from msvcrt.dll might not nul terminate */
 /* OpenWatcom-provided versions seem to behave the same... */
+
 #include <stdarg.h>
 #include <stdio.h>
 #include "common.h"
