@@ -384,7 +384,7 @@ void GL_context_copy(const GL_Context_t *context, GL_Point_t position, GL_Rectan
 
     const int sdskip = sdwidth - width;
 
-    const GL_Pixel_t *sptr = sddata + (position.y + skip_y) * sdwidth + (position.x + skip_x);
+    const GL_Pixel_t *sptr = sddata + (area.y + skip_y) * sdwidth + (area.x + skip_x);
     GL_Pixel_t *dptr = sddata + drawing_region.y0 * sdwidth + drawing_region.x0;
 
     for (int i = height; i; --i) {
