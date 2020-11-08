@@ -8,6 +8,15 @@ local MODES = {
   ["bounce"] = Iterators.bounce,
 }
 
+local function get_iterator(mode, indexes)
+  if not mode then
+    return function()
+      return indexes[1]
+    end
+  end
+  return MODES[mode](indexes)
+end
+
 local Animation = Class.define()
 
 local function build_frames(indexes, duration, flip_x, flip_y)
@@ -41,13 +50,17 @@ function Animation:resume()
 end
 
 function Animation:rewind()
-  self.next = MODES[self.mode](self.frames)
+  self.next = get_iterator(self.mode, self.frames)
   self.time = 0
   self.frame = self.next()
 end
 
 function Animation:update(delta_time)
   if not self.active then
+    return
+  end
+
+  if self.frame.duration == 0 then
     return
   end
 
