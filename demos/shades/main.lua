@@ -124,19 +124,19 @@ function Main:render(_)
     for i = 0, STEPS - 1 do
       local y = self.height * i
       canvas:shift(self.lut[i])
-      canvas:process(0, y, width, self.height)
+      canvas:copy(0, y, 0, y, width, self.height)
     end
   elseif self.mode == 1 then
     for i = 0, STEPS - 1 do
       canvas:shift(self.lut[i])
-      canvas:process(i, 0, 1, height)
-      canvas:process(width - 1 - i, 0, 1, height)
+      canvas:copy(i, 0, i, 0, 1, height)
+      canvas:copy(width - 1 - i, 0, width - 1 - i, 0, 1, height)
     end
   else
     local t = System.time()
     local index = math.tointeger((math.sin(t * 2.5) + 1) * 0.5 * (STEPS - 1))
     canvas:shift(self.lut[index])
-    canvas:process(0, 0, width, height / 2)
+    canvas:copy(0, 0, 0, 0, width, height / 2)
   end
   canvas:pop()
 
