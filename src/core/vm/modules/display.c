@@ -36,12 +36,14 @@
 static int display_offset(lua_State *L);
 static int display_palette(lua_State *L);
 static int display_color_to_index(lua_State *L);
+static int display_index_to_color(lua_State *L);
 static int display_shader(lua_State *L);
 static int display_send(lua_State *L);
 
 static const struct luaL_Reg _display_functions[] = {
     { "palette", display_palette },
     { "color_to_index", display_color_to_index },
+    { "index_to_color", display_index_to_color },
     { "offset", display_offset },
     { "shader", display_shader },
     { "send", display_send },
@@ -177,6 +179,25 @@ static int display_color_to_index(lua_State *L)
         LUAX_OVERLOAD_ARITY(1, display_color_to_index1)
         LUAX_OVERLOAD_ARITY(3, display_color_to_index3)
     LUAX_OVERLOAD_END
+}
+
+static int display_index_to_color(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 1);
+
+    const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    const GL_Palette_t *palette = Display_get_palette(display);
+    const GL_Color_t color = palette->colors[index];
+
+    lua_pushinteger(L, (lua_Integer)color.r);
+    lua_pushinteger(L, (lua_Integer)color.g);
+    lua_pushinteger(L, (lua_Integer)color.b);
+
+    return 3;
 }
 
 static int display_offset0_2(lua_State *L)
