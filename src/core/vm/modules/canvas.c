@@ -28,6 +28,7 @@
 #include <core/environment.h>
 #include <core/io/display.h>
 #include <core/io/storage.h>
+#include <core/vm/interpreter.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 
@@ -927,23 +928,53 @@ static int canvas_poke(lua_State *L)
     return 0;
 }
 
+typedef struct _Closure_t {
+    const Interpreter_t *interpreter;
+    lua_State *L;
+} Closure_t;
+
+static GL_Pixel_t _process_callback(void *user_data, GL_Pixel_t from, GL_Pixel_t to)
+{
+    Closure_t *closure = (Closure_t *)user_data;
+
+    lua_pushvalue(closure->L, 2); // Copy directly from stack argument, don't need to ref/unref (won't be GC-ed meanwhile)
+    lua_pushinteger(closure->L, (lua_Integer)from);
+    lua_pushinteger(closure->L, (lua_Integer)to);
+    Interpreter_call(closure->interpreter, 2, 1);
+
+    GL_Pixel_t pixel = (GL_Pixel_t)LUAX_INTEGER(closure->L, -1);
+
+    lua_pop(closure->L, 1);
+
+    return pixel;
+}
+
 static int canvas_process(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TFUNCTION)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
-    int x = LUAX_INTEGER(L, 2);
-    int y = LUAX_INTEGER(L, 3);
-    size_t width = (size_t)LUAX_INTEGER(L, 4);
-    size_t height = (size_t)LUAX_INTEGER(L, 5);
+//    luaX_Reference callback = luaX_tofunction(L, 2);
+    int x = LUAX_INTEGER(L, 3);
+    int y = LUAX_INTEGER(L, 4);
+    int ox = LUAX_INTEGER(L, 5);
+    int oy = LUAX_INTEGER(L, 6);
+    size_t width = (size_t)LUAX_INTEGER(L, 7);
+    size_t height = (size_t)LUAX_INTEGER(L, 8);
+
+    const Interpreter_t *interpreter = (const Interpreter_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INTERPRETER));
 
     const GL_Context_t *context = self->context;
-    GL_context_process(context, (GL_Rectangle_t){ .x = x, .y = y, .width = width, .height = height });
+    GL_context_process(context, (GL_Point_t){ .x = x, .y = y }, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height },
+        _process_callback, &(Closure_t){ .interpreter = interpreter, .L = L });
 
     return 0;
 }

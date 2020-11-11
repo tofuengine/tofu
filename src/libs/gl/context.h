@@ -63,6 +63,8 @@ typedef struct _GL_Context_t {
     GL_State_t *stack;
 } GL_Context_t;
 
+typedef GL_Pixel_t (*GL_Process_Callback_t)(void *user_data, GL_Pixel_t from, GL_Pixel_t to);
+
 // TODO: rename decode to convert/grab.
 // FIXME: change width-height to `GL_Size_t`.
 extern GL_Context_t *GL_context_decode(size_t width, size_t height, const void *pixels, const GL_Surface_Callback_t callback, void *user_data);
@@ -84,7 +86,7 @@ extern void GL_context_set_mask(GL_Context_t *context, const GL_Mask_t *mask);
 #endif
 
 extern void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t index);
-extern void GL_context_process(const GL_Context_t *context, GL_Rectangle_t rectangle);
+extern void GL_context_process(const GL_Context_t *context, GL_Point_t position, GL_Rectangle_t area, GL_Process_Callback_t callback, void *user_data);
 extern void GL_context_copy(const GL_Context_t *context, GL_Point_t position, GL_Rectangle_t area);
 extern GL_Pixel_t GL_context_peek(const GL_Context_t *context, int x, int y);
 extern void GL_context_poke(GL_Context_t *context, int x, int y, GL_Pixel_t index);

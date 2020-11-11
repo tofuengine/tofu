@@ -284,25 +284,28 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
     arrfree(stack);
 }
 
-void GL_context_process(const GL_Context_t *context, GL_Rectangle_t rectangle)
+void GL_context_process(const GL_Context_t *context, GL_Point_t position, GL_Rectangle_t area, GL_Process_Callback_t callback, void *user_data)
 {
     const GL_State_t *state = &context->state;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const GL_Pixel_t *shifting = state->shifting;
-    const GL_Bool_t *transparent = state->transparent;
     const GL_Surface_t *surface = context->surface;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
-            .x0 = rectangle.x,
-            .y0 = rectangle.y,
-            .x1 = rectangle.x + (int)rectangle.width - 1,
-            .y1 = rectangle.y + (int)rectangle.height - 1
+            .x0 = position.x,
+            .y0 = position.y,
+            .x1 = position.x + (int)area.width - 1,
+            .y1 = position.y + (int)area.height - 1
         };
 
+    int skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
+    int skip_y = 0;
+
     if (drawing_region.x0 < clipping_region->x0) {
+        skip_x = clipping_region->x0 - drawing_region.x0;
         drawing_region.x0 = clipping_region->x0;
     }
     if (drawing_region.y0 < clipping_region->y0) {
+        skip_y = clipping_region->y0 - drawing_region.y0;
         drawing_region.y0 = clipping_region->y0;
     }
     if (drawing_region.x1 > clipping_region->x1) {
@@ -322,20 +325,19 @@ void GL_context_process(const GL_Context_t *context, GL_Rectangle_t rectangle)
 
     const int sdwidth = (int)surface->width;
 
-    GL_Pixel_t *sdptr = sddata + drawing_region.y0 * sdwidth + drawing_region.x0;
-
     const int sdskip = sdwidth - width;
+
+    const GL_Pixel_t *sptr = sddata + (area.y + skip_y) * sdwidth + (area.x + skip_x);
+    GL_Pixel_t *dptr = sddata + drawing_region.y0 * sdwidth + drawing_region.x0;
 
     for (int i = height; i; --i) {
         for (int j = width; j; --j) {
-            GL_Pixel_t index = shifting[*sdptr];
-            if (transparent[index]) {
-                sdptr++;
-            } else {
-                *(sdptr++) = index;
-            }
+            GL_Pixel_t from = *dptr;
+            GL_Pixel_t to = *(sptr++);
+            *(dptr++) = callback(user_data, from, to);
         }
-        sdptr += sdskip;
+        sptr += sdskip;
+        dptr += sdskip;
     }
 }
 
