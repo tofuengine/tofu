@@ -146,11 +146,6 @@ static inline int _iroundf(float x)
     return (int)floorf(x + 0.5f);
 }
 
-static inline int _ifloorf(float x)
-{
-    return (int)floorf(x);
-}
-
 // Simple implementation of nearest-neighbour scaling, with x/y flipping according to scaling-factor sign.
 // See `http://tech-algorithm.com/articles/nearest-neighbor-image-scaling/` for a reference code.
 // To avoid empty pixels we scan the destination area and calculate the source pixel.
@@ -355,7 +350,7 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
             .y1 = _iroundf(box_y1 + dy)
         };
 
-    float skip_x = box_x0; // Offset into the (source) surface/texture, update during clipping.
+    float skip_x = box_x0; // Offset into the target surface/texture, updated during clipping.
     float skip_y = box_y0;
 
     if (drawing_region.x0 < clipping_region->x0) {
