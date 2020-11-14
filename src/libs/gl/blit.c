@@ -285,7 +285,7 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
 // https://www.flipcode.com/archives/The_Art_of_Demomaking-Issue_10_Roto-Zooming.shtml
 //
 // FIXME: one row/column is lost due to rounding errors when angle is multiple of 128.
-void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y)
+void GL_context_blit_sr_aux(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y)
 {
     const GL_State_t *state = &context->state;
     const GL_Quad_t *clipping_region = &state->clipping_region;
@@ -503,6 +503,169 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     pixel(context, drawing_region.x1, drawing_region.y1, 7);
     pixel(context, drawing_region.x0, drawing_region.y1, 7);
 #endif
+}
+
+#include "primitive.h"
+void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y)
+{
+    const GL_State_t *state = &context->state;
+    const GL_Quad_t *clipping_region = &state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
+
+    const bool flip_x = scale_x < 0.0f;
+    const bool flip_y = scale_y < 0.0f;
+
+    const float asx = fabs(scale_x);
+    const float asy = fabs(scale_y);
+
+    const float sw = (float)area.width;
+    const float sh = (float)area.height;
+    const float dw = sw * asx;
+    const float dh = sh * asy;
+
+    const float sax = (sw - 1.0f) * anchor_x; // Anchor points, relative to the source and destination areas.
+    const float say = (sh - 1.0f) * anchor_y;
+    const float dax = (dw - 1.0f) * anchor_x;
+    const float day = (dh - 1.0f) * anchor_y;
+
+    const float sx = area.x;
+    const float sy = area.y;
+    const float dx = position.x;
+    const float dy = position.y;
+
+    float s, c;
+    fsincos(rotation, &s, &c);
+
+    // The counter-clockwise 2D rotation matrix is
+    //
+    //      |  c  -s |
+    //  R = |        |
+    //      |  s   c |
+    //
+    // In order to calculate the clockwise rotation matrix one can use the
+    // similarities `cos(-a) = cos(a)` and `sin(-a) = -sin(a)` and get
+    //
+    //      |  c   s |
+    //  R = |        |
+    //      | -s   c |
+
+    // Rotate the four corners of the scaled image to compute the rotate/scaled AABB.
+    //
+    // Note that we aren *not* adding `dst/dty` on purpose to rotate around the anchor point.
+    const float aabb_x0 = -dax;
+    const float aabb_y0 = -day;
+    const float aabb_x1 = dw - 1.0f - dax;
+    const float aabb_y1 = dh - 1.0f - day;
+
+    const float x0 = c * aabb_x0 - s * aabb_y0;
+    const float y0 = s * aabb_x0 + c * aabb_y0;
+
+    const float x1 = c * aabb_x1 - s * aabb_y0;
+    const float y1 = s * aabb_x1 + c * aabb_y0;
+
+    const float x2 = c * aabb_x1 - s * aabb_y1;
+    const float y2 = s * aabb_x1 + c * aabb_y1;
+
+    const float x3 = c * aabb_x0 - s * aabb_y1;
+    const float y3 = s * aabb_x0 + c * aabb_y1;
+
+    const float box_x0 = fmin(fmin(fmin(x0, x1), x2), x3);
+    const float box_y0 = fmin(fmin(fmin(y0, y1), y2), y3);
+    const float box_x1 = fmax(fmax(fmax(x0, x1), x2), x3);
+    const float box_y1 = fmax(fmax(fmax(y0, y1), y2), y3);
+
+    GL_Quad_t drawing_region = (GL_Quad_t){
+            .x0 = _iroundf(fmin(fmin(fmin(x0, x1), x2), x3) + dx),
+            .y0 = _iroundf(fmin(fmin(fmin(y0, y1), y2), y3) + dy),
+            .x1 = _iroundf(fmax(fmax(fmax(x0, x1), x2), x3) + dx),
+            .y1 = _iroundf(fmax(fmax(fmax(y0, y1), y2), y3) + dy)
+        };
+
+    float skip_x = 0.0f; // Offset into the (source) surface/texture, update during clipping.
+    float skip_y = 0.0f;
+
+    if (drawing_region.x0 < clipping_region->x0) {
+        skip_x = (float)(clipping_region->x0 - drawing_region.x0);
+        drawing_region.x0 = clipping_region->x0;
+    }
+    if (drawing_region.y0 < clipping_region->y0) {
+        skip_y = (float)(clipping_region->y0 - drawing_region.y0);
+        drawing_region.y0 = clipping_region->y0;
+    }
+    if (drawing_region.x1 > clipping_region->x1) {
+        drawing_region.x1 = clipping_region->x1;
+    }
+    if (drawing_region.y1 > clipping_region->y1) {
+        drawing_region.y1 = clipping_region->y1;
+    }
+
+    const int width = drawing_region.x1 - drawing_region.x0 + 1;
+    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!
+        return;
+    }
+
+    const int sminx = area.x;
+    const int sminy = area.y;
+    const int smaxx = area.x + (int)area.width - 1;
+    const int smaxy = area.y + (int)area.height - 1;
+
+    const float M11 = c / asx;  // Since we are doing an *inverse* transformation, we combine rotation and *then* scaling (TRS -> SRT).
+    const float M12 = s / asx;  // | 1/sx    0 | |  c s |
+    const float M21 = -s / asy; // |           | |      |
+    const float M22 = c / asy;  // |    0 1/sy | | -s c |
+
+    const GL_Pixel_t *sdata = surface->data;
+    GL_Pixel_t *ddata = context->surface->data;
+
+    const int swidth = (int)surface->width;
+    const int dwidth = (int)context->surface->width;
+
+    GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
+
+    const int dskip = dwidth - width;
+
+    for (int i = 0; i < height; ++i) {
+        const float ov = box_y0 + skip_y + (float)i;
+
+        for (int j = 0; j < width; ++j) {
+            const float ou = box_x0 + skip_x + (float)j;
+
+            const float u = (ou * M11 + ov * M12) + sax + sx;
+            const float v = (ou * M21 + ov * M22) + say + sy;
+
+            int x = _iroundf(u); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`) and avoid mirror effect.
+            int y = _iroundf(v);
+
+            if (x >= sminx && x <= smaxx && y >= sminy && y <= smaxy) {
+                if (flip_x) {
+                    x = smaxx - (x - sminx);
+                }
+                if (flip_y) {
+                    y = smaxy - (y - sminy);
+                }
+
+                const GL_Pixel_t *sptr = sdata + y * swidth + x;
+                GL_Pixel_t index = shifting[*sptr];
+                if (!transparent[index]) {
+                    *dptr = index;
+                }
+            }
+
+            ++dptr;
+        }
+
+        dptr += dskip;
+    }
+
+    GL_primitive_point(context, (GL_Point_t){ .x = _iroundf(dx), .y = _iroundf(dy) }, 12);
+    GL_primitive_point(context, (GL_Point_t){ .x = _iroundf(x0 + dx), .y = _iroundf(y0 + dy) }, 13);
+    GL_primitive_point(context, (GL_Point_t){ .x = _iroundf(x1 + dx), .y = _iroundf(y1 + dy) }, 13);
+    GL_primitive_point(context, (GL_Point_t){ .x = _iroundf(x2 + dx), .y = _iroundf(y2 + dy) }, 13);
+    GL_primitive_point(context, (GL_Point_t){ .x = _iroundf(x3 + dx), .y = _iroundf(y3 + dy) }, 13);
+    GL_primitive_point(context, (GL_Point_t){ .x = _iroundf(box_x0 + dx), .y = _iroundf(box_y0 + dy) }, 11);
+    GL_primitive_point(context, (GL_Point_t){ .x = _iroundf(box_x1 + dx), .y = _iroundf(box_y1 + dy) }, 11);
 }
 
 // https://www.youtube.com/watch?v=3FVN_Ze7bzw
