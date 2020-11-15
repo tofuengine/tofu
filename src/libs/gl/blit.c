@@ -51,15 +51,15 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
     const GL_Mask_t *mask = &state->mask;
 #endif
 
+    int skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
+    int skip_y = 0;
+
     GL_Quad_t drawing_region = (GL_Quad_t){ // FIXME: remove `GL_Quad_t` usage!
             .x0 = position.x,
             .y0 = position.y,
             .x1 = position.x + (int)area.width - 1,
             .y1 = position.y + (int)area.height - 1
         };
-
-    int skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
-    int skip_y = 0;
 
     if (drawing_region.x0 < clipping_region->x0) {
         skip_x = clipping_region->x0 - drawing_region.x0;
@@ -165,15 +165,15 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
     const int drawing_width = _iroundf(area.width * fabsf(scale_x));
     const int drawing_height = _iroundf(area.height * fabsf(scale_y));
 
+    float skip_x = 0.0f; // Offset into the (source) surface/texture, update during clipping.
+    float skip_y = 0.0f;
+
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
             .y0 = position.y,
             .x1 = position.x + drawing_width - 1,
             .y1 = position.y + drawing_height - 1,
         };
-
-    float skip_x = 0.0f; // Offset into the (source) surface/texture, update during clipping.
-    float skip_y = 0.0f;
 
     if (drawing_region.x0 < clipping_region->x0) {
         skip_x = (float)(clipping_region->x0 - drawing_region.x0) / fabs(scale_x);

@@ -290,15 +290,15 @@ void GL_context_process(const GL_Context_t *context, GL_Point_t position, GL_Rec
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Surface_t *surface = context->surface;
 
+    int skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
+    int skip_y = 0;
+
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
             .y0 = position.y,
             .x1 = position.x + (int)area.width - 1,
             .y1 = position.y + (int)area.height - 1
         };
-
-    int skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
-    int skip_y = 0;
 
     if (drawing_region.x0 < clipping_region->x0) {
         skip_x = clipping_region->x0 - drawing_region.x0;
@@ -349,15 +349,15 @@ void GL_context_copy(const GL_Context_t *context, GL_Point_t position, GL_Rectan
     const GL_Bool_t *transparent = state->transparent;
     const GL_Surface_t *surface = context->surface;
 
+    int skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
+    int skip_y = 0;
+
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
             .y0 = position.y,
             .x1 = position.x + (int)area.width - 1,
             .y1 = position.y + (int)area.height - 1
         };
-
-    int skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
-    int skip_y = 0;
 
     if (drawing_region.x0 < clipping_region->x0) {
         skip_x = clipping_region->x0 - drawing_region.x0;
