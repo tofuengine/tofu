@@ -343,22 +343,27 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const float box_x1 = fmax(fmax(fmax(x0, x1), x2), x3);
     const float box_y1 = fmax(fmax(fmax(y0, y1), y2), y3);
 
-    GL_Quad_t drawing_region = (GL_Quad_t){
-            .x0 = _iroundf(box_x0 + dx),
-            .y0 = _iroundf(box_y0 + dy),
-            .x1 = _iroundf(box_x1 + dx),
-            .y1 = _iroundf(box_y1 + dy)
-        };
+    const float drawing_box_x0 = box_x0 + dx; // We'll use this for calculating "skip values" during clipping, for better precision.
+    const float drawing_box_y0 = box_y0 + dy;
+    const float drawing_box_x1 = box_x1 + dx;
+    const float drawing_box_y1 = box_y1 + dy;
 
     float skip_x = box_x0; // Offset into the target surface/texture, updated during clipping.
     float skip_y = box_y0;
 
+    GL_Quad_t drawing_region = (GL_Quad_t){
+            .x0 = _iroundf(drawing_box_x0),
+            .y0 = _iroundf(drawing_box_y0),
+            .x1 = _iroundf(drawing_box_x1),
+            .y1 = _iroundf(drawing_box_y1)
+        };
+
     if (drawing_region.x0 < clipping_region->x0) {
-        skip_x += (float)(clipping_region->x0 - drawing_region.x0); // Add clipped part, we'll skip it.
+        skip_x += (float)(clipping_region->x0 - drawing_box_x0); // Add clipped part, we'll skip it.
         drawing_region.x0 = clipping_region->x0;
     }
     if (drawing_region.y0 < clipping_region->y0) {
-        skip_y += (float)(clipping_region->y0 - drawing_region.y0); // Ditto.
+        skip_y += (float)(clipping_region->y0 - drawing_box_y0); // Ditto.
         drawing_region.y0 = clipping_region->y0;
     }
     if (drawing_region.x1 > clipping_region->x1) {
