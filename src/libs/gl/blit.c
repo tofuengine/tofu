@@ -297,10 +297,10 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const float dax = (dw - 1.0f) * anchor_x;
     const float day = (dh - 1.0f) * anchor_y;
 
-    const float sx = area.x;
-    const float sy = area.y;
-    const float dx = position.x;
-    const float dy = position.y;
+    const float sx = (float)area.x + sax; // Total translation, anchor offset *and* source area origin.
+    const float sy = (float)area.y + say;
+    const float dx = (float)position.x;
+    const float dy = (float)position.y;
 
     float s, c;
     fsincos(rotation, &s, &c);
@@ -403,8 +403,8 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
 #endif
             const float ou = skip_x + (float)j;
 
-            const float u = (ou * M11 + ov * M12) + sax + sx;
-            const float v = (ou * M21 + ov * M22) + say + sy;
+            const float u = (ou * M11 + ov * M12) + sx; // See variable initialization.
+            const float v = (ou * M21 + ov * M22) + sy;
 
             int x = _iroundf(u); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`) and avoid mirror effect.
             int y = _iroundf(v);
