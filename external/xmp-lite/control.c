@@ -25,6 +25,8 @@
 
 #include "format.h"
 #include "mixer.h"
+#include "load_helpers.h"
+#include "scan.h"
 
 LIBXMP_EXPORT xmp_context xmp_create_context()
 {
@@ -180,7 +182,7 @@ LIBXMP_EXPORT int xmp_set_row(xmp_context opaque, int row)
 	int pos = p->pos;
 	int pattern = mod->xxo[pos];
 
-	if (pos < 0 || pos >= mod->len) { // FIXME: should this be checked before indexing with this?
+	if (pos < 0 || pos >= mod->len) {
 		pos = 0;
 	}
 
@@ -520,11 +522,6 @@ LIBXMP_EXPORT int xmp_get_player__(xmp_context opaque, int parm)
 	}
 
 	return ret;
-}
-
-LIBXMP_EXPORT char **xmp_get_format_list()
-{
-	return format_list();
 }
 
 LIBXMP_EXPORT void xmp_inject_event(xmp_context opaque, int channel, struct xmp_event *e)

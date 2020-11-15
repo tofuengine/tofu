@@ -27,6 +27,7 @@
 #include "effects.h"
 #include "period.h"
 #include "virtual.h"
+#include "smix.h"
 
 #define HAS_QUIRK(x) (m->quirk & (x))
 
@@ -443,10 +444,8 @@ void libxmp_process_fx(struct context_data *ctx, struct channel_data *xc, int ch
 		/* speedup.xm needs BPM = 20 */
 		if (fxp < 0x20) {
 			goto fx_s3m_speed;
-		} else {
-			goto fx_s3m_bpm;
 		}
-		break;
+		goto fx_s3m_bpm;
 
 	case FX_FINETUNE:
 		xc->finetune = (int16_t) (fxp - 0x80);

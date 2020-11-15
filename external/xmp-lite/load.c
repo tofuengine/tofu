@@ -34,12 +34,9 @@
 #include "format.h"
 #include "list.h"
 #include "hio.h"
-
-extern struct format_loader *format_loader[];
-
-void libxmp_load_prologue(struct context_data *);
-void libxmp_load_epilogue(struct context_data *);
-int  libxmp_prepare_scan(struct context_data *);
+#include "loader.h"
+#include "load_helpers.h"
+#include "scan.h"
 
 LIBXMP_EXPORT int xmp_test_module(char *path, struct xmp_test_info *info)
 {
@@ -67,17 +64,20 @@ LIBXMP_EXPORT int xmp_test_module(char *path, struct xmp_test_info *info)
 		*info->type = 0;	/* reset type prior to testing */
 	}
 
-	for (i = 0; format_loader[i] != NULL; i++) {
+	for (i = 0; format_loaders[i] != NULL; i++) {
 		hio_seek(h, 0, SEEK_SET);
-		if (format_loader[i]->test(h, buf, 0) == 0) {
+		if (format_loaders[i]->test(h, buf, 0) == 0) {
 			int is_prowizard = 0;
 
 			hio_close(h);
 
 			if (info != NULL && !is_prowizard) {
-				strcpy(info->name, buf);
-				strncpy(info->type, format_loader[i]->name,
+				strncpy(info->name, buf, XMP_NAME_SIZE - 1);
+				info->name[XMP_NAME_SIZE - 1] = '\0';
+
+				strncpy(info->type, format_loaders[i]->name,
 							XMP_NAME_SIZE - 1);
+				info->type[XMP_NAME_SIZE - 1] = '\0';
 			}
 			return 0;
 		}
@@ -99,19 +99,19 @@ static int load_module(xmp_context opaque, HIO_HANDLE *h)
 
 	D_(D_WARN "loading");
 	test_result = load_result = -1;
-	for (i = 0; format_loader[i] != NULL; i++) {
+	for (i = 0; format_loaders[i] != NULL; i++) {
 		hio_seek(h, 0, SEEK_SET);
 
 		if (hio_error(h)) {
 			/* reset error flag */
 		}
 
-		D_(D_WARN "testing format: %s", format_loader[i]->name);
-		test_result = format_loader[i]->test(h, NULL, 0);
+		D_(D_WARN "testing format: %s", format_loaders[i]->name);
+		test_result = format_loaders[i]->test(h, NULL, 0);
 		if (test_result == 0) {
 			hio_seek(h, 0, SEEK_SET);
-			D_(D_WARN "loading w/ format: %s", format_loader[i]->name);
-			load_result = format_loader[i]->loader(m, h, 0);
+			D_(D_WARN "loading w/ format: %s", format_loaders[i]->name);
+			load_result = format_loaders[i]->loader(m, h, 0);
 			break;
 		}
 	}
@@ -276,10 +276,9 @@ LIBXMP_EXPORT int xmp_load_module_from_file(xmp_context opaque, void *file, long
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct module_data *m = &ctx->m;
 	HIO_HANDLE *h;
-	FILE *f = fdopen(fileno((FILE *)file), "rb");
 	int ret;
 
-	if ((h = hio_open_file(f)) == NULL)
+	if ((h = hio_open_file((FILE *)file)) == NULL)
 		return -XMP_ERROR_SYSTEM;
 
 	if (ctx->state > XMP_STATE_UNLOADED)
@@ -341,9 +340,7 @@ LIBXMP_EXPORT void xmp_release_module(xmp_context opaque)
 
 	if (mod->xxs != NULL) {
 		for (i = 0; i < mod->smp; i++) {
-			if (mod->xxs[i].data != NULL) {
-				free(mod->xxs[i].data - 4);
-			}
+			libxmp_free_sample(&mod->xxs[i]);
 		}
 		free(mod->xxs);
 		free(m->xtra);
@@ -352,19 +349,13 @@ LIBXMP_EXPORT void xmp_release_module(xmp_context opaque)
 #ifndef LIBXMP_CORE_DISABLE_IT
 	if (m->xsmp != NULL) {
 		for (i = 0; i < mod->smp; i++) {
-			if (m->xsmp[i].data != NULL) {
-				free(m->xsmp[i].data - 4);
-			}
+			libxmp_free_sample(&m->xsmp[i]);
 		}
 		free(m->xsmp);
 	}
 #endif
 
-	if (m->scan_cnt) {
-		for (i = 0; i < mod->len; i++)
-			free(m->scan_cnt[i]);
-		free(m->scan_cnt);
-	}
+	libxmp_free_scan(ctx);
 
 	free(m->comment);
 

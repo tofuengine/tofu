@@ -1,20 +1,45 @@
 #ifndef LIBXMP_COMMON_H
 #define LIBXMP_COMMON_H
 
-#ifdef __AROS__
-#define __AMIGA__
-#endif
-
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
 #include "xmp.h"
 
+#if defined(__MORPHOS__) || defined(__AROS__) || defined(AMIGAOS) || \
+    defined(__amigaos__) || defined(__amigaos4__) ||defined(__amigados__) || \
+    defined(AMIGA) || defined(_AMIGA) || defined(__AMIGA__)
+#define LIBXMP_AMIGA	1	/* to identify amiga platforms. */
+#endif
+
 #if (defined(__GNUC__) || defined(__clang__)) && defined(XMP_SYM_VISIBILITY)
-#if !defined(WIN32) && !defined(__ANDROID__) && !defined(__APPLE__) && !defined(__AMIGA__) && !defined(__MSDOS__) && !defined(B_BEOS_VERSION) && !defined(__ATHEOS__) && !defined(EMSCRIPTEN) && !defined(__MINT__)
+#if !defined(_WIN32) && !defined(__ANDROID__) && !defined(__APPLE__) && !defined(LIBXMP_AMIGA) && !defined(__MSDOS__) && !defined(B_BEOS_VERSION) && !defined(__ATHEOS__) && !defined(EMSCRIPTEN) && !defined(__MINT__)
 #define USE_VERSIONED_SYMBOLS
 #endif
+#endif
+
+/* AmigaOS fixes by Chris Young <cdyoung@ntlworld.com>, Nov 25, 2007
+ */
+#if defined B_BEOS_VERSION
+#  include <SupportDefs.h>
+#elif defined __amigaos4__
+#  include <exec/types.h>
+#else
+typedef signed char int8;
+typedef signed short int int16;
+typedef signed int int32;
+typedef unsigned char uint8;
+typedef unsigned short int uint16;
+typedef unsigned int uint32;
+#endif
+
+#ifdef _MSC_VER				/* MSVC++6.0 has no long long */
+typedef signed __int64 int64;
+typedef unsigned __int64 uint64;
+#elif !defined B_BEOS_VERSION		/* BeOS has its own int64 definition */
+typedef unsigned long long uint64;
+typedef signed long long int64;
 #endif
 
 /* Constants */
@@ -241,10 +266,10 @@ struct module_data {
 	struct xmp_module mod;
 
 	char *dirname;			/* file dirname */
-	char *basename;			/* file basename */
-	char *filename;			/* Module file name */
+	char *basename;		/* file basename */
+	const char *filename;		/* Module file name */
 	char *comment;			/* Comments, if any */
-	uint8_t md5[16];			/* MD5 message digest */
+	uint8_t md5[16];		/* MD5 message digest */
 	int size;			/* File size */
 	double rrate;			/* Replay rate */
 	double time_factor;		/* Time conversion constant */
@@ -252,7 +277,7 @@ struct module_data {
 	int volbase;			/* Volume base */
 	int gvolbase;			/* Global volume base */
 	int gvol;			/* Global volume */
-	int *vol_table;			/* Volume translation table */
+	int *vol_table;		/* Volume translation table */
 	int quirk;			/* player quirks */
 #define READ_EVENT_MOD	0
 #define READ_EVENT_FT2	1
@@ -380,18 +405,5 @@ struct context_data {
 	struct smix_data smix;
 	int state;
 };
-
-
-/* Prototypes */
-
-char	*libxmp_adjust_string	(char *);
-int	libxmp_exclude_match	(const char *);
-int	libxmp_prepare_scan	(struct context_data *);
-int	libxmp_scan_sequences	(struct context_data *);
-int	libxmp_get_sequence	(struct context_data *, int);
-int	libxmp_set_player_mode	(struct context_data *);
-
-struct xmp_instrument *libxmp_get_instrument(struct context_data *, int);
-struct xmp_sample *libxmp_get_sample(struct context_data *, int);
 
 #endif /* LIBXMP_COMMON_H */

@@ -70,6 +70,7 @@
  * in the module and instrument headers. I'm adding a simple workaround
  * to be able to load/play the module as is, see the fix87() macro below.
  */
+
 #include "loader.h"
 #include "s3m.h"
 #include "period.h"
@@ -242,7 +243,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		goto err;
 	}
 
-	memcpy(&sfh.name, buf, 28);		/* Song name */
+	memcpy(sfh.name, buf, 28);		/* Song name */
 	sfh.type = buf[30];			/* File type */
 	sfh.ordnum = readmem16l(buf + 32);	/* Number of orders (must be even) */
 	sfh.insnum = readmem16l(buf + 34);	/* Number of instruments */
@@ -266,7 +267,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	sfh.mv = buf[51];			/* Master volume */
 	sfh.uc = buf[52];			/* Ultra click removal */
 	sfh.dp = buf[53];			/* Default pan positions if 0xfc */
-	/* 54-61 reserved */
+	memcpy(sfh.rsvd2, buf + 54, 8);	/* Reserved */
 	sfh.special = readmem16l(buf + 62);	/* Ptr to special custom data */
 	memcpy(sfh.chset, buf + 64, 32);	/* Channel settings */
 

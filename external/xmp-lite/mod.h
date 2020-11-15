@@ -21,9 +21,9 @@
  */
 
 struct mod_instrument {
-	uint8_t name[22];		/* Instrument name */
+	uint8_t name[22];	/* Instrument name */
 	uint16_t size;		/* Sample length in 16-bit words */
-	int8_t finetune;		/* Finetune (signed nibble) */
+	int8_t finetune;	/* Finetune (signed nibble) */
 	int8_t volume;		/* Linear playback volume */
 	uint16_t loop_start;	/* Loop start in 16-bit words */
 	uint16_t loop_size;	/* Loop length in 16-bit words */
@@ -33,7 +33,7 @@ struct mod_header {
 	uint8_t name[20];
 	struct mod_instrument ins[31];
 	uint8_t len;
-	uint8_t restart;		/* Number of patterns in Soundtracker,
+	uint8_t restart;	/* Number of patterns in Soundtracker,
 				 * Restart in Noisetracker/Startrekker,
 				 * 0x7F in Protracker
 				 */

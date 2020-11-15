@@ -40,9 +40,8 @@
 #pragma GCC diagnostic ignored "-Wsign-compare"
 #pragma GCC diagnostic ignored "-Wshadow"
 
-
+#include "scan.h"
 #include <string.h>
-#include "common.h"
 #include "effects.h"
 
 #define S3M_END		0xff
@@ -160,11 +159,13 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
             break;
         }
 
-        /* Don't update pattern information if we're inside a loop, otherwise
-         * a loop containing e.g. a global volume fade can make the pattern
-         * start with the wrong volume.
+        /* Only update pattern information if we weren't here before. This also
+         * means that we don't update pattern information if we're inside a loop,
+         * otherwise a loop containing e.g. a global volume fade can make the
+         * pattern start with the wrong volume. (fixes xyce-dans_la_rue.xm replay,
+         * see https://github.com/libxmp/libxmp/issues/153 for more details).
          */
-        if (!inside_loop && info->gvl < 0) {
+        if (info->time < 0) {
             info->gvl = gvl;
             info->bpm = bpm;
             info->speed = speed;
@@ -461,7 +462,7 @@ int libxmp_scan_sequences(struct context_data *ctx)
 	 * multiple times at different starting points (see janosik.xm).
 	 */
 	for (i = 0; i < XMP_MAX_MOD_LENGTH; i++) {
-		m->xxo_info[i].gvl = -1;
+		m->xxo_info[i].time = -1;
 	}
 
 	ep = 0;
