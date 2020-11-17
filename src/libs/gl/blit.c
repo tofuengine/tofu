@@ -33,7 +33,7 @@
 #ifdef __DEBUG_GRAPHICS__
 static inline void pixel(const GL_Context_t *context, int x, int y, int index)
 {
-    GL_Surface_t *surface = context->state->surface;
+    GL_Surface_t *surface = context->surface;
     surface->data[y * surface->width + x]= 240 + (index % 16);
 }
 #endif
@@ -297,7 +297,7 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const float dax = (dw - 1.0f) * anchor_x;
     const float day = (dh - 1.0f) * anchor_y;
 
-    const float sx = (float)area.x + sax; // Total translation, anchor offset *and* source area origin.
+    const float sx = (float)area.x + sax; // Cumulative translation, anchor offset *and* source area origin.
     const float sy = (float)area.y + say;
     const float dx = (float)position.x;
     const float dy = (float)position.y;
@@ -404,7 +404,7 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
 
         for (int j = 0; j < width; ++j) {
 #ifdef __DEBUG_GRAPHICS__
-            pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, 15);
+            pixel(context, drawing_region.x0 + j, drawing_region.y0 + i, 15);
 #endif
             const float ou = skip_x + (float)j;
 
@@ -416,7 +416,7 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
 
             if (x >= sminx && x <= smaxx && y >= sminy && y <= smaxy) {
 #ifdef __DEBUG_GRAPHICS__
-                pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
+                pixel(context, drawing_region.x0 + j, drawing_region.y0 + i, 3);
 #endif
                 if (flip_x) {
                     x = smaxx - (x - sminx);
@@ -438,6 +438,7 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
         dptr += dskip;
     }
 #ifdef __DEBUG_GRAPHICS__
+    pixel(context, dx, dy, 7);
     pixel(context, drawing_region.x0, drawing_region.y0, 7);
     pixel(context, drawing_region.x1, drawing_region.y0, 7);
     pixel(context, drawing_region.x1, drawing_region.y1, 7);
