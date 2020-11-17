@@ -297,10 +297,10 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const float dax = (dw - 1.0f) * anchor_x;
     const float day = (dh - 1.0f) * anchor_y;
 
-    const float sx = (float)area.x + sax; // Cumulative translation, anchor offset *and* source area origin.
-    const float sy = (float)area.y + say;
-    const float dx = (float)position.x;
-    const float dy = (float)position.y;
+    const int sx = area.x;
+    const int sy = area.y;
+    const int dx = position.x;
+    const int dy = position.y;
 
     float s, c;
     fsincos(rotation, &s, &c);
@@ -338,32 +338,27 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const float x3 = c * aabb_x0 - s * aabb_y1;
     const float y3 = s * aabb_x0 + c * aabb_y1;
 
-    const float box_x0 = fmin(fmin(fmin(x0, x1), x2), x3);
-    const float box_y0 = fmin(fmin(fmin(y0, y1), y2), y3);
-    const float box_x1 = fmax(fmax(fmax(x0, x1), x2), x3);
-    const float box_y1 = fmax(fmax(fmax(y0, y1), y2), y3);
+    const int box_x0 = _iroundf(fmin(fmin(fmin(x0, x1), x2), x3));
+    const int box_y0 = _iroundf(fmin(fmin(fmin(y0, y1), y2), y3));
+    const int box_x1 = _iroundf(fmax(fmax(fmax(x0, x1), x2), x3));
+    const int box_y1 = _iroundf(fmax(fmax(fmax(y0, y1), y2), y3));
 
-    const float drawing_box_x0 = box_x0 + dx; // We'll use this for calculating "skip values" during clipping, for better precision.
-    const float drawing_box_y0 = box_y0 + dy;
-    const float drawing_box_x1 = box_x1 + dx;
-    const float drawing_box_y1 = box_y1 + dy;
-
-    float skip_x = box_x0; // Offset into the target surface/texture, updated during clipping.
-    float skip_y = box_y0;
+    float skip_x = (float)box_x0; // Offset into the target surface/texture, updated during clipping.
+    float skip_y = (float)box_y0; // NOTE: use rounded values!
 
     GL_Quad_t drawing_region = (GL_Quad_t){
-            .x0 = _iroundf(drawing_box_x0),
-            .y0 = _iroundf(drawing_box_y0),
-            .x1 = _iroundf(drawing_box_x1),
-            .y1 = _iroundf(drawing_box_y1)
+            .x0 = box_x0 + dx,
+            .y0 = box_y0 + dy,
+            .x1 = box_x1 + dx,
+            .y1 = box_y1 + dy
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
-        skip_x += (float)(clipping_region->x0 - drawing_box_x0); // Add clipped part, we'll skip it.
+        skip_x += (float)(clipping_region->x0 - drawing_region.x0); // Add clipped part, we'll skip it.
         drawing_region.x0 = clipping_region->x0;
     }
     if (drawing_region.y0 < clipping_region->y0) {
-        skip_y += (float)(clipping_region->y0 - drawing_box_y0); // Ditto.
+        skip_y += (float)(clipping_region->y0 - drawing_region.y0); // Ditto.
         drawing_region.y0 = clipping_region->y0;
     }
     if (drawing_region.x1 > clipping_region->x1) {
@@ -408,11 +403,11 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
 #endif
             const float ou = skip_x + (float)j;
 
-            const float u = (ou * M11 + ov * M12) + sx; // See variable initialization.
-            const float v = (ou * M21 + ov * M22) + sy;
+            const float u = (ou * M11 + ov * M12) + sax;
+            const float v = (ou * M21 + ov * M22) + say;
 
-            int x = _iroundf(u); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`) and avoid mirror effect.
-            int y = _iroundf(v);
+            int x = _iroundf(u) + sx; // NOTE: Translate to source texture origin *after* rounding.
+            int y = _iroundf(v) + sy; // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`) and avoid mirror effect.
 
             if (x >= sminx && x <= smaxx && y >= sminy && y <= smaxy) {
 #ifdef __DEBUG_GRAPHICS__
