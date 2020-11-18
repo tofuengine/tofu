@@ -274,12 +274,19 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
 #endif
 }
 
+// https://web.archive.org/web/20190305223938/http://www.drdobbs.com/architecture-and-design/fast-bitmap-rotation-and-scaling/184416337
+// https://www.flipcode.com/archives/The_Art_of_Demomaking-Issue_10_Roto-Zooming.shtml
+//
+// FIXME: one row/column is lost due to rounding errors when angle is multiple of 128.
 void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y)
 {
     const GL_State_t *state = &context->state;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
+#ifdef __GL_MASK_SUPPORT__
+    const GL_Mask_t *mask = &state->mask;
+#endif
 
     const bool flip_x = scale_x < 0.0f;
     const bool flip_y = scale_y < 0.0f;
@@ -297,10 +304,10 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const float dax = (dw - 1.0f) * anchor_x;
     const float day = (dh - 1.0f) * anchor_y;
 
-    const int sx = area.x;
-    const int sy = area.y;
-    const int dx = position.x;
-    const int dy = position.y;
+    const float sx = area.x;
+    const float sy = area.y;
+    const float dx = position.x;
+    const float dy = position.y;
 
     float s, c;
     fsincos(rotation, &s, &c);
@@ -338,27 +345,17 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const float x3 = c * aabb_x0 - s * aabb_y1;
     const float y3 = s * aabb_x0 + c * aabb_y1;
 
-    const int box_x0 = _iroundf(fmin(fmin(fmin(x0, x1), x2), x3));
-    const int box_y0 = _iroundf(fmin(fmin(fmin(y0, y1), y2), y3));
-    const int box_x1 = _iroundf(fmax(fmax(fmax(x0, x1), x2), x3));
-    const int box_y1 = _iroundf(fmax(fmax(fmax(y0, y1), y2), y3));
-
-    float skip_x = (float)box_x0; // Offset into the target surface/texture, updated during clipping.
-    float skip_y = (float)box_y0; // NOTE: use rounded values!
-
     GL_Quad_t drawing_region = (GL_Quad_t){
-            .x0 = box_x0 + dx,
-            .y0 = box_y0 + dy,
-            .x1 = box_x1 + dx,
-            .y1 = box_y1 + dy
+            .x0 = _iroundf(fmin(fmin(fmin(x0, x1), x2), x3) + dx),
+            .y0 = _iroundf(fmin(fmin(fmin(y0, y1), y2), y3) + dy),
+            .x1 = _iroundf(fmax(fmax(fmax(x0, x1), x2), x3) + dx),
+            .y1 = _iroundf(fmax(fmax(fmax(y0, y1), y2), y3) + dy)
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
-        skip_x += (float)(clipping_region->x0 - drawing_region.x0); // Add clipped part, we'll skip it.
         drawing_region.x0 = clipping_region->x0;
     }
     if (drawing_region.y0 < clipping_region->y0) {
-        skip_y += (float)(clipping_region->y0 - drawing_region.y0); // Ditto.
         drawing_region.y0 = clipping_region->y0;
     }
     if (drawing_region.x1 > clipping_region->x1) {
@@ -384,6 +381,11 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const float M21 = -s / asy; // |           | |      |
     const float M22 = c / asy;  // |    0 1/sy | | -s c |
 
+    const float tlx = (float)drawing_region.x0 - dx; // Transform the top-left corner of the to-be-drawn rectangle to texture space.
+    const float tly = (float)drawing_region.y0 - dy; // (could differ from AABB x0 due to clipping, we need to compute it again)
+    float ou = (tlx * M11 + tly * M12) + sax + sx; // Offset to the source texture quad.
+    float ov = (tlx * M21 + tly * M22) + say + sy;
+
     const GL_Pixel_t *sdata = surface->data;
     GL_Pixel_t *ddata = context->surface->data;
 
@@ -394,44 +396,91 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
 
     const int dskip = dwidth - width;
 
-    for (int i = 0; i < height; ++i) {
-        const float ov = skip_y + (float)i;
+#ifdef __GL_MASK_SUPPORT__
+    if (mask->stencil) {
+        const GL_Surface_t *stencil = mask->stencil;
+        const GL_Pixel_t threshold = mask->threshold;
 
-        for (int j = 0; j < width; ++j) {
+        for (int i = height; i; --i) {
+            float u = ou;
+            float v = ov;
+
+            for (int j = width; j; --j) {
 #ifdef __DEBUG_GRAPHICS__
-            pixel(context, drawing_region.x0 + j, drawing_region.y0 + i, 15);
+                pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, 15);
 #endif
-            const float ou = skip_x + (float)j;
+                int x = (int)floorf(u); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`) and avoid mirror effect.
+                int y = (int)floorf(v);
 
-            const float u = (ou * M11 + ov * M12) + sax;
-            const float v = (ou * M21 + ov * M22) + say;
-
-            int x = _iroundf(u) + sx; // NOTE: Translate to source texture origin *after* rounding.
-            int y = _iroundf(v) + sy; // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`) and avoid mirror effect.
-
-            if (x >= sminx && x <= smaxx && y >= sminy && y <= smaxy) {
+                if (x >= sminx && x <= smaxx && y >= sminy && y <= smaxy) {
 #ifdef __DEBUG_GRAPHICS__
-                pixel(context, drawing_region.x0 + j, drawing_region.y0 + i, 3);
+                    pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
-                if (flip_x) {
-                    x = smaxx - (x - sminx);
-                }
-                if (flip_y) {
-                    y = smaxy - (y - sminy);
+                    const GL_Pixel_t *sptr = surface->data_rows[y] + x;
+                    const GL_Pixel_t *mptr = stencil->data_rows[y] + x;
+                    GL_Pixel_t index = shifting[*sptr];
+                    GL_Pixel_t mask = *mptr;
+                    if (transparent[index] || (mask < threshold)) {
+                        *dptr = index;
+                    }
                 }
 
-                const GL_Pixel_t *sptr = sdata + y * swidth + x;
-                GL_Pixel_t index = shifting[*sptr];
-                if (!transparent[index]) {
-                    *dptr = index;
-                }
+                ++dptr;
+
+                u += M11;
+                v += M21;
             }
 
-            ++dptr;
-        }
+            dptr += dskip;
 
-        dptr += dskip;
+            ou += M12;
+            ov += M22;
+        }
+    } else {
+#endif
+        for (int i = height; i; --i) {
+            float u = ou;
+            float v = ov;
+
+            for (int j = width; j; --j) {
+#ifdef __DEBUG_GRAPHICS__
+                pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, 15);
+#endif
+                int x = _iroundf(u); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`) and avoid mirror effect.
+                int y = _iroundf(v);
+
+                if (x >= sminx && x <= smaxx && y >= sminy && y <= smaxy) {
+#ifdef __DEBUG_GRAPHICS__
+                    pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, 3);
+#endif
+                    if (flip_x) {
+                        x = smaxx - (x - sminx);
+                    }
+                    if (flip_y) {
+                        y = smaxy - (y - sminy);
+                    }
+
+                    const GL_Pixel_t *sptr = sdata + y * swidth + x;
+                    GL_Pixel_t index = shifting[*sptr];
+                    if (!transparent[index]) {
+                        *dptr = index;
+                    }
+                }
+
+                ++dptr;
+
+                u += M11;
+                v += M21;
+            }
+
+            dptr += dskip;
+
+            ou += M12;
+            ov += M22;
+        }
+#ifdef __GL_MASK_SUPPORT__
     }
+#endif
 #ifdef __DEBUG_GRAPHICS__
     pixel(context, dx, dy, 7);
     pixel(context, drawing_region.x0, drawing_region.y0, 7);
