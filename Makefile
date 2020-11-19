@@ -215,6 +215,11 @@ mixer: $(TARGET)
 	@$(ANALYZER) $(AFLAGS) ./demos/mixer
 	@./$(TARGET) ./demos/mixer
 
+rotations: $(TARGET)
+	@echo "Launching *rotations* application!"
+	@$(ANALYZER) $(AFLAGS) ./demos/rotations
+	@./$(TARGET) ./demos/rotations
+
 platform: $(TARGET)
 	@echo "Launching *platform* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/platform
