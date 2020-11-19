@@ -17,7 +17,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [GLFW](https://www.glfw.org/) v3.3.2
 * [libxmp](http://xmp.sourceforge.net/) v4.5.0
 * [Lua](https://lua.org/) v5.4.1
-* [miniaudio](https://github.com/dr-soft/miniaudio) v0.10.24
+* [miniaudio](https://github.com/dr-soft/miniaudio) v0.10.25
 * [spleen](https://github.com/fcambus/spleen) v1.8.1
 * [stb](https://github.com/nothings/stb) libraries
 
@@ -49,10 +49,10 @@ Guess what? Yup, that's yet another game engine/framework.
 
 ## Desiderata
 
-* [ ] Masking functions for both drawing primitives and blits.
-* [ ] Custom "raw" graphics and sound formats, with on-the-fly LZ4 (stream?) compression.
-* [ ] **Bit** **Bl**ock **T**ransfer operations when drawing (also, [stencil](https://learnopengl.com/Advanced-OpenGL/Stencil-testing) support, see [this](https://open.gl/depthstencils)).
 * [ ] Animation support w/ frameset DSL (i.e. compiling a string where each token can be a single frame, a range or a "keep-current-frame for some time" command). Each frameset can have its one update period, and will be most likely based upon a timer.
+* [ ] Masking functions for both drawing primitives and blits.
+* [ ] **Bit** **Bl**ock **T**ransfer operations when drawing (also, [stencil](https://learnopengl.com/Advanced-OpenGL/Stencil-testing) support, see [this](https://open.gl/depthstencils)).
+* [ ] Custom "raw" graphics and sound formats, with on-the-fly LZ4 (stream?) compression.
 * [ ] Out-of-the-box palette switching (with tweening) features.
 * [ ] Game state and display transitions (at which level? Engine or script?).
 * [ ] Library of noise functions ([cellular](https://thebookofshaders.com/12/), Perlin, etc...).
