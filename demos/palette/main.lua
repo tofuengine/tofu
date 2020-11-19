@@ -113,9 +113,10 @@ function Main:render(_)
     end
   elseif self.mode == 1 then
     local scale = (math.cos(time) + 1) * 3 * 0 + 5
---    local rotation = math.sin(time * 0.5) * 512
-    local rotation = self.wave(time)
+    local rotation = math.tointeger(math.sin(time * 0.5) * 512)
     self.bank:blit(0, width / 2, height / 2, scale, scale, rotation)
+    self.font:write(self.font:align(string.format("scale %d, rotation %d", scale, rotation),
+      width, height, "right", "bottom"))
   elseif self.mode == 2 then
     self.bank:blit(0, width / 2, height / 2, 10, 10, 256 * 1)
   elseif self.mode == 3 then
