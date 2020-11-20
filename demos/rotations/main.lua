@@ -100,8 +100,8 @@ function Main:render(_)
   local width, height = canvas:size()
   local x, y = canvas:center()
 
-  for _ = 1, 1 do
-    self.bank:blit(12, x, y,
+  for _ = 1, 100 do
+    self.bank:blit(9, x, y,
       self.flip_x and -self.scale or self.scale, self.flip_y and -self.scale or self.scale,
       self.rotation,
       self.anchor, self.anchor)
