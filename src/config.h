@@ -81,6 +81,7 @@
 #define __SL_PANNING_LAW__  PANNING_LAW_CONSTANT_POWER_SINCOS
 #undef  __SL_MUSIC_PRELOAD__
 #undef  __GL_MASK_SUPPORT__
+#define __GL_OPTIMIZED_ROTATIONS__
 
 // In release build, disable VM calls debug and periodic collection for better performance.
 #ifdef RELEASE
