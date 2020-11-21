@@ -326,7 +326,7 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const float radius_squared = delta_x * delta_x + delta_y * delta_y;
     const float radius = ceilf(sqrtf(radius_squared)); // Ensure room for every pixel.
 
-    const float aabb_x0 = -radius;
+    const float aabb_x0 = -radius; // The rotation AABB is a tad exaggerated, we'll optimize the scan by using the (squared) radius.
     const float aabb_y0 = -radius;
     const float aabb_x1 = radius;
     const float aabb_y1 = radius;
