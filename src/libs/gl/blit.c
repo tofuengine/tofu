@@ -154,6 +154,9 @@ static inline int _ifloorf(float x)
 // Simple implementation of nearest-neighbour scaling, with x/y flipping according to scaling-factor sign.
 // See `http://tech-algorithm.com/articles/nearest-neighbor-image-scaling/` for a reference code.
 // To avoid empty pixels we scan the destination area and calculate the source pixel.
+//
+// http://www.datagenetics.com/blog/december32013/index.html
+// file:///C:/Users/mlizza/Downloads/Extensible_Implementation_of_Reliable_Pixel_Art_In.pdf
 void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y)
 {
     const GL_State_t *state = &context->state;
@@ -170,7 +173,7 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
     const int drawing_width = _iroundf(area.width * fabsf(scale_x));
     const int drawing_height = _iroundf(area.height * fabsf(scale_y));
 
-    int skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
+    int skip_x = 0; // Offset into the (target) surface/texture, update during clipping.
     int skip_y = 0;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
@@ -211,6 +214,19 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
 
     const int dskip = dwidth - width;
 
+    // The scaling formula is the following:
+    //
+    //   x_s = round((x_r + 0.5) / S_x - 0.5) = floor((x_r + 0.5) / S_x)
+    //   y_s = round((y_r + 0.5) / S_y - 0.5) = floor((y_r + 0.5) / S_y)
+    //
+    // Notice that we need to work in the mid-center of the pixels. We can also rewrite the
+    // formula in a recurring fashion if we increment and accumulate by `1 / S_x` and `1 / S_y` steps.
+    const float ou = (skip_x + 0.5f) / fabs(scale_x);
+    const float ov = (skip_y + 0.5f) / fabs(scale_y);
+
+    const float du = 1.0f / fabs(scale_x);
+    const float dv = 1.0f / fabs(scale_y);
+
     // NOTE: we can also apply an integer-based DDA method, using remainders.
 
 #ifdef __GL_MASK_SUPPORT__
@@ -243,29 +259,27 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
         }
     } else {
 #endif
-        int yr = skip_y;
+        float v = ov;
         for (int i = height; i; --i) {
-            const int ys = _iroundf((yr + 0.5f) / fabs(scale_y) - 0.5f);
-            const int y = area.y + (flip_y ? (int)area.height - 1 - ys : ys);
+            const int y = area.y + (flip_y ? (int)area.height - 1 - (int)v : (int)v);
             const GL_Pixel_t *sptr = sdata + y * swidth;
 
-            int xr = skip_x;
+            float u = ou;
             for (int j = width; j; --j) {
-                const int xs = _iroundf((xr + 0.5f) / fabs(scale_x) - 0.5f);
 #ifdef __DEBUG_GRAPHICS__
-                pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, xs + ys);
+                pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)u + (int)v);
 #endif
-                const int x = area.x + (flip_x ? (int)area.width - 1 - xs : xs);
+                const int x = area.x + (flip_x ? (int)area.width - 1 - (int)u : (int)u);
                 GL_Pixel_t index = shifting[sptr[x]];
                 if (transparent[index]) {
                     dptr++;
                 } else {
                     *(dptr++) = index;
                 }
-                ++xr;
+                u += du;
             }
 
-            ++yr;
+            v += dv;
             dptr += dskip;
         }
 #ifdef __GL_MASK_SUPPORT__
