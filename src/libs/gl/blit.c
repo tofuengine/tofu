@@ -54,7 +54,7 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
     int skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
     int skip_y = 0;
 
-    GL_Quad_t drawing_region = (GL_Quad_t){ // FIXME: remove `GL_Quad_t` usage!
+    GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
             .y0 = position.y,
             .x1 = position.x + (int)area.width - 1,
@@ -146,6 +146,11 @@ static inline int _iroundf(float x)
     return (int)floorf(x + 0.5f);
 }
 
+static inline int _ifloorf(float x)
+{
+    return (int)floorf(x);
+}
+
 // Simple implementation of nearest-neighbour scaling, with x/y flipping according to scaling-factor sign.
 // See `http://tech-algorithm.com/articles/nearest-neighbor-image-scaling/` for a reference code.
 // To avoid empty pixels we scan the destination area and calculate the source pixel.
@@ -176,11 +181,11 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
-        skip_x = (float)(clipping_region->x0 - drawing_region.x0) / fabs(scale_x);
+        skip_x += (float)(clipping_region->x0 - drawing_region.x0) / fabs(scale_x);
         drawing_region.x0 = clipping_region->x0;
     }
     if (drawing_region.y0 < clipping_region->y0) {
-        skip_y = (float)(clipping_region->y0 - drawing_region.y0) / fabs(scale_y);
+        skip_y += (float)(clipping_region->y0 - drawing_region.y0) / fabs(scale_y);
         drawing_region.y0 = clipping_region->y0;
     }
     if (drawing_region.x1 > clipping_region->x1) {
@@ -206,15 +211,11 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
 
     const int dskip = dwidth - width;
 
-    const float du = 1.0f / scale_x; // Texture coordinates deltas (signed).
-    const float dv = 1.0f / scale_y;
+    const float du = 1.0f / fabs(scale_x); // Texture coordinates deltas (signed).
+    const float dv = 1.0f / fabs(scale_y);
 
-    float ou = flip_x // Compute origin, correcting to rightmost/bottom margin when flipping.
-        ? (float)area.x + (float)area.width - fabs(du)
-        : (float)area.x + skip_x;
-    float ov = flip_y
-        ? (float)area.y + (float)area.height - fabs(dv)
-        : (float)area.y + skip_y;
+    const float ou = skip_x;
+    const float ov = skip_y;
 
     // NOTE: we can also apply an integer-based DDA method, using remainders.
 
@@ -250,14 +251,16 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
 #endif
         float v = ov;
         for (int i = height; i; --i) {
-            const GL_Pixel_t *sptr = sdata + (int)v * swidth;
+            const int y = area.y + (flip_y ? (int)area.height - 1 - (int)v : (int)v);
+            const GL_Pixel_t *sptr = sdata + y * swidth;
 
             float u = ou;
             for (int j = width; j; --j) {
 #ifdef __DEBUG_GRAPHICS__
                 pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)u + (int)v);
 #endif
-                GL_Pixel_t index = shifting[sptr[(int)u]];
+                const int x = area.x + (flip_x ? (int)area.width - 1 - (int)u : (int)u);
+                GL_Pixel_t index = shifting[sptr[x]];
                 if (transparent[index]) {
                     dptr++;
                 } else {
