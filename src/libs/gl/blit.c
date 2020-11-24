@@ -170,8 +170,8 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
     const int drawing_width = _iroundf(area.width * fabsf(scale_x));
     const int drawing_height = _iroundf(area.height * fabsf(scale_y));
 
-    float skip_x = 0.0f; // Offset into the (source) surface/texture, update during clipping.
-    float skip_y = 0.0f;
+    int skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
+    int skip_y = 0;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
@@ -181,11 +181,11 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
-        skip_x += (float)(clipping_region->x0 - drawing_region.x0) / fabs(scale_x);
+        skip_x += clipping_region->x0 - drawing_region.x0;
         drawing_region.x0 = clipping_region->x0;
     }
     if (drawing_region.y0 < clipping_region->y0) {
-        skip_y += (float)(clipping_region->y0 - drawing_region.y0) / fabs(scale_y);
+        skip_y += clipping_region->y0 - drawing_region.y0;
         drawing_region.y0 = clipping_region->y0;
     }
     if (drawing_region.x1 > clipping_region->x1) {
@@ -210,12 +210,6 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
     const int dskip = dwidth - width;
-
-    const float du = 1.0f / fabs(scale_x); // Texture coordinates deltas (signed).
-    const float dv = 1.0f / fabs(scale_y);
-
-    const float ou = skip_x;
-    const float ov = skip_y;
 
     // NOTE: we can also apply an integer-based DDA method, using remainders.
 
@@ -249,31 +243,39 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
         }
     } else {
 #endif
-        float v = ov;
+        int yr = skip_y;
         for (int i = height; i; --i) {
-            const int y = area.y + (flip_y ? (int)area.height - 1 - (int)v : (int)v);
+            const int ys = _iroundf((yr + 0.5f) / fabs(scale_y) - 0.5f);
+            const int y = area.y + (flip_y ? (int)area.height - 1 - ys : ys);
             const GL_Pixel_t *sptr = sdata + y * swidth;
 
-            float u = ou;
+            int xr = skip_x;
             for (int j = width; j; --j) {
+                const int xs = _iroundf((xr + 0.5f) / fabs(scale_x) - 0.5f);
 #ifdef __DEBUG_GRAPHICS__
-                pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)u + (int)v);
+                pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, xs + ys);
 #endif
-                const int x = area.x + (flip_x ? (int)area.width - 1 - (int)u : (int)u);
+                const int x = area.x + (flip_x ? (int)area.width - 1 - xs : xs);
                 GL_Pixel_t index = shifting[sptr[x]];
                 if (transparent[index]) {
                     dptr++;
                 } else {
                     *(dptr++) = index;
                 }
-                u += du;
+                ++xr;
             }
 
-            v += dv;
+            ++yr;
             dptr += dskip;
         }
 #ifdef __GL_MASK_SUPPORT__
     }
+#endif
+#ifdef __DEBUG_GRAPHICS__
+    pixel(context, drawing_region.x0, drawing_region.y0, 7);
+    pixel(context, drawing_region.x1, drawing_region.y0, 7);
+    pixel(context, drawing_region.x1, drawing_region.y1, 7);
+    pixel(context, drawing_region.x0, drawing_region.y1, 7);
 #endif
 }
 
