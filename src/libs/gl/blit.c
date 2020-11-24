@@ -146,11 +146,6 @@ static inline int _iroundf(float x)
     return (int)floorf(x + 0.5f);
 }
 
-static inline int _ifloorf(float x)
-{
-    return (int)floorf(x);
-}
-
 // Simple implementation of nearest-neighbour scaling, with x/y flipping according to scaling-factor sign.
 // See `http://tech-algorithm.com/articles/nearest-neighbor-image-scaling/` for a reference code.
 // To avoid empty pixels we scan the destination area and calculate the source pixel.
@@ -170,7 +165,7 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
     const bool flip_x = scale_x < 0.0f;
     const bool flip_y = scale_y < 0.0f;
 
-    const int drawing_width = _iroundf(area.width * fabsf(scale_x));
+    const int drawing_width = _iroundf(area.width * fabsf(scale_x)); // We need to round! No ceil, no floor!
     const int drawing_height = _iroundf(area.height * fabsf(scale_y));
 
     int skip_x = 0; // Offset into the (target) surface/texture, update during clipping.
@@ -261,7 +256,7 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
 #endif
         float v = ov;
         for (int i = height; i; --i) {
-            const int y = area.y + (flip_y ? (int)area.height - 1 - (int)v : (int)v);
+            const int y = area.y + (flip_y ? (int)area.height - 1 - (int)v : (int)v); // TODO: optimize the flipping?
             const GL_Pixel_t *sptr = sdata + y * swidth;
 
             float u = ou;
