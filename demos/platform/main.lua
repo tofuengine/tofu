@@ -87,11 +87,16 @@ function Main:__ctor()
   self.position = Vector.new(25 * 15 * 16, 0)
   self.velocity = Vector.new(0, 0)
   self.acceleration = Vector.new(0, -9.81 * 0.75)
+  self.jumps = 0
+
+  self.snow = {}
+  self.flake_time = 0
 end
 
 function Main:input()
-  if self.velocity.y == 0 and Input.is_pressed("up") then
+  if self.jumps < 2 and Input.is_pressed("up") then
     self.velocity.y = 128
+    self.jumps = self.jumps + 1
   elseif Input.is_down("right") then
     self.facing = "right"
     self.velocity.x = 64
@@ -118,6 +123,7 @@ function Main:update(delta_time)
   if self.position.y <= 0 then
     self.position.y = 0
     self.velocity.y = 0
+    self.jumps = 0
   end
 
   local animation
@@ -153,6 +159,49 @@ function Main:update(delta_time)
       Display.offset(math.sin(t * 77 + 31) * 16, math.sin(t * 123 + 43) * 16)
     end
   end
+
+  local canvas = Canvas.default()
+  local width, _ = canvas:size()
+
+  self.flake_time = self.flake_time + delta_time
+  while self.flake_time >= 0.025 do
+    self.flake_time = self.flake_time - 0.025
+    if #self.snow < 1024 then
+      local v = 255
+      local color = Display.color_to_index(v, v, v)
+      table.insert(self.snow, {
+          x = math.random(0, width - 1),
+          y = 0,
+          z = math.random(1, 5),
+          vy = 12,
+          vx = 0,
+          color = color
+        })
+    end
+  end
+
+  local zombies = {}
+  for index, flake in ipairs(self.snow) do
+    local factor = -1.0 / flake.z
+    flake.vx = self.velocity.x * factor
+
+    flake.x = flake.x + flake.vx * delta_time
+    flake.y = flake.y + flake.vy * delta_time
+
+    if flake.x < 0 then
+      flake.x = flake.x + width
+    elseif flake.x >= width then
+      flake.x = flake.x - width
+    end
+
+    if flake.y >= 96 then
+      table.insert(zombies, index)
+    end
+  end
+
+  for _, index in ipairs(zombies) do
+      table.remove(self.snow, index)
+  end
 end
 
 function Main:render(_)
@@ -174,41 +223,24 @@ function Main:render(_)
       self.tileset:blit(cell_id, (j - 1) * 16 - dx, y + 16 + (i - 2) * 16)
     end
   end
+
+  for _, flake in ipairs(self.snow) do
+    canvas:point(flake.x, flake.y, flake.color)
+  end
+
 --[[
   local mid = math.tointeger(y) + 32
   local amount = height - mid
   for i = 0, amount - 1 do
-    canvas:copy(0, mid + i, 0, mid - i * 2, width, 1)
+      canvas:process(function(from, to)
+        local ar, ag, ab = Display.index_to_color(from)
+        local br, bg, bb = Display.index_to_color(to)
+        local r, g, b = (ar + br) * 0.5, (ag + bg) * 0.5, (ab + bb) * 0.5
+        return Display.color_to_index(r, g, b)
+      end, 0, mid + i, 0, mid - i * 1, width, 1)
   end
-]]
+--]]
   self.font:write(string.format("FPS: %d", math.floor(System.fps() + 0.5)), 0, 0)
-end
-
-function Main:render_2(_)
-  local canvas = Canvas.default()
-  canvas:clear()
-
-  canvas:rectangle("fill", 32, 16 - 4, 16 * 2, 4, 19)
-
-  canvas:rectangle("fill", 32 - 4, 16, 4, 16 * 2, 20)
-  canvas:square("fill", 32, 16, 16 * 2, 21)
-  self.bank:blit(12, 32, 16, -2.0, 2.0, self.position.x, 0.5, 0.5)
-
---  canvas:rectangle("fill", 32 - 4, 48, 4, 16 * 2, 20)
---  canvas:square("fill", 32, 48, 16 * 2, 21)
---  self.bank:blit(12, 32, 48, 2.0, -2.0, 0, 0.0, 0.0)
-
---  canvas:rectangle("fill", 32 - 4, 80, 4, 16 * 2, 20)
---  canvas:square("fill", 32, 80, 16 * 2, 21)
---  self.bank:blit(12, 32, 80, 2.0, 2.0, 0, 0.0, 0.0)
-
---  self.bank:blit(12, 64, 16, -1.0, 1.0, 0.0, 1.0, 1.0)
---  self.bank:blit(12, 64, 32,  1.0, 1.0, 0.0, 1.0, 1.0)
---  self.bank:blit(12, 64, 48, 1.0, 1.0, 0.0, 1.0, 1.0)
-
---  self.bank:blit(12, 96, 16, -1.0, 1.0, 0.0, 0.25, 0.25)
---  self.bank:blit(12, 96, 32,  1.0, 1.0, 0.0, 0.25, 0.25)
---  self.bank:blit(12, 96, 48, 1.0, 1.0, 0.0, 0.25, 0.25)
 end
 
 return Main
