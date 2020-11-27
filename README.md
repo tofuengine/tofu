@@ -12,12 +12,12 @@ Guess what? Yup, that's yet another game engine/framework.
 
 ## Dependecies
 
-* [dr_libs](https://github.com/mackron/dr_libs) v0.12.22, v0.6.18, v0.12.13
+* [dr_libs](https://github.com/mackron/dr_libs) v0.12.23, v0.6.19, v0.12.14
 * [Glad](https://glad.dav1d.de/)
 * [GLFW](https://www.glfw.org/) v3.3.2
 * [libxmp](http://xmp.sourceforge.net/) v4.5.0
 * [Lua](https://lua.org/) v5.4.1
-* [miniaudio](https://github.com/dr-soft/miniaudio) v0.10.25
+* [miniaudio](https://github.com/dr-soft/miniaudio) v0.10.26
 * [spleen](https://github.com/fcambus/spleen) v1.8.1
 * [stb](https://github.com/nothings/stb) libraries
 
