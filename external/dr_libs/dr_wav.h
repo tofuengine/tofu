@@ -1,6 +1,6 @@
 /*
 WAV audio loader and writer. Choice of public domain or MIT-0. See license statements at the end of this file.
-dr_wav - v0.12.13 - 2020-11-01
+dr_wav - v0.12.15 - 2020-11-21
 
 David Reid - mackron@gmail.com
 
@@ -144,7 +144,7 @@ extern "C" {
 
 #define DRWAV_VERSION_MAJOR     0
 #define DRWAV_VERSION_MINOR     12
-#define DRWAV_VERSION_REVISION  13
+#define DRWAV_VERSION_REVISION  15
 #define DRWAV_VERSION_STRING    DRWAV_XSTRINGIFY(DRWAV_VERSION_MAJOR) "." DRWAV_XSTRINGIFY(DRWAV_VERSION_MINOR) "." DRWAV_XSTRINGIFY(DRWAV_VERSION_REVISION)
 
 #include <stddef.h> /* For size_t. */
@@ -1021,6 +1021,8 @@ DRWAV_API drwav_bool32 drwav_fourcc_equal(const drwav_uint8* a, const char* b);
     #else
         #define DRWAV_INLINE inline __attribute__((always_inline))
     #endif
+#elif defined(__WATCOMC__)
+    #define DRWAV_INLINE __inline
 #else
     #define DRWAV_INLINE
 #endif
@@ -1097,7 +1099,7 @@ you doing?! (Let me know, I'd be curious!) Second, you can adjust these by #defi
 
 static const drwav_uint8 drwavGUID_W64_RIFF[16] = {0x72,0x69,0x66,0x66, 0x2E,0x91, 0xCF,0x11, 0xA5,0xD6, 0x28,0xDB,0x04,0xC1,0x00,0x00};    /* 66666972-912E-11CF-A5D6-28DB04C10000 */
 static const drwav_uint8 drwavGUID_W64_WAVE[16] = {0x77,0x61,0x76,0x65, 0xF3,0xAC, 0xD3,0x11, 0x8C,0xD1, 0x00,0xC0,0x4F,0x8E,0xDB,0x8A};    /* 65766177-ACF3-11D3-8CD1-00C04F8EDB8A */
-static const drwav_uint8 drwavGUID_W64_JUNK[16] = {0x6A,0x75,0x6E,0x6B, 0xF3,0xAC, 0xD3,0x11, 0x8C,0xD1, 0x00,0xC0,0x4F,0x8E,0xDB,0x8A};    /* 6B6E756A-ACF3-11D3-8CD1-00C04F8EDB8A */
+/*static const drwav_uint8 drwavGUID_W64_JUNK[16] = {0x6A,0x75,0x6E,0x6B, 0xF3,0xAC, 0xD3,0x11, 0x8C,0xD1, 0x00,0xC0,0x4F,0x8E,0xDB,0x8A};*/    /* 6B6E756A-ACF3-11D3-8CD1-00C04F8EDB8A */
 static const drwav_uint8 drwavGUID_W64_FMT [16] = {0x66,0x6D,0x74,0x20, 0xF3,0xAC, 0xD3,0x11, 0x8C,0xD1, 0x00,0xC0,0x4F,0x8E,0xDB,0x8A};    /* 20746D66-ACF3-11D3-8CD1-00C04F8EDB8A */
 static const drwav_uint8 drwavGUID_W64_FACT[16] = {0x66,0x61,0x63,0x74, 0xF3,0xAC, 0xD3,0x11, 0x8C,0xD1, 0x00,0xC0,0x4F,0x8E,0xDB,0x8A};    /* 74636166-ACF3-11D3-8CD1-00C04F8EDB8A */
 static const drwav_uint8 drwavGUID_W64_DATA[16] = {0x64,0x61,0x74,0x61, 0xF3,0xAC, 0xD3,0x11, 0x8C,0xD1, 0x00,0xC0,0x4F,0x8E,0xDB,0x8A};    /* 61746164-ACF3-11D3-8CD1-00C04F8EDB8A */
@@ -2478,6 +2480,13 @@ static drwav_bool32 drwav_init_write__internal(drwav* pWav, const drwav_data_for
         runningPos += drwav__write_u32ne_to_le(pWav, 0xFFFFFFFF);   /* Always set to 0xFFFFFFFF for RF64. The true size of the data chunk is specified in the ds64 chunk. */
     }
 
+    /*
+    The runningPos variable is incremented in the section above but is left unused which is causing some static analysis tools to detect it
+    as a dead store. I'm leaving this as-is for safety just in case I want to expand this function later to include other tags and want to
+    keep track of the running position for whatever reason. The line below should silence the static analysis tools.
+    */
+    (void)runningPos;
+
     /* Set some properties for the client's convenience. */
     pWav->container = pFormat->container;
     pWav->channels = (drwav_uint16)pFormat->channels;
@@ -2993,12 +3002,13 @@ _wfopen() isn't always available in all compilation environments.
     * MSVC seems to support it universally as far back as VC6 from what I can tell (haven't checked further back).
     * MinGW-64 (both 32- and 64-bit) seems to support it.
     * MinGW wraps it in !defined(__STRICT_ANSI__).
+    * OpenWatcom wraps it in !defined(_NO_EXT_KEYS).
 
 This can be reviewed as compatibility issues arise. The preference is to use _wfopen_s() and _wfopen() as opposed to the wcsrtombs()
 fallback, so if you notice your compiler not detecting this properly I'm happy to look at adding support.
 */
 #if defined(_WIN32)
-    #if defined(_MSC_VER) || defined(__MINGW64__) || !defined(__STRICT_ANSI__)
+    #if defined(_MSC_VER) || defined(__MINGW64__) || (!defined(__STRICT_ANSI__) && !defined(_NO_EXT_KEYS))
         #define DRWAV_HAS_WFOPEN
     #endif
 #endif
@@ -3575,6 +3585,7 @@ DRWAV_API size_t drwav_read_raw(drwav* pWav, size_t bytesToRead, void* pBufferOu
 DRWAV_API drwav_uint64 drwav_read_pcm_frames_le(drwav* pWav, drwav_uint64 framesToRead, void* pBufferOut)
 {
     drwav_uint32 bytesPerFrame;
+    drwav_uint64 bytesToRead;   /* Intentionally uint64 instead of size_t so we can do a check that we're not reading too much on 32-bit builds. */
 
     if (pWav == NULL || framesToRead == 0) {
         return 0;
@@ -3591,11 +3602,20 @@ DRWAV_API drwav_uint64 drwav_read_pcm_frames_le(drwav* pWav, drwav_uint64 frames
     }
 
     /* Don't try to read more samples than can potentially fit in the output buffer. */
-    if (framesToRead * bytesPerFrame > DRWAV_SIZE_MAX) {
+    bytesToRead = framesToRead * bytesPerFrame;
+    if (bytesToRead > DRWAV_SIZE_MAX) {
         framesToRead = DRWAV_SIZE_MAX / bytesPerFrame;
     }
 
-    return drwav_read_raw(pWav, (size_t)(framesToRead * bytesPerFrame), pBufferOut) / bytesPerFrame;
+    /*
+    Doing an explicit check here just to make it clear that we don't want to be attempt to read anything if there's no bytes to read. There
+    *could* be a time where it evaluates to 0 due to overflowing.
+    */
+    if (bytesToRead == 0) {
+        return 0;
+    }
+
+    return drwav_read_raw(pWav, (size_t)bytesToRead, pBufferOut) / bytesPerFrame;
 }
 
 DRWAV_API drwav_uint64 drwav_read_pcm_frames_be(drwav* pWav, drwav_uint64 framesToRead, void* pBufferOut)
@@ -6033,6 +6053,12 @@ two different ways to initialize a drwav object.
 /*
 REVISION HISTORY
 ================
+v0.12.15 - 2020-11-21
+  - Fix compilation with OpenWatcom.
+
+v0.12.14 - 2020-11-13
+  - Minor code clean up.
+
 v0.12.13 - 2020-11-01
   - Improve compiler support for older versions of GCC.
 

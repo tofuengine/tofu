@@ -1,6 +1,6 @@
 /*
 MP3 audio decoder. Choice of public domain or MIT-0. See license statements at the end of this file.
-dr_mp3 - v0.6.18 - 2020-11-01
+dr_mp3 - v0.6.20 - 2020-11-21
 
 David Reid - mackron@gmail.com
 
@@ -95,7 +95,7 @@ extern "C" {
 
 #define DRMP3_VERSION_MAJOR     0
 #define DRMP3_VERSION_MINOR     6
-#define DRMP3_VERSION_REVISION  18
+#define DRMP3_VERSION_REVISION  20
 #define DRMP3_VERSION_STRING    DRMP3_XSTRINGIFY(DRMP3_VERSION_MAJOR) "." DRMP3_XSTRINGIFY(DRMP3_VERSION_MINOR) "." DRMP3_XSTRINGIFY(DRMP3_VERSION_REVISION)
 
 #include <stddef.h> /* For size_t. */
@@ -239,6 +239,8 @@ typedef drmp3_int32 drmp3_result;
     #else
         #define DRMP3_INLINE inline __attribute__((always_inline))
     #endif
+#elif defined(__WATCOMC__)
+    #define DRMP3_INLINE __inline
 #else
     #define DRMP3_INLINE
 #endif
@@ -2691,6 +2693,9 @@ static drmp3_uint32 drmp3_decode_next_frame_ex__callbacks(drmp3* pMP3, drmp3d_sa
             return 0; /* File too big. */
         }
 
+        DRMP3_ASSERT(pMP3->pData != NULL);
+        DRMP3_ASSERT(pMP3->dataCapacity > 0);
+
         pcmFramesRead = drmp3dec_decode_frame(&pMP3->decoder, pMP3->pData + pMP3->dataConsumed, (int)pMP3->dataSize, pPCMFrames, &info);    /* <-- Safe size_t -> int conversion thanks to the check above. */
 
         /* Consume the data. */
@@ -3375,12 +3380,13 @@ _wfopen() isn't always available in all compilation environments.
     * MSVC seems to support it universally as far back as VC6 from what I can tell (haven't checked further back).
     * MinGW-64 (both 32- and 64-bit) seems to support it.
     * MinGW wraps it in !defined(__STRICT_ANSI__).
+    * OpenWatcom wraps it in !defined(_NO_EXT_KEYS).
 
 This can be reviewed as compatibility issues arise. The preference is to use _wfopen_s() and _wfopen() as opposed to the wcsrtombs()
 fallback, so if you notice your compiler not detecting this properly I'm happy to look at adding support.
 */
 #if defined(_WIN32)
-    #if defined(_MSC_VER) || defined(__MINGW64__) || !defined(__STRICT_ANSI__)
+    #if defined(_MSC_VER) || defined(__MINGW64__) || (!defined(__STRICT_ANSI__) && !defined(_NO_EXT_KEYS))
         #define DRMP3_HAS_WFOPEN
     #endif
 #endif
@@ -4432,6 +4438,12 @@ counts rather than sample counts.
 /*
 REVISION HISTORY
 ================
+v0.6.20 - 2020-11-21
+  - Fix compilation with OpenWatcom.
+
+v0.6.19 - 2020-11-13
+  - Minor code clean up.
+
 v0.6.18 - 2020-11-01
   - Improve compiler support for older versions of GCC.
 
