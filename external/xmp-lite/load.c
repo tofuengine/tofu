@@ -114,8 +114,7 @@ static int load_module(xmp_context opaque, HIO_HANDLE *h)
 	}
 
 	if (test_result < 0) {
-		free(m->basename);
-		free(m->dirname);
+		xmp_release_module(opaque);
 		return -XMP_ERROR_FORMAT;
 	}
 
@@ -318,6 +317,7 @@ LIBXMP_EXPORT void xmp_release_module(xmp_context opaque)
 			free(mod->xxt[i]);
 		}
 		free(mod->xxt);
+		mod->xxt = NULL;
 	}
 
 	if (mod->xxp != NULL) {
@@ -325,6 +325,7 @@ LIBXMP_EXPORT void xmp_release_module(xmp_context opaque)
 			free(mod->xxp[i]);
 		}
 		free(mod->xxp);
+		mod->xxp = NULL;
 	}
 
 	if (mod->xxi != NULL) {
@@ -333,6 +334,7 @@ LIBXMP_EXPORT void xmp_release_module(xmp_context opaque)
 			free(mod->xxi[i].extra);
 		}
 		free(mod->xxi);
+		mod->xxi = NULL;
 	}
 
 	if (mod->xxs != NULL) {
@@ -341,6 +343,8 @@ LIBXMP_EXPORT void xmp_release_module(xmp_context opaque)
 		}
 		free(mod->xxs);
 		free(m->xtra);
+		mod->xxs = NULL;
+		m->xtra = NULL;
 	}
 
 #ifndef LIBXMP_CORE_DISABLE_IT
@@ -349,16 +353,20 @@ LIBXMP_EXPORT void xmp_release_module(xmp_context opaque)
 			libxmp_free_sample(&m->xsmp[i]);
 		}
 		free(m->xsmp);
+		m->xsmp = NULL;
 	}
 #endif
 
 	libxmp_free_scan(ctx);
 
 	free(m->comment);
+	m->comment = NULL;
 
 	D_("free dirname/basename");
 	free(m->dirname);
 	free(m->basename);
+	m->basename = NULL;
+	m->dirname = NULL;
 }
 
 LIBXMP_EXPORT void xmp_scan_module(xmp_context opaque)
