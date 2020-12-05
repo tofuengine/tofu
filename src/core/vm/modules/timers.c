@@ -24,11 +24,9 @@
 
 #include "timers.h"
 
-#include <config.h>
-#include <core/vm/interpreter.h>
-#include <libs/log.h>
+#include <libs/luax.h>
 
-#include "udt.h"
+#include <stdint.h>
 
 static const uint8_t _timers_lua[] = {
 #include "timers.inc"

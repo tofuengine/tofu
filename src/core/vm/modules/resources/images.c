@@ -22,14 +22,14 @@
  * SOFTWARE.
  */
 
-#include "sheets.h"
+#include "images.h"
 
 #include <strings.h>
 
-typedef struct _Resource_Sheet_t {
+typedef struct _Resource_Image_t {
     const char *id;
-    Sheet_Data_t data;
-} Resource_Sheet_t;
+    Image_t data;
+} Resource_Image_t;
 
 static const unsigned char _spleen_5x8_pixels[] = {
 #include <spleen/spleen-5x8.inc>
@@ -50,22 +50,32 @@ static const unsigned char _spleen_32x64_pixels[] = {
 #include <spleen/spleen-32x64.inc>
 };
 
-static const Resource_Sheet_t _sheets[] = {
-    { "5x8", { 475, 8, _spleen_5x8_pixels, 5, 8 } },
-    { "6x12", { 570, 12, _spleen_6x12_pixels, 6, 12 } },
-    { "8x16", { 760, 16, _spleen_8x16_pixels, 8, 16 } },
-    { "12x24", { 1140, 24, _spleen_12x24_pixels, 12,24 } },
-    { "16x32", { 1520, 32, _spleen_16x32_pixels, 16, 32 } },
-    { "32x64", { 3040, 64, _spleen_32x64_pixels, 32, 64 } },
+static const Resource_Image_t _images[] = {
+    { "5x8", { 475, 8, _spleen_5x8_pixels } },
+    { "6x12", { 570, 12, _spleen_6x12_pixels } },
+    { "8x16", { 760, 16, _spleen_8x16_pixels } },
+    { "12x24", { 1140, 24, _spleen_12x24_pixels } },
+    { "16x32", { 1520, 32, _spleen_16x32_pixels } },
+    { "32x64", { 3040, 64, _spleen_32x64_pixels } },
     { NULL, { 0 } }
 };
 
-const Sheet_Data_t *resources_sheets_find(const char *id)
+const Image_t *resources_images_find(const char *id)
 {
-    for (const Resource_Sheet_t *sheet = _sheets; sheet->id != NULL; ++sheet) {
-        if (strcasecmp(sheet->id, id) == 0) {
-            return &sheet->data;
+    for (const Resource_Image_t *image = _images; image->id != NULL; ++image) {
+        if (strcasecmp(image->id, id) == 0) {
+            return &image->data;
         }
     }
     return NULL;
+}
+
+bool resources_images_exists(const char *id)
+{
+    for (const Resource_Image_t *image = _images; image->id != NULL; ++image) {
+        if (strcasecmp(image->id, id) == 0) {
+            return true;
+        }
+    }
+    return false;
 }

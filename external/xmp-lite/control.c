@@ -20,15 +20,13 @@
  * THE SOFTWARE.
  */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
-#include <stdarg.h>
 
 #include "format.h"
-#include "virtual.h"
 #include "mixer.h"
+#include "load_helpers.h"
+#include "scan.h"
 
 LIBXMP_EXPORT xmp_context xmp_create_context()
 {
@@ -118,6 +116,13 @@ static void set_position(struct context_data *ctx, int pos, int dir)
 			} else {
 				p->pos = pos;
 			}
+			f->jumpline = 0;
+			f->jump = -1;
+			f->pbreak = 0;
+			f->loop_chn = 0;
+			f->delay = 0;
+			f->rowdelay = 0;
+			f->rowdelay_set = 0;
 		}
 	}
 }
@@ -521,11 +526,6 @@ LIBXMP_EXPORT int xmp_get_player__(xmp_context opaque, int parm)
 	}
 
 	return ret;
-}
-
-LIBXMP_EXPORT char **xmp_get_format_list()
-{
-	return format_list();
 }
 
 LIBXMP_EXPORT void xmp_inject_event(xmp_context opaque, int channel, struct xmp_event *e)

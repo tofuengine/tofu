@@ -36,16 +36,17 @@ function Main:__ctor()
   Display.palette("pico-8")
 
   self.canvas = Canvas.new(Canvas.default():size())
-  self.bank = Bank.new(self.canvas, "assets/font-8x8.png", 8, 8)
-  self.font = Font.new(self.canvas, "assets/font-8x8.png", 8, 8, 0, 15)
+  self.bank = Bank.new(self.canvas, Canvas.new("assets/font-8x8.png"), 8, 8)
+  self.font = Font.new(self.canvas, Canvas.new("assets/font-8x8.png", 0, 15), 8, 8)
 end
 
 function Main:input()
   if Input.is_pressed("select") then
     if self.canvas then
+      local canvas = Canvas.default()
       self.canvas = nil -- It shouldn't be GC-ed as long as bank/font reference it.
-      self.bank:canvas()
-      self.font:canvas()
+      self.bank:canvas(canvas)
+      self.font:canvas(canvas)
     elseif self.bank then
       self.bank = nil
     elseif self.font then

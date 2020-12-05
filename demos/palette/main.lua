@@ -46,8 +46,8 @@ function Main:__ctor()
   local canvas = Canvas.default()
   local width, height = canvas:size()
 
-  self.bank = Bank.new("assets/sheet.png", 8, 8)
-  self.font = Font.default(0, 15)
+  self.bank = Bank.new(canvas, Canvas.new("assets/sheet.png", 0, 5), 8, 8)
+  self.font = Font.default(canvas, 0, 15)
   self.wave = Math.wave("triangle", 10.0, 128.0)
   self.x_size = width / AMOUNT
   self.y_size = height / AMOUNT
@@ -113,19 +113,20 @@ function Main:render(_)
     end
   elseif self.mode == 1 then
     local scale = (math.cos(time) + 1) * 3 * 0 + 5
---    local rotation = math.sin(time * 0.5) * 512
-    local rotation = self.wave(time)
-    self.bank:blit(0, width / 2, height / 2, rotation, scale)
+    local rotation = math.tointeger(math.sin(time * 0.5) * 512)
+    self.bank:blit(0, width / 2, height / 2, scale, scale, rotation)
+    self.font:write(self.font:align(string.format("scale %d, rotation %d", scale, rotation),
+      width, height, "right", "bottom"))
   elseif self.mode == 2 then
-    self.bank:blit(0, width / 2, height / 2, 256 * 1, 10)
+    self.bank:blit(0, width / 2, height / 2, 10, 10, 256 * 1)
   elseif self.mode == 3 then
-    self.bank:blit(0, width / 2, height / 2, 128 * 1, 10)
+    self.bank:blit(0, width / 2, height / 2, 10, 10, 128 * 1)
   elseif self.mode == 4 then
     local x = (width + 16) * (math.cos(time * 0.75) + 1) * 0.5 - 8
     local y = (height + 16) * (math.sin(time * 0.25) + 1) * 0.5 - 8
     self.bank:blit(0, x - 4, y - 4)
   elseif self.mode == 5 then
-    self.bank:blit(1, self.x - 32, self.y - 32, 0, self.scale_x * 8.0, self.scale_y * 8.0)
+    self.bank:blit(1, self.x - 32, self.y - 32, self.scale_x * 8.0, self.scale_y * 8.0)
   end
 
   self.font:write(string.format("FPS: %.1f", System.fps()), 0, 0)

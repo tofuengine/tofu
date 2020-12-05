@@ -25,82 +25,104 @@
 #include "configuration.h"
 
 #include <libs/imath.h>
+#include <version.h>
 
+#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
-static void on_parameter(Configuration_t *configuration, const char *key, const char *value)
+static inline void _parse_version(const char *version_string, int *major, int *minor, int *revision)
 {
-    if (strcmp(key, "title") == 0) {
-        strcpy(configuration->title, value);
+    *major = *minor = *revision = 0; // Set to zero, minimun enforced value in case some parts are missing.
+    sscanf(version_string, "%d.%d.%d", major, minor, revision);
+}
+
+static void _on_parameter(Configuration_t *configuration, const char *context, const char *key, const char *value)
+{
+    char fqn[128] = { 0 };
+    strcpy(fqn, context);
+    strcat(fqn, ".");
+    strcat(fqn, key);
+    
+    if (strcmp(fqn, "system.identity") == 0) {
+        strcpy(configuration->system.identity, value);
     } else
-    if (strcmp(key, "width") == 0) {
-        configuration->width = (size_t)strtoul(value, NULL, 0);
+    if (strcmp(fqn, "system.version") == 0) {
+        int major, minor, revision;
+        _parse_version(value, &major, &minor, &revision);
+        configuration->system.version.major = major;
+        configuration->system.version.minor = minor;
+        configuration->system.version.revision = revision;
     } else
-    if (strcmp(key, "height") == 0) {
-        configuration->height = (size_t)strtoul(value, NULL, 0);
+    if (strcmp(fqn, "system.debug") == 0) {
+        configuration->system.debug = strcmp(value, "true") == 0;
     } else
-    if (strcmp(key, "scale") == 0) {
-        configuration->scale = (size_t)strtoul(value, NULL, 0);
+    if (strcmp(fqn, "display.title") == 0) {
+        strcpy(configuration->display.title, value);
     } else
-    if (strcmp(key, "fullscreen") == 0) {
-        configuration->fullscreen = strcmp(value, "true") == 0;
+    if (strcmp(fqn, "display.width") == 0) {
+        configuration->display.width = (size_t)strtoul(value, NULL, 0);
     } else
-    if (strcmp(key, "vertical-sync") == 0) {
-        configuration->vertical_sync = strcmp(value, "true") == 0;
+    if (strcmp(fqn, "display.height") == 0) {
+        configuration->display.height = (size_t)strtoul(value, NULL, 0);
     } else
-    if (strcmp(key, "fps") == 0) {
-        configuration->fps = (size_t)strtoul(value, NULL, 0);
-        configuration->skippable_frames = configuration->fps / 5; // Keep synched. About 20% of the FPS amount.
+    if (strcmp(fqn, "display.scale") == 0) {
+        configuration->display.scale = (size_t)strtoul(value, NULL, 0);
     } else
-    if (strcmp(key, "skippable-frames") == 0) {
-        size_t suggested = configuration->fps / 5;
-        configuration->skippable_frames = (size_t)imin(strtol(value, NULL, 0), suggested); // TODO: not sure if `imin` or `imax`. :P
+    if (strcmp(fqn, "display.fullscreen") == 0) {
+        configuration->display.fullscreen = strcmp(value, "true") == 0;
     } else
-    if (strcmp(key, "fps-cap") == 0) {
-        configuration->fps_cap = (size_t)strtoul(value, NULL, 0);
+    if (strcmp(fqn, "display.vertical-sync") == 0) {
+        configuration->display.vertical_sync = strcmp(value, "true") == 0;
     } else
-    if (strcmp(key, "hide-cursor") == 0) {
-        configuration->hide_cursor = strcmp(value, "true") == 0;
+    if (strcmp(fqn, "keyboard.enabled") == 0) {
+        configuration->keyboard.enabled = strcmp(value, "true") == 0;
     } else
-    if (strcmp(key, "exit-key-enabled") == 0) {
-        configuration->exit_key_enabled = strcmp(value, "true") == 0;
+    if (strcmp(fqn, "keyboard.exit-key") == 0) {
+        configuration->keyboard.exit_key = strcmp(value, "true") == 0;
     } else
-#ifdef __INPUT_SELECTION__
-    if (strcmp(key, "keyboard-enabled") == 0) {
-        configuration->keyboard_enabled = strcmp(value, "true") == 0;
+    if (strcmp(fqn, "cursor.enabled") == 0) {
+        configuration->cursor.enabled = strcmp(value, "true") == 0;
     } else
-    if (strcmp(key, "gamepad-enabled") == 0) {
-        configuration->gamepad_enabled = strcmp(value, "true") == 0;
+    if (strcmp(fqn, "cursor.hide") == 0) {
+        configuration->cursor.hide = strcmp(value, "true") == 0;
     } else
-    if (strcmp(key, "mouse-enabled") == 0) {
-        configuration->mouse_enabled = strcmp(value, "true") == 0;
+    if (strcmp(fqn, "cursor.speed") == 0) {
+        configuration->cursor.speed = (float)strtod(value, NULL);
     } else
-#endif
-    if (strcmp(key, "emulate-dpad") == 0) {
-        configuration->emulate_dpad = strcmp(value, "true") == 0;
+    if (strcmp(fqn, "gamepad.enabled") == 0) {
+        configuration->gamepad.enabled = strcmp(value, "true") == 0;
     } else
-    if (strcmp(key, "emulate-mouse") == 0) {
-        configuration->emulate_mouse = strcmp(value, "true") == 0;
+    if (strcmp(fqn, "gamepad.sensitivity") == 0) {
+        configuration->gamepad.sensitivity = (float)strtod(value, NULL);
     } else
-    if (strcmp(key, "cursor-speed") == 0) {
-        configuration->cursor_speed = (float)strtod(value, NULL);
+    if (strcmp(fqn, "gamepad.inner-deadzone") == 0) {
+        configuration->gamepad.inner_deadzone = (float)strtod(value, NULL);
     } else
-    if (strcmp(key, "gamepad-sensitivity") == 0) {
-        configuration->gamepad_sensitivity = (float)strtod(value, NULL);
+    if (strcmp(fqn, "gamepad.outer-deadzone") == 0) {
+        configuration->gamepad.outer_deadzone = (float)strtod(value, NULL);
     } else
-    if (strcmp(key, "gamepad-inner-deadzone") == 0) {
-        configuration->gamepad_inner_deadzone = (float)strtod(value, NULL);
+    if (strcmp(fqn, "gamepad.emulate-dpad") == 0) {
+        configuration->gamepad.emulate_dpad = strcmp(value, "true") == 0;
     } else
-    if (strcmp(key, "gamepad-outer-deadzone") == 0) {
-        configuration->gamepad_outer_deadzone = (float)strtod(value, NULL);
+    if (strcmp(fqn, "gamepad.emulate-mouse") == 0) {
+        configuration->gamepad.emulate_cursor = strcmp(value, "true") == 0;
     } else
-    if (strcmp(key, "debug") == 0) {
-        configuration->debug = strcmp(value, "true") == 0;
+    if (strcmp(fqn, "engine.frames-per-seconds") == 0) {
+        configuration->engine.frames_per_seconds = (size_t)strtoul(value, NULL, 0);
+        configuration->engine.skippable_frames = configuration->engine.frames_per_seconds / 5; // Keep synched. About 20% of the frequency (FPS).
+    } else
+    if (strcmp(fqn, "engine.skippable-frames") == 0) {
+        size_t suggested = configuration->engine.frames_per_seconds / 5;
+        configuration->engine.skippable_frames = (size_t)imin((int)strtol(value, NULL, 0), (int)suggested); // TODO: not sure if `imin` or `imax`. :P
+    } else
+    if (strcmp(fqn, "engine.frames-limit") == 0) {
+        configuration->engine.frames_limit = (size_t)strtoul(value, NULL, 0);
     }
 }
 
-static const char *next(const char *ptr, char *line)
+static const char *_next(const char *ptr, char *line)
 {
     bool comment = false;
     for (;;) {
@@ -132,7 +154,20 @@ static const char *next(const char *ptr, char *line)
     return ptr;
 }
 
-static bool parse(char *line, const char **key, const char **value)
+static bool _parse_context(char *line, char *context)
+{
+    size_t length = strlen(line);
+    if (line[0] != '[' || line[length - 1] != ']') { // Contexts are declared with square brackets.
+        return false;
+    }
+
+    context[0] = '\0'; // Avoid `strncpy()` to handle null-terminator with more sense.
+    strncat(context, line + 1, length - 2);
+
+    return true;
+}
+
+static bool _parse_pair(char *line, const char **key, const char **value)
 {
     *key = line;
 
@@ -150,49 +185,89 @@ static bool parse(char *line, const char **key, const char **value)
     return true;
 }
 
+static void _normalize_identity(Configuration_t *configuration)
+{
+    if (configuration->system.identity[0] == '\0') {
+        size_t length = strlen(configuration->display.title);
+        for (size_t i = 0, j = 0; i < length; ++i) {
+            int c = configuration->display.title[i];
+            if (!isalnum(c)) {
+                continue;
+            }
+            configuration->system.identity[j++] = c;
+        }
+    }
+
+    size_t length = strlen(configuration->system.identity);
+    for (size_t i = 0; i < length; ++i) {
+        int c = configuration->system.identity[i];
+        configuration->system.identity[i] = tolower(c); // Game identity is lowercase.
+    }
+}
+
 void Configuration_parse(Configuration_t *configuration, const char *data)
 {
     *configuration = (Configuration_t){
-            .title = ".: Tofu Engine :.",
-            .width = 320,
-            .height = 240,
-            .scale = 0,
-            .fullscreen = false,
-            .vertical_sync = false,
-            .fps = 60,
-            .skippable_frames = 3, // About 20% of the FPS amount.
+            .system = {
+                .identity = { 0 },
+                .version = { TOFU_VERSION_MAJOR, TOFU_VERSION_MINOR, TOFU_VERSION_REVISION },
+                .debug = true
+            },
+            .display = {
+                .title = ".: Tofu Engine :.",
+                .width = 320,
+                .height = 240,
+                .scale = 0,
+                .fullscreen = false,
+                .vertical_sync = false
+            },
+            .audio = {
+                .master_volume = 1.0f
+            },
+            .keyboard = {
+                .enabled = true,
+                .exit_key = true
+            },
+            .cursor = {
+                .enabled = true,
+                .hide = true,
+                .speed = 128.0f
+            },
+            .gamepad = {
+                .enabled = true,
+                .sensitivity = 0.5f,
+                .inner_deadzone = 0.25f,
+                .outer_deadzone = 0.0f,
+                .emulate_dpad = true,
+                .emulate_cursor = true
+            },
+            .engine = {
+                .frames_per_seconds = 60,
+                .skippable_frames = 3, // About 20% of the FPS amount.
 #ifdef __CAP_TO_60__
-            .fps_cap = 60, // 60 FPS capping as a default. TODO: make it run-time configurable?
+                .frames_limit = 60, // 60 FPS capping as a default. TODO: make it run-time configurable?
 #else
-            .fps_cap = 0,
+                .frames_limit = 0,
 #endif
-            .hide_cursor = true,
-            .exit_key_enabled = true,
-#ifdef __INPUT_SELECTION__
-            .keyboard_enabled = true,
-            .gamepad_enabled = true,
-            .mouse_enabled = true,
-#endif
-            .emulate_dpad = true,
-            .emulate_mouse = true,
-            .cursor_speed = 128.0f,
-            .gamepad_sensitivity = 0.5f,
-            .gamepad_inner_deadzone = 0.25f,
-            .gamepad_outer_deadzone = 0.0f,
-            .debug = true
+            }
         };
-
     if (!data) {
         return;
     }
 
+    char context[128] = { 0 };
     char line[256];
     for (const char *ptr = data; ptr;) {
-        ptr = next(ptr, line);
-        const char *key, *value;
-        if (!parse(line, &key, &value)) {
-            break;
+        ptr = _next(ptr, line);
+        if (_parse_context(line, context)) {
+            continue;
         }
-        on_parameter(configuration, key, value);
+        const char *key, *value;
+        if (!_parse_pair(line, &key, &value)) {
+            continue;
+        }
+        _on_parameter(configuration, context, key, value);
     }
+
+    _normalize_identity(configuration);
 }

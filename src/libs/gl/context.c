@@ -29,8 +29,6 @@
 #include <libs/log.h>
 #include <libs/stb.h>
 
-#include "surface.h"
-
 #define LOG_CONTEXT "gl"
 
 static inline void _reset_state(GL_State_t *state, const GL_Surface_t *surface)
@@ -39,7 +37,7 @@ static inline void _reset_state(GL_State_t *state, const GL_Surface_t *surface)
             .background = 0,
             .color = 1,
             .pattern = 0,
-            .clipping_region = (GL_Quad_t){ .x0 = 0, .y0 = 0, .x1 = surface->width - 1, .y1 = surface->height - 1 },
+            .clipping_region = (GL_Quad_t){ .x0 = 0, .y0 = 0, .x1 = (int)surface->width - 1, .y1 = (int)surface->height - 1 },
             .shifting = { 0 },
             .transparent = { 0 }
 #ifdef __STENCIL_SUPPORT__
@@ -48,7 +46,7 @@ static inline void _reset_state(GL_State_t *state, const GL_Surface_t *surface)
 #endif
         };
     for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
-        state->shifting[i] = i;
+        state->shifting[i] = (GL_Pixel_t)i;
         state->transparent[i] = GL_BOOL_FALSE;
     }
     state->transparent[0] = GL_BOOL_TRUE;
@@ -101,10 +99,6 @@ GL_Context_t *GL_context_create(size_t width, size_t height)
 
 void GL_context_destroy(GL_Context_t *context)
 {
-    if (!context) {
-        return;
-    }
-
     arrfree(context->stack);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context stack freed");
 
@@ -163,25 +157,25 @@ void GL_context_set_clipping(GL_Context_t *context, const GL_Rectangle_t *region
         state->clipping_region = (GL_Quad_t){
                 .x0 = 0,
                 .y0 = 0,
-                .x1 = context->surface->width - 1,
-                .y1 = context->surface->height - 1
+                .x1 = (int)context->surface->width - 1,
+                .y1 = (int)context->surface->height - 1
             };
     } else {
         state->clipping_region = (GL_Quad_t){
                 .x0 = imax(0, region->x),
                 .y0 = imax(0, region->y),
-                .x1 = imin(context->surface->width, region->x + region->width) - 1,
-                .y1 = imin(context->surface->height, region->y + region->height) - 1
+                .x1 = imin((int)context->surface->width, region->x + (int)region->width) - 1,
+                .y1 = imin((int)context->surface->height, region->y + (int)region->height) - 1
             };
     }
 }
 
-void GL_context_set_shifting(GL_Context_t *context, const size_t *from, const size_t *to, size_t count)
+void GL_context_set_shifting(GL_Context_t *context, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count)
 {
     GL_State_t *state = &context->state;
     if (!from) {
         for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
-            state->shifting[i] = i;
+            state->shifting[i] = (GL_Pixel_t)i;
         }
     } else {
         for (size_t i = 0; i < count; ++i) {
@@ -232,7 +226,7 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
 
     GL_Pixel_t *ddata = surface->data;
 
-    const int dwidth = surface->width;
+    const int dwidth = (int)surface->width;
 
     const GL_Pixel_t match = ddata[seed.y * dwidth + seed.x];
     const GL_Pixel_t replacement = shifting[index];
@@ -240,7 +234,7 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
     GL_Point_t *stack = NULL;
     arrpush(stack, seed);
 
-    const int dskip = context->surface->width;
+    const int dskip = (int)context->surface->width;
 
     while (arrlen(stack) > 0) {
         const GL_Point_t position = arrpop(stack);
@@ -290,25 +284,28 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
     arrfree(stack);
 }
 
-void GL_context_process(const GL_Context_t *context, GL_Rectangle_t rectangle)
+void GL_context_process(const GL_Context_t *context, GL_Point_t position, GL_Rectangle_t area, GL_Process_Callback_t callback, void *user_data)
 {
     const GL_State_t *state = &context->state;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const GL_Pixel_t *shifting = state->shifting;
-    const GL_Bool_t *transparent = state->transparent;
     const GL_Surface_t *surface = context->surface;
 
+    int skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
+    int skip_y = 0;
+
     GL_Quad_t drawing_region = (GL_Quad_t){
-            .x0 = rectangle.x,
-            .y0 = rectangle.y,
-            .x1 = rectangle.x + rectangle.width - 1,
-            .y1 = rectangle.y + rectangle.height - 1
+            .x0 = position.x,
+            .y0 = position.y,
+            .x1 = position.x + (int)area.width - 1,
+            .y1 = position.y + (int)area.height - 1
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
+        skip_x = clipping_region->x0 - drawing_region.x0;
         drawing_region.x0 = clipping_region->x0;
     }
     if (drawing_region.y0 < clipping_region->y0) {
+        skip_y = clipping_region->y0 - drawing_region.y0;
         drawing_region.y0 = clipping_region->y0;
     }
     if (drawing_region.x1 > clipping_region->x1) {
@@ -326,22 +323,83 @@ void GL_context_process(const GL_Context_t *context, GL_Rectangle_t rectangle)
 
     GL_Pixel_t *sddata = surface->data;
 
-    const int sdwidth = surface->width;
-
-    GL_Pixel_t *sdptr = sddata + drawing_region.y0 * sdwidth + drawing_region.x0;
+    const int sdwidth = (int)surface->width;
 
     const int sdskip = sdwidth - width;
 
+    const GL_Pixel_t *sptr = sddata + (area.y + skip_y) * sdwidth + (area.x + skip_x);
+    GL_Pixel_t *dptr = sddata + drawing_region.y0 * sdwidth + drawing_region.x0;
+
     for (int i = height; i; --i) {
         for (int j = width; j; --j) {
-            GL_Pixel_t index = shifting[*sdptr];
+            GL_Pixel_t from = *dptr;
+            GL_Pixel_t to = *(sptr++);
+            *(dptr++) = callback(user_data, from, to);
+        }
+        sptr += sdskip;
+        dptr += sdskip;
+    }
+}
+
+void GL_context_copy(const GL_Context_t *context, GL_Point_t position, GL_Rectangle_t area)
+{
+    const GL_State_t *state = &context->state;
+    const GL_Quad_t *clipping_region = &state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
+    const GL_Surface_t *surface = context->surface;
+
+    int skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
+    int skip_y = 0;
+
+    GL_Quad_t drawing_region = (GL_Quad_t){
+            .x0 = position.x,
+            .y0 = position.y,
+            .x1 = position.x + (int)area.width - 1,
+            .y1 = position.y + (int)area.height - 1
+        };
+
+    if (drawing_region.x0 < clipping_region->x0) {
+        skip_x = clipping_region->x0 - drawing_region.x0;
+        drawing_region.x0 = clipping_region->x0;
+    }
+    if (drawing_region.y0 < clipping_region->y0) {
+        skip_y = clipping_region->y0 - drawing_region.y0;
+        drawing_region.y0 = clipping_region->y0;
+    }
+    if (drawing_region.x1 > clipping_region->x1) {
+        drawing_region.x1 = clipping_region->x1;
+    }
+    if (drawing_region.y1 > clipping_region->y1) {
+        drawing_region.y1 = clipping_region->y1;
+    }
+
+    const int width = drawing_region.x1 - drawing_region.x0 + 1;
+    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!
+        return;
+    }
+
+    GL_Pixel_t *sddata = surface->data;
+
+    const int sdwidth = (int)surface->width;
+
+    const int sdskip = sdwidth - width;
+
+    const GL_Pixel_t *sptr = sddata + (area.y + skip_y) * sdwidth + (area.x + skip_x);
+    GL_Pixel_t *dptr = sddata + drawing_region.y0 * sdwidth + drawing_region.x0;
+
+    for (int i = height; i; --i) {
+        for (int j = width; j; --j) {
+            GL_Pixel_t index = shifting[*(sptr++)];
             if (transparent[index]) {
-                sdptr++;
+                dptr++;
             } else {
-                *(sdptr++) = index;
+                *(dptr++) = index;
             }
         }
-        sdptr += sdskip;
+        sptr += sdskip;
+        dptr += sdskip;
     }
 }
 
@@ -374,14 +432,14 @@ void GL_context_to_surface(const GL_Context_t *context, const GL_Surface_t *to)
 {
     const GL_Surface_t *from = context->surface;
 
-    size_t width = imin(from->width, to->width);
-    size_t height = imin(from->height, to->height);
+    size_t width = (size_t)imin((int)from->width, (int)to->width);
+    size_t height = (size_t)imin((int)from->height, (int)to->height);
 
     const GL_Pixel_t *src = from->data;
     GL_Pixel_t *dst = to->data;
 
-    const int src_skip = from->width - width;
-    const int dst_skip = to->width - width;
+    const int src_skip = (int)from->width - (int)width;
+    const int dst_skip = (int)to->width - (int)width;
 
     for (int i = height; i; --i) {
         for (int j = width; j; --j) {

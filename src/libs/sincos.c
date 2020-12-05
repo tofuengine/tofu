@@ -29,7 +29,6 @@
 
 // 128 steps per quadrant seems more than enough.
 #include <math.h>
-#include <stddef.h>
 
 static const float _lut[640] = {
     0.000000000f, /* [0] */

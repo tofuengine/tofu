@@ -54,6 +54,7 @@
 #ifndef __LIBS_MD5_H__
 #define __LIBS_MD5_H__
 
+#include <stddef.h>
 #include <stdint.h>
 
 #define MD5_SIZE    16
@@ -65,7 +66,7 @@ typedef struct _md5_context_t {
 } md5_context_t;
 
 extern void md5_init(md5_context_t *context);
-extern void md5_update(md5_context_t *context, const uint8_t *msg, int len);
+extern void md5_update(md5_context_t *context, const uint8_t *msg, size_t len);
 extern void md5_final(md5_context_t *context, uint8_t *digest);
 
 #endif  /* __LIBS_MD5_H__ */

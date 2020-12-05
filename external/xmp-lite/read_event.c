@@ -30,6 +30,7 @@
 #include "effects.h"
 #include "virtual.h"
 #include "period.h"
+#include "smix.h"
 
 static inline int is_valid_note(int note)
 {
@@ -141,8 +142,11 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 		} */
 #endif
 
+		/* TODO: should probably expand the LFO period size instead
+		 * of reducing the vibrato rate precision here.
+		 */
 		libxmp_lfo_set_depth(&xc->insvib.lfo, sub->vde);
-		libxmp_lfo_set_rate(&xc->insvib.lfo, sub->vra >> 2);
+		libxmp_lfo_set_rate(&xc->insvib.lfo, (sub->vra + 2) >> 2);
 		libxmp_lfo_set_waveform(&xc->insvib.lfo, sub->vwf);
 		xc->insvib.sweep = sub->vsw;
 
@@ -283,23 +287,23 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 		if (e->note == XMP_KEY_OFF) {
 			SET_NOTE(NOTE_RELEASE);
 			use_ins_vol = 0;
-		} else if (!is_toneporta) {
+		} else if (!is_toneporta && is_valid_note(e->note - 1)) {
 			xc->key = e->note - 1;
 			RESET_NOTE(NOTE_END);
-	
+
 			sub = get_subinstrument(ctx, xc->ins, xc->key);
-	
+
 			if (!new_invalid_ins && sub != NULL) {
 				int transp = mod->xxi[xc->ins].map[xc->key].xpo;
 				int smp;
-	
+
 				note = xc->key + sub->xpo + transp;
 				smp = sub->sid;
-	
+
 				if (mod->xxs[smp].len == 0) {
 					smp = -1;
 				}
-	
+
 				if (smp >= 0 && smp < mod->smp) {
 					set_patch(ctx, chn, xc->ins, smp, note);
 					xc->smp = smp;
@@ -460,16 +464,22 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		}
 	}
 
-	/* Do this regardless if the instrument is invalid or not */
-	if (ev.ins) {
+	/* Do this regardless if the instrument is invalid or not -- unless
+	 * XM keyoff is used. Fixes xyce-dans_la_rue.xm chn 0 patterns 0E/0F and
+	 * chn 10 patterns 0D/0E, see https://github.com/libxmp/libxmp/issues/152
+	 * for details.
+         */
+	if (ev.ins && key != XMP_KEY_FADE) {
 		SET(NEW_INS);
 		use_ins_vol = 1;
-		xc->fadeout = 0x10000;
 		xc->per_flags = 0;
+
 		RESET_NOTE(NOTE_RELEASE|NOTE_SUSEXIT);
 		if (!k00) {
 			RESET_NOTE(NOTE_FADEOUT);
 		}
+
+		xc->fadeout = 0x10000;
 
 		if (IS_VALID_INSTRUMENT(ins - 1)) {
 			if (!is_toneporta)
@@ -790,23 +800,23 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 			if (not_same_ins) {
 				xc->offset.val = 0;
 			}
-		} else {
+		} else if (is_valid_note(e->note - 1)) {
 			xc->key = e->note - 1;
 			RESET_NOTE(NOTE_END);
-	
+
 			sub = get_subinstrument(ctx, xc->ins, xc->key);
-	
+
 			if (sub != NULL) {
 				int transp = mod->xxi[xc->ins].map[xc->key].xpo;
 				int smp;
-	
+
 				note = xc->key + sub->xpo + transp;
 				smp = sub->sid;
-	
+
 				if (mod->xxs[smp].len == 0) {
 					smp = -1;
 				}
-	
+
 				if (smp >= 0 && smp < mod->smp) {
 					set_patch(ctx, chn, xc->ins, smp, note);
 					xc->smp = smp;
@@ -1132,8 +1142,14 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 				SET_NOTE(NOTE_RELEASE);
 			}
 			SET(KEY_OFF);
+			/* Use instrument volume if an instrument was explicitly
+			 * provided on this row (see OpenMPT NoteOffInstr.it row 4).
+			 * However, never reset the envelope (see OpenMPT wnoteoff.it).
+			 */
 			reset_env = 0;
-			use_ins_vol = 0;
+			if (!ev.ins) {
+				use_ins_vol = 0;
+			}
 		} else {
 			/* portamento_after_keyoff.it test case */
 			/* also see suburban_streets o13 c45 */
@@ -1282,13 +1298,12 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			RESET_NOTE(NOTE_CUT);
 		}
 	}
-	
+
 	/* Process new volume */
 	if (ev.vol && (!TEST_NOTE(NOTE_CUT) || ev.ins != 0)) {
-		if (key != XMP_KEY_OFF) {    /* See OpenMPT NoteOffInstr.it */
-			xc->volume = ev.vol - 1;
-			SET(NEW_VOL);
-		}
+		/* Do this even for XMP_KEY_OFF (see OpenMPT NoteOffInstr.it row 4). */
+		xc->volume = ev.vol - 1;
+		SET(NEW_VOL);
 	}
 
 	/* IT: always reset sample offset */
@@ -1376,11 +1391,12 @@ static int read_event_smix(struct context_data *ctx, struct xmp_event *e, int ch
 			xc->smp = smp;
 		}
 	} else {
-		transp = mod->xxi[xc->ins].map[xc->key].xpo;
-		sub = get_subinstrument(ctx, xc->ins, xc->key);
+		sub = is_valid_note(xc->key) ?
+			get_subinstrument(ctx, xc->ins, xc->key) : NULL;
 		if (sub == NULL) {
 			return 0;
 		}
+		transp = mod->xxi[xc->ins].map[xc->key].xpo;
 		note = xc->key + sub->xpo + transp;
 		smp = sub->sid;
 		if (mod->xxs[smp].len == 0)

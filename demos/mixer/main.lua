@@ -38,7 +38,9 @@ function Main:__ctor()
 --  warn("@on")
 --  warn("Hello,", "Again")
 
-  self.font = Font.default(0, 15)
+  local canvas = Canvas.default()
+
+  self.font = Font.default(canvas, 0, 15)
 
   self.sources = {
       Source.new("assets/1ch-22050-16.flac", Source.SAMPLE),

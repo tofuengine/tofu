@@ -116,6 +116,9 @@ $(PDUMPS): %.inc : %.png Makefile
 	@convert $< RGBA:- | $(DUMPER) $(DFLAGS) > $@
 	@echo "Generated '"$@"' from '"$<"' successfully!"
 
+stats:
+	@cloc ./src > stats.txt
+
 primitives: $(TARGET)
 	@echo "Launching *primitives* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/primitives
@@ -211,6 +214,16 @@ mixer: $(TARGET)
 	@echo "Launching *mixer* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/mixer
 	@./$(TARGET) ./demos/mixer
+
+rotations: $(TARGET)
+	@echo "Launching *rotations* application!"
+	@$(ANALYZER) $(AFLAGS) ./demos/rotations
+	@./$(TARGET) ./demos/rotations
+
+platform: $(TARGET)
+	@echo "Launching *platform* application!"
+	@$(ANALYZER) $(AFLAGS) ./demos/platform
+	@./$(TARGET) ./demos/platform
 
 demo: $(TARGET)
 	@echo "Launching *$(DEMO)* application!"

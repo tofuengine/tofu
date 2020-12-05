@@ -28,26 +28,26 @@
 #include "fs.h"
 
 typedef struct _Mount_VTable_t {
-    void                  (*dtor)    (File_System_Mount_t *mount);
-    bool                  (*contains)(const File_System_Mount_t *mount, const char *file);
-    File_System_Handle_t *(*open)    (const File_System_Mount_t *mount, const char *file);
+    void         (*dtor)    (FS_Mount_t *mount);
+    bool         (*contains)(const FS_Mount_t *mount, const char *file);
+    FS_Handle_t *(*open)    (const FS_Mount_t *mount, const char *file);
 } Mount_VTable_t;
 
 typedef struct _Handle_VTable_t {
-    void   (*dtor)(File_System_Handle_t *handle);
-    size_t (*size)(File_System_Handle_t *handle);
-    size_t (*read)(File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
-    bool   (*seek)(File_System_Handle_t *handle, long offset, int whence);
-    long   (*tell)(File_System_Handle_t *handle);
-    bool   (*eof) (File_System_Handle_t *handle);
+    void   (*dtor)(FS_Handle_t *handle);
+    size_t (*size)(FS_Handle_t *handle);
+    size_t (*read)(FS_Handle_t *handle, void *buffer, size_t bytes_requested);
+    bool   (*seek)(FS_Handle_t *handle, long offset, int whence);
+    long   (*tell)(FS_Handle_t *handle);
+    bool   (*eof) (FS_Handle_t *handle);
 } Handle_VTable_t;
 
-typedef struct _Mount_t {
+struct _FS_Mount_t {
     Mount_VTable_t vtable;
-} Mount_t;
+};
 
-typedef struct _Handle_t {
+struct _FS_Handle_t {
     Handle_VTable_t vtable;
-} Handle_t;
+};
 
 #endif /* __FS_INTERNALS_H__ */

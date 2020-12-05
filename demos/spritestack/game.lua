@@ -44,8 +44,10 @@ local Game = Class.define()
 function Game:__ctor()
   Display.palette("pico-8-ext")
 
-  self.bank = Bank.new("assets/images/slices.png", 15, 32)
-  self.font = Font.default(0, 31)
+  local canvas = Canvas.default()
+
+  self.bank = Bank.new(canvas, Canvas.new("assets/images/slices.png"), 15, 32)
+  self.font = Font.default(canvas, 0, 31)
   self.tweener = Math.tweener("sine_out")
 
   self.sprites = {}

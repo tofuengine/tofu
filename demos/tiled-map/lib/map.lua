@@ -38,10 +38,10 @@ end
 
 local Map = Class.define()
 
-function Map:__ctor(bank, grid, canvas)
+function Map:__ctor(canvas, bank, grid)
+  self.canvas = canvas
   self.bank = bank
   self.grid = grid
-  self.canvas = canvas or Canvas.default()
 
   local cw, ch = self.bank:size(-1)
   local gw, gh = self.grid:size()
@@ -55,7 +55,7 @@ function Map:__ctor(bank, grid, canvas)
   self.cameras = {}
 end
 
-function Map.from_file(file)
+function Map.from_file(canvas, file)
   local content = File.as_string(file)
   local tokens = {}
   for chunk in string.gmatch(content, "[^\n]+") do
@@ -69,10 +69,10 @@ function Map.from_file(file)
     end
   end
 
-  local bank = Bank.new(tokens[1], tonumber(tokens[2]), tonumber(tokens[3]))
+  local bank = Bank.new(canvas, Canvas.new(tokens[1]), tonumber(tokens[2]), tonumber(tokens[3]))
   local grid = Grid.new(tonumber(tokens[4]), tonumber(tokens[5]), cells)
 
-  return Map.new(bank, grid)
+  return Map.new(canvas, bank, grid)
 end
 
 function Map:bound(x, y)

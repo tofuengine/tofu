@@ -26,28 +26,24 @@
 
 #include <config.h>
 #include <core/io/display.h>
-#include <libs/imath.h>
 #include <libs/log.h>
-#include <libs/stb.h>
 
 #include "udt.h"
 #include "resources/palettes.h"
-
-#include <math.h>
-#include <string.h>
-#include <time.h>
 
 #define LOG_CONTEXT "graphics"
 
 static int display_offset(lua_State *L);
 static int display_palette(lua_State *L);
 static int display_color_to_index(lua_State *L);
+static int display_index_to_color(lua_State *L);
 static int display_shader(lua_State *L);
 static int display_send(lua_State *L);
 
 static const struct luaL_Reg _display_functions[] = {
     { "palette", display_palette },
     { "color_to_index", display_color_to_index },
+    { "index_to_color", display_index_to_color },
     { "offset", display_offset },
     { "shader", display_shader },
     { "send", display_send },
@@ -67,14 +63,14 @@ static int display_palette0(lua_State *L)
 
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    const GL_Palette_t *palette = &display->palette;
+    const GL_Palette_t *palette = Display_get_palette(display);
 
-    lua_createtable(L, palette->count, 0);
+    lua_createtable(L, (int)palette->count, 0);
     for (size_t i = 0; i < palette->count; ++i) {
         unsigned int argb = GL_palette_pack_color(palette->colors[i]);
 
-        lua_pushinteger(L, argb);
-        lua_rawseti(L, -2, i + 1);
+        lua_pushinteger(L, (lua_Integer)argb);
+        lua_rawseti(L, -2, (lua_Integer)(i + 1));
     }
 
     return 1;
@@ -103,7 +99,7 @@ static int display_palette1(lua_State *L)
     } else
     if (type == LUA_TTABLE) { // User supplied palette.
         palette.count = lua_rawlen(L, 1);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "setting custom palette of #%d color(s)", palette.count);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "setting custom palette of %d color(s)", palette.count);
 
         if (palette.count > GL_MAX_PALETTE_COLORS) {
             Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "palette has too many colors (%d) - clamping", palette.count);
@@ -148,9 +144,9 @@ static int display_color_to_index1(lua_State *L)
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     GL_Color_t color = GL_palette_unpack_color(argb);
-    const GL_Pixel_t index = GL_palette_find_nearest_color(&display->palette, color);
+    const GL_Pixel_t index = GL_palette_find_nearest_color(Display_get_palette(display), color);
 
-    lua_pushinteger(L, index);
+    lua_pushinteger(L, (lua_Integer)index);
 
     return 1;
 }
@@ -170,9 +166,9 @@ static int display_color_to_index3(lua_State *L)
 
     uint32_t argb = GL_palette_pack_color((GL_Color_t){  .a = 255, .r = r, .g = g, .b = b });
     GL_Color_t color = GL_palette_unpack_color(argb);
-    const GL_Pixel_t index = GL_palette_find_nearest_color(&display->palette, color);
+    const GL_Pixel_t index = GL_palette_find_nearest_color(Display_get_palette(display), color);
 
-    lua_pushinteger(L, index);
+    lua_pushinteger(L, (lua_Integer)index);
 
     return 1;
 }
@@ -183,6 +179,25 @@ static int display_color_to_index(lua_State *L)
         LUAX_OVERLOAD_ARITY(1, display_color_to_index1)
         LUAX_OVERLOAD_ARITY(3, display_color_to_index3)
     LUAX_OVERLOAD_END
+}
+
+static int display_index_to_color(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 1);
+
+    const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    const GL_Palette_t *palette = Display_get_palette(display);
+    const GL_Color_t color = palette->colors[index];
+
+    lua_pushinteger(L, (lua_Integer)color.r);
+    lua_pushinteger(L, (lua_Integer)color.g);
+    lua_pushinteger(L, (lua_Integer)color.b);
+
+    return 3;
 }
 
 static int display_offset0_2(lua_State *L)

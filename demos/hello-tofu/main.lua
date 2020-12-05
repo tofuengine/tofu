@@ -59,11 +59,10 @@ function Main:__ctor()
   -- Please note that, as default, palette color `0` is set as transparent. This
   -- means that the font background color won't be drawn.
   self.canvas = Canvas.new(Canvas.default():size())
-  self.font = Font.new("assets/font-8x8.png", 8, 8, 0, 15)
-  self.font:canvas(self.canvas)
+  self.font = Font.new(self.canvas, Canvas.new("assets/font-8x8.png", 0, 15), 8, 8)
 
   local width, height = self.canvas:size()
-  self.xform = XForm.new(self.canvas) -- TODO: pass clamp mode?
+  self.xform = XForm.new(Canvas.default(), self.canvas) -- TODO: pass clamp mode?
   self.xform:clamp("border")
   self.xform:matrix(1, 0, 0, 1, width * 0.5, height * 0.5)
   self.xform:table(build_table(self.canvas, self.factor))
@@ -94,7 +93,7 @@ function Main:render(_)
   -- Query current time since the start, expressed in seconds (as a floating point number).
   local t = System.time()
 
-  -- Get a reference to the default canvas (i.e. the the virtual-screen).
+  -- Get a reference to the offscreen canvas (i.e. the the virtual-screen).
   local canvas = self.canvas
 
   -- Clear the virtual-screen with default background color (i.e. palette color #0).

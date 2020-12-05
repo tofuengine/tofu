@@ -47,10 +47,10 @@ typedef struct _Source_VTable_t {
     bool (*generate)(SL_Source_t *source, void *output, size_t frames_requested); // Returns `false` when end-of-data.
 } Source_VTable_t;
 
-typedef struct _Source_t {
+struct _SL_Source_t {
     Source_VTable_t vtable;
 
     SL_Props_t *props;
-} Source_t;
+};
 
 #endif  /* __SL_INTERNALS_H__ */

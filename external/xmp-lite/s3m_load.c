@@ -70,6 +70,7 @@
  * in the module and instrument headers. I'm adding a simple workaround
  * to be able to load/play the module as is, see the fix87() macro below.
  */
+
 #include "loader.h"
 #include "s3m.h"
 #include "period.h"
@@ -113,7 +114,7 @@ static int s3m_test(HIO_HANDLE *f, char *t, const int start)
 	} while (0)
 
 /* Effect conversion table */
-static const uint8_t fx[] = {
+static const uint8_t fx[27] = {
 	NONE,
 	FX_S3M_SPEED,		/* Axx  Set speed to xx (the default is 06) */
 	FX_JUMP,		/* Bxx  Jump to order xx (hexadecimal) */
@@ -148,7 +149,7 @@ static void xlat_fx(int c, struct xmp_event *e)
 {
 	uint8_t h = MSN(e->fxp), l = LSN(e->fxp);
 
-	if (e->fxt > 26) {
+	if (e->fxt >= ARRAY_SIZE(fx)) {
 		D_(D_WARN "invalid effect %02x", e->fxt);
 		e->fxt = e->fxp = 0;
 		return;
@@ -242,7 +243,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		goto err;
 	}
 
-	memcpy(&sfh.name, buf, 28);		/* Song name */
+	memcpy(sfh.name, buf, 28);		/* Song name */
 	sfh.type = buf[30];			/* File type */
 	sfh.ordnum = readmem16l(buf + 32);	/* Number of orders (must be even) */
 	sfh.insnum = readmem16l(buf + 34);	/* Number of instruments */
@@ -266,7 +267,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	sfh.mv = buf[51];			/* Master volume */
 	sfh.uc = buf[52];			/* Ultra click removal */
 	sfh.dp = buf[53];			/* Default pan positions if 0xfc */
-	/* 54-61 reserved */
+	memcpy(sfh.rsvd2, buf + 54, 8);	/* Reserved */
 	sfh.special = readmem16l(buf + 62);	/* Ptr to special custom data */
 	memcpy(sfh.chset, buf + 64, 32);	/* Channel settings */
 
@@ -455,6 +456,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		struct xmp_instrument *xxi = &mod->xxi[i];
 		struct xmp_sample *xxs = &mod->xxs[i];
 		struct xmp_subinstrument *sub;
+		int load_sample_flags;
 
 		xxi->sub = calloc(sizeof(struct xmp_subinstrument), 1);
 		if (xxi->sub == NULL) {
@@ -492,7 +494,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		sih.loopbeg = readmem32l(buf + 20);	/* Loop begin */
 		sih.loopend = readmem32l(buf + 24);	/* Loop end */
 		sih.vol = buf[28];			/* Volume */
-		sih.pack = buf[30];			/* Packing type (not used) */
+		sih.pack = buf[30];			/* Packing type */
 		sih.flags = buf[31];			/* Loop/stereo/16bit flags */
 		sih.c2spd = readmem16l(buf + 32);	/* C4 speed */
 		memcpy(sih.name, buf + 48, 28);		/* Instrument name */
@@ -514,6 +516,11 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 			xxs->flg |= XMP_SAMPLE_16BIT;
 		}
 
+		load_sample_flags = (sfh.ffi == 1) ? 0 : SAMPLE_FLAG_UNS;
+		if (sih.pack == 4) {
+			load_sample_flags = SAMPLE_FLAG_ADPCM;
+		}
+
 		sub->vol = sih.vol;
 		sih.magic = 0;
 
@@ -531,8 +538,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 			goto err3;
 		}
 
-		ret = libxmp_load_sample(m, f, sfh.ffi == 1 ? 0 : SAMPLE_FLAG_UNS,
-								xxs, NULL);
+		ret = libxmp_load_sample(m, f, load_sample_flags, xxs, NULL);
 		if (ret < 0) {
 			goto err3;
 		}

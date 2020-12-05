@@ -24,12 +24,11 @@
 
 #include "music.h"
 
-#include "common.h"
 #include "internals.h"
 #include "mix.h"
 
 #include <config.h>
-#include <dr_libs/dr_flac.h>
+#include <libs/dr_libs.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 #include <miniaudio/miniaudio.h>
@@ -38,7 +37,7 @@
 
 // We are going to buffer 1 second of non-converted data. As long as the `SL_music_update()` function is called
 // once half a second we are good. Since it's very unlikely we will run at less than 2 FPS... well, we can sleep well. :)
-// FIXME: greater value to reduce the I/O? Guess this would be require...
+// FIXME: greater value to reduce the I/O? Guess this would be required...
 #define STREAMING_BUFFER_SIZE_IN_FRAMES     SL_FRAMES_PER_SECOND
 
 // That's the size of a single chunk read in each `produce()` call. Can't be larger than the buffer size.
@@ -135,7 +134,7 @@ static inline bool _produce(Music_t *music)
 
 SL_Source_t *SL_music_create(const SL_Context_t *context, SL_Callbacks_t callbacks)
 {
-    Music_t *music = malloc(sizeof(Music_t));
+    SL_Source_t *music = malloc(sizeof(Music_t));
     if (!music) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate music structure");
         return NULL;

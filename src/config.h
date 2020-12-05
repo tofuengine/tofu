@@ -70,15 +70,18 @@
 #undef  __DEBUG_GRAPHICS__
 #undef  __DEBUG_SHADER_CALLS__
 #define __DEBUG_GARBAGE_COLLECTOR__
+#define __OPENGL_STATE_CLEANUP__
 #define __VM_USE_CUSTOM_TRACEBACK__
 #define __VM_GARBAGE_COLLECTOR_TYPE__ GC_INCREMENTAL
 #define __VM_GARBAGE_COLLECTOR_MODE__ GC_CONTINUOUS
 #undef  __VM_GARBAGE_COLLECTOR_PERIODIC_COLLECT__
+#define __STORAGE_CACHE_ENTRIES_LIMIT__ 32
 #define __FS_SUPPORT_MOUNT_OVERRIDE__
 #define __SL_BALANCE_LAW__  BALANCE_LAW_SINCOS
 #define __SL_PANNING_LAW__  PANNING_LAW_CONSTANT_POWER_SINCOS
 #undef  __SL_MUSIC_PRELOAD__
 #undef  __GL_MASK_SUPPORT__
+#define __GL_OPTIMIZED_ROTATIONS__
 
 // In release build, disable VM calls debug and periodic collection for better performance.
 #ifdef RELEASE

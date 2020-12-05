@@ -27,14 +27,25 @@ local Font = {}
 -- Note: the `__index` metatable reference is set by the module loader.
 -- Font.__index = Font
 
+local FONTS = {
+  ["5x8"] = { file = "5x8", width = 5, height = 8 },
+  ["6x12"] = { file = "6x12", width = 6, height = 12 },
+  ["8x16"] = { file = "8x16", width = 8, height = 16 },
+  ["12x24"] = { file = "12x24", width = 12, height = 24 },
+  ["16x32"] = { file = "16x32", width = 16, height = 32 },
+  ["32x64"] = { file = "32x64", width = 32, height = 64 },
+}
+
 function Font.default(...)
+  local Canvas = require("tofu.graphics").Canvas
+
   local args = { ... }
-  if #args == 2 then -- background_color, foreground_color
-    return Font.new("5x8", 0, 0, args[1], args[2])
-  elseif #args == 3 then -- id, background_color, foreground_color
-    return Font.new(args[1], 0, 0, args[2], args[3])
+  if #args == 3 then -- canvas, background_color, foreground_color
+    local font = FONTS["5x8"]
+    return Font.new(args[1], Canvas.new(font.file, args[2], args[3]), font.width, font.height)
   elseif #args == 4 then -- canvas, id, background_color, foreground_color
-    return Font.new(args[1], args[2], 0, 0, args[3], args[4])
+    local font = FONTS[args[2]]
+    return Font.new(args[1], Canvas.new(font.file, args[3], args[4]), font.width, font.height)
   else
     error("invalid arguments for default font")
   end

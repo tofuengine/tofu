@@ -24,15 +24,13 @@
 
 #include "source.h"
 
-#include "udt.h"
-
 #include <config.h>
 #include <core/io/audio.h>
+#include <core/io/storage.h>
+#include <libs/luax.h>
 #include <libs/log.h>
-#include <libs/stb.h>
 
-#define DR_FLAC_IMPLEMENTATION
-#include <dr_libs/dr_flac.h>
+#include "udt.h"
 
 typedef enum _Source_Types_t {
     SOURCE_TYPE_MUSIC,
@@ -81,7 +79,7 @@ static const luaX_Const _source_constants[] = {
     { "MUSIC", LUA_CT_INTEGER, { .i = SOURCE_TYPE_MUSIC } },
     { "SAMPLE", LUA_CT_INTEGER, { .i = SOURCE_TYPE_SAMPLE } },
     { "MODULE", LUA_CT_INTEGER, { .i = SOURCE_TYPE_MODULE } },
-    { NULL }
+    { NULL, LUA_CT_NIL, { 0 } }
 };
 
 int source_loader(lua_State *L)
@@ -92,25 +90,25 @@ int source_loader(lua_State *L)
 
 static size_t _handle_read(void *user_data, void *buffer, size_t bytes_to_read)
 {
-    File_System_Handle_t *handle = (File_System_Handle_t *)user_data;
+    FS_Handle_t *handle = (FS_Handle_t *)user_data;
     return FS_read(handle, buffer, bytes_to_read);
 }
 
 static bool _handle_seek(void *user_data, long offset, int whence)
 {
-    File_System_Handle_t *handle = (File_System_Handle_t *)user_data;
+    FS_Handle_t *handle = (FS_Handle_t *)user_data;
     return FS_seek(handle, offset, whence);
 }
 
 static long _handle_tell(void *user_data)
 {
-    File_System_Handle_t *handle = (File_System_Handle_t *)user_data;
+    FS_Handle_t *handle = (FS_Handle_t *)user_data;
     return FS_tell(handle);
 }
 
 static int _handle_eof(void *user_data)
 {
-    File_System_Handle_t *handle = (File_System_Handle_t *)user_data;
+    FS_Handle_t *handle = (FS_Handle_t *)user_data;
     return FS_eof(handle) ? 1 : 0;
 }
 
@@ -129,10 +127,10 @@ static int source_new(lua_State *L)
     const char *file = LUAX_STRING(L, 1);
     Source_Type_t type = (Source_Type_t)LUAX_OPTIONAL_INTEGER(L, 2, SOURCE_TYPE_MUSIC);
 
-    File_System_t *file_system = (File_System_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
+    const Storage_t *storage = (const Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
-    File_System_Handle_t *handle = FS_locate_and_open(file_system, file); // The handle is kept open, the source could require it.
+    FS_Handle_t *handle = Storage_open(storage, file); // The handle is kept open, the source could require it.
     if (!handle) {
         return luaL_error(L, "can't access file `%s`", file);
     }
@@ -206,7 +204,7 @@ static int source_looped2(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TBOOLEAN)
     LUAX_SIGNATURE_END
     Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
-    bool looped = LUAX_BOOLEAN(L, 2);
+    bool looped = (bool)LUAX_BOOLEAN(L, 2);
 
     SL_source_set_looped(self->source, looped);
 
@@ -228,7 +226,7 @@ static int source_group1(lua_State *L)
     LUAX_SIGNATURE_END
     const Source_Object_t *self = (const Source_Object_t *)LUAX_USERDATA(L, 1);
 
-    lua_pushinteger(L, SL_source_get_group(self->source));
+    lua_pushinteger(L, (lua_Integer)SL_source_get_group(self->source));
 
     return 1;
 }
@@ -240,7 +238,7 @@ static int source_group2(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
-    size_t group_id = LUAX_INTEGER(L, 2);
+    size_t group_id = (size_t)LUAX_INTEGER(L, 2);
 
     SL_source_set_group(self->source, group_id);
 
@@ -264,10 +262,10 @@ static int source_mix1(lua_State *L)
 
     SL_Mix_t mix = SL_source_get_mix(self->source);
 
-    lua_pushnumber(L, mix.left_to_left);
-    lua_pushnumber(L, mix.left_to_right);
-    lua_pushnumber(L, mix.right_to_left);
-    lua_pushnumber(L, mix.right_to_right);
+    lua_pushnumber(L, (lua_Number)mix.left_to_left);
+    lua_pushnumber(L, (lua_Number)mix.left_to_right);
+    lua_pushnumber(L, (lua_Number)mix.right_to_left);
+    lua_pushnumber(L, (lua_Number)mix.right_to_right);
 
     return 4;
 }
@@ -364,7 +362,7 @@ static int source_gain1(lua_State *L)
     LUAX_SIGNATURE_END
     const Source_Object_t *self = (const Source_Object_t *)LUAX_USERDATA(L, 1);
 
-    lua_pushnumber(L, SL_source_get_gain(self->source));
+    lua_pushnumber(L, (lua_Number)SL_source_get_gain(self->source));
 
     return 1;
 }
@@ -398,7 +396,7 @@ static int source_speed1(lua_State *L)
     LUAX_SIGNATURE_END
     const Source_Object_t *self = (const Source_Object_t *)LUAX_USERDATA(L, 1);
 
-    lua_pushnumber(L, SL_source_get_speed(self->source));
+    lua_pushnumber(L, (lua_Number)SL_source_get_speed(self->source));
 
     return 1;
 }

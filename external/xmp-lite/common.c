@@ -21,7 +21,6 @@
  */
 
 #include <ctype.h>
-#include <sys/types.h>
 #include <stdarg.h>
 #ifdef __WATCOMC__
 #include <direct.h>
@@ -138,7 +137,7 @@ int libxmp_alloc_tracks_in_pattern(struct xmp_module *mod, int num)
 int libxmp_alloc_pattern_tracks(struct xmp_module *mod, int num, int rows)
 {
 	/* Sanity check */
-	if (rows < 0 || rows > 256)
+	if (rows <= 0 || rows > 256)
 		return -1;
 
 	if (libxmp_alloc_pattern(mod, num) < 0)
@@ -205,6 +204,96 @@ void libxmp_read_title(HIO_HANDLE *f, char *t, int s)
 	hio_read(buf, 1, s, f);		/* coverity[check_return] */
 	buf[s] = 0;
 	libxmp_copy_adjust(t, buf, s);
+}
+
+int libxmp_copy_name_for_fopen(char *dest, const char *name, int n)
+{
+	int converted_colon = 0;
+	int i;
+
+	/* libxmp_copy_adjust, but make sure the filename won't do anything
+	 * malicious when given to fopen. This should only be used on song files.
+	 */
+	if (!strcmp(name, ".") || strstr(name, "..") ||
+	    name[0] == '\\' || name[0] == '/' || name[0] == ':')
+		return -1;
+
+
+	for (i = 0; i < n - 1; i++) {
+		uint8_t t = name[i];
+		if (!t)
+			break;
+
+		/* Reject non-ASCII symbols as they have poorly defined behavior.
+		 */
+		if (t < 32 || t >= 0x7f)
+			return -1;
+
+		/* Reject anything resembling a Windows-style root path. Allow
+		 * converting a single : to / so things like ST-01:samplename
+		 * work. (Leave the : as-is on Amiga.)
+		 */
+		if (i > 0 && t == ':' && !converted_colon) {
+			uint8_t t2 = name[i + 1];
+			if (!t2 || t2 == '/' || t2 == '\\')
+				return -1;
+
+			converted_colon = 1;
+#ifndef LIBXMP_AMIGA
+			dest[i] = '/';
+			continue;
+#endif
+		}
+
+		if (t == '\\') {
+			dest[i] = '/';
+			continue;
+		}
+
+		dest[i] = t;
+	}
+	dest[i] = '\0';
+	return 0;
+}
+
+/*
+ * Honor Noisetracker effects:
+ *
+ *  0 - arpeggio
+ *  1 - portamento up
+ *  2 - portamento down
+ *  3 - Tone-portamento
+ *  4 - Vibrato
+ *  A - Slide volume
+ *  B - Position jump
+ *  C - Set volume
+ *  D - Pattern break
+ *  E - Set filter (keep the led off, please!)
+ *  F - Set speed (now up to $1F)
+ *
+ * Pex Tufvesson's notes from http://www.livet.se/mahoney/:
+ *
+ * Note that some of the modules will have bugs in the playback with all
+ * known PC module players. This is due to that in many demos where I synced
+ * events in the demo with the music, I used commands that these newer PC
+ * module players erroneously interpret as "newer-version-trackers commands".
+ * Which they aren't.
+ */
+void libxmp_decode_noisetracker_event(struct xmp_event *event, uint8_t *mod_event)
+{
+	int fxt;
+
+	memset(event, 0, sizeof (struct xmp_event));
+	event->note = libxmp_period_to_note((LSN(mod_event[0]) << 8) + mod_event[1]);
+	event->ins = ((MSN(mod_event[0]) << 4) | MSN(mod_event[2]));
+	fxt = LSN(mod_event[2]);
+
+	if (fxt <= 0x06 || (fxt >= 0x0a && fxt != 0x0e)) {
+		event->fxt = fxt;
+		event->fxp = mod_event[3];
+	}
+
+	libxmp_disable_continue_fx(event);
 }
 
 void libxmp_decode_protracker_event(struct xmp_event *event, uint8_t *mod_event)

@@ -31,7 +31,7 @@
 #include <libs/sl/sl.h>
 
 typedef enum _UserData_t { // TODO: move to a suitable space.
-    USERDATA_FILE_SYSTEM = 1,
+    USERDATA_STORAGE = 1,
     USERDATA_DISPLAY,
     USERDATA_INPUT,
     USERDATA_AUDIO,
@@ -63,32 +63,46 @@ typedef struct _Canvas_Object_t {
 } Canvas_Object_t;
 
 typedef struct _Bank_Object_t {
-    GL_Context_t *context;
-    luaX_Reference context_reference;
-    GL_Surface_t *surface;
-    luaX_Reference surface_reference;
+    struct {
+        const Canvas_Object_t *instance;
+        luaX_Reference reference;
+    } canvas;
+    struct {
+        const Canvas_Object_t *instance;
+        luaX_Reference reference;
+    } atlas;
     GL_Sheet_t *sheet;
 } Bank_Object_t;
 
 typedef struct _Font_Object_t {
-    GL_Context_t *context;
-    luaX_Reference context_reference;
-    GL_Surface_t *surface;
-    luaX_Reference surface_reference;
+    struct {
+        const Canvas_Object_t *instance;
+        luaX_Reference reference;
+    } canvas;
+    struct {
+        const Canvas_Object_t *instance;
+        luaX_Reference reference;
+    } atlas;
     GL_Sheet_t *sheet;
 } Font_Object_t;
 
 typedef struct _Batch_Object_t {
-    const Bank_Object_t *bank;
-    luaX_Reference bank_reference;
+    struct {
+        const Bank_Object_t *instance;
+        luaX_Reference reference;
+    } bank;
     GL_Batch_t *batch;
 } Batch_Object_t;
 
 typedef struct _XForm_Object_t {
-    GL_Context_t *context;
-    luaX_Reference context_reference;
-    const GL_Surface_t *surface;
-    luaX_Reference surface_reference;
+    struct {
+        const Canvas_Object_t *instance;
+        luaX_Reference reference;
+    } canvas;
+    struct {
+        const Canvas_Object_t *instance;
+        luaX_Reference reference;
+    } source;
     GL_XForm_t xform;
 } XForm_Object_t;
 
@@ -105,7 +119,7 @@ typedef struct _Grid_Object_t {
 } Grid_Object_t;
 
 typedef struct _Source_Object_t {
-    File_System_Handle_t *handle;
+    FS_Handle_t *handle;
     SL_Source_t *source;
 } Source_Object_t;
 

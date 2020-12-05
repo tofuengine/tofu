@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2016 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2018 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -20,18 +20,18 @@
  * THE SOFTWARE.
  */
 
-#include <stdlib.h>
-#include <string.h>
 #include "format.h"
 
-extern const struct format_loader libxmp_loader_xm;
-extern const struct format_loader libxmp_loader_mod;
-extern const struct format_loader libxmp_loader_it;
-extern const struct format_loader libxmp_loader_s3m;
+#include <string.h>
 
-extern const struct pw_format *const pw_format[];
+#include "xm_load.h"
+#include "mod_load.h"
+#ifndef LIBXMP_CORE_DISABLE_IT
+#include "it_load.h"
+#endif
+#include "s3m_load.h"
 
-const struct format_loader *const format_loader[5] = {
+const struct format_loader *const format_loaders[] = {
 	&libxmp_loader_xm,
 	&libxmp_loader_mod,
 #ifndef LIBXMP_CORE_DISABLE_IT
@@ -40,20 +40,3 @@ const struct format_loader *const format_loader[5] = {
 	&libxmp_loader_s3m,
 	NULL
 };
-
-static const char *_farray[5] = { NULL };
-
-char **format_list()
-{
-	int count, i;
-
-	if (_farray[0] == NULL) {
-		for (count = i = 0; format_loader[i] != NULL; i++) {
-			_farray[count++] = format_loader[i]->name;
-		}
-
-		_farray[count] = NULL;
-	}
-
-	return (char **)_farray;
-}

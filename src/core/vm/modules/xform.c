@@ -26,17 +26,12 @@
 
 #include <config.h>
 #include <core/io/display.h>
-#include <core/vm/interpreter.h>
-#include <libs/fs/fsaux.h>
 #include <libs/log.h>
+#include <libs/luax.h>
 #include <libs/map.h>
 #include <libs/stb.h>
 
 #include "udt.h"
-#include "callbacks.h"
-
-#include <math.h>
-#include <string.h>
 
 #define LOG_CONTEXT "xform"
 #define META_TABLE  "Tofu_Graphics_XForm_mt"
@@ -52,7 +47,7 @@ static int xform_table(lua_State *L);
 
 static const struct luaL_Reg _xform_functions[] = {
     { "new", xform_new },
-    {"__gc", xform_gc },
+    { "__gc", xform_gc },
     { "canvas", xform_canvas },
     { "blit", xform_blit },
     { "offset", xform_offset },
@@ -72,17 +67,21 @@ static int xform_new(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_USERDATA(L, 1);
-
-    const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+    const Canvas_Object_t *source = (const Canvas_Object_t *)LUAX_USERDATA(L, 2);
 
     XForm_Object_t *self = (XForm_Object_t *)lua_newuserdatauv(L, sizeof(XForm_Object_t), 1);
     *self = (XForm_Object_t){
-            .context = display->context,
-            .context_reference = LUAX_REFERENCE_NIL,
-            .surface = canvas->context->surface,
-            .surface_reference = luaX_ref(L, 1),
+            .canvas = {
+                .instance = canvas,
+                .reference = luaX_ref(L, 1)
+            },
+            .source = {
+                .instance = source,
+                .reference = luaX_ref(L, 2),
+            },
             .xform = (GL_XForm_t){
                     .registers = {
                         0.0f, 0.0f, // No offset
@@ -112,15 +111,11 @@ static int xform_gc(lua_State *L)
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform scan-line table %p freed", self->xform.table);
     }
 
-    if (self->context_reference != LUAX_REFERENCE_NIL) {
-        luaX_unref(L, self->context_reference);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context reference #%d released", self->context_reference);
-    }
+    luaX_unref(L, self->canvas.reference);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas reference #%d released", self->canvas.reference);
 
-    if (self->surface_reference != LUAX_REFERENCE_NIL) {
-        luaX_unref(L, self->surface_reference);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface reference #%d released", self->surface_reference);
-    }
+    luaX_unref(L, self->source.reference);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source reference #%d released", self->source.reference);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform %p finalized", self);
 
@@ -131,27 +126,17 @@ static int xform_canvas(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     XForm_Object_t *self = (XForm_Object_t *)LUAX_USERDATA(L, 1);
-    const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 2, NULL);
+    const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_USERDATA(L, 2);
 
-    const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+    luaX_unref(L, self->canvas.reference);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas reference #%d released", self->canvas.reference);
 
-    if (self->context_reference != LUAX_REFERENCE_NIL) {
-        luaX_unref(L, self->context_reference);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context reference #%d released", self->context_reference);
-    }
-
-    if (canvas) {
-        self->context = canvas->context;
-        self->context_reference = luaX_ref(L, 2);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context %p attached w/ reference #%d", self->context, self->context_reference);
-    } else {
-        self->context = display->context;
-        self->context_reference = LUAX_REFERENCE_NIL;
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "default context attached");
-    }
+    self->canvas.instance = canvas;
+    self->canvas.reference = luaX_ref(L, 2);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas %p attached w/ reference #%d", canvas, self->canvas.reference);
 
     return 0;
 }
@@ -167,8 +152,8 @@ static int xform_blit1_3(lua_State *L)
     int x = LUAX_OPTIONAL_INTEGER(L, 2, 0);
     int y = LUAX_OPTIONAL_INTEGER(L, 3, 0);
 
-    const GL_Context_t *context = self->context;
-    const GL_Surface_t *surface = self->surface;
+    const GL_Context_t *context = self->canvas.instance->context;
+    const GL_Surface_t *surface = self->source.instance->context->surface;
     const GL_XForm_t *xform = &self->xform;
     GL_context_blit_x(context, surface, (GL_Point_t){ .x = x, .y = y }, xform);
 
@@ -355,7 +340,7 @@ static int xform_table2(lua_State *L)
                 break;
             }
             entry.count = i + 1;
-            entry.operations[i].id = map_find(L, LUAX_STRING(L, -2), _registers, GL_XForm_Registers_t_CountOf)->value;
+            entry.operations[i].id = (GL_XForm_Registers_t)map_find(L, LUAX_STRING(L, -2), _registers, GL_XForm_Registers_t_CountOf)->value;
             entry.operations[i].value = (float)LUAX_NUMBER(L, -1);
 
             lua_pop(L, 1);

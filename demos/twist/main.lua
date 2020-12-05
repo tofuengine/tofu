@@ -36,8 +36,8 @@ function Main:__ctor()
   local canvas = Canvas.default()
   local width, height = canvas:size()
 
-  self.bank = Bank.new("assets/sheet.png", 8, 8)
-  self.font = Font.default(0, 255)
+  self.bank = Bank.new(canvas, Canvas.new("assets/sheet.png"), 8, 8)
+  self.font = Font.default(canvas, 0, 255)
 
   local cw, ch = self.bank:size(-1)
   self.columns = width / cw

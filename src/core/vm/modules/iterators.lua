@@ -46,7 +46,7 @@ local function reverse(t, looped)
         if looped and looped(t) then
           return nil
         end
-        i = n
+        i = n + 1
       end
       return t[i]
     end

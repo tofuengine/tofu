@@ -29,37 +29,35 @@
 #include <libs/log.h>
 #include <libs/stb.h>
 
-#include <stdarg.h>
-#include <stdio.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
 #define LOG_CONTEXT "fs-std"
 
 typedef struct _Std_Mount_t {
-    Mount_VTable_t vtable;
+    Mount_VTable_t vtable; // Matches `_FS_Mount_t` structure.
     char base_path[FILE_PATH_MAX];
 } Std_Mount_t;
 
 typedef struct _Std_Handle_t {
-    Handle_VTable_t vtable;
+    Handle_VTable_t vtable; // Matches `_FS_Handle_t` structure.
     FILE *stream;
 } Std_Handle_t;
 
-static void _std_mount_ctor(File_System_Mount_t *mount, const char *base_path);
-static void _std_mount_dtor(File_System_Mount_t *mount);
-static bool _std_mount_contains(const File_System_Mount_t *mount, const char *file);
-static File_System_Handle_t *_std_mount_open(const File_System_Mount_t *mount, const char *file);
+static void _std_mount_ctor(FS_Mount_t *mount, const char *base_path);
+static void _std_mount_dtor(FS_Mount_t *mount);
+static bool _std_mount_contains(const FS_Mount_t *mount, const char *file);
+static FS_Handle_t *_std_mount_open(const FS_Mount_t *mount, const char *file);
 
-static void _std_handle_ctor(File_System_Handle_t *handle, FILE *stream);
-static void _std_handle_dtor(File_System_Handle_t *handle);
-static size_t _std_handle_size(File_System_Handle_t *handle);
-static size_t _std_handle_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested);
-static bool _std_handle_seek(File_System_Handle_t *handle, long offset, int whence);
-static long _std_handle_tell(File_System_Handle_t *handle);
-static bool _std_handle_eof(File_System_Handle_t *handle);
+static void _std_handle_ctor(FS_Handle_t *handle, FILE *stream);
+static void _std_handle_dtor(FS_Handle_t *handle);
+static size_t _std_handle_size(FS_Handle_t *handle);
+static size_t _std_handle_read(FS_Handle_t *handle, void *buffer, size_t bytes_requested);
+static bool _std_handle_seek(FS_Handle_t *handle, long offset, int whence);
+static long _std_handle_tell(FS_Handle_t *handle);
+static bool _std_handle_eof(FS_Handle_t *handle);
 
-bool std_is_valid(const char *path)
+bool FS_std_is_valid(const char *path)
 {
     struct stat path_stat;
     int result = stat(path, &path_stat);
@@ -71,9 +69,9 @@ bool std_is_valid(const char *path)
     return S_ISDIR(path_stat.st_mode);
 }
 
-File_System_Mount_t *std_mount(const char *path)
+FS_Mount_t *FS_std_mount(const char *path)
 {
-    File_System_Mount_t *mount = malloc(sizeof(Std_Mount_t));
+    FS_Mount_t *mount = malloc(sizeof(Std_Mount_t));
     if (!mount) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate mount for folder `%s`", path);
         return NULL;
@@ -86,28 +84,30 @@ File_System_Mount_t *std_mount(const char *path)
     return mount;
 }
 
-static void _std_mount_ctor(File_System_Mount_t *mount, const char *base_path)
+static void _std_mount_ctor(FS_Mount_t *mount, const char *base_path)
 {
     Std_Mount_t *std_mount = (Std_Mount_t *)mount;
 
-    *std_mount = (Std_Mount_t){ 0 };
-    std_mount->vtable = (Mount_VTable_t){
-            .dtor = _std_mount_dtor,
-            .contains = _std_mount_contains,
-            .open = _std_mount_open
+    *std_mount = (Std_Mount_t){
+            .vtable = (Mount_VTable_t){
+                .dtor = _std_mount_dtor,
+                .contains = _std_mount_contains,
+                .open = _std_mount_open
+            },
+            .base_path = { 0 }
         };
 
     strcpy(std_mount->base_path, base_path);
 }
 
-static void _std_mount_dtor(File_System_Mount_t *mount)
+static void _std_mount_dtor(FS_Mount_t *mount)
 {
     Std_Mount_t *std_mount = (Std_Mount_t *)mount;
 
     *std_mount = (Std_Mount_t){ 0 };
 }
 
-static bool _std_mount_contains(const File_System_Mount_t *mount, const char *file)
+static bool _std_mount_contains(const FS_Mount_t *mount, const char *file)
 {
     const Std_Mount_t *std_mount = (const Std_Mount_t *)mount;
 
@@ -115,13 +115,18 @@ static bool _std_mount_contains(const File_System_Mount_t *mount, const char *fi
     strcpy(full_path, std_mount->base_path);
     strcat(full_path, FILE_PATH_SEPARATOR_SZ);
     strcat(full_path, file);
+    for (size_t i = 0; full_path[i] != '\0'; ++i) { // Replace virtual file-system separtor `/` with the actual one.
+        if (full_path[i] == FS_PATH_SEPARATOR) {
+            full_path[i] = FILE_PATH_SEPARATOR;
+        }
+    } // FIXME: better organize name normalization.
 
     bool exists = access(full_path, R_OK) != -1;
     Log_assert(!exists, LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` found in mount %p", file, mount);
     return exists;
 }
 
-static File_System_Handle_t *_std_mount_open(const File_System_Mount_t *mount, const char *file)
+static FS_Handle_t *_std_mount_open(const FS_Mount_t *mount, const char *file)
 {
     const Std_Mount_t *std_mount = (const Std_Mount_t *)mount;
 
@@ -129,6 +134,11 @@ static File_System_Handle_t *_std_mount_open(const File_System_Mount_t *mount, c
     strcpy(full_path, std_mount->base_path);
     strcat(full_path, FILE_PATH_SEPARATOR_SZ);
     strcat(full_path, file);
+    for (size_t i = 0; full_path[i] != '\0'; ++i) { // Replace virtual file-system separtor `/` with the actual one.
+        if (full_path[i] == FS_PATH_SEPARATOR) {
+            full_path[i] = FILE_PATH_SEPARATOR;
+        }
+    }
 
     FILE *stream = fopen(full_path, "rb");
     if (!stream) {
@@ -136,7 +146,7 @@ static File_System_Handle_t *_std_mount_open(const File_System_Mount_t *mount, c
         return NULL;
     }
 
-    File_System_Handle_t *handle = malloc(sizeof(Std_Handle_t));
+    FS_Handle_t *handle = malloc(sizeof(Std_Handle_t));
     if (!handle) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate handle for file `%s`", file);
         fclose(stream);
@@ -150,31 +160,31 @@ static File_System_Handle_t *_std_mount_open(const File_System_Mount_t *mount, c
     return handle;
 }
 
-static void _std_handle_ctor(File_System_Handle_t *handle, FILE *stream)
+static void _std_handle_ctor(FS_Handle_t *handle, FILE *stream)
 {
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
-    *std_handle = (Std_Handle_t){ 0 };
-    std_handle->vtable = (Handle_VTable_t){
-            .dtor = _std_handle_dtor,
-            .size = _std_handle_size,
-            .read = _std_handle_read,
-            .seek = _std_handle_seek,
-            .tell = _std_handle_tell,
-            .eof = _std_handle_eof
+    *std_handle = (Std_Handle_t){
+            .vtable = (Handle_VTable_t){
+                .dtor = _std_handle_dtor,
+                .size = _std_handle_size,
+                .read = _std_handle_read,
+                .seek = _std_handle_seek,
+                .tell = _std_handle_tell,
+                .eof = _std_handle_eof
+            },
+            .stream = stream
         };
-
-    std_handle->stream = stream;
 }
 
-static void _std_handle_dtor(File_System_Handle_t *handle)
+static void _std_handle_dtor(FS_Handle_t *handle)
 {
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
     fclose(std_handle->stream);
 }
 
-static size_t _std_handle_size(File_System_Handle_t *handle)
+static size_t _std_handle_size(FS_Handle_t *handle)
 {
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
@@ -190,7 +200,7 @@ static size_t _std_handle_size(File_System_Handle_t *handle)
     return (size_t)stat.st_size;
 }
 
-static size_t _std_handle_read(File_System_Handle_t *handle, void *buffer, size_t bytes_requested)
+static size_t _std_handle_read(FS_Handle_t *handle, void *buffer, size_t bytes_requested)
 {
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
@@ -202,7 +212,7 @@ static size_t _std_handle_read(File_System_Handle_t *handle, void *buffer, size_
     return bytes_read;
 }
 
-static bool _std_handle_seek(File_System_Handle_t *handle, long offset, int whence)
+static bool _std_handle_seek(FS_Handle_t *handle, long offset, int whence)
 {
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
@@ -213,14 +223,14 @@ static bool _std_handle_seek(File_System_Handle_t *handle, long offset, int when
     return seeked;
 }
 
-static long _std_handle_tell(File_System_Handle_t *handle)
+static long _std_handle_tell(FS_Handle_t *handle)
 {
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
     return ftell(std_handle->stream);
 }
 
-static bool _std_handle_eof(File_System_Handle_t *handle)
+static bool _std_handle_eof(FS_Handle_t *handle)
 {
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 

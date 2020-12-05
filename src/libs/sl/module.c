@@ -24,7 +24,6 @@
 
 #include "music.h"
 
-#include "common.h"
 #include "internals.h"
 #include "mix.h"
 
@@ -64,7 +63,6 @@ typedef struct _Module_t {
     SL_Props_t *props;
 
     xmp_context context;
-    struct xmp_frame_info frame_info;
 
     ma_pcm_rb buffer;
     bool completed;
@@ -131,7 +129,7 @@ static inline bool _produce(Module_t *module)
 
 SL_Source_t *SL_module_create(const SL_Context_t *context, SL_Callbacks_t callbacks)
 {
-    Module_t *module = malloc(sizeof(Module_t));
+    SL_Source_t *module = malloc(sizeof(Module_t));
     if (!module) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate module structure");
         return NULL;

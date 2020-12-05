@@ -66,7 +66,7 @@ function Tofu:__ctor()
 
           Speakers.halt() -- Stop all sounds sources.
 
-          me.font = Font.default("5x8", 0, 1)
+          me.font = Font.default(canvas, "5x8", 0, 1)
           me.lines = {
               { text = "Software Failure." },
               { text = "Guru Meditation" }

@@ -33,15 +33,11 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
 #include "interpreter.h"
 
 #include <config.h>
-#include <core/io/display.h>
 #include <core/vm/modules.h>
-#include <libs/fs/fs.h>
-#include <libs/imath.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 
-#include <limits.h>
-#include <string.h>
+#include <stdint.h>
 #ifdef __DEBUG_GARBAGE_COLLECTOR__
   #include <time.h>
 #endif
@@ -65,11 +61,10 @@ static const uint8_t _boot_lua[] = {
 #endif
 };
 
-#define READER_BUFFER_SIZE  2048
-
 typedef struct _Reader_Context_t {
-    File_System_Handle_t *handle;
-    char buffer[READER_BUFFER_SIZE];
+    char *ptr;
+    size_t size;
+    size_t index;
 } Reader_Context_t;
 
 typedef enum _Methods_t {
@@ -153,60 +148,49 @@ static int _error_handler(lua_State *L)
 #endif
 #endif
 
+// [...] Every time lua_load needs another piece of the chunk, it calls the reader, passing along its data parameter.
+// The reader must return a pointer to a block of memory with a new piece of the chunk and set size to the block size.
+// The block must exist until the reader function is called again. To signal the end of the chunk, the reader must
+// return NULL or set size to zero. The reader function may return pieces of any size greater than zero. [...]
 static const char *_reader(lua_State *L, void *ud, size_t *size)
 {
     Reader_Context_t *context = (Reader_Context_t *)ud;
-    File_System_Handle_t *handle = context->handle;
 
-    if (FS_eof(handle)) {
+    const size_t available = context->size - context->index;
+    if (available == 0) {
+        *size = 0;
         return NULL;
     }
 
-    *size = FS_read(handle, context->buffer, READER_BUFFER_SIZE);
+    context->index += context->size; // Advance to end, we return the whole chunk at once.
 
-    return context->buffer;
-}
-
-static int _load(const File_System_t *file_system, const char *file, lua_State *L)
-{
-    File_System_Mount_t *mount = FS_locate(file_system, file);
-    if (!mount) {
-        return LUA_ERRFILE;
-    }
-
-    File_System_Handle_t *handle = FS_open(mount, file);
-    if (!handle) {
-        return LUA_ERRFILE;
-    }
-
-    char name[FILE_PATH_MAX] = "@"; // Prepend a `@`, required by Lua to track files.
-    strcat(name, file);
-
-    int result = lua_load(L, _reader, &(Reader_Context_t){ .handle = handle }, name, NULL); // nor `text` nor `binary`, autodetect.
-
-    FS_close(handle);
-
-    return result;
+    *size = context->size;
+    return context->ptr;
 }
 
 static int _searcher(lua_State *L)
 {
-    const File_System_t *file_system = (const File_System_t *)lua_touserdata(L, lua_upvalueindex(1));
+    Storage_t *storage = (Storage_t *)lua_touserdata(L, lua_upvalueindex(1));
 
     const char *file = lua_tostring(L, 1);
 
-    char path_file[FILE_PATH_MAX];
-    strcpy(path_file, file);
-    for (int i = 0; path_file[i] != '\0'; ++i) { // Replace `.' with '/` to map file system entry.
+    char path_file[FILE_PATH_MAX] = "@"; // Prepend a `@`, required by Lua to track files.
+    strcat(path_file, file);
+    for (size_t i = 1; path_file[i] != '\0'; ++i) { // Replace `.` with `/` to map (virtual) file system entry.
         if (path_file[i] == '.') {
-            path_file[i] = FILE_SYSTEM_PATH_SEPARATOR;
+            path_file[i] = FS_PATH_SEPARATOR;
         }
     }
     strcat(path_file, ".lua");
 
-    int result = _load(file_system, path_file, L);
+    const Storage_Resource_t *resource = Storage_load(storage, path_file + 1, STORAGE_RESOURCE_BLOB);
+    if (!resource) {
+        return LUA_ERRFILE;
+    }
+
+    int result = lua_load(L, _reader, &(Reader_Context_t){ .ptr = S_BPTR(resource), .size = S_BSIZE(resource) }, path_file, NULL); // Neither `text` nor `binary`: autodetect.
     if (result != LUA_OK) {
-        luaL_error(L, "failed w/ error #%d while loading file `%s`", result, path_file);
+        luaL_error(L, "failed w/ error #%d while loading file `%s`", result, path_file + 1); // Skip the `@` character.
     }
 
     return 1;
@@ -287,7 +271,7 @@ static int _call(lua_State *L, Methods_t method, int nargs, int nresults)
 #endif
 }
 
-Interpreter_t *Interpreter_create(const File_System_t *file_system, const void *userdatas[])
+Interpreter_t *Interpreter_create(const Storage_t *storage, const void *userdatas[])
 {
     Interpreter_t *interpreter = malloc(sizeof(Interpreter_t));
     if (!interpreter) {
@@ -296,6 +280,8 @@ Interpreter_t *Interpreter_create(const File_System_t *file_system, const void *
     }
 
     *interpreter = (Interpreter_t){ 0 };
+
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "Lua: %s.%s.%s", LUA_VERSION_MAJOR, LUA_VERSION_MINOR, LUA_VERSION_RELEASE);
 
     interpreter->state = lua_newstate(_allocate, NULL); // No user-data is passed.
     if (!interpreter->state) {
@@ -328,7 +314,7 @@ Interpreter_t *Interpreter_create(const File_System_t *file_system, const void *
     lua_pushlightuserdata(interpreter->state, interpreter); // Push the interpreter itself as first upvalue.
     modules_initialize(interpreter->state, nup + 1); // Take into account the self-pushed interpreter pointer.
 
-    lua_pushlightuserdata(interpreter->state, (void *)file_system);
+    lua_pushlightuserdata(interpreter->state, (void *)storage);
     luaX_overridesearchers(interpreter->state, _searcher, 1);
 
 #ifdef __DEBUG_VM_CALLS__
@@ -340,9 +326,6 @@ Interpreter_t *Interpreter_create(const File_System_t *file_system, const void *
     lua_pushcfunction(interpreter->state, _error_handler);
 #endif
 #endif
-
-    size_t version = (size_t)lua_version(interpreter->state);
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "Lua: %d.%d", version / 100, version % 100);
 
     int result = _execute(interpreter->state, (const char *)_boot_lua, sizeof(_boot_lua) / sizeof(char), "@boot.lua", 0, 1); // Prefix '@' to trace as filename internally in Lua.
     if (result != 0) {

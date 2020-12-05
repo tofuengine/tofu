@@ -27,13 +27,14 @@
 #include <config.h>
 #include <core/environment.h>
 #include <libs/log.h>
+#include <libs/luax.h>
+#include <version.h>
 
 #include "udt.h"
 
-#include <string.h>
-
 #define LOG_CONTEXT "system"
 
+static int system_version(lua_State *L);
 static int system_time(lua_State *L);
 static int system_fps(lua_State *L);
 static int system_quit(lua_State *L);
@@ -43,6 +44,7 @@ static int system_error(lua_State *L);
 static int system_fatal(lua_State *L);
 
 static const struct luaL_Reg _system_functions[] = {
+    { "version", system_version },
     { "time", system_time },
     { "fps", system_fps },
     { "quit", system_quit },
@@ -59,6 +61,18 @@ int system_loader(lua_State *L)
     return luaX_newmodule(L, NULL, _system_functions, NULL, nup, NULL);
 }
 
+static int system_version(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+    LUAX_SIGNATURE_END
+
+    lua_pushinteger(L, (lua_Integer)TOFU_VERSION_MAJOR);
+    lua_pushinteger(L, (lua_Integer)TOFU_VERSION_MINOR);
+    lua_pushinteger(L, (lua_Integer)TOFU_VERSION_REVISION);
+
+    return 3;
+}
+
 static int system_time(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -66,7 +80,7 @@ static int system_time(lua_State *L)
 
     const Environment_t *environment = (const Environment_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
 
-    lua_pushnumber(L, Environment_get_time(environment));
+    lua_pushnumber(L, (lua_Number)Environment_get_time(environment));
 
     return 1;
 }

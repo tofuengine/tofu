@@ -45,7 +45,7 @@ const struct format_loader libxmp_loader_it = {
 	it_load
 };
 
-static int it_test(HIO_HANDLE * f, char *t, const int start)
+static int it_test(HIO_HANDLE *f, char *t, const int start)
 {
 	if (hio_read32b(f) != MAGIC_IMPM)
 		return -1;
@@ -61,7 +61,7 @@ static int it_test(HIO_HANDLE * f, char *t, const int start)
 #define L_CHANNELS 64
 
 
-static const uint8_t fx[] = {
+static const uint8_t fx[32] = {
 	/*   */ FX_NONE,
 	/* A */ FX_S3M_SPEED,
 	/* B */ FX_JUMP,
@@ -88,7 +88,12 @@ static const uint8_t fx[] = {
 	/* W */ FX_GVOL_SLIDE,
 	/* X */ FX_SETPAN,
 	/* Y */ FX_PANBRELLO,
-	/* Z */ FX_FLT_CUTOFF
+	/* Z */ FX_FLT_CUTOFF,
+	/* ? */ FX_NONE,
+	/* ? */ FX_NONE,
+	/* ? */ FX_NONE,
+	/* ? */ FX_NONE,
+	/* ? */ FX_NONE
 };
 
 static void xlat_fx(int c, struct xmp_event *e, uint8_t *last_fxp, int new_fx)
@@ -296,7 +301,7 @@ static int read_envelope(struct xmp_envelope *ei, struct it_envelope *env,
 	ei->lps = env->lpb;
 	ei->lpe = env->lpe;
 
-	if (ei->npt > 0 && ei->npt <= 25 /* XMP_MAX_ENV_POINTS */ ) {
+	if (ei->npt > 0 && ei->npt <= 25 /* XMP_MAX_ENV_POINTS */) {
 		for (i = 0; i < ei->npt; i++) {
 			ei->data[i * 2] = env->node[i].x;
 			ei->data[i * 2 + 1] = env->node[i].y;
@@ -345,13 +350,13 @@ static int load_old_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
 	memcpy(i1h.name, buf + 32, 26);
 	fix_name(i1h.name, 26);
 
-	if (hio_read(&i1h.keys, 1, 240, f) != 240) {
+	if (hio_read(i1h.keys, 1, 240, f) != 240) {
 		return -1;
 	}
-	if (hio_read(&i1h.epoint, 1, 200, f) != 200) {
+	if (hio_read(i1h.epoint, 1, 200, f) != 200) {
 		return -1;
 	}
-	if (hio_read(&i1h.enode, 1, 50, f) != 50) {
+	if (hio_read(i1h.enode, 1, 50, f) != 50) {
 		return -1;
 	}
 
@@ -448,7 +453,7 @@ static int load_new_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
 	int inst_map[120], inst_rmap[XMP_MAX_KEYS];
 	struct it_instrument2_header i2h;
 	struct it_envelope env;
-	int dca2nna[] = { 0, 2, 3 };
+	int dca2nna[] = { 0, 2, 3, 3 /* Northern Sky (cj-north.it) has this... */ };
 	int c, k, j;
 	uint8_t buf[64];
 
@@ -493,7 +498,7 @@ static int load_new_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
 	i2h.mpr = buf[61];
 	i2h.mbnk = readmem16l(buf + 62);
 
-	if (hio_read(&i2h.keys, 1, 240, f) != 240) {
+	if (hio_read(i2h.keys, 1, 240, f) != 240) {
 		D_(D_CRIT "key map read error");
 		return -1;
 	}
@@ -682,6 +687,7 @@ static int load_it_sample(struct module_data *m, int i, int start,
 
 	if (sample_mode) {
 		/* Create an instrument for each sample */
+		mod->xxi[i].vol = 64;
 		mod->xxi[i].sub[0].vol = ish.vol;
 		mod->xxi[i].sub[0].pan = 0x80;
 		mod->xxi[i].sub[0].sid = i;
@@ -691,7 +697,7 @@ static int load_it_sample(struct module_data *m, int i, int start,
 		libxmp_copy_adjust(xxs->name, ish.name, 25);
 	}
 
-	D_(D_INFO "[%2X] %-26.26s %05x%c%05x %05x %05x %05x "
+	D_(D_INFO "\n[%2X] %-26.26s %05x%c%05x %05x %05x %05x "
 	   "%02x%02x %02x%02x %5d ",
 	   i, sample_mode ? xxs->name : mod->xxi[i].name,
 	   xxs->len,
@@ -714,7 +720,7 @@ static int load_it_sample(struct module_data *m, int i, int start,
 				sub->vol = ish.vol;
 				sub->gvl = ish.gvl;
 				sub->vra = ish.vis;	/* sample to sub-instrument vibrato */
-				sub->vde = ish.vid >> 1;
+				sub->vde = ish.vid << 1;
 				sub->vwf = ish.vit;
 				sub->vsw = (0xff - ish.vir) >> 1;
 
@@ -823,7 +829,7 @@ static int load_it_pattern(struct module_data *m, int i, int new_fx,
 
 	r = 0;
 
-	memset(last_fxp, 0, 64);
+	memset(last_fxp, 0, sizeof(last_fxp));
 	memset(lastevent, 0, L_CHANNELS * sizeof(struct xmp_event));
 	memset(&dummy, 0, sizeof(struct xmp_event));
 
@@ -901,7 +907,7 @@ static int load_it_pattern(struct module_data *m, int i, int new_fx,
 		}
 		if (mask[c] & 0x08) {
 			b = hio_read8(f);
-			if (b > 31) {
+			if (b >= ARRAY_SIZE(fx)) {
 				D_(D_WARN "invalid effect %#02x", b);
 				hio_read8(f);
 				
@@ -1020,10 +1026,6 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	if (ifh.flags & IT_LINEAR_FREQ) {
 		m->period_type = PERIOD_LINEAR;
-	}
-
-	if (!sample_mode && ifh.cmwt >= 0x200) {
-		m->quirk |= QUIRK_INSVOL;
 	}
 
 	for (i = 0; i < 64; i++) {
@@ -1260,7 +1262,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	/* Format quirks */
 
-	m->quirk |= QUIRKS_IT | QUIRK_ARPMEM;
+	m->quirk |= QUIRKS_IT | QUIRK_ARPMEM | QUIRK_INSVOL;
 
 	if (ifh.flags & IT_LINK_GXX) {
 		m->quirk |= QUIRK_PRENV;

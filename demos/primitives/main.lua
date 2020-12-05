@@ -45,7 +45,7 @@ function Main:__ctor()
   local canvas = Canvas.default()
   canvas:color(3)
 
-  self.font = Font.default(0, 1)
+  self.font = Font.default(canvas, 0, 1)
   self.mode = 0
 end
 

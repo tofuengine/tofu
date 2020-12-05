@@ -19,12 +19,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
 #include <stdlib.h>
 #include "common.h"
 #include "period.h"
 #include "player.h"
 #include "hio.h"
-
+#include "loader.h"
 
 struct xmp_instrument *libxmp_get_instrument(struct context_data *ctx, int ins)
 {
@@ -303,9 +304,7 @@ LIBXMP_EXPORT int xmp_smix_release_sample(xmp_context opaque, int num)
 		return -XMP_ERROR_INVALID;
 	}
 
-	if (smix->xxs[num].data != NULL) {
-		free(smix->xxs[num].data - 4);
-	}
+	libxmp_free_sample(&smix->xxs[num]);
 	free(smix->xxi[num].sub);
 
 	smix->xxs[num].data = NULL;

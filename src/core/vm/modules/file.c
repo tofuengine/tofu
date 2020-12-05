@@ -25,14 +25,10 @@
 #include "file.h"
 
 #include <config.h>
-#include <core/vm/interpreter.h>
-#include <libs/fs/fsaux.h>
-#include <libs/log.h>
-#include <libs/stb.h>
+#include <core/io/storage.h>
+#include <libs/luax.h>
 
 #include "udt.h"
-
-#include <string.h>
 
 static int file_as_string(lua_State *L);
 static int file_as_binary(lua_State *L);
@@ -56,14 +52,13 @@ static int file_as_string(lua_State *L)
     LUAX_SIGNATURE_END
     const char *file = LUAX_STRING(L, 1);
 
-    const File_System_t *file_system = (const File_System_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
+    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
 
-    File_System_Resource_t *content = FSX_load(file_system, file, FILE_SYSTEM_RESOURCE_BLOB);
-    if (!content) {
+    const Storage_Resource_t *resource = Storage_load(storage, file, STORAGE_RESOURCE_BLOB);
+    if (!resource) {
         return luaL_error(L, "can't load file `%s`", file);
     }
-    lua_pushlstring(L, FSX_BPTR(content), FSX_BSIZE(content));
-    FSX_release(content);
+    lua_pushlstring(L, S_BPTR(resource), S_BSIZE(resource));
 
     return 1;
 }
@@ -75,15 +70,15 @@ static int file_as_binary(lua_State *L)
     LUAX_SIGNATURE_END
     const char *file = LUAX_STRING(L, 1);
 
-    const File_System_t *file_system = (const File_System_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_FILE_SYSTEM));
+    Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
 
-    File_System_Resource_t *content = FSX_load(file_system, file, FILE_SYSTEM_RESOURCE_BLOB);
-    if (!content) {
+    const Storage_Resource_t *resource = Storage_load(storage, file, STORAGE_RESOURCE_BLOB);
+    if (!resource) {
         return luaL_error(L, "can't load file `%s`", file);
     }
 //    lua_pushlstring(L, buffer, size);
     lua_pushnil(L); // TODO: read the file as a Base64 or similar encoded string.
-    FSX_release(content); // FIXME: useless, Lua's strings can contain bytes.
+    // FIXME: useless, Lua's strings can contain bytes.
 
     return 1;
 }

@@ -32,7 +32,7 @@
 
 typedef struct _Program_t {
     GLuint id;
-    GLuint *locations;
+    GLint *locations;
 } Program_t;
 
 typedef enum _Program_Uniforms_t {

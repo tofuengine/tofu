@@ -46,7 +46,7 @@ function Main:__ctor()
   local canvas = Canvas.default()
   local width, height = canvas:size()
 
-  self.font = Font.default(0, 15)
+  self.font = Font.default(canvas, 0, 15)
   self.x_size = width / STEPS
   self.y_size = height / STEPS
   self.windy = false

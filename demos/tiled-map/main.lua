@@ -102,8 +102,10 @@ end
 function Main:__ctor()
   Display.palette("gameboy")
 
-  self.font = Font.default(3, 1)
-  self.map = Map.from_file("assets/world.map")
+  local canvas = Canvas.default()
+
+  self.font = Font.default(canvas, 3, 1)
+  self.map = Map.from_file(canvas, "assets/world.map")
 
   self.map:add_camera("left", 7, 5, 8, 0)
   self.map:add_camera("right", 7, 5, 248, 0, 0.5, 0.5, 0.25)

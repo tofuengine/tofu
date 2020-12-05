@@ -24,12 +24,11 @@
 
 #include "sample.h"
 
-#include "common.h"
 #include "internals.h"
 #include "mix.h"
 
 #include <config.h>
-#include <dr_libs/dr_flac.h>
+#include <libs/dr_libs.h>
 #include <libs/log.h>
 #include <libs/stb.h>
 #include <miniaudio/miniaudio.h>
@@ -106,7 +105,7 @@ static inline bool _produce(Sample_t *sample)
 
 SL_Source_t *SL_sample_create(const SL_Context_t *context, SL_Callbacks_t callbacks)
 {
-    Sample_t *sample = malloc(sizeof(Sample_t));
+    SL_Source_t *sample = malloc(sizeof(Sample_t));
     if (!sample) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate sample structure");
         return NULL;

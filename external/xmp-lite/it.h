@@ -66,33 +66,33 @@
 
 
 struct it_file_header {
-	uint32_t magic;		/* 'IMPM' */
-	uint8_t name[26];		/* ASCIIZ Song name */
+	uint32_t magic;	/* 'IMPM' */
+	uint8_t name[26];	/* ASCIIZ Song name */
 	uint8_t hilite_min;	/* Pattern editor highlight */
 	uint8_t hilite_maj;	/* Pattern editor highlight */
-	uint16_t ordnum;		/* Number of orders (must be even) */
-	uint16_t insnum;		/* Number of instruments */
-	uint16_t smpnum;		/* Number of samples */
-	uint16_t patnum;		/* Number of patterns */
+	uint16_t ordnum;	/* Number of orders (must be even) */
+	uint16_t insnum;	/* Number of instruments */
+	uint16_t smpnum;	/* Number of samples */
+	uint16_t patnum;	/* Number of patterns */
 	uint16_t cwt;		/* Tracker ID and version */
 	uint16_t cmwt;		/* Format version */
-	uint16_t flags;		/* Flags */
-	uint16_t special;		/* More flags */
+	uint16_t flags;	/* Flags */
+	uint16_t special;	/* More flags */
 	uint8_t gv;		/* Global volume */
 	uint8_t mv;		/* Master volume */
 	uint8_t is;		/* Initial speed */
 	uint8_t it;		/* Initial tempo */
 	uint8_t sep;		/* Panning separation */
 	uint8_t pwd;		/* Pitch wheel depth */
-	uint16_t msglen;		/* Message length */
-	uint32_t msgofs;		/* Message offset */
+	uint16_t msglen;	/* Message length */
+	uint32_t msgofs;	/* Message offset */
 	uint32_t rsvd;		/* Reserved */
 	uint8_t chpan[64];	/* Channel pan settings */
 	uint8_t chvol[64];	/* Channel volume settings */
 };
 
 struct it_instrument1_header {
-	uint32_t magic;		/* 'IMPI' */
+	uint32_t magic;	/* 'IMPI' */
 	uint8_t dosname[12];	/* DOS filename */
 	uint8_t zero;		/* Always zero */
 	uint8_t flags;		/* Instrument flags */
@@ -100,22 +100,22 @@ struct it_instrument1_header {
 	uint8_t vle;		/* Volume loop end */
 	uint8_t sls;		/* Sustain loop start */
 	uint8_t sle;		/* Sustain loop end */
-	uint16_t rsvd1;		/* Reserved */
-	uint16_t fadeout;		/* Fadeout (release) */
+	uint16_t rsvd1;	/* Reserved */
+	uint16_t fadeout;	/* Fadeout (release) */
 	uint8_t nna;		/* New note action */
 	uint8_t dnc;		/* Duplicate note check */
-	uint16_t trkvers;		/* Tracker version */
+	uint16_t trkvers;	/* Tracker version */
 	uint8_t nos;		/* Number of samples */
 	uint8_t rsvd2;		/* Reserved */
-	uint8_t name[26];		/* ASCIIZ Instrument name */
-	uint8_t rsvd3[6];		/* Reserved */
+	uint8_t name[26];	/* ASCIIZ Instrument name */
+	uint8_t rsvd3[6];	/* Reserved */
 	uint8_t keys[240];
 	uint8_t epoint[200];
 	uint8_t enode[50];
 };
 
 struct it_instrument2_header {
-	uint32_t magic;		/* 'IMPI' */
+	uint32_t magic;	/* 'IMPI' */
 	uint8_t dosname[12];	/* DOS filename */
 	uint8_t zero;		/* Always zero */
 	uint8_t nna;		/* New Note Action */
@@ -128,10 +128,10 @@ struct it_instrument2_header {
 	uint8_t dfp;		/* Default pan */
 	uint8_t rv;		/* Random volume variation */
 	uint8_t rp;		/* Random pan variation */
-	uint16_t trkvers;		/* Not used: tracked version */
+	uint16_t trkvers;	/* Not used: tracked version */
 	uint8_t nos;		/* Not used: number of samples */
 	uint8_t rsvd1;		/* Reserved */
-	uint8_t name[26];		/* ASCIIZ Instrument name */
+	uint8_t name[26];	/* ASCIIZ Instrument name */
 	uint8_t ifc;		/* Initial filter cutoff */
 	uint8_t ifr;		/* Initial filter resonance */
 	uint8_t mch;		/* MIDI channel */
@@ -157,19 +157,19 @@ struct it_envelope {
 };
 
 struct it_sample_header {
-	uint32_t magic;		/* 'IMPS' */
+	uint32_t magic;	/* 'IMPS' */
 	uint8_t dosname[12];	/* DOS filename */
 	uint8_t zero;		/* Always zero */
 	uint8_t gvl;		/* Global volume for instrument */
 	uint8_t flags;		/* Sample flags */
 	uint8_t vol;		/* Volume */
-	uint8_t name[26];		/* ASCIIZ sample name */
-	uint8_t convert;		/* Sample flags */
+	uint8_t name[26];	/* ASCIIZ sample name */
+	uint8_t convert;	/* Sample flags */
 	uint8_t dfp;		/* Default pan */
-	uint32_t length;		/* Length */
-	uint32_t loopbeg;		/* Loop begin */
-	uint32_t loopend;		/* Loop end */
-	uint32_t c5spd;		/* C 5 speed */
+	uint32_t length;	/* Length */
+	uint32_t loopbeg;	/* Loop begin */
+	uint32_t loopend;	/* Loop end */
+	uint32_t c5spd;	/* C 5 speed */
 	uint32_t sloopbeg;	/* SusLoop begin */
 	uint32_t sloopend;	/* SusLoop end */
 	uint32_t sample_ptr;	/* Sample pointer */

@@ -38,7 +38,9 @@ local Main = Class.define()
 function Main:__ctor()
   Display.palette("pico-8-ext")
 
-  self.font = Font.default(0, 15)
+  local canvas = Canvas.default()
+
+  self.font = Font.default(canvas, 0, 15)
   self.factor = 0.75
 end
 

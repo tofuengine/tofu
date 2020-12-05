@@ -26,13 +26,11 @@
 
 #include <config.h>
 #include <core/vm/interpreter.h>
-#include <libs/imath.h>
 #include <libs/log.h>
+#include <libs/luax.h>
 #include <libs/stb.h>
 
 #include "udt.h"
-
-#include <stdlib.h>
 
 #define LOG_CONTEXT "grid"
 #define META_TABLE  "Tofu_Collections_Grid_mt"
@@ -49,15 +47,15 @@ static int grid_process(lua_State *L);
 
 static const struct luaL_Reg _grid_functions[] = {
     { "new", grid_new },
-    {"__gc", grid_gc },
-    {"size", grid_size },
-    {"fill", grid_fill },
-    {"stride", grid_stride },
-    {"peek", grid_peek },
-    {"poke", grid_poke },
-    {"scan", grid_scan },
-    {"process", grid_process },
-//    {"path", grid_path },
+    { "__gc", grid_gc },
+    { "size", grid_size },
+    { "fill", grid_fill },
+    { "stride", grid_stride },
+    { "peek", grid_peek },
+    { "poke", grid_poke },
+    { "scan", grid_scan },
+    { "process", grid_process },
+//    { "path", grid_path },
     { NULL, NULL }
 };
 
@@ -151,8 +149,8 @@ static int grid_size(lua_State *L)
     LUAX_SIGNATURE_END
     const Grid_Object_t *self = (const Grid_Object_t *)LUAX_USERDATA(L, 1);
 
-    lua_pushinteger(L, self->width);
-    lua_pushinteger(L, self->height);
+    lua_pushinteger(L, (lua_Integer)self->width);
+    lua_pushinteger(L, (lua_Integer)self->height);
 
     return 2;
 }
@@ -313,9 +311,9 @@ static int grid_scan(lua_State *L)
     for (size_t row = 0; row < self->height; ++row) {
         for (size_t column = 0; column < self->width; ++column) {
             lua_pushvalue(L, 2); // Copy directly from stack argument, don't need to ref/unref (won't be GC-ed meanwhile)
-            lua_pushinteger(L, column);
-            lua_pushinteger(L, row);
-            lua_pushnumber(L, *(data++));
+            lua_pushinteger(L, (lua_Integer)column);
+            lua_pushinteger(L, (lua_Integer)row);
+            lua_pushnumber(L, (lua_Number)*(data++));
             Interpreter_call(interpreter, 3, 0);
         }
     }
@@ -344,14 +342,14 @@ static int grid_process(lua_State *L)
     for (size_t row = 0; row < height; ++row) {
         for (size_t column = 0; column < width; ++column) {
             lua_pushvalue(L, 2); // Copy directly from stack argument, don't need to ref/unref (won't be GC-ed meanwhile)
-            lua_pushinteger(L, column);
-            lua_pushinteger(L, row);
-            lua_pushnumber(L, *(ptr++));
+            lua_pushinteger(L, (lua_Integer)column);
+            lua_pushinteger(L, (lua_Integer)row);
+            lua_pushnumber(L, (lua_Number)*(ptr++));
             Interpreter_call(interpreter, 3, 3);
 
-            size_t dcolumn = LUAX_INTEGER(L, -3);
-            size_t drow = LUAX_INTEGER(L, -2);
-            Cell_t dvalue = LUAX_NUMBER(L, -1);
+            size_t dcolumn = (size_t)LUAX_INTEGER(L, -3);
+            size_t drow = (size_t)LUAX_INTEGER(L, -2);
+            Cell_t dvalue = (Cell_t)LUAX_NUMBER(L, -1);
             data[drow * width + dcolumn] = dvalue;
 
             lua_pop(L, 3);

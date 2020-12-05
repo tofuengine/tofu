@@ -24,13 +24,9 @@
 
 #include "environment.h"
 
-#include "config.h"
-
+#include <config.h>
 #include <libs/log.h>
 #include <libs/stb.h>
-
-#include <stdlib.h>
-#include <string.h>
 
 #define LOG_CONTEXT "environment"
 
