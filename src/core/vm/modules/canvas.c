@@ -933,14 +933,16 @@ typedef struct _Closure_t {
     lua_State *L;
 } Closure_t;
 
-static GL_Pixel_t _process_callback(void *user_data, GL_Pixel_t from, GL_Pixel_t to)
+static GL_Pixel_t _process_callback(void *user_data, int x, int y, GL_Pixel_t from, GL_Pixel_t to)
 {
     Closure_t *closure = (Closure_t *)user_data;
 
-    lua_pushvalue(closure->L, 2); // Copy directly from stack argument, don't need to ref/unref (won't be GC-ed meanwhile)
+    lua_pushvalue(closure->L, 2); // Copy directly from stack argument, don't need to ref/unref (won't be GC-ed, in the meanwhile)
+    lua_pushinteger(closure->L, (lua_Integer)x);
+    lua_pushinteger(closure->L, (lua_Integer)y);
     lua_pushinteger(closure->L, (lua_Integer)from);
     lua_pushinteger(closure->L, (lua_Integer)to);
-    Interpreter_call(closure->interpreter, 2, 1);
+    Interpreter_call(closure->interpreter, 4, 1);
 
     GL_Pixel_t pixel = (GL_Pixel_t)LUAX_INTEGER(closure->L, -1);
 

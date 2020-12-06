@@ -330,14 +330,18 @@ void GL_context_process(const GL_Context_t *context, GL_Point_t position, GL_Rec
     const GL_Pixel_t *sptr = sddata + (area.y + skip_y) * sdwidth + (area.x + skip_x);
     GL_Pixel_t *dptr = sddata + drawing_region.y0 * sdwidth + drawing_region.x0;
 
+    int y = drawing_region.y0;
     for (int i = height; i; --i) {
+        int x = drawing_region.x0; // TODO: optimize?
         for (int j = width; j; --j) {
             GL_Pixel_t from = *dptr;
             GL_Pixel_t to = *(sptr++);
-            *(dptr++) = callback(user_data, from, to);
+            *(dptr++) = callback(user_data, x, y, from, to);
+            x += 1;
         }
         sptr += sdskip;
         dptr += sdskip;
+        y += 1;
     }
 }
 

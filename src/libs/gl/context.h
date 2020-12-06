@@ -63,7 +63,7 @@ typedef struct _GL_Context_t {
     GL_State_t *stack;
 } GL_Context_t;
 
-typedef GL_Pixel_t (*GL_Process_Callback_t)(void *user_data, GL_Pixel_t from, GL_Pixel_t to);
+typedef GL_Pixel_t (*GL_Process_Callback_t)(void *user_data, int x, int y, GL_Pixel_t from, GL_Pixel_t to);
 
 // TODO: rename decode to convert/grab.
 // FIXME: change width-height to `GL_Size_t`.

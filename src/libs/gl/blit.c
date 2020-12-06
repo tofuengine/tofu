@@ -496,7 +496,7 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     //      | -s   c |
 
     // Precompute the "target disc": where we must draw pixels of the rotated sprite (relative to (x, y)).
-    // The radius of the disc is the the distance between the anchor point and the farthest corner of the
+    // The radius of the disc is the distance between the anchor point and the farthest corner of the
     // sprite rectangle, i.e. the magnitude of a vector with
     //   - the biggest horizontal distance between anchor point and rectangle left or right (as width), and
     //   - the biggest vertical distance between anchor point and rectangle top or bottom (as height).
