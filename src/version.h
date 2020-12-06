@@ -26,7 +26,7 @@
 #define __VERSION_H__
 
 #define TOFU_VERSION_MAJOR          0
-#define TOFU_VERSION_MINOR          9
+#define TOFU_VERSION_MINOR          10
 #define TOFU_VERSION_REVISION       0
 
 #define TOFU_VERSION_NUMBER         ((TOFU_VERSION_MAJOR << 16) | (TOFU_VERSION_MINOR << 8) | (TOFU_VERSION_REVISION))
