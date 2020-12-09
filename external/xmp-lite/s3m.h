@@ -56,44 +56,44 @@
 #define S3M_INST_AHIHAT	0x07
 
 struct s3m_file_header {
-	uint8_t name[28];		/* Song name */
-	uint8_t doseof;		/* 0x1a */
+	uint8_t name[28];	/* Song name */
+	uint8_t doseof;	/* 0x1a */
 	uint8_t type;		/* File type */
-	uint8_t rsvd1[2];		/* Reserved */
-	uint16_t ordnum;		/* Number of orders (must be even) */
-	uint16_t insnum;		/* Number of instruments */
-	uint16_t patnum;		/* Number of patterns */
-	uint16_t flags;		/* Flags */
-	uint16_t version;		/* Tracker ID and version */
+	uint8_t rsvd1[2];	/* Reserved */
+	uint16_t ordnum;	/* Number of orders (must be even) */
+	uint16_t insnum;	/* Number of instruments */
+	uint16_t patnum;	/* Number of patterns */
+	uint16_t flags;	/* Flags */
+	uint16_t version;	/* Tracker ID and version */
 	uint16_t ffi;		/* File format information */
-	uint32_t magic;		/* 'SCRM' */
+	uint32_t magic;	/* 'SCRM' */
 	uint8_t gv;		/* Global volume */
 	uint8_t is;		/* Initial speed */
 	uint8_t it;		/* Initial tempo */
 	uint8_t mv;		/* Master volume */
 	uint8_t uc;		/* Ultra click removal */
 	uint8_t dp;		/* Default pan positions if 0xfc */
-	uint8_t rsvd2[8];		/* Reserved */
-	uint16_t special;		/* Ptr to special custom data */
+	uint8_t rsvd2[8];	/* Reserved */
+	uint16_t special;	/* Ptr to special custom data */
 	uint8_t chset[32];	/* Channel settings */
 };
 
 struct s3m_instrument_header {
 	uint8_t dosname[13];	/* DOS file name */
-	uint16_t memseg;		/* Pointer to sample data */
-	uint32_t length;		/* Length */
-	uint32_t loopbeg;		/* Loop begin */
-	uint32_t loopend;		/* Loop end */
+	uint16_t memseg;	/* Pointer to sample data */
+	uint32_t length;	/* Length */
+	uint32_t loopbeg;	/* Loop begin */
+	uint32_t loopend;	/* Loop end */
 	uint8_t vol;		/* Volume */
 	uint8_t rsvd1;		/* Reserved */
 	uint8_t pack;		/* Packing type (not used) */
 	uint8_t flags;		/* Loop/stereo/16bit samples flags */
-	uint16_t c2spd;		/* C 4 speed */
-	uint16_t rsvd2;		/* Reserved */
-	uint8_t rsvd3[4];		/* Reserved */
-	uint16_t int_gp;		/* Internal - GUS pointer */
-	uint16_t int_512;		/* Internal - SB pointer */
+	uint16_t c2spd;	/* C 4 speed */
+	uint16_t rsvd2;	/* Reserved */
+	uint8_t rsvd3[4];	/* Reserved */
+	uint16_t int_gp;	/* Internal - GUS pointer */
+	uint16_t int_512;	/* Internal - SB pointer */
 	uint32_t int_last;	/* Internal - SB index */
-	uint8_t name[28];		/* Instrument name */
-	uint32_t magic;		/* 'SCRS' */
+	uint8_t name[28];	/* Instrument name */
+	uint32_t magic;	/* 'SCRS' */
 };

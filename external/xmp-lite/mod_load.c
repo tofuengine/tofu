@@ -412,20 +412,20 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     hio_read(mh.name, 20, 1, f);
     for (i = 0; i < 31; i++) {
-		hio_read(mh.ins[i].name, 22, 1, f);	/* Instrument name */
-		mh.ins[i].size = hio_read16b(f);	/* Length in 16-bit words */
-		mh.ins[i].finetune = hio_read8(f);	/* Finetune (signed nibble) */
-		mh.ins[i].volume = hio_read8(f);	/* Linear playback volume */
-		mh.ins[i].loop_start = hio_read16b(f);	/* Loop start in 16-bit words */
-		mh.ins[i].loop_size = hio_read16b(f);	/* Loop size in 16-bit words */
+	hio_read(mh.ins[i].name, 22, 1, f);	/* Instrument name */
+	mh.ins[i].size = hio_read16b(f);	/* Length in 16-bit words */
+	mh.ins[i].finetune = hio_read8(f);	/* Finetune (signed nibble) */
+	mh.ins[i].volume = hio_read8(f);	/* Linear playback volume */
+	mh.ins[i].loop_start = hio_read16b(f);	/* Loop start in 16-bit words */
+	mh.ins[i].loop_size = hio_read16b(f);	/* Loop size in 16-bit words */
 
-		/* Mod's Grave WOW files are converted from 669s and have default
-		* finetune and volume.
-		*/
-		if (mh.ins[i].size && (mh.ins[i].finetune != 0 || mh.ins[i].volume != 64))
-			maybe_wow = 0;
+	/* Mod's Grave WOW files are converted from 669s and have default
+	 * finetune and volume.
+	 */
+	if (mh.ins[i].size && (mh.ins[i].finetune != 0 || mh.ins[i].volume != 64))
+	    maybe_wow = 0;
 
-		smp_size += 2 * mh.ins[i].size;
+	smp_size += 2 * mh.ins[i].size;
     }
     mh.len = hio_read8(f);
     mh.restart = hio_read8(f);
@@ -440,15 +440,15 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
      * 669 repeating by inserting a pattern jump and ignores this byte.
      */
     if (mh.restart != 0)
-		maybe_wow = 0;
+	maybe_wow = 0;
 
     for (i = 0; mod_magic[i].ch; i++) {
-		if (!(strncmp (magic, mod_magic[i].magic, 4))) {
-			mod->chn = mod_magic[i].ch;
-			tracker_id = mod_magic[i].id;
-			detected = mod_magic[i].flag;
-			break;
-		}
+	if (!(strncmp (magic, mod_magic[i].magic, 4))) {
+	    mod->chn = mod_magic[i].ch;
+	    tracker_id = mod_magic[i].id;
+	    detected = mod_magic[i].flag;
+	    break;
+	}
     }
 
     if (mod->chn == 0) {

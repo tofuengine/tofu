@@ -303,8 +303,8 @@ int libxmp_load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct x
 
 void libxmp_free_sample(struct xmp_sample *s)
 {
-	if (s->data) {
-		free(s->data - 4);
-		s->data = NULL;		/* prevent double free in PCM load error */
-	}
+    if (s->data) {
+	free(s->data - 4);
+	s->data = NULL;		/* prevent double free in PCM load error */
+    }
 }

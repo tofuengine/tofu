@@ -548,10 +548,10 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 			b += 4;
 			xsh[j].loop_length = readmem32l(b);	/* Sample loop length */
 			b += 4;
-			xsh[j].volume = *b++;	/* Volume */
-			xsh[j].finetune = *b++;	/* Finetune (-128..+127) */
-			xsh[j].type = *b++;	/* Flags */
-			xsh[j].pan = *b++;	/* Panning (0-255) */
+			xsh[j].volume = *b++;			/* Volume */
+			xsh[j].finetune = *b++;		/* Finetune (-128..+127) */
+			xsh[j].type = *b++;			/* Flags */
+			xsh[j].pan = *b++;			/* Panning (0-255) */
 			xsh[j].relnote = *(int8_t *) b++;	/* Relative note number */
 			xsh[j].reserved = *b++;
 			memcpy(xsh[j].name, b, 22);
@@ -650,7 +650,7 @@ static int xm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	}
 
 	memcpy(xfh.id, buf, 17);		/* ID text */
-	memcpy(xfh.name, buf + 17, 20);		/* Module name */
+	memcpy(xfh.name, buf + 17, 20);	/* Module name */
 	/* */					/* skip 0x1a */
 	memcpy(xfh.tracker, buf + 38, 20);	/* Tracker name */
 	xfh.version = readmem16l(buf + 58);	/* Version number, minor-major */
@@ -659,10 +659,10 @@ static int xm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	xfh.restart = readmem16l(buf + 66);	/* Restart position */
 	xfh.channels = readmem16l(buf + 68);	/* Number of channels */
 	xfh.patterns = readmem16l(buf + 70);	/* Number of patterns */
-	xfh.instruments = readmem16l(buf + 72);	/* Number of instruments */
+	xfh.instruments = readmem16l(buf + 72);/* Number of instruments */
 	xfh.flags = readmem16l(buf + 74);	/* 0=Amiga freq table, 1=Linear */
 	xfh.tempo = readmem16l(buf + 76);	/* Default tempo */
-	xfh.bpm = readmem16l(buf + 78);		/* Default BPM */
+	xfh.bpm = readmem16l(buf + 78);	/* Default BPM */
 
 	/* Sanity checks */
 	if (xfh.songlen > 256 || xfh.patterns > 256 || xfh.instruments > 255) {
