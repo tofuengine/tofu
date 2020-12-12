@@ -109,7 +109,7 @@ function Tofu:__ctor()
 end
 
 function Tofu:input()
-  self:switch_if_needed()
+  self:switch_if_needed() -- TODO: add separate method for this?
 
   local me = self.state
   self:call(me.input, me)
@@ -131,14 +131,14 @@ function Tofu:switch_if_needed()
   end
 
   local id = table.remove(self.queue)
-  local next = self.states[id]
+  local entering = self.states[id]
 
-  local current = self.state
-  if current then
-    current:leave()
+  local exiting = self.state
+  if exiting then
+    self:call(exiting.leave, exiting)
   end
-  next:enter()
-  self.state = next
+  self:call(entering.enter, entering)
+  self.state = entering
 end
 
 function Tofu:switch_to(id)
