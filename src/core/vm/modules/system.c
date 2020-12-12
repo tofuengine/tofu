@@ -28,12 +28,14 @@
 #include <core/environment.h>
 #include <libs/log.h>
 #include <libs/luax.h>
+#include <libs/stb.h>
 #include <version.h>
 
 #include "udt.h"
 
 #define LOG_CONTEXT "system"
 
+static int system_args(lua_State *L);
 static int system_version(lua_State *L);
 static int system_time(lua_State *L);
 static int system_fps(lua_State *L);
@@ -44,6 +46,7 @@ static int system_error(lua_State *L);
 static int system_fatal(lua_State *L);
 
 static const struct luaL_Reg _system_functions[] = {
+    { "args", system_args },
     { "version", system_version },
     { "time", system_time },
     { "fps", system_fps },
@@ -59,6 +62,23 @@ int system_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, NULL, _system_functions, NULL, nup, NULL);
+}
+
+static int system_args(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+    LUAX_SIGNATURE_END
+
+    const Environment_t *environment = (const Environment_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
+
+    lua_createtable(L, 0, 0); // Initially empty.
+    size_t count = arrlen(environment->args);
+    for (size_t i = 0; i < count; ++i) {
+        lua_pushstring(L, environment->args[i]);
+        lua_rawseti(L, -2, (lua_Integer)(i + 1));
+    }
+
+    return 1;
 }
 
 static int system_version(lua_State *L)

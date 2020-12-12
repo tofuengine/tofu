@@ -29,12 +29,14 @@
 #include <stddef.h>
 
 typedef struct _Environment_t {
+    const char **args;
+    const char *base_path; // TODO: support multiple mount points.
     bool quit;
     float fps;
     double time;
 } Environment_t;
 
-extern Environment_t *Environment_create(void);
+extern Environment_t *Environment_create(int argc, const char *argv[]);
 extern void Environment_destroy(Environment_t *environment);
 
 extern void Environment_quit(Environment_t *environment);

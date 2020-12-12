@@ -32,7 +32,17 @@
 
 // TODO: http://www.ilikebigbits.com/2017_06_01_float_or_double.html
 
-Environment_t *Environment_create(void)
+static bool _starts_with(const char *string, const char *prefix, const char **ptr)
+{
+    size_t length = strlen(prefix);
+    if (strncmp(string, prefix, length) == 0) {
+        *ptr = string + length;
+        return true;
+    }
+    return false;
+}
+
+Environment_t *Environment_create(int argc, const char *argv[])
 {
     Environment_t *environment = malloc(sizeof(Environment_t));
     if (!environment) {
@@ -41,7 +51,18 @@ Environment_t *Environment_create(void)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "environment allocated");
 
+    const char *base_path = NULL;
+    const char **args = NULL;
+    for (int i = 1; i < argc; ++i) { // Skip executable name, i.e. argument #0.
+        if (_starts_with(argv[i], "--base-path=", &base_path)) { // Skip base mount point, too.
+            continue;
+        }
+        arrpush(args, argv[i]);
+    }
+
     *environment = (Environment_t){
+        .base_path = base_path,
+        .args = args,
         .quit = false,
         .fps = 0.0f,
         .time = 0.0
@@ -52,6 +73,9 @@ Environment_t *Environment_create(void)
 
 void Environment_destroy(Environment_t *environment)
 {
+    arrfree(environment->args);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "arguments freed");
+
     free(environment);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "environment freed");
 }

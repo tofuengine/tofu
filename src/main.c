@@ -29,9 +29,9 @@
 
 #define LOG_CONTEXT "main"
 
-int main(int argc, char **argv)
+int main(int argc, const char *argv[])
 {
-    Engine_t *engine = Engine_create(argc > 1 ? argv[1] : NULL);
+    Engine_t *engine = Engine_create(argc, argv);
     if (!engine) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize engine");
         return EXIT_FAILURE;

@@ -105,7 +105,7 @@ static bool _configure(Storage_t *storage, Configuration_t *configuration)
     return true;
 }
 
-Engine_t *Engine_create(const char *base_path)
+Engine_t *Engine_create(int argc, const char *argv[])
 {
     Engine_t *engine = malloc(sizeof(Engine_t));
     if (!engine) {
@@ -117,12 +117,20 @@ Engine_t *Engine_create(const char *base_path)
 
     Log_initialize();
 
+    engine->environment = Environment_create(argc, argv);
+    if (!engine->environment) {
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize environment");
+        free(engine);
+        return NULL;
+    }
+
     const Storage_Configuration_t storage_configuration = {
-            .base_path = base_path
+            .base_path = engine->environment->base_path
         };
     engine->storage = Storage_create(&storage_configuration);
     if (!engine->storage) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize storage at path `%s`", base_path);
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize storage");
+        Environment_destroy(engine->environment);
         free(engine);
         return NULL;
     }
@@ -130,6 +138,7 @@ Engine_t *Engine_create(const char *base_path)
     bool configured = _configure(engine->storage, &engine->configuration);
     if (!configured) {
         Storage_destroy(engine->storage);
+        Environment_destroy(engine->environment);
         free(engine);
         return NULL;
     }
@@ -154,6 +163,7 @@ Engine_t *Engine_create(const char *base_path)
     if (!engine->display) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize display");
         Storage_destroy(engine->storage);
+        Environment_destroy(engine->environment);
         free(engine);
         return NULL;
     }
@@ -187,6 +197,7 @@ Engine_t *Engine_create(const char *base_path)
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize input");
         Display_destroy(engine->display);
         Storage_destroy(engine->storage);
+        Environment_destroy(engine->environment);
         free(engine);
         return NULL;
     }
@@ -199,17 +210,7 @@ Engine_t *Engine_create(const char *base_path)
         Input_destroy(engine->input);
         Display_destroy(engine->display);
         Storage_destroy(engine->storage);
-        free(engine);
-        return NULL;
-    }
-
-    engine->environment = Environment_create();
-    if (!engine->environment) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize environment");
-        Audio_destroy(engine->audio);
-        Input_destroy(engine->input);
-        Display_destroy(engine->display);
-        Storage_destroy(engine->storage);
+        Environment_destroy(engine->environment);
         free(engine);
         return NULL;
     }
@@ -227,11 +228,11 @@ Engine_t *Engine_create(const char *base_path)
     engine->interpreter = Interpreter_create(engine->storage, userdatas);
     if (!engine->interpreter) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize interpreter");
-        Environment_destroy(engine->environment);
         Audio_destroy(engine->audio);
         Input_destroy(engine->input);
         Display_destroy(engine->display);
         Storage_destroy(engine->storage);
+        Environment_destroy(engine->environment);
         free(engine);
         return NULL;
     }
