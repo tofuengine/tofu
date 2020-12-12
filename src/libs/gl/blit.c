@@ -578,9 +578,6 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
             const float ou = skip_x + (float)j; // + 0.5f;
 #ifdef __GL_OPTIMIZED_ROTATIONS__
             const float ou_squared = ou * ou;
-#endif
-
-#ifdef __GL_OPTIMIZED_ROTATIONS__
             const float distance_squared = ov_squared + ou_squared;
             if (distance_squared <= radius_squared) {
 #endif
