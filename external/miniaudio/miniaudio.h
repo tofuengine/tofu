@@ -1,6 +1,6 @@
 /*
 Audio playback and capture library. Choice of public domain or MIT-0. See license statements at the end of this file.
-miniaudio - v0.10.27 - 2020-12-04
+miniaudio - v0.10.28 - 2020-12-16
 
 David Reid - mackron@gmail.com
 
@@ -268,6 +268,9 @@ The BSD build only requires linking to `-lpthread` and `-lm`. NetBSD uses audio(
 AAudio is the highest priority backend on Android. This should work out of the box without needing any kind of compiler configuration. Support for AAudio
 starts with Android 8 which means older versions will fall back to OpenSL|ES which requires API level 16+.
 
+There have been reports that the OpenSL|ES backend fails to initialize on some Android based devices due to `dlopen()` failing to open "libOpenSLES.so". If
+this happens on your platform you'll need to disable run-time linking with `MA_NO_RUNTIME_LINKING` and link with -lOpenSLES.
+
 2.6. Emscripten
 ---------------
 The Emscripten build emits Web Audio JavaScript directly and should compile cleanly out of the box. You cannot use -std=c* compiler flags, nor -ansi.
@@ -342,6 +345,8 @@ The Emscripten build emits Web Audio JavaScript directly and should compile clea
     | MA_NO_RUNTIME_LINKING | Disables runtime linking. This is useful for passing Apple's notarization process. When enabling this, you may need to avoid    |
     |                       | using `-std=c89` or `-std=c99` on Linux builds or else you may end up with compilation errors due to conflicts with `timespec`  |
     |                       | and `timeval` data types.                                                                                                       |
+    |                       |                                                                                                                                 |
+    |                       | You may need to enable this if your target platform does not allow runtime linking via `dlopen()`.                              |
     +-----------------------+---------------------------------------------------------------------------------------------------------------------------------+
     | MA_LOG_LEVEL [level]  | Sets the logging level. Set `level` to one of the following:                                                                    |
     |                       |                                                                                                                                 |
@@ -1451,7 +1456,7 @@ extern "C" {
 
 #define MA_VERSION_MAJOR    0
 #define MA_VERSION_MINOR    10
-#define MA_VERSION_REVISION 27
+#define MA_VERSION_REVISION 28
 #define MA_VERSION_STRING   MA_XSTRINGIFY(MA_VERSION_MAJOR) "." MA_XSTRINGIFY(MA_VERSION_MINOR) "." MA_XSTRINGIFY(MA_VERSION_REVISION)
 
 #if defined(_MSC_VER) && !defined(__clang__)
@@ -9563,6 +9568,21 @@ static C89ATOMIC_INLINE double c89atomic_exchange_explicit_f64(volatile double* 
 #define c89atomic_load_f64(ptr)                                         c89atomic_load_explicit_f64(ptr, c89atomic_memory_order_seq_cst)
 #define c89atomic_exchange_f32(dst, src)                                c89atomic_exchange_explicit_f32(dst, src, c89atomic_memory_order_seq_cst)
 #define c89atomic_exchange_f64(dst, src)                                c89atomic_exchange_explicit_f64(dst, src, c89atomic_memory_order_seq_cst)
+typedef c89atomic_flag c89atomic_spinlock;
+static C89ATOMIC_INLINE void c89atomic_spinlock_lock(volatile c89atomic_spinlock* pSpinlock)
+{
+    for (;;) {
+        if (c89atomic_flag_test_and_set_explicit(pSpinlock, c89atomic_memory_order_acquire) == 0) {
+            break;
+        }
+        while (c89atomic_load_explicit_8(pSpinlock, c89atomic_memory_order_relaxed) == 1) {
+        }
+    }
+}
+static C89ATOMIC_INLINE void c89atomic_spinlock_unlock(volatile c89atomic_spinlock* pSpinlock)
+{
+    c89atomic_flag_clear_explicit(pSpinlock, c89atomic_memory_order_release);
+}
 #if defined(__cplusplus)
 }
 #endif
@@ -10003,8 +10023,6 @@ static ma_result ma_thread_create__posix(ma_thread* pThread, ma_thread_priority 
                 }
             }
         }
-
-        pthread_attr_destroy(&attr);
     }
 #else
     /* It's the emscripten build. We'll have a few unused parameters. */
@@ -10013,6 +10031,12 @@ static ma_result ma_thread_create__posix(ma_thread* pThread, ma_thread_priority 
 #endif
 
     result = pthread_create(pThread, pAttr, entryProc, pData);
+
+    /* The thread attributes object is no longer required. */
+    if (pAttr != NULL) {
+        pthread_attr_destroy(pAttr);
+    }
+
     if (result != 0) {
         return ma_result_from_errno(result);
     }
@@ -10468,7 +10492,7 @@ not officially supporting this, but I'm leaving it here in case it's useful for 
 
 /* Disable run-time linking on certain backends. */
 #ifndef MA_NO_RUNTIME_LINKING
-    #if defined(MA_ANDROID) || defined(MA_EMSCRIPTEN)
+    #if defined(MA_EMSCRIPTEN)
         #define MA_NO_RUNTIME_LINKING
     #endif
 #endif
@@ -29468,20 +29492,23 @@ AAudio Backend
 
 ******************************************************************************/
 #ifdef MA_HAS_AAUDIO
+
 /*#include <AAudio/AAudio.h>*/
 
-#define MA_AAUDIO_UNSPECIFIED 0
+typedef int32_t                                         ma_aaudio_result_t;
+typedef int32_t                                         ma_aaudio_direction_t;
+typedef int32_t                                         ma_aaudio_sharing_mode_t;
+typedef int32_t                                         ma_aaudio_format_t;
+typedef int32_t                                         ma_aaudio_stream_state_t;
+typedef int32_t                                         ma_aaudio_performance_mode_t;
+typedef int32_t                                         ma_aaudio_usage_t;
+typedef int32_t                                         ma_aaudio_content_type_t;
+typedef int32_t                                         ma_aaudio_input_preset_t;
+typedef int32_t                                         ma_aaudio_data_callback_result_t;
+typedef struct ma_AAudioStreamBuilder_t*                ma_AAudioStreamBuilder;
+typedef struct ma_AAudioStream_t*                       ma_AAudioStream;
 
-typedef int32_t ma_aaudio_result_t;
-typedef int32_t ma_aaudio_direction_t;
-typedef int32_t ma_aaudio_sharing_mode_t;
-typedef int32_t ma_aaudio_format_t;
-typedef int32_t ma_aaudio_stream_state_t;
-typedef int32_t ma_aaudio_performance_mode_t;
-typedef int32_t ma_aaudio_usage_t;
-typedef int32_t ma_aaudio_content_type_t;
-typedef int32_t ma_aaudio_input_preset_t;
-typedef int32_t ma_aaudio_data_callback_result_t;
+#define MA_AAUDIO_UNSPECIFIED                           0
 
 /* Result codes. miniaudio only cares about the success code. */
 #define MA_AAUDIO_OK                                    0
@@ -29555,9 +29582,6 @@ typedef int32_t ma_aaudio_data_callback_result_t;
 #define MA_AAUDIO_CALLBACK_RESULT_CONTINUE              0
 #define MA_AAUDIO_CALLBACK_RESULT_STOP                  1
 
-/* Objects. */
-typedef struct ma_AAudioStreamBuilder_t* ma_AAudioStreamBuilder;
-typedef struct ma_AAudioStream_t*        ma_AAudioStream;
 
 typedef ma_aaudio_data_callback_result_t (* ma_AAudioStream_dataCallback) (ma_AAudioStream* pStream, void* pUserData, void* pAudioData, int32_t numFrames);
 typedef void                             (* ma_AAudioStream_errorCallback)(ma_AAudioStream *pStream, void *pUserData, ma_aaudio_result_t error);
@@ -30167,10 +30191,10 @@ static ma_result ma_context_uninit__aaudio(ma_context* pContext)
 
 static ma_result ma_context_init__aaudio(const ma_context_config* pConfig, ma_context* pContext)
 {
+    size_t i;
     const char* libNames[] = {
         "libaaudio.so"
     };
-    size_t i;
 
     for (i = 0; i < ma_countof(libNames); ++i) {
         pContext->aaudio.hAAudio = ma_dlopen(pContext, libNames[i]);
@@ -31346,15 +31370,19 @@ static ma_result ma_context_init_engine_nolock__opensl(ma_context* pContext)
 static ma_result ma_context_init__opensl(const ma_context_config* pConfig, ma_context* pContext)
 {
     ma_result result;
+
+#if !defined(MA_NO_RUNTIME_LINKING)
     size_t i;
     const char* libOpenSLESNames[] = {
         "libOpenSLES.so"
     };
+#endif
 
     MA_ASSERT(pContext != NULL);
 
     (void)pConfig;
 
+#if !defined(MA_NO_RUNTIME_LINKING)
     /*
     Dynamically link against libOpenSLES.so. I have now had multiple reports that SL_IID_ANDROIDSIMPLEBUFFERQUEUE cannot be found. One
     report was happening at compile time and another at runtime. To try working around this, I'm going to link to libOpenSLES at runtime
@@ -31369,49 +31397,68 @@ static ma_result ma_context_init__opensl(const ma_context_config* pConfig, ma_co
     }
 
     if (pContext->opensl.libOpenSLES == NULL) {
-        return MA_NO_BACKEND;   /* Couldn't find libOpenSLES.so */
+        ma_post_log_message(pContext, NULL, MA_LOG_LEVEL_INFO, "[OpenSL|ES] Could not find libOpenSLES.so");
+        return MA_NO_BACKEND;
     }
 
     result = ma_dlsym_SLInterfaceID__opensl(pContext, "SL_IID_ENGINE", &pContext->opensl.SL_IID_ENGINE);
     if (result != MA_SUCCESS) {
+        ma_dlclose(pContext, pContext->opensl.libOpenSLES);
         return result;
     }
 
     result = ma_dlsym_SLInterfaceID__opensl(pContext, "SL_IID_AUDIOIODEVICECAPABILITIES", &pContext->opensl.SL_IID_AUDIOIODEVICECAPABILITIES);
     if (result != MA_SUCCESS) {
+        ma_dlclose(pContext, pContext->opensl.libOpenSLES);
         return result;
     }
 
     result = ma_dlsym_SLInterfaceID__opensl(pContext, "SL_IID_ANDROIDSIMPLEBUFFERQUEUE", &pContext->opensl.SL_IID_ANDROIDSIMPLEBUFFERQUEUE);
     if (result != MA_SUCCESS) {
+        ma_dlclose(pContext, pContext->opensl.libOpenSLES);
         return result;
     }
 
     result = ma_dlsym_SLInterfaceID__opensl(pContext, "SL_IID_RECORD", &pContext->opensl.SL_IID_RECORD);
     if (result != MA_SUCCESS) {
+        ma_dlclose(pContext, pContext->opensl.libOpenSLES);
         return result;
     }
 
     result = ma_dlsym_SLInterfaceID__opensl(pContext, "SL_IID_PLAY", &pContext->opensl.SL_IID_PLAY);
     if (result != MA_SUCCESS) {
+        ma_dlclose(pContext, pContext->opensl.libOpenSLES);
         return result;
     }
 
     result = ma_dlsym_SLInterfaceID__opensl(pContext, "SL_IID_OUTPUTMIX", &pContext->opensl.SL_IID_OUTPUTMIX);
     if (result != MA_SUCCESS) {
+        ma_dlclose(pContext, pContext->opensl.libOpenSLES);
         return result;
     }
 
     result = ma_dlsym_SLInterfaceID__opensl(pContext, "SL_IID_ANDROIDCONFIGURATION", &pContext->opensl.SL_IID_ANDROIDCONFIGURATION);
     if (result != MA_SUCCESS) {
+        ma_dlclose(pContext, pContext->opensl.libOpenSLES);
         return result;
     }
 
     pContext->opensl.slCreateEngine = (ma_proc)ma_dlsym(pContext, pContext->opensl.libOpenSLES, "slCreateEngine");
     if (pContext->opensl.slCreateEngine == NULL) {
+        ma_dlclose(pContext, pContext->opensl.libOpenSLES);
         ma_post_log_message(pContext, NULL, MA_LOG_LEVEL_INFO, "[OpenSL|ES] Cannot find symbol slCreateEngine.");
         return MA_NO_BACKEND;
     }
+#else
+    pContext->opensl.SL_IID_ENGINE                    = (ma_handle)SL_IID_ENGINE;
+    pContext->opensl.SL_IID_AUDIOIODEVICECAPABILITIES = (ma_handle)SL_IID_AUDIOIODEVICECAPABILITIES;
+    pContext->opensl.SL_IID_ANDROIDSIMPLEBUFFERQUEUE  = (ma_handle)SL_IID_ANDROIDSIMPLEBUFFERQUEUE;
+    pContext->opensl.SL_IID_RECORD                    = (ma_handle)SL_IID_RECORD;
+    pContext->opensl.SL_IID_PLAY                      = (ma_handle)SL_IID_PLAY;
+    pContext->opensl.SL_IID_OUTPUTMIX                 = (ma_handle)SL_IID_OUTPUTMIX;
+    pContext->opensl.SL_IID_ANDROIDCONFIGURATION      = (ma_handle)SL_IID_ANDROIDCONFIGURATION;
+    pContext->opensl.slCreateEngine                   = (ma_proc)slCreateEngine;
+#endif
 
 
     /* Initialize global data first if applicable. */
@@ -31422,7 +31469,9 @@ static ma_result ma_context_init__opensl(const ma_context_config* pConfig, ma_co
     ma_spinlock_unlock(&g_maOpenSLSpinlock);
 
     if (result != MA_SUCCESS) {
-        return result;  /* Failed to initialize the OpenSL engine. */
+        ma_dlclose(pContext, pContext->opensl.libOpenSLES);
+        ma_post_log_message(pContext, NULL, MA_LOG_LEVEL_INFO, "[OpenSL|ES] Failed to initialize OpenSL engine.");
+        return result;
     }
 
 
@@ -32577,6 +32626,7 @@ MA_API ma_result ma_context_init(const ma_backend backends[], ma_uint32 backendC
         }
 
         if (pContext->callbacks.onContextInit != NULL) {
+            ma_post_log_messagef(pContext, NULL, MA_LOG_LEVEL_VERBOSE, "Attempting to initialize %s backend...", ma_get_backend_name(backend));
             result = pContext->callbacks.onContextInit(pContext, pConfig, &pContext->callbacks);
         } else {
             result = MA_NO_BACKEND;
@@ -32604,12 +32654,14 @@ MA_API ma_result ma_context_init(const ma_backend backends[], ma_uint32 backendC
             #ifdef MA_HAS_ALSA
                 case ma_backend_alsa:
                 {
+                    ma_post_log_message(pContext, NULL, MA_LOG_LEVEL_VERBOSE, "Attempting to initialize ALSA backend...");
                     result = ma_context_init__alsa(pConfig, pContext);
                 } break;
             #endif
             #ifdef MA_HAS_PULSEAUDIO
                 case ma_backend_pulseaudio:
                 {
+                    ma_post_log_message(pContext, NULL, MA_LOG_LEVEL_VERBOSE, "Attempting to initialize PulseAudio backend...");
                     result = ma_context_init__pulse(pConfig, pContext);
                 } break;
             #endif
@@ -32622,36 +32674,42 @@ MA_API ma_result ma_context_init(const ma_backend backends[], ma_uint32 backendC
             #ifdef MA_HAS_COREAUDIO
                 case ma_backend_coreaudio:
                 {
+                    ma_post_log_message(pContext, NULL, MA_LOG_LEVEL_VERBOSE, "Attempting to initialize CoreAudio backend...");
                     result = ma_context_init__coreaudio(pConfig, pContext);
                 } break;
             #endif
             #ifdef MA_HAS_SNDIO
                 case ma_backend_sndio:
                 {
+                    ma_post_log_message(pContext, NULL, MA_LOG_LEVEL_VERBOSE, "Attempting to initialize sndio backend...");
                     result = ma_context_init__sndio(pConfig, pContext);
                 } break;
             #endif
             #ifdef MA_HAS_AUDIO4
                 case ma_backend_audio4:
                 {
+                    ma_post_log_message(pContext, NULL, MA_LOG_LEVEL_VERBOSE, "Attempting to initialize audio(4) backend...");
                     result = ma_context_init__audio4(pConfig, pContext);
                 } break;
             #endif
             #ifdef MA_HAS_OSS
                 case ma_backend_oss:
                 {
+                    ma_post_log_message(pContext, NULL, MA_LOG_LEVEL_VERBOSE, "Attempting to initialize OSS backend...");
                     result = ma_context_init__oss(pConfig, pContext);
                 } break;
             #endif
             #ifdef MA_HAS_AAUDIO
                 case ma_backend_aaudio:
                 {
+                    ma_post_log_message(pContext, NULL, MA_LOG_LEVEL_VERBOSE, "Attempting to initialize AAudio backend...");
                     result = ma_context_init__aaudio(pConfig, pContext);
                 } break;
             #endif
             #ifdef MA_HAS_OPENSL
                 case ma_backend_opensl:
                 {
+                    ma_post_log_message(pContext, NULL, MA_LOG_LEVEL_VERBOSE, "Attempting to initialize OpenSL backend...");
                     result = ma_context_init__opensl(pConfig, pContext);
                 } break;
             #endif
@@ -32699,6 +32757,8 @@ MA_API ma_result ma_context_init(const ma_backend backends[], ma_uint32 backendC
 
             pContext->backend = backend;
             return result;
+        } else {
+            ma_post_log_messagef(pContext, NULL, MA_LOG_LEVEL_VERBOSE, "Failed to initialize %s backend.", ma_get_backend_name(backend));
         }
     }
 
@@ -64618,6 +64678,10 @@ The following miscellaneous changes have also been made.
 /*
 REVISION HISTORY
 ================
+v0.10.28 - 2020-12-16
+  - Fix a crash when initializing a POSIX thread.
+  - OpenSL|ES: Respect the MA_NO_RUNTIME_LINKING option.
+
 v0.10.27 - 2020-12-04
   - Add support for dynamically configuring some properties of `ma_noise` objects post-initialization.
   - Add support for configuring the channel mixing mode in the device config.
@@ -64626,7 +64690,6 @@ v0.10.27 - 2020-12-04
   - Fix some errors with stopping devices for synchronous backends where the backend's stop callback would get fired twice.
   - Fix a bug in the decoder due to using an uninitialized variable.
   - Fix some data race errors.
-  
 
 v0.10.26 - 2020-11-24
   - WASAPI: Fix a bug where the exclusive mode format may not be retrieved correctly due to accessing freed memory.
