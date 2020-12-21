@@ -17,7 +17,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [GLFW](https://www.glfw.org/) v3.3.2
 * [libxmp](http://xmp.sourceforge.net/) v4.5.0
 * [Lua](https://lua.org/) v5.4.2
-* [miniaudio](https://github.com/dr-soft/miniaudio) v0.10.27
+* [miniaudio](https://github.com/dr-soft/miniaudio) v0.10.28
 * [spleen](https://github.com/fcambus/spleen) v1.8.1
 * [stb](https://github.com/nothings/stb) libraries
 
