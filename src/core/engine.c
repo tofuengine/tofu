@@ -124,10 +124,9 @@ Engine_t *Engine_create(int argc, const char *argv[])
         return NULL;
     }
 
-    const Storage_Configuration_t storage_configuration = {
+    engine->storage = Storage_create(&(const Storage_Configuration_t){
             .base_path = engine->environment->base_path
-        };
-    engine->storage = Storage_create(&storage_configuration);
+        });
     if (!engine->storage) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize storage");
         Environment_destroy(engine->environment);
@@ -147,7 +146,7 @@ Engine_t *Engine_create(int argc, const char *argv[])
         ? Storage_load(engine->storage, ENTRY_ICON, STORAGE_RESOURCE_IMAGE)
         : NULL;
     Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined icon loaded");
-    Display_Configuration_t display_configuration = { // TODO: use compound-literals.
+    engine->display = Display_create(&(const Display_Configuration_t){
             .icon = icon ? (GLFWimage){ .width = (int)S_IWIDTH(icon), .height = (int)S_IHEIGHT(icon), .pixels = S_IPIXELS(icon) } : (GLFWimage){ 64, 64, (unsigned char *)_default_icon_pixels },
             .window = {
                 .title = engine->configuration.display.title,
@@ -158,8 +157,7 @@ Engine_t *Engine_create(int argc, const char *argv[])
             .fullscreen = engine->configuration.display.fullscreen,
             .vertical_sync = engine->configuration.display.vertical_sync,
             .hide_cursor = engine->configuration.cursor.hide
-        };
-    engine->display = Display_create(&display_configuration);
+        });
     if (!engine->display) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize display");
         Storage_destroy(engine->storage);
@@ -172,7 +170,7 @@ Engine_t *Engine_create(int argc, const char *argv[])
         ? Storage_load(engine->storage, ENTRY_GAMECONTROLLER_DB, STORAGE_RESOURCE_STRING)
         : NULL;
     Log_assert(!mappings, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined controller mappings loaded");
-    Input_Configuration_t input_configuration = {
+    engine->input = Input_create(&(const Input_Configuration_t){
             .mappings = mappings ? S_SCHARS(mappings) : (const char *)_default_mappings,
             .keyboard = {
                 .enabled = engine->configuration.keyboard.enabled,
@@ -191,8 +189,7 @@ Engine_t *Engine_create(int argc, const char *argv[])
                 .emulate_dpad = engine->configuration.gamepad.emulate_dpad,
                 .emulate_cursor = engine->configuration.gamepad.emulate_cursor
             }
-        };
-    engine->input = Input_create(&input_configuration, Display_get_window(engine->display));
+        }, Display_get_window(engine->display));
     if (!engine->input) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize input");
         Display_destroy(engine->display);
@@ -202,7 +199,7 @@ Engine_t *Engine_create(int argc, const char *argv[])
         return NULL;
     }
 
-    engine->audio = Audio_create(&(Audio_Configuration_t){
+    engine->audio = Audio_create(&(const Audio_Configuration_t){
             .master_volume = engine->configuration.audio.master_volume
         });
     if (!engine->audio) {

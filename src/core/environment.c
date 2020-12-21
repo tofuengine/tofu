@@ -32,7 +32,7 @@
 
 // TODO: http://www.ilikebigbits.com/2017_06_01_float_or_double.html
 
-static bool _starts_with(const char *string, const char *prefix, const char **ptr)
+static bool _parse_argument(const char *string, const char *prefix, const char **ptr)
 {
     size_t length = strlen(prefix);
     if (strncmp(string, prefix, length) == 0) {
@@ -54,7 +54,7 @@ Environment_t *Environment_create(int argc, const char *argv[])
     const char *base_path = NULL;
     const char **args = NULL;
     for (int i = 1; i < argc; ++i) { // Skip executable name, i.e. argument #0.
-        if (_starts_with(argv[i], "--base-path=", &base_path)) { // Skip base mount point, too.
+        if (_parse_argument(argv[i], "--base-path=", &base_path)) { // Skip base mount point, too.
             continue;
         }
         arrpush(args, argv[i]);
