@@ -58,65 +58,6 @@ function string.to_hex(str)
     end)
 end
 
-local function attrdir(path, list)
-  for file in lfs.dir(path) do
-      if file ~= "." and file ~= ".." then
-        local pathfile = path .. "/" .. file
-        local mode = lfs.attributes(pathfile, "mode")
-        if mode == "directory" then
-            attrdir(pathfile, list)
-        else
-          local size = lfs.attributes(pathfile, "size")
-          table.insert(list, { pathfile = pathfile, size = size, name = nil, offset = -1 })
-        end
-      end
-  end
-end
-
-local function emit_header(output, config, files)
-  local flags = bit32.lshift(config.encrypted and 1 or 0, 0)
-
-  output:write(struct.pack("c8", "TOFUPAK!"))
-  output:write(struct.pack("B", VERSION))
-  output:write(struct.pack("B", flags))
-  output:write(struct.pack("H", RESERVED_16b))
-
-  return 8 + 1 + 1 + 2
-end
-
-local function emit_entry(output, file, config, cursor)
-  local input = io.open(file.pathfile, "rb")
-  local content = input:read("*all")
-  input:close()
-
-  if config.encrypted then
-    file.name = luazen.md5(file.name) -- TODO: check for collisions.
-    content = luazen.rc4raw(content, file.name)
-  end
-
-  output:write(content)
-
-  file.offset = cursor -- Se the file offset in the archive.
-
-  return cursor + #content
-end
-
-local function emit_directory(output, files)
-  for _, file in ipairs(files) do
-    output:write(struct.pack("H", RESERVED_16b))
-    output:write(struct.pack("H", #file.name))
-    output:write(struct.pack("I", file.offset))
-    output:write(struct.pack("I", file.size))
-    output:write(struct.pack("c" .. #file.name, file.name))
-  end
-end
-
-local function emit_trailer(output, files, cursor)
-  emit_directory(output, files)
-  output:write(struct.pack("I", cursor))
-  output:write(struct.pack("I", #files))
-end
-
 local function parse_arguments(args)
   local config = {
       input = nil,
@@ -141,6 +82,21 @@ local function parse_arguments(args)
   return (config.input and config.output) and config or nil
 end
 
+local function attrdir(path, list)
+  for file in lfs.dir(path) do
+      if file ~= "." and file ~= ".." then
+        local pathfile = path .. "/" .. file
+        local mode = lfs.attributes(pathfile, "mode")
+        if mode == "directory" then
+            attrdir(pathfile, list)
+        else
+          local size = lfs.attributes(pathfile, "size")
+          table.insert(list, { pathfile = pathfile, size = size, name = nil })
+        end
+      end
+  end
+end
+
 local function fetch_files(path)
   local files = {}
   attrdir(path, files)
@@ -149,6 +105,90 @@ local function fetch_files(path)
     file.name = file.pathfile:sub(1 + #path + 1)
   end
   return files
+end
+
+local function emit_header(output, config, files)
+  local flags = bit32.lshift(config.encrypted and 1 or 0, 0)
+
+  output:write(struct.pack("c8", "TOFUPAK!"))
+  output:write(struct.pack("B", VERSION))
+  output:write(struct.pack("B", flags))
+  output:write(struct.pack("H", RESERVED_16b))
+
+  return 8 + 1 + 1 + 2
+end
+
+-- TODO: block-based copy.
+local function emit_entry(output, file, config, offset, entries)
+  local input = io.open(file.pathfile, "rb")
+  local content = input:read("*all")
+  input:close()
+
+  local id = luazen.md5(file.name:lower())
+  print(string.format("  `%s` -> id `%s`", file, id))
+
+  if entries[id] then
+    print(string.format("  `%s` -> id clashing w/ `%s`", file, entries[id].file))
+    return false, 0
+  end
+
+  entries[id] = {
+      file = file,
+      offset = offset,
+      size = #content
+    }
+
+  if config.encrypted then
+    content = luazen.rc4raw(content, id)
+  end
+
+  output:write(content)
+
+  return true, #content
+end
+
+local function emit_directory(output, entries)
+  local count = 0
+  for id, entry in pairs(entries) do
+    output:write(struct.pack("c16", id))
+    output:write(struct.pack("I", entry.offset))
+    output:write(struct.pack("I", entry.size))
+    count = count + 1
+  end
+  return count
+end
+
+local function emit_trailer(output, entries, cursor)
+  local count = emit_directory(output, entries)
+  output:write(struct.pack("I", cursor))
+  output:write(struct.pack("I", count))
+end
+
+local function emit(config, files)
+  local entries = {}
+
+  local output = io.open(config.output, "wb")
+
+  local offset = emit_header(output, config, files)
+
+  for _, file in ipairs(files) do
+    local result, size = emit_entry(output, file, config, offset, entries)
+    if not result then
+      output:close()
+      os.remove(config.output)
+      return false
+    end
+
+    print(string.format("  `%s` %d %d", file.name, offset, file.size))
+
+    offset = offset + size
+  end
+
+  emit_trailer(output, entries, offset)
+
+  output:close()
+
+  return true
 end
 
 local function main(arg)
@@ -167,18 +207,14 @@ local function main(arg)
   local files = fetch_files(config.input)
 
   print(string.format("Creating %s archive `%s` w/ %d entries", annotation, config.output, #files))
-  local output = io.open(config.output, "wb")
 
-  local cursor = emit_header(output, config, files)
-  for index, file in ipairs(files) do
-    cursor = emit_entry(output, file, config, cursor)
+  local success = emit(config, files)
 
-    print(string.format("  [%d] `%s` %d", index - 1, file.name, file.size))
+  if success then
+    print("Done!")
+  else
+    print("Failed!")
   end
-  emit_trailer(output, files, cursor)
-
-  output:close()
-  print("Done!")
 end
 
 main(arg)
