@@ -25,14 +25,13 @@ SOFTWARE.
 -- Depends upon the following Lua "rocks".
 --  1 luafilesystem
 --  2 luazen
---  3 struct
+--  3 lua-struct
 
 local lfs = require("lfs")
 local luazen = require("luazen")
 local struct = require("struct")
 
 local VERSION = 0x00
-local RESERVED_8b = 0xFF
 local RESERVED_16b = 0xFFFF
 
 function string:at(index)
@@ -80,26 +79,42 @@ local function emit_header(output, config, files)
   output:write(struct.pack("c8", "TOFUPAK!"))
   output:write(struct.pack("B", VERSION))
   output:write(struct.pack("B", flags))
-  output:write(struct.pack("H", RESERVED_8b))
-  output:write(struct.pack("I", #files))
+  output:write(struct.pack("H", RESERVED_16b))
+
+  return 8 + 1 + 1 + 2
 end
 
-local function emit_entry(output, file, config)
+local function emit_entry(output, file, config, cursor)
   local input = io.open(file.pathfile, "rb")
-
   local content = input:read("*all")
+  input:close()
 
   if config.encrypted then
-    content = luazen.rc4raw(content, luazen.md5(file.name))
+    file.name = luazen.md5(file.name) -- TODO: check for collisions.
+    content = luazen.rc4raw(content, file.name)
   end
 
-  output:write(struct.pack("H", RESERVED_16b))
-  output:write(struct.pack("H", #file.name))
-  output:write(struct.pack("I", file.size))
-  output:write(struct.pack("c" .. #file.name, file.name))
   output:write(content)
 
-  input:close()
+  file.offset = cursor -- Se the file offset in the archive.
+
+  return cursor + #content
+end
+
+local function emit_directory(output, files)
+  for _, file in ipairs(files) do
+    output:write(struct.pack("H", RESERVED_16b))
+    output:write(struct.pack("H", #file.name))
+    output:write(struct.pack("I", file.offset))
+    output:write(struct.pack("I", file.size))
+    output:write(struct.pack("c" .. #file.name, file.name))
+  end
+end
+
+local function emit_trailer(output, files, cursor)
+  emit_directory(output, files)
+  output:write(struct.pack("I", cursor))
+  output:write(struct.pack("I", #files))
 end
 
 local function parse_arguments(args)
@@ -136,29 +151,34 @@ local function fetch_files(path)
   return files
 end
 
-local config = parse_arguments(arg)
-if not config then
-  print("Usage: pakgen --input=<input folder> --output=<output file> [--encrypted]")
-  return
+local function main(arg)
+  local config = parse_arguments(arg)
+  if not config then
+    print("Usage: pakgen --input=<input folder> --output=<output file> [--encrypted]")
+    return
+  end
+
+  local flags = {}
+  if config.encrypted then
+    table.insert(flags, "encrypted")
+  end
+  local annotation = #flags == 0 and "plain" or table.concat(flags, " and ")
+
+  local files = fetch_files(config.input)
+
+  print(string.format("Creating %s archive `%s` w/ %d entries", annotation, config.output, #files))
+  local output = io.open(config.output, "wb")
+
+  local cursor = emit_header(output, config, files)
+  for index, file in ipairs(files) do
+    cursor = emit_entry(output, file, config, cursor)
+
+    print(string.format("  [%d] `%s` %d", index - 1, file.name, file.size))
+  end
+  emit_trailer(output, files, cursor)
+
+  output:close()
+  print("Done!")
 end
 
-local flags = {}
-if config.encrypted then
-  table.insert(flags, "encrypted")
-end
-local annotation = #flags == 0 and "plain" or table.concat(flags, " and ")
-
-local files = fetch_files(config.input)
-
-print(string.format("Creating %s archive `%s` w/ %d entries", annotation, config.output, #files))
-local output = io.open(config.output, "wb")
-
-emit_header(output, config, files)
-for index, file in ipairs(files) do
-  emit_entry(output, file, config)
-
-  print(string.format("  [%d] `%s` %d", index - 1, file.name, file.size))
-end
-
-output:close()
-print("Done!")
+main(arg)

@@ -40,20 +40,60 @@
 
 #define PAK_FLAG_ENCRYPTED      0x0001
 
+/*
++------------------+
+|    PAK HEADER    | sizeof(Pak_Header_t)
++------------------+
+|      BLOB 0      |
++------------------+
+|      BLOB 1      |
++------------------+
+         ..
+         ..
+         ..
++------------------+
+|      BLOB n      |
++------------------+
+|  ENTRY HEADER 0  | sizeof(Pak_Entry_Header_t)
++------------------+
+|   ENTRY NAME 0   | sizeof(char) * name_length
++------------------+
+|  ENTRY HEADER 1  |
++------------------+
+|   ENTRY NAME 1   |
++------------------+
+         ..
+         ..
+         ..
++------------------+
+|  ENTRY HEADER n  |
++------------------+
+|   ENTRY NAME n   |
++------------------+
+| DIRECTORY HEADER | sizeof(Pak_Directory_Header_t)
++------------------+
+*/
+
 #pragma pack(push, 1)
 typedef struct _Pak_Header_t {
     char signature[PAK_SIGNATURE_LENGTH];
     uint8_t version;
     uint8_t flags;
     uint16_t __reserved;
-    uint32_t entries;
 } Pak_Header_t;
 
 typedef struct _Pak_Entry_Header_t {
     uint16_t __reserved;
     uint16_t name; // The entry header is followed by `name` chars and `size` bytes.
+    uint32_t offset;
     uint32_t size;
+    // TODO: use hashed names?
 } Pak_Entry_Header_t;
+
+typedef struct _Pak_Directory_Header_t {
+    uint32_t offset;
+    uint32_t entries; // Redundant, we could check file offsets, but it's quicker that way.
+} Pak_Directory_Header_t;
 #pragma pack(pop)
 
 typedef struct _Pak_Entry_t {
@@ -149,15 +189,38 @@ FS_Mount_t *FS_pak_mount(const char *path)
         return NULL;
     }
 
-    Pak_Entry_t *directory = malloc(sizeof(Pak_Entry_t) * header.entries);
+    int result = fseek(stream, -sizeof(Pak_Directory_Header_t), SEEK_END);
+    if (result != 0) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't seek file `%s` directory-header", path);
+        fclose(stream);
+        return NULL;
+    }
+
+    Pak_Directory_Header_t directory_header;
+    headers_read = fread(&directory_header, sizeof(Pak_Directory_Header_t), 1, stream);
+    if (headers_read != 1) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read file `%s` directory-header", path);
+        fclose(stream);
+        return NULL;
+    }
+
+    Pak_Entry_t *directory = malloc(sizeof(Pak_Entry_t) * directory_header.entries);
     if (!directory) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d directory entries", header.entries);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d directory entries", directory_header.entries);
+        fclose(stream);
+        return NULL;
+    }
+
+    result = fseek(stream, directory_header.offset, SEEK_SET);
+    if (result != 0) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't seek file `%s` directory-header", path);
+        free(directory);
         fclose(stream);
         return NULL;
     }
 
     size_t entries = 0;
-    for (size_t i = 0; i < header.entries; ++i) {
+    for (size_t i = 0; i < directory_header.entries; ++i) {
         Pak_Entry_Header_t entry_header;
         size_t entries_read = fread(&entry_header, sizeof(Pak_Entry_Header_t), 1, stream);
         if (entries_read != 1) {
@@ -179,18 +242,16 @@ FS_Mount_t *FS_pak_mount(const char *path)
 
         directory[i] = (Pak_Entry_t){
                 .name = entry_name,
-                .offset = ftell(stream),
+                .offset = entry_header.offset,
                 .size = entry_header.size,
             };
-
-        fseek(stream, entry_header.size, SEEK_CUR); // Skip the curren entry data and move the next entry header.
 
         entries += 1;
     }
 
     fclose(stream);
 
-    if (entries < header.entries) {
+    if (entries < directory_header.entries) {
         for (size_t i = 0; i < entries; ++i) {
             free(directory[i].name);
         }
@@ -199,7 +260,7 @@ FS_Mount_t *FS_pak_mount(const char *path)
         return NULL;
     }
 
-    qsort(directory, header.entries, sizeof(Pak_Entry_t), _pak_entry_compare); // Keep sorted to use binary-search.
+    qsort(directory, directory_header.entries, sizeof(Pak_Entry_t), _pak_entry_compare); // Keep sorted to use binary-search.
     Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "directory w/ %d entries sorted", entries);
 
     FS_Mount_t *mount = malloc(sizeof(Pak_Mount_t));
