@@ -55,7 +55,6 @@ typedef struct _Storage_Resource_t {
         } image;
     } var;
     double age;
-//    size_t references;
 } Storage_Resource_t;
 
 typedef struct _Storage_Configuration_t {
