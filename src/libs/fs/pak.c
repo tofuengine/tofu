@@ -44,37 +44,31 @@
 #define PAK_FLAG_ENCRYPTED      0x0001
 
 /*
-+------------------+
-|    PAK HEADER    | sizeof(Pak_Header_t)
-+------------------+
-|      BLOB 0      |
-+------------------+
-|      BLOB 1      |
-+------------------+
-         ..
-         ..
-         ..
-+------------------+
-|      BLOB n      |
-+------------------+
-|  ENTRY HEADER 0  | sizeof(Pak_Entry_Header_t)
-+------------------+
-|   ENTRY NAME 0   | sizeof(char) * name_length
-+------------------+
-|  ENTRY HEADER 1  |
-+------------------+
-|   ENTRY NAME 1   |
-+------------------+
-         ..
-         ..
-         ..
-+------------------+
-|  ENTRY HEADER n  |
-+------------------+
-|   ENTRY NAME n   |
-+------------------+
-| DIRECTORY HEADER | sizeof(Pak_Directory_Header_t)
-+------------------+
++---------+
+| HEADER  | sizeof(Pak_Header_t)
++---------+
+| BLOB 0  |
++---------+
+| BLOB 1  |
++---------+
+      ..
+      ..
+      ..
++---------+
+| BLOB n  |
++---------+
+| ENTRY 0 | sizeof(Pak_Entry_t)
++---------+
+| ENTRY 1 |
++---------+
+     ..
+     ..
+     ..
++---------+
+| ENTRY n |
++---------+
+|  INDEX  | sizeof(Pak_Index_t)
++---------+
 */
 
 #define PAK_NAME_LENGTH     MD5_SIZE
@@ -87,23 +81,17 @@ typedef struct _Pak_Header_t {
     uint16_t __reserved;
 } Pak_Header_t;
 
-typedef struct _Pak_Entry_Header_t {
+typedef struct _Pak_Entry_t {
     uint8_t id[PAK_NAME_LENGTH]; // The entry name is hashed.
     uint32_t offset;
     uint32_t size;
-} Pak_Entry_Header_t;
+} Pak_Entry_t;
 
-typedef struct _Pak_Directory_Header_t {
+typedef struct _Pak_Index_t {
     uint32_t offset;
     uint32_t entries; // Redundant, we could check file offsets, but it's quicker that way.
-} Pak_Directory_Header_t;
+} Pak_Index_t;
 #pragma pack(pop)
-
-typedef struct _Pak_Entry_t {
-    uint8_t id[PAK_NAME_LENGTH];
-    long offset;
-    size_t size;
-} Pak_Entry_t;
 
 typedef struct _Pak_Mount_t {
     Mount_VTable_t vtable; // Matches `_FS_Mount_t` structure.
@@ -180,8 +168,8 @@ FS_Mount_t *FS_pak_mount(const char *path)
     }
 
     Pak_Header_t header;
-    size_t headers_read = fread(&header, sizeof(Pak_Header_t), 1, stream);
-    if (headers_read != 1) {
+    size_t entries_read = fread(&header, sizeof(Pak_Header_t), 1, stream);
+    if (entries_read != 1) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read file `%s` header", path);
         fclose(stream);
         return NULL;
@@ -197,78 +185,59 @@ FS_Mount_t *FS_pak_mount(const char *path)
         return NULL;
     }
 
-    int result = fseek(stream, -sizeof(Pak_Directory_Header_t), SEEK_END);
-    if (result != 0) {
+    bool seeked = fseek(stream, -sizeof(Pak_Index_t), SEEK_END) == 0;
+    if (!seeked) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't seek file `%s` directory-header", path);
         fclose(stream);
         return NULL;
     }
 
-    Pak_Directory_Header_t directory_header;
-    headers_read = fread(&directory_header, sizeof(Pak_Directory_Header_t), 1, stream);
-    if (headers_read != 1) {
+    Pak_Index_t index;
+    entries_read = fread(&index, sizeof(Pak_Index_t), 1, stream);
+    if (entries_read != 1) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read file `%s` directory-header", path);
         fclose(stream);
         return NULL;
     }
 
-    Pak_Entry_t *directory = malloc(sizeof(Pak_Entry_t) * directory_header.entries);
-    if (!directory) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d directory entries", directory_header.entries);
+    seeked = fseek(stream, (long)index.offset, SEEK_SET) == 0;
+    if (!seeked) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't seek file `%s` directory-header", path);
         fclose(stream);
         return NULL;
     }
 
-    result = fseek(stream, directory_header.offset, SEEK_SET);
-    if (result != 0) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't seek file `%s` directory-header", path);
+    Pak_Entry_t *directory = malloc(sizeof(Pak_Entry_t) * index.entries);
+    if (!directory) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate #%d directory entries", index.entries);
+        fclose(stream);
+        return NULL;
+    }
+
+    entries_read = fread(directory, sizeof(Pak_Entry_t), index.entries, stream);
+    if (entries_read != index.entries) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read %d entries (%d read)", index.entries, entries_read);
         free(directory);
         fclose(stream);
         return NULL;
-    }
-
-    size_t entries = 0;
-    for (size_t i = 0; i < directory_header.entries; ++i) {
-        Pak_Entry_Header_t entry_header;
-        size_t entries_read = fread(&entry_header, sizeof(Pak_Entry_Header_t), 1, stream);
-        if (entries_read != 1) {
-            Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read header for entry #%d", i);
-            break;
-        }
-
-        directory[i] = (Pak_Entry_t){
-                .id = { 0 },
-                .offset = entry_header.offset,
-                .size = entry_header.size,
-            };
-        memcpy(directory[i].id, entry_header.id, PAK_NAME_LENGTH);
-
-        entries += 1;
     }
 
     fclose(stream);
 
-    if (entries < directory_header.entries) {
-        free(directory);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "directory w/ %d entries freed", entries);
-        return NULL;
-    }
-
-    qsort(directory, directory_header.entries, sizeof(Pak_Entry_t), _pak_entry_compare); // Keep sorted to use binary-search.
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "directory w/ %d entries sorted", entries);
+    qsort(directory, index.entries, sizeof(Pak_Entry_t), _pak_entry_compare); // Keep sorted to use binary-search.
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "directory w/ %d entries sorted", index.entries);
 
     FS_Mount_t *mount = malloc(sizeof(Pak_Mount_t));
     if (!mount) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate mount for path `%s`", path);
         free(directory);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "directory w/ %d entries freed", entries);
         return NULL;
     }
 
-    _pak_mount_ctor(mount, path, entries, directory, header.flags);
+    _pak_mount_ctor(mount, path, index.entries, directory, header.flags);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "mount initialized for archive `%s` w/ %d entries (flags 0x%02x)",
-        path, entries, header.flags);
+        path, index.entries, header.flags);
 
     return mount;
 }
@@ -345,7 +314,12 @@ static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *file)
         return NULL;
     }
 
-    fseek(stream, entry->offset, SEEK_SET); // Move to the found entry position into the file.
+    bool seeked = fseek(stream, (long)entry->offset, SEEK_SET) == 0; // Move to the found entry position into the file.
+    if (!seeked) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't seek entry `%s` at offset %d in file `%s`", file, entry->offset, pak_mount->archive_path);
+        fclose(stream);
+        return NULL;
+    }
     Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry `%s` found at offset %d in file `%s`", file, entry->offset, pak_mount->archive_path);
 
     FS_Handle_t *handle = malloc(sizeof(Pak_Handle_t));
@@ -355,7 +329,7 @@ static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *file)
         return NULL;
     }
 
-    _pak_handle_ctor(handle, stream, entry->offset, entry->size, pak_mount->flags & PAK_FLAG_ENCRYPTED, entry->id);
+    _pak_handle_ctor(handle, stream, (long)entry->offset, (size_t)entry->size, pak_mount->flags & PAK_FLAG_ENCRYPTED, entry->id);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry `%s` opened w/ handle %p (%d bytes)", file, handle, entry->size);
 
