@@ -39,6 +39,8 @@
 #define PAK_SIGNATURE           "TOFUPAK!"
 #define PAK_SIGNATURE_LENGTH    8
 
+#define PAK_VERSION             0
+
 #define PAK_FLAG_ENCRYPTED      0x0001
 
 /*
@@ -186,6 +188,11 @@ FS_Mount_t *FS_pak_mount(const char *path)
     }
     if (strncmp(header.signature, PAK_SIGNATURE, PAK_SIGNATURE_LENGTH) != 0) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "file `%s` is not a valid archive", path);
+        fclose(stream);
+        return NULL;
+    }
+    if (header.version != PAK_VERSION) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "archive `%s` version mismatch (found %d, required %d)", path, header.version, PAK_VERSION);
         fclose(stream);
         return NULL;
     }
