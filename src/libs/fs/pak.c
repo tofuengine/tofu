@@ -28,7 +28,7 @@
 
 #include <libs/log.h>
 #include <libs/md5.h>
-#include <libs/rc4.h>
+#include <libs/xor.h>
 #include <libs/stb.h>
 
 #include <ctype.h>
@@ -108,7 +108,7 @@ typedef struct _Pak_Handle_t {
     long beginning_of_stream;
     long end_of_stream;
     bool encrypted;
-    rc4_context_t cipher_context;
+    xor_context_t cipher_context;
 } Pak_Handle_t;
 
 static void _pak_mount_ctor(FS_Mount_t *mount, const char *archive_path, size_t entries, Pak_Entry_t *directory, uint8_t flags);
@@ -354,17 +354,13 @@ static void _pak_handle_ctor(FS_Handle_t *handle, FILE *stream, long offset, siz
             .beginning_of_stream = offset,
             .end_of_stream = offset + size - 1,
             .encrypted = encrypted,
-            .cipher_context = { 0 }
+            .cipher_context = { { 0 } } // Uh! The first member of the structure is an array, need additional braces!
         };
 
     if (encrypted) {
-        // Encryption is implemented throught a RC4 stream cipher.
+        // Encryption is implemented throught a XOR stream cipher.
         // The key is the entry name (which is an MD5 digest for encrypted archives).
-        rc4_schedule(&pak_handle->cipher_context, id, PAK_NAME_LENGTH);
-#ifdef DROP_256
-        uint8_t drop[256] = { 0 };
-        rc4_process(cipher_context, drop, drop, sizeof(drop));
-#endif
+        xor_schedule(&pak_handle->cipher_context, id, PAK_NAME_LENGTH);
     }
 }
 
@@ -407,7 +403,7 @@ static size_t _pak_handle_read(FS_Handle_t *handle, void *buffer, size_t bytes_r
 #endif
 
     if (pak_handle->encrypted) {
-        rc4_process(&pak_handle->cipher_context, buffer, bytes_read);
+        xor_process(&pak_handle->cipher_context, buffer, buffer, bytes_read);
 #ifdef __DEBUG_FS_CALLS__
         Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d bytes decrypted", bytes_read);
 #endif
