@@ -58,6 +58,21 @@ function string.to_hex(str)
     end)
 end
 
+local function xor_cipher(key)
+  local k = { string.byte(key, 1, 256) } -- Up to 256 bytes for the key.
+  local n = #k
+  local i = 1
+  return function(data)
+    local d = { string.byte(data, 1, -1) }
+    local r = {}
+    for _, b in ipairs(d) do
+      table.insert(r, bit32.bxor(b, k[i]))
+      i = (i % n) + 1
+    end
+    return string.char(table.unpack(r))
+  end
+end
+
 local function parse_arguments(args)
   local config = {
       input = nil,
@@ -118,33 +133,38 @@ local function emit_header(output, config, files)
   return 8 + 1 + 1 + 2
 end
 
--- TODO: block-based copy.
 local function emit_entry(output, file, config, offset, entries)
-  local input = io.open(file.pathfile, "rb")
-  local content = input:read("*all")
-  input:close()
-
-  local id = luazen.md5(file.name:lower())
+  local id = luazen.md5(string.lower(file.name))
   print(string.format("  `%s` -> id `%s`", file, id))
 
   if entries[id] then
     print(string.format("  `%s` -> id clashing w/ `%s`", file, entries[id].file))
     return false, 0
   end
+  local cipher = config.encrypted and xor_cipher(id) or nil
+
+  local input = io.open(file.pathfile, "rb")
+  local size = 0
+  while true do
+    local block = input:read(8196)
+    if not block then
+      break
+    end
+    if cipher then
+      block = cipher(block)
+    end
+    output:write(block)
+    size = size + #block
+  end
+  input:close()
 
   entries[id] = {
       file = file,
       offset = offset,
-      size = #content
+      size = size
     }
 
-  if config.encrypted then
-    content = luazen.rc4raw(content, id)
-  end
-
-  output:write(content)
-
-  return true, #content
+  return true, size
 end
 
 local function emit_directory(output, entries)
