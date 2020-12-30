@@ -1,3 +1,5 @@
+#!/usr/bin/lua5.3
+
 --[[
 MIT License
 
@@ -134,13 +136,13 @@ local function emit_header(output, config, files)
 end
 
 local function emit_entry(output, file, config, offset, entries)
-  print(string.format("  `%s`", file.name))
+  print(string.format("-> `%s`", file.name))
 
   local id = luazen.md5(string.lower(file.name))
-  print(string.format("    id `%s`", string.to_hex(id)))
+  print(string.format("      id: `%s`", string.to_hex(id)))
 
   if entries[id] then
-    print(string.format("  id clashing w/ `%s`", entries[id].file))
+    print(string.format("          clashing w/ file `%s`", entries[id].file))
     return false, 0
   end
   local cipher = config.encrypted and xor_cipher(id) or nil
@@ -166,8 +168,8 @@ local function emit_entry(output, file, config, offset, entries)
       size = size
     }
 
-  print(string.format("    offset %d", offset))
-  print(string.format("    size %d", file.size))
+  print(string.format("  offset: %d", offset))
+  print(string.format("    size: %d", file.size))
 
   return true, size
 end

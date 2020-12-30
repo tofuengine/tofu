@@ -1,3 +1,5 @@
+#!/usr/bin/lua5.3
+
 --[[
 MIT License
 
