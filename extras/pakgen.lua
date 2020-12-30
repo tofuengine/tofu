@@ -68,7 +68,7 @@ local function xor_cipher(key)
     local d = { string.byte(data, 1, -1) }
     local r = {}
     for _, b in ipairs(d) do
-      table.insert(r, bit32.bxor(b, k[i]))
+      table.insert(r, b ~ k[i])
       i = (i % n) + 1
     end
     return string.char(table.unpack(r))
@@ -223,12 +223,16 @@ local function main(arg)
     return
   end
 
+  print("PakGen v0.2.0")
+  print("=============")
+
   local flags = {}
   if config.encrypted then
     table.insert(flags, "encrypted")
   end
   local annotation = #flags == 0 and "plain" or table.concat(flags, " and ")
 
+  print(string.format("Fetching files from folder `%s`", config.input))
   local files = fetch_files(config.input)
 
   print(string.format("Creating %s archive `%s` w/ %d entries", annotation, config.output, #files))

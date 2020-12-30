@@ -24,8 +24,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
--- Depends upon
---  - struct
+-- Depends upon the following Lua "rocks".
+--  - lua-struct
 
 local struct = require("struct")
 
@@ -101,13 +101,20 @@ local function parse_arguments(args)
   return (config.input and config.output) and config or nil
 end
 
-local config = parse_arguments(arg)
-if not config then
-  print("Usage: sheetgen --input=<input file> --output=<output file>")
-  return
+local function main(arg)
+  local config = parse_arguments(arg)
+  if not config then
+    print("Usage: sheetgen --input=<input file> --output=<output file>")
+    return
+  end
+
+  print("SheetGen v0.1.0")
+  print("===============")
+
+  print(string.format("Converting file `%s` to `%s`", config.input, config.output))
+  convert(config.output, config.input)
+
+  print("Done!")
 end
 
-print(string.format("Converting file `%s` to `%s`", config.input, config.output))
-convert(config.output, config.input)
-
-print("Done!")
+main(arg)
