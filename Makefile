@@ -182,7 +182,7 @@ gamepad: $(TARGET)
 gamepad-pak: $(TARGET)
 	@echo "Launching *gamepad (PAK)* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/gamepad
-	@lua5.3 ./extras/pakgen.lua --input=./demos/gamepad --output=./demos/gamepad.pak
+	@lua5.3 ./extras/pakgen.lua --input=./demos/gamepad --output=./demos/gamepad.pak --encrypted
 	@./$(TARGET) --base-path=./demos/gamepad.pak
 
 hello-tofu: $(TARGET)

@@ -213,6 +213,8 @@ static int bank_canvas(lua_State *L)
 // Bank.blit(self, cell_id, x, y, r)
 // Bank.blit(self, cell_id, x, y, sx, sy)
 // Bank.blit(self, cell_id, x, y, sx, sy, r)
+// Bank.blit(self, cell_id, x, y, sx, sy, r, ax)
+// Bank.blit(self, cell_id, x, y, sx, sy, r, ax, ay)
 static int bank_blit4(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
