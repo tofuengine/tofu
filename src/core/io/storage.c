@@ -156,7 +156,8 @@ static Storage_Resource_t *_load_as_string(FS_Handle_t *handle)
                     .length = length
                 }
             },
-            .age = 0.0
+            .age = 0.0,
+            .lock_count = 0
         };
 
     return resource;
@@ -186,7 +187,8 @@ static Storage_Resource_t *_load_as_blob(FS_Handle_t *handle)
                     .size = size
                 }
             },
-            .age = 0.0
+            .age = 0.0,
+            .lock_count = 0
         };
 
     return resource;
@@ -202,7 +204,7 @@ static Storage_Resource_t* _load_as_image(FS_Handle_t *handle, const void *extra
 {
     //const GL_Palette_t *palette = (const GL_Palette_t *)extra;
 
-    //spng_ctx_new2
+    // TODO: use `spng_ctx_new2` for using a custom allocator.
     spng_ctx *ctx = spng_ctx_new(0);
     if (!ctx) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate image decoding context from handle `%p`", handle);
@@ -269,7 +271,8 @@ static Storage_Resource_t* _load_as_image(FS_Handle_t *handle, const void *extra
                     .pixels = pixels
                 }
             },
-            .age = 0.0
+            .age = 0.0,
+            .lock_count = 0
         };
 
     return resource;
@@ -305,7 +308,7 @@ static const Storage_Load_Function_t _load_functions[Storage_Resource_Types_t_Co
     _load_as_image
 };
 
-const Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Storage_Resource_Types_t type, const void *extra)
+Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Storage_Resource_Types_t type, const void *extra)
 {
     const Storage_Resource_t *key = &(Storage_Resource_t){ .file = (char *)file };
     Storage_Resource_t **entry = bsearch((const void *)&key, storage->resources, arrlen(storage->resources), sizeof(Storage_Resource_t *), _resource_compare_by_name);
@@ -345,6 +348,20 @@ const Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Sto
     return resource;
 }
 
+void Storage_lock(Storage_Resource_t *resource)
+{
+    resource->lock_count += 1;
+}
+
+void Storage_unlock(Storage_Resource_t *resource)
+{
+    if (resource->lock_count == 0) {
+        return;
+    }
+    resource->age = 0.0f; // Reset age on unlock, we enable some kind of grace for the resource.
+    resource->lock_count -= 1;
+}
+
 FS_Handle_t *Storage_open(const Storage_t *storage, const char *file)
 {
     return FS_locate_and_open(storage->context, file);
@@ -355,11 +372,15 @@ bool Storage_update(Storage_t *storage, float delta_time)
     // Backward scan, to remove to-be-released resources.
     for (int index = (int)arrlen(storage->resources) - 1; index >= 0; --index) {
         Storage_Resource_t *resource = storage->resources[index];
-        resource->age += delta_time;
-        if (resource->age >= STORAGE_RESOURCE_AGE_LIMIT) {
-            _release(resource);
-            arrdel(storage->resources, index); // No need to resort, removing preserve ordering.
+        if (resource->lock_count > 0) {
+            continue;
         }
+        resource->age += delta_time;
+        if (resource->age < STORAGE_RESOURCE_AGE_LIMIT) {
+            continue;
+        }
+        _release(resource);
+        arrdel(storage->resources, index); // No need to resort, removing preserve ordering.
     }
     return true;
 }
