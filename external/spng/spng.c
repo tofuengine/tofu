@@ -16,7 +16,7 @@
     #include "tests/framac_stubs.h"
 #else
     #ifdef SPNG_USE_MINIZ
-        #include <miniz/miniz.h>
+        #include <miniz.h>
     #else
         #include <zlib.h>
     #endif
@@ -2199,11 +2199,11 @@ static int read_non_idat_chunks(spng_ctx *ctx)
 
                     translated_keyword_offset = term - data + 1;
 
-                    const unsigned char *zlib_stream_2 = memchr(data + translated_keyword_offset, 0, peek_bytes - translated_keyword_offset);
-                    if(zlib_stream_2 == NULL) return SPNG_EITXT;
-                    if(zlib_stream_2 == peek_end) return SPNG_EITXT;
+                    const unsigned char *zlib_stream = memchr(data + translated_keyword_offset, 0, peek_bytes - translated_keyword_offset);
+                    if(zlib_stream == NULL) return SPNG_EITXT;
+                    if(zlib_stream == peek_end) return SPNG_EITXT;
 
-                    text_offset = zlib_stream_2 - data + 1;
+                    text_offset = zlib_stream - data + 1;
                     text->text_length = chunk.length - text_offset;
                 }
                 else return 1;
@@ -2749,8 +2749,8 @@ int spng_decode_scanline(spng_ctx *ctx, void *out, size_t len)
 
             if(ctx->cur_chunk_bytes_left) /* zlib stream ended before an IDAT chunk boundary */
             {/* Discard the rest of the chunk */
-                int ret2 = discard_chunk_bytes(ctx, ctx->cur_chunk_bytes_left);
-                if(ret2) return decode_err(ctx, ret2);
+                int ret = discard_chunk_bytes(ctx, ctx->cur_chunk_bytes_left);
+                if(ret) return decode_err(ctx, ret);
             }
 
             memcpy(&ctx->last_idat, &ctx->current_chunk, sizeof(struct spng_chunk));
