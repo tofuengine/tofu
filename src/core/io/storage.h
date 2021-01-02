@@ -56,6 +56,7 @@ typedef struct _Storage_Resource_t {
     } var;
     double age;
     int lock_count;
+    bool allocated;
 } Storage_Resource_t;
 
 typedef struct _Storage_Configuration_t {

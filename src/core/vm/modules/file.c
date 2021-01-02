@@ -54,7 +54,7 @@ static int file_as_string(lua_State *L)
 
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
 
-    const Storage_Resource_t *resource = Storage_load(storage, file, STORAGE_RESOURCE_BLOB);
+    const Storage_Resource_t *resource = Storage_load(storage, file, STORAGE_RESOURCE_BLOB, NULL);
     if (!resource) {
         return luaL_error(L, "can't load file `%s`", file);
     }
@@ -72,7 +72,7 @@ static int file_as_binary(lua_State *L)
 
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
 
-    const Storage_Resource_t *resource = Storage_load(storage, file, STORAGE_RESOURCE_BLOB);
+    const Storage_Resource_t *resource = Storage_load(storage, file, STORAGE_RESOURCE_BLOB, NULL);
     if (!resource) {
         return luaL_error(L, "can't load file `%s`", file);
     }

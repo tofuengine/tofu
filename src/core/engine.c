@@ -80,7 +80,7 @@ static inline void _wait_for(float seconds)
 
 static bool _configure(Storage_t *storage, Configuration_t *configuration)
 {
-    const Storage_Resource_t *resource = Storage_load(storage, "tofu.config", STORAGE_RESOURCE_STRING);
+    const Storage_Resource_t *resource = Storage_load(storage, "tofu.config", STORAGE_RESOURCE_STRING, NULL);
     if (!resource) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "configuration file is missing");
         return false;
@@ -143,7 +143,7 @@ Engine_t *Engine_create(int argc, const char *argv[])
     }
 
     const Storage_Resource_t *icon = Storage_exists(engine->storage, ENTRY_ICON)
-        ? Storage_load(engine->storage, ENTRY_ICON, STORAGE_RESOURCE_IMAGE)
+        ? Storage_load(engine->storage, ENTRY_ICON, STORAGE_RESOURCE_IMAGE, NULL)
         : NULL;
     Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined icon loaded");
     engine->display = Display_create(&(const Display_Configuration_t){
@@ -167,7 +167,7 @@ Engine_t *Engine_create(int argc, const char *argv[])
     }
 
     const Storage_Resource_t *mappings = Storage_exists(engine->storage, ENTRY_GAMECONTROLLER_DB)
-        ? Storage_load(engine->storage, ENTRY_GAMECONTROLLER_DB, STORAGE_RESOURCE_STRING)
+        ? Storage_load(engine->storage, ENTRY_GAMECONTROLLER_DB, STORAGE_RESOURCE_STRING, NULL)
         : NULL;
     Log_assert(!mappings, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined controller mappings loaded");
     engine->input = Input_create(&(const Input_Configuration_t){

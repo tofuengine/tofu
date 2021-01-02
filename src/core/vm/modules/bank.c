@@ -72,7 +72,7 @@ static int bank_new3(lua_State *L)
 
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
 
-    const Storage_Resource_t *cells = Storage_load(storage, cells_file, STORAGE_RESOURCE_BLOB);
+    const Storage_Resource_t *cells = Storage_load(storage, cells_file, STORAGE_RESOURCE_BLOB, NULL);
     if (!cells) {
         return luaL_error(L, "can't load file `%s`", cells_file);
     }

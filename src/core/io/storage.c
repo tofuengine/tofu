@@ -25,8 +25,10 @@
 #include "storage.h"
 
 #include <config.h>
+#include <libs/gl/palette.h>
 #include <libs/log.h>
 #include <libs/stb.h>
+#include <resources/images.h>
 #include <spng/spng.h>
 
 #include <stdint.h>
@@ -34,7 +36,7 @@
 // This defines how many seconds a resource persists in the cache after the initial load (or a reuse).
 #define STORAGE_RESOURCE_AGE_LIMIT  30.0
 
-typedef Storage_Resource_t *(*Storage_Load_Function_t)(FS_Handle_t *handle);
+typedef Storage_Resource_t *(*Storage_Load_Function_t)(FS_Handle_t *handle, const void *extra);
 
 #define LOG_CONTEXT "storage"
 
@@ -63,6 +65,9 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
 
 static void _release(Storage_Resource_t *resource)
 {
+    if (!resource->allocated) {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource was not allocated");
+    } else
     if (resource->type == STORAGE_RESOURCE_STRING) {
         free(resource->var.string.chars);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource-data `%s` at %p freed (%d characters string)",
@@ -102,7 +107,7 @@ void Storage_destroy(Storage_t *storage)
 
 bool Storage_exists(const Storage_t *storage, const char *file)
 {
-    return FS_locate(storage->context, file);
+    return FS_locate(storage->context, file) || resources_images_exists(file);
 }
 
 static void *_load(FS_Handle_t *handle, bool null_terminate, size_t *size)
@@ -132,7 +137,7 @@ static void *_load(FS_Handle_t *handle, bool null_terminate, size_t *size)
     return data;
 }
 
-static Storage_Resource_t *_load_as_string(FS_Handle_t *handle)
+static Storage_Resource_t *_load_as_string(FS_Handle_t *handle, const void *extra)
 {
     size_t length;
     void *chars = _load(handle, true, &length);
@@ -157,13 +162,14 @@ static Storage_Resource_t *_load_as_string(FS_Handle_t *handle)
                 }
             },
             .age = 0.0,
-            .lock_count = 0
+            .lock_count = 0,
+            .allocated = true
         };
 
     return resource;
 }
 
-static Storage_Resource_t *_load_as_blob(FS_Handle_t *handle)
+static Storage_Resource_t *_load_as_blob(FS_Handle_t *handle, const void *extra)
 {
     size_t size;
     void *ptr = _load(handle, false, &size);
@@ -188,7 +194,8 @@ static Storage_Resource_t *_load_as_blob(FS_Handle_t *handle)
                 }
             },
             .age = 0.0,
-            .lock_count = 0
+            .lock_count = 0,
+            .allocated = true
         };
 
     return resource;
@@ -200,7 +207,7 @@ static int _spng_read_fn(spng_ctx *ctx, void *user_data, void *dest, size_t leng
     return FS_read(handle, dest, length) == length ? SPNG_OK : SPNG_IO_ERROR;
 }
 
-static Storage_Resource_t* _load_as_image(FS_Handle_t *handle, const void *extra)
+static Storage_Resource_t *_load_as_image(FS_Handle_t *handle, const void *extra)
 {
     //const GL_Palette_t *palette = (const GL_Palette_t *)extra;
 
@@ -272,7 +279,8 @@ static Storage_Resource_t* _load_as_image(FS_Handle_t *handle, const void *extra
                 }
             },
             .age = 0.0,
-            .lock_count = 0
+            .lock_count = 0,
+            .allocated = true
         };
 
     return resource;
@@ -308,6 +316,37 @@ static const Storage_Load_Function_t _load_functions[Storage_Resource_Types_t_Co
     _load_as_image
 };
 
+Storage_Resource_t *_resource_load(const char *file, Storage_Resource_Types_t type, const void *extra)
+{
+    // TODO: reorganize for type.
+    const Image_t *image = resources_images_find(file);
+    if (!image) {
+        return NULL;
+    }
+
+    Storage_Resource_t *resource = malloc(sizeof(Storage_Resource_t));
+    if (!resource) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "cant' allocate resource");
+        return NULL;
+    }
+
+    *resource = (Storage_Resource_t){
+            .type = STORAGE_RESOURCE_IMAGE,
+            .var = {
+                .image = {
+                    .width = image->width,
+                    .height = image->height,
+                    .pixels = (void *)image->pixels
+                }
+            },
+            .age = 0.0,
+            .lock_count = 0,
+            .allocated = false
+        };
+
+    return resource;
+}
+
 Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Storage_Resource_Types_t type, const void *extra)
 {
     const Storage_Resource_t *key = &(Storage_Resource_t){ .file = (char *)file };
@@ -319,14 +358,19 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Storage_R
         return resource;
     }
 
-    FS_Handle_t *handle = FS_locate_and_open(storage->context, file);
-    if (!handle) {
-        return NULL;
+    Storage_Resource_t *resource = _resource_load(file, type, extra);
+    if (resource) {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "hard-coded resource `%s` found", file);
+    } else {
+        FS_Handle_t *handle = FS_locate_and_open(storage->context, file);
+        if (!handle) {
+            return NULL;
+        }
+
+        resource = _load_functions[type](handle, extra);
+
+        FS_close(handle);
     }
-
-    Storage_Resource_t *resource = _load_functions[type](handle);
-
-    FS_close(handle);
 
     if (!resource) {
         return NULL;

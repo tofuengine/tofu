@@ -34,7 +34,6 @@
 
 #include "callbacks.h"
 #include "udt.h"
-#include "resources/images.h"
 
 #define LOG_CONTEXT "canvas"
 #define META_TABLE  "Tofu_Graphics_Canvas_mt"
@@ -165,19 +164,8 @@ static int canvas_new1_3(lua_State *L)
     }
 
     GL_Context_t *context;
-    if (resources_images_exists(file)) {
-        const Image_t *image = resources_images_find(file);
-        if (!image) {
-            return luaL_error(L, "can't find resource `%s`", file);
-        }
-
-        context = GL_context_decode(image->width, image->height, image->pixels, callback, user_data);
-        if (!context) {
-            return luaL_error(L, "can't decode resource `%s`", file);
-        }
-    } else
     if (Storage_exists(storage, file)) {
-        const Storage_Resource_t *image = Storage_load(storage, file, STORAGE_RESOURCE_IMAGE);
+        const Storage_Resource_t *image = Storage_load(storage, file, STORAGE_RESOURCE_IMAGE, NULL);
         if (!image) {
             return luaL_error(L, "can't load file `%s`", file);
         }
