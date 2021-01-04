@@ -55,7 +55,7 @@ typedef struct _Storage_Resource_t {
         } image;
     } var;
     double age;
-    int lock_count;
+    int references;
     bool allocated;
 } Storage_Resource_t;
 
@@ -83,9 +83,9 @@ extern Storage_t *Storage_create(const Storage_Configuration_t *configuration);
 extern void Storage_destroy(Storage_t *storage);
 
 extern bool Storage_exists(const Storage_t *storage, const char *file);
+
 extern Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Storage_Resource_Types_t type);
 
-// FIXME: load call lock the resource and we need an explicit unload?
 extern void Storage_lock(Storage_Resource_t *resource);
 extern void Storage_unlock(Storage_Resource_t *resource);
 

@@ -93,6 +93,7 @@ void Storage_destroy(Storage_t *storage)
     Storage_Resource_t **current = storage->resources;
     for (size_t count = arrlen(storage->resources); count; --count) {
         Storage_Resource_t *resource = *(current++);
+        Log_assert(resource->references == 0, LOG_LEVELS_WARNING, LOG_CONTEXT, "resource `%s` force-released (references-count is %d)", resource->file, resource->references);
         _release(resource);
     }
     arrfree(storage->resources);
@@ -162,7 +163,7 @@ static Storage_Resource_t *_load_as_string(FS_Handle_t *handle)
                 }
             },
             .age = 0.0,
-            .lock_count = 0,
+            .references = 0,
             .allocated = true
         };
 
@@ -194,7 +195,7 @@ static Storage_Resource_t *_load_as_blob(FS_Handle_t *handle)
                 }
             },
             .age = 0.0,
-            .lock_count = 0,
+            .references = 0,
             .allocated = true
         };
 
@@ -252,7 +253,7 @@ static Storage_Resource_t *_load_as_image(FS_Handle_t *handle)
                 }
             },
             .age = 0.0,
-            .lock_count = 0,
+            .references = 0,
             .allocated = true
         };
 
@@ -313,7 +314,7 @@ Storage_Resource_t *_resource_load(const char *file, Storage_Resource_Types_t ty
                 }
             },
             .age = 0.0,
-            .lock_count = 0,
+            .references = 0,
             .allocated = false
         };
 
@@ -327,7 +328,7 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Storage_R
     if (entry) {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "cache-hit for resource `%s`, resetting age and returning", file);
         Storage_Resource_t *resource = *entry;
-        resource->age = 0.0;
+        resource->age = 0.0f; // Reset age on cache-hit.
         return resource;
     }
 
@@ -366,16 +367,18 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Storage_R
 
 void Storage_lock(Storage_Resource_t *resource)
 {
-    resource->lock_count += 1;
+    resource->references += 1;
 }
 
 void Storage_unlock(Storage_Resource_t *resource)
 {
-    if (resource->lock_count == 0) {
+    if (resource->references == 0) {
         return;
     }
-    resource->age = 0.0f; // Reset age on unlock, we enable some kind of grace for the resource.
-    resource->lock_count -= 1;
+    resource->references -= 1;
+    if (resource->references == 0) {
+        resource->age = 0.0f; // Reset age last reference unload, we enable some kind of grace for the cache.
+    }
 }
 
 FS_Handle_t *Storage_open(const Storage_t *storage, const char *file)
@@ -388,7 +391,7 @@ bool Storage_update(Storage_t *storage, float delta_time)
     // Backward scan, to remove to-be-released resources.
     for (int index = (int)arrlen(storage->resources) - 1; index >= 0; --index) {
         Storage_Resource_t *resource = storage->resources[index];
-        if (resource->lock_count > 0) {
+        if (resource->references > 0) {
             continue;
         }
         resource->age += delta_time;
