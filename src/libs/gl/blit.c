@@ -126,7 +126,7 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
 #ifdef __DEBUG_GRAPHICS__
                 pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)i + (int)j);
 #endif
-                GL_Pixel_t index = shifting[*(sptr++)];
+                const GL_Pixel_t index = shifting[*(sptr++)];
                 if (transparent[index]) {
                     dptr++;
                 } else {

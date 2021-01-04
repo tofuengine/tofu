@@ -25,7 +25,10 @@
 #include "storage.h"
 
 #include <config.h>
+#include <libs/gl/palette.h>
 #include <libs/log.h>
+#include <libs/stb.h>
+#include <resources/images.h>
 #include <libs/stb.h>
 
 #include <stdint.h>
@@ -62,6 +65,9 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
 
 static void _release(Storage_Resource_t *resource)
 {
+    if (!resource->allocated) {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource was not allocated");
+    } else
     if (resource->type == STORAGE_RESOURCE_STRING) {
         free(resource->var.string.chars);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource-data `%s` at %p freed (%d characters string)",
@@ -87,6 +93,7 @@ void Storage_destroy(Storage_t *storage)
     Storage_Resource_t **current = storage->resources;
     for (size_t count = arrlen(storage->resources); count; --count) {
         Storage_Resource_t *resource = *(current++);
+        Log_assert(resource->references == 0, LOG_LEVELS_WARNING, LOG_CONTEXT, "resource `%s` force-released (references-count is %d)", resource->file, resource->references);
         _release(resource);
     }
     arrfree(storage->resources);
@@ -101,7 +108,7 @@ void Storage_destroy(Storage_t *storage)
 
 bool Storage_exists(const Storage_t *storage, const char *file)
 {
-    return FS_locate(storage->context, file);
+    return FS_locate(storage->context, file) || resources_images_exists(file);
 }
 
 static void *_load(FS_Handle_t *handle, bool null_terminate, size_t *size)
@@ -155,7 +162,9 @@ static Storage_Resource_t *_load_as_string(FS_Handle_t *handle)
                     .length = length
                 }
             },
-            .age = 0.0
+            .age = 0.0,
+            .references = 0,
+            .allocated = true
         };
 
     return resource;
@@ -185,7 +194,9 @@ static Storage_Resource_t *_load_as_blob(FS_Handle_t *handle)
                     .size = size
                 }
             },
-            .age = 0.0
+            .age = 0.0,
+            .references = 0,
+            .allocated = true
         };
 
     return resource;
@@ -215,7 +226,7 @@ static const stbi_io_callbacks _stbi_io_callbacks = {
     _stbi_io_eof,
 };
 
-static Storage_Resource_t* _load_as_image(FS_Handle_t *handle)
+static Storage_Resource_t *_load_as_image(FS_Handle_t *handle)
 {
     int width, height, components;
     void *pixels = stbi_load_from_callbacks(&_stbi_io_callbacks, handle, &width, &height, &components, STBI_rgb_alpha);
@@ -241,7 +252,9 @@ static Storage_Resource_t* _load_as_image(FS_Handle_t *handle)
                     .pixels = pixels
                 }
             },
-            .age = 0.0
+            .age = 0.0,
+            .references = 0,
+            .allocated = true
         };
 
     return resource;
@@ -277,25 +290,60 @@ static const Storage_Load_Function_t _load_functions[Storage_Resource_Types_t_Co
     _load_as_image
 };
 
-const Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Storage_Resource_Types_t type)
+Storage_Resource_t *_resource_load(const char *file, Storage_Resource_Types_t type)
+{
+    // TODO: reorganize for type.
+    const Image_t *image = resources_images_find(file);
+    if (!image) {
+        return NULL;
+    }
+
+    Storage_Resource_t *resource = malloc(sizeof(Storage_Resource_t));
+    if (!resource) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "cant' allocate resource");
+        return NULL;
+    }
+
+    *resource = (Storage_Resource_t){
+            .type = STORAGE_RESOURCE_IMAGE,
+            .var = {
+                .image = {
+                    .width = image->width,
+                    .height = image->height,
+                    .pixels = (void *)image->pixels
+                }
+            },
+            .age = 0.0,
+            .references = 0,
+            .allocated = false
+        };
+
+    return resource;
+}
+
+Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Storage_Resource_Types_t type)
 {
     const Storage_Resource_t *key = &(Storage_Resource_t){ .file = (char *)file };
     Storage_Resource_t **entry = bsearch((const void *)&key, storage->resources, arrlen(storage->resources), sizeof(Storage_Resource_t *), _resource_compare_by_name);
     if (entry) {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "cache-hit for resource `%s`, resetting age and returning", file);
         Storage_Resource_t *resource = *entry;
-        resource->age = 0.0;
+        resource->age = 0.0f; // Reset age on cache-hit.
         return resource;
     }
 
-    FS_Handle_t *handle = FS_locate_and_open(storage->context, file);
-    if (!handle) {
-        return NULL;
+    Storage_Resource_t *resource = _resource_load(file, type);
+    if (resource) {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "hard-coded resource `%s` found", file);
+    } else {
+        FS_Handle_t *handle = FS_locate_and_open(storage->context, file);
+        if (!handle) {
+            return NULL;
+        }
+
+        resource = _load_functions[type](handle);
+        FS_close(handle);
     }
-
-    Storage_Resource_t *resource = _load_functions[type](handle);
-
-    FS_close(handle);
 
     if (!resource) {
         return NULL;
@@ -317,6 +365,22 @@ const Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Sto
     return resource;
 }
 
+void Storage_lock(Storage_Resource_t *resource)
+{
+    resource->references += 1;
+}
+
+void Storage_unlock(Storage_Resource_t *resource)
+{
+    if (resource->references == 0) {
+        return;
+    }
+    resource->references -= 1;
+    if (resource->references == 0) {
+        resource->age = 0.0f; // Reset age last reference unload, we enable some kind of grace for the cache.
+    }
+}
+
 FS_Handle_t *Storage_open(const Storage_t *storage, const char *file)
 {
     return FS_locate_and_open(storage->context, file);
@@ -327,11 +391,15 @@ bool Storage_update(Storage_t *storage, float delta_time)
     // Backward scan, to remove to-be-released resources.
     for (int index = (int)arrlen(storage->resources) - 1; index >= 0; --index) {
         Storage_Resource_t *resource = storage->resources[index];
-        resource->age += delta_time;
-        if (resource->age >= STORAGE_RESOURCE_AGE_LIMIT) {
-            _release(resource);
-            arrdel(storage->resources, index); // No need to resort, removing preserve ordering.
+        if (resource->references > 0) {
+            continue;
         }
+        resource->age += delta_time;
+        if (resource->age < STORAGE_RESOURCE_AGE_LIMIT) {
+            continue;
+        }
+        _release(resource);
+        arrdel(storage->resources, index); // No need to resort, removing preserve ordering.
     }
     return true;
 }

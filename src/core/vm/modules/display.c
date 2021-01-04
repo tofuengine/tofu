@@ -27,9 +27,9 @@
 #include <config.h>
 #include <core/io/display.h>
 #include <libs/log.h>
+#include <resources/palettes.h>
 
 #include "udt.h"
-#include "resources/palettes.h"
 
 #define LOG_CONTEXT "graphics"
 

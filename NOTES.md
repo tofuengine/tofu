@@ -8,4 +8,4 @@
   * tweaking the palette index with a bias (constant shifting, i.e. banked palette) -> ~180 FPS
   * transparency w/ banked palette -> ~70 FPS
   * can I get rid of the transparency branch by setting the alpha color and leave it to the GPU?
-  
+    * no, I can't since GPU is involved only in the final (to frame-buffer) transfer

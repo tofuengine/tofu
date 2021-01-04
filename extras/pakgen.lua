@@ -1,3 +1,5 @@
+#!/usr/bin/lua5.3
+
 --[[
 MIT License
 
@@ -25,14 +27,13 @@ SOFTWARE.
 -- Depends upon the following Lua "rocks".
 --  1 luafilesystem
 --  2 luazen
---  3 struct
+--  3 lua-struct
 
 local lfs = require("lfs")
 local luazen = require("luazen")
 local struct = require("struct")
 
 local VERSION = 0x00
-local RESERVED_8b = 0xFF
 local RESERVED_16b = 0xFFFF
 
 function string:at(index)
@@ -59,47 +60,19 @@ function string.to_hex(str)
     end)
 end
 
-local function attrdir(path, list)
-  for file in lfs.dir(path) do
-      if file ~= "." and file ~= ".." then
-        local pathfile = path .. "/" .. file
-        local mode = lfs.attributes(pathfile, "mode")
-        if mode == "directory" then
-            attrdir(pathfile, list)
-        else
-          local size = lfs.attributes(pathfile, "size")
-          table.insert(list, { pathfile = pathfile, size = size, name = nil, offset = -1 })
-        end
-      end
+local function xor_cipher(key)
+  local k = { string.byte(key, 1, 256) } -- Up to 256 bytes for the key.
+  local n = #k
+  local i = 1
+  return function(data)
+    local d = { string.byte(data, 1, -1) }
+    local r = {}
+    for _, b in ipairs(d) do
+      table.insert(r, b ~ k[i])
+      i = (i % n) + 1
+    end
+    return string.char(table.unpack(r))
   end
-end
-
-local function emit_header(output, config, files)
-  local flags = bit32.lshift(config.encrypted and 1 or 0, 0)
-
-  output:write(struct.pack("c8", "TOFUPAK!"))
-  output:write(struct.pack("B", VERSION))
-  output:write(struct.pack("B", flags))
-  output:write(struct.pack("H", RESERVED_8b))
-  output:write(struct.pack("I", #files))
-end
-
-local function emit_entry(output, file, config)
-  local input = io.open(file.pathfile, "rb")
-
-  local content = input:read("*all")
-
-  if config.encrypted then
-    content = luazen.rc4raw(content, luazen.md5(file.name))
-  end
-
-  output:write(struct.pack("H", RESERVED_16b))
-  output:write(struct.pack("H", #file.name))
-  output:write(struct.pack("I", file.size))
-  output:write(struct.pack("c" .. #file.name, file.name))
-  output:write(content)
-
-  input:close()
 end
 
 local function parse_arguments(args)
@@ -126,6 +99,21 @@ local function parse_arguments(args)
   return (config.input and config.output) and config or nil
 end
 
+local function attrdir(path, list)
+  for file in lfs.dir(path) do
+      if file ~= "." and file ~= ".." then
+        local pathfile = path .. "/" .. file
+        local mode = lfs.attributes(pathfile, "mode")
+        if mode == "directory" then
+            attrdir(pathfile, list)
+        else
+          local size = lfs.attributes(pathfile, "size")
+          table.insert(list, { pathfile = pathfile, size = size, name = nil })
+        end
+      end
+  end
+end
+
 local function fetch_files(path)
   local files = {}
   attrdir(path, files)
@@ -136,29 +124,126 @@ local function fetch_files(path)
   return files
 end
 
-local config = parse_arguments(arg)
-if not config then
-  print("Usage: pakgen --input=<input folder> --output=<output file> [--encrypted]")
-  return
+local function emit_header(output, config, files)
+  local flags = bit32.lshift(config.encrypted and 1 or 0, 0)
+
+  output:write(struct.pack("c8", "TOFUPAK!"))
+  output:write(struct.pack("B", VERSION))
+  output:write(struct.pack("B", flags))
+  output:write(struct.pack("H", RESERVED_16b))
+
+  return 8 + 1 + 1 + 2
 end
 
-local flags = {}
-if config.encrypted then
-  table.insert(flags, "encrypted")
+local function emit_entry(output, file, config, offset, entries)
+  print(string.format("-> `%s`", file.name))
+
+  local id = luazen.md5(string.lower(file.name))
+  print(string.format("      id: `%s`", string.to_hex(id)))
+
+  if entries[id] then
+    print(string.format("          clashing w/ file `%s`", entries[id].file))
+    return false, 0
+  end
+  local cipher = config.encrypted and xor_cipher(id) or nil
+
+  local input = io.open(file.pathfile, "rb")
+  local size = 0
+  while true do
+    local block = input:read(8196)
+    if not block then
+      break
+    end
+    if cipher then
+      block = cipher(block)
+    end
+    output:write(block)
+    size = size + #block
+  end
+  input:close()
+
+  entries[id] = {
+      file = file,
+      offset = offset,
+      size = size
+    }
+
+  print(string.format("  offset: %d", offset))
+  print(string.format("    size: %d", file.size))
+
+  return true, size
 end
-local annotation = #flags == 0 and "plain" or table.concat(flags, " and ")
 
-local files = fetch_files(config.input)
-
-print(string.format("Creating %s archive `%s` w/ %d entries", annotation, config.output, #files))
-local output = io.open(config.output, "wb")
-
-emit_header(output, config, files)
-for index, file in ipairs(files) do
-  emit_entry(output, file, config)
-
-  print(string.format("  [%d] `%s` %d", index - 1, file.name, file.size))
+local function emit_directory(output, entries)
+  local count = 0
+  for id, entry in pairs(entries) do
+    output:write(struct.pack("c16", id))
+    output:write(struct.pack("I", entry.offset))
+    output:write(struct.pack("I", entry.size))
+    count = count + 1
+  end
+  return count
 end
 
-output:close()
-print("Done!")
+local function emit_trailer(output, entries, cursor)
+  local count = emit_directory(output, entries)
+  output:write(struct.pack("I", cursor))
+  output:write(struct.pack("I", count))
+end
+
+local function emit(config, files)
+  local entries = {}
+
+  local output = io.open(config.output, "wb")
+
+  local offset = emit_header(output, config, files)
+
+  for _, file in ipairs(files) do
+    local result, size = emit_entry(output, file, config, offset, entries)
+    if not result then
+      output:close()
+      os.remove(config.output)
+      return false
+    end
+
+    offset = offset + size
+  end
+
+  emit_trailer(output, entries, offset)
+
+  output:close()
+
+  return true
+end
+
+local function main(arg)
+  local config = parse_arguments(arg)
+  if not config then
+    print("Usage: pakgen --input=<input folder> --output=<output file> [--encrypted]")
+    return
+  end
+
+  print("PakGen v0.2.0")
+  print("=============")
+
+  local flags = {}
+  if config.encrypted then
+    table.insert(flags, "encrypted")
+  end
+  local annotation = #flags == 0 and "plain" or table.concat(flags, " and ")
+
+  print(string.format("Fetching files from folder `%s`", config.input))
+  local files = fetch_files(config.input)
+
+  print(string.format("Creating %s archive `%s` w/ %d entries", annotation, config.output, #files))
+
+  local success = emit(config, files)
+
+  if success then
+    print("Done!")
+  else
+    print("Failed!")
+  end
+end
+
+main(arg)
