@@ -68,6 +68,17 @@ void GL_batch_destroy(GL_Batch_t *batch)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "batch %p freed", batch);
 }
 
+bool GL_batch_resize(GL_Batch_t *batch, size_t capacity)
+{
+    bool allocated = arrsetcap(batch->sprites, capacity); // FIXME: should be `!!`?
+    if (!allocated) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't resize batch slots");
+        return false;
+    }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "batch %p capacity reset to %d", batch, capacity);
+    return true;
+}
+
 bool GL_batch_grow(GL_Batch_t *batch, size_t amount)
 {
     size_t capacity = arrcap(batch->sprites);
@@ -77,7 +88,7 @@ bool GL_batch_grow(GL_Batch_t *batch, size_t amount)
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't grow batch slots");
         return false;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "batch %p capacity grown by %d slots to %d", amount, capacity);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "batch %p capacity grown by %d slots to %d", batch, amount, capacity);
     return true;
 }
 

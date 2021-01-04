@@ -48,6 +48,7 @@ typedef struct _GL_Batch_t {
 extern GL_Batch_t *GL_batch_create(const GL_Sheet_t *sheet, size_t slots);
 extern void GL_batch_destroy(GL_Batch_t *batch);
 
+extern bool GL_batch_resize(GL_Batch_t *batch, size_t capacity);
 extern bool GL_batch_grow(GL_Batch_t *batch, size_t amount); // Can't shrink or references would be lost.
 extern void GL_batch_clear(GL_Batch_t *batch);
 extern void GL_batch_add(GL_Batch_t *batch, GL_Batch_Sprite_t sprite);

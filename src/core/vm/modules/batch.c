@@ -35,6 +35,7 @@
 
 static int batch_new(lua_State *L);
 static int batch_gc(lua_State *L);
+static int batch_resize(lua_State *L);
 static int batch_grow(lua_State *L);
 static int batch_clear(lua_State *L);
 static int batch_add(lua_State *L);
@@ -43,6 +44,7 @@ static int batch_blit(lua_State *L);
 static const struct luaL_Reg _batch_functions[] = {
     { "new", batch_new },
     { "__gc", batch_gc },
+    { "resize", batch_resize },
     { "grow", batch_grow },
     { "clear", batch_clear },
     { "add", batch_add },
@@ -107,6 +109,23 @@ static int batch_gc(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "batch %p destroyed", self->batch);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "batch %p finalized", self);
+
+    return 0;
+}
+
+static int batch_resize(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    Batch_Object_t *self = (Batch_Object_t *)LUAX_USERDATA(L, 1);
+    size_t capacity = (size_t)LUAX_INTEGER(L, 2);
+
+    bool resized = GL_batch_resize(self->batch, capacity);
+    if (!resized) {
+        return luaL_error(L, "can't resize batch %p to %d slots", self, capacity);
+    }
 
     return 0;
 }
