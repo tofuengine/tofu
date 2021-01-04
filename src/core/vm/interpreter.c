@@ -183,7 +183,7 @@ static int _searcher(lua_State *L)
     }
     strcat(path_file, ".lua");
 
-    const Storage_Resource_t *resource = Storage_load(storage, path_file + 1, STORAGE_RESOURCE_BLOB, NULL);
+    const Storage_Resource_t *resource = Storage_load(storage, path_file + 1, STORAGE_RESOURCE_BLOB);
     if (!resource) {
         return LUA_ERRFILE;
     }

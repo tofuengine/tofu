@@ -29,6 +29,7 @@
   #include <stb/stb_leakcheck.h>
 #endif
 #include <stb/stb_ds.h>
+#include <stb/stb_image.h>
 
 extern void *memdup(const void *ptr, size_t size);
 

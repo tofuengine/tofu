@@ -165,7 +165,7 @@ static int canvas_new1_3(lua_State *L)
 
     GL_Context_t *context;
     if (Storage_exists(storage, file)) {
-        const Storage_Resource_t *image = Storage_load(storage, file, STORAGE_RESOURCE_IMAGE, NULL);
+        const Storage_Resource_t *image = Storage_load(storage, file, STORAGE_RESOURCE_IMAGE);
         if (!image) {
             return luaL_error(L, "can't load file `%s`", file);
         }

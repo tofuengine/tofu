@@ -29,14 +29,14 @@
 #include <libs/log.h>
 #include <libs/stb.h>
 #include <resources/images.h>
-#include <spng/spng.h>
+#include <libs/stb.h>
 
 #include <stdint.h>
 
 // This defines how many seconds a resource persists in the cache after the initial load (or a reuse).
 #define STORAGE_RESOURCE_AGE_LIMIT  30.0
 
-typedef Storage_Resource_t *(*Storage_Load_Function_t)(FS_Handle_t *handle, const void *extra);
+typedef Storage_Resource_t *(*Storage_Load_Function_t)(FS_Handle_t *handle);
 
 #define LOG_CONTEXT "storage"
 
@@ -79,7 +79,7 @@ static void _release(Storage_Resource_t *resource)
             resource->file, resource->var.blob.ptr, resource->var.blob.size);
     } else
     if (resource->type == STORAGE_RESOURCE_IMAGE) {
-        free(resource->var.image.pixels);
+        stbi_image_free(resource->var.image.pixels);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource-data `%s` at %p freed (%dx%d image)",
             resource->file, resource->var.image.pixels, resource->var.image.width, resource->var.image.height);
     }
@@ -137,7 +137,7 @@ static void *_load(FS_Handle_t *handle, bool null_terminate, size_t *size)
     return data;
 }
 
-static Storage_Resource_t *_load_as_string(FS_Handle_t *handle, const void *extra)
+static Storage_Resource_t *_load_as_string(FS_Handle_t *handle)
 {
     size_t length;
     void *chars = _load(handle, true, &length);
@@ -169,7 +169,7 @@ static Storage_Resource_t *_load_as_string(FS_Handle_t *handle, const void *extr
     return resource;
 }
 
-static Storage_Resource_t *_load_as_blob(FS_Handle_t *handle, const void *extra)
+static Storage_Resource_t *_load_as_blob(FS_Handle_t *handle)
 {
     size_t size;
     void *ptr = _load(handle, false, &size);
@@ -201,71 +201,44 @@ static Storage_Resource_t *_load_as_blob(FS_Handle_t *handle, const void *extra)
     return resource;
 }
 
-static int _spng_read_fn(spng_ctx *ctx, void *user_data, void *dest, size_t length)
+static int _stbi_io_read(void *user_data, char *data, int size)
 {
     FS_Handle_t *handle = (FS_Handle_t *)user_data;
-    return FS_read(handle, dest, length) == length ? SPNG_OK : SPNG_IO_ERROR;
+    return (int)FS_read(handle, data, (size_t)size);
 }
 
-static Storage_Resource_t *_load_as_image(FS_Handle_t *handle, const void *extra)
+static void _stbi_io_skip(void *user_data, int n)
 {
-    //const GL_Palette_t *palette = (const GL_Palette_t *)extra;
+    FS_Handle_t *handle = (FS_Handle_t *)user_data;
+    FS_seek(handle, n, SEEK_CUR); // We are discaring the return value, yep. :|
+}
 
-    // TODO: use `spng_ctx_new2` for using a custom allocator.
-    spng_ctx *ctx = spng_ctx_new(0);
-    if (!ctx) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate image decoding context from handle `%p`", handle);
-        return NULL;
-    }
+static int _stbi_io_eof(void *user_data)
+{
+    FS_Handle_t *handle = (FS_Handle_t *)user_data;
+    return FS_eof(handle) ? -1 : 0;
+}
 
-    spng_set_png_stream(ctx, _spng_read_fn, handle);
+static const stbi_io_callbacks _stbi_io_callbacks = {
+    _stbi_io_read,
+    _stbi_io_skip,
+    _stbi_io_eof,
+};
 
-    int result = spng_decode_image(ctx, NULL, 0, SPNG_FMT_RGBA8, SPNG_DECODE_PROGRESSIVE);
-    if (result != SPNG_OK) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize image decoding from handle `%p`", handle);
-        spng_ctx_free(ctx);
-        return NULL;
-    }
-
-    struct spng_ihdr ihdr = { 0 };
-    result = spng_get_ihdr(ctx, &ihdr);
-    if (result != SPNG_OK) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get image information from handle `%p`", handle);
-        spng_ctx_free(ctx);
-        return NULL;
-    }
-
-    int width = ihdr.width, height = ihdr.height;
-//    spng_decoded_image_size(ctx, SPNG_FMT_RGBA8, &image_size);
-    size_t image_size = width * height * sizeof(uint32_t); // No need to call `spng_decoded_image_size()`.
-    size_t row_size = image_size / ihdr.height;
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loading %dx%d image (%d byte(s)) from handle `%p`", width, height, image_size, handle);
-
-    void *pixels = malloc(image_size);
+static Storage_Resource_t *_load_as_image(FS_Handle_t *handle)
+{
+    int width, height, components;
+    void *pixels = stbi_load_from_callbacks(&_stbi_io_callbacks, handle, &width, &height, &components, STBI_rgb_alpha);
     if (!pixels) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate memory for %dx%d image from handle `%p`", width, height, handle);
-        spng_ctx_free(ctx);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't decode surface from handle `%p` (%s)", handle, stbi_failure_reason());
         return NULL;
     }
-
-//    uint8_t row[row_size];
-    do {
-        struct spng_row_info row_info = { 0 };
-        result = spng_get_row_info(ctx, &row_info);
-        if (result != SPNG_OK) {
-            break;
-        }
-
-//        result = spng_decode_row(ctx, row, row_length);
-        result = spng_decode_row(ctx, (uint8_t *)pixels + row_info.row_num * row_size, row_size);
-    } while (result == SPNG_OK);
-
-    spng_ctx_free(ctx);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded %dx%d image", width, height);
 
     Storage_Resource_t *resource = malloc(sizeof(Storage_Resource_t));
     if (!resource) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "cant' allocate resource");
-        free(pixels);
+        stbi_image_free(pixels);
         return NULL;
     }
 
@@ -316,7 +289,7 @@ static const Storage_Load_Function_t _load_functions[Storage_Resource_Types_t_Co
     _load_as_image
 };
 
-Storage_Resource_t *_resource_load(const char *file, Storage_Resource_Types_t type, const void *extra)
+Storage_Resource_t *_resource_load(const char *file, Storage_Resource_Types_t type)
 {
     // TODO: reorganize for type.
     const Image_t *image = resources_images_find(file);
@@ -347,7 +320,7 @@ Storage_Resource_t *_resource_load(const char *file, Storage_Resource_Types_t ty
     return resource;
 }
 
-Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Storage_Resource_Types_t type, const void *extra)
+Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Storage_Resource_Types_t type)
 {
     const Storage_Resource_t *key = &(Storage_Resource_t){ .file = (char *)file };
     Storage_Resource_t **entry = bsearch((const void *)&key, storage->resources, arrlen(storage->resources), sizeof(Storage_Resource_t *), _resource_compare_by_name);
@@ -358,7 +331,7 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Storage_R
         return resource;
     }
 
-    Storage_Resource_t *resource = _resource_load(file, type, extra);
+    Storage_Resource_t *resource = _resource_load(file, type);
     if (resource) {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "hard-coded resource `%s` found", file);
     } else {
@@ -367,8 +340,7 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Storage_R
             return NULL;
         }
 
-        resource = _load_functions[type](handle, extra);
-
+        resource = _load_functions[type](handle);
         FS_close(handle);
     }
 
