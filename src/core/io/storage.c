@@ -36,7 +36,7 @@
 // This defines how many seconds a resource persists in the cache after the initial load (or a reuse).
 #define STORAGE_RESOURCE_AGE_LIMIT  30.0
 
-typedef Storage_Resource_t *(*Storage_Load_Function_t)(FS_Handle_t *handle);
+typedef Storage_Resource_t *(*Storage_Load_Function_t)(Storage_Resource_t *resource, FS_Handle_t *handle);
 
 #define LOG_CONTEXT "storage"
 
@@ -138,21 +138,14 @@ static void *_load(FS_Handle_t *handle, bool null_terminate, size_t *size)
     return data;
 }
 
-static Storage_Resource_t *_load_as_string(FS_Handle_t *handle)
+static bool _load_as_string(Storage_Resource_t *resource, FS_Handle_t *handle)
 {
     size_t length;
     void *chars = _load(handle, true, &length);
     if (!chars) {
-        return NULL;
+        return false;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded a %d characters long string", length);
-
-    Storage_Resource_t *resource = malloc(sizeof(Storage_Resource_t));
-    if (!resource) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "cant' allocate resource");
-        free(chars);
-        return NULL;
-    }
 
     *resource = (Storage_Resource_t){
             .type = STORAGE_RESOURCE_STRING,
@@ -167,24 +160,17 @@ static Storage_Resource_t *_load_as_string(FS_Handle_t *handle)
             .allocated = true
         };
 
-    return resource;
+    return true;
 }
 
-static Storage_Resource_t *_load_as_blob(FS_Handle_t *handle)
+static bool _load_as_blob(Storage_Resource_t *resource, FS_Handle_t *handle)
 {
     size_t size;
     void *ptr = _load(handle, false, &size);
     if (!ptr) {
-        return NULL;
+        return false;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded %d bytes blob", size);
-
-    Storage_Resource_t *resource = malloc(sizeof(Storage_Resource_t));
-    if (!resource) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "cant' allocate resource");
-        free(ptr);
-        return NULL;
-    }
 
     *resource = (Storage_Resource_t){
             .type = STORAGE_RESOURCE_BLOB,
@@ -199,7 +185,7 @@ static Storage_Resource_t *_load_as_blob(FS_Handle_t *handle)
             .allocated = true
         };
 
-    return resource;
+    return true;
 }
 
 static int _stbi_io_read(void *user_data, char *data, int size)
@@ -226,22 +212,15 @@ static const stbi_io_callbacks _stbi_io_callbacks = {
     _stbi_io_eof,
 };
 
-static Storage_Resource_t *_load_as_image(FS_Handle_t *handle)
+static bool _load_as_image(Storage_Resource_t *resource, FS_Handle_t *handle)
 {
     int width, height, components;
     void *pixels = stbi_load_from_callbacks(&_stbi_io_callbacks, handle, &width, &height, &components, STBI_rgb_alpha);
     if (!pixels) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't decode surface from handle `%p` (%s)", handle, stbi_failure_reason());
-        return NULL;
+        return false;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded %dx%d image", width, height);
-
-    Storage_Resource_t *resource = malloc(sizeof(Storage_Resource_t));
-    if (!resource) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "cant' allocate resource");
-        stbi_image_free(pixels);
-        return NULL;
-    }
 
     *resource = (Storage_Resource_t){
             .type = STORAGE_RESOURCE_IMAGE,
@@ -257,7 +236,7 @@ static Storage_Resource_t *_load_as_image(FS_Handle_t *handle)
             .allocated = true
         };
 
-    return resource;
+    return true;
 }
 
 static int _resource_compare_by_name(const void *lhs, const void *rhs)
@@ -290,35 +269,36 @@ static const Storage_Load_Function_t _load_functions[Storage_Resource_Types_t_Co
     _load_as_image
 };
 
-Storage_Resource_t *_resource_load(const char *file, Storage_Resource_Types_t type)
+static bool _resource_load(Storage_Resource_t *resource, const char *file, Storage_Resource_Types_t type)
 {
-    // TODO: reorganize for type.
-    const Image_t *image = resources_images_find(file);
-    if (!image) {
-        return NULL;
+    if (type == STORAGE_RESOURCE_STRING) {
+        return false;
+    } else
+    if (type == STORAGE_RESOURCE_BLOB) {
+        return false;
+    } else
+    if (type == STORAGE_RESOURCE_IMAGE) {
+        const Image_t *image = resources_images_find(file);
+        if (!image) {
+            return false;
+        }
+
+        *resource = (Storage_Resource_t){
+                .type = STORAGE_RESOURCE_IMAGE,
+                .var = {
+                    .image = {
+                        .width = image->width,
+                        .height = image->height,
+                        .pixels = (void *)image->pixels
+                    }
+                },
+                .age = 0.0,
+                .references = 0,
+                .allocated = false
+            };
     }
 
-    Storage_Resource_t *resource = malloc(sizeof(Storage_Resource_t));
-    if (!resource) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "cant' allocate resource");
-        return NULL;
-    }
-
-    *resource = (Storage_Resource_t){
-            .type = STORAGE_RESOURCE_IMAGE,
-            .var = {
-                .image = {
-                    .width = image->width,
-                    .height = image->height,
-                    .pixels = (void *)image->pixels
-                }
-            },
-            .age = 0.0,
-            .references = 0,
-            .allocated = false
-        };
-
-    return resource;
+    return true;
 }
 
 Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Storage_Resource_Types_t type)
@@ -332,20 +312,28 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Storage_R
         return resource;
     }
 
-    Storage_Resource_t *resource = _resource_load(file, type);
-    if (resource) {
+    Storage_Resource_t *resource = malloc(sizeof(Storage_Resource_t));
+    if (!resource) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "cant' allocate resource");
+        return NULL;
+    }
+
+    bool loaded = _resource_load(resource, file, type);
+    if (loaded) {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "hard-coded resource `%s` found", file);
     } else {
         FS_Handle_t *handle = FS_locate_and_open(storage->context, file);
         if (!handle) {
+            free(resource);
             return NULL;
         }
 
-        resource = _load_functions[type](handle);
+        loaded = _load_functions[type](resource, handle);
         FS_close(handle);
     }
 
-    if (!resource) {
+    if (!loaded) {
+        free(resource);
         return NULL;
     }
     resource->file = memdup(file, strlen(file) + 1);
