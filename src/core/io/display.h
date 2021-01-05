@@ -83,6 +83,11 @@ typedef struct _Display_t {
     double time;
 } Display_t;
 
+typedef struct _Display_VRAM_t {
+    const void *pixels;
+    size_t width, height;
+} Display_VRAM_t;
+
 extern Display_t *Display_create(const Display_Configuration_t *configuration); // TODO: rename to `Graphics`?
 extern void Display_destroy(Display_t *display);
 
@@ -94,6 +99,7 @@ extern void Display_set_palette(Display_t *display, const GL_Palette_t *palette)
 extern void Display_set_offset(Display_t *display, GL_Point_t offset);
 extern void Display_set_shader(Display_t *display, const char *code);
 
+extern void Display_get_vram(const Display_t *display, Display_VRAM_t *vram);
 extern GLFWwindow *Display_get_window(const Display_t *display);
 extern float Display_get_scale(const Display_t *display);
 extern GL_Context_t *Display_get_context(const Display_t *display);

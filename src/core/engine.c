@@ -24,6 +24,8 @@
 
 #include "engine.h"
 
+#include <gif-h/gif.h>
+
 #include <config.h>
 #include <platform.h>
 #include <libs/log.h>
@@ -260,6 +262,12 @@ void Engine_run(Engine_t *engine)
     const float reference_time = engine->configuration.engine.frames_limit == 0 ? 0.0f : 1.0f / engine->configuration.engine.frames_limit;
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "now running, update-time is %.6fs w/ %d skippable frames, reference-time is %.6fs", delta_time, skippable_frames, reference_time);
 
+    Display_VRAM_t vram;
+    Display_get_vram(engine->display, &vram);
+
+    GifWriter gif_writer = { 0 };
+    GifBegin(&gif_writer, "./capture.gif", vram.width, vram.height, 0);
+
     // Track time using double to keep the min resolution consistent over time!
     // https://randomascii.wordpress.com/2012/02/13/dont-store-that-in-a-float/
     double previous = glfwGetTime();
@@ -296,6 +304,9 @@ void Engine_run(Engine_t *engine)
 
         Display_present(engine->display);
 
+        Display_get_vram(engine->display, &vram);
+        GifWriteFrame(&gif_writer, vram.pixels, vram.width, vram.height, (uint32_t)(elapsed * 100.0f), 8); // Hundredths of seconds.
+
         if (reference_time != 0.0f) {
             const float frame_time = (float)(glfwGetTime() - current);
             const float leftover = reference_time - frame_time;
@@ -304,4 +315,6 @@ void Engine_run(Engine_t *engine)
             }
         }
     }
+
+    GifEnd(&gif_writer);
 }

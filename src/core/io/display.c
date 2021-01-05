@@ -608,6 +608,13 @@ void Display_set_shader(Display_t *display, const char *effect)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p initialized", display->program.active);
 }
 
+void Display_get_vram(const Display_t *display, Display_VRAM_t *vram)
+{
+    vram->width = display->configuration.window.width;
+    vram->height = display->configuration.window.height;
+    vram->pixels = display->vram.pixels;
+}
+
 GLFWwindow *Display_get_window(const Display_t *display)
 {
     return display->window;
