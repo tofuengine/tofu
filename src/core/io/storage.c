@@ -36,7 +36,7 @@
 // This defines how many seconds a resource persists in the cache after the initial load (or a reuse).
 #define STORAGE_RESOURCE_AGE_LIMIT  30.0
 
-typedef Storage_Resource_t *(*Storage_Load_Function_t)(Storage_Resource_t *resource, FS_Handle_t *handle);
+typedef bool (*Storage_Load_Function_t)(Storage_Resource_t *resource, FS_Handle_t *handle);
 
 #define LOG_CONTEXT "storage"
 
@@ -251,11 +251,18 @@ static int _resource_compare_by_age(const void *lhs, const void *rhs)
 {
     const Storage_Resource_t **l = (const Storage_Resource_t **)lhs;
     const Storage_Resource_t **r = (const Storage_Resource_t **)rhs;
-    const float delta = (*l)->age - (*r)->age;
-    if (delta < 0.0f) {
+    const int references_delta = (*l)->references - (*r)->references;
+    const float age_delta = (*l)->age - (*r)->age;
+    if (references_delta < 0) { // Sort by lowest reference-count...
         return -1;
     } else
-    if (delta > 0.0f) {
+    if (references_delta > 0) {
+        return 1;
+    } else
+    if (age_delta > 0.0f) { // ... and highest age.
+        return -1;
+    } else
+    if (age_delta < 0.0f) {
         return 1;
     } else {
         return 0;
@@ -342,8 +349,10 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Storage_R
 #ifdef __STORAGE_CACHE_ENTRIES_LIMIT__
     if (arrlen(storage->resources) > __STORAGE_CACHE_ENTRIES_LIMIT__) {
         qsort(storage->resources, arrlen(storage->resources), sizeof(Storage_Resource_t *), _resource_compare_by_age);
-        arrlast(storage->resources)->age = STORAGE_RESOURCE_AGE_LIMIT; // Mark the oldest for release in the next cycle.
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource `%s` marked for release", storage->resources[0]->file);
+        if (storage->resources[0]->references == 0) { // Is the first entry available for release?
+            storage->resources[0]->age = STORAGE_RESOURCE_AGE_LIMIT; // Mark the oldest for release in the next cycle.
+            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource `%s` marked for release", storage->resources[0]->file);
+        }
     }
 #endif
 
