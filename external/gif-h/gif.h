@@ -14,7 +14,7 @@
 // So resulting files are often quite large. The hope is that it will be handy nonetheless
 // as a quick and easily-integrated way for programs to spit out animations.
 //
-// Only RGBA8 is currently supported as an input format. (The alpha is ignored.)
+// Only RGBA8 and BGRA8 formats are currently supported as an input format. (The alpha is ignored.)
 //
 // If capturing a buffer with a bottom-left origin (such as OpenGL), define GIF_FLIP_VERT
 // to automatically flip the buffer data when writing the image (the buffer itself is
@@ -77,21 +77,10 @@ typedef struct
     uint8_t treeSplit[256];
 } GifPalette;
 
-#pragma pack(push, 1)
-typedef struct
-{
-#ifdef GIF_FORMAT_BGRA
-    uint8_t b, g, r, a;
-#else
-    uint8_t r, g, b, a;
-#endif
-} GifColor;
-#pragma pack(pop)
-
 // max, min, and abs functions
-int GifIMax(int l, int r) { return l>r?l:r; }
-int GifIMin(int l, int r) { return l<r?l:r; }
-int GifIAbs(int i) { return i<0?-i:i; }
+static inline int GifIMax(int l, int r) { return l>r?l:r; }
+static inline int GifIMin(int l, int r) { return l<r?l:r; }
+static inline int GifIAbs(int i) { return i<0?-i:i; }
 
 // walks the k-d tree to pick the palette entry for a desired color.
 // Takes as in/out parameters the current best color and its error -
@@ -216,7 +205,7 @@ void GifPartitionByMedian(uint8_t* image, int left, int right, int com, int need
 }
 
 // Builds a palette by creating a balanced k-d tree of all pixels in the image
-void GifSplitPalette(GifColor* image, int numPixels, int firstElt, int lastElt, int splitElt, int splitDist, int treeNode, bool buildForDither, GifPalette* pal)
+void GifSplitPalette(uint8_t* image, int numPixels, int firstElt, int lastElt, int splitElt, int splitDist, int treeNode, bool buildForDither, GifPalette* pal)
 {
     if(lastElt <= firstElt || numPixels == 0)
         return;
@@ -235,9 +224,9 @@ void GifSplitPalette(GifColor* image, int numPixels, int firstElt, int lastElt, 
                 uint32_t r=255, g=255, b=255;
                 for(int ii=0; ii<numPixels; ++ii)
                 {
-                    r = (uint32_t)GifIMin((int32_t)r, image[ii].r);
-                    g = (uint32_t)GifIMin((int32_t)g, image[ii].g);
-                    b = (uint32_t)GifIMin((int32_t)b, image[ii].b);
+                    r = (uint32_t)GifIMin((int32_t)r, image[ii * 4 + 0]);
+                    g = (uint32_t)GifIMin((int32_t)g, image[ii * 4 + 1]);
+                    b = (uint32_t)GifIMin((int32_t)b, image[ii * 4 + 2]);
                 }
 
                 pal->r[firstElt] = (uint8_t)r;
@@ -253,9 +242,9 @@ void GifSplitPalette(GifColor* image, int numPixels, int firstElt, int lastElt, 
                 uint32_t r=0, g=0, b=0;
                 for(int ii=0; ii<numPixels; ++ii)
                 {
-                    r = (uint32_t)GifIMax((int32_t)r, image[ii].r);
-                    g = (uint32_t)GifIMax((int32_t)g, image[ii].g);
-                    b = (uint32_t)GifIMax((int32_t)b, image[ii].b);
+                    r = (uint32_t)GifIMax((int32_t)r, image[ii * 4 + 0]);
+                    g = (uint32_t)GifIMax((int32_t)g, image[ii * 4 + 1]);
+                    b = (uint32_t)GifIMax((int32_t)b, image[ii * 4 + 2]);
                 }
 
                 pal->r[firstElt] = (uint8_t)r;
@@ -270,9 +259,9 @@ void GifSplitPalette(GifColor* image, int numPixels, int firstElt, int lastElt, 
         uint64_t r=0, g=0, b=0;
         for(int ii=0; ii<numPixels; ++ii)
         {
-            r += image[ii].r;
-            g += image[ii].g;
-            b += image[ii].b;
+            r += image[ii*4+0];
+            g += image[ii*4+1];
+            b += image[ii*4+2];
         }
 
         r += (uint64_t)numPixels / 2;  // round to nearest
@@ -296,9 +285,9 @@ void GifSplitPalette(GifColor* image, int numPixels, int firstElt, int lastElt, 
     int minB = 255, maxB = 0;
     for(int ii=0; ii<numPixels; ++ii)
     {
-        int r = image[ii].r;
-        int g = image[ii].g;
-        int b = image[ii].b;
+        int r = image[ii*4+0];
+        int g = image[ii*4+1];
+        int b = image[ii*4+2];
 
         if(r > maxR) maxR = r;
         if(r < minR) minR = r;
@@ -322,42 +311,38 @@ void GifSplitPalette(GifColor* image, int numPixels, int firstElt, int lastElt, 
     int subPixelsA = numPixels * (splitElt - firstElt) / (lastElt - firstElt);
     int subPixelsB = numPixels-subPixelsA;
 
-    GifPartitionByMedian((void *)image, 0, numPixels, splitCom, subPixelsA);
+    GifPartitionByMedian(image, 0, numPixels, splitCom, subPixelsA);
 
     pal->treeSplitElt[treeNode] = (uint8_t)splitCom;
-    if (splitCom == 0) {
-        pal->treeSplit[treeNode] = image[subPixelsA].r;
-    } else
-    if (splitCom == 1) {
-        pal->treeSplit[treeNode] = image[subPixelsA].g;
-    } else
-    if (splitCom == 2) {
-        pal->treeSplit[treeNode] = image[subPixelsA].b;
-    }
+    pal->treeSplit[treeNode] = image[subPixelsA*4+splitCom];
 
-    GifSplitPalette(image,            subPixelsA, firstElt, splitElt, splitElt-splitDist, splitDist/2, treeNode*2,   buildForDither, pal);
-    GifSplitPalette(image+subPixelsA, subPixelsB, splitElt, lastElt,  splitElt+splitDist, splitDist/2, treeNode*2+1, buildForDither, pal);
+    GifSplitPalette(image,              subPixelsA, firstElt, splitElt, splitElt-splitDist, splitDist/2, treeNode*2,   buildForDither, pal);
+    GifSplitPalette(image+subPixelsA*4, subPixelsB, splitElt, lastElt,  splitElt+splitDist, splitDist/2, treeNode*2+1, buildForDither, pal);
 }
 
 // Finds all pixels that have changed from the previous image and
-// moves them to the fromt of th buffer.
+// moves them to the front of the buffer.
 // This allows us to build a palette optimized for the colors of the
 // changed pixels only.
-int GifPickChangedPixels( const GifColor* lastFrame, GifColor* frame, int numPixels )
+int GifPickChangedPixels( const uint8_t* lastFrame, uint8_t* frame, int numPixels )
 {
     int numChanged = 0;
-    GifColor* writeIter = frame;
+    uint8_t* writeIter = frame;
 
     for (int ii=0; ii<numPixels; ++ii)
     {
-        if(memcmp(lastFrame, frame, sizeof(GifColor)) != 0)
+        if(lastFrame[0] != frame[0] ||
+           lastFrame[1] != frame[1] ||
+           lastFrame[2] != frame[2])
         {
-            memcpy(writeIter, frame, sizeof(GifColor));
+            writeIter[0] = frame[0];
+            writeIter[1] = frame[1];
+            writeIter[2] = frame[2];
             ++numChanged;
-            writeIter += 1;
+            writeIter += 4;
         }
-        lastFrame += 1;
-        frame += 1;
+        lastFrame += 4;
+        frame += 4;
     }
 
     return numChanged;
@@ -371,7 +356,7 @@ void GifMakePalette( const void* lastFrame, const void* nextFrame, uint32_t widt
 
     // SplitPalette is destructive (it sorts the pixels by color) so
     // we must create a copy of the image for it to destroy
-    size_t imageSize = (size_t)(width * height * sizeof(GifColor));
+    size_t imageSize = (size_t)(width * height * 4);
     void* destroyableImage = (uint8_t*)GIF_TEMP_MALLOC(imageSize);
     memcpy(destroyableImage, nextFrame, imageSize);
 
@@ -611,10 +596,16 @@ void GifWritePalette( const GifPalette* pPal, FILE* f )
 
     for(int ii=1; ii<(1 << pPal->bitDepth); ++ii)
     {
+#ifdef GIF_FORMAT_BGRA
+        // Invert B and R components in the case the image is packed in BGRA8 format (like on Windows for OpenGL)
+        uint32_t b = pPal->r[ii];
+        uint32_t g = pPal->g[ii];
+        uint32_t r = pPal->b[ii];
+#else
         uint32_t r = pPal->r[ii];
         uint32_t g = pPal->g[ii];
         uint32_t b = pPal->b[ii];
-
+#endif
         fputc((int)r, f);
         fputc((int)g, f);
         fputc((int)b, f);

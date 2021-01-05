@@ -305,7 +305,7 @@ void Engine_run(Engine_t *engine)
         Display_present(engine->display);
 
         Display_get_vram(engine->display, &vram);
-        GifWriteFrame(&gif_writer, vram.pixels, vram.width, vram.height, (uint32_t)(elapsed * 100.0f), 8); // Hundredths of seconds.
+        GifWriteFrame(&gif_writer, vram.pixels, vram.width, vram.height, (uint32_t)(elapsed * 100.0f), 8, false); // Hundredths of seconds.
 
         if (reference_time != 0.0f) {
             const float frame_time = (float)(glfwGetTime() - current);
