@@ -66,7 +66,7 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
 static void _release(Storage_Resource_t *resource)
 {
     if (!resource->allocated) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource was not allocated");
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource wasn't allocated, won't release");
     } else
     if (resource->type == STORAGE_RESOURCE_STRING) {
         free(resource->var.string.chars);
