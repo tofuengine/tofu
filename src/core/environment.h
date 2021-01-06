@@ -32,6 +32,10 @@ typedef struct _Environment_t {
     const char **args;
     const char *base_path; // TODO: support multiple mount points.
     bool quit;
+    struct {
+        bool capture;
+        bool snapshot;
+    } actions;
     float fps;
     double time;
 } Environment_t;

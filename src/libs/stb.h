@@ -30,6 +30,7 @@
 #endif
 #include <stb/stb_ds.h>
 #include <stb/stb_image.h>
+#include <stb/stb_image_write.h>
 
 extern void *memdup(const void *ptr, size_t size);
 
