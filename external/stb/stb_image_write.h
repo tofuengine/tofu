@@ -268,7 +268,7 @@ typedef struct
    stbi_write_func *func;
    void *context;
    unsigned char buffer[64];
-   int buf_used;
+   unsigned int buf_used;
 } stbi__write_context;
 
 // initialize a callback-based context
