@@ -31,7 +31,14 @@ static int _entry_compare(const void *lhs, const void *rhs)
 {
     const Map_Entry_t *l = (const Map_Entry_t *)lhs;
     const Map_Entry_t *r = (const Map_Entry_t *)rhs;
-    return strcasecmp(l->key, r->key);
+    if (!l->key) {
+        return 1;
+    } else 
+    if (!r->key) {
+        return -1;
+    } else {
+        return strcasecmp(l->key, r->key);
+    }
 }
 
 const Map_Entry_t *map_find(lua_State *L, const char *id, const Map_Entry_t *table, size_t size)
