@@ -27,10 +27,14 @@
 
 // TODO: rename Display to Video?
 
+#include <config.h>
 #include <libs/gl/gl.h>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#ifdef __GRAPHICS_CAPTURE_SUPPORT__
+  #include <gif-h/gif.h>
+#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -82,13 +86,15 @@ typedef struct _Display_t {
         Program_t *active;
     } program;
 
+#ifdef __GRAPHICS_CAPTURE_SUPPORT__
+    struct {
+        GifWriter gif_writer;
+        size_t index;
+    } capture;
+#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
+
     double time;
 } Display_t;
-
-typedef struct _Display_VRAM_t {
-    const void *pixels;
-    size_t width, height;
-} Display_VRAM_t;
 
 extern Display_t *Display_create(const Display_Configuration_t *configuration); // TODO: rename to `Graphics`?
 extern void Display_destroy(Display_t *display);
@@ -101,11 +107,17 @@ extern void Display_set_palette(Display_t *display, const GL_Palette_t *palette)
 extern void Display_set_offset(Display_t *display, GL_Point_t offset);
 extern void Display_set_shader(Display_t *display, const char *code);
 
-extern void Display_get_vram(const Display_t *display, Display_VRAM_t *vram);
 extern GLFWwindow *Display_get_window(const Display_t *display);
 extern float Display_get_scale(const Display_t *display);
 extern GL_Context_t *Display_get_context(const Display_t *display);
 extern const GL_Palette_t *Display_get_palette(const Display_t *display);
 extern GL_Point_t Display_get_offset(const Display_t *display);
+
+#ifdef __GRAPHICS_CAPTURE_SUPPORT__
+extern void Display_grab_snapshot(const Display_t *display, const char *path);
+extern void Display_start_recording(Display_t *display, const char *path);
+extern void Display_stop_recording(Display_t *display);
+extern void Display_toggle_recording(Display_t *display, const char *path);
+#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
 
 #endif  /* __DISPLAY_H__ */

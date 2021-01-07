@@ -25,6 +25,8 @@
 #ifndef __INPUT_H__
 #define __INPUT_H__
 
+#include <config.h>
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -47,6 +49,10 @@ typedef enum _Input_Buttons_t {
     INPUT_BUTTON_A,
     INPUT_BUTTON_SELECT,
     INPUT_BUTTON_START,
+#ifdef __GRAPHICS_CAPTURE_SUPPORT__
+    INPUT_BUTTON_CAPTURE,
+    INPUT_BUTTON_RECORD,
+#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
     INPUT_BUTTON_QUIT,
     Input_Buttons_t_Last = INPUT_BUTTON_QUIT,
     Input_Buttons_t_CountOf

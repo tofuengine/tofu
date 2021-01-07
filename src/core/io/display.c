@@ -30,6 +30,8 @@
 #include <libs/imath.h>
 #include <libs/stb.h>
 
+#include <time.h>
+
 #define LOG_CONTEXT "display"
 
 #if PLATFORM_ID == PLATFORM_WINDOWS
@@ -407,6 +409,10 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
 
 void Display_destroy(Display_t *display)
 {
+#ifdef __GRAPHICS_CAPTURE_SUPPORT__
+    Display_stop_recording(display);
+#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
+
     for (size_t i = 0; i < Display_Programs_t_CountOf; ++i) {
         if (display->program.array[i].id == 0) {
             continue;
@@ -444,6 +450,12 @@ void Display_update(Display_t *display, float delta_time)
 
     GLfloat time = (GLfloat)display->time;
     program_send(display->program.active, UNIFORM_TIME, PROGRAM_UNIFORM_FLOAT, 1, &time);
+
+#ifdef __GRAPHICS_CAPTURE_SUPPORT__
+    if (GifIsWriting(&display->capture.gif_writer)) {
+        GifWriteFrame(&display->capture.gif_writer, display->vram.pixels, display->vram.width, display->vram.height, (uint32_t)(delta_time * 100.0f), 8, false); // Hundredths of seconds.
+    }
+#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
 
 #ifdef DEBUG
     _has_errors(); // Display pending OpenGL errors.
@@ -612,13 +624,6 @@ void Display_set_shader(Display_t *display, const char *effect)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p initialized", display->program.active);
 }
 
-void Display_get_vram(const Display_t *display, Display_VRAM_t *vram)
-{
-    vram->width = display->configuration.window.width;
-    vram->height = display->configuration.window.height;
-    vram->pixels = display->vram.pixels;
-}
-
 GLFWwindow *Display_get_window(const Display_t *display)
 {
     return display->window;
@@ -642,4 +647,43 @@ const GL_Palette_t *Display_get_palette(const Display_t *display)
 GL_Point_t Display_get_offset(const Display_t *display)
 {
     return display->vram.offset;
+}
+
+void Display_grab_snapshot(const Display_t *display, const char *path)
+{
+    time_t t = time(0);
+    struct tm *lt = localtime(&t);
+
+    char path_file[PLATFORM_PATH_MAX] = { 0 };
+    sprintf(path_file, "%s%csnapshot-%04d%02d%02d%02d%02d%02d.png", path, PLATFORM_PATH_SEPARATOR, lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
+
+    stbi_write_png(path_file, display->vram.width, display->vram.height, display->vram.bytes_per_pixel, display->vram.pixels, display->vram.stride);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "capture done to file `%s`", path_file);
+}
+
+void Display_start_recording(Display_t *display, const char *path)
+{
+    time_t t = time(0);
+    struct tm *lt = localtime(&t);
+
+    char path_file[PLATFORM_PATH_MAX] = { 0 };
+    sprintf(path_file, "%s%crecord-%04d%02d%02d%02d%02d%02d.gif", path, PLATFORM_PATH_SEPARATOR, lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
+
+    GifBegin(&display->capture.gif_writer, path_file, display->vram.width, display->vram.height, 0);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "recording started for file `%s`", path_file);
+}
+
+void Display_stop_recording(Display_t *display)
+{
+    GifEnd(&display->capture.gif_writer);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "recording stopped");
+}
+
+void Display_toggle_recording(Display_t *display, const char *path)
+{
+    if (!GifIsWriting(&display->capture.gif_writer)) {
+        Display_start_recording(display, path);
+    } else {
+        Display_stop_recording(display);
+    }
 }

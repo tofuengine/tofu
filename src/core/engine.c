@@ -24,8 +24,6 @@
 
 #include "engine.h"
 
-#include <gif-h/gif.h>
-
 #include <config.h>
 #include <platform.h>
 #include <libs/log.h>
@@ -262,11 +260,6 @@ void Engine_run(Engine_t *engine)
     const float reference_time = engine->configuration.engine.frames_limit == 0 ? 0.0f : 1.0f / engine->configuration.engine.frames_limit;
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "now running, update-time is %.6fs w/ %d skippable frames, reference-time is %.6fs", delta_time, skippable_frames, reference_time);
 
-    // Track the GIF write.
-    GifWriter gif_writer = { 0 };
-    bool do_capture = false;
-    size_t capture_index = 0;
-
     // Track time using double to keep the min resolution consistent over time!
     // https://randomascii.wordpress.com/2012/02/13/dont-store-that-in-a-float/
     double previous = glfwGetTime();
@@ -303,30 +296,17 @@ void Engine_run(Engine_t *engine)
 
         Display_present(engine->display);
 
-        Display_VRAM_t vram;
-        Display_get_vram(engine->display, &vram);
-
-        if (do_capture != engine->environment->actions.capture) {
-            do_capture = engine->environment->actions.capture;
-
-            if (do_capture) {
-                char path_file[FILE_PATH_MAX] = { 0 };
-                sprintf(path_file, "%s%ccapture-%lu.gif", engine->environment->base_path, FILE_PATH_SEPARATOR, capture_index++);
-                GifBegin(&gif_writer, path_file, vram.width, vram.height, 0);
-            } else {
-                GifEnd(&gif_writer);
-            }
+#ifdef __GRAPHICS_CAPTURE_SUPPORT__
+        const Input_Button_State_t *record_button = Input_get_button(engine->input, INPUT_BUTTON_RECORD);
+        if (record_button->pressed) {
+            Display_toggle_recording(engine->display, engine->environment->base_path);
         }
-        if (do_capture) {
-            GifWriteFrame(&gif_writer, vram.pixels, vram.width, vram.height, (uint32_t)(elapsed * 100.0f), 8, false); // Hundredths of seconds.
-        }
-        if (engine->environment->actions.snapshot) {
-            engine->environment->actions.snapshot = false;
 
-            char path_file[FILE_PATH_MAX] = { 0 };
-            sprintf(path_file, "%s%csnapshot-%lu.gif", engine->environment->base_path, FILE_PATH_SEPARATOR, capture_index++);
-            stbi_write_png(path_file, vram.width, vram.height, 4, vram.pixels, vram.width * 4);
+        const Input_Button_State_t *capture_button = Input_get_button(engine->input, INPUT_BUTTON_CAPTURE);
+        if (capture_button->pressed) {
+            Display_grab_snapshot(engine->display, engine->environment->base_path);
         }
+#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
 
         if (reference_time != 0.0f) {
             const float frame_time = (float)(glfwGetTime() - current);
@@ -336,6 +316,4 @@ void Engine_run(Engine_t *engine)
             }
         }
     }
-
-    GifEnd(&gif_writer);
 }
