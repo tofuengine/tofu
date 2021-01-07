@@ -326,7 +326,11 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     GL_palette_generate_greyscale(&display->canvas.palette, GL_MAX_PALETTE_COLORS);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded greyscale palette of %d entries", GL_MAX_PALETTE_COLORS);
 
-    display->vram.size = display->canvas.size.width * display->canvas.size.width * sizeof(GL_Color_t);
+    display->vram.width = display->canvas.size.width;
+    display->vram.height = display->canvas.size.width;
+    display->vram.bytes_per_pixel = sizeof(GL_Color_t);
+    display->vram.stride = display->vram.width * display->vram.bytes_per_pixel;
+    display->vram.size = display->vram.stride * display->vram.height;
     display->vram.pixels = malloc(display->vram.size);
     if (!display->vram.pixels) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't allocate VRAM buffer");
