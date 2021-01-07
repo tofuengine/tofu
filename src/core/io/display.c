@@ -327,7 +327,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded greyscale palette of %d entries", GL_MAX_PALETTE_COLORS);
 
     display->vram.width = display->canvas.size.width;
-    display->vram.height = display->canvas.size.width;
+    display->vram.height = display->canvas.size.height;
     display->vram.bytes_per_pixel = sizeof(GL_Color_t);
     display->vram.stride = display->vram.width * display->vram.bytes_per_pixel;
     display->vram.size = display->vram.stride * display->vram.height;
