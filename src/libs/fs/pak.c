@@ -95,7 +95,7 @@ typedef struct _Pak_Index_t {
 
 typedef struct _Pak_Mount_t {
     Mount_VTable_t vtable; // Matches `_FS_Mount_t` structure.
-    char archive_path[FILE_PATH_MAX];
+    char archive_path[PLATFORM_PATH_MAX];
     size_t entries;
     Pak_Entry_t *directory;
     uint8_t flags;

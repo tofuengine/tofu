@@ -85,8 +85,8 @@ FS_Context_t *FS_create(const char *base_path)
 
     *context = (FS_Context_t){ 0 };
 
-    char resolved[FILE_PATH_MAX]; // Using local buffer to avoid un-tracked `malloc()` for the syscall.
-    char *ptr = realpath(base_path ? base_path : FILE_PATH_CURRENT_SZ, resolved);
+    char resolved[PLATFORM_PATH_MAX]; // Using local buffer to avoid un-tracked `malloc()` for the syscall.
+    char *ptr = realpath(base_path ? base_path : PLATFORM_PATH_CURRENT_SZ, resolved);
     if (!ptr) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't resolve `%s`", base_path);
         free(context);
@@ -96,9 +96,9 @@ FS_Context_t *FS_create(const char *base_path)
     DIR *dp = opendir(resolved);
     if (dp) { // Path is a folder, scan and mount valid archives.
         for (struct dirent *entry = readdir(dp); entry; entry = readdir(dp)) {
-            char full_path[FILE_PATH_MAX];
+            char full_path[PLATFORM_PATH_MAX];
             strcpy(full_path, resolved);
-            strcat(full_path, FILE_PATH_SEPARATOR_SZ);
+            strcat(full_path, PLATFORM_PATH_SEPARATOR_SZ);
             strcat(full_path, entry->d_name);
 
             if (!FS_pak_is_valid(full_path)) {
@@ -133,8 +133,8 @@ void FS_destroy(FS_Context_t *context)
 
 bool FS_attach(FS_Context_t *context, const char *path)
 {
-    char resolved[FILE_PATH_MAX]; // Using local buffer to avoid un-tracked `malloc()` for the syscall.
-    char *ptr = realpath(path ? path : FILE_PATH_CURRENT_SZ, resolved);
+    char resolved[PLATFORM_PATH_MAX]; // Using local buffer to avoid un-tracked `malloc()` for the syscall.
+    char *ptr = realpath(path ? path : PLATFORM_PATH_CURRENT_SZ, resolved);
     if (!ptr) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't resolve `%s`", path);
         return false;
