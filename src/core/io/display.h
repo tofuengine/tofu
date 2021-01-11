@@ -90,6 +90,7 @@ typedef struct _Display_t {
     struct {
         GifWriter gif_writer;
         size_t index;
+        double time;
     } capture;
 #endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
 

@@ -40,6 +40,12 @@
   #define PIXEL_FORMAT    GL_RGBA
 #endif
 
+#ifdef __GRAPHICS_CAPTURE_SUPPORT__
+  #define CAPTURE_FRAMES_PER_SECOND     50
+  #define CAPTURE_FRAME_TIME            (1.0f / CAPTURE_FRAMES_PER_SECOND)
+  #define CAPTURE_FRAME_TIME_100TH      (100 / CAPTURE_FRAMES_PER_SECOND)
+#endif
+
 typedef struct _Program_Data_t {
     const char *vertex_shader;
     const char *fragment_shader;
@@ -452,8 +458,14 @@ void Display_update(Display_t *display, float delta_time)
     program_send(display->program.active, UNIFORM_TIME, PROGRAM_UNIFORM_FLOAT, 1, &time);
 
 #ifdef __GRAPHICS_CAPTURE_SUPPORT__
+    // Since GIFs' delay is expressed in 100th of seconds, we automatically "auto-sample" at a proper
+    // framerate in order to preserve the period (e.g. 25 FPS is fine).
     if (GifIsWriting(&display->capture.gif_writer)) {
-        GifWriteFrame(&display->capture.gif_writer, display->vram.pixels, display->vram.width, display->vram.height, (uint32_t)(delta_time * 100.0f), 8, false); // Hundredths of seconds.
+        display->capture.time += delta_time;
+        while (display->capture.time >= CAPTURE_FRAME_TIME) {
+            display->capture.time -= CAPTURE_FRAME_TIME;
+            GifWriteFrame(&display->capture.gif_writer, display->vram.pixels, display->vram.width, display->vram.height, CAPTURE_FRAME_TIME_100TH, 8, false); // Hundredths of seconds.
+        }
     }
 #endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
 
@@ -671,6 +683,8 @@ void Display_start_recording(Display_t *display, const char *path)
 
     GifBegin(&display->capture.gif_writer, path_file, display->vram.width, display->vram.height, 0);
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "recording started for file `%s`", path_file);
+
+    display->capture.time = 0.0;
 }
 
 void Display_stop_recording(Display_t *display)
