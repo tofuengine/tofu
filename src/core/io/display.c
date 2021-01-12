@@ -30,12 +30,20 @@
 #include <libs/imath.h>
 #include <libs/stb.h>
 
+#include <time.h>
+
 #define LOG_CONTEXT "display"
 
 #if PLATFORM_ID == PLATFORM_WINDOWS
   #define PIXEL_FORMAT    GL_BGRA
 #else
   #define PIXEL_FORMAT    GL_RGBA
+#endif
+
+#ifdef __GRAPHICS_CAPTURE_SUPPORT__
+  #define CAPTURE_FRAMES_PER_SECOND     50
+  #define CAPTURE_FRAME_TIME            (1.0f / CAPTURE_FRAMES_PER_SECOND)
+  #define CAPTURE_FRAME_TIME_100TH      (100 / CAPTURE_FRAMES_PER_SECOND)
 #endif
 
 typedef struct _Program_Data_t {
@@ -326,7 +334,11 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     GL_palette_generate_greyscale(&display->canvas.palette, GL_MAX_PALETTE_COLORS);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded greyscale palette of %d entries", GL_MAX_PALETTE_COLORS);
 
-    display->vram.size = display->canvas.size.width * display->canvas.size.width * sizeof(GL_Color_t);
+    display->vram.width = display->canvas.size.width;
+    display->vram.height = display->canvas.size.height;
+    display->vram.bytes_per_pixel = sizeof(GL_Color_t);
+    display->vram.stride = display->vram.width * display->vram.bytes_per_pixel;
+    display->vram.size = display->vram.stride * display->vram.height;
     display->vram.pixels = malloc(display->vram.size);
     if (!display->vram.pixels) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't allocate VRAM buffer");
@@ -403,6 +415,10 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
 
 void Display_destroy(Display_t *display)
 {
+#ifdef __GRAPHICS_CAPTURE_SUPPORT__
+    Display_stop_recording(display);
+#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
+
     for (size_t i = 0; i < Display_Programs_t_CountOf; ++i) {
         if (display->program.array[i].id == 0) {
             continue;
@@ -440,6 +456,18 @@ void Display_update(Display_t *display, float delta_time)
 
     GLfloat time = (GLfloat)display->time;
     program_send(display->program.active, UNIFORM_TIME, PROGRAM_UNIFORM_FLOAT, 1, &time);
+
+#ifdef __GRAPHICS_CAPTURE_SUPPORT__
+    // Since GIFs' delay is expressed in 100th of seconds, we automatically "auto-sample" at a proper
+    // framerate in order to preserve the period (e.g. 25 FPS is fine).
+    if (GifIsWriting(&display->capture.gif_writer)) {
+        display->capture.time += delta_time;
+        while (display->capture.time >= CAPTURE_FRAME_TIME) {
+            display->capture.time -= CAPTURE_FRAME_TIME;
+            GifWriteFrame(&display->capture.gif_writer, display->vram.pixels, display->vram.width, display->vram.height, CAPTURE_FRAME_TIME_100TH, 8, false); // Hundredths of seconds.
+        }
+    }
+#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
 
 #ifdef DEBUG
     _has_errors(); // Display pending OpenGL errors.
@@ -631,4 +659,45 @@ const GL_Palette_t *Display_get_palette(const Display_t *display)
 GL_Point_t Display_get_offset(const Display_t *display)
 {
     return display->vram.offset;
+}
+
+void Display_grab_snapshot(const Display_t *display, const char *path)
+{
+    time_t t = time(0);
+    struct tm *lt = localtime(&t);
+
+    char path_file[PLATFORM_PATH_MAX] = { 0 };
+    sprintf(path_file, "%s%csnapshot-%04d%02d%02d%02d%02d%02d.png", path, PLATFORM_PATH_SEPARATOR, lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
+
+    stbi_write_png(path_file, display->vram.width, display->vram.height, display->vram.bytes_per_pixel, display->vram.pixels, display->vram.stride);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "capture done to file `%s`", path_file);
+}
+
+void Display_start_recording(Display_t *display, const char *path)
+{
+    time_t t = time(0);
+    struct tm *lt = localtime(&t);
+
+    char path_file[PLATFORM_PATH_MAX] = { 0 };
+    sprintf(path_file, "%s%crecord-%04d%02d%02d%02d%02d%02d.gif", path, PLATFORM_PATH_SEPARATOR, lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
+
+    GifBegin(&display->capture.gif_writer, path_file, display->vram.width, display->vram.height, 0);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "recording started for file `%s`", path_file);
+
+    display->capture.time = 0.0;
+}
+
+void Display_stop_recording(Display_t *display)
+{
+    GifEnd(&display->capture.gif_writer);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "recording stopped");
+}
+
+void Display_toggle_recording(Display_t *display, const char *path)
+{
+    if (!GifIsWriting(&display->capture.gif_writer)) {
+        Display_start_recording(display, path);
+    } else {
+        Display_stop_recording(display);
+    }
 }

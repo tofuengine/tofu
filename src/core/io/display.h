@@ -27,10 +27,14 @@
 
 // TODO: rename Display to Video?
 
+#include <config.h>
 #include <libs/gl/gl.h>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#ifdef __GRAPHICS_CAPTURE_SUPPORT__
+  #include <gif-h/gif.h>
+#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -69,6 +73,8 @@ typedef struct _Display_t {
 
     struct {
         GL_Color_t *pixels; // Temporary buffer to create the OpenGL texture from `GL_Pixel_t` array.
+        size_t width, height;
+        size_t bytes_per_pixel, stride;
         size_t size;
         GLuint texture;
         GL_Rectangle_t rectangle;
@@ -79,6 +85,14 @@ typedef struct _Display_t {
         Program_t array[Display_Programs_t_CountOf];
         Program_t *active;
     } program;
+
+#ifdef __GRAPHICS_CAPTURE_SUPPORT__
+    struct {
+        GifWriter gif_writer;
+        size_t index;
+        double time;
+    } capture;
+#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
 
     double time;
 } Display_t;
@@ -99,5 +113,12 @@ extern float Display_get_scale(const Display_t *display);
 extern GL_Context_t *Display_get_context(const Display_t *display);
 extern const GL_Palette_t *Display_get_palette(const Display_t *display);
 extern GL_Point_t Display_get_offset(const Display_t *display);
+
+#ifdef __GRAPHICS_CAPTURE_SUPPORT__
+extern void Display_grab_snapshot(const Display_t *display, const char *path);
+extern void Display_start_recording(Display_t *display, const char *path);
+extern void Display_stop_recording(Display_t *display);
+extern void Display_toggle_recording(Display_t *display, const char *path);
+#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
 
 #endif  /* __DISPLAY_H__ */

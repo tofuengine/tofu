@@ -36,7 +36,7 @@
 
 typedef struct _Std_Mount_t {
     Mount_VTable_t vtable; // Matches `_FS_Mount_t` structure.
-    char base_path[FILE_PATH_MAX];
+    char base_path[PLATFORM_PATH_MAX];
 } Std_Mount_t;
 
 typedef struct _Std_Handle_t {
@@ -111,13 +111,13 @@ static bool _std_mount_contains(const FS_Mount_t *mount, const char *file)
 {
     const Std_Mount_t *std_mount = (const Std_Mount_t *)mount;
 
-    char full_path[FILE_PATH_MAX];
+    char full_path[PLATFORM_PATH_MAX];
     strcpy(full_path, std_mount->base_path);
-    strcat(full_path, FILE_PATH_SEPARATOR_SZ);
+    strcat(full_path, PLATFORM_PATH_SEPARATOR_SZ);
     strcat(full_path, file);
     for (size_t i = 0; full_path[i] != '\0'; ++i) { // Replace virtual file-system separtor `/` with the actual one.
         if (full_path[i] == FS_PATH_SEPARATOR) {
-            full_path[i] = FILE_PATH_SEPARATOR;
+            full_path[i] = PLATFORM_PATH_SEPARATOR;
         }
     } // FIXME: better organize name normalization.
 
@@ -130,13 +130,13 @@ static FS_Handle_t *_std_mount_open(const FS_Mount_t *mount, const char *file)
 {
     const Std_Mount_t *std_mount = (const Std_Mount_t *)mount;
 
-    char full_path[FILE_PATH_MAX];
+    char full_path[PLATFORM_PATH_MAX];
     strcpy(full_path, std_mount->base_path);
-    strcat(full_path, FILE_PATH_SEPARATOR_SZ);
+    strcat(full_path, PLATFORM_PATH_SEPARATOR_SZ);
     strcat(full_path, file);
     for (size_t i = 0; full_path[i] != '\0'; ++i) { // Replace virtual file-system separtor `/` with the actual one.
         if (full_path[i] == FS_PATH_SEPARATOR) {
-            full_path[i] = FILE_PATH_SEPARATOR;
+            full_path[i] = PLATFORM_PATH_SEPARATOR;
         }
     }
 

@@ -47,10 +47,12 @@ LIBXMP_EXPORT xmp_context xmp_create_context()
 LIBXMP_EXPORT void xmp_free_context(xmp_context opaque)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
+	struct module_data *m = &ctx->m;
 
 	if (ctx->state > XMP_STATE_UNLOADED)
 		xmp_release_module(opaque);
 
+	free(m->instrument_path);
 	free(opaque);
 }
 

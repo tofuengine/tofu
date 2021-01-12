@@ -80,7 +80,9 @@ static const Map_Entry_t _buttons[Input_Buttons_t_CountOf] = { // Need to be sor
     { "start", INPUT_BUTTON_START },
     { "up", INPUT_BUTTON_UP },
     { "x", INPUT_BUTTON_X },
-    { "y", INPUT_BUTTON_Y }
+    { "y", INPUT_BUTTON_Y },
+    { NULL, 0 },
+    { NULL, 0 }
 };
 
 static const Map_Entry_t _sticks[Input_Sticks_t_CountOf] = { // Ditto.

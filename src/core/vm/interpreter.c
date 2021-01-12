@@ -174,7 +174,7 @@ static int _searcher(lua_State *L)
 
     const char *file = lua_tostring(L, 1);
 
-    char path_file[FILE_PATH_MAX] = "@"; // Prepend a `@`, required by Lua to track files.
+    char path_file[PLATFORM_PATH_MAX] = "@"; // Prepend a `@`, required by Lua to track files.
     strcat(path_file, file);
     for (size_t i = 1; path_file[i] != '\0'; ++i) { // Replace `.` with `/` to map (virtual) file system entry.
         if (path_file[i] == '.') {

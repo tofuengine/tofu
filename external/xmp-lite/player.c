@@ -1446,6 +1446,7 @@ LIBXMP_EXPORT int xmp_start_player(xmp_context opaque, int rate, int format)
 
     err1:
 	free(f->loop);
+	f->loop = NULL;
     err:
 	return ret;
 }

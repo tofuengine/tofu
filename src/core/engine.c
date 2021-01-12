@@ -296,6 +296,18 @@ void Engine_run(Engine_t *engine)
 
         Display_present(engine->display);
 
+#ifdef __GRAPHICS_CAPTURE_SUPPORT__
+        const Input_Button_State_t *record_button = Input_get_button(engine->input, INPUT_BUTTON_RECORD);
+        if (record_button->pressed) {
+            Display_toggle_recording(engine->display, engine->environment->base_path);
+        }
+
+        const Input_Button_State_t *capture_button = Input_get_button(engine->input, INPUT_BUTTON_CAPTURE);
+        if (capture_button->pressed) {
+            Display_grab_snapshot(engine->display, engine->environment->base_path);
+        }
+#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
+
         if (reference_time != 0.0f) {
             const float frame_time = (float)(glfwGetTime() - current);
             const float leftover = reference_time - frame_time;
