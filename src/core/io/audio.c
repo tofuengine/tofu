@@ -46,6 +46,7 @@ static void _data_callback(ma_device *device, void *output, const void *input, m
     Audio_t *audio = (Audio_t *)device->pUserData;
 
     ma_mutex_lock(&audio->lock);
+//    ma_zero_pcm_frames(output, frame_count, ma_format_s16, SL_CHANNELS_PER_FRAME);
 //    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d frames requested for device %p", frame_count, device);
     SL_context_generate(audio->sl, output, frame_count);
     ma_mutex_unlock(&audio->lock);
@@ -110,6 +111,9 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio device initialized");
 
+    ma_device_set_master_volume(&audio->device, configuration->master_volume); // Set the initial volume.
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio master-volume set to %.2f", configuration->master_volume);
+
     result = ma_mutex_init(&audio->lock);
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create the synchronization object");
@@ -121,11 +125,6 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio device mutex initialized");
 
-    audio->is_started = false;
-
-    ma_device_set_master_volume(&audio->device, configuration->master_volume); // Set the initial volume.
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio master-volume set to %.2f", configuration->master_volume);
-
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "miniaudio: v%s", ma_version_string());
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "device-name: %s", audio->device.playback.name);
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "back-end: %s", ma_get_backend_name(audio->context.backend));
@@ -134,15 +133,33 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "sample-rate: %d / %d", audio->device.sampleRate, audio->device.playback.internalSampleRate);
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "period-in-frames: %d", audio->device.playback.internalPeriodSizeInFrames);
 
+#ifndef __SL_START_AND_STOP__
+    result = ma_device_start(&audio->device);
+    if (result != MA_SUCCESS) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't start the audio device");
+        ma_mutex_uninit(&audio->lock);
+        ma_device_uninit(&audio->device);
+        ma_context_uninit(&audio->context);
+        SL_context_destroy(audio->sl);
+        free(audio);
+        return NULL;
+    }
+#endif
+
     return audio;
 }
 
 void Audio_destroy(Audio_t *audio)
 {
-    if (audio->is_started) {
+    // We stop it explicitly so that we can release the mutex.
+#ifdef __SL_START_AND_STOP__
+    if (ma_device_is_started(&audio->device)) {
         ma_device_stop(&audio->device);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio device stopped");
     }
+#else
+    ma_device_stop(&audio->device);
+#endif
     ma_mutex_uninit(&audio->lock);
     ma_device_uninit(&audio->device);
     ma_context_uninit(&audio->context);
@@ -232,10 +249,12 @@ void Audio_track(Audio_t *audio, SL_Source_t *source, bool reset)
     bool success = reset ? SL_source_reset(source) : true; // If the source can't be reset, it won't be tracked.
     if (success) {
         SL_context_track(audio->sl, source);
+#ifdef DEBUG
         size_t count = SL_context_count_tracked(audio->sl);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p tracked, %d source(s) active", source, count);
+#endif
     } else {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't reset source %p, won't track", source);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't reset source %p, won't be tracked", source);
     }
     ma_mutex_unlock(&audio->lock);
 }
@@ -244,8 +263,10 @@ void Audio_untrack(Audio_t *audio, SL_Source_t *source)
 {
     ma_mutex_lock(&audio->lock);
     SL_context_untrack(audio->sl, source);
+#ifdef DEBUG
     size_t count = SL_context_count_tracked(audio->sl);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p untracked, %d source(s) active", source, count);
+#endif
     ma_mutex_unlock(&audio->lock);
 }
 
@@ -261,7 +282,9 @@ bool Audio_update(Audio_t *audio, float delta_time)
 {
     ma_mutex_lock(&audio->lock);
     bool updated = SL_context_update(audio->sl, delta_time);
+#ifdef __SL_START_AND_STOP__
     size_t count = SL_context_count_tracked(audio->sl);
+#endif
     ma_mutex_unlock(&audio->lock);
 
     if (!updated) {
@@ -269,24 +292,25 @@ bool Audio_update(Audio_t *audio, float delta_time)
         return false;
     }
 
-    if (!audio->is_started && count == 1) {
+#ifdef __SL_START_AND_STOP__
+    const bool is_started = ma_device_is_started(&audio->device);
+    if (!is_started && count == 1) {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source incoming, starting device");
         ma_result result = ma_device_start(&audio->device);
         if (result != MA_SUCCESS) {
             Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't start the audio device");
             return false;
         }
-        audio->is_started = true;
     } else
-    if (audio->is_started && count == 0) {
+    if (is_started && count == 0) {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "no more sources, stopping device");
         ma_result result = ma_device_stop(&audio->device);
         if (result != MA_SUCCESS) {
             Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't stop the audio device");
             return false;
         }
-        audio->is_started = false;
     }
+#endif
 
     return true;
 }
