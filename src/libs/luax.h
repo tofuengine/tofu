@@ -59,7 +59,7 @@ typedef int luaX_Reference;
 #define LUAX_REFERENCE_NIL  -1
 #define LUAX_EOD            -2
 
-#if DEBUG
+#ifdef DEBUG
     #define LUAX_SIGNATURE_BEGIN(l) \
         do { \
             lua_State *_L = (l); \

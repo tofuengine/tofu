@@ -248,7 +248,7 @@ void Engine_destroy(Engine_t *engine)
 
     free(engine);
 
-#if DEBUG
+#ifdef DEBUG
     stb_leakcheck_dumpmem();
 #endif
 }
