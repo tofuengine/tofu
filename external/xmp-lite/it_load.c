@@ -846,6 +846,9 @@ static int load_it_pattern(struct module_data *m, int i, int new_fx,
 
 	while (--pat_len >= 0) {
 		b = hio_read8(f);
+		if (hio_error(f)) {
+			return -1;
+		}
 		if (!b) {
 			r++;
 			continue;
@@ -910,11 +913,11 @@ static int load_it_pattern(struct module_data *m, int i, int new_fx,
 			if (b >= ARRAY_SIZE(fx)) {
 				D_(D_WARN "invalid effect %#02x", b);
 				hio_read8(f);
-				
+
 			} else {
 				event->fxt = b;
 				event->fxp = hio_read8(f);
-		
+
 				xlat_fx(c, event, last_fxp, new_fx);
 				lastevent[c].fxt = event->fxt;
 				lastevent[c].fxp = event->fxp;
@@ -992,7 +995,9 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_read(&ifh.chpan, 64, 1, f);
 	hio_read(&ifh.chvol, 64, 1, f);
 
-	strncpy(mod->name, (char *)ifh.name, XMP_NAME_SIZE);
+	memcpy(mod->name, ifh.name, sizeof(ifh.name));
+	/* sizeof(ifh.name) == 26, sizeof(mod->name) == 64. */
+	mod->name[sizeof(ifh.name)] = '\0';
 	mod->len = ifh.ordnum;
 	mod->ins = ifh.insnum;
 	mod->smp = ifh.smpnum;
@@ -1159,6 +1164,10 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		while (--pat_len >= 0) {
 			int b = hio_read8(f);
+			if (hio_error(f)) {
+				D_(D_CRIT "error scanning pattern %d", i);
+				goto err4;
+			}
 			if (b == 0)
 				continue;
 

@@ -169,7 +169,11 @@ static int load_module(xmp_context opaque, HIO_HANDLE *h)
 		return ret;
 	}
 
-	libxmp_scan_sequences(ctx);
+	ret = libxmp_scan_sequences(ctx);
+	if (ret < 0) {
+		xmp_release_module(opaque);
+		return -XMP_ERROR_LOAD;
+	}
 
 	ctx->state = XMP_STATE_LOADED;
 
@@ -206,6 +210,10 @@ LIBXMP_EXPORT int xmp_load_module(xmp_context opaque, char *path)
 
 	if (ctx->state > XMP_STATE_UNLOADED)
 		xmp_release_module(opaque);
+
+	ctx->m.filename = NULL;
+	ctx->m.dirname = NULL;
+	ctx->m.basename = NULL;
 
 	ret = load_module(opaque, h);
 	hio_close(h);

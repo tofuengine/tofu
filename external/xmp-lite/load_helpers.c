@@ -183,7 +183,7 @@ int libxmp_prepare_scan(struct context_data *ctx)
 		return 0;
 	}
 
-	m->scan_cnt = calloc(sizeof (char *), mod->len);
+	m->scan_cnt = calloc(sizeof (uint8_t *), mod->len);
 	if (m->scan_cnt == NULL)
 		return -XMP_ERROR_SYSTEM;
 

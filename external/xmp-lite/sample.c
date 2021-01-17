@@ -253,7 +253,7 @@ int libxmp_load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct x
 		unroll_loop(xxs);
 		bytelen += unroll_extralen;
 	}
-	
+
 	/* Add extra samples at end */
 	if (xxs->flg & XMP_SAMPLE_16BIT) {
 		for (i = 0; i < 8; i++) {
