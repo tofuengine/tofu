@@ -1,6 +1,6 @@
 /*
 Audio playback and capture library. Choice of public domain or MIT-0. See license statements at the end of this file.
-miniaudio - v0.10.29 - 2020-12-26
+miniaudio - v0.10.31 - 2020-01-17
 
 David Reid - mackron@gmail.com
 
@@ -280,93 +280,147 @@ The Emscripten build emits Web Audio JavaScript directly and should compile clea
 ------------------
 `#define` these options before including miniaudio.h.
 
-    +-----------------------+---------------------------------------------------------------------------------------------------------------------------------+
-    | Option                | Description                                                                                                                     |
-    +-----------------------+---------------------------------------------------------------------------------------------------------------------------------+
-    | MA_NO_WASAPI          | Disables the WASAPI backend.                                                                                                    |
-    +-----------------------+---------------------------------------------------------------------------------------------------------------------------------+
-    | MA_NO_DSOUND          | Disables the DirectSound backend.                                                                                               |
-    +-----------------------+---------------------------------------------------------------------------------------------------------------------------------+
-    | MA_NO_WINMM           | Disables the WinMM backend.                                                                                                     |
-    +-----------------------+---------------------------------------------------------------------------------------------------------------------------------+
-    | MA_NO_ALSA            | Disables the ALSA backend.                                                                                                      |
-    +-----------------------+---------------------------------------------------------------------------------------------------------------------------------+
-    | MA_NO_PULSEAUDIO      | Disables the PulseAudio backend.                                                                                                |
-    +-----------------------+---------------------------------------------------------------------------------------------------------------------------------+
-    | MA_NO_JACK            | Disables the JACK backend.                                                                                                      |
-    +-----------------------+---------------------------------------------------------------------------------------------------------------------------------+
-    | MA_NO_COREAUDIO       | Disables the Core Audio backend.                                                                                                |
-    +-----------------------+---------------------------------------------------------------------------------------------------------------------------------+
-    | MA_NO_SNDIO           | Disables the sndio backend.                                                                                                     |
-    +-----------------------+---------------------------------------------------------------------------------------------------------------------------------+
-    | MA_NO_AUDIO4          | Disables the audio(4) backend.                                                                                                  |
-    +-----------------------+---------------------------------------------------------------------------------------------------------------------------------+
-    | MA_NO_OSS             | Disables the OSS backend.                                                                                                       |
-    +-----------------------+---------------------------------------------------------------------------------------------------------------------------------+
-    | MA_NO_AAUDIO          | Disables the AAudio backend.                                                                                                    |
-    +-----------------------+---------------------------------------------------------------------------------------------------------------------------------+
-    | MA_NO_OPENSL          | Disables the OpenSL|ES backend.                                                                                                 |
-    +-----------------------+---------------------------------------------------------------------------------------------------------------------------------+
-    | MA_NO_WEBAUDIO        | Disables the Web Audio backend.                                                                                                 |
-    +-----------------------+---------------------------------------------------------------------------------------------------------------------------------+
-    | MA_NO_NULL            | Disables the null backend.                                                                                                      |
-    +-----------------------+---------------------------------------------------------------------------------------------------------------------------------+
-    | MA_NO_DECODING        | Disables decoding APIs.                                                                                                         |
-    +-----------------------+---------------------------------------------------------------------------------------------------------------------------------+
-    | MA_NO_ENCODING        | Disables encoding APIs.                                                                                                         |
-    +-----------------------+---------------------------------------------------------------------------------------------------------------------------------+
-    | MA_NO_WAV             | Disables the built-in WAV decoder and encoder.                                                                                  |
-    +-----------------------+---------------------------------------------------------------------------------------------------------------------------------+
-    | MA_NO_FLAC            | Disables the built-in FLAC decoder.                                                                                             |
-    +-----------------------+---------------------------------------------------------------------------------------------------------------------------------+
-    | MA_NO_MP3             | Disables the built-in MP3 decoder.                                                                                              |
-    +-----------------------+---------------------------------------------------------------------------------------------------------------------------------+
-    | MA_NO_DEVICE_IO       | Disables playback and recording. This will disable ma_context and ma_device APIs. This is useful if you only want to use        |
-    |                       | miniaudio's data conversion and/or decoding APIs.                                                                               |
-    +-----------------------+---------------------------------------------------------------------------------------------------------------------------------+
-    | MA_NO_THREADING       | Disables the ma_thread, ma_mutex, ma_semaphore and ma_event APIs. This option is useful if you only need to use miniaudio for   |
-    |                       | data conversion, decoding and/or encoding. Some families of APIs require threading which means the following options must also  |
-    |                       | be set:                                                                                                                         |
-    |                       |                                                                                                                                 |
-    |                       |     ```                                                                                                                         |
-    |                       |     MA_NO_DEVICE_IO                                                                                                             |
-    |                       |     ```                                                                                                                         |
-    +-----------------------+---------------------------------------------------------------------------------------------------------------------------------+
-    | MA_NO_GENERATION      | Disables generation APIs such a ma_waveform and ma_noise.                                                                       |
-    +-----------------------+---------------------------------------------------------------------------------------------------------------------------------+
-    | MA_NO_SSE2            | Disables SSE2 optimizations.                                                                                                    |
-    +-----------------------+---------------------------------------------------------------------------------------------------------------------------------+
-    | MA_NO_AVX2            | Disables AVX2 optimizations.                                                                                                    |
-    +-----------------------+---------------------------------------------------------------------------------------------------------------------------------+
-    | MA_NO_AVX512          | Disables AVX-512 optimizations.                                                                                                 |
-    +-----------------------+---------------------------------------------------------------------------------------------------------------------------------+
-    | MA_NO_NEON            | Disables NEON optimizations.                                                                                                    |
-    +-----------------------+---------------------------------------------------------------------------------------------------------------------------------+
-    | MA_NO_RUNTIME_LINKING | Disables runtime linking. This is useful for passing Apple's notarization process. When enabling this, you may need to avoid    |
-    |                       | using `-std=c89` or `-std=c99` on Linux builds or else you may end up with compilation errors due to conflicts with `timespec`  |
-    |                       | and `timeval` data types.                                                                                                       |
-    |                       |                                                                                                                                 |
-    |                       | You may need to enable this if your target platform does not allow runtime linking via `dlopen()`.                              |
-    +-----------------------+---------------------------------------------------------------------------------------------------------------------------------+
-    | MA_LOG_LEVEL [level]  | Sets the logging level. Set `level` to one of the following:                                                                    |
-    |                       |                                                                                                                                 |
-    |                       |     ```                                                                                                                         |
-    |                       |     MA_LOG_LEVEL_VERBOSE                                                                                                        |
-    |                       |     MA_LOG_LEVEL_INFO                                                                                                           |
-    |                       |     MA_LOG_LEVEL_WARNING                                                                                                        |
-    |                       |     MA_LOG_LEVEL_ERROR                                                                                                          |
-    |                       |     ```                                                                                                                         |
-    +-----------------------+---------------------------------------------------------------------------------------------------------------------------------+
-    | MA_DEBUG_OUTPUT       | Enable `printf()` debug output.                                                                                                 |
-    +-----------------------+---------------------------------------------------------------------------------------------------------------------------------+
-    | MA_COINIT_VALUE       | Windows only. The value to pass to internal calls to `CoInitializeEx()`. Defaults to `COINIT_MULTITHREADED`.                    |
-    +-----------------------+---------------------------------------------------------------------------------------------------------------------------------+
-    | MA_API                | Controls how public APIs should be decorated. Defaults to `extern`.                                                             |
-    +-----------------------+---------------------------------------------------------------------------------------------------------------------------------+
-    | MA_DLL                | If set, configures MA_API to either import or export APIs depending on whether or not the implementation is being defined. If   |
-    |                       | defining the implementation, MA_API will be configured to export. Otherwise it will be configured to import. This has no effect |
-    |                       | if MA_API is defined externally.                                                                                                |
-    +-----------------------+---------------------------------------------------------------------------------------------------------------------------------+
+    +----------------------------------+--------------------------------------------------------------------+
+    | Option                           | Description                                                        |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_NO_WASAPI                     | Disables the WASAPI backend.                                       |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_NO_DSOUND                     | Disables the DirectSound backend.                                  |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_NO_WINMM                      | Disables the WinMM backend.                                        |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_NO_ALSA                       | Disables the ALSA backend.                                         |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_NO_PULSEAUDIO                 | Disables the PulseAudio backend.                                   |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_NO_JACK                       | Disables the JACK backend.                                         |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_NO_COREAUDIO                  | Disables the Core Audio backend.                                   |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_NO_SNDIO                      | Disables the sndio backend.                                        |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_NO_AUDIO4                     | Disables the audio(4) backend.                                     |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_NO_OSS                        | Disables the OSS backend.                                          |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_NO_AAUDIO                     | Disables the AAudio backend.                                       |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_NO_OPENSL                     | Disables the OpenSL|ES backend.                                    |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_NO_WEBAUDIO                   | Disables the Web Audio backend.                                    |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_NO_NULL                       | Disables the null backend.                                         |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_ENABLE_ONLY_SPECIFIC_BACKENDS | Disables all backends by default and requires `MA_ENABLE_*` to     |
+    |                                  | enable specific backends.                                          |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_ENABLE_WASAPI                 | Used in conjunction with MA_ENABLE_ONLY_SPECIFIC_BACKENDS to       |
+    |                                  | enable the WASAPI backend.                                         |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_ENABLE_DSOUND                 | Used in conjunction with MA_ENABLE_ONLY_SPECIFIC_BACKENDS to       |
+    |                                  | enable the DirectSound backend.                                    |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_ENABLE_WINMM                  | Used in conjunction with MA_ENABLE_ONLY_SPECIFIC_BACKENDS to       |
+    |                                  | enable the WinMM backend.                                          |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_ENABLE_ALSA                   | Used in conjunction with MA_ENABLE_ONLY_SPECIFIC_BACKENDS to       |
+    |                                  | enable the ALSA backend.                                           |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_ENABLE_PULSEAUDIO             | Used in conjunction with MA_ENABLE_ONLY_SPECIFIC_BACKENDS to       |
+    |                                  | enable the PulseAudio backend.                                     |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_ENABLE_JACK                   | Used in conjunction with MA_ENABLE_ONLY_SPECIFIC_BACKENDS to       |
+    |                                  | enable the JACK backend.                                           |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_ENABLE_COREAUDIO              | Used in conjunction with MA_ENABLE_ONLY_SPECIFIC_BACKENDS to       |
+    |                                  | enable the Core Audio backend.                                     |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_ENABLE_SNDIO                  | Used in conjunction with MA_ENABLE_ONLY_SPECIFIC_BACKENDS to       |
+    |                                  | enable the sndio backend.                                          |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_ENABLE_AUDIO4                 | Used in conjunction with MA_ENABLE_ONLY_SPECIFIC_BACKENDS to       |
+    |                                  | enable the audio(4) backend.                                       |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_ENABLE_OSS                    | Used in conjunction with MA_ENABLE_ONLY_SPECIFIC_BACKENDS to       |
+    |                                  | enable the OSS backend.                                            |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_ENABLE_AAUDIO                 | Used in conjunction with MA_ENABLE_ONLY_SPECIFIC_BACKENDS to       |
+    |                                  | enable the AAudio backend.                                         |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_ENABLE_OPENSL                 | Used in conjunction with MA_ENABLE_ONLY_SPECIFIC_BACKENDS to       |
+    |                                  | enable the OpenSL|ES backend.                                      |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_ENABLE_WEBAUDIO               | Used in conjunction with MA_ENABLE_ONLY_SPECIFIC_BACKENDS to       |
+    |                                  | enable the Web Audio backend.                                      |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_ENABLE_NULL                   | Used in conjunction with MA_ENABLE_ONLY_SPECIFIC_BACKENDS to       |
+    |                                  | enable the null backend.                                           |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_NO_DECODING                   | Disables decoding APIs.                                            |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_NO_ENCODING                   | Disables encoding APIs.                                            |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_NO_WAV                        | Disables the built-in WAV decoder and encoder.                     |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_NO_FLAC                       | Disables the built-in FLAC decoder.                                |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_NO_MP3                        | Disables the built-in MP3 decoder.                                 |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_NO_DEVICE_IO                  | Disables playback and recording. This will disable ma_context and  |
+    |                                  | ma_device APIs. This is useful if you only want to use miniaudio's |
+    |                                  | data conversion and/or decoding APIs.                              |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_NO_THREADING                  | Disables the ma_thread, ma_mutex, ma_semaphore and ma_event APIs.  |
+    |                                  | This option is useful if you only need to use miniaudio for data   |
+    |                                  | conversion, decoding and/or encoding. Some families of APIs        |
+    |                                  | require threading which means the following options must also be   |
+    |                                  | set:                                                               |
+    |                                  |                                                                    |
+    |                                  |     ```                                                            |
+    |                                  |     MA_NO_DEVICE_IO                                                |
+    |                                  |     ```                                                            |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_NO_GENERATION                 | Disables generation APIs such a ma_waveform and ma_noise.          |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_NO_SSE2                       | Disables SSE2 optimizations.                                       |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_NO_AVX2                       | Disables AVX2 optimizations.                                       |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_NO_AVX512                     | Disables AVX-512 optimizations.                                    |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_NO_NEON                       | Disables NEON optimizations.                                       |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_NO_RUNTIME_LINKING            | Disables runtime linking. This is useful for passing Apple's       |
+    |                                  | notarization process. When enabling this, you may need to avoid    |
+    |                                  | using `-std=c89` or `-std=c99` on Linux builds or else you may end |
+    |                                  | up with compilation errors due to conflicts with `timespec` and    |
+    |                                  | `timeval` data types.                                              |
+    |                                  |                                                                    |
+    |                                  | You may need to enable this if your target platform does not allow |
+    |                                  | runtime linking via `dlopen()`.                                    |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_LOG_LEVEL [level]             | Sets the logging level. Set `level` to one of the following:       |
+    |                                  |                                                                    |
+    |                                  |     ```                                                            |
+    |                                  |     MA_LOG_LEVEL_VERBOSE                                           |
+    |                                  |     MA_LOG_LEVEL_INFO                                              |
+    |                                  |     MA_LOG_LEVEL_WARNING                                           |
+    |                                  |     MA_LOG_LEVEL_ERROR                                             |
+    |                                  |     ```                                                            |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_DEBUG_OUTPUT                  | Enable `printf()` debug output.                                    |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_COINIT_VALUE                  | Windows only. The value to pass to internal calls to               |
+    |                                  | `CoInitializeEx()`. Defaults to `COINIT_MULTITHREADED`.            |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_API                           | Controls how public APIs should be decorated. Default is `extern`. |
+    +----------------------------------+--------------------------------------------------------------------+
+    | MA_DLL                           | If set, configures MA_API to either import or export APIs          |
+    |                                  | depending on whether or not the implementation is being defined.   |
+    |                                  | If defining the implementation, MA_API will be configured to       |
+    |                                  | export. Otherwise it will be configured to import. This has no     |
+    |                                  | effect if MA_API is defined externally.                            |
+    +----------------------------------+--------------------------------------------------------------------+
 
 
 3. Definitions
@@ -1456,7 +1510,7 @@ extern "C" {
 
 #define MA_VERSION_MAJOR    0
 #define MA_VERSION_MINOR    10
-#define MA_VERSION_REVISION 29
+#define MA_VERSION_REVISION 31
 #define MA_VERSION_STRING   MA_XSTRINGIFY(MA_VERSION_MAJOR) "." MA_XSTRINGIFY(MA_VERSION_MINOR) "." MA_XSTRINGIFY(MA_VERSION_REVISION)
 
 #if defined(_MSC_VER) && !defined(__clang__)
@@ -1649,6 +1703,12 @@ MA_LOG_LEVEL_ERROR
 #define MA_LOG_LEVEL           MA_LOG_LEVEL_ERROR
 #endif
 
+/*
+An annotation for variables which must be used atomically. This doesn't actually do anything - it's
+just used as a way for humans to identify variables that should be used atomically.
+*/
+#define MA_ATOMIC
+
 typedef struct ma_context ma_context;
 typedef struct ma_device ma_device;
 
@@ -1774,6 +1834,7 @@ typedef int ma_result;
 #define MA_NO_DEVICE                                   -104
 #define MA_API_NOT_FOUND                               -105
 #define MA_INVALID_DEVICE_CONFIG                       -106
+#define MA_LOOP                                        -107
 
 /* State errors. */
 #define MA_DEVICE_NOT_INITIALIZED                      -200
@@ -2004,7 +2065,7 @@ typedef struct
 MA_API ma_result ma_biquad_init(const ma_biquad_config* pConfig, ma_biquad* pBQ);
 MA_API ma_result ma_biquad_reinit(const ma_biquad_config* pConfig, ma_biquad* pBQ);
 MA_API ma_result ma_biquad_process_pcm_frames(ma_biquad* pBQ, void* pFramesOut, const void* pFramesIn, ma_uint64 frameCount);
-MA_API ma_uint32 ma_biquad_get_latency(ma_biquad* pBQ);
+MA_API ma_uint32 ma_biquad_get_latency(const ma_biquad* pBQ);
 
 
 /**************************************************************************************************************************************************************
@@ -2035,7 +2096,7 @@ typedef struct
 MA_API ma_result ma_lpf1_init(const ma_lpf1_config* pConfig, ma_lpf1* pLPF);
 MA_API ma_result ma_lpf1_reinit(const ma_lpf1_config* pConfig, ma_lpf1* pLPF);
 MA_API ma_result ma_lpf1_process_pcm_frames(ma_lpf1* pLPF, void* pFramesOut, const void* pFramesIn, ma_uint64 frameCount);
-MA_API ma_uint32 ma_lpf1_get_latency(ma_lpf1* pLPF);
+MA_API ma_uint32 ma_lpf1_get_latency(const ma_lpf1* pLPF);
 
 typedef struct
 {
@@ -2045,7 +2106,7 @@ typedef struct
 MA_API ma_result ma_lpf2_init(const ma_lpf2_config* pConfig, ma_lpf2* pLPF);
 MA_API ma_result ma_lpf2_reinit(const ma_lpf2_config* pConfig, ma_lpf2* pLPF);
 MA_API ma_result ma_lpf2_process_pcm_frames(ma_lpf2* pLPF, void* pFramesOut, const void* pFramesIn, ma_uint64 frameCount);
-MA_API ma_uint32 ma_lpf2_get_latency(ma_lpf2* pLPF);
+MA_API ma_uint32 ma_lpf2_get_latency(const ma_lpf2* pLPF);
 
 
 typedef struct
@@ -2073,7 +2134,7 @@ typedef struct
 MA_API ma_result ma_lpf_init(const ma_lpf_config* pConfig, ma_lpf* pLPF);
 MA_API ma_result ma_lpf_reinit(const ma_lpf_config* pConfig, ma_lpf* pLPF);
 MA_API ma_result ma_lpf_process_pcm_frames(ma_lpf* pLPF, void* pFramesOut, const void* pFramesIn, ma_uint64 frameCount);
-MA_API ma_uint32 ma_lpf_get_latency(ma_lpf* pLPF);
+MA_API ma_uint32 ma_lpf_get_latency(const ma_lpf* pLPF);
 
 
 /**************************************************************************************************************************************************************
@@ -2104,7 +2165,7 @@ typedef struct
 MA_API ma_result ma_hpf1_init(const ma_hpf1_config* pConfig, ma_hpf1* pHPF);
 MA_API ma_result ma_hpf1_reinit(const ma_hpf1_config* pConfig, ma_hpf1* pHPF);
 MA_API ma_result ma_hpf1_process_pcm_frames(ma_hpf1* pHPF, void* pFramesOut, const void* pFramesIn, ma_uint64 frameCount);
-MA_API ma_uint32 ma_hpf1_get_latency(ma_hpf1* pHPF);
+MA_API ma_uint32 ma_hpf1_get_latency(const ma_hpf1* pHPF);
 
 typedef struct
 {
@@ -2114,7 +2175,7 @@ typedef struct
 MA_API ma_result ma_hpf2_init(const ma_hpf2_config* pConfig, ma_hpf2* pHPF);
 MA_API ma_result ma_hpf2_reinit(const ma_hpf2_config* pConfig, ma_hpf2* pHPF);
 MA_API ma_result ma_hpf2_process_pcm_frames(ma_hpf2* pHPF, void* pFramesOut, const void* pFramesIn, ma_uint64 frameCount);
-MA_API ma_uint32 ma_hpf2_get_latency(ma_hpf2* pHPF);
+MA_API ma_uint32 ma_hpf2_get_latency(const ma_hpf2* pHPF);
 
 
 typedef struct
@@ -2142,7 +2203,7 @@ typedef struct
 MA_API ma_result ma_hpf_init(const ma_hpf_config* pConfig, ma_hpf* pHPF);
 MA_API ma_result ma_hpf_reinit(const ma_hpf_config* pConfig, ma_hpf* pHPF);
 MA_API ma_result ma_hpf_process_pcm_frames(ma_hpf* pHPF, void* pFramesOut, const void* pFramesIn, ma_uint64 frameCount);
-MA_API ma_uint32 ma_hpf_get_latency(ma_hpf* pHPF);
+MA_API ma_uint32 ma_hpf_get_latency(const ma_hpf* pHPF);
 
 
 /**************************************************************************************************************************************************************
@@ -2169,7 +2230,7 @@ typedef struct
 MA_API ma_result ma_bpf2_init(const ma_bpf2_config* pConfig, ma_bpf2* pBPF);
 MA_API ma_result ma_bpf2_reinit(const ma_bpf2_config* pConfig, ma_bpf2* pBPF);
 MA_API ma_result ma_bpf2_process_pcm_frames(ma_bpf2* pBPF, void* pFramesOut, const void* pFramesIn, ma_uint64 frameCount);
-MA_API ma_uint32 ma_bpf2_get_latency(ma_bpf2* pBPF);
+MA_API ma_uint32 ma_bpf2_get_latency(const ma_bpf2* pBPF);
 
 
 typedef struct
@@ -2194,7 +2255,7 @@ typedef struct
 MA_API ma_result ma_bpf_init(const ma_bpf_config* pConfig, ma_bpf* pBPF);
 MA_API ma_result ma_bpf_reinit(const ma_bpf_config* pConfig, ma_bpf* pBPF);
 MA_API ma_result ma_bpf_process_pcm_frames(ma_bpf* pBPF, void* pFramesOut, const void* pFramesIn, ma_uint64 frameCount);
-MA_API ma_uint32 ma_bpf_get_latency(ma_bpf* pBPF);
+MA_API ma_uint32 ma_bpf_get_latency(const ma_bpf* pBPF);
 
 
 /**************************************************************************************************************************************************************
@@ -2221,7 +2282,7 @@ typedef struct
 MA_API ma_result ma_notch2_init(const ma_notch2_config* pConfig, ma_notch2* pFilter);
 MA_API ma_result ma_notch2_reinit(const ma_notch2_config* pConfig, ma_notch2* pFilter);
 MA_API ma_result ma_notch2_process_pcm_frames(ma_notch2* pFilter, void* pFramesOut, const void* pFramesIn, ma_uint64 frameCount);
-MA_API ma_uint32 ma_notch2_get_latency(ma_notch2* pFilter);
+MA_API ma_uint32 ma_notch2_get_latency(const ma_notch2* pFilter);
 
 
 /**************************************************************************************************************************************************************
@@ -2249,7 +2310,7 @@ typedef struct
 MA_API ma_result ma_peak2_init(const ma_peak2_config* pConfig, ma_peak2* pFilter);
 MA_API ma_result ma_peak2_reinit(const ma_peak2_config* pConfig, ma_peak2* pFilter);
 MA_API ma_result ma_peak2_process_pcm_frames(ma_peak2* pFilter, void* pFramesOut, const void* pFramesIn, ma_uint64 frameCount);
-MA_API ma_uint32 ma_peak2_get_latency(ma_peak2* pFilter);
+MA_API ma_uint32 ma_peak2_get_latency(const ma_peak2* pFilter);
 
 
 /**************************************************************************************************************************************************************
@@ -2277,7 +2338,7 @@ typedef struct
 MA_API ma_result ma_loshelf2_init(const ma_loshelf2_config* pConfig, ma_loshelf2* pFilter);
 MA_API ma_result ma_loshelf2_reinit(const ma_loshelf2_config* pConfig, ma_loshelf2* pFilter);
 MA_API ma_result ma_loshelf2_process_pcm_frames(ma_loshelf2* pFilter, void* pFramesOut, const void* pFramesIn, ma_uint64 frameCount);
-MA_API ma_uint32 ma_loshelf2_get_latency(ma_loshelf2* pFilter);
+MA_API ma_uint32 ma_loshelf2_get_latency(const ma_loshelf2* pFilter);
 
 
 /**************************************************************************************************************************************************************
@@ -2305,7 +2366,7 @@ typedef struct
 MA_API ma_result ma_hishelf2_init(const ma_hishelf2_config* pConfig, ma_hishelf2* pFilter);
 MA_API ma_result ma_hishelf2_reinit(const ma_hishelf2_config* pConfig, ma_hishelf2* pFilter);
 MA_API ma_result ma_hishelf2_process_pcm_frames(ma_hishelf2* pFilter, void* pFramesOut, const void* pFramesIn, ma_uint64 frameCount);
-MA_API ma_uint32 ma_hishelf2_get_latency(ma_hishelf2* pFilter);
+MA_API ma_uint32 ma_hishelf2_get_latency(const ma_hishelf2* pFilter);
 
 
 
@@ -2362,10 +2423,10 @@ MA_API void ma_linear_resampler_uninit(ma_linear_resampler* pResampler);
 MA_API ma_result ma_linear_resampler_process_pcm_frames(ma_linear_resampler* pResampler, const void* pFramesIn, ma_uint64* pFrameCountIn, void* pFramesOut, ma_uint64* pFrameCountOut);
 MA_API ma_result ma_linear_resampler_set_rate(ma_linear_resampler* pResampler, ma_uint32 sampleRateIn, ma_uint32 sampleRateOut);
 MA_API ma_result ma_linear_resampler_set_rate_ratio(ma_linear_resampler* pResampler, float ratioInOut);
-MA_API ma_uint64 ma_linear_resampler_get_required_input_frame_count(ma_linear_resampler* pResampler, ma_uint64 outputFrameCount);
-MA_API ma_uint64 ma_linear_resampler_get_expected_output_frame_count(ma_linear_resampler* pResampler, ma_uint64 inputFrameCount);
-MA_API ma_uint64 ma_linear_resampler_get_input_latency(ma_linear_resampler* pResampler);
-MA_API ma_uint64 ma_linear_resampler_get_output_latency(ma_linear_resampler* pResampler);
+MA_API ma_uint64 ma_linear_resampler_get_required_input_frame_count(const ma_linear_resampler* pResampler, ma_uint64 outputFrameCount);
+MA_API ma_uint64 ma_linear_resampler_get_expected_output_frame_count(const ma_linear_resampler* pResampler, ma_uint64 inputFrameCount);
+MA_API ma_uint64 ma_linear_resampler_get_input_latency(const ma_linear_resampler* pResampler);
+MA_API ma_uint64 ma_linear_resampler_get_output_latency(const ma_linear_resampler* pResampler);
 
 typedef enum
 {
@@ -2461,24 +2522,24 @@ number of output frames.
 The returned value does not include cached input frames. It only returns the number of extra frames that would need to be
 read from the input buffer in order to output the specified number of output frames.
 */
-MA_API ma_uint64 ma_resampler_get_required_input_frame_count(ma_resampler* pResampler, ma_uint64 outputFrameCount);
+MA_API ma_uint64 ma_resampler_get_required_input_frame_count(const ma_resampler* pResampler, ma_uint64 outputFrameCount);
 
 /*
 Calculates the number of whole output frames that would be output after fully reading and consuming the specified number of
 input frames.
 */
-MA_API ma_uint64 ma_resampler_get_expected_output_frame_count(ma_resampler* pResampler, ma_uint64 inputFrameCount);
+MA_API ma_uint64 ma_resampler_get_expected_output_frame_count(const ma_resampler* pResampler, ma_uint64 inputFrameCount);
 
 
 /*
 Retrieves the latency introduced by the resampler in input frames.
 */
-MA_API ma_uint64 ma_resampler_get_input_latency(ma_resampler* pResampler);
+MA_API ma_uint64 ma_resampler_get_input_latency(const ma_resampler* pResampler);
 
 /*
 Retrieves the latency introduced by the resampler in output frames.
 */
-MA_API ma_uint64 ma_resampler_get_output_latency(ma_resampler* pResampler);
+MA_API ma_uint64 ma_resampler_get_output_latency(const ma_resampler* pResampler);
 
 
 
@@ -2579,10 +2640,10 @@ MA_API void ma_data_converter_uninit(ma_data_converter* pConverter);
 MA_API ma_result ma_data_converter_process_pcm_frames(ma_data_converter* pConverter, const void* pFramesIn, ma_uint64* pFrameCountIn, void* pFramesOut, ma_uint64* pFrameCountOut);
 MA_API ma_result ma_data_converter_set_rate(ma_data_converter* pConverter, ma_uint32 sampleRateIn, ma_uint32 sampleRateOut);
 MA_API ma_result ma_data_converter_set_rate_ratio(ma_data_converter* pConverter, float ratioInOut);
-MA_API ma_uint64 ma_data_converter_get_required_input_frame_count(ma_data_converter* pConverter, ma_uint64 outputFrameCount);
-MA_API ma_uint64 ma_data_converter_get_expected_output_frame_count(ma_data_converter* pConverter, ma_uint64 inputFrameCount);
-MA_API ma_uint64 ma_data_converter_get_input_latency(ma_data_converter* pConverter);
-MA_API ma_uint64 ma_data_converter_get_output_latency(ma_data_converter* pConverter);
+MA_API ma_uint64 ma_data_converter_get_required_input_frame_count(const ma_data_converter* pConverter, ma_uint64 outputFrameCount);
+MA_API ma_uint64 ma_data_converter_get_expected_output_frame_count(const ma_data_converter* pConverter, ma_uint64 inputFrameCount);
+MA_API ma_uint64 ma_data_converter_get_input_latency(const ma_data_converter* pConverter);
+MA_API ma_uint64 ma_data_converter_get_output_latency(const ma_data_converter* pConverter);
 
 
 /************************************************************************************************************************************************************
@@ -2727,10 +2788,10 @@ typedef struct
     ma_uint32 subbufferSizeInBytes;
     ma_uint32 subbufferCount;
     ma_uint32 subbufferStrideInBytes;
-    volatile ma_uint32 encodedReadOffset;  /* Most significant bit is the loop flag. Lower 31 bits contains the actual offset in bytes. */
-    volatile ma_uint32 encodedWriteOffset; /* Most significant bit is the loop flag. Lower 31 bits contains the actual offset in bytes. */
-    ma_bool8 ownsBuffer;                   /* Used to know whether or not miniaudio is responsible for free()-ing the buffer. */
-    ma_bool8 clearOnWriteAcquire;          /* When set, clears the acquired write buffer before returning from ma_rb_acquire_write(). */
+    MA_ATOMIC ma_uint32 encodedReadOffset;  /* Most significant bit is the loop flag. Lower 31 bits contains the actual offset in bytes. Must be used atomically. */
+    MA_ATOMIC ma_uint32 encodedWriteOffset; /* Most significant bit is the loop flag. Lower 31 bits contains the actual offset in bytes. Must be used atomically. */
+    ma_bool8 ownsBuffer;                    /* Used to know whether or not miniaudio is responsible for free()-ing the buffer. */
+    ma_bool8 clearOnWriteAcquire;           /* When set, clears the acquired write buffer before returning from ma_rb_acquire_write(). */
     ma_allocation_callbacks allocationCallbacks;
 } ma_rb;
 
@@ -2921,50 +2982,50 @@ This section contains the APIs for device playback and capture. Here is where yo
 #endif
 
 
-#if !defined(MA_NO_WASAPI) && defined(MA_SUPPORT_WASAPI)
-    #define MA_ENABLE_WASAPI
+#if defined(MA_SUPPORT_WASAPI) && !defined(MA_NO_WASAPI) && (!defined(MA_ENABLE_ONLY_SPECIFIC_BACKENDS) || defined(MA_ENABLE_WASAPI))
+    #define MA_HAS_WASAPI
 #endif
-#if !defined(MA_NO_DSOUND) && defined(MA_SUPPORT_DSOUND)
-    #define MA_ENABLE_DSOUND
+#if defined(MA_SUPPORT_DSOUND) && !defined(MA_NO_DSOUND) && (!defined(MA_ENABLE_ONLY_SPECIFIC_BACKENDS) || defined(MA_ENABLE_DSOUND))
+    #define MA_HAS_DSOUND
 #endif
-#if !defined(MA_NO_WINMM) && defined(MA_SUPPORT_WINMM)
-    #define MA_ENABLE_WINMM
+#if defined(MA_SUPPORT_WINMM) && !defined(MA_NO_WINMM) && (!defined(MA_ENABLE_ONLY_SPECIFIC_BACKENDS) || defined(MA_ENABLE_WINMM))
+    #define MA_HAS_WINMM
 #endif
-#if !defined(MA_NO_ALSA) && defined(MA_SUPPORT_ALSA)
-    #define MA_ENABLE_ALSA
+#if defined(MA_SUPPORT_ALSA) && !defined(MA_NO_ALSA) && (!defined(MA_ENABLE_ONLY_SPECIFIC_BACKENDS) || defined(MA_ENABLE_ALSA))
+    #define MA_HAS_ALSA
 #endif
-#if !defined(MA_NO_PULSEAUDIO) && defined(MA_SUPPORT_PULSEAUDIO)
-    #define MA_ENABLE_PULSEAUDIO
+#if defined(MA_SUPPORT_PULSEAUDIO) && !defined(MA_NO_PULSEAUDIO) && (!defined(MA_ENABLE_ONLY_SPECIFIC_BACKENDS) || defined(MA_ENABLE_PULSEAUDIO))
+    #define MA_HAS_PULSEAUDIO
 #endif
-#if !defined(MA_NO_JACK) && defined(MA_SUPPORT_JACK)
-    #define MA_ENABLE_JACK
+#if defined(MA_SUPPORT_JACK) && !defined(MA_NO_JACK) && (!defined(MA_ENABLE_ONLY_SPECIFIC_BACKENDS) || defined(MA_ENABLE_JACK))
+    #define MA_HAS_JACK
 #endif
-#if !defined(MA_NO_COREAUDIO) && defined(MA_SUPPORT_COREAUDIO)
-    #define MA_ENABLE_COREAUDIO
+#if defined(MA_SUPPORT_COREAUDIO) && !defined(MA_NO_COREAUDIO) && (!defined(MA_ENABLE_ONLY_SPECIFIC_BACKENDS) || defined(MA_ENABLE_COREAUDIO))
+    #define MA_HAS_COREAUDIO
 #endif
-#if !defined(MA_NO_SNDIO) && defined(MA_SUPPORT_SNDIO)
-    #define MA_ENABLE_SNDIO
+#if defined(MA_SUPPORT_SNDIO) && !defined(MA_NO_SNDIO) && (!defined(MA_ENABLE_ONLY_SPECIFIC_BACKENDS) || defined(MA_ENABLE_SNDIO))
+    #define MA_HAS_SNDIO
 #endif
-#if !defined(MA_NO_AUDIO4) && defined(MA_SUPPORT_AUDIO4)
-    #define MA_ENABLE_AUDIO4
+#if defined(MA_SUPPORT_AUDIO4) && !defined(MA_NO_AUDIO4) && (!defined(MA_ENABLE_ONLY_SPECIFIC_BACKENDS) || defined(MA_ENABLE_AUDIO4))
+    #define MA_HAS_AUDIO4
 #endif
-#if !defined(MA_NO_OSS) && defined(MA_SUPPORT_OSS)
-    #define MA_ENABLE_OSS
+#if defined(MA_SUPPORT_OSS) && !defined(MA_NO_OSS) && (!defined(MA_ENABLE_ONLY_SPECIFIC_BACKENDS) || defined(MA_ENABLE_OSS))
+    #define MA_HAS_OSS
 #endif
-#if !defined(MA_NO_AAUDIO) && defined(MA_SUPPORT_AAUDIO)
-    #define MA_ENABLE_AAUDIO
+#if defined(MA_SUPPORT_AAUDIO) && !defined(MA_NO_AAUDIO) && (!defined(MA_ENABLE_ONLY_SPECIFIC_BACKENDS) || defined(MA_ENABLE_AAUDIO))
+    #define MA_HAS_AAUDIO
 #endif
-#if !defined(MA_NO_OPENSL) && defined(MA_SUPPORT_OPENSL)
-    #define MA_ENABLE_OPENSL
+#if defined(MA_SUPPORT_OPENSL) && !defined(MA_NO_OPENSL) && (!defined(MA_ENABLE_ONLY_SPECIFIC_BACKENDS) || defined(MA_ENABLE_OPENSL))
+    #define MA_HAS_OPENSL
 #endif
-#if !defined(MA_NO_WEBAUDIO) && defined(MA_SUPPORT_WEBAUDIO)
-    #define MA_ENABLE_WEBAUDIO
+#if defined(MA_SUPPORT_WEBAUDIO) && !defined(MA_NO_WEBAUDIO) && (!defined(MA_ENABLE_ONLY_SPECIFIC_BACKENDS) || defined(MA_ENABLE_WEBAUDIO))
+    #define MA_HAS_WEBAUDIO
 #endif
-#if !defined(MA_NO_CUSTOM) && defined(MA_SUPPORT_CUSTOM)
-    #define MA_ENABLE_CUSTOM
+#if defined(MA_SUPPORT_CUSTOM) && !defined(MA_NO_CUSTOM) && (!defined(MA_ENABLE_ONLY_SPECIFIC_BACKENDS) || defined(MA_ENABLE_CUSTOM))
+    #define MA_HAS_CUSTOM
 #endif
-#if !defined(MA_NO_NULL) && defined(MA_SUPPORT_NULL)
-    #define MA_ENABLE_NULL
+#if defined(MA_SUPPORT_NULL) && !defined(MA_NO_NULL) && (!defined(MA_ENABLE_ONLY_SPECIFIC_BACKENDS) || defined(MA_ENABLE_NULL))
+    #define MA_HAS_NULL
 #endif
 
 #define MA_STATE_UNINITIALIZED     0
@@ -3916,7 +3977,7 @@ struct ma_device
     ma_context* pContext;
     ma_device_type type;
     ma_uint32 sampleRate;
-    volatile ma_uint32 state;               /* The state of the device is variable and can change at any time on any thread, so tell the compiler as such with `volatile`. */
+    MA_ATOMIC ma_uint32 state;              /* The state of the device is variable and can change at any time on any thread. Must be used atomically. */
     ma_device_callback_proc onData;         /* Set once at initialization time and should not be changed after. */
     ma_stop_proc onStop;                    /* Set once at initialization time and should not be changed after. */
     void* pUserData;                        /* Application defined data. */
@@ -3932,7 +3993,7 @@ struct ma_device
     ma_bool8 isOwnerOfContext;              /* When set to true, uninitializing the device will also uninitialize the context. Set to true when NULL is passed into ma_device_init(). */
     ma_bool8 noPreZeroedOutputBuffer;
     ma_bool8 noClip;
-    volatile float masterVolumeFactor;      /* Volatile so we can use some thread safety when applying volume to periods. */
+    MA_ATOMIC float masterVolumeFactor;     /* Linear 0..1. Can be read and written simultaneously by different threads. Must be used atomically. */
     ma_duplex_rb duplexRB;                  /* Intermediary buffer for duplex device on asynchronous backends. */
     struct
     {
@@ -3996,24 +4057,24 @@ struct ma_device
             /*IAudioClient**/ ma_ptr pAudioClientCapture;
             /*IAudioRenderClient**/ ma_ptr pRenderClient;
             /*IAudioCaptureClient**/ ma_ptr pCaptureClient;
-            /*IMMDeviceEnumerator**/ ma_ptr pDeviceEnumerator;  /* Used for IMMNotificationClient notifications. Required for detecting default device changes. */
+            /*IMMDeviceEnumerator**/ ma_ptr pDeviceEnumerator;      /* Used for IMMNotificationClient notifications. Required for detecting default device changes. */
             ma_IMMNotificationClient notificationClient;
-            /*HANDLE*/ ma_handle hEventPlayback;                /* Auto reset. Initialized to signaled. */
-            /*HANDLE*/ ma_handle hEventCapture;                 /* Auto reset. Initialized to unsignaled. */
-            ma_uint32 actualPeriodSizeInFramesPlayback;         /* Value from GetBufferSize(). internalPeriodSizeInFrames is not set to the _actual_ buffer size when low-latency shared mode is being used due to the way the IAudioClient3 API works. */
+            /*HANDLE*/ ma_handle hEventPlayback;                    /* Auto reset. Initialized to signaled. */
+            /*HANDLE*/ ma_handle hEventCapture;                     /* Auto reset. Initialized to unsignaled. */
+            ma_uint32 actualPeriodSizeInFramesPlayback;             /* Value from GetBufferSize(). internalPeriodSizeInFrames is not set to the _actual_ buffer size when low-latency shared mode is being used due to the way the IAudioClient3 API works. */
             ma_uint32 actualPeriodSizeInFramesCapture;
             ma_uint32 originalPeriodSizeInFrames;
             ma_uint32 originalPeriodSizeInMilliseconds;
             ma_uint32 originalPeriods;
             ma_performance_profile originalPerformanceProfile;
-            volatile ma_bool32 hasDefaultPlaybackDeviceChanged; /* <-- Make sure this is always a whole 32-bits because we use atomic assignments. */
-            volatile ma_bool32 hasDefaultCaptureDeviceChanged;  /* <-- Make sure this is always a whole 32-bits because we use atomic assignments. */
             ma_uint32 periodSizeInFramesPlayback;
             ma_uint32 periodSizeInFramesCapture;
-            volatile ma_bool32 isStartedCapture;                /* <-- Make sure this is always a whole 32-bits because we use atomic assignments. */
-            volatile ma_bool32 isStartedPlayback;               /* <-- Make sure this is always a whole 32-bits because we use atomic assignments. */
-            ma_bool8 noAutoConvertSRC;                          /* When set to true, disables the use of AUDCLNT_STREAMFLAGS_AUTOCONVERTPCM. */
-            ma_bool8 noDefaultQualitySRC;                       /* When set to true, disables the use of AUDCLNT_STREAMFLAGS_SRC_DEFAULT_QUALITY. */
+            MA_ATOMIC ma_bool8 hasDefaultPlaybackDeviceChanged;    /* Can be read and written simultaneously across different threads. Must be used atomically. */
+            MA_ATOMIC ma_bool8 hasDefaultCaptureDeviceChanged;     /* Can be read and written simultaneously across different threads. Must be used atomically. */
+            MA_ATOMIC ma_bool8 isStartedCapture;                   /* Can be read and written simultaneously across different threads. Must be used atomically. */
+            MA_ATOMIC ma_bool8 isStartedPlayback;                  /* Can be read and written simultaneously across different threads. Must be used atomically. */
+            ma_bool8 noAutoConvertSRC;                              /* When set to true, disables the use of AUDCLNT_STREAMFLAGS_AUTOCONVERTPCM. */
+            ma_bool8 noDefaultQualitySRC;                           /* When set to true, disables the use of AUDCLNT_STREAMFLAGS_SRC_DEFAULT_QUALITY. */
             ma_bool8 noHardwareOffloading;
             ma_bool8 allowCaptureAutoStreamRouting;
             ma_bool8 allowPlaybackAutoStreamRouting;
@@ -4162,14 +4223,14 @@ struct ma_device
             ma_event operationCompletionEvent;
             ma_semaphore operationSemaphore;
             ma_uint32 operation;
-            volatile ma_result operationResult;
+            ma_result operationResult;
             ma_timer timer;
             double priorRunTime;
             ma_uint32 currentPeriodFramesRemainingPlayback;
             ma_uint32 currentPeriodFramesRemainingCapture;
             ma_uint64 lastProcessedFramePlayback;
             ma_uint64 lastProcessedFrameCapture;
-            volatile ma_bool32 isStarted;
+            MA_ATOMIC ma_bool8 isStarted;   /* Read and written by multiple threads. Must be used atomically. */
         } null_device;
 #endif
     };
@@ -5572,17 +5633,17 @@ MA_API ma_bool32 ma_is_loopback_supported(ma_backend backend);
 /*
 Locks a spinlock.
 */
-MA_API ma_result ma_spinlock_lock(ma_spinlock* pSpinlock);
+MA_API ma_result ma_spinlock_lock(volatile ma_spinlock* pSpinlock);
 
 /*
 Locks a spinlock, but does not yield() when looping.
 */
-MA_API ma_result ma_spinlock_lock_noyield(ma_spinlock* pSpinlock);
+MA_API ma_result ma_spinlock_lock_noyield(volatile ma_spinlock* pSpinlock);
 
 /*
 Unlocks a spinlock.
 */
-MA_API ma_result ma_spinlock_unlock(ma_spinlock* pSpinlock);
+MA_API ma_result ma_spinlock_unlock(volatile ma_spinlock* pSpinlock);
 
 
 /*
@@ -5675,6 +5736,8 @@ Offsets a pointer by the specified number of PCM frames.
 */
 MA_API void* ma_offset_pcm_frames_ptr(void* p, ma_uint64 offsetInFrames, ma_format format, ma_uint32 channels);
 MA_API const void* ma_offset_pcm_frames_const_ptr(const void* p, ma_uint64 offsetInFrames, ma_format format, ma_uint32 channels);
+static MA_INLINE float* ma_offset_pcm_frames_ptr_f32(float* p, ma_uint64 offsetInFrames, ma_uint32 channels) { return (float*)ma_offset_pcm_frames_const_ptr((void*)p, offsetInFrames, ma_format_f32, channels); }
+static MA_INLINE const float* ma_offset_pcm_frames_const_ptr_f32(const float* p, ma_uint64 offsetInFrames, ma_uint32 channels) { return (const float*)ma_offset_pcm_frames_const_ptr((const void*)p, offsetInFrames, ma_format_f32, channels); }
 
 
 /*
@@ -5749,6 +5812,29 @@ MA_API ma_result ma_data_source_get_cursor_in_pcm_frames(ma_data_source* pDataSo
 MA_API ma_result ma_data_source_get_length_in_pcm_frames(ma_data_source* pDataSource, ma_uint64* pLength);    /* Returns MA_NOT_IMPLEMENTED if the length is unknown or cannot be determined. Decoders can return this. */
 
 
+
+
+typedef struct
+{
+    ma_data_source_callbacks ds;
+    ma_format format;
+    ma_uint32 channels;
+    ma_uint64 cursor;
+    ma_uint64 sizeInFrames;
+    const void* pData;
+} ma_audio_buffer_ref;
+
+MA_API ma_result ma_audio_buffer_ref_init(ma_format format, ma_uint32 channels, const void* pData, ma_uint64 sizeInFrames, ma_audio_buffer_ref* pAudioBufferRef);
+MA_API ma_result ma_audio_buffer_ref_set_data(ma_audio_buffer_ref* pAudioBufferRef, const void* pData, ma_uint64 sizeInFrames);
+MA_API ma_uint64 ma_audio_buffer_ref_read_pcm_frames(ma_audio_buffer_ref* pAudioBufferRef, void* pFramesOut, ma_uint64 frameCount, ma_bool32 loop);
+MA_API ma_result ma_audio_buffer_ref_seek_to_pcm_frame(ma_audio_buffer_ref* pAudioBufferRef, ma_uint64 frameIndex);
+MA_API ma_result ma_audio_buffer_ref_map(ma_audio_buffer_ref* pAudioBufferRef, void** ppFramesOut, ma_uint64* pFrameCount);
+MA_API ma_result ma_audio_buffer_ref_unmap(ma_audio_buffer_ref* pAudioBufferRef, ma_uint64 frameCount);    /* Returns MA_AT_END if the end has been reached. This should be considered successful. */
+MA_API ma_result ma_audio_buffer_ref_at_end(ma_audio_buffer_ref* pAudioBufferRef);
+MA_API ma_result ma_audio_buffer_ref_get_available_frames(ma_audio_buffer_ref* pAudioBufferRef, ma_uint64* pAvailableFrames);
+
+
+
 typedef struct
 {
     ma_format format;
@@ -5762,12 +5848,7 @@ MA_API ma_audio_buffer_config ma_audio_buffer_config_init(ma_format format, ma_u
 
 typedef struct
 {
-    ma_data_source_callbacks ds;
-    ma_format format;
-    ma_uint32 channels;
-    ma_uint64 cursor;
-    ma_uint64 sizeInFrames;
-    const void* pData;
+    ma_audio_buffer_ref ref;
     ma_allocation_callbacks allocationCallbacks;
     ma_bool32 ownsData;             /* Used to control whether or not miniaudio owns the data buffer. If set to true, pData will be freed in ma_audio_buffer_uninit(). */
     ma_uint8 _pExtraData[1];        /* For allocating a buffer with the memory located directly after the other memory of the structure. */
@@ -6993,6 +7074,35 @@ MA_API int ma_strcpy_s(char* dst, size_t dstSizeInBytes, const char* src)
     return 34;
 }
 
+MA_API int ma_wcscpy_s(wchar_t* dst, size_t dstSizeInBytes, const wchar_t* src)
+{
+    size_t i;
+
+    if (dst == 0) {
+        return 22;
+    }
+    if (dstSizeInBytes == 0) {
+        return 34;
+    }
+    if (src == 0) {
+        dst[0] = '\0';
+        return 22;
+    }
+
+    for (i = 0; i < dstSizeInBytes && src[i] != '\0'; ++i) {
+        dst[i] = src[i];
+    }
+
+    if (i < dstSizeInBytes) {
+        dst[i] = '\0';
+        return 0;
+    }
+
+    dst[0] = '\0';
+    return 34;
+}
+
+
 MA_API int ma_strncpy_s(char* dst, size_t dstSizeInBytes, const char* src, size_t count)
 {
     size_t maxcount;
@@ -7233,6 +7343,19 @@ MA_API char* ma_copy_string(const char* src, const ma_allocation_callbacks* pAll
     }
 
     ma_strcpy_s(dst, sz, src);
+
+    return dst;
+}
+
+MA_API wchar_t* ma_copy_string_w(const wchar_t* src, const ma_allocation_callbacks* pAllocationCallbacks)
+{
+    size_t sz = wcslen(src)+1;
+    wchar_t* dst = (wchar_t*)ma_malloc(sz * sizeof(*dst), pAllocationCallbacks);
+    if (dst == NULL) {
+        return NULL;
+    }
+
+    ma_wcscpy_s(dst, sz, src);
 
     return dst;
 }
@@ -9783,7 +9906,7 @@ Threading
 #endif
 typedef ma_thread_result (MA_THREADCALL * ma_thread_entry_proc)(void* pData);
 
-static MA_INLINE ma_result ma_spinlock_lock_ex(ma_spinlock* pSpinlock, ma_bool32 yield)
+static MA_INLINE ma_result ma_spinlock_lock_ex(volatile ma_spinlock* pSpinlock, ma_bool32 yield)
 {
     if (pSpinlock == NULL) {
         return MA_INVALID_ARGS;
@@ -9804,17 +9927,17 @@ static MA_INLINE ma_result ma_spinlock_lock_ex(ma_spinlock* pSpinlock, ma_bool32
     return MA_SUCCESS;
 }
 
-MA_API ma_result ma_spinlock_lock(ma_spinlock* pSpinlock)
+MA_API ma_result ma_spinlock_lock(volatile ma_spinlock* pSpinlock)
 {
     return ma_spinlock_lock_ex(pSpinlock, MA_TRUE);
 }
 
-MA_API ma_result ma_spinlock_lock_noyield(ma_spinlock* pSpinlock)
+MA_API ma_result ma_spinlock_lock_noyield(volatile ma_spinlock* pSpinlock)
 {
     return ma_spinlock_lock_ex(pSpinlock, MA_FALSE);
 }
 
-MA_API ma_result ma_spinlock_unlock(ma_spinlock* pSpinlock)
+MA_API ma_result ma_spinlock_unlock(volatile ma_spinlock* pSpinlock)
 {
     if (pSpinlock == NULL) {
         return MA_INVALID_ARGS;
@@ -10497,76 +10620,6 @@ not officially supporting this, but I'm leaving it here in case it's useful for 
     #endif
 #endif
 
-/*
-Check if we have the necessary development packages for each backend at the top so we can use this to determine whether or not
-certain unused functions and variables can be excluded from the build to avoid warnings.
-*/
-#ifdef MA_ENABLE_WASAPI
-    #define MA_HAS_WASAPI      /* Every compiler should support WASAPI */
-#endif
-#ifdef MA_ENABLE_DSOUND
-    #define MA_HAS_DSOUND      /* Every compiler should support DirectSound. */
-#endif
-#ifdef MA_ENABLE_WINMM
-    #define MA_HAS_WINMM       /* Every compiler I'm aware of supports WinMM. */
-#endif
-#ifdef MA_ENABLE_ALSA
-    #define MA_HAS_ALSA
-    #ifdef MA_NO_RUNTIME_LINKING
-        #ifdef __has_include
-            #if !__has_include(<alsa/asoundlib.h>)
-                #undef MA_HAS_ALSA
-            #endif
-        #endif
-    #endif
-#endif
-#ifdef MA_ENABLE_PULSEAUDIO
-    #define MA_HAS_PULSEAUDIO
-    #ifdef MA_NO_RUNTIME_LINKING
-        #ifdef __has_include
-            #if !__has_include(<pulse/pulseaudio.h>)
-                #undef MA_HAS_PULSEAUDIO
-            #endif
-        #endif
-    #endif
-#endif
-#ifdef MA_ENABLE_JACK
-    #define MA_HAS_JACK
-    #ifdef MA_NO_RUNTIME_LINKING
-        #ifdef __has_include
-            #if !__has_include(<jack/jack.h>)
-                #undef MA_HAS_JACK
-            #endif
-        #endif
-    #endif
-#endif
-#ifdef MA_ENABLE_COREAUDIO
-    #define MA_HAS_COREAUDIO
-#endif
-#ifdef MA_ENABLE_SNDIO
-    #define MA_HAS_SNDIO
-#endif
-#ifdef MA_ENABLE_AUDIO4
-    #define MA_HAS_AUDIO4
-#endif
-#ifdef MA_ENABLE_OSS
-    #define MA_HAS_OSS
-#endif
-#ifdef MA_ENABLE_AAUDIO
-    #define MA_HAS_AAUDIO
-#endif
-#ifdef MA_ENABLE_OPENSL
-    #define MA_HAS_OPENSL
-#endif
-#ifdef MA_ENABLE_WEBAUDIO
-    #define MA_HAS_WEBAUDIO
-#endif
-#ifdef MA_ENABLE_CUSTOM
-    #define MA_HAS_CUSTOM
-#endif
-#ifdef MA_ENABLE_NULL
-    #define MA_HAS_NULL    /* Everything supports the null backend. */
-#endif
 
 MA_API const char* ma_get_backend_name(ma_backend backend)
 {
@@ -11118,7 +11171,7 @@ Timing
 
 *******************************************************************************/
 #ifdef MA_WIN32
-    static LARGE_INTEGER g_ma_TimerFrequency = {{0}};
+    static LARGE_INTEGER g_ma_TimerFrequency;   /* <-- Initialized to zero since it's static. */
     static void ma_timer_init(ma_timer* pTimer)
     {
         LARGE_INTEGER counter;
@@ -11900,7 +11953,7 @@ static ma_thread_result MA_THREADCALL ma_device_thread__null(void* pData)
         ma_event_wait(&pDevice->null_device.operationEvent);
 
         /* At this point an event should have been triggered. */
-        operation = c89atomic_load_32(&pDevice->null_device.operation);
+        operation = pDevice->null_device.operation;
 
         /* Starting the device needs to put the thread into a loop. */
         if (operation == MA_DEVICE_OP_START__NULL) {
@@ -11908,7 +11961,7 @@ static ma_thread_result MA_THREADCALL ma_device_thread__null(void* pData)
             ma_timer_init(&pDevice->null_device.timer);
 
             /* Getting here means a suspend or kill operation has been requested. */
-            c89atomic_exchange_32((c89atomic_uint32*)&pDevice->null_device.operationResult, MA_SUCCESS);
+            pDevice->null_device.operationResult = MA_SUCCESS;
             ma_event_signal(&pDevice->null_device.operationCompletionEvent);
             ma_semaphore_release(&pDevice->null_device.operationSemaphore);
             continue;
@@ -11921,7 +11974,7 @@ static ma_thread_result MA_THREADCALL ma_device_thread__null(void* pData)
             ma_timer_init(&pDevice->null_device.timer);
 
             /* We're done. */
-            c89atomic_exchange_32((c89atomic_uint32*)&pDevice->null_device.operationResult, MA_SUCCESS);
+            pDevice->null_device.operationResult = MA_SUCCESS;
             ma_event_signal(&pDevice->null_device.operationCompletionEvent);
             ma_semaphore_release(&pDevice->null_device.operationSemaphore);
             continue;
@@ -11929,7 +11982,7 @@ static ma_thread_result MA_THREADCALL ma_device_thread__null(void* pData)
 
         /* Killing the device means we need to get out of this loop so that this thread can terminate. */
         if (operation == MA_DEVICE_OP_KILL__NULL) {
-            c89atomic_exchange_32((c89atomic_uint32*)&pDevice->null_device.operationResult, MA_SUCCESS);
+            pDevice->null_device.operationResult = MA_SUCCESS;
             ma_event_signal(&pDevice->null_device.operationCompletionEvent);
             ma_semaphore_release(&pDevice->null_device.operationSemaphore);
             break;
@@ -11938,7 +11991,7 @@ static ma_thread_result MA_THREADCALL ma_device_thread__null(void* pData)
         /* Getting a signal on a "none" operation probably means an error. Return invalid operation. */
         if (operation == MA_DEVICE_OP_NONE__NULL) {
             MA_ASSERT(MA_FALSE);  /* <-- Trigger this in debug mode to ensure developers are aware they're doing something wrong (or there's a bug in a miniaudio). */
-            c89atomic_exchange_32((c89atomic_uint32*)&pDevice->null_device.operationResult, (c89atomic_uint32)MA_INVALID_OPERATION);
+            pDevice->null_device.operationResult = MA_INVALID_OPERATION;
             ma_event_signal(&pDevice->null_device.operationCompletionEvent);
             ma_semaphore_release(&pDevice->null_device.operationSemaphore);
             continue;   /* Continue the loop. Don't terminate. */
@@ -11953,6 +12006,12 @@ static ma_result ma_device_do_operation__null(ma_device* pDevice, ma_uint32 oper
     ma_result result;
 
     /*
+    TODO: Need to review this and consider just using mutual exclusion. I think the original motivation
+    for this was to just post the event to a queue and return immediately, but that has since changed
+    and now this function is synchronous. I think this can be simplified to just use a mutex.
+    */
+
+    /*
     The first thing to do is wait for an operation slot to become available. We only have a single slot for this, but we could extend this later
     to support queing of operations.
     */
@@ -11965,7 +12024,7 @@ static ma_result ma_device_do_operation__null(ma_device* pDevice, ma_uint32 oper
     When we get here it means the background thread is not referencing the operation code and it can be changed. After changing this we need to
     signal an event to the worker thread to let it know that it can start work.
     */
-    c89atomic_exchange_32(&pDevice->null_device.operation, operation);
+    pDevice->null_device.operation = operation;
 
     /* Once the operation code has been set, the worker thread can start work. */
     if (ma_event_signal(&pDevice->null_device.operationEvent) != MA_SUCCESS) {
@@ -11977,7 +12036,7 @@ static ma_result ma_device_do_operation__null(ma_device* pDevice, ma_uint32 oper
         return MA_ERROR;
     }
 
-    return c89atomic_load_i32(&pDevice->null_device.operationResult);
+    return pDevice->null_device.operationResult;
 }
 
 static ma_uint64 ma_device_get_total_run_time_in_frames__null(ma_device* pDevice)
@@ -12152,7 +12211,7 @@ static ma_result ma_device_start__null(ma_device* pDevice)
 
     ma_device_do_operation__null(pDevice, MA_DEVICE_OP_START__NULL);
 
-    c89atomic_exchange_32(&pDevice->null_device.isStarted, MA_TRUE);
+    c89atomic_exchange_8(&pDevice->null_device.isStarted, MA_TRUE);
     return MA_SUCCESS;
 }
 
@@ -12162,7 +12221,7 @@ static ma_result ma_device_stop__null(ma_device* pDevice)
 
     ma_device_do_operation__null(pDevice, MA_DEVICE_OP_SUSPEND__NULL);
 
-    c89atomic_exchange_32(&pDevice->null_device.isStarted, MA_FALSE);
+    c89atomic_exchange_8(&pDevice->null_device.isStarted, MA_FALSE);
     return MA_SUCCESS;
 }
 
@@ -12176,7 +12235,7 @@ static ma_result ma_device_write__null(ma_device* pDevice, const void* pPCMFrame
         *pFramesWritten = 0;
     }
 
-    wasStartedOnEntry = c89atomic_load_32(&pDevice->null_device.isStarted);
+    wasStartedOnEntry = c89atomic_load_8(&pDevice->null_device.isStarted);
 
     /* Keep going until everything has been read. */
     totalPCMFramesProcessed = 0;
@@ -12202,7 +12261,7 @@ static ma_result ma_device_write__null(ma_device* pDevice, const void* pPCMFrame
         if (pDevice->null_device.currentPeriodFramesRemainingPlayback == 0) {
             pDevice->null_device.currentPeriodFramesRemainingPlayback = 0;
 
-            if (!c89atomic_load_32(&pDevice->null_device.isStarted) && !wasStartedOnEntry) {
+            if (!c89atomic_load_8(&pDevice->null_device.isStarted) && !wasStartedOnEntry) {
                 result = ma_device_start__null(pDevice);
                 if (result != MA_SUCCESS) {
                     break;
@@ -12222,7 +12281,7 @@ static ma_result ma_device_write__null(ma_device* pDevice, const void* pPCMFrame
             ma_uint64 currentFrame;
 
             /* Stop waiting if the device has been stopped. */
-            if (!c89atomic_load_32(&pDevice->null_device.isStarted)) {
+            if (!c89atomic_load_8(&pDevice->null_device.isStarted)) {
                 break;
             }
 
@@ -12293,7 +12352,7 @@ static ma_result ma_device_read__null(ma_device* pDevice, void* pPCMFrames, ma_u
             ma_uint64 currentFrame;
 
             /* Stop waiting if the device has been stopped. */
-            if (!c89atomic_load_32(&pDevice->null_device.isStarted)) {
+            if (!c89atomic_load_8(&pDevice->null_device.isStarted)) {
                 break;
             }
 
@@ -12331,6 +12390,7 @@ static ma_result ma_context_init__null(ma_context* pContext, const ma_context_co
     MA_ASSERT(pContext != NULL);
 
     (void)pConfig;
+    (void)pContext;
 
     pCallbacks->onContextInit             = ma_context_init__null;
     pCallbacks->onContextUninit           = ma_context_uninit__null;
@@ -13153,7 +13213,7 @@ typedef struct
 struct ma_completion_handler_uwp
 {
     ma_completion_handler_uwp_vtbl* lpVtbl;
-    volatile ma_uint32 counter;
+    MA_ATOMIC ma_uint32 counter;
     HANDLE hEvent;
 };
 
@@ -13364,10 +13424,10 @@ static HRESULT STDMETHODCALLTYPE ma_IMMNotificationClient_OnDefaultDeviceChanged
     that properly.
     */
     if (dataFlow == ma_eRender  && pThis->pDevice->type != ma_device_type_loopback) {
-        c89atomic_exchange_32(&pThis->pDevice->wasapi.hasDefaultPlaybackDeviceChanged, MA_TRUE);
+        c89atomic_exchange_8(&pThis->pDevice->wasapi.hasDefaultPlaybackDeviceChanged, MA_TRUE);
     }
     if (dataFlow == ma_eCapture || pThis->pDevice->type == ma_device_type_loopback) {
-        c89atomic_exchange_32(&pThis->pDevice->wasapi.hasDefaultCaptureDeviceChanged, MA_TRUE);
+        c89atomic_exchange_8(&pThis->pDevice->wasapi.hasDefaultCaptureDeviceChanged, MA_TRUE);
     }
 
     (void)pDefaultDeviceID;
@@ -13590,6 +13650,8 @@ static LPWSTR ma_context_get_default_device_id_from_IMMDeviceEnumerator__wasapi(
 
     MA_ASSERT(pContext          != NULL);
     MA_ASSERT(pDeviceEnumerator != NULL);
+
+    (void)pContext;
 
     /* Grab the EDataFlow type from the device type. */
     dataFlow = ma_device_type_to_EDataFlow(deviceType);
@@ -14550,7 +14612,7 @@ static ma_result ma_device_reinit__wasapi(ma_device* pDevice, ma_device_type dev
         ma_IAudioClient_GetBufferSize((ma_IAudioClient*)pDevice->wasapi.pAudioClientCapture, &pDevice->wasapi.actualPeriodSizeInFramesCapture);
 
         /* The device may be in a started state. If so we need to immediately restart it. */
-        if (c89atomic_load_32(&pDevice->wasapi.isStartedCapture)) {
+        if (c89atomic_load_8(&pDevice->wasapi.isStartedCapture)) {
             HRESULT hr = ma_IAudioClient_Start((ma_IAudioClient*)pDevice->wasapi.pAudioClientCapture);
             if (FAILED(hr)) {
                 return ma_post_error(pDevice, MA_LOG_LEVEL_ERROR, "[WASAPI] Failed to start internal capture device after reinitialization.", ma_result_from_HRESULT(hr));
@@ -14586,7 +14648,7 @@ static ma_result ma_device_reinit__wasapi(ma_device* pDevice, ma_device_type dev
         ma_IAudioClient_GetBufferSize((ma_IAudioClient*)pDevice->wasapi.pAudioClientPlayback, &pDevice->wasapi.actualPeriodSizeInFramesPlayback);
 
         /* The device may be in a started state. If so we need to immediately restart it. */
-        if (c89atomic_load_32(&pDevice->wasapi.isStartedPlayback)) {
+        if (c89atomic_load_8(&pDevice->wasapi.isStartedPlayback)) {
             HRESULT hr = ma_IAudioClient_Start((ma_IAudioClient*)pDevice->wasapi.pAudioClientPlayback);
             if (FAILED(hr)) {
                 return ma_post_error(pDevice, MA_LOG_LEVEL_ERROR, "[WASAPI] Failed to start internal playback device after reinitialization.", ma_result_from_HRESULT(hr));
@@ -14803,8 +14865,8 @@ static ma_result ma_device_init__wasapi(ma_device* pDevice, const ma_device_conf
     }
 #endif
 
-    c89atomic_exchange_32(&pDevice->wasapi.isStartedCapture,  MA_FALSE);
-    c89atomic_exchange_32(&pDevice->wasapi.isStartedPlayback, MA_FALSE);
+    c89atomic_exchange_8(&pDevice->wasapi.isStartedCapture,  MA_FALSE);
+    c89atomic_exchange_8(&pDevice->wasapi.isStartedPlayback, MA_FALSE);
 
     return MA_SUCCESS;
 }
@@ -14849,11 +14911,11 @@ static ma_bool32 ma_device_is_reroute_required__wasapi(ma_device* pDevice, ma_de
     MA_ASSERT(pDevice != NULL);
 
     if (deviceType == ma_device_type_playback) {
-        return c89atomic_load_32(&pDevice->wasapi.hasDefaultPlaybackDeviceChanged);
+        return c89atomic_load_8(&pDevice->wasapi.hasDefaultPlaybackDeviceChanged);
     }
 
     if (deviceType == ma_device_type_capture || deviceType == ma_device_type_loopback) {
-        return c89atomic_load_32(&pDevice->wasapi.hasDefaultCaptureDeviceChanged);
+        return c89atomic_load_8(&pDevice->wasapi.hasDefaultCaptureDeviceChanged);
     }
 
     return MA_FALSE;
@@ -14868,10 +14930,10 @@ static ma_result ma_device_reroute__wasapi(ma_device* pDevice, ma_device_type de
     }
 
     if (deviceType == ma_device_type_playback) {
-        c89atomic_exchange_32(&pDevice->wasapi.hasDefaultPlaybackDeviceChanged, MA_FALSE);
+        c89atomic_exchange_8(&pDevice->wasapi.hasDefaultPlaybackDeviceChanged, MA_FALSE);
     }
     if (deviceType == ma_device_type_capture || deviceType == ma_device_type_loopback) {
-        c89atomic_exchange_32(&pDevice->wasapi.hasDefaultCaptureDeviceChanged,  MA_FALSE);
+        c89atomic_exchange_8(&pDevice->wasapi.hasDefaultCaptureDeviceChanged,  MA_FALSE);
     }
 
 
@@ -14946,7 +15008,7 @@ static ma_result ma_device_audio_thread__wasapi(ma_device* pDevice)
         if (FAILED(hr)) {
             return ma_post_error(pDevice, MA_LOG_LEVEL_ERROR, "[WASAPI] Failed to start internal capture device.", ma_result_from_HRESULT(hr));
         }
-        c89atomic_exchange_32(&pDevice->wasapi.isStartedCapture, MA_TRUE);
+        c89atomic_exchange_8(&pDevice->wasapi.isStartedCapture, MA_TRUE);
     }
 
     while (ma_device_get_state(pDevice) == MA_STATE_STARTED && !exitLoop) {
@@ -15258,7 +15320,7 @@ static ma_result ma_device_audio_thread__wasapi(ma_device* pDevice)
                     mappedDeviceBufferSizeInFramesPlayback    = 0;
                 }
 
-                if (!c89atomic_load_32(&pDevice->wasapi.isStartedPlayback)) {
+                if (!c89atomic_load_8(&pDevice->wasapi.isStartedPlayback)) {
                     ma_uint32 startThreshold = pDevice->playback.internalPeriodSizeInFrames * 1;
 
                     /* Prevent a deadlock. If we don't clamp against the actual buffer size we'll never end up starting the playback device which will result in a deadlock. */
@@ -15273,7 +15335,7 @@ static ma_result ma_device_audio_thread__wasapi(ma_device* pDevice)
                             ma_IAudioClient_Reset((ma_IAudioClient*)pDevice->wasapi.pAudioClientCapture);
                             return ma_post_error(pDevice, MA_LOG_LEVEL_ERROR, "[WASAPI] Failed to start internal playback device.", ma_result_from_HRESULT(hr));
                         }
-                        c89atomic_exchange_32(&pDevice->wasapi.isStartedPlayback, MA_TRUE);
+                        c89atomic_exchange_8(&pDevice->wasapi.isStartedPlayback, MA_TRUE);
                     }
                 }
             } break;
@@ -15424,7 +15486,7 @@ static ma_result ma_device_audio_thread__wasapi(ma_device* pDevice)
                 }
 
                 framesWrittenToPlaybackDevice += framesAvailablePlayback;
-                if (!c89atomic_load_32(&pDevice->wasapi.isStartedPlayback)) {
+                if (!c89atomic_load_8(&pDevice->wasapi.isStartedPlayback)) {
                     if (pDevice->playback.shareMode == ma_share_mode_exclusive || framesWrittenToPlaybackDevice >= pDevice->playback.internalPeriodSizeInFrames*1) {
                         hr = ma_IAudioClient_Start((ma_IAudioClient*)pDevice->wasapi.pAudioClientPlayback);
                         if (FAILED(hr)) {
@@ -15432,7 +15494,7 @@ static ma_result ma_device_audio_thread__wasapi(ma_device* pDevice)
                             exitLoop = MA_TRUE;
                             break;
                         }
-                        c89atomic_exchange_32(&pDevice->wasapi.isStartedPlayback, MA_TRUE);
+                        c89atomic_exchange_8(&pDevice->wasapi.isStartedPlayback, MA_TRUE);
                     }
                 }
             } break;
@@ -15459,7 +15521,7 @@ static ma_result ma_device_audio_thread__wasapi(ma_device* pDevice)
             return ma_post_error(pDevice, MA_LOG_LEVEL_ERROR, "[WASAPI] Failed to reset internal capture device.", ma_result_from_HRESULT(hr));
         }
 
-        c89atomic_exchange_32(&pDevice->wasapi.isStartedCapture, MA_FALSE);
+        c89atomic_exchange_8(&pDevice->wasapi.isStartedCapture, MA_FALSE);
     }
 
     if (pDevice->type == ma_device_type_playback || pDevice->type == ma_device_type_duplex) {
@@ -15472,7 +15534,7 @@ static ma_result ma_device_audio_thread__wasapi(ma_device* pDevice)
         The buffer needs to be drained before stopping the device. Not doing this will result in the last few frames not getting output to
         the speakers. This is a problem for very short sounds because it'll result in a significant portion of it not getting played.
         */
-        if (c89atomic_load_32(&pDevice->wasapi.isStartedPlayback)) {
+        if (c89atomic_load_8(&pDevice->wasapi.isStartedPlayback)) {
             /* We need to make sure we put a timeout here or else we'll risk getting stuck in a deadlock in some cases. */
             DWORD waitTime = pDevice->wasapi.actualPeriodSizeInFramesPlayback / pDevice->playback.internalSampleRate;
 
@@ -15517,7 +15579,7 @@ static ma_result ma_device_audio_thread__wasapi(ma_device* pDevice)
             return ma_post_error(pDevice, MA_LOG_LEVEL_ERROR, "[WASAPI] Failed to reset internal playback device.", ma_result_from_HRESULT(hr));
         }
 
-        c89atomic_exchange_32(&pDevice->wasapi.isStartedPlayback, MA_FALSE);
+        c89atomic_exchange_8(&pDevice->wasapi.isStartedPlayback, MA_FALSE);
     }
 
     return MA_SUCCESS;
@@ -36672,7 +36734,7 @@ MA_API ma_result ma_biquad_process_pcm_frames(ma_biquad* pBQ, void* pFramesOut, 
     return MA_SUCCESS;
 }
 
-MA_API ma_uint32 ma_biquad_get_latency(ma_biquad* pBQ)
+MA_API ma_uint32 ma_biquad_get_latency(const ma_biquad* pBQ)
 {
     if (pBQ == NULL) {
         return 0;
@@ -36848,7 +36910,7 @@ MA_API ma_result ma_lpf1_process_pcm_frames(ma_lpf1* pLPF, void* pFramesOut, con
     return MA_SUCCESS;
 }
 
-MA_API ma_uint32 ma_lpf1_get_latency(ma_lpf1* pLPF)
+MA_API ma_uint32 ma_lpf1_get_latency(const ma_lpf1* pLPF)
 {
     if (pLPF == NULL) {
         return 0;
@@ -36949,7 +37011,7 @@ MA_API ma_result ma_lpf2_process_pcm_frames(ma_lpf2* pLPF, void* pFramesOut, con
     return ma_biquad_process_pcm_frames(&pLPF->bq, pFramesOut, pFramesIn, frameCount);
 }
 
-MA_API ma_uint32 ma_lpf2_get_latency(ma_lpf2* pLPF)
+MA_API ma_uint32 ma_lpf2_get_latency(const ma_lpf2* pLPF)
 {
     if (pLPF == NULL) {
         return 0;
@@ -37180,7 +37242,7 @@ MA_API ma_result ma_lpf_process_pcm_frames(ma_lpf* pLPF, void* pFramesOut, const
     return MA_SUCCESS;
 }
 
-MA_API ma_uint32 ma_lpf_get_latency(ma_lpf* pLPF)
+MA_API ma_uint32 ma_lpf_get_latency(const ma_lpf* pLPF)
 {
     if (pLPF == NULL) {
         return 0;
@@ -37355,7 +37417,7 @@ MA_API ma_result ma_hpf1_process_pcm_frames(ma_hpf1* pHPF, void* pFramesOut, con
     return MA_SUCCESS;
 }
 
-MA_API ma_uint32 ma_hpf1_get_latency(ma_hpf1* pHPF)
+MA_API ma_uint32 ma_hpf1_get_latency(const ma_hpf1* pHPF)
 {
     if (pHPF == NULL) {
         return 0;
@@ -37456,7 +37518,7 @@ MA_API ma_result ma_hpf2_process_pcm_frames(ma_hpf2* pHPF, void* pFramesOut, con
     return ma_biquad_process_pcm_frames(&pHPF->bq, pFramesOut, pFramesIn, frameCount);
 }
 
-MA_API ma_uint32 ma_hpf2_get_latency(ma_hpf2* pHPF)
+MA_API ma_uint32 ma_hpf2_get_latency(const ma_hpf2* pHPF)
 {
     if (pHPF == NULL) {
         return 0;
@@ -37669,7 +37731,7 @@ MA_API ma_result ma_hpf_process_pcm_frames(ma_hpf* pHPF, void* pFramesOut, const
     return MA_SUCCESS;
 }
 
-MA_API ma_uint32 ma_hpf_get_latency(ma_hpf* pHPF)
+MA_API ma_uint32 ma_hpf_get_latency(const ma_hpf* pHPF)
 {
     if (pHPF == NULL) {
         return 0;
@@ -37795,7 +37857,7 @@ MA_API ma_result ma_bpf2_process_pcm_frames(ma_bpf2* pBPF, void* pFramesOut, con
     return ma_biquad_process_pcm_frames(&pBPF->bq, pFramesOut, pFramesIn, frameCount);
 }
 
-MA_API ma_uint32 ma_bpf2_get_latency(ma_bpf2* pBPF)
+MA_API ma_uint32 ma_bpf2_get_latency(const ma_bpf2* pBPF)
 {
     if (pBPF == NULL) {
         return 0;
@@ -37971,7 +38033,7 @@ MA_API ma_result ma_bpf_process_pcm_frames(ma_bpf* pBPF, void* pFramesOut, const
     return MA_SUCCESS;
 }
 
-MA_API ma_uint32 ma_bpf_get_latency(ma_bpf* pBPF)
+MA_API ma_uint32 ma_bpf_get_latency(const ma_bpf* pBPF)
 {
     if (pBPF == NULL) {
         return 0;
@@ -38096,7 +38158,7 @@ MA_API ma_result ma_notch2_process_pcm_frames(ma_notch2* pFilter, void* pFramesO
     return ma_biquad_process_pcm_frames(&pFilter->bq, pFramesOut, pFramesIn, frameCount);
 }
 
-MA_API ma_uint32 ma_notch2_get_latency(ma_notch2* pFilter)
+MA_API ma_uint32 ma_notch2_get_latency(const ma_notch2* pFilter)
 {
     if (pFilter == NULL) {
         return 0;
@@ -38225,7 +38287,7 @@ MA_API ma_result ma_peak2_process_pcm_frames(ma_peak2* pFilter, void* pFramesOut
     return ma_biquad_process_pcm_frames(&pFilter->bq, pFramesOut, pFramesIn, frameCount);
 }
 
-MA_API ma_uint32 ma_peak2_get_latency(ma_peak2* pFilter)
+MA_API ma_uint32 ma_peak2_get_latency(const ma_peak2* pFilter)
 {
     if (pFilter == NULL) {
         return 0;
@@ -38351,7 +38413,7 @@ MA_API ma_result ma_loshelf2_process_pcm_frames(ma_loshelf2* pFilter, void* pFra
     return ma_biquad_process_pcm_frames(&pFilter->bq, pFramesOut, pFramesIn, frameCount);
 }
 
-MA_API ma_uint32 ma_loshelf2_get_latency(ma_loshelf2* pFilter)
+MA_API ma_uint32 ma_loshelf2_get_latency(const ma_loshelf2* pFilter)
 {
     if (pFilter == NULL) {
         return 0;
@@ -38477,7 +38539,7 @@ MA_API ma_result ma_hishelf2_process_pcm_frames(ma_hishelf2* pFilter, void* pFra
     return ma_biquad_process_pcm_frames(&pFilter->bq, pFramesOut, pFramesIn, frameCount);
 }
 
-MA_API ma_uint32 ma_hishelf2_get_latency(ma_hishelf2* pFilter)
+MA_API ma_uint32 ma_hishelf2_get_latency(const ma_hishelf2* pFilter)
 {
     if (pFilter == NULL) {
         return 0;
@@ -39035,7 +39097,7 @@ MA_API ma_result ma_linear_resampler_set_rate_ratio(ma_linear_resampler* pResamp
 }
 
 
-MA_API ma_uint64 ma_linear_resampler_get_required_input_frame_count(ma_linear_resampler* pResampler, ma_uint64 outputFrameCount)
+MA_API ma_uint64 ma_linear_resampler_get_required_input_frame_count(const ma_linear_resampler* pResampler, ma_uint64 outputFrameCount)
 {
     ma_uint64 inputFrameCount;
 
@@ -39058,7 +39120,7 @@ MA_API ma_uint64 ma_linear_resampler_get_required_input_frame_count(ma_linear_re
     return inputFrameCount;
 }
 
-MA_API ma_uint64 ma_linear_resampler_get_expected_output_frame_count(ma_linear_resampler* pResampler, ma_uint64 inputFrameCount)
+MA_API ma_uint64 ma_linear_resampler_get_expected_output_frame_count(const ma_linear_resampler* pResampler, ma_uint64 inputFrameCount)
 {
     ma_uint64 outputFrameCount;
     ma_uint64 preliminaryInputFrameCountFromFrac;
@@ -39095,7 +39157,7 @@ MA_API ma_uint64 ma_linear_resampler_get_expected_output_frame_count(ma_linear_r
     return outputFrameCount;
 }
 
-MA_API ma_uint64 ma_linear_resampler_get_input_latency(ma_linear_resampler* pResampler)
+MA_API ma_uint64 ma_linear_resampler_get_input_latency(const ma_linear_resampler* pResampler)
 {
     if (pResampler == NULL) {
         return 0;
@@ -39104,7 +39166,7 @@ MA_API ma_uint64 ma_linear_resampler_get_input_latency(ma_linear_resampler* pRes
     return 1 + ma_lpf_get_latency(&pResampler->lpf);
 }
 
-MA_API ma_uint64 ma_linear_resampler_get_output_latency(ma_linear_resampler* pResampler)
+MA_API ma_uint64 ma_linear_resampler_get_output_latency(const ma_linear_resampler* pResampler)
 {
     if (pResampler == NULL) {
         return 0;
@@ -39534,7 +39596,7 @@ MA_API ma_result ma_resampler_set_rate_ratio(ma_resampler* pResampler, float rat
     }
 }
 
-MA_API ma_uint64 ma_resampler_get_required_input_frame_count(ma_resampler* pResampler, ma_uint64 outputFrameCount)
+MA_API ma_uint64 ma_resampler_get_required_input_frame_count(const ma_resampler* pResampler, ma_uint64 outputFrameCount)
 {
     if (pResampler == NULL) {
         return 0;
@@ -39574,7 +39636,7 @@ MA_API ma_uint64 ma_resampler_get_required_input_frame_count(ma_resampler* pResa
     return 0;
 }
 
-MA_API ma_uint64 ma_resampler_get_expected_output_frame_count(ma_resampler* pResampler, ma_uint64 inputFrameCount)
+MA_API ma_uint64 ma_resampler_get_expected_output_frame_count(const ma_resampler* pResampler, ma_uint64 inputFrameCount)
 {
     if (pResampler == NULL) {
         return 0;   /* Invalid args. */
@@ -39614,7 +39676,7 @@ MA_API ma_uint64 ma_resampler_get_expected_output_frame_count(ma_resampler* pRes
     return 0;
 }
 
-MA_API ma_uint64 ma_resampler_get_input_latency(ma_resampler* pResampler)
+MA_API ma_uint64 ma_resampler_get_input_latency(const ma_resampler* pResampler)
 {
     if (pResampler == NULL) {
         return 0;
@@ -39644,7 +39706,7 @@ MA_API ma_uint64 ma_resampler_get_input_latency(ma_resampler* pResampler)
     return 0;
 }
 
-MA_API ma_uint64 ma_resampler_get_output_latency(ma_resampler* pResampler)
+MA_API ma_uint64 ma_resampler_get_output_latency(const ma_resampler* pResampler)
 {
     if (pResampler == NULL) {
         return 0;
@@ -41428,7 +41490,7 @@ MA_API ma_result ma_data_converter_set_rate_ratio(ma_data_converter* pConverter,
     return ma_resampler_set_rate_ratio(&pConverter->resampler, ratioInOut);
 }
 
-MA_API ma_uint64 ma_data_converter_get_required_input_frame_count(ma_data_converter* pConverter, ma_uint64 outputFrameCount)
+MA_API ma_uint64 ma_data_converter_get_required_input_frame_count(const ma_data_converter* pConverter, ma_uint64 outputFrameCount)
 {
     if (pConverter == NULL) {
         return 0;
@@ -41441,7 +41503,7 @@ MA_API ma_uint64 ma_data_converter_get_required_input_frame_count(ma_data_conver
     }
 }
 
-MA_API ma_uint64 ma_data_converter_get_expected_output_frame_count(ma_data_converter* pConverter, ma_uint64 inputFrameCount)
+MA_API ma_uint64 ma_data_converter_get_expected_output_frame_count(const ma_data_converter* pConverter, ma_uint64 inputFrameCount)
 {
     if (pConverter == NULL) {
         return 0;
@@ -41454,7 +41516,7 @@ MA_API ma_uint64 ma_data_converter_get_expected_output_frame_count(ma_data_conve
     }
 }
 
-MA_API ma_uint64 ma_data_converter_get_input_latency(ma_data_converter* pConverter)
+MA_API ma_uint64 ma_data_converter_get_input_latency(const ma_data_converter* pConverter)
 {
     if (pConverter == NULL) {
         return 0;
@@ -41467,7 +41529,7 @@ MA_API ma_uint64 ma_data_converter_get_input_latency(ma_data_converter* pConvert
     return 0;   /* No latency without a resampler. */
 }
 
-MA_API ma_uint64 ma_data_converter_get_output_latency(ma_data_converter* pConverter)
+MA_API ma_uint64 ma_data_converter_get_output_latency(const ma_data_converter* pConverter)
 {
     if (pConverter == NULL) {
         return 0;
@@ -43124,6 +43186,12 @@ MA_API ma_uint32 ma_get_bytes_per_sample(ma_format format)
 MA_API ma_result ma_data_source_read_pcm_frames(ma_data_source* pDataSource, void* pFramesOut, ma_uint64 frameCount, ma_uint64* pFramesRead, ma_bool32 loop)
 {
     ma_data_source_callbacks* pCallbacks = (ma_data_source_callbacks*)pDataSource;
+
+    /* Safety. */
+    if (pFramesRead != NULL) {
+        *pFramesRead = 0;
+    }
+
     if (pCallbacks == NULL) {
         return MA_INVALID_ARGS;
     }
@@ -43307,6 +43375,245 @@ MA_API ma_result ma_data_source_get_length_in_pcm_frames(ma_data_source* pDataSo
 
 
 
+
+static ma_result ma_audio_buffer_ref__data_source_on_read(ma_data_source* pDataSource, void* pFramesOut, ma_uint64 frameCount, ma_uint64* pFramesRead)
+{
+    ma_uint64 framesRead = ma_audio_buffer_ref_read_pcm_frames((ma_audio_buffer_ref*)pDataSource, pFramesOut, frameCount, MA_FALSE);
+
+    if (pFramesRead != NULL) {
+        *pFramesRead = framesRead;
+    }
+
+    if (framesRead < frameCount) {
+        return MA_AT_END;
+    }
+
+    return MA_SUCCESS;
+}
+
+static ma_result ma_audio_buffer_ref__data_source_on_seek(ma_data_source* pDataSource, ma_uint64 frameIndex)
+{
+    return ma_audio_buffer_ref_seek_to_pcm_frame((ma_audio_buffer_ref*)pDataSource, frameIndex);
+}
+
+static ma_result ma_audio_buffer_ref__data_source_on_map(ma_data_source* pDataSource, void** ppFramesOut, ma_uint64* pFrameCount)
+{
+    return ma_audio_buffer_ref_map((ma_audio_buffer_ref*)pDataSource, ppFramesOut, pFrameCount);
+}
+
+static ma_result ma_audio_buffer_ref__data_source_on_unmap(ma_data_source* pDataSource, ma_uint64 frameCount)
+{
+    return ma_audio_buffer_ref_unmap((ma_audio_buffer_ref*)pDataSource, frameCount);
+}
+
+static ma_result ma_audio_buffer_ref__data_source_on_get_data_format(ma_data_source* pDataSource, ma_format* pFormat, ma_uint32* pChannels, ma_uint32* pSampleRate)
+{
+    ma_audio_buffer_ref* pAudioBufferRef = (ma_audio_buffer_ref*)pDataSource;
+
+    *pFormat     = pAudioBufferRef->format;
+    *pChannels   = pAudioBufferRef->channels;
+    *pSampleRate = 0;   /* There is no notion of a sample rate with audio buffers. */
+
+    return MA_SUCCESS;
+}
+
+static ma_result ma_audio_buffer_ref__data_source_on_get_cursor(ma_data_source* pDataSource, ma_uint64* pCursor)
+{
+    ma_audio_buffer_ref* pAudioBufferRef = (ma_audio_buffer_ref*)pDataSource;
+
+    *pCursor = pAudioBufferRef->cursor;
+
+    return MA_SUCCESS;
+}
+
+static ma_result ma_audio_buffer_ref__data_source_on_get_length(ma_data_source* pDataSource, ma_uint64* pLength)
+{
+    ma_audio_buffer_ref* pAudioBufferRef = (ma_audio_buffer_ref*)pDataSource;
+
+    *pLength = pAudioBufferRef->sizeInFrames;
+
+    return MA_SUCCESS;
+}
+
+MA_API ma_result ma_audio_buffer_ref_init(ma_format format, ma_uint32 channels, const void* pData, ma_uint64 sizeInFrames, ma_audio_buffer_ref* pAudioBufferRef)
+{
+    if (pAudioBufferRef == NULL) {
+        return MA_INVALID_ARGS;
+    }
+
+    MA_ZERO_OBJECT(pAudioBufferRef);
+
+    pAudioBufferRef->ds.onRead          = ma_audio_buffer_ref__data_source_on_read;
+    pAudioBufferRef->ds.onSeek          = ma_audio_buffer_ref__data_source_on_seek;
+    pAudioBufferRef->ds.onMap           = ma_audio_buffer_ref__data_source_on_map;
+    pAudioBufferRef->ds.onUnmap         = ma_audio_buffer_ref__data_source_on_unmap;
+    pAudioBufferRef->ds.onGetDataFormat = ma_audio_buffer_ref__data_source_on_get_data_format;
+    pAudioBufferRef->ds.onGetCursor     = ma_audio_buffer_ref__data_source_on_get_cursor;
+    pAudioBufferRef->ds.onGetLength     = ma_audio_buffer_ref__data_source_on_get_length;
+    pAudioBufferRef->format             = format;
+    pAudioBufferRef->channels           = channels;
+    pAudioBufferRef->cursor             = 0;
+    pAudioBufferRef->sizeInFrames       = sizeInFrames;
+    pAudioBufferRef->pData              = pData;
+
+    return MA_SUCCESS;
+}
+
+MA_API ma_result ma_audio_buffer_ref_set_data(ma_audio_buffer_ref* pAudioBufferRef, const void* pData, ma_uint64 sizeInFrames)
+{
+    if (pAudioBufferRef == NULL) {
+        return MA_INVALID_ARGS;
+    }
+
+    pAudioBufferRef->cursor       = 0;
+    pAudioBufferRef->sizeInFrames = sizeInFrames;
+    pAudioBufferRef->pData        = pData;
+
+    return MA_SUCCESS;
+}
+
+MA_API ma_uint64 ma_audio_buffer_ref_read_pcm_frames(ma_audio_buffer_ref* pAudioBufferRef, void* pFramesOut, ma_uint64 frameCount, ma_bool32 loop)
+{
+    ma_uint64 totalFramesRead = 0;
+
+    if (pAudioBufferRef == NULL) {
+        return 0;
+    }
+
+    if (frameCount == 0) {
+        return 0;
+    }
+
+    while (totalFramesRead < frameCount) {
+        ma_uint64 framesAvailable = pAudioBufferRef->sizeInFrames - pAudioBufferRef->cursor;
+        ma_uint64 framesRemaining = frameCount - totalFramesRead;
+        ma_uint64 framesToRead;
+
+        framesToRead = framesRemaining;
+        if (framesToRead > framesAvailable) {
+            framesToRead = framesAvailable;
+        }
+
+        if (pFramesOut != NULL) {
+            ma_copy_pcm_frames(pFramesOut, ma_offset_ptr(pAudioBufferRef->pData, pAudioBufferRef->cursor * ma_get_bytes_per_frame(pAudioBufferRef->format, pAudioBufferRef->channels)), framesToRead, pAudioBufferRef->format, pAudioBufferRef->channels);
+        }
+
+        totalFramesRead += framesToRead;
+
+        pAudioBufferRef->cursor += framesToRead;
+        if (pAudioBufferRef->cursor == pAudioBufferRef->sizeInFrames) {
+            if (loop) {
+                pAudioBufferRef->cursor = 0;
+            } else {
+                break;  /* We've reached the end and we're not looping. Done. */
+            }
+        }
+
+        MA_ASSERT(pAudioBufferRef->cursor < pAudioBufferRef->sizeInFrames);
+    }
+
+    return totalFramesRead;
+}
+
+MA_API ma_result ma_audio_buffer_ref_seek_to_pcm_frame(ma_audio_buffer_ref* pAudioBufferRef, ma_uint64 frameIndex)
+{
+    if (pAudioBufferRef == NULL) {
+        return MA_INVALID_ARGS;
+    }
+
+    if (frameIndex > pAudioBufferRef->sizeInFrames) {
+        return MA_INVALID_ARGS;
+    }
+
+    pAudioBufferRef->cursor = (size_t)frameIndex;
+
+    return MA_SUCCESS;
+}
+
+MA_API ma_result ma_audio_buffer_ref_map(ma_audio_buffer_ref* pAudioBufferRef, void** ppFramesOut, ma_uint64* pFrameCount)
+{
+    ma_uint64 framesAvailable;
+    ma_uint64 frameCount = 0;
+
+    if (ppFramesOut != NULL) {
+        *ppFramesOut = NULL;    /* Safety. */
+    }
+
+    if (pFrameCount != NULL) {
+        frameCount = *pFrameCount;
+        *pFrameCount = 0;       /* Safety. */
+    }
+
+    if (pAudioBufferRef == NULL || ppFramesOut == NULL || pFrameCount == NULL) {
+        return MA_INVALID_ARGS;
+    }
+
+    framesAvailable = pAudioBufferRef->sizeInFrames - pAudioBufferRef->cursor;
+    if (frameCount > framesAvailable) {
+        frameCount = framesAvailable;
+    }
+
+    *ppFramesOut = ma_offset_ptr(pAudioBufferRef->pData, pAudioBufferRef->cursor * ma_get_bytes_per_frame(pAudioBufferRef->format, pAudioBufferRef->channels));
+    *pFrameCount = frameCount;
+
+    return MA_SUCCESS;
+}
+
+MA_API ma_result ma_audio_buffer_ref_unmap(ma_audio_buffer_ref* pAudioBufferRef, ma_uint64 frameCount)
+{
+    ma_uint64 framesAvailable;
+
+    if (pAudioBufferRef == NULL) {
+        return MA_INVALID_ARGS;
+    }
+
+    framesAvailable = pAudioBufferRef->sizeInFrames - pAudioBufferRef->cursor;
+    if (frameCount > framesAvailable) {
+        return MA_INVALID_ARGS;   /* The frame count was too big. This should never happen in an unmapping. Need to make sure the caller is aware of this. */
+    }
+
+    pAudioBufferRef->cursor += frameCount;
+
+    if (pAudioBufferRef->cursor == pAudioBufferRef->sizeInFrames) {
+        return MA_AT_END;   /* Successful. Need to tell the caller that the end has been reached so that it can loop if desired. */
+    } else {
+        return MA_SUCCESS;
+    }
+}
+
+MA_API ma_result ma_audio_buffer_ref_at_end(ma_audio_buffer_ref* pAudioBufferRef)
+{
+    if (pAudioBufferRef == NULL) {
+        return MA_FALSE;
+    }
+
+    return pAudioBufferRef->cursor == pAudioBufferRef->sizeInFrames;
+}
+
+MA_API ma_result ma_audio_buffer_ref_get_available_frames(ma_audio_buffer_ref* pAudioBufferRef, ma_uint64* pAvailableFrames)
+{
+    if (pAvailableFrames == NULL) {
+        return MA_INVALID_ARGS;
+    }
+
+    *pAvailableFrames = 0;
+
+    if (pAudioBufferRef == NULL) {
+        return MA_INVALID_ARGS;
+    }
+
+    if (pAudioBufferRef->sizeInFrames <= pAudioBufferRef->cursor) {
+        *pAvailableFrames = 0;
+    } else {
+        *pAvailableFrames = pAudioBufferRef->sizeInFrames - pAudioBufferRef->cursor;
+    }
+
+    return MA_SUCCESS;
+}
+
+
+
+
 MA_API ma_audio_buffer_config ma_audio_buffer_config_init(ma_format format, ma_uint32 channels, ma_uint64 sizeInFrames, const void* pData, const ma_allocation_callbacks* pAllocationCallbacks)
 {
     ma_audio_buffer_config config;
@@ -43321,68 +43628,10 @@ MA_API ma_audio_buffer_config ma_audio_buffer_config_init(ma_format format, ma_u
     return config;
 }
 
-
-static ma_result ma_audio_buffer__data_source_on_read(ma_data_source* pDataSource, void* pFramesOut, ma_uint64 frameCount, ma_uint64* pFramesRead)
-{
-    ma_uint64 framesRead = ma_audio_buffer_read_pcm_frames((ma_audio_buffer*)pDataSource, pFramesOut, frameCount, MA_FALSE);
-
-    if (pFramesRead != NULL) {
-        *pFramesRead = framesRead;
-    }
-
-    if (framesRead < frameCount) {
-        return MA_AT_END;
-    }
-
-    return MA_SUCCESS;
-}
-
-static ma_result ma_audio_buffer__data_source_on_seek(ma_data_source* pDataSource, ma_uint64 frameIndex)
-{
-    return ma_audio_buffer_seek_to_pcm_frame((ma_audio_buffer*)pDataSource, frameIndex);
-}
-
-static ma_result ma_audio_buffer__data_source_on_map(ma_data_source* pDataSource, void** ppFramesOut, ma_uint64* pFrameCount)
-{
-    return ma_audio_buffer_map((ma_audio_buffer*)pDataSource, ppFramesOut, pFrameCount);
-}
-
-static ma_result ma_audio_buffer__data_source_on_unmap(ma_data_source* pDataSource, ma_uint64 frameCount)
-{
-    return ma_audio_buffer_unmap((ma_audio_buffer*)pDataSource, frameCount);
-}
-
-static ma_result ma_audio_buffer__data_source_on_get_data_format(ma_data_source* pDataSource, ma_format* pFormat, ma_uint32* pChannels, ma_uint32* pSampleRate)
-{
-    ma_audio_buffer* pAudioBuffer = (ma_audio_buffer*)pDataSource;
-
-    *pFormat     = pAudioBuffer->format;
-    *pChannels   = pAudioBuffer->channels;
-    *pSampleRate = 0;   /* There is no notion of a sample rate with audio buffers. */
-
-    return MA_SUCCESS;
-}
-
-static ma_result ma_audio_buffer__data_source_on_get_cursor(ma_data_source* pDataSource, ma_uint64* pCursor)
-{
-    ma_audio_buffer* pAudioBuffer = (ma_audio_buffer*)pDataSource;
-
-    *pCursor = pAudioBuffer->cursor;
-
-    return MA_SUCCESS;
-}
-
-static ma_result ma_audio_buffer__data_source_on_get_length(ma_data_source* pDataSource, ma_uint64* pLength)
-{
-    ma_audio_buffer* pAudioBuffer = (ma_audio_buffer*)pDataSource;
-
-    *pLength = pAudioBuffer->sizeInFrames;
-
-    return MA_SUCCESS;
-}
-
 static ma_result ma_audio_buffer_init_ex(const ma_audio_buffer_config* pConfig, ma_bool32 doCopy, ma_audio_buffer* pAudioBuffer)
 {
+    ma_result result;
+
     if (pAudioBuffer == NULL) {
         return MA_INVALID_ARGS;
     }
@@ -43397,25 +43646,18 @@ static ma_result ma_audio_buffer_init_ex(const ma_audio_buffer_config* pConfig, 
         return MA_INVALID_ARGS; /* Not allowing buffer sizes of 0 frames. */
     }
 
-    pAudioBuffer->ds.onRead          = ma_audio_buffer__data_source_on_read;
-    pAudioBuffer->ds.onSeek          = ma_audio_buffer__data_source_on_seek;
-    pAudioBuffer->ds.onMap           = ma_audio_buffer__data_source_on_map;
-    pAudioBuffer->ds.onUnmap         = ma_audio_buffer__data_source_on_unmap;
-    pAudioBuffer->ds.onGetDataFormat = ma_audio_buffer__data_source_on_get_data_format;
-    pAudioBuffer->ds.onGetCursor     = ma_audio_buffer__data_source_on_get_cursor;
-    pAudioBuffer->ds.onGetLength     = ma_audio_buffer__data_source_on_get_length;
-    pAudioBuffer->format             = pConfig->format;
-    pAudioBuffer->channels           = pConfig->channels;
-    pAudioBuffer->cursor             = 0;
-    pAudioBuffer->sizeInFrames       = pConfig->sizeInFrames;
-    pAudioBuffer->pData              = NULL;  /* Set properly later. */
+    result = ma_audio_buffer_ref_init(pConfig->format, pConfig->channels, NULL, 0, &pAudioBuffer->ref);
+    if (result != MA_SUCCESS) {
+        return result;
+    }
+    
     ma_allocation_callbacks_init_copy(&pAudioBuffer->allocationCallbacks, &pConfig->allocationCallbacks);
 
     if (doCopy) {
         ma_uint64 allocationSizeInBytes;
         void* pData;
 
-        allocationSizeInBytes = pAudioBuffer->sizeInFrames * ma_get_bytes_per_frame(pAudioBuffer->format, pAudioBuffer->channels);
+        allocationSizeInBytes = pConfig->sizeInFrames * ma_get_bytes_per_frame(pConfig->format, pConfig->channels);
         if (allocationSizeInBytes > MA_SIZE_MAX) {
             return MA_OUT_OF_MEMORY;    /* Too big. */
         }
@@ -43426,15 +43668,15 @@ static ma_result ma_audio_buffer_init_ex(const ma_audio_buffer_config* pConfig, 
         }
 
         if (pConfig->pData != NULL) {
-            ma_copy_pcm_frames(pData, pConfig->pData, pAudioBuffer->sizeInFrames, pAudioBuffer->format, pAudioBuffer->channels);
+            ma_copy_pcm_frames(pData, pConfig->pData, pConfig->sizeInFrames, pConfig->format, pConfig->channels);
         } else {
-            ma_silence_pcm_frames(pData, pAudioBuffer->sizeInFrames, pAudioBuffer->format, pAudioBuffer->channels);
+            ma_silence_pcm_frames(pData, pConfig->sizeInFrames, pConfig->format, pConfig->channels);
         }
 
-        pAudioBuffer->pData    = pData;
+        ma_audio_buffer_ref_set_data(&pAudioBuffer->ref, pData, pConfig->sizeInFrames);
         pAudioBuffer->ownsData = MA_TRUE;
     } else {
-        pAudioBuffer->pData    = pConfig->pData;
+        ma_audio_buffer_ref_set_data(&pAudioBuffer->ref, pConfig->pData, pConfig->sizeInFrames);
         pAudioBuffer->ownsData = MA_FALSE;
     }
 
@@ -43447,13 +43689,12 @@ static void ma_audio_buffer_uninit_ex(ma_audio_buffer* pAudioBuffer, ma_bool32 d
         return;
     }
 
-    if (pAudioBuffer->ownsData && pAudioBuffer->pData != &pAudioBuffer->_pExtraData[0]) {
-        ma__free_from_callbacks((void*)pAudioBuffer->pData, &pAudioBuffer->allocationCallbacks);    /* Naugty const cast, but OK in this case since we've guarded it with the ownsData check. */
+    if (pAudioBuffer->ownsData && pAudioBuffer->ref.pData != &pAudioBuffer->_pExtraData[0]) {
+        ma__free_from_callbacks((void*)pAudioBuffer->ref.pData, &pAudioBuffer->allocationCallbacks);    /* Naugty const cast, but OK in this case since we've guarded it with the ownsData check. */
     }
 
     if (doFree) {
-        ma_allocation_callbacks allocationCallbacks = pAudioBuffer->allocationCallbacks;
-        ma__free_from_callbacks(pAudioBuffer, &allocationCallbacks);
+        ma__free_from_callbacks(pAudioBuffer, &pAudioBuffer->allocationCallbacks);
     }
 }
 
@@ -43528,45 +43769,11 @@ MA_API void ma_audio_buffer_uninit_and_free(ma_audio_buffer* pAudioBuffer)
 
 MA_API ma_uint64 ma_audio_buffer_read_pcm_frames(ma_audio_buffer* pAudioBuffer, void* pFramesOut, ma_uint64 frameCount, ma_bool32 loop)
 {
-    ma_uint64 totalFramesRead = 0;
-
     if (pAudioBuffer == NULL) {
         return 0;
     }
 
-    if (frameCount == 0) {
-        return 0;
-    }
-
-    while (totalFramesRead < frameCount) {
-        ma_uint64 framesAvailable = pAudioBuffer->sizeInFrames - pAudioBuffer->cursor;
-        ma_uint64 framesRemaining = frameCount - totalFramesRead;
-        ma_uint64 framesToRead;
-
-        framesToRead = framesRemaining;
-        if (framesToRead > framesAvailable) {
-            framesToRead = framesAvailable;
-        }
-
-        if (pFramesOut != NULL) {
-            ma_copy_pcm_frames(pFramesOut, ma_offset_ptr(pAudioBuffer->pData, pAudioBuffer->cursor * ma_get_bytes_per_frame(pAudioBuffer->format, pAudioBuffer->channels)), frameCount, pAudioBuffer->format, pAudioBuffer->channels);
-        }
-
-        totalFramesRead += framesToRead;
-
-        pAudioBuffer->cursor += framesToRead;
-        if (pAudioBuffer->cursor == pAudioBuffer->sizeInFrames) {
-            if (loop) {
-                pAudioBuffer->cursor = 0;
-            } else {
-                break;  /* We've reached the end and we're not looping. Done. */
-            }
-        }
-
-        MA_ASSERT(pAudioBuffer->cursor < pAudioBuffer->sizeInFrames);
-    }
-
-    return totalFramesRead;
+    return ma_audio_buffer_ref_read_pcm_frames(&pAudioBuffer->ref, pFramesOut, frameCount, loop);
 }
 
 MA_API ma_result ma_audio_buffer_seek_to_pcm_frame(ma_audio_buffer* pAudioBuffer, ma_uint64 frameIndex)
@@ -43575,64 +43782,33 @@ MA_API ma_result ma_audio_buffer_seek_to_pcm_frame(ma_audio_buffer* pAudioBuffer
         return MA_INVALID_ARGS;
     }
 
-    if (frameIndex > pAudioBuffer->sizeInFrames) {
-        return MA_INVALID_ARGS;
-    }
-
-    pAudioBuffer->cursor = (size_t)frameIndex;
-
-    return MA_SUCCESS;
+    return ma_audio_buffer_ref_seek_to_pcm_frame(&pAudioBuffer->ref, frameIndex);
 }
 
 MA_API ma_result ma_audio_buffer_map(ma_audio_buffer* pAudioBuffer, void** ppFramesOut, ma_uint64* pFrameCount)
 {
-    ma_uint64 framesAvailable;
-    ma_uint64 frameCount = 0;
-
     if (ppFramesOut != NULL) {
         *ppFramesOut = NULL;    /* Safety. */
     }
 
-    if (pFrameCount != NULL) {
-        frameCount = *pFrameCount;
-        *pFrameCount = 0;       /* Safety. */
-    }
+    if (pAudioBuffer == NULL) {
+        if (pFrameCount != NULL) {
+            *pFrameCount = 0;
+        }
 
-    if (pAudioBuffer == NULL || ppFramesOut == NULL || pFrameCount == NULL) {
         return MA_INVALID_ARGS;
     }
 
-    framesAvailable = pAudioBuffer->sizeInFrames - pAudioBuffer->cursor;
-    if (frameCount > framesAvailable) {
-        frameCount = framesAvailable;
-    }
-
-    *ppFramesOut = ma_offset_ptr(pAudioBuffer->pData, pAudioBuffer->cursor * ma_get_bytes_per_frame(pAudioBuffer->format, pAudioBuffer->channels));
-    *pFrameCount = frameCount;
-
-    return MA_SUCCESS;
+    return ma_audio_buffer_ref_map(&pAudioBuffer->ref, ppFramesOut, pFrameCount);
 }
 
 MA_API ma_result ma_audio_buffer_unmap(ma_audio_buffer* pAudioBuffer, ma_uint64 frameCount)
 {
-    ma_uint64 framesAvailable;
-
     if (pAudioBuffer == NULL) {
         return MA_INVALID_ARGS;
     }
 
-    framesAvailable = pAudioBuffer->sizeInFrames - pAudioBuffer->cursor;
-    if (frameCount > framesAvailable) {
-        return MA_INVALID_ARGS;   /* The frame count was too big. This should never happen in an unmapping. Need to make sure the caller is aware of this. */
-    }
-
-    pAudioBuffer->cursor += frameCount;
-
-    if (pAudioBuffer->cursor == pAudioBuffer->sizeInFrames) {
-        return MA_AT_END;   /* Successful. Need to tell the caller that the end has been reached so that it can loop if desired. */
-    } else {
-        return MA_SUCCESS;
-    }
+    return ma_audio_buffer_ref_unmap(&pAudioBuffer->ref, frameCount);
 }
 
 MA_API ma_result ma_audio_buffer_at_end(ma_audio_buffer* pAudioBuffer)
@@ -43641,7 +43817,7 @@ MA_API ma_result ma_audio_buffer_at_end(ma_audio_buffer* pAudioBuffer)
         return MA_FALSE;
     }
 
-    return pAudioBuffer->cursor == pAudioBuffer->sizeInFrames;
+    return ma_audio_buffer_ref_at_end(&pAudioBuffer->ref);
 }
 
 MA_API ma_result ma_audio_buffer_get_available_frames(ma_audio_buffer* pAudioBuffer, ma_uint64* pAvailableFrames)
@@ -43656,13 +43832,7 @@ MA_API ma_result ma_audio_buffer_get_available_frames(ma_audio_buffer* pAudioBuf
         return MA_INVALID_ARGS;
     }
 
-    if (pAudioBuffer->sizeInFrames <= pAudioBuffer->cursor) {
-        *pAvailableFrames = 0;
-    } else {
-        *pAvailableFrames = pAudioBuffer->sizeInFrames - pAudioBuffer->cursor;
-    }
-
-    return MA_SUCCESS;
+    return ma_audio_buffer_ref_get_available_frames(&pAudioBuffer->ref, pAvailableFrames);
 }
 
 
@@ -43825,7 +43995,7 @@ MA_API ma_result ma_vfs_info(ma_vfs* pVFS, ma_vfs_file file, ma_file_info* pInfo
 }
 
 
-static ma_result ma_vfs_open_and_read_file_ex(ma_vfs* pVFS, const char* pFilePath, void** ppData, size_t* pSize, const ma_allocation_callbacks* pAllocationCallbacks, ma_uint32 allocationType)
+static ma_result ma_vfs_open_and_read_file_ex(ma_vfs* pVFS, const char* pFilePath, const wchar_t* pFilePathW, void** ppData, size_t* pSize, const ma_allocation_callbacks* pAllocationCallbacks, ma_uint32 allocationType)
 {
     ma_result result;
     ma_vfs_file file;
@@ -43846,7 +44016,11 @@ static ma_result ma_vfs_open_and_read_file_ex(ma_vfs* pVFS, const char* pFilePat
         return MA_INVALID_ARGS;
     }
 
-    result = ma_vfs_open(pVFS, pFilePath, MA_OPEN_MODE_READ, &file);
+    if (pFilePath != NULL) {
+        result = ma_vfs_open(pVFS, pFilePath, MA_OPEN_MODE_READ, &file);
+    } else {
+        result = ma_vfs_open_w(pVFS, pFilePathW, MA_OPEN_MODE_READ, &file);
+    }
     if (result != MA_SUCCESS) {
         return result;
     }
@@ -43886,9 +44060,14 @@ static ma_result ma_vfs_open_and_read_file_ex(ma_vfs* pVFS, const char* pFilePat
     return MA_SUCCESS;
 }
 
-ma_result ma_vfs_open_and_read_file(ma_vfs* pVFS, const char* pFilePath, void** ppData, size_t* pSize, const ma_allocation_callbacks* pAllocationCallbacks)
+MA_API ma_result ma_vfs_open_and_read_file(ma_vfs* pVFS, const char* pFilePath, void** ppData, size_t* pSize, const ma_allocation_callbacks* pAllocationCallbacks)
 {
-    return ma_vfs_open_and_read_file_ex(pVFS, pFilePath, ppData, pSize, pAllocationCallbacks, 0 /*MA_ALLOCATION_TYPE_GENERAL*/);
+    return ma_vfs_open_and_read_file_ex(pVFS, pFilePath, NULL, ppData, pSize, pAllocationCallbacks, 0 /*MA_ALLOCATION_TYPE_GENERAL*/);
+}
+
+MA_API ma_result ma_vfs_open_and_read_file_w(ma_vfs* pVFS, const wchar_t* pFilePath, void** ppData, size_t* pSize, const ma_allocation_callbacks* pAllocationCallbacks)
+{
+    return ma_vfs_open_and_read_file_ex(pVFS, NULL, pFilePath, ppData, pSize, pAllocationCallbacks, 0 /*MA_ALLOCATION_TYPE_GENERAL*/);
 }
 
 
@@ -44586,7 +44765,7 @@ extern "C" {
 #define DRWAV_XSTRINGIFY(x)     DRWAV_STRINGIFY(x)
 #define DRWAV_VERSION_MAJOR     0
 #define DRWAV_VERSION_MINOR     12
-#define DRWAV_VERSION_REVISION  16
+#define DRWAV_VERSION_REVISION  17
 #define DRWAV_VERSION_STRING    DRWAV_XSTRINGIFY(DRWAV_VERSION_MAJOR) "." DRWAV_XSTRINGIFY(DRWAV_VERSION_MINOR) "." DRWAV_XSTRINGIFY(DRWAV_VERSION_REVISION)
 #include <stddef.h>
 typedef   signed char           drwav_int8;
@@ -44959,7 +45138,7 @@ extern "C" {
 #define DRFLAC_XSTRINGIFY(x)     DRFLAC_STRINGIFY(x)
 #define DRFLAC_VERSION_MAJOR     0
 #define DRFLAC_VERSION_MINOR     12
-#define DRFLAC_VERSION_REVISION  25
+#define DRFLAC_VERSION_REVISION  26
 #define DRFLAC_VERSION_STRING    DRFLAC_XSTRINGIFY(DRFLAC_VERSION_MAJOR) "." DRFLAC_XSTRINGIFY(DRFLAC_VERSION_MINOR) "." DRFLAC_XSTRINGIFY(DRFLAC_VERSION_REVISION)
 #include <stddef.h>
 typedef   signed char           drflac_int8;
@@ -45764,6 +45943,8 @@ static ma_result ma_decoder_init_wav__internal(const ma_decoder_config* pConfig,
     MA_ASSERT(pConfig != NULL);
     MA_ASSERT(pDecoder != NULL);
 
+    (void)pConfig;
+
     pWav = (drwav*)ma__malloc_from_callbacks(sizeof(*pWav), &pDecoder->allocationCallbacks);
     if (pWav == NULL) {
         return MA_OUT_OF_MEMORY;
@@ -46024,6 +46205,8 @@ static ma_result ma_decoder_init_mp3__internal(const ma_decoder_config* pConfig,
 
     MA_ASSERT(pConfig != NULL);
     MA_ASSERT(pDecoder != NULL);
+
+    (void)pConfig;
 
     pMP3 = (drmp3*)ma__malloc_from_callbacks(sizeof(*pMP3), &pDecoder->allocationCallbacks);
     if (pMP3 == NULL) {
@@ -46489,6 +46672,8 @@ static ma_result ma_decoder_init_raw__internal(const ma_decoder_config* pConfigI
     MA_ASSERT(pConfigIn != NULL);
     MA_ASSERT(pConfigOut != NULL);
     MA_ASSERT(pDecoder != NULL);
+
+    (void)pConfigOut;
 
     pDecoder->onReadPCMFrames        = ma_decoder_internal_on_read_pcm_frames__raw;
     pDecoder->onSeekToPCMFrame       = ma_decoder_internal_on_seek_to_pcm_frame__raw;
@@ -49272,24 +49457,6 @@ static const drwav_uint8 drwavGUID_W64_FMT [16] = {0x66,0x6D,0x74,0x20, 0xF3,0xA
 static const drwav_uint8 drwavGUID_W64_FACT[16] = {0x66,0x61,0x63,0x74, 0xF3,0xAC, 0xD3,0x11, 0x8C,0xD1, 0x00,0xC0,0x4F,0x8E,0xDB,0x8A};
 static const drwav_uint8 drwavGUID_W64_DATA[16] = {0x64,0x61,0x74,0x61, 0xF3,0xAC, 0xD3,0x11, 0x8C,0xD1, 0x00,0xC0,0x4F,0x8E,0xDB,0x8A};
 static const drwav_uint8 drwavGUID_W64_SMPL[16] = {0x73,0x6D,0x70,0x6C, 0xF3,0xAC, 0xD3,0x11, 0x8C,0xD1, 0x00,0xC0,0x4F,0x8E,0xDB,0x8A};
-static DRWAV_INLINE drwav_bool32 drwav__guid_equal(const drwav_uint8 a[16], const drwav_uint8 b[16])
-{
-    int i;
-    for (i = 0; i < 16; i += 1) {
-        if (a[i] != b[i]) {
-            return DRWAV_FALSE;
-        }
-    }
-    return DRWAV_TRUE;
-}
-static DRWAV_INLINE drwav_bool32 drwav__fourcc_equal(const drwav_uint8* a, const char* b)
-{
-    return
-        a[0] == b[0] &&
-        a[1] == b[1] &&
-        a[2] == b[2] &&
-        a[3] == b[3];
-}
 static DRWAV_INLINE int drwav__is_little_endian(void)
 {
 #if defined(DRWAV_X86) || defined(DRWAV_X64)
@@ -49300,32 +49467,6 @@ static DRWAV_INLINE int drwav__is_little_endian(void)
     int n = 1;
     return (*(char*)&n) == 1;
 #endif
-}
-static DRWAV_INLINE drwav_uint16 drwav__bytes_to_u16(const drwav_uint8* data)
-{
-    return (data[0] << 0) | (data[1] << 8);
-}
-static DRWAV_INLINE drwav_int16 drwav__bytes_to_s16(const drwav_uint8* data)
-{
-    return (short)drwav__bytes_to_u16(data);
-}
-static DRWAV_INLINE drwav_uint32 drwav__bytes_to_u32(const drwav_uint8* data)
-{
-    return (data[0] << 0) | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
-}
-static DRWAV_INLINE drwav_int32 drwav__bytes_to_s32(const drwav_uint8* data)
-{
-    return (drwav_int32)drwav__bytes_to_u32(data);
-}
-static DRWAV_INLINE drwav_uint64 drwav__bytes_to_u64(const drwav_uint8* data)
-{
-    return
-        ((drwav_uint64)data[0] <<  0) | ((drwav_uint64)data[1] <<  8) | ((drwav_uint64)data[2] << 16) | ((drwav_uint64)data[3] << 24) |
-        ((drwav_uint64)data[4] << 32) | ((drwav_uint64)data[5] << 40) | ((drwav_uint64)data[6] << 48) | ((drwav_uint64)data[7] << 56);
-}
-static DRWAV_INLINE drwav_int64 drwav__bytes_to_s64(const drwav_uint8* data)
-{
-    return (drwav_int64)drwav__bytes_to_u64(data);
 }
 static DRWAV_INLINE void drwav__bytes_to_guid(const drwav_uint8* data, drwav_uint8* guid)
 {
@@ -49541,22 +49682,22 @@ static DRWAV_INLINE void drwav__bswap_samples(void* pSamples, drwav_uint64 sampl
         } break;
     }
 }
-static void* drwav__malloc_default(size_t sz, void* pUserData)
+DRWAV_PRIVATE void* drwav__malloc_default(size_t sz, void* pUserData)
 {
     (void)pUserData;
     return DRWAV_MALLOC(sz);
 }
-static void* drwav__realloc_default(void* p, size_t sz, void* pUserData)
+DRWAV_PRIVATE void* drwav__realloc_default(void* p, size_t sz, void* pUserData)
 {
     (void)pUserData;
     return DRWAV_REALLOC(p, sz);
 }
-static void drwav__free_default(void* p, void* pUserData)
+DRWAV_PRIVATE void drwav__free_default(void* p, void* pUserData)
 {
     (void)pUserData;
     DRWAV_FREE(p);
 }
-static void* drwav__malloc_from_callbacks(size_t sz, const drwav_allocation_callbacks* pAllocationCallbacks)
+DRWAV_PRIVATE void* drwav__malloc_from_callbacks(size_t sz, const drwav_allocation_callbacks* pAllocationCallbacks)
 {
     if (pAllocationCallbacks == NULL) {
         return NULL;
@@ -49569,7 +49710,7 @@ static void* drwav__malloc_from_callbacks(size_t sz, const drwav_allocation_call
     }
     return NULL;
 }
-static void* drwav__realloc_from_callbacks(void* p, size_t szNew, size_t szOld, const drwav_allocation_callbacks* pAllocationCallbacks)
+DRWAV_PRIVATE void* drwav__realloc_from_callbacks(void* p, size_t szNew, size_t szOld, const drwav_allocation_callbacks* pAllocationCallbacks)
 {
     if (pAllocationCallbacks == NULL) {
         return NULL;
@@ -49591,7 +49732,7 @@ static void* drwav__realloc_from_callbacks(void* p, size_t szNew, size_t szOld, 
     }
     return NULL;
 }
-static void drwav__free_from_callbacks(void* p, const drwav_allocation_callbacks* pAllocationCallbacks)
+DRWAV_PRIVATE void drwav__free_from_callbacks(void* p, const drwav_allocation_callbacks* pAllocationCallbacks)
 {
     if (p == NULL || pAllocationCallbacks == NULL) {
         return;
@@ -49600,7 +49741,7 @@ static void drwav__free_from_callbacks(void* p, const drwav_allocation_callbacks
         pAllocationCallbacks->onFree(p, pAllocationCallbacks->pUserData);
     }
 }
-static drwav_allocation_callbacks drwav_copy_allocation_callbacks_or_defaults(const drwav_allocation_callbacks* pAllocationCallbacks)
+DRWAV_PRIVATE drwav_allocation_callbacks drwav_copy_allocation_callbacks_or_defaults(const drwav_allocation_callbacks* pAllocationCallbacks)
 {
     if (pAllocationCallbacks != NULL) {
         return *pAllocationCallbacks;
@@ -49619,18 +49760,18 @@ static DRWAV_INLINE drwav_bool32 drwav__is_compressed_format_tag(drwav_uint16 fo
         formatTag == DR_WAVE_FORMAT_ADPCM ||
         formatTag == DR_WAVE_FORMAT_DVI_ADPCM;
 }
-static unsigned int drwav__chunk_padding_size_riff(drwav_uint64 chunkSize)
+DRWAV_PRIVATE unsigned int drwav__chunk_padding_size_riff(drwav_uint64 chunkSize)
 {
     return (unsigned int)(chunkSize % 2);
 }
-static unsigned int drwav__chunk_padding_size_w64(drwav_uint64 chunkSize)
+DRWAV_PRIVATE unsigned int drwav__chunk_padding_size_w64(drwav_uint64 chunkSize)
 {
     return (unsigned int)(chunkSize % 8);
 }
-static drwav_uint64 drwav_read_pcm_frames_s16__msadpcm(drwav* pWav, drwav_uint64 samplesToRead, drwav_int16* pBufferOut);
-static drwav_uint64 drwav_read_pcm_frames_s16__ima(drwav* pWav, drwav_uint64 samplesToRead, drwav_int16* pBufferOut);
-static drwav_bool32 drwav_init_write__internal(drwav* pWav, const drwav_data_format* pFormat, drwav_uint64 totalSampleCount);
-static drwav_result drwav__read_chunk_header(drwav_read_proc onRead, void* pUserData, drwav_container container, drwav_uint64* pRunningBytesReadOut, drwav_chunk_header* pHeaderOut)
+DRWAV_PRIVATE drwav_uint64 drwav_read_pcm_frames_s16__msadpcm(drwav* pWav, drwav_uint64 samplesToRead, drwav_int16* pBufferOut);
+DRWAV_PRIVATE drwav_uint64 drwav_read_pcm_frames_s16__ima(drwav* pWav, drwav_uint64 samplesToRead, drwav_int16* pBufferOut);
+DRWAV_PRIVATE drwav_bool32 drwav_init_write__internal(drwav* pWav, const drwav_data_format* pFormat, drwav_uint64 totalSampleCount);
+DRWAV_PRIVATE drwav_result drwav__read_chunk_header(drwav_read_proc onRead, void* pUserData, drwav_container container, drwav_uint64* pRunningBytesReadOut, drwav_chunk_header* pHeaderOut)
 {
     if (container == drwav_container_riff || container == drwav_container_rf64) {
         drwav_uint8 sizeInBytes[4];
@@ -49640,7 +49781,7 @@ static drwav_result drwav__read_chunk_header(drwav_read_proc onRead, void* pUser
         if (onRead(pUserData, sizeInBytes, 4) != 4) {
             return DRWAV_INVALID_FILE;
         }
-        pHeaderOut->sizeInBytes = drwav__bytes_to_u32(sizeInBytes);
+        pHeaderOut->sizeInBytes = drwav_bytes_to_u32(sizeInBytes);
         pHeaderOut->paddingSize = drwav__chunk_padding_size_riff(pHeaderOut->sizeInBytes);
         *pRunningBytesReadOut += 8;
     } else {
@@ -49651,13 +49792,13 @@ static drwav_result drwav__read_chunk_header(drwav_read_proc onRead, void* pUser
         if (onRead(pUserData, sizeInBytes, 8) != 8) {
             return DRWAV_INVALID_FILE;
         }
-        pHeaderOut->sizeInBytes = drwav__bytes_to_u64(sizeInBytes) - 24;
+        pHeaderOut->sizeInBytes = drwav_bytes_to_u64(sizeInBytes) - 24;
         pHeaderOut->paddingSize = drwav__chunk_padding_size_w64(pHeaderOut->sizeInBytes);
         *pRunningBytesReadOut += 24;
     }
     return DRWAV_SUCCESS;
 }
-static drwav_bool32 drwav__seek_forward(drwav_seek_proc onSeek, drwav_uint64 offset, void* pUserData)
+DRWAV_PRIVATE drwav_bool32 drwav__seek_forward(drwav_seek_proc onSeek, drwav_uint64 offset, void* pUserData)
 {
     drwav_uint64 bytesRemainingToSeek = offset;
     while (bytesRemainingToSeek > 0) {
@@ -49675,7 +49816,7 @@ static drwav_bool32 drwav__seek_forward(drwav_seek_proc onSeek, drwav_uint64 off
     }
     return DRWAV_TRUE;
 }
-static drwav_bool32 drwav__seek_from_start(drwav_seek_proc onSeek, drwav_uint64 offset, void* pUserData)
+DRWAV_PRIVATE drwav_bool32 drwav__seek_from_start(drwav_seek_proc onSeek, drwav_uint64 offset, void* pUserData)
 {
     if (offset <= 0x7FFFFFFF) {
         return onSeek(pUserData, (int)offset, drwav_seek_origin_start);
@@ -49694,14 +49835,14 @@ static drwav_bool32 drwav__seek_from_start(drwav_seek_proc onSeek, drwav_uint64 
         offset -= 0x7FFFFFFF;
     }
 }
-static drwav_bool32 drwav__read_fmt(drwav_read_proc onRead, drwav_seek_proc onSeek, void* pUserData, drwav_container container, drwav_uint64* pRunningBytesReadOut, drwav_fmt* fmtOut)
+DRWAV_PRIVATE drwav_bool32 drwav__read_fmt(drwav_read_proc onRead, drwav_seek_proc onSeek, void* pUserData, drwav_container container, drwav_uint64* pRunningBytesReadOut, drwav_fmt* fmtOut)
 {
     drwav_chunk_header header;
     drwav_uint8 fmt[16];
     if (drwav__read_chunk_header(onRead, pUserData, container, pRunningBytesReadOut, &header) != DRWAV_SUCCESS) {
         return DRWAV_FALSE;
     }
-    while (((container == drwav_container_riff || container == drwav_container_rf64) && !drwav__fourcc_equal(header.id.fourcc, "fmt ")) || (container == drwav_container_w64 && !drwav__guid_equal(header.id.guid, drwavGUID_W64_FMT))) {
+    while (((container == drwav_container_riff || container == drwav_container_rf64) && !drwav_fourcc_equal(header.id.fourcc, "fmt ")) || (container == drwav_container_w64 && !drwav_guid_equal(header.id.guid, drwavGUID_W64_FMT))) {
         if (!drwav__seek_forward(onSeek, header.sizeInBytes + header.paddingSize, pUserData)) {
             return DRWAV_FALSE;
         }
@@ -49711,11 +49852,11 @@ static drwav_bool32 drwav__read_fmt(drwav_read_proc onRead, drwav_seek_proc onSe
         }
     }
     if (container == drwav_container_riff || container == drwav_container_rf64) {
-        if (!drwav__fourcc_equal(header.id.fourcc, "fmt ")) {
+        if (!drwav_fourcc_equal(header.id.fourcc, "fmt ")) {
             return DRWAV_FALSE;
         }
     } else {
-        if (!drwav__guid_equal(header.id.guid, drwavGUID_W64_FMT)) {
+        if (!drwav_guid_equal(header.id.guid, drwavGUID_W64_FMT)) {
             return DRWAV_FALSE;
         }
     }
@@ -49723,12 +49864,12 @@ static drwav_bool32 drwav__read_fmt(drwav_read_proc onRead, drwav_seek_proc onSe
         return DRWAV_FALSE;
     }
     *pRunningBytesReadOut += sizeof(fmt);
-    fmtOut->formatTag      = drwav__bytes_to_u16(fmt + 0);
-    fmtOut->channels       = drwav__bytes_to_u16(fmt + 2);
-    fmtOut->sampleRate     = drwav__bytes_to_u32(fmt + 4);
-    fmtOut->avgBytesPerSec = drwav__bytes_to_u32(fmt + 8);
-    fmtOut->blockAlign     = drwav__bytes_to_u16(fmt + 12);
-    fmtOut->bitsPerSample  = drwav__bytes_to_u16(fmt + 14);
+    fmtOut->formatTag      = drwav_bytes_to_u16(fmt + 0);
+    fmtOut->channels       = drwav_bytes_to_u16(fmt + 2);
+    fmtOut->sampleRate     = drwav_bytes_to_u32(fmt + 4);
+    fmtOut->avgBytesPerSec = drwav_bytes_to_u32(fmt + 8);
+    fmtOut->blockAlign     = drwav_bytes_to_u16(fmt + 12);
+    fmtOut->bitsPerSample  = drwav_bytes_to_u16(fmt + 14);
     fmtOut->extendedSize       = 0;
     fmtOut->validBitsPerSample = 0;
     fmtOut->channelMask        = 0;
@@ -49741,7 +49882,7 @@ static drwav_bool32 drwav__read_fmt(drwav_read_proc onRead, drwav_seek_proc onSe
         }
         *pRunningBytesReadOut += sizeof(fmt_cbSize);
         bytesReadSoFar = 18;
-        fmtOut->extendedSize = drwav__bytes_to_u16(fmt_cbSize);
+        fmtOut->extendedSize = drwav_bytes_to_u16(fmt_cbSize);
         if (fmtOut->extendedSize > 0) {
             if (fmtOut->formatTag == DR_WAVE_FORMAT_EXTENSIBLE) {
                 if (fmtOut->extendedSize != 22) {
@@ -49753,8 +49894,8 @@ static drwav_bool32 drwav__read_fmt(drwav_read_proc onRead, drwav_seek_proc onSe
                 if (onRead(pUserData, fmtext, fmtOut->extendedSize) != fmtOut->extendedSize) {
                     return DRWAV_FALSE;
                 }
-                fmtOut->validBitsPerSample = drwav__bytes_to_u16(fmtext + 0);
-                fmtOut->channelMask        = drwav__bytes_to_u32(fmtext + 2);
+                fmtOut->validBitsPerSample = drwav_bytes_to_u16(fmtext + 0);
+                fmtOut->channelMask        = drwav_bytes_to_u32(fmtext + 2);
                 drwav__bytes_to_guid(fmtext + 6, fmtOut->subFormat);
             } else {
                 if (!onSeek(pUserData, fmtOut->extendedSize, drwav_seek_origin_current)) {
@@ -49777,7 +49918,7 @@ static drwav_bool32 drwav__read_fmt(drwav_read_proc onRead, drwav_seek_proc onSe
     }
     return DRWAV_TRUE;
 }
-static size_t drwav__on_read(drwav_read_proc onRead, void* pUserData, void* pBufferOut, size_t bytesToRead, drwav_uint64* pCursor)
+DRWAV_PRIVATE size_t drwav__on_read(drwav_read_proc onRead, void* pUserData, void* pBufferOut, size_t bytesToRead, drwav_uint64* pCursor)
 {
     size_t bytesRead;
     DRWAV_ASSERT(onRead != NULL);
@@ -49787,7 +49928,7 @@ static size_t drwav__on_read(drwav_read_proc onRead, void* pUserData, void* pBuf
     return bytesRead;
 }
 #if 0
-static drwav_bool32 drwav__on_seek(drwav_seek_proc onSeek, void* pUserData, int offset, drwav_seek_origin origin, drwav_uint64* pCursor)
+DRWAV_PRIVATE drwav_bool32 drwav__on_seek(drwav_seek_proc onSeek, void* pUserData, int offset, drwav_seek_origin origin, drwav_uint64* pCursor)
 {
     DRWAV_ASSERT(onSeek != NULL);
     DRWAV_ASSERT(pCursor != NULL);
@@ -49802,7 +49943,7 @@ static drwav_bool32 drwav__on_seek(drwav_seek_proc onSeek, void* pUserData, int 
     return DRWAV_TRUE;
 }
 #endif
-static drwav_uint32 drwav_get_bytes_per_pcm_frame(drwav* pWav)
+DRWAV_PRIVATE drwav_uint32 drwav_get_bytes_per_pcm_frame(drwav* pWav)
 {
     if ((pWav->bitsPerSample & 0x7) == 0) {
         return (pWav->bitsPerSample * pWav->fmt.channels) >> 3;
@@ -49818,10 +49959,10 @@ DRWAV_API drwav_uint16 drwav_fmt_get_format(const drwav_fmt* pFMT)
     if (pFMT->formatTag != DR_WAVE_FORMAT_EXTENSIBLE) {
         return pFMT->formatTag;
     } else {
-        return drwav__bytes_to_u16(pFMT->subFormat);
+        return drwav_bytes_to_u16(pFMT->subFormat);
     }
 }
-static drwav_bool32 drwav_preinit(drwav* pWav, drwav_read_proc onRead, drwav_seek_proc onSeek, void* pReadSeekUserData, const drwav_allocation_callbacks* pAllocationCallbacks)
+DRWAV_PRIVATE drwav_bool32 drwav_preinit(drwav* pWav, drwav_read_proc onRead, drwav_seek_proc onSeek, void* pReadSeekUserData, const drwav_allocation_callbacks* pAllocationCallbacks)
 {
     if (pWav == NULL || onRead == NULL || onSeek == NULL) {
         return DRWAV_FALSE;
@@ -49836,7 +49977,7 @@ static drwav_bool32 drwav_preinit(drwav* pWav, drwav_read_proc onRead, drwav_see
     }
     return DRWAV_TRUE;
 }
-static drwav_bool32 drwav_init__internal(drwav* pWav, drwav_chunk_proc onChunk, void* pChunkUserData, drwav_uint32 flags)
+DRWAV_PRIVATE drwav_bool32 drwav_init__internal(drwav* pWav, drwav_chunk_proc onChunk, void* pChunkUserData, drwav_uint32 flags)
 {
     drwav_uint64 cursor;
     drwav_bool32 sequential;
@@ -49852,9 +49993,9 @@ static drwav_bool32 drwav_init__internal(drwav* pWav, drwav_chunk_proc onChunk, 
     if (drwav__on_read(pWav->onRead, pWav->pUserData, riff, sizeof(riff), &cursor) != sizeof(riff)) {
         return DRWAV_FALSE;
     }
-    if (drwav__fourcc_equal(riff, "RIFF")) {
+    if (drwav_fourcc_equal(riff, "RIFF")) {
         pWav->container = drwav_container_riff;
-    } else if (drwav__fourcc_equal(riff, "riff")) {
+    } else if (drwav_fourcc_equal(riff, "riff")) {
         int i;
         drwav_uint8 riff2[12];
         pWav->container = drwav_container_w64;
@@ -49866,7 +50007,7 @@ static drwav_bool32 drwav_init__internal(drwav* pWav, drwav_chunk_proc onChunk, 
                 return DRWAV_FALSE;
             }
         }
-    } else if (drwav__fourcc_equal(riff, "RF64")) {
+    } else if (drwav_fourcc_equal(riff, "RF64")) {
         pWav->container = drwav_container_rf64;
     } else {
         return DRWAV_FALSE;
@@ -49878,18 +50019,18 @@ static drwav_bool32 drwav_init__internal(drwav* pWav, drwav_chunk_proc onChunk, 
             return DRWAV_FALSE;
         }
         if (pWav->container == drwav_container_riff) {
-            if (drwav__bytes_to_u32(chunkSizeBytes) < 36) {
+            if (drwav_bytes_to_u32(chunkSizeBytes) < 36) {
                 return DRWAV_FALSE;
             }
         } else {
-            if (drwav__bytes_to_u32(chunkSizeBytes) != 0xFFFFFFFF) {
+            if (drwav_bytes_to_u32(chunkSizeBytes) != 0xFFFFFFFF) {
                 return DRWAV_FALSE;
             }
         }
         if (drwav__on_read(pWav->onRead, pWav->pUserData, wave, sizeof(wave), &cursor) != sizeof(wave)) {
             return DRWAV_FALSE;
         }
-        if (!drwav__fourcc_equal(wave, "WAVE")) {
+        if (!drwav_fourcc_equal(wave, "WAVE")) {
             return DRWAV_FALSE;
         }
     } else {
@@ -49898,13 +50039,13 @@ static drwav_bool32 drwav_init__internal(drwav* pWav, drwav_chunk_proc onChunk, 
         if (drwav__on_read(pWav->onRead, pWav->pUserData, chunkSizeBytes, sizeof(chunkSizeBytes), &cursor) != sizeof(chunkSizeBytes)) {
             return DRWAV_FALSE;
         }
-        if (drwav__bytes_to_u64(chunkSizeBytes) < 80) {
+        if (drwav_bytes_to_u64(chunkSizeBytes) < 80) {
             return DRWAV_FALSE;
         }
         if (drwav__on_read(pWav->onRead, pWav->pUserData, wave, sizeof(wave), &cursor) != sizeof(wave)) {
             return DRWAV_FALSE;
         }
-        if (!drwav__guid_equal(wave, drwavGUID_W64_WAVE)) {
+        if (!drwav_guid_equal(wave, drwavGUID_W64_WAVE)) {
             return DRWAV_FALSE;
         }
     }
@@ -49916,7 +50057,7 @@ static drwav_bool32 drwav_init__internal(drwav* pWav, drwav_chunk_proc onChunk, 
         if (result != DRWAV_SUCCESS) {
             return DRWAV_FALSE;
         }
-        if (!drwav__fourcc_equal(header.id.fourcc, "ds64")) {
+        if (!drwav_fourcc_equal(header.id.fourcc, "ds64")) {
             return DRWAV_FALSE;
         }
         bytesRemainingInChunk = header.sizeInBytes + header.paddingSize;
@@ -49929,12 +50070,12 @@ static drwav_bool32 drwav_init__internal(drwav* pWav, drwav_chunk_proc onChunk, 
             return DRWAV_FALSE;
         }
         bytesRemainingInChunk -= 8;
-        dataChunkSize = drwav__bytes_to_u64(sizeBytes);
+        dataChunkSize = drwav_bytes_to_u64(sizeBytes);
         if (drwav__on_read(pWav->onRead, pWav->pUserData, sizeBytes, sizeof(sizeBytes), &cursor) != sizeof(sizeBytes)) {
             return DRWAV_FALSE;
         }
         bytesRemainingInChunk -= 8;
-        sampleCountFromFactChunk = drwav__bytes_to_u64(sizeBytes);
+        sampleCountFromFactChunk = drwav_bytes_to_u64(sizeBytes);
         if (!drwav__seek_forward(pWav->onSeek, bytesRemainingInChunk, pWav->pUserData)) {
             return DRWAV_FALSE;
         }
@@ -49951,7 +50092,7 @@ static drwav_bool32 drwav_init__internal(drwav* pWav, drwav_chunk_proc onChunk, 
     }
     translatedFormatTag = fmt.formatTag;
     if (translatedFormatTag == DR_WAVE_FORMAT_EXTENSIBLE) {
-        translatedFormatTag = drwav__bytes_to_u16(fmt.subFormat + 0);
+        translatedFormatTag = drwav_bytes_to_u16(fmt.subFormat + 0);
     }
     foundDataChunk = DRWAV_FALSE;
     for (;;)
@@ -49978,14 +50119,14 @@ static drwav_bool32 drwav_init__internal(drwav* pWav, drwav_chunk_proc onChunk, 
         }
         chunkSize = header.sizeInBytes;
         if (pWav->container == drwav_container_riff || pWav->container == drwav_container_rf64) {
-            if (drwav__fourcc_equal(header.id.fourcc, "data")) {
+            if (drwav_fourcc_equal(header.id.fourcc, "data")) {
                 foundDataChunk = DRWAV_TRUE;
                 if (pWav->container != drwav_container_rf64) {
                     dataChunkSize = chunkSize;
                 }
             }
         } else {
-            if (drwav__guid_equal(header.id.guid, drwavGUID_W64_DATA)) {
+            if (drwav_guid_equal(header.id.guid, drwavGUID_W64_DATA)) {
                 foundDataChunk = DRWAV_TRUE;
                 dataChunkSize = chunkSize;
             }
@@ -49994,7 +50135,7 @@ static drwav_bool32 drwav_init__internal(drwav* pWav, drwav_chunk_proc onChunk, 
             break;
         }
         if (pWav->container == drwav_container_riff) {
-            if (drwav__fourcc_equal(header.id.fourcc, "fact")) {
+            if (drwav_fourcc_equal(header.id.fourcc, "fact")) {
                 drwav_uint32 sampleCount;
                 if (drwav__on_read(pWav->onRead, pWav->pUserData, &sampleCount, 4, &cursor) != 4) {
                     return DRWAV_FALSE;
@@ -50010,7 +50151,7 @@ static drwav_bool32 drwav_init__internal(drwav* pWav, drwav_chunk_proc onChunk, 
                 }
             }
         } else if (pWav->container == drwav_container_w64) {
-            if (drwav__guid_equal(header.id.guid, drwavGUID_W64_FACT)) {
+            if (drwav_guid_equal(header.id.guid, drwavGUID_W64_FACT)) {
                 if (drwav__on_read(pWav->onRead, pWav->pUserData, &sampleCountFromFactChunk, 8, &cursor) != 8) {
                     return DRWAV_FALSE;
                 }
@@ -50022,33 +50163,33 @@ static drwav_bool32 drwav_init__internal(drwav* pWav, drwav_chunk_proc onChunk, 
         } else if (pWav->container == drwav_container_rf64) {
         }
         if (pWav->container == drwav_container_riff || pWav->container == drwav_container_rf64) {
-            if (drwav__fourcc_equal(header.id.fourcc, "smpl")) {
+            if (drwav_fourcc_equal(header.id.fourcc, "smpl")) {
                 drwav_uint8 smplHeaderData[36];
                 if (chunkSize >= sizeof(smplHeaderData)) {
                     drwav_uint64 bytesJustRead = drwav__on_read(pWav->onRead, pWav->pUserData, smplHeaderData, sizeof(smplHeaderData), &cursor);
                     chunkSize -= bytesJustRead;
                     if (bytesJustRead == sizeof(smplHeaderData)) {
                         drwav_uint32 iLoop;
-                        pWav->smpl.manufacturer      = drwav__bytes_to_u32(smplHeaderData+0);
-                        pWav->smpl.product           = drwav__bytes_to_u32(smplHeaderData+4);
-                        pWav->smpl.samplePeriod      = drwav__bytes_to_u32(smplHeaderData+8);
-                        pWav->smpl.midiUnityNotes    = drwav__bytes_to_u32(smplHeaderData+12);
-                        pWav->smpl.midiPitchFraction = drwav__bytes_to_u32(smplHeaderData+16);
-                        pWav->smpl.smpteFormat       = drwav__bytes_to_u32(smplHeaderData+20);
-                        pWav->smpl.smpteOffset       = drwav__bytes_to_u32(smplHeaderData+24);
-                        pWav->smpl.numSampleLoops    = drwav__bytes_to_u32(smplHeaderData+28);
-                        pWav->smpl.samplerData       = drwav__bytes_to_u32(smplHeaderData+32);
+                        pWav->smpl.manufacturer      = drwav_bytes_to_u32(smplHeaderData+0);
+                        pWav->smpl.product           = drwav_bytes_to_u32(smplHeaderData+4);
+                        pWav->smpl.samplePeriod      = drwav_bytes_to_u32(smplHeaderData+8);
+                        pWav->smpl.midiUnityNotes    = drwav_bytes_to_u32(smplHeaderData+12);
+                        pWav->smpl.midiPitchFraction = drwav_bytes_to_u32(smplHeaderData+16);
+                        pWav->smpl.smpteFormat       = drwav_bytes_to_u32(smplHeaderData+20);
+                        pWav->smpl.smpteOffset       = drwav_bytes_to_u32(smplHeaderData+24);
+                        pWav->smpl.numSampleLoops    = drwav_bytes_to_u32(smplHeaderData+28);
+                        pWav->smpl.samplerData       = drwav_bytes_to_u32(smplHeaderData+32);
                         for (iLoop = 0; iLoop < pWav->smpl.numSampleLoops && iLoop < drwav_countof(pWav->smpl.loops); ++iLoop) {
                             drwav_uint8 smplLoopData[24];
                             bytesJustRead = drwav__on_read(pWav->onRead, pWav->pUserData, smplLoopData, sizeof(smplLoopData), &cursor);
                             chunkSize -= bytesJustRead;
                             if (bytesJustRead == sizeof(smplLoopData)) {
-                                pWav->smpl.loops[iLoop].cuePointId = drwav__bytes_to_u32(smplLoopData+0);
-                                pWav->smpl.loops[iLoop].type       = drwav__bytes_to_u32(smplLoopData+4);
-                                pWav->smpl.loops[iLoop].start      = drwav__bytes_to_u32(smplLoopData+8);
-                                pWav->smpl.loops[iLoop].end        = drwav__bytes_to_u32(smplLoopData+12);
-                                pWav->smpl.loops[iLoop].fraction   = drwav__bytes_to_u32(smplLoopData+16);
-                                pWav->smpl.loops[iLoop].playCount  = drwav__bytes_to_u32(smplLoopData+20);
+                                pWav->smpl.loops[iLoop].cuePointId = drwav_bytes_to_u32(smplLoopData+0);
+                                pWav->smpl.loops[iLoop].type       = drwav_bytes_to_u32(smplLoopData+4);
+                                pWav->smpl.loops[iLoop].start      = drwav_bytes_to_u32(smplLoopData+8);
+                                pWav->smpl.loops[iLoop].end        = drwav_bytes_to_u32(smplLoopData+12);
+                                pWav->smpl.loops[iLoop].fraction   = drwav_bytes_to_u32(smplLoopData+16);
+                                pWav->smpl.loops[iLoop].playCount  = drwav_bytes_to_u32(smplLoopData+20);
                             } else {
                                 break;
                             }
@@ -50058,7 +50199,7 @@ static drwav_bool32 drwav_init__internal(drwav* pWav, drwav_chunk_proc onChunk, 
                 }
             }
         } else {
-            if (drwav__guid_equal(header.id.guid, drwavGUID_W64_SMPL)) {
+            if (drwav_guid_equal(header.id.guid, drwavGUID_W64_SMPL)) {
             }
         }
         chunkSize += header.paddingSize;
@@ -50138,7 +50279,7 @@ DRWAV_API drwav_bool32 drwav_init_ex(drwav* pWav, drwav_read_proc onRead, drwav_
     }
     return drwav_init__internal(pWav, onChunk, pChunkUserData, flags);
 }
-static drwav_uint32 drwav__riff_chunk_size_riff(drwav_uint64 dataChunkSize)
+DRWAV_PRIVATE drwav_uint32 drwav__riff_chunk_size_riff(drwav_uint64 dataChunkSize)
 {
     drwav_uint64 chunkSize = 4 + 24 + dataChunkSize + drwav__chunk_padding_size_riff(dataChunkSize);
     if (chunkSize > 0xFFFFFFFFUL) {
@@ -50146,7 +50287,7 @@ static drwav_uint32 drwav__riff_chunk_size_riff(drwav_uint64 dataChunkSize)
     }
     return (drwav_uint32)chunkSize;
 }
-static drwav_uint32 drwav__data_chunk_size_riff(drwav_uint64 dataChunkSize)
+DRWAV_PRIVATE drwav_uint32 drwav__data_chunk_size_riff(drwav_uint64 dataChunkSize)
 {
     if (dataChunkSize <= 0xFFFFFFFFUL) {
         return (drwav_uint32)dataChunkSize;
@@ -50154,16 +50295,16 @@ static drwav_uint32 drwav__data_chunk_size_riff(drwav_uint64 dataChunkSize)
         return 0xFFFFFFFFUL;
     }
 }
-static drwav_uint64 drwav__riff_chunk_size_w64(drwav_uint64 dataChunkSize)
+DRWAV_PRIVATE drwav_uint64 drwav__riff_chunk_size_w64(drwav_uint64 dataChunkSize)
 {
     drwav_uint64 dataSubchunkPaddingSize = drwav__chunk_padding_size_w64(dataChunkSize);
     return 80 + 24 + dataChunkSize + dataSubchunkPaddingSize;
 }
-static drwav_uint64 drwav__data_chunk_size_w64(drwav_uint64 dataChunkSize)
+DRWAV_PRIVATE drwav_uint64 drwav__data_chunk_size_w64(drwav_uint64 dataChunkSize)
 {
     return 24 + dataChunkSize;
 }
-static drwav_uint64 drwav__riff_chunk_size_rf64(drwav_uint64 dataChunkSize)
+DRWAV_PRIVATE drwav_uint64 drwav__riff_chunk_size_rf64(drwav_uint64 dataChunkSize)
 {
     drwav_uint64 chunkSize = 4 + 36 + 24 + dataChunkSize + drwav__chunk_padding_size_riff(dataChunkSize);
     if (chunkSize > 0xFFFFFFFFUL) {
@@ -50171,17 +50312,17 @@ static drwav_uint64 drwav__riff_chunk_size_rf64(drwav_uint64 dataChunkSize)
     }
     return chunkSize;
 }
-static drwav_uint64 drwav__data_chunk_size_rf64(drwav_uint64 dataChunkSize)
+DRWAV_PRIVATE drwav_uint64 drwav__data_chunk_size_rf64(drwav_uint64 dataChunkSize)
 {
     return dataChunkSize;
 }
-static size_t drwav__write(drwav* pWav, const void* pData, size_t dataSize)
+DRWAV_PRIVATE size_t drwav__write(drwav* pWav, const void* pData, size_t dataSize)
 {
     DRWAV_ASSERT(pWav          != NULL);
     DRWAV_ASSERT(pWav->onWrite != NULL);
     return pWav->onWrite(pWav->pUserData, pData, dataSize);
 }
-static size_t drwav__write_u16ne_to_le(drwav* pWav, drwav_uint16 value)
+DRWAV_PRIVATE size_t drwav__write_u16ne_to_le(drwav* pWav, drwav_uint16 value)
 {
     DRWAV_ASSERT(pWav          != NULL);
     DRWAV_ASSERT(pWav->onWrite != NULL);
@@ -50190,7 +50331,7 @@ static size_t drwav__write_u16ne_to_le(drwav* pWav, drwav_uint16 value)
     }
     return drwav__write(pWav, &value, 2);
 }
-static size_t drwav__write_u32ne_to_le(drwav* pWav, drwav_uint32 value)
+DRWAV_PRIVATE size_t drwav__write_u32ne_to_le(drwav* pWav, drwav_uint32 value)
 {
     DRWAV_ASSERT(pWav          != NULL);
     DRWAV_ASSERT(pWav->onWrite != NULL);
@@ -50199,7 +50340,7 @@ static size_t drwav__write_u32ne_to_le(drwav* pWav, drwav_uint32 value)
     }
     return drwav__write(pWav, &value, 4);
 }
-static size_t drwav__write_u64ne_to_le(drwav* pWav, drwav_uint64 value)
+DRWAV_PRIVATE size_t drwav__write_u64ne_to_le(drwav* pWav, drwav_uint64 value)
 {
     DRWAV_ASSERT(pWav          != NULL);
     DRWAV_ASSERT(pWav->onWrite != NULL);
@@ -50208,7 +50349,7 @@ static size_t drwav__write_u64ne_to_le(drwav* pWav, drwav_uint64 value)
     }
     return drwav__write(pWav, &value, 8);
 }
-static drwav_bool32 drwav_preinit_write(drwav* pWav, const drwav_data_format* pFormat, drwav_bool32 isSequential, drwav_write_proc onWrite, drwav_seek_proc onSeek, void* pUserData, const drwav_allocation_callbacks* pAllocationCallbacks)
+DRWAV_PRIVATE drwav_bool32 drwav_preinit_write(drwav* pWav, const drwav_data_format* pFormat, drwav_bool32 isSequential, drwav_write_proc onWrite, drwav_seek_proc onSeek, void* pUserData, const drwav_allocation_callbacks* pAllocationCallbacks)
 {
     if (pWav == NULL || onWrite == NULL) {
         return DRWAV_FALSE;
@@ -50240,7 +50381,7 @@ static drwav_bool32 drwav_preinit_write(drwav* pWav, const drwav_data_format* pF
     pWav->isSequentialWrite = isSequential;
     return DRWAV_TRUE;
 }
-static drwav_bool32 drwav_init_write__internal(drwav* pWav, const drwav_data_format* pFormat, drwav_uint64 totalSampleCount)
+DRWAV_PRIVATE drwav_bool32 drwav_init_write__internal(drwav* pWav, const drwav_data_format* pFormat, drwav_uint64 totalSampleCount)
 {
     size_t runningPos = 0;
     drwav_uint64 initialDataChunkSize = 0;
@@ -50355,7 +50496,7 @@ DRWAV_API drwav_uint64 drwav_target_write_size_bytes(const drwav_data_format* pF
 }
 #ifndef DR_WAV_NO_STDIO
 #include <errno.h>
-static drwav_result drwav_result_from_errno(int e)
+DRWAV_PRIVATE drwav_result drwav_result_from_errno(int e)
 {
     switch (e)
     {
@@ -50756,7 +50897,7 @@ static drwav_result drwav_result_from_errno(int e)
         default: return DRWAV_ERROR;
     }
 }
-static drwav_result drwav_fopen(FILE** ppFile, const char* pFilePath, const char* pOpenMode)
+DRWAV_PRIVATE drwav_result drwav_fopen(FILE** ppFile, const char* pFilePath, const char* pOpenMode)
 {
 #if _MSC_VER && _MSC_VER >= 1400
     errno_t err;
@@ -50797,7 +50938,7 @@ static drwav_result drwav_fopen(FILE** ppFile, const char* pFilePath, const char
         #define DRWAV_HAS_WFOPEN
     #endif
 #endif
-static drwav_result drwav_wfopen(FILE** ppFile, const wchar_t* pFilePath, const wchar_t* pOpenMode, const drwav_allocation_callbacks* pAllocationCallbacks)
+DRWAV_PRIVATE drwav_result drwav_wfopen(FILE** ppFile, const wchar_t* pFilePath, const wchar_t* pOpenMode, const drwav_allocation_callbacks* pAllocationCallbacks)
 {
     if (ppFile != NULL) {
         *ppFile = NULL;
@@ -50859,15 +51000,15 @@ static drwav_result drwav_wfopen(FILE** ppFile, const wchar_t* pFilePath, const 
 #endif
     return DRWAV_SUCCESS;
 }
-static size_t drwav__on_read_stdio(void* pUserData, void* pBufferOut, size_t bytesToRead)
+DRWAV_PRIVATE size_t drwav__on_read_stdio(void* pUserData, void* pBufferOut, size_t bytesToRead)
 {
     return fread(pBufferOut, 1, bytesToRead, (FILE*)pUserData);
 }
-static size_t drwav__on_write_stdio(void* pUserData, const void* pData, size_t bytesToWrite)
+DRWAV_PRIVATE size_t drwav__on_write_stdio(void* pUserData, const void* pData, size_t bytesToWrite)
 {
     return fwrite(pData, 1, bytesToWrite, (FILE*)pUserData);
 }
-static drwav_bool32 drwav__on_seek_stdio(void* pUserData, int offset, drwav_seek_origin origin)
+DRWAV_PRIVATE drwav_bool32 drwav__on_seek_stdio(void* pUserData, int offset, drwav_seek_origin origin)
 {
     return fseek((FILE*)pUserData, offset, (origin == drwav_seek_origin_current) ? SEEK_CUR : SEEK_SET) == 0;
 }
@@ -50875,7 +51016,7 @@ DRWAV_API drwav_bool32 drwav_init_file(drwav* pWav, const char* filename, const 
 {
     return drwav_init_file_ex(pWav, filename, NULL, NULL, 0, pAllocationCallbacks);
 }
-static drwav_bool32 drwav_init_file__internal_FILE(drwav* pWav, FILE* pFile, drwav_chunk_proc onChunk, void* pChunkUserData, drwav_uint32 flags, const drwav_allocation_callbacks* pAllocationCallbacks)
+DRWAV_PRIVATE drwav_bool32 drwav_init_file__internal_FILE(drwav* pWav, FILE* pFile, drwav_chunk_proc onChunk, void* pChunkUserData, drwav_uint32 flags, const drwav_allocation_callbacks* pAllocationCallbacks)
 {
     drwav_bool32 result;
     result = drwav_preinit(pWav, drwav__on_read_stdio, drwav__on_seek_stdio, (void*)pFile, pAllocationCallbacks);
@@ -50910,7 +51051,7 @@ DRWAV_API drwav_bool32 drwav_init_file_ex_w(drwav* pWav, const wchar_t* filename
     }
     return drwav_init_file__internal_FILE(pWav, pFile, onChunk, pChunkUserData, flags, pAllocationCallbacks);
 }
-static drwav_bool32 drwav_init_file_write__internal_FILE(drwav* pWav, FILE* pFile, const drwav_data_format* pFormat, drwav_uint64 totalSampleCount, drwav_bool32 isSequential, const drwav_allocation_callbacks* pAllocationCallbacks)
+DRWAV_PRIVATE drwav_bool32 drwav_init_file_write__internal_FILE(drwav* pWav, FILE* pFile, const drwav_data_format* pFormat, drwav_uint64 totalSampleCount, drwav_bool32 isSequential, const drwav_allocation_callbacks* pAllocationCallbacks)
 {
     drwav_bool32 result;
     result = drwav_preinit_write(pWav, pFormat, isSequential, drwav__on_write_stdio, drwav__on_seek_stdio, (void*)pFile, pAllocationCallbacks);
@@ -50925,7 +51066,7 @@ static drwav_bool32 drwav_init_file_write__internal_FILE(drwav* pWav, FILE* pFil
     }
     return DRWAV_TRUE;
 }
-static drwav_bool32 drwav_init_file_write__internal(drwav* pWav, const char* filename, const drwav_data_format* pFormat, drwav_uint64 totalSampleCount, drwav_bool32 isSequential, const drwav_allocation_callbacks* pAllocationCallbacks)
+DRWAV_PRIVATE drwav_bool32 drwav_init_file_write__internal(drwav* pWav, const char* filename, const drwav_data_format* pFormat, drwav_uint64 totalSampleCount, drwav_bool32 isSequential, const drwav_allocation_callbacks* pAllocationCallbacks)
 {
     FILE* pFile;
     if (drwav_fopen(&pFile, filename, "wb") != DRWAV_SUCCESS) {
@@ -50933,7 +51074,7 @@ static drwav_bool32 drwav_init_file_write__internal(drwav* pWav, const char* fil
     }
     return drwav_init_file_write__internal_FILE(pWav, pFile, pFormat, totalSampleCount, isSequential, pAllocationCallbacks);
 }
-static drwav_bool32 drwav_init_file_write_w__internal(drwav* pWav, const wchar_t* filename, const drwav_data_format* pFormat, drwav_uint64 totalSampleCount, drwav_bool32 isSequential, const drwav_allocation_callbacks* pAllocationCallbacks)
+DRWAV_PRIVATE drwav_bool32 drwav_init_file_write_w__internal(drwav* pWav, const wchar_t* filename, const drwav_data_format* pFormat, drwav_uint64 totalSampleCount, drwav_bool32 isSequential, const drwav_allocation_callbacks* pAllocationCallbacks)
 {
     FILE* pFile;
     if (drwav_wfopen(&pFile, filename, L"wb", pAllocationCallbacks) != DRWAV_SUCCESS) {
@@ -50972,7 +51113,7 @@ DRWAV_API drwav_bool32 drwav_init_file_write_sequential_pcm_frames_w(drwav* pWav
     return drwav_init_file_write_sequential_w(pWav, filename, pFormat, totalPCMFrameCount*pFormat->channels, pAllocationCallbacks);
 }
 #endif
-static size_t drwav__on_read_memory(void* pUserData, void* pBufferOut, size_t bytesToRead)
+DRWAV_PRIVATE size_t drwav__on_read_memory(void* pUserData, void* pBufferOut, size_t bytesToRead)
 {
     drwav* pWav = (drwav*)pUserData;
     size_t bytesRemaining;
@@ -50988,7 +51129,7 @@ static size_t drwav__on_read_memory(void* pUserData, void* pBufferOut, size_t by
     }
     return bytesToRead;
 }
-static drwav_bool32 drwav__on_seek_memory(void* pUserData, int offset, drwav_seek_origin origin)
+DRWAV_PRIVATE drwav_bool32 drwav__on_seek_memory(void* pUserData, int offset, drwav_seek_origin origin)
 {
     drwav* pWav = (drwav*)pUserData;
     DRWAV_ASSERT(pWav != NULL);
@@ -51012,7 +51153,7 @@ static drwav_bool32 drwav__on_seek_memory(void* pUserData, int offset, drwav_see
     }
     return DRWAV_TRUE;
 }
-static size_t drwav__on_write_memory(void* pUserData, const void* pDataIn, size_t bytesToWrite)
+DRWAV_PRIVATE size_t drwav__on_write_memory(void* pUserData, const void* pDataIn, size_t bytesToWrite)
 {
     drwav* pWav = (drwav*)pUserData;
     size_t bytesRemaining;
@@ -51040,7 +51181,7 @@ static size_t drwav__on_write_memory(void* pUserData, const void* pDataIn, size_
     *pWav->memoryStreamWrite.pDataSize = pWav->memoryStreamWrite.dataSize;
     return bytesToWrite;
 }
-static drwav_bool32 drwav__on_seek_memory_write(void* pUserData, int offset, drwav_seek_origin origin)
+DRWAV_PRIVATE drwav_bool32 drwav__on_seek_memory_write(void* pUserData, int offset, drwav_seek_origin origin)
 {
     drwav* pWav = (drwav*)pUserData;
     DRWAV_ASSERT(pWav != NULL);
@@ -51081,7 +51222,7 @@ DRWAV_API drwav_bool32 drwav_init_memory_ex(drwav* pWav, const void* data, size_
     pWav->memoryStream.currentReadPos = 0;
     return drwav_init__internal(pWav, onChunk, pChunkUserData, flags);
 }
-static drwav_bool32 drwav_init_memory_write__internal(drwav* pWav, void** ppData, size_t* pDataSize, const drwav_data_format* pFormat, drwav_uint64 totalSampleCount, drwav_bool32 isSequential, const drwav_allocation_callbacks* pAllocationCallbacks)
+DRWAV_PRIVATE drwav_bool32 drwav_init_memory_write__internal(drwav* pWav, void** ppData, size_t* pDataSize, const drwav_data_format* pFormat, drwav_uint64 totalSampleCount, drwav_bool32 isSequential, const drwav_allocation_callbacks* pAllocationCallbacks)
 {
     if (ppData == NULL || pDataSize == NULL) {
         return DRWAV_FALSE;
@@ -51253,7 +51394,7 @@ DRWAV_API drwav_uint64 drwav_read_pcm_frames(drwav* pWav, drwav_uint64 framesToR
         return drwav_read_pcm_frames_be(pWav, framesToRead, pBufferOut);
     }
 }
-DRWAV_API drwav_bool32 drwav_seek_to_first_pcm_frame(drwav* pWav)
+DRWAV_PRIVATE drwav_bool32 drwav_seek_to_first_pcm_frame(drwav* pWav)
 {
     if (pWav->onWrite != NULL) {
         return DRWAV_FALSE;
@@ -51430,7 +51571,7 @@ DRWAV_API drwav_uint64 drwav_write_pcm_frames(drwav* pWav, drwav_uint64 framesTo
         return drwav_write_pcm_frames_be(pWav, framesToWrite, pData);
     }
 }
-static drwav_uint64 drwav_read_pcm_frames_s16__msadpcm(drwav* pWav, drwav_uint64 framesToRead, drwav_int16* pBufferOut)
+DRWAV_PRIVATE drwav_uint64 drwav_read_pcm_frames_s16__msadpcm(drwav* pWav, drwav_uint64 framesToRead, drwav_int16* pBufferOut)
 {
     drwav_uint64 totalFramesRead = 0;
     DRWAV_ASSERT(pWav != NULL);
@@ -51444,9 +51585,9 @@ static drwav_uint64 drwav_read_pcm_frames_s16__msadpcm(drwav* pWav, drwav_uint64
                 }
                 pWav->msadpcm.bytesRemainingInBlock = pWav->fmt.blockAlign - sizeof(header);
                 pWav->msadpcm.predictor[0]     = header[0];
-                pWav->msadpcm.delta[0]         = drwav__bytes_to_s16(header + 1);
-                pWav->msadpcm.prevFrames[0][1] = (drwav_int32)drwav__bytes_to_s16(header + 3);
-                pWav->msadpcm.prevFrames[0][0] = (drwav_int32)drwav__bytes_to_s16(header + 5);
+                pWav->msadpcm.delta[0]         = drwav_bytes_to_s16(header + 1);
+                pWav->msadpcm.prevFrames[0][1] = (drwav_int32)drwav_bytes_to_s16(header + 3);
+                pWav->msadpcm.prevFrames[0][0] = (drwav_int32)drwav_bytes_to_s16(header + 5);
                 pWav->msadpcm.cachedFrames[2]  = pWav->msadpcm.prevFrames[0][0];
                 pWav->msadpcm.cachedFrames[3]  = pWav->msadpcm.prevFrames[0][1];
                 pWav->msadpcm.cachedFrameCount = 2;
@@ -51458,12 +51599,12 @@ static drwav_uint64 drwav_read_pcm_frames_s16__msadpcm(drwav* pWav, drwav_uint64
                 pWav->msadpcm.bytesRemainingInBlock = pWav->fmt.blockAlign - sizeof(header);
                 pWav->msadpcm.predictor[0] = header[0];
                 pWav->msadpcm.predictor[1] = header[1];
-                pWav->msadpcm.delta[0] = drwav__bytes_to_s16(header + 2);
-                pWav->msadpcm.delta[1] = drwav__bytes_to_s16(header + 4);
-                pWav->msadpcm.prevFrames[0][1] = (drwav_int32)drwav__bytes_to_s16(header + 6);
-                pWav->msadpcm.prevFrames[1][1] = (drwav_int32)drwav__bytes_to_s16(header + 8);
-                pWav->msadpcm.prevFrames[0][0] = (drwav_int32)drwav__bytes_to_s16(header + 10);
-                pWav->msadpcm.prevFrames[1][0] = (drwav_int32)drwav__bytes_to_s16(header + 12);
+                pWav->msadpcm.delta[0] = drwav_bytes_to_s16(header + 2);
+                pWav->msadpcm.delta[1] = drwav_bytes_to_s16(header + 4);
+                pWav->msadpcm.prevFrames[0][1] = (drwav_int32)drwav_bytes_to_s16(header + 6);
+                pWav->msadpcm.prevFrames[1][1] = (drwav_int32)drwav_bytes_to_s16(header + 8);
+                pWav->msadpcm.prevFrames[0][0] = (drwav_int32)drwav_bytes_to_s16(header + 10);
+                pWav->msadpcm.prevFrames[1][0] = (drwav_int32)drwav_bytes_to_s16(header + 12);
                 pWav->msadpcm.cachedFrames[0] = pWav->msadpcm.prevFrames[0][0];
                 pWav->msadpcm.cachedFrames[1] = pWav->msadpcm.prevFrames[1][0];
                 pWav->msadpcm.cachedFrames[2] = pWav->msadpcm.prevFrames[0][1];
@@ -51560,7 +51701,7 @@ static drwav_uint64 drwav_read_pcm_frames_s16__msadpcm(drwav* pWav, drwav_uint64
     }
     return totalFramesRead;
 }
-static drwav_uint64 drwav_read_pcm_frames_s16__ima(drwav* pWav, drwav_uint64 framesToRead, drwav_int16* pBufferOut)
+DRWAV_PRIVATE drwav_uint64 drwav_read_pcm_frames_s16__ima(drwav* pWav, drwav_uint64 framesToRead, drwav_int16* pBufferOut)
 {
     drwav_uint64 totalFramesRead = 0;
     drwav_uint32 iChannel;
@@ -51594,7 +51735,7 @@ static drwav_uint64 drwav_read_pcm_frames_s16__ima(drwav* pWav, drwav_uint64 fra
                     pWav->ima.bytesRemainingInBlock = 0;
                     return totalFramesRead;
                 }
-                pWav->ima.predictor[0] = drwav__bytes_to_s16(header + 0);
+                pWav->ima.predictor[0] = drwav_bytes_to_s16(header + 0);
                 pWav->ima.stepIndex[0] = header[2];
                 pWav->ima.cachedFrames[drwav_countof(pWav->ima.cachedFrames) - 1] = pWav->ima.predictor[0];
                 pWav->ima.cachedFrameCount = 1;
@@ -51609,9 +51750,9 @@ static drwav_uint64 drwav_read_pcm_frames_s16__ima(drwav* pWav, drwav_uint64 fra
                     pWav->ima.bytesRemainingInBlock = 0;
                     return totalFramesRead;
                 }
-                pWav->ima.predictor[0] = drwav__bytes_to_s16(header + 0);
+                pWav->ima.predictor[0] = drwav_bytes_to_s16(header + 0);
                 pWav->ima.stepIndex[0] = header[2];
-                pWav->ima.predictor[1] = drwav__bytes_to_s16(header + 4);
+                pWav->ima.predictor[1] = drwav_bytes_to_s16(header + 4);
                 pWav->ima.stepIndex[1] = header[6];
                 pWav->ima.cachedFrames[drwav_countof(pWav->ima.cachedFrames) - 2] = pWav->ima.predictor[0];
                 pWav->ima.cachedFrames[drwav_countof(pWav->ima.cachedFrames) - 1] = pWav->ima.predictor[1];
@@ -51724,7 +51865,7 @@ static DRWAV_INLINE drwav_int16 drwav__mulaw_to_s16(drwav_uint8 sampleIn)
 {
     return (short)g_drwavMulawTable[sampleIn];
 }
-static void drwav__pcm_to_s16(drwav_int16* pOut, const drwav_uint8* pIn, size_t totalSampleCount, unsigned int bytesPerSample)
+DRWAV_PRIVATE void drwav__pcm_to_s16(drwav_int16* pOut, const drwav_uint8* pIn, size_t totalSampleCount, unsigned int bytesPerSample)
 {
     unsigned int i;
     if (bytesPerSample == 1) {
@@ -51762,7 +51903,7 @@ static void drwav__pcm_to_s16(drwav_int16* pOut, const drwav_uint8* pIn, size_t 
         *pOut++ = (drwav_int16)((drwav_int64)sample >> 48);
     }
 }
-static void drwav__ieee_to_s16(drwav_int16* pOut, const drwav_uint8* pIn, size_t totalSampleCount, unsigned int bytesPerSample)
+DRWAV_PRIVATE void drwav__ieee_to_s16(drwav_int16* pOut, const drwav_uint8* pIn, size_t totalSampleCount, unsigned int bytesPerSample)
 {
     if (bytesPerSample == 4) {
         drwav_f32_to_s16(pOut, (const float*)pIn, totalSampleCount);
@@ -51775,11 +51916,11 @@ static void drwav__ieee_to_s16(drwav_int16* pOut, const drwav_uint8* pIn, size_t
         return;
     }
 }
-static drwav_uint64 drwav_read_pcm_frames_s16__pcm(drwav* pWav, drwav_uint64 framesToRead, drwav_int16* pBufferOut)
+DRWAV_PRIVATE drwav_uint64 drwav_read_pcm_frames_s16__pcm(drwav* pWav, drwav_uint64 framesToRead, drwav_int16* pBufferOut)
 {
-    drwav_uint32 bytesPerFrame;
     drwav_uint64 totalFramesRead;
     drwav_uint8 sampleData[4096];
+    drwav_uint32 bytesPerFrame;
     if ((pWav->translatedFormatTag == DR_WAVE_FORMAT_PCM && pWav->bitsPerSample == 16) || pBufferOut == NULL) {
         return drwav_read_pcm_frames(pWav, framesToRead, pBufferOut);
     }
@@ -51800,7 +51941,7 @@ static drwav_uint64 drwav_read_pcm_frames_s16__pcm(drwav* pWav, drwav_uint64 fra
     }
     return totalFramesRead;
 }
-static drwav_uint64 drwav_read_pcm_frames_s16__ieee(drwav* pWav, drwav_uint64 framesToRead, drwav_int16* pBufferOut)
+DRWAV_PRIVATE drwav_uint64 drwav_read_pcm_frames_s16__ieee(drwav* pWav, drwav_uint64 framesToRead, drwav_int16* pBufferOut)
 {
     drwav_uint64 totalFramesRead;
     drwav_uint8 sampleData[4096];
@@ -51825,7 +51966,7 @@ static drwav_uint64 drwav_read_pcm_frames_s16__ieee(drwav* pWav, drwav_uint64 fr
     }
     return totalFramesRead;
 }
-static drwav_uint64 drwav_read_pcm_frames_s16__alaw(drwav* pWav, drwav_uint64 framesToRead, drwav_int16* pBufferOut)
+DRWAV_PRIVATE drwav_uint64 drwav_read_pcm_frames_s16__alaw(drwav* pWav, drwav_uint64 framesToRead, drwav_int16* pBufferOut)
 {
     drwav_uint64 totalFramesRead;
     drwav_uint8 sampleData[4096];
@@ -51850,7 +51991,7 @@ static drwav_uint64 drwav_read_pcm_frames_s16__alaw(drwav* pWav, drwav_uint64 fr
     }
     return totalFramesRead;
 }
-static drwav_uint64 drwav_read_pcm_frames_s16__mulaw(drwav* pWav, drwav_uint64 framesToRead, drwav_int16* pBufferOut)
+DRWAV_PRIVATE drwav_uint64 drwav_read_pcm_frames_s16__mulaw(drwav* pWav, drwav_uint64 framesToRead, drwav_int16* pBufferOut)
 {
     drwav_uint64 totalFramesRead;
     drwav_uint8 sampleData[4096];
@@ -51995,7 +52136,7 @@ DRWAV_API void drwav_mulaw_to_s16(drwav_int16* pOut, const drwav_uint8* pIn, siz
         pOut[i] = drwav__mulaw_to_s16(pIn[i]);
     }
 }
-static void drwav__pcm_to_f32(float* pOut, const drwav_uint8* pIn, size_t sampleCount, unsigned int bytesPerSample)
+DRWAV_PRIVATE void drwav__pcm_to_f32(float* pOut, const drwav_uint8* pIn, size_t sampleCount, unsigned int bytesPerSample)
 {
     unsigned int i;
     if (bytesPerSample == 1) {
@@ -52031,7 +52172,7 @@ static void drwav__pcm_to_f32(float* pOut, const drwav_uint8* pIn, size_t sample
         *pOut++ = (float)((drwav_int64)sample / 9223372036854775807.0);
     }
 }
-static void drwav__ieee_to_f32(float* pOut, const drwav_uint8* pIn, size_t sampleCount, unsigned int bytesPerSample)
+DRWAV_PRIVATE void drwav__ieee_to_f32(float* pOut, const drwav_uint8* pIn, size_t sampleCount, unsigned int bytesPerSample)
 {
     if (bytesPerSample == 4) {
         unsigned int i;
@@ -52047,7 +52188,7 @@ static void drwav__ieee_to_f32(float* pOut, const drwav_uint8* pIn, size_t sampl
         return;
     }
 }
-static drwav_uint64 drwav_read_pcm_frames_f32__pcm(drwav* pWav, drwav_uint64 framesToRead, float* pBufferOut)
+DRWAV_PRIVATE drwav_uint64 drwav_read_pcm_frames_f32__pcm(drwav* pWav, drwav_uint64 framesToRead, float* pBufferOut)
 {
     drwav_uint64 totalFramesRead;
     drwav_uint8 sampleData[4096];
@@ -52068,7 +52209,7 @@ static drwav_uint64 drwav_read_pcm_frames_f32__pcm(drwav* pWav, drwav_uint64 fra
     }
     return totalFramesRead;
 }
-static drwav_uint64 drwav_read_pcm_frames_f32__msadpcm(drwav* pWav, drwav_uint64 framesToRead, float* pBufferOut)
+DRWAV_PRIVATE drwav_uint64 drwav_read_pcm_frames_f32__msadpcm(drwav* pWav, drwav_uint64 framesToRead, float* pBufferOut)
 {
     drwav_uint64 totalFramesRead = 0;
     drwav_int16 samples16[2048];
@@ -52084,7 +52225,7 @@ static drwav_uint64 drwav_read_pcm_frames_f32__msadpcm(drwav* pWav, drwav_uint64
     }
     return totalFramesRead;
 }
-static drwav_uint64 drwav_read_pcm_frames_f32__ima(drwav* pWav, drwav_uint64 framesToRead, float* pBufferOut)
+DRWAV_PRIVATE drwav_uint64 drwav_read_pcm_frames_f32__ima(drwav* pWav, drwav_uint64 framesToRead, float* pBufferOut)
 {
     drwav_uint64 totalFramesRead = 0;
     drwav_int16 samples16[2048];
@@ -52100,7 +52241,7 @@ static drwav_uint64 drwav_read_pcm_frames_f32__ima(drwav* pWav, drwav_uint64 fra
     }
     return totalFramesRead;
 }
-static drwav_uint64 drwav_read_pcm_frames_f32__ieee(drwav* pWav, drwav_uint64 framesToRead, float* pBufferOut)
+DRWAV_PRIVATE drwav_uint64 drwav_read_pcm_frames_f32__ieee(drwav* pWav, drwav_uint64 framesToRead, float* pBufferOut)
 {
     drwav_uint64 totalFramesRead;
     drwav_uint8 sampleData[4096];
@@ -52125,7 +52266,7 @@ static drwav_uint64 drwav_read_pcm_frames_f32__ieee(drwav* pWav, drwav_uint64 fr
     }
     return totalFramesRead;
 }
-static drwav_uint64 drwav_read_pcm_frames_f32__alaw(drwav* pWav, drwav_uint64 framesToRead, float* pBufferOut)
+DRWAV_PRIVATE drwav_uint64 drwav_read_pcm_frames_f32__alaw(drwav* pWav, drwav_uint64 framesToRead, float* pBufferOut)
 {
     drwav_uint64 totalFramesRead;
     drwav_uint8 sampleData[4096];
@@ -52146,7 +52287,7 @@ static drwav_uint64 drwav_read_pcm_frames_f32__alaw(drwav* pWav, drwav_uint64 fr
     }
     return totalFramesRead;
 }
-static drwav_uint64 drwav_read_pcm_frames_f32__mulaw(drwav* pWav, drwav_uint64 framesToRead, float* pBufferOut)
+DRWAV_PRIVATE drwav_uint64 drwav_read_pcm_frames_f32__mulaw(drwav* pWav, drwav_uint64 framesToRead, float* pBufferOut)
 {
     drwav_uint64 totalFramesRead;
     drwav_uint8 sampleData[4096];
@@ -52298,7 +52439,7 @@ DRWAV_API void drwav_mulaw_to_f32(float* pOut, const drwav_uint8* pIn, size_t sa
         *pOut++ = drwav__mulaw_to_s16(pIn[i]) / 32768.0f;
     }
 }
-static void drwav__pcm_to_s32(drwav_int32* pOut, const drwav_uint8* pIn, size_t totalSampleCount, unsigned int bytesPerSample)
+DRWAV_PRIVATE void drwav__pcm_to_s32(drwav_int32* pOut, const drwav_uint8* pIn, size_t totalSampleCount, unsigned int bytesPerSample)
 {
     unsigned int i;
     if (bytesPerSample == 1) {
@@ -52336,7 +52477,7 @@ static void drwav__pcm_to_s32(drwav_int32* pOut, const drwav_uint8* pIn, size_t 
         *pOut++ = (drwav_int32)((drwav_int64)sample >> 32);
     }
 }
-static void drwav__ieee_to_s32(drwav_int32* pOut, const drwav_uint8* pIn, size_t totalSampleCount, unsigned int bytesPerSample)
+DRWAV_PRIVATE void drwav__ieee_to_s32(drwav_int32* pOut, const drwav_uint8* pIn, size_t totalSampleCount, unsigned int bytesPerSample)
 {
     if (bytesPerSample == 4) {
         drwav_f32_to_s32(pOut, (const float*)pIn, totalSampleCount);
@@ -52349,7 +52490,7 @@ static void drwav__ieee_to_s32(drwav_int32* pOut, const drwav_uint8* pIn, size_t
         return;
     }
 }
-static drwav_uint64 drwav_read_pcm_frames_s32__pcm(drwav* pWav, drwav_uint64 framesToRead, drwav_int32* pBufferOut)
+DRWAV_PRIVATE drwav_uint64 drwav_read_pcm_frames_s32__pcm(drwav* pWav, drwav_uint64 framesToRead, drwav_int32* pBufferOut)
 {
     drwav_uint64 totalFramesRead;
     drwav_uint8 sampleData[4096];
@@ -52374,7 +52515,7 @@ static drwav_uint64 drwav_read_pcm_frames_s32__pcm(drwav* pWav, drwav_uint64 fra
     }
     return totalFramesRead;
 }
-static drwav_uint64 drwav_read_pcm_frames_s32__msadpcm(drwav* pWav, drwav_uint64 framesToRead, drwav_int32* pBufferOut)
+DRWAV_PRIVATE drwav_uint64 drwav_read_pcm_frames_s32__msadpcm(drwav* pWav, drwav_uint64 framesToRead, drwav_int32* pBufferOut)
 {
     drwav_uint64 totalFramesRead = 0;
     drwav_int16 samples16[2048];
@@ -52390,7 +52531,7 @@ static drwav_uint64 drwav_read_pcm_frames_s32__msadpcm(drwav* pWav, drwav_uint64
     }
     return totalFramesRead;
 }
-static drwav_uint64 drwav_read_pcm_frames_s32__ima(drwav* pWav, drwav_uint64 framesToRead, drwav_int32* pBufferOut)
+DRWAV_PRIVATE drwav_uint64 drwav_read_pcm_frames_s32__ima(drwav* pWav, drwav_uint64 framesToRead, drwav_int32* pBufferOut)
 {
     drwav_uint64 totalFramesRead = 0;
     drwav_int16 samples16[2048];
@@ -52406,7 +52547,7 @@ static drwav_uint64 drwav_read_pcm_frames_s32__ima(drwav* pWav, drwav_uint64 fra
     }
     return totalFramesRead;
 }
-static drwav_uint64 drwav_read_pcm_frames_s32__ieee(drwav* pWav, drwav_uint64 framesToRead, drwav_int32* pBufferOut)
+DRWAV_PRIVATE drwav_uint64 drwav_read_pcm_frames_s32__ieee(drwav* pWav, drwav_uint64 framesToRead, drwav_int32* pBufferOut)
 {
     drwav_uint64 totalFramesRead;
     drwav_uint8 sampleData[4096];
@@ -52427,7 +52568,7 @@ static drwav_uint64 drwav_read_pcm_frames_s32__ieee(drwav* pWav, drwav_uint64 fr
     }
     return totalFramesRead;
 }
-static drwav_uint64 drwav_read_pcm_frames_s32__alaw(drwav* pWav, drwav_uint64 framesToRead, drwav_int32* pBufferOut)
+DRWAV_PRIVATE drwav_uint64 drwav_read_pcm_frames_s32__alaw(drwav* pWav, drwav_uint64 framesToRead, drwav_int32* pBufferOut)
 {
     drwav_uint64 totalFramesRead;
     drwav_uint8 sampleData[4096];
@@ -52448,7 +52589,7 @@ static drwav_uint64 drwav_read_pcm_frames_s32__alaw(drwav* pWav, drwav_uint64 fr
     }
     return totalFramesRead;
 }
-static drwav_uint64 drwav_read_pcm_frames_s32__mulaw(drwav* pWav, drwav_uint64 framesToRead, drwav_int32* pBufferOut)
+DRWAV_PRIVATE drwav_uint64 drwav_read_pcm_frames_s32__mulaw(drwav* pWav, drwav_uint64 framesToRead, drwav_int32* pBufferOut)
 {
     drwav_uint64 totalFramesRead;
     drwav_uint8 sampleData[4096];
@@ -52590,7 +52731,7 @@ DRWAV_API void drwav_mulaw_to_s32(drwav_int32* pOut, const drwav_uint8* pIn, siz
         *pOut++ = ((drwav_int32)drwav__mulaw_to_s16(pIn[i])) << 16;
     }
 }
-static drwav_int16* drwav__read_pcm_frames_and_close_s16(drwav* pWav, unsigned int* channels, unsigned int* sampleRate, drwav_uint64* totalFrameCount)
+DRWAV_PRIVATE drwav_int16* drwav__read_pcm_frames_and_close_s16(drwav* pWav, unsigned int* channels, unsigned int* sampleRate, drwav_uint64* totalFrameCount)
 {
     drwav_uint64 sampleDataSize;
     drwav_int16* pSampleData;
@@ -52624,7 +52765,7 @@ static drwav_int16* drwav__read_pcm_frames_and_close_s16(drwav* pWav, unsigned i
     }
     return pSampleData;
 }
-static float* drwav__read_pcm_frames_and_close_f32(drwav* pWav, unsigned int* channels, unsigned int* sampleRate, drwav_uint64* totalFrameCount)
+DRWAV_PRIVATE float* drwav__read_pcm_frames_and_close_f32(drwav* pWav, unsigned int* channels, unsigned int* sampleRate, drwav_uint64* totalFrameCount)
 {
     drwav_uint64 sampleDataSize;
     float* pSampleData;
@@ -52658,7 +52799,7 @@ static float* drwav__read_pcm_frames_and_close_f32(drwav* pWav, unsigned int* ch
     }
     return pSampleData;
 }
-static drwav_int32* drwav__read_pcm_frames_and_close_s32(drwav* pWav, unsigned int* channels, unsigned int* sampleRate, drwav_uint64* totalFrameCount)
+DRWAV_PRIVATE drwav_int32* drwav__read_pcm_frames_and_close_s32(drwav* pWav, unsigned int* channels, unsigned int* sampleRate, drwav_uint64* totalFrameCount)
 {
     drwav_uint64 sampleDataSize;
     drwav_int32* pSampleData;
@@ -52909,35 +53050,47 @@ DRWAV_API void drwav_free(void* p, const drwav_allocation_callbacks* pAllocation
 }
 DRWAV_API drwav_uint16 drwav_bytes_to_u16(const drwav_uint8* data)
 {
-    return drwav__bytes_to_u16(data);
+    return (data[0] << 0) | (data[1] << 8);
 }
 DRWAV_API drwav_int16 drwav_bytes_to_s16(const drwav_uint8* data)
 {
-    return drwav__bytes_to_s16(data);
+    return (short)drwav_bytes_to_u16(data);
 }
 DRWAV_API drwav_uint32 drwav_bytes_to_u32(const drwav_uint8* data)
 {
-    return drwav__bytes_to_u32(data);
+    return (data[0] << 0) | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
 }
 DRWAV_API drwav_int32 drwav_bytes_to_s32(const drwav_uint8* data)
 {
-    return drwav__bytes_to_s32(data);
+    return (drwav_int32)drwav_bytes_to_u32(data);
 }
 DRWAV_API drwav_uint64 drwav_bytes_to_u64(const drwav_uint8* data)
 {
-    return drwav__bytes_to_u64(data);
+    return
+        ((drwav_uint64)data[0] <<  0) | ((drwav_uint64)data[1] <<  8) | ((drwav_uint64)data[2] << 16) | ((drwav_uint64)data[3] << 24) |
+        ((drwav_uint64)data[4] << 32) | ((drwav_uint64)data[5] << 40) | ((drwav_uint64)data[6] << 48) | ((drwav_uint64)data[7] << 56);
 }
 DRWAV_API drwav_int64 drwav_bytes_to_s64(const drwav_uint8* data)
 {
-    return drwav__bytes_to_s64(data);
+    return (drwav_int64)drwav_bytes_to_u64(data);
 }
 DRWAV_API drwav_bool32 drwav_guid_equal(const drwav_uint8 a[16], const drwav_uint8 b[16])
 {
-    return drwav__guid_equal(a, b);
+    int i;
+    for (i = 0; i < 16; i += 1) {
+        if (a[i] != b[i]) {
+            return DRWAV_FALSE;
+        }
+    }
+    return DRWAV_TRUE;
 }
 DRWAV_API drwav_bool32 drwav_fourcc_equal(const drwav_uint8* a, const char* b)
 {
-    return drwav__fourcc_equal(a, b);
+    return
+        a[0] == b[0] &&
+        a[1] == b[1] &&
+        a[2] == b[2] &&
+        a[3] == b[3];
 }
 #endif
 /* dr_wav_c end */
@@ -52958,6 +53111,9 @@ DRWAV_API drwav_bool32 drwav_fourcc_equal(const drwav_uint8* a, const char* b)
 #ifdef __linux__
     #ifndef _BSD_SOURCE
         #define _BSD_SOURCE
+    #endif
+    #ifndef _DEFAULT_SOURCE
+        #define _DEFAULT_SOURCE
     #endif
     #ifndef __USE_BSD
         #define __USE_BSD
@@ -64672,6 +64828,20 @@ The following miscellaneous changes have also been made.
 /*
 REVISION HISTORY
 ================
+v0.10.31 - 2020-01-17
+  - Make some functions const correct.
+  - Update ma_data_source_read_pcm_frames() to initialize pFramesRead to 0 for safety.
+  - Add the MA_ATOMIC annotation for use with variables that should be used atomically and remove unnecessary volatile qualifiers.
+  - Add support for enabling only specific backends at compile time. This is the reverse of the pre-existing system. With the new
+    system, all backends are first disabled with `MA_ENABLE_ONLY_SPECIFIC_BACKENDS`, which is then followed with `MA_ENABLE_*`. The
+    old system where you disable backends with `MA_NO_*` still exists and is still the default.
+
+v0.10.30 - 2021-01-10
+  - Fix a crash in ma_audio_buffer_read_pcm_frames().
+  - Update spinlock APIs to take a volatile parameter as input.
+  - Silence some unused parameter warnings.
+  - Fix a warning on GCC when compiling as C++.
+
 v0.10.29 - 2020-12-26
   - Fix some subtle multi-threading bugs on non-x86 platforms.
   - Fix a bug resulting in superfluous memory allocations when enumerating devices.
