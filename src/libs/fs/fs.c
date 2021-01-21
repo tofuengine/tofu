@@ -86,7 +86,7 @@ FS_Context_t *FS_create(const char *base_path)
     *context = (FS_Context_t){ 0 };
 
     char resolved[PLATFORM_PATH_MAX]; // Using local buffer to avoid un-tracked `malloc()` for the syscall.
-    char *ptr = realpath(base_path ? base_path : PLATFORM_PATH_CURRENT_SZ, resolved);
+    char *ptr = realpath(base_path, resolved);
     if (!ptr) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't resolve `%s`", base_path);
         free(context);
