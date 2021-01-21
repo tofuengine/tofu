@@ -39,6 +39,7 @@ static int system_args(lua_State *L);
 static int system_version(lua_State *L);
 static int system_time(lua_State *L);
 static int system_fps(lua_State *L);
+static int system_has_focus(lua_State *L);
 static int system_quit(lua_State *L);
 static int system_info(lua_State *L);
 static int system_warning(lua_State *L);
@@ -50,6 +51,7 @@ static const struct luaL_Reg _system_functions[] = {
     { "version", system_version },
     { "time", system_time },
     { "fps", system_fps },
+    { "has_focus", system_has_focus },
     { "quit", system_quit },
     { "info", system_info },
     { "warning", system_warning },
@@ -113,6 +115,18 @@ static int system_fps(lua_State *L)
     const Environment_t *environment = (const Environment_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
 
     lua_pushnumber(L, Environment_get_fps(environment));
+
+    return 1;
+}
+
+static int system_has_focus(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+    LUAX_SIGNATURE_END
+
+    const Environment_t *environment = (const Environment_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
+
+    lua_pushboolean(L, Environment_has_focus(environment));
 
     return 1;
 }

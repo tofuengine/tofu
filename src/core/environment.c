@@ -32,17 +32,7 @@
 
 // TODO: http://www.ilikebigbits.com/2017_06_01_float_or_double.html
 
-static bool _parse_argument(const char *string, const char *prefix, const char **ptr)
-{
-    size_t length = strlen(prefix);
-    if (strncmp(string, prefix, length) == 0) {
-        *ptr = string + length;
-        return true;
-    }
-    return false;
-}
-
-Environment_t *Environment_create(int argc, const char *argv[])
+Environment_t *Environment_create(int argc, const char *argv[], const Display_t *display)
 {
     Environment_t *environment = malloc(sizeof(Environment_t));
     if (!environment) {
@@ -51,18 +41,14 @@ Environment_t *Environment_create(int argc, const char *argv[])
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "environment allocated");
 
-    const char *base_path = NULL;
     const char **args = NULL;
     for (int i = 1; i < argc; ++i) { // Skip executable name, i.e. argument #0.
-        if (_parse_argument(argv[i], "--base-path=", &base_path)) { // Skip base mount point, too.
-            continue;
-        }
         arrpush(args, argv[i]);
     }
 
     *environment = (Environment_t){
-        .base_path = base_path,
         .args = args,
+        .display = display,
         .quit = false,
         .fps = 0.0f,
         .time = 0.0
@@ -87,7 +73,7 @@ void Environment_quit(Environment_t *environment)
 
 bool Environment_should_quit(const Environment_t *environment)
 {
-    return environment->quit;
+    return environment->quit || Display_should_close(environment->display);
 }
 
 double Environment_get_time(const Environment_t *environment)
@@ -98,6 +84,11 @@ double Environment_get_time(const Environment_t *environment)
 float Environment_get_fps(const Environment_t *environment)
 {
     return environment->fps;
+}
+
+bool Environment_has_focus(const Environment_t *environment)
+{
+    return environment->has_focus;
 }
 
 static inline float _calculate_fps(float frame_time)
@@ -114,7 +105,7 @@ static inline float _calculate_fps(float frame_time)
     return (float)FPS_AVERAGE_SAMPLES / sum;
 }
 
-void Environment_add_frame(Environment_t *environment, float frame_time)
+void Environment_process(Environment_t *environment, float frame_time)
 {
     environment->fps = _calculate_fps(frame_time);
 #ifdef __DEBUG_ENGINE_FPS__
@@ -123,6 +114,9 @@ void Environment_add_frame(Environment_t *environment, float frame_time)
         Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "currently running at %.0f FPS", environment->fps);
         count = 0;
     }
+#endif
+#ifdef __DISPLAY_FOCUS_SUPPORT__
+    environment->has_focus = glfwGetWindowAttrib(environment->display->window, GLFW_FOCUSED) == GLFW_TRUE;
 #endif
 }
 

@@ -35,6 +35,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Out-of-the-box 'tweening functions support (optimized [Penner's](http://robertpenner.com/easing/) set).
 * [x] Detailed logging facility (w/ logging selectable level).
 * [x] Crash screen (debug build).
+* [x] game window focus detection (for game-pause).
 
 ## Desiderata
 
@@ -65,13 +66,13 @@ Guess what? Yup, that's yet another game engine/framework.
 
 ## Dependencies
 
-* [dr_libs](https://github.com/mackron/dr_libs) v0.12.25, v0.6.25, v0.12.16
+* [dr_libs](https://github.com/mackron/dr_libs) v0.12.26, v0.6.25, v0.12.17
 * [Glad](https://glad.dav1d.de/)
 * [gif-h](https://github.com/charlietangora/gif-h)
 * [GLFW](https://www.glfw.org/) v3.3.2
 * [libxmp](http://xmp.sourceforge.net/) v4.5.0
 * [Lua](https://lua.org/) v5.4.2
-* [miniaudio](https://github.com/dr-soft/miniaudio) v0.10.29
+* [miniaudio](https://github.com/dr-soft/miniaudio) v0.10.31
 * [spleen](https://github.com/fcambus/spleen) v1.8.1
 * [stb](https://github.com/nothings/stb) libraries
 

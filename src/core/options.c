@@ -22,38 +22,35 @@
  * SOFTWARE.
  */
 
-#ifndef __ENVIRONMENT_H__
-#define __ENVIRONMENT_H__
+#include "options.h"
 
-#include <core/io/display.h>
+#include <platform.h>
 
 #include <stdbool.h>
-#include <stddef.h>
+#include <string.h>
 
-typedef struct _Environment_t {
-    const char **args;
-    const Display_t *display;
-#ifdef __DISPLAY_FOCUS_SUPPORT__
-    bool has_focus;
-#endif
-    bool quit;
-    float fps;
-    double time;
-} Environment_t;
+static bool _parse_argument(const char *string, const char *prefix, const char **ptr)
+{
+    size_t length = strlen(prefix);
+    if (strncmp(string, prefix, length) == 0) {
+        *ptr = string + length;
+        return true;
+    }
+    return false;
+}
 
-extern Environment_t *Environment_create(int argc, const char *argv[], const Display_t *display);
-extern void Environment_destroy(Environment_t *environment);
+options_t options_parse_command_line(int argc, const char *argv[])
+{
+    options_t options = (options_t) {
+        .base_path = PLATFORM_PATH_CURRENT_SZ
+    };
 
-extern void Environment_quit(Environment_t *environment);
+    for (int i = 1; i < argc; ++i) { // Skip executable name, i.e. argument #0.
+        if (_parse_argument(argv[i], "--base-path=", &options.base_path)) {
+            break;
+        }
+    }
 
-extern bool Environment_should_quit(const Environment_t *environment);
+    return options;
+}
 
-extern double Environment_get_time(const Environment_t *environment);
-extern float Environment_get_fps(const Environment_t *environment);
-extern bool Environment_has_focus(const Environment_t *environment);
-
-extern void Environment_process(Environment_t *environment, float frame_time);
-
-extern void Environment_update(Environment_t *environment, float delta_time);
-
-#endif  /* __ENVIRONMENT_H__ */

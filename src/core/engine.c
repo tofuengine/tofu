@@ -34,6 +34,8 @@
   #include <windows.h>
 #endif
 
+#include "options.h"
+
 #define ENTRY_ICON "icon.png"
 #define ENTRY_GAMECONTROLLER_DB "gamecontrollerdb.txt"
 
@@ -107,6 +109,8 @@ static bool _configure(Storage_t *storage, Configuration_t *configuration)
 
 Engine_t *Engine_create(int argc, const char *argv[])
 {
+    options_t options = options_parse_command_line(argc, argv); // We do this early, since options could have effect on everything.
+
     Engine_t *engine = malloc(sizeof(Engine_t));
     if (!engine) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate engine");
@@ -117,19 +121,11 @@ Engine_t *Engine_create(int argc, const char *argv[])
 
     Log_initialize();
 
-    engine->environment = Environment_create(argc, argv);
-    if (!engine->environment) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize environment");
-        free(engine);
-        return NULL;
-    }
-
     engine->storage = Storage_create(&(const Storage_Configuration_t){
-            .base_path = engine->environment->base_path
+            .base_path = options.base_path
         });
     if (!engine->storage) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize storage");
-        Environment_destroy(engine->environment);
         free(engine);
         return NULL;
     }
@@ -137,7 +133,6 @@ Engine_t *Engine_create(int argc, const char *argv[])
     bool configured = _configure(engine->storage, &engine->configuration);
     if (!configured) {
         Storage_destroy(engine->storage);
-        Environment_destroy(engine->environment);
         free(engine);
         return NULL;
     }
@@ -161,7 +156,6 @@ Engine_t *Engine_create(int argc, const char *argv[])
     if (!engine->display) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize display");
         Storage_destroy(engine->storage);
-        Environment_destroy(engine->environment);
         free(engine);
         return NULL;
     }
@@ -194,7 +188,6 @@ Engine_t *Engine_create(int argc, const char *argv[])
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize input");
         Display_destroy(engine->display);
         Storage_destroy(engine->storage);
-        Environment_destroy(engine->environment);
         free(engine);
         return NULL;
     }
@@ -207,7 +200,17 @@ Engine_t *Engine_create(int argc, const char *argv[])
         Input_destroy(engine->input);
         Display_destroy(engine->display);
         Storage_destroy(engine->storage);
-        Environment_destroy(engine->environment);
+        free(engine);
+        return NULL;
+    }
+
+    engine->environment = Environment_create(argc, argv, engine->display);
+    if (!engine->environment) {
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize environment");
+        Audio_destroy(engine->audio);
+        Input_destroy(engine->input);
+        Display_destroy(engine->display);
+        Storage_destroy(engine->storage);
         free(engine);
         return NULL;
     }
@@ -225,11 +228,11 @@ Engine_t *Engine_create(int argc, const char *argv[])
     engine->interpreter = Interpreter_create(engine->storage, userdatas);
     if (!engine->interpreter) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize interpreter");
+        Environment_destroy(engine->environment);
         Audio_destroy(engine->audio);
         Input_destroy(engine->input);
         Display_destroy(engine->display);
         Storage_destroy(engine->storage);
-        Environment_destroy(engine->environment);
         free(engine);
         return NULL;
     }
@@ -266,12 +269,12 @@ void Engine_run(Engine_t *engine)
     float lag = 0.0f;
 
     // https://nkga.github.io/post/frame-pacing-analysis-of-the-game-loop/
-    for (bool running = true; running && !Environment_should_quit(engine->environment) && !Display_should_close(engine->display); ) {
+    for (bool running = true; running && !Environment_should_quit(engine->environment); ) {
         const double current = glfwGetTime();
         const float elapsed = (float)(current - previous);
         previous = current;
 
-        Environment_add_frame(engine->environment, elapsed);
+        Environment_process(engine->environment, elapsed);
 
         Input_process(engine->input);
 
@@ -299,12 +302,12 @@ void Engine_run(Engine_t *engine)
 #ifdef __GRAPHICS_CAPTURE_SUPPORT__
         const Input_Button_State_t *record_button = Input_get_button(engine->input, INPUT_BUTTON_RECORD);
         if (record_button->pressed) {
-            Display_toggle_recording(engine->display, engine->environment->base_path);
+            Display_toggle_recording(engine->display, engine->storage->configuration.base_path); // FIXME: use `Storage_get_base_path()`
         }
 
         const Input_Button_State_t *capture_button = Input_get_button(engine->input, INPUT_BUTTON_CAPTURE);
         if (capture_button->pressed) {
-            Display_grab_snapshot(engine->display, engine->environment->base_path);
+            Display_grab_snapshot(engine->display, engine->storage->configuration.base_path); // FIXME: ditto
         }
 #endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
 

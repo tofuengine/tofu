@@ -22,38 +22,14 @@
  * SOFTWARE.
  */
 
-#ifndef __ENVIRONMENT_H__
-#define __ENVIRONMENT_H__
+#ifndef __CORE_OPTIONS_H__
+#define __CORE_OPTIONS_H__
 
-#include <core/io/display.h>
+typedef struct _options_t {
+    const char *base_path;
+} options_t;
 
-#include <stdbool.h>
-#include <stddef.h>
+extern options_t options_parse_command_line(int argc, const char *argv[]);
 
-typedef struct _Environment_t {
-    const char **args;
-    const Display_t *display;
-#ifdef __DISPLAY_FOCUS_SUPPORT__
-    bool has_focus;
-#endif
-    bool quit;
-    float fps;
-    double time;
-} Environment_t;
+#endif /* __CORE_OPTIONS_H__ */
 
-extern Environment_t *Environment_create(int argc, const char *argv[], const Display_t *display);
-extern void Environment_destroy(Environment_t *environment);
-
-extern void Environment_quit(Environment_t *environment);
-
-extern bool Environment_should_quit(const Environment_t *environment);
-
-extern double Environment_get_time(const Environment_t *environment);
-extern float Environment_get_fps(const Environment_t *environment);
-extern bool Environment_has_focus(const Environment_t *environment);
-
-extern void Environment_process(Environment_t *environment, float frame_time);
-
-extern void Environment_update(Environment_t *environment, float delta_time);
-
-#endif  /* __ENVIRONMENT_H__ */
