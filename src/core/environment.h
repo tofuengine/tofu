@@ -34,7 +34,7 @@ typedef struct _Environment_t {
     const char **args;
     const Display_t *display;
 #ifdef __DISPLAY_FOCUS_SUPPORT__
-    bool has_focus;
+    bool is_active;
 #endif
     bool quit;
     float fps;
@@ -50,7 +50,7 @@ extern bool Environment_should_quit(const Environment_t *environment);
 
 extern double Environment_get_time(const Environment_t *environment);
 extern float Environment_get_fps(const Environment_t *environment);
-extern bool Environment_has_focus(const Environment_t *environment);
+extern bool Environment_is_active(const Environment_t *environment);
 
 extern void Environment_process(Environment_t *environment, float frame_time);
 

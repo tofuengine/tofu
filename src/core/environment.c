@@ -86,9 +86,9 @@ float Environment_get_fps(const Environment_t *environment)
     return environment->fps;
 }
 
-bool Environment_has_focus(const Environment_t *environment)
+bool Environment_is_active(const Environment_t *environment)
 {
-    return environment->has_focus;
+    return environment->is_active;
 }
 
 static inline float _calculate_fps(float frame_time)
@@ -116,7 +116,7 @@ void Environment_process(Environment_t *environment, float frame_time)
     }
 #endif
 #ifdef __DISPLAY_FOCUS_SUPPORT__
-    environment->has_focus = glfwGetWindowAttrib(environment->display->window, GLFW_FOCUSED) == GLFW_TRUE;
+    environment->is_active = glfwGetWindowAttrib(environment->display->window, GLFW_FOCUSED) == GLFW_TRUE;
 #endif
 }
 
