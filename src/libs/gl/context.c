@@ -284,7 +284,7 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
     arrfree(stack);
 }
 
-void GL_context_process(const GL_Context_t *context, GL_Point_t position, GL_Rectangle_t area, GL_Process_Callback_t callback, void *user_data)
+void GL_context_process(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, GL_Process_Callback_t callback, void *user_data)
 {
     const GL_State_t *state = &context->state;
     const GL_Quad_t *clipping_region = &state->clipping_region;
@@ -321,14 +321,17 @@ void GL_context_process(const GL_Context_t *context, GL_Point_t position, GL_Rec
         return;
     }
 
-    GL_Pixel_t *sddata = surface->data;
+    const GL_Pixel_t *sdata = source->data;
+    GL_Pixel_t *ddata = surface->data;
 
-    const int sdwidth = (int)surface->width;
+    const int swidth = (int)source->width;
+    const int dwidth = (int)surface->width;
 
-    const int sdskip = sdwidth - width;
+    const int sskip = swidth - width;
+    const int dskip = dwidth - width;
 
-    const GL_Pixel_t *sptr = sddata + (area.y + skip_y) * sdwidth + (area.x + skip_x);
-    GL_Pixel_t *dptr = sddata + drawing_region.y0 * sdwidth + drawing_region.x0;
+    const GL_Pixel_t *sptr = sdata + (area.y + skip_y) * swidth + (area.x + skip_x);
+    GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
     int y = drawing_region.y0;
     for (int i = height; i; --i) {
@@ -339,13 +342,13 @@ void GL_context_process(const GL_Context_t *context, GL_Point_t position, GL_Rec
             *(dptr++) = callback(user_data, x, y, from, to);
             x += 1;
         }
-        sptr += sdskip;
-        dptr += sdskip;
+        sptr += sskip;
+        dptr += dskip;
         y += 1;
     }
 }
 
-void GL_context_copy(const GL_Context_t *context, GL_Point_t position, GL_Rectangle_t area)
+void GL_context_copy(const GL_Context_t *context, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area)
 {
     const GL_State_t *state = &context->state;
     const GL_Quad_t *clipping_region = &state->clipping_region;
@@ -384,14 +387,17 @@ void GL_context_copy(const GL_Context_t *context, GL_Point_t position, GL_Rectan
         return;
     }
 
-    GL_Pixel_t *sddata = surface->data;
+    const GL_Pixel_t *sdata = source->data;
+    GL_Pixel_t *ddata = surface->data;
 
-    const int sdwidth = (int)surface->width;
+    const int swidth = (int)source->width;
+    const int dwidth = (int)surface->width;
 
-    const int sdskip = sdwidth - width;
+    const int sskip = swidth - width;
+    const int dskip = dwidth - width;
 
-    const GL_Pixel_t *sptr = sddata + (area.y + skip_y) * sdwidth + (area.x + skip_x);
-    GL_Pixel_t *dptr = sddata + drawing_region.y0 * sdwidth + drawing_region.x0;
+    const GL_Pixel_t *sptr = sdata + (area.y + skip_y) * swidth + (area.x + skip_x);
+    GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
     for (int i = height; i; --i) {
         for (int j = width; j; --j) {
@@ -402,8 +408,8 @@ void GL_context_copy(const GL_Context_t *context, GL_Point_t position, GL_Rectan
                 *(dptr++) = index;
             }
         }
-        sptr += sdskip;
-        dptr += sdskip;
+        sptr += sskip;
+        dptr += dskip;
     }
 }
 
@@ -430,26 +436,4 @@ void GL_context_clear(const GL_Context_t *context, GL_Pixel_t index)
     const GL_Surface_t *surface = context->surface;
     memset(surface->data, index, surface->data_size);
 #endif
-}
-
-void GL_context_to_surface(const GL_Context_t *context, const GL_Surface_t *to)
-{
-    const GL_Surface_t *from = context->surface;
-
-    size_t width = (size_t)imin((int)from->width, (int)to->width);
-    size_t height = (size_t)imin((int)from->height, (int)to->height);
-
-    const GL_Pixel_t *src = from->data;
-    GL_Pixel_t *dst = to->data;
-
-    const int src_skip = (int)from->width - (int)width;
-    const int dst_skip = (int)to->width - (int)width;
-
-    for (int i = height; i; --i) {
-        for (int j = width; j; --j) {
-            *(dst++) = *(src++);
-        }
-        src += src_skip;
-        dst += dst_skip;
-    }
 }
