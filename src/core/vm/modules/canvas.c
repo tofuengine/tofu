@@ -949,15 +949,15 @@ static int canvas_process5(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
-    Canvas_Object_t *source = (Canvas_Object_t *)LUAX_USERDATA(L, 2);
 //    luaX_Reference callback = luaX_tofunction(L, 3);
     int x = LUAX_INTEGER(L, 4);
     int y = LUAX_INTEGER(L, 5);
+    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_USERDATA(L, 2);
 
     const Interpreter_t *interpreter = (const Interpreter_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INTERPRETER));
 
-    const GL_Context_t *context = self->context;
-    const GL_Surface_t *surface = source->context->surface;
+    const GL_Context_t *context = canvas->context;
+    const GL_Surface_t *surface = self->context->surface;
     GL_context_process(context, (GL_Point_t){ .x = x, .y = y }, surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height },
         _process_callback, &(Process_Closure_t){ .interpreter = interpreter, .L = L });
 
@@ -985,12 +985,12 @@ static int canvas_process8_9(lua_State *L)
     int oy = LUAX_INTEGER(L, 6);
     size_t width = (size_t)LUAX_INTEGER(L, 7);
     size_t height = (size_t)LUAX_INTEGER(L, 8);
-    Canvas_Object_t *source = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 9, self);
+    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 9, self);
 
     const Interpreter_t *interpreter = (const Interpreter_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INTERPRETER));
 
-    const GL_Context_t *context = self->context;
-    const GL_Surface_t *surface = source->context->surface;
+    const GL_Context_t *context = canvas->context;
+    const GL_Surface_t *surface = self->context->surface;
     GL_context_process(context, (GL_Point_t){ .x = x, .y = y }, surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height },
         _process_callback, &(Process_Closure_t){ .interpreter = interpreter, .L = L });
 
@@ -1010,17 +1010,17 @@ static int canvas_copy4(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
-    Canvas_Object_t *source = (Canvas_Object_t *)LUAX_USERDATA(L, 2);
-    int x = LUAX_INTEGER(L, 3);
-    int y = LUAX_INTEGER(L, 4);
+    int x = LUAX_INTEGER(L, 2);
+    int y = LUAX_INTEGER(L, 3);
+    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 4, self);
 
-    const GL_Context_t *context = self->context;
-    const GL_Surface_t *surface = source->context->surface;
+    const GL_Context_t *context = canvas->context;
+    const GL_Surface_t *surface = self->context->surface;
     GL_context_copy(context, (GL_Point_t){ .x = x, .y = y }, surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height });
 
     return 0;
@@ -1045,10 +1045,10 @@ static int canvas_copy7_8(lua_State *L)
     int oy = LUAX_INTEGER(L, 5);
     size_t width = (size_t)LUAX_INTEGER(L, 6);
     size_t height = (size_t)LUAX_INTEGER(L, 7);
-    Canvas_Object_t *source = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 8, self);
+    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 8, self);
 
-    const GL_Context_t *context = self->context;
-    const GL_Surface_t *surface = source->context->surface;
+    const GL_Context_t *context = canvas->context;
+    const GL_Surface_t *surface = self->context->surface;
     GL_context_copy(context, (GL_Point_t){ .x = x, .y = y }, surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height });
 
     return 0;
