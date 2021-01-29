@@ -26,6 +26,8 @@
 #define __GL_XFORM_H__
 
 #include "common.h"
+#include "context.h"
+#include "surface.h"
 
 typedef enum _GL_XForm_Registers_t {
     GL_XForm_Registers_t_First,
@@ -65,6 +67,7 @@ typedef struct _GL_XForm_t {
     GL_XForm_Table_Entry_t *table;
 } GL_XForm_t;
 
+extern void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *surface, GL_Point_t position, const GL_XForm_t *xform);
 // TODO: add helper functions to generate common transformations?
 
 #endif  /* __GL_XFORM_H__ */

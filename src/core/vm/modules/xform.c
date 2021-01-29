@@ -155,7 +155,7 @@ static int xform_blit1_3(lua_State *L)
     const GL_Context_t *context = self->canvas.instance->context;
     const GL_Surface_t *surface = self->source.instance->context->surface;
     const GL_XForm_t *xform = &self->xform;
-    GL_context_blit_x(context, surface, (GL_Point_t){ .x = x, .y = y }, xform);
+    GL_context_xform(context, surface, (GL_Point_t){ .x = x, .y = y }, xform);
 
     return 0;
 }
