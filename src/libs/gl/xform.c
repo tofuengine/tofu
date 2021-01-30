@@ -30,11 +30,6 @@
 
 #include <math.h>
 
-static inline int _iroundf(float x)
-{
-    return (int)floorf(x + 0.5f);
-}
-
 // https://www.youtube.com/watch?v=3FVN_Ze7bzw
 // http://www.coranac.com/tonc/text/mode7.htm
 // https://wiki.superfamicom.org/registers
@@ -164,8 +159,8 @@ void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *surface, 
 #ifdef __DEBUG_GRAPHICS__
             pixel(context, drawing_region.x0 + j, drawing_region.y0 + i, i + j);
 #endif
-            int sx = _iroundf(xp); // Round to avoid artifacts.
-            int sy = _iroundf(yp);
+            int sx = IROUNDF(xp); // Round to avoid artifacts.
+            int sy = IROUNDF(yp);
 
             if (clamp == GL_XFORM_CLAMP_REPEAT) {
                 sx = imod(sx, sw); // TODO: optimize the amount of calls.

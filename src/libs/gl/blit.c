@@ -141,11 +141,6 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
 #endif
 }
 
-static inline int _iroundf(float x)
-{
-    return (int)floorf(x + 0.5f);
-}
-
 // Simple implementation of nearest-neighbour scaling, with x/y flipping according to scaling-factor sign.
 // See `http://tech-algorithm.com/articles/nearest-neighbor-image-scaling/` for a reference code.
 // To avoid empty pixels we scan the destination area and calculate the source pixel.
@@ -165,8 +160,8 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
     const bool flip_x = scale_x < 0.0f;
     const bool flip_y = scale_y < 0.0f;
 
-    const int drawing_width = _iroundf(area.width * fabsf(scale_x)); // We need to round! No ceil, no floor!
-    const int drawing_height = _iroundf(area.height * fabsf(scale_y));
+    const int drawing_width = IROUNDF(area.width * fabsf(scale_x)); // We need to round! No ceil, no floor!
+    const int drawing_height = IROUNDF(area.height * fabsf(scale_y));
 
     int skip_x = 0; // Offset into the (target) surface/texture, update during clipping.
     int skip_y = 0;
@@ -416,8 +411,8 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
 #ifdef __DEBUG_GRAPHICS__
             pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, 15);
 #endif
-            int x = _iroundf(u); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`) and avoid mirror effect.
-            int y = _iroundf(v);
+            int x = IROUNDF(u); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`) and avoid mirror effect.
+            int y = IROUNDF(v);
 
             if (x >= sminx && x <= smaxx && y >= sminy && y <= smaxy) {
 #ifdef __DEBUG_GRAPHICS__
