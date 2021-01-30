@@ -109,12 +109,12 @@ static void unroll_loop(struct xmp_sample *xxs)
 	if (xxs->flg & XMP_SAMPLE_16BIT) {
 		s16 += start;
 		for (i = 0; i < loop_size; i++) {
-			*(s16 + i) = *(s16 - i - 1);	
+			*(s16 + i) = *(s16 - i - 1);
 		}
 	} else {
 		s8 += start;
 		for (i = 0; i < loop_size; i++) {
-			*(s8 + i) = *(s8 - i - 1);	
+			*(s8 + i) = *(s8 - i - 1);
 		}
 	}
 }
@@ -141,6 +141,27 @@ int libxmp_load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct x
 			hio_seek(f, xxs->len, SEEK_CUR);
 		}
 		return 0;
+	}
+
+	/* If this sample starts at or after EOF, skip it entirely.
+	 */
+	if (~flags & SAMPLE_FLAG_NOLOAD) {
+		long file_pos, file_len;
+		if (!f) {
+			return 0;
+		}
+		file_pos = hio_tell(f);
+		file_len = hio_size(f);
+		if (file_len >= 0 && file_pos >= file_len) {
+			D_(D_WARN "ignoring sample at EOF");
+			return 0;
+		}
+		/* If this sample goes past EOF, truncate it. */
+		if (file_len >= 0 && file_pos + xxs->len > file_len && (~flags & SAMPLE_FLAG_ADPCM)) {
+			D_(D_WARN "sample would extend %ld bytes past EOF; truncating to %ld",
+				file_pos + xxs->len - file_len, file_len - file_pos);
+			xxs->len = file_len - file_pos;
+		}
 	}
 
 	/* Loop parameters sanity check
