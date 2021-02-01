@@ -29,8 +29,8 @@
 
 typedef struct _Mount_VTable_t {
     void         (*dtor)    (FS_Mount_t *mount);
-    bool         (*contains)(const FS_Mount_t *mount, const char *file);
-    FS_Handle_t *(*open)    (const FS_Mount_t *mount, const char *file);
+    bool         (*contains)(const FS_Mount_t *mount, const char *basename);
+    FS_Handle_t *(*open)    (const FS_Mount_t *mount, const char *basename);
 } Mount_VTable_t;
 
 typedef struct _Handle_VTable_t {

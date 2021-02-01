@@ -144,7 +144,7 @@ static int canvas_new1_3(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    const char *file = LUAX_STRING(L, 1);
+    const char *filename = LUAX_STRING(L, 1);
     GL_Pixel_t background_index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 2, 0);
     GL_Pixel_t foreground_index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 3, background_index);
 
@@ -164,20 +164,20 @@ static int canvas_new1_3(lua_State *L)
     }
 
     GL_Context_t *context;
-    if (Storage_exists(storage, file)) {
-        const Storage_Resource_t *image = Storage_load(storage, file, STORAGE_RESOURCE_IMAGE);
+    if (Storage_exists(storage, filename)) {
+        const Storage_Resource_t *image = Storage_load(storage, filename, STORAGE_RESOURCE_IMAGE);
         if (!image) {
-            return luaL_error(L, "can't load file `%s`", file);
+            return luaL_error(L, "can't load file `%s`", filename);
         }
 
         context = GL_context_decode(S_IWIDTH(image), S_IHEIGHT(image), S_IPIXELS(image), callback, user_data);
         if (!context) {
-            return luaL_error(L, "can't decode file `%s`", file);
+            return luaL_error(L, "can't decode file `%s`", filename);
         }
     } else {
-        return luaL_error(L, "unknown file `%s`", file);
+        return luaL_error(L, "unknown file `%s`", filename);
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context %p loaded from file `%s`", context, file);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context %p loaded from file `%s`", context, filename);
 
     Canvas_Object_t *self = (Canvas_Object_t *)lua_newuserdatauv(L, sizeof(Canvas_Object_t), 1);
     *self = (Canvas_Object_t){

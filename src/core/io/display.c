@@ -661,28 +661,28 @@ GL_Point_t Display_get_offset(const Display_t *display)
     return display->vram.offset;
 }
 
-void Display_grab_snapshot(const Display_t *display, const char *path)
+void Display_grab_snapshot(const Display_t *display, const char *pathname)
 {
     time_t t = time(0);
     struct tm *lt = localtime(&t);
 
-    char path_file[PLATFORM_PATH_MAX] = { 0 };
-    sprintf(path_file, "%s%csnapshot-%04d%02d%02d%02d%02d%02d.png", path, PLATFORM_PATH_SEPARATOR, lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
+    char filename[PLATFORM_PATH_MAX] = { 0 };
+    sprintf(filename, "%s%csnapshot-%04d%02d%02d%02d%02d%02d.png", pathname, PLATFORM_PATH_SEPARATOR, lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
 
-    stbi_write_png(path_file, display->vram.width, display->vram.height, display->vram.bytes_per_pixel, display->vram.pixels, display->vram.stride);
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "capture done to file `%s`", path_file);
+    stbi_write_png(filename, display->vram.width, display->vram.height, display->vram.bytes_per_pixel, display->vram.pixels, display->vram.stride);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "capture done to file `%s`", filename);
 }
 
-void Display_start_recording(Display_t *display, const char *path)
+void Display_start_recording(Display_t *display, const char *pathname)
 {
     time_t t = time(0);
     struct tm *lt = localtime(&t);
 
-    char path_file[PLATFORM_PATH_MAX] = { 0 };
-    sprintf(path_file, "%s%crecord-%04d%02d%02d%02d%02d%02d.gif", path, PLATFORM_PATH_SEPARATOR, lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
+    char filename[PLATFORM_PATH_MAX] = { 0 };
+    sprintf(filename, "%s%crecord-%04d%02d%02d%02d%02d%02d.gif", pathname, PLATFORM_PATH_SEPARATOR, lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
 
-    GifBegin(&display->capture.gif_writer, path_file, display->vram.width, display->vram.height, 0);
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "recording started for file `%s`", path_file);
+    GifBegin(&display->capture.gif_writer, filename, display->vram.width, display->vram.height, 0);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "recording started for file `%s`", filename);
 
     display->capture.time = 0.0;
 }
@@ -693,10 +693,10 @@ void Display_stop_recording(Display_t *display)
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "recording stopped");
 }
 
-void Display_toggle_recording(Display_t *display, const char *path)
+void Display_toggle_recording(Display_t *display, const char *pathname)
 {
     if (!GifIsWriting(&display->capture.gif_writer)) {
-        Display_start_recording(display, path);
+        Display_start_recording(display, pathname);
     } else {
         Display_stop_recording(display);
     }

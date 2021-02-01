@@ -127,7 +127,7 @@ typedef int luaX_Reference;
 
 #define luaX_tofunction(L, idx)     luaX_ref((L), (idx))
 
-extern void luaX_stackdump(lua_State *L, const char *file, int line);
+extern void luaX_stackdump(lua_State *L, const char *filename, int line);
 extern void luaX_overridesearchers(lua_State *L, lua_CFunction searcher, int nup);
 extern int luaX_insisttable(lua_State *L, const char *name);
 extern int luaX_newmodule(lua_State *L, const luaX_Script *script, const luaL_Reg *f, const luaX_Const *c, int nup, const char *name);
@@ -138,7 +138,7 @@ extern void luaX_requiref(lua_State *L, const char *modname, lua_CFunction openf
 extern luaX_Reference luaX_ref(lua_State *L, int idx);
 extern void luaX_unref(lua_State *L, luaX_Reference ref);
 
-extern void luaX_checkargument(lua_State *L, int idx, const char *file, int line, ...);
+extern void luaX_checkargument(lua_State *L, int idx, const char *filename, int line, ...);
 
 extern void luaX_pushvalues(lua_State *L, int nup);
 extern int luaX_pushupvalues(lua_State *L);

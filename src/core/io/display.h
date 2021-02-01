@@ -115,10 +115,10 @@ extern const GL_Palette_t *Display_get_palette(const Display_t *display);
 extern GL_Point_t Display_get_offset(const Display_t *display);
 
 #ifdef __GRAPHICS_CAPTURE_SUPPORT__
-extern void Display_grab_snapshot(const Display_t *display, const char *path);
-extern void Display_start_recording(Display_t *display, const char *path);
+extern void Display_grab_snapshot(const Display_t *display, const char *pathname);
+extern void Display_start_recording(Display_t *display, const char *pathname);
 extern void Display_stop_recording(Display_t *display);
-extern void Display_toggle_recording(Display_t *display, const char *path);
+extern void Display_toggle_recording(Display_t *display, const char *pathname);
 #endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
 
 #endif  /* __DISPLAY_H__ */

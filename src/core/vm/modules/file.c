@@ -50,13 +50,13 @@ static int file_as_string(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    const char *file = LUAX_STRING(L, 1);
+    const char *filename = LUAX_STRING(L, 1);
 
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
 
-    const Storage_Resource_t *resource = Storage_load(storage, file, STORAGE_RESOURCE_BLOB);
+    const Storage_Resource_t *resource = Storage_load(storage, filename, STORAGE_RESOURCE_BLOB);
     if (!resource) {
-        return luaL_error(L, "can't load file `%s`", file);
+        return luaL_error(L, "can't load file `%s`", filename);
     }
     lua_pushlstring(L, S_BPTR(resource), S_BSIZE(resource));
 
@@ -68,13 +68,13 @@ static int file_as_binary(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    const char *file = LUAX_STRING(L, 1);
+    const char *filename = LUAX_STRING(L, 1);
 
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
 
-    const Storage_Resource_t *resource = Storage_load(storage, file, STORAGE_RESOURCE_BLOB);
+    const Storage_Resource_t *resource = Storage_load(storage, filename, STORAGE_RESOURCE_BLOB);
     if (!resource) {
-        return luaL_error(L, "can't load file `%s`", file);
+        return luaL_error(L, "can't load file `%s`", filename);
     }
 //    lua_pushlstring(L, buffer, size);
     lua_pushnil(L); // TODO: read the file as a Base64 or similar encoded string.

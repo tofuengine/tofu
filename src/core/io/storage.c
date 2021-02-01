@@ -52,9 +52,9 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
             .configuration = *configuration
         };
 
-    storage->context = FS_create(configuration->base_path);
+    storage->context = FS_create(configuration->base_pathname);
     if (!storage->context) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create file-system context at path `%s`", configuration->base_path);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create file-system context at `%s`", configuration->base_pathname);
         free(storage);
         return NULL;
     }
@@ -71,19 +71,19 @@ static void _release(Storage_Resource_t *resource)
     if (resource->type == STORAGE_RESOURCE_STRING) {
         free(resource->var.string.chars);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource-data `%s` at %p freed (%d characters string)",
-            resource->file, resource->var.string.chars, resource->var.string.length);
+            resource->name, resource->var.string.chars, resource->var.string.length);
     } else
     if (resource->type == STORAGE_RESOURCE_BLOB) {
         free(resource->var.blob.ptr);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource-data `%s` at %p freed (%d bytes blob)",
-            resource->file, resource->var.blob.ptr, resource->var.blob.size);
+            resource->name, resource->var.blob.ptr, resource->var.blob.size);
     } else
     if (resource->type == STORAGE_RESOURCE_IMAGE) {
         stbi_image_free(resource->var.image.pixels);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource-data `%s` at %p freed (%dx%d image)",
-            resource->file, resource->var.image.pixels, resource->var.image.width, resource->var.image.height);
+            resource->name, resource->var.image.pixels, resource->var.image.width, resource->var.image.height);
     }
-    free(resource->file);
+    free(resource->name);
     free(resource);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource %p freed", resource);
 }
@@ -93,7 +93,7 @@ void Storage_destroy(Storage_t *storage)
     Storage_Resource_t **current = storage->resources;
     for (size_t count = arrlen(storage->resources); count; --count) {
         Storage_Resource_t *resource = *(current++);
-        Log_assert(resource->references == 0, LOG_LEVELS_WARNING, LOG_CONTEXT, "resource `%s` force-released (references-count is %d)", resource->file, resource->references);
+        Log_assert(resource->references == 0, LOG_LEVELS_WARNING, LOG_CONTEXT, "resource `%s` force-released (references-count is %d)", resource->name, resource->references);
         _release(resource);
     }
     arrfree(storage->resources);
@@ -106,9 +106,9 @@ void Storage_destroy(Storage_t *storage)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "storage freed");
 }
 
-bool Storage_exists(const Storage_t *storage, const char *file)
+bool Storage_exists(const Storage_t *storage, const char *name)
 {
-    return FS_locate(storage->context, file) || resources_images_exists(file);
+    return FS_locate(storage->context, name) || resources_images_exists(name);
 }
 
 static void *_load(FS_Handle_t *handle, bool null_terminate, size_t *size)
@@ -243,7 +243,7 @@ static int _resource_compare_by_name(const void *lhs, const void *rhs)
 {
     const Storage_Resource_t **l = (const Storage_Resource_t **)lhs;
     const Storage_Resource_t **r = (const Storage_Resource_t **)rhs;
-    return strcasecmp((*l)->file, (*r)->file);
+    return strcasecmp((*l)->name, (*r)->name);
 }
 
 #ifdef __STORAGE_CACHE_ENTRIES_LIMIT__
@@ -276,7 +276,7 @@ static const Storage_Load_Function_t _load_functions[Storage_Resource_Types_t_Co
     _load_as_image
 };
 
-static bool _resource_load(Storage_Resource_t *resource, const char *file, Storage_Resource_Types_t type)
+static bool _resource_load(Storage_Resource_t *resource, const char *name, Storage_Resource_Types_t type)
 {
     if (type == STORAGE_RESOURCE_STRING) {
         return false;
@@ -285,7 +285,7 @@ static bool _resource_load(Storage_Resource_t *resource, const char *file, Stora
         return false;
     } else
     if (type == STORAGE_RESOURCE_IMAGE) {
-        const Image_t *image = resources_images_find(file);
+        const Image_t *image = resources_images_find(name);
         if (!image) {
             return false;
         }
@@ -308,12 +308,12 @@ static bool _resource_load(Storage_Resource_t *resource, const char *file, Stora
     return true;
 }
 
-Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Storage_Resource_Types_t type)
+Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_Resource_Types_t type)
 {
-    const Storage_Resource_t *key = &(Storage_Resource_t){ .file = (char *)file };
+    const Storage_Resource_t *key = &(Storage_Resource_t){ .name = (char *)name };
     Storage_Resource_t **entry = bsearch((const void *)&key, storage->resources, arrlen(storage->resources), sizeof(Storage_Resource_t *), _resource_compare_by_name);
     if (entry) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "cache-hit for resource `%s`, resetting age and returning", file);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "cache-hit for resource `%s`, resetting age and returning", name);
         Storage_Resource_t *resource = *entry;
         resource->age = 0.0f; // Reset age on cache-hit.
         return resource;
@@ -325,11 +325,11 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Storage_R
         return NULL;
     }
 
-    bool loaded = _resource_load(resource, file, type);
+    bool loaded = _resource_load(resource, name, type);
     if (loaded) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "hard-coded resource `%s` found", file);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "hard-coded resource `%s` found", name);
     } else {
-        FS_Handle_t *handle = FS_locate_and_open(storage->context, file);
+        FS_Handle_t *handle = FS_locate_and_open(storage->context, name);
         if (!handle) {
             free(resource);
             return NULL;
@@ -343,21 +343,22 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Storage_R
         free(resource);
         return NULL;
     }
-    resource->file = memdup(file, strlen(file) + 1);
+    resource->name = memdup(name, strlen(name) + 1);
 
     arrpush(storage->resources, resource);
 #ifdef __STORAGE_CACHE_ENTRIES_LIMIT__
     if (arrlen(storage->resources) > __STORAGE_CACHE_ENTRIES_LIMIT__) {
         qsort(storage->resources, arrlen(storage->resources), sizeof(Storage_Resource_t *), _resource_compare_by_age);
+        // FIXME: search for the first available!!!
         if (storage->resources[0]->references == 0) { // Is the first entry available for release?
             storage->resources[0]->age = STORAGE_RESOURCE_AGE_LIMIT; // Mark the oldest for release in the next cycle.
-            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource `%s` marked for release", storage->resources[0]->file);
+            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource `%s` marked for release", storage->resources[0]->name);
         }
     }
 #endif
 
     qsort(storage->resources, arrlen(storage->resources), sizeof(Storage_Resource_t *), _resource_compare_by_name); // Keep sorted to use binary-search.
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource `%s` stored as %p, cache optimized", file, resource);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource `%s` stored as %p, cache optimized", name, resource);
 
     return resource;
 }
@@ -378,9 +379,9 @@ void Storage_unlock(Storage_Resource_t *resource)
     }
 }
 
-FS_Handle_t *Storage_open(const Storage_t *storage, const char *file)
+FS_Handle_t *Storage_open(const Storage_t *storage, const char *name)
 {
-    return FS_locate_and_open(storage->context, file);
+    return FS_locate_and_open(storage->context, name);
 }
 
 bool Storage_update(Storage_t *storage, float delta_time)

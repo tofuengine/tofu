@@ -38,7 +38,7 @@ typedef enum _Storage_Resource_Types_t {
 } Storage_Resource_Types_t;
 
 typedef struct _Storage_Resource_t {
-    char *file;
+    char *name; // Resources are references by a name, which can is (base-path) relative.
     Storage_Resource_Types_t type;
     union {
         struct {
@@ -60,7 +60,7 @@ typedef struct _Storage_Resource_t {
 } Storage_Resource_t;
 
 typedef struct _Storage_Configuration_t {
-    const char *base_path;
+    const char *base_pathname;
 } Storage_Configuration_t;
 
 
@@ -82,14 +82,14 @@ typedef struct _Storage_t {
 extern Storage_t *Storage_create(const Storage_Configuration_t *configuration);
 extern void Storage_destroy(Storage_t *storage);
 
-extern bool Storage_exists(const Storage_t *storage, const char *file);
+extern bool Storage_exists(const Storage_t *storage, const char *name);
 
-extern Storage_Resource_t *Storage_load(Storage_t *storage, const char *file, Storage_Resource_Types_t type);
+extern Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_Resource_Types_t type);
 
 extern void Storage_lock(Storage_Resource_t *resource);
 extern void Storage_unlock(Storage_Resource_t *resource);
 
-extern FS_Handle_t *Storage_open(const Storage_t *storage, const char *file);
+extern FS_Handle_t *Storage_open(const Storage_t *storage, const char *name);
 
 extern bool Storage_update(Storage_t *storage, float delta_time);
 
