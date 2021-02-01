@@ -249,7 +249,7 @@ void luaX_unref(lua_State *L, luaX_Reference ref)
     luaL_unref(L, LUA_REGISTRYINDEX, ref);
 }
 
-void luaX_checkargument(lua_State *L, int idx, const char *filename, int line, ...)
+void luaX_checkargument(lua_State *L, int idx, const char *file, int line, ...)
 {
     int actual_type = lua_type(L, idx);
     int success = 1;
@@ -267,7 +267,7 @@ void luaX_checkargument(lua_State *L, int idx, const char *filename, int line, .
     }
     va_end(args);
     if (!success) {
-        luaL_error(L, "[%s:%d] signature failure for argument #%d (wrong actual type, got `%s`)", filename, line, idx, lua_typename(L, actual_type));
+        luaL_error(L, "[%s:%d] signature failure for argument #%d (wrong actual type, got `%s`)", file, line, idx, lua_typename(L, actual_type));
     }
 }
 

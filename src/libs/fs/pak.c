@@ -95,7 +95,7 @@ typedef struct _Pak_Index_t {
 
 typedef struct _Pak_Mount_t {
     Mount_VTable_t vtable; // Matches `_FS_Mount_t` structure.
-    char filename[PLATFORM_PATH_MAX];
+    char path[PLATFORM_PATH_MAX];
     size_t entries;
     Pak_Entry_t *directory;
     uint8_t flags;
@@ -111,10 +111,10 @@ typedef struct _Pak_Handle_t {
     xor_context_t cipher_context;
 } Pak_Handle_t;
 
-static void _pak_mount_ctor(FS_Mount_t *mount, const char *filename, size_t entries, Pak_Entry_t *directory, uint8_t flags);
+static void _pak_mount_ctor(FS_Mount_t *mount, const char *path, size_t entries, Pak_Entry_t *directory, uint8_t flags);
 static void _pak_mount_dtor(FS_Mount_t *mount);
-static bool _pak_mount_contains(const FS_Mount_t *mount, const char *basename);
-static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *basename);
+static bool _pak_mount_contains(const FS_Mount_t *mount, const char *name);
+static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *name);
 
 static void _pak_handle_ctor(FS_Handle_t *handle, FILE *stream, long offset, size_t size, bool encrypted, const uint8_t id[PAK_NAME_LENGTH]);
 static void _pak_handle_dtor(FS_Handle_t *handle);
@@ -124,12 +124,12 @@ static bool _pak_handle_seek(FS_Handle_t *handle, long offset, int whence);
 static long _pak_handle_tell(FS_Handle_t *handle);
 static bool _pak_handle_eof(FS_Handle_t *handle);
 
-bool FS_pak_is_valid(const char *filename)
+bool FS_pak_is_valid(const char *path)
 {
     struct stat path_stat;
-    int result = stat(filename, &path_stat);
+    int result = stat(path, &path_stat);
     if (result != 0) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get stats for file `%s`", filename);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get stats for file `%s`", path);
         return false;
     }
 
@@ -137,9 +137,9 @@ bool FS_pak_is_valid(const char *filename)
         return false;
     }
 
-    FILE *stream = fopen(filename, "rb");
+    FILE *stream = fopen(path, "rb");
     if (!stream) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't access file `%s`", filename);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't access file `%s`", path);
         return false;
     }
 
@@ -159,35 +159,35 @@ static int _pak_entry_compare(const void *lhs, const void *rhs)
     return memcmp(l->id, r->id, PAK_NAME_LENGTH);
 }
 
-FS_Mount_t *FS_pak_mount(const char *filename)
+FS_Mount_t *FS_pak_mount(const char *path)
 {
-    FILE *stream = fopen(filename, "rb");
+    FILE *stream = fopen(path, "rb");
     if (!stream) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't access file `%s`", filename);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't access file `%s`", path);
         return NULL;
     }
 
     Pak_Header_t header;
     size_t entries_read = fread(&header, sizeof(Pak_Header_t), 1, stream);
     if (entries_read != 1) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read file `%s` header", filename);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read file `%s` header", path);
         fclose(stream);
         return NULL;
     }
     if (strncmp(header.signature, PAK_SIGNATURE, PAK_SIGNATURE_LENGTH) != 0) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "file `%s` is not a valid archive", filename);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "file `%s` is not a valid archive", path);
         fclose(stream);
         return NULL;
     }
     if (header.version != PAK_VERSION) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "archive `%s` version mismatch (found %d, required %d)", filename, header.version, PAK_VERSION);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "archive `%s` version mismatch (found %d, required %d)", path, header.version, PAK_VERSION);
         fclose(stream);
         return NULL;
     }
 
     bool seeked = fseek(stream, -sizeof(Pak_Index_t), SEEK_END) == 0;
     if (!seeked) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't seek file `%s` directory-header", filename);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't seek file `%s` directory-header", path);
         fclose(stream);
         return NULL;
     }
@@ -195,14 +195,14 @@ FS_Mount_t *FS_pak_mount(const char *filename)
     Pak_Index_t index;
     entries_read = fread(&index, sizeof(Pak_Index_t), 1, stream);
     if (entries_read != 1) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read file `%s` directory-header", filename);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't read file `%s` directory-header", path);
         fclose(stream);
         return NULL;
     }
 
     seeked = fseek(stream, (long)index.offset, SEEK_SET) == 0;
     if (!seeked) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't seek file `%s` directory-header", filename);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't seek file `%s` directory-header", path);
         fclose(stream);
         return NULL;
     }
@@ -229,20 +229,20 @@ FS_Mount_t *FS_pak_mount(const char *filename)
 
     FS_Mount_t *mount = malloc(sizeof(Pak_Mount_t));
     if (!mount) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate mount for path `%s`", filename);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate mount for path `%s`", path);
         free(directory);
         return NULL;
     }
 
-    _pak_mount_ctor(mount, filename, index.entries, directory, header.flags);
+    _pak_mount_ctor(mount, path, index.entries, directory, header.flags);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "mount initialized for archive `%s` w/ %d entries (flags 0x%02x)",
-        filename, index.entries, header.flags);
+        path, index.entries, header.flags);
 
     return mount;
 }
 
-static void _pak_mount_ctor(FS_Mount_t *mount, const char *filename, size_t entries, Pak_Entry_t *directory, uint8_t flags)
+static void _pak_mount_ctor(FS_Mount_t *mount, const char *path, size_t entries, Pak_Entry_t *directory, uint8_t flags)
 {
     Pak_Mount_t *pak_mount = (Pak_Mount_t *)mount;
 
@@ -252,13 +252,13 @@ static void _pak_mount_ctor(FS_Mount_t *mount, const char *filename, size_t entr
                 .contains = _pak_mount_contains,
                 .open = _pak_mount_open
             },
-            .filename = { 0 },
+            .path = { 0 },
             .entries = entries,
             .directory = directory,
             .flags = flags
         };
 
-    strcpy(pak_mount->filename, filename);
+    strcpy(pak_mount->path, path);
 }
 
 static void _pak_mount_dtor(FS_Mount_t *mount)
@@ -268,70 +268,70 @@ static void _pak_mount_dtor(FS_Mount_t *mount)
     free(pak_mount->directory);
 }
 
-static inline void _hash_file(const char *filename, uint8_t id[PAK_NAME_LENGTH])
+static inline void _hash_file(const char *name, uint8_t id[PAK_NAME_LENGTH])
 {
     md5_context_t context;
     md5_init(&context);
-    for (size_t i = 0; i < strlen(filename); ++i) {
-        uint8_t c = tolower(filename[i]); // Treat file names as lowercase/case-insensitive.
+    for (size_t i = 0; i < strlen(name); ++i) {
+        uint8_t c = tolower(name[i]); // Treat file names as lowercase/case-insensitive.
         md5_update(&context, &c, 1);
     }
     md5_final(&context, id);
 }
 
-static bool _pak_mount_contains(const FS_Mount_t *mount, const char *basename)
+static bool _pak_mount_contains(const FS_Mount_t *mount, const char *name)
 {
     const Pak_Mount_t *pak_mount = (const Pak_Mount_t *)mount;
 
     Pak_Entry_t key = { 0 };
-    _hash_file(basename, key.id);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` id is `%.*s`", basename, PAK_NAME_LENGTH, key.id);
+    _hash_file(name, key.id);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` id is `%.*s`", name, PAK_NAME_LENGTH, key.id);
 
     const Pak_Entry_t *entry = bsearch((const void *)&key, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
 
     bool exists = entry; // FIXME: should be `!!`?
-    Log_assert(!exists, LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry `%s` found in mount %p", basename, pak_mount);
+    Log_assert(!exists, LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry `%s` found in mount %p", name, pak_mount);
     return exists;
 }
 
-static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *basename)
+static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *name)
 {
     const Pak_Mount_t *pak_mount = (const Pak_Mount_t *)mount;
 
     Pak_Entry_t key = { 0 };
-    _hash_file(basename, key.id);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` id is `%.*s`", basename, PAK_NAME_LENGTH, key.id);
+    _hash_file(name, key.id);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` id is `%.*s`", name, PAK_NAME_LENGTH, key.id);
 
     const Pak_Entry_t *entry = bsearch((const void *)&key, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
     if (!entry) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't find entry `%s`", basename);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't find entry `%s`", name);
         return NULL;
     }
 
-    FILE *stream = fopen(pak_mount->filename, "rb"); // Always in binary mode, line-terminators aren't an issue.
+    FILE *stream = fopen(pak_mount->path, "rb"); // Always in binary mode, line-terminators aren't an issue.
     if (!stream) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't access file `%s`", pak_mount->filename);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't access file `%s`", pak_mount->path);
         return NULL;
     }
 
     bool seeked = fseek(stream, (long)entry->offset, SEEK_SET) == 0; // Move to the found entry position into the file.
     if (!seeked) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't seek entry `%s` at offset %d in file `%s`", basename, entry->offset, pak_mount->filename);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't seek entry `%s` at offset %d in file `%s`", name, entry->offset, pak_mount->path);
         fclose(stream);
         return NULL;
     }
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry `%s` found at offset %d in file `%s`", basename, entry->offset, pak_mount->filename);
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry `%s` found at offset %d in file `%s`", name, entry->offset, pak_mount->path);
 
     FS_Handle_t *handle = malloc(sizeof(Pak_Handle_t));
     if (!handle) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate handle for entry `%s`", basename);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate handle for entry `%s`", name);
         fclose(stream);
         return NULL;
     }
 
     _pak_handle_ctor(handle, stream, (long)entry->offset, (size_t)entry->size, pak_mount->flags & PAK_FLAG_ENCRYPTED, entry->id);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry `%s` opened w/ handle %p (%d bytes)", basename, handle, entry->size);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry `%s` opened w/ handle %p (%d bytes)", name, handle, entry->size);
 
     return handle;
 }

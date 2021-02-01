@@ -36,7 +36,7 @@
 
 typedef struct _Std_Mount_t {
     Mount_VTable_t vtable; // Matches `_FS_Mount_t` structure.
-    char pathname[PLATFORM_PATH_MAX];
+    char path[PLATFORM_PATH_MAX];
 } Std_Mount_t;
 
 typedef struct _Std_Handle_t {
@@ -44,10 +44,10 @@ typedef struct _Std_Handle_t {
     FILE *stream;
 } Std_Handle_t;
 
-static void _std_mount_ctor(FS_Mount_t *mount, const char *pathname);
+static void _std_mount_ctor(FS_Mount_t *mount, const char *path);
 static void _std_mount_dtor(FS_Mount_t *mount);
-static bool _std_mount_contains(const FS_Mount_t *mount, const char *basename);
-static FS_Handle_t *_std_mount_open(const FS_Mount_t *mount, const char *basename);
+static bool _std_mount_contains(const FS_Mount_t *mount, const char *name);
+static FS_Handle_t *_std_mount_open(const FS_Mount_t *mount, const char *name);
 
 static void _std_handle_ctor(FS_Handle_t *handle, FILE *stream);
 static void _std_handle_dtor(FS_Handle_t *handle);
@@ -57,34 +57,34 @@ static bool _std_handle_seek(FS_Handle_t *handle, long offset, int whence);
 static long _std_handle_tell(FS_Handle_t *handle);
 static bool _std_handle_eof(FS_Handle_t *handle);
 
-bool FS_std_is_valid(const char *pathname)
+bool FS_std_is_valid(const char *path)
 {
     struct stat path_stat;
-    int result = stat(pathname, &path_stat);
+    int result = stat(path, &path_stat);
     if (result != 0) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get stats for `%s`", pathname);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get stats for `%s`", path);
         return false;
     }
 
     return S_ISDIR(path_stat.st_mode);
 }
 
-FS_Mount_t *FS_std_mount(const char *pathname)
+FS_Mount_t *FS_std_mount(const char *path)
 {
     FS_Mount_t *mount = malloc(sizeof(Std_Mount_t));
     if (!mount) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate mount for folder `%s`", pathname);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate mount for folder `%s`", path);
         return NULL;
     }
 
-    _std_mount_ctor(mount, pathname);
+    _std_mount_ctor(mount, path);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "mount %p initialized at folder `%s`", mount, pathname);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "mount %p initialized at folder `%s`", mount, path);
 
     return mount;
 }
 
-static void _std_mount_ctor(FS_Mount_t *mount, const char *pathname)
+static void _std_mount_ctor(FS_Mount_t *mount, const char *path)
 {
     Std_Mount_t *std_mount = (Std_Mount_t *)mount;
 
@@ -94,10 +94,10 @@ static void _std_mount_ctor(FS_Mount_t *mount, const char *pathname)
                 .contains = _std_mount_contains,
                 .open = _std_mount_open
             },
-            .pathname = { 0 }
+            .path = { 0 }
         };
 
-    strcpy(std_mount->pathname, pathname);
+    strcpy(std_mount->path, path);
 }
 
 static void _std_mount_dtor(FS_Mount_t *mount)
@@ -107,55 +107,55 @@ static void _std_mount_dtor(FS_Mount_t *mount)
     *std_mount = (Std_Mount_t){ 0 };
 }
 
-static bool _std_mount_contains(const FS_Mount_t *mount, const char *basename)
+static bool _std_mount_contains(const FS_Mount_t *mount, const char *name)
 {
     const Std_Mount_t *std_mount = (const Std_Mount_t *)mount;
 
-    char filename[PLATFORM_PATH_MAX];
-    strcpy(filename, std_mount->pathname);
-    strcat(filename, PLATFORM_PATH_SEPARATOR_SZ);
-    strcat(filename, basename);
-    for (size_t i = 0; filename[i] != '\0'; ++i) { // Replace virtual file-system separator `/` with the actual one.
-        if (filename[i] == FS_PATH_SEPARATOR) {
-            filename[i] = PLATFORM_PATH_SEPARATOR;
+    char path[PLATFORM_PATH_MAX];
+    strcpy(path, std_mount->path);
+    strcat(path, PLATFORM_PATH_SEPARATOR_SZ);
+    strcat(path, name);
+    for (size_t i = 0; path[i] != '\0'; ++i) { // Replace virtual file-system separator `/` with the actual one.
+        if (path[i] == FS_PATH_SEPARATOR) {
+            path[i] = PLATFORM_PATH_SEPARATOR;
         }
     } // FIXME: better organize name normalization.
 
-    bool exists = access(filename, R_OK) != -1;
-    Log_assert(!exists, LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` found in mount %p", basename, mount);
+    bool exists = access(path, R_OK) != -1;
+    Log_assert(!exists, LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` found in mount %p", name, mount);
     return exists;
 }
 
-static FS_Handle_t *_std_mount_open(const FS_Mount_t *mount, const char *basename)
+static FS_Handle_t *_std_mount_open(const FS_Mount_t *mount, const char *name)
 {
     const Std_Mount_t *std_mount = (const Std_Mount_t *)mount;
 
-    char filename[PLATFORM_PATH_MAX];
-    strcpy(filename, std_mount->pathname);
-    strcat(filename, PLATFORM_PATH_SEPARATOR_SZ);
-    strcat(filename, basename);
-    for (size_t i = 0; filename[i] != '\0'; ++i) { // Replace virtual file-system separator `/` with the actual one.
-        if (filename[i] == FS_PATH_SEPARATOR) {
-            filename[i] = PLATFORM_PATH_SEPARATOR;
+    char path[PLATFORM_PATH_MAX];
+    strcpy(path, std_mount->path);
+    strcat(path, PLATFORM_PATH_SEPARATOR_SZ);
+    strcat(path, name);
+    for (size_t i = 0; path[i] != '\0'; ++i) { // Replace virtual file-system separator `/` with the actual one.
+        if (path[i] == FS_PATH_SEPARATOR) {
+            path[i] = PLATFORM_PATH_SEPARATOR;
         }
     }
 
-    FILE *stream = fopen(filename, "rb");
+    FILE *stream = fopen(path, "rb");
     if (!stream) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't access file `%s`", filename);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't access file `%s`", path);
         return NULL;
     }
 
     FS_Handle_t *handle = malloc(sizeof(Std_Handle_t));
     if (!handle) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate handle for file `%s`", basename);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate handle for file `%s`", name);
         fclose(stream);
         return NULL;
     }
 
     _std_handle_ctor(handle, stream);
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` opened w/ handle %p", basename, handle);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` opened w/ handle %p", name, handle);
 
     return handle;
 }

@@ -44,13 +44,13 @@ struct _FS_Context_t {
 
 #define LOG_CONTEXT "fs"
 
-static inline FS_Mount_t *_mount(const char *filename)
+static inline FS_Mount_t *_mount(const char *path)
 {
-    if (FS_std_is_valid(filename)) {
-        return FS_std_mount(filename);
+    if (FS_std_is_valid(path)) {
+        return FS_std_mount(path);
     } else
-    if (FS_pak_is_valid(filename)) {
-        return FS_pak_mount(filename);
+    if (FS_pak_is_valid(path)) {
+        return FS_pak_mount(path);
     } else {
         return NULL;
     }
@@ -62,11 +62,11 @@ static inline void _unmount(FS_Mount_t *mount)
     free(mount);
 }
 
-static bool _attach(FS_Context_t *context, const char *filename)
+static bool _attach(FS_Context_t *context, const char *path)
 {
-    FS_Mount_t *mount = _mount(filename); // Path need to be already resolved.
+    FS_Mount_t *mount = _mount(path); // Path need to be already resolved.
     if (!mount) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't attach mount-point `%s`", filename);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't attach mount-point `%s`", path);
         return false;
     }
 
@@ -75,7 +75,7 @@ static bool _attach(FS_Context_t *context, const char *filename)
     return true;
 }
 
-FS_Context_t *FS_create(const char *base_pathname)
+FS_Context_t *FS_create(const char *base_path)
 {
     FS_Context_t *context = malloc(sizeof(FS_Context_t));
     if (!context) {
@@ -85,33 +85,33 @@ FS_Context_t *FS_create(const char *base_pathname)
 
     *context = (FS_Context_t){ 0 };
 
-    char pathname[PLATFORM_PATH_MAX]; // Using local buffer to avoid un-tracked `malloc()` for the syscall.
-    char *ptr = realpath(base_pathname, pathname);
+    char resolved[PLATFORM_PATH_MAX]; // Using local buffer to avoid un-tracked `malloc()` for the syscall.
+    char *ptr = realpath(base_path, resolved);
     if (!ptr) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't resolve `%s`", base_pathname);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't resolve `%s`", base_path);
         free(context);
         return NULL;
     }
 
-    DIR *dp = opendir(pathname);
+    DIR *dp = opendir(resolved);
     if (dp) { // Path is a folder, scan and mount valid archives.
         for (struct dirent *entry = readdir(dp); entry; entry = readdir(dp)) {
-            char filename[PLATFORM_PATH_MAX];
-            strcpy(filename, pathname);
-            strcat(filename, PLATFORM_PATH_SEPARATOR_SZ);
-            strcat(filename, entry->d_name);
+            char path[PLATFORM_PATH_MAX];
+            strcpy(path, resolved);
+            strcat(path, PLATFORM_PATH_SEPARATOR_SZ);
+            strcat(path, entry->d_name);
 
-            if (!FS_pak_is_valid(filename)) {
+            if (!FS_pak_is_valid(path)) {
                 continue;
             }
 
-            _attach(context, filename);
+            _attach(context, path);
         }
 
         closedir(dp);
     }
 
-    _attach(context, pathname); // Mount the resolved folder, as well (overriding archives).
+    _attach(context, resolved); // Mount the resolved folder, as well (overriding archives).
 
     return context;
 }
@@ -131,30 +131,30 @@ void FS_destroy(FS_Context_t *context)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context freed");
 }
 
-bool FS_attach(FS_Context_t *context, const char *pathname)
+bool FS_attach(FS_Context_t *context, const char *path)
 {
     char resolved[PLATFORM_PATH_MAX]; // Using local buffer to avoid un-tracked `malloc()` for the syscall.
-    char *ptr = realpath(pathname ? pathname : PLATFORM_PATH_CURRENT_SZ, resolved);
+    char *ptr = realpath(path ? path : PLATFORM_PATH_CURRENT_SZ, resolved);
     if (!ptr) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't resolve `%s`", pathname);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't resolve path `%s`", path);
         return false;
     }
 
     return _attach(context, resolved);
 }
 
-FS_Handle_t *FS_locate_and_open(const FS_Context_t *context, const char *basename)
+FS_Handle_t *FS_locate_and_open(const FS_Context_t *context, const char *name)
 {
-    const FS_Mount_t *mount = FS_locate(context, basename);
+    const FS_Mount_t *mount = FS_locate(context, name);
     if (!mount) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't locate file `%s`", basename);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't locate file `%s`", name);
         return NULL;
     }
 
-    return FS_open(mount, basename);
+    return FS_open(mount, name);
 }
 
-const FS_Mount_t *FS_locate(const FS_Context_t *context, const char *basename)
+const FS_Mount_t *FS_locate(const FS_Context_t *context, const char *name)
 {
 #ifdef __FS_SUPPORT_MOUNT_OVERRIDE__
     // Backward scan, later mounts gain priority over existing ones.
@@ -165,7 +165,7 @@ const FS_Mount_t *FS_locate(const FS_Context_t *context, const char *basename)
     for (size_t count = arrlen(context->mounts); count; --count) {
         const FS_Mount_t *mount = *(current++);
 #endif
-        if (mount->vtable.contains(mount, basename)) {
+        if (mount->vtable.contains(mount, name)) {
             return mount;
         }
     }
@@ -173,9 +173,9 @@ const FS_Mount_t *FS_locate(const FS_Context_t *context, const char *basename)
     return NULL;
 }
 
-FS_Handle_t *FS_open(const FS_Mount_t *mount, const char *basename)
+FS_Handle_t *FS_open(const FS_Mount_t *mount, const char *name)
 {
-    return mount->vtable.open(mount, basename);
+    return mount->vtable.open(mount, name);
 }
 
 void FS_close(FS_Handle_t *handle)

@@ -172,25 +172,25 @@ static int _searcher(lua_State *L)
 {
     Storage_t *storage = (Storage_t *)lua_touserdata(L, lua_upvalueindex(1));
 
-    const char *basename = lua_tostring(L, 1);
+    const char *name = lua_tostring(L, 1);
 
-    char filename[PLATFORM_PATH_MAX] = "@"; // Prepend a `@`, required by Lua to track files.
-    strcat(filename, basename);
-    for (size_t i = 1; filename[i] != '\0'; ++i) { // Replace `.` with `/` to map (virtual) file system entry.
-        if (filename[i] == '.') {
-            filename[i] = FS_PATH_SEPARATOR;
+    char path[PLATFORM_PATH_MAX] = "@"; // Prepend a `@`, required by Lua to track files.
+    strcat(path, name);
+    for (size_t i = 1; path[i] != '\0'; ++i) { // Replace `.` with `/` to map (virtual) file system entry.
+        if (path[i] == '.') {
+            path[i] = FS_PATH_SEPARATOR;
         }
     }
-    strcat(filename, ".lua");
+    strcat(path, ".lua");
 
-    const Storage_Resource_t *resource = Storage_load(storage, filename + 1, STORAGE_RESOURCE_BLOB);
+    const Storage_Resource_t *resource = Storage_load(storage, path + 1, STORAGE_RESOURCE_BLOB);
     if (!resource) {
         return LUA_ERRFILE;
     }
 
-    int result = lua_load(L, _reader, &(Reader_Context_t){ .ptr = S_BPTR(resource), .size = S_BSIZE(resource) }, filename, NULL); // Neither `text` nor `binary`: autodetect.
+    int result = lua_load(L, _reader, &(Reader_Context_t){ .ptr = S_BPTR(resource), .size = S_BSIZE(resource) }, path, NULL); // Neither `text` nor `binary`: autodetect.
     if (result != LUA_OK) {
-        luaL_error(L, "failed w/ error #%d while loading file `%s`", result, filename + 1); // Skip the `@` character.
+        luaL_error(L, "failed w/ error #%d while loading file `%s`", result, path + 1); // Skip the `@` character.
     }
 
     return 1;

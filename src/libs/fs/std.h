@@ -27,7 +27,7 @@
 
 #include "fs.h"
 
-extern bool FS_std_is_valid(const char *pathname);
-extern FS_Mount_t *FS_std_mount(const char *pathname);
+extern bool FS_std_is_valid(const char *path);
+extern FS_Mount_t *FS_std_mount(const char *path);
 
 #endif /* __FS_STD_H__ */

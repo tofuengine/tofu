@@ -124,17 +124,17 @@ static int source_new(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    const char *filename = LUAX_STRING(L, 1);
+    const char *name = LUAX_STRING(L, 1);
     Source_Type_t type = (Source_Type_t)LUAX_OPTIONAL_INTEGER(L, 2, SOURCE_TYPE_MUSIC);
 
     const Storage_t *storage = (const Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
-    FS_Handle_t *handle = Storage_open(storage, filename); // The handle is kept open, the source could require it.
+    FS_Handle_t *handle = Storage_open(storage, name); // The handle is kept open, the source could require it.
     if (!handle) {
-        return luaL_error(L, "can't access file `%s`", filename);
+        return luaL_error(L, "can't access file `%s`", name);
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p opened for file `%s`", handle, filename);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p opened for file `%s`", handle, name);
 
     SL_Callbacks_t callbacks = (SL_Callbacks_t){
             .read = _handle_read,

@@ -42,11 +42,11 @@ static bool _parse_argument(const char *string, const char *prefix, const char *
 options_t options_parse_command_line(int argc, const char *argv[])
 {
     options_t options = (options_t) {
-        .base_pathname = PLATFORM_PATH_CURRENT_SZ
+        .base_path = PLATFORM_PATH_CURRENT_SZ
     };
 
     for (int i = 1; i < argc; ++i) { // Skip executable name, i.e. argument #0.
-        if (_parse_argument(argv[i], "--base-path=", &options.base_pathname)) {
+        if (_parse_argument(argv[i], "--base-path=", &options.base_path)) {
             break;
         }
     }

@@ -60,7 +60,7 @@ typedef struct _Storage_Resource_t {
 } Storage_Resource_t;
 
 typedef struct _Storage_Configuration_t {
-    const char *base_pathname;
+    const char *base_path;
 } Storage_Configuration_t;
 
 
