@@ -166,9 +166,10 @@ static int input_auto_repeat1(lua_State *L)
     Input_t *input = (Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
 
     const Map_Entry_t *entry = map_find(L, id, _buttons, Input_Buttons_t_CountOf);
-    Input_set_auto_repeat(input, (Input_Buttons_t)entry->value, 0.0f); // TODO: add a `clear_auto_repeat()` method and use this overload to return the current value.
+    float period = Input_get_auto_repeat(input, (Input_Buttons_t)entry->value);
+    lua_pushnumber(L, (lua_Number)period);
 
-    return 0;
+    return 1;
 }
 
 static int input_auto_repeat2(lua_State *L)
@@ -234,7 +235,27 @@ static int input_cursor(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
-static int input_cursor_area(lua_State *L) // TODO: rename to `region`?
+static int input_cursor_area0(lua_State *L) 
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+
+    Input_t *input = (Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
+
+    const Input_Cursor_t *cursor = Input_get_cursor(input);
+    lua_pushnumber(L, (lua_Number)cursor->area.x0);
+    lua_pushnumber(L, (lua_Number)cursor->area.y0);
+    lua_pushnumber(L, (lua_Number)(cursor->area.x1 - cursor->area.x0 + 1));
+    lua_pushnumber(L, (lua_Number)(cursor->area.y1 - cursor->area.y0 + 1));
+
+    return 4;
+}
+
+static int input_cursor_area4(lua_State *L) 
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -252,6 +273,14 @@ static int input_cursor_area(lua_State *L) // TODO: rename to `region`?
     Input_set_cursor_area(input, x, y, x + width - 1, y + height - 1);
 
     return 0;
+}
+
+static int input_cursor_area(lua_State *L)// TODO: rename to `region`?
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(0, input_cursor_area0)
+        LUAX_OVERLOAD_ARITY(4, input_cursor_area4)
+    LUAX_OVERLOAD_END
 }
 
 static int input_stick(lua_State *L)
