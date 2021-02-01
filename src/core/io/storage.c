@@ -52,6 +52,9 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
             .configuration = *configuration
         };
 
+    // FIXME: in case of a path referring to file, split the folder from the filename so we have a folder where
+    //        files can be written into!
+
     storage->context = FS_create(configuration->base_path);
     if (!storage->context) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create file-system context at `%s`", configuration->base_path);
