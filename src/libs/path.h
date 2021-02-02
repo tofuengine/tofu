@@ -22,35 +22,14 @@
  * SOFTWARE.
  */
 
-#include "options.h"
-
-#include <platform.h>
+#ifndef __LIBS_PATH_H__
+#define __LIBS_PATH_H__
 
 #include <stdbool.h>
-#include <string.h>
 
-static bool _parse_argument(const char *string, const char *prefix, const char **ptr)
-{
-    size_t length = strlen(prefix);
-    if (strncmp(string, prefix, length) == 0) {
-        *ptr = string + length;
-        return true;
-    }
-    return false;
-}
+extern bool path_exists(const char *path);
+extern bool path_is_folder(const char *path);
+extern bool path_is_file(const char *path);
+extern void path_split(const char *path, char *folder, char *file);
 
-options_t options_parse_command_line(int argc, const char *argv[])
-{
-    options_t options = (options_t) {
-        .path = PLATFORM_PATH_CURRENT_SZ
-    };
-
-    for (int i = 1; i < argc; ++i) { // Skip executable name, i.e. argument #0.
-        if (_parse_argument(argv[i], "--path=", &options.path)) {
-            break;
-        }
-    }
-
-    return options;
-}
-
+#endif  /* __LIBS_PATH_H__ */

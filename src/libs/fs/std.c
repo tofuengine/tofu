@@ -27,10 +27,8 @@
 #include "internals.h"
 
 #include <libs/log.h>
+#include <libs/path.h>
 #include <libs/stb.h>
-
-#include <sys/stat.h>
-#include <unistd.h>
 
 #define LOG_CONTEXT "fs-std"
 
@@ -42,6 +40,7 @@ typedef struct _Std_Mount_t {
 typedef struct _Std_Handle_t {
     Handle_VTable_t vtable; // Matches `_FS_Handle_t` structure.
     FILE *stream;
+    size_t size;
 } Std_Handle_t;
 
 static void _std_mount_ctor(FS_Mount_t *mount, const char *path);
@@ -59,14 +58,7 @@ static bool _std_handle_eof(FS_Handle_t *handle);
 
 bool FS_std_is_valid(const char *path)
 {
-    struct stat path_stat;
-    int result = stat(path, &path_stat);
-    if (result != 0) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get stats for `%s`", path);
-        return false;
-    }
-
-    return S_ISDIR(path_stat.st_mode);
+    return path_is_folder(path);
 }
 
 FS_Mount_t *FS_std_mount(const char *path)
@@ -121,7 +113,7 @@ static bool _std_mount_contains(const FS_Mount_t *mount, const char *name)
         }
     } // FIXME: better organize name normalization.
 
-    bool exists = access(path, R_OK) != -1;
+    bool exists = path_exists(path);
     Log_assert(!exists, LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` found in mount %p", name, mount);
     return exists;
 }
@@ -164,6 +156,13 @@ static void _std_handle_ctor(FS_Handle_t *handle, FILE *stream)
 {
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
+    fseek(stream, 0L, SEEK_END);
+    size_t size = (size_t)ftell(stream);
+#ifdef __DEBUG_FS_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p is %d bytes long", handle, size);
+#endif
+    rewind(stream);
+
     *std_handle = (Std_Handle_t){
             .vtable = (Handle_VTable_t){
                 .dtor = _std_handle_dtor,
@@ -173,7 +172,8 @@ static void _std_handle_ctor(FS_Handle_t *handle, FILE *stream)
                 .tell = _std_handle_tell,
                 .eof = _std_handle_eof
             },
-            .stream = stream
+            .stream = stream,
+            .size = size
         };
 }
 
@@ -188,16 +188,7 @@ static size_t _std_handle_size(FS_Handle_t *handle)
 {
     Std_Handle_t *std_handle = (Std_Handle_t *)handle;
 
-    struct stat stat;
-    int result = fstat(fileno(std_handle->stream), &stat);
-    if (result != 0) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get stats for handle %p", handle);
-        return 0;
-    }
-
-//    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p is", std_handle);
-
-    return (size_t)stat.st_size;
+    return std_handle->size;
 }
 
 static size_t _std_handle_read(FS_Handle_t *handle, void *buffer, size_t bytes_requested)

@@ -109,7 +109,7 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
 //    audio->device_config.stopCallback            = _stop_callback;
     audio->device_config.pUserData               = (void *)audio;
     audio->device_config.noPreZeroedOutputBuffer = MA_FALSE;
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio device configured w/ %dHz, %d channel(s), %d byte(s) per sample", SL_FRAMES_PER_SECOND, SL_CHANNELS_PER_FRAME, SL_BYTES_PER_SAMPLE);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio device configured w/ %dHz, %d channel(s), %d bytes per sample", SL_FRAMES_PER_SECOND, SL_CHANNELS_PER_FRAME, SL_BYTES_PER_SAMPLE);
 
     result = ma_device_init(&audio->context, &audio->device_config, &audio->device);
     if (result != MA_SUCCESS) {

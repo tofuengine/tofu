@@ -27,9 +27,9 @@
 #include <config.h>
 #include <libs/gl/palette.h>
 #include <libs/log.h>
+#include <libs/path.h>
 #include <libs/stb.h>
 #include <resources/images.h>
-#include <libs/stb.h>
 
 #include <stdint.h>
 
@@ -49,15 +49,15 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
     }
 
     *storage = (Storage_t){
-            .configuration = *configuration
+            .configuration = *configuration,
+            .base_path = { 0 }
         };
 
-    // FIXME: in case of a path referring to file, split the folder from the filename so we have a folder where
-    //        files can be written into!
+    path_split(configuration->path, storage->base_path, NULL); // Get the folder name, in case we are pointing straight to a PAK!
 
-    storage->context = FS_create(configuration->base_path);
+    storage->context = FS_create(configuration->path);
     if (!storage->context) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create file-system context at `%s`", configuration->base_path);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create file-system context at `%s`", configuration->path);
         free(storage);
         return NULL;
     }
@@ -107,6 +107,11 @@ void Storage_destroy(Storage_t *storage)
 
     free(storage);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "storage freed");
+}
+
+const char *Storage_get_base_path(const Storage_t *storage)
+{
+    return storage->base_path;
 }
 
 bool Storage_exists(const Storage_t *storage, const char *name)

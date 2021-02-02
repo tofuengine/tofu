@@ -122,7 +122,7 @@ Engine_t *Engine_create(int argc, const char *argv[])
     Log_initialize();
 
     engine->storage = Storage_create(&(const Storage_Configuration_t){
-            .base_path = options.base_path
+            .path = options.path
         });
     if (!engine->storage) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize storage");
@@ -302,12 +302,12 @@ void Engine_run(Engine_t *engine)
 #ifdef __GRAPHICS_CAPTURE_SUPPORT__
         const Input_Button_State_t *record_button = Input_get_button(engine->input, INPUT_BUTTON_RECORD);
         if (record_button->pressed) {
-            Display_toggle_recording(engine->display, engine->storage->configuration.base_path); // FIXME: use `Storage_get_base_path()`
+            Display_toggle_recording(engine->display, Storage_get_base_path(engine->storage));
         }
 
         const Input_Button_State_t *capture_button = Input_get_button(engine->input, INPUT_BUTTON_CAPTURE);
         if (capture_button->pressed) {
-            Display_grab_snapshot(engine->display, engine->storage->configuration.base_path); // FIXME: ditto
+            Display_grab_snapshot(engine->display, Storage_get_base_path(engine->storage));
         }
 #endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
 

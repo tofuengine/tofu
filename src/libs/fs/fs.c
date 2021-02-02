@@ -75,7 +75,7 @@ static bool _attach(FS_Context_t *context, const char *path)
     return true;
 }
 
-FS_Context_t *FS_create(const char *base_path)
+FS_Context_t *FS_create(const char *path)
 {
     FS_Context_t *context = malloc(sizeof(FS_Context_t));
     if (!context) {
@@ -86,9 +86,9 @@ FS_Context_t *FS_create(const char *base_path)
     *context = (FS_Context_t){ 0 };
 
     char resolved[PLATFORM_PATH_MAX]; // Using local buffer to avoid un-tracked `malloc()` for the syscall.
-    char *ptr = realpath(base_path, resolved);
+    char *ptr = realpath(path, resolved);
     if (!ptr) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't resolve `%s`", base_path);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't resolve `%s`", path);
         free(context);
         return NULL;
     }
@@ -96,16 +96,16 @@ FS_Context_t *FS_create(const char *base_path)
     DIR *dp = opendir(resolved);
     if (dp) { // Path is a folder, scan and mount valid archives.
         for (struct dirent *entry = readdir(dp); entry; entry = readdir(dp)) {
-            char path[PLATFORM_PATH_MAX];
-            strcpy(path, resolved);
-            strcat(path, PLATFORM_PATH_SEPARATOR_SZ);
-            strcat(path, entry->d_name);
+            char subpath[PLATFORM_PATH_MAX];
+            strcpy(subpath, resolved);
+            strcat(subpath, PLATFORM_PATH_SEPARATOR_SZ);
+            strcat(subpath, entry->d_name);
 
-            if (!FS_pak_is_valid(path)) {
+            if (!FS_pak_is_valid(subpath)) {
                 continue;
             }
 
-            _attach(context, path);
+            _attach(context, subpath);
         }
 
         closedir(dp);

@@ -28,11 +28,11 @@
 
 #include <libs/log.h>
 #include <libs/md5.h>
-#include <libs/xor.h>
+#include <libs/path.h>
 #include <libs/stb.h>
+#include <libs/xor.h>
 
 #include <ctype.h>
-#include <sys/stat.h>
 
 #define LOG_CONTEXT "fs-pak"
 
@@ -126,14 +126,7 @@ static bool _pak_handle_eof(FS_Handle_t *handle);
 
 bool FS_pak_is_valid(const char *path)
 {
-    struct stat path_stat;
-    int result = stat(path, &path_stat);
-    if (result != 0) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get stats for file `%s`", path);
-        return false;
-    }
-
-    if (!S_ISREG(path_stat.st_mode)) {
+    if (!path_is_file(path)) {
         return false;
     }
 

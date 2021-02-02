@@ -60,27 +60,30 @@ typedef struct _Storage_Resource_t {
 } Storage_Resource_t;
 
 typedef struct _Storage_Configuration_t {
-    const char *base_path;
+    const char *path;
 } Storage_Configuration_t;
 
 
 typedef struct _Storage_t {
     Storage_Configuration_t configuration;
 
+    char base_path[PLATFORM_PATH_MAX];
     FS_Context_t *context;
     Storage_Resource_t **resources;
 } Storage_t;
 
-#define S_SCHARS(r)         (r)->var.string.chars
-#define S_SLENTGH(r)        (r)->var.string.length
-#define S_BPTR(r)           (r)->var.blob.ptr
-#define S_BSIZE(r)          (r)->var.blob.size
-#define S_IWIDTH(r)         (r)->var.image.width
-#define S_IHEIGHT(r)        (r)->var.image.height
-#define S_IPIXELS(r)        (r)->var.image.pixels
+#define S_SCHARS(r)         ((r)->var.string.chars)
+#define S_SLENTGH(r)        ((r)->var.string.length)
+#define S_BPTR(r)           ((r)->var.blob.ptr)
+#define S_BSIZE(r)          ((r)->var.blob.size)
+#define S_IWIDTH(r)         ((r)->var.image.width)
+#define S_IHEIGHT(r)        ((r)->var.image.height)
+#define S_IPIXELS(r)        ((r)->var.image.pixels)
 
 extern Storage_t *Storage_create(const Storage_Configuration_t *configuration);
 extern void Storage_destroy(Storage_t *storage);
+
+extern const char *Storage_get_base_path(const Storage_t *storage);
 
 extern bool Storage_exists(const Storage_t *storage, const char *name);
 

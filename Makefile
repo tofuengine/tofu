@@ -127,113 +127,113 @@ primitives: $(TARGET)
 bunnymark: $(TARGET)
 	@echo "Launching *bunnymark* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/bunnymark
-	@./$(TARGET) --base-path=./demos/bunnymark
+	@./$(TARGET) --path=./demos/bunnymark
 
 fire: $(TARGET)
 	@echo "Launching *fire* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/fire
-	@./$(TARGET) --base-path=./demos/fire
+	@./$(TARGET) --path=./demos/fire
 
 tiled-map: $(TARGET)
 	@echo "Launching *tiled-map* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/tiled-map
-	@./$(TARGET) --base-path=./demos/tiled-map
+	@./$(TARGET) --path=./demos/tiled-map
 
 timers: $(TARGET)
 	@echo "Launching *timers* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/timers
-	@./$(TARGET) --base-path=./demos/timers
+	@./$(TARGET) --path=./demos/timers
 
 postfx: $(TARGET)
 	@echo "Launching *postfx* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/postfx
-	@./$(TARGET) --base-path=./demos/postfx
+	@./$(TARGET) --path=./demos/postfx
 
 spritestack: $(TARGET)
 	@echo "Launching *spritestack* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/spritestack
-	@./$(TARGET) --base-path=./demos/spritestack
+	@./$(TARGET) --path=./demos/spritestack
 
 palette: $(TARGET)
 	@echo "Launching *palette* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/palette
-	@./$(TARGET) --base-path=./demos/palette
+	@./$(TARGET) --path=./demos/palette
 
 mode7: $(TARGET)
 	@echo "Launching *mode7* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/mode7
-	@./$(TARGET) --base-path=./demos/mode7
+	@./$(TARGET) --path=./demos/mode7
 
 snake: $(TARGET)
 	@echo "Launching *snake* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/snake
-	@./$(TARGET) --base-path=./demos/snake
+	@./$(TARGET) --path=./demos/snake
 
 shades: $(TARGET)
 	@echo "Launching *shades* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/shades
-	@./$(TARGET) --base-path=./demos/shades
+	@./$(TARGET) --path=./demos/shades
 
 gamepad: $(TARGET)
 	@echo "Launching *gamepad* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/gamepad
-	@./$(TARGET) --base-path=./demos/gamepad
+	@./$(TARGET) --path=./demos/gamepad
 
 gamepad-pak: $(TARGET)
 	@echo "Launching *gamepad (PAK)* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/gamepad
 	@lua5.3 ./extras/pakgen.lua --input=./demos/gamepad --output=./demos/gamepad.pak --encrypted
-	@./$(TARGET) --base-path=./demos/gamepad.pak
+	@./$(TARGET) --path=./demos/gamepad.pak
 
 hello-tofu: $(TARGET)
 	@echo "Launching *hello-tofu* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/hello-tofu
-	@./$(TARGET) --base-path=./demos/hello-tofu
+	@./$(TARGET) --path=./demos/hello-tofu
 
 swirl: $(TARGET)
 	@echo "Launching *swirl* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/swirl
-	@./$(TARGET) --base-path=./demos/swirl
+	@./$(TARGET) --path=./demos/swirl
 
 twist: $(TARGET)
 	@echo "Launching *twist* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/twist
-	@./$(TARGET) --base-path=./demos/twist
+	@./$(TARGET) --path=./demos/twist
 
 tween: $(TARGET)
 	@echo "Launching *tween* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/tween
-	@./$(TARGET) --base-path=./demos/tween
+	@./$(TARGET) --path=./demos/tween
 
 helix: $(TARGET)
 	@echo "Launching *helix* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/helix
-	@./$(TARGET) --base-path=./demos/helix
+	@./$(TARGET) --path=./demos/helix
 
 mixer: $(TARGET)
 	@echo "Launching *mixer* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/mixer
-	@./$(TARGET) --base-path=./demos/mixer
+	@./$(TARGET) --path=./demos/mixer
 
 scaling: $(TARGET)
 	@echo "Launching *scaling* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/scaling
-	@./$(TARGET) --base-path=./demos/scaling
+	@./$(TARGET) --path=./demos/scaling
 
 rotations: $(TARGET)
 	@echo "Launching *rotations* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/rotations
-	@./$(TARGET) --base-path=./demos/rotations
+	@./$(TARGET) --path=./demos/rotations
 
 platform: $(TARGET)
 	@echo "Launching *platform* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/platform
-	@./$(TARGET) --base-path=./demos/platform
+	@./$(TARGET) --path=./demos/platform
 
 demo: $(TARGET)
 	@echo "Launching *$(DEMO)* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/$(DEMO)
-	@./$(TARGET) --base-path=./demos/$(DEMO)
+	@./$(TARGET) --path=./demos/$(DEMO)
 
 valgrind: $(TARGET)
 	@echo "Valgrind *$(DEMO)* application!"

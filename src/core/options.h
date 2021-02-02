@@ -26,7 +26,7 @@
 #define __CORE_OPTIONS_H__
 
 typedef struct _options_t {
-    const char *base_path;
+    const char *path;
 } options_t;
 
 extern options_t options_parse_command_line(int argc, const char *argv[]);
