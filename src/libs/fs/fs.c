@@ -26,6 +26,7 @@
 
 #include <config.h>
 #include <libs/log.h>
+#include <libs/path.h>
 #include <libs/stb.h>
 
 #include "internals.h"
@@ -97,9 +98,7 @@ FS_Context_t *FS_create(const char *path)
     if (dp) { // Path is a folder, scan and mount valid archives.
         for (struct dirent *entry = readdir(dp); entry; entry = readdir(dp)) {
             char subpath[PLATFORM_PATH_MAX];
-            strcpy(subpath, resolved);
-            strcat(subpath, PLATFORM_PATH_SEPARATOR_SZ);
-            strcat(subpath, entry->d_name);
+            path_join(subpath, resolved, entry->d_name);
 
             if (!FS_pak_is_valid(subpath)) {
                 continue;

@@ -24,6 +24,7 @@
 
 #include "path.h"
 
+#include <libs/fs/fs.h>
 #include <libs/log.h>
 #include <platform.h>
 
@@ -92,5 +93,17 @@ void path_split(const char *path, char *folder, char *file)
 
     if (folder && folder[strlen(folder) - 1] == PLATFORM_PATH_SEPARATOR) {
         folder[strlen(folder) - 1] = '\0';
+    }
+}
+
+void path_join(char *path, const char *folder, const char *file)
+{
+    strcpy(path, folder);
+    strcat(path, PLATFORM_PATH_SEPARATOR_SZ);
+    strcat(path, file);
+    for (size_t i = 0; path[i] != '\0'; ++i) { // Replace virtual file-system separator `/` with the actual one.
+        if (path[i] == FS_PATH_SEPARATOR) {
+            path[i] = PLATFORM_PATH_SEPARATOR;
+        }
     }
 }

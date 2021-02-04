@@ -104,14 +104,7 @@ static bool _std_mount_contains(const FS_Mount_t *mount, const char *name)
     const Std_Mount_t *std_mount = (const Std_Mount_t *)mount;
 
     char path[PLATFORM_PATH_MAX];
-    strcpy(path, std_mount->path);
-    strcat(path, PLATFORM_PATH_SEPARATOR_SZ);
-    strcat(path, name);
-    for (size_t i = 0; path[i] != '\0'; ++i) { // Replace virtual file-system separator `/` with the actual one.
-        if (path[i] == FS_PATH_SEPARATOR) {
-            path[i] = PLATFORM_PATH_SEPARATOR;
-        }
-    } // FIXME: better organize name normalization.
+    path_join(path, std_mount->path, name);
 
     bool exists = path_exists(path);
     Log_assert(!exists, LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` found in mount %p", name, mount);
@@ -123,14 +116,7 @@ static FS_Handle_t *_std_mount_open(const FS_Mount_t *mount, const char *name)
     const Std_Mount_t *std_mount = (const Std_Mount_t *)mount;
 
     char path[PLATFORM_PATH_MAX];
-    strcpy(path, std_mount->path);
-    strcat(path, PLATFORM_PATH_SEPARATOR_SZ);
-    strcat(path, name);
-    for (size_t i = 0; path[i] != '\0'; ++i) { // Replace virtual file-system separator `/` with the actual one.
-        if (path[i] == FS_PATH_SEPARATOR) {
-            path[i] = PLATFORM_PATH_SEPARATOR;
-        }
-    }
+    path_join(path, std_mount->path, name);
 
     FILE *stream = fopen(path, "rb");
     if (!stream) {
