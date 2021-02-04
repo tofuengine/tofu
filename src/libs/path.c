@@ -101,9 +101,9 @@ void path_join(char *path, const char *folder, const char *file)
     strcpy(path, folder);
     strcat(path, PLATFORM_PATH_SEPARATOR_SZ);
     strcat(path, file);
-    for (size_t i = 0; path[i] != '\0'; ++i) { // Replace virtual file-system separator `/` with the actual one.
-        if (path[i] == FS_PATH_SEPARATOR) {
-            path[i] = PLATFORM_PATH_SEPARATOR;
+    for (char *ptr = path; *ptr != '\0'; ++ptr) { // Replace virtual file-system separator `/` with the actual one.
+        if (*ptr == FS_PATH_SEPARATOR) {
+            *ptr = PLATFORM_PATH_SEPARATOR;
         }
     }
 }

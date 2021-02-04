@@ -176,9 +176,9 @@ static int _searcher(lua_State *L)
 
     char path[PLATFORM_PATH_MAX] = "@"; // Prepend a `@`, required by Lua to track files.
     strcat(path, name);
-    for (size_t i = 1; path[i] != '\0'; ++i) { // Replace `.` with `/` to map (virtual) file system entry.
-        if (path[i] == '.') {
-            path[i] = FS_PATH_SEPARATOR;
+    for (char *ptr = path; *ptr != '\0'; ++ptr) { // Replace `.` with `/` to map (virtual) file system entry.
+        if (*ptr == '.') {
+            *ptr = FS_PATH_SEPARATOR;
         }
     }
     strcat(path, ".lua");
