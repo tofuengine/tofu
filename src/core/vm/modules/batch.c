@@ -287,7 +287,7 @@ static int batch_blit(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
     LUAX_SIGNATURE_END
     const Batch_Object_t *self = (const Batch_Object_t *)LUAX_USERDATA(L, 1);
     const char *mode = LUAX_OPTIONAL_STRING(L, 2, "fast");
