@@ -33,7 +33,7 @@
 #include <stdbool.h>
 
 typedef struct _GL_Batch_Sprite_t {
-    int cell_id;
+    GL_Cell_t cell_id;
     GL_Point_t position;
     float sx, sy;
     int rotation;

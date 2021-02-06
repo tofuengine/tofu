@@ -168,7 +168,7 @@ static int batch_add4(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Batch_Object_t *self = (Batch_Object_t *)LUAX_USERDATA(L, 1);
-    int cell_id = LUAX_INTEGER(L, 2); // FIXME: make cell-id a `size_t' or a generic uint?
+    GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER(L, 2);
     int x = LUAX_OPTIONAL_INTEGER(L, 3, 0);
     int y = LUAX_OPTIONAL_INTEGER(L, 4, 0);
 
@@ -193,7 +193,7 @@ static int batch_add5(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Batch_Object_t *self = (Batch_Object_t *)LUAX_USERDATA(L, 1);
-    int cell_id = LUAX_INTEGER(L, 2);
+    GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER(L, 2);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
     int rotation = LUAX_INTEGER(L, 5);
@@ -220,7 +220,7 @@ static int batch_add6(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Batch_Object_t *self = (Batch_Object_t *)LUAX_USERDATA(L, 1);
-    int cell_id = LUAX_INTEGER(L, 2);
+    GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER(L, 2);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
     float scale_x = LUAX_NUMBER(L, 5);
@@ -251,7 +251,7 @@ static int batch_add7_8_9(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Batch_Object_t *self = (Batch_Object_t *)LUAX_USERDATA(L, 1);
-    int cell_id = LUAX_INTEGER(L, 2);
+    GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER(L, 2);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
     float scale_x = LUAX_NUMBER(L, 5);

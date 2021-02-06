@@ -36,6 +36,8 @@ typedef int8_t GL_Bool_t;
 
 typedef uint16_t GL_Pattern_t;
 
+typedef int GL_Cell_t;
+
 typedef struct _GL_Point_t {
     int x, y;
 } GL_Point_t;
@@ -75,5 +77,7 @@ typedef struct _GL_Rectangle_u32_t {
 
 #define GL_BOOL_FALSE   ((GL_Bool_t)0)
 #define GL_BOOL_TRUE    ((GL_Bool_t)1)
+
+#define GL_CELL_NIL     -1
 
 #endif  /* __GL_COMMON_H__ */

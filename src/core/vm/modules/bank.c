@@ -53,10 +53,15 @@ static const struct luaL_Reg _bank_functions[] = {
     { NULL, NULL }
 };
 
+static const luaX_Const _bank_constants[] = {
+    { "NIL", LUA_CT_INTEGER, { .i = GL_CELL_NIL } },
+    { NULL, LUA_CT_NIL, { 0 } }
+};
+
 int bank_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, NULL, _bank_functions, NULL, nup, META_TABLE);
+    return luaX_newmodule(L, NULL, _bank_functions, _bank_constants, nup, META_TABLE);
 }
 
 static int bank_new3(lua_State *L)
@@ -178,12 +183,12 @@ static int bank_size(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const Bank_Object_t *self = (const Bank_Object_t *)LUAX_USERDATA(L, 1);
-    int cell_id = LUAX_INTEGER(L, 2);
+    GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER(L, 2);
     float scale_x = LUAX_OPTIONAL_NUMBER(L, 3, 1.0f);
     float scale_y = LUAX_OPTIONAL_NUMBER(L, 4, scale_x);
 
     const GL_Sheet_t *sheet = self->sheet;
-    const GL_Rectangle_t *cell = cell_id == -1 ? sheet->cells : &sheet->cells[cell_id]; // If `-1` pick the first one.
+    const GL_Rectangle_t *cell = cell_id == GL_CELL_NIL ? sheet->cells : &sheet->cells[cell_id]; // If `-1` pick the first one.
     lua_pushinteger(L, (lua_Integer)((float)cell->width * fabsf(scale_x)));
     lua_pushinteger(L, (lua_Integer)((float)cell->height * fabsf(scale_y)));
 
@@ -224,7 +229,7 @@ static int bank_blit4(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const Bank_Object_t *self = (const Bank_Object_t *)LUAX_USERDATA(L, 1);
-    int cell_id = LUAX_INTEGER(L, 2); // FIXME: make cell-id a `size_t' or a generic uint?
+    GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER(L, 2); // FIXME: make cell-id a `size_t' or a generic uint?
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
 
@@ -245,7 +250,7 @@ static int bank_blit5(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const Bank_Object_t *self = (const Bank_Object_t *)LUAX_USERDATA(L, 1);
-    int cell_id = LUAX_INTEGER(L, 2);
+    GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER(L, 2);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
     int rotation = LUAX_INTEGER(L, 5);
@@ -268,7 +273,7 @@ static int bank_blit6(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const Bank_Object_t *self = (const Bank_Object_t *)LUAX_USERDATA(L, 1);
-    int cell_id = LUAX_INTEGER(L, 2);
+    GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER(L, 2);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
     float scale_x = LUAX_NUMBER(L, 5);
@@ -295,7 +300,7 @@ static int bank_blit7_8_9(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const Bank_Object_t *self = (const Bank_Object_t *)LUAX_USERDATA(L, 1);
-    int cell_id = LUAX_INTEGER(L, 2);
+    GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER(L, 2);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
     float scale_x = LUAX_NUMBER(L, 5);
@@ -306,6 +311,7 @@ static int bank_blit7_8_9(lua_State *L)
 
     const GL_Context_t *context = self->canvas.instance->context;
     const GL_Sheet_t *sheet = self->sheet;
+    // TODO: implement `GL_sheet_blit_XXX()` functions, passing a cell-id as argumento.
     GL_context_blit_sr(context, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, scale_x, scale_y, rotation, anchor_x, anchor_y);
 
     return 0;
