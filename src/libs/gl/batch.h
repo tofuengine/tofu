@@ -45,7 +45,7 @@ typedef struct _GL_Batch_t {
     GL_Batch_Sprite_t *sprites;
 } GL_Batch_t;
 
-extern GL_Batch_t *GL_batch_create(const GL_Sheet_t *sheet, size_t slots);
+extern GL_Batch_t *GL_batch_create(const GL_Sheet_t *sheet, size_t capacity);
 extern void GL_batch_destroy(GL_Batch_t *batch);
 
 extern bool GL_batch_resize(GL_Batch_t *batch, size_t capacity);

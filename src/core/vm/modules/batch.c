@@ -72,13 +72,13 @@ static int batch_new(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const Bank_Object_t *bank = (const Bank_Object_t *)LUAX_USERDATA(L, 1);
-    size_t slots = (size_t)LUAX_INTEGER(L, 2);
+    size_t capacity = (size_t)LUAX_INTEGER(L, 2);
 
-    GL_Batch_t *batch = GL_batch_create(bank->sheet, slots);
+    GL_Batch_t *batch = GL_batch_create(bank->sheet, capacity);
     if (!batch) {
         return luaL_error(L, "can't create batch");
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "batch %p created for bank %p w/ %d slots", batch, bank, slots);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "batch %p created for bank %p w/ %d slots", batch, bank, capacity);
 
     Batch_Object_t *self = (Batch_Object_t *)lua_newuserdatauv(L, sizeof(Batch_Object_t), 1);
     *self = (Batch_Object_t){

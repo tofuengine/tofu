@@ -32,7 +32,7 @@
 
 #define LOG_CONTEXT "gl-batch"
 
-GL_Batch_t *GL_batch_create(const GL_Sheet_t *sheet, size_t slots)
+GL_Batch_t *GL_batch_create(const GL_Sheet_t *sheet, size_t capacity)
 {
     GL_Batch_t *batch = malloc(sizeof(GL_Batch_t));
     if (!batch) {
@@ -41,8 +41,8 @@ GL_Batch_t *GL_batch_create(const GL_Sheet_t *sheet, size_t slots)
     }
 
     GL_Batch_Sprite_t *sprites = NULL;
-    if (slots > 0) {
-        bool allocated = arrsetcap(sprites, slots); // FIXME: should be `!!`?
+    if (capacity > 0) {
+        bool allocated = arrsetcap(sprites, capacity); // FIXME: should be `!!`?
         if (!allocated) {
             Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate batch sprites");
             free(batch);
