@@ -229,14 +229,13 @@ static bool _compute_size(size_t width, size_t height, size_t scale, bool fullsc
 
 static GLFWwindow *_window_initialize(const Display_Configuration_t *configuration, GL_Rectangle_t *present_area, GL_Size_t *canvas_size)
 {
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "GLFW: %s", glfwGetVersionString());
-
     glfwSetErrorCallback(_error_callback);
 
     if (!glfwInit()) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize GLFW");
         return NULL;
     }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "GLFW initialized");
 
     GL_Rectangle_t window_rectangle;
     if (!_compute_size(configuration->window.width, configuration->window.height, configuration->window.scale, configuration->fullscreen, present_area, &window_rectangle, canvas_size)) {
@@ -268,6 +267,7 @@ static GLFWwindow *_window_initialize(const Display_Configuration_t *configurati
         return NULL;
     }
     glfwMakeContextCurrent(window); // We are running on a single thread, no need to calling this in the `present()` function.
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window %p created (and made current context)", window);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize GLAD");
@@ -275,6 +275,7 @@ static GLFWwindow *_window_initialize(const Display_Configuration_t *configurati
         glfwTerminate();
         return NULL;
     }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "GLAD initialized");
 
     glfwSetWindowSizeCallback(window, _size_callback); // When resized we recalculate the projection properties.
 
@@ -293,11 +294,6 @@ static GLFWwindow *_window_initialize(const Display_Configuration_t *configurati
     }
     glfwShowWindow(window); // This is not required for fullscreen window, but it makes sense anyway.
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window shown");
-
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "vendor: %s", glGetString(GL_VENDOR));
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "renderer: %s", glGetString(GL_RENDERER));
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "version: %s", glGetString(GL_VERSION));
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "GLSL: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
     return window;
 }
@@ -320,6 +316,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
         free(display);
         return NULL;
     }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window %p initialized", display->window);
 
     display->canvas.context = GL_context_create(display->canvas.size.width, display->canvas.size.height);
     if (!display->canvas.context) {
@@ -409,6 +406,12 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
 #ifdef DEBUG
     _has_errors(); // Display pending OpenGL errors.
 #endif
+
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "GLFW: %s", glfwGetVersionString());
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "vendor: %s", glGetString(GL_VENDOR));
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "renderer: %s", glGetString(GL_RENDERER));
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "version: %s", glGetString(GL_VERSION));
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "GLSL: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
     return display;
 }

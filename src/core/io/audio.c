@@ -78,6 +78,11 @@ static void _data_callback(ma_device *device, void *output, const void *input, m
     ma_mutex_unlock(&audio->lock);
 }
 
+static void _stop_callback(ma_device* device)
+{
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "device %p has been stopped", device);
+}
+
 Audio_t *Audio_create(const Audio_Configuration_t *configuration)
 {
     Audio_t *audio = malloc(sizeof(Audio_t));
@@ -89,10 +94,6 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     *audio = (Audio_t){
             .configuration = *configuration
         };
-
-    audio->context_config = ma_context_config_init();
-    audio->context_config.pUserData = (void *)audio;
-    audio->context_config.logCallback = _log_callback;
 
     audio->sl = SL_context_create();
     if (!audio->sl) {
@@ -110,6 +111,10 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
         return NULL;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio device mutex initialized");
+
+    audio->context_config = ma_context_config_init();
+    audio->context_config.pUserData = (void *)audio;
+    audio->context_config.logCallback = _log_callback;
 
     result = ma_context_init(NULL, 0, &audio->context_config, &audio->context);
     if (result != MA_SUCCESS) {
@@ -144,7 +149,8 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     audio->device_config.playback.channels       = SL_CHANNELS_PER_FRAME;
     audio->device_config.sampleRate              = SL_FRAMES_PER_SECOND;
     audio->device_config.dataCallback            = _data_callback;
-//    audio->device_config.stopCallback            = _stop_callback;
+    audio->device_config.stopCallback            = _stop_callback;
+
     audio->device_config.pUserData               = (void *)audio;
     audio->device_config.noPreZeroedOutputBuffer = MA_FALSE;
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio device configured w/ %dHz, %d channel(s), %d bytes per sample", SL_FRAMES_PER_SECOND, SL_CHANNELS_PER_FRAME, SL_BYTES_PER_SAMPLE);
@@ -163,14 +169,6 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     ma_device_set_master_volume(&audio->device, configuration->master_volume); // Set the initial volume.
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio master-volume set to %.2f", configuration->master_volume);
 
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "miniaudio: v%s", ma_version_string());
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "device-name: %s", audio->device.playback.name);
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "back-end: %s", ma_get_backend_name(audio->context.backend));
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "format: %s / %s", ma_get_format_name(audio->device.playback.format), ma_get_format_name(audio->device.playback.internalFormat));
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "channels: %d / %d", audio->device.playback.channels, audio->device.playback.internalChannels);
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "sample-rate: %d / %d", audio->device.sampleRate, audio->device.playback.internalSampleRate);
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "period-in-frames: %d", audio->device.playback.internalPeriodSizeInFrames);
-
 #ifndef __SL_START_AND_STOP__
     result = ma_device_start(&audio->device);
     if (result != MA_SUCCESS) {
@@ -183,6 +181,14 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
         return NULL;
     }
 #endif
+
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "miniaudio: v%s", ma_version_string());
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "device-name: %s", audio->device.playback.name);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "back-end: %s", ma_get_backend_name(audio->context.backend));
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "format: %s / %s", ma_get_format_name(audio->device.playback.format), ma_get_format_name(audio->device.playback.internalFormat));
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "channels: %d / %d", audio->device.playback.channels, audio->device.playback.internalChannels);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "sample-rate: %d / %d", audio->device.sampleRate, audio->device.playback.internalSampleRate);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "period-in-frames: %d", audio->device.playback.internalPeriodSizeInFrames);
 
     return audio;
 }

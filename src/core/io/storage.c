@@ -57,11 +57,11 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
 
     storage->context = FS_create(configuration->path);
     if (!storage->context) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create file-system context at `%s`", configuration->path);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create file-system context for path `%s`", configuration->path);
         free(storage);
         return NULL;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "storage file-system context created at %p", storage->context);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "storage file-system context %p created for path `%s`", storage->context, configuration->path);
 
     return storage;
 }
