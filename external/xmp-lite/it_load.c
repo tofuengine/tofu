@@ -697,7 +697,7 @@ static int load_it_sample(struct module_data *m, int i, int start,
 		libxmp_copy_adjust(xxs->name, ish.name, 25);
 	}
 
-	D_(D_INFO "\n[%2X] %-26.26s %05x%c%05x %05x %05x %05x "
+	D_(D_INFO "[%2X] %-26.26s %05x%c%05x %05x %05x %05x "
 	   "%02x%02x %02x%02x %5d ",
 	   i, sample_mode ? xxs->name : mod->xxi[i].name,
 	   xxs->len,
