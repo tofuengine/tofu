@@ -112,11 +112,11 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio device mutex initialized");
 
-    audio->context_config = ma_context_config_init();
-    audio->context_config.pUserData = (void *)audio;
-    audio->context_config.logCallback = _log_callback;
+    ma_context_config context_config = ma_context_config_init();
+    context_config.pUserData   = (void *)audio;
+    context_config.logCallback = _log_callback;
 
-    result = ma_context_init(NULL, 0, &audio->context_config, &audio->context);
+    result = ma_context_init(NULL, 0, &context_config, &audio->context);
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize the audio context");
         ma_mutex_uninit(&audio->lock);
@@ -139,23 +139,21 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "using device #%d", closure.device_index);
 
-    audio->device_config = ma_device_config_init(ma_device_type_playback);
-    audio->device_config.playback.pDeviceID      = &closure.device_id; 
+    ma_device_config device_config = ma_device_config_init(ma_device_type_playback);
+    device_config.playback.pDeviceID      = &closure.device_id;
 #if SL_BYTES_PER_SAMPLE == 2
-    audio->device_config.playback.format         = ma_format_s16;
+    device_config.playback.format         = ma_format_s16;
 #elif SL_BYTES_PER_SAMPLE == 4
-    audio->device_config.playback.format         = ma_format_f32;
+    device_config.playback.format         = ma_format_f32;
 #endif
-    audio->device_config.playback.channels       = SL_CHANNELS_PER_FRAME;
-    audio->device_config.sampleRate              = SL_FRAMES_PER_SECOND;
-    audio->device_config.dataCallback            = _data_callback;
-    audio->device_config.stopCallback            = _stop_callback;
+    device_config.playback.channels       = SL_CHANNELS_PER_FRAME;
+    device_config.sampleRate              = SL_FRAMES_PER_SECOND;
+    device_config.dataCallback            = _data_callback;
+    device_config.stopCallback            = _stop_callback;
+    device_config.pUserData               = (void *)audio;
+    device_config.noPreZeroedOutputBuffer = MA_FALSE;
 
-    audio->device_config.pUserData               = (void *)audio;
-    audio->device_config.noPreZeroedOutputBuffer = MA_FALSE;
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio device configured w/ %dHz, %d channel(s), %d bytes per sample", SL_FRAMES_PER_SECOND, SL_CHANNELS_PER_FRAME, SL_BYTES_PER_SAMPLE);
-
-    result = ma_device_init(&audio->context, &audio->device_config, &audio->device);
+    result = ma_device_init(&audio->context, &device_config, &audio->device);
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize the audio device");
         ma_context_uninit(&audio->context);
@@ -164,7 +162,7 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
         free(audio);
         return NULL;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio device initialized");
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio device initialized w/ %dHz, %d channel(s), %d bytes per sample", SL_FRAMES_PER_SECOND, SL_CHANNELS_PER_FRAME, SL_BYTES_PER_SAMPLE);
 
     ma_device_set_master_volume(&audio->device, configuration->master_volume); // Set the initial volume.
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio master-volume set to %.2f", configuration->master_volume);

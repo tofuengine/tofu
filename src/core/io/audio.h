@@ -39,9 +39,7 @@ typedef struct _Audio_Configuration_t {
 typedef struct _Audio_t {
     Audio_Configuration_t configuration;
 
-    ma_context_config context_config;
     ma_context context;
-    ma_device_config device_config;
     ma_device device;
     ma_mutex lock;
 
