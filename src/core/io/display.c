@@ -490,6 +490,7 @@ static inline void _to_display(GLFWwindow *window, const GL_Surface_t *surface, 
     const int x1 = x0 + rectangle->width;
     const int y1 = y0 + rectangle->height;
 
+    // Performance note: passing a stack-located array (and not on the heap) greately increase `glDrawArrays()` throughput!
     const float vertices[] = {
         0.0f, 0.0f, // CCW strip, top-left is <0,0> (the face direction of the strip is determined by the winding of the first triangle)
         x0, y0,
@@ -548,6 +549,7 @@ void Display_present(const Display_t *display)
     const int x1 = x0 + vram_rectangle->width;
     const int y1 = y0 + vram_rectangle->height;
 
+    // Performance note: passing a stack-located array (and not on the heap) greately increase `glDrawArrays()` throughput!
     const float vertices[] = { // Inspired to https://github.com/emoon/minifb
         0.0f, 0.0f, // CCW strip, top-left is <0,0> (the face direction of the strip is determined by the winding of the first triangle)
         x0, y0,
