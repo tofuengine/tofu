@@ -47,6 +47,7 @@ typedef struct _Configuration {
         bool vertical_sync;
     } display;
     struct {
+        int device_index;
         float master_volume;
     } audio;
     struct {

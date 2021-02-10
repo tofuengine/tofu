@@ -76,6 +76,9 @@ static void _on_parameter(Configuration_t *configuration, const char *context, c
     if (strcmp(fqn, "display.vertical-sync") == 0) {
         configuration->display.vertical_sync = strcmp(value, "true") == 0;
     } else
+    if (strcmp(fqn, "audio.device-index") == 0) {
+        configuration->audio.device_index = (int)strtol(value, NULL, 0);
+    } else
     if (strcmp(fqn, "keyboard.enabled") == 0) {
         configuration->keyboard.enabled = strcmp(value, "true") == 0;
     } else
@@ -222,6 +225,7 @@ void Configuration_parse(Configuration_t *configuration, const char *data)
                 .vertical_sync = false
             },
             .audio = {
+                .device_index = 0, // Pick the first available.
                 .master_volume = 1.0f
             },
             .keyboard = {

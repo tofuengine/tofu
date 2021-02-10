@@ -40,6 +40,32 @@ static void _log_callback(ma_context *context, ma_device *device, ma_uint32 log_
     Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "[%p:%p] %d %s", context, device, log_level, message);
 }
 
+typedef struct _enum_callback_closure_t {
+    int current_index;
+    int device_index;
+    ma_device_id device_id;
+    bool found;
+} enum_callback_closure_t;
+
+static ma_bool32 _enum_callback(ma_context *context, ma_device_type device_type, const ma_device_info *device_info, void *user_data)
+{
+    enum_callback_closure_t *closure = (enum_callback_closure_t *)user_data;
+
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "device `%s` w/ type %d", device_info->name, device_type);
+
+    if (device_type & ma_device_type_playback) { // We are considering the output devices only.
+        if (closure->current_index == closure->device_index) {
+            closure->device_id = device_info->id;
+            Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "device #%d, `%s` w/ type %d selected", closure->current_index, device_info->name, device_type);
+            closure->found = true;
+        }
+    }
+
+    closure->current_index++;
+
+    return MA_TRUE;
+}
+
 // Note that output buffer is already pre-zeroed upon call.
 static void _data_callback(ma_device *device, void *output, const void *input, ma_uint32 frame_count)
 {
@@ -95,9 +121,21 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio driver context created");
 
+    enum_callback_closure_t closure = {
+            .device_index = configuration->device_index
+        };
+    result = ma_context_enumerate_devices(&audio->context, _enum_callback, &closure);
+    if (result != MA_SUCCESS || !closure.found) {
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't enumerated audio devices for context %p", &audio->context);
+        ma_mutex_uninit(&audio->lock);
+        SL_context_destroy(audio->sl);
+        free(audio);
+        return NULL;
+    }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "using device #%d", closure.device_index);
+
     audio->device_config = ma_device_config_init(ma_device_type_playback);
-    // TODO: loop over available devices and use the one specified in the configuration. Useful when more than one device is available.
-    //    config.playback.pDeviceID = &pPlaybackDeviceInfos[chosenPlaybackDeviceIndex].id; 
+    audio->device_config.playback.pDeviceID      = &closure.device_id; 
 #if SL_BYTES_PER_SAMPLE == 2
     audio->device_config.playback.format         = ma_format_s16;
 #elif SL_BYTES_PER_SAMPLE == 4

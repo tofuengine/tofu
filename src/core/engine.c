@@ -193,6 +193,7 @@ Engine_t *Engine_create(int argc, const char *argv[])
     }
 
     engine->audio = Audio_create(&(const Audio_Configuration_t){
+            .device_index = engine->configuration.audio.device_index,
             .master_volume = engine->configuration.audio.master_volume
         });
     if (!engine->audio) {

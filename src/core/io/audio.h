@@ -32,6 +32,7 @@
 #include <stdbool.h>
 
 typedef struct _Audio_Configuration_t {
+    int device_index;
     float master_volume;
 } Audio_Configuration_t;
 
