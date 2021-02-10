@@ -53,6 +53,8 @@ function Main:__ctor()
   self.fan = false
 
   self.font = Font.default(canvas, 0, 15)
+
+  self.time = 0
 end
 
 function Main:input()
@@ -61,7 +63,11 @@ function Main:input()
   end
 end
 
-function Main:update(_)
+function Main:update(delta_time)
+  if not System.is_active() then
+    return
+  end
+  self.time = self.time + delta_time
 end
 
 function Main:render(_)
@@ -70,7 +76,7 @@ function Main:render(_)
 
   local mx, my = self.max_x, self.max_y
 
-  local t = System.time()
+  local t = self.time
 
   for _ = 1, 1000 do
     local x, y = math.random(0, mx), math.random(0, my)

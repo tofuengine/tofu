@@ -23,6 +23,7 @@ SOFTWARE.
 ]]--
 
 local Class = require("tofu.core").Class
+local Bank = require("tofu.graphics").Bank
 
 local function bound(x, y, aabb)
   return math.min(math.max(x, aabb.x0), aabb.x1), math.min(math.max(y, aabb.y0), aabb.y1)
@@ -32,7 +33,7 @@ local Camera = Class.define()
 
 -- TODO: add camera scaling, useful to draw minimap.
 function Camera:__ctor(id, bank, grid, canvas, columns, rows, screen_x, screen_y, anchor_x, anchor_y, scale)
-  local cw, ch = bank:size(-1)
+  local cw, ch = bank:size(Bank.NIL)
 
   self.id = id
   self.bank = bank
@@ -55,7 +56,7 @@ function Camera:scale_by(scale)
 end
 
 function Camera:center_at(anchor_x, anchor_y)
-  local cw, ch = self.bank:size(-1)
+  local cw, ch = self.bank:size(Bank.NIL)
   local gw, gh = self.grid:size()
 
   self.anchor_x = anchor_x
@@ -83,7 +84,7 @@ function Camera:move_to(x, y)
   self.map_x, self.map_y = map_x, map_y -- Track offsetted map position to track *real* changes.
 
   local scale = self.scale
-  local cw, ch = self.bank:size(-1)
+  local cw, ch = self.bank:size(Bank.NIL)
   local start_column = math.tointeger(map_x / cw)
   local start_row = math.tointeger(map_y / ch)
   local column_offset = -math.tointeger((map_x % cw) * scale) -- In screen coordinates.
@@ -134,7 +135,7 @@ end
 
 function Camera:prepare_()
   local gw, gh = self.grid:size()
-  local cw, ch = self.bank:size(-1, self.scale)
+  local cw, ch = self.bank:size(Bank.NIL, self.scale)
 
   local rows = math.min(gw - self.start_row, self.rows + 1) -- We handle an additional row/column
   local columns = math.min(gh - self.start_column, self.columns + 1) -- for sub-tile scrolling

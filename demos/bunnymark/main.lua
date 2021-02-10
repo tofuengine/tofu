@@ -54,7 +54,6 @@ function Main:__ctor()
   self.speed = 1.0
   self.running = true
   self.static = true
-  self.batched = false
 
   local Bunny = self.static and StaticBunny or MovingBunny
   for _ = 1, INITIAL_BUNNIES do
@@ -93,7 +92,7 @@ function Main:update(delta_time)
 
   self.batch:clear()
 
-  for _, bunny in pairs(self.bunnies) do
+  for _, bunny in ipairs(self.bunnies) do
     bunny:update(delta_time * self.speed)
   end
 end

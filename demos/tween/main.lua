@@ -85,7 +85,7 @@ function Main:render(_)
   local ratio = self:evaluate(System.time()) -- The waves have values in the range [-1, +1].
 
   local area = self.area
-  local _, ch = self.bank:size(-1)
+  local _, ch = self.bank:size(Bank.NIL)
 
   local y = area.y
   for index, tweener in ipairs(self.tweeners) do

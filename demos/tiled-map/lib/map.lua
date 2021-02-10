@@ -43,7 +43,7 @@ function Map:__ctor(canvas, bank, grid)
   self.bank = bank
   self.grid = grid
 
-  local cw, ch = self.bank:size(-1)
+  local cw, ch = self.bank:size(Bank.NIL)
   local gw, gh = self.grid:size()
   self.aabb = {
       x0 = 0,

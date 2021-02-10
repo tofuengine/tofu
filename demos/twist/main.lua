@@ -39,7 +39,7 @@ function Main:__ctor()
   self.bank = Bank.new(canvas, Canvas.new("assets/sheet.png"), 8, 8)
   self.font = Font.default(canvas, 0, 255)
 
-  local cw, ch = self.bank:size(-1)
+  local cw, ch = self.bank:size(Bank.NIL)
   self.columns = width / cw
   self.rows = height / ch
 end
@@ -57,7 +57,7 @@ function Main:render(_)
 
   local time = System.time() * 7.5
 
-  local cw, ch = self.bank:size(-1)
+  local cw, ch = self.bank:size(Bank.NIL)
   local x, y = (width - cw) * 0.5, 0
 
   for row = 1, self.rows do

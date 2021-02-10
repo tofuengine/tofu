@@ -228,7 +228,7 @@ static int bank_blit4(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const Bank_Object_t *self = (const Bank_Object_t *)LUAX_USERDATA(L, 1);
-    GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER(L, 2); // FIXME: make cell-id a `size_t' or a generic uint?
+    GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER(L, 2);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
 
