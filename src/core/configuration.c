@@ -79,6 +79,9 @@ static void _on_parameter(Configuration_t *configuration, const char *context, c
     if (strcmp(fqn, "audio.device-index") == 0) {
         configuration->audio.device_index = (int)strtol(value, NULL, 0);
     } else
+    if (strcmp(fqn, "audio.master-volume") == 0) {
+        configuration->audio.master_volume = (float)strtod(value, NULL);
+    } else
     if (strcmp(fqn, "keyboard.enabled") == 0) {
         configuration->keyboard.enabled = strcmp(value, "true") == 0;
     } else
@@ -109,7 +112,7 @@ static void _on_parameter(Configuration_t *configuration, const char *context, c
     if (strcmp(fqn, "gamepad.emulate-dpad") == 0) {
         configuration->gamepad.emulate_dpad = strcmp(value, "true") == 0;
     } else
-    if (strcmp(fqn, "gamepad.emulate-mouse") == 0) {
+    if (strcmp(fqn, "gamepad.emulate-cursor") == 0) {
         configuration->gamepad.emulate_cursor = strcmp(value, "true") == 0;
     } else
     if (strcmp(fqn, "engine.frames-per-seconds") == 0) {
