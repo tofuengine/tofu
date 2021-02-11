@@ -264,8 +264,12 @@ void Engine_run(Engine_t *engine)
     const float reference_time = engine->configuration.engine.frames_limit == 0 ? 0.0f : 1.0f / engine->configuration.engine.frames_limit;
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "now running, update-time is %.6fs w/ %d skippable frames, reference-time is %.6fs", delta_time, skippable_frames, reference_time);
 
-    // Track time using double to keep the min resolution consistent over time!
+    // Track time using `double` to keep the min resolution consistent over time!
+    // For intervals (i.e. deltas), `float` is sufficient.
     // https://randomascii.wordpress.com/2012/02/13/dont-store-that-in-a-float/
+#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+    float deltas[4] = { 0 };
+#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
     double previous = glfwGetTime();
     float lag = 0.0f;
 
@@ -275,11 +279,20 @@ void Engine_run(Engine_t *engine)
         const float elapsed = (float)(current - previous);
         previous = current;
 
+#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+        Environment_process(engine->environment, elapsed, deltas);
+#else
         Environment_process(engine->environment, elapsed);
+#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
 
         Input_process(engine->input);
 
         running = running && Interpreter_input(engine->interpreter); // Lazy evaluate `running`, will avoid calls when error.
+
+#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+        const double process_marker = glfwGetTime();
+        deltas[0] = (float)(process_marker - current);
+#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
 
         lag += elapsed; // Count a maximum amount of skippable frames in order no to stall on slower machines.
         for (size_t frames = skippable_frames; frames && (lag >= delta_time); --frames) {
@@ -296,9 +309,19 @@ void Engine_run(Engine_t *engine)
         Input_update(engine->input, elapsed);
         Display_update(engine->display, elapsed);
 
+#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+        const double update_marker = glfwGetTime();
+        deltas[1] = (float)(update_marker - process_marker);
+#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
+
         running = running && Interpreter_render(engine->interpreter, lag / delta_time);
 
         Display_present(engine->display);
+
+#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+        const double render_marker = glfwGetTime();
+        deltas[2] = (float)(render_marker - update_marker);
+#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
 
 #ifdef __GRAPHICS_CAPTURE_SUPPORT__
         const Input_Button_State_t *record_button = Input_get_button(engine->input, INPUT_BUTTON_RECORD);
@@ -319,5 +342,9 @@ void Engine_run(Engine_t *engine)
                 _wait_for(leftover); // FIXME: Add minor compensation to reach cap value?
             }
         }
+
+#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+        deltas[3] = (float)(glfwGetTime() - current);
+#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
     }
 }

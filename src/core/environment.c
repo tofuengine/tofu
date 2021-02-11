@@ -50,8 +50,8 @@ Environment_t *Environment_create(int argc, const char *argv[], const Display_t 
         .args = args,
         .display = display,
         .quit = false,
-        .fps = 0.0f,
-        .time = 0.0
+        .time = 0.0,
+        .stats = { 0 }
     };
 
     return environment;
@@ -81,9 +81,9 @@ double Environment_get_time(const Environment_t *environment)
     return environment->time;
 }
 
-float Environment_get_fps(const Environment_t *environment)
+const Environment_Stats_t *Environment_get_stats(const Environment_t *environment)
 {
-    return environment->fps;
+    return &environment->stats;
 }
 
 bool Environment_is_active(const Environment_t *environment)
@@ -91,7 +91,8 @@ bool Environment_is_active(const Environment_t *environment)
     return environment->is_active;
 }
 
-static inline float _calculate_fps(float frame_time)
+#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+static inline float _calculate_fps(float frame_time) // FIXME: rework this as a reusable function for moving average.
 {
     static float samples[FPS_AVERAGE_SAMPLES] = { 0 };
     static size_t index = 0;
@@ -105,16 +106,41 @@ static inline float _calculate_fps(float frame_time)
     return (float)FPS_AVERAGE_SAMPLES / sum;
 }
 
-void Environment_process(Environment_t *environment, float frame_time)
+static inline void _calculate_times(float times[4], const float deltas[4])
 {
-    environment->fps = _calculate_fps(frame_time);
-#ifdef __DEBUG_ENGINE_FPS__
+    static float samples[4][FPS_AVERAGE_SAMPLES] = { 0 };
+    static size_t index = 0;
+    static float sums[4] = { 0 };
+
+    for (size_t i = 0; i < 4; ++i) {
+        const float t = deltas[i] * 1000.0f;
+        sums[i] -= samples[i][index];
+        samples[i][index] = t;
+        sums[i] += t;
+        times[i] = sums[i] / (float)FPS_AVERAGE_SAMPLES;
+    }
+    index = (index + 1) % FPS_AVERAGE_SAMPLES;
+}
+#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
+
+#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+void Environment_process(Environment_t *environment, float frame_time, const float deltas[4])
+#else
+void Environment_process(Environment_t *environment, float frame_time)
+#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
+{
+#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+    environment->stats.fps = _calculate_fps(frame_time);
+    _calculate_times(environment->stats.times, deltas);
+#ifdef __DEBUG_ENGINE_PERFORMANCES__
     static size_t count = 0;
-    if (++count == 250) {
-        Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "currently running at %.0f FPS", environment->fps);
+    if (++count == (FPS_AVERAGE_SAMPLES * 2)) {
+        Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "currently running at %.2f FPS (P=%.3fms, U=%.3fms, R=%.3fms, F=%.3fms)",
+            environment->stats.fps, environment->stats.times[0], environment->stats.times[1], environment->stats.times[2], environment->stats.times[3]);
         count = 0;
     }
-#endif
+#endif  /* __DEBUG_ENGINE_PERFORMANCES__ */
+#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
 #ifdef __DISPLAY_FOCUS_SUPPORT__
     environment->is_active = glfwGetWindowAttrib(environment->display->window, GLFW_FOCUSED) == GLFW_TRUE;
 #endif

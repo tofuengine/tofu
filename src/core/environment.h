@@ -30,6 +30,11 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+typedef struct _Environment_Stats_t {
+    float fps;
+    float times[4];
+} Environment_Stats_t;
+
 typedef struct _Environment_t {
     const char **args;
     const Display_t *display;
@@ -37,8 +42,8 @@ typedef struct _Environment_t {
     bool is_active;
 #endif
     bool quit;
-    float fps;
     double time;
+    Environment_Stats_t stats;
 } Environment_t;
 
 extern Environment_t *Environment_create(int argc, const char *argv[], const Display_t *display);
@@ -49,10 +54,16 @@ extern void Environment_quit(Environment_t *environment);
 extern bool Environment_should_quit(const Environment_t *environment);
 
 extern double Environment_get_time(const Environment_t *environment);
-extern float Environment_get_fps(const Environment_t *environment);
+#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+extern const Environment_Stats_t *Environment_get_stats(const Environment_t *environment);
+#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
 extern bool Environment_is_active(const Environment_t *environment);
 
+#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+extern void Environment_process(Environment_t *environment, float frame_time, const float deltas[4]);
+#else
 extern void Environment_process(Environment_t *environment, float frame_time);
+#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
 
 extern void Environment_update(Environment_t *environment, float delta_time);
 

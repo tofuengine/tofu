@@ -38,7 +38,10 @@
 static int system_args(lua_State *L);
 static int system_version(lua_State *L);
 static int system_time(lua_State *L);
+#ifdef __ENGINE_PERFORMANCE_STATISTICS__
 static int system_fps(lua_State *L);
+static int system_stats(lua_State *L);
+#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
 static int system_is_active(lua_State *L);
 static int system_quit(lua_State *L);
 static int system_info(lua_State *L);
@@ -50,7 +53,10 @@ static const struct luaL_Reg _system_functions[] = {
     { "args", system_args },
     { "version", system_version },
     { "time", system_time },
+#ifdef __ENGINE_PERFORMANCE_STATISTICS__
     { "fps", system_fps },
+    { "stats", system_stats },
+#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
     { "is_active", system_is_active },
     { "quit", system_quit },
     { "info", system_info },
@@ -107,6 +113,7 @@ static int system_time(lua_State *L)
     return 1;
 }
 
+#ifdef __ENGINE_PERFORMANCE_STATISTICS__
 static int system_fps(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -114,10 +121,28 @@ static int system_fps(lua_State *L)
 
     const Environment_t *environment = (const Environment_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
 
-    lua_pushnumber(L, Environment_get_fps(environment));
+    const Environment_Stats_t *stats = Environment_get_stats(environment);
+    lua_pushnumber(L, stats->fps);
 
     return 1;
 }
+
+static int system_stats(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+    LUAX_SIGNATURE_END
+
+    const Environment_t *environment = (const Environment_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
+
+    const Environment_Stats_t *stats = Environment_get_stats(environment);
+    lua_pushnumber(L, stats->times[0]);
+    lua_pushnumber(L, stats->times[1]);
+    lua_pushnumber(L, stats->times[2]);
+    lua_pushnumber(L, stats->times[3]);
+
+    return 4;
+}
+#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
 
 static int system_is_active(lua_State *L)
 {

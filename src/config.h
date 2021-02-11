@@ -26,7 +26,7 @@
 #define __TOFU_CONFIG_H__
 
 // Constant MACROs have no prefix.
-#define FPS_AVERAGE_SAMPLES         100
+#define FPS_AVERAGE_SAMPLES         128
 
 #define GC_CONTINUOUS_STEP_PERIOD   0.1f
 #define GC_COLLECTION_PERIOD        15.0f
@@ -64,7 +64,7 @@
 #undef  __DEBUG_TRIANGLES_WINDING__
 #undef  __FIND_NEAREST_COLOR_EUCLIDIAN__
 #undef  __GRID_INTEGER_CELL__
-#undef  __DEBUG_ENGINE_FPS__
+#define  __DEBUG_ENGINE_PERFORMANCES__
 #undef  __DEBUG_FS_CALLS__
 #define __DEBUG_VM_CALLS__
 #undef  __DEBUG_GRAPHICS__
@@ -86,6 +86,7 @@
 #undef  __GL_MASK_SUPPORT__
 #define __GL_OPTIMIZED_ROTATIONS__
 #define __DISPLAY_FOCUS_SUPPORT__
+#define __ENGINE_PERFORMANCE_STATISTICS__
 
 // In release build, disable VM calls debug and periodic collection for better performance.
 #ifdef RELEASE
