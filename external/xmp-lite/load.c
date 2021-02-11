@@ -246,7 +246,7 @@ LIBXMP_EXPORT int xmp_load_module_from_callbacks(xmp_context opaque, size_t (*re
 	return ret;
 }
 
-LIBXMP_EXPORT int xmp_load_module_from_memory(xmp_context opaque, void *mem, long size)
+LIBXMP_EXPORT int xmp_load_module_from_memory(xmp_context opaque, const void *mem, long size)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct module_data *m = &ctx->m;
