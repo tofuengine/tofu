@@ -184,7 +184,7 @@ void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *surface, 
             if (sx >= sminx && sx <= smaxx && sy >= sminy && sy <= smaxy) {
                 const GL_Pixel_t *sptr = sdata + sy * swidth + sx;
                 GL_Pixel_t index = shifting[*sptr];
-                // NOTE: no trasparency in Mode-7!
+                // NOTE: no transparency in Mode-7!
 #ifdef __GL_MODE7_TRANSPARENCY__
                 if (!transparent[index]) {
                     *dptr = index;

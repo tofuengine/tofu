@@ -939,20 +939,20 @@ static GL_Pixel_t _process_callback(void *user_data, int x, int y, GL_Pixel_t fr
     return pixel;
 }
 
-static int canvas_process5(lua_State *L)
+static int canvas_process4_5(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TFUNCTION)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
-//    luaX_Reference callback = luaX_tofunction(L, 3);
-    int x = LUAX_INTEGER(L, 4);
-    int y = LUAX_INTEGER(L, 5);
-    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_USERDATA(L, 2);
+//    luaX_Reference callback = luaX_tofunction(L, 2);
+    int x = LUAX_INTEGER(L, 3);
+    int y = LUAX_INTEGER(L, 4);
+    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 5, self);
 
     const Interpreter_t *interpreter = (const Interpreter_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INTERPRETER));
 
@@ -1000,19 +1000,20 @@ static int canvas_process8_9(lua_State *L)
 static int canvas_process(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(5, canvas_process5)
+        LUAX_OVERLOAD_ARITY(4, canvas_process4_5)
+        LUAX_OVERLOAD_ARITY(5, canvas_process4_5)
         LUAX_OVERLOAD_ARITY(8, canvas_process8_9)
         LUAX_OVERLOAD_ARITY(9, canvas_process8_9)
     LUAX_OVERLOAD_END
 }
 
-static int canvas_copy4(lua_State *L)
+static int canvas_copy3_4(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
     int x = LUAX_INTEGER(L, 2);
@@ -1057,7 +1058,8 @@ static int canvas_copy7_8(lua_State *L)
 static int canvas_copy(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(4, canvas_copy4)
+        LUAX_OVERLOAD_ARITY(3, canvas_copy3_4)
+        LUAX_OVERLOAD_ARITY(4, canvas_copy3_4)
         LUAX_OVERLOAD_ARITY(7, canvas_copy7_8)
         LUAX_OVERLOAD_ARITY(8, canvas_copy7_8)
     LUAX_OVERLOAD_END

@@ -274,16 +274,16 @@ static int xform_clamp(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
     XForm_Object_t *self = (XForm_Object_t *)LUAX_USERDATA(L, 1);
-    const char *clamp = LUAX_STRING(L, 2);
+    const char *mode = LUAX_STRING(L, 2);
 
     GL_XForm_t *xform = &self->xform;
-    if (clamp[0] == 'e') {
+    if (mode[0] == 'e') {
         xform->clamp = GL_XFORM_CLAMP_EDGE;
     } else
-    if (clamp[0] == 'b') {
+    if (mode[0] == 'b') {
         xform->clamp = GL_XFORM_CLAMP_BORDER;
     } else
-    if (clamp[0] == 'r') {
+    if (mode[0] == 'r') {
         xform->clamp = GL_XFORM_CLAMP_REPEAT;
     }
 
