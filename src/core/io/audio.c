@@ -59,9 +59,9 @@ static ma_bool32 _enum_callback(ma_context *context, ma_device_type device_type,
             Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "device #%d, `%s` w/ type %d selected", closure->current_index, device_info->name, device_type);
             closure->found = true;
         }
-    }
 
-    closure->current_index++;
+        closure->current_index++;
+    }
 
     return MA_TRUE;
 }
