@@ -530,7 +530,16 @@ void Display_present(const Display_t *display)
     const GL_Surface_t *surface = display->canvas.context->surface;
     GL_Color_t *pixels = display->vram.pixels;
 
-    GL_surface_to_rgba(surface, &display->canvas.palette, pixels);
+//    GL_surface_to_rgba(surface, &display->canvas.palette, pixels);
+
+    const copper_list_entry_t copper_list[2] = {
+            { .command = WAIT, .args = { { .u = surface->height / 2 } } },
+            { .command = MODULO, .args = { { .i = - surface->width * 2 } } },
+//            { .command = PALETTE, .args = { { .u8 = 0 }, { .u32 = 0xffff00ff } } },
+        };
+
+    GL_surface_to_rgba_run(surface, &display->canvas.palette, copper_list, 2, pixels);
+
 
 #ifdef PROFILE
     _to_display(display->window, surface, vram, &display->vram.rectangle, &display->vram_offset);

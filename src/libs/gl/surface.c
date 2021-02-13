@@ -103,3 +103,60 @@ void GL_surface_to_rgba(const GL_Surface_t *surface, const GL_Palette_t *palette
 #endif
     }
 }
+
+typedef struct _copper_state_t {
+    GL_Palette_t palette;
+    int modulo;
+} copper_state_t;
+
+void GL_surface_to_rgba_run(const GL_Surface_t *surface, const GL_Palette_t *palette, const copper_list_entry_t *copper_list, size_t copper_list_entries, GL_Color_t *vram)
+{
+    copper_state_t state = {
+            .palette = *palette,
+            .modulo = 0
+        };
+    size_t current = 0;
+    size_t scanline = 0;
+    size_t entry = 0;
+
+    GL_Color_t *colors = state.palette.colors;
+#ifdef __DEBUG_GRAPHICS__
+    int count = palette->count;
+#endif
+    const GL_Pixel_t *src = surface->data;
+    GL_Color_t *dst = vram;
+    for (size_t i = surface->height; i; --i) {
+        if (current++ >= scanline) {
+            while (entry < copper_list_entries) {
+                copper_list_entry_t e = copper_list[entry++];
+                if (e.command == WAIT) {
+                    scanline = e.args[0].u;
+                    break;
+                } else
+                if (e.command == PALETTE) {
+                    colors[e.args[0].u8] = GL_palette_unpack_color(e.args[1].u32);
+                } else
+                if (e.command == MODULO) {
+                    state.modulo = e.args[0].i;
+                }
+            }
+        }
+
+        for (size_t j = surface->width; j; --j) {
+            GL_Pixel_t index = *src++;
+#ifdef __DEBUG_GRAPHICS__
+            GL_Color_t color;
+            if (index >= count) {
+                int y = (index - 240) * 8;
+                color = (GL_Color_t){ 0, 63 + y, 0, 255 };
+            } else {
+                color = colors[index];
+            }
+            *(dst++) = color;
+#else
+            *(dst++) = colors[index];
+#endif
+        }
+        src += state.modulo;
+    }
+}

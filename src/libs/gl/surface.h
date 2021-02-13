@@ -36,6 +36,28 @@ typedef struct _GL_Surface_t {
     size_t data_size;
 } GL_Surface_t;
 
+typedef enum _copper_list_command_t {
+    WAIT,
+    PALETTE,
+    MODULO
+} copper_list_command_t;
+
+typedef struct _copper_list_entry_t {
+    copper_list_command_t command;
+    union {
+        uint32_t u32;
+        uint16_t u16;
+        uint8_t u8;
+        int32_t i32;
+        int16_t i16;
+        int8_t i8;
+        unsigned int u;
+        int i;
+        float f;
+        double d;
+    } args[2];
+} copper_list_entry_t;
+
 typedef void (*GL_Surface_Callback_t)(void *user_data, GL_Surface_t *surface, const void *pixels); // RGBA888 format.
 
 extern GL_Surface_t *GL_surface_decode(size_t width, size_t height, const void *pixels, const GL_Surface_Callback_t callback, void *user_data);
@@ -43,5 +65,7 @@ extern GL_Surface_t *GL_surface_create(size_t width, size_t height);
 extern void GL_surface_destroy(GL_Surface_t *surface);
 
 extern void GL_surface_to_rgba(const GL_Surface_t *context, const GL_Palette_t *palette, GL_Color_t *vram);
+
+extern void GL_surface_to_rgba_run(const GL_Surface_t *surface, const GL_Palette_t *palette, const copper_list_entry_t *copper_list, size_t copper_list_entries, GL_Color_t *vram);
 
 #endif  /* __GL_SURFACE_H__ */
