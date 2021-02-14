@@ -115,9 +115,9 @@ void GL_surface_to_rgba_run(const GL_Surface_t *surface, const GL_Palette_t *pal
             .palette = *palette,
             .modulo = 0
         };
-    size_t current = 0;
-    size_t scanline = 0;
-    size_t entry = 0;
+    const copper_list_entry_t *entry = copper_list;
+    const copper_list_entry_t *end_of_list = copper_list + copper_list_entries;
+    size_t wait_y = 0, wait_x = 0;
 
     GL_Color_t *colors = state.palette.colors;
 #ifdef __DEBUG_GRAPHICS__
@@ -125,24 +125,43 @@ void GL_surface_to_rgba_run(const GL_Surface_t *surface, const GL_Palette_t *pal
 #endif
     const GL_Pixel_t *src = surface->data;
     GL_Color_t *dst = vram;
-    for (size_t i = surface->height; i; --i) {
-        if (current++ >= scanline) {
-            while (entry < copper_list_entries) {
-                copper_list_entry_t e = copper_list[entry++];
-                if (e.command == WAIT) {
-                    scanline = e.args[0].u;
-                    break;
-                } else
-                if (e.command == PALETTE) {
-                    colors[e.args[0].u8] = GL_palette_unpack_color(e.args[1].u32);
-                } else
-                if (e.command == MODULO) {
-                    state.modulo = e.args[0].i;
-                }
-            }
-        }
 
+    size_t y = 0;
+    for (size_t i = surface->height; i; --i) {
+        size_t x = 0;
         for (size_t j = surface->width; j; --j) {
+            while (y >= wait_y && x >= wait_x && entry < end_of_list) {
+#if 1
+                switch (entry->command) {
+                    case WAIT: {
+                        wait_x = entry->args[0].u;
+                        wait_y = entry->args[1].u;
+                        break;
+                    }
+                    case PALETTE: {
+                        colors[entry->args[0].u8] = GL_palette_unpack_color(entry->args[1].u32);
+                        break;
+                    }
+                    case MODULO: {
+                        state.modulo = entry->args[0].i;
+                        break;
+                    }
+                }
+#else
+                if (entry->command == WAIT) {
+                    wait_x = entry->args[0].u;
+                    wait_y = entry->args[1].u;
+                } else
+                if (entry->command == PALETTE) {
+                    colors[entry->args[0].u8] = GL_palette_unpack_color(entry->args[1].u32);
+                } else
+                if (entry->command == MODULO) {
+                    state.modulo = entry->args[0].i;
+                }
+#endif
+                ++entry;
+            }
+
             GL_Pixel_t index = *src++;
 #ifdef __DEBUG_GRAPHICS__
             GL_Color_t color;
@@ -156,7 +175,10 @@ void GL_surface_to_rgba_run(const GL_Surface_t *surface, const GL_Palette_t *pal
 #else
             *(dst++) = colors[index];
 #endif
+            ++x;
         }
+        ++y;
+
         src += state.modulo;
     }
 }

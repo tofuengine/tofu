@@ -532,13 +532,14 @@ void Display_present(const Display_t *display)
 
 //    GL_surface_to_rgba(surface, &display->canvas.palette, pixels);
 
-    const copper_list_entry_t copper_list[2] = {
-            { .command = WAIT, .args = { { .u = surface->height / 2 } } },
+    const copper_list_entry_t copper_list[3] = {
+            { .command = WAIT, .args = { { .u = 0 }, { .u = surface->height / 2 } } },
             { .command = MODULO, .args = { { .i = - surface->width * 2 } } },
 //            { .command = PALETTE, .args = { { .u8 = 0 }, { .u32 = 0xffff00ff } } },
+            { .command = WAIT, .args = { { .u = 9999 }, { .u = 9999 } } }, // Force an unreachable WAIT as optimization!
         };
 
-    GL_surface_to_rgba_run(surface, &display->canvas.palette, copper_list, 2, pixels);
+    GL_surface_to_rgba_run(surface, &display->canvas.palette, copper_list, 3, pixels);
 
 
 #ifdef PROFILE
