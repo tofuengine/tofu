@@ -60,6 +60,30 @@ typedef struct _Display_Configuration_t {
     bool hide_cursor;
 } Display_Configuration_t;
 
+typedef enum _Display_CopperList_Command_t {
+    WAIT = 0x00000,
+    SKIP = 0x10000,
+    MOVE = 0x20000,
+    PALETTE,
+    MODULO
+} Display_CopperList_Command_t;
+
+typedef struct _Display_CopperList_Entry_t {
+    Display_CopperList_Command_t command;
+    union {
+        struct {
+            size_t x, y;
+        } wait;
+        struct {
+            size_t index;
+            GL_Color_t color;
+        } palette;
+        struct {
+            int value;
+        } modulo;
+    } args;
+} Display_CopperList_Entry_t;
+
 typedef struct _Display_t {
     Display_Configuration_t configuration;
 
@@ -80,6 +104,8 @@ typedef struct _Display_t {
         GL_Rectangle_t rectangle;
         GL_Point_t offset;
     } vram;
+
+    Display_CopperList_Entry_t *copperlist;
 
     struct {
         Program_t array[Display_Programs_t_CountOf];
@@ -106,6 +132,7 @@ extern void Display_present(const Display_t *display);
 
 extern void Display_set_palette(Display_t *display, const GL_Palette_t *palette);
 extern void Display_set_offset(Display_t *display, GL_Point_t offset);
+extern void Display_set_copperlist(Display_t *display, const Display_CopperList_Entry_t *copperlist, size_t entries);
 extern void Display_set_shader(Display_t *display, const char *code);
 
 extern GLFWwindow *Display_get_window(const Display_t *display);

@@ -1,18 +1,18 @@
 /*
  * MIT License
- * 
+ *
  * Copyright (c) 2019-2021 Marco Lizza
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -31,12 +31,15 @@
 
 #include "udt.h"
 
+#include <stdlib.h>
+
 #define LOG_CONTEXT "graphics"
 
 static int display_offset(lua_State *L);
 static int display_palette(lua_State *L);
 static int display_color_to_index(lua_State *L);
 static int display_index_to_color(lua_State *L);
+static int display_copperlist(lua_State *L);
 static int display_shader(lua_State *L);
 static int display_send(lua_State *L);
 
@@ -45,6 +48,7 @@ static const struct luaL_Reg _display_functions[] = {
     { "color_to_index", display_color_to_index },
     { "index_to_color", display_index_to_color },
     { "offset", display_offset },
+    { "copperlist", display_copperlist },
     { "shader", display_shader },
     { "send", display_send },
     { NULL, NULL }
@@ -221,6 +225,109 @@ static int display_offset(lua_State *L)
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(0, display_offset0_2)
         LUAX_OVERLOAD_ARITY(2, display_offset0_2)
+    LUAX_OVERLOAD_END
+}
+
+static int display_copperlist0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+    LUAX_SIGNATURE_END
+
+    Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    Display_set_copperlist(display, NULL, 0);
+
+    return 0;
+}
+
+static int display_copperlist1(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TTABLE)
+    LUAX_SIGNATURE_END
+
+    Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    size_t entries = lua_rawlen(L, 1);
+//    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "setting copperlist w/ %d entries", entries);
+
+    Display_CopperList_Entry_t *copperlist = malloc(sizeof(Display_CopperList_Entry_t) * (entries + 1));
+
+    lua_pushnil(L);
+    for (size_t i = 0; lua_next(L, 1); ++i) {
+        Display_CopperList_Entry_t entry = { 0 };
+
+        if (!lua_istable(L, -1)) {
+            luaL_error(L, "entry #%d is not a table", i);
+        }
+
+        lua_getfield(L, -1, "command");
+        const char *command = lua_tostring(L, -1);
+        if (command[0] == 'w') {
+            lua_getfield(L, -2, "x");
+            lua_getfield(L, -3, "y");
+
+            size_t x = (size_t)lua_tointeger(L, -2);
+            size_t y = (size_t)lua_tointeger(L, -1);
+
+            entry = (Display_CopperList_Entry_t){
+                    .command = WAIT,
+                    .args = { .wait = { .x = x, .y = y } }
+                };
+
+            lua_pop(L, 3);
+        } else
+        if (command[0] == 'p') {
+            lua_getfield(L, -2, "index");
+            lua_getfield(L, -3, "color");
+
+            size_t index = (size_t)lua_tointeger(L, -2);
+            uint32_t color = (uint32_t)lua_tointeger(L, -1);
+
+            entry = (Display_CopperList_Entry_t){
+                    .command = PALETTE,
+                    .args = { .palette = { .index = index, .color = GL_palette_unpack_color(color) } }
+                };
+
+            lua_pop(L, 3);
+        } else
+        if (command[0] == 'm') {
+            lua_getfield(L, -2, "value");
+
+            int value = lua_tointeger(L, -1);
+
+            entry = (Display_CopperList_Entry_t){
+                    .command = MODULO,
+                    .args = { .modulo = { .value = value } }
+                };
+
+            lua_pop(L, 2);
+        } else {
+            lua_pop(L, 1);
+        }
+
+        copperlist[i] = entry;
+
+        lua_pop(L, 1);
+    }
+
+    copperlist[entries] = (Display_CopperList_Entry_t){
+            .command = WAIT,
+            .args = { .wait = { .x = 9999, .y = 9999 } } // Force an unreachable WAIT as optimization!
+        };
+
+    Display_set_copperlist(display, copperlist, entries + 1);
+
+    free(copperlist);
+
+    return 0;
+}
+
+static int display_copperlist(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(0, display_copperlist0)
+        LUAX_OVERLOAD_ARITY(1, display_copperlist1)
     LUAX_OVERLOAD_END
 }
 

@@ -429,6 +429,9 @@ void Display_destroy(Display_t *display)
         program_delete(&display->program.array[i]);
     }
 
+    arrfree(display->copperlist);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p freed", display->copperlist);
+
     glDeleteBuffers(1, &display->vram.texture);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "texture w/ id #%d deleted", display->vram.texture);
 
@@ -520,6 +523,50 @@ static inline void _to_display(GLFWwindow *window, const GL_Surface_t *surface, 
 }
 #endif
 
+static inline void _surface_to_rgba(const GL_Surface_t *surface, const GL_Palette_t *palette, const Display_CopperList_Entry_t *copperlist, GL_Color_t *vram)
+{
+    const Display_CopperList_Entry_t *entry = copperlist;
+
+    size_t wait_y = 0, wait_x = 0;
+    GL_Color_t colors[GL_MAX_PALETTE_COLORS] = { 0 };
+    memcpy(colors, palette->colors, sizeof(colors));
+    int modulo = 0;
+
+    const GL_Pixel_t *src = surface->data;
+    GL_Color_t *dst = vram;
+
+    for (size_t y = 0; y < surface->height; ++y) {
+        for (size_t x = 0; x < surface->width; ++x) {
+            while (y >= wait_y && x >= wait_x && entry) {
+                switch (entry->command) {
+                    case WAIT: {
+                        wait_x = entry->args.wait.x;
+                        wait_y = entry->args.wait.y;
+                        break;
+                    }
+                    case PALETTE: {
+                        colors[entry->args.palette.index] = entry->args.palette.color;
+                        break;
+                    }
+                    case MODULO: {
+                        modulo = entry->args.modulo.value;
+                        break;
+                    }
+                    default: {
+                        break;
+                    }
+                }
+                ++entry;
+            }
+
+            GL_Pixel_t index = *src++;
+            *(dst++) = colors[index];
+        }
+
+        src += modulo;
+    }
+}
+
 void Display_present(const Display_t *display)
 {
     // It is advisable to clear the colour buffer even if the framebuffer will be
@@ -531,16 +578,7 @@ void Display_present(const Display_t *display)
     GL_Color_t *pixels = display->vram.pixels;
 
 //    GL_surface_to_rgba(surface, &display->canvas.palette, pixels);
-
-    const copper_list_entry_t copper_list[3] = {
-            { .command = WAIT, .args = { { .u = 0 }, { .u = surface->height / 2 } } },
-            { .command = MODULO, .args = { { .i = - surface->width * 2 } } },
-//            { .command = PALETTE, .args = { { .u8 = 0 }, { .u32 = 0xffff00ff } } },
-            { .command = WAIT, .args = { { .u = 9999 }, { .u = 9999 } } }, // Force an unreachable WAIT as optimization!
-        };
-
-    GL_surface_to_rgba_run(surface, &display->canvas.palette, copper_list, 3, pixels);
-
+    _surface_to_rgba(surface, &display->canvas.palette, display->copperlist, pixels);
 
 #ifdef PROFILE
     _to_display(display->window, surface, vram, &display->vram.rectangle, &display->vram_offset);
@@ -598,6 +636,20 @@ void Display_set_palette(Display_t *display, const GL_Palette_t *palette)
 void Display_set_offset(Display_t *display, GL_Point_t offset)
 {
     display->vram.offset = offset;
+}
+
+void Display_set_copperlist(Display_t *display, const Display_CopperList_Entry_t *copperlist, size_t entries)
+{
+    if (display->copperlist) {
+        arrfree(display->copperlist);
+        display->copperlist = NULL;
+//        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p freed", display->copperlist);
+    }
+
+    for (size_t i = 0; i < entries; ++i) {
+        arrpush(display->copperlist, copperlist[i]);
+    }
+//    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "updated copperlist %p w/ #%d entries", display->copperlist, entries);
 }
 
 void Display_set_shader(Display_t *display, const char *effect)
