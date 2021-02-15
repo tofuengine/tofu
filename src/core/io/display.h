@@ -65,7 +65,8 @@ typedef enum _Display_CopperList_Command_t {
     SKIP = 0x10000,
     MOVE = 0x20000,
     PALETTE,
-    MODULO
+    MODULO,
+    OFFSET
 } Display_CopperList_Command_t;
 
 typedef struct _Display_CopperList_Entry_t {
@@ -81,6 +82,9 @@ typedef struct _Display_CopperList_Entry_t {
         struct {
             int value;
         } modulo;
+        struct {
+            int value;
+        } offset;
     } args;
 } Display_CopperList_Entry_t;
 

@@ -302,6 +302,18 @@ static int display_copperlist1(lua_State *L)
                 };
 
             lua_pop(L, 2);
+        } else
+        if (command[0] == 'o') {
+            lua_getfield(L, -2, "value");
+
+            int value = lua_tointeger(L, -1);
+
+            entry = (Display_CopperList_Entry_t){
+                    .command = OFFSET,
+                    .args = { .offset = { .value = value } }
+                };
+
+            lua_pop(L, 2);
         } else {
             lua_pop(L, 1);
         }

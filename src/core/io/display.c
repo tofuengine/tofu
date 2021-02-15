@@ -557,13 +557,17 @@ static inline void _surface_to_rgba(const GL_Surface_t *surface, const GL_Palett
     GL_Color_t colors[GL_MAX_PALETTE_COLORS] = { 0 };
     memcpy(colors, palette->colors, sizeof(colors));
     int modulo = 0;
+    int offset = 0;
 
     const GL_Pixel_t *src = surface->data;
     GL_Color_t *dst = vram;
 
     for (size_t y = 0; y < surface->height; ++y) {
+        GL_Color_t *dst_row_begin = dst;
+        GL_Color_t *dst_row_end = dst + surface->width;
+
         for (size_t x = 0; x < surface->width; ++x) {
-            while (y >= wait_y && x >= wait_x && entry) {
+            while (y >= wait_y && x >= wait_x) {
                 switch (entry->command) {
                     case WAIT: {
                         wait_x = entry->args.wait.x;
@@ -578,6 +582,10 @@ static inline void _surface_to_rgba(const GL_Surface_t *surface, const GL_Palett
                         modulo = entry->args.modulo.value;
                         break;
                     }
+                    case OFFSET: {
+                        offset = entry->args.offset.value;
+                        break;
+                    }
                     default: {
                         break;
                     }
@@ -586,7 +594,11 @@ static inline void _surface_to_rgba(const GL_Surface_t *surface, const GL_Palett
             }
 
             GL_Pixel_t index = *src++;
-            *(dst++) = colors[index];
+
+            GL_Color_t *dpixel = dst++ + offset;
+            if (dpixel >= dst_row_begin && dpixel <= dst_row_end) {
+                *dpixel = colors[index];
+            }
         }
 
         src += modulo;
