@@ -579,11 +579,11 @@ static inline void _surface_to_rgba(const GL_Surface_t *surface, const GL_Palett
                         break;
                     }
                     case MODULO: {
-                        modulo = entry->args.modulo.value;
+                        modulo = entry->args.modulo.amount;
                         break;
                     }
                     case OFFSET: {
-                        offset = entry->args.offset.value;
+                        offset = entry->args.offset.amount;
                         break;
                     }
                     default: {

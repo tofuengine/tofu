@@ -80,10 +80,10 @@ typedef struct _Display_CopperList_Entry_t {
             GL_Color_t color;
         } palette;
         struct {
-            int value;
+            int amount;
         } modulo;
         struct {
-            int value;
+            int amount;
         } offset;
     } args;
 } Display_CopperList_Entry_t;

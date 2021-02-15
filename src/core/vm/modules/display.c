@@ -257,13 +257,15 @@ static int display_copperlist1(lua_State *L)
     for (size_t i = 0; lua_next(L, 1); ++i) {
         Display_CopperList_Entry_t entry = { 0 };
 
+#ifdef DEBUG
         if (!lua_istable(L, -1)) {
             luaL_error(L, "entry #%d is not a table", i);
         }
+#endif
 
         lua_getfield(L, -1, "command");
         const char *command = lua_tostring(L, -1);
-        if (command[0] == 'w') {
+        if (command[0] == 'w') { // "wait"
             lua_getfield(L, -2, "x");
             lua_getfield(L, -3, "y");
 
@@ -275,48 +277,47 @@ static int display_copperlist1(lua_State *L)
                     .args = { .wait = { .x = x, .y = y } }
                 };
 
-            lua_pop(L, 3);
+            lua_pop(L, 2);
         } else
-        if (command[0] == 'p') {
+        if (command[0] == 'p') { // "palette"
             lua_getfield(L, -2, "index");
             lua_getfield(L, -3, "color");
 
             size_t index = (size_t)lua_tointeger(L, -2);
-            uint32_t color = (uint32_t)lua_tointeger(L, -1);
+            uint32_t argb = (uint32_t)lua_tointeger(L, -1);
 
             entry = (Display_CopperList_Entry_t){
                     .command = PALETTE,
-                    .args = { .palette = { .index = index, .color = GL_palette_unpack_color(color) } }
+                    .args = { .palette = { .index = index, .color = GL_palette_unpack_color(argb) } }
                 };
 
-            lua_pop(L, 3);
+            lua_pop(L, 2);
         } else
-        if (command[0] == 'm') {
-            lua_getfield(L, -2, "value");
+        if (command[0] == 'm') { // "modulo"
+            lua_getfield(L, -2, "amount");
 
-            int value = lua_tointeger(L, -1);
+            int amount = lua_tointeger(L, -1);
 
             entry = (Display_CopperList_Entry_t){
                     .command = MODULO,
-                    .args = { .modulo = { .value = value } }
+                    .args = { .modulo = { .amount = amount } }
                 };
 
-            lua_pop(L, 2);
+            lua_pop(L, 1);
         } else
-        if (command[0] == 'o') {
-            lua_getfield(L, -2, "value");
+        if (command[0] == 'o') { // "offset"
+            lua_getfield(L, -2, "amount");
 
-            int value = lua_tointeger(L, -1);
+            int amount = lua_tointeger(L, -1);
 
             entry = (Display_CopperList_Entry_t){
                     .command = OFFSET,
-                    .args = { .offset = { .value = value } }
+                    .args = { .offset = { .amount = amount } }
                 };
 
-            lua_pop(L, 2);
-        } else {
             lua_pop(L, 1);
         }
+        lua_pop(L, 1);
 
         copperlist[i] = entry;
 
