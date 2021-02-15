@@ -523,6 +523,32 @@ static inline void _to_display(GLFWwindow *window, const GL_Surface_t *surface, 
 }
 #endif
 
+static inline void _surface_to_rgba_fast(const GL_Surface_t *surface, const GL_Palette_t *palette, GL_Color_t *vram)
+{
+    const size_t data_size = surface->data_size;
+    const GL_Color_t *colors = palette->colors;
+#ifdef __DEBUG_GRAPHICS__
+    int count = palette->count;
+#endif
+    const GL_Pixel_t *src = surface->data;
+    GL_Color_t *dst = vram;
+    for (size_t i = data_size; i; --i) {
+        GL_Pixel_t index = *src++;
+#ifdef __DEBUG_GRAPHICS__
+        GL_Color_t color;
+        if (index >= count) {
+            int y = (index - 240) * 8;
+            color = (GL_Color_t){ 0, 63 + y, 0, 255 };
+        } else {
+            color = colors[index];
+        }
+        *(dst++) = color;
+#else
+        *(dst++) = colors[index];
+#endif
+    }
+}
+
 static inline void _surface_to_rgba(const GL_Surface_t *surface, const GL_Palette_t *palette, const Display_CopperList_Entry_t *copperlist, GL_Color_t *vram)
 {
     const Display_CopperList_Entry_t *entry = copperlist;
@@ -577,8 +603,11 @@ void Display_present(const Display_t *display)
     const GL_Surface_t *surface = display->canvas.context->surface;
     GL_Color_t *pixels = display->vram.pixels;
 
-//    GL_surface_to_rgba(surface, &display->canvas.palette, pixels);
-    _surface_to_rgba(surface, &display->canvas.palette, display->copperlist, pixels);
+    if (display->copperlist) {
+        _surface_to_rgba(surface, &display->canvas.palette, display->copperlist, pixels);
+    } else {
+        _surface_to_rgba_fast(surface, &display->canvas.palette, pixels);
+    }
 
 #ifdef PROFILE
     _to_display(display->window, surface, vram, &display->vram.rectangle, &display->vram_offset);
