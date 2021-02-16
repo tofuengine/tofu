@@ -27,6 +27,7 @@
 #include <config.h>
 #include <core/io/display.h>
 #include <libs/log.h>
+#include <libs/stb.h>
 #include <resources/palettes.h>
 
 #include "udt.h"
@@ -248,15 +249,13 @@ static int display_copperlist1(lua_State *L)
 
     Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    size_t entries = lua_rawlen(L, 1);
+//    size_t entries = lua_rawlen(L, 1);
 //    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "setting copperlist w/ %d entries", entries);
 
-    Display_CopperList_Entry_t *copperlist = malloc(sizeof(Display_CopperList_Entry_t) * (entries + 1));
+    Display_CopperList_Entry_t *copperlist = NULL;
 
     lua_pushnil(L);
     for (size_t i = 0; lua_next(L, 1); ++i) {
-        Display_CopperList_Entry_t entry = { 0 };
-
 #ifdef DEBUG
         if (!lua_istable(L, -1)) {
             luaL_error(L, "entry #%d is not a table", i);
@@ -264,74 +263,68 @@ static int display_copperlist1(lua_State *L)
 #endif
 
         lua_getfield(L, -1, "command");
-        const char *command = lua_tostring(L, -1);
+        const char *command = LUAX_STRING(L, -1);
         if (command[0] == 'w') { // "wait"
             lua_getfield(L, -2, "x");
             lua_getfield(L, -3, "y");
 
-            size_t x = (size_t)lua_tointeger(L, -2);
-            size_t y = (size_t)lua_tointeger(L, -1);
+            const size_t x = (size_t)LUAX_INTEGER(L, -2);
+            const size_t y = (size_t)LUAX_INTEGER(L, -1);
 
-            entry = (Display_CopperList_Entry_t){
-                    .command = WAIT,
-                    .args = { .wait = { .x = x, .y = y } }
-                };
+            arrpush(copperlist, (Display_CopperList_Entry_t){ .command = WAIT });
+            arrpush(copperlist, (Display_CopperList_Entry_t){ .size = x });
+            arrpush(copperlist, (Display_CopperList_Entry_t){ .size = y });
 
-            lua_pop(L, 2);
+            lua_pop(L, 3);
         } else
         if (command[0] == 'p') { // "palette"
             lua_getfield(L, -2, "index");
             lua_getfield(L, -3, "color");
 
-            size_t index = (size_t)lua_tointeger(L, -2);
-            uint32_t argb = (uint32_t)lua_tointeger(L, -1);
+            const size_t index = (size_t)LUAX_INTEGER(L, -2);
+            const uint32_t argb = (uint32_t)LUAX_INTEGER(L, -1);
 
-            entry = (Display_CopperList_Entry_t){
-                    .command = PALETTE,
-                    .args = { .palette = { .index = index, .color = GL_palette_unpack_color(argb) } }
-                };
+            arrpush(copperlist, (Display_CopperList_Entry_t){ .command = PALETTE });
+            arrpush(copperlist, (Display_CopperList_Entry_t){ .integer = index });
+            arrpush(copperlist, (Display_CopperList_Entry_t){ .color = GL_palette_unpack_color(argb) });
 
-            lua_pop(L, 2);
+            lua_pop(L, 3);
         } else
         if (command[0] == 'm') { // "modulo"
             lua_getfield(L, -2, "amount");
 
-            int amount = lua_tointeger(L, -1);
+            const int amount = LUAX_INTEGER(L, -1);
 
-            entry = (Display_CopperList_Entry_t){
-                    .command = MODULO,
-                    .args = { .modulo = { .amount = amount } }
-                };
+            arrpush(copperlist, (Display_CopperList_Entry_t){ .command = MODULO });
+            arrpush(copperlist, (Display_CopperList_Entry_t){ .integer = amount });
 
-            lua_pop(L, 1);
+            lua_pop(L, 2);
         } else
         if (command[0] == 'o') { // "offset"
             lua_getfield(L, -2, "amount");
 
-            int amount = lua_tointeger(L, -1);
+            const int amount = LUAX_INTEGER(L, -1);
 
-            entry = (Display_CopperList_Entry_t){
-                    .command = OFFSET,
-                    .args = { .offset = { .amount = amount } }
-                };
+            arrpush(copperlist, (Display_CopperList_Entry_t){ .command = OFFSET });
+            arrpush(copperlist, (Display_CopperList_Entry_t){ .integer = amount });
+
+            lua_pop(L, 2);
+        } else {
+            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "unrecognized command `%s` for copperlist", command);
 
             lua_pop(L, 1);
         }
-        lua_pop(L, 1);
-
-        copperlist[i] = entry;
 
         lua_pop(L, 1);
     }
 
-    copperlist[entries] = (Display_CopperList_Entry_t){
-            .command = WAIT,
-            .args = { .wait = { .x = 9999, .y = 9999 } } // Force an unreachable WAIT as optimization!
-        };
+    arrpush(copperlist, (Display_CopperList_Entry_t){ .command = WAIT }); // Force an unreachable WAIT as optimization!
+    arrpush(copperlist, (Display_CopperList_Entry_t){ .size = 9999 });
+    arrpush(copperlist, (Display_CopperList_Entry_t){ .size = 9999 });
 
-    Display_set_copperlist(display, copperlist, entries + 1);
+    Display_set_copperlist(display, copperlist, arrlen(copperlist));
 
-    free(copperlist);
+    arrfree(copperlist);
 
     return 0;
 }

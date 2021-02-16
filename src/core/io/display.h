@@ -69,23 +69,11 @@ typedef enum _Display_CopperList_Command_t {
     OFFSET
 } Display_CopperList_Command_t;
 
-typedef struct _Display_CopperList_Entry_t {
+typedef union _Display_CopperList_Entry_t {
     Display_CopperList_Command_t command;
-    union {
-        struct {
-            size_t x, y;
-        } wait;
-        struct {
-            size_t index;
-            GL_Color_t color;
-        } palette;
-        struct {
-            int amount;
-        } modulo;
-        struct {
-            int amount;
-        } offset;
-    } args;
+    size_t size;
+    GL_Color_t color;
+    int integer;
 } Display_CopperList_Entry_t;
 
 typedef struct _Display_t {

@@ -567,30 +567,35 @@ static inline void _surface_to_rgba(const GL_Surface_t *surface, const GL_Palett
         GL_Color_t *dst_row_end = dst + surface->width;
 
         for (size_t x = 0; x < surface->width; ++x) {
+#ifdef __COPPER_ONE_COMMAND_PER_PIXEL__
+            if (y >= wait_y && x >= wait_x) {
+#else
             while (y >= wait_y && x >= wait_x) {
-                switch (entry->command) {
+#endif
+                switch ((entry++)->command) {
                     case WAIT: {
-                        wait_x = entry->args.wait.x;
-                        wait_y = entry->args.wait.y;
+                        wait_x = (entry++)->size;
+                        wait_y = (entry++)->size;
                         break;
                     }
                     case PALETTE: {
-                        colors[entry->args.palette.index] = entry->args.palette.color;
+                        const size_t index = (entry++)->size;
+                        const GL_Color_t color = (entry++)->color;
+                        colors[index] = color;
                         break;
                     }
                     case MODULO: {
-                        modulo = entry->args.modulo.amount;
+                        modulo = (entry++)->integer;
                         break;
                     }
                     case OFFSET: {
-                        offset = entry->args.offset.amount;
+                        offset = (entry++)->integer;
                         break;
                     }
                     default: {
                         break;
                     }
                 }
-                ++entry;
             }
 
             GL_Pixel_t index = *src++;
