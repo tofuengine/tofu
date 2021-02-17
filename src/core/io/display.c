@@ -529,16 +529,16 @@ static inline void _surface_to_rgba_fast(const GL_Surface_t *surface, const GL_P
     const size_t data_size = surface->data_size;
     const GL_Color_t *colors = palette->colors;
 #ifdef __DEBUG_GRAPHICS__
-    int count = palette->count;
+    const int count = palette->count;
 #endif
     const GL_Pixel_t *src = surface->data;
     GL_Color_t *dst = vram;
     for (size_t i = data_size; i; --i) {
-        GL_Pixel_t index = *src++;
+        const GL_Pixel_t index = *src++;
 #ifdef __DEBUG_GRAPHICS__
         GL_Color_t color;
         if (index >= count) {
-            int y = (index - 240) * 8;
+            const int y = (index - 240) * 8;
             color = (GL_Color_t){ 0, 63 + y, 0, 255 };
         } else {
             color = colors[index];
@@ -550,15 +550,17 @@ static inline void _surface_to_rgba_fast(const GL_Surface_t *surface, const GL_P
     }
 }
 
-static inline void _surface_to_rgba(const GL_Surface_t *surface, GL_Palette_t *palette, const void *copperlist, GL_Color_t *vram)
+static inline void _surface_to_rgba(const GL_Surface_t *surface, GL_Palette_t *palette, const Display_CopperList_Entry_t *copperlist, GL_Color_t *vram)
 {
-    const Display_CopperList_Entry_t *entry = (const Display_CopperList_Entry_t *)copperlist;
-
+#ifdef __DEBUG_GRAPHICS__
+    const int count = palette->count;
+#endif
     size_t wait_y = 0, wait_x = 0;
     GL_Color_t *colors = palette->colors;
     int modulo = 0;
     int offset = 0;
 
+    const Display_CopperList_Entry_t *entry = copperlist;
     const GL_Pixel_t *src = surface->data;
     GL_Color_t *dst = vram;
 
@@ -598,11 +600,22 @@ static inline void _surface_to_rgba(const GL_Surface_t *surface, GL_Palette_t *p
                 }
             }
 
-            GL_Pixel_t index = *src++;
+            const GL_Pixel_t index = *src++;
 
             GL_Color_t *dpixel = dst++ + offset;
             if (dpixel >= dst_row_begin && dpixel <= dst_row_end) {
+#ifdef __DEBUG_GRAPHICS__
+                GL_Color_t color;
+                if (index >= count) {
+                    const int y = (index - 240) * 8;
+                    color = (GL_Color_t){ 0, 63 + y, 0, 255 };
+                } else {
+                    color = colors[index];
+                }
+                *dpixel = color;
+#else
                 *dpixel = colors[index];
+#endif
             }
         }
 
