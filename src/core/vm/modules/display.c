@@ -27,7 +27,6 @@
 #include <config.h>
 #include <core/io/display.h>
 #include <libs/log.h>
-#include <libs/stb.h>
 #include <resources/palettes.h>
 
 #include "udt.h"
@@ -55,10 +54,14 @@ static const struct luaL_Reg _display_functions[] = {
     { NULL, NULL }
 };
 
+static const luaX_Const _display_constants[] = {
+    { NULL, LUA_CT_NIL, { 0 } }
+};
+
 int display_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, NULL, _display_functions, NULL, nup, NULL);
+    return luaX_newmodule(L, NULL, _display_functions, _display_constants, nup, NULL);
 }
 
 static int display_palette0(lua_State *L)
@@ -236,7 +239,7 @@ static int display_copperlist0(lua_State *L)
 
     Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    Display_set_copperlist(display, NULL, 0);
+    Display_set_copperlist(display, NULL);
 
     return 0;
 }
@@ -244,87 +247,13 @@ static int display_copperlist0(lua_State *L)
 static int display_copperlist1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TTABLE)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
+    const char *program = LUAX_STRING(L, 1);
 
     Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-//    size_t entries = lua_rawlen(L, 1);
-//    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "setting copperlist w/ %d entries", entries);
-
-    Display_CopperList_Entry_t *copperlist = NULL;
-
-    lua_pushnil(L);
-    for (size_t i = 0; lua_next(L, 1); ++i) {
-#ifdef DEBUG
-        if (!lua_istable(L, -1)) {
-            luaL_error(L, "entry #%d is not a table", i);
-        }
-#endif
-
-        lua_getfield(L, -1, "command");
-        const char *command = LUAX_STRING(L, -1);
-        if (command[0] == 'w') { // "wait"
-            lua_getfield(L, -2, "x");
-            lua_getfield(L, -3, "y");
-
-            const size_t x = (size_t)LUAX_INTEGER(L, -2);
-            const size_t y = (size_t)LUAX_INTEGER(L, -1);
-
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .command = WAIT });
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .size = x });
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .size = y });
-
-            lua_pop(L, 3);
-        } else
-        if (command[0] == 'p') { // "palette"
-            lua_getfield(L, -2, "index");
-            lua_getfield(L, -3, "color");
-
-            const size_t index = (size_t)LUAX_INTEGER(L, -2);
-            const uint32_t argb = (uint32_t)LUAX_INTEGER(L, -1);
-
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .command = PALETTE });
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .integer = index });
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .color = GL_palette_unpack_color(argb) });
-
-            lua_pop(L, 3);
-        } else
-        if (command[0] == 'm') { // "modulo"
-            lua_getfield(L, -2, "amount");
-
-            const int amount = LUAX_INTEGER(L, -1);
-
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .command = MODULO });
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .integer = amount });
-
-            lua_pop(L, 2);
-        } else
-        if (command[0] == 'o') { // "offset"
-            lua_getfield(L, -2, "amount");
-
-            const int amount = LUAX_INTEGER(L, -1);
-
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .command = OFFSET });
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .integer = amount });
-
-            lua_pop(L, 2);
-        } else {
-            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "unrecognized command `%s` for copperlist", command);
-
-            lua_pop(L, 1);
-        }
-
-        lua_pop(L, 1);
-    }
-
-    arrpush(copperlist, (Display_CopperList_Entry_t){ .command = WAIT }); // Force an unreachable WAIT as optimization!
-    arrpush(copperlist, (Display_CopperList_Entry_t){ .size = 9999 });
-    arrpush(copperlist, (Display_CopperList_Entry_t){ .size = 9999 });
-
-    Display_set_copperlist(display, copperlist, arrlen(copperlist));
-
-    arrfree(copperlist);
+    Display_set_copperlist(display, program);
 
     return 0;
 }

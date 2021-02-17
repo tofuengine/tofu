@@ -30,6 +30,7 @@
 #include <libs/imath.h>
 #include <libs/stb.h>
 
+#include <ctype.h>
 #include <time.h>
 
 #define LOG_CONTEXT "display"
@@ -549,9 +550,87 @@ static inline void _surface_to_rgba_fast(const GL_Surface_t *surface, const GL_P
     }
 }
 
-static inline void _surface_to_rgba(const GL_Surface_t *surface, const GL_Palette_t *palette, const Display_CopperList_Entry_t *copperlist, GL_Color_t *vram)
+typedef enum _Display_CopperList_Command_t {
+    WAIT = 0x00000,
+    SKIP = 0x10000,
+    MOVE = 0x20000,
+    PALETTE,
+    MODULO,
+    OFFSET
+} Display_CopperList_Command_t;
+
+typedef union _Display_CopperList_Entry_t {
+    Display_CopperList_Command_t command;
+    size_t size;
+    GL_Color_t color;
+    int integer;
+} Display_CopperList_Entry_t;
+
+static inline const char *_token(const char *s, const char **p)
 {
-    const Display_CopperList_Entry_t *entry = copperlist;
+    while (isspace(*s)) {
+        ++s;
+    }
+    *p = s;
+    while (!isspace(*s)) {
+        ++s;
+    }
+    while (isspace(*s)) {
+        ++s;
+    }
+    return s;
+}
+
+static inline void *_compile(const char *program)
+{
+    Display_CopperList_Entry_t *copperlist = NULL;
+
+    while (*program != '\0') {
+        const char *command = NULL;
+        program = _token(program, &command);
+
+        if (command[0] == 'w') { // "wait"
+            const char *x, *y;
+            program = _token(program, &x);
+            program = _token(program, &y);
+
+            arrpush(copperlist, (Display_CopperList_Entry_t){ .command = WAIT });
+            arrpush(copperlist, (Display_CopperList_Entry_t){ .size = (size_t)strtoul(x, NULL, 0) });
+            arrpush(copperlist, (Display_CopperList_Entry_t){ .size = (size_t)strtoul(y, NULL, 0) });
+        } else
+        if (command[0] == 'p') { // "palette"
+            const char *index, *argb;
+            program = _token(program, &index);
+            program = _token(program, &argb);
+
+            arrpush(copperlist, (Display_CopperList_Entry_t){ .command = PALETTE });
+            arrpush(copperlist, (Display_CopperList_Entry_t){ .integer = (size_t)strtoul(index, NULL, 0) });
+            arrpush(copperlist, (Display_CopperList_Entry_t){ .color = GL_palette_unpack_color((uint32_t)strtoul(argb, NULL, 0)) });
+        } else
+        if (command[0] == 'm') { // "modulo"
+            const char *amount;
+            program = _token(program, &amount);
+
+            arrpush(copperlist, (Display_CopperList_Entry_t){ .command = MODULO });
+            arrpush(copperlist, (Display_CopperList_Entry_t){ .size = (size_t)strtoul(amount, NULL, 0) });
+        } else
+        if (command[0] == 'o') { // "offset"
+            const char *amount;
+            program = _token(program, &amount);
+
+            arrpush(copperlist, (Display_CopperList_Entry_t){ .command = OFFSET });
+            arrpush(copperlist, (Display_CopperList_Entry_t){ .size = (size_t)strtoul(amount, NULL, 0) });
+        } else {
+            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "unrecognized command `%s` for copperlist", command);
+        }
+    }
+
+    return copperlist;
+}
+
+static inline void _surface_to_rgba(const GL_Surface_t *surface, const GL_Palette_t *palette, const void *copperlist, GL_Color_t *vram)
+{
+    const Display_CopperList_Entry_t *entry = (const Display_CopperList_Entry_t *)copperlist;
 
     size_t wait_y = 0, wait_x = 0;
     GL_Color_t colors[GL_MAX_PALETTE_COLORS] = { 0 };
@@ -684,7 +763,7 @@ void Display_set_offset(Display_t *display, GL_Point_t offset)
     display->vram.offset = offset;
 }
 
-void Display_set_copperlist(Display_t *display, const Display_CopperList_Entry_t *copperlist, size_t entries)
+void Display_set_copperlist(Display_t *display, const char *program)
 {
     if (display->copperlist) {
         arrfree(display->copperlist);
@@ -692,9 +771,7 @@ void Display_set_copperlist(Display_t *display, const Display_CopperList_Entry_t
 //        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p freed", display->copperlist);
     }
 
-    for (size_t i = 0; i < entries; ++i) {
-        arrpush(display->copperlist, copperlist[i]);
-    }
+    display->copperlist = _compile(program);
 //    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "updated copperlist %p w/ #%d entries", display->copperlist, entries);
 }
 
