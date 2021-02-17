@@ -562,11 +562,11 @@ static inline void _surface_to_rgba(const GL_Surface_t *surface, GL_Palette_t *p
 
     const Display_CopperList_Entry_t *entry = copperlist;
     const GL_Pixel_t *src = surface->data;
-    GL_Color_t *dst = vram;
+    GL_Color_t *dst_sod = vram;
 
     for (size_t y = 0; y < surface->height; ++y) {
-        GL_Color_t *dst_row_begin = dst;
-        GL_Color_t *dst_row_end = dst + surface->width;
+        GL_Color_t *dst_eod = dst_sod + surface->width;
+        GL_Color_t *dst = dst_sod + offset;
 
         for (size_t x = 0; x < surface->width; ++x) {
 #ifdef __COPPER_ONE_COMMAND_PER_PIXEL__
@@ -600,10 +600,8 @@ static inline void _surface_to_rgba(const GL_Surface_t *surface, GL_Palette_t *p
                 }
             }
 
-            const GL_Pixel_t index = *src++;
-
-            GL_Color_t *dpixel = dst++ + offset;
-            if (dpixel >= dst_row_begin && dpixel <= dst_row_end) {
+            if (dst >= dst_sod && dst < dst_eod) {
+                const GL_Pixel_t index = *src;
 #ifdef __DEBUG_GRAPHICS__
                 GL_Color_t color;
                 if (index >= count) {
@@ -612,14 +610,17 @@ static inline void _surface_to_rgba(const GL_Surface_t *surface, GL_Palette_t *p
                 } else {
                     color = colors[index];
                 }
-                *dpixel = color;
+                *dst = color;
 #else
-                *dpixel = colors[index];
+                *dst = colors[index];
 #endif
             }
+            ++src;
+            ++dst;
         }
 
         src += modulo;
+        dst_sod += surface->width;
     }
 }
 
