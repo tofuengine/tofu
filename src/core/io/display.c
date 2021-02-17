@@ -550,13 +550,12 @@ static inline void _surface_to_rgba_fast(const GL_Surface_t *surface, const GL_P
     }
 }
 
-static inline void _surface_to_rgba(const GL_Surface_t *surface, const GL_Palette_t *palette, const void *copperlist, GL_Color_t *vram)
+static inline void _surface_to_rgba(const GL_Surface_t *surface, GL_Palette_t *palette, const void *copperlist, GL_Color_t *vram)
 {
     const Display_CopperList_Entry_t *entry = (const Display_CopperList_Entry_t *)copperlist;
 
     size_t wait_y = 0, wait_x = 0;
-    GL_Color_t colors[GL_MAX_PALETTE_COLORS] = { 0 };
-    memcpy(colors, palette->colors, sizeof(colors));
+    GL_Color_t *colors = palette->colors;
     int modulo = 0;
     int offset = 0;
 
@@ -579,7 +578,7 @@ static inline void _surface_to_rgba(const GL_Surface_t *surface, const GL_Palett
                         wait_y = (entry++)->size;
                         break;
                     }
-                    case PALETTE: {
+                    case COLOR: {
                         const size_t index = (entry++)->size;
                         const GL_Color_t color = (entry++)->color;
                         colors[index] = color;
@@ -622,7 +621,8 @@ void Display_present(const Display_t *display)
     GL_Color_t *pixels = display->vram.pixels;
 
     if (display->copperlist) {
-        _surface_to_rgba(surface, &display->canvas.palette, display->copperlist, pixels);
+        GL_Palette_t palette = display->canvas.palette; // Make a local copy, the copperlist can change it.
+        _surface_to_rgba(surface, &palette, display->copperlist, pixels);
     } else {
         _surface_to_rgba_fast(surface, &display->canvas.palette, pixels);
     }

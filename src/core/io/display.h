@@ -64,7 +64,7 @@ typedef enum _Display_CopperList_Command_t {
     WAIT = 0x00000,
     SKIP = 0x10000,
     MOVE = 0x20000,
-    PALETTE,
+    COLOR,
     MODULO,
     OFFSET
 } Display_CopperList_Command_t;
