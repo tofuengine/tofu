@@ -115,7 +115,7 @@ function Main:update(delta_time)
 
   for i = math.tointeger(height * 0.5), height do
     table.insert(copperlist, { "wait", 0, i })
-    table.insert(copperlist, { "offset", math.sin(t * 15.0 + i * 0.25) * 1.5 })
+    table.insert(copperlist, { "offset", math.sin(t * 13.0 + i * 0.25) * 1.5 })
   end
 
   Display.copperlist(copperlist)

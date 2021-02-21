@@ -230,6 +230,11 @@ platform: $(TARGET)
 	@$(ANALYZER) $(AFLAGS) ./demos/platform
 	@./$(TARGET) --path=./demos/platform
 
+rasterbars: $(TARGET)
+	@echo "Launching *rasterbars* application!"
+	@$(ANALYZER) $(AFLAGS) ./demos/rasterbars
+	@./$(TARGET) --path=./demos/rasterbars
+
 demo: $(TARGET)
 	@echo "Launching *$(DEMO)* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/$(DEMO)
