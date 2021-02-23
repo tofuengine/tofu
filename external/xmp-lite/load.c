@@ -67,11 +67,7 @@ LIBXMP_EXPORT int xmp_test_module(char *path, struct xmp_test_info *info)
 	for (i = 0; format_loaders[i] != NULL; i++) {
 		hio_seek(h, 0, SEEK_SET);
 		if (format_loaders[i]->test(h, buf, 0) == 0) {
-			int is_prowizard = 0;
-
-			hio_close(h);
-
-			if (info != NULL && !is_prowizard) {
+			if (info != NULL) {
 				strncpy(info->name, buf, XMP_NAME_SIZE - 1);
 				info->name[XMP_NAME_SIZE - 1] = '\0';
 
@@ -350,10 +346,11 @@ LIBXMP_EXPORT void xmp_release_module(xmp_context opaque)
 			libxmp_free_sample(&mod->xxs[i]);
 		}
 		free(mod->xxs);
-		free(m->xtra);
 		mod->xxs = NULL;
-		m->xtra = NULL;
 	}
+
+	free(m->xtra);
+	m->xtra = NULL;
 
 #ifndef LIBXMP_CORE_DISABLE_IT
 	if (m->xsmp != NULL) {
