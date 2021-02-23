@@ -30,6 +30,7 @@
 #include <libs/imath.h>
 #include <libs/stb.h>
 
+#include <ctype.h>
 #include <time.h>
 
 #define LOG_CONTEXT "display"
@@ -429,6 +430,9 @@ void Display_destroy(Display_t *display)
         program_delete(&display->program.array[i]);
     }
 
+    free(display->copperlist);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p freed", display->copperlist);
+
     glDeleteBuffers(1, &display->vram.texture);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "texture w/ id #%d deleted", display->vram.texture);
 
@@ -520,6 +524,106 @@ static inline void _to_display(GLFWwindow *window, const GL_Surface_t *surface, 
 }
 #endif
 
+static inline void _surface_to_rgba_fast(const GL_Surface_t *surface, const GL_Palette_t *palette, GL_Color_t *vram)
+{
+    const size_t data_size = surface->data_size;
+    const GL_Color_t *colors = palette->colors;
+#ifdef __DEBUG_GRAPHICS__
+    const int count = palette->count;
+#endif
+    const GL_Pixel_t *src = surface->data;
+    GL_Color_t *dst = vram;
+    for (size_t i = data_size; i; --i) {
+        const GL_Pixel_t index = *src++;
+#ifdef __DEBUG_GRAPHICS__
+        GL_Color_t color;
+        if (index >= count) {
+            const int y = (index - 240) * 8;
+            color = (GL_Color_t){ 0, 63 + y, 0, 255 };
+        } else {
+            color = colors[index];
+        }
+        *(dst++) = color;
+#else
+        *(dst++) = colors[index];
+#endif
+    }
+}
+
+static inline void _surface_to_rgba(const GL_Surface_t *surface, GL_Palette_t *palette, const Display_CopperList_Entry_t *copperlist, GL_Color_t *vram)
+{
+#ifdef __DEBUG_GRAPHICS__
+    const int count = palette->count;
+#endif
+    size_t wait_y = 0, wait_x = 0;
+    GL_Color_t *colors = palette->colors;
+    int modulo = 0;
+    int offset = 0;
+
+    const Display_CopperList_Entry_t *entry = copperlist;
+    const GL_Pixel_t *src = surface->data;
+    GL_Color_t *dst_sod = vram;
+
+    for (size_t y = 0; y < surface->height; ++y) {
+        GL_Color_t *dst_eod = dst_sod + surface->width;
+        GL_Color_t *dst = dst_sod + offset;
+
+        for (size_t x = 0; x < surface->width; ++x) {
+#ifdef __COPPER_ONE_COMMAND_PER_PIXEL__
+            if (y >= wait_y && x >= wait_x) {
+#else
+            while (y >= wait_y && x >= wait_x) {
+#endif
+                switch ((entry++)->command) {
+                    case WAIT: {
+                        wait_x = (entry++)->size;
+                        wait_y = (entry++)->size;
+                        break;
+                    }
+                    case COLOR: {
+                        const size_t index = (entry++)->size;
+                        const GL_Color_t color = (entry++)->color;
+                        colors[index] = color;
+                        break;
+                    }
+                    case MODULO: {
+                        modulo = (entry++)->integer;
+                        break;
+                    }
+                    case OFFSET: {
+                        offset = (entry++)->integer;
+                        break;
+                    }
+                    default: {
+                        break;
+                    }
+                }
+            }
+
+            if (dst >= dst_sod && dst < dst_eod) {
+                const GL_Pixel_t index = *src;
+#ifdef __DEBUG_GRAPHICS__
+                GL_Color_t color;
+                if (index >= count) {
+                    const int y = (index - 240) * 8;
+                    color = (GL_Color_t){ 0, 63 + y, 0, 255 };
+                } else {
+                    color = colors[index];
+                }
+                *dst = color;
+#else
+                *dst = colors[index];
+#endif
+            }
+            ++src;
+            ++dst;
+        }
+
+        src += modulo;
+        dst_sod += surface->width;
+    }
+}
+
 void Display_present(const Display_t *display)
 {
     // It is advisable to clear the colour buffer even if the framebuffer will be
@@ -530,7 +634,12 @@ void Display_present(const Display_t *display)
     const GL_Surface_t *surface = display->canvas.context->surface;
     GL_Color_t *pixels = display->vram.pixels;
 
-    GL_surface_to_rgba(surface, &display->canvas.palette, pixels);
+    if (display->copperlist) {
+        GL_Palette_t palette = display->canvas.palette; // Make a local copy, the copperlist can change it.
+        _surface_to_rgba(surface, &palette, display->copperlist, pixels);
+    } else {
+        _surface_to_rgba_fast(surface, &display->canvas.palette, pixels);
+    }
 
 #ifdef PROFILE
     _to_display(display->window, surface, vram, &display->vram.rectangle, &display->vram_offset);
@@ -588,6 +697,20 @@ void Display_set_palette(Display_t *display, const GL_Palette_t *palette)
 void Display_set_offset(Display_t *display, GL_Point_t offset)
 {
     display->vram.offset = offset;
+}
+
+void Display_set_copperlist(Display_t *display, const Display_CopperList_Entry_t *program, size_t length)
+{
+    if (display->copperlist) {
+        free(display->copperlist);
+        display->copperlist = NULL;
+//        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p freed", display->copperlist);
+    }
+
+    if (program) {
+        display->copperlist = memdup(program, sizeof(Display_CopperList_Entry_t) * length);
+//        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "updated copperlist %p w/ #%d entries", display->copperlist, entries);
+    }
 }
 
 void Display_set_shader(Display_t *display, const char *effect)

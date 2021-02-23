@@ -130,7 +130,7 @@ void Environment_process(Environment_t *environment, float frame_time)
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
 {
 #ifdef __ENGINE_PERFORMANCE_STATISTICS__
-    environment->stats.fps = _calculate_fps(frame_time);
+    environment->stats.fps = _calculate_fps(frame_time); // FIXME: ditch this! It's implicit in the frame time!
     _calculate_times(environment->stats.times, deltas);
 #ifdef __DEBUG_ENGINE_PERFORMANCES__
     static size_t count = 0;

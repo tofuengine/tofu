@@ -42,6 +42,4 @@ extern GL_Surface_t *GL_surface_decode(size_t width, size_t height, const void *
 extern GL_Surface_t *GL_surface_create(size_t width, size_t height);
 extern void GL_surface_destroy(GL_Surface_t *surface);
 
-extern void GL_surface_to_rgba(const GL_Surface_t *context, const GL_Palette_t *palette, GL_Color_t *vram);
-
 #endif  /* __GL_SURFACE_H__ */

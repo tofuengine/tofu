@@ -22,6 +22,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Predefined library of 8/16/32/64 colors palettes.
 * [x] Automatic nearest-color palette indexing of images.
 * [x] Per-color re-indexing (*shifting*) and transparency, affecting drawing operations (global, too?).
+* [x] SNES' Mode7-like transforms, with scanline based (HDMA) changes.
 * [x] Audio support w/ real time sound streaming on a separate thread.
 * [x] On-the-fly audio mixing w/ per voice looping/panning/balance/gain/speed control.
 * [x] Static and streamed audio data playback (FLAC format).
@@ -35,15 +36,16 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Out-of-the-box 'tweening functions support (optimized [Penner's](http://robertpenner.com/easing/) set).
 * [x] Detailed logging facility (w/ logging selectable level).
 * [x] Crash screen (debug build).
-* [x] game window focus detection (for game-pause).
+* [x] Game window focus detection (for game-pause).
+* [x] Real-time performance statistics (FPS and frame times).
 
 ## Desiderata
 
+* [ ] Masking functions for both drawing primitives and blits.
+* [ ] **Bit** **Bl**ock **T**ransfer operations when drawing (also, [stencil](https://learnopengl.com/Advanced-OpenGL/Stencil-testing) support, see [this](https://open.gl/depthstencils)).
 * [ ] Define some fixed resolutions (see [this](https://pacoup.com/2011/06/12/list-of-true-169-resolutions/))?
 * [ ] Tiled-map support w/ camera support (zoom and scrolling).
 * [ ] Animation support w/ frameset DSL (i.e. compiling a string where each token can be a single frame, a range or a "keep-current-frame for some time" command). Each frameset can have its one update period, and will be most likely based upon a timer.
-* [ ] Masking functions for both drawing primitives and blits.
-* [ ] **Bit** **Bl**ock **T**ransfer operations when drawing (also, [stencil](https://learnopengl.com/Advanced-OpenGL/Stencil-testing) support, see [this](https://open.gl/depthstencils)).
 * [ ] Custom "raw" graphics and sound formats, with on-the-fly LZ4 (stream?) compression.
 * [ ] Out-of-the-box palette switching (with tweening) features.
 * [ ] Game state and display transitions (at which level? Engine or script?).
@@ -72,7 +74,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [GLFW](https://www.glfw.org/) v3.3.2
 * [libxmp](http://xmp.sourceforge.net/) v4.5.0
 * [Lua](https://lua.org/) v5.4.2
-* [miniaudio](https://github.com/dr-soft/miniaudio) v0.10.31
+* [miniaudio](https://github.com/dr-soft/miniaudio) v0.10.32
 * [spleen](https://github.com/fcambus/spleen) v1.8.1
 * [stb](https://github.com/nothings/stb) libraries
 
