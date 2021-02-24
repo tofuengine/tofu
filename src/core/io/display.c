@@ -47,11 +47,6 @@
   #define CAPTURE_FRAME_TIME_100TH      (100 / CAPTURE_FRAMES_PER_SECOND)
 #endif
 
-typedef struct _Program_Data_t {
-    const char *vertex_shader;
-    const char *fragment_shader;
-} Program_Data_t;
-
 typedef enum Uniforms_t {
     UNIFORM_TEXTURE,
     UNIFORM_RESOLUTION,
@@ -106,11 +101,6 @@ typedef enum Uniforms_t {
     "    gl_FragColor = effect(gl_Color, u_texture0, v_texture_coords, gl_FragCoord.xy);\n" \
     "}\n" \
     "\n"
-
-static const Program_Data_t _programs_data[Display_Programs_t_CountOf] = {
-    { VERTEX_SHADER, FRAGMENT_SHADER_PASSTHRU },
-    { NULL, NULL }
-};
 
 static const int _texture_id_0 = 0;
 
@@ -299,6 +289,51 @@ static GLFWwindow *_window_initialize(const Display_Configuration_t *configurati
     return window;
 }
 
+static bool _shader_initialize(Display_t *display, const char *effect)
+{
+    Program_t *program = &display->program;
+
+    bool created = program_create(program);
+    if (!created) {
+        return false;
+    }
+
+    char *code = NULL;
+
+    if (effect) {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loading custom shader");
+        const size_t length = strlen(FRAGMENT_SHADER_CUSTOM) + strlen(effect);
+        code = malloc(sizeof(char) * (length + 1)); // Add null terminator for the string.
+        strcpy(code, FRAGMENT_SHADER_CUSTOM);
+        strcat(code, effect);
+    } else {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loading pass-thru shader");
+        code = strdup(FRAGMENT_SHADER_PASSTHRU);
+    }
+
+    if (!program_attach(program, VERTEX_SHADER, PROGRAM_SHADER_VERTEX) ||
+        !program_attach(program, code, PROGRAM_SHADER_FRAGMENT)) {
+        program_delete(program);
+        return false;
+    }
+
+    program_prepare(program, _uniforms, Uniforms_t_CountOf);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p prepared w/ id #%d", program, program->id);
+
+    program_use(program);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p active", program);
+
+    program_send(program, UNIFORM_TEXTURE, PROGRAM_UNIFORM_TEXTURE, 1, &_texture_id_0); // Redundant
+    GLfloat resolution[] = {(GLfloat)display->vram.rectangle.width, (GLfloat)display->vram.rectangle.height };
+    program_send(program, UNIFORM_RESOLUTION, PROGRAM_UNIFORM_VEC2, 1, resolution);
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p initialized", program);
+
+    free(code);
+
+    return true;
+}
+
 Display_t *Display_create(const Display_Configuration_t *configuration)
 {
     Display_t *display = malloc(sizeof(Display_t));
@@ -376,33 +411,17 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 #endif
 
-    for (size_t i = 0; i < Display_Programs_t_CountOf; ++i) {
-        const Program_Data_t *data = &_programs_data[i];
-        if (!data->vertex_shader || !data->fragment_shader) {
-            continue;
-        }
-        Program_t *program= &display->program.array[i];
-        if (!program_create(program) ||
-            !program_attach(program, data->vertex_shader, PROGRAM_SHADER_VERTEX) ||
-            !program_attach(program, data->fragment_shader, PROGRAM_SHADER_FRAGMENT)) {
-            Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize shaders");
-            for (size_t j = 0; j < i; ++j) {
-                program_delete(&display->program.array[j]);
-            }
-            glDeleteBuffers(1, &display->vram.texture);
-            free(display->vram.pixels);
-            GL_context_destroy(display->canvas.context);
-            glfwDestroyWindow(display->window);
-            glfwTerminate();
-            free(display);
-            return NULL;
-        }
-
-        program_prepare(program, _uniforms, Uniforms_t_CountOf);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p prepared w/ id #%d", program, program->id);
+    bool shader = _shader_initialize(display, configuration->effect);
+    if (!shader) {
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize shader");
+        glDeleteBuffers(1, &display->vram.texture);
+        free(display->vram.pixels);
+        GL_context_destroy(display->canvas.context);
+        glfwDestroyWindow(display->window);
+        glfwTerminate();
+        free(display);
+        return NULL;
     }
-
-    Display_set_shader(display, NULL); // Use pass-through shader at the beginning.
 
 #ifdef DEBUG
     _has_errors(); // Display pending OpenGL errors.
@@ -423,15 +442,10 @@ void Display_destroy(Display_t *display)
     Display_stop_recording(display);
 #endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
 
-    for (size_t i = 0; i < Display_Programs_t_CountOf; ++i) {
-        if (display->program.array[i].id == 0) {
-            continue;
-        }
-        program_delete(&display->program.array[i]);
-    }
-
     free(display->copperlist);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p freed", display->copperlist);
+
+    program_delete(&display->program);
 
     glDeleteBuffers(1, &display->vram.texture);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "texture w/ id #%d deleted", display->vram.texture);
@@ -462,7 +476,7 @@ void Display_update(Display_t *display, float delta_time)
     display->time += delta_time;
 
     GLfloat time = (GLfloat)display->time;
-    program_send(display->program.active, UNIFORM_TIME, PROGRAM_UNIFORM_FLOAT, 1, &time);
+    program_send(&display->program, UNIFORM_TIME, PROGRAM_UNIFORM_FLOAT, 1, &time);
 
 #ifdef __GRAPHICS_CAPTURE_SUPPORT__
     // Since GIFs' delay is expressed in 100th of seconds, we automatically "auto-sample" at a proper
@@ -711,57 +725,6 @@ void Display_set_copperlist(Display_t *display, const Display_CopperList_Entry_t
         display->copperlist = memdup(program, sizeof(Display_CopperList_Entry_t) * length);
 //        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "updated copperlist %p w/ #%d entries", display->copperlist, entries);
     }
-}
-
-void Display_set_shader(Display_t *display, const char *effect)
-{
-    bool is_passthru = display->program.active == &display->program.array[DISPLAY_PROGRAM_PASSTHRU];
-
-    if (!is_passthru) {
-        if (display->program.active) {
-            program_delete(display->program.active);
-        }
-    } else
-    if (!effect) {
-        Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "pass-thru shader already active, bailing out");
-        return;
-    }
-
-    if (!effect) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loading pass-thru shader");
-        program_delete(&display->program.array[DISPLAY_PROGRAM_CUSTOM]);
-        display->program.active = &display->program.array[DISPLAY_PROGRAM_PASSTHRU];
-    } else {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loading custom shader");
-        const size_t length = strlen(FRAGMENT_SHADER_CUSTOM) + strlen(effect);
-        char *code = malloc((length + 1) * sizeof(char)); // Add null terminator for the string.
-        strcpy(code, FRAGMENT_SHADER_CUSTOM);
-        strcat(code, effect);
-
-        Program_t *program = &display->program.array[DISPLAY_PROGRAM_CUSTOM];
-
-        if (program_create(program) &&
-            program_attach(program, VERTEX_SHADER, PROGRAM_SHADER_VERTEX) &&
-            program_attach(program, code, PROGRAM_SHADER_FRAGMENT)) {
-            program_prepare(program, _uniforms, Uniforms_t_CountOf);
-            display->program.active = program;
-        } else {
-            program_delete(program);
-            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "can't load custom shader");
-        }
-
-        free(code);
-    }
-
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "switched to program %p", display->program.active);
-
-    program_use(display->program.active);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p active", display->program.active);
-
-    program_send(display->program.active, UNIFORM_TEXTURE, PROGRAM_UNIFORM_TEXTURE, 1, &_texture_id_0); // Redundant
-    GLfloat resolution[] = {(GLfloat)display->vram.rectangle.width, (GLfloat)display->vram.rectangle.height };
-    program_send(display->program.active, UNIFORM_RESOLUTION, PROGRAM_UNIFORM_VEC2, 1, resolution);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p initialized", display->program.active);
 }
 
 GLFWwindow *Display_get_window(const Display_t *display)

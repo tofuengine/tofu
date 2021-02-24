@@ -29,7 +29,6 @@ local Bank = require("tofu.graphics").Bank
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
-local File = require("tofu.io").File
 
 local Sprite = require("lib.sprite")
 
@@ -39,8 +38,6 @@ local Main = Class.define()
 
 function Main:__ctor()
   Display.palette("nes")
-  Display.shader(File.as_string("assets/shaders/water.glsl"))
---Display.send("u_strength", 100)
 
   local canvas = Canvas.default()
   canvas:transparent({ [0] = false, [13] = true })

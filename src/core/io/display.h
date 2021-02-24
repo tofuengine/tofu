@@ -41,14 +41,6 @@
 
 #include "display/program.h"
 
-typedef enum _Display_Programs_t {
-    Display_Programs_t_First = 0,
-    DISPLAY_PROGRAM_PASSTHRU = Display_Programs_t_First,
-    DISPLAY_PROGRAM_CUSTOM,
-    Display_Programs_t_Last = DISPLAY_PROGRAM_CUSTOM,
-    Display_Programs_t_CountOf
-} Display_Programs_t;
-
 typedef struct _Display_Configuration_t {
     GLFWimage icon;
     struct {
@@ -58,6 +50,7 @@ typedef struct _Display_Configuration_t {
     bool fullscreen;
     bool vertical_sync;
     bool hide_cursor;
+    const char *effect;
 } Display_Configuration_t;
 
 typedef enum _Display_CopperList_Command_t {
@@ -97,12 +90,9 @@ typedef struct _Display_t {
         GL_Point_t offset;
     } vram;
 
-    Display_CopperList_Entry_t *copperlist;
+    Program_t program;
 
-    struct {
-        Program_t array[Display_Programs_t_CountOf];
-        Program_t *active;
-    } program;
+    Display_CopperList_Entry_t *copperlist;
 
 #ifdef __GRAPHICS_CAPTURE_SUPPORT__
     struct {
@@ -125,7 +115,6 @@ extern void Display_present(const Display_t *display);
 extern void Display_set_palette(Display_t *display, const GL_Palette_t *palette);
 extern void Display_set_offset(Display_t *display, GL_Point_t offset);
 extern void Display_set_copperlist(Display_t *display, const Display_CopperList_Entry_t *program, size_t length);
-extern void Display_set_shader(Display_t *display, const char *code);
 
 extern GLFWwindow *Display_get_window(const Display_t *display);
 extern float Display_get_scale(const Display_t *display);
