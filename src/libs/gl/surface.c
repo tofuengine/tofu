@@ -45,7 +45,7 @@ GL_Surface_t *GL_surface_decode(size_t width, size_t height, const void *pixels,
 
 GL_Surface_t *GL_surface_create(size_t width, size_t height)
 {
-    GL_Pixel_t *data = malloc(width * height * sizeof(GL_Pixel_t));
+    GL_Pixel_t *data = malloc(sizeof(GL_Pixel_t) * width * height);
     if (!data) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "cant' allocate (%dx%d) pixel-data", width, height);
         return NULL;

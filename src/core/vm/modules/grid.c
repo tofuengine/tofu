@@ -83,7 +83,7 @@ static int grid_new(lua_State *L)
     int type = lua_type(L, 3);
 
     size_t data_size = width * height;
-    Cell_t *data = malloc(data_size * sizeof(Cell_t));
+    Cell_t *data = malloc(sizeof(Cell_t) * data_size);
     if (!data) {
         return luaL_error(L, "can't allocate %dx%d grid", width, height);
     }

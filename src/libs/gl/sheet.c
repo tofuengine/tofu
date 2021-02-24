@@ -54,7 +54,7 @@ static GL_Rectangle_t *_generate_cells(GL_Size_t atlas_size, GL_Size_t cell_size
     size_t columns = atlas_size.width / cell_size.width;
     size_t rows = atlas_size.height / cell_size.height;
     size_t amount = columns * rows;
-    GL_Rectangle_t *cells = malloc(amount * sizeof(GL_Rectangle_t));
+    GL_Rectangle_t *cells = malloc(sizeof(GL_Rectangle_t) * amount);
     if (!cells) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d cells", amount);
         return NULL;

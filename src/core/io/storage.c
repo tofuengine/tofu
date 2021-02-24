@@ -124,7 +124,7 @@ static void *_load(FS_Handle_t *handle, bool null_terminate, size_t *size)
     size_t bytes_requested = FS_size(handle);
 
     size_t bytes_to_allocate = bytes_requested + (null_terminate ? 1 : 0);
-    void *data = malloc(bytes_to_allocate * sizeof(uint8_t)); // Add null terminator for the string.
+    void *data = malloc(sizeof(uint8_t) * bytes_to_allocate); // Add null terminator for the string.
     if (!data) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d bytes of memory", bytes_to_allocate);
         FS_close(handle);
