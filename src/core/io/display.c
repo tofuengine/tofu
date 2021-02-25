@@ -49,8 +49,8 @@
 
 typedef enum Uniforms_t {
     UNIFORM_TEXTURE,
-    UNIFORM_SCREEN_SIZE,
     UNIFORM_TEXTURE_SIZE,
+    UNIFORM_SCREEN_SIZE,
     UNIFORM_SCREEN_SCALE,
     UNIFORM_TIME,
     Uniforms_t_CountOf
@@ -75,8 +75,8 @@ typedef enum Uniforms_t {
     "varying vec2 v_texture_coords;\n" \
     "\n" \
     "uniform sampler2D u_texture0;\n" \
-    "uniform vec2 u_screen_size;\n" \
     "uniform vec2 u_texture_size;\n" \
+    "uniform vec2 u_screen_size;\n" \
     "uniform vec2 u_screen_scale;\n" \
     "uniform float u_time;\n" \
     "\n" \
@@ -97,8 +97,8 @@ static const int _texture_id_0 = 0;
 
 static const char *_uniforms[Uniforms_t_CountOf] = {
     "u_texture0",
-    "u_screen_size",
     "u_texture_size",
+    "u_screen_size",
     "u_screen_scale",
     "u_time",
 };
