@@ -50,6 +50,7 @@
 typedef enum Uniforms_t {
     UNIFORM_TEXTURE,
     UNIFORM_RESOLUTION,
+    UNIFORM_RESOLUTION_INV,
     UNIFORM_TIME,
     Uniforms_t_CountOf
 } Uniforms_t;
@@ -74,6 +75,7 @@ typedef enum Uniforms_t {
     "\n" \
     "uniform sampler2D u_texture0;\n" \
     "uniform vec2 u_resolution;\n" \
+    "uniform vec2 u_resolution_inv;\n" \
     "uniform float u_time;\n" \
     "\n" \
     "vec4 passthru(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {\n" \
@@ -92,6 +94,7 @@ typedef enum Uniforms_t {
     "\n" \
     "uniform sampler2D u_texture0;\n" \
     "uniform vec2 u_resolution;\n" \
+    "uniform vec2 u_resolution_inv;\n" \
     "uniform float u_time;\n" \
     "\n" \
     "vec4 effect(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords);\n" \
@@ -107,6 +110,7 @@ static const int _texture_id_0 = 0;
 static const char *_uniforms[Uniforms_t_CountOf] = {
     "u_texture0",
     "u_resolution",
+    "u_resolution_inv",
     "u_time",
 };
 
@@ -327,6 +331,8 @@ static bool _shader_initialize(Display_t *display, const char *effect)
     program_send(program, UNIFORM_TEXTURE, PROGRAM_UNIFORM_TEXTURE, 1, &_texture_id_0); // Redundant
     GLfloat resolution[] = {(GLfloat)display->vram.rectangle.width, (GLfloat)display->vram.rectangle.height };
     program_send(program, UNIFORM_RESOLUTION, PROGRAM_UNIFORM_VEC2, 1, resolution);
+    GLfloat resolution_inv[] = {(GLfloat)1.0 / (GLfloat)display->vram.rectangle.width, (GLfloat)1.0 / (GLfloat)display->vram.rectangle.height };
+    program_send(program, UNIFORM_RESOLUTION_INV, PROGRAM_UNIFORM_VEC2, 1, resolution_inv);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p initialized", program);
 
