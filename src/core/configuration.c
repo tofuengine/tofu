@@ -40,11 +40,11 @@ static inline void _parse_version(const char *version_string, int *major, int *m
 
 static void _on_parameter(Configuration_t *configuration, const char *context, const char *key, const char *value)
 {
-    char fqn[128] = { 0 };
+    char fqn[256] = { 0 };
     strcpy(fqn, context);
     strcat(fqn, ".");
     strcat(fqn, key);
-    
+
     if (strcmp(fqn, "system.identity") == 0) {
         strcpy(configuration->system.identity, value);
     } else
@@ -57,6 +57,15 @@ static void _on_parameter(Configuration_t *configuration, const char *context, c
     } else
     if (strcmp(fqn, "system.debug") == 0) {
         configuration->system.debug = strcmp(value, "true") == 0;
+    } else
+    if (strcmp(fqn, "system.icon") == 0) {
+        strcpy(configuration->system.icon, value);
+    } else
+    if (strcmp(fqn, "system.effect") == 0) {
+        strcpy(configuration->system.effect, value);
+    } else
+    if (strcmp(fqn, "system.mappings") == 0) {
+        strcpy(configuration->system.mappings, value);
     } else
     if (strcmp(fqn, "display.title") == 0) {
         strcpy(configuration->display.title, value);
@@ -217,7 +226,10 @@ void Configuration_parse(Configuration_t *configuration, const char *data)
             .system = {
                 .identity = { 0 },
                 .version = { TOFU_VERSION_MAJOR, TOFU_VERSION_MINOR, TOFU_VERSION_REVISION },
-                .debug = true
+                .debug = true,
+                .icon = "icon.png",
+                .effect = "effect.glsl",
+                .mappings = "gamecontrollerdb.txt"
             },
             .display = {
                 .title = ".: Tofu Engine :.",

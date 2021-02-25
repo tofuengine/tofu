@@ -25,6 +25,8 @@
 #ifndef __CONFIGURATION_H__
 #define __CONFIGURATION_H__
 
+#include <platform.h>
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -39,6 +41,9 @@ typedef struct _Configuration {
             int major, minor, revision;
         } version;
         bool debug;
+        char icon[PLATFORM_PATH_MAX];
+        char effect[PLATFORM_PATH_MAX];
+        char mappings[PLATFORM_PATH_MAX];
     } system;
     struct {
         char title[MAX_CONFIGURATION_TITLE_LENGTH];

@@ -36,10 +36,6 @@
 
 #include "options.h"
 
-#define ENTRY_ICON "icon.png"
-#define ENTRY_EFFECT "effect.glsl"
-#define ENTRY_GAMECONTROLLER_DB "gamecontrollerdb.txt"
-
 #define LOG_CONTEXT "engine"
 
 static const unsigned char _default_icon_pixels[] = {
@@ -138,13 +134,12 @@ Engine_t *Engine_create(int argc, const char *argv[])
         return NULL;
     }
 
-    // TODO: those two should be overridable from the configuration file!!!
-    const Storage_Resource_t *icon = Storage_exists(engine->storage, ENTRY_ICON)
-        ? Storage_load(engine->storage, ENTRY_ICON, STORAGE_RESOURCE_IMAGE)
+    const Storage_Resource_t *icon = Storage_exists(engine->storage, engine->configuration.system.icon) // FIXME: too defensive?
+        ? Storage_load(engine->storage, engine->configuration.system.icon, STORAGE_RESOURCE_IMAGE)
         : NULL;
     Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined icon loaded");
-    const Storage_Resource_t *effect = Storage_exists(engine->storage, ENTRY_EFFECT)
-        ? Storage_load(engine->storage, ENTRY_EFFECT, STORAGE_RESOURCE_STRING)
+    const Storage_Resource_t *effect = Storage_exists(engine->storage, engine->configuration.system.effect)
+        ? Storage_load(engine->storage, engine->configuration.system.effect, STORAGE_RESOURCE_STRING)
         : NULL;
     Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined effect loaded");
     engine->display = Display_create(&(const Display_Configuration_t){
@@ -158,7 +153,7 @@ Engine_t *Engine_create(int argc, const char *argv[])
             .fullscreen = engine->configuration.display.fullscreen,
             .vertical_sync = engine->configuration.display.vertical_sync,
             .hide_cursor = engine->configuration.cursor.hide,
-            .effect = S_SCHARS(effect)
+            .effect = effect ? S_SCHARS(effect) : NULL
         });
     if (!engine->display) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize display");
@@ -167,9 +162,8 @@ Engine_t *Engine_create(int argc, const char *argv[])
         return NULL;
     }
 
-    // TODO: also this should be overridable from the configuration file!!!
-    const Storage_Resource_t *mappings = Storage_exists(engine->storage, ENTRY_GAMECONTROLLER_DB)
-        ? Storage_load(engine->storage, ENTRY_GAMECONTROLLER_DB, STORAGE_RESOURCE_STRING)
+    const Storage_Resource_t *mappings = Storage_exists(engine->storage, engine->configuration.system.mappings)
+        ? Storage_load(engine->storage, engine->configuration.system.mappings, STORAGE_RESOURCE_STRING)
         : NULL;
     Log_assert(!mappings, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined controller mappings loaded");
     engine->input = Input_create(&(const Input_Configuration_t){

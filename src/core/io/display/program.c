@@ -135,7 +135,7 @@ void program_prepare(Program_t *program, const char *ids[], size_t count)
     program->locations = malloc(sizeof(GLuint) * count);
     for (size_t i = 0; i < count; ++i) {
         GLint location = glGetUniformLocation(program->id, ids[i]);
-        Log_assert(location != -1, LOG_LEVELS_WARNING, LOG_CONTEXT, "uniform `%s' not found for program #%d", ids[i], program->id);
+        Log_assert(location != -1, LOG_LEVELS_WARNING, LOG_CONTEXT, "uniform `%s` not found for program #%d", ids[i], program->id);
         program->locations[i] = location;
     }
 }
