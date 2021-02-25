@@ -49,8 +49,9 @@
 
 typedef enum Uniforms_t {
     UNIFORM_TEXTURE,
-    UNIFORM_RESOLUTION,
-    UNIFORM_RESOLUTION_INV,
+    UNIFORM_SCREEN_SIZE,
+    UNIFORM_TEXTURE_SIZE,
+    UNIFORM_SCREEN_SCALE,
     UNIFORM_TIME,
     Uniforms_t_CountOf
 } Uniforms_t;
@@ -68,33 +69,15 @@ typedef enum Uniforms_t {
     "   v_texture_coords = gl_MultiTexCoord0.st; // Retain texture 2D position.\n" \
     "}\n" \
 
-#define FRAGMENT_SHADER_PASSTHRU \
+#define FRAGMENT_SHADER \
     "#version 120\n" \
     "\n" \
     "varying vec2 v_texture_coords;\n" \
     "\n" \
     "uniform sampler2D u_texture0;\n" \
-    "uniform vec2 u_resolution;\n" \
-    "uniform vec2 u_resolution_inv;\n" \
-    "uniform float u_time;\n" \
-    "\n" \
-    "vec4 passthru(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {\n" \
-    "    return texture2D(texture, texture_coords) * color;\n" \
-    "}\n" \
-    "\n" \
-    "void main()\n" \
-    "{\n" \
-    "    gl_FragColor = passthru(gl_Color, u_texture0, v_texture_coords, gl_FragCoord.xy);\n" \
-    "}\n"
-
-#define FRAGMENT_SHADER_CUSTOM \
-    "#version 120\n" \
-    "\n" \
-    "varying vec2 v_texture_coords;\n" \
-    "\n" \
-    "uniform sampler2D u_texture0;\n" \
-    "uniform vec2 u_resolution;\n" \
-    "uniform vec2 u_resolution_inv;\n" \
+    "uniform vec2 u_screen_size;\n" \
+    "uniform vec2 u_texture_size;\n" \
+    "uniform vec2 u_screen_scale;\n" \
     "uniform float u_time;\n" \
     "\n" \
     "vec4 effect(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords);\n" \
@@ -105,12 +88,18 @@ typedef enum Uniforms_t {
     "}\n" \
     "\n"
 
+#define EFFECT_PASSTHRU \
+    "vec4 effect(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {\n" \
+    "    return texture2D(texture, texture_coords) * color;\n" \
+    "}\n"
+
 static const int _texture_id_0 = 0;
 
 static const char *_uniforms[Uniforms_t_CountOf] = {
     "u_texture0",
-    "u_resolution",
-    "u_resolution_inv",
+    "u_screen_size",
+    "u_texture_size",
+    "u_screen_scale",
     "u_time",
 };
 
@@ -302,19 +291,16 @@ static bool _shader_initialize(Display_t *display, const char *effect)
         return false;
     }
 
-    char *code = NULL;
-
     if (effect) {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loading custom shader");
-        const size_t length = strlen(FRAGMENT_SHADER_CUSTOM) + strlen(effect);
-        code = malloc(sizeof(char) * (length + 1)); // Add null terminator for the string.
-        strcpy(code, FRAGMENT_SHADER_CUSTOM);
-        strcat(code, effect);
     } else {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loading pass-thru shader");
-        const size_t length = strlen(FRAGMENT_SHADER_PASSTHRU);
-        code = memdup(FRAGMENT_SHADER_PASSTHRU, length + 1);
+        effect = EFFECT_PASSTHRU;
     }
+    const size_t length = strlen(FRAGMENT_SHADER) + strlen(effect);
+    char *code = malloc(sizeof(char) * (length + 1)); // Add null terminator for the string.
+    strcpy(code, FRAGMENT_SHADER);
+    strcat(code, effect);
 
     if (!program_attach(program, VERTEX_SHADER, PROGRAM_SHADER_VERTEX) ||
         !program_attach(program, code, PROGRAM_SHADER_FRAGMENT)) {
@@ -329,10 +315,13 @@ static bool _shader_initialize(Display_t *display, const char *effect)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p active", program);
 
     program_send(program, UNIFORM_TEXTURE, PROGRAM_UNIFORM_TEXTURE, 1, &_texture_id_0); // Redundant
-    GLfloat resolution[] = {(GLfloat)display->vram.rectangle.width, (GLfloat)display->vram.rectangle.height };
-    program_send(program, UNIFORM_RESOLUTION, PROGRAM_UNIFORM_VEC2, 1, resolution);
-    GLfloat resolution_inv[] = {(GLfloat)1.0 / (GLfloat)display->vram.rectangle.width, (GLfloat)1.0 / (GLfloat)display->vram.rectangle.height };
-    program_send(program, UNIFORM_RESOLUTION_INV, PROGRAM_UNIFORM_VEC2, 1, resolution_inv);
+    GLfloat screen_size[] = { (GLfloat)display->vram.rectangle.width, (GLfloat)display->vram.rectangle.height };
+    program_send(program, UNIFORM_SCREEN_SIZE, PROGRAM_UNIFORM_VEC2, 1, screen_size);
+    GLfloat texture_size[] = { (GLfloat)(GLfloat)display->configuration.window.width, (GLfloat)display->configuration.window.height };
+    program_send(program, UNIFORM_TEXTURE_SIZE, PROGRAM_UNIFORM_VEC2, 1, texture_size);
+    GLfloat screen_scale[] = { (GLfloat)display->vram.rectangle.width / (GLfloat)display->configuration.window.width,
+        (GLfloat)display->vram.rectangle.height / (GLfloat)display->configuration.window.height };
+    program_send(program, UNIFORM_SCREEN_SCALE, PROGRAM_UNIFORM_VEC2, 1, screen_scale);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p initialized", program);
 
@@ -759,6 +748,7 @@ GL_Point_t Display_get_offset(const Display_t *display)
     return display->vram.offset;
 }
 
+// FIXME: currently the snapshot/recording doesn't include the post-fx shader. We should re-grab from the texture.
 void Display_grab_snapshot(const Display_t *display, const char *base_path)
 {
     time_t t = time(0);
