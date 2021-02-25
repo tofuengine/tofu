@@ -56,23 +56,26 @@ typedef enum Uniforms_t {
     Uniforms_t_CountOf
 } Uniforms_t;
 
+// https://www.lighthouse3d.com/tutorials/glsl-12-tutorial/hello-world-in-glsl/
+// https://ptgmedia.pearsoncmg.com/images/9780321552624/downloads/0321552628_AppI.pdf
+// https://relativity.net.au/gaming/glsl/Built-inVariables.html
+// https://www.khronos.org/registry/OpenGL/specs/gl/
+// https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.1.20.pdf
+// https://www.khronos.org/opengl/wiki/GLSL_:_common_mistakes
+
 #define VERTEX_SHADER \
     "#version 120\n" \
-    "\n" \
-    "varying vec2 v_texture_coords;\n" \
     "\n" \
     "void main()\n" \
     "{\n" \
     "   gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\n" \
     "   gl_FrontColor = gl_Color; // Pass the vertex drawing color.\n" \
     "\n" \
-    "   v_texture_coords = gl_MultiTexCoord0.st; // Retain texture 2D position.\n" \
+    "   gl_TexCoord[0] = gl_MultiTexCoord0; // Retain texture #0 coordinates.\n" \
     "}\n" \
 
 #define FRAGMENT_SHADER \
     "#version 120\n" \
-    "\n" \
-    "varying vec2 v_texture_coords;\n" \
     "\n" \
     "uniform sampler2D u_texture0;\n" \
     "uniform vec2 u_texture_size;\n" \
@@ -84,7 +87,7 @@ typedef enum Uniforms_t {
     "\n" \
     "void main()\n" \
     "{\n" \
-    "    gl_FragColor = effect(gl_Color, u_texture0, v_texture_coords, gl_FragCoord.xy);\n" \
+    "    gl_FragColor = effect(gl_Color, u_texture0, gl_TexCoord[0].st, gl_FragCoord.xy);\n" \
     "}\n" \
     "\n"
 
