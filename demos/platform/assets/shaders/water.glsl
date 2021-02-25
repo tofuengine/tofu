@@ -88,7 +88,7 @@ const float ANGLE_RATE = 3.0;
 vec4 effect(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {
     vec2 uv = texture_coords;
 
-    float edge = EDGE_OF_WATER / u_resolution.y;
+    float edge = EDGE_OF_WATER / u_screen_size.y;
 
     if (abs(uv.y - edge) < 0.003) {
         return EDGE_COLOR;
@@ -103,7 +103,7 @@ vec4 effect(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coor
     float distFromEdge = uv.y - edge;
     vec2 mirrorCoords = vec2(uv.x, edge - distFromEdge * ANGLE_RATE);
 
-    vec2 bumpNormal =  getAsBump(uv, u_time, u_resolution).xy;
+    vec2 bumpNormal =  getAsBump(uv, u_time, u_screen_size).xy;
 
     vec4 distorted = getDistortedSample(texture, mirrorCoords, distFromEdge, bumpNormal, false);
 
