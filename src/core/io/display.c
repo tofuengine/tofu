@@ -308,7 +308,8 @@ static bool _shader_initialize(Display_t *display, const char *effect)
         strcat(code, effect);
     } else {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loading pass-thru shader");
-        code = strdup(FRAGMENT_SHADER_PASSTHRU);
+        const size_t length = strlen(FRAGMENT_SHADER_PASSTHRU);
+        code = memdup(FRAGMENT_SHADER_PASSTHRU, length + 1);
     }
 
     if (!program_attach(program, VERTEX_SHADER, PROGRAM_SHADER_VERTEX) ||
