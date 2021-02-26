@@ -484,6 +484,7 @@ void Display_update(Display_t *display, float delta_time)
         display->capture.time += delta_time;
         while (display->capture.time >= CAPTURE_FRAME_TIME) {
             display->capture.time -= CAPTURE_FRAME_TIME;
+            // FIXME: expand the current framebuffer texture, not the vram, in order to include post-processing effect!
             GifWriteFrame(&display->capture.gif_writer, display->vram.pixels, display->vram.width, display->vram.height, CAPTURE_FRAME_TIME_100TH, 8, false); // Hundredths of seconds.
         }
     }
@@ -580,6 +581,8 @@ static inline void _surface_to_rgba(const GL_Surface_t *surface, GL_Palette_t *p
     for (size_t y = 0; y < surface->height; ++y) {
         GL_Color_t *dst_eod = dst_sod + surface->width;
         GL_Color_t *dst = dst_sod + offset;
+
+        // FIXME: correct color of not-written pixel when offsetting!
 
         for (size_t x = 0; x < surface->width; ++x) {
 #ifdef __COPPER_ONE_COMMAND_PER_PIXEL__

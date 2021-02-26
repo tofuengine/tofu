@@ -85,7 +85,9 @@ SCRIPTS:=$(wildcard src/core/vm/*.lua src/core/vm/modules/*.lua)
 SDUMPS:=$(SCRIPTS:%.lua=%.inc)
 TEXTS:=$(wildcard src/assets/*.txt)
 TDUMPS:=$(TEXTS:%.txt=%.inc)
-PNGS:=$(wildcard src/assets/*.png external/spleen/*.png)
+BEXTS:=$(wildcard src/assets/shaders/*.glsl)
+BDUMPS:=$(BEXTS:%.glsl=%.inc)
+PNGS:=$(wildcard src/assets/images/*.png external/spleen/*.png)
 PDUMPS:=$(PNGS:%.png=%.inc)
 
 default: $(TARGET)
@@ -96,7 +98,7 @@ $(TARGET): $(OBJECTS)
 	@echo "Linking complete!"
 
 # The dependency upon `Makefile` is redundant, since scripts are bound to it.
-$(OBJECTS): %.o : %.c $(SDUMPS) $(TDUMPS) $(PDUMPS) $(INCLUDES) Makefile
+$(OBJECTS): %.o : %.c $(SDUMPS) $(TDUMPS) $(BDUMPS) $(PDUMPS) $(INCLUDES) Makefile
 	@$(COMPILER) $(CWARNINGS) $(CFLAGS) $(COPTS) -c $< -o $@
 	@echo "Compiled '"$<"' successfully!"
 
@@ -109,6 +111,10 @@ $(SDUMPS): %.inc: %.lua Makefile
 	@echo "Generated '"$@"' from '"$<"' successfully!"
 
 $(TDUMPS): %.inc : %.txt Makefile
+	@$(DUMPER) $(DFLAGS) $< > $@
+	@echo "Generated '"$@"' from '"$<"' successfully!"
+
+$(EDUMPS): %.inc : %.glsl Makefile
 	@$(DUMPER) $(DFLAGS) $< > $@
 	@echo "Generated '"$@"' from '"$<"' successfully!"
 

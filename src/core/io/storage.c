@@ -29,6 +29,7 @@
 #include <libs/log.h>
 #include <libs/path.h>
 #include <libs/stb.h>
+#include <resources/blobs.h>
 #include <resources/images.h>
 
 #include <stdint.h>
@@ -114,9 +115,14 @@ const char *Storage_get_base_path(const Storage_t *storage)
     return storage->base_path;
 }
 
+static bool _resource_exists(const char *name)
+{
+    return resources_blobs_exists(name) || resources_images_exists(name);
+}
+
 bool Storage_exists(const Storage_t *storage, const char *name)
 {
-    return FS_locate(storage->context, name) || resources_images_exists(name);
+    return FS_locate(storage->context, name) || _resource_exists(name);
 }
 
 static void *_load(FS_Handle_t *handle, bool null_terminate, size_t *size)
@@ -287,10 +293,42 @@ static const Storage_Load_Function_t _load_functions[Storage_Resource_Types_t_Co
 static bool _resource_load(Storage_Resource_t *resource, const char *name, Storage_Resource_Types_t type)
 {
     if (type == STORAGE_RESOURCE_STRING) {
-        return false;
+        const Blob_t *blob = resources_blobs_find(name);
+        if (!blob) {
+            return false;
+        }
+
+        *resource = (Storage_Resource_t){
+                .type = STORAGE_RESOURCE_STRING,
+                .var = {
+                    .string = {
+                        .chars = (char *)blob->ptr,
+                        .length = blob->size
+                    }
+                },
+                .age = 0.0,
+                .references = 0,
+                .allocated = false
+            };
     } else
     if (type == STORAGE_RESOURCE_BLOB) {
-        return false;
+        const Blob_t *blob = resources_blobs_find(name);
+        if (!blob) {
+            return false;
+        }
+
+        *resource = (Storage_Resource_t){
+                .type = STORAGE_RESOURCE_BLOB,
+                .var = {
+                    .blob = {
+                        .ptr = (void *)blob->ptr,
+                        .size = blob->size
+                    }
+                },
+                .age = 0.0,
+                .references = 0,
+                .allocated = false
+            };
     } else
     if (type == STORAGE_RESOURCE_IMAGE) {
         const Image_t *image = resources_images_find(name);
@@ -335,7 +373,7 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_R
 
     bool loaded = _resource_load(resource, name, type);
     if (loaded) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "hard-coded resource `%s` found", name);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bundled resource `%s` found", name);
     } else {
         FS_Handle_t *handle = FS_locate_and_open(storage->context, name);
         if (!handle) {

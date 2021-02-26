@@ -24,6 +24,7 @@
 
 #include "images.h"
 
+#include <stdint.h>
 #include <strings.h>
 
 typedef struct _Resource_Image_t {
@@ -31,26 +32,34 @@ typedef struct _Resource_Image_t {
     Image_t data;
 } Resource_Image_t;
 
-static const unsigned char _spleen_5x8_pixels[] = {
+static const uint8_t _icon[] = {
+#include <assets/images/icon.inc>
+};
+static const uint8_t _icon_bw[] = {
+#include <assets/images/icon-bw.inc>
+};
+static const uint8_t _spleen_5x8_pixels[] = {
 #include <spleen/spleen-5x8.inc>
 };
-static const unsigned char _spleen_6x12_pixels[] = {
+static const uint8_t _spleen_6x12_pixels[] = {
 #include <spleen/spleen-6x12.inc>
 };
-static const unsigned char _spleen_8x16_pixels[] = {
+static const uint8_t _spleen_8x16_pixels[] = {
 #include <spleen/spleen-8x16.inc>
 };
-static const unsigned char _spleen_12x24_pixels[] = {
+static const uint8_t _spleen_12x24_pixels[] = {
 #include <spleen/spleen-12x24.inc>
 };
-static const unsigned char _spleen_16x32_pixels[] = {
+static const uint8_t _spleen_16x32_pixels[] = {
 #include <spleen/spleen-16x32.inc>
 };
-static const unsigned char _spleen_32x64_pixels[] = {
+static const uint8_t _spleen_32x64_pixels[] = {
 #include <spleen/spleen-32x64.inc>
 };
 
 static const Resource_Image_t _images[] = {
+    { "icon", { 64, 64, _icon } },
+    { "icon-bw", { 64, 64, _icon_bw } },
     { "5x8", { 475, 8, _spleen_5x8_pixels } },
     { "6x12", { 570, 12, _spleen_6x12_pixels } },
     { "8x16", { 760, 16, _spleen_8x16_pixels } },

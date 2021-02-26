@@ -80,6 +80,10 @@ typedef struct _Storage_t {
 #define S_IHEIGHT(r)        ((r)->var.image.height)
 #define S_IPIXELS(r)        ((r)->var.image.pixels)
 
+#define RESOURCE_IMAGE_ICON_ID      "icon"
+#define RESOURCE_IMAGE_ICON_WB_ID   "icon-bw"
+#define RESOURCE_BLOB_MAPPINGS_ID   "gamecontrollerdb"
+
 extern Storage_t *Storage_create(const Storage_Configuration_t *configuration);
 extern void Storage_destroy(Storage_t *storage);
 
