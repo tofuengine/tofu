@@ -543,7 +543,7 @@ static inline void _to_display(GLFWwindow *window, const GL_Surface_t *surface, 
 }
 #endif
 
-static inline void _surface_to_rgba_fast(const GL_Surface_t *surface, const GL_Palette_t *palette, GL_Color_t *vram)
+static inline void _surface_to_rgba_fast(const GL_Surface_t *surface, int bias, const GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS], const GL_Palette_t *palette, GL_Color_t *vram)
 {
     const size_t data_size = surface->data_size;
     const GL_Color_t *colors = palette->colors;
@@ -553,7 +553,7 @@ static inline void _surface_to_rgba_fast(const GL_Surface_t *surface, const GL_P
     const GL_Pixel_t *src = surface->data;
     GL_Color_t *dst = vram;
     for (size_t i = data_size; i; --i) {
-        const GL_Pixel_t index = *src++;
+        const GL_Pixel_t index = shifting[*(src++) + bias];
 #ifdef __DEBUG_GRAPHICS__
         GL_Color_t color;
         if (index >= count) {
@@ -677,7 +677,7 @@ void Display_present(const Display_t *display)
         memcpy(slots, display->canvas.palette.slots, sizeof(GL_Palette_t) * DISPLAY_MAX_PALETTE_SLOTS);
         _surface_to_rgba(surface, display->canvas.bias, shifting, slots, display->canvas.palette.active_id, display->copperlist, pixels);
     } else {
-        _surface_to_rgba_fast(surface, &display->canvas.palette.slots[display->canvas.palette.active_id], pixels);
+        _surface_to_rgba_fast(surface, display->canvas.bias, display->canvas.shifting, &display->canvas.palette.slots[display->canvas.palette.active_id], pixels);
     }
 
 #ifdef PROFILE
