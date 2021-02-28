@@ -363,11 +363,13 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "graphics context %p created", display->canvas.context);
 
+    Display_set_shifting(display, NULL, NULL, 0);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette shifting initialized");
+
     for (size_t id = 0; id < DISPLAY_MAX_PALETTE_SLOTS; ++id) {
         GL_palette_generate_greyscale(&display->canvas.palette.slots[id], GL_MAX_PALETTE_COLORS);
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded greyscale palettes of %d entries", GL_MAX_PALETTE_COLORS);
-
     display->canvas.palette.active_id = 0;
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette #%d is active", 0);
 
@@ -569,7 +571,7 @@ static inline void _surface_to_rgba_fast(const GL_Surface_t *surface, const GL_P
     }
 }
 
-static inline void _surface_to_rgba(const GL_Surface_t *surface, GL_Palette_t slots[], size_t active_id, const Display_CopperList_Entry_t *copperlist, GL_Color_t *vram)
+static inline void _surface_to_rgba(const GL_Surface_t *surface, GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS], GL_Palette_t slots[DISPLAY_MAX_PALETTE_SLOTS], size_t active_id, const Display_CopperList_Entry_t *copperlist, GL_Color_t *vram)
 {
 #ifdef __DEBUG_GRAPHICS__
     const int count = palette->count;
@@ -578,6 +580,7 @@ static inline void _surface_to_rgba(const GL_Surface_t *surface, GL_Palette_t sl
     GL_Color_t *colors = slots[active_id].colors;
     int modulo = 0;
     int offset = 0;
+    int bias = 0;
 
     const Display_CopperList_Entry_t *entry = copperlist;
     const GL_Pixel_t *src = surface->data;
@@ -620,6 +623,16 @@ static inline void _surface_to_rgba(const GL_Surface_t *surface, GL_Palette_t sl
                         colors = slots[id].colors;
                         break;
                     }
+                    case BIAS: {
+                        bias = (entry++)->integer;
+                        break;
+                    }
+                    case SHIFT: {
+                        const GL_Pixel_t from = (entry++)->pixel;
+                        const GL_Pixel_t to = (entry++)->pixel;
+                        shifting[from] = to;
+                        break;
+                    }
                     default: {
                         break;
                     }
@@ -627,7 +640,7 @@ static inline void _surface_to_rgba(const GL_Surface_t *surface, GL_Palette_t sl
             }
 
             if (dst >= dst_sod && dst < dst_eod) {
-                const GL_Pixel_t index = *src;
+                const GL_Pixel_t index = shifting[*src + bias];
 #ifdef __DEBUG_GRAPHICS__
                 GL_Color_t color;
                 if (index >= count) {
@@ -661,9 +674,11 @@ void Display_present(const Display_t *display)
     GL_Color_t *pixels = display->vram.pixels;
 
     if (display->copperlist) {
+        GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS] = { 0 };
+        memcpy(shifting, display->canvas.shifting, sizeof(GL_Pixel_t) * GL_MAX_PALETTE_COLORS);
         GL_Palette_t slots[DISPLAY_MAX_PALETTE_SLOTS] = { 0 }; // Make a local copy, the copperlist can change it.
         memcpy(slots, display->canvas.palette.slots, sizeof(GL_Palette_t) * DISPLAY_MAX_PALETTE_SLOTS);
-        _surface_to_rgba(surface, slots, display->canvas.palette.active_id, display->copperlist, pixels);
+        _surface_to_rgba(surface, shifting, slots, display->canvas.palette.active_id, display->copperlist, pixels);
     } else {
         _surface_to_rgba_fast(surface, &display->canvas.palette.slots[display->canvas.palette.active_id], pixels);
     }
@@ -733,6 +748,19 @@ void Display_set_active_palette(Display_t *display, size_t slot_id)
 void Display_set_offset(Display_t *display, GL_Point_t offset)
 {
     display->vram.offset = offset;
+}
+
+void Display_set_shifting(Display_t *display, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count)
+{
+    if (!from) {
+        for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
+            display->canvas.shifting[i] = (GL_Pixel_t)i;
+        }
+    } else {
+        for (size_t i = 0; i < count; ++i) {
+            display->canvas.shifting[from[i]] = to[i];
+        }
+    }
 }
 
 void Display_set_copperlist(Display_t *display, const Display_CopperList_Entry_t *program, size_t length)

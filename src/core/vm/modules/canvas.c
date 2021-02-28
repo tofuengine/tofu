@@ -384,8 +384,8 @@ static int canvas_shift2(lua_State *L)
 
     lua_pushnil(L);
     while (lua_next(L, 2)) {
-        arrpush(from, LUAX_INTEGER(L, -2));
-        arrpush(to, LUAX_INTEGER(L, -1));
+        arrpush(from, (GL_Pixel_t)LUAX_INTEGER(L, -2));
+        arrpush(to, (GL_Pixel_t)LUAX_INTEGER(L, -1));
 
         lua_pop(L, 1);
     }

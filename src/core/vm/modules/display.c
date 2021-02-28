@@ -36,11 +36,12 @@
 
 #define LOG_CONTEXT "graphics"
 
-static int display_offset(lua_State *L);
 static int display_palette(lua_State *L);
 static int display_use(lua_State *L);
 static int display_color_to_index(lua_State *L);
 static int display_index_to_color(lua_State *L);
+static int display_offset(lua_State *L);
+static int display_shift(lua_State *L);
 static int display_copperlist(lua_State *L);
 
 static const struct luaL_Reg _display_functions[] = {
@@ -49,6 +50,7 @@ static const struct luaL_Reg _display_functions[] = {
     { "color_to_index", display_color_to_index },
     { "index_to_color", display_index_to_color },
     { "offset", display_offset },
+    { "shift", display_shift },
     { "copperlist", display_copperlist },
     { NULL, NULL }
 };
@@ -245,6 +247,69 @@ static int display_offset(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
+static int display_shift0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+    LUAX_SIGNATURE_END
+
+    Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    Display_set_shifting(display, NULL, NULL, 0);
+
+    return 0;
+}
+
+static int display_shift1(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
+    LUAX_SIGNATURE_END
+    GL_Pixel_t *from = NULL;
+    GL_Pixel_t *to = NULL;
+
+    lua_pushnil(L);
+    while (lua_next(L, 2)) {
+        arrpush(from, (GL_Pixel_t)LUAX_INTEGER(L, -2));
+        arrpush(to, (GL_Pixel_t)LUAX_INTEGER(L, -1));
+
+        lua_pop(L, 1);
+    }
+
+    Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    Display_set_shifting(display, from, to, arrlen(from));
+
+    arrfree(from);
+    arrfree(to);
+
+    return 0;
+}
+
+static int display_shift2(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    GL_Pixel_t from = (GL_Pixel_t)LUAX_INTEGER(L, 1);
+    GL_Pixel_t to = (GL_Pixel_t)LUAX_INTEGER(L, 2);
+
+    Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    Display_set_shifting(display, &from, &to, 1);
+
+    return 0;
+}
+
+static int display_shift(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(0, display_shift0)
+        LUAX_OVERLOAD_ARITY(1, display_shift1)
+        LUAX_OVERLOAD_ARITY(2, display_shift2)
+    LUAX_OVERLOAD_END
+}
+
 static int display_copperlist0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -319,13 +384,26 @@ static int display_copperlist1(lua_State *L)
 
             lua_pop(L, 2);
         } else
-        if (command[0] == 'p') {
+        if (command[0] == 'b') {
             lua_rawgeti(L, 3, 2);
 
-            const size_t id = LUAX_INTEGER(L, -1);
+            const int bias = LUAX_INTEGER(L, -1);
 
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .command = PALETTE });
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .size = id });
+            arrpush(copperlist, (Display_CopperList_Entry_t){ .command = BIAS });
+            arrpush(copperlist, (Display_CopperList_Entry_t){ .integer = bias });
+
+            lua_pop(L, 2);
+        } else
+        if (command[0] == 's') {
+            lua_rawgeti(L, 3, 2);
+            lua_rawgeti(L, 3, 3);
+
+            const GL_Pixel_t from = (GL_Pixel_t)LUAX_INTEGER(L, -2);
+            const GL_Pixel_t to = (GL_Pixel_t)LUAX_INTEGER(L, -1);
+
+            arrpush(copperlist, (Display_CopperList_Entry_t){ .command = SHIFT });
+            arrpush(copperlist, (Display_CopperList_Entry_t){ .pixel = from });
+            arrpush(copperlist, (Display_CopperList_Entry_t){ .pixel = to });
 
             lua_pop(L, 2);
         } else {
