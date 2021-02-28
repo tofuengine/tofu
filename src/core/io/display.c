@@ -370,8 +370,6 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
         GL_palette_generate_greyscale(&display->canvas.palette.slots[id], GL_MAX_PALETTE_COLORS);
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded greyscale palettes of %d entries", GL_MAX_PALETTE_COLORS);
-    display->canvas.palette.active_id = 0;
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette #%d is active", 0);
 
     display->vram.width = display->canvas.size.width;
     display->vram.height = display->canvas.size.height;
@@ -571,7 +569,7 @@ static inline void _surface_to_rgba_fast(const GL_Surface_t *surface, const GL_P
     }
 }
 
-static inline void _surface_to_rgba(const GL_Surface_t *surface, GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS], GL_Palette_t slots[DISPLAY_MAX_PALETTE_SLOTS], size_t active_id, const Display_CopperList_Entry_t *copperlist, GL_Color_t *vram)
+static inline void _surface_to_rgba(const GL_Surface_t *surface, int bias, GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS], GL_Palette_t slots[DISPLAY_MAX_PALETTE_SLOTS], size_t active_id, const Display_CopperList_Entry_t *copperlist, GL_Color_t *vram)
 {
 #ifdef __DEBUG_GRAPHICS__
     const int count = palette->count;
@@ -580,7 +578,6 @@ static inline void _surface_to_rgba(const GL_Surface_t *surface, GL_Pixel_t shif
     GL_Color_t *colors = slots[active_id].colors;
     int modulo = 0;
     int offset = 0;
-    int bias = 0;
 
     const Display_CopperList_Entry_t *entry = copperlist;
     const GL_Pixel_t *src = surface->data;
@@ -678,7 +675,7 @@ void Display_present(const Display_t *display)
         memcpy(shifting, display->canvas.shifting, sizeof(GL_Pixel_t) * GL_MAX_PALETTE_COLORS);
         GL_Palette_t slots[DISPLAY_MAX_PALETTE_SLOTS] = { 0 }; // Make a local copy, the copperlist can change it.
         memcpy(slots, display->canvas.palette.slots, sizeof(GL_Palette_t) * DISPLAY_MAX_PALETTE_SLOTS);
-        _surface_to_rgba(surface, shifting, slots, display->canvas.palette.active_id, display->copperlist, pixels);
+        _surface_to_rgba(surface, display->canvas.bias, shifting, slots, display->canvas.palette.active_id, display->copperlist, pixels);
     } else {
         _surface_to_rgba_fast(surface, &display->canvas.palette.slots[display->canvas.palette.active_id], pixels);
     }
@@ -748,6 +745,11 @@ void Display_set_active_palette(Display_t *display, size_t slot_id)
 void Display_set_offset(Display_t *display, GL_Point_t offset)
 {
     display->vram.offset = offset;
+}
+
+void Display_set_bias(Display_t *display, int bias)
+{
+    display->canvas.bias = bias;
 }
 
 void Display_set_shifting(Display_t *display, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count)

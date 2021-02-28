@@ -41,6 +41,7 @@ static int display_use(lua_State *L);
 static int display_color_to_index(lua_State *L);
 static int display_index_to_color(lua_State *L);
 static int display_offset(lua_State *L);
+static int display_bias(lua_State *L);
 static int display_shift(lua_State *L);
 static int display_copperlist(lua_State *L);
 
@@ -50,6 +51,7 @@ static const struct luaL_Reg _display_functions[] = {
     { "color_to_index", display_color_to_index },
     { "index_to_color", display_index_to_color },
     { "offset", display_offset },
+    { "bias", display_bias },
     { "shift", display_shift },
     { "copperlist", display_copperlist },
     { NULL, NULL }
@@ -244,6 +246,28 @@ static int display_offset(lua_State *L)
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(0, display_offset0_2)
         LUAX_OVERLOAD_ARITY(2, display_offset0_2)
+    LUAX_OVERLOAD_END
+}
+
+static int display_bias0_1(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    int bias = LUAX_OPTIONAL_INTEGER(L, 1, 0);
+
+    Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    Display_set_bias(display, bias);
+
+    return 0;
+}
+
+static int display_bias(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(0, display_bias0_1)
+        LUAX_OVERLOAD_ARITY(1, display_bias0_1)
     LUAX_OVERLOAD_END
 }
 

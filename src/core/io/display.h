@@ -84,6 +84,7 @@ typedef struct _Display_t {
     struct {
         GL_Size_t size;
         GL_Context_t *context;
+        int bias;
         GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
         struct {
             GL_Palette_t slots[DISPLAY_MAX_PALETTE_SLOTS];
@@ -126,6 +127,7 @@ extern void Display_present(const Display_t *display);
 extern void Display_set_palette(Display_t *display, const GL_Palette_t *palette);
 extern void Display_set_active_palette(Display_t *display, size_t slot_id);
 extern void Display_set_offset(Display_t *display, GL_Point_t offset);
+extern void Display_set_bias(Display_t *display, int bias);
 extern void Display_set_shifting(Display_t *display, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count);
 extern void Display_set_copperlist(Display_t *display, const Display_CopperList_Entry_t *program, size_t length);
 
