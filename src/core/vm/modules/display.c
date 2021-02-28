@@ -38,12 +38,14 @@
 
 static int display_offset(lua_State *L);
 static int display_palette(lua_State *L);
+static int display_use(lua_State *L);
 static int display_color_to_index(lua_State *L);
 static int display_index_to_color(lua_State *L);
 static int display_copperlist(lua_State *L);
 
 static const struct luaL_Reg _display_functions[] = {
     { "palette", display_palette },
+    { "use", display_use }, // FIXME: find a better name for this.
     { "color_to_index", display_color_to_index },
     { "index_to_color", display_index_to_color },
     { "offset", display_offset },
@@ -137,6 +139,20 @@ static int display_palette(lua_State *L)
         LUAX_OVERLOAD_ARITY(0, display_palette0)
         LUAX_OVERLOAD_ARITY(1, display_palette1)
     LUAX_OVERLOAD_END
+}
+
+static int display_use(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    size_t slot_id = (size_t)LUAX_OPTIONAL_INTEGER(L, 1, 0);
+
+    Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    Display_set_active_palette(display, slot_id);
+
+    return 0;
 }
 
 static int display_color_to_index1(lua_State *L)
@@ -300,6 +316,16 @@ static int display_copperlist1(lua_State *L)
 
             arrpush(copperlist, (Display_CopperList_Entry_t){ .command = OFFSET });
             arrpush(copperlist, (Display_CopperList_Entry_t){ .integer = amount });
+
+            lua_pop(L, 2);
+        } else
+        if (command[0] == 'p') {
+            lua_rawgeti(L, 3, 2);
+
+            const size_t id = LUAX_INTEGER(L, -1);
+
+            arrpush(copperlist, (Display_CopperList_Entry_t){ .command = PALETTE });
+            arrpush(copperlist, (Display_CopperList_Entry_t){ .size = id });
 
             lua_pop(L, 2);
         } else {
