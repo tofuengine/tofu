@@ -617,7 +617,7 @@ static inline void _surface_to_rgba(const GL_Surface_t *surface, int bias, GL_Pi
                         break;
                     }
                     case COLOR: {
-                        const size_t index = (entry++)->size;
+                        const GL_Pixel_t index = (entry++)->pixel;
                         const GL_Color_t color = (entry++)->color;
                         colors[index] = color;
                         break;

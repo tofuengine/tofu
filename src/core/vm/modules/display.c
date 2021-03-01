@@ -35,7 +35,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 
-#define LOG_CONTEXT "graphics"
+#define LOG_CONTEXT "display"
 
 static int display_palette(lua_State *L);
 static int display_switch(lua_State *L);
