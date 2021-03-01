@@ -60,13 +60,13 @@ local function extra_half_brite(palette, target, ratio)
   for _, color in ipairs(palette) do
     table.insert(p, color)
   end
-  local tr, tg, tb = Display.unpack_color(target)
+  local tr, tg, tb = table.unpack(target)
   for _, color in ipairs(palette) do
-    local cr, cg, cb = Display.unpack_color(color)
+    local cr, cg, cb = table.unpack(color)
     local r = math.tointeger((cr - tr) * ratio + tr)
     local g = math.tointeger((cg - tg) * ratio + tg)
     local b = math.tointeger((cb - tb) * ratio + tb)
-    table.insert(p, Display.pack_color(r, g, b))
+    table.insert(p, { r, g, b })
   end
   return p
 end
@@ -116,7 +116,7 @@ function Main:__ctor()
   self.atlas:clear(0)
 
   -- Tweak the palette now that the loading phase is complete, so that color-remapping won't be interfered with!
-  Display.palette(extra_half_brite(Display.palette(), Display.pack_color(31, 127, 63), 0.5))
+  Display.palette(extra_half_brite(Display.palette(), { 31, 127, 63 }, 0.5))
 --  self.pixies:clear(0)
 end
 

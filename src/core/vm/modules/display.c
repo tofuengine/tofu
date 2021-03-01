@@ -83,9 +83,16 @@ static int display_palette0(lua_State *L)
 
     lua_createtable(L, (int)palette->count, 0);
     for (size_t i = 0; i < palette->count; ++i) {
-        unsigned int argb = GL_palette_pack_color(palette->colors[i]);
+        const GL_Color_t color = palette->colors[i];
 
-        lua_pushinteger(L, (lua_Integer)argb);
+        lua_createtable(L, (int)palette->count, 3);
+        lua_pushinteger(L, (lua_Integer)color.r);
+        lua_rawseti(L, -2, 1);
+        lua_pushinteger(L, (lua_Integer)color.g);
+        lua_rawseti(L, -2, 2);
+        lua_pushinteger(L, (lua_Integer)color.b);
+        lua_rawseti(L, -2, 3);
+
         lua_rawseti(L, -2, (lua_Integer)(i + 1));
     }
 
@@ -122,13 +129,21 @@ static int display_palette1(lua_State *L)
             palette.count = GL_MAX_PALETTE_COLORS;
         }
 
-        lua_pushnil(L);
-        for (size_t i = 0; lua_next(L, 1); ++i) {
-            uint32_t argb = (uint32_t)LUAX_INTEGER(L, -1);
-            GL_Color_t color = GL_palette_unpack_color(argb);
-            palette.colors[i] = color;
+        lua_pushnil(L); // T -> T N
+        for (size_t i = 0; lua_next(L, 1); ++i) { // T N -> T N T
+            lua_rawgeti(L, 3, 1); // T N T -> T N T I
+            lua_rawgeti(L, 3, 2); // T N T I -> T N T I I
+            lua_rawgeti(L, 3, 3); // T N T I I -> T N T I I I
 
-            lua_pop(L, 1);
+            uint8_t r = (uint8_t)LUAX_INTEGER(L, -3);
+            uint8_t g = (uint8_t)LUAX_INTEGER(L, -2);
+            uint8_t b = (uint8_t)LUAX_INTEGER(L, -1);
+
+            lua_pop(L, 3); // T N T I I I -> T N T
+
+            palette.colors[i] = (GL_Color_t){ .a = 255, .r = r, .g = g, .b = b };
+
+            lua_pop(L, 1); // T N T -> T N
         }
     }
 
@@ -419,15 +434,21 @@ static int display_copperlist1(lua_State *L)
         if (c == 'c') {
             lua_rawgeti(L, 3, 2);
             lua_rawgeti(L, 3, 3);
+            lua_rawgeti(L, 3, 4);
+            lua_rawgeti(L, 3, 5);
 
-            const size_t index = (size_t)LUAX_INTEGER(L, -2);
-            const uint32_t argb = (uint32_t)LUAX_INTEGER(L, -1);
+            const size_t index = (size_t)LUAX_INTEGER(L, -4);
+            const uint8_t r = (uint8_t)LUAX_INTEGER(L, -3);
+            const uint8_t g = (uint8_t)LUAX_INTEGER(L, -2);
+            const uint8_t b = (uint8_t)LUAX_INTEGER(L, -1);
+
+            const GL_Color_t color = (GL_Color_t){ .a = 255, .r = r, .g = g, .b = b };
 
             arrpush(copperlist, (Display_CopperList_Entry_t){ .command = COLOR });
             arrpush(copperlist, (Display_CopperList_Entry_t){ .integer = index });
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .color = GL_palette_unpack_color(argb) });
+            arrpush(copperlist, (Display_CopperList_Entry_t){ .color = color });
 
-            lua_pop(L, 3);
+            lua_pop(L, 5);
         } else
         if (c == 'b') {
             lua_rawgeti(L, 3, 2);

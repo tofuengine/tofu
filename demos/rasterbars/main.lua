@@ -90,30 +90,32 @@ function Main:update(delta_time)
   local copperlist = {}
 
   table.insert(copperlist, { "wait", 0, 0 })
-  table.insert(copperlist, { "color", 0, 0 })
-  table.insert(copperlist, { "color", 1, 0 })
-  table.insert(copperlist, { "color", 31, 0 })
+  table.insert(copperlist, { "color", 0, 0, 0, 0 })
+  table.insert(copperlist, { "color", 1, 0, 0, 0 })
+  table.insert(copperlist, { "color", 31, 0, 0, 00 })
 
   for i = 15, 0, -1 do
+    local v = 0x11 * (15 - i)
     table.insert(copperlist, { "wait", 0, y - i })
-    table.insert(copperlist, { "color", 0, 0xff000000 + 0x00110000 * (15 - i) })
-    table.insert(copperlist, { "color", 1, 0xff000000 + 0x00110011 * (15 - i) })
-    table.insert(copperlist, { "color", 31, 0xff000000 + 0x00111100 * (15 - i) })
+    table.insert(copperlist, { "color", 0, v, 0, 0 })
+    table.insert(copperlist, { "color", 1, v, 0, v })
+    table.insert(copperlist, { "color", 31, v, v, 0 })
   end
   for i = 0, 15 do
+    local v = 0x11 * (15 - i)
     table.insert(copperlist, { "wait", 0, y + i })
-    table.insert(copperlist, { "color", 0, 0xff000000 + 0x00110000 * (15 - i) })
-    table.insert(copperlist, { "color", 1, 0xff000000 + 0x00110011 * (15 - i) })
-    table.insert(copperlist, { "color", 31, 0xff000000 + 0x00111100 * (15 - i) })
+    table.insert(copperlist, { "color", 0, v, 0, 0 })
+    table.insert(copperlist, { "color", 1, v, 0, v })
+    table.insert(copperlist, { "color", 31, v, v, 0 })
   end
 
   table.insert(copperlist, { "wait", 0, height * 0.5 })
-  table.insert(copperlist, { "color", 0, 0xff001144 })
-  table.insert(copperlist, { "color", 1, 0xff001144 })
-  table.insert(copperlist, { "color", 31, 0xff001144 })
+  table.insert(copperlist, { "color", 0, 0x00, 0x11, 0x44 })
+  table.insert(copperlist, { "color", 1, 0x00, 0x11, 0x44 })
+  table.insert(copperlist, { "color", 31, 0x00, 0x11, 0x44 })
   table.insert(copperlist, { "modulo", -width * 2 })
 
-  for i = math.tointeger(height * 0.5), height do
+  for i = math.tointeger(height * 0.5), height - 1 do
     table.insert(copperlist, { "wait", 0, i })
     table.insert(copperlist, { "offset", math.sin(t * 13.0 + i * 0.25) * 1.5 })
   end
