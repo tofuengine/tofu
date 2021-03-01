@@ -55,37 +55,24 @@ local function generate_map(screens)
   return map
 end
 
-local function get_r(c)
-  return (c >> 16) & 0xff
-end
-local function get_g(c)
-  return (c >> 8) & 0xff
-end
-local function get_b(c)
-  return c & 0xff
-end
-local function to_rgb(r, g, b)
-  return r * 65536 + g * 256 + b
-end
-
-local function generate_palette(palette, target, ratio)
-  local lut = {}
+local function extra_half_brite(palette, target, ratio)
+  local p = {}
   for _, color in ipairs(palette) do
-    local r = math.tointeger((get_r(color) - get_r(target)) * ratio + get_r(target))
-    local g = math.tointeger((get_g(color) - get_g(target)) * ratio + get_g(target))
-    local b = math.tointeger((get_b(color) - get_b(target)) * ratio + get_b(target))
-    table.insert(lut, to_rgb(r, g, b))
+    table.insert(p, color)
   end
-  return lut
+  local tr, tg, tb = Display.unpack_color(target)
+  for _, color in ipairs(palette) do
+    local cr, cg, cb = Display.unpack_color(color)
+    local r = math.tointeger((cr - tr) * ratio + tr)
+    local g = math.tointeger((cg - tg) * ratio + tg)
+    local b = math.tointeger((cb - tb) * ratio + tb)
+    table.insert(p, Display.pack_color(r, g, b))
+  end
+  return p
 end
 
 function Main:__ctor()
   Display.palette("pico-8-ext")
-  local palette = Display.palette()
-  Display.use(1)
-  palette = generate_palette(palette, to_rgb(31, 127, 63), 0.5)
-  Display.palette(palette)
-  Display.use(0) -- Back to #0 to properly load the banks.
 
   Class.dump(System.args())
 
@@ -128,6 +115,8 @@ function Main:__ctor()
 
   self.atlas:clear(0)
 
+  -- Tweak the palette now that the loading phase is complete, so that color-remapping won't be interfered with!
+  Display.palette(extra_half_brite(Display.palette(), Display.pack_color(31, 127, 63), 0.5))
 --  self.pixies:clear(0)
 end
 
@@ -254,9 +243,8 @@ function Main:update(delta_time)
   local t = System.time()
   local copperlist = {}
   table.insert(copperlist, { "wait", 0, 0 })
-  table.insert(copperlist, { "palette", 0 })
   table.insert(copperlist, { "wait", 0, y })
-  table.insert(copperlist, { "palette", 1 })
+  table.insert(copperlist, { "bias", 32 })
   table.insert(copperlist, { "modulo", -width * 2 })
   for i = y, height - 1 do
     table.insert(copperlist, { "wait", 0, i })

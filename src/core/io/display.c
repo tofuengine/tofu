@@ -550,8 +550,10 @@ static inline void _surface_to_rgba_fast(const GL_Surface_t *surface, int bias, 
 #ifdef __DEBUG_GRAPHICS__
     const int count = palette->count;
 #endif
+
     const GL_Pixel_t *src = surface->data;
     GL_Color_t *dst = vram;
+
     for (size_t i = data_size; i; --i) {
         const GL_Pixel_t index = shifting[*(src++) + bias];
 #ifdef __DEBUG_GRAPHICS__
@@ -601,12 +603,6 @@ static inline void _surface_to_rgba(const GL_Surface_t *surface, int bias, GL_Pi
                         wait_y = (entry++)->size;
                         break;
                     }
-                    case COLOR: {
-                        const size_t index = (entry++)->size;
-                        const GL_Color_t color = (entry++)->color;
-                        colors[index] = color;
-                        break;
-                    }
                     case MODULO: {
                         modulo = (entry++)->integer;
                         break;
@@ -618,6 +614,12 @@ static inline void _surface_to_rgba(const GL_Surface_t *surface, int bias, GL_Pi
                     case PALETTE: {
                         const size_t id = (entry++)->size;
                         colors = slots[id].colors;
+                        break;
+                    }
+                    case COLOR: {
+                        const size_t index = (entry++)->size;
+                        const GL_Color_t color = (entry++)->color;
+                        colors[index] = color;
                         break;
                     }
                     case BIAS: {
