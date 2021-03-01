@@ -25,6 +25,7 @@
 #ifndef __MODULES_UDT_H__
 #define __MODULES_UDT_H__
 
+#include <core/io/display.h>
 #include <libs/luax.h>
 #include <libs/fs/fs.h>
 #include <libs/gl/gl.h>
@@ -48,6 +49,7 @@ typedef enum _Object_Types_t {
     OBJECT_TYPE_FONT,
     OBJECT_TYPE_BATCH,
     OBJECT_TYPE_XFORM,
+    OBJECT_TYPE_COPPERLIST,
     OBJECT_TYPE_GRID,
     OBJECT_TYPE_SOURCE
 } Object_Types_t;
@@ -105,6 +107,10 @@ typedef struct _XForm_Object_t {
     } source;
     GL_XForm_t xform;
 } XForm_Object_t;
+
+typedef struct _Copperlist_Object_t {
+    Display_CopperList_Entry_t *program;
+} Copperlist_Object_t;
 
 #ifdef __GRID_INTEGER_CELL__
 typedef int Cell_t;

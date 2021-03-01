@@ -338,119 +338,13 @@ static int display_copperlist0(lua_State *L)
 static int display_copperlist1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
+    Copperlist_Object_t *copperlist = (Copperlist_Object_t *)LUAX_USERDATA(L, 1);
 
     Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    Display_CopperList_Entry_t *copperlist = NULL;
-
-    lua_pushnil(L); // T -> T N
-    for (size_t i = 0; lua_next(L, 1); ++i) { // T N -> T N T
-        lua_rawgeti(L, 3, 1); // T N T -> T N T S
-
-        const char *command = LUAX_STRING(L, -1);
-
-        const char c = tolower(command[0]); // Case insensitive command.
-        if (c == 'w') {
-            lua_rawgeti(L, 3, 2); // T N T S -> T N T S I
-            lua_rawgeti(L, 3, 3); // T N T S I -> T N T S I I
-
-            const size_t x = (size_t)LUAX_INTEGER(L, -2);
-            const size_t y = (size_t)LUAX_INTEGER(L, -1);
-
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .command = WAIT });
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .size = x });
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .size = y });
-
-            lua_pop(L, 3); // T N T
-        } else
-        if (c == 'm') {
-            lua_rawgeti(L, 3, 2);
-
-            const int amount = LUAX_INTEGER(L, -1);
-
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .command = MODULO });
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .integer = amount });
-
-            lua_pop(L, 2);
-        } else
-        if (c == 'o') {
-            lua_rawgeti(L, 3, 2);
-
-            const int amount = LUAX_INTEGER(L, -1);
-
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .command = OFFSET });
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .integer = amount });
-
-            lua_pop(L, 2);
-        } else
-        if (c == 'p') {
-            lua_rawgeti(L, 3, 2);
-
-            const size_t id = (size_t)LUAX_INTEGER(L, -1);
-
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .command = PALETTE });
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .size = id });
-
-            lua_pop(L, 2);
-        } else
-        if (c == 'c') {
-            lua_rawgeti(L, 3, 2);
-            lua_rawgeti(L, 3, 3);
-            lua_rawgeti(L, 3, 4);
-            lua_rawgeti(L, 3, 5);
-
-            const size_t index = (size_t)LUAX_INTEGER(L, -4);
-            const uint8_t r = (uint8_t)LUAX_INTEGER(L, -3);
-            const uint8_t g = (uint8_t)LUAX_INTEGER(L, -2);
-            const uint8_t b = (uint8_t)LUAX_INTEGER(L, -1);
-
-            const GL_Color_t color = (GL_Color_t){ .a = 255, .r = r, .g = g, .b = b };
-
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .command = COLOR });
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .integer = index });
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .color = color });
-
-            lua_pop(L, 5);
-        } else
-        if (c == 'b') {
-            lua_rawgeti(L, 3, 2);
-
-            const int bias = LUAX_INTEGER(L, -1);
-
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .command = BIAS });
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .integer = bias });
-
-            lua_pop(L, 2);
-        } else
-        if (c == 's') {
-            lua_rawgeti(L, 3, 2);
-            lua_rawgeti(L, 3, 3);
-
-            const GL_Pixel_t from = (GL_Pixel_t)LUAX_INTEGER(L, -2);
-            const GL_Pixel_t to = (GL_Pixel_t)LUAX_INTEGER(L, -1);
-
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .command = SHIFT });
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .pixel = from });
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .pixel = to });
-
-            lua_pop(L, 2);
-        } else {
-            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "unrecognized command `%s` for copperlist", command);
-            lua_pop(L, 1);
-        }
-
-        lua_pop(L, 1);
-    }
-
-    arrpush(copperlist, (Display_CopperList_Entry_t){ .command = WAIT }); // Force an unreachable WAIT as optimization!
-    arrpush(copperlist, (Display_CopperList_Entry_t){ .size = SIZE_MAX });
-    arrpush(copperlist, (Display_CopperList_Entry_t){ .size = SIZE_MAX });
-
-    Display_set_copperlist(display, copperlist, arrlen(copperlist));
-
-    arrfree(copperlist);
+    Display_set_copperlist(display, copperlist->program, arrlen(copperlist->program));
 
     return 0;
 }
