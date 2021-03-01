@@ -81,7 +81,7 @@ static int display_palette0(lua_State *L)
     for (size_t i = 0; i < palette->count; ++i) {
         const GL_Color_t color = palette->colors[i];
 
-        lua_createtable(L, (int)palette->count, 3);
+        lua_createtable(L, 3, 0);
         lua_pushinteger(L, (lua_Integer)color.r);
         lua_rawseti(L, -2, 1);
         lua_pushinteger(L, (lua_Integer)color.g);
