@@ -29,6 +29,7 @@ local Input = require("tofu.events").Input
 local Bank = require("tofu.graphics").Bank
 local Batch = require("tofu.graphics").Batch
 local Canvas = require("tofu.graphics").Canvas
+local Copperlist = require("tofu.graphics").Copperlist
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
 local Vector = require("tofu.util").Vector
@@ -241,14 +242,13 @@ function Main:update(delta_time)
   local y = height * 0.5 + delta_y + 32
 
   local t = System.time()
-  local copperlist = {}
-  table.insert(copperlist, { "wait", 0, 0 })
-  table.insert(copperlist, { "wait", 0, y })
-  table.insert(copperlist, { "bias", 32 })
-  table.insert(copperlist, { "modulo", -width * 2 })
+  local copperlist = Copperlist.new()
+  copperlist:wait(0, y)
+  copperlist:bias(32)
+  copperlist:modulo(-width * 2)
   for i = y, height - 1 do
-    table.insert(copperlist, { "wait", 0, i })
-    table.insert(copperlist, { "offset", math.sin(t * 9.0 + i * 0.25) * 1.5 })
+    copperlist:wait(0, i)
+    copperlist:offset(math.sin(t * 9.0 + i * 0.25) * 1.5)
   end
   Display.copperlist(copperlist)
 end
