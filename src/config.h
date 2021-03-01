@@ -60,7 +60,6 @@
 #define __NO_LINEFEEDS__
 
 // TODO: better naming for macros, including namespace.
-#undef  __IGNORE_ALPHA_ON_COLORS__
 #undef  __DEBUG_TRIANGLES_WINDING__
 #undef  __FIND_NEAREST_COLOR_EUCLIDIAN__
 #undef  __GRID_INTEGER_CELL__

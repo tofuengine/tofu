@@ -41,8 +41,6 @@ static int display_palette(lua_State *L);
 static int display_switch(lua_State *L);
 static int display_color_to_index(lua_State *L);
 static int display_index_to_color(lua_State *L);
-static int display_unpack_color(lua_State *L);
-static int display_pack_color(lua_State *L);
 static int display_offset(lua_State *L);
 static int display_bias(lua_State *L);
 static int display_shift(lua_State *L);
@@ -53,8 +51,6 @@ static const struct luaL_Reg _display_functions[] = {
     { "switch", display_switch },
     { "color_to_index", display_color_to_index },
     { "index_to_color", display_index_to_color },
-    { "unpack_color", display_unpack_color },
-    { "pack_color", display_pack_color },
     { "offset", display_offset },
     { "bias", display_bias },
     { "shift", display_shift },
@@ -216,38 +212,6 @@ static int display_index_to_color(lua_State *L)
     lua_pushinteger(L, (lua_Integer)color.b);
 
     return 3;
-}
-
-static int display_unpack_color(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    uint32_t argb = (uint32_t)LUAX_INTEGER(L, 1);
-
-    GL_Color_t color = GL_palette_unpack_color(argb);
-
-    lua_pushinteger(L, (lua_Integer)color.r);
-    lua_pushinteger(L, (lua_Integer)color.g);
-    lua_pushinteger(L, (lua_Integer)color.b);
-
-    return 3;
-}
-
-static int display_pack_color(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    uint8_t r = (uint8_t)LUAX_INTEGER(L, 1);
-    uint8_t g = (uint8_t)LUAX_INTEGER(L, 2);
-    uint8_t b = (uint8_t)LUAX_INTEGER(L, 3);
-
-    lua_pushinteger(L, (lua_Integer)GL_palette_pack_color((GL_Color_t){ .a = 255, .r = r, .g = g, .b = b }));
-
-    return 1;
 }
 
 static int display_offset0_2(lua_State *L)

@@ -39,25 +39,6 @@ void GL_palette_generate_greyscale(GL_Palette_t *palette, const size_t count)
     palette->count = count;
 }
 
-GL_Color_t GL_palette_unpack_color(uint32_t argb)
-{
-    return (GL_Color_t){
-#ifdef __IGNORE_ALPHA_ON_COLORS__
-            .a = 255,
-#else
-            .a = (uint8_t)((argb >> 24) & 0xff),
-#endif
-            .r = (uint8_t)((argb >> 16) & 0xff),
-            .g = (uint8_t)((argb >>  8) & 0xff),
-            .b = (uint8_t)( argb        & 0xff)
-        };
-}
-
-uint32_t GL_palette_pack_color(const GL_Color_t color)
-{
-    return (color.a << 24) | (color.r << 16) | (color.g << 8) | color.b;
-}
-
 // https://en.wikipedia.org/wiki/Color_difference
 GL_Pixel_t GL_palette_find_nearest_color(const GL_Palette_t *palette, const GL_Color_t color)
 {
