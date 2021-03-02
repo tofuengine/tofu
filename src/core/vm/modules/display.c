@@ -277,6 +277,7 @@ static int display_shift1(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
     LUAX_SIGNATURE_END
+
     GL_Pixel_t *from = NULL;
     GL_Pixel_t *to = NULL;
 

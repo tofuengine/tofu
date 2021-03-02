@@ -199,7 +199,30 @@ static int copperlist_bias(lua_State *L)
     return 0;
 }
 
-static int copperlist_shift(lua_State *L)
+static int copperlist_shift2(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
+    LUAX_SIGNATURE_END
+    Copperlist_Object_t *self = (Copperlist_Object_t *)LUAX_USERDATA(L, 1);
+
+    lua_pushnil(L);
+    while (lua_next(L, 2)) {
+        const GL_Pixel_t from = (GL_Pixel_t)LUAX_INTEGER(L, -2);
+        const GL_Pixel_t to = (GL_Pixel_t)LUAX_INTEGER(L, -1);
+
+        arrpush(self->program, (Display_CopperList_Entry_t){ .command = SHIFT });
+        arrpush(self->program, (Display_CopperList_Entry_t){ .pixel = from });
+        arrpush(self->program, (Display_CopperList_Entry_t){ .pixel = to });
+
+        lua_pop(L, 1);
+    }
+
+    return 0;
+}
+
+static int copperlist_shift3(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -215,4 +238,12 @@ static int copperlist_shift(lua_State *L)
     arrpush(self->program, (Display_CopperList_Entry_t){ .pixel = to });
 
     return 0;
+}
+
+static int copperlist_shift(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(2, copperlist_shift2)
+        LUAX_OVERLOAD_ARITY(3, copperlist_shift3)
+    LUAX_OVERLOAD_END
 }
