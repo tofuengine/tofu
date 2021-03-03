@@ -68,6 +68,7 @@ static int canvas_peek(lua_State *L);
 static int canvas_poke(lua_State *L);
 static int canvas_process(lua_State *L);
 static int canvas_copy(lua_State *L);
+static int canvas_blit(lua_State *L);
 //static int canvas_grab(lua_State *L);
 
 // TODO: rename `Canvas` to `Context`?
@@ -102,6 +103,7 @@ static const struct luaL_Reg _canvas_functions[] = {
     { "peek", canvas_peek },
     { "poke", canvas_poke },
     { "process", canvas_process },
+    { "blit", canvas_blit },
     { "copy", canvas_copy },
     { NULL, NULL }
 };
@@ -704,22 +706,21 @@ static int canvas_line(lua_State *L)
     return 0;
 }
 
-static GL_Point_t *_fetch(lua_State *L, int idx)
+static inline GL_Point_t *_fetch(lua_State *L, int idx)
 {
     GL_Point_t *vertices = NULL;
-    size_t index = 0;
-    int aux = 0;
+
+    int coords[2] = { 0 };
 
     lua_pushnil(L);
-    while (lua_next(L, idx)) {
-        int value = LUAX_INTEGER(L, -1);
-        ++index;
-        if (index > 0 && (index % 2) == 0) {
-            GL_Point_t point = (GL_Point_t){ .x = aux, .y = value }; // Can't pass compound-literal to macro. :(
-            arrpush(vertices, point);
-        } else {
-            aux = value;
+    for (size_t index = 0; lua_next(L, idx); ++index) {
+        coords[index % 2] = LUAX_INTEGER(L, -1);
+
+        if (index % 2) { // On odd positions, push into the array.
+            const GL_Point_t point = (GL_Point_t){ .x = coords[0], .y = coords[1] };
+            arrpush(vertices, point); // Can't pass compound-literal to macro. :(
         }
+
         lua_pop(L, 1);
     }
 
@@ -958,7 +959,7 @@ static int canvas_process4_5(lua_State *L)
 
     const GL_Context_t *context = canvas->context;
     const GL_Surface_t *surface = self->context->surface;
-    GL_context_process(context, (GL_Point_t){ .x = x, .y = y }, surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height },
+    GL_context_process(context, surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height }, (GL_Point_t){ .x = x, .y = y },
         _process_callback, &(Process_Closure_t){ .interpreter = interpreter, .L = L });
 
     return 0;
@@ -991,7 +992,7 @@ static int canvas_process8_9(lua_State *L)
 
     const GL_Context_t *context = canvas->context;
     const GL_Surface_t *surface = self->context->surface;
-    GL_context_process(context, (GL_Point_t){ .x = x, .y = y }, surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height },
+    GL_context_process(context, surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height }, (GL_Point_t){ .x = x, .y = y },
         _process_callback, &(Process_Closure_t){ .interpreter = interpreter, .L = L });
 
     return 0;
@@ -1022,7 +1023,7 @@ static int canvas_copy3_4(lua_State *L)
 
     const GL_Context_t *context = canvas->context;
     const GL_Surface_t *surface = self->context->surface;
-    GL_context_copy(context, (GL_Point_t){ .x = x, .y = y }, surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height });
+    GL_context_copy(context, surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height }, (GL_Point_t){ .x = x, .y = y });
 
     return 0;
 }
@@ -1050,7 +1051,7 @@ static int canvas_copy7_8(lua_State *L)
 
     const GL_Context_t *context = canvas->context;
     const GL_Surface_t *surface = self->context->surface;
-    GL_context_copy(context, (GL_Point_t){ .x = x, .y = y }, surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height });
+    GL_context_copy(context, surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height }, (GL_Point_t){ .x = x, .y = y });
 
     return 0;
 }
@@ -1062,5 +1063,75 @@ static int canvas_copy(lua_State *L)
         LUAX_OVERLOAD_ARITY(4, canvas_copy3_4)
         LUAX_OVERLOAD_ARITY(7, canvas_copy7_8)
         LUAX_OVERLOAD_ARITY(8, canvas_copy7_8)
+    LUAX_OVERLOAD_END
+}
+
+static int canvas_blit4_5(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
+    int x = LUAX_INTEGER(L, 2);
+    int y = LUAX_INTEGER(L, 3);
+    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_USERDATA(L, 4);
+    XForm_Object_t *xform = (XForm_Object_t *)LUAX_OPTIONAL_USERDATA(L, 5, NULL);
+
+    const GL_Context_t *context = canvas->context;
+    const GL_Surface_t *surface = self->context->surface;
+    if (xform) {
+        GL_context_xform(context, surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height }, (GL_Point_t){ .x = x, .y = y }, &xform->xform);
+    } else {
+        GL_context_blit(context, surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height }, (GL_Point_t){ .x = x, .y = y });
+    }
+
+    return 0;
+}
+
+static int canvas_blit8_9(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
+    int x = LUAX_INTEGER(L, 2);
+    int y = LUAX_INTEGER(L, 3);
+    int ox = LUAX_INTEGER(L, 4);
+    int oy = LUAX_INTEGER(L, 5);
+    size_t width = (size_t)LUAX_INTEGER(L, 6);
+    size_t height = (size_t)LUAX_INTEGER(L, 7);
+    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_USERDATA(L, 8);
+    XForm_Object_t *xform = (XForm_Object_t *)LUAX_OPTIONAL_USERDATA(L, 9, NULL);
+
+    const GL_Context_t *context = canvas->context;
+    const GL_Surface_t *surface = self->context->surface;
+    if (xform) {
+        GL_context_xform(context, surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height }, (GL_Point_t){ .x = x, .y = y }, &xform->xform);
+    } else {
+        GL_context_blit(context, surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height }, (GL_Point_t){ .x = x, .y = y });
+    }
+
+    return 0;
+}
+
+static int canvas_blit(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(4, canvas_blit4_5)
+        LUAX_OVERLOAD_ARITY(5, canvas_blit4_5)
+        LUAX_OVERLOAD_ARITY(8, canvas_blit8_9)
+        LUAX_OVERLOAD_ARITY(9, canvas_blit8_9)
     LUAX_OVERLOAD_END
 }

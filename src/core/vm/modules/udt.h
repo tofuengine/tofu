@@ -97,14 +97,6 @@ typedef struct _Batch_Object_t {
 } Batch_Object_t;
 
 typedef struct _XForm_Object_t {
-    struct {
-        const Canvas_Object_t *instance;
-        luaX_Reference reference;
-    } canvas;
-    struct {
-        const Canvas_Object_t *instance;
-        luaX_Reference reference;
-    } source;
     GL_XForm_t xform;
 } XForm_Object_t;
 
