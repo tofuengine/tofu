@@ -42,6 +42,7 @@ static int xform_offset(lua_State *L);
 static int xform_matrix(lua_State *L);
 static int xform_clamp(lua_State *L);
 static int xform_table(lua_State *L);
+// TODO: add helper functions to generate common transformations?
 
 static const struct luaL_Reg _xform_functions[] = {
     { "new", xform_new },

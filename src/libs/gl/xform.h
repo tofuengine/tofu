@@ -68,6 +68,5 @@ typedef struct _GL_XForm_t {
 } GL_XForm_t;
 
 extern void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, const GL_XForm_t *xform);
-// TODO: add helper functions to generate common transformations?
 
 #endif  /* __GL_XFORM_H__ */
