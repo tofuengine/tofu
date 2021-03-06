@@ -363,8 +363,13 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "graphics context %p created", display->canvas.context);
 
-    GL_palette_generate_greyscale(&display->canvas.palette, GL_MAX_PALETTE_COLORS);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded greyscale palette of %d entries", GL_MAX_PALETTE_COLORS);
+    Display_set_shifting(display, NULL, NULL, 0);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette shifting initialized");
+
+    for (size_t id = 0; id < DISPLAY_MAX_PALETTE_SLOTS; ++id) {
+        GL_palette_generate_greyscale(&display->canvas.palette.slots[id], GL_MAX_PALETTE_COLORS);
+    }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded greyscale palettes of %d entries", GL_MAX_PALETTE_COLORS);
 
     display->vram.width = display->canvas.size.width;
     display->vram.height = display->canvas.size.height;
@@ -538,17 +543,19 @@ static inline void _to_display(GLFWwindow *window, const GL_Surface_t *surface, 
 }
 #endif
 
-static inline void _surface_to_rgba_fast(const GL_Surface_t *surface, const GL_Palette_t *palette, GL_Color_t *vram)
+static inline void _surface_to_rgba_fast(const GL_Surface_t *surface, int bias, const GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS], const GL_Palette_t *palette, GL_Color_t *vram)
 {
     const size_t data_size = surface->data_size;
     const GL_Color_t *colors = palette->colors;
 #ifdef __DEBUG_GRAPHICS__
     const int count = palette->count;
 #endif
+
     const GL_Pixel_t *src = surface->data;
     GL_Color_t *dst = vram;
+
     for (size_t i = data_size; i; --i) {
-        const GL_Pixel_t index = *src++;
+        const GL_Pixel_t index = shifting[*(src++) + bias];
 #ifdef __DEBUG_GRAPHICS__
         GL_Color_t color;
         if (index >= count) {
@@ -564,13 +571,13 @@ static inline void _surface_to_rgba_fast(const GL_Surface_t *surface, const GL_P
     }
 }
 
-static inline void _surface_to_rgba(const GL_Surface_t *surface, GL_Palette_t *palette, const Display_CopperList_Entry_t *copperlist, GL_Color_t *vram)
+static inline void _surface_to_rgba(const GL_Surface_t *surface, int bias, GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS], GL_Palette_t slots[DISPLAY_MAX_PALETTE_SLOTS], size_t active_id, const Display_CopperList_Entry_t *copperlist, GL_Color_t *vram)
 {
 #ifdef __DEBUG_GRAPHICS__
     const int count = palette->count;
 #endif
     size_t wait_y = 0, wait_x = 0;
-    GL_Color_t *colors = palette->colors;
+    GL_Color_t *colors = slots[active_id].colors;
     int modulo = 0;
     int offset = 0;
 
@@ -596,18 +603,33 @@ static inline void _surface_to_rgba(const GL_Surface_t *surface, GL_Palette_t *p
                         wait_y = (entry++)->size;
                         break;
                     }
-                    case COLOR: {
-                        const size_t index = (entry++)->size;
-                        const GL_Color_t color = (entry++)->color;
-                        colors[index] = color;
-                        break;
-                    }
                     case MODULO: {
                         modulo = (entry++)->integer;
                         break;
                     }
                     case OFFSET: {
                         offset = (entry++)->integer;
+                        break;
+                    }
+                    case PALETTE: {
+                        const size_t id = (entry++)->size;
+                        colors = slots[id].colors;
+                        break;
+                    }
+                    case COLOR: {
+                        const GL_Pixel_t index = (entry++)->pixel;
+                        const GL_Color_t color = (entry++)->color;
+                        colors[index] = color;
+                        break;
+                    }
+                    case BIAS: {
+                        bias = (entry++)->integer;
+                        break;
+                    }
+                    case SHIFT: {
+                        const GL_Pixel_t from = (entry++)->pixel;
+                        const GL_Pixel_t to = (entry++)->pixel;
+                        shifting[from] = to;
                         break;
                     }
                     default: {
@@ -617,7 +639,7 @@ static inline void _surface_to_rgba(const GL_Surface_t *surface, GL_Palette_t *p
             }
 
             if (dst >= dst_sod && dst < dst_eod) {
-                const GL_Pixel_t index = *src;
+                const GL_Pixel_t index = shifting[*src + bias];
 #ifdef __DEBUG_GRAPHICS__
                 GL_Color_t color;
                 if (index >= count) {
@@ -651,10 +673,13 @@ void Display_present(const Display_t *display)
     GL_Color_t *pixels = display->vram.pixels;
 
     if (display->copperlist) {
-        GL_Palette_t palette = display->canvas.palette; // Make a local copy, the copperlist can change it.
-        _surface_to_rgba(surface, &palette, display->copperlist, pixels);
+        GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS] = { 0 };
+        memcpy(shifting, display->canvas.shifting, sizeof(GL_Pixel_t) * GL_MAX_PALETTE_COLORS);
+        GL_Palette_t slots[DISPLAY_MAX_PALETTE_SLOTS] = { 0 }; // Make a local copy, the copperlist can change it.
+        memcpy(slots, display->canvas.palette.slots, sizeof(GL_Palette_t) * DISPLAY_MAX_PALETTE_SLOTS);
+        _surface_to_rgba(surface, display->canvas.bias, shifting, slots, display->canvas.palette.active_id, display->copperlist, pixels);
     } else {
-        _surface_to_rgba_fast(surface, &display->canvas.palette, pixels);
+        _surface_to_rgba_fast(surface, display->canvas.bias, display->canvas.shifting, &display->canvas.palette.slots[display->canvas.palette.active_id], pixels);
     }
 
 #ifdef PROFILE
@@ -706,13 +731,40 @@ void Display_present(const Display_t *display)
 
 void Display_set_palette(Display_t *display, const GL_Palette_t *palette)
 {
-    display->canvas.palette = *palette;
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette updated");
+    display->canvas.palette.slots[display->canvas.palette.active_id] = *palette;
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette #%d updated", display->canvas.palette.active_id);
+}
+
+void Display_set_active_palette(Display_t *display, size_t slot_id)
+{
+    if (slot_id >= DISPLAY_MAX_PALETTE_SLOTS) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "palette slot #%d exceeds limits", slot_id);
+        return;
+    }
+    display->canvas.palette.active_id = slot_id;
 }
 
 void Display_set_offset(Display_t *display, GL_Point_t offset)
 {
     display->vram.offset = offset;
+}
+
+void Display_set_bias(Display_t *display, int bias)
+{
+    display->canvas.bias = bias;
+}
+
+void Display_set_shifting(Display_t *display, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count)
+{
+    if (!from) {
+        for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
+            display->canvas.shifting[i] = (GL_Pixel_t)i;
+        }
+    } else {
+        for (size_t i = 0; i < count; ++i) {
+            display->canvas.shifting[from[i]] = to[i];
+        }
+    }
 }
 
 void Display_set_copperlist(Display_t *display, const Display_CopperList_Entry_t *program, size_t length)
@@ -746,7 +798,12 @@ GL_Context_t *Display_get_context(const Display_t *display)
 
 const GL_Palette_t *Display_get_palette(const Display_t *display)
 {
-    return &display->canvas.palette;
+    return &display->canvas.palette.slots[display->canvas.palette.active_id];
+}
+
+size_t Display_get_active_palette(const Display_t *display)
+{
+    return display->canvas.palette.active_id;
 }
 
 GL_Point_t Display_get_offset(const Display_t *display)

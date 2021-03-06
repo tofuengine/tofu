@@ -34,7 +34,7 @@
 // http://www.coranac.com/tonc/text/mode7.htm
 // https://wiki.superfamicom.org/registers
 // https://www.smwcentral.net/?p=viewthread&t=27054
-void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *surface, GL_Point_t position, const GL_XForm_t *xform)
+void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, const GL_XForm_t *xform)
 {
     const GL_State_t *state = &context->state;
     const GL_Quad_t *clipping_region = &state->clipping_region;
@@ -49,7 +49,7 @@ void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *surface, 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
             .y0 = position.y,
-            .x1 = position.x + (clipping_region->x1 - clipping_region->x0),
+            .x1 = position.x + (clipping_region->x1 - clipping_region->x0), // We need to scan the whole destination region.
             .y1 = position.y + (clipping_region->y1 - clipping_region->y0)
         };
 
@@ -72,12 +72,14 @@ void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *surface, 
         return;
     }
 
-    const int sw = (int)surface->width;
-    const int sh = (int)surface->height;
-    const int sminx = 0;
-    const int sminy = 0;
-    const int smaxx = sw - 1;
-    const int smaxy = sh - 1;
+    const int sw = (int)area.width;
+    const int sh = (int)area.height;
+    const int swm1 = sw - 1;
+    const int shm1 = sh - 1;
+    const int sminx = area.x;
+    const int sminy = area.y;
+    const int smaxx = sminx + swm1; //(int)area.width - 1;
+    const int smaxy = sminy + shm1; //(int)area.height - 1;
 
     const GL_Pixel_t *sdata = surface->data;
     GL_Pixel_t *ddata = context->surface->data;
@@ -167,21 +169,24 @@ void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *surface, 
                 sy = imod(sy, sh);
             } else
             if (clamp == GL_XFORM_CLAMP_EDGE) {
-                if (sx < sminx) {
-                    sx = sminx;
+                if (sx < 0) {
+                    sx = 0;
                 } else
-                if (sx > smaxx) {
-                    sx = smaxx;
+                if (sx > swm1) {
+                    sx = swm1;
                 }
-                if (sy < sminy) {
-                    sy = sminy;
+                if (sy < 0) {
+                    sy = 0;
                 } else
-                if (sy > smaxy) {
-                    sy = smaxy;
+                if (sy > shm1) {
+                    sy = shm1;
                 }
             }
 
-            if (sx >= sminx && sx <= smaxx && sy >= sminy && sy <= smaxy) {
+            sx += sminx;
+            sy += sminy;
+
+            if (sx >= sminx && sx <= smaxx && sy >= sminy && sy <= smaxy) { // TODO: clamp and edge render this `if` useless... strip it?
                 const GL_Pixel_t *sptr = sdata + sy * swidth + sx;
                 GL_Pixel_t index = shifting[*sptr];
                 // NOTE: no transparency in Mode-7!

@@ -32,21 +32,28 @@
 
 #include "udt.h"
 
+#include <ctype.h>
 #include <stdlib.h>
 
-#define LOG_CONTEXT "graphics"
+#define LOG_CONTEXT "display"
 
-static int display_offset(lua_State *L);
 static int display_palette(lua_State *L);
+static int display_switch(lua_State *L);
 static int display_color_to_index(lua_State *L);
 static int display_index_to_color(lua_State *L);
+static int display_offset(lua_State *L);
+static int display_bias(lua_State *L);
+static int display_shift(lua_State *L);
 static int display_copperlist(lua_State *L);
 
 static const struct luaL_Reg _display_functions[] = {
     { "palette", display_palette },
+    { "switch", display_switch },
     { "color_to_index", display_color_to_index },
     { "index_to_color", display_index_to_color },
     { "offset", display_offset },
+    { "bias", display_bias },
+    { "shift", display_shift },
     { "copperlist", display_copperlist },
     { NULL, NULL }
 };
@@ -72,9 +79,16 @@ static int display_palette0(lua_State *L)
 
     lua_createtable(L, (int)palette->count, 0);
     for (size_t i = 0; i < palette->count; ++i) {
-        unsigned int argb = GL_palette_pack_color(palette->colors[i]);
+        const GL_Color_t color = palette->colors[i];
 
-        lua_pushinteger(L, (lua_Integer)argb);
+        lua_createtable(L, 3, 0);
+        lua_pushinteger(L, (lua_Integer)color.r);
+        lua_rawseti(L, -2, 1);
+        lua_pushinteger(L, (lua_Integer)color.g);
+        lua_rawseti(L, -2, 2);
+        lua_pushinteger(L, (lua_Integer)color.b);
+        lua_rawseti(L, -2, 3);
+
         lua_rawseti(L, -2, (lua_Integer)(i + 1));
     }
 
@@ -111,13 +125,21 @@ static int display_palette1(lua_State *L)
             palette.count = GL_MAX_PALETTE_COLORS;
         }
 
-        lua_pushnil(L);
-        for (size_t i = 0; lua_next(L, 1); ++i) {
-            uint32_t argb = (uint32_t)LUAX_INTEGER(L, -1);
-            GL_Color_t color = GL_palette_unpack_color(argb);
-            palette.colors[i] = color;
+        lua_pushnil(L); // T -> T N
+        for (size_t i = 0; lua_next(L, 1); ++i) { // T N -> T N T
+            lua_rawgeti(L, 3, 1); // T N T -> T N T I
+            lua_rawgeti(L, 3, 2); // T N T I -> T N T I I
+            lua_rawgeti(L, 3, 3); // T N T I I -> T N T I I I
 
-            lua_pop(L, 1);
+            uint8_t r = (uint8_t)LUAX_INTEGER(L, -3);
+            uint8_t g = (uint8_t)LUAX_INTEGER(L, -2);
+            uint8_t b = (uint8_t)LUAX_INTEGER(L, -1);
+
+            lua_pop(L, 3); // T N T I I I -> T N T
+
+            palette.colors[i] = (GL_Color_t){ .a = 255, .r = r, .g = g, .b = b };
+
+            lua_pop(L, 1); // T N T -> T N
         }
     }
 
@@ -139,24 +161,21 @@ static int display_palette(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
-static int display_color_to_index1(lua_State *L)
+static int display_switch(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    uint32_t argb = (uint32_t)LUAX_INTEGER(L, 1);
+    size_t slot_id = (size_t)LUAX_OPTIONAL_INTEGER(L, 1, 0);
 
-    const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+    Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    GL_Color_t color = GL_palette_unpack_color(argb);
-    const GL_Pixel_t index = GL_palette_find_nearest_color(Display_get_palette(display), color);
+    Display_set_active_palette(display, slot_id);
 
-    lua_pushinteger(L, (lua_Integer)index);
-
-    return 1;
+    return 0;
 }
 
-static int display_color_to_index3(lua_State *L)
+static int display_color_to_index(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -169,21 +188,11 @@ static int display_color_to_index3(lua_State *L)
 
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    uint32_t argb = GL_palette_pack_color((GL_Color_t){  .a = 255, .r = r, .g = g, .b = b });
-    GL_Color_t color = GL_palette_unpack_color(argb);
-    const GL_Pixel_t index = GL_palette_find_nearest_color(Display_get_palette(display), color);
+    const GL_Pixel_t index = GL_palette_find_nearest_color(Display_get_palette(display), (GL_Color_t){ .a = 255, .r = r, .g = g, .b = b });
 
     lua_pushinteger(L, (lua_Integer)index);
 
     return 1;
-}
-
-static int display_color_to_index(lua_State *L)
-{
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, display_color_to_index1)
-        LUAX_OVERLOAD_ARITY(3, display_color_to_index3)
-    LUAX_OVERLOAD_END
 }
 
 static int display_index_to_color(lua_State *L)
@@ -229,6 +238,92 @@ static int display_offset(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
+static int display_bias0_1(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    int bias = LUAX_OPTIONAL_INTEGER(L, 1, 0);
+
+    Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    Display_set_bias(display, bias);
+
+    return 0;
+}
+
+static int display_bias(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(0, display_bias0_1)
+        LUAX_OVERLOAD_ARITY(1, display_bias0_1)
+    LUAX_OVERLOAD_END
+}
+
+static int display_shift0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+    LUAX_SIGNATURE_END
+
+    Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    Display_set_shifting(display, NULL, NULL, 0);
+
+    return 0;
+}
+
+static int display_shift1(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
+    LUAX_SIGNATURE_END
+
+    GL_Pixel_t *from = NULL;
+    GL_Pixel_t *to = NULL;
+
+    lua_pushnil(L);
+    while (lua_next(L, 2)) {
+        arrpush(from, (GL_Pixel_t)LUAX_INTEGER(L, -2));
+        arrpush(to, (GL_Pixel_t)LUAX_INTEGER(L, -1));
+
+        lua_pop(L, 1);
+    }
+
+    Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    Display_set_shifting(display, from, to, arrlen(from));
+
+    arrfree(from);
+    arrfree(to);
+
+    return 0;
+}
+
+static int display_shift2(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    GL_Pixel_t from = (GL_Pixel_t)LUAX_INTEGER(L, 1);
+    GL_Pixel_t to = (GL_Pixel_t)LUAX_INTEGER(L, 2);
+
+    Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    Display_set_shifting(display, &from, &to, 1);
+
+    return 0;
+}
+
+static int display_shift(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(0, display_shift0)
+        LUAX_OVERLOAD_ARITY(1, display_shift1)
+        LUAX_OVERLOAD_ARITY(2, display_shift2)
+    LUAX_OVERLOAD_END
+}
+
 static int display_copperlist0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -244,79 +339,13 @@ static int display_copperlist0(lua_State *L)
 static int display_copperlist1(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
+    Copperlist_Object_t *copperlist = (Copperlist_Object_t *)LUAX_USERDATA(L, 1);
 
     Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    Display_CopperList_Entry_t *copperlist = NULL;
-
-    lua_pushnil(L); // T -> T N
-    for (size_t i = 0; lua_next(L, 1); ++i) { // T N -> T N T
-        lua_rawgeti(L, 3, 1); // T N T -> T N T S
-
-        const char *command = LUAX_STRING(L, -1);
-
-        if (command[0] == 'w') {
-            lua_rawgeti(L, 3, 2); // T N T S -> T N T S I
-            lua_rawgeti(L, 3, 3); // T N T S I -> T N T S I I
-
-            const size_t x = (size_t)LUAX_INTEGER(L, -2);
-            const size_t y = (size_t)LUAX_INTEGER(L, -1);
-
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .command = WAIT });
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .size = x });
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .size = y });
-
-            lua_pop(L, 3); // T N T
-        } else
-        if (command[0] == 'c') {
-            lua_rawgeti(L, 3, 2);
-            lua_rawgeti(L, 3, 3);
-
-            const size_t index = (size_t)LUAX_INTEGER(L, -2);
-            const uint32_t argb = (uint32_t)LUAX_INTEGER(L, -1);
-
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .command = COLOR });
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .integer = index });
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .color = GL_palette_unpack_color(argb) });
-
-            lua_pop(L, 3);
-        } else
-        if (command[0] == 'm') {
-            lua_rawgeti(L, 3, 2);
-
-            const int amount = LUAX_INTEGER(L, -1);
-
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .command = MODULO });
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .integer = amount });
-
-            lua_pop(L, 2);
-        } else
-        if (command[0] == 'o') {
-            lua_rawgeti(L, 3, 2);
-
-            const int amount = LUAX_INTEGER(L, -1);
-
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .command = OFFSET });
-            arrpush(copperlist, (Display_CopperList_Entry_t){ .integer = amount });
-
-            lua_pop(L, 2);
-        } else {
-            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "unrecognized command `%s` for copperlist", command);
-            lua_pop(L, 1);
-        }
-
-        lua_pop(L, 1);
-    }
-
-    arrpush(copperlist, (Display_CopperList_Entry_t){ .command = WAIT }); // Force an unreachable WAIT as optimization!
-    arrpush(copperlist, (Display_CopperList_Entry_t){ .size = SIZE_MAX });
-    arrpush(copperlist, (Display_CopperList_Entry_t){ .size = SIZE_MAX });
-
-    Display_set_copperlist(display, copperlist, arrlen(copperlist));
-
-    arrfree(copperlist);
+    Display_set_copperlist(display, copperlist->program, arrlen(copperlist->program));
 
     return 0;
 }

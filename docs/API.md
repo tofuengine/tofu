@@ -109,13 +109,30 @@
   - `Display`
     - `[f] palette() -> table`
     - `[f] palette(string|table)`
-    - `[f] color_to_index()`
-    - `[f] index_to_color()`
+    - `[f] switch()` --> FIXME: use `nil` to indicate default?
+    - `[f] switch(id)`
+    - `[f] color_to_index(r, g, b)`
+    - `[f] index_to_color(index) -> r, g, b`
     - `[f] offset()`
-    - `[f] shader()`
-    - `[f] send()`
+    - `[f] offset(x, y)`
+    - `[f] bias()`
+    - `[f] bias(amount)`
+    - `[f] shift()`
+    - `[f] shift(from, to)`
+    - `[f] shift(table)`
+    - `[f] copperlist()`
+    - `[f] copperlist(program)`
+  - `Program`
+    - `[f] new()`
+    - `[m] wait(x, y)`
+    - `[m] modulo(value)`
+    - `[m] offset(value)`
+    - `[m] palette(id)`
+    - `[m] color(index, r, g, b)`
+    - `[m] bias(amount)`
+    - `[m] shift(from, to)`
+    - `[m] shift(table)`
   - `Font`
-  >>> Extend HDMA concept to display? A copperlist to tweak some params on the final transfer? Would ditch shaders...
   - `XForm`
     - `[f] new()`
     - `[m] canvas(canvas)`

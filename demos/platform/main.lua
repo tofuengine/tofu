@@ -23,11 +23,13 @@ SOFTWARE.
 ]]--
 
 local Class = require("tofu.core").Class
+local Math = require("tofu.core").Math
 local System = require("tofu.core").System
 local Input = require("tofu.events").Input
 local Bank = require("tofu.graphics").Bank
 local Batch = require("tofu.graphics").Batch
 local Canvas = require("tofu.graphics").Canvas
+local Copperlist = require("tofu.graphics").Copperlist
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
 local Vector = require("tofu.util").Vector
@@ -54,13 +56,33 @@ local function generate_map(screens)
   return map
 end
 
+local function extra_half_brite(palette, target, ratio)
+  local p = {}
+  for _, color in ipairs(palette) do
+    table.insert(p, color)
+  end
+  local tr, tg, tb = table.unpack(target)
+  for _, color in ipairs(palette) do
+    local cr, cg, cb = table.unpack(color)
+    local r = math.tointeger((cr - tr) * ratio + tr)
+    local g = math.tointeger((cg - tg) * ratio + tg)
+    local b = math.tointeger((cb - tb) * ratio + tb)
+    table.insert(p, { r, g, b })
+  end
+  return p
+end
+
 function Main:__ctor()
   Display.palette("pico-8-ext")
+
+  Class.dump(System.args())
 
   local canvas = Canvas.default()
   canvas:transparent({ ["0"] = false, ["22"] = true })
   canvas:background(12)
 
+  self.atlas = Canvas.new(1, 1)
+  self.pixies = Bank.new(canvas, self.atlas, 1, 1)
   self.bank = Bank.new(canvas, Canvas.new("assets/sprites.png"), 16, 16)
   self.tileset = Bank.new(canvas, Canvas.new("assets/tileset.png"), 16, 16)
   self.batch = Batch.new(self.bank, 5000)
@@ -91,12 +113,19 @@ function Main:__ctor()
 
   self.snow = {}
   self.flake_time = 0
+
+  self.atlas:clear(0)
+
+  -- Tweak the palette now that the loading phase is complete, so that color-remapping won't be interfered with!
+  Display.palette(extra_half_brite(Display.palette(), { 31, 127, 63 }, 0.5))
+--  self.pixies:clear(0)
 end
 
 function Main:input()
   if self.jumps < 2 and Input.is_pressed("up") then
     self.velocity.y = 128
     self.jumps = self.jumps + 1
+    self.idle_time = nil
   elseif Input.is_down("right") then
     self.facing = "right"
     self.velocity.x = 64
@@ -161,7 +190,7 @@ function Main:update(delta_time)
   end
 
   local canvas = Canvas.default()
-  local width, _ = canvas:size()
+  local width, height = canvas:size()
 
   self.flake_time = self.flake_time + delta_time
   while self.flake_time >= 0.025 do
@@ -171,22 +200,28 @@ function Main:update(delta_time)
       local color = Display.color_to_index(v, v, v)
       table.insert(self.snow, {
           x = math.random(0, width - 1),
-          y = 0,
+          y = -32,
           z = math.random(1, 5),
-          vy = 12,
+          angle = 0,
+          vy = 24,
           vx = 0,
-          color = color
+          va = math.random() * Math.SINCOS_PERIOD,
+          color = color,
         })
     end
   end
 
   local zombies = {}
+  local wind_vx = 0 -- math.random(-128, 128)
   for index, flake in ipairs(self.snow) do
-    local factor = -1.0 / flake.z
-    flake.vx = self.velocity.x * factor
+    local factor_x = -1.0 / flake.z
+    local factor_y = 1.0 / flake.z
+    flake.vx = self.velocity.x + wind_vx
 
-    flake.x = flake.x + flake.vx * delta_time
-    flake.y = flake.y + flake.vy * delta_time
+    flake.x = flake.x + (flake.vx * delta_time) * factor_x
+    flake.y = flake.y + (flake.vy * delta_time) * factor_y
+
+    flake.angle = flake.angle + (flake.va * delta_time)
 
     if flake.x < 0 then
       flake.x = flake.x + width
@@ -202,6 +237,20 @@ function Main:update(delta_time)
   for _, index in ipairs(zombies) do
       table.remove(self.snow, index)
   end
+
+  local delta_y = self.position.y * 0.75
+  local y = height * 0.5 + delta_y + 32
+
+  local t = System.time()
+  local copperlist = Copperlist.new()
+  copperlist:wait(0, y)
+  copperlist:bias(32)
+  copperlist:modulo(-width * 2)
+  for i = y, height - 1 do
+    copperlist:wait(0, i)
+    copperlist:offset(math.sin(t * 9.0 + i * 0.25) * 1.5)
+  end
+  Display.copperlist(copperlist)
 end
 
 function Main:render(_)
@@ -213,7 +262,9 @@ function Main:render(_)
 
   self.animation:blit(x, y - self.position.y)
 
-  y = y + self.position.y * 0.75
+  local delta_y = self.position.y * 0.75
+
+  y = y + delta_y
 
   local ox = math.tointeger(self.position.x / 16)
   local dx = self.position.x % 16
@@ -224,23 +275,32 @@ function Main:render(_)
     end
   end
 
+  canvas:push()
   for _, flake in ipairs(self.snow) do
-    canvas:point(flake.x, flake.y, flake.color)
+    canvas:shift(0, flake.color)
+    local scale = 1--flake.z * 0.5
+    self.pixies:blit(0, flake.x, flake.y + delta_y, scale, scale, flake.angle, 0.5, 0.5)
   end
-
+  canvas:pop()
 --[[
+  local t = System.time()
   local mid = math.tointeger(y) + 32
   local amount = height - mid
   for i = 0, amount - 1 do
-      canvas:process(function(from, to)
-        local ar, ag, ab = Display.index_to_color(from)
+      canvas:process(function(_, _, _, to)
+--        local ar, ag, ab = Display.index_to_color(from)
+        local ar, ag, ab = 31, 127, 63
         local br, bg, bb = Display.index_to_color(to)
         local r, g, b = (ar + br) * 0.5, (ag + bg) * 0.5, (ab + bb) * 0.5
         return Display.color_to_index(r, g, b)
-      end, 0, mid + i, 0, mid - i * 1, width, 1)
+      end, 0, mid + i, math.sin(t + i / (amount / 8)) * 3, mid - i * 1, width, 1)
   end
---]]
+]]
   self.font:write(string.format("FPS: %d", math.floor(System.fps() + 0.5)), 0, 0)
+
+
+  local a, b, c, d = System.stats()
+  self.font:write(string.format("%.2f %.2f %.2f %.2f %.2f", a, b, c, d, 1 / d), 0, 8)
 end
 
 return Main

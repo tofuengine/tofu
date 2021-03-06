@@ -60,11 +60,10 @@
 #define __NO_LINEFEEDS__
 
 // TODO: better naming for macros, including namespace.
-#undef  __IGNORE_ALPHA_ON_COLORS__
 #undef  __DEBUG_TRIANGLES_WINDING__
 #undef  __FIND_NEAREST_COLOR_EUCLIDIAN__
 #undef  __GRID_INTEGER_CELL__
-#define  __DEBUG_ENGINE_PERFORMANCES__
+#define __DEBUG_ENGINE_PERFORMANCES__
 #undef  __DEBUG_FS_CALLS__
 #define __DEBUG_VM_CALLS__
 #undef  __DEBUG_GRAPHICS__
@@ -90,6 +89,7 @@
 
 // In release build, disable VM calls debug and periodic collection for better performance.
 #ifdef RELEASE
+  #undef __DEBUG_ENGINE_PERFORMANCES__
   #undef __DEBUG_VM_CALLS__
   #undef __DEBUG_GARBAGE_COLLECTOR__
   #undef  __VM_GARBAGE_COLLECTOR_PERIODIC_COLLECT__

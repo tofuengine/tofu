@@ -19,10 +19,14 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Fixed- and variable-size *Blitter OBjects* drawing with rotation/scaling/flipping.
 * [x] Sprite batching for optimized (ehm) batch drawing.
 * [x] Palette based graphics with up to 256 colors.
+* [x] Multiple (i.e. banked) palette support w/ up to 8 palettes, and color bias during VRAM transfer.
 * [x] Predefined library of 8/16/32/64 colors palettes.
 * [x] Automatic nearest-color palette indexing of images.
-* [x] Per-color re-indexing (*shifting*) and transparency, affecting drawing operations (global, too?).
+* [x] Per-color re-indexing (*shifting*) and transparency, affecting drawing operations (both per-draw and during VRAM transfer).
 * [x] SNES' Mode7-like transforms, with scanline based (HDMA) changes.
+* [x] Amiga's Copper-like programs, with pixel-wise resolution.
+* [x] Post-effect display-wise shaders.
+* [ ] Library of "retro-feel" post-effect shaders (LCD, CRT, etc...).
 * [x] Audio support w/ real time sound streaming on a separate thread.
 * [x] On-the-fly audio mixing w/ per voice looping/panning/balance/gain/speed control.
 * [x] Static and streamed audio data playback (FLAC format).
@@ -50,7 +54,6 @@ Guess what? Yup, that's yet another game engine/framework.
 * [ ] Out-of-the-box palette switching (with tweening) features.
 * [ ] Game state and display transitions (at which level? Engine or script?).
 * [ ] Library of noise functions ([cellular](https://thebookofshaders.com/12/), Perlin, etc...).
-* [ ] Library of "retro-feel" shaders.
 * [ ] Multiple players support.
 * [ ] Use a custom memory-management allocator.
 * [ ] Memory usage profiling.

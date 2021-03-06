@@ -77,7 +77,7 @@ function Main:__ctor()
 
   self.font = Font.default(canvas, "5x8", 0, 63)
   self.surface = Canvas.new("assets/road.png")
-  self.xform = XForm.new(canvas, self.surface)
+  self.xform = XForm.new()
   self.running = true
 
   self.x = 0
@@ -148,7 +148,7 @@ function Main:render(_)
   canvas:clear()
 
   canvas:rectangle("fill", 0, 0, width, height * 0.25, 21)
-  self.xform:blit(0, height * 0.25)
+  self.surface:blit(0, height * 0.25, canvas, self.xform)
 
   local cx, cy = width * 0.5, height * 0.5
   canvas:line(cx, cy, cx + math.cos(self.angle) * 10, cy + math.sin(self.angle) * 10, 31)

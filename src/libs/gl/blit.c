@@ -542,8 +542,8 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
 
     const int sminx = area.x;
     const int sminy = area.y;
-    const int smaxx = area.x + (int)area.width - 1;
-    const int smaxy = area.y + (int)area.height - 1;
+    const int smaxx = sminx + (int)area.width - 1;
+    const int smaxy = sminy + (int)area.height - 1;
 
     const float M11 = c / scale_x;  // Since we are doing an *inverse* transformation, we combine rotation and *then* scaling *and* flip (TRSF -> FSRT).
     const float M12 = s / scale_x;  // | fx  0 | | 1/sx    0 | |  c s |

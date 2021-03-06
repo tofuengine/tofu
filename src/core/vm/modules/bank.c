@@ -310,7 +310,7 @@ static int bank_blit7_8_9(lua_State *L)
 
     const GL_Context_t *context = self->canvas.instance->context;
     const GL_Sheet_t *sheet = self->sheet;
-    // TODO: implement `GL_sheet_blit_XXX()` functions, passing a cell-id as argumento.
+    // TODO: implement `GL_sheet_blit_XXX()` functions, passing a cell-id as argument.
     GL_context_blit_sr(context, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, scale_x, scale_y, rotation, anchor_x, anchor_y);
 
     return 0;

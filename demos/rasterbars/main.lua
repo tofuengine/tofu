@@ -27,6 +27,7 @@ local System = require("tofu.core").System
 local Input = require("tofu.events").Input
 local Bank = require("tofu.graphics").Bank
 local Canvas = require("tofu.graphics").Canvas
+local Copperlist = require("tofu.graphics").Copperlist
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
 
@@ -87,37 +88,34 @@ function Main:update(delta_time)
   local t = self.time
   local y = math.sin(t * 2.5) * height * 0.125 + height * 0.25
 
-  local copperlist = {}
-
-  table.insert(copperlist, { "wait", 0, 0 })
-  table.insert(copperlist, { "color", 0, 0 })
-  table.insert(copperlist, { "color", 1, 0 })
-  table.insert(copperlist, { "color", 31, 0 })
-
+  local copperlist = Copperlist.new()
+  copperlist:wait(0, 0)
+  copperlist:color(0, 0x00, 0x00, 0x00)
+  copperlist:color(1, 0x00, 0x00, 0x00)
+  copperlist:color(31, 0x00, 0x00, 0x00)
   for i = 15, 0, -1 do
-    table.insert(copperlist, { "wait", 0, y - i })
-    table.insert(copperlist, { "color", 0, 0xff000000 + 0x00110000 * (15 - i) })
-    table.insert(copperlist, { "color", 1, 0xff000000 + 0x00110011 * (15 - i) })
-    table.insert(copperlist, { "color", 31, 0xff000000 + 0x00111100 * (15 - i) })
+    local v = 0x11 * (15 - i)
+    copperlist:wait(0, y - i)
+    copperlist:color(0, v, 0x00, 0x00)
+    copperlist:color(1, v, 0x00, v)
+    copperlist:color(31, v, v, 0x00)
   end
   for i = 0, 15 do
-    table.insert(copperlist, { "wait", 0, y + i })
-    table.insert(copperlist, { "color", 0, 0xff000000 + 0x00110000 * (15 - i) })
-    table.insert(copperlist, { "color", 1, 0xff000000 + 0x00110011 * (15 - i) })
-    table.insert(copperlist, { "color", 31, 0xff000000 + 0x00111100 * (15 - i) })
+    local v = 0x11 * (15 - i)
+    copperlist:wait(0, y + i)
+    copperlist:color(0, v, 0x00, 0x00)
+    copperlist:color(1, v, 0x00, v)
+    copperlist:color(31, v, v, 0x00)
   end
-
-  table.insert(copperlist, { "wait", 0, height * 0.5 })
-  table.insert(copperlist, { "color", 0, 0xff001144 })
-  table.insert(copperlist, { "color", 1, 0xff001144 })
-  table.insert(copperlist, { "color", 31, 0xff001144 })
-  table.insert(copperlist, { "modulo", -width * 2 })
-
-  for i = math.tointeger(height * 0.5), height do
-    table.insert(copperlist, { "wait", 0, i })
-    table.insert(copperlist, { "offset", math.sin(t * 13.0 + i * 0.25) * 1.5 })
+  copperlist:wait(0, height * 0.5)
+  copperlist:color(0, 0x00, 0x11, 0x44)
+  copperlist:color(1, 0x00, 0x11, 0x44)
+  copperlist:color(31, 0x00, 0x11, 0x44)
+  copperlist:modulo(-width * 2)
+  for i = math.tointeger(height * 0.5), height - 1 do
+    copperlist:wait(0, i)
+    copperlist:offset(math.sin(t * 13.0 + i * 0.25) * 1.5)
   end
-
   Display.copperlist(copperlist)
 end
 

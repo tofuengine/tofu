@@ -59,7 +59,8 @@ function Tofu:__ctor()
     ["error"] = {
       enter = function(me)
           -- TODO: rename "Display" to "Video" e "Speakers" to "Audio"
-          Display.palette({ 0xFF000000, 0xFFFF0000 })
+          -- TODO: better failure screen with text.
+          Display.palette({ { 0, 0, 0 }, { 255, 0, 0 } }) -- Red on black.
           local canvas = Canvas.default()
           local width, _ = canvas:size()
           canvas:reset() -- Reset default canvas from the game state.

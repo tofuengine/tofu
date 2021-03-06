@@ -30,6 +30,7 @@
 #include <core/vm/modules/batch.h>
 #include <core/vm/modules/canvas.h>
 #include <core/vm/modules/class.h>
+#include <core/vm/modules/copperlist.h>
 #include <core/vm/modules/display.h>
 #include <core/vm/modules/file.h>
 #include <core/vm/modules/font.h>
@@ -90,6 +91,7 @@ static int graphics_loader(lua_State *L)
         { "Bank", bank_loader },
         { "Batch", batch_loader },
         { "Canvas", canvas_loader },
+        { "Copperlist", copperlist_loader }, // FIXME: rename to `Program`?
         { "Display", display_loader },
         { "Font", font_loader },
         { "XForm", xform_loader },
