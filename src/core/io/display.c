@@ -672,7 +672,7 @@ void Display_present(const Display_t *display)
     const GL_Surface_t *surface = display->canvas.context->surface;
     GL_Color_t *pixels = display->vram.pixels;
 
-    if (display->copperlist) {
+    if (display->copperlist) { // FIXME: optimize using function pointers?
         GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS] = { 0 };
         memcpy(shifting, display->canvas.shifting, sizeof(GL_Pixel_t) * GL_MAX_PALETTE_COLORS);
         GL_Palette_t slots[DISPLAY_MAX_PALETTE_SLOTS] = { 0 }; // Make a local copy, the copperlist can change it.

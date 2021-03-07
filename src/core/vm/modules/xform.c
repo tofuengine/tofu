@@ -33,6 +33,8 @@
 
 #include "udt.h"
 
+#include <math.h>
+
 #define LOG_CONTEXT "xform"
 #define META_TABLE  "Tofu_Graphics_XForm_mt"
 
@@ -43,6 +45,8 @@ static int xform_matrix(lua_State *L);
 static int xform_clamp(lua_State *L);
 static int xform_table(lua_State *L);
 // TODO: add helper functions to generate common transformations?
+static int xform_project(lua_State *L);
+static int xform_warp(lua_State *L);
 
 static const struct luaL_Reg _xform_functions[] = {
     { "new", xform_new },
@@ -51,6 +55,8 @@ static const struct luaL_Reg _xform_functions[] = {
     { "matrix", xform_matrix },
     { "clamp", xform_clamp },
     { "table", xform_table },
+    { "project", xform_project },
+    { "warp", xform_warp },
     { NULL, NULL }
 };
 
@@ -301,4 +307,119 @@ static int xform_table(lua_State *L)
         LUAX_OVERLOAD_ARITY(1, xform_table1)
         LUAX_OVERLOAD_ARITY(2, xform_table2)
     LUAX_OVERLOAD_END
+}
+
+static int xform_project(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    XForm_Object_t *self = (XForm_Object_t *)LUAX_USERDATA(L, 1);
+    int height = LUAX_INTEGER(L, 2);
+    float angle = LUAX_NUMBER(L, 3);
+    float elevation = LUAX_NUMBER(L, 4);
+
+    const float cos = cosf(angle), sin = sinf(angle);
+    const float a = cos, b = sin;
+    const float c = -sin, d = cos;
+
+    GL_XForm_Table_Entry_t *table = NULL;
+
+    // SEE: https://www.coranac.com/tonc/text/mode7.htm
+    //      https://gamedev.stackexchange.com/questions/24957/doing-an-snes-mode-7-affine-transform-effect-in-pygame
+    for (int scan_line = 0; scan_line < height; ++scan_line) {
+        const float yc = (float)scan_line;
+        const float p = elevation / yc;
+
+        GL_XForm_Table_Entry_t entry = {
+                .scan_line = scan_line,
+                .operations = {
+                        { .id = GL_XFORM_REGISTER_A, .value = a * p },
+                        { .id = GL_XFORM_REGISTER_B, .value = b * p },
+                        { .id = GL_XFORM_REGISTER_C, .value = c * p },
+                        { .id = GL_XFORM_REGISTER_D, .value = d * p }
+                    },
+                .count = 4
+            };
+
+        arrpush(table, entry);
+    }
+    arrpush(table, (GL_XForm_Table_Entry_t){ .scan_line = -1 }); // Set the end-of-data (safety) marker
+
+    GL_XForm_t *xform = &self->xform;
+    if (xform->table) {
+        arrfree(xform->table);
+//        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "scan-line table %p reallocated as %p", xform->table, table);
+    }
+    xform->table = table;
+
+    return 0;
+}
+
+static int xform_warp(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    XForm_Object_t *self = (XForm_Object_t *)LUAX_USERDATA(L, 1);
+    int height = LUAX_INTEGER(L, 2);
+    float factor = LUAX_NUMBER(L, 3);
+
+    GL_XForm_Table_Entry_t *table = NULL;
+
+    for (int scan_line = 0; scan_line < height; ++scan_line) {
+        const float angle = ((float)scan_line / (float)height) * M_PI; // Could be partially pre-computed, but who cares...
+        const float sx = (1.0f - sinf(angle)) * factor + 1.0f;
+
+        GL_XForm_Table_Entry_t entry = {
+                .scan_line = scan_line,
+                .operations = {
+                        { .id = GL_XFORM_REGISTER_Y, .value = scan_line },
+                        { .id = GL_XFORM_REGISTER_A, .value = sx },
+                        { .id = GL_XFORM_REGISTER_B, .value = 0.0f },
+                        { .id = GL_XFORM_REGISTER_C, .value = 0.0f },
+                        { .id = GL_XFORM_REGISTER_D, .value = sx }
+                    },
+                .count = 5
+            };
+
+        arrpush(table, entry);
+    }
+    arrpush(table, (GL_XForm_Table_Entry_t){ .scan_line = -1 }); // Set the end-of-data (safety) marker
+#if 0
+    for (int scan_line = 0; scan_line < height; ++scan_line) {
+        const float r = (float)scan_line / (float)height;
+        const float d = fabs(cosf(r * M_PI)) / factor;
+
+        const float sx = d;
+
+        GL_XForm_Table_Entry_t entry = {
+                .scan_line = scan_line,
+                .operations = {
+                        { .id = GL_XFORM_REGISTER_A, .value = sx },
+                        { .id = GL_XFORM_REGISTER_B, .value = 0.0f },
+                        { .id = GL_XFORM_REGISTER_C, .value = 0.0f },
+                        { .id = GL_XFORM_REGISTER_D, .value = sx }
+                    },
+                .count = 4
+            };
+
+        arrpush(table, entry);
+    }
+    arrpush(table, (GL_XForm_Table_Entry_t){ .scan_line = -1 }); // Set the end-of-data (safety) marker
+#endif
+
+    GL_XForm_t *xform = &self->xform;
+    if (xform->table) {
+        arrfree(xform->table);
+//        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "scan-line table %p reallocated as %p", xform->table, table);
+    }
+    xform->table = table;
+
+    return 0;
 }

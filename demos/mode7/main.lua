@@ -32,44 +32,6 @@ local Font = require("tofu.graphics").Font
 
 local Main = Class.define()
 
---[[
-local function build_table(factor) -- 0.4
-  local entries = {}
-
-  for i = 1, Canvas.height() do
-    local angle = (i / Canvas.height()) * math.pi
-    local sx = (1.0 - math.sin(angle)) * factor + 1.0
-
-    local entry = { i - 1, sx, 0.0, 0.0, sx } -- Y A B C D
-    table.insert(entries, entry)
-  end
-
-  return entries
-end
-]]--
-
-local function build_table(canvas, angle, elevation)
-  local cos, sin = math.cos(angle), math.sin(angle)
-  local a, b = cos, sin
-  local c, d = -sin, cos
-
-  local entries = {}
-
-  local _, height = canvas:size()
-  for scan_line = 1, height do
-    local yc = scan_line
-    local p = elevation / yc
-    entries[scan_line] = {
-        a = a * p,
-        b = b * p,
-        c = c * p,
-        d = d * p,
-      }
-  end
-
-  return entries
-end
-
 function Main:__ctor()
   Display.palette("6-bit-rgb")
 
@@ -88,7 +50,8 @@ function Main:__ctor()
 
   local width, height = canvas:size()
   self.xform:matrix(1, 0, 0, 1, width * 0.5, height * 0.5)
-  self.xform:table(build_table(canvas, math.pi * 0.5 - self.angle, self.elevation))
+--  self.xform:table(build_table(canvas, math.pi * 0.5 - self.angle, self.elevation))
+  self.xform:project(height, math.pi * 0.5 - self.angle, self.elevation)
 end
 
 function Main:input()
@@ -126,7 +89,9 @@ function Main:input()
 
   if recompute then
     local canvas = Canvas.default()
-    self.xform:table(build_table(canvas, math.pi * 0.5 - self.angle, self.elevation))
+--    self.xform:table(build_table(canvas, math.pi * 0.5 - self.angle, self.elevation))
+    local _, height = canvas:size()
+    self.xform:project(height, math.pi * 0.5 - self.angle, self.elevation)
   end
 end
 

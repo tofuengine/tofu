@@ -1066,6 +1066,28 @@ static int canvas_copy(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
+static int canvas_blit2_3(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_USERDATA(L, 2);
+    XForm_Object_t *xform = (XForm_Object_t *)LUAX_OPTIONAL_USERDATA(L, 3, NULL);
+
+    const GL_Context_t *context = canvas->context;
+    const GL_Surface_t *surface = self->context->surface;
+    if (xform) {
+        GL_context_xform(context, surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height }, (GL_Point_t){ .x = 0, .y = 0 }, &xform->xform);
+    } else {
+        GL_context_blit(context, surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height }, (GL_Point_t){ .x = 0, .y = 0 });
+    }
+
+    return 0;
+}
+
 static int canvas_blit4_5(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -1129,6 +1151,8 @@ static int canvas_blit8_9(lua_State *L)
 static int canvas_blit(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(2, canvas_blit2_3)
+        LUAX_OVERLOAD_ARITY(3, canvas_blit2_3)
         LUAX_OVERLOAD_ARITY(4, canvas_blit4_5)
         LUAX_OVERLOAD_ARITY(5, canvas_blit4_5)
         LUAX_OVERLOAD_ARITY(8, canvas_blit8_9)

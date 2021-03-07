@@ -37,17 +37,6 @@ local Main = Class.define()
 -- The message we are displaying, as a "constant".
 local MESSAGE = "Hello, Tofu!"
 
-local function build_table(canvas, factor) -- 0.4
-  local entries = {}
-  local _, height = canvas:size()
-  for scan_line = 1, height do
-    local angle = (scan_line / height) * math.pi
-    local sx = (1.0 - math.sin(angle)) * factor + 1.0
-    entries[scan_line] = { y = scan_line - 1, a = sx, b = 0.0, c = 0.0, d = sx }
-  end
-  return entries
-end
-
 function Main:__ctor()
   -- Load a predefined palette, we choose Pico-8's one.
   Display.palette("pico-8")
@@ -62,10 +51,10 @@ function Main:__ctor()
   self.font = Font.new(self.canvas, Canvas.new("assets/font-8x8.png", 0, 15), 8, 8)
 
   local width, height = self.canvas:size()
-  self.xform = XForm.new(Canvas.default(), self.canvas) -- TODO: pass clamp mode?
+  self.xform = XForm.new() -- TODO: pass clamp mode?
   self.xform:clamp("border")
   self.xform:matrix(1, 0, 0, 1, width * 0.5, height * 0.5)
-  self.xform:table(build_table(self.canvas, self.factor))
+  self.xform:warp(height, self.factor)
 end
 
 function Main:input()
@@ -82,7 +71,8 @@ function Main:input()
   end
 
   if recompute then
-    self.xform:table(build_table(self.canvas, self.factor))
+    local _, height = self.canvas:size()
+    self.xform:warp(height, self.factor)
   end
 end
 
@@ -130,7 +120,7 @@ function Main:render(_)
 
   -- Transfer to the virtual-screen canvas through transformation.
   Canvas.default():clear()
-  self.xform:blit()
+  canvas:blit(Canvas.default(), self.xform)
 end
 
 return Main
