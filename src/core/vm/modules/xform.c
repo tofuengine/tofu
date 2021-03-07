@@ -391,28 +391,6 @@ static int xform_warp(lua_State *L)
         arrpush(table, entry);
     }
     arrpush(table, (GL_XForm_Table_Entry_t){ .scan_line = -1 }); // Set the end-of-data (safety) marker
-#if 0
-    for (int scan_line = 0; scan_line < height; ++scan_line) {
-        const float r = (float)scan_line / (float)height;
-        const float d = fabs(cosf(r * M_PI)) / factor;
-
-        const float sx = d;
-
-        GL_XForm_Table_Entry_t entry = {
-                .scan_line = scan_line,
-                .operations = {
-                        { .id = GL_XFORM_REGISTER_A, .value = sx },
-                        { .id = GL_XFORM_REGISTER_B, .value = 0.0f },
-                        { .id = GL_XFORM_REGISTER_C, .value = 0.0f },
-                        { .id = GL_XFORM_REGISTER_D, .value = sx }
-                    },
-                .count = 4
-            };
-
-        arrpush(table, entry);
-    }
-    arrpush(table, (GL_XForm_Table_Entry_t){ .scan_line = -1 }); // Set the end-of-data (safety) marker
-#endif
 
     GL_XForm_t *xform = &self->xform;
     if (xform->table) {
