@@ -427,6 +427,22 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
         return NULL;
     }
 
+#ifdef __GRAPHICS_CAPTURE_SUPPORT__
+    display->capture.pixels = malloc(display->vram.rectangle.width * display->vram.rectangle.height * 4);
+    if (!display->capture.pixels) {
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't allocate capture buffer");
+        program_delete(&display->program);
+        glDeleteBuffers(1, &display->vram.texture);
+        free(display->vram.pixels);
+        GL_context_destroy(display->canvas.context);
+        glfwDestroyWindow(display->window);
+        glfwTerminate();
+        free(display);
+        return NULL;
+    }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "capture buffer %p allocated", display->capture.pixels);
+#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
+
 #ifdef DEBUG
     _has_errors(); // Display pending OpenGL errors.
 #endif
@@ -444,6 +460,9 @@ void Display_destroy(Display_t *display)
 {
 #ifdef __GRAPHICS_CAPTURE_SUPPORT__
     Display_stop_recording(display);
+
+    free(display->capture.pixels);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "capture buffer %p freed", display->capture.pixels);
 #endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
 
     free(display->copperlist);
@@ -489,8 +508,7 @@ void Display_update(Display_t *display, float delta_time)
         display->capture.time += delta_time;
         while (display->capture.time >= CAPTURE_FRAME_TIME) {
             display->capture.time -= CAPTURE_FRAME_TIME;
-            // FIXME: expand the current framebuffer texture, not the vram, in order to include post-processing effect!
-            GifWriteFrame(&display->capture.gif_writer, display->vram.pixels, display->vram.width, display->vram.height, CAPTURE_FRAME_TIME_100TH, 8, false); // Hundredths of seconds.
+            GifWriteFrame(&display->capture.gif_writer, display->capture.pixels, display->vram.rectangle.width, display->vram.rectangle.height, CAPTURE_FRAME_TIME_100TH, 8, false); // Hundredths of seconds.
         }
     }
 #endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
@@ -532,6 +550,16 @@ static inline void _to_display(GLFWwindow *window, const GL_Surface_t *surface, 
     glTexCoordPointer(2, GL_FLOAT, 4 * sizeof(float), vertices);
     glVertexPointer(2, GL_FLOAT, 4 * sizeof(float), vertices + 2);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+#ifdef __GRAPHICS_CAPTURE_SUPPORT__
+    // Read the framebuffer data, which include the final stretching and post-processing effects.
+    glReadPixels(0, 0, vram_rectangle->width, vram_rectangle->height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, display->capture.pixels);
+    // TODO: flip image.
+    // for (size_t y = 0; y < display->vram.rectangle.height / 2; ++y) {
+    //     size_t yy = display->vram.rectangle.height - y;
+    //     memcpy(pixels )
+    // }
+#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
 
 #ifdef __OPENGL_STATE_CLEANUP__
     glDisableClientState(GL_VERTEX_ARRAY);
@@ -719,6 +747,16 @@ void Display_present(const Display_t *display)
     glVertexPointer(2, GL_FLOAT, 4 * sizeof(float), vertices + 2);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
+#ifdef __GRAPHICS_CAPTURE_SUPPORT__
+    // Read the framebuffer data, which include the final stretching and post-processing effects.
+    glReadPixels(0, 0, vram_rectangle->width, vram_rectangle->height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, display->capture.pixels);
+    // TODO: flip image.
+    // for (size_t y = 0; y < display->vram.rectangle.height / 2; ++y) {
+    //     size_t yy = display->vram.rectangle.height - y;
+    //     memcpy(pixels )
+    // }
+#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
+
 #ifdef __OPENGL_STATE_CLEANUP__
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -811,6 +849,7 @@ GL_Point_t Display_get_offset(const Display_t *display)
     return display->vram.offset;
 }
 
+#ifdef __GRAPHICS_CAPTURE_SUPPORT__
 // FIXME: currently the snapshot/recording doesn't include the post-fx shader. We should re-grab from the texture.
 void Display_grab_snapshot(const Display_t *display, const char *base_path)
 {
@@ -820,7 +859,7 @@ void Display_grab_snapshot(const Display_t *display, const char *base_path)
     char path[PLATFORM_PATH_MAX] = { 0 };
     sprintf(path, "%s%csnapshot-%04d%02d%02d%02d%02d%02d.png", base_path, PLATFORM_PATH_SEPARATOR, lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
 
-    stbi_write_png(path, display->vram.width, display->vram.height, display->vram.bytes_per_pixel, display->vram.pixels, display->vram.stride);
+    stbi_write_png(path, display->vram.rectangle.width, display->vram.rectangle.height, 4, display->capture.pixels, display->vram.rectangle.width * 4);
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "capture done to file `%s`", path);
 }
 
@@ -832,7 +871,7 @@ void Display_start_recording(Display_t *display, const char *base_path)
     char path[PLATFORM_PATH_MAX] = { 0 };
     sprintf(path, "%s%crecord-%04d%02d%02d%02d%02d%02d.gif", base_path, PLATFORM_PATH_SEPARATOR, lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
 
-    GifBegin(&display->capture.gif_writer, path, display->vram.width, display->vram.height, 0);
+    GifBegin(&display->capture.gif_writer, path, display->vram.rectangle.width, display->vram.rectangle.height, 0);
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "recording started for file `%s`", path);
 
     display->capture.time = 0.0;
@@ -852,3 +891,4 @@ void Display_toggle_recording(Display_t *display, const char *base_path)
         Display_stop_recording(display);
     }
 }
+#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
