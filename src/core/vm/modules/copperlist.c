@@ -44,6 +44,7 @@ static int copperlist_palette(lua_State *L);
 static int copperlist_color(lua_State *L);
 static int copperlist_bias(lua_State *L);
 static int copperlist_shift(lua_State *L);
+// TODO: add helper class to create gradients?
 
 static const struct luaL_Reg _copperlist_functions[] = {
     { "new", copperlist_new },
@@ -58,10 +59,17 @@ static const struct luaL_Reg _copperlist_functions[] = {
     { NULL, NULL }
 };
 
+static const uint8_t _copperlist_lua[] = {
+#include "copperlist.inc"
+};
+
+static luaX_Script _copperlist_script = { (const char *)_copperlist_lua, sizeof(_copperlist_lua), "@copperlist.lua" }; // Trace as filename internally.
+
+
 int copperlist_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, NULL, _copperlist_functions, NULL, nup, META_TABLE);
+    return luaX_newmodule(L, &_copperlist_script, _copperlist_functions, NULL, nup, META_TABLE);
 }
 
 static int copperlist_new(lua_State *L)
