@@ -554,11 +554,6 @@ static inline void _to_display(GLFWwindow *window, const GL_Surface_t *surface, 
 #ifdef __GRAPHICS_CAPTURE_SUPPORT__
     // Read the framebuffer data, which include the final stretching and post-processing effects.
     glReadPixels(0, 0, vram_rectangle->width, vram_rectangle->height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, display->capture.pixels);
-    // TODO: flip image.
-    // for (size_t y = 0; y < display->vram.rectangle.height / 2; ++y) {
-    //     size_t yy = display->vram.rectangle.height - y;
-    //     memcpy(pixels )
-    // }
 #endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
 
 #ifdef __OPENGL_STATE_CLEANUP__
@@ -748,13 +743,14 @@ void Display_present(const Display_t *display)
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
 #ifdef __GRAPHICS_CAPTURE_SUPPORT__
-    // Read the framebuffer data, which include the final stretching and post-processing effects.
+    // Read the framebuffer data, which include the final stretching and post-processing effects. The call is
+    // synchronous in that it waits the previous drawing function to be completed on the texture. But this is fine
+    // for us. Just disable this feature in the `RELEASE` build.
+    //
+    // https://vec.io/posts/faster-alternatives-to-glreadpixels-and-glteximage2d-in-opengl-es
+    // https://www.khronos.org/opengl/wiki/Pixel_Transfer
+    // https://www.khronos.org/opengl/wiki/Pixel_Buffer_Object
     glReadPixels(0, 0, vram_rectangle->width, vram_rectangle->height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, display->capture.pixels);
-    // TODO: flip image.
-    // for (size_t y = 0; y < display->vram.rectangle.height / 2; ++y) {
-    //     size_t yy = display->vram.rectangle.height - y;
-    //     memcpy(pixels )
-    // }
 #endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
 
 #ifdef __OPENGL_STATE_CLEANUP__
