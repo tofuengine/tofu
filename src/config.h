@@ -89,7 +89,9 @@
 
 // In release build, disable VM calls debug and periodic collection for better performance.
 #ifdef RELEASE
+  #undef __GRAPHICS_CAPTURE_SUPPORT__
   #undef __DEBUG_ENGINE_PERFORMANCES__
+  #undef __ENGINE_PERFORMANCE_STATISTICS__
   #undef __DEBUG_VM_CALLS__
   #undef __DEBUG_GARBAGE_COLLECTOR__
   #undef  __VM_GARBAGE_COLLECTOR_PERIODIC_COLLECT__
