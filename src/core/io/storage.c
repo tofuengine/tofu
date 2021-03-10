@@ -367,7 +367,7 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_R
 
     Storage_Resource_t *resource = malloc(sizeof(Storage_Resource_t));
     if (!resource) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "cant' allocate resource");
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate resource");
         return NULL;
     }
 
@@ -407,6 +407,66 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_R
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource `%s` stored as %p, cache optimized", name, resource);
 
     return resource;
+}
+
+static void _stbi_write_func(void *context, void *data, int size)
+{
+    FILE *stream = (FILE *)context;
+    size_t bytes_to_write = (size_t)size;
+    size_t bytes_written = fwrite(data, sizeof(uint8_t), bytes_to_write, stream);
+    if (bytes_written != bytes_to_write) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't write %d byte(s) (%d written)", bytes_to_write, bytes_written);
+    }
+}
+
+// This function saves a file into the local file-system. The archive is not touched.
+//
+// TODO: provide a pair of functions to load/save to user-dependent storage (combining application identity).
+// TODO: %AppData%\tofuengine\<identity>
+// TODO: ~/.tofuengine/<identity>
+bool Storage_store(Storage_t *storage, const char *name, const Storage_Resource_t *resource)
+{
+    char path[PLATFORM_PATH_MAX];
+    path_join(path, storage->base_path, name);
+
+    FILE *stream = fopen(path, "wb");
+    if (!stream) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create file `%s`", path);
+        return false;
+    }
+
+    bool result = false;
+
+    switch (resource->type) {
+        case STORAGE_RESOURCE_STRING: {
+            size_t chars_to_write = S_SLENTGH(resource);
+            size_t chars_written = fwrite(S_SCHARS(resource), sizeof(char), chars_to_write, stream);
+            result = chars_written == chars_to_write;
+            break;
+        }
+        case STORAGE_RESOURCE_BLOB: {
+            size_t bytes_to_write = S_BSIZE(resource);
+            size_t bytes_written = fwrite(S_BPTR(resource), sizeof(uint8_t), bytes_to_write, stream);
+            result = bytes_written == bytes_to_write;
+            break;
+        }
+        case STORAGE_RESOURCE_IMAGE: {
+            int done = stbi_write_png_to_func(_stbi_write_func, (void *)stream, S_IWIDTH(resource), S_IHEIGHT(resource), 4, S_IPIXELS(resource), S_IWIDTH(resource) * 4);
+            result = done != 0;
+            break;
+        }
+        default: {
+            break;
+        }
+    }
+
+    fclose(stream);
+
+    if (!result) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't write resource `%s` w/ type %d to file `%s`", name, resource->type, path);
+    }
+
+    return result;
 }
 
 void Storage_lock(Storage_Resource_t *resource)

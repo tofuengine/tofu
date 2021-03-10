@@ -47,14 +47,14 @@ GL_Surface_t *GL_surface_create(size_t width, size_t height)
 {
     GL_Pixel_t *data = malloc(sizeof(GL_Pixel_t) * width * height);
     if (!data) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "cant' allocate (%dx%d) pixel-data", width, height);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate (%dx%d) pixel-data", width, height);
         return NULL;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface created at %p (%dx%d)", data, width, height);
 
     GL_Surface_t *surface = malloc(sizeof(GL_Surface_t));
     if (!surface) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "cant' allocate surface");
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate surface");
         free(data);
         return NULL;
     }
