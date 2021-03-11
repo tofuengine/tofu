@@ -67,8 +67,14 @@ typedef struct _Storage_Configuration_t {
 typedef struct _Storage_t {
     Storage_Configuration_t configuration;
 
-    char base_path[PLATFORM_PATH_MAX];
+    struct {
+        char base[PLATFORM_PATH_MAX];
+        char user[PLATFORM_PATH_MAX];
+        char local[PLATFORM_PATH_MAX];
+    } path;
+
     FS_Context_t *context;
+
     Storage_Resource_t **resources;
 } Storage_t;
 
@@ -86,6 +92,8 @@ typedef struct _Storage_t {
 
 extern Storage_t *Storage_create(const Storage_Configuration_t *configuration);
 extern void Storage_destroy(Storage_t *storage);
+
+extern bool Storage_set_identity(Storage_t *storage, const char *identity);
 
 extern const char *Storage_get_base_path(const Storage_t *storage);
 

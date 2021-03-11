@@ -76,18 +76,21 @@
   #define PLATFORM_PATH_CURRENT_SZ    "./"
   #define PLATFORM_PATH_PARENT_SZ     "../"
   #define PLATFORM_PATH_MAX           PATH_MAX
+  #define PLATFORM_PATH_USER          "~/.tofuengine"
 #elif PLATFORM_ID == PLATFORM_WINDOWS
   #define PLATFORM_PATH_SEPARATOR     '\\'
   #define PLATFORM_PATH_SEPARATOR_SZ  "\\"
   #define PLATFORM_PATH_CURRENT_SZ    ".\\"
   #define PLATFORM_PATH_PARENT_SZ     "..\\"
   #define PLATFORM_PATH_MAX           260
+  #define PLATFORM_PATH_USER          "\%AppData\%\\tofuengine"
 #elif PLATFORM_ID == PLATFORM_OSX
   #define PLATFORM_PATH_SEPARATOR     '/'
   #define PLATFORM_PATH_SEPARATOR_SZ  "/"
   #define PLATFORM_PATH_CURRENT_SZ    "./"
   #define PLATFORM_PATH_PARENT_SZ     "../"
   #define PLATFORM_PATH_MAX           1024
+  #define PLATFORM_PATH_USER          "~/Library/Application Support/tofuengine"
 #endif
 
 #endif  /* __PLATFORM_H__ */

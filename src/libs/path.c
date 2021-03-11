@@ -28,15 +28,72 @@
 #include <libs/log.h>
 #include <platform.h>
 
+#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
+#if PLATFORM_ID == PLATFORM_WINDOWS
+  #define realpath(N,R) _fullpath((R),(N),PATH_MAX)
+#endif
+
 #define LOG_CONTEXT "path"
+
+void path_expand(const char *path, char *expanded)
+{
+    char resolved[PLATFORM_PATH_MAX];
+#if PLATFORM_ID == PLATFORM_LINUX
+    if (path[0] == '~') {
+        const char *home = getenv("HOME");
+        strcpy(resolved, home);
+        strcat(resolved, path + 1);
+#elif PLATFORM_ID == PLATFORM_WINDOWS
+    if (strncasecmp(folder, "%AppData%", 10) {
+        const char *appdata = getenv("APPDATA");
+        strcpy(resolved, appdata);
+        strcat(resolved, path + 10);
+#else
+    #error "Platform is neither Linux nor Windows!"
+#endif
+    } else {
+        strcpy(resolved, path);
+    }
+
+    (void)realpath(resolved, expanded);
+}
 
 bool path_exists(const char *path)
 {
     return access(path, R_OK) != -1;
+}
+
+bool path_mkdirs(const char *path)
+{
+    char aux[PLATFORM_PATH_MAX];
+    strcpy(aux, path);
+
+    // FIXME: rewrite this mess!!!
+    for (char *p = strchr(aux + 1, PLATFORM_PATH_SEPARATOR); p; p = strchr(p + 1, PLATFORM_PATH_SEPARATOR)) {
+        *p = '\0';
+        if (path_exists(aux)) {
+            if (!path_is_folder(aux)) {
+                return false;
+            }
+        } else
+        if (mkdir(aux, 0755) == -1) {
+            return false;
+        }
+        *p = PLATFORM_PATH_SEPARATOR;
+    }
+    if (path_exists(aux)) {
+        if (!path_is_folder(aux)) {
+            return false;
+        }
+    } else
+    if (mkdir(aux, 0755) == -1) {
+        return false;
+    }
+    return true;
 }
 
 bool path_is_folder(const char *path)

@@ -51,18 +51,29 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
 
     *storage = (Storage_t){
             .configuration = *configuration,
-            .base_path = { 0 }
+            .path = {
+                .base = { 0 },
+                .user = { 0 },
+                .local = { 0 }
+            }
         };
 
-    path_split(configuration->path, storage->base_path, NULL); // Get the folder name, in case we are pointing straight to a PAK!
+    char path[PLATFORM_PATH_MAX];
+    path_expand(configuration->path ? configuration->path : PLATFORM_PATH_CURRENT_SZ, path);
 
-    storage->context = FS_create(configuration->path);
+    path_split(path, storage->path.base, NULL); // Get the folder name, in case we are pointing straight to a PAK!
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "base path is `%s`", storage->path.base);
+
+    path_expand(PLATFORM_PATH_USER, storage->path.user); // Expand and resolve the user-dependend folder.
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "user path is `%s`", storage->path.user);
+
+    storage->context = FS_create(path);
     if (!storage->context) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create file-system context for path `%s`", configuration->path);
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create file-system context for path `%s`", path);
         free(storage);
         return NULL;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "storage file-system context %p created for path `%s`", storage->context, configuration->path);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "storage file-system context %p created for path `%s`", storage->context, path);
 
     return storage;
 }
@@ -110,9 +121,34 @@ void Storage_destroy(Storage_t *storage)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "storage freed");
 }
 
+bool Storage_set_identity(Storage_t *storage, const char *identity)
+{
+    // if (storage->path.local[0] != '\0') {
+    //     FS_detach(storage->context, storage->path.local);
+    //     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "user-dependent path `%s` detached", storage->path.local);
+    // }
+
+    path_join(storage->path.local, storage->path.user, identity); // Build the local storage-path, using identity.
+
+    bool created = path_mkdirs(storage->path.local);
+    if (!created) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create used-dependent path `%s`", storage->path.local);
+        return false;
+    }
+
+    bool attached = FS_attach(storage->context, storage->path.local);
+    if (!attached) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't attach user-dependent path path `%s`", storage->path.local);
+        return false;
+    }
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "user-dependent path `%s` attached", storage->path.local);
+    return true;
+}
+
 const char *Storage_get_base_path(const Storage_t *storage)
 {
-    return storage->base_path;
+    return storage->path.base;
 }
 
 static bool _resource_exists(const char *name)
@@ -419,15 +455,11 @@ static void _stbi_write_func(void *context, void *data, int size)
     }
 }
 
-// This function saves a file into the local file-system. The archive is not touched.
-//
-// TODO: provide a pair of functions to load/save to user-dependent storage (combining application identity).
-// TODO: %AppData%\tofuengine\<identity>
-// TODO: ~/.tofuengine/<identity>
+// This function saves a file into the local user-dependent storage. The mount points aren't modified.
 bool Storage_store(Storage_t *storage, const char *name, const Storage_Resource_t *resource)
 {
     char path[PLATFORM_PATH_MAX];
-    path_join(path, storage->base_path, name);
+    path_join(path, storage->path.local, name);
 
     FILE *stream = fopen(path, "wb");
     if (!stream) {

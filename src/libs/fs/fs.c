@@ -39,10 +39,6 @@ struct _FS_Context_t {
     FS_Mount_t **mounts;
 };
 
-#if PLATFORM_ID == PLATFORM_WINDOWS
-  #define realpath(N,R) _fullpath((R),(N),PATH_MAX)
-#endif
-
 #define LOG_CONTEXT "fs"
 
 static inline FS_Mount_t *_mount(const char *path)
@@ -86,19 +82,11 @@ FS_Context_t *FS_create(const char *path)
 
     *context = (FS_Context_t){ 0 };
 
-    char resolved[PLATFORM_PATH_MAX]; // Using local buffer to avoid un-tracked `malloc()` for the syscall.
-    char *ptr = realpath(path, resolved);
-    if (!ptr) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't resolve `%s`", path);
-        free(context);
-        return NULL;
-    }
-
-    DIR *dp = opendir(resolved);
+    DIR *dp = opendir(path);
     if (dp) { // Path is a folder, scan and mount valid archives.
         for (struct dirent *entry = readdir(dp); entry; entry = readdir(dp)) {
             char subpath[PLATFORM_PATH_MAX];
-            path_join(subpath, resolved, entry->d_name);
+            path_join(subpath, path, entry->d_name);
 
             if (!FS_pak_is_valid(subpath)) {
                 continue;
@@ -110,7 +98,7 @@ FS_Context_t *FS_create(const char *path)
         closedir(dp);
     }
 
-    _attach(context, resolved); // Mount the resolved folder, as well (overriding archives).
+    _attach(context, path); // Mount the resolved folder, as well (overriding archives).
 
     return context;
 }
@@ -132,14 +120,7 @@ void FS_destroy(FS_Context_t *context)
 
 bool FS_attach(FS_Context_t *context, const char *path)
 {
-    char resolved[PLATFORM_PATH_MAX]; // Using local buffer to avoid un-tracked `malloc()` for the syscall.
-    char *ptr = realpath(path ? path : PLATFORM_PATH_CURRENT_SZ, resolved);
-    if (!ptr) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't resolve path `%s`", path);
-        return false;
-    }
-
-    return _attach(context, resolved);
+    return _attach(context, path);
 }
 
 FS_Handle_t *FS_locate_and_open(const FS_Context_t *context, const char *name)

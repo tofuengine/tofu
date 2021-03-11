@@ -27,7 +27,9 @@
 
 #include <stdbool.h>
 
+extern void path_expand(const char *path, char *expanded);
 extern bool path_exists(const char *path);
+extern bool path_mkdirs(const char *path);
 extern bool path_is_folder(const char *path);
 extern bool path_is_file(const char *path);
 extern void path_split(const char *path, char *folder, char *file);

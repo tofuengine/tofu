@@ -125,6 +125,13 @@ Engine_t *Engine_create(int argc, const char *argv[])
         return NULL;
     }
 
+    bool set = Storage_set_identity(engine->storage, engine->configuration.system.identity);
+    if (!set) {
+        Storage_destroy(engine->storage);
+        free(engine);
+        return NULL;
+    }
+
     const Storage_Resource_t *icon = Storage_exists(engine->storage, engine->configuration.system.icon) // FIXME: too defensive?
         ? Storage_load(engine->storage, engine->configuration.system.icon, STORAGE_RESOURCE_IMAGE)
         : Storage_load(engine->storage, RESOURCE_IMAGE_ICON_ID, STORAGE_RESOURCE_IMAGE);
