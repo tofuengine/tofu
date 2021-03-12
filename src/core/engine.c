@@ -77,6 +77,7 @@ static bool _configure(Storage_t *storage, Configuration_t *configuration)
     }
 
     Configuration_parse(configuration, S_SCHARS(resource));
+    // TODO: add an override configuration to add user-defined configuration (e.g. audio device selection)
 
     Log_configure(configuration->system.debug, NULL);
 

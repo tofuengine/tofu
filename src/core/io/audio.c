@@ -54,9 +54,11 @@ static ma_bool32 _enum_callback(ma_context *context, ma_device_type device_type,
     Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "device `%s` w/ type %d", device_info->name, device_type);
 
     if (device_type & ma_device_type_playback) { // We are considering the output devices only.
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "device #%d, `%s` available", closure->current_index, device_info->name, device_type);
+
         if (closure->current_index == closure->device_index) {
             closure->device_id = device_info->id;
-            Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "device #%d, `%s` w/ type %d selected", closure->current_index, device_info->name, device_type);
+            Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "device #%d, `%s` selected", closure->current_index, device_info->name, device_type);
             closure->found = true;
         }
 

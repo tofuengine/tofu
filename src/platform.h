@@ -83,7 +83,7 @@
   #define PLATFORM_PATH_CURRENT_SZ    ".\\"
   #define PLATFORM_PATH_PARENT_SZ     "..\\"
   #define PLATFORM_PATH_MAX           260
-  #define PLATFORM_PATH_USER          "\%AppData\%\\tofuengine"
+  #define PLATFORM_PATH_USER          "%AppData%\\tofuengine"
 #elif PLATFORM_ID == PLATFORM_OSX
   #define PLATFORM_PATH_SEPARATOR     '/'
   #define PLATFORM_PATH_SEPARATOR_SZ  "/"

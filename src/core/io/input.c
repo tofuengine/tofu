@@ -60,8 +60,10 @@ static void _keyboard_handler(Input_t *input)
         GLFW_KEY_D,
         GLFW_KEY_ENTER,
         GLFW_KEY_SPACE,
+#ifdef __GRAPHICS_CAPTURE_SUPPORT__
         GLFW_KEY_F11,
         GLFW_KEY_F12,
+#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
         GLFW_KEY_ESCAPE
     };
 
@@ -94,8 +96,10 @@ static void _mouse_handler(Input_t *input)
         GLFW_MOUSE_BUTTON_LEFT,
         -1,
         -1,
+#ifdef __GRAPHICS_CAPTURE_SUPPORT__
         -1,
         -1,
+#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
         -1
     };
 
@@ -162,8 +166,10 @@ static void _gamepad_handler(Input_t *input)
         GLFW_GAMEPAD_BUTTON_A,
         GLFW_GAMEPAD_BUTTON_BACK,
         GLFW_GAMEPAD_BUTTON_START,
+#ifdef __GRAPHICS_CAPTURE_SUPPORT__
         -1,
         -1,
+#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
         -1
     };
 

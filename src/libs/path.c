@@ -37,6 +37,12 @@
   #define realpath(N,R) _fullpath((R),(N),PATH_MAX)
 #endif
 
+#if PLATFORM_ID == PLATFORM_LINUX
+  #define createdir(P)  mkdir((P), 0755)
+#elif PLATFORM_ID == PLATFORM_WINDOWS
+  #define createdir(P)  mkdir((P))
+#endif
+
 #define LOG_CONTEXT "path"
 
 void path_expand(const char *path, char *expanded)
@@ -48,12 +54,10 @@ void path_expand(const char *path, char *expanded)
         strcpy(resolved, home);
         strcat(resolved, path + 1);
 #elif PLATFORM_ID == PLATFORM_WINDOWS
-    if (strncasecmp(folder, "%AppData%", 10) {
+    if (strncasecmp(path, "%AppData%", 9) == 0) {
         const char *appdata = getenv("APPDATA");
         strcpy(resolved, appdata);
-        strcat(resolved, path + 10);
-#else
-    #error "Platform is neither Linux nor Windows!"
+        strcat(resolved, path + 9);
 #endif
     } else {
         strcpy(resolved, path);
@@ -80,7 +84,7 @@ bool path_mkdirs(const char *path)
                 return false;
             }
         } else
-        if (mkdir(aux, 0755) == -1) {
+        if (createdir(aux) == -1) {
             return false;
         }
         *p = PLATFORM_PATH_SEPARATOR;
@@ -90,16 +94,31 @@ bool path_mkdirs(const char *path)
             return false;
         }
     } else
-    if (mkdir(aux, 0755) == -1) {
+    if (createdir(aux) == -1) {
         return false;
     }
     return true;
 }
 
+static int _path_stat(const char *pathname, struct stat *statbuf)
+{
+    char path[PLATFORM_PATH_MAX];
+    strcpy(path, pathname);
+#if PLATFORM_ID == PLATFORM_WINDOWS
+    if (path[1] == ':') { // On Windows, calling `stat()` on drives' root requires a trailing separator...
+        strcat(path, PLATFORM_PATH_SEPARATOR_SZ);
+    } else
+    if (path[strlen(path) - 1] == PLATFORM_PATH_SEPARATOR) { // ... and no separator on every other path.
+        path[strlen(path) - 1] = '\0';
+    }
+#endif
+    return stat(path, statbuf);
+}
+
 bool path_is_folder(const char *path)
 {
     struct stat path_stat;
-    int result = stat(path, &path_stat);
+    int result = _path_stat(path, &path_stat);
     if (result != 0) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get stats for file `%s`", path);
         return false;
@@ -115,7 +134,7 @@ bool path_is_folder(const char *path)
 bool path_is_file(const char *path)
 {
     struct stat path_stat;
-    int result = stat(path, &path_stat);
+    int result = _path_stat(path, &path_stat);
     if (result != 0) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get stats for file `%s`", path);
         return false;
