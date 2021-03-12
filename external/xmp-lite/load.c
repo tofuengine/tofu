@@ -367,7 +367,7 @@ LIBXMP_EXPORT void xmp_release_module(xmp_context opaque)
 	free(m->comment);
 	m->comment = NULL;
 
-	D_("free dirname/basename");
+	D_(D_INFO "free dirname/basename");
 	free(m->dirname);
 	free(m->basename);
 	m->basename = NULL;
