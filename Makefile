@@ -236,6 +236,11 @@ platform: $(TARGET)
 	@$(ANALYZER) $(AFLAGS) ./demos/platform
 	@./$(TARGET) --path=./demos/platform
 
+splash: $(TARGET)
+	@echo "Launching *splash* application!"
+	@$(ANALYZER) $(AFLAGS) ./demos/splash
+	@./$(TARGET) --path=./demos/splash
+
 rasterbars: $(TARGET)
 	@echo "Launching *rasterbars* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/rasterbars
