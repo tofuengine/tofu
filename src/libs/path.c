@@ -63,7 +63,10 @@ void path_expand(const char *path, char *expanded)
         strcpy(resolved, path);
     }
 
-    (void)realpath(resolved, expanded);
+    char *ptr = realpath(resolved, expanded);
+    if (!ptr) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't resolve path `%s`", resolved);
+    }
 }
 
 bool path_exists(const char *path)
