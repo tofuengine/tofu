@@ -42,9 +42,12 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Crash screen (debug build).
 * [x] Game window focus detection (for game-pause).
 * [x] Real-time performance statistics (FPS and frame times).
+* [x] User-dependent I/O functions to load/store game data.
+* [ ] Configuration override through command-line arguments.
 
 ## Desiderata
 
+* [ ] Multi-threaded parallel rendering (w/ double/triple buffering).
 * [ ] Masking functions for both drawing primitives and blits.
 * [ ] **Bit** **Bl**ock **T**ransfer operations when drawing (also, [stencil](https://learnopengl.com/Advanced-OpenGL/Stencil-testing) support, see [this](https://open.gl/depthstencils)).
 * [ ] Define some fixed resolutions (see [this](https://pacoup.com/2011/06/12/list-of-true-169-resolutions/))?

@@ -68,7 +68,7 @@ static inline void _wait_for(float seconds)
 #endif
 }
 
-static bool _configure(Storage_t *storage, Configuration_t *configuration)
+static bool _configure(Storage_t *storage, int argc, const char *argv[], Configuration_t *configuration)
 {
     const Storage_Resource_t *resource = Storage_load(storage, "tofu.config", STORAGE_RESOURCE_STRING);
     if (!resource) {
@@ -77,7 +77,7 @@ static bool _configure(Storage_t *storage, Configuration_t *configuration)
     }
 
     Configuration_parse(configuration, S_SCHARS(resource));
-    // TODO: add an override configuration to add user-defined configuration (e.g. audio device selection)
+    Configuration_override(configuration, argc, argv);
 
     Log_configure(configuration->system.debug, NULL);
 
@@ -119,7 +119,7 @@ Engine_t *Engine_create(int argc, const char *argv[])
         return NULL;
     }
 
-    bool configured = _configure(engine->storage, &engine->configuration);
+    bool configured = _configure(engine->storage, argc, argv, &engine->configuration);
     if (!configured) {
         Storage_destroy(engine->storage);
         free(engine);

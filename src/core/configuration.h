@@ -80,5 +80,6 @@ typedef struct _Configuration {
 } Configuration_t;
 
 extern void Configuration_parse(Configuration_t *configuration, const char *data); // TODO: allocate this, too?
+extern void Configuration_override(Configuration_t *configuration, int argc, const char *argv[]);
 
 #endif  /* __CONFIGURATION_H__ */
