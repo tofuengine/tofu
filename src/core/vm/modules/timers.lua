@@ -52,7 +52,7 @@ function Pool:update(delta_time)
     else
       timer.age = timer.age + timer.rate * delta_time
       while timer.age >= timer.period do
-        timer.callback()
+        timer.callback("looped")
 
         timer.age = timer.age - timer.period
 
@@ -82,11 +82,12 @@ function Timer.new(period, repeats, callback, pool)
       repeats = repeats,
       callback = callback,
       rate = 1.0,
-      age = 0.0,
-      loops = repeats,
-      cancelled = false
+--      age = 0.0,
+--      loops = repeats,
+--      cancelled = false
     }, Timer)
   table.insert((pool or Pool.default()).timers, self) -- Access inner field to avoid exposing an API method.
+  self.reset()
   return self
 end
 
@@ -98,10 +99,12 @@ function Timer:reset()
   self.age = 0.0
   self.loops = self.repeats
   self.cancelled = false
+  self.callback("reset")
 end
 
 function Timer:cancel()
   self.cancelled = true
+  self.callback("cancelled")
 end
 
 return {
