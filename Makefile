@@ -114,7 +114,7 @@ $(TDUMPS): %.inc : %.txt Makefile
 	@$(DUMPER) $(DFLAGS) $< > $@
 	@echo "Generated '"$@"' from '"$<"' successfully!"
 
-$(EDUMPS): %.inc : %.glsl Makefile
+$(BDUMPS): %.inc : %.glsl Makefile
 	@$(DUMPER) $(DFLAGS) $< > $@
 	@echo "Generated '"$@"' from '"$<"' successfully!"
 
@@ -128,7 +128,7 @@ stats:
 primitives: $(TARGET)
 	@echo "Launching *primitives* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/primitives
-	./$(TARGET) ./demos/primitives
+	./$(TARGET) --path=./demos/primitives
 
 bunnymark: $(TARGET)
 	@echo "Launching *bunnymark* application!"
