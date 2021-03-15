@@ -242,7 +242,7 @@ void Configuration_parse(Configuration_t *configuration, const char *data)
                 .vertical_sync = false
             },
             .audio = {
-                .device_index = 0, // Pick the first available.
+                .device_index = -1, // Pick the default device.
                 .master_volume = 1.0f
             },
             .keyboard = {

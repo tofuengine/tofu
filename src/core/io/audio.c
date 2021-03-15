@@ -132,17 +132,22 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
             .device_index = configuration->device_index
         };
     result = ma_context_enumerate_devices(&audio->context, _enum_callback, &closure);
-    if (result != MA_SUCCESS || !closure.found) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't enumerated audio devices for context %p", &audio->context);
+    if (result != MA_SUCCESS || (!closure.found && configuration->device_index != -1)) {
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't detect audio device for context %p", &audio->context);
         ma_mutex_uninit(&audio->lock);
         SL_context_destroy(audio->sl);
         free(audio);
         return NULL;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "using device #%d", closure.device_index);
 
     ma_device_config device_config = ma_device_config_init(ma_device_type_playback);
-    device_config.playback.pDeviceID      = &closure.device_id;
+    if (configuration->device_index == -1) {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "using default device for context %p", &audio->context);
+        device_config.playback.pDeviceID  = NULL;
+    } else {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "using device #%d for context %p", closure.device_index, &audio->context);
+        device_config.playback.pDeviceID  = &closure.device_id;
+    }
 #if SL_BYTES_PER_SAMPLE == 2
     device_config.playback.format         = ma_format_s16;
 #elif SL_BYTES_PER_SAMPLE == 4
