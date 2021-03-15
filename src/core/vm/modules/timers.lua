@@ -44,11 +44,12 @@ function Pool:clear()
 end
 
 function Pool:update(delta_time)
-  local zombies = {}
+  local timers = self.timers -- Use local for faster access.
 
-  for index, timer in ipairs(self.timers) do
+  for index = #timers, 1, -1 do -- Reverse iterate to remove timers when "dead".
+    local timer = timers[index]
     if timer.cancelled then
-      table.insert(zombies, index)
+      table.remove(timers, index)
     else
       timer.age = timer.age + timer.rate * delta_time
       while timer.age >= timer.period do
@@ -59,16 +60,12 @@ function Pool:update(delta_time)
         if timer.loops > 0 then
           timer.loops = timer.loops - 1;
           if timer.loops == 0 then
-              timer:cancel()
+              timer:cancel() -- Remove on the next iteration.
               break
           end
         end
       end
     end
-  end
-
-  for _, index in ipairs(zombies) do
-    table.remove(self.timers, index)
   end
 end
 
@@ -87,7 +84,7 @@ function Timer.new(period, repeats, callback, pool)
 --      cancelled = false
     }, Timer)
   table.insert((pool or Pool.default()).timers, self) -- Access inner field to avoid exposing an API method.
-  self.reset()
+  self:reset()
   return self
 end
 
