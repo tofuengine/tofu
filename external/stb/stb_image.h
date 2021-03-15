@@ -789,9 +789,7 @@ static void stbi__refill_buffer(stbi__context *s);
 // initialize a memory-decode context
 static void stbi__start_mem(stbi__context *s, stbi_uc const *buffer, int len)
 {
-   s->io.read = NULL;
-   s->read_from_callbacks = 0;
-   s->callback_already_read = 0;
+   *s = (stbi__context){ 0 };
    s->img_buffer = s->img_buffer_original = (stbi_uc *) buffer;
    s->img_buffer_end = s->img_buffer_original_end = (stbi_uc *) buffer+len;
 }
@@ -799,11 +797,11 @@ static void stbi__start_mem(stbi__context *s, stbi_uc const *buffer, int len)
 // initialize a callback-based context
 static void stbi__start_callbacks(stbi__context *s, stbi_io_callbacks *c, void *user)
 {
+   *s = (stbi__context){ 0 };
    s->io = *c;
    s->io_user_data = user;
    s->buflen = sizeof(s->buffer_start);
    s->read_from_callbacks = 1;
-   s->callback_already_read = 0;
    s->img_buffer = s->img_buffer_original = s->buffer_start;
    stbi__refill_buffer(s);
    s->img_buffer_original_end = s->img_buffer_end;
