@@ -330,7 +330,7 @@ bool Audio_update(Audio_t *audio, float delta_time)
 #ifdef __SL_START_AND_STOP__
     const bool is_started = ma_device_is_started(&audio->device);
     if (!is_started && count == 1) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source incoming, starting device");
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "first source detected, starting device");
         ma_result result = ma_device_start(&audio->device);
         if (result != MA_SUCCESS) {
             Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't start the audio device");

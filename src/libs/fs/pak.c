@@ -178,7 +178,7 @@ FS_Mount_t *FS_pak_mount(const char *path)
         return NULL;
     }
 
-    bool seeked = fseek(stream, -sizeof(Pak_Index_t), SEEK_END) == 0;
+    bool seeked = fseek(stream, -((long)sizeof(Pak_Index_t)), SEEK_END) == 0; // Cast to fix on x64 Windows build.
     if (!seeked) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't seek file `%s` directory-header", path);
         fclose(stream);
