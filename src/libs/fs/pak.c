@@ -71,7 +71,7 @@
 +---------+
 */
 
-#define PAK_NAME_LENGTH     MD5_SIZE
+#define PAK_ID_LENGTH   MD5_SIZE
 
 #pragma pack(push, 1)
 typedef struct _Pak_Header_t {
@@ -82,7 +82,7 @@ typedef struct _Pak_Header_t {
 } Pak_Header_t;
 
 typedef struct _Pak_Entry_t {
-    uint8_t id[PAK_NAME_LENGTH]; // The entry name is hashed.
+    uint8_t id[PAK_ID_LENGTH]; // The entry name is hashed and hex-expanded.
     uint32_t offset;
     uint32_t size;
 } Pak_Entry_t;
@@ -116,7 +116,7 @@ static void _pak_mount_dtor(FS_Mount_t *mount);
 static bool _pak_mount_contains(const FS_Mount_t *mount, const char *name);
 static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *name);
 
-static void _pak_handle_ctor(FS_Handle_t *handle, FILE *stream, long offset, size_t size, bool encrypted, const uint8_t id[PAK_NAME_LENGTH]);
+static void _pak_handle_ctor(FS_Handle_t *handle, FILE *stream, long offset, size_t size, bool encrypted, const uint8_t id[PAK_ID_LENGTH]);
 static void _pak_handle_dtor(FS_Handle_t *handle);
 static size_t _pak_handle_size(FS_Handle_t *handle);
 static size_t _pak_handle_read(FS_Handle_t *handle, void *buffer, size_t bytes_requested);
@@ -149,7 +149,7 @@ static int _pak_entry_compare(const void *lhs, const void *rhs)
 {
     const Pak_Entry_t *l = (const Pak_Entry_t *)lhs;
     const Pak_Entry_t *r = (const Pak_Entry_t *)rhs;
-    return memcmp(l->id, r->id, PAK_NAME_LENGTH);
+    return memcmp(l->id, r->id, PAK_ID_LENGTH);
 }
 
 FS_Mount_t *FS_pak_mount(const char *path)
@@ -261,7 +261,7 @@ static void _pak_mount_dtor(FS_Mount_t *mount)
     free(pak_mount->directory);
 }
 
-static inline void _hash_file(const char *name, uint8_t id[PAK_NAME_LENGTH])
+static inline void _hash_file(const char *name, uint8_t id[PAK_ID_LENGTH])
 {
     md5_context_t context;
     md5_init(&context);
@@ -278,7 +278,7 @@ static bool _pak_mount_contains(const FS_Mount_t *mount, const char *name)
 
     Pak_Entry_t key = { 0 };
     _hash_file(name, key.id);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` id is `%.*s`", name, PAK_NAME_LENGTH, key.id);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` id is `%.*s`", name, PAK_ID_LENGTH, key.id);
 
     const Pak_Entry_t *entry = bsearch((const void *)&key, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
 
@@ -293,7 +293,7 @@ static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *name)
 
     Pak_Entry_t key = { 0 };
     _hash_file(name, key.id);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` id is `%.*s`", name, PAK_NAME_LENGTH, key.id);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "file `%s` id is `%.*s`", name, PAK_ID_LENGTH, key.id);
 
     const Pak_Entry_t *entry = bsearch((const void *)&key, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
     if (!entry) {
@@ -329,7 +329,7 @@ static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *name)
     return handle;
 }
 
-static void _pak_handle_ctor(FS_Handle_t *handle, FILE *stream, long offset, size_t size, bool encrypted, const uint8_t id[PAK_NAME_LENGTH])
+static void _pak_handle_ctor(FS_Handle_t *handle, FILE *stream, long offset, size_t size, bool encrypted, const uint8_t id[PAK_ID_LENGTH])
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
@@ -353,7 +353,7 @@ static void _pak_handle_ctor(FS_Handle_t *handle, FILE *stream, long offset, siz
     if (encrypted) {
         // Encryption is implemented throught a XOR stream cipher.
         // The key is the entry name (which is an MD5 digest for encrypted archives).
-        xor_schedule(&pak_handle->cipher_context, id, PAK_NAME_LENGTH);
+        xor_schedule(&pak_handle->cipher_context, id, PAK_ID_LENGTH);
     }
 }
 

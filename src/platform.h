@@ -78,11 +78,13 @@
   #define PLATFORM_PATH_MAX           PATH_MAX
   #define PLATFORM_PATH_USER          "~/.tofuengine"
 #elif PLATFORM_ID == PLATFORM_WINDOWS
+  #include <limits.h>
+
   #define PLATFORM_PATH_SEPARATOR     '\\'
   #define PLATFORM_PATH_SEPARATOR_SZ  "\\"
   #define PLATFORM_PATH_CURRENT_SZ    ".\\"
   #define PLATFORM_PATH_PARENT_SZ     "..\\"
-  #define PLATFORM_PATH_MAX           260
+  #define PLATFORM_PATH_MAX           PATH_MAX
   #define PLATFORM_PATH_USER          "%AppData%\\tofuengine"
 #elif PLATFORM_ID == PLATFORM_OSX
   #define PLATFORM_PATH_SEPARATOR     '/'

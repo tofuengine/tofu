@@ -1,5 +1,5 @@
 ifeq ($(PLATFORM),windows)
-	ifeq ($(VARIANT),x64)
+	ifeq ($(ARCHITECTURE),x64)
 		TARGET=tofu_x64.exe
 	else
 		TARGET=tofu_x32.exe
@@ -25,7 +25,7 @@ DUMPER=hexdump
 DFLAGS=-v -e '1/1 "0x%02X,"'
 
 ifeq ($(PLATFORM),windows)
-	ifeq ($(VARIANT),x64)
+	ifeq ($(ARCHITECTURE),x64)
 		COMPILER=x86_64-w64-mingw32-gcc
 	else
 		COMPILER=i686-w64-mingw32-gcc
@@ -53,7 +53,7 @@ else
 endif
 
 ifeq ($(PLATFORM),windows)
-	ifeq ($(VARIANT),x64)
+	ifeq ($(ARCHITECTURE),x64)
 		LINKER=x86_64-w64-mingw32-gcc
 		LFLAGS=-Lexternal/GLFW/windows/x64 -lglfw3 -lgdi32
 	else
