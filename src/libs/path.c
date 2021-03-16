@@ -32,9 +32,14 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#if PLATFORM_ID == PLATFORM_WINDOWS
+  #ifdef __USE_OS_NATIVE_API__
+    #include <shlobj.h>
+  #endif
+#endif
 
 #if PLATFORM_ID == PLATFORM_WINDOWS
-  #define realpath(N,R) _fullpath((R),(N),PATH_MAX)
+  #define realpath(N,R) _fullpath((R),(N),PLATFORM_PATH_MAX)
 #endif
 
 #if PLATFORM_ID == PLATFORM_LINUX
@@ -55,7 +60,12 @@ void path_expand(const char *path, char *expanded)
         strcat(resolved, path + 1);
 #elif PLATFORM_ID == PLATFORM_WINDOWS
     if (strncasecmp(path, "%AppData%", 9) == 0) {
-        const char *appdata = getenv("APPDATA");
+  #ifdef __USE_OS_NATIVE_API__
+        char appdata[PLATFORM_PATH_MAX];
+        SHGetFolderPathA(NULL, CSIDL_APPDATA | CSIDL_FLAG_CREATE, NULL, 0, appdata);
+  #else
+        const char *appdata = getenv("APPDATA"); // https://pureinfotech.com/list-environment-variables-windows-10/
+  #endif
         strcpy(resolved, appdata);
         strcat(resolved, path + 9);
 #endif
