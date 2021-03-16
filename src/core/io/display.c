@@ -465,7 +465,7 @@ void Display_destroy(Display_t *display)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "capture buffer %p freed", display->capture.pixels);
 #endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
 
-    free(display->copperlist);
+    arrfree(display->copperlist);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p freed", display->copperlist);
 
     program_delete(&display->program);
@@ -615,6 +615,11 @@ static inline void _surface_to_rgba(const GL_Surface_t *surface, int bias, GL_Pi
         // FIXME: correct color of not-written pixel when offsetting!
 
         for (size_t x = 0; x < surface->width; ++x) {
+            // Note: there's no length indicator for the copperlist program. That means that the interpreter would run
+            // endlessly (and unsafely read outside memory bounds, causing crashes). To avoid this a "wait forever"
+            // trailer is added to the program in the `Display_set_copperlist()` function. This somehow mimics the
+            // real Copper(tm) behaviour, where a special `WAIT` instruction `$FFFF, $FFFE` is used to mark the end of
+            // the copperlist.
 #ifdef __COPPER_ONE_COMMAND_PER_PIXEL__
             if (y >= wait_y && x >= wait_x) {
 #else
@@ -804,13 +809,19 @@ void Display_set_shifting(Display_t *display, const GL_Pixel_t *from, const GL_P
 void Display_set_copperlist(Display_t *display, const Display_CopperList_Entry_t *program, size_t length)
 {
     if (display->copperlist) {
-        free(display->copperlist);
+        arrfree(display->copperlist);
         display->copperlist = NULL;
 //        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p freed", display->copperlist);
     }
 
     if (program) {
-        display->copperlist = memdup(program, sizeof(Display_CopperList_Entry_t) * length);
+        for (size_t i = 0; i < length; ++i) {
+            arrpush(display->copperlist, program[i]);
+        }
+        // Add a special `WAIT` instruction to halt the Copper(tm) from reading outsize memory boundaries.
+        arrpush(display->copperlist, (Display_CopperList_Entry_t){ .command = WAIT });
+        arrpush(display->copperlist, (Display_CopperList_Entry_t){ .size = SIZE_MAX });
+        arrpush(display->copperlist, (Display_CopperList_Entry_t){ .size = SIZE_MAX });
 //        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "updated copperlist %p w/ #%d entries", display->copperlist, entries);
     }
 }
