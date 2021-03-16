@@ -204,6 +204,7 @@ static bool _module_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Ca
     module->props = SL_props_create(context, MODULE_OUTPUT_FORMAT, SL_FRAMES_PER_SECOND, MODULE_OUTPUT_CHANNELS_PER_FRAME, MIXING_BUFFER_CHANNELS_PER_FRAME);
     if (!module->props) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize module properties");
+        ma_pcm_rb_uninit(&module->buffer);
         xmp_release_module(module->context);
         xmp_free_context(module->context);
         return false;
@@ -220,6 +221,9 @@ static void _module_dtor(SL_Source_t *source)
 
     SL_props_destroy(module->props);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "module properties deinitialized");
+
+    ma_pcm_rb_uninit(&module->buffer);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "module ring-buffer deinitialized");
 
     xmp_end_player(module->context);
     xmp_release_module(module->context);
