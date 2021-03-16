@@ -76,13 +76,18 @@ bool path_exists(const char *path)
 
 bool path_mkdirs(const char *path)
 {
-    char aux[PLATFORM_PATH_MAX];
-    strcpy(aux, path);
-
-    // FIXME: rewrite this mess!!!
-    for (char *p = strchr(aux + 1, PLATFORM_PATH_SEPARATOR); p; p = strchr(p + 1, PLATFORM_PATH_SEPARATOR)) {
-        *p = '\0';
-        if (path_exists(aux)) {
+    char aux[PLATFORM_PATH_MAX] = { 0 };
+    const char *p = path;
+    bool finished = false;
+    while (!finished) {
+        const char *e = strchr(p + 1, PLATFORM_PATH_SEPARATOR);
+        if (e) {
+            strncat(aux, p, e - p);
+        } else {
+            strcat(aux, p);
+            finished = true;
+        }
+        if (path_exists(aux)) { // Incremental path never ends with the separator (`/` is skipped on Linux).
             if (!path_is_folder(aux)) {
                 return false;
             }
@@ -90,29 +95,40 @@ bool path_mkdirs(const char *path)
         if (createdir(aux) == -1) {
             return false;
         }
-        *p = PLATFORM_PATH_SEPARATOR;
-    }
-    if (path_exists(aux)) {
-        if (!path_is_folder(aux)) {
-            return false;
-        }
-    } else
-    if (createdir(aux) == -1) {
-        return false;
+        p = e; // Don't skip the separator, we need it!
     }
     return true;
 }
+
+static inline bool _path_is_trailed(const char *path)
+{
+    return path[strlen(path) - 1] == PLATFORM_PATH_SEPARATOR;
+}
+
+static inline void _path_chop(char *path)
+{
+    path[strlen(path) - 1] = '\0';
+}
+
+#if PLATFORM_ID == PLATFORM_WINDOWS
+static inline bool _path_is_root(const char *path)
+{
+    return path[1] == ':' && strlen(path) < 4; // e.g. `C:` or `C:\`)
+}
+#endif
 
 static int _path_stat(const char *pathname, struct stat *statbuf)
 {
     char path[PLATFORM_PATH_MAX];
     strcpy(path, pathname);
 #if PLATFORM_ID == PLATFORM_WINDOWS
-    if (path[1] == ':') { // On Windows, calling `stat()` on drives' root requires a trailing separator...
+    bool is_root = _path_is_root(path);
+    bool is_trailed = _path_is_trailed(path);
+    if (is_root && !is_trailed) { // On Windows, calling `stat()` on drives' root requires a trailing separator...
         strcat(path, PLATFORM_PATH_SEPARATOR_SZ);
     } else
-    if (path[strlen(path) - 1] == PLATFORM_PATH_SEPARATOR) { // ... and no separator on every other path.
-        path[strlen(path) - 1] = '\0';
+    if (is_trailed) { // ... and no separator on every other path.
+        _path_chop(path);
     }
 #endif
     return stat(path, statbuf);
@@ -170,8 +186,8 @@ void path_split(const char *path, char *folder, char *file)
         }
     }
 
-    if (folder && folder[strlen(folder) - 1] == PLATFORM_PATH_SEPARATOR) {
-        folder[strlen(folder) - 1] = '\0';
+    if (folder && _path_is_trailed(folder)) {
+        _path_chop(folder);
     }
 }
 
