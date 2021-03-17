@@ -12,7 +12,7 @@ endif
 
 # Use software renderer to use VALGRIND
 #   export LIBGL_ALWAYS_SOFTWARE=1
-#   valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./tofu --path=./demos/splash
+#   valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose ./tofu --path=./demos/splash
 
 ANALYZER=luacheck
 AFLAGS=--no-self --std lua53 -q
