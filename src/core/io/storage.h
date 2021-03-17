@@ -96,6 +96,8 @@ extern void Storage_destroy(Storage_t *storage);
 extern bool Storage_set_identity(Storage_t *storage, const char *identity);
 
 extern const char *Storage_get_base_path(const Storage_t *storage);
+extern const char *Storage_get_user_path(const Storage_t *storage);
+extern const char *Storage_get_local_path(const Storage_t *storage);
 
 extern bool Storage_exists(const Storage_t *storage, const char *name);
 

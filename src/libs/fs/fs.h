@@ -33,6 +33,8 @@
 #define FS_PATH_SEPARATOR       '/'
 #define FS_PATH_SEPARATOR_SZ    "/"
 
+#define FS_ARCHIVE_EXTENSION    ".pak"
+
 typedef struct _FS_Mount_t FS_Mount_t;
 typedef struct _FS_Handle_t FS_Handle_t;
 

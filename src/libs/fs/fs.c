@@ -72,6 +72,18 @@ static bool _attach(FS_Context_t *context, const char *path)
     return true;
 }
 
+#ifdef __FS_ENFORCE_ARCHIVE_EXTENSION__
+static inline bool _ends_with(const char *string, const char *suffix)
+{
+    size_t string_length = strlen(string);
+    size_t suffix_length = strlen(suffix);
+    if (string_length < suffix_length) {
+        return false;
+    }
+    return strcasecmp(string + string_length - suffix_length, suffix) == 0;
+}
+#endif  /* __FS_ENFORCE_ARCHIVE_EXTENSION__ */
+
 FS_Context_t *FS_create(const char *path)
 {
     FS_Context_t *context = malloc(sizeof(FS_Context_t));
@@ -83,11 +95,15 @@ FS_Context_t *FS_create(const char *path)
     *context = (FS_Context_t){ 0 };
 
     DIR *dp = opendir(path);
-    if (dp) { // Path is a folder, scan and mount valid archives.
+    if (dp) { // Path is a folder, scan and mount all valid archives.
         for (struct dirent *entry = readdir(dp); entry; entry = readdir(dp)) {
             char subpath[PLATFORM_PATH_MAX];
             path_join(subpath, path, entry->d_name);
-
+#ifdef __FS_ENFORCE_ARCHIVE_EXTENSION__
+            if (!_ends_with(subpath, FS_ARCHIVE_EXTENSION)) {
+                continue;
+            }
+#endif  /* __FS_ENFORCE_ARCHIVE_EXTENSION__ */
             if (!FS_pak_is_valid(subpath)) {
                 continue;
             }

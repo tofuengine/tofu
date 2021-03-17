@@ -141,8 +141,6 @@ extern GL_Point_t Display_get_offset(const Display_t *display);
 
 #ifdef __GRAPHICS_CAPTURE_SUPPORT__
 extern void Display_grab_snapshot(const Display_t *display, const char *base_path);
-extern void Display_start_recording(Display_t *display, const char *base_path);
-extern void Display_stop_recording(Display_t *display);
 extern void Display_toggle_recording(Display_t *display, const char *base_path);
 #endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
 

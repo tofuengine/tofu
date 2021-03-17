@@ -459,7 +459,10 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
 void Display_destroy(Display_t *display)
 {
 #ifdef __GRAPHICS_CAPTURE_SUPPORT__
-    Display_stop_recording(display);
+    if (GifIsWriting(&display->capture.gif_writer)) {
+        GifEnd(&display->capture.gif_writer);
+        Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "recording stopped");
+    }
 
     free(display->capture.pixels);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "capture buffer %p freed", display->capture.pixels);
@@ -857,7 +860,6 @@ GL_Point_t Display_get_offset(const Display_t *display)
 }
 
 #ifdef __GRAPHICS_CAPTURE_SUPPORT__
-// FIXME: currently the snapshot/recording doesn't include the post-fx shader. We should re-grab from the texture.
 void Display_grab_snapshot(const Display_t *display, const char *base_path)
 {
     time_t t = time(0);
@@ -870,32 +872,22 @@ void Display_grab_snapshot(const Display_t *display, const char *base_path)
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "capture done to file `%s`", path);
 }
 
-void Display_start_recording(Display_t *display, const char *base_path)
-{
-    time_t t = time(0);
-    struct tm *lt = localtime(&t);
-
-    char path[PLATFORM_PATH_MAX] = { 0 };
-    sprintf(path, "%s%crecord-%04d%02d%02d%02d%02d%02d.gif", base_path, PLATFORM_PATH_SEPARATOR, lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
-
-    GifBegin(&display->capture.gif_writer, path, display->vram.rectangle.width, display->vram.rectangle.height, 0);
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "recording started for file `%s`", path);
-
-    display->capture.time = 0.0;
-}
-
-void Display_stop_recording(Display_t *display)
-{
-    GifEnd(&display->capture.gif_writer);
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "recording stopped");
-}
-
 void Display_toggle_recording(Display_t *display, const char *base_path)
 {
     if (!GifIsWriting(&display->capture.gif_writer)) {
-        Display_start_recording(display, base_path);
+        time_t t = time(0);
+        struct tm *lt = localtime(&t);
+
+        char path[PLATFORM_PATH_MAX] = { 0 };
+        sprintf(path, "%s%crecord-%04d%02d%02d%02d%02d%02d.gif", base_path, PLATFORM_PATH_SEPARATOR, lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
+
+        GifBegin(&display->capture.gif_writer, path, display->vram.rectangle.width, display->vram.rectangle.height, 0);
+        Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "recording started to file `%s`", path);
+
+        display->capture.time = 0.0;
     } else {
-        Display_stop_recording(display);
+        GifEnd(&display->capture.gif_writer);
+        Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "recording stopped");
     }
 }
 #endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */

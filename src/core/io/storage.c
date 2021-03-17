@@ -151,6 +151,16 @@ const char *Storage_get_base_path(const Storage_t *storage)
     return storage->path.base;
 }
 
+const char *Storage_get_user_path(const Storage_t *storage)
+{
+    return storage->path.user;
+}
+
+const char *Storage_get_local_path(const Storage_t *storage)
+{
+    return storage->path.local;
+}
+
 static bool _resource_exists(const char *name)
 {
     return resources_blobs_exists(name) || resources_images_exists(name);
