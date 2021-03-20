@@ -11283,7 +11283,7 @@ MA_API const char* ma_log_level_to_string(ma_uint32 logLevel)
 {
     switch (logLevel)
     {
-        case MA_LOG_LEVEL_VERBOSE: return "";
+        case MA_LOG_LEVEL_VERBOSE: return "VERBOSE";
         case MA_LOG_LEVEL_INFO:    return "INFO";
         case MA_LOG_LEVEL_WARNING: return "WARNING";
         case MA_LOG_LEVEL_ERROR:   return "ERROR";

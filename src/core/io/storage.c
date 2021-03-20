@@ -59,7 +59,7 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
         };
 
     char path[PLATFORM_PATH_MAX];
-    path_expand(configuration->path ? configuration->path : PLATFORM_PATH_CURRENT_SZ, path);
+    path_expand(configuration->path, path);
 
     path_split(path, storage->path.base, NULL); // Get the folder name, in case we are pointing straight to a PAK!
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "base path is `%s`", storage->path.base);

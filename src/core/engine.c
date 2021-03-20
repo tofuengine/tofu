@@ -82,7 +82,6 @@ static bool _configure(Storage_t *storage, int argc, const char *argv[], Configu
     Log_configure(configuration->system.debug, NULL);
 
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "game identity is `%s`", configuration->system.identity);
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "running engine version %s", TOFU_VERSION_STRING);
 
     if (configuration->system.version.major > TOFU_VERSION_MAJOR
         || configuration->system.version.minor > TOFU_VERSION_MINOR
@@ -239,6 +238,8 @@ Engine_t *Engine_create(int argc, const char *argv[])
         return NULL;
     }
 
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "engine: %s", TOFU_VERSION_STRING);
+
     return engine;
 }
 
@@ -252,6 +253,7 @@ void Engine_destroy(Engine_t *engine)
     Storage_destroy(engine->storage);
 
     free(engine);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "engine freed");
 
 #ifdef DEBUG
     stb_leakcheck_dumpmem();
