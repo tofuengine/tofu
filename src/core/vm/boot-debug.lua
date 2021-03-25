@@ -27,6 +27,7 @@ local System = require("tofu.core").System
 local Input = require("tofu.events").Input
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
+local Palette = require("tofu.graphics").Palette
 local Font = require("tofu.graphics").Font
 local Speakers = require("tofu.sound").Speakers
 local Pool = require("tofu.timers").Pool
@@ -60,7 +61,7 @@ function Tofu:__ctor()
       enter = function(me)
           -- TODO: rename "Display" to "Video" e "Speakers" to "Audio"
           -- TODO: better failure screen with text.
-          Display.palette({ { 0, 0, 0 }, { 255, 0, 0 } }) -- Red on black.
+          Display.palette(Palette.new({ { 0, 0, 0 }, { 255, 0, 0 } })) -- Red on black.
           local canvas = Canvas.default()
           local width, _ = canvas:size()
           canvas:reset() -- Reset default canvas from the game state.

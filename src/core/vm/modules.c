@@ -38,6 +38,7 @@
 #include <core/vm/modules/input.h>
 #include <core/vm/modules/iterators.h>
 #include <core/vm/modules/math.h>
+#include <core/vm/modules/palette.h>
 #include <core/vm/modules/source.h>
 #include <core/vm/modules/speakers.h>
 #include <core/vm/modules/system.h>
@@ -94,6 +95,7 @@ static int graphics_loader(lua_State *L)
         { "Copperlist", copperlist_loader }, // FIXME: rename to `Program`?
         { "Display", display_loader },
         { "Font", font_loader },
+        { "Palette", palette_loader },
         { "XForm", xform_loader },
         { NULL, NULL }
     };

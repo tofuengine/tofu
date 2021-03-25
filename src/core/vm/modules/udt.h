@@ -100,6 +100,10 @@ typedef struct _XForm_Object_t {
     GL_XForm_t xform;
 } XForm_Object_t;
 
+typedef struct _Palette_Object_t {
+    GL_Palette_t palette;
+} Palette_Object_t;
+
 typedef struct _Copperlist_Object_t {
     Display_CopperList_Entry_t *program;
 } Copperlist_Object_t;

@@ -22,22 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __GL_PALETTE_H__
-#define __GL_PALETTE_H__
+#ifndef __MODULES_PALETTE_H__
+#define __MODULES_PALETTE_H__
 
-#include <stddef.h>
+#include <lua/lua.h>
 
-#include "common.h"
+extern int palette_loader(lua_State *L);
 
-#define GL_MAX_PALETTE_COLORS       256
-
-typedef struct _GL_Palette_t {
-    GL_Color_t colors[GL_MAX_PALETTE_COLORS];
-    size_t count;
-} GL_Palette_t;
-
-extern void GL_palette_generate_greyscale(GL_Palette_t *palette, size_t count);
-extern GL_Pixel_t GL_palette_find_nearest_color(const GL_Palette_t *palette, const GL_Color_t color);
-extern GL_Color_t GL_palette_lerp(const GL_Color_t from, const GL_Color_t to, float ratio);
-
-#endif  /* __GL_PALETTE_H__ */
+#endif  /* __MODULES_PALETTE_H__ */
