@@ -70,6 +70,8 @@ typedef struct _Storage_t {
     struct {
         char base[PLATFORM_PATH_MAX];
         char user[PLATFORM_PATH_MAX];
+        // TODO: add the possibility to save to a shared folder, e.g. for saving hiscores.
+        // char shared[PLATFORM_PATH_MAX];
         char local[PLATFORM_PATH_MAX];
     } path;
 

@@ -47,4 +47,16 @@ function Copperlist.gradient(index, markers)
   return copperlist
 end
 
+function Copperlist.palette(x, y, palette)
+  local copperlist = Copperlist.new()
+  copperlist:wait(x, y)
+  for index, color in palette do
+    local r, g, b = table.unpack(color)
+    copperlist:color(index - 1, r, g, b)
+  end
+  return copperlist
+end
+
+-- TODO: add some helper functions to populate the copperlist.
+
 return Copperlist
