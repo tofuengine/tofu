@@ -26,20 +26,15 @@
 
 #include <string.h>
 
-#define RED_WEIGHT      2.0f
-#define GREEN_WEIGHT    4.0f
-#define BLUE_WEIGHT     3.0f
-
 void GL_palette_generate_greyscale(GL_Palette_t *palette, const size_t count)
 {
     for (size_t i = 0; i < count; ++i) {
         unsigned char y = (unsigned char)(((float)i / (float)(count - 1)) * 255.0f);
-        palette->colors[i] = (GL_Color_t){ .a = 255, .r = y, .g = y, .b = y };
+        palette->colors[i] = (GL_Color_t){ .r = y, .g = y, .b = y, .a = 255  };
     }
     palette->count = count;
 }
 
-// https://en.wikipedia.org/wiki/Color_difference
 GL_Pixel_t GL_palette_find_nearest_color(const GL_Palette_t *palette, const GL_Color_t color)
 {
     GL_Pixel_t index = 0;
@@ -47,17 +42,18 @@ GL_Pixel_t GL_palette_find_nearest_color(const GL_Palette_t *palette, const GL_C
     for (size_t i = 0; i < palette->count; ++i) {
         const GL_Color_t *current = &palette->colors[i];
 
+        // https://www.compuphase.com/cmetric.htm
+        float r_mean = (float)(color.r + current->r) * 0.5;
+
         float delta_r = (float)(color.r - current->r);
         float delta_g = (float)(color.g - current->g);
         float delta_b = (float)(color.b - current->b);
+
+        float distance = (delta_r * delta_r) * (2.0f + (r_mean / 256.0f))
+            + (delta_g * delta_g) * 4.0f
+            + (delta_b * delta_b) * (2.0f + (255.0f - r_mean) / 256.0f);
 #ifdef __FIND_NEAREST_COLOR_EUCLIDIAN__
-        float distance = sqrtf((delta_r * delta_r) * RED_WEIGHT
-            + (delta_g * delta_g) * GREEN_WEIGHT
-            + (delta_b * delta_b)) * BLUE_WEIGHT;
-#else
-        float distance = (delta_r * delta_r) * RED_WEIGHT
-            + (delta_g * delta_g) * GREEN_WEIGHT
-            + (delta_b * delta_b) * BLUE_WEIGHT; // Faster, no need to get the Euclidean distance.
+        distance = sqrtf(distance);
 #endif
         if (minimum > distance) {
             minimum = distance;
