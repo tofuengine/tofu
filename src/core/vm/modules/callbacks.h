@@ -27,6 +27,17 @@
 
 #include <libs/gl/gl.h>
 
+typedef struct _Callback_Palette_Closure_t {
+    const GL_Palette_t *palette;
+    GL_Pixel_t transparent;
+    uint8_t threshold;
+} Callback_Palette_Closure_t;
+
+typedef struct _Callback_Indexes_Closure_t {
+    GL_Pixel_t background;
+    GL_Pixel_t foreground;
+} Callback_Indexes_Closure_t;
+
 extern void surface_callback_palette(void *user_data, GL_Surface_t *surface, const void *pixels);
 extern void surface_callback_indexes(void *user_data, GL_Surface_t *surface, const void *pixels);
 

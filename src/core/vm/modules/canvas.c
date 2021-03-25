@@ -139,30 +139,42 @@ static int canvas_new0(lua_State *L)
     return 1;
 }
 
-static int canvas_new1_3(lua_State *L)
+// TODO: pass the (optional) palette in the constructor. Revert to display's if not provided.
+
+static int canvas_new1_4(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const char *name = LUAX_STRING(L, 1);
     GL_Pixel_t background_index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 2, 0);
     GL_Pixel_t foreground_index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 3, background_index);
+    GL_Pixel_t transparent_index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 4, background_index);
 
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    const GL_Pixel_t indexes[] = { background_index, foreground_index };
+    Callback_Palette_Closure_t palette_closure = (Callback_Palette_Closure_t){
+            .palette = Display_get_palette(display),
+            .transparent = transparent_index,
+            .threshold = 0
+        };
+    Callback_Indexes_Closure_t indexes_closure = (Callback_Indexes_Closure_t){
+            .background = background_index,
+            .foreground = foreground_index
+        };
 
     GL_Surface_Callback_t callback;
     void *user_data;
     if (background_index == foreground_index) {
         callback = surface_callback_palette; // Back- and fore-ground equals, convert to palette.
-        user_data = (void *)Display_get_palette(display);
+        user_data = (void *)&palette_closure;
     } else {
         callback = surface_callback_indexes; // Otherwise, convert to the specified indexes.
-        user_data = (void *)indexes;
+        user_data = (void *)&indexes_closure;
     }
 
     GL_Context_t *context;
@@ -223,9 +235,10 @@ static int canvas_new(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(0, canvas_new0)
-        LUAX_OVERLOAD_ARITY(1, canvas_new1_3)
+        LUAX_OVERLOAD_ARITY(1, canvas_new1_4)
         LUAX_OVERLOAD_ARITY(2, canvas_new2)
-        LUAX_OVERLOAD_ARITY(3, canvas_new1_3)
+        LUAX_OVERLOAD_ARITY(3, canvas_new1_4)
+        LUAX_OVERLOAD_ARITY(4, canvas_new1_4)
     LUAX_OVERLOAD_END
 }
 

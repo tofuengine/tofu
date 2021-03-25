@@ -32,23 +32,25 @@ typedef struct rgba_t {
 
 void surface_callback_palette(void *user_data, GL_Surface_t *surface, const void *pixels)
 {
-    const GL_Palette_t *palette = (const GL_Palette_t *)user_data;
+    const Callback_Palette_Closure_t *closure = (const Callback_Palette_Closure_t *)user_data;
 
     const rgba_t *src = (const rgba_t *)pixels;
     GL_Pixel_t *dst = surface->data;
 
     for (size_t i = surface->data_size; i; --i) {
         rgba_t rgba = *(src++);
-        GL_Color_t color = (GL_Color_t){ .r = rgba.r, .g = rgba.g, .b = rgba.b, .a = rgba.a };
-        *(dst++) = GL_palette_find_nearest_color(palette, color);
+        if (rgba.a <= closure->threshold) { // Colors is transparent if below.
+            *(dst++) = closure->transparent;
+        } else {
+            GL_Color_t color = (GL_Color_t){ .r = rgba.r, .g = rgba.g, .b = rgba.b, .a = rgba.a };
+            *(dst++) = GL_palette_find_nearest_color(closure->palette, color);
+        }
     }
 }
 
 void surface_callback_indexes(void *user_data, GL_Surface_t *surface, const void *pixels)
 {
-    const GL_Pixel_t *indexes = (const GL_Pixel_t *)user_data;
-    const GL_Pixel_t bg_index = indexes[0];
-    const GL_Pixel_t fg_index = indexes[1];
+    const Callback_Indexes_Closure_t *closure = (const Callback_Indexes_Closure_t *)user_data;
 
     const uint32_t *src = (const uint32_t *)pixels; // Faster than the `rgba_t` struct, we don't need to unpack components.
     GL_Pixel_t *dst = surface->data;
@@ -57,6 +59,6 @@ void surface_callback_indexes(void *user_data, GL_Surface_t *surface, const void
 
     for (size_t i = surface->data_size; i; --i) {
         uint32_t rgba = *(src++);
-        *(dst++) = rgba == background ? bg_index : fg_index;
+        *(dst++) = rgba == background ? closure->background : closure->foreground;
     }
 }

@@ -183,7 +183,7 @@ static int copperlist_color(lua_State *L)
     uint8_t g = (uint8_t)LUAX_INTEGER(L, 4);
     uint8_t b = (uint8_t)LUAX_INTEGER(L, 5);
 
-    const GL_Color_t color = (GL_Color_t){ .a = 255, .r = r, .g = g, .b = b };
+    const GL_Color_t color = (GL_Color_t){ .r = r, .g = g, .b = b, .a = 255 };
 
     arrpush(self->program, (Display_CopperList_Entry_t){ .command = COLOR });
     arrpush(self->program, (Display_CopperList_Entry_t){ .pixel = index });
