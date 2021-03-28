@@ -139,27 +139,25 @@ static int canvas_new0(lua_State *L)
     return 1;
 }
 
-// TODO: pass the (optional) palette in the constructor. Revert to display's if not provided.
-
 static int canvas_new1_4(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     const char *name = LUAX_STRING(L, 1);
     GL_Pixel_t background_index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 2, 0);
     GL_Pixel_t foreground_index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 3, background_index);
-    GL_Pixel_t transparent_index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 4, background_index);
+    const Palette_Object_t *palette = (const Palette_Object_t *)LUAX_OPTIONAL_USERDATA(L, 4, NULL);
 
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     Callback_Palette_Closure_t palette_closure = (Callback_Palette_Closure_t){
-            .palette = Display_get_palette(display),
-            .transparent = transparent_index,
+            .palette = palette ? &palette->palette : Display_get_palette(display), // Use current display's if not passed.
+            .transparent = background_index, // Background index is used as transparent.
             .threshold = 0
         };
     Callback_Indexes_Closure_t indexes_closure = (Callback_Indexes_Closure_t){
