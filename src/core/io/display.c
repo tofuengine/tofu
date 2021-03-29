@@ -576,7 +576,7 @@ static inline void _surface_to_rgba_fast(const GL_Surface_t *surface, int bias, 
     const size_t data_size = surface->data_size;
     const GL_Color_t *colors = palette->colors;
 #ifdef __DEBUG_GRAPHICS__
-    const int count = palette->count;
+    const int count = palette->size;
 #endif
 
     const GL_Pixel_t *src = surface->data;
@@ -602,7 +602,7 @@ static inline void _surface_to_rgba_fast(const GL_Surface_t *surface, int bias, 
 static inline void _surface_to_rgba(const GL_Surface_t *surface, int bias, GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS], GL_Palette_t slots[DISPLAY_MAX_PALETTE_SLOTS], size_t active_id, const Display_CopperList_Entry_t *copperlist, GL_Color_t *vram)
 {
 #ifdef __DEBUG_GRAPHICS__
-    const int count = palette->count;
+    const int count = palette->size;
 #endif
     size_t wait_y = 0, wait_x = 0;
     GL_Color_t *colors = slots[active_id].colors;

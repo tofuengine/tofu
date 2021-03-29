@@ -25,7 +25,6 @@ SOFTWARE.
 local Class = require("tofu.core").Class
 local System = require("tofu.core").System
 local Input = require("tofu.events").Input
-local Bank = require("tofu.graphics").Bank
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
@@ -36,40 +35,16 @@ local STEPS
 local LEVELS
 local TARGET = 0x00000000
 
-local function get_r(c)
-  return (c >> 16) & 0xff
-end
-local function get_g(c)
-  return (c >> 8) & 0xff
-end
-local function get_b(c)
-  return c & 0xff
-end
-
-local function find_best_match(palette, match)
-  local index
-  local min = math.huge
-  for i, color in ipairs(palette) do
-    local dr, dg, db = (get_r(match) - get_r(color)), (get_g(match) - get_g(color)), (get_b(match) - get_b(color))
-    local d = dr * dr * 2.0 + dg * dg * 4.0 + db * db * 3.0
-    if min > d then
-      min = d
-      index = i
-    end
-  end
-  return index
-end
-
 local function build_table(palette, levels, target)
+  local tr, tg, tb = Palette.unpack(target)
   local lut = {}
   for i = 0, levels - 1 do
     local shifting = {}
     local ratio = 1 / (levels - 1) * i
-    for j, color in ipairs(palette) do
-      local r = math.tointeger((get_r(color) - get_r(target)) * ratio + get_r(target))
-      local g = math.tointeger((get_g(color) - get_g(target)) * ratio + get_g(target))
-      local b = math.tointeger((get_b(color) - get_b(target)) * ratio + get_b(target))
-      local k = find_best_match(palette, r * 65536 + g * 256 + b) -- TODO: use internal function?
+    for j, color in ipairs(palette:colors()) do
+      local ar, ag, ab = table.unpack(color)
+      local r, g, b = Palette.mix(ar, ag, ab, tr, tg, tb, 1 - ratio)
+      local k = palette:color_to_index(r, g, b)
       shifting[j - 1] = k - 1
     end
     lut[i] = shifting
@@ -81,7 +56,7 @@ local Main = Class.define()
 
 function Main:__ctor()
   PALETTE = Palette.new("pico-8")
-  STEPS = PALETTE:length()
+  STEPS = PALETTE:size()
   LEVELS = STEPS
 
   Display.palette(PALETTE)
@@ -90,7 +65,6 @@ function Main:__ctor()
   local width, height = canvas:size()
   self.lut = build_table(PALETTE, LEVELS, TARGET)
 
-  self.bank = Bank.new(canvas, Canvas.new("assets/sheet.png", 0), 8, 8)
   self.font = Font.default(canvas, 0, 15)
   self.width = width / STEPS
   self.height = height / STEPS

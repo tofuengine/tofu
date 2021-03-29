@@ -26,20 +26,20 @@
 
 #include <string.h>
 
-void GL_palette_generate_greyscale(GL_Palette_t *palette, const size_t count)
+void GL_palette_generate_greyscale(GL_Palette_t *palette, const size_t size)
 {
-    for (size_t i = 0; i < count; ++i) {
-        unsigned char y = (unsigned char)(((float)i / (float)(count - 1)) * 255.0f);
+    for (size_t i = 0; i < size; ++i) {
+        unsigned char y = (unsigned char)(((float)i / (float)(size - 1)) * 255.0f);
         palette->colors[i] = (GL_Color_t){ .r = y, .g = y, .b = y, .a = 255  };
     }
-    palette->count = count;
+    palette->size = size;
 }
 
 GL_Pixel_t GL_palette_find_nearest_color(const GL_Palette_t *palette, const GL_Color_t color)
 {
     GL_Pixel_t index = 0;
     float minimum = __FLT_MAX__;
-    for (size_t i = 0; i < palette->count; ++i) {
+    for (size_t i = 0; i < palette->size; ++i) {
         const GL_Color_t *current = &palette->colors[i];
 
         // https://www.compuphase.com/cmetric.htm
@@ -79,4 +79,23 @@ GL_Color_t GL_palette_lerp(const GL_Color_t from, const GL_Color_t to, float rat
             .b = (uint8_t)_lerpf((float)from.b, (float)to.b, ratio),
             .a = 255
         };
+}
+
+GL_Color_t GL_palette_unpack_color(uint32_t argb)
+{
+    return (GL_Color_t){
+#ifdef __IGNORE_ALPHA_ON_COLORS__
+            .a = 255,
+#else
+            .a = (uint8_t)((argb >> 24) & 0xff),
+#endif
+            .r = (uint8_t)((argb >> 16) & 0xff),
+            .g = (uint8_t)((argb >>  8) & 0xff),
+            .b = (uint8_t)( argb        & 0xff)
+        };
+}
+
+uint32_t GL_palette_pack_color(const GL_Color_t color)
+{
+    return (color.a << 24) | (color.r << 16) | (color.g << 8) | color.b;
 }
