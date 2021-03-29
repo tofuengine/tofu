@@ -33,10 +33,10 @@ local Palette = require("tofu.graphics").Palette
 local PALETTE
 local STEPS
 local LEVELS
-local TARGET = 0x00000000
+local TARGET = { 0, 0, 0 }
 
 local function build_table(palette, levels, target)
-  local tr, tg, tb = Palette.unpack(target)
+  local tr, tg, tb = table.unpack(target)
   local lut = {}
   for i = 0, levels - 1 do
     local shifting = {}
@@ -55,7 +55,7 @@ end
 local Main = Class.define()
 
 function Main:__ctor()
-  PALETTE = Palette.new("pico-8")
+  PALETTE = Palette.new("pico-8-ext")
   STEPS = PALETTE:size()
   LEVELS = STEPS
 
@@ -63,8 +63,10 @@ function Main:__ctor()
 
   local canvas = Canvas.default()
   local width, height = canvas:size()
-  self.lut = build_table(PALETTE, LEVELS, TARGET)
 
+  canvas:transparent(0, false)
+
+  self.lut = build_table(PALETTE, LEVELS, TARGET)
   self.font = Font.default(canvas, 0, 15)
   self.width = width / STEPS
   self.height = height / STEPS

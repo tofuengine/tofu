@@ -38,8 +38,6 @@
 
 static int palette_new(lua_State *L);
 static int palette_gc(lua_State *L);
-static int palette_pack(lua_State *L);
-static int palette_unpack(lua_State *L);
 static int palette_mix(lua_State *L);
 static int palette_colors(lua_State *L);
 static int palette_size(lua_State *L);
@@ -51,8 +49,6 @@ static int palette_merge(lua_State *L);
 static const struct luaL_Reg _palette_functions[] = {
     { "new", palette_new },
     { "__gc", palette_gc },
-    { "pack", palette_pack },
-    { "unpack", palette_unpack },
     { "mix", palette_mix },
     { "colors", palette_colors },
     { "size", palette_size },
@@ -173,40 +169,6 @@ static int palette_gc(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p finalized", self);
 
     return 0;
-}
-
-static int palette_pack(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    uint8_t r = (uint8_t)LUAX_NUMBER(L, 1);
-    uint8_t g = (uint8_t)LUAX_NUMBER(L, 2);
-    uint8_t b = (uint8_t)LUAX_NUMBER(L, 3);
-
-    uint32_t argb = GL_palette_pack_color((GL_Color_t){ .r = r, .g = g, .b = b, .a = 255 });
-
-    lua_pushinteger(L, (lua_Integer)argb);
-
-    return 1;
-}
-
-static int palette_unpack(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    uint32_t argb = (uint32_t)LUAX_NUMBER(L, 1);
-
-    GL_Color_t color = GL_palette_unpack_color(argb);
-
-    lua_pushinteger(L, (lua_Integer)color.r);
-    lua_pushinteger(L, (lua_Integer)color.g);
-    lua_pushinteger(L, (lua_Integer)color.b);
-
-    return 3;
 }
 
 static int palette_mix(lua_State *L)
