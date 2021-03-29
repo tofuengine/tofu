@@ -57,12 +57,13 @@ typedef struct _luaX_Script {
 typedef int luaX_Reference;
 
 #define LUAX_REFERENCE_NIL  -1
-#define LUAX_EOD            -2
+#define LUAX_ANY            -2
+#define LUAX_EOD            -3
 
 #ifdef DEBUG
-    #define LUAX_SIGNATURE_BEGIN(l) \
+    #define LUAX_SIGNATURE_BEGIN(L) \
         do { \
-            lua_State *_L = (l); \
+            lua_State *_L = (L); \
             int _argc = lua_gettop(_L); \
             int _matched = 0; \
             int _index = 1;
@@ -86,18 +87,31 @@ typedef int luaX_Reference;
     #define LUAX_SIGNATURE_END
 #endif
 
-// TODO: support overloading on signature arity and types?
-#define LUAX_OVERLOAD_BEGIN(l) \
-    do { \
-        lua_State *_L = (l); \
-        int _argc = lua_gettop(_L); \
-        switch (_argc) {
-#define LUAX_OVERLOAD_ARITY(n, f) \
-            case (n): { return (f)(_L); }
-#define LUAX_OVERLOAD_END \
-            default: { return luaL_error(L, "[%s:%d] overload for arity #%d is missing", __FILE__, __LINE__, _argc); } \
-        } \
-    } while (0);
+#ifdef __LUAX_ARITY_OVERLOAD_ONLY__
+    #define LUAX_OVERLOAD_BEGIN(L) \
+        do { \
+            lua_State *_L = (L); \
+            int _argc = lua_gettop(_L); \
+            switch (_argc) {
+    #define LUAX_OVERLOAD_ARITY(n, f) \
+                case (n): { return (f)(_L); }
+    #define LUAX_OVERLOAD_END \
+                default: { return luaL_error(L, "[%s:%d] overload for arity #%d is missing", __FILE__, __LINE__, _argc); } \
+            } \
+        } while (0);
+#else
+    #define LUAX_OVERLOAD_BEGIN(L) \
+        do { \
+            lua_State *_L = (L); \
+            int _argc = lua_gettop(_L);
+    #define LUAX_OVERLOAD_ARITY(n, f) \
+            if (_argc == (n)) { return (f)(_L); } else
+    #define LUAX_OVERLOAD_SIGNATURE(f, ...) \
+            if (luaX_hassignature(_L, __VA_ARGS__, LUAX_EOD)) { return (f)(_L); } else
+    #define LUAX_OVERLOAD_END \
+            { return luaL_error(L, "[%s:%d] overload for arity #%d is missing", __FILE__, __LINE__, _argc); } \
+        } while (0);
+#endif
 
 #ifdef DEBUG
     #define LUAX_BOOLEAN(L, idx)                (!lua_isboolean((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), 0 : lua_toboolean((L), (idx)))
@@ -139,6 +153,8 @@ extern luaX_Reference luaX_ref(lua_State *L, int idx);
 extern void luaX_unref(lua_State *L, luaX_Reference ref);
 
 extern void luaX_checkargument(lua_State *L, int idx, const char *filename, int line, ...);
+
+extern int luaX_hassignature(lua_State *L, ...);
 
 extern void luaX_pushvalues(lua_State *L, int nup);
 extern int luaX_pushupvalues(lua_State *L);

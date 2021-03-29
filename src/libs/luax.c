@@ -271,6 +271,40 @@ void luaX_checkargument(lua_State *L, int idx, const char *file, int line, ...)
     }
 }
 
+int luaX_hassignature(lua_State *L, ...)
+{
+    int argc = lua_gettop(L);
+    if (argc == 0) {
+        return 1;
+    }
+
+    int all_checked = 0;
+    int mismatch = 0;
+    int matched = 0;
+
+    va_list args;
+    va_start(args, L);
+    for (int idx = 1;; ++idx) {
+        int type = va_arg(args, int);
+        if (type == LUAX_EOD) {
+            all_checked = 1;
+            break;
+        }
+        if (idx > argc) {
+            break; // Bail out, after checking end-of-data (see above).
+        }
+        int actual_type = lua_type(L, idx);
+        if (actual_type != type && type != LUAX_ANY) {
+            mismatch = 1;
+            break;
+        }
+        ++matched;
+    }
+    va_end(args);
+
+    return all_checked && !mismatch && argc == matched;
+}
+
 int luaX_pushupvalues(lua_State *L)
 {
     int nup = 0;
