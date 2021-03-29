@@ -29,6 +29,7 @@ local Input = require("tofu.events").Input
 local Bank = require("tofu.graphics").Bank
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
+local Palette = require("tofu.graphics").Palette
 local Font = require("tofu.graphics").Font
 
 local Main = Class.define()
@@ -39,10 +40,6 @@ local PALETTES = { "pico-8", "arne-16", "dawnbringer-16", "c64", "cga" }
 --384 x 224 pixels
 
 function Main:__ctor()
-  Display.palette("pico-8")
-
-  Input.auto_repeat("y", 0.5)
-
   local canvas = Canvas.default()
   local width, height = canvas:size()
 
@@ -57,6 +54,10 @@ function Main:__ctor()
   self.x, self.y = canvas:center()
   self.mode = 0
   self.clipping = false
+
+  Display.palette(Palette.new("pico-8"))
+
+  Input.auto_repeat("y", 0.5)
 end
 
 function Main:input()
@@ -89,7 +90,8 @@ function Main:update(_)
   local index = (math.tointeger(System.time() * 0.2) % #PALETTES) + 1
   if self.palette ~= index then
     self.palette = index
-    Display.palette(PALETTES[index])
+    local palette = Palette.new(PALETTES[index])
+    Display.palette(palette)
   end
 end
 

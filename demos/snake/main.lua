@@ -27,6 +27,7 @@ local System = require("tofu.core").System
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
+local Palette = require("tofu.graphics").Palette
 local Input = require("tofu.events").Input
 local Grid = require("tofu.util").Grid
 
@@ -71,7 +72,7 @@ local MAP =  "************************************************"
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette("gameboy")
+  Display.palette(Palette.new("gameboy"))
 
   local canvas = Canvas.default()
   local width, height = canvas:size()

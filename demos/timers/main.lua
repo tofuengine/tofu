@@ -25,12 +25,13 @@ SOFTWARE.
 local Class = require("tofu.core").Class
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
+local Palette = require("tofu.graphics").Palette
 local Timer = require("tofu.timers").Timer
 
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette("pico-8")
+  Display.palette(Palette.new("pico-8"))
 
   local canvas = Canvas.default()
   local width, height = canvas:size()

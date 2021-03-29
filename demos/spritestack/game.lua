@@ -29,6 +29,7 @@ local Input = require("tofu.events").Input
 local Bank = require("tofu.graphics").Bank
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
+local Palette = require("tofu.graphics").Palette
 local Font = require("tofu.graphics").Font
 
 local Sprite = require("lib.sprite")
@@ -42,11 +43,14 @@ local BRAKE = 25.0
 local Game = Class.define()
 
 function Game:__ctor()
-  Display.palette("pico-8-ext")
+  local palette = Palette.new("pico-8-ext")
+  Display.palette(palette)
 
   local canvas = Canvas.default()
 
-  self.bank = Bank.new(canvas, Canvas.new("assets/images/slices.png"), 15, 32)
+  self.palette = palette
+  self.bank = Bank.new(canvas, Canvas.new("assets/images/racing-car-tiny-red.png", 0), 16, 16)
+--  self.bank = Bank.new(canvas, Canvas.new("assets/images/racing-car-small-red.png", 0), 32, 32)
   self.font = Font.default(canvas, 0, 31)
   self.tweener = Math.tweener("sine_out")
 
@@ -60,8 +64,15 @@ function Game:__ctor()
   self.torque_life = 0
 end
 
+-- PHYSICS
 -- http://www.iforce2d.net/b2dtut/top-down-car
 -- file:///C:/Users/mlizza/Downloads/[Andrew_Kirmse]_Game_Programming_Gems_4(z-lib.org).pdf
+
+-- SUPER SPRINT
+-- https://daytona500news.blogspot.com/2012/01/super-sprint-intricate-design-details.html
+-- http://samd.site/2020/04/10/sprite-stacking.html
+-- https://medium.com/@avsnoopy/beginners-guide-to-sprite-stacking-in-gamemaker
+   -- -studio-2-and-magica-voxel-part-1-f7a1394569c0
 function Game:input()
   self.force = 0
   self.torque = 0
@@ -69,7 +80,8 @@ function Game:input()
   if Input.is_pressed("start") then
     local cx, cy = Canvas.default():center()
     for _ = 1, CHUNK_SIZE do
-      local sprite = Sprite.new(self.bank, 0, 13, 1)
+      local sprite = Sprite.new(self.bank, 15, 11, 1, self.palette)
+--      local sprite = Sprite.new(self.bank, 31, 19, 1)
       sprite:move(cx, cy)
       table.insert(self.sprites, sprite)
     end

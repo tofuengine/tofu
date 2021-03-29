@@ -27,18 +27,19 @@ local System = require("tofu.core").System
 local Input = require("tofu.events").Input
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
-local XForm = require("tofu.graphics").XForm
 local Font = require("tofu.graphics").Font
+local Palette = require("tofu.graphics").Palette
+local XForm = require("tofu.graphics").XForm
 
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette("6-bit-rgb")
+  Display.palette(Palette.new("6-bit-rgb"))
 
   local canvas = Canvas.default()
 
   self.font = Font.default(canvas, "5x8", 0, 63)
-  self.surface = Canvas.new("assets/road.png")
+  self.surface = Canvas.new("assets/road.png", 0)
   self.xform = XForm.new()
   self.running = true
 

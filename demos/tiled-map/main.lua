@@ -28,6 +28,7 @@ local Input = require("tofu.events").Input
 local Display = require("tofu.graphics").Display
 local Canvas = require("tofu.graphics").Canvas
 local Font = require("tofu.graphics").Font
+local Palette = require("tofu.graphics").Palette
 
 local Map = require("lib.map")
 
@@ -100,7 +101,7 @@ end
 ]]--
 
 function Main:__ctor()
-  Display.palette("gameboy")
+  Display.palette(Palette.new("gameboy"))
 
   local canvas = Canvas.default()
 

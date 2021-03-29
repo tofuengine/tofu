@@ -32,6 +32,7 @@ local Canvas = require("tofu.graphics").Canvas
 local Copperlist = require("tofu.graphics").Copperlist
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
+local Palette = require("tofu.graphics").Palette
 local Vector = require("tofu.util").Vector
 
 local Animation = require("lib.animation")
@@ -73,7 +74,7 @@ local function extra_half_brite(palette, target, ratio)
 end
 
 function Main:__ctor()
-  Display.palette("pico-8-ext")
+  Display.palette(Palette.new("pico-8-ext"))
 
   Class.dump(System.args())
 
@@ -83,8 +84,8 @@ function Main:__ctor()
 
   self.atlas = Canvas.new(1, 1)
   self.pixies = Bank.new(canvas, self.atlas, 1, 1)
-  self.bank = Bank.new(canvas, Canvas.new("assets/sprites.png"), 16, 16)
-  self.tileset = Bank.new(canvas, Canvas.new("assets/tileset.png"), 16, 16)
+  self.bank = Bank.new(canvas, Canvas.new("assets/sprites.png", 22), 16, 16)
+  self.tileset = Bank.new(canvas, Canvas.new("assets/tileset.png", 22), 16, 16)
   self.batch = Batch.new(self.bank, 5000)
   self.font = Font.default(canvas, 22, 2)
 

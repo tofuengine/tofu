@@ -28,6 +28,7 @@ local Input = require("tofu.events").Input
 local Bank = require("tofu.graphics").Bank
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
+local Palette = require("tofu.graphics").Palette
 local Font = require("tofu.graphics").Font
 
 local Main = Class.define()
@@ -47,11 +48,11 @@ local INDICES = {
   }
 
 function Main:__ctor()
-  Display.palette("pico-8")
+  Display.palette(Palette.new("pico-8"))
 
   local canvas = Canvas.default()
 
-  self.bank = Bank.new(canvas, Canvas.new("assets/sheet.png"), 12, 12)
+  self.bank = Bank.new(canvas, Canvas.new("assets/sheet.png", 0), 12, 12)
   self.font = Font.default(canvas, 0, 15)
   self.down = {}
   self.scale = {}

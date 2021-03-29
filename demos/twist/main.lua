@@ -31,12 +31,12 @@ local Font = require("tofu.graphics").Font
 local Main = Class.define()
 
 function Main:__ctor()
-  --Display.palette("pico-8")
+  --Display.palette(Palette.new("pico-8"))
 
   local canvas = Canvas.default()
   local width, height = canvas:size()
 
-  self.bank = Bank.new(canvas, Canvas.new("assets/sheet.png"), 8, 8)
+  self.bank = Bank.new(canvas, Canvas.new("assets/sheet.png", 0), 8, 8)
   self.font = Font.default(canvas, 0, 255)
 
   local cw, ch = self.bank:size(Bank.NIL)

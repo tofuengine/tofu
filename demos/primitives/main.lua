@@ -28,6 +28,7 @@ local Input = require("tofu.events").Input
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
+local Palette = require("tofu.graphics").Palette
 
 local Main = Class.define()
 
@@ -40,7 +41,7 @@ local PALETTE = {
 
 function Main:__ctor()
   Display.palette(PALETTE) -- "arne-16")
-  Display.palette("arne-16")
+  Display.palette(Palette.new("arne-16"))
 
   local canvas = Canvas.default()
   canvas:color(3)

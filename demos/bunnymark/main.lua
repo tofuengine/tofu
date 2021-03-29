@@ -29,6 +29,7 @@ local Bank = require("tofu.graphics").Bank
 local Batch = require("tofu.graphics").Batch
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
+local Palette = require("tofu.graphics").Palette
 local Font = require("tofu.graphics").Font
 
 local MovingBunny = require("lib.moving_bunny")
@@ -41,14 +42,14 @@ local MAX_BUNNIES = 32768
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette("pico-8")
+  Display.palette(Palette.new("pico-8"))
 
   local canvas = Canvas.default()
   canvas:transparent({ ["0"] = false, ["11"] = true })
   canvas:background(0)
 
   self.bunnies = {}
-  self.bank = Bank.new(canvas, Canvas.new("assets/bunnies.png"), "assets/bunnies.sheet")
+  self.bank = Bank.new(canvas, Canvas.new("assets/bunnies.png", 11), "assets/bunnies.sheet")
   self.batch = Batch.new(self.bank, 5000)
   self.font = Font.default(canvas, 11, 6)
   self.speed = 1.0

@@ -29,6 +29,7 @@ local Bank = require("tofu.graphics").Bank
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
+local Palette = require("tofu.graphics").Palette
 
 local PALETTE
 local STEPS
@@ -79,17 +80,17 @@ end
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette("pico-8")
-
-  PALETTE = Display.palette()
-  STEPS = #PALETTE
+  PALETTE = Palette.new("pico-8")
+  STEPS = PALETTE:length()
   LEVELS = STEPS
+
+  Display.palette(PALETTE)
 
   local canvas = Canvas.default()
   local width, height = canvas:size()
   self.lut = build_table(PALETTE, LEVELS, TARGET)
 
-  self.bank = Bank.new(canvas, Canvas.new("assets/sheet.png"), 8, 8)
+  self.bank = Bank.new(canvas, Canvas.new("assets/sheet.png", 0), 8, 8)
   self.font = Font.default(canvas, 0, 15)
   self.width = width / STEPS
   self.height = height / STEPS

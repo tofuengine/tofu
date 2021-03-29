@@ -30,17 +30,18 @@ local Batch = require("tofu.graphics").Batch
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
+local Palette = require("tofu.graphics").Palette
 
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette("pico-8-ext")
+  Display.palette(Palette.new("pico-8-ext"))
 
   local canvas = Canvas.default()
   canvas:transparent({ ["0"] = false, ["22"] = true })
   canvas:background(12)
 
-  self.bank = Bank.new(canvas, Canvas.new("assets/sprites.png"), 16, 16)
+  self.bank = Bank.new(canvas, Canvas.new("assets/sprites.png", 22), 16, 16)
   self.batch = Batch.new(self.bank, 5000)
   self.font = Font.default(canvas, 22, 2)
 

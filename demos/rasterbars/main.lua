@@ -30,18 +30,19 @@ local Canvas = require("tofu.graphics").Canvas
 local Copperlist = require("tofu.graphics").Copperlist
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
+local Palette = require("tofu.graphics").Palette
 
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette("pico-8-ext")
+  Display.palette(Palette.new("pico-8-ext"))
 
   local canvas = Canvas.default()
   local width, height = canvas:size()
   canvas:transparent({ ["0"] = false, ["22"] = true })
 
   self.font = Font.default(canvas, 0, 11)
-  self.bank = Bank.new(canvas, Canvas.new("assets/sprites.png"), 16, 16)
+  self.bank = Bank.new(canvas, Canvas.new("assets/sprites.png", 22), 16, 16)
   self.big_font = Font.default(canvas, "32x64", 1, 31)
   self.running = true
   self.time = 0

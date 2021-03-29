@@ -24,57 +24,72 @@ SOFTWARE.
 
 -- Include the modules we'll be using.
 local Class = require("tofu.core").Class
+local Math = require("tofu.core").Math
 local System = require("tofu.core").System
 local Bank = require("tofu.graphics").Bank
 local Canvas = require("tofu.graphics").Canvas
 local Copperlist = require("tofu.graphics").Copperlist
 local Display = require("tofu.graphics").Display
+local Palette = require("tofu.graphics").Palette
 local Font = require("tofu.graphics").Font
 local Source = require("tofu.sound").Source
+local Timer = require("tofu.timers").Timer
 
 local STAR_PERIOD = 1.0 / 3.0
 
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette("pico-8-ext")
-  Display.palette("famicube")
+  local palette = Palette.new("famicube")
+  Display.palette(palette)
 
   local canvas = Canvas.default()
   canvas:background(63) -- Use index #63 as background color and transparent! :)
   canvas:transparent({ [0] = false, [63] = true })
 
-  self.bank = Bank.new(canvas, Canvas.new("assets/images/atlas.png"), 23, 23)
+  self.bank = Bank.new(canvas, Canvas.new("assets/images/atlas.png", 63), 23, 23)
   self.font = Font.new(canvas, Canvas.new("assets/images/font-8x8.png", 31, 0), 8, 8)
 
   self.images = {
-      Canvas.new("assets/images/tofu.png"),
-      Canvas.new("assets/images/engine.png")
+      Canvas.new("assets/images/tofu.png", 63),
+      Canvas.new("assets/images/engine.png", 63)
     }
-  self.outline = Canvas.new("assets/images/outline.png")
-  self.stripe = Canvas.new("assets/images/stripes.png")
+  self.outline = Canvas.new("assets/images/outline.png", 63)
+  self.stripe = Canvas.new("assets/images/stripes.png", 63)
 
-  self.period_tick = 0
-  self.period_current = 0
-  self.period_next = 1.75
-  self.period_time = 0
+  self.timer = Timer.new(10, 0, function(_)
+    local _, height = canvas:size()
+    local half_height = math.tointeger(height / 2)
+    local quarter_height = math.tointeger(height / 4)
+    local copperlist = Copperlist.gradient(63, {
+        { 0, palette:index_to_color(math.random(0, 63)) },
+        { quarter_height - 1, palette:index_to_color(math.random(0, 63)) },
+        { half_height - 1, palette:index_to_color(math.random(0, 63)) },
+        { height - quarter_height - 1, palette:index_to_color(math.random(0, 63)) },
+        { height - 1, palette:index_to_color(math.random(0, 63)) }
+      })
+--    copperlist:wait(0, height - math.tointeger(quarter_height / 2) - 1)
+--    copperlist:modulo(-width * 4)
+    Display.copperlist(copperlist)
+  end)
+
+  self.wave = {
+      tweener = Math.tweener("linear"),
+      period_current = 0,
+      period_next = 0,
+      period = 0,
+      update = function(this, delta_time)
+          local period = Math.lerp(this.period_current, this.period_next, this.tweener(this.timer.age / 5))
+          this.period = this.period + delta_time * period
+        end
+    }
+  self.wave.timer = Timer.new(5, 0, function(_)
+      self.wave.period_current = self.wave.period_next
+      self.wave.period_next = math.random() * 2.0 + 1.5
+    end)
 
   self.tick = 0
   self.stars = { }
-
-  local _, height = canvas:size()
-  local half_height = math.tointeger(height / 2)
-  local quarter_height = math.tointeger(height / 4)
-  local copperlist = Copperlist.gradient(63, {
-      { 0, Display.index_to_color(63) },
-      { quarter_height - 1, Display.index_to_color(60) },
-      { half_height - 1, Display.index_to_color(2) },
-      { height - quarter_height - 1, Display.index_to_color(43) },
-      { height - 1, Display.index_to_color(1) }
-    })
---  copperlist:wait(0, height - math.tointeger(quarter_height / 2) - 1)
---  copperlist:modulo(-width * 4)
-  Display.copperlist(copperlist)
 
   self.music = Source.new("assets/modules/a_nice_and_warm_day.mod", Source.MODULE)
   self.music:looped(true)
@@ -85,17 +100,7 @@ function Main:input()
 end
 
 function Main:update(delta_time)
-  self.period_tick = self.period_tick + delta_time
-  while self.period_tick > 15 do
-    self.period_tick = self.period_tick - 15
-    self.period_current = self.period_next
-    self.period_next = math.random() * 2.0 + 1.0
-    self.period_time = 0
-  end
-
-  if self.period_time < 5 then
-    self.period_time = math.min(self.period_time + delta_time, 5)
-  end
+  self.wave:update(delta_time)
 
   self.tick = self.tick + delta_time
   while self.tick > STAR_PERIOD do
@@ -117,18 +122,15 @@ function Main:update(delta_time)
     end
   end
 
-  local zombies = {}
-  for index, star in ipairs(self.stars) do
+  for index = #self.stars, 1, -1 do
+    local star = self.stars[index]
     local size = 24 * star.scale
     star.x = star.x + star.vx * delta_time
     star.y = star.y + star.vy * delta_time
     star.rotation = star.rotation + star.vr * delta_time
     if star.x < -size or star.x > (480 + size) or star.y > (320 + size) then
-      table.insert(zombies, index)
+      table.remove(self.stars, index)
     end
-  end
-  for _, index in ipairs(zombies) do
-    table.remove(self.stars, index)
   end
 end
 
@@ -138,13 +140,10 @@ function Main:render(_)
   local canvas = Canvas.default()
   canvas:clear()
 
-  local r = self.period_time / 5.0
-  local period = (1.0 - r) * self.period_current + r * self.period_next
-
   local canvas_width, _ = canvas:size()
   local stripe_width, stripe_height = self.stripe:size()
   for i = 0, canvas_width, stripe_width do
-    local dy = math.sin(t * period + i * 0.0025) * stripe_height * 0.25
+    local dy = math.sin(self.wave.period + i * 0.0025) * stripe_height * 0.25
 
     self.stripe:copy(i, dy, canvas)
   end

@@ -29,6 +29,7 @@ local Bank = require("tofu.graphics").Bank
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
+local Palette = require("tofu.graphics").Palette
 
 local EASINGS = {
     "linear",
@@ -49,7 +50,7 @@ local PERIOD = 5.0
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette("pico-8")
+  Display.palette(Palette.new("pico-8"))
 
   self.tweeners = {}
   for _, easing in ipairs(EASINGS) do
@@ -61,7 +62,7 @@ function Main:__ctor()
   local x0, y0 = width * 0.25, height * 0
   self.area = { x = x0, y = y0, width = width * 0.50, height = height * 1 }
 
-  self.bank = Bank.new(canvas, Canvas.new("assets/sheet.png"), 8, 8)
+  self.bank = Bank.new(canvas, Canvas.new("assets/sheet.png", 0), 8, 8)
   self.font = Font.default(canvas, 0, 15)
   self.wave = Math.wave("triangle", PERIOD)
 end

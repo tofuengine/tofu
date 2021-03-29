@@ -29,14 +29,15 @@ local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Bank = require("tofu.graphics").Bank
 local Font = require("tofu.graphics").Font
+local Palette = require("tofu.graphics").Palette
 
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette("pico-8")
+  Display.palette(Palette.new("pico-8"))
 
   self.canvas = Canvas.new(Canvas.default():size())
-  self.bank = Bank.new(self.canvas, Canvas.new("assets/font-8x8.png"), 8, 8)
+  self.bank = Bank.new(self.canvas, Canvas.new("assets/font-8x8.png", 0), 8, 8)
   self.font = Font.new(self.canvas, Canvas.new("assets/font-8x8.png", 0, 15), 8, 8)
 end
 
