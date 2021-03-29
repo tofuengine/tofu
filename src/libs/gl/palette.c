@@ -43,7 +43,7 @@ GL_Pixel_t GL_palette_find_nearest_color(const GL_Palette_t *palette, const GL_C
         const GL_Color_t *current = &palette->colors[i];
 
         // https://www.compuphase.com/cmetric.htm
-        float r_mean = (float)(color.r + current->r) * 0.5;
+        float r_mean = (float)(color.r + current->r) * 0.5f;
 
         float delta_r = (float)(color.r - current->r);
         float delta_g = (float)(color.g - current->g);

@@ -40,12 +40,12 @@ local function build_table(palette, levels, target)
   local lut = {}
   for i = 0, levels - 1 do
     local shifting = {}
-    local ratio = 1 / (levels - 1) * i
+    local ratio = i / (levels - 1)
     for j, color in ipairs(palette:colors()) do
       local ar, ag, ab = table.unpack(color)
       local r, g, b = Palette.mix(ar, ag, ab, tr, tg, tb, 1 - ratio)
       local k = palette:color_to_index(r, g, b)
-      shifting[j - 1] = k - 1
+      shifting[j - 1] = k
     end
     lut[i] = shifting
   end
@@ -55,7 +55,7 @@ end
 local Main = Class.define()
 
 function Main:__ctor()
-  PALETTE = Palette.new("pico-8-ext")
+  PALETTE = Palette.new("famicube")
   STEPS = PALETTE:size()
   LEVELS = STEPS
 
