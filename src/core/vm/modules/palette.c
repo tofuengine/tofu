@@ -25,7 +25,6 @@
 #include "palette.h"
 
 #include <config.h>
-#include <libs/imath.h>
 #include <libs/log.h>
 #include <libs/luax.h>
 #include <libs/stb.h>
@@ -311,6 +310,16 @@ static int palette_lerp(lua_State *L)
     return 0;
 }
 
+static bool _contains(const GL_Palette_t *palette, GL_Color_t color)
+{
+    for (size_t i = 0; i < palette->size; ++i) {
+        if (memcmp(&palette->colors[i], &color, sizeof(GL_Color_t)) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
 static int palette_merge(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -322,12 +331,15 @@ static int palette_merge(lua_State *L)
     const Palette_Object_t *other = (const Palette_Object_t *)LUAX_USERDATA(L, 2);
     bool remove_duplicates = LUAX_OPTIONAL_BOOLEAN(L, 3, true);
 
-    (void)remove_duplicates;
-    const size_t size = imax(self->palette.size + other->palette.size, GL_MAX_PALETTE_COLORS);
-
-    // FIXME: scan for duplicates and append!
-    for (size_t i = self->palette.size + 1, j = 0; i < size; ++i) {
-        self->palette.colors[i] = other->palette.colors[j++];
+    for (size_t i = 0; i < other->palette.size; ++i) {
+        if (self->palette.size == GL_MAX_PALETTE_COLORS) {
+            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "maximum palette size reached when merging palette %p w/ %p", self, other);
+            break;
+        }
+        if (remove_duplicates && _contains(&self->palette, other->palette.colors[i])) {
+            continue;
+        }
+        self->palette.colors[++self->palette.size] = other->palette.colors[i];
     }
 
     return 0;
