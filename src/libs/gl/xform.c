@@ -78,8 +78,6 @@ void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *surface, 
     const int shm1 = sh - 1;
     const int sminx = area.x;
     const int sminy = area.y;
-    const int smaxx = sminx + swm1; //(int)area.width - 1;
-    const int smaxy = sminy + shm1; //(int)area.height - 1;
 
     const GL_Pixel_t *sdata = surface->data;
     GL_Pixel_t *ddata = context->surface->data;
@@ -164,9 +162,15 @@ void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *surface, 
             int sx = (int)xp;
             int sy = (int)yp;
 
+            bool copy = true;
             if (clamp == GL_XFORM_CLAMP_REPEAT) {
-                sx = imod(sx, sw); // TODO: optimize the amount of calls.
-                sy = imod(sy, sh);
+                if (surface->is_power_of_two) {
+                    sx = sx & swm1;
+                    sy = sy & shm1;
+                } else {
+                    sx = imod(sx, sw);
+                    sy = imod(sy, sh);
+                }
             } else
             if (clamp == GL_XFORM_CLAMP_EDGE) {
                 if (sx < 0) {
@@ -181,12 +185,19 @@ void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *surface, 
                 if (sy > shm1) {
                     sy = shm1;
                 }
+            } else
+            if (clamp == GL_XFORM_CLAMP_BORDER) {
+                if (sx < 0 || sx > swm1 || sy < 0 || sy > shm1) {
+                    copy = false;
+                }
+            } else {
+                copy = false;
             }
 
-            sx += sminx;
-            sy += sminy;
+            if (copy) {
+                sx += sminx;
+                sy += sminy;
 
-            if (sx >= sminx && sx <= smaxx && sy >= sminy && sy <= smaxy) { // TODO: clamp and edge render this `if` useless... strip it?
                 const GL_Pixel_t *sptr = sdata + sy * swidth + sx;
                 GL_Pixel_t index = shifting[*sptr];
                 // NOTE: no transparency in Mode-7!
