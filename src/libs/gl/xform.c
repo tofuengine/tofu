@@ -42,7 +42,7 @@ void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *surface, 
 #endif  /* __GL_MODE7_TRANSPARENCY__ */
 
     const GL_XForm_Table_Entry_t *table = xform->table;
-    const int clamp = xform->clamp;
+    const GL_XForm_Wraps_t wrap = xform->wrap;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
@@ -74,6 +74,8 @@ void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *surface, 
     const int sh = (int)area.height;
     const int swm1 = sw - 1;
     const int shm1 = sh - 1;
+    const int swb2 = sw * 2;
+    const int shb2 = sh * 2;
 
     const GL_Pixel_t *sdata = surface->data;
     GL_Pixel_t *ddata = context->surface->data;
@@ -161,7 +163,7 @@ void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *surface, 
             // https://www.khronos.org/registry/OpenGL/specs/gl/glspec46.core.pdf
             // see page #260
             bool copy = true;
-            if (clamp == GL_XFORM_CLAMP_REPEAT) {
+            if (wrap == GL_XFORM_WRAP_REPEAT) {
                 if (surface->is_power_of_two) {
                     sx &= swm1;
                     sy &= shm1;
@@ -170,21 +172,30 @@ void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *surface, 
                     sy = IMOD(sy, sh);
                 }
             } else
-            if (clamp == GL_XFORM_CLAMP_EDGE) {
-                if (sx < 0) {
-                    sx = 0;
-                } else
-                if (sx > swm1) {
-                    sx = swm1;
-                }
-                if (sy < 0) {
-                    sy = 0;
-                } else
-                if (sy > shm1) {
-                    sy = shm1;
+            if (wrap == GL_XFORM_WRAP_CLAMP_TO_EDGE) {
+                sx = ICLAMP(sx, 0, swm1);
+                sy = ICLAMP(sy, 0, shm1);
+            } else
+            if (wrap == GL_XFORM_WRAP_CLAMP_TO_BORDER) {
+                if (sx < 0 || sx > swm1 || sy < 0 || sy > shm1) {
+                    copy = false;
                 }
             } else
-            if (clamp == GL_XFORM_CLAMP_BORDER) {
+            if (wrap == GL_XFORM_WRAP_MIRRORED_REPEAT) {
+                const int mx = IMOD(sx, swb2); // There's a typo in OpenGL's formula. Correct one is:
+                const int my = IMOD(sy, shb2); // (size - 1) - mirror((coord mod (2 x size)) - size)
+                sx = swm1 - IMIRROR(mx - sw);
+                sy = shm1 - IMIRROR(my - sh);
+            } else
+            if (wrap == GL_XFORM_WRAP_MIRROR_CLAMP_TO_EDGE) {
+                const int mx = IMIRROR(sx);
+                const int my = IMIRROR(sy);
+                sx = ICLAMP(mx, 0, swm1);
+                sy = ICLAMP(my, 0, shm1);
+            } else
+            if (wrap == GL_XFORM_WRAP_MIRROR_CLAMP_TO_BORDER) { // This is a (not so wild) guess... :)
+                sx = IMIRROR(sx);
+                sy = IMIRROR(sy);
                 if (sx < 0 || sx > swm1 || sy < 0 || sy > shm1) {
                     copy = false;
                 }

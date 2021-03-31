@@ -54,17 +54,19 @@ typedef struct _GL_XForm_Table_Entry_t {
     size_t count;
 } GL_XForm_Table_Entry_t;
 
-typedef enum _GL_XForm_Clamps_t {
-    GL_XFORM_CLAMP_EDGE,
-    GL_XFORM_CLAMP_BORDER,
-    GL_XFORM_CLAMP_REPEAT,
-//    GL_XFORM_CLAMP_MIRRORED_REPEAT,
-    GL_XForm_Clamps_t_CountOf
-} GL_XForm_Clamps_t;
+typedef enum _GL_XForm_Wraps_t {
+    GL_XFORM_WRAP_REPEAT,
+    GL_XFORM_WRAP_CLAMP_TO_EDGE,
+    GL_XFORM_WRAP_CLAMP_TO_BORDER,
+    GL_XFORM_WRAP_MIRRORED_REPEAT,
+    GL_XFORM_WRAP_MIRROR_CLAMP_TO_EDGE, // FIXME: useless?
+    GL_XFORM_WRAP_MIRROR_CLAMP_TO_BORDER, // FIXME: ditto.
+    GL_XForm_Wraps_t_CountOf
+} GL_XForm_Wraps_t;
 
 typedef struct _GL_XForm_t {
     float registers[GL_XForm_Registers_t_CountOf];
-    GL_XForm_Clamps_t clamp;
+    GL_XForm_Wraps_t wrap;
     GL_XForm_Table_Entry_t *table;
 } GL_XForm_t;
 

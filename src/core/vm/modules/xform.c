@@ -49,7 +49,7 @@ static int xform_new(lua_State *L);
 static int xform_gc(lua_State *L);
 static int xform_offset(lua_State *L);
 static int xform_matrix(lua_State *L);
-static int xform_clamp(lua_State *L);
+static int xform_wrap(lua_State *L);
 static int xform_table(lua_State *L);
 // TODO: add helper functions to generate common transformations?
 static int xform_project(lua_State *L);
@@ -60,7 +60,7 @@ static const struct luaL_Reg _xform_functions[] = {
     { "__gc", xform_gc },
     { "offset", xform_offset },
     { "matrix", xform_matrix },
-    { "clamp", xform_clamp },
+    { "wrap", xform_wrap },
     { "table", xform_table },
     { "project", xform_project },
     { "warp", xform_warp },
@@ -86,7 +86,7 @@ static int xform_new(lua_State *L) // TODO: pass optional clamp mode?
                         1.0f, 0.0f, 1.0f, 0.0f, // Identity matrix.
                         0.0f, 0.0f, // No offset
                     },
-                    .clamp = GL_XFORM_CLAMP_REPEAT,
+                    .wrap = GL_XFORM_WRAP_REPEAT,
                     .table = NULL
                 }
         };
@@ -213,7 +213,7 @@ static int xform_matrix(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
-static int xform_clamp(lua_State *L)
+static int xform_wrap(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -223,14 +223,23 @@ static int xform_clamp(lua_State *L)
     const char *mode = LUAX_STRING(L, 2);
 
     GL_XForm_t *xform = &self->xform;
-    if (mode[0] == 'e') {
-        xform->clamp = GL_XFORM_CLAMP_EDGE;
+    if (strcasecmp(mode, "repeat") == 0) {
+        xform->wrap = GL_XFORM_WRAP_REPEAT;
     } else
-    if (mode[0] == 'b') {
-        xform->clamp = GL_XFORM_CLAMP_BORDER;
+    if (strcasecmp(mode, "edge") == 0) {
+        xform->wrap = GL_XFORM_WRAP_CLAMP_TO_EDGE;
     } else
-    if (mode[0] == 'r') {
-        xform->clamp = GL_XFORM_CLAMP_REPEAT;
+    if (strcasecmp(mode, "border") == 0) {
+        xform->wrap = GL_XFORM_WRAP_CLAMP_TO_BORDER;
+    } else
+    if (strcasecmp(mode, "mirror-repeat") == 0) {
+        xform->wrap = GL_XFORM_WRAP_MIRRORED_REPEAT;
+    } else
+    if (strcasecmp(mode, "mirror-edge") == 0) {
+        xform->wrap = GL_XFORM_WRAP_MIRROR_CLAMP_TO_EDGE;
+    } else
+    if (strcasecmp(mode, "mirror-border") == 0) {
+        xform->wrap = GL_XFORM_WRAP_MIRROR_CLAMP_TO_BORDER;
     }
 
     return 0;

@@ -27,10 +27,12 @@
 
 #include <math.h>
 
-#define IABS(v)     ((v) > 0 ? (v) : -(v))
-#define IMOD(a, b)  ((((a) % (b)) + (b)) % (b))
-#define IMIN(a, b)  ((a) < (b) ? (a) : (b))
-#define IMAX(a, b)  ((a) > (b) ? (a) : (b))
+#define IABS(v)         ((v) > 0 ? (v) : -(v))
+#define IMOD(a, b)      ((((a) % (b)) + (b)) % (b))
+#define IMIN(a, b)      ((a) < (b) ? (a) : (b))
+#define IMAX(a, b)      ((a) > (b) ? (a) : (b))
+#define ICLAMP(x, a, b) ((x) < (a) ? (a) : ((x) > (b) ? (b) : (x)))
+#define IMIRROR(x)      ((x) >= 0 ? (x) : -(1 + (x)))
 
 #define IFLOORF(x)  ((int)floorf((x)))
 #define ICEILF(x )  ((int)ceilf((x)))
