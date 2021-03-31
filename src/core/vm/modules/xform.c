@@ -73,7 +73,7 @@ int xform_loader(lua_State *L)
     return luaX_newmodule(L, NULL, _xform_functions, NULL, nup, META_TABLE);
 }
 
-static int xform_new(lua_State *L)
+static int xform_new(lua_State *L) // TODO: pass optional clamp mode?
 {
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END

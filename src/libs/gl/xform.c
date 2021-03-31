@@ -28,8 +28,6 @@
 #include <libs/imath.h>
 #include <libs/sincos.h>
 
-#include <math.h>
-
 // https://www.youtube.com/watch?v=3FVN_Ze7bzw
 // http://www.coranac.com/tonc/text/mode7.htm
 // https://wiki.superfamicom.org/registers
@@ -43,8 +41,8 @@ void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *surface, 
     const GL_Bool_t *transparent = state->transparent;
 #endif  /* __GL_MODE7_TRANSPARENCY__ */
 
-    const int clamp = xform->clamp;
     const GL_XForm_Table_Entry_t *table = xform->table;
+    const int clamp = xform->clamp;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
@@ -76,8 +74,6 @@ void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *surface, 
     const int sh = (int)area.height;
     const int swm1 = sw - 1;
     const int shm1 = sh - 1;
-    const int sminx = area.x;
-    const int sminy = area.y;
 
     const GL_Pixel_t *sdata = surface->data;
     GL_Pixel_t *ddata = context->surface->data;
@@ -162,14 +158,16 @@ void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *surface, 
             int sx = (int)xp;
             int sy = (int)yp;
 
+            // https://www.khronos.org/registry/OpenGL/specs/gl/glspec46.core.pdf
+            // see page #260
             bool copy = true;
             if (clamp == GL_XFORM_CLAMP_REPEAT) {
                 if (surface->is_power_of_two) {
-                    sx = sx & swm1;
-                    sy = sy & shm1;
+                    sx &= swm1;
+                    sy &= shm1;
                 } else {
-                    sx = imod(sx, sw);
-                    sy = imod(sy, sh);
+                    sx = IMOD(sx, sw);
+                    sy = IMOD(sy, sh);
                 }
             } else
             if (clamp == GL_XFORM_CLAMP_EDGE) {
@@ -190,22 +188,22 @@ void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *surface, 
                 if (sx < 0 || sx > swm1 || sy < 0 || sy > shm1) {
                     copy = false;
                 }
-            } else {
-                copy = false;
+//            } else {
+//                copy = false;
             }
 
             if (copy) {
-                sx += sminx;
-                sy += sminy;
+                sx += area.x;
+                sy += area.y;
 
                 const GL_Pixel_t *sptr = sdata + sy * swidth + sx;
                 GL_Pixel_t index = shifting[*sptr];
-                // NOTE: no transparency in Mode-7!
 #ifdef __GL_MODE7_TRANSPARENCY__
                 if (!transparent[index]) {
                     *dptr = index;
                 }
 #else
+                // NOTE: no transparency in Mode-7!
                 *dptr = index;
 #endif  /* __GL_MODE7_TRANSPARENCY__ */
             }

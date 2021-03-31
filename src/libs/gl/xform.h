@@ -58,6 +58,7 @@ typedef enum _GL_XForm_Clamps_t {
     GL_XFORM_CLAMP_EDGE,
     GL_XFORM_CLAMP_BORDER,
     GL_XFORM_CLAMP_REPEAT,
+//    GL_XFORM_CLAMP_MIRRORED_REPEAT,
     GL_XForm_Clamps_t_CountOf
 } GL_XForm_Clamps_t;
 
