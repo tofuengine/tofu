@@ -161,8 +161,8 @@ void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *surface, 
 #ifdef __DEBUG_GRAPHICS__
             pixel(context, drawing_region.x0 + j, drawing_region.y0 + i, i + j);
 #endif
-            int sx = IROUNDF(xp); // Round to avoid artifacts.
-            int sy = IROUNDF(yp);
+            int sx = (int)xp;
+            int sy = (int)yp;
 
             if (clamp == GL_XFORM_CLAMP_REPEAT) {
                 sx = imod(sx, sw); // TODO: optimize the amount of calls.
