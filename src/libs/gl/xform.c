@@ -157,14 +157,14 @@ void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *surface, 
 #ifdef __DEBUG_GRAPHICS__
             pixel(context, drawing_region.x0 + j, drawing_region.y0 + i, i + j);
 #endif
-            int sx = (int)xp;
-            int sy = (int)yp;
+            int sx = (int)xp; //IROUNDF(xp);
+            int sy = (int)yp; //IROUNDF(yp);
 
             // https://www.khronos.org/registry/OpenGL/specs/gl/glspec46.core.pdf
             // see page #260
             bool copy = true;
             if (wrap == GL_XFORM_WRAP_REPEAT) {
-                if (surface->is_power_of_two) {
+                if (surface->is_power_of_two) { // Faster case, when Po2 (just a bitmask).
                     sx &= swm1;
                     sy &= shm1;
                 } else {
