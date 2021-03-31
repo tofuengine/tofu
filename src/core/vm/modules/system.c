@@ -38,8 +38,8 @@
 static int system_args(lua_State *L);
 static int system_version(lua_State *L);
 static int system_time(lua_State *L);
-#ifdef __ENGINE_PERFORMANCE_STATISTICS__
 static int system_fps(lua_State *L);
+#ifdef __ENGINE_PERFORMANCE_STATISTICS__
 static int system_stats(lua_State *L);
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
 static int system_is_active(lua_State *L);
@@ -53,8 +53,8 @@ static const struct luaL_Reg _system_functions[] = {
     { "args", system_args },
     { "version", system_version },
     { "time", system_time },
-#ifdef __ENGINE_PERFORMANCE_STATISTICS__
     { "fps", system_fps },
+#ifdef __ENGINE_PERFORMANCE_STATISTICS__
     { "stats", system_stats },
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
     { "is_active", system_is_active },
@@ -113,7 +113,6 @@ static int system_time(lua_State *L)
     return 1;
 }
 
-#ifdef __ENGINE_PERFORMANCE_STATISTICS__
 static int system_fps(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -127,6 +126,7 @@ static int system_fps(lua_State *L)
     return 1;
 }
 
+#ifdef __ENGINE_PERFORMANCE_STATISTICS__
 static int system_stats(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)

@@ -32,7 +32,9 @@
 
 typedef struct _Environment_Stats_t {
     float fps;
+#ifdef __ENGINE_PERFORMANCE_STATISTICS__
     float times[4];
+#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
 } Environment_Stats_t;
 
 typedef struct _Environment_t {
@@ -54,9 +56,7 @@ extern void Environment_quit(Environment_t *environment);
 extern bool Environment_should_quit(const Environment_t *environment);
 
 extern double Environment_get_time(const Environment_t *environment);
-#ifdef __ENGINE_PERFORMANCE_STATISTICS__
 extern const Environment_Stats_t *Environment_get_stats(const Environment_t *environment);
-#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
 extern bool Environment_is_active(const Environment_t *environment);
 
 #ifdef __ENGINE_PERFORMANCE_STATISTICS__

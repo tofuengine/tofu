@@ -91,7 +91,6 @@ bool Environment_is_active(const Environment_t *environment)
     return environment->is_active;
 }
 
-#ifdef __ENGINE_PERFORMANCE_STATISTICS__
 static inline float _calculate_fps(float frame_time) // FIXME: rework this as a reusable function for moving average.
 {
     static float samples[FPS_AVERAGE_SAMPLES] = { 0 };
@@ -106,6 +105,7 @@ static inline float _calculate_fps(float frame_time) // FIXME: rework this as a 
     return (float)FPS_AVERAGE_SAMPLES / sum;
 }
 
+#ifdef __ENGINE_PERFORMANCE_STATISTICS__
 static inline void _calculate_times(float times[4], const float deltas[4])
 {
     static float samples[4][FPS_AVERAGE_SAMPLES] = { 0 };
@@ -129,8 +129,8 @@ void Environment_process(Environment_t *environment, float frame_time, const flo
 void Environment_process(Environment_t *environment, float frame_time)
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
 {
-#ifdef __ENGINE_PERFORMANCE_STATISTICS__
     environment->stats.fps = _calculate_fps(frame_time); // FIXME: ditch this! It's implicit in the frame time!
+#ifdef __ENGINE_PERFORMANCE_STATISTICS__
     _calculate_times(environment->stats.times, deltas);
 #ifdef __DEBUG_ENGINE_PERFORMANCES__
     static size_t count = 0;
