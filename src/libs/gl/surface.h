@@ -34,6 +34,7 @@ typedef struct _GL_Surface_t {
     size_t width, height;
     GL_Pixel_t *data;
     size_t data_size;
+    bool is_power_of_two;
 } GL_Surface_t;
 
 typedef void (*GL_Surface_Callback_t)(void *user_data, GL_Surface_t *surface, const void *pixels); // RGBA888 format.

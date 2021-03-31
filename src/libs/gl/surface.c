@@ -30,6 +30,11 @@
 
 #define LOG_CONTEXT "gl-surface"
 
+static inline bool _is_power_of_two(int n)
+{
+    return n && !(n & (n - 1));
+}
+
 GL_Surface_t *GL_surface_decode(size_t width, size_t height, const void *pixels, const GL_Surface_Callback_t callback, void *user_data)
 {
     GL_Surface_t *surface = GL_surface_create(width, height);
@@ -63,7 +68,8 @@ GL_Surface_t *GL_surface_create(size_t width, size_t height)
             .width = width,
             .height = height,
             .data = data,
-            .data_size = width * height
+            .data_size = width * height,
+            .is_power_of_two = _is_power_of_two(width) && _is_power_of_two(height)
         };
 
     return surface;
