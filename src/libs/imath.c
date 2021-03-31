@@ -26,20 +26,20 @@
 
 int iabs(int v)
 {
-    return v > 0 ? v : -v;
+    return IABS(v);
 }
 
 int imod(int a, int b) // This is also called "wrapping" since it handles negatives, as well.
 {
-    return ((a % b) + b) % b; // Solves the `-b` case.
+    return IMOD(a, b); // Solves the `-b` case.
 }
 
 int imin(int a, int b)
 {
-    return a < b ? a : b;
+    return IMIN(a, b);
 }
 
 int imax(int a, int b)
 {
-    return a > b ? a : b;
+    return IMAX(a, b);
 }

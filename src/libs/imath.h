@@ -27,13 +27,18 @@
 
 #include <math.h>
 
-extern int iabs(int v);
-extern int imod(int a, int b);
-extern int imin(int a, int b);
-extern int imax(int a, int b);
+#define IABS(v)     ((v) > 0 ? (v) : -(v))
+#define IMOD(a, b)  ((((a) % (b)) + (b)) % (b))
+#define IMIN(a, b)  ((a) < (b) ? (a) : (b))
+#define IMAX(a, b)  ((a) > (b) ? (a) : (b))
 
 #define IFLOORF(x)  ((int)floorf((x)))
 #define ICEILF(x )  ((int)ceilf((x)))
 #define IROUNDF(x)  ((int)floorf((x) + 0.5f))
+
+extern int iabs(int v);
+extern int imod(int a, int b);
+extern int imin(int a, int b);
+extern int imax(int a, int b);
 
 #endif  /* __LIBS_IMATH_H__ */
