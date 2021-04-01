@@ -85,7 +85,7 @@ Guess what? Yup, that's yet another game engine/framework.
 
 ## Inspirations
 
-**#tofuengine** is an original software, born from a ~30 years long experience in programming. However, it has been influenced during its development by similar/other game-engines in one way or another. Here's a brief list.
+**#tofuengine** is an original software, result of the experience gained from ~30 years in programming on a broad range of platforms (some concept even stems back to the [Amiga](https://en.wikipedia.org/wiki/Amiga) and the [SNES](https://en.wikipedia.org/wiki/Super_Nintendo_Entertainment_System)). However, it has also been influenced by modern similar/other game-engines in one way or another. Here's a brief list.
 
 * [Love2D](https://love2d.org/)
 * [Pico-8](https://www.lexaloffle.com/pico-8.php)

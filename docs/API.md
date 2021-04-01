@@ -106,23 +106,30 @@
     - `[m] process(callback, x, y, ox, oy, width, height, canvas = self)`
     - `[m] copy(x, y, canvas = self)`
     - `[m] copy(x, y, ox, oy, width, height, canvas = self)`
-  - `Display`
-    - `[f] palette() -> table`
-    - `[f] palette(string|table)`
-    - `[f] switch()` --> FIXME: use `nil` to indicate default?
-    - `[f] switch(id)`
-    - `[f] color_to_index(r, g, b)`
-    - `[f] index_to_color(index) -> r, g, b`
+  - `Display` *OK*
+    - `[f] palette(palette)`
+    - `[f] switch(id = 0)`
     - `[f] offset()`
-    - `[f] offset(x, y)`
+    - `[f] offset(x = 0, y = 0)`
     - `[f] bias()`
-    - `[f] bias(amount)`
+    - `[f] bias(amount = 0)`
     - `[f] shift()`
     - `[f] shift(from, to)`
     - `[f] shift(table)`
-    - `[f] copperlist()`
-    - `[f] copperlist(program)`
-  - `Program`
+    - `[f] copperlist(copperlist = nil)`
+  - `Palette` *OK*
+    - `[f] new()`
+    - `[f] new(id)`
+    - `[f] new(shades)`
+    - `[f] new(colors)`
+    - `[f] mix(ar, ag, ab, br, bg, bb, ratio)`
+    - `[m] colors() -> colors`
+    - `[m] size() -> number of colors`
+    - `[m] color_to_index(r, g, b) -> integer`
+    - `[m] index_to_color(index) -> r, g, b`
+    - `[m] lerp(r, g, b, ratio)`
+    - `[m] merge(palette, remove_duplicates = true)`
+  - `Copperlist` *OK*
     - `[f] new()`
     - `[m] wait(x, y)`
     - `[m] modulo(value)`
@@ -132,22 +139,24 @@
     - `[m] bias(amount)`
     - `[m] shift(from, to)`
     - `[m] shift(table)`
+    - `[m] gradient(index, markers)`
+    - `[m] palette(x, y, palette)`
   - `Font`
-  - `XForm`
-    - `[f] new()`
-    - `[m] canvas(canvas)`
-    - `[m] blit(x = 0, y = 0)`
+  - `XForm` *OK*
+    - `[f] new(mode = "repeat")`
     - `[m] offset(h, v)`
     - `[m] matrix(x0, y0)`
     - `[m] matrix(a, b, c, d)`
     - `[m] matrix(a, b, c, d, x0, y0)`
-    - `[m] clamp(mode)`
+    - `[m] wrap(mode)`
     - `[m] table()`
     - `[m] table(table)`
+    - `[m] project(height, angle, elevation)`
+    - `[m] warp(height, factor)`
 * `tofu.io`
-  - `File`
-    - `[f] as_string(filename)`
-    - `[f] as_binary(filename)`
+  - `File` *OK*
+    - `[f] load(name, mode = "string")`
+    - `[f] store(name, data, mode = "string")`
 * `tofu.sound`
   - `Speakers`
     - `[f] volume() -> level`
