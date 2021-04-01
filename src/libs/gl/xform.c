@@ -157,8 +157,8 @@ void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *surface, 
 #ifdef __DEBUG_GRAPHICS__
             pixel(context, drawing_region.x0 + j, drawing_region.y0 + i, i + j);
 #endif
-            int sx = (int)xp; //IROUNDF(xp);
-            int sy = (int)yp; //IROUNDF(yp);
+            int sx = (int)(xp + 0.5f); // Faster rounding, using integer casting truncation!
+            int sy = (int)(yp + 0.5f);
 
             // https://www.khronos.org/registry/OpenGL/specs/gl/glspec46.core.pdf
             // see page #260
