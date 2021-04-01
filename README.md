@@ -15,25 +15,26 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Fully script-based, using Lua.
 * [x] Straight multimedia support, no intermediate third-party libraries (OpenGL 2.1 required).
 * [x] Windowed/fullscreen display with best-fit integer automatic scaling.
-* [x] Internal software renderer.
+* [x] Internal software renderer. OpenGL is used only to present the framebuffer to the user (and apply post-process effects).
 * [x] Fixed- and variable-size *Blitter OBjects* drawing with rotation/scaling/flipping.
 * [x] Sprite batching for optimized (ehm) batch drawing.
 * [x] Palette based graphics with up to 256 colors.
 * [x] Multiple (i.e. banked) palette support w/ up to 8 palettes, and color bias during VRAM transfer.
 * [x] Predefined library of 8/16/32/64 colors palettes.
-* [x] Automatic nearest-color palette indexing of images.
+* [x] Automatic nearest-color palette indexing of RGBA images.
 * [x] Per-color re-indexing (*shifting*) and transparency, affecting drawing operations (both per-draw and during VRAM transfer).
 * [x] SNES' Mode7-like transforms, with scanline based (HDMA) changes.
 * [x] Amiga's Copper-like programs, with pixel-wise resolution.
 * [x] Post-effect display-wise shaders.
-* [ ] Library of "retro-feel" post-effect shaders (LCD, CRT, etc...).
+* [x] Library of "retro-feel" post-effect shaders (LCD, CRT, etc...).
 * [x] Audio support w/ real time sound streaming on a separate thread.
 * [x] On-the-fly audio mixing w/ per voice looping/panning/balance/gain/speed control.
 * [x] Static and streamed audio data playback (FLAC format).
 * [x] Module playback support (MOD, S3M, XM, and IT).
 * [x] Out-of-the-box timers support.
 * [x] Customizable application icon.
-* [x] Support for *archived games*, via custom "packed" format (w/ optional encryption).
+* [x] Support for *archived games*, via custom "packed" format (w/ optional encryption). Multiple archives are supported, with root folder override.
+* [x] Resource manager w/ caching I/O and single instance object loading/reuse.
 * [x] Game-controller support (w/ D-PAD and mouse emulation) w/ keyboard/mouse fallback if not available.
 * [x] Screen capture and recording.
 * [x] Framebuffer offsetting (e.g. for screen-shaking effect).
@@ -43,7 +44,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Game window focus detection (for game-pause).
 * [x] Real-time performance statistics (FPS and frame times).
 * [x] User-dependent I/O functions to load/store game data.
-* [ ] Configuration override through command-line arguments.
+* [x] Configuration override through command-line arguments.
 
 ## Desiderata
 
@@ -54,7 +55,6 @@ Guess what? Yup, that's yet another game engine/framework.
 * [ ] Tiled-map support w/ camera support (zoom and scrolling).
 * [ ] Animation support w/ frameset DSL (i.e. compiling a string where each token can be a single frame, a range or a "keep-current-frame for some time" command). Each frameset can have its one update period, and will be most likely based upon a timer.
 * [ ] Custom "raw" graphics and sound formats, with on-the-fly LZ4 (stream?) compression.
-* [ ] Out-of-the-box palette switching (with tweening) features.
 * [ ] Game state and display transitions (at which level? Engine or script?).
 * [ ] Library of noise functions ([cellular](https://thebookofshaders.com/12/), Perlin, etc...).
 * [ ] Multiple players support.
@@ -62,7 +62,6 @@ Guess what? Yup, that's yet another game engine/framework.
 * [ ] Memory usage profiling.
 * [ ] Switch to [Vulkan API](https://www.khronos.org/vulkan/) (through [GLFW](https://www.glfw.org/)).
 * [ ] game time management, in system class (speed, up down pause)
-* [ ] resource manager, with single object loading
 * [ ] async load with callback
 * [ ] memory usage info in system class
 * [ ] both shoulder and trigger axes are analogue?
@@ -79,7 +78,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [gif-h](https://github.com/charlietangora/gif-h)
 * [GLFW](https://www.glfw.org/) v3.3.3
 * [libxmp](http://xmp.sourceforge.net/) v4.5.0
-* [Lua](https://lua.org/) v5.4.2
+* [Lua](https://lua.org/) v5.4.3
 * [miniaudio](https://github.com/dr-soft/miniaudio) v0.10.32
 * [spleen](https://github.com/fcambus/spleen) v1.8.1
 * [stb](https://github.com/nothings/stb) libraries
