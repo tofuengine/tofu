@@ -91,7 +91,7 @@ static int display_switch(lua_State *L)
     return 0;
 }
 
-static int display_offset0_2(lua_State *L)
+static int display_offset(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
@@ -107,15 +107,7 @@ static int display_offset0_2(lua_State *L)
     return 0;
 }
 
-static int display_offset(lua_State *L)
-{
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(0, display_offset0_2)
-        LUAX_OVERLOAD_ARITY(2, display_offset0_2)
-    LUAX_OVERLOAD_END
-}
-
-static int display_bias0_1(lua_State *L)
+static int display_bias(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
@@ -127,14 +119,6 @@ static int display_bias0_1(lua_State *L)
     Display_set_bias(display, bias);
 
     return 0;
-}
-
-static int display_bias(lua_State *L)
-{
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(0, display_bias0_1)
-        LUAX_OVERLOAD_ARITY(1, display_bias0_1)
-    LUAX_OVERLOAD_END
 }
 
 static int display_shift0(lua_State *L)
@@ -201,36 +185,20 @@ static int display_shift(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
-static int display_copperlist0(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-    LUAX_SIGNATURE_END
-
-    Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
-
-    Display_set_copperlist(display, NULL, 0);
-
-    return 0;
-}
-
-static int display_copperlist1(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-    LUAX_SIGNATURE_END
-    Copperlist_Object_t *copperlist = (Copperlist_Object_t *)LUAX_USERDATA(L, 1);
-
-    Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
-
-    Display_set_copperlist(display, copperlist->program, arrlen(copperlist->program));
-
-    return 0;
-}
-
 static int display_copperlist(lua_State *L)
 {
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(0, display_copperlist0)
-        LUAX_OVERLOAD_ARITY(1, display_copperlist1)
-    LUAX_OVERLOAD_END
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    const Copperlist_Object_t *copperlist = (const Copperlist_Object_t *)LUAX_OPTIONAL_USERDATA(L, 1, NULL);
+
+    Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    if (copperlist) {
+        Display_set_copperlist(display, copperlist->program, arrlen(copperlist->program));
+    } else {
+        Display_set_copperlist(display, NULL, 0);
+    }
+
+    return 0;
 }

@@ -83,7 +83,7 @@ static int palette_new0(lua_State *L)
     return 1;
 }
 
-static int palette_new1(lua_State *L)
+static int palette_new1(lua_State *L) // TODO: test signature match override.
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING, LUA_TNUMBER, LUA_TTABLE)
