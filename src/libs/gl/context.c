@@ -117,13 +117,13 @@ void GL_context_push(GL_Context_t *context)
 void GL_context_pop(GL_Context_t *context, size_t levels)
 {
     size_t length = arrlen(context->stack);
-    if (length > levels) {
-        length = levels;
-    }
-
     if (length < 1) {
         Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "no more states to pop from context");
         return;
+    }
+
+    if (length > levels) {
+        length = levels;
     }
 
     for (size_t i = length; i; --i) {
