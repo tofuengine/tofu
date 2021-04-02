@@ -334,11 +334,13 @@ static int canvas_pop(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
+    size_t levels = (size_t)LUAX_OPTIONAL_INTEGER(L, 2, 1);
 
     GL_Context_t *context = self->context;
-    GL_context_pop(context);
+    GL_context_pop(context, levels > 0 ? levels : SIZE_MAX);
 
     return 0;
 }

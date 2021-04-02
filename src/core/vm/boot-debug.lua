@@ -64,6 +64,7 @@ function Tofu:__ctor()
           Display.palette(Palette.new({ { 0, 0, 0 }, { 255, 0, 0 } })) -- Red on black.
           local canvas = Canvas.default()
           local width, _ = canvas:size()
+          canvas:pop(0) -- Discard all saved states, if any.
           canvas:reset() -- Reset default canvas from the game state.
 
           Speakers.halt() -- Stop all sounds sources.

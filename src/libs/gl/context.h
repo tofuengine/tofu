@@ -72,7 +72,7 @@ extern GL_Context_t *GL_context_create(size_t width, size_t height);
 extern void GL_context_destroy(GL_Context_t *context);
 
 extern void GL_context_push(GL_Context_t *context);
-extern void GL_context_pop(GL_Context_t *context);
+extern void GL_context_pop(GL_Context_t *context, size_t levels);
 extern void GL_context_reset(GL_Context_t *context);
 
 extern void GL_context_set_background(GL_Context_t *context, GL_Pixel_t index);

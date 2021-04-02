@@ -114,20 +114,26 @@ void GL_context_push(GL_Context_t *context)
     arrpush(context->stack, context->state); // Store current state into stack.
 }
 
-void GL_context_pop(GL_Context_t *context)
+void GL_context_pop(GL_Context_t *context, size_t levels)
 {
-    if (arrlen(context->stack) < 1) {
-        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "no states to pop from context");
+    size_t length = arrlen(context->stack);
+    if (length > levels) {
+        length = levels;
+    }
+
+    if (length < 1) {
+        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "no more states to pop from context");
         return;
     }
-    context->state = arrpop(context->stack);
+
+    for (size_t i = length; i; --i) {
+        context->state = arrpop(context->stack);
+    }
+//    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d length states popped from context");
 }
 
 void GL_context_reset(GL_Context_t *context)
 {
-    arrfree(context->stack);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context stack freed");
-
     _reset_state(&context->state, context->surface);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context reset");
 }
