@@ -33,6 +33,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Static and streamed audio data playback (FLAC format).
 * [x] Module playback support (MOD, S3M, XM, and IT).
 * [x] Out-of-the-box timers support.
+* [x] Ready-to-use 2D vector class and higher-order iterators.
 * [x] Customizable application icon.
 * [x] Support for *archived games*, via custom "packed" format (w/ optional encryption). Multiple archives are supported, with root folder override.
 * [x] Resource manager w/ caching I/O and single instance object loading/reuse.
@@ -40,7 +41,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Screen capture and recording.
 * [x] Framebuffer offsetting (e.g. for screen-shaking effect).
 * [x] Out-of-the-box 'tweening functions support (optimized [Penner's](http://robertpenner.com/easing/) set).
-* [x] Detailed logging facility (w/ selectable severity level).
+* [x] Logging facility (w/ selectable severity level).
 * [x] Crash screen (debug build).
 * [x] Game window focus detection (for game-pause).
 * [x] Real-time performance statistics (FPS and frame times).
@@ -55,7 +56,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [GLFW](https://www.glfw.org/) v3.3.3
 * [libxmp](http://xmp.sourceforge.net/) v4.5.0
 * [Lua](https://lua.org/) v5.4.3
-* [miniaudio](https://github.com/dr-soft/miniaudio) v0.10.32
+* [miniaudio](https://github.com/dr-soft/miniaudio) v0.10.33
 * [spleen](https://github.com/fcambus/spleen) v1.8.1
 * [stb](https://github.com/nothings/stb) libraries
 
