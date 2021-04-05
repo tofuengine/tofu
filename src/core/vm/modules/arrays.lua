@@ -328,6 +328,29 @@ local function merged(a, b)
   return result
 end
 
+-- Cormen-Leiserson-Rivest's implementation of insertion-sort, which is stable and uber-efficient
+-- as the table is incrementally grown and re-sorted every time (that is, only the last item is_pressed
+-- eventually moved to the correct place). It's even faster than `table.sort()`.
+--
+-- Either this, or use `table.sort()` by adding another field for comparison.
+local function _lower_than(a, b)
+  return a < b
+end
+
+local function sort(array, comparator)
+  local lower_than = comparator or _lower_than
+  local length = #array
+  for i = 2, length do
+    local x = array[i]
+    local j = i - 1
+    while j >= 1 and lower_than(x, array[j]) do
+      array[j + 1] = array[j]
+      j = j - 1
+    end
+    array[j + 1] = x
+  end
+end
+
 return {
   map = map,
   filter = filter,
@@ -352,5 +375,6 @@ return {
   equals = equals,
   copy = copy,
   merge = merge,
-  merged = merged
+  merged = merged,
+  sort = sort
 }

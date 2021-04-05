@@ -34,6 +34,7 @@ local Palette = require("tofu.graphics").Palette
 local Font = require("tofu.graphics").Font
 local Source = require("tofu.sound").Source
 local Timer = require("tofu.timers").Timer
+local Arrays = require("tofu.util").Arrays
 
 local STAR_PERIOD = 1.0 / 3.0
 
@@ -118,7 +119,8 @@ function Main:update(delta_time)
           vr = vx * 7.0 -- Rotate in the "direction" of the Y movement, faster with speed.
         })
 
-      table.sort(self.stars, function(a, b) return a.scale < b.scale end)
+--      table.sort(self.stars, function(a, b) return a.scale < b.scale or (a.scale == b.scale and a.id < b.id) end)
+        Arrays.sort(self.stars, function(a, b) return a.scale < b.scale end)
     end
   end
 
