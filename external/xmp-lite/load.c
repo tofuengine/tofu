@@ -249,9 +249,9 @@ LIBXMP_EXPORT int xmp_load_module_from_memory(xmp_context opaque, const void *me
 	HIO_HANDLE *h;
 	int ret;
 
-	/* Use size < 0 for unknown/undetermined size */
-	if (size == 0)
-		size--;
+	if (size <= 0) {
+		return -XMP_ERROR_INVALID;
+	}
 
 	if ((h = hio_open_mem(mem, size)) == NULL)
 		return -XMP_ERROR_SYSTEM;
@@ -271,7 +271,7 @@ LIBXMP_EXPORT int xmp_load_module_from_memory(xmp_context opaque, const void *me
 	return ret;
 }
 
-LIBXMP_EXPORT int xmp_load_module_from_file(xmp_context opaque, void *file, long size)
+LIBXMP_EXPORT int xmp_load_module_from_file(xmp_context opaque, void *file)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct module_data *m = &ctx->m;

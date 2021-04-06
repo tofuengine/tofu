@@ -157,6 +157,7 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #define open _open
 #define close _close
 #define unlink _unlink
+#define S_ISDIR(x) (((x)&_S_IFDIR) != 0)
 #endif
 #if defined(_WIN32) || defined(__WATCOMC__) /* in win32.c */
 #define USE_LIBXMP_SNPRINTF

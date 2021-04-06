@@ -319,6 +319,8 @@ struct xmp_frame_info {			/* Current frame information */
 
 typedef char *xmp_context;
 
+LIBXMP_EXPORT int         xmp_syserrno        (void);
+
 LIBXMP_EXPORT xmp_context xmp_create_context  (void);
 LIBXMP_EXPORT void        xmp_free_context    (xmp_context);
 LIBXMP_EXPORT int         xmp_test_module     (char *, struct xmp_test_info *);
@@ -347,7 +349,7 @@ LIBXMP_EXPORT int         xmp_get_player      (xmp_context, int);
 LIBXMP_EXPORT int         xmp_set_instrument_path (xmp_context, char *);
 LIBXMP_EXPORT int         xmp_load_module_from_callbacks(xmp_context opaque, size_t (*read)(void *, size_t, size_t, void *), int (*seek)(void *, long, int), long (*tell)(void *), int (*eof)(void *), void *userdata);
 LIBXMP_EXPORT int         xmp_load_module_from_memory (xmp_context, const void *, long);
-LIBXMP_EXPORT int         xmp_load_module_from_file (xmp_context, void *, long);
+LIBXMP_EXPORT int         xmp_load_module_from_file (xmp_context, void *);
 
 /* External sample mixer API */
 LIBXMP_EXPORT int         xmp_start_smix       (xmp_context, int, int);
