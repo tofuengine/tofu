@@ -56,6 +56,7 @@ static const struct luaL_Reg _grid_functions[] = {
     { "scan", grid_scan },
     { "process", grid_process },
 //    { "path", grid_path },
+//    { "copy", grid_copy },
     { NULL, NULL }
 };
 
@@ -76,11 +77,10 @@ static int grid_new(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TTABLE, LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
     LUAX_SIGNATURE_END
     size_t width = (size_t)LUAX_INTEGER(L, 1);
     size_t height = (size_t)LUAX_INTEGER(L, 2);
-    int type = lua_type(L, 3);
 
     size_t data_size = width * height;
     Cell_t *data = malloc(sizeof(Cell_t) * data_size);
@@ -89,27 +89,20 @@ static int grid_new(lua_State *L)
     }
 
     Cell_t *ptr = data;
-    Cell_t *eod = ptr + data_size;
-    if (type == LUA_TTABLE) {
-        lua_pushnil(L);
-        while (lua_next(L, 3)) {
-            if (ptr == eod) {
-                lua_pop(L, 2);
-                break;
-            }
+
+    size_t length = lua_rawlen(L, 3);
+    if (length > 0) {
+        for (size_t i = 0; i < data_size; ++i) {
+            size_t index = ((i % length) + 1);
+            lua_rawgeti(L, 3, index);
 
             Cell_t value = (Cell_t)LUAX_NUMBER(L, -1);
             *(ptr++) = value;
 
             lua_pop(L, 1);
         }
-    } else
-    if (type == LUA_TNUMBER) {
-        Cell_t value = (Cell_t)LUAX_NUMBER(L, 3);
-
-        while (ptr < eod) {
-            *(ptr++) = value;
-        }
+    } else {
+        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "grid content left uninitialized");
     }
 
     Grid_Object_t *self = (Grid_Object_t *)lua_newuserdatauv(L, sizeof(Grid_Object_t), 1);
@@ -159,34 +152,25 @@ static int grid_fill(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-        LUAX_SIGNATURE_REQUIRED(LUA_TTABLE, LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
     LUAX_SIGNATURE_END
     Grid_Object_t *self = (Grid_Object_t *)LUAX_USERDATA(L, 1);
-    int type = lua_type(L, 2);
+
+    size_t length = lua_rawlen(L, 2);
+    if (length == 0) {
+        return luaL_error(L, "table can't be empty");
+    }
 
     Cell_t *ptr = self->data;
-    Cell_t *eod = ptr + self->data_size;
 
-    if (type == LUA_TTABLE) {
-        lua_pushnil(L);
-        while (lua_next(L, 2)) {
-            if (ptr == eod) {
-                lua_pop(L, 2);
-                break;
-            }
+    for (size_t i = 0; i < self->data_size; ++i) {
+        size_t index = ((i % length) + 1);
+        lua_rawgeti(L, 2, index);
 
-            Cell_t value = (Cell_t)LUAX_NUMBER(L, -1);
-            *(ptr++) = value;
+        Cell_t value = (Cell_t)LUAX_NUMBER(L, -1);
+        *(ptr++) = value;
 
-            lua_pop(L, 1);
-        }
-    } else
-    if (type == LUA_TNUMBER) {
-        Cell_t value = (Cell_t)LUAX_NUMBER(L, 2);
-
-        while (ptr < eod) {
-            *(ptr++) = value;
-        }
+        lua_pop(L, 1);
     }
 
     return 0;
@@ -198,14 +182,11 @@ static int grid_stride(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TTABLE, LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
     LUAX_SIGNATURE_END
     Grid_Object_t *self = (Grid_Object_t *)LUAX_USERDATA(L, 1);
     size_t column = (size_t)LUAX_INTEGER(L, 2);
     size_t row = (size_t)LUAX_INTEGER(L, 3);
-    int type = lua_type(L, 4);
-    size_t amount = (size_t)LUAX_INTEGER(L, 5);
 #ifdef DEBUG
     if (column >= self->width) {
         return luaL_error(L, "column %d is out of range (0, %d)", column, self->width);
@@ -216,28 +197,19 @@ static int grid_stride(lua_State *L)
 #endif
 
     Cell_t *ptr = self->data + row * self->width + column;
-    Cell_t *eod = ptr + (self->data_size < amount ? self->data_size : amount);
+    Cell_t *eod = ptr + self->data_size;
 
-    if (type == LUA_TTABLE) {
-        lua_pushnil(L);
-        while (lua_next(L, 4)) {
-            if (ptr == eod) {
-                lua_pop(L, 2);
-                break;
-            }
-
-            Cell_t value = (Cell_t)LUAX_NUMBER(L, -1);
-            *(ptr++) = value;
-
-            lua_pop(L, 1);
+    lua_pushnil(L);
+    while (lua_next(L, 4)) {
+        if (ptr == eod) {
+            lua_pop(L, 2);
+            break;
         }
-    } else
-    if (type == LUA_TNUMBER) {
-        Cell_t value = (Cell_t)LUAX_NUMBER(L, 4);
 
-        for (size_t i = 0; (ptr < eod) && (i < amount); ++i) {
-            *(ptr++) = value;
-        }
+        Cell_t value = (Cell_t)LUAX_NUMBER(L, -1);
+        *(ptr++) = value;
+
+        lua_pop(L, 1);
     }
 
     return 0;

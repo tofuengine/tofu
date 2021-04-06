@@ -28,6 +28,7 @@ local Input = require("tofu.events").Input
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
+local Palette = require("tofu.graphics").Palette
 local Grid = require("tofu.util").Grid
 
 local STEPS = 64
@@ -41,7 +42,7 @@ local PALETTE = {
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette(PALETTE)
+  Display.palette(Palette.new(PALETTE))
 
   local canvas = Canvas.default()
   local width, height = canvas:size()
@@ -51,14 +52,18 @@ function Main:__ctor()
   self.y_size = height / STEPS
   self.windy = false
   self.damping = 1.0
-  self.grid = Grid.new(STEPS, STEPS, 0)
+  self.grid = Grid.new(STEPS, STEPS, { 0 })
 
   self:reset()
 end
 
 function Main:reset()
-  self.grid:fill(0)
-  self.grid:stride(0, STEPS - 1, #PALETTE - 1, STEPS)
+  self.grid:process(function(column, row, _)
+    if row == STEPS - 1 then
+      return column, row, #PALETTE - 1
+    end
+    return column, row, 0
+  end)
 end
 
 function Main:input()
