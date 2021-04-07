@@ -24,11 +24,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
--- Depends upon the following Lua "rocks".
---  - lua-struct
-
-local struct = require("struct")
-
 function string:at(index)
   return self:sub(index, index)
 end
@@ -72,10 +67,10 @@ local function convert(output, input)
   local out = io.open(output, "wb")
   for index, entry in ipairs(sheet) do
     print(string.format("  entry #%d `%s` at <%d, %d> w/ size %dx%d", index, entry.id, entry.x, entry.y, entry.width, entry.height))
-    out:write(struct.pack("I", entry.x))
-    out:write(struct.pack("I", entry.y))
-    out:write(struct.pack("I", entry.width))
-    out:write(struct.pack("I", entry.height))
+    out:write(string.pack("I4", entry.x))
+    out:write(string.pack("I4", entry.y))
+    out:write(string.pack("I4", entry.width))
+    out:write(string.pack("I4", entry.height))
   end
   out:close()
 end

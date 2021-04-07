@@ -27,11 +27,9 @@ SOFTWARE.
 -- Depends upon the following Lua "rocks".
 --  1 luafilesystem
 --  2 luazen
---  3 lua-struct
 
 local lfs = require("lfs")
 local luazen = require("luazen")
-local struct = require("struct")
 
 local VERSION = 0x00
 local RESERVED_16b = 0xFFFF
@@ -127,10 +125,10 @@ end
 local function emit_header(output, config, files)
   local flags = bit32.lshift(config.encrypted and 1 or 0, 0)
 
-  output:write(struct.pack("c8", "TOFUPAK!"))
-  output:write(struct.pack("B", VERSION))
-  output:write(struct.pack("B", flags))
-  output:write(struct.pack("H", RESERVED_16b))
+  output:write(string.pack("c8", "TOFUPAK!"))
+  output:write(string.pack("I1", VERSION))
+  output:write(string.pack("I1", flags))
+  output:write(string.pack("I2", RESERVED_16b))
 
   return 8 + 1 + 1 + 2
 end
@@ -177,9 +175,9 @@ end
 local function emit_directory(output, entries)
   local count = 0
   for id, entry in pairs(entries) do
-    output:write(struct.pack("c16", id))
-    output:write(struct.pack("I", entry.offset))
-    output:write(struct.pack("I", entry.size))
+    output:write(string.pack("c16", id))
+    output:write(string.pack("I4", entry.offset))
+    output:write(string.pack("I4", entry.size))
     count = count + 1
   end
   return count
@@ -187,8 +185,8 @@ end
 
 local function emit_trailer(output, entries, cursor)
   local count = emit_directory(output, entries)
-  output:write(struct.pack("I", cursor))
-  output:write(struct.pack("I", count))
+  output:write(string.pack("I4", cursor))
+  output:write(string.pack("I4", count))
 end
 
 local function emit(config, files)
