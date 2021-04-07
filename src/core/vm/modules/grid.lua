@@ -28,11 +28,13 @@ local Grid = {}
 
 -- <width>|<height>|<amount>:<value>|<amount>:<value>|<amount>:<value>
 function Grid.parse(content)
-  local columns, rows, data = string.gmatch(content, "([^|]+)|([^|]+)|(.+)")() -- Match and call!
+  local columns, rows, data = string.match(content, "^(%d+)|(%d+)|(.+)$")
+  if not columns or not rows or not data then
+    error("grid content is malformed")
+  end
 
   local width = math.tointeger(columns)
   local height = math.tointeger(rows)
-
   if width <= 0 or height <= 0 then
     error("grid dimensions can't be negative or null")
   end
@@ -40,7 +42,7 @@ function Grid.parse(content)
   local grid = Grid.new(width, height, {})
 
   local offset = 0
-  for amount, value in string.gmatch(data, "([^|:]+):([^|]+)") do
+  for amount, value in string.gmatch(data, "(%d+):([+-]?%d+%.?%d*)") do -- Matches any number (not only integer).
     for _ = 1, amount do
       grid:poke(offset, tonumber(value))
       offset = offset + 1
