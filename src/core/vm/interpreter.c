@@ -367,7 +367,7 @@ bool Interpreter_input(const Interpreter_t *interpreter)
 
 bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
 {
-    lua_pushnumber(interpreter->state, delta_time);
+    lua_pushnumber(interpreter->state, (lua_Number)delta_time);
     if (_call(interpreter->state, METHOD_UPDATE, 1, 0) != LUA_OK) {
         return false;
     }
@@ -413,7 +413,7 @@ bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
 
 bool Interpreter_render(const Interpreter_t *interpreter, float ratio)
 {
-    lua_pushnumber(interpreter->state, ratio); // TODO: is the `ratio` parameter really useful?
+    lua_pushnumber(interpreter->state, (lua_Number)ratio); // TODO: is the `ratio` parameter really useful?
     return _call(interpreter->state, METHOD_RENDER, 1, 0) == LUA_OK;
 }
 

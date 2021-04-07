@@ -234,7 +234,7 @@ static int math_sign(lua_State *L) // This never returns 0.
     LUAX_SIGNATURE_END
     float x = LUAX_NUMBER(L, 1);
 
-    lua_pushnumber(L, copysignf(1.0f, x)); // absolute value of the 1st, sign of the 2nd.
+    lua_pushnumber(L, (lua_Number)copysignf(1.0f, x)); // absolute value of the 1st, sign of the 2nd.
 
     return 1;
 }
@@ -252,7 +252,7 @@ static int math_signum(lua_State *L) // Returns -1, 0, 1
     LUAX_SIGNATURE_END
     float x = LUAX_NUMBER(L, 1);
 
-    lua_pushinteger(L, _signun(x));
+    lua_pushinteger(L, (lua_Integer)_signun(x));
 
     return 1;
 }
@@ -282,7 +282,7 @@ static int math_angle_to_rotation(lua_State *L)
 
     int rotation = fator(angle);
 
-    lua_pushinteger(L, rotation);
+    lua_pushinteger(L, (lua_Integer)rotation);
 
     return 1;
 }

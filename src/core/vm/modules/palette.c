@@ -237,7 +237,7 @@ static int palette_size(lua_State *L)
 
     const GL_Palette_t *palette = &self->palette;
 
-    lua_pushinteger(L, palette->size);
+    lua_pushinteger(L, (lua_Integer)palette->size);
 
     return 1;
 }
