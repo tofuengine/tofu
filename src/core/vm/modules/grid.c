@@ -39,7 +39,7 @@ static int grid_new(lua_State *L);
 static int grid_gc(lua_State *L);
 static int grid_size(lua_State *L);
 static int grid_fill(lua_State *L);
-static int grid_stride(lua_State *L);
+static int grid_copy(lua_State *L);
 static int grid_peek(lua_State *L);
 static int grid_poke(lua_State *L);
 static int grid_scan(lua_State *L);
@@ -50,13 +50,12 @@ static const struct luaL_Reg _grid_functions[] = {
     { "__gc", grid_gc },
     { "size", grid_size },
     { "fill", grid_fill },
-    { "stride", grid_stride },
+    { "copy", grid_copy },
     { "peek", grid_peek },
     { "poke", grid_poke },
     { "scan", grid_scan },
     { "process", grid_process },
 //    { "path", grid_path },
-//    { "copy", grid_copy },
     { NULL, NULL }
 };
 
@@ -176,46 +175,51 @@ static int grid_fill(lua_State *L)
     return 0;
 }
 
-static int grid_stride(lua_State *L)
+static int grid_copy(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     Grid_Object_t *self = (Grid_Object_t *)LUAX_USERDATA(L, 1);
-    size_t column = (size_t)LUAX_INTEGER(L, 2);
-    size_t row = (size_t)LUAX_INTEGER(L, 3);
-#ifdef DEBUG
-    if (column >= self->width) {
-        return luaL_error(L, "column %d is out of range (0, %d)", column, self->width);
-    } else
-    if (row >= self->height) {
-        return luaL_error(L, "row %d is out of range (0, %d)", row, self->height);
+    const Grid_Object_t *other = (const Grid_Object_t *)LUAX_USERDATA(L, 2);
+
+    if (self->data_size != other->data_size) {
+        return luaL_error(L, "grid data-size don't match");
     }
-#endif
 
-    Cell_t *ptr = self->data + row * self->width + column;
-    Cell_t *eod = ptr + self->data_size;
+    Cell_t *dptr = self->data;
+    const Cell_t *sptr = other->data;
 
-    lua_pushnil(L);
-    while (lua_next(L, 4)) {
-        if (ptr == eod) {
-            lua_pop(L, 2);
-            break;
-        }
-
-        Cell_t value = (Cell_t)LUAX_NUMBER(L, -1);
-        *(ptr++) = value;
-
-        lua_pop(L, 1);
+    for (size_t i = self->data_size; i; --i) {
+        *(dptr++) = *(sptr++);
     }
 
     return 0;
 }
 
-static int grid_peek(lua_State *L)
+static int grid_peek2(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    const Grid_Object_t *self = (const Grid_Object_t *)LUAX_USERDATA(L, 1);
+    size_t offset = (size_t)LUAX_INTEGER(L, 2);
+#ifdef DEBUG
+    if (offset >= self->data_size) {
+        return luaL_error(L, "offset %d is out of range (0, %d)", offset, self->data_size);
+    }
+#endif
+
+    Cell_t value = self->data[offset];
+
+    lua_pushnumber(L, (lua_Number)value);
+
+    return 1;
+}
+
+static int grid_peek3(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -241,7 +245,36 @@ static int grid_peek(lua_State *L)
     return 1;
 }
 
-static int grid_poke(lua_State *L)
+static int grid_peek(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(2, grid_peek2)
+        LUAX_OVERLOAD_ARITY(3, grid_peek3)
+    LUAX_OVERLOAD_END
+}
+
+static int grid_poke3(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    Grid_Object_t *self = (Grid_Object_t *)LUAX_USERDATA(L, 1);
+    size_t offset = (size_t)LUAX_INTEGER(L, 2);
+    Cell_t value = (Cell_t)LUAX_NUMBER(L, 3);
+#ifdef DEBUG
+    if (offset >= self->data_size) {
+        return luaL_error(L, "offset %d is out of range (0, %d)", offset, self->data_size);
+    }
+#endif
+
+    self->data[offset] = value;
+
+    return 0;
+}
+
+static int grid_poke4(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -265,6 +298,14 @@ static int grid_poke(lua_State *L)
     self->data[row * self->width + column] = value;
 
     return 0;
+}
+
+static int grid_poke(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(3, grid_poke3)
+        LUAX_OVERLOAD_ARITY(4, grid_poke4)
+    LUAX_OVERLOAD_END
 }
 
 static int grid_scan(lua_State *L)

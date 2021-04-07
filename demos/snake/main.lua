@@ -40,34 +40,40 @@ local SPEED = 5.0
 local DELTA_X = { up = 0, down = 0, left = -1, right = 1 }
 local DELTA_Y = { up = -1, down = 1, left = 0, right = 0 }
 
-local MAP =  "************************************************"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "************************************************"
+--[[
+************************************************
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+************************************************
+]]
+
+local MAP = "48|28|49:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0\z
+  |2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0\z
+  |2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|49:-1"
 
 local Main = Class.define()
 
@@ -78,31 +84,17 @@ function Main:__ctor()
   local width, height = canvas:size()
 
   self.font = Font.default(canvas, 0, 3)
-  self.grid = Grid.new(math.tointeger(width / CELL_SIZE), math.tointeger(height / CELL_SIZE), 0)
-  Class.dump(self)
+  self.grid = Grid.new(math.tointeger(width / CELL_SIZE), math.tointeger(height / CELL_SIZE), { 0 })
+--  Class.dump(self)
 
   self:reset()
-end
-
-function Main:draw_map(map)
-  local gw, _ = self.grid:size()
-  for i = 1, map:len() do
-    local c = map:byte(i)
-    local column = (i - 1) % gw
-    local row = (i - 1) / gw
-    local value = 0
-    if c == 42 then
-      value = -1
-    end
-    self.grid:poke(column, row, value)
-  end
 end
 
 function Main:reset()
   self.length = INITIAL_LENGHT
   self.state = "running"
 
-  self:draw_map(MAP)
+  self.grid = Grid.parse(MAP)
 
   local gw, gh = self.grid:size()
   self.position = { x = gw / 2, y = gh / 2 }

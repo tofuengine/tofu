@@ -26,8 +26,57 @@ local Grid = {}
 
 --Grid.__index = Grid
 
-function Grid.parse(_)
-  -- <amount>:<value>|<amount>:<value>|<amount>:<value>
+-- <width>|<height>|<amount>:<value>|<amount>:<value>|<amount>:<value>
+function Grid.parse(content)
+  local columns, rows, data = string.gmatch(content, "([^|]+)|([^|]+)|(.+)")() -- Match and call!
+
+  local width = math.tointeger(columns)
+  local height = math.tointeger(rows)
+
+  if width <= 0 or height <= 0 then
+    error("grid dimensions can't be negative or null")
+  end
+
+  local grid = Grid.new(width, height, {})
+
+  local offset = 0
+  for amount, value in string.gmatch(data, "([^|:]+):([^|]+)") do
+    for _ = 1, amount do
+      grid:poke(offset, tonumber(value))
+      offset = offset + 1
+    end
+  end
+
+  return grid
+end
+
+function Grid:to_string()
+  local width, height = self:size()
+  local size = width * height
+
+  local content = {}
+  table.insert(content, string.format("%d|%d", width, height))
+
+  local value = nil
+  local amount = 0
+  for offset = 0, size - 1 do
+    local v = self:peek(offset)
+    if value == v then
+      amount = amount + 1
+    else
+      if amount > 0 then
+        table.insert(content, string.format("%d:%f", amount, value))
+      end
+      value = v
+      amount = 1
+    end
+  end
+
+  if amount > 0 then
+    table.insert(content, string.format("%d:%f", amount, value))
+  end
+
+  return table.concat(content, "|")
 end
 
 return Grid
