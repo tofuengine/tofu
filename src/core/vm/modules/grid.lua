@@ -36,7 +36,7 @@ function Grid.parse(content)
   local width = math.tointeger(columns)
   local height = math.tointeger(rows)
   if width <= 0 or height <= 0 then
-    error("grid dimensions can't be negative or null")
+    error("grid dimensions must be positive")
   end
 
   local grid = Grid.new(width, height, {})

@@ -109,7 +109,8 @@ function Main:update(delta_time)
     if #self.stars < 64 then
       local vx = math.random(-5, 5) * 7
       local vy = math.random(3, 5) * 11
-      table.insert(self.stars, {
+
+      local star = {
           cell_id = math.random(0, 19) > 18 and 0 or 1,
           x = math.random(-32, 479 + 32),
           y = -32,
@@ -117,10 +118,11 @@ function Main:update(delta_time)
           rotation = 0,
           vx = vx, vy = vy,
           vr = vx * 7.0 -- Rotate in the "direction" of the Y movement, faster with speed.
-        })
-
---      table.sort(self.stars, function(a, b) return a.scale < b.scale or (a.scale == b.scale and a.id < b.id) end)
-        Arrays.sort(self.stars, function(a, b) return a.scale < b.scale end)
+        }
+      Arrays.add(self.stars, star, function(a, b) return a.scale < b.scale end)
+--      table.insert(self.stars, star)
+--        table.sort(self.stars, function(a, b) return a.scale < b.scale or (a.scale == b.scale and a.id < b.id) end)
+--        Arrays.sort(self.stars, function(a, b) return a.scale < b.scale end)
     end
   end
 
@@ -142,6 +144,7 @@ function Main:render(_)
   local canvas = Canvas.default()
   canvas:clear()
 
+  -- TODO: use an oscillator, here.
   local canvas_width, _ = canvas:size()
   local stripe_width, stripe_height = self.stripe:size()
   for i = 0, canvas_width, stripe_width do

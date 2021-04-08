@@ -350,6 +350,19 @@ local function sort(array, comparator)
   end
 end
 
+-- Add the element `item` to `array`, preserving the current ordering. Designed to be incrementally called to
+-- obtain an ever-ordered array of elements.
+local function add(array, item, comparator)
+  local lower_than = comparator or _lower_than
+  for index, other in ipairs(array) do
+    if lower_than(item, other) then
+      table.insert(array, index, item)
+      return
+    end
+  end
+  table.insert(array, item)
+end
+
 return {
   map = map,
   filter = filter,
@@ -375,5 +388,6 @@ return {
   copy = copy,
   merge = merge,
   merged = merged,
-  sort = sort
+  sort = sort,
+  add = add
 }
