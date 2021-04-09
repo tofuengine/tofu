@@ -23,54 +23,39 @@ SOFTWARE.
 ]]--
 
 local Class = require("tofu.core").Class
+local Math = require("tofu.core").Math
 local Canvas = require("tofu.graphics").Canvas
-local Display = require("tofu.graphics").Display
-local Palette = require("tofu.graphics").Palette
-local Source = require("tofu.sound").Source
+local Timer = require("tofu.timers").Timer
 
-local Background = require("libs.background")
-local Logo = require("libs.logo")
-local Stars = require("libs.stars")
-local Wave = require("libs.wave")
+local Wave = Class.define()
 
-local Main = Class.define()
-
-function Main:__ctor()
-  local palette = Palette.new("famicube") -- Pick a 64 colors palette.
-  Display.palette(palette)
-
-  local canvas = Canvas.default()
-  canvas:background(63) -- Use index #63 as background colour and transparent! :)
-  canvas:transparent({ [0] = false, [63] = true })
-
-  self.objects = {
-      Background.new(canvas, 63, palette),
-      Wave.new(canvas, 63),
-      Logo.new(canvas, 63),
-      Stars.new(canvas, 63)
-    }
-
-  self.music = Source.new("assets/modules/a_nice_and_warm_day.mod", Source.MODULE)
-  self.music:looped(true)
-  self.music:play()
+function Wave:__ctor(canvas, transparent)
+  self.canvas = canvas
+  self.stripe = Canvas.new("assets/images/stripes.png", transparent)
+  self.tweener = Math.tweener("linear", 5)
+  self.period_current = 0
+  self.period_next = 0
+  self.period = 0
+  self.timer = Timer.new(5, 0, function(_)
+    self.period_current = self.period_next
+    self.period_next = math.random() * 2.0 + 1.5
+  end)
 end
 
-function Main:input()
+function Wave:update(delta_time)
+  local period = Math.lerp(self.period_current, self.period_next, self.tweener(self.timer.age))
+  self.period = self.period + delta_time * period
 end
 
-function Main:update(delta_time)
-  for _, object in ipairs(self.objects) do
-    object:update(delta_time)
+function Wave:render()
+  -- TODO: use an oscillator, here.
+  local canvas_width, _ = self.canvas:size()
+  local stripe_width, stripe_height = self.stripe:size()
+  local span = stripe_height * 0.25
+  for i = 0, canvas_width, stripe_width do
+    local dy = math.sin(self.period + i * 0.00375) * span
+    self.stripe:copy(i, dy, self.canvas)
   end
 end
 
-function Main:render(_)
-  local canvas = Canvas.default()
-  canvas:clear()
-
-  for _, object in ipairs(self.objects) do
-    object:render()
-  end
-end
-
-return Main
+return Wave
