@@ -68,10 +68,10 @@ typedef int luaX_Reference;
             int _matched = 0; \
             int _index = 1;
     #define LUAX_SIGNATURE_REQUIRED(...) \
-            luaX_checkargument(_L, _index++, __FILE__, __LINE__, __VA_ARGS__, LUAX_EOD); \
+            luaX_checkargument(_L, _index++, __FILE__, __LINE__, (const int[]){ __VA_ARGS__, LUAX_EOD }); \
             ++_matched;
     #define LUAX_SIGNATURE_OPTIONAL(...) \
-            luaX_checkargument(_L, _index, __FILE__, __LINE__, __VA_ARGS__, LUA_TNONE, LUAX_EOD); \
+            luaX_checkargument(_L, _index, __FILE__, __LINE__, (const int[]){ __VA_ARGS__, LUA_TNONE, LUAX_EOD }); \
             if (!lua_isnone(_L, _index++)) { \
                 ++_matched; \
             }
@@ -107,7 +107,7 @@ typedef int luaX_Reference;
     #define LUAX_OVERLOAD_ARITY(n, f) \
             if (_argc == (n)) { return (f)(_L); } else
     #define LUAX_OVERLOAD_SIGNATURE(f, ...) \
-            if (luaX_hassignature(_L, __VA_ARGS__, LUAX_EOD)) { return (f)(_L); } else
+            if (luaX_hassignature(_L, (const int []){ __VA_ARGS__, LUAX_EOD })) { return (f)(_L); } else
     #define LUAX_OVERLOAD_END \
             { return luaL_error(L, "[%s:%d] overload for arity #%d is missing", __FILE__, __LINE__, _argc); } \
         } while (0);
@@ -152,9 +152,9 @@ extern void luaX_requiref(lua_State *L, const char *modname, lua_CFunction openf
 extern luaX_Reference luaX_ref(lua_State *L, int idx);
 extern void luaX_unref(lua_State *L, luaX_Reference ref);
 
-extern void luaX_checkargument(lua_State *L, int idx, const char *filename, int line, ...);
+extern void luaX_checkargument(lua_State *L, int idx, const char *file, int line, const int types[]);
 
-extern int luaX_hassignature(lua_State *L, ...);
+extern int luaX_hassignature(lua_State *L, const int signature[]);
 
 extern void luaX_pushvalues(lua_State *L, int nup);
 extern int luaX_pushupvalues(lua_State *L);

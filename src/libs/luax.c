@@ -249,60 +249,38 @@ void luaX_unref(lua_State *L, luaX_Reference ref)
     luaL_unref(L, LUA_REGISTRYINDEX, ref);
 }
 
-void luaX_checkargument(lua_State *L, int idx, const char *file, int line, ...)
+void luaX_checkargument(lua_State *L, int idx, const char *file, int line, const int types[])
 {
     int actual_type = lua_type(L, idx);
-    int success = 1;
-    va_list args;
-    va_start(args, line);
-    for (;;) {
-        int type = va_arg(args, int);
-        if (type == LUAX_EOD) {
-            success = 0;
-            break;
-        }
-        if (actual_type == type) {
-            break;
+    for (int i = 0; types[i] != LUAX_EOD; ++i) {
+        int type = types[i];
+        if (actual_type == type) { // Bail out if we match a type!
+            return;
         }
     }
-    va_end(args);
-    if (!success) {
-        luaL_error(L, "[%s:%d] signature failure for argument #%d (wrong actual type, got `%s`)", file, line, idx, lua_typename(L, actual_type));
-    }
+    luaL_error(L, "[%s:%d] signature failure for argument #%d (wrong actual type, got `%s`)", file, line, idx, lua_typename(L, actual_type));
 }
 
-int luaX_hassignature(lua_State *L, ...)
+int luaX_hassignature(lua_State *L, const int signature[])
 {
     int argc = lua_gettop(L);
-    if (argc == 0) {
-        return 1;
-    }
 
-    int all_checked = 0;
-    int mismatch = 0;
     int matched = 0;
 
-    va_list args;
-    va_start(args, L);
-    for (int idx = 1;; ++idx) {
-        int type = va_arg(args, int);
-        if (type == LUAX_EOD) {
-            all_checked = 1;
-            break;
+    int idx = 1; // Lua's stack isn't zero-based.
+    for (int i = 0; signature[i] != LUAX_EOD; ++i) {
+        if (i == argc) { // Actual arguments are fewer than signature's formal ones. Bail out as not matching!
+            return 0;
         }
-        if (idx > argc) {
-            break; // Bail out, after checking end-of-data (see above).
-        }
-        int actual_type = lua_type(L, idx);
-        if (actual_type != type && type != LUAX_ANY) {
-            mismatch = 1;
-            break;
+        int type = signature[i];
+        int actual_type = lua_type(L, idx++);
+        if (actual_type != type && type != LUAX_ANY) { // Non matching argument! Bail out as not matching!
+            return 0;
         }
         ++matched;
     }
-    va_end(args);
 
-    return all_checked && !mismatch && argc == matched;
+    return matched == argc; // We need to matched the exact count of actual arguments. Having `countof(signature)` would've be easier.
 }
 
 int luaX_pushupvalues(lua_State *L)
