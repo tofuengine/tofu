@@ -216,17 +216,14 @@ Engine_t *Engine_create(int argc, const char *argv[])
         return NULL;
     }
 
-    // The interpreter is the first to be loaded, since it also manages the configuration. Later on, we will call to
-    // initialization function once the sub-systems are ready.
-    const void *userdatas[] = {
+    engine->interpreter = Interpreter_create(engine->storage, (const void *[]){
             engine->storage,
             engine->display,
             engine->input,
             engine->audio,
             engine->environment,
             NULL
-        };
-    engine->interpreter = Interpreter_create(engine->storage, userdatas);
+        });
     if (!engine->interpreter) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize interpreter");
         Environment_destroy(engine->environment);

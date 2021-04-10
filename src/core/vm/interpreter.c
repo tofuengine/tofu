@@ -74,7 +74,7 @@ typedef enum _Methods_t {
     Methods_t_CountOf
 } Methods_t;
 
-static const char *_methods[] = {
+static const char *_methods[] = { // We don't use a compound-literal on purpose here, since we are referring to the above enum.
     "input",
     "update",
     "render",

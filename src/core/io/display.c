@@ -96,8 +96,6 @@ typedef enum Uniforms_t {
     "    return texture2D(texture, texture_coords) * color;\n" \
     "}\n"
 
-static const int _texture_id_0 = 0;
-
 static const char *_uniforms[Uniforms_t_CountOf] = {
     "u_texture0",
     "u_texture_size",
@@ -317,14 +315,19 @@ static bool _shader_initialize(Display_t *display, const char *effect)
     program_use(program);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p active", program);
 
-    program_send(program, UNIFORM_TEXTURE, PROGRAM_UNIFORM_TEXTURE, 1, &_texture_id_0); // Redundant
-    GLfloat screen_size[] = { (GLfloat)display->vram.rectangle.width, (GLfloat)display->vram.rectangle.height };
-    program_send(program, UNIFORM_SCREEN_SIZE, PROGRAM_UNIFORM_VEC2, 1, screen_size);
-    GLfloat texture_size[] = { (GLfloat)(GLfloat)display->configuration.window.width, (GLfloat)display->configuration.window.height };
-    program_send(program, UNIFORM_TEXTURE_SIZE, PROGRAM_UNIFORM_VEC2, 1, texture_size);
-    GLfloat screen_scale[] = { (GLfloat)display->vram.rectangle.width / (GLfloat)display->configuration.window.width,
-        (GLfloat)display->vram.rectangle.height / (GLfloat)display->configuration.window.height };
-    program_send(program, UNIFORM_SCREEN_SCALE, PROGRAM_UNIFORM_VEC2, 1, screen_scale);
+    program_send(program, UNIFORM_TEXTURE, PROGRAM_UNIFORM_TEXTURE, 1, (const int[]){ 0 }); // Redundant
+    program_send(program, UNIFORM_SCREEN_SIZE, PROGRAM_UNIFORM_VEC2, 1, (const GLfloat[]){
+            (GLfloat)display->vram.rectangle.width,
+            (GLfloat)display->vram.rectangle.height
+        });
+    program_send(program, UNIFORM_TEXTURE_SIZE, PROGRAM_UNIFORM_VEC2, 1, (const GLfloat[]){
+            (GLfloat)display->configuration.window.width,
+            (GLfloat)display->configuration.window.height
+        });
+    program_send(program, UNIFORM_SCREEN_SCALE, PROGRAM_UNIFORM_VEC2, 1, (const GLfloat[]){
+            (GLfloat)display->vram.rectangle.width / (GLfloat)display->configuration.window.width,
+            (GLfloat)display->vram.rectangle.height / (GLfloat)display->configuration.window.height
+        });
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p initialized", program);
 
