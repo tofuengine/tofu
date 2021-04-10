@@ -41,7 +41,7 @@ static inline void pixel(const GL_Context_t *context, int x, int y, int index)
 // TODO: specifies `const` always? Is pedantic or useful?
 // TODO: define a `BlitInfo` and `BlitFunc` types to generalize?
 // https://dev.to/fenbf/please-declare-your-variables-as-const
-void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position)
+void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position)
 {
     const GL_State_t *state = &context->state;
     const GL_Quad_t *clipping_region = &state->clipping_region;
@@ -50,6 +50,7 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
 #ifdef __GL_MASK_SUPPORT__
     const GL_Mask_t *mask = &state->mask;
 #endif
+    const GL_Surface_t *surface = context->surface;
 
     int skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
     int skip_y = 0;
@@ -82,17 +83,18 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
         return;
     }
 
-    const GL_Pixel_t *sdata = surface->data;
-    GL_Pixel_t *ddata = context->surface->data;
+    const GL_Pixel_t *sdata = source->data;
+    GL_Pixel_t *ddata = surface->data;
 
-    const int swidth = (int)surface->width;
-    const int dwidth = (int)context->surface->width;
+    const int swidth = (int)source->width;
+    const int dwidth = (int)surface->width;
+
+    const int sskip = swidth - width;
+    const int dskip = dwidth - width;
 
     const GL_Pixel_t *sptr = sdata + (area.y + skip_y) * swidth + (area.x + skip_x);
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
-    const int sskip = swidth - width;
-    const int dskip = dwidth - width;
 #ifdef __GL_MASK_SUPPORT__
     if (mask->stencil) {
         const GL_Surface_t *stencil = mask->stencil;
@@ -147,7 +149,7 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, G
 //
 // http://www.datagenetics.com/blog/december32013/index.html
 // file:///C:/Users/mlizza/Downloads/Extensible_Implementation_of_Reliable_Pixel_Art_In.pdf
-void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y)
+void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y)
 {
     const GL_State_t *state = &context->state;
     const GL_Quad_t *clipping_region = &state->clipping_region;
@@ -156,6 +158,7 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
 #ifdef __GL_MASK_SUPPORT__
     const GL_Mask_t *mask = &state->mask;
 #endif
+    const GL_Surface_t *surface = context->surface;
 
     const bool flip_x = scale_x < 0.0f;
     const bool flip_y = scale_y < 0.0f;
@@ -194,15 +197,15 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
         return;
     }
 
-    const GL_Pixel_t *sdata = surface->data;
-    GL_Pixel_t *ddata = context->surface->data;
+    const GL_Pixel_t *sdata = source->data;
+    GL_Pixel_t *ddata = surface->data;
 
-    const int swidth = (int)surface->width;
-    const int dwidth = (int)context->surface->width;
-
-    GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
+    const int swidth = (int)source->width;
+    const int dwidth = (int)surface->width;
 
     const int dskip = dwidth - width;
+
+    GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
     // The scaling formula is the following:
     //
@@ -288,12 +291,13 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface,
 // https://www.flipcode.com/archives/The_Art_of_Demomaking-Issue_10_Roto-Zooming.shtml
 //
 // FIXME: one row/column is lost due to rounding errors when angle is multiple of 128.
-void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y)
+void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y)
 {
     const GL_State_t *state = &context->state;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
+    const GL_Surface_t *surface = context->surface;
 
     const bool flip_x = scale_x < 0.0f;
     const bool flip_y = scale_y < 0.0f;
@@ -393,15 +397,15 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     float ou = (tlx * M11 + tly * M12) + sax + sx; // Offset to the source texture quad.
     float ov = (tlx * M21 + tly * M22) + say + sy;
 
-    const GL_Pixel_t *sdata = surface->data;
-    GL_Pixel_t *ddata = context->surface->data;
+    const GL_Pixel_t *sdata = source->data;
+    GL_Pixel_t *ddata = surface->data;
 
-    const int swidth = (int)surface->width;
-    const int dwidth = (int)context->surface->width;
-
-    GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
+    const int swidth = (int)source->width;
+    const int dwidth = (int)surface->width;
 
     const int dskip = dwidth - width;
+
+    GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
     for (int i = height; i; --i) {
         float u = ou;
@@ -452,12 +456,13 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
 #endif
 }
 #else
-void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y)
+void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y)
 {
     const GL_State_t *state = &context->state;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
+    const GL_Surface_t *surface = context->surface;
 
     const float sw = (float)area.width;
     const float sh = (float)area.height;
@@ -550,15 +555,15 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface
     const float M21 = -s / scale_y; // |       | |           | |      | NOTE: flip sign is already fused in the scale factor!
     const float M22 = c / scale_y;  // |  0 fy | |    0 1/sy | | -s c |
 
-    const GL_Pixel_t *sdata = surface->data;
-    GL_Pixel_t *ddata = context->surface->data;
+    const GL_Pixel_t *sdata = source->data;
+    GL_Pixel_t *ddata = surface->data;
 
-    const int swidth = (int)surface->width;
-    const int dwidth = (int)context->surface->width;
-
-    GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
+    const int swidth = (int)source->width;
+    const int dwidth = (int)surface->width;
 
     const int dskip = dwidth - width;
+
+    GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
     for (int i = 0; i < height; ++i) {
         const float ov = skip_y + (float)i; // + 0.5f;

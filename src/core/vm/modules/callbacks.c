@@ -39,7 +39,7 @@ void surface_callback_palette(void *user_data, GL_Surface_t *surface, const void
 
     for (size_t i = surface->data_size; i; --i) {
         rgba_t rgba = *(src++);
-        if (rgba.a <= closure->threshold) { // Colors is transparent if below.
+        if (rgba.a <= closure->threshold) { // Colors is transparent if not above threshold (can't disable it).
             *(dst++) = closure->transparent;
         } else {
             GL_Color_t color = (GL_Color_t){ .r = rgba.r, .g = rgba.g, .b = rgba.b, .a = rgba.a };

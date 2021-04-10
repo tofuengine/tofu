@@ -354,6 +354,8 @@ void GL_context_process(const GL_Context_t *context, const GL_Surface_t *source,
     }
 }
 
+// Note: currently the `GL_context_copy()` function is equal to `GL_context_blit()`. However, we are keeping them
+// separate, as in the future they might be different (with the `*_copy()` variant optimized).
 void GL_context_copy(const GL_Context_t *context, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position)
 {
     const GL_State_t *state = &context->state;

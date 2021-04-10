@@ -103,8 +103,8 @@ static const struct luaL_Reg _canvas_functions[] = {
     { "peek", canvas_peek },
     { "poke", canvas_poke },
     { "process", canvas_process },
-    { "blit", canvas_blit },
     { "copy", canvas_copy },
+    { "blit", canvas_blit },
     { NULL, NULL }
 };
 
