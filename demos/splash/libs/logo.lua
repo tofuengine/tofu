@@ -35,6 +35,11 @@ function Logo:__ctor(canvas, transparent)
     Canvas.new("assets/images/engine.png", transparent)
   }
   self.outline = Canvas.new("assets/images/outline.png", transparent)
+
+  local cw, ch = canvas:size()
+  local w, h = self.outline:size()
+  self.x = (cw - w) * 0.5
+  self.y = (ch - h) * 0.5
 end
 
 function Logo:update(_)
@@ -66,10 +71,11 @@ function Logo:render()
 
   -- TODO: generate the outline w/ 4 offsetted blits.
   local t = System.time()
-  self.outline:blit(self.canvas)
+
+  self.outline:blit(self.x, self.y, self.canvas)
   local index = (math.tointeger(t * 1.0) % 2) + 1
   local image = self.images[index]
-  image:blit(self.canvas)
+  image:blit(self.x, self.y, self.canvas)
 end
 
 return Logo
