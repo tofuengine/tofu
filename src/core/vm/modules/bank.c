@@ -64,7 +64,7 @@ int bank_loader(lua_State *L)
     return luaX_newmodule(L, NULL, _bank_functions, _bank_constants, nup, META_TABLE);
 }
 
-static int bank_new3(lua_State *L)
+static int bank_new_uus(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -107,7 +107,7 @@ static int bank_new3(lua_State *L)
     return 1;
 }
 
-static int bank_new4(lua_State *L)
+static int bank_new_uunn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -148,8 +148,8 @@ static int bank_new4(lua_State *L)
 static int bank_new(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(3, bank_new3)
-        LUAX_OVERLOAD_ARITY(4, bank_new4)
+        LUAX_OVERLOAD_ARITY(3, bank_new_uus)
+        LUAX_OVERLOAD_ARITY(4, bank_new_uunn)
     LUAX_OVERLOAD_END
 }
 
@@ -217,9 +217,8 @@ static int bank_canvas(lua_State *L)
 // Bank.blit(self, cell_id, x, y)
 // Bank.blit(self, cell_id, x, y, r)
 // Bank.blit(self, cell_id, x, y, sx, sy)
-// Bank.blit(self, cell_id, x, y, sx, sy, r)
 // Bank.blit(self, cell_id, x, y, sx, sy, r, ax = 0.5, ay = 0.5)
-static int bank_blit4(lua_State *L)
+static int bank_blit_unnn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -239,7 +238,7 @@ static int bank_blit4(lua_State *L)
     return 0;
 }
 
-static int bank_blit5(lua_State *L)
+static int bank_blit_unnnn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -261,7 +260,7 @@ static int bank_blit5(lua_State *L)
     return 0;
 }
 
-static int bank_blit6(lua_State *L)
+static int bank_blit_unnnnn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -285,7 +284,7 @@ static int bank_blit6(lua_State *L)
     return 0;
 }
 
-static int bank_blit7_8_9(lua_State *L)
+static int bank_blit_unnnnnnnn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -319,11 +318,11 @@ static int bank_blit7_8_9(lua_State *L)
 static int bank_blit(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(4, bank_blit4)
-        LUAX_OVERLOAD_ARITY(5, bank_blit5)
-        LUAX_OVERLOAD_ARITY(6, bank_blit6)
-        LUAX_OVERLOAD_ARITY(7, bank_blit7_8_9)
-        LUAX_OVERLOAD_ARITY(8, bank_blit7_8_9)
-        LUAX_OVERLOAD_ARITY(9, bank_blit7_8_9)
+        LUAX_OVERLOAD_ARITY(4, bank_blit_unnn)
+        LUAX_OVERLOAD_ARITY(5, bank_blit_unnnn)
+        LUAX_OVERLOAD_ARITY(6, bank_blit_unnnnn)
+        LUAX_OVERLOAD_ARITY(7, bank_blit_unnnnnnnn)
+        LUAX_OVERLOAD_ARITY(8, bank_blit_unnnnnnnn)
+        LUAX_OVERLOAD_ARITY(9, bank_blit_unnnnnnnn)
     LUAX_OVERLOAD_END
 }

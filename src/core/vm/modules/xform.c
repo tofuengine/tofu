@@ -158,7 +158,7 @@ static int xform_offset(lua_State *L)
     return 0;
 }
 
-static int xform_matrix3(lua_State *L)
+static int xform_matrix_unn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -176,7 +176,7 @@ static int xform_matrix3(lua_State *L)
     return 0;
 }
 
-static int xform_matrix5(lua_State *L)
+static int xform_matrix_unnnn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -200,7 +200,7 @@ static int xform_matrix5(lua_State *L)
     return 0;
 }
 
-static int xform_matrix7(lua_State *L)
+static int xform_matrix_unnnnnn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -233,9 +233,9 @@ static int xform_matrix7(lua_State *L)
 static int xform_matrix(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(3, xform_matrix3)
-        LUAX_OVERLOAD_ARITY(5, xform_matrix5)
-        LUAX_OVERLOAD_ARITY(7, xform_matrix7)
+        LUAX_OVERLOAD_ARITY(3, xform_matrix_unn)
+        LUAX_OVERLOAD_ARITY(5, xform_matrix_unnnn)
+        LUAX_OVERLOAD_ARITY(7, xform_matrix_unnnnnn)
     LUAX_OVERLOAD_END
 }
 

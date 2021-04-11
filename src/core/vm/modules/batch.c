@@ -159,7 +159,7 @@ static int batch_clear(lua_State *L)
     return 0;
 }
 
-static int batch_add4(lua_State *L)
+static int batch_add_unnn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -183,7 +183,7 @@ static int batch_add4(lua_State *L)
     return 0;
 }
 
-static int batch_add5(lua_State *L)
+static int batch_add_unnnn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -209,7 +209,7 @@ static int batch_add5(lua_State *L)
     return 0;
 }
 
-static int batch_add6(lua_State *L)
+static int batch_add_unnnnn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -237,7 +237,7 @@ static int batch_add6(lua_State *L)
     return 0;
 }
 
-static int batch_add7_8_9(lua_State *L)
+static int batch_add_unnnnnnnn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -274,12 +274,12 @@ static int batch_add7_8_9(lua_State *L)
 static int batch_add(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(4, batch_add4)
-        LUAX_OVERLOAD_ARITY(5, batch_add5)
-        LUAX_OVERLOAD_ARITY(6, batch_add6)
-        LUAX_OVERLOAD_ARITY(7, batch_add7_8_9)
-        LUAX_OVERLOAD_ARITY(8, batch_add7_8_9)
-        LUAX_OVERLOAD_ARITY(9, batch_add7_8_9)
+        LUAX_OVERLOAD_ARITY(4, batch_add_unnn)
+        LUAX_OVERLOAD_ARITY(5, batch_add_unnnn)
+        LUAX_OVERLOAD_ARITY(6, batch_add_unnnnn)
+        LUAX_OVERLOAD_ARITY(7, batch_add_unnnnnnnn)
+        LUAX_OVERLOAD_ARITY(8, batch_add_unnnnnnnn)
+        LUAX_OVERLOAD_ARITY(9, batch_add_unnnnnnnn)
     LUAX_OVERLOAD_END
 }
 

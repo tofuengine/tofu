@@ -121,7 +121,7 @@ static int display_bias(lua_State *L)
     return 0;
 }
 
-static int display_shift0(lua_State *L)
+static int display_shift_v(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
@@ -133,7 +133,7 @@ static int display_shift0(lua_State *L)
     return 0;
 }
 
-static int display_shift1(lua_State *L)
+static int display_shift_t(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
@@ -160,7 +160,7 @@ static int display_shift1(lua_State *L)
     return 0;
 }
 
-static int display_shift2(lua_State *L)
+static int display_shift_nn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -179,9 +179,9 @@ static int display_shift2(lua_State *L)
 static int display_shift(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(0, display_shift0)
-        LUAX_OVERLOAD_ARITY(1, display_shift1)
-        LUAX_OVERLOAD_ARITY(2, display_shift2)
+        LUAX_OVERLOAD_ARITY(0, display_shift_v)
+        LUAX_OVERLOAD_ARITY(1, display_shift_t)
+        LUAX_OVERLOAD_ARITY(2, display_shift_nn)
     LUAX_OVERLOAD_END
 }
 

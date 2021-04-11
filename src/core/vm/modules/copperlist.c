@@ -207,7 +207,7 @@ static int copperlist_bias(lua_State *L)
     return 0;
 }
 
-static int copperlist_shift2(lua_State *L)
+static int copperlist_shift_ut(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -230,7 +230,7 @@ static int copperlist_shift2(lua_State *L)
     return 0;
 }
 
-static int copperlist_shift3(lua_State *L)
+static int copperlist_shift_unn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -251,7 +251,7 @@ static int copperlist_shift3(lua_State *L)
 static int copperlist_shift(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(2, copperlist_shift2)
-        LUAX_OVERLOAD_ARITY(3, copperlist_shift3)
+        LUAX_OVERLOAD_ARITY(2, copperlist_shift_ut)
+        LUAX_OVERLOAD_ARITY(3, copperlist_shift_unn)
     LUAX_OVERLOAD_END
 }

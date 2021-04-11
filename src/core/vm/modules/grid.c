@@ -198,7 +198,7 @@ static int grid_copy(lua_State *L)
     return 0;
 }
 
-static int grid_peek2(lua_State *L)
+static int grid_peek_un(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -219,7 +219,7 @@ static int grid_peek2(lua_State *L)
     return 1;
 }
 
-static int grid_peek3(lua_State *L)
+static int grid_peek_unn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -248,12 +248,12 @@ static int grid_peek3(lua_State *L)
 static int grid_peek(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(2, grid_peek2)
-        LUAX_OVERLOAD_ARITY(3, grid_peek3)
+        LUAX_OVERLOAD_ARITY(2, grid_peek_un)
+        LUAX_OVERLOAD_ARITY(3, grid_peek_unn)
     LUAX_OVERLOAD_END
 }
 
-static int grid_poke3(lua_State *L)
+static int grid_poke_unn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -274,7 +274,7 @@ static int grid_poke3(lua_State *L)
     return 0;
 }
 
-static int grid_poke4(lua_State *L)
+static int grid_poke_unnn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -303,8 +303,8 @@ static int grid_poke4(lua_State *L)
 static int grid_poke(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(3, grid_poke3)
-        LUAX_OVERLOAD_ARITY(4, grid_poke4)
+        LUAX_OVERLOAD_ARITY(3, grid_poke_unn)
+        LUAX_OVERLOAD_ARITY(4, grid_poke_unnn)
     LUAX_OVERLOAD_END
 }
 

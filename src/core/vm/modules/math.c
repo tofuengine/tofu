@@ -336,7 +336,7 @@ static int _normalize_wave(lua_State *L)
     return 1;
 }
 
-static int math_wave1(lua_State *L)
+static int math_wave_s(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
@@ -354,7 +354,7 @@ static int math_wave1(lua_State *L)
     return 1;
 }
 
-static int math_wave2_3(lua_State *L)
+static int math_wave_snn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
@@ -381,9 +381,9 @@ static int math_wave2_3(lua_State *L)
 static int math_wave(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, math_wave1)
-        LUAX_OVERLOAD_ARITY(2, math_wave2_3)
-        LUAX_OVERLOAD_ARITY(3, math_wave2_3)
+        LUAX_OVERLOAD_ARITY(1, math_wave_s)
+        LUAX_OVERLOAD_ARITY(2, math_wave_snn)
+        LUAX_OVERLOAD_ARITY(3, math_wave_snn)
     LUAX_OVERLOAD_END
 }
 
@@ -441,7 +441,7 @@ static int _normalize_lerp_tweener(lua_State *L)
     return 1;
 }
 
-static int math_tweener1(lua_State *L)
+static int math_tweener_s(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
@@ -459,7 +459,7 @@ static int math_tweener1(lua_State *L)
     return 1;
 }
 
-static int math_tweener2(lua_State *L)
+static int math_tweener_sn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
@@ -480,7 +480,7 @@ static int math_tweener2(lua_State *L)
     return 1;
 }
 
-static int math_tweener4(lua_State *L)
+static int math_tweener_snnn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
@@ -510,8 +510,8 @@ static int math_tweener4(lua_State *L)
 static int math_tweener(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, math_tweener1)
-        LUAX_OVERLOAD_ARITY(2, math_tweener2)
-        LUAX_OVERLOAD_ARITY(4, math_tweener4)
+        LUAX_OVERLOAD_ARITY(1, math_tweener_s)
+        LUAX_OVERLOAD_ARITY(2, math_tweener_sn)
+        LUAX_OVERLOAD_ARITY(4, math_tweener_snnn)
     LUAX_OVERLOAD_END
 }

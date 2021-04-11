@@ -158,7 +158,7 @@ static int input_is_released(lua_State *L)
     return 1;
 }
 
-static int input_auto_repeat1(lua_State *L)
+static int input_auto_repeat_s(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
@@ -174,7 +174,7 @@ static int input_auto_repeat1(lua_State *L)
     return 1;
 }
 
-static int input_auto_repeat2(lua_State *L)
+static int input_auto_repeat_sn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
@@ -194,12 +194,12 @@ static int input_auto_repeat2(lua_State *L)
 static int input_auto_repeat(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, input_auto_repeat1)
-        LUAX_OVERLOAD_ARITY(2, input_auto_repeat2)
+        LUAX_OVERLOAD_ARITY(1, input_auto_repeat_s)
+        LUAX_OVERLOAD_ARITY(2, input_auto_repeat_sn)
     LUAX_OVERLOAD_END
 }
 
-static int input_cursor0(lua_State *L)
+static int input_cursor_v(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
@@ -213,7 +213,7 @@ static int input_cursor0(lua_State *L)
     return 2;
 }
 
-static int input_cursor2(lua_State *L)
+static int input_cursor_nn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -232,18 +232,14 @@ static int input_cursor2(lua_State *L)
 static int input_cursor(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(0, input_cursor0)
-        LUAX_OVERLOAD_ARITY(2, input_cursor2)
+        LUAX_OVERLOAD_ARITY(0, input_cursor_v)
+        LUAX_OVERLOAD_ARITY(2, input_cursor_nn)
     LUAX_OVERLOAD_END
 }
 
-static int input_cursor_area0(lua_State *L) 
+static int input_cursor_area_v(lua_State *L) 
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
 
     Input_t *input = (Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
@@ -257,7 +253,7 @@ static int input_cursor_area0(lua_State *L)
     return 4;
 }
 
-static int input_cursor_area4(lua_State *L) 
+static int input_cursor_area_nnnn(lua_State *L) 
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -280,8 +276,8 @@ static int input_cursor_area4(lua_State *L)
 static int input_cursor_area(lua_State *L)// TODO: rename to `region`?
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(0, input_cursor_area0)
-        LUAX_OVERLOAD_ARITY(4, input_cursor_area4)
+        LUAX_OVERLOAD_ARITY(0, input_cursor_area_v)
+        LUAX_OVERLOAD_ARITY(4, input_cursor_area_nnnn)
     LUAX_OVERLOAD_END
 }
 
@@ -318,7 +314,7 @@ static int input_triggers(lua_State *L)
     return 2;
 }
 
-static int input_mode0(lua_State *L)
+static int input_mode_v(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
@@ -338,7 +334,7 @@ static int input_mode0(lua_State *L)
     return 1;
 }
 
-static int input_mode1(lua_State *L)
+static int input_mode_t(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
@@ -367,7 +363,7 @@ static int input_mode1(lua_State *L)
 static int input_mode(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(0, input_mode0)
-        LUAX_OVERLOAD_ARITY(1, input_mode1)
+        LUAX_OVERLOAD_ARITY(0, input_mode_v)
+        LUAX_OVERLOAD_ARITY(1, input_mode_t)
     LUAX_OVERLOAD_END
 }
