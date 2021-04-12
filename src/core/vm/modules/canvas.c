@@ -165,7 +165,7 @@ static int canvas_new_nn(lua_State *L)
     return 1;
 }
 
-static int canvas_new_snu(lua_State *L)
+static int canvas_new_snU(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
@@ -263,9 +263,9 @@ static int canvas_new(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(0, canvas_new_v)
-        LUAX_OVERLOAD_SIGNATURE(canvas_new_snu, LUA_TSTRING, LUA_TNUMBER)
+        LUAX_OVERLOAD_SIGNATURE(canvas_new_snU, LUA_TSTRING, LUA_TNUMBER)
         LUAX_OVERLOAD_ARITY(2, canvas_new_nn)
-        LUAX_OVERLOAD_SIGNATURE(canvas_new_snu, LUA_TSTRING, LUA_TNUMBER, LUA_TUSERDATA)
+        LUAX_OVERLOAD_SIGNATURE(canvas_new_snU, LUA_TSTRING, LUA_TNUMBER, LUA_TUSERDATA)
         LUAX_OVERLOAD_ARITY(3, canvas_new_snn)
     LUAX_OVERLOAD_END
 }
@@ -983,7 +983,7 @@ static GL_Pixel_t _process_callback(void *user_data, int x, int y, GL_Pixel_t fr
     return pixel;
 }
 
-static int canvas_process_ufnnu(lua_State *L)
+static int canvas_process_ufnnU(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -1008,7 +1008,7 @@ static int canvas_process_ufnnu(lua_State *L)
     return 0;
 }
 
-static int canvas_process_ufnnnnnnu(lua_State *L)
+static int canvas_process_ufnnnnnnU(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -1044,14 +1044,14 @@ static int canvas_process_ufnnnnnnu(lua_State *L)
 static int canvas_process(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(4, canvas_process_ufnnu)
-        LUAX_OVERLOAD_ARITY(5, canvas_process_ufnnu)
-        LUAX_OVERLOAD_ARITY(8, canvas_process_ufnnnnnnu)
-        LUAX_OVERLOAD_ARITY(9, canvas_process_ufnnnnnnu)
+        LUAX_OVERLOAD_ARITY(4, canvas_process_ufnnU)
+        LUAX_OVERLOAD_ARITY(5, canvas_process_ufnnU)
+        LUAX_OVERLOAD_ARITY(8, canvas_process_ufnnnnnnU)
+        LUAX_OVERLOAD_ARITY(9, canvas_process_ufnnnnnnU)
     LUAX_OVERLOAD_END
 }
 
-static int canvas_copy_unnu(lua_State *L)
+static int canvas_copy_unnU(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -1071,7 +1071,7 @@ static int canvas_copy_unnu(lua_State *L)
     return 0;
 }
 
-static int canvas_copy_unnnnnnu(lua_State *L)
+static int canvas_copy_unnnnnnU(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -1102,14 +1102,14 @@ static int canvas_copy_unnnnnnu(lua_State *L)
 static int canvas_copy(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(3, canvas_copy_unnu)
-        LUAX_OVERLOAD_ARITY(4, canvas_copy_unnu)
-        LUAX_OVERLOAD_ARITY(7, canvas_copy_unnnnnnu)
-        LUAX_OVERLOAD_ARITY(8, canvas_copy_unnnnnnu)
+        LUAX_OVERLOAD_ARITY(3, canvas_copy_unnU)
+        LUAX_OVERLOAD_ARITY(4, canvas_copy_unnU)
+        LUAX_OVERLOAD_ARITY(7, canvas_copy_unnnnnnU)
+        LUAX_OVERLOAD_ARITY(8, canvas_copy_unnnnnnU)
     LUAX_OVERLOAD_END
 }
 
-static int canvas_blit_uuu(lua_State *L)
+static int canvas_blit_uuU(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -1131,7 +1131,7 @@ static int canvas_blit_uuu(lua_State *L)
     return 0;
 }
 
-static int canvas_blit_unnuu(lua_State *L)
+static int canvas_blit_unnuU(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -1157,7 +1157,7 @@ static int canvas_blit_unnuu(lua_State *L)
     return 0;
 }
 
-static int canvas_blit_unnnnnnuu(lua_State *L)
+static int canvas_blit_unnnnnnuU(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -1194,11 +1194,11 @@ static int canvas_blit_unnnnnnuu(lua_State *L)
 static int canvas_blit(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(2, canvas_blit_uuu)
-        LUAX_OVERLOAD_ARITY(3, canvas_blit_uuu)
-        LUAX_OVERLOAD_ARITY(4, canvas_blit_unnuu)
-        LUAX_OVERLOAD_ARITY(5, canvas_blit_unnuu)
-        LUAX_OVERLOAD_ARITY(8, canvas_blit_unnnnnnuu)
-        LUAX_OVERLOAD_ARITY(9, canvas_blit_unnnnnnuu)
+        LUAX_OVERLOAD_ARITY(2, canvas_blit_uuU)
+        LUAX_OVERLOAD_ARITY(3, canvas_blit_uuU)
+        LUAX_OVERLOAD_ARITY(4, canvas_blit_unnuU)
+        LUAX_OVERLOAD_ARITY(5, canvas_blit_unnuU)
+        LUAX_OVERLOAD_ARITY(8, canvas_blit_unnnnnnuU)
+        LUAX_OVERLOAD_ARITY(9, canvas_blit_unnnnnnuU)
     LUAX_OVERLOAD_END
 }

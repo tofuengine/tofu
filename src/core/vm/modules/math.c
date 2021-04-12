@@ -354,7 +354,7 @@ static int math_wave_s(lua_State *L)
     return 1;
 }
 
-static int math_wave_snn(lua_State *L)
+static int math_wave_snN(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
@@ -382,8 +382,8 @@ static int math_wave(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(1, math_wave_s)
-        LUAX_OVERLOAD_ARITY(2, math_wave_snn)
-        LUAX_OVERLOAD_ARITY(3, math_wave_snn)
+        LUAX_OVERLOAD_ARITY(2, math_wave_snN)
+        LUAX_OVERLOAD_ARITY(3, math_wave_snN)
     LUAX_OVERLOAD_END
 }
 

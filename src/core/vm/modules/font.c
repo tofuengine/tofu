@@ -258,7 +258,7 @@ static int font_write_usnn(lua_State *L)
     return 0;
 }
 
-static int font_write_usnnnn(lua_State *L)
+static int font_write_usnnnN(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -311,7 +311,7 @@ static int font_write(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(4, font_write_usnn)
-        LUAX_OVERLOAD_ARITY(5, font_write_usnnnn)
-        LUAX_OVERLOAD_ARITY(6, font_write_usnnnn)
+        LUAX_OVERLOAD_ARITY(5, font_write_usnnnN)
+        LUAX_OVERLOAD_ARITY(6, font_write_usnnnN)
     LUAX_OVERLOAD_END
 }

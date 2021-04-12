@@ -284,7 +284,7 @@ static int bank_blit_unnnnn(lua_State *L)
     return 0;
 }
 
-static int bank_blit_unnnnnnnn(lua_State *L)
+static int bank_blit_unnnnnnNN(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -321,8 +321,8 @@ static int bank_blit(lua_State *L)
         LUAX_OVERLOAD_ARITY(4, bank_blit_unnn)
         LUAX_OVERLOAD_ARITY(5, bank_blit_unnnn)
         LUAX_OVERLOAD_ARITY(6, bank_blit_unnnnn)
-        LUAX_OVERLOAD_ARITY(7, bank_blit_unnnnnnnn)
-        LUAX_OVERLOAD_ARITY(8, bank_blit_unnnnnnnn)
-        LUAX_OVERLOAD_ARITY(9, bank_blit_unnnnnnnn)
+        LUAX_OVERLOAD_ARITY(7, bank_blit_unnnnnnNN)
+        LUAX_OVERLOAD_ARITY(8, bank_blit_unnnnnnNN)
+        LUAX_OVERLOAD_ARITY(9, bank_blit_unnnnnnNN)
     LUAX_OVERLOAD_END
 }
