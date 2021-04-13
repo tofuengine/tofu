@@ -30,6 +30,8 @@
 #include <libs/luax.h>
 #include <libs/sincos.h>
 #include <libs/wave.h>
+#include <libs/imath.h>
+#include <libs/fmath.h>
 
 #include <stdint.h>
 #include <math.h>
@@ -83,14 +85,6 @@ int math_loader(lua_State *L)
     return luaX_newmodule(L, &_math_script, _math_functions, _math_constants, nup, NULL);
 }
 
-static inline float _lerpf(float v0, float v1, float t) // FIXME: tranform to macros.
-{
-    // More numerical stable than the following one.
-    // return (v1 - v0) * t + v0
-    // see: https://en.wikipedia.org/wiki/Linear_interpolation
-    return v0 * (1.0f - t) + v1 * t;
-}
-
 static int math_lerp_3nnn_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -102,16 +96,11 @@ static int math_lerp_3nnn_1n(lua_State *L)
     float v1 = LUAX_NUMBER(L, 2);
     float t = LUAX_NUMBER(L, 3);
 
-    float v = _lerpf(v0, v1, t);
+    float v = FLERP(v0, v1, t);
 
     lua_pushnumber(L, (lua_Number)v);
 
     return 1;
-}
-
-static inline float _invlerpf(float v0, float v1, float v)
-{
-	return (v - v0) / (v1 - v0);
 }
 
 static int math_invlerp_3nnn_1n(lua_State *L)
@@ -125,19 +114,11 @@ static int math_invlerp_3nnn_1n(lua_State *L)
     float v1 = LUAX_NUMBER(L, 2);
     float v = LUAX_NUMBER(L, 3);
 
-    float t = _invlerpf(v0, v1, v);
+    float t = FINVLERP(v0, v1, v);
 
     lua_pushnumber(L, (lua_Number)t);
 
     return 1;
-}
-
-// Arguments order matches Khronos' one.
-// https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/clamp.xhtml
-
-static inline float _clampf(float x, float lower, float upper) // TODO: move to a separate lib file?
-{
-    return x < lower ? lower : (x > upper ? upper : x);
 }
 
 static int math_clamp_3nnn_1n(lua_State *L)
@@ -151,16 +132,11 @@ static int math_clamp_3nnn_1n(lua_State *L)
     float lower = LUAX_NUMBER(L, 2);
     float upper = LUAX_NUMBER(L, 3);
 
-    float v = _clampf(x, lower, upper);
+    float v = FCLAMP(x, lower, upper);
 
     lua_pushnumber(L, (lua_Number)v);
 
     return 1;
-}
-
-static inline float _stepf(float edge, float x) // TODO: move to a separate lib file?
-{
-    return x < edge ? 0.0f : 1.0f;
 }
 
 static int math_step_2nn_1n(lua_State *L)
@@ -172,17 +148,11 @@ static int math_step_2nn_1n(lua_State *L)
     float edge = LUAX_NUMBER(L, 1);
     float x = LUAX_NUMBER(L, 2);
 
-    float v = _stepf(edge, x);
+    float v = FSTEP(edge, x);
 
     lua_pushnumber(L, (lua_Number)v);
 
     return 1;
-}
-
-static inline float _smoothstepf(float edge0, float edge1, float x) // TODO: move to a separate lib file?
-{
-    x = _clampf((x - edge0) / (edge1 - edge0), 0.0f, 1.0f); // Scale, bias and saturate x to [0, 1] range.
-    return x * x * (3.0f - 2.0f * x); // Evaluate polynomial.
 }
 
 static int math_smoothstep_3nnn_1n(lua_State *L)
@@ -196,17 +166,11 @@ static int math_smoothstep_3nnn_1n(lua_State *L)
     float edge1 = LUAX_NUMBER(L, 2);
     float x = LUAX_NUMBER(L, 3);
 
-    float v = _smoothstepf(edge0, edge1, x);
+    float v = fsmoothstep(edge0, edge1, x);
 
     lua_pushnumber(L, (lua_Number)v);
 
     return 1;
-}
-
-static inline float _smootherstepf(float edge0, float edge1, float x) // TODO: move to a separate lib file?
-{
-    x = _clampf((x - edge0) / (edge1 - edge0), 0.0f, 1.0f);
-    return x * x * x * (x * (x * 6.0f - 15.0f) + 10.0f);
 }
 
 static int math_smootherstep_3nnn_1n(lua_State *L)
@@ -220,7 +184,7 @@ static int math_smootherstep_3nnn_1n(lua_State *L)
     float edge1 = LUAX_NUMBER(L, 2);
     float x = LUAX_NUMBER(L, 3);
 
-    float v = _smootherstepf(edge0, edge1, x);
+    float v = fsmootherstep(edge0, edge1, x);
 
     lua_pushnumber(L, (lua_Number)v);
 
@@ -239,12 +203,6 @@ static int math_sign_1n_1n(lua_State *L) // This never returns 0.
     return 1;
 }
 
-static inline int _signun(float x)
-{
-//    return x > 0.0f ? 1 : (x < 0.0f ? -1 : 0);
-    return (x > 0.0f) - (x < 0.0f);
-}
-
 static int math_signum_1n_1n(lua_State *L) // Returns -1, 0, 1
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -252,7 +210,7 @@ static int math_signum_1n_1n(lua_State *L) // Returns -1, 0, 1
     LUAX_SIGNATURE_END
     float x = LUAX_NUMBER(L, 1);
 
-    lua_pushinteger(L, (lua_Integer)_signun(x));
+    lua_pushinteger(L, (lua_Integer)FSIGNUM(x));
 
     return 1;
 }
@@ -434,7 +392,8 @@ static int _normalize_lerp_tweener_1n_1n(lua_State *L)
     float to = LUAX_NUMBER(L, lua_upvalueindex(4));
 
     float ratio = time / duration;
-    float value = _lerpf(from, to, easing->function(ratio));
+    float eased_ratio = easing->function(ratio);
+    float value = FLERP(from, to, eased_ratio);
 
     lua_pushnumber(L, (lua_Number)value);
 
