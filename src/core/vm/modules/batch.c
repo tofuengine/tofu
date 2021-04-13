@@ -53,9 +53,6 @@ static const struct luaL_Reg _batch_functions[] = {
 };
 
 static const luaX_Const _batch_constants[] = {
-    // { "FAST", LUA_CT_INTEGER, { .i = MODE_FAST } },
-    // { "SIMPLE", LUA_CT_INTEGER, { .i = MODE_SIMPLE } },
-    // { "COMPLETE", LUA_CT_INTEGER, { .i = MODE_COMPLETE } },
     { NULL, LUA_CT_NIL, { 0 } }
 };
 

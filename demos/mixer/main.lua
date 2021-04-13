@@ -33,6 +33,16 @@ local Source = require("tofu.sound").Source
 
 local Main = Class.define()
 
+local SOURCES = {
+  { name = "assets/1ch-22050-16.flac", type = "sample" },
+  { name = "assets/2ch-48000-16.flac", type = "music" },
+  { name = "assets/last_ninja_3.it", type = "module" },
+  { name = "assets/c64_operationwolf.mod", type = "module" },
+  { name = "assets/nightbeat-turrican_ii_theme.s3m", type = "module" },
+  --{ name = "assets/db_ab.xm", type = "module" },
+  { name = "assets/turrican_iii.xm", type = "module" },
+}
+
 function Main:__ctor()
   Display.palette(Palette.new("pico-8"))
 
@@ -43,18 +53,15 @@ function Main:__ctor()
 
   self.font = Font.default(canvas, 0, 15)
 
-  self.sources = {
-      Source.new("assets/1ch-22050-16.flac", Source.SAMPLE),
-      Source.new("assets/2ch-48000-16.flac", Source.MUSIC),
-      Source.new("assets/last_ninja_3.it", Source.MODULE),
-      Source.new("assets/c64_operationwolf.mod", Source.MODULE),
-      Source.new("assets/nightbeat-turrican_ii_theme.s3m", Source.MODULE),
-      --Source.new("assets/db_ab.xm", Source.MODULE),
-      Source.new("assets/turrican_iii.xm", Source.MODULE),
-    }
-    self.sources[2]:looped(true)
-    self.sources[3]:looped(true)
-    self.sources[3]:play()
+  self.sources = {}
+  for _, source in ipairs(SOURCES) do
+    local instance = Source.new(source.name, source.type)
+    table.insert(self.sources, { instance = instance, pan = 0.0, balance = 0.0 })
+  end
+
+  self.sources[2].instance:looped(true)
+  self.sources[3].instance:looped(true)
+  self.sources[3].instance:play()
 
   self.property = 1
   self.current = 1
@@ -62,44 +69,42 @@ end
 
 local PROPERTIES = { 'play', 'stop', 'resume', 'gain', 'pan', 'balance', 'mix' }
 
-local _pan = 0.0
-
 function Main:input()
   if Input.is_pressed("a") then
     local source = self.sources[self.current]
     if self.property == 1 then
-      source:play()
+      source.instance:play()
     elseif self.property == 2 then
-      source:stop()
+      source.instance:stop()
     elseif self.property == 3 then
-      source:resume()
+      source.instance:resume()
     elseif self.property == 7 then
-      local ll, lr, rl, rr = source:mix()
-      source:mix(lr, ll, rr, rl)
+      local ll, lr, rl, rr = source.instance:mix()
+      source.instance:mix(lr, ll, rr, rl)
     end
   elseif Input.is_pressed("x") then
     local source = self.sources[self.current]
     if self.property == 4 then
-      local gain = source:gain()
-      source:gain(gain - 0.05)
+      local gain = source.instance:gain()
+      source.instance:gain(gain - 0.05)
     elseif self.property == 5 then
-      _pan = _pan - 0.05
-      source:pan(_pan)
+      source.pan = math.max(0.0, source.pan - 0.05)
+      source.instance:pan(source.pan)
     elseif self.property == 6 then
-      local balance = source:balance()
-      source:balance(balance - 0.05)
+      source.balance = math.max(0.0, source.balance - 0.05)
+      source.instance:balance(source.balance)
     end
   elseif Input.is_pressed("y") then
     local source = self.sources[self.current]
     if self.property == 4 then
-      local gain = source:gain()
-      source:gain(gain + 0.05)
+      local gain = source.instance:gain()
+      source.instance:gain(gain + 0.05)
     elseif self.property == 5 then
-      _pan = _pan + 0.05
-      source:pan(_pan)
+      source.pan = math.max(1.0, source.pan + 0.05)
+      source.instance:pan(source.pan)
     elseif self.property == 6 then
-      local balance = source:balance()
-      source:balance(balance + 0.05)
+      source.balance = math.max(1.0, source.balance + 0.05)
+      source.instance:balance(source.balance)
     end
   elseif Input.is_pressed("up") then
     self.current = math.max(self.current - 1, 1)
@@ -125,8 +130,8 @@ function Main:render(_)
   for index, source in ipairs(self.sources) do
       local text = string.format("%s%s %.3f %.3f",
         self.current == index and "*" or " ",
-        source:is_playing() and "!" or " ",
-        _pan, source:gain())
+        source.instance:is_playing() and "!" or " ",
+        source.pan, source.instance:gain())
     local _, th = self.font:size(text)
     self.font:write(text, x, y)
     y = y + th

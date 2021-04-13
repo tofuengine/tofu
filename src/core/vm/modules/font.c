@@ -43,14 +43,14 @@ static int font_new_4uunn_1u(lua_State *L);
 static int font_gc_1u_0(lua_State *L);
 static int font_size_4uSNN_2n(lua_State *L);
 static int font_canvas_2uu_0(lua_State *L);
-static int font_write(lua_State *L);
+static int font_write_v_0(lua_State *L);
 
 static const struct luaL_Reg _font_functions[] = {
     { "new", font_new_4uunn_1u },
     { "__gc", font_gc_1u_0 },
     { "size", font_size_4uSNN_2n },
     { "canvas", font_canvas_2uu_0 },
-    { "write", font_write },
+    { "write", font_write_v_0 },
     { NULL, NULL }
 };
 
@@ -307,7 +307,7 @@ static int font_write_6usnnnN_0(lua_State *L)
     return 0;
 }
 
-static int font_write(lua_State *L)
+static int font_write_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(4, font_write_4usnn_0)

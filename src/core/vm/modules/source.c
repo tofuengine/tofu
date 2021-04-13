@@ -31,8 +31,8 @@
 #include <libs/log.h>
 
 #include "udt.h"
+#include "utils/map.h"
 
-// FIXME: FIXME: change to string constant.
 typedef enum _Source_Types_t {
     SOURCE_TYPE_MUSIC,
     SOURCE_TYPE_SAMPLE,
@@ -77,9 +77,6 @@ static const struct luaL_Reg _source_functions[] = {
 };
 
 static const luaX_Const _source_constants[] = {
-    { "MUSIC", LUA_CT_INTEGER, { .i = SOURCE_TYPE_MUSIC } },
-    { "SAMPLE", LUA_CT_INTEGER, { .i = SOURCE_TYPE_SAMPLE } },
-    { "MODULE", LUA_CT_INTEGER, { .i = SOURCE_TYPE_MODULE } },
     { NULL, LUA_CT_NIL, { 0 } }
 };
 
@@ -113,6 +110,12 @@ static int _handle_eof(void *user_data)
     return FS_eof(handle) ? 1 : 0;
 }
 
+static const Map_Entry_t _types[Source_Type_t_CountOf] = { // Need to be sorted for `bsearch()`
+    { "module", SOURCE_TYPE_MODULE },
+    { "music", SOURCE_TYPE_MUSIC },
+    { "sample", SOURCE_TYPE_SAMPLE },
+};
+
 static const Source_Create_Function_t _create_functions[Source_Type_t_CountOf] = {
     SL_music_create,
     SL_sample_create,
@@ -123,10 +126,10 @@ static int source_new_2sn_1u(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
     LUAX_SIGNATURE_END
     const char *name = LUAX_STRING(L, 1);
-    Source_Type_t type = (Source_Type_t)LUAX_OPTIONAL_INTEGER(L, 2, SOURCE_TYPE_MUSIC);
+    const char *type = LUAX_OPTIONAL_STRING(L, 2, "music");
 
     const Storage_t *storage = (const Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
@@ -137,14 +140,14 @@ static int source_new_2sn_1u(lua_State *L)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p opened for file `%s`", handle, name);
 
-    SL_Callbacks_t callbacks = (SL_Callbacks_t){
+    const Map_Entry_t *entry = map_find(L, type, _types, Source_Type_t_CountOf);
+    SL_Source_t *source = _create_functions[entry->value](audio->sl, (SL_Callbacks_t){
             .read = _handle_read,
             .seek = _handle_seek,
             .tell = _handle_tell,
             .eof = _handle_eof,
             .user_data = (void *)handle
-        };
-    SL_Source_t *source = _create_functions[type](audio->sl, callbacks);
+        });
     if (!source) {
         FS_close(handle);
         return luaL_error(L, "can't create source");
