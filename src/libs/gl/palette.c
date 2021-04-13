@@ -24,6 +24,8 @@
 
 #include "palette.h"
 
+#include <libs/fmath.h>
+
 #include <string.h>
 
 void GL_palette_generate_greyscale(GL_Palette_t *palette, const size_t size)
@@ -63,20 +65,12 @@ GL_Pixel_t GL_palette_find_nearest_color(const GL_Palette_t *palette, const GL_C
     return index;
 }
 
-static inline float _lerpf(float v0, float v1, float t)
-{
-    // More numerical stable than the following one.
-    // return (v1 - v0) * t + v0
-    // see: https://en.wikipedia.org/wiki/Linear_interpolation
-    return v0 * (1.0f - t) + v1 * t;
-}
-
 GL_Color_t GL_palette_lerp(const GL_Color_t from, const GL_Color_t to, float ratio)
 {
     return (GL_Color_t){
-            .r = (uint8_t)_lerpf((float)from.r, (float)to.r, ratio),
-            .g = (uint8_t)_lerpf((float)from.g, (float)to.g, ratio),
-            .b = (uint8_t)_lerpf((float)from.b, (float)to.b, ratio),
+            .r = (uint8_t)FLERP((float)from.r, (float)to.r, ratio),
+            .g = (uint8_t)FLERP((float)from.g, (float)to.g, ratio),
+            .b = (uint8_t)FLERP((float)from.b, (float)to.b, ratio),
             .a = 255
         };
 }
