@@ -209,7 +209,7 @@ void luaX_preload(lua_State *L, const char *modname, lua_CFunction loadf, int nu
 {
     luaL_getsubtable(L, LUA_REGISTRYINDEX, LUA_PRELOAD_TABLE);
     lua_insert(L, -(nup + 1)); // Move the `_PRELOAD` table above the upvalues.
-    lua_pushcclosure(L, loadf, nup); // Closure with the upvalues (they are be consumed)
+    lua_pushcclosure(L, loadf, nup); // Closure with the upvalues (they are consumed)
     lua_setfield(L, -2, modname);
     lua_pop(L, 1); // Pop the `_PRELOAD` table
 }
