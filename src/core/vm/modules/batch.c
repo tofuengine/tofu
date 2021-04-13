@@ -27,8 +27,8 @@
 #include <config.h>
 #include <libs/log.h>
 
-#include "callbacks.h"
 #include "udt.h"
+#include "utils/callbacks.h"
 
 #define LOG_CONTEXT "batch"
 #define META_TABLE  "Tofu_Graphics_Batch_mt"

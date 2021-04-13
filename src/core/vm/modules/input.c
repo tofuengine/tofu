@@ -26,9 +26,9 @@
 
 #include <config.h>
 #include <core/io/input.h>
-#include <libs/map.h>
 
 #include "udt.h"
+#include "utils/map.h"
 
 #ifndef countof
   #define countof(a)  (sizeof((a)) / sizeof((a)[0]))
