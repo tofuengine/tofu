@@ -35,27 +35,26 @@
 #define LOG_CONTEXT "copperlist"
 #define META_TABLE  "Tofu_Graphics_Copperlist_mt"
 
-static int copperlist_new(lua_State *L);
-static int copperlist_gc(lua_State *L);
-static int copperlist_wait(lua_State *L);
-static int copperlist_modulo(lua_State *L);
-static int copperlist_offset(lua_State *L);
-static int copperlist_palette(lua_State *L);
-static int copperlist_color(lua_State *L);
-static int copperlist_bias(lua_State *L);
-static int copperlist_shift(lua_State *L);
-// TODO: add helper class to create gradients?
+static int copperlist_new_0_1u(lua_State *L);
+static int copperlist_gc_1u_0(lua_State *L);
+static int copperlist_wait_3unn_0(lua_State *L);
+static int copperlist_modulo_2un_0(lua_State *L);
+static int copperlist_offset_2un_0(lua_State *L);
+static int copperlist_palette_2un_0(lua_State *L);
+static int copperlist_color_5unnnn_0(lua_State *L);
+static int copperlist_bias_2un_0(lua_State *L);
+static int copperlist_shift_v_0(lua_State *L);
 
 static const struct luaL_Reg _copperlist_functions[] = {
-    { "new", copperlist_new },
-    { "__gc", copperlist_gc },
-    { "wait", copperlist_wait },
-    { "modulo", copperlist_modulo },
-    { "offset", copperlist_offset },
-    { "palette", copperlist_palette },
-    { "color", copperlist_color },
-    { "bias", copperlist_bias },
-    { "shift", copperlist_shift },
+    { "new", copperlist_new_0_1u },
+    { "__gc", copperlist_gc_1u_0 },
+    { "wait", copperlist_wait_3unn_0 },
+    { "modulo", copperlist_modulo_2un_0 },
+    { "offset", copperlist_offset_2un_0 },
+    { "palette", copperlist_palette_2un_0 },
+    { "color", copperlist_color_5unnnn_0 },
+    { "bias", copperlist_bias_2un_0 },
+    { "shift", copperlist_shift_v_0 },
     { NULL, NULL }
 };
 
@@ -72,7 +71,7 @@ int copperlist_loader(lua_State *L)
     return luaX_newmodule(L, &_copperlist_script, _copperlist_functions, NULL, nup, META_TABLE);
 }
 
-static int copperlist_new(lua_State *L)
+static int copperlist_new_0_1u(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
@@ -88,7 +87,7 @@ static int copperlist_new(lua_State *L)
     return 1;
 }
 
-static int copperlist_gc(lua_State *L)
+static int copperlist_gc_1u_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -105,7 +104,7 @@ static int copperlist_gc(lua_State *L)
     return 0;
 }
 
-static int copperlist_wait(lua_State *L)
+static int copperlist_wait_3unn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -123,7 +122,7 @@ static int copperlist_wait(lua_State *L)
     return 0;
 }
 
-static int copperlist_modulo(lua_State *L)
+static int copperlist_modulo_2un_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -138,7 +137,7 @@ static int copperlist_modulo(lua_State *L)
     return 0;
 }
 
-static int copperlist_offset(lua_State *L)
+static int copperlist_offset_2un_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -153,7 +152,7 @@ static int copperlist_offset(lua_State *L)
     return 0;
 }
 
-static int copperlist_palette(lua_State *L)
+static int copperlist_palette_2un_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -168,7 +167,7 @@ static int copperlist_palette(lua_State *L)
     return 0;
 }
 
-static int copperlist_color(lua_State *L)
+static int copperlist_color_5unnnn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -192,7 +191,7 @@ static int copperlist_color(lua_State *L)
     return 0;
 }
 
-static int copperlist_bias(lua_State *L)
+static int copperlist_bias_2un_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -207,7 +206,7 @@ static int copperlist_bias(lua_State *L)
     return 0;
 }
 
-static int copperlist_shift_ut(lua_State *L)
+static int copperlist_shift_2ut_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -230,7 +229,7 @@ static int copperlist_shift_ut(lua_State *L)
     return 0;
 }
 
-static int copperlist_shift_unn(lua_State *L)
+static int copperlist_shift_3unn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -248,10 +247,10 @@ static int copperlist_shift_unn(lua_State *L)
     return 0;
 }
 
-static int copperlist_shift(lua_State *L)
+static int copperlist_shift_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(2, copperlist_shift_ut)
-        LUAX_OVERLOAD_ARITY(3, copperlist_shift_unn)
+        LUAX_OVERLOAD_ARITY(2, copperlist_shift_2ut_0)
+        LUAX_OVERLOAD_ARITY(3, copperlist_shift_3unn_0)
     LUAX_OVERLOAD_END
 }

@@ -32,12 +32,12 @@
 
 #include <string.h>
 
-static int file_load(lua_State *L);
-static int file_store(lua_State *L);
+static int file_load_1sS_1s(lua_State *L);
+static int file_store_3ssS_0(lua_State *L);
 
 static const struct luaL_Reg _file_functions[] = {
-    { "load", file_load },
-    { "store", file_store },
+    { "load", file_load_1sS_1s },
+    { "store", file_store_3ssS_0 },
     { NULL, NULL }
 };
 
@@ -47,7 +47,7 @@ int file_loader(lua_State *L)
     return luaX_newmodule(L, NULL, _file_functions, NULL, nup, NULL);
 }
 
-static int file_load(lua_State *L)
+static int file_load_1sS_1s(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
@@ -78,7 +78,7 @@ static int file_load(lua_State *L)
     return 1;
 }
 
-static int file_store(lua_State *L)
+static int file_store_3ssS_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)

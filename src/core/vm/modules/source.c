@@ -32,6 +32,7 @@
 
 #include "udt.h"
 
+// FIXME: FIXME: change to string constant.
 typedef enum _Source_Types_t {
     SOURCE_TYPE_MUSIC,
     SOURCE_TYPE_SAMPLE,
@@ -44,34 +45,34 @@ typedef SL_Source_t *(*Source_Create_Function_t)(const SL_Context_t *context, SL
 #define LOG_CONTEXT "source"
 #define META_TABLE  "Tofu_Sound_Source_mt"
 
-static int source_new(lua_State *L);
-static int source_gc(lua_State *L);
-static int source_group(lua_State *L);
-static int source_looped(lua_State *L);
-static int source_mix(lua_State *L);
-static int source_pan(lua_State *L);
-static int source_balance(lua_State *L);
-static int source_gain(lua_State *L);
-static int source_speed(lua_State *L);
-static int source_play(lua_State *L);
-static int source_resume(lua_State *L);
-static int source_stop(lua_State *L);
-static int source_is_playing(lua_State *L);
+static int source_new_2sn_1u(lua_State *L);
+static int source_gc_1u_0(lua_State *L);
+static int source_looped_v_v(lua_State *L);
+static int source_group_v_v(lua_State *L);
+static int source_mix_v_v(lua_State *L);
+static int source_pan_v_0(lua_State *L);
+static int source_balance_2un_0(lua_State *L);
+static int source_gain_v_v(lua_State *L);
+static int source_speed_v_v(lua_State *L);
+static int source_play_1u_0(lua_State *L);
+static int source_resume_1u_0(lua_State *L);
+static int source_stop_1u_0(lua_State *L);
+static int source_is_playing_1u_1b(lua_State *L);
 
 static const struct luaL_Reg _source_functions[] = {
-    { "new", source_new },
-    { "__gc", source_gc },
-    { "group", source_group },
-    { "looped", source_looped },
-    { "mix", source_mix },
-    { "pan", source_pan },
-    { "balance", source_balance },
-    { "gain", source_gain },
-    { "speed", source_speed },
-    { "play", source_play },
-    { "resume", source_resume },
-    { "stop", source_stop },
-    { "is_playing", source_is_playing },
+    { "new", source_new_2sn_1u },
+    { "__gc", source_gc_1u_0 },
+    { "looped", source_looped_v_v },
+    { "group", source_group_v_v },
+    { "mix", source_mix_v_v },
+    { "pan", source_pan_v_0 },
+    { "balance", source_balance_2un_0 },
+    { "gain", source_gain_v_v },
+    { "speed", source_speed_v_v },
+    { "play", source_play_1u_0 },
+    { "resume", source_resume_1u_0 },
+    { "stop", source_stop_1u_0 },
+    { "is_playing", source_is_playing_1u_1b },
     { NULL, NULL }
 };
 
@@ -118,7 +119,7 @@ static const Source_Create_Function_t _create_functions[Source_Type_t_CountOf] =
     SL_module_create
 };
 
-static int source_new(lua_State *L)
+static int source_new_2sn_1u(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
@@ -163,7 +164,7 @@ static int source_new(lua_State *L)
     return 1;
 }
 
-static int source_gc(lua_State *L)
+static int source_gc_1u_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -185,7 +186,7 @@ static int source_gc(lua_State *L)
     return 0;
 }
 
-static int source_looped_u(lua_State *L)
+static int source_looped_1u_1b(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -197,7 +198,7 @@ static int source_looped_u(lua_State *L)
     return 1;
 }
 
-static int source_looped_ub(lua_State *L)
+static int source_looped_2ub_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -211,15 +212,15 @@ static int source_looped_ub(lua_State *L)
     return 0;
 }
 
-static int source_looped(lua_State *L)
+static int source_looped_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, source_looped_u)
-        LUAX_OVERLOAD_ARITY(2, source_looped_ub)
+        LUAX_OVERLOAD_ARITY(1, source_looped_1u_1b)
+        LUAX_OVERLOAD_ARITY(2, source_looped_2ub_0)
     LUAX_OVERLOAD_END
 }
 
-static int source_group_u(lua_State *L)
+static int source_group_1u_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -231,7 +232,7 @@ static int source_group_u(lua_State *L)
     return 1;
 }
 
-static int source_group_ub(lua_State *L)
+static int source_group_2ub_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -245,15 +246,15 @@ static int source_group_ub(lua_State *L)
     return 0;
 }
 
-static int source_group(lua_State *L)
+static int source_group_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, source_group_u)
-        LUAX_OVERLOAD_ARITY(2, source_group_ub)
+        LUAX_OVERLOAD_ARITY(1, source_group_1u_1n)
+        LUAX_OVERLOAD_ARITY(2, source_group_2ub_0)
     LUAX_OVERLOAD_END
 }
 
-static int source_mix_u(lua_State *L)
+static int source_mix_1u_4nnnn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -270,7 +271,7 @@ static int source_mix_u(lua_State *L)
     return 4;
 }
 
-static int source_mix_unnnn(lua_State *L)
+static int source_mix_5unnnn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -295,15 +296,15 @@ static int source_mix_unnnn(lua_State *L)
     return 0;
 }
 
-static int source_mix(lua_State *L)
+static int source_mix_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, source_mix_u)
-        LUAX_OVERLOAD_ARITY(5, source_mix_unnnn)
+        LUAX_OVERLOAD_ARITY(1, source_mix_1u_4nnnn)
+        LUAX_OVERLOAD_ARITY(5, source_mix_5unnnn_0)
     LUAX_OVERLOAD_END
 }
 
-static int source_pan_un(lua_State *L)
+static int source_pan_2un_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -317,7 +318,7 @@ static int source_pan_un(lua_State *L)
     return 0;
 }
 
-static int source_pan_unn(lua_State *L)
+static int source_pan_3unn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -333,15 +334,15 @@ static int source_pan_unn(lua_State *L)
     return 0;
 }
 
-static int source_pan(lua_State *L)
+static int source_pan_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(2, source_pan_un)
-        LUAX_OVERLOAD_ARITY(3, source_pan_unn)
+        LUAX_OVERLOAD_ARITY(2, source_pan_2un_0)
+        LUAX_OVERLOAD_ARITY(3, source_pan_3unn_0)
     LUAX_OVERLOAD_END
 }
 
-static int source_balance(lua_State *L)
+static int source_balance_2un_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -355,7 +356,7 @@ static int source_balance(lua_State *L)
     return 0;
 }
 
-static int source_gain_u(lua_State *L)
+static int source_gain_1u_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -367,7 +368,7 @@ static int source_gain_u(lua_State *L)
     return 1;
 }
 
-static int source_gain_un(lua_State *L)
+static int source_gain_2un_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -381,15 +382,15 @@ static int source_gain_un(lua_State *L)
     return 0;
 }
 
-static int source_gain(lua_State *L)
+static int source_gain_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, source_gain_u)
-        LUAX_OVERLOAD_ARITY(2, source_gain_un)
+        LUAX_OVERLOAD_ARITY(1, source_gain_1u_1n)
+        LUAX_OVERLOAD_ARITY(2, source_gain_2un_0)
     LUAX_OVERLOAD_END
 }
 
-static int source_speed_u(lua_State *L)
+static int source_speed_1u_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -401,7 +402,7 @@ static int source_speed_u(lua_State *L)
     return 1;
 }
 
-static int source_speed_un(lua_State *L)
+static int source_speed_2un_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -415,15 +416,15 @@ static int source_speed_un(lua_State *L)
     return 0;
 }
 
-static int source_speed(lua_State *L)
+static int source_speed_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, source_speed_u)
-        LUAX_OVERLOAD_ARITY(2, source_speed_un)
+        LUAX_OVERLOAD_ARITY(1, source_speed_1u_1n)
+        LUAX_OVERLOAD_ARITY(2, source_speed_2un_0)
     LUAX_OVERLOAD_END
 }
 
-static int source_play(lua_State *L)
+static int source_play_1u_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -437,7 +438,7 @@ static int source_play(lua_State *L)
     return 0;
 }
 
-static int source_resume(lua_State *L)
+static int source_resume_1u_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -451,7 +452,7 @@ static int source_resume(lua_State *L)
     return 0;
 }
 
-static int source_stop(lua_State *L)
+static int source_stop_1u_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -465,7 +466,7 @@ static int source_stop(lua_State *L)
     return 0;
 }
 
-static int source_is_playing(lua_State *L)
+static int source_is_playing_1u_1b(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)

@@ -45,25 +45,25 @@
 #define LOG_CONTEXT "xform"
 #define META_TABLE  "Tofu_Graphics_XForm_mt"
 
-static int xform_new(lua_State *L);
-static int xform_gc(lua_State *L);
-static int xform_offset(lua_State *L);
-static int xform_matrix(lua_State *L);
-static int xform_wrap(lua_State *L);
-static int xform_table(lua_State *L);
+static int xform_new_1S_1u(lua_State *L);
+static int xform_gc_1u_0(lua_State *L);
+static int xform_offset_3unn_0(lua_State *L);
+static int xform_matrix_v_0(lua_State *L);
+static int xform_wrap_2us_0(lua_State *L);
+static int xform_table_v_0(lua_State *L);
 // TODO: add helper functions to generate common transformations?
-static int xform_project(lua_State *L);
-static int xform_warp(lua_State *L);
+static int xform_project_4unnn_0(lua_State *L);
+static int xform_warp_3unn_0(lua_State *L);
 
 static const struct luaL_Reg _xform_functions[] = {
-    { "new", xform_new },
-    { "__gc", xform_gc },
-    { "offset", xform_offset },
-    { "matrix", xform_matrix },
-    { "wrap", xform_wrap },
-    { "table", xform_table },
-    { "project", xform_project },
-    { "warp", xform_warp },
+    { "new", xform_new_1S_1u },
+    { "__gc", xform_gc_1u_0 },
+    { "offset", xform_offset_3unn_0 },
+    { "matrix", xform_matrix_v_0 },
+    { "wrap", xform_wrap_2us_0 },
+    { "table", xform_table_v_0 },
+    { "project", xform_project_4unnn_0 },
+    { "warp", xform_warp_3unn_0 },
     { NULL, NULL }
 };
 
@@ -97,7 +97,7 @@ static inline GL_XForm_Wraps_t _parse_wrap_mode(const char *mode)
     }
 }
 
-static int xform_new(lua_State *L)
+static int xform_new_1S_1u(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
@@ -123,7 +123,7 @@ static int xform_new(lua_State *L)
     return 1;
 }
 
-static int xform_gc(lua_State *L)
+static int xform_gc_1u_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -140,7 +140,7 @@ static int xform_gc(lua_State *L)
     return 0;
 }
 
-static int xform_offset(lua_State *L)
+static int xform_offset_3unn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -158,7 +158,7 @@ static int xform_offset(lua_State *L)
     return 0;
 }
 
-static int xform_matrix_unn(lua_State *L)
+static int xform_matrix_3unn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -176,7 +176,7 @@ static int xform_matrix_unn(lua_State *L)
     return 0;
 }
 
-static int xform_matrix_unnnn(lua_State *L)
+static int xform_matrix_5unnnn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -200,7 +200,7 @@ static int xform_matrix_unnnn(lua_State *L)
     return 0;
 }
 
-static int xform_matrix_unnnnnn(lua_State *L)
+static int xform_matrix_7unnnnnn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -230,16 +230,16 @@ static int xform_matrix_unnnnnn(lua_State *L)
     return 0;
 }
 
-static int xform_matrix(lua_State *L)
+static int xform_matrix_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(3, xform_matrix_unn)
-        LUAX_OVERLOAD_ARITY(5, xform_matrix_unnnn)
-        LUAX_OVERLOAD_ARITY(7, xform_matrix_unnnnnn)
+        LUAX_OVERLOAD_ARITY(3, xform_matrix_3unn_0)
+        LUAX_OVERLOAD_ARITY(5, xform_matrix_5unnnn_0)
+        LUAX_OVERLOAD_ARITY(7, xform_matrix_7unnnnnn_0)
     LUAX_OVERLOAD_END
 }
 
-static int xform_wrap(lua_State *L)
+static int xform_wrap_2us_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -254,7 +254,7 @@ static int xform_wrap(lua_State *L)
     return 0;
 }
 
-static int xform_table1(lua_State *L)
+static int xform_table_1u_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -281,7 +281,7 @@ static const Map_Entry_t _registers[GL_XForm_Registers_t_CountOf] = { // Need to
     { "y", GL_XFORM_REGISTER_Y }
 };
 
-static int xform_table2(lua_State *L)
+static int xform_table_2ut_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -326,15 +326,15 @@ static int xform_table2(lua_State *L)
     return 0;
 }
 
-static int xform_table(lua_State *L)
+static int xform_table_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, xform_table1)
-        LUAX_OVERLOAD_ARITY(2, xform_table2)
+        LUAX_OVERLOAD_ARITY(1, xform_table_1u_0)
+        LUAX_OVERLOAD_ARITY(2, xform_table_2ut_0)
     LUAX_OVERLOAD_END
 }
 
-static int xform_project(lua_State *L)
+static int xform_project_4unnn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -384,7 +384,7 @@ static int xform_project(lua_State *L)
     return 0;
 }
 
-static int xform_warp(lua_State *L)
+static int xform_warp_3unn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)

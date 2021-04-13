@@ -24,6 +24,23 @@
 
 #include "modules.h"
 
+// Lua exposed C functions names are "mangled" according to this format
+//
+//   <function name>_<input arguments>_<return values>
+//
+// where `function name` is a generic identifier, `input arguments` and `return values` have this format
+//
+//   \d+[bBnNsStTuUfF]*
+//
+// The integer number indicates the amount of arguments/return-values and the sequence of characters encodes the
+// types. Uppercase characters are used for *optional* when optional.
+//
+// Example:
+//
+//   void blit_8unnnnNNN_0();
+//   void cursor_1u_2nn();
+//
+
 // FIXME: better namespace/naming usage for the modules? `arrays.h` -> `core_arrays.h`?
 #include <core/vm/modules/arrays.h>
 #include <core/vm/modules/bank.h>
@@ -66,7 +83,7 @@ static int create_module(lua_State *L, const luaL_Reg *entries)
     return 1;
 }
 
-static int core_loader(lua_State *L) // java.lang
+static int core_loader(lua_State *L)
 {
     static const luaL_Reg classes[] = {
         { "Class", class_loader },

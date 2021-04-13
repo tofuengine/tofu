@@ -34,34 +34,34 @@
 #include <stdint.h>
 #include <math.h>
 
-static int math_lerp(lua_State *L);
-static int math_invlerp(lua_State *L);
-static int math_clamp(lua_State *L);
-static int math_step(lua_State *L);
-static int math_smoothstep(lua_State *L);
-static int math_smootherstep(lua_State *L);
-static int math_sign(lua_State *L);
-static int math_signum(lua_State *L);
-static int math_sincos(lua_State *L);
-static int math_angle_to_rotation(lua_State *L);
-static int math_rotation_to_angle(lua_State *L);
-static int math_wave(lua_State *L);
-static int math_tweener(lua_State *L);
+static int math_lerp_3nnn_1n(lua_State *L);
+static int math_invlerp_3nnn_1n(lua_State *L);
+static int math_clamp_3nnn_1n(lua_State *L);
+static int math_step_2nn_1n(lua_State *L);
+static int math_smoothstep_3nnn_1n(lua_State *L);
+static int math_smootherstep_3nnn_1n(lua_State *L);
+static int math_sign_1n_1n(lua_State *L);
+static int math_signum_1n_1n(lua_State *L);
+static int math_sincos_1n_2nn(lua_State *L);
+static int math_angle_to_rotation_1n_1n(lua_State *L);
+static int math_rotation_to_angle_1n_1n(lua_State *L);
+static int math_wave_v_1f(lua_State *L);
+static int math_tweener_v_1f(lua_State *L);
 
 static const struct luaL_Reg _math_functions[] = {
-    { "lerp", math_lerp },
-    { "invlerp", math_invlerp },
-    { "clamp", math_clamp },
-    { "step", math_step },
-    { "smoothstep", math_smoothstep },
-    { "smootherstep", math_smootherstep },
-    { "sign", math_sign },
-    { "signum", math_signum },
-    { "sincos", math_sincos },
-    { "angle_to_rotation", math_angle_to_rotation },
-    { "rotation_to_angle", math_rotation_to_angle },
-    { "wave", math_wave },
-    { "tweener", math_tweener },
+    { "lerp", math_lerp_3nnn_1n },
+    { "invlerp", math_invlerp_3nnn_1n },
+    { "clamp", math_clamp_3nnn_1n },
+    { "step", math_step_2nn_1n },
+    { "smoothstep", math_smoothstep_3nnn_1n },
+    { "smootherstep", math_smootherstep_3nnn_1n },
+    { "sign", math_sign_1n_1n },
+    { "signum", math_signum_1n_1n },
+    { "sincos", math_sincos_1n_2nn },
+    { "angle_to_rotation", math_angle_to_rotation_1n_1n },
+    { "rotation_to_angle", math_rotation_to_angle_1n_1n },
+    { "wave", math_wave_v_1f },
+    { "tweener", math_tweener_v_1f },
     { NULL, NULL }
 };
 
@@ -83,7 +83,7 @@ int math_loader(lua_State *L)
     return luaX_newmodule(L, &_math_script, _math_functions, _math_constants, nup, NULL);
 }
 
-static inline float _lerpf(float v0, float v1, float t)
+static inline float _lerpf(float v0, float v1, float t) // FIXME: tranform to macros.
 {
     // More numerical stable than the following one.
     // return (v1 - v0) * t + v0
@@ -91,7 +91,7 @@ static inline float _lerpf(float v0, float v1, float t)
     return v0 * (1.0f - t) + v1 * t;
 }
 
-static int math_lerp(lua_State *L)
+static int math_lerp_3nnn_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -114,7 +114,7 @@ static inline float _invlerpf(float v0, float v1, float v)
 	return (v - v0) / (v1 - v0);
 }
 
-static int math_invlerp(lua_State *L)
+static int math_invlerp_3nnn_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -140,7 +140,7 @@ static inline float _clampf(float x, float lower, float upper) // TODO: move to 
     return x < lower ? lower : (x > upper ? upper : x);
 }
 
-static int math_clamp(lua_State *L)
+static int math_clamp_3nnn_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -163,7 +163,7 @@ static inline float _stepf(float edge, float x) // TODO: move to a separate lib 
     return x < edge ? 0.0f : 1.0f;
 }
 
-static int math_step(lua_State *L)
+static int math_step_2nn_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -185,7 +185,7 @@ static inline float _smoothstepf(float edge0, float edge1, float x) // TODO: mov
     return x * x * (3.0f - 2.0f * x); // Evaluate polynomial.
 }
 
-static int math_smoothstep(lua_State *L)
+static int math_smoothstep_3nnn_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -209,7 +209,7 @@ static inline float _smootherstepf(float edge0, float edge1, float x) // TODO: m
     return x * x * x * (x * (x * 6.0f - 15.0f) + 10.0f);
 }
 
-static int math_smootherstep(lua_State *L)
+static int math_smootherstep_3nnn_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -227,7 +227,7 @@ static int math_smootherstep(lua_State *L)
     return 1;
 }
 
-static int math_sign(lua_State *L) // This never returns 0.
+static int math_sign_1n_1n(lua_State *L) // This never returns 0.
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -245,7 +245,7 @@ static inline int _signun(float x)
     return (x > 0.0f) - (x < 0.0f);
 }
 
-static int math_signum(lua_State *L) // Returns -1, 0, 1
+static int math_signum_1n_1n(lua_State *L) // Returns -1, 0, 1
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -257,7 +257,7 @@ static int math_signum(lua_State *L) // Returns -1, 0, 1
     return 1;
 }
 
-static int math_sincos(lua_State *L)
+static int math_sincos_1n_2nn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -273,7 +273,7 @@ static int math_sincos(lua_State *L)
     return 2;
 }
 
-static int math_angle_to_rotation(lua_State *L)
+static int math_angle_to_rotation_1n_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -287,7 +287,7 @@ static int math_angle_to_rotation(lua_State *L)
     return 1;
 }
 
-static int math_rotation_to_angle(lua_State *L)
+static int math_rotation_to_angle_1n_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -301,7 +301,7 @@ static int math_rotation_to_angle(lua_State *L)
     return 1;
 }
 
-static int _vanilla_wave(lua_State *L)
+static int _vanilla_wave_1n_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -317,7 +317,7 @@ static int _vanilla_wave(lua_State *L)
     return 1;
 }
 
-static int _normalize_wave(lua_State *L)
+static int _normalize_wave_1n_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -336,7 +336,7 @@ static int _normalize_wave(lua_State *L)
     return 1;
 }
 
-static int math_wave_s(lua_State *L)
+static int math_wave_1s_1f(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
@@ -349,12 +349,12 @@ static int math_wave_s(lua_State *L)
     }
 
     lua_pushlightuserdata(L, (void *)wave);
-    lua_pushcclosure(L, _vanilla_wave, 1);
+    lua_pushcclosure(L, _vanilla_wave_1n_1n, 1);
 
     return 1;
 }
 
-static int math_wave_snN(lua_State *L)
+static int math_wave_3snN_1f(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
@@ -373,21 +373,21 @@ static int math_wave_snN(lua_State *L)
     lua_pushlightuserdata(L, (void *)wave);
     lua_pushnumber(L, (lua_Number)period);
     lua_pushnumber(L, (lua_Number)amplitude);
-    lua_pushcclosure(L, _normalize_wave, 3);
+    lua_pushcclosure(L, _normalize_wave_1n_1n, 3);
 
     return 1;
 }
 
-static int math_wave(lua_State *L)
+static int math_wave_v_1f(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, math_wave_s)
-        LUAX_OVERLOAD_ARITY(2, math_wave_snN)
-        LUAX_OVERLOAD_ARITY(3, math_wave_snN)
+        LUAX_OVERLOAD_ARITY(1, math_wave_1s_1f)
+        LUAX_OVERLOAD_ARITY(2, math_wave_3snN_1f)
+        LUAX_OVERLOAD_ARITY(3, math_wave_3snN_1f)
     LUAX_OVERLOAD_END
 }
 
-static int _vanilla_tweener(lua_State *L)
+static int _vanilla_tweener_1n_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -403,7 +403,7 @@ static int _vanilla_tweener(lua_State *L)
     return 1;
 }
 
-static int _normalize_tweener(lua_State *L)
+static int _normalize_tweener_1n_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -421,7 +421,7 @@ static int _normalize_tweener(lua_State *L)
     return 1;
 }
 
-static int _normalize_lerp_tweener(lua_State *L)
+static int _normalize_lerp_tweener_1n_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -441,7 +441,7 @@ static int _normalize_lerp_tweener(lua_State *L)
     return 1;
 }
 
-static int math_tweener_s(lua_State *L)
+static int math_tweener_1s_1f(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
@@ -454,12 +454,12 @@ static int math_tweener_s(lua_State *L)
     }
 
     lua_pushlightuserdata(L, (void *)easing);
-    lua_pushcclosure(L, _vanilla_tweener, 1);
+    lua_pushcclosure(L, _vanilla_tweener_1n_1n, 1);
 
     return 1;
 }
 
-static int math_tweener_sn(lua_State *L)
+static int math_tweener_2sn_1f(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
@@ -475,12 +475,12 @@ static int math_tweener_sn(lua_State *L)
 
     lua_pushlightuserdata(L, (void *)easing);
     lua_pushnumber(L, (lua_Number)duration);
-    lua_pushcclosure(L, _normalize_tweener, 2);
+    lua_pushcclosure(L, _normalize_tweener_1n_1n, 2);
 
     return 1;
 }
 
-static int math_tweener_snnn(lua_State *L)
+static int math_tweener_4snnn_1f(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
@@ -502,16 +502,16 @@ static int math_tweener_snnn(lua_State *L)
     lua_pushnumber(L, (lua_Number)duration);
     lua_pushnumber(L, (lua_Number)from);
     lua_pushnumber(L, (lua_Number)to);
-    lua_pushcclosure(L, _normalize_lerp_tweener, 4);
+    lua_pushcclosure(L, _normalize_lerp_tweener_1n_1n, 4);
 
     return 1;
 }
 
-static int math_tweener(lua_State *L)
+static int math_tweener_v_1f(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, math_tweener_s)
-        LUAX_OVERLOAD_ARITY(2, math_tweener_sn)
-        LUAX_OVERLOAD_ARITY(4, math_tweener_snnn)
+        LUAX_OVERLOAD_ARITY(1, math_tweener_1s_1f)
+        LUAX_OVERLOAD_ARITY(2, math_tweener_2sn_1f)
+        LUAX_OVERLOAD_ARITY(4, math_tweener_4snnn_1f)
     LUAX_OVERLOAD_END
 }

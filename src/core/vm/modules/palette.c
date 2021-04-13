@@ -35,26 +35,26 @@
 #define LOG_CONTEXT "palette"
 #define META_TABLE  "Tofu_Graphics_Palette_mt"
 
-static int palette_new(lua_State *L);
-static int palette_gc(lua_State *L);
-static int palette_mix(lua_State *L);
-static int palette_colors(lua_State *L);
-static int palette_size(lua_State *L);
-static int palette_color_to_index(lua_State *L);
-static int palette_index_to_color(lua_State *L);
-static int palette_lerp(lua_State *L);
-static int palette_merge(lua_State *L);
+static int palette_new_v_1u(lua_State *L);
+static int palette_gc_1u_0(lua_State *L);
+static int palette_mix_7nnnnnnN_3nnn(lua_State *L);
+static int palette_colors_1u_1t(lua_State *L);
+static int palette_size_1u_1n(lua_State *L);
+static int palette_color_to_index_4unnn_1n(lua_State *L);
+static int palette_index_to_color_2un_3nnn(lua_State *L);
+static int palette_lerp_5unnnN_0(lua_State *L);
+static int palette_merge_3uuB_0(lua_State *L);
 
 static const struct luaL_Reg _palette_functions[] = {
-    { "new", palette_new },
-    { "__gc", palette_gc },
-    { "mix", palette_mix },
-    { "colors", palette_colors },
-    { "size", palette_size },
-    { "color_to_index", palette_color_to_index },
-    { "index_to_color", palette_index_to_color },
-    { "lerp", palette_lerp },
-    { "merge", palette_merge },
+    { "new", palette_new_v_1u },
+    { "__gc", palette_gc_1u_0 },
+    { "mix", palette_mix_7nnnnnnN_3nnn },
+    { "colors", palette_colors_1u_1t },
+    { "size", palette_size_1u_1n },
+    { "color_to_index", palette_color_to_index_4unnn_1n },
+    { "index_to_color", palette_index_to_color_2un_3nnn },
+    { "lerp", palette_lerp_5unnnN_0 },
+    { "merge", palette_merge_3uuB_0 },
     { NULL, NULL }
 };
 
@@ -64,7 +64,7 @@ int palette_loader(lua_State *L)
     return luaX_newmodule(L, NULL, _palette_functions, NULL, nup, META_TABLE);
 }
 
-static int palette_new_v(lua_State *L)
+static int palette_new_0_1u(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
@@ -83,7 +83,7 @@ static int palette_new_v(lua_State *L)
     return 1;
 }
 
-static int palette_new_s(lua_State *L)
+static int palette_new_1s_1u(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
@@ -108,7 +108,7 @@ static int palette_new_s(lua_State *L)
     return 1;
 }
 
-static int palette_new_n(lua_State *L)
+static int palette_new_1n_1u(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -134,7 +134,7 @@ static int palette_new_n(lua_State *L)
     return 1;
 }
 
-static int palette_new_t(lua_State *L)
+static int palette_new_1t_1u(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
@@ -181,17 +181,17 @@ static int palette_new_t(lua_State *L)
     return 1;
 }
 
-static int palette_new(lua_State *L)
+static int palette_new_v_1u(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(0, palette_new_v)
-        LUAX_OVERLOAD_SIGNATURE(palette_new_s, LUA_TSTRING)
-        LUAX_OVERLOAD_SIGNATURE(palette_new_n, LUA_TNUMBER)
-        LUAX_OVERLOAD_SIGNATURE(palette_new_t, LUA_TTABLE)
+        LUAX_OVERLOAD_ARITY(0, palette_new_0_1u)
+        LUAX_OVERLOAD_SIGNATURE(palette_new_1s_1u, LUA_TSTRING)
+        LUAX_OVERLOAD_SIGNATURE(palette_new_1n_1u, LUA_TNUMBER)
+        LUAX_OVERLOAD_SIGNATURE(palette_new_1t_1u, LUA_TTABLE)
     LUAX_OVERLOAD_END
 }
 
-static int palette_gc(lua_State *L)
+static int palette_gc_1u_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -203,7 +203,7 @@ static int palette_gc(lua_State *L)
     return 0;
 }
 
-static int palette_mix(lua_State *L)
+static int palette_mix_7nnnnnnN_3nnn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -234,7 +234,7 @@ static int palette_mix(lua_State *L)
     return 3;
 }
 
-static int palette_colors(lua_State *L)
+static int palette_colors_1u_1t(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -261,7 +261,7 @@ static int palette_colors(lua_State *L)
     return 1;
 }
 
-static int palette_size(lua_State *L)
+static int palette_size_1u_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -275,7 +275,7 @@ static int palette_size(lua_State *L)
     return 1;
 }
 
-static int palette_color_to_index(lua_State *L)
+static int palette_color_to_index_4unnn_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -298,7 +298,7 @@ static int palette_color_to_index(lua_State *L)
     return 1;
 }
 
-static int palette_index_to_color(lua_State *L)
+static int palette_index_to_color_2un_3nnn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -317,7 +317,7 @@ static int palette_index_to_color(lua_State *L)
     return 3;
 }
 
-static int palette_lerp(lua_State *L)
+static int palette_lerp_5unnnN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -353,7 +353,7 @@ static bool _contains(const GL_Palette_t *palette, GL_Color_t color)
     return false;
 }
 
-static int palette_merge(lua_State *L)
+static int palette_merge_3uuB_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
