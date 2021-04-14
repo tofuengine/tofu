@@ -610,7 +610,7 @@ static inline void _surface_to_rgba(const GL_Surface_t *surface, int bias, GL_Pi
     size_t wait_y = 0, wait_x = 0;
     GL_Color_t *colors = slots[active_id].colors;
     int modulo = 0;
-    int offset = 0;
+    size_t offset = 0; // Always in the range `[0, width)`.
 
     const Display_CopperList_Entry_t *entry = copperlist;
     const GL_Pixel_t *src = surface->data;
@@ -645,10 +645,10 @@ static inline void _surface_to_rgba(const GL_Surface_t *surface, int bias, GL_Pi
                         break;
                     }
                     case OFFSET: {
-                        offset = (entry++)->integer; // FIXME: we could add the `dwidth` and spare an addition.
+                        const int amount = (entry++)->integer; // FIXME: we could add the `dwidth` and spare an addition.
                         // The offset is in the range of a scanline, so we modulo it to spare operations. Note that
                         // we are casting to `int` to avoid integer promotion, as this is a macro!
-                        offset = IMOD(offset, (int)dwidth);
+                        offset = (size_t)IMOD(amount, (int)dwidth);
                         break;
                     }
                     case PALETTE: {
@@ -761,7 +761,8 @@ void Display_present(const Display_t *display)
 #ifdef __GRAPHICS_CAPTURE_SUPPORT__
     // Read the framebuffer data, which include the final stretching and post-processing effects. The call is
     // synchronous in that it waits the previous drawing function to be completed on the texture. But this is fine
-    // for us. Just disable this feature in the `RELEASE` build.
+    // for us as we need to capture the full frame-buffer. Just disable this feature if not required, as it slows
+    // down the rendering *a lot*.
     //
     // https://vec.io/posts/faster-alternatives-to-glreadpixels-and-glteximage2d-in-opengl-es
     // https://www.khronos.org/opengl/wiki/Pixel_Transfer
