@@ -622,8 +622,11 @@ static inline void _surface_to_rgba(const GL_Surface_t *surface, int bias, GL_Pi
         GL_Color_t *dst_eod = dst_sod + dwidth;
         GL_Color_t *dst = dst_sod + offset; // Apply the offset separately on this row pointer to check row boundaries.
 
-        if (dst < dst_sod) { // Fix start-of-data wrapping. We can be "negative" only at start, if offset is negative.
+        if (dst < dst_sod) { // Fix wrapping once for all. During copy we can only wrap EOD->SOD.
             dst = dst_eod - ((dst_sod - dst) % dwidth);
+        } else
+        if (dst >= dst_eod) {
+            dst = dst_sod + ((dst - dst_eod) % dwidth);
         }
 
         for (size_t x = 0; x < dwidth; ++x) {
@@ -678,10 +681,6 @@ static inline void _surface_to_rgba(const GL_Surface_t *surface, int bias, GL_Pi
                 }
             }
 
-            if (dst >= dst_eod) { // Check end-of-data scanline wrapping prior copy-and-advance. We can't go back. :)
-                dst = dst_sod + ((dst - dst_eod) % dwidth);
-            }
-
             const GL_Pixel_t index = shifting[*(src++) + bias];
 #ifdef __DEBUG_GRAPHICS__
             GL_Color_t color;
@@ -695,6 +694,9 @@ static inline void _surface_to_rgba(const GL_Surface_t *surface, int bias, GL_Pi
 #else
             *(dst++) = colors[index];
 #endif
+            if (dst == dst_eod) { // Wrap on end-of-data. Check for equality since we are copy one pixel at time.
+                dst = dst_sod;
+            }
         }
 
         src += modulo;
