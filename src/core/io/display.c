@@ -616,13 +616,13 @@ static inline void _surface_to_rgba(const GL_Surface_t *surface, int bias, GL_Pi
     const GL_Pixel_t *src = surface->data;
     GL_Color_t *dst_sod = vram;
 
+    const size_t dwidth = (int)surface->width;
+
     for (size_t y = 0; y < surface->height; ++y) {
-        GL_Color_t *dst_eod = dst_sod + surface->width;
-        GL_Color_t *dst = dst_sod + offset;
+        GL_Color_t *dst_eod = dst_sod + dwidth;
+        GL_Color_t *dst = dst_sod + offset; // Apply the offset separately on this row pointer to check row boundaries.
 
-        // FIXME: correct color of not-written pixel when offsetting!
-
-        for (size_t x = 0; x < surface->width; ++x) {
+        for (size_t x = 0; x < dwidth; ++x) {
             // Note: there's no length indicator for the copperlist program. That means that the interpreter would run
             // endlessly (and unsafely read outside memory bounds, causing crashes). To avoid this a "wait forever"
             // trailer is added to the program in the `Display_set_copperlist()` function. This somehow mimics the
@@ -644,7 +644,7 @@ static inline void _surface_to_rgba(const GL_Surface_t *surface, int bias, GL_Pi
                         break;
                     }
                     case OFFSET: {
-                        offset = (entry++)->integer;
+                        offset = (entry++)->integer; // We could add the `dwidth` and spare an addition.
                         break;
                     }
                     case PALETTE: {
@@ -674,27 +674,31 @@ static inline void _surface_to_rgba(const GL_Surface_t *surface, int bias, GL_Pi
                 }
             }
 
-            if (dst >= dst_sod && dst < dst_eod) {
-                const GL_Pixel_t index = shifting[*src + bias];
-#ifdef __DEBUG_GRAPHICS__
-                GL_Color_t color;
-                if (index >= count) {
-                    const int y = (index - 240) * 8;
-                    color = (GL_Color_t){ 0, 63 + y, 0, 255 };
-                } else {
-                    color = colors[index];
-                }
-                *dst = color;
-#else
-                *dst = colors[index];
-#endif
+            // Wrap around scanline edges!
+            if (dst < dst_sod) {
+                dst = dst_eod - ((dst_sod - dst) % dwidth);
+            } else
+            if (dst >= dst_eod) {
+                dst = dst_sod + ((dst - dst_eod) % dwidth);
             }
-            ++src;
-            ++dst;
+
+            const GL_Pixel_t index = shifting[*(src++) + bias];
+#ifdef __DEBUG_GRAPHICS__
+            GL_Color_t color;
+            if (index >= count) {
+                const int y = (index - 240) * 8;
+                color = (GL_Color_t){ 0, 63 + y, 0, 255 };
+            } else {
+                color = colors[index];
+            }
+            *(dst++) = color;
+#else
+            *(dst++) = colors[index];
+#endif
         }
 
         src += modulo;
-        dst_sod += surface->width;
+        dst_sod += dwidth;
     }
 }
 
