@@ -133,7 +133,7 @@ static void _line(const GL_Surface_t *surface, const GL_Quad_t *clipping_region,
 #ifdef __DDA__
     GL_Pixel_t *ddata = surface->data;
 
-    const int dwidth = surface->width;
+    const int dwidth = (int)surface->width;
 
     const int dx = x1 - x0;
     const int dy = y1 - y0;

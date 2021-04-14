@@ -617,17 +617,11 @@ static inline void _surface_to_rgba(const GL_Surface_t *surface, int bias, GL_Pi
     GL_Color_t *dst_sod = vram;
 
     const size_t dwidth = (int)surface->width;
+    const size_t dheight = (int)surface->height;
 
-    for (size_t y = 0; y < surface->height; ++y) {
+    for (size_t y = 0; y < dheight; ++y) {
         GL_Color_t *dst_eod = dst_sod + dwidth;
-        GL_Color_t *dst = dst_sod + offset; // Apply the offset separately on this row pointer to check row boundaries.
-
-        if (dst < dst_sod) { // Fix wrapping once for all. During copy we can only wrap EOD->SOD.
-            dst = dst_eod - ((dst_sod - dst) % dwidth);
-        } else
-        if (dst >= dst_eod) {
-            dst = dst_sod + ((dst - dst_eod) % dwidth);
-        }
+        GL_Color_t *dst = dst_sod + offset; // Apply the (wrapped) offset separately on this row pointer to check row "restart".
 
         for (size_t x = 0; x < dwidth; ++x) {
             // Note: there's no length indicator for the copperlist program. That means that the interpreter would run
@@ -651,7 +645,10 @@ static inline void _surface_to_rgba(const GL_Surface_t *surface, int bias, GL_Pi
                         break;
                     }
                     case OFFSET: {
-                        offset = (entry++)->integer; // We could add the `dwidth` and spare an addition.
+                        offset = (entry++)->integer; // FIXME: we could add the `dwidth` and spare an addition.
+                        // The offset is in the range of a scanline, so we modulo it to spare operations. Note that
+                        // we are casting to `int` to avoid integer promotion, as this is a macro!
+                        offset = IMOD(offset, (int)dwidth);
                         break;
                     }
                     case PALETTE: {
