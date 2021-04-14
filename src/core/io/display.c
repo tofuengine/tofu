@@ -622,6 +622,10 @@ static inline void _surface_to_rgba(const GL_Surface_t *surface, int bias, GL_Pi
         GL_Color_t *dst_eod = dst_sod + dwidth;
         GL_Color_t *dst = dst_sod + offset; // Apply the offset separately on this row pointer to check row boundaries.
 
+        if (dst < dst_sod) { // Fix start-of-data wrapping. We can be "negative" only at start, if offset is negative.
+            dst = dst_eod - ((dst_sod - dst) % dwidth);
+        }
+
         for (size_t x = 0; x < dwidth; ++x) {
             // Note: there's no length indicator for the copperlist program. That means that the interpreter would run
             // endlessly (and unsafely read outside memory bounds, causing crashes). To avoid this a "wait forever"
@@ -674,11 +678,7 @@ static inline void _surface_to_rgba(const GL_Surface_t *surface, int bias, GL_Pi
                 }
             }
 
-            // Wrap around scanline edges!
-            if (dst < dst_sod) {
-                dst = dst_eod - ((dst_sod - dst) % dwidth);
-            } else
-            if (dst >= dst_eod) {
+            if (dst >= dst_eod) { // Check end-of-data scanline wrapping prior copy-and-advance. We can't go back. :)
                 dst = dst_sod + ((dst - dst_eod) % dwidth);
             }
 
