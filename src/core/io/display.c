@@ -369,17 +369,16 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     Display_set_shifting(display, NULL, NULL, 0);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette shifting initialized");
 
-    for (size_t id = 0; id < DISPLAY_MAX_PALETTE_SLOTS; ++id) {
+    for (size_t id = 0; id < GL_MAX_PALETTE_SLOTS; ++id) {
         GL_palette_generate_greyscale(&display->canvas.palette.slots[id], GL_MAX_PALETTE_COLORS);
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded greyscale palettes of %d entries", GL_MAX_PALETTE_COLORS);
 
-    display->vram.width = display->canvas.size.width;
-    display->vram.height = display->canvas.size.height;
-    display->vram.bytes_per_pixel = sizeof(GL_Color_t);
-    display->vram.stride = display->vram.width * display->vram.bytes_per_pixel;
-    display->vram.size = display->vram.stride * display->vram.height;
-    display->vram.pixels = malloc(display->vram.size);
+    Display_set_copperlist(display, NULL, 0);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "initial copperlist list cleared");
+
+    size_t size = sizeof(GL_Color_t) * display->canvas.size.width * display->canvas.size.height;
+    display->vram.pixels = malloc(size);
     if (!display->vram.pixels) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't allocate VRAM buffer");
         GL_context_destroy(display->canvas.context);
@@ -388,7 +387,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
         free(display);
         return NULL;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes VRAM allocated at %p (%dx%d)", display->vram.size, display->vram.pixels, display->canvas.size.width, display->canvas.size.height);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes VRAM allocated at %p (%dx%d)", size, display->vram.pixels, display->canvas.size.width, display->canvas.size.height);
 
     glGenTextures(1, &display->vram.texture); //allocate the memory for texture
     if (display->vram.texture == 0) {
@@ -471,9 +470,9 @@ void Display_destroy(Display_t *display)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "capture buffer %p freed", display->capture.pixels);
 #endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
 
-    if (display->copperlist) {
-        arrfree(display->copperlist);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p freed", display->copperlist);
+    if (display->canvas.copperlist) {
+        arrfree(display->canvas.copperlist);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p freed", display->canvas.copperlist);
     }
 
     program_delete(&display->program);
@@ -526,179 +525,21 @@ void Display_update(Display_t *display, float delta_time)
 #endif
 }
 
-#ifdef PROFILE
-static inline void _to_display(GLFWwindow *window, const GL_Surface_t *surface, GL_Color_t *pixels, const GL_Rectangle_t *rectangle, const GL_Point_t *offset)
+static void _surface_to_rgba_fast(const Display_Canvas_t *canvas, GL_Color_t *pixels)
 {
-#ifdef __OPENGL_STATE_CLEANUP__
-    glBindTexture(GL_TEXTURE_2D, display->vram.texture);
-#endif
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)surface->width, (GLsizei)surface->height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, pixels);
-
-    const int x0 = rectangle->x + offset->x;
-    const int y0 = rectangle->y + offset->y;
-    const int x1 = x0 + rectangle->width;
-    const int y1 = y0 + rectangle->height;
-
-    // Performance note: passing a stack-located array (and not on the heap) greately increase `glDrawArrays()` throughput!
-    const float vertices[] = {
-        0.0f, 0.0f, // CCW strip, top-left is <0,0> (the face direction of the strip is determined by the winding of the first triangle)
-        x0, y0,
-        0.0f, 1.0f,
-        x0, y1,
-        1.0f, 0.0f,
-        x1, y0,
-        1.0f, 1.0f,
-        x1, y1
-    };
-
-#ifdef __OPENGL_STATE_CLEANUP__
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-#endif
-    glTexCoordPointer(2, GL_FLOAT, 4 * sizeof(float), vertices);
-    glVertexPointer(2, GL_FLOAT, 4 * sizeof(float), vertices + 2);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-#ifdef __GRAPHICS_CAPTURE_SUPPORT__
-    // Read the framebuffer data, which include the final stretching and post-processing effects.
-    glReadPixels(0, 0, vram_rectangle->width, vram_rectangle->height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, display->capture.pixels);
-#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
-
-#ifdef __OPENGL_STATE_CLEANUP__
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-    glBindTexture(GL_TEXTURE_2D, 0);
-#endif
-
-    glfwSwapBuffers(window);
-}
-#endif
-
-static inline void _surface_to_rgba_fast(const GL_Surface_t *surface, int bias, const GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS], const GL_Palette_t *palette, GL_Color_t *vram)
-{
-    const size_t data_size = surface->data_size;
-    const GL_Color_t *colors = palette->colors;
-#ifdef __DEBUG_GRAPHICS__
-    const int count = palette->size;
-#endif
-
-    const GL_Pixel_t *src = surface->data;
-    GL_Color_t *dst = vram;
-
-    for (size_t i = data_size; i; --i) {
-        const GL_Pixel_t index = shifting[*(src++) + bias];
-#ifdef __DEBUG_GRAPHICS__
-        GL_Color_t color;
-        if (index >= count) {
-            const int y = (index - 240) * 8;
-            color = (GL_Color_t){ 0, 63 + y, 0, 255 };
-        } else {
-            color = colors[index];
-        }
-        *(dst++) = color;
-#else
-        *(dst++) = colors[index];
-#endif
-    }
+    GL_surface_to_rgba(canvas->context->surface, canvas->bias, canvas->shifting, canvas->palette.slots,
+        canvas->palette.active_id, pixels);
 }
 
-static inline void _surface_to_rgba(const GL_Surface_t *surface, int bias, GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS], GL_Palette_t slots[DISPLAY_MAX_PALETTE_SLOTS], size_t active_id, const Display_CopperList_Entry_t *copperlist, GL_Color_t *vram)
+static void _surface_to_rgba(const Display_Canvas_t *canvas, GL_Color_t *pixels)
 {
-#ifdef __DEBUG_GRAPHICS__
-    const int count = palette->size;
-#endif
-    size_t wait_y = 0, wait_x = 0;
-    GL_Color_t *colors = slots[active_id].colors;
-    int modulo = 0;
-    size_t offset = 0; // Always in the range `[0, width)`.
+    GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS] = { 0 };
+    GL_Palette_t slots[GL_MAX_PALETTE_SLOTS] = { 0 }; // Make a local copy, the copperlist can change it.
+    memcpy(shifting, canvas->shifting, sizeof(GL_Pixel_t) * GL_MAX_PALETTE_COLORS);
+    memcpy(slots, canvas->palette.slots, sizeof(GL_Palette_t) * GL_MAX_PALETTE_SLOTS);
 
-    const Display_CopperList_Entry_t *entry = copperlist;
-    const GL_Pixel_t *src = surface->data;
-    GL_Color_t *dst_sod = vram;
-
-    const size_t dwidth = (int)surface->width;
-    const size_t dheight = (int)surface->height;
-
-    for (size_t y = 0; y < dheight; ++y) {
-        GL_Color_t *dst_eod = dst_sod + dwidth;
-        GL_Color_t *dst = dst_sod + offset; // Apply the (wrapped) offset separately on this row pointer to check row "restart".
-
-        for (size_t x = 0; x < dwidth; ++x) {
-            // Note: there's no length indicator for the copperlist program. That means that the interpreter would run
-            // endlessly (and unsafely read outside memory bounds, causing crashes). To avoid this a "wait forever"
-            // trailer is added to the program in the `Display_set_copperlist()` function. This somehow mimics the
-            // real Copper(tm) behaviour, where a special `WAIT` instruction `$FFFF, $FFFE` is used to mark the end of
-            // the copperlist.
-#ifdef __COPPER_ONE_COMMAND_PER_PIXEL__
-            if (y >= wait_y && x >= wait_x) {
-#else
-            while (y >= wait_y && x >= wait_x) {
-#endif
-                switch ((entry++)->command) {
-                    case WAIT: {
-                        wait_x = (entry++)->size;
-                        wait_y = (entry++)->size;
-                        break;
-                    }
-                    case MODULO: {
-                        modulo = (entry++)->integer;
-                        break;
-                    }
-                    case OFFSET: {
-                        const int amount = (entry++)->integer; // FIXME: we could add the `dwidth` and spare an addition.
-                        // The offset is in the range of a scanline, so we modulo it to spare operations. Note that
-                        // we are casting to `int` to avoid integer promotion, as this is a macro!
-                        offset = (size_t)IMOD(amount, (int)dwidth);
-                        break;
-                    }
-                    case PALETTE: {
-                        const size_t id = (entry++)->size;
-                        colors = slots[id].colors;
-                        break;
-                    }
-                    case COLOR: {
-                        const GL_Pixel_t index = (entry++)->pixel;
-                        const GL_Color_t color = (entry++)->color;
-                        colors[index] = color;
-                        break;
-                    }
-                    case BIAS: {
-                        bias = (entry++)->integer;
-                        break;
-                    }
-                    case SHIFT: {
-                        const GL_Pixel_t from = (entry++)->pixel;
-                        const GL_Pixel_t to = (entry++)->pixel;
-                        shifting[from] = to;
-                        break;
-                    }
-                    default: {
-                        break;
-                    }
-                }
-            }
-
-            const GL_Pixel_t index = shifting[*(src++) + bias];
-#ifdef __DEBUG_GRAPHICS__
-            GL_Color_t color;
-            if (index >= count) {
-                const int y = (index - 240) * 8;
-                color = (GL_Color_t){ 0, 63 + y, 0, 255 };
-            } else {
-                color = colors[index];
-            }
-            *(dst++) = color;
-#else
-            *(dst++) = colors[index];
-#endif
-            if (dst == dst_eod) { // Wrap on end-of-data. Check for equality since we are copy one pixel at time.
-                dst = dst_sod;
-            }
-        }
-
-        src += modulo;
-        dst_sod += dwidth;
-    }
+    GL_surface_to_rgba_copperlist(canvas->context->surface, canvas->bias, shifting, slots, canvas->palette.active_id,
+        canvas->copperlist, pixels);
 }
 
 void Display_present(const Display_t *display)
@@ -707,30 +548,20 @@ void Display_present(const Display_t *display)
     // fully written (see `glTexSubImage2D()` below)
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // Convert the offscreen surface to a texture.
-    const GL_Surface_t *surface = display->canvas.context->surface;
-    GL_Color_t *pixels = display->vram.pixels;
+    // Convert the offscreen surface to a texture. The actual function changes when a copperlist is defined.
+    const Display_Canvas_t *canvas = &display->canvas;
+    const Display_Vram_t *vram = &display->vram;
 
-    if (display->copperlist) { // FIXME: optimize using function pointers?
-        GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS] = { 0 };
-        memcpy(shifting, display->canvas.shifting, sizeof(GL_Pixel_t) * GL_MAX_PALETTE_COLORS);
-        GL_Palette_t slots[DISPLAY_MAX_PALETTE_SLOTS] = { 0 }; // Make a local copy, the copperlist can change it.
-        memcpy(slots, display->canvas.palette.slots, sizeof(GL_Palette_t) * DISPLAY_MAX_PALETTE_SLOTS);
-        _surface_to_rgba(surface, display->canvas.bias, shifting, slots, display->canvas.palette.active_id, display->copperlist, pixels);
-    } else {
-        _surface_to_rgba_fast(surface, display->canvas.bias, display->canvas.shifting, &display->canvas.palette.slots[display->canvas.palette.active_id], pixels);
-    }
+    GL_Color_t *pixels = vram->pixels;
+    display->surface_to_rgba(canvas, pixels);
 
-#ifdef PROFILE
-    _to_display(display->window, surface, vram, &display->vram.rectangle, &display->vram_offset);
-#else
 #ifdef __OPENGL_STATE_CLEANUP__
-    glBindTexture(GL_TEXTURE_2D, display->vram.texture);
+    glBindTexture(GL_TEXTURE_2D, vram->texture);
 #endif
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)surface->width, (GLsizei)surface->height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, pixels);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)canvas->size.width, (GLsizei)canvas->size.height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, pixels);
 
-    const GL_Rectangle_t *vram_rectangle = &display->vram.rectangle;
-    const GL_Point_t *vram_offset = &display->vram.offset;
+    const GL_Rectangle_t *vram_rectangle = &vram->rectangle;
+    const GL_Point_t *vram_offset = &vram->offset;
 
     // Add x/y offset to implement screen-shaking or similar effects.
     const int x0 = vram_rectangle->x + vram_offset->x;
@@ -777,7 +608,6 @@ void Display_present(const Display_t *display)
 #endif
 
     glfwSwapBuffers(display->window);
-#endif
 }
 
 void Display_set_palette(Display_t *display, const GL_Palette_t *palette)
@@ -788,7 +618,7 @@ void Display_set_palette(Display_t *display, const GL_Palette_t *palette)
 
 void Display_set_active_palette(Display_t *display, size_t slot_id)
 {
-    if (slot_id >= DISPLAY_MAX_PALETTE_SLOTS) {
+    if (slot_id >= GL_MAX_PALETTE_SLOTS) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "palette slot #%d exceeds limits", slot_id);
         return;
     }
@@ -818,23 +648,27 @@ void Display_set_shifting(Display_t *display, const GL_Pixel_t *from, const GL_P
     }
 }
 
-void Display_set_copperlist(Display_t *display, const Display_CopperList_Entry_t *program, size_t length)
+void Display_set_copperlist(Display_t *display, const GL_CopperList_Entry_t *program, size_t length)
 {
-    if (display->copperlist) {
-        arrfree(display->copperlist);
-        display->copperlist = NULL;
+    if (display->canvas.copperlist) {
+        arrfree(display->canvas.copperlist);
+        display->canvas.copperlist = NULL;
 //        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p freed", display->copperlist);
     }
 
     if (program) {
         for (size_t i = 0; i < length; ++i) {
-            arrpush(display->copperlist, program[i]);
+            arrpush(display->canvas.copperlist, program[i]);
         }
         // Add a special `WAIT` instruction to halt the Copper(tm) from reading outsize memory boundaries.
-        arrpush(display->copperlist, (Display_CopperList_Entry_t){ .command = WAIT });
-        arrpush(display->copperlist, (Display_CopperList_Entry_t){ .size = SIZE_MAX });
-        arrpush(display->copperlist, (Display_CopperList_Entry_t){ .size = SIZE_MAX });
+        arrpush(display->canvas.copperlist, (GL_CopperList_Entry_t){ .command = WAIT });
+        arrpush(display->canvas.copperlist, (GL_CopperList_Entry_t){ .size = SIZE_MAX });
+        arrpush(display->canvas.copperlist, (GL_CopperList_Entry_t){ .size = SIZE_MAX });
 //        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "updated copperlist %p w/ #%d entries", display->copperlist, entries);
+
+        display->surface_to_rgba = _surface_to_rgba;
+    } else {
+        display->surface_to_rgba = _surface_to_rgba_fast;
     }
 }
 

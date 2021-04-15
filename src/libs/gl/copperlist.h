@@ -22,28 +22,35 @@
  * SOFTWARE.
  */
 
-#ifndef __GL_SURFACE_H__
-#define __GL_SURFACE_H__
-
-#include <stdbool.h>
+#ifndef __GL_COPPERLIST_H__
+#define __GL_COPPERLIST_H__
 
 #include "common.h"
 #include "palette.h"
+#include "surface.h"
 
-typedef struct _GL_Surface_t {
-    size_t width, height;
-    GL_Pixel_t *data;
-    size_t data_size;
-    bool is_power_of_two;
-} GL_Surface_t;
+typedef enum _GL_CopperList_Command_t {
+    WAIT = 0x00000,
+    SKIP = 0x10000,
+    MOVE = 0x20000,
+    MODULO,
+    OFFSET,
+    PALETTE,
+    COLOR,
+    BIAS,
+    SHIFT,
+    Display_CopperList_Command_t_CountOf
+} GL_CopperList_Command_t;
 
-typedef void (*GL_Surface_Callback_t)(void *user_data, GL_Surface_t *surface, const void *pixels); // RGBA888 format.
+typedef union _GL_CopperList_Entry_t {
+    GL_CopperList_Command_t command;
+    size_t size;
+    GL_Color_t color;
+    GL_Pixel_t pixel;
+    int integer;
+} GL_CopperList_Entry_t;
 
-extern GL_Surface_t *GL_surface_decode(size_t width, size_t height, const void *pixels, const GL_Surface_Callback_t callback, void *user_data);
-extern GL_Surface_t *GL_surface_create(size_t width, size_t height);
-extern void GL_surface_destroy(GL_Surface_t *surface);
+extern void GL_surface_to_rgba_copperlist(const GL_Surface_t *surface, int bias, GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS],
+    GL_Palette_t slots[GL_MAX_PALETTE_SLOTS], size_t active_id, const GL_CopperList_Entry_t *copperlist, GL_Color_t *pixels);
 
-extern void GL_surface_to_rgba(const GL_Surface_t *surface, int bias, const GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS],
-    const GL_Palette_t slots[GL_MAX_PALETTE_SLOTS], size_t active_id, GL_Color_t *pixels);
-
-#endif  /* __GL_SURFACE_H__ */
+#endif  /* __GL_COPPERLIST_H__ */

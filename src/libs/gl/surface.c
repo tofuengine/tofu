@@ -83,3 +83,33 @@ void GL_surface_destroy(GL_Surface_t *surface)
     free(surface);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface %p freed", surface);
 }
+
+void GL_surface_to_rgba(const GL_Surface_t *surface, int bias, const GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS],
+    const GL_Palette_t slots[GL_MAX_PALETTE_SLOTS], size_t active_id, GL_Color_t *pixels)
+{
+    const GL_Color_t *colors = slots[active_id].colors;
+#ifdef __DEBUG_GRAPHICS__
+    const int count = slots[active_id].size;
+#endif
+
+    const size_t data_size = surface->data_size;
+
+    const GL_Pixel_t *src = surface->data;
+    GL_Color_t *dst = pixels;
+
+    for (size_t i = data_size; i; --i) {
+        const GL_Pixel_t index = shifting[*(src++) + bias];
+#ifdef __DEBUG_GRAPHICS__
+        GL_Color_t color;
+        if (index >= count) {
+            const int y = (index - 240) * 8;
+            color = (GL_Color_t){ 0, 63 + y, 0, 255 };
+        } else {
+            color = colors[index];
+        }
+        *(dst++) = color;
+#else
+        *(dst++) = colors[index];
+#endif
+    }
+}

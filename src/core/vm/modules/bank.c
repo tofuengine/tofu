@@ -82,7 +82,7 @@ static int bank_new_3uus_1u(lua_State *L)
         return luaL_error(L, "can't load file `%s`", cells_file);
     }
 
-    GL_Sheet_t *sheet = GL_sheet_create(atlas->context->surface, S_BPTR(cells), S_BSIZE(cells) / sizeof(GL_Rectangle_u32_t)); // Calculate the amount of entries on the fly.
+    GL_Sheet_t *sheet = GL_sheet_create(GL_context_get_surface(atlas->context), S_BPTR(cells), S_BSIZE(cells) / sizeof(GL_Rectangle_u32_t)); // Calculate the amount of entries on the fly.
     if (!sheet) {
         return luaL_error(L, "can't create sheet");
     }
@@ -120,7 +120,7 @@ static int bank_new_4uunn_1u(lua_State *L)
     size_t cell_width = (size_t)LUAX_INTEGER(L, 3);
     size_t cell_height = (size_t)LUAX_INTEGER(L, 4);
 
-    GL_Sheet_t *sheet = GL_sheet_create_fixed(atlas->context->surface, (GL_Size_t ){ .width = cell_width, .height = cell_height });
+    GL_Sheet_t *sheet = GL_sheet_create_fixed(GL_context_get_surface(atlas->context), (GL_Size_t){ .width = cell_width, .height = cell_height });
     if (!sheet) {
         return luaL_error(L, "can't create sheet");
     }

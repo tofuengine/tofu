@@ -81,7 +81,7 @@ static int font_new_4uunn_1u(lua_State *L)
     size_t glyph_width = (size_t)LUAX_INTEGER(L, 3);
     size_t glyph_height = (size_t)LUAX_INTEGER(L, 4);
 
-    GL_Sheet_t *sheet = GL_sheet_create_fixed(atlas->context->surface, (GL_Size_t ){ .width = glyph_width, .height = glyph_height });
+    GL_Sheet_t *sheet = GL_sheet_create_fixed(GL_context_get_surface(atlas->context), (GL_Size_t){ .width = glyph_width, .height = glyph_height });
     if (!sheet) {
         return luaL_error(L, "can't create sheet");
     }
