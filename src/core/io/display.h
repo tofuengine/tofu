@@ -95,7 +95,7 @@ typedef struct _Display_Vram_t {
     GL_Point_t offset;
 } Display_Vram_t;
 
-typedef void (*Surface_To_Rgba_Function_t)(const Display_Canvas_t *canvas, const Display_Vram_t *vram);
+typedef void (*Surface_To_Rgba_Function_t)(const Display_Canvas_t *canvas, GL_Color_t *pixels);
 
 typedef struct _Display_t {
     Display_Configuration_t configuration;

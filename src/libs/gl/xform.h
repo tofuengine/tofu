@@ -70,6 +70,10 @@ typedef struct _GL_XForm_t {
     GL_XForm_Table_Entry_t *table;
 } GL_XForm_t;
 
+// TODO: add proper functions to manuplate an XForm structure.
+//extern GL_XForm_t *GL_XForm_create(GL_XForm_Wraps_t wrap);
+//extern void GL_XForm_destroy(GL_XForm_t *xform);
+
 extern void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, const GL_XForm_t *xform);
 
 #endif  /* __GL_XFORM_H__ */

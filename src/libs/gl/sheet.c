@@ -104,7 +104,7 @@ static void _detach(GL_Sheet_t *sheet)
 GL_Sheet_t *GL_sheet_create_fixed(const GL_Surface_t *atlas, GL_Size_t cell_size)
 {
     size_t count;
-    GL_Rectangle_t *cells = _generate_cells((GL_Size_t ){ .width = atlas->width, .height = atlas->height }, cell_size, &count);
+    GL_Rectangle_t *cells = _generate_cells((GL_Size_t){ .width = atlas->width, .height = atlas->height }, cell_size, &count);
     if (!cells) {
         return NULL;
     }

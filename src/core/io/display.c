@@ -525,20 +525,18 @@ void Display_update(Display_t *display, float delta_time)
 #endif
 }
 
-static void _surface_to_rgba_fast(const Display_Canvas_t *canvas, const Display_Vram_t *vram)
+static void _surface_to_rgba_fast(const Display_Canvas_t *canvas, GL_Color_t *pixels)
 {
     int bias = canvas->bias;
     const GL_Pixel_t *shifting = canvas->shifting;
-    const GL_Palette_t *palette = &canvas->palette.slots[canvas->palette.active_id];
-
-    const GL_Color_t *colors = palette->colors;
+    const GL_Color_t *colors = canvas->palette.slots[canvas->palette.active_id].colors;
 #ifdef __DEBUG_GRAPHICS__
-    const int count = palette->size;
+    const int count = canvas->palette.slots[canvas->palette.active_id].size;
 #endif
 
     // TODO: we are accessing context's surface internals. That works, but exposes a part we should keep private.
+//    const GL_Surface_t *surface = GL_context_get_surface(canvas->context);
     const GL_Surface_t *surface = canvas->context->surface;
-    GL_Color_t *pixels = vram->pixels;
 
     const size_t data_size = surface->data_size;
 
@@ -562,7 +560,7 @@ static void _surface_to_rgba_fast(const Display_Canvas_t *canvas, const Display_
     }
 }
 
-static void _surface_to_rgba(const Display_Canvas_t *canvas, const Display_Vram_t *vram)
+static void _surface_to_rgba(const Display_Canvas_t *canvas, GL_Color_t *pixels)
 {
     int bias = canvas->bias;
     GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS] = { 0 };
@@ -581,8 +579,8 @@ static void _surface_to_rgba(const Display_Canvas_t *canvas, const Display_Vram_
     int modulo = 0;
     size_t offset = 0; // Always in the range `[0, width)`.
 
+//    const GL_Surface_t *surface = GL_context_get_surface(canvas->context);
     const GL_Surface_t *surface = canvas->context->surface;
-    GL_Color_t *pixels = vram->pixels;
 
     const Display_CopperList_Entry_t *entry = copperlist;
     const GL_Pixel_t *src = surface->data;
@@ -679,16 +677,17 @@ void Display_present(const Display_t *display)
     // fully written (see `glTexSubImage2D()` below)
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // Convert the offscreen surface to a texture.
+    // Convert the offscreen surface to a texture. The actual function changes when a copperlist is defined.
     const Display_Canvas_t *canvas = &display->canvas;
     const Display_Vram_t *vram = &display->vram;
 
-    display->surface_to_rgba(canvas, vram); // The actual function changes when a copperlist is defined. 
+    GL_Color_t *pixels = vram->pixels;
+    display->surface_to_rgba(canvas, pixels);
 
 #ifdef __OPENGL_STATE_CLEANUP__
     glBindTexture(GL_TEXTURE_2D, vram->texture);
 #endif
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)canvas->size.width, (GLsizei)canvas->size.height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, vram->pixels);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)canvas->size.width, (GLsizei)canvas->size.height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, pixels);
 
     const GL_Rectangle_t *vram_rectangle = &vram->rectangle;
     const GL_Point_t *vram_offset = &vram->offset;

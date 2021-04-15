@@ -115,8 +115,8 @@ static int copperlist_wait_3unn_0(lua_State *L)
     size_t x = (size_t)LUAX_INTEGER(L, 2);
     size_t y = (size_t)LUAX_INTEGER(L, 3);
 
-    arrpush(self->program, (Display_CopperList_Entry_t){ .command = WAIT });
-    arrpush(self->program, (Display_CopperList_Entry_t){ .size = x });
+    arrpush(self->program, (Display_CopperList_Entry_t){ .command = WAIT }); // TODO: create MACROs/functions to populate copperlist.
+    arrpush(self->program, (Display_CopperList_Entry_t){ .size = x }); // TODO: move the copperlist to `GL` and add functions for rendering?
     arrpush(self->program, (Display_CopperList_Entry_t){ .size = y });
 
     return 0;
