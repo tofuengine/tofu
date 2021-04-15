@@ -529,54 +529,6 @@ void Display_update(Display_t *display, float delta_time)
 #endif
 }
 
-#ifdef PROFILE
-static inline void _to_display(GLFWwindow *window, const GL_Surface_t *surface, GL_Color_t *pixels, const GL_Rectangle_t *rectangle, const GL_Point_t *offset)
-{
-#ifdef __OPENGL_STATE_CLEANUP__
-    glBindTexture(GL_TEXTURE_2D, display->vram.texture);
-#endif
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)surface->width, (GLsizei)surface->height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, pixels);
-
-    const int x0 = rectangle->x + offset->x;
-    const int y0 = rectangle->y + offset->y;
-    const int x1 = x0 + rectangle->width;
-    const int y1 = y0 + rectangle->height;
-
-    // Performance note: passing a stack-located array (and not on the heap) greately increase `glDrawArrays()` throughput!
-    const float vertices[] = {
-        0.0f, 0.0f, // CCW strip, top-left is <0,0> (the face direction of the strip is determined by the winding of the first triangle)
-        x0, y0,
-        0.0f, 1.0f,
-        x0, y1,
-        1.0f, 0.0f,
-        x1, y0,
-        1.0f, 1.0f,
-        x1, y1
-    };
-
-#ifdef __OPENGL_STATE_CLEANUP__
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-#endif
-    glTexCoordPointer(2, GL_FLOAT, 4 * sizeof(float), vertices);
-    glVertexPointer(2, GL_FLOAT, 4 * sizeof(float), vertices + 2);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-#ifdef __GRAPHICS_CAPTURE_SUPPORT__
-    // Read the framebuffer data, which include the final stretching and post-processing effects.
-    glReadPixels(0, 0, vram_rectangle->width, vram_rectangle->height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, display->capture.pixels);
-#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
-
-#ifdef __OPENGL_STATE_CLEANUP__
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-    glBindTexture(GL_TEXTURE_2D, 0);
-#endif
-
-    glfwSwapBuffers(window);
-}
-#endif
-
 static void _surface_to_rgba_fast(const GL_Surface_t *surface, GL_Color_t *pixels, const void *user_data)
 {
     const Display_t *display = (const Display_t *)user_data;
@@ -733,9 +685,6 @@ void Display_present(const Display_t *display)
 
     display->surface_to_rgba(surface, pixels, display); // The acutal function changes when a copperlist is defined. 
 
-#ifdef PROFILE
-    _to_display(display->window, surface, vram, &display->vram.rectangle, &display->vram_offset);
-#else
 #ifdef __OPENGL_STATE_CLEANUP__
     glBindTexture(GL_TEXTURE_2D, display->vram.texture);
 #endif
@@ -789,7 +738,6 @@ void Display_present(const Display_t *display)
 #endif
 
     glfwSwapBuffers(display->window);
-#endif
 }
 
 void Display_set_palette(Display_t *display, const GL_Palette_t *palette)
