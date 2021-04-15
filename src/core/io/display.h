@@ -89,11 +89,8 @@ typedef struct _Display_Canvas_t {
 } Display_Canvas_t;
 
 typedef struct _Display_Vram_t {
-    GL_Color_t *pixels; // Temporary buffer to create the OpenGL texture from `GL_Pixel_t` array.
-    size_t width, height;
-    size_t bytes_per_pixel, stride;
-    size_t size;
     GLuint texture;
+    GL_Color_t *pixels; // Temporary buffer to create the OpenGL texture from `GL_Pixel_t` array.
     GL_Rectangle_t rectangle; // Destination rectangle, scaled to the final screen size.
     GL_Point_t offset;
 } Display_Vram_t;

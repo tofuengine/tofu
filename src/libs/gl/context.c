@@ -74,7 +74,7 @@ GL_Context_t *GL_context_decode(size_t width, size_t height, const void *pixels,
     return context;
 }
 
-GL_Context_t *GL_context_create(size_t width, size_t height)
+GL_Context_t *GL_context_create(size_t width, size_t height) // TODO: use `GL_Size_t`?
 {
     GL_Surface_t *surface = GL_surface_create(width, height);
     if (!surface) {

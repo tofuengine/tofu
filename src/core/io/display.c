@@ -377,12 +377,8 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     Display_set_copperlist(display, NULL, 0);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "initial copperlist list cleared");
 
-    display->vram.width = display->canvas.size.width;
-    display->vram.height = display->canvas.size.height;
-    display->vram.bytes_per_pixel = sizeof(GL_Color_t);
-    display->vram.stride = display->vram.width * display->vram.bytes_per_pixel;
-    display->vram.size = display->vram.stride * display->vram.height;
-    display->vram.pixels = malloc(display->vram.size);
+    size_t size = sizeof(GL_Color_t) * display->canvas.size.width * display->canvas.size.height;
+    display->vram.pixels = malloc(size);
     if (!display->vram.pixels) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't allocate VRAM buffer");
         GL_context_destroy(display->canvas.context);
@@ -391,7 +387,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
         free(display);
         return NULL;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes VRAM allocated at %p (%dx%d)", display->vram.size, display->vram.pixels, display->canvas.size.width, display->canvas.size.height);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes VRAM allocated at %p (%dx%d)", size, display->vram.pixels, display->canvas.size.width, display->canvas.size.height);
 
     glGenTextures(1, &display->vram.texture); //allocate the memory for texture
     if (display->vram.texture == 0) {
@@ -540,6 +536,7 @@ static void _surface_to_rgba_fast(const Display_Canvas_t *canvas, const Display_
     const int count = palette->size;
 #endif
 
+    // TODO: we are accessing context's surface internals. That works, but exposes a part we should keep private.
     const GL_Surface_t *surface = canvas->context->surface;
     GL_Color_t *pixels = vram->pixels;
 
