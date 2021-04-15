@@ -474,9 +474,9 @@ void Display_destroy(Display_t *display)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "capture buffer %p freed", display->capture.pixels);
 #endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
 
-    if (display->properties.copperlist) {
-        arrfree(display->properties.copperlist);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p freed", display->properties.copperlist);
+    if (display->properties.canvas.copperlist) {
+        arrfree(display->properties.canvas.copperlist);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p freed", display->properties.canvas.copperlist);
     }
 
     program_delete(&display->program);
@@ -567,7 +567,7 @@ static void _surface_to_rgba(const GL_Surface_t *surface, GL_Color_t *pixels, co
     GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS] = { 0 };
     GL_Palette_t slots[DISPLAY_MAX_PALETTE_SLOTS] = { 0 }; // Make a local copy, the copperlist can change it.
     size_t active_id = properties->canvas.palette.active_id;
-    const Display_CopperList_Entry_t *copperlist = properties->copperlist;
+    const Display_CopperList_Entry_t *copperlist = properties->canvas.copperlist;
 
     memcpy(shifting, properties->canvas.shifting, sizeof(GL_Pixel_t) * GL_MAX_PALETTE_COLORS);
     memcpy(slots, properties->canvas.palette.slots, sizeof(GL_Palette_t) * DISPLAY_MAX_PALETTE_SLOTS);
@@ -776,20 +776,20 @@ void Display_set_shifting(Display_t *display, const GL_Pixel_t *from, const GL_P
 
 void Display_set_copperlist(Display_t *display, const Display_CopperList_Entry_t *program, size_t length)
 {
-    if (display->properties.copperlist) {
-        arrfree(display->properties.copperlist);
-        display->properties.copperlist = NULL;
+    if (display->properties.canvas.copperlist) {
+        arrfree(display->properties.canvas.copperlist);
+        display->properties.canvas.copperlist = NULL;
 //        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p freed", display->copperlist);
     }
 
     if (program) {
         for (size_t i = 0; i < length; ++i) {
-            arrpush(display->properties.copperlist, program[i]);
+            arrpush(display->properties.canvas.copperlist, program[i]);
         }
         // Add a special `WAIT` instruction to halt the Copper(tm) from reading outsize memory boundaries.
-        arrpush(display->properties.copperlist, (Display_CopperList_Entry_t){ .command = WAIT });
-        arrpush(display->properties.copperlist, (Display_CopperList_Entry_t){ .size = SIZE_MAX });
-        arrpush(display->properties.copperlist, (Display_CopperList_Entry_t){ .size = SIZE_MAX });
+        arrpush(display->properties.canvas.copperlist, (Display_CopperList_Entry_t){ .command = WAIT });
+        arrpush(display->properties.canvas.copperlist, (Display_CopperList_Entry_t){ .size = SIZE_MAX });
+        arrpush(display->properties.canvas.copperlist, (Display_CopperList_Entry_t){ .size = SIZE_MAX });
 //        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "updated copperlist %p w/ #%d entries", display->copperlist, entries);
 
         display->surface_to_rgba = _surface_to_rgba;

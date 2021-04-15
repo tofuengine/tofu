@@ -86,6 +86,7 @@ typedef struct _Display_Properties_t {
             GL_Palette_t slots[DISPLAY_MAX_PALETTE_SLOTS];
             size_t active_id;
         } palette;
+        Display_CopperList_Entry_t *copperlist;
     } canvas;
 
     struct {
@@ -97,8 +98,6 @@ typedef struct _Display_Properties_t {
         GL_Rectangle_t rectangle;
         GL_Point_t offset;
     } vram;
-
-    Display_CopperList_Entry_t *copperlist; // FIXME: move to canvas sub-structure.
 } Display_Properties_t;
 
 typedef void (*Surface_To_Rgba_Function_t)(const GL_Surface_t *surface, GL_Color_t *pixels, const Display_Properties_t *properties);
