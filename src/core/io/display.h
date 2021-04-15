@@ -41,8 +41,6 @@
 
 #include "display/program.h"
 
-#define DISPLAY_MAX_PALETTE_SLOTS   8
-
 typedef struct _Display_Configuration_t {
     GLFWimage icon;
     struct {
@@ -55,37 +53,16 @@ typedef struct _Display_Configuration_t {
     const char *effect;
 } Display_Configuration_t;
 
-typedef enum _Display_CopperList_Command_t {
-    WAIT = 0x00000,
-    SKIP = 0x10000,
-    MOVE = 0x20000,
-    MODULO,
-    OFFSET,
-    PALETTE,
-    COLOR,
-    BIAS,
-    SHIFT,
-    Display_CopperList_Command_t_CountOf
-} Display_CopperList_Command_t;
-
-typedef union _Display_CopperList_Entry_t {
-    Display_CopperList_Command_t command;
-    size_t size;
-    GL_Color_t color;
-    GL_Pixel_t pixel;
-    int integer;
-} Display_CopperList_Entry_t;
-
 typedef struct _Display_Canvas_t {
     GL_Size_t size;
     GL_Context_t *context;
     int bias;
     GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
     struct {
-        GL_Palette_t slots[DISPLAY_MAX_PALETTE_SLOTS];
+        GL_Palette_t slots[GL_MAX_PALETTE_SLOTS]; // FIXME: I'm not sure multiple slots are a good idea...
         size_t active_id;
     } palette;
-    Display_CopperList_Entry_t *copperlist;
+    GL_CopperList_Entry_t *copperlist;
 } Display_Canvas_t;
 
 typedef struct _Display_Vram_t {
@@ -133,7 +110,7 @@ extern void Display_set_active_palette(Display_t *display, size_t slot_id);
 extern void Display_set_offset(Display_t *display, GL_Point_t offset);
 extern void Display_set_bias(Display_t *display, int bias);
 extern void Display_set_shifting(Display_t *display, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count);
-extern void Display_set_copperlist(Display_t *display, const Display_CopperList_Entry_t *program, size_t length);
+extern void Display_set_copperlist(Display_t *display, const GL_CopperList_Entry_t *program, size_t length);
 
 extern GLFWwindow *Display_get_window(const Display_t *display);
 extern float Display_get_scale(const Display_t *display);

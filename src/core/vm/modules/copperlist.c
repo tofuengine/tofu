@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-#include "xform.h"
+#include "copperlist.h"
 
 #include <config.h>
 #include <core/io/display.h>
@@ -115,9 +115,9 @@ static int copperlist_wait_3unn_0(lua_State *L)
     size_t x = (size_t)LUAX_INTEGER(L, 2);
     size_t y = (size_t)LUAX_INTEGER(L, 3);
 
-    arrpush(self->program, (Display_CopperList_Entry_t){ .command = WAIT }); // TODO: create MACROs/functions to populate copperlist.
-    arrpush(self->program, (Display_CopperList_Entry_t){ .size = x }); // TODO: move the copperlist to `GL` and add functions for rendering?
-    arrpush(self->program, (Display_CopperList_Entry_t){ .size = y });
+    arrpush(self->program, (GL_CopperList_Entry_t){ .command = WAIT }); // TODO: create MACROs/functions to populate copperlist.
+    arrpush(self->program, (GL_CopperList_Entry_t){ .size = x });
+    arrpush(self->program, (GL_CopperList_Entry_t){ .size = y });
 
     return 0;
 }
@@ -131,8 +131,8 @@ static int copperlist_modulo_2un_0(lua_State *L)
     Copperlist_Object_t *self = (Copperlist_Object_t *)LUAX_USERDATA(L, 1);
     int amount = LUAX_INTEGER(L, 2);
 
-    arrpush(self->program, (Display_CopperList_Entry_t){ .command = MODULO });
-    arrpush(self->program, (Display_CopperList_Entry_t){ .integer = amount });
+    arrpush(self->program, (GL_CopperList_Entry_t){ .command = MODULO });
+    arrpush(self->program, (GL_CopperList_Entry_t){ .integer = amount });
 
     return 0;
 }
@@ -146,8 +146,8 @@ static int copperlist_offset_2un_0(lua_State *L)
     Copperlist_Object_t *self = (Copperlist_Object_t *)LUAX_USERDATA(L, 1);
     int amount = LUAX_INTEGER(L, 2);
 
-    arrpush(self->program, (Display_CopperList_Entry_t){ .command = OFFSET });
-    arrpush(self->program, (Display_CopperList_Entry_t){ .integer = amount });
+    arrpush(self->program, (GL_CopperList_Entry_t){ .command = OFFSET });
+    arrpush(self->program, (GL_CopperList_Entry_t){ .integer = amount });
 
     return 0;
 }
@@ -161,8 +161,8 @@ static int copperlist_palette_2un_0(lua_State *L)
     Copperlist_Object_t *self = (Copperlist_Object_t *)LUAX_USERDATA(L, 1);
     size_t id = (size_t)LUAX_INTEGER(L, 2);
 
-    arrpush(self->program, (Display_CopperList_Entry_t){ .command = PALETTE });
-    arrpush(self->program, (Display_CopperList_Entry_t){ .size = id });
+    arrpush(self->program, (GL_CopperList_Entry_t){ .command = PALETTE });
+    arrpush(self->program, (GL_CopperList_Entry_t){ .size = id });
 
     return 0;
 }
@@ -184,9 +184,9 @@ static int copperlist_color_5unnnn_0(lua_State *L)
 
     const GL_Color_t color = (GL_Color_t){ .r = r, .g = g, .b = b, .a = 255 };
 
-    arrpush(self->program, (Display_CopperList_Entry_t){ .command = COLOR });
-    arrpush(self->program, (Display_CopperList_Entry_t){ .pixel = index });
-    arrpush(self->program, (Display_CopperList_Entry_t){ .color = color });
+    arrpush(self->program, (GL_CopperList_Entry_t){ .command = COLOR });
+    arrpush(self->program, (GL_CopperList_Entry_t){ .pixel = index });
+    arrpush(self->program, (GL_CopperList_Entry_t){ .color = color });
 
     return 0;
 }
@@ -200,8 +200,8 @@ static int copperlist_bias_2un_0(lua_State *L)
     Copperlist_Object_t *self = (Copperlist_Object_t *)LUAX_USERDATA(L, 1);
     int value = LUAX_INTEGER(L, 2);
 
-    arrpush(self->program, (Display_CopperList_Entry_t){ .command = BIAS });
-    arrpush(self->program, (Display_CopperList_Entry_t){ .integer = value });
+    arrpush(self->program, (GL_CopperList_Entry_t){ .command = BIAS });
+    arrpush(self->program, (GL_CopperList_Entry_t){ .integer = value });
 
     return 0;
 }
@@ -219,9 +219,9 @@ static int copperlist_shift_2ut_0(lua_State *L)
         const GL_Pixel_t from = (GL_Pixel_t)LUAX_INTEGER(L, -2);
         const GL_Pixel_t to = (GL_Pixel_t)LUAX_INTEGER(L, -1);
 
-        arrpush(self->program, (Display_CopperList_Entry_t){ .command = SHIFT });
-        arrpush(self->program, (Display_CopperList_Entry_t){ .pixel = from });
-        arrpush(self->program, (Display_CopperList_Entry_t){ .pixel = to });
+        arrpush(self->program, (GL_CopperList_Entry_t){ .command = SHIFT });
+        arrpush(self->program, (GL_CopperList_Entry_t){ .pixel = from });
+        arrpush(self->program, (GL_CopperList_Entry_t){ .pixel = to });
 
         lua_pop(L, 1);
     }
@@ -240,9 +240,9 @@ static int copperlist_shift_3unn_0(lua_State *L)
     GL_Pixel_t from = (GL_Pixel_t)LUAX_INTEGER(L, 2);
     GL_Pixel_t to = (GL_Pixel_t)LUAX_INTEGER(L, 3);
 
-    arrpush(self->program, (Display_CopperList_Entry_t){ .command = SHIFT });
-    arrpush(self->program, (Display_CopperList_Entry_t){ .pixel = from });
-    arrpush(self->program, (Display_CopperList_Entry_t){ .pixel = to });
+    arrpush(self->program, (GL_CopperList_Entry_t){ .command = SHIFT });
+    arrpush(self->program, (GL_CopperList_Entry_t){ .pixel = from });
+    arrpush(self->program, (GL_CopperList_Entry_t){ .pixel = to });
 
     return 0;
 }

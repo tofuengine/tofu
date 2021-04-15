@@ -369,7 +369,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     Display_set_shifting(display, NULL, NULL, 0);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette shifting initialized");
 
-    for (size_t id = 0; id < DISPLAY_MAX_PALETTE_SLOTS; ++id) {
+    for (size_t id = 0; id < GL_MAX_PALETTE_SLOTS; ++id) {
         GL_palette_generate_greyscale(&display->canvas.palette.slots[id], GL_MAX_PALETTE_COLORS);
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded greyscale palettes of %d entries", GL_MAX_PALETTE_COLORS);
@@ -527,148 +527,19 @@ void Display_update(Display_t *display, float delta_time)
 
 static void _surface_to_rgba_fast(const Display_Canvas_t *canvas, GL_Color_t *pixels)
 {
-    int bias = canvas->bias;
-    const GL_Pixel_t *shifting = canvas->shifting;
-    const GL_Color_t *colors = canvas->palette.slots[canvas->palette.active_id].colors;
-#ifdef __DEBUG_GRAPHICS__
-    const int count = canvas->palette.slots[canvas->palette.active_id].size;
-#endif
-
-    // TODO: we are accessing context's surface internals. That works, but exposes a part we should keep private.
-//    const GL_Surface_t *surface = GL_context_get_surface(canvas->context);
-    const GL_Surface_t *surface = canvas->context->surface;
-
-    const size_t data_size = surface->data_size;
-
-    const GL_Pixel_t *src = surface->data;
-    GL_Color_t *dst = pixels;
-
-    for (size_t i = data_size; i; --i) {
-        const GL_Pixel_t index = shifting[*(src++) + bias];
-#ifdef __DEBUG_GRAPHICS__
-        GL_Color_t color;
-        if (index >= count) {
-            const int y = (index - 240) * 8;
-            color = (GL_Color_t){ 0, 63 + y, 0, 255 };
-        } else {
-            color = colors[index];
-        }
-        *(dst++) = color;
-#else
-        *(dst++) = colors[index];
-#endif
-    }
+    GL_surface_to_rgba(canvas->context->surface, canvas->bias, canvas->shifting, canvas->palette.slots,
+        canvas->palette.active_id, pixels);
 }
 
 static void _surface_to_rgba(const Display_Canvas_t *canvas, GL_Color_t *pixels)
 {
-    int bias = canvas->bias;
     GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS] = { 0 };
-    GL_Palette_t slots[DISPLAY_MAX_PALETTE_SLOTS] = { 0 }; // Make a local copy, the copperlist can change it.
-    size_t active_id = canvas->palette.active_id;
-    const Display_CopperList_Entry_t *copperlist = canvas->copperlist;
-
+    GL_Palette_t slots[GL_MAX_PALETTE_SLOTS] = { 0 }; // Make a local copy, the copperlist can change it.
     memcpy(shifting, canvas->shifting, sizeof(GL_Pixel_t) * GL_MAX_PALETTE_COLORS);
-    memcpy(slots, canvas->palette.slots, sizeof(GL_Palette_t) * DISPLAY_MAX_PALETTE_SLOTS);
+    memcpy(slots, canvas->palette.slots, sizeof(GL_Palette_t) * GL_MAX_PALETTE_SLOTS);
 
-    size_t wait_y = 0, wait_x = 0;
-    GL_Color_t *colors = slots[active_id].colors;
-#ifdef __DEBUG_GRAPHICS__
-    const int count = slots[active_id].size;
-#endif
-    int modulo = 0;
-    size_t offset = 0; // Always in the range `[0, width)`.
-
-//    const GL_Surface_t *surface = GL_context_get_surface(canvas->context);
-    const GL_Surface_t *surface = canvas->context->surface;
-
-    const Display_CopperList_Entry_t *entry = copperlist;
-    const GL_Pixel_t *src = surface->data;
-    GL_Color_t *dst_sod = pixels;
-
-    const size_t dwidth = (int)surface->width;
-    const size_t dheight = (int)surface->height;
-
-    for (size_t y = 0; y < dheight; ++y) {
-        GL_Color_t *dst_eod = dst_sod + dwidth;
-        GL_Color_t *dst = dst_sod + offset; // Apply the (wrapped) offset separately on this row pointer to check row "restart".
-
-        for (size_t x = 0; x < dwidth; ++x) {
-            // Note: there's no length indicator for the copperlist program. That means that the interpreter would run
-            // endlessly (and unsafely read outside memory bounds, causing crashes). To avoid this a "wait forever"
-            // trailer is added to the program in the `Display_set_copperlist()` function. This somehow mimics the
-            // real Copper(tm) behaviour, where a special `WAIT` instruction `$FFFF, $FFFE` is used to mark the end of
-            // the copperlist.
-#ifdef __COPPER_ONE_COMMAND_PER_PIXEL__
-            if (y >= wait_y && x >= wait_x) {
-#else
-            while (y >= wait_y && x >= wait_x) {
-#endif
-                switch ((entry++)->command) {
-                    case WAIT: {
-                        wait_x = (entry++)->size;
-                        wait_y = (entry++)->size;
-                        break;
-                    }
-                    case MODULO: {
-                        modulo = (entry++)->integer;
-                        break;
-                    }
-                    case OFFSET: {
-                        const int amount = (entry++)->integer; // FIXME: we could add the `dwidth` and spare an addition.
-                        // The offset is in the range of a scanline, so we modulo it to spare operations. Note that
-                        // we are casting to `int` to avoid integer promotion, as this is a macro!
-                        offset = (size_t)IMOD(amount, (int)dwidth);
-                        break;
-                    }
-                    case PALETTE: {
-                        const size_t id = (entry++)->size;
-                        colors = slots[id].colors;
-                        break;
-                    }
-                    case COLOR: {
-                        const GL_Pixel_t index = (entry++)->pixel;
-                        const GL_Color_t color = (entry++)->color;
-                        colors[index] = color;
-                        break;
-                    }
-                    case BIAS: {
-                        bias = (entry++)->integer;
-                        break;
-                    }
-                    case SHIFT: {
-                        const GL_Pixel_t from = (entry++)->pixel;
-                        const GL_Pixel_t to = (entry++)->pixel;
-                        shifting[from] = to;
-                        break;
-                    }
-                    default: {
-                        break;
-                    }
-                }
-            }
-
-            const GL_Pixel_t index = shifting[*(src++) + bias];
-#ifdef __DEBUG_GRAPHICS__
-            GL_Color_t color;
-            if (index >= count) {
-                const int y = (index - 240) * 8;
-                color = (GL_Color_t){ 0, 63 + y, 0, 255 };
-            } else {
-                color = colors[index];
-            }
-            *(dst++) = color;
-#else
-            *(dst++) = colors[index];
-#endif
-            if (dst == dst_eod) { // Wrap on end-of-data. Check for equality since we are copy one pixel at time.
-                dst = dst_sod;
-            }
-        }
-
-        src += modulo;
-        dst_sod += dwidth;
-    }
+    GL_surface_to_rgba_copperlist(canvas->context->surface, canvas->bias, shifting, slots, canvas->palette.active_id,
+        canvas->copperlist, pixels);
 }
 
 void Display_present(const Display_t *display)
@@ -747,7 +618,7 @@ void Display_set_palette(Display_t *display, const GL_Palette_t *palette)
 
 void Display_set_active_palette(Display_t *display, size_t slot_id)
 {
-    if (slot_id >= DISPLAY_MAX_PALETTE_SLOTS) {
+    if (slot_id >= GL_MAX_PALETTE_SLOTS) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "palette slot #%d exceeds limits", slot_id);
         return;
     }
@@ -777,7 +648,7 @@ void Display_set_shifting(Display_t *display, const GL_Pixel_t *from, const GL_P
     }
 }
 
-void Display_set_copperlist(Display_t *display, const Display_CopperList_Entry_t *program, size_t length)
+void Display_set_copperlist(Display_t *display, const GL_CopperList_Entry_t *program, size_t length)
 {
     if (display->canvas.copperlist) {
         arrfree(display->canvas.copperlist);
@@ -790,9 +661,9 @@ void Display_set_copperlist(Display_t *display, const Display_CopperList_Entry_t
             arrpush(display->canvas.copperlist, program[i]);
         }
         // Add a special `WAIT` instruction to halt the Copper(tm) from reading outsize memory boundaries.
-        arrpush(display->canvas.copperlist, (Display_CopperList_Entry_t){ .command = WAIT });
-        arrpush(display->canvas.copperlist, (Display_CopperList_Entry_t){ .size = SIZE_MAX });
-        arrpush(display->canvas.copperlist, (Display_CopperList_Entry_t){ .size = SIZE_MAX });
+        arrpush(display->canvas.copperlist, (GL_CopperList_Entry_t){ .command = WAIT });
+        arrpush(display->canvas.copperlist, (GL_CopperList_Entry_t){ .size = SIZE_MAX });
+        arrpush(display->canvas.copperlist, (GL_CopperList_Entry_t){ .size = SIZE_MAX });
 //        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "updated copperlist %p w/ #%d entries", display->copperlist, entries);
 
         display->surface_to_rgba = _surface_to_rgba;
