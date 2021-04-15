@@ -35,26 +35,26 @@
 #define LOG_CONTEXT "palette"
 #define META_TABLE  "Tofu_Graphics_Palette_mt"
 
-static int palette_new(lua_State *L);
-static int palette_gc(lua_State *L);
-static int palette_mix(lua_State *L);
-static int palette_colors(lua_State *L);
-static int palette_size(lua_State *L);
-static int palette_color_to_index(lua_State *L);
-static int palette_index_to_color(lua_State *L);
-static int palette_lerp(lua_State *L);
-static int palette_merge(lua_State *L);
+static int palette_new_v_1u(lua_State *L);
+static int palette_gc_1u_0(lua_State *L);
+static int palette_mix_7nnnnnnN_3nnn(lua_State *L);
+static int palette_colors_1u_1t(lua_State *L);
+static int palette_size_1u_1n(lua_State *L);
+static int palette_color_to_index_4unnn_1n(lua_State *L);
+static int palette_index_to_color_2un_3nnn(lua_State *L);
+static int palette_lerp_5unnnN_0(lua_State *L);
+static int palette_merge_3uuB_0(lua_State *L);
 
 static const struct luaL_Reg _palette_functions[] = {
-    { "new", palette_new },
-    { "__gc", palette_gc },
-    { "mix", palette_mix },
-    { "colors", palette_colors },
-    { "size", palette_size },
-    { "color_to_index", palette_color_to_index },
-    { "index_to_color", palette_index_to_color },
-    { "lerp", palette_lerp },
-    { "merge", palette_merge },
+    { "new", palette_new_v_1u },
+    { "__gc", palette_gc_1u_0 },
+    { "mix", palette_mix_7nnnnnnN_3nnn },
+    { "colors", palette_colors_1u_1t },
+    { "size", palette_size_1u_1n },
+    { "color_to_index", palette_color_to_index_4unnn_1n },
+    { "index_to_color", palette_index_to_color_2un_3nnn },
+    { "lerp", palette_lerp_5unnnN_0 },
+    { "merge", palette_merge_3uuB_0 },
     { NULL, NULL }
 };
 
@@ -64,7 +64,7 @@ int palette_loader(lua_State *L)
     return luaX_newmodule(L, NULL, _palette_functions, NULL, nup, META_TABLE);
 }
 
-static int palette_new0(lua_State *L)
+static int palette_new_0_1u(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
@@ -83,82 +83,115 @@ static int palette_new0(lua_State *L)
     return 1;
 }
 
-static int palette_new1(lua_State *L) // TODO: test signature match override.
+static int palette_new_1s_1u(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING, LUA_TNUMBER, LUA_TTABLE)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    int type = lua_type(L, 1);
+    const char *id = LUAX_STRING(L, 1);
 
-    GL_Palette_t palette = { 0 };
-    if (type == LUA_TSTRING) { // Predefined palette!
-        const char *id = LUAX_STRING(L, 1);
-        const GL_Palette_t *predefined_palette = resources_palettes_find(id);
-        if (predefined_palette != NULL) {
-            palette = *predefined_palette;
-
-            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "setting predefined palette `%s` w/ %d color(s)", id, predefined_palette->size);
-        } else {
-            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "unknown predefined palette w/ id `%s`", id);
-        }
-    } else
-    if (type == LUA_TNUMBER) { // Greyscale palette!
-        int colors = LUAX_INTEGER(L, 1);
-        GL_palette_generate_greyscale(&palette, colors);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "generating greyscale palette w/ %d color(s)", colors);
-    } else
-    if (type == LUA_TTABLE) { // User supplied palette.
-        palette.size = lua_rawlen(L, 1);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "setting custom palette of %d color(s)", palette.size);
-
-        if (palette.size > GL_MAX_PALETTE_COLORS) {
-            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "palette has too many colors (%d) - clamping", palette.size);
-            palette.size = GL_MAX_PALETTE_COLORS;
-        }
-
-        lua_pushnil(L); // T -> T N
-        for (size_t i = 0; lua_next(L, 1); ++i) { // T N -> T N T
-            lua_rawgeti(L, 3, 1); // T N T -> T N T I
-            lua_rawgeti(L, 3, 2); // T N T I -> T N T I I
-            lua_rawgeti(L, 3, 3); // T N T I I -> T N T I I I
-
-            uint8_t r = (uint8_t)LUAX_INTEGER(L, -3);
-            uint8_t g = (uint8_t)LUAX_INTEGER(L, -2);
-            uint8_t b = (uint8_t)LUAX_INTEGER(L, -1);
-
-            lua_pop(L, 3); // T N T I I I -> T N T
-
-            palette.colors[i] = (GL_Color_t){ .r = r, .g = g, .b = b, .a = 255 };
-
-            lua_pop(L, 1); // T N T -> T N
-        }
+    const GL_Palette_t *predefined_palette = resources_palettes_find(id);
+    if (predefined_palette == NULL) {
+        return luaL_error(L, "unknown predefined palette w/ id `%s`", id);
     }
 
-    if (palette.size == 0) {
-        return luaL_error(L, "palette can't be empty!");
-        return 0;
-    }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "setting predefined palette `%s` w/ %d color(s)", id, predefined_palette->size);
 
     Palette_Object_t *self = (Palette_Object_t *)lua_newuserdatauv(L, sizeof(Palette_Object_t), 1);
     *self = (Palette_Object_t){
-            .palette = palette
+            .palette = *predefined_palette
         };
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p allocated w/ %d color(s)", self, palette.size);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p allocated w/ %d color(s)", self, self->palette.size);
 
     luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }
 
-static int palette_new(lua_State *L)
+static int palette_new_1n_1u(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    size_t colors = (size_t)LUAX_INTEGER(L, 1);
+
+    if (colors == 0) {
+        return luaL_error(L, "palette can't be empty!");
+    }
+
+    GL_Palette_t palette = { 0 };
+    GL_palette_generate_greyscale(&palette, colors);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "generating greyscale palette w/ %d color(s)", colors);
+
+    Palette_Object_t *self = (Palette_Object_t *)lua_newuserdatauv(L, sizeof(Palette_Object_t), 1);
+    *self = (Palette_Object_t){
+            .palette = palette
+        };
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p allocated w/ %d color(s)", self, self->palette.size);
+
+    luaL_setmetatable(L, META_TABLE);
+
+    return 1;
+}
+
+static int palette_new_1t_1u(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
+    LUAX_SIGNATURE_END
+
+    GL_Palette_t palette = { 0 };
+
+    palette.size = lua_rawlen(L, 1);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "setting custom palette of %d color(s)", palette.size);
+
+    if (palette.size == 0) {
+        return luaL_error(L, "palette can't be empty!");
+    } else
+    if (palette.size > GL_MAX_PALETTE_COLORS) {
+        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "palette has too many colors (%d) - clamping", palette.size);
+        palette.size = GL_MAX_PALETTE_COLORS;
+    }
+
+    lua_pushnil(L); // T -> T N
+    for (size_t i = 0; lua_next(L, 1); ++i) { // T N -> T N T
+        lua_rawgeti(L, 3, 1); // T N T -> T N T I
+        lua_rawgeti(L, 3, 2); // T N T I -> T N T I I
+        lua_rawgeti(L, 3, 3); // T N T I I -> T N T I I I
+
+        uint8_t r = (uint8_t)LUAX_INTEGER(L, -3);
+        uint8_t g = (uint8_t)LUAX_INTEGER(L, -2);
+        uint8_t b = (uint8_t)LUAX_INTEGER(L, -1);
+
+        lua_pop(L, 3); // T N T I I I -> T N T
+
+        palette.colors[i] = (GL_Color_t){ .r = r, .g = g, .b = b, .a = 255 };
+
+        lua_pop(L, 1); // T N T -> T N
+    }
+
+    Palette_Object_t *self = (Palette_Object_t *)lua_newuserdatauv(L, sizeof(Palette_Object_t), 1);
+    *self = (Palette_Object_t){
+            .palette = palette
+        };
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p allocated w/ %d color(s)", self, self->palette.size);
+
+    luaL_setmetatable(L, META_TABLE);
+
+    return 1;
+}
+
+static int palette_new_v_1u(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(0, palette_new0)
-        LUAX_OVERLOAD_ARITY(1, palette_new1)
+        LUAX_OVERLOAD_ARITY(0, palette_new_0_1u)
+        LUAX_OVERLOAD_SIGNATURE(palette_new_1s_1u, LUA_TSTRING)
+        LUAX_OVERLOAD_SIGNATURE(palette_new_1n_1u, LUA_TNUMBER)
+        LUAX_OVERLOAD_SIGNATURE(palette_new_1t_1u, LUA_TTABLE)
     LUAX_OVERLOAD_END
 }
 
-static int palette_gc(lua_State *L)
+static int palette_gc_1u_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -170,7 +203,7 @@ static int palette_gc(lua_State *L)
     return 0;
 }
 
-static int palette_mix(lua_State *L)
+static int palette_mix_7nnnnnnN_3nnn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -201,7 +234,7 @@ static int palette_mix(lua_State *L)
     return 3;
 }
 
-static int palette_colors(lua_State *L)
+static int palette_colors_1u_1t(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -228,7 +261,7 @@ static int palette_colors(lua_State *L)
     return 1;
 }
 
-static int palette_size(lua_State *L)
+static int palette_size_1u_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -242,7 +275,7 @@ static int palette_size(lua_State *L)
     return 1;
 }
 
-static int palette_color_to_index(lua_State *L)
+static int palette_color_to_index_4unnn_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -265,7 +298,7 @@ static int palette_color_to_index(lua_State *L)
     return 1;
 }
 
-static int palette_index_to_color(lua_State *L)
+static int palette_index_to_color_2un_3nnn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -284,7 +317,7 @@ static int palette_index_to_color(lua_State *L)
     return 3;
 }
 
-static int palette_lerp(lua_State *L)
+static int palette_lerp_5unnnN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -320,7 +353,7 @@ static bool _contains(const GL_Palette_t *palette, GL_Color_t color)
     return false;
 }
 
-static int palette_merge(lua_State *L)
+static int palette_merge_3uuB_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)

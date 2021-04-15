@@ -29,9 +29,11 @@
 #include "blit.h"
 #include "common.h"
 #include "context.h"
+#include "copperlist.h"
 #include "palette.h"
 #include "primitive.h"
 #include "sheet.h"
 #include "surface.h"
+#include "xform.h"
 
 #endif  /* __GL_H__ */

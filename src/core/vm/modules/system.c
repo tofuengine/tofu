@@ -35,34 +35,34 @@
 
 #define LOG_CONTEXT "system"
 
-static int system_args(lua_State *L);
-static int system_version(lua_State *L);
-static int system_time(lua_State *L);
-static int system_fps(lua_State *L);
+static int system_args_0_1t(lua_State *L);
+static int system_version_0_3nnn(lua_State *L);
+static int system_time_0_1n(lua_State *L);
+static int system_fps_0_1n(lua_State *L);
 #ifdef __ENGINE_PERFORMANCE_STATISTICS__
-static int system_stats(lua_State *L);
+static int system_stats_0_4nnnn(lua_State *L);
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
-static int system_is_active(lua_State *L);
-static int system_quit(lua_State *L);
-static int system_info(lua_State *L);
-static int system_warning(lua_State *L);
-static int system_error(lua_State *L);
-static int system_fatal(lua_State *L);
+static int system_is_active_0_1b(lua_State *L);
+static int system_quit_0_0(lua_State *L);
+static int system_info_v_0(lua_State *L);
+static int system_warning_v_0(lua_State *L);
+static int system_error_v_0(lua_State *L);
+static int system_fatal_v_0(lua_State *L);
 
 static const struct luaL_Reg _system_functions[] = {
-    { "args", system_args },
-    { "version", system_version },
-    { "time", system_time },
-    { "fps", system_fps },
+    { "args", system_args_0_1t },
+    { "version", system_version_0_3nnn },
+    { "time", system_time_0_1n },
+    { "fps", system_fps_0_1n },
 #ifdef __ENGINE_PERFORMANCE_STATISTICS__
-    { "stats", system_stats },
+    { "stats", system_stats_0_4nnnn },
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
-    { "is_active", system_is_active },
-    { "quit", system_quit },
-    { "info", system_info },
-    { "warning", system_warning },
-    { "error", system_error },
-    { "fatal", system_fatal },
+    { "is_active", system_is_active_0_1b },
+    { "quit", system_quit_0_0 },
+    { "info", system_info_v_0 },
+    { "warning", system_warning_v_0 },
+    { "error", system_error_v_0 },
+    { "fatal", system_fatal_v_0 },
     { NULL, NULL }
 };
 
@@ -72,7 +72,7 @@ int system_loader(lua_State *L)
     return luaX_newmodule(L, NULL, _system_functions, NULL, nup, NULL);
 }
 
-static int system_args(lua_State *L)
+static int system_args_0_1t(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
@@ -89,7 +89,7 @@ static int system_args(lua_State *L)
     return 1;
 }
 
-static int system_version(lua_State *L)
+static int system_version_0_3nnn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
@@ -101,7 +101,7 @@ static int system_version(lua_State *L)
     return 3;
 }
 
-static int system_time(lua_State *L)
+static int system_time_0_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
@@ -113,7 +113,7 @@ static int system_time(lua_State *L)
     return 1;
 }
 
-static int system_fps(lua_State *L)
+static int system_fps_0_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
@@ -127,7 +127,7 @@ static int system_fps(lua_State *L)
 }
 
 #ifdef __ENGINE_PERFORMANCE_STATISTICS__
-static int system_stats(lua_State *L)
+static int system_stats_0_4nnnn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
@@ -144,7 +144,7 @@ static int system_stats(lua_State *L)
 }
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
 
-static int system_is_active(lua_State *L)
+static int system_is_active_0_1b(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
@@ -156,7 +156,7 @@ static int system_is_active(lua_State *L)
     return 1;
 }
 
-static int system_quit(lua_State *L)
+static int system_quit_0_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
@@ -188,22 +188,22 @@ static int log_write(lua_State *L, Log_Levels_t level)
     return 0;
 }
 
-static int system_info(lua_State *L)
+static int system_info_v_0(lua_State *L)
 {
     return log_write(L, LOG_LEVELS_INFO);
 }
 
-static int system_warning(lua_State *L)
+static int system_warning_v_0(lua_State *L)
 {
     return log_write(L, LOG_LEVELS_WARNING);
 }
 
-static int system_error(lua_State *L)
+static int system_error_v_0(lua_State *L)
 {
     return log_write(L, LOG_LEVELS_ERROR);
 }
 
-static int system_fatal(lua_State *L)
+static int system_fatal_v_0(lua_State *L)
 {
     return log_write(L, LOG_LEVELS_FATAL);
 }

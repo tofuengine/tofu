@@ -74,7 +74,7 @@ GL_Context_t *GL_context_decode(size_t width, size_t height, const void *pixels,
     return context;
 }
 
-GL_Context_t *GL_context_create(size_t width, size_t height)
+GL_Context_t *GL_context_create(size_t width, size_t height) // TODO: use `GL_Size_t`?
 {
     GL_Surface_t *surface = GL_surface_create(width, height);
     if (!surface) {
@@ -216,6 +216,16 @@ void GL_context_set_mask(GL_Context_t *context, const GL_Mask_t *mask)
     }
 }
 #endif
+
+GL_Size_t GL_context_get_size(const GL_Context_t *context)
+{
+    return (GL_Size_t){ .width = context->surface->width, .height = context->surface->height };
+}
+
+GL_Surface_t *GL_context_get_surface(const GL_Context_t *context)
+{
+    return context->surface;
+}
 
 // https://lodev.org/cgtutor/floodfill.html
 void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t index)

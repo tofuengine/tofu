@@ -47,6 +47,7 @@ const Map_Entry_t *map_find(lua_State *L, const char *id, const Map_Entry_t *tab
     const Map_Entry_t *entry = bsearch((const void *)&key, table, size, sizeof(Map_Entry_t), _entry_compare);
     if (!entry) {
         luaL_error(L, "unknown value for key `%s`", id);
+        return NULL;
     }
     return entry;
 }

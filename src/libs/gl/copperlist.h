@@ -22,28 +22,35 @@
  * SOFTWARE.
  */
 
-#ifndef __LIBS_IMATH_H__
-#define __LIBS_IMATH_H__
+#ifndef __GL_COPPERLIST_H__
+#define __GL_COPPERLIST_H__
 
-#include <math.h>
+#include "common.h"
+#include "palette.h"
+#include "surface.h"
 
-#define IABS(v)         ((v) > 0 ? (v) : -(v))
-#define IMOD(a, b)      ((((a) % (b)) + (b)) % (b))
-#define IMIN(a, b)      ((a) < (b) ? (a) : (b))
-#define IMAX(a, b)      ((a) > (b) ? (a) : (b))
+typedef enum _GL_CopperList_Command_t {
+    WAIT = 0x00000,
+    SKIP = 0x10000,
+    MOVE = 0x20000,
+    MODULO,
+    OFFSET,
+    PALETTE,
+    COLOR,
+    BIAS,
+    SHIFT,
+    Display_CopperList_Command_t_CountOf
+} GL_CopperList_Command_t;
 
-#define ISIGNUM(x)      (((x) > 0) - ((x) < 0))
+typedef union _GL_CopperList_Entry_t {
+    GL_CopperList_Command_t command;
+    size_t size;
+    GL_Color_t color;
+    GL_Pixel_t pixel;
+    int integer;
+} GL_CopperList_Entry_t;
 
-#define ICLAMP(x, l, u) ((x) < (l) ? (l) : ((x) > (u) ? (u) : (x)))
-#define IMIRROR(x)      ((x) >= 0 ? (x) : -(1 + (x)))
+extern void GL_surface_to_rgba_copperlist(const GL_Surface_t *surface, int bias, GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS],
+    GL_Palette_t slots[GL_MAX_PALETTE_SLOTS], size_t active_id, const GL_CopperList_Entry_t *copperlist, GL_Color_t *pixels);
 
-#define IFLOORF(x)      ((int)floorf((x)))
-#define ICEILF(x)       ((int)ceilf((x)))
-#define IROUNDF(x)      ((int)floorf((x) + 0.5f))
-
-extern int iabs(int v);
-extern int imod(int a, int b);
-extern int imin(int a, int b);
-extern int imax(int a, int b);
-
-#endif  /* __LIBS_IMATH_H__ */
+#endif  /* __GL_COPPERLIST_H__ */

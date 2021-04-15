@@ -31,26 +31,26 @@
 #include <libs/log.h>
 #include <libs/luax.h>
 
-#include "callbacks.h"
 #include "udt.h"
+#include "utils/callbacks.h"
 
 #include <math.h>
 
 #define LOG_CONTEXT "font"
 #define META_TABLE  "Tofu_Graphics_Font_mt"
 
-static int font_new(lua_State *L);
-static int font_gc(lua_State *L);
-static int font_size(lua_State *L);
-static int font_canvas(lua_State *L);
-static int font_write(lua_State *L);
+static int font_new_4uunn_1u(lua_State *L);
+static int font_gc_1u_0(lua_State *L);
+static int font_size_4uSNN_2n(lua_State *L);
+static int font_canvas_2uu_0(lua_State *L);
+static int font_write_v_0(lua_State *L);
 
 static const struct luaL_Reg _font_functions[] = {
-    { "new", font_new },
-    { "__gc", font_gc },
-    { "size", font_size },
-    { "canvas", font_canvas },
-    { "write", font_write },
+    { "new", font_new_4uunn_1u },
+    { "__gc", font_gc_1u_0 },
+    { "size", font_size_4uSNN_2n },
+    { "canvas", font_canvas_2uu_0 },
+    { "write", font_write_v_0 },
     { NULL, NULL }
 };
 
@@ -68,7 +68,7 @@ int font_loader(lua_State *L)
     return luaX_newmodule(L, &_font_script, _font_functions, NULL, nup, META_TABLE);
 }
 
-static int font_new(lua_State *L)
+static int font_new_4uunn_1u(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -81,7 +81,7 @@ static int font_new(lua_State *L)
     size_t glyph_width = (size_t)LUAX_INTEGER(L, 3);
     size_t glyph_height = (size_t)LUAX_INTEGER(L, 4);
 
-    GL_Sheet_t *sheet = GL_sheet_create_fixed(atlas->context->surface, (GL_Size_t ){ .width = glyph_width, .height = glyph_height });
+    GL_Sheet_t *sheet = GL_sheet_create_fixed(GL_context_get_surface(atlas->context), (GL_Size_t){ .width = glyph_width, .height = glyph_height });
     if (!sheet) {
         return luaL_error(L, "can't create sheet");
     }
@@ -106,7 +106,7 @@ static int font_new(lua_State *L)
     return 1;
 }
 
-static int font_gc(lua_State *L)
+static int font_gc_1u_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -174,7 +174,7 @@ static void _size(const char *text, const GL_Rectangle_t *cells, float scale_x, 
     *h += height;
 }
 
-static int font_size(lua_State *L)
+static int font_size_4uSNN_2n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -196,7 +196,7 @@ static int font_size(lua_State *L)
     return 2;
 }
 
-static int font_canvas(lua_State *L)
+static int font_canvas_2uu_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -215,7 +215,7 @@ static int font_canvas(lua_State *L)
     return 0;
 }
 
-static int font_write4(lua_State *L)
+static int font_write_4usnn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -258,7 +258,7 @@ static int font_write4(lua_State *L)
     return 0;
 }
 
-static int font_write5_6(lua_State *L)
+static int font_write_6usnnnN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -307,11 +307,11 @@ static int font_write5_6(lua_State *L)
     return 0;
 }
 
-static int font_write(lua_State *L)
+static int font_write_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(4, font_write4)
-        LUAX_OVERLOAD_ARITY(5, font_write5_6)
-        LUAX_OVERLOAD_ARITY(6, font_write5_6)
+        LUAX_OVERLOAD_ARITY(4, font_write_4usnn_0)
+        LUAX_OVERLOAD_ARITY(5, font_write_6usnnnN_0)
+        LUAX_OVERLOAD_ARITY(6, font_write_6usnnnN_0)
     LUAX_OVERLOAD_END
 }

@@ -105,7 +105,7 @@ typedef struct _Palette_Object_t {
 } Palette_Object_t;
 
 typedef struct _Copperlist_Object_t {
-    Display_CopperList_Entry_t *program;
+    GL_CopperList_Entry_t *program;
 } Copperlist_Object_t;
 
 #ifdef __GRID_INTEGER_CELL__

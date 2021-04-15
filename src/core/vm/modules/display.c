@@ -36,20 +36,20 @@
 
 #define LOG_CONTEXT "display"
 
-static int display_palette(lua_State *L);
-static int display_switch(lua_State *L);
-static int display_offset(lua_State *L);
-static int display_bias(lua_State *L);
-static int display_shift(lua_State *L);
-static int display_copperlist(lua_State *L);
+static int display_palette_1u_0(lua_State *L);
+static int display_switch_1n_0(lua_State *L);
+static int display_offset_2n_0(lua_State *L);
+static int display_bias_1n_0(lua_State *L);
+static int display_shift_v_0(lua_State *L);
+static int display_copperlist_1u_0(lua_State *L);
 
 static const struct luaL_Reg _display_functions[] = {
-    { "palette", display_palette },
-    { "switch", display_switch },
-    { "offset", display_offset },
-    { "bias", display_bias },
-    { "shift", display_shift },
-    { "copperlist", display_copperlist },
+    { "palette", display_palette_1u_0 },
+    { "switch", display_switch_1n_0 },
+    { "offset", display_offset_2n_0 },
+    { "bias", display_bias_1n_0 },
+    { "shift", display_shift_v_0 },
+    { "copperlist", display_copperlist_1u_0 },
     { NULL, NULL }
 };
 
@@ -63,7 +63,7 @@ int display_loader(lua_State *L)
     return luaX_newmodule(L, NULL, _display_functions, _display_constants, nup, NULL);
 }
 
-static int display_palette(lua_State *L)
+static int display_palette_1u_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -77,7 +77,7 @@ static int display_palette(lua_State *L)
     return 0;
 }
 
-static int display_switch(lua_State *L)
+static int display_switch_1n_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
@@ -91,7 +91,7 @@ static int display_switch(lua_State *L)
     return 0;
 }
 
-static int display_offset(lua_State *L)
+static int display_offset_2n_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
@@ -107,7 +107,7 @@ static int display_offset(lua_State *L)
     return 0;
 }
 
-static int display_bias(lua_State *L)
+static int display_bias_1n_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
@@ -121,7 +121,7 @@ static int display_bias(lua_State *L)
     return 0;
 }
 
-static int display_shift0(lua_State *L)
+static int display_shift_0_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
@@ -133,7 +133,7 @@ static int display_shift0(lua_State *L)
     return 0;
 }
 
-static int display_shift1(lua_State *L)
+static int display_shift_1t_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
@@ -160,7 +160,7 @@ static int display_shift1(lua_State *L)
     return 0;
 }
 
-static int display_shift2(lua_State *L)
+static int display_shift_2nn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -176,16 +176,16 @@ static int display_shift2(lua_State *L)
     return 0;
 }
 
-static int display_shift(lua_State *L)
+static int display_shift_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(0, display_shift0)
-        LUAX_OVERLOAD_ARITY(1, display_shift1)
-        LUAX_OVERLOAD_ARITY(2, display_shift2)
+        LUAX_OVERLOAD_ARITY(0, display_shift_0_0)
+        LUAX_OVERLOAD_ARITY(1, display_shift_1t_0)
+        LUAX_OVERLOAD_ARITY(2, display_shift_2nn_0)
     LUAX_OVERLOAD_END
 }
 
-static int display_copperlist(lua_State *L)
+static int display_copperlist_1u_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)

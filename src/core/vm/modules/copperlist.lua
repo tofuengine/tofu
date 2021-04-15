@@ -22,14 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Copperlist = {}
+local Math = require("tofu.core").Math
 
-local function _lerp(v0, v1, t)
-  -- More numerical stable than the following one.
-  -- return (v1 - v0) * t + v0
-  -- see: https://en.wikipedia.org/wiki/Linear_interpolation
-  return v0 * (1.0 - t) + v1 * t;
-end
+local Copperlist = {}
 
 function Copperlist.gradient(index, markers)
   local copperlist = Copperlist.new()
@@ -38,7 +33,8 @@ function Copperlist.gradient(index, markers)
     local wait_y, wait_r, wait_g, wait_b = table.unpack(marker)
     for y = current_y + 1, wait_y do
       local ratio = (y - current_y) / (wait_y - current_y)
-      local r, g, b = _lerp(current_r, wait_r, ratio), _lerp(current_g, wait_g, ratio), _lerp(current_b, wait_b, ratio)
+      local r, g, b = Math.lerp(current_r, wait_r, ratio),
+      Math.lerp(current_g, wait_g, ratio), Math.lerp(current_b, wait_b, ratio)
       copperlist:wait(0, y)
       copperlist:color(index, r, g, b)
     end

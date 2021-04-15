@@ -16,34 +16,49 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * AUTHORS OR COPYR3IGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
 
-#ifndef __LIBS_IMATH_H__
-#define __LIBS_IMATH_H__
+#include "fmath.h"
 
-#include <math.h>
+int fsignun(float x)
+{
+    return FSIGNUM(x);
+}
 
-#define IABS(v)         ((v) > 0 ? (v) : -(v))
-#define IMOD(a, b)      ((((a) % (b)) + (b)) % (b))
-#define IMIN(a, b)      ((a) < (b) ? (a) : (b))
-#define IMAX(a, b)      ((a) > (b) ? (a) : (b))
+float flerp(float v0, float v1, float t)
+{
+    return FLERP(v0, v1, t);
+}
 
-#define ISIGNUM(x)      (((x) > 0) - ((x) < 0))
+float finvlerp(float v0, float v1, float v)
+{
+    return FINVLERP(v0, v1, v);
+}
 
-#define ICLAMP(x, l, u) ((x) < (l) ? (l) : ((x) > (u) ? (u) : (x)))
-#define IMIRROR(x)      ((x) >= 0 ? (x) : -(1 + (x)))
+float fclamp(float x, float lower, float upper)
+{
+    return FCLAMP(x, lower, upper);
+}
 
-#define IFLOORF(x)      ((int)floorf((x)))
-#define ICEILF(x)       ((int)ceilf((x)))
-#define IROUNDF(x)      ((int)floorf((x) + 0.5f))
+float fstep(float edge, float x)
+{
+    return FSTEP(edge, x);
+}
 
-extern int iabs(int v);
-extern int imod(int a, int b);
-extern int imin(int a, int b);
-extern int imax(int a, int b);
+float fsmoothstep(float edge0, float edge1, float x)
+{
+    float e = FINVLERP(edge0, edge1, x);
+    x = FCLAMP(e, 0.0f, 1.0f); // Scale, bias and saturate x to [0, 1] range.
+    return x * x * (3.0f - 2.0f * x); // Evaluate polynomial.
+}
 
-#endif  /* __LIBS_IMATH_H__ */
+float fsmootherstep(float edge0, float edge1, float x)
+{
+    float e = FINVLERP(edge0, edge1, x);
+    x = FCLAMP(e, 0.0f, 1.0f);
+    return x * x * x * (x * (x * 6.0f - 15.0f) + 10.0f);
+}

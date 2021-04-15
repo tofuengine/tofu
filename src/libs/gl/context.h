@@ -85,6 +85,9 @@ extern void GL_context_set_transparent(GL_Context_t *context, const GL_Pixel_t *
 extern void GL_context_set_mask(GL_Context_t *context, const GL_Mask_t *mask);
 #endif
 
+extern GL_Size_t GL_context_get_size(const GL_Context_t *context);
+extern GL_Surface_t *GL_context_get_surface(const GL_Context_t *context);
+
 extern void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t index);
 extern void GL_context_process(const GL_Context_t *context, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, GL_Process_Callback_t callback, void *user_data);
 extern void GL_context_copy(const GL_Context_t *context, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position);
