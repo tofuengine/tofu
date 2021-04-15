@@ -76,31 +76,29 @@ typedef union _Display_CopperList_Entry_t {
     int integer;
 } Display_CopperList_Entry_t;
 
-typedef struct _Display_Properties_t {
+typedef struct _Display_Canvas_t {
+    GL_Size_t size;
+    GL_Context_t *context;
+    int bias;
+    GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
     struct {
-        GL_Size_t size;
-        GL_Context_t *context;
-        int bias;
-        GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
-        struct {
-            GL_Palette_t slots[DISPLAY_MAX_PALETTE_SLOTS];
-            size_t active_id;
-        } palette;
-        Display_CopperList_Entry_t *copperlist;
-    } canvas;
+        GL_Palette_t slots[DISPLAY_MAX_PALETTE_SLOTS];
+        size_t active_id;
+    } palette;
+    Display_CopperList_Entry_t *copperlist;
+} Display_Canvas_t;
 
-    struct {
-        GL_Color_t *pixels; // Temporary buffer to create the OpenGL texture from `GL_Pixel_t` array.
-        size_t width, height;
-        size_t bytes_per_pixel, stride;
-        size_t size;
-        GLuint texture;
-        GL_Rectangle_t rectangle;
-        GL_Point_t offset;
-    } vram;
-} Display_Properties_t;
+typedef struct _Display_Vram_t {
+    GL_Color_t *pixels; // Temporary buffer to create the OpenGL texture from `GL_Pixel_t` array.
+    size_t width, height;
+    size_t bytes_per_pixel, stride;
+    size_t size;
+    GLuint texture;
+    GL_Rectangle_t rectangle; // Destination rectangle, scaled to the final screen size.
+    GL_Point_t offset;
+} Display_Vram_t;
 
-typedef void (*Surface_To_Rgba_Function_t)(const GL_Surface_t *surface, GL_Color_t *pixels, const Display_Properties_t *properties);
+typedef void (*Surface_To_Rgba_Function_t)(const Display_Canvas_t *canvas, const Display_Vram_t *vram);
 
 typedef struct _Display_t {
     Display_Configuration_t configuration;
@@ -109,7 +107,8 @@ typedef struct _Display_t {
 
     Program_t program;
 
-    Display_Properties_t properties;
+    Display_Canvas_t canvas;
+    Display_Vram_t vram;
 
     Surface_To_Rgba_Function_t surface_to_rgba;
 
