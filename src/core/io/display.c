@@ -317,16 +317,16 @@ static bool _shader_initialize(Display_t *display, const char *effect)
 
     program_send(program, UNIFORM_TEXTURE, PROGRAM_UNIFORM_TEXTURE, 1, (const int[]){ 0 }); // Redundant
     program_send(program, UNIFORM_SCREEN_SIZE, PROGRAM_UNIFORM_VEC2, 1, (const GLfloat[]){
-            (GLfloat)display->vram.rectangle.width,
-            (GLfloat)display->vram.rectangle.height
+            (GLfloat)display->properties.vram.rectangle.width,
+            (GLfloat)display->properties.vram.rectangle.height
         });
     program_send(program, UNIFORM_TEXTURE_SIZE, PROGRAM_UNIFORM_VEC2, 1, (const GLfloat[]){
             (GLfloat)display->configuration.window.width,
             (GLfloat)display->configuration.window.height
         });
     program_send(program, UNIFORM_SCREEN_SCALE, PROGRAM_UNIFORM_VEC2, 1, (const GLfloat[]){
-            (GLfloat)display->vram.rectangle.width / (GLfloat)display->configuration.window.width,
-            (GLfloat)display->vram.rectangle.height / (GLfloat)display->configuration.window.height
+            (GLfloat)display->properties.vram.rectangle.width / (GLfloat)display->configuration.window.width,
+            (GLfloat)display->properties.vram.rectangle.height / (GLfloat)display->configuration.window.height
         });
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p initialized", program);
@@ -348,7 +348,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
             .configuration = *configuration
         };
 
-    display->window = _window_initialize(configuration, &display->vram.rectangle, &display->canvas.size);
+    display->window = _window_initialize(configuration, &display->properties.vram.rectangle, &display->properties.canvas.size);
     if (!display->window) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize window");
         free(display);
@@ -356,54 +356,54 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window %p initialized", display->window);
 
-    display->canvas.context = GL_context_create(display->canvas.size.width, display->canvas.size.height);
-    if (!display->canvas.context) {
+    display->properties.canvas.context = GL_context_create(display->properties.canvas.size.width, display->properties.canvas.size.height);
+    if (!display->properties.canvas.context) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create graphics context");
         glfwDestroyWindow(display->window);
         glfwTerminate();
         free(display);
         return NULL;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "graphics context %p created", display->canvas.context);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "graphics context %p created", display->properties.canvas.context);
 
     Display_set_shifting(display, NULL, NULL, 0);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette shifting initialized");
 
     for (size_t id = 0; id < DISPLAY_MAX_PALETTE_SLOTS; ++id) {
-        GL_palette_generate_greyscale(&display->canvas.palette.slots[id], GL_MAX_PALETTE_COLORS);
+        GL_palette_generate_greyscale(&display->properties.canvas.palette.slots[id], GL_MAX_PALETTE_COLORS);
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded greyscale palettes of %d entries", GL_MAX_PALETTE_COLORS);
 
     Display_set_copperlist(display, NULL, 0);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "initial copperlist list cleared");
 
-    display->vram.width = display->canvas.size.width;
-    display->vram.height = display->canvas.size.height;
-    display->vram.bytes_per_pixel = sizeof(GL_Color_t);
-    display->vram.stride = display->vram.width * display->vram.bytes_per_pixel;
-    display->vram.size = display->vram.stride * display->vram.height;
-    display->vram.pixels = malloc(display->vram.size);
-    if (!display->vram.pixels) {
+    display->properties.vram.width = display->properties.canvas.size.width;
+    display->properties.vram.height = display->properties.canvas.size.height;
+    display->properties.vram.bytes_per_pixel = sizeof(GL_Color_t);
+    display->properties.vram.stride = display->properties.vram.width * display->properties.vram.bytes_per_pixel;
+    display->properties.vram.size = display->properties.vram.stride * display->properties.vram.height;
+    display->properties.vram.pixels = malloc(display->properties.vram.size);
+    if (!display->properties.vram.pixels) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't allocate VRAM buffer");
-        GL_context_destroy(display->canvas.context);
+        GL_context_destroy(display->properties.canvas.context);
         glfwDestroyWindow(display->window);
         glfwTerminate();
         free(display);
         return NULL;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes VRAM allocated at %p (%dx%d)", display->vram.size, display->vram.pixels, display->canvas.size.width, display->canvas.size.height);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes VRAM allocated at %p (%dx%d)", display->properties.vram.size, display->properties.vram.pixels, display->properties.canvas.size.width, display->properties.canvas.size.height);
 
-    glGenTextures(1, &display->vram.texture); //allocate the memory for texture
-    if (display->vram.texture == 0) {
+    glGenTextures(1, &display->properties.vram.texture); //allocate the memory for texture
+    if (display->properties.vram.texture == 0) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't allocate VRAM texture");
-        free(display->vram.pixels);
-        GL_context_destroy(display->canvas.context);
+        free(display->properties.vram.pixels);
+        GL_context_destroy(display->properties.canvas.context);
         glfwDestroyWindow(display->window);
         glfwTerminate();
         free(display);
         return NULL;
     }
-    glBindTexture(GL_TEXTURE_2D, display->vram.texture); // The VRAM texture is always the active and bound one.
+    glBindTexture(GL_TEXTURE_2D, display->properties.vram.texture); // The VRAM texture is always the active and bound one.
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // Faster when not-power-of-two, which is the common case.
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -411,8 +411,8 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0); // Disable mip-mapping
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
     glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)display->canvas.size.width, (GLsizei)display->canvas.size.height, 0, PIXEL_FORMAT, GL_UNSIGNED_BYTE, NULL); // Create the storage
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "texture created w/ id #%d (%dx%d)", display->vram.texture, display->canvas.size.width, display->canvas.size.height);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)display->properties.canvas.size.width, (GLsizei)display->properties.canvas.size.height, 0, PIXEL_FORMAT, GL_UNSIGNED_BYTE, NULL); // Create the storage
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "texture created w/ id #%d (%dx%d)", display->properties.vram.texture, display->properties.canvas.size.width, display->properties.canvas.size.height);
 
 #ifdef __OPENGL_STATE_CLEANUP__
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -424,9 +424,9 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     bool shader = _shader_initialize(display, configuration->effect);
     if (!shader) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize shader");
-        glDeleteBuffers(1, &display->vram.texture);
-        free(display->vram.pixels);
-        GL_context_destroy(display->canvas.context);
+        glDeleteBuffers(1, &display->properties.vram.texture);
+        free(display->properties.vram.pixels);
+        GL_context_destroy(display->properties.canvas.context);
         glfwDestroyWindow(display->window);
         glfwTerminate();
         free(display);
@@ -434,13 +434,13 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     }
 
 #ifdef __GRAPHICS_CAPTURE_SUPPORT__
-    display->capture.pixels = malloc(display->vram.rectangle.width * display->vram.rectangle.height * 4);
+    display->capture.pixels = malloc(display->properties.vram.rectangle.width * display->properties.vram.rectangle.height * 4);
     if (!display->capture.pixels) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't allocate capture buffer");
         program_delete(&display->program);
-        glDeleteBuffers(1, &display->vram.texture);
-        free(display->vram.pixels);
-        GL_context_destroy(display->canvas.context);
+        glDeleteBuffers(1, &display->properties.vram.texture);
+        free(display->properties.vram.pixels);
+        GL_context_destroy(display->properties.canvas.context);
         glfwDestroyWindow(display->window);
         glfwTerminate();
         free(display);
@@ -474,21 +474,21 @@ void Display_destroy(Display_t *display)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "capture buffer %p freed", display->capture.pixels);
 #endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
 
-    if (display->copperlist) {
-        arrfree(display->copperlist);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p freed", display->copperlist);
+    if (display->properties.copperlist) {
+        arrfree(display->properties.copperlist);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p freed", display->properties.copperlist);
     }
 
     program_delete(&display->program);
 
-    glDeleteBuffers(1, &display->vram.texture);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "texture w/ id #%d deleted", display->vram.texture);
+    glDeleteBuffers(1, &display->properties.vram.texture);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "texture w/ id #%d deleted", display->properties.vram.texture);
 
-    free(display->vram.pixels);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "VRAM buffer %p freed", display->vram.pixels);
+    free(display->properties.vram.pixels);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "VRAM buffer %p freed", display->properties.vram.pixels);
 
-    GL_context_destroy(display->canvas.context);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "graphics context %p destroyed", display->canvas.context);
+    GL_context_destroy(display->properties.canvas.context);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "graphics context %p destroyed", display->properties.canvas.context);
 
     glfwDestroyWindow(display->window);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window %p destroyed", display->window);
@@ -519,7 +519,7 @@ void Display_update(Display_t *display, float delta_time)
         display->capture.time += delta_time;
         while (display->capture.time >= CAPTURE_FRAME_TIME) {
             display->capture.time -= CAPTURE_FRAME_TIME;
-            GifWriteFrame(&display->capture.gif_writer, display->capture.pixels, display->vram.rectangle.width, display->vram.rectangle.height, CAPTURE_FRAME_TIME_100TH, 8, false); // Hundredths of seconds.
+            GifWriteFrame(&display->capture.gif_writer, display->capture.pixels, display->properties.vram.rectangle.width, display->properties.vram.rectangle.height, CAPTURE_FRAME_TIME_100TH, 8, false); // Hundredths of seconds.
         }
     }
 #endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
@@ -529,13 +529,11 @@ void Display_update(Display_t *display, float delta_time)
 #endif
 }
 
-static void _surface_to_rgba_fast(const GL_Surface_t *surface, GL_Color_t *pixels, const void *user_data)
+static void _surface_to_rgba_fast(const GL_Surface_t *surface, GL_Color_t *pixels, const Display_Properties_t *properties)
 {
-    const Display_t *display = (const Display_t *)user_data;
-
-    int bias = display->canvas.bias;
-    const GL_Pixel_t *shifting = display->canvas.shifting;
-    const GL_Palette_t *palette = &display->canvas.palette.slots[display->canvas.palette.active_id];
+    int bias = properties->canvas.bias;
+    const GL_Pixel_t *shifting = properties->canvas.shifting;
+    const GL_Palette_t *palette = &properties->canvas.palette.slots[properties->canvas.palette.active_id];
 
     const size_t data_size = surface->data_size;
     const GL_Color_t *colors = palette->colors;
@@ -563,18 +561,16 @@ static void _surface_to_rgba_fast(const GL_Surface_t *surface, GL_Color_t *pixel
     }
 }
 
-static void _surface_to_rgba(const GL_Surface_t *surface, GL_Color_t *pixels, const void *user_data)
+static void _surface_to_rgba(const GL_Surface_t *surface, GL_Color_t *pixels, const Display_Properties_t *properties)
 {
-    const Display_t *display = (const Display_t *)user_data;
-
-    int bias = display->canvas.bias;
+    int bias = properties->canvas.bias;
     GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS] = { 0 };
     GL_Palette_t slots[DISPLAY_MAX_PALETTE_SLOTS] = { 0 }; // Make a local copy, the copperlist can change it.
-    size_t active_id = display->canvas.palette.active_id;
-    const Display_CopperList_Entry_t *copperlist = display->copperlist;
+    size_t active_id = properties->canvas.palette.active_id;
+    const Display_CopperList_Entry_t *copperlist = properties->copperlist;
 
-    memcpy(shifting, display->canvas.shifting, sizeof(GL_Pixel_t) * GL_MAX_PALETTE_COLORS);
-    memcpy(slots, display->canvas.palette.slots, sizeof(GL_Palette_t) * DISPLAY_MAX_PALETTE_SLOTS);
+    memcpy(shifting, properties->canvas.shifting, sizeof(GL_Pixel_t) * GL_MAX_PALETTE_COLORS);
+    memcpy(slots, properties->canvas.palette.slots, sizeof(GL_Palette_t) * DISPLAY_MAX_PALETTE_SLOTS);
 
     size_t wait_y = 0, wait_x = 0;
     GL_Color_t *colors = slots[active_id].colors;
@@ -680,18 +676,18 @@ void Display_present(const Display_t *display)
     glClear(GL_COLOR_BUFFER_BIT);
 
     // Convert the offscreen surface to a texture.
-    const GL_Surface_t *surface = display->canvas.context->surface;
-    GL_Color_t *pixels = display->vram.pixels;
+    const GL_Surface_t *surface = display->properties.canvas.context->surface;
+    GL_Color_t *pixels = display->properties.vram.pixels;
 
-    display->surface_to_rgba(surface, pixels, display); // The acutal function changes when a copperlist is defined. 
+    display->surface_to_rgba(surface, pixels, &display->properties); // The actual function changes when a copperlist is defined. 
 
 #ifdef __OPENGL_STATE_CLEANUP__
-    glBindTexture(GL_TEXTURE_2D, display->vram.texture);
+    glBindTexture(GL_TEXTURE_2D, display->properties.vram.texture);
 #endif
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)surface->width, (GLsizei)surface->height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, pixels);
 
-    const GL_Rectangle_t *vram_rectangle = &display->vram.rectangle;
-    const GL_Point_t *vram_offset = &display->vram.offset;
+    const GL_Rectangle_t *vram_rectangle = &display->properties.vram.rectangle;
+    const GL_Point_t *vram_offset = &display->properties.vram.offset;
 
     // Add x/y offset to implement screen-shaking or similar effects.
     const int x0 = vram_rectangle->x + vram_offset->x;
@@ -742,8 +738,8 @@ void Display_present(const Display_t *display)
 
 void Display_set_palette(Display_t *display, const GL_Palette_t *palette)
 {
-    display->canvas.palette.slots[display->canvas.palette.active_id] = *palette;
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette #%d updated", display->canvas.palette.active_id);
+    display->properties.canvas.palette.slots[display->properties.canvas.palette.active_id] = *palette;
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette #%d updated", display->properties.canvas.palette.active_id);
 }
 
 void Display_set_active_palette(Display_t *display, size_t slot_id)
@@ -752,48 +748,48 @@ void Display_set_active_palette(Display_t *display, size_t slot_id)
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "palette slot #%d exceeds limits", slot_id);
         return;
     }
-    display->canvas.palette.active_id = slot_id;
+    display->properties.canvas.palette.active_id = slot_id;
 }
 
 void Display_set_offset(Display_t *display, GL_Point_t offset)
 {
-    display->vram.offset = offset;
+    display->properties.vram.offset = offset;
 }
 
 void Display_set_bias(Display_t *display, int bias)
 {
-    display->canvas.bias = bias;
+    display->properties.canvas.bias = bias;
 }
 
 void Display_set_shifting(Display_t *display, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count)
 {
     if (!from) {
         for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
-            display->canvas.shifting[i] = (GL_Pixel_t)i;
+            display->properties.canvas.shifting[i] = (GL_Pixel_t)i;
         }
     } else {
         for (size_t i = 0; i < count; ++i) {
-            display->canvas.shifting[from[i]] = to[i];
+            display->properties.canvas.shifting[from[i]] = to[i];
         }
     }
 }
 
 void Display_set_copperlist(Display_t *display, const Display_CopperList_Entry_t *program, size_t length)
 {
-    if (display->copperlist) {
-        arrfree(display->copperlist);
-        display->copperlist = NULL;
+    if (display->properties.copperlist) {
+        arrfree(display->properties.copperlist);
+        display->properties.copperlist = NULL;
 //        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p freed", display->copperlist);
     }
 
     if (program) {
         for (size_t i = 0; i < length; ++i) {
-            arrpush(display->copperlist, program[i]);
+            arrpush(display->properties.copperlist, program[i]);
         }
         // Add a special `WAIT` instruction to halt the Copper(tm) from reading outsize memory boundaries.
-        arrpush(display->copperlist, (Display_CopperList_Entry_t){ .command = WAIT });
-        arrpush(display->copperlist, (Display_CopperList_Entry_t){ .size = SIZE_MAX });
-        arrpush(display->copperlist, (Display_CopperList_Entry_t){ .size = SIZE_MAX });
+        arrpush(display->properties.copperlist, (Display_CopperList_Entry_t){ .command = WAIT });
+        arrpush(display->properties.copperlist, (Display_CopperList_Entry_t){ .size = SIZE_MAX });
+        arrpush(display->properties.copperlist, (Display_CopperList_Entry_t){ .size = SIZE_MAX });
 //        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "updated copperlist %p w/ #%d entries", display->copperlist, entries);
 
         display->surface_to_rgba = _surface_to_rgba;
@@ -809,27 +805,27 @@ GLFWwindow *Display_get_window(const Display_t *display)
 
 float Display_get_scale(const Display_t *display)
 {
-    return (float)display->vram.rectangle.width / (float)display->canvas.size.width;
+    return (float)display->properties.vram.rectangle.width / (float)display->properties.canvas.size.width;
 }
 
 GL_Context_t *Display_get_context(const Display_t *display)
 {
-    return display->canvas.context;
+    return display->properties.canvas.context;
 }
 
 const GL_Palette_t *Display_get_palette(const Display_t *display)
 {
-    return &display->canvas.palette.slots[display->canvas.palette.active_id];
+    return &display->properties.canvas.palette.slots[display->properties.canvas.palette.active_id];
 }
 
 size_t Display_get_active_palette(const Display_t *display)
 {
-    return display->canvas.palette.active_id;
+    return display->properties.canvas.palette.active_id;
 }
 
 GL_Point_t Display_get_offset(const Display_t *display)
 {
-    return display->vram.offset;
+    return display->properties.vram.offset;
 }
 
 #ifdef __GRAPHICS_CAPTURE_SUPPORT__
@@ -841,7 +837,7 @@ void Display_grab_snapshot(const Display_t *display, const char *base_path)
     char path[PLATFORM_PATH_MAX] = { 0 };
     sprintf(path, "%s%csnapshot-%04d%02d%02d%02d%02d%02d.png", base_path, PLATFORM_PATH_SEPARATOR, lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
 
-    stbi_write_png(path, display->vram.rectangle.width, display->vram.rectangle.height, 4, display->capture.pixels, display->vram.rectangle.width * 4);
+    stbi_write_png(path, display->properties.vram.rectangle.width, display->properties.vram.rectangle.height, 4, display->capture.pixels, display->properties.vram.rectangle.width * 4);
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "capture done to file `%s`", path);
 }
 
@@ -854,7 +850,7 @@ void Display_toggle_recording(Display_t *display, const char *base_path)
         char path[PLATFORM_PATH_MAX] = { 0 };
         sprintf(path, "%s%crecord-%04d%02d%02d%02d%02d%02d.gif", base_path, PLATFORM_PATH_SEPARATOR, lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
 
-        GifBegin(&display->capture.gif_writer, path, display->vram.rectangle.width, display->vram.rectangle.height, 0);
+        GifBegin(&display->capture.gif_writer, path, display->properties.vram.rectangle.width, display->properties.vram.rectangle.height, 0);
         Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "recording started to file `%s`", path);
 
         display->capture.time = 0.0;
