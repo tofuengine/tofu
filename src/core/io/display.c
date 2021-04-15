@@ -374,6 +374,9 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded greyscale palettes of %d entries", GL_MAX_PALETTE_COLORS);
 
+    Display_set_copperlist(display, NULL, 0);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "initial copperlist list cleared");
+
     display->vram.width = display->canvas.size.width;
     display->vram.height = display->canvas.size.height;
     display->vram.bytes_per_pixel = sizeof(GL_Color_t);
@@ -574,8 +577,14 @@ static inline void _to_display(GLFWwindow *window, const GL_Surface_t *surface, 
 }
 #endif
 
-static inline void _surface_to_rgba_fast(const GL_Surface_t *surface, int bias, const GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS], const GL_Palette_t *palette, GL_Color_t *vram)
+static void _surface_to_rgba_fast(const GL_Surface_t *surface, GL_Color_t *pixels, const void *user_data)
 {
+    const Display_t *display = (const Display_t *)user_data;
+
+    int bias = display->canvas.bias;
+    const GL_Pixel_t *shifting = display->canvas.shifting;
+    const GL_Palette_t *palette = &display->canvas.palette.slots[display->canvas.palette.active_id];
+
     const size_t data_size = surface->data_size;
     const GL_Color_t *colors = palette->colors;
 #ifdef __DEBUG_GRAPHICS__
@@ -583,7 +592,7 @@ static inline void _surface_to_rgba_fast(const GL_Surface_t *surface, int bias, 
 #endif
 
     const GL_Pixel_t *src = surface->data;
-    GL_Color_t *dst = vram;
+    GL_Color_t *dst = pixels;
 
     for (size_t i = data_size; i; --i) {
         const GL_Pixel_t index = shifting[*(src++) + bias];
@@ -602,19 +611,30 @@ static inline void _surface_to_rgba_fast(const GL_Surface_t *surface, int bias, 
     }
 }
 
-static inline void _surface_to_rgba(const GL_Surface_t *surface, int bias, GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS], GL_Palette_t slots[DISPLAY_MAX_PALETTE_SLOTS], size_t active_id, const Display_CopperList_Entry_t *copperlist, GL_Color_t *vram)
+static void _surface_to_rgba(const GL_Surface_t *surface, GL_Color_t *pixels, const void *user_data)
 {
-#ifdef __DEBUG_GRAPHICS__
-    const int count = palette->size;
-#endif
+    const Display_t *display = (const Display_t *)user_data;
+
+    int bias = display->canvas.bias;
+    GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS] = { 0 };
+    GL_Palette_t slots[DISPLAY_MAX_PALETTE_SLOTS] = { 0 }; // Make a local copy, the copperlist can change it.
+    size_t active_id = display->canvas.palette.active_id;
+    const Display_CopperList_Entry_t *copperlist = display->copperlist;
+
+    memcpy(shifting, display->canvas.shifting, sizeof(GL_Pixel_t) * GL_MAX_PALETTE_COLORS);
+    memcpy(slots, display->canvas.palette.slots, sizeof(GL_Palette_t) * DISPLAY_MAX_PALETTE_SLOTS);
+
     size_t wait_y = 0, wait_x = 0;
     GL_Color_t *colors = slots[active_id].colors;
+#ifdef __DEBUG_GRAPHICS__
+    const int count = slots[active_id].size;
+#endif
     int modulo = 0;
     size_t offset = 0; // Always in the range `[0, width)`.
 
     const Display_CopperList_Entry_t *entry = copperlist;
     const GL_Pixel_t *src = surface->data;
-    GL_Color_t *dst_sod = vram;
+    GL_Color_t *dst_sod = pixels;
 
     const size_t dwidth = (int)surface->width;
     const size_t dheight = (int)surface->height;
@@ -711,15 +731,7 @@ void Display_present(const Display_t *display)
     const GL_Surface_t *surface = display->canvas.context->surface;
     GL_Color_t *pixels = display->vram.pixels;
 
-    if (display->copperlist) { // FIXME: optimize using function pointers?
-        GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS] = { 0 };
-        memcpy(shifting, display->canvas.shifting, sizeof(GL_Pixel_t) * GL_MAX_PALETTE_COLORS);
-        GL_Palette_t slots[DISPLAY_MAX_PALETTE_SLOTS] = { 0 }; // Make a local copy, the copperlist can change it.
-        memcpy(slots, display->canvas.palette.slots, sizeof(GL_Palette_t) * DISPLAY_MAX_PALETTE_SLOTS);
-        _surface_to_rgba(surface, display->canvas.bias, shifting, slots, display->canvas.palette.active_id, display->copperlist, pixels);
-    } else {
-        _surface_to_rgba_fast(surface, display->canvas.bias, display->canvas.shifting, &display->canvas.palette.slots[display->canvas.palette.active_id], pixels);
-    }
+    display->surface_to_rgba(surface, pixels, display); // The acutal function changes when a copperlist is defined. 
 
 #ifdef PROFILE
     _to_display(display->window, surface, vram, &display->vram.rectangle, &display->vram_offset);
@@ -835,6 +847,10 @@ void Display_set_copperlist(Display_t *display, const Display_CopperList_Entry_t
         arrpush(display->copperlist, (Display_CopperList_Entry_t){ .size = SIZE_MAX });
         arrpush(display->copperlist, (Display_CopperList_Entry_t){ .size = SIZE_MAX });
 //        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "updated copperlist %p w/ #%d entries", display->copperlist, entries);
+
+        display->surface_to_rgba = _surface_to_rgba;
+    } else {
+        display->surface_to_rgba = _surface_to_rgba_fast;
     }
 }
 

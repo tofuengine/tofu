@@ -76,6 +76,8 @@ typedef union _Display_CopperList_Entry_t {
     int integer;
 } Display_CopperList_Entry_t;
 
+typedef void (*Surface_To_Rgba_Function_t)(const GL_Surface_t *surface, GL_Color_t *pixels, const void *user_data);
+
 typedef struct _Display_t {
     Display_Configuration_t configuration;
 
@@ -101,6 +103,8 @@ typedef struct _Display_t {
         GL_Rectangle_t rectangle;
         GL_Point_t offset;
     } vram;
+
+    Surface_To_Rgba_Function_t surface_to_rgba;
 
     Program_t program;
 
