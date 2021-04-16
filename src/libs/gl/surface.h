@@ -44,6 +44,6 @@ extern GL_Surface_t *GL_surface_create(size_t width, size_t height);
 extern void GL_surface_destroy(GL_Surface_t *surface);
 
 extern void GL_surface_to_rgba(const GL_Surface_t *surface, int bias, const GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS],
-    const GL_Palette_t slots[GL_MAX_PALETTE_SLOTS], size_t active_id, GL_Color_t *pixels);
+    const GL_Palette_t *palette, GL_Color_t *pixels);
 
 #endif  /* __GL_SURFACE_H__ */

@@ -27,12 +27,12 @@
 #include <libs/imath.h>
 
 void GL_surface_to_rgba_copperlist(const GL_Surface_t *surface, int bias, GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS],
-    GL_Palette_t slots[GL_MAX_PALETTE_SLOTS], size_t active_id, const GL_CopperList_Entry_t *copperlist, GL_Color_t *pixels)
+    GL_Palette_t *palette, const GL_CopperList_Entry_t *copperlist, GL_Color_t *pixels)
 {
     size_t wait_y = 0, wait_x = 0;
-    GL_Color_t *colors = slots[active_id].colors;
+    GL_Color_t *colors = palette->colors;
 #ifdef __DEBUG_GRAPHICS__
-    const int count = slots[active_id].size;
+    const int count = palette->size;
 #endif
     int modulo = 0;
     size_t offset = 0; // Always in the range `[0, width)`.
@@ -74,11 +74,6 @@ void GL_surface_to_rgba_copperlist(const GL_Surface_t *surface, int bias, GL_Pix
                         // The offset is in the range of a scanline, so we modulo it to spare operations. Note that
                         // we are casting to `int` to avoid integer promotion, as this is a macro!
                         offset = (size_t)IMOD(amount, (int)dwidth);
-                        break;
-                    }
-                    case PALETTE: {
-                        const size_t id = (entry++)->size;
-                        colors = slots[id].colors;
                         break;
                     }
                     case COLOR: {

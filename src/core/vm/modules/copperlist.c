@@ -40,7 +40,6 @@ static int copperlist_gc_1u_0(lua_State *L);
 static int copperlist_wait_3unn_0(lua_State *L);
 static int copperlist_modulo_2un_0(lua_State *L);
 static int copperlist_offset_2un_0(lua_State *L);
-static int copperlist_palette_2un_0(lua_State *L);
 static int copperlist_color_5unnnn_0(lua_State *L);
 static int copperlist_bias_2un_0(lua_State *L);
 static int copperlist_shift_v_0(lua_State *L);
@@ -51,7 +50,6 @@ static const struct luaL_Reg _copperlist_functions[] = {
     { "wait", copperlist_wait_3unn_0 },
     { "modulo", copperlist_modulo_2un_0 },
     { "offset", copperlist_offset_2un_0 },
-    { "palette", copperlist_palette_2un_0 },
     { "color", copperlist_color_5unnnn_0 },
     { "bias", copperlist_bias_2un_0 },
     { "shift", copperlist_shift_v_0 },
@@ -148,21 +146,6 @@ static int copperlist_offset_2un_0(lua_State *L)
 
     arrpush(self->program, (GL_CopperList_Entry_t){ .command = OFFSET });
     arrpush(self->program, (GL_CopperList_Entry_t){ .integer = amount });
-
-    return 0;
-}
-
-static int copperlist_palette_2un_0(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    Copperlist_Object_t *self = (Copperlist_Object_t *)LUAX_USERDATA(L, 1);
-    size_t id = (size_t)LUAX_INTEGER(L, 2);
-
-    arrpush(self->program, (GL_CopperList_Entry_t){ .command = PALETTE });
-    arrpush(self->program, (GL_CopperList_Entry_t){ .size = id });
 
     return 0;
 }

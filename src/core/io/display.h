@@ -58,10 +58,7 @@ typedef struct _Display_Canvas_t {
     GL_Context_t *context;
     int bias;
     GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
-    struct {
-        GL_Palette_t slots[GL_MAX_PALETTE_SLOTS]; // FIXME: I'm not sure multiple slots are a good idea...
-        size_t active_id;
-    } palette;
+    GL_Palette_t palette;
     GL_CopperList_Entry_t *copperlist;
 } Display_Canvas_t;
 
@@ -106,7 +103,6 @@ extern void Display_update(Display_t *display, float delta_time);
 extern void Display_present(const Display_t *display);
 
 extern void Display_set_palette(Display_t *display, const GL_Palette_t *palette);
-extern void Display_set_active_palette(Display_t *display, size_t slot_id);
 extern void Display_set_offset(Display_t *display, GL_Point_t offset);
 extern void Display_set_bias(Display_t *display, int bias);
 extern void Display_set_shifting(Display_t *display, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count);
@@ -116,7 +112,6 @@ extern GLFWwindow *Display_get_window(const Display_t *display);
 extern float Display_get_scale(const Display_t *display);
 extern GL_Context_t *Display_get_context(const Display_t *display);
 extern const GL_Palette_t *Display_get_palette(const Display_t *display);
-extern size_t Display_get_active_palette(const Display_t *display);
 extern GL_Point_t Display_get_offset(const Display_t *display);
 
 #ifdef __GRAPHICS_CAPTURE_SUPPORT__

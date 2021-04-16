@@ -19,7 +19,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Fixed- and variable-size *Blitter OBjects* drawing with rotation/scaling/flipping.
 * [x] Sprite batching for optimized (ehm) batch drawing.
 * [x] Palette based graphics with up to 256 colors.
-* [x] Multiple (i.e. banked) palette support w/ up to 8 palettes, and color bias during VRAM transfer.
+* [x] Banked palette support w/ color bias during VRAM transfer.
 * [x] Predefined library of 8/16/32/64 colors palettes.
 * [x] Automatic nearest-matching-color palette indexing of [RGBA8888](https://en.wikipedia.org/wiki/RGBA_color_model) images.
 * [x] Per-color re-indexing (*shifting*) and transparency, affecting drawing operations (both per-draw and during VRAM transfer).

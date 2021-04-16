@@ -37,7 +37,6 @@
 #define LOG_CONTEXT "display"
 
 static int display_palette_1u_0(lua_State *L);
-static int display_switch_1n_0(lua_State *L);
 static int display_offset_2n_0(lua_State *L);
 static int display_bias_1n_0(lua_State *L);
 static int display_shift_v_0(lua_State *L);
@@ -45,7 +44,6 @@ static int display_copperlist_1u_0(lua_State *L);
 
 static const struct luaL_Reg _display_functions[] = {
     { "palette", display_palette_1u_0 },
-    { "switch", display_switch_1n_0 },
     { "offset", display_offset_2n_0 },
     { "bias", display_bias_1n_0 },
     { "shift", display_shift_v_0 },
@@ -73,20 +71,6 @@ static int display_palette_1u_0(lua_State *L)
     Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     Display_set_palette(display, &palette->palette);
-
-    return 0;
-}
-
-static int display_switch_1n_0(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    size_t slot_id = (size_t)LUAX_OPTIONAL_INTEGER(L, 1, 0);
-
-    Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
-
-    Display_set_active_palette(display, slot_id);
 
     return 0;
 }

@@ -35,7 +35,6 @@ typedef enum _GL_CopperList_Command_t {
     MOVE = 0x20000,
     MODULO,
     OFFSET,
-    PALETTE,
     COLOR,
     BIAS,
     SHIFT,
@@ -51,6 +50,6 @@ typedef union _GL_CopperList_Entry_t {
 } GL_CopperList_Entry_t;
 
 extern void GL_surface_to_rgba_copperlist(const GL_Surface_t *surface, int bias, GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS],
-    GL_Palette_t slots[GL_MAX_PALETTE_SLOTS], size_t active_id, const GL_CopperList_Entry_t *copperlist, GL_Color_t *pixels);
+    GL_Palette_t *palette, const GL_CopperList_Entry_t *copperlist, GL_Color_t *pixels);
 
 #endif  /* __GL_COPPERLIST_H__ */
