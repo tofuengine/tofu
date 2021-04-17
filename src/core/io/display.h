@@ -53,24 +53,6 @@ typedef struct _Display_Configuration_t {
     const char *effect;
 } Display_Configuration_t;
 
-typedef struct _Display_Canvas_t {
-    GL_Size_t size;
-    GL_Context_t *context;
-    int bias;
-    GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
-    GL_Palette_t palette;
-    GL_CopperList_Entry_t *copperlist;
-} Display_Canvas_t;
-
-typedef struct _Display_Vram_t {
-    GLuint texture;
-    GL_Color_t *pixels; // Temporary buffer to create the OpenGL texture from `GL_Pixel_t` array.
-    GL_Rectangle_t rectangle; // Destination rectangle, scaled to the final screen size.
-    GL_Point_t offset;
-} Display_Vram_t;
-
-typedef void (*Surface_To_Rgba_Function_t)(const Display_Canvas_t *canvas, GL_Color_t *pixels);
-
 typedef struct _Display_t {
     Display_Configuration_t configuration;
 
@@ -78,10 +60,18 @@ typedef struct _Display_t {
 
     Program_t program;
 
-    Display_Canvas_t canvas;
-    Display_Vram_t vram;
+    struct {
+        GL_Size_t size;
+        GL_Context_t *context;
+        GL_CopperList_t *copperlist;
+    } canvas;
 
-    Surface_To_Rgba_Function_t surface_to_rgba;
+    struct {
+        GLuint texture;
+        GL_Color_t *pixels; // Temporary buffer to create the OpenGL texture from `GL_Pixel_t` array.
+        GL_Rectangle_t rectangle; // Destination rectangle, scaled to the final screen size.
+        GL_Point_t offset;
+    } vram;
 
 #ifdef __GRAPHICS_CAPTURE_SUPPORT__
     struct {
@@ -102,10 +92,10 @@ extern bool Display_should_close(const Display_t *display);
 extern void Display_update(Display_t *display, float delta_time);
 extern void Display_present(const Display_t *display);
 
-extern void Display_set_palette(Display_t *display, const GL_Palette_t *palette);
 extern void Display_set_offset(Display_t *display, GL_Point_t offset);
 extern void Display_set_bias(Display_t *display, int bias);
 extern void Display_set_shifting(Display_t *display, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count);
+extern void Display_set_palette(Display_t *display, const GL_Palette_t *palette);
 extern void Display_set_copperlist(Display_t *display, const GL_CopperList_Entry_t *program, size_t length);
 
 extern GLFWwindow *Display_get_window(const Display_t *display);

@@ -366,19 +366,22 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "graphics context %p created", display->canvas.context);
 
-    Display_set_shifting(display, NULL, NULL, 0);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette shifting initialized");
-
-    GL_palette_generate_greyscale(&display->canvas.palette, GL_MAX_PALETTE_COLORS);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded greyscale palettes of %d entries", GL_MAX_PALETTE_COLORS);
-
-    Display_set_copperlist(display, NULL, 0);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "initial copperlist list cleared");
+    display->canvas.copperlist = GL_copperlist_create();
+    if (!display->canvas.copperlist) {
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create copperlist");
+        GL_context_destroy(display->canvas.context);
+        glfwDestroyWindow(display->window);
+        glfwTerminate();
+        free(display);
+        return NULL;
+    }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p created", display->canvas.copperlist);
 
     size_t size = sizeof(GL_Color_t) * display->canvas.size.width * display->canvas.size.height;
     display->vram.pixels = malloc(size);
     if (!display->vram.pixels) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't allocate VRAM buffer");
+        GL_copperlist_destroy(display->canvas.copperlist);
         GL_context_destroy(display->canvas.context);
         glfwDestroyWindow(display->window);
         glfwTerminate();
@@ -391,6 +394,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     if (display->vram.texture == 0) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't allocate VRAM texture");
         free(display->vram.pixels);
+        GL_copperlist_destroy(display->canvas.copperlist);
         GL_context_destroy(display->canvas.context);
         glfwDestroyWindow(display->window);
         glfwTerminate();
@@ -420,6 +424,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize shader");
         glDeleteBuffers(1, &display->vram.texture);
         free(display->vram.pixels);
+        GL_copperlist_destroy(display->canvas.copperlist);
         GL_context_destroy(display->canvas.context);
         glfwDestroyWindow(display->window);
         glfwTerminate();
@@ -434,6 +439,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
         program_delete(&display->program);
         glDeleteBuffers(1, &display->vram.texture);
         free(display->vram.pixels);
+        GL_copperlist_destroy(display->canvas.copperlist);
         GL_context_destroy(display->canvas.context);
         glfwDestroyWindow(display->window);
         glfwTerminate();
@@ -468,11 +474,6 @@ void Display_destroy(Display_t *display)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "capture buffer %p freed", display->capture.pixels);
 #endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
 
-    if (display->canvas.copperlist) {
-        arrfree(display->canvas.copperlist);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p freed", display->canvas.copperlist);
-    }
-
     program_delete(&display->program);
 
     glDeleteBuffers(1, &display->vram.texture);
@@ -480,6 +481,9 @@ void Display_destroy(Display_t *display)
 
     free(display->vram.pixels);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "VRAM buffer %p freed", display->vram.pixels);
+
+    GL_copperlist_destroy(display->canvas.copperlist);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p destroyed", display->canvas.copperlist);
 
     GL_context_destroy(display->canvas.context);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "graphics context %p destroyed", display->canvas.context);
@@ -523,20 +527,6 @@ void Display_update(Display_t *display, float delta_time)
 #endif
 }
 
-static void _surface_to_rgba_fast(const Display_Canvas_t *canvas, GL_Color_t *pixels)
-{
-    GL_surface_to_rgba(canvas->context->surface, canvas->bias, canvas->shifting, &canvas->palette, pixels);
-}
-
-static void _surface_to_rgba(const Display_Canvas_t *canvas, GL_Color_t *pixels)
-{
-    GL_Palette_t palette = canvas->palette; // Make a local copy, the copperlist can change it.
-    GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS] = { 0 };
-    memcpy(shifting, canvas->shifting, sizeof(GL_Pixel_t) * GL_MAX_PALETTE_COLORS);
-
-    GL_surface_to_rgba_copperlist(canvas->context->surface, canvas->bias, shifting, &palette, canvas->copperlist, pixels);
-}
-
 void Display_present(const Display_t *display)
 {
     // It is advisable to clear the colour buffer even if the framebuffer will be
@@ -544,19 +534,18 @@ void Display_present(const Display_t *display)
     glClear(GL_COLOR_BUFFER_BIT);
 
     // Convert the offscreen surface to a texture. The actual function changes when a copperlist is defined.
-    const Display_Canvas_t *canvas = &display->canvas;
-    const Display_Vram_t *vram = &display->vram;
+    GL_Surface_t *surface = display->canvas.context->surface;
+    GL_Color_t *pixels = display->vram.pixels;
 
-    GL_Color_t *pixels = vram->pixels;
-    display->surface_to_rgba(canvas, pixels);
+    GL_copperlist_surface_to_rgba(surface, display->canvas.copperlist, pixels);
 
 #ifdef __OPENGL_STATE_CLEANUP__
-    glBindTexture(GL_TEXTURE_2D, vram->texture);
+    glBindTexture(GL_TEXTURE_2D, display->vram.texture);
 #endif
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)canvas->size.width, (GLsizei)canvas->size.height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, pixels);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)display->canvas.size.width, (GLsizei)display->canvas.size.height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, pixels);
 
-    const GL_Rectangle_t *vram_rectangle = &vram->rectangle;
-    const GL_Point_t *vram_offset = &vram->offset;
+    const GL_Rectangle_t *vram_rectangle = &display->vram.rectangle;
+    const GL_Point_t *vram_offset = &display->vram.offset;
 
     // Add x/y offset to implement screen-shaking or similar effects.
     const int x0 = vram_rectangle->x + vram_offset->x;
@@ -605,12 +594,6 @@ void Display_present(const Display_t *display)
     glfwSwapBuffers(display->window);
 }
 
-void Display_set_palette(Display_t *display, const GL_Palette_t *palette)
-{
-    display->canvas.palette = *palette;
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette updated");
-}
-
 void Display_set_offset(Display_t *display, GL_Point_t offset)
 {
     display->vram.offset = offset;
@@ -618,44 +601,22 @@ void Display_set_offset(Display_t *display, GL_Point_t offset)
 
 void Display_set_bias(Display_t *display, int bias)
 {
-    display->canvas.bias = bias;
+    GL_copperlist_set_bias(display->canvas.copperlist, bias);
 }
 
 void Display_set_shifting(Display_t *display, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count)
 {
-    if (!from) {
-        for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
-            display->canvas.shifting[i] = (GL_Pixel_t)i;
-        }
-    } else {
-        for (size_t i = 0; i < count; ++i) {
-            display->canvas.shifting[from[i]] = to[i];
-        }
-    }
+    GL_copperlist_set_shifting(display->canvas.copperlist, from, to, count);
+}
+
+void Display_set_palette(Display_t *display, const GL_Palette_t *palette)
+{
+    GL_copperlist_set_palette(display->canvas.copperlist, palette);
 }
 
 void Display_set_copperlist(Display_t *display, const GL_CopperList_Entry_t *program, size_t length)
 {
-    if (display->canvas.copperlist) {
-        arrfree(display->canvas.copperlist);
-        display->canvas.copperlist = NULL;
-//        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p freed", display->copperlist);
-    }
-
-    if (program) {
-        for (size_t i = 0; i < length; ++i) {
-            arrpush(display->canvas.copperlist, program[i]);
-        }
-        // Add a special `WAIT` instruction to halt the Copper(tm) from reading outsize memory boundaries.
-        arrpush(display->canvas.copperlist, (GL_CopperList_Entry_t){ .command = WAIT });
-        arrpush(display->canvas.copperlist, (GL_CopperList_Entry_t){ .size = SIZE_MAX });
-        arrpush(display->canvas.copperlist, (GL_CopperList_Entry_t){ .size = SIZE_MAX });
-//        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "updated copperlist %p w/ #%d entries", display->copperlist, entries);
-
-        display->surface_to_rgba = _surface_to_rgba;
-    } else {
-        display->surface_to_rgba = _surface_to_rgba_fast;
-    }
+    GL_copperlist_set_program(display->canvas.copperlist, program, length);
 }
 
 GLFWwindow *Display_get_window(const Display_t *display)
@@ -675,7 +636,7 @@ GL_Context_t *Display_get_context(const Display_t *display)
 
 const GL_Palette_t *Display_get_palette(const Display_t *display)
 {
-    return &display->canvas.palette;
+    return &display->canvas.copperlist->palette;
 }
 
 GL_Point_t Display_get_offset(const Display_t *display)

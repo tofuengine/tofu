@@ -47,14 +47,14 @@ typedef enum _GL_Modes_t {
 
 typedef struct _GL_State_t { // FIXME: rename to `GL_State_s`
     GL_Pixel_t background, color;
-    GL_Pattern_t pattern;
+    GL_Pattern_t pattern; // FIXME: use it or remove it!!!
     GL_Quad_t clipping_region;
     GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
     GL_Bool_t transparent[GL_MAX_PALETTE_COLORS];
 #ifdef __GL_MASK_SUPPORT__
     GL_Mask_t mask;
 #endif
-    GL_Modes_t mode;
+    GL_Modes_t mode; // FIXME: use it or remove it!!!
 } GL_State_t;
 
 typedef struct _GL_Context_t {

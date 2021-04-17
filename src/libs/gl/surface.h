@@ -28,7 +28,6 @@
 #include <stdbool.h>
 
 #include "common.h"
-#include "palette.h"
 
 typedef struct _GL_Surface_t {
     size_t width, height;
@@ -42,8 +41,5 @@ typedef void (*GL_Surface_Callback_t)(void *user_data, GL_Surface_t *surface, co
 extern GL_Surface_t *GL_surface_decode(size_t width, size_t height, const void *pixels, const GL_Surface_Callback_t callback, void *user_data);
 extern GL_Surface_t *GL_surface_create(size_t width, size_t height);
 extern void GL_surface_destroy(GL_Surface_t *surface);
-
-extern void GL_surface_to_rgba(const GL_Surface_t *surface, int bias, const GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS],
-    const GL_Palette_t *palette, GL_Color_t *pixels);
 
 #endif  /* __GL_SURFACE_H__ */

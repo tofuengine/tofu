@@ -62,6 +62,10 @@ function Tofu:__ctor()
           -- TODO: rename "Display" to "Video" e "Speakers" to "Audio"
           -- TODO: better failure screen with text.
           Display.palette(Palette.new({ { 0, 0, 0 }, { 255, 0, 0 } })) -- Red on black.
+          Display.offset()
+          Display.bias()
+          Display.shift()
+          Display.copperlist()
           local canvas = Canvas.default()
           local width, _ = canvas:size()
           canvas:pop(0) -- Discard all saved states, if any.
