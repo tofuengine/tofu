@@ -96,7 +96,6 @@ extern void Display_reset(Display_t *display); // FIXME: remove these six, and a
 
 extern void Display_set_offset(Display_t *display, GL_Point_t offset);
 extern void Display_set_palette(Display_t *display, const GL_Palette_t *palette);
-extern void Display_set_bias(Display_t *display, int bias);
 extern void Display_set_shifting(Display_t *display, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count);
 extern void Display_set_copperlist(Display_t *display, const GL_CopperList_Entry_t *program, size_t length);
 

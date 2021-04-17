@@ -38,7 +38,6 @@
 
 static int display_palette_1u_0(lua_State *L);
 static int display_offset_2NN_0(lua_State *L);
-static int display_bias_1N_0(lua_State *L);
 static int display_shift_v_0(lua_State *L);
 static int display_copperlist_1U_0(lua_State *L);
 static int display_reset_0_0(lua_State *L);
@@ -46,7 +45,6 @@ static int display_reset_0_0(lua_State *L);
 static const struct luaL_Reg _display_functions[] = {
     { "palette", display_palette_1u_0 },
     { "offset", display_offset_2NN_0 },
-    { "bias", display_bias_1N_0 },
     { "shift", display_shift_v_0 },
     { "copperlist", display_copperlist_1U_0 },
     { "reset", display_reset_0_0 },
@@ -89,20 +87,6 @@ static int display_offset_2NN_0(lua_State *L)
     Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     Display_set_offset(display, (GL_Point_t){ .x = x, .y = y });
-
-    return 0;
-}
-
-static int display_bias_1N_0(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    int bias = LUAX_OPTIONAL_INTEGER(L, 1, 0);
-
-    Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
-
-    Display_set_bias(display, bias);
 
     return 0;
 }

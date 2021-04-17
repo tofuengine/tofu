@@ -610,11 +610,6 @@ void Display_set_palette(Display_t *display, const GL_Palette_t *palette)
     GL_copperlist_set_palette(display->canvas.copperlist, palette);
 }
 
-void Display_set_bias(Display_t *display, int bias)
-{
-    GL_copperlist_set_bias(display->canvas.copperlist, bias);
-}
-
 void Display_set_shifting(Display_t *display, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count)
 {
     GL_copperlist_set_shifting(display->canvas.copperlist, from, to, count);

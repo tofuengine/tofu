@@ -36,7 +36,6 @@ typedef enum _GL_CopperList_Command_t {
     MODULO,
     OFFSET,
     COLOR,
-    BIAS,
     SHIFT,
     GL_CopperList_Command_t_CountOf
 } GL_CopperList_Command_t;
@@ -51,7 +50,6 @@ typedef union _GL_CopperList_Entry_t {
 
 typedef struct _GL_CopperList_t { // FIXME: rename to something better!!!
     GL_Palette_t palette;
-    int bias;
     GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
     GL_CopperList_Entry_t *program;
 } GL_CopperList_t;
@@ -62,9 +60,19 @@ extern void GL_copperlist_destroy(GL_CopperList_t *copperlist);
 extern void GL_copperlist_reset(GL_CopperList_t *copperlist);
 
 extern void GL_copperlist_set_palette(GL_CopperList_t *copperlist, const GL_Palette_t *palette);
-extern void GL_copperlist_set_bias(GL_CopperList_t *copperlist, int bias);
 extern void GL_copperlist_set_shifting(GL_CopperList_t *copperlist, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count);
 extern void GL_copperlist_set_program(GL_CopperList_t *copperlist, const GL_CopperList_Entry_t *program, size_t length);
+
+// TODO: add `GL_program_XXX()` functions.
+// typedef GL_CopperList_Entry_t *GL_Program_t;
+// GL_program_create();
+// GL_program_destroy();
+// GL_program_clear(GL_Program_t *program)
+// GL_program_wait(GL_Program_t *program, size_t x, size_y)
+// GL_program_modulo(GL_Program_t *program, int amount)
+// GL_program_offset(GL_Program_t *program, int amount)
+// GL_program_color(GL_Program_t *program, GL_Color_t color)
+// GL_program_shift(GL_Program_t *program, GL_Pixel_t from, GL_Pixel_t to)
 
 extern void GL_copperlist_surface_to_rgba(const GL_Surface_t *surface, const GL_CopperList_t *copperlist, GL_Color_t *pixels);
 

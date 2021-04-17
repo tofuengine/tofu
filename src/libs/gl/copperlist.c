@@ -64,8 +64,6 @@ void GL_copperlist_reset(GL_CopperList_t *copperlist)
     GL_palette_generate_greyscale(&copperlist->palette, GL_MAX_PALETTE_COLORS);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded greyscale palettes of %d entries", GL_MAX_PALETTE_COLORS);
 
-    copperlist->bias = 0;
-
     for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
         copperlist->shifting[i] = (GL_Pixel_t)i;
     }
@@ -81,11 +79,6 @@ void GL_copperlist_set_palette(GL_CopperList_t *copperlist, const GL_Palette_t *
 {
     copperlist->palette = *palette;
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette updated");
-}
-
-void GL_copperlist_set_bias(GL_CopperList_t *copperlist, int bias)
-{
-    copperlist->bias = bias;
 }
 
 void GL_copperlist_set_shifting(GL_CopperList_t *copperlist, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count)
@@ -121,8 +114,7 @@ void GL_copperlist_set_program(GL_CopperList_t *copperlist, const GL_CopperList_
     }
 }
 
-static void _surface_to_rgba(const GL_Surface_t *surface, int bias, const GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS],
-    const GL_Palette_t *palette, GL_Color_t *pixels)
+static void _surface_to_rgba(const GL_Surface_t *surface, const GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS], const GL_Palette_t *palette, GL_Color_t *pixels)
 {
     const GL_Color_t *colors = palette->colors;
 #ifdef __DEBUG_GRAPHICS__
@@ -135,7 +127,7 @@ static void _surface_to_rgba(const GL_Surface_t *surface, int bias, const GL_Pix
     GL_Color_t *dst = pixels;
 
     for (size_t i = data_size; i; --i) {
-        const GL_Pixel_t index = shifting[*(src++) + bias];
+        const GL_Pixel_t index = shifting[*(src++)];
 #ifdef __DEBUG_GRAPHICS__
         GL_Color_t color;
         if (index >= count) {
@@ -151,8 +143,7 @@ static void _surface_to_rgba(const GL_Surface_t *surface, int bias, const GL_Pix
     }
 }
 
-void _surface_to_rgba_program(const GL_Surface_t *surface, int bias, GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS],
-    GL_Palette_t *palette, const GL_CopperList_Entry_t *program, GL_Color_t *pixels)
+void _surface_to_rgba_program(const GL_Surface_t *surface, GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS], GL_Palette_t *palette, const GL_CopperList_Entry_t *program, GL_Color_t *pixels)
 {
     size_t wait_y = 0, wait_x = 0;
     GL_Color_t *colors = palette->colors;
@@ -207,10 +198,6 @@ void _surface_to_rgba_program(const GL_Surface_t *surface, int bias, GL_Pixel_t 
                         colors[index] = color;
                         break;
                     }
-                    case BIAS: {
-                        bias = (entry++)->integer;
-                        break;
-                    }
                     case SHIFT: {
                         const GL_Pixel_t from = (entry++)->pixel;
                         const GL_Pixel_t to = (entry++)->pixel;
@@ -223,7 +210,7 @@ void _surface_to_rgba_program(const GL_Surface_t *surface, int bias, GL_Pixel_t 
                 }
             }
 
-            const GL_Pixel_t index = shifting[*(src++) + bias];
+            const GL_Pixel_t index = shifting[*(src++)];
 #ifdef __DEBUG_GRAPHICS__
             GL_Color_t color;
             if (index >= count) {
@@ -253,8 +240,8 @@ void GL_copperlist_surface_to_rgba(const GL_Surface_t *surface, const GL_CopperL
         GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS] = { 0 };
         memcpy(shifting, copperlist->shifting, sizeof(GL_Pixel_t) * GL_MAX_PALETTE_COLORS);
 
-        _surface_to_rgba_program(surface, copperlist->bias, shifting, &palette, copperlist->program, pixels);
+        _surface_to_rgba_program(surface, shifting, &palette, copperlist->program, pixels);
     } else {
-        _surface_to_rgba(surface, copperlist->bias, copperlist->shifting, &copperlist->palette, pixels);
+        _surface_to_rgba(surface, copperlist->shifting, &copperlist->palette, pixels);
     }
 }

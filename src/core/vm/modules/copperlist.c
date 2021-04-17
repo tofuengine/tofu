@@ -41,7 +41,6 @@ static int copperlist_wait_3unn_0(lua_State *L);
 static int copperlist_modulo_2un_0(lua_State *L);
 static int copperlist_offset_2un_0(lua_State *L);
 static int copperlist_color_5unnnn_0(lua_State *L);
-static int copperlist_bias_2un_0(lua_State *L);
 static int copperlist_shift_v_0(lua_State *L);
 
 static const struct luaL_Reg _copperlist_functions[] = {
@@ -51,7 +50,6 @@ static const struct luaL_Reg _copperlist_functions[] = {
     { "modulo", copperlist_modulo_2un_0 },
     { "offset", copperlist_offset_2un_0 },
     { "color", copperlist_color_5unnnn_0 },
-    { "bias", copperlist_bias_2un_0 },
     { "shift", copperlist_shift_v_0 },
     { NULL, NULL }
 };
@@ -61,7 +59,6 @@ static const uint8_t _copperlist_lua[] = {
 };
 
 static luaX_Script _copperlist_script = { (const char *)_copperlist_lua, sizeof(_copperlist_lua), "@copperlist.lua" }; // Trace as filename internally.
-
 
 int copperlist_loader(lua_State *L)
 {
@@ -170,21 +167,6 @@ static int copperlist_color_5unnnn_0(lua_State *L)
     arrpush(self->program, (GL_CopperList_Entry_t){ .command = COLOR });
     arrpush(self->program, (GL_CopperList_Entry_t){ .pixel = index });
     arrpush(self->program, (GL_CopperList_Entry_t){ .color = color });
-
-    return 0;
-}
-
-static int copperlist_bias_2un_0(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    Copperlist_Object_t *self = (Copperlist_Object_t *)LUAX_USERDATA(L, 1);
-    int value = LUAX_INTEGER(L, 2);
-
-    arrpush(self->program, (GL_CopperList_Entry_t){ .command = BIAS });
-    arrpush(self->program, (GL_CopperList_Entry_t){ .integer = value });
 
     return 0;
 }
