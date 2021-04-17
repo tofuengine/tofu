@@ -50,18 +50,20 @@ typedef union _GL_CopperList_Entry_t {
 } GL_CopperList_Entry_t;
 
 typedef struct _GL_CopperList_t { // FIXME: rename to something better!!!
+    GL_Palette_t palette;
     int bias;
     GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
-    GL_Palette_t palette;
     GL_CopperList_Entry_t *program;
 } GL_CopperList_t;
 
 extern GL_CopperList_t *GL_copperlist_create(void);
 extern void GL_copperlist_destroy(GL_CopperList_t *copperlist);
 
+extern void GL_copperlist_reset(GL_CopperList_t *copperlist);
+
+extern void GL_copperlist_set_palette(GL_CopperList_t *copperlist, const GL_Palette_t *palette);
 extern void GL_copperlist_set_bias(GL_CopperList_t *copperlist, int bias);
 extern void GL_copperlist_set_shifting(GL_CopperList_t *copperlist, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count);
-extern void GL_copperlist_set_palette(GL_CopperList_t *copperlist, const GL_Palette_t *palette);
 extern void GL_copperlist_set_program(GL_CopperList_t *copperlist, const GL_CopperList_Entry_t *program, size_t length);
 
 extern void GL_copperlist_surface_to_rgba(const GL_Surface_t *surface, const GL_CopperList_t *copperlist, GL_Color_t *pixels);

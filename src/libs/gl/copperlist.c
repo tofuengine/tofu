@@ -41,16 +41,9 @@ GL_CopperList_t *GL_copperlist_create(void)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist created at %p", copperlist);
 
-    *copperlist = (GL_CopperList_t){
-            .bias = 0
-        };
+    *copperlist = (GL_CopperList_t){ 0 };
 
-    for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
-        copperlist->shifting[i] = (GL_Pixel_t)i;
-    }
-
-    GL_palette_generate_greyscale(&copperlist->palette, GL_MAX_PALETTE_COLORS);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded greyscale palettes of %d entries", GL_MAX_PALETTE_COLORS);
+    GL_copperlist_reset(copperlist);
 
     return copperlist;
 }
@@ -64,6 +57,30 @@ void GL_copperlist_destroy(GL_CopperList_t *copperlist)
 
     free(copperlist);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p freed", copperlist);
+}
+
+void GL_copperlist_reset(GL_CopperList_t *copperlist)
+{
+    GL_palette_generate_greyscale(&copperlist->palette, GL_MAX_PALETTE_COLORS);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded greyscale palettes of %d entries", GL_MAX_PALETTE_COLORS);
+
+    copperlist->bias = 0;
+
+    for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
+        copperlist->shifting[i] = (GL_Pixel_t)i;
+    }
+
+    if (copperlist->program) {
+        arrfree(copperlist->program);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist program at %p freed", copperlist->program);
+        copperlist->program = NULL;
+    }
+}
+
+void GL_copperlist_set_palette(GL_CopperList_t *copperlist, const GL_Palette_t *palette)
+{
+    copperlist->palette = *palette;
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette updated");
 }
 
 void GL_copperlist_set_bias(GL_CopperList_t *copperlist, int bias)
@@ -82,12 +99,6 @@ void GL_copperlist_set_shifting(GL_CopperList_t *copperlist, const GL_Pixel_t *f
             copperlist->shifting[from[i]] = to[i];
         }
     }
-}
-
-void GL_copperlist_set_palette(GL_CopperList_t *copperlist, const GL_Palette_t *palette)
-{
-    copperlist->palette = *palette;
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette updated");
 }
 
 void GL_copperlist_set_program(GL_CopperList_t *copperlist, const GL_CopperList_Entry_t *program, size_t length)

@@ -594,9 +594,20 @@ void Display_present(const Display_t *display)
     glfwSwapBuffers(display->window);
 }
 
+void Display_reset(Display_t *display)
+{
+    display->vram.offset = (GL_Point_t){ 0, 0 };
+    GL_copperlist_reset(display->canvas.copperlist);
+}
+
 void Display_set_offset(Display_t *display, GL_Point_t offset)
 {
     display->vram.offset = offset;
+}
+
+void Display_set_palette(Display_t *display, const GL_Palette_t *palette)
+{
+    GL_copperlist_set_palette(display->canvas.copperlist, palette);
 }
 
 void Display_set_bias(Display_t *display, int bias)
@@ -607,11 +618,6 @@ void Display_set_bias(Display_t *display, int bias)
 void Display_set_shifting(Display_t *display, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count)
 {
     GL_copperlist_set_shifting(display->canvas.copperlist, from, to, count);
-}
-
-void Display_set_palette(Display_t *display, const GL_Palette_t *palette)
-{
-    GL_copperlist_set_palette(display->canvas.copperlist, palette);
 }
 
 void Display_set_copperlist(Display_t *display, const GL_CopperList_Entry_t *program, size_t length)
