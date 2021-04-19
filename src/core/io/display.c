@@ -615,9 +615,9 @@ void Display_set_shifting(Display_t *display, const GL_Pixel_t *from, const GL_P
     GL_copperlist_set_shifting(display->canvas.copperlist, from, to, count);
 }
 
-void Display_set_copperlist(Display_t *display, const GL_CopperList_Entry_t *program, size_t length)
+void Display_set_program(Display_t *display, const GL_Program_t *program)
 {
-    GL_copperlist_set_program(display->canvas.copperlist, program, length);
+    GL_copperlist_set_program(display->canvas.copperlist, program);
 }
 
 GLFWwindow *Display_get_window(const Display_t *display)

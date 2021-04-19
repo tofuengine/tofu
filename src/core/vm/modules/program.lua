@@ -24,10 +24,10 @@ SOFTWARE.
 
 local Math = require("tofu.core").Math
 
-local Copperlist = {}
+local Program = {}
 
-function Copperlist.gradient(index, markers)
-  local copperlist = Copperlist.new()
+function Program.gradient(index, markers)
+  local program = Program.new()
   local current_y, current_r, current_g, current_b = -1, 0, 0, 0
   for _, marker in ipairs(markers) do
     local wait_y, wait_r, wait_g, wait_b = table.unpack(marker)
@@ -35,24 +35,24 @@ function Copperlist.gradient(index, markers)
       local ratio = (y - current_y) / (wait_y - current_y)
       local r, g, b = Math.lerp(current_r, wait_r, ratio),
       Math.lerp(current_g, wait_g, ratio), Math.lerp(current_b, wait_b, ratio)
-      copperlist:wait(0, y)
-      copperlist:color(index, r, g, b)
+      program:wait(0, y)
+      program:color(index, r, g, b)
     end
     current_y, current_r, current_g, current_b = wait_y, wait_r, wait_g, wait_b
   end
-  return copperlist
+  return program
 end
 
-function Copperlist.palette(x, y, palette)
-  local copperlist = Copperlist.new()
-  copperlist:wait(x, y)
+function Program.palette(x, y, palette)
+  local program = Program.new()
+  program:wait(x, y)
   for index, color in palette do
     local r, g, b = table.unpack(color)
-    copperlist:color(index - 1, r, g, b)
+    program:color(index - 1, r, g, b)
   end
-  return copperlist
+  return program
 end
 
--- TODO: add some helper functions to populate the copperlist.
+-- TODO: add some helper functions to populate the program.
 
-return Copperlist
+return Program

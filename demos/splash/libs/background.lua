@@ -25,8 +25,8 @@ SOFTWARE.
 local Class = require("tofu.core").Class
 local System = require("tofu.core").System
 local Canvas = require("tofu.graphics").Canvas
-local Copperlist = require("tofu.graphics").Copperlist
 local Display = require("tofu.graphics").Display
+local Program = require("tofu.graphics").Program
 local Font = require("tofu.graphics").Font
 local Timer = require("tofu.timers").Timer
 
@@ -43,16 +43,16 @@ function Background:__ctor(canvas, transparent, palette)
       8, 8)
 
   self.timer = Timer.new(10, 0, function(_)
-      local copperlist = Copperlist.gradient(transparent, {
+      local program = Program.gradient(transparent, {
           { 0, palette:index_to_color(math.random(0, transparent)) },
           { quarter_height - 1, palette:index_to_color(math.random(0, transparent)) },
           { half_height - 1, palette:index_to_color(math.random(0, transparent)) },
           { height - quarter_height - 1, palette:index_to_color(math.random(0, transparent)) },
           { height - 1, palette:index_to_color(math.random(0, transparent)) }
         })
---      copperlist:wait(0, height - math.tointeger(quarter_height / 2) - 1)
---      copperlist:modulo(-width * 4)
-      Display.copperlist(copperlist)
+--      program:wait(0, height - math.tointeger(quarter_height / 2) - 1)
+--      program:modulo(-width * 4)
+      Display.program(program)
     end)
 end
 

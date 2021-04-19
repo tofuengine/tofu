@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __MODULES_COPPERLIST_H__
-#define __MODULES_COPPERLIST_H__
+#ifndef __MODULES_PROGRAM_H__
+#define __MODULES_PROGRAM_H__
 
 #include <lua/lua.h>
 
-extern int copperlist_loader(lua_State *L);
+extern int program_loader(lua_State *L);
 
-#endif  /* __MODULES_COPPERLIST_H__ */
+#endif  /* __MODULES_PROGRAM_H__ */

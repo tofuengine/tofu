@@ -47,7 +47,6 @@
 #include <core/vm/modules/batch.h>
 #include <core/vm/modules/canvas.h>
 #include <core/vm/modules/class.h>
-#include <core/vm/modules/copperlist.h>
 #include <core/vm/modules/display.h>
 #include <core/vm/modules/file.h>
 #include <core/vm/modules/font.h>
@@ -56,6 +55,7 @@
 #include <core/vm/modules/iterators.h>
 #include <core/vm/modules/math.h>
 #include <core/vm/modules/palette.h>
+#include <core/vm/modules/program.h>
 #include <core/vm/modules/source.h>
 #include <core/vm/modules/speakers.h>
 #include <core/vm/modules/system.h>
@@ -126,10 +126,10 @@ static int graphics_loader(lua_State *L)
             { "Bank", bank_loader },
             { "Batch", batch_loader },
             { "Canvas", canvas_loader },
-            { "Copperlist", copperlist_loader }, // FIXME: rename to `Program`?
             { "Display", display_loader },
             { "Font", font_loader },
             { "Palette", palette_loader },
+            { "Program", program_loader },
             { "XForm", xform_loader },
             { NULL, NULL }
         });

@@ -39,14 +39,14 @@
 static int display_palette_1u_0(lua_State *L);
 static int display_offset_2NN_0(lua_State *L);
 static int display_shift_v_0(lua_State *L);
-static int display_copperlist_1U_0(lua_State *L);
+static int display_program_1U_0(lua_State *L);
 static int display_reset_0_0(lua_State *L);
 
 static const struct luaL_Reg _display_functions[] = {
     { "palette", display_palette_1u_0 },
     { "offset", display_offset_2NN_0 },
     { "shift", display_shift_v_0 },
-    { "copperlist", display_copperlist_1U_0 },
+    { "program", display_program_1U_0 },
     { "reset", display_reset_0_0 },
     { NULL, NULL }
 };
@@ -155,19 +155,19 @@ static int display_shift_v_0(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
-static int display_copperlist_1U_0(lua_State *L)
+static int display_program_1U_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    const Copperlist_Object_t *copperlist = (const Copperlist_Object_t *)LUAX_OPTIONAL_USERDATA(L, 1, NULL);
+    const Program_Object_t *program = (const Program_Object_t *)LUAX_OPTIONAL_USERDATA(L, 1, NULL);
 
     Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    if (copperlist) {
-        Display_set_copperlist(display, copperlist->program, arrlen(copperlist->program));
+    if (program) {
+        Display_set_program(display, program->program);
     } else {
-        Display_set_copperlist(display, NULL, 0);
+        Display_set_program(display, NULL);
     }
 
     return 0;

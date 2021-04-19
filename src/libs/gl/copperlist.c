@@ -32,34 +32,32 @@
 
 #define LOG_CONTEXT "gl-copperlist"
 
-GL_CopperList_t *GL_copperlist_create(void)
+GL_Copperlist_t *GL_copperlist_create(void)
 {
-    GL_CopperList_t *copperlist = malloc(sizeof(GL_CopperList_t));
+    GL_Copperlist_t *copperlist = malloc(sizeof(GL_Copperlist_t));
     if (!copperlist) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate copperlist");
         return NULL;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist created at %p", copperlist);
 
-    *copperlist = (GL_CopperList_t){ 0 };
+    *copperlist = (GL_Copperlist_t){ 0 };
 
     GL_copperlist_reset(copperlist);
 
     return copperlist;
 }
 
-void GL_copperlist_destroy(GL_CopperList_t *copperlist)
+void GL_copperlist_destroy(GL_Copperlist_t *copperlist)
 {
-    if (copperlist->program) {
-        arrfree(copperlist->program);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist program at %p freed", copperlist->program);
-    }
+    GL_program_destroy(copperlist->program);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist program at %p destroyed", copperlist->program);
 
     free(copperlist);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p freed", copperlist);
 }
 
-void GL_copperlist_reset(GL_CopperList_t *copperlist)
+void GL_copperlist_reset(GL_Copperlist_t *copperlist)
 {
     GL_palette_generate_greyscale(&copperlist->palette, GL_MAX_PALETTE_COLORS);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded greyscale palettes of %d entries", GL_MAX_PALETTE_COLORS);
@@ -68,20 +66,16 @@ void GL_copperlist_reset(GL_CopperList_t *copperlist)
         copperlist->shifting[i] = (GL_Pixel_t)i;
     }
 
-    if (copperlist->program) {
-        arrfree(copperlist->program);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist program at %p freed", copperlist->program);
-        copperlist->program = NULL;
-    }
+    GL_copperlist_set_program(copperlist, NULL);
 }
 
-void GL_copperlist_set_palette(GL_CopperList_t *copperlist, const GL_Palette_t *palette)
+void GL_copperlist_set_palette(GL_Copperlist_t *copperlist, const GL_Palette_t *palette)
 {
     copperlist->palette = *palette;
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette updated");
 }
 
-void GL_copperlist_set_shifting(GL_CopperList_t *copperlist, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count)
+void GL_copperlist_set_shifting(GL_Copperlist_t *copperlist, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count)
 {
     if (!from) {
         for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
@@ -94,23 +88,17 @@ void GL_copperlist_set_shifting(GL_CopperList_t *copperlist, const GL_Pixel_t *f
     }
 }
 
-void GL_copperlist_set_program(GL_CopperList_t *copperlist, const GL_CopperList_Entry_t *program, size_t length)
+void GL_copperlist_set_program(GL_Copperlist_t *copperlist, const GL_Program_t *program)
 {
     if (copperlist->program) {
-        arrfree(copperlist->program);
+        GL_program_destroy(copperlist->program);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist program at %p destroyed", copperlist->program);
         copperlist->program = NULL;
-//        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p freed", display->copperlist);
     }
 
     if (program) {
-        for (size_t i = 0; i < length; ++i) {
-            arrpush(copperlist->program, program[i]);
-        }
-        // Add a special `WAIT` instruction to halt the Copper(tm) from reading outsize memory boundaries.
-        arrpush(copperlist->program, (GL_CopperList_Entry_t){ .command = WAIT });
-        arrpush(copperlist->program, (GL_CopperList_Entry_t){ .size = SIZE_MAX });
-        arrpush(copperlist->program, (GL_CopperList_Entry_t){ .size = SIZE_MAX });
-//        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "updated copperlist %p w/ #%d entries", display->copperlist, entries);
+        copperlist->program = GL_program_clone(program);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist program at %p cloned at %p", program, copperlist->program);
     }
 }
 
@@ -143,7 +131,7 @@ static void _surface_to_rgba(const GL_Surface_t *surface, const GL_Pixel_t shift
     }
 }
 
-void _surface_to_rgba_program(const GL_Surface_t *surface, GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS], GL_Palette_t *palette, const GL_CopperList_Entry_t *program, GL_Color_t *pixels)
+void _surface_to_rgba_program(const GL_Surface_t *surface, GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS], GL_Palette_t *palette, const GL_Program_t *program, GL_Color_t *pixels)
 {
     size_t wait_y = 0, wait_x = 0;
     GL_Color_t *colors = palette->colors;
@@ -153,7 +141,7 @@ void _surface_to_rgba_program(const GL_Surface_t *surface, GL_Pixel_t shifting[G
     int modulo = 0;
     size_t offset = 0; // Always in the range `[0, width)`.
 
-    const GL_CopperList_Entry_t *entry = program;
+    const GL_Program_Entry_t *entry = program->entries;
     const GL_Pixel_t *src = surface->data;
     GL_Color_t *dst_sod = pixels;
 
@@ -233,7 +221,7 @@ void _surface_to_rgba_program(const GL_Surface_t *surface, GL_Pixel_t shifting[G
     }
 }
 
-void GL_copperlist_surface_to_rgba(const GL_Surface_t *surface, const GL_CopperList_t *copperlist, GL_Color_t *pixels)
+void GL_copperlist_surface_to_rgba(const GL_Surface_t *surface, const GL_Copperlist_t *copperlist, GL_Color_t *pixels)
 {
     if (copperlist->program) {
         GL_Palette_t palette = copperlist->palette; // Make a local copy, the copperlist can change it.

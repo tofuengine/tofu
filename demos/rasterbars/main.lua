@@ -27,10 +27,10 @@ local System = require("tofu.core").System
 local Input = require("tofu.events").Input
 local Bank = require("tofu.graphics").Bank
 local Canvas = require("tofu.graphics").Canvas
-local Copperlist = require("tofu.graphics").Copperlist
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
 local Palette = require("tofu.graphics").Palette
+local Program = require("tofu.graphics").Program
 
 local Main = Class.define()
 
@@ -89,7 +89,7 @@ function Main:update(delta_time)
   local t = self.time
   local y = math.sin(t * 2.5) * height * 0.125 + height * 0.25
 
-  local copperlist = Copperlist.new()
+  local copperlist = Program.new()
   copperlist:wait(0, 0)
   copperlist:color(0, 0x00, 0x00, 0x00)
   copperlist:color(1, 0x00, 0x00, 0x00)
@@ -117,7 +117,7 @@ function Main:update(delta_time)
     copperlist:wait(0, i)
     copperlist:offset(math.sin(t * 13.0 + i * 0.25) * 1.5)
   end
-  Display.copperlist(copperlist)
+  Display.program(copperlist)
 end
 
 function Main:render(_)

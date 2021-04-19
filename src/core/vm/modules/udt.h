@@ -49,7 +49,7 @@ typedef enum _Object_Types_t {
     OBJECT_TYPE_FONT,
     OBJECT_TYPE_BATCH,
     OBJECT_TYPE_XFORM,
-    OBJECT_TYPE_COPPERLIST,
+    OBJECT_TYPE_PROGRAM,
     OBJECT_TYPE_GRID,
     OBJECT_TYPE_SOURCE
 } Object_Types_t;
@@ -104,9 +104,9 @@ typedef struct _Palette_Object_t {
     GL_Palette_t palette;
 } Palette_Object_t;
 
-typedef struct _Copperlist_Object_t {
-    GL_CopperList_Entry_t *program;
-} Copperlist_Object_t;
+typedef struct _Program_Object_t {
+    GL_Program_t *program;
+} Program_Object_t;
 
 #ifdef __GRID_INTEGER_CELL__
 typedef int Cell_t;

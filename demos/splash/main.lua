@@ -50,7 +50,7 @@ function Main:__ctor()
       Stars.new(canvas, 63)
     }
 
-  self.music = Source.new("assets/modules/a_nice_and_warm_day.mod", Source.MODULE)
+  self.music = Source.new("assets/modules/a_nice_and_warm_day.mod", "module")
   self.music:looped(true)
   self.music:play()
 end

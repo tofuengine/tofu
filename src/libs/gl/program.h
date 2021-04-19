@@ -22,29 +22,43 @@
  * SOFTWARE.
  */
 
-#ifndef __GL_COPPERLIST_H__
-#define __GL_COPPERLIST_H__
+#ifndef __GL_PROGRAM_H__
+#define __GL_PROGRAM_H__
 
 #include "common.h"
-#include "palette.h"
-#include "program.h"
-#include "surface.h"
 
-typedef struct _GL_Copperlist_t { // FIXME: rename to something better!!!
-    GL_Palette_t palette;
-    GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
-    GL_Program_t *program;
-} GL_Copperlist_t;
+typedef enum _GL_Program_Command_t {
+    WAIT = 0x00000,
+    SKIP = 0x10000,
+    MOVE = 0x20000,
+    MODULO,
+    OFFSET,
+    COLOR,
+    SHIFT,
+    GL_Program_Command_t_CountOf
+} GL_Program_Command_t;
 
-extern GL_Copperlist_t *GL_copperlist_create(void);
-extern void GL_copperlist_destroy(GL_Copperlist_t *copperlist);
+typedef union _GL_Program_Entry_t {
+    GL_Program_Command_t command;
+    size_t size;
+    GL_Color_t color;
+    GL_Pixel_t pixel;
+    int integer;
+} GL_Program_Entry_t;
 
-extern void GL_copperlist_reset(GL_Copperlist_t *copperlist);
+typedef struct _GL_Program_t {
+    GL_Program_Entry_t *entries;
+} GL_Program_t;
 
-extern void GL_copperlist_set_palette(GL_Copperlist_t *copperlist, const GL_Palette_t *palette);
-extern void GL_copperlist_set_shifting(GL_Copperlist_t *copperlist, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count);
-extern void GL_copperlist_set_program(GL_Copperlist_t *copperlist, const GL_Program_t *program);
+extern GL_Program_t *GL_program_create(void);
+extern GL_Program_t *GL_program_clone(const GL_Program_t *program);
+extern void GL_program_destroy(GL_Program_t *program);
 
-extern void GL_copperlist_surface_to_rgba(const GL_Surface_t *surface, const GL_Copperlist_t *copperlist, GL_Color_t *pixels);
+extern void GL_program_clear(GL_Program_t *program);
+extern void GL_program_wait(GL_Program_t *program, size_t x, size_t y);
+extern void GL_program_modulo(GL_Program_t *program, int amount);
+extern void GL_program_offset(GL_Program_t *program, int amount);
+extern void GL_program_color(GL_Program_t *program, GL_Pixel_t index, GL_Color_t color);
+extern void GL_program_shift(GL_Program_t *program, GL_Pixel_t from, GL_Pixel_t to);
 
-#endif  /* __GL_COPPERLIST_H__ */
+#endif  /* __GL_PROGRAM_H__ */
