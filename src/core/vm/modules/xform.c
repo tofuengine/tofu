@@ -104,19 +104,17 @@ static int xform_new_1S_1u(lua_State *L)
     LUAX_SIGNATURE_END
     const char *mode = LUAX_OPTIONAL_STRING(L, 1, "repeat");
 
+    GL_XForm_t *xform = GL_xform_create(_parse_wrap_mode(mode));
+    if (!xform) {
+        return luaL_error(L, "can't create xform");
+    }
+
     XForm_Object_t *self = (XForm_Object_t *)lua_newuserdatauv(L, sizeof(XForm_Object_t), 1);
     *self = (XForm_Object_t){
-            .xform = (GL_XForm_t){
-                    .registers = {
-                        0.0f, 0.0f, // No offset
-                        1.0f, 0.0f, 1.0f, 0.0f, // Identity matrix.
-                        0.0f, 0.0f, // No offset
-                    },
-                    .wrap = _parse_wrap_mode(mode),
-                    .table = NULL
-                }
+            .xform = xform
         };
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform %p allocated for default canvas", self);
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform %p allocated", self);
 
     luaL_setmetatable(L, META_TABLE);
 
@@ -130,10 +128,7 @@ static int xform_gc_1u_0(lua_State *L)
     LUAX_SIGNATURE_END
     XForm_Object_t *self = (XForm_Object_t *)LUAX_USERDATA(L, 1);
 
-    if (self->xform.table) {
-        arrfree(self->xform.table);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform scan-line table %p freed", self->xform.table);
-    }
+    GL_xform_destroy(self->xform);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform %p finalized", self);
 
@@ -151,9 +146,11 @@ static int xform_offset_3unn_0(lua_State *L)
     float h = LUAX_NUMBER(L, 2);
     float v = LUAX_NUMBER(L, 3);
 
-    GL_XForm_t *xform = &self->xform;
-    xform->registers[GL_XFORM_REGISTER_H] = h;
-    xform->registers[GL_XFORM_REGISTER_V] = v;
+    GL_XForm_t *xform = self->xform;
+    GL_xform_registers(xform, 2, (const GL_XForm_State_Operation_t[]){
+            { .id = GL_XFORM_REGISTER_H, . value = h },
+            { .id = GL_XFORM_REGISTER_V, . value = v },
+        });
 
     return 0;
 }
@@ -169,9 +166,11 @@ static int xform_matrix_3unn_0(lua_State *L)
     float x0 = LUAX_NUMBER(L, 2);
     float y0 = LUAX_NUMBER(L, 3);
 
-    GL_XForm_t *xform = &self->xform;
-    xform->registers[GL_XFORM_REGISTER_X] = x0;
-    xform->registers[GL_XFORM_REGISTER_Y] = y0;
+    GL_XForm_t *xform = self->xform;
+    GL_xform_registers(xform, 2, (const GL_XForm_State_Operation_t[]){
+            { .id = GL_XFORM_REGISTER_X, .value = x0 },
+            { .id = GL_XFORM_REGISTER_Y, .value = y0 }
+        });
 
     return 0;
 }
@@ -191,11 +190,13 @@ static int xform_matrix_5unnnn_0(lua_State *L)
     float c = LUAX_NUMBER(L, 4);
     float d = LUAX_NUMBER(L, 5);
 
-    GL_XForm_t *xform = &self->xform;
-    xform->registers[GL_XFORM_REGISTER_A] = a;
-    xform->registers[GL_XFORM_REGISTER_B] = b;
-    xform->registers[GL_XFORM_REGISTER_C] = c;
-    xform->registers[GL_XFORM_REGISTER_D] = d;
+    GL_XForm_t *xform = self->xform;
+    GL_xform_registers(xform, 4, (const GL_XForm_State_Operation_t[]){
+            { .id = GL_XFORM_REGISTER_A, .value = a },
+            { .id = GL_XFORM_REGISTER_B, .value = b },
+            { .id = GL_XFORM_REGISTER_C, .value = c },
+            { .id = GL_XFORM_REGISTER_D, .value = d }
+        });
 
     return 0;
 }
@@ -219,13 +220,15 @@ static int xform_matrix_7unnnnnn_0(lua_State *L)
     float x0 = LUAX_NUMBER(L, 6);
     float y0 = LUAX_NUMBER(L, 7);
 
-    GL_XForm_t *xform = &self->xform;
-    xform->registers[GL_XFORM_REGISTER_A] = a;
-    xform->registers[GL_XFORM_REGISTER_B] = b;
-    xform->registers[GL_XFORM_REGISTER_C] = c;
-    xform->registers[GL_XFORM_REGISTER_D] = d;
-    xform->registers[GL_XFORM_REGISTER_X] = x0;
-    xform->registers[GL_XFORM_REGISTER_Y] = y0;
+    GL_XForm_t *xform = self->xform;
+    GL_xform_registers(xform, 6, (const GL_XForm_State_Operation_t[]){
+            { .id = GL_XFORM_REGISTER_A, .value = a },
+            { .id = GL_XFORM_REGISTER_B, .value = b },
+            { .id = GL_XFORM_REGISTER_C, .value = c },
+            { .id = GL_XFORM_REGISTER_D, .value = d },
+            { .id = GL_XFORM_REGISTER_X, .value = x0 },
+            { .id = GL_XFORM_REGISTER_Y, .value = y0 }
+        });
 
     return 0;
 }
@@ -248,8 +251,8 @@ static int xform_wrap_2us_0(lua_State *L)
     XForm_Object_t *self = (XForm_Object_t *)LUAX_USERDATA(L, 1);
     const char *mode = LUAX_STRING(L, 2);
 
-    GL_XForm_t *xform = &self->xform;
-    xform->wrap = _parse_wrap_mode(mode);
+    GL_XForm_t *xform = self->xform;
+    GL_xform_wrap(xform, _parse_wrap_mode(mode));
 
     return 0;
 }
@@ -261,11 +264,8 @@ static int xform_table_1u_0(lua_State *L)
     LUAX_SIGNATURE_END
     XForm_Object_t *self = (XForm_Object_t *)LUAX_USERDATA(L, 1);
 
-    if (self->xform.table) {
-        arrfree(self->xform.table);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "scan-line table %p freed", self->xform.table);
-    }
-    self->xform.table = NULL;
+    GL_XForm_t *xform = self->xform;
+    GL_xform_table(xform, 0, NULL);
 
     return 0;
 }
@@ -314,14 +314,11 @@ static int xform_table_2ut_0(lua_State *L)
 
         lua_pop(L, 1);
     }
-    arrpush(table, (GL_XForm_Table_Entry_t){ .scan_line = -1 }); // Set the end-of-data (safety) marker
 
-    GL_XForm_t *xform = &self->xform;
-    if (xform->table) {
-        arrfree(xform->table);
-//        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "scan-line table %p reallocated as %p", xform->table, table);
-    }
-    xform->table = table;
+    GL_XForm_t *xform = self->xform;
+    GL_xform_table(xform, arrlen(table), table);
+
+    arrfree(table);
 
     return 0;
 }
@@ -372,14 +369,11 @@ static int xform_project_4unnn_0(lua_State *L)
 
         arrpush(table, entry);
     }
-    arrpush(table, (GL_XForm_Table_Entry_t){ .scan_line = -1 }); // Set the end-of-data (safety) marker
 
-    GL_XForm_t *xform = &self->xform;
-    if (xform->table) {
-        arrfree(xform->table);
-//        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "scan-line table %p reallocated as %p", xform->table, table);
-    }
-    xform->table = table;
+    GL_XForm_t *xform = self->xform;
+    GL_xform_table(xform, arrlen(table), table);
+
+    arrfree(table);
 
     return 0;
 }
@@ -415,14 +409,11 @@ static int xform_warp_3unn_0(lua_State *L)
 
         arrpush(table, entry);
     }
-    arrpush(table, (GL_XForm_Table_Entry_t){ .scan_line = -1 }); // Set the end-of-data (safety) marker
 
-    GL_XForm_t *xform = &self->xform;
-    if (xform->table) {
-        arrfree(xform->table);
-//        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "scan-line table %p reallocated as %p", xform->table, table);
-    }
-    xform->table = table;
+    GL_XForm_t *xform = self->xform;
+    GL_xform_table(xform, arrlen(table), table);
+
+    arrfree(table);
 
     return 0;
 }

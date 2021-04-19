@@ -26,7 +26,71 @@
 
 #include <config.h>
 #include <libs/imath.h>
+#include <libs/log.h>
 #include <libs/sincos.h>
+#include <libs/stb.h>
+
+#define LOG_CONTEXT "gl-xform"
+
+GL_XForm_t *GL_xform_create(GL_XForm_Wraps_t wrap)
+{
+    GL_XForm_t *xform = malloc(sizeof(GL_XForm_t));
+    if (!xform) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate xform");
+        return NULL;
+    }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform created at %p", xform);
+
+    *xform = (GL_XForm_t){
+            .registers = {
+                0.0f, 0.0f, // No offset
+                1.0f, 0.0f, 1.0f, 0.0f, // Identity matrix.
+                0.0f, 0.0f, // No offset
+            },
+            .wrap = wrap,
+            .table = NULL
+        };
+
+    return xform;
+}
+
+void GL_xform_destroy(GL_XForm_t *xform)
+{
+    if (xform->table) {
+        arrfree(xform->table);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform table at %p freed", xform->table);
+    }
+
+    free(xform);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform %p freed", xform);
+}
+
+void GL_xform_wrap(GL_XForm_t *xform, GL_XForm_Wraps_t wrap)
+{
+    xform->wrap = wrap;
+}
+
+void GL_xform_registers(GL_XForm_t *xform, size_t count, const GL_XForm_State_Operation_t *operations)
+{
+    for (size_t i = 0; i < count; ++i) {
+        xform->registers[operations[i].id] = operations[i].value;
+    }
+}
+
+void GL_xform_table(GL_XForm_t *xform, size_t count, const GL_XForm_Table_Entry_t *entries)
+{
+    if (xform->table) {
+        arrfree(xform->table);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform table at %p freed", xform->table);
+    }
+
+    const GL_XForm_Table_Entry_t *current = entries;
+    for (size_t i = count; i; --i) {
+        GL_XForm_Table_Entry_t entry = *(current++);
+        arrpush(xform->table, entry);
+    }
+    arrpush(xform->table, (GL_XForm_Table_Entry_t){ .scan_line = -1 }); // Set the end-of-data (safety) marker
+}
 
 // https://www.youtube.com/watch?v=3FVN_Ze7bzw
 // http://www.coranac.com/tonc/text/mode7.htm

@@ -97,7 +97,7 @@ typedef struct _Batch_Object_t {
 } Batch_Object_t;
 
 typedef struct _XForm_Object_t {
-    GL_XForm_t xform;
+    GL_XForm_t *xform;
 } XForm_Object_t;
 
 typedef struct _Palette_Object_t {

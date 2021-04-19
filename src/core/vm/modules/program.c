@@ -79,6 +79,7 @@ static int program_new_0_1u(lua_State *L)
     *self = (Program_Object_t){
             .program = program
         };
+
 //    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p allocated", self);
 
     luaL_setmetatable(L, META_TABLE);
@@ -94,6 +95,7 @@ static int program_gc_1u_0(lua_State *L)
     Program_Object_t *self = (Program_Object_t *)LUAX_USERDATA(L, 1);
 
     GL_program_destroy(self->program);
+
 //    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p finalized", self);
 
     return 0;
