@@ -73,7 +73,7 @@ GL_Program_t *GL_program_clone(const GL_Program_t *program)
 
     *clone = (GL_Program_t){ 0 };
 
-    GL_Program_Entry_t *current = program->entries;
+    const GL_Program_Entry_t *current = program->entries;
     for (size_t count = arrlen(program->entries); count; --count) {
         GL_Program_Entry_t entry = *(current++);
         arrpush(clone->entries, entry);

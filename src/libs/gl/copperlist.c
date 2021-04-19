@@ -50,8 +50,10 @@ GL_Copperlist_t *GL_copperlist_create(void)
 
 void GL_copperlist_destroy(GL_Copperlist_t *copperlist)
 {
-    GL_program_destroy(copperlist->program);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist program at %p destroyed", copperlist->program);
+    if (copperlist->program) {
+        GL_program_destroy(copperlist->program);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist program at %p destroyed", copperlist->program);
+    }
 
     free(copperlist);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p freed", copperlist);
