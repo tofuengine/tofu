@@ -104,7 +104,7 @@ DOCUMENTATION
           moving the rest of the array over. Returns b.
 
       arrinsn:
-        void arrins(T* a, int p, int n);
+        void arrinsn(T* a, int p, int n);
           Inserts n uninitialized items into array a starting at a[p],
           moving the rest of the array over.
 
