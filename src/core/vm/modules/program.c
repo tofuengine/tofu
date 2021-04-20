@@ -80,7 +80,9 @@ static int program_new_0_1u(lua_State *L)
             .program = program
         };
 
-//    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p allocated", self);
+#ifdef VERBOSE_DEBUG
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p allocated", self);
+#endif  /* VERBOSE_DEBUG */
 
     luaL_setmetatable(L, META_TABLE);
 
@@ -96,7 +98,9 @@ static int program_gc_1u_0(lua_State *L)
 
     GL_program_destroy(self->program);
 
-//    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p finalized", self);
+#ifdef VERBOSE_DEBUG
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p finalized", self);
+#endif  /* VERBOSE_DEBUG */
 
     return 0;
 }

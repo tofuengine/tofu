@@ -47,7 +47,9 @@ GL_Program_t *GL_program_create(void)
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate program");
         return NULL;
     }
+#ifdef VERBOSE_DEBUG
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program created at %p", program);
+#endif  /* VERBOSE_DEBUG */
 
     *program = (GL_Program_t){ 0 };
 
@@ -69,7 +71,9 @@ GL_Program_t *GL_program_clone(const GL_Program_t *program)
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate program");
         return NULL;
     }
+#ifdef VERBOSE_DEBUG
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program created at %p", clone);
+#endif  /* VERBOSE_DEBUG */
 
     *clone = (GL_Program_t){ 0 };
 
@@ -85,17 +89,23 @@ GL_Program_t *GL_program_clone(const GL_Program_t *program)
 void GL_program_destroy(GL_Program_t *program)
 {
     arrfree(program->entries);
+#ifdef VERBOSE_DEBUG
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program entries at %p freed", program->entries);
+#endif  /* VERBOSE_DEBUG */
 
     free(program);
+#ifdef VERBOSE_DEBUG
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p freed", program);
+#endif  /* VERBOSE_DEBUG */
 }
 
 void GL_program_clear(GL_Program_t *program)
 {
     arrfree(program->entries);
+#ifdef VERBOSE_DEBUG
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program entries at %p freed", program->entries);
+#endif  /* VERBOSE_DEBUG */
     program->entries = NULL;
-//    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p freed", display->copperlist);
 
     // Add a special `WAIT` instruction to halt the Copper(tm) from reading outsize memory boundaries.
     program->entries = _insert(NULL, 0, 3, (const GL_Program_Entry_t[]) {

@@ -39,7 +39,9 @@ GL_XForm_t *GL_xform_create(GL_XForm_Wraps_t wrap)
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate xform");
         return NULL;
     }
+#ifdef VERBOSE_DEBUG
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform created at %p", xform);
+#endif  /* VERBOSE_DEBUG */
 
     *xform = (GL_XForm_t){
             .registers = {
@@ -58,11 +60,15 @@ void GL_xform_destroy(GL_XForm_t *xform)
 {
     if (xform->table) {
         arrfree(xform->table);
+#ifdef VERBOSE_DEBUG
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform table at %p freed", xform->table);
+#endif  /* VERBOSE_DEBUG */
     }
 
     free(xform);
+#ifdef VERBOSE_DEBUG
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform %p freed", xform);
+#endif  /* VERBOSE_DEBUG */
 }
 
 void GL_xform_wrap(GL_XForm_t *xform, GL_XForm_Wraps_t wrap)
@@ -81,7 +87,9 @@ void GL_xform_table(GL_XForm_t *xform, size_t count, const GL_XForm_Table_Entry_
 {
     if (xform->table) {
         arrfree(xform->table);
+#ifdef VERBOSE_DEBUG
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform table at %p freed", xform->table);
+#endif  /* VERBOSE_DEBUG */
     }
 
     const GL_XForm_Table_Entry_t *current = entries;

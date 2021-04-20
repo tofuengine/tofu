@@ -39,7 +39,9 @@ GL_Copperlist_t *GL_copperlist_create(void)
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate copperlist");
         return NULL;
     }
+#ifdef VERBOSE_DEBUG
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist created at %p", copperlist);
+#endif  /* VERBOSE_DEBUG */
 
     *copperlist = (GL_Copperlist_t){ 0 };
 
@@ -52,17 +54,23 @@ void GL_copperlist_destroy(GL_Copperlist_t *copperlist)
 {
     if (copperlist->program) {
         GL_program_destroy(copperlist->program);
+#ifdef VERBOSE_DEBUG
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist program at %p destroyed", copperlist->program);
+#endif  /* VERBOSE_DEBUG */
     }
 
     free(copperlist);
+#ifdef VERBOSE_DEBUG
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p freed", copperlist);
+#endif  /* VERBOSE_DEBUG */
 }
 
 void GL_copperlist_reset(GL_Copperlist_t *copperlist)
 {
     GL_palette_generate_greyscale(&copperlist->palette, GL_MAX_PALETTE_COLORS);
+#ifdef VERBOSE_DEBUG
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded greyscale palettes of %d entries", GL_MAX_PALETTE_COLORS);
+#endif  /* VERBOSE_DEBUG */
 
     for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
         copperlist->shifting[i] = (GL_Pixel_t)i;
@@ -74,7 +82,9 @@ void GL_copperlist_reset(GL_Copperlist_t *copperlist)
 void GL_copperlist_set_palette(GL_Copperlist_t *copperlist, const GL_Palette_t *palette)
 {
     copperlist->palette = *palette;
+#ifdef VERBOSE_DEBUG
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette updated");
+#endif  /* VERBOSE_DEBUG */
 }
 
 void GL_copperlist_set_shifting(GL_Copperlist_t *copperlist, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count)
@@ -90,17 +100,21 @@ void GL_copperlist_set_shifting(GL_Copperlist_t *copperlist, const GL_Pixel_t *f
     }
 }
 
-void GL_copperlist_set_program(GL_Copperlist_t *copperlist, const GL_Program_t *program)
+void GL_copperlist_set_program(GL_Copperlist_t *copperlist, const GL_Program_t *program) // FIXME: make a copy or track the reference? (also for xform)
 {
     if (copperlist->program) {
         GL_program_destroy(copperlist->program);
+#ifdef VERBOSE_DEBUG
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist program at %p destroyed", copperlist->program);
+#endif  /* VERBOSE_DEBUG */
         copperlist->program = NULL;
     }
 
     if (program) {
         copperlist->program = GL_program_clone(program);
+#ifdef VERBOSE_DEBUG
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist program at %p cloned at %p", program, copperlist->program);
+#endif  /* VERBOSE_DEBUG */
     }
 }
 

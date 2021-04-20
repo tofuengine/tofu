@@ -391,7 +391,9 @@ static size_t _pak_handle_size(FS_Handle_t *handle)
 {
     Pak_Handle_t *pak_handle = (Pak_Handle_t *)handle;
 
-//    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p is", std_handle);
+#ifdef VERBOSE_DEBUG
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p is", std_handle);
+#endif  /* VERBOSE_DEBUG */
 
     return pak_handle->stream_size;
 }
