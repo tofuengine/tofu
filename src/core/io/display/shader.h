@@ -22,43 +22,43 @@
  * SOFTWARE.
  */
 
-#ifndef __DISPLAY_PROGRAM_H__
-#define __DISPLAY_PROGRAM_H__
+#ifndef __DISPLAY_SHADER_H__
+#define __DISPLAY_SHADER_H__
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 #include <stdbool.h>
 
-typedef struct _Program_t {
+typedef struct _Shader_t {
     GLuint id;
     GLint *locations;
-} Program_t;
+} Shader_t;
 
-typedef enum _Program_Uniforms_t {
-    PROGRAM_UNIFORM_BOOL,
-    PROGRAM_UNIFORM_INT,
-    PROGRAM_UNIFORM_FLOAT,
-    PROGRAM_UNIFORM_VEC2,
-    PROGRAM_UNIFORM_VEC3,
-    PROGRAM_UNIFORM_VEC4,
-    PROGRAM_UNIFORM_VEC2I,
-    PROGRAM_UNIFORM_VEC3I,
-    PROGRAM_UNIFORM_VEC4I,
-    PROGRAM_UNIFORM_TEXTURE
-} Program_Uniforms_t;
+typedef enum _Shader_Uniforms_t {
+    SHADER_UNIFORM_BOOL,
+    SHADER_UNIFORM_INT,
+    SHADER_UNIFORM_FLOAT,
+    SHADER_UNIFORM_VEC2,
+    SHADER_UNIFORM_VEC3,
+    SHADER_UNIFORM_VEC4,
+    SHADER_UNIFORM_VEC2I,
+    SHADER_UNIFORM_VEC3I,
+    SHADER_UNIFORM_VEC4I,
+    SHADER_UNIFORM_TEXTURE
+} Shader_Uniforms_t;
 
-typedef enum _Program_Shaders_t {
-    PROGRAM_SHADER_VERTEX,
-    PROGRAM_SHADER_FRAGMENT,
-    Program_Shaders_t_CountOf
-} Program_Shaders_t;
+typedef enum _Shader_Types_t {
+    SHADER_TYPE_VERTEX,
+    SHADER_TYPE_FRAGMENT,
+    Shader_Types_t_CountOf
+} Shader_Types_t;
 
-extern bool program_create(Program_t *program);
-extern void program_delete(Program_t *program);
-extern bool program_attach(Program_t *program, const char *shader_code, Program_Shaders_t shader_type);
-extern void program_prepare(Program_t *program, const char *ids[], size_t count);
-extern void program_send(const Program_t *program, size_t index, Program_Uniforms_t type, size_t count, const void *value);
-extern void program_use(const Program_t *program);
+extern Shader_t *shader_create(void);
+extern void shader_destroy(Shader_t *shader);
+extern bool shader_attach(Shader_t *shader, const char *code, Shader_Types_t type);
+extern void shader_prepare(Shader_t *shader, const char *ids[], size_t count);
+extern void shader_send(const Shader_t *shader, size_t index, Shader_Uniforms_t type, size_t count, const void *value);
+extern void shader_use(const Shader_t *shader);
 
-#endif  /* __DISPLAY_PROGRAM_H__ */
+#endif  /* __DISPLAY_SHADER_H__ */

@@ -39,7 +39,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "display/program.h"
+#include "display/shader.h"
 
 typedef struct _Display_Configuration_t {
     GLFWimage icon;
@@ -58,7 +58,7 @@ typedef struct _Display_t {
 
     GLFWwindow *window;
 
-    Program_t program;
+    Shader_t *shader;
 
     struct {
         GL_Size_t size;

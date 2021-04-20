@@ -285,10 +285,8 @@ static GLFWwindow *_window_initialize(const Display_Configuration_t *configurati
 
 static bool _shader_initialize(Display_t *display, const char *effect)
 {
-    Program_t *program = &display->program;
-
-    bool created = program_create(program);
-    if (!created) {
+    display->shader = shader_create();
+    if (!display->shader) {
         return false;
     }
 
@@ -303,33 +301,33 @@ static bool _shader_initialize(Display_t *display, const char *effect)
     strcpy(code, FRAGMENT_SHADER);
     strcat(code, effect);
 
-    if (!program_attach(program, VERTEX_SHADER, PROGRAM_SHADER_VERTEX) ||
-        !program_attach(program, code, PROGRAM_SHADER_FRAGMENT)) {
-        program_delete(program);
+    if (!shader_attach(display->shader, VERTEX_SHADER, SHADER_TYPE_VERTEX) ||
+        !shader_attach(display->shader, code, SHADER_TYPE_FRAGMENT)) {
+        shader_destroy(display->shader);
         return false;
     }
 
-    program_prepare(program, _uniforms, Uniforms_t_CountOf);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p prepared w/ id #%d", program, program->id);
+    shader_prepare(display->shader, _uniforms, Uniforms_t_CountOf);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shader %p prepared", display->shader);
 
-    program_use(program);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p active", program);
+    shader_use(display->shader);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shader %p active", display->shader);
 
-    program_send(program, UNIFORM_TEXTURE, PROGRAM_UNIFORM_TEXTURE, 1, (const int[]){ 0 }); // Redundant
-    program_send(program, UNIFORM_SCREEN_SIZE, PROGRAM_UNIFORM_VEC2, 1, (const GLfloat[]){
+    shader_send(display->shader, UNIFORM_TEXTURE, SHADER_UNIFORM_TEXTURE, 1, (const int[]){ 0 }); // Redundant
+    shader_send(display->shader, UNIFORM_SCREEN_SIZE, SHADER_UNIFORM_VEC2, 1, (const GLfloat[]){
             (GLfloat)display->vram.rectangle.width,
             (GLfloat)display->vram.rectangle.height
         });
-    program_send(program, UNIFORM_TEXTURE_SIZE, PROGRAM_UNIFORM_VEC2, 1, (const GLfloat[]){
+    shader_send(display->shader, UNIFORM_TEXTURE_SIZE, SHADER_UNIFORM_VEC2, 1, (const GLfloat[]){
             (GLfloat)display->configuration.window.width,
             (GLfloat)display->configuration.window.height
         });
-    program_send(program, UNIFORM_SCREEN_SCALE, PROGRAM_UNIFORM_VEC2, 1, (const GLfloat[]){
+    shader_send(display->shader, UNIFORM_SCREEN_SCALE, SHADER_UNIFORM_VEC2, 1, (const GLfloat[]){
             (GLfloat)display->vram.rectangle.width / (GLfloat)display->configuration.window.width,
             (GLfloat)display->vram.rectangle.height / (GLfloat)display->configuration.window.height
         });
 
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p initialized", program);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shader %p initialized", display->shader);
 
     free(code);
 
@@ -436,7 +434,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     display->capture.pixels = malloc(display->vram.rectangle.width * display->vram.rectangle.height * 4);
     if (!display->capture.pixels) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't allocate capture buffer");
-        program_delete(&display->program);
+        shader_destroy(display->shader);
         glDeleteBuffers(1, &display->vram.texture);
         free(display->vram.pixels);
         GL_copperlist_destroy(display->canvas.copperlist);
@@ -474,7 +472,8 @@ void Display_destroy(Display_t *display)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "capture buffer %p freed", display->capture.pixels);
 #endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
 
-    program_delete(&display->program);
+    shader_destroy(display->shader);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shader %p destroyed", display->shader);
 
     glDeleteBuffers(1, &display->vram.texture);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "texture w/ id #%d deleted", display->vram.texture);
@@ -508,7 +507,7 @@ void Display_update(Display_t *display, float delta_time)
     display->time += delta_time;
 
     GLfloat time = (GLfloat)display->time;
-    program_send(&display->program, UNIFORM_TIME, PROGRAM_UNIFORM_FLOAT, 1, &time);
+    shader_send(display->shader, UNIFORM_TIME, SHADER_UNIFORM_FLOAT, 1, &time);
 
 #ifdef __GRAPHICS_CAPTURE_SUPPORT__
     // Since GIFs' delay is expressed in 100th of seconds, we automatically "auto-sample" at a proper
