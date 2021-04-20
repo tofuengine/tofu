@@ -179,32 +179,31 @@ void _surface_to_rgba_program(const GL_Surface_t *surface, GL_Pixel_t shifting[G
 #else
             while (y >= wait_y && x >= wait_x) {
 #endif
-                switch ((entry++)->command) {
-                    case WAIT: {
-                        wait_x = (entry++)->size;
-                        wait_y = (entry++)->size;
+                switch (entry->command) {
+                    case GL_PROGRAM_COMMAND_WAIT: {
+                        wait_x = entry->args[0].size;
+                        wait_y = entry->args[1].size;
                         break;
                     }
-                    case MODULO: {
-                        modulo = (entry++)->integer;
+                    case GL_PROGRAM_COMMAND_MODULO: {
+                        modulo = entry->args[0].integer;
                         break;
                     }
-                    case OFFSET: {
-                        const int amount = (entry++)->integer; // FIXME: we could add the `dwidth` and spare an addition.
+                    case GL_PROGRAM_COMMAND_OFFSET: {
                         // The offset is in the range of a scanline, so we modulo it to spare operations. Note that
                         // we are casting to `int` to avoid integer promotion, as this is a macro!
-                        offset = (size_t)IMOD(amount, (int)dwidth);
+                        offset = (size_t)IMOD(entry->args[0].integer, (int)dwidth);
                         break;
                     }
-                    case COLOR: {
-                        const GL_Pixel_t index = (entry++)->pixel;
-                        const GL_Color_t color = (entry++)->color;
+                    case GL_PROGRAM_COMMAND_COLOR: {
+                        const GL_Pixel_t index = entry->args[0].pixel;
+                        const GL_Color_t color = entry->args[1].color;
                         colors[index] = color;
                         break;
                     }
-                    case SHIFT: {
-                        const GL_Pixel_t from = (entry++)->pixel;
-                        const GL_Pixel_t to = (entry++)->pixel;
+                    case GL_PROGRAM_COMMAND_SHIFT: {
+                        const GL_Pixel_t from = entry->args[0].pixel;
+                        const GL_Pixel_t to = entry->args[1].pixel;
                         shifting[from] = to;
                         break;
                     }
@@ -212,6 +211,7 @@ void _surface_to_rgba_program(const GL_Surface_t *surface, GL_Pixel_t shifting[G
                         break;
                     }
                 }
+                ++entry;
             }
 
             const GL_Pixel_t index = shifting[*(src++)];

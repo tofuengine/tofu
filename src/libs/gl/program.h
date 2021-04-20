@@ -28,22 +28,22 @@
 #include "common.h"
 
 typedef enum _GL_Program_Command_t {
-    WAIT = 0x00000,
-    SKIP = 0x10000,
-    MOVE = 0x20000,
-    MODULO,
-    OFFSET,
-    COLOR,
-    SHIFT,
+    GL_PROGRAM_COMMAND_WAIT,
+    GL_PROGRAM_COMMAND_MODULO,
+    GL_PROGRAM_COMMAND_OFFSET,
+    GL_PROGRAM_COMMAND_COLOR,
+    GL_PROGRAM_COMMAND_SHIFT,
     GL_Program_Command_t_CountOf
 } GL_Program_Command_t;
 
-typedef union _GL_Program_Entry_t {
+typedef struct _GL_Program_Entry_t {
     GL_Program_Command_t command;
-    size_t size;
-    GL_Color_t color;
-    GL_Pixel_t pixel;
-    int integer;
+    union {
+        size_t size;
+        GL_Color_t color;
+        GL_Pixel_t pixel;
+        int integer;
+    } args[2];
 } GL_Program_Entry_t;
 
 typedef struct _GL_Program_t {

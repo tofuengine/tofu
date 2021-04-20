@@ -21,7 +21,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
 #include "program.h"
 
 #include <libs/log.h>
@@ -29,14 +28,11 @@
 
 #define LOG_CONTEXT "gl-program"
 
-static inline GL_Program_Entry_t *_insert(GL_Program_Entry_t *program, int position, size_t count, const GL_Program_Entry_t *entries)
+static inline GL_Program_Entry_t *_insert(GL_Program_Entry_t *program, int position, const GL_Program_Entry_t entry)
 {
     const size_t length = arrlen(program);
-    const size_t offset = position >= 0 ? (size_t)position : length + position;
-    arrinsn(program, offset, count);
-    for (size_t i = 0; i < count; ++i) {
-        program[offset + i] = entries[i];
-    }
+    size_t offset = position >= 0 ? (size_t)position : length + position;
+    arrins(program, offset, entry);
     return program;
 }
 
@@ -55,11 +51,8 @@ GL_Program_t *GL_program_create(void)
 
     // Add a special `WAIT` instruction to halt the Copper(tm) from reading outsize memory boundaries.
     // We will be adding the other entries at the end of the array, keeping the `WAIT/max/max` terminator.
-    program->entries = _insert(NULL, 0, 3, (const GL_Program_Entry_t[]) {
-            (GL_Program_Entry_t){ .command = WAIT },
-            (GL_Program_Entry_t){ .size = SIZE_MAX },
-            (GL_Program_Entry_t){ .size = SIZE_MAX }
-        });
+    program->entries = _insert(NULL, 0,
+            (GL_Program_Entry_t){ .command = GL_PROGRAM_COMMAND_WAIT, .args = { { .size = SIZE_MAX }, { .size = SIZE_MAX } } });
 
     return program;
 }
@@ -108,52 +101,36 @@ void GL_program_clear(GL_Program_t *program)
     program->entries = NULL;
 
     // Add a special `WAIT` instruction to halt the Copper(tm) from reading outsize memory boundaries.
-    program->entries = _insert(NULL, 0, 3, (const GL_Program_Entry_t[]) {
-            (GL_Program_Entry_t){ .command = WAIT },
-            (GL_Program_Entry_t){ .size = SIZE_MAX },
-            (GL_Program_Entry_t){ .size = SIZE_MAX }
-        });
+    program->entries = _insert(NULL, 0,
+            (GL_Program_Entry_t){ .command = GL_PROGRAM_COMMAND_WAIT, .args = { { .size = SIZE_MAX }, { .size = SIZE_MAX } } });
 }
 
 void GL_program_wait(GL_Program_t *program, size_t x, size_t y)
 {
-    program->entries = _insert(program->entries, -3, 3, (const GL_Program_Entry_t[]) {
-            (GL_Program_Entry_t){ .command = WAIT },
-            (GL_Program_Entry_t){ .size = x },
-            (GL_Program_Entry_t){ .size = y }
-        });
+    program->entries = _insert(program->entries, -1,
+            (GL_Program_Entry_t){ .command = GL_PROGRAM_COMMAND_WAIT, .args = { { .size = x }, { .size = y } } });
 }
 
 void GL_program_modulo(GL_Program_t *program, int amount)
 {
-    program->entries = _insert(program->entries, -2, 2, (const GL_Program_Entry_t[]) {
-            (GL_Program_Entry_t){ .command = MODULO },
-            (GL_Program_Entry_t){ .integer = amount }
-        });
+    program->entries = _insert(program->entries, -1,
+            (GL_Program_Entry_t){ .command = GL_PROGRAM_COMMAND_MODULO, .args = { { .integer = amount } } });
 }
 
 void GL_program_offset(GL_Program_t *program, int amount)
 {
-    program->entries = _insert(program->entries, -2, 2, (const GL_Program_Entry_t[]) {
-            (GL_Program_Entry_t){ .command = OFFSET },
-            (GL_Program_Entry_t){ .integer = amount }
-        });
+    program->entries = _insert(program->entries, -1,
+            (GL_Program_Entry_t){ .command = GL_PROGRAM_COMMAND_OFFSET, .args = { { .integer = amount } } });
 }
 
 void GL_program_color(GL_Program_t *program, GL_Pixel_t index, GL_Color_t color)
 {
-    program->entries = _insert(program->entries, -3, 3, (const GL_Program_Entry_t[]) {
-            (GL_Program_Entry_t){ .command = COLOR },
-            (GL_Program_Entry_t){ .pixel = index },
-            (GL_Program_Entry_t){ .color = color }
-        });
+    program->entries = _insert(program->entries, -1,
+            (GL_Program_Entry_t){ .command = GL_PROGRAM_COMMAND_COLOR, .args = { { .pixel = index }, { .color = color } } });
 }
 
 void GL_program_shift(GL_Program_t *program, GL_Pixel_t from, GL_Pixel_t to)
 {
-    program->entries = _insert(program->entries, -3, 3, (const GL_Program_Entry_t[]) {
-            (GL_Program_Entry_t){ .command = SHIFT },
-            (GL_Program_Entry_t){ .pixel = from },
-            (GL_Program_Entry_t){ .pixel = to }
-        });
+    program->entries = _insert(program->entries, -1,
+            (GL_Program_Entry_t){ .command = GL_PROGRAM_COMMAND_SHIFT, .args = { { .pixel = from }, { .pixel = to } } });
 }

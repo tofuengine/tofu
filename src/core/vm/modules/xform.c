@@ -147,10 +147,10 @@ static int xform_offset_3unn_0(lua_State *L)
     float v = LUAX_NUMBER(L, 3);
 
     GL_XForm_t *xform = self->xform;
-    GL_xform_registers(xform, 2, (const GL_XForm_State_Operation_t[]){
-            { .id = GL_XFORM_REGISTER_H, . value = h },
-            { .id = GL_XFORM_REGISTER_V, . value = v },
-        });
+    GL_xform_registers(xform, (const GL_XForm_State_Operation_t[]){
+            { .id = GL_XFORM_REGISTER_H, .value = h },
+            { .id = GL_XFORM_REGISTER_V, .value = v }
+        }, 2);
 
     return 0;
 }
@@ -167,10 +167,10 @@ static int xform_matrix_3unn_0(lua_State *L)
     float y0 = LUAX_NUMBER(L, 3);
 
     GL_XForm_t *xform = self->xform;
-    GL_xform_registers(xform, 2, (const GL_XForm_State_Operation_t[]){
+    GL_xform_registers(xform, (const GL_XForm_State_Operation_t[]){
             { .id = GL_XFORM_REGISTER_X, .value = x0 },
             { .id = GL_XFORM_REGISTER_Y, .value = y0 }
-        });
+        }, 2);
 
     return 0;
 }
@@ -191,12 +191,12 @@ static int xform_matrix_5unnnn_0(lua_State *L)
     float d = LUAX_NUMBER(L, 5);
 
     GL_XForm_t *xform = self->xform;
-    GL_xform_registers(xform, 4, (const GL_XForm_State_Operation_t[]){
+    GL_xform_registers(xform, (const GL_XForm_State_Operation_t[]){
             { .id = GL_XFORM_REGISTER_A, .value = a },
             { .id = GL_XFORM_REGISTER_B, .value = b },
             { .id = GL_XFORM_REGISTER_C, .value = c },
             { .id = GL_XFORM_REGISTER_D, .value = d }
-        });
+        }, 4);
 
     return 0;
 }
@@ -221,14 +221,14 @@ static int xform_matrix_7unnnnnn_0(lua_State *L)
     float y0 = LUAX_NUMBER(L, 7);
 
     GL_XForm_t *xform = self->xform;
-    GL_xform_registers(xform, 6, (const GL_XForm_State_Operation_t[]){
+    GL_xform_registers(xform, (const GL_XForm_State_Operation_t[]){
             { .id = GL_XFORM_REGISTER_A, .value = a },
             { .id = GL_XFORM_REGISTER_B, .value = b },
             { .id = GL_XFORM_REGISTER_C, .value = c },
             { .id = GL_XFORM_REGISTER_D, .value = d },
             { .id = GL_XFORM_REGISTER_X, .value = x0 },
             { .id = GL_XFORM_REGISTER_Y, .value = y0 }
-        });
+        }, 6);
 
     return 0;
 }
@@ -265,7 +265,7 @@ static int xform_table_1u_0(lua_State *L)
     XForm_Object_t *self = (XForm_Object_t *)LUAX_USERDATA(L, 1);
 
     GL_XForm_t *xform = self->xform;
-    GL_xform_table(xform, 0, NULL);
+    GL_xform_table(xform, NULL, 0);
 
     return 0;
 }
@@ -316,7 +316,7 @@ static int xform_table_2ut_0(lua_State *L)
     }
 
     GL_XForm_t *xform = self->xform;
-    GL_xform_table(xform, arrlen(table), table);
+    GL_xform_table(xform, table, arrlen(table));
 
     arrfree(table);
 
@@ -371,7 +371,7 @@ static int xform_project_4unnn_0(lua_State *L)
     }
 
     GL_XForm_t *xform = self->xform;
-    GL_xform_table(xform, arrlen(table), table);
+    GL_xform_table(xform, table, arrlen(table));
 
     arrfree(table);
 
@@ -411,7 +411,7 @@ static int xform_warp_3unn_0(lua_State *L)
     }
 
     GL_XForm_t *xform = self->xform;
-    GL_xform_table(xform, arrlen(table), table);
+    GL_xform_table(xform, table, arrlen(table));
 
     arrfree(table);
 

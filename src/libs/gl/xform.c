@@ -76,14 +76,16 @@ void GL_xform_wrap(GL_XForm_t *xform, GL_XForm_Wraps_t wrap)
     xform->wrap = wrap;
 }
 
-void GL_xform_registers(GL_XForm_t *xform, size_t count, const GL_XForm_State_Operation_t *operations)
+void GL_xform_registers(GL_XForm_t *xform, const GL_XForm_State_Operation_t *operations, size_t count)
 {
-    for (size_t i = 0; i < count; ++i) {
-        xform->registers[operations[i].id] = operations[i].value;
+    const GL_XForm_State_Operation_t *operation = operations;
+    for (size_t i = count; i; --i) {
+        xform->registers[operation->id] = operation->value;
+        ++operation;
     }
 }
 
-void GL_xform_table(GL_XForm_t *xform, size_t count, const GL_XForm_Table_Entry_t *entries)
+void GL_xform_table(GL_XForm_t *xform, const GL_XForm_Table_Entry_t *entries, size_t count)
 {
     if (xform->table) {
         arrfree(xform->table);
@@ -92,10 +94,9 @@ void GL_xform_table(GL_XForm_t *xform, size_t count, const GL_XForm_Table_Entry_
 #endif  /* VERBOSE_DEBUG */
     }
 
-    const GL_XForm_Table_Entry_t *current = entries;
+    const GL_XForm_Table_Entry_t *entry = entries;
     for (size_t i = count; i; --i) {
-        GL_XForm_Table_Entry_t entry = *(current++);
-        arrpush(xform->table, entry);
+        arrpush(xform->table, *(entry++));
     }
     arrpush(xform->table, (GL_XForm_Table_Entry_t){ .scan_line = -1 }); // Set the end-of-data (safety) marker
 }

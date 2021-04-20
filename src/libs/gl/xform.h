@@ -73,9 +73,9 @@ typedef struct _GL_XForm_t {
 extern GL_XForm_t *GL_xform_create(GL_XForm_Wraps_t wrap);
 extern void GL_xform_destroy(GL_XForm_t *xform);
 
-extern void GL_xform_registers(GL_XForm_t *xform, size_t count, const GL_XForm_State_Operation_t *operations);
+extern void GL_xform_registers(GL_XForm_t *xform, const GL_XForm_State_Operation_t *operations, size_t count);
 extern void GL_xform_wrap(GL_XForm_t *xform, GL_XForm_Wraps_t wrap);
-extern void GL_xform_table(GL_XForm_t *xform, size_t count, const GL_XForm_Table_Entry_t *entries);
+extern void GL_xform_table(GL_XForm_t *xform, const GL_XForm_Table_Entry_t *entries, size_t count);
 
 extern void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, const GL_XForm_t *xform);
 

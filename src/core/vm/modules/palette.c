@@ -101,7 +101,7 @@ static int palette_new_1s_1u(lua_State *L)
     *self = (Palette_Object_t){
             .palette = *predefined_palette
         };
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p allocated w/ %d color(s)", self, self->palette.size);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p allocated w/ %d color(s)", self, self->palette.size); // FIXME: mark alloc/dealloc as TRACE.
 
     luaL_setmetatable(L, META_TABLE);
 
