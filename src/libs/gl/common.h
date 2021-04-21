@@ -34,8 +34,6 @@ typedef uint8_t GL_Pixel_t;
 
 typedef int8_t GL_Bool_t;
 
-typedef uint16_t GL_Pattern_t;
-
 typedef int GL_Cell_t;
 
 typedef struct _GL_Point_t {
