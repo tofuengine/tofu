@@ -1155,7 +1155,7 @@ static int canvas_mask_4uunU_0(lua_State *L)
     const GL_Context_t *context = canvas->context;
     const GL_Surface_t *surface = GL_context_get_surface(self->context);
     const GL_Surface_t *mask = GL_context_get_surface(stencil->context);
-    GL_context_blit_m(context, surface, mask, threshold, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height }, (GL_Point_t){ .x = 0, .y = 0 });
+    GL_context_stencil(context, surface, mask, threshold, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height }, (GL_Point_t){ .x = 0, .y = 0 });
 
     return 0;
 }
@@ -1180,7 +1180,7 @@ static int canvas_mask_6unnunU_0(lua_State *L)
     const GL_Context_t *context = canvas->context;
     const GL_Surface_t *surface = GL_context_get_surface(self->context);
     const GL_Surface_t *mask = GL_context_get_surface(stencil->context);
-    GL_context_blit_m(context, surface, mask, threshold, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height }, (GL_Point_t){ .x = x, .y = y });
+    GL_context_stencil(context, surface, mask, threshold, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height }, (GL_Point_t){ .x = x, .y = y });
 
     return 0;
 }
@@ -1213,7 +1213,7 @@ static int canvas_mask_10unnnnnnunU_0(lua_State *L)
     const GL_Context_t *context = canvas->context;
     const GL_Surface_t *surface = GL_context_get_surface(self->context);
     const GL_Surface_t *mask = GL_context_get_surface(stencil->context);
-    GL_context_blit_m(context, surface, mask, threshold, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height }, (GL_Point_t){ .x = x, .y = y });
+    GL_context_stencil(context, surface, mask, threshold, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height }, (GL_Point_t){ .x = x, .y = y });
 
     return 0;
 }
