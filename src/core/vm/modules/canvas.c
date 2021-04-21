@@ -51,9 +51,6 @@ static int canvas_pattern_2un_0(lua_State *L);
 static int canvas_shift_v_0(lua_State *L);
 static int canvas_transparent_v_0(lua_State *L);
 static int canvas_clipping_v_0(lua_State *L);
-#ifdef __GL_MASK_SUPPORT__
-static int canvas_mask(lua_State *L);
-#endif
 static int canvas_clear_2uN_0(lua_State *L);
 static int canvas_point_4unnN_0(lua_State *L);
 static int canvas_hline_5unnnN_0(lua_State *L);
@@ -69,6 +66,8 @@ static int canvas_poke_4unnn_0(lua_State *L);
 static int canvas_process_v_0(lua_State *L);
 static int canvas_copy_v_0(lua_State *L);
 static int canvas_blit_v_0(lua_State *L);
+static int canvas_mask_v_0(lua_State *L);
+static int canvas_xform_v_0(lua_State *L);
 //static int canvas_grab(lua_State *L);
 
 // TODO: rename `Canvas` to `Context`?
@@ -88,9 +87,6 @@ static const struct luaL_Reg _canvas_functions[] = {
     { "transparent", canvas_transparent_v_0 },
     { "clipping", canvas_clipping_v_0 },
     { "clear", canvas_clear_2uN_0 },
-#ifdef __GL_MASK_SUPPORT__
-    { "mask", canvas_mask },
-#endif
     { "point", canvas_point_4unnN_0 },
     { "hline", canvas_hline_5unnnN_0 },
     { "vline", canvas_vline_5unnnN_0 },
@@ -105,6 +101,8 @@ static const struct luaL_Reg _canvas_functions[] = {
     { "process", canvas_process_v_0 },
     { "copy", canvas_copy_v_0 },
     { "blit", canvas_blit_v_0 },
+    { "mask", canvas_mask_v_0 },
+    { "xform", canvas_xform_v_0 },
     { NULL, NULL }
 };
 
@@ -581,73 +579,6 @@ static int canvas_clipping_v_0(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
-#ifdef __GL_MASK_SUPPORT__
-static int canvas_mask1(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-    LUAX_SIGNATURE_END
-    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
-
-    GL_Context_t *context = self->context;
-    GL_context_set_mask(context, NULL);
-
-    return 0;
-}
-
-static int canvas_mask2(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA, LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
-    int type = lua_type(L, 2);
-
-    GL_Context_t *context = self->context;
-    GL_Mask_t mask = context->state.mask;
-    if (type == LUA_TUSERDATA) {
-        const Surface_Class_t *self = (const Surface_Class_t *)LUAX_USERDATA(L, 1);
-
-        mask.stencil = self->surface;
-    } else
-    if (type == LUA_TNUMBER) {
-        GL_Pixel_t index = LUAX_INTEGER(L, 1);
-
-        mask.threshold = index;
-    }
-    GL_context_set_mask(context, &mask);
-
-    return 0;
-}
-
-static int canvas_mask3(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
-    const Surface_Class_t *self = (const Surface_Class_t *)LUAX_USERDATA(L, 2);
-    GL_Pixel_t index = LUAX_INTEGER(L, 3);
-
-    GL_Context_t *context = self->context;
-    GL_context_set_mask(context, &(GL_Mask_t){ self->surface, index });
-
-    return 0;
-}
-
-static int canvas_mask(lua_State *L)
-{
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, canvas_mask1)
-        LUAX_OVERLOAD_ARITY(2, canvas_mask2)
-        LUAX_OVERLOAD_ARITY(3, canvas_mask3)
-    LUAX_OVERLOAD_END
-}
-#endif
-
 static int canvas_clear_2uN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -985,6 +916,27 @@ static GL_Pixel_t _process_callback(void *user_data, int x, int y, GL_Pixel_t fr
     return pixel;
 }
 
+static int canvas_process_3ufU_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TFUNCTION)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
+//    luaX_Reference callback = luaX_tofunction(L, 2);
+    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 3, self);
+
+    const Interpreter_t *interpreter = (const Interpreter_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INTERPRETER));
+
+    const GL_Context_t *context = canvas->context;
+    const GL_Surface_t *surface = GL_context_get_surface(self->context);
+    GL_context_process(context, surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height }, (GL_Point_t){ .x = 0, .y = 0 },
+        _process_callback, &(Process_Closure_t){ .interpreter = interpreter, .L = L });
+
+    return 0;
+}
+
 static int canvas_process_5ufnnU_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -1046,11 +998,29 @@ static int canvas_process_9ufnnnnnnU_0(lua_State *L)
 static int canvas_process_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(2, canvas_process_3ufU_0)
+        LUAX_OVERLOAD_ARITY(3, canvas_process_3ufU_0)
         LUAX_OVERLOAD_ARITY(4, canvas_process_5ufnnU_0)
         LUAX_OVERLOAD_ARITY(5, canvas_process_5ufnnU_0)
         LUAX_OVERLOAD_ARITY(8, canvas_process_9ufnnnnnnU_0)
         LUAX_OVERLOAD_ARITY(9, canvas_process_9ufnnnnnnU_0)
     LUAX_OVERLOAD_END
+}
+
+static int canvas_copy_2uU_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 2, self);
+
+    const GL_Context_t *context = canvas->context;
+    const GL_Surface_t *surface = GL_context_get_surface(self->context);
+    GL_context_copy(context, surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height }, (GL_Point_t){ .x = 0, .y = 0 });
+
+    return 0;
 }
 
 static int canvas_copy_4unnU_0(lua_State *L)
@@ -1104,6 +1074,8 @@ static int canvas_copy_8unnnnnnU_0(lua_State *L)
 static int canvas_copy_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, canvas_copy_2uU_0)
+        LUAX_OVERLOAD_ARITY(2, canvas_copy_2uU_0)
         LUAX_OVERLOAD_ARITY(3, canvas_copy_4unnU_0)
         LUAX_OVERLOAD_ARITY(4, canvas_copy_4unnU_0)
         LUAX_OVERLOAD_ARITY(7, canvas_copy_8unnnnnnU_0)
@@ -1111,7 +1083,168 @@ static int canvas_copy_v_0(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
-static int canvas_blit_3uuU_0(lua_State *L)
+static int canvas_blit_2uU_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 2, self);
+
+    const GL_Context_t *context = canvas->context;
+    const GL_Surface_t *surface = GL_context_get_surface(self->context);
+    GL_context_blit(context, surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height }, (GL_Point_t){ .x = 0, .y = 0 });
+
+    return 0;
+}
+
+static int canvas_blit_4unnU_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
+    int x = LUAX_INTEGER(L, 2);
+    int y = LUAX_INTEGER(L, 3);
+    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 4, self);
+
+    const GL_Context_t *context = canvas->context;
+    const GL_Surface_t *surface = GL_context_get_surface(self->context);
+    GL_context_blit(context, surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height }, (GL_Point_t){ .x = x, .y = y });
+
+    return 0;
+}
+
+static int canvas_blit_8unnnnnnU_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
+    int x = LUAX_INTEGER(L, 2);
+    int y = LUAX_INTEGER(L, 3);
+    int ox = LUAX_INTEGER(L, 4);
+    int oy = LUAX_INTEGER(L, 5);
+    size_t width = (size_t)LUAX_INTEGER(L, 6);
+    size_t height = (size_t)LUAX_INTEGER(L, 7);
+    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 8, self);
+
+    const GL_Context_t *context = canvas->context;
+    const GL_Surface_t *surface = GL_context_get_surface(self->context);
+    GL_context_blit(context, surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height }, (GL_Point_t){ .x = x, .y = y });
+
+    return 0;
+}
+
+static int canvas_blit_v_0(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(2, canvas_blit_2uU_0)
+        LUAX_OVERLOAD_ARITY(4, canvas_blit_4unnU_0)
+        LUAX_OVERLOAD_ARITY(8, canvas_blit_8unnnnnnU_0)
+    LUAX_OVERLOAD_END
+}
+
+static int canvas_mask_4uunU_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *stencil = (Canvas_Object_t *)LUAX_USERDATA(L, 2);
+    GL_Pixel_t threshold = (GL_Pixel_t)LUAX_INTEGER(L, 3);
+    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 4, self);
+
+    const GL_Context_t *context = canvas->context;
+    const GL_Surface_t *surface = GL_context_get_surface(self->context);
+    const GL_Surface_t *mask = GL_context_get_surface(stencil->context);
+    GL_context_blit_m(context, surface, mask, threshold, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height }, (GL_Point_t){ .x = 0, .y = 0 });
+
+    return 0;
+}
+
+static int canvas_mask_6unnunU_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
+    int x = LUAX_INTEGER(L, 2);
+    int y = LUAX_INTEGER(L, 3);
+    Canvas_Object_t *stencil = (Canvas_Object_t *)LUAX_USERDATA(L, 4);
+    GL_Pixel_t threshold = (GL_Pixel_t)LUAX_INTEGER(L, 5);
+    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 6, self);
+
+    const GL_Context_t *context = canvas->context;
+    const GL_Surface_t *surface = GL_context_get_surface(self->context);
+    const GL_Surface_t *mask = GL_context_get_surface(stencil->context);
+    GL_context_blit_m(context, surface, mask, threshold, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height }, (GL_Point_t){ .x = x, .y = y });
+
+    return 0;
+}
+
+static int canvas_mask_10unnnnnnunU_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
+    int x = LUAX_INTEGER(L, 2);
+    int y = LUAX_INTEGER(L, 3);
+    int ox = LUAX_INTEGER(L, 4);
+    int oy = LUAX_INTEGER(L, 5);
+    size_t width = (size_t)LUAX_INTEGER(L, 6);
+    size_t height = (size_t)LUAX_INTEGER(L, 7);
+    Canvas_Object_t *stencil = (Canvas_Object_t *)LUAX_USERDATA(L, 8);
+    GL_Pixel_t threshold = (GL_Pixel_t)LUAX_INTEGER(L, 9);
+    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 10, self);
+
+    const GL_Context_t *context = canvas->context;
+    const GL_Surface_t *surface = GL_context_get_surface(self->context);
+    const GL_Surface_t *mask = GL_context_get_surface(stencil->context);
+    GL_context_blit_m(context, surface, mask, threshold, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height }, (GL_Point_t){ .x = x, .y = y });
+
+    return 0;
+}
+
+static int canvas_mask_v_0(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(4, canvas_mask_4uunU_0)
+        LUAX_OVERLOAD_ARITY(6, canvas_mask_6unnunU_0)
+        LUAX_OVERLOAD_ARITY(10, canvas_mask_10unnnnnnunU_0)
+    LUAX_OVERLOAD_END
+}
+
+static int canvas_xform_3uuU_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -1119,21 +1252,17 @@ static int canvas_blit_3uuU_0(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
-    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_USERDATA(L, 2);
-    XForm_Object_t *xform = (XForm_Object_t *)LUAX_OPTIONAL_USERDATA(L, 3, NULL);
+    XForm_Object_t *xform = (XForm_Object_t *)LUAX_USERDATA(L, 2);
+    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 3, self);
 
     const GL_Context_t *context = canvas->context;
     const GL_Surface_t *surface = GL_context_get_surface(self->context);
-    if (xform) {
-        GL_context_xform(context, surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height }, (GL_Point_t){ .x = 0, .y = 0 }, xform->xform);
-    } else {
-        GL_context_blit(context, surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height }, (GL_Point_t){ .x = 0, .y = 0 });
-    }
+    GL_context_xform(context, surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height }, (GL_Point_t){ .x = 0, .y = 0 }, xform->xform);
 
     return 0;
 }
 
-static int canvas_blit_5unnuU_0(lua_State *L)
+static int canvas_xform_5unnuU_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -1145,21 +1274,17 @@ static int canvas_blit_5unnuU_0(lua_State *L)
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
-    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_USERDATA(L, 4);
-    XForm_Object_t *xform = (XForm_Object_t *)LUAX_OPTIONAL_USERDATA(L, 5, NULL);
+    XForm_Object_t *xform = (XForm_Object_t *)LUAX_USERDATA(L, 4);
+    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 5, self);
 
     const GL_Context_t *context = canvas->context;
     const GL_Surface_t *surface = GL_context_get_surface(self->context);
-    if (xform) {
-        GL_context_xform(context, surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height }, (GL_Point_t){ .x = x, .y = y }, xform->xform);
-    } else {
-        GL_context_blit(context, surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height }, (GL_Point_t){ .x = x, .y = y });
-    }
+    GL_context_xform(context, surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height }, (GL_Point_t){ .x = x, .y = y }, xform->xform);
 
     return 0;
 }
 
-static int canvas_blit_9unnnnnnuU_0(lua_State *L)
+static int canvas_xform_9unnnnnnuU_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -1179,28 +1304,21 @@ static int canvas_blit_9unnnnnnuU_0(lua_State *L)
     int oy = LUAX_INTEGER(L, 5);
     size_t width = (size_t)LUAX_INTEGER(L, 6);
     size_t height = (size_t)LUAX_INTEGER(L, 7);
-    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_USERDATA(L, 8);
-    XForm_Object_t *xform = (XForm_Object_t *)LUAX_OPTIONAL_USERDATA(L, 9, NULL);
+    XForm_Object_t *xform = (XForm_Object_t *)LUAX_USERDATA(L, 8);
+    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 9, self);
 
     const GL_Context_t *context = canvas->context;
     const GL_Surface_t *surface = GL_context_get_surface(self->context);
-    if (xform) {
-        GL_context_xform(context, surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height }, (GL_Point_t){ .x = x, .y = y }, xform->xform);
-    } else {
-        GL_context_blit(context, surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height }, (GL_Point_t){ .x = x, .y = y });
-    }
+    GL_context_xform(context, surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height }, (GL_Point_t){ .x = x, .y = y }, xform->xform);
 
     return 0;
 }
 
-static int canvas_blit_v_0(lua_State *L)
+static int canvas_xform_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(2, canvas_blit_3uuU_0)
-        LUAX_OVERLOAD_ARITY(3, canvas_blit_3uuU_0)
-        LUAX_OVERLOAD_ARITY(4, canvas_blit_5unnuU_0)
-        LUAX_OVERLOAD_ARITY(5, canvas_blit_5unnuU_0)
-        LUAX_OVERLOAD_ARITY(8, canvas_blit_9unnnnnnuU_0)
-        LUAX_OVERLOAD_ARITY(9, canvas_blit_9unnnnnnuU_0)
+        LUAX_OVERLOAD_ARITY(3, canvas_xform_3uuU_0)
+        LUAX_OVERLOAD_ARITY(5, canvas_xform_5unnuU_0)
+        LUAX_OVERLOAD_ARITY(9, canvas_xform_9unnnnnnuU_0)
     LUAX_OVERLOAD_END
 }

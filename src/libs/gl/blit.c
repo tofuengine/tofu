@@ -47,9 +47,6 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *source, GL
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
-#ifdef __GL_MASK_SUPPORT__
-    const GL_Mask_t *mask = &state->mask;
-#endif
     const GL_Surface_t *surface = context->surface;
 
     int skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
@@ -95,52 +92,21 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *source, GL
     const GL_Pixel_t *sptr = sdata + (area.y + skip_y) * swidth + (area.x + skip_x);
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
-#ifdef __GL_MASK_SUPPORT__
-    if (mask->stencil) {
-        const GL_Surface_t *stencil = mask->stencil;
-        const GL_Pixel_t threshold = mask->threshold;
-
-        const GL_Pixel_t *mptr = stencil->data_rows[area.y + skip_y] + (area.x + skip_x);
-
-        const int mskip = stencil->width - width;
-
-        for (int i = height; i; --i) {
-            for (int j = width; j; --j) {
+    for (int i = height; i; --i) {
+        for (int j = width; j; --j) {
 #ifdef __DEBUG_GRAPHICS__
-                pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)i + (int)j);
+            pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)i + (int)j);
 #endif
-                GL_Pixel_t index = shifting[*(sptr++)];
-                GL_Pixel_t mask = *(mptr++);
-                if (transparent[index] || (mask < threshold)) {
-                    dptr++;
-                } else {
-                    *(dptr++) = index;
-                }
+            const GL_Pixel_t index = shifting[*(sptr++)];
+            if (transparent[index]) {
+                dptr++;
+            } else {
+                *(dptr++) = index;
             }
-            sptr += sskip;
-            mptr += mskip;
-            dptr += dskip;
         }
-    } else {
-#endif
-        for (int i = height; i; --i) {
-            for (int j = width; j; --j) {
-#ifdef __DEBUG_GRAPHICS__
-                pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)i + (int)j);
-#endif
-                const GL_Pixel_t index = shifting[*(sptr++)];
-                if (transparent[index]) {
-                    dptr++;
-                } else {
-                    *(dptr++) = index;
-                }
-            }
-            sptr += sskip;
-            dptr += dskip;
-        }
-#ifdef __GL_MASK_SUPPORT__
+        sptr += sskip;
+        dptr += dskip;
     }
-#endif
 }
 
 // Simple implementation of nearest-neighbour scaling, with x/y flipping according to scaling-factor sign.
@@ -155,9 +121,6 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *source, 
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
-#ifdef __GL_MASK_SUPPORT__
-    const GL_Mask_t *mask = &state->mask;
-#endif
     const GL_Surface_t *surface = context->surface;
 
     const bool flip_x = scale_x < 0.0f;
@@ -222,62 +185,29 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *source, 
 
     // NOTE: we can also apply an integer-based DDA method, using remainders.
 
-#ifdef __GL_MASK_SUPPORT__
-    if (mask->stencil) {
-        const GL_Surface_t *stencil = mask->stencil;
-        const GL_Pixel_t threshold = mask->threshold;
+    float v = ov;
+    for (int i = height; i; --i) {
+        const int y = area.y + (flip_y ? (int)area.height - 1 - (int)v : (int)v); // TODO: optimize the flipping?
+        const GL_Pixel_t *sptr = sdata + y * swidth;
 
-        float v = ov;
-        for (int i = height; i; --i) {
-            const GL_Pixel_t *sptr = surface->data_rows[(int)v];
-            const GL_Pixel_t *mptr = stencil->data_rows[(int)v];
-
-            float u = ou;
-            for (int j = width; j; --j) {
+        float u = ou;
+        for (int j = width; j; --j) {
 #ifdef __DEBUG_GRAPHICS__
-                pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)u + (int)v);
+            pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)u + (int)v);
 #endif
-                GL_Pixel_t index = shifting[sptr[(int)u]];
-                GL_Pixel_t mask = mptr[(int)u];
-                if (transparent[index] || (mask < threshold)) {
-                    dptr++;
-                } else {
-                    *(dptr++) = index;
-                }
-                u += du;
+            const int x = area.x + (flip_x ? (int)area.width - 1 - (int)u : (int)u);
+            GL_Pixel_t index = shifting[sptr[x]];
+            if (transparent[index]) {
+                dptr++;
+            } else {
+                *(dptr++) = index;
             }
-
-            v += dv;
-            dptr += dskip;
+            u += du;
         }
-    } else {
-#endif
-        float v = ov;
-        for (int i = height; i; --i) {
-            const int y = area.y + (flip_y ? (int)area.height - 1 - (int)v : (int)v); // TODO: optimize the flipping?
-            const GL_Pixel_t *sptr = sdata + y * swidth;
 
-            float u = ou;
-            for (int j = width; j; --j) {
-#ifdef __DEBUG_GRAPHICS__
-                pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)u + (int)v);
-#endif
-                const int x = area.x + (flip_x ? (int)area.width - 1 - (int)u : (int)u);
-                GL_Pixel_t index = shifting[sptr[x]];
-                if (transparent[index]) {
-                    dptr++;
-                } else {
-                    *(dptr++) = index;
-                }
-                u += du;
-            }
-
-            v += dv;
-            dptr += dskip;
-        }
-#ifdef __GL_MASK_SUPPORT__
+        v += dv;
+        dptr += dskip;
     }
-#endif
 #ifdef __DEBUG_GRAPHICS__
     pixel(context, drawing_region.x0, drawing_region.y0, 7);
     pixel(context, drawing_region.x1, drawing_region.y0, 7);
@@ -619,3 +549,77 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *source,
 #endif
 }
 #endif
+
+void GL_context_blit_m(const GL_Context_t *context, const GL_Surface_t *source, const GL_Surface_t *mask, GL_Pixel_t threshold, GL_Rectangle_t area, GL_Point_t position)
+{
+    const GL_State_t *state = &context->state;
+    const GL_Quad_t *clipping_region = &state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
+    const GL_Surface_t *surface = context->surface;
+
+    int skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
+    int skip_y = 0;
+
+    GL_Quad_t drawing_region = (GL_Quad_t){
+            .x0 = position.x,
+            .y0 = position.y,
+            .x1 = position.x + (int)area.width - 1,
+            .y1 = position.y + (int)area.height - 1
+        };
+
+    if (drawing_region.x0 < clipping_region->x0) {
+        skip_x = clipping_region->x0 - drawing_region.x0;
+        drawing_region.x0 = clipping_region->x0;
+    }
+    if (drawing_region.y0 < clipping_region->y0) {
+        skip_y = clipping_region->y0 - drawing_region.y0;
+        drawing_region.y0 = clipping_region->y0;
+    }
+    if (drawing_region.x1 > clipping_region->x1) {
+        drawing_region.x1 = clipping_region->x1;
+    }
+    if (drawing_region.y1 > clipping_region->y1) {
+        drawing_region.y1 = clipping_region->y1;
+    }
+
+    const int width = drawing_region.x1 - drawing_region.x0 + 1;
+    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!
+        return;
+    }
+
+    const GL_Pixel_t *sdata = source->data;
+    const GL_Pixel_t *mdata = mask->data;
+    GL_Pixel_t *ddata = surface->data;
+
+    const int swidth = (int)source->width;
+    const int mwidth = (int)mask->width;
+    const int dwidth = (int)surface->width;
+
+    const int sskip = swidth - width;
+    const int mskip = mwidth - width;
+    const int dskip = dwidth - width;
+
+    const GL_Pixel_t *sptr = sdata + (area.y + skip_y) * swidth + (area.x + skip_x);
+    const GL_Pixel_t *mptr = mdata + (area.y + skip_y) * mwidth + (area.x + skip_x);
+    GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
+
+    for (int i = height; i; --i) {
+        for (int j = width; j; --j) {
+#ifdef __DEBUG_GRAPHICS__
+            pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)i + (int)j);
+#endif
+            const GL_Pixel_t value = *(mptr++);
+            const GL_Pixel_t index = shifting[*(sptr++)];
+            if (transparent[index] || value < threshold) {
+                dptr++;
+            } else {
+                *(dptr++) = index;
+            }
+        }
+        sptr += sskip;
+        mptr += mskip;
+        dptr += dskip;
+    }
+}

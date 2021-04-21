@@ -204,18 +204,6 @@ void GL_context_set_transparent(GL_Context_t *context, const GL_Pixel_t *indexes
     }
 }
 
-#ifdef __GL_MASK_SUPPORT__
-void GL_context_set_mask(GL_Context_t *context, const GL_Mask_t *mask)
-{
-    GL_State_t *state = &context->state;
-    if (!mask) {
-        state->mask = (GL_Mask_t){ 0 };
-    } else {
-        state->mask = *mask;
-    }
-}
-#endif
-
 GL_Size_t GL_context_get_size(const GL_Context_t *context)
 {
     return (GL_Size_t){ .width = context->surface->width, .height = context->surface->height };
