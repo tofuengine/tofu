@@ -411,7 +411,53 @@ void GL_context_copy(const GL_Context_t *context, const GL_Surface_t *source, GL
     }
 }
 
-void GL_context_stencil(const GL_Context_t *context, const GL_Surface_t *source, const GL_Surface_t *mask, GL_Pixel_t threshold, GL_Rectangle_t area, GL_Point_t position)
+typedef GL_Pixel_t (*Stencil_Function_t)(GL_Pixel_t from, GL_Pixel_t to, GL_Pixel_t value, GL_Pixel_t threshold);
+
+static GL_Pixel_t _never(GL_Pixel_t from, GL_Pixel_t to, GL_Pixel_t value, GL_Pixel_t threshold)
+{
+    return from;
+}
+
+static GL_Pixel_t _less(GL_Pixel_t from, GL_Pixel_t to, GL_Pixel_t value, GL_Pixel_t threshold)
+{
+    return value < threshold ? to : from;
+}
+
+static GL_Pixel_t _less_or_equal(GL_Pixel_t from, GL_Pixel_t to, GL_Pixel_t value, GL_Pixel_t threshold)
+{
+    return value <= threshold ? to : from;
+}
+
+static GL_Pixel_t _greater(GL_Pixel_t from, GL_Pixel_t to, GL_Pixel_t value, GL_Pixel_t threshold)
+{
+    return value > threshold ? to : from;
+}
+
+static GL_Pixel_t _greater_or_equal(GL_Pixel_t from, GL_Pixel_t to, GL_Pixel_t value, GL_Pixel_t threshold)
+{
+    return value >= threshold ? to : from;
+}
+
+static GL_Pixel_t _equal(GL_Pixel_t from, GL_Pixel_t to, GL_Pixel_t value, GL_Pixel_t threshold)
+{
+    return value == threshold ? to : from;
+}
+
+static GL_Pixel_t _not_equal(GL_Pixel_t from, GL_Pixel_t to, GL_Pixel_t value, GL_Pixel_t threshold)
+{
+    return value != threshold ? to : from;
+}
+
+static GL_Pixel_t _always(GL_Pixel_t from, GL_Pixel_t to, GL_Pixel_t value, GL_Pixel_t threshold)
+{
+    return to;
+}
+
+static const Stencil_Function_t _functions[GL_Stencil_Functions_t_CountOf] = {
+    _never, _less, _less_or_equal, _greater, _greater_or_equal, _equal, _not_equal, _always
+};
+
+void GL_context_stencil(const GL_Context_t *context, const GL_Surface_t *source, const GL_Surface_t *mask, GL_Pixel_t threshold, GL_Stencil_Functions_t function, GL_Rectangle_t area, GL_Point_t position)
 {
     const GL_State_t *state = &context->state;
     const GL_Quad_t *clipping_region = &state->clipping_region;
@@ -466,17 +512,20 @@ void GL_context_stencil(const GL_Context_t *context, const GL_Surface_t *source,
     const GL_Pixel_t *mptr = mdata + (area.y + skip_y) * mwidth + (area.x + skip_x);
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
+    Stencil_Function_t op = _functions[function];
+
     for (int i = height; i; --i) {
         for (int j = width; j; --j) {
 #ifdef __DEBUG_GRAPHICS__
             pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)i + (int)j);
 #endif
             const GL_Pixel_t value = *(mptr++);
-            const GL_Pixel_t index = shifting[*(sptr++)];
-            if (transparent[index] || value < threshold) { // Transparent or below-threshold are skipped.
+            const GL_Pixel_t from = *dptr;
+            const GL_Pixel_t to = shifting[*(sptr++)];
+            if (transparent[to]) {
                 dptr++;
             } else {
-                *(dptr++) = index;
+                *(dptr++) = op(from, to, value, threshold);
             }
         }
         sptr += sskip;
