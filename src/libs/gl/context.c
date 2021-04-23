@@ -411,49 +411,49 @@ void GL_context_copy(const GL_Context_t *context, const GL_Surface_t *source, GL
     }
 }
 
-typedef GL_Pixel_t (*Stencil_Function_t)(GL_Pixel_t from, GL_Pixel_t to, GL_Pixel_t value, GL_Pixel_t threshold);
+typedef GL_Pixel_t (*Pixel_Comparator_t)(GL_Pixel_t value, GL_Pixel_t threshold);
 
-static GL_Pixel_t _never(GL_Pixel_t from, GL_Pixel_t to, GL_Pixel_t value, GL_Pixel_t threshold)
+static GL_Pixel_t _never(GL_Pixel_t value, GL_Pixel_t threshold)
 {
-    return from;
+    return false;
 }
 
-static GL_Pixel_t _less(GL_Pixel_t from, GL_Pixel_t to, GL_Pixel_t value, GL_Pixel_t threshold)
+static GL_Pixel_t _less(GL_Pixel_t value, GL_Pixel_t threshold)
 {
-    return value < threshold ? to : from;
+    return value < threshold;
 }
 
-static GL_Pixel_t _less_or_equal(GL_Pixel_t from, GL_Pixel_t to, GL_Pixel_t value, GL_Pixel_t threshold)
+static GL_Pixel_t _less_or_equal(GL_Pixel_t value, GL_Pixel_t threshold)
 {
-    return value <= threshold ? to : from;
+    return value <= threshold;
 }
 
-static GL_Pixel_t _greater(GL_Pixel_t from, GL_Pixel_t to, GL_Pixel_t value, GL_Pixel_t threshold)
+static GL_Pixel_t _greater(GL_Pixel_t value, GL_Pixel_t threshold)
 {
-    return value > threshold ? to : from;
+    return value > threshold;
 }
 
-static GL_Pixel_t _greater_or_equal(GL_Pixel_t from, GL_Pixel_t to, GL_Pixel_t value, GL_Pixel_t threshold)
+static GL_Pixel_t _greater_or_equal(GL_Pixel_t value, GL_Pixel_t threshold)
 {
-    return value >= threshold ? to : from;
+    return value >= threshold;
 }
 
-static GL_Pixel_t _equal(GL_Pixel_t from, GL_Pixel_t to, GL_Pixel_t value, GL_Pixel_t threshold)
+static GL_Pixel_t _equal(GL_Pixel_t value, GL_Pixel_t threshold)
 {
-    return value == threshold ? to : from;
+    return value == threshold;
 }
 
-static GL_Pixel_t _not_equal(GL_Pixel_t from, GL_Pixel_t to, GL_Pixel_t value, GL_Pixel_t threshold)
+static GL_Pixel_t _not_equal(GL_Pixel_t value, GL_Pixel_t threshold)
 {
-    return value != threshold ? to : from;
+    return value != threshold;
 }
 
-static GL_Pixel_t _always(GL_Pixel_t from, GL_Pixel_t to, GL_Pixel_t value, GL_Pixel_t threshold)
+static GL_Pixel_t _always(GL_Pixel_t value, GL_Pixel_t threshold)
 {
-    return to;
+    return true;
 }
 
-static const Stencil_Function_t _functions[GL_Stencil_Functions_t_CountOf] = {
+static const Pixel_Comparator_t _comparators[GL_Stencil_Functions_t_CountOf] = {
     _never, _less, _less_or_equal, _greater, _greater_or_equal, _equal, _not_equal, _always
 };
 
@@ -512,7 +512,7 @@ void GL_context_stencil(const GL_Context_t *context, const GL_Surface_t *source,
     const GL_Pixel_t *mptr = mdata + (area.y + skip_y) * mwidth + (area.x + skip_x);
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
-    Stencil_Function_t op = _functions[function];
+    Pixel_Comparator_t comparator = _comparators[function];
 
     for (int i = height; i; --i) {
         for (int j = width; j; --j) {
@@ -520,12 +520,11 @@ void GL_context_stencil(const GL_Context_t *context, const GL_Surface_t *source,
             pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)i + (int)j);
 #endif
             const GL_Pixel_t value = *(mptr++);
-            const GL_Pixel_t from = *dptr;
-            const GL_Pixel_t to = shifting[*(sptr++)];
-            if (transparent[to]) {
+            const GL_Pixel_t index = shifting[*(sptr++)];
+            if (transparent[index] || !comparator(value, threshold)) {
                 dptr++;
             } else {
-                *(dptr++) = op(from, to, value, threshold);
+                *(dptr++) = index;
             }
         }
         sptr += sskip;
