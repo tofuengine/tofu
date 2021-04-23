@@ -38,11 +38,9 @@ static inline void _reset_state(GL_State_t *state, const GL_Surface_t *surface)
             .color = 1,
             .clipping_region = (GL_Quad_t){ .x0 = 0, .y0 = 0, .x1 = (int)surface->width - 1, .y1 = (int)surface->height - 1 },
             .shifting = { 0 },
-            .transparent = { 0 }
-#ifdef __STENCIL_SUPPORT__
-            .stencil = NULL,
-            .threshold = 0
-#endif
+            .transparent = { 0 },
+            .comparator = GL_COMPARATOR_GEQUAL
+//            .threshold = 0
         };
     for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
         state->shifting[i] = (GL_Pixel_t)i;
@@ -195,6 +193,12 @@ void GL_context_set_transparent(GL_Context_t *context, const GL_Pixel_t *indexes
             state->transparent[indexes[i]] = transparent[i];
         }
     }
+}
+
+void GL_context_set_comparator(GL_Context_t *context, GL_Comparators_t comparator)
+{
+    GL_State_t *state = &context->state;
+    state->comparator = comparator;
 }
 
 GL_Size_t GL_context_get_size(const GL_Context_t *context)
@@ -453,17 +457,18 @@ static GL_Pixel_t _always(GL_Pixel_t value, GL_Pixel_t threshold)
     return true;
 }
 
-static const Pixel_Comparator_t _comparators[GL_Stencil_Functions_t_CountOf] = {
+static const Pixel_Comparator_t _comparators[GL_Comparators_t_CountOf] = {
     _never, _less, _less_or_equal, _greater, _greater_or_equal, _equal, _not_equal, _always
 };
 
-void GL_context_stencil(const GL_Context_t *context, const GL_Surface_t *source, const GL_Surface_t *mask, GL_Pixel_t threshold, GL_Stencil_Functions_t function, GL_Rectangle_t area, GL_Point_t position)
+void GL_context_stencil(const GL_Context_t *context, const GL_Surface_t *source, const GL_Surface_t *mask, GL_Pixel_t threshold, GL_Rectangle_t area, GL_Point_t position)
 {
     const GL_State_t *state = &context->state;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting; // TODO: should `GL_context_copy()` and `GL_context_mask()` skip shifting and transparency?
     const GL_Bool_t *transparent = state->transparent;
     const GL_Surface_t *surface = context->surface;
+    const Pixel_Comparator_t comparator = _comparators[state->comparator];
 
     int skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
     int skip_y = 0;
@@ -511,8 +516,6 @@ void GL_context_stencil(const GL_Context_t *context, const GL_Surface_t *source,
     const GL_Pixel_t *sptr = sdata + (area.y + skip_y) * swidth + (area.x + skip_x);
     const GL_Pixel_t *mptr = mdata + (area.y + skip_y) * mwidth + (area.x + skip_x);
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
-
-    Pixel_Comparator_t comparator = _comparators[function];
 
     for (int i = height; i; --i) {
         for (int j = width; j; --j) {
