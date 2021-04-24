@@ -49,6 +49,7 @@ typedef struct _GL_State_t { // FIXME: rename to `GL_State_s`
     GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
     GL_Bool_t transparent[GL_MAX_PALETTE_COLORS];
     GL_Comparators_t comparator;
+    GL_Pixel_t threshold;
 } GL_State_t;
 
 typedef struct _GL_Context_t {
@@ -70,11 +71,12 @@ extern void GL_context_pop(GL_Context_t *context, size_t levels);
 extern void GL_context_reset(GL_Context_t *context);
 
 extern void GL_context_set_background(GL_Context_t *context, GL_Pixel_t index);
-extern void GL_context_set_color(GL_Context_t *context, GL_Pixel_t index);
 extern void GL_context_set_clipping(GL_Context_t *context, const GL_Rectangle_t *region);
-extern void GL_context_set_shifting(GL_Context_t *context, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count);
-extern void GL_context_set_transparent(GL_Context_t *context, const GL_Pixel_t *indexes, const GL_Bool_t *transparent, size_t count);
+extern void GL_context_set_color(GL_Context_t *context, GL_Pixel_t index);
 extern void GL_context_set_comparator(GL_Context_t *context, GL_Comparators_t comparator);
+extern void GL_context_set_shifting(GL_Context_t *context, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count);
+extern void GL_context_set_threshold(GL_Context_t *context, GL_Pixel_t threshold);
+extern void GL_context_set_transparent(GL_Context_t *context, const GL_Pixel_t *indexes, const GL_Bool_t *transparent, size_t count);
 
 extern GL_Size_t GL_context_get_size(const GL_Context_t *context);
 extern GL_Surface_t *GL_context_get_surface(const GL_Context_t *context);
@@ -82,7 +84,7 @@ extern GL_Surface_t *GL_context_get_surface(const GL_Context_t *context);
 extern void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t index);
 extern void GL_context_process(const GL_Context_t *context, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, GL_Process_Callback_t callback, void *user_data);
 extern void GL_context_copy(const GL_Context_t *context, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position);
-extern void GL_context_stencil(const GL_Context_t *context, const GL_Surface_t *source, const GL_Surface_t *mask, GL_Pixel_t threshold, GL_Rectangle_t area, GL_Point_t position);
+extern void GL_context_stencil(const GL_Context_t *context, const GL_Surface_t *source, const GL_Surface_t *mask, GL_Rectangle_t area, GL_Point_t position);
 extern GL_Pixel_t GL_context_peek(const GL_Context_t *context, int x, int y);
 extern void GL_context_poke(GL_Context_t *context, int x, int y, GL_Pixel_t index);
 

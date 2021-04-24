@@ -140,12 +140,6 @@ void GL_context_set_background(GL_Context_t *context, GL_Pixel_t index)
     state->background = index;
 }
 
-void GL_context_set_color(GL_Context_t *context, GL_Pixel_t index)
-{
-    GL_State_t *state = &context->state;
-    state->color = index;
-}
-
 void GL_context_set_clipping(GL_Context_t *context, const GL_Rectangle_t *region)
 {
     GL_State_t *state = &context->state;
@@ -166,6 +160,18 @@ void GL_context_set_clipping(GL_Context_t *context, const GL_Rectangle_t *region
     }
 }
 
+void GL_context_set_color(GL_Context_t *context, GL_Pixel_t index)
+{
+    GL_State_t *state = &context->state;
+    state->color = index;
+}
+
+void GL_context_set_comparator(GL_Context_t *context, GL_Comparators_t comparator)
+{
+    GL_State_t *state = &context->state;
+    state->comparator = comparator;
+}
+
 void GL_context_set_shifting(GL_Context_t *context, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count)
 {
     GL_State_t *state = &context->state;
@@ -178,6 +184,12 @@ void GL_context_set_shifting(GL_Context_t *context, const GL_Pixel_t *from, cons
             state->shifting[from[i]] = to[i];
         }
     }
+}
+
+void GL_context_set_threshold(GL_Context_t *context, GL_Pixel_t threshold)
+{
+    GL_State_t *state = &context->state;
+    state->threshold = threshold;
 }
 
 void GL_context_set_transparent(GL_Context_t *context, const GL_Pixel_t *indexes, const GL_Bool_t *transparent, size_t count)
@@ -193,12 +205,6 @@ void GL_context_set_transparent(GL_Context_t *context, const GL_Pixel_t *indexes
             state->transparent[indexes[i]] = transparent[i];
         }
     }
-}
-
-void GL_context_set_comparator(GL_Context_t *context, GL_Comparators_t comparator)
-{
-    GL_State_t *state = &context->state;
-    state->comparator = comparator;
 }
 
 GL_Size_t GL_context_get_size(const GL_Context_t *context)
@@ -461,7 +467,7 @@ static const Pixel_Comparator_t _comparators[GL_Comparators_t_CountOf] = {
     _never, _less, _less_or_equal, _greater, _greater_or_equal, _equal, _not_equal, _always
 };
 
-void GL_context_stencil(const GL_Context_t *context, const GL_Surface_t *source, const GL_Surface_t *mask, GL_Pixel_t threshold, GL_Rectangle_t area, GL_Point_t position)
+void GL_context_stencil(const GL_Context_t *context, const GL_Surface_t *source, const GL_Surface_t *mask, GL_Rectangle_t area, GL_Point_t position)
 {
     const GL_State_t *state = &context->state;
     const GL_Quad_t *clipping_region = &state->clipping_region;
@@ -469,6 +475,7 @@ void GL_context_stencil(const GL_Context_t *context, const GL_Surface_t *source,
     const GL_Bool_t *transparent = state->transparent;
     const GL_Surface_t *surface = context->surface;
     const Pixel_Comparator_t comparator = _comparators[state->comparator];
+    const GL_Pixel_t threshold = state->threshold;
 
     int skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
     int skip_y = 0;
