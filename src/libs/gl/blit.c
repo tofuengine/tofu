@@ -122,11 +122,8 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *source, 
     const GL_Bool_t *transparent = state->transparent;
     const GL_Surface_t *surface = context->surface;
 
-    const bool flip_x = scale_x < 0.0f;
-    const bool flip_y = scale_y < 0.0f;
-
-    const int drawing_width = IROUNDF(area.width * fabsf(scale_x)); // We need to round! No ceil, no floor!
-    const int drawing_height = IROUNDF(area.height * fabsf(scale_y));
+    const size_t drawing_width = (int)IROUNDF(area.width * fabsf(scale_x)); // We need to round! No ceil, no floor!
+    const size_t drawing_height = (int)IROUNDF(area.height * fabsf(scale_y));
 
     size_t skip_x = 0; // Offset into the (target) surface/texture, update during clipping.
     size_t skip_y = 0;
@@ -134,8 +131,8 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *source, 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
             .y0 = position.y,
-            .x1 = position.x + drawing_width - 1,
-            .y1 = position.y + drawing_height - 1,
+            .x1 = position.x + (int)drawing_width - 1,
+            .y1 = position.y + (int)drawing_height - 1,
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
@@ -176,17 +173,20 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *source, 
     //
     // Notice that we need to work in the mid-center of the pixels. We can also rewrite the
     // formula in a recurring fashion if we increment and accumulate by `1 / S_x` and `1 / S_y` steps.
-    const float ou = (skip_x + 0.5f) / fabs(scale_x);
-    const float ov = (skip_y + 0.5f) / fabs(scale_y);
+    const float ou0 = (skip_x + 0.5f) / scale_x;
+    const float ov0 = (skip_y + 0.5f) / scale_y;
 
-    const float du = 1.0f / fabs(scale_x);
-    const float dv = 1.0f / fabs(scale_y);
+    const float ou = area.x + (ou0 < 0.0f ? (float)area.width + ou0 : ou0); // Offset to the correct margin, according to flipping.
+    const float ov = area.y + (ov0 < 0.0f ? (float)area.height + ov0 : ov0);
+
+    const float du = 1.0f / scale_x; // Retain sign of the scaling to move according to a "vector" along the scaling.
+    const float dv = 1.0f / scale_y;
 
     // NOTE: we can also apply an integer-based DDA method, using remainders.
 
     float v = ov;
     for (size_t i = height; i; --i) {
-        const int y = area.y + (flip_y ? (int)area.height - 1 - (int)v : (int)v); // TODO: optimize the flipping?
+        const int y = (int)v;
         const GL_Pixel_t *sptr = sdata + y * swidth;
 
         float u = ou;
@@ -194,7 +194,7 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *source, 
 #ifdef __DEBUG_GRAPHICS__
             pixel(surface, drawing_region.x0 + (int)width - (int)j, drawing_region.y0 + (int)height - (int)i, (int)u + (int)v);
 #endif
-            const int x = area.x + (flip_x ? (int)area.width - 1 - (int)u : (int)u);
+            const int x = (int)u;
             GL_Pixel_t index = shifting[sptr[x]];
             if (transparent[index]) {
                 dptr++;
