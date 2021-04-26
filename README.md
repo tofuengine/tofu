@@ -26,6 +26,8 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Multiple canvas, with drawing state stack support.
 * [x] SNES' Mode7-like transforms, with scanline based ([HDMA](https://wiki.superfamicom.org/grog's-guide-to-dma-and-hdma-on-the-snes)) changes.
 * [x] Amiga's Copper-like programs, with pixel-wise resolution.
+* [x] Image programmable copy functions, to implement *script-shaders*.
+* [x] Stencil copy support, with used definable *threshold function*.
 * [x] Post-effect display-wise fragment shaders.
 * [x] Library of "retro-feel" post-effects (LCD, CRT, etc...).
 * [x] Audio support w/ real time sound streaming on a separate thread.
@@ -56,7 +58,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [GLFW](https://www.glfw.org/) v3.3.4
 * [libxmp](http://xmp.sourceforge.net/) v4.5.0
 * [Lua](https://lua.org/) v5.4.3
-* [miniaudio](https://github.com/dr-soft/miniaudio) v0.10.33
+* [miniaudio](https://github.com/dr-soft/miniaudio) v0.10.34
 * [spleen](https://github.com/fcambus/spleen) v1.8.1
 * [stb](https://github.com/nothings/stb) libraries
 
@@ -83,9 +85,7 @@ sudo apt install lua5.3 liblua5.3-dev luarocks
 sudo luarocks install argparse
 sudo luarocks install luafilesystem
 sudo luarocks install luacheck
-sudo luarocks install luacheck
 sudo luarocks install luazen
-sudo luarocks install lua-struct
 sudo apt install imagemagick
 ```
 
@@ -116,8 +116,7 @@ Along with the game-engine source, there's a bunch of (basic) demo projects. The
 ## Desiderata
 
 * [ ] Multi-threaded parallel rendering (w/ double/triple buffering).
-* [ ] Masking functions for both drawing primitives and blits.
-* [ ] **Bit** **Bl**ock **T**ransfer operations when drawing (also, [stencil](https://learnopengl.com/Advanced-OpenGL/Stencil-testing) support, see [this](https://open.gl/depthstencils)).
+* [ ] **Bit** **Bl**ock **T**ransfer operations when drawing.
 * [ ] Define some fixed resolutions (see [this](https://pacoup.com/2011/06/12/list-of-true-169-resolutions/))?
 * [ ] Tiled-map support w/ camera support (zoom and scrolling).
 * [ ] Animation support w/ frameset DSL (i.e. compiling a string where each token can be a single frame, a range or a "keep-current-frame for some time" command). Each frameset can have its one update period, and will be most likely based upon a timer.
