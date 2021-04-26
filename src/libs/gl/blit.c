@@ -31,9 +31,8 @@
 #include <math.h>
 
 #ifdef __DEBUG_GRAPHICS__
-static inline void pixel(const GL_Context_t *context, int x, int y, int index)
+static inline void pixel(const GL_Surface_t *context, int x, int y, int index)
 {
-    GL_Surface_t *surface = context->surface;
     surface->data[y * surface->width + x]= 240 + (index % 16);
 }
 #endif
@@ -49,8 +48,8 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *source, GL
     const GL_Bool_t *transparent = state->transparent;
     const GL_Surface_t *surface = context->surface;
 
-    int skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
-    int skip_y = 0;
+    size_t skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
+    size_t skip_y = 0;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
@@ -74,28 +73,28 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *source, GL
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
-    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!
+    const size_t width = drawing_region.x1 - drawing_region.x0 + 1;
+    const size_t height = drawing_region.y1 - drawing_region.y0 + 1;
+    if ((width == 0) || (height == 0)) { // Nothing to draw! Bail out! (can't be negative, by definition)
         return;
     }
 
     const GL_Pixel_t *sdata = source->data;
     GL_Pixel_t *ddata = surface->data;
 
-    const int swidth = (int)source->width;
-    const int dwidth = (int)surface->width;
+    const size_t swidth = source->width;
+    const size_t dwidth = surface->width;
 
-    const int sskip = swidth - width;
-    const int dskip = dwidth - width;
+    const size_t sskip = swidth - width;
+    const size_t dskip = dwidth - width;
 
     const GL_Pixel_t *sptr = sdata + (area.y + skip_y) * swidth + (area.x + skip_x);
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
-    for (int i = height; i; --i) {
-        for (int j = width; j; --j) {
+    for (size_t i = height; i; --i) {
+        for (size_t j = width; j; --j) {
 #ifdef __DEBUG_GRAPHICS__
-            pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)i + (int)j);
+            pixel(surface, drawing_region.x0 + (int)width - (int)j, drawing_region.y0 + (int)height - (int)i, (int)i + (int)j);
 #endif
             const GL_Pixel_t index = shifting[*(sptr++)];
             if (transparent[index]) {
@@ -129,8 +128,8 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *source, 
     const int drawing_width = IROUNDF(area.width * fabsf(scale_x)); // We need to round! No ceil, no floor!
     const int drawing_height = IROUNDF(area.height * fabsf(scale_y));
 
-    int skip_x = 0; // Offset into the (target) surface/texture, update during clipping.
-    int skip_y = 0;
+    size_t skip_x = 0; // Offset into the (target) surface/texture, update during clipping.
+    size_t skip_y = 0;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
@@ -154,19 +153,19 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *source, 
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
-    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!
+    const size_t width = drawing_region.x1 - drawing_region.x0 + 1;
+    const size_t height = drawing_region.y1 - drawing_region.y0 + 1;
+    if ((width == 0) || (height == 0)) { // Nothing to draw! Bail out! (can't be negative, by definition)
         return;
     }
 
     const GL_Pixel_t *sdata = source->data;
     GL_Pixel_t *ddata = surface->data;
 
-    const int swidth = (int)source->width;
-    const int dwidth = (int)surface->width;
+    const size_t swidth = source->width;
+    const size_t dwidth = surface->width;
 
-    const int dskip = dwidth - width;
+    const size_t dskip = dwidth - width;
 
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
@@ -186,14 +185,14 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *source, 
     // NOTE: we can also apply an integer-based DDA method, using remainders.
 
     float v = ov;
-    for (int i = height; i; --i) {
+    for (size_t i = height; i; --i) {
         const int y = area.y + (flip_y ? (int)area.height - 1 - (int)v : (int)v); // TODO: optimize the flipping?
         const GL_Pixel_t *sptr = sdata + y * swidth;
 
         float u = ou;
-        for (int j = width; j; --j) {
+        for (size_t j = width; j; --j) {
 #ifdef __DEBUG_GRAPHICS__
-            pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)u + (int)v);
+            pixel(surface, drawing_region.x0 + (int)width - (int)j, drawing_region.y0 + (int)height - (int)i, (int)u + (int)v);
 #endif
             const int x = area.x + (flip_x ? (int)area.width - 1 - (int)u : (int)u);
             GL_Pixel_t index = shifting[sptr[x]];
@@ -209,10 +208,10 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *source, 
         dptr += dskip;
     }
 #ifdef __DEBUG_GRAPHICS__
-    pixel(context, drawing_region.x0, drawing_region.y0, 7);
-    pixel(context, drawing_region.x1, drawing_region.y0, 7);
-    pixel(context, drawing_region.x1, drawing_region.y1, 7);
-    pixel(context, drawing_region.x0, drawing_region.y1, 7);
+    pixel(surface, drawing_region.x0, drawing_region.y0, 7);
+    pixel(surface, drawing_region.x1, drawing_region.y0, 7);
+    pixel(surface, drawing_region.x1, drawing_region.y1, 7);
+    pixel(surface, drawing_region.x0, drawing_region.y1, 7);
 #endif
 }
 
@@ -306,9 +305,9 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *source,
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
-    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!
+    const size_t width = drawing_region.x1 - drawing_region.x0 + 1;
+    const size_t height = drawing_region.y1 - drawing_region.y0 + 1;
+    if ((width == 0) || (height == 0)) { // Nothing to draw! Bail out! (can't be negative, by definition)
         return;
     }
 
@@ -330,27 +329,27 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *source,
     const GL_Pixel_t *sdata = source->data;
     GL_Pixel_t *ddata = surface->data;
 
-    const int swidth = (int)source->width;
-    const int dwidth = (int)surface->width;
+    const size_t swidth = source->width;
+    const size_t dwidth = surface->width;
 
-    const int dskip = dwidth - width;
+    const size_t dskip = dwidth - width;
 
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
-    for (int i = height; i; --i) {
+    for (size_t i = height; i; --i) {
         float u = ou;
         float v = ov;
 
-        for (int j = width; j; --j) {
+        for (size_t j = width; j; --j) {
 #ifdef __DEBUG_GRAPHICS__
-            pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, 15);
+            pixel(surface, drawing_region.x0 + (int)width - (int)j, drawing_region.y0 + (int)height - (int)i, 15);
 #endif
             int x = IROUNDF(u); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`) and avoid mirror effect.
             int y = IROUNDF(v);
 
             if (x >= sminx && x <= smaxx && y >= sminy && y <= smaxy) {
 #ifdef __DEBUG_GRAPHICS__
-                pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, 3);
+                pixel(surface, drawing_region.x0 + (int)width - (int)j, drawing_region.y0 + (int)height - (int)i, 3);
 #endif
                 if (flip_x) {
                     x = smaxx - (x - sminx);
@@ -378,11 +377,11 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *source,
         ov += M22;
     }
 #ifdef __DEBUG_GRAPHICS__
-    pixel(context, dx, dy, 7);
-    pixel(context, drawing_region.x0, drawing_region.y0, 7);
-    pixel(context, drawing_region.x1, drawing_region.y0, 7);
-    pixel(context, drawing_region.x1, drawing_region.y1, 7);
-    pixel(context, drawing_region.x0, drawing_region.y1, 7);
+    pixel(surface, dx, dy, 7);
+    pixel(surface, drawing_region.x0, drawing_region.y0, 7);
+    pixel(surface, drawing_region.x1, drawing_region.y0, 7);
+    pixel(surface, drawing_region.x1, drawing_region.y1, 7);
+    pixel(surface, drawing_region.x0, drawing_region.y1, 7);
 #endif
 }
 #else
@@ -469,9 +468,9 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *source,
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
-    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!
+    const size_t width = drawing_region.x1 - drawing_region.x0 + 1;
+    const size_t height = drawing_region.y1 - drawing_region.y0 + 1;
+    if ((width == 0) || (height == 0)) { // Nothing to draw! Bail out! (can't be negative, by definition)
         return;
     }
 
@@ -488,22 +487,22 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *source,
     const GL_Pixel_t *sdata = source->data;
     GL_Pixel_t *ddata = surface->data;
 
-    const int swidth = (int)source->width;
-    const int dwidth = (int)surface->width;
+    const size_t swidth = source->width;
+    const size_t dwidth = surface->width;
 
-    const int dskip = dwidth - width;
+    const size_t dskip = dwidth - width;
 
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
-    for (int i = 0; i < height; ++i) {
+    for (size_t i = 0; i < height; ++i) {
         const float ov = skip_y + (float)i; // + 0.5f;
 #ifdef __GL_OPTIMIZED_ROTATIONS__
         const float ov_squared = ov * ov;
 #endif
 
-        for (int j = 0; j < width; ++j) {
+        for (size_t j = 0; j < width; ++j) {
 #ifdef __DEBUG_GRAPHICS__
-            pixel(context, drawing_region.x0 + j, drawing_region.y0 + i, 15);
+            pixel(surface, drawing_region.x0 + (int)j, drawing_region.y0 + (int)i, 15);
 #endif
             const float ou = skip_x + (float)j; // + 0.5f;
 #ifdef __GL_OPTIMIZED_ROTATIONS__
@@ -512,7 +511,7 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *source,
             if (distance_squared <= radius_squared) {
 #endif
 #ifdef __DEBUG_GRAPHICS__
-                pixel(context, drawing_region.x0 + j, drawing_region.y0 + i, 11);
+                pixel(surface, drawing_region.x0 + (int)j, drawing_region.y0 + (int)i, 11);
 #endif
 
                 const float u = (ou * M11 + ov * M12) + sx + 0.5f; // Important: offset half a pixel to center the source texture!
@@ -523,7 +522,7 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *source,
 
                 if (x >= sminx && x <= smaxx && y >= sminy && y <= smaxy) {
 #ifdef __DEBUG_GRAPHICS__
-                    pixel(context, drawing_region.x0 + j, drawing_region.y0 + i, 3);
+                    pixel(surface, drawing_region.x0 + (int)j, drawing_region.y0 + (int)i, 3);
 #endif
                     const GL_Pixel_t *sptr = sdata + y * swidth + x;
                     GL_Pixel_t index = shifting[*sptr];
@@ -541,11 +540,11 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *source,
         dptr += dskip;
     }
 #ifdef __DEBUG_GRAPHICS__
-    pixel(context, dx, dy, 7);
-    pixel(context, drawing_region.x0, drawing_region.y0, 7);
-    pixel(context, drawing_region.x1, drawing_region.y0, 7);
-    pixel(context, drawing_region.x1, drawing_region.y1, 7);
-    pixel(context, drawing_region.x0, drawing_region.y1, 7);
+    pixel(surface, dx, dy, 7);
+    pixel(surface, drawing_region.x0, drawing_region.y0, 7);
+    pixel(surface, drawing_region.x1, drawing_region.y0, 7);
+    pixel(surface, drawing_region.x1, drawing_region.y1, 7);
+    pixel(surface, drawing_region.x0, drawing_region.y1, 7);
 #endif
 }
 #endif

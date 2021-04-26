@@ -49,7 +49,7 @@ typedef struct _GL_XForm_State_Operation_t {
 } GL_XForm_State_Operation_t;
 
 typedef struct _GL_XForm_Table_Entry_t {
-    int scan_line;
+    size_t scan_line;
     GL_XForm_State_Operation_t operations[GL_XForm_Registers_t_CountOf]; // At most, change all the registries.
     size_t count;
 } GL_XForm_Table_Entry_t;
@@ -77,6 +77,6 @@ extern void GL_xform_registers(GL_XForm_t *xform, const GL_XForm_State_Operation
 extern void GL_xform_wrap(GL_XForm_t *xform, GL_XForm_Wraps_t wrap);
 extern void GL_xform_table(GL_XForm_t *xform, const GL_XForm_Table_Entry_t *entries, size_t count);
 
-extern void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, const GL_XForm_t *xform);
+extern void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, const GL_XForm_t *xform);
 
 #endif  /* __GL_XFORM_H__ */

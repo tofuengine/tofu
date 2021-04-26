@@ -340,7 +340,7 @@ static int xform_project_4unnn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     XForm_Object_t *self = (XForm_Object_t *)LUAX_USERDATA(L, 1);
-    int height = LUAX_INTEGER(L, 2);
+    size_t height = (size_t)LUAX_INTEGER(L, 2);
     float angle = LUAX_NUMBER(L, 3);
     float elevation = LUAX_NUMBER(L, 4);
 
@@ -352,7 +352,7 @@ static int xform_project_4unnn_0(lua_State *L)
 
     // SEE: https://www.coranac.com/tonc/text/mode7.htm
     //      https://gamedev.stackexchange.com/questions/24957/doing-an-snes-mode-7-affine-transform-effect-in-pygame
-    for (int scan_line = 0; scan_line < height; ++scan_line) {
+    for (size_t scan_line = 0; scan_line < height; ++scan_line) {
         const float yc = (float)scan_line;
         const float p = elevation / yc;
 
@@ -386,12 +386,12 @@ static int xform_warp_3unn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     XForm_Object_t *self = (XForm_Object_t *)LUAX_USERDATA(L, 1);
-    int height = LUAX_INTEGER(L, 2);
+    size_t height = (size_t)LUAX_INTEGER(L, 2);
     float factor = LUAX_NUMBER(L, 3);
 
     GL_XForm_Table_Entry_t *table = NULL;
 
-    for (int scan_line = 0; scan_line < height; ++scan_line) {
+    for (size_t scan_line = 0; scan_line < height; ++scan_line) {
         const float angle = ((float)scan_line / (float)height) * M_PI; // Could be partially pre-computed, but who cares...
         const float sx = (1.0f - sinf(angle)) * factor + 1.0f;
 

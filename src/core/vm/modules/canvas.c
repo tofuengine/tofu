@@ -899,7 +899,7 @@ static int canvas_peek_3unn_1n(lua_State *L)
     int y = LUAX_INTEGER(L, 3);
 
     const GL_Context_t *context = self->context;
-    lua_pushinteger(L, (lua_Integer)GL_context_peek(context, x, y));
+    lua_pushinteger(L, (lua_Integer)GL_context_peek(context, (GL_Point_t){ .x = x, .y = y }));
 
     return 1;
 }
@@ -918,7 +918,7 @@ static int canvas_poke_4unnn_0(lua_State *L)
     GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 4);
 
     GL_Context_t *context = self->context;
-    GL_context_poke(context, x, y, index);
+    GL_context_poke(context, (GL_Point_t){ .x = x, .y = y }, index);
 
     return 0;
 }
@@ -928,13 +928,13 @@ typedef struct _Process_Closure_t {
     lua_State *L;
 } Process_Closure_t;
 
-static GL_Pixel_t _process_callback(void *user_data, int x, int y, GL_Pixel_t from, GL_Pixel_t to)
+static GL_Pixel_t _process_callback(void *user_data, GL_Point_t position, GL_Pixel_t from, GL_Pixel_t to)
 {
     Process_Closure_t *closure = (Process_Closure_t *)user_data;
 
     lua_pushvalue(closure->L, 2); // Copy directly from stack argument, don't need to ref/unref (won't be GC-ed, in the meanwhile)
-    lua_pushinteger(closure->L, (lua_Integer)x);
-    lua_pushinteger(closure->L, (lua_Integer)y);
+    lua_pushinteger(closure->L, (lua_Integer)position.x);
+    lua_pushinteger(closure->L, (lua_Integer)position.y);
     lua_pushinteger(closure->L, (lua_Integer)from);
     lua_pushinteger(closure->L, (lua_Integer)to);
     Interpreter_call(closure->interpreter, 4, 1);

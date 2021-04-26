@@ -98,14 +98,14 @@ void GL_xform_table(GL_XForm_t *xform, const GL_XForm_Table_Entry_t *entries, si
     for (size_t i = count; i; --i) {
         arrpush(xform->table, *(entry++));
     }
-    arrpush(xform->table, (GL_XForm_Table_Entry_t){ .scan_line = -1 }); // Set the end-of-data (safety) marker
+    arrpush(xform->table, (GL_XForm_Table_Entry_t){ .scan_line = SIZE_MAX }); // Set the end-of-data (safety) marker
 }
 
 // https://www.youtube.com/watch?v=3FVN_Ze7bzw
 // http://www.coranac.com/tonc/text/mode7.htm
 // https://wiki.superfamicom.org/registers
 // https://www.smwcentral.net/?p=viewthread&t=27054
-void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, const GL_XForm_t *xform)
+void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, const GL_XForm_t *xform)
 {
     const GL_State_t *state = &context->state;
     const GL_Quad_t *clipping_region = &state->clipping_region;
@@ -113,6 +113,7 @@ void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *surface, 
 #ifdef __GL_MODE7_TRANSPARENCY__
     const GL_Bool_t *transparent = state->transparent;
 #endif  /* __GL_MODE7_TRANSPARENCY__ */
+    const GL_Surface_t *surface = context->surface;
 
     const GL_XForm_Table_Entry_t *table = xform->table;
     const GL_XForm_Wraps_t wrap = xform->wrap;
@@ -137,9 +138,9 @@ void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *surface, 
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
-    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!
+    const size_t width = drawing_region.x1 - drawing_region.x0 + 1;
+    const size_t height = drawing_region.y1 - drawing_region.y0 + 1;
+    if ((width == 0) || (height == 0)) { // Nothing to draw! Bail out! (can't be negative, by definition)
         return;
     }
 
@@ -149,16 +150,17 @@ void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *surface, 
     const int shm1 = sh - 1;
     const int swb2 = sw * 2;
     const int shb2 = sh * 2;
+    const bool is_power_of_two = source->is_power_of_two;
 
-    const GL_Pixel_t *sdata = surface->data;
-    GL_Pixel_t *ddata = context->surface->data;
+    const GL_Pixel_t *sdata = source->data;
+    GL_Pixel_t *ddata = surface->data;
 
-    const int swidth = (int)surface->width;
-    const int dwidth = (int)context->surface->width;
+    const size_t swidth = source->width;
+    const size_t dwidth = surface->width;
 
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
-    const int dskip = dwidth - width;
+    const size_t dskip = dwidth - width;
 
     // The basic Mode7 formula is the following
     //
@@ -190,7 +192,7 @@ void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *surface, 
     float c = registers[GL_XFORM_REGISTER_C]; float d = registers[GL_XFORM_REGISTER_D];
     float x0 = registers[GL_XFORM_REGISTER_X]; float y0 = registers[GL_XFORM_REGISTER_Y];
 
-    for (int i = 0; i < height; ++i) {
+    for (size_t i = 0; i < height; ++i) {
         if (table && i == table->scan_line) {
             for (size_t k = 0; k < table->count; ++k) {
                 const GL_XForm_Registers_t id = table->operations[k].id;
@@ -209,7 +211,7 @@ void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *surface, 
             }
             ++table;
 #ifdef __DETACH_XFORM_TABLE__
-            if (table->scan_line == -1) { // End-of-data reached, detach pointer for faster loop.
+            if (table->scan_line == SIZE_MAX) { // End-of-data reached, detach pointer for faster loop.
                 table = NULL;
             }
 #endif
@@ -226,9 +228,9 @@ void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *surface, 
         float yp = (c * xi + d * yi) + y0 + fmodf(v, sh);
 #endif
 
-        for (int j = 0; j < width; ++j) {
+        for (size_t j = 0; j < width; ++j) {
 #ifdef __DEBUG_GRAPHICS__
-            pixel(context, drawing_region.x0 + j, drawing_region.y0 + i, i + j);
+            pixel(surface, drawing_region.x0 + (int)j, drawing_region.y0 + (int)i, (int)i + (int)j);
 #endif
             int sx = (int)(xp + 0.5f); // Faster rounding, using integer casting truncation!
             int sy = (int)(yp + 0.5f);
@@ -237,7 +239,7 @@ void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *surface, 
             // see page #260
             bool copy = true;
             if (wrap == GL_XFORM_WRAP_REPEAT) {
-                if (surface->is_power_of_two) { // Faster case, when Po2 (just a bitmask).
+                if (is_power_of_two) { // Faster case, when the source texture is power-of-two (just a bitmask).
                     sx &= swm1;
                     sy &= shm1;
                 } else {

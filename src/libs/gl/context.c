@@ -232,15 +232,15 @@ void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pixel_t in
 
     GL_Pixel_t *ddata = surface->data;
 
-    const int dwidth = (int)surface->width;
+    const size_t dwidth = surface->width;
+
+    const size_t dskip = dwidth;
 
     const GL_Pixel_t match = ddata[seed.y * dwidth + seed.x];
     const GL_Pixel_t replacement = shifting[index];
 
     GL_Point_t *stack = NULL;
     arrpush(stack, seed);
-
-    const int dskip = (int)context->surface->width;
 
     while (arrlen(stack) > 0) {
         const GL_Point_t position = arrpop(stack);
@@ -296,8 +296,8 @@ void GL_context_process(const GL_Context_t *context, const GL_Surface_t *source,
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Surface_t *surface = context->surface;
 
-    int skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
-    int skip_y = 0;
+    size_t skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
+    size_t skip_y = 0;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
@@ -321,31 +321,31 @@ void GL_context_process(const GL_Context_t *context, const GL_Surface_t *source,
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
-    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!
+    const size_t width = drawing_region.x1 - drawing_region.x0 + 1;
+    const size_t height = drawing_region.y1 - drawing_region.y0 + 1;
+    if ((width == 0) || (height == 0)) { // Nothing to draw! Bail out! (can't be negative, by definition)
         return;
     }
 
     const GL_Pixel_t *sdata = source->data;
     GL_Pixel_t *ddata = surface->data;
 
-    const int swidth = (int)source->width;
-    const int dwidth = (int)surface->width;
+    const size_t swidth = source->width;
+    const size_t dwidth = surface->width;
 
-    const int sskip = swidth - width;
-    const int dskip = dwidth - width;
+    const size_t sskip = swidth - width;
+    const size_t dskip = dwidth - width;
 
     const GL_Pixel_t *sptr = sdata + (area.y + skip_y) * swidth + (area.x + skip_x);
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
     int y = drawing_region.y0;
-    for (int i = height; i; --i) {
+    for (size_t i = height; i; --i) {
         int x = drawing_region.x0; // TODO: optimize?
-        for (int j = width; j; --j) {
+        for (size_t j = width; j; --j) {
             GL_Pixel_t from = *dptr;
             GL_Pixel_t to = *(sptr++);
-            *(dptr++) = callback(user_data, x, y, from, to);
+            *(dptr++) = callback(user_data, (GL_Point_t){ .x = x, .y = y}, from, to);
             x += 1;
         }
         sptr += sskip;
@@ -364,8 +364,8 @@ void GL_context_copy(const GL_Context_t *context, const GL_Surface_t *source, GL
     const GL_Bool_t *transparent = state->transparent;
     const GL_Surface_t *surface = context->surface;
 
-    int skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
-    int skip_y = 0;
+    size_t skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
+    size_t skip_y = 0;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
@@ -389,26 +389,26 @@ void GL_context_copy(const GL_Context_t *context, const GL_Surface_t *source, GL
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
-    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!
+    const size_t width = drawing_region.x1 - drawing_region.x0 + 1;
+    const size_t height = drawing_region.y1 - drawing_region.y0 + 1;
+    if ((width == 0) || (height == 0)) { // Nothing to draw! Bail out! (can't be negative, by definition)
         return;
     }
 
     const GL_Pixel_t *sdata = source->data;
     GL_Pixel_t *ddata = surface->data;
 
-    const int swidth = (int)source->width;
-    const int dwidth = (int)surface->width;
+    const size_t swidth = source->width;
+    const size_t dwidth = surface->width;
 
-    const int sskip = swidth - width;
-    const int dskip = dwidth - width;
+    const size_t sskip = swidth - width;
+    const size_t dskip = dwidth - width;
 
     const GL_Pixel_t *sptr = sdata + (area.y + skip_y) * swidth + (area.x + skip_x);
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
-    for (int i = height; i; --i) {
-        for (int j = width; j; --j) {
+    for (size_t i = height; i; --i) {
+        for (size_t j = width; j; --j) {
             GL_Pixel_t index = shifting[*(sptr++)];
             if (transparent[index]) {
                 dptr++;
@@ -477,8 +477,15 @@ void GL_context_stencil(const GL_Context_t *context, const GL_Surface_t *source,
     const Pixel_Comparator_t comparator = _comparators[state->comparator];
     const GL_Pixel_t threshold = state->threshold;
 
-    int skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
-    int skip_y = 0;
+#ifdef __DEFENSIVE_CHECKS__
+    if (source->width != mask->width || source->height != mask->height) {
+        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "source and mask surfaces need to match in size");
+        return;
+    }
+#endif
+
+    size_t skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
+    size_t skip_y = 0;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
@@ -502,9 +509,9 @@ void GL_context_stencil(const GL_Context_t *context, const GL_Surface_t *source,
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
-    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!
+    const size_t width = drawing_region.x1 - drawing_region.x0 + 1;
+    const size_t height = drawing_region.y1 - drawing_region.y0 + 1;
+    if ((width == 0) || (height == 0)) { // Nothing to draw! Bail out! (can't be negative, by definition) (can't be negative, by definition)
         return;
     }
 
@@ -512,22 +519,22 @@ void GL_context_stencil(const GL_Context_t *context, const GL_Surface_t *source,
     const GL_Pixel_t *mdata = mask->data;
     GL_Pixel_t *ddata = surface->data;
 
-    const int swidth = (int)source->width;
-    const int mwidth = (int)mask->width;
-    const int dwidth = (int)surface->width;
+    const size_t swidth = source->width;
+    const size_t mwidth = mask->width;
+    const size_t dwidth = surface->width;
 
-    const int sskip = swidth - width;
-    const int mskip = mwidth - width;
-    const int dskip = dwidth - width;
+    const size_t sskip = swidth - width;
+    const size_t mskip = mwidth - width;
+    const size_t dskip = dwidth - width;
 
     const GL_Pixel_t *sptr = sdata + (area.y + skip_y) * swidth + (area.x + skip_x);
     const GL_Pixel_t *mptr = mdata + (area.y + skip_y) * mwidth + (area.x + skip_x);
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
-    for (int i = height; i; --i) {
-        for (int j = width; j; --j) {
+    for (size_t i = height; i; --i) {
+        for (size_t j = width; j; --j) {
 #ifdef __DEBUG_GRAPHICS__
-            pixel(context, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)i + (int)j);
+            pixel(surface, drawing_region.x0 + (int)width - (int)j, drawing_region.y0 + (int)height - (int)i, (int)i + (int)j);
 #endif
             const GL_Pixel_t value = *(mptr++);
             const GL_Pixel_t index = shifting[*(sptr++)];
@@ -543,16 +550,16 @@ void GL_context_stencil(const GL_Context_t *context, const GL_Surface_t *source,
     }
 }
 
-GL_Pixel_t GL_context_peek(const GL_Context_t *context, int x, int y)
+GL_Pixel_t GL_context_peek(const GL_Context_t *context, GL_Point_t position)
 {
     const GL_Surface_t *surface = context->surface;
-    return surface->data[y * surface->width + x];
+    return surface->data[position.y * surface->width + position.x];
 }
 
-void GL_context_poke(GL_Context_t *context, int x, int y, GL_Pixel_t index)
+void GL_context_poke(GL_Context_t *context, GL_Point_t position, GL_Pixel_t index)
 {
     GL_Surface_t *surface = context->surface;
-    surface->data[y * surface->width + x] = index;
+    surface->data[position.y * surface->width + position.x] = index;
 }
 
 void GL_context_clear(const GL_Context_t *context, GL_Pixel_t index)

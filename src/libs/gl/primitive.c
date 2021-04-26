@@ -210,7 +210,7 @@ static void _hline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region
 
     const int width = drawing_region.x1 - drawing_region.x0 + 1;
     const int height = drawing_region.y1 - drawing_region.y0 + 1;
-    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!
+    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out! (can't be negative, by definition)
         return;
     }
 
@@ -301,7 +301,7 @@ static void _vline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region
 
     const int width = drawing_region.x1 - drawing_region.x0 + 1;
     const int height = drawing_region.y1 - drawing_region.y0 + 1;
-    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!
+    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out! (can't be negative, by definition)
         return;
     }
 
@@ -430,22 +430,22 @@ void GL_primitive_filled_rectangle(const GL_Context_t *context, GL_Rectangle_t r
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
-    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!
+    const size_t width = drawing_region.x1 - drawing_region.x0 + 1;
+    const size_t height = drawing_region.y1 - drawing_region.y0 + 1;
+    if ((width == 0) || (height == 0)) { // Nothing to draw! Bail out! (can't be negative, by definition)
         return;
     }
 
     GL_Pixel_t *ddata = surface->data;
 
-    const int dwidth = (int)surface->width;
+    const size_t dwidth = surface->width;
+
+    const size_t dskip = dwidth - width;
 
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
-    const int dskip = dwidth - width;
-
-    for (int i = height; i; --i) {
-        for (int j = width; j; --j) {
+    for (size_t i = height; i; --i) {
+        for (size_t j = width; j; --j) {
             *(dptr++) = index;
         }
         dptr += dskip;
@@ -490,9 +490,9 @@ void GL_primitive_filled_triangle(const GL_Context_t *context, GL_Point_t a, GL_
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
-    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!
+    const size_t width = drawing_region.x1 - drawing_region.x0 + 1;
+    const size_t height = drawing_region.y1 - drawing_region.y0 + 1;
+    if ((width == 0) || (height == 0)) { // Nothing to draw! Bail out! (can't be negative, by definition)
         return;
     }
 
@@ -523,19 +523,19 @@ void GL_primitive_filled_triangle(const GL_Context_t *context, GL_Point_t a, GL_
 
     GL_Pixel_t *ddata = surface->data;
 
-    const int dwidth = (int)surface->width;
+    const size_t dwidth = surface->width;
+
+    const size_t dskip = dwidth;
 
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
-    const int dskip = dwidth;
-
-    for (int y = 0; y <= height; ++y) { // Pinada's edge function is linear, we can cast it...
+    for (size_t y = 0; y <= height; ++y) { // Pinada's edge function is linear, we can cast it...
         int CX1 = CY1;
         int CX2 = CY2;
         int CX3 = CY3;
-        int count = 0;
-        int eod = 0;
-        for (int x = 0; x <= width; ++x) {
+        size_t count = 0;
+        size_t eod = 0;
+        for (size_t x = 0; x <= width; ++x) {
             if ((CX1 | CX2 | CX3) > 0) { // Check the sign bit only.
                 count += 1;
                 eod = x;
@@ -548,9 +548,9 @@ void GL_primitive_filled_triangle(const GL_Context_t *context, GL_Point_t a, GL_
         CY2 += DX23;
         CY3 += DX31;
 
-        const int offset = eod - count;
+        const size_t offset = eod - count;
         dptr += eod;
-        for (int i = count; i; --i) { // Backward copy, simpler math.
+        for (size_t i = count; i; --i) { // Backward copy, simpler math.
             *(dptr--) = index;
         }
         dptr += dskip - offset;
