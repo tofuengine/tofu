@@ -48,7 +48,7 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *source, GL
     const GL_Bool_t *transparent = state->transparent;
     const GL_Surface_t *surface = context->surface;
 
-    size_t skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
+    size_t skip_x = 0; // Offset into the (source) surface/texture, updated during clipping.
     size_t skip_y = 0;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
@@ -125,7 +125,7 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *source, 
     const size_t drawing_width = (int)IROUNDF(area.width * fabsf(scale_x)); // We need to round! No ceil, no floor!
     const size_t drawing_height = (int)IROUNDF(area.height * fabsf(scale_y));
 
-    size_t skip_x = 0; // Offset into the (target) surface/texture, update during clipping.
+    size_t skip_x = 0; // Offset into the (target) surface/texture, updated during clipping.
     size_t skip_y = 0;
 
     GL_Quad_t drawing_region = (GL_Quad_t){

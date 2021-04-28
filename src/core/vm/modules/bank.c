@@ -43,6 +43,7 @@ static int bank_gc_1u_0(lua_State *L);
 static int bank_size_4unNN_2n(lua_State *L);
 static int bank_canvas_2uu_0(lua_State *L);
 static int bank_blit_v_0(lua_State *L);
+static int bank_tile_6unnnnn_0(lua_State *L);
 
 static const struct luaL_Reg _bank_functions[] = {
     { "new", bank_new_v_1u },
@@ -50,6 +51,7 @@ static const struct luaL_Reg _bank_functions[] = {
     { "size", bank_size_4unNN_2n },
     { "canvas", bank_canvas_2uu_0 },
     { "blit", bank_blit_v_0 },
+    { "tile", bank_tile_6unnnnn_0 },
     { NULL, NULL }
 };
 
@@ -210,6 +212,30 @@ static int bank_canvas_2uu_0(lua_State *L)
     self->canvas.instance = canvas;
     self->canvas.reference = luaX_ref(L, 2);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas %p attached w/ reference #%d", canvas, self->canvas.reference);
+
+    return 0;
+}
+
+static int bank_tile_6unnnnn_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    const Bank_Object_t *self = (const Bank_Object_t *)LUAX_USERDATA(L, 1);
+    GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER(L, 2);
+    int x = LUAX_INTEGER(L, 3);
+    int y = LUAX_INTEGER(L, 4);
+    int ox = LUAX_INTEGER(L, 5);
+    int oy = LUAX_INTEGER(L, 6);
+
+    const GL_Context_t *context = self->canvas.instance->context;
+    const GL_Sheet_t *sheet = self->sheet;
+    GL_context_tile(context, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, (GL_Point_t){ .x = ox, .y = oy });
 
     return 0;
 }

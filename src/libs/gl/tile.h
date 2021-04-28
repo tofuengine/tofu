@@ -22,19 +22,13 @@
  * SOFTWARE.
  */
 
-#ifndef __GL_H__
-#define __GL_H__
+#ifndef __GL_TILE_H__
+#define __GL_TILE_H__
 
-#include "batch.h"
-#include "blit.h"
 #include "common.h"
 #include "context.h"
-#include "copperlist.h"
-#include "palette.h"
-#include "primitive.h"
-#include "sheet.h"
 #include "surface.h"
-#include "tile.h"
-#include "xform.h"
 
-#endif  /* __GL_H__ */
+extern void GL_context_tile(const GL_Context_t *context, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, GL_Point_t offset);
+
+#endif  /* __GL_TILE_H__ */
