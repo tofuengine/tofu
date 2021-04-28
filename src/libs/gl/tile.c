@@ -116,7 +116,7 @@ void GL_context_tile(const GL_Context_t *context, const GL_Surface_t *source, GL
     }
 }
 
-void GL_context_tile_s(const GL_Context_t *context, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, GL_Point_t offset, int sx, int sy)
+void GL_context_tile_s(const GL_Context_t *context, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, GL_Point_t offset, int scale_x, int scale_y)
 {
     const GL_State_t *state = &context->state;
     const GL_Quad_t *clipping_region = &state->clipping_region;
@@ -124,8 +124,8 @@ void GL_context_tile_s(const GL_Context_t *context, const GL_Surface_t *source, 
     const GL_Bool_t *transparent = state->transparent;
     const GL_Surface_t *surface = context->surface;
 
-    const size_t sw = area.width * IABS(sx);
-    const size_t sh = area.height * IABS(sy);
+    const size_t sw = area.width * IABS(scale_x);
+    const size_t sh = area.height * IABS(scale_y);
 
     size_t skip_x = 0; // Offset into the (source) surface/texture, updated during clipping.
     size_t skip_y = 0;
@@ -166,20 +166,29 @@ void GL_context_tile_s(const GL_Context_t *context, const GL_Surface_t *source, 
 
     const size_t dskip = dwidth - width;
 
-    const GL_Pixel_t *sptr = sdata;
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
-    int ou = (int)skip_x / IABS(sx);
-    int ov = (int)skip_y / IABS(sy);
+    const int su = IABS(scale_x);
+    const int sv = IABS(scale_y);
+    const int ou0 = (int)skip_x / su;
+    const int ov0 = (int)skip_y / sv;
+    const int ru0 = skip_x % su;
+    const int rv0 = skip_y % sv;
+
+    const int ou = area.x + (scale_x < 0 ? (int)area.width - 1 - ou0 : ou0); // Offset to the correct margin, according to flipping.
+    const int ov = area.y + (scale_y < 0 ? (int)area.height - 1 - ov0 : ov0);
+
+    const int du = scale_x > 0 ? 1 : -1;
+    const int dv = scale_y > 0 ? 1 : -1;
 
     int v = ov;
-    int rv = 0;
+    int rv = rv0;
     for (size_t i = height; i; --i) {
         const int y = (int)v;
         const GL_Pixel_t *sptr = sdata + y * swidth;
 
         int u = ou;
-        int ru = 0;
+        int ru = ru0;
         for (size_t j = width; j; --j) {
 #ifdef __DEBUG_GRAPHICS__
             pixel(surface, drawing_region.x0 + (int)width - (int)j, drawing_region.y0 + (int)height - (int)i, (int)i + (int)j);
@@ -191,20 +200,18 @@ void GL_context_tile_s(const GL_Context_t *context, const GL_Surface_t *source, 
             } else {
                 *(dptr++) = index;
             }
-
             ru += 1;
-            if (ru == sx) {
-                u += 1;
+            if (ru == su) {
+                u += du;
                 ru = 0;
             }
         }
 
-        dptr += dskip;
-
         rv += 1;
-        if (rv == sy) {
-            v += 1;
+        if (rv == sv) {
+            v += dv;
             rv = 0;
         }
+        dptr += dskip;
     }
 }
