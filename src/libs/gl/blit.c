@@ -175,7 +175,6 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *source, 
     // formula in a recurring fashion if we increment and accumulate by `1 / S_x` and `1 / S_y` steps.
     const float ou0 = (skip_x + 0.5f) / scale_x;
     const float ov0 = (skip_y + 0.5f) / scale_y; // `skip_*` is never zero, so we can check the sign!
-
     const float ou = area.x + (ou0 < 0.0f ? (float)area.width + ou0 : ou0); // Offset to the correct margin, according to flipping.
     const float ov = area.y + (ov0 < 0.0f ? (float)area.height + ov0 : ov0);
 

@@ -168,13 +168,21 @@ void GL_context_tile_s(const GL_Context_t *context, const GL_Surface_t *source, 
 
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
+    // We are implementing a DDA integer-remainders algorithm, as the scaling factors are integer. For both `x` and `y`
+    // (which we are calling `u` and `v` in the source surface texture) we need to pre-calculate:
+    //
+    //   - the absolute value of the scaling factor, i.e. the count limit after which a pixel need to change;
+    //   - the current remainder value, in the source texture;
+    //   - the source origin `u` and `v`, scaled, given that we might have skipped some pixels due to clipping, and
+    //     moved to the correct margin due to x/y flipping;
+    //   - the movement vector, according to x/y flipping.
     const int su = IABS(scale_x);
     const int sv = IABS(scale_y);
-    const int ou0 = (int)skip_x / su;
-    const int ov0 = (int)skip_y / sv;
     const int ru0 = skip_x % su;
     const int rv0 = skip_y % sv;
 
+    const int ou0 = (int)skip_x / su;
+    const int ov0 = (int)skip_y / sv;
     const int ou = area.x + (scale_x < 0 ? (int)area.width - 1 - ou0 : ou0); // Offset to the correct margin, according to flipping.
     const int ov = area.y + (scale_y < 0 ? (int)area.height - 1 - ov0 : ov0);
 
@@ -184,7 +192,7 @@ void GL_context_tile_s(const GL_Context_t *context, const GL_Surface_t *source, 
     int v = ov;
     int rv = rv0;
     for (size_t i = height; i; --i) {
-        const int y = (int)v;
+        const int y = ((int)v + offset.y) % area.height;
         const GL_Pixel_t *sptr = sdata + y * swidth;
 
         int u = ou;
@@ -193,7 +201,7 @@ void GL_context_tile_s(const GL_Context_t *context, const GL_Surface_t *source, 
 #ifdef __DEBUG_GRAPHICS__
             pixel(surface, drawing_region.x0 + (int)width - (int)j, drawing_region.y0 + (int)height - (int)i, (int)i + (int)j);
 #endif
-            const int x = (int)u;
+            const int x = ((int)u + offset.x) % area.width;
             GL_Pixel_t index = shifting[sptr[x]];
             if (transparent[index]) {
                 dptr++;
@@ -201,14 +209,14 @@ void GL_context_tile_s(const GL_Context_t *context, const GL_Surface_t *source, 
                 *(dptr++) = index;
             }
             ru += 1;
-            if (ru == su) {
+            if (ru == su) { // The remainder has reached the (scaling) limit, move to the next pixel and reset.
                 u += du;
                 ru = 0;
             }
         }
 
         rv += 1;
-        if (rv == sv) {
+        if (rv == sv) { // Ditto.
             v += dv;
             rv = 0;
         }
