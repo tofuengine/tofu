@@ -30,5 +30,6 @@
 #include "surface.h"
 
 extern void GL_context_tile(const GL_Context_t *context, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, GL_Point_t offset);
+extern void GL_context_tile_s(const GL_Context_t *context, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, GL_Point_t offset, float sx, float sy);
 
 #endif  /* __GL_TILE_H__ */

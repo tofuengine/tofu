@@ -115,3 +115,96 @@ void GL_context_tile(const GL_Context_t *context, const GL_Surface_t *source, GL
         }
     }
 }
+
+void GL_context_tile_s(const GL_Context_t *context, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, GL_Point_t offset, int sx, int sy)
+{
+    const GL_State_t *state = &context->state;
+    const GL_Quad_t *clipping_region = &state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
+    const GL_Surface_t *surface = context->surface;
+
+    const size_t sw = area.width * IABS(sx);
+    const size_t sh = area.height * IABS(sy);
+
+    size_t skip_x = 0; // Offset into the (source) surface/texture, updated during clipping.
+    size_t skip_y = 0;
+
+    GL_Quad_t drawing_region = (GL_Quad_t){
+            .x0 = position.x,
+            .y0 = position.y,
+            .x1 = position.x + (int)sw - 1,
+            .y1 = position.y + (int)sh - 1
+        };
+
+    if (drawing_region.x0 < clipping_region->x0) {
+        skip_x = clipping_region->x0 - drawing_region.x0;
+        drawing_region.x0 = clipping_region->x0;
+    }
+    if (drawing_region.y0 < clipping_region->y0) {
+        skip_y = clipping_region->y0 - drawing_region.y0;
+        drawing_region.y0 = clipping_region->y0;
+    }
+    if (drawing_region.x1 > clipping_region->x1) {
+        drawing_region.x1 = clipping_region->x1;
+    }
+    if (drawing_region.y1 > clipping_region->y1) {
+        drawing_region.y1 = clipping_region->y1;
+    }
+
+    const size_t width = drawing_region.x1 - drawing_region.x0 + 1;
+    const size_t height = drawing_region.y1 - drawing_region.y0 + 1;
+    if ((width == 0) || (height == 0)) { // Nothing to draw! Bail out! (can't be negative, by definition)
+        return;
+    }
+
+    const GL_Pixel_t *sdata = source->data;
+    GL_Pixel_t *ddata = surface->data;
+
+    const size_t swidth = source->width;
+    const size_t dwidth = surface->width;
+
+    const size_t dskip = dwidth - width;
+
+    const GL_Pixel_t *sptr = sdata;
+    GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
+
+    int ou = (int)skip_x / IABS(sx);
+    int ov = (int)skip_y / IABS(sy);
+
+    int v = ov;
+    int rv = 0;
+    for (size_t i = height; i; --i) {
+        const int y = (int)v;
+        const GL_Pixel_t *sptr = sdata + y * swidth;
+
+        int u = ou;
+        int ru = 0;
+        for (size_t j = width; j; --j) {
+#ifdef __DEBUG_GRAPHICS__
+            pixel(surface, drawing_region.x0 + (int)width - (int)j, drawing_region.y0 + (int)height - (int)i, (int)i + (int)j);
+#endif
+            const int x = (int)u;
+            GL_Pixel_t index = shifting[sptr[x]];
+            if (transparent[index]) {
+                dptr++;
+            } else {
+                *(dptr++) = index;
+            }
+
+            ru += 1;
+            if (ru == sx) {
+                u += 1;
+                ru = 0;
+            }
+        }
+
+        dptr += dskip;
+
+        rv += 1;
+        if (rv == sy) {
+            v += 1;
+            rv = 0;
+        }
+    }
+}
