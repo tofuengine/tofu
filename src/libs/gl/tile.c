@@ -45,8 +45,8 @@ void GL_context_tile(const GL_Context_t *context, const GL_Surface_t *source, GL
     const GL_Bool_t *transparent = state->transparent;
     const GL_Surface_t *surface = context->surface;
 
-    size_t skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
-    size_t skip_y = 0;
+    size_t skip_x = IMOD(offset.x, area.width); // Offset into the (source) surface/texture, update during clipping.
+    size_t skip_y = IMOD(offset.y, area.height);
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
@@ -56,11 +56,11 @@ void GL_context_tile(const GL_Context_t *context, const GL_Surface_t *source, GL
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
-        skip_x = clipping_region->x0 - drawing_region.x0;
+        skip_x = IMOD((clipping_region->x0 - drawing_region.x0) + offset.x, area.width);
         drawing_region.x0 = clipping_region->x0;
     }
     if (drawing_region.y0 < clipping_region->y0) {
-        skip_y = clipping_region->y0 - drawing_region.y0;
+        skip_y = IMOD((clipping_region->y0 - drawing_region.y0) + offset.y, area.height);
         drawing_region.y0 = clipping_region->y0;
     }
     if (drawing_region.x1 > clipping_region->x1) {
@@ -89,30 +89,30 @@ void GL_context_tile(const GL_Context_t *context, const GL_Surface_t *source, GL
     const GL_Pixel_t *sptr = sdata + (area.y + skip_y) * swidth + (area.x + skip_x);
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
-    const GL_Pixel_t *sveod = sptr + ssize;
-    sptr += offset.y * swidth;
-    for (size_t i = height; i; --i) {
-        const GL_Pixel_t *sheod = sptr + width;
-        const GL_Pixel_t *sss = sptr + offset.x;
-        for (size_t j = width; j; --j) {
+    const GL_Pixel_t *sheod = sdata + area.y * swidth + area.x + area.width;
+    const GL_Pixel_t *sveod = sdata + ssize;
+    for (int i = height; i; --i) {
+        const GL_Pixel_t *sline = sptr;
+        for (int j = width; j; --j) {
 #ifdef __DEBUG_GRAPHICS__
-            pixel(surface, drawing_region.x0 + (int)width - (int)j, drawing_region.y0 + (int)height - (int)i, (int)i + (int)j);
+            pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
-            const GL_Pixel_t index = shifting[*(sss++)];
+            const GL_Pixel_t index = shifting[*(sline++)];
             if (transparent[index]) {
-                dptr++;
+                dptr++; // FIXME: change all these to pre-increment!
             } else {
                 *(dptr++) = index;
             }
-            if (sss >= sheod) {
-                sss -= area.width;
+            if (sline >= sheod) {
+                sline -= area.width;
             }
         }
         sptr += swidth;
-        dptr += dskip;
         if (sptr >= sveod) {
             sptr -= ssize;
         }
+        dptr += dskip;
+        sheod += swidth;
     }
 }
 
@@ -185,22 +185,22 @@ void GL_context_tile_s(const GL_Context_t *context, const GL_Surface_t *source, 
     const int ov0 = (int)skip_y / sv;
     const int ou1 = area.x + (scale_x < 0 ? (int)area.width - 1 - ou0 : ou0); // Offset to the correct margin, according to flipping.
     const int ov1 = area.y + (scale_y < 0 ? (int)area.height - 1 - ov0 : ov0);
-    const int ou = (ou1 + offset.x) % area.width; // Pre-add the offset (wrapping around).
-    const int ov = (ov1 + offset.y) % area.height;
+    const int ou = IMOD(ou1 + offset.x, area.width); // Pre-add the offset (wrapping around). Negative offset is supported.
+    const int ov = IMOD(ov1 + offset.y, area.height);
 
     const int du = scale_x > 0 ? 1 : -1;
     const int dv = scale_y > 0 ? 1 : -1;
 
     int v = ov;
     int rv = rv0;
-    for (size_t i = height; i; --i) {
+    for (int i = height; i; --i) {
         const GL_Pixel_t *sptr = sdata + v * swidth;
 
         int u = ou;
         int ru = ru0;
-        for (size_t j = width; j; --j) {
+        for (int j = width; j; --j) {
 #ifdef __DEBUG_GRAPHICS__
-            pixel(surface, drawing_region.x0 + (int)width - (int)j, drawing_region.y0 + (int)height - (int)i, (int)i + (int)j);
+            pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
             GL_Pixel_t index = shifting[sptr[u]];
             if (transparent[index]) {
@@ -210,14 +210,14 @@ void GL_context_tile_s(const GL_Context_t *context, const GL_Surface_t *source, 
             }
             ru += 1;
             if (ru == su) { // The remainder has reached the (scaling) limit, move to the next pixel and reset.
-                u = (u + du) % area.height; // Prefer modulo over branch.
+                u = IMOD(u + du, area.height); // Prefer modulo over branch.
                 ru = 0;
             }
         }
 
         rv += 1;
         if (rv == sv) { // Ditto.
-            v = (v + dv) % area.height; // Ditto.
+            v = IMOD(v + dv, area.height); // Ditto.
             rv = 0;
         }
         dptr += dskip;
