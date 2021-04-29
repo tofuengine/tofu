@@ -183,8 +183,10 @@ void GL_context_tile_s(const GL_Context_t *context, const GL_Surface_t *source, 
 
     const int ou0 = (int)skip_x / su;
     const int ov0 = (int)skip_y / sv;
-    const int ou = area.x + (scale_x < 0 ? (int)area.width - 1 - ou0 : ou0); // Offset to the correct margin, according to flipping.
-    const int ov = area.y + (scale_y < 0 ? (int)area.height - 1 - ov0 : ov0);
+    const int ou1 = area.x + (scale_x < 0 ? (int)area.width - 1 - ou0 : ou0); // Offset to the correct margin, according to flipping.
+    const int ov1 = area.y + (scale_y < 0 ? (int)area.height - 1 - ov0 : ov0);
+    const int ou = (ou1 + offset.x) % area.width; // Pre-add the offset (wrapping around).
+    const int ov = (ov1 + offset.y) % area.height;
 
     const int du = scale_x > 0 ? 1 : -1;
     const int dv = scale_y > 0 ? 1 : -1;
@@ -192,8 +194,7 @@ void GL_context_tile_s(const GL_Context_t *context, const GL_Surface_t *source, 
     int v = ov;
     int rv = rv0;
     for (size_t i = height; i; --i) {
-        const int y = ((int)v + offset.y) % area.height;
-        const GL_Pixel_t *sptr = sdata + y * swidth;
+        const GL_Pixel_t *sptr = sdata + v * swidth;
 
         int u = ou;
         int ru = ru0;
@@ -201,8 +202,7 @@ void GL_context_tile_s(const GL_Context_t *context, const GL_Surface_t *source, 
 #ifdef __DEBUG_GRAPHICS__
             pixel(surface, drawing_region.x0 + (int)width - (int)j, drawing_region.y0 + (int)height - (int)i, (int)i + (int)j);
 #endif
-            const int x = ((int)u + offset.x) % area.width;
-            GL_Pixel_t index = shifting[sptr[x]];
+            GL_Pixel_t index = shifting[sptr[u]];
             if (transparent[index]) {
                 dptr++;
             } else {
@@ -210,14 +210,14 @@ void GL_context_tile_s(const GL_Context_t *context, const GL_Surface_t *source, 
             }
             ru += 1;
             if (ru == su) { // The remainder has reached the (scaling) limit, move to the next pixel and reset.
-                u += du;
+                u = (u + du) % area.height; // Prefer modulo over branch.
                 ru = 0;
             }
         }
 
         rv += 1;
         if (rv == sv) { // Ditto.
-            v += dv;
+            v = (v + dv) % area.height; // Ditto.
             rv = 0;
         }
         dptr += dskip;

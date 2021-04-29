@@ -181,8 +181,6 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *source, 
     const float du = 1.0f / scale_x; // Retain sign of the scaling to move according to a "vector" along the scaling.
     const float dv = 1.0f / scale_y;
 
-    // NOTE: we can also apply an integer-based DDA method, using remainders.
-
     float v = ov;
     for (size_t i = height; i; --i) {
         const int y = (int)v;
