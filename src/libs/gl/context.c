@@ -321,9 +321,9 @@ void GL_context_process(const GL_Context_t *context, const GL_Surface_t *source,
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const size_t width = drawing_region.x1 - drawing_region.x0 + 1;
-    const size_t height = drawing_region.y1 - drawing_region.y0 + 1;
-    if ((width == 0) || (height == 0)) { // Nothing to draw! Bail out! (can't be negative, by definition)
+    const int width = drawing_region.x1 - drawing_region.x0 + 1;
+    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out! (can negative)
         return;
     }
 
@@ -340,9 +340,9 @@ void GL_context_process(const GL_Context_t *context, const GL_Surface_t *source,
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
     int y = drawing_region.y0;
-    for (size_t i = height; i; --i) {
+    for (int i = height; i; --i) {
         int x = drawing_region.x0; // TODO: optimize?
-        for (size_t j = width; j; --j) {
+        for (int j = width; j; --j) {
             GL_Pixel_t from = *dptr;
             GL_Pixel_t to = *(sptr++);
             *(dptr++) = callback(user_data, (GL_Point_t){ .x = x, .y = y}, from, to);
@@ -389,9 +389,9 @@ void GL_context_copy(const GL_Context_t *context, const GL_Surface_t *source, GL
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const size_t width = drawing_region.x1 - drawing_region.x0 + 1;
-    const size_t height = drawing_region.y1 - drawing_region.y0 + 1;
-    if ((width == 0) || (height == 0)) { // Nothing to draw! Bail out! (can't be negative, by definition)
+    const int width = drawing_region.x1 - drawing_region.x0 + 1;
+    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out! (can negative)
         return;
     }
 
@@ -407,8 +407,8 @@ void GL_context_copy(const GL_Context_t *context, const GL_Surface_t *source, GL
     const GL_Pixel_t *sptr = sdata + (area.y + skip_y) * swidth + (area.x + skip_x);
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
-    for (size_t i = height; i; --i) {
-        for (size_t j = width; j; --j) {
+    for (int i = height; i; --i) {
+        for (int j = width; j; --j) {
             GL_Pixel_t index = shifting[*(sptr++)];
             if (transparent[index]) {
                 dptr++;
@@ -509,9 +509,9 @@ void GL_context_stencil(const GL_Context_t *context, const GL_Surface_t *source,
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const size_t width = drawing_region.x1 - drawing_region.x0 + 1;
-    const size_t height = drawing_region.y1 - drawing_region.y0 + 1;
-    if ((width == 0) || (height == 0)) { // Nothing to draw! Bail out! (can't be negative, by definition) (can't be negative, by definition)
+    const int width = drawing_region.x1 - drawing_region.x0 + 1;
+    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out! (can negative)
         return;
     }
 
@@ -531,10 +531,10 @@ void GL_context_stencil(const GL_Context_t *context, const GL_Surface_t *source,
     const GL_Pixel_t *mptr = mdata + (area.y + skip_y) * mwidth + (area.x + skip_x);
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
-    for (size_t i = height; i; --i) {
-        for (size_t j = width; j; --j) {
+    for (int i = height; i; --i) {
+        for (int j = width; j; --j) {
 #ifdef __DEBUG_GRAPHICS__
-            pixel(surface, drawing_region.x0 + (int)width - (int)j, drawing_region.y0 + (int)height - (int)i, (int)i + (int)j);
+            pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
             const GL_Pixel_t value = *(mptr++);
             const GL_Pixel_t index = shifting[*(sptr++)];

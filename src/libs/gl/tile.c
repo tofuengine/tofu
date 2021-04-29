@@ -70,9 +70,9 @@ void GL_context_tile(const GL_Context_t *context, const GL_Surface_t *source, GL
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const size_t width = drawing_region.x1 - drawing_region.x0 + 1;
-    const size_t height = drawing_region.y1 - drawing_region.y0 + 1;
-    if ((width == 0) || (height == 0)) { // Nothing to draw! Bail out! (can't be negative, by definition)
+    const int width = drawing_region.x1 - drawing_region.x0 + 1;
+    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out! (can negative)
         return;
     }
 
@@ -152,9 +152,9 @@ void GL_context_tile_s(const GL_Context_t *context, const GL_Surface_t *source, 
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const size_t width = drawing_region.x1 - drawing_region.x0 + 1;
-    const size_t height = drawing_region.y1 - drawing_region.y0 + 1;
-    if ((width == 0) || (height == 0)) { // Nothing to draw! Bail out! (can't be negative, by definition)
+    const int width = drawing_region.x1 - drawing_region.x0 + 1;
+    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out! (can negative)
         return;
     }
 

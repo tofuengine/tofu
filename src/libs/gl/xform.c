@@ -98,7 +98,7 @@ void GL_xform_table(GL_XForm_t *xform, const GL_XForm_Table_Entry_t *entries, si
     for (size_t i = count; i; --i) {
         arrpush(xform->table, *(entry++));
     }
-    arrpush(xform->table, (GL_XForm_Table_Entry_t){ .scan_line = SIZE_MAX }); // Set the end-of-data (safety) marker
+    arrpush(xform->table, (GL_XForm_Table_Entry_t){ .scan_line = -1 }); // Set the end-of-data (safety) marker
 }
 
 // https://www.youtube.com/watch?v=3FVN_Ze7bzw
@@ -138,9 +138,9 @@ void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *source, G
         drawing_region.y1 = clipping_region->y1;
     }
 
-    const size_t width = drawing_region.x1 - drawing_region.x0 + 1;
-    const size_t height = drawing_region.y1 - drawing_region.y0 + 1;
-    if ((width == 0) || (height == 0)) { // Nothing to draw! Bail out! (can't be negative, by definition)
+    const int width = drawing_region.x1 - drawing_region.x0 + 1;
+    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out! (can negative)
         return;
     }
 
@@ -192,7 +192,7 @@ void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *source, G
     float c = registers[GL_XFORM_REGISTER_C]; float d = registers[GL_XFORM_REGISTER_D];
     float x0 = registers[GL_XFORM_REGISTER_X]; float y0 = registers[GL_XFORM_REGISTER_Y];
 
-    for (size_t i = 0; i < height; ++i) {
+    for (int i = 0; i < height; ++i) {
         if (table && i == table->scan_line) {
             for (size_t k = 0; k < table->count; ++k) {
                 const GL_XForm_Registers_t id = table->operations[k].id;
@@ -211,7 +211,7 @@ void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *source, G
             }
             ++table;
 #ifdef __DETACH_XFORM_TABLE__
-            if (table->scan_line == SIZE_MAX) { // End-of-data reached, detach pointer for faster loop.
+            if (table->scan_line == -1) { // End-of-data reached, detach pointer for faster loop.
                 table = NULL;
             }
 #endif
@@ -228,9 +228,9 @@ void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *source, G
         float yp = (c * xi + d * yi) + y0 + fmodf(v, sh);
 #endif
 
-        for (size_t j = 0; j < width; ++j) {
+        for (int j = 0; j < width; ++j) {
 #ifdef __DEBUG_GRAPHICS__
-            pixel(surface, drawing_region.x0 + (int)j, drawing_region.y0 + (int)i, (int)i + (int)j);
+            pixel(surface, drawing_region.x0 + j, drawing_region.y0 + i, i + j);
 #endif
             int sx = (int)(xp + 0.5f); // Faster rounding, using integer casting truncation!
             int sy = (int)(yp + 0.5f);
