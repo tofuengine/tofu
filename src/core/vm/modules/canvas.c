@@ -166,15 +166,15 @@ static int canvas_new_2nn_1u(lua_State *L)
     return 1;
 }
 
-static int canvas_new_3snU_1u(lua_State *L)
+static int canvas_new_3sNU_1u(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     const char *name = LUAX_STRING(L, 1);
-    GL_Pixel_t transparent_index = (GL_Pixel_t)LUAX_INTEGER(L, 2);
+    GL_Pixel_t transparent_index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 2, 0);
     const Palette_Object_t *palette = (const Palette_Object_t *)LUAX_OPTIONAL_USERDATA(L, 3, NULL);
 
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
@@ -264,9 +264,10 @@ static int canvas_new_v_1u(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(0, canvas_new_0_1u)
-        LUAX_OVERLOAD_SIGNATURE(canvas_new_3snU_1u, LUA_TSTRING, LUA_TNUMBER)
+        LUAX_OVERLOAD_SIGNATURE(canvas_new_3sNU_1u, LUA_TSTRING)
+        LUAX_OVERLOAD_SIGNATURE(canvas_new_3sNU_1u, LUA_TSTRING, LUA_TNUMBER)
         LUAX_OVERLOAD_ARITY(2, canvas_new_2nn_1u)
-        LUAX_OVERLOAD_SIGNATURE(canvas_new_3snU_1u, LUA_TSTRING, LUA_TNUMBER, LUA_TUSERDATA)
+        LUAX_OVERLOAD_SIGNATURE(canvas_new_3sNU_1u, LUA_TSTRING, LUA_TNUMBER, LUA_TUSERDATA)
         LUAX_OVERLOAD_ARITY(3, canvas_new_3snn_1u)
     LUAX_OVERLOAD_END
 }
