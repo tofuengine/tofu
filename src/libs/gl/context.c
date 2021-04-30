@@ -323,7 +323,7 @@ void GL_context_process(const GL_Context_t *context, const GL_Surface_t *source,
 
     const int width = drawing_region.x1 - drawing_region.x0 + 1;
     const int height = drawing_region.y1 - drawing_region.y0 + 1;
-    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out! (can negative)
+    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
         return;
     }
 
@@ -391,7 +391,7 @@ void GL_context_copy(const GL_Context_t *context, const GL_Surface_t *source, GL
 
     const int width = drawing_region.x1 - drawing_region.x0 + 1;
     const int height = drawing_region.y1 - drawing_region.y0 + 1;
-    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out! (can negative)
+    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
         return;
     }
 
@@ -511,7 +511,7 @@ void GL_context_stencil(const GL_Context_t *context, const GL_Surface_t *source,
 
     const int width = drawing_region.x1 - drawing_region.x0 + 1;
     const int height = drawing_region.y1 - drawing_region.y0 + 1;
-    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out! (can negative)
+    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
         return;
     }
 

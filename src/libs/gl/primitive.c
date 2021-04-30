@@ -210,7 +210,7 @@ static void _hline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region
 
     const int width = drawing_region.x1 - drawing_region.x0 + 1;
     const int height = drawing_region.y1 - drawing_region.y0 + 1;
-    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out! (can negative)
+    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
         return;
     }
 
@@ -301,7 +301,7 @@ static void _vline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region
 
     const int width = drawing_region.x1 - drawing_region.x0 + 1;
     const int height = drawing_region.y1 - drawing_region.y0 + 1;
-    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out! (can negative)
+    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
         return;
     }
 
@@ -432,7 +432,7 @@ void GL_primitive_filled_rectangle(const GL_Context_t *context, GL_Rectangle_t r
 
     const int width = drawing_region.x1 - drawing_region.x0 + 1;
     const int height = drawing_region.y1 - drawing_region.y0 + 1;
-    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out! (can negative)
+    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
         return;
     }
 
@@ -492,7 +492,7 @@ void GL_primitive_filled_triangle(const GL_Context_t *context, GL_Point_t a, GL_
 
     const int width = drawing_region.x1 - drawing_region.x0 + 1;
     const int height = drawing_region.y1 - drawing_region.y0 + 1;
-    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out! (can negative)
+    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
         return;
     }
 
