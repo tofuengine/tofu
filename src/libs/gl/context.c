@@ -411,7 +411,7 @@ void GL_context_copy(const GL_Context_t *context, const GL_Surface_t *source, GL
         for (int j = width; j; --j) {
             GL_Pixel_t index = shifting[*(sptr++)];
             if (transparent[index]) {
-                dptr++;
+                ++dptr;
             } else {
                 *(dptr++) = index;
             }
@@ -539,7 +539,7 @@ void GL_context_stencil(const GL_Context_t *context, const GL_Surface_t *source,
             const GL_Pixel_t value = *(mptr++);
             const GL_Pixel_t index = shifting[*(sptr++)];
             if (transparent[index] || !comparator(value, threshold)) {
-                dptr++;
+                ++dptr;
             } else {
                 *(dptr++) = index;
             }

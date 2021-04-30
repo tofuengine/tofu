@@ -102,7 +102,7 @@ void GL_context_tile(const GL_Context_t *context, const GL_Surface_t *source, GL
 #endif
             const GL_Pixel_t index = shifting[sptr[ax + u]];
             if (transparent[index]) {
-                dptr++; // FIXME: change all these to pre-increment!
+                ++dptr;
             } else {
                 *(dptr++) = index;
             }

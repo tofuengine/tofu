@@ -98,7 +98,7 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *source, GL
 #endif
             const GL_Pixel_t index = shifting[*(sptr++)];
             if (transparent[index]) {
-                dptr++;
+                ++dptr;
             } else {
                 *(dptr++) = index;
             }
@@ -194,7 +194,7 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *source, 
             const int x = (int)u;
             GL_Pixel_t index = shifting[sptr[x]];
             if (transparent[index]) {
-                dptr++;
+                ++dptr;
             } else {
                 *(dptr++) = index;
             }
