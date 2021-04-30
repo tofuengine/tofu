@@ -84,23 +84,22 @@ void GL_context_tile(const GL_Context_t *context, const GL_Surface_t *source, GL
 
     const size_t dskip = dwidth - width;
 
+    const GL_Pixel_t *sptr = sdata + area.y * swidth + area.x;
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
-    const int ax = area.x; // Keep the area position separate, we are wrapping around the tile area.
-    const int ay = area.y;
     const int ou = IMOD(skip_x + offset.x, area.width);
     const int ov = IMOD(skip_y + offset.y, area.height);
 
     int v = ov;
     for (int i = height; i; --i) {
-        const GL_Pixel_t *sptr = sdata + (ay + v) * swidth;
+        const GL_Pixel_t *srow = sptr + v * swidth;
 
         int u = ou;
         for (int j = width; j; --j) {
 #ifdef __DEBUG_GRAPHICS__
             pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
-            const GL_Pixel_t index = shifting[sptr[ax + u]];
+            const GL_Pixel_t index = shifting[srow[u]];
             if (transparent[index]) {
                 ++dptr;
             } else {
@@ -163,6 +162,7 @@ void GL_context_tile_s(const GL_Context_t *context, const GL_Surface_t *source, 
 
     const size_t dskip = dwidth - width;
 
+    const GL_Pixel_t *sptr = sdata + area.y * swidth + area.x;
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
     // We are implementing a DDA integer-remainders algorithm, as the scaling factors are integer. For both `x` and `y`
@@ -178,8 +178,6 @@ void GL_context_tile_s(const GL_Context_t *context, const GL_Surface_t *source, 
     const int ru0 = skip_x % su;
     const int rv0 = skip_y % sv;
 
-    const int ax = area.x;
-    const int ay = area.y;
     const int ou0 = (int)skip_x / su;
     const int ov0 = (int)skip_y / sv;
     const int ou1 = (scale_x < 0 ? (int)area.width - 1 - ou0 : ou0); // Offset to the correct margin, according to flipping.
@@ -193,7 +191,7 @@ void GL_context_tile_s(const GL_Context_t *context, const GL_Surface_t *source, 
     int v = ov;
     int rv = rv0;
     for (int i = height; i; --i) {
-        const GL_Pixel_t *sptr = sdata + (ay + v) * swidth;
+        const GL_Pixel_t *srow = sptr + v * swidth;
 
         int u = ou;
         int ru = ru0;
@@ -201,7 +199,7 @@ void GL_context_tile_s(const GL_Context_t *context, const GL_Surface_t *source, 
 #ifdef __DEBUG_GRAPHICS__
             pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
-            GL_Pixel_t index = shifting[sptr[ax + u]];
+            GL_Pixel_t index = shifting[srow[u]];
             if (transparent[index]) {
                 ++dptr;
             } else {
