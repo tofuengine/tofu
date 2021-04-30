@@ -45,8 +45,8 @@ void GL_context_tile(const GL_Context_t *context, const GL_Surface_t *source, GL
     const GL_Bool_t *transparent = state->transparent;
     const GL_Surface_t *surface = context->surface;
 
-    size_t skip_x = IMOD(offset.x, area.width); // Offset into the (source) surface/texture, update during clipping.
-    size_t skip_y = IMOD(offset.y, area.height);
+    size_t skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
+    size_t skip_y = 0;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
             .x0 = position.x,
@@ -56,11 +56,11 @@ void GL_context_tile(const GL_Context_t *context, const GL_Surface_t *source, GL
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
-        skip_x = IMOD((clipping_region->x0 - drawing_region.x0) + offset.x, area.width);
+        skip_x = clipping_region->x0 - drawing_region.x0;
         drawing_region.x0 = clipping_region->x0;
     }
     if (drawing_region.y0 < clipping_region->y0) {
-        skip_y = IMOD((clipping_region->y0 - drawing_region.y0) + offset.y, area.height);
+        skip_y = clipping_region->y0 - drawing_region.y0;
         drawing_region.y0 = clipping_region->y0;
     }
     if (drawing_region.x1 > clipping_region->x1) {
