@@ -18,6 +18,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Internal software renderer. OpenGL is used only to present the framebuffer to the user (and apply post-process effects).
 * [x] Fixed- and variable-size *Blitter OBjects* drawing with rotation/scaling/flipping.
 * [x] Sprite batching for optimized (ehm) batch drawing.
+* [x] Tiles drawing with offset/scaling/flipping.
 * [x] Palette based graphics with up to 256 colors.
 * [x] Banked palette support w/ color bias during VRAM transfer.
 * [x] Predefined library of 8/16/32/64 colors palettes.
@@ -126,6 +127,7 @@ Along with the game-engine source, there's a bunch of (basic) demo projects. The
 * [ ] Multiple players support.
 * [ ] Use a custom memory-management allocator.
 * [ ] Memory usage profiling.
+* [ ] Webassembly build via Emscripten.
 * [ ] Switch to [Vulkan API](https://www.khronos.org/vulkan/) (through [GLFW](https://www.glfw.org/)).
 * [ ] game time management, in system class (speed, up down pause)
 * [ ] async load with callback
