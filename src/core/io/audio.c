@@ -62,7 +62,7 @@ static ma_bool32 _enum_callback(ma_context *context, ma_device_type device_type,
             closure->found = true;
         }
 
-        closure->current_index++;
+        closure->current_index += 1;
     }
 
     return MA_TRUE;
