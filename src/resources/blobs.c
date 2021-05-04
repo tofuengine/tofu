@@ -64,6 +64,22 @@ static const uint8_t _scanlines_sine_abs[] = {
 #include <assets/shaders/scanlines-sine-abs.inc>
     0x00
 };
+static const uint8_t _color_acromatopsia[] = {
+#include <assets/shaders/color-acromatopsia.inc>
+    0x00
+};
+static const uint8_t _color_deuteranopia[] = {
+#include <assets/shaders/color-deuteranopia.inc>
+    0x00
+};
+static const uint8_t _color_protanopia[] = {
+#include <assets/shaders/color-protanopia.inc>
+    0x00
+};
+static const uint8_t _color_tritanopia[] = {
+#include <assets/shaders/color-tritanopia.inc>
+    0x00
+};
 
 static const Resource_Blob_t _blobs[] = {
     { "gamecontrollerdb", { _gamecontrollerdb, sizeof(_gamecontrollerdb) } },
@@ -74,6 +90,10 @@ static const Resource_Blob_t _blobs[] = {
     { "zfast-lcd", { _zfast_lcd, sizeof(_zfast_lcd) } },
     { "scanline-fract", { _scanline_fract, sizeof(_scanline_fract) } },
     { "scanlines-sine-abs", { _scanlines_sine_abs, sizeof(_scanlines_sine_abs) } },
+    { "color-acromatopsia", { _color_acromatopsia, sizeof(_color_acromatopsia) } },
+    { "color-deuteranopia", { _color_deuteranopia, sizeof(_color_deuteranopia) } },
+    { "color-protanopia", { _color_protanopia, sizeof(_color_protanopia) } },
+    { "color-tritanopia", { _color_tritanopia, sizeof(_color_tritanopia) } },
     { NULL, { 0 } }
 };
 
