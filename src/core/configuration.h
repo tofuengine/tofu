@@ -42,7 +42,6 @@ typedef struct _Configuration {
         } version;
         bool debug;
         char icon[PLATFORM_PATH_MAX];
-        char effect[PLATFORM_PATH_MAX];
         char mappings[PLATFORM_PATH_MAX];
     } system;
     struct {
@@ -50,6 +49,7 @@ typedef struct _Configuration {
         size_t width, height, scale;
         bool fullscreen;
         bool vertical_sync;
+        char effect[PLATFORM_PATH_MAX];
     } display;
     struct {
         int device_index;

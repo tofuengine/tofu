@@ -136,8 +136,8 @@ Engine_t *Engine_create(int argc, const char *argv[])
         ? Storage_load(engine->storage, engine->configuration.system.icon, STORAGE_RESOURCE_IMAGE)
         : Storage_load(engine->storage, RESOURCE_IMAGE_ICON_ID, STORAGE_RESOURCE_IMAGE);
     Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined icon loaded");
-    const Storage_Resource_t *effect = Storage_exists(engine->storage, engine->configuration.system.effect)
-        ? Storage_load(engine->storage, engine->configuration.system.effect, STORAGE_RESOURCE_STRING)
+    const Storage_Resource_t *effect = Storage_exists(engine->storage, engine->configuration.display.effect)
+        ? Storage_load(engine->storage, engine->configuration.display.effect, STORAGE_RESOURCE_STRING)
         : NULL;
     Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined effect loaded");
     engine->display = Display_create(&(const Display_Configuration_t){

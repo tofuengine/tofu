@@ -63,9 +63,6 @@ static void _on_parameter(Configuration_t *configuration, const char *context, c
     if (strcmp(fqn, "system-icon") == 0) {
         strcpy(configuration->system.icon, value);
     } else
-    if (strcmp(fqn, "system-effect") == 0) {
-        strcpy(configuration->system.effect, value);
-    } else
     if (strcmp(fqn, "system-mappings") == 0) {
         strcpy(configuration->system.mappings, value);
     } else
@@ -86,6 +83,9 @@ static void _on_parameter(Configuration_t *configuration, const char *context, c
     } else
     if (strcmp(fqn, "display-vertical-sync") == 0) {
         configuration->display.vertical_sync = strcmp(value, "true") == 0;
+    } else
+    if (strcmp(fqn, "display-effect") == 0) {
+        strcpy(configuration->display.effect, value);
     } else
     if (strcmp(fqn, "audio-device-index") == 0) {
         configuration->audio.device_index = (int)strtol(value, NULL, 0);
