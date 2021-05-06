@@ -34,9 +34,10 @@
 //   - in some cases can be reversed.
 
 const mat3 m = mat3(
-        0.95, 0.00000, 0.000,
-        0.05, 0.43333, 0.475,
-        0.00, 0.56667, 0.525
+        // http://mkweb.bcgsc.ca/colorblind/math.mhtml
+         1.0000000, 0.0000000, 0.0000000,
+         0.1273989, 0.8739093, 0.8739093,
+        -0.1273989, 0.1260907, 0.1260907
     );
 
 vec4 effect(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {

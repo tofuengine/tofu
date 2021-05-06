@@ -33,9 +33,10 @@
 //   - sexually linked trait, males are more affected (8% males, 0.6% females).
 
 const mat3 m = mat3(
-        0.625, 0.70, 0.00,
-        0.375, 0.30, 0.30,
-        0.000, 0.00, 0.70
+        // http://mkweb.bcgsc.ca/colorblind/math.mhtml
+        0.33066007, 0.33066007, -0.02785538,
+        0.66933993, 0.66933993,  0.02785538,
+        0.00000000, 0.00000000,  1.00000000
     );
 
 vec4 effect(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {

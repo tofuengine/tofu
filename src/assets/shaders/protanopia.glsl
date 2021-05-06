@@ -27,14 +27,15 @@
 //
 //   - most common form of color-blindness (affects ~6% of the male polulation);
 //   - only GREEN and BLUE cones are present;
-//   - total absence (or heavily reduced) of RED retinal receptros;
+//   - total absence (or heavily reduced) of RED retinal receptors;
 //   - pure reds can't be seen (appear black), purple apperars as blue, green/yellow/oranges yellow;
 //   - sexually linked trait, males are more affected (8% males, 0.6% females).
 
 const mat3 m = mat3(
-        0.56667, 0.55833, 0.00000,
-        0.43333, 0.44167, 0.24167,
-        0.00000, 0.00000, 0.75833
+        // http://mkweb.bcgsc.ca/colorblind/math.mhtml
+        0.170556992, 0.170556991, -0.004517144,
+        0.829443014, 0.829443008,  0.004517144,
+        0.000000000, 0.000000000,  1.000000000
     );
 
 vec4 effect(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {

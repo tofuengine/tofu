@@ -29,9 +29,10 @@
 //   - not sexually linked trait;
 //   - can be acquired (due to diencephalon or cerebral cortex damage) or congenital.
 const mat3 m = mat3(
-        0.299, 0.299, 0.299,
-        0.587, 0.587, 0.587,
-        0.114, 0.114, 0.114
+        // http://mkweb.bcgsc.ca/colorblind/math.mhtml
+        0.2126, 0.2126, 0.2126,
+        0.7152, 0.7152, 0.7152,
+        0.0722, 0.0722, 0.0722
     );
 
 vec4 effect(vec4 color, sampler2D texture, vec2 texture_coords, vec2 screen_coords) {
