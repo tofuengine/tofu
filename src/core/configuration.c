@@ -230,7 +230,6 @@ void Configuration_parse(Configuration_t *configuration, const char *data)
                 .version = { TOFU_VERSION_MAJOR, TOFU_VERSION_MINOR, TOFU_VERSION_REVISION },
                 .debug = true,
                 .icon = "icon.png",
-                .effect = "effect.glsl",
                 .mappings = "gamecontrollerdb.txt"
             },
             .display = {
@@ -239,7 +238,8 @@ void Configuration_parse(Configuration_t *configuration, const char *data)
                 .height = 240,
                 .scale = 0,
                 .fullscreen = false,
-                .vertical_sync = false
+                .vertical_sync = false,
+                .effect = "effect.glsl"
             },
             .audio = {
                 .device_index = -1, // Pick the default device.
