@@ -23,19 +23,20 @@ SOFTWARE.
 ]]--
 
 local Class = require("tofu.core").Class
-local Math = require("tofu.core").Math
 local System = require("tofu.core").System
 local Input = require("tofu.events").Input
 local Bank = require("tofu.graphics").Bank
 local Batch = require("tofu.graphics").Batch
 local Canvas = require("tofu.graphics").Canvas
-local Copperlist = require("tofu.graphics").Copperlist
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
 local Palette = require("tofu.graphics").Palette
+local Program = require("tofu.graphics").Program
 local Vector = require("tofu.util").Vector
 
 local Animation = require("lib.animation")
+
+local WATER_DISPLACEMENT = 1.5
 
 local Main = Class.define()
 
@@ -74,7 +75,8 @@ local function extra_half_brite(palette, target, ratio)
 end
 
 function Main:__ctor()
-  Display.palette(Palette.new("pico-8-ext"))
+  local palette = Palette.new("pico-8-ext")
+  Display.palette(palette)
 
   Class.dump(System.args())
 
@@ -112,13 +114,15 @@ function Main:__ctor()
   self.acceleration = Vector.new(0, -9.81 * 0.75)
   self.jumps = 0
 
+--[[
   self.snow = {}
   self.flake_time = 0
+]]
 
   self.atlas:clear(0)
 
   -- Tweak the palette now that the loading phase is complete, so that color-remapping won't be interfered with!
-  Display.palette(extra_half_brite(Display.palette(), { 31, 127, 63 }, 0.5))
+  Display.palette(Palette.new(extra_half_brite(palette:colors(), { 31, 127, 63 }, 0.5)))
 --  self.pixies:clear(0)
 end
 
@@ -192,7 +196,7 @@ function Main:update(delta_time)
 
   local canvas = Canvas.default()
   local width, height = canvas:size()
-
+--[[
   self.flake_time = self.flake_time + delta_time
   while self.flake_time >= 0.025 do
     self.flake_time = self.flake_time - 0.025
@@ -212,9 +216,9 @@ function Main:update(delta_time)
     end
   end
 
-  local zombies = {}
   local wind_vx = 0 -- math.random(-128, 128)
-  for index, flake in ipairs(self.snow) do
+  for index = #self.snow, 1, -1 do
+    local flake = self.snow[index]
     local factor_x = -1.0 / flake.z
     local factor_y = 1.0 / flake.z
     flake.vx = self.velocity.x + wind_vx
@@ -231,27 +235,26 @@ function Main:update(delta_time)
     end
 
     if flake.y >= 96 then
-      table.insert(zombies, index)
+      table.remove(self.snow, index)
     end
   end
-
-  for _, index in ipairs(zombies) do
-      table.remove(self.snow, index)
-  end
+]]
 
   local delta_y = self.position.y * 0.75
   local y = height * 0.5 + delta_y + 32
 
   local t = System.time()
-  local copperlist = Copperlist.new()
-  copperlist:wait(0, y)
-  copperlist:bias(32)
-  copperlist:modulo(-width * 2)
-  for i = y, height - 1 do
-    copperlist:wait(0, i)
-    copperlist:offset(math.sin(t * 9.0 + i * 0.25) * 1.5)
+  local program = Program.new()
+  program:wait(0, y)
+  for i = 0, 31 do
+    program:shift(i, 32 + i)
   end
-  Display.copperlist(copperlist)
+  program:modulo(-width * 2)
+  for i = y, height - 1 do
+    program:wait(0, i)
+    program:offset(math.sin(t * 9.0 + i * 0.25) * WATER_DISPLACEMENT)
+  end
+  Display.program(program)
 end
 
 function Main:render(_)
@@ -276,6 +279,7 @@ function Main:render(_)
     end
   end
 
+--[[
   canvas:push()
   for _, flake in ipairs(self.snow) do
     canvas:shift(0, flake.color)
@@ -283,6 +287,8 @@ function Main:render(_)
     self.pixies:blit(0, flake.x, flake.y + delta_y, scale, scale, flake.angle, 0.5, 0.5)
   end
   canvas:pop()
+]]
+
 --[[
   local t = System.time()
   local mid = math.tointeger(y) + 32
@@ -299,9 +305,8 @@ function Main:render(_)
 ]]
   self.font:write(string.format("FPS: %d", math.floor(System.fps() + 0.5)), 0, 0)
 
-
-  local a, b, c, d = System.stats()
-  self.font:write(string.format("%.2f %.2f %.2f %.2f %.2f", a, b, c, d, 1 / d), 0, 8)
+--  local a, b, c, d = System.stats()
+--  self.font:write(string.format("%.2f %.2f %.2f %.2f %.2f", a, b, c, d, 1 / d), 0, 8)
 end
 
 return Main

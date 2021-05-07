@@ -246,6 +246,11 @@ rasterbars: $(TARGET)
 	@$(ANALYZER) $(AFLAGS) ./demos/rasterbars
 	@./$(TARGET) --path=./demos/rasterbars
 
+stencil: $(TARGET)
+	@echo "Launching *stencil* application!"
+	@$(ANALYZER) $(AFLAGS) ./demos/stencil
+	@./$(TARGET) --path=./demos/stencil
+
 demo: $(TARGET)
 	@echo "Launching *$(DEMO)* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/$(DEMO)

@@ -89,35 +89,35 @@ function Main:update(delta_time)
   local t = self.time
   local y = math.sin(t * 2.5) * height * 0.125 + height * 0.25
 
-  local copperlist = Program.new()
-  copperlist:wait(0, 0)
-  copperlist:color(0, 0x00, 0x00, 0x00)
-  copperlist:color(1, 0x00, 0x00, 0x00)
-  copperlist:color(31, 0x00, 0x00, 0x00)
+  local program = Program.new()
+  program:wait(0, 0)
+  program:color(0, 0x00, 0x00, 0x00)
+  program:color(1, 0x00, 0x00, 0x00)
+  program:color(31, 0x00, 0x00, 0x00)
   for i = 15, 0, -1 do
     local v = 0x11 * (15 - i)
-    copperlist:wait(0, y - i)
-    copperlist:color(0, v, 0x00, 0x00)
-    copperlist:color(1, v, 0x00, v)
-    copperlist:color(31, v, v, 0x00)
+    program:wait(0, y - i)
+    program:color(0, v, 0x00, 0x00)
+    program:color(1, v, 0x00, v)
+    program:color(31, v, v, 0x00)
   end
   for i = 0, 15 do
     local v = 0x11 * (15 - i)
-    copperlist:wait(0, y + i)
-    copperlist:color(0, v, 0x00, 0x00)
-    copperlist:color(1, v, 0x00, v)
-    copperlist:color(31, v, v, 0x00)
+    program:wait(0, y + i)
+    program:color(0, v, 0x00, 0x00)
+    program:color(1, v, 0x00, v)
+    program:color(31, v, v, 0x00)
   end
-  copperlist:wait(0, height * 0.5)
-  copperlist:color(0, 0x00, 0x11, 0x44)
-  copperlist:color(1, 0x00, 0x11, 0x44)
-  copperlist:color(31, 0x00, 0x11, 0x44)
-  copperlist:modulo(-width * 2)
+  program:wait(0, height * 0.5)
+  program:color(0, 0x00, 0x11, 0x44)
+  program:color(1, 0x00, 0x11, 0x44)
+  program:color(31, 0x00, 0x11, 0x44)
+  program:modulo(-width * 2)
   for i = math.tointeger(height * 0.5), height - 1 do
-    copperlist:wait(0, i)
-    copperlist:offset(math.sin(t * 13.0 + i * 0.25) * 1.5)
+    program:wait(0, i)
+    program:offset(math.sin(t * 13.0 + i * 0.25) * 1.5)
   end
-  Display.program(copperlist)
+  Display.program(program)
 end
 
 function Main:render(_)

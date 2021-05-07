@@ -31,17 +31,24 @@ local Font = require("tofu.graphics").Font
 local Palette = require("tofu.graphics").Palette
 local XForm = require("tofu.graphics").XForm
 
+local WRAP_MODES = {
+  "repeat", "edge", "border", "mirror-repeat", "mirror-edge", "mirror-border"
+}
+
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette(Palette.new("6-bit-rgb"))
+  local palette = Palette.new("famicube")
+  Display.palette(palette)
 
   local canvas = Canvas.default()
+  canvas:background(palette:color_to_index(31, 31, 63))
 
-  self.font = Font.default(canvas, "5x8", 0, 63)
+  self.font = Font.default(canvas, "5x8", 0, palette:color_to_index(0, 255, 0))
   self.surface = Canvas.new("assets/road.png", 0)
   self.xform = XForm.new()
   self.running = true
+  self.wrap = 1
 
   self.x = 0
   self.y = 0
@@ -50,8 +57,8 @@ function Main:__ctor()
   self.elevation = 48
 
   local width, height = canvas:size()
+  self.xform:wrap(WRAP_MODES[self.wrap])
   self.xform:matrix(1, 0, 0, 1, width * 0.5, height * 0.5)
---  self.xform:table(build_table(canvas, math.pi * 0.5 - self.angle, self.elevation))
   self.xform:project(height, math.pi * 0.5 - self.angle, self.elevation)
 end
 
@@ -63,10 +70,10 @@ function Main:input()
   elseif Input.is_pressed("start") then
     self.running = not self.running
   elseif Input.is_pressed("y") then
-    self.elevation = self.elevation + 8.0
+    self.elevation = self.elevation + 4.0
     recompute = true
   elseif Input.is_pressed("x") then
-    self.elevation = self.elevation - 8.0
+    self.elevation = self.elevation - 4.0
     recompute = true
   elseif Input.is_pressed("a") then -- STRAFE
     local a = self.angle + math.pi * 0.5
@@ -76,6 +83,9 @@ function Main:input()
     local a = self.angle + math.pi * 0.5
     self.x = self.x - math.cos(a) * 8
     self.y = self.y - math.sin(a) * 8
+  elseif Input.is_pressed("rt") then
+    self.wrap = (self.wrap % #WRAP_MODES) + 1
+    self.xform:wrap(WRAP_MODES[self.wrap])
   elseif Input.is_pressed("up") then
     self.speed = self.speed + 16.0
   elseif Input.is_pressed("down") then
@@ -113,8 +123,8 @@ function Main:render(_)
 
   canvas:clear()
 
-  canvas:rectangle("fill", 0, 0, width, height * 0.25, 21)
-  self.surface:blit(0, height * 0.25, canvas, self.xform)
+--  canvas:rectangle("fill", 0, 0, width, height * 0.25, 21)
+  self.surface:xform(0, height * 0.25, self.xform, canvas)
 
   local cx, cy = width * 0.5, height * 0.5
   canvas:line(cx, cy, cx + math.cos(self.angle) * 10, cy + math.sin(self.angle) * 10, 31)

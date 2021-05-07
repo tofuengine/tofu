@@ -56,7 +56,7 @@ function Map:__ctor(canvas, bank, grid)
 end
 
 function Map.from_file(canvas, file)
-  local content = File.as_string(file)
+  local content = File.load(file)
   local tokens = {}
   for chunk in string.gmatch(content, "[^\n]+") do
     table.insert(tokens, chunk)

@@ -40,7 +40,7 @@ local PALETTE = {
   }
 
 function Main:__ctor()
-  Display.palette(PALETTE) -- "arne-16")
+  Display.palette(Palette.new(PALETTE)) -- "arne-16")
   Display.palette(Palette.new("arne-16"))
 
   local canvas = Canvas.default()

@@ -45,39 +45,37 @@ function Main:__ctor()
   self.batch = Batch.new(self.bank, 5000)
   self.font = Font.default(canvas, 22, 2)
 
-  self.anchor = 0.5
-  self.anchor_speed = 0.0
-  self.rotation = 128
-  self.rotation_speed = 0.0
-  self.scale = 2.0
+  self.x, self.y = 0, 0
+  self.x_speed, self.y_speed = 0, 0
+  self.scale = 7.0
   self.scale_speed = 0.0
-  self.flip_x = false
+  self.flip_x = true
   self.flip_y = false
 end
 
 function Main:input()
-  self.scale_speed = 0
+  self.y_speed = 0
   if Input.is_down("up") then
-    self.scale_speed = self.scale_speed + 2
+    self.y_speed = self.y_speed - 16
   end
   if Input.is_down("down") then
-    self.scale_speed = self.scale_speed - 2
+    self.y_speed = self.y_speed + 16
   end
 
-  self.rotation_speed = 0
+  self.x_speed = 0
   if Input.is_down("left") then
-    self.rotation_speed = self.rotation_speed - 32
+    self.x_speed = self.x_speed - 16
   end
   if Input.is_down("right") then
-    self.rotation_speed = self.rotation_speed + 32
+    self.x_speed = self.x_speed + 16
   end
 
-  self.anchor_speed = 0
+  self.scale_speed = 0
   if Input.is_down("a") then
-    self.anchor_speed = self.anchor_speed - 1
+    self.scale_speed = self.scale_speed + 2
   end
   if Input.is_down("b") then
-    self.anchor_speed = self.anchor_speed + 1
+    self.scale_speed = self.scale_speed - 2
   end
 
   if Input.is_pressed("x") then
@@ -90,8 +88,8 @@ end
 
 function Main:update(delta_time)
   self.scale = math.max(0, self.scale + self.scale_speed * delta_time)
-  self.rotation = self.rotation + self.rotation_speed * delta_time
-  self.anchor = math.min(1.0, math.max(0.0, self.anchor + self.anchor_speed * delta_time))
+  self.x = self.x + self.x_speed * delta_time
+  self.y = self.y + self.y_speed * delta_time
 end
 
 function Main:render(_)
@@ -99,17 +97,15 @@ function Main:render(_)
   canvas:clear()
 
   local width, height = canvas:size()
-  local x, y = canvas:center()
+  local x, y = self.x, self.y
 
   for _ = 1, 1 do
     self.bank:blit(9, x, y,
-      self.flip_x and -self.scale or self.scale, self.flip_y and -self.scale or self.scale,
-      self.rotation,
-      self.anchor, self.anchor)
+      self.flip_x and -self.scale or self.scale, self.flip_y and -self.scale or self.scale)
   end
 
   self.font:write(string.format("FPS: %d", math.floor(System.fps() + 0.5)), 0, 0)
-  self.font:write(self.font:align(string.format("S:%.2f|R:%4d|A:%.2f", self.scale, self.rotation, self.anchor),
+  self.font:write(self.font:align(string.format("S:%.2f X:%s Y:%s", self.scale, self.flip_x, self.flip_y),
     width, height, "right", "bottom"))
 end
 

@@ -114,20 +114,44 @@ function Main:render(_)
       end
     end
   elseif self.mode == 1 then
+    for i = 0, AMOUNT - 1 do
+      local x = self.x_size * i
+      for j = 0, AMOUNT - 1 do
+        local index = (i + j) % 7
+        local color = (i + j) % AMOUNT
+        local y = self.y_size * j
+        canvas:shift(5, color)
+        self.bank:tile(index, x, y, 0, math.tointeger(time * 4))
+      end
+    end
+  elseif self.mode == 2 then
+    for i = 0, AMOUNT - 1 do
+      local x = self.x_size * i
+      for j = 0, AMOUNT - 1 do
+        local index = (i + j) % 7
+        local color = (i + j) % AMOUNT
+        local y = self.y_size * j
+        canvas:shift(5, color)
+        self.bank:tile(index, x, y, math.tointeger(time * 4), 0)
+      end
+    end
+  elseif self.mode == 3 then
+    self.bank:tile(5, 0, 0, 0, math.tointeger(time * 4), 4, -4)
+  elseif self.mode == 4 then
     local scale = (math.cos(time) + 1) * 3 * 0 + 5
     local rotation = math.tointeger(math.sin(time * 0.5) * 512)
     self.bank:blit(0, width / 2, height / 2, scale, scale, rotation)
     self.font:write(self.font:align(string.format("scale %d, rotation %d", scale, rotation),
       width, height, "right", "bottom"))
-  elseif self.mode == 2 then
+  elseif self.mode == 5 then
     self.bank:blit(0, width / 2, height / 2, 10, 10, 256 * 1)
-  elseif self.mode == 3 then
+  elseif self.mode == 6 then
     self.bank:blit(0, width / 2, height / 2, 10, 10, 128 * 1)
-  elseif self.mode == 4 then
+  elseif self.mode == 7 then
     local x = (width + 16) * (math.cos(time * 0.75) + 1) * 0.5 - 8
     local y = (height + 16) * (math.sin(time * 0.25) + 1) * 0.5 - 8
     self.bank:blit(0, x - 4, y - 4)
-  elseif self.mode == 5 then
+  elseif self.mode == 8 then
     self.bank:blit(1, self.x - 32, self.y - 32, self.scale_x * 8.0, self.scale_y * 8.0)
   end
 

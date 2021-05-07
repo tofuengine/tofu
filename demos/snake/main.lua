@@ -31,7 +31,7 @@ local Palette = require("tofu.graphics").Palette
 local Input = require("tofu.events").Input
 local Grid = require("tofu.util").Grid
 
-local INITIAL_LENGHT = 5
+local INITIAL_LENGTH = 5
 local SPEED_RATIO = 5
 local CELL_SIZE = 8
 local LIFE = 1.0
@@ -91,7 +91,7 @@ function Main:__ctor()
 end
 
 function Main:reset()
-  self.length = INITIAL_LENGHT
+  self.length = INITIAL_LENGTH
   self.state = "running"
 
   self.grid = Grid.parse(MAP)

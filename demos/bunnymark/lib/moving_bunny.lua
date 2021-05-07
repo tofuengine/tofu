@@ -22,8 +22,8 @@ function Bunny:__ctor(bank, batch)
   self.batch = batch
   self.x = (self.max_x - self.min_x) / 2 -- Spawn in the top-center part of the screen.
   self.y = (self.max_y - self.min_y) / 8
-  self.vx = (math.random() * MAX_SPEED) - (MAX_SPEED / 2.0)
-  self.vy = (math.random() * MAX_SPEED) - (MAX_SPEED / 2.0)
+  self.vx = (math.random() * MAX_SPEED) - (MAX_SPEED * 0.5)
+  self.vy = (math.random() * MAX_SPEED) - (MAX_SPEED * 0.5)
 
   self.batch:add(CELL_ID, self.x, self.y)
 end
