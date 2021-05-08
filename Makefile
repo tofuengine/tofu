@@ -42,7 +42,7 @@ endif
 ifeq ($(BUILD),release)
 # -Ofast => -O3 -ffast-math
 # -Os => -O2, favouring size
-	COPTS=-O3 -DRELEASE
+	COPTS=-O3 -DRELEASE -fomit-frame-pointer
 else ifeq ($(BUILD),profile)
 	COPTS=-O0 -ggdb3 -DDEBUG -DPROFILE -pg
 else ifeq ($(BUILD),sanitize)
@@ -68,7 +68,9 @@ else
 	LFLAGS=-Lexternal/GLFW/linux/x64 -lglfw3 -lm -lpthread -lX11 -ldl
 endif
 LWARNINGS=-Wall -Wextra -Werror
-ifeq ($(BUILD),profile)
+ifeq ($(BUILD),release)
+	LOPTS=-fomit-frame-pointer
+else ifeq ($(BUILD),profile)
 	LOPTS=-pg
 else ifeq ($(BUILD),sanitize)
 	LOPTS=-fsanitize=address -fno-omit-frame-pointer
