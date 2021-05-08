@@ -42,14 +42,15 @@ endif
 ifeq ($(BUILD),release)
 # -Ofast => -O3 -ffast-math
 # -Os => -O2, favouring size
-	COPTS=-O3 -DRELEASE -fomit-frame-pointer
+	COPTS=-O3 -ffast-math -DRELEASE -fomit-frame-pointer
 else ifeq ($(BUILD),profile)
-	COPTS=-O0 -ggdb3 -DDEBUG -DPROFILE -pg
+	COPTS=-O0 -ffast-math -ggdb3 -DDEBUG -DPROFILE -pg
 else ifeq ($(BUILD),sanitize)
-	COPTS=-O0 -ggdb3 -DDEBUG -fsanitize=address -fno-omit-frame-pointer
+	COPTS=-O0 -ffast-math -ggdb3 -DDEBUG -fsanitize=address -fno-omit-frame-pointer
 else
 #	COPTS=-Og -ggdb3 -DDEBUG
-	COPTS=-O0 -ggdb3 -DDEBUG
+#	COPTS=-O0 -ggdb3 -DDEBUG
+	COPTS=-O0 -ffast-math -ggdb3 -DDEBUG
 endif
 
 ifeq ($(PLATFORM),windows)
