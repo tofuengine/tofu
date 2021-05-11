@@ -95,11 +95,6 @@ bool Environment_is_active(const Environment_t *environment)
 }
 #endif  /* __DISPLAY_FOCUS_SUPPORT__ */
 
-const Environment_Heap_t *Environment_get_heap(const Environment_t *environment)
-{
-    return &environment->heap;
-}
-
 static inline float _calculate_fps(float frame_time) // FIXME: rework this as a reusable function for moving average.
 {
     static float samples[FPS_AVERAGE_SAMPLES] = { 0 };
@@ -157,14 +152,16 @@ void Environment_process(Environment_t *environment, float frame_time)
     environment->is_active = glfwGetWindowAttrib(environment->display->window, GLFW_FOCUSED) == GLFW_TRUE;
 #endif
 
+#ifdef __SYSTEM_HEAP_STATISTICS__
     static float heap_time = __SYSTEM_HEAP_PERIOD__;
     heap_time += frame_time;
     while (heap_time > __SYSTEM_HEAP_PERIOD__) {
         heap_time -= __SYSTEM_HEAP_PERIOD__;
 
         struct mallinfo mi = mallinfo();
-        environment->heap.memory_usage = mi.uordblks;
+        environment->stats.memory_usage = mi.uordblks;
     }
+#endif  /* __SYSTEM_HEAP_STATISTICS__ */
 }
 
 void Environment_update(Environment_t *environment, float frame_time)

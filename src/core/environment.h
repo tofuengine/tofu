@@ -35,13 +35,10 @@ typedef struct _Environment_Stats_t {
 #ifdef __ENGINE_PERFORMANCE_STATISTICS__
     float times[4];
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
-} Environment_Stats_t;
-
 #ifdef __SYSTEM_HEAP_STATISTICS__
-typedef struct _Environment_Heap_t {
     size_t memory_usage;
-} Environment_Heap_t;
 #endif  /* __SYSTEM_HEAP_STATISTICS__ */
+} Environment_Stats_t;
 
 typedef struct _Environment_t {
     const char **args;
@@ -52,9 +49,6 @@ typedef struct _Environment_t {
     bool quit;
     double time;
     Environment_Stats_t stats;
-#ifdef __SYSTEM_HEAP_STATISTICS__
-    Environment_Heap_t heap;
-#endif  /* __SYSTEM_HEAP_STATISTICS__ */
 } Environment_t;
 
 extern Environment_t *Environment_create(int argc, const char *argv[], const Display_t *display);
@@ -69,9 +63,6 @@ extern const Environment_Stats_t *Environment_get_stats(const Environment_t *env
 #ifdef __DISPLAY_FOCUS_SUPPORT__
 extern bool Environment_is_active(const Environment_t *environment);
 #endif  /* __DISPLAY_FOCUS_SUPPORT__ */
-#ifdef __SYSTEM_HEAP_STATISTICS__
-extern const Environment_Heap_t *Environment_get_heap(const Environment_t *environment);
-#endif  /* __SYSTEM_HEAP_STATISTICS__ */
 
 #ifdef __ENGINE_PERFORMANCE_STATISTICS__
 extern void Environment_process(Environment_t *environment, float frame_time, const float deltas[4]);

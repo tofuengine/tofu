@@ -164,12 +164,12 @@ static int system_heap_1S_1n(lua_State *L)
 
     const Environment_t *environment = (const Environment_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
 
-    const Environment_Heap_t *heap = Environment_get_heap(environment);
+    const Environment_Stats_t *stats = Environment_get_stats(environment);
     size_t usage;
     switch (unit[0]) {
-        case 'm': { usage = heap->memory_usage / (1024 * 1024); } break;
-        case 'k': { usage = heap->memory_usage / 1024; } break;
-        case 'b': { usage = heap->memory_usage; } break;
+        case 'm': { usage = stats->memory_usage / (1024 * 1024); } break;
+        case 'k': { usage = stats->memory_usage / 1024; } break;
+        case 'b': { usage = stats->memory_usage; } break;
     }
     lua_pushnumber(L, (lua_Number)usage);
 
