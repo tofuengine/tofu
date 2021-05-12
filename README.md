@@ -47,7 +47,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Logging facility (w/ selectable severity level).
 * [x] Crash screen (debug build).
 * [x] Game window focus detection (for game-pause).
-* [x] Real-time performance statistics (FPS and frame times).
+* [x] Real-time performance statistics (FPS and frame times) and resource usage (memory).
 * [x] User-dependent I/O functions to load/store game data.
 * [x] Configuration override through command-line arguments.
 
@@ -131,7 +131,6 @@ Along with the game-engine source, there's a bunch of (basic) demo projects. The
 * [ ] Switch to [Vulkan API](https://www.khronos.org/vulkan/) (through [GLFW](https://www.glfw.org/)).
 * [ ] game time management, in system class (speed, up down pause)
 * [ ] async load with callback
-* [ ] memory usage info in system class
 * [ ] both shoulder and trigger axes are analogue?
 * [ ] rumble?
 * [ ] analogues low pass filter (page 591) or moving average?
