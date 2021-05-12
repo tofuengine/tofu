@@ -86,6 +86,7 @@ typedef struct _Font_Object_t {
         luaX_Reference reference;
     } atlas;
     GL_Sheet_t *sheet;
+    GL_Cell_t glyphs[256];
 } Font_Object_t;
 
 typedef struct _Batch_Object_t {

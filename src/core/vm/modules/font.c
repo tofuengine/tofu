@@ -54,7 +54,7 @@ static const struct luaL_Reg _font_functions[] = {
     { NULL, NULL }
 };
 
-static const unsigned char _font_lua[] = {
+static const unsigned char _font_lua[] = { // FIXME: declare as "char" arrays!
 #include "font.inc"
 };
 
@@ -68,16 +68,35 @@ int font_loader(lua_State *L)
     return luaX_newmodule(L, &_font_script, _font_functions, NULL, nup, META_TABLE);
 }
 
-static int font_new_3uus_1u(lua_State *L)
+static inline void _generate_alphabeth(GL_Cell_t glyphs[256], const char *alphabeth)
+{
+    if (alphabeth) {
+        for (size_t i = 0; i < 256; ++i) {
+            glyphs[i] = GL_CELL_NIL;
+        }
+        const uint8_t *ptr = (const uint8_t *)alphabeth; // Hack! Treat as unsigned! :)
+        for (size_t i = 0; ptr[i] != '\0'; ++i) {
+            glyphs[ptr[i]] = (GL_Cell_t)i;
+        }
+    } else {
+        for (size_t i = 0; i < 256; ++i) {
+            glyphs[i] = i < ' ' ? GL_CELL_NIL : (GL_Cell_t)(i - ' ');
+        }
+    }
+}
+
+static int font_new_3uusS_1u(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
     LUAX_SIGNATURE_END
     const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_USERDATA(L, 1);
     const Canvas_Object_t *atlas = (const Canvas_Object_t *)LUAX_USERDATA(L, 2);
     const char *cells_file = LUAX_STRING(L, 3);
+    const char *alphabeth = LUAX_OPTIONAL_STRING(L, 4, NULL);
 
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
 
@@ -102,7 +121,9 @@ static int font_new_3uus_1u(lua_State *L)
                 .reference = luaX_ref(L, 2)
             },
             .sheet = sheet,
+            .glyphs = { 0 }
         };
+    _generate_alphabeth(self->glyphs, alphabeth);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font %p allocated w/ sheet %p for canvas %p w/ reference #%d and atlas %p w/ reference #%d",
         self, sheet, canvas, self->canvas.reference, atlas, self->atlas.reference);
 
@@ -111,18 +132,20 @@ static int font_new_3uus_1u(lua_State *L)
     return 1;
 }
 
-static int font_new_4uunn_1u(lua_State *L)
+static int font_new_4uunnS_1u(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
     LUAX_SIGNATURE_END
     const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_USERDATA(L, 1);
     const Canvas_Object_t *atlas = (const Canvas_Object_t *)LUAX_USERDATA(L, 2);
     size_t glyph_width = (size_t)LUAX_INTEGER(L, 3);
     size_t glyph_height = (size_t)LUAX_INTEGER(L, 4);
+    const char *alphabeth = LUAX_OPTIONAL_STRING(L, 5, NULL);
 
     GL_Sheet_t *sheet = GL_sheet_create_fixed(GL_context_get_surface(atlas->context), (GL_Size_t){ .width = glyph_width, .height = glyph_height });
     if (!sheet) {
@@ -140,7 +163,9 @@ static int font_new_4uunn_1u(lua_State *L)
                 .reference = luaX_ref(L, 2)
             },
             .sheet = sheet,
+            .glyphs = { 0 }
         };
+    _generate_alphabeth(self->glyphs, alphabeth);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font %p allocated w/ sheet %p for canvas %p w/ reference #%d and atlas %p w/ reference #%d",
         self, sheet, canvas, self->canvas.reference, atlas, self->atlas.reference);
 
@@ -152,8 +177,10 @@ static int font_new_4uunn_1u(lua_State *L)
 static int font_new_v_1u(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(3, font_new_3uus_1u)
-        LUAX_OVERLOAD_ARITY(4, font_new_4uunn_1u)
+        LUAX_OVERLOAD_ARITY(3, font_new_3uusS_1u)
+        LUAX_OVERLOAD_SIGNATURE(font_new_3uusS_1u, LUA_TUSERDATA, LUA_TUSERDATA, LUA_TSTRING, LUA_TSTRING)
+        LUAX_OVERLOAD_SIGNATURE(font_new_4uunnS_1u, LUA_TUSERDATA, LUA_TUSERDATA, LUA_TNUMBER, LUA_TNUMBER)
+        LUAX_OVERLOAD_ARITY(5, font_new_4uunnS_1u)
     LUAX_OVERLOAD_END
 }
 
@@ -275,23 +302,25 @@ static int font_write_4usnn_0(lua_State *L)
     const GL_Context_t *context = self->canvas.instance->context;
     const GL_Sheet_t *sheet = self->sheet;
     const GL_Rectangle_t *cells = sheet->cells;
+    const GL_Cell_t *glyphs = self->glyphs;
 
     int dx = x, dy = y;
     size_t height = 0;
-    for (const char *ptr = text; *ptr != '\0'; ++ptr) {
-        char c = *ptr;
+    for (const uint8_t *ptr = (const uint8_t *)text; *ptr != '\0'; ++ptr) { // Hack! Treat as unsigned! :)
+        uint8_t c = *ptr;
 #ifndef __NO_LINEFEEDS__
         if (c == '\n') { // Handle carriage-return
             dx = x;
             dy += height;
             height = 0;
             continue;
-        } else
+        }
 #endif
-        if (c < ' ') {
+        GL_Cell_t cell_id = glyphs[(size_t)c];
+        if (cell_id == GL_CELL_NIL) {
             continue;
         }
-        const GL_Rectangle_t *cell = &cells[c - ' '];
+        const GL_Rectangle_t *cell = &cells[cell_id];
         GL_context_blit(context, sheet->atlas, *cell, (GL_Point_t){ .x = dx, .y = dy });
         dx += cell->width;
         if (height < cell->height) {
@@ -322,23 +351,25 @@ static int font_write_6usnnnN_0(lua_State *L)
     const GL_Context_t *context = self->canvas.instance->context;
     const GL_Sheet_t *sheet = self->sheet;
     const GL_Rectangle_t *cells = sheet->cells;
+    const GL_Cell_t *glyphs = self->glyphs;
 
     int dx = x, dy = y;
     size_t height = 0;
-    for (const char *ptr = text; *ptr != '\0'; ++ptr) {
-        char c = *ptr;
+    for (const uint8_t *ptr = (const uint8_t *)text; *ptr != '\0'; ++ptr) { // Hack! Treat as unsigned! :)
+        uint8_t c = *ptr;
 #ifndef __NO_LINEFEEDS__
         if (c == '\n') { // Handle carriage-return
             dx = x;
             dy += height;
             height = 0;
             continue;
-        } else
+        }
 #endif
-        if (c < ' ') {
+        GL_Cell_t cell_id = glyphs[c];
+        if (cell_id == GL_CELL_NIL) {
             continue;
         }
-        const GL_Rectangle_t *cell = &cells[c - ' '];
+        const GL_Rectangle_t *cell = &cells[cell_id];
         const size_t cw = (size_t)(cell->width * fabs(scale_x));
         const size_t ch = (size_t)(cell->height * fabs(scale_y));
         GL_context_blit_s(context, sheet->atlas, *cell, (GL_Point_t){ .x = dx, .y = dy }, scale_x, scale_y);
