@@ -28,6 +28,8 @@
 #include <libs/log.h>
 #include <libs/stb.h>
 
+#include <malloc.h>
+
 #define LOG_CONTEXT "environment"
 
 // TODO: http://www.ilikebigbits.com/2017_06_01_float_or_double.html
@@ -86,10 +88,12 @@ const Environment_Stats_t *Environment_get_stats(const Environment_t *environmen
     return &environment->stats;
 }
 
+#ifdef __DISPLAY_FOCUS_SUPPORT__
 bool Environment_is_active(const Environment_t *environment)
 {
     return environment->is_active;
 }
+#endif  /* __DISPLAY_FOCUS_SUPPORT__ */
 
 static inline float _calculate_fps(float frame_time) // FIXME: rework this as a reusable function for moving average.
 {
@@ -130,20 +134,34 @@ void Environment_process(Environment_t *environment, float frame_time)
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
 {
     environment->stats.fps = _calculate_fps(frame_time); // FIXME: ditch this! It's implicit in the frame time!
+
 #ifdef __ENGINE_PERFORMANCE_STATISTICS__
     _calculate_times(environment->stats.times, deltas);
 #ifdef __DEBUG_ENGINE_PERFORMANCES__
-    static size_t count = 0;
-    if (++count == (FPS_AVERAGE_SAMPLES * 2)) {
+    static float stats_time = __ENGINE_PERFORMANCES_PERIOD__;
+    stats_time += frame_time;
+    while (stats_time > __ENGINE_PERFORMANCES_PERIOD__) {
+        stats_time -= __ENGINE_PERFORMANCES_PERIOD__;
         Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "currently running at %.2f FPS (P=%.3fms, U=%.3fms, R=%.3fms, F=%.3fms)",
             environment->stats.fps, environment->stats.times[0], environment->stats.times[1], environment->stats.times[2], environment->stats.times[3]);
-        count = 0;
     }
 #endif  /* __DEBUG_ENGINE_PERFORMANCES__ */
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
+
 #ifdef __DISPLAY_FOCUS_SUPPORT__
     environment->is_active = glfwGetWindowAttrib(environment->display->window, GLFW_FOCUSED) == GLFW_TRUE;
 #endif
+
+#ifdef __SYSTEM_HEAP_STATISTICS__
+    static float heap_time = __SYSTEM_HEAP_PERIOD__;
+    heap_time += frame_time;
+    while (heap_time > __SYSTEM_HEAP_PERIOD__) {
+        heap_time -= __SYSTEM_HEAP_PERIOD__;
+
+        struct mallinfo mi = mallinfo();
+        environment->stats.memory_usage = mi.uordblks;
+    }
+#endif  /* __SYSTEM_HEAP_STATISTICS__ */
 }
 
 void Environment_update(Environment_t *environment, float frame_time)

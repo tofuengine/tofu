@@ -87,6 +87,9 @@
 #define __GL_OPTIMIZED_ROTATIONS__
 #define __DISPLAY_FOCUS_SUPPORT__
 #define __ENGINE_PERFORMANCE_STATISTICS__
+#define __ENGINE_PERFORMANCES_PERIOD__ 10.0f
+#define __SYSTEM_HEAP_STATISTICS__
+#define __SYSTEM_HEAP_PERIOD__  5.0f
 
 // In release build, disable VM calls debug and periodic collection for better performance.
 #ifdef RELEASE

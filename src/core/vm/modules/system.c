@@ -42,7 +42,12 @@ static int system_fps_0_1n(lua_State *L);
 #ifdef __ENGINE_PERFORMANCE_STATISTICS__
 static int system_stats_0_4nnnn(lua_State *L);
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
+#ifdef __SYSTEM_HEAP_STATISTICS__
+static int system_heap_1S_1n(lua_State *L);
+#endif  /* __SYSTEM_HEAP_STATISTICS__ */
+#ifdef __DISPLAY_FOCUS_SUPPORT__
 static int system_is_active_0_1b(lua_State *L);
+#endif  /* __DISPLAY_FOCUS_SUPPORT__ */
 static int system_quit_0_0(lua_State *L);
 static int system_info_v_0(lua_State *L);
 static int system_warning_v_0(lua_State *L);
@@ -57,7 +62,12 @@ static const struct luaL_Reg _system_functions[] = {
 #ifdef __ENGINE_PERFORMANCE_STATISTICS__
     { "stats", system_stats_0_4nnnn },
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
+#ifdef __SYSTEM_HEAP_STATISTICS__
+    { "heap", system_heap_1S_1n },
+#endif  /* __SYSTEM_HEAP_STATISTICS__ */
+#ifdef __DISPLAY_FOCUS_SUPPORT__
     { "is_active", system_is_active_0_1b },
+#endif  /* __DISPLAY_FOCUS_SUPPORT__ */
     { "quit", system_quit_0_0 },
     { "info", system_info_v_0 },
     { "warning", system_warning_v_0 },
@@ -144,6 +154,30 @@ static int system_stats_0_4nnnn(lua_State *L)
 }
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
 
+#ifdef __SYSTEM_HEAP_STATISTICS__
+static int system_heap_1S_1n(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
+    LUAX_SIGNATURE_END
+    const char *unit = LUAX_OPTIONAL_STRING(L, 1, "b");
+
+    const Environment_t *environment = (const Environment_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
+
+    const Environment_Stats_t *stats = Environment_get_stats(environment);
+    size_t usage;
+    switch (unit[0]) {
+        case 'm': { usage = stats->memory_usage / (1024 * 1024); } break;
+        case 'k': { usage = stats->memory_usage / 1024; } break;
+        case 'b': { usage = stats->memory_usage; } break;
+    }
+    lua_pushnumber(L, (lua_Number)usage);
+
+    return 1;
+}
+#endif  /* __SYSTEM_HEAP_STATISTICS__ */
+
+#ifdef __DISPLAY_FOCUS_SUPPORT__
 static int system_is_active_0_1b(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -155,6 +189,7 @@ static int system_is_active_0_1b(lua_State *L)
 
     return 1;
 }
+#endif  /* __DISPLAY_FOCUS_SUPPORT__ */
 
 static int system_quit_0_0(lua_State *L)
 {

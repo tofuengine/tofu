@@ -35,6 +35,9 @@ typedef struct _Environment_Stats_t {
 #ifdef __ENGINE_PERFORMANCE_STATISTICS__
     float times[4];
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
+#ifdef __SYSTEM_HEAP_STATISTICS__
+    size_t memory_usage;
+#endif  /* __SYSTEM_HEAP_STATISTICS__ */
 } Environment_Stats_t;
 
 typedef struct _Environment_t {
@@ -57,7 +60,9 @@ extern bool Environment_should_quit(const Environment_t *environment);
 
 extern double Environment_get_time(const Environment_t *environment);
 extern const Environment_Stats_t *Environment_get_stats(const Environment_t *environment);
+#ifdef __DISPLAY_FOCUS_SUPPORT__
 extern bool Environment_is_active(const Environment_t *environment);
+#endif  /* __DISPLAY_FOCUS_SUPPORT__ */
 
 #ifdef __ENGINE_PERFORMANCE_STATISTICS__
 extern void Environment_process(Environment_t *environment, float frame_time, const float deltas[4]);

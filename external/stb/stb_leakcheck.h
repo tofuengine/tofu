@@ -137,6 +137,7 @@ void stb_leakcheck_dumpmem(void)
 #if !defined(INCLUDE_STB_LEAKCHECK_H) || !defined(malloc)
 #define INCLUDE_STB_LEAKCHECK_H
 
+#include <malloc.h> // include to let the user access `mallinfo()`, too.
 #include <stdlib.h> // we want to define the macros *after* stdlib to avoid a slew of errors
 
 extern void * stb_leakcheck_malloc(size_t sz, const char *file, int line);
