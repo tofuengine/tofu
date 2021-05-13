@@ -53,16 +53,18 @@ static const struct luaL_Reg _program_functions[] = {
     { NULL, NULL }
 };
 
-static const uint8_t _program_lua[] = {
+static const char _program_lua[] = {
 #include "program.inc"
 };
-
-static luaX_Script _program_script = { (const char *)_program_lua, sizeof(_program_lua), "@program.lua" }; // Trace as filename internally.
 
 int program_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, &_program_script, _program_functions, NULL, nup, META_TABLE);
+    return luaX_newmodule(L, &(luaX_Script){
+            .buffer = _program_lua,
+            .size = sizeof(_program_lua) / sizeof(char),
+            .name = "@program.lua"
+        }, _program_functions, NULL, nup, META_TABLE);
 }
 
 static int program_new_0_1u(lua_State *L)

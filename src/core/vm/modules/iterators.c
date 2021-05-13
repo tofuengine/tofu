@@ -28,14 +28,16 @@
 
 #include <stdint.h>
 
-static const uint8_t _iterators_lua[] = {
+static const char _iterators_lua[] = {
 #include "iterators.inc"
 };
-
-static luaX_Script _iterators_script = { (const char *)_iterators_lua, sizeof(_iterators_lua), "@iterators.lua" }; // Trace as filename internally.
 
 int iterators_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, &_iterators_script, NULL, NULL, nup, NULL);
+    return luaX_newmodule(L, &(luaX_Script){
+            .buffer = _iterators_lua,
+            .size = sizeof(_iterators_lua) / sizeof(char),
+            .name = "@iterators.lua"
+        }, NULL, NULL, nup, NULL);
 }

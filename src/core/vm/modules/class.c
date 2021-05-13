@@ -28,14 +28,16 @@
 
 #include <stdint.h>
 
-static const uint8_t _class_lua[] = {
+static const char _class_lua[] = {
 #include "class.inc"
 };
-
-static luaX_Script _class_script = { (const char *)_class_lua, sizeof(_class_lua), "@class.lua" }; // Trace as filename internally.
 
 int class_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, &_class_script, NULL, NULL, nup, NULL);
+    return luaX_newmodule(L, &(luaX_Script){
+            .buffer = _class_lua,
+            .size = sizeof(_class_lua) / sizeof(char),
+            .name = "@class.lua"
+        }, NULL, NULL, nup, NULL);
 }

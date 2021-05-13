@@ -53,7 +53,7 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
   #define METHOD_STACK_INDEX(m)   OBJECT_STACK_INDEX + 1 + (m)
 #endif
 
-static const uint8_t _boot_lua[] = {
+static const char _boot_lua[] = {
 #ifdef DEBUG
   #include "boot-debug.inc"
 #else
@@ -327,7 +327,7 @@ Interpreter_t *Interpreter_create(const Storage_t *storage, const void *userdata
 #endif
 #endif
 
-    int result = _execute(interpreter->state, (const char *)_boot_lua, sizeof(_boot_lua) / sizeof(char), "@boot.lua", 0, 1); // Prefix '@' to trace as filename internally in Lua.
+    int result = _execute(interpreter->state, _boot_lua, sizeof(_boot_lua) / sizeof(char), "@boot.lua", 0, 1); // Prefix '@' to trace as filename internally in Lua.
     if (result != 0) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't interpret boot script");
         lua_close(interpreter->state);

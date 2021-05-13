@@ -73,16 +73,18 @@ static const luaX_Const _math_constants[] = {
     { NULL, LUA_CT_NIL, { 0 } }
 };
 
-static const uint8_t _math_lua[] = {
+static const char _math_lua[] = {
 #include "math.inc"
 };
-
-static luaX_Script _math_script = { (const char *)_math_lua, sizeof(_math_lua), "@math.lua" }; // Trace as filename internally.
 
 int math_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, &_math_script, _math_functions, _math_constants, nup, NULL);
+    return luaX_newmodule(L, &(luaX_Script){
+            .buffer = _math_lua,
+            .size = sizeof(_math_lua) / sizeof(char),
+            .name = "@math.lua"
+        }, _math_functions, _math_constants, nup, NULL);
 }
 
 static int math_lerp_3nnn_1n(lua_State *L)

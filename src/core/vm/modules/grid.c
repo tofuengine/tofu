@@ -59,16 +59,18 @@ static const struct luaL_Reg _grid_functions[] = {
     { NULL, NULL }
 };
 
-static const unsigned char _grid_lua[] = {
+static const char _grid_lua[] = {
 #include "grid.inc"
 };
-
-static luaX_Script _grid_script = { (const char *)_grid_lua, sizeof(_grid_lua), "@grid.lua" }; // Trace as filename internally.
 
 int grid_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, &_grid_script, _grid_functions, NULL, nup, META_TABLE);
+    return luaX_newmodule(L, &(luaX_Script){
+            .buffer = _grid_lua,
+            .size = sizeof(_grid_lua) / sizeof(char),
+            .name = "@grid.lua"
+        }, _grid_functions, NULL, nup, META_TABLE);
 }
 
 static int grid_new_3nnt_1u(lua_State *L)

@@ -109,16 +109,18 @@ static const struct luaL_Reg _canvas_functions[] = {
     { NULL, NULL }
 };
 
-static const uint8_t _canvas_lua[] = {
+static const char _canvas_lua[] = {
 #include "canvas.inc"
 };
-
-static luaX_Script _canvas_script = { (const char *)_canvas_lua, sizeof(_canvas_lua), "@canvas.lua" }; // Trace as filename internally.
 
 int canvas_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, &_canvas_script, _canvas_functions, NULL, nup, META_TABLE);
+    return luaX_newmodule(L, &(luaX_Script){
+            .buffer = _canvas_lua,
+            .size = sizeof(_canvas_lua) / sizeof(char),
+            .name = "@canvas.lua"
+        }, _canvas_functions, NULL, nup, META_TABLE);
 }
 
 static int canvas_new_0_1u(lua_State *L)

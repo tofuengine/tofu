@@ -28,14 +28,16 @@
 
 #include <stdint.h>
 
-static const uint8_t _timers_lua[] = {
+static const char _timers_lua[] = {
 #include "timers.inc"
 };
-
-static luaX_Script _timers_script = { (const char *)_timers_lua, sizeof(_timers_lua), "@timers.lua" }; // Trace as filename internally.
 
 int timers_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, &_timers_script, NULL, NULL, nup, NULL);
+    return luaX_newmodule(L, &(luaX_Script){
+            .buffer = _timers_lua,
+            .size = sizeof(_timers_lua) / sizeof(char),
+            .name = "@timers.lua"
+        }, NULL, NULL, nup, NULL);
 }

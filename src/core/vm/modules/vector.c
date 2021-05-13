@@ -28,14 +28,16 @@
 
 #include <stdint.h>
 
-static const uint8_t _vector_lua[] = {
+static const char _vector_lua[] = {
 #include "vector.inc"
 };
-
-static luaX_Script _vector_script = { (const char *)_vector_lua, sizeof(_vector_lua), "@vector.lua" }; // Trace as filename internally.
 
 int vector_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, &_vector_script, NULL, NULL, nup, NULL);
+    return luaX_newmodule(L, &(luaX_Script){
+            .buffer = _vector_lua,
+            .size = sizeof(_vector_lua) / sizeof(char),
+            .name = "@vector.lua"
+        }, NULL, NULL, nup, NULL);
 }

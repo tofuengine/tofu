@@ -28,14 +28,16 @@
 
 #include <stdint.h>
 
-static const uint8_t _arrays_lua[] = {
+static const char _arrays_lua[] = {
 #include "arrays.inc"
 };
-
-static luaX_Script _arrays_script = { (const char *)_arrays_lua, sizeof(_arrays_lua), "@arrays.lua" }; // Trace as filename internally.
 
 int arrays_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, &_arrays_script, NULL, NULL, nup, NULL);
+    return luaX_newmodule(L, &(luaX_Script){
+            .buffer = _arrays_lua,
+            .size = sizeof(_arrays_lua),
+            .name = "@arrays.lua"
+        }, NULL, NULL, nup, NULL);
 }

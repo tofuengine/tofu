@@ -54,18 +54,18 @@ static const struct luaL_Reg _font_functions[] = {
     { NULL, NULL }
 };
 
-static const unsigned char _font_lua[] = {
+static const char _font_lua[] = {
 #include "font.inc"
 };
-
-// TODO: implement font in Lua as a bank.
-
-static luaX_Script _font_script = { (const char *)_font_lua, sizeof(_font_lua), "@font.lua" }; // Trace as filename internally.
 
 int font_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, &_font_script, _font_functions, NULL, nup, META_TABLE);
+    return luaX_newmodule(L, &(luaX_Script){
+            .buffer = _font_lua,
+            .size = sizeof(_font_lua) / sizeof(char),
+            .name = "@font.lua"
+        }, _font_functions, NULL, nup, META_TABLE);
 }
 
 static int font_new_4uunn_1u(lua_State *L)
