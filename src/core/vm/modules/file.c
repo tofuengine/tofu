@@ -35,16 +35,18 @@
 static int file_load_2sS_1s(lua_State *L);
 static int file_store_3ssS_0(lua_State *L);
 
-static const struct luaL_Reg _file_functions[] = {
-    { "load", file_load_2sS_1s },
-    { "store", file_store_3ssS_0 },
-    { NULL, NULL }
-};
-
 int file_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, NULL, _file_functions, NULL, nup, NULL);
+    return luaX_newmodule(L, (luaX_Script){ 0 },
+        (const struct luaL_Reg[]){
+            { "load", file_load_2sS_1s },
+            { "store", file_store_3ssS_0 },
+            { NULL, NULL }
+        },
+        (const luaX_Const[]){
+            { NULL, LUA_CT_NIL, { 0 } }
+        }, nup, NULL);
 }
 
 static int file_load_2sS_1s(lua_State *L)

@@ -140,6 +140,8 @@ typedef struct _Input_Configuration_t {
 #define INPUT_MODE_KEYMOUSE (INPUT_MODE_KEYBOARD | INPUT_MODE_MOUSE)
 #define INPUT_MODE_ALL      (INPUT_MODE_KEYBOARD | INPUT_MODE_MOUSE | INPUT_MODE_GAMEPAD)
 
+#define INPUT_MODES_COUNT   3
+
 typedef struct _Input_t {
     Input_Configuration_t configuration;
 

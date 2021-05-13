@@ -126,10 +126,11 @@ int luaX_insisttable(lua_State *L, const char *name)
     return 1;
 }
 
-int luaX_newmodule(lua_State *L, const luaX_Script *script, const luaL_Reg *f, const luaX_Const *c, int nup, const char *name)
+// Both `f` and `c` can't be `NULL`, but need to be "empty" arrays (which is easy, thanks to compound-literals)
+int luaX_newmodule(lua_State *L, luaX_Script script, const luaL_Reg *f, const luaX_Const *c, int nup, const char *name)
 {
-    if (script && script->buffer && script->size > 0) {
-        luaL_loadbuffer(L, script->buffer, script->size, script->name);
+    if (script.buffer && script.size > 0) {
+        luaL_loadbuffer(L, script.buffer, script.size, script.name);
         lua_pcall(L, 0, LUA_MULTRET, 0); // Just the export table is returned.
         if (name) {
             lua_pushstring(L, name);
@@ -153,27 +154,21 @@ int luaX_newmodule(lua_State *L, const luaX_Script *script, const luaL_Reg *f, c
         lua_setfield(L, -2, "__index");  /* metatable.__index = metatable */
     }
 
-    lua_insert(L, -(nup + 1)); // Move the table above the upvalues.
-    if (f) {
-        luaL_setfuncs(L, f, nup); // Register the function into the table at the top of the stack, i.e. create the methods
-    } else {
-        lua_pop(L, nup); // Consume the upvalues.
-    }
+    lua_insert(L, -(nup + 1)); // Move the table above the upvalues (to permit them to be consumed while preservig the table).
+    luaL_setfuncs(L, f, nup); // Register the function into the table at the top of the stack, i.e. create the methods.
 
-    if (c) {
-        for (; c->name; c++) {
-            switch (c->type) {
-                case LUA_CT_NIL: { lua_pushnil(L); } break;
-                case LUA_CT_BOOLEAN: { lua_pushboolean(L, c->value.b); } break;
-                case LUA_CT_INTEGER: { lua_pushinteger(L, (lua_Integer)c->value.i); } break;
-                case LUA_CT_NUMBER: { lua_pushnumber(L, (lua_Number)c->value.n); } break;
-                case LUA_CT_STRING: { lua_pushstring(L, c->value.sz); } break;
-            }
-            lua_setfield(L, -2, c->name);
+    for (; c->name; c++) {
+        switch (c->type) {
+            case LUA_CT_NIL: { lua_pushnil(L); } break;
+            case LUA_CT_BOOLEAN: { lua_pushboolean(L, c->value.b); } break;
+            case LUA_CT_INTEGER: { lua_pushinteger(L, (lua_Integer)c->value.i); } break;
+            case LUA_CT_NUMBER: { lua_pushnumber(L, (lua_Number)c->value.n); } break;
+            case LUA_CT_STRING: { lua_pushstring(L, c->value.sz); } break;
         }
+        lua_setfield(L, -2, c->name);
     }
 
-    // Upvalues have already been consumed. No need to clear the stack.
+    // Upvalues have already been consumed by `luaL_setfuncs()`. No need to clear the stack.
 
     return 1;
 }

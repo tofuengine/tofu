@@ -34,6 +34,7 @@
 
 #define LOG_CONTEXT "grid"
 #define META_TABLE  "Tofu_Collections_Grid_mt"
+#define SCRIPT_NAME "@grid.lua"
 
 static int grid_new_3nnt_1u(lua_State *L);
 static int grid_gc_1u_0(lua_State *L);
@@ -45,20 +46,6 @@ static int grid_poke_v_0(lua_State *L);
 static int grid_scan_2uf_0(lua_State *L);
 static int grid_process_2uf_0(lua_State *L);
 
-static const struct luaL_Reg _grid_functions[] = {
-    { "new", grid_new_3nnt_1u },
-    { "__gc", grid_gc_1u_0 },
-    { "size", grid_size_1u_2nn },
-    { "fill", grid_fill_2ut_0 },
-    { "copy", grid_copy_2uu_0 },
-    { "peek", grid_peek_v_1n },
-    { "poke", grid_poke_v_0 },
-    { "scan", grid_scan_2uf_0 },
-    { "process", grid_process_2uf_0 },
-//    { "path", grid_path },
-    { NULL, NULL }
-};
-
 static const char _grid_lua[] = {
 #include "grid.inc"
 };
@@ -66,11 +53,27 @@ static const char _grid_lua[] = {
 int grid_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, &(luaX_Script){
+    return luaX_newmodule(L, (luaX_Script){
             .buffer = _grid_lua,
             .size = sizeof(_grid_lua) / sizeof(char),
-            .name = "@grid.lua"
-        }, _grid_functions, NULL, nup, META_TABLE);
+            .name = SCRIPT_NAME
+        },
+        (const struct luaL_Reg[]){
+            { "new", grid_new_3nnt_1u },
+            { "__gc", grid_gc_1u_0 },
+            { "size", grid_size_1u_2nn },
+            { "fill", grid_fill_2ut_0 },
+            { "copy", grid_copy_2uu_0 },
+            { "peek", grid_peek_v_1n },
+            { "poke", grid_poke_v_0 },
+            { "scan", grid_scan_2uf_0 },
+            { "process", grid_process_2uf_0 },
+//            { "path", grid_path },
+            { NULL, NULL }
+        },
+        (const luaX_Const[]){
+            { NULL, LUA_CT_NIL, { 0 } }
+        }, nup, META_TABLE);
 }
 
 static int grid_new_3nnt_1u(lua_State *L)

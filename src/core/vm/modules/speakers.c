@@ -40,25 +40,23 @@ static int speakers_balance_2nn_0(lua_State *L);
 static int speakers_gain_v_v(lua_State *L);
 static int speakers_halt_0_0(lua_State *L);
 
-static const struct luaL_Reg _speakers_functions[] = {
-    { "volume", speakers_volume_v_v },
-    { "mix", speakers_mix_v_v },
-    { "pan", speakers_pan_2nn_0 },
-    { "balance", speakers_balance_2nn_0 },
-    { "gain", speakers_gain_v_v },
-    { "halt", speakers_halt_0_0 },
-    { NULL, NULL }
-};
-
-static const luaX_Const _speaker_constants[] = {
-    { "DEFAULT_GROUP", LUA_CT_INTEGER, { .i = SL_DEFAULT_GROUP } },
-    { NULL, LUA_CT_NIL, { 0 } }
-};
-
 int speakers_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, NULL, _speakers_functions, _speaker_constants, nup, NULL);
+    return luaX_newmodule(L, (luaX_Script){ 0 },
+        (const struct luaL_Reg[]){
+            { "volume", speakers_volume_v_v },
+            { "mix", speakers_mix_v_v },
+            { "pan", speakers_pan_2nn_0 },
+            { "balance", speakers_balance_2nn_0 },
+            { "gain", speakers_gain_v_v },
+            { "halt", speakers_halt_0_0 },
+            { NULL, NULL }
+        },
+        (const luaX_Const[]){
+            { "DEFAULT_GROUP", LUA_CT_INTEGER, { .i = SL_DEFAULT_GROUP } },
+            { NULL, LUA_CT_NIL, { 0 } }
+        }, nup, NULL);
 }
 
 static int speakers_volume_0_1n(lua_State *L)

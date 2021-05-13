@@ -76,7 +76,7 @@ function Tofu:__ctor()
               { text = "Guru Meditation" }
             }
 
-          local margin = 4 -- Precalculate lines position and rectangle area.
+          local margin = 4 -- Pre-calculate lines position and rectangle area.
           local y = margin
           for _, line in ipairs(me.lines) do
             local lw, lh = me.font:size(line.text)

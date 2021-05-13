@@ -45,23 +45,25 @@ static int palette_index_to_color_2un_3nnn(lua_State *L);
 static int palette_lerp_5unnnN_0(lua_State *L);
 static int palette_merge_3uuB_0(lua_State *L);
 
-static const struct luaL_Reg _palette_functions[] = {
-    { "new", palette_new_v_1u },
-    { "__gc", palette_gc_1u_0 },
-    { "mix", palette_mix_7nnnnnnN_3nnn },
-    { "colors", palette_colors_1u_1t },
-    { "size", palette_size_1u_1n },
-    { "color_to_index", palette_color_to_index_4unnn_1n },
-    { "index_to_color", palette_index_to_color_2un_3nnn },
-    { "lerp", palette_lerp_5unnnN_0 },
-    { "merge", palette_merge_3uuB_0 },
-    { NULL, NULL }
-};
-
 int palette_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, NULL, _palette_functions, NULL, nup, META_TABLE);
+    return luaX_newmodule(L, (luaX_Script){ 0 },
+        (const struct luaL_Reg[]){
+            { "new", palette_new_v_1u },
+            { "__gc", palette_gc_1u_0 },
+            { "mix", palette_mix_7nnnnnnN_3nnn },
+            { "colors", palette_colors_1u_1t },
+            { "size", palette_size_1u_1n },
+            { "color_to_index", palette_color_to_index_4unnn_1n },
+            { "index_to_color", palette_index_to_color_2un_3nnn },
+            { "lerp", palette_lerp_5unnnN_0 },
+            { "merge", palette_merge_3uuB_0 },
+            { NULL, NULL }
+        },
+        (const luaX_Const[]){
+            { NULL, LUA_CT_NIL, { 0 } }
+        }, nup, META_TABLE);
 }
 
 static int palette_new_0_1u(lua_State *L)

@@ -38,21 +38,13 @@
 
 #define LOG_CONTEXT "font"
 #define META_TABLE  "Tofu_Graphics_Font_mt"
+#define SCRIPT_NAME "@font.lua"
 
 static int font_new_4uunn_1u(lua_State *L);
 static int font_gc_1u_0(lua_State *L);
 static int font_size_4uSNN_2n(lua_State *L);
 static int font_canvas_2uu_0(lua_State *L);
 static int font_write_v_0(lua_State *L);
-
-static const struct luaL_Reg _font_functions[] = {
-    { "new", font_new_4uunn_1u },
-    { "__gc", font_gc_1u_0 },
-    { "size", font_size_4uSNN_2n },
-    { "canvas", font_canvas_2uu_0 },
-    { "write", font_write_v_0 },
-    { NULL, NULL }
-};
 
 static const char _font_lua[] = {
 #include "font.inc"
@@ -61,11 +53,22 @@ static const char _font_lua[] = {
 int font_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, &(luaX_Script){
+    return luaX_newmodule(L, (luaX_Script){
             .buffer = _font_lua,
             .size = sizeof(_font_lua) / sizeof(char),
-            .name = "@font.lua"
-        }, _font_functions, NULL, nup, META_TABLE);
+            .name = SCRIPT_NAME
+        },
+        (const struct luaL_Reg[]){
+            { "new", font_new_4uunn_1u },
+            { "__gc", font_gc_1u_0 },
+            { "size", font_size_4uSNN_2n },
+            { "canvas", font_canvas_2uu_0 },
+            { "write", font_write_v_0 },
+            { NULL, NULL }
+        },
+        (const luaX_Const[]){
+            { NULL, LUA_CT_NIL, { 0 } }
+        }, nup, META_TABLE);
 }
 
 static int font_new_4uunn_1u(lua_State *L)

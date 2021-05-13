@@ -28,6 +28,8 @@
 
 #include <stdint.h>
 
+#define SCRIPT_NAME "@arrays.lua"
+
 static const char _arrays_lua[] = {
 #include "arrays.inc"
 };
@@ -35,9 +37,15 @@ static const char _arrays_lua[] = {
 int arrays_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, &(luaX_Script){
+    return luaX_newmodule(L, (luaX_Script){
             .buffer = _arrays_lua,
-            .size = sizeof(_arrays_lua),
-            .name = "@arrays.lua"
-        }, NULL, NULL, nup, NULL);
+            .size = sizeof(_arrays_lua) / sizeof(char),
+            .name = SCRIPT_NAME
+        },
+        (const struct luaL_Reg[]){
+            { NULL, NULL }
+        },
+        (const luaX_Const[]){
+            { NULL, LUA_CT_NIL, { 0 } }
+        }, nup, NULL);
 }

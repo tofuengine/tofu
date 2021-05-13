@@ -54,32 +54,34 @@ static int system_warning_v_0(lua_State *L);
 static int system_error_v_0(lua_State *L);
 static int system_fatal_v_0(lua_State *L);
 
-static const struct luaL_Reg _system_functions[] = {
-    { "args", system_args_0_1t },
-    { "version", system_version_0_3nnn },
-    { "time", system_time_0_1n },
-    { "fps", system_fps_0_1n },
-#ifdef __ENGINE_PERFORMANCE_STATISTICS__
-    { "stats", system_stats_0_4nnnn },
-#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
-#ifdef __SYSTEM_HEAP_STATISTICS__
-    { "heap", system_heap_1S_1n },
-#endif  /* __SYSTEM_HEAP_STATISTICS__ */
-#ifdef __DISPLAY_FOCUS_SUPPORT__
-    { "is_active", system_is_active_0_1b },
-#endif  /* __DISPLAY_FOCUS_SUPPORT__ */
-    { "quit", system_quit_0_0 },
-    { "info", system_info_v_0 },
-    { "warning", system_warning_v_0 },
-    { "error", system_error_v_0 },
-    { "fatal", system_fatal_v_0 },
-    { NULL, NULL }
-};
-
 int system_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, NULL, _system_functions, NULL, nup, NULL);
+    return luaX_newmodule(L, (luaX_Script){ 0 },
+        (const struct luaL_Reg[]){
+            { "args", system_args_0_1t },
+            { "version", system_version_0_3nnn },
+            { "time", system_time_0_1n },
+            { "fps", system_fps_0_1n },
+#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+            { "stats", system_stats_0_4nnnn },
+#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
+#ifdef __SYSTEM_HEAP_STATISTICS__
+            { "heap", system_heap_1S_1n },
+#endif  /* __SYSTEM_HEAP_STATISTICS__ */
+#ifdef __DISPLAY_FOCUS_SUPPORT__
+            { "is_active", system_is_active_0_1b },
+#endif  /* __DISPLAY_FOCUS_SUPPORT__ */
+            { "quit", system_quit_0_0 },
+            { "info", system_info_v_0 },
+            { "warning", system_warning_v_0 },
+            { "error", system_error_v_0 },
+            { "fatal", system_fatal_v_0 },
+            { NULL, NULL }
+        },
+        (const luaX_Const[]){
+            { NULL, LUA_CT_NIL, { 0 } }
+        }, nup, NULL);
 }
 
 static int system_args_0_1t(lua_State *L)

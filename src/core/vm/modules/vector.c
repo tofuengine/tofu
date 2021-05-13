@@ -28,6 +28,8 @@
 
 #include <stdint.h>
 
+#define SCRIPT_NAME "@vector.lua"
+
 static const char _vector_lua[] = {
 #include "vector.inc"
 };
@@ -35,9 +37,15 @@ static const char _vector_lua[] = {
 int vector_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, &(luaX_Script){
+    return luaX_newmodule(L, (luaX_Script){
             .buffer = _vector_lua,
             .size = sizeof(_vector_lua) / sizeof(char),
-            .name = "@vector.lua"
-        }, NULL, NULL, nup, NULL);
+            .name = SCRIPT_NAME
+        },
+        (const struct luaL_Reg[]){
+            { NULL, NULL }
+        },
+        (const luaX_Const[]){
+            { NULL, LUA_CT_NIL, { 0 } }
+        }, nup, NULL);
 }

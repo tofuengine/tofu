@@ -45,25 +45,23 @@ static int bank_canvas_2uu_0(lua_State *L);
 static int bank_blit_v_0(lua_State *L);
 static int bank_tile_v_0(lua_State *L);
 
-static const struct luaL_Reg _bank_functions[] = {
-    { "new", bank_new_v_1u },
-    { "__gc", bank_gc_1u_0 },
-    { "size", bank_size_4unNN_2n },
-    { "canvas", bank_canvas_2uu_0 },
-    { "blit", bank_blit_v_0 },
-    { "tile", bank_tile_v_0 },
-    { NULL, NULL }
-};
-
-static const luaX_Const _bank_constants[] = {
-    { "NIL", LUA_CT_INTEGER, { .i = GL_CELL_NIL } },
-    { NULL, LUA_CT_NIL, { 0 } }
-};
-
 int bank_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, NULL, _bank_functions, _bank_constants, nup, META_TABLE);
+    return luaX_newmodule(L, (luaX_Script){ 0 },
+        (const struct luaL_Reg[]){
+            { "new", bank_new_v_1u },
+            { "__gc", bank_gc_1u_0 },
+            { "size", bank_size_4unNN_2n },
+            { "canvas", bank_canvas_2uu_0 },
+            { "blit", bank_blit_v_0 },
+            { "tile", bank_tile_v_0 },
+            { NULL, NULL }
+        },
+        (const luaX_Const[]){
+            { "NIL", LUA_CT_INTEGER, { .i = GL_CELL_NIL } },
+            { NULL, LUA_CT_NIL, { 0 } }
+        }, nup, META_TABLE);
 }
 
 static int bank_new_3uus_1u(lua_State *L)

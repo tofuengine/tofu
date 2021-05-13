@@ -30,10 +30,6 @@
 #include "udt.h"
 #include "utils/map.h"
 
-#ifndef countof
-  #define countof(a)  (sizeof((a)) / sizeof((a)[0]))
-#endif
-
 static int input_is_down_1s_1b(lua_State *L);
 static int input_is_up_1s_1b(lua_State *L);
 static int input_is_pressed_1s_1b(lua_State *L);
@@ -45,24 +41,26 @@ static int input_stick_1s_4nnnn(lua_State *L);
 static int input_triggers_0_2nn(lua_State *L);
 static int input_mode_v_v(lua_State *L);
 
-static const struct luaL_Reg _input_functions[] = {
-    { "is_down", input_is_down_1s_1b },
-    { "is_up", input_is_up_1s_1b },
-    { "is_pressed", input_is_pressed_1s_1b },
-    { "is_released", input_is_released_1s_1b },
-    { "auto_repeat", input_auto_repeat_v_v },
-    { "cursor", input_cursor_v_v },
-    { "cursor_area", input_cursor_area_v_v },
-    { "stick", input_stick_1s_4nnnn },
-    { "triggers", input_triggers_0_2nn },
-    { "mode", input_mode_v_v },
-    { NULL, NULL }
-};
-
 int input_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, NULL, _input_functions, NULL, nup, NULL);
+    return luaX_newmodule(L, (luaX_Script){ 0 },
+        (const struct luaL_Reg[]){
+            { "is_down", input_is_down_1s_1b },
+            { "is_up", input_is_up_1s_1b },
+            { "is_pressed", input_is_pressed_1s_1b },
+            { "is_released", input_is_released_1s_1b },
+            { "auto_repeat", input_auto_repeat_v_v },
+            { "cursor", input_cursor_v_v },
+            { "cursor_area", input_cursor_area_v_v },
+            { "stick", input_stick_1s_4nnnn },
+            { "triggers", input_triggers_0_2nn },
+            { "mode", input_mode_v_v },
+            { NULL, NULL }
+        },
+        (const luaX_Const[]){
+            { NULL, LUA_CT_NIL, { 0 } }
+        }, nup, NULL);
 }
 
 static const Map_Entry_t _buttons[Input_Buttons_t_CountOf] = { // Need to be sorted for `bsearch()`
@@ -92,7 +90,7 @@ static const Map_Entry_t _sticks[Input_Sticks_t_CountOf] = { // Ditto.
     { "right", INPUT_STICK_RIGHT }
 };
 
-static const Map_Entry_t _modes[] = { // Ditto.
+static const Map_Entry_t _modes[INPUT_MODES_COUNT] = { // Ditto.
     { "gamepad", INPUT_MODE_GAMEPAD },
     { "keyboard", INPUT_MODE_KEYBOARD },
     { "mouse", INPUT_MODE_MOUSE }
@@ -324,10 +322,10 @@ static int input_mode_0_1t(lua_State *L)
     int mode = Input_get_mode(input);
 
     lua_createtable(L, 0, 0); // Initially empty.
-    for (size_t i = 0; i < countof(_modes); ++i) {
+    for (size_t i = 0; i < INPUT_MODES_COUNT; ++i) {
         if (mode & _modes[i].value) {
             lua_pushstring(L, _modes[i].key);
-            lua_rawseti(L, -2, (lua_Integer)(i + 1));
+            lua_rawseti(L, -2, (lua_Integer)(lua_rawlen(L, -2) + 1)); // Append to table, same as `table[#table + 1] = value`.
         }
     }
 
@@ -349,7 +347,7 @@ static int input_mode_1t_0(lua_State *L)
 //        int index = LUAX_INTEGER(L, -2);
         const char *id = LUAX_STRING(L, -1);
 
-        const Map_Entry_t *entry = map_find(L, id, _modes, countof(_modes));
+        const Map_Entry_t *entry = map_find(L, id, _modes, INPUT_MODES_COUNT);
         mode |= entry->value;
 
         lua_pop(L, 1);

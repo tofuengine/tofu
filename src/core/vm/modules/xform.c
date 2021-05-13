@@ -55,22 +55,24 @@ static int xform_table_v_0(lua_State *L);
 static int xform_project_4unnn_0(lua_State *L);
 static int xform_warp_3unn_0(lua_State *L);
 
-static const struct luaL_Reg _xform_functions[] = {
-    { "new", xform_new_1S_1u },
-    { "__gc", xform_gc_1u_0 },
-    { "offset", xform_offset_3unn_0 },
-    { "matrix", xform_matrix_v_0 },
-    { "wrap", xform_wrap_2us_0 },
-    { "table", xform_table_v_0 },
-    { "project", xform_project_4unnn_0 },
-    { "warp", xform_warp_3unn_0 },
-    { NULL, NULL }
-};
-
 int xform_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, NULL, _xform_functions, NULL, nup, META_TABLE);
+    return luaX_newmodule(L, (luaX_Script){ 0 },
+        (const struct luaL_Reg[]){
+            { "new", xform_new_1S_1u },
+            { "__gc", xform_gc_1u_0 },
+            { "offset", xform_offset_3unn_0 },
+            { "matrix", xform_matrix_v_0 },
+            { "wrap", xform_wrap_2us_0 },
+            { "table", xform_table_v_0 },
+            { "project", xform_project_4unnn_0 },
+            { "warp", xform_warp_3unn_0 },
+            { NULL, NULL }
+        },
+        (const luaX_Const[]){
+            { NULL, LUA_CT_NIL, { 0 } }
+        }, nup, META_TABLE);
 }
 
 static inline GL_XForm_Wraps_t _parse_wrap_mode(const char *mode)

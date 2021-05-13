@@ -42,23 +42,21 @@ static int display_shift_v_0(lua_State *L);
 static int display_program_1U_0(lua_State *L);
 static int display_reset_0_0(lua_State *L);
 
-static const struct luaL_Reg _display_functions[] = {
-    { "palette", display_palette_1u_0 },
-    { "offset", display_offset_2NN_0 },
-    { "shift", display_shift_v_0 },
-    { "program", display_program_1U_0 },
-    { "reset", display_reset_0_0 },
-    { NULL, NULL }
-};
-
-static const luaX_Const _display_constants[] = {
-    { NULL, LUA_CT_NIL, { 0 } }
-};
-
 int display_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, NULL, _display_functions, _display_constants, nup, NULL);
+    return luaX_newmodule(L, (luaX_Script){ 0 },
+        (const struct luaL_Reg[]){
+            { "palette", display_palette_1u_0 },
+            { "offset", display_offset_2NN_0 },
+            { "shift", display_shift_v_0 },
+            { "program", display_program_1U_0 },
+            { "reset", display_reset_0_0 },
+            { NULL, NULL }
+        },
+        (const luaX_Const[]){
+            { NULL, LUA_CT_NIL, { 0 } }
+        }, nup, NULL);
 }
 
 static int display_palette_1u_0(lua_State *L)

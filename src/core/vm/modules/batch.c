@@ -41,25 +41,23 @@ static int batch_clear_1u_0(lua_State *L);
 static int batch_add_v_0(lua_State *L);
 static int batch_blit_2uS_0(lua_State *L);
 
-static const struct luaL_Reg _batch_functions[] = {
-    { "new", batch_new_2un_1u },
-    { "__gc", batch_gc_1u_0 },
-    { "resize", batch_resize_2un_0 },
-    { "grow", batch_grow_2un_0 },
-    { "clear", batch_clear_1u_0 },
-    { "add", batch_add_v_0 },
-    { "blit", batch_blit_2uS_0 },
-    { NULL, NULL }
-};
-
-static const luaX_Const _batch_constants[] = {
-    { NULL, LUA_CT_NIL, { 0 } }
-};
-
 int batch_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, NULL, _batch_functions, _batch_constants, nup, META_TABLE);
+    return luaX_newmodule(L, (luaX_Script){ 0 },
+        (const struct luaL_Reg[]){
+            { "new", batch_new_2un_1u },
+            { "__gc", batch_gc_1u_0 },
+            { "resize", batch_resize_2un_0 },
+            { "grow", batch_grow_2un_0 },
+            { "clear", batch_clear_1u_0 },
+            { "add", batch_add_v_0 },
+            { "blit", batch_blit_2uS_0 },
+            { NULL, NULL }
+        },
+        (const luaX_Const[]){
+            { NULL, LUA_CT_NIL, { 0 } }
+        }, nup, META_TABLE);
 }
 
 static int batch_new_2un_1u(lua_State *L)

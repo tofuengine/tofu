@@ -38,6 +38,7 @@
 
 #define LOG_CONTEXT "canvas"
 #define META_TABLE  "Tofu_Graphics_Canvas_mt"
+#define SCRIPT_NAME "@canvas.lua"
 
 static int canvas_new_v_1u(lua_State *L);
 static int canvas_gc_1u_0(lua_State *L);
@@ -74,41 +75,6 @@ static int canvas_xform_v_0(lua_State *L);
 
 // TODO: rename `Canvas` to `Context`?
 
-static const struct luaL_Reg _canvas_functions[] = {
-    { "new", canvas_new_v_1u },
-    { "__gc", canvas_gc_1u_0 },
-    { "size", canvas_size_1u_2nn },
-    { "center", canvas_center_1u_2nn },
-    { "push", canvas_push_1u_0 },
-    { "pop", canvas_pop_2uN_0 },
-    { "reset", canvas_reset_1u_0 },
-    { "background", canvas_background_2un_0 },
-    { "color", canvas_color_2un_0 },
-    { "clipping", canvas_clipping_v_0 },
-    { "comparator", canvas_comparator_2us_0 },
-    { "shift", canvas_shift_v_0 },
-    { "threshold", canvas_threshold_2un_0 },
-    { "transparent", canvas_transparent_v_0 },
-    { "clear", canvas_clear_2uN_0 },
-    { "point", canvas_point_4unnN_0 },
-    { "hline", canvas_hline_5unnnN_0 },
-    { "vline", canvas_vline_5unnnN_0 },
-    { "line", canvas_line_6unnnnN_0 },
-    { "polyline", canvas_polyline_3utN_0 },
-    { "fill", canvas_fill_4unnN_0 },
-    { "triangle", canvas_triangle_9usnnnnnnN_0 },
-    { "rectangle", canvas_rectangle_7usnnnnN_0 },
-    { "circle", canvas_circle_6usnnnN_0 },
-    { "peek", canvas_peek_3unn_1n },
-    { "poke", canvas_poke_4unnn_0 },
-    { "process", canvas_process_v_0 },
-    { "copy", canvas_copy_v_0 },
-    { "blit", canvas_blit_v_0 },
-    { "mask", canvas_mask_v_0 },
-    { "xform", canvas_xform_v_0 },
-    { NULL, NULL }
-};
-
 static const char _canvas_lua[] = {
 #include "canvas.inc"
 };
@@ -116,11 +82,48 @@ static const char _canvas_lua[] = {
 int canvas_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, &(luaX_Script){
+    return luaX_newmodule(L, (luaX_Script){
             .buffer = _canvas_lua,
             .size = sizeof(_canvas_lua) / sizeof(char),
-            .name = "@canvas.lua"
-        }, _canvas_functions, NULL, nup, META_TABLE);
+            .name = SCRIPT_NAME
+        },
+        (const struct luaL_Reg[]){
+            { "new", canvas_new_v_1u },
+            { "__gc", canvas_gc_1u_0 },
+            { "size", canvas_size_1u_2nn },
+            { "center", canvas_center_1u_2nn },
+            { "push", canvas_push_1u_0 },
+            { "pop", canvas_pop_2uN_0 },
+            { "reset", canvas_reset_1u_0 },
+            { "background", canvas_background_2un_0 },
+            { "color", canvas_color_2un_0 },
+            { "clipping", canvas_clipping_v_0 },
+            { "comparator", canvas_comparator_2us_0 },
+            { "shift", canvas_shift_v_0 },
+            { "threshold", canvas_threshold_2un_0 },
+            { "transparent", canvas_transparent_v_0 },
+            { "clear", canvas_clear_2uN_0 },
+            { "point", canvas_point_4unnN_0 },
+            { "hline", canvas_hline_5unnnN_0 },
+            { "vline", canvas_vline_5unnnN_0 },
+            { "line", canvas_line_6unnnnN_0 },
+            { "polyline", canvas_polyline_3utN_0 },
+            { "fill", canvas_fill_4unnN_0 },
+            { "triangle", canvas_triangle_9usnnnnnnN_0 },
+            { "rectangle", canvas_rectangle_7usnnnnN_0 },
+            { "circle", canvas_circle_6usnnnN_0 },
+            { "peek", canvas_peek_3unn_1n },
+            { "poke", canvas_poke_4unnn_0 },
+            { "process", canvas_process_v_0 },
+            { "copy", canvas_copy_v_0 },
+            { "blit", canvas_blit_v_0 },
+            { "mask", canvas_mask_v_0 },
+            { "xform", canvas_xform_v_0 },
+            { NULL, NULL }
+        },
+        (const luaX_Const[]){
+            { NULL, LUA_CT_NIL, { 0 } }
+        }, nup, META_TABLE);
 }
 
 static int canvas_new_0_1u(lua_State *L)

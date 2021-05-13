@@ -59,31 +59,29 @@ static int source_resume_1u_0(lua_State *L);
 static int source_stop_1u_0(lua_State *L);
 static int source_is_playing_1u_1b(lua_State *L);
 
-static const struct luaL_Reg _source_functions[] = {
-    { "new", source_new_2sn_1u },
-    { "__gc", source_gc_1u_0 },
-    { "looped", source_looped_v_v },
-    { "group", source_group_v_v },
-    { "mix", source_mix_v_v },
-    { "pan", source_pan_v_0 },
-    { "balance", source_balance_2un_0 },
-    { "gain", source_gain_v_v },
-    { "speed", source_speed_v_v },
-    { "play", source_play_1u_0 },
-    { "resume", source_resume_1u_0 },
-    { "stop", source_stop_1u_0 },
-    { "is_playing", source_is_playing_1u_1b },
-    { NULL, NULL }
-};
-
-static const luaX_Const _source_constants[] = {
-    { NULL, LUA_CT_NIL, { 0 } }
-};
-
 int source_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, NULL, _source_functions, _source_constants, nup, META_TABLE);
+    return luaX_newmodule(L, (luaX_Script){ 0 },
+        (const struct luaL_Reg[]){
+            { "new", source_new_2sn_1u },
+            { "__gc", source_gc_1u_0 },
+            { "looped", source_looped_v_v },
+            { "group", source_group_v_v },
+            { "mix", source_mix_v_v },
+            { "pan", source_pan_v_0 },
+            { "balance", source_balance_2un_0 },
+            { "gain", source_gain_v_v },
+            { "speed", source_speed_v_v },
+            { "play", source_play_1u_0 },
+            { "resume", source_resume_1u_0 },
+            { "stop", source_stop_1u_0 },
+            { "is_playing", source_is_playing_1u_1b },
+            { NULL, NULL }
+        },
+        (const luaX_Const[]){
+            { NULL, LUA_CT_NIL, { 0 } }
+        }, nup, META_TABLE);
 }
 
 static size_t _handle_read(void *user_data, void *buffer, size_t bytes_to_read)

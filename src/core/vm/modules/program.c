@@ -33,6 +33,7 @@
 
 #define LOG_CONTEXT "program"
 #define META_TABLE  "Tofu_Graphics_Program_mt"
+#define SCRIPT_NAME "@program.lua"
 
 static int program_new_0_1u(lua_State *L);
 static int program_gc_1u_0(lua_State *L);
@@ -42,17 +43,6 @@ static int program_offset_2un_0(lua_State *L);
 static int program_color_5unnnn_0(lua_State *L);
 static int program_shift_v_0(lua_State *L);
 
-static const struct luaL_Reg _program_functions[] = {
-    { "new", program_new_0_1u },
-    { "__gc", program_gc_1u_0 },
-    { "wait", program_wait_3unn_0 },
-    { "modulo", program_modulo_2un_0 },
-    { "offset", program_offset_2un_0 },
-    { "color", program_color_5unnnn_0 },
-    { "shift", program_shift_v_0 },
-    { NULL, NULL }
-};
-
 static const char _program_lua[] = {
 #include "program.inc"
 };
@@ -60,11 +50,24 @@ static const char _program_lua[] = {
 int program_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, &(luaX_Script){
+    return luaX_newmodule(L, (luaX_Script){
             .buffer = _program_lua,
             .size = sizeof(_program_lua) / sizeof(char),
-            .name = "@program.lua"
-        }, _program_functions, NULL, nup, META_TABLE);
+            .name = SCRIPT_NAME
+        },
+        (const struct luaL_Reg[]){
+            { "new", program_new_0_1u },
+            { "__gc", program_gc_1u_0 },
+            { "wait", program_wait_3unn_0 },
+            { "modulo", program_modulo_2un_0 },
+            { "offset", program_offset_2un_0 },
+            { "color", program_color_5unnnn_0 },
+            { "shift", program_shift_v_0 },
+            { NULL, NULL }
+        },
+        (const luaX_Const[]){
+            { NULL, LUA_CT_NIL, { 0 } }
+        }, nup, META_TABLE);
 }
 
 static int program_new_0_1u(lua_State *L)

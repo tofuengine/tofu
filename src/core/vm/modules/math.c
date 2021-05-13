@@ -36,6 +36,8 @@
 #include <stdint.h>
 #include <math.h>
 
+#define SCRIPT_NAME "@math.lua"
+
 static int math_lerp_3nnn_1n(lua_State *L);
 static int math_invlerp_3nnn_1n(lua_State *L);
 static int math_clamp_3nnn_1n(lua_State *L);
@@ -50,29 +52,6 @@ static int math_rotation_to_angle_1n_1n(lua_State *L);
 static int math_wave_v_1f(lua_State *L);
 static int math_tweener_v_1f(lua_State *L);
 
-static const struct luaL_Reg _math_functions[] = {
-    { "lerp", math_lerp_3nnn_1n },
-    { "invlerp", math_invlerp_3nnn_1n },
-    { "clamp", math_clamp_3nnn_1n },
-    { "step", math_step_2nn_1n },
-    { "smoothstep", math_smoothstep_3nnn_1n },
-    { "smootherstep", math_smootherstep_3nnn_1n },
-    { "sign", math_sign_1n_1n },
-    { "signum", math_signum_1n_1n },
-    { "sincos", math_sincos_1n_2nn },
-    { "angle_to_rotation", math_angle_to_rotation_1n_1n },
-    { "rotation_to_angle", math_rotation_to_angle_1n_1n },
-    { "wave", math_wave_v_1f },
-    { "tweener", math_tweener_v_1f },
-    { NULL, NULL }
-};
-
-static const luaX_Const _math_constants[] = {
-    { "SINCOS_PERIOD", LUA_CT_INTEGER, { .i = SINCOS_PERIOD } },
-    { "EPSILON", LUA_CT_NUMBER, { .n = __FLT_EPSILON__ } },
-    { NULL, LUA_CT_NIL, { 0 } }
-};
-
 static const char _math_lua[] = {
 #include "math.inc"
 };
@@ -80,11 +59,32 @@ static const char _math_lua[] = {
 int math_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, &(luaX_Script){
+    return luaX_newmodule(L, (luaX_Script){
             .buffer = _math_lua,
             .size = sizeof(_math_lua) / sizeof(char),
-            .name = "@math.lua"
-        }, _math_functions, _math_constants, nup, NULL);
+            .name = SCRIPT_NAME
+        },
+        (const struct luaL_Reg[]){
+            { "lerp", math_lerp_3nnn_1n },
+            { "invlerp", math_invlerp_3nnn_1n },
+            { "clamp", math_clamp_3nnn_1n },
+            { "step", math_step_2nn_1n },
+            { "smoothstep", math_smoothstep_3nnn_1n },
+            { "smootherstep", math_smootherstep_3nnn_1n },
+            { "sign", math_sign_1n_1n },
+            { "signum", math_signum_1n_1n },
+            { "sincos", math_sincos_1n_2nn },
+            { "angle_to_rotation", math_angle_to_rotation_1n_1n },
+            { "rotation_to_angle", math_rotation_to_angle_1n_1n },
+            { "wave", math_wave_v_1f },
+            { "tweener", math_tweener_v_1f },
+            { NULL, NULL }
+        },
+        (const luaX_Const[]){
+            { "SINCOS_PERIOD", LUA_CT_INTEGER, { .i = SINCOS_PERIOD } },
+            { "EPSILON", LUA_CT_NUMBER, { .n = __FLT_EPSILON__ } },
+            { NULL, LUA_CT_NIL, { 0 } }
+        }, nup, NULL);
 }
 
 static int math_lerp_3nnn_1n(lua_State *L)
