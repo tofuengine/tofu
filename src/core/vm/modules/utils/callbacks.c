@@ -24,15 +24,40 @@
 
 #include "callbacks.h"
 
+#include <config.h>
+
+#ifdef __GRAPHICS_FAST_LOAD__
+#include <libs/stb.h>
+
+typedef struct _key_value_pair_t {
+    GL_Color_t key;
+    GL_Pixel_t value;
+} key_value_pair_t;
+#endif  /* __GRAPHICS_FAST_LOAD__ */
+
 #pragma pack(push, 1)
-typedef struct rgba_t {
+typedef struct _rgba_t {
     uint8_t r, g, b, a;
 } rgba_t;
 #pragma pack(pop)
 
+// Given an `MxN` RGBA8888 image, the naive conversion to the color-indexed format requires `MxN` scans to find the
+// nearest-matching color in the palette. This is a computationally demanding operation, since it computes the Euclidian
+// distance for each palette-entry. Even for small images the load-and-convert times are non negligible.
+//
+// We can get a huge performance boost by adopting a "minification" technique. Each nearest-matches is stored into an
+// hash-map dynamically populated during the conversion: a color is first first checked if has been already encountered
+// and converted; if not it is converted and stored for later usage.
+//
+// Since the total amount of distinct colors in a single image is typically small, the additional memory usage is worth
+// the effort.
 void surface_callback_palette(void *user_data, GL_Surface_t *surface, const void *pixels)
 {
     const Callback_Palette_Closure_t *closure = (const Callback_Palette_Closure_t *)user_data;
+
+#ifdef __GRAPHICS_FAST_LOAD__
+    key_value_pair_t *hash = NULL;
+#endif  /* __GRAPHICS_FAST_LOAD__ */
 
     const rgba_t *src = (const rgba_t *)pixels;
     GL_Pixel_t *dst = surface->data;
@@ -43,9 +68,25 @@ void surface_callback_palette(void *user_data, GL_Surface_t *surface, const void
             *(dst++) = closure->transparent;
         } else {
             GL_Color_t color = (GL_Color_t){ .r = rgba.r, .g = rgba.g, .b = rgba.b, .a = rgba.a };
+#ifdef __GRAPHICS_FAST_LOAD__
+            GL_Pixel_t pixel;
+            int index = hmgeti(hash, color);
+            if (index == -1) {
+                pixel = GL_palette_find_nearest_color(closure->palette, color);
+                hmput(hash, color, pixel);
+            } else {
+                pixel = hash[index].value;
+            }
+            *(dst++) = pixel;
+#else
             *(dst++) = GL_palette_find_nearest_color(closure->palette, color);
+#endif  /* __GRAPHICS_FAST_LOAD__ */
         }
     }
+
+#ifdef __GRAPHICS_FAST_LOAD__
+    hmfree(hash);
+#endif  /* __GRAPHICS_FAST_LOAD__ */
 }
 
 void surface_callback_indexes(void *user_data, GL_Surface_t *surface, const void *pixels)
