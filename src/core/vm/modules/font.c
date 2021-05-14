@@ -59,9 +59,9 @@ int font_loader(lua_State *L)
             .name = SCRIPT_NAME
         },
         (const struct luaL_Reg[]){
-            { "new", font_new_4uunn_1u },
+            { "new", font_new_v_1u },
             { "__gc", font_gc_1u_0 },
-            { "size", font_size_4uSNN_2n },
+            { "size", font_size_4usNN_2n },
             { "canvas", font_canvas_2uu_0 },
             { "write", font_write_v_0 },
             { NULL, NULL }
