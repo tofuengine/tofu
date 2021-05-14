@@ -38,9 +38,7 @@ static inline void _reset_state(GL_State_t *state, const GL_Surface_t *surface)
             .color = 1,
             .clipping_region = (GL_Quad_t){ .x0 = 0, .y0 = 0, .x1 = (int)surface->width - 1, .y1 = (int)surface->height - 1 },
             .shifting = { 0 },
-            .transparent = { 0 },
-            .comparator = GL_COMPARATOR_GEQUAL
-//            .threshold = 0
+            .transparent = { 0 }
         };
     for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
         state->shifting[i] = (GL_Pixel_t)i;
@@ -166,12 +164,6 @@ void GL_context_set_color(GL_Context_t *context, GL_Pixel_t index)
     state->color = index;
 }
 
-void GL_context_set_comparator(GL_Context_t *context, GL_Comparators_t comparator)
-{
-    GL_State_t *state = &context->state;
-    state->comparator = comparator;
-}
-
 void GL_context_set_shifting(GL_Context_t *context, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count)
 {
     GL_State_t *state = &context->state;
@@ -184,12 +176,6 @@ void GL_context_set_shifting(GL_Context_t *context, const GL_Pixel_t *from, cons
             state->shifting[from[i]] = to[i];
         }
     }
-}
-
-void GL_context_set_threshold(GL_Context_t *context, GL_Pixel_t threshold)
-{
-    GL_State_t *state = &context->state;
-    state->threshold = threshold;
 }
 
 void GL_context_set_transparent(GL_Context_t *context, const GL_Pixel_t *indexes, const GL_Bool_t *transparent, size_t count)
@@ -421,61 +407,60 @@ void GL_context_copy(const GL_Context_t *context, const GL_Surface_t *source, GL
     }
 }
 
-typedef GL_Pixel_t (*Pixel_Comparator_t)(GL_Pixel_t value, GL_Pixel_t threshold);
+typedef bool (*GL_Pixel_Comparator_t)(GL_Pixel_t value, GL_Pixel_t threshold);
 
-static GL_Pixel_t _never(GL_Pixel_t value, GL_Pixel_t threshold)
+static bool _never(GL_Pixel_t value, GL_Pixel_t threshold)
 {
     return false;
 }
 
-static GL_Pixel_t _less(GL_Pixel_t value, GL_Pixel_t threshold)
+static bool _less(GL_Pixel_t value, GL_Pixel_t threshold)
 {
     return value < threshold;
 }
 
-static GL_Pixel_t _less_or_equal(GL_Pixel_t value, GL_Pixel_t threshold)
+static bool _less_or_equal(GL_Pixel_t value, GL_Pixel_t threshold)
 {
     return value <= threshold;
 }
 
-static GL_Pixel_t _greater(GL_Pixel_t value, GL_Pixel_t threshold)
+static bool _greater(GL_Pixel_t value, GL_Pixel_t threshold)
 {
     return value > threshold;
 }
 
-static GL_Pixel_t _greater_or_equal(GL_Pixel_t value, GL_Pixel_t threshold)
+static bool _greater_or_equal(GL_Pixel_t value, GL_Pixel_t threshold)
 {
     return value >= threshold;
 }
 
-static GL_Pixel_t _equal(GL_Pixel_t value, GL_Pixel_t threshold)
+static bool _equal(GL_Pixel_t value, GL_Pixel_t threshold)
 {
     return value == threshold;
 }
 
-static GL_Pixel_t _not_equal(GL_Pixel_t value, GL_Pixel_t threshold)
+static bool _not_equal(GL_Pixel_t value, GL_Pixel_t threshold)
 {
     return value != threshold;
 }
 
-static GL_Pixel_t _always(GL_Pixel_t value, GL_Pixel_t threshold)
+static bool _always(GL_Pixel_t value, GL_Pixel_t threshold)
 {
     return true;
 }
 
-static const Pixel_Comparator_t _comparators[GL_Comparators_t_CountOf] = {
+const GL_Pixel_Comparator_t _pixel_comparators[GL_Comparators_t_CountOf] = {
     _never, _less, _less_or_equal, _greater, _greater_or_equal, _equal, _not_equal, _always
 };
 
-void GL_context_stencil(const GL_Context_t *context, const GL_Surface_t *source, const GL_Surface_t *mask, GL_Rectangle_t area, GL_Point_t position)
+void GL_context_stencil(const GL_Context_t *context, const GL_Surface_t *source, const GL_Surface_t *mask, GL_Comparators_t comparator, GL_Pixel_t threshold, GL_Rectangle_t area, GL_Point_t position)
 {
     const GL_State_t *state = &context->state;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting; // TODO: should `GL_context_copy()` and `GL_context_mask()` skip shifting and transparency?
     const GL_Bool_t *transparent = state->transparent;
     const GL_Surface_t *surface = context->surface;
-    const Pixel_Comparator_t comparator = _comparators[state->comparator];
-    const GL_Pixel_t threshold = state->threshold;
+    const GL_Pixel_Comparator_t should_write = _pixel_comparators[comparator];
 
 #ifdef __DEFENSIVE_CHECKS__
     if (source->width != mask->width || source->height != mask->height) {
@@ -538,7 +523,7 @@ void GL_context_stencil(const GL_Context_t *context, const GL_Surface_t *source,
 #endif
             const GL_Pixel_t value = *(mptr++);
             const GL_Pixel_t index = shifting[*(sptr++)];
-            if (transparent[index] || !comparator(value, threshold)) {
+            if (transparent[index] || !should_write(value, threshold)) {
                 ++dptr;
             } else {
                 *(dptr++) = index;

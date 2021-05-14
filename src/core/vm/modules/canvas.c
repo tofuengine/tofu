@@ -50,9 +50,7 @@ static int canvas_reset_1u_0(lua_State *L);
 static int canvas_background_2un_0(lua_State *L);
 static int canvas_clipping_v_0(lua_State *L);
 static int canvas_color_2un_0(lua_State *L);
-static int canvas_comparator_2us_0(lua_State *L);
 static int canvas_shift_v_0(lua_State *L);
-static int canvas_threshold_2un_0(lua_State *L);
 static int canvas_transparent_v_0(lua_State *L);
 static int canvas_clear_2uN_0(lua_State *L);
 static int canvas_point_4unnN_0(lua_State *L);
@@ -69,7 +67,7 @@ static int canvas_poke_4unnn_0(lua_State *L);
 static int canvas_process_v_0(lua_State *L);
 static int canvas_copy_v_0(lua_State *L);
 static int canvas_blit_v_0(lua_State *L);
-static int canvas_mask_v_0(lua_State *L);
+static int canvas_stencil_v_0(lua_State *L);
 static int canvas_xform_v_0(lua_State *L);
 //static int canvas_grab(lua_State *L);
 
@@ -98,9 +96,7 @@ int canvas_loader(lua_State *L)
             { "background", canvas_background_2un_0 },
             { "color", canvas_color_2un_0 },
             { "clipping", canvas_clipping_v_0 },
-            { "comparator", canvas_comparator_2us_0 },
             { "shift", canvas_shift_v_0 },
-            { "threshold", canvas_threshold_2un_0 },
             { "transparent", canvas_transparent_v_0 },
             { "clear", canvas_clear_2uN_0 },
             { "point", canvas_point_4unnN_0 },
@@ -117,7 +113,7 @@ int canvas_loader(lua_State *L)
             { "process", canvas_process_v_0 },
             { "copy", canvas_copy_v_0 },
             { "blit", canvas_blit_v_0 },
-            { "mask", canvas_mask_v_0 },
+            { "stencil", canvas_stencil_v_0 },
             { "xform", canvas_xform_v_0 },
             { NULL, NULL }
         },
@@ -439,33 +435,6 @@ static int canvas_clipping_v_0(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
-static const Map_Entry_t _comparator[GL_Comparators_t_CountOf] = { // Need to be sorted for `bsearch()`
-    { "always", GL_COMPARATOR_ALWAYS },
-    { "equal", GL_COMPARATOR_EQUAL },
-    { "greater", GL_COMPARATOR_GREATER },
-    { "greater-or-equal", GL_COMPARATOR_GEQUAL },
-    { "less", GL_COMPARATOR_LESS },
-    { "less-or-equal", GL_COMPARATOR_LEQUAL },
-    { "never", GL_COMPARATOR_NEVER },
-    { "not-equal", GL_COMPARATOR_NOTEQUAL }
-};
-
-static int canvas_comparator_2us_0(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
-    LUAX_SIGNATURE_END
-    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
-    const char *comparator = LUAX_STRING(L, 2);
-
-    GL_Context_t *context = self->context;
-    const Map_Entry_t *entry = map_find(L, comparator, _comparator, GL_Comparators_t_CountOf);
-    GL_context_set_comparator(context, (GL_Comparators_t)entry->value);
-
-    return 0;
-}
-
 static int canvas_shift_1u_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -531,21 +500,6 @@ static int canvas_shift_v_0(lua_State *L)
         LUAX_OVERLOAD_ARITY(2, canvas_shift_2ut_0)
         LUAX_OVERLOAD_ARITY(3, canvas_shift_3unn_0)
     LUAX_OVERLOAD_END
-}
-
-static int canvas_threshold_2un_0(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
-    GL_Pixel_t threshold = (GL_Pixel_t)LUAX_INTEGER(L, 2);
-
-    GL_Context_t *context = self->context;
-    GL_context_set_threshold(context, threshold);
-
-    return 0;
 }
 
 static int canvas_transparent_1u_0(lua_State *L)
@@ -1192,49 +1146,70 @@ static int canvas_blit_v_0(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
-static int canvas_mask_3uuU_0(lua_State *L)
+static const Map_Entry_t _comparators[GL_Comparators_t_CountOf] = { // Need to be sorted for `bsearch()`
+    { "always", GL_COMPARATOR_ALWAYS },
+    { "equal", GL_COMPARATOR_EQUAL },
+    { "greater", GL_COMPARATOR_GREATER },
+    { "greater-or-equal", GL_COMPARATOR_GEQUAL },
+    { "less", GL_COMPARATOR_LESS },
+    { "less-or-equal", GL_COMPARATOR_LEQUAL },
+    { "never", GL_COMPARATOR_NEVER },
+    { "not-equal", GL_COMPARATOR_NOTEQUAL }
+};
+
+static int canvas_stencil_5uusnU_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
-    Canvas_Object_t *stencil = (Canvas_Object_t *)LUAX_USERDATA(L, 2);
-    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 3, self);
+    Canvas_Object_t *mask = (Canvas_Object_t *)LUAX_USERDATA(L, 2);
+    const char *comparator = LUAX_STRING(L, 3);
+    GL_Pixel_t threshold = (GL_Pixel_t)LUAX_INTEGER(L, 4);
+    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 5, self);
 
     const GL_Context_t *context = canvas->context;
     const GL_Surface_t *surface = GL_context_get_surface(self->context);
-    const GL_Surface_t *mask = GL_context_get_surface(stencil->context);
-    GL_context_stencil(context, surface, mask, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height }, (GL_Point_t){ .x = 0, .y = 0 });
+    const GL_Surface_t *mask_surface = GL_context_get_surface(mask->context);
+    const Map_Entry_t *entry = map_find(L, comparator, _comparators, GL_Comparators_t_CountOf);
+    GL_context_stencil(context, surface, mask_surface, (GL_Comparators_t)entry->value, threshold, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height }, (GL_Point_t){ .x = 0, .y = 0 });
 
     return 0;
 }
 
-static int canvas_mask_5unnuU_0(lua_State *L)
+static int canvas_stencil_7unnusnU_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
-    Canvas_Object_t *stencil = (Canvas_Object_t *)LUAX_USERDATA(L, 4);
-    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 5, self);
+    Canvas_Object_t *mask = (Canvas_Object_t *)LUAX_USERDATA(L, 4);
+    const char *comparator = LUAX_STRING(L, 5);
+    GL_Pixel_t threshold = (GL_Pixel_t)LUAX_INTEGER(L, 6);
+    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 7, self);
 
     const GL_Context_t *context = canvas->context;
     const GL_Surface_t *surface = GL_context_get_surface(self->context);
-    const GL_Surface_t *mask = GL_context_get_surface(stencil->context);
-    GL_context_stencil(context, surface, mask, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height }, (GL_Point_t){ .x = x, .y = y });
+    const GL_Surface_t *mask_surface = GL_context_get_surface(mask->context);
+    const Map_Entry_t *entry = map_find(L, comparator, _comparators, GL_Comparators_t_CountOf);
+    GL_context_stencil(context, surface, mask_surface, (GL_Comparators_t)entry->value, threshold, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height }, (GL_Point_t){ .x = x, .y = y });
 
     return 0;
 }
 
-static int canvas_mask_9unnnnnnuU_0(lua_State *L)
+static int canvas_stencil_11unnnnnnusnU_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -1245,6 +1220,8 @@ static int canvas_mask_9unnnnnnuU_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
@@ -1254,7 +1231,28 @@ static int canvas_mask_9unnnnnnuU_0(lua_State *L)
     int oy = LUAX_INTEGER(L, 5);
     size_t width = (size_t)LUAX_INTEGER(L, 6);
     size_t height = (size_t)LUAX_INTEGER(L, 7);
-    Canvas_Object_t *stencil = (Canvas_Object_t *)LUAX_USERDATA(L, 8);
+    Canvas_Object_t *mask = (Canvas_Object_t *)LUAX_USERDATA(L, 8);
+    const char *comparator = LUAX_STRING(L, 9);
+    GL_Pixel_t threshold = (GL_Pixel_t)LUAX_INTEGER(L, 10);
+    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 11, self);
+
+    const GL_Context_t *context = canvas->context;
+    const GL_Surface_t *surface = GL_context_get_surface(self->context);
+    const GL_Surface_t *mask_surface = GL_context_get_surface(mask->context);
+    const Map_Entry_t *entry = map_find(L, comparator, _comparators, GL_Comparators_t_CountOf);
+    GL_context_stencil(context, surface, mask_surface, (GL_Comparators_t)entry->value, threshold, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height }, (GL_Point_t){ .x = x, .y = y });
+
+    return 0;
+}
+
+static int canvas_stencil_v_0(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(5, canvas_stencil_5uusnU_0)
+        LUAX_OVERLOAD_ARITY(7, canvas_stencil_7unnusnU_0)
+        LUAX_OVERLOAD_ARITY(11, canvas_stencil_11unnnnnnusnU_0)
+    LUAX_OVERLOAD_END
+}
     Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 9, self);
 
     const GL_Context_t *context = canvas->context;

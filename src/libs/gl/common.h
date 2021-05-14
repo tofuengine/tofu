@@ -71,6 +71,17 @@ typedef struct _GL_Rectangle_u32_t {
 } GL_Rectangle_u32_t;
 #pragma pack(pop)
 
+typedef enum _GL_Comparators_t {
+    GL_COMPARATOR_NEVER,
+    GL_COMPARATOR_LESS,
+    GL_COMPARATOR_LEQUAL,
+    GL_COMPARATOR_GREATER,
+    GL_COMPARATOR_GEQUAL,
+    GL_COMPARATOR_EQUAL,
+    GL_COMPARATOR_NOTEQUAL,
+    GL_COMPARATOR_ALWAYS,
+    GL_Comparators_t_CountOf
+} GL_Comparators_t;
 #define GL_BOOL_FALSE   ((GL_Bool_t)0)
 #define GL_BOOL_TRUE    ((GL_Bool_t)1)
 
