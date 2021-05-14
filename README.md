@@ -17,6 +17,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Windowed/fullscreen display with best-fit integer automatic scaling.
 * [x] Internal software renderer. OpenGL is used only to present the framebuffer to the user (and apply post-process effects).
 * [x] Fixed- and variable-size *Blitter OBjects* drawing with rotation/scaling/flipping.
+* [x] Support for both proportional and non-proportional bitmap based fonts (alphabet subset can be specified, if required).
 * [x] Sprite batching for optimized (ehm) batch drawing.
 * [x] Tiles drawing with offset/scaling/flipping.
 * [x] Palette based graphics with up to 256 colors.
