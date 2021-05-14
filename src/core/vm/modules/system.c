@@ -167,7 +167,7 @@ static int system_heap_1S_1n(lua_State *L)
     const Environment_t *environment = (const Environment_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
 
     const Environment_Stats_t *stats = Environment_get_stats(environment);
-    size_t usage;
+    size_t usage = 0;
     switch (unit[0]) {
         case 'm': { usage = stats->memory_usage / (1024 * 1024); } break;
         case 'k': { usage = stats->memory_usage / 1024; } break;
