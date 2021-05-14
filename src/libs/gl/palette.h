@@ -37,6 +37,7 @@ typedef struct _GL_Palette_t {
 } GL_Palette_t;
 
 extern void GL_palette_generate_greyscale(GL_Palette_t *palette, size_t size);
+extern void GL_palette_generate_quantized(GL_Palette_t *palette, const size_t red_bits, const size_t green_bits, const size_t blue_bits);
 extern GL_Pixel_t GL_palette_find_nearest_color(const GL_Palette_t *palette, const GL_Color_t color);
 extern GL_Color_t GL_palette_lerp(const GL_Color_t from, const GL_Color_t to, float ratio);
 

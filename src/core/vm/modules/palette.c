@@ -189,6 +189,40 @@ static int palette_new_1t_1u(lua_State *L)
     return 1;
 }
 
+static int palette_new_3n_1u(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    size_t red_bits = (size_t)LUAX_INTEGER(L, 1);
+    size_t green_bits = (size_t)LUAX_INTEGER(L, 2);
+    size_t blue_bits = (size_t)LUAX_INTEGER(L, 3);
+
+    size_t bits = red_bits + green_bits + blue_bits;
+    if (bits == 0) {
+        return luaL_error(L, "at least one bit is required (R%dG%dB%d == %d bits)", red_bits, green_bits, blue_bits, bits);
+    } else
+    if (bits > (sizeof(GL_Pixel_t) * 8)) {
+        return luaL_error(L, "too many bits to fit a pixel (R%dG%dB%d == %d bits)", red_bits, green_bits, blue_bits, bits);
+    }
+
+    GL_Palette_t palette = { 0 };
+    GL_palette_generate_quantized(&palette, red_bits, green_bits, blue_bits);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "generating quantized palette R%d:G%d:B%d (%d color(s))", red_bits, green_bits, blue_bits, 1 << bits);
+
+    Palette_Object_t *self = (Palette_Object_t *)lua_newuserdatauv(L, sizeof(Palette_Object_t), 1);
+    *self = (Palette_Object_t){
+            .palette = palette
+        };
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p allocated w/ %d color(s)", self, self->palette.size);
+
+    luaL_setmetatable(L, META_TABLE);
+
+    return 1;
+}
+
 static int palette_new_v_1u(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
@@ -196,6 +230,7 @@ static int palette_new_v_1u(lua_State *L)
         LUAX_OVERLOAD_SIGNATURE(palette_new_1s_1u, LUA_TSTRING)
         LUAX_OVERLOAD_SIGNATURE(palette_new_1n_1u, LUA_TNUMBER)
         LUAX_OVERLOAD_SIGNATURE(palette_new_1t_1u, LUA_TTABLE)
+        LUAX_OVERLOAD_ARITY(3, palette_new_3n_1u)
     LUAX_OVERLOAD_END
 }
 
