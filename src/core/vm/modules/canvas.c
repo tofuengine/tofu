@@ -1284,19 +1284,19 @@ static int canvas_blend_3usU_0(lua_State *L)
     return 0;
 }
 
-static int canvas_blend_5usnnU_0(lua_State *L)
+static int canvas_blend_5unnsU_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
-    const char *function = LUAX_STRING(L, 2);
-    int x = LUAX_INTEGER(L, 3);
-    int y = LUAX_INTEGER(L, 4);
+    int x = LUAX_INTEGER(L, 2);
+    int y = LUAX_INTEGER(L, 3);
+    const char *function = LUAX_STRING(L, 4);
     Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 5, self);
 
     const GL_Context_t *context = canvas->context;
@@ -1307,27 +1307,27 @@ static int canvas_blend_5usnnU_0(lua_State *L)
     return 0;
 }
 
-static int canvas_blend_9usnnnnnnU_0(lua_State *L)
+static int canvas_blend_9unnnnnnsU_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
-    const char *function = LUAX_STRING(L, 2);
-    int x = LUAX_INTEGER(L, 3);
-    int y = LUAX_INTEGER(L, 4);
-    int ox = LUAX_INTEGER(L, 5);
-    int oy = LUAX_INTEGER(L, 6);
-    size_t width = (size_t)LUAX_INTEGER(L, 7);
-    size_t height = (size_t)LUAX_INTEGER(L, 8);
+    int x = LUAX_INTEGER(L, 2);
+    int y = LUAX_INTEGER(L, 3);
+    int ox = LUAX_INTEGER(L, 4);
+    int oy = LUAX_INTEGER(L, 5);
+    size_t width = (size_t)LUAX_INTEGER(L, 6);
+    size_t height = (size_t)LUAX_INTEGER(L, 7);
+    const char *function = LUAX_STRING(L, 8);
     Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 9, self);
 
     const GL_Context_t *context = canvas->context;
@@ -1342,8 +1342,8 @@ static int canvas_blend_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(3, canvas_blend_3usU_0)
-        LUAX_OVERLOAD_ARITY(5, canvas_blend_5usnnU_0)
-        LUAX_OVERLOAD_ARITY(9, canvas_blend_9usnnnnnnU_0)
+        LUAX_OVERLOAD_ARITY(5, canvas_blend_5unnsU_0)
+        LUAX_OVERLOAD_ARITY(9, canvas_blend_9unnnnnnsU_0)
     LUAX_OVERLOAD_END
 }
 
