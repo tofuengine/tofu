@@ -28,7 +28,8 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] SNES' Mode7-like transforms, with scanline based ([HDMA](https://wiki.superfamicom.org/grog's-guide-to-dma-and-hdma-on-the-snes)) changes.
 * [x] Amiga's Copper-like programs, with pixel-wise resolution.
 * [x] Image programmable copy functions, to implement *script-shaders*.
-* [x] Stencil copy support, with used definable *threshold function*.
+* [x] Image stencil copy function, with used definable *threshold function*.
+* [x] Image blend copy, with user definable *blending function* (`repeat`, `add`, `sub`, `multiply`, `min`, `max`).
 * [x] Post-effect display-wise fragment shaders.
 * [x] Library of "retro-feel" post-effects (LCD, CRT, etc...).
 * [x] Audio support w/ real time sound streaming on a separate thread.
@@ -117,7 +118,6 @@ Along with the game-engine source, there's a bunch of (basic) demo projects. The
 ## Desiderata
 
 * [ ] Multi-threaded parallel rendering (w/ double/triple buffering).
-* [ ] **Bit** **Bl**ock **T**ransfer operations when drawing.
 * [ ] Define some fixed resolutions (see [this](https://pacoup.com/2011/06/12/list-of-true-169-resolutions/))?
 * [ ] Tiled-map support w/ camera support (zoom and scrolling).
 * [ ] Animation support w/ frameset DSL (i.e. compiling a string where each token can be a single frame, a range or a "keep-current-frame for some time" command). Each frameset can have its one update period, and will be most likely based upon a timer.
@@ -126,7 +126,6 @@ Along with the game-engine source, there's a bunch of (basic) demo projects. The
 * [ ] Library of noise functions ([cellular](https://thebookofshaders.com/12/), Perlin, etc...).
 * [ ] Multiple players support.
 * [ ] Use a custom memory-management allocator.
-* [ ] Memory usage profiling.
 * [ ] Webassembly build via Emscripten.
 * [ ] Switch to [Vulkan API](https://www.khronos.org/vulkan/) (through [GLFW](https://www.glfw.org/)).
 * [ ] game time management, in system class (speed, up down pause)
