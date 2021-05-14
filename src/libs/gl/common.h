@@ -82,6 +82,17 @@ typedef enum _GL_Comparators_t {
     GL_COMPARATOR_ALWAYS,
     GL_Comparators_t_CountOf
 } GL_Comparators_t;
+
+typedef enum _GL_Functions_t {
+    GL_FUNCTIONS_REPLACE,
+    GL_FUNCTIONS_ADD,
+    GL_FUNCTIONS_SUBTRACT,
+    GL_FUNCTIONS_MULTIPLY,
+    GL_FUNCTIONS_MIN,
+    GL_FUNCTIONS_MAX,
+    GL_Functions_t_CountOf
+} GL_Functions_t;
+
 #define GL_BOOL_FALSE   ((GL_Bool_t)0)
 #define GL_BOOL_TRUE    ((GL_Bool_t)1)
 

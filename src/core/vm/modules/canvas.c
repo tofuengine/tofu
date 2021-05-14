@@ -68,6 +68,7 @@ static int canvas_process_v_0(lua_State *L);
 static int canvas_copy_v_0(lua_State *L);
 static int canvas_blit_v_0(lua_State *L);
 static int canvas_stencil_v_0(lua_State *L);
+static int canvas_blend_v_0(lua_State *L);
 static int canvas_xform_v_0(lua_State *L);
 //static int canvas_grab(lua_State *L);
 
@@ -114,6 +115,7 @@ int canvas_loader(lua_State *L)
             { "copy", canvas_copy_v_0 },
             { "blit", canvas_blit_v_0 },
             { "stencil", canvas_stencil_v_0 },
+            { "blend", canvas_blend_v_0 },
             { "xform", canvas_xform_v_0 },
             { NULL, NULL }
         },
@@ -1253,22 +1255,95 @@ static int canvas_stencil_v_0(lua_State *L)
         LUAX_OVERLOAD_ARITY(11, canvas_stencil_11unnnnnnusnU_0)
     LUAX_OVERLOAD_END
 }
-    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 9, self);
+
+static const Map_Entry_t _functions[GL_Functions_t_CountOf] = { // Need to be sorted for `bsearch()`
+    { "add", GL_FUNCTIONS_ADD },
+    { "max", GL_FUNCTIONS_MAX },
+    { "min", GL_FUNCTIONS_MIN },
+    { "multiply", GL_FUNCTIONS_MULTIPLY },
+    { "replace", GL_FUNCTIONS_REPLACE },
+    { "subtract", GL_FUNCTIONS_SUBTRACT }
+};
+
+static int canvas_blend_3usU_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
+    const char *function = LUAX_STRING(L, 2);
+    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 3, self);
 
     const GL_Context_t *context = canvas->context;
     const GL_Surface_t *surface = GL_context_get_surface(self->context);
-    const GL_Surface_t *mask = GL_context_get_surface(stencil->context);
-    GL_context_stencil(context, surface, mask, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height }, (GL_Point_t){ .x = x, .y = y });
+    const Map_Entry_t *entry = map_find(L, function, _functions, GL_Functions_t_CountOf);
+    GL_context_blend(context, surface, (GL_Functions_t)entry->value, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height }, (GL_Point_t){ .x = 0, .y = 0 });
 
     return 0;
 }
 
-static int canvas_mask_v_0(lua_State *L)
+static int canvas_blend_5usnnU_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
+    const char *function = LUAX_STRING(L, 2);
+    int x = LUAX_INTEGER(L, 3);
+    int y = LUAX_INTEGER(L, 4);
+    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 5, self);
+
+    const GL_Context_t *context = canvas->context;
+    const GL_Surface_t *surface = GL_context_get_surface(self->context);
+    const Map_Entry_t *entry = map_find(L, function, _functions, GL_Functions_t_CountOf);
+    GL_context_blend(context, surface, (GL_Functions_t)entry->value, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height }, (GL_Point_t){ .x = x, .y = y });
+
+    return 0;
+}
+
+static int canvas_blend_9usnnnnnnU_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
+    const char *function = LUAX_STRING(L, 2);
+    int x = LUAX_INTEGER(L, 3);
+    int y = LUAX_INTEGER(L, 4);
+    int ox = LUAX_INTEGER(L, 5);
+    int oy = LUAX_INTEGER(L, 6);
+    size_t width = (size_t)LUAX_INTEGER(L, 7);
+    size_t height = (size_t)LUAX_INTEGER(L, 8);
+    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 9, self);
+
+    const GL_Context_t *context = canvas->context;
+    const GL_Surface_t *surface = GL_context_get_surface(self->context);
+    const Map_Entry_t *entry = map_find(L, function, _functions, GL_Functions_t_CountOf);
+    GL_context_blend(context, surface, (GL_Functions_t)entry->value, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height }, (GL_Point_t){ .x = x, .y = y });
+
+    return 0;
+}
+
+static int canvas_blend_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(3, canvas_mask_3uuU_0)
-        LUAX_OVERLOAD_ARITY(5, canvas_mask_5unnuU_0)
-        LUAX_OVERLOAD_ARITY(9, canvas_mask_9unnnnnnuU_0)
+        LUAX_OVERLOAD_ARITY(3, canvas_blend_3usU_0)
+        LUAX_OVERLOAD_ARITY(5, canvas_blend_5usnnU_0)
+        LUAX_OVERLOAD_ARITY(9, canvas_blend_9usnnnnnnU_0)
     LUAX_OVERLOAD_END
 }
 

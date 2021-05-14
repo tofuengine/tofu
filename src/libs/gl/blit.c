@@ -38,7 +38,6 @@ static inline void pixel(const GL_Surface_t *context, int x, int y, int index)
 #endif
 
 // TODO: specifies `const` always? Is pedantic or useful?
-// TODO: define a `BlitInfo` and `BlitFunc` types to generalize?
 // https://dev.to/fenbf/please-declare-your-variables-as-const
 void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position)
 {

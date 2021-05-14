@@ -535,6 +535,114 @@ void GL_context_stencil(const GL_Context_t *context, const GL_Surface_t *source,
     }
 }
 
+typedef GL_Pixel_t (*GL_Pixel_Function_t)(GL_Pixel_t destination, GL_Pixel_t source);
+
+static GL_Pixel_t _replace(GL_Pixel_t destination, GL_Pixel_t source)
+{
+    return source;
+}
+
+static GL_Pixel_t _add(GL_Pixel_t destination, GL_Pixel_t source)
+{
+    const int value = (int)destination + (int)source;
+    return (GL_Pixel_t)ICLAMP(value, 0, 255);
+}
+
+static GL_Pixel_t _subtract(GL_Pixel_t destination, GL_Pixel_t source)
+{
+    const int value = (int)destination - (int)source;
+    return (GL_Pixel_t)ICLAMP(value, 0, 255);
+}
+
+static GL_Pixel_t _multiply(GL_Pixel_t destination, GL_Pixel_t source)
+{
+    const int value = (int)destination * (int)source;
+    return (GL_Pixel_t)ICLAMP(value, 0, 255);
+}
+
+static GL_Pixel_t _min(GL_Pixel_t destination, GL_Pixel_t source)
+{
+    return destination < source ? destination : source;
+}
+
+static GL_Pixel_t _max(GL_Pixel_t destination, GL_Pixel_t source)
+{
+    return destination > source ? destination : source;
+}
+
+const GL_Pixel_Function_t _pixel_functions[GL_Functions_t_CountOf] = {
+    _replace, _add, _subtract, _multiply, _min, _max
+};
+
+void GL_context_blend(const GL_Context_t *context, const GL_Surface_t *source, GL_Functions_t function, GL_Rectangle_t area, GL_Point_t position)
+{
+    const GL_State_t *state = &context->state;
+    const GL_Quad_t *clipping_region = &state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
+    const GL_Surface_t *surface = context->surface;
+    const GL_Pixel_Function_t blend = _pixel_functions[function];
+
+    size_t skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
+    size_t skip_y = 0;
+
+    GL_Quad_t drawing_region = (GL_Quad_t){
+            .x0 = position.x,
+            .y0 = position.y,
+            .x1 = position.x + (int)area.width - 1,
+            .y1 = position.y + (int)area.height - 1
+        };
+
+    if (drawing_region.x0 < clipping_region->x0) {
+        skip_x = clipping_region->x0 - drawing_region.x0;
+        drawing_region.x0 = clipping_region->x0;
+    }
+    if (drawing_region.y0 < clipping_region->y0) {
+        skip_y = clipping_region->y0 - drawing_region.y0;
+        drawing_region.y0 = clipping_region->y0;
+    }
+    if (drawing_region.x1 > clipping_region->x1) {
+        drawing_region.x1 = clipping_region->x1;
+    }
+    if (drawing_region.y1 > clipping_region->y1) {
+        drawing_region.y1 = clipping_region->y1;
+    }
+
+    const int width = drawing_region.x1 - drawing_region.x0 + 1;
+    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
+        return;
+    }
+
+    const GL_Pixel_t *sdata = source->data;
+    GL_Pixel_t *ddata = surface->data;
+
+    const size_t swidth = source->width;
+    const size_t dwidth = surface->width;
+
+    const size_t sskip = swidth - width;
+    const size_t dskip = dwidth - width;
+
+    const GL_Pixel_t *sptr = sdata + (area.y + skip_y) * swidth + (area.x + skip_x);
+    GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
+
+    for (int i = height; i; --i) {
+        for (int j = width; j; --j) {
+#ifdef __DEBUG_GRAPHICS__
+            pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
+#endif
+            const GL_Pixel_t index = shifting[blend(*dptr, *(sptr++))];
+            if (transparent[index]) {
+                ++dptr;
+            } else {
+                *(dptr++) = index;
+            }
+        }
+        sptr += sskip;
+        dptr += dskip;
+    }
+}
+
 GL_Pixel_t GL_context_peek(const GL_Context_t *context, GL_Point_t position)
 {
     const GL_Surface_t *surface = context->surface;

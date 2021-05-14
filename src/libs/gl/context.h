@@ -69,6 +69,7 @@ extern void GL_context_fill(const GL_Context_t *context, GL_Point_t seed, GL_Pix
 extern void GL_context_process(const GL_Context_t *context, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, GL_Process_Callback_t callback, void *user_data);
 extern void GL_context_copy(const GL_Context_t *context, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position);
 extern void GL_context_stencil(const GL_Context_t *context, const GL_Surface_t *source, const GL_Surface_t *mask, GL_Comparators_t comparator, GL_Pixel_t threshold, GL_Rectangle_t area, GL_Point_t position);
+extern void GL_context_blend(const GL_Context_t *context, const GL_Surface_t *source, GL_Functions_t function, GL_Rectangle_t area, GL_Point_t position);
 extern GL_Pixel_t GL_context_peek(const GL_Context_t *context, GL_Point_t position);
 extern void GL_context_poke(GL_Context_t *context, GL_Point_t position, GL_Pixel_t index);
 
