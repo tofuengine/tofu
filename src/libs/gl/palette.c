@@ -61,10 +61,9 @@
 //
 //     i * ((1 << (8 - bits)) - 1) / ((1 << bits) - 1))
 //
-static inline uint8_t _padding(size_t value, size_t values, size_t bits)
+static inline uint8_t _padding(size_t value, size_t values, size_t count)
 {
-    float ratio = ((float)values - 1.0f) / ((float)bits - 1.0f);
-    return (uint8_t)(ratio * value + 0.5f); // Rounding is required to get consistent results!
+    return (uint8_t)((value * (values - 1)) / (count - 1));
 }
 
 void GL_palette_generate_quantized(GL_Palette_t *palette, const size_t red_bits, const size_t green_bits, const size_t blue_bits)
