@@ -61,7 +61,7 @@
 //
 //     i * ((1 << (8 - bits)) - 1) / ((1 << bits) - 1))
 //
-static inline uint8_t _padding(size_t value, size_t values, size_t count)
+static inline uint8_t _quantize(size_t value, size_t values, size_t count)
 {
     return (uint8_t)((value * (values - 1)) / (count - 1));
 }
@@ -82,11 +82,11 @@ void GL_palette_generate_quantized(GL_Palette_t *palette, const size_t red_bits,
 
     size_t size = 0;
     for (size_t r = 0; r < red_values; ++r) {
-        uint8_t r8 = (r << red_lower_bits) | _padding(r, red_lower_values, red_values);
+        uint8_t r8 = (r << red_lower_bits) | _quantize(r, red_lower_values, red_values);
         for (size_t g = 0; g < green_values; ++g) {
-            uint8_t g8 = (g << green_lower_bits) | _padding(g, green_lower_values, green_values);
+            uint8_t g8 = (g << green_lower_bits) | _quantize(g, green_lower_values, green_values);
             for (size_t b = 0; b < blue_values; ++b) {
-                uint8_t b8 = (b << blue_lower_bits) | _padding(b, blue_lower_values, blue_values);
+                uint8_t b8 = (b << blue_lower_bits) | _quantize(b, blue_lower_values, blue_values);
                 palette->colors[size++] = (GL_Color_t){ .r = r8, .g = g8, .b = b8, .a = 255 };
             }
         }
@@ -97,8 +97,8 @@ void GL_palette_generate_quantized(GL_Palette_t *palette, const size_t red_bits,
 void GL_palette_generate_greyscale(GL_Palette_t *palette, const size_t size)
 {
     for (size_t i = 0; i < size; ++i) {
-        unsigned char y = (unsigned char)(((float)i / (float)(size - 1)) * 255.0f);
-        palette->colors[i] = (GL_Color_t){ .r = y, .g = y, .b = y, .a = 255  };
+        uint8_t y = _quantize(i, 256, size);
+        palette->colors[i] = (GL_Color_t){ .r = y, .g = y, .b = y, .a = 255 };
     }
     palette->size = size;
 }
