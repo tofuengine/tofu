@@ -77,7 +77,7 @@ typedef int luaX_Reference;
             }
     #define LUAX_SIGNATURE_END \
             if (_matched != _argc) { \
-                luaL_error(_L, "[%s:%d] arguments number mismatch (checked %d, matched %d out of %d)", __FILE__, __LINE__, _index, _matched, _argc); \
+                luaL_error(_L, "[%s:%d] arguments number mismatch (checked %d, matched %d out of %d)", __FILE__, __LINE__, _index - 1, _matched, _argc); \
             } \
         } while (0);
 #else
