@@ -72,7 +72,7 @@ typedef int luaX_Reference;
             ++_matched;
     #define LUAX_SIGNATURE_OPTIONAL(...) \
             luaX_checkargument(_L, _index, __FILE__, __LINE__, (const int[]){ __VA_ARGS__, LUA_TNIL, LUA_TNONE, LUAX_EOD }); \
-            if (!lua_isnoneornil(_L, _index++)) { \
+            if (!lua_isnone(_L, _index++)) { \
                 ++_matched; \
             }
     #define LUAX_SIGNATURE_END \
