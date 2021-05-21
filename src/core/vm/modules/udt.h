@@ -103,6 +103,7 @@ typedef struct _XForm_Object_t {
 
 typedef struct _Palette_Object_t {
     GL_Palette_t palette;
+    // TODO: add hashtable to memoize color matching! 
 } Palette_Object_t;
 
 typedef struct _Program_Object_t {

@@ -71,8 +71,8 @@ typedef int luaX_Reference;
             luaX_checkargument(_L, _index++, __FILE__, __LINE__, (const int[]){ __VA_ARGS__, LUAX_EOD }); \
             ++_matched;
     #define LUAX_SIGNATURE_OPTIONAL(...) \
-            luaX_checkargument(_L, _index, __FILE__, __LINE__, (const int[]){ __VA_ARGS__, LUA_TNONE, LUAX_EOD }); \
-            if (!lua_isnone(_L, _index++)) { \
+            luaX_checkargument(_L, _index, __FILE__, __LINE__, (const int[]){ __VA_ARGS__, LUA_TNIL, LUA_TNONE, LUAX_EOD }); \
+            if (!lua_isnoneornil(_L, _index++)) { \
                 ++_matched; \
             }
     #define LUAX_SIGNATURE_END \
@@ -115,26 +115,26 @@ typedef int luaX_Reference;
 
 #ifdef DEBUG
     #define LUAX_BOOLEAN(L, idx)                (!lua_isboolean((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), 0 : lua_toboolean((L), (idx)))
-    #define LUAX_OPTIONAL_BOOLEAN(L, idx, def)  (lua_isnone((L), (idx)) ? (def) : lua_toboolean((L), (idx)))
+    #define LUAX_OPTIONAL_BOOLEAN(L, idx, def)  (lua_isnoneornil((L), (idx)) ? (def) : lua_toboolean((L), (idx)))
     #define LUAX_INTEGER(L, idx)                (!lua_isnumber((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), 0 : lua_tointeger((L), (idx)))
-    #define LUAX_OPTIONAL_INTEGER(L, idx, def)  (lua_isnone((L), (idx)) ? (def) : lua_tointeger((L), (idx)))
+    #define LUAX_OPTIONAL_INTEGER(L, idx, def)  (lua_isnoneornil((L), (idx)) ? (def) : lua_tointeger((L), (idx)))
     #define LUAX_NUMBER(L, idx)                 (!lua_isnumber((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), 0.0f : lua_tonumber((L), (idx)))
-    #define LUAX_OPTIONAL_NUMBER(L, idx, def)   (lua_isnone((L), (idx)) ? (def) : lua_tonumber((L), (idx)))
+    #define LUAX_OPTIONAL_NUMBER(L, idx, def)   (lua_isnoneornil((L), (idx)) ? (def) : lua_tonumber((L), (idx)))
     #define LUAX_STRING(L, idx)                 (!lua_isstring((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), NULL : lua_tostring((L), (idx)))
-    #define LUAX_OPTIONAL_STRING(L, idx, def)   (lua_isnone((L), (idx)) ? (def) : lua_tostring((L), (idx)))
+    #define LUAX_OPTIONAL_STRING(L, idx, def)   (lua_isnoneornil((L), (idx)) ? (def) : lua_tostring((L), (idx)))
     #define LUAX_USERDATA(L, idx)               (!lua_isuserdata((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), NULL : lua_touserdata((L), (idx)))
-    #define LUAX_OPTIONAL_USERDATA(L, idx, def) (lua_isnone((L), (idx)) ? (def) : lua_touserdata((L), (idx)))
+    #define LUAX_OPTIONAL_USERDATA(L, idx, def) (lua_isnoneornil((L), (idx)) ? (def) : lua_touserdata((L), (idx)))
 #else
     #define LUAX_BOOLEAN(L, idx)                (lua_toboolean((L), (idx)))
-    #define LUAX_OPTIONAL_BOOLEAN(L, idx, def)  (lua_isnone((L), (idx)) ? (def) : lua_toboolean((L), (idx)))
+    #define LUAX_OPTIONAL_BOOLEAN(L, idx, def)  (lua_isnoneornil((L), (idx)) ? (def) : lua_toboolean((L), (idx)))
     #define LUAX_INTEGER(L, idx)                (lua_tointeger((L), (idx)))
-    #define LUAX_OPTIONAL_INTEGER(L, idx, def)  (lua_isnone((L), (idx)) ? (def) : lua_tointeger((L), (idx)))
+    #define LUAX_OPTIONAL_INTEGER(L, idx, def)  (lua_isnoneornil((L), (idx)) ? (def) : lua_tointeger((L), (idx)))
     #define LUAX_NUMBER(L, idx)                 (lua_tonumber((L), (idx)))
-    #define LUAX_OPTIONAL_NUMBER(L, idx, def)   (lua_isnone((L), (idx)) ? (def) : lua_tonumber((L), (idx)))
+    #define LUAX_OPTIONAL_NUMBER(L, idx, def)   (lua_isnoneornil((L), (idx)) ? (def) : lua_tonumber((L), (idx)))
     #define LUAX_STRING(L, idx)                 (lua_tostring((L), (idx)))
-    #define LUAX_OPTIONAL_STRING(L, idx, def)   (lua_isnone((L), (idx)) ? (def) : lua_tostring((L), (idx)))
+    #define LUAX_OPTIONAL_STRING(L, idx, def)   (lua_isnoneornil((L), (idx)) ? (def) : lua_tostring((L), (idx)))
     #define LUAX_USERDATA(L, idx)               (lua_touserdata((L), (idx)))
-    #define LUAX_OPTIONAL_USERDATA(L, idx, def) (lua_isnone((L), (idx)) ? (def) : lua_touserdata((L), (idx)))
+    #define LUAX_OPTIONAL_USERDATA(L, idx, def) (lua_isnoneornil((L), (idx)) ? (def) : lua_touserdata((L), (idx)))
 #endif
 
 #define luaX_dump(L)                luaX_stackdump((L), __FILE__, __LINE__)
