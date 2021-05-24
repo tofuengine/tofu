@@ -1152,11 +1152,11 @@ static const Map_Entry_t _comparators[GL_Comparators_t_CountOf] = { // Need to b
     { "always", GL_COMPARATOR_ALWAYS },
     { "equal", GL_COMPARATOR_EQUAL },
     { "greater", GL_COMPARATOR_GREATER },
-    { "greater-or-equal", GL_COMPARATOR_GEQUAL },
+    { "greater-or-equal", GL_COMPARATOR_GREATER_OR_EQUAL },
     { "less", GL_COMPARATOR_LESS },
-    { "less-or-equal", GL_COMPARATOR_LEQUAL },
+    { "less-or-equal", GL_COMPARATOR_LESS_OR_EQUAL },
     { "never", GL_COMPARATOR_NEVER },
-    { "not-equal", GL_COMPARATOR_NOTEQUAL }
+    { "not-equal", GL_COMPARATOR_NOT_EQUAL }
 };
 
 static int canvas_stencil_5uusnU_0(lua_State *L)
@@ -1258,11 +1258,14 @@ static int canvas_stencil_v_0(lua_State *L)
 
 static const Map_Entry_t _functions[GL_Functions_t_CountOf] = { // Need to be sorted for `bsearch()`
     { "add", GL_FUNCTIONS_ADD },
+    { "add-clamped", GL_FUNCTIONS_ADD_CLAMPED },
     { "max", GL_FUNCTIONS_MAX },
     { "min", GL_FUNCTIONS_MIN },
     { "multiply", GL_FUNCTIONS_MULTIPLY },
+    { "multiply-clamped", GL_FUNCTIONS_MULTIPLY_CLAMPED },
     { "replace", GL_FUNCTIONS_REPLACE },
-    { "subtract", GL_FUNCTIONS_SUBTRACT }
+    { "subtract", GL_FUNCTIONS_SUBTRACT },
+    { "subtract-clamped", GL_FUNCTIONS_SUBTRACT_CLAMPED }
 };
 
 static int canvas_blend_3usU_0(lua_State *L)

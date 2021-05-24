@@ -544,17 +544,32 @@ static GL_Pixel_t _replace(GL_Pixel_t destination, GL_Pixel_t source)
 
 static GL_Pixel_t _add(GL_Pixel_t destination, GL_Pixel_t source)
 {
+    return destination + source;
+}
+
+static GL_Pixel_t _add_clamped(GL_Pixel_t destination, GL_Pixel_t source)
+{
     const int value = (int)destination + (int)source;
     return (GL_Pixel_t)ICLAMP(value, 0, 255);
 }
 
 static GL_Pixel_t _subtract(GL_Pixel_t destination, GL_Pixel_t source)
 {
+    return destination - source;
+}
+
+static GL_Pixel_t _subtract_clamped(GL_Pixel_t destination, GL_Pixel_t source)
+{
     const int value = (int)destination - (int)source;
     return (GL_Pixel_t)ICLAMP(value, 0, 255);
 }
 
 static GL_Pixel_t _multiply(GL_Pixel_t destination, GL_Pixel_t source)
+{
+    return destination * source;
+}
+
+static GL_Pixel_t _multiply_clamped(GL_Pixel_t destination, GL_Pixel_t source)
 {
     const int value = (int)destination * (int)source;
     return (GL_Pixel_t)ICLAMP(value, 0, 255);
@@ -571,7 +586,7 @@ static GL_Pixel_t _max(GL_Pixel_t destination, GL_Pixel_t source)
 }
 
 const GL_Pixel_Function_t _pixel_functions[GL_Functions_t_CountOf] = {
-    _replace, _add, _subtract, _multiply, _min, _max
+    _replace, _add, _add_clamped, _subtract, _subtract_clamped, _multiply, _multiply_clamped, _min, _max
 };
 
 void GL_context_blend(const GL_Context_t *context, const GL_Surface_t *source, GL_Functions_t function, GL_Rectangle_t area, GL_Point_t position)
