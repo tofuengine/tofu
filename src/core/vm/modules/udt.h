@@ -62,6 +62,9 @@ typedef struct _Object_t {
 typedef struct _Canvas_Object_t {
     GL_Context_t *context;
     bool allocated;
+    struct {
+        GL_Pixel_t background, foreground;
+    } color;
 } Canvas_Object_t;
 
 typedef struct _Bank_Object_t {

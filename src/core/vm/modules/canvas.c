@@ -40,6 +40,9 @@
 #define META_TABLE  "Tofu_Graphics_Canvas_mt"
 #define SCRIPT_NAME "@canvas.lua"
 
+#define CANVAS_DEFAULT_BACKGROUND   0
+#define CANVAS_DEFAULT_FOREGROUND   1
+
 static int canvas_new_v_1u(lua_State *L);
 static int canvas_gc_1u_0(lua_State *L);
 static int canvas_size_1u_2nn(lua_State *L);
@@ -49,7 +52,7 @@ static int canvas_pop_2uN_0(lua_State *L);
 static int canvas_reset_1u_0(lua_State *L);
 static int canvas_background_2un_0(lua_State *L);
 static int canvas_clipping_v_0(lua_State *L);
-static int canvas_color_2un_0(lua_State *L);
+static int canvas_foreground_2un_0(lua_State *L);
 static int canvas_shift_v_0(lua_State *L);
 static int canvas_transparent_v_0(lua_State *L);
 static int canvas_clear_2uN_0(lua_State *L);
@@ -95,7 +98,7 @@ int canvas_loader(lua_State *L)
             { "pop", canvas_pop_2uN_0 },
             { "reset", canvas_reset_1u_0 },
             { "background", canvas_background_2un_0 },
-            { "color", canvas_color_2un_0 },
+            { "foreground", canvas_foreground_2un_0 },
             { "clipping", canvas_clipping_v_0 },
             { "shift", canvas_shift_v_0 },
             { "transparent", canvas_transparent_v_0 },
@@ -134,7 +137,11 @@ static int canvas_new_0_1u(lua_State *L)
     Canvas_Object_t *self = (Canvas_Object_t *)lua_newuserdatauv(L, sizeof(Canvas_Object_t), 1);
     *self = (Canvas_Object_t){
             .context = Display_get_context(display),
-            .allocated = false
+            .allocated = false,
+            .color = {
+                .background = CANVAS_DEFAULT_BACKGROUND,
+                .foreground = CANVAS_DEFAULT_FOREGROUND
+            }
         };
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas %p allocated w/ default context", self);
 
@@ -160,7 +167,11 @@ static int canvas_new_2nn_1u(lua_State *L)
     Canvas_Object_t *self = (Canvas_Object_t *)lua_newuserdatauv(L, sizeof(Canvas_Object_t), 1);
     *self = (Canvas_Object_t){
             .context = context,
-            .allocated = true
+            .allocated = true,
+            .color = {
+                .background = CANVAS_DEFAULT_BACKGROUND,
+                .foreground = CANVAS_DEFAULT_FOREGROUND
+            }
         };
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas %p allocated w/ context", self, context);
 
@@ -208,7 +219,11 @@ static int canvas_new_3sNU_1u(lua_State *L)
     Canvas_Object_t *self = (Canvas_Object_t *)lua_newuserdatauv(L, sizeof(Canvas_Object_t), 1);
     *self = (Canvas_Object_t){
             .context = context,
-            .allocated = true
+            .allocated = true,
+            .color = {
+                .background = CANVAS_DEFAULT_BACKGROUND,
+                .foreground = CANVAS_DEFAULT_FOREGROUND
+            }
         };
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas %p allocated w/ context", self, context);
 
@@ -374,13 +389,12 @@ static int canvas_background_2un_0(lua_State *L)
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
     GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 2);
 
-    GL_Context_t *context = self->context;
-    GL_context_set_background(context, index);
+    self->color.background = index;
 
     return 0;
 }
 
-static int canvas_color_2un_0(lua_State *L)
+static int canvas_foreground_2un_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -389,8 +403,7 @@ static int canvas_color_2un_0(lua_State *L)
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
     GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 2);
 
-    GL_Context_t *context = self->context;
-    GL_context_set_color(context, index);
+    self->color.foreground = index;
 
     return 0;
 }
@@ -578,7 +591,7 @@ static int canvas_clear_2uN_0(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 2, self->context->state.background);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 2, self->color.background);
 
     const GL_Context_t *context = self->context;
     GL_context_clear(context, index);
@@ -597,7 +610,7 @@ static int canvas_point_4unnN_0(lua_State *L)
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 4, self->context->state.color);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 4, self->color.foreground);
 
     const GL_Context_t *context = self->context;
     GL_primitive_point(context, (GL_Point_t){ .x = x, .y = y }, index);
@@ -618,7 +631,7 @@ static int canvas_hline_5unnnN_0(lua_State *L)
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
     size_t width = (size_t)LUAX_INTEGER(L, 4);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 5, self->context->state.color); // TODO: is state stack useful?
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 5, self->color.foreground);
 
     const GL_Context_t *context = self->context;
     GL_primitive_hline(context, (GL_Point_t){ .x = x, .y = y }, width, index);
@@ -639,7 +652,7 @@ static int canvas_vline_5unnnN_0(lua_State *L)
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
     size_t height = (size_t)LUAX_INTEGER(L, 4);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 5, self->context->state.color);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 5, self->color.foreground);
 
     const GL_Context_t *context = self->context;
     GL_primitive_vline(context, (GL_Point_t){ .x = x, .y = y }, height, index);
@@ -662,7 +675,7 @@ static int canvas_line_6unnnnN_0(lua_State *L)
     int y0 = LUAX_INTEGER(L, 3);
     int x1 = LUAX_INTEGER(L, 4);
     int y1 = LUAX_INTEGER(L, 5);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 6, self->context->state.color);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 6, self->color.foreground);
 
     const GL_Context_t *context = self->context;
     GL_Point_t vertices[2] = {
@@ -703,7 +716,7 @@ static int canvas_polyline_3utN_0(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 3, self->context->state.color);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 3, self->color.foreground);
 
     GL_Point_t *vertices = _fetch(L, 2);
 
@@ -731,7 +744,7 @@ static int canvas_fill_4unnN_0(lua_State *L)
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 4, self->context->state.color);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 4, self->color.foreground);
 
     const GL_Context_t *context = self->context;
     GL_context_fill(context, (GL_Point_t){ .x = x, .y = y }, index); // TODO: pass `GL_INDEX_COLOR` fake?
@@ -760,7 +773,7 @@ static int canvas_triangle_9usnnnnnnN_0(lua_State *L)
     int y1 = LUAX_INTEGER(L, 6);
     int x2 = LUAX_INTEGER(L, 7);
     int y2 = LUAX_INTEGER(L, 8);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 9, self->context->state.color);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 9, self->color.foreground);
 
     const GL_Context_t *context = self->context;
     if (mode[0] == 'f') {
@@ -795,7 +808,7 @@ static int canvas_rectangle_7usnnnnN_0(lua_State *L)
     int y = LUAX_INTEGER(L, 4);
     size_t width = (size_t)LUAX_INTEGER(L, 5);
     size_t height = (size_t)LUAX_INTEGER(L, 6);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 7, self->context->state.color);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 7, self->color.foreground);
 
     const GL_Context_t *context = self->context;
     if (mode[0] == 'f') {
@@ -834,7 +847,7 @@ static int canvas_circle_6usnnnN_0(lua_State *L)
     int cx = LUAX_INTEGER(L, 3);
     int cy = LUAX_INTEGER(L, 4);
     size_t radius = (size_t)LUAX_INTEGER(L, 5);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 6, self->context->state.color);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 6, self->color.foreground);
 
     const GL_Context_t *context = self->context;
     if (radius < 1) { // Null radius, just a point regardless mode!

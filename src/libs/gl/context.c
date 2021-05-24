@@ -34,8 +34,6 @@
 static inline void _reset_state(GL_State_t *state, const GL_Surface_t *surface)
 {
     *state = (GL_State_t){
-            .background = 0,
-            .color = 1,
             .clipping_region = (GL_Quad_t){ .x0 = 0, .y0 = 0, .x1 = (int)surface->width - 1, .y1 = (int)surface->height - 1 },
             .shifting = { 0 },
             .transparent = { 0 }
@@ -132,12 +130,6 @@ void GL_context_reset(GL_Context_t *context)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "context reset");
 }
 
-void GL_context_set_background(GL_Context_t *context, GL_Pixel_t index)
-{
-    GL_State_t *state = &context->state;
-    state->background = index;
-}
-
 void GL_context_set_clipping(GL_Context_t *context, const GL_Rectangle_t *region)
 {
     GL_State_t *state = &context->state;
@@ -156,12 +148,6 @@ void GL_context_set_clipping(GL_Context_t *context, const GL_Rectangle_t *region
                 .y1 = imin((int)context->surface->height, region->y + (int)region->height) - 1
             };
     }
-}
-
-void GL_context_set_color(GL_Context_t *context, GL_Pixel_t index)
-{
-    GL_State_t *state = &context->state;
-    state->color = index;
 }
 
 void GL_context_set_shifting(GL_Context_t *context, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count)
