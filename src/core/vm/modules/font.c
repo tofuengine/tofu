@@ -108,7 +108,7 @@ static int font_new_3uusS_1u(lua_State *L)
         return luaL_error(L, "can't load file `%s`", cells_file);
     }
 
-    GL_Sheet_t *sheet = GL_sheet_create(GL_context_get_surface(atlas->context), S_BPTR(cells), S_BSIZE(cells) / sizeof(GL_Rectangle_u32_t)); // Calculate the amount of entries on the fly.
+    GL_Sheet_t *sheet = GL_sheet_create(atlas->surface, S_BPTR(cells), S_BSIZE(cells) / sizeof(GL_Rectangle_u32_t)); // Calculate the amount of entries on the fly.
     if (!sheet) {
         return luaL_error(L, "can't create sheet");
     }
@@ -150,7 +150,7 @@ static int font_new_4uunnS_1u(lua_State *L)
     size_t glyph_height = (size_t)LUAX_INTEGER(L, 4);
     const char *alphabeth = LUAX_OPTIONAL_STRING(L, 5, NULL);
 
-    GL_Sheet_t *sheet = GL_sheet_create_fixed(GL_context_get_surface(atlas->context), (GL_Size_t){ .width = glyph_width, .height = glyph_height });
+    GL_Sheet_t *sheet = GL_sheet_create_fixed(atlas->surface, (GL_Size_t){ .width = glyph_width, .height = glyph_height });
     if (!sheet) {
         return luaL_error(L, "can't create sheet");
     }
@@ -302,7 +302,8 @@ static int font_write_4usnn_0(lua_State *L)
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
 
-    const GL_Context_t *context = self->canvas.instance->context;
+    const GL_Surface_t *surface = self->canvas.instance->surface;
+    const GL_State_t state = self->canvas.instance->state.current;
     const GL_Sheet_t *sheet = self->sheet;
     const GL_Rectangle_t *cells = sheet->cells;
     const GL_Cell_t *glyphs = self->glyphs;
@@ -324,7 +325,7 @@ static int font_write_4usnn_0(lua_State *L)
             continue;
         }
         const GL_Rectangle_t *cell = &cells[cell_id];
-        GL_context_blit(context, sheet->atlas, *cell, (GL_Point_t){ .x = dx, .y = dy });
+        GL_blit(surface, state, sheet->atlas, *cell, (GL_Point_t){ .x = dx, .y = dy });
         dx += cell->width;
         if (height < cell->height) {
             height = cell->height;
@@ -351,7 +352,8 @@ static int font_write_6usnnnN_0(lua_State *L)
     float scale_x = LUAX_NUMBER(L, 5);
     float scale_y = LUAX_OPTIONAL_NUMBER(L, 6, scale_x);
 
-    const GL_Context_t *context = self->canvas.instance->context;
+    const GL_Surface_t *surface = self->canvas.instance->surface;
+    const GL_State_t state = self->canvas.instance->state.current;
     const GL_Sheet_t *sheet = self->sheet;
     const GL_Rectangle_t *cells = sheet->cells;
     const GL_Cell_t *glyphs = self->glyphs;
@@ -375,7 +377,7 @@ static int font_write_6usnnnN_0(lua_State *L)
         const GL_Rectangle_t *cell = &cells[cell_id];
         const size_t cw = (size_t)(cell->width * fabs(scale_x));
         const size_t ch = (size_t)(cell->height * fabs(scale_y));
-        GL_context_blit_s(context, sheet->atlas, *cell, (GL_Point_t){ .x = dx, .y = dy }, scale_x, scale_y);
+        GL_blit_s(surface, state, sheet->atlas, *cell, (GL_Point_t){ .x = dx, .y = dy }, scale_x, scale_y);
         dx += cw;
         if (height < ch) {
             height = ch;
