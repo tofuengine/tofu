@@ -288,15 +288,17 @@ static int batch_blit_2uS_0(lua_State *L)
     const char *mode = LUAX_OPTIONAL_STRING(L, 2, "fast");
 
     const GL_Batch_t *batch = self->batch;
-    const GL_Context_t *context = self->bank.instance->canvas.instance->context;
+
+    const GL_Surface_t *surface = self->bank.instance->canvas.instance->surface;
+    const GL_State_t state = self->bank.instance->canvas.instance->state.current;
     if (mode[0] == 'f') {
-        GL_batch_blit(batch, context);
+        GL_batch_blit(batch, surface, state);
     } else
     if (mode[0] == 's') {
-        GL_batch_blit_s(batch, context);
+        GL_batch_blit_s(batch, surface, state);
     } else
     if (mode[0] == 'c') {
-        GL_batch_blit_sr(batch, context);
+        GL_batch_blit_sr(batch, surface, state);
     } else {
         return luaL_error(L, "unknown mode `%s`", mode);
     }

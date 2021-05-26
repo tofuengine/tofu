@@ -354,20 +354,20 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window %p initialized", display->window);
 
-    display->canvas.context = GL_context_create(display->canvas.size.width, display->canvas.size.height);
-    if (!display->canvas.context) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create graphics context");
+    display->canvas.surface = GL_surface_create(display->canvas.size.width, display->canvas.size.height);
+    if (!display->canvas.surface) {
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create graphics surface");
         glfwDestroyWindow(display->window);
         glfwTerminate();
         free(display);
         return NULL;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "graphics context %p created", display->canvas.context);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "graphics surface %p created", display->canvas.surface);
 
     display->canvas.copperlist = GL_copperlist_create();
     if (!display->canvas.copperlist) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create copperlist");
-        GL_context_destroy(display->canvas.context);
+        GL_surface_destroy(display->canvas.surface);
         glfwDestroyWindow(display->window);
         glfwTerminate();
         free(display);
@@ -380,7 +380,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     if (!display->vram.pixels) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't allocate VRAM buffer");
         GL_copperlist_destroy(display->canvas.copperlist);
-        GL_context_destroy(display->canvas.context);
+        GL_surface_destroy(display->canvas.surface);
         glfwDestroyWindow(display->window);
         glfwTerminate();
         free(display);
@@ -393,7 +393,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't allocate VRAM texture");
         free(display->vram.pixels);
         GL_copperlist_destroy(display->canvas.copperlist);
-        GL_context_destroy(display->canvas.context);
+        GL_surface_destroy(display->canvas.surface);
         glfwDestroyWindow(display->window);
         glfwTerminate();
         free(display);
@@ -423,7 +423,7 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
         glDeleteBuffers(1, &display->vram.texture);
         free(display->vram.pixels);
         GL_copperlist_destroy(display->canvas.copperlist);
-        GL_context_destroy(display->canvas.context);
+        GL_surface_destroy(display->canvas.surface);
         glfwDestroyWindow(display->window);
         glfwTerminate();
         free(display);
@@ -484,8 +484,8 @@ void Display_destroy(Display_t *display)
     GL_copperlist_destroy(display->canvas.copperlist);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p destroyed", display->canvas.copperlist);
 
-    GL_context_destroy(display->canvas.context);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "graphics context %p destroyed", display->canvas.context);
+    GL_surface_destroy(display->canvas.surface);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "graphics surface %p destroyed", display->canvas.surface);
 
     glfwDestroyWindow(display->window);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window %p destroyed", display->window);
@@ -533,7 +533,7 @@ void Display_present(const Display_t *display)
     glClear(GL_COLOR_BUFFER_BIT);
 
     // Convert the offscreen surface to a texture. The actual function changes when a copperlist is defined.
-    GL_Surface_t *surface = display->canvas.context->surface;
+    GL_Surface_t *surface = display->canvas.surface;
     GL_Color_t *pixels = display->vram.pixels;
 
     GL_copperlist_surface_to_rgba(surface, display->canvas.copperlist, pixels);
@@ -629,9 +629,9 @@ float Display_get_scale(const Display_t *display)
     return (float)display->vram.rectangle.width / (float)display->canvas.size.width;
 }
 
-GL_Context_t *Display_get_context(const Display_t *display)
+GL_Surface_t *Display_get_surface(const Display_t *display)
 {
-    return display->canvas.context;
+    return display->canvas.surface;
 }
 
 const GL_Palette_t *Display_get_palette(const Display_t *display)

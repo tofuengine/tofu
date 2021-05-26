@@ -27,7 +27,6 @@
 
 #include "common.h"
 #include "palette.h"
-#include "surface.h"
 
 typedef struct _GL_State_t { // FIXME: rename to `GL_State_s`
     GL_Quad_t clipping_region;
@@ -35,9 +34,9 @@ typedef struct _GL_State_t { // FIXME: rename to `GL_State_s`
     GL_Bool_t transparent[GL_MAX_PALETTE_COLORS];
 } GL_State_t;
 
-extern void GL_state_reset(GL_State_t *state, const GL_Surface_t *surface);
+extern void GL_state_reset(GL_State_t *state, GL_Size_t size);
 
-extern void GL_state_set_clipping(GL_State_t *state, const GL_Surface_t *surface, const GL_Rectangle_t *region);
+extern void GL_state_set_clipping(GL_State_t *state, GL_Size_t size, const GL_Rectangle_t *region);
 extern void GL_state_set_shifting(GL_State_t *state, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count);
 extern void GL_state_set_transparent(GL_State_t *state, const GL_Pixel_t *indexes, const GL_Bool_t *transparent, size_t count);
 

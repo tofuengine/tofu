@@ -29,8 +29,9 @@
 #include "surface.h"
 #include "state.h"
 
-extern void GL_blit(const GL_Surface_t *surface, const GL_State_t state, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position);
-extern void GL_blit_s(const GL_Surface_t *surface, const GL_State_t state, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, float sx, float sy);
-extern void GL_blit_sr(const GL_Surface_t *surface, const GL_State_t state, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, float sx, float sy, int rotation, float ax, float ay);
+// FIXME: rename to `GL_surface_blit_XXX`.
+extern void GL_blit(const GL_Surface_t *surface, GL_State_t state, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position);
+extern void GL_blit_s(const GL_Surface_t *surface, GL_State_t state, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, float sx, float sy);
+extern void GL_blit_sr(const GL_Surface_t *surface, GL_State_t state, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, float sx, float sy, int rotation, float ax, float ay);
 
 #endif  /* __GL_BLIT_H__ */

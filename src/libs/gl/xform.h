@@ -77,6 +77,6 @@ extern void GL_xform_registers(GL_XForm_t *xform, const GL_XForm_State_Operation
 extern void GL_xform_wrap(GL_XForm_t *xform, GL_XForm_Wraps_t wrap);
 extern void GL_xform_table(GL_XForm_t *xform, const GL_XForm_Table_Entry_t *entries, size_t count);
 
-extern void GL_xform_blit(const GL_XForm_t *xform, const GL_Surface_t *surface, const GL_State_t state, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position);
+extern void GL_xform_blit(const GL_XForm_t *xform, const GL_Surface_t *surface, GL_State_t state, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position);
 
 #endif  /* __GL_XFORM_H__ */

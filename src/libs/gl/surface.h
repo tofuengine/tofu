@@ -31,7 +31,7 @@
 #include <stdbool.h>
 
 typedef struct _GL_Surface_t {
-    size_t width, height;
+    size_t width, height; // FIXME: use `GL_Size_t`.
     GL_Pixel_t *data;
     size_t data_size;
     bool is_power_of_two;
@@ -48,9 +48,8 @@ extern GL_Surface_t *GL_surface_create(size_t width, size_t height);
 extern void GL_surface_destroy(GL_Surface_t *surface);
 
 extern void GL_surface_clear(const GL_Surface_t *surface, GL_Pixel_t index);
-
 extern GL_Pixel_t GL_surface_peek(const GL_Surface_t *surface, GL_Point_t position);
-extern void GL_surface_poke(const GL_Surface_t *surface, GL_State_t state, GL_Point_t position, GL_Pixel_t index);
+extern void GL_surface_poke(const GL_Surface_t *surface, GL_Point_t position, GL_Pixel_t index);
 
 extern void GL_surface_fill(const GL_Surface_t *surface, GL_State_t state, GL_Point_t seed, GL_Pixel_t index);
 
