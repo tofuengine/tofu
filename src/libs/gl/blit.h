@@ -26,11 +26,11 @@
 #define __GL_BLIT_H__
 
 #include "common.h"
-#include "context.h"
 #include "surface.h"
+#include "state.h"
 
-extern void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position);
-extern void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, float sx, float sy);
-extern void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, float sx, float sy, int rotation, float ax, float ay);
+extern void GL_blit(const GL_Surface_t *surface, const GL_State_t state, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position);
+extern void GL_blit_s(const GL_Surface_t *surface, const GL_State_t state, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, float sx, float sy);
+extern void GL_blit_sr(const GL_Surface_t *surface, const GL_State_t state, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, float sx, float sy, int rotation, float ax, float ay);
 
 #endif  /* __GL_BLIT_H__ */

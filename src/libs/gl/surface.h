@@ -25,9 +25,10 @@
 #ifndef __GL_SURFACE_H__
 #define __GL_SURFACE_H__
 
-#include <stdbool.h>
-
 #include "common.h"
+#include "state.h"
+
+#include <stdbool.h>
 
 typedef struct _GL_Surface_t {
     size_t width, height;
@@ -38,8 +39,24 @@ typedef struct _GL_Surface_t {
 
 typedef void (*GL_Surface_Callback_t)(void *user_data, GL_Surface_t *surface, const void *pixels); // RGBA888 format.
 
+typedef GL_Pixel_t (*GL_Process_Callback_t)(void *user_data, GL_Point_t position, GL_Pixel_t from, GL_Pixel_t to);
+
+// TODO: rename decode to convert/grab.
+// FIXME: change width-height to `GL_Size_t`.
 extern GL_Surface_t *GL_surface_decode(size_t width, size_t height, const void *pixels, const GL_Surface_Callback_t callback, void *user_data);
 extern GL_Surface_t *GL_surface_create(size_t width, size_t height);
 extern void GL_surface_destroy(GL_Surface_t *surface);
+
+extern void GL_surface_clear(const GL_Surface_t *surface, GL_Pixel_t index);
+
+extern GL_Pixel_t GL_surface_peek(const GL_Surface_t *surface, GL_Point_t position);
+extern void GL_surface_poke(const GL_Surface_t *surface, GL_State_t state, GL_Point_t position, GL_Pixel_t index);
+
+extern void GL_surface_fill(const GL_Surface_t *surface, GL_State_t state, GL_Point_t seed, GL_Pixel_t index);
+
+extern void GL_surface_process(const GL_Surface_t *surface, GL_State_t state, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, GL_Process_Callback_t callback, void *user_data);
+extern void GL_surface_copy(const GL_Surface_t *surface, GL_State_t state, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position);
+extern void GL_surface_stencil(const GL_Surface_t *surface, GL_State_t state, const GL_Surface_t *source, const GL_Surface_t *mask, GL_Comparators_t comparator, GL_Pixel_t threshold, GL_Rectangle_t area, GL_Point_t position);
+extern void GL_surface_blend(const GL_Surface_t *surface, GL_State_t state, const GL_Surface_t *source, GL_Functions_t function, GL_Rectangle_t area, GL_Point_t position);
 
 #endif  /* __GL_SURFACE_H__ */

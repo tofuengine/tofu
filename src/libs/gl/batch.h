@@ -26,8 +26,9 @@
 #define __GL_BATCH_H__
 
 #include "common.h"
-#include "context.h"
 #include "sheet.h"
+#include "surface.h"
+#include "state.h"
 
 #include <stdbool.h>
 
@@ -54,8 +55,8 @@ extern void GL_batch_add(GL_Batch_t *batch, GL_Batch_Sprite_t sprite);
 
 //extern GL_Batch_Sprite_t *GL_batch_get_sprite(const GL_Batch_t *batch, size_t index);
 
-void GL_batch_blit(const GL_Batch_t *batch, const GL_Context_t *context); // FIXME: rename to `flush()`
-void GL_batch_blit_s(const GL_Batch_t *batch, const GL_Context_t *context);
-void GL_batch_blit_sr(const GL_Batch_t *batch, const GL_Context_t *context);
+void GL_batch_blit(const GL_Batch_t *batch, const GL_Surface_t *target, const GL_State_t state); // FIXME: rename to `flush()`
+void GL_batch_blit_s(const GL_Batch_t *batch, const GL_Surface_t *target, const GL_State_t state);
+void GL_batch_blit_sr(const GL_Batch_t *batch, const GL_Surface_t *target, const GL_State_t state);
 
 #endif  /* __GL_BATCH_H__ */

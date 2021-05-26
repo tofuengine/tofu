@@ -22,20 +22,23 @@
  * SOFTWARE.
  */
 
-#ifndef __GL_H__
-#define __GL_H__
+#ifndef __GL_STATE_H__
+#define __GL_STATE_H__
 
-#include "batch.h"
-#include "blit.h"
 #include "common.h"
-#include "context.h"
-#include "copperlist.h"
 #include "palette.h"
-#include "primitive.h"
-#include "sheet.h"
-#include "state.h"
 #include "surface.h"
-#include "tile.h"
-#include "xform.h"
 
-#endif  /* __GL_H__ */
+typedef struct _GL_State_t { // FIXME: rename to `GL_State_s`
+    GL_Quad_t clipping_region;
+    GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
+    GL_Bool_t transparent[GL_MAX_PALETTE_COLORS];
+} GL_State_t;
+
+extern void GL_state_reset(GL_State_t *state, const GL_Surface_t *surface);
+
+extern void GL_state_set_clipping(GL_State_t *state, const GL_Surface_t *surface, const GL_Rectangle_t *region);
+extern void GL_state_set_shifting(GL_State_t *state, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count);
+extern void GL_state_set_transparent(GL_State_t *state, const GL_Pixel_t *indexes, const GL_Bool_t *transparent, size_t count);
+
+#endif  /* __GL_STATE_H__ */
