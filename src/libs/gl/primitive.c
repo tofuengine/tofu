@@ -267,11 +267,12 @@ static void _vline(const GL_Surface_t *surface, const GL_Quad_t *clipping_region
     }
 }
 
-void GL_primitive_point(const GL_Surface_t *surface, GL_State_t state, GL_Point_t position, GL_Pixel_t index)
+void GL_primitive_point(const GL_Surface_t *surface, GL_Point_t position, GL_Pixel_t index)
 {
-    const GL_Quad_t *clipping_region = &state.clipping_region;
-    const GL_Pixel_t *shifting = state.shifting;
-    const GL_Bool_t *transparent = state.transparent;
+    const GL_State_t *state = &surface->state.current;
+    const GL_Quad_t *clipping_region = &state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
 
     index = shifting[index];
 
@@ -282,11 +283,12 @@ void GL_primitive_point(const GL_Surface_t *surface, GL_State_t state, GL_Point_
     _point(surface, clipping_region, position.x, position.y, index);
 }
 
-void GL_primitive_hline(const GL_Surface_t *surface, GL_State_t state, GL_Point_t origin, size_t w, GL_Pixel_t index)
+void GL_primitive_hline(const GL_Surface_t *surface, GL_Point_t origin, size_t w, GL_Pixel_t index)
 {
-    const GL_Quad_t *clipping_region = &state.clipping_region;
-    const GL_Pixel_t *shifting = state.shifting;
-    const GL_Bool_t *transparent = state.transparent;
+    const GL_State_t *state = &surface->state.current;
+    const GL_Quad_t *clipping_region = &state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
 
     index = shifting[index];
 
@@ -297,11 +299,12 @@ void GL_primitive_hline(const GL_Surface_t *surface, GL_State_t state, GL_Point_
     _hline(surface, clipping_region, origin.x, origin.y, w, index);
 }
 
-void GL_primitive_vline(const GL_Surface_t *surface, GL_State_t state, GL_Point_t origin, size_t h, GL_Pixel_t index)
+void GL_primitive_vline(const GL_Surface_t *surface, GL_Point_t origin, size_t h, GL_Pixel_t index)
 {
-    const GL_Quad_t *clipping_region = &state.clipping_region;
-    const GL_Pixel_t *shifting = state.shifting;
-    const GL_Bool_t *transparent = state.transparent;
+    const GL_State_t *state = &surface->state.current;
+    const GL_Quad_t *clipping_region = &state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
 
     index = shifting[index];
 
@@ -312,11 +315,12 @@ void GL_primitive_vline(const GL_Surface_t *surface, GL_State_t state, GL_Point_
     _vline(surface, clipping_region, origin.x, origin.y, h, index);
 }
 
-void GL_primitive_polyline(const GL_Surface_t *surface, GL_State_t state, const GL_Point_t *vertices, size_t count, GL_Pixel_t index)
+void GL_primitive_polyline(const GL_Surface_t *surface, const GL_Point_t *vertices, size_t count, GL_Pixel_t index)
 {
-    const GL_Quad_t *clipping_region = &state.clipping_region;
-    const GL_Pixel_t *shifting = state.shifting;
-    const GL_Bool_t *transparent = state.transparent;
+    const GL_State_t *state = &surface->state.current;
+    const GL_Quad_t *clipping_region = &state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
 
     index = shifting[index];
 
@@ -336,11 +340,12 @@ void GL_primitive_polyline(const GL_Surface_t *surface, GL_State_t state, const 
     }
 }
 
-void GL_primitive_filled_rectangle(const GL_Surface_t *surface, GL_State_t state, GL_Rectangle_t rectangle, GL_Pixel_t index)
+void GL_primitive_filled_rectangle(const GL_Surface_t *surface, GL_Rectangle_t rectangle, GL_Pixel_t index)
 {
-    const GL_Quad_t *clipping_region = &state.clipping_region;
-    const GL_Pixel_t *shifting = state.shifting;
-    const GL_Bool_t *transparent = state.transparent;
+    const GL_State_t *state = &surface->state.current;
+    const GL_Quad_t *clipping_region = &state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
 
     index = shifting[index];
 
@@ -394,11 +399,12 @@ void GL_primitive_filled_rectangle(const GL_Surface_t *surface, GL_State_t state
 // https://www.scratchapixel.com/lessons/3d-basic-rendering/rasterization-practical-implementation/rasterization-stage
 // https://fgiesen.wordpress.com/2013/02/08/triangle-rasterization-in-practice/
 // https://github.com/dpethes/2D-rasterizer/blob/master/rasterizer2d.pas
-void GL_primitive_filled_triangle(const GL_Surface_t *surface, GL_State_t state, GL_Point_t a, GL_Point_t b, GL_Point_t c, GL_Pixel_t index)
+void GL_primitive_filled_triangle(const GL_Surface_t *surface, GL_Point_t a, GL_Point_t b, GL_Point_t c, GL_Pixel_t index)
 {
-    const GL_Quad_t *clipping_region = &state.clipping_region;
-    const GL_Pixel_t *shifting = state.shifting;
-    const GL_Bool_t *transparent = state.transparent;
+    const GL_State_t *state = &surface->state.current;
+    const GL_Quad_t *clipping_region = &state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
 
     index = shifting[index];
 
@@ -494,11 +500,12 @@ void GL_primitive_filled_triangle(const GL_Surface_t *surface, GL_State_t state,
 }
 
 // https://www.javatpoint.com/computer-graphics-bresenhams-circle-algorithm
-void GL_primitive_filled_circle(const GL_Surface_t *surface, GL_State_t state, GL_Point_t center, size_t radius, GL_Pixel_t index)
+void GL_primitive_filled_circle(const GL_Surface_t *surface, GL_Point_t center, size_t radius, GL_Pixel_t index)
 {
-    const GL_Quad_t *clipping_region = &state.clipping_region;
-    const GL_Pixel_t *shifting = state.shifting;
-    const GL_Bool_t *transparent = state.transparent;
+    const GL_State_t *state = &surface->state.current;
+    const GL_Quad_t *clipping_region = &state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
 
     index = shifting[index];
 
@@ -532,11 +539,12 @@ void GL_primitive_filled_circle(const GL_Surface_t *surface, GL_State_t state, G
     }
 }
 
-void GL_primitive_circle(const GL_Surface_t *surface, GL_State_t state, GL_Point_t center, size_t radius, GL_Pixel_t index)
+void GL_primitive_circle(const GL_Surface_t *surface, GL_Point_t center, size_t radius, GL_Pixel_t index)
 {
-    const GL_Quad_t *clipping_region = &state.clipping_region;
-    const GL_Pixel_t *shifting = state.shifting;
-    const GL_Bool_t *transparent = state.transparent;
+    const GL_State_t *state = &surface->state.current;
+    const GL_Quad_t *clipping_region = &state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
 
     index = shifting[index];
 

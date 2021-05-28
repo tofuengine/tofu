@@ -63,10 +63,6 @@ typedef struct _Canvas_Object_t {
     GL_Surface_t *surface;
     bool allocated;
     struct {
-        GL_State_t current;
-        GL_State_t *stack;
-    } state;
-    struct {
         GL_Pixel_t background, foreground; // TODO: should those two belong to the state?
     } color;
 } Canvas_Object_t;

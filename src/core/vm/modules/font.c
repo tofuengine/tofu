@@ -303,7 +303,6 @@ static int font_write_4usnn_0(lua_State *L)
     int y = LUAX_INTEGER(L, 4);
 
     const GL_Surface_t *surface = self->canvas.instance->surface;
-    const GL_State_t state = self->canvas.instance->state.current;
     const GL_Sheet_t *sheet = self->sheet;
     const GL_Rectangle_t *cells = sheet->cells;
     const GL_Cell_t *glyphs = self->glyphs;
@@ -325,7 +324,7 @@ static int font_write_4usnn_0(lua_State *L)
             continue;
         }
         const GL_Rectangle_t *cell = &cells[cell_id];
-        GL_blit(surface, state, sheet->atlas, *cell, (GL_Point_t){ .x = dx, .y = dy });
+        GL_blit(surface, sheet->atlas, *cell, (GL_Point_t){ .x = dx, .y = dy });
         dx += cell->width;
         if (height < cell->height) {
             height = cell->height;
@@ -353,7 +352,6 @@ static int font_write_6usnnnN_0(lua_State *L)
     float scale_y = LUAX_OPTIONAL_NUMBER(L, 6, scale_x);
 
     const GL_Surface_t *surface = self->canvas.instance->surface;
-    const GL_State_t state = self->canvas.instance->state.current;
     const GL_Sheet_t *sheet = self->sheet;
     const GL_Rectangle_t *cells = sheet->cells;
     const GL_Cell_t *glyphs = self->glyphs;
@@ -377,7 +375,7 @@ static int font_write_6usnnnN_0(lua_State *L)
         const GL_Rectangle_t *cell = &cells[cell_id];
         const size_t cw = (size_t)(cell->width * fabs(scale_x));
         const size_t ch = (size_t)(cell->height * fabs(scale_y));
-        GL_blit_s(surface, state, sheet->atlas, *cell, (GL_Point_t){ .x = dx, .y = dy }, scale_x, scale_y);
+        GL_blit_s(surface, sheet->atlas, *cell, (GL_Point_t){ .x = dx, .y = dy }, scale_x, scale_y);
         dx += cw;
         if (height < ch) {
             height = ch;

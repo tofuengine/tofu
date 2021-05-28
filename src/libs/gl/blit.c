@@ -39,11 +39,12 @@ static inline void pixel(const GL_Surface_t *context, int x, int y, int index)
 
 // TODO: specifies `const` always? Is pedantic or useful?
 // https://dev.to/fenbf/please-declare-your-variables-as-const
-void GL_blit(const GL_Surface_t *surface, GL_State_t state, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position)
+void GL_blit(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position)
 {
-    const GL_Quad_t *clipping_region = &state.clipping_region;
-    const GL_Pixel_t *shifting = state.shifting;
-    const GL_Bool_t *transparent = state.transparent;
+    const GL_State_t *state = &surface->state.current;
+    const GL_Quad_t *clipping_region = &state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
 
     size_t skip_x = 0; // Offset into the (source) surface/texture, updated during clipping.
     size_t skip_y = 0;
@@ -111,11 +112,12 @@ void GL_blit(const GL_Surface_t *surface, GL_State_t state, const GL_Surface_t *
 //
 // http://www.datagenetics.com/blog/december32013/index.html
 // file:///C:/Users/mlizza/Downloads/Extensible_Implementation_of_Reliable_Pixel_Art_In.pdf
-void GL_blit_s(const GL_Surface_t *surface, GL_State_t state, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y)
+void GL_blit_s(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y)
 {
-    const GL_Quad_t *clipping_region = &state.clipping_region;
-    const GL_Pixel_t *shifting = state.shifting;
-    const GL_Bool_t *transparent = state.transparent;
+    const GL_State_t *state = &surface->state.current;
+    const GL_Quad_t *clipping_region = &state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
 
     const size_t drawing_width = (int)IROUNDF(area.width * fabsf(scale_x)); // We need to round! No ceil, no floor!
     const size_t drawing_height = (int)IROUNDF(area.height * fabsf(scale_y));
@@ -212,11 +214,12 @@ void GL_blit_s(const GL_Surface_t *surface, GL_State_t state, const GL_Surface_t
 // https://www.flipcode.com/archives/The_Art_of_Demomaking-Issue_10_Roto-Zooming.shtml
 //
 // FIXME: one row/column is lost due to rounding errors when angle is multiple of 128.
-void GL_blit_sr(const GL_Surface_t *surface, GL_State_t state, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y)
+void GL_blit_sr(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y)
 {
-    const GL_Quad_t *clipping_region = &state.clipping_region;
-    const GL_Pixel_t *shifting = state.shifting;
-    const GL_Bool_t *transparent = state.transparent;
+    const GL_State_t *state = &surface->state.current;
+    const GL_Quad_t *clipping_region = &state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
 
     const bool flip_x = scale_x < 0.0f;
     const bool flip_y = scale_y < 0.0f;
@@ -375,11 +378,12 @@ void GL_blit_sr(const GL_Surface_t *surface, GL_State_t state, const GL_Surface_
 #endif
 }
 #else
-void GL_blit_sr(const GL_Surface_t *surface, GL_State_t state, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y)
+void GL_blit_sr(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y)
 {
-    const GL_Quad_t *clipping_region = &state.clipping_region;
-    const GL_Pixel_t *shifting = state.shifting;
-    const GL_Bool_t *transparent = state.transparent;
+    const GL_State_t *state = &surface->state.current;
+    const GL_Quad_t *clipping_region = &state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
 
     const float sw = (float)area.width;
     const float sh = (float)area.height;

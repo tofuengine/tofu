@@ -232,9 +232,8 @@ static int bank_blit_4unnn_0(lua_State *L)
     int y = LUAX_INTEGER(L, 4);
 
     const GL_Surface_t *surface = self->canvas.instance->surface;
-    const GL_State_t state = self->canvas.instance->state.current;
     const GL_Sheet_t *sheet = self->sheet;
-    GL_blit(surface, state, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y });
+    GL_blit(surface, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y });
 
     return 0;
 }
@@ -255,9 +254,8 @@ static int bank_blit_5unnnn_0(lua_State *L)
     int rotation = LUAX_INTEGER(L, 5);
 
     const GL_Surface_t *surface = self->canvas.instance->surface;
-    const GL_State_t state = self->canvas.instance->state.current;
     const GL_Sheet_t *sheet = self->sheet;
-    GL_blit_sr(surface, state, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, 1.0f, 1.0f, rotation, 0.5f, 0.5f);
+    GL_blit_sr(surface, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, 1.0f, 1.0f, rotation, 0.5f, 0.5f);
 
     return 0;
 }
@@ -280,9 +278,8 @@ static int bank_blit_6unnnnn_0(lua_State *L)
     float scale_y = LUAX_NUMBER(L, 6);
 
     const GL_Surface_t *surface = self->canvas.instance->surface;
-    const GL_State_t state = self->canvas.instance->state.current;
     const GL_Sheet_t *sheet = self->sheet;
-    GL_blit_s(surface, state, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, scale_x, scale_y);
+    GL_blit_s(surface, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, scale_x, scale_y);
 
     return 0;
 }
@@ -311,10 +308,9 @@ static int bank_blit_9unnnnnnNN_0(lua_State *L)
     float anchor_y = LUAX_OPTIONAL_NUMBER(L, 9, anchor_x);
 
     const GL_Surface_t *surface = self->canvas.instance->surface;
-    const GL_State_t state = self->canvas.instance->state.current;
     const GL_Sheet_t *sheet = self->sheet;
     // TODO: |NEXT TO DO| implement `GL_sheet_blit_XXX()` functions, passing a cell-id as argument.
-    GL_blit_sr(surface, state, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, scale_x, scale_y, rotation, anchor_x, anchor_y);
+    GL_blit_sr(surface, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, scale_x, scale_y, rotation, anchor_x, anchor_y);
 
     return 0;
 }
@@ -349,9 +345,8 @@ static int bank_tile_6unnnnn_0(lua_State *L)
     int oy = LUAX_INTEGER(L, 6);
 
     const GL_Surface_t *surface = self->canvas.instance->surface;
-    const GL_State_t state = self->canvas.instance->state.current;
     const GL_Sheet_t *sheet = self->sheet;
-    GL_tile(surface, state, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, (GL_Point_t){ .x = ox, .y = oy });
+    GL_tile(surface, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, (GL_Point_t){ .x = ox, .y = oy });
 
     return 0;
 }
@@ -377,10 +372,9 @@ static int bank_tile_8unnnnnnN_0(lua_State *L)
     int scale_x = LUAX_INTEGER(L, 7);
     int scale_y = LUAX_OPTIONAL_INTEGER(L, 8, scale_x);
 
-    const GL_Surface_t *surface = self->canvas.instance->surface; // FIXME: isn't this a bit too long?
-    const GL_State_t state = self->canvas.instance->state.current;
+    const GL_Surface_t *surface = self->canvas.instance->surface; // FIXME: isn't this a bit too verbose?
     const GL_Sheet_t *sheet = self->sheet;
-    GL_tile_s(surface, state, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, (GL_Point_t){ .x = offset_x, .y = offset_y }, scale_x, scale_y);
+    GL_tile_s(surface, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, (GL_Point_t){ .x = offset_x, .y = offset_y }, scale_x, scale_y);
 
     return 0;
 }

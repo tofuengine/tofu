@@ -105,12 +105,13 @@ void GL_xform_table(GL_XForm_t *xform, const GL_XForm_Table_Entry_t *entries, si
 // http://www.coranac.com/tonc/text/mode7.htm
 // https://wiki.superfamicom.org/registers
 // https://www.smwcentral.net/?p=viewthread&t=27054
-void GL_xform_blit(const GL_XForm_t *xform, const GL_Surface_t *surface, GL_State_t state, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position)
+void GL_xform_blit(const GL_XForm_t *xform, const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position)
 {
-    const GL_Quad_t *clipping_region = &state.clipping_region;
-    const GL_Pixel_t *shifting = state.shifting;
+    const GL_State_t *state = &surface->state.current;
+    const GL_Quad_t *clipping_region = &state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
 #ifdef __GL_XFORM_TRANSPARENCY__
-    const GL_Bool_t *transparent = state.transparent;
+    const GL_Bool_t *transparent = state->transparent;
 #endif  /* __GL_XFORM_TRANSPARENCY__ */
 
     const GL_XForm_Table_Entry_t *table = xform->table;

@@ -31,6 +31,22 @@
 
 #define LOG_CONTEXT "gl-surface"
 
+static void _reset(GL_Surface_t *surface)
+{
+    GL_State_t state = (GL_State_t){
+            .clipping_region = (GL_Quad_t){ .x0 = 0, .y0 = 0, .x1 = surface->width - 1, .y1 = surface->height - 1 },
+            .shifting = { 0 },
+            .transparent = { 0 }
+        };
+    for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
+        state.shifting[i] = (GL_Pixel_t)i;
+        state.transparent[i] = GL_BOOL_FALSE;
+    }
+    state.transparent[0] = GL_BOOL_TRUE;
+
+    surface->state.current = state;
+}
+
 static inline bool _is_power_of_two(int n)
 {
     return n && !(n & (n - 1));
@@ -70,19 +86,96 @@ GL_Surface_t *GL_surface_create(size_t width, size_t height)
             .height = height,
             .data = data,
             .data_size = width * height,
-            .is_power_of_two = _is_power_of_two(width) && _is_power_of_two(height)
+            .is_power_of_two = _is_power_of_two(width) && _is_power_of_two(height),
+            .state = { .current = { { 0 }, { 0 }, { 0 } }, .stack = NULL }
         };
+
+    _reset(surface);
 
     return surface;
 }
 
 void GL_surface_destroy(GL_Surface_t *surface)
 {
+    arrfree(surface->state.stack);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface stack at %p freed", surface->state.stack);
+
     free(surface->data);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface-data at %p freed", surface->data);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface data at %p freed", surface->data);
 
     free(surface);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface %p freed", surface);
+}
+
+void GL_surface_reset(GL_Surface_t *surface)
+{
+    _reset(surface);
+}
+
+void GL_surface_push(GL_Surface_t *surface)
+{
+    arrpush(surface->state.stack, surface->state.current); // Store current state into stack.
+}
+
+void GL_surface_pop(GL_Surface_t *surface, size_t levels)
+{
+    const size_t length = arrlen(surface->state.stack);
+    if (length < 1) {
+        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "no more states to pop from canvas");
+        return;
+    }
+    for (size_t i = imin(length, levels); i; --i) {
+        surface->state.current = arrpop(surface->state.stack);
+    }
+}
+
+void GL_surface_set_clipping(GL_Surface_t *surface, const GL_Rectangle_t *region)
+{
+    GL_State_t *state = &surface->state.current;
+    if (!region) {
+        state->clipping_region = (GL_Quad_t){
+                .x0 = 0,
+                .y0 = 0,
+                .x1 = (int)surface->width - 1,
+                .y1 = (int)surface->height - 1
+            };
+    } else {
+        state->clipping_region = (GL_Quad_t){
+                .x0 = imax(0, region->x),
+                .y0 = imax(0, region->y),
+                .x1 = imin((int)surface->width, region->x + (int)region->width) - 1,
+                .y1 = imin((int)surface->height, region->y + (int)region->height) - 1
+            };
+    }
+}
+
+void GL_surface_set_shifting(GL_Surface_t *surface, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count)
+{
+    GL_State_t *state = &surface->state.current;
+    if (!from) {
+        for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
+            state->shifting[i] = (GL_Pixel_t)i;
+        }
+    } else {
+        for (size_t i = 0; i < count; ++i) {
+            state->shifting[from[i]] = to[i];
+        }
+    }
+}
+
+void GL_surface_set_transparent(GL_Surface_t *surface, const GL_Pixel_t *indexes, const GL_Bool_t *transparent, size_t count)
+{
+    GL_State_t *state = &surface->state.current;
+    if (!indexes) {
+        for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
+            state->transparent[i] = GL_BOOL_FALSE;
+        }
+        state->transparent[0] = GL_BOOL_TRUE;
+    } else {
+        for (size_t i = 0; i < count; ++i) {
+            state->transparent[indexes[i]] = transparent[i];
+        }
+    }
 }
 
 void GL_surface_clear(const GL_Surface_t *surface, GL_Pixel_t index)
@@ -108,10 +201,11 @@ void GL_surface_poke(const GL_Surface_t *surface, GL_Point_t position, GL_Pixel_
 }
 
 // https://lodev.org/cgtutor/floodfill.html
-void GL_surface_fill(const GL_Surface_t *surface, GL_State_t state, GL_Point_t seed, GL_Pixel_t index)
+void GL_surface_fill(const GL_Surface_t *surface, GL_Point_t seed, GL_Pixel_t index)
 {
-    const GL_Quad_t *clipping_region = &state.clipping_region;
-    const GL_Pixel_t *shifting = state.shifting;
+    const GL_State_t *state = &surface->state.current;
+    const GL_Quad_t *clipping_region = &state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
 
     if (seed.x < clipping_region->x0 || seed.x > clipping_region->x1
         || seed.y < clipping_region->y0 || seed.y > clipping_region->y1) {
@@ -179,9 +273,10 @@ void GL_surface_fill(const GL_Surface_t *surface, GL_State_t state, GL_Point_t s
 }
 
 
-void GL_surface_process(const GL_Surface_t *surface, GL_State_t state, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, GL_Process_Callback_t callback, void *user_data)
+void GL_surface_process(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, GL_Process_Callback_t callback, void *user_data)
 {
-    const GL_Quad_t *clipping_region = &state.clipping_region;
+    const GL_State_t *state = &surface->state.current;
+    const GL_Quad_t *clipping_region = &state->clipping_region;
 
     size_t skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
     size_t skip_y = 0;
@@ -243,11 +338,12 @@ void GL_surface_process(const GL_Surface_t *surface, GL_State_t state, const GL_
 
 // Note: currently the `GL_surface_copy()` function is equal to `GL_surface_blit()`. However, we are keeping them
 // separate, as in the future they might be different (with the `*_copy()` variant optimized).
-void GL_surface_copy(const GL_Surface_t *surface, GL_State_t state, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position)
+void GL_surface_copy(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position)
 {
-    const GL_Quad_t *clipping_region = &state.clipping_region;
-    const GL_Pixel_t *shifting = state.shifting;
-    const GL_Bool_t *transparent = state.transparent;
+    const GL_State_t *state = &surface->state.current;
+    const GL_Quad_t *clipping_region = &state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
 
     size_t skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
     size_t skip_y = 0;
@@ -352,11 +448,12 @@ const GL_Pixel_Comparator_t _pixel_comparators[GL_Comparators_t_CountOf] = {
     _never, _less, _less_or_equal, _greater, _greater_or_equal, _equal, _not_equal, _always
 };
 
-void GL_surface_stencil(const GL_Surface_t *surface, GL_State_t state, const GL_Surface_t *source, const GL_Surface_t *mask, GL_Comparators_t comparator, GL_Pixel_t threshold, GL_Rectangle_t area, GL_Point_t position)
+void GL_surface_stencil(const GL_Surface_t *surface, const GL_Surface_t *source, const GL_Surface_t *mask, GL_Comparators_t comparator, GL_Pixel_t threshold, GL_Rectangle_t area, GL_Point_t position)
 {
-    const GL_Quad_t *clipping_region = &state.clipping_region;
-    const GL_Pixel_t *shifting = state.shifting;
-    const GL_Bool_t *transparent = state.transparent; // TODO: should `GL_surface_copy()` and `GL_surface_mask()` skip shifting and transparency?
+    const GL_State_t *state = &surface->state.current;
+    const GL_Quad_t *clipping_region = &state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent; // TODO: should `GL_surface_copy()` and `GL_surface_mask()` skip shifting and transparency?
     const GL_Pixel_Comparator_t should_write = _pixel_comparators[comparator];
 
 #ifdef __DEFENSIVE_CHECKS__
@@ -486,11 +583,12 @@ const GL_Pixel_Function_t _pixel_functions[GL_Functions_t_CountOf] = {
     _replace, _add, _add_clamped, _subtract, _subtract_clamped, _multiply, _multiply_clamped, _min, _max
 };
 
-void GL_surface_blend(const GL_Surface_t *surface, GL_State_t state, const GL_Surface_t *source, GL_Functions_t function, GL_Rectangle_t area, GL_Point_t position)
+void GL_surface_blend(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Functions_t function, GL_Rectangle_t area, GL_Point_t position)
 {
-    const GL_Quad_t *clipping_region = &state.clipping_region;
-    const GL_Pixel_t *shifting = state.shifting;
-    const GL_Bool_t *transparent = state.transparent;
+    const GL_State_t *state = &surface->state.current;
+    const GL_Quad_t *clipping_region = &state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
     const GL_Pixel_Function_t blend = _pixel_functions[function];
 
     size_t skip_x = 0; // Offset into the (source) surface/texture, update during clipping.

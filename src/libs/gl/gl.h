@@ -32,7 +32,6 @@
 #include "palette.h"
 #include "primitive.h"
 #include "sheet.h"
-#include "state.h"
 #include "surface.h"
 #include "tile.h"
 #include "xform.h"

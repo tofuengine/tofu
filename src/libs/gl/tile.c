@@ -37,11 +37,12 @@ static inline void pixel(const GL_Surface_t *context, int x, int y, int index)
 }
 #endif
 
-void GL_tile(const GL_Surface_t *surface, GL_State_t state, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, GL_Point_t offset)
+void GL_tile(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, GL_Point_t offset)
 {
-    const GL_Quad_t *clipping_region = &state.clipping_region;
-    const GL_Pixel_t *shifting = state.shifting;
-    const GL_Bool_t *transparent = state.transparent;
+    const GL_State_t *state = &surface->state.current;
+    const GL_Quad_t *clipping_region = &state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
 
     size_t skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
     size_t skip_y = 0;
@@ -110,11 +111,12 @@ void GL_tile(const GL_Surface_t *surface, GL_State_t state, const GL_Surface_t *
     }
 }
 
-void GL_tile_s(const GL_Surface_t *surface, GL_State_t state, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, GL_Point_t offset, int scale_x, int scale_y)
+void GL_tile_s(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, GL_Point_t offset, int scale_x, int scale_y)
 {
-    const GL_Quad_t *clipping_region = &state.clipping_region;
-    const GL_Pixel_t *shifting = state.shifting;
-    const GL_Bool_t *transparent = state.transparent;
+    const GL_State_t *state = &surface->state.current;
+    const GL_Quad_t *clipping_region = &state->clipping_region;
+    const GL_Pixel_t *shifting = state->shifting;
+    const GL_Bool_t *transparent = state->transparent;
 
     const size_t sw = area.width * IABS(scale_x);
     const size_t sh = area.height * IABS(scale_y);

@@ -27,9 +27,8 @@
 
 #include "common.h"
 #include "surface.h"
-#include "state.h"
 
-extern void GL_tile(const GL_Surface_t *surface, GL_State_t state, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, GL_Point_t offset);
-extern void GL_tile_s(const GL_Surface_t *surface, GL_State_t state, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, GL_Point_t offset, int scale_x, int scale_y);
+extern void GL_tile(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, GL_Point_t offset);
+extern void GL_tile_s(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, GL_Point_t offset, int scale_x, int scale_y);
 
 #endif  /* __GL_TILE_H__ */
