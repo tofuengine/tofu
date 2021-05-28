@@ -39,7 +39,7 @@ static inline void pixel(const GL_Surface_t *context, int x, int y, int index)
 
 // TODO: specifies `const` always? Is pedantic or useful?
 // https://dev.to/fenbf/please-declare-your-variables-as-const
-void GL_blit(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position)
+void GL_surface_blit(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position)
 {
     const GL_State_t *state = &surface->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
@@ -112,7 +112,7 @@ void GL_blit(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rectang
 //
 // http://www.datagenetics.com/blog/december32013/index.html
 // file:///C:/Users/mlizza/Downloads/Extensible_Implementation_of_Reliable_Pixel_Art_In.pdf
-void GL_blit_s(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y)
+void GL_surface_blit_s(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y)
 {
     const GL_State_t *state = &surface->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
@@ -214,7 +214,7 @@ void GL_blit_s(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Recta
 // https://www.flipcode.com/archives/The_Art_of_Demomaking-Issue_10_Roto-Zooming.shtml
 //
 // FIXME: one row/column is lost due to rounding errors when angle is multiple of 128.
-void GL_blit_sr(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y)
+void GL_surface_blit_sr(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y)
 {
     const GL_State_t *state = &surface->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
@@ -378,7 +378,7 @@ void GL_blit_sr(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rect
 #endif
 }
 #else
-void GL_blit_sr(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y)
+void GL_surface_blit_sr(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y)
 {
     const GL_State_t *state = &surface->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;

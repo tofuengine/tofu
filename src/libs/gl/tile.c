@@ -37,7 +37,7 @@ static inline void pixel(const GL_Surface_t *context, int x, int y, int index)
 }
 #endif
 
-void GL_tile(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, GL_Point_t offset)
+void GL_surface_tile(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, GL_Point_t offset)
 {
     const GL_State_t *state = &surface->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
@@ -111,7 +111,7 @@ void GL_tile(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rectang
     }
 }
 
-void GL_tile_s(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, GL_Point_t offset, int scale_x, int scale_y)
+void GL_surface_tile_s(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, GL_Point_t offset, int scale_x, int scale_y)
 {
     const GL_State_t *state = &surface->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;

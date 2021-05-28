@@ -233,7 +233,7 @@ static int bank_blit_4unnn_0(lua_State *L)
 
     const GL_Surface_t *surface = self->canvas.instance->surface;
     const GL_Sheet_t *sheet = self->sheet;
-    GL_blit(surface, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y });
+    GL_sheet_blit(sheet, cell_id, surface, (GL_Point_t){ .x = x, .y = y });
 
     return 0;
 }
@@ -255,7 +255,7 @@ static int bank_blit_5unnnn_0(lua_State *L)
 
     const GL_Surface_t *surface = self->canvas.instance->surface;
     const GL_Sheet_t *sheet = self->sheet;
-    GL_blit_sr(surface, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, 1.0f, 1.0f, rotation, 0.5f, 0.5f);
+    GL_sheet_blit_sr(sheet, cell_id, surface, (GL_Point_t){ .x = x, .y = y }, 1.0f, 1.0f, rotation, 0.5f, 0.5f);
 
     return 0;
 }
@@ -279,7 +279,7 @@ static int bank_blit_6unnnnn_0(lua_State *L)
 
     const GL_Surface_t *surface = self->canvas.instance->surface;
     const GL_Sheet_t *sheet = self->sheet;
-    GL_blit_s(surface, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, scale_x, scale_y);
+    GL_sheet_blit_s(sheet, cell_id, surface, (GL_Point_t){ .x = x, .y = y }, scale_x, scale_y);
 
     return 0;
 }
@@ -309,8 +309,7 @@ static int bank_blit_9unnnnnnNN_0(lua_State *L)
 
     const GL_Surface_t *surface = self->canvas.instance->surface;
     const GL_Sheet_t *sheet = self->sheet;
-    // TODO: |NEXT TO DO| implement `GL_sheet_blit_XXX()` functions, passing a cell-id as argument.
-    GL_blit_sr(surface, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, scale_x, scale_y, rotation, anchor_x, anchor_y);
+    GL_sheet_blit_sr(sheet, cell_id, surface, (GL_Point_t){ .x = x, .y = y }, scale_x, scale_y, rotation, anchor_x, anchor_y);
 
     return 0;
 }
@@ -346,7 +345,7 @@ static int bank_tile_6unnnnn_0(lua_State *L)
 
     const GL_Surface_t *surface = self->canvas.instance->surface;
     const GL_Sheet_t *sheet = self->sheet;
-    GL_tile(surface, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, (GL_Point_t){ .x = ox, .y = oy });
+    GL_surface_tile(surface, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, (GL_Point_t){ .x = ox, .y = oy });
 
     return 0;
 }
@@ -374,7 +373,7 @@ static int bank_tile_8unnnnnnN_0(lua_State *L)
 
     const GL_Surface_t *surface = self->canvas.instance->surface; // FIXME: isn't this a bit too verbose?
     const GL_Sheet_t *sheet = self->sheet;
-    GL_tile_s(surface, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, (GL_Point_t){ .x = offset_x, .y = offset_y }, scale_x, scale_y);
+    GL_surface_tile_s(surface, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, (GL_Point_t){ .x = offset_x, .y = offset_y }, scale_x, scale_y);
 
     return 0;
 }

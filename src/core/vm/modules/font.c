@@ -304,7 +304,6 @@ static int font_write_4usnn_0(lua_State *L)
 
     const GL_Surface_t *surface = self->canvas.instance->surface;
     const GL_Sheet_t *sheet = self->sheet;
-    const GL_Rectangle_t *cells = sheet->cells;
     const GL_Cell_t *glyphs = self->glyphs;
 
     int dx = x, dy = y;
@@ -323,11 +322,11 @@ static int font_write_4usnn_0(lua_State *L)
         if (cell_id == GL_CELL_NIL) {
             continue;
         }
-        const GL_Rectangle_t *cell = &cells[cell_id];
-        GL_blit(surface, sheet->atlas, *cell, (GL_Point_t){ .x = dx, .y = dy });
-        dx += cell->width;
-        if (height < cell->height) {
-            height = cell->height;
+        GL_Size_t size = GL_sheet_size(sheet, cell_id, 1.0f, 1.0f);
+        GL_sheet_blit(sheet, cell_id, surface, (GL_Point_t){ .x = dx, .y = dy });
+        dx += size.width;
+        if (height < size.height) {
+            height = size.height;
         }
     }
 
@@ -353,7 +352,6 @@ static int font_write_6usnnnN_0(lua_State *L)
 
     const GL_Surface_t *surface = self->canvas.instance->surface;
     const GL_Sheet_t *sheet = self->sheet;
-    const GL_Rectangle_t *cells = sheet->cells;
     const GL_Cell_t *glyphs = self->glyphs;
 
     int dx = x, dy = y;
@@ -372,13 +370,11 @@ static int font_write_6usnnnN_0(lua_State *L)
         if (cell_id == GL_CELL_NIL) {
             continue;
         }
-        const GL_Rectangle_t *cell = &cells[cell_id];
-        const size_t cw = (size_t)(cell->width * fabs(scale_x));
-        const size_t ch = (size_t)(cell->height * fabs(scale_y));
-        GL_blit_s(surface, sheet->atlas, *cell, (GL_Point_t){ .x = dx, .y = dy }, scale_x, scale_y);
-        dx += cw;
-        if (height < ch) {
-            height = ch;
+        GL_Size_t size = GL_sheet_size(sheet, cell_id, scale_x, scale_y);
+        GL_sheet_blit_s(sheet, cell_id, surface, (GL_Point_t){ .x = dx, .y = dy }, scale_x, scale_y);
+        dx += size.width;
+        if (height < size.height) {
+            height = size.height;
         }
     }
 

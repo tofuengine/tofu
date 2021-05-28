@@ -618,7 +618,7 @@ static int canvas_point_4unnN_0(lua_State *L)
     GL_Pixel_t index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 4, self->color.foreground);
 
     const GL_Surface_t *surface = self->surface;
-    GL_primitive_point(surface, (GL_Point_t){ .x = x, .y = y }, index);
+    GL_surface_point(surface, (GL_Point_t){ .x = x, .y = y }, index);
 
     return 0;
 }
@@ -639,7 +639,7 @@ static int canvas_hline_5unnnN_0(lua_State *L)
     GL_Pixel_t index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 5, self->color.foreground);
 
     const GL_Surface_t *surface = self->surface;
-    GL_primitive_hline(surface, (GL_Point_t){ .x = x, .y = y }, width, index);
+    GL_surface_hline(surface, (GL_Point_t){ .x = x, .y = y }, width, index);
 
     return 0;
 }
@@ -660,7 +660,7 @@ static int canvas_vline_5unnnN_0(lua_State *L)
     GL_Pixel_t index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 5, self->color.foreground);
 
     const GL_Surface_t *surface = self->surface;
-    GL_primitive_vline(surface, (GL_Point_t){ .x = x, .y = y }, height, index);
+    GL_surface_vline(surface, (GL_Point_t){ .x = x, .y = y }, height, index);
 
     return 0;
 }
@@ -683,7 +683,7 @@ static int canvas_line_6unnnnN_0(lua_State *L)
     GL_Pixel_t index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 6, self->color.foreground);
 
     const GL_Surface_t *surface = self->surface;
-    GL_primitive_polyline(surface, (GL_Point_t[]){
+    GL_surface_polyline(surface, (GL_Point_t[]){
             (GL_Point_t){ .x = x0, .y = y0 },
             (GL_Point_t){ .x = x1, .y = y1 }
         }, 2, index);
@@ -727,7 +727,7 @@ static int canvas_polyline_3utN_0(lua_State *L)
     size_t count = arrlen(vertices);
     if (count > 1) {
         const GL_Surface_t *surface = self->surface;
-        GL_primitive_polyline(surface, vertices, count, index);
+        GL_surface_polyline(surface, vertices, count, index);
     } else {
         Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "polyline requires al least 2 points (provided %d)", count);
     }
@@ -781,7 +781,7 @@ static int canvas_triangle_9usnnnnnnN_0(lua_State *L)
 
     const GL_Surface_t *surface = self->surface;
     if (mode[0] == 'f') {
-        GL_primitive_filled_triangle(surface, (GL_Point_t){ .x = x0, .y = y0 }, (GL_Point_t){ .x = x1, .y = y1 }, (GL_Point_t){ .x = x2, .y = y2 }, index);
+        GL_surface_filled_triangle(surface, (GL_Point_t){ .x = x0, .y = y0 }, (GL_Point_t){ .x = x1, .y = y1 }, (GL_Point_t){ .x = x2, .y = y2 }, index);
     } else {
         GL_Point_t vertices[4] = {
                 (GL_Point_t){ .x = x0, .y = y0 },
@@ -789,7 +789,7 @@ static int canvas_triangle_9usnnnnnnN_0(lua_State *L)
                 (GL_Point_t){ .x = x2, .y = y2 },
                 (GL_Point_t){ .x = x0, .y = y0 }
             };
-        GL_primitive_polyline(surface, vertices, 4, index);
+        GL_surface_polyline(surface, vertices, 4, index);
     }
 
     return 0;
@@ -816,7 +816,7 @@ static int canvas_rectangle_7usnnnnN_0(lua_State *L)
 
     const GL_Surface_t *surface = self->surface;
     if (mode[0] == 'f') {
-        GL_primitive_filled_rectangle(surface, (GL_Rectangle_t){ .x = x, .y = y, .width = width, .height = height }, index);
+        GL_surface_filled_rectangle(surface, (GL_Rectangle_t){ .x = x, .y = y, .width = width, .height = height }, index);
     } else {
         int x0 = x;
         int y0 = y;
@@ -830,7 +830,7 @@ static int canvas_rectangle_7usnnnnN_0(lua_State *L)
                 (GL_Point_t){ .x = x1, .y = y0 },
                 (GL_Point_t){ .x = x0, .y = y0 }
             };
-        GL_primitive_polyline(surface, vertices, 5, index);
+        GL_surface_polyline(surface, vertices, 5, index);
     }
 
     return 0;
@@ -855,12 +855,12 @@ static int canvas_circle_6usnnnN_0(lua_State *L)
 
     const GL_Surface_t *surface = self->surface;
     if (radius < 1) { // Null radius, just a point regardless mode!
-        GL_primitive_point(surface, (GL_Point_t){ .x = cx, .y = cy }, index);
+        GL_surface_point(surface, (GL_Point_t){ .x = cx, .y = cy }, index);
     } else
     if (mode[0] == 'f') {
-        GL_primitive_filled_circle(surface, (GL_Point_t){ .x = cx, .y = cy }, radius, index);
+        GL_surface_filled_circle(surface, (GL_Point_t){ .x = cx, .y = cy }, radius, index);
     } else {
-        GL_primitive_circle(surface, (GL_Point_t){ .x = cx, .y = cy }, radius, index);
+        GL_surface_circle(surface, (GL_Point_t){ .x = cx, .y = cy }, radius, index);
     }
 
     return 0;
@@ -1106,7 +1106,7 @@ static int canvas_blit_2uU_0(lua_State *L)
 
     const GL_Surface_t *surface = canvas->surface;
     const GL_Surface_t *source = self->surface;
-    GL_blit(surface, source, (GL_Rectangle_t){ .x = 0, .y = 0, .width = source->width, .height = source->height }, (GL_Point_t){ .x = 0, .y = 0 });
+    GL_surface_blit(surface, source, (GL_Rectangle_t){ .x = 0, .y = 0, .width = source->width, .height = source->height }, (GL_Point_t){ .x = 0, .y = 0 });
 
     return 0;
 }
@@ -1126,7 +1126,7 @@ static int canvas_blit_4unnU_0(lua_State *L)
 
     const GL_Surface_t *surface = canvas->surface;
     const GL_Surface_t *source = self->surface;
-    GL_blit(surface, source, (GL_Rectangle_t){ .x = 0, .y = 0, .width = source->width, .height = source->height }, (GL_Point_t){ .x = x, .y = y });
+    GL_surface_blit(surface, source, (GL_Rectangle_t){ .x = 0, .y = 0, .width = source->width, .height = source->height }, (GL_Point_t){ .x = x, .y = y });
 
     return 0;
 }
@@ -1154,7 +1154,7 @@ static int canvas_blit_8unnnnnnU_0(lua_State *L)
 
     const GL_Surface_t *surface = canvas->surface;
     const GL_Surface_t *source = self->surface;
-    GL_blit(surface, source, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height }, (GL_Point_t){ .x = x, .y = y });
+    GL_surface_blit(surface, source, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height }, (GL_Point_t){ .x = x, .y = y });
 
     return 0;
 }

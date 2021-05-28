@@ -41,4 +41,13 @@ extern GL_Sheet_t *GL_sheet_create_fixed(const GL_Surface_t *atlas, GL_Size_t ce
 extern GL_Sheet_t *GL_sheet_create(const GL_Surface_t *atlas, const GL_Rectangle_u32_t *cells, size_t count);
 extern void GL_sheet_destroy(GL_Sheet_t *sheet);
 
+extern GL_Size_t GL_sheet_size(const GL_Sheet_t *sheet, size_t cell_id, float scale_x, float scale_y);
+
+extern void GL_sheet_blit(const GL_Sheet_t *sheet, size_t cell_id, const GL_Surface_t *surface, GL_Point_t position);
+extern void GL_sheet_blit_s(const GL_Sheet_t *sheet, size_t cell_id, const GL_Surface_t *surface, GL_Point_t position, float sx, float sy); // FIXME: rename `scale_X` and `anchor_X`.
+extern void GL_sheet_blit_sr(const GL_Sheet_t *sheet, size_t cell_id, const GL_Surface_t *surface, GL_Point_t position, float sx, float sy, int rotation, float ax, float ay);
+
+extern void GL_sheet_tile(const GL_Sheet_t *sheet, size_t cell_id, const GL_Surface_t *surface, GL_Point_t position, GL_Point_t offset);
+extern void GL_sheet_tile_s(const GL_Sheet_t *sheet, size_t cell_id, const GL_Surface_t *surface, GL_Point_t position, GL_Point_t offset, int scale_x, int scale_y);
+
 #endif  /* __GL_SHEET_H__ */
