@@ -28,7 +28,7 @@
 #include "common.h"
 #include "surface.h"
 
-extern void GL_surface_tile(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, GL_Point_t offset);
-extern void GL_surface_tile_s(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, GL_Point_t offset, int scale_x, int scale_y);
+extern void GL_surface_tile(const GL_Surface_t *surface, GL_Rectangle_t area, const GL_Surface_t *destination, GL_Point_t position, GL_Point_t offset);
+extern void GL_surface_tile_s(const GL_Surface_t *surface, GL_Rectangle_t area, const GL_Surface_t *destination, GL_Point_t position, GL_Point_t offset, int scale_x, int scale_y);
 
 #endif  /* __GL_SURFACE_TILE_H__ */

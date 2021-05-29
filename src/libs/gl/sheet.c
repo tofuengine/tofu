@@ -151,27 +151,27 @@ GL_Size_t GL_sheet_size(const GL_Sheet_t *sheet, size_t cell_id, float scale_x, 
         };
 }
 
-void GL_sheet_blit(const GL_Sheet_t *sheet, size_t cell_id, const GL_Surface_t *surface, GL_Point_t position)
+void GL_sheet_blit(const GL_Sheet_t *sheet, size_t cell_id, const GL_Surface_t *destination, GL_Point_t position)
 {
-    GL_surface_blit(surface, sheet->atlas, sheet->cells[cell_id], position);
+    GL_surface_blit(sheet->atlas, sheet->cells[cell_id], destination, position);
 }
 
-void GL_sheet_blit_s(const GL_Sheet_t *sheet, size_t cell_id, const GL_Surface_t *surface, GL_Point_t position, float sx, float sy)
+void GL_sheet_blit_s(const GL_Sheet_t *sheet, size_t cell_id, const GL_Surface_t *destination, GL_Point_t position, float sx, float sy)
 {
-    GL_surface_blit_s(surface, sheet->atlas, sheet->cells[cell_id], position, sx, sy);
+    GL_surface_blit_s(sheet->atlas, sheet->cells[cell_id], destination, position, sx, sy);
 }
 
-void GL_sheet_blit_sr(const GL_Sheet_t *sheet, size_t cell_id, const GL_Surface_t *surface, GL_Point_t position, float sx, float sy, int rotation, float ax, float ay)
+void GL_sheet_blit_sr(const GL_Sheet_t *sheet, size_t cell_id, const GL_Surface_t *destination, GL_Point_t position, float sx, float sy, int rotation, float ax, float ay)
 {
-    GL_surface_blit_sr(surface, sheet->atlas, sheet->cells[cell_id], position, sx, sy, rotation, ax, ay);
+    GL_surface_blit_sr(sheet->atlas, sheet->cells[cell_id], destination, position, sx, sy, rotation, ax, ay);
 }
 
-void GL_sheet_tile(const GL_Sheet_t *sheet, size_t cell_id, const GL_Surface_t *surface, GL_Point_t position, GL_Point_t offset)
+void GL_sheet_tile(const GL_Sheet_t *sheet, size_t cell_id, const GL_Surface_t *destination, GL_Point_t position, GL_Point_t offset)
 {
-    GL_surface_tile(surface, sheet->atlas, sheet->cells[cell_id], position, offset);
+    GL_surface_tile(sheet->atlas, sheet->cells[cell_id], destination, position, offset);
 }
 
-void GL_sheet_tile_s(const GL_Sheet_t *sheet, size_t cell_id, const GL_Surface_t *surface, GL_Point_t position, GL_Point_t offset, int scale_x, int scale_y)
+void GL_sheet_tile_s(const GL_Sheet_t *sheet, size_t cell_id, const GL_Surface_t *destination, GL_Point_t position, GL_Point_t offset, int scale_x, int scale_y)
 {
-    GL_surface_tile_s(surface, sheet->atlas, sheet->cells[cell_id], position, offset, scale_x, scale_y);
+    GL_surface_tile_s(sheet->atlas, sheet->cells[cell_id], destination, position, offset, scale_x, scale_y);
 }

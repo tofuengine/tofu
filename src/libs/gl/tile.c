@@ -31,15 +31,15 @@
 #include <math.h>
 
 #ifdef __DEBUG_GRAPHICS__
-static inline void pixel(const GL_Surface_t *context, int x, int y, int index)
+static inline void _pixel(const GL_Surface_t *context, int x, int y, int index)
 {
     surface->data[y * surface->width + x]= 240 + (index % 16);
 }
 #endif
 
-void GL_surface_tile(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, GL_Point_t offset)
+void GL_surface_tile(const GL_Surface_t *surface, GL_Rectangle_t area, const GL_Surface_t *destination, GL_Point_t position, GL_Point_t offset)
 {
-    const GL_State_t *state = &surface->state.current;
+    const GL_State_t *state = &destination->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
@@ -75,11 +75,11 @@ void GL_surface_tile(const GL_Surface_t *surface, const GL_Surface_t *source, GL
         return;
     }
 
-    const GL_Pixel_t *sdata = source->data;
-    GL_Pixel_t *ddata = surface->data;
+    const GL_Pixel_t *sdata = surface->data;
+    GL_Pixel_t *ddata = destination->data;
 
-    const size_t swidth = source->width;
-    const size_t dwidth = surface->width;
+    const size_t swidth = surface->width;
+    const size_t dwidth = destination->width;
 
     const size_t dskip = dwidth - width;
 
@@ -96,7 +96,7 @@ void GL_surface_tile(const GL_Surface_t *surface, const GL_Surface_t *source, GL
         int u = ou;
         for (int j = width; j; --j) {
 #ifdef __DEBUG_GRAPHICS__
-            pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
+            _pixel(destination, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
             const GL_Pixel_t index = shifting[srow[u]];
             if (transparent[index]) {
@@ -111,9 +111,9 @@ void GL_surface_tile(const GL_Surface_t *surface, const GL_Surface_t *source, GL
     }
 }
 
-void GL_surface_tile_s(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, GL_Point_t offset, int scale_x, int scale_y)
+void GL_surface_tile_s(const GL_Surface_t *surface, GL_Rectangle_t area, const GL_Surface_t *destination, GL_Point_t position, GL_Point_t offset, int scale_x, int scale_y)
 {
-    const GL_State_t *state = &surface->state.current;
+    const GL_State_t *state = &destination->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
@@ -152,11 +152,11 @@ void GL_surface_tile_s(const GL_Surface_t *surface, const GL_Surface_t *source, 
         return;
     }
 
-    const GL_Pixel_t *sdata = source->data;
-    GL_Pixel_t *ddata = surface->data;
+    const GL_Pixel_t *sdata = surface->data;
+    GL_Pixel_t *ddata = destination->data;
 
-    const size_t swidth = source->width;
-    const size_t dwidth = surface->width;
+    const size_t swidth = surface->width;
+    const size_t dwidth = destination->width;
 
     const size_t dskip = dwidth - width;
 
@@ -195,7 +195,7 @@ void GL_surface_tile_s(const GL_Surface_t *surface, const GL_Surface_t *source, 
         int ru = ru0;
         for (int j = width; j; --j) {
 #ifdef __DEBUG_GRAPHICS__
-            pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
+            _pixel(destination, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
             GL_Pixel_t index = shifting[srow[u]];
             if (transparent[index]) {

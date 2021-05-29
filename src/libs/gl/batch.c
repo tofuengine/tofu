@@ -102,38 +102,35 @@ void GL_batch_add(GL_Batch_t *batch, GL_Batch_Sprite_t sprite)
     arrpush(batch->sprites, sprite);
 }
 
-void GL_batch_blit(const GL_Batch_t *batch, const GL_Surface_t *surface)
+void GL_batch_blit(const GL_Batch_t *batch, const GL_Surface_t *destination)
 {
     const GL_Sheet_t *sheet = batch->sheet;
-    const GL_Rectangle_t *cells = sheet->cells;
 
     GL_Batch_Sprite_t *current = batch->sprites;
     for (size_t count = arrlen(batch->sprites); count; --count) {
         GL_Batch_Sprite_t *sprite = current++;
-        GL_surface_blit(surface, sheet->atlas, cells[sprite->cell_id], sprite->position);
+        GL_sheet_blit(sheet, sprite->cell_id, destination, sprite->position);
     }
 }
 
-void GL_batch_blit_s(const GL_Batch_t *batch, const GL_Surface_t *surface)
+void GL_batch_blit_s(const GL_Batch_t *batch, const GL_Surface_t *destination)
 {
     const GL_Sheet_t *sheet = batch->sheet;
-    const GL_Rectangle_t *cells = sheet->cells;
 
     GL_Batch_Sprite_t *current = batch->sprites;
     for (size_t count = arrlen(batch->sprites); count; --count) {
         GL_Batch_Sprite_t *sprite = current++;
-        GL_surface_blit_s(surface, sheet->atlas, cells[sprite->cell_id], sprite->position, sprite->sx, sprite->sy);
+        GL_sheet_blit_s(sheet, sprite->cell_id, destination, sprite->position, sprite->sx, sprite->sy);
     }
 }
 
-void GL_batch_blit_sr(const GL_Batch_t *batch, const GL_Surface_t *surface)
+void GL_batch_blit_sr(const GL_Batch_t *batch, const GL_Surface_t *destination)
 {
     const GL_Sheet_t *sheet = batch->sheet;
-    const GL_Rectangle_t *cells = sheet->cells;
 
     GL_Batch_Sprite_t *current = batch->sprites;
     for (size_t count = arrlen(batch->sprites); count; --count) {
         GL_Batch_Sprite_t *sprite = current++;
-        GL_surface_blit_sr(surface, sheet->atlas, cells[sprite->cell_id], sprite->position, sprite->sx, sprite->sy, sprite->rotation, sprite->ax, sprite->ay);
+        GL_sheet_blit_sr(sheet, sprite->cell_id, destination, sprite->position, sprite->sx, sprite->sy, sprite->rotation, sprite->ax, sprite->ay);
     }
 }

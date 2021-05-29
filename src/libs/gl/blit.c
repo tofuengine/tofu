@@ -31,7 +31,7 @@
 #include <math.h>
 
 #ifdef __DEBUG_GRAPHICS__
-static inline void pixel(const GL_Surface_t *context, int x, int y, int index)
+static inline void _pixel(const GL_Surface_t *context, int x, int y, int index)
 {
     surface->data[y * surface->width + x]= 240 + (index % 16);
 }
@@ -39,9 +39,9 @@ static inline void pixel(const GL_Surface_t *context, int x, int y, int index)
 
 // TODO: specifies `const` always? Is pedantic or useful?
 // https://dev.to/fenbf/please-declare-your-variables-as-const
-void GL_surface_blit(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position)
+void GL_surface_blit(const GL_Surface_t *surface, GL_Rectangle_t area, const GL_Surface_t *destination, GL_Point_t position)
 {
-    const GL_State_t *state = &surface->state.current;
+    const GL_State_t *state = &destination->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
@@ -77,11 +77,11 @@ void GL_surface_blit(const GL_Surface_t *surface, const GL_Surface_t *source, GL
         return;
     }
 
-    const GL_Pixel_t *sdata = source->data;
-    GL_Pixel_t *ddata = surface->data;
+    const GL_Pixel_t *sdata = surface->data;
+    GL_Pixel_t *ddata = destination->data;
 
-    const size_t swidth = source->width;
-    const size_t dwidth = surface->width;
+    const size_t swidth = surface->width;
+    const size_t dwidth = destination->width;
 
     const size_t sskip = swidth - width;
     const size_t dskip = dwidth - width;
@@ -92,7 +92,7 @@ void GL_surface_blit(const GL_Surface_t *surface, const GL_Surface_t *source, GL
     for (int i = height; i; --i) {
         for (int j = width; j; --j) {
 #ifdef __DEBUG_GRAPHICS__
-            pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
+            _pixel(destination, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
             const GL_Pixel_t index = shifting[*(sptr++)];
             if (transparent[index]) {
@@ -112,9 +112,9 @@ void GL_surface_blit(const GL_Surface_t *surface, const GL_Surface_t *source, GL
 //
 // http://www.datagenetics.com/blog/december32013/index.html
 // file:///C:/Users/mlizza/Downloads/Extensible_Implementation_of_Reliable_Pixel_Art_In.pdf
-void GL_surface_blit_s(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y)
+void GL_surface_blit_s(const GL_Surface_t *surface, GL_Rectangle_t area, const GL_Surface_t *destination, GL_Point_t position, float scale_x, float scale_y)
 {
-    const GL_State_t *state = &surface->state.current;
+    const GL_State_t *state = &destination->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
@@ -153,11 +153,11 @@ void GL_surface_blit_s(const GL_Surface_t *surface, const GL_Surface_t *source, 
         return;
     }
 
-    const GL_Pixel_t *sdata = source->data;
-    GL_Pixel_t *ddata = surface->data;
+    const GL_Pixel_t *sdata = surface->data;
+    GL_Pixel_t *ddata = destination->data;
 
-    const size_t swidth = source->width;
-    const size_t dwidth = surface->width;
+    const size_t swidth = surface->width;
+    const size_t dwidth = destination->width;
 
     const size_t dskip = dwidth - width;
 
@@ -186,7 +186,7 @@ void GL_surface_blit_s(const GL_Surface_t *surface, const GL_Surface_t *source, 
         float u = ou;
         for (int j = width; j; --j) {
 #ifdef __DEBUG_GRAPHICS__
-            pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)u + (int)v);
+            _pixel(destination, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)u + (int)v);
 #endif
             const int x = (int)u;
             GL_Pixel_t index = shifting[sptr[x]];
@@ -202,10 +202,10 @@ void GL_surface_blit_s(const GL_Surface_t *surface, const GL_Surface_t *source, 
         dptr += dskip;
     }
 #ifdef __DEBUG_GRAPHICS__
-    pixel(surface, drawing_region.x0, drawing_region.y0, 7);
-    pixel(surface, drawing_region.x1, drawing_region.y0, 7);
-    pixel(surface, drawing_region.x1, drawing_region.y1, 7);
-    pixel(surface, drawing_region.x0, drawing_region.y1, 7);
+    _pixel(destination, drawing_region.x0, drawing_region.y0, 7);
+    _pixel(destination, drawing_region.x1, drawing_region.y0, 7);
+    _pixel(destination, drawing_region.x1, drawing_region.y1, 7);
+    _pixel(destination, drawing_region.x0, drawing_region.y1, 7);
 #endif
 }
 
@@ -214,9 +214,9 @@ void GL_surface_blit_s(const GL_Surface_t *surface, const GL_Surface_t *source, 
 // https://www.flipcode.com/archives/The_Art_of_Demomaking-Issue_10_Roto-Zooming.shtml
 //
 // FIXME: one row/column is lost due to rounding errors when angle is multiple of 128.
-void GL_surface_blit_sr(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y)
+void GL_surface_blit_sr(const GL_Surface_t *surface, GL_Rectangle_t area, const GL_Surface_t *destination, GL_Point_t position, float sx, float sy, int rotation, float ax, float ay)
 {
-    const GL_State_t *state = &surface->state.current;
+    const GL_State_t *state = &destination->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
@@ -319,11 +319,11 @@ void GL_surface_blit_sr(const GL_Surface_t *surface, const GL_Surface_t *source,
     float ou = (tlx * M11 + tly * M12) + sax + sx; // Offset to the source texture quad.
     float ov = (tlx * M21 + tly * M22) + say + sy;
 
-    const GL_Pixel_t *sdata = source->data;
-    GL_Pixel_t *ddata = surface->data;
+    const GL_Pixel_t *sdata = surface->data;
+    GL_Pixel_t *ddata = destination->data;
 
-    const size_t swidth = source->width;
-    const size_t dwidth = surface->width;
+    const size_t swidth = surface->width;
+    const size_t dwidth = destination->width;
 
     const size_t dskip = dwidth - width;
 
@@ -335,14 +335,14 @@ void GL_surface_blit_sr(const GL_Surface_t *surface, const GL_Surface_t *source,
 
         for (int j = width; j; --j) {
 #ifdef __DEBUG_GRAPHICS__
-            pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, 15);
+            _pixel(destination, drawing_region.x0 + width - j, drawing_region.y0 + height - i, 15);
 #endif
             int x = IROUNDF(u); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`) and avoid mirror effect.
             int y = IROUNDF(v);
 
             if (x >= sminx && x <= smaxx && y >= sminy && y <= smaxy) {
 #ifdef __DEBUG_GRAPHICS__
-                pixel(surface, drawing_region.x0 + (int)width - (int)j, drawing_region.y0 + (int)height - (int)i, 3);
+                _pixel(destination, drawing_region.x0 + (int)width - (int)j, drawing_region.y0 + (int)height - (int)i, 3);
 #endif
                 if (flip_x) {
                     x = smaxx - (x - sminx);
@@ -370,17 +370,17 @@ void GL_surface_blit_sr(const GL_Surface_t *surface, const GL_Surface_t *source,
         ov += M22;
     }
 #ifdef __DEBUG_GRAPHICS__
-    pixel(surface, dx, dy, 7);
-    pixel(surface, drawing_region.x0, drawing_region.y0, 7);
-    pixel(surface, drawing_region.x1, drawing_region.y0, 7);
-    pixel(surface, drawing_region.x1, drawing_region.y1, 7);
-    pixel(surface, drawing_region.x0, drawing_region.y1, 7);
+    _pixel(destination, dx, dy, 7);
+    _pixel(destination, drawing_region.x0, drawing_region.y0, 7);
+    _pixel(destination, drawing_region.x1, drawing_region.y0, 7);
+    _pixel(destination, drawing_region.x1, drawing_region.y1, 7);
+    _pixel(destination, drawing_region.x0, drawing_region.y1, 7);
 #endif
 }
 #else
-void GL_surface_blit_sr(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y)
+void GL_surface_blit_sr(const GL_Surface_t *surface, GL_Rectangle_t area, const GL_Surface_t *destination, GL_Point_t position, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y)
 {
-    const GL_State_t *state = &surface->state.current;
+    const GL_State_t *state = &destination->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
@@ -476,11 +476,11 @@ void GL_surface_blit_sr(const GL_Surface_t *surface, const GL_Surface_t *source,
     const float M21 = -s / scale_y; // |       | |           | |      | NOTE: flip sign is already fused in the scale factor!
     const float M22 = c / scale_y;  // |  0 fy | |    0 1/sy | | -s c |
 
-    const GL_Pixel_t *sdata = source->data;
-    GL_Pixel_t *ddata = surface->data;
+    const GL_Pixel_t *sdata = surface->data;
+    GL_Pixel_t *ddata = destination->data;
 
-    const size_t swidth = source->width;
-    const size_t dwidth = surface->width;
+    const size_t swidth = surface->width;
+    const size_t dwidth = destination->width;
 
     const size_t dskip = dwidth - width;
 
@@ -494,7 +494,7 @@ void GL_surface_blit_sr(const GL_Surface_t *surface, const GL_Surface_t *source,
 
         for (int j = 0; j < width; ++j) {
 #ifdef __DEBUG_GRAPHICS__
-            pixel(surface, drawing_region.x0 + j, drawing_region.y0 + i, 15);
+            _pixel(destination, drawing_region.x0 + j, drawing_region.y0 + i, 15);
 #endif
             const float ou = skip_x + (float)j; // + 0.5f;
 #ifdef __GL_OPTIMIZED_ROTATIONS__
@@ -503,7 +503,7 @@ void GL_surface_blit_sr(const GL_Surface_t *surface, const GL_Surface_t *source,
             if (distance_squared <= radius_squared) {
 #endif
 #ifdef __DEBUG_GRAPHICS__
-                pixel(surface, drawing_region.x0 + j, drawing_region.y0 + i, 11);
+                _pixel(destination, drawing_region.x0 + j, drawing_region.y0 + i, 11);
 #endif
 
                 const float u = (ou * M11 + ov * M12) + sx + 0.5f; // Important: offset half a pixel to center the source texture!
@@ -514,7 +514,7 @@ void GL_surface_blit_sr(const GL_Surface_t *surface, const GL_Surface_t *source,
 
                 if (x >= sminx && x <= smaxx && y >= sminy && y <= smaxy) {
 #ifdef __DEBUG_GRAPHICS__
-                    pixel(surface, drawing_region.x0 + j, drawing_region.y0 + i, 3);
+                    _pixel(destination, drawing_region.x0 + j, drawing_region.y0 + i, 3);
 #endif
                     const GL_Pixel_t *sptr = sdata + y * swidth + x;
                     GL_Pixel_t index = shifting[*sptr];
@@ -532,11 +532,11 @@ void GL_surface_blit_sr(const GL_Surface_t *surface, const GL_Surface_t *source,
         dptr += dskip;
     }
 #ifdef __DEBUG_GRAPHICS__
-    pixel(surface, dx, dy, 7);
-    pixel(surface, drawing_region.x0, drawing_region.y0, 7);
-    pixel(surface, drawing_region.x1, drawing_region.y0, 7);
-    pixel(surface, drawing_region.x1, drawing_region.y1, 7);
-    pixel(surface, drawing_region.x0, drawing_region.y1, 7);
+    _pixel(destination, dx, dy, 7);
+    _pixel(destination, drawing_region.x0, drawing_region.y0, 7);
+    _pixel(destination, drawing_region.x1, drawing_region.y0, 7);
+    _pixel(destination, drawing_region.x1, drawing_region.y1, 7);
+    _pixel(destination, drawing_region.x0, drawing_region.y1, 7);
 #endif
 }
 #endif

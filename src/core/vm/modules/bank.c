@@ -340,12 +340,12 @@ static int bank_tile_6unnnnn_0(lua_State *L)
     GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER(L, 2);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
-    int ox = LUAX_INTEGER(L, 5);
-    int oy = LUAX_INTEGER(L, 6);
+    int offset_x = LUAX_INTEGER(L, 5);
+    int offset_y = LUAX_INTEGER(L, 6);
 
-    const GL_Surface_t *surface = self->canvas.instance->surface;
     const GL_Sheet_t *sheet = self->sheet;
-    GL_surface_tile(surface, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, (GL_Point_t){ .x = ox, .y = oy });
+    const GL_Surface_t *destination = self->canvas.instance->surface;
+    GL_sheet_tile(sheet, cell_id, destination, (GL_Point_t){ .x = x, .y = y }, (GL_Point_t){ .x = offset_x, .y = offset_y });
 
     return 0;
 }
@@ -371,9 +371,9 @@ static int bank_tile_8unnnnnnN_0(lua_State *L)
     int scale_x = LUAX_INTEGER(L, 7);
     int scale_y = LUAX_OPTIONAL_INTEGER(L, 8, scale_x);
 
-    const GL_Surface_t *surface = self->canvas.instance->surface; // FIXME: isn't this a bit too verbose?
     const GL_Sheet_t *sheet = self->sheet;
-    GL_surface_tile_s(surface, sheet->atlas, sheet->cells[cell_id], (GL_Point_t){ .x = x, .y = y }, (GL_Point_t){ .x = offset_x, .y = offset_y }, scale_x, scale_y);
+    const GL_Surface_t *destination = self->canvas.instance->surface; // FIXME: isn't this a bit too verbose?
+    GL_sheet_tile_s(sheet, cell_id, destination, (GL_Point_t){ .x = x, .y = y }, (GL_Point_t){ .x = offset_x, .y = offset_y }, scale_x, scale_y);
 
     return 0;
 }

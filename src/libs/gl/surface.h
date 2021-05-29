@@ -71,9 +71,9 @@ extern void GL_surface_poke(const GL_Surface_t *surface, GL_Point_t position, GL
 
 extern void GL_surface_fill(const GL_Surface_t *surface, GL_Point_t seed, GL_Pixel_t index);
 
-extern void GL_surface_process(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, GL_Process_Callback_t callback, void *user_data);
-extern void GL_surface_copy(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position);
-extern void GL_surface_stencil(const GL_Surface_t *surface, const GL_Surface_t *source, const GL_Surface_t *mask, GL_Comparators_t comparator, GL_Pixel_t threshold, GL_Rectangle_t area, GL_Point_t position);
-extern void GL_surface_blend(const GL_Surface_t *surface, const GL_Surface_t *source, GL_Functions_t function, GL_Rectangle_t area, GL_Point_t position);
+extern void GL_surface_process(const GL_Surface_t *surface, GL_Rectangle_t area, const GL_Surface_t *destination, GL_Point_t position, GL_Process_Callback_t callback, void *user_data);
+extern void GL_surface_copy(const GL_Surface_t *surface, GL_Rectangle_t area, const GL_Surface_t *destination, GL_Point_t position);
+extern void GL_surface_stencil(const GL_Surface_t *surface, GL_Rectangle_t area, const GL_Surface_t *destination, GL_Point_t position, const GL_Surface_t *mask, GL_Comparators_t comparator, GL_Pixel_t threshold);
+extern void GL_surface_blend(const GL_Surface_t *surface, GL_Rectangle_t area, const GL_Surface_t *destination, GL_Point_t position, GL_Functions_t function);
 
 #endif  /* __GL_SURFACE_H__ */

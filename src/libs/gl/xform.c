@@ -32,6 +32,13 @@
 
 #define LOG_CONTEXT "gl-xform"
 
+#ifdef __DEBUG_GRAPHICS__
+static inline void _pixel(const GL_Surface_t *context, int x, int y, int index)
+{
+    surface->data[y * surface->width + x]= 240 + (index % 16);
+}
+#endif
+
 GL_XForm_t *GL_xform_create(GL_XForm_Wraps_t wrap)
 {
     GL_XForm_t *xform = malloc(sizeof(GL_XForm_t));
@@ -105,9 +112,9 @@ void GL_xform_table(GL_XForm_t *xform, const GL_XForm_Table_Entry_t *entries, si
 // http://www.coranac.com/tonc/text/mode7.htm
 // https://wiki.superfamicom.org/registers
 // https://www.smwcentral.net/?p=viewthread&t=27054
-void GL_xform_blit(const GL_XForm_t *xform, const GL_Surface_t *surface, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position)
+void GL_xform_blit(const GL_XForm_t *xform, const GL_Surface_t *surface, GL_Rectangle_t area, const GL_Surface_t *destination, GL_Point_t position)
 {
-    const GL_State_t *state = &surface->state.current;
+    const GL_State_t *state = &destination->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
 #ifdef __GL_XFORM_TRANSPARENCY__
@@ -149,13 +156,13 @@ void GL_xform_blit(const GL_XForm_t *xform, const GL_Surface_t *surface, const G
     const int shm1 = sh - 1;
     const int swb2 = sw * 2;
     const int shb2 = sh * 2;
-    const bool is_power_of_two = source->is_power_of_two;
+    const bool is_power_of_two = surface->is_power_of_two;
 
-    const GL_Pixel_t *sdata = source->data;
-    GL_Pixel_t *ddata = surface->data;
+    const GL_Pixel_t *sdata = surface->data;
+    GL_Pixel_t *ddata = destination->data;
 
-    const size_t swidth = source->width;
-    const size_t dwidth = surface->width;
+    const size_t swidth = surface->width;
+    const size_t dwidth = destination->width;
 
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
@@ -229,7 +236,7 @@ void GL_xform_blit(const GL_XForm_t *xform, const GL_Surface_t *surface, const G
 
         for (int j = 0; j < width; ++j) {
 #ifdef __DEBUG_GRAPHICS__
-            pixel(surface, drawing_region.x0 + j, drawing_region.y0 + i, i + j);
+            _pixel(destination, drawing_region.x0 + j, drawing_region.y0 + i, i + j);
 #endif
             int sx = (int)(xp + 0.5f); // Faster rounding, using integer casting truncation!
             int sy = (int)(yp + 0.5f);
