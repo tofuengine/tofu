@@ -156,14 +156,14 @@ void GL_sheet_blit(const GL_Sheet_t *sheet, size_t cell_id, const GL_Surface_t *
     GL_surface_blit(sheet->atlas, sheet->cells[cell_id], destination, position);
 }
 
-void GL_sheet_blit_s(const GL_Sheet_t *sheet, size_t cell_id, const GL_Surface_t *destination, GL_Point_t position, float sx, float sy)
+void GL_sheet_blit_s(const GL_Sheet_t *sheet, size_t cell_id, const GL_Surface_t *destination, GL_Point_t position, float scale_x, float scale_y)
 {
-    GL_surface_blit_s(sheet->atlas, sheet->cells[cell_id], destination, position, sx, sy);
+    GL_surface_blit_s(sheet->atlas, sheet->cells[cell_id], destination, position, scale_x, scale_y);
 }
 
-void GL_sheet_blit_sr(const GL_Sheet_t *sheet, size_t cell_id, const GL_Surface_t *destination, GL_Point_t position, float sx, float sy, int rotation, float ax, float ay)
+void GL_sheet_blit_sr(const GL_Sheet_t *sheet, size_t cell_id, const GL_Surface_t *destination, GL_Point_t position, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y)
 {
-    GL_surface_blit_sr(sheet->atlas, sheet->cells[cell_id], destination, position, sx, sy, rotation, ax, ay);
+    GL_surface_blit_sr(sheet->atlas, sheet->cells[cell_id], destination, position, scale_x, scale_y, rotation, anchor_x, anchor_y);
 }
 
 void GL_sheet_tile(const GL_Sheet_t *sheet, size_t cell_id, const GL_Surface_t *destination, GL_Point_t position, GL_Point_t offset)

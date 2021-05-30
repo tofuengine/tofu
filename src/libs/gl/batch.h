@@ -34,9 +34,9 @@
 typedef struct _GL_Batch_Sprite_t {
     GL_Cell_t cell_id;
     GL_Point_t position;
-    float sx, sy;
+    float scale_x, scale_y;
     int rotation;
-    float ax, ay;
+    float anchor_x, anchor_y;
 } GL_Batch_Sprite_t;
 
 typedef struct _GL_Batch_t {

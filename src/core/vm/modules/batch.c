@@ -170,9 +170,9 @@ static int batch_add_4unNN_0(lua_State *L)
     GL_batch_add(self->batch, (GL_Batch_Sprite_t){
             .cell_id = cell_id,
             .position = (GL_Point_t){ .x = x, .y = y },
-            .sx = 1.0f, .sy = 1.0f,
+            .scale_x = 1.0f, .scale_y = 1.0f,
             .rotation = 0,
-            .ax = 0.5f, .ay = 0.5f
+            .anchor_x = 0.5f, .anchor_y = 0.5f
         });
 
     return 0;
@@ -196,9 +196,9 @@ static int batch_add_5unnnn_0(lua_State *L)
     GL_batch_add(self->batch, (GL_Batch_Sprite_t){
             .cell_id = cell_id,
             .position = (GL_Point_t){ .x = x, .y = y },
-            .sx = 1.0f, .sy = 1.0f,
+            .scale_x = 1.0f, .scale_y = 1.0f,
             .rotation = rotation,
-            .ax = 0.5f, .ay = 0.5f
+            .anchor_x = 0.5f, .anchor_y = 0.5f
         });
 
     return 0;
@@ -224,9 +224,9 @@ static int batch_add_6unnnnn_0(lua_State *L)
     GL_batch_add(self->batch, (GL_Batch_Sprite_t){
             .cell_id = cell_id,
             .position = (GL_Point_t){ .x = x, .y = y },
-            .sx = scale_x, .sy = scale_y,
+            .scale_x = scale_x, .scale_y = scale_y,
             .rotation = 0,
-            .ax = 0.5f, .ay = 0.5f
+            .anchor_x = 0.5f, .anchor_y = 0.5f
         });
 
     return 0;
@@ -258,9 +258,9 @@ static int batch_add_9unnnnnNNN_0(lua_State *L)
     GL_batch_add(self->batch, (GL_Batch_Sprite_t){
             .cell_id = cell_id,
             .position = (GL_Point_t){ .x = x, .y = y },
-            .sx = scale_x, .sy = scale_y,
+            .scale_x = scale_x, .scale_y = scale_y,
             .rotation = rotation,
-            .ax = anchor_x, .ay = anchor_y
+            .anchor_x = anchor_x, .anchor_y = anchor_y
         });
 
     return 0;

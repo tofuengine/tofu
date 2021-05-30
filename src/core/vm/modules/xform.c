@@ -395,16 +395,16 @@ static int xform_warp_3unn_0(lua_State *L)
 
     for (size_t scan_line = 0; scan_line < height; ++scan_line) {
         const float angle = ((float)scan_line / (float)height) * M_PI; // Could be partially pre-computed, but who cares...
-        const float sx = (1.0f - sinf(angle)) * factor + 1.0f;
+        const float scale_x = (1.0f - sinf(angle)) * factor + 1.0f;
 
         GL_XForm_Table_Entry_t entry = {
                 .scan_line = scan_line,
                 .operations = {
                         { .id = GL_XFORM_REGISTER_Y, .value = scan_line },
-                        { .id = GL_XFORM_REGISTER_A, .value = sx },
+                        { .id = GL_XFORM_REGISTER_A, .value = scale_x },
                         { .id = GL_XFORM_REGISTER_B, .value = 0.0f },
                         { .id = GL_XFORM_REGISTER_C, .value = 0.0f },
-                        { .id = GL_XFORM_REGISTER_D, .value = sx }
+                        { .id = GL_XFORM_REGISTER_D, .value = scale_x }
                     },
                 .count = 5
             };
