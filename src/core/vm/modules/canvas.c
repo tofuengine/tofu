@@ -1296,6 +1296,8 @@ static const Map_Entry_t _functions[GL_Functions_t_CountOf] = { // Need to be so
     { "multiply", GL_FUNCTIONS_MULTIPLY },
     { "multiply-clamped", GL_FUNCTIONS_MULTIPLY_CLAMPED },
     { "replace", GL_FUNCTIONS_REPLACE },
+    { "reverse-subtract", GL_FUNCTIONS_REVERSE_SUBTRACT },
+    { "reverse-subtract-clamped", GL_FUNCTIONS_REVERSE_SUBTRACT_CLAMPED },
     { "subtract", GL_FUNCTIONS_SUBTRACT },
     { "subtract-clamped", GL_FUNCTIONS_SUBTRACT_CLAMPED }
 };
