@@ -242,8 +242,8 @@ static int palette_gc_1u_0(lua_State *L)
     Palette_Object_t *self = (Palette_Object_t *)LUAX_USERDATA(L, 1);
 
 #ifdef __PALETTE_COLOR_MEMOIZATION__
-    hmfree(self->memoize);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "memoizing cache %p freed", self->memoize);
+    hmfree(self->cache);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "memoizing cache %p freed", self->cache);
 #endif  /* __PALETTE_COLOR_MEMOIZATION__ */
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p finalized", self);
@@ -344,19 +344,19 @@ static int palette_color_to_index_4unnn_1n(lua_State *L)
 
     const GL_Palette_t *palette = &self->palette;
 #ifdef __PALETTE_COLOR_MEMOIZATION__
-    GL_Pixel_t pixel;
-    int index = hmgeti(self->memoize, color);
-    if (index == -1) {
-        pixel = GL_palette_find_nearest_color(palette, color);
-        hmput(self->memoize, color, pixel);
-        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "color <%d, %d, %d> stored into memoizing w/ pixel #%d", r, g, b, pixel);
+    GL_Pixel_t index;
+    int position = hmgeti(self->cache, color);
+    if (position == -1) {
+        index = GL_palette_find_nearest_color(palette, color);
+        hmput(self->cache, color, index);
+        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "color <%d, %d, %d> stored into memoizing cache w/ index #%d", r, g, b, index);
     } else {
-        pixel = self->memoize[index].value;
-        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "color <%d, %d, %d> found at memoizing cache index #%d (pixel #%d)", r, g, b, index, pixel);
+        index = self->cache[position].value;
+        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "color <%d, %d, %d> found into memoizing cache at #%d (index #%d)", r, g, b, position, index);
     }
 #else
     const GL_Pixel_t index = GL_palette_find_nearest_color(palette, color);
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "color <%d, %d, %d> matched w/ palette index #%d", r, g, b, pixel);
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "color <%d, %d, %d> matched w/ palette index #%d", r, g, b, index);
 #endif  /* __PALETTE_COLOR_MEMOIZATION__ */
 
     lua_pushinteger(L, (lua_Integer)index);

@@ -114,7 +114,7 @@ typedef struct _key_value_pair_t {
 typedef struct _Palette_Object_t {
     GL_Palette_t palette;
 #ifdef __PALETTE_COLOR_MEMOIZATION__
-    color_pixel_pair_t *memoize; // Stores past executed colors matches.
+    color_pixel_pair_t *cache; // Stores past executed colors matches.
 #endif  /* __PALETTE_COLOR_MEMOIZATION__ */
 } Palette_Object_t;
 
