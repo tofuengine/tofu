@@ -32,9 +32,9 @@
 #define LOG_CONTEXT "gl-surface"
 
 #ifdef __DEBUG_GRAPHICS__
-static inline void _pixel(const GL_Surface_t *context, int x, int y, int index)
+static inline void _pixel(const GL_Surface_t *surface, int x, int y, int index)
 {
-    surface->data[y * surface->width + x]= 240 + (index % 16);
+    surface->data[y * surface->width + x]= (GL_Pixel_t)(240 + (index % 16));
 }
 #endif
 
@@ -279,9 +279,9 @@ void GL_surface_fill(const GL_Surface_t *surface, GL_Point_t seed, GL_Pixel_t in
     arrfree(stack);
 }
 
-void GL_surface_process(const GL_Surface_t *surface, GL_Rectangle_t area, const GL_Surface_t *destination, GL_Point_t position, GL_Process_Callback_t callback, void *user_data)
+void GL_surface_process(const GL_Surface_t *surface, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, GL_Process_Callback_t callback, void *user_data)
 {
-    const GL_State_t *state = &destination->state.current;
+    const GL_State_t *state = &surface->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
 
     size_t skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
@@ -315,11 +315,11 @@ void GL_surface_process(const GL_Surface_t *surface, GL_Rectangle_t area, const 
         return;
     }
 
-    const GL_Pixel_t *sdata = surface->data;
-    GL_Pixel_t *ddata = destination->data;
+    const GL_Pixel_t *sdata = source->data;
+    GL_Pixel_t *ddata = surface->data;
 
-    const size_t swidth = surface->width;
-    const size_t dwidth = destination->width;
+    const size_t swidth = source->width;
+    const size_t dwidth = surface->width;
 
     const size_t sskip = swidth - width;
     const size_t dskip = dwidth - width;
@@ -344,9 +344,9 @@ void GL_surface_process(const GL_Surface_t *surface, GL_Rectangle_t area, const 
 
 // Note: currently the `GL_surface_copy()` function is equal to `GL_surface_blit()`. However, we are keeping them
 // separate, as in the future they might be different (with the `*_copy()` variant optimized).
-void GL_surface_copy(const GL_Surface_t *surface, GL_Rectangle_t area, const GL_Surface_t *destination, GL_Point_t position)
+void GL_surface_copy(const GL_Surface_t *surface, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area)
 {
-    const GL_State_t *state = &destination->state.current;
+    const GL_State_t *state = &surface->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
@@ -382,11 +382,11 @@ void GL_surface_copy(const GL_Surface_t *surface, GL_Rectangle_t area, const GL_
         return;
     }
 
-    const GL_Pixel_t *sdata = surface->data;
-    GL_Pixel_t *ddata = destination->data;
+    const GL_Pixel_t *sdata = source->data;
+    GL_Pixel_t *ddata = surface->data;
 
-    const size_t swidth = surface->width;
-    const size_t dwidth = destination->width;
+    const size_t swidth = source->width;
+    const size_t dwidth = surface->width;
 
     const size_t sskip = swidth - width;
     const size_t dskip = dwidth - width;
@@ -454,16 +454,16 @@ const GL_Pixel_Comparator_t _pixel_comparators[GL_Comparators_t_CountOf] = {
     _never, _less, _less_or_equal, _greater, _greater_or_equal, _equal, _not_equal, _always
 };
 
-void GL_surface_stencil(const GL_Surface_t *surface, GL_Rectangle_t area, const GL_Surface_t *destination, GL_Point_t position, const GL_Surface_t *mask, GL_Comparators_t comparator, GL_Pixel_t threshold)
+void GL_surface_stencil(const GL_Surface_t *surface, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, const GL_Surface_t *mask, GL_Comparators_t comparator, GL_Pixel_t threshold)
 {
-    const GL_State_t *state = &destination->state.current;
+    const GL_State_t *state = &surface->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent; // TODO: should `GL_surface_copy()` and `GL_surface_mask()` skip shifting and transparency?
     const GL_Pixel_Comparator_t should_write = _pixel_comparators[comparator];
 
 #ifdef __DEFENSIVE_CHECKS__
-    if (surface->width != mask->width || surface->height != mask->height) {
+    if (source->width != mask->width || source->height != mask->height) {
         Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "source and mask surfaces need to match in size");
         return;
     }
@@ -500,13 +500,13 @@ void GL_surface_stencil(const GL_Surface_t *surface, GL_Rectangle_t area, const 
         return;
     }
 
-    const GL_Pixel_t *sdata = surface->data;
+    const GL_Pixel_t *sdata = source->data;
     const GL_Pixel_t *mdata = mask->data;
-    GL_Pixel_t *ddata = destination->data;
+    GL_Pixel_t *ddata = surface->data;
 
-    const size_t swidth = surface->width;
+    const size_t swidth = source->width;
     const size_t mwidth = mask->width;
-    const size_t dwidth = destination->width;
+    const size_t dwidth = surface->width;
 
     const size_t sskip = swidth - width;
     const size_t mskip = mwidth - width;
@@ -519,7 +519,7 @@ void GL_surface_stencil(const GL_Surface_t *surface, GL_Rectangle_t area, const 
     for (int i = height; i; --i) {
         for (int j = width; j; --j) {
 #ifdef __DEBUG_GRAPHICS__
-            _pixel(destination, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
+            _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
             const GL_Pixel_t value = *(mptr++);
             const GL_Pixel_t index = shifting[*(sptr++)];
@@ -606,9 +606,9 @@ const GL_Pixel_Function_t _pixel_functions[GL_Functions_t_CountOf] = {
     _max
 };
 
-void GL_surface_blend(const GL_Surface_t *surface, GL_Rectangle_t area, const GL_Surface_t *destination, GL_Point_t position, GL_Functions_t function)
+void GL_surface_blend(const GL_Surface_t *surface, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, GL_Functions_t function)
 {
-    const GL_State_t *state = &destination->state.current;
+    const GL_State_t *state = &surface->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
@@ -645,11 +645,11 @@ void GL_surface_blend(const GL_Surface_t *surface, GL_Rectangle_t area, const GL
         return;
     }
 
-    const GL_Pixel_t *sdata = surface->data;
-    GL_Pixel_t *ddata = destination->data;
+    const GL_Pixel_t *sdata = source->data;
+    GL_Pixel_t *ddata = surface->data;
 
-    const size_t swidth = surface->width;
-    const size_t dwidth = destination->width;
+    const size_t swidth = source->width;
+    const size_t dwidth = surface->width;
 
     const size_t sskip = swidth - width;
     const size_t dskip = dwidth - width;
@@ -660,7 +660,7 @@ void GL_surface_blend(const GL_Surface_t *surface, GL_Rectangle_t area, const GL
     for (int i = height; i; --i) {
         for (int j = width; j; --j) {
 #ifdef __DEBUG_GRAPHICS__
-            _pixel(destination, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
+            _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
             const GL_Pixel_t index = shifting[blend(*dptr, *(sptr++))];
             if (transparent[index]) {

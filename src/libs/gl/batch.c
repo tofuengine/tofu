@@ -102,35 +102,35 @@ void GL_batch_add(GL_Batch_t *batch, GL_Batch_Sprite_t sprite)
     arrpush(batch->sprites, sprite);
 }
 
-void GL_batch_blit(const GL_Batch_t *batch, const GL_Surface_t *destination)
+void GL_batch_blit(const GL_Batch_t *batch, const GL_Surface_t *surface)
 {
     const GL_Sheet_t *sheet = batch->sheet;
 
     GL_Batch_Sprite_t *current = batch->sprites;
     for (size_t count = arrlen(batch->sprites); count; --count) {
         GL_Batch_Sprite_t *sprite = current++;
-        GL_sheet_blit(sheet, sprite->cell_id, destination, sprite->position);
+        GL_sheet_blit(sheet, surface, sprite->position, sprite->cell_id);
     }
 }
 
-void GL_batch_blit_s(const GL_Batch_t *batch, const GL_Surface_t *destination)
+void GL_batch_blit_s(const GL_Batch_t *batch, const GL_Surface_t *surface)
 {
     const GL_Sheet_t *sheet = batch->sheet;
 
     GL_Batch_Sprite_t *current = batch->sprites;
     for (size_t count = arrlen(batch->sprites); count; --count) {
         GL_Batch_Sprite_t *sprite = current++;
-        GL_sheet_blit_s(sheet, sprite->cell_id, destination, sprite->position, sprite->scale_x, sprite->scale_y);
+        GL_sheet_blit_s(sheet, surface, sprite->position, sprite->cell_id, sprite->scale_x, sprite->scale_y);
     }
 }
 
-void GL_batch_blit_sr(const GL_Batch_t *batch, const GL_Surface_t *destination)
+void GL_batch_blit_sr(const GL_Batch_t *batch, const GL_Surface_t *surface)
 {
     const GL_Sheet_t *sheet = batch->sheet;
 
     GL_Batch_Sprite_t *current = batch->sprites;
     for (size_t count = arrlen(batch->sprites); count; --count) {
         GL_Batch_Sprite_t *sprite = current++;
-        GL_sheet_blit_sr(sheet, sprite->cell_id, destination, sprite->position, sprite->scale_x, sprite->scale_y, sprite->rotation, sprite->anchor_x, sprite->anchor_y);
+        GL_sheet_blit_sr(sheet, surface, sprite->position, sprite->cell_id, sprite->scale_x, sprite->scale_y, sprite->rotation, sprite->anchor_x, sprite->anchor_y);
     }
 }

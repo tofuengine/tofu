@@ -323,7 +323,7 @@ static int font_write_4usnn_0(lua_State *L)
             continue;
         }
         GL_Size_t size = GL_sheet_size(sheet, cell_id, 1.0f, 1.0f);
-        GL_sheet_blit(sheet, cell_id, surface, (GL_Point_t){ .x = dx, .y = dy });
+        GL_sheet_blit(sheet, surface, (GL_Point_t){ .x = dx, .y = dy }, cell_id);
         dx += size.width;
         if (height < size.height) {
             height = size.height;
@@ -371,7 +371,7 @@ static int font_write_6usnnnN_0(lua_State *L)
             continue;
         }
         GL_Size_t size = GL_sheet_size(sheet, cell_id, scale_x, scale_y);
-        GL_sheet_blit_s(sheet, cell_id, surface, (GL_Point_t){ .x = dx, .y = dy }, scale_x, scale_y);
+        GL_sheet_blit_s(sheet, surface, (GL_Point_t){ .x = dx, .y = dy }, cell_id, scale_x, scale_y);
         dx += size.width;
         if (height < size.height) {
             height = size.height;

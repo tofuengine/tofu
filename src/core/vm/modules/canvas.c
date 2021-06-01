@@ -941,10 +941,10 @@ static int canvas_process_3ufU_0(lua_State *L)
 
     const Interpreter_t *interpreter = (const Interpreter_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INTERPRETER));
 
-    const GL_Surface_t *surface = self->surface;
-    const GL_Surface_t *destination = canvas->surface;
-    GL_surface_process(surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height },
-        destination, (GL_Point_t){ .x = 0, .y = 0 },
+    const GL_Surface_t *source = self->surface;
+    const GL_Surface_t *surface = canvas->surface;
+    GL_surface_process(surface, (GL_Point_t){ .x = 0, .y = 0 },
+        source, (GL_Rectangle_t){ .x = 0, .y = 0, .width = source->width, .height = source->height },
         _process_callback, &(Process_Closure_t){ .interpreter = interpreter, .L = L });
 
     return 0;
@@ -967,10 +967,10 @@ static int canvas_process_5ufnnU_0(lua_State *L)
 
     const Interpreter_t *interpreter = (const Interpreter_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INTERPRETER));
 
-    const GL_Surface_t *surface = self->surface;
-    const GL_Surface_t *destination = canvas->surface;
-    GL_surface_process(surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height },
-        destination, (GL_Point_t){ .x = x, .y = y },
+    const GL_Surface_t *source = self->surface;
+    const GL_Surface_t *surface = canvas->surface;
+    GL_surface_process(surface, (GL_Point_t){ .x = x, .y = y },
+        source, (GL_Rectangle_t){ .x = 0, .y = 0, .width = source->width, .height = source->height },
         _process_callback, &(Process_Closure_t){ .interpreter = interpreter, .L = L });
 
     return 0;
@@ -1001,10 +1001,10 @@ static int canvas_process_9ufnnnnnnU_0(lua_State *L)
 
     const Interpreter_t *interpreter = (const Interpreter_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INTERPRETER));
 
-    const GL_Surface_t *surface = self->surface;
-    const GL_Surface_t *destination = canvas->surface;
-    GL_surface_process(surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height },
-        destination, (GL_Point_t){ .x = x, .y = y },
+    const GL_Surface_t *source = self->surface;
+    const GL_Surface_t *surface = canvas->surface;
+    GL_surface_process(surface, (GL_Point_t){ .x = x, .y = y },
+        source, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height },
         _process_callback, &(Process_Closure_t){ .interpreter = interpreter, .L = L });
 
     return 0;
@@ -1031,10 +1031,10 @@ static int canvas_copy_2uU_0(lua_State *L)
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
     Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 2, self);
 
-    const GL_Surface_t *surface = self->surface;
-    const GL_Surface_t *destination = canvas->surface;
-    GL_surface_copy(surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height },
-        destination, (GL_Point_t){ .x = 0, .y = 0 });
+    const GL_Surface_t *source = self->surface;
+    const GL_Surface_t *surface = canvas->surface;
+    GL_surface_copy(surface, (GL_Point_t){ .x = 0, .y = 0 },
+        source, (GL_Rectangle_t){ .x = 0, .y = 0, .width = source->width, .height = source->height });
 
     return 0;
 }
@@ -1052,10 +1052,10 @@ static int canvas_copy_4unnU_0(lua_State *L)
     int y = LUAX_INTEGER(L, 3);
     Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 4, self);
 
-    const GL_Surface_t *surface = self->surface;
-    const GL_Surface_t *destination = canvas->surface;
-    GL_surface_copy(surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height },
-        destination, (GL_Point_t){ .x = x, .y = y });
+    const GL_Surface_t *source = self->surface;
+    const GL_Surface_t *surface = canvas->surface;
+    GL_surface_copy(surface, (GL_Point_t){ .x = x, .y = y },
+        source, (GL_Rectangle_t){ .x = 0, .y = 0, .width = source->width, .height = source->height });
 
     return 0;
 }
@@ -1081,10 +1081,10 @@ static int canvas_copy_8unnnnnnU_0(lua_State *L)
     size_t height = (size_t)LUAX_INTEGER(L, 7);
     Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 8, self);
 
-    const GL_Surface_t *surface = self->surface;
-    const GL_Surface_t *destination = canvas->surface;
-    GL_surface_copy(surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height }, 
-        destination, (GL_Point_t){ .x = x, .y = y });
+    const GL_Surface_t *source = self->surface;
+    const GL_Surface_t *surface = canvas->surface;
+    GL_surface_copy(surface, (GL_Point_t){ .x = x, .y = y },
+        source, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height });
 
     return 0;
 }
@@ -1110,10 +1110,10 @@ static int canvas_blit_2uU_0(lua_State *L)
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
     Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 2, self);
 
-    const GL_Surface_t *surface = self->surface;
-    const GL_Surface_t *destination = canvas->surface;
-    GL_surface_blit(surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height },
-        destination, (GL_Point_t){ .x = 0, .y = 0 });
+    const GL_Surface_t *source = self->surface;
+    const GL_Surface_t *surface = canvas->surface;
+    GL_surface_blit(surface, (GL_Point_t){ .x = 0, .y = 0 },
+        source, (GL_Rectangle_t){ .x = 0, .y = 0, .width = source->width, .height = source->height });
 
     return 0;
 }
@@ -1131,10 +1131,10 @@ static int canvas_blit_4unnU_0(lua_State *L)
     int y = LUAX_INTEGER(L, 3);
     Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 4, self);
 
-    const GL_Surface_t *surface = self->surface;
-    const GL_Surface_t *destination = canvas->surface;
-    GL_surface_blit(surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height },
-        destination, (GL_Point_t){ .x = x, .y = y });
+    const GL_Surface_t *source = self->surface;
+    const GL_Surface_t *surface = canvas->surface;
+    GL_surface_blit(surface, (GL_Point_t){ .x = x, .y = y },
+        source, (GL_Rectangle_t){ .x = 0, .y = 0, .width = source->width, .height = source->height });
 
     return 0;
 }
@@ -1160,10 +1160,10 @@ static int canvas_blit_8unnnnnnU_0(lua_State *L)
     size_t height = (size_t)LUAX_INTEGER(L, 7);
     Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 8, self);
 
-    const GL_Surface_t *surface = self->surface;
-    const GL_Surface_t *destination = canvas->surface;
-    GL_surface_blit(surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height },
-        destination, (GL_Point_t){ .x = x, .y = y });
+    const GL_Surface_t *source = self->surface;
+    const GL_Surface_t *surface = canvas->surface;
+    GL_surface_blit(surface, (GL_Point_t){ .x = x, .y = y },
+        source, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height });
 
     return 0;
 }
@@ -1203,12 +1203,13 @@ static int canvas_stencil_5uusnU_0(lua_State *L)
     GL_Pixel_t threshold = (GL_Pixel_t)LUAX_INTEGER(L, 4);
     Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 5, self);
 
-    const GL_Surface_t *surface = self->surface;
+    const GL_Surface_t *source = self->surface;
     const GL_Surface_t *mask_surface = mask->surface;
-    const GL_Surface_t *destination = canvas->surface;
+    const GL_Surface_t *surface = canvas->surface;
     const Map_Entry_t *entry = map_find(L, comparator, _comparators, GL_Comparators_t_CountOf);
-    GL_surface_stencil(surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height },
-        destination, (GL_Point_t){ .x = 0, .y = 0 }, mask_surface, (GL_Comparators_t)entry->value, threshold);
+    GL_surface_stencil(surface, (GL_Point_t){ .x = 0, .y = 0 },
+        source, (GL_Rectangle_t){ .x = 0, .y = 0, .width = source->width, .height = source->height },
+        mask_surface, (GL_Comparators_t)entry->value, threshold);
 
     return 0;
 }
@@ -1232,12 +1233,13 @@ static int canvas_stencil_7unnusnU_0(lua_State *L)
     GL_Pixel_t threshold = (GL_Pixel_t)LUAX_INTEGER(L, 6);
     Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 7, self);
 
-    const GL_Surface_t *surface = self->surface;
+    const GL_Surface_t *source = self->surface;
     const GL_Surface_t *mask_surface = mask->surface;
-    const GL_Surface_t *destination = canvas->surface;
+    const GL_Surface_t *surface = canvas->surface;
     const Map_Entry_t *entry = map_find(L, comparator, _comparators, GL_Comparators_t_CountOf);
-    GL_surface_stencil(surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height },
-        destination, (GL_Point_t){ .x = x, .y = y }, mask_surface, (GL_Comparators_t)entry->value, threshold);
+    GL_surface_stencil(surface, (GL_Point_t){ .x = x, .y = y },
+        source, (GL_Rectangle_t){ .x = 0, .y = 0, .width = source->width, .height = source->height },
+        mask_surface, (GL_Comparators_t)entry->value, threshold);
 
     return 0;
 }
@@ -1269,12 +1271,13 @@ static int canvas_stencil_11unnnnnnusnU_0(lua_State *L)
     GL_Pixel_t threshold = (GL_Pixel_t)LUAX_INTEGER(L, 10);
     Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 11, self);
 
-    const GL_Surface_t *surface = self->surface;
+    const GL_Surface_t *source = self->surface;
     const GL_Surface_t *mask_surface = mask->surface;
-    const GL_Surface_t *destination = canvas->surface;
+    const GL_Surface_t *surface = canvas->surface;
     const Map_Entry_t *entry = map_find(L, comparator, _comparators, GL_Comparators_t_CountOf);
-    GL_surface_stencil(surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height },
-        destination, (GL_Point_t){ .x = x, .y = y }, mask_surface, (GL_Comparators_t)entry->value, threshold);
+    GL_surface_stencil(surface, (GL_Point_t){ .x = x, .y = y },
+        source, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height  },
+        mask_surface, (GL_Comparators_t)entry->value, threshold);
 
     return 0;
 }
@@ -1313,11 +1316,12 @@ static int canvas_blend_3usU_0(lua_State *L)
     const char *function = LUAX_STRING(L, 2);
     Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 3, self);
 
-    const GL_Surface_t *surface = self->surface;
-    const GL_Surface_t *destination = canvas->surface;
+    const GL_Surface_t *source = self->surface;
+    const GL_Surface_t *surface = canvas->surface;
     const Map_Entry_t *entry = map_find(L, function, _functions, GL_Functions_t_CountOf);
-    GL_surface_blend(surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height },
-        destination, (GL_Point_t){ .x = 0, .y = 0 }, (GL_Functions_t)entry->value);
+    GL_surface_blend(surface, (GL_Point_t){ .x = 0, .y = 0 },
+        source, (GL_Rectangle_t){ .x = 0, .y = 0, .width = source->width, .height = source->height },
+        (GL_Functions_t)entry->value);
 
     return 0;
 }
@@ -1337,11 +1341,12 @@ static int canvas_blend_5unnsU_0(lua_State *L)
     const char *function = LUAX_STRING(L, 4);
     Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 5, self);
 
-    const GL_Surface_t *surface = self->surface;
-    const GL_Surface_t *destination = canvas->surface;
+    const GL_Surface_t *source = self->surface;
+    const GL_Surface_t *surface = canvas->surface;
     const Map_Entry_t *entry = map_find(L, function, _functions, GL_Functions_t_CountOf);
-    GL_surface_blend(surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height },
-        destination, (GL_Point_t){ .x = x, .y = y }, (GL_Functions_t)entry->value);
+    GL_surface_blend(surface, (GL_Point_t){ .x = x, .y = y },
+        source, (GL_Rectangle_t){ .x = 0, .y = 0, .width = source->width, .height = source->height },
+        (GL_Functions_t)entry->value);
 
     return 0;
 }
@@ -1369,11 +1374,12 @@ static int canvas_blend_9unnnnnnsU_0(lua_State *L)
     const char *function = LUAX_STRING(L, 8);
     Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 9, self);
 
-    const GL_Surface_t *surface = self->surface;
-    const GL_Surface_t *destination = canvas->surface;
+    const GL_Surface_t *source = self->surface;
+    const GL_Surface_t *surface = canvas->surface;
     const Map_Entry_t *entry = map_find(L, function, _functions, GL_Functions_t_CountOf);
-    GL_surface_blend(surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height },
-        destination, (GL_Point_t){ .x = x, .y = y }, (GL_Functions_t)entry->value);
+    GL_surface_blend(surface, (GL_Point_t){ .x = x, .y = y },
+        source, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height },
+        (GL_Functions_t)entry->value);
 
     return 0;
 }
@@ -1398,10 +1404,10 @@ static int canvas_xform_3uuU_0(lua_State *L)
     XForm_Object_t *xform = (XForm_Object_t *)LUAX_USERDATA(L, 2);
     Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 3, self);
 
-    const GL_Surface_t *surface = self->surface;
-    const GL_Surface_t *destination = canvas->surface;
-    GL_xform_blit(xform->xform, surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height },
-        destination, (GL_Point_t){ .x = 0, .y = 0 });
+    const GL_Surface_t *source = self->surface;
+    const GL_Surface_t *surface = canvas->surface;
+    GL_xform_blit(xform->xform, surface, (GL_Point_t){ .x = 0, .y = 0 },
+        source, (GL_Rectangle_t){ .x = 0, .y = 0, .width = source->width, .height = source->height });
 
     return 0;
 }
@@ -1421,10 +1427,10 @@ static int canvas_xform_5unnuU_0(lua_State *L)
     XForm_Object_t *xform = (XForm_Object_t *)LUAX_USERDATA(L, 4);
     Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 5, self);
 
-    const GL_Surface_t *surface = self->surface;
-    const GL_Surface_t *destination = canvas->surface;
-    GL_xform_blit(xform->xform, surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height },
-        destination, (GL_Point_t){ .x = x, .y = y });
+    const GL_Surface_t *source = self->surface;
+    const GL_Surface_t *surface = canvas->surface;
+    GL_xform_blit(xform->xform, surface, (GL_Point_t){ .x = x, .y = y },
+        source, (GL_Rectangle_t){ .x = 0, .y = 0, .width = source->width, .height = source->height });
 
     return 0;
 }
@@ -1452,10 +1458,10 @@ static int canvas_xform_9unnnnnnuU_0(lua_State *L)
     XForm_Object_t *xform = (XForm_Object_t *)LUAX_USERDATA(L, 8);
     Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_OPTIONAL_USERDATA(L, 9, self);
 
-    const GL_Surface_t *surface = self->surface;
-    const GL_Surface_t *destination = canvas->surface;
-    GL_xform_blit(xform->xform, surface, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height },
-        destination, (GL_Point_t){ .x = x, .y = y });
+    const GL_Surface_t *source = self->surface;
+    const GL_Surface_t *surface = canvas->surface;
+    GL_xform_blit(xform->xform, surface, (GL_Point_t){ .x = x, .y = y },
+        source, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height });
 
     return 0;
 }

@@ -28,8 +28,8 @@
 #include "common.h"
 #include "surface.h"
 
-extern void GL_surface_blit(const GL_Surface_t *surface, GL_Rectangle_t area, const GL_Surface_t *destination, GL_Point_t position);
-extern void GL_surface_blit_s(const GL_Surface_t *surface, GL_Rectangle_t area, const GL_Surface_t *destination, GL_Point_t position, float scale_x, float scale_y);
-extern void GL_surface_blit_sr(const GL_Surface_t *surface, GL_Rectangle_t area, const GL_Surface_t *destination, GL_Point_t position, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y);
+extern void GL_surface_blit(const GL_Surface_t *surface, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area);
+extern void GL_surface_blit_s(const GL_Surface_t *surface, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, float scale_x, float scale_y);
+extern void GL_surface_blit_sr(const GL_Surface_t *surface, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y);
 
 #endif  /* __GL_SURFACE_BLIT_H__ */
