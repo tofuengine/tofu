@@ -31,19 +31,18 @@
 #include <math.h>
 
 #ifdef __DEBUG_GRAPHICS__
-static inline void pixel(const GL_Surface_t *context, int x, int y, int index)
+static inline void _pixel(const GL_Surface_t *surface, int x, int y, int index)
 {
-    surface->data[y * surface->width + x]= 240 + (index % 16);
+    surface->data[y * surface->width + x]= (GL_Pixel_t)(240 + (index % 16));
 }
 #endif
 
-void GL_context_tile(const GL_Context_t *context, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, GL_Point_t offset)
+extern void GL_surface_tile(const GL_Surface_t *surface, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t offset)
 {
-    const GL_State_t *state = &context->state;
+    const GL_State_t *state = &surface->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
-    const GL_Surface_t *surface = context->surface;
 
     size_t skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
     size_t skip_y = 0;
@@ -97,7 +96,7 @@ void GL_context_tile(const GL_Context_t *context, const GL_Surface_t *source, GL
         int u = ou;
         for (int j = width; j; --j) {
 #ifdef __DEBUG_GRAPHICS__
-            pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
+            _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
             const GL_Pixel_t index = shifting[srow[u]];
             if (transparent[index]) {
@@ -112,13 +111,12 @@ void GL_context_tile(const GL_Context_t *context, const GL_Surface_t *source, GL
     }
 }
 
-void GL_context_tile_s(const GL_Context_t *context, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, GL_Point_t offset, int scale_x, int scale_y)
+void GL_surface_tile_s(const GL_Surface_t *surface, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t offset, int scale_x, int scale_y)
 {
-    const GL_State_t *state = &context->state;
+    const GL_State_t *state = &surface->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
-    const GL_Surface_t *surface = context->surface;
 
     const size_t sw = area.width * IABS(scale_x);
     const size_t sh = area.height * IABS(scale_y);
@@ -197,7 +195,7 @@ void GL_context_tile_s(const GL_Context_t *context, const GL_Surface_t *source, 
         int ru = ru0;
         for (int j = width; j; --j) {
 #ifdef __DEBUG_GRAPHICS__
-            pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
+            _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
             GL_Pixel_t index = shifting[srow[u]];
             if (transparent[index]) {

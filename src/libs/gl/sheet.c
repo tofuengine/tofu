@@ -24,9 +24,14 @@
 
 #include "sheet.h"
 
+#include "blit.h"
+#include "tile.h"
+
 #include <config.h>
 #include <libs/log.h>
 #include <libs/stb.h>
+
+#include <math.h>
 
 #define LOG_CONTEXT "gl-sheet"
 
@@ -135,4 +140,38 @@ GL_Sheet_t *GL_sheet_create(const GL_Surface_t *atlas, const GL_Rectangle_u32_t 
 void GL_sheet_destroy(GL_Sheet_t *sheet)
 {
     _detach(sheet);
+}
+
+GL_Size_t GL_sheet_size(const GL_Sheet_t *sheet, size_t cell_id, float scale_x, float scale_y)
+{
+    const GL_Rectangle_t *cell = &sheet->cells[cell_id];
+    return (GL_Size_t){
+            .width = (size_t)((float)cell->width * fabsf(scale_x)),
+            .height = (size_t)((float)cell->height * fabsf(scale_y))
+        };
+}
+
+void GL_sheet_blit(const GL_Sheet_t *sheet, const GL_Surface_t *surface, GL_Point_t position, size_t cell_id)
+{
+    GL_surface_blit(surface, position, sheet->atlas, sheet->cells[cell_id]);
+}
+
+void GL_sheet_blit_s(const GL_Sheet_t *sheet, const GL_Surface_t *surface, GL_Point_t position, size_t cell_id, float scale_x, float scale_y)
+{
+    GL_surface_blit_s(surface, position, sheet->atlas, sheet->cells[cell_id], scale_x, scale_y);
+}
+
+void GL_sheet_blit_sr(const GL_Sheet_t *sheet, const GL_Surface_t *surface, GL_Point_t position, size_t cell_id, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y)
+{
+    GL_surface_blit_sr(surface, position, sheet->atlas, sheet->cells[cell_id], scale_x, scale_y, rotation, anchor_x, anchor_y);
+}
+
+void GL_sheet_tile(const GL_Sheet_t *sheet, const GL_Surface_t *surface, GL_Point_t position, size_t cell_id, GL_Point_t offset)
+{
+    GL_surface_tile(surface, position, sheet->atlas, sheet->cells[cell_id], offset);
+}
+
+void GL_sheet_tile_s(const GL_Sheet_t *sheet, const GL_Surface_t *surface, GL_Point_t position, size_t cell_id, GL_Point_t offset, int scale_x, int scale_y)
+{
+    GL_surface_tile_s(surface, position, sheet->atlas, sheet->cells[cell_id], offset, scale_x, scale_y);
 }

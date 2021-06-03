@@ -22,20 +22,20 @@
  * SOFTWARE.
  */
 
-#ifndef __GL_PRIMITIVE_H__
-#define __GL_PRIMITIVE_H__
+#ifndef __GL_SURFACE_PRIMITIVE_H__
+#define __GL_SURFACE_PRIMITIVE_H__
 
 #include "common.h"
-#include "context.h"
+#include "surface.h"
 
-extern void GL_primitive_point(const GL_Context_t *context, GL_Point_t position, GL_Pixel_t index);
-extern void GL_primitive_hline(const GL_Context_t *context, GL_Point_t origin,  size_t w, GL_Pixel_t index);
-extern void GL_primitive_vline(const GL_Context_t *context, GL_Point_t origin, size_t h, GL_Pixel_t index);
-extern void GL_primitive_polyline(const GL_Context_t *context, const GL_Point_t *vertices, size_t count, GL_Pixel_t index);
+extern void GL_surface_point(const GL_Surface_t *surface, GL_Point_t position, GL_Pixel_t index);
+extern void GL_surface_hline(const GL_Surface_t *surface, GL_Point_t origin,  size_t w, GL_Pixel_t index);
+extern void GL_surface_vline(const GL_Surface_t *surface, GL_Point_t origin, size_t h, GL_Pixel_t index);
+extern void GL_surface_polyline(const GL_Surface_t *surface, const GL_Point_t *vertices, size_t count, GL_Pixel_t index);
 
-extern void GL_primitive_filled_rectangle(const GL_Context_t *context, GL_Rectangle_t rectangle, GL_Pixel_t index);
-extern void GL_primitive_filled_triangle(const GL_Context_t *context, GL_Point_t a, GL_Point_t b, GL_Point_t c, GL_Pixel_t index);
-extern void GL_primitive_filled_circle(const GL_Context_t *context, GL_Point_t center, size_t radius, GL_Pixel_t index);
-extern void GL_primitive_circle(const GL_Context_t *context, GL_Point_t center, size_t radius, GL_Pixel_t index);
+extern void GL_surface_filled_rectangle(const GL_Surface_t *surface, GL_Rectangle_t rectangle, GL_Pixel_t index);
+extern void GL_surface_filled_triangle(const GL_Surface_t *surface, GL_Point_t a, GL_Point_t b, GL_Point_t c, GL_Pixel_t index);
+extern void GL_surface_filled_circle(const GL_Surface_t *surface, GL_Point_t center, size_t radius, GL_Pixel_t index);
+extern void GL_surface_circle(const GL_Surface_t *surface, GL_Point_t center, size_t radius, GL_Pixel_t index);
 
-#endif  /* __GL_PRIMITIVE_H__ */
+#endif  /* __GL_SURFACE_PRIMITIVE_H__ */

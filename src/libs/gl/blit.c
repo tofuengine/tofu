@@ -31,21 +31,20 @@
 #include <math.h>
 
 #ifdef __DEBUG_GRAPHICS__
-static inline void pixel(const GL_Surface_t *context, int x, int y, int index)
+static inline void _pixel(const GL_Surface_t *surface, int x, int y, int index)
 {
-    surface->data[y * surface->width + x]= 240 + (index % 16);
+    surface->data[y * surface->width + x]= (GL_Pixel_t)(240 + (index % 16));
 }
 #endif
 
 // TODO: specifies `const` always? Is pedantic or useful?
 // https://dev.to/fenbf/please-declare-your-variables-as-const
-void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position)
+void GL_surface_blit(const GL_Surface_t *surface, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area)
 {
-    const GL_State_t *state = &context->state;
+    const GL_State_t *state = &surface->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
-    const GL_Surface_t *surface = context->surface;
 
     size_t skip_x = 0; // Offset into the (source) surface/texture, updated during clipping.
     size_t skip_y = 0;
@@ -93,7 +92,7 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *source, GL
     for (int i = height; i; --i) {
         for (int j = width; j; --j) {
 #ifdef __DEBUG_GRAPHICS__
-            pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
+            _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, i + j);
 #endif
             const GL_Pixel_t index = shifting[*(sptr++)];
             if (transparent[index]) {
@@ -113,13 +112,12 @@ void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *source, GL
 //
 // http://www.datagenetics.com/blog/december32013/index.html
 // file:///C:/Users/mlizza/Downloads/Extensible_Implementation_of_Reliable_Pixel_Art_In.pdf
-void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y)
+void GL_surface_blit_s(const GL_Surface_t *surface, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, float scale_x, float scale_y)
 {
-    const GL_State_t *state = &context->state;
+    const GL_State_t *state = &surface->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
-    const GL_Surface_t *surface = context->surface;
 
     const size_t drawing_width = (int)IROUNDF(area.width * fabsf(scale_x)); // We need to round! No ceil, no floor!
     const size_t drawing_height = (int)IROUNDF(area.height * fabsf(scale_y));
@@ -188,7 +186,7 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *source, 
         float u = ou;
         for (int j = width; j; --j) {
 #ifdef __DEBUG_GRAPHICS__
-            pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)u + (int)v);
+            _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)u + (int)v);
 #endif
             const int x = (int)u;
             GL_Pixel_t index = shifting[sptr[x]];
@@ -204,190 +202,19 @@ void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *source, 
         dptr += dskip;
     }
 #ifdef __DEBUG_GRAPHICS__
-    pixel(surface, drawing_region.x0, drawing_region.y0, 7);
-    pixel(surface, drawing_region.x1, drawing_region.y0, 7);
-    pixel(surface, drawing_region.x1, drawing_region.y1, 7);
-    pixel(surface, drawing_region.x0, drawing_region.y1, 7);
+    _pixel(surface, drawing_region.x0, drawing_region.y0, 7);
+    _pixel(surface, drawing_region.x1, drawing_region.y0, 7);
+    _pixel(surface, drawing_region.x1, drawing_region.y1, 7);
+    _pixel(surface, drawing_region.x0, drawing_region.y1, 7);
 #endif
 }
 
-#if 0
-// https://web.archive.org/web/20190305223938/http://www.drdobbs.com/architecture-and-design/fast-bitmap-rotation-and-scaling/184416337
-// https://www.flipcode.com/archives/The_Art_of_Demomaking-Issue_10_Roto-Zooming.shtml
-//
-// FIXME: one row/column is lost due to rounding errors when angle is multiple of 128.
-void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y)
+void GL_surface_blit_sr(const GL_Surface_t *surface, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y)
 {
-    const GL_State_t *state = &context->state;
+    const GL_State_t *state = &surface->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
-    const GL_Surface_t *surface = context->surface;
-
-    const bool flip_x = scale_x < 0.0f;
-    const bool flip_y = scale_y < 0.0f;
-
-    const float asx = fabs(scale_x);
-    const float asy = fabs(scale_y);
-
-    const float sw = (float)area.width;
-    const float sh = (float)area.height;
-    const float dw = sw * asx;
-    const float dh = sh * asy;
-
-    const float sax = (sw - 1.0f) * anchor_x; // Anchor points, relative to the source and destination areas.
-    const float say = (sh - 1.0f) * anchor_y;
-    const float dax = (dw - 1.0f) * anchor_x;
-    const float day = (dh - 1.0f) * anchor_y;
-
-    const float sx = area.x;
-    const float sy = area.y;
-    const float dx = position.x;
-    const float dy = position.y;
-
-    float s, c;
-    fsincos(rotation, &s, &c);
-
-    // The counter-clockwise 2D rotation matrix is
-    //
-    //      |  c  -s |
-    //  R = |        |
-    //      |  s   c |
-    //
-    // In order to calculate the clockwise rotation matrix one can use the
-    // similarities `cos(-a) = cos(a)` and `sin(-a) = -sin(a)` and get
-    //
-    //      |  c   s |
-    //  R = |        |
-    //      | -s   c |
-
-    // Rotate the four corners of the scaled image to compute the rotate/scaled AABB.
-    //
-    // Note that we aren *not* adding `dst/dty` on purpose to rotate around the anchor point.
-    const float aabb_x0 = -dax + 0.5f;
-    const float aabb_y0 = -day + 0.5f;
-    const float aabb_x1 = dw - dax - 0.5f;
-    const float aabb_y1 = dh - day - 0.5f;
-
-    const float x0 = c * aabb_x0 - s * aabb_y0;
-    const float y0 = s * aabb_x0 + c * aabb_y0;
-
-    const float x1 = c * aabb_x1 - s * aabb_y0;
-    const float y1 = s * aabb_x1 + c * aabb_y0;
-
-    const float x2 = c * aabb_x1 - s * aabb_y1;
-    const float y2 = s * aabb_x1 + c * aabb_y1;
-
-    const float x3 = c * aabb_x0 - s * aabb_y1;
-    const float y3 = s * aabb_x0 + c * aabb_y1;
-
-    GL_Quad_t drawing_region = (GL_Quad_t){
-            .x0 = (int)ceilf(fmin(fmin(fmin(x0, x1), x2), x3) + dx),
-            .y0 = (int)ceilf(fmin(fmin(fmin(y0, y1), y2), y3) + dy),
-            .x1 = (int)ceilf(fmax(fmax(fmax(x0, x1), x2), x3) + dx),
-            .y1 = (int)ceilf(fmax(fmax(fmax(y0, y1), y2), y3) + dy)
-        };
-
-    if (drawing_region.x0 < clipping_region->x0) {
-        drawing_region.x0 = clipping_region->x0;
-    }
-    if (drawing_region.y0 < clipping_region->y0) {
-        drawing_region.y0 = clipping_region->y0;
-    }
-    if (drawing_region.x1 > clipping_region->x1) {
-        drawing_region.x1 = clipping_region->x1;
-    }
-    if (drawing_region.y1 > clipping_region->y1) {
-        drawing_region.y1 = clipping_region->y1;
-    }
-
-    const int width = drawing_region.x1 - drawing_region.x0 + 1;
-    const int height = drawing_region.y1 - drawing_region.y0 + 1;
-    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
-        return;
-    }
-
-    const int sminx = area.x;
-    const int sminy = area.y;
-    const int smaxx = area.x + (int)area.width - 1;
-    const int smaxy = area.y + (int)area.height - 1;
-
-    const float M11 = c / asx;  // Since we are doing an *inverse* transformation, we combine rotation and *then* scaling (TRS -> SRT).
-    const float M12 = s / asx;  // | 1/sx    0 | |  c s |
-    const float M21 = -s / asy; // |           | |      |
-    const float M22 = c / asy;  // |    0 1/sy | | -s c |
-
-    const float tlx = (float)drawing_region.x0 - dx + 0.5f; // Transform the top-left corner of the to-be-drawn rectangle to texture space.
-    const float tly = (float)drawing_region.y0 - dy + 0.5f; // (could differ from AABB x0 due to clipping, we need to compute it again)
-    float ou = (tlx * M11 + tly * M12) + sax + sx; // Offset to the source texture quad.
-    float ov = (tlx * M21 + tly * M22) + say + sy;
-
-    const GL_Pixel_t *sdata = source->data;
-    GL_Pixel_t *ddata = surface->data;
-
-    const size_t swidth = source->width;
-    const size_t dwidth = surface->width;
-
-    const size_t dskip = dwidth - width;
-
-    GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
-
-    for (int i = height; i; --i) {
-        float u = ou;
-        float v = ov;
-
-        for (int j = width; j; --j) {
-#ifdef __DEBUG_GRAPHICS__
-            pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, 15);
-#endif
-            int x = IROUNDF(u); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`) and avoid mirror effect.
-            int y = IROUNDF(v);
-
-            if (x >= sminx && x <= smaxx && y >= sminy && y <= smaxy) {
-#ifdef __DEBUG_GRAPHICS__
-                pixel(surface, drawing_region.x0 + (int)width - (int)j, drawing_region.y0 + (int)height - (int)i, 3);
-#endif
-                if (flip_x) {
-                    x = smaxx - (x - sminx);
-                }
-                if (flip_y) {
-                    y = smaxy - (y - sminy);
-                }
-
-                const GL_Pixel_t *sptr = sdata + y * swidth + x;
-                GL_Pixel_t index = shifting[*sptr];
-                if (!transparent[index]) {
-                    *dptr = index;
-                }
-            }
-
-            ++dptr;
-
-            u += M11;
-            v += M21;
-        }
-
-        dptr += dskip;
-
-        ou += M12;
-        ov += M22;
-    }
-#ifdef __DEBUG_GRAPHICS__
-    pixel(surface, dx, dy, 7);
-    pixel(surface, drawing_region.x0, drawing_region.y0, 7);
-    pixel(surface, drawing_region.x1, drawing_region.y0, 7);
-    pixel(surface, drawing_region.x1, drawing_region.y1, 7);
-    pixel(surface, drawing_region.x0, drawing_region.y1, 7);
-#endif
-}
-#else
-void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y)
-{
-    const GL_State_t *state = &context->state;
-    const GL_Quad_t *clipping_region = &state->clipping_region;
-    const GL_Pixel_t *shifting = state->shifting;
-    const GL_Bool_t *transparent = state->transparent;
-    const GL_Surface_t *surface = context->surface;
 
     const float sw = (float)area.width;
     const float sh = (float)area.height;
@@ -498,7 +325,7 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *source,
 
         for (int j = 0; j < width; ++j) {
 #ifdef __DEBUG_GRAPHICS__
-            pixel(surface, drawing_region.x0 + j, drawing_region.y0 + i, 15);
+            _pixel(surface, drawing_region.x0 + j, drawing_region.y0 + i, 15);
 #endif
             const float ou = skip_x + (float)j; // + 0.5f;
 #ifdef __GL_OPTIMIZED_ROTATIONS__
@@ -507,7 +334,7 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *source,
             if (distance_squared <= radius_squared) {
 #endif
 #ifdef __DEBUG_GRAPHICS__
-                pixel(surface, drawing_region.x0 + j, drawing_region.y0 + i, 11);
+                _pixel(surface, drawing_region.x0 + j, drawing_region.y0 + i, 11);
 #endif
 
                 const float u = (ou * M11 + ov * M12) + sx + 0.5f; // Important: offset half a pixel to center the source texture!
@@ -518,7 +345,7 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *source,
 
                 if (x >= sminx && x <= smaxx && y >= sminy && y <= smaxy) {
 #ifdef __DEBUG_GRAPHICS__
-                    pixel(surface, drawing_region.x0 + j, drawing_region.y0 + i, 3);
+                    _pixel(surface, drawing_region.x0 + j, drawing_region.y0 + i, 3);
 #endif
                     const GL_Pixel_t *sptr = sdata + y * swidth + x;
                     GL_Pixel_t index = shifting[*sptr];
@@ -536,11 +363,10 @@ void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *source,
         dptr += dskip;
     }
 #ifdef __DEBUG_GRAPHICS__
-    pixel(surface, dx, dy, 7);
-    pixel(surface, drawing_region.x0, drawing_region.y0, 7);
-    pixel(surface, drawing_region.x1, drawing_region.y0, 7);
-    pixel(surface, drawing_region.x1, drawing_region.y1, 7);
-    pixel(surface, drawing_region.x0, drawing_region.y1, 7);
+    _pixel(surface, dx, dy, 7);
+    _pixel(surface, drawing_region.x0, drawing_region.y0, 7);
+    _pixel(surface, drawing_region.x1, drawing_region.y0, 7);
+    _pixel(surface, drawing_region.x1, drawing_region.y1, 7);
+    _pixel(surface, drawing_region.x0, drawing_region.y1, 7);
 #endif
 }
-#endif

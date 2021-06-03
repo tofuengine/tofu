@@ -26,17 +26,17 @@
 #define __GL_BATCH_H__
 
 #include "common.h"
-#include "context.h"
 #include "sheet.h"
+#include "surface.h"
 
 #include <stdbool.h>
 
 typedef struct _GL_Batch_Sprite_t {
     GL_Cell_t cell_id;
     GL_Point_t position;
-    float sx, sy;
+    float scale_x, scale_y;
     int rotation;
-    float ax, ay;
+    float anchor_x, anchor_y;
 } GL_Batch_Sprite_t;
 
 typedef struct _GL_Batch_t {
@@ -54,8 +54,8 @@ extern void GL_batch_add(GL_Batch_t *batch, GL_Batch_Sprite_t sprite);
 
 //extern GL_Batch_Sprite_t *GL_batch_get_sprite(const GL_Batch_t *batch, size_t index);
 
-void GL_batch_blit(const GL_Batch_t *batch, const GL_Context_t *context); // FIXME: rename to `flush()`
-void GL_batch_blit_s(const GL_Batch_t *batch, const GL_Context_t *context);
-void GL_batch_blit_sr(const GL_Batch_t *batch, const GL_Context_t *context);
+void GL_batch_blit(const GL_Batch_t *batch, const GL_Surface_t *surface); // FIXME: rename to `flush()`
+void GL_batch_blit_s(const GL_Batch_t *batch, const GL_Surface_t *surface);
+void GL_batch_blit_sr(const GL_Batch_t *batch, const GL_Surface_t *surface);
 
 #endif  /* __GL_BATCH_H__ */

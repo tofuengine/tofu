@@ -32,6 +32,13 @@
 
 #define LOG_CONTEXT "gl-xform"
 
+#ifdef __DEBUG_GRAPHICS__
+static inline void _pixel(const GL_Surface_t *surface, int x, int y, int index)
+{
+    surface->data[y * surface->width + x]= (GL_Pixel_t)(240 + (index % 16));
+}
+#endif
+
 GL_XForm_t *GL_xform_create(GL_XForm_Wraps_t wrap)
 {
     GL_XForm_t *xform = malloc(sizeof(GL_XForm_t));
@@ -105,15 +112,14 @@ void GL_xform_table(GL_XForm_t *xform, const GL_XForm_Table_Entry_t *entries, si
 // http://www.coranac.com/tonc/text/mode7.htm
 // https://wiki.superfamicom.org/registers
 // https://www.smwcentral.net/?p=viewthread&t=27054
-void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *source, GL_Rectangle_t area, GL_Point_t position, const GL_XForm_t *xform)
+void GL_xform_blit(const GL_XForm_t *xform, const GL_Surface_t *surface, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area)
 {
-    const GL_State_t *state = &context->state;
+    const GL_State_t *state = &surface->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
     const GL_Pixel_t *shifting = state->shifting;
-#ifdef __GL_MODE7_TRANSPARENCY__
+#ifdef __GL_XFORM_TRANSPARENCY__
     const GL_Bool_t *transparent = state->transparent;
-#endif  /* __GL_MODE7_TRANSPARENCY__ */
-    const GL_Surface_t *surface = context->surface;
+#endif  /* __GL_XFORM_TRANSPARENCY__ */
 
     const GL_XForm_Table_Entry_t *table = xform->table;
     const GL_XForm_Wraps_t wrap = xform->wrap;
@@ -230,7 +236,7 @@ void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *source, G
 
         for (int j = 0; j < width; ++j) {
 #ifdef __DEBUG_GRAPHICS__
-            pixel(surface, drawing_region.x0 + j, drawing_region.y0 + i, i + j);
+            _pixel(surface, drawing_region.x0 + j, drawing_region.y0 + i, i + j);
 #endif
             int sx = (int)(xp + 0.5f); // Faster rounding, using integer casting truncation!
             int sy = (int)(yp + 0.5f);
@@ -284,14 +290,14 @@ void GL_context_xform(const GL_Context_t *context, const GL_Surface_t *source, G
 
                 const GL_Pixel_t *sptr = sdata + sy * swidth + sx;
                 GL_Pixel_t index = shifting[*sptr];
-#ifdef __GL_MODE7_TRANSPARENCY__
+#ifdef __GL_XFORM_TRANSPARENCY__
                 if (!transparent[index]) {
                     *dptr = index;
                 }
 #else
                 // NOTE: no transparency in Mode-7!
                 *dptr = index;
-#endif  /* __GL_MODE7_TRANSPARENCY__ */
+#endif  /* __GL_XFORM_TRANSPARENCY__ */
             }
 
             ++dptr;

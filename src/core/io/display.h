@@ -62,7 +62,7 @@ typedef struct _Display_t {
 
     struct {
         GL_Size_t size;
-        GL_Context_t *context;
+        GL_Surface_t *surface;
         GL_Copperlist_t *copperlist;
     } canvas;
 
@@ -101,7 +101,7 @@ extern void Display_set_program(Display_t *display, const GL_Program_t *program)
 
 extern GLFWwindow *Display_get_window(const Display_t *display);
 extern float Display_get_scale(const Display_t *display);
-extern GL_Context_t *Display_get_context(const Display_t *display);
+extern GL_Surface_t *Display_get_surface(const Display_t *display);
 extern const GL_Palette_t *Display_get_palette(const Display_t *display);
 extern GL_Point_t Display_get_offset(const Display_t *display);
 

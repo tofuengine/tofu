@@ -117,9 +117,9 @@ GL_Pixel_t GL_palette_find_nearest_color(const GL_Palette_t *palette, const GL_C
         float delta_g = (float)(color.g - current->g);
         float delta_b = (float)(color.b - current->b);
 
-        float distance = (delta_r * delta_r) * (2.0f + (r_mean / 256.0f))
+        float distance = (delta_r * delta_r) * (2.0f + (r_mean / 255.0f))
             + (delta_g * delta_g) * 4.0f
-            + (delta_b * delta_b) * (2.0f + (255.0f - r_mean) / 256.0f);
+            + (delta_b * delta_b) * (2.0f + ((255.0f - r_mean) / 255.0f));
 #ifdef __FIND_NEAREST_COLOR_EUCLIDIAN__
         distance = sqrtf(distance);
 #endif

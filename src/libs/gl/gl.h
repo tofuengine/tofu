@@ -28,7 +28,6 @@
 #include "batch.h"
 #include "blit.h"
 #include "common.h"
-#include "context.h"
 #include "copperlist.h"
 #include "palette.h"
 #include "primitive.h"

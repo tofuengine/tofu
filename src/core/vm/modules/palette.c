@@ -241,6 +241,11 @@ static int palette_gc_1u_0(lua_State *L)
     LUAX_SIGNATURE_END
     Palette_Object_t *self = (Palette_Object_t *)LUAX_USERDATA(L, 1);
 
+#ifdef __PALETTE_COLOR_MEMOIZATION__
+    hmfree(self->cache);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "memoizing cache %p freed", self->cache);
+#endif  /* __PALETTE_COLOR_MEMOIZATION__ */
+
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p finalized", self);
 
     return 0;
@@ -326,7 +331,11 @@ static int palette_color_to_index_4unnn_1n(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
+#ifdef __PALETTE_COLOR_MEMOIZATION__
+    Palette_Object_t *self = (Palette_Object_t *)LUAX_USERDATA(L, 1);
+#else
     const Palette_Object_t *self = (const Palette_Object_t *)LUAX_USERDATA(L, 1);
+#endif  /* __PALETTE_COLOR_MEMOIZATION__ */
     uint8_t r = (uint8_t)LUAX_INTEGER(L, 2);
     uint8_t g = (uint8_t)LUAX_INTEGER(L, 3);
     uint8_t b = (uint8_t)LUAX_INTEGER(L, 4);
@@ -334,7 +343,21 @@ static int palette_color_to_index_4unnn_1n(lua_State *L)
     const GL_Color_t color = (GL_Color_t){ .r = r, .g = g, .b = b, .a = 255 };
 
     const GL_Palette_t *palette = &self->palette;
+#ifdef __PALETTE_COLOR_MEMOIZATION__
+    GL_Pixel_t index;
+    int position = hmgeti(self->cache, color);
+    if (position == -1) {
+        index = GL_palette_find_nearest_color(palette, color);
+        hmput(self->cache, color, index);
+        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "color <%d, %d, %d> stored into memoizing cache w/ index #%d", r, g, b, index);
+    } else {
+        index = self->cache[position].value;
+        Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "color <%d, %d, %d> found into memoizing cache at #%d (index #%d)", r, g, b, position, index);
+    }
+#else
     const GL_Pixel_t index = GL_palette_find_nearest_color(palette, color);
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "color <%d, %d, %d> matched w/ palette index #%d", r, g, b, index);
+#endif  /* __PALETTE_COLOR_MEMOIZATION__ */
 
     lua_pushinteger(L, (lua_Integer)index);
 
