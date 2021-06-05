@@ -83,10 +83,6 @@ typedef struct _Font_Object_t {
     struct {
         const Canvas_Object_t *instance;
         luaX_Reference reference;
-    } canvas;
-    struct {
-        const Canvas_Object_t *instance;
-        luaX_Reference reference;
     } atlas;
     GL_Sheet_t *sheet;
     GL_Cell_t glyphs[256];

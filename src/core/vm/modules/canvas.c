@@ -66,6 +66,7 @@ static int canvas_fill_4unnN_0(lua_State *L);
 static int canvas_triangle_9usnnnnnnN_0(lua_State *L);
 static int canvas_rectangle_7usnnnnN_0(lua_State *L);
 static int canvas_circle_6usnnnN_0(lua_State *L);
+static int canvas_write_v_0(lua_State *L);
 static int canvas_peek_3unn_1n(lua_State *L);
 static int canvas_poke_4unnn_0(lua_State *L);
 static int canvas_process_v_0(lua_State *L);
@@ -113,6 +114,7 @@ int canvas_loader(lua_State *L)
             { "triangle", canvas_triangle_9usnnnnnnN_0 },
             { "rectangle", canvas_rectangle_7usnnnnN_0 },
             { "circle", canvas_circle_6usnnnN_0 },
+            { "write", canvas_write_v_0 },
             { "peek", canvas_peek_3unn_1n },
             { "poke", canvas_poke_4unnn_0 },
             { "process", canvas_process_v_0 },
@@ -864,6 +866,112 @@ static int canvas_circle_6usnnnN_0(lua_State *L)
     }
 
     return 0;
+}
+
+
+static int canvas_write_5usnnu_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
+    const char *text = LUAX_STRING(L, 2);
+    int x = LUAX_INTEGER(L, 3);
+    int y = LUAX_INTEGER(L, 4);
+    const Font_Object_t *font = (const Font_Object_t *)LUAX_USERDATA(L, 5);
+
+    const GL_Surface_t *surface = self->surface;
+    const GL_Sheet_t *sheet = font->sheet;
+    const GL_Cell_t *glyphs = font->glyphs;
+
+    int dx = x, dy = y;
+    size_t height = 0;
+    for (const uint8_t *ptr = (const uint8_t *)text; *ptr != '\0'; ++ptr) { // Hack! Treat as unsigned! :)
+        uint8_t c = *ptr;
+#ifndef __NO_LINEFEEDS__
+        if (c == '\n') { // Handle carriage-return
+            dx = x;
+            dy += height;
+            height = 0;
+            continue;
+        }
+#endif
+        GL_Cell_t cell_id = glyphs[(size_t)c];
+        if (cell_id == GL_CELL_NIL) {
+            continue;
+        }
+        GL_Size_t size = GL_sheet_size(sheet, cell_id, 1.0f, 1.0f);
+        GL_sheet_blit(sheet, surface, (GL_Point_t){ .x = dx, .y = dy }, cell_id);
+        dx += size.width;
+        if (height < size.height) {
+            height = size.height;
+        }
+    }
+
+    return 0;
+}
+
+static int canvas_write_7usnnunN_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
+    const char *text = LUAX_STRING(L, 2);
+    int x = LUAX_INTEGER(L, 3); // TODO: make all arguments const?
+    int y = LUAX_INTEGER(L, 4);
+    const Font_Object_t *font = (const Font_Object_t *)LUAX_USERDATA(L, 5);
+    float scale_x = LUAX_NUMBER(L, 6);
+    float scale_y = LUAX_OPTIONAL_NUMBER(L, 7, scale_x);
+
+    const GL_Surface_t *surface = self->surface;
+    const GL_Sheet_t *sheet = font->sheet;
+    const GL_Cell_t *glyphs = font->glyphs;
+
+    int dx = x, dy = y;
+    size_t height = 0;
+    for (const uint8_t *ptr = (const uint8_t *)text; *ptr != '\0'; ++ptr) { // Hack! Treat as unsigned! :)
+        uint8_t c = *ptr;
+#ifndef __NO_LINEFEEDS__
+        if (c == '\n') { // Handle carriage-return
+            dx = x;
+            dy += height;
+            height = 0;
+            continue;
+        }
+#endif
+        GL_Cell_t cell_id = glyphs[c];
+        if (cell_id == GL_CELL_NIL) {
+            continue;
+        }
+        GL_Size_t size = GL_sheet_size(sheet, cell_id, scale_x, scale_y);
+        GL_sheet_blit_s(sheet, surface, (GL_Point_t){ .x = dx, .y = dy }, cell_id, scale_x, scale_y);
+        dx += size.width;
+        if (height < size.height) {
+            height = size.height;
+        }
+    }
+
+    return 0;
+}
+
+static int canvas_write_v_0(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(5, canvas_write_5usnnu_0)
+        LUAX_OVERLOAD_ARITY(6, canvas_write_7usnnunN_0)
+        LUAX_OVERLOAD_ARITY(7, canvas_write_7usnnunN_0)
+    LUAX_OVERLOAD_END
 }
 
 static int canvas_peek_3unn_1n(lua_State *L)
