@@ -278,18 +278,20 @@ static int batch_add_v_0(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
+// TODO: move to `Canvas.flush()` and pass the `Batch' object to it, similar fashion other functions.
 static int batch_blit_2uS_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
     LUAX_SIGNATURE_END
     const Batch_Object_t *self = (const Batch_Object_t *)LUAX_USERDATA(L, 1);
-    const char *mode = LUAX_OPTIONAL_STRING(L, 2, "fast");
+    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_USERDATA(L, 2);
+    const char *mode = LUAX_OPTIONAL_STRING(L, 3, "fast");
 
     const GL_Batch_t *batch = self->batch;
-
-    const GL_Surface_t *surface = self->bank.instance->canvas.instance->surface;
+    const GL_Surface_t *surface = canvas->surface;
     if (mode[0] == 'f') {
         GL_batch_blit(batch, surface);
     } else
