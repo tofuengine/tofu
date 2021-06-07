@@ -83,7 +83,7 @@ static int bank_new_2us_1u(lua_State *L)
     *self = (Bank_Object_t){
             .atlas = {
                 .instance = atlas,
-                .reference = luaX_ref(L, 2),
+                .reference = luaX_ref(L, 1),
             },
             .sheet = sheet
         };
@@ -115,7 +115,7 @@ static int bank_new_3unn_1u(lua_State *L)
     *self = (Bank_Object_t){
             .atlas = {
                 .instance = atlas,
-                .reference = luaX_ref(L, 2),
+                .reference = luaX_ref(L, 1),
             },
             .sheet = sheet
         };

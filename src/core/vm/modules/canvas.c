@@ -875,16 +875,16 @@ static int canvas_write_5usnnu_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
-    const char *text = LUAX_STRING(L, 2);
-    int x = LUAX_INTEGER(L, 3);
-    int y = LUAX_INTEGER(L, 4);
-    const Font_Object_t *font = (const Font_Object_t *)LUAX_USERDATA(L, 5);
+    int x = LUAX_INTEGER(L, 2);
+    int y = LUAX_INTEGER(L, 3);
+    const Font_Object_t *font = (const Font_Object_t *)LUAX_USERDATA(L, 4);
+    const char *text = LUAX_STRING(L, 5);
 
     const GL_Surface_t *surface = self->surface;
     const GL_Sheet_t *sheet = font->sheet;
@@ -921,18 +921,18 @@ static int canvas_write_7usnnunN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_USERDATA(L, 1);
-    const char *text = LUAX_STRING(L, 2);
-    int x = LUAX_INTEGER(L, 3); // TODO: make all arguments const?
-    int y = LUAX_INTEGER(L, 4);
-    const Font_Object_t *font = (const Font_Object_t *)LUAX_USERDATA(L, 5);
+    int x = LUAX_INTEGER(L, 2); // TODO: make all arguments const?
+    int y = LUAX_INTEGER(L, 3);
+    const Font_Object_t *font = (const Font_Object_t *)LUAX_USERDATA(L, 4);
+    const char *text = LUAX_STRING(L, 5);
     float scale_x = LUAX_NUMBER(L, 6);
     float scale_y = LUAX_OPTIONAL_NUMBER(L, 7, scale_x);
 

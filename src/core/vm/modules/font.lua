@@ -40,12 +40,12 @@ function Font.default(...)
   local Canvas = require("tofu.graphics").Canvas
 
   local args = { ... }
-  if #args == 3 then -- canvas, background_color, foreground_color
+  if #args == 2 then -- background_color, foreground_color
     local font = FONTS["5x8"]
-    return Font.new(args[1], Canvas.new(font.file, args[2], args[3]), font.width, font.height)
-  elseif #args == 4 then -- canvas, id, background_color, foreground_color
-    local font = FONTS[args[2]]
-    return Font.new(args[1], Canvas.new(font.file, args[3], args[4]), font.width, font.height)
+    return Font.new(Canvas.new(font.file, args[1], args[2]), font.width, font.height)
+  elseif #args == 3 then -- id, background_color, foreground_color
+    local font = FONTS[args[1]]
+    return Font.new(Canvas.new(font.file, args[2], args[3]), font.width, font.height)
   else
     error("invalid arguments for default font")
   end
@@ -57,7 +57,7 @@ end
 -- << [...] A function call that is not the last element in the list always produces one
 -- result [...] When a function call is the last (or the only) argument to another call,
 -- all results from the first call go as arguments. >>
-function Font:align(text, x, y, h_align, v_align, scale_x, scale_y)
+function Font:align(x, y, text, h_align, v_align, scale_x, scale_y)
   local width, height = self:size(text, scale_x or 1.0, scale_y or scale_x or 1.0)
 
   local dx, dy
@@ -79,11 +79,11 @@ function Font:align(text, x, y, h_align, v_align, scale_x, scale_y)
   -- Return the proper amount of values in order to trigger the correct
   -- `Font.write()` overloaded method.
   if scale_y then
-    return text, x - dx, y - dy, scale_x, scale_y
+    return x - dx, y - dy, self, text, scale_x, scale_y
   elseif scale_x then
-    return text, x - dx, y - dy, scale_x
+    return x - dx, y - dy, self, text, scale_x
   else
-    return text, x - dx, y - dy
+    return x - dx, y - dy, self, text
   end
 end
 

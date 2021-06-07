@@ -128,6 +128,7 @@ static int font_new_3usS_1u(lua_State *L)
 static int font_new_4unnS_1u(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
@@ -163,9 +164,9 @@ static int font_new_4unnS_1u(lua_State *L)
 static int font_new_v_1u(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(3, font_new_3usS_1u)
         LUAX_OVERLOAD_SIGNATURE(font_new_3usS_1u, LUA_TUSERDATA, LUA_TSTRING, LUA_TSTRING)
         LUAX_OVERLOAD_SIGNATURE(font_new_4unnS_1u, LUA_TUSERDATA, LUA_TNUMBER, LUA_TNUMBER)
+        LUAX_OVERLOAD_ARITY(3, font_new_3usS_1u)
         LUAX_OVERLOAD_ARITY(4, font_new_4unnS_1u)
     LUAX_OVERLOAD_END
 }

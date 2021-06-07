@@ -34,11 +34,18 @@
 typedef struct _GL_Palette_t {
     GL_Color_t colors[GL_MAX_PALETTE_COLORS];
     size_t size;
+    // TODO: move cache here!
 } GL_Palette_t;
 
+//extern GL_Palette_t *GL_palette_create(GL_Color_t *colors, size_t size);
+//extern GL_Palette_t *GL_palette_create_greyscale(size_t size);
+//extern GL_Palette_t *GL_palette_create_quantized(GL_Palette_t *palette, const size_t red_bits, const size_t green_bits, const size_t blue_bits);
+//extern void GL_palette_destroy(GL_Palette_t *palette);
 extern void GL_palette_generate_greyscale(GL_Palette_t *palette, size_t size);
 extern void GL_palette_generate_quantized(GL_Palette_t *palette, const size_t red_bits, const size_t green_bits, const size_t blue_bits);
+
 extern GL_Pixel_t GL_palette_find_nearest_color(const GL_Palette_t *palette, const GL_Color_t color);
 extern GL_Color_t GL_palette_lerp(const GL_Color_t from, const GL_Color_t to, float ratio);
+// TODO: add other functions, too, such as `merge()`.
 
 #endif  /* __GL_PALETTE_H__ */

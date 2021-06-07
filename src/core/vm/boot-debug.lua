@@ -70,7 +70,7 @@ function Tofu:__ctor()
 
           Speakers.halt() -- Stop all sounds sources.
 
-          me.font = Font.default(canvas, "5x8", 0, 1)
+          me.font = Font.default(0, 1)
           me.lines = {
               { text = "Software Failure." },
               { text = "Guru Meditation" }
@@ -103,7 +103,7 @@ function Tofu:__ctor()
           canvas:clear()
           canvas:rectangle("line", 0, 0, me.width, me.height, on and 1 or 0)
           for _, line in ipairs(me.lines) do
-            me.font:write(line.text, line.x, line.y)
+            canvas:write(line.x, line.y, me.font, line.text)
           end
         end
     }
