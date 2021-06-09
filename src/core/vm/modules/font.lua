@@ -60,7 +60,7 @@ end
 --
 -- The arguments are returned in the order required for the `Canvas.write()` method, that is
 --
---   x, y, font, text, scale_x, scale_y
+--   x, y, text, scale_x, scale_y
 --
 function Font:align(x, y, text, h_align, v_align, scale_x, scale_y)
   local width, height = self:size(text, scale_x or 1.0, scale_y or scale_x or 1.0)
@@ -84,11 +84,11 @@ function Font:align(x, y, text, h_align, v_align, scale_x, scale_y)
   -- Return the proper amount of values in order to trigger the correct `Canvas.write()` overloaded method.
   -- Note that we *cannot* return `nil` for optional arguments or the wrong arity overload will be called.
   if scale_y then
-    return x - dx, y - dy, self, text, scale_x, scale_y
+    return x - dx, y - dy, text, scale_x, scale_y
   elseif scale_x then
-    return x - dx, y - dy, self, text, scale_x
+    return x - dx, y - dy, text, scale_x
   else
-    return x - dx, y - dy, self, text
+    return x - dx, y - dy, text
   end
 end
 

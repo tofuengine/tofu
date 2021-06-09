@@ -43,6 +43,7 @@
 static int font_new_v_1u(lua_State *L);
 static int font_gc_1u_0(lua_State *L);
 static int font_size_4usNN_2n(lua_State *L);
+static int font_write_v_0(lua_State *L);
 
 static const char _font_lua[] = {
 #include "font.inc"
@@ -60,6 +61,7 @@ int font_loader(lua_State *L)
             { "new", font_new_v_1u },
             { "__gc", font_gc_1u_0 },
             { "size", font_size_4usNN_2n },
+            { "write", font_write_v_0 },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -249,4 +251,109 @@ static int font_size_4usNN_2n(lua_State *L)
     lua_pushinteger(L, (lua_Integer)height);
 
     return 2;
+}
+
+static int font_write_5uunns_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+    LUAX_SIGNATURE_END
+    const Font_Object_t *self = (const Font_Object_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_USERDATA(L, 2);
+    int x = LUAX_INTEGER(L, 3);
+    int y = LUAX_INTEGER(L, 4);
+    const char *text = LUAX_STRING(L, 5);
+
+    const GL_Surface_t *surface = canvas->surface;
+    const GL_Sheet_t *sheet = self->sheet;
+    const GL_Cell_t *glyphs = self->glyphs;
+
+    int dx = x, dy = y;
+    size_t height = 0;
+    for (const uint8_t *ptr = (const uint8_t *)text; *ptr != '\0'; ++ptr) { // Hack! Treat as unsigned! :)
+        uint8_t c = *ptr;
+#ifndef __NO_LINEFEEDS__
+        if (c == '\n') { // Handle carriage-return
+            dx = x;
+            dy += height;
+            height = 0;
+            continue;
+        }
+#endif
+        GL_Cell_t cell_id = glyphs[(size_t)c];
+        if (cell_id == GL_CELL_NIL) {
+            continue;
+        }
+        GL_Size_t size = GL_sheet_size(sheet, cell_id, 1.0f, 1.0f);
+        GL_sheet_blit(sheet, surface, (GL_Point_t){ .x = dx, .y = dy }, cell_id);
+        dx += size.width;
+        if (height < size.height) {
+            height = size.height;
+        }
+    }
+
+    return 0;
+}
+
+static int font_write_7uunnsnN_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    const Font_Object_t *self = (const Font_Object_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_USERDATA(L, 2);
+    int x = LUAX_INTEGER(L, 3); // TODO: make all arguments const?
+    int y = LUAX_INTEGER(L, 4);
+    const char *text = LUAX_STRING(L, 5);
+    float scale_x = LUAX_NUMBER(L, 6);
+    float scale_y = LUAX_OPTIONAL_NUMBER(L, 7, scale_x);
+
+    const GL_Surface_t *surface = canvas->surface;
+    const GL_Sheet_t *sheet = self->sheet;
+    const GL_Cell_t *glyphs = self->glyphs;
+
+    int dx = x, dy = y;
+    size_t height = 0;
+    for (const uint8_t *ptr = (const uint8_t *)text; *ptr != '\0'; ++ptr) { // Hack! Treat as unsigned! :)
+        uint8_t c = *ptr;
+#ifndef __NO_LINEFEEDS__
+        if (c == '\n') { // Handle carriage-return
+            dx = x;
+            dy += height;
+            height = 0;
+            continue;
+        }
+#endif
+        GL_Cell_t cell_id = glyphs[c];
+        if (cell_id == GL_CELL_NIL) {
+            continue;
+        }
+        GL_Size_t size = GL_sheet_size(sheet, cell_id, scale_x, scale_y);
+        GL_sheet_blit_s(sheet, surface, (GL_Point_t){ .x = dx, .y = dy }, cell_id, scale_x, scale_y);
+        dx += size.width;
+        if (height < size.height) {
+            height = size.height;
+        }
+    }
+
+    return 0;
+}
+
+static int font_write_v_0(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(5, font_write_5uunns_0)
+        LUAX_OVERLOAD_ARITY(6, font_write_7uunnsnN_0)
+        LUAX_OVERLOAD_ARITY(7, font_write_7uunnsnN_0)
+    LUAX_OVERLOAD_END
 }
