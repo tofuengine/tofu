@@ -86,8 +86,6 @@ typedef struct _Font_Object_t {
     } atlas;
     GL_Sheet_t *sheet;
     GL_Cell_t glyphs[256];
-    float scale_x, scale_y;
-    bool no_scaling;
 } Font_Object_t;
 
 typedef struct _Batch_Object_t {

@@ -42,8 +42,7 @@
 
 static int font_new_v_1u(lua_State *L);
 static int font_gc_1u_0(lua_State *L);
-static int font_size_2us_2n(lua_State *L);
-static int font_scale_3uNN_0(lua_State *L);
+static int font_size_4usNN_2n(lua_State *L);
 static int font_write_v_0(lua_State *L);
 
 static const char _font_lua[] = {
@@ -61,8 +60,7 @@ int font_loader(lua_State *L)
         (const struct luaL_Reg[]){
             { "new", font_new_v_1u },
             { "__gc", font_gc_1u_0 },
-            { "size", font_size_2us_2n },
-            { "scale", font_scale_3uNN_0 },
+            { "size", font_size_4usNN_2n },
             { "write", font_write_v_0 },
             { NULL, NULL }
         },
@@ -118,9 +116,7 @@ static int font_new_3usS_1u(lua_State *L)
                 .reference = luaX_ref(L, 1)
             },
             .sheet = sheet,
-            .glyphs = { 0 },
-            .scale_x = 1.0f, .scale_y = 1.0f,
-            .no_scaling = true
+            .glyphs = { 0 }
         };
     _generate_alphabeth(self->glyphs, alphabeth);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font %p allocated w/ sheet %p for atlas %p w/ reference #%d",
@@ -156,9 +152,7 @@ static int font_new_4unnS_1u(lua_State *L)
                 .reference = luaX_ref(L, 1)
             },
             .sheet = sheet,
-            .glyphs = { 0 },
-            .scale_x = 1.0f, .scale_y = 1.0f,
-            .no_scaling = true
+            .glyphs = { 0 }
         };
     _generate_alphabeth(self->glyphs, alphabeth);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font %p allocated w/ sheet %p for atlas %p w/ reference #%d",
@@ -197,12 +191,12 @@ static int font_gc_1u_0(lua_State *L)
     return 0;
 }
 
-static GL_Size_t _size(const char *text, const GL_Rectangle_t *cells, float scale_x, float scale_y)
+static GL_Size_t _size(const GL_Sheet_t *sheet, const char *text, const GL_Cell_t *glyphs, float scale_x, float scale_y)
 {
     size_t max_width = 0, width = 0;
     size_t max_height = 0, height = 0;
-    for (const char *ptr = text; *ptr != '\0'; ++ptr) { // The input string is always *not* null.
-        char c = *ptr;
+    for (const uint8_t *ptr = (const uint8_t *)text; *ptr != '\0'; ++ptr) { // The input string is always *not* null.
+        uint8_t c = *ptr;
 #ifndef __NO_LINEFEEDS__
         if (c == '\n') {
             max_height += height;
@@ -212,20 +206,16 @@ static GL_Size_t _size(const char *text, const GL_Rectangle_t *cells, float scal
             width = 0;
             height = 0;
             continue;
-        } else
+        }
 #endif
-        if (c < ' ') {
+        const GL_Cell_t cell_id = glyphs[(size_t)c];
+        if (cell_id == GL_CELL_NIL) {
             continue;
         }
-
-        const GL_Rectangle_t *cell = &cells[c - ' '];
-
-        const size_t cw = (size_t)((float)cell->width * fabs(scale_x));
-        const size_t ch = (size_t)((float)cell->height * fabs(scale_y));
-
-        width += cw;
-        if (height < ch) {
-            height = ch;
+        GL_Size_t size = GL_sheet_size(sheet, cell_id, scale_x, scale_y);
+        width += size.width;
+        if (height < size.height) {
+            height = size.height;
         }
     }
     if (max_width < width) {
@@ -236,16 +226,23 @@ static GL_Size_t _size(const char *text, const GL_Rectangle_t *cells, float scal
     return (GL_Size_t){ .width = max_width, .height = max_height };
 }
 
-static int font_size_2us_2n(lua_State *L)
+static int font_size_4usNN_2n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const Font_Object_t *self = (const Font_Object_t *)LUAX_USERDATA(L, 1);
     const char *text = LUAX_STRING(L, 2);
+    float scale_x = LUAX_OPTIONAL_NUMBER(L, 3, 1.0f);
+    float scale_y = LUAX_OPTIONAL_NUMBER(L, 4, scale_x);
 
-    const GL_Size_t size = _size(text, self->sheet->cells, self->scale_x, self->scale_y);
+    const GL_Sheet_t *sheet = self->sheet;
+    const GL_Cell_t *glyphs = self->glyphs;
+
+    const GL_Size_t size = _size(sheet, text, glyphs, scale_x, scale_y);
 
     lua_pushinteger(L, (lua_Integer)size.width);
     lua_pushinteger(L, (lua_Integer)size.height);
@@ -253,25 +250,7 @@ static int font_size_2us_2n(lua_State *L)
     return 2;
 }
 
-static int font_scale_3uNN_0(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    Font_Object_t *self = (Font_Object_t *)LUAX_USERDATA(L, 1);
-    float scale_x = LUAX_OPTIONAL_NUMBER(L, 2, 1.0f);
-    float scale_y = LUAX_OPTIONAL_NUMBER(L, 3, scale_x);
-
-    self->scale_x = scale_x;
-    self->scale_y = scale_y;
-    self->no_scaling = scale_x == 1.0f && scale_y == 1.0f;
-
-    return 0;
-}
-
-static int font_write_7uunnsSS_0(lua_State *L)
+static int font_write_5uunns_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -279,35 +258,18 @@ static int font_write_7uunnsSS_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
     LUAX_SIGNATURE_END
     const Font_Object_t *self = (const Font_Object_t *)LUAX_USERDATA(L, 1);
     Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_USERDATA(L, 2);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
     const char *text = LUAX_STRING(L, 5);
-    const char *h_align = LUAX_OPTIONAL_STRING(L, 6, "left");
-    const char *v_align = LUAX_OPTIONAL_STRING(L, 7, "top");
 
     const GL_Surface_t *surface = canvas->surface;
     const GL_Sheet_t *sheet = self->sheet;
     const GL_Cell_t *glyphs = self->glyphs;
 
-    const GL_Size_t size = _size(text, self->sheet->cells, self->scale_x, self->scale_y);
-
     int dx = x, dy = y;
-    switch (h_align[0]) {
-        case 'l': { /* NOP */ } break;
-        case 'c': { dx -= size.width / 2; } break;
-        case 'r': { dx -= size.width; } break;
-    }
-    switch (v_align[0]) {
-        case 't': { /* NOP */ } break;
-        case 'm': { dy -= size.height / 2; } break;
-        case 'b': { dy -= size.height; } break;
-    }
-
 #ifndef __NO_LINEFEEDS__
     size_t line_height = 0;
 #endif
@@ -325,12 +287,62 @@ static int font_write_7uunnsSS_0(lua_State *L)
         if (cell_id == GL_CELL_NIL) {
             continue;
         }
-        const GL_Size_t cell_size = GL_sheet_size(sheet, cell_id, self->scale_x, self->scale_y);
-        if (self->no_scaling) {
-            GL_sheet_blit(sheet, surface, (GL_Point_t){ .x = dx, .y = dy }, cell_id);
-        } else {
-            GL_sheet_blit_s(sheet, surface, (GL_Point_t){ .x = dx, .y = dy }, cell_id, self->scale_x, self->scale_y);
+        const GL_Size_t cell_size = GL_sheet_size(sheet, cell_id, 1.0f, 1.0f);
+        GL_sheet_blit(sheet, surface, (GL_Point_t){ .x = dx, .y = dy }, cell_id);
+        dx += cell_size.width;
+#ifndef __NO_LINEFEEDS__
+        if (line_height < cell_size.height) {
+            line_height = cell_size.height;
         }
+#endif
+    }
+
+    return 0;
+}
+
+static int font_write_7uunnsnN_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    const Font_Object_t *self = (const Font_Object_t *)LUAX_USERDATA(L, 1);
+    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_USERDATA(L, 2);
+    int x = LUAX_INTEGER(L, 3);
+    int y = LUAX_INTEGER(L, 4);
+    const char *text = LUAX_STRING(L, 5);
+    float scale_x = LUAX_NUMBER(L, 6);
+    float scale_y = LUAX_OPTIONAL_NUMBER(L, 7, scale_x);
+
+    const GL_Surface_t *surface = canvas->surface;
+    const GL_Sheet_t *sheet = self->sheet;
+    const GL_Cell_t *glyphs = self->glyphs;
+
+    int dx = x, dy = y;
+#ifndef __NO_LINEFEEDS__
+    size_t line_height = 0;
+#endif
+    for (const uint8_t *ptr = (const uint8_t *)text; *ptr != '\0'; ++ptr) { // Hack! Treat as unsigned! :)
+        uint8_t c = *ptr;
+#ifndef __NO_LINEFEEDS__
+        if (c == '\n') { // Handle carriage-return
+            dx = x;
+            dy += line_height;
+            line_height = 0;
+            continue;
+        }
+#endif
+        const GL_Cell_t cell_id = glyphs[(size_t)c];
+        if (cell_id == GL_CELL_NIL) {
+            continue;
+        }
+        const GL_Size_t cell_size = GL_sheet_size(sheet, cell_id, scale_x, scale_y);
+        GL_sheet_blit_s(sheet, surface, (GL_Point_t){ .x = dx, .y = dy }, cell_id, scale_x, scale_y);
         dx += cell_size.width;
 #ifndef __NO_LINEFEEDS__
         if (line_height < cell_size.height) {
@@ -345,8 +357,8 @@ static int font_write_7uunnsSS_0(lua_State *L)
 static int font_write_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(5, font_write_7uunnsSS_0)
-        LUAX_OVERLOAD_ARITY(6, font_write_7uunnsSS_0)
-        LUAX_OVERLOAD_ARITY(7, font_write_7uunnsSS_0)
+        LUAX_OVERLOAD_ARITY(5, font_write_5uunns_0)
+        LUAX_OVERLOAD_ARITY(6, font_write_7uunnsnN_0)
+        LUAX_OVERLOAD_ARITY(7, font_write_7uunnsnN_0)
     LUAX_OVERLOAD_END
 }
