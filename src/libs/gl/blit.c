@@ -119,8 +119,8 @@ void GL_surface_blit_s(const GL_Surface_t *surface, GL_Point_t position, const G
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
 
-    const size_t drawing_width = (int)IROUNDF(area.width * fabsf(scale_x)); // We need to round! No ceil, no floor!
-    const size_t drawing_height = (int)IROUNDF(area.height * fabsf(scale_y));
+    const size_t drawing_width = (size_t)IROUNDF(area.width * fabsf(scale_x)); // We need to round! No ceil, no floor!
+    const size_t drawing_height = (size_t)IROUNDF(area.height * fabsf(scale_y));
 
     size_t skip_x = 0; // Offset into the (target) surface/texture, updated during clipping.
     size_t skip_y = 0;

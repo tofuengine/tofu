@@ -309,7 +309,7 @@ static int xform_table_2ut_0(lua_State *L)
             }
             entry.count = i + 1;
             entry.operations[i].id = (GL_XForm_Registers_t)map_find(L, LUAX_STRING(L, -2), _registers, GL_XForm_Registers_t_CountOf)->value;
-            entry.operations[i].value = (float)LUAX_NUMBER(L, -1);
+            entry.operations[i].value = LUAX_NUMBER(L, -1);
 
             lua_pop(L, 1);
         }
