@@ -119,8 +119,8 @@ void GL_surface_blit_s(const GL_Surface_t *surface, GL_Point_t position, const G
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
 
-    const size_t drawing_width = (size_t)IROUNDF(area.width * fabsf(scale_x)); // We need to round! No ceil, no floor!
-    const size_t drawing_height = (size_t)IROUNDF(area.height * fabsf(scale_y));
+    const size_t drawing_width = (size_t)ITRUNC(area.width * fabsf(scale_x)); // Truncate, or we might "bleed" and pick from outside the source area.
+    const size_t drawing_height = (size_t)ITRUNC(area.height * fabsf(scale_y));
 
     size_t skip_x = 0; // Offset into the (target) surface/texture, updated during clipping.
     size_t skip_y = 0;
@@ -180,7 +180,7 @@ void GL_surface_blit_s(const GL_Surface_t *surface, GL_Point_t position, const G
 
     float v = ov;
     for (int i = height; i; --i) {
-        const int y = (int)v;
+        const int y = ITRUNC(v); // Truncate, as we used `ITRUNC()` to calculate the scaled size.
         const GL_Pixel_t *sptr = sdata + y * swidth;
 
         float u = ou;
@@ -188,7 +188,7 @@ void GL_surface_blit_s(const GL_Surface_t *surface, GL_Point_t position, const G
 #ifdef __DEBUG_GRAPHICS__
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)u + (int)v);
 #endif
-            const int x = (int)u;
+            const int x = ITRUNC(u); // Ditto.
             GL_Pixel_t index = shifting[sptr[x]];
             if (transparent[index]) {
                 ++dptr;

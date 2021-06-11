@@ -147,8 +147,8 @@ GL_Size_t GL_sheet_size(const GL_Sheet_t *sheet, size_t cell_id, float scale_x, 
 {
     const GL_Rectangle_t *cell = &sheet->cells[cell_id];
     return (GL_Size_t){
-            .width = (size_t)IROUNDF(cell->width * fabsf(scale_x)),
-            .height = (size_t)IROUNDF(cell->height * fabsf(scale_y))
+            .width = (size_t)ITRUNC(cell->width * fabsf(scale_x)),
+            .height = (size_t)ITRUNC(cell->height * fabsf(scale_y))
         };
 }
 
