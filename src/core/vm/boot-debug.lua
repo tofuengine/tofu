@@ -103,7 +103,7 @@ function Tofu:__ctor()
           canvas:clear()
           canvas:rectangle("line", 0, 0, me.width, me.height, on and 1 or 0)
           for _, line in ipairs(me.lines) do
-            canvas:write(line.x, line.y, me.font, line.text)
+            me.font:write(canvas, line.x, line.y, line.text)
           end
         end
     }
