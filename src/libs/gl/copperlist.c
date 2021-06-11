@@ -161,8 +161,8 @@ void _surface_to_rgba_program(const GL_Surface_t *surface, GL_Pixel_t shifting[G
     const GL_Pixel_t *src = surface->data;
     GL_Color_t *dst_sod = pixels;
 
-    const size_t dwidth = (int)surface->width;
-    const size_t dheight = (int)surface->height;
+    const size_t dwidth = surface->width;
+    const size_t dheight = surface->height;
 
     for (size_t y = 0; y < dheight; ++y) {
         GL_Color_t *dst_eod = dst_sod + dwidth;

@@ -270,10 +270,10 @@ void GL_surface_blit_sr(const GL_Surface_t *surface, GL_Point_t position, const 
     float skip_y = aabb_y0;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
-            .x0 = (int)ceilf(aabb_x0 + dx), // To include every fractionally occupied pixel.
-            .y0 = (int)ceilf(aabb_y0 + dy),
-            .x1 = (int)ceilf(aabb_x1 + dx),
-            .y1 = (int)ceilf(aabb_y1 + dy)
+            .x0 = ICEILF(aabb_x0 + dx), // To include every fractionally occupied pixel.
+            .y0 = ICEILF(aabb_y0 + dy),
+            .x1 = ICEILF(aabb_x1 + dx),
+            .y1 = ICEILF(aabb_y1 + dy)
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
@@ -340,8 +340,8 @@ void GL_surface_blit_sr(const GL_Surface_t *surface, GL_Point_t position, const 
                 const float u = (ou * M11 + ov * M12) + sx + 0.5f; // Important: offset half a pixel to center the source texture!
                 const float v = (ou * M21 + ov * M22) + sy + 0.5f; // (see variables initialization why we are using sx/sx solely)
 
-                int x = (int)floorf(u); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`) and avoid mirror effect.
-                int y = (int)floorf(v);
+                int x = IFLOORF(u); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`) and avoid mirror effect.
+                int y = IFLOORF(v); // (can't truncate, because negatives would be truncated toward zero)
 
                 if (x >= sminx && x <= smaxx && y >= sminy && y <= smaxy) {
 #ifdef __DEBUG_GRAPHICS__
