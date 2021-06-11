@@ -342,14 +342,12 @@ void GL_surface_process(const GL_Surface_t *surface, GL_Point_t position, const 
     }
 }
 
-// Note: currently the `GL_surface_copy()` function is equal to `GL_surface_blit()`. However, we are keeping them
-// separate, as in the future they might be different (with the `*_copy()` variant optimized).
+// Note: `GL_surface_copy()` is optimized, when compared to `GL_surface_blit()`, since *no* shifting *nor*
+// transparency are applied.
 void GL_surface_copy(const GL_Surface_t *surface, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area)
 {
     const GL_State_t *state = &surface->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
-    const GL_Pixel_t *shifting = state->shifting;
-    const GL_Bool_t *transparent = state->transparent;
 
     size_t skip_x = 0; // Offset into the (source) surface/texture, update during clipping.
     size_t skip_y = 0;
@@ -396,12 +394,7 @@ void GL_surface_copy(const GL_Surface_t *surface, GL_Point_t position, const GL_
 
     for (int i = height; i; --i) {
         for (int j = width; j; --j) {
-            GL_Pixel_t index = shifting[*(sptr++)];
-            if (transparent[index]) {
-                ++dptr;
-            } else {
-                *(dptr++) = index;
-            }
+            *(dptr++) = *(sptr++);
         }
         sptr += sskip;
         dptr += dskip;
