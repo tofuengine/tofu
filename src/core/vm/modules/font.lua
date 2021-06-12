@@ -51,18 +51,13 @@ function Font.default(...)
   end
 end
 
--- Only `text`, `x`, and `y` are required. All the other arguments are optional.
+-- Only `canvas`, `x`, `y`, and `text` are required. All the other arguments are optional.
 --
 -- From the [reference manual](https://www.lua.org/pil/5.1.html)
 -- << [...] A function call that is not the last element in the list always produces one
 -- result [...] When a function call is the last (or the only) argument to another call,
 -- all results from the first call go as arguments. >>
---
--- The arguments are returned in the order required for the `Font.write()` method, that is
---
---   x, y, text, scale_x, scale_y
---
-function Font:align(x, y, text, h_align, v_align, scale_x, scale_y)
+function Font:write(canvas, x, y, text, h_align, v_align, scale_x, scale_y)
   local width, height = self:size(text, scale_x or 1.0, scale_y or scale_x or 1.0)
 
   local dx, dy
@@ -81,14 +76,12 @@ function Font:align(x, y, text, h_align, v_align, scale_x, scale_y)
     dy = 0
   end
 
-  -- Return the proper amount of values in order to trigger the correct `Canvas.write()` overloaded method.
-  -- Note that we *cannot* return `nil` for optional arguments or the wrong arity overload will be called.
   if scale_y then
-    return x - dx, y - dy, text, scale_x, scale_y
+    self:blit(canvas, x - dx, y - dy, text, scale_x, scale_y)
   elseif scale_x then
-    return x - dx, y - dy, text, scale_x
+    self:blit(canvas, x - dx, y - dy, text, scale_x)
   else
-    return x - dx, y - dy, text
+    self:blit(canvas, x - dx, y - dy, text)
   end
 end
 

@@ -43,7 +43,7 @@
 static int font_new_v_1u(lua_State *L);
 static int font_gc_1u_0(lua_State *L);
 static int font_size_4usNN_2n(lua_State *L);
-static int font_write_v_0(lua_State *L);
+static int font_blit_v_0(lua_State *L);
 
 static const char _font_lua[] = {
 #include "font.inc"
@@ -61,7 +61,7 @@ int font_loader(lua_State *L)
             { "new", font_new_v_1u },
             { "__gc", font_gc_1u_0 },
             { "size", font_size_4usNN_2n },
-            { "write", font_write_v_0 },
+            { "blit", font_blit_v_0 },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -250,7 +250,7 @@ static int font_size_4usNN_2n(lua_State *L)
     return 2;
 }
 
-static int font_write_5uunns_0(lua_State *L)
+static int font_blit_5uunns_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -300,7 +300,7 @@ static int font_write_5uunns_0(lua_State *L)
     return 0;
 }
 
-static int font_write_7uunnsnN_0(lua_State *L)
+static int font_blit_7uunnsnN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -354,11 +354,11 @@ static int font_write_7uunnsnN_0(lua_State *L)
     return 0;
 }
 
-static int font_write_v_0(lua_State *L)
+static int font_blit_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(5, font_write_5uunns_0)
-        LUAX_OVERLOAD_ARITY(6, font_write_7uunnsnN_0)
-        LUAX_OVERLOAD_ARITY(7, font_write_7uunnsnN_0)
+        LUAX_OVERLOAD_ARITY(5, font_blit_5uunns_0)
+        LUAX_OVERLOAD_ARITY(6, font_blit_7uunnsnN_0)
+        LUAX_OVERLOAD_ARITY(7, font_blit_7uunnsnN_0)
     LUAX_OVERLOAD_END
 }
