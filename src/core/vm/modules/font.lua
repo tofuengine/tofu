@@ -77,11 +77,11 @@ function Font:write(canvas, x, y, text, h_align, v_align, scale_x, scale_y)
   end
 
   if scale_y then
-    self:blit(canvas, x - dx, y - dy, text, scale_x, scale_y)
+    return self:blit(canvas, x - dx, y - dy, text, scale_x, scale_y)
   elseif scale_x then
-    self:blit(canvas, x - dx, y - dy, text, scale_x)
+    return self:blit(canvas, x - dx, y - dy, text, scale_x)
   else
-    self:blit(canvas, x - dx, y - dy, text)
+    return self:blit(canvas, x - dx, y - dy, text)
   end
 end
 
