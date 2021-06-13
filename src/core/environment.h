@@ -31,7 +31,7 @@
 #include <stddef.h>
 
 typedef struct _Environment_Stats_t {
-    float fps;
+    size_t fps;
 #ifdef __ENGINE_PERFORMANCE_STATISTICS__
     float times[4];
 #endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */

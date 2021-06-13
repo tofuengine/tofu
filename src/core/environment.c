@@ -95,7 +95,7 @@ bool Environment_is_active(const Environment_t *environment)
 }
 #endif  /* __DISPLAY_FOCUS_SUPPORT__ */
 
-static inline float _calculate_fps(float frame_time) // FIXME: rework this as a reusable function for moving average.
+static inline size_t _calculate_fps(float frame_time) // FIXME: rework this as a reusable function for moving average.
 {
     static float samples[FPS_AVERAGE_SAMPLES] = { 0 };
     static size_t index = 0;
@@ -106,7 +106,7 @@ static inline float _calculate_fps(float frame_time) // FIXME: rework this as a 
     sum += frame_time;
     index = (index + 1) % FPS_AVERAGE_SAMPLES;
 
-    return (float)FPS_AVERAGE_SAMPLES / sum;
+    return (size_t)((float)FPS_AVERAGE_SAMPLES / sum + 0.5f); // Fast rounding and truncation to integer.
 }
 
 #ifdef __ENGINE_PERFORMANCE_STATISTICS__
