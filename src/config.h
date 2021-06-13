@@ -57,8 +57,6 @@
   #undef  __DEFENSIVE_CHECKS__
 #endif
 
-#define __NO_LINEFEEDS__
-
 // TODO: better naming for macros, including namespace.
 #undef  __DEBUG_TRIANGLES_WINDING__
 #undef  __FIND_NEAREST_COLOR_EUCLIDIAN__

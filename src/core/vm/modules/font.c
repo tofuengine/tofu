@@ -193,21 +193,9 @@ static int font_gc_1u_0(lua_State *L)
 
 static GL_Size_t _size(const GL_Sheet_t *sheet, const char *text, const GL_Cell_t *glyphs, float scale_x, float scale_y)
 {
-    size_t max_width = 0, width = 0;
-    size_t max_height = 0, height = 0;
+    size_t width = 0, height = 0;
     for (const uint8_t *ptr = (const uint8_t *)text; *ptr != '\0'; ++ptr) { // The input string is always *not* null.
         uint8_t c = *ptr;
-#ifndef __NO_LINEFEEDS__
-        if (c == '\n') {
-            max_height += height;
-            if (max_width < width) {
-                max_width = width;
-            }
-            width = 0;
-            height = 0;
-            continue;
-        }
-#endif
         const GL_Cell_t cell_id = glyphs[(size_t)c];
         if (cell_id == GL_CELL_NIL) {
             continue;
@@ -218,12 +206,8 @@ static GL_Size_t _size(const GL_Sheet_t *sheet, const char *text, const GL_Cell_
             height = size.height;
         }
     }
-    if (max_width < width) {
-        max_width = width;
-    }
-    max_height += height;
 
-    return (GL_Size_t){ .width = max_width, .height = max_height };
+    return (GL_Size_t){ .width = width, .height = height };
 }
 
 static int font_size_4usNN_2n(lua_State *L)
@@ -269,33 +253,23 @@ static int font_blit_5uunns_2nn(lua_State *L)
     const GL_Sheet_t *sheet = self->sheet;
     const GL_Cell_t *glyphs = self->glyphs;
 
-    int dx = x, dy = y;
-    size_t line_height = 0;
+    size_t width = 0, height = 0;
     for (const uint8_t *ptr = (const uint8_t *)text; *ptr != '\0'; ++ptr) { // Hack! Treat as unsigned! :)
         uint8_t c = *ptr;
-#ifndef __NO_LINEFEEDS__
-        if (c == '\n') { // Handle carriage-return
-            dx = x;
-            dy += line_height;
-            line_height = 0;
-            continue;
-        }
-#endif
         const GL_Cell_t cell_id = glyphs[(size_t)c];
         if (cell_id == GL_CELL_NIL) {
             continue;
         }
         const GL_Size_t cell_size = GL_sheet_size(sheet, cell_id, 1.0f, 1.0f);
-        GL_sheet_blit(sheet, surface, (GL_Point_t){ .x = dx, .y = dy }, cell_id);
-        dx += cell_size.width;
-        if (line_height < cell_size.height) {
-            line_height = cell_size.height;
+        GL_sheet_blit(sheet, surface, (GL_Point_t){ .x = x + width, .y = y }, cell_id);
+        width += cell_size.width;
+        if (height < cell_size.height) {
+            height = cell_size.height;
         }
     }
-    dy += line_height;
 
-    lua_pushinteger(L, (lua_Integer)(dx - x));
-    lua_pushinteger(L, (lua_Integer)(dy - y));
+    lua_pushinteger(L, (lua_Integer)width);
+    lua_pushinteger(L, (lua_Integer)height);
 
     return 2;
 }
@@ -323,33 +297,23 @@ static int font_blit_7uunnsnN_2nn(lua_State *L)
     const GL_Sheet_t *sheet = self->sheet;
     const GL_Cell_t *glyphs = self->glyphs;
 
-    int dx = x, dy = y;
-    size_t line_height = 0;
+    size_t width = 0, height = 0;
     for (const uint8_t *ptr = (const uint8_t *)text; *ptr != '\0'; ++ptr) { // Hack! Treat as unsigned! :)
         uint8_t c = *ptr;
-#ifndef __NO_LINEFEEDS__
-        if (c == '\n') { // Handle carriage-return
-            dx = x;
-            dy += line_height;
-            line_height = 0;
-            continue;
-        }
-#endif
         const GL_Cell_t cell_id = glyphs[(size_t)c];
         if (cell_id == GL_CELL_NIL) {
             continue;
         }
         const GL_Size_t cell_size = GL_sheet_size(sheet, cell_id, scale_x, scale_y);
-        GL_sheet_blit_s(sheet, surface, (GL_Point_t){ .x = dx, .y = dy }, cell_id, scale_x, scale_y);
-        dx += cell_size.width;
-        if (line_height < cell_size.height) {
-            line_height = cell_size.height;
+        GL_sheet_blit_s(sheet, surface, (GL_Point_t){ .x = x + width, .y = y }, cell_id, scale_x, scale_y);
+        width += cell_size.width;
+        if (height < cell_size.height) {
+            height = cell_size.height;
         }
     }
-    dy += line_height;
 
-    lua_pushinteger(L, (lua_Integer)(dx - x));
-    lua_pushinteger(L, (lua_Integer)(dy - y));
+    lua_pushinteger(L, (lua_Integer)width);
+    lua_pushinteger(L, (lua_Integer)height);
 
     return 2;
 }
