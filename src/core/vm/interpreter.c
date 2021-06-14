@@ -413,6 +413,7 @@ bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
 
 bool Interpreter_render(const Interpreter_t *interpreter, float ratio)
 {
+    // TODO: pass the default `Canvas` instance?
     lua_pushnumber(interpreter->state, (lua_Number)ratio); // TODO: is the `ratio` parameter really useful?
     return _call(interpreter->state, METHOD_RENDER, 1, 0) == LUA_OK;
 }

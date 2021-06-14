@@ -142,7 +142,7 @@ void Environment_process(Environment_t *environment, float frame_time)
     stats_time += frame_time;
     while (stats_time > __ENGINE_PERFORMANCES_PERIOD__) {
         stats_time -= __ENGINE_PERFORMANCES_PERIOD__;
-        Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "currently running at %.2f FPS (P=%.3fms, U=%.3fms, R=%.3fms, F=%.3fms)",
+        Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "currently running at %d FPS (P=%.3fms, U=%.3fms, R=%.3fms, F=%.3fms)",
             environment->stats.fps, environment->stats.times[0], environment->stats.times[1], environment->stats.times[2], environment->stats.times[3]);
     }
 #endif  /* __DEBUG_ENGINE_PERFORMANCES__ */
