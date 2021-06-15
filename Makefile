@@ -254,6 +254,11 @@ stencil: $(TARGET)
 	@$(ANALYZER) $(AFLAGS) ./demos/stencil
 	@./$(TARGET) --path=./demos/stencil
 
+lasers: $(TARGET)
+	@echo "Launching *lasers* application!"
+	@$(ANALYZER) $(AFLAGS) ./demos/lasers
+	@./$(TARGET) --path=./demos/lasers
+
 demo: $(TARGET)
 	@echo "Launching *$(DEMO)* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/$(DEMO)
