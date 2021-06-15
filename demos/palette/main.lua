@@ -155,7 +155,7 @@ function Main:render(_)
     self.bank:blit(canvas, self.x - 32, self.y - 32, 1, self.scale_x * 8.0, self.scale_y * 8.0)
   end
 
-  self.font:write(canvas, 0, 0, string.format("FPS: %.1f", System.fps()), 1.5)
+  self.font:write(canvas, 0, 0, string.format("FPS: %6.1f", System.fps()), 1.5)
   self.font:write(canvas, width, 0, string.format("mode: %d", self.mode), "right")
 end
 

@@ -44,7 +44,12 @@ function Tofu:__ctor()
         end,
       leave = function(me)
           Pool.default():clear()
-          me.main = nil
+          Speakers.halt() -- Stop all sounds sources.
+          Display.reset()
+          local canvas = Canvas.default()
+          canvas:pop(0) -- Discard all saved states, if any.
+          canvas:reset() -- Reset default canvas from the game state.
+         me.main = nil
         end,
       input = function(me)
           me.main:input()
@@ -61,20 +66,16 @@ function Tofu:__ctor()
       enter = function(me)
           -- TODO: rename "Display" to "Video" e "Speakers" to "Audio"
           -- TODO: better failure screen with text.
-          Display.reset()
           Display.palette(Palette.new({ { 0, 0, 0 }, { 255, 0, 0 } })) -- Red on black.
           local canvas = Canvas.default()
           local width, _ = canvas:size()
-          canvas:pop(0) -- Discard all saved states, if any.
-          canvas:reset() -- Reset default canvas from the game state.
-
-          Speakers.halt() -- Stop all sounds sources.
 
           me.font = Font.default(0, 1)
           me.lines = {
               { text = "Software Failure." },
               { text = "Guru Meditation" }
             }
+          -- TODO: fetch error message and display!
 
           local margin = 4 -- Pre-calculate lines position and rectangle area.
           local y = margin
