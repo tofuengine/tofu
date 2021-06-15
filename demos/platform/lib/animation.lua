@@ -77,9 +77,9 @@ function Animation:update(delta_time)
   end
 end
 
-function Animation:blit(x, y)
+function Animation:render(canvas, x, y)
   local frame = self.frame
-  self.bank:blit(frame.cell_id, x, y, frame.scale_x, frame.scale_y)
+  self.bank:blit(canvas, x, y, frame.cell_id, frame.scale_x, frame.scale_y)
 end
 
 return Animation

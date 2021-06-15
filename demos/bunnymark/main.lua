@@ -49,9 +49,9 @@ function Main:__ctor()
   canvas:background(0)
 
   self.bunnies = {}
-  self.bank = Bank.new(canvas, Canvas.new("assets/bunnies.png", 11), "assets/bunnies.sheet")
+  self.bank = Bank.new(Canvas.new("assets/bunnies.png", 11), "assets/bunnies.sheet")
   self.batch = Batch.new(self.bank, 5000)
-  self.font = Font.default(canvas, 11, 6)
+  self.font = Font.default(11, 6)
   self.speed = 1.0
   self.running = true
   self.static = true
@@ -103,10 +103,10 @@ function Main:render(_)
   local width, _ = canvas:size()
   canvas:clear()
 
-  self.batch:blit()
+  self.batch:blit(canvas)
 
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
-  self.font:write(self.font:align(string.format("#%d bunnies", #self.bunnies), width, 0, "right"))
+  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
+  self.font:write(canvas, width, 0, string.format("#%d bunnies", #self.bunnies), "right")
 end
 
 return Main

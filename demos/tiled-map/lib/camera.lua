@@ -32,13 +32,12 @@ end
 local Camera = Class.define()
 
 -- TODO: add camera scaling, useful to draw minimap.
-function Camera:__ctor(id, bank, grid, canvas, columns, rows, screen_x, screen_y, anchor_x, anchor_y, scale)
+function Camera:__ctor(id, bank, grid, columns, rows, screen_x, screen_y, anchor_x, anchor_y, scale)
   local cw, ch = bank:size(Bank.NIL)
 
   self.id = id
   self.bank = bank
   self.grid = grid
-  self.canvas = canvas
   self.screen_x = screen_x or 0
   self.screen_y = screen_y or 0
   self.columns = columns
@@ -93,7 +92,7 @@ function Camera:move_to(x, y)
   if self.start_column ~= start_column or self.start_row ~= start_row then
     self.start_column = start_column
     self.start_row = start_row
-    self:prepare_()
+    self:_prepare()
   end
   self.column_offset = column_offset
   self.row_offset = row_offset
@@ -113,27 +112,27 @@ function Camera:update(_)
   -- Override.
 end
 
-function Camera:pre_draw()
+function Camera:pre_draw(_)
   -- Override.
 end
 
-function Camera:draw()
+function Camera:draw(canvas)
   local scale = self.scale
 
-  self.canvas:clipping(self.screen_x, self.screen_y, self.screen_width, self.screen_height)
+  canvas:clipping(self.screen_x, self.screen_y, self.screen_width, self.screen_height)
 
   local ox, oy = self.screen_x + self.column_offset, self.screen_y + self.row_offset
   for _, v in ipairs(self.batch) do
     local cell_id, cell_x, cell_y = table.unpack(v)
-    self.bank:blit(cell_id, cell_x + ox, cell_y + oy, scale, scale)
+    self.bank:blit(canvas, cell_x + ox, cell_y + oy, cell_id, scale, scale)
   end
 end
 
-function Camera:post_draw()
+function Camera:post_draw(_)
   -- Override.
 end
 
-function Camera:prepare_()
+function Camera:_prepare()
   local gw, gh = self.grid:size()
   local cw, ch = self.bank:size(Bank.NIL, self.scale)
 

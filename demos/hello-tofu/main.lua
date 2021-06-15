@@ -44,12 +44,13 @@ function Main:__ctor()
 
   self.factor = 0.0
 
-  -- Load a custom 8x8 font from file, setting palette color `0` as background
+  -- Load a custom 8x8 font from file, setting palette colour `0` as background
   -- and `15` as foreground.
-  -- Please note that, as default, palette color `0` is set as transparent. This
-  -- means that the font background color won't be drawn.
+  -- Please note that, as default, palette colour `0` is set as transparent. This
+  -- means that the font background colour won't be drawn.
   self.canvas = Canvas.new(Canvas.default():size())
-  self.font = Font.new(self.canvas, Canvas.new("assets/font-8x8.png", 0, 15), 8, 8)
+  self.font = Font.new(Canvas.new("assets/font-8x8.png", 0, 15), 8, 8)
+  self.font_digits = Font.new(Canvas.new("assets/digits.png", 0, 15), 8, 8, "0123456789")
 
   local width, height = self.canvas:size()
   self.xform = XForm.new() -- TODO: pass clamp mode?
@@ -84,44 +85,48 @@ function Main:render(_)
   -- Query current time since the start, expressed in seconds (as a floating point number).
   local t = System.time()
 
-  -- Get a reference to the offscreen canvas (i.e. the the virtual-screen).
+  -- Get a reference to the off-screen canvas (i.e. the the virtual-screen).
   local canvas = self.canvas
 
-  -- Clear the virtual-screen with default background color (i.e. palette color #0).
+  -- Clear the virtual-screen with default background colour (i.e. palette colour #0).
   canvas:clear()
 
-  -- Query for text width/height and calculate the (screen-centered) origin
+  -- Query for text width/height and calculate the (screen-centred) origin
   -- x/y position.
   local canvas_width, canvas_height = self.canvas:size()
   local text_width, text_height = self.font:size(MESSAGE)
   local x, y = (canvas_width - text_width) * 0.5, (canvas_height - text_height) * 0.5
 
-  -- Query for font char width/height, we'll use it for offseting the characters.
-  local char_width, char_height = self.font:size()
-
-  --
   canvas:rectangle("fill", 2, 2, canvas_width - 4, canvas_height - 4, 3)
 
   -- Scan the message text one char at time. We need the current char index in order
   -- to change color for each character.
   for i = 1, #MESSAGE do
-    -- Compute the verical offset using a sine wave, each chacter with a different value.
+    -- Get the i-th string character.
+    local c = MESSAGE:sub(i, i)
+
+    -- Query for font char width/height, we'll use it for offsetting the characters.
+    local char_width, char_height = self.font:size(c)
+
+    -- Compute the vertical offset using a sine wave, each character with a different value.
     local dx = math.cos(t * 1.5           ) * 2 * char_width + (i - 1) * char_width
     local dy = math.sin(t * 2.5 + i * 0.25) * 2 * char_height
 
     -- Convert the time to an integer (speeding it up a bit) and get a different
-    -- color for each character. Then instruct the engine that color `15` need to be
-    -- remapped to color `index`.
+    -- colour for each character. Then instruct the engine that colour `15` need to be
+    -- remapped to colour `index`.
     local index = (tonumber(t * 5) + i) % 16
     canvas:shift(15, index)
 
     -- Draw the i-th character, accounting for vertical offset.
-    self.font:write(MESSAGE:sub(i, i), x + dx, y + dy)
+    self.font:write(canvas, x + dx, y + dy, c)
   end
+
+  self.font_digits:write(canvas, 0, 0, "9876543210")
 
   -- Transfer to the virtual-screen canvas through transformation.
   Canvas.default():clear()
-  canvas:xform(self.xform, Canvas.default())
+  self.xform:blit(Canvas.default(), canvas)
 end
 
 return Main

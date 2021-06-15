@@ -44,8 +44,7 @@ local function build_table(palette, levels, target)
     for j, color in ipairs(palette:colors()) do
       local ar, ag, ab = table.unpack(color)
       local r, g, b = Palette.mix(ar, ag, ab, tr, tg, tb, 1 - ratio)
-      local k = palette:color_to_index(r, g, b)
-      shifting[j - 1] = k
+      shifting[j - 1] = palette:color_to_index(r, g, b)
     end
     lut[i] = shifting
   end
@@ -55,7 +54,13 @@ end
 local Main = Class.define()
 
 function Main:__ctor()
-  PALETTE = Palette.new("famicube")
+  local a = Palette.new("gameboy")
+  local b = Palette.new("pico-8-ext")
+  local c = Palette.new("pico-8-ext")
+  a:merge(b)
+  b:merge(c)
+
+  PALETTE = Palette.new(3, 3, 2) --"famicube")
   STEPS = PALETTE:size()
   LEVELS = STEPS
 
@@ -64,10 +69,8 @@ function Main:__ctor()
   local canvas = Canvas.default()
   local width, height = canvas:size()
 
-  canvas:transparent(0, false)
-
   self.lut = build_table(PALETTE, LEVELS, TARGET)
-  self.font = Font.default(canvas, 0, 15)
+  self.font = Font.default(0, PALETTE:color_to_index(0, 255, 0))
   self.width = width / STEPS
   self.height = height / STEPS
   self.mode = 0
@@ -101,23 +104,23 @@ function Main:render(_)
     for i = 0, STEPS - 1 do
       local y = self.height * i
       canvas:shift(self.lut[i])
-      canvas:copy(0, y, 0, y, width, self.height)
+      canvas:blit(0, y, canvas, 0, y, width, self.height)
     end
   elseif self.mode == 1 then
     for i = 0, STEPS - 1 do
       canvas:shift(self.lut[i])
-      canvas:copy(i, 0, i, 0, 1, height)
-      canvas:copy(width - 1 - i, 0, width - 1 - i, 0, 1, height)
+      canvas:blit(i, 0, canvas, i, 0, 1, height)
+      canvas:blit(width - 1 - i, 0, canvas, width - 1 - i, 0, 1, height)
     end
   else
     local t = System.time()
     local index = math.tointeger((math.sin(t * 2.5) + 1) * 0.5 * (STEPS - 1))
     canvas:shift(self.lut[index])
-    canvas:copy(0, 0, 0, 0, width, height / 2)
+    canvas:blit(0, 0, canvas, 0, 0, width, height / 2)
   end
   canvas:pop()
 
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
+  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
 end
 
 return Main

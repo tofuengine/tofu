@@ -1,5 +1,4 @@
 local Class = require("tofu.core").Class
-local Canvas = require("tofu.graphics").Canvas
 
 local Sprite = Class.define()
 
@@ -9,7 +8,7 @@ local Sprite = Class.define()
 local PADDING = 16
 local STEP = (2.0 * math.pi) / 32.0
 
-function Sprite:__ctor(bank, index)
+function Sprite:__ctor(canvas, bank, index)
   self.bank = bank
 
   self.angle = STEP * index -- (2.0 * Num.pi) random.float() * MAX_ANGLE
@@ -19,7 +18,6 @@ function Sprite:__ctor(bank, index)
 
   self.id = math.random(0, 11)
 
-  local canvas = Canvas.default()
   local width, height = canvas:size()
 
   self.CENTER_X = width / 2
@@ -32,12 +30,12 @@ function Sprite:update(delta_time)
   self.angle = self.angle + delta_time
 end
 
-function Sprite:render()
+function Sprite:render(canvas)
   local x = self.CENTER_X + math.cos(self.angle * self.frequency_x) * self.X_AMPLITUDE
   local y = self.CENTER_Y + math.sin(self.angle * self.frequency_y) * self.Y_AMPLITUDE
 
   local s = ((math.sin(self.angle * self.frequency_s) + 1.0) * 0.5) * 1.5 + 0.5
-  self.bank:blit(self.id, x, y, s, s)
+  self.bank:blit(canvas, x, y, self.id, s, s)
 end
 
 return Sprite

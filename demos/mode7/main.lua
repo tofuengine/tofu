@@ -44,7 +44,7 @@ function Main:__ctor()
   local canvas = Canvas.default()
   canvas:background(palette:color_to_index(31, 31, 63))
 
-  self.font = Font.default(canvas, "5x8", 0, palette:color_to_index(0, 255, 0))
+  self.font = Font.default("5x8", 0, palette:color_to_index(0, 255, 0))
   self.surface = Canvas.new("assets/road.png", 0)
   self.xform = XForm.new()
   self.running = true
@@ -124,7 +124,7 @@ function Main:render(_)
   canvas:clear()
 
 --  canvas:rectangle("fill", 0, 0, width, height * 0.25, 21)
-  self.surface:xform(0, height * 0.25, self.xform, canvas)
+  self.xform:blit(canvas, 0, height * 0.25, self.surface)
 
   local cx, cy = width * 0.5, height * 0.5
   canvas:line(cx, cy, cx + math.cos(self.angle) * 10, cy + math.sin(self.angle) * 10, 31)
@@ -132,7 +132,9 @@ function Main:render(_)
   canvas:line(cx, cy, cx + math.cos(math.pi * 0.5 - self.angle) * 10,
               cy + math.sin(math.pi * 0.5 - self.angle) * 10, 47)
 
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
+  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
+  self.font:write(canvas, width, 0, string.format("mode: %s", WRAP_MODES[self.wrap]), "right", "top")
+  self.font:write(canvas, width, height, string.format("mem: %.3f MiB", System.heap("m")), "right", "bottom")
 end
 
 return Main

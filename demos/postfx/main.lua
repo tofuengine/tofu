@@ -45,8 +45,8 @@ function Main:__ctor()
   canvas:background(63)
 
   self.sprites = {}
-  self.bank = Bank.new(canvas, Canvas.new("assets/images/diamonds.png", 13), 16, 16)
-  self.font = Font.default(canvas, 13, 0)
+  self.bank = Bank.new(Canvas.new("assets/images/diamonds.png", 13), 16, 16)
+  self.font = Font.default(13, 0)
   self.speed = 1.0
   self.running = true
 end
@@ -54,7 +54,7 @@ end
 function Main:input()
   if Input.is_pressed("start") then
     for _ = 1, LITTER_SIZE do
-      table.insert(self.sprites, Sprite.new(self.bank, #self.sprites))
+      table.insert(self.sprites, Sprite.new(Canvas.default(), self.bank, #self.sprites))
     end
   elseif Input.is_pressed("left") then
     self.speed = self.speed * 0.5
@@ -83,10 +83,10 @@ function Main:render(_)
   local width, _ = canvas:size()
   canvas:clear()
   for _, sprite in pairs(self.sprites) do
-    sprite:render()
+    sprite:render(canvas)
   end
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
-  self.font:write(self.font:align(string.format("#%d sprites", #self.sprites), width, 0, "right"))
+  self.font:write(canvas, 0,0, string.format("FPS: %d", System.fps()))
+  self.font:write(canvas, width, 0, string.format("#%d sprites", #self.sprites), "right")
 end
 
 return Main

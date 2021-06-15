@@ -41,9 +41,9 @@ function Main:__ctor()
   canvas:transparent({ ["0"] = false, ["22"] = true })
   canvas:background(12)
 
-  self.bank = Bank.new(canvas, Canvas.new("assets/sprites.png", 22), 16, 16)
+  self.bank = Bank.new(Canvas.new("assets/sprites.png", 22), 16, 16)
   self.batch = Batch.new(self.bank, 5000)
-  self.font = Font.default(canvas, 22, 2)
+  self.font = Font.default(22, 2)
 
   self.x, self.y = 0, 0
   self.x_speed, self.y_speed = 0, 0
@@ -100,13 +100,13 @@ function Main:render(_)
   local x, y = self.x, self.y
 
   for _ = 1, 1 do
-    self.bank:blit(9, x, y,
+    self.bank:blit(canvas, x, y, 9,
       self.flip_x and -self.scale or self.scale, self.flip_y and -self.scale or self.scale)
   end
 
-  self.font:write(string.format("FPS: %d", math.floor(System.fps() + 0.5)), 0, 0)
-  self.font:write(self.font:align(string.format("S:%.2f X:%s Y:%s", self.scale, self.flip_x, self.flip_y),
-    width, height, "right", "bottom"))
+  self.font:write(canvas, 0, 0, string.format("FPS: %d", math.floor(System.fps() + 0.5)))
+  self.font:write(canvas, width, height, string.format("S:%.2f X:%s Y:%s",
+    self.scale, self.flip_x, self.flip_y), "right", "bottom")
 end
 
 return Main

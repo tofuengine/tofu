@@ -33,14 +33,14 @@ local Font = require("tofu.graphics").Font
 
 local Main = Class.define()
 
-local IDS = {
+local IDS <const> = {
     "a", "b", "x", "y",
     "lb", "rb",
     "up", "down", "left", "right",
     "select", "start"
   }
 
-local INDICES = {
+local INDICES <const> = {
     0, 1, 2, 3,
     4, 5,
     12, 13, 14, 15,
@@ -52,8 +52,8 @@ function Main:__ctor()
 
   local canvas = Canvas.default()
 
-  self.bank = Bank.new(canvas, Canvas.new("assets/sheet.png", 0), 12, 12)
-  self.font = Font.default(canvas, 0, 15)
+  self.bank = Bank.new(Canvas.new("assets/sheet.png", 0), 12, 12)
+  self.font = Font.default(0, 15)
   self.down = {}
   self.scale = {}
 
@@ -119,7 +119,7 @@ function Main:render(_)
       ox = (cw * s - cw) * 0.5
       oy = (ch * s - ch) * 0.5
     end
-    self.bank:blit(INDICES[index], x - ox, y - oy + dy, s, s)
+    self.bank:blit(canvas, x - ox, y - oy + dy, INDICES[index], s, s)
     x = x + cw
   end
 
@@ -138,9 +138,9 @@ function Main:render(_)
   canvas:line(mx, my - 3, mx, my - 1, 2)
   canvas:line(mx, my + 1, mx, my + 3, 2)
 
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
-  self.font:write(self.font:align(string.format("X:%.2f Y:%.2f A:%.2f M:%.2f", lx, ly, la, lm),
-    width, height, "right", "bottom"))
+  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
+  self.font:write(canvas, width, height, string.format("X:%.2f Y:%.2f A:%.2f M:%.2f", lx, ly, la, lm),
+    "right", "bottom")
 end
 
 return Main

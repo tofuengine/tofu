@@ -39,10 +39,8 @@ local CAMERA_SPEED = 128.0
 function Main:__ctor()
   Display.palette(Palette.new("gameboy"))
 
-  local canvas = Canvas.default()
-
-  self.font = Font.default(canvas, 3, 1)
-  self.map = Map.from_file(canvas, "assets/world.map")
+  self.font = Font.default(3, 1)
+  self.map = Map.from_file("assets/world.map")
 
   self.map:add_camera("left", 7, 5, 8, 0)
   self.map:add_camera("right", 7, 5, 248, 0, 0.5, 0.5, 0.25)
@@ -53,10 +51,10 @@ function Main:__ctor()
   self.map:camera_from_id("left"):move_to(200, 200)
   self.map:camera_from_id("right"):move_to(800, 200)
   for _, camera in pairs(self.map:get_cameras()) do
-    camera.post_draw = function(me)
+    camera.post_draw = function(me, canvas)
         local x, y = me:to_screen(me.x, me.y)
-        me.canvas:rectangle("fill", x - 2, y - 2, 4, 4, 2)
-        self.font:write(self.font:align(tostring(me), me.screen_x + me.screen_width, me.screen_y, "right"))
+        canvas:rectangle("fill", x - 2, y - 2, 4, 4, 2)
+        self.font:write(canvas, me.screen_x + me.screen_width, me.screen_y, tostring(me), "right")
       end
   end
 end
@@ -107,13 +105,13 @@ end
 function Main:render(_)
   local canvas = Canvas.default()
   canvas:clear()
-  self.map:draw()
+  self.map:draw(canvas)
 
   local camera = self.map:camera_from_id("right")
   local x, y = camera:to_screen(self.player.x, self.player.y)
   canvas:rectangle("fill", x - 2, y - 2, 4, 4, 1)
 
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
+  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
 end
 
 return Main

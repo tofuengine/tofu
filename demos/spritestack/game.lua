@@ -46,12 +46,10 @@ function Game:__ctor()
   local palette = Palette.new("pico-8-ext")
   Display.palette(palette)
 
-  local canvas = Canvas.default()
-
   self.palette = palette
-  self.bank = Bank.new(canvas, Canvas.new("assets/images/racing-car-tiny-red.png", 0), 16, 16)
---  self.bank = Bank.new(canvas, Canvas.new("assets/images/racing-car-small-red.png", 0), 32, 32)
-  self.font = Font.default(canvas, 0, 31)
+  self.bank = Bank.new(Canvas.new("assets/images/racing-car-tiny-red.png", 0), 16, 16)
+--  self.bank = Bank.new(Canvas.new("assets/images/racing-car-small-red.png", 0), 32, 32)
+  self.font = Font.default(0, 31)
   self.tweener = Math.tweener("sine_out")
 
   self.sprites = {}
@@ -122,11 +120,11 @@ function Game:render(_)
   canvas:clear()
 
   for _, sprite in ipairs(self.sprites) do
-    sprite:render()
+    sprite:render(canvas)
   end
 
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
-  self.font:write(self.font:align(string.format("#%d sprites", #self.sprites), width, 0, "right"))
+  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
+  self.font:write(canvas, width, 0, string.format("#%d sprites", #self.sprites), "right")
 end
 
 return Game

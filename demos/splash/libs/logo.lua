@@ -28,12 +28,11 @@ local Canvas = require("tofu.graphics").Canvas
 
 local Logo = Class.define()
 
-function Logo:__ctor(canvas, transparent)
-  self.canvas = canvas
+function Logo:__ctor(canvas, transparent, _)
   self.images = {
-    Canvas.new("assets/images/tofu.png", transparent),
-    Canvas.new("assets/images/engine.png", transparent)
-  }
+      Canvas.new("assets/images/tofu.png", transparent),
+      Canvas.new("assets/images/engine.png", transparent)
+    }
   self.outline = Canvas.new("assets/images/outline.png", transparent)
 
   local cw, ch = canvas:size()
@@ -45,37 +44,12 @@ end
 function Logo:update(_)
 end
 
-function Logo:render()
---[[
-  canvas:push()
-  local x, y = 0, 0
-  local dy = 0
-  local message = '* T O F U - E N G I N E '
-  local colors = { 0, 5, 6, 10, 7, 23, 6, 5 }
-  local char_width, char_height = self.font:size()
-  local offset = 0 -- math.tointeger(t * 17.0)
-  local cursor = math.tointeger(t * 5.0)
-  for k = 0, 49 do
-    local dx = 0
-    for i = 0, 59 do
-      local j = ((cursor + k + i) % #message) + 1
-      local c = message:sub(j, j)
-      canvas:shift(0, colors[(i + offset) % #colors + 1])
-      self.font:write(c, x + dx, y + dy)
-      dx = dx + char_width
-    end
-    dy = dy + char_height
-  end
-  canvas:pop()
---]]
-
+function Logo:render(canvas)
   -- TODO: generate the outline w/ 4 offsetted blits.
   local t = System.time()
 
-  self.outline:blit(self.x, self.y, self.canvas)
-  local index = (math.tointeger(t * 1.0) % 2) + 1
-  local image = self.images[index]
-  image:blit(self.x, self.y, self.canvas)
+  canvas:blit(self.x, self.y, self.outline)
+  canvas:blit(self.x, self.y, self.images[(math.tointeger(t * 1.0) % 2) + 1])
 end
 
 return Logo

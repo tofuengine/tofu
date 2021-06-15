@@ -47,19 +47,15 @@ function Main:__ctor()
   local color = Palette.new("famicube")
   local greyscale = Palette.new(color:size())
 
-  local canvas = Canvas.default()
-
-  self.font = Font.default(canvas, 0, 15)
+  self.font = Font.default(0, 15)
   self.top = Canvas.new("assets/top.png", 0, color)
   self.bottom = Canvas.new("assets/bottom.png", 0, color)
-  self.stencil = Canvas.new("assets/gradient.png", 0, greyscale)
+  self.mask = Canvas.new("assets/gradient.png", 0, greyscale)
   self.comparator = 1
   self.threshold = 64
   self.mode = 0
 
   --  canvas:transparent(0, false)
-  canvas:comparator(COMPARATORS[self.comparator])
-  canvas:threshold(self.threshold)
 
   Display.palette(color)
 end
@@ -69,20 +65,12 @@ function Main:input()
     self.mode = (self.mode + 1) % 2
   elseif Input.is_pressed("up") then
     self.comparator = math.min(self.comparator + 1, #COMPARATORS)
-    local canvas = Canvas.default()
-    canvas:comparator(COMPARATORS[self.comparator])
   elseif Input.is_pressed("down") then
     self.comparator = math.max(self.comparator - 1, 1)
-    local canvas = Canvas.default()
-    canvas:comparator(COMPARATORS[self.comparator])
   elseif Input.is_pressed("right") then
     self.threshold = self.mode == 1 and self.threshold or math.min(self.threshold + 1, 64)
-    local canvas = Canvas.default()
-    canvas:threshold(self.threshold)
   elseif Input.is_pressed("left") then
     self.threshold = self.mode == 1 and self.threshold or math.max(self.threshold - 1, 0)
-    local canvas = Canvas.default()
-    canvas:threshold(self.threshold)
   end
 end
 
@@ -90,8 +78,6 @@ function Main:update(_)
   if self.mode == 1 then
     local t = System.time()
     self.threshold = math.tointeger(((math.sin(t) + 1) * 0.5) * 64 + 0.5)
-    local canvas = Canvas.default()
-    canvas:threshold(self.threshold)
   end
 end
 
@@ -99,20 +85,20 @@ function Main:render(_)
   local canvas = Canvas.default()
   canvas:clear()
 
-  self.bottom:copy(canvas)
+  canvas:copy(self.bottom)
   -- self.top:process(function(x, y, from, to)
-  --     local pixel = self.stencil:peek(x, y)
+  --     local pixel = self.mask:peek(x, y)
   --     if pixel < self.threshold then
   --       return from
   --     else
   --       return to
   --     end
   --   end, canvas)
-  self.top:mask(self.stencil, canvas)
+  canvas:stencil(self.top, self.mask, COMPARATORS[self.comparator], self.threshold)
 
   local width, _ = canvas:size()
-  self.font:write(string.format("FPS: %.1f", System.fps()), 0, 0)
-  self.font:write(self.font:align(string.format("M: %d, T: %d", self.mode, self.threshold), width, 0, "right"))
+  self.font:write(canvas, 0, 0, string.format("FPS: %.1f", System.fps()))
+  self.font:write(canvas, width, 0, string.format("M: %d, T: %d", self.mode, self.threshold), "right")
 end
 
 return Main

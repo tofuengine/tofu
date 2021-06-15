@@ -49,9 +49,7 @@ function Main:__ctor()
 --  warn("@on")
 --  warn("Hello,", "Again")
 
-  local canvas = Canvas.default()
-
-  self.font = Font.default(canvas, 0, 15)
+  self.font = Font.default(0, 15)
 
   self.sources = {}
   for _, source in ipairs(SOURCES) do
@@ -132,13 +130,11 @@ function Main:render(_)
         self.current == index and "*" or " ",
         source.instance:is_playing() and "!" or " ",
         source.pan, source.instance:gain())
-    local _, th = self.font:size(text)
-    self.font:write(text, x, y)
+    local _, th = self.font:write(canvas, x, y, text)
     y = y + th
   end
-  self.font:write(PROPERTIES[self.property], x, y)
-
-  self.font:write(self.font:align(string.format("FPS: %d", System.fps()), width, height, "right", "bottom"))
+  self.font:write(canvas, x, y, PROPERTIES[self.property])
+  self.font:write(canvas, width, height, System.fps(), "right", "bottom")
 end
 
 return Main

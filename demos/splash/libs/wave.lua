@@ -29,8 +29,7 @@ local Timer = require("tofu.timers").Timer
 
 local Wave = Class.define()
 
-function Wave:__ctor(canvas, transparent)
-  self.canvas = canvas
+function Wave:__ctor(_, transparent, _)
   self.stripe = Canvas.new("assets/images/stripes.png", transparent)
   self.tweener = Math.tweener("linear", 5)
   self.period_current = 0
@@ -47,14 +46,14 @@ function Wave:update(delta_time)
   self.period = self.period + delta_time * period
 end
 
-function Wave:render()
+function Wave:render(canvas)
   -- TODO: use an oscillator, here.
-  local canvas_width, _ = self.canvas:size()
+  local canvas_width, _ = canvas:size()
   local stripe_width, stripe_height = self.stripe:size()
   local span = stripe_height * 0.25
   for i = 0, canvas_width, stripe_width do
     local dy = math.sin(self.period + i * 0.00375) * span
-    self.stripe:copy(i, dy, self.canvas)
+    canvas:blit(i, dy, self.stripe)
   end
 end
 
