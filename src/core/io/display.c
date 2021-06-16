@@ -604,11 +604,6 @@ void Display_set_offset(Display_t *display, GL_Point_t offset)
     display->vram.offset = offset;
 }
 
-void Display_set_palette(Display_t *display, const GL_Palette_t *palette)
-{
-    GL_copperlist_set_palette(display->canvas.copperlist, palette);
-}
-
 void Display_set_shifting(Display_t *display, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count)
 {
     GL_copperlist_set_shifting(display->canvas.copperlist, from, to, count);
@@ -634,9 +629,9 @@ GL_Surface_t *Display_get_surface(const Display_t *display)
     return display->canvas.surface;
 }
 
-const GL_Palette_t *Display_get_palette(const Display_t *display)
+GL_Palette_t *Display_get_palette(const Display_t *display)
 {
-    return &display->canvas.copperlist->palette;
+    return display->canvas.copperlist->palette;
 }
 
 GL_Point_t Display_get_offset(const Display_t *display)

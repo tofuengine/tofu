@@ -27,6 +27,11 @@
 
 #include <libs/gl/gl.h>
 
-extern const GL_Palette_t *resources_palettes_find(const char *id);
+typedef struct _Palette_t {
+    GL_Color_t colors[GL_MAX_PALETTE_COLORS];
+    size_t size;
+} Palette_t;
+
+extern const Palette_t *resources_palettes_find(const char *id);
 
 #endif  /* __RESOURCES_PALETTES_H__ */

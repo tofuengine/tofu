@@ -198,7 +198,7 @@ static int canvas_new_3sNU_1u(lua_State *L)
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
     Callback_Palette_Closure_t closure = (Callback_Palette_Closure_t){
-            .palette = palette ? &palette->palette : Display_get_palette(display), // Use current display's if not passed.
+            .palette = palette ? palette->palette : Display_get_palette(display), // Use current display's if not passed.
             .transparent = transparent_index,
             .threshold = 0
         };

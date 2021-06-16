@@ -28,7 +28,7 @@
 
 typedef struct _Resource_Palette_t {
     const char *id;
-    GL_Palette_t palette;
+    Palette_t palette;
 } Resource_Palette_t;
 
 static const Resource_Palette_t _palettes[] = {
@@ -635,7 +635,7 @@ static const Resource_Palette_t _palettes[] = {
     { NULL, { { { 0 } }, 0 } }
 };
 
-const GL_Palette_t *resources_palettes_find(const char *id)
+const Palette_t *resources_palettes_find(const char *id)
 {
     for (size_t i = 0; _palettes[i].id != NULL; ++i) {
         if (strcasecmp(_palettes[i].id, id) == 0) {

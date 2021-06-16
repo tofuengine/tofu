@@ -28,7 +28,11 @@
 #include <libs/gl/gl.h>
 
 typedef struct _Callback_Palette_Closure_t {
+#ifdef __PALETTE_COLOR_MEMOIZATION__
+    GL_Palette_t *palette;
+#else
     const GL_Palette_t *palette;
+#endif  /* __PALETTE_COLOR_MEMOIZATION__ */
     GL_Pixel_t transparent;
     uint8_t threshold;
 } Callback_Palette_Closure_t;
