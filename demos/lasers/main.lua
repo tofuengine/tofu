@@ -51,17 +51,17 @@ function Main:__ctor()
 
   local canvas = Canvas.default()
   canvas:transparent(0, false)
-  canvas:foreground(palette:color_to_index(255, 255, 255))
+  canvas:foreground(palette:match(255, 255, 255))
 
   local width, height = canvas:size()
 
-  self.font = Font.default(0, palette:color_to_index(255, 255, 255))
+  self.font = Font.default(0, palette:match(255, 255, 255))
   self.colors = {
-      palette:color_to_index( 15,  15,  15),
-      palette:color_to_index( 31,  31,  31),
-      palette:color_to_index( 31,  31,  63),
-      palette:color_to_index( 63,  63, 127),
-      palette:color_to_index(191, 191, 223)
+      palette:match( 15,  15,  15),
+      palette:match( 31,  31,  31),
+      palette:match( 31,  31,  63),
+      palette:match( 63,  63, 127),
+      palette:match(191, 191, 223)
     }
   self.step = 4
   self.lines = {}

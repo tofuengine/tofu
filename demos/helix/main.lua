@@ -78,15 +78,15 @@ function Main:render(_)
     for px = coords[1].x, coords[2].x, delta_x do
       local r = (px - coords[1].x) / (coords[2].x - coords[1].x)
       local v = Math.lerp(coords[1].v, coords[2].v, r)
-      local index = self.palette:color_to_index(v, v, v)
+      local index = self.palette:match(v, v, v)
       canvas:point(px, py, index)
     end
 
     local v1 = coords[1].v
-    canvas:circle("fill", coords[1].x, coords[1].y, RADIUS, self.palette:color_to_index(v1, v1, v1))
+    canvas:circle("fill", coords[1].x, coords[1].y, RADIUS, self.palette:match(v1, v1, v1))
 
     local v2 = coords[2].v
-    canvas:circle("fill", coords[2].x, coords[2].y, RADIUS, self.palette:color_to_index(v2, v2, v2))
+    canvas:circle("fill", coords[2].x, coords[2].y, RADIUS, self.palette:match(v2, v2, v2))
   end
 
   self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))

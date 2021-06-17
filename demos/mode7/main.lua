@@ -42,9 +42,9 @@ function Main:__ctor()
   Display.palette(palette)
 
   local canvas = Canvas.default()
-  canvas:background(palette:color_to_index(31, 31, 63))
+  canvas:background(palette:match(31, 31, 63))
 
-  self.font = Font.default("5x8", 0, palette:color_to_index(0, 255, 0))
+  self.font = Font.default("5x8", 0, palette:match(0, 255, 0))
   self.surface = Canvas.new("assets/road.png", 0)
   self.xform = XForm.new()
   self.running = true

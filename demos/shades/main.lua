@@ -44,7 +44,7 @@ local function build_table(palette, levels, target)
     for j, color in ipairs(palette:colors()) do
       local ar, ag, ab = table.unpack(color)
       local r, g, b = Palette.mix(ar, ag, ab, tr, tg, tb, 1 - ratio)
-      shifting[j - 1] = palette:color_to_index(r, g, b)
+      shifting[j - 1] = palette:match(r, g, b)
     end
     lut[i] = shifting
   end
@@ -70,7 +70,7 @@ function Main:__ctor()
   local width, height = canvas:size()
 
   self.lut = build_table(PALETTE, LEVELS, TARGET)
-  self.font = Font.default(0, PALETTE:color_to_index(0, 255, 0))
+  self.font = Font.default(0, PALETTE:match(0, 255, 0))
   self.width = width / STEPS
   self.height = height / STEPS
   self.mode = 0

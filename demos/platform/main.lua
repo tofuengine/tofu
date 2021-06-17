@@ -59,19 +59,17 @@ local function generate_map(screens)
 end
 
 local function extra_half_brite(palette, target, ratio)
-  local p = {}
-  for _, color in ipairs(palette) do
-    table.insert(p, color)
-  end
-  local tr, tg, tb = table.unpack(target)
-  for _, color in ipairs(palette) do
-    local cr, cg, cb = table.unpack(color)
-    local r = math.tointeger((cr - tr) * ratio + tr)
-    local g = math.tointeger((cg - tg) * ratio + tg)
-    local b = math.tointeger((cb - tb) * ratio + tb)
-    table.insert(p, { r, g, b })
-  end
-  return p
+  local r, g, b = table.unpack(target)
+  local tweaked = Palette.new(palette)
+  tweaked:lerp(r, g, b, ratio)
+  palette:merge(tweaked, false) -- Just append.
+--  local size = palette:size()
+--  for index = 0, size - 1 do
+--    local ar, ag, ab = palette:get(index)
+--    local mr, mg, mb = Palette.mix(r, g, b, ar, ag, ab, ratio)
+--    palette:set(size + index, mr, mg, mb)
+--  end
+  return palette
 end
 
 function Main:__ctor()
@@ -122,7 +120,7 @@ function Main:__ctor()
   self.atlas:clear(0)
 
   -- Tweak the palette now that the loading phase is complete, so that color-remapping won't be interfered with!
-  Display.palette(Palette.new(extra_half_brite(palette:colors(), { 31, 127, 63 }, 0.5)))
+  Display.palette(Palette.new(extra_half_brite(palette, { 31, 127, 63 }, 0.5)))
 --  self.pixies:clear(0)
 end
 
@@ -297,9 +295,9 @@ function Main:render(_)
   local amount = height - mid
   for i = 0, amount - 1 do
       canvas:process(function(_, _, _, to)
---        local ar, ag, ab = Display.index_to_color(from)
+--        local ar, ag, ab = Display.get(from)
         local ar, ag, ab = 31, 127, 63
-        local br, bg, bb = Display.index_to_color(to)
+        local br, bg, bb = Display.get(to)
         local r, g, b = (ar + br) * 0.5, (ag + bg) * 0.5, (ab + bb) * 0.5
         return Display.color_to_index(r, g, b)
       end, 0, mid + i, math.sin(t + i / (amount / 8)) * 3, mid - i * 1, width, 1)

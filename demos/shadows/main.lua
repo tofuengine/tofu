@@ -48,8 +48,8 @@ function Main:__ctor()
   self.background = Canvas.new("assets/background.png")
   self.stamp = Canvas.new("assets/sphere.png", 0, greyscale)
   self.bank = Bank.new(Canvas.new("assets/sheet.png",
-    palette:color_to_index(0, 0, 0), palette:color_to_index(255, 255, 255)), 32, 32)
-  self.font = Font.default(palette:color_to_index(255, 255, 255), palette:color_to_index(0, 0, 0))
+    palette:match(0, 0, 0), palette:match(255, 255, 255)), 32, 32)
+  self.font = Font.default(palette:match(255, 255, 255), palette:match(0, 0, 0))
   self.velocity = { x = 0, y = 0 }
   self.position = { x = 0, y = 0 }
   self.cursor = { x = 0, y = 0 }

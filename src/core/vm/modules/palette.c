@@ -40,8 +40,9 @@ static int palette_gc_1u_0(lua_State *L);
 static int palette_mix_7nnnnnnN_3nnn(lua_State *L);
 static int palette_colors_1u_1t(lua_State *L);
 static int palette_size_1u_1n(lua_State *L);
-static int palette_color_to_index_4unnn_1n(lua_State *L);
-static int palette_index_to_color_2un_3nnn(lua_State *L);
+static int palette_get_2un_3nnn(lua_State *L);
+static int palette_set_5unnnn_0(lua_State *L);
+static int palette_match_4unnn_1n(lua_State *L);
 static int palette_lerp_5unnnN_0(lua_State *L);
 static int palette_merge_3uuB_0(lua_State *L);
 
@@ -55,8 +56,9 @@ int palette_loader(lua_State *L)
             { "mix", palette_mix_7nnnnnnN_3nnn },
             { "colors", palette_colors_1u_1t },
             { "size", palette_size_1u_1n },
-            { "color_to_index", palette_color_to_index_4unnn_1n },
-            { "index_to_color", palette_index_to_color_2un_3nnn },
+            { "get", palette_get_2un_3nnn },
+            { "set", palette_set_5unnnn_0 },
+            { "match", palette_match_4unnn_1n },
             { "lerp", palette_lerp_5unnnN_0 },
             { "merge", palette_merge_3uuB_0 },
             { NULL, NULL }
@@ -106,7 +108,7 @@ static int palette_new_1s_1u(lua_State *L)
     if (!palette) {
         return luaL_error(L, "can't create palette");
     }
-    GL_palette_set(palette, predefined_palette->colors, predefined_palette->size);
+    GL_palette_set_colors(palette, predefined_palette->colors, predefined_palette->size);
 
     Palette_Object_t *self = (Palette_Object_t *)lua_newuserdatauv(L, sizeof(Palette_Object_t), 1);
     *self = (Palette_Object_t){
@@ -194,7 +196,33 @@ static int palette_new_1t_1u(lua_State *L)
     if (!palette) {
         return luaL_error(L, "can't create palette");
     }
-    GL_palette_set(palette, colors, size);
+    GL_palette_set_colors(palette, colors, size);
+
+    Palette_Object_t *self = (Palette_Object_t *)lua_newuserdatauv(L, sizeof(Palette_Object_t), 1);
+    *self = (Palette_Object_t){
+            .palette = palette
+        };
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p allocated w/ %d color(s)", self, self->palette->size);
+
+    luaL_setmetatable(L, META_TABLE);
+
+    return 1;
+}
+
+static int palette_new_1u_1u(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+    LUAX_SIGNATURE_END
+    const Palette_Object_t *other = (const Palette_Object_t *)LUAX_USERDATA(L, 1);
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "cloning palette %p", other);
+
+    GL_Palette_t *palette = GL_palette_create();
+    if (!palette) {
+        return luaL_error(L, "can't create palette");
+    }
+    GL_palette_copy(palette, other->palette);
 
     Palette_Object_t *self = (Palette_Object_t *)lua_newuserdatauv(L, sizeof(Palette_Object_t), 1);
     *self = (Palette_Object_t){
@@ -252,6 +280,7 @@ static int palette_new_v_1u(lua_State *L)
         LUAX_OVERLOAD_SIGNATURE(palette_new_1s_1u, LUA_TSTRING)
         LUAX_OVERLOAD_SIGNATURE(palette_new_1n_1u, LUA_TNUMBER)
         LUAX_OVERLOAD_SIGNATURE(palette_new_1t_1u, LUA_TTABLE)
+        LUAX_OVERLOAD_SIGNATURE(palette_new_1u_1u, LUA_TUSERDATA)
         LUAX_OVERLOAD_ARITY(3, palette_new_3n_1u)
     LUAX_OVERLOAD_END
 }
@@ -293,7 +322,7 @@ static int palette_mix_7nnnnnnN_3nnn(lua_State *L)
     const GL_Color_t a = (GL_Color_t){ .r = ar, .g = ag, .b = ab, .a = 255 };
     const GL_Color_t b = (GL_Color_t){ .r = br, .g = bg, .b = bb, .a = 255 };
 
-    const GL_Color_t color = GL_palette_lerp(a, b, ratio);
+    const GL_Color_t color = GL_palette_mix(a, b, ratio);
 
     lua_pushinteger(L, (lua_Integer)color.r);
     lua_pushinteger(L, (lua_Integer)color.g);
@@ -343,7 +372,48 @@ static int palette_size_1u_1n(lua_State *L)
     return 1;
 }
 
-static int palette_color_to_index_4unnn_1n(lua_State *L)
+int palette_get_2un_3nnn(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    Palette_Object_t *self = (Palette_Object_t *)LUAX_USERDATA(L, 1);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 2);
+
+    const GL_Palette_t *palette = self->palette;
+    GL_Color_t color = GL_palette_get(palette, index);
+
+    lua_pushinteger(L, (lua_Integer)color.r);
+    lua_pushinteger(L, (lua_Integer)color.g);
+    lua_pushinteger(L, (lua_Integer)color.b);
+
+    return 3;
+}
+
+int palette_set_5unnnn_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    Palette_Object_t *self = (Palette_Object_t *)LUAX_USERDATA(L, 1);
+    GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 2);
+    uint8_t r = (uint8_t)LUAX_INTEGER(L, 3);
+    uint8_t g = (uint8_t)LUAX_INTEGER(L, 4);
+    uint8_t b = (uint8_t)LUAX_INTEGER(L, 5);
+
+    GL_Palette_t *palette = self->palette;
+    const GL_Color_t color = (GL_Color_t){ .r = r, .g = g, .b = b, .a = 255 };
+    GL_palette_set(palette, index, color);
+
+    return 0;
+}
+
+static int palette_match_4unnn_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
@@ -374,25 +444,6 @@ static int palette_color_to_index_4unnn_1n(lua_State *L)
     return 1;
 }
 
-static int palette_index_to_color_2un_3nnn(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    const Palette_Object_t *self = (const Palette_Object_t *)LUAX_USERDATA(L, 1);
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 2);
-
-    const GL_Palette_t *palette = self->palette;
-    const GL_Color_t color = palette->colors[index];
-
-    lua_pushinteger(L, (lua_Integer)color.r);
-    lua_pushinteger(L, (lua_Integer)color.g);
-    lua_pushinteger(L, (lua_Integer)color.b);
-
-    return 3;
-}
-
 static int palette_lerp_5unnnN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -411,22 +462,9 @@ static int palette_lerp_5unnnN_0(lua_State *L)
     const GL_Color_t color = (GL_Color_t){ .r = r, .g = g, .b = b, .a = 255 };
 
     GL_Palette_t *palette = self->palette;
-    GL_Color_t *colors = palette->colors;
-    for (size_t i = 0; i < palette->size; ++i) {
-        colors[i] = GL_palette_lerp(colors[i], color, ratio);
-    }
+    GL_palette_lerp(palette, color, ratio);
 
     return 0;
-}
-
-static bool _contains(const GL_Palette_t *palette, GL_Color_t color)
-{
-    for (size_t i = 0; i < palette->size; ++i) {
-        if (memcmp(&palette->colors[i], &color, sizeof(GL_Color_t)) == 0) {
-            return true;
-        }
-    }
-    return false;
 }
 
 static int palette_merge_3uuB_0(lua_State *L)
@@ -440,16 +478,8 @@ static int palette_merge_3uuB_0(lua_State *L)
     const Palette_Object_t *other = (const Palette_Object_t *)LUAX_USERDATA(L, 2);
     bool remove_duplicates = LUAX_OPTIONAL_BOOLEAN(L, 3, true);
 
-    for (size_t i = 0; i < other->palette->size; ++i) {
-        if (self->palette->size == GL_MAX_PALETTE_COLORS) {
-            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "maximum palette size reached when merging palette %p w/ %p", self, other);
-            break;
-        }
-        if (remove_duplicates && _contains(self->palette, other->palette->colors[i])) {
-            continue;
-        }
-        self->palette->colors[++self->palette->size] = other->palette->colors[i];
-    }
+    GL_Palette_t *palette = self->palette;
+    GL_palette_merge(palette, other->palette, remove_duplicates);
 
     return 0;
 }

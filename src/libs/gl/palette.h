@@ -27,6 +27,7 @@
 
 #include <config.h>
 
+#include <stdbool.h>
 #include <stddef.h>
 
 #include "common.h"
@@ -51,9 +52,12 @@ typedef struct _GL_Palette_t {
 extern GL_Palette_t *GL_palette_create(void);
 extern void GL_palette_destroy(GL_Palette_t *palette);
 
-extern void GL_palette_set(GL_Palette_t *palette, const GL_Color_t *colors, size_t size);
+extern void GL_palette_set_colors(GL_Palette_t *palette, const GL_Color_t *colors, size_t size);
 extern void GL_palette_set_greyscale(GL_Palette_t *palette, size_t size);
 extern void GL_palette_set_quantized(GL_Palette_t *palette, const size_t red_bits, const size_t green_bits, const size_t blue_bits);
+
+extern GL_Color_t GL_palette_get(const GL_Palette_t *palette, GL_Pixel_t index);
+extern void GL_palette_set(GL_Palette_t *palette, GL_Pixel_t index, GL_Color_t color);
 
 #ifdef __PALETTE_COLOR_MEMOIZATION__
 extern GL_Pixel_t GL_palette_find_nearest_color(GL_Palette_t *palette, const GL_Color_t color);
@@ -61,10 +65,11 @@ extern GL_Pixel_t GL_palette_find_nearest_color(GL_Palette_t *palette, const GL_
 extern GL_Pixel_t GL_palette_find_nearest_color(const GL_Palette_t *palette, const GL_Color_t color);
 #endif  /* __PALETTE_COLOR_MEMOIZATION__ */
 
-extern GL_Color_t GL_palette_lerp(const GL_Color_t from, const GL_Color_t to, float ratio);
+extern GL_Color_t GL_palette_mix(const GL_Color_t from, const GL_Color_t to, float ratio);
 
 extern void GL_palette_copy(GL_Palette_t *palette, const GL_Palette_t *source);
-// TODO: add other functions, too, such as `merge()`.
-//extern void GL_palette_merge(GL_Palette_t *palette, const GL_Palette_t *source, bool remove_duplicates);
+extern void GL_palette_merge(GL_Palette_t *palette, const GL_Palette_t *other, bool remove_duplicates);
+extern void GL_palette_lerp(GL_Palette_t *palette, const GL_Color_t color, float ratio);
+// TODO: add other functions, too...
 
 #endif  /* __GL_PALETTE_H__ */

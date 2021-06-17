@@ -83,9 +83,9 @@ function Sprite:render(canvas)
     end
   end
 
-  canvas:line(x, y, x + self.velocity.x, y + self.velocity.y, self.palette:color_to_index(0x88, 0x88, 0xFF))
+  canvas:line(x, y, x + self.velocity.x, y + self.velocity.y, self.palette:match(0x88, 0x88, 0xFF))
   local direction = Vector.from_polar(self.angle, 48)
-  canvas:line(x, y, x + direction.x, y + direction.y, self.palette:color_to_index(0x88, 0xFF, 0x88))
+  canvas:line(x, y, x + direction.x, y + direction.y, self.palette:match(0x88, 0xFF, 0x88))
 end
 
 return Sprite
