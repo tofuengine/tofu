@@ -184,29 +184,27 @@ GL_Pixel_t GL_palette_find_nearest_color(const GL_Palette_t *palette, const GL_C
 #endif  /* __PALETTE_COLOR_MEMOIZATION__ */
 {
 #ifdef __PALETTE_COLOR_MEMOIZATION__
-    GL_Pixel_t index;
-    int position = hmgeti(palette->cache, color);
+    const int position = hmgeti(palette->cache, color);
     if (position != -1) {
-        index = palette->cache[position].value;
+        const GL_Pixel_t index = palette->cache[position].value;
         Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "color <%d, %d, %d> found into memoizing cache at #%d (index #%d)", color.r, color.g, color.b, position, index);
         return index;
     }
-#else
-    GL_Pixel_t index = 0;
 #endif  /* __PALETTE_COLOR_MEMOIZATION__ */
 
+    GL_Pixel_t index = 0;
     float minimum = __FLT_MAX__;
     for (size_t i = 0; i < palette->size; ++i) {
         const GL_Color_t *current = &palette->colors[i];
 
         // https://www.compuphase.com/cmetric.htm
-        float r_mean = (float)(color.r + current->r) * 0.5f;
+        const float r_mean = (float)(color.r + current->r) * 0.5f;
 
-        float delta_r = (float)(color.r - current->r);
-        float delta_g = (float)(color.g - current->g);
-        float delta_b = (float)(color.b - current->b);
+        const float delta_r = (float)(color.r - current->r);
+        const float delta_g = (float)(color.g - current->g);
+        const float delta_b = (float)(color.b - current->b);
 
-        float distance = (delta_r * delta_r) * (2.0f + (r_mean / 255.0f))
+        const float distance = (delta_r * delta_r) * (2.0f + (r_mean / 255.0f))
             + (delta_g * delta_g) * 4.0f
             + (delta_b * delta_b) * (2.0f + ((255.0f - r_mean) / 255.0f));
 #ifdef __FIND_NEAREST_COLOR_EUCLIDIAN__
