@@ -63,30 +63,41 @@ function Tofu:__ctor()
         end
     },
     ["error"] = {
-      enter = function(me)
+      enter = function(me, message)
           -- TODO: rename "Display" to "Video" e "Speakers" to "Audio"
-          -- TODO: better failure screen with text.
+          -- TODO: resize the window to a default size for error?
+--          Display.resize(384, 224, 0)
           Display.palette(Palette.new({ { 0, 0, 0 }, { 255, 0, 0 } })) -- Red on black.
           local canvas = Canvas.default()
           local width, _ = canvas:size()
 
-          me.font = Font.default(0, 1)
-          me.lines = {
-              { text = "Software Failure." },
-              { text = "Guru Meditation" }
+          local title = {
+              "Software Failure.",
+              "Guru Meditation"
             }
-          -- TODO: fetch error message and display!
+          local errors = {}
+          for str in string.gmatch(message, "([^\n]+)") do -- Split the error-message into separate lines.
+            table.insert(errors, str)
+          end
 
-          local margin = 4 -- Pre-calculate lines position and rectangle area.
+          me.font = Font.default(0, 1)
+          me.lines = {}
+          local margin <const> = 4 -- Pre-calculate lines position and rectangle area.
           local y = margin
-          for _, line in ipairs(me.lines) do
-            local lw, lh = me.font:size(line.text)
-            line.x = (width - lw) * 0.5
-            line.y = y
+          for _, text in ipairs(title) do
+            local lw, lh = me.font:size(text)
+            table.insert(me.lines, { text = text, x = (width - lw) * 0.5, y = y })
             y = y + lh
           end
           me.width = width
-          me.height = y + margin
+          y = y + margin
+          me.height = y -- The rectangle ends here, message follows.
+          y = y + margin
+          for _, text in ipairs(errors) do
+            local _, lh = me.font:size(text)
+            table.insert(me.lines, { text = text, x = margin, y = y })
+            y = y + lh
+          end
         end,
       leave = function(me)
           me.font = nil
@@ -113,8 +124,8 @@ function Tofu:__ctor()
   self:switch_to("normal")
 end
 
-function Tofu:input()
-  self:switch_if_needed() -- TODO: add separate method for this?
+function Tofu:input() -- FIXME: rename to `process()`?
+  self:switch_if_needed() -- TODO: `Tofu:input()` is the first method of the loop. Add separate method for this?
 
   local me = self.state
   self:call(me.input, me)
@@ -135,19 +146,19 @@ function Tofu:switch_if_needed()
     return
   end
 
-  local id = table.remove(self.queue)
-  local entering = self.states[id]
+  local state = table.remove(self.queue)
+  local entering = self.states[state.id]
 
   local exiting = self.state
   if exiting then
     self:call(exiting.leave, exiting)
   end
-  self:call(entering.enter, entering)
+  self:call(entering.enter, entering, table.unpack(state.args))
   self.state = entering
 end
 
-function Tofu:switch_to(id)
-  table.insert(self.queue, id)
+function Tofu:switch_to(id, ...)
+  table.insert(self.queue, { id = id, args = { ... } })
 end
 
 function Tofu:call(func, ...)
@@ -156,8 +167,8 @@ function Tofu:call(func, ...)
   end
   local success, message = xpcall(func, debug.traceback, ...)
   if not success then
-    System.error(message)
-    self:switch_to("error")
+    System.error(message) -- Dump to log...
+    self:switch_to("error", message) -- ... and pass to the error-state for visualization.
   end
 end
 
