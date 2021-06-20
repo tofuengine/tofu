@@ -95,7 +95,7 @@ bool Environment_is_active(const Environment_t *environment)
 }
 #endif  /* __DISPLAY_FOCUS_SUPPORT__ */
 
-static inline float _calculate_fps(float frame_time) // FIXME: rework this as a reusable function for moving average.
+static inline size_t _calculate_fps(float frame_time) // FIXME: rework this as a reusable function for moving average.
 {
     static float samples[FPS_AVERAGE_SAMPLES] = { 0 };
     static size_t index = 0;
@@ -106,7 +106,7 @@ static inline float _calculate_fps(float frame_time) // FIXME: rework this as a 
     sum += frame_time;
     index = (index + 1) % FPS_AVERAGE_SAMPLES;
 
-    return (float)FPS_AVERAGE_SAMPLES / sum;
+    return (size_t)((float)FPS_AVERAGE_SAMPLES / sum + 0.5f); // Fast rounding and truncation to integer.
 }
 
 #ifdef __ENGINE_PERFORMANCE_STATISTICS__
@@ -142,7 +142,7 @@ void Environment_process(Environment_t *environment, float frame_time)
     stats_time += frame_time;
     while (stats_time > __ENGINE_PERFORMANCES_PERIOD__) {
         stats_time -= __ENGINE_PERFORMANCES_PERIOD__;
-        Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "currently running at %.2f FPS (P=%.3fms, U=%.3fms, R=%.3fms, F=%.3fms)",
+        Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "currently running at %d FPS (P=%.3fms, U=%.3fms, R=%.3fms, F=%.3fms)",
             environment->stats.fps, environment->stats.times[0], environment->stats.times[1], environment->stats.times[2], environment->stats.times[3]);
     }
 #endif  /* __DEBUG_ENGINE_PERFORMANCES__ */

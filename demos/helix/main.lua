@@ -31,8 +31,8 @@ local Display = require("tofu.graphics").Display
 local Palette = require("tofu.graphics").Palette
 local Font = require("tofu.graphics").Font
 
-local SIZE = 4
-local RADIUS = SIZE * 0.5
+local SIZE <const> = 4
+local RADIUS <const> = SIZE * 0.5
 
 local Main = Class.define()
 
@@ -40,10 +40,8 @@ function Main:__ctor()
   local palette = Palette.new("pico-8-ext")
   Display.palette(palette)
 
-  local canvas = Canvas.default()
-
   self.palette = palette
-  self.font = Font.default(canvas, 0, 15)
+  self.font = Font.default(0, 15)
   self.factor = 0.75
 end
 
@@ -80,18 +78,18 @@ function Main:render(_)
     for px = coords[1].x, coords[2].x, delta_x do
       local r = (px - coords[1].x) / (coords[2].x - coords[1].x)
       local v = Math.lerp(coords[1].v, coords[2].v, r)
-      local index = self.palette:color_to_index(v, v, v)
+      local index = self.palette:match(v, v, v)
       canvas:point(px, py, index)
     end
 
     local v1 = coords[1].v
-    canvas:circle("fill", coords[1].x, coords[1].y, RADIUS, self.palette:color_to_index(v1, v1, v1))
+    canvas:circle("fill", coords[1].x, coords[1].y, RADIUS, self.palette:match(v1, v1, v1))
 
     local v2 = coords[2].v
-    canvas:circle("fill", coords[2].x, coords[2].y, RADIUS, self.palette:color_to_index(v2, v2, v2))
+    canvas:circle("fill", coords[2].x, coords[2].y, RADIUS, self.palette:match(v2, v2, v2))
   end
 
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
+  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
 end
 
 return Main

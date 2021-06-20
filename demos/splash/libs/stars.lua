@@ -36,13 +36,13 @@ local MAX_STARS_COUNT = 32
 
 local Stars = Class.define()
 
-function Stars:__ctor(canvas, transparent)
+function Stars:__ctor(canvas, transparent, _)
   local width, height = canvas:size()
 
   local area = { x0 = 0, y0 = 0, x1 = width - 1, y1 = height - 1 }
 
   self.pool = {}
-  self.bank = Bank.new(canvas, Canvas.new("assets/images/atlas.png", transparent), STAR_WIDTH, STAR_HEIGHT)
+  self.bank = Bank.new(Canvas.new("assets/images/atlas.png", transparent), STAR_WIDTH, STAR_HEIGHT)
   self.timer = Timer.new(0.5, 0, function(_)
       if #self.pool >= MAX_STARS_COUNT then
         return
@@ -80,9 +80,9 @@ function Stars:update(delta_time)
   end
 end
 
-function Stars:render()
+function Stars:render(canvas)
   for _, star in ipairs(self.pool) do
-    self.bank:blit(star.cell_id, star.x, star.y, star.scale, star.scale, star.rotation)
+    self.bank:blit(canvas, star.x, star.y, star.cell_id, star.scale, star.scale, star.rotation)
   end
 end
 

@@ -36,8 +36,8 @@ function Main:__ctor()
   local canvas = Canvas.default()
   local width, height = canvas:size()
 
-  self.bank = Bank.new(canvas, Canvas.new("assets/sheet.png", 0), 8, 8)
-  self.font = Font.default(canvas, 0, 255)
+  self.bank = Bank.new(Canvas.new("assets/sheet.png", 0), 8, 8)
+  self.font = Font.default(0, 255)
 
   local cw, ch = self.bank:size(Bank.NIL)
   self.columns = width / cw
@@ -63,11 +63,11 @@ function Main:render(_)
   for row = 1, self.rows do
 --    local cell_id = math.tointeger((math.sin(time + row * 0.5) + 1) * 0.5 * 9)
     local cell_id = ((math.sin(time * 0.5 + row * 0.75) + 1) * 0.5) * 9
-    self.bank:blit(cell_id, x, y)
+    self.bank:blit(canvas, x, y, cell_id)
     y = y + ch
   end
 
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
+  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
 end
 
 return Main

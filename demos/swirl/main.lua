@@ -53,7 +53,7 @@ function Main:__ctor()
   self.max_y = height - 1
   self.fan = false
 
-  self.font = Font.default(canvas, 0, 15)
+  self.font = Font.default(0, 15)
 
   self.time = 0
 end
@@ -107,7 +107,7 @@ function Main:render(_)
     end
   end
 
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
+  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
 end
 
 return Main

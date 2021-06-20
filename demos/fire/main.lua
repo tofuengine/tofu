@@ -47,7 +47,7 @@ function Main:__ctor()
   local canvas = Canvas.default()
   local width, height = canvas:size()
 
-  self.font = Font.default(canvas, 0, 15)
+  self.font = Font.default(0, 15)
   self.x_size = width / STEPS
   self.y_size = height / STEPS
   self.windy = false
@@ -121,8 +121,8 @@ function Main:render(_)
       end
     end)
 
-    self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
-    self.font:write(self.font:align(string.format("D: %.2f", self.damping), width, 0, "right"))
+    self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
+    self.font:write(canvas, width, 0, string.format("D: %.2f", self.damping), "right")
 end
 
 return Main

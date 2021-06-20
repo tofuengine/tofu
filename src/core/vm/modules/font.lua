@@ -28,36 +28,36 @@ local Font = {}
 -- Font.__index = Font
 
 local FONTS = {
-  ["5x8"] = { file = "5x8", width = 5, height = 8 },
-  ["6x12"] = { file = "6x12", width = 6, height = 12 },
-  ["8x16"] = { file = "8x16", width = 8, height = 16 },
-  ["12x24"] = { file = "12x24", width = 12, height = 24 },
-  ["16x32"] = { file = "16x32", width = 16, height = 32 },
-  ["32x64"] = { file = "32x64", width = 32, height = 64 },
-}
+    ["5x8"] = { file = "5x8", width = 5, height = 8 },
+    ["6x12"] = { file = "6x12", width = 6, height = 12 },
+    ["8x16"] = { file = "8x16", width = 8, height = 16 },
+    ["12x24"] = { file = "12x24", width = 12, height = 24 },
+    ["16x32"] = { file = "16x32", width = 16, height = 32 },
+    ["32x64"] = { file = "32x64", width = 32, height = 64 },
+  }
 
 function Font.default(...)
-  local Canvas = require("tofu.graphics").Canvas
+  local Canvas = require("tofu.graphics").Canvas -- Lazy `require()` to permit initial load.
 
   local args = { ... }
-  if #args == 3 then -- canvas, background_color, foreground_color
+  if #args == 2 then -- background_color, foreground_color
     local font = FONTS["5x8"]
-    return Font.new(args[1], Canvas.new(font.file, args[2], args[3]), font.width, font.height)
-  elseif #args == 4 then -- canvas, id, background_color, foreground_color
-    local font = FONTS[args[2]]
-    return Font.new(args[1], Canvas.new(font.file, args[3], args[4]), font.width, font.height)
+    return Font.new(Canvas.new(font.file, args[1], args[2]), font.width, font.height)
+  elseif #args == 3 then -- id, background_color, foreground_color
+    local font = FONTS[args[1]]
+    return Font.new(Canvas.new(font.file, args[2], args[3]), font.width, font.height)
   else
     error("invalid arguments for default font")
   end
 end
 
--- Only `text`, `x`, and `y` are required. All the other arguments are optional.
+-- Only `canvas`, `x`, `y`, and `text` are required. All the other arguments are optional.
 --
 -- From the [reference manual](https://www.lua.org/pil/5.1.html)
 -- << [...] A function call that is not the last element in the list always produces one
 -- result [...] When a function call is the last (or the only) argument to another call,
 -- all results from the first call go as arguments. >>
-function Font:align(text, x, y, h_align, v_align, scale_x, scale_y)
+function Font:write(canvas, x, y, text, h_align, v_align, scale_x, scale_y)
   local width, height = self:size(text, scale_x or 1.0, scale_y or scale_x or 1.0)
 
   local dx, dy
@@ -76,14 +76,12 @@ function Font:align(text, x, y, h_align, v_align, scale_x, scale_y)
     dy = 0
   end
 
-  -- Return the proper amount of values in order to trigger the correct
-  -- `Font.write()` overloaded method.
   if scale_y then
-    return text, x - dx, y - dy, scale_x, scale_y
+    return self:blit(canvas, x - dx, y - dy, text, scale_x, scale_y)
   elseif scale_x then
-    return text, x - dx, y - dy, scale_x
+    return self:blit(canvas, x - dx, y - dy, text, scale_x)
   else
-    return text, x - dx, y - dy
+    return self:blit(canvas, x - dx, y - dy, text)
   end
 end
 

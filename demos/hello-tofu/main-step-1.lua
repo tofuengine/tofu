@@ -40,9 +40,9 @@ function Main:__ctor()
   -- Load a predefined palette, we choose Pico-8's one.
   Display.palette(Palette.new("pico-8"))
 
-  -- Create a default font, palette color `0` as background and `15` as foreground.
-  -- Please note that, as default, palette color `0` is set as transparent. This
-  -- means that the font background color won't be drawn.
+  -- Create a default font, palette colour `0` as background and `15` as foreground.
+  -- Please note that, as default, palette colour `0` is set as transparent. This
+  -- means that the font background colour won't be drawn.
   self.font = Font.default(0, 15)
 end
 
@@ -61,12 +61,12 @@ function Main:render(_)
   -- Query current time since the start, expressed in seconds (as a floating point number).
   local t = System.time()
 
-  -- Convert the time to an integer, then instruct the engine that color `15` need to be
-  -- remapped to color `index`.
+  -- Convert the time to an integer, then instruct the engine that colour `15` need to be
+  -- remapped to colour `index`.
   local index = tonumber(t) % 16
   canvas:shift(15, index)
 
-  -- Clear the virtual-screen with default background color (i.e. palette color #0).
+  -- Clear the virtual-screen with default background colour (i.e. palette colour #0).
   canvas:clear()
 
   -- Get the canvas width and height.

@@ -26,15 +26,6 @@
 
 #include <config.h>
 
-#ifdef __GRAPHICS_FAST_LOAD__
-#include <libs/stb.h>
-
-typedef struct _key_value_pair_t {
-    GL_Color_t key;
-    GL_Pixel_t value;
-} key_value_pair_t;
-#endif  /* __GRAPHICS_FAST_LOAD__ */
-
 #pragma pack(push, 1)
 typedef struct _rgba_t {
     uint8_t r, g, b, a;
@@ -55,10 +46,6 @@ void surface_callback_palette(void *user_data, GL_Surface_t *surface, const void
 {
     const Callback_Palette_Closure_t *closure = (const Callback_Palette_Closure_t *)user_data;
 
-#ifdef __GRAPHICS_FAST_LOAD__
-    key_value_pair_t *hash = NULL;
-#endif  /* __GRAPHICS_FAST_LOAD__ */
-
     const rgba_t *src = (const rgba_t *)pixels;
     GL_Pixel_t *dst = surface->data;
 
@@ -68,25 +55,9 @@ void surface_callback_palette(void *user_data, GL_Surface_t *surface, const void
             *(dst++) = closure->transparent;
         } else {
             GL_Color_t color = (GL_Color_t){ .r = rgba.r, .g = rgba.g, .b = rgba.b, .a = rgba.a };
-#ifdef __GRAPHICS_FAST_LOAD__
-            GL_Pixel_t pixel;
-            int index = hmgeti(hash, color);
-            if (index == -1) {
-                pixel = GL_palette_find_nearest_color(closure->palette, color);
-                hmput(hash, color, pixel);
-            } else {
-                pixel = hash[index].value;
-            }
-            *(dst++) = pixel;
-#else
             *(dst++) = GL_palette_find_nearest_color(closure->palette, color);
-#endif  /* __GRAPHICS_FAST_LOAD__ */
         }
     }
-
-#ifdef __GRAPHICS_FAST_LOAD__
-    hmfree(hash);
-#endif  /* __GRAPHICS_FAST_LOAD__ */
 }
 
 void surface_callback_indexes(void *user_data, GL_Surface_t *surface, const void *pixels)

@@ -40,9 +40,9 @@ function Main:__ctor()
   -- Load a predefined palette, we choose Pico-8's one.
   Display.palette(Palette.new("pico-8"))
 
-  -- Create a default font, palette color `0` as background and `15` as foreground.
-  -- Please note that, as default, palette color `0` is set as transparent. This
-  -- means that the font background color won't be drawn.
+  -- Create a default font, palette colour `0` as background and `15` as foreground.
+  -- Please note that, as default, palette colour `0` is set as transparent. This
+  -- means that the font background colour won't be drawn.
   self.font = Font.default(0, 15)
 end
 
@@ -61,21 +61,21 @@ function Main:render(_)
   -- Query current time since the start, expressed in seconds (as a floating point number).
   local t = System.time()
 
-  -- Clear the virtual-screen with default background color (i.e. palette color #0).
+  -- Clear the virtual-screen with default background colour (i.e. palette colour #0).
   canvas:clear()
 
-  -- Query for text width/height and calculate the (screen-centered) origin
+  -- Query for text width/height and calculate the (screen-centred) origin
   -- x/y position.
   local canvas_width, canvas_height = self.canvas:size()
   local text_width, text_height = self.font:size(MESSAGE)
   local x, y = (canvas_width - text_width) * 0.5, (canvas_height - text_height) * 0.5
 
-  -- Query for font char width/height, we'll use it for offseting the characters.
-  local char_width, char_height = self.font:size()
-
   -- Scan the message text one char at time.
   for c in MESSAGE:gmatch(".") do
-    -- Compute the verical offset using a sine wave, each chacter with a different value.
+    -- Query for current char width/height, we'll use it for offsetting the characters.
+    local char_width, char_height = self.font:size(c)
+
+    -- Compute the vertical offset using a sine wave, each character with a different value.
     local dy = math.sin(t * 2.5 + x * 0.05) * char_height
 
     -- Draw the character, accounting for vertical offset.

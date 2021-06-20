@@ -400,6 +400,7 @@ static bool _resource_load(Storage_Resource_t *resource, const char *name, Stora
     return true;
 }
 
+// TODO: add "load from string", i.e. if the string is not an existing file, check if it's base64 or decode from it!
 Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_Resource_Types_t type)
 {
     const Storage_Resource_t *key = &(Storage_Resource_t){ .name = (char *)name };

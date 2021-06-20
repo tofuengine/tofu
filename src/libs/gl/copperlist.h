@@ -31,7 +31,7 @@
 #include "surface.h"
 
 typedef struct _GL_Copperlist_t { // FIXME: rename to something better!!!
-    GL_Palette_t palette;
+    GL_Palette_t *palette;
     GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
     GL_Program_t *program;
 } GL_Copperlist_t;

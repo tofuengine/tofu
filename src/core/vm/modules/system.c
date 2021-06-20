@@ -133,7 +133,7 @@ static int system_fps_0_1n(lua_State *L)
     const Environment_t *environment = (const Environment_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
 
     const Environment_Stats_t *stats = Environment_get_stats(environment);
-    lua_pushnumber(L, (lua_Number)stats->fps);
+    lua_pushinteger(L, (lua_Number)stats->fps);
 
     return 1;
 }
@@ -167,11 +167,11 @@ static int system_heap_1S_1n(lua_State *L)
     const Environment_t *environment = (const Environment_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
 
     const Environment_Stats_t *stats = Environment_get_stats(environment);
-    size_t usage = 0;
+    float usage = 0.0f;
     switch (unit[0]) {
-        case 'm': { usage = stats->memory_usage / (1024 * 1024); } break;
-        case 'k': { usage = stats->memory_usage / 1024; } break;
-        case 'b': { usage = stats->memory_usage; } break;
+        case 'm': { usage = (float)stats->memory_usage / (1024.0f * 1024.0f); } break;
+        case 'k': { usage = (float)stats->memory_usage / 1024.0f; } break;
+        case 'b': { usage = (float)stats->memory_usage; } break;
     }
     lua_pushnumber(L, (lua_Number)usage);
 

@@ -37,18 +37,16 @@ function Background:__ctor(canvas, transparent, palette)
   local half_height = math.tointeger(height * 0.5)
   local quarter_height = math.tointeger(height * 0.25)
 
-  self.canvas = canvas
-  self.font = Font.new(canvas,
-      Canvas.new("assets/images/font-8x8.png", transparent, palette:color_to_index(255, 255, 255)),
+  self.font = Font.new(Canvas.new("assets/images/font-8x8.png", transparent, palette:match(255, 255, 255)),
       8, 8)
 
   self.timer = Timer.new(10, 0, function(_)
       local program = Program.gradient(transparent, {
-          { 0, palette:index_to_color(math.random(0, transparent)) },
-          { quarter_height - 1, palette:index_to_color(math.random(0, transparent)) },
-          { half_height - 1, palette:index_to_color(math.random(0, transparent)) },
-          { height - quarter_height - 1, palette:index_to_color(math.random(0, transparent)) },
-          { height - 1, palette:index_to_color(math.random(0, transparent)) }
+          { 0, palette:get(math.random(0, transparent)) },
+          { quarter_height - 1, palette:get(math.random(0, transparent)) },
+          { half_height - 1, palette:get(math.random(0, transparent)) },
+          { height - quarter_height - 1, palette:get(math.random(0, transparent)) },
+          { height - 1, palette:get(math.random(0, transparent)) }
         })
 --      program:wait(0, height - math.tointeger(quarter_height / 2) - 1)
 --      program:modulo(-width * 4)
@@ -59,21 +57,25 @@ end
 function Background:update(_)
 end
 
-function Background:render()
+function Background:render(canvas)
 --[[
   self.canvas:push()
   local x, y = 0, 0
   local dy = 0
   local message = '* T O F U - E N G I N E '
   local colours = { 0, 5, 6, 10, 7, 23, 6, 5 }
-  local char_width, char_height = self.font:size()
   local offset = 0 -- math.tointeger(t * 17.0)
   local cursor = math.tointeger(t * 5.0)
   for k = 0, 49 do
     local dx = 0
+    local max_char_height = 0
     for i = 0, 59 do
       local j = ((cursor + k + i) % #message) + 1
       local c = message:sub(j, j)
+      local char_width, char_height = self.font:size(c)
+      if char_height > max_char_height then
+        max_char_height = char_height
+      end
       canvas:shift(0, colours[(i + offset) % #colours + 1])
       self.font:write(c, x + dx, y + dy)
       dx = dx + char_width
@@ -82,7 +84,10 @@ function Background:render()
   end
   self.canvas:pop()
 --]]
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
+  local width, height = canvas:size()
+
+  self.font:write(canvas, width, 0, string.format("%d FPS", System.fps()), "right", "top")
+  self.font:write(canvas, width, height, string.format("%d KiB", System.heap("kb")), "right", "bottom")
 end
 
 return Background

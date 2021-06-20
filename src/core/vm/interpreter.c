@@ -227,7 +227,7 @@ static int _execute(lua_State *L, const char *script, size_t size, const char *n
 {
     int result = luaL_loadbuffer(L, script, size, name);
     if (result != LUA_OK) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "error #%d in load %s", result, lua_tostring(L, -1));
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "error #%d in load: %s", result, lua_tostring(L, -1));
         lua_pop(L, 1);
         return result;
     }
@@ -413,6 +413,7 @@ bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
 
 bool Interpreter_render(const Interpreter_t *interpreter, float ratio)
 {
+    // TODO: pass the default `Canvas` instance?
     lua_pushnumber(interpreter->state, (lua_Number)ratio); // TODO: is the `ratio` parameter really useful?
     return _call(interpreter->state, METHOD_RENDER, 1, 0) == LUA_OK;
 }

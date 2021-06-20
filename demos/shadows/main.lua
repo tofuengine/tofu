@@ -38,19 +38,21 @@ local SPEED = 32
 --384 x 224 pixels
 
 function Main:__ctor()
-  local palette = Palette.new("famicube")
+  local greyscale = Palette.new(256)
+  local palette = Palette.new(3, 3, 2) -- R3G3B2
   Display.palette(palette)
 
   local canvas = Canvas.default()
-  canvas:transparent(palette:color_to_index(255, 255, 255), true)
-  canvas:transparent(palette:color_to_index(0, 0, 0), false)
+  canvas:transparent(0, false)
 
   self.background = Canvas.new("assets/background.png")
-  self.bank = Bank.new(canvas, Canvas.new("assets/sheet.png",
-  palette:color_to_index(0, 0, 0), palette:color_to_index(255, 255, 255)), 32, 32)
-  self.font = Font.default(canvas, palette:color_to_index(255, 255, 255), palette:color_to_index(0, 0, 0))
+  self.stamp = Canvas.new("assets/sphere.png", 0, greyscale)
+  self.bank = Bank.new(Canvas.new("assets/sheet.png",
+    palette:match(0, 0, 0), palette:match(255, 255, 255)), 32, 32)
+  self.font = Font.default(palette:match(255, 255, 255), palette:match(0, 0, 0))
   self.velocity = { x = 0, y = 0 }
   self.position = { x = 0, y = 0 }
+  self.cursor = { x = 0, y = 0 }
 end
 
 function Main:input()
@@ -68,23 +70,40 @@ function Main:input()
   else
     self.velocity.x = 0
   end
+  if Input.is_down("a") then
+    self.apply = true
+  else
+    self.apply = false
+  end
 end
 
 function Main:update(delta_time)
   self.position.x = self.position.x + self.velocity.x * delta_time
   self.position.y = self.position.y + self.velocity.y * delta_time
+
+  self.cursor.x, self.cursor.y = Input.cursor()
 end
 
 function Main:render(_)
   local canvas = Canvas.default()
---  canvas:clear()
+  canvas:clear()
 
 --  local time = System.time()
 
-  self.background:copy(canvas)
-  self.bank:blit(0, self.position.x, self.position.y)
+  if self.apply then
+    local w, h = self.stamp:size()
+    canvas:blend(self.cursor.x - (w * 0.5), self.cursor.y - (h * 0.5), self.stamp, "add", self.background)
+  end
 
-  self.font:write(string.format("FPS: %.1f", System.fps()), 0, 0)
+  canvas:copy(self.background)
+
+  canvas:push()
+    canvas:transparent(255, true)
+    self.bank:blit(canvas, self.position.x, self.position.y, 0)
+    self.font:write(canvas, 0, 0,string.format("FPS: %.1f", System.fps()))
+  canvas:pop()
+
+  canvas:square("fill", self.cursor.x - 4, self.cursor.y - 4, 8, 0)
 end
 
 return Main

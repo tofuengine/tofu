@@ -41,9 +41,9 @@ function Main:__ctor()
   local width, height = canvas:size()
   canvas:transparent({ ["0"] = false, ["22"] = true })
 
-  self.font = Font.default(canvas, 0, 11)
-  self.bank = Bank.new(canvas, Canvas.new("assets/sprites.png", 22), 16, 16)
-  self.big_font = Font.default(canvas, "32x64", 1, 31)
+  self.font = Font.default(0, 11)
+  self.bank = Bank.new(Canvas.new("assets/sprites.png", 22), 16, 16)
+  self.big_font = Font.default("32x64", 1, 31)
   self.running = true
   self.time = 0
   self.dx = 0
@@ -128,11 +128,11 @@ function Main:render(_)
 
   local t = self.time
   local y = math.sin(t * 0.5) * height * 0.125 + height * 0.25
-  self.big_font:write("TOFU ENGINE", 0, y)
+  self.big_font:write(canvas, 0, y, "TOFU ENGINE")
 
-  self.bank:blit(12, self.x, self.y, 4, 4, 0)
+  self.bank:blit(canvas, self.x, self.y, 12, 4, 4, 0)
 
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
+  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
 end
 
 return Main

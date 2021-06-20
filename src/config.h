@@ -57,8 +57,6 @@
   #undef  __DEFENSIVE_CHECKS__
 #endif
 
-#define __NO_LINEFEEDS__
-
 // TODO: better naming for macros, including namespace.
 #undef  __DEBUG_TRIANGLES_WINDING__
 #undef  __FIND_NEAREST_COLOR_EUCLIDIAN__
@@ -77,7 +75,6 @@
 #define __STORAGE_CACHE_ENTRIES_LIMIT__ 32
 // The capture support is darn slow!!!
 #undef  __GRAPHICS_CAPTURE_SUPPORT__
-#define __GRAPHICS_FAST_LOAD__
 #define __FS_ENFORCE_ARCHIVE_EXTENSION__
 #define __FS_SUPPORT_MOUNT_OVERRIDE__
 #define __SL_START_AND_STOP__

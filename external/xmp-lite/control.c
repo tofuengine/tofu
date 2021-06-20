@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2018 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -21,7 +21,6 @@
  */
 
 #include <stdlib.h>
-#include <string.h>
 
 #include "format.h"
 #include "mixer.h"
@@ -186,16 +185,17 @@ LIBXMP_EXPORT int xmp_set_row(xmp_context opaque, int row)
 	struct xmp_module *mod = &m->mod;
 	struct flow_control *f = &p->flow;
 	int pos = p->pos;
-	int pattern = mod->xxo[pos];
+	int pattern;
 
 	if (pos < 0 || pos >= mod->len) {
 		pos = 0;
 	}
+	pattern = mod->xxo[pos];
 
 	if (ctx->state < XMP_STATE_PLAYING)
 		return -XMP_ERROR_STATE;
 
-	if (row >= mod->xxp[pattern]->rows)
+	if (pattern >= mod->pat || row >= mod->xxp[pattern]->rows)
 		return -XMP_ERROR_INVALID;
 
 	/* See set_position. */

@@ -95,14 +95,13 @@ extern void Display_present(const Display_t *display);
 extern void Display_reset(Display_t *display); // FIXME: remove these six, and access the `copperlist` field directly?
 
 extern void Display_set_offset(Display_t *display, GL_Point_t offset);
-extern void Display_set_palette(Display_t *display, const GL_Palette_t *palette);
 extern void Display_set_shifting(Display_t *display, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count);
 extern void Display_set_program(Display_t *display, const GL_Program_t *program);
 
 extern GLFWwindow *Display_get_window(const Display_t *display);
 extern float Display_get_scale(const Display_t *display);
 extern GL_Surface_t *Display_get_surface(const Display_t *display);
-extern const GL_Palette_t *Display_get_palette(const Display_t *display);
+extern GL_Palette_t *Display_get_palette(const Display_t *display);
 extern GL_Point_t Display_get_offset(const Display_t *display);
 
 #ifdef __GRAPHICS_CAPTURE_SUPPORT__

@@ -39,11 +39,22 @@ GL_Copperlist_t *GL_copperlist_create(void)
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate copperlist");
         return NULL;
     }
+
+    GL_Palette_t *palette = GL_palette_create();
+    if (!palette) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create palette");
+        free(copperlist);
+        return NULL;
+    }
+
+    *copperlist = (GL_Copperlist_t){
+            .palette = palette,
+            .shifting = { 0 },
+            .program  = NULL
+        };
 #ifdef VERBOSE_DEBUG
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist created at %p", copperlist);
 #endif  /* VERBOSE_DEBUG */
-
-    *copperlist = (GL_Copperlist_t){ 0 };
 
     GL_copperlist_reset(copperlist);
 
@@ -59,6 +70,11 @@ void GL_copperlist_destroy(GL_Copperlist_t *copperlist)
 #endif  /* VERBOSE_DEBUG */
     }
 
+    GL_palette_destroy(copperlist->palette);
+#ifdef VERBOSE_DEBUG
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist palette %p freed", copperlist->palette);
+#endif  /* VERBOSE_DEBUG */
+
     free(copperlist);
 #ifdef VERBOSE_DEBUG
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "copperlist %p freed", copperlist);
@@ -67,24 +83,24 @@ void GL_copperlist_destroy(GL_Copperlist_t *copperlist)
 
 void GL_copperlist_reset(GL_Copperlist_t *copperlist)
 {
-    GL_palette_generate_greyscale(&copperlist->palette, GL_MAX_PALETTE_COLORS);
-#ifdef VERBOSE_DEBUG
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded greyscale palettes of %d entries", GL_MAX_PALETTE_COLORS);
-#endif  /* VERBOSE_DEBUG */
-
-    for (size_t i = 0; i < GL_MAX_PALETTE_COLORS; ++i) {
-        copperlist->shifting[i] = (GL_Pixel_t)i;
-    }
-
+    GL_copperlist_set_palette(copperlist, NULL);
+    GL_copperlist_set_shifting(copperlist, NULL, NULL, 0);
     GL_copperlist_set_program(copperlist, NULL);
 }
 
 void GL_copperlist_set_palette(GL_Copperlist_t *copperlist, const GL_Palette_t *palette)
 {
-    copperlist->palette = *palette;
+    if (palette) {
+        GL_palette_copy(copperlist->palette, palette);
 #ifdef VERBOSE_DEBUG
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette updated");
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette updated");
 #endif  /* VERBOSE_DEBUG */
+    } else {
+        GL_palette_set_greyscale(copperlist->palette, GL_MAX_PALETTE_COLORS);
+#ifdef VERBOSE_DEBUG
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "loaded greyscale palettes of %d entries", GL_MAX_PALETTE_COLORS);
+#endif  /* VERBOSE_DEBUG */
+    }
 }
 
 void GL_copperlist_set_shifting(GL_Copperlist_t *copperlist, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count)
@@ -118,9 +134,8 @@ void GL_copperlist_set_program(GL_Copperlist_t *copperlist, const GL_Program_t *
     }
 }
 
-static void _surface_to_rgba(const GL_Surface_t *surface, const GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS], const GL_Palette_t *palette, GL_Color_t *pixels)
+static void _surface_to_rgba(const GL_Surface_t *surface, const GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS], const GL_Color_t colors[GL_MAX_PALETTE_COLORS], GL_Color_t *pixels)
 {
-    const GL_Color_t *colors = palette->colors;
 #ifdef __DEBUG_GRAPHICS__
     const int count = palette->size;
 #endif
@@ -147,10 +162,9 @@ static void _surface_to_rgba(const GL_Surface_t *surface, const GL_Pixel_t shift
     }
 }
 
-void _surface_to_rgba_program(const GL_Surface_t *surface, GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS], GL_Palette_t *palette, const GL_Program_t *program, GL_Color_t *pixels)
+void _surface_to_rgba_program(const GL_Surface_t *surface, GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS], GL_Color_t colors[GL_MAX_PALETTE_COLORS], const GL_Program_t *program, GL_Color_t *pixels)
 {
     size_t wait_y = 0, wait_x = 0;
-    GL_Color_t *colors = palette->colors;
 #ifdef __DEBUG_GRAPHICS__
     const int count = palette->size;
 #endif
@@ -161,8 +175,8 @@ void _surface_to_rgba_program(const GL_Surface_t *surface, GL_Pixel_t shifting[G
     const GL_Pixel_t *src = surface->data;
     GL_Color_t *dst_sod = pixels;
 
-    const size_t dwidth = (int)surface->width;
-    const size_t dheight = (int)surface->height;
+    const size_t dwidth = surface->width;
+    const size_t dheight = surface->height;
 
     for (size_t y = 0; y < dheight; ++y) {
         GL_Color_t *dst_eod = dst_sod + dwidth;
@@ -240,12 +254,13 @@ void _surface_to_rgba_program(const GL_Surface_t *surface, GL_Pixel_t shifting[G
 void GL_copperlist_surface_to_rgba(const GL_Surface_t *surface, const GL_Copperlist_t *copperlist, GL_Color_t *pixels)
 {
     if (copperlist->program) {
-        GL_Palette_t palette = copperlist->palette; // Make a local copy, the copperlist can change it.
+        GL_Color_t colors[GL_MAX_PALETTE_COLORS] = { 0 }; // Make a local copy, the copperlist can change it.
+        memcpy(colors, copperlist->palette->colors, sizeof(GL_Color_t) * GL_MAX_PALETTE_COLORS);
         GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS] = { 0 };
         memcpy(shifting, copperlist->shifting, sizeof(GL_Pixel_t) * GL_MAX_PALETTE_COLORS);
 
-        _surface_to_rgba_program(surface, shifting, &palette, copperlist->program, pixels);
+        _surface_to_rgba_program(surface, shifting, colors, copperlist->program, pixels);
     } else {
-        _surface_to_rgba(surface, copperlist->shifting, &copperlist->palette, pixels);
+        _surface_to_rgba(surface, copperlist->shifting, copperlist->palette->colors, pixels);
     }
 }

@@ -43,8 +43,8 @@ function Main:__ctor()
   local canvas = Canvas.default()
   local width, height = canvas:size()
 
-  self.bank = Bank.new(canvas, Canvas.new("assets/sheet.png", 0, 5), 8, 8)
-  self.font = Font.default(canvas, 0, 15)
+  self.bank = Bank.new(Canvas.new("assets/sheet.png", 0, 5), 8, 8)
+  self.font = Font.default(0, 15)
   self.wave = Math.wave("triangle", 10.0, 128.0)
   self.x_size = width / AMOUNT
   self.y_size = height / AMOUNT
@@ -110,7 +110,7 @@ function Main:render(_)
         local color = (i + j) % AMOUNT
         local y = (height - 8) * (math.sin(time * 1.5 + i * 0.250 + j * 0.125) + 1) * 0.5
         canvas:shift(5, color)
-        self.bank:blit(index, x, y)
+        self.bank:blit(canvas, x, y, index)
       end
     end
   elseif self.mode == 1 then
@@ -121,7 +121,7 @@ function Main:render(_)
         local color = (i + j) % AMOUNT
         local y = self.y_size * j
         canvas:shift(5, color)
-        self.bank:tile(index, x, y, 0, math.tointeger(time * 4))
+        self.bank:tile(canvas, x, y, index, 0, math.tointeger(time * 4))
       end
     end
   elseif self.mode == 2 then
@@ -132,31 +132,31 @@ function Main:render(_)
         local color = (i + j) % AMOUNT
         local y = self.y_size * j
         canvas:shift(5, color)
-        self.bank:tile(index, x, y, math.tointeger(time * 4), 0)
+        self.bank:tile(canvas, x, y, index, math.tointeger(time * 4), 0)
       end
     end
   elseif self.mode == 3 then
-    self.bank:tile(5, 0, 0, 0, math.tointeger(time * 4), 4, -4)
+    self.bank:tile(canvas, 0, 0, 5, 0, math.tointeger(time * 4), 4, -4)
   elseif self.mode == 4 then
     local scale = (math.cos(time) + 1) * 3 * 0 + 5
     local rotation = math.tointeger(math.sin(time * 0.5) * 512)
-    self.bank:blit(0, width / 2, height / 2, scale, scale, rotation)
-    self.font:write(self.font:align(string.format("scale %d, rotation %d", scale, rotation),
-      width, height, "right", "bottom"))
+
+    self.bank:blit(canvas, width / 2, height / 2, 0, scale, scale, rotation)
+    self.font:write(canvas, width, height, string.format("scale %d, rotation %d", scale, rotation), "right", "bottom")
   elseif self.mode == 5 then
-    self.bank:blit(0, width / 2, height / 2, 10, 10, 256 * 1)
+    self.bank:blit(canvas, width / 2, height / 2, 0, 10, 10, 256 * 1)
   elseif self.mode == 6 then
-    self.bank:blit(0, width / 2, height / 2, 10, 10, 128 * 1)
+    self.bank:blit(canvas, width / 2, height / 2, 0, 10, 10, 128 * 1)
   elseif self.mode == 7 then
     local x = (width + 16) * (math.cos(time * 0.75) + 1) * 0.5 - 8
     local y = (height + 16) * (math.sin(time * 0.25) + 1) * 0.5 - 8
-    self.bank:blit(0, x - 4, y - 4)
+    self.bank:blit(canvas, x - 4, y - 4, 0)
   elseif self.mode == 8 then
-    self.bank:blit(1, self.x - 32, self.y - 32, self.scale_x * 8.0, self.scale_y * 8.0)
+    self.bank:blit(canvas, self.x - 32, self.y - 32, 1, self.scale_x * 8.0, self.scale_y * 8.0)
   end
 
-  self.font:write(string.format("FPS: %.1f", System.fps()), 0, 0)
-  self.font:write(self.font:align(string.format("mode: %d", self.mode), width, 0, "right"))
+  self.font:write(canvas, 0, 0, string.format("FPS: %6.1f", System.fps()), 1.5)
+  self.font:write(canvas, width, 0, string.format("mode: %d", self.mode), "right")
 end
 
 return Main

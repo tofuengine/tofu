@@ -497,6 +497,11 @@ void Display_destroy(Display_t *display)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "display freed");
 }
 
+//bool Display_resize(Display_t *display, size_t width, size_t height, size_t scale, bool fullscreen)
+//{
+//    return glfwWindowShouldClose(display->window);
+//}
+
 bool Display_should_close(const Display_t *display)
 {
     return glfwWindowShouldClose(display->window);
@@ -604,11 +609,6 @@ void Display_set_offset(Display_t *display, GL_Point_t offset)
     display->vram.offset = offset;
 }
 
-void Display_set_palette(Display_t *display, const GL_Palette_t *palette)
-{
-    GL_copperlist_set_palette(display->canvas.copperlist, palette);
-}
-
 void Display_set_shifting(Display_t *display, const GL_Pixel_t *from, const GL_Pixel_t *to, size_t count)
 {
     GL_copperlist_set_shifting(display->canvas.copperlist, from, to, count);
@@ -634,9 +634,9 @@ GL_Surface_t *Display_get_surface(const Display_t *display)
     return display->canvas.surface;
 }
 
-const GL_Palette_t *Display_get_palette(const Display_t *display)
+GL_Palette_t *Display_get_palette(const Display_t *display)
 {
-    return &display->canvas.copperlist->palette;
+    return display->canvas.copperlist->palette;
 }
 
 GL_Point_t Display_get_offset(const Display_t *display)

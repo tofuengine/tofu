@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2018 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -40,7 +40,6 @@
 #pragma GCC diagnostic ignored "-Wsign-compare"
 
 #include <stdlib.h>
-#include <string.h>
 #include "virtual.h"
 #include "period.h"
 #include "effects.h"

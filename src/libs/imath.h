@@ -37,9 +37,10 @@
 #define ICLAMP(x, l, u) ((x) < (l) ? (l) : ((x) > (u) ? (u) : (x)))
 #define IMIRROR(x)      ((x) >= 0 ? (x) : -(1 + (x)))
 
+#define ITRUNC(x)       ((int)(x))
 #define IFLOORF(x)      ((int)floorf((x)))
 #define ICEILF(x)       ((int)ceilf((x)))
-#define IROUNDF(x)      ((int)floorf((x) + 0.5f))
+#define IROUNDF(x)      ((int)roundf((x)))
 
 extern int iabs(int v);
 extern int imod(int a, int b);

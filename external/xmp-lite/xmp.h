@@ -347,7 +347,7 @@ LIBXMP_EXPORT int         xmp_channel_vol     (xmp_context, int, int);
 LIBXMP_EXPORT int         xmp_set_player      (xmp_context, int, int);
 LIBXMP_EXPORT int         xmp_get_player      (xmp_context, int);
 LIBXMP_EXPORT int         xmp_set_instrument_path (xmp_context, char *);
-LIBXMP_EXPORT int         xmp_load_module_from_callbacks(xmp_context opaque, size_t (*read)(void *, size_t, size_t, void *), int (*seek)(void *, long, int), long (*tell)(void *), int (*eof)(void *), void *userdata);
+LIBXMP_EXPORT int         xmp_load_module_from_callbacks(xmp_context, size_t (*read)(void *, size_t, size_t, void *), int (*seek)(void *, long, int), long (*tell)(void *), int (*eof)(void *), void *userdata);
 LIBXMP_EXPORT int         xmp_load_module_from_memory (xmp_context, const void *, long);
 LIBXMP_EXPORT int         xmp_load_module_from_file (xmp_context, void *);
 

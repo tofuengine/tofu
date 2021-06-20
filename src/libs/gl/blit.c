@@ -119,8 +119,8 @@ void GL_surface_blit_s(const GL_Surface_t *surface, GL_Point_t position, const G
     const GL_Pixel_t *shifting = state->shifting;
     const GL_Bool_t *transparent = state->transparent;
 
-    const size_t drawing_width = (int)IROUNDF(area.width * fabsf(scale_x)); // We need to round! No ceil, no floor!
-    const size_t drawing_height = (int)IROUNDF(area.height * fabsf(scale_y));
+    const size_t drawing_width = (size_t)ITRUNC(area.width * fabsf(scale_x)); // Truncate, or we might "bleed" and pick from outside the source area.
+    const size_t drawing_height = (size_t)ITRUNC(area.height * fabsf(scale_y));
 
     size_t skip_x = 0; // Offset into the (target) surface/texture, updated during clipping.
     size_t skip_y = 0;
@@ -180,7 +180,7 @@ void GL_surface_blit_s(const GL_Surface_t *surface, GL_Point_t position, const G
 
     float v = ov;
     for (int i = height; i; --i) {
-        const int y = (int)v;
+        const int y = ITRUNC(v); // Truncate, as we used `ITRUNC()` to calculate the scaled size.
         const GL_Pixel_t *sptr = sdata + y * swidth;
 
         float u = ou;
@@ -188,7 +188,7 @@ void GL_surface_blit_s(const GL_Surface_t *surface, GL_Point_t position, const G
 #ifdef __DEBUG_GRAPHICS__
             _pixel(surface, drawing_region.x0 + width - j, drawing_region.y0 + height - i, (int)u + (int)v);
 #endif
-            const int x = (int)u;
+            const int x = ITRUNC(u); // Ditto.
             GL_Pixel_t index = shifting[sptr[x]];
             if (transparent[index]) {
                 ++dptr;
@@ -270,10 +270,10 @@ void GL_surface_blit_sr(const GL_Surface_t *surface, GL_Point_t position, const 
     float skip_y = aabb_y0;
 
     GL_Quad_t drawing_region = (GL_Quad_t){
-            .x0 = (int)ceilf(aabb_x0 + dx), // To include every fractionally occupied pixel.
-            .y0 = (int)ceilf(aabb_y0 + dy),
-            .x1 = (int)ceilf(aabb_x1 + dx),
-            .y1 = (int)ceilf(aabb_y1 + dy)
+            .x0 = ICEILF(aabb_x0 + dx), // To include every fractionally occupied pixel.
+            .y0 = ICEILF(aabb_y0 + dy),
+            .x1 = ICEILF(aabb_x1 + dx),
+            .y1 = ICEILF(aabb_y1 + dy)
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
@@ -340,8 +340,8 @@ void GL_surface_blit_sr(const GL_Surface_t *surface, GL_Point_t position, const 
                 const float u = (ou * M11 + ov * M12) + sx + 0.5f; // Important: offset half a pixel to center the source texture!
                 const float v = (ou * M21 + ov * M22) + sy + 0.5f; // (see variables initialization why we are using sx/sx solely)
 
-                int x = (int)floorf(u); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`) and avoid mirror effect.
-                int y = (int)floorf(v);
+                int x = IFLOORF(u); // Round down, to preserve negative values as such (e.g. `-0.3` is `-1`) and avoid mirror effect.
+                int y = IFLOORF(v); // (can't truncate, because negatives would be truncated toward zero)
 
                 if (x >= sminx && x <= smaxx && y >= sminy && y <= smaxy) {
 #ifdef __DEBUG_GRAPHICS__

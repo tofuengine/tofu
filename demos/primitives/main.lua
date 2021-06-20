@@ -44,9 +44,9 @@ function Main:__ctor()
   Display.palette(Palette.new("arne-16"))
 
   local canvas = Canvas.default()
-  canvas:color(3)
+  canvas:foreground(3)
 
-  self.font = Font.default(canvas, 0, 1)
+  self.font = Font.default(0, 1)
   self.mode = 0
 end
 
@@ -142,8 +142,8 @@ function Main:render(_) -- ratio
     canvas:rectangle("fill", 4, 12, 8, 8, 3)
   end
 
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
-  self.font:write(self.font:align(string.format("mode: %d", self.mode), width, 0, "right"))
+  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
+  self.font:write(canvas, width, 0, string.format("mode: %d", self.mode), "right")
 end
 
 return Main

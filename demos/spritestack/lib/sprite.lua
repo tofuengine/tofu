@@ -24,7 +24,6 @@ SOFTWARE.
 
 local Class = require("tofu.core").Class
 local Math = require("tofu.core").Math
-local Canvas = require("tofu.graphics").Canvas
 local Vector = require("tofu.util").Vector
 
 local Sprite = Class.define()
@@ -74,20 +73,19 @@ function Sprite:update(delta_time)
   self.velocity:scale(0.95)
 end
 
-function Sprite:render()
+function Sprite:render(canvas)
   local x, y = self.position.x, self.position.y
   local rotation = Math.angle_to_rotation(self.angle)
   for id = self.from, self.to, self.step do
     local i = math.abs((id - self.from)) * self.scale
     for j = i, i + self.scale - 1 do
-      self.bank:blit(id, x, y - j, self.scale, self.scale, rotation)
+      self.bank:blit(canvas, x, y - j, id, self.scale, self.scale, rotation)
     end
   end
 
-  local canvas = Canvas.default()
-  canvas:line(x, y, x + self.velocity.x, y + self.velocity.y, self.palette:color_to_index(0x88, 0x88, 0xFF))
+  canvas:line(x, y, x + self.velocity.x, y + self.velocity.y, self.palette:match(0x88, 0x88, 0xFF))
   local direction = Vector.from_polar(self.angle, 48)
-  canvas:line(x, y, x + direction.x, y + direction.y, self.palette:color_to_index(0x88, 0xFF, 0x88))
+  canvas:line(x, y, x + direction.x, y + direction.y, self.palette:match(0x88, 0xFF, 0x88))
 end
 
 return Sprite

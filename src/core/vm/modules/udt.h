@@ -65,13 +65,13 @@ typedef struct _Canvas_Object_t {
     struct {
         GL_Pixel_t background, foreground;
     } color;
+//    struct {
+//        const Bank_Object_t *instance;
+//        luaX_Reference reference;
+//    } bank;
 } Canvas_Object_t;
 
 typedef struct _Bank_Object_t {
-    struct {
-        const Canvas_Object_t *instance;
-        luaX_Reference reference;
-    } canvas;
     struct {
         const Canvas_Object_t *instance;
         luaX_Reference reference;
@@ -80,10 +80,6 @@ typedef struct _Bank_Object_t {
 } Bank_Object_t;
 
 typedef struct _Font_Object_t {
-    struct {
-        const Canvas_Object_t *instance;
-        luaX_Reference reference;
-    } canvas;
     struct {
         const Canvas_Object_t *instance;
         luaX_Reference reference;
@@ -104,18 +100,8 @@ typedef struct _XForm_Object_t {
     GL_XForm_t *xform;
 } XForm_Object_t;
 
-#ifdef __PALETTE_COLOR_MEMOIZATION__
-typedef struct _key_value_pair_t {
-    GL_Color_t key;
-    GL_Pixel_t value;
-} color_pixel_pair_t;
-#endif  /* __PALETTE_COLOR_MEMOIZATION__ */
-
 typedef struct _Palette_Object_t {
-    GL_Palette_t palette;
-#ifdef __PALETTE_COLOR_MEMOIZATION__
-    color_pixel_pair_t *cache; // Stores past executed colors matches.
-#endif  /* __PALETTE_COLOR_MEMOIZATION__ */
+    GL_Palette_t *palette;
 } Palette_Object_t;
 
 typedef struct _Program_Object_t {
