@@ -227,7 +227,7 @@ static int _execute(lua_State *L, const char *script, size_t size, const char *n
 {
     int result = luaL_loadbuffer(L, script, size, name);
     if (result != LUA_OK) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "error #%d in load %s", result, lua_tostring(L, -1));
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "error #%d in load: %s", result, lua_tostring(L, -1));
         lua_pop(L, 1);
         return result;
     }
