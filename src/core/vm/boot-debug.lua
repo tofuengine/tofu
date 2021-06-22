@@ -36,6 +36,24 @@ local Main = require("main")
 
 local Tofu = Class.define() -- To be precise, the class name is irrelevant since it's locally used.
 
+local function _wrap(line, width, font)
+  local texts = {}
+  local text = ""
+  for c in line:gmatch(".") do
+    local tw, _ = font:size(text .. c)
+    if tw >= width then
+      table.insert(texts, text)
+      text = c
+    else
+      text = text .. c
+    end
+  end
+  if #text > 0 then
+    table.insert(texts, text)
+  end
+  return texts
+end
+
 function Tofu:__ctor()
   self.states = {
     ["normal"] = {
@@ -65,8 +83,6 @@ function Tofu:__ctor()
     ["error"] = {
       enter = function(me, message)
           -- TODO: rename "Display" to "Video" e "Speakers" to "Audio"
-          -- TODO: resize the window to a default size for error?
---          Display.resize(384, 224, 0)
           Display.palette(Palette.new({ { 0, 0, 0 }, { 255, 0, 0 } })) -- Red on black.
           local canvas = Canvas.default()
           local width, _ = canvas:size()
@@ -83,8 +99,9 @@ function Tofu:__ctor()
           me.font = Font.default(0, 1)
           me.lines = {}
           local margin <const> = 4 -- Pre-calculate lines position and rectangle area.
+          local span <const> = width - 2 * margin
           local y = margin
-          for _, text in ipairs(title) do
+          for _, text in ipairs(title) do -- Title lines are centered.
             local lw, lh = me.font:size(text)
             table.insert(me.lines, { text = text, x = (width - lw) * 0.5, y = y })
             y = y + lh
@@ -93,10 +110,13 @@ function Tofu:__ctor()
           y = y + margin
           me.height = y -- The rectangle ends here, message follows.
           y = y + margin
-          for _, text in ipairs(errors) do
-            local _, lh = me.font:size(text)
-            table.insert(me.lines, { text = text, x = margin, y = y })
-            y = y + lh
+          for _, line in ipairs(errors) do -- Error lines are left-justified and auto-wrapped.
+            local texts = _wrap(line, span, me.font)
+            for _, text in ipairs(texts) do
+              local _, th = me.font:size(text)
+              table.insert(me.lines, { text = text, x = margin, y = y })
+              y = y + th
+            end
           end
         end,
       leave = function(me)
