@@ -47,7 +47,7 @@ function Main:__ctor()
   self.font = Font.new("assets/font-8x8.png", 8, 8, 0, 15)
 end
 
-function Main:input()
+function Main:process()
   -- Nothing to do, here.
 end
 

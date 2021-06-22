@@ -60,7 +60,7 @@ function Main:__ctor()
   Display.palette(color)
 end
 
-function Main:input()
+function Main:process()
   if Input.is_pressed("select") then
     self.mode = (self.mode + 1) % 2
   elseif Input.is_pressed("up") then

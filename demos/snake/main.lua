@@ -108,7 +108,7 @@ function Main:reset()
   self:generate_food()
 end
 
-function Main:input()
+function Main:process()
   if self.state == "game-over" then
     if Input.is_pressed("start") then
       self:reset()

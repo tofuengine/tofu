@@ -45,7 +45,7 @@ function Main:__ctor()
   self.font = Font.default(0, 15)
 end
 
-function Main:input()
+function Main:process()
   -- Nothing to do, here.
 end
 

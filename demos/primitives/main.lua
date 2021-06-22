@@ -50,7 +50,7 @@ function Main:__ctor()
   self.mode = 0
 end
 
-function Main:input()
+function Main:process()
   if Input.is_pressed("start") then
     System.quit()
   elseif Input.is_pressed("right") then

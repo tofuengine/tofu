@@ -76,7 +76,7 @@ function Main:__ctor()
   self.mode = 0
 end
 
-function Main:input()
+function Main:process()
   if Input.is_pressed("y") then
     self.mode = (self.mode + 1) % 10
   end

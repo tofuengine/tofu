@@ -67,7 +67,7 @@ function Main:__ctor()
   self.wave = Math.wave("triangle", PERIOD)
 end
 
-function Main:input()
+function Main:process()
 end
 
 function Main:update(_)

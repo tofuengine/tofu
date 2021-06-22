@@ -62,7 +62,7 @@ function Main:__ctor()
   Input.cursor_area(0, 0, canvas:size()) -- FIXME: painful!
 end
 
-function Main:input()
+function Main:process()
   for _, id in ipairs(IDS) do
     self.down[id] = Input.is_down(id)
     if Input.is_pressed(id) then

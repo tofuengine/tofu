@@ -66,7 +66,7 @@ function Main:reset()
   end)
 end
 
-function Main:input()
+function Main:process()
   if Input.is_pressed("select") then
     self.windy = not self.windy
   elseif Input.is_pressed("left") then

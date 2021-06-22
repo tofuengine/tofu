@@ -44,7 +44,7 @@ function Main:__ctor()
   self.rows = height / ch
 end
 
-function Main:input()
+function Main:process()
 end
 
 function Main:update(_)

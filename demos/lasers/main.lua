@@ -71,7 +71,7 @@ function Main:__ctor()
   self.changed = true
 end
 
-function Main:input()
+function Main:process()
   local cx, cy = Input.cursor()
   self.c.x = cx
   self.c.y = cy

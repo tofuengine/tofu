@@ -67,7 +67,7 @@ end
 
 local PROPERTIES = { 'play', 'stop', 'resume', 'gain', 'pan', 'balance', 'mix' }
 
-function Main:input()
+function Main:process()
   if Input.is_pressed("a") then
     local source = self.sources[self.current]
     if self.property == 1 then

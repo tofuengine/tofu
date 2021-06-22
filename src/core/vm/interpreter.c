@@ -68,14 +68,14 @@ typedef struct _Reader_Context_t {
 } Reader_Context_t;
 
 typedef enum _Methods_t {
-    METHOD_INPUT,
+    METHOD_PROCESS,
     METHOD_UPDATE,
     METHOD_RENDER,
     Methods_t_CountOf
 } Methods_t;
 
 static const char *_methods[] = { // We don't use a compound-literal on purpose here, since we are referring to the above enum.
-    "input",
+    "process",
     "update",
     "render",
     NULL
@@ -360,9 +360,9 @@ void Interpreter_destroy(Interpreter_t *interpreter)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "interpreter freed");
 }
 
-bool Interpreter_input(const Interpreter_t *interpreter)
+bool Interpreter_process(const Interpreter_t *interpreter)
 {
-    return _call(interpreter->state, METHOD_INPUT, 0, 0) == LUA_OK;
+    return _call(interpreter->state, METHOD_PROCESS, 0, 0) == LUA_OK;
 }
 
 bool Interpreter_update(Interpreter_t *interpreter, float delta_time)

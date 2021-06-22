@@ -62,7 +62,7 @@ function Main:__ctor()
   self.xform:project(height, math.pi * 0.5 - self.angle, self.elevation)
 end
 
-function Main:input()
+function Main:process()
   local recompute = false
 
   if Input.is_pressed("select") then

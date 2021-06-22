@@ -59,7 +59,7 @@ function Main:__ctor()
   self.xform:warp(height, self.factor)
 end
 
-function Main:input()
+function Main:process()
   local recompute = false
 
   if Input.is_pressed("start") then

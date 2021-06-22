@@ -52,7 +52,7 @@ function Main:__ctor()
   self.y = height * 0.25
 end
 
-function Main:input()
+function Main:process()
   if Input.is_pressed("y") then
     self.running = not self.running
   end

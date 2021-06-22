@@ -59,7 +59,7 @@ function Main:__ctor()
   end
 end
 
-function Main:input()
+function Main:process()
   self.dx = 0
   self.dy = 0
   if Input.is_down("left") then

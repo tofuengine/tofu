@@ -52,7 +52,7 @@ function Main:__ctor()
     self.y = math.random() * height
 end
 
-function Main:input()
+function Main:process()
 end
 
 function Main:update(_)

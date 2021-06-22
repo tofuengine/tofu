@@ -58,7 +58,7 @@ function Main:__ctor()
   self.time = 0
 end
 
-function Main:input()
+function Main:process()
   if Input.is_pressed("start") then
     self.fan = not self.fan
   end

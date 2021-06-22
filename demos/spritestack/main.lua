@@ -32,8 +32,8 @@ function Main:__ctor()
   self.game = Game.new()
 end
 
-function Main:input()
-  self.game:input()
+function Main:process()
+  self.game:process()
 end
 
 function Main:update(delta_time)

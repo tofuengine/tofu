@@ -62,7 +62,7 @@ function Main:__ctor()
   end
 end
 
-function Main:input()
+function Main:process()
   if Input.is_pressed("start") then
     local Bunny = self.static and StaticBunny or MovingBunny
     for _ = 1, LITTER_SIZE do

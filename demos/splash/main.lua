@@ -56,7 +56,7 @@ function Main:__ctor()
   self.music:play()
 end
 
-function Main:input()
+function Main:process()
 end
 
 function Main:update(delta_time)

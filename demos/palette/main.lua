@@ -60,7 +60,7 @@ function Main:__ctor()
   Input.auto_repeat("y", 0.5)
 end
 
-function Main:input()
+function Main:process()
   if Input.is_pressed("down") then
     self.scale_y = 1.0
     self.y = self.y + 1
@@ -155,7 +155,7 @@ function Main:render(_)
     self.bank:blit(canvas, self.x - 32, self.y - 32, 1, self.scale_x * 8.0, self.scale_y * 8.0)
   end
 
-  self.font:write(canvas, 0, 0, string.format("FPS: %6.1f", System.fps()), 1.5)
+  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()), 1.5)
   self.font:write(canvas, width, 0, string.format("mode: %d", self.mode), "right")
 end
 

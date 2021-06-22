@@ -45,7 +45,7 @@ function Main:__ctor()
   self.factor = 0.75
 end
 
-function Main:input()
+function Main:process()
   if Input.is_pressed("left") then
     self.factor = self.factor - 0.01
   elseif Input.is_pressed("right") then

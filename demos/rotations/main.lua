@@ -55,7 +55,7 @@ function Main:__ctor()
   self.flip_y = false
 end
 
-function Main:input()
+function Main:process()
   self.scale_speed = 0
   if Input.is_down("up") then
     self.scale_speed = self.scale_speed + 2

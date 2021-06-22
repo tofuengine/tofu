@@ -55,7 +55,7 @@ function Main:__ctor()
   self.cursor = { x = 0, y = 0 }
 end
 
-function Main:input()
+function Main:process()
   if Input.is_down("up") then
     self.velocity.y = -SPEED
   elseif Input.is_down("down") then

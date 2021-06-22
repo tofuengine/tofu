@@ -51,7 +51,7 @@ function Main:__ctor()
   self.running = true
 end
 
-function Main:input()
+function Main:process()
   if Input.is_pressed("start") then
     for _ = 1, LITTER_SIZE do
       table.insert(self.sprites, Sprite.new(Canvas.default(), self.bank, #self.sprites))

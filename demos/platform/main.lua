@@ -124,7 +124,7 @@ function Main:__ctor()
 --  self.pixies:clear(0)
 end
 
-function Main:input()
+function Main:process()
   if self.jumps < 2 and Input.is_pressed("up") then
     self.velocity.y = 128
     self.jumps = self.jumps + 1
@@ -141,7 +141,6 @@ function Main:input()
     self.velocity.x = 0
     self.idle_time = 0
   end
-
   if Input.is_pressed("start") then
     self.map = generate_map(50)
     self.shake_time = 5

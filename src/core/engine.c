@@ -287,7 +287,7 @@ void Engine_run(Engine_t *engine)
 
         Input_process(engine->input);
 
-        running = running && Interpreter_input(engine->interpreter); // Lazy evaluate `running`, will avoid calls when error.
+        running = running && Interpreter_process(engine->interpreter); // Lazy evaluate `running`, will avoid calls when error.
 
 #ifdef __ENGINE_PERFORMANCE_STATISTICS__
         const double process_marker = glfwGetTime();
