@@ -444,7 +444,7 @@ void GL_surface_filled_triangle(const GL_Surface_t *surface, GL_Point_t a, GL_Po
         b = t;
     }
 
-    int DX12 = a.x - b.x;
+    int DX12 = a.x - b.x; // Fast edge-function calculation, using a DDA method.
     int DX23 = b.x - c.x;
     int DX31 = c.x - a.x;
     int DY12 = a.y - b.y;
@@ -471,13 +471,13 @@ void GL_surface_filled_triangle(const GL_Surface_t *surface, GL_Point_t a, GL_Po
 
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
-    for (int y = 0; y <= height; ++y) { // Pinada's edge function is linear, we can cast it...
+    for (int y = 0; y < height; ++y) { // Pinada's edge function is linear, we can cast it...
         int CX1 = CY1;
         int CX2 = CY2;
         int CX3 = CY3;
         size_t count = 0;
         int eod = 0;
-        for (int x = 0; x <= width; ++x) {
+        for (int x = 0; x < width; ++x) {
             if ((CX1 | CX2 | CX3) > 0) { // Check the sign bit only.
                 count += 1;
                 eod = x;
@@ -490,12 +490,11 @@ void GL_surface_filled_triangle(const GL_Surface_t *surface, GL_Point_t a, GL_Po
         CY2 += DX23;
         CY3 += DX31;
 
-        const size_t offset = eod - count;
-        dptr += eod;
+        GL_Pixel_t *dstride = dptr + eod;
         for (size_t i = count; i; --i) { // Backward copy, simpler math.
-            *(dptr--) = index;
+            *(dstride--) = index;
         }
-        dptr += dskip - offset;
+        dptr += dskip;
     }
 }
 
