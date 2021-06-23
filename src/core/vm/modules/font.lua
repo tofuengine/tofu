@@ -85,4 +85,22 @@ function Font:write(canvas, x, y, text, h_align, v_align, scale_x, scale_y)
   end
 end
 
+function Font:wrap(text, width)
+  local lines = {}
+  local line = ""
+  for c in text:gmatch(".") do
+    local lw, _ = self:size(line .. c)
+    if lw >= width then
+      table.insert(lines, line)
+      line = c
+    else
+      line = line .. c
+    end
+  end
+  if #line > 0 then
+    table.insert(lines, line)
+  end
+  return lines
+end
+
 return Font

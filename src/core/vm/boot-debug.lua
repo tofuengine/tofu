@@ -36,24 +36,6 @@ local Main = require("main")
 
 local Tofu = Class.define() -- To be precise, the class name is irrelevant since it's locally used.
 
-local function _wrap(line, width, font)
-  local texts = {}
-  local text = ""
-  for c in line:gmatch(".") do
-    local tw, _ = font:size(text .. c)
-    if tw >= width then
-      table.insert(texts, text)
-      text = c
-    else
-      text = text .. c
-    end
-  end
-  if #text > 0 then
-    table.insert(texts, text)
-  end
-  return texts
-end
-
 function Tofu:__ctor()
   self.states = {
     ["normal"] = {
@@ -111,7 +93,7 @@ function Tofu:__ctor()
           me.height = y -- The rectangle ends here, message follows.
           y = y + margin
           for _, line in ipairs(errors) do -- Error lines are left-justified and auto-wrapped.
-            local texts = _wrap(line, span, me.font)
+            local texts = me.font:wrap(line, span)
             for _, text in ipairs(texts) do
               local _, th = me.font:size(text)
               table.insert(me.lines, { text = text, x = margin, y = y })
