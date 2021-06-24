@@ -497,11 +497,6 @@ void Display_destroy(Display_t *display)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "display freed");
 }
 
-//bool Display_resize(Display_t *display, size_t width, size_t height, size_t scale, bool fullscreen)
-//{
-//    return glfwWindowShouldClose(display->window);
-//}
-
 bool Display_should_close(const Display_t *display)
 {
     return glfwWindowShouldClose(display->window);

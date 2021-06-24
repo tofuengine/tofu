@@ -31,7 +31,7 @@
 #include <libs/gl/gl.h>
 #include <libs/sl/sl.h>
 
-typedef enum _UserData_t { // TODO: move to a suitable space.
+typedef enum _UserData_t { // TODO: move to a separate file.
     USERDATA_STORAGE = 1,
     USERDATA_DISPLAY,
     USERDATA_INPUT,

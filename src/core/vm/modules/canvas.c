@@ -254,6 +254,7 @@ static int canvas_new_3snn_1u(lua_State *L)
         };
 
     GL_Surface_t *surface;
+    // TODO: decode from memory?
     if (Storage_exists(storage, name)) {
         const Storage_Resource_t *image = Storage_load(storage, name, STORAGE_RESOURCE_IMAGE);
         if (!image) {

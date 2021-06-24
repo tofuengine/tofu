@@ -300,6 +300,7 @@ static int font_blit_7uunnsnN_2nn(lua_State *L)
     size_t width = 0, height = 0;
     for (const uint8_t *ptr = (const uint8_t *)text; *ptr != '\0'; ++ptr) { // Hack! Treat as unsigned! :)
         uint8_t c = *ptr;
+        // TODO: add support for tabs and escape-commands.
         const GL_Cell_t cell_id = glyphs[(size_t)c];
         if (cell_id == GL_CELL_NIL) {
             continue;
