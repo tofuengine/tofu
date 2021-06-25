@@ -22,14 +22,16 @@
  * SOFTWARE.
  */
 
-#ifndef __RESOURCES_IMAGES_H__
-#define __RESOURCES_IMAGES_H__
+#ifndef __RESOURCES_DECODER_H__
+#define __RESOURCES_DECODER_H__
 
 #include <stdbool.h>
 
 #include "common.h"
 
-extern const Image_t *resources_images_find(const char *id);
-extern bool resources_images_exists(const char *id);
+extern bool decoder_is_valid(const char *encoded_data);
 
-#endif  /* __RESOURCES_IMAGES_H__ */
+extern Blob_t decoder_as_blob(const char *encoded_data);
+extern Image_t decoder_as_image(const char *encoded_data);
+
+#endif  /* __RESOURCES_DECODER_H__ */

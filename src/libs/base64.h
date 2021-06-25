@@ -22,14 +22,18 @@
  * SOFTWARE.
  */
 
-#ifndef __RESOURCES_IMAGES_H__
-#define __RESOURCES_IMAGES_H__
+#ifndef __LIBS_BASE64_H__
+#define __LIBS_BASE64_H__
 
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
-#include "common.h"
+extern size_t base64_encoded_size(size_t in_size);
+extern void base64_encode(char *out, const uint8_t *in, size_t in_size);
 
-extern const Image_t *resources_images_find(const char *id);
-extern bool resources_images_exists(const char *id);
+extern bool base64_is_valid(const char *in);
+extern size_t base64_decoded_size(const char *in);
+extern void base64_decode(uint8_t *out, size_t out_size, const char *in);
 
-#endif  /* __RESOURCES_IMAGES_H__ */
+#endif  /* __LIBS_BASE64_H__ */

@@ -31,6 +31,7 @@
 #include <libs/stb.h>
 #include <resources/blobs.h>
 #include <resources/images.h>
+#include <resources/decoder.h>
 
 #include <stdint.h>
 
@@ -168,7 +169,9 @@ static bool _resource_exists(const char *name)
 
 bool Storage_exists(const Storage_t *storage, const char *name)
 {
-    return FS_locate(storage->context, name) || _resource_exists(name);
+    // Local files override bundled resources with the same `name`. At last, check if the `name` is an encoded
+    // resource.
+    return FS_locate(storage->context, name) || _resource_exists(name) || decoder_is_valid(name);
 }
 
 static void *_load(FS_Handle_t *handle, bool null_terminate, size_t *size)
@@ -344,6 +347,8 @@ static bool _resource_load(Storage_Resource_t *resource, const char *name, Stora
             return false;
         }
 
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bundle resource `%s` found as string", name);
+
         *resource = (Storage_Resource_t){
                 .type = STORAGE_RESOURCE_STRING,
                 .var = {
@@ -362,6 +367,8 @@ static bool _resource_load(Storage_Resource_t *resource, const char *name, Stora
         if (!blob) {
             return false;
         }
+
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bundle resource `%s` found as blob", name);
 
         *resource = (Storage_Resource_t){
                 .type = STORAGE_RESOURCE_BLOB,
@@ -382,6 +389,8 @@ static bool _resource_load(Storage_Resource_t *resource, const char *name, Stora
             return false;
         }
 
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bundle resource `%s` found as image", name);
+
         *resource = (Storage_Resource_t){
                 .type = STORAGE_RESOURCE_IMAGE,
                 .var = {
@@ -400,7 +409,81 @@ static bool _resource_load(Storage_Resource_t *resource, const char *name, Stora
     return true;
 }
 
-// TODO: add "load from string", i.e. if the string is not an existing file, check if it's base64 or decode from it!
+static bool _resource_decode(Storage_Resource_t *resource, const char *name, Storage_Resource_Types_t type)
+{
+    if (!decoder_is_valid(name)) {
+        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "resource `%s` is not valid for decode", name);
+        return false;
+    }
+
+    if (type == STORAGE_RESOURCE_STRING) {
+        const Blob_t blob = decoder_as_blob(name);
+        if (!BLOB_IS_VALID(blob)) {
+            return false;
+        }
+
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource %p decoded as string", resource);
+
+        *resource = (Storage_Resource_t){
+                .type = STORAGE_RESOURCE_STRING,
+                .var = {
+                    .string = {
+                        .chars = (char *)blob.ptr,
+                        .length = blob.size
+                    }
+                },
+                .age = 0.0,
+                .references = 0,
+                .allocated = true
+            };
+    } else
+    if (type == STORAGE_RESOURCE_BLOB) {
+        const Blob_t blob = decoder_as_blob(name);
+        if (!BLOB_IS_VALID(blob)) {
+            return false;
+        }
+
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource %p decoded as blob", resource);
+
+        *resource = (Storage_Resource_t){
+                .type = STORAGE_RESOURCE_BLOB,
+                .var = {
+                    .blob = {
+                        .ptr = (void *)blob.ptr,
+                        .size = blob.size
+                    }
+                },
+                .age = 0.0,
+                .references = 0,
+                .allocated = true
+            };
+    } else
+    if (type == STORAGE_RESOURCE_IMAGE) {
+        const Image_t image = decoder_as_image(name);
+        if (!IMAGE_IS_VALID(image)) {
+            return false;
+        }
+
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource %p decoded as image", resource);
+
+        *resource = (Storage_Resource_t){
+                .type = STORAGE_RESOURCE_IMAGE,
+                .var = {
+                    .image = {
+                        .width = image.width,
+                        .height = image.height,
+                        .pixels = (void *)image.pixels
+                    }
+                },
+                .age = 0.0,
+                .references = 0,
+                .allocated = true
+            };
+    }
+
+    return true;
+}
+
 Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_Resource_Types_t type)
 {
     const Storage_Resource_t *key = &(Storage_Resource_t){ .name = (char *)name };
@@ -419,17 +502,17 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_R
     }
 
     bool loaded = _resource_load(resource, name, type);
-    if (loaded) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bundled resource `%s` found", name);
-    } else {
-        FS_Handle_t *handle = FS_locate_and_open(storage->context, name);
-        if (!handle) {
-            free(resource);
-            return NULL;
+    if (!loaded) {
+        const FS_Mount_t *mount = FS_locate(storage->context, name);
+        if (mount) {
+            FS_Handle_t *handle = FS_open(mount, name);
+            if (handle) {
+                loaded = _load_functions[type](resource, handle);
+                FS_close(handle);
+            }
+        } else {
+            loaded = _resource_decode(resource, name, type);
         }
-
-        loaded = _load_functions[type](resource, handle);
-        FS_close(handle);
     }
 
     if (!loaded) {

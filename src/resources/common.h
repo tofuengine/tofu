@@ -22,14 +22,22 @@
  * SOFTWARE.
  */
 
-#ifndef __RESOURCES_IMAGES_H__
-#define __RESOURCES_IMAGES_H__
+#ifndef __RESOURCES_COMMON_H__
+#define __RESOURCES_COMMON_H__
 
-#include <stdbool.h>
+#include <stddef.h>
 
-#include "common.h"
+typedef struct _Blob_t {
+    const void *ptr;
+    size_t size;
+} Blob_t;
 
-extern const Image_t *resources_images_find(const char *id);
-extern bool resources_images_exists(const char *id);
+typedef struct _Image_t {
+    size_t width, height;
+    const void *pixels;
+} Image_t;
 
-#endif  /* __RESOURCES_IMAGES_H__ */
+#define BLOB_IS_VALID(b)        ((b).ptr)
+#define IMAGE_IS_VALID(i)       ((i).pixels)
+
+#endif  /* __RESOURCES_COMMON_H__ */

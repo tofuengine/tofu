@@ -26,12 +26,8 @@
 #define __RESOURCES_BLOBS_H__
 
 #include <stdbool.h>
-#include <stddef.h>
 
-typedef struct _Blob_t {
-    const void *ptr;
-    size_t size;
-} Blob_t;
+#include "common.h"
 
 extern const Blob_t *resources_blobs_find(const char *id);
 extern bool resources_blobs_exists(const char *id);
