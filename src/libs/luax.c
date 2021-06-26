@@ -36,6 +36,24 @@ https://stackoverflow.com/questions/29449296/extending-lua-check-number-of-param
 https://stackoverflow.com/questions/32673835/how-do-i-create-a-lua-module-inside-a-lua-module-in-c
 */
 
+int luaX_istype(lua_State *L, int idx, int type)
+{
+    luaX_Object_t *obj = (luaX_Object_t *)lua_touserdata(L, idx);
+    if (!obj) {
+        return 0;
+    }
+    return obj->type == type;
+}
+
+void *luaX_totype(lua_State *L, int idx, int type)
+{
+    luaX_Object_t *obj = (luaX_Object_t *)lua_touserdata(L, idx);
+    if (!obj) {
+        return 0;
+    }
+    return obj->type == type ? obj : NULL;
+}
+
 void luaX_stackdump(lua_State *L, const char* func, int line)
 {
     int top = lua_gettop(L);

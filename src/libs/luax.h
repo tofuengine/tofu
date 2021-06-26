@@ -54,6 +54,18 @@ typedef struct _luaX_Script {
     const char *name;
 } luaX_Script;
 
+typedef struct _luaX_Object_t {
+    int type;
+} luaX_Object_t;
+
+#define LUAX_TYPE_BEGIN(n) \
+    typedef struct _##n n; \
+    struct _##n { \
+        luaX_Object_t __luaX_reserved;
+#define LUAX_TYPE_END \
+    };
+
+#define LUAX_SETTYPE(o,t)   (((luaX_Object_t *)(o))->type = (t))
 typedef int luaX_Reference;
 
 #define LUAX_REFERENCE_NIL  -1
@@ -124,6 +136,8 @@ typedef int luaX_Reference;
     #define LUAX_OPTIONAL_STRING(L, idx, def)   (lua_isnoneornil((L), (idx)) ? (def) : lua_tostring((L), (idx)))
     #define LUAX_USERDATA(L, idx)               (!lua_isuserdata((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), NULL : lua_touserdata((L), (idx)))
     #define LUAX_OPTIONAL_USERDATA(L, idx, def) (lua_isnoneornil((L), (idx)) ? (def) : lua_touserdata((L), (idx)))
+    #define LUAX_TYPE(l, idx, t)                (!luaX_istype((L), (idx), (t)) ? luaL_error((L), "value at index #%d has wrong type (expected #%d)", (idx), (t)), NULL : lua_touserdata((L), (idx)))
+    #define LUAX_OPTIONAL_TYPE(l, idx, t, def)  (lua_isnoneornil((L), (idx)) ? (def) : luaX_totype((L), (idx), (t)))
 #else
     #define LUAX_BOOLEAN(L, idx)                (lua_toboolean((L), (idx)))
     #define LUAX_OPTIONAL_BOOLEAN(L, idx, def)  (lua_isnoneornil((L), (idx)) ? (def) : lua_toboolean((L), (idx)))
@@ -135,11 +149,16 @@ typedef int luaX_Reference;
     #define LUAX_OPTIONAL_STRING(L, idx, def)   (lua_isnoneornil((L), (idx)) ? (def) : lua_tostring((L), (idx)))
     #define LUAX_USERDATA(L, idx)               (lua_touserdata((L), (idx)))
     #define LUAX_OPTIONAL_USERDATA(L, idx, def) (lua_isnoneornil((L), (idx)) ? (def) : lua_touserdata((L), (idx)))
+    #define LUAX_TYPE(l, idx, t)                (luaX_totype((L), (idx), (t)))
+    #define LUAX_OPTIONAL_TYPE(l, idx, t, def)  (lua_isnoneornil((L), (idx)) ? (def) : luaX_totype((L), (idx), (t)))
 #endif
 
 #define luaX_dump(L)                luaX_stackdump((L), __FILE__, __LINE__)
 
 #define luaX_tofunction(L, idx)     luaX_ref((L), (idx))
+
+extern int luaX_istype(lua_State *L, int idx, int type);
+extern void *luaX_totype(lua_State *L, int idx, int type);
 
 extern void luaX_stackdump(lua_State *L, const char *file, int line);
 extern void luaX_overridesearchers(lua_State *L, lua_CFunction searcher, int nup);

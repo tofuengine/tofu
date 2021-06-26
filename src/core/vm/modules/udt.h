@@ -41,25 +41,19 @@ typedef enum _UserData_t { // TODO: move to a separate file.
     UserData_t_CountOf
 } UserData_t;
 
-#if 0
-// TODO: add type as first field of a `Object_t` type to track proper type and avoid errors.
 typedef enum _Object_Types_t {
     OBJECT_TYPE_CANVAS,
     OBJECT_TYPE_BANK,
     OBJECT_TYPE_FONT,
     OBJECT_TYPE_BATCH,
     OBJECT_TYPE_XFORM,
+    OBJECT_TYPE_PALETTE,
     OBJECT_TYPE_PROGRAM,
     OBJECT_TYPE_GRID,
     OBJECT_TYPE_SOURCE
 } Object_Types_t;
 
-typedef struct _Object_t {
-    Object_Types_t type;
-} Object_t;
-#endif
-
-typedef struct _Canvas_Object_t {
+LUAX_TYPE_BEGIN(Canvas_Object_t)
     GL_Surface_t *surface;
     bool allocated;
     struct {
@@ -69,44 +63,44 @@ typedef struct _Canvas_Object_t {
 //        const Bank_Object_t *instance;
 //        luaX_Reference reference;
 //    } bank;
-} Canvas_Object_t;
+LUAX_TYPE_END
 
-typedef struct _Bank_Object_t {
+LUAX_TYPE_BEGIN(Bank_Object_t)
     struct {
         const Canvas_Object_t *instance;
         luaX_Reference reference;
     } atlas;
     GL_Sheet_t *sheet;
-} Bank_Object_t;
+LUAX_TYPE_END
 
-typedef struct _Font_Object_t {
+LUAX_TYPE_BEGIN(Font_Object_t)
     struct {
         const Canvas_Object_t *instance;
         luaX_Reference reference;
     } atlas;
     GL_Sheet_t *sheet;
     GL_Cell_t glyphs[256];
-} Font_Object_t;
+LUAX_TYPE_END
 
-typedef struct _Batch_Object_t {
+LUAX_TYPE_BEGIN(Batch_Object_t)
     struct {
         const Bank_Object_t *instance;
         luaX_Reference reference;
     } bank;
     GL_Batch_t *batch;
-} Batch_Object_t;
+LUAX_TYPE_END
 
-typedef struct _XForm_Object_t {
+LUAX_TYPE_BEGIN(XForm_Object_t)
     GL_XForm_t *xform;
-} XForm_Object_t;
+LUAX_TYPE_END
 
-typedef struct _Palette_Object_t {
+LUAX_TYPE_BEGIN(Palette_Object_t)
     GL_Palette_t *palette;
-} Palette_Object_t;
+LUAX_TYPE_END
 
-typedef struct _Program_Object_t {
+LUAX_TYPE_BEGIN(Program_Object_t)
     GL_Program_t *program;
-} Program_Object_t;
+LUAX_TYPE_END
 
 #ifdef __GRID_INTEGER_CELL__
 typedef int Cell_t;
@@ -114,15 +108,15 @@ typedef int Cell_t;
 typedef float Cell_t;
 #endif
 
-typedef struct _Grid_Object_t {
+LUAX_TYPE_BEGIN(Grid_Object_t)
     size_t width, height;
     Cell_t *data;
     size_t data_size;
-} Grid_Object_t;
+LUAX_TYPE_END
 
-typedef struct _Source_Object_t {
+LUAX_TYPE_BEGIN(Source_Object_t)
     FS_Handle_t *handle;
     SL_Source_t *source;
-} Source_Object_t;
+LUAX_TYPE_END
 
 #endif  /* __MODULES_UDT_H__ */
