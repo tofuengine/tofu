@@ -364,6 +364,10 @@ Display_t *Display_create(const Display_Configuration_t *configuration)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "graphics surface %p created", display->canvas.surface);
 
+    // TODO: implement a small boot effect?
+    GL_surface_clear(display->canvas.surface, 0);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "graphics surface %p cleared", display->canvas.surface);
+
     display->canvas.copperlist = GL_copperlist_create();
     if (!display->canvas.copperlist) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create copperlist");
