@@ -24,6 +24,8 @@
 
 #include "luax.h"
 
+#include <string.h>
+
 /*
 http://webcache.googleusercontent.com/search?q=cache:RLoR9dkMeowJ:howtomakeanrpg.com/a/classes-in-lua.html+&cd=4&hl=en&ct=clnk&gl=it
 https://hisham.hm/2014/01/02/how-to-write-lua-modules-in-a-post-module-world/
@@ -36,9 +38,18 @@ https://stackoverflow.com/questions/29449296/extending-lua-check-number-of-param
 https://stackoverflow.com/questions/32673835/how-do-i-create-a-lua-module-inside-a-lua-module-in-c
 */
 
+void *luaX_newtype(lua_State *L, size_t size, void *object, int type) // FIXME: rename to `newobject` and `isobject`
+{
+    void *obj = lua_newuserdatauv(L, sizeof(luaX_Object) + size, 1);
+    ((luaX_Object *)obj)->type = type;
+    void *self = (uint8_t *)obj + sizeof(luaX_Object);
+    memcpy(self, object, size);
+    return self;
+}
+
 int luaX_istype(lua_State *L, int idx, int type)
 {
-    luaX_Object_t *obj = (luaX_Object_t *)lua_touserdata(L, idx);
+    luaX_Object *obj = (luaX_Object *)lua_touserdata(L, idx);
     if (!obj) {
         return 0;
     }
@@ -47,11 +58,11 @@ int luaX_istype(lua_State *L, int idx, int type)
 
 void *luaX_totype(lua_State *L, int idx, int type)
 {
-    luaX_Object_t *obj = (luaX_Object_t *)lua_touserdata(L, idx);
+    luaX_Object *obj = (luaX_Object *)lua_touserdata(L, idx);
     if (!obj) {
         return 0;
     }
-    return obj->type == type ? obj : NULL;
+    return obj->type == type ? obj + 1: NULL;
 }
 
 void luaX_stackdump(lua_State *L, const char* func, int line)

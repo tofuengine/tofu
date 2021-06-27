@@ -53,7 +53,7 @@ typedef enum _Object_Types_t {
     OBJECT_TYPE_SOURCE
 } Object_Types_t;
 
-LUAX_TYPE_BEGIN(Canvas_Object_t)
+typedef struct _Canvas_Object_t {
     GL_Surface_t *surface;
     bool allocated;
     struct {
@@ -63,44 +63,44 @@ LUAX_TYPE_BEGIN(Canvas_Object_t)
 //        const Bank_Object_t *instance;
 //        luaX_Reference reference;
 //    } bank;
-LUAX_TYPE_END
+} Canvas_Object_t;
 
-LUAX_TYPE_BEGIN(Bank_Object_t)
+typedef struct _Bank_Object_t {
     struct {
         const Canvas_Object_t *instance;
         luaX_Reference reference;
     } atlas;
     GL_Sheet_t *sheet;
-LUAX_TYPE_END
+} Bank_Object_t;
 
-LUAX_TYPE_BEGIN(Font_Object_t)
+typedef struct _Font_Object_t {
     struct {
         const Canvas_Object_t *instance;
         luaX_Reference reference;
     } atlas;
     GL_Sheet_t *sheet;
     GL_Cell_t glyphs[256];
-LUAX_TYPE_END
+} Font_Object_t;
 
-LUAX_TYPE_BEGIN(Batch_Object_t)
+typedef struct _Batch_Object_t {
     struct {
         const Bank_Object_t *instance;
         luaX_Reference reference;
     } bank;
     GL_Batch_t *batch;
-LUAX_TYPE_END
+} Batch_Object_t;
 
-LUAX_TYPE_BEGIN(XForm_Object_t)
+typedef struct _XForm_Object_t {
     GL_XForm_t *xform;
-LUAX_TYPE_END
+} XForm_Object_t;
 
-LUAX_TYPE_BEGIN(Palette_Object_t)
+typedef struct _Palette_Object_t {
     GL_Palette_t *palette;
-LUAX_TYPE_END
+} Palette_Object_t;
 
-LUAX_TYPE_BEGIN(Program_Object_t)
+typedef struct _Program_Object_t {
     GL_Program_t *program;
-LUAX_TYPE_END
+} Program_Object_t;
 
 #ifdef __GRID_INTEGER_CELL__
 typedef int Cell_t;
@@ -108,15 +108,15 @@ typedef int Cell_t;
 typedef float Cell_t;
 #endif
 
-LUAX_TYPE_BEGIN(Grid_Object_t)
+typedef struct _Grid_Object_t {
     size_t width, height;
     Cell_t *data;
     size_t data_size;
-LUAX_TYPE_END
+} Grid_Object_t;
 
-LUAX_TYPE_BEGIN(Source_Object_t)
+typedef struct _Source_Object_t {
     FS_Handle_t *handle;
     SL_Source_t *source;
-LUAX_TYPE_END
+} Source_Object_t;
 
 #endif  /* __MODULES_UDT_H__ */
