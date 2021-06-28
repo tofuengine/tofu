@@ -214,7 +214,7 @@ static int palette_new_1u_1u(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    const Palette_Object_t *other = (const Palette_Object_t *)LUAX_USERDATA(L, 1);
+    const Palette_Object_t *other = (const Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "cloning palette %p", other);
 

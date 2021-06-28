@@ -66,7 +66,7 @@ static int batch_new_2un_1u(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    const Bank_Object_t *bank = (const Bank_Object_t *)LUAX_USERDATA(L, 1);
+    const Bank_Object_t *bank = (const Bank_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BANK);
     size_t capacity = (size_t)LUAX_INTEGER(L, 2);
 
     GL_Batch_t *batch = GL_batch_create(bank->sheet, capacity);

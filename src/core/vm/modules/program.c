@@ -100,7 +100,7 @@ static int program_gc_1u_0(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Program_Object_t *self = (Program_Object_t *)LUAX_USERDATA(L, 1);
+    Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
 
     GL_program_destroy(self->program);
 
