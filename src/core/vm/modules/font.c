@@ -93,7 +93,7 @@ static int font_new_3usS_1u(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
         LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    const Canvas_Object_t *atlas = (const Canvas_Object_t *)LUAX_USERDATA(L, 1);
+    const Canvas_Object_t *atlas = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
     const char *cells_file = LUAX_STRING(L, 2);
     const char *alphabeth = LUAX_OPTIONAL_STRING(L, 3, NULL);
 
@@ -109,16 +109,16 @@ static int font_new_3usS_1u(lua_State *L)
         return luaL_error(L, "can't create sheet");
     }
 
-    Font_Object_t *self = (Font_Object_t *)lua_newuserdatauv(L, sizeof(Font_Object_t), 1);
-    *self = (Font_Object_t){
+    Font_Object_t *self = (Font_Object_t *)luaX_newobject(L, sizeof(Font_Object_t), &(Font_Object_t){
             .atlas = {
                 .instance = atlas,
                 .reference = luaX_ref(L, 1)
             },
             .sheet = sheet,
             .glyphs = { 0 }
-        };
+        }, OBJECT_TYPE_FONT);
     _generate_alphabeth(self->glyphs, alphabeth);
+
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font %p allocated w/ sheet %p for atlas %p w/ reference #%d",
         self, sheet, atlas, self->atlas.reference);
 
@@ -135,7 +135,7 @@ static int font_new_4unnS_1u(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    const Canvas_Object_t *atlas = (const Canvas_Object_t *)LUAX_USERDATA(L, 1);
+    const Canvas_Object_t *atlas = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
     size_t glyph_width = (size_t)LUAX_INTEGER(L, 2);
     size_t glyph_height = (size_t)LUAX_INTEGER(L, 3);
     const char *alphabeth = LUAX_OPTIONAL_STRING(L, 4, NULL);
@@ -145,16 +145,16 @@ static int font_new_4unnS_1u(lua_State *L)
         return luaL_error(L, "can't create sheet");
     }
 
-    Font_Object_t *self = (Font_Object_t *)lua_newuserdatauv(L, sizeof(Font_Object_t), 1);
-    *self = (Font_Object_t){
+    Font_Object_t *self = (Font_Object_t *)luaX_newobject(L, sizeof(Font_Object_t), &(Font_Object_t){
             .atlas = {
                 .instance = atlas,
                 .reference = luaX_ref(L, 1)
             },
             .sheet = sheet,
             .glyphs = { 0 }
-        };
+        }, OBJECT_TYPE_FONT);
     _generate_alphabeth(self->glyphs, alphabeth);
+
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font %p allocated w/ sheet %p for atlas %p w/ reference #%d",
         self, sheet, atlas, self->atlas.reference);
 
@@ -178,7 +178,7 @@ static int font_gc_1u_0(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Font_Object_t *self = (Font_Object_t *)LUAX_USERDATA(L, 1);
+    Font_Object_t *self = (Font_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_FONT);
 
     GL_sheet_destroy(self->sheet);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p destroyed", self->sheet);
@@ -218,7 +218,7 @@ static int font_size_4usNN_2n(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    const Font_Object_t *self = (const Font_Object_t *)LUAX_USERDATA(L, 1);
+    const Font_Object_t *self = (const Font_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_FONT);
     const char *text = LUAX_STRING(L, 2);
     float scale_x = LUAX_OPTIONAL_NUMBER(L, 3, 1.0f);
     float scale_y = LUAX_OPTIONAL_NUMBER(L, 4, scale_x);
@@ -243,8 +243,8 @@ static int font_blit_5uunns_2nn(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING, LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    const Font_Object_t *self = (const Font_Object_t *)LUAX_USERDATA(L, 1);
-    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_USERDATA(L, 2);
+    const Font_Object_t *self = (const Font_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_FONT);
+    const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_CANVAS);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
     const char *text = LUAX_STRING(L, 5);
@@ -285,8 +285,8 @@ static int font_blit_7uunnsnN_2nn(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    const Font_Object_t *self = (const Font_Object_t *)LUAX_USERDATA(L, 1);
-    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_USERDATA(L, 2);
+    const Font_Object_t *self = (const Font_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_FONT);
+    const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_CANVAS);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
     const char *text = LUAX_STRING(L, 5);

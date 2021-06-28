@@ -152,11 +152,10 @@ static int source_new_2sn_1u(lua_State *L)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p created, type #%d", source, type);
 
-    Source_Object_t *self = (Source_Object_t *)lua_newuserdatauv(L, sizeof(Source_Object_t), 1);
-    *self = (Source_Object_t){
+    Source_Object_t *self = (Source_Object_t *)luaX_newobject(L, sizeof(Source_Object_t), &(Source_Object_t){
             .handle = handle,
             .source = source
-        };
+        }, OBJECT_TYPE_SOURCE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p allocated", self);
 
@@ -170,7 +169,7 @@ static int source_gc_1u_0(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
+    Source_Object_t *self = (Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
@@ -192,7 +191,7 @@ static int source_looped_1u_1b(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    const Source_Object_t *self = (const Source_Object_t *)LUAX_USERDATA(L, 1);
+    const Source_Object_t *self = (const Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
 
     lua_pushboolean(L, SL_source_get_looped(self->source));
 
@@ -205,7 +204,7 @@ static int source_looped_2ub_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TBOOLEAN)
     LUAX_SIGNATURE_END
-    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
+    Source_Object_t *self = (Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
     bool looped = (bool)LUAX_BOOLEAN(L, 2);
 
     SL_source_set_looped(self->source, looped);
@@ -226,7 +225,7 @@ static int source_group_1u_1n(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    const Source_Object_t *self = (const Source_Object_t *)LUAX_USERDATA(L, 1);
+    const Source_Object_t *self = (const Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
 
     lua_pushinteger(L, (lua_Integer)SL_source_get_group(self->source));
 
@@ -239,7 +238,7 @@ static int source_group_2ub_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
+    Source_Object_t *self = (Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
     size_t group_id = (size_t)LUAX_INTEGER(L, 2);
 
     SL_source_set_group(self->source, group_id);
@@ -260,7 +259,7 @@ static int source_mix_1u_4nnnn(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    const Source_Object_t *self = (const Source_Object_t *)LUAX_USERDATA(L, 1);
+    const Source_Object_t *self = (const Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
 
     SL_Mix_t mix = SL_source_get_mix(self->source);
 
@@ -281,7 +280,7 @@ static int source_mix_5unnnn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
+    Source_Object_t *self = (Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
     float left_to_left = LUAX_NUMBER(L, 2);
     float left_to_right = LUAX_NUMBER(L, 3);
     float right_to_left = LUAX_NUMBER(L, 4);
@@ -311,7 +310,7 @@ static int source_pan_2un_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
+    Source_Object_t *self = (Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
     float pan = LUAX_NUMBER(L, 2);
 
     SL_source_set_pan(self->source, pan);
@@ -326,7 +325,7 @@ static int source_pan_3unn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
+    Source_Object_t *self = (Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
     float left_pan = LUAX_NUMBER(L, 2);
     float right_pan = LUAX_NUMBER(L, 3);
 
@@ -349,7 +348,7 @@ static int source_balance_2un_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
+    Source_Object_t *self = (Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
     float balance = LUAX_NUMBER(L, 2);
 
     SL_source_set_balance(self->source, balance);
@@ -362,7 +361,7 @@ static int source_gain_1u_1n(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    const Source_Object_t *self = (const Source_Object_t *)LUAX_USERDATA(L, 1);
+    const Source_Object_t *self = (const Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
 
     lua_pushnumber(L, (lua_Number)SL_source_get_gain(self->source));
 
@@ -375,7 +374,7 @@ static int source_gain_2un_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
+    Source_Object_t *self = (Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
     float gain = LUAX_NUMBER(L, 2);
 
     SL_source_set_gain(self->source, gain);
@@ -396,7 +395,7 @@ static int source_speed_1u_1n(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    const Source_Object_t *self = (const Source_Object_t *)LUAX_USERDATA(L, 1);
+    const Source_Object_t *self = (const Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
 
     lua_pushnumber(L, (lua_Number)SL_source_get_speed(self->source));
 
@@ -409,7 +408,7 @@ static int source_speed_2un_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
+    Source_Object_t *self = (Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
     float speed = LUAX_NUMBER(L, 2);
 
     SL_source_set_speed(self->source, speed);
@@ -430,7 +429,7 @@ static int source_play_1u_0(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
+    Source_Object_t *self = (Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
@@ -444,7 +443,7 @@ static int source_resume_1u_0(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
+    Source_Object_t *self = (Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
@@ -458,7 +457,7 @@ static int source_stop_1u_0(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
+    Source_Object_t *self = (Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 
@@ -472,7 +471,7 @@ static int source_is_playing_1u_1b(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Source_Object_t *self = (Source_Object_t *)LUAX_USERDATA(L, 1);
+    const Source_Object_t *self = (const Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
 
     Audio_t *audio = (Audio_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_AUDIO));
 

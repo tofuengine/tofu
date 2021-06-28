@@ -42,15 +42,15 @@ typedef enum _UserData_t { // TODO: move to a separate file.
 } UserData_t;
 
 typedef enum _Object_Types_t {
-    OBJECT_TYPE_CANVAS,
     OBJECT_TYPE_BANK,
-    OBJECT_TYPE_FONT,
     OBJECT_TYPE_BATCH,
-    OBJECT_TYPE_XFORM,
+    OBJECT_TYPE_CANVAS,
+    OBJECT_TYPE_FONT,
+    OBJECT_TYPE_GRID,
     OBJECT_TYPE_PALETTE,
     OBJECT_TYPE_PROGRAM,
-    OBJECT_TYPE_GRID,
-    OBJECT_TYPE_SOURCE
+    OBJECT_TYPE_SOURCE,
+    OBJECT_TYPE_XFORM
 } Object_Types_t;
 
 typedef struct _Canvas_Object_t {
@@ -59,10 +59,6 @@ typedef struct _Canvas_Object_t {
     struct {
         GL_Pixel_t background, foreground;
     } color;
-//    struct {
-//        const Bank_Object_t *instance;
-//        luaX_Reference reference;
-//    } bank;
 } Canvas_Object_t;
 
 typedef struct _Bank_Object_t {

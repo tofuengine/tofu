@@ -79,10 +79,10 @@ static int palette_new_0_1u(lua_State *L)
     }
     GL_palette_set_greyscale(palette, GL_MAX_PALETTE_COLORS);
 
-    Palette_Object_t *self = (Palette_Object_t *)lua_newuserdatauv(L, sizeof(Palette_Object_t), 1);
-    *self = (Palette_Object_t){
+    Palette_Object_t *self = (Palette_Object_t *)luaX_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
             .palette = palette
-        };
+        }, OBJECT_TYPE_PALETTE);
+
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "greyscale palette %p allocated w/ %d color(s)", self, palette->size);
 
     luaL_setmetatable(L, META_TABLE);
@@ -110,10 +110,10 @@ static int palette_new_1s_1u(lua_State *L)
     }
     GL_palette_set_colors(palette, predefined_palette->colors, predefined_palette->size);
 
-    Palette_Object_t *self = (Palette_Object_t *)lua_newuserdatauv(L, sizeof(Palette_Object_t), 1);
-    *self = (Palette_Object_t){
+    Palette_Object_t *self = (Palette_Object_t *)luaX_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
             .palette = palette
-        };
+        }, OBJECT_TYPE_PALETTE);
+
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p allocated w/ %d color(s)", self, self->palette->size); // FIXME: mark alloc/dealloc as TRACE.
 
     luaL_setmetatable(L, META_TABLE);
@@ -140,10 +140,10 @@ static int palette_new_1n_1u(lua_State *L)
     }
     GL_palette_set_greyscale(palette, levels);
 
-    Palette_Object_t *self = (Palette_Object_t *)lua_newuserdatauv(L, sizeof(Palette_Object_t), 1);
-    *self = (Palette_Object_t){
+    Palette_Object_t *self = (Palette_Object_t *)luaX_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
             .palette = palette
-        };
+        }, OBJECT_TYPE_PALETTE);
+
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p allocated w/ %d color(s)", self, self->palette->size);
 
     luaL_setmetatable(L, META_TABLE);
@@ -198,10 +198,10 @@ static int palette_new_1t_1u(lua_State *L)
     }
     GL_palette_set_colors(palette, colors, size);
 
-    Palette_Object_t *self = (Palette_Object_t *)lua_newuserdatauv(L, sizeof(Palette_Object_t), 1);
-    *self = (Palette_Object_t){
+    Palette_Object_t *self = (Palette_Object_t *)luaX_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
             .palette = palette
-        };
+        }, OBJECT_TYPE_PALETTE);
+
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p allocated w/ %d color(s)", self, self->palette->size);
 
     luaL_setmetatable(L, META_TABLE);
@@ -224,10 +224,10 @@ static int palette_new_1u_1u(lua_State *L)
     }
     GL_palette_copy(palette, other->palette);
 
-    Palette_Object_t *self = (Palette_Object_t *)lua_newuserdatauv(L, sizeof(Palette_Object_t), 1);
-    *self = (Palette_Object_t){
+    Palette_Object_t *self = (Palette_Object_t *)luaX_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
             .palette = palette
-        };
+        }, OBJECT_TYPE_PALETTE);
+
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p allocated w/ %d color(s)", self, self->palette->size);
 
     luaL_setmetatable(L, META_TABLE);
@@ -262,10 +262,10 @@ static int palette_new_3n_1u(lua_State *L)
     }
     GL_palette_set_quantized(palette, red_bits, green_bits, blue_bits);
 
-    Palette_Object_t *self = (Palette_Object_t *)lua_newuserdatauv(L, sizeof(Palette_Object_t), 1);
-    *self = (Palette_Object_t){
+    Palette_Object_t *self = (Palette_Object_t *)luaX_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
             .palette = palette
-        };
+        }, OBJECT_TYPE_PALETTE);
+
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p allocated w/ %d color(s)", self, self->palette->size);
 
     luaL_setmetatable(L, META_TABLE);
@@ -290,7 +290,7 @@ static int palette_gc_1u_0(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Palette_Object_t *self = (Palette_Object_t *)LUAX_USERDATA(L, 1);
+    Palette_Object_t *self = (Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
 
     GL_palette_destroy(self->palette);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p destroyed", self->palette);
@@ -336,7 +336,7 @@ static int palette_colors_1u_1t(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Palette_Object_t *self = (Palette_Object_t *)LUAX_USERDATA(L, 1);
+    const Palette_Object_t *self = (const Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
 
     const GL_Palette_t *palette = self->palette;
 
@@ -363,7 +363,7 @@ static int palette_size_1u_1n(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Palette_Object_t *self = (Palette_Object_t *)LUAX_USERDATA(L, 1);
+    const Palette_Object_t *self = (const Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
 
     const GL_Palette_t *palette = self->palette;
 
@@ -378,7 +378,7 @@ int palette_get_2un_3nnn(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Palette_Object_t *self = (Palette_Object_t *)LUAX_USERDATA(L, 1);
+    const Palette_Object_t *self = (const Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
     GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 2);
 
     const GL_Palette_t *palette = self->palette;
@@ -400,7 +400,7 @@ int palette_set_5unnnn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Palette_Object_t *self = (Palette_Object_t *)LUAX_USERDATA(L, 1);
+    Palette_Object_t *self = (Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
     GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 2);
     uint8_t r = (uint8_t)LUAX_INTEGER(L, 3);
     uint8_t g = (uint8_t)LUAX_INTEGER(L, 4);
@@ -422,9 +422,9 @@ static int palette_match_4unnn_1n(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
 #ifdef __PALETTE_COLOR_MEMOIZATION__
-    Palette_Object_t *self = (Palette_Object_t *)LUAX_USERDATA(L, 1);
+    Palette_Object_t *self = (Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
 #else
-    const Palette_Object_t *self = (const Palette_Object_t *)LUAX_USERDATA(L, 1);
+    const Palette_Object_t *self = (const Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
 #endif  /* __PALETTE_COLOR_MEMOIZATION__ */
     uint8_t r = (uint8_t)LUAX_INTEGER(L, 2);
     uint8_t g = (uint8_t)LUAX_INTEGER(L, 3);
@@ -453,7 +453,7 @@ static int palette_lerp_5unnnN_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Palette_Object_t *self = (Palette_Object_t *)LUAX_USERDATA(L, 1);
+    Palette_Object_t *self = (Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
     uint8_t r = (uint8_t)LUAX_INTEGER(L, 2);
     uint8_t g = (uint8_t)LUAX_INTEGER(L, 3);
     uint8_t b = (uint8_t)LUAX_INTEGER(L, 4);
@@ -474,8 +474,8 @@ static int palette_merge_3uuB_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_OPTIONAL(LUA_TBOOLEAN)
     LUAX_SIGNATURE_END
-    Palette_Object_t *self = (Palette_Object_t *)LUAX_USERDATA(L, 1);
-    const Palette_Object_t *other = (const Palette_Object_t *)LUAX_USERDATA(L, 2);
+    Palette_Object_t *self = (Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
+    const Palette_Object_t *other = (const Palette_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_PALETTE);
     bool remove_duplicates = LUAX_OPTIONAL_BOOLEAN(L, 3, true);
 
     GL_Palette_t *palette = self->palette;

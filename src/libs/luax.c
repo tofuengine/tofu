@@ -37,32 +37,55 @@ https://stackoverflow.com/questions/16713837/hand-over-global-custom-data-to-lua
 https://stackoverflow.com/questions/29449296/extending-lua-check-number-of-parameters-passed-to-a-function
 https://stackoverflow.com/questions/32673835/how-do-i-create-a-lua-module-inside-a-lua-module-in-c
 */
+#define __LUAX_RTTI__
 
-void *luaX_newtype(lua_State *L, size_t size, void *object, int type) // FIXME: rename to `newobject` and `isobject`
+#ifdef __LUAX_RTTI__
+typedef struct _luaX_Object {
+    int type;
+} luaX_Object;
+#endif  /* __LUAX_RTTI__ */
+
+void *luaX_newobject(lua_State *L, size_t size, void *state, int type)
 {
-    void *obj = lua_newuserdatauv(L, sizeof(luaX_Object) + size, 1);
-    ((luaX_Object *)obj)->type = type;
-    void *self = (uint8_t *)obj + sizeof(luaX_Object);
-    memcpy(self, object, size);
+#ifdef __LUAX_RTTI__
+    luaX_Object *object = (luaX_Object *)lua_newuserdatauv(L, sizeof(luaX_Object) + size, 1);
+    *object = (luaX_Object){
+            .type = type
+        };
+    void *self = object + 1;
+    memcpy(self, state, size);
     return self;
+#else
+    void *self = lua_newuserdatauv(L, size, 1);
+    memcpy(self, state, size);
+    return self;
+#endif  /* __LUAX_RTTI__ */
 }
 
-int luaX_istype(lua_State *L, int idx, int type)
+int luaX_isobject(lua_State *L, int idx, int type)
 {
-    luaX_Object *obj = (luaX_Object *)lua_touserdata(L, idx);
-    if (!obj) {
+#ifdef __LUAX_RTTI__
+    luaX_Object *object = (luaX_Object *)lua_touserdata(L, idx);
+    if (!object) {
         return 0;
     }
-    return obj->type == type;
+    return object->type == type;
+#else   /* __LUAX_RTTI__ */
+    return lua_isuserdata(L, idx);
+#endif  /* __LUAX_RTTI__ */
 }
 
-void *luaX_totype(lua_State *L, int idx, int type)
+void *luaX_toobject(lua_State *L, int idx, int type)
 {
-    luaX_Object *obj = (luaX_Object *)lua_touserdata(L, idx);
-    if (!obj) {
-        return 0;
+#ifdef __LUAX_RTTI__
+    luaX_Object *object = (luaX_Object *)lua_touserdata(L, idx);
+    if (!object) {
+        return NULL;
     }
-    return obj->type == type ? obj + 1: NULL;
+    return object->type == type ? object + 1: NULL;
+#else   /* __LUAX_RTTI__ */
+    return lua_touserdata(L, idx);
+#endif  /* __LUAX_RTTI__ */
 }
 
 void luaX_stackdump(lua_State *L, const char* func, int line)

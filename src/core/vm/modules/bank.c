@@ -68,7 +68,7 @@ static int bank_new_2us_1u(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    const Canvas_Object_t *atlas = (const Canvas_Object_t *)LUAX_USERDATA(L, 1);
+    const Canvas_Object_t *atlas = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
     const char *cells_file = LUAX_STRING(L, 2);
 
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
@@ -83,14 +83,14 @@ static int bank_new_2us_1u(lua_State *L)
         return luaL_error(L, "can't create sheet");
     }
 
-    Bank_Object_t *self = (Bank_Object_t *)lua_newuserdatauv(L, sizeof(Bank_Object_t), 1);
-    *self = (Bank_Object_t){
+    Bank_Object_t *self = (Bank_Object_t *)luaX_newobject(L, sizeof(Bank_Object_t), &(Bank_Object_t){
             .atlas = {
                 .instance = atlas,
                 .reference = luaX_ref(L, 1),
             },
             .sheet = sheet
-        };
+        }, OBJECT_TYPE_BANK);
+
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p allocated w/ sheet %p for atlas %p w/ reference #%d",
         self, sheet, atlas, self->atlas.reference);
 
@@ -106,7 +106,7 @@ static int bank_new_3unn_1u(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    const Canvas_Object_t *atlas = (const Canvas_Object_t *)LUAX_USERDATA(L, 1);
+    const Canvas_Object_t *atlas = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
     size_t cell_width = (size_t)LUAX_INTEGER(L, 2);
     size_t cell_height = (size_t)LUAX_INTEGER(L, 3);
 
@@ -115,14 +115,14 @@ static int bank_new_3unn_1u(lua_State *L)
         return luaL_error(L, "can't create sheet");
     }
 
-    Bank_Object_t *self = (Bank_Object_t *)lua_newuserdatauv(L, sizeof(Bank_Object_t), 1);
-    *self = (Bank_Object_t){
+    Bank_Object_t *self = (Bank_Object_t *)luaX_newobject(L, sizeof(Bank_Object_t), &(Bank_Object_t){
             .atlas = {
                 .instance = atlas,
                 .reference = luaX_ref(L, 1),
             },
             .sheet = sheet
-        };
+        }, OBJECT_TYPE_BANK);
+
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p allocated w/ sheet %p for atlas %p w/ reference #%d",
         self, sheet, atlas, self->atlas.reference);
 
@@ -144,7 +144,7 @@ static int bank_gc_1u_0(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Bank_Object_t *self = (Bank_Object_t *)LUAX_USERDATA(L, 1);
+    Bank_Object_t *self = (Bank_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BANK);
 
     GL_sheet_destroy(self->sheet);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sheet %p destroyed", self->sheet);
@@ -165,7 +165,7 @@ static int bank_size_4unNN_2n(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    const Bank_Object_t *self = (const Bank_Object_t *)LUAX_USERDATA(L, 1);
+    const Bank_Object_t *self = (const Bank_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BANK);
     GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER(L, 2);
     float scale_x = LUAX_OPTIONAL_NUMBER(L, 3, 1.0f);
     float scale_y = LUAX_OPTIONAL_NUMBER(L, 4, scale_x);
@@ -187,8 +187,8 @@ static int bank_blit_5uunnn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    const Bank_Object_t *self = (const Bank_Object_t *)LUAX_USERDATA(L, 1);
-    const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_USERDATA(L, 2);
+    const Bank_Object_t *self = (const Bank_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BANK);
+    const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_CANVAS);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
     GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER(L, 5);
@@ -211,8 +211,8 @@ static int bank_blit_6unnunn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    const Bank_Object_t *self = (const Bank_Object_t *)LUAX_USERDATA(L, 1);
-    const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_USERDATA(L, 2);
+    const Bank_Object_t *self = (const Bank_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BANK);
+    const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_CANVAS);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
     GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER(L, 5);
@@ -237,8 +237,8 @@ static int bank_blit_7uunnnnnn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    const Bank_Object_t *self = (const Bank_Object_t *)LUAX_USERDATA(L, 1);
-    const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_USERDATA(L, 2);
+    const Bank_Object_t *self = (const Bank_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BANK);
+    const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_CANVAS);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
     GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER(L, 5);
@@ -267,8 +267,8 @@ static int bank_blit_10uunnnnnnNN_0(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    const Bank_Object_t *self = (const Bank_Object_t *)LUAX_USERDATA(L, 1);
-    const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_USERDATA(L, 2);
+    const Bank_Object_t *self = (const Bank_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BANK);
+    const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_CANVAS);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
     GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER(L, 5);
@@ -310,8 +310,8 @@ static int bank_tile_7unnnnnn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    const Bank_Object_t *self = (const Bank_Object_t *)LUAX_USERDATA(L, 1);
-    const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_USERDATA(L, 2);
+    const Bank_Object_t *self = (const Bank_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BANK);
+    const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_CANVAS);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
     GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER(L, 5);
@@ -339,8 +339,8 @@ static int bank_tile_9uunnnnnnN_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    const Bank_Object_t *self = (const Bank_Object_t *)LUAX_USERDATA(L, 1);
-    const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_USERDATA(L, 2);
+    const Bank_Object_t *self = (const Bank_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BANK);
+    const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_CANVAS);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
     GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER(L, 5);
