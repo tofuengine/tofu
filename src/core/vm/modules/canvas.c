@@ -192,7 +192,7 @@ static int canvas_new_3sNU_1u(lua_State *L)
     LUAX_SIGNATURE_END
     const char *name = LUAX_STRING(L, 1);
     GL_Pixel_t transparent_index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 2, 0);
-    const Palette_Object_t *palette = (const Palette_Object_t *)LUAX_OPTIONAL_USERDATA(L, 3, NULL);
+    const Palette_Object_t *palette = (const Palette_Object_t *)LUAX_OPTIONAL_OBJECT(L, 3, OBJECT_TYPE_PALETTE, NULL);
 
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
     const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));

@@ -158,7 +158,7 @@ static int display_program_1U_0(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    const Program_Object_t *program = (const Program_Object_t *)LUAX_OPTIONAL_USERDATA(L, 1, NULL);
+    const Program_Object_t *program = (const Program_Object_t *)LUAX_OPTIONAL_OBJECT(L, 1, OBJECT_TYPE_PROGRAM, NULL);
 
     Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
