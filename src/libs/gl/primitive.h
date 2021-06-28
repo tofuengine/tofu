@@ -35,6 +35,7 @@ extern void GL_surface_polyline(const GL_Surface_t *surface, const GL_Point_t *v
 
 extern void GL_surface_filled_rectangle(const GL_Surface_t *surface, GL_Rectangle_t rectangle, GL_Pixel_t index);
 extern void GL_surface_filled_triangle(const GL_Surface_t *surface, GL_Point_t a, GL_Point_t b, GL_Point_t c, GL_Pixel_t index);
+//extern void GL_surface_filled_fan(const GL_Surface_t *surface, GL_Point_t a, GL_Point_t b, GL_Point_t c, GL_Pixel_t index);
 extern void GL_surface_filled_circle(const GL_Surface_t *surface, GL_Point_t center, size_t radius, GL_Pixel_t index);
 extern void GL_surface_circle(const GL_Surface_t *surface, GL_Point_t center, size_t radius, GL_Pixel_t index);
 

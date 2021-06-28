@@ -32,6 +32,7 @@
 
 typedef enum _Storage_Resource_Types_t {
     STORAGE_RESOURCE_STRING,
+    // STORAGE_RESOURCE_ENCODED,
     STORAGE_RESOURCE_BLOB,
     STORAGE_RESOURCE_IMAGE,
     Storage_Resource_Types_t_CountOf

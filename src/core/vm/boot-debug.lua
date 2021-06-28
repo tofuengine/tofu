@@ -38,6 +38,7 @@ local Tofu = Class.define() -- To be precise, the class name is irrelevant since
 
 function Tofu:__ctor()
   self.states = {
+    -- TODO: add an "splash" state that emulates Amiga's boot.
     ["normal"] = {
       enter = function(me)
           me.main = Main.new()
