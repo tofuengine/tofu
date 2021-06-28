@@ -58,6 +58,8 @@
 #endif
 
 // TODO: better naming for macros, including namespace.
+#define __LUAX_RTTI__
+#undef  __LUAX_INCLUDE_SYSTEM_LIBRARIES__
 #undef  __DEBUG_TRIANGLES_WINDING__
 #undef  __FIND_NEAREST_COLOR_EUCLIDIAN__
 #undef  __GRID_INTEGER_CELL__
@@ -92,6 +94,7 @@
 
 // In release build, disable VM calls debug and periodic collection for better performance.
 #ifdef RELEASE
+  #undef __LUAX_RTTI__
   #undef __GRAPHICS_CAPTURE_SUPPORT__
   #undef __DEBUG_ENGINE_PERFORMANCES__
   #undef __ENGINE_PERFORMANCE_STATISTICS__

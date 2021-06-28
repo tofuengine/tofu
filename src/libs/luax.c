@@ -24,6 +24,8 @@
 
 #include "luax.h"
 
+#include <config.h>
+
 #include <string.h>
 
 /*
@@ -37,7 +39,6 @@ https://stackoverflow.com/questions/16713837/hand-over-global-custom-data-to-lua
 https://stackoverflow.com/questions/29449296/extending-lua-check-number-of-parameters-passed-to-a-function
 https://stackoverflow.com/questions/32673835/how-do-i-create-a-lua-module-inside-a-lua-module-in-c
 */
-#define __LUAX_RTTI__
 
 #ifdef __LUAX_RTTI__
 typedef struct _luaX_Object {
@@ -55,7 +56,7 @@ void *luaX_newobject(lua_State *L, size_t size, void *state, int type)
     void *self = object + 1;
     memcpy(self, state, size);
     return self;
-#else
+#else   /* __LUAX_RTTI__ */
     void *self = lua_newuserdatauv(L, size, 1);
     memcpy(self, state, size);
     return self;
@@ -232,16 +233,16 @@ void luaX_openlibs(lua_State *L)
         { LUA_LOADLIBNAME, luaopen_package },
         { LUA_COLIBNAME, luaopen_coroutine },
         { LUA_TABLIBNAME, luaopen_table },
-#ifdef __INCLUDE_SYSTEM_LIBRARIES__
+#ifdef __LUAX_INCLUDE_SYSTEM_LIBRARIES__
         { LUA_IOLIBNAME, luaopen_io },
         { LUA_OSLIBNAME, luaopen_os },
-#endif
+#endif  /* __LUAX_INCLUDE_SYSTEM_LIBRARIES__ */
         { LUA_STRLIBNAME, luaopen_string },
         { LUA_MATHLIBNAME, luaopen_math },
         { LUA_UTF8LIBNAME, luaopen_utf8 },
 #ifdef DEBUG
         { LUA_DBLIBNAME, luaopen_debug },
-#endif
+#endif  /* DEBUG */
         { NULL, NULL }
     };
     // "require" is different from preload in the sense that is also make the
