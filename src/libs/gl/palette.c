@@ -187,7 +187,9 @@ GL_Pixel_t GL_palette_find_nearest_color(const GL_Palette_t *palette, const GL_C
     const int position = hmgeti(palette->cache, color);
     if (position != -1) {
         const GL_Pixel_t index = palette->cache[position].value;
+#ifdef VERBOSE_DEBUG
         Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "color <%d, %d, %d> found into memoizing cache at #%d (index #%d)", color.r, color.g, color.b, position, index);
+#endif
         return index;
     }
 #endif  /* __PALETTE_COLOR_MEMOIZATION__ */
@@ -218,7 +220,9 @@ GL_Pixel_t GL_palette_find_nearest_color(const GL_Palette_t *palette, const GL_C
 
 #ifdef __PALETTE_COLOR_MEMOIZATION__
     hmput(palette->cache, color, index);
+#ifdef VERBOSE_DEBUG
     Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "color <%d, %d, %d> stored into memoizing cache w/ index #%d", color.r, color.g, color.b, index);
+#endif
 #endif  /* __PALETTE_COLOR_MEMOIZATION__ */
 
     return index;

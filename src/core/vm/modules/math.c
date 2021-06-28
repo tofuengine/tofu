@@ -76,6 +76,7 @@ int math_loader(lua_State *L)
             { "sincos", math_sincos_1n_2nn },
             { "angle_to_rotation", math_angle_to_rotation_1n_1n },
             { "rotation_to_angle", math_rotation_to_angle_1n_1n },
+//            { "rotate", math_rotate_3nnn_2nn },
             { "wave", math_wave_v_1f },
             { "tweener", math_tweener_v_1f },
             { NULL, NULL }
