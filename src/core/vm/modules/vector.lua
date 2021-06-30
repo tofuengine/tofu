@@ -92,6 +92,16 @@ function Vector:sub(v)
   return self
 end
 
+function Vector:mul(v)
+  self.x, self.y = self.x * v.x, self.y * v.y
+  return self
+end
+
+function Vector:div(v)
+  self.x, self.y = self.x / v.x, self.y / v.y
+  return self
+end
+
 function Vector:scale(s)
   self.x, self.y = self.x * s, self.y * s
   return self
