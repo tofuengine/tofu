@@ -207,7 +207,7 @@ end
 
 function Vector:angle_to(v)
   if v then
-    return math.atan(v.y- self.y, v.x - self.x)
+    return math.atan(v.y - self.y, v.x - self.x)
   end
   return math.atan(self.y, self.x)
 end
