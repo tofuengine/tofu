@@ -24,6 +24,10 @@
 
 #include "luax.h"
 
+#include <config.h>
+
+#include <string.h>
+
 /*
 http://webcache.googleusercontent.com/search?q=cache:RLoR9dkMeowJ:howtomakeanrpg.com/a/classes-in-lua.html+&cd=4&hl=en&ct=clnk&gl=it
 https://hisham.hm/2014/01/02/how-to-write-lua-modules-in-a-post-module-world/
@@ -35,6 +39,55 @@ https://stackoverflow.com/questions/16713837/hand-over-global-custom-data-to-lua
 https://stackoverflow.com/questions/29449296/extending-lua-check-number-of-parameters-passed-to-a-function
 https://stackoverflow.com/questions/32673835/how-do-i-create-a-lua-module-inside-a-lua-module-in-c
 */
+
+#ifdef __LUAX_RTTI__
+typedef struct _luaX_Object {
+    int type;
+} luaX_Object;
+#endif  /* __LUAX_RTTI__ */
+
+void *luaX_newobject(lua_State *L, size_t size, void *state, int type)
+{
+#ifdef __LUAX_RTTI__
+    luaX_Object *object = (luaX_Object *)lua_newuserdatauv(L, sizeof(luaX_Object) + size, 1);
+    *object = (luaX_Object){
+            .type = type
+        };
+    void *self = object + 1;
+    memcpy(self, state, size);
+    return self;
+#else   /* __LUAX_RTTI__ */
+    void *self = lua_newuserdatauv(L, size, 1);
+    memcpy(self, state, size);
+    return self;
+#endif  /* __LUAX_RTTI__ */
+}
+
+int luaX_isobject(lua_State *L, int idx, int type)
+{
+#ifdef __LUAX_RTTI__
+    luaX_Object *object = (luaX_Object *)lua_touserdata(L, idx);
+    if (!object) {
+        return 0;
+    }
+    return object->type == type;
+#else   /* __LUAX_RTTI__ */
+    return lua_isuserdata(L, idx);
+#endif  /* __LUAX_RTTI__ */
+}
+
+void *luaX_toobject(lua_State *L, int idx, int type)
+{
+#ifdef __LUAX_RTTI__
+    luaX_Object *object = (luaX_Object *)lua_touserdata(L, idx);
+    if (!object) {
+        return NULL;
+    }
+    return object->type == type ? object + 1: NULL;
+#else   /* __LUAX_RTTI__ */
+    return lua_touserdata(L, idx);
+#endif  /* __LUAX_RTTI__ */
+}
 
 void luaX_stackdump(lua_State *L, const char* func, int line)
 {
@@ -180,16 +233,16 @@ void luaX_openlibs(lua_State *L)
         { LUA_LOADLIBNAME, luaopen_package },
         { LUA_COLIBNAME, luaopen_coroutine },
         { LUA_TABLIBNAME, luaopen_table },
-#ifdef __INCLUDE_SYSTEM_LIBRARIES__
+#ifdef __LUAX_INCLUDE_SYSTEM_LIBRARIES__
         { LUA_IOLIBNAME, luaopen_io },
         { LUA_OSLIBNAME, luaopen_os },
-#endif
+#endif  /* __LUAX_INCLUDE_SYSTEM_LIBRARIES__ */
         { LUA_STRLIBNAME, luaopen_string },
         { LUA_MATHLIBNAME, luaopen_math },
         { LUA_UTF8LIBNAME, luaopen_utf8 },
 #ifdef DEBUG
         { LUA_DBLIBNAME, luaopen_debug },
-#endif
+#endif  /* DEBUG */
         { NULL, NULL }
     };
     // "require" is different from preload in the sense that is also make the

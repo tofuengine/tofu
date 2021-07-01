@@ -58,6 +58,8 @@
 #endif
 
 // TODO: better naming for macros, including namespace.
+#define __LUAX_RTTI__
+#undef  __LUAX_INCLUDE_SYSTEM_LIBRARIES__
 #undef  __DEBUG_TRIANGLES_WINDING__
 #undef  __FIND_NEAREST_COLOR_EUCLIDIAN__
 #undef  __GRID_INTEGER_CELL__
@@ -81,6 +83,8 @@
 #define __SL_BALANCE_LAW__  BALANCE_LAW_SINCOS
 #define __SL_PANNING_LAW__  PANNING_LAW_CONSTANT_POWER_SINCOS
 #undef  __SL_MUSIC_PRELOAD__
+#undef  __GL_CLOCKWISE_WINDING__
+#define __GL_FIX_WINDING__
 #undef  __GL_XFORM_TRANSPARENCY__
 #define __GL_OPTIMIZED_ROTATIONS__
 #define __DISPLAY_FOCUS_SUPPORT__
@@ -92,6 +96,7 @@
 
 // In release build, disable VM calls debug and periodic collection for better performance.
 #ifdef RELEASE
+  #undef __LUAX_RTTI__
   #undef __GRAPHICS_CAPTURE_SUPPORT__
   #undef __DEBUG_ENGINE_PERFORMANCES__
   #undef __ENGINE_PERFORMANCE_STATISTICS__

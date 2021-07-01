@@ -60,6 +60,8 @@ typedef int luaX_Reference;
 #define LUAX_ANY            -2
 #define LUAX_EOD            -3
 
+#define LUAX_TOBJECT        LUA_TUSERDATA
+
 #ifdef DEBUG
     #define LUAX_SIGNATURE_BEGIN(L) \
         do { \
@@ -114,32 +116,40 @@ typedef int luaX_Reference;
 #endif
 
 #ifdef DEBUG
-    #define LUAX_BOOLEAN(L, idx)                (!lua_isboolean((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), 0 : lua_toboolean((L), (idx)))
-    #define LUAX_OPTIONAL_BOOLEAN(L, idx, def)  (lua_isnoneornil((L), (idx)) ? (def) : lua_toboolean((L), (idx)))
-    #define LUAX_INTEGER(L, idx)                (!lua_isnumber((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), 0 : lua_tointeger((L), (idx)))
-    #define LUAX_OPTIONAL_INTEGER(L, idx, def)  (lua_isnoneornil((L), (idx)) ? (def) : lua_tointeger((L), (idx)))
-    #define LUAX_NUMBER(L, idx)                 (!lua_isnumber((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), 0.0f : lua_tonumber((L), (idx)))
-    #define LUAX_OPTIONAL_NUMBER(L, idx, def)   (lua_isnoneornil((L), (idx)) ? (def) : lua_tonumber((L), (idx)))
-    #define LUAX_STRING(L, idx)                 (!lua_isstring((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), NULL : lua_tostring((L), (idx)))
-    #define LUAX_OPTIONAL_STRING(L, idx, def)   (lua_isnoneornil((L), (idx)) ? (def) : lua_tostring((L), (idx)))
-    #define LUAX_USERDATA(L, idx)               (!lua_isuserdata((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), NULL : lua_touserdata((L), (idx)))
-    #define LUAX_OPTIONAL_USERDATA(L, idx, def) (lua_isnoneornil((L), (idx)) ? (def) : lua_touserdata((L), (idx)))
+    #define LUAX_BOOLEAN(L, idx)                 (!lua_isboolean((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), 0 : lua_toboolean((L), (idx)))
+    #define LUAX_OPTIONAL_BOOLEAN(L, idx, def)   (lua_isnoneornil((L), (idx)) ? (def) : lua_toboolean((L), (idx)))
+    #define LUAX_INTEGER(L, idx)                 (!lua_isnumber((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), 0 : lua_tointeger((L), (idx)))
+    #define LUAX_OPTIONAL_INTEGER(L, idx, def)   (lua_isnoneornil((L), (idx)) ? (def) : lua_tointeger((L), (idx)))
+    #define LUAX_NUMBER(L, idx)                  (!lua_isnumber((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), 0.0f : lua_tonumber((L), (idx)))
+    #define LUAX_OPTIONAL_NUMBER(L, idx, def)    (lua_isnoneornil((L), (idx)) ? (def) : lua_tonumber((L), (idx)))
+    #define LUAX_STRING(L, idx)                  (!lua_isstring((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), NULL : lua_tostring((L), (idx)))
+    #define LUAX_OPTIONAL_STRING(L, idx, def)    (lua_isnoneornil((L), (idx)) ? (def) : lua_tostring((L), (idx)))
+    #define LUAX_USERDATA(L, idx)                (!lua_isuserdata((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), NULL : lua_touserdata((L), (idx)))
+    #define LUAX_OPTIONAL_USERDATA(L, idx, def)  (lua_isnoneornil((L), (idx)) ? (def) : lua_touserdata((L), (idx)))
+    #define LUAX_OBJECT(l, idx, t)               (!luaX_isobject((L), (idx), (t)) ? luaL_error((L), "value at index #%d has wrong type (expected #%d)", (idx), (t)), NULL : luaX_toobject((L), (idx), (t)))
+    #define LUAX_OPTIONAL_OBJECT(l, idx, t, def) (lua_isnoneornil((L), (idx)) ? (def) : luaX_toobject((L), (idx), (t)))
 #else
-    #define LUAX_BOOLEAN(L, idx)                (lua_toboolean((L), (idx)))
-    #define LUAX_OPTIONAL_BOOLEAN(L, idx, def)  (lua_isnoneornil((L), (idx)) ? (def) : lua_toboolean((L), (idx)))
-    #define LUAX_INTEGER(L, idx)                (lua_tointeger((L), (idx)))
-    #define LUAX_OPTIONAL_INTEGER(L, idx, def)  (lua_isnoneornil((L), (idx)) ? (def) : lua_tointeger((L), (idx)))
-    #define LUAX_NUMBER(L, idx)                 (lua_tonumber((L), (idx)))
-    #define LUAX_OPTIONAL_NUMBER(L, idx, def)   (lua_isnoneornil((L), (idx)) ? (def) : lua_tonumber((L), (idx)))
-    #define LUAX_STRING(L, idx)                 (lua_tostring((L), (idx)))
-    #define LUAX_OPTIONAL_STRING(L, idx, def)   (lua_isnoneornil((L), (idx)) ? (def) : lua_tostring((L), (idx)))
-    #define LUAX_USERDATA(L, idx)               (lua_touserdata((L), (idx)))
-    #define LUAX_OPTIONAL_USERDATA(L, idx, def) (lua_isnoneornil((L), (idx)) ? (def) : lua_touserdata((L), (idx)))
+    #define LUAX_BOOLEAN(L, idx)                 (lua_toboolean((L), (idx)))
+    #define LUAX_OPTIONAL_BOOLEAN(L, idx, def)   (lua_isnoneornil((L), (idx)) ? (def) : lua_toboolean((L), (idx)))
+    #define LUAX_INTEGER(L, idx)                 (lua_tointeger((L), (idx)))
+    #define LUAX_OPTIONAL_INTEGER(L, idx, def)   (lua_isnoneornil((L), (idx)) ? (def) : lua_tointeger((L), (idx)))
+    #define LUAX_NUMBER(L, idx)                  (lua_tonumber((L), (idx)))
+    #define LUAX_OPTIONAL_NUMBER(L, idx, def)    (lua_isnoneornil((L), (idx)) ? (def) : lua_tonumber((L), (idx)))
+    #define LUAX_STRING(L, idx)                  (lua_tostring((L), (idx)))
+    #define LUAX_OPTIONAL_STRING(L, idx, def)    (lua_isnoneornil((L), (idx)) ? (def) : lua_tostring((L), (idx)))
+    #define LUAX_USERDATA(L, idx)                (lua_touserdata((L), (idx)))
+    #define LUAX_OPTIONAL_USERDATA(L, idx, def)  (lua_isnoneornil((L), (idx)) ? (def) : lua_touserdata((L), (idx)))
+    #define LUAX_OBJECT(l, idx, t)               (luaX_toobject((L), (idx), (t)))
+    #define LUAX_OPTIONAL_OBJECT(l, idx, t, def) (lua_isnoneornil((L), (idx)) ? (def) : luaX_toobject((L), (idx), (t)))
 #endif
 
 #define luaX_dump(L)                luaX_stackdump((L), __FILE__, __LINE__)
 
 #define luaX_tofunction(L, idx)     luaX_ref((L), (idx))
+
+extern void *luaX_newobject(lua_State *L, size_t size, void *state, int type);
+extern int luaX_isobject(lua_State *L, int idx, int type);
+extern void *luaX_toobject(lua_State *L, int idx, int type);
 
 extern void luaX_stackdump(lua_State *L, const char *file, int line);
 extern void luaX_overridesearchers(lua_State *L, lua_CFunction searcher, int nup);

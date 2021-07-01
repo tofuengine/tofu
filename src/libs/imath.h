@@ -38,6 +38,8 @@
 #define IMIRROR(x)      ((x) >= 0 ? (x) : -(1 + (x)))
 
 #define ITRUNC(x)       ((int)(x))
+#define INEAREST(x)     ((int)((x) + 0.5f))
+
 #define IFLOORF(x)      ((int)floorf((x)))
 #define ICEILF(x)       ((int)ceilf((x)))
 #define IROUNDF(x)      ((int)roundf((x)))

@@ -397,9 +397,10 @@ void GL_surface_filled_rectangle(const GL_Surface_t *surface, GL_Rectangle_t rec
 
 // http://www.sunshine2k.de/coding/java/TriangleRasterization/TriangleRasterization.html
 // https://www.scratchapixel.com/lessons/3d-basic-rendering/rasterization-practical-implementation/rasterization-stage
-// https://fgiesen.wordpress.com/2013/02/08/triangle-rasterization-in-practice/
 // https://github.com/dpethes/2D-rasterizer/blob/master/rasterizer2d.pas
-void GL_surface_filled_triangle(const GL_Surface_t *surface, GL_Point_t a, GL_Point_t b, GL_Point_t c, GL_Pixel_t index)
+// https://fgiesen.wordpress.com/2013/02/08/triangle-rasterization-in-practice/
+// https://fgiesen.wordpress.com/2013/02/10/optimizing-the-basic-rasterizer/
+void GL_surface_filled_triangle(const GL_Surface_t *surface, GL_Point_t v0, GL_Point_t v1, GL_Point_t v2, GL_Pixel_t index)
 {
     const GL_State_t *state = &surface->state.current;
     const GL_Quad_t *clipping_region = &state->clipping_region;
@@ -413,10 +414,10 @@ void GL_surface_filled_triangle(const GL_Surface_t *surface, GL_Point_t a, GL_Po
     }
 
     GL_Quad_t drawing_region = (GL_Quad_t){
-            .x0 = imin(imin(a.x, b.x), c.x),
-            .y0 = imin(imin(a.y, b.y), c.y),
-            .x1 = imax(imax(a.x, b.x), c.x),
-            .y1 = imax(imax(a.y, b.y), c.y)
+            .x0 = imin(imin(v0.x, v1.x), v2.x),
+            .y0 = imin(imin(v0.y, v1.y), v2.y),
+            .x1 = imax(imax(v0.x, v1.x), v2.x),
+            .y1 = imax(imax(v0.y, v1.y), v2.y)
         };
 
     if (drawing_region.x0 < clipping_region->x0) {
@@ -434,67 +435,68 @@ void GL_surface_filled_triangle(const GL_Surface_t *surface, GL_Point_t a, GL_Po
 
     const int width = drawing_region.x1 - drawing_region.x0 + 1;
     const int height = drawing_region.y1 - drawing_region.y0 + 1;
-    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
+    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out! (can be negative due to clipping region)
         return;
     }
 
-    if ((b.x - a.x) * (c.y - a.y) > (c.x - a.x) * (b.y - a.y)) { // Ensure CCW winding.
-        GL_Point_t t = a;
-        a = b;
-        b = t;
+#ifdef __GL_FIX_WINDING__
+#ifdef __GL_CLOCKWISE_WINDING__
+    if ((v1.x - v0.x) * (v2.y - v0.y) < (v2.x - v0.x) * (v1.y - v0.y)) { // Ensure CW winding.
+#else
+    if ((v1.x - v0.x) * (v2.y - v0.y) > (v2.x - v0.x) * (v1.y - v0.y)) { // Ensure CCW winding.
+#endif
+        const GL_Point_t t = v1;
+        v1 = v2;
+        v2 = t;
     }
+#endif  /* __GL_FIX_WINDING__ */
 
-    int DX12 = a.x - b.x; // Fast edge-function calculation, using a DDA method.
-    int DX23 = b.x - c.x;
-    int DX31 = c.x - a.x;
-    int DY12 = a.y - b.y;
-    int DY23 = b.y - c.y;
-    int DY31 = c.y - a.y;
+    // Fast edge-function calculation, using a DDA method.
+    // Note: swap `v1` and `v2` in the formulas to change winding.
+#ifdef __GL_CLOCKWISE_WINDING__
+    const int DW0X = v1.y - v2.y, DW0Y = v2.x - v1.x;
+    const int DW1X = v2.y - v0.y, DW1Y = v0.x - v2.x;
+    const int DW2X = v0.y - v1.y, DW2Y = v1.x - v0.x;
+#else
+    const int DW0X = v2.y - v1.y, DW0Y = v1.x - v2.x;
+    const int DW1X = v0.y - v2.y, DW1Y = v2.x - v0.x;
+    const int DW2X = v1.y - v0.y, DW2Y = v0.x - v1.x;
+#endif
 
-    int C1 = DY12 * a.x - DX12 * a.y;
-    int C2 = DY23 * b.x - DX23 * b.y;
-    int C3 = DY31 * c.x - DX31 * c.y;
+    const GL_Point_t p = (GL_Point_t){ .x = drawing_region.x0, .y = drawing_region.y0 };
 
-    if ((DY12 < 0) || ((DY12 == 0) && (DX12 > 0))) { C1 += 1; }
-    if ((DY23 < 0) || ((DY23 == 0) && (DX23 > 0))) { C2 += 1; }
-    if ((DY31 < 0) || ((DY31 == 0) && (DX31 > 0))) { C3 += 1; }
-
-    int CY1 = C1 + DX12 * drawing_region.y0 - DY12 * drawing_region.x0;
-    int CY2 = C2 + DX23 * drawing_region.y0 - DY23 * drawing_region.x0;
-    int CY3 = C3 + DX31 * drawing_region.y0 - DY31 * drawing_region.x0;
+    int w0_row = DW0Y * (p.y - v1.y) + DW0X * (p.x - v1.x); // Reuse and simplify `orient2d()`.
+    int w1_row = DW1Y * (p.y - v2.y) + DW1X * (p.x - v2.x);
+    int w2_row = DW2Y * (p.y - v0.y) + DW2X * (p.x - v0.x);
 
     GL_Pixel_t *ddata = surface->data;
 
     const size_t dwidth = surface->width;
 
-    const size_t dskip = dwidth;
+    const size_t dskip = dwidth - width;
 
     GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
 
     for (int y = 0; y < height; ++y) { // Pinada's edge function is linear, we can cast it...
-        int CX1 = CY1;
-        int CX2 = CY2;
-        int CX3 = CY3;
-        size_t count = 0;
-        int eod = 0;
-        for (int x = 0; x < width; ++x) {
-            if ((CX1 | CX2 | CX3) > 0) { // Check the sign bit only.
-                count += 1;
-                eod = x;
-            }
-            CX1 -= DY12;
-            CX2 -= DY23;
-            CX3 -= DY31;
-        }
-        CY1 += DX12;
-        CY2 += DX23;
-        CY3 += DX31;
+        int w0 = w0_row;
+        int w1 = w1_row;
+        int w2 = w2_row;
 
-        GL_Pixel_t *dstride = dptr + eod;
-        for (size_t i = count; i; --i) { // Backward copy, simpler math.
-            *(dstride--) = index;
+        for (int x = 0; x < width; ++x) {
+            if ((w0 | w1 | w2) >= 0) { // Check the sign bit only.
+                *dptr = index;
+            }
+            ++dptr;
+
+            w0 += DW0X;
+            w1 += DW1X;
+            w2 += DW2X;
         }
         dptr += dskip;
+
+        w0_row += DW0Y;
+        w1_row += DW1Y;
+        w2_row += DW2Y;
     }
 }
 

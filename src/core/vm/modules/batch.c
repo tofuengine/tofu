@@ -66,7 +66,7 @@ static int batch_new_2un_1u(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    const Bank_Object_t *bank = (const Bank_Object_t *)LUAX_USERDATA(L, 1);
+    const Bank_Object_t *bank = (const Bank_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BANK);
     size_t capacity = (size_t)LUAX_INTEGER(L, 2);
 
     GL_Batch_t *batch = GL_batch_create(bank->sheet, capacity);
@@ -75,14 +75,14 @@ static int batch_new_2un_1u(lua_State *L)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "batch %p created for bank %p w/ %d slots", batch, bank, capacity);
 
-    Batch_Object_t *self = (Batch_Object_t *)lua_newuserdatauv(L, sizeof(Batch_Object_t), 1);
-    *self = (Batch_Object_t){
+    Batch_Object_t *self = (Batch_Object_t *)luaX_newobject(L, sizeof(Batch_Object_t), &(Batch_Object_t){
             .bank = {
                 .instance = bank,
                 .reference = luaX_ref(L, 1)
             },
             .batch = batch
-        };
+        }, OBJECT_TYPE_BATCH);
+
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "batch %p created w/ bank %p", self, bank);
 
     luaL_setmetatable(L, META_TABLE);
@@ -95,7 +95,7 @@ static int batch_gc_1u_0(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Batch_Object_t *self = (Batch_Object_t *)LUAX_USERDATA(L, 1);
+    Batch_Object_t *self = (Batch_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BATCH);
 
     luaX_unref(L, self->bank.reference);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank reference #%d released", self->bank.reference);
@@ -114,7 +114,7 @@ static int batch_resize_2un_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Batch_Object_t *self = (Batch_Object_t *)LUAX_USERDATA(L, 1);
+    Batch_Object_t *self = (Batch_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BATCH);
     size_t capacity = (size_t)LUAX_INTEGER(L, 2);
 
     bool resized = GL_batch_resize(self->batch, capacity);
@@ -131,7 +131,7 @@ static int batch_grow_2un_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Batch_Object_t *self = (Batch_Object_t *)LUAX_USERDATA(L, 1);
+    Batch_Object_t *self = (Batch_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BATCH);
     size_t amount = (size_t)LUAX_INTEGER(L, 2);
 
     bool grown = GL_batch_grow(self->batch, amount);
@@ -147,7 +147,7 @@ static int batch_clear_1u_0(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Batch_Object_t *self = (Batch_Object_t *)LUAX_USERDATA(L, 1);
+    Batch_Object_t *self = (Batch_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BATCH);
 
     GL_batch_clear(self->batch);
 
@@ -162,7 +162,7 @@ static int batch_add_4unNN_0(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Batch_Object_t *self = (Batch_Object_t *)LUAX_USERDATA(L, 1);
+    Batch_Object_t *self = (Batch_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BATCH);
     GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER(L, 2);
     int x = LUAX_OPTIONAL_INTEGER(L, 3, 0);
     int y = LUAX_OPTIONAL_INTEGER(L, 4, 0);
@@ -187,7 +187,7 @@ static int batch_add_5unnnn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Batch_Object_t *self = (Batch_Object_t *)LUAX_USERDATA(L, 1);
+    Batch_Object_t *self = (Batch_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BATCH);
     GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER(L, 2);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
@@ -214,7 +214,7 @@ static int batch_add_6unnnnn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Batch_Object_t *self = (Batch_Object_t *)LUAX_USERDATA(L, 1);
+    Batch_Object_t *self = (Batch_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BATCH);
     GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER(L, 2);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
@@ -245,7 +245,7 @@ static int batch_add_9unnnnnNNN_0(lua_State *L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Batch_Object_t *self = (Batch_Object_t *)LUAX_USERDATA(L, 1);
+    Batch_Object_t *self = (Batch_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BATCH);
     GL_Cell_t cell_id = (GL_Cell_t)LUAX_INTEGER(L, 2);
     int x = LUAX_INTEGER(L, 3);
     int y = LUAX_INTEGER(L, 4);
@@ -285,8 +285,8 @@ static int batch_blit_3uuS_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    const Batch_Object_t *self = (const Batch_Object_t *)LUAX_USERDATA(L, 1);
-    Canvas_Object_t *canvas = (Canvas_Object_t *)LUAX_USERDATA(L, 2);
+    const Batch_Object_t *self = (const Batch_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BATCH);
+    const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_CANVAS);
     const char *mode = LUAX_OPTIONAL_STRING(L, 3, "fast");
 
     const GL_Batch_t *batch = self->batch;

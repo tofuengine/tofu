@@ -80,13 +80,14 @@ static int program_new_0_1u(lua_State *L)
         return luaL_error(L, "can't create program");
     }
 
-    Program_Object_t *self = (Program_Object_t *)lua_newuserdatauv(L, sizeof(Program_Object_t), 1);
-    *self = (Program_Object_t){
+    Program_Object_t *self = (Program_Object_t *)luaX_newobject(L, sizeof(Program_Object_t), &(Program_Object_t){
             .program = program
-        };
+        }, OBJECT_TYPE_PROGRAM);
 
 #ifdef VERBOSE_DEBUG
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p allocated", self);
+#else  /* VERBOSE_DEBUG */
+    (void)self;
 #endif  /* VERBOSE_DEBUG */
 
     luaL_setmetatable(L, META_TABLE);
@@ -99,7 +100,7 @@ static int program_gc_1u_0(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
     LUAX_SIGNATURE_END
-    Program_Object_t *self = (Program_Object_t *)LUAX_USERDATA(L, 1);
+    Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
 
     GL_program_destroy(self->program);
 
@@ -117,7 +118,7 @@ static int program_wait_3unn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Program_Object_t *self = (Program_Object_t *)LUAX_USERDATA(L, 1);
+    Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
     size_t x = (size_t)LUAX_INTEGER(L, 2);
     size_t y = (size_t)LUAX_INTEGER(L, 3);
 
@@ -132,7 +133,7 @@ static int program_modulo_2un_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Program_Object_t *self = (Program_Object_t *)LUAX_USERDATA(L, 1);
+    Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
     int amount = LUAX_INTEGER(L, 2);
 
     GL_program_modulo(self->program, amount);
@@ -146,7 +147,7 @@ static int program_offset_2un_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Program_Object_t *self = (Program_Object_t *)LUAX_USERDATA(L, 1);
+    Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
     int amount = LUAX_INTEGER(L, 2);
 
     GL_program_offset(self->program, amount);
@@ -163,7 +164,7 @@ static int program_color_5unnnn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Program_Object_t *self = (Program_Object_t *)LUAX_USERDATA(L, 1);
+    Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
     GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 2);
     uint8_t r = (uint8_t)LUAX_INTEGER(L, 3);
     uint8_t g = (uint8_t)LUAX_INTEGER(L, 4);
@@ -182,7 +183,7 @@ static int program_shift_2ut_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
         LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
     LUAX_SIGNATURE_END
-    Program_Object_t *self = (Program_Object_t *)LUAX_USERDATA(L, 1);
+    Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
 
     lua_pushnil(L);
     while (lua_next(L, 2)) {
@@ -204,7 +205,7 @@ static int program_shift_3unn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    Program_Object_t *self = (Program_Object_t *)LUAX_USERDATA(L, 1);
+    Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
     GL_Pixel_t from = (GL_Pixel_t)LUAX_INTEGER(L, 2);
     GL_Pixel_t to = (GL_Pixel_t)LUAX_INTEGER(L, 3);
 

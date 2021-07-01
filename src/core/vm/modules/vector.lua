@@ -92,6 +92,16 @@ function Vector:sub(v)
   return self
 end
 
+function Vector:mul(v)
+  self.x, self.y = self.x * v.x, self.y * v.y
+  return self
+end
+
+function Vector:div(v)
+  self.x, self.y = self.x / v.x, self.y / v.y
+  return self
+end
+
 function Vector:scale(s)
   self.x, self.y = self.x * s, self.y * s
   return self
@@ -207,7 +217,7 @@ end
 
 function Vector:angle_to(v)
   if v then
-    return math.atan(v.y- self.y, v.x - self.x)
+    return math.atan(v.y - self.y, v.x - self.x)
   end
   return math.atan(self.y, self.x)
 end
