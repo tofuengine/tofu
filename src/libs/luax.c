@@ -300,7 +300,7 @@ void luaX_unref(lua_State *L, luaX_Reference ref)
 void luaX_checkargument(lua_State *L, int idx, const char *file, int line, const int types[])
 {
     int actual_type = lua_type(L, idx);
-    for (int i = 0; types[i] != LUAX_EOD; ++i) {
+    for (int i = 0; types[i] != LUA_TEOD; ++i) {
         int type = types[i];
         if (actual_type == type) { // Bail out if we match a type!
             return;
@@ -316,13 +316,13 @@ int luaX_hassignature(lua_State *L, const int signature[])
     int matched = 0;
 
     int idx = 1; // Lua's stack isn't zero-based.
-    for (int i = 0; signature[i] != LUAX_EOD; ++i) {
+    for (int i = 0; signature[i] != LUA_TEOD; ++i) {
         if (i == argc) { // Actual arguments are fewer than signature's formal ones. Bail out as not matching!
             return 0;
         }
         int type = signature[i];
         int actual_type = lua_type(L, idx++);
-        if (actual_type != type && type != LUAX_ANY) { // Non matching argument! Bail out as not matching!
+        if (actual_type != type && type != LUA_TANY) { // Non matching argument! Bail out as not matching!
             return 0;
         }
         ++matched;
