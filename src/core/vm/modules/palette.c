@@ -212,7 +212,7 @@ static int palette_new_1t_1u(lua_State *L)
 static int palette_new_1u_1u(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     const Palette_Object_t *other = (const Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
 
@@ -280,7 +280,7 @@ static int palette_new_v_1u(lua_State *L)
         LUAX_OVERLOAD_SIGNATURE(palette_new_1s_1u, LUA_TSTRING)
         LUAX_OVERLOAD_SIGNATURE(palette_new_1n_1u, LUA_TNUMBER)
         LUAX_OVERLOAD_SIGNATURE(palette_new_1t_1u, LUA_TTABLE)
-        LUAX_OVERLOAD_SIGNATURE(palette_new_1u_1u, LUA_TUSERDATA)
+        LUAX_OVERLOAD_SIGNATURE(palette_new_1u_1u, LUA_TOBJECT)
         LUAX_OVERLOAD_ARITY(3, palette_new_3n_1u)
     LUAX_OVERLOAD_END
 }
@@ -288,7 +288,7 @@ static int palette_new_v_1u(lua_State *L)
 static int palette_gc_1u_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     Palette_Object_t *self = (Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
 
@@ -334,7 +334,7 @@ static int palette_mix_7nnnnnnN_3nnn(lua_State *L)
 static int palette_colors_1u_1t(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     const Palette_Object_t *self = (const Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
 
@@ -361,7 +361,7 @@ static int palette_colors_1u_1t(lua_State *L)
 static int palette_size_1u_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     const Palette_Object_t *self = (const Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
 
@@ -375,7 +375,7 @@ static int palette_size_1u_1n(lua_State *L)
 int palette_get_2un_3nnn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const Palette_Object_t *self = (const Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
@@ -394,7 +394,7 @@ int palette_get_2un_3nnn(lua_State *L)
 int palette_set_5unnnn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -416,7 +416,7 @@ int palette_set_5unnnn_0(lua_State *L)
 static int palette_match_4unnn_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -447,7 +447,7 @@ static int palette_match_4unnn_1n(lua_State *L)
 static int palette_lerp_5unnnN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -470,8 +470,8 @@ static int palette_lerp_5unnnN_0(lua_State *L)
 static int palette_merge_3uuB_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_OPTIONAL(LUA_TBOOLEAN)
     LUAX_SIGNATURE_END
     Palette_Object_t *self = (Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);

@@ -167,7 +167,7 @@ static int source_new_2sn_1u(lua_State *L)
 static int source_gc_1u_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     Source_Object_t *self = (Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
 
@@ -189,7 +189,7 @@ static int source_gc_1u_0(lua_State *L)
 static int source_looped_1u_1b(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     const Source_Object_t *self = (const Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
 
@@ -201,7 +201,7 @@ static int source_looped_1u_1b(lua_State *L)
 static int source_looped_2ub_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TBOOLEAN)
     LUAX_SIGNATURE_END
     Source_Object_t *self = (Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
@@ -223,7 +223,7 @@ static int source_looped_v_v(lua_State *L)
 static int source_group_1u_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     const Source_Object_t *self = (const Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
 
@@ -235,7 +235,7 @@ static int source_group_1u_1n(lua_State *L)
 static int source_group_2ub_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Source_Object_t *self = (Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
@@ -257,7 +257,7 @@ static int source_group_v_v(lua_State *L)
 static int source_mix_1u_4nnnn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     const Source_Object_t *self = (const Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
 
@@ -274,7 +274,7 @@ static int source_mix_1u_4nnnn(lua_State *L)
 static int source_mix_5unnnn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -307,7 +307,7 @@ static int source_mix_v_v(lua_State *L)
 static int source_pan_2un_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Source_Object_t *self = (Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
@@ -321,7 +321,7 @@ static int source_pan_2un_0(lua_State *L)
 static int source_pan_3unn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
@@ -345,7 +345,7 @@ static int source_pan_v_0(lua_State *L)
 static int source_balance_2un_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Source_Object_t *self = (Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
@@ -359,7 +359,7 @@ static int source_balance_2un_0(lua_State *L)
 static int source_gain_1u_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     const Source_Object_t *self = (const Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
 
@@ -371,7 +371,7 @@ static int source_gain_1u_1n(lua_State *L)
 static int source_gain_2un_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Source_Object_t *self = (Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
@@ -393,7 +393,7 @@ static int source_gain_v_v(lua_State *L)
 static int source_speed_1u_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     const Source_Object_t *self = (const Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
 
@@ -405,7 +405,7 @@ static int source_speed_1u_1n(lua_State *L)
 static int source_speed_2un_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Source_Object_t *self = (Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
@@ -427,7 +427,7 @@ static int source_speed_v_v(lua_State *L)
 static int source_play_1u_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     Source_Object_t *self = (Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
 
@@ -441,7 +441,7 @@ static int source_play_1u_0(lua_State *L)
 static int source_resume_1u_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     Source_Object_t *self = (Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
 
@@ -455,7 +455,7 @@ static int source_resume_1u_0(lua_State *L)
 static int source_stop_1u_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     Source_Object_t *self = (Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
 
@@ -469,7 +469,7 @@ static int source_stop_1u_0(lua_State *L)
 static int source_is_playing_1u_1b(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     const Source_Object_t *self = (const Source_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_SOURCE);
 

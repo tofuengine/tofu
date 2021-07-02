@@ -62,7 +62,7 @@ int display_loader(lua_State *L)
 static int display_palette_1u_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     const Palette_Object_t *palette = (const Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
 
@@ -156,7 +156,7 @@ static int display_shift_v_0(lua_State *L)
 static int display_program_1U_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     const Program_Object_t *program = (const Program_Object_t *)LUAX_OPTIONAL_OBJECT(L, 1, OBJECT_TYPE_PROGRAM, NULL);
 
