@@ -116,13 +116,11 @@ static int font_new_3usS_1u(lua_State *L)
             },
             .sheet = sheet,
             .glyphs = { 0 }
-        }, OBJECT_TYPE_FONT);
+        }, OBJECT_TYPE_FONT, META_TABLE);
     _generate_alphabeth(self->glyphs, alphabeth);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font %p allocated w/ sheet %p for atlas %p w/ reference #%d",
         self, sheet, atlas, self->atlas.reference);
-
-    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }
@@ -152,13 +150,11 @@ static int font_new_4unnS_1u(lua_State *L)
             },
             .sheet = sheet,
             .glyphs = { 0 }
-        }, OBJECT_TYPE_FONT);
+        }, OBJECT_TYPE_FONT, META_TABLE);
     _generate_alphabeth(self->glyphs, alphabeth);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "font %p allocated w/ sheet %p for atlas %p w/ reference #%d",
         self, sheet, atlas, self->atlas.reference);
-
-    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }

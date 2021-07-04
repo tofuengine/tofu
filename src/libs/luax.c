@@ -46,10 +46,11 @@ typedef struct _luaX_Object {
 } luaX_Object;
 #endif  /* __LUAX_RTTI__ */
 
-void *luaX_newobject(lua_State *L, size_t size, void *state, int type)
+void *luaX_newobject(lua_State *L, size_t size, void *state, int type, const char *metatable)
 {
 #ifdef __LUAX_RTTI__
     luaX_Object *object = (luaX_Object *)lua_newuserdatauv(L, sizeof(luaX_Object) + size, 1);
+    luaL_setmetatable(L, metatable);
     *object = (luaX_Object){
             .type = type
         };
@@ -58,6 +59,7 @@ void *luaX_newobject(lua_State *L, size_t size, void *state, int type)
     return self;
 #else   /* __LUAX_RTTI__ */
     void *self = lua_newuserdatauv(L, size, 1);
+    luaL_setmetatable(L, metatable);
     memcpy(self, state, size);
     return self;
 #endif  /* __LUAX_RTTI__ */

@@ -114,11 +114,9 @@ static int grid_new_3nnt_1u(lua_State *L)
             .height = height,
             .data = data,
             .data_size = data_size
-        }, OBJECT_TYPE_GRID);
+        }, OBJECT_TYPE_GRID, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "grid %p allocated w/ data %p", self, data);
-
-    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }

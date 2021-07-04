@@ -155,11 +155,9 @@ static int source_new_2sn_1u(lua_State *L)
     Source_Object_t *self = (Source_Object_t *)luaX_newobject(L, sizeof(Source_Object_t), &(Source_Object_t){
             .handle = handle,
             .source = source
-        }, OBJECT_TYPE_SOURCE);
+        }, OBJECT_TYPE_SOURCE, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p allocated", self);
-
-    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }

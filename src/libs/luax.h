@@ -147,7 +147,7 @@ typedef int luaX_Reference;
 
 #define luaX_tofunction(L, idx)     luaX_ref((L), (idx))
 
-extern void *luaX_newobject(lua_State *L, size_t size, void *state, int type);
+extern void *luaX_newobject(lua_State *L, size_t size, void *state, int type, const char *metatable);
 extern int luaX_isobject(lua_State *L, int idx, int type);
 extern void *luaX_toobject(lua_State *L, int idx, int type);
 

@@ -89,12 +89,10 @@ static int bank_new_2us_1u(lua_State *L)
                 .reference = luaX_ref(L, 1),
             },
             .sheet = sheet
-        }, OBJECT_TYPE_BANK);
+        }, OBJECT_TYPE_BANK, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p allocated w/ sheet %p for atlas %p w/ reference #%d",
         self, sheet, atlas, self->atlas.reference);
-
-    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }
@@ -121,12 +119,10 @@ static int bank_new_3unn_1u(lua_State *L)
                 .reference = luaX_ref(L, 1),
             },
             .sheet = sheet
-        }, OBJECT_TYPE_BANK);
+        }, OBJECT_TYPE_BANK, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p allocated w/ sheet %p for atlas %p w/ reference #%d",
         self, sheet, atlas, self->atlas.reference);
-
-    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }

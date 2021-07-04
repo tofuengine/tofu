@@ -81,11 +81,9 @@ static int palette_new_0_1u(lua_State *L)
 
     Palette_Object_t *self = (Palette_Object_t *)luaX_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
             .palette = palette
-        }, OBJECT_TYPE_PALETTE);
+        }, OBJECT_TYPE_PALETTE, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "greyscale palette %p allocated w/ %d color(s)", self, palette->size);
-
-    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }
@@ -112,11 +110,9 @@ static int palette_new_1s_1u(lua_State *L)
 
     Palette_Object_t *self = (Palette_Object_t *)luaX_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
             .palette = palette
-        }, OBJECT_TYPE_PALETTE);
+        }, OBJECT_TYPE_PALETTE, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p allocated w/ %d color(s)", self, self->palette->size); // FIXME: mark alloc/dealloc as TRACE.
-
-    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }
@@ -142,11 +138,9 @@ static int palette_new_1n_1u(lua_State *L)
 
     Palette_Object_t *self = (Palette_Object_t *)luaX_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
             .palette = palette
-        }, OBJECT_TYPE_PALETTE);
+        }, OBJECT_TYPE_PALETTE, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p allocated w/ %d color(s)", self, self->palette->size);
-
-    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }
@@ -200,11 +194,9 @@ static int palette_new_1t_1u(lua_State *L)
 
     Palette_Object_t *self = (Palette_Object_t *)luaX_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
             .palette = palette
-        }, OBJECT_TYPE_PALETTE);
+        }, OBJECT_TYPE_PALETTE, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p allocated w/ %d color(s)", self, self->palette->size);
-
-    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }
@@ -226,11 +218,9 @@ static int palette_new_1u_1u(lua_State *L)
 
     Palette_Object_t *self = (Palette_Object_t *)luaX_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
             .palette = palette
-        }, OBJECT_TYPE_PALETTE);
+        }, OBJECT_TYPE_PALETTE, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p allocated w/ %d color(s)", self, self->palette->size);
-
-    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }
@@ -264,11 +254,9 @@ static int palette_new_3n_1u(lua_State *L)
 
     Palette_Object_t *self = (Palette_Object_t *)luaX_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
             .palette = palette
-        }, OBJECT_TYPE_PALETTE);
+        }, OBJECT_TYPE_PALETTE, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p allocated w/ %d color(s)", self, self->palette->size);
-
-    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }

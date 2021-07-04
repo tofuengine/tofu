@@ -82,15 +82,13 @@ static int program_new_0_1u(lua_State *L)
 
     Program_Object_t *self = (Program_Object_t *)luaX_newobject(L, sizeof(Program_Object_t), &(Program_Object_t){
             .program = program
-        }, OBJECT_TYPE_PROGRAM);
+        }, OBJECT_TYPE_PROGRAM, META_TABLE);
 
 #ifdef VERBOSE_DEBUG
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "program %p allocated", self);
 #else  /* VERBOSE_DEBUG */
     (void)self;
 #endif  /* VERBOSE_DEBUG */
-
-    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }

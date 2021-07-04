@@ -61,6 +61,7 @@ static int canvas_point_4unnN_0(lua_State *L);
 static int canvas_hline_5unnnN_0(lua_State *L);
 static int canvas_vline_5unnnN_0(lua_State *L);
 static int canvas_line_6unnnnN_0(lua_State *L);
+// static int canvas_tline_6unnnnunnnn_0(lua_State *L);
 static int canvas_polyline_3utN_0(lua_State *L);
 static int canvas_fill_4unnN_0(lua_State *L);
 static int canvas_triangle_9usnnnnnnN_0(lua_State *L);
@@ -143,11 +144,9 @@ static int canvas_new_0_1u(lua_State *L)
                 .background = CANVAS_DEFAULT_BACKGROUND,
                 .foreground = CANVAS_DEFAULT_FOREGROUND
             }
-        }, OBJECT_TYPE_CANVAS);
+        }, OBJECT_TYPE_CANVAS, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas %p allocated w/ default context", self);
-
-    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }
@@ -174,11 +173,9 @@ static int canvas_new_2nn_1u(lua_State *L)
                 .background = CANVAS_DEFAULT_BACKGROUND,
                 .foreground = CANVAS_DEFAULT_FOREGROUND
             }
-        }, OBJECT_TYPE_CANVAS);
+        }, OBJECT_TYPE_CANVAS, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas %p allocated w/ surface %p", self, surface);
-
-    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }
@@ -226,11 +223,9 @@ static int canvas_new_3sNU_1u(lua_State *L)
                 .background = CANVAS_DEFAULT_BACKGROUND,
                 .foreground = CANVAS_DEFAULT_FOREGROUND
             }
-        }, OBJECT_TYPE_CANVAS);
+        }, OBJECT_TYPE_CANVAS, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas %p allocated w/ surface %p", self, surface);
-
-    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }
@@ -276,11 +271,9 @@ static int canvas_new_3snn_1u(lua_State *L)
                 .background = CANVAS_DEFAULT_BACKGROUND,
                 .foreground = CANVAS_DEFAULT_FOREGROUND
             }
-        }, OBJECT_TYPE_CANVAS);
+        }, OBJECT_TYPE_CANVAS, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas %p allocated w/ surface %p", self, surface);
-
-    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }

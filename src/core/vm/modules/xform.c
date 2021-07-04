@@ -115,11 +115,9 @@ static int xform_new_1S_1u(lua_State *L)
 
     XForm_Object_t *self = (XForm_Object_t *)luaX_newobject(L, sizeof(XForm_Object_t), &(XForm_Object_t){
             .xform = xform
-        }, OBJECT_TYPE_XFORM);
+        }, OBJECT_TYPE_XFORM, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "xform %p allocated", self);
-
-    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }

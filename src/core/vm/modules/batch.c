@@ -81,11 +81,9 @@ static int batch_new_2un_1u(lua_State *L)
                 .reference = luaX_ref(L, 1)
             },
             .batch = batch
-        }, OBJECT_TYPE_BATCH);
+        }, OBJECT_TYPE_BATCH, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "batch %p created w/ bank %p", self, bank);
-
-    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }
