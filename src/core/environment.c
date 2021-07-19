@@ -29,6 +29,10 @@
 #include <libs/stb.h>
 
 #include <malloc.h>
+#if PLATFORM_ID == PLATFORM_WINDOWS
+    #include "windows.h"
+    #include "psapi.h"
+#endif
 
 #define LOG_CONTEXT "environment"
 
@@ -158,8 +162,14 @@ void Environment_process(Environment_t *environment, float frame_time)
     while (heap_time > __SYSTEM_HEAP_PERIOD__) {
         heap_time -= __SYSTEM_HEAP_PERIOD__;
 
+#if PLATFORM_ID == PLATFORM_WINDOWS
+        PROCESS_MEMORY_COUNTERS pmc = { 0 };
+        GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc));
+        environment->stats.memory_usage = pmc.WorkingSetSize;
+#else
         struct mallinfo mi = mallinfo();
         environment->stats.memory_usage = mi.uordblks;
+#endif
     }
 #endif  /* __SYSTEM_HEAP_STATISTICS__ */
 }
