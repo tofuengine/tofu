@@ -56,10 +56,10 @@ endif
 ifeq ($(PLATFORM),windows)
 	ifeq ($(ARCHITECTURE),x64)
 		LINKER=x86_64-w64-mingw32-gcc
-		LFLAGS=-Lexternal/GLFW/windows/x64 -lglfw3 -lgdi32
+		LFLAGS=-Lexternal/GLFW/windows/x64 -lglfw3 -lgdi32 -lpsapi
 	else
 		LINKER=i686-w64-mingw32-gcc
-		LFLAGS=-Lexternal/GLFW/windows/x32 -lglfw3 -lgdi32
+		LFLAGS=-Lexternal/GLFW/windows/x32 -lglfw3 -lgdi32 -lpsapi
 	endif
 else ifeq ($(PLATFORM),rpi)
 	LINKER=gcc
