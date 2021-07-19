@@ -30,15 +30,23 @@
 //
 // where `function name` is a generic identifier, `input arguments` and `return values` have this format
 //
-//   \d+[bBnNsStTuUfF]*
+//   \d+[bBnNsStTuUfFoO]*
 //
 // The integer number indicates the amount of arguments/return-values and the sequence of characters encodes the
-// types. Uppercase characters are used for *optional* when optional.
+// types. Uppercase characters are used for *optional* when optional. The encoded types are the following:
+//
+//   b -> boolean
+//   n -> number
+//   s -> string
+//   t -> table
+//   u -> userdata
+//   f -> function
+//   o -> object (i.e. userdata with optionally encoded type)
 //
 // Example:
 //
-//   void blit_8unnnnNNN_0();
-//   void cursor_1u_2nn();
+//   void blit_8onnnnNNN_0();
+//   void cursor_1o_2nn();
 //
 
 // FIXME: better namespace/naming usage for the modules? `arrays.h` -> `core_arrays.h`?

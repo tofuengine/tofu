@@ -38,9 +38,9 @@
 #define LOG_CONTEXT "bank"
 #define META_TABLE  "Tofu_Graphics_Bank_mt"
 
-static int bank_new_v_1u(lua_State *L);
-static int bank_gc_1u_0(lua_State *L);
-static int bank_size_4unNN_2n(lua_State *L);
+static int bank_new_v_1o(lua_State *L);
+static int bank_gc_1o_0(lua_State *L);
+static int bank_size_4onNN_2n(lua_State *L);
 static int bank_blit_v_0(lua_State *L);
 static int bank_tile_v_0(lua_State *L);
 
@@ -49,9 +49,9 @@ int bank_loader(lua_State *L)
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
-            { "new", bank_new_v_1u },
-            { "__gc", bank_gc_1u_0 },
-            { "size", bank_size_4unNN_2n },
+            { "new", bank_new_v_1o },
+            { "__gc", bank_gc_1o_0 },
+            { "size", bank_size_4onNN_2n },
             { "blit", bank_blit_v_0 },
             { "tile", bank_tile_v_0 },
             { NULL, NULL }
@@ -62,10 +62,10 @@ int bank_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
-static int bank_new_2us_1u(lua_State *L)
+static int bank_new_2os_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
     const Canvas_Object_t *atlas = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
@@ -89,20 +89,18 @@ static int bank_new_2us_1u(lua_State *L)
                 .reference = luaX_ref(L, 1),
             },
             .sheet = sheet
-        }, OBJECT_TYPE_BANK);
+        }, OBJECT_TYPE_BANK, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p allocated w/ sheet %p for atlas %p w/ reference #%d",
         self, sheet, atlas, self->atlas.reference);
 
-    luaL_setmetatable(L, META_TABLE);
-
     return 1;
 }
 
-static int bank_new_3unn_1u(lua_State *L)
+static int bank_new_3onn_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
@@ -121,28 +119,26 @@ static int bank_new_3unn_1u(lua_State *L)
                 .reference = luaX_ref(L, 1),
             },
             .sheet = sheet
-        }, OBJECT_TYPE_BANK);
+        }, OBJECT_TYPE_BANK, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "bank %p allocated w/ sheet %p for atlas %p w/ reference #%d",
         self, sheet, atlas, self->atlas.reference);
 
-    luaL_setmetatable(L, META_TABLE);
-
     return 1;
 }
 
-static int bank_new_v_1u(lua_State *L)
+static int bank_new_v_1o(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(2, bank_new_2us_1u)
-        LUAX_OVERLOAD_ARITY(3, bank_new_3unn_1u)
+        LUAX_OVERLOAD_ARITY(2, bank_new_2os_1o)
+        LUAX_OVERLOAD_ARITY(3, bank_new_3onn_1o)
     LUAX_OVERLOAD_END
 }
 
-static int bank_gc_1u_0(lua_State *L)
+static int bank_gc_1o_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     Bank_Object_t *self = (Bank_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BANK);
 
@@ -157,10 +153,10 @@ static int bank_gc_1u_0(lua_State *L)
     return 0;
 }
 
-static int bank_size_4unNN_2n(lua_State *L)
+static int bank_size_4onNN_2n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
@@ -171,18 +167,18 @@ static int bank_size_4unNN_2n(lua_State *L)
     float scale_y = LUAX_OPTIONAL_NUMBER(L, 4, scale_x);
 
     const GL_Sheet_t *sheet = self->sheet;
-    const GL_Rectangle_t *cell = cell_id == GL_CELL_NIL ? sheet->cells : &sheet->cells[cell_id]; // If `-1` pick the first one.
+    const GL_Rectangle_t *cell = cell_id == GL_CELL_NIL ? sheet->cells : &sheet->cells[cell_id]; // If `GL_CELL_NIL` pick the first one.
     lua_pushinteger(L, (lua_Integer)((float)cell->width * fabsf(scale_x)));
     lua_pushinteger(L, (lua_Integer)((float)cell->height * fabsf(scale_y)));
 
     return 2;
 }
 
-static int bank_blit_5uunnn_0(lua_State *L)
+static int bank_blit_5oonnn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -201,11 +197,11 @@ static int bank_blit_5uunnn_0(lua_State *L)
     return 0;
 }
 
-static int bank_blit_6unnunn_0(lua_State *L)
+static int bank_blit_6oonnnn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -226,11 +222,11 @@ static int bank_blit_6unnunn_0(lua_State *L)
     return 0;
 }
 
-static int bank_blit_7uunnnnnn_0(lua_State *L)
+static int bank_blit_7oonnnnnn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -253,11 +249,11 @@ static int bank_blit_7uunnnnnn_0(lua_State *L)
     return 0;
 }
 
-static int bank_blit_10uunnnnnnNN_0(lua_State *L)
+static int bank_blit_10oonnnnnnNN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -289,21 +285,21 @@ static int bank_blit_10uunnnnnnNN_0(lua_State *L)
 static int bank_blit_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(5, bank_blit_5uunnn_0)
-        LUAX_OVERLOAD_ARITY(6, bank_blit_6unnunn_0)
-        LUAX_OVERLOAD_ARITY(7, bank_blit_7uunnnnnn_0)
-        LUAX_OVERLOAD_ARITY(8, bank_blit_10uunnnnnnNN_0)
-        LUAX_OVERLOAD_ARITY(9, bank_blit_10uunnnnnnNN_0)
-        LUAX_OVERLOAD_ARITY(10, bank_blit_10uunnnnnnNN_0)
+        LUAX_OVERLOAD_ARITY(5, bank_blit_5oonnn_0)
+        LUAX_OVERLOAD_ARITY(6, bank_blit_6oonnnn_0)
+        LUAX_OVERLOAD_ARITY(7, bank_blit_7oonnnnnn_0)
+        LUAX_OVERLOAD_ARITY(8, bank_blit_10oonnnnnnNN_0)
+        LUAX_OVERLOAD_ARITY(9, bank_blit_10oonnnnnnNN_0)
+        LUAX_OVERLOAD_ARITY(10, bank_blit_10oonnnnnnNN_0)
     LUAX_OVERLOAD_END
 }
 
 // FIXME: fix the consts!!!
-static int bank_tile_7unnnnnn_0(lua_State *L)
+static int bank_tile_7oonnnnn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -326,11 +322,11 @@ static int bank_tile_7unnnnnn_0(lua_State *L)
     return 0;
 }
 
-static int bank_tile_9uunnnnnnN_0(lua_State *L)
+static int bank_tile_9oonnnnnnN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -360,8 +356,8 @@ static int bank_tile_9uunnnnnnN_0(lua_State *L)
 static int bank_tile_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(7, bank_tile_7unnnnnn_0)
-        LUAX_OVERLOAD_ARITY(8, bank_tile_9uunnnnnnN_0)
-        LUAX_OVERLOAD_ARITY(9, bank_tile_9uunnnnnnN_0)
+        LUAX_OVERLOAD_ARITY(7, bank_tile_7oonnnnn_0)
+        LUAX_OVERLOAD_ARITY(8, bank_tile_9oonnnnnnN_0)
+        LUAX_OVERLOAD_ARITY(9, bank_tile_9oonnnnnnN_0)
     LUAX_OVERLOAD_END
 }

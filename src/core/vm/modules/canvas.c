@@ -44,30 +44,31 @@
 #define CANVAS_DEFAULT_BACKGROUND   0
 #define CANVAS_DEFAULT_FOREGROUND   1
 
-static int canvas_new_v_1u(lua_State *L);
-static int canvas_gc_1u_0(lua_State *L);
-static int canvas_size_1u_2nn(lua_State *L);
-static int canvas_center_1u_2nn(lua_State *L);
-static int canvas_push_1u_0(lua_State *L);
-static int canvas_pop_2uN_0(lua_State *L);
-static int canvas_reset_1u_0(lua_State *L);
-static int canvas_background_2un_0(lua_State *L);
+static int canvas_new_v_1o(lua_State *L);
+static int canvas_gc_1o_0(lua_State *L);
+static int canvas_size_1o_2nn(lua_State *L);
+static int canvas_center_1o_2nn(lua_State *L);
+static int canvas_push_1o_0(lua_State *L);
+static int canvas_pop_2oN_0(lua_State *L);
+static int canvas_reset_1o_0(lua_State *L);
+static int canvas_background_2on_0(lua_State *L);
 static int canvas_clipping_v_0(lua_State *L);
-static int canvas_foreground_2un_0(lua_State *L);
+static int canvas_foreground_2on_0(lua_State *L);
 static int canvas_shift_v_0(lua_State *L);
 static int canvas_transparent_v_0(lua_State *L);
-static int canvas_clear_2uN_0(lua_State *L);
-static int canvas_point_4unnN_0(lua_State *L);
-static int canvas_hline_5unnnN_0(lua_State *L);
-static int canvas_vline_5unnnN_0(lua_State *L);
-static int canvas_line_6unnnnN_0(lua_State *L);
-static int canvas_polyline_3utN_0(lua_State *L);
-static int canvas_fill_4unnN_0(lua_State *L);
-static int canvas_triangle_9usnnnnnnN_0(lua_State *L);
-static int canvas_rectangle_7usnnnnN_0(lua_State *L);
-static int canvas_circle_6usnnnN_0(lua_State *L);
-static int canvas_peek_3unn_1n(lua_State *L);
-static int canvas_poke_4unnn_0(lua_State *L);
+static int canvas_clear_2oN_0(lua_State *L);
+static int canvas_point_4onnN_0(lua_State *L);
+static int canvas_hline_5onnnN_0(lua_State *L);
+static int canvas_vline_5onnnN_0(lua_State *L);
+static int canvas_line_6onnnnN_0(lua_State *L);
+// static int canvas_tline_6onnnnonnnn_0(lua_State *L);
+static int canvas_polyline_3otN_0(lua_State *L);
+static int canvas_fill_4onnN_0(lua_State *L);
+static int canvas_triangle_9osnnnnnnN_0(lua_State *L);
+static int canvas_rectangle_7osnnnnN_0(lua_State *L);
+static int canvas_circle_6osnnnN_0(lua_State *L);
+static int canvas_peek_3onn_1n(lua_State *L);
+static int canvas_poke_4onnn_0(lua_State *L);
 static int canvas_process_v_0(lua_State *L);
 static int canvas_copy_v_0(lua_State *L);
 static int canvas_blit_v_0(lua_State *L);
@@ -90,30 +91,30 @@ int canvas_loader(lua_State *L)
             .name = SCRIPT_NAME
         },
         (const struct luaL_Reg[]){
-            { "new", canvas_new_v_1u },
-            { "__gc", canvas_gc_1u_0 },
-            { "size", canvas_size_1u_2nn },
-            { "center", canvas_center_1u_2nn },
-            { "push", canvas_push_1u_0 },
-            { "pop", canvas_pop_2uN_0 },
-            { "reset", canvas_reset_1u_0 },
-            { "background", canvas_background_2un_0 },
-            { "foreground", canvas_foreground_2un_0 },
+            { "new", canvas_new_v_1o },
+            { "__gc", canvas_gc_1o_0 },
+            { "size", canvas_size_1o_2nn },
+            { "center", canvas_center_1o_2nn },
+            { "push", canvas_push_1o_0 },
+            { "pop", canvas_pop_2oN_0 },
+            { "reset", canvas_reset_1o_0 },
+            { "background", canvas_background_2on_0 },
+            { "foreground", canvas_foreground_2on_0 },
             { "clipping", canvas_clipping_v_0 },
             { "shift", canvas_shift_v_0 },
             { "transparent", canvas_transparent_v_0 },
-            { "clear", canvas_clear_2uN_0 },
-            { "point", canvas_point_4unnN_0 },
-            { "hline", canvas_hline_5unnnN_0 },
-            { "vline", canvas_vline_5unnnN_0 },
-            { "line", canvas_line_6unnnnN_0 },
-            { "polyline", canvas_polyline_3utN_0 },
-            { "fill", canvas_fill_4unnN_0 },
-            { "triangle", canvas_triangle_9usnnnnnnN_0 },
-            { "rectangle", canvas_rectangle_7usnnnnN_0 },
-            { "circle", canvas_circle_6usnnnN_0 },
-            { "peek", canvas_peek_3unn_1n },
-            { "poke", canvas_poke_4unnn_0 },
+            { "clear", canvas_clear_2oN_0 },
+            { "point", canvas_point_4onnN_0 },
+            { "hline", canvas_hline_5onnnN_0 },
+            { "vline", canvas_vline_5onnnN_0 },
+            { "line", canvas_line_6onnnnN_0 },
+            { "polyline", canvas_polyline_3otN_0 },
+            { "fill", canvas_fill_4onnN_0 },
+            { "triangle", canvas_triangle_9osnnnnnnN_0 },
+            { "rectangle", canvas_rectangle_7osnnnnN_0 },
+            { "circle", canvas_circle_6osnnnN_0 },
+            { "peek", canvas_peek_3onn_1n },
+            { "poke", canvas_poke_4onnn_0 },
             { "process", canvas_process_v_0 },
             { "copy", canvas_copy_v_0 },
             { "blit", canvas_blit_v_0 },
@@ -126,7 +127,7 @@ int canvas_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
-static int canvas_new_0_1u(lua_State *L)
+static int canvas_new_0_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
@@ -143,16 +144,14 @@ static int canvas_new_0_1u(lua_State *L)
                 .background = CANVAS_DEFAULT_BACKGROUND,
                 .foreground = CANVAS_DEFAULT_FOREGROUND
             }
-        }, OBJECT_TYPE_CANVAS);
+        }, OBJECT_TYPE_CANVAS, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas %p allocated w/ default context", self);
-
-    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }
 
-static int canvas_new_2nn_1u(lua_State *L)
+static int canvas_new_2nn_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -174,21 +173,19 @@ static int canvas_new_2nn_1u(lua_State *L)
                 .background = CANVAS_DEFAULT_BACKGROUND,
                 .foreground = CANVAS_DEFAULT_FOREGROUND
             }
-        }, OBJECT_TYPE_CANVAS);
+        }, OBJECT_TYPE_CANVAS, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas %p allocated w/ surface %p", self, surface);
-
-    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }
 
-static int canvas_new_3sNU_1u(lua_State *L)
+static int canvas_new_3sNO_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     const char *name = LUAX_STRING(L, 1);
     GL_Pixel_t transparent_index = (GL_Pixel_t)LUAX_OPTIONAL_INTEGER(L, 2, 0);
@@ -226,16 +223,14 @@ static int canvas_new_3sNU_1u(lua_State *L)
                 .background = CANVAS_DEFAULT_BACKGROUND,
                 .foreground = CANVAS_DEFAULT_FOREGROUND
             }
-        }, OBJECT_TYPE_CANVAS);
+        }, OBJECT_TYPE_CANVAS, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas %p allocated w/ surface %p", self, surface);
-
-    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }
 
-static int canvas_new_3snn_1u(lua_State *L)
+static int canvas_new_3snn_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
@@ -276,31 +271,29 @@ static int canvas_new_3snn_1u(lua_State *L)
                 .background = CANVAS_DEFAULT_BACKGROUND,
                 .foreground = CANVAS_DEFAULT_FOREGROUND
             }
-        }, OBJECT_TYPE_CANVAS);
+        }, OBJECT_TYPE_CANVAS, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "canvas %p allocated w/ surface %p", self, surface);
-
-    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }
 
-static int canvas_new_v_1u(lua_State *L)
+static int canvas_new_v_1o(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(0, canvas_new_0_1u)
-        LUAX_OVERLOAD_SIGNATURE(canvas_new_3sNU_1u, LUA_TSTRING)
-        LUAX_OVERLOAD_SIGNATURE(canvas_new_3sNU_1u, LUA_TSTRING, LUA_TNUMBER)
-        LUAX_OVERLOAD_ARITY(2, canvas_new_2nn_1u)
-        LUAX_OVERLOAD_SIGNATURE(canvas_new_3sNU_1u, LUA_TSTRING, LUA_TNUMBER, LUA_TUSERDATA)
-        LUAX_OVERLOAD_ARITY(3, canvas_new_3snn_1u)
+        LUAX_OVERLOAD_ARITY(0, canvas_new_0_1o)
+        LUAX_OVERLOAD_SIGNATURE(canvas_new_3sNO_1o, LUA_TSTRING)
+        LUAX_OVERLOAD_SIGNATURE(canvas_new_3sNO_1o, LUA_TSTRING, LUA_TNUMBER)
+        LUAX_OVERLOAD_ARITY(2, canvas_new_2nn_1o)
+        LUAX_OVERLOAD_SIGNATURE(canvas_new_3sNO_1o, LUA_TSTRING, LUA_TNUMBER, LUA_TOBJECT)
+        LUAX_OVERLOAD_ARITY(3, canvas_new_3snn_1o)
     LUAX_OVERLOAD_END
 }
 
-static int canvas_gc_1u_0(lua_State *L)
+static int canvas_gc_1o_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
 
@@ -314,10 +307,10 @@ static int canvas_gc_1u_0(lua_State *L)
     return 0;
 }
 
-static int canvas_size_1u_2nn(lua_State *L)
+static int canvas_size_1o_2nn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
 
@@ -328,10 +321,10 @@ static int canvas_size_1u_2nn(lua_State *L)
     return 2;
 }
 
-static int canvas_center_1u_2nn(lua_State *L)
+static int canvas_center_1o_2nn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
 
@@ -342,10 +335,10 @@ static int canvas_center_1u_2nn(lua_State *L)
     return 2;
 }
 
-static int canvas_push_1u_0(lua_State *L)
+static int canvas_push_1o_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
 
@@ -355,10 +348,10 @@ static int canvas_push_1u_0(lua_State *L)
     return 0;
 }
 
-static int canvas_pop_2uN_0(lua_State *L)
+static int canvas_pop_2oN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
@@ -370,10 +363,10 @@ static int canvas_pop_2uN_0(lua_State *L)
     return 0;
 }
 
-static int canvas_reset_1u_0(lua_State *L)
+static int canvas_reset_1o_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
 
@@ -383,10 +376,10 @@ static int canvas_reset_1u_0(lua_State *L)
     return 0;
 }
 
-static int canvas_background_2un_0(lua_State *L)
+static int canvas_background_2on_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
@@ -397,10 +390,10 @@ static int canvas_background_2un_0(lua_State *L)
     return 0;
 }
 
-static int canvas_foreground_2un_0(lua_State *L)
+static int canvas_foreground_2on_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
@@ -411,10 +404,10 @@ static int canvas_foreground_2un_0(lua_State *L)
     return 0;
 }
 
-static int canvas_clipping_1u_0(lua_State *L)
+static int canvas_clipping_1o_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
 
@@ -424,10 +417,10 @@ static int canvas_clipping_1u_0(lua_State *L)
     return 0;
 }
 
-static int canvas_clipping_5unnnn_0(lua_State *L)
+static int canvas_clipping_5onnnn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -448,15 +441,15 @@ static int canvas_clipping_5unnnn_0(lua_State *L)
 static int canvas_clipping_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, canvas_clipping_1u_0)
-        LUAX_OVERLOAD_ARITY(5, canvas_clipping_5unnnn_0)
+        LUAX_OVERLOAD_ARITY(1, canvas_clipping_1o_0)
+        LUAX_OVERLOAD_ARITY(5, canvas_clipping_5onnnn_0)
     LUAX_OVERLOAD_END
 }
 
-static int canvas_shift_1u_0(lua_State *L)
+static int canvas_shift_1o_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
 
@@ -466,10 +459,10 @@ static int canvas_shift_1u_0(lua_State *L)
     return 0;
 }
 
-static int canvas_shift_2ut_0(lua_State *L)
+static int canvas_shift_2ot_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
     LUAX_SIGNATURE_END
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
@@ -494,10 +487,10 @@ static int canvas_shift_2ut_0(lua_State *L)
     return 0;
 }
 
-static int canvas_shift_3unn_0(lua_State *L)
+static int canvas_shift_3onn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
@@ -514,16 +507,16 @@ static int canvas_shift_3unn_0(lua_State *L)
 static int canvas_shift_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, canvas_shift_1u_0)
-        LUAX_OVERLOAD_ARITY(2, canvas_shift_2ut_0)
-        LUAX_OVERLOAD_ARITY(3, canvas_shift_3unn_0)
+        LUAX_OVERLOAD_ARITY(1, canvas_shift_1o_0)
+        LUAX_OVERLOAD_ARITY(2, canvas_shift_2ot_0)
+        LUAX_OVERLOAD_ARITY(3, canvas_shift_3onn_0)
     LUAX_OVERLOAD_END
 }
 
-static int canvas_transparent_1u_0(lua_State *L)
+static int canvas_transparent_1o_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
 
@@ -533,10 +526,10 @@ static int canvas_transparent_1u_0(lua_State *L)
     return 0;
 }
 
-static int canvas_transparent_2ut_0(lua_State *L)
+static int canvas_transparent_2ot_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
     LUAX_SIGNATURE_END
     Canvas_Object_t *self = (Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
@@ -561,10 +554,10 @@ static int canvas_transparent_2ut_0(lua_State *L)
     return 0;
 }
 
-static int canvas_transparent_3unb_0(lua_State *L)
+static int canvas_transparent_3onb_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TBOOLEAN)
     LUAX_SIGNATURE_END
@@ -581,16 +574,16 @@ static int canvas_transparent_3unb_0(lua_State *L)
 static int canvas_transparent_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, canvas_transparent_1u_0)
-        LUAX_OVERLOAD_ARITY(2, canvas_transparent_2ut_0)
-        LUAX_OVERLOAD_ARITY(3, canvas_transparent_3unb_0)
+        LUAX_OVERLOAD_ARITY(1, canvas_transparent_1o_0)
+        LUAX_OVERLOAD_ARITY(2, canvas_transparent_2ot_0)
+        LUAX_OVERLOAD_ARITY(3, canvas_transparent_3onb_0)
     LUAX_OVERLOAD_END
 }
 
-static int canvas_clear_2uN_0(lua_State *L)
+static int canvas_clear_2oN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
@@ -602,10 +595,10 @@ static int canvas_clear_2uN_0(lua_State *L)
     return 0;
 }
 
-static int canvas_point_4unnN_0(lua_State *L)
+static int canvas_point_4onnN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
@@ -621,10 +614,10 @@ static int canvas_point_4unnN_0(lua_State *L)
     return 0;
 }
 
-static int canvas_hline_5unnnN_0(lua_State *L)
+static int canvas_hline_5onnnN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -642,10 +635,10 @@ static int canvas_hline_5unnnN_0(lua_State *L)
     return 0;
 }
 
-static int canvas_vline_5unnnN_0(lua_State *L)
+static int canvas_vline_5onnnN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -663,10 +656,10 @@ static int canvas_vline_5unnnN_0(lua_State *L)
     return 0;
 }
 
-static int canvas_line_6unnnnN_0(lua_State *L)
+static int canvas_line_6onnnnN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -710,10 +703,10 @@ static inline GL_Point_t *_fetch(lua_State *L, int idx)
     return vertices;
 }
 
-static int canvas_polyline_3utN_0(lua_State *L)
+static int canvas_polyline_3otN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
@@ -735,10 +728,10 @@ static int canvas_polyline_3utN_0(lua_State *L)
     return 0;
 }
 
-static int canvas_fill_4unnN_0(lua_State *L)
+static int canvas_fill_4onnN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
@@ -754,10 +747,10 @@ static int canvas_fill_4unnN_0(lua_State *L)
     return 0;
 }
 
-static int canvas_triangle_9usnnnnnnN_0(lua_State *L)
+static int canvas_triangle_9osnnnnnnN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -793,10 +786,10 @@ static int canvas_triangle_9usnnnnnnN_0(lua_State *L)
     return 0;
 }
 
-static int canvas_rectangle_7usnnnnN_0(lua_State *L)
+static int canvas_rectangle_7osnnnnN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -834,10 +827,10 @@ static int canvas_rectangle_7usnnnnN_0(lua_State *L)
     return 0;
 }
 
-static int canvas_circle_6usnnnN_0(lua_State *L)
+static int canvas_circle_6osnnnN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -864,10 +857,10 @@ static int canvas_circle_6usnnnN_0(lua_State *L)
     return 0;
 }
 
-static int canvas_peek_3unn_1n(lua_State *L)
+static int canvas_peek_3onn_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
@@ -883,10 +876,10 @@ static int canvas_peek_3unn_1n(lua_State *L)
     return 1;
 }
 
-static int canvas_poke_4unnn_0(lua_State *L)
+static int canvas_poke_4onnn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -926,11 +919,11 @@ static GL_Pixel_t _process_callback(void *user_data, GL_Point_t position, GL_Pix
     return pixel;
 }
 
-static int canvas_process_3uuf_0(lua_State *L)
+static int canvas_process_3oof_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TFUNCTION)
     LUAX_SIGNATURE_END
     const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
@@ -948,13 +941,13 @@ static int canvas_process_3uuf_0(lua_State *L)
     return 0;
 }
 
-static int canvas_process_5unnuf_0(lua_State *L)
+static int canvas_process_5onnof_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TFUNCTION)
     LUAX_SIGNATURE_END
     const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
@@ -974,13 +967,13 @@ static int canvas_process_5unnuf_0(lua_State *L)
     return 0;
 }
 
-static int canvas_process_9unnunnnnf_0(lua_State *L)
+static int canvas_process_9onnonnnnf_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -1011,17 +1004,17 @@ static int canvas_process_9unnunnnnf_0(lua_State *L)
 static int canvas_process_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(3, canvas_process_3uuf_0)
-        LUAX_OVERLOAD_ARITY(5, canvas_process_5unnuf_0)
-        LUAX_OVERLOAD_ARITY(9, canvas_process_9unnunnnnf_0)
+        LUAX_OVERLOAD_ARITY(3, canvas_process_3oof_0)
+        LUAX_OVERLOAD_ARITY(5, canvas_process_5onnof_0)
+        LUAX_OVERLOAD_ARITY(9, canvas_process_9onnonnnnf_0)
     LUAX_OVERLOAD_END
 }
 
-static int canvas_copy_2uu_0(lua_State *L)
+static int canvas_copy_2oo_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
     const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_CANVAS);
@@ -1034,13 +1027,13 @@ static int canvas_copy_2uu_0(lua_State *L)
     return 0;
 }
 
-static int canvas_copy_4unnu_0(lua_State *L)
+static int canvas_copy_4onno_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
     int x = LUAX_INTEGER(L, 2);
@@ -1055,13 +1048,13 @@ static int canvas_copy_4unnu_0(lua_State *L)
     return 0;
 }
 
-static int canvas_copy_8unnunnnn_0(lua_State *L)
+static int canvas_copy_8onnonnnn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -1087,17 +1080,17 @@ static int canvas_copy_8unnunnnn_0(lua_State *L)
 static int canvas_copy_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(2, canvas_copy_2uu_0)
-        LUAX_OVERLOAD_ARITY(4, canvas_copy_4unnu_0)
-        LUAX_OVERLOAD_ARITY(8, canvas_copy_8unnunnnn_0)
+        LUAX_OVERLOAD_ARITY(2, canvas_copy_2oo_0)
+        LUAX_OVERLOAD_ARITY(4, canvas_copy_4onno_0)
+        LUAX_OVERLOAD_ARITY(8, canvas_copy_8onnonnnn_0)
     LUAX_OVERLOAD_END
 }
 
-static int canvas_blit_2uu_0(lua_State *L)
+static int canvas_blit_2oo_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
     const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_CANVAS);
@@ -1110,13 +1103,13 @@ static int canvas_blit_2uu_0(lua_State *L)
     return 0;
 }
 
-static int canvas_blit_4unnu_0(lua_State *L)
+static int canvas_blit_4onno_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
     int x = LUAX_INTEGER(L, 2);
@@ -1131,13 +1124,13 @@ static int canvas_blit_4unnu_0(lua_State *L)
     return 0;
 }
 
-static int canvas_blit_8unnunnnn_0(lua_State *L)
+static int canvas_blit_8onnonnnn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -1163,9 +1156,9 @@ static int canvas_blit_8unnunnnn_0(lua_State *L)
 static int canvas_blit_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(2, canvas_blit_2uu_0)
-        LUAX_OVERLOAD_ARITY(4, canvas_blit_4unnu_0)
-        LUAX_OVERLOAD_ARITY(8, canvas_blit_8unnunnnn_0)
+        LUAX_OVERLOAD_ARITY(2, canvas_blit_2oo_0)
+        LUAX_OVERLOAD_ARITY(4, canvas_blit_4onno_0)
+        LUAX_OVERLOAD_ARITY(8, canvas_blit_8onnonnnn_0)
     LUAX_OVERLOAD_END
 }
 
@@ -1180,12 +1173,12 @@ static const Map_Entry_t _comparators[GL_Comparators_t_CountOf] = { // Need to b
     { "not-equal", GL_COMPARATOR_NOT_EQUAL }
 };
 
-static int canvas_stencil_5uuusn_0(lua_State *L)
+static int canvas_stencil_5ooosn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
@@ -1206,14 +1199,14 @@ static int canvas_stencil_5uuusn_0(lua_State *L)
     return 0;
 }
 
-static int canvas_stencil_7unnuusn_0(lua_State *L)
+static int canvas_stencil_7onnoosn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
@@ -1236,18 +1229,18 @@ static int canvas_stencil_7unnuusn_0(lua_State *L)
     return 0;
 }
 
-static int canvas_stencil_11unnunnnnusn_0(lua_State *L)
+static int canvas_stencil_11onnonnnnosn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
@@ -1277,9 +1270,9 @@ static int canvas_stencil_11unnunnnnusn_0(lua_State *L)
 static int canvas_stencil_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(5, canvas_stencil_5uuusn_0)
-        LUAX_OVERLOAD_ARITY(7, canvas_stencil_7unnuusn_0)
-        LUAX_OVERLOAD_ARITY(11, canvas_stencil_11unnunnnnusn_0)
+        LUAX_OVERLOAD_ARITY(5, canvas_stencil_5ooosn_0)
+        LUAX_OVERLOAD_ARITY(7, canvas_stencil_7onnoosn_0)
+        LUAX_OVERLOAD_ARITY(11, canvas_stencil_11onnonnnnosn_0)
     LUAX_OVERLOAD_END
 }
 
@@ -1297,12 +1290,12 @@ static const Map_Entry_t _functions[GL_Functions_t_CountOf] = { // Need to be so
     { "subtract-clamped", GL_FUNCTIONS_SUBTRACT_CLAMPED }
 };
 
-static int canvas_blend_3uus_0(lua_State *L)
+static int canvas_blend_3oos_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
     const char *function = LUAX_STRING(L, 2);
@@ -1318,13 +1311,13 @@ static int canvas_blend_3uus_0(lua_State *L)
     return 0;
 }
 
-static int canvas_blend_5unnus_0(lua_State *L)
+static int canvas_blend_5onnos_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
     const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
@@ -1343,10 +1336,10 @@ static int canvas_blend_5unnus_0(lua_State *L)
     return 0;
 }
 
-static int canvas_blend_9unnunnnns_0(lua_State *L)
+static int canvas_blend_9onnonnnns_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -1354,7 +1347,7 @@ static int canvas_blend_9unnunnnns_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
     int x = LUAX_INTEGER(L, 2);
@@ -1379,8 +1372,8 @@ static int canvas_blend_9unnunnnns_0(lua_State *L)
 static int canvas_blend_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(3, canvas_blend_3uus_0)
-        LUAX_OVERLOAD_ARITY(5, canvas_blend_5unnus_0)
-        LUAX_OVERLOAD_ARITY(9, canvas_blend_9unnunnnns_0)
+        LUAX_OVERLOAD_ARITY(3, canvas_blend_3oos_0)
+        LUAX_OVERLOAD_ARITY(5, canvas_blend_5onnos_0)
+        LUAX_OVERLOAD_ARITY(9, canvas_blend_9onnonnnns_0)
     LUAX_OVERLOAD_END
 }

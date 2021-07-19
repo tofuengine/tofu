@@ -56,11 +56,11 @@ typedef struct _luaX_Script {
 
 typedef int luaX_Reference;
 
-#define LUAX_REFERENCE_NIL  -1
-#define LUAX_ANY            -2
-#define LUAX_EOD            -3
-
-#define LUAX_TOBJECT        LUA_TUSERDATA
+//#define LUA_TNIL      0
+//#define LUA_TNONE     (-1)
+#define LUA_TANY        (-2)
+#define LUA_TEOD        (-3)
+#define LUA_TOBJECT     LUA_TUSERDATA
 
 #ifdef DEBUG
     #define LUAX_SIGNATURE_BEGIN(L) \
@@ -70,10 +70,10 @@ typedef int luaX_Reference;
             int _matched = 0; \
             int _index = 1;
     #define LUAX_SIGNATURE_REQUIRED(...) \
-            luaX_checkargument(_L, _index++, __FILE__, __LINE__, (const int[]){ __VA_ARGS__, LUAX_EOD }); \
+            luaX_checkargument(_L, _index++, __FILE__, __LINE__, (const int[]){ __VA_ARGS__, LUA_TEOD }); \
             ++_matched;
     #define LUAX_SIGNATURE_OPTIONAL(...) \
-            luaX_checkargument(_L, _index, __FILE__, __LINE__, (const int[]){ __VA_ARGS__, LUA_TNIL, LUA_TNONE, LUAX_EOD }); \
+            luaX_checkargument(_L, _index, __FILE__, __LINE__, (const int[]){ __VA_ARGS__, LUA_TNIL, LUA_TNONE, LUA_TEOD }); \
             if (!lua_isnone(_L, _index++)) { \
                 ++_matched; \
             }
@@ -109,7 +109,7 @@ typedef int luaX_Reference;
     #define LUAX_OVERLOAD_ARITY(n, f) \
             if (_argc == (n)) { return (f)(_L); } else
     #define LUAX_OVERLOAD_SIGNATURE(f, ...) \
-            if (luaX_hassignature(_L, (const int []){ __VA_ARGS__, LUAX_EOD })) { return (f)(_L); } else
+            if (luaX_hassignature(_L, (const int []){ __VA_ARGS__, LUA_TEOD })) { return (f)(_L); } else
     #define LUAX_OVERLOAD_END \
             { return luaL_error(L, "[%s:%d] overload for arity #%d is missing", __FILE__, __LINE__, _argc); } \
         } while (0);
@@ -147,7 +147,7 @@ typedef int luaX_Reference;
 
 #define luaX_tofunction(L, idx)     luaX_ref((L), (idx))
 
-extern void *luaX_newobject(lua_State *L, size_t size, void *state, int type);
+extern void *luaX_newobject(lua_State *L, size_t size, void *state, int type, const char *metatable);
 extern int luaX_isobject(lua_State *L, int idx, int type);
 extern void *luaX_toobject(lua_State *L, int idx, int type);
 

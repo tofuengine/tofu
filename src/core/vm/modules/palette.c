@@ -35,32 +35,32 @@
 #define LOG_CONTEXT "palette"
 #define META_TABLE  "Tofu_Graphics_Palette_mt"
 
-static int palette_new_v_1u(lua_State *L);
-static int palette_gc_1u_0(lua_State *L);
+static int palette_new_v_1o(lua_State *L);
+static int palette_gc_1o_0(lua_State *L);
 static int palette_mix_7nnnnnnN_3nnn(lua_State *L);
-static int palette_colors_1u_1t(lua_State *L);
-static int palette_size_1u_1n(lua_State *L);
-static int palette_get_2un_3nnn(lua_State *L);
-static int palette_set_5unnnn_0(lua_State *L);
-static int palette_match_4unnn_1n(lua_State *L);
-static int palette_lerp_5unnnN_0(lua_State *L);
-static int palette_merge_3uuB_0(lua_State *L);
+static int palette_colors_1o_1t(lua_State *L);
+static int palette_size_1o_1n(lua_State *L);
+static int palette_get_2on_3nnn(lua_State *L);
+static int palette_set_5onnnn_0(lua_State *L);
+static int palette_match_4onnn_1n(lua_State *L);
+static int palette_lerp_5onnnN_0(lua_State *L);
+static int palette_merge_3ooB_0(lua_State *L);
 
 int palette_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
-            { "new", palette_new_v_1u },
-            { "__gc", palette_gc_1u_0 },
+            { "new", palette_new_v_1o },
+            { "__gc", palette_gc_1o_0 },
             { "mix", palette_mix_7nnnnnnN_3nnn },
-            { "colors", palette_colors_1u_1t },
-            { "size", palette_size_1u_1n },
-            { "get", palette_get_2un_3nnn },
-            { "set", palette_set_5unnnn_0 },
-            { "match", palette_match_4unnn_1n },
-            { "lerp", palette_lerp_5unnnN_0 },
-            { "merge", palette_merge_3uuB_0 },
+            { "colors", palette_colors_1o_1t },
+            { "size", palette_size_1o_1n },
+            { "get", palette_get_2on_3nnn },
+            { "set", palette_set_5onnnn_0 },
+            { "match", palette_match_4onnn_1n },
+            { "lerp", palette_lerp_5onnnN_0 },
+            { "merge", palette_merge_3ooB_0 },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -68,7 +68,7 @@ int palette_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
-static int palette_new_0_1u(lua_State *L)
+static int palette_new_0_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
@@ -81,16 +81,14 @@ static int palette_new_0_1u(lua_State *L)
 
     Palette_Object_t *self = (Palette_Object_t *)luaX_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
             .palette = palette
-        }, OBJECT_TYPE_PALETTE);
+        }, OBJECT_TYPE_PALETTE, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "greyscale palette %p allocated w/ %d color(s)", self, palette->size);
-
-    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }
 
-static int palette_new_1s_1u(lua_State *L)
+static int palette_new_1s_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
@@ -112,16 +110,14 @@ static int palette_new_1s_1u(lua_State *L)
 
     Palette_Object_t *self = (Palette_Object_t *)luaX_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
             .palette = palette
-        }, OBJECT_TYPE_PALETTE);
+        }, OBJECT_TYPE_PALETTE, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p allocated w/ %d color(s)", self, self->palette->size); // FIXME: mark alloc/dealloc as TRACE.
-
-    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }
 
-static int palette_new_1n_1u(lua_State *L)
+static int palette_new_1n_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -142,16 +138,14 @@ static int palette_new_1n_1u(lua_State *L)
 
     Palette_Object_t *self = (Palette_Object_t *)luaX_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
             .palette = palette
-        }, OBJECT_TYPE_PALETTE);
+        }, OBJECT_TYPE_PALETTE, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p allocated w/ %d color(s)", self, self->palette->size);
-
-    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }
 
-static int palette_new_1t_1u(lua_State *L)
+static int palette_new_1t_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
@@ -200,19 +194,17 @@ static int palette_new_1t_1u(lua_State *L)
 
     Palette_Object_t *self = (Palette_Object_t *)luaX_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
             .palette = palette
-        }, OBJECT_TYPE_PALETTE);
+        }, OBJECT_TYPE_PALETTE, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p allocated w/ %d color(s)", self, self->palette->size);
-
-    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }
 
-static int palette_new_1u_1u(lua_State *L)
+static int palette_new_1o_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     const Palette_Object_t *other = (const Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
 
@@ -226,16 +218,14 @@ static int palette_new_1u_1u(lua_State *L)
 
     Palette_Object_t *self = (Palette_Object_t *)luaX_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
             .palette = palette
-        }, OBJECT_TYPE_PALETTE);
+        }, OBJECT_TYPE_PALETTE, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p allocated w/ %d color(s)", self, self->palette->size);
-
-    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }
 
-static int palette_new_3n_1u(lua_State *L)
+static int palette_new_3n_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -264,31 +254,29 @@ static int palette_new_3n_1u(lua_State *L)
 
     Palette_Object_t *self = (Palette_Object_t *)luaX_newobject(L, sizeof(Palette_Object_t), &(Palette_Object_t){
             .palette = palette
-        }, OBJECT_TYPE_PALETTE);
+        }, OBJECT_TYPE_PALETTE, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "palette %p allocated w/ %d color(s)", self, self->palette->size);
-
-    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }
 
-static int palette_new_v_1u(lua_State *L)
+static int palette_new_v_1o(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(0, palette_new_0_1u)
-        LUAX_OVERLOAD_SIGNATURE(palette_new_1s_1u, LUA_TSTRING)
-        LUAX_OVERLOAD_SIGNATURE(palette_new_1n_1u, LUA_TNUMBER)
-        LUAX_OVERLOAD_SIGNATURE(palette_new_1t_1u, LUA_TTABLE)
-        LUAX_OVERLOAD_SIGNATURE(palette_new_1u_1u, LUA_TUSERDATA)
-        LUAX_OVERLOAD_ARITY(3, palette_new_3n_1u)
+        LUAX_OVERLOAD_ARITY(0, palette_new_0_1o)
+        LUAX_OVERLOAD_SIGNATURE(palette_new_1s_1o, LUA_TSTRING)
+        LUAX_OVERLOAD_SIGNATURE(palette_new_1n_1o, LUA_TNUMBER)
+        LUAX_OVERLOAD_SIGNATURE(palette_new_1t_1o, LUA_TTABLE)
+        LUAX_OVERLOAD_SIGNATURE(palette_new_1o_1o, LUA_TOBJECT)
+        LUAX_OVERLOAD_ARITY(3, palette_new_3n_1o)
     LUAX_OVERLOAD_END
 }
 
-static int palette_gc_1u_0(lua_State *L)
+static int palette_gc_1o_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     Palette_Object_t *self = (Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
 
@@ -331,10 +319,10 @@ static int palette_mix_7nnnnnnN_3nnn(lua_State *L)
     return 3;
 }
 
-static int palette_colors_1u_1t(lua_State *L)
+static int palette_colors_1o_1t(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     const Palette_Object_t *self = (const Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
 
@@ -358,10 +346,10 @@ static int palette_colors_1u_1t(lua_State *L)
     return 1;
 }
 
-static int palette_size_1u_1n(lua_State *L)
+static int palette_size_1o_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     const Palette_Object_t *self = (const Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
 
@@ -372,10 +360,10 @@ static int palette_size_1u_1n(lua_State *L)
     return 1;
 }
 
-int palette_get_2un_3nnn(lua_State *L)
+int palette_get_2on_3nnn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const Palette_Object_t *self = (const Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
@@ -391,10 +379,10 @@ int palette_get_2un_3nnn(lua_State *L)
     return 3;
 }
 
-int palette_set_5unnnn_0(lua_State *L)
+int palette_set_5onnnn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -413,10 +401,10 @@ int palette_set_5unnnn_0(lua_State *L)
     return 0;
 }
 
-static int palette_match_4unnn_1n(lua_State *L)
+static int palette_match_4onnn_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -444,10 +432,10 @@ static int palette_match_4unnn_1n(lua_State *L)
     return 1;
 }
 
-static int palette_lerp_5unnnN_0(lua_State *L)
+static int palette_lerp_5onnnN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -467,11 +455,11 @@ static int palette_lerp_5unnnN_0(lua_State *L)
     return 0;
 }
 
-static int palette_merge_3uuB_0(lua_State *L)
+static int palette_merge_3ooB_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_OPTIONAL(LUA_TBOOLEAN)
     LUAX_SIGNATURE_END
     Palette_Object_t *self = (Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);

@@ -36,15 +36,15 @@
 #define META_TABLE  "Tofu_Collections_Grid_mt"
 #define SCRIPT_NAME "@grid.lua"
 
-static int grid_new_3nnt_1u(lua_State *L);
-static int grid_gc_1u_0(lua_State *L);
-static int grid_size_1u_2nn(lua_State *L);
-static int grid_fill_2ut_0(lua_State *L);
-static int grid_copy_2uu_0(lua_State *L);
+static int grid_new_3nnt_1o(lua_State *L);
+static int grid_gc_1o_0(lua_State *L);
+static int grid_size_1o_2nn(lua_State *L);
+static int grid_fill_2ot_0(lua_State *L);
+static int grid_copy_2oo_0(lua_State *L);
 static int grid_peek_v_1n(lua_State *L);
 static int grid_poke_v_0(lua_State *L);
-static int grid_scan_2uf_0(lua_State *L);
-static int grid_process_2uf_0(lua_State *L);
+static int grid_scan_2of_0(lua_State *L);
+static int grid_process_2of_0(lua_State *L);
 
 static const char _grid_lua[] = {
 #include "grid.inc"
@@ -59,16 +59,16 @@ int grid_loader(lua_State *L)
             .name = SCRIPT_NAME
         },
         (const struct luaL_Reg[]){
-            { "new", grid_new_3nnt_1u },
-            { "__gc", grid_gc_1u_0 },
-            { "size", grid_size_1u_2nn },
-            { "fill", grid_fill_2ut_0 },
-            { "copy", grid_copy_2uu_0 },
+            { "new", grid_new_3nnt_1o },
+            { "__gc", grid_gc_1o_0 },
+            { "size", grid_size_1o_2nn },
+            { "fill", grid_fill_2ot_0 },
+            { "copy", grid_copy_2oo_0 },
             { "peek", grid_peek_v_1n },
             { "poke", grid_poke_v_0 },
-            { "scan", grid_scan_2uf_0 },
-            { "process", grid_process_2uf_0 },
-//            { "path", grid_path },
+            { "scan", grid_scan_2of_0 },
+            { "process", grid_process_2of_0 },
+//            { "path", grid_path }, // TODO: implmement Dijkstra/A* path-finding.
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -76,7 +76,7 @@ int grid_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
-static int grid_new_3nnt_1u(lua_State *L)
+static int grid_new_3nnt_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -114,19 +114,17 @@ static int grid_new_3nnt_1u(lua_State *L)
             .height = height,
             .data = data,
             .data_size = data_size
-        }, OBJECT_TYPE_GRID);
+        }, OBJECT_TYPE_GRID, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "grid %p allocated w/ data %p", self, data);
-
-    luaL_setmetatable(L, META_TABLE);
 
     return 1;
 }
 
-static int grid_gc_1u_0(lua_State *L)
+static int grid_gc_1o_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     Grid_Object_t *self = (Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
 
@@ -138,10 +136,10 @@ static int grid_gc_1u_0(lua_State *L)
     return 0;
 }
 
-static int grid_size_1u_2nn(lua_State *L)
+static int grid_size_1o_2nn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     const Grid_Object_t *self = (const Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
 
@@ -151,10 +149,10 @@ static int grid_size_1u_2nn(lua_State *L)
     return 2;
 }
 
-static int grid_fill_2ut_0(lua_State *L)
+static int grid_fill_2ot_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
     LUAX_SIGNATURE_END
     Grid_Object_t *self = (Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
@@ -179,11 +177,11 @@ static int grid_fill_2ut_0(lua_State *L)
     return 0;
 }
 
-static int grid_copy_2uu_0(lua_State *L)
+static int grid_copy_2oo_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     Grid_Object_t *self = (Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
     const Grid_Object_t *other = (const Grid_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_GRID);
@@ -202,10 +200,10 @@ static int grid_copy_2uu_0(lua_State *L)
     return 0;
 }
 
-static int grid_peek_2un_1n(lua_State *L)
+static int grid_peek_2on_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const Grid_Object_t *self = (const Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
@@ -223,10 +221,10 @@ static int grid_peek_2un_1n(lua_State *L)
     return 1;
 }
 
-static int grid_peek_3unn_1n(lua_State *L)
+static int grid_peek_3onn_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
@@ -252,15 +250,15 @@ static int grid_peek_3unn_1n(lua_State *L)
 static int grid_peek_v_1n(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(2, grid_peek_2un_1n)
-        LUAX_OVERLOAD_ARITY(3, grid_peek_3unn_1n)
+        LUAX_OVERLOAD_ARITY(2, grid_peek_2on_1n)
+        LUAX_OVERLOAD_ARITY(3, grid_peek_3onn_1n)
     LUAX_OVERLOAD_END
 }
 
-static int grid_poke_3unn_0(lua_State *L)
+static int grid_poke_3onn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
@@ -278,10 +276,10 @@ static int grid_poke_3unn_0(lua_State *L)
     return 0;
 }
 
-static int grid_poke_4unnn_0(lua_State *L)
+static int grid_poke_4onnn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -307,15 +305,15 @@ static int grid_poke_4unnn_0(lua_State *L)
 static int grid_poke_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(3, grid_poke_3unn_0)
-        LUAX_OVERLOAD_ARITY(4, grid_poke_4unnn_0)
+        LUAX_OVERLOAD_ARITY(3, grid_poke_3onn_0)
+        LUAX_OVERLOAD_ARITY(4, grid_poke_4onnn_0)
     LUAX_OVERLOAD_END
 }
 
-static int grid_scan_2uf_0(lua_State *L)
+static int grid_scan_2of_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TFUNCTION)
     LUAX_SIGNATURE_END
     const Grid_Object_t *self = (const Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
@@ -338,10 +336,10 @@ static int grid_scan_2uf_0(lua_State *L)
     return 0;
 }
 
-static int grid_process_2uf_0(lua_State *L)
+static int grid_process_2of_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
         LUAX_SIGNATURE_REQUIRED(LUA_TFUNCTION)
     LUAX_SIGNATURE_END
     Grid_Object_t *self = (Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);

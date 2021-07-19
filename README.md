@@ -12,7 +12,7 @@ Guess what? Yup, that's yet another game engine/framework.
 
 ## Features
 
-* [x] Fully script-based, using [Lua](https://www.lua.org/).
+* [x] Fully scripted in [Lua](https://www.lua.org/).
 * [x] Straight multimedia support, no intermediate third-party libraries (OpenGL 2.1 required).
 * [x] Windowed/fullscreen display with best-fit integer automatic scaling.
 * [x] Internal software renderer. OpenGL is used only to present the framebuffer to the user (and apply post-process effects).
@@ -47,6 +47,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Framebuffer offsetting (e.g. for screen-shaking effect).
 * [x] Out-of-the-box 'tweening functions support (optimized [Penner's](http://robertpenner.com/easing/) set).
 * [x] Logging facility (w/ selectable severity level).
+* [x] Run-time signature check for Lua's API functions (debug build). Also, UDTs are typed-checked with a custom RTTI implementation.
 * [x] Crash screen (debug build).
 * [x] Game window focus detection (for game-pause).
 * [x] Real-time performance statistics (FPS and frame times) and resource usage (memory).
@@ -67,7 +68,7 @@ Guess what? Yup, that's yet another game engine/framework.
 
 ## Inspirations
 
-**#tofuengine** is an original software, result of the experience gained from ~30 years in programming on a broad range of platforms (some concept even stems back to *ancient* platforms like the [Amiga](https://en.wikipedia.org/wiki/Amiga) and the [SNES](https://en.wikipedia.org/wiki/Super_Nintendo_Entertainment_System), and arcane languages like [AMOS](https://en.wikipedia.org/wiki/AMOS_(programming_language)) and [Blitz BASIC 2](https://en.wikipedia.org/wiki/Blitz_BASIC)). However, it has also been influenced by modern similar/other game-engines in one way or another. Here's a brief list.
+**#tofuengine** is an original software, result of the experience gained from ~30 years in programming on a broad range of platforms (some concept even stems back to *ancient* platforms like the [Amiga](https://en.wikipedia.org/wiki/Amiga) and the [SNES](https://en.wikipedia.org/wiki/Super_Nintendo_Entertainment_System), and arcane languages like [AMOS](https://en.wikipedia.org/wiki/AMOS_(programming_language)) and [Blitz BASIC 2](https://en.wikipedia.org/wiki/Blitz_BASIC)). However, it has also been influenced by modern similar/other softwares in one way or another. Here's a brief list.
 
 * [Love2D](https://love2d.org/)
 * [Pico-8](https://www.lexaloffle.com/pico-8.php)
@@ -108,7 +109,7 @@ into a suitable work folder. Change directory into `tofu` folder you've just cre
 
 * `BUILD`, can be either `debug` or `release` with the usual meaning. If not specified, the build is assumed in **debug** mode.
 * `PLATFORM`, can be either `linux`, `windows`, or `rpi`. If not specified, the build is assumed for **Linux** platform. Please not that while the Windows build is generated on Linux using cross-compiling, the *Raspberry-Pi* build can be obtained only on a proper Raspberry-Pi board computer.
-* `ARCHITECTURE`, can be either `x64` or `x32`. Please note that this is used only for the **Windows** build as the Linux one is 64-bit only, and the Raspberry-Pi 32-bit only.
+* `ARCHITECTURE`, can be either `x64` or `x32`. Please note that this is used only for the **Windows** build as the Linux one is 64-bit only, and the Raspberry-Pi is 32-bit only.
 
 ## Sample projects
 

@@ -29,10 +29,7 @@ local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Palette = require("tofu.graphics").Palette
 local Font = require("tofu.graphics").Font
-
-local function length(x, y)
-  return math.sqrt((x * x) + (y * y))
-end
+local Vector = require("tofu.util").Vector
 
 local function square(canvas, x, y, s, r, g, b)
 --  local index = Display.color_to_index(r * 255.0, g * 255.0, b * 255.0)
@@ -49,8 +46,8 @@ function Main:__ctor()
   canvas:transparent(0, false)
 
   local width, height = canvas:size()
-  self.max_x = width - 1
-  self.max_y = height - 1
+  self.m = Vector.new(width - 1, height - 1)
+  self.c = self.m:clone():scale(0.5)
   self.fan = false
 
   self.font = Font.default(0, 15)
@@ -75,35 +72,33 @@ function Main:render(_)
   local canvas = Canvas:default()
   -- Note that we *don't* clear the canvas on purpose!!!
 
-  local mx, my = self.max_x, self.max_y
+  local m = self.m
+  local c = self.c
 
   local t = self.time
 
-  for _ = 1, 1000 do
-    local x, y = math.random(0, mx), math.random(0, my)
-    local ox, oy = (x / mx) * 2 - 1, (y / my) * 2 - 1
-    local d = length(ox, oy)
-    local r = 1.0 - d
-
-    local angle = t * 3 + r * math.pi -- Angle increase as we reach the center.
-    local c, s = math.cos(angle), math.sin(angle)
-    local rx, ry = c * ox - s * oy, s * ox + c * oy
+  for _ = 1, 250 do
+    local p = Vector.new(math.random(0, m.x), math.random(0, m.y))
+    local v = p:clone():sub(c):div(c) -- Normalize and center in [-1, 1]
+    local d = 1.0 - v:magnitude()
+    local angle = t * 3 + d * math.pi -- Angle increase as we reach the center.
+    local r = v:clone():rotate(angle)
 
     if self.fan then
-      local rad = math.atan(ry, rx) + math.pi -- Find the octanct of the rotated point to pick the color.
+      local rad = r:angle_to() + math.pi -- Find the octant of the rotated point to pick the color.
       local deg = math.floor(rad * (180.0 / math.pi)) % 180
       if deg > 3 and deg < 87 then
-        square(canvas, x, y, 5, 0.0, 0.5, 1.0)
+        square(canvas, p.x, p.y, 5, 0.0, 0.5, 1.0)
       elseif deg > 93 and deg < 177 then
-        square(canvas, x, y, 5, 0.0, 1.0, 0.0)
+        square(canvas, p.x, p.y, 5, 0.0, 1.0, 0.0)
       else
-        square(canvas, x, y, 5, 0.0, 0.0, 0.0)
+        square(canvas, p.x, p.y, 5, 0.0, 0.0, 0.0)
       end
     else
-      local v = math.min(1.0, length(rx, ry))
-      v = 1.0 - v * v -- Tweak to smooth the color change differently.
+      local l = math.min(1.0, r:magnitude())
+      l = 1.0 - l * l -- Tweak to smooth the color change differently.
 
-      square(canvas, x, y, 5, rx, ry, v)
+      square(canvas, p.x, p.y, 5, r.x, r.y, l)
     end
   end
 

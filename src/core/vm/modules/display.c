@@ -36,10 +36,10 @@
 
 #define LOG_CONTEXT "display"
 
-static int display_palette_1u_0(lua_State *L);
+static int display_palette_1o_0(lua_State *L);
 static int display_offset_2NN_0(lua_State *L);
 static int display_shift_v_0(lua_State *L);
-static int display_program_1U_0(lua_State *L);
+static int display_program_1O_0(lua_State *L);
 static int display_reset_0_0(lua_State *L);
 
 int display_loader(lua_State *L)
@@ -47,10 +47,10 @@ int display_loader(lua_State *L)
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
-            { "palette", display_palette_1u_0 },
+            { "palette", display_palette_1o_0 },
             { "offset", display_offset_2NN_0 },
             { "shift", display_shift_v_0 },
-            { "program", display_program_1U_0 },
+            { "program", display_program_1O_0 },
             { "reset", display_reset_0_0 },
             { NULL, NULL }
         },
@@ -59,10 +59,10 @@ int display_loader(lua_State *L)
         }, nup, NULL);
 }
 
-static int display_palette_1u_0(lua_State *L)
+static int display_palette_1o_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     const Palette_Object_t *palette = (const Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
 
@@ -153,10 +153,10 @@ static int display_shift_v_0(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
-static int display_program_1U_0(lua_State *L)
+static int display_program_1O_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TUSERDATA)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TOBJECT)
     LUAX_SIGNATURE_END
     const Program_Object_t *program = (const Program_Object_t *)LUAX_OPTIONAL_OBJECT(L, 1, OBJECT_TYPE_PROGRAM, NULL);
 
