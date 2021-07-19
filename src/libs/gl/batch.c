@@ -94,7 +94,8 @@ bool GL_batch_grow(GL_Batch_t *batch, size_t amount)
 
 void GL_batch_clear(GL_Batch_t *batch)
 {
-    arrsetlen(batch->sprites, 0);
+    static const size_t zero = 0; // Note: we don't pass the immediate `0` to avoid a "type-limit" warning from the compiler.
+    arrsetlen(batch->sprites, zero);
 }
 
 void GL_batch_add(GL_Batch_t *batch, GL_Batch_Sprite_t sprite)
