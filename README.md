@@ -8,7 +8,7 @@ Guess what? Yup, that's yet another game engine/framework.
 
 * Carefully crafted C99 code.
 * Self-contained, no additional runtime modules/libraries required (system-wide libraries excluded).
-* Multi-platform support through cross-compilation (Windows, Linux and [Raspberry-Pi](https://www.raspberrypi.org/) -- macOS currently not supported).
+* Multi-platform support through cross-compilation (Windows, Linux and [Raspberry-Pi](https://www.raspberrypi.org/) -- macOS currently not supported, possibly WebAssembly in the not so distant future).
 
 ## Features
 
@@ -47,7 +47,7 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Framebuffer offsetting (e.g. for screen-shaking effect).
 * [x] Out-of-the-box 'tweening functions support (optimized [Penner's](http://robertpenner.com/easing/) set).
 * [x] Logging facility (w/ selectable severity level).
-* [x] Run-time signature check for Lua's API functions (debug build). Also, UDTs are typed-checked with a custom RTTI implementation.
+* [x] Run-time signature check for Lua's API functions (debug build). Also, UDTs are typed-checked with a custom [RTTI](https://en.wikipedia.org/wiki/Run-time_type_information) implementation.
 * [x] Crash screen (debug build).
 * [x] Game window focus detection (for game-pause).
 * [x] Real-time performance statistics (FPS and frame times) and resource usage (memory).
@@ -56,13 +56,14 @@ Guess what? Yup, that's yet another game engine/framework.
 
 ## Dependencies
 
-* [dr_libs](https://github.com/mackron/dr_libs) v0.12.29, v0.6.27, v0.12.19
+* [dr_libs](https://github.com/mackron/dr_libs) v0.12.29, v0.6.27, v0.13.0
 * [Glad](https://glad.dav1d.de/)
 * [gif-h](https://github.com/charlietangora/gif-h)
 * [GLFW](https://www.glfw.org/) v3.3.4
 * [libxmp](http://xmp.sourceforge.net/) v4.5.0
 * [Lua](https://lua.org/) v5.4.3
-* [miniaudio](https://github.com/dr-soft/miniaudio) v0.10.34
+* [miniaudio](https://github.com/dr-soft/miniaudio) v0.10.38
+* [SDL_GameControllerDB](https://github.com/gabomdq/SDL_GameControllerDB)
 * [spleen](https://github.com/fcambus/spleen) v1.8.1
 * [stb](https://github.com/nothings/stb) libraries
 
@@ -119,25 +120,25 @@ Along with the game-engine source, there's a bunch of (basic) demo projects. The
 
 ## Desiderata
 
+* [ ] Physics-engine.
+* [ ] Asynchronous resource loading/decoding with callback (maybe just some kind of pre-loading?)
 * [ ] Multi-threaded parallel rendering (w/ double/triple buffering).
 * [ ] Define some fixed resolutions (see [this](https://pacoup.com/2011/06/12/list-of-true-169-resolutions/))?
 * [ ] Tiled-map support w/ camera support (zoom and scrolling).
 * [ ] Animation support w/ frameset DSL (i.e. compiling a string where each token can be a single frame, a range or a "keep-current-frame for some time" command). Each frameset can have its one update period, and will be most likely based upon a timer.
 * [ ] Custom "raw" graphics and sound formats, with on-the-fly LZ4 (stream?) compression.
 * [ ] Game state and display transitions (at which level? Engine or script?).
-* [ ] Library of noise functions ([cellular](https://thebookofshaders.com/12/), Perlin, etc...).
+* [ ] Library of noise functions ([cellular](https://thebookofshaders.com/12/), [Perlin](https://github.com/stegu/perlin-noise), etc...).
 * [ ] Multiple players support.
 * [ ] Use a custom memory-management allocator.
-* [ ] Webassembly build via Emscripten.
+* [ ] Webassembly build via [Emscripten](https://www.jamesfmackenzie.com/2019/12/01/webassembly-graphics-with-sdl/) to [HTML5](https://uncovergame.com/2015/01/21/porting-a-complete-c-game-engine-to-html5-through-emscripten/).
 * [ ] Switch to [Vulkan API](https://www.khronos.org/vulkan/) (through [GLFW](https://www.glfw.org/)).
 * [ ] game time management, in system class (speed, up down pause)
-* [ ] async load with callback
 * [ ] both shoulder and trigger axes are analogue?
 * [ ] rumble?
 * [ ] analogues low pass filter (page 591) or moving average?
 * [ ] buttons states with XOR (page 594)
 * [ ] chords and gestures detection
-* [ ] collisions
 
 ## Profiling
 
