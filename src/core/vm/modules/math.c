@@ -49,6 +49,7 @@ static int math_signum_1n_1n(lua_State *L);
 static int math_sincos_1n_2nn(lua_State *L);
 static int math_angle_to_rotation_1n_1n(lua_State *L);
 static int math_rotation_to_angle_1n_1n(lua_State *L);
+static int math_rotate_3nnn_2nn(lua_State *L);
 static int math_wave_v_1f(lua_State *L);
 static int math_tweener_v_1f(lua_State *L);
 
@@ -76,7 +77,7 @@ int math_loader(lua_State *L)
             { "sincos", math_sincos_1n_2nn },
             { "angle_to_rotation", math_angle_to_rotation_1n_1n },
             { "rotation_to_angle", math_rotation_to_angle_1n_1n },
-//            { "rotate", math_rotate_3nnn_2nn },
+            { "rotate", math_rotate_3nnn_2nn },
             { "wave", math_wave_v_1f },
             { "tweener", math_tweener_v_1f },
             { NULL, NULL }
@@ -260,6 +261,29 @@ static int math_rotation_to_angle_1n_1n(lua_State *L)
     lua_pushnumber(L, (lua_Number)angle);
 
     return 1;
+}
+
+static int math_rotate_3nnn_2nn(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    float x = LUAX_NUMBER(L, 1);
+    float y = LUAX_NUMBER(L, 2);
+    int rotation = LUAX_INTEGER(L, 3);
+
+    float s, c;
+    fsincos(rotation, &s, &c);
+
+    float rx = c * x - s * y;
+    float ry = s * x + c * y;
+
+    lua_pushnumber(L, (lua_Number)rx);
+    lua_pushnumber(L, (lua_Number)ry);
+
+    return 2;
 }
 
 static int _vanilla_wave_1n_1n(lua_State *L)
