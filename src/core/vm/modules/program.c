@@ -35,12 +35,12 @@
 #define META_TABLE  "Tofu_Graphics_Program_mt"
 #define SCRIPT_NAME "@program.lua"
 
-static int program_new_0_1u(lua_State *L);
-static int program_gc_1u_0(lua_State *L);
-static int program_wait_3unn_0(lua_State *L);
-static int program_modulo_2un_0(lua_State *L);
-static int program_offset_2un_0(lua_State *L);
-static int program_color_5unnnn_0(lua_State *L);
+static int program_new_0_1o(lua_State *L);
+static int program_gc_1o_0(lua_State *L);
+static int program_wait_3onn_0(lua_State *L);
+static int program_modulo_2on_0(lua_State *L);
+static int program_offset_2on_0(lua_State *L);
+static int program_color_5onnnn_0(lua_State *L);
 static int program_shift_v_0(lua_State *L);
 
 static const char _program_lua[] = {
@@ -56,12 +56,12 @@ int program_loader(lua_State *L)
             .name = SCRIPT_NAME
         },
         (const struct luaL_Reg[]){
-            { "new", program_new_0_1u },
-            { "__gc", program_gc_1u_0 },
-            { "wait", program_wait_3unn_0 },
-            { "modulo", program_modulo_2un_0 },
-            { "offset", program_offset_2un_0 },
-            { "color", program_color_5unnnn_0 },
+            { "new", program_new_0_1o },
+            { "__gc", program_gc_1o_0 },
+            { "wait", program_wait_3onn_0 },
+            { "modulo", program_modulo_2on_0 },
+            { "offset", program_offset_2on_0 },
+            { "color", program_color_5onnnn_0 },
             { "shift", program_shift_v_0 },
             { NULL, NULL }
         },
@@ -70,7 +70,7 @@ int program_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
-static int program_new_0_1u(lua_State *L)
+static int program_new_0_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
@@ -93,7 +93,7 @@ static int program_new_0_1u(lua_State *L)
     return 1;
 }
 
-static int program_gc_1u_0(lua_State *L)
+static int program_gc_1o_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -109,7 +109,7 @@ static int program_gc_1u_0(lua_State *L)
     return 0;
 }
 
-static int program_wait_3unn_0(lua_State *L)
+static int program_wait_3onn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -125,7 +125,7 @@ static int program_wait_3unn_0(lua_State *L)
     return 0;
 }
 
-static int program_modulo_2un_0(lua_State *L)
+static int program_modulo_2on_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -139,7 +139,7 @@ static int program_modulo_2un_0(lua_State *L)
     return 0;
 }
 
-static int program_offset_2un_0(lua_State *L)
+static int program_offset_2on_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -153,7 +153,7 @@ static int program_offset_2un_0(lua_State *L)
     return 0;
 }
 
-static int program_color_5unnnn_0(lua_State *L)
+static int program_color_5onnnn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -175,7 +175,7 @@ static int program_color_5unnnn_0(lua_State *L)
     return 0;
 }
 
-static int program_shift_2ut_0(lua_State *L)
+static int program_shift_2ot_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -196,7 +196,7 @@ static int program_shift_2ut_0(lua_State *L)
     return 0;
 }
 
-static int program_shift_3unn_0(lua_State *L)
+static int program_shift_3onn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -215,7 +215,7 @@ static int program_shift_3unn_0(lua_State *L)
 static int program_shift_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(2, program_shift_2ut_0)
-        LUAX_OVERLOAD_ARITY(3, program_shift_3unn_0)
+        LUAX_OVERLOAD_ARITY(2, program_shift_2ot_0)
+        LUAX_OVERLOAD_ARITY(3, program_shift_3onn_0)
     LUAX_OVERLOAD_END
 }

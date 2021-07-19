@@ -50,7 +50,7 @@ function Tofu:__ctor()
           local canvas = Canvas.default()
           canvas:pop(0) -- Discard all saved states, if any.
           canvas:reset() -- Reset default canvas from the game state.
-         me.main = nil
+          me.main = nil
         end,
       process = function(me)
           me.main:process()

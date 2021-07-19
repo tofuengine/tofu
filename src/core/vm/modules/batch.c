@@ -33,26 +33,26 @@
 #define LOG_CONTEXT "batch"
 #define META_TABLE  "Tofu_Graphics_Batch_mt"
 
-static int batch_new_2un_1u(lua_State *L);
-static int batch_gc_1u_0(lua_State *L);
-static int batch_resize_2un_0(lua_State *L);
-static int batch_grow_2un_0(lua_State *L);
-static int batch_clear_1u_0(lua_State *L);
+static int batch_new_2on_1o(lua_State *L);
+static int batch_gc_1o_0(lua_State *L);
+static int batch_resize_2on_0(lua_State *L);
+static int batch_grow_2on_0(lua_State *L);
+static int batch_clear_1o_0(lua_State *L);
 static int batch_add_v_0(lua_State *L);
-static int batch_blit_3uuS_0(lua_State *L);
+static int batch_blit_3ooS_0(lua_State *L);
 
 int batch_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
-            { "new", batch_new_2un_1u },
-            { "__gc", batch_gc_1u_0 },
-            { "resize", batch_resize_2un_0 },
-            { "grow", batch_grow_2un_0 },
-            { "clear", batch_clear_1u_0 },
+            { "new", batch_new_2on_1o },
+            { "__gc", batch_gc_1o_0 },
+            { "resize", batch_resize_2on_0 },
+            { "grow", batch_grow_2on_0 },
+            { "clear", batch_clear_1o_0 },
             { "add", batch_add_v_0 },
-            { "blit", batch_blit_3uuS_0 },
+            { "blit", batch_blit_3ooS_0 },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -60,7 +60,7 @@ int batch_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
-static int batch_new_2un_1u(lua_State *L)
+static int batch_new_2on_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -88,7 +88,7 @@ static int batch_new_2un_1u(lua_State *L)
     return 1;
 }
 
-static int batch_gc_1u_0(lua_State *L)
+static int batch_gc_1o_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -106,7 +106,7 @@ static int batch_gc_1u_0(lua_State *L)
     return 0;
 }
 
-static int batch_resize_2un_0(lua_State *L)
+static int batch_resize_2on_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -123,7 +123,7 @@ static int batch_resize_2un_0(lua_State *L)
     return 0;
 }
 
-static int batch_grow_2un_0(lua_State *L)
+static int batch_grow_2on_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -140,7 +140,7 @@ static int batch_grow_2un_0(lua_State *L)
     return 0;
 }
 
-static int batch_clear_1u_0(lua_State *L)
+static int batch_clear_1o_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -152,7 +152,7 @@ static int batch_clear_1u_0(lua_State *L)
     return 0;
 }
 
-static int batch_add_4unNN_0(lua_State *L)
+static int batch_add_4onNN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -176,7 +176,7 @@ static int batch_add_4unNN_0(lua_State *L)
     return 0;
 }
 
-static int batch_add_5unnnn_0(lua_State *L)
+static int batch_add_5onnnn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -202,7 +202,7 @@ static int batch_add_5unnnn_0(lua_State *L)
     return 0;
 }
 
-static int batch_add_6unnnnn_0(lua_State *L)
+static int batch_add_6onnnnn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -230,7 +230,7 @@ static int batch_add_6unnnnn_0(lua_State *L)
     return 0;
 }
 
-static int batch_add_9unnnnnNNN_0(lua_State *L)
+static int batch_add_9onnnnnNNN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -267,16 +267,16 @@ static int batch_add_9unnnnnNNN_0(lua_State *L)
 static int batch_add_v_0(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(4, batch_add_4unNN_0)
-        LUAX_OVERLOAD_ARITY(5, batch_add_5unnnn_0)
-        LUAX_OVERLOAD_ARITY(6, batch_add_6unnnnn_0)
-        LUAX_OVERLOAD_ARITY(7, batch_add_9unnnnnNNN_0)
-        LUAX_OVERLOAD_ARITY(8, batch_add_9unnnnnNNN_0)
-        LUAX_OVERLOAD_ARITY(9, batch_add_9unnnnnNNN_0)
+        LUAX_OVERLOAD_ARITY(4, batch_add_4onNN_0)
+        LUAX_OVERLOAD_ARITY(5, batch_add_5onnnn_0)
+        LUAX_OVERLOAD_ARITY(6, batch_add_6onnnnn_0)
+        LUAX_OVERLOAD_ARITY(7, batch_add_9onnnnnNNN_0)
+        LUAX_OVERLOAD_ARITY(8, batch_add_9onnnnnNNN_0)
+        LUAX_OVERLOAD_ARITY(9, batch_add_9onnnnnNNN_0)
     LUAX_OVERLOAD_END
 }
 
-static int batch_blit_3uuS_0(lua_State *L)
+static int batch_blit_3ooS_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -289,7 +289,7 @@ static int batch_blit_3uuS_0(lua_State *L)
 
     const GL_Batch_t *batch = self->batch;
     const GL_Surface_t *surface = canvas->surface;
-    if (mode[0] == 'f') {
+    if (mode[0] == 'f') { // FIXME: traslate all these into map-lookups?
         GL_batch_blit(batch, surface);
     } else
     if (mode[0] == 's') {

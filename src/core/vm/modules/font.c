@@ -40,9 +40,9 @@
 #define META_TABLE  "Tofu_Graphics_Font_mt"
 #define SCRIPT_NAME "@font.lua"
 
-static int font_new_v_1u(lua_State *L);
-static int font_gc_1u_0(lua_State *L);
-static int font_size_4usNN_2n(lua_State *L);
+static int font_new_v_1o(lua_State *L);
+static int font_gc_1o_0(lua_State *L);
+static int font_size_4osNN_2n(lua_State *L);
 static int font_blit_v_2nn(lua_State *L);
 
 static const char _font_lua[] = {
@@ -58,9 +58,9 @@ int font_loader(lua_State *L)
             .name = SCRIPT_NAME
         },
         (const struct luaL_Reg[]){
-            { "new", font_new_v_1u },
-            { "__gc", font_gc_1u_0 },
-            { "size", font_size_4usNN_2n },
+            { "new", font_new_v_1o },
+            { "__gc", font_gc_1o_0 },
+            { "size", font_size_4osNN_2n },
             { "blit", font_blit_v_2nn },
             { NULL, NULL }
         },
@@ -86,7 +86,7 @@ static inline void _generate_alphabeth(GL_Cell_t glyphs[256], const char *alphab
     }
 }
 
-static int font_new_3usS_1u(lua_State *L)
+static int font_new_3osS_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -125,7 +125,7 @@ static int font_new_3usS_1u(lua_State *L)
     return 1;
 }
 
-static int font_new_4unnS_1u(lua_State *L)
+static int font_new_4onnS_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -159,17 +159,17 @@ static int font_new_4unnS_1u(lua_State *L)
     return 1;
 }
 
-static int font_new_v_1u(lua_State *L)
+static int font_new_v_1o(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_SIGNATURE(font_new_3usS_1u, LUA_TOBJECT, LUA_TSTRING, LUA_TSTRING)
-        LUAX_OVERLOAD_SIGNATURE(font_new_4unnS_1u, LUA_TOBJECT, LUA_TNUMBER, LUA_TNUMBER)
-        LUAX_OVERLOAD_ARITY(3, font_new_3usS_1u)
-        LUAX_OVERLOAD_ARITY(4, font_new_4unnS_1u)
+        LUAX_OVERLOAD_SIGNATURE(font_new_3osS_1o, LUA_TOBJECT, LUA_TSTRING, LUA_TSTRING)
+        LUAX_OVERLOAD_SIGNATURE(font_new_4onnS_1o, LUA_TOBJECT, LUA_TNUMBER, LUA_TNUMBER)
+        LUAX_OVERLOAD_ARITY(3, font_new_3osS_1o)
+        LUAX_OVERLOAD_ARITY(4, font_new_4onnS_1o)
     LUAX_OVERLOAD_END
 }
 
-static int font_gc_1u_0(lua_State *L)
+static int font_gc_1o_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -206,7 +206,7 @@ static GL_Size_t _size(const GL_Sheet_t *sheet, const char *text, const GL_Cell_
     return (GL_Size_t){ .width = width, .height = height };
 }
 
-static int font_size_4usNN_2n(lua_State *L)
+static int font_size_4osNN_2n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -230,7 +230,7 @@ static int font_size_4usNN_2n(lua_State *L)
     return 2;
 }
 
-static int font_blit_5uunns_2nn(lua_State *L)
+static int font_blit_5oonns_2nn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -270,7 +270,7 @@ static int font_blit_5uunns_2nn(lua_State *L)
     return 2;
 }
 
-static int font_blit_7uunnsnN_2nn(lua_State *L)
+static int font_blit_7oonnsnN_2nn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -318,8 +318,8 @@ static int font_blit_7uunnsnN_2nn(lua_State *L)
 static int font_blit_v_2nn(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(5, font_blit_5uunns_2nn)
-        LUAX_OVERLOAD_ARITY(6, font_blit_7uunnsnN_2nn)
-        LUAX_OVERLOAD_ARITY(7, font_blit_7uunnsnN_2nn)
+        LUAX_OVERLOAD_ARITY(5, font_blit_5oonns_2nn)
+        LUAX_OVERLOAD_ARITY(6, font_blit_7oonnsnN_2nn)
+        LUAX_OVERLOAD_ARITY(7, font_blit_7oonnsnN_2nn)
     LUAX_OVERLOAD_END
 }
