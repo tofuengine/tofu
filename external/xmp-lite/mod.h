@@ -20,6 +20,9 @@
  * THE SOFTWARE.
  */
 
+#ifndef LIBXMP_LOADERS_MOD_H
+#define LIBXMP_LOADERS_MOD_H
+
 struct mod_instrument {
 	uint8_t name[22];	/* Instrument name */
 	uint16_t size;		/* Sample length in 16-bit words */
@@ -40,3 +43,7 @@ struct mod_header {
 	uint8_t order[128];
 	uint8_t magic[4];
 };
+
+extern const struct format_loader libxmp_loader_mod;
+
+#endif  /* LIBXMP_LOADERS_MOD_H */

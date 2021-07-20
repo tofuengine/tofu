@@ -36,12 +36,11 @@
  * scan.c was hanging when it jumps to an invalid restart value.
  * (Fixed by hipolito)
  */
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wsign-compare"
-#pragma GCC diagnostic ignored "-Wshadow"
 
 #include "scan.h"
 #include "effects.h"
+
+#include <malloc.h>
 
 #define S3M_END		0xff
 #define S3M_SKIP	0xfe
@@ -71,7 +70,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 	return 0;
 
     for (i = 0; i < mod->len; i++) {
-	int pat = mod->xxo[i];
+	pat = mod->xxo[i];
 	memset(m->scan_cnt[i], 0, pat >= mod->pat ? 1 :
 			mod->xxp[pat]->rows ? mod->xxp[pat]->rows : 1);
     }
@@ -123,7 +122,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 	}
 	orders_since_last_valid++;
 
-	if ((uint32_t)++ord >= mod->len) {
+	if (++ord >= mod->len) {
 	    if (mod->rst > mod->len || mod->xxo[mod->rst] >= mod->pat) {
 		ord = ep;
 	    } else {
@@ -479,9 +478,17 @@ int libxmp_scan_sequences(struct context_data *ctx)
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
+	struct scan_data *s;
 	int i, ep;
 	int seq;
 	unsigned char temp_ep[XMP_MAX_MOD_LENGTH];
+
+	s = (struct scan_data *)realloc(p->scan, MAX(1, mod->len) * sizeof(struct scan_data));
+	if (!s) {
+		D_(D_CRIT "failed to allocate scan data");
+		return -1;
+	}
+	p->scan = s;
 
 	/* Initialize order data to prevent overwrite when a position is used
 	 * multiple times at different starting points (see janosik.xm).
@@ -521,6 +528,12 @@ int libxmp_scan_sequences(struct context_data *ctx)
 		}
 	}
 
+	if (seq < mod->len) {
+		s = (struct scan_data *)realloc(p->scan, seq * sizeof(struct scan_data));
+		if (s != NULL) {
+			p->scan = s;
+		}
+	}
 	m->num_sequences = seq;
 
 	/* Now place entry points in the public accessible array */
@@ -529,8 +542,5 @@ int libxmp_scan_sequences(struct context_data *ctx)
 		m->seq_data[i].duration = p->scan[i].time;
 	}
 
-
 	return 0;
 }
-
-#pragma GCC diagnostic pop

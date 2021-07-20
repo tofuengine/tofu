@@ -20,6 +20,9 @@
  * THE SOFTWARE.
  */
 
+#ifndef LIBXMP_LOADERS_S3M_H
+#define LIBXMP_LOADERS_S3M_H
+
 /* S3M packed pattern macros */
 #define S3M_EOR		0	/* End of row */
 #define S3M_CH_MASK	0x1f	/* Channel */
@@ -97,3 +100,7 @@ struct s3m_instrument_header {
 	uint8_t name[28];	/* Instrument name */
 	uint32_t magic;	/* 'SCRS' */
 };
+
+extern const struct format_loader libxmp_loader_s3m;
+
+#endif  /* LIBXMP_LOADERS_S3M_H */

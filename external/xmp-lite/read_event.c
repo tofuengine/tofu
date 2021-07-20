@@ -19,9 +19,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wsign-compare"
-#pragma GCC diagnostic ignored "-Wshadow"
 
 #include <stdlib.h>
 #include "common.h"
@@ -67,7 +64,7 @@ static void reset_envelopes(struct context_data *ctx, struct channel_data *xc)
 	if (!IS_VALID_INSTRUMENT(xc->ins))
 		return;
 
- 	RESET_NOTE(NOTE_ENV_END);
+	RESET_NOTE(NOTE_ENV_END);
 
 	xc->v_idx = -1;
 	xc->p_idx = -1;
@@ -75,6 +72,20 @@ static void reset_envelopes(struct context_data *ctx, struct channel_data *xc)
 }
 
 #ifndef LIBXMP_CORE_DISABLE_IT
+
+static void reset_envelopes_volume(struct context_data *ctx,
+				struct channel_data *xc)
+{
+	struct module_data *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
+
+	if (!IS_VALID_INSTRUMENT(xc->ins))
+		return;
+
+	RESET_NOTE(NOTE_ENV_END);
+
+	xc->v_idx = -1;
+}
 
 static void reset_envelopes_carry(struct context_data *ctx,
 				struct channel_data *xc)
@@ -111,7 +122,7 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct smix_data *smix = &ctx->smix;
-	
+
 	if (sub != NULL && note >= 0) {
 		struct xmp_instrument *xxi;
 
@@ -442,19 +453,17 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	/* FT2: Retrieve old instrument volume */
 	if (ins) {
 		if (key == 0 || key >= XMP_KEY_OFF) {
-			struct xmp_subinstrument *sub;
-
 			/* Previous instrument */
 			sub = get_subinstrument(ctx, xc->ins, xc->key);
 
 			/* No note */
 			if (sub != NULL) {
-				int p = mod->xxc[chn].pan - 128;
+				int pan = mod->xxc[chn].pan - 128;
 				xc->volume = sub->vol;
 
 				if (!HAS_QUIRK(QUIRK_FTMOD)) {
-					xc->pan.val = p + ((sub->pan - 128) *
-						(128 - abs(p))) / 128 + 128;
+					xc->pan.val = pan + ((sub->pan - 128) *
+						(128 - abs(pan))) / 128 + 128;
 				}
 
 				xc->ins_fade = mod->xxi[xc->ins].rls;
@@ -501,11 +510,8 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	}
 
 	/* Check note */
-
 	if (ins) {
 		if (key > 0 && key < XMP_KEY_OFF) {
-			struct xmp_subinstrument *sub;
-
 			/* Retrieve volume when we have note */
 
 			/* and only if we have instrument, otherwise we're in
@@ -515,12 +521,12 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			/* Current instrument */
 			sub = get_subinstrument(ctx, xc->ins, key - 1);
 			if (sub != NULL) {
-				int p = mod->xxc[chn].pan - 128;
+				int pan = mod->xxc[chn].pan - 128;
 				xc->volume = sub->vol;
 
 				if (!HAS_QUIRK(QUIRK_FTMOD)) {
-					xc->pan.val = p + ((sub->pan - 128) *
-						(128 - abs(p))) / 128 + 128;
+					xc->pan.val = pan + ((sub->pan - 128) *
+						(128 - abs(pan))) / 128 + 128;
 				}
 
 				xc->ins_fade = mod->xxi[xc->ins].rls;
@@ -555,7 +561,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 					env_on = 1;
 				}
 			}
-			
+
 			if (env_on || (!vol_set && (!ev.ins || !delay_fx))) {
 				if (sustain_check(env, xc->v_idx)) {
 					/* See OpenMPT EnvOff.xm. In certain
@@ -1253,10 +1259,11 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	 * finished (OpenMPT test EnvReset.it). This must take place after
 	 * channel copies in case of NNA (see test/test.it)
 	 * Also if we have envelope in carry mode, check fadeout
+	 * Also, only reset the volume envelope. (it_fade_env_reset_carry.it)
 	 */
 	if (ev.ins && TEST_NOTE(NOTE_ENV_END)) {
 		if (check_fadeout(ctx, xc, candidate_ins)) {
-			reset_envelopes(ctx, xc);
+			reset_envelopes_volume(ctx, xc);
 		} else {
 			reset_env = 0;
 		}
@@ -1451,5 +1458,3 @@ int libxmp_read_event(struct context_data *ctx, struct xmp_event *e, int chn)
 		return read_event_mod(ctx, e, chn);
 	}
 }
-
-#pragma GCC diagnostic pop

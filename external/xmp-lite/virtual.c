@@ -19,8 +19,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wsign-compare"
 
 #include <stdlib.h>
 #include <limits.h>
@@ -64,7 +62,7 @@ void libxmp_virt_resetvoice(struct context_data *ctx, int voc, int mute)
 	struct paula_state *paula;
 #endif
 
-	if ((uint32_t)voc >= p->virt.maxvoc) {
+	if (voc >= p->virt.maxvoc) {
 		return;
 	}
 
@@ -105,7 +103,7 @@ int libxmp_virt_on(struct context_data *ctx, int num)
 
 	p->virt.maxvoc = libxmp_mixer_numvoices(ctx, num);
 
-	p->virt.voice_array = calloc(p->virt.maxvoc,
+	p->virt.voice_array = (struct mixer_voice *)calloc(p->virt.maxvoc,
 				sizeof(struct mixer_voice));
 	if (p->virt.voice_array == NULL)
 		goto err;
@@ -119,7 +117,7 @@ int libxmp_virt_on(struct context_data *ctx, int num)
 	/* Initialize Paula simulator */
 	if (IS_AMIGA_MOD()) {
 		for (i = 0; i < p->virt.maxvoc; i++) {
-			p->virt.voice_array[i].paula = calloc(1, sizeof (struct paula_state));
+			p->virt.voice_array[i].paula = (struct paula_state *)calloc(1, sizeof (struct paula_state));
 			if (p->virt.voice_array[i].paula == NULL) {
 				goto err2;
 			}
@@ -128,7 +126,7 @@ int libxmp_virt_on(struct context_data *ctx, int num)
 	}
 #endif
 
-	p->virt.virt_channel = malloc(p->virt.virt_channels *
+	p->virt.virt_channel = (struct virt_channel *)malloc(p->virt.virt_channels *
 				sizeof(struct virt_channel));
 	if (p->virt.virt_channel == NULL)
 		goto err2;
@@ -278,12 +276,12 @@ static int map_virt_channel(struct player_data *p, int chn)
 {
 	int voc;
 
-	if ((uint32_t)chn >= p->virt.virt_channels)
+	if (chn >= p->virt.virt_channels)
 		return -1;
 
 	voc = p->virt.virt_channel[chn].map;
 
-	if ((uint32_t)voc >= p->virt.maxvoc)
+	if (voc >= p->virt.maxvoc)
 		return -1;
 
 	return voc;
@@ -462,7 +460,7 @@ int libxmp_virt_setpatch(struct context_data *ctx, int chn, int ins, int smp,
 	struct player_data *p = &ctx->p;
 	int voc, vfree;
 
-	if ((uint32_t)chn >= p->virt.virt_channels) {
+	if (chn >= p->virt.virt_channels) {
 		return -1;
 	}
 
@@ -585,5 +583,3 @@ int libxmp_virt_cstat(struct context_data *ctx, int chn)
 
 	return p->virt.voice_array[voc].act;
 }
-
-#pragma GCC diagnostic pop

@@ -1,6 +1,10 @@
 #ifndef XMP_H
 #define XMP_H
 
+#if defined(EMSCRIPTEN)
+# include <emscripten.h>
+#endif
+
 #include <stddef.h>
 
 #ifdef __cplusplus
@@ -324,7 +328,7 @@ LIBXMP_EXPORT int         xmp_syserrno        (void);
 LIBXMP_EXPORT xmp_context xmp_create_context  (void);
 LIBXMP_EXPORT void        xmp_free_context    (xmp_context);
 LIBXMP_EXPORT int         xmp_test_module     (char *, struct xmp_test_info *);
-LIBXMP_EXPORT int         xmp_load_module     (xmp_context, char *);
+LIBXMP_EXPORT int         xmp_load_module     (xmp_context, const char *);
 LIBXMP_EXPORT void        xmp_scan_module     (xmp_context);
 LIBXMP_EXPORT void        xmp_release_module  (xmp_context);
 LIBXMP_EXPORT int         xmp_start_player    (xmp_context, int, int);

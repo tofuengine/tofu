@@ -2,10 +2,27 @@
 #define LIBXMP_COMMON_H
 
 #include <stdarg.h>
-#include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include "xmp.h"
+
+#undef  LIBXMP_EXPORT_VAR
+#if defined(EMSCRIPTEN)
+#include <emscripten.h>
+#define LIBXMP_EXPORT_VAR EMSCRIPTEN_KEEPALIVE
+#else
+#define LIBXMP_EXPORT_VAR
+#endif
+
+#ifndef __cplusplus
+#define LIBXMP_BEGIN_DECLS
+#define LIBXMP_END_DECLS
+#else
+#define LIBXMP_BEGIN_DECLS	extern "C" {
+#define LIBXMP_END_DECLS	}
+#endif
 
 #if defined(__MORPHOS__) || defined(__AROS__) || defined(AMIGAOS) || \
     defined(__amigaos__) || defined(__amigaos4__) ||defined(__amigados__) || \
@@ -16,6 +33,16 @@
 #if (defined(__GNUC__) || defined(__clang__)) && defined(XMP_SYM_VISIBILITY)
 #if !defined(_WIN32) && !defined(__ANDROID__) && !defined(__APPLE__) && !defined(LIBXMP_AMIGA) && !defined(__MSDOS__) && !defined(B_BEOS_VERSION) && !defined(__ATHEOS__) && !defined(EMSCRIPTEN) && !defined(__MINT__)
 #define USE_VERSIONED_SYMBOLS
+#ifdef HAVE_EXTERNAL_VISIBILITY
+#define LIBXMP_EXPORT_VERSIONED __attribute__((visibility("default"),externally_visible))
+#else
+#define LIBXMP_EXPORT_VERSIONED __attribute__((visibility("default")))
+#endif
+#ifdef HAVE_ATTRIBUTE_SYMVER
+#define LIBXMP_ATTRIB_SYMVER(_sym) __attribute__((__symver__(_sym)))
+#else
+#define LIBXMP_ATTRIB_SYMVER(_sym)
+#endif
 #endif
 #endif
 
@@ -37,7 +64,7 @@ typedef unsigned int uint32;
 #ifdef _MSC_VER				/* MSVC++6.0 has no long long */
 typedef signed __int64 int64;
 typedef unsigned __int64 uint64;
-#elif !defined B_BEOS_VERSION		/* BeOS has its own int64 definition */
+#elif !(defined(B_BEOS_VERSION) || defined(__amigaos4__))
 typedef unsigned long long uint64;
 typedef signed long long int64;
 #endif
@@ -84,11 +111,12 @@ typedef signed long long int64;
 #endif
 void CLIB_DECL D_(const char *text, ...) ATTR_PRINTF(1,2);
 #else
-// VS prior to VC7.1 does not support variadic macros. VC8.0 does not optimize unused parameters passing
+/* VS prior to VC7.1 does not support variadic macros.
+ * VC8.0 does not optimize unused parameters passing. */
 #if _MSC_VER < 1400
 void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #else
-#define D_(args, ...) do {} while (0)
+#define D_(...) do {} while (0)
 #endif
 #endif
 
@@ -99,11 +127,11 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #define D_CRIT "  Error: "
 #define D_WARN "Warning: "
 #define D_INFO "   Info: "
-#define D_(args...) do { \
-	__android_log_print(ANDROID_LOG_DEBUG, "libxmp", args); \
+#define D_(...) do { \
+	__android_log_print(ANDROID_LOG_DEBUG, "libxmp", __VA_ARGS__); \
 	} while (0)
 #else
-#define D_(args...) do {} while (0)
+#define D_(...) do {} while (0)
 #endif
 
 #elif defined(__WATCOMC__)
@@ -121,30 +149,27 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 
 #else
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wvariadic-macros"
 #ifdef DEBUG
   #if defined(_WIN32) || defined(_WIN64)
 	#define D_CRIT "  Error: "
 	#define D_WARN "Warning: "
 	#define D_INFO "   Info: "
-	#define D_(args...) do { \
+	#define D_(...) do { \
 		printf("[%s:%d] ", \
-			__FILE__, __LINE__); printf (args); printf ("\n"); \
+			__FILE__, __LINE__); printf (__VA_ARGS__); printf ("\n"); \
 		} while (0)
   #else
 	#define D_INFO "\x1b[33m"
 	#define D_CRIT "\x1b[31m"
 	#define D_WARN "\x1b[36m"
-	#define D_(args...) do { \
+	#define D_(...) do { \
 		printf("\x1b[37m[%s:%d]\x1b[0m " D_INFO, \
-			__FILE__, __LINE__); printf (args); printf ("\x1b[0m\n"); \
+			__FILE__, __LINE__); printf (__VA_ARGS__); printf ("\x1b[0m\n"); \
 		} while (0)
   #endif
 #else
-  #define D_(args...) do {} while (0)
+  #define D_(...) do {} while (0)
 #endif
-#pragma GCC diagnostic pop
 
 #endif	/* !_MSC_VER */
 
@@ -234,7 +259,7 @@ int libxmp_snprintf (char *, size_t, const char *, ...);
 #define DEFAULT_TIME_FACTOR	10.0
 #define MED_TIME_FACTOR		2.64
 
-#define MAX_SEQUENCES		16
+#define MAX_SEQUENCES		255
 #define MAX_SAMPLE_SIZE		0x10000000
 #define MAX_SAMPLES		1024
 #define MAX_INSTRUMENTS		255
@@ -258,7 +283,6 @@ struct ord_data {
 	int time;
 	int start_row;
 };
-
 
 
 /* Context */
@@ -291,7 +315,7 @@ struct module_data {
 	int volbase;			/* Volume base */
 	int gvolbase;			/* Global volume base */
 	int gvol;			/* Global volume */
-	int *vol_table;		/* Volume translation table */
+	const int *vol_table;		/* Volume translation table */
 	int quirk;			/* player quirks */
 #define READ_EVENT_MOD	0
 #define READ_EVENT_FT2	1
@@ -319,6 +343,40 @@ struct module_data {
 };
 
 
+struct pattern_loop {
+	int start;
+	int count;
+};
+
+struct flow_control {
+	int pbreak;
+	int jump;
+	int delay;
+	int jumpline;
+	int loop_chn;
+
+	struct pattern_loop *loop;
+
+	int num_rows;
+	int end_point;
+#define ROWDELAY_ON		(1 << 0)
+#define ROWDELAY_FIRST_FRAME	(1 << 1)
+	int rowdelay;		/* For IT pattern row delay */
+	int rowdelay_set;
+};
+
+struct virt_channel {
+	int count;
+	int map;
+};
+
+struct scan_data {
+	int time;			/* replay time in ms */
+	int row;
+	int ord;
+	int num;
+};
+
 struct player_data {
 	int ord;
 	int pos;
@@ -341,32 +399,9 @@ struct player_data {
 	int master_vol;		/* Music volume */
 	int gvol;
 
-	struct flow_control {
-		int pbreak;
-		int jump;
-		int delay;
-		int jumpline;
-		int loop_chn;
+	struct flow_control flow;
 
-		struct pattern_loop {
-			int start;
-			int count;
-		} *loop;
-
-		int num_rows;
-		int end_point;
-#define ROWDELAY_ON				(1 << 0)
-#define ROWDELAY_FIRST_FRAME	(1 << 1)
-		int rowdelay;		/* For IT pattern row delay */
-		int rowdelay_set;
-	} flow;
-
-	struct {
-		int time;		/* replay time in ms */
-		int ord;
-		int row;
-		int num;
-	} scan[MAX_SEQUENCES];
+	struct scan_data *scan;
 
 	struct channel_data *xc_data;
 
@@ -379,10 +414,7 @@ struct player_data {
 		int virt_used;		/* Number of voices currently in use */
 		int maxvoc;		/* Number of sound card voices */
 
-		struct virt_channel {
-			int count;
-			int map;
-		} *virt_channel;
+		struct virt_channel *virt_channel;
 
 		struct mixer_voice *voice_array;
 	} virt;

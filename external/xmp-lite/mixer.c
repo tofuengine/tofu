@@ -19,9 +19,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wshadow"
-#pragma GCC diagnostic ignored "-Wsign-compare"
 
 #include <stdlib.h>
 #include <math.h>
@@ -254,7 +251,7 @@ static void set_sample_end(struct context_data *ctx, int voc, int end)
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
 	struct channel_data *xc;
 
-	if ((uint32_t)voc >= p->virt.maxvoc)
+	if (voc >= p->virt.maxvoc)
 		return;
 
 	xc = &p->xc_data[vi->chn];
@@ -468,13 +465,13 @@ void libxmp_mixer_softmixer(struct context_data *ctx)
 				samples = 0;
 				usmp = 1;
 			} else {
-				int s = ceil(((double)vi->end - vi->pos) / step);
+				int c = ceil(((double)vi->end - vi->pos) / step);
 				/* ...inside the tick boundaries */
-				if (s > size) {
-					s = size;
+				if (c > size) {
+					c = size;
 				}
 
-				samples = s;
+				samples = c;
 				if (samples > 0) {
 					usmp = 0;
 				}
@@ -842,5 +839,3 @@ void libxmp_mixer_off(struct context_data *ctx)
 	s->buf32 = NULL;
 	s->buffer = NULL;
 }
-
-#pragma GCC diagnostic pop

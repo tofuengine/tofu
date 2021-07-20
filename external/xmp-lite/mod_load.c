@@ -124,15 +124,15 @@ static int mod_test(HIO_HANDLE * f, char *t, const int start)
 		return -1;
 	}
 
-	if (!strncmp(buf + 2, "CH", 2) && isdigit((int)buf[0])
-	    && isdigit((int)buf[1])) {
+	if (!strncmp(buf + 2, "CH", 2) &&
+	    isdigit((unsigned char)buf[0]) && isdigit((unsigned char)buf[1])) {
 		i = (buf[0] - '0') * 10 + buf[1] - '0';
 		if (i > 0 && i <= 32) {
 			goto found;
 		}
 	}
 
-	if (!strncmp(buf + 1, "CHN", 3) && isdigit((int)*buf)) {
+	if (!strncmp(buf + 1, "CHN", 3) && isdigit((unsigned char)*buf)) {
 		if (*buf - '0') {
 			goto found;
 		}
@@ -242,7 +242,7 @@ static int is_st_ins(char *s)
 		return 0;
 	if (s[2] != '-' || s[5] != ':')
 		return 0;
-	if (!isdigit((int)s[3]) || !isdigit((int)s[4]))
+	if (!isdigit((unsigned char)s[3]) || !isdigit((unsigned char)s[4]))
 		return 0;
 
 	return 1;
@@ -456,9 +456,9 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     if (mod->chn == 0) {
 	if (!strncmp(magic + 2, "CH", 2) &&
-	    isdigit((int)magic[0]) && isdigit((int)magic[1])) {
+	    isdigit((unsigned char)magic[0]) && isdigit((unsigned char)magic[1])) {
 	    mod->chn = (*magic - '0') * 10 + magic[1] - '0';
-	} else if (!strncmp(magic + 1, "CHN", 3) && isdigit((int)*magic)) {
+	} else if (!strncmp(magic + 1, "CHN", 3) && isdigit((unsigned char)*magic)) {
 	    mod->chn = *magic - '0';
 	} else {
 	    return -1;
@@ -546,13 +546,13 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
     if (0x43c + mod->pat * 4 * mod->chn * 0x40 + smp_size < m->size) {
 	int pos = hio_tell(f);
         if (pos < 0) {
-           return -1;
+            return -1;
         }
 	hio_seek(f, start + 0x43c + mod->pat * 4 * mod->chn * 0x40 + smp_size, SEEK_SET);
-	hio_read(idbuffer, 1, 4, f);
+	int num_read = hio_read(idbuffer, 1, 4, f);
 	hio_seek(f, start + pos, SEEK_SET);
 
-	if (!memcmp(idbuffer, "FLEX", 4)) {
+	if (num_read == 4 && !memcmp(idbuffer, "FLEX", 4)) {
 	    tracker_id = TRACKER_FLEXTRAX;
 	    goto skip_test;
 	}

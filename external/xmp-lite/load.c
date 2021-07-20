@@ -179,7 +179,7 @@ static int load_module(xmp_context opaque, HIO_HANDLE *h)
 	return -XMP_ERROR_LOAD;
 }
 
-LIBXMP_EXPORT int xmp_load_module(xmp_context opaque, char *path)
+LIBXMP_EXPORT int xmp_load_module(xmp_context opaque, const char *path)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	HIO_HANDLE *h;

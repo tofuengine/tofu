@@ -36,8 +36,6 @@
  *
  * Claudio's fix: implementing effect K
  */
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wsign-compare"
 
 #include <stdlib.h>
 #include "virtual.h"
@@ -55,7 +53,6 @@ static const struct retrig_control rval[] = {
 	{   0,  1,  1 }, {   1,  1,  1 }, {   2,  1,  1 }, {   4,  1,  1 },
 	{   8,  1,  1 }, {  16,  1,  1 }, {   0,  3,  2 }, {   0,  2,  1 },
 	{   0,  0,  1 }		/* Note cut */
-	
 };
 
 
@@ -71,15 +68,15 @@ static const struct retrig_control rval[] = {
 static int check_envelope_end(struct xmp_envelope *env, int x)
 {
 	int16_t *data = env->data;
-	int index;
+	int idx;
 
 	if (~env->flg & XMP_ENVELOPE_ON || env->npt <= 0)
 		return 0;
 
-	index = (env->npt - 1) * 2;
+	idx = (env->npt - 1) * 2;
 
 	/* last node */
-	if (x >= data[index] || index == 0) { 
+	if (x >= data[idx] || idx == 0) {
 		if (~env->flg & XMP_ENVELOPE_LOOP) {
 			return 1;
 		}
@@ -92,27 +89,27 @@ static int get_envelope(struct xmp_envelope *env, int x, int def)
 {
 	int x1, x2, y1, y2;
 	int16_t *data = env->data;
-	int index;
+	int idx;
 
 	if (x < 0 || ~env->flg & XMP_ENVELOPE_ON || env->npt <= 0)
 		return def;
 
-	index = (env->npt - 1) * 2;
+	idx = (env->npt - 1) * 2;
 
-	x1 = data[index];		/* last node */
-	if (x >= x1 || index == 0) { 
-		return data[index + 1];
+	x1 = data[idx]; /* last node */
+	if (x >= x1 || idx == 0) {
+		return data[idx + 1];
 	}
 
 	do {
-		index -= 2;
-		x1 = data[index];
-	} while (index > 0 && x1 > x);
+		idx -= 2;
+		x1 = data[idx];
+	} while (idx > 0 && x1 > x);
 
 	/* interpolate */
-	y1 = data[index + 1];
-	x2 = data[index + 2];
-	y2 = data[index + 3];
+	y1 = data[idx + 1];
+	x2 = data[idx + 2];
+	y2 = data[idx + 3];
 
 	return x2 == x1 ? y2 : ((y2 - y1) * (x - x1) / (x2 - x1)) + y1;
 }
@@ -234,14 +231,14 @@ static int update_envelope(struct xmp_envelope *env, int x, int release, int key
 static int check_envelope_fade(struct xmp_envelope *env, int x)
 {
 	int16_t *data = env->data;
-	int index;
+	int idx;
 
 	if (~env->flg & XMP_ENVELOPE_ON)
 		return 0;
 
-	index = (env->npt - 1) * 2;		/* last node */
-	if (x > data[index]) {
-		if (data[index + 1] == 0)
+	idx = (env->npt - 1) * 2;		/* last node */
+	if (x > data[idx]) {
+		if (data[idx + 1] == 0)
 			return -1;
 		else
 			return 1;
@@ -355,7 +352,7 @@ static void reset_channels(struct context_data *ctx)
 			xc->mastervol = mod->xxc[i].vol;
 			xc->pan.val = mod->xxc[i].pan;
 		}
-		
+
 #ifndef LIBXMP_CORE_DISABLE_IT
 		xc->filter.cutoff = 0xff;
 
@@ -606,19 +603,20 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 		}
 	}
 
-	if (TEST_NOTE(NOTE_FADEOUT) || act == VIRT_ACTION_FADE) {
-		fade = 1;
+	if (!TEST_PER(VENV_PAUSE)) {
+		xc->v_idx = update_envelope(&instrument->aei, xc->v_idx,
+			DOENV_RELEASE, TEST(KEY_OFF), IS_PLAYER_MODE_IT());
 	}
 
-	if (fade) {
-		if (xc->fadeout > xc->ins_fade) {
-			xc->fadeout -= xc->ins_fade;
-		} else {
-			xc->fadeout = 0;
+	vol_envelope = get_envelope(&instrument->aei, xc->v_idx, 64);
+	if (check_envelope_end(&instrument->aei, xc->v_idx)) {
+		if (vol_envelope == 0) {
 			SET_NOTE(NOTE_END);
 		}
+		SET_NOTE(NOTE_ENV_END);
 	}
 
+	/* IT starts fadeout automatically at the end of the volume envelope. */
 	switch (check_envelope_fade(&instrument->aei, xc->v_idx)) {
 	case -1:
 		SET_NOTE(NOTE_END);
@@ -634,17 +632,19 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 		}
 	}
 
-	if (!TEST_PER(VENV_PAUSE)) {
-		xc->v_idx = update_envelope(&instrument->aei, xc->v_idx,
-			DOENV_RELEASE, TEST(KEY_OFF), IS_PLAYER_MODE_IT());
+	/* IT envelope fadeout starts immediately after the envelope tick,
+	 * so process fadeout after the volume envelope. */
+	if (TEST_NOTE(NOTE_FADEOUT) || act == VIRT_ACTION_FADE) {
+		fade = 1;
 	}
 
-	vol_envelope = get_envelope(&instrument->aei, xc->v_idx, 64);
-	if (check_envelope_end(&instrument->aei, xc->v_idx)) {
-		if (vol_envelope == 0) {
+	if (fade) {
+		if (xc->fadeout > xc->ins_fade) {
+			xc->fadeout -= xc->ins_fade;
+		} else {
+			xc->fadeout = 0;
 			SET_NOTE(NOTE_END);
 		}
-		SET_NOTE(NOTE_ENV_END);
 	}
 
 	/* If note ended in background channel, we can safely reset it */
@@ -771,7 +771,7 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 	/* Sanity check */
 	if (period < 0.1) {
 		period = 0.1;
-	} 
+	}
 
 	/* Arpeggio */
 	arp = arpeggio(ctx, xc);
@@ -802,7 +802,7 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 			}
 		}
 	}
-	
+
 	/* Envelope */
 
 	if (xc->f_idx >= 0 && (~instrument->fei.flg & XMP_ENVELOPE_FLT)) {
@@ -1002,7 +1002,7 @@ static void update_volume(struct context_data *ctx, int chn)
 			 * Unlike fine volume slides in the effect column,
 			 * fine volume slides in the volume column are only
 			 * ever executed on the first tick -- not on multiples
-			 * of the first tick if there is a pattern delay. 
+			 * of the first tick if there is a pattern delay.
 			 */
 			if (!f->rowdelay_set || f->rowdelay_set & ROWDELAY_FIRST_FRAME) {
 				xc->volume += xc->vol.fslide2;
@@ -1069,7 +1069,7 @@ static void update_frequency(struct context_data *ctx, int chn)
 					}
 				}
 			}
-		} 
+		}
 	}
 
 	if (is_first_frame(ctx)) {
@@ -1215,7 +1215,7 @@ static void inject_event(struct context_data *ctx)
 	struct xmp_module *mod = &m->mod;
 	struct smix_data *smix = &ctx->smix;
 	int chn;
-	
+
 	for (chn = 0; chn < mod->chn + smix->chn; chn++) {
 		struct xmp_event *e = &p->inject_event[chn];
 		if (e->_flag > 0) {
@@ -1293,14 +1293,14 @@ static void next_row(struct context_data *ctx)
 			p->row = f->loop[f->loop_chn - 1].start - 1;
 			f->loop_chn = 0;
 		}
-	
+
 		if (f->rowdelay == 0) {
 			p->row++;
 			f->rowdelay_set = 0;
 		} else {
 			f->rowdelay--;
 		}
-	
+
 		/* check end of pattern */
 		if (p->row >= f->num_rows) {
 			next_order(ctx);
@@ -1422,13 +1422,13 @@ LIBXMP_EXPORT int xmp_start_player(xmp_context opaque, int rate, int format)
 	f->pbreak = 0;
 	f->rowdelay_set = 0;
 
-	f->loop = calloc(p->virt.virt_channels, sizeof(struct pattern_loop));
+	f->loop = (struct pattern_loop *)calloc(p->virt.virt_channels, sizeof(struct pattern_loop));
 	if (f->loop == NULL) {
 		ret = -XMP_ERROR_SYSTEM;
 		goto err;
 	}
 
-	p->xc_data = calloc(p->virt.virt_channels, sizeof(struct channel_data));
+	p->xc_data = (struct channel_data *)calloc(p->virt.virt_channels, sizeof(struct channel_data));
 	if (p->xc_data == NULL) {
 		ret = -XMP_ERROR_SYSTEM;
 		goto err1;
@@ -1612,7 +1612,7 @@ LIBXMP_EXPORT int xmp_play_buffer(xmp_context opaque, void *out_buffer, int size
 			}
 
 			p->buffer_data.consumed = 0;
-			p->buffer_data.in_buffer = fi.buffer;
+			p->buffer_data.in_buffer = (char *)fi.buffer;
 			p->buffer_data.in_size = fi.buffer_size;
 		}
 
@@ -1727,7 +1727,7 @@ LIBXMP_EXPORT void xmp_get_frame_info(xmp_context opaque, struct xmp_frame_info 
 			struct xmp_track *track;
 			struct xmp_event *event;
 			int trk;
-	
+
 			ci->note = c->key;
 			ci->pitchbend = c->info_pitchbend;
 			ci->period = c->info_period;
@@ -1738,7 +1738,7 @@ LIBXMP_EXPORT void xmp_get_frame_info(xmp_context opaque, struct xmp_frame_info 
 			ci->pan = c->info_finalpan;
 			ci->reserved = 0;
 			memset(&ci->event, 0, sizeof(*event));
-	
+
 			if (info->pattern < mod->pat && info->row < info->num_rows) {
 				trk = mod->xxp[info->pattern]->index[i];
 				track = mod->xxt[trk];
@@ -1750,5 +1750,3 @@ LIBXMP_EXPORT void xmp_get_frame_info(xmp_context opaque, struct xmp_frame_info 
 		}
 	}
 }
-
-#pragma GCC diagnostic pop

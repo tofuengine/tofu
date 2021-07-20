@@ -19,8 +19,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wsign-compare"
 
 #include "common.h"
 #include "player.h"
@@ -29,6 +27,7 @@
 #include "virtual.h"
 #include "smix.h"
 
+#define NOT_IMPLEMENTED
 #define HAS_QUIRK(x) (m->quirk & (x))
 
 #define SET_LFO_NOTZERO(lfo, depth, rate) do { \
@@ -79,7 +78,7 @@ static void do_toneporta(struct context_data *ctx,
 
 	sub = &instrument->sub[mapped];
 
-	if (note >= 1 && note <= 0x80 && (uint32_t)xc->ins < m->mod.ins) {
+	if (note >= 1 && note <= 0x80 && xc->ins < m->mod.ins) {
 		note--;
 		xc->porta.target = libxmp_note_to_period(ctx, note + sub->xpo +
 			instrument->map[xc->key_porta].xpo, xc->finetune,
@@ -808,5 +807,3 @@ void libxmp_process_fx(struct context_data *ctx, struct channel_data *xc, int ch
 		break;
 	}
 }
-
-#pragma GCC diagnostic pop

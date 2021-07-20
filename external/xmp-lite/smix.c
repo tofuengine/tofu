@@ -71,11 +71,11 @@ LIBXMP_EXPORT int xmp_start_smix(xmp_context opaque, int chn, int smp)
 		return -XMP_ERROR_STATE;
 	}
 
-	smix->xxi = calloc(sizeof (struct xmp_instrument), smp);
+	smix->xxi = (struct xmp_instrument *)calloc(sizeof (struct xmp_instrument), smp);
 	if (smix->xxi == NULL) {
 		goto err;
 	}
-	smix->xxs = calloc(sizeof (struct xmp_sample), smp);
+	smix->xxs = (struct xmp_sample *)calloc(sizeof (struct xmp_sample), smp);
 	if (smix->xxs == NULL) {
 		goto err1;
 	}
@@ -197,10 +197,10 @@ LIBXMP_EXPORT int xmp_smix_load_sample(xmp_context opaque, int num, char *path)
 		retval = -XMP_ERROR_SYSTEM;
 		goto err;
 	}
-		
+
 	/* Init instrument */
 
-	xxi->sub = calloc(sizeof(struct xmp_subinstrument), 1);
+	xxi->sub = (struct xmp_subinstrument *)calloc(sizeof(struct xmp_subinstrument), 1);
 	if (xxi->sub == NULL) {
 		retval = -XMP_ERROR_SYSTEM;
 		goto err1;
@@ -263,7 +263,7 @@ LIBXMP_EXPORT int xmp_smix_load_sample(xmp_context opaque, int num, char *path)
 	xxs->lpe = 0;
 	xxs->flg = bits == 16 ? XMP_SAMPLE_16BIT : 0;
 
-	xxs->data = malloc(size + 8);
+	xxs->data = (unsigned char *)malloc(size + 8);
 	if (xxs->data == NULL) {
 		retval = -XMP_ERROR_SYSTEM;
 		goto err2;

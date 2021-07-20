@@ -28,3 +28,4 @@ int xmp_syserrno (void)
 {
 	return errno;
 }
+

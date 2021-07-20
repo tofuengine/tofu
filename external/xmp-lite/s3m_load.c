@@ -58,19 +58,6 @@
  * starting at pos12, caused by pitchbending effect F25.
  */
 
-/*
- * From: Ralf Hoffmann <ralf@boomerangsworld.de>
- * Date: Wed, 26 Sep 2007 17:12:41 +0200
- * ftp://ftp.scenesp.org/pub/compilations/modplanet/normal/bonuscd/artists/
- * Iq/return%20of%20litmus.s3m doesn't start playing, just uses 100% cpu,
- * the number of patterns is unusually high
- *
- * Claudio's fix: this module seems to be a bad conversion, bad rip or
- * simply corrupted since it has many instances of 0x87 instead of 0x00
- * in the module and instrument headers. I'm adding a simple workaround
- * to be able to load/play the module as is, see the fix87() macro below.
- */
-
 #include "loader.h"
 #include "s3m.h"
 #include "period.h"
@@ -107,11 +94,6 @@ static int s3m_test(HIO_HANDLE *f, char *t, const int start)
 
 #define NONE		0xff
 #define FX_S3M_EXTENDED	0xfe
-
-#define fix87(x) do { \
-	int i; for (i = 0; i < sizeof(x); i++) { \
-		if (*((uint8_t *)&x + i) == 0x87) *((uint8_t *)&x + i) = 0; } \
-	} while (0)
 
 /* Effect conversion table */
 static const uint8_t fx[27] = {
@@ -277,12 +259,12 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 	libxmp_copy_adjust(mod->name, sfh.name, 28);
 
-	pp_ins = calloc(2, sfh.insnum);
+	pp_ins = (uint16_t *)calloc(sfh.insnum, sizeof(uint16_t));
 	if (pp_ins == NULL) {
 		goto err;
 	}
 
-	pp_pat = calloc(2, sfh.patnum);
+	pp_pat = (uint16_t *)calloc(sfh.patnum, sizeof(uint16_t));
 	if (pp_pat == NULL) {
 		goto err2;
 	}
@@ -458,7 +440,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		struct xmp_subinstrument *sub;
 		int load_sample_flags;
 
-		xxi->sub = calloc(sizeof(struct xmp_subinstrument), 1);
+		xxi->sub = (struct xmp_subinstrument *)calloc(1, sizeof(struct xmp_subinstrument));
 		if (xxi->sub == NULL) {
 			goto err3;
 		}

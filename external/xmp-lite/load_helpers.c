@@ -31,7 +31,7 @@ char *libxmp_adjust_string(char *s)
 	size_t i;
 
 	for (i = 0; i < strlen(s); i++) {
-		if (!isprint((int)s[i]) || ((uint8_t) s[i] > 127))
+		if (!isprint((unsigned char)s[i]) || ((uint8) s[i] > 127))
 			s[i] = ' ';
 	}
 
@@ -181,7 +181,7 @@ int libxmp_prepare_scan(struct context_data *ctx)
 		return 0;
 	}
 
-	m->scan_cnt = calloc(sizeof (uint8_t *), mod->len);
+	m->scan_cnt = (uint8_t **)calloc(mod->len, sizeof(uint8_t *));
 	if (m->scan_cnt == NULL)
 		return -XMP_ERROR_SYSTEM;
 
@@ -197,7 +197,7 @@ int libxmp_prepare_scan(struct context_data *ctx)
 		}
 
 		pat = pat_idx >= mod->pat ? NULL : mod->xxp[pat_idx];
-		m->scan_cnt[i] = calloc(1, pat && pat->rows ? pat->rows : 1);
+		m->scan_cnt[i] = (uint8_t *)calloc((pat && pat->rows) ? pat->rows : 1, sizeof(uint8_t));
 		if (m->scan_cnt[i] == NULL)
 			return -XMP_ERROR_SYSTEM;
 	}
@@ -207,6 +207,7 @@ int libxmp_prepare_scan(struct context_data *ctx)
 
 void libxmp_free_scan(struct context_data *ctx)
 {
+	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i;
@@ -218,6 +219,9 @@ void libxmp_free_scan(struct context_data *ctx)
 		free(m->scan_cnt);
 		m->scan_cnt = NULL;
 	}
+
+	free(p->scan);
+	p->scan = NULL;
 }
 
 /* Process player personality flags */
@@ -294,3 +298,4 @@ int libxmp_set_player_mode(struct context_data *ctx)
 
 	return 0;
 }
+

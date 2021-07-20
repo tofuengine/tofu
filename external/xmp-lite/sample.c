@@ -27,17 +27,17 @@
 static void convert_delta(uint8_t *p, int l, int r)
 {
 	uint16_t *w = (uint16_t *)p;
-	uint16_t abs = 0;
+	uint16_t absval = 0;
 
 	if (r) {
 		for (; l--;) {
-			abs = *w + abs;
-			*w++ = abs;
+			absval = *w + absval;
+			*w++ = absval;
 		}
 	} else {
 		for (; l--;) {
-			abs = *p + abs;
-			*p++ = (uint8_t) abs;
+			absval = *p + absval;
+			*p++ = (uint8_t) absval;
 		}
 	}
 }
@@ -208,7 +208,7 @@ int libxmp_load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct x
 	}
 
 	/* add guard bytes before the buffer for higher order interpolation */
-	xxs->data = malloc(bytelen + extralen + unroll_extralen + 4);
+	xxs->data = (unsigned char *)malloc(bytelen + extralen + unroll_extralen + 4);
 	if (xxs->data == NULL) {
 		goto err;
 	}

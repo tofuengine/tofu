@@ -31,7 +31,7 @@ LIBXMP_EXPORT xmp_context xmp_create_context()
 {
 	struct context_data *ctx;
 
-	ctx = calloc(1, sizeof(struct context_data));
+	ctx = (struct context_data *)calloc(1, sizeof(struct context_data));
 	if (ctx == NULL) {
 		return NULL;
 	}
@@ -310,18 +310,22 @@ LIBXMP_EXPORT int xmp_channel_vol(xmp_context opaque, int chn, int vol)
 }
 
 #ifdef USE_VERSIONED_SYMBOLS
-LIBXMP_EXPORT extern int xmp_set_player_v40__(xmp_context, int, int);
-LIBXMP_EXPORT extern int xmp_set_player_v41__(xmp_context, int, int)
-			__attribute__((alias("xmp_set_player_v40__")));
-LIBXMP_EXPORT extern int xmp_set_player_v43__(xmp_context, int, int)
-			__attribute__((alias("xmp_set_player_v40__")));
-LIBXMP_EXPORT extern int xmp_set_player_v44__(xmp_context, int, int)
-			__attribute__((alias("xmp_set_player_v40__")));
+LIBXMP_BEGIN_DECLS /* no name-mangling */
+LIBXMP_EXPORT_VERSIONED extern int xmp_set_player_v40__(xmp_context, int, int) LIBXMP_ATTRIB_SYMVER("xmp_set_player@XMP_4.0");
+LIBXMP_EXPORT_VERSIONED extern int xmp_set_player_v41__(xmp_context, int, int)
+			__attribute__((alias("xmp_set_player_v40__"))) LIBXMP_ATTRIB_SYMVER("xmp_set_player@XMP_4.1");
+LIBXMP_EXPORT_VERSIONED extern int xmp_set_player_v43__(xmp_context, int, int)
+			__attribute__((alias("xmp_set_player_v40__"))) LIBXMP_ATTRIB_SYMVER("xmp_set_player@XMP_4.3");
+LIBXMP_EXPORT_VERSIONED extern int xmp_set_player_v44__(xmp_context, int, int)
+			__attribute__((alias("xmp_set_player_v40__"))) LIBXMP_ATTRIB_SYMVER("xmp_set_player@@XMP_4.4");
 
+#ifndef HAVE_ATTRIBUTE_SYMVER
 asm(".symver xmp_set_player_v40__, xmp_set_player@XMP_4.0");
 asm(".symver xmp_set_player_v41__, xmp_set_player@XMP_4.1");
 asm(".symver xmp_set_player_v43__, xmp_set_player@XMP_4.3");
 asm(".symver xmp_set_player_v44__, xmp_set_player@@XMP_4.4");
+#endif
+LIBXMP_END_DECLS
 
 #define xmp_set_player__ xmp_set_player_v40__
 #else
@@ -428,21 +432,25 @@ LIBXMP_EXPORT int xmp_set_player__(xmp_context opaque, int parm, int val)
 }
 
 #ifdef USE_VERSIONED_SYMBOLS
-LIBXMP_EXPORT extern int xmp_get_player_v40__(xmp_context, int);
-LIBXMP_EXPORT extern int xmp_get_player_v41__(xmp_context, int)
-		__attribute__((alias("xmp_get_player_v40__")));
-LIBXMP_EXPORT extern int xmp_get_player_v42__(xmp_context, int)
-		__attribute__((alias("xmp_get_player_v40__")));
-LIBXMP_EXPORT extern int xmp_get_player_v43__(xmp_context, int)
-		__attribute__((alias("xmp_get_player_v40__")));
-LIBXMP_EXPORT extern int xmp_get_player_v44__(xmp_context, int)
-		__attribute__((alias("xmp_get_player_v40__")));
+LIBXMP_BEGIN_DECLS /* no name-mangling */
+LIBXMP_EXPORT_VERSIONED extern int xmp_get_player_v40__(xmp_context, int) LIBXMP_ATTRIB_SYMVER("xmp_get_player@XMP_4.0");
+LIBXMP_EXPORT_VERSIONED extern int xmp_get_player_v41__(xmp_context, int)
+		__attribute__((alias("xmp_get_player_v40__"))) LIBXMP_ATTRIB_SYMVER("xmp_get_player@XMP_4.1");
+LIBXMP_EXPORT_VERSIONED extern int xmp_get_player_v42__(xmp_context, int)
+		__attribute__((alias("xmp_get_player_v40__"))) LIBXMP_ATTRIB_SYMVER("xmp_get_player@XMP_4.2");
+LIBXMP_EXPORT_VERSIONED extern int xmp_get_player_v43__(xmp_context, int)
+		__attribute__((alias("xmp_get_player_v40__"))) LIBXMP_ATTRIB_SYMVER("xmp_get_player@XMP_4.3");
+LIBXMP_EXPORT_VERSIONED extern int xmp_get_player_v44__(xmp_context, int)
+		__attribute__((alias("xmp_get_player_v40__"))) LIBXMP_ATTRIB_SYMVER("xmp_get_player@@XMP_4.4");
 
+#ifndef HAVE_ATTRIBUTE_SYMVER
 asm(".symver xmp_get_player_v40__, xmp_get_player@XMP_4.0");
 asm(".symver xmp_get_player_v41__, xmp_get_player@XMP_4.1");
 asm(".symver xmp_get_player_v42__, xmp_get_player@XMP_4.2");
 asm(".symver xmp_get_player_v43__, xmp_get_player@XMP_4.3");
 asm(".symver xmp_get_player_v44__, xmp_get_player@@XMP_4.4");
+#endif
+LIBXMP_END_DECLS
 
 #define xmp_get_player__ xmp_get_player_v40__
 #else
