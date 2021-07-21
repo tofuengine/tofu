@@ -182,7 +182,7 @@ static int speakers_balance_2nn_0(lua_State *L)
     return 0;
 }
 
-static int speakers_gain_1u_1n(lua_State *L)
+static int speakers_gain_1n_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -196,7 +196,7 @@ static int speakers_gain_1u_1n(lua_State *L)
     return 1;
 }
 
-static int speakers_gain_2un_0(lua_State *L)
+static int speakers_gain_2nn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -216,8 +216,8 @@ static int speakers_gain_2un_0(lua_State *L)
 static int speakers_gain_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, speakers_gain_1u_1n)
-        LUAX_OVERLOAD_ARITY(2, speakers_gain_2un_0)
+        LUAX_OVERLOAD_ARITY(1, speakers_gain_1n_1n)
+        LUAX_OVERLOAD_ARITY(2, speakers_gain_2nn_0)
     LUAX_OVERLOAD_END
 }
 

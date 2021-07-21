@@ -26,6 +26,7 @@
 
 #include <config.h>
 #include <libs/log.h>
+#include <libs/stb.h>
 
 #ifdef DEBUG
   #define MA_DEBUG_OUTPUT
@@ -74,7 +75,7 @@ static void _data_callback(ma_device *device, void *output, const void *input, m
     Audio_t *audio = (Audio_t *)device->pUserData;
 
     ma_mutex_lock(&audio->lock);
-//    ma_zero_pcm_frames(output, frame_count, ma_format_s16, SL_CHANNELS_PER_FRAME);
+//    ma_silence_pcm_frames(output, frame_count, ma_format_s16, SL_CHANNELS_PER_FRAME);
 //    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d frames requested for device %p", frame_count, device);
     SL_context_generate(audio->sl, output, frame_count);
     ma_mutex_unlock(&audio->lock);
@@ -83,6 +84,21 @@ static void _data_callback(ma_device *device, void *output, const void *input, m
 static void _stop_callback(ma_device* device)
 {
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "device %p has been stopped", device);
+}
+
+static void *_malloc(size_t sz, void *pUserData)
+{
+    return stb_leakcheck_malloc(sz, __FILE__, __LINE__);
+}
+
+static void *_realloc(void *ptr, size_t sz, void *pUserData)
+{
+    return stb_leakcheck_realloc(ptr, sz, __FILE__, __LINE__);
+}
+
+static void  _free(void *ptr, void *pUserData)
+{
+    stb_leakcheck_free(ptr);
 }
 
 Audio_t *Audio_create(const Audio_Configuration_t *configuration)
@@ -117,6 +133,12 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     ma_context_config context_config = ma_context_config_init();
     context_config.pUserData   = (void *)audio;
     context_config.logCallback = _log_callback;
+    context_config.allocationCallbacks = (ma_allocation_callbacks){
+            .pUserData = NULL,
+            .onMalloc = _malloc,
+            .onRealloc = _realloc,
+            .onFree = _free
+        };
 
     result = ma_context_init(NULL, 0, &context_config, &audio->context);
     if (result != MA_SUCCESS) {
@@ -174,7 +196,7 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     ma_device_set_master_volume(&audio->device, configuration->master_volume); // Set the initial volume.
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio master-volume set to %.2f", configuration->master_volume);
 
-#ifndef __SL_START_AND_STOP__
+#ifndef __AUDIO_START_AND_STOP__
     result = ma_device_start(&audio->device);
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't start the audio device");
@@ -322,7 +344,7 @@ bool Audio_update(Audio_t *audio, float delta_time)
 {
     ma_mutex_lock(&audio->lock);
     bool updated = SL_context_update(audio->sl, delta_time);
-#ifdef __SL_START_AND_STOP__
+#ifdef __AUDIO_START_AND_STOP__
     size_t count = SL_context_count_tracked(audio->sl);
 #endif
     ma_mutex_unlock(&audio->lock);
@@ -332,7 +354,7 @@ bool Audio_update(Audio_t *audio, float delta_time)
         return false;
     }
 
-#ifdef __SL_START_AND_STOP__
+#ifdef __AUDIO_START_AND_STOP__
     const bool is_started = ma_device_is_started(&audio->device);
     if (!is_started && count == 1) {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "first source detected, starting device");

@@ -74,6 +74,8 @@ static bool _music_generate(SL_Source_t *source, void *output, size_t frames_req
 
 static inline bool _rewind(Music_t *music)
 {
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "rewinding music %p", music);
+
     drflac_bool32 seeked = drflac_seek_to_pcm_frame(music->decoder, 0);
     if (!seeked) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't rewind music stream");
@@ -87,8 +89,9 @@ static inline bool _rewind(Music_t *music)
 
 static inline bool _reset(Music_t *music)
 {
-    ma_pcm_rb *buffer = &music->buffer;
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "rewinding music %p", music);
 
+    ma_pcm_rb *buffer = &music->buffer;
     ma_pcm_rb_reset(buffer);
 
     return _rewind(music);
@@ -102,11 +105,15 @@ static inline bool _produce(Music_t *music)
 
     ma_pcm_rb *buffer = &music->buffer;
     ma_uint32 frames_to_produce = ma_pcm_rb_available_write(buffer);
+    if (frames_to_produce == 0) {
+        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "buffer overrrun for source %p - stalling (waiting for consumer)", music);
+        return true;
 #ifdef STREAMING_BUFFER_CHUNK_IN_FRAMES
+    } else
     if (frames_to_produce > STREAMING_BUFFER_CHUNK_IN_FRAMES) {
         frames_to_produce = STREAMING_BUFFER_CHUNK_IN_FRAMES;
-    }
 #endif
+    }
 
     void *write_buffer;
     ma_pcm_rb_acquire_write(buffer, &frames_to_produce, &write_buffer);
@@ -255,7 +262,7 @@ static bool _music_reset(SL_Source_t *source)
 
     bool reset = _reset(music);
     if (!reset) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't reset music stream");
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't reset music %p stream", source);
         return false;
     }
 
