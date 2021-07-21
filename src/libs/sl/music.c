@@ -313,9 +313,6 @@ static bool _music_generate(SL_Source_t *source, void *output, size_t frames_req
         size_t frames_to_generate = frames_remaining > MIXING_BUFFER_SIZE_IN_FRAMES ? MIXING_BUFFER_SIZE_IN_FRAMES : frames_remaining;
 
         ma_uint32 frames_to_consume = ma_data_converter_get_required_input_frame_count(converter, frames_to_generate);
-        if (frames_to_consume > frames_available) {
-            frames_to_consume = frames_available;
-        }
 
         void *consumed_buffer;
         ma_pcm_rb_acquire_read(buffer, &frames_to_consume, &consumed_buffer);

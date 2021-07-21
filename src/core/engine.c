@@ -299,7 +299,7 @@ void Engine_run(Engine_t *engine)
             Environment_update(engine->environment, delta_time);
             running = running && Interpreter_update(engine->interpreter, delta_time); // Fixed update.
             running = running && Audio_update(engine->audio, elapsed); // Update the subsystems w/ fixed steps (fake interrupt based).
-            running = running && Storage_update(engine->storage, elapsed);
+            running = running && Storage_update(engine->storage, elapsed); // Note: we could update audio/storage one every two steps (or more).
             lag -= delta_time;
         }
 
