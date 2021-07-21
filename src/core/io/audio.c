@@ -88,17 +88,17 @@ static void _stop_callback(ma_device* device)
 
 static void *_malloc(size_t sz, void *pUserData)
 {
-    return stb_leakcheck_malloc(sz, __FILE__, __LINE__);
+    return malloc(sz);
 }
 
 static void *_realloc(void *ptr, size_t sz, void *pUserData)
 {
-    return stb_leakcheck_realloc(ptr, sz, __FILE__, __LINE__);
+    return realloc(ptr, sz);
 }
 
 static void  _free(void *ptr, void *pUserData)
 {
-    stb_leakcheck_free(ptr);
+    free(ptr);
 }
 
 Audio_t *Audio_create(const Audio_Configuration_t *configuration)
