@@ -221,7 +221,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 	LOAD_INIT();
 
-	if (hio_read(buf, 1, 96, f) != 96) {
+	if (hio_read(buf, sizeof(uint8_t), 96, f) != 96) {
 		goto err;
 	}
 
@@ -296,12 +296,12 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 	if (sfh.ordnum <= XMP_MAX_MOD_LENGTH) {
 		mod->len = sfh.ordnum;
-		if (hio_read(mod->xxo, 1, mod->len, f) != (size_t)mod->len) {
+		if (hio_read(mod->xxo, sizeof(unsigned char), mod->len, f) != (size_t)mod->len) {
 			goto err3;
 		}
 	} else {
 		mod->len = XMP_MAX_MOD_LENGTH;
-		if (hio_read(mod->xxo, 1, mod->len, f) != (size_t)mod->len) {
+		if (hio_read(mod->xxo, sizeof(unsigned char), mod->len, f) != (size_t)mod->len) {
 			goto err3;
 		}
 		if (hio_seek(f, sfh.ordnum - XMP_MAX_MOD_LENGTH, SEEK_CUR) < 0) {
@@ -451,7 +451,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		sub->pan = 0x80;
 		sub->sid = i;
 
-		if (hio_read(buf, 1, 80, f) != 80) {
+		if (hio_read(buf, sizeof(uint8_t), 80, f) != 80) {
 			goto err3;
 		}
 

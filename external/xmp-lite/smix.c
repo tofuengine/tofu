@@ -278,7 +278,7 @@ LIBXMP_EXPORT int xmp_smix_load_sample(xmp_context opaque, int num, char *path)
 		retval = -XMP_ERROR_SYSTEM;
 		goto err2;
 	}
-	if (hio_read(xxs->data, 1, size, h) != (size_t)size) {
+	if (hio_read(xxs->data, sizeof(unsigned char), size, h) != (size_t)size) {
 		retval = -XMP_ERROR_SYSTEM;
 		goto err2;
 	}

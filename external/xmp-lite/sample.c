@@ -219,7 +219,7 @@ int libxmp_load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct x
 	if (flags & SAMPLE_FLAG_NOLOAD) {
 		memcpy(xxs->data, buffer, bytelen);
 	} else {
-		int x = hio_read(xxs->data, 1, bytelen, f);
+		int x = hio_read(xxs->data, sizeof(unsigned char), bytelen, f);
 		if (x != bytelen) {
 			D_(D_WARN "short read (%d) in sample load", x - bytelen);
 			memset(xxs->data + x, 0, bytelen - x);

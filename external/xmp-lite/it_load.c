@@ -260,7 +260,7 @@ static int read_envelope(struct xmp_envelope *ei, struct it_envelope *env,
 	int i;
 	uint8_t buf[82];
 
-	if (hio_read(buf, 1, 82, f) != 82) {
+	if (hio_read(buf, sizeof(uint8_t), 82, f) != 82) {
 		return -1;
 	}
 
@@ -321,7 +321,7 @@ static int load_old_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
 	int c, k, j;
 	uint8_t buf[64];
 
-	if (hio_read(buf, 1, 64, f) != 64) {
+	if (hio_read(buf, sizeof(uint8_t), 64, f) != 64) {
 		return -1;
 	}
 
@@ -346,13 +346,13 @@ static int load_old_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
 	memcpy(i1h.name, buf + 32, 26);
 	fix_name(i1h.name, 26);
 
-	if (hio_read(i1h.keys, 1, 240, f) != 240) {
+	if (hio_read(i1h.keys, sizeof(uint8_t), 240, f) != 240) {
 		return -1;
 	}
-	if (hio_read(i1h.epoint, 1, 200, f) != 200) {
+	if (hio_read(i1h.epoint, sizeof(uint8_t), 200, f) != 200) {
 		return -1;
 	}
-	if (hio_read(i1h.enode, 1, 50, f) != 50) {
+	if (hio_read(i1h.enode, sizeof(uint8_t), 50, f) != 50) {
 		return -1;
 	}
 
@@ -453,7 +453,7 @@ static int load_new_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
 	int c, k, j;
 	uint8_t buf[64];
 
-	if (hio_read(buf, 1, 64, f) != 64) {
+	if (hio_read(buf, sizeof(uint8_t), 64, f) != 64) {
 		return -1;
 	}
 
@@ -494,7 +494,7 @@ static int load_new_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
 	i2h.mpr = buf[61];
 	i2h.mbnk = readmem16l(buf + 62);
 
-	if (hio_read(i2h.keys, 1, 240, f) != 240) {
+	if (hio_read(i2h.keys, sizeof(uint8_t), 240, f) != 240) {
 		D_(D_CRIT "key map read error");
 		return -1;
 	}
@@ -626,7 +626,7 @@ static int load_it_sample(struct module_data *m, int i, int start,
 		}
 	}
 
-	if (hio_read(buf, 1, 80, f) != 80) {
+	if (hio_read(buf, sizeof(uint8_t), 80, f) != 80) {
 		return -1;
 	}
 
@@ -993,7 +993,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		return -1;
 	}
 
-	hio_read(ifh.name, 26, 1, f);
+	hio_read(ifh.name, sizeof(uint8_t), 26, f);
 	ifh.hilite_min = hio_read8(f);
 	ifh.hilite_maj = hio_read8(f);
 
@@ -1024,8 +1024,8 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	ifh.msgofs = hio_read32l(f);
 	ifh.rsvd = hio_read32l(f);
 
-	hio_read(ifh.chpan, 64, 1, f);
-	hio_read(ifh.chvol, 64, 1, f);
+	hio_read(ifh.chpan, sizeof(uint8_t), 64, f);
+	hio_read(ifh.chvol, sizeof(uint8_t), 64, f);
 
 	if (hio_error(f)) {
 		D_(D_CRIT "error reading IT header");
@@ -1095,9 +1095,9 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
 
 	if (mod->len <= XMP_MAX_MOD_LENGTH) {
-		hio_read(mod->xxo, 1, mod->len, f);
+		hio_read(mod->xxo, sizeof(unsigned char), mod->len, f);
 	} else {
-		hio_read(mod->xxo, 1, XMP_MAX_MOD_LENGTH, f);
+		hio_read(mod->xxo, sizeof(unsigned char), XMP_MAX_MOD_LENGTH, f);
 		hio_seek(f, mod->len - XMP_MAX_MOD_LENGTH, SEEK_CUR);
 		mod->len = XMP_MAX_MOD_LENGTH;
 	}

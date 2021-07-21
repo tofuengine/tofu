@@ -113,18 +113,18 @@ static int validate_pattern(uint8_t *buf)
 static int mod_test(HIO_HANDLE * f, char *t, const int start)
 {
 	int i;
-	char buf[4];
+	uint8_t buf[4];
 	uint8_t pat_buf[1024];
 	int smp_size, num_pat;
 	long size;
 	int count;
 
 	hio_seek(f, start + 1080, SEEK_SET);
-	if (hio_read(buf, 1, 4, f) < 4) {
+	if (hio_read(buf, sizeof(uint8_t), 4, f) < 4) {
 		return -1;
 	}
 
-	if (!strncmp(buf + 2, "CH", 2) &&
+	if (!memcmp(buf + 2, "CH", 2) &&
 	    isdigit((unsigned char)buf[0]) && isdigit((unsigned char)buf[1])) {
 		i = (buf[0] - '0') * 10 + buf[1] - '0';
 		if (i > 0 && i <= 32) {
@@ -132,7 +132,7 @@ static int mod_test(HIO_HANDLE * f, char *t, const int start)
 		}
 	}
 
-	if (!strncmp(buf + 1, "CHN", 3) && isdigit((unsigned char)*buf)) {
+	if (!memcmp(buf + 1, "CHN", 3) && isdigit((unsigned char)*buf)) {
 		if (*buf - '0') {
 			goto found;
 		}
@@ -212,7 +212,7 @@ static int mod_test(HIO_HANDLE * f, char *t, const int start)
 	/* validate pattern data in an attempt to catch UNICs with MOD size */
 	for (count = i = 0; i < num_pat; i++) {
 		hio_seek(f, start + 1084 + 1024 * i, SEEK_SET);
-		if (!hio_read(pat_buf, 1024, 1, f)) {
+		if (!hio_read(pat_buf, sizeof(uint8_t), 1024, f)) {
 			D_(D_WARN "pattern %d: failed to read pattern data", i);
 			return -1;
 		}
@@ -397,7 +397,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
     uint8_t mod_event[4];
     const char *tracker = "";
     int detected = 0;
-    char magic[8], idbuffer[32];
+    uint8_t magic[4], idbuffer[4];
     int ptkloop = 0;			/* Protracker loop */
     int tracker_id = TRACKER_PROTRACKER;
     int out_of_range = 0;
@@ -413,9 +413,9 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     m->period_type = PERIOD_MODRNG;
 
-    hio_read(mh.name, 20, 1, f);
+    hio_read(mh.name, sizeof(uint8_t), 20, f);
     for (i = 0; i < 31; i++) {
-	hio_read(mh.ins[i].name, 22, 1, f);	/* Instrument name */
+	hio_read(mh.ins[i].name, sizeof(uint8_t), 22, f);	/* Instrument name */
 	mh.ins[i].size = hio_read16b(f);	/* Length in 16-bit words */
 	mh.ins[i].finetune = hio_read8(f);	/* Finetune (signed nibble) */
 	mh.ins[i].volume = hio_read8(f);	/* Linear playback volume */
@@ -432,9 +432,9 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
     }
     mh.len = hio_read8(f);
     mh.restart = hio_read8(f);
-    hio_read(mh.order, 128, 1, f);
+    hio_read(mh.order, sizeof(uint8_t), 128, f);
     memset(magic, 0, sizeof(magic));
-    hio_read(magic, 1, 4, f);
+    hio_read(magic, sizeof(uint8_t), 4, f);
     if (hio_error(f)) {
         return -1;
     }
@@ -446,7 +446,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	maybe_wow = 0;
 
     for (i = 0; mod_magic[i].ch; i++) {
-	if (!(strncmp (magic, mod_magic[i].magic, 4))) {
+	if (!(memcmp(magic, mod_magic[i].magic, 4))) {
 	    mod->chn = mod_magic[i].ch;
 	    tracker_id = mod_magic[i].id;
 	    detected = mod_magic[i].flag;
@@ -455,10 +455,10 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
     }
 
     if (mod->chn == 0) {
-	if (!strncmp(magic + 2, "CH", 2) &&
+	if (!memcmp(magic + 2, "CH", 2) &&
 	    isdigit((unsigned char)magic[0]) && isdigit((unsigned char)magic[1])) {
 	    mod->chn = (*magic - '0') * 10 + magic[1] - '0';
-	} else if (!strncmp(magic + 1, "CHN", 3) && isdigit((unsigned char)*magic)) {
+	} else if (!memcmp(magic + 1, "CHN", 3) && isdigit((unsigned char)*magic)) {
 	    mod->chn = *magic - '0';
 	} else {
 	    return -1;
@@ -549,7 +549,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
             return -1;
         }
 	hio_seek(f, start + 0x43c + mod->pat * 4 * mod->chn * 0x40 + smp_size, SEEK_SET);
-	int num_read = hio_read(idbuffer, 1, 4, f);
+	int num_read = hio_read(idbuffer, sizeof(uint8_t), 4, f);
 	hio_seek(f, start + pos, SEEK_SET);
 
 	if (num_read == 4 && !memcmp(idbuffer, "FLEX", 4)) {
@@ -575,7 +575,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
      * regular M.K. MOD) to rule out false positives.
      */
 
-    if (!strncmp(magic, "M.K.", 4) && maybe_wow &&
+    if (!memcmp(magic, "M.K.", 4) && maybe_wow &&
 		(0x43c + mod->pat * 32 * 0x40 + smp_size) == (m->size & ~1)) {
 	mod->chn = 8;
 	tracker_id = TRACKER_MODSGRAVE;
@@ -632,7 +632,7 @@ skip_test:
 	    int period;
 
 	    event = &EVENT(i, j % mod->chn, j / mod->chn);
-	    if (hio_read(mod_event, 1, 4, f) < 4) {
+	    if (hio_read(mod_event, sizeof(uint8_t), 4, f) < 4) {
 		return -1;
 	    }
 
@@ -671,7 +671,7 @@ skip_test:
 
 	for (j = 0; j < (64 * mod->chn); j++) {
 	    event = &EVENT(i, j % mod->chn, j / mod->chn);
-	    if (hio_read(mod_event, 1, 4, f) < 4) {
+	    if (hio_read(mod_event, sizeof(uint8_t), 4, f) < 4) {
 		return -1;
 	    }
 
@@ -798,7 +798,7 @@ skip_test:
 	    if ((pos = hio_tell(f)) < 0) {
 		return -1;
 	    }
-	    num = hio_read(buf, 1, 5, f);
+	    num = hio_read(buf, sizeof(uint8_t), 5, f);
 
 	    if (num == 5 && !memcmp(buf, "ADPCM", 5)) {
 		flags |= SAMPLE_FLAG_ADPCM;
