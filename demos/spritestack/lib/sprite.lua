@@ -69,7 +69,7 @@ function Sprite:update(delta_time)
   self.velocity:add(Vector.from_polar(self.angle, self.acceleration * delta_time))
   self.acceleration = self.acceleration * 0.90
 
-  self.position:add(self.velocity:clone():scale(delta_time))
+  self.position:fma(self.velocity, delta_time)
   self.velocity:scale(0.95)
 end
 

@@ -149,7 +149,7 @@ end
 
 function Main:update(delta_time)
   self.velocity:add(self.acceleration)
-  self.position:add(self.velocity:clone():scale(delta_time))
+  self.position:fma(self.velocity, delta_time)
 
   if self.position.y <= 0 then
     self.position.y = 0

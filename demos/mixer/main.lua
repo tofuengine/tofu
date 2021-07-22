@@ -33,7 +33,7 @@ local Source = require("tofu.sound").Source
 
 local Main = Class.define()
 
-local SOURCES = {
+local SOURCES <const> = {
   { name = "assets/1ch-22050-16.flac", type = "sample" },
   { name = "assets/2ch-48000-16.flac", type = "music" },
   { name = "assets/last_ninja_3.it", type = "module" },
@@ -59,13 +59,13 @@ function Main:__ctor()
 
   self.sources[2].instance:looped(true)
   self.sources[3].instance:looped(true)
-  self.sources[3].instance:play()
+  --self.sources[3].instance:play()
 
   self.property = 1
   self.current = 1
 end
 
-local PROPERTIES = { 'play', 'stop', 'resume', 'gain', 'pan', 'balance', 'mix' }
+local PROPERTIES <const> = { 'play', 'stop', 'resume', 'gain', 'pan', 'balance', 'mix' }
 
 function Main:process()
   if Input.is_pressed("a") then
@@ -86,10 +86,10 @@ function Main:process()
       local gain = source.instance:gain()
       source.instance:gain(gain - 0.05)
     elseif self.property == 5 then
-      source.pan = math.max(0.0, source.pan - 0.05)
+      source.pan = math.max(-1.0, source.pan - 0.05)
       source.instance:pan(source.pan)
     elseif self.property == 6 then
-      source.balance = math.max(0.0, source.balance - 0.05)
+      source.balance = math.max(-1.0, source.balance - 0.05)
       source.instance:balance(source.balance)
     end
   elseif Input.is_pressed("y") then
@@ -98,10 +98,10 @@ function Main:process()
       local gain = source.instance:gain()
       source.instance:gain(gain + 0.05)
     elseif self.property == 5 then
-      source.pan = math.max(1.0, source.pan + 0.05)
+      source.pan = math.min(1.0, source.pan + 0.05)
       source.instance:pan(source.pan)
     elseif self.property == 6 then
-      source.balance = math.max(1.0, source.balance + 0.05)
+      source.balance = math.min(1.0, source.balance + 0.05)
       source.instance:balance(source.balance)
     end
   elseif Input.is_pressed("up") then

@@ -101,6 +101,12 @@ function Main:render(_) -- ratio
     local y2 = ((math.sin(System.time() * 0.123) + 1.0) * 0.5) * height
     canvas:triangle("fill", x0, y0, x1, y1, x2, y2, 2)
     canvas:triangle("line", x0, y0, x1, y1, x2, y2, 7)
+    canvas:push()
+      canvas:shift(1, 15)
+      self.font:write(canvas, x0, y0, "v0", "center", "middle")
+      self.font:write(canvas, x1, y1, "v1", "center", "middle")
+      self.font:write(canvas, x2, y2, "v2", "center", "middle")
+    canvas:pop()
   elseif self.mode == 4 then
     local x = ((math.cos(System.time() * 0.125) + 1.0) * 0.5) * width
     local y = ((math.cos(System.time() * 0.342) + 1.0) * 0.5) * height
