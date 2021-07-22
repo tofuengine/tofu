@@ -68,8 +68,8 @@ struct retrig_control {
 #define NOTE_KEY_CUT	(1 << 8)	/* note cut with XMP_KEY_CUT event */
 #define NOTE_GLISSANDO	(1 << 9)
 
-#define IS_VALID_INSTRUMENT(x) ((x) < mod->ins && mod->xxi[(x)].nsm > 0)
-#define IS_VALID_INSTRUMENT_OR_SFX(x) (((x) < mod->ins && mod->xxi[(x)].nsm > 0) || (smix->ins > 0 && (x) < mod->ins + smix->ins))
+#define IS_VALID_INSTRUMENT(x) ((x) >= 0 && (x) < mod->ins && mod->xxi[(x)].nsm > 0)
+#define IS_VALID_INSTRUMENT_OR_SFX(x) ((x) >= 0 && (((x) < mod->ins && mod->xxi[(x)].nsm > 0) || (smix->ins > 0 && (x) < mod->ins + smix->ins)))
 
 struct instrument_vibrato {
 	int phase;
