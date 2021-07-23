@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2020 Marco Lizza
+Copyright (c) 2019-2021 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -27,10 +27,11 @@ local System = require("tofu.core").System
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
+local Palette = require("tofu.graphics").Palette
 local Input = require("tofu.events").Input
 local Grid = require("tofu.util").Grid
 
-local INITIAL_LENGHT = 5
+local INITIAL_LENGTH = 5
 local SPEED_RATIO = 5
 local CELL_SIZE = 8
 local LIFE = 1.0
@@ -39,69 +40,62 @@ local SPEED = 5.0
 local DELTA_X = { up = 0, down = 0, left = -1, right = 1 }
 local DELTA_Y = { up = -1, down = 1, left = 0, right = 0 }
 
-local MAP =  "************************************************"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "*                                              *"
-          .. "************************************************"
+--[[
+************************************************
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+*                                              *
+************************************************
+]]
+
+local MAP = "48|28|49:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0\z
+  |2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0\z
+  |2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|2:-1|46:0|49:-1"
 
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette("gameboy")
+  local palette = Palette.new("gameboy")
+  Display.palette(palette)
 
   local canvas = Canvas.default()
   local width, height = canvas:size()
 
-  self.font = Font.default(canvas, 0, 3)
-  self.grid = Grid.new(math.tointeger(width / CELL_SIZE), math.tointeger(height / CELL_SIZE), 0)
-  Class.dump(self)
+  self.font = Font.default(palette:match(0, 0, 0), palette:match(255, 255, 255))
+  self.grid = Grid.new(math.tointeger(width / CELL_SIZE), math.tointeger(height / CELL_SIZE), { 0 })
+--  Class.dump(self)
 
   self:reset()
 end
 
-function Main:draw_map(map)
-  local gw, _ = self.grid:size()
-  for i = 1, map:len() do
-    local c = map:byte(i)
-    local column = (i - 1) % gw
-    local row = (i - 1) / gw
-    local value = 0
-    if c == 42 then
-      value = -1
-    end
-    self.grid:poke(column, row, value)
-  end
-end
-
 function Main:reset()
-  self.length = INITIAL_LENGHT
+  self.length = INITIAL_LENGTH
   self.state = "running"
 
-  self:draw_map(MAP)
+  self.grid = Grid.parse(MAP)
 
   local gw, gh = self.grid:size()
   self.position = { x = gw / 2, y = gh / 2 }
@@ -114,7 +108,7 @@ function Main:reset()
   self:generate_food()
 end
 
-function Main:input()
+function Main:process()
   if self.state == "game-over" then
     if Input.is_pressed("start") then
       self:reset()
@@ -215,7 +209,7 @@ function Main:render(_)
       end
     end)
 
-    self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
+    self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
 end
 
 return Main

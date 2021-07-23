@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2020 Marco Lizza
+ * Copyright (c) 2019-2021 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,6 +24,25 @@
 
 #ifndef __LIBS_IMATH_H__
 #define __LIBS_IMATH_H__
+
+#include <math.h>
+
+#define IABS(v)         ((v) > 0 ? (v) : -(v))
+#define IMOD(a, b)      ((((a) % (b)) + (b)) % (b))
+#define IMIN(a, b)      ((a) < (b) ? (a) : (b))
+#define IMAX(a, b)      ((a) > (b) ? (a) : (b))
+
+#define ISIGNUM(x)      (((x) > 0) - ((x) < 0))
+
+#define ICLAMP(x, l, u) ((x) < (l) ? (l) : ((x) > (u) ? (u) : (x)))
+#define IMIRROR(x)      ((x) >= 0 ? (x) : -(1 + (x)))
+
+#define ITRUNC(x)       ((int)(x))
+#define INEAREST(x)     ((int)((x) + 0.5f))
+
+#define IFLOORF(x)      ((int)floorf((x)))
+#define ICEILF(x)       ((int)ceilf((x)))
+#define IROUNDF(x)      ((int)roundf((x)))
 
 extern int iabs(int v);
 extern int imod(int a, int b);

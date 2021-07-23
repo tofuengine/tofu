@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2018 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -27,17 +27,17 @@
 static void convert_delta(uint8_t *p, int l, int r)
 {
 	uint16_t *w = (uint16_t *)p;
-	uint16_t abs = 0;
+	uint16_t absval = 0;
 
 	if (r) {
 		for (; l--;) {
-			abs = *w + abs;
-			*w++ = abs;
+			absval = *w + absval;
+			*w++ = absval;
 		}
 	} else {
 		for (; l--;) {
-			abs = *p + abs;
-			*p++ = (uint8_t) abs;
+			absval = *p + absval;
+			*p++ = (uint8_t) absval;
 		}
 	}
 }
@@ -109,12 +109,12 @@ static void unroll_loop(struct xmp_sample *xxs)
 	if (xxs->flg & XMP_SAMPLE_16BIT) {
 		s16 += start;
 		for (i = 0; i < loop_size; i++) {
-			*(s16 + i) = *(s16 - i - 1);	
+			*(s16 + i) = *(s16 - i - 1);
 		}
 	} else {
 		s8 += start;
 		for (i = 0; i < loop_size; i++) {
-			*(s8 + i) = *(s8 - i - 1);	
+			*(s8 + i) = *(s8 - i - 1);
 		}
 	}
 }
@@ -141,6 +141,27 @@ int libxmp_load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct x
 			hio_seek(f, xxs->len, SEEK_CUR);
 		}
 		return 0;
+	}
+
+	/* If this sample starts at or after EOF, skip it entirely.
+	 */
+	if (~flags & SAMPLE_FLAG_NOLOAD) {
+		long file_pos, file_len;
+		if (!f) {
+			return 0;
+		}
+		file_pos = hio_tell(f);
+		file_len = hio_size(f);
+		if (file_pos >= file_len) {
+			D_(D_WARN "ignoring sample at EOF");
+			return 0;
+		}
+		/* If this sample goes past EOF, truncate it. */
+		if (file_pos + xxs->len > file_len && (~flags & SAMPLE_FLAG_ADPCM)) {
+			D_(D_WARN "sample would extend %ld bytes past EOF; truncating to %ld",
+				file_pos + xxs->len - file_len, file_len - file_pos);
+			xxs->len = file_len - file_pos;
+		}
 	}
 
 	/* Loop parameters sanity check
@@ -187,7 +208,7 @@ int libxmp_load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct x
 	}
 
 	/* add guard bytes before the buffer for higher order interpolation */
-	xxs->data = malloc(bytelen + extralen + unroll_extralen + 4);
+	xxs->data = (unsigned char *)malloc(bytelen + extralen + unroll_extralen + 4);
 	if (xxs->data == NULL) {
 		goto err;
 	}
@@ -198,7 +219,7 @@ int libxmp_load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct x
 	if (flags & SAMPLE_FLAG_NOLOAD) {
 		memcpy(xxs->data, buffer, bytelen);
 	} else {
-		int x = hio_read(xxs->data, 1, bytelen, f);
+		int x = hio_read(xxs->data, sizeof(unsigned char), bytelen, f);
 		if (x != bytelen) {
 			D_(D_WARN "short read (%d) in sample load", x - bytelen);
 			memset(xxs->data + x, 0, bytelen - x);
@@ -253,7 +274,7 @@ int libxmp_load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct x
 		unroll_loop(xxs);
 		bytelen += unroll_extralen;
 	}
-	
+
 	/* Add extra samples at end */
 	if (xxs->flg & XMP_SAMPLE_16BIT) {
 		for (i = 0; i < 8; i++) {
@@ -303,8 +324,8 @@ int libxmp_load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct x
 
 void libxmp_free_sample(struct xmp_sample *s)
 {
-	if (s->data) {
-		free(s->data - 4);
-		s->data = NULL;		/* prevent double free in PCM load error */
-	}
+    if (s->data) {
+	free(s->data - 4);
+	s->data = NULL;		/* prevent double free in PCM load error */
+    }
 }

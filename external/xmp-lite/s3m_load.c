@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2018 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -58,19 +58,6 @@
  * starting at pos12, caused by pitchbending effect F25.
  */
 
-/*
- * From: Ralf Hoffmann <ralf@boomerangsworld.de>
- * Date: Wed, 26 Sep 2007 17:12:41 +0200
- * ftp://ftp.scenesp.org/pub/compilations/modplanet/normal/bonuscd/artists/
- * Iq/return%20of%20litmus.s3m doesn't start playing, just uses 100% cpu,
- * the number of patterns is unusually high
- *
- * Claudio's fix: this module seems to be a bad conversion, bad rip or
- * simply corrupted since it has many instances of 0x87 instead of 0x00
- * in the module and instrument headers. I'm adding a simple workaround
- * to be able to load/play the module as is, see the fix87() macro below.
- */
-
 #include "loader.h"
 #include "s3m.h"
 #include "period.h"
@@ -107,11 +94,6 @@ static int s3m_test(HIO_HANDLE *f, char *t, const int start)
 
 #define NONE		0xff
 #define FX_S3M_EXTENDED	0xfe
-
-#define fix87(x) do { \
-	int i; for (i = 0; i < sizeof(x); i++) { \
-		if (*((uint8_t *)&x + i) == 0x87) *((uint8_t *)&x + i) = 0; } \
-	} while (0)
 
 /* Effect conversion table */
 static const uint8_t fx[27] = {
@@ -239,7 +221,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 	LOAD_INIT();
 
-	if (hio_read(buf, 1, 96, f) != 96) {
+	if (hio_read(buf, sizeof(uint8_t), 96, f) != 96) {
 		goto err;
 	}
 
@@ -277,12 +259,12 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 	libxmp_copy_adjust(mod->name, sfh.name, 28);
 
-	pp_ins = calloc(2, sfh.insnum);
+	pp_ins = (uint16_t *)calloc(sfh.insnum, sizeof(uint16_t));
 	if (pp_ins == NULL) {
 		goto err;
 	}
 
-	pp_pat = calloc(2, sfh.patnum);
+	pp_pat = (uint16_t *)calloc(sfh.patnum, sizeof(uint16_t));
 	if (pp_pat == NULL) {
 		goto err2;
 	}
@@ -314,12 +296,12 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 	if (sfh.ordnum <= XMP_MAX_MOD_LENGTH) {
 		mod->len = sfh.ordnum;
-		if (hio_read(mod->xxo, 1, mod->len, f) != (size_t)mod->len) {
+		if (hio_read(mod->xxo, sizeof(unsigned char), mod->len, f) != (size_t)mod->len) {
 			goto err3;
 		}
 	} else {
 		mod->len = XMP_MAX_MOD_LENGTH;
-		if (hio_read(mod->xxo, 1, mod->len, f) != (size_t)mod->len) {
+		if (hio_read(mod->xxo, sizeof(unsigned char), mod->len, f) != (size_t)mod->len) {
 			goto err3;
 		}
 		if (hio_seek(f, sfh.ordnum - XMP_MAX_MOD_LENGTH, SEEK_CUR) < 0) {
@@ -458,7 +440,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		struct xmp_subinstrument *sub;
 		int load_sample_flags;
 
-		xxi->sub = calloc(sizeof(struct xmp_subinstrument), 1);
+		xxi->sub = (struct xmp_subinstrument *)calloc(1, sizeof(struct xmp_subinstrument));
 		if (xxi->sub == NULL) {
 			goto err3;
 		}
@@ -469,7 +451,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		sub->pan = 0x80;
 		sub->sid = i;
 
-		if (hio_read(buf, 1, 80, f) != 80) {
+		if (hio_read(buf, sizeof(uint8_t), 80, f) != 80) {
 			goto err3;
 		}
 

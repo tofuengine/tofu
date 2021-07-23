@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2020 Marco Lizza
+Copyright (c) 2019-2021 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -38,12 +38,11 @@ end
 
 local Map = Class.define()
 
-function Map:__ctor(canvas, bank, grid)
-  self.canvas = canvas
+function Map:__ctor(bank, grid)
   self.bank = bank
   self.grid = grid
 
-  local cw, ch = self.bank:size(-1)
+  local cw, ch = self.bank:size(Bank.NIL)
   local gw, gh = self.grid:size()
   self.aabb = {
       x0 = 0,
@@ -55,8 +54,8 @@ function Map:__ctor(canvas, bank, grid)
   self.cameras = {}
 end
 
-function Map.from_file(canvas, file)
-  local content = File.as_string(file)
+function Map.from_file(file)
+  local content = File.load(file)
   local tokens = {}
   for chunk in string.gmatch(content, "[^\n]+") do
     table.insert(tokens, chunk)
@@ -69,10 +68,10 @@ function Map.from_file(canvas, file)
     end
   end
 
-  local bank = Bank.new(canvas, Canvas.new(tokens[1]), tonumber(tokens[2]), tonumber(tokens[3]))
+  local bank = Bank.new(Canvas.new(tokens[1]), tonumber(tokens[2]), tonumber(tokens[3]))
   local grid = Grid.new(tonumber(tokens[4]), tonumber(tokens[5]), cells)
 
-  return Map.new(canvas, bank, grid)
+  return Map.new(bank, grid)
 end
 
 function Map:bound(x, y)
@@ -84,15 +83,14 @@ function Map:get_cameras()
 end
 
 function Map:add_camera(id, columns, rows, screen_x, screen_y, anchor_x, anchor_y, scale) -- last 3 arguments optional
-  self.cameras[id] = Camera.new(id, self.bank, self.grid, self.canvas,
-    columns, rows, screen_x, screen_y, anchor_x, anchor_y, scale)
+  self.cameras[id] = Camera.new(id, self.bank, self.grid, columns, rows, screen_x, screen_y, anchor_x, anchor_y, scale)
 end
 
 function Map:remove_camera(id)
   self.cameras[id] = nil
 end
 
-function Map:camera_from_id(id) -- last two arguments are optional
+function Map:camera_from_id(id)
   return self.cameras[id]
 end
 
@@ -102,14 +100,14 @@ function Map:update(delta_time)
   end
 end
 
-function Map:draw()
-  self.canvas:push()
+function Map:draw(canvas)
+  canvas:push()
   for _, camera in pairs(self.cameras) do
-    camera:pre_draw()
-    camera:draw()
-    camera:post_draw()
+    camera:pre_draw(canvas)
+    camera:draw(canvas)
+    camera:post_draw(canvas)
   end
-  self.canvas:pop()
+  canvas:pop()
 end
 
 function Map:__tostring()

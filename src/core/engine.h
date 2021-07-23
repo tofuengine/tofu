@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2020 Marco Lizza
+ * Copyright (c) 2019-2021 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,7 +44,7 @@ typedef struct _Engine_t {
     Interpreter_t *interpreter;
 } Engine_t;
 
-extern Engine_t *Engine_create(const char *base_path);
+extern Engine_t *Engine_create(int argc, const char *argv[]);
 extern void Engine_destroy(Engine_t *engine);
 
 extern void Engine_run(Engine_t *engine);

@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2020 Marco Lizza
+Copyright (c) 2019-2021 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -28,6 +28,7 @@ local System = require("tofu.core").System
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
+local Palette = require("tofu.graphics").Palette
 
 -- The entry point is a class, we are creating with a helper function.
 local Main = Class.define()
@@ -37,7 +38,7 @@ local MESSAGE = "Hello, Tofu!"
 
 function Main:__ctor()
   -- Load a predefined palette, we choose Pico-8's one.
-  Display.palette("pico-8")
+  Display.palette(Palette.new("pico-8"))
 
   -- Create a default font, palette color `0` as background and `15` as foreground.
   -- Please note that, as default, palette color `0` is set as transparent. This
@@ -45,7 +46,7 @@ function Main:__ctor()
   self.font = Font.default(0, 15)
 end
 
-function Main:input()
+function Main:process()
   -- Nothing to do, here.
 end
 

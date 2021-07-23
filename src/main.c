@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2020 Marco Lizza
+ * Copyright (c) 2019-2021 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,9 +29,9 @@
 
 #define LOG_CONTEXT "main"
 
-int main(int argc, char **argv)
+int main(int argc, const char *argv[])
 {
-    Engine_t *engine = Engine_create(argc > 1 ? argv[1] : NULL);
+    Engine_t *engine = Engine_create(argc, argv);
     if (!engine) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize engine");
         return EXIT_FAILURE;

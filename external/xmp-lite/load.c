@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2018 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -20,8 +20,6 @@
  * THE SOFTWARE.
  */
 
-#include <sys/stat.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
@@ -38,26 +36,10 @@
 #include "load_helpers.h"
 #include "scan.h"
 
-LIBXMP_EXPORT int xmp_test_module(char *path, struct xmp_test_info *info)
+static int test_module(struct xmp_test_info *info, HIO_HANDLE *h)
 {
-	HIO_HANDLE *h;
-	struct stat st;
 	char buf[XMP_NAME_SIZE];
 	int i;
-	int ret = -XMP_ERROR_FORMAT;
-
-	if (stat(path, &st) < 0)
-		return -XMP_ERROR_SYSTEM;
-
-#ifndef _MSC_VER
-	if (S_ISDIR(st.st_mode)) {
-		errno = EISDIR;
-		return -XMP_ERROR_SYSTEM;
-	}
-#endif
-
-	if ((h = hio_open(path, "rb")) == NULL)
-		return -XMP_ERROR_SYSTEM;
 
 	if (info != NULL) {
 		*info->name = 0;	/* reset name prior to testing */
@@ -67,11 +49,7 @@ LIBXMP_EXPORT int xmp_test_module(char *path, struct xmp_test_info *info)
 	for (i = 0; format_loaders[i] != NULL; i++) {
 		hio_seek(h, 0, SEEK_SET);
 		if (format_loaders[i]->test(h, buf, 0) == 0) {
-			int is_prowizard = 0;
-
-			hio_close(h);
-
-			if (info != NULL && !is_prowizard) {
+			if (info != NULL) {
 				strncpy(info->name, buf, XMP_NAME_SIZE - 1);
 				info->name[XMP_NAME_SIZE - 1] = '\0';
 
@@ -82,6 +60,73 @@ LIBXMP_EXPORT int xmp_test_module(char *path, struct xmp_test_info *info)
 			return 0;
 		}
 	}
+	return -XMP_ERROR_FORMAT;
+}
+
+LIBXMP_EXPORT int xmp_test_module(const char *path, struct xmp_test_info *info)
+{
+	HIO_HANDLE *h;
+	int ret = libxmp_get_filetype(path);
+
+	if (ret == XMP_FILETYPE_NONE) {
+		return -XMP_ERROR_SYSTEM;
+	}
+	if (ret & XMP_FILETYPE_DIR) {
+		errno = EISDIR;
+		return -XMP_ERROR_SYSTEM;
+	}
+
+	if ((h = hio_open(path, "rb")) == NULL)
+		return -XMP_ERROR_SYSTEM;
+
+	ret = test_module(info, h);
+
+	hio_close(h);
+	return ret;
+}
+
+LIBXMP_EXPORT int xmp_test_module_from_memory(const void *mem, long size, struct xmp_test_info *info)
+{
+	HIO_HANDLE *h;
+	int ret;
+
+	if (size <= 0) {
+		return -XMP_ERROR_INVALID;
+	}
+
+	if ((h = hio_open_mem(mem, size)) == NULL)
+		return -XMP_ERROR_SYSTEM;
+
+	ret = test_module(info, h);
+
+	hio_close(h);
+	return ret;
+}
+
+LIBXMP_EXPORT int xmp_test_module_from_file(void *file, struct xmp_test_info *info)
+{
+	HIO_HANDLE *h;
+	int ret;
+
+	if ((h = hio_open_file((FILE *)file)) == NULL)
+		return -XMP_ERROR_SYSTEM;
+
+	ret = test_module(info, h);
+
+	hio_close(h);
+	return ret;
+}
+
+LIBXMP_EXPORT int xmp_test_module_from_callbacks(size_t (*read)(void *, size_t, size_t, void *), int (*seek)(void *, long, int), long (*tell)(void *), int (*eof)(void *), void *userdata,
+									struct xmp_test_info *info)
+{
+	HIO_HANDLE *h;
+	int ret;
+
+	if ((h = hio_open_callbacks((HIO_FUNCS){ .read = read, .seek = seek, .tell = tell, .eof = eof }, userdata)) == NULL)
+		return -XMP_ERROR_SYSTEM;
+
+	ret = test_module(info, h);
 
 	hio_close(h);
 	return ret;
@@ -169,7 +214,11 @@ static int load_module(xmp_context opaque, HIO_HANDLE *h)
 		return ret;
 	}
 
-	libxmp_scan_sequences(ctx);
+	ret = libxmp_scan_sequences(ctx);
+	if (ret < 0) {
+		xmp_release_module(opaque);
+		return -XMP_ERROR_LOAD;
+	}
 
 	ctx->state = XMP_STATE_LOADED;
 
@@ -180,25 +229,23 @@ static int load_module(xmp_context opaque, HIO_HANDLE *h)
 	return -XMP_ERROR_LOAD;
 }
 
-LIBXMP_EXPORT int xmp_load_module(xmp_context opaque, char *path)
+LIBXMP_EXPORT int xmp_load_module(xmp_context opaque, const char *path)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	HIO_HANDLE *h;
-	struct stat st;
 	int ret;
 
 	D_(D_WARN "path: %s", path);
 
-	if (stat(path, &st) < 0) {
+	ret = libxmp_get_filetype(path);
+
+	if (ret == XMP_FILETYPE_NONE) {
 		return -XMP_ERROR_SYSTEM;
 	}
-
-#ifndef _MSC_VER
-	if (S_ISDIR(st.st_mode)) {
+	if (ret & XMP_FILETYPE_DIR) {
 		errno = EISDIR;
 		return -XMP_ERROR_SYSTEM;
 	}
-#endif
 
 	if ((h = hio_open(path, "rb")) == NULL) {
 		return -XMP_ERROR_SYSTEM;
@@ -207,47 +254,26 @@ LIBXMP_EXPORT int xmp_load_module(xmp_context opaque, char *path)
 	if (ctx->state > XMP_STATE_UNLOADED)
 		xmp_release_module(opaque);
 
+	ctx->m.filename = NULL;
+	ctx->m.dirname = NULL;
+	ctx->m.basename = NULL;
+
 	ret = load_module(opaque, h);
 	hio_close(h);
 
 	return ret;
 }
 
-LIBXMP_EXPORT int xmp_load_module_from_callbacks(xmp_context opaque, size_t (*read)(void *, size_t, size_t, void *), int (*seek)(void *, long, int), long (*tell)(void *), int (*eof)(void *), void *userdata)
+LIBXMP_EXPORT int xmp_load_module_from_memory(xmp_context opaque, const void *mem, long size)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct module_data *m = &ctx->m;
 	HIO_HANDLE *h;
 	int ret;
 
-	if ((h = hio_open_callbacks((HIO_FUNCS){ .read = read, .seek = seek, .tell = tell, .eof = eof }, userdata)) == NULL)
-		return -XMP_ERROR_SYSTEM;
-
-	if (ctx->state > XMP_STATE_UNLOADED)
-		xmp_release_module(opaque);
-
-	m->filename = NULL;
-	m->basename = NULL;
-	m->dirname = NULL;
-	m->size = hio_size(h);
-
-	ret = load_module(opaque, h);
-
-	hio_close(h);
-
-	return ret;
-}
-
-LIBXMP_EXPORT int xmp_load_module_from_memory(xmp_context opaque, void *mem, long size)
-{
-	struct context_data *ctx = (struct context_data *)opaque;
-	struct module_data *m = &ctx->m;
-	HIO_HANDLE *h;
-	int ret;
-
-	/* Use size < 0 for unknown/undetermined size */
-	if (size == 0)
-		size--;
+	if (size <= 0) {
+		return -XMP_ERROR_INVALID;
+	}
 
 	if ((h = hio_open_mem(mem, size)) == NULL)
 		return -XMP_ERROR_SYSTEM;
@@ -267,7 +293,7 @@ LIBXMP_EXPORT int xmp_load_module_from_memory(xmp_context opaque, void *mem, lon
 	return ret;
 }
 
-LIBXMP_EXPORT int xmp_load_module_from_file(xmp_context opaque, void *file, long size)
+LIBXMP_EXPORT int xmp_load_module_from_file(xmp_context opaque, void *file)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct module_data *m = &ctx->m;
@@ -275,6 +301,31 @@ LIBXMP_EXPORT int xmp_load_module_from_file(xmp_context opaque, void *file, long
 	int ret;
 
 	if ((h = hio_open_file((FILE *)file)) == NULL)
+		return -XMP_ERROR_SYSTEM;
+
+	if (ctx->state > XMP_STATE_UNLOADED)
+		xmp_release_module(opaque);
+
+	m->filename = NULL;
+	m->basename = NULL;
+	m->dirname = NULL;
+	m->size = hio_size(h);
+
+	ret = load_module(opaque, h);
+
+	hio_close(h);
+
+	return ret;
+}
+
+LIBXMP_EXPORT int xmp_load_module_from_callbacks(xmp_context opaque, size_t (*read)(void *, size_t, size_t, void *), int (*seek)(void *, long, int), long (*tell)(void *), int (*eof)(void *), void *userdata)
+{
+	struct context_data *ctx = (struct context_data *)opaque;
+	struct module_data *m = &ctx->m;
+	HIO_HANDLE *h;
+	int ret;
+
+	if ((h = hio_open_callbacks((HIO_FUNCS){ .read = read, .seek = seek, .tell = tell, .eof = eof }, userdata)) == NULL)
 		return -XMP_ERROR_SYSTEM;
 
 	if (ctx->state > XMP_STATE_UNLOADED)
@@ -342,10 +393,11 @@ LIBXMP_EXPORT void xmp_release_module(xmp_context opaque)
 			libxmp_free_sample(&mod->xxs[i]);
 		}
 		free(mod->xxs);
-		free(m->xtra);
 		mod->xxs = NULL;
-		m->xtra = NULL;
 	}
+
+	free(m->xtra);
+	m->xtra = NULL;
 
 #ifndef LIBXMP_CORE_DISABLE_IT
 	if (m->xsmp != NULL) {
@@ -362,7 +414,7 @@ LIBXMP_EXPORT void xmp_release_module(xmp_context opaque)
 	free(m->comment);
 	m->comment = NULL;
 
-	D_("free dirname/basename");
+	D_(D_INFO "free dirname/basename");
 	free(m->dirname);
 	free(m->basename);
 	m->basename = NULL;

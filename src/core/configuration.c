@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2020 Marco Lizza
+ * Copyright (c) 2019-2021 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -40,84 +40,101 @@ static inline void _parse_version(const char *version_string, int *major, int *m
 
 static void _on_parameter(Configuration_t *configuration, const char *context, const char *key, const char *value)
 {
-    char fqn[128] = { 0 };
-    strcpy(fqn, context);
-    strcat(fqn, ".");
+    char fqn[256] = { 0 };
+    if (context && context[0] != '\0') { // Skip context if not provided.
+        strcpy(fqn, context);
+        strcat(fqn, "-");
+    }
     strcat(fqn, key);
-    
-    if (strcmp(fqn, "system.identity") == 0) {
+
+    if (strcmp(fqn, "system-identity") == 0) {
         strcpy(configuration->system.identity, value);
     } else
-    if (strcmp(fqn, "system.version") == 0) {
+    if (strcmp(fqn, "system-version") == 0) {
         int major, minor, revision;
         _parse_version(value, &major, &minor, &revision);
         configuration->system.version.major = major;
         configuration->system.version.minor = minor;
         configuration->system.version.revision = revision;
     } else
-    if (strcmp(fqn, "system.debug") == 0) {
+    if (strcmp(fqn, "system-debug") == 0) {
         configuration->system.debug = strcmp(value, "true") == 0;
     } else
-    if (strcmp(fqn, "display.title") == 0) {
+    if (strcmp(fqn, "system-icon") == 0) {
+        strcpy(configuration->system.icon, value);
+    } else
+    if (strcmp(fqn, "system-mappings") == 0) {
+        strcpy(configuration->system.mappings, value);
+    } else
+    if (strcmp(fqn, "display-title") == 0) {
         strcpy(configuration->display.title, value);
     } else
-    if (strcmp(fqn, "display.width") == 0) {
+    if (strcmp(fqn, "display-width") == 0) {
         configuration->display.width = (size_t)strtoul(value, NULL, 0);
     } else
-    if (strcmp(fqn, "display.height") == 0) {
+    if (strcmp(fqn, "display-height") == 0) {
         configuration->display.height = (size_t)strtoul(value, NULL, 0);
     } else
-    if (strcmp(fqn, "display.scale") == 0) {
+    if (strcmp(fqn, "display-scale") == 0) {
         configuration->display.scale = (size_t)strtoul(value, NULL, 0);
     } else
-    if (strcmp(fqn, "display.fullscreen") == 0) {
+    if (strcmp(fqn, "display-fullscreen") == 0) {
         configuration->display.fullscreen = strcmp(value, "true") == 0;
     } else
-    if (strcmp(fqn, "display.vertical-sync") == 0) {
+    if (strcmp(fqn, "display-vertical-sync") == 0) {
         configuration->display.vertical_sync = strcmp(value, "true") == 0;
     } else
-    if (strcmp(fqn, "keyboard.enabled") == 0) {
+    if (strcmp(fqn, "display-effect") == 0) {
+        strcpy(configuration->display.effect, value);
+    } else
+    if (strcmp(fqn, "audio-device-index") == 0) {
+        configuration->audio.device_index = (int)strtol(value, NULL, 0);
+    } else
+    if (strcmp(fqn, "audio-master-volume") == 0) {
+        configuration->audio.master_volume = (float)strtod(value, NULL);
+    } else
+    if (strcmp(fqn, "keyboard-enabled") == 0) {
         configuration->keyboard.enabled = strcmp(value, "true") == 0;
     } else
-    if (strcmp(fqn, "keyboard.exit-key") == 0) {
+    if (strcmp(fqn, "keyboard-exit-key") == 0) {
         configuration->keyboard.exit_key = strcmp(value, "true") == 0;
     } else
-    if (strcmp(fqn, "cursor.enabled") == 0) {
+    if (strcmp(fqn, "cursor-enabled") == 0) {
         configuration->cursor.enabled = strcmp(value, "true") == 0;
     } else
-    if (strcmp(fqn, "cursor.hide") == 0) {
+    if (strcmp(fqn, "cursor-hide") == 0) {
         configuration->cursor.hide = strcmp(value, "true") == 0;
     } else
-    if (strcmp(fqn, "cursor.speed") == 0) {
+    if (strcmp(fqn, "cursor-speed") == 0) {
         configuration->cursor.speed = (float)strtod(value, NULL);
     } else
-    if (strcmp(fqn, "gamepad.enabled") == 0) {
+    if (strcmp(fqn, "gamepad-enabled") == 0) {
         configuration->gamepad.enabled = strcmp(value, "true") == 0;
     } else
-    if (strcmp(fqn, "gamepad.sensitivity") == 0) {
+    if (strcmp(fqn, "gamepad-sensitivity") == 0) {
         configuration->gamepad.sensitivity = (float)strtod(value, NULL);
     } else
-    if (strcmp(fqn, "gamepad.inner-deadzone") == 0) {
+    if (strcmp(fqn, "gamepad-inner-deadzone") == 0) {
         configuration->gamepad.inner_deadzone = (float)strtod(value, NULL);
     } else
-    if (strcmp(fqn, "gamepad.outer-deadzone") == 0) {
+    if (strcmp(fqn, "gamepad-outer-deadzone") == 0) {
         configuration->gamepad.outer_deadzone = (float)strtod(value, NULL);
     } else
-    if (strcmp(fqn, "gamepad.emulate-dpad") == 0) {
+    if (strcmp(fqn, "gamepad-emulate-dpad") == 0) {
         configuration->gamepad.emulate_dpad = strcmp(value, "true") == 0;
     } else
-    if (strcmp(fqn, "gamepad.emulate-mouse") == 0) {
+    if (strcmp(fqn, "gamepad-emulate-cursor") == 0) {
         configuration->gamepad.emulate_cursor = strcmp(value, "true") == 0;
     } else
-    if (strcmp(fqn, "engine.frames-per-seconds") == 0) {
+    if (strcmp(fqn, "engine-frames-per-seconds") == 0) {
         configuration->engine.frames_per_seconds = (size_t)strtoul(value, NULL, 0);
         configuration->engine.skippable_frames = configuration->engine.frames_per_seconds / 5; // Keep synched. About 20% of the frequency (FPS).
     } else
-    if (strcmp(fqn, "engine.skippable-frames") == 0) {
+    if (strcmp(fqn, "engine-skippable-frames") == 0) {
         size_t suggested = configuration->engine.frames_per_seconds / 5;
         configuration->engine.skippable_frames = (size_t)imin((int)strtol(value, NULL, 0), (int)suggested); // TODO: not sure if `imin` or `imax`. :P
     } else
-    if (strcmp(fqn, "engine.frames-limit") == 0) {
+    if (strcmp(fqn, "engine-frames-limit") == 0) {
         configuration->engine.frames_limit = (size_t)strtoul(value, NULL, 0);
     }
 }
@@ -211,7 +228,9 @@ void Configuration_parse(Configuration_t *configuration, const char *data)
             .system = {
                 .identity = { 0 },
                 .version = { TOFU_VERSION_MAJOR, TOFU_VERSION_MINOR, TOFU_VERSION_REVISION },
-                .debug = true
+                .debug = true,
+                .icon = "icon.png",
+                .mappings = "gamecontrollerdb.txt"
             },
             .display = {
                 .title = ".: Tofu Engine :.",
@@ -219,9 +238,11 @@ void Configuration_parse(Configuration_t *configuration, const char *data)
                 .height = 240,
                 .scale = 0,
                 .fullscreen = false,
-                .vertical_sync = false
+                .vertical_sync = false,
+                .effect = "effect.glsl"
             },
             .audio = {
+                .device_index = -1, // Pick the default device.
                 .master_volume = 1.0f
             },
             .keyboard = {
@@ -270,4 +291,20 @@ void Configuration_parse(Configuration_t *configuration, const char *data)
     }
 
     _normalize_identity(configuration);
+}
+
+void Configuration_override(Configuration_t *configuration, int argc, const char *argv[])
+{
+    char pair[256];
+    for (int i = 0; i < argc; ++i) {
+        if (strncmp(argv[i], "--", 2) != 0) { // Long-options only.
+            continue;
+        }
+        strcpy(pair, argv[i] + 2); // Skip "--" marker.
+        const char *key, *value;
+        if (!_parse_pair(pair, &key, &value)) {
+            continue;
+        }
+        _on_parameter(configuration, NULL, key, value); // Context is already fused in the parameter key.
+    }
 }

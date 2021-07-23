@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2020 Marco Lizza
+ * Copyright (c) 2019-2021 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,9 +24,15 @@
 
 #include "sheet.h"
 
+#include "blit.h"
+#include "tile.h"
+
 #include <config.h>
+#include <libs/imath.h>
 #include <libs/log.h>
 #include <libs/stb.h>
+
+#include <math.h>
 
 #define LOG_CONTEXT "gl-sheet"
 
@@ -54,7 +60,7 @@ static GL_Rectangle_t *_generate_cells(GL_Size_t atlas_size, GL_Size_t cell_size
     size_t columns = atlas_size.width / cell_size.width;
     size_t rows = atlas_size.height / cell_size.height;
     size_t amount = columns * rows;
-    GL_Rectangle_t *cells = malloc(amount * sizeof(GL_Rectangle_t));
+    GL_Rectangle_t *cells = malloc(sizeof(GL_Rectangle_t) * amount);
     if (!cells) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate %d cells", amount);
         return NULL;
@@ -104,7 +110,7 @@ static void _detach(GL_Sheet_t *sheet)
 GL_Sheet_t *GL_sheet_create_fixed(const GL_Surface_t *atlas, GL_Size_t cell_size)
 {
     size_t count;
-    GL_Rectangle_t *cells = _generate_cells((GL_Size_t ){ .width = atlas->width, .height = atlas->height }, cell_size, &count);
+    GL_Rectangle_t *cells = _generate_cells((GL_Size_t){ .width = atlas->width, .height = atlas->height }, cell_size, &count);
     if (!cells) {
         return NULL;
     }
@@ -135,4 +141,38 @@ GL_Sheet_t *GL_sheet_create(const GL_Surface_t *atlas, const GL_Rectangle_u32_t 
 void GL_sheet_destroy(GL_Sheet_t *sheet)
 {
     _detach(sheet);
+}
+
+GL_Size_t GL_sheet_size(const GL_Sheet_t *sheet, size_t cell_id, float scale_x, float scale_y)
+{
+    const GL_Rectangle_t *cell = &sheet->cells[cell_id];
+    return (GL_Size_t){
+            .width = (size_t)ITRUNC(cell->width * fabsf(scale_x)),
+            .height = (size_t)ITRUNC(cell->height * fabsf(scale_y))
+        };
+}
+
+void GL_sheet_blit(const GL_Sheet_t *sheet, const GL_Surface_t *surface, GL_Point_t position, size_t cell_id)
+{
+    GL_surface_blit(surface, position, sheet->atlas, sheet->cells[cell_id]);
+}
+
+void GL_sheet_blit_s(const GL_Sheet_t *sheet, const GL_Surface_t *surface, GL_Point_t position, size_t cell_id, float scale_x, float scale_y)
+{
+    GL_surface_blit_s(surface, position, sheet->atlas, sheet->cells[cell_id], scale_x, scale_y);
+}
+
+void GL_sheet_blit_sr(const GL_Sheet_t *sheet, const GL_Surface_t *surface, GL_Point_t position, size_t cell_id, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y)
+{
+    GL_surface_blit_sr(surface, position, sheet->atlas, sheet->cells[cell_id], scale_x, scale_y, rotation, anchor_x, anchor_y);
+}
+
+void GL_sheet_tile(const GL_Sheet_t *sheet, const GL_Surface_t *surface, GL_Point_t position, size_t cell_id, GL_Point_t offset)
+{
+    GL_surface_tile(surface, position, sheet->atlas, sheet->cells[cell_id], offset);
+}
+
+void GL_sheet_tile_s(const GL_Sheet_t *sheet, const GL_Surface_t *surface, GL_Point_t position, size_t cell_id, GL_Point_t offset, int scale_x, int scale_y)
+{
+    GL_surface_tile_s(surface, position, sheet->atlas, sheet->cells[cell_id], offset, scale_x, scale_y);
 }

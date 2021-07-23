@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2020 Marco Lizza
+ * Copyright (c) 2019-2021 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,35 +33,33 @@
 
 #define LOG_CONTEXT "speakers"
 
-static int speakers_volume(lua_State *L);
-static int speakers_mix(lua_State *L);
-static int speakers_pan(lua_State *L);
-static int speakers_balance(lua_State *L);
-static int speakers_gain(lua_State *L);
-static int speakers_halt(lua_State *L);
-
-static const struct luaL_Reg _speakers_functions[] = {
-    { "volume", speakers_volume },
-    { "mix", speakers_mix },
-    { "pan", speakers_pan },
-    { "balance", speakers_balance },
-    { "gain", speakers_gain },
-    { "halt", speakers_halt },
-    { NULL, NULL }
-};
-
-static const luaX_Const _speaker_constants[] = {
-    { "DEFAULT_GROUP", LUA_CT_INTEGER, { .i = SL_DEFAULT_GROUP } },
-    { NULL, LUA_CT_NIL, { 0 } }
-};
+static int speakers_volume_v_v(lua_State *L);
+static int speakers_mix_v_v(lua_State *L);
+static int speakers_pan_2nn_0(lua_State *L);
+static int speakers_balance_2nn_0(lua_State *L);
+static int speakers_gain_v_v(lua_State *L);
+static int speakers_halt_0_0(lua_State *L);
 
 int speakers_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, NULL, _speakers_functions, _speaker_constants, nup, NULL);
+    return luaX_newmodule(L, (luaX_Script){ 0 },
+        (const struct luaL_Reg[]){
+            { "volume", speakers_volume_v_v },
+            { "mix", speakers_mix_v_v },
+            { "pan", speakers_pan_2nn_0 },
+            { "balance", speakers_balance_2nn_0 },
+            { "gain", speakers_gain_v_v },
+            { "halt", speakers_halt_0_0 },
+            { NULL, NULL }
+        },
+        (const luaX_Const[]){
+            { "DEFAULT_GROUP", LUA_CT_INTEGER, { .i = SL_DEFAULT_GROUP } },
+            { NULL, LUA_CT_NIL, { 0 } }
+        }, nup, NULL);
 }
 
-static int speakers_volume0(lua_State *L)
+static int speakers_volume_0_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END
@@ -73,7 +71,7 @@ static int speakers_volume0(lua_State *L)
     return 1;
 }
 
-static int speakers_volume1(lua_State *L)
+static int speakers_volume_1n_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -87,15 +85,15 @@ static int speakers_volume1(lua_State *L)
     return 0;
 }
 
-static int speakers_volume(lua_State *L)
+static int speakers_volume_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(0, speakers_volume0)
-        LUAX_OVERLOAD_ARITY(1, speakers_volume1)
+        LUAX_OVERLOAD_ARITY(0, speakers_volume_0_1n)
+        LUAX_OVERLOAD_ARITY(1, speakers_volume_1n_0)
     LUAX_OVERLOAD_END
 }
 
-static int speakers_mix1(lua_State *L)
+static int speakers_mix_1n_4nnnn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -114,10 +112,10 @@ static int speakers_mix1(lua_State *L)
     return 4;
 }
 
-static int speakers_mix5(lua_State *L)
+static int speakers_mix_5nnnnn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TUSERDATA)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -142,15 +140,15 @@ static int speakers_mix5(lua_State *L)
     return 0;
 }
 
-static int speakers_mix(lua_State *L)
+static int speakers_mix_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, speakers_mix1)
-        LUAX_OVERLOAD_ARITY(5, speakers_mix5)
+        LUAX_OVERLOAD_ARITY(1, speakers_mix_1n_4nnnn)
+        LUAX_OVERLOAD_ARITY(5, speakers_mix_5nnnnn_0)
     LUAX_OVERLOAD_END
 }
 
-static int speakers_pan(lua_State *L)
+static int speakers_pan_2nn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -167,7 +165,7 @@ static int speakers_pan(lua_State *L)
     return 0;
 }
 
-static int speakers_balance(lua_State *L)
+static int speakers_balance_2nn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -184,7 +182,7 @@ static int speakers_balance(lua_State *L)
     return 0;
 }
 
-static int speakers_gain1(lua_State *L)
+static int speakers_gain_1n_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -198,7 +196,7 @@ static int speakers_gain1(lua_State *L)
     return 1;
 }
 
-static int speakers_gain2(lua_State *L)
+static int speakers_gain_2nn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
@@ -215,15 +213,15 @@ static int speakers_gain2(lua_State *L)
     return 0;
 }
 
-static int speakers_gain(lua_State *L)
+static int speakers_gain_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, speakers_gain1)
-        LUAX_OVERLOAD_ARITY(2, speakers_gain2)
+        LUAX_OVERLOAD_ARITY(1, speakers_gain_1n_1n)
+        LUAX_OVERLOAD_ARITY(2, speakers_gain_2nn_0)
     LUAX_OVERLOAD_END
 }
 
-static int speakers_halt(lua_State *L)
+static int speakers_halt_0_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
     LUAX_SIGNATURE_END

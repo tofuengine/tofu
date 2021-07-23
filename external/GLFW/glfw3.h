@@ -295,7 +295,7 @@ extern "C" {
  *  API changes.
  *  @ingroup init
  */
-#define GLFW_VERSION_REVISION       3
+#define GLFW_VERSION_REVISION       4
 /*! @} */
 
 /*! @brief One.
@@ -1353,7 +1353,7 @@ typedef void (* GLFWwindowiconifyfun)(GLFWwindow*,int);
  *  @endcode
  *
  *  @param[in] window The window that was maximized or restored.
- *  @param[in] iconified `GLFW_TRUE` if the window was maximized, or
+ *  @param[in] maximized `GLFW_TRUE` if the window was maximized, or
  *  `GLFW_FALSE` if it was restored.
  *
  *  @sa @ref window_maximize

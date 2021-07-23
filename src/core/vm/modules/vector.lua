@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2020 Marco Lizza
+Copyright (c) 2019-2021 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -30,6 +30,14 @@ Vector.__index = Vector
 
 function Vector.new(x, y)
   return setmetatable({ x = x or 0, y = y or 0 }, Vector)
+end
+
+function Vector:__eq(v)
+  return self == v or (self.x == v.x and self.y == v.y)
+end
+
+function Vector:__tostring()
+	return string.format("<%.5f, %.5f>", self.x, self.y)
 end
 
 function Vector:clone()
@@ -69,8 +77,18 @@ function Vector:unpack()
   return self.x, self.y
 end
 
+function Vector:pack()
+  return { self.x, self.y }
+end
+
 function Vector:is_zero()
   return self.x == 0 and self.y == 0
+end
+
+local EPSILON <const> = 1e-9
+
+function Vector:is_almost(v)
+    return math.abs(self.x - v.x) <= EPSILON and math.abs(self.y - v.y) <= EPSILON
 end
 
 function Vector:is_equal(v)
@@ -92,18 +110,43 @@ function Vector:sub(v)
   return self
 end
 
+function Vector:mul(v)
+  self.x, self.y = self.x * v.x, self.y * v.y
+  return self
+end
+
+function Vector:div(v)
+  self.x, self.y = self.x / v.x, self.y / v.y
+  return self
+end
+
 function Vector:scale(s)
   self.x, self.y = self.x * s, self.y * s
+  return self
+end
+
+function Vector:fma(v, t) -- Fused multiply-add
+  self.x, self.y = self.x + v.x * t, self.y + v.y * t
+  return self
+end
+
+function Vector:lerp(v, t)
+  self.x, self.y = self.x * (1.0 - t) + v.x * t, self.y * (1.0 - t) + v.y * t
   return self
 end
 
 -- | cos(a)  -sin(a) | | x |   | x' |
 -- |                 | |   | = |    |
 -- | sin(a)   cos(a) | | y |   | y' |
-function Vector:rotate(a)
-  local cos, sin = math.cos(a), math.sin(a)
-  self.x, self.y = cos * self.x - sin * self.y, sin * self.x + cos * self.y
+function Vector:rotate(angle)
+  local cos, sin = math.cos(angle), math.sin(angle)
+  local x, y = self.x, self.y
+  self.x, self.y = cos * x - sin * y, sin * x + cos * y
   return self
+end
+
+function Vector:rotate_around(angle, pivot)
+  return self:sub(pivot):rotate(angle):add(pivot)
 end
 
 function Vector:negate()
@@ -112,10 +155,18 @@ function Vector:negate()
 end
 
 -- COUNTER-CLOCKWISE perpendicular vector (`perp` operator).
-function Vector:perpendiculal()
+function Vector:rotate90ccw()
   self.x, self.y = -self.y, self.x
   return self
 end
+
+-- CLOCKWISE perpendicular vector.
+function Vector:rotate90cw()
+  self.x, self.y = self.y, -self.x
+  return self
+end
+
+Vector.rotate180 = Vector.negate
 
 -- a dot b
 -- ------- b
@@ -139,8 +190,10 @@ function Vector:mirror(v)
 end
 
 function Vector:dot(v)
-  return (self.x * v.x) + (self.y * v.y)
+  return self.x * v.x + self.y * v.y
 end
+
+Vector.perp = Vector.rotate90ccw
 
 -- Area of the parallelogram described by the vector, i.e. the DETERMINAND of
 -- the matrix with the vectors as columns (or rows).
@@ -150,7 +203,7 @@ end
 -- POSITIVE the second vector is COUNTER-CLOCKWISE from the first one.
 --
 -- It is also called "perp-dot", that is the dot product of the perpendicular
--- vector with another vector (i.e. `a:perpendicular():dot(b)`)
+-- vector with another vector (i.e. `a:perp():dot(b)`)
 --
 -- NOTE: when on a 2D display, since the `y` component inverts it sign, also
 --       the rule inverts! That is if NEGATIVE then is COUNTER-CLOCKWISE.
@@ -158,11 +211,12 @@ end
 -- https://en.wikipedia.org/wiki/Exterior_algebra
 -- http://geomalgorithms.com/vector_products.html#2D-Perp-Product
 function Vector:perp_dot(v)
-  return (self.x * v.y) - (self.y * v.x)
+  return self.x * v.y - self.y * v.x
 end
 
 function Vector:magnitude_squared()
-  return self:dot(self)
+  local x, y = self.x, self.y
+  return x * x + y * y
 end
 
 function Vector:magnitude()
@@ -171,7 +225,7 @@ end
 
 function Vector:distance_from_squared(v)
   local dx, dy = self.x - v.x, self.y - v.y
-  return (dx * dx) + (dy * dy)
+  return dx * dx + dy * dy
 end
 
 function Vector:distance_from(v)
@@ -179,14 +233,11 @@ function Vector:distance_from(v)
 end
 
 function Vector:normalize(l)
-  return self:scale((l or 1) / self:magnitude())
-end
-
-function Vector:normalize_if_not_zero(l)
-  if self:is_zero() then
-    return self
+  local magnitude = self:magnitude()
+  if magnitude == 0 then
+    return self, 0
   end
-  return self:normalize(l)
+  return self:scale((l or 1) / magnitude), magnitude
 end
 
 -- Normalize to the given `l` length only when greater than it.
@@ -207,7 +258,7 @@ end
 
 function Vector:angle_to(v)
   if v then
-    return math.atan(v.y- self.y, v.x - self.x)
+    return math.atan(v.y - self.y, v.x - self.x)
   end
   return math.atan(self.y, self.x)
 end

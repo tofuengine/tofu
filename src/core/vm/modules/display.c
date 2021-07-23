@@ -1,18 +1,18 @@
 /*
  * MIT License
- * 
- * Copyright (c) 2019-2020 Marco Lizza
- * 
+ *
+ * Copyright (c) 2019-2021 Marco Lizza
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -27,180 +27,53 @@
 #include <config.h>
 #include <core/io/display.h>
 #include <libs/log.h>
+#include <libs/stb.h>
 
 #include "udt.h"
-#include "resources/palettes.h"
 
-#define LOG_CONTEXT "graphics"
+#include <ctype.h>
+#include <stdlib.h>
 
-static int display_offset(lua_State *L);
-static int display_palette(lua_State *L);
-static int display_color_to_index(lua_State *L);
-static int display_index_to_color(lua_State *L);
-static int display_shader(lua_State *L);
-static int display_send(lua_State *L);
+#define LOG_CONTEXT "display"
 
-static const struct luaL_Reg _display_functions[] = {
-    { "palette", display_palette },
-    { "color_to_index", display_color_to_index },
-    { "index_to_color", display_index_to_color },
-    { "offset", display_offset },
-    { "shader", display_shader },
-    { "send", display_send },
-    { NULL, NULL }
-};
+static int display_palette_1o_0(lua_State *L);
+static int display_offset_2NN_0(lua_State *L);
+static int display_shift_v_0(lua_State *L);
+static int display_program_1O_0(lua_State *L);
+static int display_reset_0_0(lua_State *L);
 
 int display_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, NULL, _display_functions, NULL, nup, NULL);
+    return luaX_newmodule(L, (luaX_Script){ 0 },
+        (const struct luaL_Reg[]){
+            { "palette", display_palette_1o_0 },
+            { "offset", display_offset_2NN_0 },
+            { "shift", display_shift_v_0 },
+            { "program", display_program_1O_0 },
+            { "reset", display_reset_0_0 },
+            { NULL, NULL }
+        },
+        (const luaX_Const[]){
+            { NULL, LUA_CT_NIL, { 0 } }
+        }, nup, NULL);
 }
 
-static int display_palette0(lua_State *L)
+static int display_palette_1o_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
-
-    const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
-
-    const GL_Palette_t *palette = Display_get_palette(display);
-
-    lua_createtable(L, (int)palette->count, 0);
-    for (size_t i = 0; i < palette->count; ++i) {
-        unsigned int argb = GL_palette_pack_color(palette->colors[i]);
-
-        lua_pushinteger(L, (lua_Integer)argb);
-        lua_rawseti(L, -2, (lua_Integer)(i + 1));
-    }
-
-    return 1;
-}
-
-static int display_palette1(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING, LUA_TTABLE)
-    LUAX_SIGNATURE_END
-    int type = lua_type(L, 1);
+    const Palette_Object_t *palette = (const Palette_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PALETTE);
 
     Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    GL_Palette_t palette = { 0 };
-    if (type == LUA_TSTRING) { // Predefined palette!
-        const char *id = luaL_checkstring(L, 1);
-        const GL_Palette_t *predefined_palette = resources_palettes_find(id);
-        if (predefined_palette != NULL) {
-            palette = *predefined_palette;
-
-            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "setting predefined palette `%s` w/ %d color(s)", id, predefined_palette->count);
-        } else {
-            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "unknown predefined palette w/ id `%s`", id);
-        }
-    } else
-    if (type == LUA_TTABLE) { // User supplied palette.
-        palette.count = lua_rawlen(L, 1);
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "setting custom palette of %d color(s)", palette.count);
-
-        if (palette.count > GL_MAX_PALETTE_COLORS) {
-            Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "palette has too many colors (%d) - clamping", palette.count);
-            palette.count = GL_MAX_PALETTE_COLORS;
-        }
-
-        lua_pushnil(L);
-        for (size_t i = 0; lua_next(L, 1); ++i) {
-            uint32_t argb = (uint32_t)LUAX_INTEGER(L, -1);
-            GL_Color_t color = GL_palette_unpack_color(argb);
-            palette.colors[i] = color;
-
-            lua_pop(L, 1);
-        }
-    }
-
-    if (palette.count == 0) {
-        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "palette has no colors - skipping");
-        return 0;
-    }
-
-    Display_set_palette(display, &palette);
+    GL_palette_copy(Display_get_palette(display), palette->palette);
 
     return 0;
 }
 
-static int display_palette(lua_State *L)
-{
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(0, display_palette0)
-        LUAX_OVERLOAD_ARITY(1, display_palette1)
-    LUAX_OVERLOAD_END
-}
-
-static int display_color_to_index1(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    uint32_t argb = (uint32_t)LUAX_INTEGER(L, 1);
-
-    const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
-
-    GL_Color_t color = GL_palette_unpack_color(argb);
-    const GL_Pixel_t index = GL_palette_find_nearest_color(Display_get_palette(display), color);
-
-    lua_pushinteger(L, (lua_Integer)index);
-
-    return 1;
-}
-
-static int display_color_to_index3(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    uint8_t r = (uint8_t)LUAX_INTEGER(L, 1);
-    uint8_t g = (uint8_t)LUAX_INTEGER(L, 2);
-    uint8_t b = (uint8_t)LUAX_INTEGER(L, 3);
-
-    const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
-
-    uint32_t argb = GL_palette_pack_color((GL_Color_t){  .a = 255, .r = r, .g = g, .b = b });
-    GL_Color_t color = GL_palette_unpack_color(argb);
-    const GL_Pixel_t index = GL_palette_find_nearest_color(Display_get_palette(display), color);
-
-    lua_pushinteger(L, (lua_Integer)index);
-
-    return 1;
-}
-
-static int display_color_to_index(lua_State *L)
-{
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, display_color_to_index1)
-        LUAX_OVERLOAD_ARITY(3, display_color_to_index3)
-    LUAX_OVERLOAD_END
-}
-
-static int display_index_to_color(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    GL_Pixel_t index = (GL_Pixel_t)LUAX_INTEGER(L, 1);
-
-    const Display_t *display = (const Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
-
-    const GL_Palette_t *palette = Display_get_palette(display);
-    const GL_Color_t color = palette->colors[index];
-
-    lua_pushinteger(L, (lua_Integer)color.r);
-    lua_pushinteger(L, (lua_Integer)color.g);
-    lua_pushinteger(L, (lua_Integer)color.b);
-
-    return 3;
-}
-
-static int display_offset0_2(lua_State *L)
+static int display_offset_2NN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
@@ -216,49 +89,96 @@ static int display_offset0_2(lua_State *L)
     return 0;
 }
 
-static int display_offset(lua_State *L)
-{
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(0, display_offset0_2)
-        LUAX_OVERLOAD_ARITY(2, display_offset0_2)
-    LUAX_OVERLOAD_END
-}
-
-static int display_shader(lua_State *L)
+static int display_shift_0_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
     LUAX_SIGNATURE_END
-    const char *code = LUAX_STRING(L, 1);
 
     Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    Display_set_shader(display, code);
+    Display_set_shifting(display, NULL, NULL, 0);
 
     return 0;
 }
 
-static int display_send(lua_State *L)
+static int display_shift_1t_0(lua_State *L)
 {
-/*
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER, LUA_TTABLE)
+        LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
     LUAX_SIGNATURE_END
-    const char *uniform = LUAX_STRING(L, 1);
-    int type = lua_type(L, 2);
+
+    GL_Pixel_t *from = NULL;
+    GL_Pixel_t *to = NULL;
+
+    lua_pushnil(L);
+    while (lua_next(L, 2)) {
+        arrpush(from, (GL_Pixel_t)LUAX_INTEGER(L, -2));
+        arrpush(to, (GL_Pixel_t)LUAX_INTEGER(L, -1));
+
+        lua_pop(L, 1);
+    }
 
     Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
 
-    if (lua_isinteger(L, 2)) {
-        Display_send(display, uniform, PROGRAM_UNIFORM_INT, 1, &value);
-    } else
-    if (lua_isnumber(L, 2)) {
-        Display_send(display, uniform, PROGRAM_UNIFORM_FLOAT, 1, &value);
-    } else
-    if (lua_istable(L, 2)) {
-        Display_send(display, uniform, PROGRAM_UNIFORM_FLOAT, 1, &value);
+    Display_set_shifting(display, from, to, arrlen(from));
+
+    arrfree(from);
+    arrfree(to);
+
+    return 0;
+}
+
+static int display_shift_2nn_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    GL_Pixel_t from = (GL_Pixel_t)LUAX_INTEGER(L, 1);
+    GL_Pixel_t to = (GL_Pixel_t)LUAX_INTEGER(L, 2);
+
+    Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    Display_set_shifting(display, &from, &to, 1);
+
+    return 0;
+}
+
+static int display_shift_v_0(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(0, display_shift_0_0)
+        LUAX_OVERLOAD_ARITY(1, display_shift_1t_0)
+        LUAX_OVERLOAD_ARITY(2, display_shift_2nn_0)
+    LUAX_OVERLOAD_END
+}
+
+static int display_program_1O_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TOBJECT)
+    LUAX_SIGNATURE_END
+    const Program_Object_t *program = (const Program_Object_t *)LUAX_OPTIONAL_OBJECT(L, 1, OBJECT_TYPE_PROGRAM, NULL);
+
+    Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    if (program) {
+        Display_set_program(display, program->program);
+    } else {
+        Display_set_program(display, NULL);
     }
-*/
+
+    return 0;
+}
+
+static int display_reset_0_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+    LUAX_SIGNATURE_END
+
+    Display_t *display = (Display_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_DISPLAY));
+
+    Display_reset(display);
+
     return 0;
 }

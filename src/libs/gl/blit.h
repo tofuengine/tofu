@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2020 Marco Lizza
+ * Copyright (c) 2019-2021 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,17 +22,14 @@
  * SOFTWARE.
  */
 
-#ifndef __GL_BLIT_H__
-#define __GL_BLIT_H__
+#ifndef __GL_SURFACE_BLIT_H__
+#define __GL_SURFACE_BLIT_H__
 
 #include "common.h"
-#include "context.h"
 #include "surface.h"
-#include "xform.h"
 
-extern void GL_context_blit(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position);
-extern void GL_context_blit_s(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, float sx, float sy);
-extern void GL_context_blit_sr(const GL_Context_t *context, const GL_Surface_t *surface, GL_Rectangle_t area, GL_Point_t position, float sx, float sy, int rotation, float ax, float ay);
-extern void GL_context_blit_x(const GL_Context_t *context, const GL_Surface_t *surface, GL_Point_t position, const GL_XForm_t *xform);
+extern void GL_surface_blit(const GL_Surface_t *surface, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area);
+extern void GL_surface_blit_s(const GL_Surface_t *surface, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, float scale_x, float scale_y);
+extern void GL_surface_blit_sr(const GL_Surface_t *surface, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, float scale_x, float scale_y, int rotation, float anchor_x, float anchor_y);
 
-#endif  /* __GL_BLIT_H__ */
+#endif  /* __GL_SURFACE_BLIT_H__ */

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2020 Marco Lizza
+ * Copyright (c) 2019-2021 Marco Lizza
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,7 +34,7 @@
 
 // Being the speed implemented by dynamic resampling, there's an intrinsic theoretical limit given by the ratio
 // between the minimum (8KHz) and the maximum (384KHz) supported sample rates.
-#define MIN_SPEED_VALUE ((float)MA_MIN_SAMPLE_RATE / (float)MA_MAX_SAMPLE_RATE)
+#define MIN_SPEED_VALUE ((float)ma_standard_sample_rate_min / (float)ma_standard_sample_rate_max)
 
 #if SL_BYTES_PER_SAMPLE == 2
   #define INTERNAL_FORMAT   ma_format_s16

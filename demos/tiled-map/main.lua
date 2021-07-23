@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2020 Marco Lizza
+Copyright (c) 2019-2021 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -28,6 +28,7 @@ local Input = require("tofu.events").Input
 local Display = require("tofu.graphics").Display
 local Canvas = require("tofu.graphics").Canvas
 local Font = require("tofu.graphics").Font
+local Palette = require("tofu.graphics").Palette
 
 local Map = require("lib.map")
 
@@ -35,77 +36,11 @@ local Main = Class.define()
 
 local CAMERA_SPEED = 128.0
 
---[[
-function string.split(s, sep)
-  local fields = {}
-  local pattern = string.format("([^%s]+)", sep or " ")
-  string.gsub(s, pattern, function(c) fields[#fields + 1] = c end)
-  return fields
-end
-
-function table.dump(t, spaces)
-  spaces = spaces or ""
-  for k, v in pairs(t) do
-    print(spaces .. k .. " " .. type(v) .. " " .. tostring(v))
-    if type(v) == "table" then
-      if (k ~= "__index") then
-        dump(v, spaces .. " ")
-      end
-    end
-  end
-end
-]]--
---[[
-local function roundm(n, m)
-  return math.floor(((n + m - 1) / m)) * m
-end
-
-local function getRandomPointInEllipse(ellipse_width, ellipse_height)
-  local t = 2*math.pi*math.random()
-  local u = math.random()+math.random()
-  local r = nil
-  if u > 1 then r = 2-u else r = u end
-  return roundm(ellipse_width*r*math.cos(t)/2, tile_size),
-         roundm(ellipse_height*r*math.sin(t)/2, tile_size)
-end
-
-local function random_point_in_circle(radius)
-  local t =  2 * math.pi * math.random()
-  local u = math.random()+math.random()
-  local r = nil
-  if u > 1 then
-    r = 2 - u
-  else
-    r = u
-  end
-  return radius * r * math.cos(t), radius * r * math.sin(t)
-end
-
-local function generate(width, height)
-  local grid = Grid.new(width, height)
-
-  local rw, rh = width * 0.125, height * 0.125
-
-  local hw, hh = width * 0.5, height * 0.5
-  local radius = math.min(hw, hh)
-
-  for _ = 1, 100 do
-    local x, y = random_point_in_circle(radius)
-    x = x + hw
-    y = y + hh
-    local w = math.rand() * rw + rw
-    local h = math.rand() * rh + rh
-  end
-end
-]]--
-
 function Main:__ctor()
-  Display.palette("gameboy")
+  Display.palette(Palette.new("gameboy"))
 
-  local canvas = Canvas.default()
-
-  self.font = Font.default(canvas, 3, 1)
-  self.map = Map.from_file(canvas, "assets/world.map")
+  self.font = Font.default(3, 1)
+  self.map = Map.from_file("assets/world.map")
 
   self.map:add_camera("left", 7, 5, 8, 0)
   self.map:add_camera("right", 7, 5, 248, 0, 0.5, 0.5, 0.25)
@@ -116,15 +51,15 @@ function Main:__ctor()
   self.map:camera_from_id("left"):move_to(200, 200)
   self.map:camera_from_id("right"):move_to(800, 200)
   for _, camera in pairs(self.map:get_cameras()) do
-    camera.post_draw = function(me)
+    camera.post_draw = function(me, canvas)
         local x, y = me:to_screen(me.x, me.y)
-        me.canvas:rectangle("fill", x - 2, y - 2, 4, 4, 2)
-        self.font:write(self.font:align(tostring(me), me.screen_x + me.screen_width, me.screen_y, "right"))
+        canvas:rectangle("fill", x - 2, y - 2, 4, 4, 2)
+        self.font:write(canvas, me.screen_x + me.screen_width, me.screen_y, tostring(me), "right")
       end
   end
 end
 
-function Main:input()
+function Main:process()
   self.dx = 0
   self.dy = 0
   if Input.is_down("left") then
@@ -170,13 +105,13 @@ end
 function Main:render(_)
   local canvas = Canvas.default()
   canvas:clear()
-  self.map:draw()
+  self.map:draw(canvas)
 
   local camera = self.map:camera_from_id("right")
   local x, y = camera:to_screen(self.player.x, self.player.y)
   canvas:rectangle("fill", x - 2, y - 2, 4, 4, 1)
 
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
+  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
 end
 
 return Main

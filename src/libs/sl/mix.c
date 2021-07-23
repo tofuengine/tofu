@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2020 Marco Lizza
+ * Copyright (c) 2019-2021 Marco Lizza
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,8 +29,11 @@
 #include <math.h>
 #include <stdint.h>
 
+#ifndef M_PI
+  #define M_PI      3.14159265358979323846264f
+#endif
 #ifndef M_PI_2
-  #define M_PI_2    1.57079632679489661923
+  #define M_PI_2    1.57079632679489661923132f
 #endif
 
 // Add to the `accumulator` the `sample` scaled by `gain`.

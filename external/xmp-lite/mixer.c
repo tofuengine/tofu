@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2018 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -19,12 +19,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wshadow"
-#pragma GCC diagnostic ignored "-Wsign-compare"
 
 #include <stdlib.h>
-#include <string.h>
 #include <math.h>
 #include "common.h"
 #include "virtual.h"
@@ -255,7 +251,7 @@ static void set_sample_end(struct context_data *ctx, int voc, int end)
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
 	struct channel_data *xc;
 
-	if ((uint32_t)voc >= p->virt.maxvoc)
+	if (voc >= p->virt.maxvoc)
 		return;
 
 	xc = &p->xc_data[vi->chn];
@@ -469,13 +465,13 @@ void libxmp_mixer_softmixer(struct context_data *ctx)
 				samples = 0;
 				usmp = 1;
 			} else {
-				int s = ceil(((double)vi->end - vi->pos) / step);
+				int c = ceil(((double)vi->end - vi->pos) / step);
 				/* ...inside the tick boundaries */
-				if (s > size) {
-					s = size;
+				if (c > size) {
+					c = size;
 				}
 
-				samples = s;
+				samples = c;
 				if (samples > 0) {
 					usmp = 0;
 				}
@@ -829,6 +825,7 @@ int libxmp_mixer_on(struct context_data *ctx, int rate, int format, int c4rate)
 
     err1:
 	free(s->buffer);
+	s->buffer = NULL;
     err:
 	return -1;
 }
@@ -842,5 +839,3 @@ void libxmp_mixer_off(struct context_data *ctx)
 	s->buf32 = NULL;
 	s->buffer = NULL;
 }
-
-#pragma GCC diagnostic pop

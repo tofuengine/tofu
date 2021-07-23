@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2020 Marco Lizza
+Copyright (c) 2019-2021 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -44,31 +44,28 @@ function Pool:clear()
 end
 
 function Pool:update(delta_time)
-  local zombies = {}
+  local timers = self.timers -- Use local for faster access.
 
-  for index, timer in ipairs(self.timers) do
+  for index = #timers, 1, -1 do -- Reverse iterate to remove timers when "dead".
+    local timer = timers[index]
     if timer.cancelled then
-      table.insert(zombies, index)
+      table.remove(timers, index)
     else
       timer.age = timer.age + timer.rate * delta_time
       while timer.age >= timer.period do
-        timer.callback()
+        timer.callback("looped")
 
         timer.age = timer.age - timer.period
 
         if timer.loops > 0 then
           timer.loops = timer.loops - 1;
           if timer.loops == 0 then
-              timer:cancel()
+              timer:cancel() -- Remove on the next iteration.
               break
           end
         end
       end
     end
-  end
-
-  for _, index in ipairs(zombies) do
-    table.remove(self.timers, index)
   end
 end
 
@@ -82,11 +79,12 @@ function Timer.new(period, repeats, callback, pool)
       repeats = repeats,
       callback = callback,
       rate = 1.0,
-      age = 0.0,
-      loops = repeats,
-      cancelled = false
+--      age = 0.0,
+--      loops = repeats,
+--      cancelled = false
     }, Timer)
   table.insert((pool or Pool.default()).timers, self) -- Access inner field to avoid exposing an API method.
+  self:reset()
   return self
 end
 
@@ -98,10 +96,12 @@ function Timer:reset()
   self.age = 0.0
   self.loops = self.repeats
   self.cancelled = false
+  self.callback("reset")
 end
 
 function Timer:cancel()
   self.cancelled = true
+  self.callback("cancelled")
 end
 
 return {

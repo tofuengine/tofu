@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2020 Marco Lizza
+ * Copyright (c) 2019-2021 Marco Lizza
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,14 +28,24 @@
 
 #include <stdint.h>
 
-static const uint8_t _iterators_lua[] = {
+#define SCRIPT_NAME "@iterators.lua"
+
+static const char _iterators_lua[] = {
 #include "iterators.inc"
 };
-
-static luaX_Script _iterators_script = { (const char *)_iterators_lua, sizeof(_iterators_lua), "@iterators.lua" }; // Trace as filename internally.
 
 int iterators_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, &_iterators_script, NULL, NULL, nup, NULL);
+    return luaX_newmodule(L, (luaX_Script){
+            .buffer = _iterators_lua,
+            .size = sizeof(_iterators_lua) / sizeof(char),
+            .name = SCRIPT_NAME
+        },
+        (const struct luaL_Reg[]){
+            { NULL, NULL }
+        },
+        (const luaX_Const[]){
+            { NULL, LUA_CT_NIL, { 0 } }
+        }, nup, NULL);
 }

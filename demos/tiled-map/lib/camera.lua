@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2020 Marco Lizza
+Copyright (c) 2019-2021 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,6 +23,7 @@ SOFTWARE.
 ]]--
 
 local Class = require("tofu.core").Class
+local Bank = require("tofu.graphics").Bank
 
 local function bound(x, y, aabb)
   return math.min(math.max(x, aabb.x0), aabb.x1), math.min(math.max(y, aabb.y0), aabb.y1)
@@ -31,13 +32,12 @@ end
 local Camera = Class.define()
 
 -- TODO: add camera scaling, useful to draw minimap.
-function Camera:__ctor(id, bank, grid, canvas, columns, rows, screen_x, screen_y, anchor_x, anchor_y, scale)
-  local cw, ch = bank:size(-1)
+function Camera:__ctor(id, bank, grid, columns, rows, screen_x, screen_y, anchor_x, anchor_y, scale)
+  local cw, ch = bank:size(Bank.NIL)
 
   self.id = id
   self.bank = bank
   self.grid = grid
-  self.canvas = canvas
   self.screen_x = screen_x or 0
   self.screen_y = screen_y or 0
   self.columns = columns
@@ -55,7 +55,7 @@ function Camera:scale_by(scale)
 end
 
 function Camera:center_at(anchor_x, anchor_y)
-  local cw, ch = self.bank:size(-1)
+  local cw, ch = self.bank:size(Bank.NIL)
   local gw, gh = self.grid:size()
 
   self.anchor_x = anchor_x
@@ -83,7 +83,7 @@ function Camera:move_to(x, y)
   self.map_x, self.map_y = map_x, map_y -- Track offsetted map position to track *real* changes.
 
   local scale = self.scale
-  local cw, ch = self.bank:size(-1)
+  local cw, ch = self.bank:size(Bank.NIL)
   local start_column = math.tointeger(map_x / cw)
   local start_row = math.tointeger(map_y / ch)
   local column_offset = -math.tointeger((map_x % cw) * scale) -- In screen coordinates.
@@ -92,7 +92,7 @@ function Camera:move_to(x, y)
   if self.start_column ~= start_column or self.start_row ~= start_row then
     self.start_column = start_column
     self.start_row = start_row
-    self:prepare_()
+    self:_prepare()
   end
   self.column_offset = column_offset
   self.row_offset = row_offset
@@ -112,29 +112,29 @@ function Camera:update(_)
   -- Override.
 end
 
-function Camera:pre_draw()
+function Camera:pre_draw(_)
   -- Override.
 end
 
-function Camera:draw()
+function Camera:draw(canvas)
   local scale = self.scale
 
-  self.canvas:clipping(self.screen_x, self.screen_y, self.screen_width, self.screen_height)
+  canvas:clipping(self.screen_x, self.screen_y, self.screen_width, self.screen_height)
 
   local ox, oy = self.screen_x + self.column_offset, self.screen_y + self.row_offset
   for _, v in ipairs(self.batch) do
     local cell_id, cell_x, cell_y = table.unpack(v)
-    self.bank:blit(cell_id, cell_x + ox, cell_y + oy, scale, scale)
+    self.bank:blit(canvas, cell_x + ox, cell_y + oy, cell_id, scale, scale)
   end
 end
 
-function Camera:post_draw()
+function Camera:post_draw(_)
   -- Override.
 end
 
-function Camera:prepare_()
+function Camera:_prepare()
   local gw, gh = self.grid:size()
-  local cw, ch = self.bank:size(-1, self.scale)
+  local cw, ch = self.bank:size(Bank.NIL, self.scale)
 
   local rows = math.min(gw - self.start_row, self.rows + 1) -- We handle an additional row/column
   local columns = math.min(gh - self.start_column, self.columns + 1) -- for sub-tile scrolling

@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2020 Marco Lizza
+ * Copyright (c) 2019-2021 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,18 +26,17 @@
 #define __GL_BATCH_H__
 
 #include "common.h"
-#include "context.h"
 #include "sheet.h"
-#include "xform.h"
+#include "surface.h"
 
 #include <stdbool.h>
 
 typedef struct _GL_Batch_Sprite_t {
-    int cell_id;
+    GL_Cell_t cell_id;
     GL_Point_t position;
-    float sx, sy;
+    float scale_x, scale_y;
     int rotation;
-    float ax, ay;
+    float anchor_x, anchor_y;
 } GL_Batch_Sprite_t;
 
 typedef struct _GL_Batch_t {
@@ -45,17 +44,18 @@ typedef struct _GL_Batch_t {
     GL_Batch_Sprite_t *sprites;
 } GL_Batch_t;
 
-extern GL_Batch_t *GL_batch_create(const GL_Sheet_t *sheet, size_t slots);
+extern GL_Batch_t *GL_batch_create(const GL_Sheet_t *sheet, size_t capacity);
 extern void GL_batch_destroy(GL_Batch_t *batch);
 
+extern bool GL_batch_resize(GL_Batch_t *batch, size_t capacity);
 extern bool GL_batch_grow(GL_Batch_t *batch, size_t amount); // Can't shrink or references would be lost.
 extern void GL_batch_clear(GL_Batch_t *batch);
 extern void GL_batch_add(GL_Batch_t *batch, GL_Batch_Sprite_t sprite);
 
 //extern GL_Batch_Sprite_t *GL_batch_get_sprite(const GL_Batch_t *batch, size_t index);
 
-void GL_batch_blit(const GL_Batch_t *batch, const GL_Context_t *context); // FIXME: rename to `flush()`
-void GL_batch_blit_s(const GL_Batch_t *batch, const GL_Context_t *context);
-void GL_batch_blit_sr(const GL_Batch_t *batch, const GL_Context_t *context);
+void GL_batch_blit(const GL_Batch_t *batch, const GL_Surface_t *surface); // FIXME: rename to `flush()`
+void GL_batch_blit_s(const GL_Batch_t *batch, const GL_Surface_t *surface);
+void GL_batch_blit_sr(const GL_Batch_t *batch, const GL_Surface_t *surface);
 
 #endif  /* __GL_BATCH_H__ */

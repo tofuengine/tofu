@@ -1,7 +1,9 @@
+#!/usr/bin/lua5.3
+
 --[[
 MIT License
 
-Copyright (c) 2019-2020 Marco Lizza
+Copyright (c) 2019-2021 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,11 +23,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
-
--- Depends upon
---  - struct
-
-local struct = require("struct")
 
 function string:at(index)
   return self:sub(index, index)
@@ -70,10 +67,10 @@ local function convert(output, input)
   local out = io.open(output, "wb")
   for index, entry in ipairs(sheet) do
     print(string.format("  entry #%d `%s` at <%d, %d> w/ size %dx%d", index, entry.id, entry.x, entry.y, entry.width, entry.height))
-    out:write(struct.pack("I", entry.x))
-    out:write(struct.pack("I", entry.y))
-    out:write(struct.pack("I", entry.width))
-    out:write(struct.pack("I", entry.height))
+    out:write(string.pack("I4", entry.x))
+    out:write(string.pack("I4", entry.y))
+    out:write(string.pack("I4", entry.width))
+    out:write(string.pack("I4", entry.height))
   end
   out:close()
 end
@@ -99,13 +96,20 @@ local function parse_arguments(args)
   return (config.input and config.output) and config or nil
 end
 
-local config = parse_arguments(arg)
-if not config then
-  print("Usage: sheetgen --input=<input file> --output=<output file>")
-  return
+local function main(arg)
+  local config = parse_arguments(arg)
+  if not config then
+    print("Usage: sheetgen --input=<input file> --output=<output file>")
+    return
+  end
+
+  print("SheetGen v0.1.0")
+  print("===============")
+
+  print(string.format("Converting file `%s` to `%s`", config.input, config.output))
+  convert(config.output, config.input)
+
+  print("Done!")
 end
 
-print(string.format("Converting file `%s` to `%s`", config.input, config.output))
-convert(config.output, config.input)
-
-print("Done!")
+main(arg)

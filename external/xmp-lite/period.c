@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2018 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -135,14 +135,11 @@ static uint16_t pt_period_table[16][36] = {
 #ifndef M_LN2
 #define M_LN2	0.69314718055994530942
 #endif
-#if !defined(HAVE_ROUND) || defined(_MSC_VER) || defined(__WATCOMC__)
+
 static inline double libxmp_round(double val)
 {
 	return (val >= 0.0)? floor(val + 0.5) : ceil(val - 0.5);
 }
-#else
-#define libxmp_round round
-#endif
 
 #ifdef LIBXMP_PAULA_SIMULATOR
 /* Get period from note using Protracker tuning */
@@ -249,7 +246,7 @@ void libxmp_c2spd_to_note(int c2spd, int *n, int *f)
 {
 	int c;
 
-	if (c2spd == 0) {
+	if (c2spd <= 0) {
 		*n = *f = 0;
 		return;
 	}

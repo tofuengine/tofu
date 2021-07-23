@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2020 Marco Lizza
+ * Copyright (c) 2019-2021 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,8 @@
 #ifndef __CONFIGURATION_H__
 #define __CONFIGURATION_H__
 
+#include <platform.h>
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -39,14 +41,18 @@ typedef struct _Configuration {
             int major, minor, revision;
         } version;
         bool debug;
+        char icon[PLATFORM_PATH_MAX];
+        char mappings[PLATFORM_PATH_MAX];
     } system;
     struct {
         char title[MAX_CONFIGURATION_TITLE_LENGTH];
         size_t width, height, scale;
         bool fullscreen;
         bool vertical_sync;
+        char effect[PLATFORM_PATH_MAX];
     } display;
     struct {
+        int device_index;
         float master_volume;
     } audio;
     struct {
@@ -74,5 +80,6 @@ typedef struct _Configuration {
 } Configuration_t;
 
 extern void Configuration_parse(Configuration_t *configuration, const char *data); // TODO: allocate this, too?
+extern void Configuration_override(Configuration_t *configuration, int argc, const char *argv[]);
 
 #endif  /* __CONFIGURATION_H__ */

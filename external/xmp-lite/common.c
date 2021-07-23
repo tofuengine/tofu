@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2018 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -21,15 +21,9 @@
  */
 
 #include <ctype.h>
-#include <stdarg.h>
-#ifdef __WATCOMC__
-#include <direct.h>
-#elif !defined(_WIN32)
-#include <dirent.h>
-#endif
 
-#include "xmp.h"
 #include "common.h"
+#include "xmp.h"
 #include "period.h"
 #include "loader.h"
 
@@ -38,18 +32,24 @@ int libxmp_init_instrument(struct module_data *m)
 	struct xmp_module *mod = &m->mod;
 
 	if (mod->ins > 0) {
-		mod->xxi = calloc(sizeof (struct xmp_instrument), mod->ins);
+		mod->xxi = (struct xmp_instrument *)calloc(mod->ins, sizeof(struct xmp_instrument));
 		if (mod->xxi == NULL)
 			return -1;
 	}
 
 	if (mod->smp > 0) {
 		int i;
+		/* Sanity check */
+		if (mod->smp > MAX_SAMPLES) {
+			D_(D_CRIT "sample count %d exceeds maximum (%d)",
+			   mod->smp, MAX_SAMPLES);
+			return -1;
+		}
 
-		mod->xxs = calloc(sizeof (struct xmp_sample), mod->smp);
+		mod->xxs = (struct xmp_sample *)calloc(mod->smp, sizeof(struct xmp_sample));
 		if (mod->xxs == NULL)
 			return -1;
-		m->xtra = calloc(sizeof (struct extra_sample_data), mod->smp);
+		m->xtra = (struct extra_sample_data *)calloc(mod->smp, sizeof(struct extra_sample_data));
 		if (m->xtra == NULL)
 			return -1;
 
@@ -61,12 +61,60 @@ int libxmp_init_instrument(struct module_data *m)
 	return 0;
 }
 
+/* Sample number adjustment (originally by Vitamin/CAIG).
+ * Only use this AFTER a previous usage of libxmp_init_instrument,
+ * and don't use this to free samples that have already been loaded. */
+int libxmp_realloc_samples(struct module_data *m, int new_size)
+{
+	struct xmp_module *mod = &m->mod;
+	struct xmp_sample *xxs;
+	struct extra_sample_data *xtra;
+
+	/* Sanity check */
+	if (new_size < 0)
+		return -1;
+
+	if (new_size == 0) {
+		/* Don't rely on implementation-defined realloc(x,0) behavior. */
+		mod->smp = 0;
+		free(mod->xxs);
+		mod->xxs = NULL;
+		free(m->xtra);
+		m->xtra = NULL;
+		return 0;
+	}
+
+	xxs = (struct xmp_sample *)realloc(mod->xxs, sizeof(struct xmp_sample) * new_size);
+	if (xxs == NULL)
+		return -1;
+	mod->xxs = xxs;
+
+	xtra = (struct extra_sample_data *)realloc(m->xtra, sizeof(struct extra_sample_data) * new_size);
+	if (xtra == NULL)
+		return -1;
+	m->xtra = xtra;
+
+	if (new_size > mod->smp) {
+		int clear_size = new_size - mod->smp;
+		int i;
+
+		memset(xxs + mod->smp, 0, sizeof(struct xmp_sample) * clear_size);
+		memset(xtra + mod->smp, 0, sizeof(struct extra_sample_data) * clear_size);
+
+		for (i = mod->smp; i < new_size; i++) {
+			m->xtra[i].c5spd = m->c4rate;
+		}
+	}
+	mod->smp = new_size;
+	return 0;
+}
+
 int libxmp_alloc_subinstrument(struct xmp_module *mod, int i, int num)
 {
 	if (num == 0)
 		return 0;
 
-	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), num);
+	mod->xxi[i].sub = (struct xmp_subinstrument *)calloc(num, sizeof(struct xmp_subinstrument));
 	if (mod->xxi[i].sub == NULL)
 		return -1;
 
@@ -75,11 +123,11 @@ int libxmp_alloc_subinstrument(struct xmp_module *mod, int i, int num)
 
 int libxmp_init_pattern(struct xmp_module *mod)
 {
-	mod->xxt = calloc(sizeof (struct xmp_track *), mod->trk);
+	mod->xxt = (struct xmp_track **)calloc(mod->trk, sizeof(struct xmp_track *));
 	if (mod->xxt == NULL)
 		return -1;
 
-	mod->xxp = calloc(sizeof (struct xmp_pattern *), mod->pat);
+	mod->xxp = (struct xmp_pattern **)calloc(mod->pat, sizeof(struct xmp_pattern *));
 	if (mod->xxp == NULL)
 		return -1;
 
@@ -92,8 +140,8 @@ int libxmp_alloc_pattern(struct xmp_module *mod, int num)
 	if (num < 0 || num >= mod->pat || mod->xxp[num] != NULL)
 		return -1;
 
-	mod->xxp[num] = calloc(1, sizeof (struct xmp_pattern) +
-        				sizeof (int) * (mod->chn - 1));
+	mod->xxp[num] = (struct xmp_pattern *)calloc(1, sizeof(struct xmp_pattern) +
+        				sizeof(int) * (mod->chn - 1));
 	if (mod->xxp[num] == NULL)
 		return -1;
 
@@ -106,8 +154,8 @@ int libxmp_alloc_track(struct xmp_module *mod, int num, int rows)
 	if (num < 0 || num >= mod->trk || mod->xxt[num] != NULL || rows <= 0)
 		return -1;
 
-	mod->xxt[num] = calloc(sizeof (struct xmp_track) +
-			       sizeof (struct xmp_event) * (rows - 1), 1);
+	mod->xxt[num] = (struct xmp_track *)calloc(1, sizeof(struct xmp_track) +
+			       sizeof(struct xmp_event) * (rows - 1));
 	if (mod->xxt[num] == NULL)
 		return -1;
 
@@ -151,19 +199,6 @@ int libxmp_alloc_pattern_tracks(struct xmp_module *mod, int num, int rows)
 	return 0;
 }
 
-/* Sample number adjustment by Vitamin/CAIG */
-struct xmp_sample *libxmp_realloc_samples(struct xmp_sample *buf, int *size, int new_size)
-{
-	buf = realloc(buf, sizeof (struct xmp_sample) * new_size);
-	if (buf == NULL)
-		return NULL;
-	if (new_size > *size)
-		memset(buf + *size, 0, sizeof (struct xmp_sample) * (new_size - *size));
-	*size = new_size;
-
-	return buf;
-}
-
 char *libxmp_instrument_name(struct xmp_module *mod, int i, uint8_t *r, int n)
 {
 	CLAMP(n, 0, 31);
@@ -179,7 +214,7 @@ char *libxmp_copy_adjust(char *s, uint8_t *r, int n)
 	strncpy(s, (char *)r, n);
 
 	for (i = 0; s[i] && i < n; i++) {
-		if (!isprint((int)s[i]) || ((uint8_t)s[i] > 127))
+		if (!isprint((unsigned char)s[i]) || ((uint8)s[i] > 127))
 			s[i] = '.';
 	}
 
@@ -193,7 +228,7 @@ void libxmp_read_title(HIO_HANDLE *f, char *t, int s)
 {
 	uint8_t buf[XMP_NAME_SIZE];
 
-	if (t == NULL)
+	if (t == NULL || s < 0)
 		return;
 
 	if (s >= XMP_NAME_SIZE)
@@ -201,7 +236,7 @@ void libxmp_read_title(HIO_HANDLE *f, char *t, int s)
 
 	memset(t, 0, s + 1);
 
-	hio_read(buf, 1, s, f);		/* coverity[check_return] */
+	s = hio_read(buf, 1, s, f);
 	buf[s] = 0;
 	libxmp_copy_adjust(t, buf, s);
 }
@@ -217,7 +252,6 @@ int libxmp_copy_name_for_fopen(char *dest, const char *name, int n)
 	if (!strcmp(name, ".") || strstr(name, "..") ||
 	    name[0] == '\\' || name[0] == '/' || name[0] == ':')
 		return -1;
-
 
 	for (i = 0; i < n - 1; i++) {
 		uint8_t t = name[i];

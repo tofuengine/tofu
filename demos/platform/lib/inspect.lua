@@ -150,7 +150,7 @@ local copySequence = function(s)
 end
 
 local function makePath(path, ...)
-  local keys = {...}
+  local keys = { ... }
   local newPath, len = copySequence(path)
   for i=1, #keys do
     newPath[len + i] = keys[i]
@@ -191,7 +191,7 @@ local Inspector = {}
 local Inspector_mt = {__index = Inspector}
 
 function Inspector:puts(...)
-  local args   = {...}
+  local args   = { ... }
   local buffer = self.buffer
   local len    = #buffer
   for i=1, #args do
@@ -238,7 +238,7 @@ function Inspector:putTable(t)
   elseif self:alreadyVisited(t) then
     self:puts('<table ', self:getId(t), '>')
   elseif self.level >= self.depth then
-    self:puts('{...}')
+    self:puts('{ ... }')
   else
     if self.tableAppearances[t] > 1 then self:puts('<', self:getId(t), '>') end
 

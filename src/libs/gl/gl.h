@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2020 Marco Lizza
+ * Copyright (c) 2019-2021 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,10 +28,12 @@
 #include "batch.h"
 #include "blit.h"
 #include "common.h"
-#include "context.h"
+#include "copperlist.h"
 #include "palette.h"
 #include "primitive.h"
 #include "sheet.h"
 #include "surface.h"
+#include "tile.h"
+#include "xform.h"
 
 #endif  /* __GL_H__ */

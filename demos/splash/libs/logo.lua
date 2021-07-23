@@ -1,0 +1,55 @@
+--[[
+MIT License
+
+Copyright (c) 2019-2021 Marco Lizza
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+]]--
+
+local Class = require("tofu.core").Class
+local System = require("tofu.core").System
+local Canvas = require("tofu.graphics").Canvas
+
+local Logo = Class.define()
+
+function Logo:__ctor(canvas, transparent, _)
+  self.images = {
+      Canvas.new("assets/images/tofu.png", transparent),
+      Canvas.new("assets/images/engine.png", transparent)
+    }
+  self.outline = Canvas.new("assets/images/outline.png", transparent)
+
+  local cw, ch = canvas:size()
+  local w, h = self.outline:size()
+  self.x = (cw - w) * 0.5
+  self.y = (ch - h) * 0.5
+end
+
+function Logo:update(_)
+end
+
+function Logo:render(canvas)
+  -- TODO: generate the outline w/ 4 offsetted blits.
+  local t = System.time()
+
+  canvas:blit(self.x, self.y, self.outline)
+  canvas:blit(self.x, self.y, self.images[(math.tointeger(t * 1.0) % 2) + 1])
+end
+
+return Logo

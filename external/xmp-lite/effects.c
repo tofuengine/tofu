@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2018 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -19,8 +19,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wsign-compare"
 
 #include "common.h"
 #include "player.h"
@@ -29,6 +27,7 @@
 #include "virtual.h"
 #include "smix.h"
 
+#define NOT_IMPLEMENTED
 #define HAS_QUIRK(x) (m->quirk & (x))
 
 #define SET_LFO_NOTZERO(lfo, depth, rate) do { \
@@ -79,7 +78,7 @@ static void do_toneporta(struct context_data *ctx,
 
 	sub = &instrument->sub[mapped];
 
-	if (note >= 1 && note <= 0x80 && (uint32_t)xc->ins < m->mod.ins) {
+	if (note >= 1 && note <= 0x80 && xc->ins < m->mod.ins) {
 		note--;
 		xc->porta.target = libxmp_note_to_period(ctx, note + sub->xpo +
 			instrument->map[xc->key_porta].xpo, xc->finetune,
@@ -523,7 +522,7 @@ void libxmp_process_fx(struct context_data *ctx, struct channel_data *xc, int ch
 	case FX_IT_ROWDELAY:
 		if (!f->rowdelay_set) {
 			f->rowdelay = fxp;
-			f->rowdelay_set = 3;
+			f->rowdelay_set = ROWDELAY_ON | ROWDELAY_FIRST_FRAME;
 		}
 		break;
 
@@ -808,5 +807,3 @@ void libxmp_process_fx(struct context_data *ctx, struct channel_data *xc, int ch
 		break;
 	}
 }
-
-#pragma GCC diagnostic pop

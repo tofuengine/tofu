@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2020 Marco Lizza
+Copyright (c) 2019-2021 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -28,18 +28,19 @@ local Input = require("tofu.events").Input
 local Bank = require("tofu.graphics").Bank
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
+local Palette = require("tofu.graphics").Palette
 local Font = require("tofu.graphics").Font
 
 local Main = Class.define()
 
-local IDS = {
+local IDS <const> = {
     "a", "b", "x", "y",
     "lb", "rb",
     "up", "down", "left", "right",
     "select", "start"
   }
 
-local INDICES = {
+local INDICES <const> = {
     0, 1, 2, 3,
     4, 5,
     12, 13, 14, 15,
@@ -47,12 +48,12 @@ local INDICES = {
   }
 
 function Main:__ctor()
-  Display.palette("pico-8")
+  Display.palette(Palette.new("pico-8"))
 
   local canvas = Canvas.default()
 
-  self.bank = Bank.new(canvas, Canvas.new("assets/sheet.png"), 12, 12)
-  self.font = Font.default(canvas, 0, 15)
+  self.bank = Bank.new(Canvas.new("assets/sheet.png", 0), 12, 12)
+  self.font = Font.default(0, 15)
   self.down = {}
   self.scale = {}
 
@@ -61,7 +62,7 @@ function Main:__ctor()
   Input.cursor_area(0, 0, canvas:size()) -- FIXME: painful!
 end
 
-function Main:input()
+function Main:process()
   for _, id in ipairs(IDS) do
     self.down[id] = Input.is_down(id)
     if Input.is_pressed(id) then
@@ -102,7 +103,7 @@ function Main:render(_)
   local canvas = Canvas.default()
   canvas:clear()
 
-  local cw, ch = self.bank:size(-1)
+  local cw, ch = self.bank:size(Bank.NIL)
   local width, height = canvas:size()
 
   local x, y = (width - #IDS * cw) * 0.5, (height - ch) * 0.5
@@ -118,7 +119,7 @@ function Main:render(_)
       ox = (cw * s - cw) * 0.5
       oy = (ch * s - ch) * 0.5
     end
-    self.bank:blit(INDICES[index], x - ox, y - oy + dy, s, s)
+    self.bank:blit(canvas, x - ox, y - oy + dy, INDICES[index], s, s)
     x = x + cw
   end
 
@@ -137,9 +138,9 @@ function Main:render(_)
   canvas:line(mx, my - 3, mx, my - 1, 2)
   canvas:line(mx, my + 1, mx, my + 3, 2)
 
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
-  self.font:write(self.font:align(string.format("X:%.2f Y:%.2f A:%.2f M:%.2f", lx, ly, la, lm),
-    width, height, "right", "bottom"))
+  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
+  self.font:write(canvas, width, height, string.format("X:%.2f Y:%.2f A:%.2f M:%.2f", lx, ly, la, lm),
+    "right", "bottom")
 end
 
 return Main

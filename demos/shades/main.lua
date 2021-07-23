@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2020 Marco Lizza
+Copyright (c) 2019-2021 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,51 +25,26 @@ SOFTWARE.
 local Class = require("tofu.core").Class
 local System = require("tofu.core").System
 local Input = require("tofu.events").Input
-local Bank = require("tofu.graphics").Bank
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
+local Palette = require("tofu.graphics").Palette
 
 local PALETTE
 local STEPS
 local LEVELS
-local TARGET = 0x00000000
-
-local function get_r(c)
-  return (c >> 16) & 0xff
-end
-local function get_g(c)
-  return (c >> 8) & 0xff
-end
-local function get_b(c)
-  return c & 0xff
-end
-
-local function find_best_match(palette, match)
-  local index
-  local min = math.huge
-  for i, color in ipairs(palette) do
-    local dr, dg, db = (get_r(match) - get_r(color)), (get_g(match) - get_g(color)), (get_b(match) - get_b(color))
-    local d = dr * dr * 2.0 + dg * dg * 4.0 + db * db * 3.0
-    if min > d then
-      min = d
-      index = i
-    end
-  end
-  return index
-end
+local TARGET = { 0, 0, 0 }
 
 local function build_table(palette, levels, target)
+  local tr, tg, tb = table.unpack(target)
   local lut = {}
   for i = 0, levels - 1 do
     local shifting = {}
-    local ratio = 1 / (levels - 1) * i
-    for j, color in ipairs(palette) do
-      local r = math.tointeger((get_r(color) - get_r(target)) * ratio + get_r(target))
-      local g = math.tointeger((get_g(color) - get_g(target)) * ratio + get_g(target))
-      local b = math.tointeger((get_b(color) - get_b(target)) * ratio + get_b(target))
-      local k = find_best_match(palette, r * 65536 + g * 256 + b) -- TODO: use internal function?
-      shifting[j - 1] = k - 1
+    local ratio = i / (levels - 1)
+    for j, color in ipairs(palette:colors()) do
+      local ar, ag, ab = table.unpack(color)
+      local r, g, b = Palette.mix(ar, ag, ab, tr, tg, tb, 1 - ratio)
+      shifting[j - 1] = palette:match(r, g, b)
     end
     lut[i] = shifting
   end
@@ -79,24 +54,29 @@ end
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette("pico-8")
+  local a = Palette.new("gameboy")
+  local b = Palette.new("pico-8-ext")
+  local c = Palette.new("pico-8-ext")
+  a:merge(b)
+  b:merge(c)
 
-  PALETTE = Display.palette()
-  STEPS = #PALETTE
+  PALETTE = Palette.new(3, 3, 2) --"famicube")
+  STEPS = PALETTE:size()
   LEVELS = STEPS
+
+  Display.palette(PALETTE)
 
   local canvas = Canvas.default()
   local width, height = canvas:size()
-  self.lut = build_table(PALETTE, LEVELS, TARGET)
 
-  self.bank = Bank.new(canvas, Canvas.new("assets/sheet.png"), 8, 8)
-  self.font = Font.default(canvas, 0, 15)
+  self.lut = build_table(PALETTE, LEVELS, TARGET)
+  self.font = Font.default(0, PALETTE:match(0, 255, 0))
   self.width = width / STEPS
   self.height = height / STEPS
   self.mode = 0
 end
 
-function Main:input()
+function Main:process()
   if Input.is_pressed("y") then
     self.mode = (self.mode + 1) % 10
   end
@@ -124,23 +104,23 @@ function Main:render(_)
     for i = 0, STEPS - 1 do
       local y = self.height * i
       canvas:shift(self.lut[i])
-      canvas:copy(0, y, 0, y, width, self.height)
+      canvas:blit(0, y, canvas, 0, y, width, self.height)
     end
   elseif self.mode == 1 then
     for i = 0, STEPS - 1 do
       canvas:shift(self.lut[i])
-      canvas:copy(i, 0, i, 0, 1, height)
-      canvas:copy(width - 1 - i, 0, width - 1 - i, 0, 1, height)
+      canvas:blit(i, 0, canvas, i, 0, 1, height)
+      canvas:blit(width - 1 - i, 0, canvas, width - 1 - i, 0, 1, height)
     end
   else
     local t = System.time()
     local index = math.tointeger((math.sin(t * 2.5) + 1) * 0.5 * (STEPS - 1))
     canvas:shift(self.lut[index])
-    canvas:copy(0, 0, 0, 0, width, height / 2)
+    canvas:blit(0, 0, canvas, 0, 0, width, height / 2)
   end
   canvas:pop()
 
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
+  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
 end
 
 return Main

@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2020 Marco Lizza
+ * Copyright (c) 2019-2021 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,12 +25,13 @@
 #ifndef __MODULES_UDT_H__
 #define __MODULES_UDT_H__
 
+#include <core/io/display.h>
 #include <libs/luax.h>
 #include <libs/fs/fs.h>
 #include <libs/gl/gl.h>
 #include <libs/sl/sl.h>
 
-typedef enum _UserData_t { // TODO: move to a suitable space.
+typedef enum _UserData_t { // TODO: move to a separate file.
     USERDATA_STORAGE = 1,
     USERDATA_DISPLAY,
     USERDATA_INPUT,
@@ -40,33 +41,27 @@ typedef enum _UserData_t { // TODO: move to a suitable space.
     UserData_t_CountOf
 } UserData_t;
 
-#if 0
-// TODO: add type as first field of a `Object_t` type to track proper type and avoid errors.
 typedef enum _Object_Types_t {
-    OBJECT_TYPE_CANVAS,
     OBJECT_TYPE_BANK,
-    OBJECT_TYPE_FONT,
     OBJECT_TYPE_BATCH,
-    OBJECT_TYPE_XFORM,
+    OBJECT_TYPE_CANVAS,
+    OBJECT_TYPE_FONT,
     OBJECT_TYPE_GRID,
-    OBJECT_TYPE_SOURCE
+    OBJECT_TYPE_PALETTE,
+    OBJECT_TYPE_PROGRAM,
+    OBJECT_TYPE_SOURCE,
+    OBJECT_TYPE_XFORM
 } Object_Types_t;
 
-typedef struct _Object_t {
-    Object_Types_t type;
-} Object_t;
-#endif
-
 typedef struct _Canvas_Object_t {
-    GL_Context_t *context;
+    GL_Surface_t *surface;
     bool allocated;
+    struct {
+        GL_Pixel_t background, foreground;
+    } color;
 } Canvas_Object_t;
 
 typedef struct _Bank_Object_t {
-    struct {
-        const Canvas_Object_t *instance;
-        luaX_Reference reference;
-    } canvas;
     struct {
         const Canvas_Object_t *instance;
         luaX_Reference reference;
@@ -78,12 +73,9 @@ typedef struct _Font_Object_t {
     struct {
         const Canvas_Object_t *instance;
         luaX_Reference reference;
-    } canvas;
-    struct {
-        const Canvas_Object_t *instance;
-        luaX_Reference reference;
     } atlas;
     GL_Sheet_t *sheet;
+    GL_Cell_t glyphs[256];
 } Font_Object_t;
 
 typedef struct _Batch_Object_t {
@@ -95,16 +87,16 @@ typedef struct _Batch_Object_t {
 } Batch_Object_t;
 
 typedef struct _XForm_Object_t {
-    struct {
-        const Canvas_Object_t *instance;
-        luaX_Reference reference;
-    } canvas;
-    struct {
-        const Canvas_Object_t *instance;
-        luaX_Reference reference;
-    } source;
-    GL_XForm_t xform;
+    GL_XForm_t *xform;
 } XForm_Object_t;
+
+typedef struct _Palette_Object_t {
+    GL_Palette_t *palette;
+} Palette_Object_t;
+
+typedef struct _Program_Object_t {
+    GL_Program_t *program;
+} Program_Object_t;
 
 #ifdef __GRID_INTEGER_CELL__
 typedef int Cell_t;

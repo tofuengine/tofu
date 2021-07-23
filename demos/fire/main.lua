@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2020 Marco Lizza
+Copyright (c) 2019-2021 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -28,40 +28,45 @@ local Input = require("tofu.events").Input
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
+local Palette = require("tofu.graphics").Palette
 local Grid = require("tofu.util").Grid
 
 local STEPS = 64
 local PALETTE = {
-    0xFF000000, 0xFF240000, 0xFF480000, 0xFF6D0000,
-    0xFF910000, 0xFFB60000, 0xFFDA0000, 0xFFFF0000,
-    0xFFFF3F00, 0xFFFF7F00, 0xFFFFBF00, 0xFFFFFF00,
-    0xFFFFFF3F, 0xFFFFFF7F, 0xFFFFFFBF, 0xFFFFFFFF
+    { 0x00, 0x00, 0x00 }, { 0x24, 0x00, 0x00 }, { 0x48, 0x00, 0x00 }, { 0x6D, 0x00, 0x00 },
+    { 0x91, 0x00, 0x00 }, { 0xB6, 0x00, 0x00 }, { 0xDA, 0x00, 0x00 }, { 0xFF, 0x00, 0x00 },
+    { 0xFF, 0x3F, 0x00 }, { 0xFF, 0x7F, 0x00 }, { 0xFF, 0xBF, 0x00 }, { 0xFF, 0xFF, 0x00 },
+    { 0xFF, 0xFF, 0x3F }, { 0xFF, 0xFF, 0x7F }, { 0xFF, 0xFF, 0xBF }, { 0xFF, 0xFF, 0xFF }
   }
 
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette(PALETTE)
+  Display.palette(Palette.new(PALETTE))
 
   local canvas = Canvas.default()
   local width, height = canvas:size()
 
-  self.font = Font.default(canvas, 0, 15)
+  self.font = Font.default(0, 15)
   self.x_size = width / STEPS
   self.y_size = height / STEPS
   self.windy = false
   self.damping = 1.0
-  self.grid = Grid.new(STEPS, STEPS, 0)
+  self.grid = Grid.new(STEPS, STEPS, { 0 })
 
   self:reset()
 end
 
 function Main:reset()
-  self.grid:fill(0)
-  self.grid:stride(0, STEPS - 1, #PALETTE - 1, STEPS)
+  self.grid:process(function(column, row, _)
+    if row == STEPS - 1 then
+      return column, row, #PALETTE - 1
+    end
+    return column, row, 0
+  end)
 end
 
-function Main:input()
+function Main:process()
   if Input.is_pressed("select") then
     self.windy = not self.windy
   elseif Input.is_pressed("left") then
@@ -116,8 +121,8 @@ function Main:render(_)
       end
     end)
 
-    self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
-    self.font:write(self.font:align(string.format("D: %.2f", self.damping), width, 0, "right"))
+    self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
+    self.font:write(canvas, width, 0, string.format("D: %.2f", self.damping), "right")
 end
 
 return Main

@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2020 Marco Lizza
+ * Copyright (c) 2019-2021 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,11 +28,17 @@
 #include <libs/log.h>
 #include <libs/stb.h>
 
+#include <malloc.h>
+#if PLATFORM_ID == PLATFORM_WINDOWS
+    #include "windows.h"
+    #include "psapi.h"
+#endif
+
 #define LOG_CONTEXT "environment"
 
 // TODO: http://www.ilikebigbits.com/2017_06_01_float_or_double.html
 
-Environment_t *Environment_create(void)
+Environment_t *Environment_create(int argc, const char *argv[], const Display_t *display)
 {
     Environment_t *environment = malloc(sizeof(Environment_t));
     if (!environment) {
@@ -41,10 +47,17 @@ Environment_t *Environment_create(void)
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "environment allocated");
 
+    const char **args = NULL;
+    for (int i = 1; i < argc; ++i) { // Skip executable name, i.e. argument #0.
+        arrpush(args, argv[i]);
+    }
+
     *environment = (Environment_t){
+        .args = args,
+        .display = display,
         .quit = false,
-        .fps = 0.0f,
-        .time = 0.0
+        .time = 0.0,
+        .stats = { 0 }
     };
 
     return environment;
@@ -52,6 +65,9 @@ Environment_t *Environment_create(void)
 
 void Environment_destroy(Environment_t *environment)
 {
+    arrfree(environment->args);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "arguments freed");
+
     free(environment);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "environment freed");
 }
@@ -63,7 +79,7 @@ void Environment_quit(Environment_t *environment)
 
 bool Environment_should_quit(const Environment_t *environment)
 {
-    return environment->quit;
+    return environment->quit || Display_should_close(environment->display);
 }
 
 double Environment_get_time(const Environment_t *environment)
@@ -71,12 +87,19 @@ double Environment_get_time(const Environment_t *environment)
     return environment->time;
 }
 
-float Environment_get_fps(const Environment_t *environment)
+const Environment_Stats_t *Environment_get_stats(const Environment_t *environment)
 {
-    return environment->fps;
+    return &environment->stats;
 }
 
-static inline float _calculate_fps(float frame_time)
+#ifdef __DISPLAY_FOCUS_SUPPORT__
+bool Environment_is_active(const Environment_t *environment)
+{
+    return environment->is_active;
+}
+#endif  /* __DISPLAY_FOCUS_SUPPORT__ */
+
+static inline size_t _calculate_fps(float frame_time) // FIXME: rework this as a reusable function for moving average.
 {
     static float samples[FPS_AVERAGE_SAMPLES] = { 0 };
     static size_t index = 0;
@@ -87,19 +110,68 @@ static inline float _calculate_fps(float frame_time)
     sum += frame_time;
     index = (index + 1) % FPS_AVERAGE_SAMPLES;
 
-    return (float)FPS_AVERAGE_SAMPLES / sum;
+    return (size_t)((float)FPS_AVERAGE_SAMPLES / sum + 0.5f); // Fast rounding and truncation to integer.
 }
 
-void Environment_add_frame(Environment_t *environment, float frame_time)
+#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+static inline void _calculate_times(float times[4], const float deltas[4])
 {
-    environment->fps = _calculate_fps(frame_time);
-#ifdef __DEBUG_ENGINE_FPS__
-    static size_t count = 0;
-    if (++count == 250) {
-        Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "currently running at %.0f FPS", environment->fps);
-        count = 0;
+    static float samples[4][FPS_AVERAGE_SAMPLES] = { 0 };
+    static size_t index = 0;
+    static float sums[4] = { 0 };
+
+    for (size_t i = 0; i < 4; ++i) {
+        const float t = deltas[i] * 1000.0f;
+        sums[i] -= samples[i][index];
+        samples[i][index] = t;
+        sums[i] += t;
+        times[i] = sums[i] / (float)FPS_AVERAGE_SAMPLES;
     }
+    index = (index + 1) % FPS_AVERAGE_SAMPLES;
+}
+#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
+
+#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+void Environment_process(Environment_t *environment, float frame_time, const float deltas[4])
+#else
+void Environment_process(Environment_t *environment, float frame_time)
+#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
+{
+    environment->stats.fps = _calculate_fps(frame_time); // FIXME: ditch this! It's implicit in the frame time!
+
+#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+    _calculate_times(environment->stats.times, deltas);
+#ifdef __DEBUG_ENGINE_PERFORMANCES__
+    static float stats_time = __ENGINE_PERFORMANCES_PERIOD__;
+    stats_time += frame_time;
+    while (stats_time > __ENGINE_PERFORMANCES_PERIOD__) {
+        stats_time -= __ENGINE_PERFORMANCES_PERIOD__;
+        Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "currently running at %d FPS (P=%.3fms, U=%.3fms, R=%.3fms, F=%.3fms)",
+            environment->stats.fps, environment->stats.times[0], environment->stats.times[1], environment->stats.times[2], environment->stats.times[3]);
+    }
+#endif  /* __DEBUG_ENGINE_PERFORMANCES__ */
+#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
+
+#ifdef __DISPLAY_FOCUS_SUPPORT__
+    environment->is_active = glfwGetWindowAttrib(environment->display->window, GLFW_FOCUSED) == GLFW_TRUE;
 #endif
+
+#ifdef __SYSTEM_HEAP_STATISTICS__
+    static float heap_time = __SYSTEM_HEAP_PERIOD__;
+    heap_time += frame_time;
+    while (heap_time > __SYSTEM_HEAP_PERIOD__) {
+        heap_time -= __SYSTEM_HEAP_PERIOD__;
+
+#if PLATFORM_ID == PLATFORM_WINDOWS
+        PROCESS_MEMORY_COUNTERS pmc = { 0 };
+        GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc));
+        environment->stats.memory_usage = pmc.WorkingSetSize;
+#else
+        struct mallinfo mi = mallinfo();
+        environment->stats.memory_usage = mi.uordblks;
+#endif
+    }
+#endif  /* __SYSTEM_HEAP_STATISTICS__ */
 }
 
 void Environment_update(Environment_t *environment, float frame_time)

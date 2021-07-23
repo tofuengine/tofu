@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2020 Marco Lizza
+ * Copyright (c) 2019-2021 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,8 @@
 #ifndef __INPUT_H__
 #define __INPUT_H__
 
+#include <config.h>
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -47,6 +49,10 @@ typedef enum _Input_Buttons_t {
     INPUT_BUTTON_A,
     INPUT_BUTTON_SELECT,
     INPUT_BUTTON_START,
+#ifdef __GRAPHICS_CAPTURE_SUPPORT__
+    INPUT_BUTTON_CAPTURE,
+    INPUT_BUTTON_RECORD,
+#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
     INPUT_BUTTON_QUIT,
     Input_Buttons_t_Last = INPUT_BUTTON_QUIT,
     Input_Buttons_t_CountOf
@@ -133,6 +139,8 @@ typedef struct _Input_Configuration_t {
 #define INPUT_MODE_GAMEPAD  4
 #define INPUT_MODE_KEYMOUSE (INPUT_MODE_KEYBOARD | INPUT_MODE_MOUSE)
 #define INPUT_MODE_ALL      (INPUT_MODE_KEYBOARD | INPUT_MODE_MOUSE | INPUT_MODE_GAMEPAD)
+
+#define INPUT_MODES_COUNT   3
 
 typedef struct _Input_t {
     Input_Configuration_t configuration;

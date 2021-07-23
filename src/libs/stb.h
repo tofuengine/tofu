@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2020 Marco Lizza
+ * Copyright (c) 2019-2021 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,6 +30,7 @@
 #endif
 #include <stb/stb_ds.h>
 #include <stb/stb_image.h>
+#include <stb/stb_image_write.h>
 
 extern void *memdup(const void *ptr, size_t size);
 

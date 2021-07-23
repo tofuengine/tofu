@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2020 Marco Lizza
+ * Copyright (c) 2019-2021 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,14 +28,24 @@
 
 #include <stdint.h>
 
-static const uint8_t _timers_lua[] = {
+#define SCRIPT_NAME "@timers.lua"
+
+static const char _timers_lua[] = {
 #include "timers.inc"
 };
-
-static luaX_Script _timers_script = { (const char *)_timers_lua, sizeof(_timers_lua), "@timers.lua" }; // Trace as filename internally.
 
 int timers_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, &_timers_script, NULL, NULL, nup, NULL);
+    return luaX_newmodule(L, (luaX_Script){
+            .buffer = _timers_lua,
+            .size = sizeof(_timers_lua) / sizeof(char),
+            .name = SCRIPT_NAME
+        },
+        (const struct luaL_Reg[]){
+            { NULL, NULL }
+        },
+        (const luaX_Const[]){
+            { NULL, LUA_CT_NIL, { 0 } }
+        }, nup, NULL);
 }

@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2018 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -20,7 +20,6 @@
  * THE SOFTWARE.
  */
 
-#include <stdlib.h>
 #include "common.h"
 #include "period.h"
 #include "player.h"
@@ -72,11 +71,11 @@ LIBXMP_EXPORT int xmp_start_smix(xmp_context opaque, int chn, int smp)
 		return -XMP_ERROR_STATE;
 	}
 
-	smix->xxi = calloc(sizeof (struct xmp_instrument), smp);
+	smix->xxi = (struct xmp_instrument *)calloc(sizeof (struct xmp_instrument), smp);
 	if (smix->xxi == NULL) {
 		goto err;
 	}
-	smix->xxs = calloc(sizeof (struct xmp_sample), smp);
+	smix->xxs = (struct xmp_sample *)calloc(sizeof (struct xmp_sample), smp);
 	if (smix->xxs == NULL) {
 		goto err1;
 	}
@@ -88,6 +87,7 @@ LIBXMP_EXPORT int xmp_start_smix(xmp_context opaque, int chn, int smp)
 
     err1:
 	free(smix->xxi);
+	smix->xxi = NULL;
     err:
 	return -XMP_ERROR_INTERNAL;
 }
@@ -197,10 +197,10 @@ LIBXMP_EXPORT int xmp_smix_load_sample(xmp_context opaque, int num, char *path)
 		retval = -XMP_ERROR_SYSTEM;
 		goto err;
 	}
-		
+
 	/* Init instrument */
 
-	xxi->sub = calloc(sizeof(struct xmp_subinstrument), 1);
+	xxi->sub = (struct xmp_subinstrument *)calloc(sizeof(struct xmp_subinstrument), 1);
 	if (xxi->sub == NULL) {
 		retval = -XMP_ERROR_SYSTEM;
 		goto err1;
@@ -263,7 +263,7 @@ LIBXMP_EXPORT int xmp_smix_load_sample(xmp_context opaque, int num, char *path)
 	xxs->lpe = 0;
 	xxs->flg = bits == 16 ? XMP_SAMPLE_16BIT : 0;
 
-	xxs->data = malloc(size + 8);
+	xxs->data = (unsigned char *)malloc(size + 8);
 	if (xxs->data == NULL) {
 		retval = -XMP_ERROR_SYSTEM;
 		goto err2;
@@ -278,7 +278,7 @@ LIBXMP_EXPORT int xmp_smix_load_sample(xmp_context opaque, int num, char *path)
 		retval = -XMP_ERROR_SYSTEM;
 		goto err2;
 	}
-	if (hio_read(xxs->data, 1, size, h) != (size_t)size) {
+	if (hio_read(xxs->data, sizeof(unsigned char), size, h) != (size_t)size) {
 		retval = -XMP_ERROR_SYSTEM;
 		goto err2;
 	}
@@ -325,4 +325,6 @@ LIBXMP_EXPORT void xmp_end_smix(xmp_context opaque)
 
 	free(smix->xxs);
 	free(smix->xxi);
+	smix->xxs = NULL;
+	smix->xxi = NULL;
 }

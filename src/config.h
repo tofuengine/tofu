@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2020 Marco Lizza
+ * Copyright (c) 2019-2021 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,7 @@
 #define __TOFU_CONFIG_H__
 
 // Constant MACROs have no prefix.
-#define FPS_AVERAGE_SAMPLES         100
+#define FPS_AVERAGE_SAMPLES         128
 
 #define GC_CONTINUOUS_STEP_PERIOD   0.1f
 #define GC_COLLECTION_PERIOD        15.0f
@@ -57,14 +57,13 @@
   #undef  __DEFENSIVE_CHECKS__
 #endif
 
-#define __NO_LINEFEEDS__
-
 // TODO: better naming for macros, including namespace.
-#undef  __IGNORE_ALPHA_ON_COLORS__
+#define __LUAX_RTTI__
+#undef  __LUAX_INCLUDE_SYSTEM_LIBRARIES__
 #undef  __DEBUG_TRIANGLES_WINDING__
 #undef  __FIND_NEAREST_COLOR_EUCLIDIAN__
 #undef  __GRID_INTEGER_CELL__
-#undef  __DEBUG_ENGINE_FPS__
+#define __DEBUG_ENGINE_PERFORMANCES__
 #undef  __DEBUG_FS_CALLS__
 #define __DEBUG_VM_CALLS__
 #undef  __DEBUG_GRAPHICS__
@@ -75,16 +74,32 @@
 #define __VM_GARBAGE_COLLECTOR_TYPE__ GC_INCREMENTAL
 #define __VM_GARBAGE_COLLECTOR_MODE__ GC_CONTINUOUS
 #undef  __VM_GARBAGE_COLLECTOR_PERIODIC_COLLECT__
+#define __AUDIO_START_AND_STOP__
 #define __STORAGE_CACHE_ENTRIES_LIMIT__ 32
+// The capture support is darn slow!!!
+#undef  __GRAPHICS_CAPTURE_SUPPORT__
+#define __FS_ENFORCE_ARCHIVE_EXTENSION__
 #define __FS_SUPPORT_MOUNT_OVERRIDE__
 #define __SL_BALANCE_LAW__  BALANCE_LAW_SINCOS
 #define __SL_PANNING_LAW__  PANNING_LAW_CONSTANT_POWER_SINCOS
 #undef  __SL_MUSIC_PRELOAD__
-#undef  __GL_MASK_SUPPORT__
+#undef  __GL_CLOCKWISE_WINDING__
+#define __GL_FIX_WINDING__
+#undef  __GL_XFORM_TRANSPARENCY__
 #define __GL_OPTIMIZED_ROTATIONS__
+#define __DISPLAY_FOCUS_SUPPORT__
+#define __PALETTE_COLOR_MEMOIZATION__
+#define __ENGINE_PERFORMANCE_STATISTICS__
+#define __ENGINE_PERFORMANCES_PERIOD__ 10.0f
+#define __SYSTEM_HEAP_STATISTICS__
+#define __SYSTEM_HEAP_PERIOD__  5.0f
 
 // In release build, disable VM calls debug and periodic collection for better performance.
 #ifdef RELEASE
+  #undef __LUAX_RTTI__
+  #undef __GRAPHICS_CAPTURE_SUPPORT__
+  #undef __DEBUG_ENGINE_PERFORMANCES__
+  #undef __ENGINE_PERFORMANCE_STATISTICS__
   #undef __DEBUG_VM_CALLS__
   #undef __DEBUG_GARBAGE_COLLECTOR__
   #undef  __VM_GARBAGE_COLLECTOR_PERIODIC_COLLECT__

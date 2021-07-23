@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2020 Marco Lizza
+ * Copyright (c) 2019-2021 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -52,7 +52,7 @@ typedef struct _Interpreter_t {
 extern Interpreter_t *Interpreter_create(const Storage_t *storage, const void *userdatas[]);
 extern void Interpreter_destroy(Interpreter_t *interpreter);
 
-extern bool Interpreter_input(const Interpreter_t *interpreter);
+extern bool Interpreter_process(const Interpreter_t *interpreter);
 extern bool Interpreter_update(Interpreter_t *interpreter, float delta_time);
 extern bool Interpreter_render(const Interpreter_t *interpreter, float ratio);
 extern bool Interpreter_call(const Interpreter_t *interpreter, int nargs, int nresults);

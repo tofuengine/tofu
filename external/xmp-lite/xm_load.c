@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2018 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -49,9 +49,9 @@ const struct format_loader libxmp_loader_xm = {
 
 static int xm_test(HIO_HANDLE *f, char *t, const int start)
 {
-	char buf[20];
+	uint8_t buf[20];
 
-	if (hio_read(buf, 1, 17, f) < 17)	/* ID text */
+	if (hio_read(buf, sizeof(uint8_t), 17, f) < 17)	/* ID text */
 		return -1;
 
 	if (memcmp(buf, "Extended Module: ", 17))
@@ -102,16 +102,17 @@ static int load_xm_pattern(struct module_data *m, int num, int version, HIO_HAND
 
 	size = xph.datasize;
 
-	pat = patbuf = calloc(1, size);
+	pat = patbuf = (uint8_t *)calloc(size, sizeof(uint8_t));
 	if (patbuf == NULL) {
 		goto err;
 	}
 
-	hio_read(patbuf, 1, size, f);
+	hio_read(patbuf, sizeof(uint8_t), size, f);
 	for (j = 0; j < (mod->chn * r); j++) {
-
-		/*if ((pat - patbuf) >= xph.datasize)
-		   break; */
+		/*
+		if ((pat - patbuf) >= xph.datasize)
+			break;
+		*/
 
 		event = &EVENT(num, j % mod->chn, j / mod->chn);
 
@@ -342,8 +343,8 @@ err:
 }
 
 /* Packed structures size */
-#define XM_INST_HEADER_SIZE 33
-#define XM_INST_SIZE 208
+#define XM_INST_HEADER_SIZE 29
+#define XM_INST_SIZE 212
 
 /* grass.near.the.house.xm defines 23 samples in instrument 1. FT2 docs
  * specify at most 16. See https://github.com/libxmp/libxmp/issues/168
@@ -378,8 +379,13 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 		 * instruments, but file may end abruptly before that. Also covers
 		 * XMLiTE stripped modules and truncated files. This test will not
 		 * work if file has trailing garbage.
+		 *
+		 * Note: loading 4 bytes past the instrument header to get the
+		 * sample header size (if it exists). This is NOT considered to
+		 * be part of the instrument header.
 		 */
-		if (hio_read(buf, 33, 1, f) != 1) {
+		size_t instr_header_len = XM_INST_HEADER_SIZE + 4;
+		if (hio_read(buf, sizeof(uint8_t), instr_header_len, f) != instr_header_len) {
 			D_(D_WARN "short read in instrument header data");
 			break;
 		}
@@ -391,8 +397,13 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 		xih.sh_size = readmem32l(buf + 29);	/* Sample header size */
 
 		/* Sanity check */
+		if ((int)xih.size < XM_INST_HEADER_SIZE) {
+			D_(D_CRIT "instrument %d: instrument header size:%d", i + 1, xih.size);
+			return -1;
+		}
+
 		if (xih.samples > XM_MAX_SAMPLES_PER_INST || (xih.samples > 0 && xih.sh_size > 0x100)) {
-			D_(D_CRIT "sanity check: %d %d", xih.samples, xih.sh_size);
+			D_(D_CRIT "instrument %d: samples:%d sample header size:%d", i + 1, xih.samples, xih.sh_size);
 			return -1;
 		}
 
@@ -406,7 +417,7 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 			/* Sample size should be in struct xm_instrument according to
 			 * the official format description, but FT2 actually puts it in
 			 * struct xm_instrument header. There's a tracker or converter
-			 * that follow the specs, so we must handle both cases (see 
+			 * that follow the specs, so we must handle both cases (see
 			 * "Braintomb" by Jazztiz/ART).
 			 */
 
@@ -418,7 +429,7 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 			 * generalization should take care of both cases.
 			 */
 
-			if (hio_seek(f, (int)xih.size - XM_INST_HEADER_SIZE, SEEK_CUR) < 0) {
+			if (hio_seek(f, (int)xih.size - (XM_INST_HEADER_SIZE + 4), SEEK_CUR) < 0) {
 				return -1;
 			}
 
@@ -429,21 +440,17 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 			return -1;
 		}
 
-		if (xih.size < XM_INST_HEADER_SIZE) {
-			return -1;
-		}
-
 		/* for BoobieSqueezer (see http://boobie.rotfl.at/)
 		 * It works pretty much the same way as Impulse Tracker's sample
 		 * only mode, where it will strip off the instrument data.
 		 */
 		if (xih.size < XM_INST_HEADER_SIZE + XM_INST_SIZE) {
 			memset(&xi, 0, sizeof(struct xm_instrument));
-			hio_seek(f, xih.size - XM_INST_HEADER_SIZE, SEEK_CUR);
+			hio_seek(f, xih.size - (XM_INST_HEADER_SIZE + 4), SEEK_CUR);
 		} else {
 			uint8_t *b = buf;
 
-			if (hio_read(buf, 208, 1, f) != 1) {
+			if (hio_read(buf, sizeof(uint8_t), 208, f) != 208) {
 				D_(D_CRIT "short read in instrument data");
 				return -1;
 			}
@@ -524,13 +531,12 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 			D_(D_INFO "  sample index:%d sample id:%d", j, sample_num);
 
 			if (sample_num >= mod->smp) {
-				mod->xxs = libxmp_realloc_samples(mod->xxs, &mod->smp, mod->smp * 3 / 2);
-				if (mod->xxs == NULL)
+				if (libxmp_realloc_samples(m, mod->smp * 3 / 2) < 0)
 					return -1;
 			}
 			xxs = &mod->xxs[sample_num];
 
-			if (hio_read(buf, 40, 1, f) != 1) {
+			if (hio_read(buf, sizeof(uint8_t), 40, f) != 40) {
 				D_(D_CRIT "short read in sample data");
 				return -1;
 			}
@@ -548,10 +554,10 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 			b += 4;
 			xsh[j].loop_length = readmem32l(b);	/* Sample loop length */
 			b += 4;
-			xsh[j].volume = *b++;	/* Volume */
-			xsh[j].finetune = *b++;	/* Finetune (-128..+127) */
-			xsh[j].type = *b++;	/* Flags */
-			xsh[j].pan = *b++;	/* Panning (0-255) */
+			xsh[j].volume = *b++;			/* Volume */
+			xsh[j].finetune = *b++;		/* Finetune (-128..+127) */
+			xsh[j].type = *b++;			/* Flags */
+			xsh[j].pan = *b++;			/* Panning (0-255) */
 			xsh[j].relnote = *(int8_t *) b++;	/* Relative note number */
 			xsh[j].reserved = *b++;
 			memcpy(xsh[j].name, b, 22);
@@ -625,8 +631,7 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 	}
 
 	/* Final sample number adjustment */
-	mod->xxs = libxmp_realloc_samples(mod->xxs, &mod->smp, sample_num);
-	if (mod->xxs == NULL) {
+	if (libxmp_realloc_samples(m, sample_num) < 0) {
 		return -1;
 	}
 
@@ -644,13 +649,13 @@ static int xm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 	LOAD_INIT();
 
-	if (hio_read(buf, 80, 1, f) != 1) {
+	if (hio_read(buf, sizeof(uint8_t), 80, f) != 80) {
 		D_(D_CRIT "error reading header");
 		return -1;
 	}
 
 	memcpy(xfh.id, buf, 17);		/* ID text */
-	memcpy(xfh.name, buf + 17, 20);		/* Module name */
+	memcpy(xfh.name, buf + 17, 20);	/* Module name */
 	/* */					/* skip 0x1a */
 	memcpy(xfh.tracker, buf + 38, 20);	/* Tracker name */
 	xfh.version = readmem16l(buf + 58);	/* Version number, minor-major */
@@ -659,10 +664,10 @@ static int xm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	xfh.restart = readmem16l(buf + 66);	/* Restart position */
 	xfh.channels = readmem16l(buf + 68);	/* Number of channels */
 	xfh.patterns = readmem16l(buf + 70);	/* Number of patterns */
-	xfh.instruments = readmem16l(buf + 72);	/* Number of instruments */
+	xfh.instruments = readmem16l(buf + 72);/* Number of instruments */
 	xfh.flags = readmem16l(buf + 74);	/* 0=Amiga freq table, 1=Linear */
 	xfh.tempo = readmem16l(buf + 76);	/* Default tempo */
-	xfh.bpm = readmem16l(buf + 78);		/* Default BPM */
+	xfh.bpm = readmem16l(buf + 78);	/* Default BPM */
 
 	/* Sanity checks */
 	if (xfh.songlen > 256 || xfh.patterns > 256 || xfh.instruments > 255) {
@@ -689,7 +694,8 @@ static int xm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		return -1;
 	}
 
-	if (hio_read(&xfh.order, len, 1, f) != 1) {	/* Pattern order table */
+	memset(xfh.order, 0, sizeof(xfh.order));
+	if (hio_read(xfh.order, sizeof(uint8_t), len, f) != (size_t)len) {	/* Pattern order table */
 		D_(D_CRIT "error reading orders");
 		return -1;
 	}

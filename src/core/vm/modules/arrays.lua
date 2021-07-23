@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2020 Marco Lizza
+Copyright (c) 2019-2021 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -328,6 +328,41 @@ local function merged(a, b)
   return result
 end
 
+-- Naive implementation of insertion-sort which is stable and uber-efficient when the table is incrementally grown
+-- and re-sorted every time (that is, only the last item is_pressed eventually moved to the correct place).
+-- It's even faster than `table.sort()`.
+--
+-- Note that's not Cormen-Leiserson-Rivest's optimized version, since it won't work with Lua's `for ...`.
+local function _lower_than(a, b)
+  return a < b
+end
+
+local function sort(array, comparator)
+  local lower_than = comparator or _lower_than
+  local length = #array
+  for i = 2, length do
+    for j = i, 2, -1 do
+      if not lower_than(array[j], array[j - 1]) then -- Preserve stability! Swap only if strictly lower-than!
+        break
+      end
+      array[j - 1], array[j] = array[j], array[j - 1] -- Swap adjacent slots.
+    end
+  end
+end
+
+-- Add the element `item` to `array`, preserving the current ordering. Designed to be incrementally called to
+-- obtain an ever-ordered array of elements.
+local function add(array, item, comparator)
+  local lower_than = comparator or _lower_than
+  for index, other in ipairs(array) do
+    if lower_than(item, other) then
+      table.insert(array, index, item)
+      return
+    end
+  end
+  table.insert(array, item)
+end
+
 return {
   map = map,
   filter = filter,
@@ -352,5 +387,7 @@ return {
   equals = equals,
   copy = copy,
   merge = merge,
-  merged = merged
+  merged = merged,
+  sort = sort,
+  add = add
 }

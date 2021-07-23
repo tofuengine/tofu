@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2020 Marco Lizza
+Copyright (c) 2019-2021 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,17 +24,17 @@ SOFTWARE.
 
 local Class = require("tofu.core").Class
 local Math = require("tofu.core").Math
-local Canvas = require("tofu.graphics").Canvas
-local Display = require("tofu.graphics").Display
 local Vector = require("tofu.util").Vector
 
 local Sprite = Class.define()
 
-function Sprite:__ctor(bank, from, to, scale)
+function Sprite:__ctor(bank, from, to, scale, palette)
   self.bank = bank
   self.from = from
   self.to = to
+  self.step = from < to and 1 or -1
   self.scale = scale
+  self.palette = palette
 
   self.mass = 1.0
   self.inertia = 1.0
@@ -69,24 +69,23 @@ function Sprite:update(delta_time)
   self.velocity:add(Vector.from_polar(self.angle, self.acceleration * delta_time))
   self.acceleration = self.acceleration * 0.90
 
-  self.position:add(self.velocity:clone():scale(delta_time))
+  self.position:fma(self.velocity, delta_time)
   self.velocity:scale(0.95)
 end
 
-function Sprite:render()
+function Sprite:render(canvas)
   local x, y = self.position.x, self.position.y
-  for id = self.from, self.to do
-    local i = (id - self.from) * self.scale
+  local rotation = Math.angle_to_rotation(self.angle)
+  for id = self.from, self.to, self.step do
+    local i = math.abs((id - self.from)) * self.scale
     for j = i, i + self.scale - 1 do
-      local rotation = Math.angle_to_rotation(self.angle - math.pi * 0.5)
-      self.bank:blit(id, x, y - j, self.scale, self.scale, rotation)
+      self.bank:blit(canvas, x, y - j, id, self.scale, self.scale, rotation)
     end
   end
 
-  local canvas = Canvas.default()
-  canvas:line(x, y, x + self.velocity.x, y + self.velocity.y, Display.color_to_index(0xFF8888FF))
+  canvas:line(x, y, x + self.velocity.x, y + self.velocity.y, self.palette:match(0x88, 0x88, 0xFF))
   local direction = Vector.from_polar(self.angle, 48)
-  canvas:line(x, y, x + direction.x, y + direction.y, Display.color_to_index(0xFF88FF88))
+  canvas:line(x, y, x + direction.x, y + direction.y, self.palette:match(0x88, 0xFF, 0x88))
 end
 
 return Sprite

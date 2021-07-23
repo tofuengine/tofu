@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2020 Marco Lizza
+ * Copyright (c) 2019-2021 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,23 +25,22 @@
 #ifndef __AUDIO_H__
 #define __AUDIO_H__
 
-#include <miniaudio/miniaudio.h>
 #include <libs/sl/sl.h>
+
+#include <miniaudio/miniaudio.h>
 
 #include <stdbool.h>
 
 typedef struct _Audio_Configuration_t {
+    int device_index;
     float master_volume;
 } Audio_Configuration_t;
 
 typedef struct _Audio_t {
     Audio_Configuration_t configuration;
 
-    ma_context_config context_config;
     ma_context context;
-    ma_device_config device_config;
     ma_device device;
-    bool is_started;
     ma_mutex lock;
 
     SL_Context_t *sl;

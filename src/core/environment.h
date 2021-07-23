@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2020 Marco Lizza
+ * Copyright (c) 2019-2021 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,16 +25,33 @@
 #ifndef __ENVIRONMENT_H__
 #define __ENVIRONMENT_H__
 
+#include <core/io/display.h>
+
 #include <stdbool.h>
 #include <stddef.h>
 
+typedef struct _Environment_Stats_t {
+    size_t fps;
+#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+    float times[4];
+#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
+#ifdef __SYSTEM_HEAP_STATISTICS__
+    size_t memory_usage;
+#endif  /* __SYSTEM_HEAP_STATISTICS__ */
+} Environment_Stats_t;
+
 typedef struct _Environment_t {
+    const char **args;
+    const Display_t *display;
+#ifdef __DISPLAY_FOCUS_SUPPORT__
+    bool is_active;
+#endif
     bool quit;
-    float fps;
     double time;
+    Environment_Stats_t stats;
 } Environment_t;
 
-extern Environment_t *Environment_create(void);
+extern Environment_t *Environment_create(int argc, const char *argv[], const Display_t *display);
 extern void Environment_destroy(Environment_t *environment);
 
 extern void Environment_quit(Environment_t *environment);
@@ -42,9 +59,16 @@ extern void Environment_quit(Environment_t *environment);
 extern bool Environment_should_quit(const Environment_t *environment);
 
 extern double Environment_get_time(const Environment_t *environment);
-extern float Environment_get_fps(const Environment_t *environment);
+extern const Environment_Stats_t *Environment_get_stats(const Environment_t *environment);
+#ifdef __DISPLAY_FOCUS_SUPPORT__
+extern bool Environment_is_active(const Environment_t *environment);
+#endif  /* __DISPLAY_FOCUS_SUPPORT__ */
 
-extern void Environment_add_frame(Environment_t *environment, float frame_time);
+#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+extern void Environment_process(Environment_t *environment, float frame_time, const float deltas[4]);
+#else
+extern void Environment_process(Environment_t *environment, float frame_time);
+#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
 
 extern void Environment_update(Environment_t *environment, float delta_time);
 

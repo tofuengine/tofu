@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2020 Marco Lizza
+Copyright (c) 2019-2021 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +29,7 @@ local Bank = require("tofu.graphics").Bank
 local Batch = require("tofu.graphics").Batch
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
+local Palette = require("tofu.graphics").Palette
 local Font = require("tofu.graphics").Font
 
 local MovingBunny = require("lib.moving_bunny")
@@ -41,20 +42,19 @@ local MAX_BUNNIES = 32768
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette("pico-8")
+  Display.palette(Palette.new("pico-8"))
 
   local canvas = Canvas.default()
   canvas:transparent({ ["0"] = false, ["11"] = true })
   canvas:background(0)
 
   self.bunnies = {}
-  self.bank = Bank.new(canvas, Canvas.new("assets/bunnies.png"), "assets/bunnies.sheet")
+  self.bank = Bank.new(Canvas.new("assets/bunnies.png", 11), "assets/bunnies.sheet")
   self.batch = Batch.new(self.bank, 5000)
-  self.font = Font.default(canvas, 11, 6)
+  self.font = Font.default(11, 6)
   self.speed = 1.0
   self.running = true
   self.static = true
-  self.batched = false
 
   local Bunny = self.static and StaticBunny or MovingBunny
   for _ = 1, INITIAL_BUNNIES do
@@ -62,7 +62,7 @@ function Main:__ctor()
   end
 end
 
-function Main:input()
+function Main:process()
   if Input.is_pressed("start") then
     local Bunny = self.static and StaticBunny or MovingBunny
     for _ = 1, LITTER_SIZE do
@@ -93,7 +93,7 @@ function Main:update(delta_time)
 
   self.batch:clear()
 
-  for _, bunny in pairs(self.bunnies) do
+  for _, bunny in ipairs(self.bunnies) do
     bunny:update(delta_time * self.speed)
   end
 end
@@ -103,10 +103,10 @@ function Main:render(_)
   local width, _ = canvas:size()
   canvas:clear()
 
-  self.batch:blit()
+  self.batch:blit(canvas)
 
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
-  self.font:write(self.font:align(string.format("#%d bunnies", #self.bunnies), width, 0, "right"))
+  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
+  self.font:write(canvas, width, 0, string.format("#%d bunnies", #self.bunnies), "right")
 end
 
 return Main

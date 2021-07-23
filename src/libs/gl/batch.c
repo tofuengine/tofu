@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2020 Marco Lizza
+ * Copyright (c) 2019-2021 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,7 +32,7 @@
 
 #define LOG_CONTEXT "gl-batch"
 
-GL_Batch_t *GL_batch_create(const GL_Sheet_t *sheet, size_t slots)
+GL_Batch_t *GL_batch_create(const GL_Sheet_t *sheet, size_t capacity)
 {
     GL_Batch_t *batch = malloc(sizeof(GL_Batch_t));
     if (!batch) {
@@ -41,8 +41,8 @@ GL_Batch_t *GL_batch_create(const GL_Sheet_t *sheet, size_t slots)
     }
 
     GL_Batch_Sprite_t *sprites = NULL;
-    if (slots > 0) {
-        bool allocated = arrsetcap(sprites, slots); // FIXME: should be `!!`?
+    if (capacity > 0) {
+        bool allocated = arrsetcap(sprites, capacity); // FIXME: should be `!!`?
         if (!allocated) {
             Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate batch sprites");
             free(batch);
@@ -68,6 +68,17 @@ void GL_batch_destroy(GL_Batch_t *batch)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "batch %p freed", batch);
 }
 
+bool GL_batch_resize(GL_Batch_t *batch, size_t capacity)
+{
+    bool allocated = arrsetcap(batch->sprites, capacity); // FIXME: should be `!!`?
+    if (!allocated) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't resize batch slots");
+        return false;
+    }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "batch %p capacity reset to %d", batch, capacity);
+    return true;
+}
+
 bool GL_batch_grow(GL_Batch_t *batch, size_t amount)
 {
     size_t capacity = arrcap(batch->sprites);
@@ -77,13 +88,14 @@ bool GL_batch_grow(GL_Batch_t *batch, size_t amount)
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't grow batch slots");
         return false;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "batch %p capacity grown by %d slots to %d", amount, capacity);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "batch %p capacity grown by %d slots to %d", batch, amount, capacity);
     return true;
 }
 
 void GL_batch_clear(GL_Batch_t *batch)
 {
-    arrsetlen(batch->sprites, 0);
+    static const size_t zero = 0; // Note: we don't pass the immediate `0` to avoid a "type-limit" warning from the compiler.
+    arrsetlen(batch->sprites, zero);
 }
 
 void GL_batch_add(GL_Batch_t *batch, GL_Batch_Sprite_t sprite)
@@ -91,38 +103,35 @@ void GL_batch_add(GL_Batch_t *batch, GL_Batch_Sprite_t sprite)
     arrpush(batch->sprites, sprite);
 }
 
-void GL_batch_blit(const GL_Batch_t *batch, const GL_Context_t *context)
+void GL_batch_blit(const GL_Batch_t *batch, const GL_Surface_t *surface)
 {
     const GL_Sheet_t *sheet = batch->sheet;
-    const GL_Rectangle_t *cells = sheet->cells;
 
     GL_Batch_Sprite_t *current = batch->sprites;
     for (size_t count = arrlen(batch->sprites); count; --count) {
         GL_Batch_Sprite_t *sprite = current++;
-        GL_context_blit(context, sheet->atlas, cells[sprite->cell_id], sprite->position);
+        GL_sheet_blit(sheet, surface, sprite->position, sprite->cell_id);
     }
 }
 
-void GL_batch_blit_s(const GL_Batch_t *batch, const GL_Context_t *context)
+void GL_batch_blit_s(const GL_Batch_t *batch, const GL_Surface_t *surface)
 {
     const GL_Sheet_t *sheet = batch->sheet;
-    const GL_Rectangle_t *cells = sheet->cells;
 
     GL_Batch_Sprite_t *current = batch->sprites;
     for (size_t count = arrlen(batch->sprites); count; --count) {
         GL_Batch_Sprite_t *sprite = current++;
-        GL_context_blit_s(context, sheet->atlas, cells[sprite->cell_id], sprite->position, sprite->sx, sprite->sy);
+        GL_sheet_blit_s(sheet, surface, sprite->position, sprite->cell_id, sprite->scale_x, sprite->scale_y);
     }
 }
 
-void GL_batch_blit_sr(const GL_Batch_t *batch, const GL_Context_t *context)
+void GL_batch_blit_sr(const GL_Batch_t *batch, const GL_Surface_t *surface)
 {
     const GL_Sheet_t *sheet = batch->sheet;
-    const GL_Rectangle_t *cells = sheet->cells;
 
     GL_Batch_Sprite_t *current = batch->sprites;
     for (size_t count = arrlen(batch->sprites); count; --count) {
         GL_Batch_Sprite_t *sprite = current++;
-        GL_context_blit_sr(context, sheet->atlas, cells[sprite->cell_id], sprite->position, sprite->sx, sprite->sy, sprite->rotation, sprite->ax, sprite->ay);
+        GL_sheet_blit_sr(sheet, surface, sprite->position, sprite->cell_id, sprite->scale_x, sprite->scale_y, sprite->rotation, sprite->anchor_x, sprite->anchor_y);
     }
 }

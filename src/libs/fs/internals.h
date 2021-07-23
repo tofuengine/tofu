@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2020 Marco Lizza
+ * Copyright (c) 2019-2021 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,8 +29,8 @@
 
 typedef struct _Mount_VTable_t {
     void         (*dtor)    (FS_Mount_t *mount);
-    bool         (*contains)(const FS_Mount_t *mount, const char *file);
-    FS_Handle_t *(*open)    (const FS_Mount_t *mount, const char *file);
+    bool         (*contains)(const FS_Mount_t *mount, const char *name);
+    FS_Handle_t *(*open)    (const FS_Mount_t *mount, const char *name);
 } Mount_VTable_t;
 
 typedef struct _Handle_VTable_t {

@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2020 Marco Lizza
+ * Copyright (c) 2019-2021 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,7 @@
 #define __VERSION_H__
 
 #define TOFU_VERSION_MAJOR          0
-#define TOFU_VERSION_MINOR          9
+#define TOFU_VERSION_MINOR          10
 #define TOFU_VERSION_REVISION       0
 
 #define TOFU_VERSION_NUMBER         ((TOFU_VERSION_MAJOR << 16) | (TOFU_VERSION_MINOR << 8) | (TOFU_VERSION_REVISION))

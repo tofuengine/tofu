@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2020 Marco Lizza
+ * Copyright (c) 2019-2021 Marco Lizza
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,14 +28,24 @@
 
 #include <stdint.h>
 
-static const uint8_t _vector_lua[] = {
+#define SCRIPT_NAME "@vector.lua"
+
+static const char _vector_lua[] = {
 #include "vector.inc"
 };
-
-static luaX_Script _vector_script = { (const char *)_vector_lua, sizeof(_vector_lua), "@vector.lua" }; // Trace as filename internally.
 
 int vector_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, &_vector_script, NULL, NULL, nup, NULL);
+    return luaX_newmodule(L, (luaX_Script){
+            .buffer = _vector_lua,
+            .size = sizeof(_vector_lua) / sizeof(char),
+            .name = SCRIPT_NAME
+        },
+        (const struct luaL_Reg[]){
+            { NULL, NULL }
+        },
+        (const luaX_Const[]){
+            { NULL, LUA_CT_NIL, { 0 } }
+        }, nup, NULL);
 }

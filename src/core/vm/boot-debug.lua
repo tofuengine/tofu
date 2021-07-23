@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2020 Marco Lizza
+Copyright (c) 2019-2021 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,7 @@ local System = require("tofu.core").System
 local Input = require("tofu.events").Input
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
+local Palette = require("tofu.graphics").Palette
 local Font = require("tofu.graphics").Font
 local Speakers = require("tofu.sound").Speakers
 local Pool = require("tofu.timers").Pool
@@ -37,16 +38,22 @@ local Tofu = Class.define() -- To be precise, the class name is irrelevant since
 
 function Tofu:__ctor()
   self.states = {
+    -- TODO: add an "splash" state that emulates Amiga's boot.
     ["normal"] = {
       enter = function(me)
           me.main = Main.new()
         end,
       leave = function(me)
           Pool.default():clear()
+          Speakers.halt() -- Stop all sounds sources.
+          Display.reset()
+          local canvas = Canvas.default()
+          canvas:pop(0) -- Discard all saved states, if any.
+          canvas:reset() -- Reset default canvas from the game state.
           me.main = nil
         end,
-      input = function(me)
-          me.main:input()
+      process = function(me)
+          me.main:process()
         end,
       update = function(me, delta_time)
           Pool.default():update(delta_time)
@@ -57,36 +64,48 @@ function Tofu:__ctor()
         end
     },
     ["error"] = {
-      enter = function(me)
+      enter = function(me, message)
           -- TODO: rename "Display" to "Video" e "Speakers" to "Audio"
-          Display.palette({ 0xFF000000, 0xFFFF0000 })
+          Display.palette(Palette.new({ { 0, 0, 0 }, { 255, 0, 0 } })) -- Red on black.
           local canvas = Canvas.default()
           local width, _ = canvas:size()
-          canvas:reset() -- Reset default canvas from the game state.
 
-          Speakers.halt() -- Stop all sounds sources.
-
-          me.font = Font.default(canvas, "5x8", 0, 1)
-          me.lines = {
-              { text = "Software Failure." },
-              { text = "Guru Meditation" }
+          local title = {
+              "Software Failure.",
+              "Guru Meditation"
             }
+          local errors = {}
+          for str in string.gmatch(message, "([^\n]+)") do -- Split the error-message into separate lines.
+            table.insert(errors, str)
+          end
 
-          local margin = 4 -- Precalculate lines position and rectangle area.
+          me.font = Font.default(0, 1)
+          me.lines = {}
+          local margin <const> = 4 -- Pre-calculate lines position and rectangle area.
+          local span <const> = width - 2 * margin
           local y = margin
-          for _, line in ipairs(me.lines) do
-            local lw, lh = me.font:size(line.text)
-            line.x = (width - lw) * 0.5
-            line.y = y
+          for _, text in ipairs(title) do -- Title lines are centered.
+            local lw, lh = me.font:size(text)
+            table.insert(me.lines, { text = text, x = (width - lw) * 0.5, y = y })
             y = y + lh
           end
           me.width = width
-          me.height = y + margin
+          y = y + margin
+          me.height = y -- The rectangle ends here, message follows.
+          y = y + margin
+          for _, line in ipairs(errors) do -- Error lines are left-justified and auto-wrapped.
+            local texts = me.font:wrap(line, span)
+            for _, text in ipairs(texts) do
+              local _, th = me.font:size(text)
+              table.insert(me.lines, { text = text, x = margin, y = y })
+              y = y + th
+            end
+          end
         end,
       leave = function(me)
           me.font = nil
         end,
-      input = function(_)
+      process = function(_)
           if Input.is_pressed("start") then
             System.quit()
           end
@@ -99,7 +118,7 @@ function Tofu:__ctor()
           canvas:clear()
           canvas:rectangle("line", 0, 0, me.width, me.height, on and 1 or 0)
           for _, line in ipairs(me.lines) do
-            me.font:write(line.text, line.x, line.y)
+            me.font:write(canvas, line.x, line.y, line.text)
           end
         end
     }
@@ -108,11 +127,11 @@ function Tofu:__ctor()
   self:switch_to("normal")
 end
 
-function Tofu:input()
-  self:switch_if_needed()
+function Tofu:process()
+  self:switch_if_needed() -- TODO: `Tofu:process()` is the first method of the loop. Add separate method for this?
 
   local me = self.state
-  self:call(me.input, me)
+  self:call(me.process, me)
 end
 
 function Tofu:update(delta_time)
@@ -130,19 +149,19 @@ function Tofu:switch_if_needed()
     return
   end
 
-  local id = table.remove(self.queue)
-  local next = self.states[id]
+  local state = table.remove(self.queue)
+  local entering = self.states[state.id]
 
-  local current = self.state
-  if current then
-    current:leave()
+  local exiting = self.state
+  if exiting then
+    self:call(exiting.leave, exiting)
   end
-  next:enter()
-  self.state = next
+  self:call(entering.enter, entering, table.unpack(state.args))
+  self.state = entering
 end
 
-function Tofu:switch_to(id)
-  table.insert(self.queue, id)
+function Tofu:switch_to(id, ...)
+  table.insert(self.queue, { id = id, args = { ... } })
 end
 
 function Tofu:call(func, ...)
@@ -151,8 +170,8 @@ function Tofu:call(func, ...)
   end
   local success, message = xpcall(func, debug.traceback, ...)
   if not success then
-    System.error(message)
-    self:switch_to("error")
+    System.error(message) -- Dump to log...
+    self:switch_to("error", message) -- ... and pass to the error-state for visualization.
   end
 end
 

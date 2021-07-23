@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2020 Marco Lizza
+Copyright (c) 2019-2021 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,12 +25,13 @@ SOFTWARE.
 local Class = require("tofu.core").Class
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
+local Palette = require("tofu.graphics").Palette
 local Timer = require("tofu.timers").Timer
 
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette("pico-8")
+  Display.palette(Palette.new("pico-8"))
 
   local canvas = Canvas.default()
   local width, height = canvas:size()
@@ -51,7 +52,7 @@ function Main:__ctor()
     self.y = math.random() * height
 end
 
-function Main:input()
+function Main:process()
 end
 
 function Main:update(_)

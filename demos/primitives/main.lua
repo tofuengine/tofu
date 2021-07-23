@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2020 Marco Lizza
+Copyright (c) 2019-2021 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -28,28 +28,29 @@ local Input = require("tofu.events").Input
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
+local Palette = require("tofu.graphics").Palette
 
 local Main = Class.define()
 
 local PALETTE = {
-    0xFF000000, 0xFF240000, 0xFF480000, 0xFF6D0000,
-    0xFF910000, 0xFFB60000, 0xFFDA0000, 0xFFFF0000,
-    0xFFFF3F00, 0xFFFF7F00, 0xFFFFBF00, 0xFFFFFF00,
-    0xFFFFFF3F, 0xFFFFFF7F, 0xFFFFFFBF, 0xFFFFFFFF
+    { 0x00, 0x00, 0x00 }, { 0x24, 0x00, 0x00 }, { 0x48, 0x00, 0x00 }, { 0x6D, 0x00, 0x00 },
+    { 0x91, 0x00, 0x00 }, { 0xB6, 0x00, 0x00 }, { 0xDA, 0x00, 0x00 }, { 0xFF, 0x00, 0x00 },
+    { 0xFF, 0x3F, 0x00 }, { 0xFF, 0x7F, 0x00 }, { 0xFF, 0xBF, 0x00 }, { 0xFF, 0xFF, 0x00 },
+    { 0xFF, 0xFF, 0x3F }, { 0xFF, 0xFF, 0x7F }, { 0xFF, 0xFF, 0xBF }, { 0xFF, 0xFF, 0xFF }
   }
 
 function Main:__ctor()
-  Display.palette(PALETTE) -- "arne-16")
-  Display.palette("arne-16")
+  Display.palette(Palette.new(PALETTE)) -- "arne-16")
+  Display.palette(Palette.new("arne-16"))
 
   local canvas = Canvas.default()
-  canvas:color(3)
+  canvas:foreground(3)
 
-  self.font = Font.default(canvas, 0, 1)
+  self.font = Font.default(0, 1)
   self.mode = 0
 end
 
-function Main:input()
+function Main:process()
   if Input.is_pressed("start") then
     System.quit()
   elseif Input.is_pressed("right") then
@@ -100,6 +101,12 @@ function Main:render(_) -- ratio
     local y2 = ((math.sin(System.time() * 0.123) + 1.0) * 0.5) * height
     canvas:triangle("fill", x0, y0, x1, y1, x2, y2, 2)
     canvas:triangle("line", x0, y0, x1, y1, x2, y2, 7)
+    canvas:push()
+      canvas:shift(1, 15)
+      self.font:write(canvas, x0, y0, "v0", "center", "middle")
+      self.font:write(canvas, x1, y1, "v1", "center", "middle")
+      self.font:write(canvas, x2, y2, "v2", "center", "middle")
+    canvas:pop()
   elseif self.mode == 4 then
     local x = ((math.cos(System.time() * 0.125) + 1.0) * 0.5) * width
     local y = ((math.cos(System.time() * 0.342) + 1.0) * 0.5) * height
@@ -141,8 +148,8 @@ function Main:render(_) -- ratio
     canvas:rectangle("fill", 4, 12, 8, 8, 3)
   end
 
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
-  self.font:write(self.font:align(string.format("mode: %d", self.mode), width, 0, "right"))
+  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
+  self.font:write(canvas, width, 0, string.format("mode: %d", self.mode), "right")
 end
 
 return Main

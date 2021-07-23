@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2020 Marco Lizza
+Copyright (c) 2019-2021 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +29,7 @@ local Bank = require("tofu.graphics").Bank
 local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
+local Palette = require("tofu.graphics").Palette
 
 local EASINGS = {
     "linear",
@@ -49,7 +50,7 @@ local PERIOD = 5.0
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette("pico-8")
+  Display.palette(Palette.new("pico-8"))
 
   self.tweeners = {}
   for _, easing in ipairs(EASINGS) do
@@ -61,18 +62,18 @@ function Main:__ctor()
   local x0, y0 = width * 0.25, height * 0
   self.area = { x = x0, y = y0, width = width * 0.50, height = height * 1 }
 
-  self.bank = Bank.new(canvas, Canvas.new("assets/sheet.png"), 8, 8)
-  self.font = Font.default(canvas, 0, 15)
+  self.bank = Bank.new(Canvas.new("assets/sheet.png", 0), 8, 8)
+  self.font = Font.default(0, 15)
   self.wave = Math.wave("triangle", PERIOD)
 end
 
-function Main:input()
+function Main:process()
 end
 
 function Main:update(_)
 end
 
-function Main:evaluate(t)
+function Main:_evaluate(t)
   local y = self.wave(t)
   y = (y + 0.75) / 1.5
   return math.min(math.max(y, 0.0), 1.0)
@@ -82,20 +83,20 @@ function Main:render(_)
   local canvas = Canvas.default()
   canvas:clear()
 
-  local ratio = self:evaluate(System.time()) -- The waves have values in the range [-1, +1].
+  local ratio = self:_evaluate(System.time()) -- The waves have values in the range [-1, +1].
 
   local area = self.area
-  local _, ch = self.bank:size(-1)
+  local _, ch = self.bank:size(Bank.NIL)
 
   local y = area.y
   for index, tweener in ipairs(self.tweeners) do
     local x = area.x + area.width * tweener(ratio)
     canvas:shift(5, 1 + (index % 15))
-    self.bank:blit(index % 7, x, y)
+    self.bank:blit(canvas, x, y, index % 7)
     y = y + ch
   end
 
-  self.font:write(string.format("FPS: %d", System.fps()), 0, 0)
+  self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
 end
 
 return Main

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2020 Marco Lizza
+ * Copyright (c) 2019-2021 Marco Lizza
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -76,6 +76,8 @@ static bool _module_generate(SL_Source_t *source, void *output, size_t frames_re
 
 static inline bool _rewind(Module_t *module)
 {
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "rewinding module %p", module);
+
     xmp_restart_module(module->context);
 
     module->completed = false;
@@ -85,8 +87,9 @@ static inline bool _rewind(Module_t *module)
 
 static inline bool _reset(Module_t *module)
 {
-    ma_pcm_rb *buffer = &module->buffer;
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "resetting module %p", module);
 
+    ma_pcm_rb *buffer = &module->buffer;
     ma_pcm_rb_reset(buffer);
 
     return _rewind(module);
@@ -100,11 +103,15 @@ static inline bool _produce(Module_t *module)
 
     ma_pcm_rb *buffer = &module->buffer;
     ma_uint32 frames_to_produce = ma_pcm_rb_available_write(buffer);
+    if (frames_to_produce == 0) {
+        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "buffer overrrun for source %p - stalling (waiting for consumer)", module);
+        return true;
 #ifdef STREAMING_BUFFER_CHUNK_IN_FRAMES
+    } else
     if (frames_to_produce > STREAMING_BUFFER_CHUNK_IN_FRAMES) {
         frames_to_produce = STREAMING_BUFFER_CHUNK_IN_FRAMES;
-    }
 #endif
+    }
 
     void *write_buffer;
     ma_pcm_rb_acquire_write(buffer, &frames_to_produce, &write_buffer);
@@ -117,6 +124,7 @@ static inline bool _produce(Module_t *module)
     ma_pcm_rb_commit_write(buffer, frames_to_produce, write_buffer);
 
     if (play_result == -XMP_END) {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "module %p reached end, marking as completed", module);
         module->completed = true;
     } else
     if (play_result != 0) { // Mark the end-of-data for both "end" and "error state" cases.
@@ -204,6 +212,7 @@ static bool _module_ctor(SL_Source_t *source, const SL_Context_t *context, SL_Ca
     module->props = SL_props_create(context, MODULE_OUTPUT_FORMAT, SL_FRAMES_PER_SECOND, MODULE_OUTPUT_CHANNELS_PER_FRAME, MIXING_BUFFER_CHANNELS_PER_FRAME);
     if (!module->props) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't initialize module properties");
+        ma_pcm_rb_uninit(&module->buffer);
         xmp_release_module(module->context);
         xmp_free_context(module->context);
         return false;
@@ -221,6 +230,9 @@ static void _module_dtor(SL_Source_t *source)
     SL_props_destroy(module->props);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "module properties deinitialized");
 
+    ma_pcm_rb_uninit(&module->buffer);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "module ring-buffer deinitialized");
+
     xmp_end_player(module->context);
     xmp_release_module(module->context);
     xmp_free_context(module->context);
@@ -233,7 +245,7 @@ static bool _module_reset(SL_Source_t *source)
 
     bool reset = _reset(module);
     if (!reset) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't reset module stream");
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't reset module %p stream", source);
         return false;
     }
 
@@ -276,9 +288,6 @@ static bool _module_generate(SL_Source_t *source, void *output, size_t frames_re
         size_t frames_to_generate = frames_remaining > MIXING_BUFFER_SIZE_IN_FRAMES ? MIXING_BUFFER_SIZE_IN_FRAMES : frames_remaining;
 
         ma_uint32 frames_to_consume = ma_data_converter_get_required_input_frame_count(converter, frames_to_generate);
-        if (frames_to_consume > MIXING_BUFFER_SIZE_IN_FRAMES) {
-            frames_to_consume = MIXING_BUFFER_SIZE_IN_FRAMES;
-        }
 
         void *consumed_buffer;
         ma_pcm_rb_acquire_read(buffer, &frames_to_consume, &consumed_buffer);

@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2020 Marco Lizza
+ * Copyright (c) 2019-2021 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,7 +34,7 @@ typedef uint8_t GL_Pixel_t;
 
 typedef int8_t GL_Bool_t;
 
-typedef uint16_t GL_Pattern_t;
+typedef int GL_Cell_t;
 
 typedef struct _GL_Point_t {
     int x, y;
@@ -71,9 +71,36 @@ typedef struct _GL_Rectangle_u32_t {
 } GL_Rectangle_u32_t;
 #pragma pack(pop)
 
-#define GL_DEGREES_OVER_RADIANS 57.295779513082320876798154814105
+typedef enum _GL_Comparators_t {
+    GL_COMPARATOR_NEVER,
+    GL_COMPARATOR_LESS,
+    GL_COMPARATOR_LESS_OR_EQUAL,
+    GL_COMPARATOR_GREATER,
+    GL_COMPARATOR_GREATER_OR_EQUAL,
+    GL_COMPARATOR_EQUAL,
+    GL_COMPARATOR_NOT_EQUAL,
+    GL_COMPARATOR_ALWAYS,
+    GL_Comparators_t_CountOf
+} GL_Comparators_t;
+
+typedef enum _GL_Functions_t {
+    GL_FUNCTIONS_REPLACE,
+    GL_FUNCTIONS_ADD,
+    GL_FUNCTIONS_ADD_CLAMPED,
+    GL_FUNCTIONS_SUBTRACT,
+    GL_FUNCTIONS_SUBTRACT_CLAMPED,
+    GL_FUNCTIONS_REVERSE_SUBTRACT,
+    GL_FUNCTIONS_REVERSE_SUBTRACT_CLAMPED,
+    GL_FUNCTIONS_MULTIPLY,
+    GL_FUNCTIONS_MULTIPLY_CLAMPED,
+    GL_FUNCTIONS_MIN,
+    GL_FUNCTIONS_MAX,
+    GL_Functions_t_CountOf
+} GL_Functions_t;
 
 #define GL_BOOL_FALSE   ((GL_Bool_t)0)
 #define GL_BOOL_TRUE    ((GL_Bool_t)1)
+
+#define GL_CELL_NIL     ((GL_Cell_t)-1)
 
 #endif  /* __GL_COMMON_H__ */

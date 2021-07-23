@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2020 Marco Lizza
+ * Copyright (c) 2019-2021 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,19 +34,9 @@
   #include <windows.h>
 #endif
 
-#define ENTRY_ICON "icon.png"
-#define ENTRY_GAMECONTROLLER_DB "gamecontrollerdb.txt"
+#include "options.h"
 
 #define LOG_CONTEXT "engine"
-
-static const unsigned char _default_icon_pixels[] = {
-#include <assets/icon.inc>
-};
-
-static const uint8_t _default_mappings[] = {
-#include <assets/gamecontrollerdb.inc>
-    0x00
-};
 
 static inline void _wait_for(float seconds)
 {
@@ -78,7 +68,7 @@ static inline void _wait_for(float seconds)
 #endif
 }
 
-static bool _configure(Storage_t *storage, Configuration_t *configuration)
+static bool _configure(Storage_t *storage, int argc, const char *argv[], Configuration_t *configuration)
 {
     const Storage_Resource_t *resource = Storage_load(storage, "tofu.config", STORAGE_RESOURCE_STRING);
     if (!resource) {
@@ -87,11 +77,11 @@ static bool _configure(Storage_t *storage, Configuration_t *configuration)
     }
 
     Configuration_parse(configuration, S_SCHARS(resource));
+    Configuration_override(configuration, argc, argv);
 
     Log_configure(configuration->system.debug, NULL);
 
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "game identity is `%s`", configuration->system.identity);
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "running engine version %s", TOFU_VERSION_STRING);
 
     if (configuration->system.version.major > TOFU_VERSION_MAJOR
         || configuration->system.version.minor > TOFU_VERSION_MINOR
@@ -105,8 +95,10 @@ static bool _configure(Storage_t *storage, Configuration_t *configuration)
     return true;
 }
 
-Engine_t *Engine_create(const char *base_path)
+Engine_t *Engine_create(int argc, const char *argv[])
 {
+    options_t options = options_parse_command_line(argc, argv); // We do this early, since options could have effect on everything.
+
     Engine_t *engine = malloc(sizeof(Engine_t));
     if (!engine) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate engine");
@@ -117,29 +109,39 @@ Engine_t *Engine_create(const char *base_path)
 
     Log_initialize();
 
-    const Storage_Configuration_t storage_configuration = {
-            .base_path = base_path
-        };
-    engine->storage = Storage_create(&storage_configuration);
+    engine->storage = Storage_create(&(const Storage_Configuration_t){
+            .path = options.path
+        });
     if (!engine->storage) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize storage at path `%s`", base_path);
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize storage");
         free(engine);
         return NULL;
     }
 
-    bool configured = _configure(engine->storage, &engine->configuration);
+    bool configured = _configure(engine->storage, argc, argv, &engine->configuration);
     if (!configured) {
         Storage_destroy(engine->storage);
         free(engine);
         return NULL;
     }
 
-    const Storage_Resource_t *icon = Storage_exists(engine->storage, ENTRY_ICON)
-        ? Storage_load(engine->storage, ENTRY_ICON, STORAGE_RESOURCE_IMAGE)
-        : NULL;
+    bool set = Storage_set_identity(engine->storage, engine->configuration.system.identity);
+    if (!set) {
+        Storage_destroy(engine->storage);
+        free(engine);
+        return NULL;
+    }
+
+    const Storage_Resource_t *icon = Storage_exists(engine->storage, engine->configuration.system.icon) // FIXME: too defensive?
+        ? Storage_load(engine->storage, engine->configuration.system.icon, STORAGE_RESOURCE_IMAGE)
+        : Storage_load(engine->storage, RESOURCE_IMAGE_ICON_ID, STORAGE_RESOURCE_IMAGE);
     Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined icon loaded");
-    Display_Configuration_t display_configuration = { // TODO: use compound-literals.
-            .icon = icon ? (GLFWimage){ .width = (int)S_IWIDTH(icon), .height = (int)S_IHEIGHT(icon), .pixels = S_IPIXELS(icon) } : (GLFWimage){ 64, 64, (unsigned char *)_default_icon_pixels },
+    const Storage_Resource_t *effect = Storage_exists(engine->storage, engine->configuration.display.effect)
+        ? Storage_load(engine->storage, engine->configuration.display.effect, STORAGE_RESOURCE_STRING)
+        : NULL;
+    Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined effect loaded");
+    engine->display = Display_create(&(const Display_Configuration_t){
+            .icon = (GLFWimage){ .width = (int)S_IWIDTH(icon), .height = (int)S_IHEIGHT(icon), .pixels = S_IPIXELS(icon) },
             .window = {
                 .title = engine->configuration.display.title,
                 .width = engine->configuration.display.width,
@@ -148,9 +150,9 @@ Engine_t *Engine_create(const char *base_path)
             },
             .fullscreen = engine->configuration.display.fullscreen,
             .vertical_sync = engine->configuration.display.vertical_sync,
-            .hide_cursor = engine->configuration.cursor.hide
-        };
-    engine->display = Display_create(&display_configuration);
+            .hide_cursor = engine->configuration.cursor.hide,
+            .effect = effect ? S_SCHARS(effect) : NULL
+        });
     if (!engine->display) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize display");
         Storage_destroy(engine->storage);
@@ -158,12 +160,12 @@ Engine_t *Engine_create(const char *base_path)
         return NULL;
     }
 
-    const Storage_Resource_t *mappings = Storage_exists(engine->storage, ENTRY_GAMECONTROLLER_DB)
-        ? Storage_load(engine->storage, ENTRY_GAMECONTROLLER_DB, STORAGE_RESOURCE_STRING)
-        : NULL;
+    const Storage_Resource_t *mappings = Storage_exists(engine->storage, engine->configuration.system.mappings)
+        ? Storage_load(engine->storage, engine->configuration.system.mappings, STORAGE_RESOURCE_STRING)
+        : Storage_load(engine->storage, RESOURCE_BLOB_MAPPINGS_ID, STORAGE_RESOURCE_STRING);
     Log_assert(!mappings, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined controller mappings loaded");
-    Input_Configuration_t input_configuration = {
-            .mappings = mappings ? S_SCHARS(mappings) : (const char *)_default_mappings,
+    engine->input = Input_create(&(const Input_Configuration_t){
+            .mappings = S_SCHARS(mappings),
             .keyboard = {
                 .enabled = engine->configuration.keyboard.enabled,
                 .exit_key = engine->configuration.keyboard.exit_key,
@@ -181,8 +183,7 @@ Engine_t *Engine_create(const char *base_path)
                 .emulate_dpad = engine->configuration.gamepad.emulate_dpad,
                 .emulate_cursor = engine->configuration.gamepad.emulate_cursor
             }
-        };
-    engine->input = Input_create(&input_configuration, Display_get_window(engine->display));
+        }, Display_get_window(engine->display));
     if (!engine->input) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize input");
         Display_destroy(engine->display);
@@ -191,7 +192,8 @@ Engine_t *Engine_create(const char *base_path)
         return NULL;
     }
 
-    engine->audio = Audio_create(&(Audio_Configuration_t){
+    engine->audio = Audio_create(&(const Audio_Configuration_t){
+            .device_index = engine->configuration.audio.device_index,
             .master_volume = engine->configuration.audio.master_volume
         });
     if (!engine->audio) {
@@ -203,7 +205,7 @@ Engine_t *Engine_create(const char *base_path)
         return NULL;
     }
 
-    engine->environment = Environment_create();
+    engine->environment = Environment_create(argc, argv, engine->display);
     if (!engine->environment) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize environment");
         Audio_destroy(engine->audio);
@@ -214,17 +216,14 @@ Engine_t *Engine_create(const char *base_path)
         return NULL;
     }
 
-    // The interpreter is the first to be loaded, since it also manages the configuration. Later on, we will call to
-    // initialization function once the sub-systems are ready.
-    const void *userdatas[] = {
+    engine->interpreter = Interpreter_create(engine->storage, (const void *[]){
             engine->storage,
             engine->display,
             engine->input,
             engine->audio,
             engine->environment,
             NULL
-        };
-    engine->interpreter = Interpreter_create(engine->storage, userdatas);
+        });
     if (!engine->interpreter) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize interpreter");
         Environment_destroy(engine->environment);
@@ -235,6 +234,8 @@ Engine_t *Engine_create(const char *base_path)
         free(engine);
         return NULL;
     }
+
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "engine: %s", TOFU_VERSION_STRING);
 
     return engine;
 }
@@ -249,8 +250,9 @@ void Engine_destroy(Engine_t *engine)
     Storage_destroy(engine->storage);
 
     free(engine);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "engine freed");
 
-#if DEBUG
+#ifdef DEBUG
     stb_leakcheck_dumpmem();
 #endif
 }
@@ -262,29 +264,42 @@ void Engine_run(Engine_t *engine)
     const float reference_time = engine->configuration.engine.frames_limit == 0 ? 0.0f : 1.0f / engine->configuration.engine.frames_limit;
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "now running, update-time is %.6fs w/ %d skippable frames, reference-time is %.6fs", delta_time, skippable_frames, reference_time);
 
-    // Track time using double to keep the min resolution consistent over time!
+    // Track time using `double` to keep the min resolution consistent over time!
+    // For intervals (i.e. deltas), `float` is sufficient.
     // https://randomascii.wordpress.com/2012/02/13/dont-store-that-in-a-float/
+#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+    float deltas[4] = { 0 };
+#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
     double previous = glfwGetTime();
     float lag = 0.0f;
 
     // https://nkga.github.io/post/frame-pacing-analysis-of-the-game-loop/
-    for (bool running = true; running && !Environment_should_quit(engine->environment) && !Display_should_close(engine->display); ) {
+    for (bool running = true; running && !Environment_should_quit(engine->environment); ) {
         const double current = glfwGetTime();
         const float elapsed = (float)(current - previous);
         previous = current;
 
-        Environment_add_frame(engine->environment, elapsed);
+#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+        Environment_process(engine->environment, elapsed, deltas);
+#else
+        Environment_process(engine->environment, elapsed);
+#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
 
         Input_process(engine->input);
 
-        running = running && Interpreter_input(engine->interpreter); // Lazy evaluate `running`, will avoid calls when error.
+        running = running && Interpreter_process(engine->interpreter); // Lazy evaluate `running`, will avoid calls when error.
+
+#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+        const double process_marker = glfwGetTime();
+        deltas[0] = (float)(process_marker - current);
+#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
 
         lag += elapsed; // Count a maximum amount of skippable frames in order no to stall on slower machines.
         for (size_t frames = skippable_frames; frames && (lag >= delta_time); --frames) {
             Environment_update(engine->environment, delta_time);
             running = running && Interpreter_update(engine->interpreter, delta_time); // Fixed update.
             running = running && Audio_update(engine->audio, elapsed); // Update the subsystems w/ fixed steps (fake interrupt based).
-            running = running && Storage_update(engine->storage, elapsed);
+            running = running && Storage_update(engine->storage, elapsed); // Note: we could update audio/storage one every two steps (or more).
             lag -= delta_time;
         }
 
@@ -294,9 +309,31 @@ void Engine_run(Engine_t *engine)
         Input_update(engine->input, elapsed);
         Display_update(engine->display, elapsed);
 
+#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+        const double update_marker = glfwGetTime();
+        deltas[1] = (float)(update_marker - process_marker);
+#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
+
         running = running && Interpreter_render(engine->interpreter, lag / delta_time);
 
         Display_present(engine->display);
+
+#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+        const double render_marker = glfwGetTime();
+        deltas[2] = (float)(render_marker - update_marker);
+#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
+
+#ifdef __GRAPHICS_CAPTURE_SUPPORT__
+        const Input_Button_State_t *record_button = Input_get_button(engine->input, INPUT_BUTTON_RECORD);
+        if (record_button->pressed) {
+            Display_toggle_recording(engine->display, Storage_get_local_path(engine->storage));
+        }
+
+        const Input_Button_State_t *capture_button = Input_get_button(engine->input, INPUT_BUTTON_CAPTURE);
+        if (capture_button->pressed) {
+            Display_grab_snapshot(engine->display, Storage_get_local_path(engine->storage));
+        }
+#endif  /* __GRAPHICS_CAPTURE_SUPPORT__ */
 
         if (reference_time != 0.0f) {
             const float frame_time = (float)(glfwGetTime() - current);
@@ -305,5 +342,9 @@ void Engine_run(Engine_t *engine)
                 _wait_for(leftover); // FIXME: Add minor compensation to reach cap value?
             }
         }
+
+#ifdef __ENGINE_PERFORMANCE_STATISTICS__
+        deltas[3] = (float)(glfwGetTime() - current);
+#endif  /* __ENGINE_PERFORMANCE_STATISTICS__ */
     }
 }

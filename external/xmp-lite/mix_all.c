@@ -1,5 +1,5 @@
 /* Extended Module Player
- * Copyright (C) 1996-2018 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 1996-2021 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -141,7 +141,7 @@
 
 #define VAR_NORM(x) \
     register int smp_in; \
-    x *sptr = vi->sptr; \
+    x *sptr = (x *)vi->sptr; \
     unsigned int pos = vi->pos; \
     int frac = (1 << SMIX_SHIFT) * (vi->pos - (int)vi->pos)
 

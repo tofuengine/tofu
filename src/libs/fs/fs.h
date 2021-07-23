@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2020 Marco Lizza
+ * Copyright (c) 2019-2021 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,45 +30,25 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#if PLATFORM_ID == PLATFORM_LINUX
-  #include <linux/limits.h>
-
-  #define FILE_PATH_SEPARATOR     '/'
-  #define FILE_PATH_SEPARATOR_SZ  "/"
-  #define FILE_PATH_CURRENT_SZ    "./"
-  #define FILE_PATH_PARENT_SZ     "../"
-  #define FILE_PATH_MAX           PATH_MAX
-#elif PLATFORM_ID == PLATFORM_WINDOWS
-  #define FILE_PATH_SEPARATOR     '\\'
-  #define FILE_PATH_SEPARATOR_SZ  "\\"
-  #define FILE_PATH_CURRENT_SZ    ".\\"
-  #define FILE_PATH_PARENT_SZ     "..\\"
-  #define FILE_PATH_MAX           260
-#elif PLATFORM_ID == PLATFORM_OSX
-  #define FILE_PATH_SEPARATOR     '/'
-  #define FILE_PATH_SEPARATOR_SZ  "/"
-  #define FILE_PATH_CURRENT_SZ    "./"
-  #define FILE_PATH_PARENT_SZ     "../"
-  #define FILE_PATH_MAX           1024
-#endif
-
 #define FS_PATH_SEPARATOR       '/'
 #define FS_PATH_SEPARATOR_SZ    "/"
+
+#define FS_ARCHIVE_EXTENSION    ".pak"
 
 typedef struct _FS_Mount_t FS_Mount_t;
 typedef struct _FS_Handle_t FS_Handle_t;
 
 typedef struct _FS_Context_t FS_Context_t;
 
-extern FS_Context_t *FS_create(const char *base_path);
+extern FS_Context_t *FS_create(const char *path);
 extern void FS_destroy(FS_Context_t *context);
 
 extern bool FS_attach(FS_Context_t *context, const char *path);
-extern const FS_Mount_t *FS_locate(const FS_Context_t *context, const char *file);
+extern const FS_Mount_t *FS_locate(const FS_Context_t *context, const char *name);
 
-extern FS_Handle_t *FS_locate_and_open(const FS_Context_t *context, const char *file);
+extern FS_Handle_t *FS_locate_and_open(const FS_Context_t *context, const char *name);
 
-extern FS_Handle_t *FS_open(const FS_Mount_t *mount, const char *file);
+extern FS_Handle_t *FS_open(const FS_Mount_t *mount, const char *name);
 extern void FS_close(FS_Handle_t *handle);
 extern size_t FS_size(FS_Handle_t *handle);
 extern size_t FS_read(FS_Handle_t *handle, void *buffer, size_t bytes_requested);

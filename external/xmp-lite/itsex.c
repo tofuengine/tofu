@@ -4,15 +4,20 @@
 
 #include "itsex.h"
 
-static inline uint32_t read_bits(HIO_HANDLE *ibuf, uint32_t *bitbuf, int *bitnum, int n)
+static inline uint32_t read_bits(HIO_HANDLE *ibuf, uint32_t *bitbuf, int *bitnum, int n, int *err)
 {
 	uint32_t retval = 0;
 	int i = n;
-	int bnum = *bitnum, bbuf = *bitbuf;
+	int bnum = *bitnum;
+	uint32_t bbuf = *bitbuf;
 
-	if (n > 0) {
+	if (n > 0 && n <= 32) {
 		do {
 			if (bnum == 0) {
+				if (hio_eof(ibuf)) {
+					*err = EOF;
+					return 0;
+				}
 				bbuf = hio_read8(ibuf);
 				bnum = 8;
 			}
@@ -27,6 +32,10 @@ static inline uint32_t read_bits(HIO_HANDLE *ibuf, uint32_t *bitbuf, int *bitnum
 
 		*bitnum = bnum;
 		*bitbuf = bbuf;
+	} else {
+		/* Invalid shift value. */
+		*err = -2;
+		return 0;
 	}
 
 	return (retval >> (32 - i));
@@ -41,6 +50,7 @@ int itsex_decompress8(HIO_HANDLE *src, uint8_t *dst, uint32_t len, int it215)
 	int bitnum = 0;
 	uint8_t left = 0, temp = 0, temp2 = 0;
 	uint32_t d, pos;
+	int err = 0;
 
 	while (len) {
 		if (!block_count) {
@@ -58,8 +68,8 @@ int itsex_decompress8(HIO_HANDLE *src, uint8_t *dst, uint32_t len, int it215)
 		/* Unpacking */
 		pos = 0;
 		do {
-			uint16_t bits = read_bits(src, &bitbuf, &bitnum, left);
-			if (hio_eof(src))
+			uint16_t bits = read_bits(src, &bitbuf, &bitnum, left, &err);
+			if (err != 0)
 				return -1;
 
 			if (left < 7) {
@@ -67,9 +77,9 @@ int itsex_decompress8(HIO_HANDLE *src, uint8_t *dst, uint32_t len, int it215)
 				uint32_t j = bits & 0xffff;
 				if (i != j)
 					goto unpack_byte;
-				bits = (read_bits(src, &bitbuf, &bitnum, 3)
+				bits = (read_bits(src, &bitbuf, &bitnum, 3, &err)
 								+ 1) & 0xff;
-				if (hio_eof(src))
+				if (err != 0)
 					return -1;
 
 				left = ((uint8_t)bits < left) ?  (uint8_t)bits :
@@ -137,6 +147,7 @@ int itsex_decompress16(HIO_HANDLE *src, int16_t *dst, uint32_t len, int it215)
 	uint8_t left = 0;
 	int16_t temp = 0, temp2 = 0;
 	uint32_t d, pos;
+	int err = 0;
 
 	while (len) {
 		if (!block_count) {
@@ -154,8 +165,8 @@ int itsex_decompress16(HIO_HANDLE *src, int16_t *dst, uint32_t len, int it215)
 		/* Unpacking */
 		pos = 0;
 		do {
-			uint32_t bits = read_bits(src, &bitbuf, &bitnum, left);
-			if (hio_eof(src))
+			uint32_t bits = read_bits(src, &bitbuf, &bitnum, left, &err);
+			if (err != 0)
 				return -1;
 
 			if (left < 7) {
@@ -165,9 +176,8 @@ int itsex_decompress16(HIO_HANDLE *src, int16_t *dst, uint32_t len, int it215)
 				if (i != j)
 					goto unpack_byte;
 
-				bits = read_bits(src, &bitbuf, &bitnum, 4) + 1;
-
-				if (hio_eof(src))
+				bits = read_bits(src, &bitbuf, &bitnum, 4, &err) + 1;
+				if (err != 0)
 					return -1;
 
 				left = ((uint8_t)(bits & 0xff) < left) ?

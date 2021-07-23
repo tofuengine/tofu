@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2020 Marco Lizza
+ * Copyright (c) 2019-2021 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,6 +24,10 @@
 
 #include "luax.h"
 
+#include <config.h>
+
+#include <string.h>
+
 /*
 http://webcache.googleusercontent.com/search?q=cache:RLoR9dkMeowJ:howtomakeanrpg.com/a/classes-in-lua.html+&cd=4&hl=en&ct=clnk&gl=it
 https://hisham.hm/2014/01/02/how-to-write-lua-modules-in-a-post-module-world/
@@ -35,6 +39,57 @@ https://stackoverflow.com/questions/16713837/hand-over-global-custom-data-to-lua
 https://stackoverflow.com/questions/29449296/extending-lua-check-number-of-parameters-passed-to-a-function
 https://stackoverflow.com/questions/32673835/how-do-i-create-a-lua-module-inside-a-lua-module-in-c
 */
+
+#ifdef __LUAX_RTTI__
+typedef struct _luaX_Object {
+    int type;
+} luaX_Object;
+#endif  /* __LUAX_RTTI__ */
+
+void *luaX_newobject(lua_State *L, size_t size, void *state, int type, const char *metatable)
+{
+#ifdef __LUAX_RTTI__
+    luaX_Object *object = (luaX_Object *)lua_newuserdatauv(L, sizeof(luaX_Object) + size, 1);
+    luaL_setmetatable(L, metatable);
+    *object = (luaX_Object){
+            .type = type
+        };
+    void *self = object + 1;
+    memcpy(self, state, size);
+    return self;
+#else   /* __LUAX_RTTI__ */
+    void *self = lua_newuserdatauv(L, size, 1);
+    luaL_setmetatable(L, metatable);
+    memcpy(self, state, size);
+    return self;
+#endif  /* __LUAX_RTTI__ */
+}
+
+int luaX_isobject(lua_State *L, int idx, int type)
+{
+#ifdef __LUAX_RTTI__
+    luaX_Object *object = (luaX_Object *)lua_touserdata(L, idx);
+    if (!object) {
+        return 0;
+    }
+    return object->type == type;
+#else   /* __LUAX_RTTI__ */
+    return lua_isuserdata(L, idx);
+#endif  /* __LUAX_RTTI__ */
+}
+
+void *luaX_toobject(lua_State *L, int idx, int type)
+{
+#ifdef __LUAX_RTTI__
+    luaX_Object *object = (luaX_Object *)lua_touserdata(L, idx);
+    if (!object) {
+        return NULL;
+    }
+    return object->type == type ? object + 1: NULL;
+#else   /* __LUAX_RTTI__ */
+    return lua_touserdata(L, idx);
+#endif  /* __LUAX_RTTI__ */
+}
 
 void luaX_stackdump(lua_State *L, const char* func, int line)
 {
@@ -126,10 +181,11 @@ int luaX_insisttable(lua_State *L, const char *name)
     return 1;
 }
 
-int luaX_newmodule(lua_State *L, const luaX_Script *script, const luaL_Reg *f, const luaX_Const *c, int nup, const char *name)
+// Both `f` and `c` can't be `NULL`, but need to be "empty" arrays (which is easy, thanks to compound-literals)
+int luaX_newmodule(lua_State *L, luaX_Script script, const luaL_Reg *f, const luaX_Const *c, int nup, const char *name)
 {
-    if (script && script->buffer && script->size > 0) {
-        luaL_loadbuffer(L, script->buffer, script->size, script->name);
+    if (script.buffer && script.size > 0) {
+        luaL_loadbuffer(L, script.buffer, script.size, script.name);
         lua_pcall(L, 0, LUA_MULTRET, 0); // Just the export table is returned.
         if (name) {
             lua_pushstring(L, name);
@@ -153,27 +209,21 @@ int luaX_newmodule(lua_State *L, const luaX_Script *script, const luaL_Reg *f, c
         lua_setfield(L, -2, "__index");  /* metatable.__index = metatable */
     }
 
-    lua_insert(L, -(nup + 1)); // Move the table above the upvalues.
-    if (f) {
-        luaL_setfuncs(L, f, nup); // Register the function into the table at the top of the stack, i.e. create the methods
-    } else {
-        lua_pop(L, nup); // Consume the upvalues.
-    }
+    lua_insert(L, -(nup + 1)); // Move the table above the upvalues (to permit them to be consumed while preservig the table).
+    luaL_setfuncs(L, f, nup); // Register the function into the table at the top of the stack, i.e. create the methods.
 
-    if (c) {
-        for (; c->name; c++) {
-            switch (c->type) {
-                case LUA_CT_NIL: { lua_pushnil(L); } break;
-                case LUA_CT_BOOLEAN: { lua_pushboolean(L, c->value.b); } break;
-                case LUA_CT_INTEGER: { lua_pushinteger(L, (lua_Integer)c->value.i); } break;
-                case LUA_CT_NUMBER: { lua_pushnumber(L, (lua_Number)c->value.n); } break;
-                case LUA_CT_STRING: { lua_pushstring(L, c->value.sz); } break;
-            }
-            lua_setfield(L, -2, c->name);
+    for (; c->name; c++) {
+        switch (c->type) {
+            case LUA_CT_NIL: { lua_pushnil(L); } break;
+            case LUA_CT_BOOLEAN: { lua_pushboolean(L, c->value.b); } break;
+            case LUA_CT_INTEGER: { lua_pushinteger(L, (lua_Integer)c->value.i); } break;
+            case LUA_CT_NUMBER: { lua_pushnumber(L, (lua_Number)c->value.n); } break;
+            case LUA_CT_STRING: { lua_pushstring(L, c->value.sz); } break;
         }
+        lua_setfield(L, -2, c->name);
     }
 
-    // Upvalues have already been consumed. No need to clear the stack.
+    // Upvalues have already been consumed by `luaL_setfuncs()`. No need to clear the stack.
 
     return 1;
 }
@@ -185,16 +235,16 @@ void luaX_openlibs(lua_State *L)
         { LUA_LOADLIBNAME, luaopen_package },
         { LUA_COLIBNAME, luaopen_coroutine },
         { LUA_TABLIBNAME, luaopen_table },
-#ifdef __INCLUDE_SYSTEM_LIBRARIES__
+#ifdef __LUAX_INCLUDE_SYSTEM_LIBRARIES__
         { LUA_IOLIBNAME, luaopen_io },
         { LUA_OSLIBNAME, luaopen_os },
-#endif
+#endif  /* __LUAX_INCLUDE_SYSTEM_LIBRARIES__ */
         { LUA_STRLIBNAME, luaopen_string },
         { LUA_MATHLIBNAME, luaopen_math },
         { LUA_UTF8LIBNAME, luaopen_utf8 },
 #ifdef DEBUG
         { LUA_DBLIBNAME, luaopen_debug },
-#endif
+#endif  /* DEBUG */
         { NULL, NULL }
     };
     // "require" is different from preload in the sense that is also make the
@@ -209,7 +259,7 @@ void luaX_preload(lua_State *L, const char *modname, lua_CFunction loadf, int nu
 {
     luaL_getsubtable(L, LUA_REGISTRYINDEX, LUA_PRELOAD_TABLE);
     lua_insert(L, -(nup + 1)); // Move the `_PRELOAD` table above the upvalues.
-    lua_pushcclosure(L, loadf, nup); // Closure with the upvalues (they are be consumed)
+    lua_pushcclosure(L, loadf, nup); // Closure with the upvalues (they are consumed)
     lua_setfield(L, -2, modname);
     lua_pop(L, 1); // Pop the `_PRELOAD` table
 }
@@ -249,26 +299,38 @@ void luaX_unref(lua_State *L, luaX_Reference ref)
     luaL_unref(L, LUA_REGISTRYINDEX, ref);
 }
 
-void luaX_checkargument(lua_State *L, int idx, const char *file, int line, ...)
+void luaX_checkargument(lua_State *L, int idx, const char *file, int line, const int types[])
 {
     int actual_type = lua_type(L, idx);
-    int success = 1;
-    va_list args;
-    va_start(args, line);
-    for (;;) {
-        int type = va_arg(args, int);
-        if (type == LUAX_EOD) {
-            success = 0;
-            break;
-        }
-        if (actual_type == type) {
-            break;
+    for (int i = 0; types[i] != LUA_TEOD; ++i) {
+        int type = types[i];
+        if (actual_type == type) { // Bail out if we match a type!
+            return;
         }
     }
-    va_end(args);
-    if (!success) {
-        luaL_error(L, "[%s:%d] signature failure for argument #%d (wrong actual type, got `%s`)", file, line, idx, lua_typename(L, actual_type));
+    luaL_error(L, "[%s:%d] signature failure for argument #%d (wrong actual type, got `%s`)", file, line, idx, lua_typename(L, actual_type));
+}
+
+int luaX_hassignature(lua_State *L, const int signature[])
+{
+    int argc = lua_gettop(L);
+
+    int matched = 0;
+
+    int idx = 1; // Lua's stack isn't zero-based.
+    for (int i = 0; signature[i] != LUA_TEOD; ++i) {
+        if (i == argc) { // Actual arguments are fewer than signature's formal ones. Bail out as not matching!
+            return 0;
+        }
+        int type = signature[i];
+        int actual_type = lua_type(L, idx++);
+        if (actual_type != type && type != LUA_TANY) { // Non matching argument! Bail out as not matching!
+            return 0;
+        }
+        ++matched;
     }
+
+    return matched == argc; // We need to matched the exact count of actual arguments. Having `countof(signature)` would've be easier.
 }
 
 int luaX_pushupvalues(lua_State *L)

@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019-2020 Marco Lizza
+ * Copyright (c) 2019-2021 Marco Lizza
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -53,7 +53,7 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
   #define METHOD_STACK_INDEX(m)   OBJECT_STACK_INDEX + 1 + (m)
 #endif
 
-static const uint8_t _boot_lua[] = {
+static const char _boot_lua[] = {
 #ifdef DEBUG
   #include "boot-debug.inc"
 #else
@@ -68,14 +68,14 @@ typedef struct _Reader_Context_t {
 } Reader_Context_t;
 
 typedef enum _Methods_t {
-    METHOD_INPUT,
+    METHOD_PROCESS,
     METHOD_UPDATE,
     METHOD_RENDER,
     Methods_t_CountOf
 } Methods_t;
 
-static const char *_methods[] = {
-    "input",
+static const char *_methods[] = { // We don't use a compound-literal on purpose here, since we are referring to the above enum.
+    "process",
     "update",
     "render",
     NULL
@@ -172,25 +172,25 @@ static int _searcher(lua_State *L)
 {
     Storage_t *storage = (Storage_t *)lua_touserdata(L, lua_upvalueindex(1));
 
-    const char *file = lua_tostring(L, 1);
+    const char *name = lua_tostring(L, 1);
 
-    char path_file[FILE_PATH_MAX] = "@"; // Prepend a `@`, required by Lua to track files.
-    strcat(path_file, file);
-    for (size_t i = 1; path_file[i] != '\0'; ++i) { // Replace `.` with `/` to map (virtual) file system entry.
-        if (path_file[i] == '.') {
-            path_file[i] = FS_PATH_SEPARATOR;
+    char path[PLATFORM_PATH_MAX] = "@"; // Prepend a `@`, required by Lua to track files.
+    strcat(path, name);
+    for (char *ptr = path; *ptr != '\0'; ++ptr) { // Replace `.` with `/` to map (virtual) file system entry.
+        if (*ptr == '.') {
+            *ptr = FS_PATH_SEPARATOR;
         }
     }
-    strcat(path_file, ".lua");
+    strcat(path, ".lua");
 
-    const Storage_Resource_t *resource = Storage_load(storage, path_file + 1, STORAGE_RESOURCE_BLOB);
+    const Storage_Resource_t *resource = Storage_load(storage, path + 1, STORAGE_RESOURCE_BLOB);
     if (!resource) {
         return LUA_ERRFILE;
     }
 
-    int result = lua_load(L, _reader, &(Reader_Context_t){ .ptr = S_BPTR(resource), .size = S_BSIZE(resource) }, path_file, NULL); // Neither `text` nor `binary`: autodetect.
+    int result = lua_load(L, _reader, &(Reader_Context_t){ .ptr = S_BPTR(resource), .size = S_BSIZE(resource) }, path, NULL); // Neither `text` nor `binary`: autodetect.
     if (result != LUA_OK) {
-        luaL_error(L, "failed w/ error #%d while loading file `%s`", result, path_file + 1); // Skip the `@` character.
+        luaL_error(L, "failed w/ error #%d while loading file `%s`", result, path + 1); // Skip the `@` character.
     }
 
     return 1;
@@ -227,7 +227,7 @@ static int _execute(lua_State *L, const char *script, size_t size, const char *n
 {
     int result = luaL_loadbuffer(L, script, size, name);
     if (result != LUA_OK) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "error #%d in load %s", result, lua_tostring(L, -1));
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "error #%d in load: %s", result, lua_tostring(L, -1));
         lua_pop(L, 1);
         return result;
     }
@@ -327,7 +327,7 @@ Interpreter_t *Interpreter_create(const Storage_t *storage, const void *userdata
 #endif
 #endif
 
-    int result = _execute(interpreter->state, (const char *)_boot_lua, sizeof(_boot_lua) / sizeof(char), "@boot.lua", 0, 1); // Prefix '@' to trace as filename internally in Lua.
+    int result = _execute(interpreter->state, _boot_lua, sizeof(_boot_lua) / sizeof(char), "@boot.lua", 0, 1); // Prefix '@' to trace as filename internally in Lua.
     if (result != 0) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't interpret boot script");
         lua_close(interpreter->state);
@@ -360,14 +360,14 @@ void Interpreter_destroy(Interpreter_t *interpreter)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "interpreter freed");
 }
 
-bool Interpreter_input(const Interpreter_t *interpreter)
+bool Interpreter_process(const Interpreter_t *interpreter)
 {
-    return _call(interpreter->state, METHOD_INPUT, 0, 0) == LUA_OK;
+    return _call(interpreter->state, METHOD_PROCESS, 0, 0) == LUA_OK;
 }
 
 bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
 {
-    lua_pushnumber(interpreter->state, delta_time);
+    lua_pushnumber(interpreter->state, (lua_Number)delta_time);
     if (_call(interpreter->state, METHOD_UPDATE, 1, 0) != LUA_OK) {
         return false;
     }
@@ -413,7 +413,8 @@ bool Interpreter_update(Interpreter_t *interpreter, float delta_time)
 
 bool Interpreter_render(const Interpreter_t *interpreter, float ratio)
 {
-    lua_pushnumber(interpreter->state, ratio);
+    // TODO: pass the default `Canvas` instance?
+    lua_pushnumber(interpreter->state, (lua_Number)ratio); // TODO: is the `ratio` parameter really useful?
     return _call(interpreter->state, METHOD_RENDER, 1, 0) == LUA_OK;
 }
 

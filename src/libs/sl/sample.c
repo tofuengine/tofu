@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2020 Marco Lizza
+ * Copyright (c) 2019-2021 Marco Lizza
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -68,8 +68,9 @@ static bool _sample_generate(SL_Source_t *source, void *output, size_t frames_re
 
 static inline bool _rewind(Sample_t *sample)
 {
-    ma_audio_buffer *buffer = &sample->buffer;
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "rewinding sample %p", sample);
 
+    ma_audio_buffer *buffer = &sample->buffer;
     ma_audio_buffer_seek_to_pcm_frame(buffer, 0); // Can't fail, we are rewinding into memory (frame-seeking is safe).
 
     sample->frames_completed = 0;
@@ -79,6 +80,8 @@ static inline bool _rewind(Sample_t *sample)
 
 static inline bool _reset(Sample_t *sample)
 {
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "rewinding sample %p", sample);
+
     return _rewind(sample);
 }
 
@@ -236,7 +239,7 @@ static bool _sample_reset(SL_Source_t *source)
 
     bool reset = _reset(sample);
     if (!reset) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't reset sample data");
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't reset sample %p data", source);
         return false;
     }
 
@@ -274,9 +277,6 @@ static bool _sample_generate(SL_Source_t *source, void *output, size_t frames_re
         size_t frames_to_generate = frames_remaining > MIXING_BUFFER_SIZE_IN_FRAMES ? MIXING_BUFFER_SIZE_IN_FRAMES : frames_remaining;
 
         ma_uint64 frames_to_consume = ma_data_converter_get_required_input_frame_count(converter, frames_to_generate);
-        if (frames_to_consume > MIXING_BUFFER_SIZE_IN_FRAMES) {
-            frames_to_consume = MIXING_BUFFER_SIZE_IN_FRAMES;
-        }
 
         void *consumed_buffer;
         ma_audio_buffer_map(buffer, &consumed_buffer, &frames_to_consume); // No need to check the result, can't fail.
@@ -287,7 +287,7 @@ static bool _sample_generate(SL_Source_t *source, void *output, size_t frames_re
 
         ma_audio_buffer_unmap(buffer, frames_consumed); // Ditto.
 
-        sample->frames_completed += frames_generated;
+        sample->frames_completed += frames_consumed;
 
         mix_1on2_additive(cursor, converted_buffer, frames_generated, mix);
         cursor += frames_generated * SL_BYTES_PER_FRAME;

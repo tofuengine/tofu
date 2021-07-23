@@ -1,7 +1,7 @@
 --[[
 MIT License
 
-Copyright (c) 2019-2020 Marco Lizza
+Copyright (c) 2019-2021 Marco Lizza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -32,8 +32,8 @@ function Main:__ctor()
   self.game = Game.new()
 end
 
-function Main:input()
-  self.game:input()
+function Main:process()
+  self.game:process()
 end
 
 function Main:update(delta_time)
