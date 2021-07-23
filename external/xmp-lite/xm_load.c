@@ -694,6 +694,7 @@ static int xm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		return -1;
 	}
 
+	memset(xfh.order, 0, sizeof(xfh.order));
 	if (hio_read(xfh.order, sizeof(uint8_t), len, f) != (size_t)len) {	/* Pattern order table */
 		D_(D_CRIT "error reading orders");
 		return -1;

@@ -87,6 +87,11 @@ typedef signed long long int64;
 #define RESET_FLAG(a,b)	((a)&=~(b))
 #define TEST_FLAG(a,b)	!!((a)&(b))
 
+/* libxmp_get_filetype() return values */
+#define XMP_FILETYPE_NONE		0
+#define XMP_FILETYPE_DIR	(1 << 0)
+#define XMP_FILETYPE_FILE	(1 << 1)
+
 #define CLAMP(x,a,b) do { \
     if ((x) < (a)) (x) = (a); \
     else if ((x) > (b)) (x) = (b); \
@@ -453,5 +458,7 @@ struct context_data {
 	struct smix_data smix;
 	int state;
 };
+
+int libxmp_get_filetype (const char *path);
 
 #endif /* LIBXMP_COMMON_H */
