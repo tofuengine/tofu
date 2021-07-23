@@ -27,12 +27,12 @@ Guess what? Yup, that's yet another game engine/framework.
 * [x] Per-color re-indexing (*shifting*) and transparency, affecting drawing operations (both per-draw and during VRAM transfer).
 * [x] Multiple canvas, with drawing state stack support.
 * [x] SNES' Mode7-like transforms, with scanline based ([HDMA](https://wiki.superfamicom.org/grog's-guide-to-dma-and-hdma-on-the-snes)) changes.
-* [x] Amiga's Copper-like programs, with pixel-wise resolution.
+* [x] Amiga's Copper-like programs, with pixel-wide resolution.
 * [x] Image programmable copy functions, to implement *script-shaders*.
 * [x] Image stencil copy function, with used definable *threshold function*.
 * [x] Image blend copy, with user definable *blending function* (`repeat`, `add`, `sub`, `multiply`, `min`, `max`).
 * [x] Post-effect display-wise fragment shaders.
-* [x] Library of "retro-feel" post-effects (LCD, CRT, etc...).
+* [x] Library of "retro-feel" post-effects (LCD, CRT, color-blindness, etc...).
 * [x] Audio support w/ real time sound streaming on a separate thread.
 * [x] On-the-fly audio mixing w/ per voice looping/panning/balance/gain/speed control.
 * [x] Static and streamed audio data playback (FLAC format).
@@ -62,14 +62,14 @@ Guess what? Yup, that's yet another game engine/framework.
 * [GLFW](https://www.glfw.org/) v3.3.4
 * [libxmp](http://xmp.sourceforge.net/) v4.5.0
 * [Lua](https://lua.org/) v5.4.3
-* [miniaudio](https://github.com/dr-soft/miniaudio) v0.10.39
+* [miniaudio](https://github.com/dr-soft/miniaudio) v0.10.40
 * [SDL_GameControllerDB](https://github.com/gabomdq/SDL_GameControllerDB)
 * [spleen](https://github.com/fcambus/spleen) v1.8.1
 * [stb](https://github.com/nothings/stb) libraries
 
 ## Inspirations
 
-**#tofuengine** is an original software, result of the experience gained from ~30 years in programming on a broad range of platforms (some concept even stems back to *ancient* platforms like the [Amiga](https://en.wikipedia.org/wiki/Amiga) and the [SNES](https://en.wikipedia.org/wiki/Super_Nintendo_Entertainment_System), and arcane languages like [AMOS](https://en.wikipedia.org/wiki/AMOS_(programming_language)) and [Blitz BASIC 2](https://en.wikipedia.org/wiki/Blitz_BASIC)). However, it has also been influenced by modern similar/other softwares in one way or another. Here's a brief list.
+**#tofuengine** is an original software, result of the experience gained from ~30 years in programming on a broad range of platforms (some concept even stems back to *ancient* platforms like the [Amiga](https://en.wikipedia.org/wiki/Amiga) and the [SNES](https://en.wikipedia.org/wiki/Super_Nintendo_Entertainment_System), and *arcane* languages like [AMOS](https://en.wikipedia.org/wiki/AMOS_(programming_language)) and [Blitz BASIC 2](https://en.wikipedia.org/wiki/Blitz_BASIC)). However, it has also been influenced by modern similar/other softwares in one way or another. Here's a brief list.
 
 * [Love2D](https://love2d.org/)
 * [Pico-8](https://www.lexaloffle.com/pico-8.php)
