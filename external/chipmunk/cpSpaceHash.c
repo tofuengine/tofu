@@ -69,7 +69,7 @@ cpHandleRelease(cpHandle *hand, cpArray *pooledHandles)
 	if(hand->retain == 0) cpArrayPush(pooledHandles, hand);
 }
 
-static int handleSetEql(void *obj, cpHandle *hand){return (obj == hand->obj);}
+static cpBool handleSetEql(const void *ptr, const void *elt){return (ptr == ((const cpHandle *)elt)->obj);}
 
 static void *
 handleSetTrans(void *obj, cpSpaceHash *hash)
@@ -168,7 +168,7 @@ cpSpaceHashAllocTable(cpSpaceHash *hash, int numcells)
 	hash->table = (cpSpaceHashBin **)cpcalloc(numcells, sizeof(cpSpaceHashBin *));
 }
 
-static inline cpSpatialIndexClass *Klass();
+static inline cpSpatialIndexClass *Klass(void);
 
 cpSpatialIndex *
 cpSpaceHashInit(cpSpaceHash *hash, cpFloat celldim, int numcells, cpSpatialIndexBBFunc bbfunc, cpSpatialIndex *staticIndex)
@@ -564,9 +564,10 @@ cpSpaceHashCount(cpSpaceHash *hash)
 	return cpHashSetCount(hash->handleSet);
 }
 
-static int
-cpSpaceHashContains(cpSpaceHash *hash, void *obj, cpHashValue hashid)
+static cpBool
+cpSpaceHashContains(cpSpatialIndex *index, void *obj, cpHashValue hashid)
 {
+	cpSpaceHash *hash = (cpSpaceHash *)index;
 	return cpHashSetFind(hash->handleSet, hashid, obj) != NULL;
 }
 

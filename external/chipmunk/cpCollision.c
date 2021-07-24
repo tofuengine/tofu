@@ -345,7 +345,7 @@ EPA(const struct SupportContext *ctx, const struct MinkowskiPoint v0, const stru
 //MARK: GJK Functions.
 
 // Recursive implementation of the GJK loop.
-static inline struct ClosestPoints
+static struct ClosestPoints
 GJKRecurse(const struct SupportContext *ctx, const struct MinkowskiPoint v0, const struct MinkowskiPoint v1, const int iteration)
 {
 	if(iteration > MAX_GJK_ITERATIONS){

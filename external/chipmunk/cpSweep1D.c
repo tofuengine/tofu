@@ -21,7 +21,7 @@
 
 #include "chipmunk/chipmunk_private.h"
 
-static inline cpSpatialIndexClass *Klass();
+static inline cpSpatialIndexClass *Klass(void);
 
 //MARK: Basic Structures
 
@@ -117,9 +117,10 @@ cpSweep1DEach(cpSweep1D *sweep, cpSpatialIndexIteratorFunc func, void *data)
 	for(int i=0, count=sweep->num; i<count; i++) func(table[i].obj, data);
 }
 
-static int
-cpSweep1DContains(cpSweep1D *sweep, void *obj, cpHashValue hashid)
+static cpBool
+cpSweep1DContains(cpSpatialIndex *index, void *obj, cpHashValue hashid)
 {
+	cpSweep1D *sweep = (cpSweep1D *)index;
 	TableCell *table = sweep->table;
 	for(int i=0, count=sweep->num; i<count; i++){
 		if(table[i].obj == obj) return cpTrue;
