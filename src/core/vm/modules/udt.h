@@ -30,6 +30,7 @@
 #include <libs/fs/fs.h>
 #include <libs/gl/gl.h>
 #include <libs/sl/sl.h>
+#include <libs/pl/pl.h>
 
 typedef enum _UserData_t { // TODO: move to a separate file.
     USERDATA_STORAGE = 1,
@@ -37,6 +38,7 @@ typedef enum _UserData_t { // TODO: move to a separate file.
     USERDATA_INPUT,
     USERDATA_AUDIO,
     USERDATA_ENVIRONMENT,
+    USERDATA_PHYSICS,
     USERDATA_INTERPRETER,
     UserData_t_CountOf
 } UserData_t;
@@ -44,6 +46,7 @@ typedef enum _UserData_t { // TODO: move to a separate file.
 typedef enum _Object_Types_t {
     OBJECT_TYPE_BANK,
     OBJECT_TYPE_BATCH,
+    OBJECT_TYPE_BODY,
     OBJECT_TYPE_CANVAS,
     OBJECT_TYPE_FONT,
     OBJECT_TYPE_GRID,
@@ -114,5 +117,24 @@ typedef struct _Source_Object_t {
     FS_Handle_t *handle;
     SL_Source_t *source;
 } Source_Object_t;
+
+typedef enum _Body_Types_t {
+    BODY_TYPE_BOX,
+    BODY_TYPE_CIRCLE
+} Body_Types_t;
+
+typedef struct _Body_Object_t {
+    PL_Body_t *body;
+    PL_Shape_t *shape;
+    Body_Types_t type;
+    union {
+        struct {
+            size_t width, height;
+        } box;
+        struct {
+            size_t radius;
+        } circle;
+    } size;
+} Body_Object_t;
 
 #endif  /* __MODULES_UDT_H__ */

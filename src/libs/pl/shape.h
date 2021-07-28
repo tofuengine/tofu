@@ -28,11 +28,7 @@
 #include "common.h"
 #include "body.h"
 
-#include <chipmunk/chipmunk.h>
-
-typedef struct _PL_Shape_t {
-    cpShape *shape;
-} PL_Shape_t;
+typedef void *PL_Shape_t;
 
 extern PL_Shape_t *PL_shape_create_circle(PL_Body_t *body, PL_Float_t radius, PL_Vector_t offset);
 extern PL_Shape_t *PL_shape_create_box(PL_Body_t *body, PL_Float_t width, PL_Float_t height, PL_Float_t radius);

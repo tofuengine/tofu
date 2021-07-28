@@ -22,33 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef __ENGINE_H__
-#define __ENGINE_H__
+#ifndef __MODULES_WORLD_H__
+#define __MODULES_WORLD_H__
 
-#include <core/configuration.h>
-#include <core/environment.h>
-#include <core/physics.h>
-#include <core/io/audio.h>
-#include <core/io/display.h>
-#include <core/io/input.h>
-#include <core/io/storage.h>
-#include <core/vm/interpreter.h>
+#include <lua/lua.h>
 
-typedef struct _Engine_t {
-    Configuration_t configuration;
+extern int world_loader(lua_State *L);
 
-    Storage_t *storage;
-    Display_t *display;
-    Input_t *input;
-    Audio_t *audio;
-    Physics_t *physics;
-    Environment_t *environment;
-    Interpreter_t *interpreter;
-} Engine_t;
-
-extern Engine_t *Engine_create(int argc, const char *argv[]);
-extern void Engine_destroy(Engine_t *engine);
-
-extern void Engine_run(Engine_t *engine);
-
-#endif  /* __ENGINE_H__ */
+#endif  /* __MODULES_WORLD_H__ */

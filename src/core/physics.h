@@ -22,33 +22,24 @@
  * SOFTWARE.
  */
 
-#ifndef __ENGINE_H__
-#define __ENGINE_H__
+#ifndef __PHYSICS_H__
+#define __PHYSICS_H__
 
-#include <core/configuration.h>
-#include <core/environment.h>
-#include <core/physics.h>
-#include <core/io/audio.h>
-#include <core/io/display.h>
-#include <core/io/input.h>
-#include <core/io/storage.h>
-#include <core/vm/interpreter.h>
+#include <libs/pl/pl.h>
 
-typedef struct _Engine_t {
-    Configuration_t configuration;
+typedef struct _Physics_Configuration_t {
+    const char *path;
+} Physics_Configuration_t;
 
-    Storage_t *storage;
-    Display_t *display;
-    Input_t *input;
-    Audio_t *audio;
-    Physics_t *physics;
-    Environment_t *environment;
-    Interpreter_t *interpreter;
-} Engine_t;
+typedef struct _Physics_t {
+    Physics_Configuration_t configuration;
 
-extern Engine_t *Engine_create(int argc, const char *argv[]);
-extern void Engine_destroy(Engine_t *engine);
+    PL_World_t *world;
+} Physics_t;
 
-extern void Engine_run(Engine_t *engine);
+extern Physics_t *Physics_create(const Physics_Configuration_t *configuration);
+extern void Physics_destroy(Physics_t *physics);
 
-#endif  /* __ENGINE_H__ */
+extern bool Physics_update(Physics_t *physics, float delta_time);
+
+#endif  /* __PHYSICS_H__ */

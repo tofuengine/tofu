@@ -27,21 +27,23 @@
 
 #include "common.h"
 #include "body.h"
+#include "shape.h"
 
-#include <chipmunk/chipmunk.h>
-
-typedef struct _PL_World_t {
-    cpSpace *space;
-} PL_World_t;
+typedef void *PL_World_t;
 
 extern PL_World_t *PL_world_create(void);
 extern void PL_world_destroy(PL_World_t *world);
 
-extern void PL_world_set_gravity(PL_World_t *world, PL_Vector_t force);
+extern PL_Vector_t PL_world_get_gravity(const PL_World_t *world);
+extern void PL_world_set_gravity(PL_World_t *world, PL_Vector_t gravity);
+extern PL_Float_t PL_world_get_damping(const PL_World_t *world);
 extern void PL_world_set_damping(PL_World_t *world, PL_Float_t damping);
 
 extern void PL_world_add_body(PL_World_t *world, const PL_Body_t *body);
 extern void PL_world_remove_body(PL_World_t *world, const PL_Body_t *body);
+
+extern void PL_world_add_shape(PL_World_t *world, const PL_Shape_t *shape);
+extern void PL_world_remove_shape(PL_World_t *world, const PL_Shape_t *shape);
 
 extern void PL_world_update(PL_World_t *world, PL_Float_t delta_time);
 

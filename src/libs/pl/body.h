@@ -27,8 +27,6 @@
 
 #include "common.h"
 
-#include <chipmunk/chipmunk.h>
-
 #include <stdbool.h>
 
 typedef enum _PL_Body_Types_t {
@@ -37,9 +35,7 @@ typedef enum _PL_Body_Types_t {
     PL_BODY_TYPE_STATIC,
 } PL_Body_Types_t;
 
-typedef struct _PL_Body_t {
-    cpBody *body;
-} PL_Body_t;
+typedef void *PL_Body_t;
 
 extern PL_Body_t *PL_body_create(void);
 extern void PL_body_destroy(PL_Body_t *body);
@@ -47,14 +43,21 @@ extern void PL_body_set_type(PL_Body_t *body, PL_Body_Types_t type);
 extern void PL_body_set_enabled(PL_Body_t *body, bool enable);
 extern bool PL_body_is_enabled(const PL_Body_t *body);
 
+extern PL_Float_t PL_body_get_mass(const PL_Body_t *body);
+extern void PL_body_set_mass(PL_Body_t *body, PL_Float_t mass);
+
 extern PL_Vector_t PL_body_get_position(const PL_Body_t *body);
 extern void PL_body_set_position(PL_Body_t *body, PL_Vector_t position);
 
 extern void PL_body_set_centre_of_gravity(PL_Body_t *body, PL_Vector_t centre_of_gravity);
 extern PL_Float_t PL_body_get_angle(const PL_Body_t *body);
 extern void PL_body_set_angle(PL_Body_t *body, PL_Float_t angle);
+extern PL_Float_t PL_body_get_momentum(const PL_Body_t *body);
 extern void PL_body_set_momentum(PL_Body_t *body, PL_Float_t momentum);
+extern void PL_body_set_momentum_for_box(PL_Body_t *body, PL_Float_t momentum, PL_Float_t width, PL_Float_t height);
+extern void PL_body_set_momentum_for_circle(PL_Body_t *body, PL_Float_t momentum, PL_Float_t radius);
 
+extern PL_Vector_t PL_body_get_velocity(const PL_Body_t *body);
 extern void PL_body_set_velocity(PL_Body_t *body, PL_Vector_t velocity);
 extern void PL_body_set_force(PL_Body_t *body, PL_Vector_t force);
 

@@ -205,9 +205,21 @@ Engine_t *Engine_create(int argc, const char *argv[])
         return NULL;
     }
 
+    engine->physics = Physics_create(&(const Physics_Configuration_t){ 0 });
+    if (!engine->physics) {
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize physics");
+        Audio_destroy(engine->audio);
+        Input_destroy(engine->input);
+        Display_destroy(engine->display);
+        Storage_destroy(engine->storage);
+        free(engine);
+        return NULL;
+    }
+
     engine->environment = Environment_create(argc, argv, engine->display);
     if (!engine->environment) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize environment");
+        Physics_destroy(engine->physics);
         Audio_destroy(engine->audio);
         Input_destroy(engine->input);
         Display_destroy(engine->display);
@@ -222,11 +234,13 @@ Engine_t *Engine_create(int argc, const char *argv[])
             engine->input,
             engine->audio,
             engine->environment,
+            engine->physics,
             NULL
         });
     if (!engine->interpreter) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize interpreter");
         Environment_destroy(engine->environment);
+        Physics_destroy(engine->physics);
         Audio_destroy(engine->audio);
         Input_destroy(engine->input);
         Display_destroy(engine->display);
@@ -244,6 +258,7 @@ void Engine_destroy(Engine_t *engine)
 {
     Interpreter_destroy(engine->interpreter); // Terminate the interpreter to unlock all resources.
     Environment_destroy(engine->environment);
+    Physics_destroy(engine->physics);
     Audio_destroy(engine->audio);
     Input_destroy(engine->input);
     Display_destroy(engine->display);
@@ -297,8 +312,9 @@ void Engine_run(Engine_t *engine)
         lag += elapsed; // Count a maximum amount of skippable frames in order no to stall on slower machines.
         for (size_t frames = skippable_frames; frames && (lag >= delta_time); --frames) {
             Environment_update(engine->environment, delta_time);
-            running = running && Interpreter_update(engine->interpreter, delta_time); // Fixed update.
-            running = running && Audio_update(engine->audio, elapsed); // Update the subsystems w/ fixed steps (fake interrupt based).
+            running = running && Interpreter_update(engine->interpreter, delta_time); // Update the subsystems w/ fixed steps (fake interrupt based).
+            running = running && Audio_update(engine->audio, elapsed);
+            running = running && Physics_update(engine->physics, elapsed);
             running = running && Storage_update(engine->storage, elapsed); // Note: we could update audio/storage one every two steps (or more).
             lag -= delta_time;
         }

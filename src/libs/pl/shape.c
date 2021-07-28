@@ -24,89 +24,67 @@
 
 #include "shape.h"
 
+#include <chipmunk/chipmunk.h>
+
 #include <libs/log.h>
 
 #define LOG_CONTEXT "pl-shape"
 
 PL_Shape_t *PL_shape_create_circle(PL_Body_t *body, PL_Float_t radius, PL_Vector_t offset)
 {
-    cpShape *circle = cpCircleShapeNew(body->body, (cpFloat)radius, (cpVect){ .x = offset.x, .y = offset.y });
-    if (!circle) {
+    cpShape *shape = cpCircleShapeNew((cpBody *)body, (cpFloat)radius, (cpVect){ .x = offset.x, .y = offset.y });
+    if (!shape) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create circle");
         return NULL;
     }
 
-    PL_Shape_t *shape = malloc(sizeof(PL_Shape_t));
-    if (!shape) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate shape");
-        cpSpaceFree(circle);
-        return NULL;
-    }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "circular shape %p created", shape);
 
-    *shape = (PL_Shape_t){
-            .shape = circle
-        };
-
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shape %p created w/ circle %p", shape, circle);
-
-    return shape;
+    return (PL_Shape_t *)shape;
 }
 
 PL_Shape_t *PL_shape_create_box(PL_Body_t *body, PL_Float_t width, PL_Float_t height, PL_Float_t radius)
 {
-    cpShape *box = cpBoxShapeNew(body->body, (cpFloat)width, (cpFloat)height, (cpFloat)radius);
-    if (!box) {
+    cpShape *shape = cpBoxShapeNew((cpBody *)body, (cpFloat)width, (cpFloat)height, (cpFloat)radius);
+    if (!shape) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create box");
         return NULL;
     }
 
-    PL_Shape_t *shape = malloc(sizeof(PL_Shape_t));
-    if (!shape) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate shape");
-        cpSpaceFree(box);
-        return NULL;
-    }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "boxed shape %p create", shape);
 
-    *shape = (PL_Shape_t){
-            .shape = box
-        };
-
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shape %p create w/ box %p", shape, box);
-
-    return shape;
+    return (PL_Shape_t *)shape;
 }
 
 void PL_shape_destroy(PL_Shape_t *shape)
 {
-    cpShapeFree(shape->shape);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shape circle/box %p freed", shape->shape);
-
-    free(shape);
+//    cpSpaceRemoveShape(cpShapeGetSpace((cpShape *)shape), (cpShape *)shape);
+    cpShapeFree((cpShape *)shape);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shape %p freed", shape);
 }
 
 void PL_shape_set_density(PL_Shape_t *shape, PL_Float_t density)
 {
-    cpShapeSetDensity(shape->shape, (cpFloat)density);
+    cpShapeSetDensity((cpShape *)shape, (cpFloat)density);
 }
 
 void PL_shape_set_elasticity(PL_Shape_t *shape, PL_Float_t elasticity)
 {
-    cpShapeSetElasticity(shape->shape, (cpFloat)elasticity);
+    cpShapeSetElasticity((cpShape *)shape, (cpFloat)elasticity);
 }
 
 void PL_shape_set_friction(PL_Shape_t *shape, PL_Float_t friction)
 {
-    cpShapeSetFriction(shape->shape, (cpFloat)friction);
+    cpShapeSetFriction((cpShape *)shape, (cpFloat)friction);
 }
 
 void PL_shape_set_surface_velocity(PL_Shape_t *shape, PL_Vector_t surfaceVelocity)
 {
-    cpShapeSetSurfaceVelocity(shape->shape, (cpVect){ .x = surfaceVelocity.x, .y = surfaceVelocity.y });
+    cpShapeSetSurfaceVelocity((cpShape *)shape, (cpVect){ .x = surfaceVelocity.x, .y = surfaceVelocity.y });
 }
 
 PL_AABB_t PL_shape_get_aabb(const PL_Shape_t *shape)
 {
-    cpBB bb = cpShapeGetBB(shape->shape);
+    cpBB bb = cpShapeGetBB((const cpShape *)shape);
     return (PL_AABB_t){ .x0 = bb.l, .y0 = bb.t, .x1 = bb.r, .y1 = bb.b };
 }
