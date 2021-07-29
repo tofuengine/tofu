@@ -313,9 +313,9 @@ void Engine_run(Engine_t *engine)
         for (size_t frames = skippable_frames; frames && (lag >= delta_time); --frames) {
             Environment_update(engine->environment, delta_time);
             running = running && Interpreter_update(engine->interpreter, delta_time); // Update the subsystems w/ fixed steps (fake interrupt based).
-            running = running && Audio_update(engine->audio, elapsed);
-            running = running && Physics_update(engine->physics, elapsed);
-            running = running && Storage_update(engine->storage, elapsed); // Note: we could update audio/storage one every two steps (or more).
+            running = running && Audio_update(engine->audio, delta_time);
+            running = running && Physics_update(engine->physics, delta_time);
+            running = running && Storage_update(engine->storage, delta_time); // Note: we could update audio/storage one every two steps (or more).
             lag -= delta_time;
         }
 
