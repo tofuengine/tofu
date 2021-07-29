@@ -25,7 +25,9 @@
 #ifndef __PHYSICS_H__
 #define __PHYSICS_H__
 
-#include <libs/pl/pl.h>
+#include <chipmunk/chipmunk.h>
+
+#include <stdbool.h>
 
 typedef struct _Physics_Configuration_t {
     const char *path;
@@ -34,7 +36,7 @@ typedef struct _Physics_Configuration_t {
 typedef struct _Physics_t {
     Physics_Configuration_t configuration;
 
-    PL_World_t *world;
+    cpSpace *space;
 } Physics_t;
 
 extern Physics_t *Physics_create(const Physics_Configuration_t *configuration);

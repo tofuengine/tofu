@@ -42,21 +42,21 @@ Physics_t *Physics_create(const Physics_Configuration_t *configuration)
             .configuration = *configuration
         };
 
-    physics->world = PL_world_create();
-    if (!physics->world) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create world");
+    physics->space = cpSpaceNew();
+    if (!physics->space) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create space");
         free(physics);
         return NULL;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "physics world %p created", physics->world);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "physics %p w/ space %p created", physics, physics->space);
 
     return physics;
 }
 
 void Physics_destroy(Physics_t *physics)
 {
-    PL_world_destroy(physics->world);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "physics world %p destroyed", physics->world);
+    cpSpaceFree(physics->space);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "physics space %p destroyed", physics->space);
 
     free(physics);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "physics freed");
@@ -64,6 +64,6 @@ void Physics_destroy(Physics_t *physics)
 
 bool Physics_update(Physics_t *physics, float delta_time)
 {
-    PL_world_update(physics->world, delta_time);
+    cpSpaceStep(physics->space, delta_time);
     return true;
 }

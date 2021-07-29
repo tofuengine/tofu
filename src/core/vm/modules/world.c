@@ -30,7 +30,7 @@
 
 #include "udt.h"
 
-#define LOG_CONTEXT "world"
+#define LOG_CONTEXT "space"
 #define META_TABLE  "Tofu_World_Body_mt"
 
 static int world_gravity_v_v(lua_State *L);
@@ -57,8 +57,8 @@ static int world_gravity_0_2n(lua_State *L)
 
     const Physics_t *physics = (const Physics_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_PHYSICS));
 
-    const PL_World_t *world = physics->world;
-    const PL_Vector_t position = PL_world_get_gravity(world);
+    const cpSpace *space = physics->space;
+    const cpVect position = cpSpaceGetGravity(space);
 
     lua_pushnumber(L, (lua_Number)position.x);
     lua_pushnumber(L, (lua_Number)position.y);
@@ -72,13 +72,13 @@ static int world_gravity_2nn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    PL_Float_t x = (PL_Float_t)LUAX_NUMBER(L, 1);
-    PL_Float_t y = (PL_Float_t)LUAX_NUMBER(L, 2);
+    cpFloat x = (cpFloat)LUAX_NUMBER(L, 1);
+    cpFloat y = (cpFloat)LUAX_NUMBER(L, 2);
 
     Physics_t *physics = (Physics_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_PHYSICS));
 
-    PL_World_t *world = physics->world;
-    PL_world_set_gravity(world, (PL_Vector_t){ .x = x, .y = y });
+    cpSpace *space = physics->space;
+    cpSpaceSetGravity(space, (cpVect){ .x = x, .y = y });
 
     return 0;
 }
@@ -98,8 +98,8 @@ static int world_damping_0_1n(lua_State *L)
 
     const Physics_t *physics = (const Physics_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_PHYSICS));
 
-    const PL_World_t *world = physics->world;
-    const PL_Float_t damping = PL_world_get_damping(world);
+    const cpSpace *space = physics->space;
+    const cpFloat damping = cpSpaceGetDamping(space);
 
     lua_pushnumber(L, (lua_Number)damping);
 
@@ -111,12 +111,12 @@ static int world_damping_1n_0(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    PL_Float_t damping = (PL_Float_t)LUAX_NUMBER(L, 1);
+    cpFloat damping = (cpFloat)LUAX_NUMBER(L, 1);
 
     Physics_t *physics = (Physics_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_PHYSICS));
 
-    PL_World_t *world = physics->world;
-    PL_world_set_damping(world, damping);
+    cpSpace *space = physics->space;
+    cpSpaceSetDamping(space, damping);
 
     return 0;
 }

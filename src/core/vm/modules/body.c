@@ -29,6 +29,7 @@
 #include <libs/log.h>
 
 #include "udt.h"
+#include "utils/map.h"
 
 #define LOG_CONTEXT "body"
 #define META_TABLE  "Tofu_Physics_Body_mt"
@@ -60,6 +61,12 @@ int body_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
+static const Map_Entry_t _types[3] = { // Ditto.
+    { "dynamic", CP_BODY_TYPE_DYNAMIC },
+    { "kinematic", CP_BODY_TYPE_KINEMATIC },
+    { "static", CP_BODY_TYPE_STATIC }
+};
+
 static int body_new_4snnn_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -75,22 +82,25 @@ static int body_new_4snnn_1o(lua_State *L)
 
     Physics_t *physics = (Physics_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_PHYSICS));
 
-    PL_Body_t *body = PL_body_create();
+    cpBody *body = cpBodyNew(0.0, 0.0);
     if (!body) {
         return luaL_error(L, "can't create body");
     }
 //    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p created for world %p", body, physics->world);
 
-    PL_body_set_type(body, PL_BODY_TYPE_DYNAMIC);
+    const Map_Entry_t *entry = map_find(L, type, _types, 3);
+    cpBodySetType(body, (cpBodyType)entry->value);
 
-    PL_Shape_t *shape = PL_shape_create_box(body, (PL_Float_t)width, (PL_Float_t)height, (PL_Float_t)radius);
+    cpShape *shape = cpBoxShapeNew(body, (cpFloat)width, (cpFloat)height, (cpFloat)radius);
     if (!shape) {
-        PL_body_destroy(body);
+        cpBodyFree(body);
         return luaL_error(L, "can't create shape");
     }
 
-    PL_world_add_body(physics->world, body);
-    PL_world_add_shape(physics->world, shape);
+    cpShapeSetElasticity(shape, 0.90);
+
+    cpSpaceAddBody(physics->space, body);
+    cpSpaceAddShape(physics->space, shape);
 
     Body_Object_t *self = (Body_Object_t *)luaX_newobject(L, sizeof(Body_Object_t), &(Body_Object_t){
             .body = body,
@@ -120,22 +130,23 @@ static int body_new_2sn_1o(lua_State *L)
 
     Physics_t *physics = (Physics_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_PHYSICS));
 
-    PL_Body_t *body = PL_body_create();
+    cpBody *body = cpBodyNew(0.0, 0.0);
     if (!body) {
         return luaL_error(L, "can't create body");
     }
 //    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p created for world %p", body, physics->world);
 
-    PL_body_set_type(body, PL_BODY_TYPE_DYNAMIC);
+    const Map_Entry_t *entry = map_find(L, type, _types, 3);
+    cpBodySetType(body, (cpBodyType)entry->value);
 
-    PL_Shape_t *shape = PL_shape_create_circle(body, (PL_Float_t)radius, (PL_Vector_t){ .x = 0.0, .y = 0.0 });
+    cpShape *shape = cpCircleShapeNew(body, (cpFloat)radius, (cpVect){ .x = 0.0, .y = 0.0 });
     if (!shape) {
-        PL_body_destroy(body);
+        cpBodyFree(body);
         return luaL_error(L, "can't create shape");
     }
 
-    PL_world_add_body(physics->world, body);
-    PL_world_add_shape(physics->world, shape);
+    cpSpaceAddBody(physics->space, body);
+    cpSpaceAddShape(physics->space, shape);
 
     Body_Object_t *self = (Body_Object_t *)luaX_newobject(L, sizeof(Body_Object_t), &(Body_Object_t){
             .body = body,
@@ -161,6 +172,28 @@ static int body_new_v_1o(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
+static int body_gc_1o_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+    LUAX_SIGNATURE_END
+    Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
+
+    Physics_t *physics = (Physics_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_PHYSICS));
+
+    cpSpaceRemoveShape(physics->space, self->shape);
+    cpShapeFree(self->shape);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shape %p destroyed", self->shape);
+
+    cpSpaceRemoveBody(physics->space, self->body);
+    cpBodyFree(self->body);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p destroyed", self->body);
+
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p finalized", self);
+
+    return 0;
+}
+
 static int body_mass_1o_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -168,8 +201,8 @@ static int body_mass_1o_1n(lua_State *L)
     LUAX_SIGNATURE_END
     const Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
 
-    const PL_Body_t *body = self->body;
-    const PL_Float_t mass = PL_body_get_mass(body);
+    const cpBody *body = self->body;
+    const cpFloat mass = cpBodyGetMass(body);
 
     lua_pushnumber(L, (lua_Number)mass);
 
@@ -183,10 +216,10 @@ static int body_mass_2on_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
-    PL_Float_t mass = (PL_Float_t)LUAX_NUMBER(L, 2);
+    cpFloat mass = (cpFloat)LUAX_NUMBER(L, 2);
 
-    PL_Body_t *body = self->body;
-    PL_body_set_mass(body, mass);
+    cpBody *body = self->body;
+    cpBodySetMass(body, mass);
 
     return 0;
 }
@@ -206,8 +239,8 @@ static int body_momentum_1o_1n(lua_State *L)
     LUAX_SIGNATURE_END
     const Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
 
-    const PL_Body_t *body = self->body;
-    const PL_Float_t momentum = PL_body_get_momentum(body);
+    const cpBody *body = self->body;
+    const cpFloat momentum = cpBodyGetMoment(body);
 
     lua_pushnumber(L, (lua_Number)momentum);
 
@@ -221,17 +254,16 @@ static int body_momentum_2on_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
-    PL_Float_t momentum = (PL_Float_t)LUAX_NUMBER(L, 2);
+    cpFloat momentum = (cpFloat)LUAX_NUMBER(L, 2);
 
-    PL_Body_t *body = self->body;
+    cpBody *body = self->body;
     if (self->type == BODY_TYPE_BOX) {
-        PL_body_set_momentum_for_box(body, momentum, self->size.box.width, self->size.box.height);
+        momentum = cpMomentForBox(momentum, self->size.box.width, self->size.box.height);
     } else
     if (self->type == BODY_TYPE_CIRCLE) {
-        PL_body_set_momentum_for_circle(body, momentum, self->size.circle.radius);
-    } else {
-        PL_body_set_momentum(body, momentum);
+        momentum = cpMomentForCircle(momentum, self->size.circle.radius, 0.0, (cpVect){ .x = 0.0, .y = 0.0 });
     }
+    cpBodySetMoment(body, momentum);
 
     return 0;
 }
@@ -244,28 +276,6 @@ static int body_momentum_v_v(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
-static int body_gc_1o_0(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-    LUAX_SIGNATURE_END
-    Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
-
-    Physics_t *physics = (Physics_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_PHYSICS));
-
-    PL_world_remove_shape(physics->world, self->shape);
-    PL_shape_destroy(self->shape);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shape %p destroyed", self->shape);
-
-    PL_world_remove_body(physics->world, self->body);
-    PL_body_destroy(self->body);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p destroyed", self->body);
-
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "batch %p finalized", self);
-
-    return 0;
-}
-
 static int body_position_1o_2n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -273,8 +283,8 @@ static int body_position_1o_2n(lua_State *L)
     LUAX_SIGNATURE_END
     const Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
 
-    const PL_Body_t *body = self->body;
-    const PL_Vector_t position = PL_body_get_position(body);
+    const cpBody *body = self->body;
+    const cpVect position = cpBodyGetPosition(body);
 
     lua_pushnumber(L, (lua_Number)position.x);
     lua_pushnumber(L, (lua_Number)position.y);
@@ -290,11 +300,11 @@ static int body_position_3onn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
-    PL_Float_t x = (PL_Float_t)LUAX_NUMBER(L, 2);
-    PL_Float_t y = (PL_Float_t)LUAX_NUMBER(L, 3);
+    cpFloat x = (cpFloat)LUAX_NUMBER(L, 2);
+    cpFloat y = (cpFloat)LUAX_NUMBER(L, 3);
 
-    PL_Body_t *body = self->body;
-    PL_body_set_position(body, (PL_Vector_t){ .x = x, .y = y });
+    cpBody *body = self->body;
+    cpBodySetPosition(body, (cpVect){ .x = x, .y = y });
 
     return 0;
 }
@@ -314,8 +324,8 @@ static int body_velocity_1o_2nn(lua_State *L)
     LUAX_SIGNATURE_END
     const Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
 
-    const PL_Body_t *body = self->body;
-    const PL_Vector_t velocity = PL_body_get_velocity(body);
+    const cpBody *body = self->body;
+    const cpVect velocity = cpBodyGetVelocity(body);
 
     lua_pushnumber(L, (lua_Number)velocity.x);
     lua_pushnumber(L, (lua_Number)velocity.y);
@@ -331,11 +341,11 @@ static int body_velocity_3onn_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
-    PL_Float_t x = (PL_Float_t)LUAX_NUMBER(L, 2);
-    PL_Float_t y = (PL_Float_t)LUAX_NUMBER(L, 3);
+    cpFloat x = (cpFloat)LUAX_NUMBER(L, 2);
+    cpFloat y = (cpFloat)LUAX_NUMBER(L, 3);
 
-    PL_Body_t *body = self->body;
-    PL_body_set_velocity(body, (PL_Vector_t){ .x = x, .y = y });
+    cpBody *body = self->body;
+    cpBodySetVelocity(body, (cpVect){ .x = x, .y = y });
 
     return 0;
 }
@@ -355,8 +365,8 @@ static int body_angle_1o_1n(lua_State *L)
     LUAX_SIGNATURE_END
     const Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
 
-    const PL_Body_t *body = self->body;
-    const PL_Float_t angle = PL_body_get_angle(body);
+    const cpBody *body = self->body;
+    const cpFloat angle = cpBodyGetAngle(body);
 
     lua_pushnumber(L, (lua_Number)angle);
 
@@ -370,10 +380,10 @@ static int body_angle_2on_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
-    PL_Float_t angle = (PL_Float_t)LUAX_NUMBER(L, 2);
+    cpFloat angle = (cpFloat)LUAX_NUMBER(L, 2);
 
-    PL_Body_t *body = self->body;
-    PL_body_set_angle(body, angle);
+    cpBody *body = self->body;
+    cpBodySetAngle(body, angle);
 
     return 0;
 }

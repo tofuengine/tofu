@@ -25,12 +25,13 @@
 #ifndef __MODULES_UDT_H__
 #define __MODULES_UDT_H__
 
+#include <chipmunk/chipmunk.h>
+
 #include <core/io/display.h>
 #include <libs/luax.h>
 #include <libs/fs/fs.h>
 #include <libs/gl/gl.h>
 #include <libs/sl/sl.h>
-#include <libs/pl/pl.h>
 
 typedef enum _UserData_t { // TODO: move to a separate file.
     USERDATA_STORAGE = 1,
@@ -124,8 +125,8 @@ typedef enum _Body_Types_t {
 } Body_Types_t;
 
 typedef struct _Body_Object_t {
-    PL_Body_t *body;
-    PL_Shape_t *shape;
+    cpBody *body;
+    cpShape *shape;
     Body_Types_t type;
     union {
         struct {
