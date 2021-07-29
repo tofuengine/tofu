@@ -119,23 +119,25 @@ typedef struct _Source_Object_t {
     SL_Source_t *source;
 } Source_Object_t;
 
-typedef enum _Body_Types_t {
-    BODY_TYPE_BOX,
-    BODY_TYPE_CIRCLE
-} Body_Types_t;
+typedef enum _Body_Kinds_t {
+    BODY_KIND_BOX,
+    BODY_KIND_CIRCLE,
+    Body_Kinds_t_CountOf
+} Body_Kinds_t;
 
 typedef struct _Body_Object_t {
     cpBody *body;
     cpShape *shape;
-    Body_Types_t type;
+    Body_Kinds_t kind;
     union {
         struct {
-            size_t width, height;
+            cpFloat width, height, radius;
         } box;
         struct {
-            size_t radius;
+            cpFloat radius;
         } circle;
     } size;
+//    cpFloat *momentum;
 } Body_Object_t;
 
 #endif  /* __MODULES_UDT_H__ */
