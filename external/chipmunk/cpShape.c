@@ -91,7 +91,7 @@ cpShapeSetBody(cpShape *shape, cpBody *body)
 	shape->body = body;
 }
 
-cpFloat cpShapeGetMass(cpShape *shape){ return shape->massInfo.m; }
+cpFloat cpShapeGetMass(const cpShape *shape){ return shape->massInfo.m; }
 
 void
 cpShapeSetMass(cpShape *shape, cpFloat mass){
@@ -102,12 +102,12 @@ cpShapeSetMass(cpShape *shape, cpFloat mass){
 	cpBodyAccumulateMassFromShapes(body);
 }
 
-cpFloat cpShapeGetDensity(cpShape *shape){ return shape->massInfo.m/shape->massInfo.area; }
+cpFloat cpShapeGetDensity(const cpShape *shape){ return shape->massInfo.m/shape->massInfo.area; }
 void cpShapeSetDensity(cpShape *shape, cpFloat density){ cpShapeSetMass(shape, density*shape->massInfo.area); }
 
-cpFloat cpShapeGetMoment(cpShape *shape){ return shape->massInfo.m*shape->massInfo.i; }
-cpFloat cpShapeGetArea(cpShape *shape){ return shape->massInfo.area; }
-cpVect cpShapeGetCenterOfGravity(cpShape *shape) { return shape->massInfo.cog; }
+cpFloat cpShapeGetMoment(const cpShape *shape){ return shape->massInfo.m*shape->massInfo.i; }
+cpFloat cpShapeGetArea(const cpShape *shape){ return shape->massInfo.area; }
+cpVect cpShapeGetCenterOfGravity(const cpShape *shape) { return shape->massInfo.cog; }
 
 cpBB
 cpShapeGetBB(const cpShape *shape)

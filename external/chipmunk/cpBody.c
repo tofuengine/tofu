@@ -134,7 +134,7 @@ cpBodyIsSleeping(const cpBody *body)
 }
 
 cpBodyType
-cpBodyGetType(cpBody *body)
+cpBodyGetType(const cpBody *body)
 {
 	if(body->sleeping.idleTime == INFINITY){
 		return CP_BODY_TYPE_STATIC;

@@ -104,21 +104,21 @@ CP_EXPORT cpBody* cpShapeGetBody(const cpShape *shape);
 CP_EXPORT void cpShapeSetBody(cpShape *shape, cpBody *body);
 
 /// Get the mass of the shape if you are having Chipmunk calculate mass properties for you.
-CP_EXPORT cpFloat cpShapeGetMass(cpShape *shape);
+CP_EXPORT cpFloat cpShapeGetMass(const cpShape *shape);
 /// Set the mass of this shape to have Chipmunk calculate mass properties for you.
 CP_EXPORT void cpShapeSetMass(cpShape *shape, cpFloat mass);
 
 /// Get the density of the shape if you are having Chipmunk calculate mass properties for you.
-CP_EXPORT cpFloat cpShapeGetDensity(cpShape *shape);
+CP_EXPORT cpFloat cpShapeGetDensity(const cpShape *shape);
 /// Set the density  of this shape to have Chipmunk calculate mass properties for you.
 CP_EXPORT void cpShapeSetDensity(cpShape *shape, cpFloat density);
 
 /// Get the calculated moment of inertia for this shape.
-CP_EXPORT cpFloat cpShapeGetMoment(cpShape *shape);
+CP_EXPORT cpFloat cpShapeGetMoment(const cpShape *shape);
 /// Get the calculated area of this shape.
-CP_EXPORT cpFloat cpShapeGetArea(cpShape *shape);
+CP_EXPORT cpFloat cpShapeGetArea(const cpShape *shape);
 /// Get the centroid of this shape.
-CP_EXPORT cpVect cpShapeGetCenterOfGravity(cpShape *shape);
+CP_EXPORT cpVect cpShapeGetCenterOfGravity(const cpShape *shape);
 
 /// Get the bounding box that contains the shape given it's current position and angle.
 CP_EXPORT cpBB cpShapeGetBB(const cpShape *shape);
