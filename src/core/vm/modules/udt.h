@@ -25,6 +25,8 @@
 #ifndef __MODULES_UDT_H__
 #define __MODULES_UDT_H__
 
+#include <chipmunk/chipmunk.h>
+
 #include <core/io/display.h>
 #include <libs/luax.h>
 #include <libs/fs/fs.h>
@@ -37,6 +39,7 @@ typedef enum _UserData_t { // TODO: move to a separate file.
     USERDATA_INPUT,
     USERDATA_AUDIO,
     USERDATA_ENVIRONMENT,
+    USERDATA_PHYSICS,
     USERDATA_INTERPRETER,
     UserData_t_CountOf
 } UserData_t;
@@ -44,6 +47,7 @@ typedef enum _UserData_t { // TODO: move to a separate file.
 typedef enum _Object_Types_t {
     OBJECT_TYPE_BANK,
     OBJECT_TYPE_BATCH,
+    OBJECT_TYPE_BODY,
     OBJECT_TYPE_CANVAS,
     OBJECT_TYPE_FONT,
     OBJECT_TYPE_GRID,
@@ -114,5 +118,26 @@ typedef struct _Source_Object_t {
     FS_Handle_t *handle;
     SL_Source_t *source;
 } Source_Object_t;
+
+typedef enum _Body_Kinds_t {
+    BODY_KIND_BOX,
+    BODY_KIND_CIRCLE,
+    Body_Kinds_t_CountOf
+} Body_Kinds_t;
+
+typedef struct _Body_Object_t {
+    cpBody *body;
+    cpShape *shape;
+    Body_Kinds_t kind;
+    union {
+        struct {
+            cpFloat width, height, radius;
+        } box;
+        struct {
+            cpFloat radius;
+        } circle;
+    } size;
+//    cpFloat *momentum;
+} Body_Object_t;
 
 #endif  /* __MODULES_UDT_H__ */

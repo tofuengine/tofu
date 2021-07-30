@@ -53,6 +53,7 @@
 #include <core/vm/modules/arrays.h>
 #include <core/vm/modules/bank.h>
 #include <core/vm/modules/batch.h>
+#include <core/vm/modules/body.h>
 #include <core/vm/modules/canvas.h>
 #include <core/vm/modules/class.h>
 #include <core/vm/modules/display.h>
@@ -69,6 +70,7 @@
 #include <core/vm/modules/system.h>
 #include <core/vm/modules/timers.h>
 #include <core/vm/modules/vector.h>
+#include <core/vm/modules/world.h>
 #include <core/vm/modules/xform.h>
 #include <libs/log.h>
 #include <libs/luax.h>
@@ -151,6 +153,15 @@ static int io_loader(lua_State *L)
         });
 }
 
+static int physics_loader(lua_State *L)
+{
+    return _create_module(L, (const luaL_Reg[]){
+            { "World", world_loader },
+            { "Body", body_loader },
+            { NULL, NULL }
+        });
+}
+
 static int sound_loader(lua_State *L)
 {
     return _create_module(L, (const luaL_Reg[]){
@@ -178,6 +189,7 @@ void modules_initialize(lua_State *L, int nup)
             { "tofu.events", events_loader },
             { "tofu.graphics", graphics_loader },
             { "tofu.io", io_loader },
+            { "tofu.physics", physics_loader },
             { "tofu.sound", sound_loader },
             { "tofu.timers", timers_loader },
             { "tofu.util", util_loader },

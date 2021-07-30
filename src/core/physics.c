@@ -22,33 +22,48 @@
  * SOFTWARE.
  */
 
-#ifndef __ENGINE_H__
-#define __ENGINE_H__
+#include "physics.h"
 
-#include <core/configuration.h>
-#include <core/environment.h>
-#include <core/physics.h>
-#include <core/io/audio.h>
-#include <core/io/display.h>
-#include <core/io/input.h>
-#include <core/io/storage.h>
-#include <core/vm/interpreter.h>
+#include <libs/log.h>
 
-typedef struct _Engine_t {
-    Configuration_t configuration;
+#include <malloc.h>
 
-    Storage_t *storage;
-    Display_t *display;
-    Input_t *input;
-    Audio_t *audio;
-    Physics_t *physics;
-    Environment_t *environment;
-    Interpreter_t *interpreter;
-} Engine_t;
+#define LOG_CONTEXT "physics"
 
-extern Engine_t *Engine_create(int argc, const char *argv[]);
-extern void Engine_destroy(Engine_t *engine);
+Physics_t *Physics_create(const Physics_Configuration_t *configuration)
+{
+    Physics_t *physics = malloc(sizeof(Physics_t));
+    if (!physics) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate physics");
+        return NULL;
+    }
 
-extern void Engine_run(Engine_t *engine);
+    *physics = (Physics_t){
+            .configuration = *configuration
+        };
 
-#endif  /* __ENGINE_H__ */
+    physics->space = cpSpaceNew();
+    if (!physics->space) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create space");
+        free(physics);
+        return NULL;
+    }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "physics %p w/ space %p created", physics, physics->space);
+
+    return physics;
+}
+
+void Physics_destroy(Physics_t *physics)
+{
+    cpSpaceFree(physics->space);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "physics space %p destroyed", physics->space);
+
+    free(physics);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "physics freed");
+}
+
+bool Physics_update(Physics_t *physics, float delta_time)
+{
+    cpSpaceStep(physics->space, delta_time);
+    return true;
+}

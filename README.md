@@ -56,6 +56,7 @@ Guess what? Yup, that's yet another game engine/framework.
 
 ## Dependencies
 
+* [Chipmunk2D](https://chipmunk-physics.net/) v7.0.3
 * [dr_libs](https://github.com/mackron/dr_libs) v0.12.29, v0.6.27, v0.13.0
 * [Glad](https://glad.dav1d.de/)
 * [gif-h](https://github.com/charlietangora/gif-h)

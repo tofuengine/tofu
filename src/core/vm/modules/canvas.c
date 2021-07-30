@@ -93,8 +93,10 @@ int canvas_loader(lua_State *L)
         (const struct luaL_Reg[]){
             { "new", canvas_new_v_1o },
             { "__gc", canvas_gc_1o_0 },
+            // -- observers --
             { "size", canvas_size_1o_2nn },
             { "center", canvas_center_1o_2nn },
+            // -- modifiers --
             { "push", canvas_push_1o_0 },
             { "pop", canvas_pop_2oN_0 },
             { "reset", canvas_reset_1o_0 },
@@ -103,6 +105,7 @@ int canvas_loader(lua_State *L)
             { "clipping", canvas_clipping_v_0 },
             { "shift", canvas_shift_v_0 },
             { "transparent", canvas_transparent_v_0 },
+            // -- operations --
             { "clear", canvas_clear_2oN_0 },
             { "point", canvas_point_4onnN_0 },
             { "hline", canvas_hline_5onnnN_0 },

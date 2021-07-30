@@ -1,7 +1,4 @@
-/*
- * MIT License
- * 
- * Copyright (c) 2019-2021 Marco Lizza
+/* Copyright (c) 2013 Scott Lembcke and Howling Moon Software
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -10,8 +7,8 @@
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  * 
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -22,33 +19,50 @@
  * SOFTWARE.
  */
 
-#ifndef __ENGINE_H__
-#define __ENGINE_H__
+// Used for resizing hash tables.
+// Values approximately double.
+// http://planetmath.org/encyclopedia/GoodHashTablePrimes.html
+static int primes[] = {
+	5,
+	13,
+	23,
+	47,
+	97,
+	193,
+	389,
+	769,
+	1543,
+	3079,
+	6151,
+	12289,
+	24593,
+	49157,
+	98317,
+	196613,
+	393241,
+	786433,
+	1572869,
+	3145739,
+	6291469,
+	12582917,
+	25165843,
+	50331653,
+	100663319,
+	201326611,
+	402653189,
+	805306457,
+	1610612741,
+	0,
+};
 
-#include <core/configuration.h>
-#include <core/environment.h>
-#include <core/physics.h>
-#include <core/io/audio.h>
-#include <core/io/display.h>
-#include <core/io/input.h>
-#include <core/io/storage.h>
-#include <core/vm/interpreter.h>
-
-typedef struct _Engine_t {
-    Configuration_t configuration;
-
-    Storage_t *storage;
-    Display_t *display;
-    Input_t *input;
-    Audio_t *audio;
-    Physics_t *physics;
-    Environment_t *environment;
-    Interpreter_t *interpreter;
-} Engine_t;
-
-extern Engine_t *Engine_create(int argc, const char *argv[]);
-extern void Engine_destroy(Engine_t *engine);
-
-extern void Engine_run(Engine_t *engine);
-
-#endif  /* __ENGINE_H__ */
+static inline int
+next_prime(int n)
+{
+	int i = 0;
+	while(n > primes[i]){
+		i++;
+		cpAssertHard(primes[i], "Tried to resize a hash table to a size greater than 1610612741 O_o"); // realistically this should never happen
+	}
+	
+	return primes[i];
+}
