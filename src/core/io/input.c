@@ -283,7 +283,7 @@ Input_t *Input_create(const Input_Configuration_t *configuration, GLFWwindow *wi
     int result = glfwUpdateGamepadMappings(configuration->mappings);
     if (result == GLFW_FALSE) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't update gamepad mappings");
-        return false;
+        return NULL;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "input gamepad mappings updated");
 

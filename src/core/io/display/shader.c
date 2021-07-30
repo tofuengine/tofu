@@ -45,7 +45,8 @@ Shader_t *shader_create(void)
     shader->id = glCreateProgram();
     if (shader->id == 0) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't create shader program");
-        return false;
+        free(shader);
+        return NULL;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shader program #%d created", shader->id);
 

@@ -128,10 +128,10 @@ static void _on_parameter(Configuration_t *configuration, const char *context, c
     } else
     if (strcmp(fqn, "engine-frames-per-seconds") == 0) {
         configuration->engine.frames_per_seconds = (size_t)strtoul(value, NULL, 0);
-        configuration->engine.skippable_frames = configuration->engine.frames_per_seconds / 5; // Keep synched. About 20% of the frequency (FPS).
+        configuration->engine.skippable_frames = configuration->engine.frames_per_seconds / 20; // Keep synched. About 5% of the frequency (FPS).
     } else
     if (strcmp(fqn, "engine-skippable-frames") == 0) {
-        size_t suggested = configuration->engine.frames_per_seconds / 5;
+        size_t suggested = configuration->engine.frames_per_seconds / 20;
         configuration->engine.skippable_frames = (size_t)imin((int)strtol(value, NULL, 0), (int)suggested); // TODO: not sure if `imin` or `imax`. :P
     } else
     if (strcmp(fqn, "engine-frames-limit") == 0) {
@@ -264,7 +264,7 @@ void Configuration_parse(Configuration_t *configuration, const char *data)
             },
             .engine = {
                 .frames_per_seconds = 60,
-                .skippable_frames = 3, // About 20% of the FPS amount.
+                .skippable_frames = 3, // About 5% of the FPS amount.
 #ifdef __CAP_TO_60__
                 .frames_limit = 60, // 60 FPS capping as a default. TODO: make it run-time configurable?
 #else
