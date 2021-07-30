@@ -535,6 +535,8 @@ static int body_position_3onn_1o(lua_State *L)
 
     cpBody *body = self->body;
     cpBodySetPosition(body, (cpVect){ .x = x, .y = y });
+    cpShape *shape = self->shape;
+    cpSpaceReindexShape(cpShapeGetSpace(shape), shape); // Reindex when moving (mostly for static bodies)
 
     lua_pushvalue(L, 1);
 
