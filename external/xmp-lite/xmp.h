@@ -18,12 +18,12 @@ extern "C" {
 #define XMP_VER_RELEASE 0
 
 #if defined(_WIN32) && !defined(__CYGWIN__)
-# if defined(LIBXMP_BUILDING_LIB)
-#  define LIBXMP_EXPORT __declspec(dllimport)
+# if defined(LIBXMP_BUILDING_STATIC)
+#  define LIBXMP_EXPORT
 # elif defined(LIBXMP_BUILDING_DLL)
 #  define LIBXMP_EXPORT __declspec(dllexport)
 # else
-#  define LIBXMP_EXPORT
+#  define LIBXMP_EXPORT __declspec(dllimport)
 # endif
 #elif defined(__OS2__) && defined(__WATCOMC__) && defined(__SW_BD)
 #  define LIBXMP_EXPORT __declspec(dllexport)
@@ -113,7 +113,7 @@ extern "C" {
 #define XMP_SMPCTL_SKIP		(1 << 0) /* Don't load samples */
 
 /* limits */
-#define XMP_MAX_KEYS		121	/* Number of valid keys */
+#define XMP_MAX_KEYS		120	/* Number of valid keys */
 #define XMP_MAX_ENV_POINTS	32	/* Max number of envelope points */
 #define XMP_MAX_MOD_LENGTH	256	/* Max number of patterns in module */
 #define XMP_MAX_CHANNELS	64	/* Max number of channels in module */

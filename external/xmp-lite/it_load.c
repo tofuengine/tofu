@@ -192,13 +192,13 @@ static void xlat_fx(int c, struct xmp_event *e, uint8_t *last_fxp, int new_fx)
 
 static void xlat_volfx(struct xmp_event *event)
 {
-	int b;
+	unsigned char b;
 
 	b = event->vol;
 	event->vol = 0;
 
-	if (b <= 0x40) {
-		event->vol = b + 1;
+	if (b <= 64) {
+		event->vol = b;
 	} else if (b >= 65 && b <= 74) {	/* A */
 		event->f2t = FX_F_VSLIDE_UP_2;
 		event->f2p = b - 65;
@@ -248,8 +248,7 @@ static void fix_name(uint8_t *s, int l)
 			s[i] = ' ';
 	}
 	for (i--; i >= 0 && s[i] == ' '; i--) {
-		if (s[i] == ' ')
-			s[i] = 0;
+		s[i] = 0;
 	}
 }
 
@@ -811,7 +810,7 @@ static int load_it_sample(struct module_data *m, int i, int start,
 					free(decbuf);
 					return -1;
 				}
-				ret = libxmp_load_sample(m, NULL, SAMPLE_FLAG_NOLOAD |
+				ret = libxmp_load_sample(m, f, SAMPLE_FLAG_NOLOAD |
 							cvt, &m->xsmp[i], decbuf);
 				if (ret < 0) {
 					free(decbuf);
@@ -820,7 +819,7 @@ static int load_it_sample(struct module_data *m, int i, int start,
 				hio_seek(f, pos, SEEK_SET);
 			}
 
-			ret = libxmp_load_sample(m, NULL, SAMPLE_FLAG_NOLOAD | cvt,
+			ret = libxmp_load_sample(m, f, SAMPLE_FLAG_NOLOAD | cvt,
 					  &mod->xxs[i], decbuf);
 			if (ret < 0) {
 				free(decbuf);

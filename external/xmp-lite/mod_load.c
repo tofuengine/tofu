@@ -36,7 +36,6 @@
  */
 
 #include <ctype.h>
-#include <limits.h>
 #include "loader.h"
 #include "mod.h"
 
@@ -390,11 +389,10 @@ static int get_tracker_id(struct module_data *m, struct mod_header *mh, int id)
 static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
-    int i, j;
+    int i, j, k;
     int smp_size, ptsong = 0;
     struct xmp_event *event;
     struct mod_header mh;
-    uint8_t mod_event[4];
     const char *tracker = "";
     int detected = 0;
     uint8_t magic[4], idbuffer[4];
@@ -402,6 +400,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
     int tracker_id = TRACKER_PROTRACKER;
     int out_of_range = 0;
     int maybe_wow = 1;
+    uint8_t *patbuf;
 
     LOAD_INIT();
 
@@ -617,42 +616,48 @@ skip_test:
     /* Load and convert patterns */
     D_(D_INFO "Stored patterns: %d", mod->pat);
 
+    if ((patbuf = (uint8_t *) malloc(64 * 4 * mod->chn)) == NULL) {
+	return -1;
+    }
+
     for (i = 0; i < mod->pat; i++) {
-	long pos;
+	uint8 *mod_event;
 
-	if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0)
+	if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0) {
+	    free(patbuf);
 	    return -1;
-
-	pos = hio_tell(f);
-	if (pos < 0) {
-		return -1;
 	}
 
-	for (j = 0; j < (64 * mod->chn); j++) {
-	    int period;
+	size_t len = 64 * 4 * mod->chn;
+	if (hio_read(patbuf, sizeof(uint8_t), len, f) < len) {
+	    free(patbuf);
+	    return -1;
+	}
 
-	    event = &EVENT(i, j % mod->chn, j / mod->chn);
-	    if (hio_read(mod_event, sizeof(uint8_t), 4, f) < 4) {
-		return -1;
-	    }
+	mod_event = patbuf;
+	for (j = 0; j < 64; j++) {
+	    for (k = 0; k < mod->chn; k++) {
+		int period;
 
-	    period = ((int)(LSN(mod_event[0])) << 8) | mod_event[1];
-	    if (period != 0 && (period < 108 || period > 907)) {
-		out_of_range = 1;
-	    }
-
-	    /* Filter noisetracker events */
-	    if (tracker_id == TRACKER_PROBABLY_NOISETRACKER) {
-		unsigned char fxt = LSN(mod_event[2]);
-		unsigned char fxp = LSN(mod_event[3]);
-
-		if ((fxt > 0x06 && fxt < 0x0a) || (fxt == 0x0e && fxp > 1)) {
-		    tracker_id = TRACKER_UNKNOWN;
+		period = ((int)(LSN(mod_event[0])) << 8) | mod_event[1];
+		if (period != 0 && (period < 108 || period > 907)) {
+		    out_of_range = 1;
 		}
+
+		/* Filter noisetracker events */
+		if (tracker_id == TRACKER_PROBABLY_NOISETRACKER) {
+		    unsigned char fxt = LSN(mod_event[2]);
+		    unsigned char fxp = LSN(mod_event[3]);
+
+		    if ((fxt > 0x06 && fxt < 0x0a) || (fxt == 0x0e && fxp > 1)) {
+			tracker_id = TRACKER_UNKNOWN;
+		    }
+		}
+		mod_event += 4;
 	    }
 	}
 
-        if (out_of_range) {
+	if (out_of_range) {
 	    if (tracker_id == TRACKER_UNKNOWN && mh.restart == 0x7f) {
 		tracker_id = TRACKER_SCREAMTRACKER3;
 	    }
@@ -667,24 +672,24 @@ skip_test:
 	    }
 	}
 
-	hio_seek(f, pos, SEEK_SET);
+	mod_event = patbuf;
+	for (j = 0; j < 64; j++) {
+	    for (k = 0; k < mod->chn; k++) {
+		event = &EVENT(i, k, j);
 
-	for (j = 0; j < (64 * mod->chn); j++) {
-	    event = &EVENT(i, j % mod->chn, j / mod->chn);
-	    if (hio_read(mod_event, sizeof(uint8_t), 4, f) < 4) {
-		return -1;
-	    }
-
-	    switch (tracker_id) {
-	    case TRACKER_PROBABLY_NOISETRACKER:
-	    case TRACKER_NOISETRACKER:
-	    	libxmp_decode_noisetracker_event(event, mod_event);
-		break;
-	    default:
-	        libxmp_decode_protracker_event(event, mod_event);
+		switch (tracker_id) {
+		case TRACKER_PROBABLY_NOISETRACKER:
+		case TRACKER_NOISETRACKER:
+		    libxmp_decode_noisetracker_event(event, mod_event);
+		    break;
+		default:
+		    libxmp_decode_protracker_event(event, mod_event);
+		}
+		mod_event += 4;
 	    }
 	}
     }
+    free(patbuf);
 
     switch (tracker_id) {
     case TRACKER_PROTRACKER:
@@ -771,7 +776,7 @@ skip_test:
 
 	if (ptsong) {
 	    HIO_HANDLE *s;
-	    char sn[PATH_MAX];
+	    char sn[XMP_MAXPATH];
 	    char tmpname[32];
 	    const char *instname = mod->xxi[i].name;
 
@@ -781,7 +786,7 @@ skip_test:
 	    if (libxmp_copy_name_for_fopen(tmpname, instname, 32))
 		continue;
 
-	    snprintf(sn, PATH_MAX, "%s%s", m->dirname, tmpname);
+	    snprintf(sn, XMP_MAXPATH, "%s%s", m->dirname, tmpname);
 
 	    if ((s = hio_open(sn, "rb")) != NULL) {
 	        if (libxmp_load_sample(m, s, flags, &mod->xxs[i], NULL) < 0) {

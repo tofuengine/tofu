@@ -232,7 +232,7 @@ int itsex_decompress16(HIO_HANDLE *src, int16_t *dst, uint32_t len, int it215)
 		block_count -= d;
 		len -= d;
 		dst += d;
-		if (len <= 0)
+		if (len == 0)
 			break;
 	}
 

@@ -299,12 +299,10 @@ void libxmp_process_fx(struct context_data *ctx, struct channel_data *xc, int ch
 			xc->vol.memory = fxp;
 			h = MSN(fxp);
 			l = LSN(fxp);
-			if (fxp) {
-				if (HAS_QUIRK(QUIRK_VOLPDN)) {
-					xc->vol.slide = l ? -l : h;
-				} else {
-					xc->vol.slide = h ? h : -l;
-				}
+			if (HAS_QUIRK(QUIRK_VOLPDN)) {
+				xc->vol.slide = l ? -l : h;
+			} else {
+				xc->vol.slide = h ? h : -l;
 			}
 		}
 
