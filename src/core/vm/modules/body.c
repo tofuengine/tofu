@@ -250,7 +250,7 @@ static int body_width_1o_1n(lua_State *L)
     return 1;
 }
 
-static int body_width_2on_1o(lua_State *L)
+static int body_width_2on_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -268,16 +268,14 @@ static int body_width_2on_1o(lua_State *L)
 
     _recreate(L, self);
 
-    lua_pushvalue(L, 1);
-
-    return 1;
+    return 0;
 }
 
 static int body_width_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(1, body_width_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, body_width_2on_1o)
+        LUAX_OVERLOAD_ARITY(2, body_width_2on_0)
     LUAX_OVERLOAD_END
 }
 
@@ -298,7 +296,7 @@ static int body_height_1o_1n(lua_State *L)
     return 1;
 }
 
-static int body_height_2on_1o(lua_State *L)
+static int body_height_2on_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -316,16 +314,14 @@ static int body_height_2on_1o(lua_State *L)
 
     _recreate(L, self);
 
-    lua_pushvalue(L, 1);
-
-    return 1;
+    return 0;
 }
 
 static int body_height_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(1, body_height_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, body_height_2on_1o)
+        LUAX_OVERLOAD_ARITY(2, body_height_2on_0)
     LUAX_OVERLOAD_END
 }
 
@@ -346,7 +342,7 @@ static int body_radius_1o_1n(lua_State *L)
     return 1;
 }
 
-static int body_radius_2on_1o(lua_State *L)
+static int body_radius_2on_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -364,16 +360,14 @@ static int body_radius_2on_1o(lua_State *L)
 
     _recreate(L, self);
 
-    lua_pushvalue(L, 1);
-
-    return 1;
+    return 0;
 }
 
 static int body_radius_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(1, body_radius_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, body_radius_2on_1o)
+        LUAX_OVERLOAD_ARITY(2, body_radius_2on_0)
     LUAX_OVERLOAD_END
 }
 
@@ -392,7 +386,7 @@ static int body_type_1o_1s(lua_State *L)
     return 1;
 }
 
-static int body_type_2os_1o(lua_State *L)
+static int body_type_2os_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -405,16 +399,14 @@ static int body_type_2os_1o(lua_State *L)
     const Map_Entry_t *entry = map_find(L, type, _types, 3);
     cpBodySetType(body, (cpBodyType)entry->value);
 
-    lua_pushvalue(L, 1);
-
-    return 1;
+    return 0;
 }
 
 static int body_type_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(1, body_type_1o_1s)
-        LUAX_OVERLOAD_ARITY(2, body_type_2os_1o)
+        LUAX_OVERLOAD_ARITY(2, body_type_2os_0)
     LUAX_OVERLOAD_END
 }
 
@@ -433,7 +425,7 @@ static int body_mass_1o_1n(lua_State *L)
     return 1;
 }
 
-static int body_mass_2on_1o(lua_State *L)
+static int body_mass_2on_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -445,16 +437,14 @@ static int body_mass_2on_1o(lua_State *L)
     cpBody *body = self->body;
     cpBodySetMass(body, mass);
 
-    lua_pushvalue(L, 1);
-
-    return 1;
+    return 0;
 }
 
 static int body_mass_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(1, body_mass_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, body_mass_2on_1o)
+        LUAX_OVERLOAD_ARITY(2, body_mass_2on_0)
     LUAX_OVERLOAD_END
 }
 
@@ -474,7 +464,7 @@ static int body_momentum_1o_1n(lua_State *L)
     return 1;
 }
 
-static int body_momentum_2on_1o(lua_State *L)
+static int body_momentum_2on_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -493,16 +483,14 @@ static int body_momentum_2on_1o(lua_State *L)
     }
     cpBodySetMoment(body, momentum);
 
-    lua_pushvalue(L, 1);
-
-    return 1;
+    return 0;
 }
 
 static int body_momentum_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(1, body_momentum_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, body_momentum_2on_1o)
+        LUAX_OVERLOAD_ARITY(2, body_momentum_2on_0)
     LUAX_OVERLOAD_END
 }
 
@@ -522,7 +510,7 @@ static int body_position_1o_2n(lua_State *L)
     return 2;
 }
 
-static int body_position_3onn_1o(lua_State *L)
+static int body_position_3onn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -538,16 +526,14 @@ static int body_position_3onn_1o(lua_State *L)
     cpShape *shape = self->shape;
     cpSpaceReindexShape(cpShapeGetSpace(shape), shape); // Reindex when moving (mostly for static bodies)
 
-    lua_pushvalue(L, 1);
-
-    return 1;
+    return 0;
 }
 
 static int body_position_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(1, body_position_1o_2n)
-        LUAX_OVERLOAD_ARITY(3, body_position_3onn_1o)
+        LUAX_OVERLOAD_ARITY(3, body_position_3onn_0)
     LUAX_OVERLOAD_END
 }
 
@@ -567,7 +553,7 @@ static int body_velocity_1o_2nn(lua_State *L)
     return 2;
 }
 
-static int body_velocity_3onn_1o(lua_State *L)
+static int body_velocity_3onn_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -581,16 +567,14 @@ static int body_velocity_3onn_1o(lua_State *L)
     cpBody *body = self->body;
     cpBodySetVelocity(body, (cpVect){ .x = x, .y = y });
 
-    lua_pushvalue(L, 1);
-
-    return 1;
+    return 0;
 }
 
 static int body_velocity_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(1, body_velocity_1o_2nn)
-        LUAX_OVERLOAD_ARITY(3, body_velocity_3onn_1o)
+        LUAX_OVERLOAD_ARITY(3, body_velocity_3onn_0)
     LUAX_OVERLOAD_END
 }
 
@@ -609,7 +593,7 @@ static int body_angle_1o_1n(lua_State *L)
     return 1;
 }
 
-static int body_angle_2on_1o(lua_State *L)
+static int body_angle_2on_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -621,16 +605,14 @@ static int body_angle_2on_1o(lua_State *L)
     cpBody *body = self->body;
     cpBodySetAngle(body, angle);
 
-    lua_pushvalue(L, 1);
-
-    return 1;
+    return 0;
 }
 
 static int body_angle_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(1, body_angle_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, body_angle_2on_1o)
+        LUAX_OVERLOAD_ARITY(2, body_angle_2on_0)
     LUAX_OVERLOAD_END
 }
 
@@ -649,7 +631,7 @@ static int body_elasticity_1o_1n(lua_State *L)
     return 1;
 }
 
-static int body_elasticity_2on_1o(lua_State *L)
+static int body_elasticity_2on_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -661,16 +643,14 @@ static int body_elasticity_2on_1o(lua_State *L)
     cpShape *shape = self->shape;
     cpShapeSetElasticity(shape, elasticity);
 
-    lua_pushvalue(L, 1);
-
-    return 1;
+    return 0;
 }
 
 static int body_elasticity_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(1, body_elasticity_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, body_elasticity_2on_1o)
+        LUAX_OVERLOAD_ARITY(2, body_elasticity_2on_0)
     LUAX_OVERLOAD_END
 }
 
@@ -689,7 +669,7 @@ static int body_density_1o_1n(lua_State *L)
     return 1;
 }
 
-static int body_density_2on_1o(lua_State *L)
+static int body_density_2on_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -701,15 +681,13 @@ static int body_density_2on_1o(lua_State *L)
     cpShape *shape = self->shape;
     cpShapeSetDensity(shape, density);
 
-    lua_pushvalue(L, 1);
-
-    return 1;
+    return 0;
 }
 
 static int body_density_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
         LUAX_OVERLOAD_ARITY(1, body_density_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, body_density_2on_1o)
+        LUAX_OVERLOAD_ARITY(2, body_density_2on_0)
     LUAX_OVERLOAD_END
 }

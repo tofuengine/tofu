@@ -30,12 +30,13 @@ local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Palette = require("tofu.graphics").Palette
 local Font = require("tofu.graphics").Font
+local Body = require("tofu.physics").Body
 local World = require("tofu.physics").World
 
 local Bunny = require("lib.bunny")
 
 local INITIAL_BUNNIES = 1
-local LITTER_SIZE = 50
+local LITTER_SIZE = 5
 local MAX_BUNNIES = 32768
 
 local Main = Class.define()
@@ -49,19 +50,39 @@ function Main:__ctor()
   canvas:transparent({ ["0"] = false, ["11"] = true })
   canvas:background(0)
 
+  local width, height = canvas:size()
+
   self.bunnies = {}
   self.bank = Bank.new(Canvas.new("assets/bunnies.png", 11), "assets/bunnies.sheet")
   self.font = Font.default(11, 6)
 
+  local left = Body.new(1, height)
+  left:type("kinematic")
+  left:position(0, height * 0.5)
+  left:elasticity(1.0)
+  self.left = left
+
+  local bottom = Body.new(width, 1)
+  bottom:type("kinematic")
+  bottom:position(width * 0.5, height)
+  bottom:elasticity(1.0)
+  self.bottom = bottom
+
+  local right = Body.new(1, height, 0)
+  right:type("kinematic")
+  right:position(width, height * 0.5)
+  right:density(1.0)
+  self.right = right
+
   for _ = 1, INITIAL_BUNNIES do
-    table.insert(self.bunnies, Bunny.new(self.bank))
+    table.insert(self.bunnies, Bunny.new(self.font, self.bank))
   end
 end
 
 function Main:process()
   if Input.is_pressed("start") then
     for _ = 1, LITTER_SIZE do
-      table.insert(self.bunnies, Bunny.new(self.bank))
+      table.insert(self.bunnies, Bunny.new(self.font, self.bank))
     end
     if #self.bunnies >= MAX_BUNNIES then
       System.quit()
