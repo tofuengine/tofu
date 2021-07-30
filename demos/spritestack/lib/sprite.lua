@@ -53,7 +53,7 @@ end
 function Sprite:rotate(torque)
   -- When updating the angular velocity we should also take into account
   -- that steering is easier at higher speeds.
---  local dampening = self.velocity:clone():trim_if_not_zero(1):magnitude()
+--  local dampening = Vector.new(self.velocity):trim_if_not_zero(1):magnitude()
   local dampening = 1.0
   self.angular_velocity = self.angular_velocity + dampening * torque / self.inertia
 end

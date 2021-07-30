@@ -47,7 +47,7 @@ function Main:__ctor()
 
   local width, height = canvas:size()
   self.m = Vector.new(width - 1, height - 1)
-  self.c = self.m:clone():scale(0.5)
+  self.c = Vector.new(self.m):scale(0.5)
   self.fan = false
 
   self.font = Font.default(0, 15)
@@ -79,10 +79,10 @@ function Main:render(_)
 
   for _ = 1, 250 do
     local p = Vector.new(math.random(0, m.x), math.random(0, m.y))
-    local v = p:clone():sub(c):div(c) -- Normalize and center in [-1, 1]
+    local v = Vector.new(p):sub(c):div(c) -- Normalize and center in [-1, 1]
     local d = 1.0 - v:magnitude()
     local angle = t * 3 + d * math.pi -- Angle increase as we reach the center.
-    local r = v:clone():rotate(angle)
+    local r = v:rotate(angle)
 
     if self.fan then
       local rad = r:angle_to() + math.pi -- Find the octant of the rotated point to pick the color.

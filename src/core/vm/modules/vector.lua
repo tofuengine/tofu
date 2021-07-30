@@ -28,8 +28,20 @@ local Vector = { }
 
 Vector.__index = Vector
 
-function Vector.new(x, y)
-  return setmetatable({ x = x or 0, y = y or 0 }, Vector)
+function Vector.new(...)
+  local args = { ... }
+  local values
+  if #args == 0 then
+    values = { x = 0, y = 0 }
+  elseif #args == 1 then
+    local v = args[1]
+    values = { x = v, y = v }
+  elseif #args == 2 then
+    values = { x = args[1], y = args[2] }
+  else
+    error("invalid arguments for Vector")
+  end
+  return setmetatable(values, Vector)
 end
 
 function Vector:__eq(v)
@@ -38,10 +50,6 @@ end
 
 function Vector:__tostring()
 	return string.format("<%.5f, %.5f>", self.x, self.y)
-end
-
-function Vector:clone()
-  return Vector.new(self.x, self.y)
 end
 
 function Vector.from_polar(a, l, ox, oy)
@@ -67,7 +75,7 @@ function Vector.intersect(p0, v0, p1, v1)
   if det == 0.0 then
     return nil, nil
   end
-  local v3 = p1:clone():sub(p0)
+  local v3 = Vector.new(p1):sub(p0)
   local t0 = v3:perp_dot(v1) / det -- ratio for the first ray
   local t1 = v3:perp_dot(v0) / det -- ratio for the second ray
   return t0, t1
@@ -97,42 +105,34 @@ end
 
 function Vector:assign(v)
   self.x, self.y = v.x, v.y
-  return self
 end
 
 function Vector:add(v)
   self.x, self.y = self.x + v.x, self.y + v.y
-  return self
 end
 
 function Vector:sub(v)
   self.x, self.y = self.x - v.x, self.y - v.y
-  return self
 end
 
 function Vector:mul(v)
   self.x, self.y = self.x * v.x, self.y * v.y
-  return self
 end
 
 function Vector:div(v)
   self.x, self.y = self.x / v.x, self.y / v.y
-  return self
 end
 
 function Vector:scale(s)
   self.x, self.y = self.x * s, self.y * s
-  return self
 end
 
 function Vector:fma(v, t) -- Fused multiply-add
   self.x, self.y = self.x + v.x * t, self.y + v.y * t
-  return self
 end
 
 function Vector:lerp(v, t)
   self.x, self.y = self.x * (1.0 - t) + v.x * t, self.y * (1.0 - t) + v.y * t
-  return self
 end
 
 -- | cos(a)  -sin(a) | | x |   | x' |
@@ -142,28 +142,26 @@ function Vector:rotate(angle)
   local cos, sin = math.cos(angle), math.sin(angle)
   local x, y = self.x, self.y
   self.x, self.y = cos * x - sin * y, sin * x + cos * y
-  return self
 end
 
 function Vector:rotate_around(angle, pivot)
-  return self:sub(pivot):rotate(angle):add(pivot)
+  self:sub(pivot)
+  self:rotate(angle)
+  self:add(pivot)
 end
 
 function Vector:negate()
   self.x, self.y = -self.x, -self.y
-  return self
 end
 
 -- COUNTER-CLOCKWISE perpendicular vector (`perp` operator).
 function Vector:rotate90ccw()
   self.x, self.y = -self.y, self.x
-  return self
 end
 
 -- CLOCKWISE perpendicular vector.
 function Vector:rotate90cw()
   self.x, self.y = self.y, -self.x
-  return self
 end
 
 Vector.rotate180 = Vector.negate
@@ -175,7 +173,7 @@ Vector.rotate180 = Vector.negate
 -- https://en.wikipedia.org/wiki/Vector_projection
 function Vector:project(v)
   local s = self:dot(v) / v:dot(v)
-  return self:scale(s)
+  self:scale(s)
 end
 
 --       a dot b
@@ -186,7 +184,6 @@ end
 function Vector:mirror(v)
   local s = 2 * self:dot(v) / v:dot(v)
   self.x, self.y = self.x - s * v.x, self.y - s * v.y
-  return self
 end
 
 function Vector:dot(v)
@@ -235,25 +232,26 @@ end
 function Vector:normalize(l)
   local magnitude = self:magnitude()
   if magnitude == 0 then
-    return self, 0
+    return 0
   end
-  return self:scale((l or 1) / magnitude), magnitude
+  self:scale((l or 1) / magnitude)
+  return magnitude
 end
 
 -- Normalize to the given `l` length only when greater than it.
 function Vector:trim(l)
   local s = l * l / self:magnitude_squared()
   if s >= 1 then
-    return self
+    return
   end
-  return self:scale(math.sqrt(s))
+  self:scale(math.sqrt(s))
 end
 
 function Vector:trim_if_not_zero(l)
   if self:is_zero() then
-    return self
+    return
   end
-  return self:trim(l)
+  self:trim(l)
 end
 
 function Vector:angle_to(v)
