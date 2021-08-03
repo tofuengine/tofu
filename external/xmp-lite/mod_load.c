@@ -73,14 +73,13 @@ const struct mod_magic mod_magic[] = {
 	{"N.T.", 1, TRACKER_NOISETRACKER, 4},
 	{"6CHN", 0, TRACKER_FASTTRACKER, 6},
 	{"8CHN", 0, TRACKER_FASTTRACKER, 8},
-	{"CD61", 1, TRACKER_OCTALYSER, 6},	/* Atari STe/Falcon */
-	{"CD81", 1, TRACKER_OCTALYSER, 8},	/* Atari STe/Falcon */
+	{"CD61", 1, TRACKER_OCTALYSER, 6},		/* Atari STe/Falcon */
+	{"CD81", 1, TRACKER_OCTALYSER, 8},		/* Atari STe/Falcon */
 	{"TDZ4", 1, TRACKER_TAKETRACKER, 4},	/* see XModule SaveTracker.c */
 	{"FA04", 1, TRACKER_DIGITALTRACKER, 4},	/* Atari Falcon */
 	{"FA06", 1, TRACKER_DIGITALTRACKER, 6},	/* Atari Falcon */
 	{"FA08", 1, TRACKER_DIGITALTRACKER, 8},	/* Atari Falcon */
-	{"NSMS", 1, TRACKER_UNKNOWN, 4},	/* in Kingdom.mod */
-	{ 0 }
+	{"NSMS", 1, TRACKER_UNKNOWN, 4}			/* in Kingdom.mod */
 };
 
 static int mod_test(HIO_HANDLE *, char *, const int);
@@ -137,11 +136,11 @@ static int mod_test(HIO_HANDLE * f, char *t, const int start)
 		}
 	}
 
-	for (i = 0; mod_magic[i].ch; i++) {
+	for (i = 0; i < (int)ARRAY_SIZE(mod_magic); i++) {
 		if (!memcmp(buf, mod_magic[i].magic, 4))
 			break;
 	}
-	if (mod_magic[i].ch == 0) {
+	if (i >= (int)ARRAY_SIZE(mod_magic)) {
 		return -1;
 	}
 
@@ -444,7 +443,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
     if (mh.restart != 0)
 	maybe_wow = 0;
 
-    for (i = 0; mod_magic[i].ch; i++) {
+    for (i = 0; i < (int)ARRAY_SIZE(mod_magic); i++) {
 	if (!(memcmp(magic, mod_magic[i].magic, 4))) {
 	    mod->chn = mod_magic[i].ch;
 	    tracker_id = mod_magic[i].id;
@@ -621,7 +620,7 @@ skip_test:
     }
 
     for (i = 0; i < mod->pat; i++) {
-	uint8 *mod_event;
+	uint8_t *mod_event;
 
 	if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0) {
 	    free(patbuf);
@@ -796,7 +795,7 @@ skip_test:
 		hio_close(s);
 	    }
 	} else {
-	    uint8 buf[5];
+	    uint8_t buf[5];
 	    long pos;
 	    int num;
 

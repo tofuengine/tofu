@@ -807,7 +807,7 @@ int libxmp_mixer_on(struct context_data *ctx, int rate, int format, int c4rate)
 	if (s->buffer == NULL)
 		goto err;
 
-	s->buf32 = (int32 *) calloc(sizeof(int32), XMP_MAX_FRAMESIZE);
+	s->buf32 = (int32_t *) calloc(sizeof(int32_t), XMP_MAX_FRAMESIZE);
 	if (s->buf32 == NULL)
 		goto err1;
 

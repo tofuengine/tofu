@@ -214,7 +214,7 @@ char *libxmp_copy_adjust(char *s, uint8_t *r, int n)
 	strncpy(s, (char *)r, n);
 
 	for (i = 0; i < n && s[i]; i++) {
-		if (!isprint((unsigned char)s[i]) || ((uint8)s[i] > 127))
+		if (!isprint((unsigned char)s[i]) || ((uint8_t)s[i] > 127))
 			s[i] = '.';
 	}
 

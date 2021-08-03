@@ -63,13 +63,13 @@ static int xm_test(HIO_HANDLE *f, char *t, const int start)
 }
 
 static int load_xm_pattern(struct module_data *m, int num, int version,
-			   uint8 *patbuf, HIO_HANDLE *f)
+			   uint8_t *patbuf, HIO_HANDLE *f)
 {
 	const int headsize = version > 0x0102 ? 9 : 8;
 	struct xmp_module *mod = &m->mod;
 	struct xm_pattern_header xph;
 	struct xmp_event *event;
-	uint8 *pat, b;
+	uint8_t *pat, b;
 	int j, k, r;
 	int size, size_read;
 
@@ -302,7 +302,7 @@ err:
 static int load_patterns(struct module_data *m, int version, HIO_HANDLE *f)
 {
 	struct xmp_module *mod = &m->mod;
-	uint8 *patbuf;
+	uint8_t *patbuf;
 	int i, j;
 
 	mod->pat++;
@@ -312,7 +312,7 @@ static int load_patterns(struct module_data *m, int version, HIO_HANDLE *f)
 
 	D_(D_INFO "# of patterns: %d", mod->pat - 1);
 
-	if ((patbuf = calloc(1, 65536)) == NULL) {
+	if ((patbuf = (uint8_t *) calloc(65536, sizeof(uint8_t))) == NULL) {
 		return -1;
 	}
 
