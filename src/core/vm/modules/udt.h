@@ -120,6 +120,7 @@ typedef struct _Source_Object_t {
 } Source_Object_t;
 
 typedef enum _Body_Kinds_t {
+    BODY_KIND_SHAPELESS,
     BODY_KIND_BOX,
     BODY_KIND_CIRCLE,
     Body_Kinds_t_CountOf
@@ -135,6 +136,7 @@ typedef struct _Body_Object_t {
         } box;
         struct {
             cpFloat radius;
+            cpVect offset;
         } circle;
     } size;
 //    cpFloat *momentum;

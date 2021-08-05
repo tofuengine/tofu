@@ -56,19 +56,22 @@ function Main:__ctor()
   self.bank = Bank.new(Canvas.new("assets/bunnies.png", 11), "assets/bunnies.sheet")
   self.font = Font.default(11, 6)
 
-  local left = Body.new(1, height)
+  local left = Body.new()
+  left:shape("box", 1, height)
   left:type("kinematic")
   left:position(0, height * 0.5)
   left:elasticity(1.0)
   self.left = left
 
-  local bottom = Body.new(width, 1)
+  local bottom = Body.new()
+  bottom:shape("box", width, 1)
   bottom:type("kinematic")
   bottom:position(width * 0.5, height)
   bottom:elasticity(1.0)
   self.bottom = bottom
 
-  local right = Body.new(1, height, 0)
+  local right = Body.new()
+  right:shape("box", 1, height)
   right:type("kinematic")
   right:position(width, height * 0.5)
   right:density(1.0)

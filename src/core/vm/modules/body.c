@@ -34,11 +34,9 @@
 #define LOG_CONTEXT "body"
 #define META_TABLE  "Tofu_Physics_Body_mt"
 
-static int body_new_v_1o(lua_State *L);
+static int body_new_0_1o(lua_State *L);
 static int body_gc_1o_0(lua_State *L);
-static int body_width_v_v(lua_State *L);
-static int body_height_v_v(lua_State *L);
-static int body_radius_v_v(lua_State *L);
+static int body_shape_v_v(lua_State *L);
 static int body_type_v_v(lua_State *L);
 static int body_mass_v_v(lua_State *L);
 static int body_momentum_v_v(lua_State *L);
@@ -53,12 +51,9 @@ int body_loader(lua_State *L)
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
-            { "new", body_new_v_1o },
+            { "new", body_new_0_1o },
             { "__gc", body_gc_1o_0 },
-//            { "shape", body_shape_1o_1s },
-            { "width", body_width_v_v },
-            { "height", body_height_v_v },
-            { "radius", body_radius_v_v },
+            { "shape", body_shape_v_v },
             { "type", body_type_v_v },
             { "mass", body_mass_v_v },
             { "momentum", body_momentum_v_v },
@@ -74,10 +69,10 @@ int body_loader(lua_State *L)
         }, nup, META_TABLE);
 }
 
-//static const Map_Entry_t _types[Body_Shapes_t_CountOf] = { // Ditto.
-//    { "box", BODY_SHAPE_BOX },
-//    { "circle", BODY_SHAPE_CIRCLE }
-//};
+static const Map_Entry_t _kinds[Body_Kinds_t_CountOf] = { // Ditto.
+    { "box", BODY_KIND_BOX },
+    { "circle", BODY_KIND_CIRCLE }
+};
 
 static const Map_Entry_t _types[3] = { // Ditto.
     { "dynamic", CP_BODY_TYPE_DYNAMIC },
@@ -85,16 +80,10 @@ static const Map_Entry_t _types[3] = { // Ditto.
     { "static", CP_BODY_TYPE_STATIC }
 };
 
-static int body_new_3nnN_1o(lua_State *L)
+static int body_new_0_1o(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    cpFloat width = (cpFloat)LUAX_INTEGER(L, 1);
-    cpFloat height = (cpFloat)LUAX_INTEGER(L, 2);
-    cpFloat radius = (cpFloat)LUAX_OPTIONAL_NUMBER(L, 3, 0.0);
 
     Physics_t *physics = (Physics_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_PHYSICS));
 
@@ -104,79 +93,18 @@ static int body_new_3nnN_1o(lua_State *L)
     }
 //    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p created for world %p", body, physics->world);
 
-    cpShape *shape = cpBoxShapeNew(body, width, height, radius);
-    if (!shape) {
-        cpBodyFree(body);
-        return luaL_error(L, "can't create shape");
-    }
-
     cpSpaceAddBody(physics->space, body);
-    cpSpaceAddShape(physics->space, shape);
 
     Body_Object_t *self = (Body_Object_t *)luaX_newobject(L, sizeof(Body_Object_t), &(Body_Object_t){
             .body = body,
-            .shape = shape,
-            .kind = BODY_KIND_BOX,
-            .size = {
-                .box = {
-                    .width = width,
-                    .height = height
-                }
-            }
+            .shape = NULL,
+            .kind = BODY_KIND_SHAPELESS,
+            .size = { { 0 } }
         }, OBJECT_TYPE_BODY, META_TABLE);
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p created", self);
 
     return 1;
-}
-
-static int body_new_1n_1o(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    cpFloat radius = (cpFloat)LUAX_INTEGER(L, 1);
-
-    Physics_t *physics = (Physics_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_PHYSICS));
-
-    cpBody *body = cpBodyNew(0.0, 0.0);
-    if (!body) {
-        return luaL_error(L, "can't create body");
-    }
-//    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p created for world %p", body, physics->world);
-
-    cpShape *shape = cpCircleShapeNew(body, radius, (cpVect){ .x = 0.0, .y = 0.0 });
-    if (!shape) {
-        cpBodyFree(body);
-        return luaL_error(L, "can't create shape");
-    }
-
-    cpSpaceAddBody(physics->space, body);
-    cpSpaceAddShape(physics->space, shape);
-
-    Body_Object_t *self = (Body_Object_t *)luaX_newobject(L, sizeof(Body_Object_t), &(Body_Object_t){
-            .body = body,
-            .shape = shape,
-            .kind = BODY_KIND_CIRCLE,
-            .size = {
-                .circle = {
-                    .radius = radius
-                }
-            }
-        }, OBJECT_TYPE_BODY, META_TABLE);
-
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "body %p created", self);
-
-    return 1;
-}
-
-static int body_new_v_1o(lua_State *L)
-{
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, body_new_1n_1o)
-        LUAX_OVERLOAD_ARITY(2, body_new_3nnN_1o)
-        LUAX_OVERLOAD_ARITY(3, body_new_3nnN_1o)
-    LUAX_OVERLOAD_END
 }
 
 static int body_gc_1o_0(lua_State *L)
@@ -188,9 +116,11 @@ static int body_gc_1o_0(lua_State *L)
 
     Physics_t *physics = (Physics_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_PHYSICS));
 
-    cpSpaceRemoveShape(physics->space, self->shape);
-    cpShapeFree(self->shape);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shape %p destroyed", self->shape);
+    if (self->shape) {
+        cpSpaceRemoveShape(physics->space, self->shape);
+        cpShapeFree(self->shape);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shape %p destroyed", self->shape);
+    }
 
     cpSpaceRemoveBody(physics->space, self->body);
     cpBodyFree(self->body);
@@ -201,31 +131,32 @@ static int body_gc_1o_0(lua_State *L)
     return 0;
 }
 
-static void _recreate(lua_State *L, Body_Object_t *self)
+static void _recreate(lua_State *L, cpSpace *space, Body_Object_t *self)
 {
     cpShape *shape = self->shape;
-    const cpFloat density = cpShapeGetDensity(shape);
-    const cpFloat elasticity = cpShapeGetElasticity(shape);
+    //const cpFloat density = shape ? cpShapeGetDensity(shape) : 1.0; // ???
+    const cpFloat elasticity = shape ? cpShapeGetElasticity(shape) : 1.0;
 
-    cpSpace *space = cpShapeGetSpace(shape);
-    cpSpaceRemoveShape(space, shape);
-    cpShapeFree(shape);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shape %p destroyed", shape);
-    self->shape = shape = NULL;
+    if (shape) {
+        cpSpaceRemoveShape(space, shape);
+        cpShapeFree(shape);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "shape %p destroyed", shape);
+        self->shape = shape = NULL;
+    }
 
     cpBody *body = self->body;
     if (self->kind == BODY_KIND_BOX) {
         shape = cpBoxShapeNew(body, self->size.box.width, self->size.box.height, self->size.box.radius);
     } else
     if (self->kind == BODY_KIND_CIRCLE) {
-        shape = cpCircleShapeNew(body, self->size.circle.radius, (cpVect){ .x = 0.0, .y = 0.0 });
+        shape = cpCircleShapeNew(body, self->size.circle.radius, self->size.circle.offset);
     }
     if (!shape) {
         luaL_error(L, "can't create shape");
         return;
     }
 
-    cpShapeSetDensity(shape, density);
+    //cpShapeSetDensity(shape, density);
     cpShapeSetElasticity(shape, elasticity);
 
     cpSpaceAddShape(space, shape);
@@ -233,7 +164,7 @@ static void _recreate(lua_State *L, Body_Object_t *self)
     self->shape = shape;
 }
 
-static int body_width_1o_1n(lua_State *L)
+static int body_shape_1o_4snnn(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
@@ -241,133 +172,64 @@ static int body_width_1o_1n(lua_State *L)
     const Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
 
     if (self->kind == BODY_KIND_BOX) {
+        lua_pushstring(L, "box");
         lua_pushnumber(L, (lua_Number)self->size.box.width);
-    } else
-    if (self->kind == BODY_KIND_CIRCLE) {
-        lua_pushnumber(L, (lua_Number)self->size.circle.radius * 2.0);
-    }
-
-    return 1;
-}
-
-static int body_width_2on_0(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
-    cpFloat width = (cpFloat)LUAX_NUMBER(L, 2);
-
-    if (self->kind == BODY_KIND_BOX) {
-        self->size.box.width = width;
-    } else
-    if (self->kind == BODY_KIND_CIRCLE) {
-        self->size.circle.radius = width * 0.5;
-    }
-
-    _recreate(L, self);
-
-    return 0;
-}
-
-static int body_width_v_v(lua_State *L)
-{
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, body_width_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, body_width_2on_0)
-    LUAX_OVERLOAD_END
-}
-
-static int body_height_1o_1n(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-    LUAX_SIGNATURE_END
-    const Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
-
-    if (self->kind == BODY_KIND_BOX) {
         lua_pushnumber(L, (lua_Number)self->size.box.height);
-    } else
-    if (self->kind == BODY_KIND_CIRCLE) {
-        lua_pushnumber(L, (lua_Number)self->size.circle.radius * 2.0);
-    }
-
-    return 1;
-}
-
-static int body_height_2on_0(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
-    cpFloat height = (cpFloat)LUAX_NUMBER(L, 2);
-
-    if (self->kind == BODY_KIND_BOX) {
-        self->size.box.height = height;
-    } else
-    if (self->kind == BODY_KIND_CIRCLE) {
-        self->size.circle.radius = height * 0.5;
-    }
-
-    _recreate(L, self);
-
-    return 0;
-}
-
-static int body_height_v_v(lua_State *L)
-{
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, body_height_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, body_height_2on_0)
-    LUAX_OVERLOAD_END
-}
-
-static int body_radius_1o_1n(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
-    LUAX_SIGNATURE_END
-    const Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
-
-    if (self->kind == BODY_KIND_BOX) {
         lua_pushnumber(L, (lua_Number)self->size.box.radius);
     } else
     if (self->kind == BODY_KIND_CIRCLE) {
+        lua_pushstring(L, "circle");
         lua_pushnumber(L, (lua_Number)self->size.circle.radius);
+        lua_pushnumber(L, (lua_Number)self->size.circle.offset.x);
+        lua_pushnumber(L, (lua_Number)self->size.circle.offset.y);
     }
 
-    return 1;
+    return 4;
 }
 
-static int body_radius_2on_0(lua_State *L)
+static int body_shape_5osnNN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
-    cpFloat radius = (cpFloat)LUAX_NUMBER(L, 2);
+    const char *kind = LUAX_STRING(L, 2);
 
-    if (self->kind == BODY_KIND_BOX) {
-        self->size.box.radius = radius;
+    Physics_t *physics = (Physics_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_PHYSICS));
+
+    const Map_Entry_t *entry = map_find(L, kind, _kinds, Body_Kinds_t_CountOf);
+    if ((Body_Kinds_t)entry->value == BODY_KIND_BOX) {
+        self->kind = BODY_KIND_BOX;
+        self->size.box.width = (cpFloat)LUAX_NUMBER(L, 3);
+        self->size.box.height = (cpFloat)LUAX_NUMBER(L, 4);
+        self->size.box.radius = (cpFloat)LUAX_OPTIONAL_NUMBER(L, 5, 0.0);
     } else
-    if (self->kind == BODY_KIND_CIRCLE) {
-        self->size.circle.radius = radius;
+    if ((Body_Kinds_t)entry->value == BODY_KIND_CIRCLE) {
+        self->kind = BODY_KIND_CIRCLE;
+        self->size.circle.radius = (cpFloat)LUAX_NUMBER(L, 3);
+        self->size.circle.offset.x = (cpFloat)LUAX_OPTIONAL_NUMBER(L, 4, 0.0);
+        self->size.circle.offset.y = (cpFloat)LUAX_OPTIONAL_NUMBER(L, 5, 0.0);
+    } else {
+        return luaL_error(L, "unrecognized kind `%s`", kind);
     }
 
-    _recreate(L, self);
+    cpSpace *space = physics->space;
+    _recreate(L, space, self);
 
     return 0;
 }
 
-static int body_radius_v_v(lua_State *L)
+static int body_shape_v_v(lua_State *L)
 {
     LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, body_radius_1o_1n)
-        LUAX_OVERLOAD_ARITY(2, body_radius_2on_0)
+        LUAX_OVERLOAD_ARITY(1, body_shape_1o_4snnn)
+        LUAX_OVERLOAD_ARITY(3, body_shape_5osnNN_0)
+        LUAX_OVERLOAD_ARITY(4, body_shape_5osnNN_0)
+        LUAX_OVERLOAD_ARITY(5, body_shape_5osnNN_0)
     LUAX_OVERLOAD_END
 }
 

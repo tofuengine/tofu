@@ -23,9 +23,8 @@ function Bunny:__ctor(font, bank)
   local x = math.random() * (max_x - min_x) + cw
   local y = math.random() * (max_y - min_y) + ch
 
-  local body = Body.new(cw, ch)
-  body:width(cw)
-  body:height(ch)
+  local body = Body.new()
+  body:shape("box", cw, ch)
   body:elasticity(0.75)
   body:type("dynamic")
   body:mass(25)
