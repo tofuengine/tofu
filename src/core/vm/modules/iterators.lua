@@ -106,6 +106,21 @@ local function ipairs(table, check)
     end, table, 0
 end
 
+local function reverse_ipairs(table, check)
+  return function(a, i)
+      while true do
+        i = i - 1
+        local v = a[i]
+        if not v then
+          return nil, nil
+        end
+        if not check or check(v) then
+          return i, v
+        end
+      end
+    end, table, #table + 1
+end
+
 local function pairs(table, check)
   return function(t, k)
       while true do
@@ -126,5 +141,6 @@ return {
   circular = circular,
   bounce = bounce,
   ipairs = ipairs,
+  reverse_ipairs = reverse_ipairs,
   pairs = pairs
 }
