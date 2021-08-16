@@ -10,6 +10,9 @@ else
 	TARGET=tofu
 endif
 
+# CppCheck
+# 	cppcheck --enable=all ./src > /dev/null
+
 # Use software renderer to use VALGRIND
 #   export LIBGL_ALWAYS_SOFTWARE=1
 #   valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose ./tofu --path=./demos/splash
@@ -265,6 +268,11 @@ physics: $(TARGET)
 	@echo "Launching *physics* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/physics
 	@./$(TARGET) --path=./demos/physics
+
+threedee: $(TARGET)
+	@echo "Launching *threedee* application!"
+	@$(ANALYZER) $(AFLAGS) ./demos/threedee
+	@./$(TARGET) --path=./demos/threedee
 
 demo: $(TARGET)
 	@echo "Launching *$(DEMO)* application!"
