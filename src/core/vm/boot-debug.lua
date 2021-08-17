@@ -23,6 +23,7 @@ SOFTWARE.
 ]]--
 
 local Class = require("tofu.core").Class
+local Log = require("tofu.core").Log
 local System = require("tofu.core").System
 local Input = require("tofu.events").Input
 local Canvas = require("tofu.graphics").Canvas
@@ -170,7 +171,7 @@ function Tofu:call(func, ...)
   end
   local success, message = xpcall(func, debug.traceback, ...)
   if not success then
-    System.error(message) -- Dump to log...
+    Log.error(message) -- Dump to log...
     self:switch_to("error", message) -- ... and pass to the error-state for visualization.
   end
 end

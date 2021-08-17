@@ -49,10 +49,6 @@ static int system_heap_1S_1n(lua_State *L);
 static int system_is_active_0_1b(lua_State *L);
 #endif  /* __DISPLAY_FOCUS_SUPPORT__ */
 static int system_quit_0_0(lua_State *L);
-static int system_info_v_0(lua_State *L);
-static int system_warning_v_0(lua_State *L);
-static int system_error_v_0(lua_State *L);
-static int system_fatal_v_0(lua_State *L);
 
 int system_loader(lua_State *L)
 {
@@ -73,10 +69,6 @@ int system_loader(lua_State *L)
             { "is_active", system_is_active_0_1b },
 #endif  /* __DISPLAY_FOCUS_SUPPORT__ */
             { "quit", system_quit_0_0 },
-            { "info", system_info_v_0 },
-            { "warning", system_warning_v_0 },
-            { "error", system_error_v_0 },
-            { "fatal", system_fatal_v_0 },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -203,44 +195,4 @@ static int system_quit_0_0(lua_State *L)
     Environment_quit(environment);
 
     return 0;
-}
-
-static int log_write(lua_State *L, Log_Levels_t level)
-{
-    int argc = lua_gettop(L);
-    lua_getglobal(L, "tostring"); // F
-    for (int i = 1; i <= argc; ++i) {
-        lua_pushvalue(L, -1); // F -> F F
-        lua_pushvalue(L, i); // F F -> F F I
-        lua_call(L, 1, 1); // F F I -> F R
-        const char *s = lua_tostring(L, -1);
-        if (s == NULL) {
-            return luaL_error(L, "`tostring` must return a string `log_write`");
-        }
-        Log_write(level, LOG_CONTEXT, (i > 1) ? "\t%s" : "%s", s);
-        lua_pop(L, 1); // F R -> F
-    }
-    lua_pop(L, 1); // F -> <empty>
-
-    return 0;
-}
-
-static int system_info_v_0(lua_State *L)
-{
-    return log_write(L, LOG_LEVELS_INFO);
-}
-
-static int system_warning_v_0(lua_State *L)
-{
-    return log_write(L, LOG_LEVELS_WARNING);
-}
-
-static int system_error_v_0(lua_State *L)
-{
-    return log_write(L, LOG_LEVELS_ERROR);
-}
-
-static int system_fatal_v_0(lua_State *L)
-{
-    return log_write(L, LOG_LEVELS_FATAL);
 }

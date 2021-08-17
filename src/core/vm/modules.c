@@ -62,6 +62,7 @@
 #include <core/vm/modules/grid.h>
 #include <core/vm/modules/input.h>
 #include <core/vm/modules/iterators.h>
+#include <core/vm/modules/log.h>
 #include <core/vm/modules/math.h>
 #include <core/vm/modules/palette.h>
 #include <core/vm/modules/program.h>
@@ -116,6 +117,7 @@ static int core_loader(lua_State *L)
 {
     return _create_module(L, (const luaL_Reg[]){
             { "Class", class_loader },
+            { "Log", log_loader },
             { "Math", math_loader },
             { "System", system_loader },
             { NULL, NULL }
