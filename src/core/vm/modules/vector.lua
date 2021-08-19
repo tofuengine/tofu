@@ -89,14 +89,18 @@ function Vector:pack()
   return { self.x, self.y }
 end
 
+local EPSILON <const> = 1e-9
+
+function Vector:is_almost_zero()
+  return math.abs(self.x) <= EPSILON and math.abs(self.y) <= EPSILON
+end
+
 function Vector:is_zero()
   return self.x == 0 and self.y == 0
 end
 
-local EPSILON <const> = 1e-9
-
-function Vector:is_almost(v)
-    return math.abs(self.x - v.x) <= EPSILON and math.abs(self.y - v.y) <= EPSILON
+function Vector:is_almost_equal(v)
+  return math.abs(self.x - v.x) <= EPSILON and math.abs(self.y - v.y) <= EPSILON
 end
 
 function Vector:is_equal(v)
