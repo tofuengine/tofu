@@ -22,40 +22,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local Class = {}
+local Log = {}
 
-function Class.define()
-  local proto = {}
-  proto.__index = proto
-  proto.new = function(...)
-      local self = setmetatable({}, proto)
-      if self.__ctor then
-        self:__ctor(...)
-      end
-      return self
-    end
-  return proto
-end
-
-function Class.borrow(proto, model, criteria)
-  for id, other in pairs(model) do
-    if type(other) == "function" and id ~= "new" then -- Skip the `new()` static method.
-      local this = proto[id]
-      if this and (id == "__ctor" or criteria == "extend") then -- `__ctor()` is always extended.
-        proto[id] = function(...)
-            this(...)
-            other(...)
-          end
-      elseif this and criteria == "chain" then
-        proto[id] = function(...)
-            other(...)
-            this(...)
-          end
-      elseif not this or criteria == "replace" then
-        proto[id] = other
+function Log.dump(t, spaces)
+  spaces = spaces or ""
+  for k, v in pairs(t) do
+    Log.info(spaces .. k .. " " .. type(v) .. " " .. tostring(v))
+    if type(v) == "table" then
+      if k ~= "__index" and k ~= "__newindex" then
+        Log.dump(v, spaces .. " ")
       end
     end
   end
 end
 
-return Class
+return Log

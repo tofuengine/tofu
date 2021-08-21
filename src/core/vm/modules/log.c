@@ -29,16 +29,25 @@
 #include <libs/luax.h>
 
 #define LOG_CONTEXT "log"
+#define SCRIPT_NAME "@log.lua"
 
 static int log_info_v_0(lua_State *L);
 static int log_warning_v_0(lua_State *L);
 static int log_error_v_0(lua_State *L);
 static int log_fatal_v_0(lua_State *L);
 
+static const char _log_lua[] = {
+#include "log.inc"
+};
+
 int log_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
-    return luaX_newmodule(L, (luaX_Script){ 0 },
+    return luaX_newmodule(L, (luaX_Script){
+            .buffer = _log_lua,
+            .size = sizeof(_log_lua) / sizeof(char),
+            .name = SCRIPT_NAME
+        },
         (const struct luaL_Reg[]){
             { "info", log_info_v_0 },
             { "warning", log_warning_v_0 },
