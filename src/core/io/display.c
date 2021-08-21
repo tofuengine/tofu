@@ -499,7 +499,7 @@ void Display_destroy(Display_t *display)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "window %p destroyed", display->window);
 
     glfwTerminate();
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "terminated");
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "display terminated");
 
     free(display);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "display freed");

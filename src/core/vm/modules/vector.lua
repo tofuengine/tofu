@@ -89,7 +89,7 @@ function Vector:pack()
   return { self.x, self.y }
 end
 
-local EPSILON <const> = 1e-9
+local EPSILON <const> = 1.19209290e-7
 
 function Vector:is_almost_zero()
   return math.abs(self.x) <= EPSILON and math.abs(self.y) <= EPSILON
