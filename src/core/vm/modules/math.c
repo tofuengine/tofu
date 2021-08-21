@@ -40,7 +40,7 @@
 
 static int math_lerp_3nnn_1n(lua_State *L);
 static int math_invlerp_3nnn_1n(lua_State *L);
-static int math_clamp_3nnn_1n(lua_State *L);
+static int math_clamp_v_1n(lua_State *L);
 static int math_step_2nn_1n(lua_State *L);
 static int math_smoothstep_3nnn_1n(lua_State *L);
 static int math_smootherstep_3nnn_1n(lua_State *L);
@@ -68,7 +68,7 @@ int math_loader(lua_State *L)
         (const struct luaL_Reg[]){
             { "lerp", math_lerp_3nnn_1n },
             { "invlerp", math_invlerp_3nnn_1n },
-            { "clamp", math_clamp_3nnn_1n },
+            { "clamp", math_clamp_v_1n },
             { "step", math_step_2nn_1n },
             { "smoothstep", math_smoothstep_3nnn_1n },
             { "smootherstep", math_smootherstep_3nnn_1n },
@@ -125,22 +125,30 @@ static int math_invlerp_3nnn_1n(lua_State *L)
     return 1;
 }
 
-static int math_clamp_3nnn_1n(lua_State *L)
+static int math_clamp_3nNN_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     float x = LUAX_NUMBER(L, 1);
-    float lower = LUAX_NUMBER(L, 2);
-    float upper = LUAX_NUMBER(L, 3);
+    float lower = LUAX_OPTIONAL_NUMBER(L, 2, 0.0f);
+    float upper = LUAX_OPTIONAL_NUMBER(L, 3, 1.0f);
 
     float v = FCLAMP(x, lower, upper);
 
     lua_pushnumber(L, (lua_Number)v);
 
     return 1;
+}
+
+static int math_clamp_v_1n(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, math_clamp_3nNN_1n)
+        LUAX_OVERLOAD_ARITY(3, math_clamp_3nNN_1n)
+    LUAX_OVERLOAD_END
 }
 
 static int math_step_2nn_1n(lua_State *L)

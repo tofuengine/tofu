@@ -26,6 +26,14 @@ local Math = {}
 
 -- TODO: https://github.com/MarcoLizza/love-workouts/tree/master/anaglyph-3d/lib/math
 
+function Math.is_almost_zero(x)
+  return math.abs(x) <= Math.EPSILON
+end
+
+function Math.is_almost_equal(x, y)
+  return math.abs(x - y) <= Math.EPSILON
+end
+
 function Math.fitting()
   return nil
 end
