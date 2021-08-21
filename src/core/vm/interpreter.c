@@ -271,7 +271,7 @@ static int _call(lua_State *L, Methods_t method, int nargs, int nresults)
 #endif
 }
 
-Interpreter_t *Interpreter_create(void)
+Interpreter_t *Interpreter_create(const Storage_t *storage)
 {
     Interpreter_t *interpreter = malloc(sizeof(Interpreter_t));
     if (!interpreter) {
@@ -306,6 +306,19 @@ Interpreter_t *Interpreter_create(void)
 
     luaX_openlibs(interpreter->state); // Custom loader, only selected libraries.
 
+    lua_pushlightuserdata(interpreter->state, (void *)storage);
+    luaX_overridesearchers(interpreter->state, _searcher, 1);
+
+#ifdef __DEBUG_VM_CALLS__
+#ifndef __VM_USE_CUSTOM_TRACEBACK__
+    lua_getglobal(interpreter->state, "debug");
+    lua_getfield(interpreter->state, -1, "traceback");
+    lua_remove(interpreter->state, -2);
+#else
+    lua_pushcfunction(interpreter->state, _error_handler);
+#endif
+#endif
+
     return interpreter;
 }
 
@@ -322,27 +335,14 @@ void Interpreter_destroy(Interpreter_t *interpreter)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "interpreter freed");
 }
 
-bool Interpreter_boot(Interpreter_t *interpreter, const Storage_t *storage, const void *userdatas[])
+bool Interpreter_boot(Interpreter_t *interpreter, const void *userdatas[])
 {
     int nup = 0;
     for (int i = 0; userdatas[i]; ++i) {
         lua_pushlightuserdata(interpreter->state, (void *)userdatas[i]); // Discard `const` qualifier.
         nup += 1;
     }
-    modules_initialize(interpreter->state, nup); // Take into account the self-pushed interpreter pointer.
-
-    lua_pushlightuserdata(interpreter->state, (void *)storage);
-    luaX_overridesearchers(interpreter->state, _searcher, 1);
-
-#ifdef __DEBUG_VM_CALLS__
-#ifndef __VM_USE_CUSTOM_TRACEBACK__
-    lua_getglobal(interpreter->state, "debug");
-    lua_getfield(interpreter->state, -1, "traceback");
-    lua_remove(interpreter->state, -2);
-#else
-    lua_pushcfunction(interpreter->state, _error_handler);
-#endif
-#endif
+    modules_initialize(interpreter->state, nup);
 
     int result = _execute(interpreter->state, _boot_lua, sizeof(_boot_lua) / sizeof(char), "@boot.lua", 0, 1); // Prefix '@' to trace as filename internally in Lua.
     if (result != 0) {

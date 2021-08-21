@@ -49,10 +49,10 @@ typedef struct _Interpreter_t {
 #endif
 } Interpreter_t;
 
-extern Interpreter_t *Interpreter_create(void);
+extern Interpreter_t *Interpreter_create(const Storage_t *storage);
 extern void Interpreter_destroy(Interpreter_t *interpreter);
 
-extern bool Interpreter_boot(Interpreter_t *interpreter, const Storage_t *storage, const void *userdatas[]);
+extern bool Interpreter_boot(Interpreter_t *interpreter, const void *userdatas[]);
 extern bool Interpreter_process(const Interpreter_t *interpreter);
 extern bool Interpreter_update(Interpreter_t *interpreter, float delta_time);
 extern bool Interpreter_render(const Interpreter_t *interpreter, float ratio);
