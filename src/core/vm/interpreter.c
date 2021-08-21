@@ -271,7 +271,7 @@ static int _call(lua_State *L, Methods_t method, int nargs, int nresults)
 #endif
 }
 
-Interpreter_t *Interpreter_create(const Storage_t *storage, const void *userdatas[])
+Interpreter_t *Interpreter_create(void)
 {
     Interpreter_t *interpreter = malloc(sizeof(Interpreter_t));
     if (!interpreter) {
@@ -306,13 +306,30 @@ Interpreter_t *Interpreter_create(const Storage_t *storage, const void *userdata
 
     luaX_openlibs(interpreter->state); // Custom loader, only selected libraries.
 
+    return interpreter;
+}
+
+void Interpreter_destroy(Interpreter_t *interpreter)
+{
+    lua_settop(interpreter->state, 0); // T O F1 ... Fn -> <empty>
+    lua_gc(interpreter->state, LUA_GCCOLLECT); // Full GC cycle to trigger resource release.
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "interpreter VM %p garbage-collected", interpreter->state);
+
+    lua_close(interpreter->state);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "interpreter VM %p destroyed", interpreter->state);
+
+    free(interpreter);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "interpreter freed");
+}
+
+bool Interpreter_boot(Interpreter_t *interpreter, const Storage_t *storage, const void *userdatas[])
+{
     int nup = 0;
     for (int i = 0; userdatas[i]; ++i) {
         lua_pushlightuserdata(interpreter->state, (void *)userdatas[i]); // Discard `const` qualifier.
         nup += 1;
     }
-    lua_pushlightuserdata(interpreter->state, interpreter); // Push the interpreter itself as first upvalue.
-    modules_initialize(interpreter->state, nup + 1); // Take into account the self-pushed interpreter pointer.
+    modules_initialize(interpreter->state, nup); // Take into account the self-pushed interpreter pointer.
 
     lua_pushlightuserdata(interpreter->state, (void *)storage);
     luaX_overridesearchers(interpreter->state, _searcher, 1);
@@ -330,34 +347,17 @@ Interpreter_t *Interpreter_create(const Storage_t *storage, const void *userdata
     int result = _execute(interpreter->state, _boot_lua, sizeof(_boot_lua) / sizeof(char), "@boot.lua", 0, 1); // Prefix '@' to trace as filename internally in Lua.
     if (result != 0) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't interpret boot script");
-        lua_close(interpreter->state);
-        free(interpreter);
-        return NULL;
+        return false;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "boot script executed");
 
     if (!_detect(interpreter->state, -1, _methods)) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't detect entry-points");
-        lua_close(interpreter->state);
-        free(interpreter);
-        return NULL;
+        return false;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "entry-points detected");
 
-    return interpreter;
-}
-
-void Interpreter_destroy(Interpreter_t *interpreter)
-{
-    lua_settop(interpreter->state, 0); // T O F1 ... Fn -> <empty>
-    lua_gc(interpreter->state, LUA_GCCOLLECT); // Full GC cycle to trigger resource release.
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "interpreter VM %p garbage-collected", interpreter->state);
-
-    lua_close(interpreter->state);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "interpreter VM %p destroyed", interpreter->state);
-
-    free(interpreter);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "interpreter freed");
+    return true;
 }
 
 bool Interpreter_process(const Interpreter_t *interpreter)

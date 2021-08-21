@@ -228,17 +228,9 @@ Engine_t *Engine_create(int argc, const char *argv[])
         return NULL;
     }
 
-    engine->interpreter = Interpreter_create(engine->storage, (const void *[]){
-            engine->storage,
-            engine->display,
-            engine->input,
-            engine->audio,
-            engine->environment,
-            engine->physics,
-            NULL
-        });
+    engine->interpreter = Interpreter_create();
     if (!engine->interpreter) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize interpreter");
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create interpreter");
         Environment_destroy(engine->environment);
         Physics_destroy(engine->physics);
         Audio_destroy(engine->audio);
@@ -274,6 +266,23 @@ void Engine_destroy(Engine_t *engine)
 
 void Engine_run(Engine_t *engine)
 {
+    // Initialize the VM now that all the sub-systems are ready.
+    bool booted = Interpreter_boot(engine->interpreter, engine->storage, (const void *[]){
+            engine->storage,
+            &engine->configuration, // FIXME: allocate the configuration struct.
+            engine->display,
+            engine->input,
+            engine->audio,
+            engine->environment,
+            engine->physics,
+            engine->interpreter,
+            NULL
+        });
+    if (!booted) {
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize interpreter");
+        return;
+    }
+
     const float delta_time = 1.0f / (float)engine->configuration.engine.frames_per_seconds;
     const size_t skippable_frames = engine->configuration.engine.skippable_frames;
     const float reference_time = engine->configuration.engine.frames_limit == 0 ? 0.0f : 1.0f / engine->configuration.engine.frames_limit;
