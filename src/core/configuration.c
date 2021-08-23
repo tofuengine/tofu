@@ -25,12 +25,15 @@
 #include "configuration.h"
 
 #include <libs/imath.h>
+#include <libs/log.h>
 #include <version.h>
 
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+
+#define LOG_CONTEXT "configuration"
 
 static inline void _parse_version(const char *version_string, int *major, int *minor, int *revision)
 {
@@ -222,8 +225,15 @@ static void _normalize_identity(Configuration_t *configuration)
     }
 }
 
-void Configuration_parse(Configuration_t *configuration, const char *data)
+Configuration_t *Configuration_create(const char *data)
 {
+    Configuration_t *configuration = malloc(sizeof(Configuration_t));
+    if (!configuration) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't allocate configuration");
+        return NULL;
+    }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "configuration allocated");
+
     *configuration = (Configuration_t){
             .system = {
                 .identity = { 0 },
@@ -291,6 +301,12 @@ void Configuration_parse(Configuration_t *configuration, const char *data)
     }
 
     _normalize_identity(configuration);
+}
+
+void Configuration_destroy(Configuration_t *configuration)
+{
+    free(configuration);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "configuration freed");
 }
 
 void Configuration_override(Configuration_t *configuration, int argc, const char *argv[])

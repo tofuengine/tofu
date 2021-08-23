@@ -68,7 +68,7 @@ static inline void _wait_for(float seconds)
 #endif
 }
 
-static bool _configure(Storage_t *storage, int argc, const char *argv[], Configuration_t *configuration)
+static Configuration_t *_configure(Storage_t *storage, int argc, const char *argv[])
 {
     const Storage_Resource_t *resource = Storage_load(storage, "tofu.config", STORAGE_RESOURCE_STRING);
     if (!resource) {
@@ -76,7 +76,7 @@ static bool _configure(Storage_t *storage, int argc, const char *argv[], Configu
         return false;
     }
 
-    Configuration_parse(configuration, S_SCHARS(resource));
+    Configuration_t *configuration = Configuration_create(S_SCHARS(resource));
     Configuration_override(configuration, argc, argv);
 
     Log_configure(configuration->system.debug, NULL);
@@ -89,10 +89,11 @@ static bool _configure(Storage_t *storage, int argc, const char *argv[], Configu
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "engine version mismatch (required %d.%d.%d, current %d.%d.%d)",
             configuration->system.version.major, configuration->system.version.minor, configuration->system.version.revision,
             TOFU_VERSION_MAJOR, TOFU_VERSION_MINOR, TOFU_VERSION_REVISION);
-        return false;
+        Configuration_destroy(configuration);
+        return NULL;
     }
 
-    return true;
+    return configuration;
 }
 
 Engine_t *Engine_create(int argc, const char *argv[])
@@ -118,88 +119,92 @@ Engine_t *Engine_create(int argc, const char *argv[])
         return NULL;
     }
 
-    bool configured = _configure(engine->storage, argc, argv, &engine->configuration);
-    if (!configured) {
+    engine->configuration = _configure(engine->storage, argc, argv);
+    if (!engine->configuration) {
         Storage_destroy(engine->storage);
         free(engine);
         return NULL;
     }
 
-    bool set = Storage_set_identity(engine->storage, engine->configuration.system.identity);
+    bool set = Storage_set_identity(engine->storage, engine->configuration->system.identity);
     if (!set) {
+        Configuration_destroy(engine->configuration);
         Storage_destroy(engine->storage);
         free(engine);
         return NULL;
     }
 
-    const Storage_Resource_t *icon = Storage_exists(engine->storage, engine->configuration.system.icon) // FIXME: too defensive?
-        ? Storage_load(engine->storage, engine->configuration.system.icon, STORAGE_RESOURCE_IMAGE)
+    const Storage_Resource_t *icon = Storage_exists(engine->storage, engine->configuration->system.icon) // FIXME: too defensive?
+        ? Storage_load(engine->storage, engine->configuration->system.icon, STORAGE_RESOURCE_IMAGE)
         : Storage_load(engine->storage, RESOURCE_IMAGE_ICON_ID, STORAGE_RESOURCE_IMAGE);
     Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined icon loaded");
-    const Storage_Resource_t *effect = Storage_exists(engine->storage, engine->configuration.display.effect)
-        ? Storage_load(engine->storage, engine->configuration.display.effect, STORAGE_RESOURCE_STRING)
+    const Storage_Resource_t *effect = Storage_exists(engine->storage, engine->configuration->display.effect)
+        ? Storage_load(engine->storage, engine->configuration->display.effect, STORAGE_RESOURCE_STRING)
         : NULL;
     Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined effect loaded");
     engine->display = Display_create(&(const Display_Configuration_t){
             .icon = (GLFWimage){ .width = (int)S_IWIDTH(icon), .height = (int)S_IHEIGHT(icon), .pixels = S_IPIXELS(icon) },
             .window = {
-                .title = engine->configuration.display.title,
-                .width = engine->configuration.display.width,
-                .height = engine->configuration.display.height,
-                .scale = engine->configuration.display.scale
+                .title = engine->configuration->display.title,
+                .width = engine->configuration->display.width,
+                .height = engine->configuration->display.height,
+                .scale = engine->configuration->display.scale
             },
-            .fullscreen = engine->configuration.display.fullscreen,
-            .vertical_sync = engine->configuration.display.vertical_sync,
-            .hide_cursor = engine->configuration.cursor.hide,
+            .fullscreen = engine->configuration->display.fullscreen,
+            .vertical_sync = engine->configuration->display.vertical_sync,
+            .hide_cursor = engine->configuration->cursor.hide,
             .effect = effect ? S_SCHARS(effect) : NULL
         });
     if (!engine->display) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize display");
+        Configuration_destroy(engine->configuration);
         Storage_destroy(engine->storage);
         free(engine);
         return NULL;
     }
 
-    const Storage_Resource_t *mappings = Storage_exists(engine->storage, engine->configuration.system.mappings)
-        ? Storage_load(engine->storage, engine->configuration.system.mappings, STORAGE_RESOURCE_STRING)
+    const Storage_Resource_t *mappings = Storage_exists(engine->storage, engine->configuration->system.mappings)
+        ? Storage_load(engine->storage, engine->configuration->system.mappings, STORAGE_RESOURCE_STRING)
         : Storage_load(engine->storage, RESOURCE_BLOB_MAPPINGS_ID, STORAGE_RESOURCE_STRING);
     Log_assert(!mappings, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined controller mappings loaded");
     engine->input = Input_create(&(const Input_Configuration_t){
             .mappings = S_SCHARS(mappings),
             .keyboard = {
-                .enabled = engine->configuration.keyboard.enabled,
-                .exit_key = engine->configuration.keyboard.exit_key,
+                .enabled = engine->configuration->keyboard.enabled,
+                .exit_key = engine->configuration->keyboard.exit_key,
             },
             .cursor = {
-                .enabled = engine->configuration.cursor.enabled,
-                .speed = engine->configuration.cursor.speed,
+                .enabled = engine->configuration->cursor.enabled,
+                .speed = engine->configuration->cursor.speed,
                 .scale = 1.0f / Display_get_scale(engine->display) // FIXME: pass the sizes?
             },
             .gamepad = {
-                .enabled = engine->configuration.gamepad.enabled,
-                .sensitivity = engine->configuration.gamepad.sensitivity,
-                .deadzone = engine->configuration.gamepad.inner_deadzone, // FIXME: pass inner/outer and let the input code do the math?
-                .range = 1.0f - engine->configuration.gamepad.inner_deadzone - engine->configuration.gamepad.outer_deadzone,
-                .emulate_dpad = engine->configuration.gamepad.emulate_dpad,
-                .emulate_cursor = engine->configuration.gamepad.emulate_cursor
+                .enabled = engine->configuration->gamepad.enabled,
+                .sensitivity = engine->configuration->gamepad.sensitivity,
+                .deadzone = engine->configuration->gamepad.inner_deadzone, // FIXME: pass inner/outer and let the input code do the math?
+                .range = 1.0f - engine->configuration->gamepad.inner_deadzone - engine->configuration->gamepad.outer_deadzone,
+                .emulate_dpad = engine->configuration->gamepad.emulate_dpad,
+                .emulate_cursor = engine->configuration->gamepad.emulate_cursor
             }
         }, Display_get_window(engine->display));
     if (!engine->input) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize input");
         Display_destroy(engine->display);
+        Configuration_destroy(engine->configuration);
         Storage_destroy(engine->storage);
         free(engine);
         return NULL;
     }
 
     engine->audio = Audio_create(&(const Audio_Configuration_t){
-            .device_index = engine->configuration.audio.device_index,
-            .master_volume = engine->configuration.audio.master_volume
+            .device_index = engine->configuration->audio.device_index,
+            .master_volume = engine->configuration->audio.master_volume
         });
     if (!engine->audio) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize audio");
         Input_destroy(engine->input);
         Display_destroy(engine->display);
+        Configuration_destroy(engine->configuration);
         Storage_destroy(engine->storage);
         free(engine);
         return NULL;
@@ -211,6 +216,7 @@ Engine_t *Engine_create(int argc, const char *argv[])
         Audio_destroy(engine->audio);
         Input_destroy(engine->input);
         Display_destroy(engine->display);
+        Configuration_destroy(engine->configuration);
         Storage_destroy(engine->storage);
         free(engine);
         return NULL;
@@ -223,6 +229,7 @@ Engine_t *Engine_create(int argc, const char *argv[])
         Audio_destroy(engine->audio);
         Input_destroy(engine->input);
         Display_destroy(engine->display);
+        Configuration_destroy(engine->configuration);
         Storage_destroy(engine->storage);
         free(engine);
         return NULL;
@@ -236,6 +243,7 @@ Engine_t *Engine_create(int argc, const char *argv[])
         Audio_destroy(engine->audio);
         Input_destroy(engine->input);
         Display_destroy(engine->display);
+        Configuration_destroy(engine->configuration);
         Storage_destroy(engine->storage);
         free(engine);
         return NULL;
@@ -254,6 +262,7 @@ void Engine_destroy(Engine_t *engine)
     Audio_destroy(engine->audio);
     Input_destroy(engine->input);
     Display_destroy(engine->display);
+    Configuration_destroy(engine->configuration);
     Storage_destroy(engine->storage);
 
     free(engine);
@@ -269,7 +278,7 @@ void Engine_run(Engine_t *engine)
     // Initialize the VM now that all the sub-systems are ready.
     bool booted = Interpreter_boot(engine->interpreter, (const void *[]){
             engine->storage,
-            &engine->configuration, // FIXME: allocate the configuration struct.
+            engine->configuration,
             engine->display,
             engine->input,
             engine->audio,
@@ -283,9 +292,9 @@ void Engine_run(Engine_t *engine)
         return;
     }
 
-    const float delta_time = 1.0f / (float)engine->configuration.engine.frames_per_seconds;
-    const size_t skippable_frames = engine->configuration.engine.skippable_frames;
-    const float reference_time = engine->configuration.engine.frames_limit == 0 ? 0.0f : 1.0f / engine->configuration.engine.frames_limit;
+    const float delta_time = 1.0f / (float)engine->configuration->engine.frames_per_seconds;
+    const size_t skippable_frames = engine->configuration->engine.skippable_frames;
+    const float reference_time = engine->configuration->engine.frames_limit == 0 ? 0.0f : 1.0f / engine->configuration->engine.frames_limit;
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "now running, update-time is %.6fs w/ %d skippable frames, reference-time is %.6fs", delta_time, skippable_frames, reference_time);
 
     // Track time using `double` to keep the min resolution consistent over time!

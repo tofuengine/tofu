@@ -35,9 +35,8 @@
 #include <core/vm/interpreter.h>
 
 typedef struct _Engine_t {
-    Configuration_t configuration;
-
     Storage_t *storage;
+    Configuration_t *configuration;
     Display_t *display;
     Input_t *input;
     Audio_t *audio;
