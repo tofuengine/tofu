@@ -278,7 +278,6 @@ void Engine_run(Engine_t *engine)
     // Initialize the VM now that all the sub-systems are ready.
     bool booted = Interpreter_boot(engine->interpreter, (const void *[]){
             engine->storage,
-            engine->configuration,
             engine->display,
             engine->input,
             engine->audio,
