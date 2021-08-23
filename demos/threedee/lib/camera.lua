@@ -36,20 +36,26 @@ function Camera:move(x, y, z)
   self.z = z
 end
 
+function Camera:offset(dx, dy, dz)
+  self.x = self.x + dx
+  self.y = self.y + dy
+  self.z = self.z + dz
+end
+
 -- function Camera:rotate(angle)
 -- end
 
 function Camera:project(x, y, z)
-  local cx = x - self.x -- Transform to camera-space.
-  local cy = y - self.y
-  local cz = z - self.z
+  local cx <const> = x - self.x -- Transform to camera-space.
+  local cy <const> = y - self.y
+  local cz <const> = z - self.z
 
   -- TODO: apply rotation here.
 
-  local d_over_dz = self.d / cz -- Transform to normalized projection plane
-  local px = cx * d_over_dz / self.aspect_ratio
-  local py = cy * d_over_dz
-  local pz = cz / self.far
+  local d_over_cz <const> = self.d / cz -- Transform to normalized projection plane
+  local px <const> = cx * d_over_cz / self.aspect_ratio
+  local py <const> = cy * d_over_cz
+  local pz <const> = cz / self.far
 
   if px < -1 or px > 1 or py < -1 or py > 1 or pz < self.normalized_near or pz > 1 then
     return px, py, pz, nil, nil
@@ -62,8 +68,8 @@ function Camera:project(x, y, z)
   --
   -- which can be simplified by pre-calculating the half width/height. Also note that the
   -- `y` component is mirrored as the display origin is at the top-left corner.
-  local sx = (1.0 + px) * self.half_width - 1
-  local sy = (1.0 - py) * self.half_height - 1
+  local sx <const> = (1.0 + px) * self.half_width - 1
+  local sy <const> = (1.0 - py) * self.half_height - 1
 
   return px, py, pz, sx, sy
 end

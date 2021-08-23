@@ -23,7 +23,6 @@ SOFTWARE.
 ]]--
 
 local Class = require("tofu.core").Class
-local Math = require("tofu.core").Math
 local System = require("tofu.core").System
 local Input = require("tofu.events").Input
 local Bank = require("tofu.graphics").Bank
@@ -36,18 +35,20 @@ local Arrays = require("tofu.util").Arrays
 
 local Camera = require("lib.camera")
 
-local COUNT <const> = 32
-local SPEED <const> = 150.0
+local DEBUG <const> = false
+local COUNT <const> = 250
+local SPEED <const> = 500.0
 
 local Main = Class.define()
 
 function Main:__ctor()
-  Display.palette(Palette.new("famicube"))
+  local palette = Palette.new("famicube")
+  Display.palette(palette)
 
   local program = Program.gradient(59, {
-    { 0, 0x98, 0xdc, 0xff },
-    { 96, 0x5b, 0xa8, 0xff },
-    { 128, 0x0a, 0x89, 0xff}
+    { 0, 0x00, 0xBE, 0xDA },
+    { 96, 0x8F, 0xB6, 0xBD },
+    { 128, 0xC2, 0xA3, 0xA0 }
   })
   Display.program(program)
 
@@ -62,10 +63,15 @@ function Main:__ctor()
   self.bank = Bank.new(Canvas.new("assets/sheet.png", 63), 40, 158)
   self.camera = Camera.new(self.field_of_view, width, height, self.near, self.far)
   self.font = Font.default(63, 11)
-  self.easing = Math.tweener("quadratic_out")
-  self.wave = Math.wave("triangle", 5.0, 500.0)
 
   self.entities = {}
+  for _ = 1, COUNT do
+    table.insert(self.entities, { x = math.random(-5000, 5000), y = 0, z = math.random(0, 5000) })
+    -- Spawn at ground level.
+  end
+  Arrays.sort(self.entities, function(a, b) -- Farthers first.
+      return a.z < b.z
+    end)
 
   self.running = true
 end
@@ -73,26 +79,30 @@ end
 function Main:process()
   local update = false
 
-  if Input.is_pressed("down") then
-    self.near = math.max(self.near - 10, 1)
-    update = true
-  elseif Input.is_pressed("up") then
-    self.near = math.min(self.near + 10, self.far)
-    update = true
-  elseif Input.is_pressed("left") then
-    self.far = math.max(self.far - 10, self.near)
-    update = true
-  elseif Input.is_pressed("right") then
-    self.far = math.min(self.far + 10, 1000)
-    update = true
-  elseif Input.is_pressed("y") then
+  self.dx = 0
+  self.dy = 0
+  self.dz = 0
+  if Input.is_down("up") then
+    self.dz = self.dz + 1
+  end
+  if Input.is_down("down") then
+    self.dz = self.dz - 1
+  end
+  if Input.is_down("left") then
+    self.dx = self.dx - 1
+  end
+  if Input.is_down("right") then
+    self.dx = self.dx + 1
+  end
+
+  if Input.is_pressed("y") then
     self.field_of_view = math.min(self.field_of_view + math.pi / 15, math.pi)
     update = true
   elseif Input.is_pressed("x") then
     self.field_of_view = math.max(self.field_of_view - math.pi / 15, 0)
     update = true
   elseif Input.is_pressed("b") then
-    self.camera.y = math.min(self.camera.y + 5.0, 500.0)
+    self.camera.y = math.min(self.camera.y + 5.0, 1000.0)
   elseif Input.is_pressed("a") then
     self.camera.y = math.max(self.camera.y - 5.0, 0)
   elseif Input.is_pressed("start") then
@@ -103,10 +113,6 @@ function Main:process()
     self.camera:set_field_of_view(self.field_of_view)
     self.camera:set_clipping_planes(self.near, self.far)
   end
-end
-
-local function _fartherst_first(a, b)
-  return a.z < b.z
 end
 
 local function reverse_ipairs(table)
@@ -124,23 +130,13 @@ function Main:update(delta_time)
     return
   end
 
-  if #self.entities < COUNT then
-    table.insert(self.entities, { x = math.random(-1000, 1000), y = 0, z = 1000.0 }) -- Spawn them on ground level.
-  end
-
-  for _, entity in ipairs(self.entities) do
-    entity.z = entity.z - SPEED * delta_time
-  end
-
-  Arrays.sort(self.entities, _fartherst_first)
+  local camera = self.camera
+  camera:offset(self.dx * SPEED * delta_time, self.dy * SPEED * delta_time, self.dz * SPEED * delta_time)
 end
 
-local function _distance(a, b)
-  local dx = a.x - b.x
-  local dy = a.y - b.y
-  local dz = a.z - b.z
-  local d = math.sqrt(dx * dx + dy * dy + dz * dz)
-  return math.max(math.min(d / 1500.0, 1.0), 0.0)
+local function _distance_to_scale(d)
+  local r = (1 - d) + 0.05
+  return r * 1
 end
 
 function Main:render(_)
@@ -150,34 +146,30 @@ function Main:render(_)
 
   local camera = self.camera
 
-  local i = 0
-  for z = camera.far, camera.near, -50 do
+  local far = camera.far + camera.z
+  local near = camera.near + camera.z
+  for z = far, near, -1 do
     local _, _, _, _, sy = camera:project(camera.x, 0.0, z) -- Straight forward the camera, on ground level.
-    local _, _, _, _, syp1 = camera:project(camera.x, 0.0, z - 50)
-    if not sy or not syp1 then
-      break
+    if sy then
+      local i = math.tointeger(z / 125)
+      canvas:rectangle('fill', 0, math.tointeger(sy + 0.5), width, 1, i % 2 == 0 and 28 or 42)
     end
-    --print(z .. " " .. sy .. " " .. syp1)
-    canvas:rectangle('fill', 0, sy, width, syp1 - sy + 1, i % 2 == 0 and 18 or 22)
-    i = i + 1
   end
 
-  for index, entity in reverse_ipairs(self.entities) do
-    local _, _, pz, sx, sy = camera:project(entity.x, entity.y, entity.z)
-    if not sx or not sy then
-      --print(string.format("dead at %.3f, %.3f, %.3f", px, py, pz))
-      --print(index .. " " .. #self.entities)
-      table.remove(self.entities, index)
-    else
-      local d = pz or _distance(camera, entity)
-      local sz = 1.0 - self.easing(d) -- Scaling factor should depend on camera-to-entity distance!
-      local scale = sz * 4
+  for _, entity in reverse_ipairs(self.entities) do
+    local x, y, z = entity.x, entity.y, entity.z
+    local px, py, pz, sx, sy = camera:project(x, y, z)
+    if sx and sy then
+      local scale = _distance_to_scale(pz)
       local w, h = self.bank:size(0, scale, scale)
       self.bank:blit(canvas, sx - w * 0.5, sy - h * 1.0, 0, scale, scale) -- Align the bottom center.
       --canvas:square('fill', sx - 2, sy - 2, 4, 17)
---      self.font:write(canvas, sx, sy,
---        string.format("%.3f %.3f %.3f (%.3f)", px, py, pz, d), "center", "middle")
---      self.font:write(canvas, dx, dy, string.format("%.3f %.3f %.3f", x, y, z), "center", "middle")
+      if DEBUG then
+        self.font:write(canvas, sx, sy - 8,
+          string.format("%.3f %.3f %.3f", x, y, z), "center", "middle")
+        self.font:write(canvas, sx, sy,
+          string.format("%.3f %.3f %.3f", px, py, pz), "center", "middle")
+      end
     end
   end
 
