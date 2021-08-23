@@ -283,7 +283,7 @@ Configuration_t *Configuration_create(const char *data)
             }
         };
     if (!data) {
-        return;
+        return configuration;
     }
 
     char context[128] = { 0 };
@@ -301,6 +301,8 @@ Configuration_t *Configuration_create(const char *data)
     }
 
     _normalize_identity(configuration);
+
+    return configuration;
 }
 
 void Configuration_destroy(Configuration_t *configuration)

@@ -79,7 +79,7 @@ typedef struct _Configuration {
     } engine;
 } Configuration_t;
 
-extern Configuration_t *configurationConfiguration_create(const char *data);
+extern Configuration_t *Configuration_create(const char *data);
 extern void Configuration_destroy(Configuration_t *configuration);
 
 extern void Configuration_override(Configuration_t *configuration, int argc, const char *argv[]);
