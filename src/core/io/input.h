@@ -148,8 +148,11 @@ typedef struct _Input_t {
     GLFWwindow *window;
 
     int mode;
-    bool gamepads[INPUT_GAMEPADS_COUNT];
-    int gamepad_id;
+    struct {
+        bool state[INPUT_GAMEPADS_COUNT];
+        size_t count;
+        int id;
+    } gamepad;
     Input_Button_t buttons[Input_Buttons_t_CountOf];
     Input_Cursor_t cursor;
     Input_Stick_t sticks[Input_Sticks_t_CountOf];
@@ -168,6 +171,8 @@ extern void Input_set_cursor_position(Input_t *input, float x, float y);
 extern void Input_set_cursor_area(Input_t *input, float x0, float y0, float x1, float y1);
 extern void Input_set_auto_repeat(Input_t *input, Input_Buttons_t button, float period);
 extern void Input_set_mode(Input_t *input, int mode);
+
+//extern const size_t Input_has_gamepad(const Input_t *input);
 
 extern const Input_Button_State_t *Input_get_button(const Input_t *input, Input_Buttons_t button);
 extern const Input_Cursor_t *Input_get_cursor(const Input_t *input);

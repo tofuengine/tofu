@@ -40,6 +40,7 @@ static int input_cursor_area_v_v(lua_State *L);
 static int input_stick_1s_4nnnn(lua_State *L);
 static int input_triggers_0_2nn(lua_State *L);
 static int input_mode_v_v(lua_State *L);
+static int input_has_input_0_1b(lua_State *L);
 
 int input_loader(lua_State *L)
 {
@@ -56,6 +57,7 @@ int input_loader(lua_State *L)
             { "stick", input_stick_1s_4nnnn },
             { "triggers", input_triggers_0_2nn },
             { "mode", input_mode_v_v },
+            { "has_input", input_has_input_0_1b },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -364,4 +366,18 @@ static int input_mode_v_v(lua_State *L)
         LUAX_OVERLOAD_ARITY(0, input_mode_0_1t)
         LUAX_OVERLOAD_ARITY(1, input_mode_1t_0)
     LUAX_OVERLOAD_END
+}
+
+static int input_has_input_0_1b(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+    LUAX_SIGNATURE_END
+
+    Input_t *input = (Input_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INPUT));
+
+    bool has_input = (input->mode != INPUT_MODE_NONE)
+        && (input->mode & INPUT_MODE_KEYMOUSE || input->gamepad.count == 0);
+    lua_pushboolean(L, has_input);
+
+    return 1;
 }
