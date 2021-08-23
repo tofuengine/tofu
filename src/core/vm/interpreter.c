@@ -345,7 +345,7 @@ bool Interpreter_boot(Interpreter_t *interpreter, const void *userdatas[])
     modules_initialize(interpreter->state, nup);
 
     int result = _execute(interpreter->state, _boot_lua, sizeof(_boot_lua) / sizeof(char), "@boot.lua", 0, 1); // Prefix '@' to trace as filename internally in Lua.
-    if (result != 0) {
+    if (result != LUA_OK) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't interpret boot script");
         return false;
     }
