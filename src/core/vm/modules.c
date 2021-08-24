@@ -158,8 +158,8 @@ static int io_loader(lua_State *L)
 static int physics_loader(lua_State *L)
 {
     return _create_module(L, (const luaL_Reg[]){
-            { "World", world_loader },
             { "Body", body_loader },
+            { "World", world_loader },
             { NULL, NULL }
         });
 }
@@ -167,8 +167,8 @@ static int physics_loader(lua_State *L)
 static int sound_loader(lua_State *L)
 {
     return _create_module(L, (const luaL_Reg[]){
-            { "Speakers", speakers_loader }, // FIXME: find a better name.
             { "Source", source_loader },
+            { "Speakers", speakers_loader }, // FIXME: find a better name.
             { NULL, NULL }
         });
 }
