@@ -97,7 +97,7 @@ FS_Context_t *FS_create(const char *path)
     DIR *dp = opendir(path);
     if (dp) { // Path is a folder, scan and mount all valid archives.
         for (struct dirent *entry = readdir(dp); entry; entry = readdir(dp)) {
-            char subpath[PLATFORM_PATH_MAX];
+            char subpath[PLATFORM_PATH_MAX] = { 0 };
             path_join(subpath, path, entry->d_name);
 #ifdef __FS_ENFORCE_ARCHIVE_EXTENSION__
             if (!_ends_with(subpath, FS_ARCHIVE_EXTENSION)) {

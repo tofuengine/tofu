@@ -59,7 +59,7 @@ Storage_t *Storage_create(const Storage_Configuration_t *configuration)
             }
         };
 
-    char path[PLATFORM_PATH_MAX];
+    char path[PLATFORM_PATH_MAX] = { 0 };
     path_expand(configuration->path, path);
 
     path_split(path, storage->path.base, NULL); // Get the folder name, in case we are pointing straight to a PAK!
@@ -302,6 +302,12 @@ static bool _load_as_image(Storage_Resource_t *resource, FS_Handle_t *handle)
     return true;
 }
 
+static const Storage_Load_Function_t _load_functions[Storage_Resource_Types_t_CountOf] = {
+    _load_as_string,
+    _load_as_blob,
+    _load_as_image
+};
+
 static int _resource_compare_by_name(const void *lhs, const void *rhs)
 {
     const Storage_Resource_t **l = (const Storage_Resource_t **)lhs;
@@ -332,12 +338,6 @@ static int _resource_compare_by_age(const void *lhs, const void *rhs)
     }
 }
 #endif
-
-static const Storage_Load_Function_t _load_functions[Storage_Resource_Types_t_CountOf] = {
-    _load_as_string,
-    _load_as_blob,
-    _load_as_image
-};
 
 static bool _resource_load(Storage_Resource_t *resource, const char *name, Storage_Resource_Types_t type)
 {
@@ -552,7 +552,7 @@ static void _stbi_write_func(void *context, void *data, int size)
 // This function saves a file into the local user-dependent storage. The mount points aren't modified.
 bool Storage_store(Storage_t *storage, const char *name, const Storage_Resource_t *resource)
 {
-    char path[PLATFORM_PATH_MAX];
+    char path[PLATFORM_PATH_MAX] = { 0 };
     path_join(path, storage->path.local, name);
 
     FILE *stream = fopen(path, "wb");

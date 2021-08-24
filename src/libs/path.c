@@ -52,7 +52,7 @@
 
 void path_expand(const char *path, char *expanded)
 {
-    char resolved[PLATFORM_PATH_MAX];
+    char resolved[PLATFORM_PATH_MAX] = { 0 };
 #if PLATFORM_ID == PLATFORM_LINUX
     if (path[0] == '~') {
         const char *home = getenv("HOME");
@@ -61,7 +61,7 @@ void path_expand(const char *path, char *expanded)
 #elif PLATFORM_ID == PLATFORM_WINDOWS
     if (strncasecmp(path, "%AppData%", 9) == 0) {
   #ifdef __USE_OS_NATIVE_API__
-        char appdata[PLATFORM_PATH_MAX];
+        char appdata[PLATFORM_PATH_MAX] = { 0 };
         SHGetFolderPathA(NULL, CSIDL_APPDATA | CSIDL_FLAG_CREATE, NULL, 0, appdata);
   #else
         const char *appdata = getenv("APPDATA"); // https://pureinfotech.com/list-environment-variables-windows-10/
@@ -129,7 +129,7 @@ static inline bool _path_is_root(const char *path)
 
 static int _path_stat(const char *pathname, struct stat *statbuf)
 {
-    char path[PLATFORM_PATH_MAX];
+    char path[PLATFORM_PATH_MAX] = { 0 };
     strcpy(path, pathname);
 #if PLATFORM_ID == PLATFORM_WINDOWS
     bool is_root = _path_is_root(path);

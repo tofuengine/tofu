@@ -35,23 +35,28 @@
 
 #define LOG_CONTEXT "configuration"
 
+#define LINE_LENGTH                 256
+#define PARAMETER_LENGTH            128
+#define PARAMETER_CONTEXT_LENGTH    64
+#define PARAMETER_KEY_LENGTH        (PARAMETER_LENGTH - PARAMETER_CONTEXT_LENGTH)
+
 static inline void _parse_version(const char *version_string, int *major, int *minor, int *revision)
 {
-    *major = *minor = *revision = 0; // Set to zero, minimun enforced value in case some parts are missing.
+    *major = *minor = *revision = 0; // Set to zero, minimum enforced value in case some parts are missing.
     sscanf(version_string, "%d.%d.%d", major, minor, revision);
 }
 
 static void _on_parameter(Configuration_t *configuration, const char *context, const char *key, const char *value)
 {
-    char fqn[256] = { 0 };
+    char fqn[PARAMETER_LENGTH] = { 0 };
     if (context && context[0] != '\0') { // Skip context if not provided.
-        strcpy(fqn, context);
+        strncpy(fqn, context, PARAMETER_CONTEXT_LENGTH);
         strcat(fqn, "-");
     }
-    strcat(fqn, key);
+    strncat(fqn, key, PARAMETER_KEY_LENGTH);
 
     if (strcmp(fqn, "system-identity") == 0) {
-        strcpy(configuration->system.identity, value);
+        strncpy(configuration->system.identity, value, MAX_VALUE_LENGTH - 1);
     } else
     if (strcmp(fqn, "system-version") == 0) {
         int major, minor, revision;
@@ -64,13 +69,13 @@ static void _on_parameter(Configuration_t *configuration, const char *context, c
         configuration->system.debug = strcmp(value, "true") == 0;
     } else
     if (strcmp(fqn, "system-icon") == 0) {
-        strcpy(configuration->system.icon, value);
+        strncpy(configuration->system.icon, value, MAX_VALUE_LENGTH - 1);
     } else
     if (strcmp(fqn, "system-mappings") == 0) {
-        strcpy(configuration->system.mappings, value);
+        strncpy(configuration->system.mappings, value, MAX_VALUE_LENGTH - 1);
     } else
     if (strcmp(fqn, "display-title") == 0) {
-        strcpy(configuration->display.title, value);
+        strncpy(configuration->display.title, value, MAX_VALUE_LENGTH - 1);
     } else
     if (strcmp(fqn, "display-width") == 0) {
         configuration->display.width = (size_t)strtoul(value, NULL, 0);
@@ -88,7 +93,7 @@ static void _on_parameter(Configuration_t *configuration, const char *context, c
         configuration->display.vertical_sync = strcmp(value, "true") == 0;
     } else
     if (strcmp(fqn, "display-effect") == 0) {
-        strcpy(configuration->display.effect, value);
+        strncpy(configuration->display.effect, value, MAX_VALUE_LENGTH - 1);
     } else
     if (strcmp(fqn, "audio-device-index") == 0) {
         configuration->audio.device_index = (int)strtol(value, NULL, 0);
@@ -142,9 +147,10 @@ static void _on_parameter(Configuration_t *configuration, const char *context, c
     }
 }
 
-static const char *_next(const char *ptr, char *line)
+static const char *_next(const char *ptr, char *line, size_t n)
 {
     bool comment = false;
+    const char *end_of_data = line + n - 1; // Leave room for the null-terminator.
     for (;;) {
         char c = *(ptr++);
         if (c == '\0') {
@@ -168,21 +174,30 @@ static const char *_next(const char *ptr, char *line)
             comment = true;
             continue;
         }
+        if (line >= end_of_data) {
+            continue; // Don't halt the loop as we need to consume a whole line in the source buffer.
+        }
         *(line++) = c;
     }
     *line = '\0';
     return ptr;
 }
 
-static bool _parse_context(char *line, char *context)
+static bool _parse_context(char *line, char *context, size_t n)
 {
     size_t length = strlen(line);
     if (line[0] != '[' || line[length - 1] != ']') { // Contexts are declared with square brackets.
         return false;
     }
 
-    context[0] = '\0'; // Avoid `strncpy()` to handle null-terminator with more sense.
-    strncat(context, line + 1, length - 2);
+    const char *end_of_data = context + n - 1; // Leave room for the null-terminator.
+    for (const char *ptr = line + 1; *ptr != ']'; ++ptr) {
+        if (context >= end_of_data) {
+            break;
+        }
+        *(context++) = *ptr;
+    }
+    *context = '\0';
 
     return true;
 }
@@ -286,11 +301,11 @@ Configuration_t *Configuration_create(const char *data)
         return configuration;
     }
 
-    char context[128] = { 0 };
-    char line[256];
+    char context[PARAMETER_CONTEXT_LENGTH] = { 0 };
     for (const char *ptr = data; ptr;) {
-        ptr = _next(ptr, line);
-        if (_parse_context(line, context)) {
+        char line[LINE_LENGTH] = { 0 };
+        ptr = _next(ptr, line, LINE_LENGTH);
+        if (_parse_context(line, context, PARAMETER_CONTEXT_LENGTH)) {
             continue;
         }
         const char *key, *value;
@@ -313,12 +328,12 @@ void Configuration_destroy(Configuration_t *configuration)
 
 void Configuration_override(Configuration_t *configuration, int argc, const char *argv[])
 {
-    char pair[256];
     for (int i = 0; i < argc; ++i) {
         if (strncmp(argv[i], "--", 2) != 0) { // Long-options only.
             continue;
         }
-        strcpy(pair, argv[i] + 2); // Skip "--" marker.
+        char pair[LINE_LENGTH] = { 0 };
+        strncpy(pair, argv[i] + 2, LINE_LENGTH - 1); // Skip "--" marker.
         const char *key, *value;
         if (!_parse_pair(pair, &key, &value)) {
             continue;

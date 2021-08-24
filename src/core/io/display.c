@@ -302,7 +302,7 @@ static bool _shader_initialize(Display_t *display, const char *effect)
     }
     const size_t length = strlen(FRAGMENT_SHADER) + strlen(effect);
     char *code = malloc(sizeof(char) * (length + 1)); // Add null terminator for the string.
-    strcpy(code, FRAGMENT_SHADER);
+    strcpy(code, FRAGMENT_SHADER); // We are safe using `strcpy()` as we pre-allocated the correct buffer length.
     strcat(code, effect);
 
     if (!shader_attach(display->shader, VERTEX_SHADER, SHADER_TYPE_VERTEX) ||

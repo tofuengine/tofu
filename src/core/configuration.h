@@ -31,25 +31,24 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define MAX_CONFIGURATION_IDENTITY_LENGTH   128
-#define MAX_CONFIGURATION_TITLE_LENGTH      128
+#define MAX_VALUE_LENGTH   128
 
 typedef struct _Configuration {
     struct {
-        char identity[MAX_CONFIGURATION_IDENTITY_LENGTH];
+        char identity[MAX_VALUE_LENGTH];
         struct {
             int major, minor, revision;
         } version;
         bool debug;
-        char icon[PLATFORM_PATH_MAX];
-        char mappings[PLATFORM_PATH_MAX];
+        char icon[MAX_VALUE_LENGTH];
+        char mappings[MAX_VALUE_LENGTH];
     } system;
     struct {
-        char title[MAX_CONFIGURATION_TITLE_LENGTH];
+        char title[MAX_VALUE_LENGTH];
         size_t width, height, scale;
         bool fullscreen;
         bool vertical_sync;
-        char effect[PLATFORM_PATH_MAX];
+        char effect[MAX_VALUE_LENGTH];
     } display;
     struct {
         int device_index;

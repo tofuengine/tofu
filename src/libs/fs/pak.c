@@ -267,7 +267,7 @@ static void _pak_mount_ctor(FS_Mount_t *mount, const char *path, size_t entries,
             .flags = flags
         };
 
-    strcpy(pak_mount->path, path);
+    strncpy(pak_mount->path, path, PLATFORM_PATH_MAX - 1);
 }
 
 static void _pak_mount_dtor(FS_Mount_t *mount)

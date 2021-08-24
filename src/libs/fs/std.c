@@ -89,7 +89,7 @@ static void _std_mount_ctor(FS_Mount_t *mount, const char *path)
             .path = { 0 }
         };
 
-    strcpy(std_mount->path, path);
+    strncpy(std_mount->path, path, PLATFORM_PATH_MAX - 1);
 }
 
 static void _std_mount_dtor(FS_Mount_t *mount)
@@ -103,7 +103,7 @@ static bool _std_mount_contains(const FS_Mount_t *mount, const char *name)
 {
     const Std_Mount_t *std_mount = (const Std_Mount_t *)mount;
 
-    char path[PLATFORM_PATH_MAX];
+    char path[PLATFORM_PATH_MAX] = { 0 };
     path_join(path, std_mount->path, name);
 
     bool exists = path_exists(path);
@@ -115,7 +115,7 @@ static FS_Handle_t *_std_mount_open(const FS_Mount_t *mount, const char *name)
 {
     const Std_Mount_t *std_mount = (const Std_Mount_t *)mount;
 
-    char path[PLATFORM_PATH_MAX];
+    char path[PLATFORM_PATH_MAX] = { 0 };
     path_join(path, std_mount->path, name);
 
     FILE *stream = fopen(path, "rb");
