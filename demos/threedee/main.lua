@@ -34,10 +34,10 @@ local Program = require("tofu.graphics").Program
 local Arrays = require("tofu.util").Arrays
 
 local Camera = require("lib.camera")
+local Player = require("lib.player")
 
 local DEBUG <const> = false
 local COUNT <const> = 250
-local SPEED <const> = 500.0
 
 local Main = Class.define()
 
@@ -60,8 +60,10 @@ function Main:__ctor()
   self.far = 1000
   self.field_of_view = math.pi / 2
 
-  self.bank = Bank.new(Canvas.new("assets/sheet.png", 63), 40, 158)
+  self.player = Player.new()
   self.camera = Camera.new(self.field_of_view, width, height, self.near, self.far)
+  self.bank = Bank.new(Canvas.new("assets/sheet.png", 63), 40, 158)
+  self.terrain = Canvas.new("assets/terrain.png", 63)
   self.font = Font.default(63, 11)
 
   self.entities = {}
@@ -69,7 +71,11 @@ function Main:__ctor()
     table.insert(self.entities, { x = math.random(-5000, 5000), y = 0, z = math.random(0, 5000) })
     -- Spawn at ground level.
   end
-  Arrays.sort(self.entities, function(a, b) -- Farthers first.
+  for i = 1, self.far * 10 do
+    table.insert(self.entities, { x = -250, y = 0, z = i * 100 })
+    table.insert(self.entities, { x =  250, y = 0, z = i * 100 })
+  end
+  Arrays.sort(self.entities, function(a, b) -- Farthest first.
       return a.z < b.z
     end)
 
@@ -79,21 +85,7 @@ end
 function Main:process()
   local update = false
 
-  self.dx = 0
-  self.dy = 0
-  self.dz = 0
-  if Input.is_down("up") then
-    self.dz = self.dz + 1
-  end
-  if Input.is_down("down") then
-    self.dz = self.dz - 1
-  end
-  if Input.is_down("left") then
-    self.dx = self.dx - 1
-  end
-  if Input.is_down("right") then
-    self.dx = self.dx + 1
-  end
+  self.player:process()
 
   if Input.is_pressed("y") then
     self.field_of_view = math.min(self.field_of_view + math.pi / 15, math.pi)
@@ -130,47 +122,91 @@ function Main:update(delta_time)
     return
   end
 
-  local camera = self.camera
-  camera:offset(self.dx * SPEED * delta_time, self.dy * SPEED * delta_time, self.dz * SPEED * delta_time)
+  self.player:update(delta_time)
+  self.camera:move(self.player:position())
 end
 
 local function _distance_to_scale(d)
   local r = (1 - d) + 0.05
-  return r * 1
+  return r * 2
 end
 
-function Main:render(_)
-  local canvas = Canvas.default()
+----[[
+local function _render_terrain(canvas, camera)
   local width, _ = canvas:size()
-  canvas:clear(59)
 
-  local camera = self.camera
+  local last_y = nil
 
   local far = camera.far + camera.z
   local near = camera.near + camera.z
   for z = far, near, -1 do
-    local _, _, _, _, sy = camera:project(camera.x, 0.0, z) -- Straight forward the camera, on ground level.
-    if sy then
-      local i = math.tointeger(z / 125)
-      canvas:rectangle('fill', 0, math.tointeger(sy + 0.5), width, 1, i % 2 == 0 and 28 or 42)
-    end
+    local i = math.tointeger(z / 125)
+    local c = i % 2 == 0 and 28 or 42
+
+    local _, _, _, _, sy = camera:project(camera.x, 0.0, z) -- Straight forward, on ground level.
+
+    local y1 = math.tointeger(sy + 0.5)
+    local y0 = last_y or y1
+    canvas:rectangle('fill', 0, y0, width, y1 - y0 + 1, c)
+    last_y = y1
+  end
+end
+--]]--
+--[[
+local function _render_terrain(canvas, camera)
+  local width, _ = canvas:size()
+
+  local last_y = camera.ground[camera.far]
+
+  for z = camera.far, camera.near, -1 do
+    local i = math.tointeger((camera.z + z) / 125)
+    local c = i % 2 == 0 and 28 or 42
+
+    local sy = camera.ground[z]
+      print(">>>" .. sy .. " | " .. z)
+
+    local y1 = math.tointeger(sy + 0.5)
+    local y0 = last_y
+    canvas:rectangle('fill', 0, y0, width, y1 - y0 + 1, c)
+    last_y = y1
+  end
+end
+--]]--
+
+function Main:_draw_entity(canvas, camera, entity)
+  local x, y, z = entity.x, entity.y, entity.z
+
+  if camera:is_too_far(x, y, z) then
+    return
   end
 
+  local px, py, pz, sx, sy = camera:project(x, y, z)
+
+  local scale = _distance_to_scale(pz)
+  local w, h = self.bank:size(0, scale, scale)
+  local xx, yy = sx - w * 0.5, sy - h * 1.0
+  if DEBUG then
+    canvas:rectangle('line', xx, yy, w, h, 15)
+  end
+  self.bank:blit(canvas, xx, yy, 0, scale, scale) -- Align the bottom center.
+  if DEBUG then
+    self.font:write(canvas, sx, sy - 8,
+      string.format("%.3f %.3f %.3f", x, y, z), "center", "middle")
+    self.font:write(canvas, sx, sy,
+      string.format("%.3f %.3f %.3f", px, py, pz), "center", "middle")
+  end
+end
+
+function Main:render(_)
+  local canvas = Canvas.default()
+  canvas:clear(59)
+
+  local camera = self.camera
+
+  _render_terrain(canvas, camera)
+
   for _, entity in reverse_ipairs(self.entities) do
-    local x, y, z = entity.x, entity.y, entity.z
-    local px, py, pz, sx, sy = camera:project(x, y, z)
-    if sx and sy then
-      local scale = _distance_to_scale(pz)
-      local w, h = self.bank:size(0, scale, scale)
-      self.bank:blit(canvas, sx - w * 0.5, sy - h * 1.0, 0, scale, scale) -- Align the bottom center.
-      --canvas:square('fill', sx - 2, sy - 2, 4, 17)
-      if DEBUG then
-        self.font:write(canvas, sx, sy - 8,
-          string.format("%.3f %.3f %.3f", x, y, z), "center", "middle")
-        self.font:write(canvas, sx, sy,
-          string.format("%.3f %.3f %.3f", px, py, pz), "center", "middle")
-      end
-    end
+    self:_draw_entity(canvas, camera, entity)
   end
 
   self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))

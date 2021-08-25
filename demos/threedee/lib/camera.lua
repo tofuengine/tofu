@@ -8,42 +8,91 @@ function Camera:__ctor(field_of_view, width, height, near, far)
   self.aspect_ratio = width / height
   self.width = width
   self.height = height
-  self.half_width = width * 0.5
-  self.half_height = height * 0.5
+  self.cx = (width - 1) * 0.5 -- As floating-point number to properly center the NPP on the screen.
+  self.cy = (height - 1) * 0.5
 
   self.near = near
   self.far = far
   self.normalized_near = near / far
 
   self.x = 0.0
-  self.y = 250.0
+  self.y = 0.0
   self.z = 0.0
+
+  self:_generate_z_buffer()
+end
+
+-- Recalculate when `self.y` or `self.z` change.
+function Camera:_generate_z_buffer()
+  local z_buffer = {}
+
+  local minus_cy_by_d <const> = -self.y * self.d
+
+  for sy = 0, self.height - 1 do
+    local py <const> = 1.0 - (sy / self.cx)
+    local cz = minus_cy_by_d / py
+    local z = cz + self.z
+    z_buffer[sy] = z
+--    print(sy .. " " .. z)
+  end
+
+  self.z_buffer = z_buffer
+
+  self:_generate_ground()
+end
+
+function Camera:_generate_ground()
+  local ground = {}
+
+  for z = self.far, self.near, -1 do
+    local _, _, _, _, sy = self:project(self.x, 0.0, z) -- Straight forward the camera, on ground level.
+    ground[z] = sy
+  end
+
+  self.ground = ground
 end
 
 function Camera:set_field_of_view(theta)
   self.d = 1.0 / math.tan(theta * 0.5)
+
+  self:_generate_z_buffer()
 end
 
 function Camera:set_clipping_planes(near, far)
   self.near = near
   self.far = far
   self.normalized_near = near / far
+
+  self:_generate_z_buffer()
 end
 
 function Camera:move(x, y, z)
   self.x = x
   self.y = y
   self.z = z
+
+  self:_generate_z_buffer()
 end
 
 function Camera:offset(dx, dy, dz)
   self.x = self.x + dx
   self.y = self.y + dy
   self.z = self.z + dz
+
+  self:_generate_z_buffer()
 end
 
 -- function Camera:rotate(angle)
 -- end
+
+function Camera:is_too_far(_, _, z)
+  local cz <const> = z - self.z
+  return cz < self.near or cz > self.far
+end
+
+function Camera:is_clipped(px, py, pz)
+  return px < -1 or px > 1 or py < -1 or py > 1 or pz < self.normalized_near or pz > 1
+end
 
 function Camera:project(x, y, z)
   local cx <const> = x - self.x -- Transform to camera-space.
@@ -52,14 +101,12 @@ function Camera:project(x, y, z)
 
   -- TODO: apply rotation here.
 
-  local d_over_cz <const> = self.d / cz -- Transform to normalized projection plane
+  local d_over_cz <const> = self.d / cz -- Transform to normalized projection plane (this is the scale factor).
   local px <const> = cx * d_over_cz / self.aspect_ratio
   local py <const> = cy * d_over_cz
   local pz <const> = cz / self.far
 
-  if px < -1 or px > 1 or py < -1 or py > 1 or pz < self.normalized_near or pz > 1 then
-    return px, py, pz, nil, nil
-  end
+  -- We don't clip here, as it is potentially too costly.
 
   -- Remap from `[-1, +1]` to `[0, width)` and `[0, height)`. The formula is
   --
@@ -68,10 +115,31 @@ function Camera:project(x, y, z)
   --
   -- which can be simplified by pre-calculating the half width/height. Also note that the
   -- `y` component is mirrored as the display origin is at the top-left corner.
-  local sx <const> = (1.0 + px) * self.half_width - 1
-  local sy <const> = (1.0 - py) * self.half_height - 1
+  local sx <const> = (1.0 + px) * self.cx
+  local sy <const> = (1.0 - py) * self.cy
 
   return px, py, pz, sx, sy
+end
+
+function Camera:screen_to_world(sx, sy, pz)
+  local px <const> = (sx / self.cx) - 1.0
+  local py <const> = 1.0 - (sy / self.cy)
+
+  if px < -1 or px > 1 or py < -1 or py > 1 then
+    return nil, nil, nil
+  end
+
+  local cz <const> = pz * self.far
+
+  local d_over_cz <const> = self.d / cz
+  local cx <const> = px * self.aspect_ratio / d_over_cz
+  local cy <const> = py / d_over_cz
+
+  local x <const> = cx + self.x -- Transform to camera-space.
+  local y <const> = cy + self.y
+  local z <const> = cz + self.z
+
+  return x, y, z
 end
 
 return Camera
