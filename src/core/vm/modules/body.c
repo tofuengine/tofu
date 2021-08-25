@@ -37,6 +37,7 @@
 static int body_new_0_1o(lua_State *L);
 static int body_gc_1o_0(lua_State *L);
 static int body_shape_v_v(lua_State *L);
+static int body_center_of_gravity_v_v(lua_State *L);
 static int body_type_v_v(lua_State *L);
 static int body_mass_v_v(lua_State *L);
 static int body_momentum_v_v(lua_State *L);
@@ -54,6 +55,7 @@ int body_loader(lua_State *L)
             { "new", body_new_0_1o },
             { "__gc", body_gc_1o_0 },
             { "shape", body_shape_v_v },
+            { "center_of_gravity", body_center_of_gravity_v_v },
             { "type", body_type_v_v },
             { "mass", body_mass_v_v },
             { "momentum", body_momentum_v_v },
@@ -169,7 +171,7 @@ static int body_shape_1o_4snnn(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
-    const Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
+    const Body_Object_t *self = (const Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
 
     if (self->kind == BODY_KIND_BOX) {
         lua_pushstring(L, "box");
@@ -233,12 +235,53 @@ static int body_shape_v_v(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
+static int body_center_of_gravity_1o_2n(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+    LUAX_SIGNATURE_END
+    const Body_Object_t *self = (const Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
+
+    const cpBody *body = self->body;
+    const cpVect cog = cpBodyGetCenterOfGravity(body);
+
+    lua_pushnumber(L, (lua_Number)cog.x);
+    lua_pushnumber(L, (lua_Number)cog.y);
+
+    return 2;
+}
+
+static int body_center_of_gravity_3onn_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
+    cpFloat x = (cpFloat)LUAX_NUMBER(L, 2);
+    cpFloat y = (cpFloat)LUAX_NUMBER(L, 3);
+
+    cpBody *body = self->body;
+    cpBodySetCenterOfGravity(body, (cpVect){ .x = x, .y = y });
+
+    return 0;
+}
+
+static int body_center_of_gravity_v_v(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, body_center_of_gravity_1o_2n)
+        LUAX_OVERLOAD_ARITY(3, body_center_of_gravity_3onn_0)
+    LUAX_OVERLOAD_END
+}
+
 static int body_type_1o_1s(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
-    const Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
+    const Body_Object_t *self = (const Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
 
     const cpBody *body = self->body;
     const cpBodyType type = cpBodyGetType(body);
@@ -277,7 +320,7 @@ static int body_mass_1o_1n(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
-    const Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
+    const Body_Object_t *self = (const Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
 
     const cpBody *body = self->body;
     const cpFloat mass = cpBodyGetMass(body);
@@ -315,7 +358,7 @@ static int body_momentum_1o_1n(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
-    const Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
+    const Body_Object_t *self = (const Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
 
     const cpBody *body = self->body;
     const cpFloat momentum = cpBodyGetMoment(body);
@@ -361,7 +404,7 @@ static int body_position_1o_2n(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
-    const Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
+    const Body_Object_t *self = (const Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
 
     const cpBody *body = self->body;
     const cpVect position = cpBodyGetPosition(body);
@@ -404,7 +447,7 @@ static int body_velocity_1o_2nn(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
-    const Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
+    const Body_Object_t *self = (const Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
 
     const cpBody *body = self->body;
     const cpVect velocity = cpBodyGetVelocity(body);
@@ -445,7 +488,7 @@ static int body_angle_1o_1n(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
-    const Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
+    const Body_Object_t *self = (const Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
 
     const cpBody *body = self->body;
     const cpFloat angle = cpBodyGetAngle(body);
@@ -483,7 +526,7 @@ static int body_elasticity_1o_1n(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
-    const Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
+    const Body_Object_t *self = (const Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
 
     const cpShape *shape = self->shape;
     const cpFloat elasticity = cpShapeGetElasticity(shape);
@@ -521,7 +564,7 @@ static int body_density_1o_1n(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
     LUAX_SIGNATURE_END
-    const Body_Object_t *self = (Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
+    const Body_Object_t *self = (const Body_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_BODY);
 
     const cpShape *shape = self->shape;
     const cpFloat density = cpShapeGetDensity(shape);
