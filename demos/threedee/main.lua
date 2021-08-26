@@ -45,13 +45,6 @@ function Main:__ctor()
   local palette = Palette.new("famicube")
   Display.palette(palette)
 
-  local program = Program.gradient(59, {
-    { 0, 0x00, 0xBE, 0xDA },
-    { 96, 0x8F, 0xB6, 0xBD },
-    { 128, 0xC2, 0xA3, 0xA0 }
-  })
-  Display.program(program)
-
   local canvas = Canvas.default()
   local width, height = canvas:size()
   canvas:transparent({ [0] = false, [63] = true })
@@ -132,24 +125,35 @@ local function _distance_to_scale(d)
 end
 
 ----[[
-local function _render_terrain(canvas, camera)
-  local width, _ = canvas:size()
+local function _render_terrain(camera)
+  local x <const> = camera.x
+  local far <const> = camera.far + camera.z
+  local near <const> = camera.near + camera.z
 
-  local last_y = nil
+  local _, _, _, _, sy0 = camera:project(x, 0.0, far) -- Straight forward, on ground level.
+  local y0 = math.tointeger(sy0 + 0.5) - 1
 
-  local far = camera.far + camera.z
-  local near = camera.near + camera.z
-  for z = far, near, -1 do
-    local i = math.tointeger(z / 125)
-    local c = i % 2 == 0 and 28 or 42
+  local program = Program.gradient(59, {
+    { 0, 0x00, 0xBE, 0xDA },
+    { y0 * 0.75, 0x8F, 0xB6, 0xBD },
+    { y0, 0xC2, 0xA3, 0xA0 }
+  })
 
-    local _, _, _, _, sy = camera:project(camera.x, 0.0, z) -- Straight forward, on ground level.
+  for z = far, near, -1  do
+    local i <const> = math.tointeger(z / 125)
+    local c <const> = i % 2 == 0 and 28 or 42
 
-    local y1 = math.tointeger(sy + 0.5)
-    local y0 = last_y or y1
-    canvas:rectangle('fill', 0, y0, width, y1 - y0 + 1, c)
-    last_y = y1
+    local _, _, _, _, sy = camera:project(x, 0.0, z) -- Straight forward, on ground level.
+
+    local y = math.tointeger(sy + 0.5)
+    if y0 ~= y then
+      program:wait(0, y)
+      program:shift(59, c)
+      y0 = y
+    end
   end
+
+  return program
 end
 --]]--
 --[[
@@ -203,7 +207,8 @@ function Main:render(_)
 
   local camera = self.camera
 
-  _render_terrain(canvas, camera)
+  local program = _render_terrain(camera)
+  Display.program(program)
 
   for _, entity in reverse_ipairs(self.entities) do
     self:_draw_entity(canvas, camera, entity)
