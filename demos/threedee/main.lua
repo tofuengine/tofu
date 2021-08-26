@@ -31,7 +31,6 @@ local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
 local Palette = require("tofu.graphics").Palette
 local Program = require("tofu.graphics").Program
-local Arrays = require("tofu.util").Arrays
 
 local Camera = require("lib.camera")
 local Player = require("lib.player")
@@ -89,9 +88,11 @@ function Main:__ctor()
     table.insert(self.entities, { x = -250, y = 0, z = i * 100 })
     table.insert(self.entities, { x =  250, y = 0, z = i * 100 })
   end
-  Arrays.sort(self.entities, function(a, b) -- Farthest first.
-      return a.z < b.z
+  table.sort(self.entities, function(a, b) -- Farthest first.
+      return a.z > b.z
     end)
+
+  self.visibles = {}
 
   self.running = true
 end
@@ -121,30 +122,6 @@ function Main:process()
     self.camera:set_field_of_view(self.field_of_view)
     self.camera:set_clipping_planes(self.near, self.far)
   end
-end
-
-local function reverse_ipairs(table)
-  return function(a, i)
-        i = i - 1
-        if i == 0 then
-          return nil, nil
-        end
-        return i, a[i]
-    end, table, #table + 1
-end
-
-function Main:update(delta_time)
-  if not self.running then
-    return
-  end
-
-  self.player:update(delta_time)
-  self.camera:move(self.player:position())
-end
-
-local function _distance_to_scale(d)
-  local r = (1 - d) + 0.05
-  return r * 2
 end
 
 local function _render_terrain(camera, index)
@@ -177,34 +154,88 @@ local function _render_terrain(camera, index)
   return program
 end
 
-function Main:_draw_entity(canvas, camera, entity, lut)
+function Main:update(delta_time)
+  if not self.running then
+    return
+  end
+
+  local player = self.player
+  local camera = self.camera
+
+  player:update(delta_time)
+  camera:move(player:position())
+
+  -- Rebuild sky and ground (copperlist) program.
+  local program = _render_terrain(camera, 59)
+  Display.program(program)
+
+  -- Scan and update entries, keeping only the visible ones.
+  local visibles = {}
+  for _, entity in ipairs(self.entities) do
+    local is_visible = self:_update_entity(camera, entity)
+    if is_visible then
+      table.insert(visibles, entity)
+    end
+  end
+  -- TODO: sort by `fog_depth` and `pz` to reduce the amount of `Canvas.shift()` calls.
+  -- Arrays.sort(visibles, function(a, b) -- Farthest first.
+  --     return a.z > b.z
+  --   end)
+  self.visibles = visibles
+end
+
+local function _distance_to_scale(d)
+  local r = (1 - d) + 0.05
+  return r * 2
+end
+
+function Main:_update_entity(camera, entity)
   local x, y, z = entity.x, entity.y, entity.z
 
   if camera:is_too_far(x, y, z) then
-    return
+    return false
   end
 
   local px, py, pz, sx, sy = camera:project(x, y, z)
 
-  -- TODO: should fade distant objects.
+  if camera:is_culled(pz) then
+    return false
+  end
+
   if pz >= 0.40 then
-    local depth = math.tointeger((1 - (pz - 0.40) / 0.60) * 15)
-    canvas:shift(lut[depth])
-    canvas:shift(63, 63)
+    entity.fog_level = math.tointeger((1 - (pz - 0.40) / 0.60) * 15)
+  else
+    entity.fog_level = 15
   end
 
   local scale = _distance_to_scale(pz)
   local w, h = self.bank:size(0, scale, scale)
-  local xx, yy = sx - w * 0.5, sy - h * 0.95
+
+  entity.scale = scale
+  entity.width = w
+  entity.height = h
+  entity.px = px
+  entity.py = py
+  entity.pz = pz
+  entity.sx = sx - w * 0.50 -- Align the bottom center.
+  entity.sy = sy - h * 0.95
+
+  return true
+end
+
+function Main:_draw_entity(canvas, entity, lut)
+  canvas:shift(lut[entity.fog_level])
+  canvas:shift(63, 63)
+
   if DEBUG then
-    canvas:rectangle('line', xx, yy, w, h, 15)
+    canvas:rectangle('line', entity.sx, entity.y, entity.width, entity.height, 15)
   end
-  self.bank:blit(canvas, xx, yy, 0, scale, scale) -- Align the bottom center.
+  self.bank:blit(canvas, entity.sx, entity.sy, 0, entity.scale, entity.scale)
   if DEBUG then
-    self.font:write(canvas, sx, sy - 8,
-      string.format("%.3f %.3f %.3f", x, y, z), "center", "middle")
-    self.font:write(canvas, sx, sy,
-      string.format("%.3f %.3f %.3f", px, py, pz), "center", "middle")
+    self.font:write(canvas, entity.sx, entity.sy - 8,
+      string.format("%.3f %.3f %.3f", entity.x, entity.y, entity.z), "center", "middle")
+    self.font:write(canvas, entity.sx, entity.sy,
+      string.format("%.3f %.3f %.3f", entity.px, entity.py, entity.pz), "center", "middle")
   end
 end
 
@@ -212,14 +243,9 @@ function Main:render(_)
   local canvas = Canvas.default()
   canvas:clear(59)
 
-  local camera = self.camera
-
-  local program = _render_terrain(camera, 59)
-  Display.program(program)
-
   canvas:push()
-  for _, entity in reverse_ipairs(self.entities) do
-    self:_draw_entity(canvas, camera, entity, self.lut)
+  for _, entity in ipairs(self.visibles) do
+    self:_draw_entity(canvas, entity, self.lut)
   end
   canvas:pop()
 

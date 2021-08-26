@@ -57,6 +57,10 @@ function Camera:is_clipped(px, py, pz)
   return px < -1 or px > 1 or py < -1 or py > 1 or pz < self.normalized_near or pz > 1
 end
 
+function Camera:is_culled(pz)
+  return pz < self.normalized_near or pz > 1
+end
+
 function Camera:project(x, y, z)
   local cx <const> = x - self.x -- Transform to camera-space.
   local cy <const> = y - self.y
