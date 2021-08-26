@@ -18,76 +18,39 @@ function Camera:__ctor(field_of_view, width, height, near, far)
   self.x = 0.0
   self.y = 0.0
   self.z = 0.0
-
-  self:_generate_z_buffer()
-end
-
--- Recalculate when `self.y` or `self.z` change.
-function Camera:_generate_z_buffer()
-  local z_buffer = {}
-
-  local minus_cy_by_d <const> = -self.y * self.d
-
-  for sy = 0, self.height - 1 do
-    local py <const> = 1.0 - (sy / self.cx)
-    local cz = minus_cy_by_d / py
-    local z = cz + self.z
-    z_buffer[sy] = z
---    print(sy .. " " .. z)
-  end
-
-  self.z_buffer = z_buffer
-
-  self:_generate_ground()
-end
-
-function Camera:_generate_ground()
-  local ground = {}
-
-  for z = self.far, self.near, -1 do
-    local _, _, _, _, sy = self:project(self.x, 0.0, z) -- Straight forward the camera, on ground level.
-    ground[z] = sy
-  end
-
-  self.ground = ground
 end
 
 function Camera:set_field_of_view(theta)
   self.d = 1.0 / math.tan(theta * 0.5)
-
-  self:_generate_z_buffer()
 end
 
 function Camera:set_clipping_planes(near, far)
   self.near = near
   self.far = far
   self.normalized_near = near / far
-
-  self:_generate_z_buffer()
 end
 
 function Camera:move(x, y, z)
   self.x = x
   self.y = y
   self.z = z
-
-  self:_generate_z_buffer()
 end
 
 function Camera:offset(dx, dy, dz)
   self.x = self.x + dx
   self.y = self.y + dy
   self.z = self.z + dz
-
-  self:_generate_z_buffer()
 end
 
 -- function Camera:rotate(angle)
 -- end
 
-function Camera:is_too_far(_, _, z)
+function Camera:is_too_far(x, y, z)
+  local cx <const> = x - self.x
+  local cy <const> = y - self.y
   local cz <const> = z - self.z
-  return cz < self.near or cz > self.far
+  return cx > self.far or cy > self.far or cz > self.far
+    or cz < self.near
 end
 
 function Camera:is_clipped(px, py, pz)
