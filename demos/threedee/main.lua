@@ -36,22 +36,41 @@ local Arrays = require("tofu.util").Arrays
 local Camera = require("lib.camera")
 local Player = require("lib.player")
 
-local DEBUG <const> = false
-local COUNT <const> = 250
+local config = require("config")
+
+local DEBUG <const> = config.debug
+local RUMBLE_LENGTH <const> = config.ground.rumble_length
 
 local Main = Class.define()
 
+local function _build_table(palette, levels, target)
+  local tr, tg, tb = table.unpack(target)
+  local colors = palette:colors()
+  local lut = {}
+  for i = 0, levels - 1 do
+    local shifting = {}
+    local ratio = i / (levels - 1)
+    for j, color in ipairs(colors) do
+      local ar, ag, ab = table.unpack(color)
+      local r, g, b = Palette.mix(ar, ag, ab, tr, tg, tb, 1 - ratio)
+      shifting[j - 1] = palette:match(r, g, b)
+    end
+    lut[i] = shifting
+  end
+  return lut
+end
+
 function Main:__ctor()
-  local palette = Palette.new("famicube")
+  local palette = Palette.new(config.display.palette)
   Display.palette(palette)
 
   local canvas = Canvas.default()
   local width, height = canvas:size()
   canvas:transparent({ [0] = false, [63] = true })
 
-  self.near = 1
-  self.far = 1000
-  self.field_of_view = math.pi / 2
+  self.near = config.camera.near
+  self.far = config.camera.far
+  self.field_of_view = config.camera.field_of_view
 
   self.player = Player.new()
   self.camera = Camera.new(self.field_of_view, width, height, self.near, self.far)
@@ -59,8 +78,10 @@ function Main:__ctor()
   self.terrain = Canvas.new("assets/terrain.png", 63)
   self.font = Font.default(63, 11)
 
+  self.lut = _build_table(palette, 16, { 0x8F, 0xB6, 0xBD})
+
   self.entities = {}
-  for _ = 1, COUNT do
+  for _ = 1, config.objects.count do
     table.insert(self.entities, { x = math.random(-5000, 5000), y = 0, z = math.random(0, 5000) })
     -- Spawn at ground level.
   end
@@ -87,9 +108,11 @@ function Main:process()
     self.field_of_view = math.max(self.field_of_view - math.pi / 15, 0)
     update = true
   elseif Input.is_pressed("b") then
-    self.camera.y = math.min(self.camera.y + 5.0, 1000.0)
+    self.far = math.min(self.far + 50.0, 5000.0)
+    update = true
   elseif Input.is_pressed("a") then
-    self.camera.y = math.max(self.camera.y - 5.0, 0)
+    self.far = math.max(self.far - 50.0, 0)
+    update = true
   elseif Input.is_pressed("start") then
     self.running = not self.running
   end
@@ -124,60 +147,37 @@ local function _distance_to_scale(d)
   return r * 2
 end
 
-----[[
-local function _render_terrain(camera)
+local function _render_terrain(camera, index)
   local x <const> = camera.x
   local far <const> = camera.far + camera.z
   local near <const> = camera.near + camera.z
 
   local _, _, _, _, sy0 = camera:project(x, 0.0, far) -- Straight forward, on ground level.
-  local y0 = math.tointeger(sy0 + 0.5) - 1
+  local y0 = math.tointeger(sy0 + 0.5)
 
-  local program = Program.gradient(59, {
+  local program = Program.gradient(index, {
     { 0, 0x00, 0xBE, 0xDA },
     { y0 * 0.75, 0x8F, 0xB6, 0xBD },
-    { y0, 0xC2, 0xA3, 0xA0 }
+    { y0 - 1, 0xC2, 0xA3, 0xA0 }
   })
 
-  for z = far, near, -1  do
-    local i <const> = math.tointeger(z / 125)
-    local c <const> = i % 2 == 0 and 28 or 42
+  local toggle = math.tointeger(far / RUMBLE_LENGTH) % 2 == 0 -- Find the initial color.
+  program:wait(0, y0)
+  program:shift(index, toggle and 28 or 42)
 
+  local less_far <const> = far - math.tointeger(far % RUMBLE_LENGTH) -- Skip to the start of the new rumble.
+
+  for z = less_far, near, -RUMBLE_LENGTH  do
     local _, _, _, _, sy = camera:project(x, 0.0, z) -- Straight forward, on ground level.
-
-    local y = math.tointeger(sy + 0.5)
-    if y0 ~= y then
-      program:wait(0, y)
-      program:shift(59, c)
-      y0 = y
-    end
+    toggle = not toggle
+    program:wait(0, math.tointeger(sy + 0.5))
+    program:shift(index, toggle and 28 or 42)
   end
 
   return program
 end
---]]--
---[[
-local function _render_terrain(canvas, camera)
-  local width, _ = canvas:size()
 
-  local last_y = camera.ground[camera.far]
-
-  for z = camera.far, camera.near, -1 do
-    local i = math.tointeger((camera.z + z) / 125)
-    local c = i % 2 == 0 and 28 or 42
-
-    local sy = camera.ground[z]
-      print(">>>" .. sy .. " | " .. z)
-
-    local y1 = math.tointeger(sy + 0.5)
-    local y0 = last_y
-    canvas:rectangle('fill', 0, y0, width, y1 - y0 + 1, c)
-    last_y = y1
-  end
-end
---]]--
-
-function Main:_draw_entity(canvas, camera, entity)
+function Main:_draw_entity(canvas, camera, entity, lut)
   local x, y, z = entity.x, entity.y, entity.z
 
   if camera:is_too_far(x, y, z) then
@@ -186,9 +186,16 @@ function Main:_draw_entity(canvas, camera, entity)
 
   local px, py, pz, sx, sy = camera:project(x, y, z)
 
+  -- TODO: should fade distant objects.
+  if pz >= 0.40 then
+    local depth = math.tointeger((1 - (pz - 0.40) / 0.60) * 15)
+    canvas:shift(lut[depth])
+    canvas:shift(63, 63)
+  end
+
   local scale = _distance_to_scale(pz)
   local w, h = self.bank:size(0, scale, scale)
-  local xx, yy = sx - w * 0.5, sy - h * 1.0
+  local xx, yy = sx - w * 0.5, sy - h * 0.95
   if DEBUG then
     canvas:rectangle('line', xx, yy, w, h, 15)
   end
@@ -207,12 +214,14 @@ function Main:render(_)
 
   local camera = self.camera
 
-  local program = _render_terrain(camera)
+  local program = _render_terrain(camera, 59)
   Display.program(program)
 
+  canvas:push()
   for _, entity in reverse_ipairs(self.entities) do
-    self:_draw_entity(canvas, camera, entity)
+    self:_draw_entity(canvas, camera, entity, self.lut)
   end
+  canvas:pop()
 
   self.font:write(canvas, 0, 0, string.format("FPS: %d", System.fps()))
   self.font:write(canvas, 0, 10, string.format("%.3f %.3f %.3f", self.field_of_view, self.near, self.far))
