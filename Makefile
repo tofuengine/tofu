@@ -45,7 +45,7 @@ endif
 ifeq ($(BUILD),release)
 # -Ofast => -O3 -ffast-math
 # -Os => -O2, favouring size
-	COPTS=-O3 -ffast-math -DRELEASE -fomit-frame-pointer
+	COPTS=-O3 -ffast-math -DNDEBUG -fomit-frame-pointer
 else ifeq ($(BUILD),profile)
 	COPTS=-O0 -ffast-math -ggdb3 -DDEBUG -DPROFILE -pg
 else ifeq ($(BUILD),sanitize)

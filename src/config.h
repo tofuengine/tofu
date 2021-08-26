@@ -95,7 +95,7 @@
 #define __SYSTEM_HEAP_PERIOD__  5.0f
 
 // In release build, disable VM calls debug and periodic collection for better performance.
-#ifdef RELEASE
+#ifdef NDEBUG
   #undef __LUAX_RTTI__
   #undef __GRAPHICS_CAPTURE_SUPPORT__
   #undef __DEBUG_ENGINE_PERFORMANCES__
