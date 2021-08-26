@@ -50,6 +50,16 @@
 
 #define LOG_CONTEXT "path"
 
+static inline bool _path_is_trailed(const char *path)
+{
+    return path[strlen(path) - 1] == PLATFORM_PATH_SEPARATOR;
+}
+
+static inline void _path_chop(char *path)
+{
+    path[strlen(path) - 1] = '\0';
+}
+
 void path_expand(const char *path, char *expanded)
 {
     char resolved[PLATFORM_PATH_MAX] = { 0 };
@@ -76,7 +86,15 @@ void path_expand(const char *path, char *expanded)
     char *ptr = realpath(resolved, expanded);
     if (!ptr) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't resolve path `%s`", resolved);
+        return;
     }
+
+#if PLATFORM_ID == PLATFORM_WINDOWS
+    bool is_trailed = _path_is_trailed(expanded);
+    if (is_trailed) {
+        _path_chop(expanded);
+    }
+#endif
 }
 
 bool path_exists(const char *path)
@@ -108,16 +126,6 @@ bool path_mkdirs(const char *path)
         p = e; // Don't skip the separator, we need it!
     }
     return true;
-}
-
-static inline bool _path_is_trailed(const char *path)
-{
-    return path[strlen(path) - 1] == PLATFORM_PATH_SEPARATOR;
-}
-
-static inline void _path_chop(char *path)
-{
-    path[strlen(path) - 1] = '\0';
 }
 
 #if PLATFORM_ID == PLATFORM_WINDOWS
