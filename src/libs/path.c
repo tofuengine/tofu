@@ -89,12 +89,9 @@ void path_expand(const char *path, char *expanded)
         return;
     }
 
-#if PLATFORM_ID == PLATFORM_WINDOWS
-    bool is_trailed = _path_is_trailed(expanded);
-    if (is_trailed) {
+    if (_path_is_trailed(expanded)) {
         _path_chop(expanded);
     }
-#endif
 }
 
 bool path_exists(const char *path)
@@ -212,7 +209,9 @@ void path_split(const char *path, char *folder, char *file)
 void path_join(char *path, const char *folder, const char *file)
 {
     strcpy(path, folder);
-    strcat(path, PLATFORM_PATH_SEPARATOR_SZ);
+    if (!_path_is_trailed(path)) {
+        strcat(path, PLATFORM_PATH_SEPARATOR_SZ);
+    }
     strcat(path, file);
     for (char *ptr = path; *ptr != '\0'; ++ptr) { // Replace virtual file-system separator `/` with the actual one.
         if (*ptr == FS_PATH_SEPARATOR) {
