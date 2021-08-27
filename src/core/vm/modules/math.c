@@ -1,18 +1,18 @@
 /*
  * MIT License
- * 
+ *
  * Copyright (c) 2019-2021 Marco Lizza
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -49,6 +49,7 @@ static int math_signum_1n_1n(lua_State *L);
 static int math_sincos_1n_2nn(lua_State *L);
 static int math_angle_to_rotation_1n_1n(lua_State *L);
 static int math_rotation_to_angle_1n_1n(lua_State *L);
+static int math_invsqrt_1n_1n(lua_State *L);
 static int math_rotate_3nnn_2nn(lua_State *L);
 static int math_wave_v_1f(lua_State *L);
 static int math_tweener_v_1f(lua_State *L);
@@ -77,6 +78,7 @@ int math_loader(lua_State *L)
             { "sincos", math_sincos_1n_2nn },
             { "angle_to_rotation", math_angle_to_rotation_1n_1n },
             { "rotation_to_angle", math_rotation_to_angle_1n_1n },
+            { "invsqrt", math_invsqrt_1n_1n },
             { "rotate", math_rotate_3nnn_2nn },
             { "wave", math_wave_v_1f },
             { "tweener", math_tweener_v_1f },
@@ -267,6 +269,38 @@ static int math_rotation_to_angle_1n_1n(lua_State *L)
     float angle = frtoa(rotation);
 
     lua_pushnumber(L, (lua_Number)angle);
+
+    return 1;
+}
+
+// See: https://en.wikipedia.org/wiki/Fast_inverse_square_root
+//
+// The magic number is for doubles is from https://cs.uwaterloo.ca/~m32rober/rsqrt.pdf
+//     i = 0x5fe6eb50c7b537a9 - (i >> 1);
+static inline float _Q_rsqrt(float number)
+{
+    const float x2 = number * 0.5f;
+    float y = number;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
+    int32_t i = *(int32_t *)&y;             // evil floating point bit level hacking
+    i = 0x5f3759df - (i >> 1);              // what the fuck?
+    y = *(float *)&i;
+#pragma GCC diagnostic pop
+    y = y * (1.5f - (x2 * y * y));          // 1st iteration
+//	y = y * (threehalfs - (x2 * y * y));    // 2nd iteration, this can be removed
+    return y;
+}
+
+static int math_invsqrt_1n_1n(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    float x = LUAX_NUMBER(L, 1);
+
+    const float y = _Q_rsqrt(x);
+    lua_pushnumber(L, (lua_Number)y);
 
     return 1;
 }
