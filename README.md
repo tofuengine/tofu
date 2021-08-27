@@ -57,13 +57,13 @@ Guess what? Yup, that's yet another game engine/framework.
 ## Dependencies
 
 * [Chipmunk2D](https://chipmunk-physics.net/) v7.0.3
-* [dr_libs](https://github.com/mackron/dr_libs) v0.12.29, v0.6.27, v0.13.0
+* [dr_libs](https://github.com/mackron/dr_libs) v0.12.31, v0.6.31, v0.13.1
 * [Glad](https://glad.dav1d.de/)
 * [gif-h](https://github.com/charlietangora/gif-h)
 * [GLFW](https://www.glfw.org/) v3.3.4
 * [libxmp](http://xmp.sourceforge.net/) v4.5.0
 * [Lua](https://lua.org/) v5.4.3
-* [miniaudio](https://github.com/dr-soft/miniaudio) v0.10.40
+* [miniaudio](https://github.com/dr-soft/miniaudio) v0.10.42
 * [SDL_GameControllerDB](https://github.com/gabomdq/SDL_GameControllerDB)
 * [spleen](https://github.com/fcambus/spleen) v1.8.1
 * [stb](https://github.com/nothings/stb) libraries
