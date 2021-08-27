@@ -1,18 +1,18 @@
 /*
  * MIT License
- * 
+ *
  * Copyright (c) 2019-2021 Marco Lizza
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -33,10 +33,13 @@
 
 #include "udt.h"
 
+#include <time.h>
+
 #define LOG_CONTEXT "system"
 
 static int system_args_0_1t(lua_State *L);
 static int system_version_0_3nnn(lua_State *L);
+static int system_clock_0_1n(lua_State *L);
 static int system_time_0_1n(lua_State *L);
 static int system_fps_0_1n(lua_State *L);
 #ifdef __ENGINE_PERFORMANCE_STATISTICS__
@@ -57,6 +60,7 @@ int system_loader(lua_State *L)
         (const struct luaL_Reg[]){
             { "args", system_args_0_1t },
             { "version", system_version_0_3nnn },
+            { "clock", system_clock_0_1n },
             { "time", system_time_0_1n },
             { "fps", system_fps_0_1n },
 #ifdef __ENGINE_PERFORMANCE_STATISTICS__
@@ -103,6 +107,16 @@ static int system_version_0_3nnn(lua_State *L)
     lua_pushinteger(L, (lua_Integer)TOFU_VERSION_REVISION);
 
     return 3;
+}
+
+static int system_clock_0_1n(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+    LUAX_SIGNATURE_END
+
+    lua_pushnumber(L, ((lua_Number)clock()) / (lua_Number)CLOCKS_PER_SEC);
+
+    return 1;
 }
 
 static int system_time_0_1n(lua_State *L)
