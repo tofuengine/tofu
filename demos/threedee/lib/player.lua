@@ -1,7 +1,7 @@
 local Class = require("tofu.core").Class
 local Input = require("tofu.events").Input
 
-local SPEED_X <const> = 1000.0
+local SPEED_X <const> = 250.0
 local SPEED_Y <const> = 250.0
 local SPEED_Z <const> = 500.0
 

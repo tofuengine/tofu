@@ -31,6 +31,7 @@ local Display = require("tofu.graphics").Display
 local Font = require("tofu.graphics").Font
 local Palette = require("tofu.graphics").Palette
 local Program = require("tofu.graphics").Program
+local Arrays = require("tofu.util").Arrays
 
 local Camera = require("lib.camera")
 local Player = require("lib.player")
@@ -42,7 +43,7 @@ local RUMBLE_LENGTH <const> = config.ground.rumble_length
 
 local Main = Class.define()
 
-local function _build_table(palette, levels, target)
+local function _build_table(palette, levels, target, excluded)
   local tr, tg, tb = table.unpack(target)
   local colors = palette:colors()
   local lut = {}
@@ -50,9 +51,14 @@ local function _build_table(palette, levels, target)
     local shifting = {}
     local ratio = i / (levels - 1)
     for j, color in ipairs(colors) do
-      local ar, ag, ab = table.unpack(color)
-      local r, g, b = Palette.mix(ar, ag, ab, tr, tg, tb, 1 - ratio)
-      shifting[j - 1] = palette:match(r, g, b)
+      local index = j - 1
+      if Arrays.index_of(excluded, index) then
+        shifting[index] = index
+      else
+        local ar, ag, ab = table.unpack(color)
+        local r, g, b = Palette.mix(ar, ag, ab, tr, tg, tb, ratio)
+        shifting[index] = palette:match(r, g, b)
+      end
     end
     lut[i] = shifting
   end
@@ -77,16 +83,12 @@ function Main:__ctor()
   self.terrain = Canvas.new("assets/terrain.png", 63)
   self.font = Font.default(63, 11)
 
-  self.lut = _build_table(palette, 16, { 0x8F, 0xB6, 0xBD})
+  self.lut = _build_table(palette, 16, { 0x8F, 0xB6, 0xBD }, { 63 })
 
   self.entities = {}
-  for _ = 1, config.objects.count do
-    table.insert(self.entities, { x = math.random(-5000, 5000), y = 0, z = math.random(0, 5000) })
-    -- Spawn at ground level.
-  end
   for i = 1, self.far * 10 do
-    table.insert(self.entities, { x = -250, y = 0, z = i * 100 })
-    table.insert(self.entities, { x =  250, y = 0, z = i * 100 })
+    table.insert(self.entities, { x = -100, y = 0, z = i * 100, anchor_x = 0.5, anchor_y = 0.95 })
+    table.insert(self.entities, { x =  100, y = 0, z = i * 100, anchor_x = 0.5, anchor_y = 0.95 })
   end
   table.sort(self.entities, function(a, b) -- Farthest first.
       return a.z > b.z
@@ -177,16 +179,27 @@ function Main:update(delta_time)
       table.insert(visibles, entity)
     end
   end
-  -- TODO: sort by `fog_depth` and `pz` to reduce the amount of `Canvas.shift()` calls.
-  -- Arrays.sort(visibles, function(a, b) -- Farthest first.
-  --     return a.z > b.z
-  --   end)
+
+  -- Sort by `fog_depth` and `pz` to reduce the amount of `Canvas.shift()` calls.
+  table.sort(visibles, function(a, b) -- Farthest first.
+      return a.fog_depth > b.fog_depth or a.z > b.z
+    end)
+
   self.visibles = visibles
 end
 
 local function _distance_to_scale(d)
   local r = (1 - d) + 0.05
   return r * 2
+end
+
+local function _to_fog_level(pz, threshold, levels)
+  if pz >= threshold then
+    local ratio = (pz - threshold) / (1.0 - threshold)
+    return math.tointeger(ratio * (levels - 1))
+  else
+    return 0
+  end
 end
 
 function Main:_update_entity(camera, entity)
@@ -202,11 +215,7 @@ function Main:_update_entity(camera, entity)
     return false
   end
 
-  if pz >= 0.40 then
-    entity.fog_level = math.tointeger((1 - (pz - 0.40) / 0.60) * 15)
-  else
-    entity.fog_level = 15
-  end
+  entity.fog_depth = _to_fog_level(pz, 0.60, 16)
 
   local scale = _distance_to_scale(pz)
   local w, h = self.bank:size(0, scale, scale)
@@ -217,16 +226,13 @@ function Main:_update_entity(camera, entity)
   entity.px = px
   entity.py = py
   entity.pz = pz
-  entity.sx = sx - w * 0.50 -- Align the bottom center.
-  entity.sy = sy - h * 0.95
+  entity.sx = sx - w * entity.anchor_x
+  entity.sy = sy - h * entity.anchor_y
 
   return true
 end
 
-function Main:_draw_entity(canvas, entity, lut)
-  canvas:shift(lut[entity.fog_level])
-  canvas:shift(63, 63)
-
+function Main:_draw_entity(canvas, entity)
   if DEBUG then
     canvas:rectangle('line', entity.sx, entity.y, entity.width, entity.height, 15)
   end
@@ -244,7 +250,12 @@ function Main:render(_)
   canvas:clear(59)
 
   canvas:push()
+  local fog_depth = nil
   for _, entity in ipairs(self.visibles) do
+    if fog_depth ~= entity.fog_depth then -- Minimize palette shifting calls.
+      fog_depth = entity.fog_depth
+      canvas:shift(self.lut[fog_depth])
+    end
     self:_draw_entity(canvas, entity, self.lut)
   end
   canvas:pop()
