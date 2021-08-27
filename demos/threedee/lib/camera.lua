@@ -68,8 +68,9 @@ function Camera:project(x, y, z)
 
   -- TODO: apply rotation here.
 
-  local d_over_cz <const> = self.d / cz -- Transform to normalized projection plane (this is the scale factor).
-  local px <const> = cx * d_over_cz / self.aspect_ratio
+  -- Transform to normalized projection plane (this is the scale factor).
+  local d_over_cz <const> = self.d / cz -- Note that division-by-zero has to be excluded with a prior check.
+  local px <const> = cx * d_over_cz * self.aspect_ratio
   local py <const> = cy * d_over_cz
   local pz <const> = cz / self.far
 
