@@ -154,7 +154,7 @@ local function index_of(array, search, from)
       return index
     end
   end
-  return 0
+  return nil
 end
 
 local function reversed(array)
