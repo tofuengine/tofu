@@ -13,7 +13,7 @@ function Camera:__ctor(field_of_view, width, height, near, far)
 
   self.near = near
   self.far = far
-  self.normalized_near = near / far
+  self.range = far - near
   self.far_side = far / self.d * self.aspect_ratio
 
   self.x = 0.0
@@ -29,7 +29,7 @@ end
 function Camera:set_clipping_planes(near, far)
   self.near = near
   self.far = far
-  self.normalized_near = near / far
+  self.range = far - near
   self.far_side = far / self.d * self.aspect_ratio -- Max "wide" distance, on the far plane.
 end
 
@@ -52,17 +52,17 @@ function Camera:is_too_far(x, y, z)
   local cx <const> = x - self.x
   local cy <const> = y - self.y
   local cz <const> = z - self.z
-  return cx > self.far_side or cy > self.far_side -- Avoid `math.abs()`, too costly!
-    or cx < -self.far_side or cy < -self.far_side
+  return cx < -self.far_side or cx > self.far_side -- Avoid `math.abs()`, too costly!
+    or cy < -self.far_side or cy > self.far_side
     or cz > self.far or cz < self.near
 end
 
 function Camera:is_clipped(px, py, pz)
-  return px < -1 or px > 1 or py < -1 or py > 1 or pz < self.normalized_near or pz > 1
+  return px < -1 or px > 1 or py < -1 or py > 1 or pz < 0 or pz > 1
 end
 
 function Camera:is_culled(pz)
-  return pz < self.normalized_near or pz > 1
+  return pz < 0 or pz > 1
 end
 
 function Camera:project(x, y, z)
@@ -72,11 +72,11 @@ function Camera:project(x, y, z)
 
   -- TODO: apply rotation here.
 
-  -- Transform to normalized projection plane (this is the scale factor).
-  local d_over_cz <const> = self.d / cz -- Note that division-by-zero has to be excluded with a prior check.
-  local px <const> = cx * d_over_cz * self.aspect_ratio
-  local py <const> = cy * d_over_cz
-  local pz <const> = cz / self.far
+  -- Transform to normalized projection plane.
+  local d_over_cz <const> = self.d / cz -- Scale factor. Division-by-zero has to be excluded with a prior check.
+  local px <const> = cx * d_over_cz / self.aspect_ratio -- [-ar, +ar] -> [-1, +1]
+  local py <const> = cy * d_over_cz -- [-1, +1]
+  local pz <const> = (cz - self.near) / self.range -- [0, 1]
 
   -- We don't clip here, as it is potentially too costly.
 

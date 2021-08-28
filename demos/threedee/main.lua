@@ -79,7 +79,7 @@ function Main:__ctor()
 
   self.player = Player.new()
   self.camera = Camera.new(self.field_of_view, width, height, self.near, self.far)
-  self.bank = Bank.new(Canvas.new("assets/sheet.png", 63), 40, 158)
+  self.bank = Bank.new(Canvas.new("assets/texture.png", 63), "assets/texture.sheet")
   self.terrain = Canvas.new("assets/terrain.png", 63)
   self.font = Font.default(63, 11)
 
@@ -87,8 +87,18 @@ function Main:__ctor()
 
   self.entities = {}
   for i = 1, self.far * 10 do
-    table.insert(self.entities, { x = -100, y = 0, z = i * 100, anchor_x = 0.5, anchor_y = 0.95 })
-    table.insert(self.entities, { x =  100, y = 0, z = i * 100, anchor_x = 0.5, anchor_y = 0.95 })
+    table.insert(self.entities, { x = -250, y = 0, z = i * 100, cell_id = 0, anchor_x = 0.5, anchor_y = 0.95 })
+    table.insert(self.entities, { x =  250, y = 0, z = i * 100, cell_id = 0, anchor_x = 0.5, anchor_y = 0.95 })
+  end
+  for _ = 1, 500 do
+    table.insert(self.entities, {
+        x = math.random(-1000, 1000),
+        y = 0,
+        z = math.random(0, 50000),
+        cell_id = math.random(1, 3),
+        anchor_x = 0.5,
+        anchor_y = 0.75
+      })
   end
   table.sort(self.entities, function(a, b) -- Farthest first.
       return a.z > b.z
@@ -189,6 +199,7 @@ function Main:update(delta_time)
 end
 
 local function _distance_to_scale(d)
+  -- TODO: fix scale so that nearest objscts are bigger.
   local r = (1 - d) + 0.05
   return r * 2
 end
@@ -215,10 +226,10 @@ function Main:_update_entity(camera, entity)
     return false
   end
 
-  entity.fog_depth = _to_fog_level(pz, 0.60, 16)
+  entity.fog_depth = _to_fog_level(pz, 0.50, 16)
 
   local scale = _distance_to_scale(pz)
-  local w, h = self.bank:size(0, scale, scale)
+  local w, h = self.bank:size(entity.cell_id, scale, scale)
 
   entity.scale = scale
   entity.width = w
@@ -236,7 +247,7 @@ function Main:_draw_entity(canvas, entity)
   if DEBUG then
     canvas:rectangle('line', entity.sx, entity.y, entity.width, entity.height, 15)
   end
-  self.bank:blit(canvas, entity.sx, entity.sy, 0, entity.scale, entity.scale)
+  self.bank:blit(canvas, entity.sx, entity.sy, entity.cell_id, entity.scale, entity.scale)
   if DEBUG then
     self.font:write(canvas, entity.sx, entity.sy - 8,
       string.format("%.3f %.3f %.3f", entity.x, entity.y, entity.z), "center", "middle")
