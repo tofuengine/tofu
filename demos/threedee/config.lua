@@ -36,6 +36,6 @@ return {
     count = 250,
   },
   ground = {
-    rumble_length = 125
+    rumble_length = 75
   }
 }
