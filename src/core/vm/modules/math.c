@@ -62,7 +62,7 @@ int math_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, (luaX_Script){
-            .buffer = _math_lua,
+            .data = _math_lua,
             .size = sizeof(_math_lua) / sizeof(char),
             .name = SCRIPT_NAME
         },

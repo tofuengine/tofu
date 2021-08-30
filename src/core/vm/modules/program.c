@@ -42,6 +42,7 @@ static int program_modulo_2on_0(lua_State *L);
 static int program_offset_2on_0(lua_State *L);
 static int program_color_5onnnn_0(lua_State *L);
 static int program_shift_v_0(lua_State *L);
+// TODO: add program `merging`
 
 static const char _program_lua[] = {
 #include "program.inc"
@@ -51,7 +52,7 @@ int program_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, (luaX_Script){
-            .buffer = _program_lua,
+            .data = _program_lua,
             .size = sizeof(_program_lua) / sizeof(char),
             .name = SCRIPT_NAME
         },

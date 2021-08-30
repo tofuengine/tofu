@@ -44,7 +44,7 @@ int log_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, (luaX_Script){
-            .buffer = _log_lua,
+            .data = _log_lua,
             .size = sizeof(_log_lua) / sizeof(char),
             .name = SCRIPT_NAME
         },

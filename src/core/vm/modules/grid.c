@@ -54,7 +54,7 @@ int grid_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, (luaX_Script){
-            .buffer = _grid_lua,
+            .data = _grid_lua,
             .size = sizeof(_grid_lua) / sizeof(char),
             .name = SCRIPT_NAME
         },

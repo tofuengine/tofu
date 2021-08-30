@@ -38,7 +38,7 @@ int vector_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, (luaX_Script){
-            .buffer = _vector_lua,
+            .data = _vector_lua,
             .size = sizeof(_vector_lua) / sizeof(char),
             .name = SCRIPT_NAME
         },

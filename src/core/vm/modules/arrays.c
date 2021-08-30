@@ -38,7 +38,7 @@ int arrays_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, (luaX_Script){
-            .buffer = _arrays_lua,
+            .data = _arrays_lua,
             .size = sizeof(_arrays_lua) / sizeof(char),
             .name = SCRIPT_NAME
         },

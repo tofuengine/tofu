@@ -86,7 +86,7 @@ int canvas_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, (luaX_Script){
-            .buffer = _canvas_lua,
+            .data = _canvas_lua,
             .size = sizeof(_canvas_lua) / sizeof(char),
             .name = SCRIPT_NAME
         },
