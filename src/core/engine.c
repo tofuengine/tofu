@@ -30,6 +30,7 @@
 #include <libs/stb.h>
 #include <version.h>
 
+#include <sys/utsname.h>
 #if PLATFORM_ID == PLATFORM_WINDOWS
   #include <windows.h>
 #endif
@@ -96,6 +97,24 @@ static Configuration_t *_configure(Storage_t *storage, int argc, const char *arg
     return configuration;
 }
 
+static inline void _sys_info(void)
+{
+    struct utsname buffer;
+    int result = uname(&buffer);
+    if (result == -1) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get system information");
+        return;
+    }
+
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "-----[ Tofu Engine v%s ]-----", TOFU_VERSION_STRING);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "  platform: %d", PLATFORM_ID);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "  node: %s", buffer.nodename);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "  system: %s", buffer.sysname);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "  release: %s", buffer.release);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "  version: %s", buffer.version);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "  machine: %s", buffer.machine);
+}
+
 Engine_t *Engine_create(int argc, const char *argv[])
 {
     options_t options = options_parse_command_line(argc, argv); // We do this early, since options could have effect on everything.
@@ -109,6 +128,8 @@ Engine_t *Engine_create(int argc, const char *argv[])
     *engine = (Engine_t){ 0 }; // Ensure is cleared at first.
 
     Log_initialize();
+
+    _sys_info();
 
     engine->storage = Storage_create(&(const Storage_Configuration_t){
             .path = options.path
