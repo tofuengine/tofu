@@ -40,6 +40,7 @@ typedef enum _Log_Levels_t {
     Log_Levels_t_CountOf
 } Log_Levels_t;
 
+// TODO: add log-to-file.
 extern void Log_initialize(void);
 extern void Log_configure(bool enabled, FILE *stream);
 extern void Log_write(Log_Levels_t level, const char *context, const char *text, ...);

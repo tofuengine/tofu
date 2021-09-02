@@ -97,7 +97,7 @@ static Configuration_t *_configure(Storage_t *storage, int argc, const char *arg
     return configuration;
 }
 
-static inline void _sys_info(void)
+static inline void _information(void)
 {
     struct utsname buffer;
     int result = uname(&buffer);
@@ -106,13 +106,8 @@ static inline void _sys_info(void)
         return;
     }
 
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "-----[ Tofu Engine v%s ]-----", TOFU_VERSION_STRING);
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "  platform: %d", PLATFORM_ID);
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "  node: %s", buffer.nodename);
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "  system: %s", buffer.sysname);
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "  release: %s", buffer.release);
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "  version: %s", buffer.version);
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "  machine: %s", buffer.machine);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "Tofu Engine v%s (platform-id #%d)", TOFU_VERSION_STRING, PLATFORM_ID);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "running on %s %s (%s, %s)", buffer.sysname, buffer.machine, buffer.release, buffer.version);
 }
 
 Engine_t *Engine_create(int argc, const char *argv[])
@@ -129,7 +124,7 @@ Engine_t *Engine_create(int argc, const char *argv[])
 
     Log_initialize();
 
-    _sys_info();
+    _information();
 
     engine->storage = Storage_create(&(const Storage_Configuration_t){
             .path = options.path

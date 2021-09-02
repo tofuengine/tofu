@@ -904,6 +904,7 @@ typedef struct _Process_Closure_t {
     int index;
 } Process_Closure_t;
 
+// FIXME: use `lua_ref()` to optimize.
 static GL_Pixel_t _process_callback(void *user_data, GL_Point_t position, GL_Pixel_t from, GL_Pixel_t to)
 {
     Process_Closure_t *closure = (Process_Closure_t *)user_data;

@@ -96,7 +96,9 @@ function Camera:project(x, y, z)
 
   -- TODO: apply rotation here.
 
-  -- Transform to normalized projection plane.
+  -- Transform to normalized projection plane. The `d` value is relative to the *vertical* field-of-view. For the
+  -- horizontal coordinate we need to take into account also the *aspect-ratio* and additionally scale (i.e. normalize)
+  -- for this value, too (we can think of this as "squaring" the display).
   local d_over_cz <const> = self.d / cz -- Scale factor. Division-by-zero has to be excluded with a prior check.
   local px <const> = cx * d_over_cz / self.aspect_ratio -- [-ar, +ar] -> [-1, +1]
   local py <const> = cy * d_over_cz -- [-1, +1]

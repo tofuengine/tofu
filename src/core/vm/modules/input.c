@@ -323,7 +323,7 @@ static int input_mode_0_1t(lua_State *L)
 
     int mode = Input_get_mode(input);
 
-    lua_createtable(L, 0, 0); // Initially empty.
+    lua_newtable(L); // Initially empty.
     for (size_t i = 0; i < INPUT_MODES_COUNT; ++i) {
         if (mode & _modes[i].value) {
             lua_pushstring(L, _modes[i].key);

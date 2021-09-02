@@ -101,6 +101,7 @@ typedef enum _GL_Functions_t {
 #define GL_BOOL_FALSE   ((GL_Bool_t)0)
 #define GL_BOOL_TRUE    ((GL_Bool_t)1)
 
+// FIXME: does this makes sense?
 #define GL_CELL_NIL     ((GL_Cell_t)-1)
 
 #endif  /* __GL_COMMON_H__ */
