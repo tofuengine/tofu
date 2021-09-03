@@ -183,6 +183,7 @@ static int program_shift_2ot_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
     LUAX_SIGNATURE_END
     Program_Object_t *self = (Program_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_PROGRAM);
+    // idx #2: LUA_TTABLE
 
     lua_pushnil(L);
     while (lua_next(L, 2)) {

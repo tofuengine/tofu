@@ -150,6 +150,7 @@ static int palette_new_1t_1o(lua_State *L)
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
     LUAX_SIGNATURE_END
+    // idx #1: LUA_TTABLE
 
     size_t size = lua_rawlen(L, 1);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "setting custom palette of %d color(s)", size);

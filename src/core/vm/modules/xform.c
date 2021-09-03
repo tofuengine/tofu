@@ -289,6 +289,7 @@ static int xform_table_2ot_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
     LUAX_SIGNATURE_END
     XForm_Object_t *self = (XForm_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_XFORM);
+    // idx #2: LUA_TTABLE
 
     GL_XForm_Table_Entry_t *table = NULL;
 
