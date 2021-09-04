@@ -28,9 +28,9 @@
 #include <platform.h>
 #include <libs/log.h>
 #include <libs/stb.h>
+#include <libs/sysinfo.h>
 #include <version.h>
 
-#include <sys/utsname.h>
 #if PLATFORM_ID == PLATFORM_WINDOWS
   #include <windows.h>
 #endif
@@ -99,15 +99,15 @@ static Configuration_t *_configure(Storage_t *storage, int argc, const char *arg
 
 static inline void _information(void)
 {
-    struct utsname buffer;
-    int result = uname(&buffer);
-    if (result == -1) {
+    System_Information_t si = { 0 };
+    bool result = SI_inspect(&si);
+    if (!result) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get system information");
         return;
     }
 
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "Tofu Engine v%s (platform-id #%d)", TOFU_VERSION_STRING, PLATFORM_ID);
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "running on %s %s (%s, %s)", buffer.sysname, buffer.machine, buffer.release, buffer.version);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "running on %s %s (%s, %s)", si.system, si.architecture, si.release, si.version);
 }
 
 Engine_t *Engine_create(int argc, const char *argv[])
