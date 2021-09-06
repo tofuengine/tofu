@@ -33,27 +33,10 @@
 
 /* This file provides an implementation only for the native Windows API.  */
 #if PLATFORM_ID == PLATFORM_WINDOWS
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
 #include <windows.h>
 
-/* Mingw headers don't have all the platform codes.  */
 #ifndef VER_PLATFORM_WIN32_CE
-# define VER_PLATFORM_WIN32_CE 3
-#endif
-
-/* Some headers don't have all the processor architecture codes.  */
-#ifndef PROCESSOR_ARCHITECTURE_AMD64
-# define PROCESSOR_ARCHITECTURE_AMD64 9
-#endif
-#ifndef PROCESSOR_ARCHITECTURE_IA32_ON_WIN64
-# define PROCESSOR_ARCHITECTURE_IA32_ON_WIN64 10
-#endif
-
-/* Mingw headers don't have the latest processor codes.  */
-#ifndef PROCESSOR_AMD_X8664
-# define PROCESSOR_AMD_X8664 8664
+  #define VER_PLATFORM_WIN32_CE 3
 #endif
 #elif PLATFORM_ID == PLATFORM_LINUX
   #include <sys/utsname.h>
@@ -117,18 +100,7 @@ bool SI_inspect(System_Information_t *si)
     super_version = "";
 
   /* Fill in sysname.  */
-#ifdef __MINGW32__
-  /* Returns a string compatible with the MSYS uname.exe program,
-     so that no further changes are needed to GNU config.guess.
-     For example,
-       $ ./uname.exe -s      => MINGW32_NT-5.1
-   */
-  sprintf (si->system, "MINGW32_%s-%u.%u", super_version,
-           (unsigned int) version.dwMajorVersion,
-           (unsigned int) version.dwMinorVersion);
-#else
   sprintf (si->system, "Windows%s", super_version);
-#endif
 
   /* Fill in release, version.  */
   /* The MSYS uname.exe programs uses strings from a modified Cygwin runtime:
@@ -201,7 +173,7 @@ bool SI_inspect(System_Information_t *si)
       /* Windows 95/98/ME.  */
       sprintf (si->release, "Windows %s", super_version);
     }
-  strcpy (si->version, version.szCSDVersion);
+  strcpy (si->version, version.szCSDVersion[0] != '\0' ? version.szCSDVersion : "vanilla");
 
   /* Fill in machine.  */
   {
