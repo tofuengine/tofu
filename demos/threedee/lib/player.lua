@@ -25,9 +25,11 @@ SOFTWARE.
 local Class = require("tofu.core").Class
 local Input = require("tofu.events").Input
 
-local SPEED_X <const> = 500.0
-local SPEED_Y <const> = 500.0
-local SPEED_Z <const> = 500.0
+local config = require("config")
+
+local SPEED_X <const> = config.player.speed.x or 250.0
+local SPEED_Y <const> = config.player.speed.y or 250.0
+local SPEED_Z <const> = config.player.speed.z or 500.0
 
 local Player = Class.define()
 
@@ -60,6 +62,12 @@ function Player:process()
   self:direction(dx, dy, dz)
 end
 
+function Player:move(x, y, z)
+  self.x = x
+  self.y = y
+  self.z = z
+end
+
 function Player:direction(dx, dy, dz)
   self.dx = dx
   self.dy = dy
@@ -67,8 +75,8 @@ function Player:direction(dx, dy, dz)
 end
 
 function Player:update(delta_time)
-  self.x = self.x + self.dx * SPEED_X * delta_time
-  self.y = math.max(self.y + self.dy * SPEED_Y * delta_time, 0.0)
+  self.x = math.min(math.max(self.x + self.dx * SPEED_X * delta_time, -150.0), 150.0)
+  self.y = math.min(math.max(self.y + self.dy * SPEED_Y * delta_time, 50.0), 150)
   self.z = self.z + self.dz * SPEED_Z * delta_time
 end
 

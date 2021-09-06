@@ -27,7 +27,9 @@ local Class = require("tofu.core").Class
 local Camera = Class.define()
 
 function Camera:__ctor(field_of_view, width, height, near, far)
+  self.field_of_view = field_of_view
   self.d = 1.0 / math.tan(field_of_view * 0.5)
+  -- Setting 'd = 1.0' seems like giving the more pleasant visual effect. Also, math is simpler.
 
   self.aspect_ratio = width / height
   self.width = width
@@ -45,8 +47,9 @@ function Camera:__ctor(field_of_view, width, height, near, far)
   self.z = 0.0
 end
 
-function Camera:set_field_of_view(theta)
-  self.d = 1.0 / math.tan(theta * 0.5)
+function Camera:set_field_of_view(field_of_view)
+  self.field_of_view = field_of_view
+  self.d = 1.0 / math.tan(field_of_view * 0.5)
   self.far_side = self.far / self.d * self.aspect_ratio
 end
 
@@ -72,13 +75,14 @@ end
 -- function Camera:rotate(angle)
 -- end
 
-function Camera:is_too_far(x, y, z)
-  local cx <const> = x - self.x
-  local cy <const> = y - self.y
+function Camera:is_behind(_, _, z)
   local cz <const> = z - self.z
-  return cx < -self.far_side or cx > self.far_side -- Avoid `math.abs()`, too costly!
-    or cy < -self.far_side or cy > self.far_side
-    or cz > self.far or cz < self.near
+  return cz < self.near
+end
+
+function Camera:is_too_far(_, _, z)
+  local cz <const> = z - self.z
+  return cz > self.far or cz < self.near
 end
 
 function Camera:is_clipped(px, py, pz)
