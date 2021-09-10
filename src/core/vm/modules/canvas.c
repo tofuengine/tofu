@@ -72,6 +72,7 @@ static int canvas_poke_4onnn_0(lua_State *L);
 static int canvas_process_v_0(lua_State *L);
 static int canvas_copy_v_0(lua_State *L);
 static int canvas_blit_v_0(lua_State *L);
+static int canvas_tile_v_0(lua_State *L);
 static int canvas_stencil_v_0(lua_State *L);
 static int canvas_blend_v_0(lua_State *L);
 //static int canvas_grab(lua_State *L);
@@ -121,6 +122,7 @@ int canvas_loader(lua_State *L)
             { "process", canvas_process_v_0 },
             { "copy", canvas_copy_v_0 },
             { "blit", canvas_blit_v_0 },
+            { "tile", canvas_tile_v_0 },
             { "stencil", canvas_stencil_v_0 },
             { "blend", canvas_blend_v_0 },
             { NULL, NULL }
@@ -1166,6 +1168,97 @@ static int canvas_blit_v_0(lua_State *L)
         LUAX_OVERLOAD_ARITY(2, canvas_blit_2oo_0)
         LUAX_OVERLOAD_ARITY(4, canvas_blit_4onno_0)
         LUAX_OVERLOAD_ARITY(8, canvas_blit_8onnonnnn_0)
+    LUAX_OVERLOAD_END
+}
+
+static int canvas_tile_4oonn_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
+    const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_CANVAS);
+    int offset_x = LUAX_INTEGER(L, 3);
+    int offset_y = LUAX_INTEGER(L, 4);
+
+    const GL_Surface_t *surface = self->surface;
+    const GL_Surface_t *source = canvas->surface;
+    GL_surface_tile(surface, (GL_Point_t){ .x = 0, .y = 0 },
+        source, (GL_Rectangle_t){ .x = 0, .y = 0, .width = source->width, .height = source->height },
+        (GL_Point_t){ .x = offset_x, .y = offset_y });
+
+    return 0;
+}
+
+static int canvas_tile_6onnonn_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
+    int x = LUAX_INTEGER(L, 2);
+    int y = LUAX_INTEGER(L, 3);
+    const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_OBJECT(L, 4, OBJECT_TYPE_CANVAS);
+    int offset_x = LUAX_INTEGER(L, 5);
+    int offset_y = LUAX_INTEGER(L, 6);
+
+    const GL_Surface_t *surface = self->surface;
+    const GL_Surface_t *source = canvas->surface;
+    GL_surface_tile(surface, (GL_Point_t){ .x = x, .y = y },
+        source, (GL_Rectangle_t){ .x = 0, .y = 0, .width = source->width, .height = source->height },
+        (GL_Point_t){ .x = offset_x, .y = offset_y });
+
+    return 0;
+}
+
+static int canvas_tile_10onnonnnnnn_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
+    int x = LUAX_INTEGER(L, 2);
+    int y = LUAX_INTEGER(L, 3);
+    const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_OBJECT(L, 4, OBJECT_TYPE_CANVAS);
+    int ox = LUAX_INTEGER(L, 5);
+    int oy = LUAX_INTEGER(L, 6);
+    size_t width = (size_t)LUAX_INTEGER(L, 7);
+    size_t height = (size_t)LUAX_INTEGER(L, 8);
+    int offset_x = LUAX_INTEGER(L, 9);
+    int offset_y = LUAX_INTEGER(L, 10);
+
+    const GL_Surface_t *surface = self->surface;
+    const GL_Surface_t *source = canvas->surface;
+    GL_surface_tile(surface, (GL_Point_t){ .x = x, .y = y },
+        source, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height },
+        (GL_Point_t){ .x = offset_x, .y = offset_y });
+
+    return 0;
+}
+
+static int canvas_tile_v_0(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(4, canvas_tile_4oonn_0)
+        LUAX_OVERLOAD_ARITY(6, canvas_tile_6onnonn_0)
+        LUAX_OVERLOAD_ARITY(10, canvas_tile_10onnonnnnnn_0)
     LUAX_OVERLOAD_END
 }
 
