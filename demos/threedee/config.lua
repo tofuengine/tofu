@@ -46,7 +46,7 @@ return {
   camera = {
     near = 1,
     far = 750,
-    field_of_view = math.pi / 4,
+    field_of_view = math.pi / 3,
   },
   objects = {
     count = 250,

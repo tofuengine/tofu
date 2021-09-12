@@ -75,13 +75,13 @@ end
 -- function Camera:rotate(angle)
 -- end
 
-function Camera:is_behind(_, _, z)
-  local cz <const> = z - self.z
+function Camera:is_behind(_, _, z, infinite)
+  local cz <const> = infinite and z or z - self.z
   return cz < self.near
 end
 
-function Camera:is_too_far(_, _, z)
-  local cz <const> = z - self.z
+function Camera:is_too_far(_, _, z, infinite)
+  local cz <const> = infinite and z or z - self.z
   return cz > self.far or cz < self.near
 end
 
@@ -93,10 +93,10 @@ function Camera:is_culled(pz)
   return pz < 0 or pz > 1
 end
 
-function Camera:project(x, y, z)
+function Camera:project(x, y, z, infinite)
   local cx <const> = x - self.x -- Transform to camera-space.
   local cy <const> = y - self.y
-  local cz <const> = z - self.z
+  local cz <const> = infinite and z or z - self.z
 
   -- TODO: apply rotation here.
 

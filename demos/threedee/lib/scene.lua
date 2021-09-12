@@ -76,11 +76,12 @@ end
 local function _create_entities(camera)
   local entities = {}
   for z = 0, camera.far - TREE_DISTANCE, TREE_DISTANCE do
-    table.insert(entities, { x = -250, y = 0, z = z, cell_id = 0, anchor_x = 0.5, anchor_y = 0.95 })
-    table.insert(entities, { x =  250, y = 0, z = z, cell_id = 0, anchor_x = 0.5, anchor_y = 0.95 })
+    table.insert(entities, { kind = "tree", x = -350, y = 0, z = z, cell_id = 0, anchor_x = 0.5, anchor_y = 0.95 })
+    table.insert(entities, { kind = "tree", x =  350, y = 0, z = z, cell_id = 0, anchor_x = 0.5, anchor_y = 0.95 })
   end
-  for _ = 1, 20 do
+  for _ = 1, 10 do
     table.insert(entities, {
+        kind = "obstacle",
         x = math.random(-500, 500),
         y = 0,
         z = math.random(0, camera.far),
@@ -91,6 +92,7 @@ local function _create_entities(camera)
   end
   for _ = 1, 10 do
     table.insert(entities, {
+        kind = "rock",
         x = math.random(-500, 500),
         y = math.random(50, 250),
         z = math.random(0, camera.far),
@@ -99,9 +101,16 @@ local function _create_entities(camera)
         anchor_y = 0.5
       })
   end
-  table.sort(entities, function(a, b) -- Farthest first.
-      return a.z > b.z
-    end)
+  table.insert(entities, {
+      kind = "floating",
+      x = 0,
+      y = 500,
+      z = camera.far * 0.90,
+      cell_id = 1,
+      anchor_x = 0.5,
+      anchor_y = 0.5,
+      infinite = true
+    })
   return entities
 end
 
@@ -133,19 +142,24 @@ end
 
 local function _update_entity(camera, entity, bank)
   local x, y, z = entity.x, entity.y, entity.z
+  local infinite = entity.infinite
 
-  if camera:is_behind(x, y, z) then
-    _respawn_entity(camera, entity)
+  if camera:is_behind(x, y, z, infinite) then
+    if entity.kind == "bullet" then
+      return false, true
+    else
+      _respawn_entity(camera, entity)
+    end
   end
 
-  if camera:is_too_far(x, y, z) then
-    return false
+  if camera:is_too_far(x, y, z, infinite) then
+    return false, false
   end
 
-  local px, py, pz, sx, sy = camera:project(x, y, z)
+  local px, py, pz, sx, sy = camera:project(x, y, z, infinite)
 
   if camera:is_culled(pz) then
-    return false
+    return false, false
   end
 
   entity.fog_depth = _to_fog_level(pz, FOG_THRESHOLD, FOG_LEVELS)
@@ -162,27 +176,68 @@ local function _update_entity(camera, entity, bank)
   entity.sx = sx - w * entity.anchor_x
   entity.sy = sy - h * entity.anchor_y
 
-  return true
+  return true, false
 end
 
 local function z_order(a, b) -- Farthest first.
-  return a.fog_depth > b.fog_depth or a.z > b.z
+  return a.fog_depth > b.fog_depth or a.pz > b.pz
 end
 
-function Scene:update(_)
+local PREDICTION <const> = 250
+
+local function _fire_bullet()
+  return math.random() >= 0.99
+end
+
+function Scene:update(delta_time)
   local camera <const> = self.camera
   local bank <const> = self.bank
   local entities <const> = self.entities
 
   -- Scan and update entries, keeping only the visible ones.
-  local visibles = {}
-  local count = 1
   for i = 1, #entities do
     local entity = entities[i]
-    local is_visible = _update_entity(camera, entity, bank)
+    if entity.kind == "rock" then
+      local dx <const> = camera.x - entity.x
+      local dy <const> = camera.y - entity.y
+      local dz <const> = camera.z + PREDICTION - entity.z -- Assume player will move, anticipate its position.
+      if dz < 0 and _fire_bullet() then
+        local d <const> = (dx * dx + dy * dy + dz * dz) ^ -0.5
+        local vx <const> = dx * d
+        local vy <const> = dy * d
+        local vz <const> = dz * d
+        table.insert(entities, {
+          kind = "bullet",
+          x = entity.x,
+          y = entity.y,
+          z = entity.z, -- Just a bit in front of the rock.
+          vx = vx * 500,
+          vy = vy * 500,
+          vz = vz * 250,
+          cell_id = 4,
+          anchor_x = 0.5,
+          anchor_y = 0.5,
+          is_moving = true
+        })
+      end
+    end
+  end
+
+  local visibles = {}
+  local count = 1
+  for i = #entities, 1, -1  do -- Reverse loop to permit removal.
+    local entity = entities[i]
+    if entity.is_moving then
+      entity.x = entity.x + entity.vx * delta_time
+      entity.y = entity.y + entity.vy * delta_time
+      entity.z = entity.z + entity.vz * delta_time
+    end
+    local is_visible, is_dead = _update_entity(camera, entity, bank)
     if is_visible then
       visibles[count] = entity
       count = count + 1
+    elseif is_dead then
+      table.remove(entities, i)
     end
   end
 

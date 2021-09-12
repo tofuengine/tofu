@@ -41,6 +41,8 @@ function Player:__ctor()
   self.dx = 0
   self.dy = 0
   self.dz = 0
+
+  self.pause = false
 end
 
 function Player:process()
@@ -76,8 +78,10 @@ end
 
 function Player:update(delta_time)
   self.x = math.min(math.max(self.x + self.dx * SPEED_X * delta_time, -150.0), 150.0)
-  self.y = math.min(math.max(self.y + self.dy * SPEED_Y * delta_time, 50.0), 150)
-  self.z = self.z + self.dz * SPEED_Z * delta_time
+  self.y = math.min(math.max(self.y + self.dy * SPEED_Y * delta_time, 50.0), 250)
+  if not self.pause then
+    self.z = self.z + self.dz * SPEED_Z * delta_time
+  end
 end
 
 function Player:position()

@@ -23,6 +23,7 @@ SOFTWARE.
 ]]--
 
 local Class = require("tofu.core").Class
+local Canvas = require("tofu.graphics").Canvas
 local Display = require("tofu.graphics").Display
 local Program = require("tofu.graphics").Program
 
@@ -39,6 +40,7 @@ local SKY <const> = {
 local Background = Class.define()
 
 function Background:__ctor(camera, index)
+  self.skyline = Canvas.new("assets/skyline.png", index)
   self.camera = camera
   self.index = index
   self.program = Program.new()
@@ -82,17 +84,41 @@ function Background:update(_)
   Display.program(program)
 end
 
-function Background:render(_)
-  -- local camera <const> = self.camera
-  -- local far <const> = camera.far + camera.z
-  -- local near <const> = camera.near + camera.z
+function Background:render(canvas)
+  local camera <const> = self.camera
+  local x <const> = camera.x
+  local far <const> = camera.far + camera.z
+  local near <const> = camera.near + camera.z
 
-  -- local _, _, _, sx0, sy0 = camera:project(-100, 0.0, far)
-  -- local _, _, _, sx1, sy1 = camera:project( 100, 0.0, far)
-  -- local _, _, _, sx2, sy2 = camera:project(-100, 0.0, near)
-  -- local _, _, _, sx3, sy3 = camera:project( 100, 0.0, near)
-  -- canvas:triangle("fill", sx0, sy0, sx2, sy2, sx1, sy1, self.index + 1)
-  -- canvas:triangle("fill", sx2, sy2, sx3, sy3, sx1, sy1  , self.index + 1)
+  local _, _, _, _, sy = camera:project(x, 0.0, far) -- Straight forward, on ground level.
+  local y = math.tointeger(sy + 0.5)
+
+  -- Render the skyline.
+  local width, _ = canvas:size()
+  local w, h = self.skyline:size()
+  h = h - (15 - camera.y // 16)
+  local wy = y - h
+  local offset_x <const> = camera.x // 4
+  for wx = 0, width - w, w do
+    canvas:tile(wx, wy, self.skyline, 0, 0, w, h, offset_x, 0)
+  end
+
+  -- Render the "road"
+  local _, _, _, sx0, sy0 = camera:project(-100, 0.0, far)
+  local _, _, _, sx1, sy1 = camera:project( 100, 0.0, far)
+  local _, _, _, sx2, sy2 = camera:project(-100, 0.0, near)
+  local _, _, _, sx3, sy3 = camera:project( 100, 0.0, near)
+
+  canvas:triangle("fill", math.tointeger(sx0 + 0.5), math.tointeger(sy0 + 0.5),
+      math.tointeger(sx2 + 0.5), math.tointeger(sy2 + 0.5),
+      math.tointeger(sx1 + 0.5), math.tointeger(sy1 + 0.5), self.index + 1)
+  canvas:triangle("fill", math.tointeger(sx1 + 0.5), math.tointeger(sy1 + 0.5),
+      math.tointeger(sx2 + 0.5), math.tointeger(sy2 + 0.5),
+      math.tointeger(sx3 + 0.5), math.tointeger(sy3 + 0.5)  , self.index + 1)
+--    print(">>", sx0, sy0)
+--    print("  ", sx1, sy1)
+--    print("  ", sx2, sy2)
+--    print("  ", sx3, sy3)
 end
 
 return Background

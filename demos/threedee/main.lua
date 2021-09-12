@@ -78,6 +78,9 @@ function Main:process()
     camera:set_clipping_planes(camera.near, far)
   end
   if Input.is_pressed("start") then
+    self.player.pause = not self.player.pause
+  end
+  if Input.is_pressed("select") then
     self.running = not self.running
   end
 
