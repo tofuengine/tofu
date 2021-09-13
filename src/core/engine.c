@@ -150,16 +150,12 @@ Engine_t *Engine_create(int argc, const char *argv[])
         return NULL;
     }
 
-    const Storage_Resource_t *icon = Storage_exists(engine->storage, engine->configuration->system.icon) // FIXME: too defensive?
-        ? Storage_load(engine->storage, engine->configuration->system.icon, STORAGE_RESOURCE_IMAGE)
-        : Storage_load(engine->storage, RESOURCE_IMAGE_ICON_ID, STORAGE_RESOURCE_IMAGE);
+    const Storage_Resource_t *icon = Storage_load(engine->storage, engine->configuration->system.icon, STORAGE_RESOURCE_IMAGE);
     Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined icon loaded");
-    const Storage_Resource_t *effect = Storage_exists(engine->storage, engine->configuration->display.effect)
-        ? Storage_load(engine->storage, engine->configuration->display.effect, STORAGE_RESOURCE_STRING)
-        : NULL;
+    const Storage_Resource_t *effect = Storage_load(engine->storage, engine->configuration->display.effect, STORAGE_RESOURCE_STRING);
     Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined effect loaded");
     engine->display = Display_create(&(const Display_Configuration_t){
-            .icon = (GLFWimage){ .width = (int)S_IWIDTH(icon), .height = (int)S_IHEIGHT(icon), .pixels = S_IPIXELS(icon) },
+            .icon = icon ? (GLFWimage){ .width = (int)S_IWIDTH(icon), .height = (int)S_IHEIGHT(icon), .pixels = S_IPIXELS(icon) } : (GLFWimage){ 0 },
             .window = {
                 .title = engine->configuration->display.title,
                 .width = engine->configuration->display.width,
@@ -179,12 +175,10 @@ Engine_t *Engine_create(int argc, const char *argv[])
         return NULL;
     }
 
-    const Storage_Resource_t *mappings = Storage_exists(engine->storage, engine->configuration->system.mappings)
-        ? Storage_load(engine->storage, engine->configuration->system.mappings, STORAGE_RESOURCE_STRING)
-        : Storage_load(engine->storage, RESOURCE_BLOB_MAPPINGS_ID, STORAGE_RESOURCE_STRING);
+    const Storage_Resource_t *mappings = Storage_load(engine->storage, engine->configuration->system.mappings, STORAGE_RESOURCE_STRING);
     Log_assert(!mappings, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined controller mappings loaded");
     engine->input = Input_create(&(const Input_Configuration_t){
-            .mappings = S_SCHARS(mappings),
+            .mappings = mappings ? S_SCHARS(mappings) : NULL,
             .keyboard = {
                 .enabled = engine->configuration->keyboard.enabled,
                 .exit_key = engine->configuration->keyboard.exit_key,

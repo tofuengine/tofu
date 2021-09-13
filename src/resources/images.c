@@ -58,14 +58,14 @@ static const uint8_t _spleen_32x64_pixels[] = {
 };
 
 static const Resource_Image_t _images[] = {
-    { "icon", { 64, 64, _icon } },
-    { "icon-bw", { 64, 64, _icon_bw } },
-    { "5x8", { 475, 8, _spleen_5x8_pixels } },
-    { "6x12", { 570, 12, _spleen_6x12_pixels } },
-    { "8x16", { 760, 16, _spleen_8x16_pixels } },
-    { "12x24", { 1140, 24, _spleen_12x24_pixels } },
-    { "16x32", { 1520, 32, _spleen_16x32_pixels } },
-    { "32x64", { 3040, 64, _spleen_32x64_pixels } },
+    { "icon.png", { 64, 64, _icon } },
+    { "icon-bw.png", { 64, 64, _icon_bw } },
+    { "5x8.png", { 475, 8, _spleen_5x8_pixels } },
+    { "6x12.png", { 570, 12, _spleen_6x12_pixels } },
+    { "8x16.png", { 760, 16, _spleen_8x16_pixels } },
+    { "12x24.png", { 1140, 24, _spleen_12x24_pixels } },
+    { "16x32.png", { 1520, 32, _spleen_16x32_pixels } },
+    { "32x64.png", { 3040, 64, _spleen_32x64_pixels } },
     { NULL, { 0 } }
 };
 

@@ -268,7 +268,11 @@ static GLFWwindow *_window_initialize(const Display_Configuration_t *configurati
 
     glfwSetWindowSizeCallback(window, _size_callback); // When resized we recalculate the projection properties.
 
-    glfwSetWindowIcon(window, 1, &configuration->icon);
+    if (configuration->icon.pixels) {
+        glfwSetWindowIcon(window, 1, &configuration->icon);
+    } else {
+        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "icon is missing");
+    }
 
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%s mouse cursor", configuration->hide_cursor ? "hiding" : "showing");
     glfwSetInputMode(window, GLFW_CURSOR, configuration->hide_cursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);

@@ -340,7 +340,24 @@ static int _resource_compare_by_age(const void *lhs, const void *rhs)
 }
 #endif
 
-static bool _resource_load(Storage_Resource_t *resource, const char *name, Storage_Resource_Types_t type)
+static bool _resource_load(Storage_Resource_t *resource, const char *name, Storage_Resource_Types_t type, const FS_Context_t *context)
+{
+    const FS_Mount_t *mount = FS_locate(context, name);
+    if (!mount) {
+        return false;
+    }
+
+    FS_Handle_t *handle = FS_open(mount, name);
+    if (!handle) {
+        return false;
+    }
+
+    bool loaded = _load_functions[type](resource, handle);
+    FS_close(handle);
+    return loaded;
+}
+
+static bool _resource_fetch(Storage_Resource_t *resource, const char *name, Storage_Resource_Types_t type)
 {
     if (type == STORAGE_RESOURCE_STRING) {
         const Blob_t *blob = resources_blobs_find(name);
@@ -502,21 +519,16 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_R
         return NULL;
     }
 
-    bool loaded = _resource_load(resource, name, type);
-    if (!loaded) {
-        const FS_Mount_t *mount = FS_locate(storage->context, name);
-        if (mount) {
-            FS_Handle_t *handle = FS_open(mount, name);
-            if (handle) {
-                loaded = _load_functions[type](resource, handle);
-                FS_close(handle);
-            }
-        } else {
-            loaded = _resource_decode(resource, name, type);
-        }
-    }
-
-    if (!loaded) {
+    if (_resource_load(resource, name, type, storage->context)) {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource `%s` loaded from file-system", name);
+    } else
+    if (_resource_fetch(resource, name, type)) {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource `%s` fetched from bundle", name);
+    } else
+    if (_resource_decode(resource, name, type)) {
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource `%s` decoded", name);
+    } else {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't load resource `%s`", name);
         free(resource);
         return NULL;
     }
