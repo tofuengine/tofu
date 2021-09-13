@@ -153,7 +153,7 @@ Engine_t *Engine_create(int argc, const char *argv[])
     const Storage_Resource_t *icon = Storage_load(engine->storage, engine->configuration->system.icon, STORAGE_RESOURCE_IMAGE);
     Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined icon loaded");
     const Storage_Resource_t *effect = Storage_load(engine->storage, engine->configuration->display.effect, STORAGE_RESOURCE_STRING);
-    Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined effect loaded");
+    Log_assert(!effect, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined effect loaded");
     engine->display = Display_create(&(const Display_Configuration_t){
             .icon = icon ? (GLFWimage){ .width = (int)S_IWIDTH(icon), .height = (int)S_IHEIGHT(icon), .pixels = S_IPIXELS(icon) } : (GLFWimage){ 0 },
             .window = {
