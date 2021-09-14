@@ -128,7 +128,8 @@ bool path_mkdirs(const char *path)
 #if PLATFORM_ID == PLATFORM_WINDOWS
 static inline bool _path_is_root(const char *path)
 {
-    return path[1] == ':' && strlen(path) < 4; // e.g. `C:` or `C:\`)
+    size_t length = strlen(path);
+    return strlen(path) >= 2 && strlen(path) <= 3 && path[1] == ':'; // e.g. `C:` or `C:\`)
 }
 #endif
 
@@ -179,6 +180,15 @@ bool path_is_file(const char *path)
     }
 
     return true;
+}
+
+bool path_is_absolute(const char *path)
+{
+#if PLATFORM_ID == PLATFORM_WINDOWS
+    return strlen(path) >= 3 && path[1] == ':' && path[2] == PLATFORM_PATH_SEPARATOR; // e.g. `C:\`
+#else
+    return strlen(path) >= 1 && path[0] == PLATFORM_PATH_SEPARATOR;
+#endif
 }
 
 void path_split(const char *path, char *folder, char *file)
