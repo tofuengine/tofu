@@ -136,7 +136,7 @@ end
 local function emit_entry(output, file, config, offset, entries)
   print(string.format("-> `%s`", file.name))
 
-  local id = luazen.md5(string.lower(file.name))
+  local id = luazen.md5(string.gsub(string.lower(file.name), "\\", "/")) -- Fix Windows' path separators.
   print(string.format("      id: `%s`", string.to_hex(id)))
 
   if entries[id] then
