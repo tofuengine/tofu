@@ -30,6 +30,5 @@
 #include "common.h"
 
 extern const Image_t *resources_images_find(const char *id);
-extern bool resources_images_exists(const char *id);
 
 #endif  /* __RESOURCES_IMAGES_H__ */

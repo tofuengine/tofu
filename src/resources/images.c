@@ -78,13 +78,3 @@ const Image_t *resources_images_find(const char *id)
     }
     return NULL;
 }
-
-bool resources_images_exists(const char *id)
-{
-    for (const Resource_Image_t *image = _images; image->id != NULL; ++image) {
-        if (strcasecmp(image->id, id) == 0) {
-            return true;
-        }
-    }
-    return false;
-}

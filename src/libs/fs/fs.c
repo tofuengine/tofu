@@ -139,38 +139,26 @@ bool FS_attach(FS_Context_t *context, const char *path)
     return _attach(context, path);
 }
 
-FS_Handle_t *FS_locate_and_open(const FS_Context_t *context, const char *name)
+FS_Handle_t *FS_open(const FS_Context_t *context, const char *name)
 {
-    const FS_Mount_t *mount = FS_locate(context, name);
-    if (!mount) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't locate file `%s`", name);
-        return NULL;
-    }
-
-    return FS_open(mount, name);
-}
-
-const FS_Mount_t *FS_locate(const FS_Context_t *context, const char *name)
-{
+    const FS_Mount_t *mount = NULL;
 #ifdef __FS_SUPPORT_MOUNT_OVERRIDE__
     // Backward scan, later mounts gain priority over existing ones.
     for (int index = (int)arrlen(context->mounts) - 1; index >= 0; --index) {
-        const FS_Mount_t *mount = context->mounts[index];
 #else
-    FS_Mount_t **current = context->mounts;
-    for (size_t count = arrlen(context->mounts); count; --count) {
-        const FS_Mount_t *mount = *(current++);
+    for (int index = 0; index < (int)arrlen(context->mounts); ++index) {
 #endif
-        if (mount->vtable.contains(mount, name)) {
-            return mount;
+        FS_Mount_t *current = context->mounts[index];
+        if (current->vtable.contains(current, name)) {
+            mount = current;
+            break;
         }
     }
 
-    return NULL;
-}
+    if (!mount) {
+        return NULL;
+    }
 
-FS_Handle_t *FS_open(const FS_Mount_t *mount, const char *name)
-{
     return mount->vtable.open(mount, name);
 }
 

@@ -299,12 +299,10 @@ static bool _pak_mount_contains(const FS_Mount_t *mount, const char *name)
     char id[PAK_ID_LENGTH_SZ] = { 0 };
     _hash_file(name, key.id, id);
 
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry `%s` id is `%s`", name, id);
-
     const Pak_Entry_t *entry = bsearch((const void *)&key, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
 
     bool exists = entry; // FIXME: should be `!!`?
-    Log_assert(!exists, LOG_LEVELS_TRACE, LOG_CONTEXT, "entry `%s` found in mount %p", name, pak_mount);
+    Log_assert(!exists, LOG_LEVELS_TRACE, LOG_CONTEXT, "entry `%s` (w/ id `%s`) found in mount %p", name, id, pak_mount);
     return exists;
 }
 
@@ -315,8 +313,6 @@ static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *name)
     Pak_Entry_t key = { 0 };
     char id[PAK_ID_LENGTH_SZ] = { 0 };
     _hash_file(name, key.id, id);
-
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry `%s` id is `%s`", name, id);
 
     const Pak_Entry_t *entry = bsearch((const void *)&key, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
     if (!entry) {
@@ -336,7 +332,7 @@ static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *name)
         fclose(stream);
         return NULL;
     }
-    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry `%s` located at offset %d in archive `%s`", name, entry->offset, pak_mount->path);
+    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "entry `%s` (w/ id `%s`) located at offset %d in archive `%s`", name, id, entry->offset, pak_mount->path);
 
     FS_Handle_t *handle = malloc(sizeof(Pak_Handle_t));
     if (!handle) {

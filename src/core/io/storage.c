@@ -163,18 +163,6 @@ const char *Storage_get_local_path(const Storage_t *storage)
     return storage->path.local;
 }
 
-static bool _resource_exists(const char *name)
-{
-    return resources_blobs_exists(name) || resources_images_exists(name);
-}
-
-bool Storage_exists(const Storage_t *storage, const char *name)
-{
-    // Local files override bundled resources with the same `name`. At last, check if the `name` is an encoded
-    // resource.
-    return FS_locate(storage->context, name) || _resource_exists(name) || decoder_is_valid(name);
-}
-
 static void *_load(FS_Handle_t *handle, bool null_terminate, size_t *size)
 {
     size_t bytes_requested = FS_size(handle);
@@ -342,12 +330,7 @@ static int _resource_compare_by_age(const void *lhs, const void *rhs)
 
 static bool _resource_load(Storage_Resource_t *resource, const char *name, Storage_Resource_Types_t type, const FS_Context_t *context)
 {
-    const FS_Mount_t *mount = FS_locate(context, name);
-    if (!mount) {
-        return false;
-    }
-
-    FS_Handle_t *handle = FS_open(mount, name);
+    FS_Handle_t *handle = FS_open(context, name);
     if (!handle) {
         return false;
     }
@@ -633,7 +616,7 @@ void Storage_unlock(Storage_Resource_t *resource)
 
 FS_Handle_t *Storage_open(const Storage_t *storage, const char *name)
 {
-    return FS_locate_and_open(storage->context, name);
+    return FS_open(storage->context, name);
 }
 
 bool Storage_update(Storage_t *storage, float delta_time)

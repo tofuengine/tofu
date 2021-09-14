@@ -205,21 +205,15 @@ static int canvas_new_3sNO_1o(lua_State *L)
             .threshold = 0
         };
 
-    GL_Surface_t *surface;
-    if (Storage_exists(storage, name)) {
-        const Storage_Resource_t *image = Storage_load(storage, name, STORAGE_RESOURCE_IMAGE);
-        if (!image) {
-            return luaL_error(L, "can't load file `%s`", name);
-        }
-
-        surface = GL_surface_decode(S_IWIDTH(image), S_IHEIGHT(image), S_IPIXELS(image), surface_callback_palette, (void *)&closure);
-        if (!surface) {
-            return luaL_error(L, "can't decode file `%s`", name);
-        }
-    } else {
-        return luaL_error(L, "unknown file `%s`", name);
+    const Storage_Resource_t *image = Storage_load(storage, name, STORAGE_RESOURCE_IMAGE);
+    if (!image) {
+        return luaL_error(L, "can't load file `%s`", name);
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface %p loaded from file `%s`", surface, name);
+    GL_Surface_t *surface = GL_surface_decode(S_IWIDTH(image), S_IHEIGHT(image), S_IPIXELS(image), surface_callback_palette, (void *)&closure);
+    if (!surface) {
+        return luaL_error(L, "can't decode file `%s`", name);
+    }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface %p loaded and decoded from file `%s`", surface, name);
 
     Canvas_Object_t *self = (Canvas_Object_t *)luaX_newobject(L, sizeof(Canvas_Object_t), &(Canvas_Object_t){
             .surface = surface,
@@ -253,21 +247,15 @@ static int canvas_new_3snn_1o(lua_State *L)
             .foreground = foreground_index
         };
 
-    GL_Surface_t *surface;
-    if (Storage_exists(storage, name)) {
-        const Storage_Resource_t *image = Storage_load(storage, name, STORAGE_RESOURCE_IMAGE);
-        if (!image) {
-            return luaL_error(L, "can't load file `%s`", name);
-        }
-
-        surface = GL_surface_decode(S_IWIDTH(image), S_IHEIGHT(image), S_IPIXELS(image), surface_callback_indexes, (void *)&closure);
-        if (!surface) {
-            return luaL_error(L, "can't decode file `%s`", name);
-        }
-    } else {
-        return luaL_error(L, "unknown file `%s`", name);
+    const Storage_Resource_t *image = Storage_load(storage, name, STORAGE_RESOURCE_IMAGE);
+    if (!image) {
+        return luaL_error(L, "can't load file `%s`", name);
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface %p loaded from file `%s`", surface, name);
+    GL_Surface_t *surface = GL_surface_decode(S_IWIDTH(image), S_IHEIGHT(image), S_IPIXELS(image), surface_callback_indexes, (void *)&closure);
+    if (!surface) {
+        return luaL_error(L, "can't decode file `%s`", name);
+    }
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "surface %p loaded and decoded from file `%s`", surface, name);
 
     Canvas_Object_t *self = (Canvas_Object_t *)luaX_newobject(L, sizeof(Canvas_Object_t), &(Canvas_Object_t){
             .surface = surface,

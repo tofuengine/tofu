@@ -108,13 +108,3 @@ const Blob_t *resources_blobs_find(const char *id)
     }
     return NULL;
 }
-
-bool resources_blobs_exists(const char *id)
-{
-    for (const Resource_Blob_t *blob = _blobs; blob->id != NULL; ++blob) {
-        if (strcasecmp(blob->id, id) == 0) {
-            return true;
-        }
-    }
-    return false;
-}
