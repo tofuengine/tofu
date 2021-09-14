@@ -37,10 +37,13 @@
 
 #define LOG_CONTEXT "system"
 
+#define MAX_DATE_LENGTH 64
+
 static int system_args_0_1t(lua_State *L);
 static int system_version_0_3nnn(lua_State *L);
 static int system_clock_0_1n(lua_State *L);
 static int system_time_0_1n(lua_State *L);
+static int system_date_2SS_1s(lua_State *L);
 static int system_fps_0_1n(lua_State *L);
 #ifdef __ENGINE_PERFORMANCE_STATISTICS__
 static int system_stats_0_4nnnn(lua_State *L);
@@ -62,6 +65,7 @@ int system_loader(lua_State *L)
             { "version", system_version_0_3nnn },
             { "clock", system_clock_0_1n },
             { "time", system_time_0_1n },
+            { "date", system_date_2SS_1s },
             { "fps", system_fps_0_1n },
 #ifdef __ENGINE_PERFORMANCE_STATISTICS__
             { "stats", system_stats_0_4nnnn },
@@ -127,6 +131,26 @@ static int system_time_0_1n(lua_State *L)
     const Environment_t *environment = (const Environment_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
 
     lua_pushnumber(L, (lua_Number)Environment_get_time(environment));
+
+    return 1;
+}
+
+static int system_date_2SS_1s(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
+    LUAX_SIGNATURE_END
+    const char *format = LUAX_OPTIONAL_STRING(L, 1, "%Y-%m-%dT%H:%M:%S");
+    const char *timezone = LUAX_OPTIONAL_STRING(L, 2, "local");
+
+    const time_t t = time(NULL);
+    const struct tm tm = (timezone[0] == 'g') ? *gmtime(&t) : *localtime(&t); // TODO: use table lookup.
+
+    char date[MAX_DATE_LENGTH] = { 0 };
+    size_t length = strftime(date, MAX_DATE_LENGTH, format, &tm);
+
+    lua_pushlstring(L, date, length);
 
     return 1;
 }
