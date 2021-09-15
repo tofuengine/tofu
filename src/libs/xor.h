@@ -35,5 +35,6 @@ typedef struct _xor_context_t {
 
 extern void xor_schedule(xor_context_t *context, const uint8_t *key, size_t size);
 extern void xor_process(xor_context_t *context, uint8_t *out, const uint8_t *in, size_t size);
+extern void xor_seek(xor_context_t *context, long offset, int whence);
 
 #endif  /* __LIBS_XOR_H__ */

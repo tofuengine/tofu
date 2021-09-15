@@ -496,6 +496,12 @@ static bool _pak_handle_seek(FS_Handle_t *handle, long offset, int whence)
 #ifdef __DEBUG_FS_CALLS__
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes seeked w/ mode %d for handle %p w/ result %d", offset, whence, handle, seeked);
 #endif
+
+    xor_seek(&pak_handle->cipher_context, offset, whence);
+#ifdef __DEBUG_FS_CALLS__
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d bytes seeked w/ mode %d for handle %p w/ result %d", offset, whence, handle, seeked);
+#endif
+
     return seeked;
 }
 
