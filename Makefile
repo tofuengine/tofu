@@ -274,6 +274,12 @@ threedee: $(TARGET)
 	@$(ANALYZER) $(AFLAGS) ./demos/threedee
 	@./$(TARGET) --path=./demos/threedee
 
+threedee-pak: $(TARGET)
+	@echo "Launching *threedee (PAK)* application!"
+	@$(ANALYZER) $(AFLAGS) ./demos/threedee
+	@lua5.3 ./extras/pakgen.lua --input=./demos/threedee --output=./demos/threedee.pak --encrypted
+	@./$(TARGET) --path=./demos/threedee.pak
+
 demo: $(TARGET)
 	@echo "Launching *$(DEMO)* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/$(DEMO)

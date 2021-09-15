@@ -134,15 +134,19 @@ local function emit_header(output, config, files)
 end
 
 local function emit_entry(output, file, config, offset, entries)
-  print(string.format("-> `%s`", file.name))
+  print(string.format("-> file `%s`", file.name))
 
-  local id = luazen.md5(string.gsub(string.lower(file.name), "\\", "/")) -- Fix Windows' path separators.
-  print(string.format("      id: `%s`", string.to_hex(id)))
+  local name = string.gsub(string.lower(file.name), "\\", "/") -- Fix Windows' path separators.
+  print(string.format("    name: `%s`", name))
 
-  if entries[id] then
-    print(string.format("          clashing w/ file `%s`", entries[id].file))
+  if entries[name] then
+    print(string.format("          clashing w/ file `%s`", entries[name].file))
     return false, 0
   end
+
+  local id = luazen.md5(name)
+  print(string.format("      id: `%s`", string.to_hex(id)))
+
   local cipher = config.encrypted and xor_cipher(id) or nil
 
   local input = io.open(file.pathfile, "rb")
@@ -160,7 +164,7 @@ local function emit_entry(output, file, config, offset, entries)
   end
   input:close()
 
-  entries[id] = {
+  entries[name] = {
       file = file,
       offset = offset,
       size = size
@@ -174,10 +178,11 @@ end
 
 local function emit_directory(output, entries)
   local count = 0
-  for id, entry in pairs(entries) do
-    output:write(string.pack("c16", id))
+  for name, entry in pairs(entries) do
+    output:write(string.pack("I2", #name))
     output:write(string.pack("I4", entry.offset))
     output:write(string.pack("I4", entry.size))
+    output:write(string.pack("z", name))
     count = count + 1
   end
   return count
@@ -221,7 +226,7 @@ local function main(arg)
     return
   end
 
-  print("PakGen v0.2.0")
+  print("PakGen v0.3.0")
   print("=============")
 
   local flags = {}
