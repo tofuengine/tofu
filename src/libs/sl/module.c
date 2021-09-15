@@ -236,7 +236,7 @@ static void _module_dtor(SL_Source_t *source)
     xmp_end_player(module->context);
     xmp_release_module(module->context);
     xmp_free_context(module->context);
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "module context freed");
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "module context deinitialized");
 }
 
 static bool _module_reset(SL_Source_t *source)

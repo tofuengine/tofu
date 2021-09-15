@@ -42,3 +42,8 @@ void xor_process(xor_context_t *context, uint8_t *out, const uint8_t *in, size_t
         context->i = (context->i + 1) % context->n;
     }
 }
+
+void xor_adjust(xor_context_t *context, size_t index)
+{
+    context->i = index % context->n;
+}
