@@ -106,7 +106,7 @@ static inline void _information(void)
         return;
     }
 
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "Tofu Engine v%s (platform-id #%d)", TOFU_VERSION_STRING, PLATFORM_ID);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "Tofu Engine v%s (%s build)", TOFU_VERSION_STRING, PLATFORM_NAME);
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "running on %s %s (%s, %s)", si.system, si.architecture, si.release, si.version);
 }
 
