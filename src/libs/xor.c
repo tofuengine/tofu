@@ -24,8 +24,6 @@
 
 #include "xor.h"
 
-#include <stdio.h>
-
 void xor_schedule(xor_context_t *context, const uint8_t *key, size_t size)
 {
     *context = (xor_context_t){ 
@@ -45,15 +43,7 @@ void xor_process(xor_context_t *context, uint8_t *out, const uint8_t *in, size_t
     }
 }
 
-void xor_seek(xor_context_t *context, long offset, int whence)
+void xor_adjust(xor_context_t *context, size_t index)
 {
-    if (whence == SEEK_SET) {
-        context->i = offset % context->n;
-    } else
-    if (whence == SEEK_CUR) {
-        context->i = (context->i + offset) % context->n;
-    } else
-    if (whence == SEEK_END) {
-        context->i = 0;
-    }
+    context->i = index % context->n;
 }
