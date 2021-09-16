@@ -488,8 +488,8 @@ static bool _resource_decode(Storage_Resource_t *resource, const char *name, Sto
 Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_Resource_Types_t type)
 {
 #ifdef __STORAGE_CHECK_ABSOLUTE_PATHS__
-    if (path_is_absolute(name)) {
-        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "path `%s` is not allowed (only relative paths in sandbox mode)", name);
+    if (path_is_absolute(name) || path_is_parent(name)) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "path `%s` is not allowed (only relative non-parent paths in sandbox mode)", name);
         return NULL;
     }
 #endif  /* __STORAGE_CHECK_ABSOLUTE_PATHS__*/
