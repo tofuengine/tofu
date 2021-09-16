@@ -83,9 +83,9 @@ typedef struct _Pak_Header_t {
 } Pak_Header_t;
 
 typedef struct _Pak_Entry_Header_t {
-    uint16_t chars;
     uint32_t offset;
     uint32_t size;
+    uint16_t chars;
 } Pak_Entry_Header_t;
 
 typedef struct _Pak_Entry_t {
@@ -200,13 +200,13 @@ static bool _read_entry(Pak_Entry_t *entry, FILE *stream)
         return false;
     }
 
-    size_t length = header.chars + 1;
-    char *name = malloc(length);
-    entries_read = fread(name, sizeof(char), length, stream);
-    if (entries_read != length) {
+    char *name = malloc(header.chars + 1);
+    entries_read = fread(name, sizeof(char), header.chars, stream);
+    if (entries_read != header.chars) {
         free(name);
         return false;
     }
+    name[header.chars] = '\0';
 
     *entry = (Pak_Entry_t){
             .name = name,

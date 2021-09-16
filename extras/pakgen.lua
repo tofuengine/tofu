@@ -179,10 +179,9 @@ end
 local function emit_directory(output, entries)
   local count = 0
   for name, entry in pairs(entries) do
-    output:write(string.pack("I2", #name))
     output:write(string.pack("I4", entry.offset))
     output:write(string.pack("I4", entry.size))
-    output:write(string.pack("z", name))
+    output:write(string.pack("s2", name))
     count = count + 1
   end
   return count
