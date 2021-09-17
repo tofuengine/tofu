@@ -29,6 +29,7 @@
 #include <libs/log.h>
 #include <libs/luax.h>
 #include <libs/stb.h>
+#include <libs/sysinfo.h>
 #include <version.h>
 
 #include "udt.h"
@@ -41,6 +42,7 @@
 
 static int system_args_0_1t(lua_State *L);
 static int system_version_0_3nnn(lua_State *L);
+static int system_information_0_1t(lua_State *L);
 static int system_clock_0_1n(lua_State *L);
 static int system_time_0_1n(lua_State *L);
 static int system_date_2SS_1s(lua_State *L);
@@ -63,6 +65,7 @@ int system_loader(lua_State *L)
         (const struct luaL_Reg[]){
             { "args", system_args_0_1t },
             { "version", system_version_0_3nnn },
+            { "information", system_information_0_1t },
             { "clock", system_clock_0_1n },
             { "time", system_time_0_1n },
             { "date", system_date_2SS_1s },
@@ -111,6 +114,30 @@ static int system_version_0_3nnn(lua_State *L)
     lua_pushinteger(L, (lua_Integer)TOFU_VERSION_REVISION);
 
     return 3;
+}
+
+static int system_information_0_1t(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+    LUAX_SIGNATURE_END
+
+    System_Information_t si;
+    bool result = SI_inspect(&si);
+    if (!result) {
+        return luaL_error(L, "can't get system information");
+    }
+
+    lua_newtable(L);
+    lua_pushstring(L, si.system);
+    lua_setfield(L, -2, "system");
+    lua_pushstring(L, si.release);
+    lua_setfield(L, -2, "release");
+    lua_pushstring(L, si.version);
+    lua_setfield(L, -2, "version");
+    lua_pushstring(L, si.architecture);
+    lua_setfield(L, -2, "architecture");
+
+    return 1;
 }
 
 static int system_clock_0_1n(lua_State *L)

@@ -43,6 +43,8 @@
 
 #define PAK_FLAG_ENCRYPTED      0x0001
 
+// TODO: no in-memory directory?
+
 /*
 +---------+
 | HEADER  | sizeof(Pak_Header_t)
