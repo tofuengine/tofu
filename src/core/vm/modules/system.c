@@ -127,7 +127,7 @@ static int system_information_0_1t(lua_State *L)
         return luaL_error(L, "can't get system information");
     }
 
-    lua_newtable(L);
+    lua_createtable(L, 0, 4);
     lua_pushstring(L, si.system);
     lua_setfield(L, -2, "system");
     lua_pushstring(L, si.release);
