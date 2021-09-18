@@ -193,7 +193,9 @@ static int _searcher(lua_State *L)
         luaL_error(L, "failed w/ error #%d while loading file `%s`", result, path + 1); // Skip the `@` character.
     }
 
-    return 1;
+    lua_pushstring(L, path); // Return the path of the loaded file as second return value.
+
+    return 2;
 }
 
 //

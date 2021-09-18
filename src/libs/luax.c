@@ -156,6 +156,18 @@ void luaX_stackdump(lua_State *L, const char* func, int line)
     }
 }
 
+// Lua default searchers are stored as four entries in the `package.searchers` table, as follows:
+//
+//   - a searcher that looks for a loader in the `package.preload` table,
+//   - a searcher that looks for a loader as a Lua library,
+//   - a searcher that looks for a loader as a C library,
+//   - a searcher that looks for a all-in-one, combined, loader.
+//
+// This function modifies the table by clearing table entries #3 and #4. The first one is kept (to enable
+// module reuse), and the second one is overwritten with the given `searcher`. As a result the module loading
+// process is confined to the custom searcher only.
+//
+// See: https://www.lua.org/manual/5.4/manual.html#pdf-package.searchers
 void luaX_overridesearchers(lua_State *L, lua_CFunction searcher, int nup)
 {
     lua_getglobal(L, "package"); // Access the `package.searchers` table.
