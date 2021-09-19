@@ -110,7 +110,6 @@ void Storage_destroy(Storage_t *storage)
     Storage_Resource_t **current = storage->resources;
     for (size_t count = arrlen(storage->resources); count; --count) {
         Storage_Resource_t *resource = *(current++);
-        Log_assert(resource->references == 0, LOG_LEVELS_WARNING, LOG_CONTEXT, "resource `%s` force-released (references-count is %d)", resource->name, resource->references);
         _release(resource);
     }
     arrfree(storage->resources);
@@ -208,7 +207,6 @@ static bool _load_as_string(Storage_Resource_t *resource, FS_Handle_t *handle)
                 }
             },
             .age = 0.0,
-            .references = 0,
             .allocated = true
         };
 
@@ -233,7 +231,6 @@ static bool _load_as_blob(Storage_Resource_t *resource, FS_Handle_t *handle)
                 }
             },
             .age = 0.0,
-            .references = 0,
             .allocated = true
         };
 
@@ -284,7 +281,6 @@ static bool _load_as_image(Storage_Resource_t *resource, FS_Handle_t *handle)
                 }
             },
             .age = 0.0,
-            .references = 0,
             .allocated = true
         };
 
@@ -309,15 +305,8 @@ static int _resource_compare_by_age(const void *lhs, const void *rhs)
 {
     const Storage_Resource_t **l = (const Storage_Resource_t **)lhs;
     const Storage_Resource_t **r = (const Storage_Resource_t **)rhs;
-    const int references_delta = (*l)->references - (*r)->references;
     const float age_delta = (*l)->age - (*r)->age;
-    if (references_delta < 0) { // Sort by lowest reference-count...
-        return -1;
-    } else
-    if (references_delta > 0) {
-        return 1;
-    } else
-    if (age_delta > 0.0f) { // ... and highest age.
+    if (age_delta > 0.0f) { // Sort by highest age.
         return -1;
     } else
     if (age_delta < 0.0f) {
@@ -359,7 +348,6 @@ static bool _resource_fetch(Storage_Resource_t *resource, const char *name, Stor
                     }
                 },
                 .age = 0.0,
-                .references = 0,
                 .allocated = false
             };
     } else
@@ -380,7 +368,6 @@ static bool _resource_fetch(Storage_Resource_t *resource, const char *name, Stor
                     }
                 },
                 .age = 0.0,
-                .references = 0,
                 .allocated = false
             };
     } else
@@ -402,7 +389,6 @@ static bool _resource_fetch(Storage_Resource_t *resource, const char *name, Stor
                     }
                 },
                 .age = 0.0,
-                .references = 0,
                 .allocated = false
             };
     }
@@ -434,7 +420,6 @@ static bool _resource_decode(Storage_Resource_t *resource, const char *name, Sto
                     }
                 },
                 .age = 0.0,
-                .references = 0,
                 .allocated = true
             };
     } else
@@ -455,7 +440,6 @@ static bool _resource_decode(Storage_Resource_t *resource, const char *name, Sto
                     }
                 },
                 .age = 0.0,
-                .references = 0,
                 .allocated = true
             };
     } else
@@ -477,7 +461,6 @@ static bool _resource_decode(Storage_Resource_t *resource, const char *name, Sto
                     }
                 },
                 .age = 0.0,
-                .references = 0,
                 .allocated = true
             };
     }
@@ -528,11 +511,8 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_R
 #ifdef __STORAGE_CACHE_ENTRIES_LIMIT__
     if (arrlen(storage->resources) > __STORAGE_CACHE_ENTRIES_LIMIT__) {
         qsort(storage->resources, arrlen(storage->resources), sizeof(Storage_Resource_t *), _resource_compare_by_age);
-        // FIXME: search for the first available!!!
-        if (storage->resources[0]->references == 0) { // Is the first entry available for release?
-            storage->resources[0]->age = STORAGE_RESOURCE_AGE_LIMIT; // Mark the oldest for release in the next cycle.
-            Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource `%s` marked for release", storage->resources[0]->name);
-        }
+        storage->resources[0]->age = STORAGE_RESOURCE_AGE_LIMIT; // Mark the oldest for release in the next cycle.
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "resource `%s` marked for release", storage->resources[0]->name);
     }
 #endif
 
@@ -598,22 +578,6 @@ bool Storage_store(Storage_t *storage, const char *name, const Storage_Resource_
     return result;
 }
 
-void Storage_lock(Storage_Resource_t *resource)
-{
-    resource->references += 1;
-}
-
-void Storage_unlock(Storage_Resource_t *resource)
-{
-    if (resource->references == 0) {
-        return;
-    }
-    resource->references -= 1;
-    if (resource->references == 0) {
-        resource->age = 0.0f; // Reset age last reference unload, we enable some kind of grace for the cache.
-    }
-}
-
 FS_Handle_t *Storage_open(const Storage_t *storage, const char *name)
 {
     return FS_open(storage->context, name);
@@ -624,9 +588,6 @@ bool Storage_update(Storage_t *storage, float delta_time)
     // Backward scan, to remove to-be-released resources.
     for (int index = (int)arrlen(storage->resources) - 1; index >= 0; --index) {
         Storage_Resource_t *resource = storage->resources[index];
-        if (resource->references > 0) {
-            continue;
-        }
         resource->age += delta_time;
         if (resource->age < STORAGE_RESOURCE_AGE_LIMIT) {
             continue;

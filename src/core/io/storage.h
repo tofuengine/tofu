@@ -56,7 +56,6 @@ typedef struct _Storage_Resource_t {
         } image;
     } var;
     double age;
-    int references;
     bool allocated;
 } Storage_Resource_t;
 
