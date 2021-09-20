@@ -38,7 +38,7 @@ int class_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, (luaX_Script){
-            .buffer = _class_lua,
+            .data = _class_lua,
             .size = sizeof(_class_lua) / sizeof(char),
             .name = SCRIPT_NAME
         },

@@ -26,6 +26,8 @@ SOFTWARE.
 
 local Vector = { }
 
+-- TODO: optimize by using `{ x, y }` over `{ x = x, y = y }`.
+
 Vector.__index = Vector
 
 function Vector.new(...)
@@ -221,7 +223,7 @@ function Vector:magnitude_squared()
 end
 
 function Vector:magnitude()
-  return math.sqrt(self:magnitude_squared())
+  return self:magnitude_squared() ^ 0.5
 end
 
 function Vector:distance_from_squared(v)
@@ -230,15 +232,15 @@ function Vector:distance_from_squared(v)
 end
 
 function Vector:distance_from(v)
-  return math.sqrt(self:distance_from_squared(v))
+  return self:distance_from_squared(v) ^ 0.5
 end
 
 function Vector:normalize(l)
-  local magnitude = self:magnitude()
+  local magnitude = self:magnitude_squared()
   if magnitude == 0 then
     return 0
   end
-  self:scale((l or 1) / magnitude)
+  self:scale((l or 1) * (magnitude ^ -0.5))
   return magnitude
 end
 
@@ -248,7 +250,7 @@ function Vector:trim(l)
   if s >= 1 then
     return
   end
-  self:scale(math.sqrt(s))
+  self:scale(s ^ 0.5)
 end
 
 function Vector:trim_if_not_zero(l)

@@ -28,6 +28,7 @@
 #include <platform.h>
 #include <libs/log.h>
 #include <libs/stb.h>
+#include <libs/sysinfo.h>
 #include <version.h>
 
 #if PLATFORM_ID == PLATFORM_WINDOWS
@@ -96,6 +97,19 @@ static Configuration_t *_configure(Storage_t *storage, int argc, const char *arg
     return configuration;
 }
 
+static inline void _information(void)
+{
+    System_Information_t si = { 0 };
+    bool result = SI_inspect(&si);
+    if (!result) {
+        Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't get system information");
+        return;
+    }
+
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "Tofu Engine v%s (%s build)", TOFU_VERSION_STRING, PLATFORM_NAME);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "running on %s %s (%s, %s)", si.system, si.architecture, si.release, si.version);
+}
+
 Engine_t *Engine_create(int argc, const char *argv[])
 {
     options_t options = options_parse_command_line(argc, argv); // We do this early, since options could have effect on everything.
@@ -109,6 +123,8 @@ Engine_t *Engine_create(int argc, const char *argv[])
     *engine = (Engine_t){ 0 }; // Ensure is cleared at first.
 
     Log_initialize();
+
+    _information();
 
     engine->storage = Storage_create(&(const Storage_Configuration_t){
             .path = options.path
@@ -134,16 +150,12 @@ Engine_t *Engine_create(int argc, const char *argv[])
         return NULL;
     }
 
-    const Storage_Resource_t *icon = Storage_exists(engine->storage, engine->configuration->system.icon) // FIXME: too defensive?
-        ? Storage_load(engine->storage, engine->configuration->system.icon, STORAGE_RESOURCE_IMAGE)
-        : Storage_load(engine->storage, RESOURCE_IMAGE_ICON_ID, STORAGE_RESOURCE_IMAGE);
+    const Storage_Resource_t *icon = Storage_load(engine->storage, engine->configuration->system.icon, STORAGE_RESOURCE_IMAGE);
     Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined icon loaded");
-    const Storage_Resource_t *effect = Storage_exists(engine->storage, engine->configuration->display.effect)
-        ? Storage_load(engine->storage, engine->configuration->display.effect, STORAGE_RESOURCE_STRING)
-        : NULL;
-    Log_assert(!icon, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined effect loaded");
+    const Storage_Resource_t *effect = Storage_load(engine->storage, engine->configuration->display.effect, STORAGE_RESOURCE_STRING);
+    Log_assert(!effect, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined effect loaded");
     engine->display = Display_create(&(const Display_Configuration_t){
-            .icon = (GLFWimage){ .width = (int)S_IWIDTH(icon), .height = (int)S_IHEIGHT(icon), .pixels = S_IPIXELS(icon) },
+            .icon = icon ? (GLFWimage){ .width = (int)S_IWIDTH(icon), .height = (int)S_IHEIGHT(icon), .pixels = S_IPIXELS(icon) } : (GLFWimage){ 0 },
             .window = {
                 .title = engine->configuration->display.title,
                 .width = engine->configuration->display.width,
@@ -163,12 +175,10 @@ Engine_t *Engine_create(int argc, const char *argv[])
         return NULL;
     }
 
-    const Storage_Resource_t *mappings = Storage_exists(engine->storage, engine->configuration->system.mappings)
-        ? Storage_load(engine->storage, engine->configuration->system.mappings, STORAGE_RESOURCE_STRING)
-        : Storage_load(engine->storage, RESOURCE_BLOB_MAPPINGS_ID, STORAGE_RESOURCE_STRING);
+    const Storage_Resource_t *mappings = Storage_load(engine->storage, engine->configuration->system.mappings, STORAGE_RESOURCE_STRING);
     Log_assert(!mappings, LOG_LEVELS_INFO, LOG_CONTEXT, "user-defined controller mappings loaded");
     engine->input = Input_create(&(const Input_Configuration_t){
-            .mappings = S_SCHARS(mappings),
+            .mappings = mappings ? S_SCHARS(mappings) : NULL,
             .keyboard = {
                 .enabled = engine->configuration->keyboard.enabled,
                 .exit_key = engine->configuration->keyboard.exit_key,
@@ -291,7 +301,7 @@ void Engine_run(Engine_t *engine)
         return;
     }
 
-    const float delta_time = 1.0f / (float)engine->configuration->engine.frames_per_seconds;
+    const float delta_time = 1.0f / (float)engine->configuration->engine.frames_per_seconds; // TODO: runtime configurable?
     const size_t skippable_frames = engine->configuration->engine.skippable_frames;
     const float reference_time = engine->configuration->engine.frames_limit == 0 ? 0.0f : 1.0f / engine->configuration->engine.frames_limit;
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "now running, update-time is %.6fs w/ %d skippable frames, reference-time is %.6fs", delta_time, skippable_frames, reference_time);

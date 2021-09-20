@@ -122,7 +122,8 @@ Along with the game-engine source, there's a bunch of (basic) demo projects. The
 ## Desiderata
 
 * [ ] Physics-engine.
-* [ ] Asynchronous resource loading/decoding with callback (maybe just some kind of pre-loading?)
+* [ ] Framebuffer rotations? Or does Mode7 suffices? But copperlists are not rendered on canvases...
+* [ ] Asynchronous resource loading/decoding with callback (maybe just some kind of pre-loading? With coroutines?)
 * [ ] Multi-threaded parallel rendering (w/ double/triple buffering).
 * [ ] Define some fixed resolutions (see [this](https://pacoup.com/2011/06/12/list-of-true-169-resolutions/))?
 * [ ] Tiled-map support w/ camera support (zoom and scrolling).
@@ -137,6 +138,7 @@ Along with the game-engine source, there's a bunch of (basic) demo projects. The
 * [ ] game time management, in system class (speed, up down pause)
 * [ ] both shoulder and trigger axes are analogue?
 * [ ] rumble?
+* [ ] Audio effects (e.g. reverb)?
 * [ ] analogues low pass filter (page 591) or moving average?
 * [ ] buttons states with XOR (page 594)
 * [ ] chords and gestures detection

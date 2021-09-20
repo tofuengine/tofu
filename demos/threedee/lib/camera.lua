@@ -1,9 +1,35 @@
+--[[
+MIT License
+
+Copyright (c) 2019-2021 Marco Lizza
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+]]--
+
 local Class = require("tofu.core").Class
 
 local Camera = Class.define()
 
 function Camera:__ctor(field_of_view, width, height, near, far)
+  self.field_of_view = field_of_view
   self.d = 1.0 / math.tan(field_of_view * 0.5)
+  -- Setting 'd = 1.0' seems like giving the more pleasant visual effect. Also, math is simpler.
 
   self.aspect_ratio = width / height
   self.width = width
@@ -13,21 +39,25 @@ function Camera:__ctor(field_of_view, width, height, near, far)
 
   self.near = near
   self.far = far
-  self.normalized_near = near / far
+  self.range = far - near
+  self.far_side = far / self.d * self.aspect_ratio
 
   self.x = 0.0
   self.y = 0.0
   self.z = 0.0
 end
 
-function Camera:set_field_of_view(theta)
-  self.d = 1.0 / math.tan(theta * 0.5)
+function Camera:set_field_of_view(field_of_view)
+  self.field_of_view = field_of_view
+  self.d = 1.0 / math.tan(field_of_view * 0.5)
+  self.far_side = self.far / self.d * self.aspect_ratio
 end
 
 function Camera:set_clipping_planes(near, far)
   self.near = near
   self.far = far
-  self.normalized_near = near / far
+  self.range = far - near
+  self.far_side = far / self.d * self.aspect_ratio -- Max "wide" distance, on the far plane.
 end
 
 function Camera:move(x, y, z)
@@ -45,33 +75,38 @@ end
 -- function Camera:rotate(angle)
 -- end
 
-function Camera:is_too_far(x, y, z)
-  local cx <const> = x - self.x
-  local cy <const> = y - self.y
-  local cz <const> = z - self.z
-  return cx > self.far or cy > self.far or cz > self.far
-    or cz < self.near
+function Camera:is_behind(_, _, z, infinite)
+  local cz <const> = infinite and z or z - self.z
+  return cz < self.near
+end
+
+function Camera:is_too_far(_, _, z, infinite)
+  local cz <const> = infinite and z or z - self.z
+  return cz > self.far or cz < self.near
 end
 
 function Camera:is_clipped(px, py, pz)
-  return px < -1 or px > 1 or py < -1 or py > 1 or pz < self.normalized_near or pz > 1
+  return px < -1 or px > 1 or py < -1 or py > 1 or pz < 0 or pz > 1
 end
 
 function Camera:is_culled(pz)
-  return pz < self.normalized_near or pz > 1
+  return pz < 0 or pz > 1
 end
 
-function Camera:project(x, y, z)
+function Camera:project(x, y, z, infinite)
   local cx <const> = x - self.x -- Transform to camera-space.
   local cy <const> = y - self.y
-  local cz <const> = z - self.z
+  local cz <const> = infinite and z or z - self.z
 
   -- TODO: apply rotation here.
 
-  local d_over_cz <const> = self.d / cz -- Transform to normalized projection plane (this is the scale factor).
-  local px <const> = cx * d_over_cz / self.aspect_ratio
-  local py <const> = cy * d_over_cz
-  local pz <const> = cz / self.far
+  -- Transform to normalized projection plane. The `d` value is relative to the *vertical* field-of-view. For the
+  -- horizontal coordinate we need to take into account also the *aspect-ratio* and additionally scale (i.e. normalize)
+  -- for this value, too (we can think of this as "squaring" the display).
+  local d_over_cz <const> = self.d / cz -- Scale factor. Division-by-zero has to be excluded with a prior check.
+  local px <const> = cx * d_over_cz / self.aspect_ratio -- [-ar, +ar] -> [-1, +1]
+  local py <const> = cy * d_over_cz -- [-1, +1]
+  local pz <const> = (cz - self.near) / self.range -- [0, 1]
 
   -- We don't clip here, as it is potentially too costly.
 

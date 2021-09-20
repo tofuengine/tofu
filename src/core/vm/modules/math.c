@@ -50,6 +50,7 @@ static int math_sincos_1n_2nn(lua_State *L);
 static int math_angle_to_rotation_1n_1n(lua_State *L);
 static int math_rotation_to_angle_1n_1n(lua_State *L);
 static int math_invsqrt_1n_1n(lua_State *L);
+static int math_finvsqrt_1n_1n(lua_State *L);
 static int math_rotate_3nnn_2nn(lua_State *L);
 static int math_wave_v_1f(lua_State *L);
 static int math_tweener_v_1f(lua_State *L);
@@ -62,7 +63,7 @@ int math_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, (luaX_Script){
-            .buffer = _math_lua,
+            .data = _math_lua,
             .size = sizeof(_math_lua) / sizeof(char),
             .name = SCRIPT_NAME
         },
@@ -79,6 +80,7 @@ int math_loader(lua_State *L)
             { "angle_to_rotation", math_angle_to_rotation_1n_1n },
             { "rotation_to_angle", math_rotation_to_angle_1n_1n },
             { "invsqrt", math_invsqrt_1n_1n },
+            { "finvsqrt", math_finvsqrt_1n_1n },
             { "rotate", math_rotate_3nnn_2nn },
             { "wave", math_wave_v_1f },
             { "tweener", math_tweener_v_1f },
@@ -273,6 +275,19 @@ static int math_rotation_to_angle_1n_1n(lua_State *L)
     return 1;
 }
 
+static int math_invsqrt_1n_1n(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    float x = LUAX_NUMBER(L, 1);
+
+    const float y = 1.0f / sqrtf(x);
+    lua_pushnumber(L, (lua_Number)y);
+
+    return 1;
+}
+
 // See: https://en.wikipedia.org/wiki/Fast_inverse_square_root
 //
 // The magic number is for doubles is from https://cs.uwaterloo.ca/~m32rober/rsqrt.pdf
@@ -292,7 +307,7 @@ static inline float _Q_rsqrt(float number)
     return y;
 }
 
-static int math_invsqrt_1n_1n(lua_State *L)
+static int math_finvsqrt_1n_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)

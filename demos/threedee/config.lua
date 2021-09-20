@@ -27,15 +27,28 @@ return {
   display = {
     palette = "famicube",
   },
+  scene = {
+    ground = {
+      rumble_length = 75
+    },
+    fog = {
+      levels = 8,
+      threshold = 0.5
+    }
+  },
+  player = {
+    speed = {
+      x = 250,
+      y = 250,
+      z = 500
+    }
+  },
   camera = {
     near = 1,
     far = 750,
-    field_of_view = math.pi / 2,
+    field_of_view = math.pi / 3,
   },
   objects = {
     count = 250,
-  },
-  ground = {
-    rumble_length = 125
   }
 }

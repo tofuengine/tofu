@@ -22,16 +22,20 @@
  * SOFTWARE.
  */
 
-#ifndef __RESOURCES_LOADER_H__
-#define __RESOURCES_LOADER_H__
+#ifndef __LIBS_SYSINFO_H__
+#define __LIBS_SYSINFO_H__
 
 #include <stdbool.h>
 
-#include "common.h"
+#define SYSINFO_NAME_LENGTH 128
 
-extern bool decoder_is_valid(const char *encoded_data);
+typedef struct _System_Information_t {
+    char system[SYSINFO_NAME_LENGTH];
+    char release[SYSINFO_NAME_LENGTH];
+    char version[SYSINFO_NAME_LENGTH];
+    char architecture[SYSINFO_NAME_LENGTH];
+} System_Information_t;
 
-extern Blob_t decoder_as_blob(const char *encoded_data);
-extern Image_t decoder_as_image(const char *encoded_data);
+extern bool SI_inspect(System_Information_t *buffer);
 
-#endif  /* __RESOURCES_LOADER_H__ */
+#endif  /* __LIBS_SYSINFO_H__ */

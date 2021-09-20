@@ -38,7 +38,7 @@ int iterators_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, (luaX_Script){
-            .buffer = _iterators_lua,
+            .data = _iterators_lua,
             .size = sizeof(_iterators_lua) / sizeof(char),
             .name = SCRIPT_NAME
         },

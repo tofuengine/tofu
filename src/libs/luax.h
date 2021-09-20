@@ -49,12 +49,17 @@ typedef struct _luaX_Const {
 } luaX_Const;
 
 typedef struct _luaX_Script {
-    const char *buffer;
+    const char *data;
     size_t size;
     const char *name;
 } luaX_Script;
 
 typedef int luaX_Reference;
+
+typedef struct _luaX_String {
+    const char *data;
+    size_t size;
+} luaX_String;
 
 //#define LUA_TNIL      0
 //#define LUA_TNONE     (-1)
@@ -124,6 +129,8 @@ typedef int luaX_Reference;
     #define LUAX_OPTIONAL_NUMBER(L, idx, def)    (lua_isnoneornil((L), (idx)) ? (def) : lua_tonumber((L), (idx)))
     #define LUAX_STRING(L, idx)                  (!lua_isstring((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), NULL : lua_tostring((L), (idx)))
     #define LUAX_OPTIONAL_STRING(L, idx, def)    (lua_isnoneornil((L), (idx)) ? (def) : lua_tostring((L), (idx)))
+    #define LUAX_LSTRING(L, idx)                 (!lua_isstring((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), (luaX_String){ 0 } : luaX_tolstring((L), (idx)))
+    #define LUAX_OPTIONAL_LSTRING(L, idx, def)   (lua_isnoneornil((L), (idx)) ? (luaX_String){ .data = (def), .size = strlen((def)) } : lua_tolstring((L), (idx)))
     #define LUAX_USERDATA(L, idx)                (!lua_isuserdata((L), (idx)) ? luaL_error((L), "value at index #%d has wrong type", (idx)), NULL : lua_touserdata((L), (idx)))
     #define LUAX_OPTIONAL_USERDATA(L, idx, def)  (lua_isnoneornil((L), (idx)) ? (def) : lua_touserdata((L), (idx)))
     #define LUAX_OBJECT(l, idx, t)               (!luaX_isobject((L), (idx), (t)) ? luaL_error((L), "value at index #%d has wrong type (expected #%d)", (idx), (t)), NULL : luaX_toobject((L), (idx), (t)))
@@ -137,6 +144,8 @@ typedef int luaX_Reference;
     #define LUAX_OPTIONAL_NUMBER(L, idx, def)    (lua_isnoneornil((L), (idx)) ? (def) : lua_tonumber((L), (idx)))
     #define LUAX_STRING(L, idx)                  (lua_tostring((L), (idx)))
     #define LUAX_OPTIONAL_STRING(L, idx, def)    (lua_isnoneornil((L), (idx)) ? (def) : lua_tostring((L), (idx)))
+    #define LUAX_LSTRING(L, idx)                 (luaX_tolstring((L), (idx)))
+    #define LUAX_OPTIONAL_LSTRING(L, idx, def)   (lua_isnoneornil((L), (idx)) ? (luaX_String){ .data = (def), .size = strlen((def)) } : luaX_tolstring((L), (idx)))
     #define LUAX_USERDATA(L, idx)                (lua_touserdata((L), (idx)))
     #define LUAX_OPTIONAL_USERDATA(L, idx, def)  (lua_isnoneornil((L), (idx)) ? (def) : lua_touserdata((L), (idx)))
     #define LUAX_OBJECT(l, idx, t)               (luaX_toobject((L), (idx), (t)))
@@ -146,6 +155,8 @@ typedef int luaX_Reference;
 #define luaX_dump(L)                luaX_stackdump((L), __FILE__, __LINE__)
 
 #define luaX_tofunction(L, idx)     luaX_ref((L), (idx))
+
+extern luaX_String luaX_tolstring(lua_State *L, int idx);
 
 extern void *luaX_newobject(lua_State *L, size_t size, void *state, int type, const char *metatable);
 extern int luaX_isobject(lua_State *L, int idx, int type);

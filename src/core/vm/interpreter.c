@@ -53,6 +53,12 @@ https://nachtimwald.com/2014/07/26/calling-lua-from-c/
   #define METHOD_STACK_INDEX(m)   OBJECT_STACK_INDEX + 1 + (m)
 #endif
 
+#ifdef __VM_READER_BUFFER_SIZE__
+  #define READER_CONTEXT_BUFFER_SIZE  1024
+#else
+  #define READER_CONTEXT_BUFFER_SIZE  __VM_READER_BUFFER_SIZE__
+#endif
+
 static const char _boot_lua[] = {
 #ifdef DEBUG
   #include "boot-debug.inc"
@@ -60,12 +66,6 @@ static const char _boot_lua[] = {
   #include "boot-release.inc"
 #endif
 };
-
-typedef struct _Reader_Context_t {
-    char *ptr;
-    size_t size;
-    size_t index;
-} Reader_Context_t;
 
 typedef enum _Methods_t {
     METHOD_PROCESS,
@@ -152,20 +152,23 @@ static int _error_handler(lua_State *L)
 // The reader must return a pointer to a block of memory with a new piece of the chunk and set size to the block size.
 // The block must exist until the reader function is called again. To signal the end of the chunk, the reader must
 // return NULL or set size to zero. The reader function may return pieces of any size greater than zero. [...]
+typedef struct _Reader_Context_t {
+    FS_Handle_t *handle;
+    uint8_t buffer[READER_CONTEXT_BUFFER_SIZE];
+} Reader_Context_t;
+
 static const char *_reader(lua_State *L, void *ud, size_t *size)
 {
     Reader_Context_t *context = (Reader_Context_t *)ud;
 
-    const size_t available = context->size - context->index;
-    if (available == 0) {
+    const size_t bytes_read = FS_read(context->handle, context->buffer, READER_CONTEXT_BUFFER_SIZE);
+    if (bytes_read == 0) {
         *size = 0;
         return NULL;
     }
 
-    context->index += context->size; // Advance to end, we return the whole chunk at once.
-
-    *size = context->size;
-    return context->ptr;
+    *size = bytes_read;
+    return (const char *)context->buffer;
 }
 
 static int _searcher(lua_State *L)
@@ -183,17 +186,24 @@ static int _searcher(lua_State *L)
     }
     strcat(path, ".lua");
 
-    const Storage_Resource_t *resource = Storage_load(storage, path + 1, STORAGE_RESOURCE_BLOB);
-    if (!resource) {
-        return LUA_ERRFILE;
+    FS_Handle_t *handle = Storage_open(storage, path + 1); // Don't waste storage cache! The module will be cached by Lua!
+    if (!handle) {
+        lua_pushfstring(L, "file `%s` can't be found into the storage", path + 1);
+        return 1;
     }
 
-    int result = lua_load(L, _reader, &(Reader_Context_t){ .ptr = S_BPTR(resource), .size = S_BSIZE(resource) }, path, NULL); // Neither `text` nor `binary`: autodetect.
+    int result = lua_load(L, _reader, &(Reader_Context_t){ .handle = handle }, path, NULL); // Set `mode` to `NULL`. Autodetect format to support both `text` and `binary` sources.
+
+    FS_close(handle);
+
     if (result != LUA_OK) {
-        luaL_error(L, "failed w/ error #%d while loading file `%s`", result, path + 1); // Skip the `@` character.
+        lua_pushfstring(L, "failed w/ error #%d while loading file `%s`", result, path + 1); // Skip the `@` character.
+        return 1;
     }
 
-    return 1;
+    lua_pushstring(L, path); // Return the path of the loaded file as second return value.
+
+    return 2;
 }
 
 //

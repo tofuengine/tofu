@@ -44,11 +44,8 @@ extern FS_Context_t *FS_create(const char *path);
 extern void FS_destroy(FS_Context_t *context);
 
 extern bool FS_attach(FS_Context_t *context, const char *path);
-extern const FS_Mount_t *FS_locate(const FS_Context_t *context, const char *name);
 
-extern FS_Handle_t *FS_locate_and_open(const FS_Context_t *context, const char *name);
-
-extern FS_Handle_t *FS_open(const FS_Mount_t *mount, const char *name);
+extern FS_Handle_t *FS_open(const FS_Context_t *context, const char *name);
 extern void FS_close(FS_Handle_t *handle);
 extern size_t FS_size(FS_Handle_t *handle);
 extern size_t FS_read(FS_Handle_t *handle, void *buffer, size_t bytes_requested);

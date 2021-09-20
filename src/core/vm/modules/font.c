@@ -53,7 +53,7 @@ int font_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, (luaX_Script){
-            .buffer = _font_lua,
+            .data = _font_lua,
             .size = sizeof(_font_lua) / sizeof(char),
             .name = SCRIPT_NAME
         },

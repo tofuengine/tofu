@@ -56,7 +56,6 @@ typedef struct _Storage_Resource_t {
         } image;
     } var;
     double age;
-    int references;
     bool allocated;
 } Storage_Resource_t;
 
@@ -89,10 +88,6 @@ typedef struct _Storage_t {
 #define S_IHEIGHT(r)        ((r)->var.image.height)
 #define S_IPIXELS(r)        ((r)->var.image.pixels)
 
-#define RESOURCE_IMAGE_ICON_ID      "icon"
-#define RESOURCE_IMAGE_ICON_WB_ID   "icon-bw"
-#define RESOURCE_BLOB_MAPPINGS_ID   "gamecontrollerdb"
-
 extern Storage_t *Storage_create(const Storage_Configuration_t *configuration);
 extern void Storage_destroy(Storage_t *storage);
 
@@ -102,15 +97,13 @@ extern const char *Storage_get_base_path(const Storage_t *storage);
 extern const char *Storage_get_user_path(const Storage_t *storage);
 extern const char *Storage_get_local_path(const Storage_t *storage);
 
-extern bool Storage_exists(const Storage_t *storage, const char *name);
-
 extern Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_Resource_Types_t type);
 extern bool Storage_store(Storage_t *storage, const char *name, const Storage_Resource_t *resource);
 
 extern void Storage_lock(Storage_Resource_t *resource);
 extern void Storage_unlock(Storage_Resource_t *resource);
 
-extern FS_Handle_t *Storage_open(const Storage_t *storage, const char *name);
+extern FS_Handle_t *Storage_open(const Storage_t *storage, const char *name); // Use `FS` API to control and close it.
 
 extern bool Storage_update(Storage_t *storage, float delta_time);
 

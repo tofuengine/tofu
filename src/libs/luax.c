@@ -40,6 +40,13 @@ https://stackoverflow.com/questions/29449296/extending-lua-check-number-of-param
 https://stackoverflow.com/questions/32673835/how-do-i-create-a-lua-module-inside-a-lua-module-in-c
 */
 
+luaX_String luaX_tolstring(lua_State *L, int idx)
+{
+    luaX_String s;
+    s.data = lua_tolstring(L, idx, &s.size);
+    return s;
+}
+
 #ifdef __LUAX_RTTI__
 typedef struct _luaX_Object {
     int type;
@@ -149,6 +156,18 @@ void luaX_stackdump(lua_State *L, const char* func, int line)
     }
 }
 
+// Lua default searchers are stored as four entries in the `package.searchers` table, as follows:
+//
+//   - a searcher that looks for a loader in the `package.preload` table,
+//   - a searcher that looks for a loader as a Lua library,
+//   - a searcher that looks for a loader as a C library,
+//   - a searcher that looks for a all-in-one, combined, loader.
+//
+// This function modifies the table by clearing table entries #3 and #4. The first one is kept (to enable
+// module reuse), and the second one is overwritten with the given `searcher`. As a result the module loading
+// process is confined to the custom searcher only.
+//
+// See: https://www.lua.org/manual/5.4/manual.html#pdf-package.searchers
 void luaX_overridesearchers(lua_State *L, lua_CFunction searcher, int nup)
 {
     lua_getglobal(L, "package"); // Access the `package.searchers` table.
@@ -184,8 +203,8 @@ int luaX_insisttable(lua_State *L, const char *name)
 // Both `f` and `c` can't be `NULL`, but need to be "empty" arrays (which is easy, thanks to compound-literals)
 int luaX_newmodule(lua_State *L, luaX_Script script, const luaL_Reg *f, const luaX_Const *c, int nup, const char *name)
 {
-    if (script.buffer && script.size > 0) {
-        luaL_loadbuffer(L, script.buffer, script.size, script.name);
+    if (script.data && script.size > 0) {
+        luaL_loadbuffer(L, script.data, script.size, script.name);
         lua_pcall(L, 0, LUA_MULTRET, 0); // Just the export table is returned.
         if (name) {
             lua_pushstring(L, name);

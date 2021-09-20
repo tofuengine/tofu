@@ -29,6 +29,7 @@
 #include <libs/log.h>
 #include <libs/luax.h>
 #include <libs/stb.h>
+#include <libs/sysinfo.h>
 #include <version.h>
 
 #include "udt.h"
@@ -37,10 +38,14 @@
 
 #define LOG_CONTEXT "system"
 
+#define MAX_DATE_LENGTH 64
+
 static int system_args_0_1t(lua_State *L);
 static int system_version_0_3nnn(lua_State *L);
+static int system_information_0_1t(lua_State *L);
 static int system_clock_0_1n(lua_State *L);
 static int system_time_0_1n(lua_State *L);
+static int system_date_2SS_1s(lua_State *L);
 static int system_fps_0_1n(lua_State *L);
 #ifdef __ENGINE_PERFORMANCE_STATISTICS__
 static int system_stats_0_4nnnn(lua_State *L);
@@ -60,8 +65,10 @@ int system_loader(lua_State *L)
         (const struct luaL_Reg[]){
             { "args", system_args_0_1t },
             { "version", system_version_0_3nnn },
+            { "information", system_information_0_1t },
             { "clock", system_clock_0_1n },
             { "time", system_time_0_1n },
+            { "date", system_date_2SS_1s },
             { "fps", system_fps_0_1n },
 #ifdef __ENGINE_PERFORMANCE_STATISTICS__
             { "stats", system_stats_0_4nnnn },
@@ -87,7 +94,7 @@ static int system_args_0_1t(lua_State *L)
 
     const Environment_t *environment = (const Environment_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
 
-    lua_createtable(L, 0, 0); // Initially empty.
+    lua_newtable(L); // Initially empty.
     size_t count = arrlen(environment->args);
     for (size_t i = 0; i < count; ++i) {
         lua_pushstring(L, environment->args[i]);
@@ -109,6 +116,30 @@ static int system_version_0_3nnn(lua_State *L)
     return 3;
 }
 
+static int system_information_0_1t(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+    LUAX_SIGNATURE_END
+
+    System_Information_t si;
+    bool result = SI_inspect(&si);
+    if (!result) {
+        return luaL_error(L, "can't get system information");
+    }
+
+    lua_createtable(L, 0, 4);
+    lua_pushstring(L, si.system);
+    lua_setfield(L, -2, "system");
+    lua_pushstring(L, si.release);
+    lua_setfield(L, -2, "release");
+    lua_pushstring(L, si.version);
+    lua_setfield(L, -2, "version");
+    lua_pushstring(L, si.architecture);
+    lua_setfield(L, -2, "architecture");
+
+    return 1;
+}
+
 static int system_clock_0_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -127,6 +158,26 @@ static int system_time_0_1n(lua_State *L)
     const Environment_t *environment = (const Environment_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_ENVIRONMENT));
 
     lua_pushnumber(L, (lua_Number)Environment_get_time(environment));
+
+    return 1;
+}
+
+static int system_date_2SS_1s(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
+    LUAX_SIGNATURE_END
+    const char *format = LUAX_OPTIONAL_STRING(L, 1, "%Y-%m-%dT%H:%M:%S");
+    const char *timezone = LUAX_OPTIONAL_STRING(L, 2, "local");
+
+    const time_t t = time(NULL);
+    const struct tm tm = (timezone[0] == 'g') ? *gmtime(&t) : *localtime(&t); // TODO: use table lookup.
+
+    char date[MAX_DATE_LENGTH] = { 0 };
+    size_t length = strftime(date, MAX_DATE_LENGTH, format, &tm);
+
+    lua_pushlstring(L, date, length);
 
     return 1;
 }

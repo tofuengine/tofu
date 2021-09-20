@@ -54,7 +54,7 @@ int grid_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, (luaX_Script){
-            .buffer = _grid_lua,
+            .data = _grid_lua,
             .size = sizeof(_grid_lua) / sizeof(char),
             .name = SCRIPT_NAME
         },
@@ -85,6 +85,7 @@ static int grid_new_3nnt_1o(lua_State *L)
     LUAX_SIGNATURE_END
     size_t width = (size_t)LUAX_INTEGER(L, 1);
     size_t height = (size_t)LUAX_INTEGER(L, 2);
+    // idx #3: LUA_TTABLE
 
     size_t data_size = width * height;
     Cell_t *data = malloc(sizeof(Cell_t) * data_size);
@@ -156,6 +157,7 @@ static int grid_fill_2ot_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TTABLE)
     LUAX_SIGNATURE_END
     Grid_Object_t *self = (Grid_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_GRID);
+    // idx #2: LUA_TTABLE
 
     size_t length = lua_rawlen(L, 2);
     if (length == 0) {

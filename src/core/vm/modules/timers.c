@@ -38,7 +38,7 @@ int timers_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, (luaX_Script){
-            .buffer = _timers_lua,
+            .data = _timers_lua,
             .size = sizeof(_timers_lua) / sizeof(char),
             .name = SCRIPT_NAME
         },

@@ -83,19 +83,19 @@ static const uint8_t _shader_tritanopia[] = {
 
 static const Resource_Blob_t _blobs[] = {
     // Textual assets.
-    { "gamecontrollerdb", { _gamecontrollerdb, sizeof(_gamecontrollerdb) } },
+    { "gamecontrollerdb.txt", { _gamecontrollerdb, sizeof(_gamecontrollerdb) } },
     // Shaders assets.
-    { "crt-pi", { _crt_pi, sizeof(_crt_pi) } },
-    { "crt-pi-vertical", { _crt_pi_vertical, sizeof(_crt_pi_vertical) } },
-    { "scanline-fract", { _scanline_fract, sizeof(_scanline_fract) } },
-    { "scanlines-sine-abs", { _scanlines_sine_abs, sizeof(_scanlines_sine_abs) } },
-    { "zfast-crt", { _zfast_crt, sizeof(_zfast_crt) } },
-    { "zfast-crt-vertical", { _zfast_crt_vertical, sizeof(_zfast_crt_vertical) } },
-    { "zfast-lcd", { _zfast_lcd, sizeof(_zfast_lcd) } },
-    { "acromatopsia", { _shader_acromatopsia, sizeof(_shader_acromatopsia) } },
-    { "deuteranopia", { _shader_deuteranopia, sizeof(_shader_deuteranopia) } },
-    { "protanopia", { _shader_protanopia, sizeof(_shader_protanopia) } },
-    { "tritanopia", { _shader_tritanopia, sizeof(_shader_tritanopia) } },
+    { "crt-pi.glsl", { _crt_pi, sizeof(_crt_pi) } },
+    { "crt-pi-vertical.glsl", { _crt_pi_vertical, sizeof(_crt_pi_vertical) } },
+    { "scanline-fract.glsl", { _scanline_fract, sizeof(_scanline_fract) } },
+    { "scanlines-sine-abs.glsl", { _scanlines_sine_abs, sizeof(_scanlines_sine_abs) } },
+    { "zfast-crt.glsl", { _zfast_crt, sizeof(_zfast_crt) } },
+    { "zfast-crt-vertical.glsl", { _zfast_crt_vertical, sizeof(_zfast_crt_vertical) } },
+    { "zfast-lcd.glsl", { _zfast_lcd, sizeof(_zfast_lcd) } },
+    { "acromatopsia.glsl", { _shader_acromatopsia, sizeof(_shader_acromatopsia) } },
+    { "deuteranopia.glsl", { _shader_deuteranopia, sizeof(_shader_deuteranopia) } },
+    { "protanopia.glsl", { _shader_protanopia, sizeof(_shader_protanopia) } },
+    { "tritanopia.glsl", { _shader_tritanopia, sizeof(_shader_tritanopia) } },
     { NULL, { 0 } }
 };
 
@@ -107,14 +107,4 @@ const Blob_t *resources_blobs_find(const char *id)
         }
     }
     return NULL;
-}
-
-bool resources_blobs_exists(const char *id)
-{
-    for (const Resource_Blob_t *blob = _blobs; blob->id != NULL; ++blob) {
-        if (strcasecmp(blob->id, id) == 0) {
-            return true;
-        }
-    }
-    return false;
 }

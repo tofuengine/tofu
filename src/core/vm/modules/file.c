@@ -32,16 +32,16 @@
 
 #include <string.h>
 
-static int file_load_2sS_1s(lua_State *L);
-static int file_store_3ssS_0(lua_State *L);
+static int file_load_1s_1s(lua_State *L);
+static int file_store_2ss_0(lua_State *L);
 
 int file_loader(lua_State *L)
 {
     int nup = luaX_pushupvalues(L);
     return luaX_newmodule(L, (luaX_Script){ 0 },
         (const struct luaL_Reg[]){
-            { "load", file_load_2sS_1s },
-            { "store", file_store_3ssS_0 },
+            { "load", file_load_1s_1s },
+            { "store", file_store_2ss_0 },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -49,77 +49,45 @@ int file_loader(lua_State *L)
         }, nup, NULL);
 }
 
-static int file_load_2sS_1s(lua_State *L)
+static int file_load_1s_1s(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
     LUAX_SIGNATURE_END
     const char *name = LUAX_STRING(L, 1);
-    const char *mode = LUAX_OPTIONAL_STRING(L, 2, "string");
 
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
 
-    if (mode[0] == 's') { // "string"
-        const Storage_Resource_t *resource = Storage_load(storage, name, STORAGE_RESOURCE_STRING);
-        if (!resource) {
-            return luaL_error(L, "can't load file `%s`", name);
-        }
-        lua_pushlstring(L, S_SCHARS(resource), S_SLENTGH(resource));
-    } else
-    if (mode[0] == 'b') { // "blob"
-        const Storage_Resource_t *resource = Storage_load(storage, name, STORAGE_RESOURCE_BLOB);
-        if (!resource) {
-            return luaL_error(L, "can't load file `%s`", name);
-        }
-        lua_pushlstring(L, S_BPTR(resource), S_BSIZE(resource)); // Lua's strings can contain bytes.
-    } else {
-        return luaL_error(L, "unknown mode `%s`", mode);
+    const Storage_Resource_t *resource = Storage_load(storage, name, STORAGE_RESOURCE_BLOB);
+    if (!resource) {
+        return luaL_error(L, "can't load file `%s`", name);
     }
+    lua_pushlstring(L, S_BPTR(resource), S_BSIZE(resource)); // Lua's strings can contain bytes.
 
     return 1;
 }
 
-static int file_store_3ssS_0(lua_State *L)
+static int file_store_2ss_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TSTRING)
     LUAX_SIGNATURE_END
     const char *name = LUAX_STRING(L, 1);
-    const char *data = LUAX_STRING(L, 2);
-    const char *mode = LUAX_OPTIONAL_STRING(L, 3, "string");
+    luaX_String data = LUAX_LSTRING(L, 2);
 
     Storage_t *storage = (Storage_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_STORAGE));
 
-    Storage_Resource_t resource = { 0 };
-    if (mode[0] == 's') { // "string"
-        resource = (Storage_Resource_t){
-                // .name = name,
-                .type = STORAGE_RESOURCE_STRING,
-                .var = {
-                    .string = {
-                        .chars = (char *)data,
-                        .length = strlen(data)
-                    }
+    Storage_Resource_t resource = (Storage_Resource_t){
+            // .name = name,
+            .type = STORAGE_RESOURCE_BLOB,
+            .var = {
+                .blob = {
+                    .ptr = (void *)data.data,
+                    .size = data.size
                 }
-            };
-    } else
-    if (mode[0] == 'b') { // "blob"
-        resource = (Storage_Resource_t){
-                // .name = name,
-                .type = STORAGE_RESOURCE_BLOB,
-                .var = {
-                    .blob = {
-                        .ptr = (void *)data,
-                        .size = strlen(data) + 1
-                    }
-                }
-            };
-    } else {
-        return luaL_error(L, "unknown mode `%s`", mode);
-    }
+            }
+        };
 
     bool stored = Storage_store(storage, name, &resource);
     if (!stored) {
