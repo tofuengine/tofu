@@ -67,7 +67,7 @@ static const char _boot_lua[] = {
 #endif
 };
 
-typedef enum _Entry_Point_Methods_t {
+typedef enum Entry_Point_Methods_e {
     METHOD_PROCESS,
     METHOD_UPDATE,
     METHOD_RENDER,
@@ -102,7 +102,7 @@ static int _panic(lua_State *L)
 
 static void _warning(void *ud, const char *message, int tocont)
 {
-    Warning_States_t *warning_state = (Warning_States_t *)ud;
+    lua_Warning_States_t *warning_state = (lua_Warning_States_t *)ud;
     if (*warning_state != WARNING_STATE_APPENDING && !tocont && *message == '@') {
         if (strcmp(message, "@off") == 0) {
             *warning_state = WARNING_STATE_DISABLED;

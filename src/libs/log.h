@@ -28,7 +28,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-typedef enum _Log_Levels_t {
+typedef enum Log_Levels_e {
     LOG_LEVELS_ALL,
     LOG_LEVELS_TRACE,
     LOG_LEVELS_DEBUG,

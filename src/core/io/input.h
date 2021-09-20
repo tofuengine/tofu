@@ -33,7 +33,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-typedef enum _Input_Buttons_t {
+typedef enum Input_Buttons_e {
     Input_Buttons_t_First = 0,
     INPUT_BUTTON_UP = Input_Buttons_t_First,
     INPUT_BUTTON_DOWN,
@@ -82,7 +82,7 @@ typedef struct Input_Cursor_s {
     } area;
 } Input_Cursor_t;
 
-typedef enum _Input_Sticks_t {
+typedef enum Input_Sticks_e {
     Input_Sticks_t_First = 0,
     INPUT_STICK_LEFT = Input_Sticks_t_First,
     INPUT_STICK_RIGHT,
@@ -101,7 +101,7 @@ typedef struct Input_Triggers_s {
 
 #define INPUT_GAMEPADS_COUNT    (GLFW_JOYSTICK_LAST + 1)
 
-typedef enum _Input_Handlers_t {
+typedef enum Input_Handlers_e {
     Input_Handlers_t_First = 0,
     INPUT_HANDLE_DEFAULT = Input_Handlers_t_First,
     INPUT_HANDLER_KEYBOARD,

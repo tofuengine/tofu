@@ -27,7 +27,7 @@
 
 #include "common.h"
 
-typedef enum _GL_Program_Command_t {
+typedef enum GL_Program_Command_e {
     GL_PROGRAM_COMMAND_WAIT,
     GL_PROGRAM_COMMAND_MODULO,
     GL_PROGRAM_COMMAND_OFFSET,

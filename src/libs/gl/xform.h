@@ -28,7 +28,7 @@
 #include "common.h"
 #include "surface.h"
 
-typedef enum _GL_XForm_Registers_t {
+typedef enum GL_XForm_Registers_e {
     GL_XForm_Registers_t_First,
     GL_XFORM_REGISTER_H = GL_XForm_Registers_t_First,
     GL_XFORM_REGISTER_V,
@@ -53,7 +53,7 @@ typedef struct GL_XForm_Table_Entry_s {
     size_t count;
 } GL_XForm_Table_Entry_t;
 
-typedef enum _GL_XForm_Wraps_t {
+typedef enum GL_XForm_Wraps_e {
     GL_XFORM_WRAP_REPEAT,
     GL_XFORM_WRAP_CLAMP_TO_EDGE,
     GL_XFORM_WRAP_CLAMP_TO_BORDER,

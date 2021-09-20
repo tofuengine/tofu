@@ -30,7 +30,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-typedef enum _Storage_Resource_Types_t {
+typedef enum Storage_Resource_Types_e {
     STORAGE_RESOURCE_STRING,
     // STORAGE_RESOURCE_ENCODED,
     STORAGE_RESOURCE_BLOB,

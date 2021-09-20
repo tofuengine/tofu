@@ -33,7 +33,7 @@
 #include "udt.h"
 #include "utils/map.h"
 
-typedef enum _Source_Types_t {
+typedef enum Source_Types_e {
     SOURCE_TYPE_MUSIC,
     SOURCE_TYPE_SAMPLE,
     SOURCE_TYPE_MODULE,

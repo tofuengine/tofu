@@ -71,7 +71,7 @@ typedef struct GL_Rectangle_u32_s {
 } GL_Rectangle_u32_t;
 #pragma pack(pop)
 
-typedef enum _GL_Comparators_t {
+typedef enum GL_Comparators_e {
     GL_COMPARATOR_NEVER,
     GL_COMPARATOR_LESS,
     GL_COMPARATOR_LESS_OR_EQUAL,
@@ -83,7 +83,7 @@ typedef enum _GL_Comparators_t {
     GL_Comparators_t_CountOf
 } GL_Comparators_t;
 
-typedef enum _GL_Functions_t {
+typedef enum GL_Functions_e {
     GL_FUNCTIONS_REPLACE,
     GL_FUNCTIONS_ADD,
     GL_FUNCTIONS_ADD_CLAMPED,

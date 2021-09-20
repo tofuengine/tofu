@@ -33,7 +33,7 @@
 #include <libs/gl/gl.h>
 #include <libs/sl/sl.h>
 
-typedef enum _UserData_t { // TODO: move to a separate file.
+typedef enum UserData_e { // TODO: move to a separate file.
     USERDATA_STORAGE = 1,
     USERDATA_DISPLAY,
     USERDATA_INPUT,
@@ -44,7 +44,7 @@ typedef enum _UserData_t { // TODO: move to a separate file.
     UserData_t_CountOf
 } UserData_t;
 
-typedef enum _Object_Types_t {
+typedef enum Object_Types_e {
     OBJECT_TYPE_BANK,
     OBJECT_TYPE_BATCH,
     OBJECT_TYPE_BODY,
@@ -119,7 +119,7 @@ typedef struct Source_Object_s {
     SL_Source_t *source;
 } Source_Object_t;
 
-typedef enum _Body_Kinds_t {
+typedef enum Body_Kinds_e {
     BODY_KIND_SHAPELESS,
     BODY_KIND_BOX,
     BODY_KIND_CIRCLE,
