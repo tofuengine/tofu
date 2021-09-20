@@ -57,7 +57,7 @@
 
 #define LOG_CONTEXT "sl-module"
 
-typedef struct _Module_t {
+typedef struct Module_s {
     Source_VTable_t vtable;
 
     SL_Props_t *props;

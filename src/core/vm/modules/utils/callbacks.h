@@ -27,7 +27,7 @@
 
 #include <libs/gl/gl.h>
 
-typedef struct _Callback_Palette_Closure_t {
+typedef struct Callback_Palette_Closure_s {
 #ifdef __PALETTE_COLOR_MEMOIZATION__
     GL_Palette_t *palette;
 #else
@@ -37,7 +37,7 @@ typedef struct _Callback_Palette_Closure_t {
     uint8_t threshold;
 } Callback_Palette_Closure_t;
 
-typedef struct _Callback_Indexes_Closure_t {
+typedef struct Callback_Indexes_Closure_s {
     GL_Pixel_t background;
     GL_Pixel_t foreground;
 } Callback_Indexes_Closure_t;

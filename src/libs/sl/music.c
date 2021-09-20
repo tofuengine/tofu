@@ -52,7 +52,7 @@
 
 #define LOG_CONTEXT "sl-music"
 
-typedef struct _Music_t { // FIXME: rename to `_Music_Source_t`.
+typedef struct Music_s { // FIXME: rename to `_Music_Source_t`.
     Source_VTable_t vtable;
 
     SL_Props_t *props;

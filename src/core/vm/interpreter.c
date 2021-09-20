@@ -67,12 +67,12 @@ static const char _boot_lua[] = {
 #endif
 };
 
-typedef enum _Methods_t {
+typedef enum _Entry_Point_Methods_t {
     METHOD_PROCESS,
     METHOD_UPDATE,
     METHOD_RENDER,
     Methods_t_CountOf
-} Methods_t;
+} Entry_Point_Methods_t;
 
 static const char *_methods[] = { // We don't use a compound-literal on purpose here, since we are referring to the above enum.
     "process",
@@ -152,14 +152,14 @@ static int _error_handler(lua_State *L)
 // The reader must return a pointer to a block of memory with a new piece of the chunk and set size to the block size.
 // The block must exist until the reader function is called again. To signal the end of the chunk, the reader must
 // return NULL or set size to zero. The reader function may return pieces of any size greater than zero. [...]
-typedef struct _Reader_Context_t {
+typedef struct lua_Reader_Context_s {
     FS_Handle_t *handle;
     uint8_t buffer[READER_CONTEXT_BUFFER_SIZE];
-} Reader_Context_t;
+} lua_Reader_Context_t;
 
 static const char *_reader(lua_State *L, void *ud, size_t *size)
 {
-    Reader_Context_t *context = (Reader_Context_t *)ud;
+    lua_Reader_Context_t *context = (lua_Reader_Context_t *)ud;
 
     const size_t bytes_read = FS_read(context->handle, context->buffer, READER_CONTEXT_BUFFER_SIZE);
     if (bytes_read == 0) {
@@ -192,7 +192,7 @@ static int _searcher(lua_State *L)
         return 1;
     }
 
-    int result = lua_load(L, _reader, &(Reader_Context_t){ .handle = handle }, path, NULL); // Set `mode` to `NULL`. Autodetect format to support both `text` and `binary` sources.
+    int result = lua_load(L, _reader, &(lua_Reader_Context_t){ .handle = handle }, path, NULL); // Set `mode` to `NULL`. Autodetect format to support both `text` and `binary` sources.
 
     FS_close(handle);
 
@@ -254,7 +254,7 @@ static int _execute(lua_State *L, const char *script, size_t size, const char *n
 #endif
 }
 
-static int _call(lua_State *L, Methods_t method, int nargs, int nresults)
+static int _call(lua_State *L, Entry_Point_Methods_t method, int nargs, int nresults)
 {
     int index = METHOD_STACK_INDEX(method); // T O F1 .. Fn
     if (lua_isnil(L, index)) {

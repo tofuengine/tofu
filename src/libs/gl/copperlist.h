@@ -30,7 +30,7 @@
 #include "program.h"
 #include "surface.h"
 
-typedef struct _GL_Copperlist_t { // FIXME: rename to something better!!!
+typedef struct GL_Copperlist_s { // FIXME: rename to something better!!!
     GL_Palette_t *palette;
     GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
     GL_Program_t *program;

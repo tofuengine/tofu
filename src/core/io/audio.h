@@ -31,12 +31,12 @@
 
 #include <stdbool.h>
 
-typedef struct _Audio_Configuration_t {
+typedef struct Audio_Configuration_s {
     int device_index;
     float master_volume;
 } Audio_Configuration_t;
 
-typedef struct _Audio_t {
+typedef struct Audio_s {
     Audio_Configuration_t configuration;
 
     ma_context context;

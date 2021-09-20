@@ -30,7 +30,7 @@
 
 #include <stdbool.h>
 
-typedef struct _Shader_t {
+typedef struct Shader_s {
     GLuint id;
     GLint *locations;
 } Shader_t;

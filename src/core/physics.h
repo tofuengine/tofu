@@ -29,11 +29,11 @@
 
 #include <stdbool.h>
 
-typedef struct _Physics_Configuration_t {
+typedef struct Physics_Configuration_s {
     const char *path;
 } Physics_Configuration_t;
 
-typedef struct _Physics_t {
+typedef struct Physics_s {
     Physics_Configuration_t configuration;
 
     cpSpace *space;

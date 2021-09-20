@@ -38,7 +38,7 @@ typedef enum _Warning_States_t {
     WARNING_STATE_APPENDING
 } Warning_States_t;
 
-typedef struct _Interpreter_t {
+typedef struct Interpreter_s {
     lua_State *state;
     Warning_States_t warning_state;
 #if __VM_GARBAGE_COLLECTOR_MODE__ == GC_CONTINUOUS

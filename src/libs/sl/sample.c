@@ -46,7 +46,7 @@
 
 #define LOG_CONTEXT "sl-sample"
 
-typedef struct _Sample_t {
+typedef struct Sample_s {
     Source_VTable_t vtable;
 
     SL_Props_t *props;

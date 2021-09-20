@@ -35,13 +35,13 @@
 #define GL_MAX_PALETTE_COLORS       256
 
 #ifdef __PALETTE_COLOR_MEMOIZATION__
-typedef struct _color_pixel_pair_t {
+typedef struct color_pixel_pair_s {
     GL_Color_t key;
     GL_Pixel_t value;
 } color_pixel_pair_t;
 #endif  /* __PALETTE_COLOR_MEMOIZATION__ */
 
-typedef struct _GL_Palette_t {
+typedef struct GL_Palette_s {
     GL_Color_t colors[GL_MAX_PALETTE_COLORS];
     size_t size;
 #ifdef __PALETTE_COLOR_MEMOIZATION__

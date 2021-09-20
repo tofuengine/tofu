@@ -36,26 +36,26 @@ typedef int8_t GL_Bool_t;
 
 typedef int GL_Cell_t;
 
-typedef struct _GL_Point_t {
+typedef struct GL_Point_s {
     int x, y;
 } GL_Point_t;
 
-typedef struct _GL_Size_t {
+typedef struct GL_Size_s {
     size_t width, height;
 } GL_Size_t;
 
-typedef struct _GL_Rectangle_t {
+typedef struct GL_Rectangle_s {
     int x, y;
     size_t width, height;
 } GL_Rectangle_t;
 
-typedef struct _GL_Quad_t {
+typedef struct GL_Quad_s {
     int x0, y0;
     int x1, y1;
 } GL_Quad_t;
 
 #pragma pack(push, 1)
-typedef struct _GL_Color_t {
+typedef struct GL_Color_s {
 #if PLATFORM_ID == PLATFORM_WINDOWS
     uint8_t b, g, r, a;
 #else
@@ -65,7 +65,7 @@ typedef struct _GL_Color_t {
 #pragma pack(pop)
 
 #pragma pack(push, 1)
-typedef struct _GL_Rectangle_u32_t {
+typedef struct GL_Rectangle_u32_s {
     uint32_t x, y;
     uint32_t width, height;
 } GL_Rectangle_u32_t;

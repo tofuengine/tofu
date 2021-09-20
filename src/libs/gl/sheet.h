@@ -30,7 +30,7 @@
 #include "common.h"
 #include "surface.h"
 
-typedef struct _GL_Sheet_t {
+typedef struct GL_Sheet_s {
     const GL_Surface_t *atlas;
 
     GL_Rectangle_t *cells;

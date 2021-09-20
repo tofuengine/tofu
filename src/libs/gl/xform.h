@@ -42,12 +42,12 @@ typedef enum _GL_XForm_Registers_t {
     GL_XForm_Registers_t_CountOf
 } GL_XForm_Registers_t;
 
-typedef struct _GL_XForm_State_Operation_t {
+typedef struct GL_XForm_State_Operation_s {
     GL_XForm_Registers_t id;
     float value;
 } GL_XForm_State_Operation_t;
 
-typedef struct _GL_XForm_Table_Entry_t {
+typedef struct GL_XForm_Table_Entry_s {
     int scan_line;
     GL_XForm_State_Operation_t operations[GL_XForm_Registers_t_CountOf]; // At most, change all the registries.
     size_t count;
@@ -63,7 +63,7 @@ typedef enum _GL_XForm_Wraps_t {
     GL_XForm_Wraps_t_CountOf
 } GL_XForm_Wraps_t;
 
-typedef struct _GL_XForm_t {
+typedef struct GL_XForm_s {
     float registers[GL_XForm_Registers_t_CountOf];
     GL_XForm_Wraps_t wrap;
     GL_XForm_Table_Entry_t *table;

@@ -41,7 +41,7 @@ static void _log_callback(ma_context *context, ma_device *device, ma_uint32 log_
     Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "[%p:%p] %d %s", context, device, log_level, message);
 }
 
-typedef struct _enum_callback_closure_t {
+typedef struct enum_callback_closure_s {
     int current_index;
     int device_index;
     ma_device_id device_id;

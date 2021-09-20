@@ -28,7 +28,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-typedef struct _xor_context_t {
+typedef struct xor_context_s {
     uint8_t K[256];
     size_t n, i;
 } xor_context_t;

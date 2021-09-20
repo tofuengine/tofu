@@ -38,7 +38,7 @@ typedef enum _Storage_Resource_Types_t {
     Storage_Resource_Types_t_CountOf
 } Storage_Resource_Types_t;
 
-typedef struct _Storage_Resource_t {
+typedef struct Storage_Resource_s {
     char *name; // Resources are references by a name, which can is (base-path) relative.
     Storage_Resource_Types_t type;
     union {
@@ -59,12 +59,12 @@ typedef struct _Storage_Resource_t {
     bool allocated;
 } Storage_Resource_t;
 
-typedef struct _Storage_Configuration_t {
+typedef struct Storage_Configuration_s {
     const char *path;
 } Storage_Configuration_t;
 
 
-typedef struct _Storage_t {
+typedef struct Storage_s {
     Storage_Configuration_t configuration;
 
     struct {

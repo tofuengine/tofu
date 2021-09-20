@@ -29,7 +29,7 @@
 
 typedef float (*Easing_Function_t)(float ratio);
 
-typedef struct _Easing_t {
+typedef struct Easing_s {
     const char *id;
     Easing_Function_t function;
 } Easing_t;

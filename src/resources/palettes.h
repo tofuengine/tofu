@@ -27,7 +27,7 @@
 
 #include <libs/gl/gl.h>
 
-typedef struct _Palette_t {
+typedef struct Palette_s {
     GL_Color_t colors[GL_MAX_PALETTE_COLORS];
     size_t size;
 } Palette_t;

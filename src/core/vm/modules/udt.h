@@ -57,7 +57,7 @@ typedef enum _Object_Types_t {
     OBJECT_TYPE_XFORM
 } Object_Types_t;
 
-typedef struct _Canvas_Object_t {
+typedef struct Canvas_Object_s {
     GL_Surface_t *surface;
     bool allocated;
     struct {
@@ -65,7 +65,7 @@ typedef struct _Canvas_Object_t {
     } color;
 } Canvas_Object_t;
 
-typedef struct _Bank_Object_t {
+typedef struct Bank_Object_s {
     struct {
         const Canvas_Object_t *instance;
         luaX_Reference reference;
@@ -73,7 +73,7 @@ typedef struct _Bank_Object_t {
     GL_Sheet_t *sheet;
 } Bank_Object_t;
 
-typedef struct _Font_Object_t {
+typedef struct Font_Object_s {
     struct {
         const Canvas_Object_t *instance;
         luaX_Reference reference;
@@ -82,7 +82,7 @@ typedef struct _Font_Object_t {
     GL_Cell_t glyphs[256];
 } Font_Object_t;
 
-typedef struct _Batch_Object_t {
+typedef struct Batch_Object_s {
     struct {
         const Bank_Object_t *instance;
         luaX_Reference reference;
@@ -90,15 +90,15 @@ typedef struct _Batch_Object_t {
     GL_Batch_t *batch;
 } Batch_Object_t;
 
-typedef struct _XForm_Object_t {
+typedef struct XForm_Object_s {
     GL_XForm_t *xform;
 } XForm_Object_t;
 
-typedef struct _Palette_Object_t {
+typedef struct Palette_Object_s {
     GL_Palette_t *palette;
 } Palette_Object_t;
 
-typedef struct _Program_Object_t {
+typedef struct Program_Object_s {
     GL_Program_t *program;
 } Program_Object_t;
 
@@ -108,13 +108,13 @@ typedef int Cell_t;
 typedef float Cell_t;
 #endif
 
-typedef struct _Grid_Object_t {
+typedef struct Grid_Object_s {
     size_t width, height;
     Cell_t *data;
     size_t data_size;
 } Grid_Object_t;
 
-typedef struct _Source_Object_t {
+typedef struct Source_Object_s {
     FS_Handle_t *handle;
     SL_Source_t *source;
 } Source_Object_t;
@@ -126,7 +126,7 @@ typedef enum _Body_Kinds_t {
     Body_Kinds_t_CountOf
 } Body_Kinds_t;
 
-typedef struct _Body_Object_t {
+typedef struct Body_Object_s {
     cpBody *body;
     cpShape *shape;
     Body_Kinds_t kind;

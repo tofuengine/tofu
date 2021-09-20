@@ -26,7 +26,7 @@
 
 #include <strings.h>
 
-typedef struct _Resource_Palette_t {
+typedef struct Resource_Palette_s {
     const char *id;
     Palette_t palette;
 } Resource_Palette_t;

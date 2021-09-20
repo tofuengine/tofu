@@ -58,7 +58,7 @@ typedef enum _Input_Buttons_t {
     Input_Buttons_t_CountOf
 } Input_Buttons_t;
 
-typedef struct _Input_Button_State_t {
+typedef struct Input_Button_State_s {
     uint8_t was : 1; // Transient buffer.
     uint8_t is : 1; // Ditto.
     uint8_t down : 1;
@@ -68,13 +68,13 @@ typedef struct _Input_Button_State_t {
     uint8_t : 2;
 } Input_Button_State_t;
 
-typedef struct _Input_Button_t {
+typedef struct Input_Button_s {
     Input_Button_State_t state;
     float period;
     float time;
 } Input_Button_t;
 
-typedef struct _Input_Cursor_t {
+typedef struct Input_Cursor_s {
     float x, y;
     struct {
         float x0, y0;
@@ -90,12 +90,12 @@ typedef enum _Input_Sticks_t {
     Input_Sticks_t_CountOf
 } Input_Sticks_t;
 
-typedef struct _Input_Stick_t {
+typedef struct Input_Stick_s {
     float x, y;
     float angle, magnitude;
 } Input_Stick_t;
 
-typedef struct _Input_Triggers_t {
+typedef struct Input_Triggers_s {
     float left, right;
 } Input_Triggers_t;
 
@@ -111,7 +111,7 @@ typedef enum _Input_Handlers_t {
     Input_Handlers_t_CountOf
 } Input_Handlers_t;
 
-typedef struct _Input_Configuration_t {
+typedef struct Input_Configuration_s {
     const char *mappings;
     struct {
         bool enabled;
@@ -142,7 +142,7 @@ typedef struct _Input_Configuration_t {
 
 #define INPUT_MODES_COUNT   3
 
-typedef struct _Input_t {
+typedef struct Input_s {
     Input_Configuration_t configuration;
 
     GLFWwindow *window;

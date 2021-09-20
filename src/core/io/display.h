@@ -41,7 +41,7 @@
 
 #include "display/shader.h"
 
-typedef struct _Display_Configuration_t {
+typedef struct Display_Configuration_s {
     GLFWimage icon;
     struct {
         const char *title;
@@ -53,7 +53,7 @@ typedef struct _Display_Configuration_t {
     const char *effect;
 } Display_Configuration_t;
 
-typedef struct _Display_t {
+typedef struct Display_s {
     Display_Configuration_t configuration;
 
     GLFWwindow *window;

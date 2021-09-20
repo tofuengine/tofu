@@ -33,7 +33,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-typedef struct _SL_Props_t {
+typedef struct SL_Props_s {
     const SL_Context_t *context;
     size_t channels;
 

@@ -30,13 +30,13 @@
 
 #include <stdbool.h>
 
-typedef struct _GL_State_t { // FIXME: rename to `GL_State_s`
+typedef struct GL_State_s { // FIXME: rename to `GL_State_s`
     GL_Quad_t clipping_region;
     GL_Pixel_t shifting[GL_MAX_PALETTE_COLORS];
     GL_Bool_t transparent[GL_MAX_PALETTE_COLORS];
 } GL_State_t;
 
-typedef struct _GL_Surface_t {
+typedef struct GL_Surface_s {
     size_t width, height; // FIXME: use `GL_Size_t`.
     GL_Pixel_t *data;
     size_t data_size;

@@ -29,7 +29,7 @@
 
 #define SYSINFO_NAME_LENGTH 128
 
-typedef struct _System_Information_t {
+typedef struct System_Information_s {
     char system[SYSINFO_NAME_LENGTH];
     char release[SYSINFO_NAME_LENGTH];
     char version[SYSINFO_NAME_LENGTH];

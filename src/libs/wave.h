@@ -27,7 +27,7 @@
 
 typedef float (*Wave_Function_t)(float ratio);
 
-typedef struct _Wave_t {
+typedef struct Wave_s {
     const char *name;
     Wave_Function_t function;
 } Wave_t;

@@ -27,7 +27,7 @@
 
 #include <libs/luax.h>
 
-typedef struct _Map_Entry_t {
+typedef struct Map_Entry_s {
     const char *key;
     int value;
 } Map_Entry_t;

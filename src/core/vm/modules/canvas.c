@@ -891,7 +891,7 @@ static int canvas_poke_4onnn_0(lua_State *L)
     return 0;
 }
 
-typedef struct _Process_Closure_t {
+typedef struct Process_Closure_s {
     const Interpreter_t *interpreter;
     lua_State *L;
     int index;

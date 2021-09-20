@@ -27,7 +27,7 @@
 #include <stdint.h>
 #include <strings.h>
 
-typedef struct _Resource_Blob_t {
+typedef struct Resource_Blob_s {
     const char *id;
     Blob_t data;
 } Resource_Blob_t;
