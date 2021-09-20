@@ -269,6 +269,11 @@ physics: $(TARGET)
 	@$(ANALYZER) $(AFLAGS) ./demos/physics
 	@./$(TARGET) --path=./demos/physics
 
+bump: $(TARGET)
+	@echo "Launching *bump* application!"
+	@$(ANALYZER) $(AFLAGS) ./demos/bump
+	@./$(TARGET) --path=./demos/bump
+
 threedee: $(TARGET)
 	@echo "Launching *threedee* application!"
 	@$(ANALYZER) $(AFLAGS) ./demos/threedee
