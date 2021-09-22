@@ -100,9 +100,6 @@ extern const char *Storage_get_local_path(const Storage_t *storage);
 extern Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_Resource_Types_t type);
 extern bool Storage_store(Storage_t *storage, const char *name, const Storage_Resource_t *resource);
 
-extern void Storage_lock(Storage_Resource_t *resource);
-extern void Storage_unlock(Storage_Resource_t *resource);
-
 extern FS_Handle_t *Storage_open(const Storage_t *storage, const char *name); // Use `FS` API to control and close it.
 
 extern bool Storage_update(Storage_t *storage, float delta_time);
