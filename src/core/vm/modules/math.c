@@ -30,11 +30,9 @@
 #include <libs/luax.h>
 #include <libs/sincos.h>
 #include <libs/wave.h>
+#include <libs/noise.h>
 #include <libs/imath.h>
 #include <libs/fmath.h>
-
-#include <perlin-noise/noise1234.h>
-#include <perlin-noise/simplexnoise1234.h>
 
 #include <stdint.h>
 #include <math.h>
@@ -57,7 +55,7 @@ static int math_finvsqrt_1n_1n(lua_State *L);
 static int math_rotate_3nnn_2nn(lua_State *L);
 static int math_wave_v_1f(lua_State *L);
 static int math_tweener_v_1f(lua_State *L);
-static int math_noise_v_1f(lua_State *L);
+static int math_noise_1s_1f(lua_State *L);
 
 static const char _math_lua[] = {
 #include "math.inc"
@@ -88,7 +86,7 @@ int math_loader(lua_State *L)
             { "rotate", math_rotate_3nnn_2nn },
             { "wave", math_wave_v_1f },
             { "tweener", math_tweener_v_1f },
-            { "noise", math_noise_v_1f },
+            { "noise", math_noise_1s_1f },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -564,108 +562,40 @@ static int math_tweener_v_1f(lua_State *L)
     LUAX_OVERLOAD_END
 }
 
-static int math_noise_2sn_1f(lua_State *L)
+static int _noise_3nNN_1n(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
         LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
+        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
     LUAX_SIGNATURE_END
-    const char *type = LUAX_STRING(L, 1);
-    float x = LUAX_NUMBER(L, 2);
+    float x = LUAX_NUMBER(L, 1);
+    float y = LUAX_OPTIONAL_NUMBER(L, 2, 0.0f);
+    float z = LUAX_OPTIONAL_NUMBER(L, 3, 0.0f);
 
-    if (type[0] == 's') {
-        const float value = snoise1(x);
-        lua_pushnumber(L, (lua_Number)value);
-    } else
-    if (type[0] == 'p') {
-        const float value = noise1(x);
-        lua_pushnumber(L, (lua_Number)value);
-    }
+    const Noise_t *noise = (const Noise_t *)LUAX_USERDATA(L, lua_upvalueindex(1));
+
+    float value = noise->function(x, y, z);
+
+    lua_pushnumber(L, (lua_Number)value);
 
     return 1;
 }
 
-static int math_noise_3snn_1f(lua_State *L)
+static int math_noise_1s_1f(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
         LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
     LUAX_SIGNATURE_END
     const char *type = LUAX_STRING(L, 1);
-    float x = LUAX_NUMBER(L, 2);
-    float y = LUAX_NUMBER(L, 3);
 
-    if (type[0] == 's') {
-        const float value = snoise2(x, y);
-        lua_pushnumber(L, (lua_Number)value);
-    } else
-    if (type[0] == 'p') {
-        const float value = noise2(x, y);
-        lua_pushnumber(L, (lua_Number)value);
+    const Noise_t *noise  = noise_from_type(type);
+    if (!noise) {
+        return luaL_error(L, "unknown noise `%s`", type);
     }
 
-    return 1;
-}
-
-static int math_noise_4snnn_1f(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    const char *type = LUAX_STRING(L, 1);
-    float x = LUAX_NUMBER(L, 2);
-    float y = LUAX_NUMBER(L, 3);
-    float z = LUAX_NUMBER(L, 4);
-
-    if (type[0] == 's') {
-        const float value = snoise3(x, y, z);
-        lua_pushnumber(L, (lua_Number)value);
-    } else
-    if (type[0] == 'p') {
-        const float value = noise3(x, y, z);
-        lua_pushnumber(L, (lua_Number)value);
-    }
+    lua_pushlightuserdata(L, (void *)noise);
+    lua_pushcclosure(L, _noise_3nNN_1n, 1);
 
     return 1;
-}
-
-static int math_noise_5snnnn_1f(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    const char *type = LUAX_STRING(L, 1);
-    float x = LUAX_NUMBER(L, 2);
-    float y = LUAX_NUMBER(L, 3);
-    float z = LUAX_NUMBER(L, 4);
-    float w = LUAX_NUMBER(L, 5);
-
-    if (type[0] == 's') {
-        const float value = snoise4(x, y, z, w);
-        lua_pushnumber(L, (lua_Number)value);
-    } else
-    if (type[0] == 'p') {
-        const float value = noise4(x, y, z, w);
-        lua_pushnumber(L, (lua_Number)value);
-    }
-
-    return 1;
-}
-
-static int math_noise_v_1f(lua_State *L)
-{
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(2, math_noise_2sn_1f)
-        LUAX_OVERLOAD_ARITY(3, math_noise_3snn_1f)
-        LUAX_OVERLOAD_ARITY(4, math_noise_4snnn_1f)
-        LUAX_OVERLOAD_ARITY(5, math_noise_5snnnn_1f)
-    LUAX_OVERLOAD_END
 }
