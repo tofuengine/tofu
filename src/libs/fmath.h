@@ -50,11 +50,11 @@
 #ifdef __FAST_FLOAT_MATH__
 #define FFLOOR(x)           (ffloor((x)))
 #define FCEIL(x )           (fceil((x)))
-#define FROUND(x)           (fround((x)))
+#define FROUND(x)           (ffloor((x) + 0.5f))
 #else
 #define FFLOOR(x)           (floorf((x)))
 #define FCEIL(x )           (ceilf((x)))
-#define FROUND(x)           (floorf((x) + 0.5f))
+#define FROUND(x)           (roundf((x)))
 #endif
 
 extern int fsignun(float x);
@@ -68,7 +68,6 @@ extern float fsmootherstep(float edge0, float edge1, float x);
 #ifdef __FAST_INTEGER_MATH__
 extern float ffloor(float x);
 extern float fceil(float x);
-extern float fround(float x);
 #endif
 
 #endif  /* __LIBS_FMATH_H__ */

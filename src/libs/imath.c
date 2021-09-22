@@ -45,34 +45,16 @@ int imax(int a, int b)
 }
 
 #ifdef __FAST_INTEGER_MATH__
-// Much faster than (int)floor(f)
-// Profiling showed floor() to be a sizable performance hog
-#ifdef __SIMPLE__
-int ifloor(float x)
-{
-    const int i = (int)x;
-    return (x < 0.0f && x != (float)i ? i - 1 : i);
-}
-
-int iceil(float x)
-{
-    const int i = (int)x;
-    return (x > 0.0f && x != (float)i ? i + 1 : i);
-}
 #else
 int ifloor(float x)
 {
-    return (int)x <= x ? (int)x : (int)x - 1;
+    const int i = (int)x;
+    return i - ((float)i > x);
 }
 
 int iceil(float x)
 {
-    return (int)x <= x ? (int)x + 1 : (int)x;
-}
-#endif
-
-int iround(float x)
-{
-    return x >= 0.0f ? (int)(x + 0.5f) : (int)(x - 0.5f); 
+    const int i = (int)x;
+    return i + (x > (float)i);
 }
 #endif

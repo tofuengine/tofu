@@ -43,7 +43,7 @@
 #ifdef __FAST_INTEGER_MATH__
 #define IFLOORF(x)      (ifloor((x)))
 #define ICEILF(x)       (iceil((x)))
-#define IROUNDF(x)      (iround((x)))
+#define IROUNDF(x)      (ifloor((x) + 0.5f))
 #else
 #define IFLOORF(x)      ((int)floorf((x)))
 #define ICEILF(x)       ((int)ceilf((x)))
@@ -58,7 +58,6 @@ extern int imax(int a, int b);
 #ifdef __FAST_INTEGER_MATH__
 extern int ifloor(float x);
 extern int iceil(float x);
-extern int iround(float x);
 #endif
 
 #endif  /* __LIBS_IMATH_H__ */

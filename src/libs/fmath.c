@@ -66,17 +66,13 @@ float fsmootherstep(float edge0, float edge1, float x)
 #ifdef __FAST_INTEGER_MATH__
 float ffloor(float x)
 {
-    return (float)((int)x <= x ? (int)x : (int)x - 1);
+    const int i = (int)x;
+    return (float)(i - ((float)i > x));
 }
 
 float fceil(float x)
 {
-    return (float)((int)x <= x ? (int)x + 1 : (int)x);
+    const int i = (int)x;
+    return (float)(i + (x > (float)i));
 }
-
-float fround(float x)
-{
-    return (float)(x >= 0.0f ? (int)(x + 0.5f) : (int)(x - 0.5f));
-}
-
 #endif
