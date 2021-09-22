@@ -47,9 +47,15 @@
 #define FINVLERP(v0, v1, v) (((v) - (v0)) / ((v1) - (v0)))
 #define FSTEP(e, x)         ((x) < (e) ? 0.0f : 1.0f)
 
+#ifdef __FAST_FLOAT_MATH__
+#define FFLOOR(x)           (ffloor((x)))
+#define FCEIL(x )           (fceil((x)))
+#define FROUND(x)           (fround((x)))
+#else
 #define FFLOOR(x)           (floorf((x)))
 #define FCEIL(x )           (ceilf((x)))
 #define FROUND(x)           (floorf((x) + 0.5f))
+#endif
 
 extern int fsignun(float x);
 extern float flerp(float v0, float v1, float t);
@@ -58,5 +64,11 @@ extern float fclamp(float x, float lower, float upper);
 extern float fstep(float edge, float x);
 extern float fsmoothstep(float edge0, float edge1, float x);
 extern float fsmootherstep(float edge0, float edge1, float x);
+
+#ifdef __FAST_INTEGER_MATH__
+extern float ffloor(float x);
+extern float fceil(float x);
+extern float fround(float x);
+#endif
 
 #endif  /* __LIBS_FMATH_H__ */

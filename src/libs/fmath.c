@@ -62,3 +62,21 @@ float fsmootherstep(float edge0, float edge1, float x)
     x = FCLAMP(e, 0.0f, 1.0f);
     return x * x * x * (x * (x * 6.0f - 15.0f) + 10.0f);
 }
+
+#ifdef __FAST_INTEGER_MATH__
+float ffloor(float x)
+{
+    return (float)((int)x <= x ? (int)x : (int)x - 1);
+}
+
+float fceil(float x)
+{
+    return (float)((int)x <= x ? (int)x + 1 : (int)x);
+}
+
+float fround(float x)
+{
+    return (float)(x >= 0.0f ? (int)(x + 0.5f) : (int)(x - 0.5f));
+}
+
+#endif
