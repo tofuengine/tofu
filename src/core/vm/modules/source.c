@@ -139,7 +139,7 @@ static int source_new_2sn_1o(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "handle %p opened for file `%s`", handle, name);
 
     const Map_Entry_t *entry = map_find(L, type, _types, Source_Type_t_CountOf);
-    SL_Source_t *source = _create_functions[entry->value](audio->sl, (SL_Callbacks_t){
+    SL_Source_t *source = _create_functions[entry->value](audio->context, (SL_Callbacks_t){
             .read = _handle_read,
             .seek = _handle_seek,
             .tell = _handle_tell,

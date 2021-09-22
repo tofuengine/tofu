@@ -74,11 +74,11 @@ static void _data_callback(ma_device *device, void *output, const void *input, m
 {
     Audio_t *audio = (Audio_t *)device->pUserData;
 
-    ma_mutex_lock(&audio->lock);
+    ma_mutex_lock(&audio->driver.lock);
 //    ma_silence_pcm_frames(output, frame_count, ma_format_s16, SL_CHANNELS_PER_FRAME);
 //    Log_write(LOG_LEVELS_TRACE, LOG_CONTEXT, "%d frames requested for device %p", frame_count, device);
-    SL_context_generate(audio->sl, output, frame_count);
-    ma_mutex_unlock(&audio->lock);
+    SL_context_generate(audio->context, output, frame_count);
+    ma_mutex_unlock(&audio->driver.lock);
 }
 
 static void _stop_callback(ma_device* device)
@@ -113,18 +113,18 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
             .configuration = *configuration
         };
 
-    audio->sl = SL_context_create();
-    if (!audio->sl) {
+    audio->context = SL_context_create();
+    if (!audio->context) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create the sound context");
         free(audio);
         return NULL;
     }
-    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sound context created at %p", audio->sl);
+    Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sound context created at %p", audio->context);
 
-    ma_result result = ma_mutex_init(&audio->lock);
+    ma_result result = ma_mutex_init(&audio->driver.lock);
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't create the synchronization object");
-        SL_context_destroy(audio->sl);
+        SL_context_destroy(audio->context);
         free(audio);
         return NULL;
     }
@@ -140,11 +140,11 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
             .onFree = _free
         };
 
-    result = ma_context_init(NULL, 0, &context_config, &audio->context);
+    result = ma_context_init(NULL, 0, &context_config, &audio->driver.context);
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize the audio context");
-        ma_mutex_uninit(&audio->lock);
-        SL_context_destroy(audio->sl);
+        ma_mutex_uninit(&audio->driver.lock);
+        SL_context_destroy(audio->context);
         free(audio);
         return NULL;
     }
@@ -153,21 +153,21 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     enum_callback_closure_t closure = {
             .device_index = configuration->device_index
         };
-    result = ma_context_enumerate_devices(&audio->context, _enum_callback, &closure);
+    result = ma_context_enumerate_devices(&audio->driver.context, _enum_callback, &closure);
     if (result != MA_SUCCESS || (!closure.found && configuration->device_index != -1)) {
-        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't detect audio device for context %p", &audio->context);
-        ma_mutex_uninit(&audio->lock);
-        SL_context_destroy(audio->sl);
+        Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't detect audio device for context %p", audio->driver.context);
+        ma_mutex_uninit(&audio->driver.lock);
+        SL_context_destroy(audio->context);
         free(audio);
         return NULL;
     }
 
     ma_device_config device_config = ma_device_config_init(ma_device_type_playback);
     if (configuration->device_index == -1) {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "using default device for context %p", &audio->context);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "using default device for context %p", audio->driver.context);
         device_config.playback.pDeviceID  = NULL;
     } else {
-        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "using device #%d for context %p", closure.device_index, &audio->context);
+        Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "using device #%d for context %p", closure.device_index, audio->driver.context);
         device_config.playback.pDeviceID  = &closure.device_id;
     }
 #if SL_BYTES_PER_SAMPLE == 2
@@ -182,52 +182,52 @@ Audio_t *Audio_create(const Audio_Configuration_t *configuration)
     device_config.pUserData               = (void *)audio;
     device_config.noPreZeroedOutputBuffer = MA_FALSE;
 
-    result = ma_device_init(&audio->context, &device_config, &audio->device);
+    result = ma_device_init(&audio->driver.context, &device_config, &audio->driver.device);
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_FATAL, LOG_CONTEXT, "can't initialize the audio device");
-        ma_context_uninit(&audio->context);
-        ma_mutex_uninit(&audio->lock);
-        SL_context_destroy(audio->sl);
+        ma_context_uninit(&audio->driver.context);
+        ma_mutex_uninit(&audio->driver.lock);
+        SL_context_destroy(audio->context);
         free(audio);
         return NULL;
     }
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio device initialized w/ %dHz, %d channel(s), %d bytes per sample", SL_FRAMES_PER_SECOND, SL_CHANNELS_PER_FRAME, SL_BYTES_PER_SAMPLE);
 
-    ma_device_set_master_volume(&audio->device, configuration->master_volume); // Set the initial volume.
+    ma_device_set_master_volume(&audio->driver.device, configuration->master_volume); // Set the initial volume.
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio master-volume set to %.2f", configuration->master_volume);
 
 #ifndef __AUDIO_START_AND_STOP__
-    result = ma_device_start(&audio->device);
+    result = ma_device_start(&audio->driver.device);
     if (result != MA_SUCCESS) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't start the audio device");
-        ma_device_uninit(&audio->device);
-        ma_context_uninit(&audio->context);
-        ma_mutex_uninit(&audio->lock);
-        SL_context_destroy(audio->sl);
+        ma_device_uninit(&audio->driver.device);
+        ma_context_uninit(audio->driver.context);
+        ma_mutex_uninit(&audio->driver.lock);
+        SL_context_destroy(audio->context);
         free(audio);
         return NULL;
     }
 #endif
 
     Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "miniaudio: v%s", ma_version_string());
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "device-name: %s", audio->device.playback.name);
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "back-end: %s", ma_get_backend_name(audio->context.backend));
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "format: %s / %s", ma_get_format_name(audio->device.playback.format), ma_get_format_name(audio->device.playback.internalFormat));
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "channels: %d / %d", audio->device.playback.channels, audio->device.playback.internalChannels);
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "sample-rate: %d / %d", audio->device.sampleRate, audio->device.playback.internalSampleRate);
-    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "period-in-frames: %d", audio->device.playback.internalPeriodSizeInFrames);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "device-name: %s", audio->driver.device.playback.name);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "back-end: %s", ma_get_backend_name(audio->driver.context.backend));
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "format: %s / %s", ma_get_format_name(audio->driver.device.playback.format), ma_get_format_name(audio->driver.device.playback.internalFormat));
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "channels: %d / %d", audio->driver.device.playback.channels, audio->driver.device.playback.internalChannels);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "sample-rate: %d / %d", audio->driver.device.sampleRate, audio->driver.device.playback.internalSampleRate);
+    Log_write(LOG_LEVELS_INFO, LOG_CONTEXT, "period-in-frames: %d", audio->driver.device.playback.internalPeriodSizeInFrames);
 
     return audio;
 }
 
 void Audio_destroy(Audio_t *audio)
 {
-    ma_device_uninit(&audio->device); // Device is automatically stopped on deinitialization.
-    ma_context_uninit(&audio->context);
-    ma_mutex_uninit(&audio->lock);
+    ma_device_uninit(&audio->driver.device); // Device is automatically stopped on deinitialization.
+    ma_context_uninit(&audio->driver.context);
+    ma_mutex_uninit(&audio->driver.lock);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "audio deinitialized");
 
-    SL_context_destroy(audio->sl);
+    SL_context_destroy(audio->context);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "sound context destroyed");
 
     free(audio);
@@ -236,118 +236,118 @@ void Audio_destroy(Audio_t *audio)
 
 void Audio_halt(Audio_t *audio)
 {
-    ma_mutex_lock(&audio->lock);
-    SL_context_halt(audio->sl);
+    ma_mutex_lock(&audio->driver.lock);
+    SL_context_halt(audio->context);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "halted, no more sources active");
-    ma_mutex_unlock(&audio->lock);
+    ma_mutex_unlock(&audio->driver.lock);
 }
 
 void Audio_set_volume(Audio_t *audio, float volume)
 {
-//    ma_mutex_lock(&audio->lock);
-    ma_device_set_master_volume(&audio->device, volume);
-//    ma_mutex_unlock(&audio->lock);
+//    ma_mutex_lock(&audio->driver.lock);
+    ma_device_set_master_volume(&audio->driver.device, volume);
+//    ma_mutex_unlock(&audio->driver.lock);
 }
 
 void Audio_set_mix(Audio_t *audio, size_t group_id, SL_Mix_t mix)
 {
-    ma_mutex_lock(&audio->lock);
-    SL_context_set_mix(audio->sl, group_id, mix);
-    ma_mutex_unlock(&audio->lock);
+    ma_mutex_lock(&audio->driver.lock);
+    SL_context_set_mix(audio->context, group_id, mix);
+    ma_mutex_unlock(&audio->driver.lock);
 }
 
 void Audio_set_pan(Audio_t *audio, size_t group_id, float pan)
 {
-    ma_mutex_lock(&audio->lock);
-    SL_context_set_pan(audio->sl, group_id, pan);
-    ma_mutex_unlock(&audio->lock);
+    ma_mutex_lock(&audio->driver.lock);
+    SL_context_set_pan(audio->context, group_id, pan);
+    ma_mutex_unlock(&audio->driver.lock);
 }
 
 void Audio_set_balance(Audio_t *audio, size_t group_id, float balance)
 {
-    ma_mutex_lock(&audio->lock);
-    SL_context_set_balance(audio->sl, group_id, balance);
-    ma_mutex_unlock(&audio->lock);
+    ma_mutex_lock(&audio->driver.lock);
+    SL_context_set_balance(audio->context, group_id, balance);
+    ma_mutex_unlock(&audio->driver.lock);
 }
 
 void Audio_set_gain(Audio_t *audio, size_t group_id, float gain)
 {
-    ma_mutex_lock(&audio->lock);
-    SL_context_set_gain(audio->sl, group_id, gain);
-    ma_mutex_unlock(&audio->lock);
+    ma_mutex_lock(&audio->driver.lock);
+    SL_context_set_gain(audio->context, group_id, gain);
+    ma_mutex_unlock(&audio->driver.lock);
 }
 
 float Audio_get_volume(const Audio_t *audio)
 {
-//    ma_mutex_lock(&audio->lock);
+//    ma_mutex_lock(&audio->driver.lock);
     float volume;
-    ma_result result = ma_device_get_master_volume((ma_device *)&audio->device, &volume);
+    ma_result result = ma_device_get_master_volume((ma_device *)&audio->driver.device, &volume);
     if (result != MA_SUCCESS) {
         return 0.0f;
     }
     return volume;
-//    ma_mutex_unlock(&audio->lock);
+//    ma_mutex_unlock(&audio->driver.lock);
 }
 
 SL_Mix_t Audio_get_mix(const Audio_t *audio, size_t group_id)
 {
-    ma_mutex_lock((ma_mutex *)&audio->lock);
-    SL_Mix_t mix = SL_context_get_group(audio->sl, group_id)->mix;
-    ma_mutex_unlock((ma_mutex *)&audio->lock);
+    ma_mutex_lock((ma_mutex *)&audio->driver.lock);
+    SL_Mix_t mix = SL_context_get_group(audio->context, group_id)->mix;
+    ma_mutex_unlock((ma_mutex *)&audio->driver.lock);
     return mix;
 }
 
 float Audio_get_gain(const Audio_t *audio, size_t group_id)
 {
-    ma_mutex_lock((ma_mutex *)&audio->lock);
-    float gain = SL_context_get_group(audio->sl, group_id)->gain;
-    ma_mutex_unlock((ma_mutex *)&audio->lock);
+    ma_mutex_lock((ma_mutex *)&audio->driver.lock);
+    float gain = SL_context_get_group(audio->context, group_id)->gain;
+    ma_mutex_unlock((ma_mutex *)&audio->driver.lock);
     return gain;
 }
 
 void Audio_track(Audio_t *audio, SL_Source_t *source, bool reset)
 {
-    ma_mutex_lock(&audio->lock);
+    ma_mutex_lock(&audio->driver.lock);
     bool success = reset ? SL_source_reset(source) : true; // If the source can't be reset, it won't be tracked.
     if (success) {
-        SL_context_track(audio->sl, source);
+        SL_context_track(audio->context, source);
 #ifdef DEBUG
-        size_t count = SL_context_count_tracked(audio->sl);
+        size_t count = SL_context_count_tracked(audio->context);
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p tracked, %d source(s) active", source, count);
 #endif
     } else {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't reset source %p, won't be tracked", source);
     }
-    ma_mutex_unlock(&audio->lock);
+    ma_mutex_unlock(&audio->driver.lock);
 }
 
 void Audio_untrack(Audio_t *audio, SL_Source_t *source)
 {
-    ma_mutex_lock(&audio->lock);
-    SL_context_untrack(audio->sl, source);
+    ma_mutex_lock(&audio->driver.lock);
+    SL_context_untrack(audio->context, source);
 #ifdef DEBUG
-    size_t count = SL_context_count_tracked(audio->sl);
+    size_t count = SL_context_count_tracked(audio->context);
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "source %p untracked, %d source(s) active", source, count);
 #endif
-    ma_mutex_unlock(&audio->lock);
+    ma_mutex_unlock(&audio->driver.lock);
 }
 
 bool Audio_is_tracked(const Audio_t *audio, SL_Source_t *source)
 {
-    ma_mutex_lock((ma_mutex *)&audio->lock);
-    bool is_tracked = SL_context_is_tracked(audio->sl, source);
-    ma_mutex_unlock((ma_mutex *)&audio->lock);
+    ma_mutex_lock((ma_mutex *)&audio->driver.lock);
+    bool is_tracked = SL_context_is_tracked(audio->context, source);
+    ma_mutex_unlock((ma_mutex *)&audio->driver.lock);
     return is_tracked;
 }
 
 bool Audio_update(Audio_t *audio, float delta_time)
 {
-    ma_mutex_lock(&audio->lock);
-    bool updated = SL_context_update(audio->sl, delta_time);
+    ma_mutex_lock(&audio->driver.lock);
+    bool updated = SL_context_update(audio->context, delta_time);
 #ifdef __AUDIO_START_AND_STOP__
-    size_t count = SL_context_count_tracked(audio->sl);
+    size_t count = SL_context_count_tracked(audio->context);
 #endif
-    ma_mutex_unlock(&audio->lock);
+    ma_mutex_unlock(&audio->driver.lock);
 
     if (!updated) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't update context");
@@ -355,10 +355,10 @@ bool Audio_update(Audio_t *audio, float delta_time)
     }
 
 #ifdef __AUDIO_START_AND_STOP__
-    const bool is_started = ma_device_is_started(&audio->device);
+    const bool is_started = ma_device_is_started(&audio->driver.device);
     if (!is_started && count > 0) {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "%d incoming source(s), starting device", count);
-        ma_result result = ma_device_start(&audio->device);
+        ma_result result = ma_device_start(&audio->driver.device);
         if (result != MA_SUCCESS) {
             Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't start the audio device");
             return false;
@@ -366,7 +366,7 @@ bool Audio_update(Audio_t *audio, float delta_time)
     } else
     if (is_started && count == 0) {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "no more sources, stopping device");
-        ma_result result = ma_device_stop(&audio->device);
+        ma_result result = ma_device_stop(&audio->driver.device);
         if (result != MA_SUCCESS) {
             Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't stop the audio device");
             return false;
