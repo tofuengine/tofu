@@ -49,6 +49,8 @@ typedef struct GL_Surface_s {
 
 typedef void (*GL_Surface_Callback_t)(void *user_data, GL_Surface_t *surface, const void *pixels); // RGBA888 format.
 
+typedef GL_Pixel_t (*GL_Scan_Callback_t)(void *user_data, GL_Point_t position, GL_Pixel_t index);
+
 typedef GL_Pixel_t (*GL_Process_Callback_t)(void *user_data, GL_Point_t position, GL_Pixel_t from, GL_Pixel_t to);
 
 // TODO: rename decode to convert/grab.
@@ -70,6 +72,7 @@ extern GL_Pixel_t GL_surface_peek(const GL_Surface_t *surface, GL_Point_t positi
 extern void GL_surface_poke(const GL_Surface_t *surface, GL_Point_t position, GL_Pixel_t index);
 
 extern void GL_surface_fill(const GL_Surface_t *surface, GL_Point_t seed, GL_Pixel_t index);
+extern void GL_surface_scan(const GL_Surface_t *surface, GL_Rectangle_t area, GL_Scan_Callback_t callback, void *user_data);
 
 extern void GL_surface_process(const GL_Surface_t *surface, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, GL_Process_Callback_t callback, void *user_data);
 extern void GL_surface_copy(const GL_Surface_t *surface, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area);

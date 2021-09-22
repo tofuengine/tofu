@@ -64,6 +64,7 @@ static int canvas_line_6onnnnN_0(lua_State *L);
 // static int canvas_tline_6onnnnonnnn_0(lua_State *L);
 static int canvas_polyline_3otN_0(lua_State *L);
 static int canvas_fill_4onnN_0(lua_State *L);
+static int canvas_scan_v_0(lua_State *L);
 static int canvas_triangle_9osnnnnnnN_0(lua_State *L);
 static int canvas_rectangle_7osnnnnN_0(lua_State *L);
 static int canvas_circle_6osnnnN_0(lua_State *L);
@@ -114,6 +115,7 @@ int canvas_loader(lua_State *L)
             { "line", canvas_line_6onnnnN_0 },
             { "polyline", canvas_polyline_3otN_0 },
             { "fill", canvas_fill_4onnN_0 },
+            { "scan", canvas_scan_v_0 },
             { "triangle", canvas_triangle_9osnnnnnnN_0 },
             { "rectangle", canvas_rectangle_7osnnnnN_0 },
             { "circle", canvas_circle_6osnnnN_0 },
@@ -743,6 +745,82 @@ static int canvas_fill_4onnN_0(lua_State *L)
     return 0;
 }
 
+typedef struct Canvas_Scan_Closure_s {
+    const Interpreter_t *interpreter;
+    lua_State *L;
+    int index;
+} Canvas_Scan_Closure_t;
+
+// FIXME: use `lua_ref()` to optimize.
+static GL_Pixel_t _scan_callback(void *user_data, GL_Point_t position, GL_Pixel_t index)
+{
+    Canvas_Scan_Closure_t *closure = (Canvas_Scan_Closure_t *)user_data;
+
+    lua_pushvalue(closure->L, closure->index); // Copy directly from stack argument, don't need to ref/unref (won't be GC-ed, in the meanwhile)
+    lua_pushinteger(closure->L, (lua_Integer)position.x);
+    lua_pushinteger(closure->L, (lua_Integer)position.y);
+    lua_pushinteger(closure->L, (lua_Integer)index);
+    Interpreter_call(closure->interpreter, 3, 1);
+
+    GL_Pixel_t pixel = (GL_Pixel_t)LUAX_INTEGER(closure->L, -1);
+
+    lua_pop(closure->L, 1);
+
+    return pixel;
+}
+
+static int canvas_scan_2of_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TFUNCTION)
+    LUAX_SIGNATURE_END
+    const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
+//    luaX_Reference callback = luaX_tofunction(L, 2);
+
+    const Interpreter_t *interpreter = (const Interpreter_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INTERPRETER));
+
+    const GL_Surface_t *surface = self->surface;
+    GL_surface_scan(surface, (GL_Rectangle_t){ .x = 0, .y = 0, .width = surface->width, .height = surface->height },
+        _scan_callback, &(Canvas_Scan_Closure_t){ .interpreter = interpreter, .L = L, .index = 2 });
+
+    return 0;
+}
+
+static int canvas_scan_6onnnnf_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+        LUAX_SIGNATURE_REQUIRED(LUA_TFUNCTION)
+    LUAX_SIGNATURE_END
+    const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
+    int x = LUAX_INTEGER(L, 2);
+    int y = LUAX_INTEGER(L, 3);
+    size_t width = (size_t)LUAX_INTEGER(L, 4);
+    size_t height = (size_t)LUAX_INTEGER(L, 5);
+//    luaX_Reference callback = luaX_tofunction(L, 6);
+
+    const Interpreter_t *interpreter = (const Interpreter_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INTERPRETER));
+
+    const GL_Surface_t *surface = self->surface;
+    GL_surface_scan(surface, (GL_Rectangle_t){ .x = x, .y = y, .width = width, .height = height },
+        _scan_callback, &(Canvas_Scan_Closure_t){ .interpreter = interpreter, .L = L, .index = 6 });
+
+    return 0;
+}
+
+static int canvas_scan_v_0(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(2, canvas_scan_2of_0)
+        LUAX_OVERLOAD_ARITY(6, canvas_scan_6onnnnf_0)
+    LUAX_OVERLOAD_END
+}
+
 static int canvas_triangle_9osnnnnnnN_0(lua_State *L)
 {
     LUAX_SIGNATURE_BEGIN(L)
@@ -891,16 +969,16 @@ static int canvas_poke_4onnn_0(lua_State *L)
     return 0;
 }
 
-typedef struct Process_Closure_s {
+typedef struct Canvas_Process_Closure_s {
     const Interpreter_t *interpreter;
     lua_State *L;
     int index;
-} Process_Closure_t;
+} Canvas_Process_Closure_t;
 
 // FIXME: use `lua_ref()` to optimize.
 static GL_Pixel_t _process_callback(void *user_data, GL_Point_t position, GL_Pixel_t from, GL_Pixel_t to)
 {
-    Process_Closure_t *closure = (Process_Closure_t *)user_data;
+    Canvas_Process_Closure_t *closure = (Canvas_Process_Closure_t *)user_data;
 
     lua_pushvalue(closure->L, closure->index); // Copy directly from stack argument, don't need to ref/unref (won't be GC-ed, in the meanwhile)
     lua_pushinteger(closure->L, (lua_Integer)position.x);
@@ -933,7 +1011,7 @@ static int canvas_process_3oof_0(lua_State *L)
     const GL_Surface_t *source = canvas->surface;
     GL_surface_process(surface, (GL_Point_t){ .x = 0, .y = 0 },
         source, (GL_Rectangle_t){ .x = 0, .y = 0, .width = source->width, .height = source->height },
-        _process_callback, &(Process_Closure_t){ .interpreter = interpreter, .L = L, .index = 3 });
+        _process_callback, &(Canvas_Process_Closure_t){ .interpreter = interpreter, .L = L, .index = 3 });
 
     return 0;
 }
@@ -959,7 +1037,7 @@ static int canvas_process_5onnof_0(lua_State *L)
     const GL_Surface_t *source = canvas->surface;
     GL_surface_process(surface, (GL_Point_t){ .x = x, .y = y },
         source, (GL_Rectangle_t){ .x = 0, .y = 0, .width = source->width, .height = source->height },
-        _process_callback, &(Process_Closure_t){ .interpreter = interpreter, .L = L, .index = 5 });
+        _process_callback, &(Canvas_Process_Closure_t){ .interpreter = interpreter, .L = L, .index = 5 });
 
     return 0;
 }
@@ -993,7 +1071,7 @@ static int canvas_process_9onnonnnnf_0(lua_State *L)
     const GL_Surface_t *source = canvas->surface;
     GL_surface_process(surface, (GL_Point_t){ .x = x, .y = y },
         source, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height },
-        _process_callback, &(Process_Closure_t){ .interpreter = interpreter, .L = L, .index = 9 });
+        _process_callback, &(Canvas_Process_Closure_t){ .interpreter = interpreter, .L = L, .index = 9 });
 
     return 0;
 }

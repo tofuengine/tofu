@@ -279,6 +279,58 @@ void GL_surface_fill(const GL_Surface_t *surface, GL_Point_t seed, GL_Pixel_t in
     arrfree(stack);
 }
 
+void GL_surface_scan(const GL_Surface_t *surface, GL_Rectangle_t area, GL_Scan_Callback_t callback, void *user_data)
+{
+    const GL_State_t *state = &surface->state.current;
+    const GL_Quad_t *clipping_region = &state->clipping_region;
+
+    GL_Quad_t drawing_region = (GL_Quad_t){
+            .x0 = area.x,
+            .y0 = area.y,
+            .x1 = area.x + (int)area.width - 1,
+            .y1 = area.y + (int)area.height - 1
+        };
+
+    if (drawing_region.x0 < clipping_region->x0) {
+        drawing_region.x0 = clipping_region->x0;
+    }
+    if (drawing_region.y0 < clipping_region->y0) {
+        drawing_region.y0 = clipping_region->y0;
+    }
+    if (drawing_region.x1 > clipping_region->x1) {
+        drawing_region.x1 = clipping_region->x1;
+    }
+    if (drawing_region.y1 > clipping_region->y1) {
+        drawing_region.y1 = clipping_region->y1;
+    }
+
+    const int width = drawing_region.x1 - drawing_region.x0 + 1;
+    const int height = drawing_region.y1 - drawing_region.y0 + 1;
+    if ((width <= 0) || (height <= 0)) { // Nothing to draw! Bail out!(can be negative due to clipping region)
+        return;
+    }
+
+    GL_Pixel_t *ddata = surface->data;
+
+    const size_t dwidth = surface->width;
+
+    const size_t dskip = dwidth - width;
+
+    GL_Pixel_t *dptr = ddata + drawing_region.y0 * dwidth + drawing_region.x0;
+
+    int y = drawing_region.y0;
+    for (int i = height; i; --i) {
+        int x = drawing_region.x0; // TODO: optimize?
+        for (int j = width; j; --j) {
+            GL_Pixel_t index = *dptr;
+            *(dptr++) = callback(user_data, (GL_Point_t){ .x = x, .y = y }, index);
+            x += 1;
+        }
+        dptr += dskip;
+        y += 1;
+    }
+}
+
 void GL_surface_process(const GL_Surface_t *surface, GL_Point_t position, const GL_Surface_t *source, GL_Rectangle_t area, GL_Process_Callback_t callback, void *user_data)
 {
     const GL_State_t *state = &surface->state.current;
@@ -333,7 +385,7 @@ void GL_surface_process(const GL_Surface_t *surface, GL_Point_t position, const 
         for (int j = width; j; --j) {
             GL_Pixel_t from = *dptr;
             GL_Pixel_t to = *(sptr++);
-            *(dptr++) = callback(user_data, (GL_Point_t){ .x = x, .y = y}, from, to);
+            *(dptr++) = callback(user_data, (GL_Point_t){ .x = x, .y = y }, from, to);
             x += 1;
         }
         sptr += sskip;
