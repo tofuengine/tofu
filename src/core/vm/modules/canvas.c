@@ -776,7 +776,7 @@ static int canvas_scan_2of_0(lua_State *L)
         LUAX_SIGNATURE_REQUIRED(LUA_TFUNCTION)
     LUAX_SIGNATURE_END
     const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
-//    luaX_Reference callback = luaX_tofunction(L, 2);
+    // idx #2: LUA_TFUNCTION
 
     const Interpreter_t *interpreter = (const Interpreter_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INTERPRETER));
 
@@ -802,7 +802,7 @@ static int canvas_scan_6onnnnf_0(lua_State *L)
     int y = LUAX_INTEGER(L, 3);
     size_t width = (size_t)LUAX_INTEGER(L, 4);
     size_t height = (size_t)LUAX_INTEGER(L, 5);
-//    luaX_Reference callback = luaX_tofunction(L, 6);
+    // idx #6: LUA_TFUNCTION
 
     const Interpreter_t *interpreter = (const Interpreter_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INTERPRETER));
 
@@ -1003,7 +1003,7 @@ static int canvas_process_3oof_0(lua_State *L)
     LUAX_SIGNATURE_END
     const Canvas_Object_t *self = (const Canvas_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_CANVAS);
     const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_OBJECT(L, 2, OBJECT_TYPE_CANVAS);
-//    luaX_Reference callback = luaX_tofunction(L, 3);
+    // idx #3: LUA_TFUNCTION
 
     const Interpreter_t *interpreter = (const Interpreter_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INTERPRETER));
 
@@ -1029,7 +1029,7 @@ static int canvas_process_5onnof_0(lua_State *L)
     int x = LUAX_INTEGER(L, 2);
     int y = LUAX_INTEGER(L, 3);
     const Canvas_Object_t *canvas = (const Canvas_Object_t *)LUAX_OBJECT(L, 4, OBJECT_TYPE_CANVAS);
-//    luaX_Reference callback = luaX_tofunction(L, 5);
+    // idx #5: LUA_TFUNCTION
 
     const Interpreter_t *interpreter = (const Interpreter_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INTERPRETER));
 
@@ -1063,7 +1063,7 @@ static int canvas_process_9onnonnnnf_0(lua_State *L)
     int oy = LUAX_INTEGER(L, 6);
     size_t width = (size_t)LUAX_INTEGER(L, 7);
     size_t height = (size_t)LUAX_INTEGER(L, 8);
-//    luaX_Reference callback = luaX_tofunction(L, 9);
+    // idx #9: LUA_TFUNCTION
 
     const Interpreter_t *interpreter = (const Interpreter_t *)LUAX_USERDATA(L, lua_upvalueindex(USERDATA_INTERPRETER));
 
