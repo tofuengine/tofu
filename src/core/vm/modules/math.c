@@ -575,7 +575,7 @@ static int _noise_3nNN_1n(lua_State *L)
 
     const Noise_t *noise = (const Noise_t *)LUAX_USERDATA(L, lua_upvalueindex(1));
 
-    float value = noise->function(x, y, z);
+    float value = (noise->function(x, y, z) + 1.0f) * 0.5f;
 
     lua_pushnumber(L, (lua_Number)value);
 
