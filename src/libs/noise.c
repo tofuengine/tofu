@@ -29,43 +29,19 @@
 
 #include <string.h>
 
-static float _perlin1d(float x, float y, float z)
-{
-    return noise1(x);
-}
-
-static float _perlin2d(float x, float y, float z)
-{
-    return noise2(x, y);
-}
-
-static float _perlin3d(float x, float y, float z)
+static float _perlin(float x, float y, float z)
 {
     return noise3(x, y, z);
 }
 
-static float _simplex1d(float x, float y, float z)
-{
-    return snoise1(x);
-}
-
-static float _simplex2d(float x, float y, float z)
-{
-    return snoise2(x, y);
-}
-
-static float _simplex3d(float x, float y, float z)
+static float _simplex(float x, float y, float z)
 {
     return snoise3(x, y, z);
 }
 
 static const Noise_t _entries[] = {
-    { "perlin-1d", _perlin1d },
-    { "perlin-2d", _perlin2d },
-    { "perlin-3d", _perlin3d },
-    { "simplex-1d", _simplex1d },
-    { "simplex-2d", _simplex2d },
-    { "simplex-3d", _simplex3d },
+    { "perlin", _perlin },
+    { "simplex", _simplex },
     { NULL, NULL }
 };
 
