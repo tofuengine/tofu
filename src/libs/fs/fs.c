@@ -84,6 +84,33 @@ static inline bool _ends_with(const char *string, const char *suffix)
 }
 #endif  /* __FS_ENFORCE_ARCHIVE_EXTENSION__ */
 
+static int _dirent_compare_by_name(const void *lhs, const void *rhs)
+{
+    const struct dirent *l = (const struct dirent *)lhs;
+    const struct dirent *r = (const struct dirent *)rhs;
+    return strcasecmp(l->d_name, r->d_name);
+}
+
+static struct dirent *_read_directory(const char *path, int (*compare)(const void *, const void *))
+{
+    DIR *dp = opendir(path);
+    if (!dp) { // Path is a folder, scan and mount all valid archives.
+        return NULL;
+    }
+
+    struct dirent *directory = NULL;
+
+    for (struct dirent *entry = readdir(dp); entry; entry = readdir(dp)) {
+        arrpush(directory, *entry);
+    }
+
+    qsort(directory, arrlen(directory), sizeof(struct dirent), compare);
+
+    closedir(dp);
+
+    return directory;
+}
+
 FS_Context_t *FS_create(const char *path)
 {
     FS_Context_t *context = malloc(sizeof(FS_Context_t));
@@ -94,25 +121,33 @@ FS_Context_t *FS_create(const char *path)
 
     *context = (FS_Context_t){ 0 };
 
-    DIR *dp = opendir(path);
-    if (dp) { // Path is a folder, scan and mount all valid archives.
-        for (struct dirent *entry = readdir(dp); entry; entry = readdir(dp)) {
-            char subpath[PLATFORM_PATH_MAX] = { 0 };
-            path_join(subpath, path, entry->d_name);
-#ifdef __FS_ENFORCE_ARCHIVE_EXTENSION__
-            if (!_ends_with(subpath, FS_ARCHIVE_EXTENSION)) {
-                continue;
-            }
-#endif  /* __FS_ENFORCE_ARCHIVE_EXTENSION__ */
-            if (!FS_pak_is_valid(subpath)) {
-                continue;
-            }
+    struct dirent *directory = _read_directory(path, _dirent_compare_by_name); // Build the non-recursive sorted directory listing.
+    if (!directory) {
+        Log_write(LOG_LEVELS_WARNING, LOG_CONTEXT, "can't access directory `%s`", path);
+        return NULL;
+    }
 
-            _attach(context, subpath);
+    for (size_t i = 0; i < (size_t)arrlen(directory); ++i) {
+        const struct dirent *entry = &directory[i]; 
+        if (entry->d_type != DT_REG) {
+            continue;
         }
 
-        closedir(dp);
+        char subpath[PLATFORM_PATH_MAX] = { 0 };
+        path_join(subpath, path, entry->d_name);
+#ifdef __FS_ENFORCE_ARCHIVE_EXTENSION__
+        if (!_ends_with(subpath, FS_ARCHIVE_EXTENSION)) {
+            continue;
+        }
+#endif  /* __FS_ENFORCE_ARCHIVE_EXTENSION__ */
+        if (!FS_pak_is_valid(subpath)) {
+            continue;
+        }
+
+        _attach(context, subpath);
     }
+
+    arrfree(directory);
 
     _attach(context, path); // Mount the resolved folder, as well (overriding archives).
 
