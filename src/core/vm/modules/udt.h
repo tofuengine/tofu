@@ -26,6 +26,7 @@
 #define __MODULES_UDT_H__
 
 #include <chipmunk/chipmunk.h>
+#include <FastNoiseLite/FastNoiseLite.h>
 
 #include <core/io/display.h>
 #include <libs/luax.h>
@@ -45,6 +46,7 @@ typedef enum UserData_e { // TODO: move to a separate file.
 } UserData_t;
 
 typedef enum Object_Types_e {
+    // Graphics
     OBJECT_TYPE_BANK,
     OBJECT_TYPE_BATCH,
     OBJECT_TYPE_BODY,
@@ -53,8 +55,11 @@ typedef enum Object_Types_e {
     OBJECT_TYPE_GRID,
     OBJECT_TYPE_PALETTE,
     OBJECT_TYPE_PROGRAM,
+    OBJECT_TYPE_XFORM,
+    // Sound
     OBJECT_TYPE_SOURCE,
-    OBJECT_TYPE_XFORM
+    // Math
+    OBJECT_TYPE_NOISE
 } Object_Types_t;
 
 typedef struct Canvas_Object_s {
@@ -141,5 +146,9 @@ typedef struct Body_Object_s {
     } size;
 //    cpFloat *momentum;
 } Body_Object_t;
+
+typedef struct Noise_Object_s {
+    fnl_state state;
+} Noise_Object_t;
 
 #endif  /* __MODULES_UDT_H__ */
