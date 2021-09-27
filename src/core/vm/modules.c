@@ -64,6 +64,7 @@
 #include <core/vm/modules/iterators.h>
 #include <core/vm/modules/log.h>
 #include <core/vm/modules/math.h>
+#include <core/vm/modules/noise.h>
 #include <core/vm/modules/palette.h>
 #include <core/vm/modules/program.h>
 #include <core/vm/modules/source.h>
@@ -132,6 +133,14 @@ static int events_loader(lua_State *L)
         });
 }
 
+static int generators_loader(lua_State *L)
+{
+    return _create_module(L, (const luaL_Reg[]){
+            { "Noise", noise_loader },
+            { NULL, NULL }
+        });
+}
+
 static int graphics_loader(lua_State *L)
 {
     return _create_module(L, (const luaL_Reg[]){
@@ -189,6 +198,7 @@ void modules_initialize(lua_State *L, int nup)
     _preload_modules(L, nup, (const luaL_Reg[]){
             { "tofu.core", core_loader }, // TODO: core should be loaded for first?
             { "tofu.events", events_loader },
+            { "tofu.generators", generators_loader },
             { "tofu.graphics", graphics_loader },
             { "tofu.io", io_loader },
             { "tofu.physics", physics_loader },
