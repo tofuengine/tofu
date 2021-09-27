@@ -55,7 +55,6 @@ static int math_finvsqrt_1n_1n(lua_State *L);
 static int math_rotate_3nnn_2nn(lua_State *L);
 static int math_wave_3sNN_1f(lua_State *L);
 static int math_tweener_v_1f(lua_State *L);
-static int math_noise_1s_1f(lua_State *L);
 
 static const char _math_lua[] = {
 #include "math.inc"
@@ -86,7 +85,6 @@ int math_loader(lua_State *L)
             { "rotate", math_rotate_3nnn_2nn },
             { "wave", math_wave_3sNN_1f },
             { "tweener", math_tweener_v_1f },
-            { "noise", math_noise_1s_1f },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -444,42 +442,4 @@ static int math_tweener_v_1f(lua_State *L)
         LUAX_OVERLOAD_ARITY(2, math_tweener_4sNNN_1f)
         LUAX_OVERLOAD_ARITY(4, math_tweener_4sNNN_1f)
     LUAX_OVERLOAD_END
-}
-
-static int _noise_3nNN_1n(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    float x = LUAX_NUMBER(L, 1);
-    float y = LUAX_OPTIONAL_NUMBER(L, 2, 0.0f);
-    float z = LUAX_OPTIONAL_NUMBER(L, 3, 0.0f);
-
-    const Noise_t *noise = (const Noise_t *)LUAX_USERDATA(L, lua_upvalueindex(1));
-
-    float value = (noise->function(x, y, z) + 1.0f) * 0.5f;
-
-    lua_pushnumber(L, (lua_Number)value);
-
-    return 1;
-}
-
-static int math_noise_1s_1f(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
-    LUAX_SIGNATURE_END
-    const char *type = LUAX_STRING(L, 1);
-
-    const Noise_t *noise  = noise_from_type(type);
-    if (!noise) {
-        return luaL_error(L, "unknown noise `%s`", type);
-    }
-
-    lua_pushlightuserdata(L, (void *)noise);
-    lua_pushcclosure(L, _noise_3nNN_1n, 1);
-
-    return 1;
 }
