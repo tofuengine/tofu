@@ -1357,7 +1357,7 @@ static int canvas_stencil_5ooosn_0(lua_State *L)
     const GL_Surface_t *surface = self->surface;
     const GL_Surface_t *source = canvas->surface;
     const GL_Surface_t *mask_surface = mask->surface;
-    const Map_Entry_t *entry = map_find(L, comparator, _comparators, GL_Comparators_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(L, comparator, _comparators, GL_Comparators_t_CountOf);
     GL_surface_stencil(surface, (GL_Point_t){ .x = 0, .y = 0 },
         source, (GL_Rectangle_t){ .x = 0, .y = 0, .width = source->width, .height = source->height },
         mask_surface, (GL_Comparators_t)entry->value, threshold);
@@ -1387,7 +1387,7 @@ static int canvas_stencil_7onnoosn_0(lua_State *L)
     const GL_Surface_t *surface = self->surface;
     const GL_Surface_t *source = canvas->surface;
     const GL_Surface_t *mask_surface = mask->surface;
-    const Map_Entry_t *entry = map_find(L, comparator, _comparators, GL_Comparators_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(L, comparator, _comparators, GL_Comparators_t_CountOf);
     GL_surface_stencil(surface, (GL_Point_t){ .x = x, .y = y },
         source, (GL_Rectangle_t){ .x = 0, .y = 0, .width = source->width, .height = source->height },
         mask_surface, (GL_Comparators_t)entry->value, threshold);
@@ -1425,7 +1425,7 @@ static int canvas_stencil_11onnonnnnosn_0(lua_State *L)
     const GL_Surface_t *surface = self->surface;
     const GL_Surface_t *source = canvas->surface;
     const GL_Surface_t *mask_surface = mask->surface;
-    const Map_Entry_t *entry = map_find(L, comparator, _comparators, GL_Comparators_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(L, comparator, _comparators, GL_Comparators_t_CountOf);
     GL_surface_stencil(surface, (GL_Point_t){ .x = x, .y = y },
         source, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height  },
         mask_surface, (GL_Comparators_t)entry->value, threshold);
@@ -1469,7 +1469,7 @@ static int canvas_blend_3oos_0(lua_State *L)
 
     const GL_Surface_t *surface = self->surface;
     const GL_Surface_t *source = canvas->surface;
-    const Map_Entry_t *entry = map_find(L, function, _functions, GL_Functions_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(L, function, _functions, GL_Functions_t_CountOf);
     GL_surface_blend(surface, (GL_Point_t){ .x = 0, .y = 0 },
         source, (GL_Rectangle_t){ .x = 0, .y = 0, .width = source->width, .height = source->height },
         (GL_Functions_t)entry->value);
@@ -1494,7 +1494,7 @@ static int canvas_blend_5onnos_0(lua_State *L)
 
     const GL_Surface_t *surface = self->surface;
     const GL_Surface_t *source = canvas->surface;
-    const Map_Entry_t *entry = map_find(L, function, _functions, GL_Functions_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(L, function, _functions, GL_Functions_t_CountOf);
     GL_surface_blend(surface, (GL_Point_t){ .x = x, .y = y },
         source, (GL_Rectangle_t){ .x = 0, .y = 0, .width = source->width, .height = source->height },
         (GL_Functions_t)entry->value);
@@ -1527,7 +1527,7 @@ static int canvas_blend_9onnonnnns_0(lua_State *L)
 
     const GL_Surface_t *surface = self->surface;
     const GL_Surface_t *source = canvas->surface;
-    const Map_Entry_t *entry = map_find(L, function, _functions, GL_Functions_t_CountOf);
+    const Map_Entry_t *entry = map_find_key(L, function, _functions, GL_Functions_t_CountOf);
     GL_surface_blend(surface, (GL_Point_t){ .x = x, .y = y },
         source, (GL_Rectangle_t){ .x = ox, .y = oy, .width = width, .height = height },
         (GL_Functions_t)entry->value);

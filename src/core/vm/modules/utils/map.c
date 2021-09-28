@@ -27,7 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static int _entry_compare(const void *lhs, const void *rhs)
+static int _entry_compare_by_key(const void *lhs, const void *rhs)
 {
     const Map_Entry_t *l = (const Map_Entry_t *)lhs;
     const Map_Entry_t *r = (const Map_Entry_t *)rhs;
@@ -41,12 +41,30 @@ static int _entry_compare(const void *lhs, const void *rhs)
     }
 }
 
-const Map_Entry_t *map_find(lua_State *L, const char *id, const Map_Entry_t *table, size_t size)
+static int _entry_compare_by_value(const void *lhs, const void *rhs)
 {
-    const Map_Entry_t key = { .key = id };
-    const Map_Entry_t *entry = bsearch((const void *)&key, table, size, sizeof(Map_Entry_t), _entry_compare);
+    const Map_Entry_t *l = (const Map_Entry_t *)lhs;
+    const Map_Entry_t *r = (const Map_Entry_t *)rhs;
+    return l->value - r->value;
+}
+
+const Map_Entry_t *map_find_key(lua_State *L, const char *key, const Map_Entry_t *table, size_t size)
+{
+    const Map_Entry_t needle = { .key = key };
+    const Map_Entry_t *entry = bsearch((const void *)&needle, table, size, sizeof(Map_Entry_t), _entry_compare_by_key);
     if (!entry) {
-        luaL_error(L, "unknown value for key `%s`", id);
+        luaL_error(L, "unknown value for key `%s`", key);
+        return NULL;
+    }
+    return entry;
+}
+
+const Map_Entry_t *map_find_value(lua_State *L, int value, const Map_Entry_t *table, size_t size)
+{
+    const Map_Entry_t needle = { .value = value };
+    const Map_Entry_t *entry = bsearch((const void *)&needle, table, size, sizeof(Map_Entry_t), _entry_compare_by_value);
+    if (!entry) {
+        luaL_error(L, "unknown key for value %d", value);
         return NULL;
     }
     return entry;
