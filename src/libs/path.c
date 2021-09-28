@@ -191,12 +191,12 @@ bool path_is_absolute(const char *path)
 #endif
 }
 
-bool path_is_unsafe(const char *path)
+bool path_is_normalized(const char *path)
 {
-    return strncmp(path, "." PLATFORM_PATH_SEPARATOR_SZ, 2) == 0
-        || strncmp(path, ".." PLATFORM_PATH_SEPARATOR_SZ, 3) == 0
-        || strstr(path, PLATFORM_PATH_SEPARATOR_SZ "." PLATFORM_PATH_SEPARATOR_SZ)
-        || strstr(path, PLATFORM_PATH_SEPARATOR_SZ ".." PLATFORM_PATH_SEPARATOR_SZ);
+    return strncmp(path, "." PLATFORM_PATH_SEPARATOR_SZ, 2) != 0
+        || strncmp(path, ".." PLATFORM_PATH_SEPARATOR_SZ, 3) != 0
+        || !strstr(path, PLATFORM_PATH_SEPARATOR_SZ "." PLATFORM_PATH_SEPARATOR_SZ)
+        || !strstr(path, PLATFORM_PATH_SEPARATOR_SZ ".." PLATFORM_PATH_SEPARATOR_SZ);
 }
 
 void path_split(const char *path, char *folder, char *file)
