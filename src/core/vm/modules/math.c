@@ -30,7 +30,6 @@
 #include <libs/luax.h>
 #include <libs/sincos.h>
 #include <libs/wave.h>
-#include <libs/noise.h>
 #include <libs/imath.h>
 #include <libs/fmath.h>
 

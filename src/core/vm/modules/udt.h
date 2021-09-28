@@ -26,9 +26,9 @@
 #define __MODULES_UDT_H__
 
 #include <chipmunk/chipmunk.h>
-#include <FastNoiseLite/FastNoiseLite.h>
 
 #include <core/io/display.h>
+#include <libs/fnl.h>
 #include <libs/luax.h>
 #include <libs/fs/fs.h>
 #include <libs/gl/gl.h>
