@@ -71,6 +71,7 @@
 #include <core/vm/modules/speakers.h>
 #include <core/vm/modules/system.h>
 #include <core/vm/modules/timers.h>
+#include <core/vm/modules/tweener.h>
 #include <core/vm/modules/vector.h>
 #include <core/vm/modules/wave.h>
 #include <core/vm/modules/world.h>
@@ -138,6 +139,7 @@ static int generators_loader(lua_State *L)
 {
     return _create_module(L, (const luaL_Reg[]){
             { "Noise", noise_loader },
+            { "Tweener", tweener_loader },
             { "Wave", wave_loader },
             { NULL, NULL }
         });

@@ -28,6 +28,7 @@
 #include <chipmunk/chipmunk.h>
 
 #include <core/io/display.h>
+#include <libs/easing.h>
 #include <libs/fnl.h>
 #include <libs/luax.h>
 #include <libs/wave.h>
@@ -61,6 +62,7 @@ typedef enum Object_Types_e {
     OBJECT_TYPE_SOURCE,
     // Math
     OBJECT_TYPE_NOISE,
+    OBJECT_TYPE_TWEENER,
     OBJECT_TYPE_WAVE
 } Object_Types_t;
 
@@ -148,6 +150,13 @@ typedef struct Body_Object_s {
     } size;
 //    cpFloat *momentum;
 } Body_Object_t;
+
+typedef struct Tweener_Object_s {
+    Easing_Function_t function;
+    float duration;
+    float from;
+    float to;
+} Tweener_Object_t;
 
 typedef struct Noise_Object_s {
     fnl_state state;

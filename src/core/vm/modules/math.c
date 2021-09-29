@@ -25,7 +25,6 @@
 #include "math.h"
 
 #include <config.h>
-#include <libs/easing.h>
 #include <libs/log.h>
 #include <libs/luax.h>
 #include <libs/sincos.h>
@@ -51,7 +50,6 @@ static int math_rotation_to_angle_1n_1n(lua_State *L);
 static int math_invsqrt_1n_1n(lua_State *L);
 static int math_finvsqrt_1n_1n(lua_State *L);
 static int math_rotate_3nnn_2nn(lua_State *L);
-static int math_tweener_v_1f(lua_State *L);
 
 static const char _math_lua[] = {
 #include "math.inc"
@@ -80,7 +78,6 @@ int math_loader(lua_State *L)
             { "invsqrt", math_invsqrt_1n_1n },
             { "finvsqrt", math_finvsqrt_1n_1n },
             { "rotate", math_rotate_3nnn_2nn },
-            { "tweener", math_tweener_v_1f },
             { NULL, NULL }
         },
         (const luaX_Const[]){
@@ -338,61 +335,4 @@ static int math_rotate_3nnn_2nn(lua_State *L)
     lua_pushnumber(L, (lua_Number)ry);
 
     return 2;
-}
-
-static int _tweener_1n_1n(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    float time = LUAX_NUMBER(L, 1);
-
-    const Easing_t *easing = (const Easing_t *)LUAX_USERDATA(L, lua_upvalueindex(1));
-    float duration = LUAX_NUMBER(L, lua_upvalueindex(2));
-    float from = LUAX_NUMBER(L, lua_upvalueindex(3));
-    float to = LUAX_NUMBER(L, lua_upvalueindex(4));
-
-    float ratio = time / duration;
-    float eased_ratio = easing->function(ratio);
-    float value = FLERP(from, to, eased_ratio);
-
-    lua_pushnumber(L, (lua_Number)value);
-
-    return 1;
-}
-
-static int math_tweener_4sNNN_1f(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    const char *name = LUAX_STRING(L, 1);
-    float duration = LUAX_OPTIONAL_NUMBER(L, 2, 1.0f);
-    float from = LUAX_OPTIONAL_NUMBER(L, 3, 0.0f);
-    float to = LUAX_OPTIONAL_NUMBER(L, 4, 1.0f);
-
-    const Easing_t *easing  = easing_from_id(name);
-    if (!easing) {
-        return luaL_error(L, "unknown easing `%s`", name);
-    }
-
-    lua_pushlightuserdata(L, (void *)easing);
-    lua_pushnumber(L, (lua_Number)duration);
-    lua_pushnumber(L, (lua_Number)from);
-    lua_pushnumber(L, (lua_Number)to);
-    lua_pushcclosure(L, _tweener_1n_1n, 4);
-
-    return 1;
-}
-
-static int math_tweener_v_1f(lua_State *L)
-{
-    LUAX_OVERLOAD_BEGIN(L)
-        LUAX_OVERLOAD_ARITY(1, math_tweener_4sNNN_1f)
-        LUAX_OVERLOAD_ARITY(2, math_tweener_4sNNN_1f)
-        LUAX_OVERLOAD_ARITY(4, math_tweener_4sNNN_1f)
-    LUAX_OVERLOAD_END
 }
