@@ -35,8 +35,10 @@
 
 static int wave_new_3sNN_1o(lua_State *L);
 static int wave_gc_1o_0(lua_State *L);
+static int wave_form_v_v(lua_State *L);
+static int wave_period_v_v(lua_State *L);
+static int wave_amplitude_v_v(lua_State *L);
 static int wave_at_2on_1n(lua_State *L);
-// TODO: add wave parameters.
 
 int wave_loader(lua_State *L)
 {
@@ -46,6 +48,9 @@ int wave_loader(lua_State *L)
             { "new", wave_new_3sNN_1o },
             { "__gc", wave_gc_1o_0 },
             { "__call", wave_at_2on_1n }, // Call meta-method, mapped to `at(...)`.
+            { "form", wave_form_v_v },
+            { "period", wave_period_v_v },
+            { "amplitude", wave_amplitude_v_v },
             { "at", wave_at_2on_1n },
             { NULL, NULL }
         },
@@ -93,6 +98,120 @@ static int wave_gc_1o_0(lua_State *L)
     Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "wave %p finalized", self);
 
     return 0;
+}
+
+// FIXME: implement only the observers? (also for `Tweener`s)
+static int wave_form_1o_1s(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+    LUAX_SIGNATURE_END
+    //const Wave_Object_t *self = (const Wave_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WAVE);
+
+    // FIXME: move to `map_find_XXX()` usage.
+
+    lua_pushstring(L, "<undefined>");
+
+    return 1;
+}
+
+static int wave_form_2os_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
+    LUAX_SIGNATURE_END
+    Wave_Object_t *self = (Wave_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WAVE);
+    const char *name = LUAX_STRING(L, 2);
+
+    const Wave_t *wave = wave_from_name(name);
+    if (!wave) {
+        return luaL_error(L, "can't find wave w/ name `%s`", name);
+    }
+
+    self->function = wave->function;
+
+    return 0;
+}
+
+static int wave_form_v_v(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, wave_form_1o_1s)
+        LUAX_OVERLOAD_ARITY(2, wave_form_2os_0)
+    LUAX_OVERLOAD_END
+}
+
+static int wave_period_1o_1n(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+    LUAX_SIGNATURE_END
+    const Wave_Object_t *self = (const Wave_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WAVE);
+
+    const float period = self->period;
+
+    lua_pushnumber(L, (lua_Number)period);
+
+    return 1;
+}
+
+static int wave_period_2on_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    Wave_Object_t *self = (Wave_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WAVE);
+    float period = LUAX_NUMBER(L, 2);
+
+    self->period = period;
+
+    return 0;
+}
+
+static int wave_period_v_v(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, wave_period_1o_1n)
+        LUAX_OVERLOAD_ARITY(2, wave_period_2on_0)
+    LUAX_OVERLOAD_END
+}
+
+static int wave_amplitude_1o_1n(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+    LUAX_SIGNATURE_END
+    const Wave_Object_t *self = (const Wave_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WAVE);
+
+    const float amplitude = self->amplitude;
+
+    lua_pushnumber(L, (lua_Number)amplitude);
+
+    return 1;
+}
+
+static int wave_amplitude_2on_0(lua_State *L)
+{
+    LUAX_SIGNATURE_BEGIN(L)
+        LUAX_SIGNATURE_REQUIRED(LUA_TOBJECT)
+        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
+    LUAX_SIGNATURE_END
+    Wave_Object_t *self = (Wave_Object_t *)LUAX_OBJECT(L, 1, OBJECT_TYPE_WAVE);
+    float amplitude = LUAX_NUMBER(L, 2);
+
+    self->amplitude = amplitude;
+
+    return 0;
+}
+
+static int wave_amplitude_v_v(lua_State *L)
+{
+    LUAX_OVERLOAD_BEGIN(L)
+        LUAX_OVERLOAD_ARITY(1, wave_amplitude_1o_1n)
+        LUAX_OVERLOAD_ARITY(2, wave_amplitude_2on_0)
+    LUAX_OVERLOAD_END
 }
 
 static int wave_at_2on_1n(lua_State *L)
