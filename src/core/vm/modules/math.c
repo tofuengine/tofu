@@ -29,7 +29,6 @@
 #include <libs/log.h>
 #include <libs/luax.h>
 #include <libs/sincos.h>
-#include <libs/wave.h>
 #include <libs/imath.h>
 #include <libs/fmath.h>
 
@@ -52,7 +51,6 @@ static int math_rotation_to_angle_1n_1n(lua_State *L);
 static int math_invsqrt_1n_1n(lua_State *L);
 static int math_finvsqrt_1n_1n(lua_State *L);
 static int math_rotate_3nnn_2nn(lua_State *L);
-static int math_wave_3sNN_1f(lua_State *L);
 static int math_tweener_v_1f(lua_State *L);
 
 static const char _math_lua[] = {
@@ -82,7 +80,6 @@ int math_loader(lua_State *L)
             { "invsqrt", math_invsqrt_1n_1n },
             { "finvsqrt", math_finvsqrt_1n_1n },
             { "rotate", math_rotate_3nnn_2nn },
-            { "wave", math_wave_3sNN_1f },
             { "tweener", math_tweener_v_1f },
             { NULL, NULL }
         },
@@ -341,49 +338,6 @@ static int math_rotate_3nnn_2nn(lua_State *L)
     lua_pushnumber(L, (lua_Number)ry);
 
     return 2;
-}
-
-static int _wave_1n_1n(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    float time = LUAX_NUMBER(L, 1);
-
-    const Wave_t *wave = (const Wave_t *)LUAX_USERDATA(L, lua_upvalueindex(1));
-    float period = LUAX_NUMBER(L, lua_upvalueindex(2));
-    float amplitude = LUAX_NUMBER(L, lua_upvalueindex(3));
-
-    float ratio = time / period;
-    float value = wave->function(ratio) * amplitude;
-
-    lua_pushnumber(L, (lua_Number)value);
-
-    return 1;
-}
-
-static int math_wave_3sNN_1f(lua_State *L)
-{
-    LUAX_SIGNATURE_BEGIN(L)
-        LUAX_SIGNATURE_REQUIRED(LUA_TSTRING)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
-        LUAX_SIGNATURE_OPTIONAL(LUA_TNUMBER)
-    LUAX_SIGNATURE_END
-    const char *name = LUAX_STRING(L, 1);
-    float period = LUAX_OPTIONAL_NUMBER(L, 2, 1.0f);
-    float amplitude = LUAX_OPTIONAL_NUMBER(L, 3, 1.0f);
-
-    const Wave_t *wave = wave_from_name(name);
-    if (!wave) {
-        return luaL_error(L, "unknown wave `%s`", name);
-    }
-
-    lua_pushlightuserdata(L, (void *)wave);
-    lua_pushnumber(L, (lua_Number)period);
-    lua_pushnumber(L, (lua_Number)amplitude);
-    lua_pushcclosure(L, _wave_1n_1n, 3);
-
-    return 1;
 }
 
 static int _tweener_1n_1n(lua_State *L)

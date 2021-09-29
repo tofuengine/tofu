@@ -30,6 +30,7 @@
 #include <core/io/display.h>
 #include <libs/fnl.h>
 #include <libs/luax.h>
+#include <libs/wave.h>
 #include <libs/fs/fs.h>
 #include <libs/gl/gl.h>
 #include <libs/sl/sl.h>
@@ -59,7 +60,8 @@ typedef enum Object_Types_e {
     // Sound
     OBJECT_TYPE_SOURCE,
     // Math
-    OBJECT_TYPE_NOISE
+    OBJECT_TYPE_NOISE,
+    OBJECT_TYPE_WAVE
 } Object_Types_t;
 
 typedef struct Canvas_Object_s {
@@ -150,5 +152,11 @@ typedef struct Body_Object_s {
 typedef struct Noise_Object_s {
     fnl_state state;
 } Noise_Object_t;
+
+typedef struct Wave_Object_s { // TODO: rename to oscillator?
+    Wave_Function_t function;
+    float period;
+    float amplitude;
+} Wave_Object_t;
 
 #endif  /* __MODULES_UDT_H__ */
