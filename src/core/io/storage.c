@@ -477,8 +477,8 @@ Storage_Resource_t *Storage_load(Storage_t *storage, const char *name, Storage_R
     }
 #endif  /* __STORAGE_CHECK_ABSOLUTE_PATHS__*/
 
-    const Storage_Resource_t *key = &(Storage_Resource_t){ .name = (char *)name };
-    Storage_Resource_t **entry = bsearch((const void *)&key, storage->resources, arrlen(storage->resources), sizeof(Storage_Resource_t *), _resource_compare_by_name);
+    const Storage_Resource_t *needle = &(Storage_Resource_t){ .name = (char *)name };
+    Storage_Resource_t **entry = bsearch((const void *)&needle, storage->resources, arrlen(storage->resources), sizeof(Storage_Resource_t *), _resource_compare_by_name);
     if (entry) {
         Log_write(LOG_LEVELS_DEBUG, LOG_CONTEXT, "cache-hit for resource `%s`, resetting age and returning", name);
         Storage_Resource_t *resource = *entry;

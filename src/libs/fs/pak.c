@@ -342,8 +342,8 @@ static bool _pak_mount_contains(const FS_Mount_t *mount, const char *name)
 {
     const Pak_Mount_t *pak_mount = (const Pak_Mount_t *)mount;
 
-    Pak_Entry_t key = { .name = (char *)name };
-    const Pak_Entry_t *entry = bsearch((const void *)&key, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
+    Pak_Entry_t needle = { .name = (char *)name };
+    const Pak_Entry_t *entry = bsearch((const void *)&needle, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
 
     bool exists = entry; // FIXME: should be `!!`?
     Log_assert(!exists, LOG_LEVELS_TRACE, LOG_CONTEXT, "entry `%s` found in mount %p", name, pak_mount);
@@ -354,8 +354,8 @@ static FS_Handle_t *_pak_mount_open(const FS_Mount_t *mount, const char *name)
 {
     const Pak_Mount_t *pak_mount = (const Pak_Mount_t *)mount;
 
-    Pak_Entry_t key = { .name = (char *)name };
-    const Pak_Entry_t *entry = bsearch((const void *)&key, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
+    Pak_Entry_t needle = { .name = (char *)name };
+    const Pak_Entry_t *entry = bsearch((const void *)&needle, pak_mount->directory, pak_mount->entries, sizeof(Pak_Entry_t), _pak_entry_compare);
     if (!entry) {
         Log_write(LOG_LEVELS_ERROR, LOG_CONTEXT, "can't find entry `%s`", name);
         return NULL;
